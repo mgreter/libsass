@@ -25,7 +25,7 @@ install:
 
 after_success:
   # exclude some directories from profiling (.libs is from autotools)
-  - export EXCLUDE_COVERAGE="--exclude sassc --exclude sass-spec --exclude .libs"
+  - export EXCLUDE_COVERAGE="-e sassc -e sass-spec -e .libs -e json.hpp -e json.cpp -e debug.hpp -e cencode.c -e b64 -e utf8 -e utf8.h -e utf8_string.hpp -e utf8_string.cpp -e test"
   # debug via gcovr
   - gcovr -r .
   # debug via coveralls (dump result for futher analyzing)
