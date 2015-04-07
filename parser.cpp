@@ -2078,6 +2078,8 @@ namespace Sass {
             >,
             // main selector match
             sequence <
+              // allow namespace prefix
+              optional < namespace_prefix >,
               // modifiers prefixes
               alternatives <
                 sequence <
@@ -2090,8 +2092,6 @@ namespace Sass {
                 // single or double colon
                 optional < pseudo_prefix >
               >,
-              // can be namespaced
-              optional < namespace_prefix >,
               // accept hypens in token
               one_plus < sequence <
                 // can start with hyphens
@@ -2099,6 +2099,7 @@ namespace Sass {
                 // now the main token
                 alternatives <
                   kwd_optional,
+                  exactly <'*'>,
                   quoted_string,
                   interpolant,
                   identifier,
