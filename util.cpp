@@ -1,4 +1,4 @@
-#include<stdint.h>
+#include <stdint.h>
 #include "ast.hpp"
 #include "util.hpp"
 #include "prelexer.hpp"
@@ -565,7 +565,7 @@ namespace Sass {
       return isPrintable(e, style);
     }
 
-    bool isPrintable(Feature_Block* f, Output_Style style) {
+    bool isPrintable(Supports_Block* f, Output_Style style) {
       if (f == NULL) {
         return false;
       }
@@ -658,8 +658,8 @@ namespace Sass {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Feature_Block)) {
-          Feature_Block* f = (Feature_Block*) stm;
+        else if (typeid(*stm) == typeid(Supports_Block)) {
+          Supports_Block* f = (Supports_Block*) stm;
           if (isPrintable(f, style)) {
             return true;
           }

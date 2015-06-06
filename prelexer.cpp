@@ -240,7 +240,7 @@ namespace Sass {
       return word<media_kwd>(src);
     }
 
-    const char* kwd_supports(const char* src) {
+    const char* kwd_supports_directive(const char* src) {
       return word<supports_kwd>(src);
     }
 
@@ -256,7 +256,7 @@ namespace Sass {
       return word<return_kwd>(src);
     }
 
-    const char* kwd_include(const char* src) {
+    const char* kwd_include_directive(const char* src) {
       return word<include_kwd>(src);
     }
 
@@ -476,13 +476,13 @@ namespace Sass {
                        filename_schema >(src); // optional trailing slash
     }*/
     // Match CSS "!important" keyword.
-    const char* important(const char* src) {
+    const char* kwd_important(const char* src) {
       return sequence< exactly<'!'>,
                        optional_css_whitespace,
                        word<important_kwd> >(src);
     }
     // Match CSS "!optional" keyword.
-    const char* optional(const char* src) {
+    const char* kwd_optional(const char* src) {
       return sequence< exactly<'!'>,
       optional_css_whitespace,
       word<optional_kwd> >(src);
@@ -507,7 +507,7 @@ namespace Sass {
     const char* functional_schema(const char* src) {
       return sequence< identifier_schema, exactly<'('> >(src);
     }
-    const char* functional(const char* src) {
+    const char* re_pseudo_selector(const char* src) {
       return sequence< identifier, exactly<'('> >(src);
     }
     // Match the CSS negation pseudo-class.
