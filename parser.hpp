@@ -262,11 +262,6 @@ namespace Sass {
     Supports_Block* parse_supports_directive();
     Supports_Query* parse_supports_queries();
     Supports_Condition* parse_supports_query();
-    Supports_Condition* parse_feature_query_in_parens();
-    Supports_Condition* parse_supports_negation();
-    Supports_Condition* parse_supports_conjunction();
-    Supports_Condition* parse_supports_disjunction();
-    Supports_Condition* parse_supports_declaration();
     At_Root_Block* parse_at_root_block();
     At_Root_Expression* parse_at_root_expression();
     At_Rule* parse_at_rule();

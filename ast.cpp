@@ -211,7 +211,8 @@ namespace Sass {
   {
     To_String to_string;
 
-    Simple_Selector* lbase = base();
+    Compound_Selector* lhs = this;
+    Simple_Selector* lbase = lhs->base();
     Simple_Selector* rbase = rhs->base();
 
     // Check if pseudo-elements are the same between the selectors

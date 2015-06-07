@@ -91,7 +91,7 @@ namespace Sass {
     Lookahead lookahead_result;
     while (position < end) {
       parse_block_comments(root);
-      if (peek< kwd_import >()) {
+      if (lex < kwd_import >()) {
         Import* imp = parse_import();
         if (!imp->urls().empty()) (*root) << imp;
         if (!imp->files().empty()) {
@@ -105,7 +105,7 @@ namespace Sass {
       else if (peek< kwd_mixin >() || peek< kwd_function >()) {
         (*root) << parse_definition();
       }
-      else if (peek< variable >()) {
+      else if (lex < variable >()) {
         (*root) << parse_assignment();
         semicolon = true;
         error_message = "top-level variable binding must be terminated by ';'";
@@ -113,7 +113,7 @@ namespace Sass {
       /*else if (peek< sequence< optional< exactly<'*'> >, alternatives< identifier_schema, identifier >, optional_spaces, exactly<':'>, optional_spaces, exactly<'{'> > >(position)) {
         (*root) << parse_propset();
       }*/
-      else if (peek< kwd_include_directive >() /* || peek< exactly<'+'> >() */) {
+      else if (lex < kwd_include_directive >() /* || peek< exactly<'+'> >() */) {
         Mixin_Call* mixin_call = parse_include_directive();
         (*root) << mixin_call;
         if (!mixin_call->block()) {
@@ -124,35 +124,35 @@ namespace Sass {
       else if (peek< kwd_if_directive >()) {
         (*root) << parse_if_directive();
       }
-      else if (peek< kwd_for_directive >()) {
+      else if (lex < kwd_for_directive >()) {
         (*root) << parse_for_directive();
       }
-      else if (peek< kwd_each_directive >()) {
+      else if (lex < kwd_each_directive >()) {
         (*root) << parse_each_directive();
       }
-      else if (peek< kwd_while_directive >()) {
+      else if (lex < kwd_while_directive >()) {
         (*root) << parse_while_directive();
       }
-      else if (peek< kwd_media >()) {
+      else if (lex < kwd_media >()) {
         (*root) << parse_media_block();
       }
-      else if (peek< kwd_at_root >()) {
+      else if (lex < kwd_at_root >()) {
         (*root) << parse_at_root_block();
       }
-      else if (peek< kwd_supports_directive >()) {
+      else if (lex < kwd_supports_directive >()) {
         (*root) << parse_supports_directive();
       }
-      else if (peek< kwd_warn >()) {
+      else if (lex < kwd_warn >()) {
         (*root) << parse_warning();
         semicolon = true;
         error_message = "top-level @warn directive must be terminated by ';'";
       }
-      else if (peek< kwd_err >()) {
+      else if (lex < kwd_err >()) {
         (*root) << parse_error();
         semicolon = true;
         error_message = "top-level @error directive must be terminated by ';'";
       }
-      else if (peek< kwd_dbg >()) {
+      else if (lex < kwd_dbg >()) {
         (*root) << parse_debug();
         semicolon = true;
         error_message = "top-level @debug directive must be terminated by ';'";
@@ -162,7 +162,7 @@ namespace Sass {
         lex< quoted_string >();
         lex< one_plus< exactly<';'> > >();
       }
-      else if (peek< at_keyword >()) {
+      else if (lex< at_keyword >()) {
         At_Rule* at_rule = parse_at_rule();
         (*root) << at_rule;
         if (!at_rule->block()){
@@ -281,7 +281,6 @@ namespace Sass {
 
   Import* Parser::parse_import()
   {
-    lex< kwd_import >();
     Import* imp = new (ctx.mem) Import(pstate);
     bool first = true;
     do {
@@ -431,7 +430,6 @@ namespace Sass {
 
   Assignment* Parser::parse_assignment()
   {
-    lex< variable >();
     string name(Util::normalize_underscores(lexed));
     ParserState var_source_position = pstate;
     if (!lex< exactly<':'> >()) error("expected ':' after " + name + " in assignment statement", pstate);
@@ -557,20 +555,18 @@ namespace Sass {
   // called after parsing `kwd_include_directive`
   Mixin_Call* Parser::parse_include_directive()
   {
-    lex< kwd_include_directive >() /* || lex< exactly<'+'> >() */;
     // lex identifier into `lexed` var
     if (!lex< identifier >()) error("invalid name in @include directive", pstate);
-    ParserState source_position_of_call = pstate;
     // normalize underscores to hyphens
     string name(Util::normalize_underscores(lexed));
+    // create the initial mixin call object
+    Mixin_Call* call = new (ctx.mem) Mixin_Call(pstate, name, 0, 0);
     // parse mandatory arguments
-    Arguments* args = parse_arguments();
-    Block* content = 0;
+    call->arguments(parse_arguments());
     // parse optional block
     if (peek< exactly<'{'> >()) {
-      content = parse_block();
+      call->block(parse_block());
     }
-    Mixin_Call* call = new (ctx.mem) Mixin_Call(source_position_of_call, name, args, content);
     // return ast node
     return call;
   }
@@ -588,12 +584,7 @@ namespace Sass {
     group->last_block(block_stack.back());
     do {
       reloop = false;
-      if (peek< alternatives <
-            exactly<'{'>,
-            exactly<'}'>,
-            exactly<')'>,
-            exactly<';'>
-          > >())
+      if (peek_css< class_char < selector_list_delims > >())
         break; // in case there are superfluous commas at the end
       Complex_Selector* comb = parse_complex_selector();
       if (!comb->has_reference() && !in_at_root) {
@@ -628,7 +619,7 @@ namespace Sass {
       (*group) << comb;
     }
     while (reloop);
-    while (lex< kwd_optional >()) {
+    while (lex_css< kwd_optional >()) {
       group->is_optional(true);
     }
     return group;
@@ -645,14 +636,7 @@ namespace Sass {
     // parse the left hand side
     Compound_Selector* lhs = 0;
     // special case if it starts with combinator ([+~>])
-    if (peek_css< alternatives <
-          exactly<'+'>,
-          exactly<'~'>,
-          exactly<'>'>
-        > >())
-    // no selector before the combinator
-    { lhs = 0; }
-    else {
+    if (!peek_css< class_char < selector_combinator_ops > >()) {
       // parse the left hand side
       lhs = parse_compound_selector();
       sel_source_position = before_token;
@@ -671,14 +655,7 @@ namespace Sass {
     // ToDo: make sure we update pstate for ancestor of (lex < zero >());
     Complex_Selector* rhs;
     // check if we got the abort condition (ToDo: optimize)
-    if (peek_css< alternatives <
-                exactly<','>,
-                exactly<')'>,
-                exactly<'{'>,
-                exactly<'}'>,
-                exactly<';'>,
-                kwd_optional
-        > >())
+    if (peek_css< class_char < complex_selector_delims > >())
     // no selector after the combinator
     { rhs = 0; }
     else {
@@ -756,7 +733,7 @@ namespace Sass {
   {
     lex < css_comments >();
     if (lex< alternatives < id_name, class_name > >()) {
-      return new (ctx.mem) Selector_Qualifier(pstate, unquote(lexed));
+      return new (ctx.mem) Selector_Qualifier(pstate, lexed);
     }
     else if (lex< quoted_string >()) {
       return new (ctx.mem) Type_Selector(pstate, unquote(lexed));
@@ -773,11 +750,11 @@ namespace Sass {
     else if (peek< exactly<':'> >()) {
       return parse_pseudo_selector();
     }
-    else if (peek< exactly<'['> >()) {
+    else if (lex < exactly<'['> >()) {
       return parse_attribute_selector();
     }
     else if (lex< placeholder >()) {
-      Selector_Placeholder* sel = new (ctx.mem) Selector_Placeholder(pstate, unquote(lexed));
+      Selector_Placeholder* sel = new (ctx.mem) Selector_Placeholder(pstate, lexed);
       sel->media_block(last_media_block);
       sel->last_block(block_stack.back());
       return sel;
@@ -860,7 +837,6 @@ namespace Sass {
 
   Attribute_Selector* Parser::parse_attribute_selector()
   {
-    lex_css< exactly<'['> >();
     ParserState p = pstate;
     if (!lex_css< attribute_name >()) error("invalid attribute name in attribute selector", pstate);
     string name(lexed);
@@ -927,9 +903,8 @@ namespace Sass {
         parse_block_comments(block);
         if (lex< sequence< exactly<'}'>, zero_plus< exactly<';'> > > >()) break;
       }
-      else if (peek< kwd_import >(position)) {
+      else if (lex < kwd_import >(position)) {
         if (stack.back() == mixin_def || stack.back() == function_def) {
-          lex< kwd_import >(); // to adjust the before_token number
           error("@import directives are not allowed inside mixins and functions", pstate);
         }
         Import* imp = parse_import();
@@ -941,7 +916,7 @@ namespace Sass {
         }
         semicolon = true;
       }
-      else if (lex< variable >()) {
+      else if (lex < variable >()) {
         (*block) << parse_assignment();
         semicolon = true;
       }
@@ -951,28 +926,28 @@ namespace Sass {
       else if (peek< kwd_if_directive >()) {
         (*block) << parse_if_directive();
       }
-      else if (peek< kwd_for_directive >()) {
+      else if (lex < kwd_for_directive >()) {
         (*block) << parse_for_directive();
       }
-      else if (peek< kwd_each_directive >()) {
+      else if (lex < kwd_each_directive >()) {
         (*block) << parse_each_directive();
       }
-      else if (peek < kwd_while_directive >()) {
+      else if (lex < kwd_while_directive >()) {
         (*block) << parse_while_directive();
       }
-      else if (peek < kwd_return_directive >()) {
+      else if (lex < kwd_return_directive >()) {
         (*block) << parse_return_directive();
         semicolon = true;
       }
-      else if (peek< kwd_warn >()) {
+      else if (lex < kwd_warn >()) {
         (*block) << parse_warning();
         semicolon = true;
       }
-      else if (peek< kwd_err >()) {
+      else if (lex < kwd_err >()) {
         (*block) << parse_error();
         semicolon = true;
       }
-      else if (peek< kwd_dbg >()) {
+      else if (lex < kwd_dbg >()) {
         (*block) << parse_debug();
         semicolon = true;
       }
@@ -982,7 +957,7 @@ namespace Sass {
       else if (peek< kwd_mixin >() || peek< kwd_function >()) {
         (*block) << parse_definition();
       }
-      else if (peek< kwd_include_directive >(position)) {
+      else if (lex < kwd_include_directive >(position)) {
         Mixin_Call* the_call = parse_include_directive();
         (*block) << the_call;
         // don't need a semicolon after a content block
@@ -1010,13 +985,13 @@ namespace Sass {
         (*block) << new (ctx.mem) Extension(pstate, target);
         semicolon = true;
       }
-      else if (peek< kwd_media >()) {
+      else if (lex < kwd_media >()) {
         (*block) << parse_media_block();
       }
-      else if (peek< kwd_supports_directive >()) {
+      else if (lex < kwd_supports_directive >()) {
         (*block) << parse_supports_directive();
       }
-      else if (peek< kwd_at_root >()) {
+      else if (lex < kwd_at_root >()) {
         (*block) << parse_at_root_block();
       }
       // ignore the @charset directive for now
@@ -1024,7 +999,7 @@ namespace Sass {
         lex< quoted_string >();
         lex< one_plus< exactly<';'> > >();
       }
-      else if (peek< at_keyword >()) {
+      else if (lex< at_keyword >()) {
         At_Rule* at_rule = parse_at_rule();
         (*block) << at_rule;
         if (!at_rule->block()) semicolon = true;
@@ -1201,12 +1176,14 @@ namespace Sass {
     // return the empty list as such
     if (peek_css< alternatives <
           // exactly<'!'>,
-          // exactly<':'>,
           exactly<';'>,
           exactly<'}'>,
           exactly<'{'>,
           exactly<')'>,
-          exactly<ellipsis>
+          exactly<':'>,
+          exactly<ellipsis>,
+          default_flag,
+          global_flag
         > >(position))
     { return new (ctx.mem) List(pstate, 0); }
 
@@ -1224,13 +1201,14 @@ namespace Sass {
     {
       // check for abort condition
       if (peek_css< alternatives <
-            // exactly<'!'>,
             exactly<';'>,
             exactly<'}'>,
             exactly<'{'>,
             exactly<')'>,
             exactly<':'>,
-            exactly<ellipsis>
+            exactly<ellipsis>,
+            default_flag,
+            global_flag
           > >(position)
       ) { break; }
       // otherwise add another expression
@@ -1371,6 +1349,7 @@ namespace Sass {
       operands.push_back(parse_operators());
     }
 
+    if (operands.size() == 0) return lhs;
     return fold_operands(lhs, operands, operators);
   }
 
@@ -1384,7 +1363,7 @@ namespace Sass {
       if (ss && ss->has_interpolants()) return factor;
     }
     // if it's a singleton, return it (don't wrap it)
-    if (!peek< class_char< static_ops > >()) return factor;
+    if (!peek_css< class_char< static_ops > >()) return factor;
     return parse_operators(factor);
   }
 
@@ -1485,6 +1464,10 @@ namespace Sass {
     if ((stop = peek< value_schema >()))
     { return parse_value_schema(stop); }
 
+    // string may be interpolated
+    if (lex< quoted_string >())
+    { return parse_string(); }
+
     if (lex< kwd_true >())
     { return new (ctx.mem) Boolean(pstate, true); }
 
@@ -1495,10 +1478,7 @@ namespace Sass {
     { return new (ctx.mem) Null(pstate); }
 
     if (lex< identifier >()) {
-      String_Constant* str = new (ctx.mem) String_Quoted(pstate, lexed);
-      // Dont' delay this string if it is a name color. Fixes #652.
-      str->is_delayed(ctx.names_to_colors.count(unquote(lexed)) == 0);
-      return str;
+      return new (ctx.mem) String_Constant(pstate, lexed);
     }
 
     if (lex< percentage >())
@@ -1514,9 +1494,6 @@ namespace Sass {
 
     if (lex< number >())
     { return new (ctx.mem) Textual(pstate, Textual::NUMBER, lexed); }
-
-    if (peek< quoted_string >())
-    { return parse_string(); }
 
     if (lex< variable >())
     { return new (ctx.mem) Variable(pstate, Util::normalize_underscores(lexed)); }
@@ -1603,7 +1580,6 @@ namespace Sass {
 
   String* Parser::parse_string()
   {
-    lex< quoted_string >();
     Token token(lexed);
     return parse_interpolated_chunk(token);
   }
@@ -1682,14 +1658,18 @@ namespace Sass {
   {
     // initialize the string schema object to add tokens
     String_Schema* schema = new (ctx.mem) String_Schema(pstate);
-    size_t num_items = 0;
+
     if (peek<exactly<'}'>>()) {
       css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
     }
+
+    size_t num_items = 0;
     while (position < stop) {
+      // parse space between tokens
       if (lex< spaces >() && num_items) {
         (*schema) << new (ctx.mem) String_Constant(pstate, " ");
       }
+      // lex an interpolant /#{...}/
       else if (lex< interpolant >()) {
         Token insides(Token(lexed.begin + 2, lexed.end - 1));
         Expression* interp_node;
@@ -1701,11 +1681,17 @@ namespace Sass {
         (*schema) << interp_node;
       }
       // lex some string constants
-      else if (lex< exactly<'%'> >()) {
+      else if (lex< alternatives < exactly<'%'>, exactly < '-' >, identifier > >()) {
         (*schema) << new (ctx.mem) String_Constant(pstate, lexed);
       }
-      else if (lex< identifier >()) {
+      // lex a quoted string
+      else if (lex< quoted_string >()) {
         (*schema) << new (ctx.mem) String_Quoted(pstate, lexed);
+      }
+      // lex (normalized) variable
+      else if (lex< variable >()) {
+        string name(Util::normalize_underscores(lexed));
+        (*schema) << new (ctx.mem) Variable(pstate, name);
       }
       // lex percentage value
       else if (lex< percentage >()) {
@@ -1717,26 +1703,11 @@ namespace Sass {
       }
       // lex number value
       else if (lex< number >()) {
-        Expression* factor = new (ctx.mem) Textual(pstate, Textual::NUMBER, lexed);
-        if (peek< class_char< static_ops > >()) {
-          (*schema) << parse_operators(factor);
-        } else {
-          (*schema) << factor;
-        }
+        (*schema) <<  new (ctx.mem) Textual(pstate, Textual::NUMBER, lexed);
       }
       // lex hex color value
       else if (lex< hex >()) {
-        (*schema) << new (ctx.mem) Textual(pstate, Textual::HEX, unquote(lexed));
-      }
-      else if (lex < exactly < '-' > >()) {
-        (*schema) << new (ctx.mem) String_Constant(pstate, lexed);
-      }
-      else if (lex< quoted_string >()) {
-        (*schema) << new (ctx.mem) String_Quoted(pstate, lexed);
-      }
-      // lex (normalized) variable
-      else if (lex< variable >()) {
-        (*schema) << new (ctx.mem) Variable(pstate, Util::normalize_underscores(lexed));
+        (*schema) << new (ctx.mem) Textual(pstate, Textual::HEX, lexed);
       }
       // lex a value in parentheses
       else if (peek< parenthese_scope >()) {
@@ -1894,7 +1865,6 @@ namespace Sass {
 
   For* Parser::parse_for_directive()
   {
-    lex< kwd_for_directive >();
     ParserState for_source_position = pstate;
     if (!lex< variable >()) error("@for directive requires an iteration variable", pstate);
     string var(Util::normalize_underscores(lexed));
@@ -1914,7 +1884,6 @@ namespace Sass {
 
   Each* Parser::parse_each_directive()
   {
-    lex < kwd_each_directive >();
     ParserState each_source_position = pstate;
     if (!lex< variable >()) error("@each directive requires an iteration variable", pstate);
     vector<string> vars;
@@ -1940,19 +1909,21 @@ namespace Sass {
   // called after parsing `kwd_while_directive`
   While* Parser::parse_while_directive()
   {
-    lex< kwd_while_directive >();
-    ParserState while_source_position = pstate;
+    // create the initial while call object
+    While* call = new (ctx.mem) While(pstate, 0, 0);
     // parse mandatory predicate
     Expression* predicate = parse_list();
     predicate->is_delayed(false);
-    Block* body = parse_block();
-    return new (ctx.mem) While(while_source_position, predicate, body);
+    call->predicate(predicate);
+    // parse optional block
+    call->block(parse_block());
+    // return ast node
+    return call;
   }
 
   // EO parse_while_directive
   Media_Block* Parser::parse_media_block()
   {
-    lex< kwd_media >();
     ParserState media_source_position = pstate;
 
     List* media_queries = parse_media_queries();
@@ -2029,33 +2000,41 @@ namespace Sass {
   // these are very similar to media blocks
   Supports_Block* Parser::parse_supports_directive()
   {
-    lex< kwd_supports_directive >();
-    ParserState supports_source_position = pstate;
-
-    Supports_Query* queries = parse_supports_queries();
-
+    // create the ast node object for the support queries
+    Supports_Block* query = new (ctx.mem) Supports_Block(pstate);
+    // now parse the support queries
+    query->queries(parse_supports_queries());
+    // additional block is mandatory
     if (!peek< exactly<'{'> >()) {
       error("expected '{' in feature query", pstate);
     }
-    Block* block = parse_block();
-
-    return new (ctx.mem) Supports_Block(supports_source_position, queries, block);
+    // parse inner block
+    query->block(parse_block());
+    // return ast node
+    return query;
   }
 
   // parse multiple queries for supports blocks
   // these are very similar to media queries
   Supports_Query* Parser::parse_supports_queries()
   {
-    Supports_Query* fq = new (ctx.mem) Supports_Query(pstate);
+    // lex optional comments
+    lex < css_whitespace >();
+    // create wrapper object and root condition
+    Supports_Query* sq = new (ctx.mem) Supports_Query(pstate);
     Supports_Condition* cond = new (ctx.mem) Supports_Condition(pstate);
+    // first condition is the root
     cond->is_root(true);
+    // loop until the abort condition
     while (!peek< exactly<')'> >(position) && !peek< exactly<'{'> >(position))
       (*cond) << parse_supports_query();
-    (*fq) << cond;
-
-    if (fq->empty()) error("expected @supports condition (e.g. (display: flexbox))", pstate);
-
-    return fq;
+    // add condition
+    (*sq) << cond;
+    // at least one query is mandatory (ToDo: check for ruby sass compat)
+    if (sq->empty()) error("expected @supports condition (e.g. (display: flexbox))", pstate);
+    if (!peek_css < exactly <'{'> >()) error("expected \"{\" after @supports declaration", pstate);
+    // return ast node
+    return sq;
   }
   // EO parse_supports_queries
 
@@ -2063,78 +2042,62 @@ namespace Sass {
   // may encounter nested queries
   Supports_Condition* Parser::parse_supports_query()
   {
-    if (peek< kwd_not >(position)) return parse_supports_negation();
-    else if (peek< kwd_and >(position)) return parse_supports_conjunction();
-    else if (peek< kwd_or >(position)) return parse_supports_disjunction();
-    else if (peek< exactly<'('> >(position)) return parse_feature_query_in_parens();
-    else return parse_supports_declaration();
-  }
-
-  Supports_Condition* Parser::parse_feature_query_in_parens()
-  {
-    Supports_Condition* cond = new (ctx.mem) Supports_Condition(pstate);
-
-    if (!lex< exactly<'('> >()) error("@supports declaration expected '('", pstate);
-    while (!peek< exactly<')'> >(position) && !peek< exactly<'{'> >(position))
-      (*cond) << parse_supports_query();
-    if (!lex< exactly<')'> >()) error("unclosed parenthesis in @supports declaration", pstate);
-
-    return (cond->length() == 1) ? (*cond)[0] : cond;
-  }
-
-  Supports_Condition* Parser::parse_supports_negation()
-  {
-    lex< kwd_not >();
-
-    Supports_Condition* cond = parse_supports_query();
-    cond->operand(Supports_Condition::NOT);
-
+    Supports_Condition* cond = 0;
+    // lex optional comments
+    lex < css_whitespace >();
+    // parse `not` query operator
+    if (lex < kwd_not >(position)) {
+      cond = parse_supports_query();
+      cond->operand(Supports_Condition::NOT);
+    }
+    // parse `and` query operator
+    else if (lex < kwd_and >(position)) {
+      cond = parse_supports_query();
+      cond->operand(Supports_Condition::AND);
+    }
+    // parse `or` query operator
+    else if (lex < kwd_or >(position)) {
+      cond = parse_supports_query();
+      cond->operand(Supports_Condition::OR);
+    }
+    // parse another list with queries
+    else if (lex < exactly <'('> >()) {
+      // create the inner (parenthesis) condition
+      cond = new (ctx.mem) Supports_Condition(pstate);
+      // parse inner supports queries recursively
+      while (!peek < exactly <')'> >())
+        (*cond) << parse_supports_query();
+      // at least one query is mandatory (ToDo: check for ruby sass compat)
+      if (cond->empty()) error("expected @supports condition (e.g. (display: flexbox))", pstate);
+      // the parenthesis closer is mandatory (ToDo: check for ruby sass compat)
+      if (!lex_css < exactly <')'> >()) error("unclosed parenthesis in @supports declaration", pstate);
+      // if we have just one query, we do not wrap it
+      cond = (cond->length() == 1) ? (*cond)[0] : cond;
+    }
+    else {
+      // or parse something declaration like
+      Declaration* declaration = parse_declaration();
+      cond = new (ctx.mem) Supports_Condition(declaration->pstate(),
+                                          1,
+                                          declaration->property(),
+                                          declaration->value());
+      // ToDo: maybe we need an addition error condition?
+    }
     return cond;
   }
-
-  Supports_Condition* Parser::parse_supports_conjunction()
-  {
-    lex< kwd_and >();
-
-    Supports_Condition* cond = parse_supports_query();
-    cond->operand(Supports_Condition::AND);
-
-    return cond;
-  }
-
-  Supports_Condition* Parser::parse_supports_disjunction()
-  {
-    lex< kwd_or >();
-
-    Supports_Condition* cond = parse_supports_query();
-    cond->operand(Supports_Condition::OR);
-
-    return cond;
-  }
-
-  Supports_Condition* Parser::parse_supports_declaration()
-  {
-    Declaration* declaration = parse_declaration();
-    Supports_Condition* cond = new (ctx.mem) Supports_Condition(declaration->pstate(),
-                                                                          1,
-                                                                          declaration->property(),
-                                                                          declaration->value());
-    return cond;
-  }
+  // EO parse_supports_query
 
   At_Root_Block* Parser::parse_at_root_block()
   {
-    lex<kwd_at_root>();
     ParserState at_source_position = pstate;
     Block* body = 0;
     At_Root_Expression* expr = 0;
     Lookahead lookahead_result;
     in_at_root = true;
-    if (peek< exactly<'('> >()) {
+    if (lex< exactly<'('> >()) {
       expr = parse_at_root_expression();
-      body = parse_block();
     }
-    else if (peek< exactly<'{'> >()) {
+    if (peek< exactly<'{'> >()) {
       body = parse_block();
     }
     else if ((lookahead_result = lookahead_for_selector(position)).found) {
@@ -2150,7 +2113,6 @@ namespace Sass {
 
   At_Root_Expression* Parser::parse_at_root_expression()
   {
-    lex< exactly<'('> >();
     if (peek< exactly<')'> >()) error("at-root feature required in at-root expression", pstate);
 
     if (!peek< alternatives< kwd_with_directive, kwd_without_directive > >()) {
@@ -2174,7 +2136,6 @@ namespace Sass {
 
   At_Rule* Parser::parse_at_rule()
   {
-    lex<at_keyword>();
     string kwd(lexed);
     ParserState at_source_position = pstate;
     Selector* sel = 0;
@@ -2200,25 +2161,21 @@ namespace Sass {
 
   Warning* Parser::parse_warning()
   {
-    lex< kwd_warn >();
     return new (ctx.mem) Warning(pstate, parse_list());
   }
 
   Error* Parser::parse_error()
   {
-    lex< kwd_err >();
     return new (ctx.mem) Error(pstate, parse_list());
   }
 
   Debug* Parser::parse_debug()
   {
-    lex< kwd_dbg >();
     return new (ctx.mem) Debug(pstate, parse_list());
   }
 
   Return* Parser::parse_return_directive()
   {
-    lex< kwd_return_directive >();
     return new (ctx.mem) Return(pstate, parse_list());
   }
 
