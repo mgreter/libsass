@@ -1746,9 +1746,13 @@ namespace Sass {
   };
   inline Simple_Selector::~Simple_Selector() { }
 
-  /////////////////////////////////////
-  // Parent references (i.e., the "&").
-  /////////////////////////////////////
+
+  //////////////////////////////////
+  // The Parent Selector Expression.
+  //////////////////////////////////
+  // parent selectors can occur in selectors but also
+  // inside strings in declarations (Compound_Selector).
+  // only one simple parent selector means the first case.
   class Selector_Reference : public Simple_Selector {
     ADD_PROPERTY(Selector*, selector)
   public:
@@ -1760,6 +1764,8 @@ namespace Sass {
       if (!selector()) return 0;
       return selector()->specificity();
     }
+    string type() { return "selector"; }
+    static string type_name() { return "selector"; }
     ATTACH_OPERATIONS()
   };
 
@@ -1940,9 +1946,9 @@ namespace Sass {
         return (*this)[0];
       return 0;
     }
-    bool is_superselector_of(Compound_Selector* sub);
-    // bool is_superselector_of(Complex_Selector* sub);
-    // bool is_superselector_of(Selector_List* sub);
+    virtual bool is_superselector_of(Compound_Selector* sub);
+    // virtual bool is_superselector_of(Complex_Selector* sub);
+    // virtual bool is_superselector_of(Selector_List* sub);
     virtual unsigned long specificity()
     {
       int sum = 0;
@@ -1999,13 +2005,11 @@ namespace Sass {
     Complex_Selector* context(Context&);
     Complex_Selector* innermost();
     size_t length();
-    bool is_superselector_of(Compound_Selector* sub);
-    bool is_superselector_of(Complex_Selector* sub);
-    bool is_superselector_of(Selector_List* sub);
+    virtual bool is_superselector_of(Compound_Selector* sub);
+    virtual bool is_superselector_of(Complex_Selector* sub);
+    virtual bool is_superselector_of(Selector_List* sub);
     // virtual Selector_Placeholder* find_placeholder();
-    
     Selector_List* unify_with(Complex_Selector* rhs, Context& ctx);
-
     Combinator clear_innermost();
     void set_innermost(Complex_Selector*, Combinator);
     virtual unsigned long specificity() const
@@ -2090,13 +2094,12 @@ namespace Sass {
     : Selector(pstate), Vectorized<Complex_Selector*>(s), wspace_(0)
     { }
     // virtual Selector_Placeholder* find_placeholder();
-    bool is_superselector_of(Compound_Selector* sub);
-    bool is_superselector_of(Complex_Selector* sub);
-    bool is_superselector_of(Selector_List* sub);
+    virtual bool is_superselector_of(Compound_Selector* sub);
+    virtual bool is_superselector_of(Complex_Selector* sub);
+    virtual bool is_superselector_of(Selector_List* sub);
 
     Selector_List* unify_with(Selector_List*, Context&);
     void populate_extends(Selector_List*, Context&, ExtensionSubsetMap&);
-
     virtual unsigned long specificity()
     {
       unsigned long sum = 0;

@@ -222,6 +222,7 @@ namespace Sass {
     Simple_Selector* parse_pseudo_selector();
     Attribute_Selector* parse_attribute_selector();
     Block* parse_block();
+    Block* parse_block(Block* root);
     bool parse_number_prefix();
     Declaration* parse_declaration();
     Expression* parse_map_value();

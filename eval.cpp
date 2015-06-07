@@ -629,7 +629,6 @@ namespace Sass {
     // else if it's a user-defined c function
     // convert call into C-API compatible form
     else if (c_function) {
-
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
       if (full_name == "*[f]") {
         String_Constant *str = new (ctx.mem) String_Constant(c->pstate(), c->name());
