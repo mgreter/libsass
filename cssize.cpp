@@ -131,6 +131,11 @@ namespace Sass {
     return rules;
   }
 
+  Statement* Cssize::operator()(Null* m)
+  {
+    return 0;
+  }
+
   Statement* Cssize::operator()(Media_Block* m)
   {
     if (parent()->statement_type() == Statement::RULESET)
@@ -238,7 +243,6 @@ namespace Sass {
     At_Root_Block* mm = new (ctx.mem) At_Root_Block(m->pstate(),
                                                     wrapper_block,
                                                     m->expression());
-
     Bubble* bubble = new (ctx.mem) Bubble(mm->pstate(), mm);
     return bubble;
   }
