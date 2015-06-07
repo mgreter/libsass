@@ -88,7 +88,7 @@ namespace Sass {
     bool semicolon = false;
     string error_message;
     lex< optional_spaces >();
-    Selector_Lookahead lookahead_result;
+    Lookahead lookahead_result;
     while (position < end) {
       parse_block_comments(root);
       if (peek< kwd_import >()) {
@@ -114,7 +114,7 @@ namespace Sass {
         (*root) << parse_propset();
       }*/
       else if (peek< kwd_include_directive >() /* || peek< exactly<'+'> >() */) {
-        Mixin_Call* mixin_call = parse_mixin_call();
+        Mixin_Call* mixin_call = parse_include_directive();
         (*root) << mixin_call;
         if (!mixin_call->block()) {
           semicolon = true;
@@ -140,7 +140,7 @@ namespace Sass {
         (*root) << parse_at_root_block();
       }
       else if (peek< kwd_supports_directive >()) {
-        (*root) << parse_feature_block();
+        (*root) << parse_supports_directive();
       }
       else if (peek< kwd_warn >()) {
         (*root) << parse_warning();
@@ -380,7 +380,7 @@ namespace Sass {
     return p;
   }
 
-  Mixin_Call* Parser::parse_mixin_call()
+  Mixin_Call* Parser::parse_include_directive()
   {
     lex< kwd_include_directive >() /* || lex< exactly<'+'> >() */;
     if (!lex< identifier >()) error("invalid name in @include directive", pstate);
@@ -450,7 +450,7 @@ namespace Sass {
     ParserState var_source_position = pstate;
     if (!lex< exactly<':'> >()) error("expected ':' after " + name + " in assignment statement", pstate);
     Expression* val;
-    Selector_Lookahead lookahead = lookahead_for_value(position);
+    Lookahead lookahead = lookahead_for_value(position);
     if (lookahead.has_interpolants && lookahead.found) {
       val = parse_value_schema(lookahead.found);
     } else {
@@ -490,7 +490,7 @@ namespace Sass {
     return propset;
   } */
 
-  Ruleset* Parser::parse_ruleset(Selector_Lookahead lookahead)
+  Ruleset* Parser::parse_ruleset(Lookahead lookahead)
   {
     Selector* sel;
     if (lookahead.has_interpolants) {
@@ -547,11 +547,15 @@ namespace Sass {
       else {
         // make sure to add the last bits of the string up to the end (if any)
         if (i < end_of_selector) (*schema) << new (ctx.mem) String_Quoted(pstate, string(i, end_of_selector));
-        break;
+        // exit loop
+        i = end_of_selector;
       }
     }
     // EO until eos
-    position = end_of_selector;
+
+    // update position
+    position = i;
+
     Selector_Schema* selector_schema = new (ctx.mem) Selector_Schema(pstate, schema);
     selector_schema->media_block(last_media_block);
     selector_schema->last_block(block_stack.back());
@@ -577,7 +581,7 @@ namespace Sass {
             exactly<';'>
           > >())
         break; // in case there are superfluous commas at the end
-      Complex_Selector* comb = parse_selector_combination();
+      Complex_Selector* comb = parse_complex_selector();
       if (!comb->has_reference() && !in_at_root) {
         ParserState sel_source_position = pstate;
         Selector_Reference* ref = new (ctx.mem) Selector_Reference(sel_source_position);
@@ -616,7 +620,7 @@ namespace Sass {
     return group;
   }
 
-  Complex_Selector* Parser::parse_selector_combination()
+  Complex_Selector* Parser::parse_complex_selector()
   {
     Position sel_source_position(-1);
     Compound_Selector* lhs;
@@ -628,7 +632,7 @@ namespace Sass {
     // no selector before the combinator
     { lhs = 0; }
     else {
-      lhs = parse_simple_selector_sequence();
+      lhs = parse_compound_selector();
       sel_source_position = before_token;
       lhs->has_line_break(peek_newline());
     }
@@ -652,7 +656,7 @@ namespace Sass {
     // no selector after the combinator
     { rhs = 0; }
     else {
-      rhs = parse_selector_combination();
+      rhs = parse_complex_selector();
       sel_source_position = before_token;
     }
     if (!sel_source_position.line) sel_source_position = before_token;
@@ -663,7 +667,7 @@ namespace Sass {
     return cpx;
   }
 
-  Compound_Selector* Parser::parse_simple_selector_sequence()
+  Compound_Selector* Parser::parse_compound_selector()
   {
     Compound_Selector* seq = new (ctx.mem) Compound_Selector(pstate);
     seq->media_block(last_media_block);
@@ -853,7 +857,7 @@ namespace Sass {
   {
     lex< exactly<'{'> >();
     bool semicolon = false;
-    Selector_Lookahead lookahead_result;
+    Lookahead lookahead_result;
     Block* block = new (ctx.mem) Block(pstate);
     block_stack.push_back(block);
     lex< zero_plus < alternatives < space, line_comment > > >();
@@ -903,8 +907,8 @@ namespace Sass {
       else if (peek < kwd_while_directive >()) {
         (*block) << parse_while_directive();
       }
-      else if (lex < kwd_return_directive >()) {
-        (*block) << new (ctx.mem) Return(pstate, parse_list());
+      else if (peek < kwd_return_directive >()) {
+        (*block) << parse_return_directive();
         semicolon = true;
       }
       else if (peek< kwd_warn >()) {
@@ -926,7 +930,7 @@ namespace Sass {
         (*block) << parse_definition();
       }
       else if (peek< kwd_include_directive >(position)) {
-        Mixin_Call* the_call = parse_mixin_call();
+        Mixin_Call* the_call = parse_include_directive();
         (*block) << the_call;
         // don't need a semicolon after a content block
         semicolon = (the_call->block()) ? false : true;
@@ -940,12 +944,12 @@ namespace Sass {
       }
       /*
       else if (peek< exactly<'+'> >()) {
-        (*block) << parse_mixin_call();
+        (*block) << parse_include_directive();
         semicolon = true;
       }
       */
       else if (lex< kwd_extend >()) {
-        Selector_Lookahead lookahead = lookahead_for_extension_target(position);
+        Lookahead lookahead = lookahead_for_include(position);
         if (!lookahead.found) error("invalid selector for @extend", pstate);
         Selector* target;
         if (lookahead.has_interpolants) target = parse_selector_schema(lookahead.found);
@@ -957,7 +961,7 @@ namespace Sass {
         (*block) << parse_media_block();
       }
       else if (peek< kwd_supports_directive >()) {
-        (*block) << parse_feature_block();
+        (*block) << parse_supports_directive();
       }
       else if (peek< kwd_at_root >()) {
         (*block) << parse_at_root_block();
@@ -1031,7 +1035,7 @@ namespace Sass {
     }
     else {
       Expression* value;
-      Selector_Lookahead lookahead = lookahead_for_value(position);
+      Lookahead lookahead = lookahead_for_value(position);
       if (lookahead.found) {
         if (lookahead.has_interpolants) {
           value = parse_value_schema(lookahead.found);
@@ -1266,7 +1270,7 @@ namespace Sass {
 
   Expression* Parser::parse_expression()
   {
-    Expression* term1 = parse_term();
+    Expression* term1 = parse_operators();
     // if it's a singleton, return it directly; don't wrap it
     if (!(peek< exactly<'+'> >(position) ||
           (peek< no_spaces >(position) && peek< sequence< negate< unsigned_number >, exactly<'-'>, negate< space > > >(position)) ||
@@ -1278,13 +1282,13 @@ namespace Sass {
     vector<Binary_Expression::Type> operators;
     while (lex< exactly<'+'> >() || lex< sequence< negate< digit >, exactly<'-'> > >()) {
       operators.push_back(lexed.to_string() == "+" ? Binary_Expression::ADD : Binary_Expression::SUB);
-      operands.push_back(parse_term());
+      operands.push_back(parse_operators());
     }
 
     return fold_operands(term1, operands, operators);
   }
 
-  Expression* Parser::parse_term()
+  Expression* Parser::parse_operators()
   {
     Expression* factor = parse_factor();
     // Special case: Ruby sass never tries to modulo if the lhs contains an interpolant
@@ -1913,12 +1917,12 @@ namespace Sass {
     return new (ctx.mem) Media_Query_Expression(feature->pstate(), feature, expression);
   }
 
-  Supports_Block* Parser::parse_feature_block()
+  Supports_Block* Parser::parse_supports_directive()
   {
     lex< kwd_supports_directive >();
     ParserState supports_source_position = pstate;
 
-    Supports_Query* queries = parse_feature_queries();
+    Supports_Query* queries = parse_supports_queries();
 
     if (!peek< exactly<'{'> >()) {
       error("expected '{' in feature query", pstate);
@@ -1928,13 +1932,13 @@ namespace Sass {
     return new (ctx.mem) Supports_Block(supports_source_position, queries, block);
   }
 
-  Supports_Query* Parser::parse_feature_queries()
+  Supports_Query* Parser::parse_supports_queries()
   {
     Supports_Query* fq = new (ctx.mem) Supports_Query(pstate);
     Supports_Condition* cond = new (ctx.mem) Supports_Condition(pstate);
     cond->is_root(true);
     while (!peek< exactly<')'> >(position) && !peek< exactly<'{'> >(position))
-      (*cond) << parse_feature_query();
+      (*cond) << parse_supports_query();
     (*fq) << cond;
 
     if (fq->empty()) error("expected @supports condition (e.g. (display: flexbox))", pstate);
@@ -1942,7 +1946,7 @@ namespace Sass {
     return fq;
   }
 
-  Supports_Condition* Parser::parse_feature_query()
+  Supports_Condition* Parser::parse_supports_query()
   {
     if (peek< kwd_not >(position)) return parse_supports_negation();
     else if (peek< kwd_and >(position)) return parse_supports_conjunction();
@@ -1957,7 +1961,7 @@ namespace Sass {
 
     if (!lex< exactly<'('> >()) error("@supports declaration expected '('", pstate);
     while (!peek< exactly<')'> >(position) && !peek< exactly<'{'> >(position))
-      (*cond) << parse_feature_query();
+      (*cond) << parse_supports_query();
     if (!lex< exactly<')'> >()) error("unclosed parenthesis in @supports declaration", pstate);
 
     return (cond->length() == 1) ? (*cond)[0] : cond;
@@ -1967,7 +1971,7 @@ namespace Sass {
   {
     lex< kwd_not >();
 
-    Supports_Condition* cond = parse_feature_query();
+    Supports_Condition* cond = parse_supports_query();
     cond->operand(Supports_Condition::NOT);
 
     return cond;
@@ -1977,7 +1981,7 @@ namespace Sass {
   {
     lex< kwd_and >();
 
-    Supports_Condition* cond = parse_feature_query();
+    Supports_Condition* cond = parse_supports_query();
     cond->operand(Supports_Condition::AND);
 
     return cond;
@@ -1987,7 +1991,7 @@ namespace Sass {
   {
     lex< kwd_or >();
 
-    Supports_Condition* cond = parse_feature_query();
+    Supports_Condition* cond = parse_supports_query();
     cond->operand(Supports_Condition::OR);
 
     return cond;
@@ -2009,7 +2013,7 @@ namespace Sass {
     ParserState at_source_position = pstate;
     Block* body = 0;
     At_Root_Expression* expr = 0;
-    Selector_Lookahead lookahead_result;
+    Lookahead lookahead_result;
     in_at_root = true;
     if (peek< exactly<'('> >()) {
       expr = parse_at_root_expression();
@@ -2060,7 +2064,7 @@ namespace Sass {
     ParserState at_source_position = pstate;
     Selector* sel = 0;
     Expression* val = 0;
-    Selector_Lookahead lookahead = lookahead_for_extension_target(position);
+    Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found) {
       if (lookahead.has_interpolants) {
         sel = parse_selector_schema(lookahead.found);
@@ -2097,7 +2101,13 @@ namespace Sass {
     return new (ctx.mem) Debug(pstate, parse_list());
   }
 
-  Selector_Lookahead Parser::lookahead_for_selector(const char* start)
+  Return* Parser::parse_return_directive()
+  {
+    lex< kwd_return_directive >();
+    return new (ctx.mem) Return(pstate, parse_list());
+  }
+
+  Lookahead Parser::lookahead_for_selector(const char* start)
   {
     const char* p = start ? start : position;
     const char* q;
@@ -2154,14 +2164,14 @@ namespace Sass {
       if (*(p - 1) == '}') saw_interpolant = true;
     }
 
-    Selector_Lookahead result;
+    Lookahead result;
     result.found            = saw_stuff && peek< exactly<'{'> >(p) ? p : 0;
     result.has_interpolants = saw_interpolant;
 
     return result;
   }
 
-  Selector_Lookahead Parser::lookahead_for_extension_target(const char* start)
+  Lookahead Parser::lookahead_for_include(const char* start)
   {
     const char* p = start ? start : position;
     const char* q;
@@ -2215,7 +2225,7 @@ namespace Sass {
       saw_stuff = true;
     }
 
-    Selector_Lookahead result;
+    Lookahead result;
     result.found            = peek< alternatives< exactly<';'>, exactly<'}'>, exactly<'{'> > >(p) && saw_stuff ? p : 0;
     result.has_interpolants = saw_interpolant;
 
@@ -2223,7 +2233,7 @@ namespace Sass {
   }
 
 
-  Selector_Lookahead Parser::lookahead_for_value(const char* start)
+  Lookahead Parser::lookahead_for_value(const char* start)
   {
     const char* p = start ? start : position;
     const char* q;
@@ -2265,7 +2275,7 @@ namespace Sass {
       saw_stuff = true;
     }
 
-    Selector_Lookahead result;
+    Lookahead result;
     result.found            = peek< alternatives< exactly<';'>, exactly<'}'>, exactly<'{'> > >(p) && saw_stuff ? p : 0;
     result.has_interpolants = saw_interpolant;
 

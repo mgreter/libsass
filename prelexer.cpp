@@ -151,8 +151,7 @@ namespace Sass {
             // skip escapes
             sequence <
               exactly < '\\' >,
-              exactly < '\r' >,
-              exactly < '\n' >
+              re_linebreak
             >,
             escape_seq,
             // skip interpolants
@@ -175,8 +174,7 @@ namespace Sass {
             // skip escapes
             sequence <
               exactly < '\\' >,
-              exactly < '\r' >,
-              exactly < '\n' >
+              re_linebreak
             >,
             escape_seq,
             // skip interpolants
@@ -508,7 +506,7 @@ namespace Sass {
       return sequence< identifier_schema, exactly<'('> >(src);
     }
     const char* re_pseudo_selector(const char* src) {
-      return sequence< identifier, exactly<'('> >(src);
+      return sequence< identifier, optional < block_comment >, exactly<'('> >(src);
     }
     // Match the CSS negation pseudo-class.
     const char* pseudo_not(const char* src) {
