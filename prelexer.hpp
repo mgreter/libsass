@@ -239,11 +239,18 @@ namespace Sass {
 
     const char* kwd_while_directive(const char* src);
 
+    const char* re_nothing(const char* src);
+    const char* re_type_selector2(const char* src);
+
+
     const char* kwd_warn(const char* src);
     const char* kwd_err(const char* src);
     const char* kwd_dbg(const char* src);
 
     const char* kwd_null(const char* src);
+
+    const char* re_type_selector(const char* src);
+    const char* re_static_expression(const char* src);
 
     // Match CSS type selectors
     const char* namespace_prefix(const char* src);

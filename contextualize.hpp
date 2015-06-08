@@ -1,46 +1,41 @@
 #ifndef SASS_CONTEXTUALIZE_H
 #define SASS_CONTEXTUALIZE_H
 
+#include <vector>
+#include <iostream>
+
+#include "ast.hpp"
 #include "context.hpp"
 #include "operation.hpp"
 #include "environment.hpp"
-#include "ast_fwd_decl.hpp"
 
 namespace Sass {
-  struct Backtrace;
+  using namespace std;
 
   typedef Environment<AST_Node*> Env;
+  struct Backtrace;
 
-  class Contextualize : public Operation_CRTP<Selector*, Contextualize> {
+  class Listize2 : public Operation_CRTP<Expression*, Listize2> {
 
+    Context&            ctx;
+
+    Expression* fallback_impl(AST_Node* n);
 
   public:
-    Context&   ctx;
-    Env*       env;
-    Backtrace* backtrace;
-    Selector*  parent;
-    Selector* placeholder;
-    Selector* extender;
+    Listize2(Context&);
+    virtual ~Listize2() { }
 
-    Selector* fallback_impl(AST_Node* n);
-    Contextualize(Context&, Env*, Backtrace*, Selector* placeholder = 0, Selector* extender = 0);
-    virtual ~Contextualize();
-    Contextualize* with(Selector*, Env*, Backtrace*, Selector* placeholder = 0, Selector* extender = 0);
-    using Operation<Selector*>::operator();
+    using Operation<Expression*>::operator();
 
-    Selector* operator()(Selector_List*);
-    Selector* operator()(Complex_Selector*);
-    Selector* operator()(Compound_Selector*);
-    Selector* operator()(Wrapped_Selector*);
-    Selector* operator()(Pseudo_Selector*);
-    Selector* operator()(Selector_Qualifier*);
-    Selector* operator()(Type_Selector*);
-    Selector* operator()(Selector_Placeholder*);
-    Selector* operator()(Selector_Reference*);
+    Expression* operator()(Selector_List*);
+    Expression* operator()(Complex_Selector*);
+    Expression* operator()(Compound_Selector*);
+    Expression* operator()(Parent_Selector*);
 
     template <typename U>
-    Selector* fallback(U x) { return fallback_impl(x); }
+    Expression* fallback(U x) { return fallback_impl(x); }
   };
+
 }
 
 #endif

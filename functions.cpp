@@ -9,6 +9,7 @@
 #include "extend.hpp"
 #include "eval.hpp"
 #include "util.hpp"
+#include "expand.hpp"
 #include "utf8_string.hpp"
 #include "utf8.h"
 
@@ -1135,6 +1136,15 @@ namespace Sass {
         return new (ctx.mem) Number(pstate,
                                     map ? map->length() : 1);
       }
+      if (v->concrete_type() == Expression::SELECTOR) {
+        if (Compound_Selector* h = dynamic_cast<Compound_Selector*>(v)) {
+          return new (ctx.mem) Number(pstate, h->size());
+        } else if (Selector_List* ls = dynamic_cast<Selector_List*>(v)) {
+          return new (ctx.mem) Number(pstate, ls->size());
+        } else {
+          return new (ctx.mem) Number(pstate, 1);
+        }
+      }
 
       List* list = dynamic_cast<List*>(env["$list"]);
       return new (ctx.mem) Number(pstate,
@@ -1521,10 +1531,8 @@ namespace Sass {
         }
       }
       Function_Call* func = new (ctx.mem) Function_Call(pstate, name, args);
-      Contextualize contextualize(ctx, &d_env, backtrace);
-      Listize listize(ctx);
-      Eval eval(ctx, &contextualize, &listize, &d_env, backtrace);
-      return func->perform(&eval);
+      Expand expand(ctx, &d_env, backtrace);
+      return func->perform(&expand.eval);
 
     }
 
@@ -1541,15 +1549,13 @@ namespace Sass {
     // { return ARG("$condition", Expression)->is_false() ? ARG("$if-false", Expression) : ARG("$if-true", Expression); }
     BUILT_IN(sass_if)
     {
-      Contextualize contextualize(ctx, &d_env, backtrace);
-      Listize listize(ctx);
-      Eval eval(ctx, &contextualize, &listize, &d_env, backtrace);
-      bool is_true = !ARG("$condition", Expression)->perform(&eval)->is_false();
+      Expand expand(ctx, &d_env, backtrace);
+      bool is_true = !ARG("$condition", Expression)->perform(&expand.eval)->is_false();
       if (is_true) {
-        return ARG("$if-true", Expression)->perform(&eval);
+        return ARG("$if-true", Expression)->perform(&expand.eval);
       }
       else {
-        return ARG("$if-false", Expression)->perform(&eval);
+        return ARG("$if-false", Expression)->perform(&expand.eval);
       }
     }
 
@@ -1637,9 +1643,7 @@ namespace Sass {
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
             Complex_Selector* parent = (*result)[i]->cloneFully(ctx);
-            Complex_Selector* selector = (*child)[j];
-            parent->innermost()->tail(selector);
-            exploded.push_back(parent);
+            exploded.push_back((*child)[j]->parentize(parent, ctx));
           }
         }
 

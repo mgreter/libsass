@@ -339,10 +339,7 @@ namespace Sass {
     // Match CSS type selectors
     const char* namespace_prefix(const char* src) {
       return sequence< optional< alternatives< identifier, exactly<'*'> > >,
-                       exactly<'|'> >(src);
-    }
-    const char* type_selector(const char* src) {
-      return sequence< optional<namespace_prefix>, identifier>(src);
+                       exactly<'|'>, negate<exactly<'='>> >(src);
     }
     const char* hyphens_and_identifier(const char* src) {
       return sequence< zero_plus< exactly< '-' > >, identifier >(src);
@@ -389,13 +386,15 @@ namespace Sass {
                            sign >(src);
     }
     const char* binomial(const char* src) {
-      return sequence< optional<sign>,
-                       optional<digits>,
-                       exactly<'n'>,
-                       zero_plus < space >,
-                       sign,
-                       zero_plus < space >,
-                       digits >(src);
+      return sequence <
+               optional < sign >,
+               optional < digits >,
+               exactly <'n'>,
+               zero_plus < sequence <
+                 optional_css_whitespace, sign,
+                 optional_css_whitespace, digits
+               > >
+             >(src);
     }
     const char* percentage(const char* src) {
       return sequence< number, exactly<'%'> >(src);
@@ -503,8 +502,13 @@ namespace Sass {
     }
     // Match CSS function call openers.
     const char* functional_schema(const char* src) {
-      return sequence< identifier_schema, exactly<'('> >(src);
+      return sequence< identifier_schema, lookahead < exactly<'('> > >(src);
     }
+
+    const char* re_nothing(const char* src) {
+      return src;
+    }
+
     const char* re_pseudo_selector(const char* src) {
       return sequence< identifier, optional < block_comment >, exactly<'('> >(src);
     }
@@ -776,6 +780,19 @@ namespace Sass {
           exactly < ')' >
         >
       >(src);
+    }
+
+    const char* type_selector(const char* src) {
+      return sequence< optional<namespace_prefix>, identifier>(src);
+    }
+    const char* re_type_selector(const char* src) {
+      return alternatives< type_selector, universal, quoted_string, dimension, percentage, number, identifier_alnums >(src);
+    }
+    const char* re_type_selector2(const char* src) {
+      return alternatives< type_selector, universal, quoted_string, dimension, percentage, number, identifier_alnums >(src);
+    }
+    const char* re_static_expression(const char* src) {
+      return sequence< number, optional_spaces, exactly<'/'>, optional_spaces, number >(src);
     }
 
   }

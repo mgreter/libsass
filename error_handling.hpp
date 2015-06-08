@@ -10,6 +10,11 @@ namespace Sass {
 
   struct Backtrace;
 
+  struct Css_Error {
+    Css_Error();
+
+  };
+
   struct Sass_Error {
     enum Type { read, write, syntax, evaluation };
 

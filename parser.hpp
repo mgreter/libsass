@@ -13,7 +13,9 @@
 
 struct Lookahead {
   const char* found;
+  const char* error;
   const char* position;
+  bool parsable;
   bool has_interpolants;
 };
 
@@ -35,7 +37,6 @@ namespace Sass {
     Context& ctx;
     vector<Block*> block_stack;
     vector<Syntactic_Context> stack;
-    Media_Block* last_media_block;
     const char* source;
     const char* position;
     const char* end;
@@ -49,7 +50,7 @@ namespace Sass {
     bool in_at_root;
 
     Parser(Context& ctx, const ParserState& pstate)
-    : ParserState(pstate), ctx(ctx), block_stack(0), stack(0), last_media_block(0),
+    : ParserState(pstate), ctx(ctx), block_stack(0), stack(0),
       source(0), position(0), end(0), before_token(pstate), after_token(pstate), pstate(pstate), indentation(0)
     { in_at_root = false; stack.push_back(nothing); }
 
@@ -204,7 +205,7 @@ namespace Sass {
 
     Block* parse();
     Import* parse_import();
-    Definition* parse_definition();
+    Definition* parse_definition(Definition::Type which_type);
     Parameters* parse_parameters();
     Parameter* parse_parameter();
     Mixin_Call* parse_include_directive();
@@ -214,15 +215,18 @@ namespace Sass {
     // Propset* parse_propset();
     Ruleset* parse_ruleset(Lookahead lookahead);
     Selector_Schema* parse_selector_schema(const char* end_of_selector);
-    Selector_List* parse_selector_list();
-    Complex_Selector* parse_complex_selector();
+    Selector_List* parse_selector_list(bool at_root = false);
+    Complex_Selector* parse_complex_selector(bool in_root = true);
     Compound_Selector* parse_compound_selector();
     Simple_Selector* parse_simple_selector();
     Wrapped_Selector* parse_negated_selector();
     Simple_Selector* parse_pseudo_selector();
     Attribute_Selector* parse_attribute_selector();
-    Block* parse_block();
-    Block* parse_block(Block* root);
+    Block* parse_block(bool is_root = false);
+    Block* parse_css_block(bool is_root = false);
+    bool parse_block_nodes();
+    bool parse_block_node();
+
     bool parse_number_prefix();
     Declaration* parse_declaration();
     Expression* parse_map_value();
@@ -236,6 +240,7 @@ namespace Sass {
     Expression* parse_expression();
     Expression* parse_operators();
     Expression* parse_factor();
+    Expression* parse_value2();
     Expression* parse_value();
     Function_Call* parse_calc_function();
     Function_Call* parse_function_call();
@@ -247,7 +252,6 @@ namespace Sass {
     String* parse_ie_property();
     String* parse_ie_keyword_arg();
     String_Schema* parse_value_schema(const char* stop);
-    Expression* parse_operators(Expression* factor);
     String* parse_identifier_schema();
     // String_Schema* parse_url_schema();
     If* parse_if_directive(bool else_if = false);
@@ -269,7 +273,11 @@ namespace Sass {
     Error* parse_error();
     Debug* parse_debug();
 
-    void parse_block_comments(Block* block);
+    // these will throw errors
+    Token lex_variable();
+    Token lex_identifier();
+
+    void parse_block_comments();
 
     Lookahead lookahead_for_value(const char* start = 0);
     Lookahead lookahead_for_selector(const char* start = 0);

@@ -1,148 +1,86 @@
 #include "contextualize.hpp"
-#include "ast.hpp"
-#include "eval.hpp"
-#include "backtrace.hpp"
+
+#include <iostream>
+#include <typeinfo>
+
+#include "listize.hpp"
 #include "to_string.hpp"
-#include "parser.hpp"
+#include "context.hpp"
+#include "backtrace.hpp"
+#include "error_handling.hpp"
 
 namespace Sass {
 
-  Contextualize::Contextualize(Context& ctx, Env* env, Backtrace* bt, Selector* placeholder, Selector* extender)
-  : ctx(ctx), env(env), backtrace(bt), parent(0), placeholder(placeholder), extender(extender)
-  { }
+  Listize2::Listize2(Context& ctx)
+  : ctx(ctx)
+  {  }
 
-  Contextualize::~Contextualize() { }
-
-  Selector* Contextualize::fallback_impl(AST_Node* n)
-  { return parent; }
-
-  Contextualize* Contextualize::with(Selector* s, Env* e, Backtrace* bt, Selector* p, Selector* ex)
+  Expression* Listize2::operator()(Selector_List* sel)
   {
-    parent = s;
-    env = e;
-    backtrace = bt;
-    placeholder = p;
-    extender = ex;
-    return this;
+    List* l = new (ctx.mem) List(sel->pstate(), sel->length(), List::COMMA);
+    for (size_t i = 0, L = sel->length(); i < L; ++i) {
+      if (!(*sel)[i]) continue;
+      *l << (*sel)[i]->perform(this);
+    }
+    return l;
   }
 
-  Selector* Contextualize::operator()(Selector_List* s)
+  Expression* Listize2::operator()(Compound_Selector* sel)
   {
-    Selector_List* p = static_cast<Selector_List*>(parent);
-    Selector_List* ss = 0;
-    if (p) {
-      ss = new (ctx.mem) Selector_List(s->pstate(), p->length() * s->length());
-      if (s->length() == 0) {
-          Complex_Selector* comb = static_cast<Complex_Selector*>(parent->perform(this));
-          if (parent->has_line_feed()) comb->has_line_feed(true);
-          if (comb) *ss << comb;
-          else cerr << "Warning: contextualize returned null" << endl;
-      }
-      for (size_t i = 0, L = p->length(); i < L; ++i) {
-        for (size_t j = 0, L = s->length(); j < L; ++j) {
-          parent = (*p)[i];
-          Complex_Selector* comb = static_cast<Complex_Selector*>((*s)[j]->perform(this));
-          if (parent->has_line_feed()) comb->has_line_feed(true);
-          if (comb) *ss << comb;
-          else cerr << "Warning: contextualize returned null" << endl;
-        }
-      }
+    To_String to_string;
+    string str;
+    for (size_t i = 0, L = sel->length(); i < L; ++i) {
+      Expression* e = (*sel)[i]->perform(this);
+      if (e) str += e->perform(&to_string);
     }
-    else {
-      ss = new (ctx.mem) Selector_List(s->pstate(), s->length());
-      for (size_t j = 0, L = s->length(); j < L; ++j) {
-        Complex_Selector* comb = static_cast<Complex_Selector*>((*s)[j]->perform(this));
-        if (comb) *ss << comb;
-      }
-    }
-    return ss->length() ? ss : 0;
+    return new (ctx.mem) String_Constant(sel->pstate(), str);
   }
 
-  Selector* Contextualize::operator()(Complex_Selector* s)
+  Expression* Listize2::operator()(Complex_Selector* sel)
   {
-    To_String to_string(&ctx);
-    Complex_Selector* ss = new (ctx.mem) Complex_Selector(*s);
-    // ss->last_block(s->last_block());
-    // ss->media_block(s->media_block());
-    Compound_Selector* new_head = 0;
-    Complex_Selector* new_tail = 0;
-    if (ss->head()) {
-      new_head = static_cast<Compound_Selector*>(s->head()->perform(this));
-      ss->head(new_head);
+    List* l = new (ctx.mem) List(sel->pstate(), 2);
+
+    Compound_Selector* head = sel->head();
+    if (head && !head->is_empty_reference())
+    {
+      Expression* hh = head->perform(this);
+      if (hh) *l << hh;
     }
-    if (ss->tail()) {
-      new_tail = static_cast<Complex_Selector*>(s->tail()->perform(this));
-      // new_tail->last_block(s->last_block());
-      // new_tail->media_block(s->media_block());
-      ss->tail(new_tail);
+
+    switch(sel->combinator())
+    {
+      case Complex_Selector::PARENT_OF:
+        *l << new (ctx.mem) String_Constant(sel->pstate(), ">");
+      break;
+      case Complex_Selector::ADJACENT_TO:
+        *l << new (ctx.mem) String_Constant(sel->pstate(), "+");
+      break;
+      case Complex_Selector::PRECEDES:
+        *l << new (ctx.mem) String_Constant(sel->pstate(), "~");
+      break;
+      case Complex_Selector::ANCESTOR_OF:
+      break;
     }
-    if ((new_head && new_head->has_placeholder()) || (new_tail && new_tail->has_placeholder())) {
-      ss->has_placeholder(true);
+
+    Complex_Selector* tail = sel->tail();
+    if (tail)
+    {
+      Expression* tt = tail->perform(this);
+      if (tt && tt->concrete_type() == Expression::LIST)
+      { *l += static_cast<List*>(tt); }
+      else if (tt) *l << static_cast<List*>(tt);
     }
-    else {
-      ss->has_placeholder(false);
-    }
-    if (!ss->head() && ss->combinator() == Complex_Selector::ANCESTOR_OF) {
-      return ss->tail();
-    }
-    else {
-      return ss;
-    }
+    if (l->length() == 0) return 0;
+    return l;
   }
 
-  Selector* Contextualize::operator()(Compound_Selector* s)
+  Expression* Listize2::operator()(Parent_Selector* sel)
   {
-    To_String to_string(&ctx);
-    if (placeholder && extender && s->perform(&to_string) == placeholder->perform(&to_string)) {
-      return extender;
-    }
-    Compound_Selector* ss = new (ctx.mem) Compound_Selector(s->pstate(), s->length());
-    ss->last_block(s->last_block());
-    ss->media_block(s->media_block());
-    ss->has_line_break(s->has_line_break());
-    for (size_t i = 0, L = s->length(); i < L; ++i) {
-      Simple_Selector* simp = static_cast<Simple_Selector*>((*s)[i]->perform(this));
-      if (simp) *ss << simp;
-    }
-    return ss->length() ? ss : 0;
+    return 0;
   }
 
-  Selector* Contextualize::operator()(Wrapped_Selector* s)
+  Expression* Listize2::fallback_impl(AST_Node* n)
   {
-    Selector* old_parent = parent;
-    parent = 0;
-    Wrapped_Selector* neg = new (ctx.mem) Wrapped_Selector(s->pstate(),
-                                                           s->name(),
-                                                           s->selector()->perform(this));
-    parent = old_parent;
-    return neg;
-  }
-
-  Selector* Contextualize::operator()(Pseudo_Selector* s)
-  { return s; }
-
-  Selector* Contextualize::operator()(Selector_Qualifier* s)
-  { return s; }
-
-  Selector* Contextualize::operator()(Type_Selector* s)
-  { return s; }
-
-  Selector* Contextualize::operator()(Selector_Placeholder* p)
-  {
-    To_String to_string(&ctx);
-    if (placeholder && extender && p->perform(&to_string) == placeholder->perform(&to_string)) {
-      return extender;
-    }
-    else {
-      return p;
-    }
-  }
-
-  Selector* Contextualize::operator()(Selector_Reference* s)
-  {
-    if (!parent) return 0;
-    Selector_Reference* ss = new (ctx.mem) Selector_Reference(*s);
-    ss->selector(parent);
-    return ss;
+    return static_cast<Expression*>(n);
   }
 }

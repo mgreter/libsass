@@ -292,7 +292,7 @@ namespace Sass {
     Media_Block* mm = new (ctx.mem) Media_Block(m->pstate(),
                                                 m->media_queries(),
                                                 wrapper_block,
-                                                m->selector());
+                                                0);
 
     mm->tabs(m->tabs());
 

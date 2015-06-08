@@ -61,6 +61,7 @@ namespace Sass {
           Node& path = *loopStartIter;
 
           Node newPermutation = Node::createCollection();
+          newPermutation.got_line_feed = arr.got_line_feed;
           newPermutation.plus(path);
           newPermutation.collection()->push_back(e);
 
@@ -114,14 +115,31 @@ namespace Sass {
     }
 
     Node flattened = Node::createCollection();
+    if (arr.got_line_feed) flattened.got_line_feed = true;
 
     for (NodeDeque::iterator iter = arr.collection()->begin(), iterEnd = arr.collection()->end();
     	iter != iterEnd; iter++) {
     	Node& e = *iter;
 
+      // e has the lf set
       if (e.isCollection()) {
+
+      	// e.collection().got_line_feed = e.got_line_feed;
       	Node recurseFlattened = flatten(e, ctx, n - 1);
-        flattened.collection()->insert(flattened.collection()->end(), recurseFlattened.collection()->begin(), recurseFlattened.collection()->end());
+
+      	if(e.got_line_feed) {
+      		 flattened.got_line_feed = e.got_line_feed;
+      	  recurseFlattened.got_line_feed = e.got_line_feed;
+      	}
+
+      	for(auto i : (*recurseFlattened.collection())) {
+          if (recurseFlattened.got_line_feed) {
+
+            i.got_line_feed = true;
+          }
+          flattened.collection()->push_back(i);
+      	}
+
       } else {
       	flattened.collection()->push_back(e);
       }

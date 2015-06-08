@@ -23,8 +23,6 @@
 #include "output.hpp"
 #include "expand.hpp"
 #include "eval.hpp"
-#include "contextualize.hpp"
-#include "contextualize_eval.hpp"
 #include "cssize.hpp"
 #include "listize.hpp"
 #include "extend.hpp"
@@ -35,6 +33,7 @@
 #include "sass2scss.h"
 #include "prelexer.hpp"
 #include "emitter.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
   using namespace Constants;
@@ -340,30 +339,30 @@ namespace Sass {
     { register_c_function(*this, &global, c_functions[i]); }
     // create initial backtrace entry
     Backtrace backtrace(0, ParserState("", 0), "");
-    Contextualize contextualize(*this, &global, &backtrace);
-    Listize listize(*this);
-    Eval eval(*this, &contextualize, &listize, &global, &backtrace);
-    Contextualize_Eval contextualize_eval(*this, &eval, &global, &backtrace);
     // create crtp visitor objects
-    Expand expand(*this, &eval, &contextualize_eval, &global, &backtrace);
+    Expand expand(*this, &global, &backtrace);
     Cssize cssize(*this, &backtrace);
     // expand and eval the tree
+//debug_ast(root, "parsed: ");
     root = root->perform(&expand)->block();
+//debug_ast(root, "expand: ");
     // merge and bubble certain rules
     root = root->perform(&cssize)->block();
+// debug_ast(root, "cssize: ");
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);
       // extend tree nodes
       root->perform(&extend);
+//debug_ast(root, "extend: ");
     }
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders(*this);
     root->perform(&remove_placeholders);
-
+//debug_ast(root, "cleaned: ");
     // return processed tree
     return root;
   }

@@ -282,35 +282,9 @@ namespace Sass {
     in_media_block = false;
     append_scope_opener();
 
-    Selector* e = m->selector();
-    if (e && b->has_non_hoistable()) {
-      // JMA - hoisted, output the non-hoistable in a nested block, followed by the hoistable
-      e->perform(this);
-      append_scope_opener();
-
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
-        if (!stm->is_hoistable()) {
-          stm->perform(this);
-        }
-      }
-
-      append_scope_closer();
-
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
-        if (stm->is_hoistable()) {
-          stm->perform(this);
-        }
-      }
-    }
-    else {
-      // JMA - not hoisted, just output in order
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
-        stm->perform(this);
-        if (i < L - 1) append_special_linefeed();
-      }
+    for (size_t i = 0, L = b->length(); i < L; ++i) {
+      if ((*b)[i]) (*b)[i]->perform(this);
+      if (i < L - 1) append_special_linefeed();
     }
 
     if (output_style() == NESTED) indentation -= m->tabs();

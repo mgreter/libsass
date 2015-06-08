@@ -8,6 +8,7 @@
 #include "ast.hpp"
 #include "inspect.hpp"
 #include "context.hpp"
+#include "listize.hpp"
 #include "utf8/checked.h"
 
 namespace Sass {
@@ -123,7 +124,14 @@ namespace Sass {
     append_indentation();
     dec->property()->perform(this);
     append_colon_separator();
-    dec->value()->perform(this);
+
+    if (dec->value()->concrete_type() == Expression::SELECTOR) {
+      Listize listize(*ctx);
+      dec->value()->perform(&listize)->perform(this);
+    } else {
+      dec->value()->perform(this);
+    }
+
     if (dec->is_important()) {
       append_optional_space();
       append_string("!important");
@@ -741,17 +749,6 @@ namespace Sass {
     append_token("null", n);
   }
 
-  void Inspect::operator()(Parent_Selector* p)
-  {
-    if (p->selector()) {
-      p->selector()->perform(this);
-      append_delimiter();
-    }
-    else {
-      append_string("&");
-    }
-  }
-
   // parameters and arguments
   void Inspect::operator()(Parameter* p)
   {
@@ -816,10 +813,9 @@ namespace Sass {
     s->contents()->perform(this);
   }
 
-  void Inspect::operator()(Selector_Reference* ref)
+  void Inspect::operator()(Parent_Selector* p)
   {
-    if (ref->selector()) ref->selector()->perform(this);
-    else                 append_string("&");
+    append_string("&");
   }
 
   void Inspect::operator()(Selector_Placeholder* s)
@@ -861,6 +857,7 @@ namespace Sass {
   {
     append_token(s->name(), s);
     if (s->expression()) {
+      append_string("(");
       s->expression()->perform(this);
       append_string(")");
     }
@@ -871,6 +868,7 @@ namespace Sass {
     bool was = in_wrapped;
     in_wrapped = true;
     append_token(s->name(), s);
+    append_string("(");
     s->selector()->perform(this);
     append_string(")");
     in_wrapped = was;
@@ -882,7 +880,9 @@ namespace Sass {
       (*s)[i]->perform(this);
     }
     if (s->has_line_break()) {
-      append_optional_linefeed();
+      if (output_style() != COMPACT) {
+        append_optional_linefeed();
+      }
     }
   }
 
@@ -891,6 +891,14 @@ namespace Sass {
     Compound_Selector*           head = c->head();
     Complex_Selector*            tail = c->tail();
     Complex_Selector::Combinator comb = c->combinator();
+
+    if (c->has_line_feed()) {
+      if (!(c->has_parent_ref())) {
+        append_optional_linefeed();
+        append_indentation();
+      }
+    }
+
     if (head && !head->is_empty_reference()) head->perform(this);
     bool is_empty = head && head->is_empty_reference();
     bool is_tail = head && !head->is_empty_reference() && tail;
@@ -922,6 +930,11 @@ namespace Sass {
       if (c->has_line_break()) append_optional_linefeed();
     }
     if (tail) tail->perform(this);
+    if (!tail && c->has_line_break()) {
+      if (output_style() == COMPACT) {
+        append_mandatory_space();
+      }
+    }
   }
 
   void Inspect::operator()(Selector_List* g)
@@ -929,13 +942,10 @@ namespace Sass {
     if (g->empty()) return;
     for (size_t i = 0, L = g->length(); i < L; ++i) {
       if (!in_wrapped && i == 0) append_indentation();
+      if ((*g)[i] == 0) continue;
       (*g)[i]->perform(this);
       if (i < L - 1) {
         append_comma_separator();
-        if ((*g)[i]->has_line_feed()) {
-          append_optional_linefeed();
-          append_indentation();
-        }
       }
     }
   }

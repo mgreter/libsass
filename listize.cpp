@@ -17,7 +17,7 @@ namespace Sass {
   {
     List* l = new (ctx.mem) List(sel->pstate(), sel->length(), List::COMMA);
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
-      // if (!(*sel)[i]) continue;
+      if (!(*sel)[i]) continue;
       *l << (*sel)[i]->perform(this);
     }
     return l;
@@ -72,7 +72,7 @@ namespace Sass {
     return l;
   }
 
-  Expression* Listize::operator()(Selector_Reference* sel)
+  Expression* Listize::operator()(Parent_Selector* sel)
   {
     return 0;
   }
