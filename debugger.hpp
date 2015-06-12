@@ -315,8 +315,8 @@ inline void debug_ast(AST_Node* node, string ind = "", Env* env = 0)
     cerr << ind << "At_Rule " << block;
     cerr << " (" << pstate_source_position(node) << ")";
     cerr << " [" << block->keyword() << "] " << block->tabs() << endl;
-    debug_ast(block->value(), ind + "+", env);
     debug_ast(block->selector(), ind + "~", env);
+    debug_ast(block->value(), ind + "+", env);
     if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Each*>(node)) {
     Each* block = dynamic_cast<Each*>(node);

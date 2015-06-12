@@ -106,6 +106,10 @@ namespace Sass {
       at_rule->selector()->perform(this);
       in_wrapped = was_wrapped;
     }
+    if (at_rule->value()) {
+      append_mandatory_space();
+      at_rule->value()->perform(this);
+    }
     if (at_rule->block()) {
       at_rule->block()->perform(this);
     }

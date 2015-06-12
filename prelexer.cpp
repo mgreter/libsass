@@ -751,6 +751,54 @@ namespace Sass {
                           >(src);
     }
 
+    const char* static_property(const char* src) {
+      return
+        sequence <
+          zero_plus<
+            sequence <
+              zero_plus <
+                alternatives <
+                  spaces,
+                  line_comment,
+                  block_comment
+                >
+              >,
+              alternatives <
+                exactly<','>,
+                exactly<'('>,
+                exactly<')'>,
+                kwd_optional,
+                quoted_string,
+                interpolant,
+                identifier,
+                percentage,
+                dimension,
+                variable,
+                alnum,
+                sequence <
+                  exactly <'\\'>,
+                  any_char
+                >
+              >
+            >
+          >,
+          lookahead <
+            sequence <
+              zero_plus <
+                alternatives <
+                  spaces
+                >
+              >,
+              alternatives <
+                exactly <';'>,
+                exactly <'}'>,
+                exactly <'\0'>
+              >
+            >
+          >
+        >(src);
+    }
+
     const char* static_value(const char* src) {
       return sequence< sequence<
                          static_component,

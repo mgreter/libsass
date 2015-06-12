@@ -190,15 +190,15 @@ namespace Sass {
     Selector* as = a->selector();
     Expression* av = a->value();
     selector_stack.push_back(0);
-    if (as) as = static_cast<Selector_List*>(as->perform(&eval));
-    else if (av) av = av->perform(&eval);
+    if (av) av = av->perform(&eval);
+    if (as) as = dynamic_cast<Selector*>(as->perform(&eval));
     selector_stack.pop_back();
     Block* bb = ab ? ab->perform(this)->block() : 0;
     At_Rule* aa = new (ctx.mem) At_Rule(a->pstate(),
                                         a->keyword(),
                                         as,
-                                        bb);
-    if (av) aa->value(av);
+                                        bb,
+                                        av);
     return aa;
   }
 

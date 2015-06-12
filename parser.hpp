@@ -248,6 +248,7 @@ namespace Sass {
     String* parse_interpolated_chunk(Token, bool constant = false);
     String* parse_string();
     String_Constant* parse_static_expression();
+    // String_Constant* parse_static_property();
     String_Constant* parse_static_value();
     String* parse_ie_property();
     String* parse_ie_keyword_arg();

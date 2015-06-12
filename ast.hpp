@@ -169,6 +169,7 @@ namespace Sass {
     const T& operator[](size_t i) const { return elements_[i]; }
     Vectorized& operator<<(T element)
     {
+      if (!element) return *this;
       reset_hash();
       elements_.push_back(element);
       adjust_after_pushing(element);
@@ -415,8 +416,8 @@ namespace Sass {
     ADD_PROPERTY(Selector*, selector)
     ADD_PROPERTY(Expression*, value)
   public:
-    At_Rule(ParserState pstate, string kwd, Selector* sel = 0, Block* b = 0)
-    : Has_Block(pstate, b), keyword_(kwd), selector_(sel), value_(0) // set value manually if needed
+    At_Rule(ParserState pstate, string kwd, Selector* sel = 0, Block* b = 0, Expression* val = 0)
+    : Has_Block(pstate, b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
     { statement_type(DIRECTIVE); }
     bool bubbles() { return is_keyframes() || is_media(); }
     bool is_media() {

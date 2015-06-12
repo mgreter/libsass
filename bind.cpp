@@ -15,6 +15,13 @@ namespace Sass {
     Listize listize(ctx);
     map<string, Parameter*> param_map;
 
+    for (size_t i = 0, L = as->length(); i < L; ++i) {
+      if (auto str = dynamic_cast<String_Quoted*>((*as)[i]->value())) {
+        // force optional quotes (only if needed)
+        if (str->quote_mark()) str->quote_mark('*');
+      }
+    }
+
     // Set up a map to ensure named arguments refer to actual parameters. Also
     // eval each default value left-to-right, wrt env, populating env as we go.
     for (size_t i = 0, L = ps->length(); i < L; ++i) {

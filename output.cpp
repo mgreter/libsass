@@ -306,7 +306,7 @@ namespace Sass {
       s->perform(this);
       in_wrapped = false;
     }
-    else if (v) {
+    if (v) {
       append_mandatory_space();
       v->perform(this);
     }

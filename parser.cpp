@@ -251,7 +251,6 @@ namespace Sass {
         (*block) << ps;
       }
       else {
-      // cerr << "NO BLOCK\n";
         // finish and let the semicolon get munched
       }
     }
@@ -264,10 +263,7 @@ namespace Sass {
       css_error("Invalid CSS", " after ", ": expected selector or at-rule, was ");
     }
     // nothing matched
-    else {
-
-      // cerr << "parse decl\n";
-    	return false; }
+    else { return false; }
     // something matched
     return true;
   }
@@ -675,7 +671,6 @@ namespace Sass {
     if (!peek_css< class_char < selector_combinator_ops > >()) {
       // parse the left hand side
       lhs = parse_compound_selector();
-      lhs->has_line_break(peek_newline());
     }
 
     // check for end of file condition
@@ -687,6 +682,8 @@ namespace Sass {
     else if (lex< exactly<'~'> >()) combinator = Complex_Selector::PRECEDES;
     else if (lex< exactly<'>'> >()) combinator = Complex_Selector::PARENT_OF;
     else /* if (lex< zero >()) */   combinator = Complex_Selector::ANCESTOR_OF;
+
+    if (!lhs && combinator == Complex_Selector::ANCESTOR_OF) return 0;
 
     // lex < block_comment >();
     // source position of a complex selector points to the combinator
@@ -761,12 +758,18 @@ namespace Sass {
       }
       // peek for abort conditions
       else if (peek< spaces >()) break;
-    else if (peek< exactly <0> >()) { cerr << "EO\n"; break; }
+      else if (peek< end_of_file >()) { break; }
       else if (peek_css < class_char < selector_combinator_ops > >()) break;
       else if (peek_css < class_char < complex_selector_delims > >()) break;
       // otherwise parse another simple selector
-      else (*seq) << parse_simple_selector();
+      else {
+        Simple_Selector* sel = parse_simple_selector();
+        if (!sel) return 0;
+        (*seq) << sel;
+      }
     }
+
+    if (seq) seq->has_line_break(peek_newline());
 
     // EO while true
     return seq;
@@ -1423,6 +1426,7 @@ namespace Sass {
       }
       ++ i;
     }
+
     return schema;
   }
 
@@ -1448,8 +1452,7 @@ namespace Sass {
 
   String* Parser::parse_string()
   {
-    Token token(lexed);
-    return parse_interpolated_chunk(token);
+    return parse_interpolated_chunk(Token(lexed));
   }
 
   String* Parser::parse_ie_property()
@@ -1949,8 +1952,6 @@ namespace Sass {
       Ruleset* r = parse_ruleset(lookahead_result);
       body = new (ctx.mem) Block(r->pstate(), 1, true);
       *body << r;
-    } else {
-      cerr << "NO BLOCK\n";
     }
     At_Root_Block* at_root = new (ctx.mem) At_Root_Block(at_source_position, body);
     if (expr) at_root->expression(expr);
@@ -1983,31 +1984,32 @@ namespace Sass {
   At_Rule* Parser::parse_at_rule()
   {
     string kwd(lexed);
-    ParserState at_source_position = pstate;
-    Selector* sel = 0;
-    Expression* val = 0;
+    At_Rule* at_rule = new (ctx.mem) At_Rule(pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found) {
       if (lookahead.has_interpolants) {
-        sel = parse_selector_schema(lookahead.found);
+        at_rule->selector(parse_selector_schema(lookahead.found));
       }
       else {
-        sel = parse_selector_list();
+        at_rule->selector(parse_selector_list());
       }
     }
-    else if (!(peek < alternatives < exactly<'{'>, exactly<'}'>, exactly<';'> > >())) {
-      val = parse_list();
-    }
-    Block* body = 0;
-    if (peek< exactly<'{'> >()) {
-      body = parse_block();
-    }
-    // ToDo: is the block really optional
-    // else cerr << "NO AT RULE BLOCK\n";
 
-    At_Rule* rule = new (ctx.mem) At_Rule(at_source_position, kwd, sel, body);
-    if (!sel) rule->value(val);
-    return rule;
+    lex < css_comments >();
+
+    if (lex < static_property >()) {
+      at_rule->value(parse_interpolated_chunk(Token(lexed)));
+    } else if (!(peek < alternatives < exactly<'{'>, exactly<'}'>, exactly<';'> > >())) {
+      at_rule->value(parse_list());
+    }
+
+    lex < css_comments >();
+
+    if (peek< exactly<'{'> >()) {
+      at_rule->block(parse_block());
+    }
+
+    return at_rule;
   }
 
   Warning* Parser::parse_warning()
