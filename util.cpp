@@ -1,10 +1,12 @@
-#include <stdint.h>
+#include "sass.h"
 #include "ast.hpp"
 #include "util.hpp"
 #include "lexer.hpp"
 #include "prelexer.hpp"
 #include "constants.hpp"
 #include "utf8/checked.h"
+
+#include <stdint.h>
 
 namespace Sass {
 

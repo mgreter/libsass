@@ -1896,17 +1896,17 @@ namespace Sass {
     // lex optional comments
     lex < css_whitespace >();
     // parse `not` query operator
-    if (lex < kwd_not >(position)) {
+	if (lex < kwd_not >()) {
       cond = parse_supports_query();
       cond->operand(Supports_Condition::NOT);
     }
     // parse `and` query operator
-    else if (lex < kwd_and >(position)) {
+	else if (lex < kwd_and >()) {
       cond = parse_supports_query();
       cond->operand(Supports_Condition::AND);
     }
     // parse `or` query operator
-    else if (lex < kwd_or >(position)) {
+	else if (lex < kwd_or >()) {
       cond = parse_supports_query();
       cond->operand(Supports_Condition::OR);
     }

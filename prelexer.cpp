@@ -756,13 +756,7 @@ namespace Sass {
         sequence <
           zero_plus<
             sequence <
-              zero_plus <
-                alternatives <
-                  spaces,
-                  line_comment,
-                  block_comment
-                >
-              >,
+			  optional_css_comments,
               alternatives <
                 exactly<','>,
                 exactly<'('>,
@@ -784,15 +778,11 @@ namespace Sass {
           >,
           lookahead <
             sequence <
-              zero_plus <
-                alternatives <
-                  spaces
-                >
-              >,
+              optional_css_comments,
               alternatives <
                 exactly <';'>,
                 exactly <'}'>,
-                exactly <'\0'>
+                end_of_file
               >
             >
           >

@@ -4,9 +4,10 @@
 // #define DEBUG 1
 
 #ifdef _MSC_VER
-#define _SCL_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#define _CRT_NONSTDC_NO_DEPRECATE
+  #pragma warning(disable : 4503)
+  #define _SCL_SECURE_NO_WARNINGS
+  #define _CRT_SECURE_NO_WARNINGS
+  #define _CRT_NONSTDC_NO_DEPRECATE
 #endif
 
 #include <stddef.h>
