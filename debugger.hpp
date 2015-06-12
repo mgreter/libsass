@@ -9,6 +9,28 @@
 using namespace std;
 using namespace Sass;
 
+/*
+inline void debug_extenstion_map(Sass::ExtensionSubsetMap* map, string ind = "")
+{
+  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+  for(auto const &it : map->values()) {
+    debug_ast(it.first, ind + "first: ");
+    debug_ast(it.second, ind + "second: ");
+  }
+  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+}
+
+inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
+{
+  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+  for(auto const &pair : *entries) {
+    debug_ast(pair.first, ind + "first: ");
+    debug_ast(pair.second, ind + "second: ");
+  }
+  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+}
+*/
+
 inline string str_replace(std::string str, const std::string& oldStr, const std::string& newStr)
 {
   size_t pos = 0;

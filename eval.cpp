@@ -22,8 +22,6 @@
 #include "prelexer.hpp"
 #include "parser.hpp"
 #include "expand.hpp"
-#include "contextualize.hpp"
-#include "debugger.hpp"
 
 namespace Sass {
   using namespace std;
@@ -1478,11 +1476,6 @@ namespace Sass {
 
     }
 
-//      (*sl)[i] = (*sl)[i]->first();
-
-    // sl->remove_parent_selectors();
-To_String to_string;
-// cerr << "returned [" << sl->perform(&to_string) << "]" << endl;
     return sl;
   }
 
@@ -1504,27 +1497,13 @@ To_String to_string;
     return operator()(p.parse_selector_list(exp.block_stack.back()->is_root()));
   }
 
-  Expression* Eval::operator()(Selector_Placeholder* p)
-  {
-    To_String to_string(&ctx);
-//    if (placeholder && extender && p->perform(&to_string) == placeholder->perform(&to_string)) {
-//      return extender;
-//    }
-//    else {
-      return p;
-//    }
-  }
-
   Expression* Eval::operator()(Parent_Selector* p)
   {
     Selector_List* pr = selector();
     exp.selector_stack.pop_back();
-    auto ss = pr ? pr->perform(this) : 0;
+    if (pr) pr = operator()(pr);
     exp.selector_stack.push_back(pr);
-    // all selectors must be listized
-//    if (dynamic_cast<Selector_List*>(pr))
-//      ss = ss->perform(&listize);
-    return ss;
+    return pr;
   }
 
 }

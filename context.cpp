@@ -33,7 +33,6 @@
 #include "sass2scss.h"
 #include "prelexer.hpp"
 #include "emitter.hpp"
-#include "debugger.hpp"
 
 namespace Sass {
   using namespace Constants;
@@ -343,26 +342,21 @@ namespace Sass {
     Expand expand(*this, &global, &backtrace);
     Cssize cssize(*this, &backtrace);
     // expand and eval the tree
-//debug_ast(root, "parsed: ");
     root = root->perform(&expand)->block();
-//debug_ast(root, "expand: ");
     // merge and bubble certain rules
     root = root->perform(&cssize)->block();
-// debug_ast(root, "cssize: ");
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);
       // extend tree nodes
       root->perform(&extend);
-//debug_ast(root, "extend: ");
     }
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders(*this);
     root->perform(&remove_placeholders);
-//debug_ast(root, "cleaned: ");
     // return processed tree
     return root;
   }

@@ -155,14 +155,14 @@ namespace Sass {
 
     } else if (node.isCollection()) {
 
-			os << "[";
+      os << "[";
 
       for (NodeDeque::iterator iter = node.collection()->begin(), iterBegin = node.collection()->begin(), iterEnd = node.collection()->end(); iter != iterEnd; iter++) {
         if (iter != iterBegin) {
           os << ", ";
         }
 
-				os << (*iter);
+        os << (*iter);
       }
 
       os << "]";

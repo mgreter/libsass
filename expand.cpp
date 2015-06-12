@@ -11,7 +11,6 @@
 #include "to_string.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
-#include "debugger.hpp"
 #include "parser.hpp"
 
 namespace Sass {
@@ -475,17 +474,6 @@ namespace Sass {
     return 0;
   }
 
-inline void debug_extenstion_map(Sass::ExtensionSubsetMap* map, string ind = "")
-{
-  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-  for(auto const &it : map->values()) {
-    debug_ast(it.first, ind + "first: ");
-    debug_ast(it.second, ind + "second: ");
-  }
-  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-}
-
-
   Statement* Expand::operator()(Extension* e)
   {
     To_String to_string(&ctx);
@@ -497,15 +485,11 @@ inline void debug_extenstion_map(Sass::ExtensionSubsetMap* map, string ind = "")
     Selector_List* selector_list = static_cast<Selector_List*>(e->selector());
     Selector_List* contextualized = static_cast<Selector_List*>(selector_list->perform(&eval));
     // contextualized->remove_parent_selectors();
-//cerr << "extend\n";
-//debug_ast(extender, "extender: ");
-//debug_ast(selector_list, "selector_list: ");
-//debug_ast(contextualized, "contextualized: ");
     for (auto complex_sel : contextualized->elements()) {
       Complex_Selector* c = complex_sel;
-//      if (!c->head() || c->tail()) {
-//        error("nested selectors may not be extended", c->pstate(), backtrace());
-//      }
+      if (!c->head() || c->tail()) {
+        error("nested selectors may not be extended", c->pstate(), backtrace());
+      }
       Compound_Selector* placeholder = c->head();
       placeholder->is_optional(selector_list->is_optional());
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
@@ -519,18 +503,11 @@ inline void debug_extenstion_map(Sass::ExtensionSubsetMap* map, string ind = "")
         ssel->head(hh);
         sel = ssel;
         }
-//debug_ast(sel, "sel: ");
         if (c->has_line_feed()) sel->has_line_feed(true);
-        // sel = dynamic_cast<Complex_Selector*>(sel->perform(&eval));
-//        cerr << "REGISTERING EXTENSION REQUEST: " << endl;
-//        debug_ast(sel);
-//        debug_ast(placeholder);
         ctx.subset_map.put(placeholder->to_str_vec(), make_pair(sel, placeholder));
       }
     }
     selector_stack.pop_back();
-
-//debug_extenstion_map(&ctx.subset_map, "ctx.subset_map: ");
 
     return 0;
   }

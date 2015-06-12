@@ -8,9 +8,6 @@ namespace Sass {
   : type(type), pstate(pstate), message(message)
   { }
 
-  Css_Error::Css_Error()
-  { }
-
   void warn(string msg, ParserState pstate)
   {
     cerr << "Warning: " << msg<< endl;

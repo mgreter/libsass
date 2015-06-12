@@ -10,7 +10,6 @@
 #include "parser.hpp"
 #include "node.hpp"
 #include "sass_util.hpp"
-#include "debugger.hpp"
 #include "debug.hpp"
 #include <iostream>
 #include <deque>
@@ -67,27 +66,6 @@ namespace Sass {
 
   typedef pair<Complex_Selector*, Compound_Selector*> ExtensionPair;
   typedef vector<ExtensionPair> SubsetMapEntries;
-
-inline void debug_extenstion_map(Sass::ExtensionSubsetMap* map, string ind = "")
-{
-  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-  for(auto const &it : map->values()) {
-    debug_ast(it.first, ind + "first: ");
-    debug_ast(it.second, ind + "second: ");
-  }
-  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-}
-
-inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
-{
-  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-  for(auto const &pair : *entries) {
-    debug_ast(pair.first, ind + "first: ");
-    debug_ast(pair.second, ind + "second: ");
-  }
-  if (ind == "") cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-}
-
 
 #ifdef DEBUG
 
@@ -1514,7 +1492,7 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
     set<Compound_Selector> seen) {
 
     DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelector, "EXTEND COMPOUND: "))
-// debug_ast(pSelector, "extendCompoundSelector:");
+
     Node extendedSelectors = Node::createCollection();
     // extendedSelectors.got_line_feed = true;
 
@@ -1527,8 +1505,6 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
     GroupByToAFunctor<Complex_Selector> extPairKeyFunctor;
     GroupedByToAResult arr;
     group_by_to_a(entries, extPairKeyFunctor, arr);
-
-// debug_subset_entries(&entries);
 
     typedef pair<Compound_Selector*, Complex_Selector*> SelsNewSeqPair;
     typedef vector<SelsNewSeqPair> SelsNewSeqPairCollection;
@@ -1543,7 +1519,6 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
       Complex_Selector& seq = groupedPair.first;
       vector<ExtensionPair>& group = groupedPair.second;
 
-// debug_ast(&seq);
       DEBUG_EXEC(EXTEND_COMPOUND, printComplexSelector(&seq, "SEQ: "))
 
 
@@ -1595,16 +1570,10 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
       // out and aren't operated on.
       Complex_Selector* pNewSelector = pExtComplexSelector->cloneFully(ctx); // ->first();
 
-// debug_ast(pNewSelector);
-//  debug_ast(pNewSelector);
       Complex_Selector* pNewInnerMost = new (ctx.mem) Complex_Selector(pSelector->pstate(), Complex_Selector::ANCESTOR_OF, pUnifiedSelector, NULL);
-//  debug_ast(pNewInnerMost, "= ");
+
       Complex_Selector::Combinator combinator = pNewSelector->clear_innermost();
       pNewSelector->set_innermost(pNewInnerMost, combinator);
-// pNewSelector->head(0);
-
-// pNewSelector = pNewSelector;
-  //debug_ast(pNewSelector);
 
 #ifdef DEBUG
       SourcesSet debugSet;
@@ -1639,7 +1608,6 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
 
       if (pSels->has_line_feed()) pNewSelector->has_line_feed(true);;
 
-//debug_ast(pNewSelector, " haqweqweqwe: ");
       holder.push_back(make_pair(pSels, pNewSelector));
     }
 
@@ -1661,9 +1629,7 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
 
 
       DEBUG_PRINTLN(EXTEND_COMPOUND, "RECURSING DO EXTEND: " << complexSelectorToNode(pNewSelector, ctx))
-//debug_ast(pNewSelector, " rec: ");
       Node recurseExtendedSelectors = extendComplexSelector(pNewSelector, ctx, subset_map, recurseSeen);
-//debug_node(&recurseExtendedSelectors, " reced: ");
 
       DEBUG_PRINTLN(EXTEND_COMPOUND, "RECURSING DO EXTEND RETURN: " << recurseExtendedSelectors)
 
@@ -1776,9 +1742,7 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
     ExtensionSubsetMap& subset_map,
     set<Compound_Selector> seen) {
 
-    //debug_ast(pComplexSelector, "hwa: ");
     Node complexSelector = complexSelectorToNode(pComplexSelector, ctx);
-    //debug_node(&complexSelector, "now: ");
     DEBUG_PRINTLN(EXTEND_COMPLEX, "EXTEND COMPLEX: " << complexSelector)
 
     Node extendedNotExpanded = Node::createCollection();
@@ -1899,7 +1863,6 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
       // the extend. We might be able to optimize extendComplexSelector, but this approach keeps us closer to ruby sass (which helps
       // when debugging).
       if (!complexSelectorHasExtension(pSelector, ctx, subset_map)) {
-//debug_ast(pSelector, "test1: ");
         *pNewSelectors << pSelector;
         continue;
       }
@@ -1909,10 +1872,8 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
       set<Compound_Selector> seen;
 
       Node extendedSelectors = extendComplexSelector(pSelector, ctx, subset_map, seen);
-//debug_node(&extendedSelectors, "doubled?: ");
       if (!pSelector->has_placeholder()) {
         if (!extendedSelectors.contains(complexSelectorToNode(pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
-//debug_ast(pSelector, "test2: ");
           *pNewSelectors << pSelector;
         }
       }
@@ -1922,7 +1883,6 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
         if(isReplace && iterator == iteratorBegin && extendedSelectors.collection()->size() > 1 ) continue;
 
         Node& childNode = *iterator;
-//debug_node(&childNode, "test2: ");
         *pNewSelectors << nodeToComplexSelector(childNode, ctx);
       }
     }
@@ -1978,22 +1938,12 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
     }
 
     bool extendedSomething = false;
-//debug_extenstion_map(&subset_map, "++");
     Selector_List* pNewSelectorList = Extend::extendSelectorList(static_cast<Selector_List*>(pObject->selector()), ctx, subset_map, false, extendedSomething);
-//debug_ast(pNewSelectorList, "==");
 
     if (extendedSomething && pNewSelectorList) {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND ORIGINAL SELECTORS: " << static_cast<Selector_List*>(pObject->selector())->perform(&to_string))
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND SETTING NEW SELECTORS: " << pNewSelectorList->perform(&to_string))
-
-      // re-parse in order to restructure expanded placeholder nodes correctly.
-      //
-      // TODO: I don't know if this is needed, but it was in the original C++ implementation, so I kept it. Try running the tests without re-parsing.
-      // this probably messes up source-maps
-//      pObject->selector(pNewSelectorList);
-
       pObject->selector(pNewSelectorList);
-
     } else {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND DID NOT TRY TO EXTEND ANYTHING")
     }
@@ -2025,7 +1975,6 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
       }
       pRuleset->selector(ssl);
     }
-//    debug_ast(pRuleset);
     extendObjectWithSelectorAndBlock(pRuleset, ctx, subset_map);
 
     pRuleset->block()->perform(this);
@@ -2038,15 +1987,14 @@ inline void debug_subset_entries(SubsetMapEntries* entries, string ind = "")
 
   void Extend::operator()(Media_Block* pMediaBlock)
   {
-    // if (pMediaBlock->selector()) {
-    //   extendObjectWithSelectorAndBlock(pMediaBlock, ctx, subset_map);
-    // }
-
     pMediaBlock->block()->perform(this);
   }
 
   void Extend::operator()(At_Rule* a)
   {
+    // Selector_List* ls = dynamic_cast<Selector_List*>(a->selector());
+    // selector_stack.push_back(ls);
     if (a->block()) a->block()->perform(this);
+    // exp.selector_stack.pop_back();
   }
 }

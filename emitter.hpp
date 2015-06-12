@@ -73,7 +73,6 @@ namespace Sass {
       void append_indentation();
       void append_optional_space(void);
       void append_mandatory_space(void);
-      void append_forced_space(void);
       void append_special_linefeed(void);
       void append_optional_linefeed(void);
       void append_mandatory_linefeed(void);

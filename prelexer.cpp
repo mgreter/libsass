@@ -756,7 +756,7 @@ namespace Sass {
         sequence <
           zero_plus<
             sequence <
-			  optional_css_comments,
+              optional_css_comments,
               alternatives <
                 exactly<','>,
                 exactly<'('>,

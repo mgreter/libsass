@@ -2,7 +2,6 @@
 #include "context.hpp"
 #include "node.hpp"
 #include "extend.hpp"
-#include "debugger.hpp"
 #include "to_string.hpp"
 #include <set>
 #include <algorithm>
@@ -258,7 +257,6 @@ namespace Sass {
 
   bool Compound_Selector::is_superselector_of(Selector_List* rhs, string wrapped)
   {
-//cerr << "DAHJKA\n";
     for (Complex_Selector* item : rhs->elements()) {
       if (is_superselector_of(item, wrapped)) return true;
     }
@@ -325,7 +323,7 @@ namespace Sass {
           if (Selector_List* not_list = dynamic_cast<Selector_List*>(wrapped->selector())) {
             if (not_list->is_superselector_of(rhs, wrapped->name())) return false;
           } else {
-            cerr << "do not\n";
+            throw runtime_error("wrapped not selector is not a list");
           }
         }
         if (wrapped->name() == ":matches" || wrapped->name() == ":-moz-any") {

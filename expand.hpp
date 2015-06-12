@@ -36,8 +36,6 @@ namespace Sass {
     vector<String*>   property_stack;
     vector<Selector_List*> selector_stack;
     vector<Backtrace*>backtrace_stack;
-
-    // bool              in_at_root;
     bool              in_keyframes;
 
     Statement* fallback_impl(AST_Node* n);

@@ -18,8 +18,8 @@ namespace Sass {
 
   const char* const ROUNDTRIP_TESTS[] = {
     NULL,
-  	"~",
-		"CMPD",
+    "~",
+    "CMPD",
     "~ CMPD",
     "CMPD >",
     "> > CMPD",
@@ -73,7 +73,7 @@ namespace Sass {
 
     assert( (!pOrigSelector && !pNewSelector ) || (pOrigSelector && pNewSelector) );
     if (pOrigSelector) {
-	    assert( *pOrigSelector == *pNewSelector );
+      assert( *pOrigSelector == *pNewSelector );
     }
 
 
@@ -84,7 +84,7 @@ namespace Sass {
   }
 
 
-	int main() {
+  int main() {
     for (int index = 0; index < STATIC_ARRAY_SIZE(ROUNDTRIP_TESTS); index++) {
       const char* const toTest = ROUNDTRIP_TESTS[index];
       cout << "\nINPUT STRING: " << (toTest ? toTest : "NULL") << endl;

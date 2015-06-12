@@ -5,8 +5,8 @@ namespace Sass {
 
 
   /*
-		This is the equivalent of ruby's Sass::Util.paths.
-
+    # This is the equivalent of ruby's Sass::Util.paths.
+    #
     # Return an array of all possible paths through the given arrays.
     #
     # @param arrs [NodeCollection<NodeCollection<Node>>]
@@ -23,7 +23,7 @@ namespace Sass {
    should be able to drop it into ruby 3.2.19 and get the same results from ruby sass.
 
     def paths(arrs)
-     	// I changed the inject and maps to an iterative approach to make it easier to implement in C++
+        // I changed the inject and maps to an iterative approach to make it easier to implement in C++
       loopStart = [[]]
 
       for arr in arrs do
@@ -36,7 +36,7 @@ namespace Sass {
         loopStart = permutations
       end
     end
-	*/
+  */
   Node paths(const Node& arrs, Context& ctx) {
     To_String to_string(&ctx);
 
@@ -76,7 +76,7 @@ namespace Sass {
   }
 
 
-	/*
+  /*
   This is the equivalent of ruby sass' Sass::Util.flatten and [].flatten.
   Sass::Util.flatten requires the number of levels to flatten, while
   [].flatten doesn't and will flatten the entire array. This function

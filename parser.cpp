@@ -515,9 +515,9 @@ namespace Sass {
     val->is_delayed(false);
     bool is_default = false;
     bool is_global = false;
-    while (peek< default_flag >() || peek< global_flag >()) {
-      is_default = lex< default_flag >() || is_default;
-      is_global = lex< global_flag >() || is_global;
+    while (peek< alternatives < default_flag, global_flag > >()) {
+      if (lex< default_flag >()) is_default = true;
+      else if (lex< global_flag >()) is_global = true;
     }
     Assignment* var = new (ctx.mem) Assignment(var_source_position, name, val, is_default, is_global);
     return var;
@@ -1896,17 +1896,17 @@ namespace Sass {
     // lex optional comments
     lex < css_whitespace >();
     // parse `not` query operator
-	if (lex < kwd_not >()) {
+    if (lex < kwd_not >()) {
       cond = parse_supports_query();
       cond->operand(Supports_Condition::NOT);
     }
     // parse `and` query operator
-	else if (lex < kwd_and >()) {
+    else if (lex < kwd_and >()) {
       cond = parse_supports_query();
       cond->operand(Supports_Condition::AND);
     }
     // parse `or` query operator
-	else if (lex < kwd_or >()) {
+    else if (lex < kwd_or >()) {
       cond = parse_supports_query();
       cond->operand(Supports_Condition::OR);
     }
