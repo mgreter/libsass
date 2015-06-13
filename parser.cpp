@@ -1333,8 +1333,7 @@ namespace Sass {
     if (lex< kwd_important >())
     { return new (ctx.mem) String_Constant(pstate, "!important"); }
 
-    const char* stop;
-    if ((stop = peek< value_schema >()))
+    if (const char* stop = peek< value_schema >())
     { return parse_value_schema(stop); }
 
     // string may be interpolated
@@ -1364,6 +1363,9 @@ namespace Sass {
     // also handle the 10em- foo special case
     if (lex< sequence< dimension, optional< sequence< exactly<'-'>, negate< digit > > > > >())
     { return new (ctx.mem) Textual(pstate, Textual::DIMENSION, lexed); }
+
+    if (lex< sequence< static_component, one_plus< identifier > > >())
+    { return new (ctx.mem) String_Constant(pstate, lexed); }
 
     if (lex< number >())
     { return new (ctx.mem) Textual(pstate, Textual::NUMBER, lexed); }
