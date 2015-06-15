@@ -1964,19 +1964,7 @@ namespace Sass {
 
   void Extend::operator()(Ruleset* pRuleset)
   {
-    if (Selector_List* sl = dynamic_cast<Selector_List*>(pRuleset->selector())) {
-      Selector_List* ssl = new (ctx.mem) Selector_List(sl->pstate());
-      for (size_t i = 0, iL = sl->size(); i < iL; ++i) {
-        Complex_Selector* item = (*sl)[i];
-        Compound_Selector* hh = new (ctx.mem) Compound_Selector(sl->pstate());
-        Complex_Selector* ss = new (ctx.mem) Complex_Selector(sl->pstate());
-        *hh << new (ctx.mem) Parent_Selector(sl->pstate());
-        ss->head(hh); ss->tail(item); *ssl << ss;
-      }
-      pRuleset->selector(ssl);
-    }
     extendObjectWithSelectorAndBlock(pRuleset, ctx, subset_map);
-
     pRuleset->block()->perform(this);
   }
 

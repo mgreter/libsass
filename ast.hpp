@@ -2128,8 +2128,12 @@ namespace Sass {
     virtual unsigned long specificity()
     {
       unsigned long sum = 0;
+      unsigned long specificity = 0;
       for (size_t i = 0, L = length(); i < L; ++i)
-      { sum += (*this)[i]->specificity(); }
+      {
+        specificity = (*this)[i]->specificity();
+        if (sum < specificity) sum = specificity;
+      }
       return sum;
     }
     // vector<Complex_Selector*> members() { return elements_; }
