@@ -803,6 +803,9 @@ namespace Sass {
       if (dynamic_cast<Null*>(arg)) {
         return new (ctx.mem) Null(pstate);
       }
+      else if (List* list = dynamic_cast<List*>(arg)) {
+        return list;
+      }
       else if (String_Quoted* string_quoted = dynamic_cast<String_Quoted*>(arg)) {
         String_Constant* result = new (ctx.mem) String_Constant(pstate, string_quoted->value());
         // remember if the string was quoted (color tokens)
@@ -810,7 +813,7 @@ namespace Sass {
         return result;
       }
       To_String to_string(&ctx);
-      return new (ctx.mem) String_Constant(pstate, unquote(string(arg->perform(&to_string))));
+      return new (ctx.mem) String_Constant(pstate, string(arg->perform(&to_string)));
     }
 
     Signature quote_sig = "quote($string)";
