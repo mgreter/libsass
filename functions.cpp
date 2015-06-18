@@ -166,7 +166,6 @@ namespace Sass {
       Expression* exp = ARG(argname, Expression);
       string exp_src = exp->perform(&to_string) + "{";
       Selector_List* sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
-
       return (sel_list->length() > 0) ? sel_list->first()->tail()->head() : 0;
     }
 
@@ -1400,9 +1399,6 @@ namespace Sass {
       if (v->concrete_type() == Expression::STRING) {
         To_String to_string(&ctx);
         string str(v->perform(&to_string));
-        if (ctx.names_to_colors.count(str)) {
-          return new (ctx.mem) String_Constant(pstate, "color");
-        }
       }
       return new (ctx.mem) String_Constant(pstate, ARG("$value", Expression)->type());
     }
