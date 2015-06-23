@@ -822,17 +822,21 @@ namespace Sass {
       if (dynamic_cast<Null*>(arg)) {
         return new (ctx.mem) Null(pstate);
       }
-      else if (List* list = dynamic_cast<List*>(arg)) {
-        return list;
-      }
       else if (String_Quoted* string_quoted = dynamic_cast<String_Quoted*>(arg)) {
         String_Constant* result = new (ctx.mem) String_Constant(pstate, string_quoted->value());
         // remember if the string was quoted (color tokens)
         result->sass_fix_1291(string_quoted->quote_mark() != 0);
         return result;
       }
-      To_String to_string(&ctx);
-      return new (ctx.mem) String_Constant(pstate, string(arg->perform(&to_string)));
+      else if (dynamic_cast<String_Constant*>(arg)) {
+        return (Expression*) arg;
+      }
+      else {
+        To_String to_string(&ctx);
+        string val(arg->perform(&to_string));
+        deprecated("Passing " + val + ", a non-string value, to unquote()", pstate);
+        return (Expression*) arg;
+      }
     }
 
     Signature quote_sig = "quote($string)";
