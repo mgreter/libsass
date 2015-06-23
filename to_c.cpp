@@ -21,6 +21,9 @@ namespace Sass {
   Sass_Value* To_C::operator()(String_Constant* s)
   { return sass_make_string(s->value().c_str()); }
 
+  Sass_Value* To_C::operator()(String_Quoted* s)
+  { return sass_make_qstring(s->value().c_str()); }
+
   Sass_Value* To_C::operator()(List* l)
   {
     Sass_Value* v = sass_make_list(l->length(), l->separator() == List::COMMA ? SASS_COMMA : SASS_SPACE);
