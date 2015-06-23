@@ -31,7 +31,7 @@ namespace Sass {
       Expression* e = (*sel)[i]->perform(this);
       if (e) str += e->perform(&to_string);
     }
-    return new (ctx.mem) String_Constant(sel->pstate(), str);
+    return new (ctx.mem) String_Quoted(sel->pstate(), str);
   }
 
   Expression* Listize::operator()(Complex_Selector* sel)
@@ -51,16 +51,16 @@ namespace Sass {
     switch(sel->combinator())
     {
       case Complex_Selector::PARENT_OF:
-        *l << new (ctx.mem) String_Constant(sel->pstate(), ">");
+        *l << new (ctx.mem) String_Quoted(sel->pstate(), ">");
       break;
       case Complex_Selector::ADJACENT_TO:
-        *l << new (ctx.mem) String_Constant(sel->pstate(), "+");
+        *l << new (ctx.mem) String_Quoted(sel->pstate(), "+");
       break;
       case Complex_Selector::REFERENCE:
-        *l << new (ctx.mem) String_Constant(sel->pstate(), "/" + reference + "/");
+        *l << new (ctx.mem) String_Quoted(sel->pstate(), "/" + reference + "/");
       break;
       case Complex_Selector::PRECEDES:
-        *l << new (ctx.mem) String_Constant(sel->pstate(), "~");
+        *l << new (ctx.mem) String_Quoted(sel->pstate(), "~");
       break;
       case Complex_Selector::ANCESTOR_OF:
       break;

@@ -53,6 +53,13 @@
 namespace Sass {
   using namespace std;
 
+  template <typename T>
+  void hash_combine (std::size_t& seed, const T& val)
+  {
+    seed ^= std::hash<T>()(val) + 0x9e3779b9
+             + (seed<<6) + (seed>>2);
+  }
+
   //////////////////////////////////////////////////////////
   // Abstract base class for all abstract syntax tree nodes.
   //////////////////////////////////////////////////////////
@@ -454,11 +461,11 @@ namespace Sass {
     ADD_PROPERTY(String*, property)
     ADD_PROPERTY(Expression*, value)
     ADD_PROPERTY(bool, is_important)
-    ADD_PROPERTY(bool, surfer);
+    ADD_PROPERTY(bool, is_indented)
   public:
     Declaration(ParserState pstate,
                 String* prop, Expression* val, bool i = false)
-    : Statement(pstate), property_(prop), value_(val), is_important_(i), surfer_(false)
+    : Statement(pstate), property_(prop), value_(val), is_important_(i), is_indented_(false)
     { }
     ATTACH_OPERATIONS()
   };
@@ -769,9 +776,8 @@ namespace Sass {
       if (hash_ > 0) return hash_;
 
       hash_ = std::hash<string>()(separator() == COMMA ? "comma" : "space");
-
       for (size_t i = 0, L = length(); i < L; ++i)
-        hash_ ^= (elements()[i])->hash() + (i + 1);
+        hash_combine(hash_, (elements()[i])->hash());
 
       return hash_;
     }

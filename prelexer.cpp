@@ -258,8 +258,12 @@ namespace Sass {
       return word<include_kwd>(src);
     }
 
-    const char* kwd_content(const char* src) {
+    const char* kwd_content_directive(const char* src) {
       return word<content_kwd>(src);
+    }
+
+    const char* kwd_charset_directive(const char* src) {
+      return word<charset_kwd>(src);
     }
 
     const char* kwd_extend(const char* src) {

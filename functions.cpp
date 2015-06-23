@@ -472,7 +472,7 @@ namespace Sass {
       Number* amount = dynamic_cast<Number*>(env["$amount"]);
       if (!amount) {
         To_String to_string(&ctx);
-        return new (ctx.mem) String_Constant(pstate, "saturate(" + env["$color"]->perform(&to_string) + ")");
+        return new (ctx.mem) String_Quoted(pstate, "saturate(" + env["$color"]->perform(&to_string) + ")");
       }
 
       ARGR("$amount", Number, 0, 100);
@@ -533,7 +533,7 @@ namespace Sass {
       Number* amount = dynamic_cast<Number*>(env["$color"]);
       if (amount) {
         To_String to_string(&ctx);
-        return new (ctx.mem) String_Constant(pstate, "grayscale(" + amount->perform(&to_string) + ")");
+        return new (ctx.mem) String_Quoted(pstate, "grayscale(" + amount->perform(&to_string) + ")");
       }
 
       Color* rgb_color = ARG("$color", Color);
@@ -570,7 +570,7 @@ namespace Sass {
       Number* amount = dynamic_cast<Number*>(env["$color"]);
       if (amount) {
         To_String to_string(&ctx);
-        return new (ctx.mem) String_Constant(pstate, "invert(" + amount->perform(&to_string) + ")");
+        return new (ctx.mem) String_Quoted(pstate, "invert(" + amount->perform(&to_string) + ")");
       }
 
       Color* rgb_color = ARG("$color", Color);
@@ -590,14 +590,14 @@ namespace Sass {
     {
       String_Constant* ie_kwd = dynamic_cast<String_Constant*>(env["$color"]);
       if (ie_kwd) {
-        return new (ctx.mem) String_Constant(pstate, "alpha(" + ie_kwd->value() + ")");
+        return new (ctx.mem) String_Quoted(pstate, "alpha(" + ie_kwd->value() + ")");
       }
 
       // CSS3 filter function overload: pass literal through directly
       Number* amount = dynamic_cast<Number*>(env["$color"]);
       if (amount) {
         To_String to_string(&ctx);
-        return new (ctx.mem) String_Constant(pstate, "opacity(" + amount->perform(&to_string) + ")");
+        return new (ctx.mem) String_Quoted(pstate, "opacity(" + amount->perform(&to_string) + ")");
       }
 
       return new (ctx.mem) Number(pstate, ARG("$color", Color)->a());
@@ -808,7 +808,7 @@ namespace Sass {
       for (size_t i = 0, L = result.length(); i < L; ++i) {
         result[i] = std::toupper(result[i]);
       }
-      return new (ctx.mem) String_Constant(pstate, result);
+      return new (ctx.mem) String_Quoted(pstate, result);
     }
 
     ///////////////////
@@ -823,7 +823,7 @@ namespace Sass {
         return new (ctx.mem) Null(pstate);
       }
       else if (String_Quoted* string_quoted = dynamic_cast<String_Quoted*>(arg)) {
-        String_Constant* result = new (ctx.mem) String_Constant(pstate, string_quoted->value());
+        String_Quoted* result = new (ctx.mem) String_Quoted(pstate, string_quoted->value());
         // remember if the string was quoted (color tokens)
         result->sass_fix_1291(string_quoted->quote_mark() != 0);
         return result;
@@ -845,7 +845,7 @@ namespace Sass {
       To_String to_string(&ctx);
       AST_Node* arg = env["$string"];
       string str(quote(arg->perform(&to_string), String_Constant::double_quote()));
-      String_Constant* result = new (ctx.mem) String_Constant(pstate, str);
+      String_Quoted* result = new (ctx.mem) String_Quoted(pstate, str);
       result->is_delayed(true);
       return result;
     }
@@ -910,7 +910,7 @@ namespace Sass {
       // handle any invalid utf8 errors
       // other errors will be re-thrown
       catch (...) { handle_utf8_error(pstate, backtrace); }
-      return new (ctx.mem) String_Constant(pstate, str);
+      return new (ctx.mem) String_Quoted(pstate, str);
     }
 
     Signature str_index_sig = "str-index($string, $substring)";
@@ -991,7 +991,7 @@ namespace Sass {
         cpy->value(str);
         return cpy;
       } else {
-        return new (ctx.mem) String_Constant(pstate, str);
+        return new (ctx.mem) String_Quoted(pstate, str);
       }
     }
 
@@ -1012,7 +1012,7 @@ namespace Sass {
         cpy->value(str);
         return cpy;
       } else {
-        return new (ctx.mem) String_Constant(pstate, str);
+        return new (ctx.mem) String_Quoted(pstate, str);
       }
     }
 
@@ -1303,7 +1303,7 @@ namespace Sass {
         l = new (ctx.mem) List(pstate, 1);
         *l << ARG("$list", Expression);
       }
-      return new (ctx.mem) String_Constant(pstate,
+      return new (ctx.mem) String_Quoted(pstate,
                                            l->separator() == List::COMMA ? "comma" : "space");
     }
 
@@ -1392,7 +1392,7 @@ namespace Sass {
       for (size_t i = arglist->size(), L = arglist->length(); i < L; ++i) {
         string name = string(((Argument*)(*arglist)[i])->name());
         name = name.erase(0, 1); // sanitize name (remove dollar sign)
-        *result << make_pair(new (ctx.mem) String_Constant(pstate, name),
+        *result << make_pair(new (ctx.mem) String_Quoted(pstate, name),
                              ((Argument*)(*arglist)[i])->value());
       }
       return result;
@@ -1410,7 +1410,7 @@ namespace Sass {
         To_String to_string(&ctx);
         string str(v->perform(&to_string));
       }
-      return new (ctx.mem) String_Constant(pstate, ARG("$value", Expression)->type());
+      return new (ctx.mem) String_Quoted(pstate, ARG("$value", Expression)->type());
     }
 
     Signature unit_sig = "unit($number)";
@@ -1568,9 +1568,9 @@ namespace Sass {
     {
       Expression* v = ARG("$value", Expression);
       if (v->concrete_type() == Expression::NULL_VAL) {
-        return new (ctx.mem) String_Constant(pstate, "null");
+        return new (ctx.mem) String_Quoted(pstate, "null");
       } else if (v->concrete_type() == Expression::BOOLEAN && *v == 0) {
-        return new (ctx.mem) String_Constant(pstate, "false");
+        return new (ctx.mem) String_Quoted(pstate, "false");
       } else if (v->concrete_type() == Expression::STRING) {
         return v;
       } else {
@@ -1583,7 +1583,7 @@ namespace Sass {
         string inspect = v->perform(&to_string);
         if (inspect.empty() && parentheses) inspect = "()";
         ctx.output_style = old_style;
-        return new (ctx.mem) String_Constant(pstate, inspect);
+        return new (ctx.mem) String_Quoted(pstate, inspect);
 
 
       }
@@ -1752,7 +1752,7 @@ namespace Sass {
         Simple_Selector* ss = (*sel)[i];
         string ss_string = ss->perform(&to_string) ;
 
-        *l << new (ctx.mem) String_Constant(ss->pstate(), ss_string);
+        *l << new (ctx.mem) String_Quoted(ss->pstate(), ss_string);
       }
 
       return l;
@@ -1827,7 +1827,7 @@ namespace Sass {
       uniform_real_distribution<> distributor(0, 4294967296); // 16^8
       uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
       ss << "u" << setfill('0') << setw(8) << std::hex << distributed;
-      return new (ctx.mem) String_Constant(pstate, ss.str());
+      return new (ctx.mem) String_Quoted(pstate, ss.str());
     }
 
   }

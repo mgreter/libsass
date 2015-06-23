@@ -368,7 +368,7 @@ namespace Sass {
       case Statement::NONE:
       default:
         error("unknown internal error; please contact the LibSass maintainers", s->pstate(), backtrace);
-        String_Constant* msg = new (ctx.mem) String_Constant(ParserState("[WARN]"), string("`CSSize` can't clone ") + typeid(*s).name());
+        String_Quoted* msg = new (ctx.mem) String_Quoted(ParserState("[WARN]"), string("`CSSize` can't clone ") + typeid(*s).name());
         return new (ctx.mem) Warning(ParserState("[WARN]"), msg);
     }
   }
@@ -539,7 +539,7 @@ namespace Sass {
     );
 
     if (!type.empty()) {
-      mm->media_type(new (ctx.mem) String_Constant(mq1->pstate(), type));
+      mm->media_type(new (ctx.mem) String_Quoted(mq1->pstate(), type));
     }
 
     *mm += mq2;

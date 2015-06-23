@@ -222,7 +222,8 @@ namespace Sass {
     const char* kwd_function(const char* src);
     const char* kwd_return_directive(const char* src);
     const char* kwd_include_directive(const char* src);
-    const char* kwd_content(const char* src);
+    const char* kwd_content_directive(const char* src);
+    const char* kwd_charset_directive(const char* src);
     const char* kwd_extend(const char* src);
 
     const char* kwd_if_directive(const char* src);

@@ -55,7 +55,9 @@ namespace Sass {
     Expression* operator()(Number*);
     Expression* operator()(Boolean*);
     Expression* operator()(String_Schema*);
+    Expression* operator()(String_Quoted*);
     Expression* operator()(String_Constant*);
+    // Expression* operator()(Selector_List*);
     Expression* operator()(Media_Query*);
     Expression* operator()(Media_Query_Expression*);
     Expression* operator()(At_Root_Expression*);

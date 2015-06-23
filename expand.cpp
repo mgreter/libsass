@@ -122,7 +122,7 @@ namespace Sass {
         String_Schema* combined_prop = new (ctx.mem) String_Schema(p->pstate());
         if (!property_stack.empty()) {
           *combined_prop << property_stack.back()
-                         << new (ctx.mem) String_Constant(p->pstate(), "-")
+                         << new (ctx.mem) String_Quoted(p->pstate(), "-")
                          << dec->property(); // TODO: eval the prop into a string constant
         }
         else {
@@ -573,7 +573,7 @@ namespace Sass {
   inline Statement* Expand::fallback_impl(AST_Node* n)
   {
     string err = string("`Expand` doesn't handle ") + typeid(*n).name();
-    String_Constant* msg = new (ctx.mem) String_Constant(ParserState("[WARN]"), err);
+    String_Quoted* msg = new (ctx.mem) String_Quoted(ParserState("[WARN]"), err);
     error("unknown internal error; please contact the LibSass maintainers", n->pstate(), backtrace());
     return new (ctx.mem) Warning(ParserState("[WARN]"), msg);
   }

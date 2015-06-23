@@ -18,7 +18,10 @@ namespace Sass {
     for (size_t i = 0, L = as->length(); i < L; ++i) {
       if (auto str = dynamic_cast<String_Quoted*>((*as)[i]->value())) {
         // force optional quotes (only if needed)
-        if (str->quote_mark()) str->quote_mark('*');
+        if (str->quote_mark()) {
+          str->quote_mark('*');
+          str->is_delayed(true);
+        }
       }
     }
 

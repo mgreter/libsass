@@ -126,8 +126,8 @@ namespace Sass {
           if (dec->value()->concrete_type() == Expression::STRING) {
             String_Constant* valConst = static_cast<String_Constant*>(dec->value());
             string val(valConst->value());
-            if (dynamic_cast<String_Quoted*>(valConst)) {
-              if (!valConst->quote_mark() && val.empty()) {
+            if (auto qstr = dynamic_cast<String_Quoted*>(valConst)) {
+              if (!qstr->quote_mark() && val.empty()) {
                 bPrintExpression = false;
               }
             }

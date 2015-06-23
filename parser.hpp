@@ -260,6 +260,8 @@ namespace Sass {
     Each* parse_each_directive();
     While* parse_while_directive();
     Return* parse_return_directive();
+    Content* parse_content_directive();
+    void parse_charset_directive();
     Media_Block* parse_media_block();
     List* parse_media_queries();
     Media_Query* parse_media_query();
