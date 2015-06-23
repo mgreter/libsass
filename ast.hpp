@@ -771,7 +771,7 @@ namespace Sass {
       hash_ = std::hash<string>()(separator() == COMMA ? "comma" : "space");
 
       for (size_t i = 0, L = length(); i < L; ++i)
-        hash_ ^= (elements()[i])->hash();
+        hash_ ^= (elements()[i])->hash() + (i + 1);
 
       return hash_;
     }
