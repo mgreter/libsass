@@ -22,6 +22,7 @@
 #include "prelexer.hpp"
 #include "parser.hpp"
 #include "expand.hpp"
+#include "debug.hpp"
 
 namespace Sass {
   using namespace std;
@@ -368,6 +369,7 @@ namespace Sass {
 
   Expression* Eval::operator()(Debug* d)
   {
+    //DEBUG_PRINTLN(ALL, "Eval Debug: ");
     Expression* message = d->value()->perform(this);
     To_String to_string(&ctx);
     Env* env = exp.environment();
@@ -1359,10 +1361,14 @@ namespace Sass {
 
   Selector_List* Eval::operator()(Selector_List* s)
   {
+    //DEBUG_PRINTLN(ALL, "Eval Selector_List: " << s->mCachedSelector());
     vector<Selector_List*> rv;
     Selector_List* sl = new (ctx.mem) Selector_List(s->pstate());
     for (size_t i = 0, iL = s->size(); i < iL; ++i) {
-      rv.push_back(operator()((*s)[i]));
+      Complex_Selector* cpxs = (*s)[i];
+      Selector_List* sm = operator()(cpxs);
+      //DEBUG_PRINTLN(ALL, "Eval Selector_List after eval element: " << sm->mCachedSelector());
+      rv.push_back(sm);
     }
 
     // we should actually permutate parent first
@@ -1383,12 +1389,17 @@ namespace Sass {
       }
 
     }
+    //DEBUG_PRINTLN(ALL, "Eval Selector_List returning: " << sl->mCachedSelector());
     return sl;
   }
 
 
   Selector_List* Eval::operator()(Complex_Selector* s)
   {
+    To_String to_string(&ctx);
+    //DEBUG_PRINTLN(ALL, "Eval Complex_Selector: param " << s->perform(&to_string));
+
+    // << s->unify_with(new (ctx.mem) Complex_Selector(s->pstate()), ctx)->mCachedSelector());
     if (s == 0) return 0;
     bool parentized = false;
     Complex_Selector* tail = s->tail();
@@ -1396,37 +1407,66 @@ namespace Sass {
     String* reference = s->reference();
     Complex_Selector::Combinator combinator = s->combinator();
     Selector_List* sl = new (ctx.mem) Selector_List(s->pstate());
+
+    //if (head) DEBUG_PRINTLN(ALL, "Eval Complex_Selector: param head: " << head->perform(&to_string));
+    //if (tail) DEBUG_PRINTLN(ALL, "Eval Complex_Selector: param tail " << tail->perform(&to_string));
+    //DEBUG_PRINTLN(ALL, "Eval Complex_Selector Reference: " << reference);
+    //if (head) DEBUG_PRINTLN(ALL, "Eval Complex_Selector: head has parent ref" << head->has_parent_ref());
+    //DEBUG_PRINTLN(ALL, "Eval Complex_Selector Combinator: " << combinator);
+
     if (reference) reference = (String*) reference->perform(this);
 
     if (head) {
       // check if we have a parent selector reference (expands to list)
+      //DEBUG_PRINTLN(ALL, "We have head");
       if (head->size() > 0 && dynamic_cast<Parent_Selector*>((*head)[0])) {
+        //DEBUG_PRINTLN(ALL, "We have head that is a parent");
         // do we have any parents to interpolate
         Selector_List* pr = selector();
         if (pr && pr->size() > 0) {
+          //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | Parent selector from the stack: " << pr->mCachedSelector())
           for (size_t n = 0, nL = pr->size(); n < nL; ++n) {
             if (tail) {
               vector<Selector_List*> rv;
+              //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | About to eval tail");
               Selector_List* tails = operator()(tail);
+              //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | Evaled tail: " << tails->mCachedSelector());
               for (size_t m = 0, mL = tails->size(); m < mL; ++m) {
                 Complex_Selector* ns = (*pr)[n]->cloneFully(ctx);
                 if (s->has_line_feed()) ns->has_line_feed(true);
                 Complex_Selector* tt = (*tails)[m];
                 Complex_Selector* last = ns->last();
-                if (combinator != Complex_Selector::ANCESTOR_OF) {
+                //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | tt: " << tt->perform(&to_string));
+                //if (last) DEBUG_PRINTLN(ALL, "Eval Complex_Selector | last: " << last->perform(&to_string));
+                //if (ns->first()) DEBUG_PRINTLN(ALL, "Eval Complex_Selector | first: " << ns->first()->perform(&to_string));
+                if (combinator == Complex_Selector::ANCESTOR_OF){
+                  //DEBUG_PRINTLN(ALL, "AncestorOf");
+                  last->tail(tt);
+                } else if (combinator == Complex_Selector::PARENT_OF){
+                  Complex_Selector *cp = 0;
+                  cp = new(ctx.mem) Complex_Selector(s->pstate());
+                  cp->head(head);
+                  cp->tail(tt);
+                  cp->combinator(combinator);
+                  cp->reference(reference);
+                  //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | setting last tail to cp: " << cp->perform(&to_string));
+                  last->tail(cp);
+                  //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | last tail set to cp: " << last->tail()->perform(&to_string));
+                } else {
                   Complex_Selector* cp = 0;
                   cp = new (ctx.mem) Complex_Selector(s->pstate());
-                  cp->head(head); cp->tail(tt);
+                  cp->head(head);
+                  cp->tail(tt);
                   cp->combinator(combinator);
                   cp->reference(reference);
                   last->tail(cp);
-                } else {
-                  last->tail(tt);
                 }
                 for (size_t i = 1, iL = head->size(); i < iL; ++i) {
                   // add simple selectors
-                  *last->head() << (*head)[i];
+                    *last->head() << (*head)[i];
                 }
+                ///DEBUG_PRINTLN(ALL, "Eval Complex_Selector | adding ns: " << ns->perform(&to_string));
+
                 *sl << ns;
               }
               // EO foreach parentized tail
@@ -1440,6 +1480,7 @@ namespace Sass {
                 *last->head() << (*head)[i];
               }
               *sl << ns;
+              //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | no tail: " << sl->mCachedSelector());
             }
           }
           parentized = true;
@@ -1451,17 +1492,36 @@ namespace Sass {
 
     if (parentized == false) {
       if (s->tail()) {
+        //DEBUG_PRINTLN(ALL, "Eval Complex_Selector: about to eval s->tail")
         Selector_List* tails = operator()(s->tail());
+        //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | evaled s->tail: " << tails->mCachedSelector());
         for (size_t m = 0, mL = tails->size(); m < mL; ++m) {
-          Complex_Selector* ss = new (ctx.mem) Complex_Selector(*s);
-          ss->tail((*tails)[m]);
-          *sl << ss;
+          Complex_Selector* tailm = (*tails)[m];
+          //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | s->tail element to add: " << tailm->perform(&to_string));
+          //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | tailm->head: " << tailm->head()->perform(&to_string));
+          //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | head: " << head->perform(&to_string));
+
+          if(head && head->is_superselector_of(tailm)) {
+            //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | equal head | adding param s: "  << s->perform(&to_string));
+            *sl << s;
+            //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | equal head | added param sl: "  << sl->mCachedSelector());
+          } else {
+            Complex_Selector *ss = new(ctx.mem) Complex_Selector(*s);
+            ss->tail(tailm);
+            //DEBUG_PRINTLN(ALL, "Eval Complex_Selector: parentized false | adding ss: " << ss->perform(&to_string));
+            *sl << ss;
+            //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | added param sl: " << sl->mCachedSelector());
+          }
         }
       }
       else {
+        //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | tail empty | adding param s: "  << s->perform(&to_string));
         *sl << s;
+        //DEBUG_PRINTLN(ALL, "Eval Complex_Selector | parentized false | tail empty | added param sl: "  << sl->mCachedSelector());
       }
     }
+
+    ///DEBUG_PRINTLN(ALL, "Eval Complex_Selector return val after handling unparentized: " << sl->mCachedSelector());
 
     for (size_t i = 0, iL = sl->size(); i < iL; ++i) {
 
@@ -1475,6 +1535,7 @@ namespace Sass {
       }
 
     }
+    //DEBUG_PRINTLN(ALL, "Eval Complex_Selector returning: " << sl->mCachedSelector());
 
     return sl;
   }
@@ -1500,8 +1561,12 @@ namespace Sass {
   Expression* Eval::operator()(Parent_Selector* p)
   {
     Selector_List* pr = selector();
+    //DEBUG_PRINTLN(ALL, "PARENT: " << pr->mCachedSelector())
     exp.selector_stack.pop_back();
-    if (pr) pr = operator()(pr);
+    if (pr) {
+      pr = operator()(pr);
+    }
+    //DEBUG_PRINTLN(ALL, "PARENT eval: " << pr->mCachedSelector())
     exp.selector_stack.push_back(pr);
     return pr;
   }
