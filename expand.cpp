@@ -12,6 +12,7 @@
 #include "backtrace.hpp"
 #include "context.hpp"
 #include "parser.hpp"
+#include "debug.hpp"
 
 namespace Sass {
 
@@ -96,8 +97,10 @@ namespace Sass {
       return k;
     }
 
+    //DEBUG_PRINTLN(ALL, "Expand Ruleset: Before eval")
     Expression* ex = r->selector()->perform(&eval);
     Selector_List* sel = dynamic_cast<Selector_List*>(ex);
+    //DEBUG_PRINTLN(ALL, "Expand Ruleset: " << sel->mCachedSelector())
     if (sel == 0) throw runtime_error("Expanded null selector");
 
     selector_stack.push_back(sel);
@@ -271,7 +274,12 @@ namespace Sass {
       }
     }
     else {
-      env->set_lexical(var, a->value()->perform(&eval));
+      //DEBUG_PRINTLN(ALL, "Assign: " << var.data());
+      auto val = a->value()->perform(&eval);
+      if(val == NULL) {
+        val = new (ctx.mem) Null(a->pstate());
+      }
+      env->set_lexical(var, val);
     }
     return 0;
   }
