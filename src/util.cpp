@@ -430,7 +430,11 @@ namespace Sass {
 
       int cp = utf8::next(it, end);
 
-      if (cp == 10) {
+      // just skip them
+      while (cp == '\r') {
+        cp = utf8::next(it, end);
+      }
+      if (cp == '\n') {
         quoted.push_back('\\');
         quoted.push_back('a');
         // we hope we can remove this flag once we figure out
