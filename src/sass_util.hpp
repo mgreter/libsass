@@ -7,8 +7,7 @@
 
 namespace Sass {
 
-
-
+  double round(double x);
 
   /*
    This is for ports of functions in the Sass:Util module.

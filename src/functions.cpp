@@ -5,6 +5,7 @@
 #include "parser.hpp"
 #include "constants.hpp"
 #include "to_string.hpp"
+#include "sass_util.hpp"
 #include "inspect.hpp"
 #include "extend.hpp"
 #include "eval.hpp"
@@ -312,9 +313,9 @@ namespace Sass {
 
       return SASS_MEMORY_NEW(ctx.mem, Color,
                              pstate,
-                             std::round(w1*color1->r() + w2*color2->r()),
-                             std::round(w1*color1->g() + w2*color2->g()),
-                             std::round(w1*color1->b() + w2*color2->b()),
+                             Sass::round(w1*color1->r() + w2*color2->r()),
+                             Sass::round(w1*color1->g() + w2*color2->g()),
+                             Sass::round(w1*color1->b() + w2*color2->b()),
                              color1->a()*p + color2->a()*(1-p));
     }
 

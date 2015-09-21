@@ -3,6 +3,10 @@
 
 namespace Sass {
 
+  double round(double x)
+  {
+    return std::copysign(std::floor(std::fabs(x) + 0.5), x);
+  }
 
   /*
     # This is the equivalent of ruby's Sass::Util.paths.
