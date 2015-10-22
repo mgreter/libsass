@@ -16,6 +16,7 @@
 #include "sass.h"
 #include "context.hpp"
 #include "plugins.hpp"
+#include "debugger.hpp"
 #include "constants.hpp"
 #include "parser.hpp"
 #include "file.hpp"
@@ -348,6 +349,7 @@ namespace Sass {
     // create crtp visitor objects
     Expand expand(*this, &global, &backtrace);
     Cssize cssize(*this, &backtrace);
+    // debug_ast(root);
     // expand and eval the tree
     root = root->perform(&expand)->block();
     // merge and bubble certain rules

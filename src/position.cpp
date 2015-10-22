@@ -142,6 +142,21 @@ namespace Sass {
     return Offset(line - off.line, off.line == line ? column - off.column : column);
   }
 
+  Token Token::rtrim()
+  {
+    return Token(prefix, begin, end);
+    const char* pos = end - 1;
+    while (pos > begin && (
+      *pos == 0    ||
+      *pos == ' '  ||
+      *pos == '\t' ||
+      *pos == '\r' ||
+      *pos == '\n'
+    )) { -- pos; }
+    return Token(prefix, begin, pos + 1);
+  }
+
+
   /* not used anymore - remove?
   std::ostream& operator<<(std::ostream& strm, const Offset& off)
   {

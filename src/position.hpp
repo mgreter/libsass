@@ -92,6 +92,8 @@ namespace Sass {
       return str.erase(str.find_last_not_of(whitespaces)+1);
     }
 
+    Token rtrim();
+
     operator bool()        { return begin && end && begin >= end; }
     operator std::string() { return to_string(); }
 

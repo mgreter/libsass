@@ -148,6 +148,7 @@ namespace Sass {
     // they must be static to be useable by lexer
     extern const char static_ops[]      = "*/%";
     // some character classes for the parser
+    extern const char selector_delims[] = ";{";
     extern const char selector_list_delims[] = "){};!";
     extern const char complex_selector_delims[] = ",){};!";
     extern const char selector_combinator_ops[] = "+~>";

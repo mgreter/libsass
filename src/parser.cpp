@@ -2162,18 +2162,34 @@ namespace Sass {
     At_Rule* at_rule = SASS_MEMORY_NEW(ctx.mem, At_Rule, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
-      at_rule->selector(parse_selector_list(true));
+      at_rule->selector(parse_selector_list());
     }
 
     lex < css_comments >(false);
 
-    if (lex < static_property >()) {
-      at_rule->value(parse_interpolated_chunk(Token(lexed)));
-    } else if (!(peek < alternatives < exactly<'{'>, exactly<'}'>, exactly<';'> > >())) {
-      at_rule->value(parse_list());
+    if (!peek <
+          alternatives <
+            exactly<'{'>,
+            exactly<'}'>,
+            exactly<';'>
+          >
+        >()
+    ) {
+      if (lex <
+            one_plus < alternatives <
+                interpolant,
+                any_char_but < selector_delims >
+              >
+            >
+          >(true)) {
+        at_rule->value(parse_interpolated_chunk(lexed));
+      } else {
+        at_rule->value(parse_list());
+      }
     }
 
-    lex < css_comments >(false);
+
+    lex < css_comments >();
 
     if (peek< exactly<'{'> >()) {
       at_rule->block(parse_block());

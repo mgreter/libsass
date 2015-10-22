@@ -128,6 +128,13 @@ namespace Sass {
       return (*src && *src != chr) ? src + 1 : 0;
     }
 
+    // Match all except the supplied one.
+    // Regex equivalent: /[^xyz]/
+    template <const char* char_class>
+    const char* any_char_but(const char* src) {
+      return class_char<char_class>(src) ? 0 : src + 1;
+    }
+
     // Succeeds if the matcher fails.
     // Aka. zero-width negative lookahead.
     // Regex equivalent: /(?!literal)/

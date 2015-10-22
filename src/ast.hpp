@@ -464,6 +464,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class At_Rule : public Has_Block {
     ADD_PROPERTY(std::string, keyword)
+    // Can only be a compound selector
     ADD_PROPERTY(Selector*, selector)
     ADD_PROPERTY(Expression*, value)
   public:
