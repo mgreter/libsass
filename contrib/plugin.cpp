@@ -12,6 +12,9 @@ extern "C" const char* ADDCALL libsass_get_version() {
 
 union Sass_Value* custom_function(const union Sass_Value* s_args, Sass_Function_Entry cb, struct Sass_Options* opts)
 {
+  // get context/option struct associated with this compiler
+  struct Sass_Context* ctx = sass_compiler_get_context(comp);
+  struct Sass_Options* opts = sass_compiler_get_options(comp);
   // get the cookie from function descriptor
   void* cookie = sass_function_get_cookie(cb);
   // we actually abuse the void* to store an "int"
