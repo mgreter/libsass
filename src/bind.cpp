@@ -78,7 +78,7 @@ namespace Sass {
                                               rest->separator(),
                                               true);
               // wrap each item from list as an argument
-              for (Expression* item : rest->elements()) {
+              for (auto __item = rest->elements().begin(); __item != rest->elements().end(); ++__item) { Expression* item = *(__item); 
                 (*arglist) << SASS_MEMORY_NEW(ctx.mem, Argument,
                                               item->pstate(),
                                               item,
@@ -100,7 +100,7 @@ namespace Sass {
           List* arglist = SASS_MEMORY_NEW(ctx.mem, List, p->pstate(), 0, SASS_COMMA, true);
           env->local_frame()[p->name()] = arglist;
           Map* argmap = static_cast<Map*>(a->value());
-          for (auto key : argmap->keys()) {
+          for (auto __key = argmap->keys().begin(); __key != argmap->keys().end(); ++__key) { auto key = *(__key); 
             std::string name = unquote(static_cast<String_Constant*>(key)->value());
             (*arglist) << SASS_MEMORY_NEW(ctx.mem, Argument,
                                           key->pstate(),
@@ -201,7 +201,7 @@ namespace Sass {
       } else if (a->is_keyword_argument()) {
         Map* argmap = static_cast<Map*>(a->value());
 
-        for (auto key : argmap->keys()) {
+        for (auto __key = argmap->keys().begin(); __key != argmap->keys().end(); ++__key) { auto key = *(__key); 
           std::string name = "$" + unquote(static_cast<String_Constant*>(key)->value());
 
           if (!param_map.count(name)) {

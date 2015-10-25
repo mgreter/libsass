@@ -271,7 +271,7 @@ namespace Sass {
         return *this;
       }
 
-      for (auto key : h->keys()) {
+      for (auto __key = h->keys().begin(); __key != h->keys().end(); ++__key) { auto key = *(__key); 
         *this << std::make_pair(key, h->at(key));
       }
 
@@ -858,7 +858,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        for (auto key : keys()) {
+        for (auto __key = keys().begin(); __key != keys().end(); ++__key) { auto key = *(__key); 
           hash_combine(hash_, key->hash());
           hash_combine(hash_, at(key)->hash());
         }
@@ -1095,8 +1095,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_ = std::hash<std::string>()(name());
-        for (auto argument : arguments()->elements())
-        { hash_combine(hash_, argument->hash()); }
+        for (auto __argument = arguments()->elements().begin(); __argument != arguments()->elements().end(); ++__argument) { auto argument = *(__argument);  hash_combine(hash_, argument->hash()); }
       }
       return hash_;
     }
@@ -1362,8 +1361,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        for (auto string : elements())
-        { hash_combine(hash_, string->hash()); }
+        for (auto __string = elements().begin(); __string != elements().end(); ++__string) { auto string = *(__string);  hash_combine(hash_, string->hash()); }
       }
       return hash_;
     }

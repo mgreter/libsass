@@ -517,7 +517,7 @@ namespace Sass {
 
   bool Compound_Selector::is_superselector_of(Selector_List* rhs, std::string wrapped)
   {
-    for (Complex_Selector* item : rhs->elements()) {
+    for (auto __item = rhs->elements().begin(); __item != rhs->elements().end(); ++__item) { Complex_Selector* item = *(__item); 
       if (is_superselector_of(item, wrapped)) return true;
     }
     return false;
@@ -634,8 +634,8 @@ namespace Sass {
       rset.insert(r->perform(&to_string));
     }
 
-    //for (auto l : lset) { cerr << "l: " << l << endl; }
-    //for (auto r : rset) { cerr << "r: " << r << endl; }
+    //for (auto __l = lset.begin(); __l != lset.end(); ++__l) { auto l = *(__l);  cerr << "l: " << l << endl; }
+    //for (auto __r = rset.begin(); __r != rset.end(); ++__r) { auto r = *(__r);  cerr << "r: " << r << endl; }
 
     if (lset.empty()) return true;
     // return true if rset contains all the elements of lset
@@ -1281,7 +1281,7 @@ namespace Sass {
     To_String to_string;
 
     Selector_List* extender = this;
-    for (auto complex_sel : extendee->elements()) {
+    for (auto __complex_sel = extendee->elements().begin(); __complex_sel != extendee->elements().end(); ++__complex_sel) { auto complex_sel = *(__complex_sel); 
       Complex_Selector* c = complex_sel;
 
 
@@ -1503,8 +1503,7 @@ namespace Sass {
     denominator_units_.clear();
 
     // build them by iterating over the exponents
-    for (auto exp : exponents)
-    {
+    for (auto __exp = exponents.begin(); __exp != exponents.end(); ++__exp) { auto exp = *(__exp); 
       // maybe there is more effecient way to push
       // the same item multiple times to a vector?
       for(size_t i = 0, S = abs(exp.second); i < S; ++i)
@@ -1597,8 +1596,7 @@ namespace Sass {
     denominator_units_.clear();
 
     // build them by iterating over the exponents
-    for (auto exp : exponents)
-    {
+    for (auto __exp = exponents.begin(); __exp != exponents.end(); ++__exp) { auto exp = *(__exp); 
       // maybe there is more effecient way to push
       // the same item multiple times to a vector?
       for(size_t i = 0, S = abs(exp.second); i < S; ++i)
@@ -1744,7 +1742,7 @@ namespace Sass {
   {
     if (const Map* r = dynamic_cast<const Map*>(&rhs)) {
       if (length() != r->length()) return false;
-      for (auto key : keys()) {
+      for (auto __key = keys().begin(); __key != keys().end(); ++__key) { auto key = *(__key); 
         Expression* lv = at(key);
         Expression* rv = r->at(key);
         if (!rv || !lv) return false;
@@ -1785,7 +1783,7 @@ namespace Sass {
     if (empty()) return res;
     if (is_invisible()) return res;
     bool items_output = false;
-    for (auto key : keys()) {
+    for (auto __key = keys().begin(); __key != keys().end(); ++__key) { auto key = *(__key); 
       if (key->is_invisible()) continue;
       if (at(key)->is_invisible()) continue;
       if (items_output) res += compressed ? "," : ", ";

@@ -191,7 +191,7 @@ extern "C" {
       std::string msg_prefix("Error: ");
       bool got_newline = false;
       msg_stream << msg_prefix;
-      for (char chr : e.message) {
+      for (auto __chr = e.message.begin(); __chr != e.message.end(); ++__chr) { char chr = *(__chr); 
         if (chr == '\r') {
           got_newline = true;
         } else if (chr == '\n') {

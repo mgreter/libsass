@@ -204,7 +204,7 @@ namespace Sass {
     }
     bool first = true;
     std::cerr << "[";
-    for(SelsNewSeqPair& pair : collection) {
+    for (auto __pair = collection.begin(); __pair != collection.end(); ++__pair) { SelsNewSeqPair& pair = *(__pair); 
       if (first) {
         first = false;
       } else {
@@ -1733,7 +1733,7 @@ namespace Sass {
 
       if (pHead) {
         SubsetMapEntries entries = subset_map.get_v(pHead->to_str_vec());
-        for (ExtensionPair ext : entries) {
+        for (auto __ext = entries.begin(); __ext != entries.end(); ++__ext) { ExtensionPair ext = *(__ext); 
           // check if both selectors have the same media block parent
           if (ext.first->media_block() == pComplexSelector->media_block()) continue;
           To_String to_string(&ctx);
@@ -1771,7 +1771,7 @@ namespace Sass {
       std::string cwd(Sass::File::get_cwd());
       std::string sel1(pComplexSelector->perform(&to_string));
       Compound_Selector* pExtendSelector = 0;
-      for (auto i : subset_map.values()) {
+      for (auto __i = subset_map.values().begin(); __i != subset_map.values().end(); ++__i) { auto i = *(__i); 
         if (i.first == pComplexSelector) {
           pExtendSelector = i.second;
           break;

@@ -1475,7 +1475,7 @@ namespace Sass {
     {
       Map* m = ARGM("$map", Map, ctx);
       List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
-      for ( auto key : m->keys()) {
+      for (auto __key = m->keys().begin(); __key != m->keys().end(); ++__key) { auto key = *(__key); 
         *result << key;
       }
       return result;
@@ -1486,7 +1486,7 @@ namespace Sass {
     {
       Map* m = ARGM("$map", Map, ctx);
       List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
-      for ( auto key : m->keys()) {
+      for (auto __key = m->keys().begin(); __key != m->keys().end(); ++__key) { auto key = *(__key); 
         *result << m->at(key);
       }
       return result;
@@ -1512,7 +1512,7 @@ namespace Sass {
       Map* m = ARGM("$map", Map, ctx);
       List* arglist = ARG("$keys", List);
       Map* result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
-      for (auto key : m->keys()) {
+      for (auto __key = m->keys().begin(); __key != m->keys().end(); ++__key) { auto key = *(__key); 
         remove = false;
         for (size_t j = 0, K = arglist->length(); j < K && !remove; ++j) {
           remove = Eval::eq(key, arglist->value_at_index(j));

@@ -335,7 +335,7 @@ namespace Sass {
     bool has_import = false;
     std::string load_path = unquote(import_path);
     // std::cerr << "-- " << load_path << "\n";
-    for (Sass_Importer_Entry& importer : importers) {
+    for (auto __importer = importers.begin(); __importer != importers.end(); ++__importer) { Sass_Importer_Entry& importer = *(__importer); 
       // int priority = sass_importer_get_priority(importer);
       Sass_Importer_Fn fn = sass_importer_get_function(importer);
       if (Sass_Import_List includes =
@@ -436,7 +436,7 @@ namespace Sass {
       imp->media_queries(media_queries);
     }
 
-    for(auto location : to_import) {
+    for (auto __location = to_import.begin(); __location != to_import.end(); ++__location) { auto location = *(__location); 
       if (location.second) {
         imp->urls().push_back(location.second);
       } else {

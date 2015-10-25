@@ -83,7 +83,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
 
-    for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = selector->elements().begin(); __i != selector->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
 
 //  } else if (dynamic_cast<Expression*>(node)) {
 //    Expression* expression = dynamic_cast<Expression*>(node);
@@ -135,13 +135,13 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
-    for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = selector->elements().begin(); __i != selector->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Propset*>(node)) {
     Propset* selector = dynamic_cast<Propset*>(node);
     std::cerr << ind << "Propset " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << selector->tabs() << std::endl;
-    if (selector->block()) for(auto i : selector->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (selector->block()) for (auto __i = selector->block()->elements().begin(); __i != selector->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Wrapped_Selector*>(node)) {
     Wrapped_Selector* selector = dynamic_cast<Wrapped_Selector*>(node);
     std::cerr << ind << "Wrapped_Selector " << selector;
@@ -198,7 +198,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     << std::endl;
 
     debug_ast(selector->contents(), ind + " ");
-    // for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
+    // for (auto __i = selector->elements().begin(); __i != selector->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
 
   } else if (dynamic_cast<Selector*>(node)) {
     Selector* selector = dynamic_cast<Selector*>(node);
@@ -225,7 +225,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       << (block->is_restricted() ? " [is_restricted]": " -")
     << std::endl;
     debug_ast(block->media_type(), ind + " ");
-    for(auto i : block->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = block->elements().begin(); __i != block->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
 
   } else if (dynamic_cast<Media_Block*>(node)) {
     Media_Block* block = dynamic_cast<Media_Block*>(node);
@@ -233,7 +233,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->media_queries(), ind + " =@ ");
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Supports_Block*>(node)) {
     Supports_Block* block = dynamic_cast<Supports_Block*>(node);
     std::cerr << ind << "Supports_Block " << block;
@@ -266,7 +266,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     if (root_block->is_root()) std::cerr << " [root]";
     std::cerr << " " << root_block->tabs() << std::endl;
-    if (root_block->block()) for(auto i : root_block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (root_block->block()) for (auto __i = root_block->block()->elements().begin(); __i != root_block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Warning*>(node)) {
     Warning* block = dynamic_cast<Warning*>(node);
     std::cerr << ind << "Warning " << block;
@@ -325,7 +325,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->media_queries(), ind + " @ ");
     // std::vector<std::string>         files_;
-    for (auto imp : block->urls()) { debug_ast(imp, "@ ", env); }
+    for (auto __imp = block->urls().begin(); __imp != block->urls().end(); ++__imp) { auto imp = *(__imp);  debug_ast(imp, "@ ", env); }
   } else if (dynamic_cast<Assignment*>(node)) {
     Assignment* block = dynamic_cast<Assignment*>(node);
     std::cerr << ind << "Assignment " << block;
@@ -345,7 +345,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
     if (has_block->selector()) debug_ast(has_block->selector(), ind + "@");
-    if (has_block->block()) for(auto i : has_block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (has_block->block()) for (auto __i = has_block->block()->elements().begin(); __i != has_block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<At_Rule*>(node)) {
     At_Rule* block = dynamic_cast<At_Rule*>(node);
     std::cerr << ind << "At_Rule " << block;
@@ -353,25 +353,25 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " [" << block->keyword() << "] " << block->tabs() << std::endl;
     debug_ast(block->selector(), ind + "~", env);
     debug_ast(block->value(), ind + "+", env);
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Each*>(node)) {
     Each* block = dynamic_cast<Each*>(node);
     std::cerr << ind << "Each " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<For*>(node)) {
     For* block = dynamic_cast<For*>(node);
     std::cerr << ind << "For " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<While*>(node)) {
     While* block = dynamic_cast<While*>(node);
     std::cerr << ind << "While " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Definition*>(node)) {
     Definition* block = dynamic_cast<Definition*>(node);
     std::cerr << ind << "Definition " << block;
@@ -383,14 +383,14 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " [native: " << block->native_function() << "] ";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->parameters(), ind + " params: ", env);
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Mixin_Call*>(node)) {
     Mixin_Call* block = dynamic_cast<Mixin_Call*>(node);
     std::cerr << ind << "Mixin_Call " << block << " " << block->tabs();
     std::cerr << " [" <<  block->name() << "]";
     std::cerr << " [has_content: " << block->has_content() << "] " << std::endl;
     debug_ast(block->arguments(), ind + " args: ");
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (block->block()) for (auto __i = block->block()->elements().begin(); __i != block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (Ruleset* ruleset = dynamic_cast<Ruleset*>(node)) {
     std::cerr << ind << "Ruleset " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -405,7 +405,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "Block " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << block->tabs() << "]" << std::endl;
-    for(auto i : block->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = block->elements().begin(); __i != block->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Textual*>(node)) {
     Textual* expression = dynamic_cast<Textual*>(node);
     std::cerr << ind << "Textual ";
@@ -445,7 +445,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     if (expression->has_rest_argument()) std::cerr << " [has_rest_argument]";
     if (expression->has_keyword_argument()) std::cerr << " [has_keyword_argument]";
     std::cerr << std::endl;
-    for(auto i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = expression->elements().begin(); __i != expression->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Argument*>(node)) {
     Argument* expression = dynamic_cast<Argument*>(node);
     std::cerr << ind << "Argument " << expression;
@@ -462,7 +462,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " [has_optional: " << expression->has_optional_parameters() << "] ";
     std::cerr << " [has_rest: " << expression->has_rest_parameter() << "] ";
     std::cerr << std::endl;
-    for(auto i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = expression->elements().begin(); __i != expression->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Parameter*>(node)) {
     Parameter* expression = dynamic_cast<Parameter*>(node);
     std::cerr << ind << "Parameter " << expression;
@@ -489,7 +489,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "Map " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [Hashed]" << std::endl;
-    for (auto i : expression->elements()) {
+    for (auto __i = expression->elements().begin(); __i != expression->elements().end(); ++__i) { auto i = *(__i); 
       debug_ast(i.first, ind + " key: ");
       debug_ast(i.second, ind + " val: ");
     }
@@ -504,7 +504,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       " [arglist: " << expression->is_arglist() << "] " <<
       " [hash: " << expression->hash() << "] " <<
       std::endl;
-    for(auto i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = expression->elements().begin(); __i != expression->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Content*>(node)) {
     Content* expression = dynamic_cast<Content*>(node);
     std::cerr << ind << "Content " << expression;
@@ -555,7 +555,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     if (expression->has_interpolants()) std::cerr << " [has_interpolants]";
     if (expression->is_interpolant()) std::cerr << " [interpolant]";
     std::cerr << " <" << prettyprint(expression->pstate().token.ws_before()) << ">" << std::endl;
-    for(auto i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for (auto __i = expression->elements().begin(); __i != expression->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<String*>(node)) {
     String* expression = dynamic_cast<String*>(node);
     std::cerr << ind << "String " << expression;
@@ -588,7 +588,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "Has_Block " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
-    if (has_block->block()) for(auto i : has_block->block()->elements()) { debug_ast(i, ind + " ", env); }
+    if (has_block->block()) for (auto __i = has_block->block()->elements().begin(); __i != has_block->block()->elements().end(); ++__i) { auto i = *(__i);  debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Statement*>(node)) {
     Statement* statement = dynamic_cast<Statement*>(node);
     std::cerr << ind << "Statement " << statement;
@@ -629,7 +629,7 @@ inline void debug_node(Node* node, std::string ind = "")
     std::cerr << node << " ";
     if (node->got_line_feed) std::cerr << "[LF] ";
     std::cerr << std::endl;
-    for(auto n : (*node->collection())) {
+    for (auto __n = (*node->collection()).begin(); __n != (*node->collection()).end(); ++__n) { auto n = *(__n); 
       debug_node(&n, ind + "  ");
     }
   } else if (node->isNil()) {

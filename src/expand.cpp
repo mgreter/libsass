@@ -100,10 +100,10 @@ namespace Sass {
     // do some special checks for the base level rules
     if (r->is_root()) {
       if (Selector_List* selector_list = dynamic_cast<Selector_List*>(r->selector())) {
-        for (Complex_Selector* complex_selector : selector_list->elements()) {
+        for (auto __complex_selector = selector_list->elements().begin(); __complex_selector != selector_list->elements().end(); ++__complex_selector) { Complex_Selector* complex_selector = *(__complex_selector); 
           Complex_Selector* tail = complex_selector;
           while (tail) {
-            if (tail->head()) for (Simple_Selector* header : tail->head()->elements()) {
+            if (tail->head()) for (auto __header = tail->head()->elements().begin(); __header != tail->head()->elements().end(); ++__header) { Simple_Selector* header = *(__header); 
               if (dynamic_cast<Parent_Selector*>(header) == NULL) continue; // skip all others
               To_String to_string(&ctx); std::string sel_str(complex_selector->perform(&to_string));
               error("Base-level rules cannot contain the parent-selector-referencing character '&'.", header->pstate(), backtrace());
@@ -441,7 +441,7 @@ namespace Sass {
     Block* body = e->block();
 
     if (map) {
-      for (auto key : map->keys()) {
+      for (auto __key = map->keys().begin(); __key != map->keys().end(); ++__key) { auto key = *(__key); 
         Expression* k = key->perform(&eval);
         Expression* v = map->at(key)->perform(&eval);
 
@@ -521,10 +521,10 @@ namespace Sass {
     selector_stack.push_back(0);
 
     if (Selector_List* selector_list = dynamic_cast<Selector_List*>(e->selector())) {
-      for (Complex_Selector* complex_selector : selector_list->elements()) {
+      for (auto __complex_selector = selector_list->elements().begin(); __complex_selector != selector_list->elements().end(); ++__complex_selector) { Complex_Selector* complex_selector = *(__complex_selector); 
         Complex_Selector* tail = complex_selector;
         while (tail) {
-          if (tail->head()) for (Simple_Selector* header : tail->head()->elements()) {
+          if (tail->head()) for (auto __header = tail->head()->elements().begin(); __header != tail->head()->elements().end(); ++__header) { Simple_Selector* header = *(__header); 
             if (dynamic_cast<Parent_Selector*>(header) == NULL) continue; // skip all others
             To_String to_string(&ctx); std::string sel_str(complex_selector->perform(&to_string));
             error("Can't extend " + sel_str + ": can't extend parent selectors", header->pstate(), backtrace());
@@ -536,7 +536,7 @@ namespace Sass {
 
     Selector_List* contextualized = dynamic_cast<Selector_List*>(e->selector()->perform(&eval));
     if (contextualized == NULL) return 0;
-    for (auto complex_sel : contextualized->elements()) {
+    for (auto __complex_sel = contextualized->elements().begin(); __complex_sel != contextualized->elements().end(); ++__complex_sel) { auto complex_sel = *(__complex_sel); 
       Complex_Selector* c = complex_sel;
       if (!c->head() || c->tail()) {
         To_String to_string(&ctx); std::string sel_str(contextualized->perform(&to_string));

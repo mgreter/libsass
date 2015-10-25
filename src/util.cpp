@@ -144,7 +144,7 @@ namespace Sass {
   std::string string_escape(const std::string& str)
   {
     std::string out("");
-    for (auto i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { auto i = *(__i); 
       // escape some characters
       if (i == '"') out += '\\';
       if (i == '\'') out += '\\';
@@ -160,7 +160,7 @@ namespace Sass {
   {
     std::string out("");
     bool esc = false;
-    for (auto i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { auto i = *(__i); 
       if (esc || i != '\\') {
         esc = false;
         out += i;
@@ -179,7 +179,7 @@ namespace Sass {
   {
     std::string out("");
     bool esc = false;
-    for (auto i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { auto i = *(__i); 
       if (i == '\\') {
         esc = ! esc;
       } else if (esc && i == '\r') {
@@ -203,7 +203,7 @@ namespace Sass {
   {
     std::string out("");
     bool esc = false;
-    for (auto i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { auto i = *(__i); 
       if (!esc) {
         // ignore next character
         if (i == '\\') esc = true;
@@ -225,7 +225,7 @@ namespace Sass {
   {
     std::string out("");
     bool esc = false;
-    for (auto i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { auto i = *(__i); 
       if (i == '\\' && !esc) {
         out += '\\';
         out += '\\';
@@ -259,7 +259,7 @@ namespace Sass {
   {
     std::string out("");
     bool lf = false;
-    for (auto i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { auto i = *(__i); 
       if (i == 10) {
         out += ' ';
         lf = true;
@@ -277,7 +277,7 @@ namespace Sass {
     size_t has = 0;
     char prev = 0;
     bool clean = false;
-    for (auto i : text) {
+    for (auto __i = text.begin(); __i != text.end(); ++__i) { auto i = *(__i); 
       if (clean) {
         if (i == '\n') { has = 0; }
         else if (i == '\r') { has = 0; }
@@ -308,7 +308,7 @@ namespace Sass {
     bool ws = false;
     bool esc = false;
     std::string text = "";
-    for(const char& i : str) {
+    for (auto __i = str.begin(); __i != str.end(); ++__i) { const char& i = *(__i); 
       if (!esc && i == '\\') {
         esc = true;
         ws = false;

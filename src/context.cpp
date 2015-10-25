@@ -99,13 +99,13 @@ namespace Sass {
       plugins.load_plugins(plugin_paths[i]);
     }
 
-    for(auto fn : plugins.get_functions()) {
+    for (auto __fn = plugins.get_functions().begin(); __fn != plugins.get_functions().end(); ++__fn) { auto fn = *(__fn); 
       c_functions.push_back(fn);
     }
-    for(auto fn : plugins.get_headers()) {
+    for (auto __fn = plugins.get_headers().begin(); __fn != plugins.get_headers().end(); ++__fn) { auto fn = *(__fn); 
       c_headers.push_back(fn);
     }
-    for(auto fn : plugins.get_importers()) {
+    for (auto __fn = plugins.get_importers().begin(); __fn != plugins.get_importers().end(); ++__fn) { auto fn = *(__fn); 
       c_importers.push_back(fn);
     }
 

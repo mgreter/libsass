@@ -240,7 +240,7 @@ namespace Sass {
     Expression* val = 0;
 
     if (map) {
-      for (auto key : map->keys()) {
+      for (auto __key = map->keys().begin(); __key != map->keys().end(); ++__key) { auto key = *(__key); 
         Expression* value = map->at(key);
 
         if (variables.size() == 1) {
@@ -437,7 +437,7 @@ namespace Sass {
     Map* mm = SASS_MEMORY_NEW(ctx.mem, Map,
                                 m->pstate(),
                                 m->length());
-    for (auto key : m->keys()) {
+    for (auto __key = m->keys().begin(); __key != m->keys().end(); ++__key) { auto key = *(__key); 
       Expression* ex_key = key->perform(this);
       Expression* ex_val = m->at(key)->perform(this);
       *mm << std::make_pair(ex_key, ex_val);
@@ -884,8 +884,7 @@ namespace Sass {
       // return evacuate_quotes(str_schema->perform(&to_string));
 
       std::string res = "";
-      for(auto i : str_schema->elements())
-      { res += (interpolation(i)); }
+      for (auto __i = str_schema->elements().begin(); __i != str_schema->elements().end(); ++__i) { auto i = *(__i);  res += (interpolation(i)); }
       //ToDo: do this in one step
       auto esc = evacuate_escapes(res);
       auto unq = unquote(esc);
@@ -899,7 +898,7 @@ namespace Sass {
       std::string sep = list->separator() == SASS_COMMA ? "," : " ";
       if (ctx.output_style != COMPRESSED && sep == ",") sep += " ";
       bool initial = false;
-      for(auto item : list->elements()) {
+      for (auto __item = list->elements().begin(); __item != list->elements().end(); ++__item) { auto item = *(__item); 
         if (item->concrete_type() != Expression::NULL_VAL) {
           if (initial) acc += sep;
           acc += interpolation(item);

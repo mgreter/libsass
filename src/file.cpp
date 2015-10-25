@@ -298,13 +298,13 @@ namespace Sass {
       abs_path = join_paths(root, rel_path);
       if (file_exists(abs_path)) resolved.push_back(Sass_Queued(rel_path, abs_path, 0));
       // next test exts plus underscore
-      for(auto ext : exts) {
+      for (auto __ext = exts.begin(); __ext != exts.end(); ++__ext) { auto ext = *(__ext); 
         rel_path = join_paths(base, "_" + name + ext);
         abs_path = join_paths(root, rel_path);
         if (file_exists(abs_path)) resolved.push_back(Sass_Queued(rel_path, abs_path, 0));
       }
       // next test plain name with exts
-      for(auto ext : exts) {
+      for (auto __ext = exts.begin(); __ext != exts.end(); ++__ext) { auto ext = *(__ext); 
         rel_path = join_paths(base, name + ext);
         abs_path = join_paths(root, rel_path);
         if (file_exists(abs_path)) resolved.push_back(Sass_Queued(rel_path, abs_path, 0));
