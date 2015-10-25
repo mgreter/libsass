@@ -242,7 +242,7 @@ namespace Sass {
     virtual void adjust_after_pushing(std::pair<Expression*, Expression*> p) { }
   public:
     Hashed(size_t s = 0) : elements_(std::unordered_map<Expression*, Expression*>(s)), list_(std::vector<Expression*>())
-    { elements_.reserve(s); list_.reserve(s); reset_duplicate_key(); }
+    { /* elements_.reserve(s); */ list_.reserve(s); reset_duplicate_key(); }
     virtual ~Hashed();
     size_t length() const                  { return list_.size(); }
     bool empty() const                     { return list_.empty(); }
@@ -1096,7 +1096,7 @@ namespace Sass {
       if (hash_ == 0) {
         hash_ = std::hash<std::string>()(name());
         for (auto argument : arguments()->elements())
-          hash_combine(hash_, argument->hash());
+        { hash_combine(hash_, argument->hash()); }
       }
       return hash_;
     }
@@ -1363,7 +1363,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         for (auto string : elements())
-          hash_combine(hash_, string->hash());
+        { hash_combine(hash_, string->hash()); }
       }
       return hash_;
     }

@@ -885,7 +885,7 @@ namespace Sass {
 
       std::string res = "";
       for(auto i : str_schema->elements())
-        res += (interpolation(i));
+      { res += (interpolation(i)); }
       //ToDo: do this in one step
       auto esc = evacuate_escapes(res);
       auto unq = unquote(esc);
