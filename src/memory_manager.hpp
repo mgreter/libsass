@@ -8,8 +8,12 @@ namespace Sass {
   class Memory_Object {
   friend class Memory_Manager;
     long refcount;
+    uint16_t size;
   public:
-    Memory_Object() { refcount = 0; };
+    Memory_Object()
+    : refcount(0),
+      size(0)
+    { };
     virtual ~Memory_Object() {};
   };
 
@@ -22,6 +26,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   class Memory_Manager {
     std::vector<Memory_Object*> nodes;
+    uint64_t size;
 
   public:
     Memory_Manager(size_t size = 0);

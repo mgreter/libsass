@@ -4,7 +4,8 @@
 namespace Sass {
 
   Memory_Manager::Memory_Manager(size_t size)
-  : nodes(std::vector<Memory_Object*>())
+  : nodes(std::vector<Memory_Object*>()),
+    size(0)
   {
     size_t init = size;
     if (init < 8) init = 8;
@@ -39,10 +40,16 @@ namespace Sass {
 
   Memory_Object* Memory_Manager::allocate(size_t size)
   {
+    // sum overall size
+    this->size += size;
+    if (this->size > 128 * 1024 * 1024) {
+      throw std::runtime_error("Memory limit reached");
+    }
     // allocate requested memory
     void* heap = malloc(size);
     // init internal refcount status to zero
     (static_cast<Memory_Object*>(heap))->refcount = 0;
+    (static_cast<Memory_Object*>(heap))->size = size;
     // add the memory under our management
     nodes.push_back(static_cast<Memory_Object*>(heap));
     // cast object to its initial type
@@ -51,6 +58,8 @@ namespace Sass {
 
   void Memory_Manager::deallocate(Memory_Object* np)
   {
+    // sum overall size
+    this->size += np->size;
     // only call destructor if initialized
     if (np->refcount) np->~Memory_Object();
     // always free the memory
