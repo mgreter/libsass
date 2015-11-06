@@ -503,6 +503,7 @@ namespace Sass {
       // try to parse mutliple interpolants
       if (const char* p = find_first_in_interval< exactly<hash_lbrace> >(i, end_of_selector)) {
         // accumulate the preceding segment if the position has advanced
+        pstate = ParserState(pstate.path, pstate.src, Token(i, i, p), pstate + pstate.offset, Offset(Token(i, i, p)));
         if (i < p) (*schema) << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, p));
         // check if the interpolation only contains white-space (error out)
         if (peek < sequence < optional_spaces, exactly<rbrace> > >(p+2)) { position = p+2;
@@ -511,12 +512,14 @@ namespace Sass {
         // skip over all nested inner interpolations up to our own delimiter
         const char* j = skip_over_scopes< exactly<hash_lbrace>, exactly<rbrace> >(p + 2, end_of_selector);
         // pass inner expression to the parser to resolve nested interpolations
-        Expression* interpolant = Parser::from_c_str(p+2, j, ctx, pstate).parse_list();
+        pstate = ParserState(pstate.path, pstate.src, Token(p+2, p+2, j-1), pstate + pstate.offset + Offset(0, 2), Offset(Token(p+2, p+2, j-1)));
+        Expression* interpolant = Parser::from_c_str(p+2, j-1, ctx, pstate).parse_list();
         // set status on the list expression
         interpolant->is_interpolant(true);
         // add to the string schema
         (*schema) << interpolant;
         // advance position
+        pstate += Offset(0, 1);
         i = j;
       }
       // no more interpolants have been found
@@ -535,6 +538,7 @@ namespace Sass {
 
     // update for end position
     selector_schema->update_pstate(pstate);
+    schema->update_pstate(pstate);
 
     // return parsed result
     return selector_schema;
