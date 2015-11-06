@@ -1279,6 +1279,7 @@ namespace Sass {
     }
 
     virtual bool operator== (const Expression& rhs) const;
+    virtual std::string to_hex(bool compressed = false, int precision = 5) const;
     virtual std::string to_string(bool compressed = false, int precision = 5) const;
 
     ATTACH_OPERATIONS()

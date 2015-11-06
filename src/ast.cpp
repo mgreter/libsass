@@ -1858,6 +1858,27 @@ namespace Sass {
     else                return c;
   }
 
+  std::string Color::to_hex(bool compressed, int precision) const
+  {
+    std::stringstream hexlet;
+    double r = Sass::round(cap_channel<0xff>(r_));
+    double g = Sass::round(cap_channel<0xff>(g_));
+    double b = Sass::round(cap_channel<0xff>(b_));
+    hexlet << '#' << std::setw(1) << std::setfill('0');
+    if (compressed && is_color_doublet(r, g, b)) {
+      hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(r) >> 4);
+      hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(g) >> 4);
+      hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(b) >> 4);
+    } else {
+      hexlet << std::hex << std::setw(2) << static_cast<unsigned long>(r);
+      hexlet << std::hex << std::setw(2) << static_cast<unsigned long>(g);
+      hexlet << std::hex << std::setw(2) << static_cast<unsigned long>(b);
+   }
+
+   return hexlet.str();
+
+  }
+
   std::string Color::to_string(bool compressed, int precision) const
   {
     std::stringstream ss;
