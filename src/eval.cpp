@@ -990,6 +990,19 @@ namespace Sass {
       error(dbg + " isn't a valid CSS value.", s->pstate());
       return dbg;
     } else {
+      Color* c = dynamic_cast<Color*>(s);
+      if (c && c->disp() != "") {
+        std::string msg("You probably don't mean to use the color value `");
+        msg += c->disp();
+        msg += "' in interpolation here.\n";
+        msg += "It may end up represented as ";
+        msg += c->to_hex(false, 5);
+        msg += ", which will likely produce invalid CSS.\n";
+        msg += "Always quote color names when using them as strings (for example, \"";
+        msg += c->disp() + "\").\n";
+        msg += "If you really want to use the color value here, use `\"\" + $var'.";
+        warning(msg, s->pstate());
+      }
       To_String to_string(&ctx);
       return evacuate_quotes(s->perform(&to_string));
     }
