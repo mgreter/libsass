@@ -7,10 +7,41 @@
 
 namespace Sass {
 
+  // Token type for representing lexed chunks of text
+  class Token {
+  public:
+    const char* prefix;
+    const char* begin;
+    const char* end;
+
+    Token()
+    : prefix(0), begin(0), end(0) { }
+    Token(const char* b, const char* e)
+    : prefix(b), begin(b), end(e) { }
+    Token(const char* str)
+    : prefix(str), begin(str), end(str + strlen(str)) { }
+    Token(const char* p, const char* b, const char* e)
+    : prefix(p), begin(b), end(e) { }
+
+    size_t length()    const { return end - begin; }
+    std::string ws_before() const { return std::string(prefix, begin); }
+    std::string to_string() const { return std::string(begin, end); }
+    std::string time_wspace() const {
+      std::string str(to_string());
+      std::string whitespaces(" \t\f\v\n\r");
+      return str.erase(str.find_last_not_of(whitespaces)+1);
+    }
+
+    operator bool()        { return begin && end && begin >= end; }
+    operator std::string() { return to_string(); }
+
+    bool operator==(Token t)  { return to_string() == t.to_string(); }
+  };
 
   class Offset {
 
     public: // c-tor
+      Offset(const Token& token);
       Offset(const char* string);
       Offset(const std::string& text);
       Offset(const size_t line, const size_t column);
@@ -65,37 +96,6 @@ namespace Sass {
     public:
       size_t file;
 
-  };
-
-  // Token type for representing lexed chunks of text
-  class Token {
-  public:
-    const char* prefix;
-    const char* begin;
-    const char* end;
-
-    Token()
-    : prefix(0), begin(0), end(0) { }
-    Token(const char* b, const char* e)
-    : prefix(b), begin(b), end(e) { }
-    Token(const char* str)
-    : prefix(str), begin(str), end(str + strlen(str)) { }
-    Token(const char* p, const char* b, const char* e)
-    : prefix(p), begin(b), end(e) { }
-
-    size_t length()    const { return end - begin; }
-    std::string ws_before() const { return std::string(prefix, begin); }
-    std::string to_string() const { return std::string(begin, end); }
-    std::string time_wspace() const {
-      std::string str(to_string());
-      std::string whitespaces(" \t\f\v\n\r");
-      return str.erase(str.find_last_not_of(whitespaces)+1);
-    }
-
-    operator bool()        { return begin && end && begin >= end; }
-    operator std::string() { return to_string(); }
-
-    bool operator==(Token t)  { return to_string() == t.to_string(); }
   };
 
   class ParserState : public Position {

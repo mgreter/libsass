@@ -3,6 +3,12 @@
 namespace Sass {
 
 
+  Offset::Offset(const Token& token)
+  : line(0), column(0)
+  {
+    *this = inc(token.begin, token.end);
+  }
+
   Offset::Offset(const char* string)
   : line(0), column(0)
   {
