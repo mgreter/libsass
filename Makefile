@@ -6,10 +6,6 @@ CP       ?= cp -a
 MKDIR    ?= mkdir
 RMDIR    ?= rmdir
 WINDRES  ?= windres
-ifeq ($(OS),SunOS)  # Solaris/Illumos flavors
-INSTALL  ?= ginstall
-PREFIX   ?= /opt/local
-endif
 INSTALL  ?= install
 CFLAGS   ?= -Wall
 CXXFLAGS ?= -Wall
