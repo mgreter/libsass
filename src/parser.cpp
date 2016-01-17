@@ -222,7 +222,7 @@ namespace Sass {
 
     else if (lex < kwd_extend >(true)) {
       if (block->is_root()) {
-        error("Extend directives may only be used within rules.", pstate);
+        // error("Extend directives may only be used within rules.", pstate);
       }
 
       Lookahead lookahead = lookahead_for_include(position);
