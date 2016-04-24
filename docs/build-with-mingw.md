@@ -72,14 +72,18 @@ mingw32-make -C libsass test_build
 ## Building via MingGW 64bit (makefiles)
 Building libass to dll on window 64bit.
 
-Download [MinGW64 for windows7 64bit](http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-win32/seh/x86_64-4.9.2-release-win32-seh-rt_v3-rev0.7z/download) and unzip to "C:\mingw64".
+Download [MinGW64 for windows7 64bit] [5] (or [32bit] [6] and unzip to "C:\mingw[32|64]".
 
 Create a batch file with this content:
 
 ```bat
 @echo off
+REM choose the one for you arch
 set PATH=C:\mingw64\bin;%PATH%
+set PATH=C:\mingw32\bin;%PATH%
+REM optional
 set CC=gcc
+set CXX=g++
 REM only needed if not already available
 set PATH=%PROGRAMFILES%\Git\bin;%PATH%
 REM C:\MinGW\msys\1.0\msys.bat
@@ -100,8 +104,14 @@ Compile the library
 mingw32-make -C libsass
 ```
 
-By the way, if you are using java jna, [JNAerator](http://jnaerator.googlecode.com/) is a good tool.
+### Thing to look out for
+
+- If `sh` shell (i.e.`sh.exe` from msys or git) is in your path, `mingw32-make` [will pick it up] [4] and execute further calls with that shell (most often resulting in a *"file not found"* error). To avoid this you need to invoke make with `mingw32-make SHELL=cmd`.
+- Make sure no other compiler is in your path and that `CC` and `CXX` env variables are not defined at all or point the the correct compiler tools. Also make sure you call the correct make tool for your environment (`mingw32-make` for most using mingw).
 
 [1]: http://sourceforge.net/projects/mingw/files/latest/download?source=files
 [2]: https://msysgit.github.io/
 [3]: http://rubyinstaller.org/
+[4]: http://stackoverflow.com/questions/24066265/force-mingw32-make-to-ignore-sh
+[5]: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-win32/seh/x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z/download
+[6]: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/4.9.3/threads-win32/sjlj/i686-4.9.3-release-win32-sjlj-rt_v4-rev1.7z/download

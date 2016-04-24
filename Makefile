@@ -3,6 +3,7 @@ CC       ?= gcc
 CXX      ?= g++
 RM       ?= rm -f
 CP       ?= cp -a
+CHDIR    ?= chdir
 MKDIR    ?= mkdir
 RMDIR    ?= rmdir
 WINDRES  ?= windres
@@ -10,8 +11,9 @@ WINDRES  ?= windres
 # ginstall from coreutils
 ifeq ($(OS),SunOS)
 INSTALL  ?= ginstall
-endif
+else
 INSTALL  ?= install
+endif
 CFLAGS   ?= -Wall
 CXXFLAGS ?= -Wall
 LDFLAGS  ?= -Wall
@@ -21,24 +23,44 @@ ifneq "$(COVERAGE)" "yes"
   LDFLAGS  += -O2
 endif
 LDFLAGS  += -Wl,-undefined,error
-CAT      ?= $(if $(filter $(OS),Windows_NT),type,cat)
+
+# If you run this under windows cmd.com interpreter:
+# You must provide UnxUtils rm.exe and cp.exe in path
+# Otherwise certain targets may not work as intended!
+# Note: It seems impossible to replace `mkdir` command
 
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 	UNAME := Cygwin
+	TARGET := Windows
 else
 	ifneq (,$(findstring Windows_NT,$(OS)))
 		UNAME := Windows
+		TARGET := Windows
 	else
-		ifneq (,$(findstring mingw32,$(MAKE)))
+		ifneq (,$(findstring Windows,$(PATH)))
 			UNAME := Windows
+			TARGET := Windows
 		else
-			ifneq (,$(findstring MINGW32,$(shell uname -s)))
-				UNAME = Windows
+			ifneq (,$(findstring mingw32,$(MAKE)))
+				UNAME := MinGW
+				TARGET := Windows
 			else
-				UNAME := $(shell uname -s)
+				ifneq (,$(findstring MINGW32,$(shell uname -s)))
+					UNAME = MinGW
+					TARGET := Windows
+				else
+					UNAME := $(shell uname -s)
+					TARGET := $(shell uname -s)
+				endif
 			endif
 		endif
 	endif
+endif
+
+ifeq (Windows,$(TARGET))
+	CAT ?= type
+else
+	CAT ?= cat
 endif
 
 ifeq ($(SASS_LIBSASS_PATH),)
@@ -63,7 +85,7 @@ ifneq ($(LIBSASS_VERSION),)
 endif
 
 # enable mandatory flag
-ifeq (Windows,$(UNAME))
+ifeq (Windows,$(TARGET))
 	ifneq ($(BUILD),shared)
 		STATIC_ALL     ?= 1
 	endif
@@ -82,6 +104,10 @@ endif
 ifneq ($(SASS_LIBSASS_PATH),)
 	CFLAGS   += -I $(SASS_LIBSASS_PATH)/include
 	CXXFLAGS += -I $(SASS_LIBSASS_PATH)/include
+	# only needed to support old source tree
+	# we have moved the files to src folder
+	# CFLAGS   += -I $(SASS_LIBSASS_PATH)
+	# CXXFLAGS += -I $(SASS_LIBSASS_PATH)
 else
 	# this is needed for mingw
 	CFLAGS   += -I include
@@ -123,7 +149,7 @@ ifeq ($(UNAME),Darwin)
 	LDFLAGS += -stdlib=libc++
 endif
 
-ifneq (Windows,$(UNAME))
+ifneq (Windows,$(TARGET))
 	ifneq (FreeBSD,$(UNAME))
 		LDFLAGS += -ldl
 		LDLIBS += -ldl
@@ -134,16 +160,17 @@ ifneq ($(BUILD),shared)
 	BUILD = static
 endif
 
-ifeq (,$(TRAVIS_BUILD_DIR))
-	ifeq ($(OS),SunOS)
-		PREFIX ?= /opt/local
+ifeq (,$(PREFIX))
+	ifeq (,$(TRAVIS_BUILD_DIR))
+		ifeq ($(OS),SunOS)
+			PREFIX = /opt/local
+		else
+			PREFIX = /usr/local
+		endif
 	else
-		PREFIX ?= /usr/local
+		PREFIX = $(TRAVIS_BUILD_DIR)
 	endif
-else
-	PREFIX ?= $(TRAVIS_BUILD_DIR)
 endif
-
 
 SASS_SASSC_PATH ?= sassc
 SASS_SPEC_PATH ?= sass-spec
@@ -154,7 +181,14 @@ RUBY_BIN = ruby
 LIB_STATIC = $(SASS_LIBSASS_PATH)/lib/libsass.a
 LIB_SHARED = $(SASS_LIBSASS_PATH)/lib/libsass.so
 
-ifeq (Windows,$(UNAME))
+include Makefile.conf
+
+RESOURCES =
+STATICLIB = lib/libsass.a
+SHAREDLIB = lib/libsass.so
+ifeq (Windows,$(TARGET))
+	RESOURCES += res/resource.rc
+	SHAREDLIB  = lib/libsass.dll
 	ifeq (shared,$(BUILD))
 		CFLAGS     += -D ADD_EXPORTS
 		CXXFLAGS   += -D ADD_EXPORTS
@@ -168,28 +202,8 @@ else
 	endif
 endif
 
-ifeq (Windows,$(UNAME))
+ifeq (Windows,$(TARGET))
 	SASSC_BIN = $(SASS_SASSC_PATH)/bin/sassc.exe
-endif
-
-include Makefile.conf
-
-RESOURCES =
-STATICLIB = lib/libsass.a
-SHAREDLIB = lib/libsass.so
-ifeq (Windows,$(UNAME))
-	RESOURCES += res/resource.rc
-	SHAREDLIB  = lib/libsass.dll
-	ifeq (shared,$(BUILD))
-		CFLAGS    += -D ADD_EXPORTS
-		CXXFLAGS  += -D ADD_EXPORTS
-	endif
-else
-	ifneq (Cygwin,$(UNAME))
-		CFLAGS   += -fPIC
-		CXXFLAGS += -fPIC
-		LDFLAGS  += -fPIC
-	endif
 endif
 
 OBJECTS = $(addprefix src/,$(SOURCES:.cpp=.o))
@@ -204,7 +218,9 @@ CLEANUPS += $(COBJECTS)
 CLEANUPS += $(OBJECTS)
 CLEANUPS += $(LIBSASS_LIB)
 
-all: $(BUILD)
+all: libsass
+
+libsass: $(BUILD)
 
 debug: $(BUILD)
 
