@@ -255,9 +255,9 @@ namespace Sass {
     Declaration* parse_declaration();
     Expression* parse_map_value();
     Expression* parse_map();
-    Expression* parse_list();
-    Expression* parse_comma_list();
-    Expression* parse_space_list();
+    Expression* parse_list(bool unwrap = true);
+    Expression* parse_comma_list(bool unwrap = true);
+    Expression* parse_space_list(bool unwrap = true);
     Expression* parse_disjunction();
     Expression* parse_conjunction();
     Expression* parse_relation();

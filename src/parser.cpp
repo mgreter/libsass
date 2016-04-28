@@ -429,14 +429,14 @@ namespace Sass {
       std::string name(Util::normalize_underscores(lexed));
       ParserState p = pstate;
       lex_css< exactly<':'> >();
-      Expression* val = parse_space_list();
+      Expression* val = parse_space_list(false);
       val->is_delayed(false);
       arg = SASS_MEMORY_NEW(ctx.mem, Argument, p, val, name);
     }
     else {
       bool is_arglist = false;
       bool is_keyword = false;
-      Expression* val = parse_space_list();
+      Expression* val = parse_space_list(false);
       val->is_delayed(false);
       List* l = dynamic_cast<List*>(val);
       if (lex_css< exactly< ellipsis > >()) {
@@ -1052,18 +1052,18 @@ namespace Sass {
   // parse list returns either a space separated list,
   // a comma separated list or any bare expression found.
   // so to speak: we unwrap items from lists if possible here!
-  Expression* Parser::parse_list()
+  Expression* Parser::parse_list(bool unwrap)
   {
     // parse list is relly just an alias
-    return parse_comma_list();
+    return parse_comma_list(unwrap);
   }
 
   // will return singletons unwrapped
-  Expression* Parser::parse_comma_list()
+  Expression* Parser::parse_comma_list(bool unwrap)
   {
     // check if we have an empty list
     // return the empty list as such
-    if (peek_css< alternatives <
+    if (unwrap && peek_css< alternatives <
           // exactly<'!'>,
           exactly<';'>,
           exactly<'}'>,
@@ -1078,7 +1078,7 @@ namespace Sass {
     { return SASS_MEMORY_NEW(ctx.mem, List, pstate, 0); }
 
     // now try to parse a space list
-    Expression* list = parse_space_list();
+    Expression* list = parse_space_list(unwrap);
     // if it's a singleton, return it (don't wrap it)
     if (!peek_css< exactly<','> >(position)) return list;
 
@@ -1103,7 +1103,7 @@ namespace Sass {
           > >(position)
       ) { break; }
       // otherwise add another expression
-      (*comma_list) << parse_space_list();
+      (*comma_list) << parse_space_list(unwrap);
     }
     // return the list
     return comma_list;
@@ -1111,11 +1111,11 @@ namespace Sass {
   // EO parse_comma_list
 
   // will return singletons unwrapped
-  Expression* Parser::parse_space_list()
+  Expression* Parser::parse_space_list(bool unwrap)
   {
     Expression* disj1 = parse_disjunction();
     // if it's a singleton, return it (don't wrap it)
-    if (peek_css< alternatives <
+    if (unwrap && peek_css< alternatives <
           // exactly<'!'>,
           exactly<';'>,
           exactly<'}'>,
