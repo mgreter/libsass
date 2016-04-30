@@ -1,7 +1,7 @@
 #ifndef SASS_AST_NODES_H
 #define SASS_AST_NODES_H
 
-#include "../ast.hpp"
+#include "common.hpp"
 
 namespace Sass {
 
