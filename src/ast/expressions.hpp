@@ -1,8 +1,26 @@
 #ifndef SASS_AST_EXPRESSIONS_H
 #define SASS_AST_EXPRESSIONS_H
 
+#include <set>
+#include <deque>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <typeinfo>
+#include <algorithm>
+#include <unordered_map>
+#include "sass/base.h"
+
+#include "../environment.hpp"
+
+#include "sass.h"
+
+#include "common.hpp"
+
 namespace Sass {
 
+  typedef Environment<AST_Node*> Env;
 
   //////////////////////////////////////////////////////////////////////
   // Still just an expression, but with a to_string method
@@ -208,6 +226,140 @@ namespace Sass {
     }
 
     ATTACH_OPERATIONS()
+  };
+
+
+
+  /////////////////
+  // Media queries.
+  /////////////////
+  class Media_Query : public Expression,
+                      public Vectorized<Media_Query_Expression*> {
+    ADD_PROPERTY(String*, media_type)
+    ADD_PROPERTY(bool, is_negated)
+    ADD_PROPERTY(bool, is_restricted)
+  public:
+    Media_Query(ParserState pstate,
+                String* t = 0, size_t s = 0, bool n = false, bool r = false)
+    : Expression(pstate), Vectorized<Media_Query_Expression*>(s),
+      media_type_(t), is_negated_(n), is_restricted_(r)
+    { }
+    ATTACH_OPERATIONS()
+  };
+
+  ////////////////////////////////////////////////////
+  // Media expressions (for use inside media queries).
+  ////////////////////////////////////////////////////
+  class Media_Query_Expression : public Expression {
+    ADD_PROPERTY(Expression*, feature)
+    ADD_PROPERTY(Expression*, value)
+    ADD_PROPERTY(bool, is_interpolated)
+  public:
+    Media_Query_Expression(ParserState pstate,
+                           Expression* f, Expression* v, bool i = false)
+    : Expression(pstate), feature_(f), value_(v), is_interpolated_(i)
+    { }
+    ATTACH_OPERATIONS()
+  };
+
+  //////////////////////////////////////////////////////
+  // The abstract superclass of all Supports conditions.
+  //////////////////////////////////////////////////////
+  class Supports_Condition : public Expression {
+  public:
+    Supports_Condition(ParserState pstate)
+    : Expression(pstate)
+    { }
+    virtual bool needs_parens(Supports_Condition* cond) const { return false; }
+    ATTACH_OPERATIONS()
+  };
+
+  ////////////////////////////////////////////////////////////
+  // An operator condition (e.g. `CONDITION1 and CONDITION2`).
+  ////////////////////////////////////////////////////////////
+  class Supports_Operator : public Supports_Condition {
+  public:
+    enum Operand { AND, OR };
+  private:
+    ADD_PROPERTY(Supports_Condition*, left);
+    ADD_PROPERTY(Supports_Condition*, right);
+    ADD_PROPERTY(Operand, operand);
+  public:
+    Supports_Operator(ParserState pstate, Supports_Condition* l, Supports_Condition* r, Operand o)
+    : Supports_Condition(pstate), left_(l), right_(r), operand_(o)
+    { }
+    virtual bool needs_parens(Supports_Condition* cond) const;
+    ATTACH_OPERATIONS()
+  };
+
+  //////////////////////////////////////////
+  // A negation condition (`not CONDITION`).
+  //////////////////////////////////////////
+  class Supports_Negation : public Supports_Condition {
+  private:
+    ADD_PROPERTY(Supports_Condition*, condition);
+  public:
+    Supports_Negation(ParserState pstate, Supports_Condition* c)
+    : Supports_Condition(pstate), condition_(c)
+    { }
+    virtual bool needs_parens(Supports_Condition* cond) const;
+    ATTACH_OPERATIONS()
+  };
+
+  /////////////////////////////////////////////////////
+  // A declaration condition (e.g. `(feature: value)`).
+  /////////////////////////////////////////////////////
+  class Supports_Declaration : public Supports_Condition {
+  private:
+    ADD_PROPERTY(Expression*, feature);
+    ADD_PROPERTY(Expression*, value);
+  public:
+    Supports_Declaration(ParserState pstate, Expression* f, Expression* v)
+    : Supports_Condition(pstate), feature_(f), value_(v)
+    { }
+    virtual bool needs_parens(Supports_Condition* cond) const { return false; }
+    ATTACH_OPERATIONS()
+  };
+
+  ///////////////////////////////////////////////
+  // An interpolation condition (e.g. `#{$var}`).
+  ///////////////////////////////////////////////
+  class Supports_Interpolation : public Supports_Condition {
+  private:
+    ADD_PROPERTY(Expression*, value);
+  public:
+    Supports_Interpolation(ParserState pstate, Expression* v)
+    : Supports_Condition(pstate), value_(v)
+    { }
+    virtual bool needs_parens(Supports_Condition* cond) const { return false; }
+    ATTACH_OPERATIONS()
+  };
+
+  /////////////////////////////////////////////////
+  // At root expressions (for use inside @at-root).
+  /////////////////////////////////////////////////
+  class At_Root_Query : public Expression {
+  private:
+    ADD_PROPERTY(Expression*, feature)
+    ADD_PROPERTY(Expression*, value)
+  public:
+    At_Root_Query(ParserState pstate, Expression* f = 0, Expression* v = 0, bool i = false)
+    : Expression(pstate), feature_(f), value_(v)
+    { }
+    bool exclude(std::string str);
+    ATTACH_OPERATIONS()
+  };
+
+  /////////////////////////////////
+  // Thunks for delayed evaluation.
+  /////////////////////////////////
+  class Thunk : public Expression {
+    ADD_PROPERTY(Expression*, expression)
+    ADD_PROPERTY(Env*, environment)
+  public:
+    Thunk(ParserState pstate, Expression* exp, Env* env = 0)
+    : Expression(pstate), expression_(exp), environment_(env)
+    { }
   };
 
 }

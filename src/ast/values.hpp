@@ -587,6 +587,29 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
+
+  //////////////////
+  // The null value.
+  //////////////////
+  class Null : public Value {
+  public:
+    Null(ParserState pstate) : Value(pstate) { concrete_type(NULL_VAL); }
+    std::string type() { return "null"; }
+    static std::string type_name() { return "null"; }
+    bool is_invisible() const { return true; }
+    operator bool() { return false; }
+    bool is_false() { return true; }
+
+    virtual size_t hash()
+    {
+      return -1;
+    }
+
+    virtual bool operator== (const Expression& rhs) const;
+
+    ATTACH_OPERATIONS()
+  };
+
 }
 
 #endif

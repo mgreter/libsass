@@ -240,6 +240,58 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
+  ////////////////////
+  // `@supports` rule.
+  ////////////////////
+  class Supports_Block : public Has_Block {
+    ADD_PROPERTY(Supports_Condition*, condition)
+  public:
+    Supports_Block(ParserState pstate, Supports_Condition* condition, Block* block = 0)
+    : Has_Block(pstate, block), condition_(condition)
+    { statement_type(SUPPORTS); }
+    bool is_hoistable() { return true; }
+    bool bubbles() { return true; }
+    ATTACH_OPERATIONS()
+  };
+
+
+  ///////////
+  // At-root.
+  ///////////
+  class At_Root_Block : public Has_Block {
+    ADD_PROPERTY(At_Root_Query*, expression)
+  public:
+    At_Root_Block(ParserState pstate, Block* b = 0, At_Root_Query* e = 0)
+    : Has_Block(pstate, b), expression_(e)
+    { statement_type(ATROOT); }
+    bool is_hoistable() { return true; }
+    bool bubbles() { return true; }
+    bool exclude_node(Statement* s) {
+      if (s->statement_type() == Statement::DIRECTIVE)
+      {
+        return expression()->exclude(static_cast<Directive*>(s)->keyword().erase(0, 1));
+      }
+      if (s->statement_type() == Statement::MEDIA)
+      {
+        return expression()->exclude("media");
+      }
+      if (s->statement_type() == Statement::RULESET)
+      {
+        return expression()->exclude("rule");
+      }
+      if (s->statement_type() == Statement::SUPPORTS)
+      {
+        return expression()->exclude("supports");
+      }
+      if (static_cast<Directive*>(s)->is_keyframes())
+      {
+        return expression()->exclude("keyframes");
+      }
+      return false;
+    }
+    ATTACH_OPERATIONS()
+  };
+
 }
 
 #endif
