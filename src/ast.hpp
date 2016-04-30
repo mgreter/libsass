@@ -48,7 +48,9 @@
 
 #include "sass.h"
 
+#include "ast/common.hpp"
 #include "ast/nodes.hpp"
+#include "ast/containers.hpp"
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -95,19 +97,6 @@ namespace Sass {
       bool ws_before;
       bool ws_after;
   };
-
-  //////////////////////////////////////////////////////////
-  // `hash_combine` comes from boost (functional/hash):
-  // http://www.boost.org/doc/libs/1_35_0/doc/html/hash/combine.html
-  // Boost Software License - Version 1.0
-  // http://www.boost.org/users/license.html
-  template <typename T>
-  void hash_combine (std::size_t& seed, const T& val)
-  {
-    seed ^= std::hash<T>()(val) + 0x9e3779b9
-             + (seed<<6) + (seed>>2);
-  }
-  //////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////
   // Still just an expression, but with a to_string method
