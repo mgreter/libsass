@@ -117,11 +117,6 @@ namespace Sass {
     }
   }
 
-  void AST_Node::update_pstate(const ParserState& pstate)
-  {
-    pstate_.offset += pstate - pstate_ + pstate.offset;
-  }
-
   inline bool is_ns_eq(const std::string& l, const std::string& r)
   {
     if (l.empty() && r.empty()) return true;
@@ -2162,22 +2157,6 @@ namespace Sass {
   bool Binary_Expression::is_right_interpolant(void) const
   {
     return is_interpolant() || (right() && right()->is_right_interpolant());
-  }
-
-  std::string AST_Node::to_string(Sass_Inspect_Options opt) const
-  {
-    Sass_Output_Options out(opt);
-    Emitter emitter(out);
-    Inspect i(emitter);
-    i.in_declaration = true;
-    // ToDo: inspect should be const
-    const_cast<AST_Node*>(this)->perform(&i);
-    return i.get_buffer();
-  }
-
-  std::string AST_Node::to_string() const
-  {
-    return to_string({ NESTED, 5 });
   }
 
   std::string String_Quoted::inspect() const
