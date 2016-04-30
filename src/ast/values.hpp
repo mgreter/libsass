@@ -208,6 +208,88 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
+
+  //////////////////
+  // Function calls.
+  //////////////////
+  class Function_Call : public PreValue {
+    ADD_HASHED(std::string, name)
+    ADD_HASHED(Arguments*, arguments)
+    ADD_PROPERTY(void*, cookie)
+    size_t hash_;
+  public:
+    Function_Call(ParserState pstate, std::string n, Arguments* args, void* cookie)
+    : PreValue(pstate), name_(n), arguments_(args), cookie_(cookie), hash_(0)
+    { concrete_type(STRING); }
+    Function_Call(ParserState pstate, std::string n, Arguments* args)
+    : PreValue(pstate), name_(n), arguments_(args), cookie_(0), hash_(0)
+    { concrete_type(STRING); }
+
+    virtual bool operator==(const Expression& rhs) const
+    {
+      try
+      {
+        const Function_Call* m = dynamic_cast<const Function_Call*>(&rhs);
+        if (!(m && name() == m->name())) return false;
+        if (!(m && arguments()->length() == m->arguments()->length())) return false;
+        for (size_t i =0, L = arguments()->length(); i < L; ++i)
+          if (!((*arguments())[i] == (*m->arguments())[i])) return false;
+        return true;
+      }
+      catch (std::bad_cast&)
+      {
+        return false;
+      }
+      catch (...) { throw; }
+    }
+
+    virtual size_t hash()
+    {
+      if (hash_ == 0) {
+        hash_ = std::hash<std::string>()(name());
+        for (auto argument : arguments()->elements())
+          hash_combine(hash_, argument->hash());
+      }
+      return hash_;
+    }
+
+    ATTACH_OPERATIONS()
+  };
+
+
+  ///////////////////////
+  // Variable references.
+  ///////////////////////
+  class Variable : public PreValue {
+    ADD_PROPERTY(std::string, name)
+  public:
+    Variable(ParserState pstate, std::string n)
+    : PreValue(pstate), name_(n)
+    { }
+
+    virtual bool operator==(const Expression& rhs) const
+    {
+      try
+      {
+        const Variable* e = dynamic_cast<const Variable*>(&rhs);
+        return e && name() == e->name();
+      }
+      catch (std::bad_cast&)
+      {
+        return false;
+      }
+      catch (...) { throw; }
+    }
+
+    virtual size_t hash()
+    {
+      return std::hash<std::string>()(name());
+    }
+
+    ATTACH_OPERATIONS()
+  };
+
+
 }
 
 #endif
