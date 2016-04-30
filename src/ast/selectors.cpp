@@ -5,6 +5,7 @@
 #include "../extend.hpp"
 #include "../emitter.hpp"
 #include "../color_maps.hpp"
+#include "selectors.hpp"
 #include <set>
 #include <iomanip>
 #include <iostream>
@@ -1398,6 +1399,47 @@ namespace Sass {
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
         extends.put(compound_sel->to_str_vec(), std::make_pair((*extender)[i], compound_sel));
       }
+    }
+  }
+
+
+  std::vector<std::string> Compound_Selector::to_str_vec()
+  {
+    std::vector<std::string> result;
+    result.reserve(length());
+    for (size_t i = 0, L = length(); i < L; ++i)
+    { result.push_back((*this)[i]->to_string()); }
+    return result;
+  }
+
+  Compound_Selector* Compound_Selector::minus(Compound_Selector* rhs, Context& ctx)
+  {
+    Compound_Selector* result = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate());
+    // result->has_parent_reference(has_parent_reference());
+
+    // not very efficient because it needs to preserve order
+    for (size_t i = 0, L = length(); i < L; ++i)
+    {
+      bool found = false;
+      std::string thisSelector((*this)[i]->to_string(ctx.c_options));
+      for (size_t j = 0, M = rhs->length(); j < M; ++j)
+      {
+        if (thisSelector == (*rhs)[j]->to_string(ctx.c_options))
+        {
+          found = true;
+          break;
+        }
+      }
+      if (!found) (*result) << (*this)[i];
+    }
+
+    return result;
+  }
+
+  void Compound_Selector::mergeSources(SourcesSet& sources, Context& ctx)
+  {
+    for (SourcesSet::iterator iterator = sources.begin(), endIterator = sources.end(); iterator != endIterator; ++iterator) {
+      this->sources_.insert((*iterator)->clone(ctx));
     }
   }
 

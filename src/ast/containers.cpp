@@ -16,4 +16,13 @@
 
 namespace Sass {
 
+  static Null sass_null(Sass::Null(ParserState("null")));
+
+  Expression* Hashed::at(Expression* k) const
+  {
+    if (elements_.count(k))
+    { return elements_.at(k); }
+    else { return &sass_null; }
+  }
+
 }
