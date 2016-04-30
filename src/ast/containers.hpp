@@ -102,6 +102,86 @@ namespace Sass {
   template <typename T>
   inline Vectorized<T>::~Vectorized() { }
 
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Mixin class for AST nodes that should behave like a hash table. Uses an
+  // extra <std::vector> internally to maintain insertion order for interation.
+  /////////////////////////////////////////////////////////////////////////////
+  class Hashed {
+  struct HashExpression {
+    size_t operator() (Expression* ex) const {
+      return ex ? ex->hash() : 0;
+    }
+  };
+  struct CompareExpression {
+    bool operator()(const Expression* lhs, const Expression* rhs) const {
+      return lhs && rhs && *lhs == *rhs;
+    }
+  };
+  typedef std::unordered_map<
+    Expression*, // key
+    Expression*, // value
+    HashExpression, // hasher
+    CompareExpression // compare
+  > ExpressionMap;
+  private:
+    ExpressionMap elements_;
+    std::vector<Expression*> list_;
+  protected:
+    size_t hash_;
+    Expression* duplicate_key_;
+    void reset_hash() { hash_ = 0; }
+    void reset_duplicate_key() { duplicate_key_ = 0; }
+    virtual void adjust_after_pushing(std::pair<Expression*, Expression*> p) { }
+  public:
+    Hashed(size_t s = 0) : elements_(ExpressionMap(s)), list_(std::vector<Expression*>())
+    { elements_.reserve(s); list_.reserve(s); reset_duplicate_key(); }
+    virtual ~Hashed();
+    size_t length() const                  { return list_.size(); }
+    bool empty() const                     { return list_.empty(); }
+    bool has(Expression* k) const          { return elements_.count(k) == 1; }
+    Expression* at(Expression* k) const;
+    bool has_duplicate_key() const         { return duplicate_key_ != 0; }
+    Expression* get_duplicate_key() const  { return duplicate_key_; }
+    const ExpressionMap elements() { return elements_; }
+    Hashed& operator<<(std::pair<Expression*, Expression*> p)
+    {
+      reset_hash();
+
+      if (!has(p.first)) list_.push_back(p.first);
+      else if (!duplicate_key_) duplicate_key_ = p.first;
+
+      elements_[p.first] = p.second;
+
+      adjust_after_pushing(p);
+      return *this;
+    }
+    Hashed& operator+=(Hashed* h)
+    {
+      if (length() == 0) {
+        this->elements_ = h->elements_;
+        this->list_ = h->list_;
+        return *this;
+      }
+
+      for (auto key : h->keys()) {
+        *this << std::make_pair(key, h->at(key));
+      }
+
+      reset_duplicate_key();
+      return *this;
+    }
+    const ExpressionMap& pairs() const { return elements_; }
+    const std::vector<Expression*>& keys() const { return list_; }
+
+    std::unordered_map<Expression*, Expression*>::iterator end() { return elements_.end(); }
+    std::unordered_map<Expression*, Expression*>::iterator begin() { return elements_.begin(); }
+    std::unordered_map<Expression*, Expression*>::const_iterator end() const { return elements_.end(); }
+    std::unordered_map<Expression*, Expression*>::const_iterator begin() const { return elements_.begin(); }
+
+  };
+  inline Hashed::~Hashed() { }
+
 }
 
 #endif

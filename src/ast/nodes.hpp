@@ -83,6 +83,61 @@ namespace Sass {
     virtual size_t hash() { return 0; }
   };
 
+
+
+  /////////////////////////////////////////////////////////////////////////
+  // Abstract base class for statements. This side of the AST hierarchy
+  // represents elements in expansion contexts, which exist primarily to be
+  // rewritten and macro-expanded.
+  /////////////////////////////////////////////////////////////////////////
+  class Statement : public AST_Node {
+  public:
+    enum Statement_Type {
+      NONE,
+      RULESET,
+      MEDIA,
+      DIRECTIVE,
+      SUPPORTS,
+      ATROOT,
+      BUBBLE,
+      CONTENT,
+      KEYFRAMERULE,
+      DECLARATION,
+      ASSIGNMENT,
+      IMPORT_STUB,
+      IMPORT,
+      COMMENT,
+      WARNING,
+      RETURN,
+      EXTEND,
+      ERROR,
+      DEBUGSTMT,
+      WHILE,
+      EACH,
+      FOR,
+      IF
+    };
+  private:
+    ADD_PROPERTY(Block*, block)
+    ADD_PROPERTY(Statement_Type, statement_type)
+    ADD_PROPERTY(size_t, tabs)
+    ADD_PROPERTY(bool, group_end)
+  public:
+    Statement(ParserState pstate, Statement_Type st = NONE, size_t t = 0)
+    : AST_Node(pstate), block_(0), statement_type_(st), tabs_(t), group_end_(false)
+     { }
+    virtual ~Statement() = 0;
+    // needed for rearranging nested rulesets during CSS emission
+    virtual bool   is_hoistable() { return false; }
+    virtual bool   is_invisible() const { return false; }
+    virtual bool   bubbles() { return false; }
+    virtual Block* block()  { return 0; }
+    virtual bool has_content()
+    {
+      return statement_type_ == CONTENT;
+    }
+  };
+  inline Statement::~Statement() { }
 }
 
 
