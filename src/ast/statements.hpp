@@ -71,6 +71,163 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
+
+  ////////////////////////////////////////////////////////////////////////
+  // Declarations -- style rules consisting of a property name and values.
+  ////////////////////////////////////////////////////////////////////////
+  class Declaration : public Statement {
+    ADD_PROPERTY(String*, property)
+    ADD_PROPERTY(Expression*, value)
+    ADD_PROPERTY(bool, is_important)
+    ADD_PROPERTY(bool, is_indented)
+  public:
+    Declaration(ParserState pstate,
+                String* prop, Expression* val, bool i = false)
+    : Statement(pstate), property_(prop), value_(val), is_important_(i), is_indented_(false)
+    { statement_type(DECLARATION); }
+    ATTACH_OPERATIONS()
+  };
+
+  /////////////////////////////////////
+  // Assignments -- variable and value.
+  /////////////////////////////////////
+  class Assignment : public Statement {
+    ADD_PROPERTY(std::string, variable)
+    ADD_PROPERTY(Expression*, value)
+    ADD_PROPERTY(bool, is_default)
+    ADD_PROPERTY(bool, is_global)
+  public:
+    Assignment(ParserState pstate,
+               std::string var, Expression* val,
+               bool is_default = false,
+               bool is_global = false)
+    : Statement(pstate), variable_(var), value_(val), is_default_(is_default), is_global_(is_global)
+    { statement_type(ASSIGNMENT); }
+    ATTACH_OPERATIONS()
+  };
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Import directives. CSS and Sass import lists can be intermingled, so it's
+  // necessary to store a list of each in an Import node.
+  ////////////////////////////////////////////////////////////////////////////
+  class Import : public Statement {
+    std::vector<Expression*> urls_;
+    std::vector<Include>     incs_;
+    ADD_PROPERTY(List*,      media_queries);
+  public:
+    Import(ParserState pstate)
+    : Statement(pstate),
+      urls_(std::vector<Expression*>()),
+      incs_(std::vector<Include>()),
+      media_queries_(0)
+    { statement_type(IMPORT); }
+    std::vector<Expression*>& urls() { return urls_; }
+    std::vector<Include>& incs() { return incs_; }
+    ATTACH_OPERATIONS()
+  };
+
+  // not yet resolved single import
+  // so far we only know requested name
+  class Import_Stub : public Statement {
+    Include resource_;
+  public:
+    std::string abs_path() { return resource_.abs_path; };
+    std::string imp_path() { return resource_.imp_path; };
+    Include resource() { return resource_; };
+
+    Import_Stub(ParserState pstate, Include res)
+    : Statement(pstate), resource_(res)
+    { statement_type(IMPORT_STUB); }
+    ATTACH_OPERATIONS()
+  };
+
+  //////////////////////////////
+  // The Sass `@warn` directive.
+  //////////////////////////////
+  class Warning : public Statement {
+    ADD_PROPERTY(Expression*, message)
+  public:
+    Warning(ParserState pstate, Expression* msg)
+    : Statement(pstate), message_(msg)
+    { statement_type(WARNING); }
+    ATTACH_OPERATIONS()
+  };
+
+  ///////////////////////////////
+  // The Sass `@error` directive.
+  ///////////////////////////////
+  class Error : public Statement {
+    ADD_PROPERTY(Expression*, message)
+  public:
+    Error(ParserState pstate, Expression* msg)
+    : Statement(pstate), message_(msg)
+    { statement_type(ERROR); }
+    ATTACH_OPERATIONS()
+  };
+
+  ///////////////////////////////
+  // The Sass `@debug` directive.
+  ///////////////////////////////
+  class Debug : public Statement {
+    ADD_PROPERTY(Expression*, value)
+  public:
+    Debug(ParserState pstate, Expression* val)
+    : Statement(pstate), value_(val)
+    { statement_type(DEBUGSTMT); }
+    ATTACH_OPERATIONS()
+  };
+
+  ///////////////////////////////////////////
+  // CSS comments. These may be interpolated.
+  ///////////////////////////////////////////
+  class Comment : public Statement {
+    ADD_PROPERTY(String*, text)
+    ADD_PROPERTY(bool, is_important)
+  public:
+    Comment(ParserState pstate, String* txt, bool is_important)
+    : Statement(pstate), text_(txt), is_important_(is_important)
+    { statement_type(COMMENT); }
+    virtual bool is_invisible() const
+    { return /* is_important() == */ false; }
+    ATTACH_OPERATIONS()
+  };
+
+
+  /////////////////////////////////////////////////////////////
+  // The @return directive for use inside SassScript functions.
+  /////////////////////////////////////////////////////////////
+  class Return : public Statement {
+    ADD_PROPERTY(Expression*, value)
+  public:
+    Return(ParserState pstate, Expression* val)
+    : Statement(pstate), value_(val)
+    { statement_type(RETURN); }
+    ATTACH_OPERATIONS()
+  };
+
+  ////////////////////////////////
+  // The Sass `@extend` directive.
+  ////////////////////////////////
+  class Extension : public Statement {
+    ADD_PROPERTY(Selector*, selector)
+  public:
+    Extension(ParserState pstate, Selector* s)
+    : Statement(pstate), selector_(s)
+    { statement_type(EXTEND); }
+    ATTACH_OPERATIONS()
+  };
+
+  ///////////////////////////////////////////////////
+  // The @content directive for mixin content blocks.
+  ///////////////////////////////////////////////////
+  class Content : public Statement {
+    ADD_PROPERTY(Media_Block*, media_block)
+  public:
+    Content(ParserState pstate) : Statement(pstate)
+    { statement_type(CONTENT); }
+    ATTACH_OPERATIONS()
+  };
+
 }
 
 #endif
