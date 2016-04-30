@@ -52,30 +52,6 @@
 #include "ast/nodes.hpp"
 #include "ast/containers.hpp"
 
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Hash method specializations for std::unordered_map to work with Sass::Expression
-/////////////////////////////////////////////////////////////////////////////////////
-
-namespace std {
-  template<>
-  struct hash<Sass::Expression*>
-  {
-    size_t operator()(Sass::Expression* s) const
-    {
-      return s->hash();
-    }
-  };
-  template<>
-  struct equal_to<Sass::Expression*>
-  {
-    bool operator()( Sass::Expression* lhs,  Sass::Expression* rhs) const
-    {
-      return lhs->hash() == rhs->hash();
-    }
-  };
-}
-
 namespace Sass {
 
 
