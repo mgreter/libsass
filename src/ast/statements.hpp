@@ -56,6 +56,21 @@ namespace Sass {
   };
   inline Has_Block::~Has_Block() { }
 
+
+  /////////////////
+  // Bubble.
+  /////////////////
+  class Bubble : public Statement {
+    ADD_PROPERTY(Statement*, node)
+    ADD_PROPERTY(bool, group_end)
+  public:
+    Bubble(ParserState pstate, Statement* n, Statement* g = 0, size_t t = 0)
+    : Statement(pstate, Statement::BUBBLE, t), node_(n), group_end_(g == 0)
+    { }
+    bool bubbles() { return true; }
+    ATTACH_OPERATIONS()
+  };
+
 }
 
 #endif
