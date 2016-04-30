@@ -32,6 +32,7 @@
 
 #include "common.hpp"
 #include "nodes.hpp"
+#include "values.hpp"
 #include "containers.hpp"
 #include "expressions.hpp"
 

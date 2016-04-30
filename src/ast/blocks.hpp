@@ -1,6 +1,42 @@
 #ifndef SASS_AST_BLOCKS_H
 #define SASS_AST_BLOCKS_H
 
+#include <set>
+#include <deque>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <typeinfo>
+#include <algorithm>
+#include <unordered_map>
+#include "sass/base.h"
+
+
+#include "../util.hpp"
+#include "../units.hpp"
+#include "../context.hpp"
+#include "../position.hpp"
+#include "../constants.hpp"
+#include "../operation.hpp"
+#include "../position.hpp"
+#include "../inspect.hpp"
+#include "../source_map.hpp"
+#include "../environment.hpp"
+#include "../error_handling.hpp"
+#include "../ast_def_macros.hpp"
+#include "../ast_fwd_decl.hpp"
+#include "../source_map.hpp"
+
+#include "sass.h"
+
+#include "common.hpp"
+#include "nodes.hpp"
+#include "values.hpp"
+#include "containers.hpp"
+#include "expressions.hpp"
+#include "statements.hpp"
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////////
