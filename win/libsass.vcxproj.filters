@@ -48,6 +48,30 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\nodes.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\blocks.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\values.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\selectors.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\containers.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\statements.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\expressions.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast\common.hpp">
+      <Filter>LibSass\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_def_macros.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -211,6 +235,27 @@
   <ItemGroup Label="Sources">
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\nodes.cpp">
+      <Filter>LibSass\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\blocks.cpp">
+      <Filter>LibSass\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\values.cpp">
+      <Filter>LibSass\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\selectors.cpp">
+      <Filter>LibSass\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\containers.cpp">
+      <Filter>LibSass\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\statements.cpp">
+      <Filter>LibSass\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast\expressions.cpp">
+      <Filter>LibSass\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\base64vlq.cpp">
       <Filter>Sources</Filter>
