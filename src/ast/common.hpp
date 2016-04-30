@@ -42,6 +42,15 @@ namespace Sass {
   }
   //////////////////////////////////////////////////////////////////////
 
+
+  inline bool is_ns_eq(const std::string& l, const std::string& r)
+  {
+    if (l.empty() && r.empty()) return true;
+    else if (l.empty() && r == "*") return true;
+    else if (r.empty() && l == "*") return true;
+    else return l == r;
+  }
+
 }
 
 #endif
