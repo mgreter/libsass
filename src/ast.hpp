@@ -78,49 +78,6 @@ namespace std {
 
 namespace Sass {
 
-  // easier to search with name
-  const bool DELAYED = true;
-
-  // ToDo: should this really be hardcoded
-  // Note: most methods follow precision option
-  const double NUMBER_EPSILON = 0.00000000000001;
-
-  // ToDo: where does this fit best?
-  // We don't share this with C-API?
-  class Operand {
-    public:
-      Operand(Sass_OP operand, bool ws_before = false, bool ws_after = false)
-      : operand(operand), ws_before(ws_before), ws_after(ws_after)
-      { }
-    public:
-      enum Sass_OP operand;
-      bool ws_before;
-      bool ws_after;
-  };
-
-  //////////////////////////////////////////////////////////////////////
-  // Still just an expression, but with a to_string method
-  //////////////////////////////////////////////////////////////////////
-  class PreValue : public Expression {
-  public:
-    PreValue(ParserState pstate,
-               bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : Expression(pstate, d, e, i, ct)
-    { }
-    virtual ~PreValue() { }
-  };
-
-  //////////////////////////////////////////////////////////////////////
-  // base class for values that support operations
-  //////////////////////////////////////////////////////////////////////
-  class Value : public Expression {
-  public:
-    Value(ParserState pstate,
-          bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : Expression(pstate, d, e, i, ct)
-    { }
-    virtual bool operator== (const Expression& rhs) const = 0;
-  };
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like vectors. Uses the
@@ -187,6 +144,37 @@ namespace Sass {
   };
   template <typename T>
   inline Vectorized<T>::~Vectorized() { }
+
+  // easier to search with name
+  const bool DELAYED = true;
+
+  // ToDo: should this really be hardcoded
+  // Note: most methods follow precision option
+  const double NUMBER_EPSILON = 0.00000000000001;
+
+  //////////////////////////////////////////////////////////////////////
+  // Still just an expression, but with a to_string method
+  //////////////////////////////////////////////////////////////////////
+  class PreValue : public Expression {
+  public:
+    PreValue(ParserState pstate,
+               bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
+    : Expression(pstate, d, e, i, ct)
+    { }
+    virtual ~PreValue() { }
+  };
+
+  //////////////////////////////////////////////////////////////////////
+  // base class for values that support operations
+  //////////////////////////////////////////////////////////////////////
+  class Value : public Expression {
+  public:
+    Value(ParserState pstate,
+          bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
+    : Expression(pstate, d, e, i, ct)
+    { }
+    virtual bool operator== (const Expression& rhs) const = 0;
+  };
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
