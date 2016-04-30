@@ -290,6 +290,114 @@ namespace Sass {
   };
 
 
+
+
+  ////////////////////////////////////////////////
+  // Numbers, percentages, dimensions, and colors.
+  ////////////////////////////////////////////////
+  class Number : public Value {
+    ADD_HASHED(double, value)
+    ADD_PROPERTY(bool, zero)
+    std::vector<std::string> numerator_units_;
+    std::vector<std::string> denominator_units_;
+    size_t hash_;
+  public:
+    Number(ParserState pstate, double val, std::string u = "", bool zero = true);
+    bool zero() { return zero_; }
+    bool is_valid_css_unit() const;
+    std::vector<std::string>& numerator_units()   { return numerator_units_; }
+    std::vector<std::string>& denominator_units() { return denominator_units_; }
+    const std::vector<std::string>& numerator_units() const   { return numerator_units_; }
+    const std::vector<std::string>& denominator_units() const { return denominator_units_; }
+    std::string type() { return "number"; }
+    static std::string type_name() { return "number"; }
+    std::string unit() const;
+
+    bool is_unitless() const;
+    double convert_factor(const Number&) const;
+    bool convert(const std::string& unit = "", bool strict = false);
+    void normalize(const std::string& unit = "", bool strict = false);
+    // useful for making one number compatible with another
+    std::string find_convertible_unit() const;
+
+    virtual size_t hash()
+    {
+      if (hash_ == 0) {
+        hash_ = std::hash<double>()(value_);
+        for (const auto numerator : numerator_units())
+          hash_combine(hash_, std::hash<std::string>()(numerator));
+        for (const auto denominator : denominator_units())
+          hash_combine(hash_, std::hash<std::string>()(denominator));
+      }
+      return hash_;
+    }
+
+    virtual bool operator< (const Number& rhs) const;
+    virtual bool operator== (const Expression& rhs) const;
+
+    ATTACH_OPERATIONS()
+  };
+
+  //////////
+  // Colors.
+  //////////
+  class Color : public Value {
+    ADD_HASHED(double, r)
+    ADD_HASHED(double, g)
+    ADD_HASHED(double, b)
+    ADD_HASHED(double, a)
+    ADD_PROPERTY(std::string, disp)
+    size_t hash_;
+  public:
+    Color(ParserState pstate, double r, double g, double b, double a = 1, const std::string disp = "")
+    : Value(pstate), r_(r), g_(g), b_(b), a_(a), disp_(disp),
+      hash_(0)
+    { concrete_type(COLOR); }
+    std::string type() { return "color"; }
+    static std::string type_name() { return "color"; }
+
+    virtual size_t hash()
+    {
+      if (hash_ == 0) {
+        hash_ = std::hash<double>()(a_);
+        hash_combine(hash_, std::hash<double>()(r_));
+        hash_combine(hash_, std::hash<double>()(g_));
+        hash_combine(hash_, std::hash<double>()(b_));
+      }
+      return hash_;
+    }
+
+    virtual bool operator== (const Expression& rhs) const;
+
+    ATTACH_OPERATIONS()
+  };
+
+  //////////////////////////////
+  // Errors from Sass_Values.
+  //////////////////////////////
+  class Custom_Error : public Value {
+    ADD_PROPERTY(std::string, message)
+  public:
+    Custom_Error(ParserState pstate, std::string msg)
+    : Value(pstate), message_(msg)
+    { concrete_type(C_ERROR); }
+    virtual bool operator== (const Expression& rhs) const;
+    ATTACH_OPERATIONS()
+  };
+
+  //////////////////////////////
+  // Warnings from Sass_Values.
+  //////////////////////////////
+  class Custom_Warning : public Value {
+    ADD_PROPERTY(std::string, message)
+  public:
+    Custom_Warning(ParserState pstate, std::string msg)
+    : Value(pstate), message_(msg)
+    { concrete_type(C_WARNING); }
+    virtual bool operator== (const Expression& rhs) const;
+    ATTACH_OPERATIONS()
+  };
+
 }
 
 #endif
