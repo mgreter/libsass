@@ -52,41 +52,10 @@
 #include "ast/nodes.hpp"
 #include "ast/containers.hpp"
 #include "ast/statements.hpp"
+#include "ast/expressions.hpp"
 #include "ast/blocks.hpp"
 
 namespace Sass {
-
-
-  // easier to search with name
-  const bool DELAYED = true;
-
-  // ToDo: should this really be hardcoded
-  // Note: most methods follow precision option
-  const double NUMBER_EPSILON = 0.00000000000001;
-
-  //////////////////////////////////////////////////////////////////////
-  // Still just an expression, but with a to_string method
-  //////////////////////////////////////////////////////////////////////
-  class PreValue : public Expression {
-  public:
-    PreValue(ParserState pstate,
-               bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : Expression(pstate, d, e, i, ct)
-    { }
-    virtual ~PreValue() { }
-  };
-
-  //////////////////////////////////////////////////////////////////////
-  // base class for values that support operations
-  //////////////////////////////////////////////////////////////////////
-  class Value : public Expression {
-  public:
-    Value(ParserState pstate,
-          bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : Expression(pstate, d, e, i, ct)
-    { }
-    virtual bool operator== (const Expression& rhs) const = 0;
-  };
 
 
   ////////////////////////

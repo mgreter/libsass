@@ -6,6 +6,13 @@
 
 namespace Sass {
 
+  // easier to search with name
+  const bool DELAYED = true;
+
+  // ToDo: should this really be hardcoded
+  // Note: most methods follow precision option
+  const double NUMBER_EPSILON = 0.00000000000001;
+
   // ToDo: where does this fit best?
   // We don't share this with C-API?
   class Operand {
