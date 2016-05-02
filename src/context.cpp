@@ -650,12 +650,12 @@ namespace Sass {
     Expand expand(*this, &global, &backtrace);
     Cssize cssize(*this, &backtrace);
     CheckNesting check_nesting(*this);
-    // check nesting
-    root = root->perform(&check_nesting)->block();
+    // check proper nesting of ast nodes
+    // root = root->perform(&check_nesting)->block();
     // expand and eval the tree
     root = root->perform(&expand)->block();
-    // check nesting
-    root = root->perform(&check_nesting)->block();
+    // check proper nesting of ast nodes
+    // root = root->perform(&check_nesting)->block();
     // merge and bubble certain rules
     root = root->perform(&cssize)->block();
     // should we extend something?
@@ -665,6 +665,8 @@ namespace Sass {
       // extend tree nodes
       root->perform(&extend);
     }
+    // check proper nesting of ast nodes
+    root = root->perform(&check_nesting)->block();
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
