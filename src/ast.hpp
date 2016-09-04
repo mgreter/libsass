@@ -225,7 +225,7 @@ namespace Sass {
     void reset_hash() { hash_ = 0; }
     virtual void adjust_after_pushing(T element) { }
   public:
-    Vectorized(size_t s = 0) : elements_(std::vector<T>())
+    Vectorized(size_t s = 0) : elements_(std::vector<T>()), hash_(0)
     { elements_.reserve(s); }
     virtual ~Vectorized() = 0;
     size_t length() const   { return elements_.size(); }
