@@ -466,12 +466,14 @@ namespace Sass {
                                l->pstate(),
                                l->length(),
                                l->separator(),
+                               l->delimiter(),
                                l->is_arglist());
     for (size_t i = 0, L = l->length(); i < L; ++i) {
       ll->append((*l)[i]->perform(this));
     }
     ll->is_interpolant(l->is_interpolant());
     ll->from_selector(l->from_selector());
+    ll->delimiter(l->delimiter());
     ll->is_expanded(true);
     return ll.detach();
   }
@@ -1330,6 +1332,7 @@ namespace Sass {
                                         val->pstate(),
                                         0,
                                         SASS_COMMA,
+                                        SASS_NO_DELIMITER,
                                         true);
         wrapper->append(val);
         val = &wrapper;
@@ -1359,7 +1362,8 @@ namespace Sass {
       Expression_Obj rest = a->get_rest_argument()->perform(this);
       Expression_Obj splat = SASS_MEMORY_CAST(Argument, rest)->value()->perform(this);
 
-      Sass_Separator separator = SASS_COMMA;
+      enum Sass_Separator separator = SASS_COMMA;
+      enum Sass_List_Delimiter delimiter = SASS_NO_DELIMITER;
       List_Ptr ls = SASS_MEMORY_CAST(List, splat);
       Map_Ptr ms = SASS_MEMORY_CAST(Map, splat);
 
@@ -1367,6 +1371,7 @@ namespace Sass {
                                       splat->pstate(),
                                       0,
                                       ls ? ls->separator() : separator,
+                                      ls ? ls->delimiter() : delimiter,
                                       true);
 
       if (ls && ls->is_arglist()) {

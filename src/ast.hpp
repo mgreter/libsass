@@ -1057,14 +1057,18 @@ namespace Sass {
     void adjust_after_pushing(Expression_Obj e) { is_expanded(false); }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
+    ADD_PROPERTY(enum Sass_List_Delimiter, delimiter)
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, from_selector)
   public:
     List(ParserState pstate,
-         size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
+         size_t size = 0, enum Sass_Separator separator = SASS_SPACE,
+         enum Sass_List_Delimiter delimiter = SASS_NO_DELIMITER,
+         bool argl = false)
     : Value(pstate),
       Vectorized<Expression_Obj>(size),
-      separator_(sep),
+      separator_(separator),
+      delimiter_(delimiter),
       is_arglist_(argl),
       from_selector_(false)
     { concrete_type(LIST); }
@@ -1072,6 +1076,7 @@ namespace Sass {
     : Value(ptr),
       Vectorized<Expression_Obj>(*ptr),
       separator_(ptr->separator_),
+      delimiter_(ptr->delimiter_),
       is_arglist_(ptr->is_arglist_),
       from_selector_(ptr->from_selector_)
     { concrete_type(LIST); }
@@ -1081,7 +1086,8 @@ namespace Sass {
       return separator() == SASS_SPACE ?
         " " : (compressed ? "," : ", ");
     }
-    bool is_invisible() const { return empty(); }
+    bool is_bracketed() const { return delimiter() == SASS_BRACKETS; }
+    bool is_invisible() const { return !is_bracketed() && empty(); }
     Expression_Obj value_at_index(size_t i);
 
     virtual size_t size() const;

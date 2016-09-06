@@ -67,6 +67,7 @@ namespace Sass {
                                               p->pstate(),
                                               0,
                                               rest->separator(),
+                                              rest->delimiter(),
                                               true);
               // wrap each item from list as an argument
               for (Expression_Obj item : rest->elements()) {
@@ -91,7 +92,7 @@ namespace Sass {
         } else if (a->is_keyword_argument()) {
 
           // expand keyword arguments into their parameters
-          List_Ptr arglist = SASS_MEMORY_NEW(List, p->pstate(), 0, SASS_COMMA, true);
+          List_Ptr arglist = SASS_MEMORY_NEW(List, p->pstate(), 0, SASS_COMMA, SASS_NO_DELIMITER, true);
           env->local_frame()[p->name()] = arglist;
           Map_Obj argmap = SASS_MEMORY_CAST(Map, a->value());
           for (auto key : argmap->keys()) {
@@ -111,6 +112,7 @@ namespace Sass {
                                           p->pstate(),
                                           0,
                                           SASS_COMMA,
+                                          SASS_NO_DELIMITER,
                                           true);
           // consume the next args
           while (ia < LA) {
@@ -269,6 +271,7 @@ namespace Sass {
                                                                    leftover->pstate(),
                                                                    0,
                                                                    SASS_COMMA,
+                                                                   SASS_NO_DELIMITER,
                                                                    true);
         }
         else if (leftover->default_value()) {
