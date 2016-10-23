@@ -245,9 +245,9 @@ namespace Sass {
     CommaSequence_Selector_Ptr parse_selector_list(bool at_root = false);
     Sequence_Selector_Ptr parse_complex_selector(bool in_root = true);
     SimpleSequence_Selector_Ptr parse_compound_selector();
-    Simple_Selector* parse_simple_selector();
+    Simple_Selector_Ptr parse_simple_selector();
     Wrapped_Selector_Ptr parse_negated_selector();
-    Simple_Selector* parse_pseudo_selector();
+    Simple_Selector_Ptr parse_pseudo_selector();
     Attribute_Selector_Ptr parse_attribute_selector();
     Block_Obj parse_block(bool is_root = false);
     Block_Obj parse_css_block(bool is_root = false);

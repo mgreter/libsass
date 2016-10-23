@@ -199,8 +199,7 @@ namespace Sass {
   // semicolons must be lexed beforehand
   bool Parser::parse_block_node(bool is_root) {
 
-    Block_Obj _block = block_stack.back();
-    Block_Ptr block = &_block;
+    Block_Obj block = block_stack.back();
 
     parse_block_comments();
 
@@ -221,7 +220,7 @@ namespace Sass {
     else if (lex < kwd_for_directive >(true)) { block->append(parse_for_directive()); }
     else if (lex < kwd_each_directive >(true)) { block->append(parse_each_directive()); }
     else if (lex < kwd_while_directive >(true)) { block->append(parse_while_directive()); }
-    else if (lex < kwd_return_directive >(true)) { (*block) << parse_return_directive(); }
+    else if (lex < kwd_return_directive >(true)) { block->append(parse_return_directive()); }
 
     // abort if we are in function context and have nothing parsed yet
     else if (stack.back() == Scope::Function) {
@@ -238,10 +237,10 @@ namespace Sass {
       }
       Import_Ptr imp = parse_import();
       // if it is a url, we only add the statement
-      if (!imp->urls().empty()) (*block) << imp;
+      if (!imp->urls().empty()) block->append(imp);
       // process all resources now (add Import_Stub nodes)
       for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-        (*block) << SASS_MEMORY_NEW(ctx.mem, Import_Stub, pstate, imp->incs()[i]);
+        block->append(SASS_MEMORY_NEW(ctx.mem, Import_Stub, pstate, imp->incs()[i]));
       }
     }
 
@@ -255,29 +254,29 @@ namespace Sass {
       Selector_Ptr target;
       if (lookahead.has_interpolants) target = parse_selector_schema(lookahead.found);
       else                            target = parse_selector_list(true);
-      (*block) << SASS_MEMORY_NEW(ctx.mem, Extension, pstate, target);
+      block->append(SASS_MEMORY_NEW(ctx.mem, Extension, pstate, target));
     }
 
     // selector may contain interpolations which need delayed evaluation
     else if (!(lookahead_result = lookahead_for_selector(position)).error)
-    { (*block) << &parse_ruleset(lookahead_result, is_root); }
+    { block->append(&parse_ruleset(lookahead_result, is_root)); }
 
     // parse multiple specific keyword directives
-    else if (lex < kwd_media >(true)) { (*block) << &parse_media_block(); }
-    else if (lex < kwd_at_root >(true)) { (*block) << &parse_at_root_block(); }
-    else if (lex < kwd_include_directive >(true)) { (*block) << parse_include_directive(); }
-    else if (lex < kwd_content_directive >(true)) { (*block) << parse_content_directive(); }
-    else if (lex < kwd_supports_directive >(true)) { (*block) << &parse_supports_directive(); }
-    else if (lex < kwd_mixin >(true)) { (*block) << parse_definition(Definition::MIXIN); }
-    else if (lex < kwd_function >(true)) { (*block) << parse_definition(Definition::FUNCTION); }
+    else if (lex < kwd_media >(true)) { block->append(&parse_media_block()); }
+    else if (lex < kwd_at_root >(true)) { block->append(&parse_at_root_block()); }
+    else if (lex < kwd_include_directive >(true)) { block->append(parse_include_directive()); }
+    else if (lex < kwd_content_directive >(true)) { block->append(parse_content_directive()); }
+    else if (lex < kwd_supports_directive >(true)) { block->append(&parse_supports_directive()); }
+    else if (lex < kwd_mixin >(true)) { block->append(parse_definition(Definition::MIXIN)); }
+    else if (lex < kwd_function >(true)) { block->append(parse_definition(Definition::FUNCTION)); }
 
     // ignore the @charset directive for now
     else if (lex< kwd_charset_directive >(true)) { parse_charset_directive(); }
 
     // generic at keyword (keep last)
-    else if (lex< re_special_directive >(true)) { (*block) << &parse_special_directive(); }
-    else if (lex< re_prefixed_directive >(true)) { (*block) << &parse_prefixed_directive(); }
-    else if (lex< at_keyword >(true)) { (*block) << &parse_directive(); }
+    else if (lex< re_special_directive >(true)) { block->append(&parse_special_directive()); }
+    else if (lex< re_prefixed_directive >(true)) { block->append(&parse_prefixed_directive()); }
+    else if (lex< at_keyword >(true)) { block->append(&parse_directive()); }
 
     else if (is_root /* && block->is_root() */) {
       lex< css_whitespace >();
@@ -291,7 +290,7 @@ namespace Sass {
       // maybe we are expected to parse something?
       Declaration_Ptr decl = parse_declaration();
       decl->tabs(indentation);
-      (*block) << decl;
+      block->append(decl);
       // maybe we have a "sub-block"
       if (peek< exactly<'{'> >()) {
         if (decl->is_indented()) ++ indentation;
@@ -948,13 +947,13 @@ namespace Sass {
   /* parse block comment and add to block */
   void Parser::parse_block_comments()
   {
-    Block_Obj _block = block_stack.back();
-    Block_Ptr block = &_block;
+    Block_Obj block = block_stack.back();
+
     while (lex< block_comment >()) {
       bool is_important = lexed.begin[2] == '!';
       // flag on second param is to skip loosely over comments
       String_Ptr  contents = parse_interpolated_chunk(lexed, true);
-      (*block) << SASS_MEMORY_NEW(ctx.mem, Comment, pstate, contents, is_important);
+      block->append(SASS_MEMORY_NEW(ctx.mem, Comment, pstate, contents, is_important));
     }
   }
 
