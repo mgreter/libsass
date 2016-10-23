@@ -25,7 +25,7 @@ namespace Sass {
     : node(node) {
       if (node) {
         node->refcount += 1;
-        std::cerr << "increase refcount, now at " << node->refcount << "\n";
+        // std::cerr << "increase refcount, now at " << node->refcount << "\n";
       }
     };
     // the copy constructor
@@ -33,13 +33,13 @@ namespace Sass {
     : node(obj.node) {
       if (node) {
         node->refcount += 1;
-        std::cerr << "increase refcount, now at " << node->refcount << "\n";
+        // std::cerr << "increase refcount, now at " << node->refcount << "\n";
       }
     }
     ~Memory_Ptr() {
       if (node) {
         node->refcount -= 1;
-        std::cerr << "decrease refcount, now at " << node->refcount << "\n";
+        // std::cerr << "decrease refcount, now at " << node->refcount << "\n";
         if (node->refcount == 1) {
           // delete and remove
         }
@@ -60,8 +60,14 @@ namespace Sass {
   public:
     Memory_Node(T* node)
     : Memory_Ptr(node) {};
+    Memory_Node(const T& node)
+    : Memory_Ptr(node) {};
     ~Memory_Node() {};
   public:
+    T* operator& () {
+      // should be save to cast it here
+      return static_cast<T*>(this->obj());
+    };
     T* operator-> () {
       // should be save to cast it here
       return static_cast<T*>(this->obj());

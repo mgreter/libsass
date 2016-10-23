@@ -544,7 +544,13 @@ namespace Sass {
 
     // check if entry file is given
     if (input_path.empty()) return 0;
-
+/*
+Memory_Manager mem;
+ParserState pstate("null");
+     Null_Obj node = SASS_MEMORY_CREATE(mem, Null, pstate);
+std::cerr << "[[" << node.obj() << "]]\n";
+exit(0);
+*/
     // create absolute path from input filename
     // ToDo: this should be resolved via custom importers
     std::string abs_path(rel2abs(input_path, CWD));
