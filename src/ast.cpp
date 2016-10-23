@@ -143,8 +143,8 @@ namespace Sass {
     size_t L = std::min(length(), rhs.length());
     for (size_t i = 0; i < L; ++i)
     {
-      Simple_Selector* l = (*this)[i];
-      Simple_Selector* r = rhs[i];
+      Simple_Selector_Ptr l = (*this)[i];
+      Simple_Selector_Ptr r = rhs[i];
       if (!l && !r) return false;
       else if (!r) return false;
       else if (!l) return true;
@@ -157,7 +157,7 @@ namespace Sass {
 
   bool SimpleSequence_Selector_Ref::has_parent_ref()
   {
-    for (Simple_Selector* s : *this) {
+    for (Simple_Selector_Ptr s : *this) {
       if (s && s->has_parent_ref()) return true;
     }
     return false;
@@ -165,7 +165,7 @@ namespace Sass {
 
   bool SimpleSequence_Selector_Ref::has_real_parent_ref()
   {
-    for (Simple_Selector* s : *this) {
+    for (Simple_Selector_Ptr s : *this) {
       if (s && s->has_real_parent_ref()) return true;
     }
     return false;
@@ -431,7 +431,7 @@ namespace Sass {
     return cpy;
   }
 
-  Simple_Selector* Element_Selector::unify_with(Simple_Selector* rhs, Context& ctx)
+  Simple_Selector_Ptr Element_Selector::unify_with(Simple_Selector_Ptr rhs, Context& ctx)
   {
     // check if ns can be extended
     // true for no ns or universal
@@ -477,7 +477,7 @@ namespace Sass {
       return cpy;
     }
 
-    Simple_Selector* rhs_0 = (*rhs)[0];
+    Simple_Selector_Ptr rhs_0 = (*rhs)[0];
     // otherwise, this is a tag name
     if (name() == "*")
     {
@@ -531,7 +531,7 @@ namespace Sass {
   {
     for (size_t i = 0, L = rhs->length(); i < L; ++i)
     {
-      Simple_Selector* rhs_i = (*rhs)[i];
+      Simple_Selector_Ptr rhs_i = (*rhs)[i];
       if (typeid(*rhs_i) == typeid(Id_Selector) && static_cast<Id_Selector_Ptr>(rhs_i)->name() != name()) {
         return 0;
       }
@@ -546,7 +546,7 @@ namespace Sass {
     {
       for (size_t i = 0, L = rhs->length(); i < L; ++i)
       {
-        Simple_Selector* rhs_i = (*rhs)[i];
+        Simple_Selector_Ptr rhs_i = (*rhs)[i];
         if (typeid(*rhs_i) == typeid(Pseudo_Selector) &&
             static_cast<Pseudo_Selector_Ptr>(rhs_i)->is_pseudo_element() &&
             static_cast<Pseudo_Selector_Ptr>(rhs_i)->name() != name())
@@ -710,8 +710,8 @@ namespace Sass {
   bool SimpleSequence_Selector_Ref::is_superselector_of(SimpleSequence_Selector_Ptr rhs, std::string wrapping)
   {
     SimpleSequence_Selector_Ptr lhs = this;
-    Simple_Selector* lbase = lhs->base();
-    Simple_Selector* rbase = rhs->base();
+    Simple_Selector_Ptr lbase = lhs->base();
+    Simple_Selector_Ptr rbase = rhs->base();
 
     // Check if pseudo-elements are the same between the selectors
 
@@ -773,7 +773,7 @@ namespace Sass {
             }
           }
         }
-        Simple_Selector* rhs_sel = rhs->elements().size() > i ? (*rhs)[i] : 0;
+        Simple_Selector_Ptr rhs_sel = rhs->elements().size() > i ? (*rhs)[i] : 0;
         if (Wrapped_Selector_Ptr wrapped_r = dynamic_cast<Wrapped_Selector_Ptr>(rhs_sel)) {
           if (wrapped->name() == wrapped_r->name()) {
           if (wrapped->is_superselector_of(wrapped_r)) {
@@ -905,8 +905,8 @@ namespace Sass {
     size_t iL = length();
     size_t nL = rhs.length();
     // create temporary vectors and sort them
-    std::vector<Simple_Selector*> l_lst = this->elements();
-    std::vector<Simple_Selector*> r_lst = rhs.elements();
+    std::vector<Simple_Selector_Ptr> l_lst = this->elements();
+    std::vector<Simple_Selector_Ptr> r_lst = rhs.elements();
     std::sort(l_lst.begin(), l_lst.end(), cmp_simple_selector());
     std::sort(r_lst.begin(), r_lst.end(), cmp_simple_selector());
     // process loop
@@ -916,8 +916,8 @@ namespace Sass {
       if (i == iL) return iL == nL;
       else if (n == nL) return iL == nL;
       // the access the vector items
-      Simple_Selector* l = l_lst[i];
-      Simple_Selector* r = r_lst[n];
+      Simple_Selector_Ptr l = l_lst[i];
+      Simple_Selector_Ptr r = r_lst[n];
       // skip nulls
       if (!l) ++i;
       if (!r) ++n;
@@ -1245,7 +1245,7 @@ namespace Sass {
         retval = this->tails(ctx, tails);
       }
 
-      for (Simple_Selector* ss : *head) {
+      for (Simple_Selector_Ptr ss : *head) {
         if (Wrapped_Selector_Ptr ws = dynamic_cast<Wrapped_Selector_Ptr>(ss)) {
           if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(ws->selector())) {
             if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, implicit_parent));
@@ -1593,9 +1593,9 @@ namespace Sass {
     return result;
   }
 
-  SimpleSequence_Selector& SimpleSequence_Selector_Ref::operator<<(Simple_Selector* element)
+  SimpleSequence_Selector& SimpleSequence_Selector_Ref::operator<<(Simple_Selector_Ptr element)
   {
-    Vectorized<Simple_Selector*>::operator<<(element);
+    Vectorized<Simple_Selector_Ptr>::operator<<(element);
     pstate_.offset += element->pstate().offset;
     return *this;
   }

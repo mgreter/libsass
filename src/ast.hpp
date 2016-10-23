@@ -1942,12 +1942,12 @@ namespace Sass {
   ////////////////////////////////////////////
   // Abstract base class for simple selectors.
   ////////////////////////////////////////////
-  class Simple_Selector : public Selector_Ref {
+  class Simple_Selector_Ref : public Selector_Ref {
     ADD_PROPERTY(std::string, ns);
     ADD_PROPERTY(std::string, name)
     ADD_PROPERTY(bool, has_ns)
   public:
-    Simple_Selector(ParserState pstate, std::string n = "")
+    Simple_Selector_Ref(ParserState pstate, std::string n = "")
     : Selector_Ref(pstate), ns_(""), name_(n), has_ns_(false)
     {
       size_t pos = n.find('|');
@@ -2005,7 +2005,7 @@ namespace Sass {
       return name_ == "*";
     }
 
-    virtual ~Simple_Selector() = 0;
+    virtual ~Simple_Selector_Ref() = 0;
     virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
     virtual bool has_parent_ref() { return false; };
     virtual bool has_real_parent_ref() { return false; };
@@ -2014,14 +2014,14 @@ namespace Sass {
 
     virtual bool is_superselector_of(SimpleSequence_Selector_Ptr sub) { return false; }
 
-    bool operator==(const Simple_Selector& rhs) const;
-    inline bool operator!=(const Simple_Selector& rhs) const { return !(*this == rhs); }
+    bool operator==(const Simple_Selector_Ref& rhs) const;
+    inline bool operator!=(const Simple_Selector_Ref& rhs) const { return !(*this == rhs); }
 
-    bool operator<(const Simple_Selector& rhs) const;
+    bool operator<(const Simple_Selector_Ref& rhs) const;
     // default implementation should work for most of the simple selectors (otherwise overload)
     ATTACH_OPERATIONS();
   };
-  inline Simple_Selector::~Simple_Selector() { }
+  inline Simple_Selector_Ref::~Simple_Selector_Ref() { }
 
 
   //////////////////////////////////
@@ -2030,11 +2030,11 @@ namespace Sass {
   // parent selectors can occur in selectors but also
   // inside strings in declarations (SimpleSequence_Selector).
   // only one simple parent selector means the first case.
-  class Parent_Selector_Ref : public Simple_Selector {
+  class Parent_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(bool, real)
   public:
     Parent_Selector_Ref(ParserState pstate, bool r = true)
-    : Simple_Selector(pstate, "&"), real_(r)
+    : Simple_Selector_Ref(pstate, "&"), real_(r)
     { /* has_reference(true); */ }
     bool is_real_parent_ref() { return real(); };
     virtual bool has_parent_ref() { return true; };
@@ -2051,10 +2051,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Placeholder selectors (e.g., "%foo") for use in extend-only selectors.
   /////////////////////////////////////////////////////////////////////////
-  class Placeholder_Selector_Ref : public Simple_Selector {
+  class Placeholder_Selector_Ref : public Simple_Selector_Ref {
   public:
     Placeholder_Selector_Ref(ParserState pstate, std::string n)
-    : Simple_Selector(pstate, n)
+    : Simple_Selector_Ref(pstate, n)
     { }
     virtual unsigned long specificity()
     {
@@ -2071,17 +2071,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////
   // Element selectors (and the universal selector) -- e.g., div, span, *.
   /////////////////////////////////////////////////////////////////////
-  class Element_Selector_Ref : public Simple_Selector {
+  class Element_Selector_Ref : public Simple_Selector_Ref {
   public:
     Element_Selector_Ref(ParserState pstate, std::string n)
-    : Simple_Selector(pstate, n)
+    : Simple_Selector_Ref(pstate, n)
     { }
     virtual unsigned long specificity()
     {
       if (name() == "*") return 0;
       else               return Constants::Specificity_Element;
     }
-    virtual Simple_Selector* unify_with(Simple_Selector*, Context&);
+    virtual Simple_Selector_Ptr unify_with(Simple_Selector_Ptr, Context&);
     virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
     ATTACH_OPERATIONS()
   };
@@ -2089,10 +2089,10 @@ namespace Sass {
   ////////////////////////////////////////////////
   // Class selectors  -- i.e., .foo.
   ////////////////////////////////////////////////
-  class Class_Selector_Ref : public Simple_Selector {
+  class Class_Selector_Ref : public Simple_Selector_Ref {
   public:
     Class_Selector_Ref(ParserState pstate, std::string n)
-    : Simple_Selector(pstate, n)
+    : Simple_Selector_Ref(pstate, n)
     { }
     virtual bool unique() const
     {
@@ -2109,10 +2109,10 @@ namespace Sass {
   ////////////////////////////////////////////////
   // ID selectors -- i.e., #foo.
   ////////////////////////////////////////////////
-  class Id_Selector_Ref : public Simple_Selector {
+  class Id_Selector_Ref : public Simple_Selector_Ref {
   public:
     Id_Selector_Ref(ParserState pstate, std::string n)
-    : Simple_Selector(pstate, n)
+    : Simple_Selector_Ref(pstate, n)
     { }
     virtual bool unique() const
     {
@@ -2129,17 +2129,17 @@ namespace Sass {
   ///////////////////////////////////////////////////
   // Attribute selectors -- e.g., [src*=".jpg"], etc.
   ///////////////////////////////////////////////////
-  class Attribute_Selector_Ref : public Simple_Selector {
+  class Attribute_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(std::string, matcher)
     ADD_PROPERTY(String_Ptr, value) // might be interpolated
   public:
     Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Ptr v)
-    : Simple_Selector(pstate, n), matcher_(m), value_(v)
+    : Simple_Selector_Ref(pstate, n), matcher_(m), value_(v)
     { }
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        hash_combine(hash_, Simple_Selector::hash());
+        hash_combine(hash_, Simple_Selector_Ref::hash());
         hash_combine(hash_, std::hash<std::string>()(matcher()));
         if (value_) hash_combine(hash_, value_->hash());
       }
@@ -2149,9 +2149,9 @@ namespace Sass {
     {
       return Constants::Specificity_Attr;
     }
-    bool operator==(const Simple_Selector& rhs) const;
+    bool operator==(const Simple_Selector_Ref& rhs) const;
     bool operator==(const Attribute_Selector_Ref& rhs) const;
-    bool operator<(const Simple_Selector& rhs) const;
+    bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Attribute_Selector_Ref& rhs) const;
     ATTACH_OPERATIONS()
   };
@@ -2172,11 +2172,11 @@ namespace Sass {
   }
 
   // Pseudo Selector cannot have any namespace?
-  class Pseudo_Selector_Ref : public Simple_Selector {
+  class Pseudo_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(String_Ptr, expression)
   public:
     Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Ptr expr = 0)
-    : Simple_Selector(pstate, n), expression_(expr)
+    : Simple_Selector_Ref(pstate, n), expression_(expr)
     { }
 
     // A pseudo-class always consists of a "colon" (:) followed by the name
@@ -2203,7 +2203,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        hash_combine(hash_, Simple_Selector::hash());
+        hash_combine(hash_, Simple_Selector_Ref::hash());
         if (expression_) hash_combine(hash_, expression_->hash());
       }
       return hash_;
@@ -2214,9 +2214,9 @@ namespace Sass {
         return Constants::Specificity_Element;
       return Constants::Specificity_Pseudo;
     }
-    bool operator==(const Simple_Selector& rhs) const;
+    bool operator==(const Simple_Selector_Ref& rhs) const;
     bool operator==(const Pseudo_Selector_Ref& rhs) const;
-    bool operator<(const Simple_Selector& rhs) const;
+    bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Pseudo_Selector_Ref& rhs) const;
     virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
     ATTACH_OPERATIONS()
@@ -2225,11 +2225,11 @@ namespace Sass {
   /////////////////////////////////////////////////
   // Wrapped selector -- pseudo selector that takes a list of selectors as argument(s) e.g., :not(:first-of-type), :-moz-any(ol p.blah, ul, menu, dir)
   /////////////////////////////////////////////////
-  class Wrapped_Selector_Ref : public Simple_Selector {
+  class Wrapped_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(Selector_Ptr, selector)
   public:
     Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Ptr sel)
-    : Simple_Selector(pstate, n), selector_(sel)
+    : Simple_Selector_Ref(pstate, n), selector_(sel)
     { }
     virtual bool is_superselector_of(Wrapped_Selector_Ptr sub);
     // Selectors inside the negation pseudo-class are counted like any
@@ -2237,7 +2237,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        hash_combine(hash_, Simple_Selector::hash());
+        hash_combine(hash_, Simple_Selector_Ref::hash());
         if (selector_) hash_combine(hash_, selector_->hash());
       }
       return hash_;
@@ -2260,9 +2260,9 @@ namespace Sass {
     {
       return selector_ ? selector_->specificity() : 0;
     }
-    bool operator==(const Simple_Selector& rhs) const;
+    bool operator==(const Simple_Selector_Ref& rhs) const;
     bool operator==(const Wrapped_Selector_Ref& rhs) const;
-    bool operator<(const Simple_Selector& rhs) const;
+    bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Wrapped_Selector_Ref& rhs) const;
     ATTACH_OPERATIONS()
   };
@@ -2276,13 +2276,13 @@ namespace Sass {
   // any parent references or placeholders, to simplify expansion.
   ////////////////////////////////////////////////////////////////////////////
   typedef std::set<Sequence_Selector_Ptr, Sequence_Selector_Pointer_Compare> SourcesSet;
-  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector*> {
+  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector_Ptr> {
   private:
     SourcesSet sources_;
     ADD_PROPERTY(bool, extended);
     ADD_PROPERTY(bool, has_parent_reference);
   protected:
-    void adjust_after_pushing(Simple_Selector* s)
+    void adjust_after_pushing(Simple_Selector_Ptr s)
     {
       // if (s->has_reference())   has_reference(true);
       // if (s->has_placeholder()) has_placeholder(true);
@@ -2290,7 +2290,7 @@ namespace Sass {
   public:
     SimpleSequence_Selector_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate),
-      Vectorized<Simple_Selector*>(s),
+      Vectorized<Simple_Selector_Ptr>(s),
       extended_(false),
       has_parent_reference_(false)
     { }
@@ -2301,7 +2301,7 @@ namespace Sass {
       return false;
     };
 
-    SimpleSequence_Selector_Ref& operator<<(Simple_Selector* element);
+    SimpleSequence_Selector_Ref& operator<<(Simple_Selector_Ptr element);
 
     bool is_universal() const
     {
@@ -2313,12 +2313,12 @@ namespace Sass {
     // virtual Placeholder_Selector_Ptr find_placeholder();
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
-    Simple_Selector* base()
+    Simple_Selector_Ptr base()
     {
       // Implement non-const in terms of const. Safe to const_cast since this method is non-const
-      return const_cast<Simple_Selector*>(static_cast<SimpleSequence_Selector_Ptr_Const>(this)->base());
+      return const_cast<Simple_Selector_Ptr>(static_cast<SimpleSequence_Selector_Ptr_Const>(this)->base());
     }
-    const Simple_Selector* base() const {
+    Simple_Selector_Ptr_Const base() const {
       if (length() == 0) return 0;
       // ToDo: why is this needed?
       if (dynamic_cast<Element_Selector_Ptr>((*this)[0]))
@@ -2347,7 +2347,7 @@ namespace Sass {
     virtual bool has_wrapped_selector()
     {
       if (length() == 0) return false;
-      if (Simple_Selector* ss = elements().front()) {
+      if (Simple_Selector_Ptr ss = elements().front()) {
         if (ss->has_wrapped_selector()) return true;
       }
       return false;
@@ -2356,7 +2356,7 @@ namespace Sass {
     virtual bool has_placeholder()
     {
       if (length() == 0) return false;
-      if (Simple_Selector* ss = elements().front()) {
+      if (Simple_Selector_Ptr ss = elements().front()) {
         if (ss->has_placeholder()) return true;
       }
       return false;
@@ -2378,7 +2378,7 @@ namespace Sass {
     void clearSources() { sources_.clear(); }
     void mergeSources(SourcesSet& sources, Context& ctx);
 
-    SimpleSequence_Selector_Ptr clone(Context&) const; // does not clone the Simple_Selector*s
+    SimpleSequence_Selector_Ptr clone(Context&) const; // does not clone the Simple_Selectors
 
     SimpleSequence_Selector_Ptr minus(SimpleSequence_Selector_Ptr rhs, Context& ctx);
     ATTACH_OPERATIONS()
@@ -2652,7 +2652,7 @@ namespace Sass {
   // compare function for sorting and probably other other uses
   struct cmp_complex_selector { inline bool operator() (Sequence_Selector_Ptr_Const l, Sequence_Selector_Ptr_Const r) { return (*l < *r); } };
   struct cmp_compound_selector { inline bool operator() (SimpleSequence_Selector_Ptr_Const l, SimpleSequence_Selector_Ptr_Const r) { return (*l < *r); } };
-  struct cmp_simple_selector { inline bool operator() (const Simple_Selector* l, const Simple_Selector* r) { return (*l < *r); } };
+  struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Ptr l, const Simple_Selector_Ptr r) { return (*l < *r); } };
 
   // declare classes that are instances of memory nodes
   using AST_Node_Obj = Memory_Node<AST_Node_Ref>;

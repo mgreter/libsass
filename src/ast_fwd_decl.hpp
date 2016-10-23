@@ -16,6 +16,11 @@ namespace Sass {
   typedef Has_Block* Has_Block_Ptr;
   typedef Has_Block const* Has_Block_Ptr_Const;
 
+  class Simple_Selector_Ref;
+  typedef Simple_Selector_Ref Simple_Selector;
+  typedef Simple_Selector* Simple_Selector_Ptr;
+  typedef Simple_Selector const* Simple_Selector_Ptr_Const;
+
   class PreValue_Ref;
   typedef PreValue_Ref PreValue;
   typedef PreValue* PreValue_Ptr;
