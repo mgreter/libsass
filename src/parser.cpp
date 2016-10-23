@@ -267,7 +267,7 @@ namespace Sass {
     else if (lex < kwd_at_root >(true)) { (*block) << &parse_at_root_block(); }
     else if (lex < kwd_include_directive >(true)) { (*block) << parse_include_directive(); }
     else if (lex < kwd_content_directive >(true)) { (*block) << parse_content_directive(); }
-    else if (lex < kwd_supports_directive >(true)) { (*block) << parse_supports_directive(); }
+    else if (lex < kwd_supports_directive >(true)) { (*block) << &parse_supports_directive(); }
     else if (lex < kwd_mixin >(true)) { (*block) << parse_definition(Definition::MIXIN); }
     else if (lex < kwd_function >(true)) { (*block) << parse_definition(Definition::FUNCTION); }
 
@@ -2091,11 +2091,11 @@ namespace Sass {
 
   // lexed after `kwd_supports_directive`
   // these are very similar to media blocks
-  Supports_Block_Ptr Parser::parse_supports_directive()
+  Supports_Block_Obj Parser::parse_supports_directive()
   {
-    Supports_Condition_Ptr cond = parse_supports_condition();
+    Supports_Condition_Obj cond = parse_supports_condition();
     // create the ast node object for the support queries
-    Supports_Block_Ptr query = SASS_MEMORY_NEW(ctx.mem, Supports_Block, pstate, cond);
+    Supports_Block_Obj query = SASS_MEMORY_CREATE(ctx.mem, Supports_Block, pstate, &cond);
     // additional block is mandatory
     // parse inner block
     query->block(&parse_block());
@@ -2105,27 +2105,27 @@ namespace Sass {
 
   // parse one query operation
   // may encounter nested queries
-  Supports_Condition_Ptr Parser::parse_supports_condition()
+  Supports_Condition_Obj Parser::parse_supports_condition()
   {
     lex < css_whitespace >();
-    Supports_Condition_Ptr cond = parse_supports_negation();
-    if (!cond) cond = parse_supports_operator();
-    if (!cond) cond = parse_supports_interpolation();
+    Supports_Condition_Obj cond = parse_supports_negation();
+    if (!&cond) cond = parse_supports_operator();
+    if (!&cond) cond = parse_supports_interpolation();
     return cond;
   }
 
-  Supports_Condition_Ptr Parser::parse_supports_negation()
+  Supports_Condition_Obj Parser::parse_supports_negation()
   {
     if (!lex < kwd_not >()) return 0;
 
-    Supports_Condition_Ptr cond = parse_supports_condition_in_parens();
-    return SASS_MEMORY_NEW(ctx.mem, Supports_Negation, pstate, cond);
+    Supports_Condition_Obj cond = parse_supports_condition_in_parens();
+    return SASS_MEMORY_CREATE(ctx.mem, Supports_Negation, pstate, &cond);
   }
 
-  Supports_Condition_Ptr Parser::parse_supports_operator()
+  Supports_Condition_Obj Parser::parse_supports_operator()
   {
-    Supports_Condition_Ptr cond = parse_supports_condition_in_parens();
-    if (!cond) return 0;
+    Supports_Condition_Obj cond = parse_supports_condition_in_parens();
+    if (!&cond) return 0;
 
     while (true) {
       Supports_Operator::Operand op = Supports_Operator::OR;
@@ -2133,15 +2133,15 @@ namespace Sass {
       else if(!lex < kwd_or >()) { break; }
 
       lex < css_whitespace >();
-      Supports_Condition_Ptr right = parse_supports_condition_in_parens();
+      Supports_Condition_Obj right = parse_supports_condition_in_parens();
 
       // Supports_Condition_Ptr cc = SASS_MEMORY_NEW(ctx.mem, Supports_Condition, *static_cast<Supports_Condition_Ptr>(cond));
-      cond = SASS_MEMORY_NEW(ctx.mem, Supports_Operator, pstate, cond, right, op);
+      cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Operator, pstate, &cond, &right, op);
     }
     return cond;
   }
 
-  Supports_Condition_Ptr Parser::parse_supports_interpolation()
+  Supports_Condition_Obj Parser::parse_supports_interpolation()
   {
     if (!lex < interpolant >()) return 0;
 
@@ -2153,13 +2153,13 @@ namespace Sass {
 
   // TODO: This needs some major work. Although feature conditions
   // look like declarations their semantics differ significantly
-  Supports_Condition_Ptr Parser::parse_supports_declaration()
+  Supports_Condition_Obj Parser::parse_supports_declaration()
   {
     Supports_Condition_Ptr cond = 0;
     // parse something declaration like
     Declaration_Ptr declaration = parse_declaration();
     if (!declaration) error("@supports condition expected declaration", pstate);
-    cond = SASS_MEMORY_NEW(ctx.mem, Supports_Declaration,
+    cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Declaration,
                      declaration->pstate(),
                      declaration->property(),
                      declaration->value());
@@ -2167,16 +2167,16 @@ namespace Sass {
     return cond;
   }
 
-  Supports_Condition_Ptr Parser::parse_supports_condition_in_parens()
+  Supports_Condition_Obj Parser::parse_supports_condition_in_parens()
   {
-    Supports_Condition_Ptr interp = parse_supports_interpolation();
-    if (interp != 0) return interp;
+    Supports_Condition_Obj interp = parse_supports_interpolation();
+    if (&interp != 0) return interp;
 
     if (!lex < exactly <'('> >()) return 0;
     lex < css_whitespace >();
 
-    Supports_Condition_Ptr cond = parse_supports_condition();
-    if (cond != 0) {
+    Supports_Condition_Obj cond = parse_supports_condition();
+    if (&cond != 0) {
       if (!lex < exactly <')'> >()) error("unclosed parenthesis in @supports declaration", pstate);
     } else {
       cond = parse_supports_declaration();
