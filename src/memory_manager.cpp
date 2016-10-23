@@ -1,11 +1,10 @@
 #include "sass.hpp"
 #include "ast.hpp"
-#include "memory_manager.hpp"
 
 namespace Sass {
 
   Memory_Manager::Memory_Manager(size_t size)
-  : nodes(std::vector<Memory_Object*>())
+  : nodes(std::vector<SharedObj*>())
   {
     size_t init = size;
     if (init < 8) init = 8;
@@ -24,48 +23,53 @@ namespace Sass {
     nodes.clear();
   }
 
-  Memory_Object* Memory_Manager::add(Memory_Object* np)
+  SharedObj* Memory_Manager::add(SharedObj* np, std::string file, size_t line)
   {
     // object has been initialized
     // it can be "deleted" from now on
-    np->refcount = 1;
+#ifdef DEBUG_SHARED_PTR
+    np->allocated = file;
+    np->line = line;
+#endif
+    np->refcounter = 0;
+    // np->refcount = 1;
     return np;
   }
 
-  bool Memory_Manager::has(Memory_Object* np)
+  bool Memory_Manager::has(SharedObj* np)
   {
     // check if the pointer is controlled under our pool
     return find(nodes.begin(), nodes.end(), np) != nodes.end();
   }
 
-  Memory_Object* Memory_Manager::allocate(size_t size)
+  SharedObj* Memory_Manager::allocate(size_t size)
   {
     // allocate requested memory
-    void* heap = malloc(size);
+    void* heap = ::operator new(size);
     // init internal refcount status to zero
-    (static_cast<Memory_Object*>(heap))->refcount = 0;
+    // (static_cast<SharedObj*>(heap))->refcount = 0;
     // add the memory under our management
-    nodes.push_back(static_cast<Memory_Object*>(heap));
+    if (!MEM) nodes.push_back(static_cast<SharedObj*>(heap));
     // cast object to its initial type
-    return static_cast<Memory_Object*>(heap);
+    return static_cast<SharedObj*>(heap);
   }
 
-  void Memory_Manager::deallocate(Memory_Object* np)
+  void Memory_Manager::deallocate(SharedObj* np)
   {
     // only call destructor if initialized
-    if (np->refcount) np->~Memory_Object();
+    // if (np->refcount) np->~SharedObj();
     // always free the memory
-    free(np);
+    // free(np);
   }
 
-  void Memory_Manager::remove(Memory_Object* np)
+  void Memory_Manager::remove(SharedObj* np)
   {
     // remove node from pool (no longer active)
-    nodes.erase(find(nodes.begin(), nodes.end(), np));
+    if (!MEM) nodes.erase(find(nodes.begin(), nodes.end(), np));
     // you are now in control of the memory
   }
 
-  void Memory_Manager::destroy(Memory_Object* np)
+  void Memory_Manager::destroy(SharedObj* np)
   {
     // remove from pool
     remove(np);
