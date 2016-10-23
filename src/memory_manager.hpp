@@ -2,6 +2,7 @@
 #define SASS_MEMORY_MANAGER_H
 
 #include <vector>
+#include <iostream>
 
 namespace Sass {
 
