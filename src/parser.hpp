@@ -240,7 +240,7 @@ namespace Sass {
     Arguments_Ptr parse_arguments();
     Argument_Ptr parse_argument();
     Assignment_Ptr parse_assignment();
-    Ruleset_Ptr parse_ruleset(Lookahead lookahead, bool is_root = false);
+    Ruleset_Obj parse_ruleset(Lookahead lookahead, bool is_root = false);
     Selector_Schema_Ptr parse_selector_schema(const char* end_of_selector);
     CommaSequence_Selector_Ptr parse_selector_list(bool at_root = false);
     Sequence_Selector_Ptr parse_complex_selector(bool in_root = true);
@@ -303,14 +303,14 @@ namespace Sass {
     Supports_Condition_Obj parse_supports_declaration();
     Supports_Condition_Obj parse_supports_condition_in_parens();
     At_Root_Block_Obj parse_at_root_block();
-    At_Root_Query_Ptr parse_at_root_query();
+    At_Root_Query_Obj parse_at_root_query();
     String_Schema_Ptr parse_almost_any_value();
-    Directive_Ptr parse_special_directive();
-    Directive_Ptr parse_prefixed_directive();
-    Directive_Ptr parse_directive();
-    Warning_Ptr parse_warning();
-    Error_Ptr parse_error();
-    Debug_Ptr parse_debug();
+    Directive_Obj parse_special_directive();
+    Directive_Obj parse_prefixed_directive();
+    Directive_Obj parse_directive();
+    Warning_Obj parse_warning();
+    Error_Obj parse_error();
+    Debug_Obj parse_debug();
 
     // be more like ruby sass
     Expression_Ptr lex_almost_any_value_token();

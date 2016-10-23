@@ -236,6 +236,14 @@ namespace Sass {
     T& operator[](size_t i) { return elements_[i]; }
     virtual const T& at(size_t i) const { return elements_.at(i); }
     const T& operator[](size_t i) const { return elements_[i]; }
+    virtual Vectorized& append(T element)
+    {
+      if (!element) return *this;
+      reset_hash();
+      elements_.push_back(element);
+      adjust_after_pushing(element);
+      return *this;
+    }
     virtual Vectorized& operator<<(T element)
     {
       if (!element) return *this;

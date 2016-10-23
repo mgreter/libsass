@@ -58,6 +58,8 @@ namespace Sass {
   template < typename T >
   class Memory_Node : private Memory_Ptr {
   public:
+    Memory_Node()
+    : Memory_Ptr(NULL) {};
     Memory_Node(T* node)
     : Memory_Ptr(node) {};
     Memory_Node(const T& node)
@@ -69,6 +71,10 @@ namespace Sass {
       return static_cast<T*>(this->obj());
     };
     T* operator-> () {
+      // should be save to cast it here
+      return static_cast<T*>(this->obj());
+    };
+    T* ptr () {
       // should be save to cast it here
       return static_cast<T*>(this->obj());
     };

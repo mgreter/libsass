@@ -213,14 +213,14 @@ namespace Sass {
     // also parse block comments
 
     // first parse everything that is allowed in functions
-    if (lex < variable >(true)) { (*block) << parse_assignment(); }
-    else if (lex < kwd_err >(true)) { (*block) << parse_error(); }
-    else if (lex < kwd_dbg >(true)) { (*block) << parse_debug(); }
-    else if (lex < kwd_warn >(true)) { (*block) << parse_warning(); }
-    else if (lex < kwd_if_directive >(true)) { (*block) << parse_if_directive(); }
-    else if (lex < kwd_for_directive >(true)) { (*block) << parse_for_directive(); }
-    else if (lex < kwd_each_directive >(true)) { (*block) << parse_each_directive(); }
-    else if (lex < kwd_while_directive >(true)) { (*block) << parse_while_directive(); }
+    if (lex < variable >(true)) { block->append(parse_assignment()); }
+    else if (lex < kwd_err >(true)) { block->append(&parse_error()); }
+    else if (lex < kwd_dbg >(true)) { block->append(&parse_debug()); }
+    else if (lex < kwd_warn >(true)) { block->append(&parse_warning()); }
+    else if (lex < kwd_if_directive >(true)) { block->append(parse_if_directive()); }
+    else if (lex < kwd_for_directive >(true)) { block->append(parse_for_directive()); }
+    else if (lex < kwd_each_directive >(true)) { block->append(parse_each_directive()); }
+    else if (lex < kwd_while_directive >(true)) { block->append(parse_while_directive()); }
     else if (lex < kwd_return_directive >(true)) { (*block) << parse_return_directive(); }
 
     // abort if we are in function context and have nothing parsed yet
@@ -260,7 +260,7 @@ namespace Sass {
 
     // selector may contain interpolations which need delayed evaluation
     else if (!(lookahead_result = lookahead_for_selector(position)).error)
-    { (*block) << parse_ruleset(lookahead_result, is_root); }
+    { (*block) << &parse_ruleset(lookahead_result, is_root); }
 
     // parse multiple specific keyword directives
     else if (lex < kwd_media >(true)) { (*block) << &parse_media_block(); }
@@ -275,9 +275,9 @@ namespace Sass {
     else if (lex< kwd_charset_directive >(true)) { parse_charset_directive(); }
 
     // generic at keyword (keep last)
-    else if (lex< re_special_directive >(true)) { (*block) << parse_special_directive(); }
-    else if (lex< re_prefixed_directive >(true)) { (*block) << parse_prefixed_directive(); }
-    else if (lex< at_keyword >(true)) { (*block) << parse_directive(); }
+    else if (lex< re_special_directive >(true)) { (*block) << &parse_special_directive(); }
+    else if (lex< re_prefixed_directive >(true)) { (*block) << &parse_prefixed_directive(); }
+    else if (lex< at_keyword >(true)) { (*block) << &parse_directive(); }
 
     else if (is_root /* && block->is_root() */) {
       lex< css_whitespace >();
@@ -498,12 +498,12 @@ namespace Sass {
   }
 
   // a ruleset connects a selector and a block
-  Ruleset_Ptr Parser::parse_ruleset(Lookahead lookahead, bool is_root)
+  Ruleset_Obj Parser::parse_ruleset(Lookahead lookahead, bool is_root)
   {
     // make sure to move up the the last position
     lex < optional_css_whitespace >(false, true);
     // create the connector object (add parts later)
-    Ruleset_Ptr ruleset = SASS_MEMORY_NEW(ctx.mem, Ruleset, pstate);
+    Ruleset_Obj ruleset = SASS_MEMORY_CREATE(ctx.mem, Ruleset, pstate);
     // parse selector static or as schema to be evaluated later
     if (lookahead.parsable) ruleset->selector(parse_selector_list(is_root));
     else ruleset->selector(parse_selector_schema(lookahead.found));
@@ -2190,7 +2190,7 @@ namespace Sass {
   {
     ParserState at_source_position = pstate;
     Block_Ptr body = 0;
-    At_Root_Query_Ptr expr = 0;
+    At_Root_Query_Obj expr;
     Lookahead lookahead_result;
     LOCAL_FLAG(in_at_root, true);
     if (lex_css< exactly<'('> >()) {
@@ -2201,16 +2201,16 @@ namespace Sass {
       body = &parse_block(true);
     }
     else if ((lookahead_result = lookahead_for_selector(position)).found) {
-      Ruleset_Ptr r = parse_ruleset(lookahead_result, false);
+      Ruleset_Obj r = parse_ruleset(lookahead_result, false);
       body = SASS_MEMORY_NEW(ctx.mem, Block, r->pstate(), 1, true);
-      *body << r;
+      *body << &r;
     }
     At_Root_Block_Obj at_root = SASS_MEMORY_CREATE(ctx.mem, At_Root_Block, at_source_position, body);
-    if (expr) at_root->expression(expr);
+    if (&expr) at_root->expression(&expr);
     return at_root;
   }
 
-  At_Root_Query_Ptr Parser::parse_at_root_query()
+  At_Root_Query_Obj Parser::parse_at_root_query()
   {
     if (peek< exactly<')'> >()) error("at-root feature required in at-root expression", pstate);
 
@@ -2228,7 +2228,7 @@ namespace Sass {
     }
     else *value << expression;
 
-    At_Root_Query_Ptr cond = SASS_MEMORY_NEW(ctx.mem, At_Root_Query,
+    At_Root_Query_Obj cond = SASS_MEMORY_CREATE(ctx.mem, At_Root_Query,
                                           value->pstate(),
                                           feature,
                                           value);
@@ -2236,13 +2236,13 @@ namespace Sass {
     return cond;
   }
 
-  Directive_Ptr Parser::parse_special_directive()
+  Directive_Obj Parser::parse_special_directive()
   {
     std::string kwd(lexed);
 
     if (lexed == "@else") error("Invalid CSS: @else must come after @if", pstate);
 
-    Directive_Ptr at_rule = SASS_MEMORY_NEW(ctx.mem, Directive, pstate, kwd);
+    Directive_Ptr at_rule = SASS_MEMORY_CREATE(ctx.mem, Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
       at_rule->selector(parse_selector_list(true));
@@ -2265,13 +2265,13 @@ namespace Sass {
     return at_rule;
   }
 
-  Directive_Ptr Parser::parse_prefixed_directive()
+  Directive_Obj Parser::parse_prefixed_directive()
   {
     std::string kwd(lexed);
 
     if (lexed == "@else") error("Invalid CSS: @else must come after @if", pstate);
 
-    Directive_Ptr at_rule = SASS_MEMORY_NEW(ctx.mem, Directive, pstate, kwd);
+    Directive_Obj at_rule = SASS_MEMORY_CREATE(ctx.mem, Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
       at_rule->selector(parse_selector_list(true));
@@ -2295,9 +2295,9 @@ namespace Sass {
   }
 
 
-  Directive_Ptr Parser::parse_directive()
+  Directive_Obj Parser::parse_directive()
   {
-    Directive_Ptr directive = SASS_MEMORY_NEW(ctx.mem, Directive, pstate, lexed);
+    Directive_Obj directive = SASS_MEMORY_CREATE(ctx.mem, Directive, pstate, lexed);
     Expression_Ptr val = parse_almost_any_value();
     // strip left and right if they are of type string
     directive->value(val);
@@ -2421,7 +2421,7 @@ namespace Sass {
     return schema;
   }
 
-  Warning_Ptr Parser::parse_warning()
+  Warning_Obj Parser::parse_warning()
   {
     if (stack.back() != Scope::Root &&
         stack.back() != Scope::Function &&
@@ -2430,10 +2430,10 @@ namespace Sass {
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_NEW(ctx.mem, Warning, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(ctx.mem, Warning, pstate, parse_list(DELAYED));
   }
 
-  Error_Ptr Parser::parse_error()
+  Error_Obj Parser::parse_error()
   {
     if (stack.back() != Scope::Root &&
         stack.back() != Scope::Function &&
@@ -2442,10 +2442,10 @@ namespace Sass {
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_NEW(ctx.mem, Error, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(ctx.mem, Error, pstate, parse_list(DELAYED));
   }
 
-  Debug_Ptr Parser::parse_debug()
+  Debug_Obj Parser::parse_debug()
   {
     if (stack.back() != Scope::Root &&
         stack.back() != Scope::Function &&
@@ -2454,7 +2454,7 @@ namespace Sass {
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_NEW(ctx.mem, Debug, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(ctx.mem, Debug, pstate, parse_list(DELAYED));
   }
 
   Return_Ptr Parser::parse_return_directive()
