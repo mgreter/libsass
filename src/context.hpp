@@ -27,14 +27,14 @@ namespace Sass {
 
   class Context {
   public:
-    void import_url (Import* imp, std::string load_path, const std::string& ctx_path);
-    bool call_headers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import* imp)
+    void import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path);
+    bool call_headers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp)
     { return call_loader(load_path, ctx_path, pstate, imp, c_headers, false); };
-    bool call_importers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import* imp)
+    bool call_importers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp)
     { return call_loader(load_path, ctx_path, pstate, imp, c_importers, true); };
 
   private:
-    bool call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import* imp, std::vector<Sass_Importer_Entry> importers, bool only_one = true);
+    bool call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, std::vector<Sass_Importer_Entry> importers, bool only_one = true);
 
   public:
     const std::string CWD;
@@ -50,7 +50,7 @@ namespace Sass {
     std::vector<char*> strings;
     std::vector<Resource> resources;
     std::map<const std::string, const StyleSheet> sheets;
-    Subset_Map<std::string, std::pair<Sequence_Selector*, SimpleSequence_Selector*> > subset_map;
+    Subset_Map<std::string, std::pair<Sequence_Selector_Ptr, SimpleSequence_Selector_Ptr> > subset_map;
     std::vector<Sass_Import_Entry> import_stack;
 
     struct Sass_Compiler* c_compiler;
@@ -68,7 +68,7 @@ namespace Sass {
 
 
 
-    void apply_custom_headers(Block* root, const char* path, ParserState pstate);
+    void apply_custom_headers(Block_Ptr root, const char* path, ParserState pstate);
 
     std::vector<Sass_Importer_Entry> c_headers;
     std::vector<Sass_Importer_Entry> c_importers;
@@ -87,9 +87,9 @@ namespace Sass {
 
     virtual ~Context();
     Context(struct Sass_Context&);
-    virtual Block* parse() = 0;
-    virtual Block* compile();
-    virtual char* render(Block* root);
+    virtual Block_Ptr parse() = 0;
+    virtual Block_Ptr compile();
+    virtual char* render(Block_Ptr root);
     virtual char* render_srcmap();
 
     void register_resource(const Include&, const Resource&, ParserState* = 0);
@@ -123,7 +123,7 @@ namespace Sass {
     : Context(ctx)
     { }
     virtual ~File_Context();
-    virtual Block* parse();
+    virtual Block_Ptr parse();
   };
 
   class Data_Context : public Context {
@@ -139,7 +139,7 @@ namespace Sass {
       ctx.srcmap_string = 0; // passed away
     }
     virtual ~Data_Context();
-    virtual Block* parse();
+    virtual Block_Ptr parse();
   };
 
 }

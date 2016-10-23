@@ -50,18 +50,18 @@ namespace Sass {
     bool isNil() const { return mType == NIL; }
     bool got_line_feed;
 
-    Sequence_Selector::Combinator combinator() const { return mCombinator; }
+    Sequence_Selector_Ref::Combinator combinator() const { return mCombinator; }
 
-    Sequence_Selector* selector() { return mpSelector; }
-    const Sequence_Selector* selector() const { return mpSelector; }
+    Sequence_Selector_Ptr selector() { return mpSelector; }
+    Sequence_Selector_Ptr_Const selector() const { return mpSelector; }
 
     NodeDequePtr collection() { return mpCollection; }
     const NodeDequePtr collection() const { return mpCollection; }
 
-    static Node createCombinator(const Sequence_Selector::Combinator& combinator);
+    static Node createCombinator(const Sequence_Selector_Ref::Combinator& combinator);
 
     // This method will clone the selector, stripping off the tail and combinator
-    static Node createSelector(Sequence_Selector* pSelector, Context& ctx);
+    static Node createSelector(Sequence_Selector_Ptr pSelector, Context& ctx);
 
     static Node createCollection();
     static Node createCollection(const NodeDeque& values);
@@ -97,21 +97,21 @@ namespace Sass {
     // Private constructor; Use the static methods (like createCombinator and createSelector)
     // to instantiate this object. This is more expressive, and it allows us to break apart each
     // case into separate functions.
-    Node(const TYPE& type, Sequence_Selector::Combinator combinator, Sequence_Selector* pSelector, NodeDequePtr& pCollection);
+    Node(const TYPE& type, Sequence_Selector_Ref::Combinator combinator, Sequence_Selector_Ptr pSelector, NodeDequePtr& pCollection);
 
     TYPE mType;
 
     // TODO: can we union these to save on memory?
-    Sequence_Selector::Combinator mCombinator;
-    Sequence_Selector* mpSelector; // this is an AST_Node, so it will be handled by the Memory_Manager
+    Sequence_Selector_Ref::Combinator mCombinator;
+    Sequence_Selector_Ptr mpSelector; // this is an AST_Node, so it will be handled by the Memory_Manager
     NodeDequePtr mpCollection;
   };
 
 #ifdef DEBUG
   std::ostream& operator<<(std::ostream& os, const Node& node);
 #endif
-  Node complexSelectorToNode(Sequence_Selector* pToConvert, Context& ctx);
-  Sequence_Selector* nodeToComplexSelector(const Node& toConvert, Context& ctx);
+  Node complexSelectorToNode(Sequence_Selector_Ptr pToConvert, Context& ctx);
+  Sequence_Selector_Ptr nodeToComplexSelector(const Node& toConvert, Context& ctx);
 
   bool nodesEqual(const Node& one, const Node& two, bool simpleSelectorOrderDependent);
 

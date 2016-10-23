@@ -284,7 +284,7 @@ extern "C" {
 
   }
 
-  static Block* sass_parse_block (Sass_Compiler* compiler) throw()
+  static Block_Ptr sass_parse_block (Sass_Compiler* compiler) throw()
   {
 
     // assert valid pointer
@@ -303,7 +303,7 @@ extern "C" {
       std::string output_path = safe_str(c_ctx->output_path);
 
       // parsed root block
-      Block* root = 0;
+      Block_Ptr root = 0;
 
       // maybe skip some entries of included files
       // we do not include stdin for data contexts
@@ -473,7 +473,7 @@ extern "C" {
       return compiler->c_ctx->error_status;
     compiler->state = SASS_COMPILER_EXECUTED;
     Context* cpp_ctx = compiler->cpp_ctx;
-    Block* root = compiler->root;
+    Block_Ptr root = compiler->root;
     // compile the parsed root block
     try { compiler->c_ctx->output_string = cpp_ctx->render(root); }
     // pass catched errors to generic error handler

@@ -38,12 +38,12 @@ namespace Sass {
   using std::stringstream;
   using std::endl;
 
-  Definition* make_native_function(Signature sig, Native_Function func, Context& ctx)
+  Definition_Ptr make_native_function(Signature sig, Native_Function func, Context& ctx)
   {
     Parser sig_parser = Parser::from_c_str(sig, ctx, ParserState("[built-in function]"));
     sig_parser.lex<Prelexer::identifier>();
     std::string name(Util::normalize_underscores(sig_parser.lexed));
-    Parameters* params = sig_parser.parse_parameters();
+    Parameters_Ptr params = sig_parser.parse_parameters();
     return SASS_MEMORY_NEW(ctx.mem, Definition,
                            ParserState("[built-in function]"),
                            sig,
@@ -53,7 +53,7 @@ namespace Sass {
                            false);
   }
 
-  Definition* make_c_function(Sass_Function_Entry c_func, Context& ctx)
+  Definition_Ptr make_c_function(Sass_Function_Entry c_func, Context& ctx)
   {
     using namespace Prelexer;
 
@@ -66,7 +66,7 @@ namespace Sass {
                                     exactly < Constants::debug_kwd >
                    >              >();
     std::string name(Util::normalize_underscores(sig_parser.lexed));
-    Parameters* params = sig_parser.parse_parameters();
+    Parameters_Ptr params = sig_parser.parse_parameters();
     return SASS_MEMORY_NEW(ctx.mem, Definition,
                            ParserState("[c function]"),
                            sig,
@@ -121,13 +121,13 @@ namespace Sass {
       return val;
     }
 
-    Map* get_arg_m(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx)
+    Map_Ptr get_arg_m(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx)
     {
       // Minimal error handling -- the expectation is that built-ins will be written correctly!
-      Map* val = dynamic_cast<Map*>(env[argname]);
+      Map_Ptr val = dynamic_cast<Map_Ptr>(env[argname]);
       if (val) return val;
 
-      List* lval = dynamic_cast<List*>(env[argname]);
+      List_Ptr lval = dynamic_cast<List_Ptr>(env[argname]);
       if (lval && lval->length() == 0) return SASS_MEMORY_NEW(ctx.mem, Map, pstate, 0);
 
       // fallback on get_arg for error handling
@@ -135,10 +135,10 @@ namespace Sass {
       return val;
     }
 
-    Number* get_arg_r(const std::string& argname, Env& env, Signature sig, ParserState pstate, double lo, double hi, Backtrace* backtrace)
+    Number_Ptr get_arg_r(const std::string& argname, Env& env, Signature sig, ParserState pstate, double lo, double hi, Backtrace* backtrace)
     {
       // Minimal error handling -- the expectation is that built-ins will be written correctly!
-      Number* val = get_arg<Number>(argname, env, sig, pstate, backtrace);
+      Number_Ptr val = get_arg<Number>(argname, env, sig, pstate, backtrace);
       double v = val->value();
       if (!(lo <= v && v <= hi)) {
         std::stringstream msg;
@@ -155,15 +155,15 @@ namespace Sass {
     T* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx);
 
     template <>
-    CommaSequence_Selector* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
-      Expression* exp = ARG(argname, Expression);
+    CommaSequence_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+      Expression_Ptr exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
         msg << argname << ": null is not a valid selector: it must be a string,\n";
         msg << "a list of strings, or a list of lists of strings for `" << function_name(sig) << "'";
         error(msg.str(), pstate);
       }
-      if (String_Constant* str =dynamic_cast<String_Constant*>(exp)) {
+      if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
@@ -171,35 +171,35 @@ namespace Sass {
     }
 
     template <>
-    Sequence_Selector* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
-      Expression* exp = ARG(argname, Expression);
+    Sequence_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+      Expression_Ptr exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
         msg << argname << ": null is not a valid selector: it must be a string,\n";
         msg << "a list of strings, or a list of lists of strings for `" << function_name(sig) << "'";
         error(msg.str(), pstate);
       }
-      if (String_Constant* str =dynamic_cast<String_Constant*>(exp)) {
+      if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      CommaSequence_Selector* sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
+      CommaSequence_Selector_Ptr sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
       return (sel_list->length() > 0) ? sel_list->first() : 0;
     }
 
     template <>
-    SimpleSequence_Selector* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
-      Expression* exp = ARG(argname, Expression);
+    SimpleSequence_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+      Expression_Ptr exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
         msg << argname << ": null is not a string for `" << function_name(sig) << "'";
         error(msg.str(), pstate);
       }
-      if (String_Constant* str =dynamic_cast<String_Constant*>(exp)) {
+      if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      CommaSequence_Selector* sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
+      CommaSequence_Selector_Ptr sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
       return (sel_list->length() > 0) ? sel_list->first()->tail()->head() : 0;
     }
 
@@ -243,7 +243,7 @@ namespace Sass {
     // RGB FUNCTIONS
     ////////////////
 
-    inline double color_num(Number* n) {
+    inline double color_num(Number_Ptr n) {
       if (n->unit() == "%") {
         return std::min(std::max(n->value() * 255 / 100.0, 0.0), 255.0);
       } else {
@@ -251,7 +251,7 @@ namespace Sass {
       }
     }
 
-    inline double alpha_num(Number* n) {
+    inline double alpha_num(Number_Ptr n) {
       if (n->unit() == "%") {
         return std::min(std::max(n->value(), 0.0), 100.0);
       } else {
@@ -283,8 +283,8 @@ namespace Sass {
     Signature rgba_2_sig = "rgba($color, $alpha)";
     BUILT_IN(rgba_2)
     {
-      Color* c_arg = ARG("$color", Color);
-      Color* new_c = SASS_MEMORY_NEW(ctx.mem, Color, *c_arg);
+      Color_Ptr c_arg = ARG("$color", Color);
+      Color_Ptr new_c = SASS_MEMORY_NEW(ctx.mem, Color, *c_arg);
       new_c->a(alpha_num(ARG("$alpha", Number)));
       new_c->disp("");
       return new_c;
@@ -305,9 +305,9 @@ namespace Sass {
     Signature mix_sig = "mix($color-1, $color-2, $weight: 50%)";
     BUILT_IN(mix)
     {
-      Color*  color1 = ARG("$color-1", Color);
-      Color*  color2 = ARG("$color-2", Color);
-      Number* weight = ARGR("$weight", Number, 0, 100);
+      Color_Ptr  color1 = ARG("$color-1", Color);
+      Color_Ptr  color2 = ARG("$color-2", Color);
+      Number_Ptr weight = ARGR("$weight", Number, 0, 100);
 
       double p = weight->value()/100;
       double w = 2*p - 1;
@@ -372,7 +372,7 @@ namespace Sass {
       return m1;
     }
 
-    Color* hsla_impl(double h, double s, double l, double a, Context& ctx, ParserState pstate)
+    Color_Ptr hsla_impl(double h, double s, double l, double a, Context& ctx, ParserState pstate)
     {
       h /= 360.0;
       s /= 100.0;
@@ -429,7 +429,7 @@ namespace Sass {
     Signature hue_sig = "hue($color)";
     BUILT_IN(hue)
     {
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -439,7 +439,7 @@ namespace Sass {
     Signature saturation_sig = "saturation($color)";
     BUILT_IN(saturation)
     {
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -449,7 +449,7 @@ namespace Sass {
     Signature lightness_sig = "lightness($color)";
     BUILT_IN(lightness)
     {
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -459,8 +459,8 @@ namespace Sass {
     Signature adjust_hue_sig = "adjust-hue($color, $degrees)";
     BUILT_IN(adjust_hue)
     {
-      Color* rgb_color = ARG("$color", Color);
-      Number* degrees = ARG("$degrees", Number);
+      Color_Ptr rgb_color = ARG("$color", Color);
+      Number_Ptr degrees = ARG("$degrees", Number);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -475,8 +475,8 @@ namespace Sass {
     Signature lighten_sig = "lighten($color, $amount)";
     BUILT_IN(lighten)
     {
-      Color* rgb_color = ARG("$color", Color);
-      Number* amount = ARGR("$amount", Number, 0, 100);
+      Color_Ptr rgb_color = ARG("$color", Color);
+      Number_Ptr amount = ARGR("$amount", Number, 0, 100);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -497,8 +497,8 @@ namespace Sass {
     Signature darken_sig = "darken($color, $amount)";
     BUILT_IN(darken)
     {
-      Color* rgb_color = ARG("$color", Color);
-      Number* amount = ARGR("$amount", Number, 0, 100);
+      Color_Ptr rgb_color = ARG("$color", Color);
+      Number_Ptr amount = ARGR("$amount", Number, 0, 100);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -521,13 +521,13 @@ namespace Sass {
     BUILT_IN(saturate)
     {
       // CSS3 filter function overload: pass literal through directly
-      Number* amount = dynamic_cast<Number*>(env["$amount"]);
+      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$amount"]);
       if (!amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "saturate(" + env["$color"]->to_string(ctx.c_options) + ")");
       }
 
       ARGR("$amount", Number, 0, 100);
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -553,8 +553,8 @@ namespace Sass {
     Signature desaturate_sig = "desaturate($color, $amount)";
     BUILT_IN(desaturate)
     {
-      Color* rgb_color = ARG("$color", Color);
-      Number* amount = ARGR("$amount", Number, 0, 100);
+      Color_Ptr rgb_color = ARG("$color", Color);
+      Number_Ptr amount = ARGR("$amount", Number, 0, 100);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -581,12 +581,12 @@ namespace Sass {
     BUILT_IN(grayscale)
     {
       // CSS3 filter function overload: pass literal through directly
-      Number* amount = dynamic_cast<Number*>(env["$color"]);
+      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$color"]);
       if (amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "grayscale(" + amount->to_string(ctx.c_options) + ")");
       }
 
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -601,7 +601,7 @@ namespace Sass {
     Signature complement_sig = "complement($color)";
     BUILT_IN(complement)
     {
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       HSL hsl_color = rgb_to_hsl(rgb_color->r(),
                                  rgb_color->g(),
                                  rgb_color->b());
@@ -617,12 +617,12 @@ namespace Sass {
     BUILT_IN(invert)
     {
       // CSS3 filter function overload: pass literal through directly
-      Number* amount = dynamic_cast<Number*>(env["$color"]);
+      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$color"]);
       if (amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "invert(" + amount->to_string(ctx.c_options) + ")");
       }
 
-      Color* rgb_color = ARG("$color", Color);
+      Color_Ptr rgb_color = ARG("$color", Color);
       return SASS_MEMORY_NEW(ctx.mem, Color,
                              pstate,
                              255 - rgb_color->r(),
@@ -638,13 +638,13 @@ namespace Sass {
     Signature opacity_sig = "opacity($color)";
     BUILT_IN(alpha)
     {
-      String_Constant* ie_kwd = dynamic_cast<String_Constant*>(env["$color"]);
+      String_Constant_Ptr ie_kwd = dynamic_cast<String_Constant_Ptr>(env["$color"]);
       if (ie_kwd) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "alpha(" + ie_kwd->value() + ")");
       }
 
       // CSS3 filter function overload: pass literal through directly
-      Number* amount = dynamic_cast<Number*>(env["$color"]);
+      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$color"]);
       if (amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "opacity(" + amount->to_string(ctx.c_options) + ")");
       }
@@ -656,7 +656,7 @@ namespace Sass {
     Signature fade_in_sig = "fade-in($color, $amount)";
     BUILT_IN(opacify)
     {
-      Color* color = ARG("$color", Color);
+      Color_Ptr color = ARG("$color", Color);
       double amount = ARGR("$amount", Number, 0, 1)->value();
       double alpha = std::min(color->a() + amount, 1.0);
       return SASS_MEMORY_NEW(ctx.mem, Color,
@@ -671,7 +671,7 @@ namespace Sass {
     Signature fade_out_sig = "fade-out($color, $amount)";
     BUILT_IN(transparentize)
     {
-      Color* color = ARG("$color", Color);
+      Color_Ptr color = ARG("$color", Color);
       double amount = ARGR("$amount", Number, 0, 1)->value();
       double alpha = std::max(color->a() - amount, 0.0);
       return SASS_MEMORY_NEW(ctx.mem, Color,
@@ -689,14 +689,14 @@ namespace Sass {
     Signature adjust_color_sig = "adjust-color($color, $red: false, $green: false, $blue: false, $hue: false, $saturation: false, $lightness: false, $alpha: false)";
     BUILT_IN(adjust_color)
     {
-      Color* color = ARG("$color", Color);
-      Number* r = dynamic_cast<Number*>(env["$red"]);
-      Number* g = dynamic_cast<Number*>(env["$green"]);
-      Number* b = dynamic_cast<Number*>(env["$blue"]);
-      Number* h = dynamic_cast<Number*>(env["$hue"]);
-      Number* s = dynamic_cast<Number*>(env["$saturation"]);
-      Number* l = dynamic_cast<Number*>(env["$lightness"]);
-      Number* a = dynamic_cast<Number*>(env["$alpha"]);
+      Color_Ptr color = ARG("$color", Color);
+      Number_Ptr r = dynamic_cast<Number_Ptr>(env["$red"]);
+      Number_Ptr g = dynamic_cast<Number_Ptr>(env["$green"]);
+      Number_Ptr b = dynamic_cast<Number_Ptr>(env["$blue"]);
+      Number_Ptr h = dynamic_cast<Number_Ptr>(env["$hue"]);
+      Number_Ptr s = dynamic_cast<Number_Ptr>(env["$saturation"]);
+      Number_Ptr l = dynamic_cast<Number_Ptr>(env["$lightness"]);
+      Number_Ptr a = dynamic_cast<Number_Ptr>(env["$alpha"]);
 
       bool rgb = r || g || b;
       bool hsl = h || s || l;
@@ -744,14 +744,14 @@ namespace Sass {
     Signature scale_color_sig = "scale-color($color, $red: false, $green: false, $blue: false, $hue: false, $saturation: false, $lightness: false, $alpha: false)";
     BUILT_IN(scale_color)
     {
-      Color* color = ARG("$color", Color);
-      Number* r = dynamic_cast<Number*>(env["$red"]);
-      Number* g = dynamic_cast<Number*>(env["$green"]);
-      Number* b = dynamic_cast<Number*>(env["$blue"]);
-      Number* h = dynamic_cast<Number*>(env["$hue"]);
-      Number* s = dynamic_cast<Number*>(env["$saturation"]);
-      Number* l = dynamic_cast<Number*>(env["$lightness"]);
-      Number* a = dynamic_cast<Number*>(env["$alpha"]);
+      Color_Ptr color = ARG("$color", Color);
+      Number_Ptr r = dynamic_cast<Number_Ptr>(env["$red"]);
+      Number_Ptr g = dynamic_cast<Number_Ptr>(env["$green"]);
+      Number_Ptr b = dynamic_cast<Number_Ptr>(env["$blue"]);
+      Number_Ptr h = dynamic_cast<Number_Ptr>(env["$hue"]);
+      Number_Ptr s = dynamic_cast<Number_Ptr>(env["$saturation"]);
+      Number_Ptr l = dynamic_cast<Number_Ptr>(env["$lightness"]);
+      Number_Ptr a = dynamic_cast<Number_Ptr>(env["$alpha"]);
 
       bool rgb = r || g || b;
       bool hsl = h || s || l;
@@ -800,14 +800,14 @@ namespace Sass {
     Signature change_color_sig = "change-color($color, $red: false, $green: false, $blue: false, $hue: false, $saturation: false, $lightness: false, $alpha: false)";
     BUILT_IN(change_color)
     {
-      Color* color = ARG("$color", Color);
-      Number* r = dynamic_cast<Number*>(env["$red"]);
-      Number* g = dynamic_cast<Number*>(env["$green"]);
-      Number* b = dynamic_cast<Number*>(env["$blue"]);
-      Number* h = dynamic_cast<Number*>(env["$hue"]);
-      Number* s = dynamic_cast<Number*>(env["$saturation"]);
-      Number* l = dynamic_cast<Number*>(env["$lightness"]);
-      Number* a = dynamic_cast<Number*>(env["$alpha"]);
+      Color_Ptr color = ARG("$color", Color);
+      Number_Ptr r = dynamic_cast<Number_Ptr>(env["$red"]);
+      Number_Ptr g = dynamic_cast<Number_Ptr>(env["$green"]);
+      Number_Ptr b = dynamic_cast<Number_Ptr>(env["$blue"]);
+      Number_Ptr h = dynamic_cast<Number_Ptr>(env["$hue"]);
+      Number_Ptr s = dynamic_cast<Number_Ptr>(env["$saturation"]);
+      Number_Ptr l = dynamic_cast<Number_Ptr>(env["$lightness"]);
+      Number_Ptr a = dynamic_cast<Number_Ptr>(env["$alpha"]);
 
       bool rgb = r || g || b;
       bool hsl = h || s || l;
@@ -855,7 +855,7 @@ namespace Sass {
     Signature ie_hex_str_sig = "ie-hex-str($color)";
     BUILT_IN(ie_hex_str)
     {
-      Color* c = ARG("$color", Color);
+      Color_Ptr c = ARG("$color", Color);
       double r = cap_channel<0xff>(c->r());
       double g = cap_channel<0xff>(c->g());
       double b = cap_channel<0xff>(c->b());
@@ -882,40 +882,40 @@ namespace Sass {
     Signature unquote_sig = "unquote($string)";
     BUILT_IN(sass_unquote)
     {
-      AST_Node* arg = env["$string"];
-      if (String_Quoted* string_quoted = dynamic_cast<String_Quoted*>(arg)) {
-        String_Constant* result = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, string_quoted->value());
+      AST_Node_Ptr arg = env["$string"];
+      if (String_Quoted_Ptr string_quoted = dynamic_cast<String_Quoted_Ptr>(arg)) {
+        String_Constant_Ptr result = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, string_quoted->value());
         // remember if the string was quoted (color tokens)
         result->is_delayed(true); // delay colors
         return result;
       }
-      else if (dynamic_cast<String_Constant*>(arg)) {
-        return (Expression*) arg;
+      else if (dynamic_cast<String_Constant_Ptr>(arg)) {
+        return (Expression_Ptr) arg;
       }
       else {
         Sass_Output_Style oldstyle = ctx.c_options.output_style;
         ctx.c_options.output_style = SASS_STYLE_NESTED;
         std::string val(arg->to_string(ctx.c_options));
-        val = dynamic_cast<Null*>(arg) ? "null" : val;
+        val = dynamic_cast<Null_Ptr>(arg) ? "null" : val;
         ctx.c_options.output_style = oldstyle;
 
         deprecated_function("Passing " + val + ", a non-string value, to unquote()", pstate);
-        return (Expression*) arg;
+        return (Expression_Ptr) arg;
       }
     }
 
     Signature quote_sig = "quote($string)";
     BUILT_IN(sass_quote)
     {
-      AST_Node* arg = env["$string"];
+      AST_Node_Ptr arg = env["$string"];
       // only set quote mark to true if already a string
-      if (String_Quoted* qstr = dynamic_cast<String_Quoted*>(arg)) {
+      if (String_Quoted_Ptr qstr = dynamic_cast<String_Quoted_Ptr>(arg)) {
         qstr->quote_mark('*');
         return qstr;
       }
       // all other nodes must be converted to a string node
       std::string str(quote(arg->to_string(ctx.c_options), String_Constant::double_quote()));
-      String_Quoted* result = SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, str);
+      String_Quoted_Ptr result = SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, str);
       result->quote_mark('*');
       return result;
     }
@@ -926,7 +926,7 @@ namespace Sass {
     {
       size_t len = std::string::npos;
       try {
-        String_Constant* s = ARG("$string", String_Constant);
+        String_Constant_Ptr s = ARG("$string", String_Constant);
         len = UTF_8::code_point_count(s->value(), 0, s->value().size());
 
       }
@@ -942,13 +942,13 @@ namespace Sass {
     {
       std::string str;
       try {
-        String_Constant* s = ARG("$string", String_Constant);
+        String_Constant_Ptr s = ARG("$string", String_Constant);
         str = s->value();
         str = unquote(str);
-        String_Constant* i = ARG("$insert", String_Constant);
+        String_Constant_Ptr i = ARG("$insert", String_Constant);
         std::string ins = i->value();
         ins = unquote(ins);
-        Number* ind = ARG("$index", Number);
+        Number_Ptr ind = ARG("$index", Number);
         double index = ind->value();
         size_t len = UTF_8::code_point_count(str, 0, str.size());
 
@@ -973,7 +973,7 @@ namespace Sass {
           str = ins + str;
         }
 
-        if (String_Quoted* ss = dynamic_cast<String_Quoted*>(s)) {
+        if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
           if (ss->quote_mark()) str = quote(str);
         }
       }
@@ -988,8 +988,8 @@ namespace Sass {
     {
       size_t index = std::string::npos;
       try {
-        String_Constant* s = ARG("$string", String_Constant);
-        String_Constant* t = ARG("$substring", String_Constant);
+        String_Constant_Ptr s = ARG("$string", String_Constant);
+        String_Constant_Ptr t = ARG("$substring", String_Constant);
         std::string str = s->value();
         str = unquote(str);
         std::string substr = t->value();
@@ -1013,7 +1013,7 @@ namespace Sass {
     {
       std::string newstr;
       try {
-        String_Constant* s = ARG("$string", String_Constant);
+        String_Constant_Ptr s = ARG("$string", String_Constant);
         double start_at = ARG("$start-at", Number)->value();
         double end_at = ARG("$end-at", Number)->value();
 
@@ -1040,7 +1040,7 @@ namespace Sass {
           utf8::advance(end, end_at - start_at + 1, str.end());
           newstr = std::string(start, end);
         }
-        if (String_Quoted* ss = dynamic_cast<String_Quoted*>(s)) {
+        if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
           if(ss->quote_mark()) newstr = quote(newstr);
         }
       }
@@ -1053,7 +1053,7 @@ namespace Sass {
     Signature to_upper_case_sig = "to-upper-case($string)";
     BUILT_IN(to_upper_case)
     {
-      String_Constant* s = ARG("$string", String_Constant);
+      String_Constant_Ptr s = ARG("$string", String_Constant);
       std::string str = s->value();
 
       for (size_t i = 0, L = str.length(); i < L; ++i) {
@@ -1062,8 +1062,8 @@ namespace Sass {
         }
       }
 
-      if (String_Quoted* ss = dynamic_cast<String_Quoted*>(s)) {
-        String_Quoted* cpy = SASS_MEMORY_NEW(ctx.mem, String_Quoted, *ss);
+      if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
+        String_Quoted_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, String_Quoted, *ss);
         cpy->value(str);
         return cpy;
       } else {
@@ -1074,7 +1074,7 @@ namespace Sass {
     Signature to_lower_case_sig = "to-lower-case($string)";
     BUILT_IN(to_lower_case)
     {
-      String_Constant* s = ARG("$string", String_Constant);
+      String_Constant_Ptr s = ARG("$string", String_Constant);
       std::string str = s->value();
 
       for (size_t i = 0, L = str.length(); i < L; ++i) {
@@ -1083,8 +1083,8 @@ namespace Sass {
         }
       }
 
-      if (String_Quoted* ss = dynamic_cast<String_Quoted*>(s)) {
-        String_Quoted* cpy = SASS_MEMORY_NEW(ctx.mem, String_Quoted, *ss);
+      if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
+        String_Quoted_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, String_Quoted, *ss);
         cpy->value(str);
         return cpy;
       } else {
@@ -1099,7 +1099,7 @@ namespace Sass {
     Signature percentage_sig = "percentage($number)";
     BUILT_IN(percentage)
     {
-      Number* n = ARG("$number", Number);
+      Number_Ptr n = ARG("$number", Number);
       if (!n->is_unitless()) error("argument $number of `" + std::string(sig) + "` must be unitless", pstate);
       return SASS_MEMORY_NEW(ctx.mem, Number, pstate, n->value() * 100, "%");
     }
@@ -1107,8 +1107,8 @@ namespace Sass {
     Signature round_sig = "round($number)";
     BUILT_IN(round)
     {
-      Number* n = ARG("$number", Number);
-      Number* r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
+      Number_Ptr n = ARG("$number", Number);
+      Number_Ptr r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
       r->pstate(pstate);
       r->value(Sass::round(r->value(), ctx.c_options.precision));
       return r;
@@ -1117,8 +1117,8 @@ namespace Sass {
     Signature ceil_sig = "ceil($number)";
     BUILT_IN(ceil)
     {
-      Number* n = ARG("$number", Number);
-      Number* r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
+      Number_Ptr n = ARG("$number", Number);
+      Number_Ptr r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
       r->pstate(pstate);
       r->value(std::ceil(r->value()));
       return r;
@@ -1127,8 +1127,8 @@ namespace Sass {
     Signature floor_sig = "floor($number)";
     BUILT_IN(floor)
     {
-      Number* n = ARG("$number", Number);
-      Number* r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
+      Number_Ptr n = ARG("$number", Number);
+      Number_Ptr r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
       r->pstate(pstate);
       r->value(std::floor(r->value()));
       return r;
@@ -1137,8 +1137,8 @@ namespace Sass {
     Signature abs_sig = "abs($number)";
     BUILT_IN(abs)
     {
-      Number* n = ARG("$number", Number);
-      Number* r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
+      Number_Ptr n = ARG("$number", Number);
+      Number_Ptr r = SASS_MEMORY_NEW(ctx.mem, Number, *n);
       r->pstate(pstate);
       r->value(std::abs(r->value()));
       return r;
@@ -1147,11 +1147,11 @@ namespace Sass {
     Signature min_sig = "min($numbers...)";
     BUILT_IN(min)
     {
-      List* arglist = ARG("$numbers", List);
-      Number* least = 0;
+      List_Ptr arglist = ARG("$numbers", List);
+      Number_Ptr least = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression* val = arglist->value_at_index(i);
-        Number* xi = dynamic_cast<Number*>(val);
+        Expression_Ptr val = arglist->value_at_index(i);
+        Number_Ptr xi = dynamic_cast<Number_Ptr>(val);
         if (!xi) {
           error("\"" + val->to_string(ctx.c_options) + "\" is not a number for `min'", pstate);
         }
@@ -1165,11 +1165,11 @@ namespace Sass {
     Signature max_sig = "max($numbers...)";
     BUILT_IN(max)
     {
-      List* arglist = ARG("$numbers", List);
-      Number* greatest = 0;
+      List_Ptr arglist = ARG("$numbers", List);
+      Number_Ptr greatest = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression* val = arglist->value_at_index(i);
-        Number* xi = dynamic_cast<Number*>(val);
+        Expression_Ptr val = arglist->value_at_index(i);
+        Number_Ptr xi = dynamic_cast<Number_Ptr>(val);
         if (!xi) {
           error("\"" + val->to_string(ctx.c_options) + "\" is not a number for `max'", pstate);
         }
@@ -1183,10 +1183,10 @@ namespace Sass {
     Signature random_sig = "random($limit:false)";
     BUILT_IN(random)
     {
-      AST_Node* arg = env["$limit"];
-      Value* v = dynamic_cast<Value*>(arg);
-      Number* l = dynamic_cast<Number*>(arg);
-      Boolean* b = dynamic_cast<Boolean*>(arg);
+      AST_Node_Ptr arg = env["$limit"];
+      Value_Ptr v = dynamic_cast<Value_Ptr>(arg);
+      Number_Ptr l = dynamic_cast<Number_Ptr>(arg);
+      Boolean_Ptr b = dynamic_cast<Boolean_Ptr>(arg);
       if (l) {
         double v = l->value();
         if (v < 1) {
@@ -1223,25 +1223,25 @@ namespace Sass {
     Signature length_sig = "length($list)";
     BUILT_IN(length)
     {
-      if (CommaSequence_Selector* sl = dynamic_cast<CommaSequence_Selector*>(env["$list"])) {
+      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(env["$list"])) {
         return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)sl->length());
       }
-      Expression* v = ARG("$list", Expression);
+      Expression_Ptr v = ARG("$list", Expression);
       if (v->concrete_type() == Expression::MAP) {
-        Map* map = dynamic_cast<Map*>(env["$list"]);
+        Map_Ptr map = dynamic_cast<Map_Ptr>(env["$list"]);
         return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)(map ? map->length() : 1));
       }
       if (v->concrete_type() == Expression::SELECTOR) {
-        if (SimpleSequence_Selector* h = dynamic_cast<SimpleSequence_Selector*>(v)) {
+        if (SimpleSequence_Selector_Ptr h = dynamic_cast<SimpleSequence_Selector_Ptr>(v)) {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)h->length());
-        } else if (CommaSequence_Selector* ls = dynamic_cast<CommaSequence_Selector*>(v)) {
+        } else if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(v)) {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)ls->length());
         } else {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, 1);
         }
       }
 
-      List* list = dynamic_cast<List*>(env["$list"]);
+      List_Ptr list = dynamic_cast<List_Ptr>(env["$list"]);
       return SASS_MEMORY_NEW(ctx.mem, Number,
                              pstate,
                              (double)(list ? list->size() : 1));
@@ -1250,9 +1250,9 @@ namespace Sass {
     Signature nth_sig = "nth($list, $n)";
     BUILT_IN(nth)
     {
-      Number* n = ARG("$n", Number);
-      Map* m = dynamic_cast<Map*>(env["$list"]);
-      if (CommaSequence_Selector* sl = dynamic_cast<CommaSequence_Selector*>(env["$list"])) {
+      Number_Ptr n = ARG("$n", Number);
+      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
+      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(env["$list"])) {
         size_t len = m ? m->length() : sl->length();
         bool empty = m ? m->empty() : sl->empty();
         if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate);
@@ -1262,7 +1262,7 @@ namespace Sass {
         Listize listize(ctx.mem);
         return (*sl)[static_cast<int>(index)]->perform(&listize);
       }
-      List* l = dynamic_cast<List*>(env["$list"]);
+      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
       if (n->value() == 0) error("argument `$n` of `" + std::string(sig) + "` must be non-zero", pstate);
       // if the argument isn't a list, then wrap it in a singleton list
       if (!m && !l) {
@@ -1282,7 +1282,7 @@ namespace Sass {
         return l;
       }
       else {
-        Expression* rv = l->value_at_index(static_cast<int>(index));
+        Expression_Ptr rv = l->value_at_index(static_cast<int>(index));
         rv->set_delayed(false);
         return rv;
       }
@@ -1291,10 +1291,10 @@ namespace Sass {
     Signature set_nth_sig = "set-nth($list, $n, $value)";
     BUILT_IN(set_nth)
     {
-      Map* m = dynamic_cast<Map*>(env["$list"]);
-      List* l = dynamic_cast<List*>(env["$list"]);
-      Number* n = ARG("$n", Number);
-      Expression* v = ARG("$value", Expression);
+      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
+      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      Number_Ptr n = ARG("$n", Number);
+      Expression_Ptr v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1305,7 +1305,7 @@ namespace Sass {
       if (l->empty()) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate);
       double index = std::floor(n->value() < 0 ? l->length() + n->value() : n->value() - 1);
       if (index < 0 || index > l->length() - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate);
-      List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length(), l->separator());
+      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length(), l->separator());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
         *result << ((i == index) ? v : (*l)[i]);
       }
@@ -1315,9 +1315,9 @@ namespace Sass {
     Signature index_sig = "index($list, $value)";
     BUILT_IN(index)
     {
-      Map* m = dynamic_cast<Map*>(env["$list"]);
-      List* l = dynamic_cast<List*>(env["$list"]);
-      Expression* v = ARG("$value", Expression);
+      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
+      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      Expression_Ptr v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1334,11 +1334,11 @@ namespace Sass {
     Signature join_sig = "join($list1, $list2, $separator: auto)";
     BUILT_IN(join)
     {
-      Map* m1 = dynamic_cast<Map*>(env["$list1"]);
-      Map* m2 = dynamic_cast<Map*>(env["$list2"]);
-      List* l1 = dynamic_cast<List*>(env["$list1"]);
-      List* l2 = dynamic_cast<List*>(env["$list2"]);
-      String_Constant* sep = ARG("$separator", String_Constant);
+      Map_Ptr m1 = dynamic_cast<Map_Ptr>(env["$list1"]);
+      Map_Ptr m2 = dynamic_cast<Map_Ptr>(env["$list2"]);
+      List_Ptr l1 = dynamic_cast<List_Ptr>(env["$list1"]);
+      List_Ptr l2 = dynamic_cast<List_Ptr>(env["$list2"]);
+      String_Constant_Ptr sep = ARG("$separator", String_Constant);
       enum Sass_Separator sep_val = (l1 ? l1->separator() : SASS_SPACE);
       if (!l1) {
         l1 = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
@@ -1361,7 +1361,7 @@ namespace Sass {
       if (sep_str == "space") sep_val = SASS_SPACE;
       else if (sep_str == "comma") sep_val = SASS_COMMA;
       else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
-      List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
+      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
       *result += l1;
       *result += l2;
       return result;
@@ -1370,14 +1370,14 @@ namespace Sass {
     Signature append_sig = "append($list, $val, $separator: auto)";
     BUILT_IN(append)
     {
-      Map* m = dynamic_cast<Map*>(env["$list"]);
-      List* l = dynamic_cast<List*>(env["$list"]);
-      Expression* v = ARG("$val", Expression);
-      if (CommaSequence_Selector* sl = dynamic_cast<CommaSequence_Selector*>(env["$list"])) {
+      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
+      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      Expression_Ptr v = ARG("$val", Expression);
+      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(env["$list"])) {
         Listize listize(ctx.mem);
-        l = dynamic_cast<List*>(sl->perform(&listize));
+        l = dynamic_cast<List_Ptr>(sl->perform(&listize));
       }
-      String_Constant* sep = ARG("$separator", String_Constant);
+      String_Constant_Ptr sep = ARG("$separator", String_Constant);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1385,7 +1385,7 @@ namespace Sass {
       if (m) {
         l = m->to_list(ctx, pstate);
       }
-      List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length() + 1, l->separator());
+      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length() + 1, l->separator());
       std::string sep_str(unquote(sep->value()));
       if (sep_str == "space") result->separator(SASS_SPACE);
       else if (sep_str == "comma") result->separator(SASS_COMMA);
@@ -1410,11 +1410,11 @@ namespace Sass {
     Signature zip_sig = "zip($lists...)";
     BUILT_IN(zip)
     {
-      List* arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$lists", List));
+      List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$lists", List));
       size_t shortest = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        List* ith = dynamic_cast<List*>(arglist->value_at_index(i));
-        Map* mith = dynamic_cast<Map*>(arglist->value_at_index(i));
+        List_Ptr ith = dynamic_cast<List_Ptr>(arglist->value_at_index(i));
+        Map_Ptr mith = dynamic_cast<Map_Ptr>(arglist->value_at_index(i));
         if (!ith) {
           if (mith) {
             ith = mith->to_list(ctx, pstate);
@@ -1423,19 +1423,19 @@ namespace Sass {
             *ith << arglist->value_at_index(i);
           }
           if (arglist->is_arglist()) {
-            ((Argument*)(*arglist)[i])->value(ith);
+            ((Argument_Ptr)(*arglist)[i])->value(ith);
           } else {
             (*arglist)[i] = ith;
           }
         }
         shortest = (i ? std::min(shortest, ith->length()) : ith->length());
       }
-      List* zippers = SASS_MEMORY_NEW(ctx.mem, List, pstate, shortest, SASS_COMMA);
+      List_Ptr zippers = SASS_MEMORY_NEW(ctx.mem, List, pstate, shortest, SASS_COMMA);
       size_t L = arglist->length();
       for (size_t i = 0; i < shortest; ++i) {
-        List* zipper = SASS_MEMORY_NEW(ctx.mem, List, pstate, L);
+        List_Ptr zipper = SASS_MEMORY_NEW(ctx.mem, List, pstate, L);
         for (size_t j = 0; j < L; ++j) {
-          *zipper << (*static_cast<List*>(arglist->value_at_index(j)))[i];
+          *zipper << (*static_cast<List_Ptr>(arglist->value_at_index(j)))[i];
         }
         *zippers << zipper;
       }
@@ -1445,7 +1445,7 @@ namespace Sass {
     Signature list_separator_sig = "list_separator($list)";
     BUILT_IN(list_separator)
     {
-      List* l = dynamic_cast<List*>(env["$list"]);
+      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1462,8 +1462,8 @@ namespace Sass {
     Signature map_get_sig = "map-get($map, $key)";
     BUILT_IN(map_get)
     {
-      Map* m = ARGM("$map", Map, ctx);
-      Expression* v = ARG("$key", Expression);
+      Map_Ptr m = ARGM("$map", Map, ctx);
+      Expression_Ptr v = ARG("$key", Expression);
       try {
         return m->at(v);
       } catch (const std::out_of_range&) {
@@ -1475,16 +1475,16 @@ namespace Sass {
     Signature map_has_key_sig = "map-has-key($map, $key)";
     BUILT_IN(map_has_key)
     {
-      Map* m = ARGM("$map", Map, ctx);
-      Expression* v = ARG("$key", Expression);
+      Map_Ptr m = ARGM("$map", Map, ctx);
+      Expression_Ptr v = ARG("$key", Expression);
       return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, m->has(v));
     }
 
     Signature map_keys_sig = "map-keys($map)";
     BUILT_IN(map_keys)
     {
-      Map* m = ARGM("$map", Map, ctx);
-      List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
+      Map_Ptr m = ARGM("$map", Map, ctx);
+      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
       for ( auto key : m->keys()) {
         *result << key;
       }
@@ -1494,8 +1494,8 @@ namespace Sass {
     Signature map_values_sig = "map-values($map)";
     BUILT_IN(map_values)
     {
-      Map* m = ARGM("$map", Map, ctx);
-      List* result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
+      Map_Ptr m = ARGM("$map", Map, ctx);
+      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
       for ( auto key : m->keys()) {
         *result << m->at(key);
       }
@@ -1505,11 +1505,11 @@ namespace Sass {
     Signature map_merge_sig = "map-merge($map1, $map2)";
     BUILT_IN(map_merge)
     {
-      Map* m1 = ARGM("$map1", Map, ctx);
-      Map* m2 = ARGM("$map2", Map, ctx);
+      Map_Ptr m1 = ARGM("$map1", Map, ctx);
+      Map_Ptr m2 = ARGM("$map2", Map, ctx);
 
       size_t len = m1->length() + m2->length();
-      Map* result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, len);
+      Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, len);
       *result += m1;
       *result += m2;
       return result;
@@ -1519,9 +1519,9 @@ namespace Sass {
     BUILT_IN(map_remove)
     {
       bool remove;
-      Map* m = ARGM("$map", Map, ctx);
-      List* arglist = ARG("$keys", List);
-      Map* result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
+      Map_Ptr m = ARGM("$map", Map, ctx);
+      List_Ptr arglist = ARG("$keys", List);
+      Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
       for (auto key : m->keys()) {
         remove = false;
         for (size_t j = 0, K = arglist->length(); j < K && !remove; ++j) {
@@ -1535,14 +1535,14 @@ namespace Sass {
     Signature keywords_sig = "keywords($args)";
     BUILT_IN(keywords)
     {
-      List* arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
-      Map* result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
+      List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
+      Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
       for (size_t i = arglist->size(), L = arglist->length(); i < L; ++i) {
-        std::string name = std::string(((Argument*)(*arglist)[i])->name());
+        std::string name = std::string(((Argument_Ptr)(*arglist)[i])->name());
         name = name.erase(0, 1); // sanitize name (remove dollar sign)
         *result << std::make_pair(SASS_MEMORY_NEW(ctx.mem, String_Quoted,
                  pstate, name),
-                 ((Argument*)(*arglist)[i])->value());
+                 ((Argument_Ptr)(*arglist)[i])->value());
       }
       return result;
     }
@@ -1554,7 +1554,7 @@ namespace Sass {
     Signature type_of_sig = "type-of($value)";
     BUILT_IN(type_of)
     {
-      Expression* v = ARG("$value", Expression);
+      Expression_Ptr v = ARG("$value", Expression);
       return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, v->type());
     }
 
@@ -1569,8 +1569,8 @@ namespace Sass {
     Signature comparable_sig = "comparable($number-1, $number-2)";
     BUILT_IN(comparable)
     {
-      Number* n1 = ARG("$number-1", Number);
-      Number* n2 = ARG("$number-2", Number);
+      Number_Ptr n1 = ARG("$number-1", Number);
+      Number_Ptr n2 = ARG("$number-2", Number);
       if (n1->is_unitless() || n2->is_unitless()) {
         return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, true);
       }
@@ -1648,22 +1648,22 @@ namespace Sass {
     BUILT_IN(call)
     {
       std::string name = Util::normalize_underscores(unquote(ARG("$name", String_Constant)->value()));
-      List* arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
+      List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
 
-      Arguments* args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
+      Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
       // std::string full_name(name + "[f]");
-      // Definition* def = d_env.has(full_name) ? static_cast<Definition*>((d_env)[full_name]) : 0;
-      // Parameters* params = def ? def->parameters() : 0;
+      // Definition_Ptr def = d_env.has(full_name) ? static_cast<Definition_Ptr>((d_env)[full_name]) : 0;
+      // Parameters_Ptr params = def ? def->parameters() : 0;
       // size_t param_size = params ? params->length() : 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression* expr = arglist->value_at_index(i);
+        Expression_Ptr expr = arglist->value_at_index(i);
         // if (params && params->has_rest_parameter()) {
-        //   Parameter* p = param_size > i ? (*params)[i] : 0;
-        //   List* list = dynamic_cast<List*>(expr);
+        //   Parameter_Ptr p = param_size > i ? (*params)[i] : 0;
+        //   List_Ptr list = dynamic_cast<List_Ptr>(expr);
         //   if (list && p && !p->is_rest_parameter()) expr = (*list)[0];
         // }
         if (arglist->is_arglist()) {
-          Argument* arg = dynamic_cast<Argument*>((*arglist)[i]);
+          Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*arglist)[i]);
           *args << SASS_MEMORY_NEW(ctx.mem, Argument,
                                    pstate,
                                    expr,
@@ -1674,7 +1674,7 @@ namespace Sass {
           *args << SASS_MEMORY_NEW(ctx.mem, Argument, pstate, expr);
         }
       }
-      Function_Call* func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, args);
+      Function_Call_Ptr func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, args);
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
       return func->perform(&expand.eval);
 
@@ -1695,7 +1695,7 @@ namespace Sass {
     {
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
       bool is_true = !ARG("$condition", Expression)->perform(&expand.eval)->is_false();
-      Expression* res = ARG(is_true ? "$if-true" : "$if-false", Expression);
+      Expression_Ptr res = ARG(is_true ? "$if-true" : "$if-false", Expression);
       res = res->perform(&expand.eval);
       res->set_delayed(false); // clone?
       return res;
@@ -1722,7 +1722,7 @@ namespace Sass {
     Signature inspect_sig = "inspect($value)";
     BUILT_IN(inspect)
     {
-      Expression* v = ARG("$value", Expression);
+      Expression_Ptr v = ARG("$value", Expression);
       if (v->concrete_type() == Expression::NULL_VAL) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "null");
       } else if (v->concrete_type() == Expression::BOOLEAN && *v == 0) {
@@ -1746,27 +1746,27 @@ namespace Sass {
     Signature selector_nest_sig = "selector-nest($selectors...)";
     BUILT_IN(selector_nest)
     {
-      List* arglist = ARG("$selectors", List);
+      List_Ptr arglist = ARG("$selectors", List);
 
       // Not enough parameters
       if( arglist->length() == 0 )
         error("$selectors: At least one selector must be passed", pstate);
 
       // Parse args into vector of selectors
-      std::vector<CommaSequence_Selector*> parsedSelectors;
+      std::vector<CommaSequence_Selector_Ptr> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression* exp = dynamic_cast<Expression*>(arglist->value_at_index(i));
+        Expression_Ptr exp = dynamic_cast<Expression_Ptr>(arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
           std::stringstream msg;
           msg << "$selectors: null is not a valid selector: it must be a string,\n";
           msg << "a list of strings, or a list of lists of strings for 'selector-nest'";
           error(msg.str(), pstate);
         }
-        if (String_Constant* str =dynamic_cast<String_Constant*>(exp)) {
+        if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string(ctx.c_options) + "{";
-        CommaSequence_Selector* sel = Parser::parse_selector(exp_src.c_str(), ctx);
+        CommaSequence_Selector_Ptr sel = Parser::parse_selector(exp_src.c_str(), ctx);
         parsedSelectors.push_back(sel);
       }
 
@@ -1776,14 +1776,14 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      std::vector<CommaSequence_Selector*>::iterator itr = parsedSelectors.begin();
-      CommaSequence_Selector* result = *itr;
+      std::vector<CommaSequence_Selector_Ptr>::iterator itr = parsedSelectors.begin();
+      CommaSequence_Selector_Ptr result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        CommaSequence_Selector* child = *itr;
-        std::vector<Sequence_Selector*> exploded;
-        CommaSequence_Selector* rv = child->resolve_parent_refs(ctx, result);
+        CommaSequence_Selector_Ptr child = *itr;
+        std::vector<Sequence_Selector_Ptr> exploded;
+        CommaSequence_Selector_Ptr rv = child->resolve_parent_refs(ctx, result);
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
           exploded.push_back((*rv)[m]);
         }
@@ -1797,27 +1797,27 @@ namespace Sass {
     Signature selector_append_sig = "selector-append($selectors...)";
     BUILT_IN(selector_append)
     {
-      List* arglist = ARG("$selectors", List);
+      List_Ptr arglist = ARG("$selectors", List);
 
       // Not enough parameters
       if( arglist->length() == 0 )
         error("$selectors: At least one selector must be passed", pstate);
 
       // Parse args into vector of selectors
-      std::vector<CommaSequence_Selector*> parsedSelectors;
+      std::vector<CommaSequence_Selector_Ptr> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression* exp = dynamic_cast<Expression*>(arglist->value_at_index(i));
+        Expression_Ptr exp = dynamic_cast<Expression_Ptr>(arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
           std::stringstream msg;
           msg << "$selectors: null is not a valid selector: it must be a string,\n";
           msg << "a list of strings, or a list of lists of strings for 'selector-append'";
           error(msg.str(), pstate);
         }
-        if (String_Constant* str =dynamic_cast<String_Constant*>(exp)) {
+        if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string() + "{";
-        CommaSequence_Selector* sel = Parser::parse_selector(exp_src.c_str(), ctx);
+        CommaSequence_Selector_Ptr sel = Parser::parse_selector(exp_src.c_str(), ctx);
         parsedSelectors.push_back(sel);
       }
 
@@ -1827,13 +1827,13 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      std::vector<CommaSequence_Selector*>::iterator itr = parsedSelectors.begin();
-      CommaSequence_Selector* result = *itr;
+      std::vector<CommaSequence_Selector_Ptr>::iterator itr = parsedSelectors.begin();
+      CommaSequence_Selector_Ptr result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        CommaSequence_Selector* child = *itr;
-        std::vector<Sequence_Selector*> newElements;
+        CommaSequence_Selector_Ptr child = *itr;
+        std::vector<Sequence_Selector_Ptr> newElements;
 
         // For every COMPLEX_SELECTOR in `result`
         // For every COMPLEX_SELECTOR in `child`
@@ -1844,12 +1844,12 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Sequence_Selector* parentSeqClone = (*result)[i]->cloneFully(ctx);
-            Sequence_Selector* childSeq = (*child)[j];
-            Sequence_Selector* base = childSeq->tail();
+            Sequence_Selector_Ptr parentSeqClone = (*result)[i]->cloneFully(ctx);
+            Sequence_Selector_Ptr childSeq = (*child)[j];
+            Sequence_Selector_Ptr base = childSeq->tail();
 
             // Must be a simple sequence
-            if( childSeq->combinator() != Sequence_Selector::Combinator::ANCESTOR_OF ) {
+            if( childSeq->combinator() != Sequence_Selector_Ref::Combinator::ANCESTOR_OF ) {
               std::string msg("Can't append  `");
               msg += childSeq->to_string();
               msg += "` to `";
@@ -1859,7 +1859,7 @@ namespace Sass {
             }
 
             // Cannot be a Universal selector
-            Element_Selector* pType = dynamic_cast<Element_Selector*>(childSeq->head()->first());
+            Element_Selector_Ptr pType = dynamic_cast<Element_Selector_Ptr>(childSeq->head()->first());
             if(pType && pType->name() == "*") {
               std::string msg("Can't append  `");
               msg += childSeq->to_string();
@@ -1891,10 +1891,10 @@ namespace Sass {
     Signature selector_unify_sig = "selector-unify($selector1, $selector2)";
     BUILT_IN(selector_unify)
     {
-      CommaSequence_Selector* selector1 = ARGSEL("$selector1", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector* selector2 = ARGSEL("$selector2", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr selector1 = ARGSEL("$selector1", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr selector2 = ARGSEL("$selector2", CommaSequence_Selector, p_contextualize);
 
-      CommaSequence_Selector* result = selector1->unify_with(selector2, ctx);
+      CommaSequence_Selector_Ptr result = selector1->unify_with(selector2, ctx);
       Listize listize(ctx.mem);
       return result->perform(&listize);
     }
@@ -1902,9 +1902,9 @@ namespace Sass {
     Signature simple_selectors_sig = "simple-selectors($selector)";
     BUILT_IN(simple_selectors)
     {
-      SimpleSequence_Selector* sel = ARGSEL("$selector", SimpleSequence_Selector, p_contextualize);
+      SimpleSequence_Selector_Ptr sel = ARGSEL("$selector", SimpleSequence_Selector, p_contextualize);
 
-      List* l = SASS_MEMORY_NEW(ctx.mem, List, sel->pstate(), sel->length(), SASS_COMMA);
+      List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, sel->pstate(), sel->length(), SASS_COMMA);
 
       for (size_t i = 0, L = sel->length(); i < L; ++i) {
         Simple_Selector* ss = (*sel)[i];
@@ -1919,14 +1919,14 @@ namespace Sass {
     Signature selector_extend_sig = "selector-extend($selector, $extendee, $extender)";
     BUILT_IN(selector_extend)
     {
-      CommaSequence_Selector*  selector = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector*  extendee = ARGSEL("$extendee", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector*  extender = ARGSEL("$extender", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  selector = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  extendee = ARGSEL("$extendee", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  extender = ARGSEL("$extender", CommaSequence_Selector, p_contextualize);
 
       ExtensionSubsetMap subset_map;
       extender->populate_extends(extendee, ctx, subset_map);
 
-      CommaSequence_Selector* result = Extend::extendSelectorList(selector, ctx, subset_map, false);
+      CommaSequence_Selector_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, false);
 
       Listize listize(ctx.mem);
       return result->perform(&listize);
@@ -1935,14 +1935,14 @@ namespace Sass {
     Signature selector_replace_sig = "selector-replace($selector, $original, $replacement)";
     BUILT_IN(selector_replace)
     {
-      CommaSequence_Selector*  selector = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector*  original = ARGSEL("$original", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector*  replacement = ARGSEL("$replacement", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  selector = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  original = ARGSEL("$original", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  replacement = ARGSEL("$replacement", CommaSequence_Selector, p_contextualize);
 
       ExtensionSubsetMap subset_map;
       replacement->populate_extends(original, ctx, subset_map);
 
-      CommaSequence_Selector* result = Extend::extendSelectorList(selector, ctx, subset_map, true);
+      CommaSequence_Selector_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, true);
 
       Listize listize(ctx.mem);
       return result->perform(&listize);
@@ -1951,7 +1951,7 @@ namespace Sass {
     Signature selector_parse_sig = "selector-parse($selector)";
     BUILT_IN(selector_parse)
     {
-      CommaSequence_Selector* sel = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr sel = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
 
       Listize listize(ctx.mem);
       return sel->perform(&listize);
@@ -1960,8 +1960,8 @@ namespace Sass {
     Signature is_superselector_sig = "is-superselector($super, $sub)";
     BUILT_IN(is_superselector)
     {
-      CommaSequence_Selector*  sel_sup = ARGSEL("$super", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector*  sel_sub = ARGSEL("$sub", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  sel_sup = ARGSEL("$super", CommaSequence_Selector, p_contextualize);
+      CommaSequence_Selector_Ptr  sel_sub = ARGSEL("$sub", CommaSequence_Selector, p_contextualize);
       bool result = sel_sup->is_superselector_of(sel_sub);
       return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, result);
     }

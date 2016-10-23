@@ -316,7 +316,7 @@ namespace Sass {
     sass_import_take_source(import);
     sass_import_take_srcmap(import);
     // then parse the root block
-    Block* root = p.parse();
+    Block_Ptr root = p.parse();
     // delete memory of current stack frame
     sass_delete_import(import_stack.back());
     // remove current stack frame
@@ -369,7 +369,7 @@ namespace Sass {
 
   }
 
-  void Context::import_url (Import* imp, std::string load_path, const std::string& ctx_path) {
+  void Context::import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path) {
 
     ParserState pstate(imp->pstate());
     std::string imp_path(unquote(load_path));
@@ -388,11 +388,11 @@ namespace Sass {
       imp->urls().push_back(SASS_MEMORY_NEW(mem, String_Quoted, imp->pstate(), load_path));
     }
     else if (imp_path.length() > 4 && imp_path.substr(imp_path.length() - 4, 4) == ".css") {
-      String_Constant* loc = SASS_MEMORY_NEW(mem, String_Constant, pstate, unquote(load_path));
-      Argument* loc_arg = SASS_MEMORY_NEW(mem, Argument, pstate, loc);
-      Arguments* loc_args = SASS_MEMORY_NEW(mem, Arguments, pstate);
+      String_Constant_Ptr loc = SASS_MEMORY_NEW(mem, String_Constant, pstate, unquote(load_path));
+      Argument_Ptr loc_arg = SASS_MEMORY_NEW(mem, Argument, pstate, loc);
+      Arguments_Ptr loc_args = SASS_MEMORY_NEW(mem, Arguments, pstate);
       (*loc_args) << loc_arg;
-      Function_Call* new_url = SASS_MEMORY_NEW(mem, Function_Call, pstate, "url", loc_args);
+      Function_Call_Ptr new_url = SASS_MEMORY_NEW(mem, Function_Call, pstate, "url", loc_args);
       imp->urls().push_back(new_url);
     }
     else {
@@ -408,7 +408,7 @@ namespace Sass {
 
 
   // call custom importers on the given (unquoted) load_path and eventually parse the resulting style_sheet
-  bool Context::call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import* imp, std::vector<Sass_Importer_Entry> importers, bool only_one)
+  bool Context::call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, std::vector<Sass_Importer_Entry> importers, bool only_one)
   {
     // unique counter
     size_t count = 0;
@@ -494,7 +494,7 @@ namespace Sass {
   void register_c_functions(Context&, Env* env, Sass_Function_List);
   void register_c_function(Context&, Env* env, Sass_Function_Entry);
 
-  char* Context::render(Block* root)
+  char* Context::render(Block_Ptr root)
   {
     // check for valid block
     if (!root) return 0;
@@ -522,10 +522,10 @@ namespace Sass {
     return sass_copy_c_string(emitted.buffer.c_str());
   }
 
-  void Context::apply_custom_headers(Block* root, const char* ctx_path, ParserState pstate)
+  void Context::apply_custom_headers(Block_Ptr root, const char* ctx_path, ParserState pstate)
   {
     // create a custom import to resolve headers
-    Import* imp = SASS_MEMORY_NEW(mem, Import, pstate);
+    Import_Ptr imp = SASS_MEMORY_NEW(mem, Import, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
     call_headers(entry_path, ctx_path, pstate, imp);
@@ -539,7 +539,7 @@ namespace Sass {
     }
   }
 
-  Block* File_Context::parse()
+  Block_Ptr File_Context::parse()
   {
 
     // check if entry file is given
@@ -585,7 +585,7 @@ namespace Sass {
 
   }
 
-  Block* Data_Context::parse()
+  Block_Ptr Data_Context::parse()
   {
 
     // check if source string is given
@@ -629,12 +629,12 @@ namespace Sass {
 
 
   // parse root block from includes
-  Block* Context::compile()
+  Block_Ptr Context::compile()
   {
     // abort if there is no data
     if (resources.size() == 0) return 0;
     // get root block from the first style sheet
-    Block* root = sheets.at(entry_path).root;
+    Block_Ptr root = sheets.at(entry_path).root;
     // abort on invalid root
     if (root == 0) return 0;
 
@@ -719,14 +719,14 @@ namespace Sass {
 
   void register_function(Context& ctx, Signature sig, Native_Function f, Env* env)
   {
-    Definition* def = make_native_function(sig, f, ctx);
+    Definition_Ptr def = make_native_function(sig, f, ctx);
     def->environment(env);
     (*env)[def->name() + "[f]"] = def;
   }
 
   void register_function(Context& ctx, Signature sig, Native_Function f, size_t arity, Env* env)
   {
-    Definition* def = make_native_function(sig, f, ctx);
+    Definition_Ptr def = make_native_function(sig, f, ctx);
     std::stringstream ss;
     ss << def->name() << "[f]" << arity;
     def->environment(env);
@@ -735,7 +735,7 @@ namespace Sass {
 
   void register_overload_stub(Context& ctx, std::string name, Env* env)
   {
-    Definition* stub = SASS_MEMORY_NEW(ctx.mem, Definition,
+    Definition_Ptr stub = SASS_MEMORY_NEW(ctx.mem, Definition,
                                        ParserState("[built-in function]"),
                                        0,
                                        name,
@@ -856,7 +856,7 @@ namespace Sass {
   }
   void register_c_function(Context& ctx, Env* env, Sass_Function_Entry descr)
   {
-    Definition* def = make_c_function(descr, ctx);
+    Definition_Ptr def = make_c_function(descr, ctx);
     def->environment(env);
     (*env)[def->name() + "[f]"] = def;
   }
