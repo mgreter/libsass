@@ -2,16 +2,9 @@
 #define SASS_MEMORY_MANAGER_H
 
 #include <vector>
+#include <iostream>
 
 namespace Sass {
-
-  class Memory_Object {
-  friend class Memory_Manager;
-    long refcount;
-  public:
-    Memory_Object() { refcount = 0; };
-    virtual ~Memory_Object() {};
-  };
 
   /////////////////////////////////////////////////////////////////////////////
   // A class for tracking allocations of AST_Node objects. The intended usage
@@ -44,5 +37,17 @@ namespace Sass {
 
 #define SASS_MEMORY_NEW(mgr, Class, ...)                                                 \
   (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+
+#define SASS_MEMORY_CREATE(mgr, Class, ...)                                                 \
+  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+
+#define SASS_MEMORY_OBJ(mgr, Class, ...)                                                 \
+  Class##_Obj(static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+
+#define SASS_MEMORY_CAST(Class, obj)   \
+  (dynamic_cast<Class##_Ptr>(& obj))   \
+
+#define SASS_MEMORY_CAST_PTR(Class, ptr)   \
+  (dynamic_cast<Class##_Ptr>(ptr))   \
 
 #endif

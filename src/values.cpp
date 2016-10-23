@@ -7,21 +7,21 @@
 namespace Sass {
 
   // convert value from C++ side to C-API
-  union Sass_Value* ast_node_to_sass_value (const Expression* val)
+  union Sass_Value* ast_node_to_sass_value (const Expression_Ptr val)
   {
     if (val->concrete_type() == Expression::NUMBER)
     {
-      const Number* res = dynamic_cast<const Number*>(val);
+      Number_Ptr_Const res = dynamic_cast<Number_Ptr_Const>(val);
       return sass_make_number(res->value(), res->unit().c_str());
     }
     else if (val->concrete_type() == Expression::COLOR)
     {
-      const Color* col = dynamic_cast<const Color*>(val);
+      Color_Ptr_Const col = dynamic_cast<Color_Ptr_Const>(val);
       return sass_make_color(col->r(), col->g(), col->b(), col->a());
     }
     else if (val->concrete_type() == Expression::LIST)
     {
-      const List* l = dynamic_cast<const List*>(val);
+      List_Ptr_Const l = dynamic_cast<List_Ptr_Const>(val);
       union Sass_Value* list = sass_make_list(l->size(), l->separator());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
         auto val = ast_node_to_sass_value((*l)[i]);
@@ -31,7 +31,7 @@ namespace Sass {
     }
     else if (val->concrete_type() == Expression::MAP)
     {
-      const Map* m = dynamic_cast<const Map*>(val);
+      Map_Ptr_Const m = dynamic_cast<Map_Ptr_Const>(val);
       union Sass_Value* map = sass_make_map(m->length());
       size_t i = 0; for (auto key : m->keys()) {
         sass_map_set_key(map, i, ast_node_to_sass_value(key));
@@ -46,16 +46,16 @@ namespace Sass {
     }
     else if (val->concrete_type() == Expression::BOOLEAN)
     {
-      const Boolean* res = dynamic_cast<const Boolean*>(val);
+      Boolean_Ptr_Const res = dynamic_cast<Boolean_Ptr_Const>(val);
       return sass_make_boolean(res->value());
     }
     else if (val->concrete_type() == Expression::STRING)
     {
-      if (const String_Quoted* qstr = dynamic_cast<const String_Quoted*>(val))
+      if (String_Quoted_Ptr_Const qstr = dynamic_cast<String_Quoted_Ptr_Const>(val))
       {
         return sass_make_qstring(qstr->value().c_str());
       }
-      else if (const String_Constant* cstr = dynamic_cast<const String_Constant*>(val))
+      else if (String_Constant_Ptr_Const cstr = dynamic_cast<String_Constant_Ptr_Const>(val))
       {
         return sass_make_string(cstr->value().c_str());
       }
@@ -64,7 +64,7 @@ namespace Sass {
   }
 
   // convert value from C-API to C++ side
-  Value* sass_value_to_ast_node (Memory_Manager& mem, const union Sass_Value* val)
+  Value_Ptr sass_value_to_ast_node (Memory_Manager& mem, const union Sass_Value* val)
   {
     switch (sass_value_get_tag(val)) {
       case SASS_NUMBER:
@@ -98,7 +98,7 @@ namespace Sass {
         }
       break;
       case SASS_LIST: {
-        List* l = SASS_MEMORY_NEW(mem, List,
+        List_Ptr l = SASS_MEMORY_NEW(mem, List,
                                   ParserState("[C-VALUE]"),
                                   sass_list_get_length(val),
                                   sass_list_get_separator(val));
@@ -109,7 +109,7 @@ namespace Sass {
       }
       break;
       case SASS_MAP: {
-        Map* m = SASS_MEMORY_NEW(mem, Map, ParserState("[C-VALUE]"));
+        Map_Ptr m = SASS_MEMORY_NEW(mem, Map, ParserState("[C-VALUE]"));
         for (size_t i = 0, L = sass_map_get_length(val); i < L; ++i) {
           *m << std::make_pair(
             sass_value_to_ast_node(mem, sass_map_get_key(val, i)),

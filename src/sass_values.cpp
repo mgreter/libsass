@@ -276,7 +276,7 @@ extern "C" {
   union Sass_Value* ADDCALL sass_value_stringify (const union Sass_Value* v, bool compressed, int precision)
   {
     Memory_Manager mem;
-    Value* val = sass_value_to_ast_node(mem, v);
+    Value_Ptr val = sass_value_to_ast_node(mem, v);
     Sass_Inspect_Options options(compressed ? COMPRESSED : NESTED, precision);
     std::string str(val->to_string(options));
     return sass_make_qstring(str.c_str());
@@ -285,13 +285,13 @@ extern "C" {
   union Sass_Value* ADDCALL sass_value_op (enum Sass_OP op, const union Sass_Value* a, const union Sass_Value* b)
   {
 
-    Sass::Value* rv = 0;
+    Sass::Value_Ptr rv = 0;
     Memory_Manager mem;
 
     try {
 
-      Value* lhs = sass_value_to_ast_node(mem, a);
-      Value* rhs = sass_value_to_ast_node(mem, b);
+      Value_Ptr lhs = sass_value_to_ast_node(mem, a);
+      Value_Ptr rhs = sass_value_to_ast_node(mem, b);
       struct Sass_Inspect_Options options(NESTED, 5);
 
       // see if it's a relational expression
@@ -306,28 +306,28 @@ extern "C" {
       }
 
       if (sass_value_is_number(a) && sass_value_is_number(b)) {
-        const Number* l_n = dynamic_cast<const Number*>(lhs);
-        const Number* r_n = dynamic_cast<const Number*>(rhs);
+        Number_Ptr_Const l_n = dynamic_cast<Number_Ptr_Const>(lhs);
+        Number_Ptr_Const r_n = dynamic_cast<Number_Ptr_Const>(rhs);
         rv = Eval::op_numbers(mem, op, *l_n, *r_n, options);
       }
       else if (sass_value_is_number(a) && sass_value_is_color(a)) {
-        const Number* l_n = dynamic_cast<const Number*>(lhs);
-        const Color* r_c = dynamic_cast<const Color*>(rhs);
+        Number_Ptr_Const l_n = dynamic_cast<Number_Ptr_Const>(lhs);
+        Color_Ptr_Const r_c = dynamic_cast<Color_Ptr_Const>(rhs);
         rv = Eval::op_number_color(mem, op, *l_n, *r_c, options);
       }
       else if (sass_value_is_color(a) && sass_value_is_number(b)) {
-        const Color* l_c = dynamic_cast<const Color*>(lhs);
-        const Number* r_n = dynamic_cast<const Number*>(rhs);
+        Color_Ptr_Const l_c = dynamic_cast<Color_Ptr_Const>(lhs);
+        Number_Ptr_Const r_n = dynamic_cast<Number_Ptr_Const>(rhs);
         rv = Eval::op_color_number(mem, op, *l_c, *r_n, options);
       }
       else if (sass_value_is_color(a) && sass_value_is_color(b)) {
-        const Color* l_c = dynamic_cast<const Color*>(lhs);
-        const Color* r_c = dynamic_cast<const Color*>(rhs);
+        Color_Ptr_Const l_c = dynamic_cast<Color_Ptr_Const>(lhs);
+        Color_Ptr_Const r_c = dynamic_cast<Color_Ptr_Const>(rhs);
         rv = Eval::op_colors(mem, op, *l_c, *r_c, options);
       }
       else /* convert other stuff to string and apply operation */ {
-        Value* l_v = dynamic_cast<Value*>(lhs);
-        Value* r_v = dynamic_cast<Value*>(rhs);
+        Value_Ptr l_v = dynamic_cast<Value_Ptr>(lhs);
+        Value_Ptr r_v = dynamic_cast<Value_Ptr>(rhs);
         rv = Eval::op_strings(mem, op, *l_v, *r_v, options);
       }
 
