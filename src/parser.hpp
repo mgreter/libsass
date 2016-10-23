@@ -42,7 +42,7 @@ namespace Sass {
     bool in_at_root;
 
     Parser(Context& ctx, const ParserState& pstate)
-    : ParserState(pstate), ctx(ctx), block_stack(0), stack(0), last_media_block(0),
+    : ParserState(pstate), ctx(ctx), block_stack(), stack(0), last_media_block(0),
       source(0), position(0), end(0), before_token(pstate), after_token(pstate), pstate(pstate), indentation(0)
     { in_at_root = false; stack.push_back(Scope::Root); }
 
@@ -231,7 +231,7 @@ namespace Sass {
                    const std::string& middle = ", was: ");
     void read_bom();
 
-    Block_Ptr parse();
+    Block_Obj parse();
     Import_Ptr parse_import();
     Definition_Ptr parse_definition(Definition::Type which_type);
     Parameters_Ptr parse_parameters();
@@ -249,8 +249,8 @@ namespace Sass {
     Wrapped_Selector_Ptr parse_negated_selector();
     Simple_Selector* parse_pseudo_selector();
     Attribute_Selector_Ptr parse_attribute_selector();
-    Block_Ptr parse_block(bool is_root = false);
-    Block_Ptr parse_css_block(bool is_root = false);
+    Block_Obj parse_block(bool is_root = false);
+    Block_Obj parse_css_block(bool is_root = false);
     bool parse_block_nodes(bool is_root = false);
     bool parse_block_node(bool is_root = false);
 
@@ -291,7 +291,7 @@ namespace Sass {
     Return_Ptr parse_return_directive();
     Content_Ptr parse_content_directive();
     void parse_charset_directive();
-    Media_Block_Ptr parse_media_block();
+    Media_Block_Obj parse_media_block();
     List_Ptr parse_media_queries();
     Media_Query_Ptr parse_media_query();
     Media_Query_Expression_Ptr parse_media_expression();
@@ -302,7 +302,7 @@ namespace Sass {
     Supports_Condition_Ptr parse_supports_interpolation();
     Supports_Condition_Ptr parse_supports_declaration();
     Supports_Condition_Ptr parse_supports_condition_in_parens();
-    At_Root_Block_Ptr parse_at_root_block();
+    At_Root_Block_Obj parse_at_root_block();
     At_Root_Query_Ptr parse_at_root_query();
     String_Schema_Ptr parse_almost_any_value();
     Directive_Ptr parse_special_directive();

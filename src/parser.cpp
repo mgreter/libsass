@@ -94,7 +94,7 @@ namespace Sass {
   }
 
   /* main entry point to parse root block */
-  Block_Ptr Parser::parse()
+  Block_Obj Parser::parse()
   {
     bool is_root = false;
     Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate, 0, true);
@@ -117,14 +117,14 @@ namespace Sass {
       css_error("Invalid CSS", " after ", ": expected selector or at-rule, was ");
     }
 
-    return &root;
+    return root;
   }
 
 
   // convenience function for block parsing
   // will create a new block ad-hoc for you
   // this is the base block parsing function
-  Block_Ptr Parser::parse_css_block(bool is_root)
+  Block_Obj Parser::parse_css_block(bool is_root)
   {
 
     // parse comments before block
@@ -158,7 +158,7 @@ namespace Sass {
   // convenience function for block parsing
   // will create a new block ad-hoc for you
   // also updates the `in_at_root` flag
-  Block_Ptr Parser::parse_block(bool is_root)
+  Block_Obj Parser::parse_block(bool is_root)
   {
     LOCAL_FLAG(in_at_root, is_root);
     return parse_css_block(is_root);
@@ -263,8 +263,8 @@ namespace Sass {
     { (*block) << parse_ruleset(lookahead_result, is_root); }
 
     // parse multiple specific keyword directives
-    else if (lex < kwd_media >(true)) { (*block) << parse_media_block(); }
-    else if (lex < kwd_at_root >(true)) { (*block) << parse_at_root_block(); }
+    else if (lex < kwd_media >(true)) { (*block) << &parse_media_block(); }
+    else if (lex < kwd_at_root >(true)) { (*block) << &parse_at_root_block(); }
     else if (lex < kwd_include_directive >(true)) { (*block) << parse_include_directive(); }
     else if (lex < kwd_content_directive >(true)) { (*block) << parse_content_directive(); }
     else if (lex < kwd_supports_directive >(true)) { (*block) << parse_supports_directive(); }
@@ -297,7 +297,7 @@ namespace Sass {
         if (decl->is_indented()) ++ indentation;
         // parse a propset that rides on the declaration's property
         stack.push_back(Scope::Properties);
-        decl->block(parse_block());
+        decl->block(&parse_block());
         stack.pop_back();
         if (decl->is_indented()) -- indentation;
       }
@@ -382,7 +382,7 @@ namespace Sass {
     Parameters_Ptr params = parse_parameters();
     if (which_type == Definition::MIXIN) stack.push_back(Scope::Mixin);
     else stack.push_back(Scope::Function);
-    Block_Ptr body = parse_block();
+    Block_Ptr body = &parse_block();
     stack.pop_back();
     Definition_Ptr def = SASS_MEMORY_NEW(ctx.mem, Definition, source_position_of_def, name, params, body, which_type);
     return def;
@@ -509,7 +509,7 @@ namespace Sass {
     else ruleset->selector(parse_selector_schema(lookahead.found));
     // then parse the inner block
     stack.push_back(Scope::Rules);
-    ruleset->block(parse_block());
+    ruleset->block(&parse_block());
     stack.pop_back();
     // update for end position
     ruleset->update_pstate(pstate);
@@ -602,7 +602,7 @@ namespace Sass {
     call->arguments(parse_arguments());
     // parse optional block
     if (peek < exactly <'{'> >()) {
-      call->block(parse_block());
+      call->block(&parse_block());
     }
     // return ast node
     return call;
@@ -1915,7 +1915,7 @@ namespace Sass {
     ParserState if_source_position = pstate;
     bool root = block_stack.back()->is_root();
     Expression_Ptr predicate = parse_list();
-    Block_Ptr block = parse_block(root);
+    Block_Ptr block = &parse_block(root);
     Block_Ptr alternative = 0;
 
     // only throw away comment if we parse a case
@@ -1925,7 +1925,7 @@ namespace Sass {
       (*alternative) << parse_if_directive(true);
     }
     else if (lex_css< kwd_else_directive >()) {
-      alternative = parse_block(root);
+      alternative = &parse_block(root);
     }
     stack.pop_back();
     return SASS_MEMORY_NEW(ctx.mem, If, if_source_position, predicate, block, alternative);
@@ -1945,7 +1945,7 @@ namespace Sass {
     else if (lex< kwd_to >()) inclusive = false;
     else                  error("expected 'through' or 'to' keyword in @for directive", pstate);
     Expression_Ptr upper_bound = parse_expression();
-    Block_Ptr body = parse_block(root);
+    Block_Ptr body = &parse_block(root);
     stack.pop_back();
     return SASS_MEMORY_NEW(ctx.mem, For, for_source_position, var, lower_bound, upper_bound, body, inclusive);
   }
@@ -1990,7 +1990,7 @@ namespace Sass {
     }
     if (!lex< kwd_in >()) error("expected 'in' keyword in @each directive", pstate);
     Expression_Ptr list = parse_list();
-    Block_Ptr body = parse_block(root);
+    Block_Ptr body = &parse_block(root);
     stack.pop_back();
     return SASS_MEMORY_NEW(ctx.mem, Each, each_source_position, vars, list, body);
   }
@@ -2006,7 +2006,7 @@ namespace Sass {
     Expression_Ptr predicate = parse_list();
     call->predicate(predicate);
     // parse mandatory block
-    call->block(parse_block(root));
+    call->block(&parse_block(root));
     // return ast node
     stack.pop_back();
     // return ast node
@@ -2014,7 +2014,7 @@ namespace Sass {
   }
 
   // EO parse_while_directive
-  Media_Block_Ptr Parser::parse_media_block()
+  Media_Block_Obj Parser::parse_media_block()
   {
     stack.push_back(Scope::Media);
     Media_Block_Ptr media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
@@ -2022,7 +2022,7 @@ namespace Sass {
 
     Media_Block_Ptr prev_media_block = last_media_block;
     last_media_block = media_block;
-    media_block->block(parse_css_block());
+    media_block->block(&parse_css_block());
     last_media_block = prev_media_block;
     stack.pop_back();
     return media_block;
@@ -2098,7 +2098,7 @@ namespace Sass {
     Supports_Block_Ptr query = SASS_MEMORY_NEW(ctx.mem, Supports_Block, pstate, cond);
     // additional block is mandatory
     // parse inner block
-    query->block(parse_block());
+    query->block(&parse_block());
     // return ast node
     return query;
   }
@@ -2186,7 +2186,7 @@ namespace Sass {
     return cond;
   }
 
-  At_Root_Block_Ptr Parser::parse_at_root_block()
+  At_Root_Block_Obj Parser::parse_at_root_block()
   {
     ParserState at_source_position = pstate;
     Block_Ptr body = 0;
@@ -2198,14 +2198,14 @@ namespace Sass {
     }
     if (peek_css < exactly<'{'> >()) {
       lex <optional_spaces>();
-      body = parse_block(true);
+      body = &parse_block(true);
     }
     else if ((lookahead_result = lookahead_for_selector(position)).found) {
       Ruleset_Ptr r = parse_ruleset(lookahead_result, false);
       body = SASS_MEMORY_NEW(ctx.mem, Block, r->pstate(), 1, true);
       *body << r;
     }
-    At_Root_Block_Ptr at_root = SASS_MEMORY_NEW(ctx.mem, At_Root_Block, at_source_position, body);
+    At_Root_Block_Obj at_root = SASS_MEMORY_CREATE(ctx.mem, At_Root_Block, at_source_position, body);
     if (expr) at_root->expression(expr);
     return at_root;
   }
@@ -2259,7 +2259,7 @@ namespace Sass {
     lex < css_comments >(false);
 
     if (peek< exactly<'{'> >()) {
-      at_rule->block(parse_block());
+      at_rule->block(&parse_block());
     }
 
     return at_rule;
@@ -2288,7 +2288,7 @@ namespace Sass {
     lex < css_comments >(false);
 
     if (peek< exactly<'{'> >()) {
-      at_rule->block(parse_block());
+      at_rule->block(&parse_block());
     }
 
     return at_rule;
@@ -2302,7 +2302,7 @@ namespace Sass {
     // strip left and right if they are of type string
     directive->value(val);
     if (peek< exactly<'{'> >()) {
-      directive->block(parse_block());
+      directive->block(&parse_block());
     }
     return directive;
   }

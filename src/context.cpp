@@ -316,14 +316,14 @@ namespace Sass {
     sass_import_take_source(import);
     sass_import_take_srcmap(import);
     // then parse the root block
-    Block_Ptr root = p.parse();
+    Block_Obj root = p.parse();
     // delete memory of current stack frame
     sass_delete_import(import_stack.back());
     // remove current stack frame
     import_stack.pop_back();
     // create key/value pair for ast node
     std::pair<const std::string, const StyleSheet>
-      ast_pair(inc.abs_path, { res, root });
+      ast_pair(inc.abs_path, { res, &root });
     // register resulting resource
     sheets.insert(ast_pair);
 
