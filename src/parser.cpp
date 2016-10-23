@@ -40,7 +40,7 @@ namespace Sass {
     p.position = beg ? beg : p.source;
     p.end      = p.position + strlen(p.position);
     Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate);
-    p.block_stack2.push_back(root);
+    p.block_stack.push_back(root);
     root->is_root(true);
     return p;
   }
@@ -54,7 +54,7 @@ namespace Sass {
     p.position = beg ? beg : p.source;
     p.end      = end ? end : p.position + strlen(p.position);
     Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate);
-    p.block_stack2.push_back(root);
+    p.block_stack.push_back(root);
     root->is_root(true);
     return p;
   }
@@ -88,7 +88,7 @@ namespace Sass {
     p.position = t.begin ? t.begin : p.source;
     p.end      = t.end ? t.end : p.position + strlen(p.position);
     Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate);
-    p.block_stack2.push_back(root);
+    p.block_stack.push_back(root);
     root->is_root(true);
     return p;
   }
@@ -106,9 +106,9 @@ namespace Sass {
       ctx.apply_custom_headers(&root, path, pstate);
     }
 
-    block_stack2.push_back(root);
+    block_stack.push_back(root);
     /* bool rv = */ parse_block_nodes(is_root);
-    block_stack2.pop_back();
+    block_stack.pop_back();
 
     // update for end position
     root->update_pstate(pstate);
@@ -136,7 +136,7 @@ namespace Sass {
     }
     // create new block and push to the selector stack
     Block_Obj block = SASS_MEMORY_CREATE(ctx.mem, Block, pstate, 0, is_root);
-    block_stack2.push_back(block);
+    block_stack.push_back(block);
 
     if (!parse_block_nodes()) css_error("Invalid CSS", " after ", ": expected \"}\", was ");;
 
@@ -150,7 +150,7 @@ namespace Sass {
     // parse comments after block
     // lex < optional_css_comments >();
 
-    block_stack2.pop_back();
+    block_stack.pop_back();
 
     return &block;
   }
@@ -199,7 +199,7 @@ namespace Sass {
   // semicolons must be lexed beforehand
   bool Parser::parse_block_node(bool is_root) {
 
-    Block_Obj _block = block_stack2.back();
+    Block_Obj _block = block_stack.back();
     Block_Ptr block = &_block;
 
     parse_block_comments();
@@ -948,7 +948,7 @@ namespace Sass {
   /* parse block comment and add to block */
   void Parser::parse_block_comments()
   {
-    Block_Obj _block = block_stack2.back();
+    Block_Obj _block = block_stack.back();
     Block_Ptr block = &_block;
     while (lex< block_comment >()) {
       bool is_important = lexed.begin[2] == '!';
@@ -1913,7 +1913,7 @@ namespace Sass {
   {
     stack.push_back(Scope::Control);
     ParserState if_source_position = pstate;
-    bool root = block_stack2.back()->is_root();
+    bool root = block_stack.back()->is_root();
     Expression_Ptr predicate = parse_list();
     Block_Ptr block = parse_block(root);
     Block_Ptr alternative = 0;
@@ -1935,7 +1935,7 @@ namespace Sass {
   {
     stack.push_back(Scope::Control);
     ParserState for_source_position = pstate;
-    bool root = block_stack2.back()->is_root();
+    bool root = block_stack.back()->is_root();
     lex_variable();
     std::string var(Util::normalize_underscores(lexed));
     if (!lex< kwd_from >()) error("expected 'from' keyword in @for directive", pstate);
@@ -1980,7 +1980,7 @@ namespace Sass {
   {
     stack.push_back(Scope::Control);
     ParserState each_source_position = pstate;
-    bool root = block_stack2.back()->is_root();
+    bool root = block_stack.back()->is_root();
     std::vector<std::string> vars;
     lex_variable();
     vars.push_back(Util::normalize_underscores(lexed));
@@ -1999,7 +1999,7 @@ namespace Sass {
   While_Ptr Parser::parse_while_directive()
   {
     stack.push_back(Scope::Control);
-    bool root = block_stack2.back()->is_root();
+    bool root = block_stack.back()->is_root();
     // create the initial while call object
     While_Ptr call = SASS_MEMORY_NEW(ctx.mem, While, pstate, 0, 0);
     // parse mandatory predicate

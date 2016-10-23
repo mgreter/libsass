@@ -26,8 +26,7 @@ namespace Sass {
     enum Scope { Root, Mixin, Function, Media, Control, Properties, Rules };
 
     Context& ctx;
-    std::vector<Block_Ptr> block_stack;
-    std::vector<Block_Obj> block_stack2;
+    std::vector<Block_Obj> block_stack;
     std::vector<Scope> stack;
     Media_Block_Ptr last_media_block;
     const char* source;
