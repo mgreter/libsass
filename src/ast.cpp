@@ -2233,7 +2233,7 @@ namespace Sass {
     return false;
   }
 
-  bool Null::operator== (const Expression& rhs) const
+  bool Null_Ref::operator== (const Expression& rhs) const
   {
     return rhs.concrete_type() == NULL_VAL;
   }

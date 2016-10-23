@@ -6,11 +6,65 @@
 namespace Sass {
 
   class Memory_Object {
+  friend class Memory_Ptr;
   friend class Memory_Manager;
     long refcount;
   public:
     Memory_Object() { refcount = 0; };
     virtual ~Memory_Object() {};
+  };
+
+
+  class Memory_Ptr {
+  private:
+    Memory_Object* node;
+  public:
+    // the create constructor
+    Memory_Ptr(Memory_Object* node)
+    : node(node) {
+      if (node) {
+        node->refcount += 1;
+        std::cerr << "increase refcount, now at " << node->refcount << "\n";
+      }
+    };
+    // the copy constructor
+    Memory_Ptr(const Memory_Ptr& obj)
+    : node(obj.node) {
+      if (node) {
+        node->refcount += 1;
+        std::cerr << "increase refcount, now at " << node->refcount << "\n";
+      }
+    }
+    ~Memory_Ptr() {
+      if (node) {
+        node->refcount -= 1;
+        std::cerr << "decrease refcount, now at " << node->refcount << "\n";
+        if (node->refcount == 1) {
+          // delete and remove
+        }
+      }
+    };
+  public:
+    Memory_Object* obj () {
+      return node;
+    }
+    Memory_Object* operator-> () {
+      return node;
+    };
+
+  };
+
+  template < typename T >
+  class Memory_Node : private Memory_Ptr {
+  public:
+    Memory_Node(T* node)
+    : Memory_Ptr(node) {};
+    ~Memory_Node() {};
+  public:
+    T* operator-> () {
+      // should be save to cast it here
+      return static_cast<T*>(this->obj());
+    };
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -43,6 +97,9 @@ namespace Sass {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SASS_MEMORY_NEW(mgr, Class, ...)                                                 \
+  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+
+#define SASS_MEMORY_CREATE(mgr, Class, ...)                                                 \
   (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
 
 #endif
