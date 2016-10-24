@@ -13,7 +13,7 @@ namespace Sass {
   {
     std::string callee(type + " " + name);
 
-    std::map<std::string, Parameter_Ptr> param_map;
+    std::map<std::string, Parameter_Obj> param_map;
 
     for (size_t i = 0, L = as->length(); i < L; ++i) {
       if (auto str = dynamic_cast<String_Quoted_Ptr>((*as)[i]->value())) {
@@ -27,7 +27,7 @@ namespace Sass {
     // Set up a map to ensure named arguments refer to actual parameters. Also
     // eval each default value left-to-right, wrt env, populating env as we go.
     for (size_t i = 0, L = ps->length(); i < L; ++i) {
-      Parameter_Ptr  p = (*ps)[i];
+      Parameter_Obj  p = (*ps)[i];
       param_map[p->name()] = p;
       // if (p->default_value()) {
       //   env->local_frame()[p->name()] = p->default_value()->perform(eval->with(env));
@@ -53,7 +53,7 @@ namespace Sass {
         msg << " for `" << name << "'";
         return error(msg.str(), as->pstate());
       }
-      Parameter_Ptr p = (*ps)[ip];
+      Parameter_Obj p = (*ps)[ip];
 
       // If the current parameter is the rest parameter, process and break the loop
       if (p->is_rest_parameter()) {
@@ -256,7 +256,7 @@ namespace Sass {
     // That's only okay if they have default values, or were already bound by
     // named arguments, or if it's a single rest-param.
     for (size_t i = ip; i < LP; ++i) {
-      Parameter_Ptr leftover = (*ps)[i];
+      Parameter_Obj leftover = (*ps)[i];
       // cerr << "env for default params:" << endl;
       // env->print();
       // cerr << "********" << endl;

@@ -1658,7 +1658,7 @@ namespace Sass {
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Ptr expr = arglist->value_at_index(i);
         // if (params && params->has_rest_parameter()) {
-        //   Parameter_Ptr p = param_size > i ? (*params)[i] : 0;
+        //   Parameter_Obj p = param_size > i ? (*params)[i] : 0;
         //   List_Ptr list = dynamic_cast<List_Ptr>(expr);
         //   if (list && p && !p->is_rest_parameter()) expr = (*list)[0];
         // }

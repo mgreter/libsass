@@ -1911,11 +1911,11 @@ namespace Sass {
   // error checking (e.g., ensuring that all optional parameters follow all
   // required parameters).
   /////////////////////////////////////////////////////////////////////////
-  class Parameters_Ref : public AST_Node_Ref, public Vectorized<Parameter_Ptr> {
+  class Parameters_Ref : public AST_Node_Ref, public Vectorized<Parameter_Obj> {
     ADD_PROPERTY(bool, has_optional_parameters)
     ADD_PROPERTY(bool, has_rest_parameter)
   protected:
-    void adjust_after_pushing(Parameter_Ptr p)
+    void adjust_after_pushing(Parameter_Obj p)
     {
       if (p->default_value()) {
         if (has_rest_parameter_) {
@@ -1941,7 +1941,7 @@ namespace Sass {
   public:
     Parameters_Ref(ParserState pstate)
     : AST_Node_Ref(pstate),
-      Vectorized<Parameter_Ptr>(),
+      Vectorized<Parameter_Obj>(),
       has_optional_parameters_(false),
       has_rest_parameter_(false)
     { }
