@@ -102,10 +102,9 @@ namespace Sass {
 
   Statement_Ptr CheckNesting::fallback_impl(Statement_Ptr s)
   {
-    if (dynamic_cast<Block_Ptr>(s) || dynamic_cast<Has_Block_Ptr>(s)) {
-      return visit_children(s);
-    }
-    return s;
+    Block_Obj b1 = SASS_MEMORY_CAST_PTR(Block, s);
+    Has_Block_Obj b2 = SASS_MEMORY_CAST_PTR(Has_Block, s);
+    return b1 || b2 ? visit_children(s) : s;
   }
 
   bool CheckNesting::should_visit(Statement_Ptr node)
@@ -360,7 +359,7 @@ namespace Sass {
   {
     if (dynamic_cast<Ruleset_Ptr>(n)) return false;
 
-    Block_Ptr b = dynamic_cast<Block_Ptr>(n);
+    Block_Obj b = SASS_MEMORY_CAST_PTR(Block, n);
     return b && b->is_root();
   }
 
