@@ -57,7 +57,7 @@ namespace Sass {
     std::vector<std::pair<bool, Block_Ptr>> slice_by_bubble(Statement_Ptr);
     Statement_Ptr bubble(Directive_Ptr);
     Statement_Ptr bubble(At_Root_Block_Ptr);
-    Statement_Ptr bubble(Media_Block_Ptr);
+    Statement_Ptr bubble(Media_Block_Obj);
     Statement_Ptr bubble(Supports_Block_Ptr);
     Statement_Ptr shallow_copy(Statement_Ptr);
     Statement_Ptr debubble(Block_Ptr children, Statement_Ptr parent = 0);

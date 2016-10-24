@@ -343,7 +343,7 @@ namespace Sass {
     return bubble;
   }
 
-  Statement_Ptr Cssize::bubble(Media_Block_Ptr m)
+  Statement_Ptr Cssize::bubble(Media_Block_Obj m)
   {
     Ruleset_Ptr parent = static_cast<Ruleset_Ptr>(shallow_copy(this->parent()));
 
