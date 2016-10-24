@@ -2421,7 +2421,7 @@ namespace Sass {
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(ctx.mem, Warning, pstate, &parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(ctx.mem, Warning, pstate, parse_list(DELAYED));
   }
 
   Error_Obj Parser::parse_error()
@@ -2433,7 +2433,7 @@ namespace Sass {
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(ctx.mem, Error, pstate, &parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(ctx.mem, Error, pstate, parse_list(DELAYED));
   }
 
   Debug_Obj Parser::parse_debug()
@@ -2445,7 +2445,7 @@ namespace Sass {
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(ctx.mem, Debug, pstate, &parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(ctx.mem, Debug, pstate, parse_list(DELAYED));
   }
 
   Return_Obj Parser::parse_return_directive()

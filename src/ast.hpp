@@ -642,9 +642,9 @@ namespace Sass {
   // The Sass `@warn` directive.
   //////////////////////////////
   class Warning_Ref : public Statement_Ref {
-    ADD_PROPERTY(Expression_Ptr, message)
+    ADD_PROPERTY(Expression_Obj, message)
   public:
-    Warning_Ref(ParserState pstate, Expression_Ptr msg)
+    Warning_Ref(ParserState pstate, Expression_Obj msg)
     : Statement_Ref(pstate), message_(msg)
     { statement_type(WARNING); }
     ATTACH_OPERATIONS()
@@ -654,9 +654,9 @@ namespace Sass {
   // The Sass `@error` directive.
   ///////////////////////////////
   class Error_Ref : public Statement_Ref {
-    ADD_PROPERTY(Expression_Ptr, message)
+    ADD_PROPERTY(Expression_Obj, message)
   public:
-    Error_Ref(ParserState pstate, Expression_Ptr msg)
+    Error_Ref(ParserState pstate, Expression_Obj msg)
     : Statement_Ref(pstate), message_(msg)
     { statement_type(ERROR); }
     ATTACH_OPERATIONS()
@@ -666,9 +666,9 @@ namespace Sass {
   // The Sass `@debug` directive.
   ///////////////////////////////
   class Debug_Ref : public Statement_Ref {
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(Expression_Obj, value)
   public:
-    Debug_Ref(ParserState pstate, Expression_Ptr val)
+    Debug_Ref(ParserState pstate, Expression_Obj val)
     : Statement_Ref(pstate), value_(val)
     { statement_type(DEBUGSTMT); }
     ATTACH_OPERATIONS()
