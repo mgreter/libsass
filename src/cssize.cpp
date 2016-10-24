@@ -96,12 +96,13 @@ namespace Sass {
     bool directive_exists = false;
     size_t L = rr->block() ? rr->block()->length() : 0;
     for (size_t i = 0; i < L && !directive_exists; ++i) {
-      Statement_Ptr s = (*r->block())[i];
+      Statement_Obj s = (*r->block())[i];
       if (s->statement_type() != Statement_Ref::BUBBLE) directive_exists = true;
       else {
-        s = static_cast<Bubble_Ptr>(s)->node();
+        Bubble_Obj s_obj = SASS_MEMORY_CAST(Bubble, s);
+        s = s_obj->node();
         if (s->statement_type() != Statement_Ref::DIRECTIVE) directive_exists = false;
-        else directive_exists = (static_cast<Directive_Ptr>(s)->keyword() == rr->keyword());
+        else directive_exists = (static_cast<Directive_Ptr>(&s)->keyword() == rr->keyword());
       }
 
     }
@@ -476,21 +477,21 @@ namespace Sass {
       for (size_t j = 0, K = slice->length(); j < K; ++j)
       {
         Statement_Ptr ss = 0;
-        Bubble_Ptr node = static_cast<Bubble_Ptr>((*slice)[j]);
+        Bubble_Obj node = SASS_MEMORY_CAST(Bubble, *(*slice)[j]);
 
         if (!parent ||
             parent->statement_type() != Statement_Ref::MEDIA ||
             node->node()->statement_type() != Statement_Ref::MEDIA ||
-            static_cast<Media_Block_Ptr>(node->node())->media_queries() == static_cast<Media_Block_Ptr>(parent)->media_queries())
+            static_cast<Media_Block_Ptr>(&node->node())->media_queries() == static_cast<Media_Block_Ptr>(parent)->media_queries())
         {
-          ss = node->node();
+          ss = &node->node();
         }
         else
         {
-          List_Ptr mq = merge_media_queries(static_cast<Media_Block_Ptr>(node->node()), static_cast<Media_Block_Ptr>(parent));
+          List_Ptr mq = merge_media_queries(static_cast<Media_Block_Ptr>(&node->node()), static_cast<Media_Block_Ptr>(parent));
           if (!mq->length()) continue;
-          static_cast<Media_Block_Ptr>(node->node())->media_queries(mq);
-          ss = node->node();
+          static_cast<Media_Block_Ptr>(&node->node())->media_queries(mq);
+          ss = &node->node();
         }
 
         if (!ss) continue;

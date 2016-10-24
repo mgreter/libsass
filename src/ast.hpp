@@ -485,10 +485,10 @@ namespace Sass {
   // Bubble.
   /////////////////
   class Bubble_Ref : public Statement_Ref {
-    ADD_PROPERTY(Statement_Ptr, node)
+    ADD_PROPERTY(Statement_Obj, node)
     ADD_PROPERTY(bool, group_end)
   public:
-    Bubble_Ref(ParserState pstate, Statement_Ptr n, Statement_Ptr g = 0, size_t t = 0)
+    Bubble_Ref(ParserState pstate, Statement_Obj n, Statement_Obj g = 0, size_t t = 0)
     : Statement_Ref(pstate, Statement_Ref::BUBBLE, t), node_(n), group_end_(g == 0)
     { }
     bool bubbles() { return true; }
