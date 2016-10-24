@@ -257,18 +257,17 @@ namespace Sass {
     bool parse_number_prefix();
     Declaration_Obj parse_declaration();
     // Expression_Ptr parse_map_value();
-    Expression_Ptr parse_map();
-    Expression_Ptr parse_list(bool delayed = false);
-    Expression_Ptr parse_comma_list(bool delayed = false);
-    Expression_Ptr parse_space_list();
-    Expression_Ptr parse_disjunction();
-    Expression_Ptr parse_conjunction();
-    Expression_Ptr parse_relation();
-    Expression_Ptr parse_expression();
-    Expression_Ptr parse_operators();
-    Expression_Ptr parse_factor();
-    Expression_Ptr parse_value2();
-    Expression_Ptr parse_value();
+    Expression_Obj parse_map();
+    Expression_Obj parse_list(bool delayed = false);
+    Expression_Obj parse_comma_list(bool delayed = false);
+    Expression_Obj parse_space_list();
+    Expression_Obj parse_disjunction();
+    Expression_Obj parse_conjunction();
+    Expression_Obj parse_relation();
+    Expression_Obj parse_expression();
+    Expression_Obj parse_operators();
+    Expression_Obj parse_factor();
+    Expression_Obj parse_value();
     Function_Call_Obj parse_calc_function();
     Function_Call_Obj parse_function_call();
     Function_Call_Schema_Obj parse_function_call_schema();
@@ -281,7 +280,6 @@ namespace Sass {
     String_Obj parse_ie_keyword_arg();
     String_Schema_Obj parse_value_schema(const char* stop);
     String_Obj parse_identifier_schema();
-    // String_Schema_Ptr parse_url_schema();
     If_Obj parse_if_directive(bool else_if = false);
     For_Obj parse_for_directive();
     Each_Obj parse_each_directive();
@@ -311,11 +309,11 @@ namespace Sass {
     Debug_Obj parse_debug();
 
     // be more like ruby sass
-    Expression_Ptr lex_almost_any_value_token();
-    Expression_Ptr lex_almost_any_value_chars();
-    Expression_Ptr lex_interp_string();
-    Expression_Ptr lex_interp_uri();
-    Expression_Ptr lex_interpolation();
+    Expression_Obj lex_almost_any_value_token();
+    Expression_Obj lex_almost_any_value_chars();
+    Expression_Obj lex_interp_string();
+    Expression_Obj lex_interp_uri();
+    Expression_Obj lex_interpolation();
 
     // these will throw errors
     Token lex_variable();
@@ -342,13 +340,13 @@ namespace Sass {
         // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
         *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
         if (position[0] == '#' && position[1] == '{') {
-          Expression_Ptr itpl = lex_interpolation();
+          Expression_Ptr itpl = &lex_interpolation();
           if (itpl) *schema << itpl;
           while (lex < close >(false)) {
             // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
             *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
             if (position[0] == '#' && position[1] == '{') {
-              Expression_Ptr itpl = lex_interpolation();
+              Expression_Ptr itpl = &lex_interpolation();
               if (itpl) *schema << itpl;
             } else {
               return schema;

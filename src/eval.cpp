@@ -1674,9 +1674,9 @@ namespace Sass {
     result_str = unquote(Util::rtrim(result_str)) + "\n{";
     Parser p = Parser::from_c_str(result_str.c_str(), ctx, s->pstate());
     p.last_media_block = s->media_block();
-    CommaSequence_Selector_Ptr sl = p.parse_selector_list(exp.block_stack.back()->is_root());
+    CommaSequence_Selector_Obj sl = p.parse_selector_list(exp.block_stack.back()->is_root());
     if (s->has_parent_ref()) sl->remove_parent_selectors();
-    return operator()(sl);
+    return operator()(&sl);
   }
 
   Expression_Ptr Eval::operator()(Parent_Selector_Ptr p)
