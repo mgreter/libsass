@@ -456,9 +456,6 @@ namespace Sass {
   class Has_Block_Ref : public Statement_Ref {
     ADD_PROPERTY(Block_Ptr, block)
   public:
-    Has_Block_Ref(ParserState pstate, Block_Ptr b)
-    : Statement_Ref(pstate), block_(b)
-    { }
     Has_Block_Ref(ParserState pstate, Block_Obj b)
     : Statement_Ref(pstate), block_(&b)
     { }
