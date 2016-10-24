@@ -535,10 +535,10 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class Directive_Ref : public Has_Block_Ref {
     ADD_PROPERTY(std::string, keyword)
-    ADD_PROPERTY(Selector_Ptr, selector)
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(Selector_Obj, selector)
+    ADD_PROPERTY(Expression_Obj, value)
   public:
-    Directive_Ref(ParserState pstate, std::string kwd, Selector_Ptr sel = 0, Block_Ptr b = 0, Expression_Ptr val = 0)
+    Directive_Ref(ParserState pstate, std::string kwd, Selector_Obj sel = 0, Block_Ptr b = 0, Expression_Obj val = 0)
     : Has_Block_Ref(pstate, b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
     { statement_type(DIRECTIVE); }
     bool bubbles() { return is_keyframes() || is_media(); }

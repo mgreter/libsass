@@ -267,8 +267,8 @@ namespace Sass {
   void Output::operator()(Directive_Ptr a)
   {
     std::string      kwd   = a->keyword();
-    Selector_Ptr   s     = a->selector();
-    Expression_Ptr v     = a->value();
+    Selector_Obj   s     = a->selector();
+    Expression_Obj v     = a->value();
     Block_Ptr      b     = a->block();
 
     append_indentation();
@@ -282,7 +282,7 @@ namespace Sass {
     if (v) {
       append_mandatory_space();
       // ruby sass bug? should use options?
-      append_token(v->to_string(/* opt */), v);
+      append_token(v->to_string(/* opt */), &v);
     }
     if (!b) {
       append_delimiter();

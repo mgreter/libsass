@@ -214,8 +214,8 @@ namespace Sass {
   {
     LOCAL_FLAG(in_keyframes, a->is_keyframes());
     Block_Ptr ab = a->block();
-    Selector_Ptr as = a->selector();
-    Expression_Ptr av = a->value();
+    Selector_Obj as = a->selector();
+    Expression_Obj av = a->value();
     selector_stack.push_back(0);
     if (av) av = av->perform(&eval);
     if (as) as = dynamic_cast<Selector_Ptr>(as->perform(&eval));
