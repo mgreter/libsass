@@ -479,8 +479,8 @@ namespace Sass {
     ADD_PROPERTY(bool, at_root);
     ADD_PROPERTY(bool, is_root);
   public:
-    Ruleset_Ref(ParserState pstate, Selector_Ptr s = 0, Block_Ptr b = 0)
-    : Has_Block_Ref(pstate, b), selector_(s), at_root_(false), is_root_(false)
+    Ruleset_Ref(ParserState pstate, Selector_Ptr s = 0, Block_Obj b = 0)
+    : Has_Block_Ref(pstate, &b), selector_(s), at_root_(false), is_root_(false)
     { statement_type(RULESET); }
     bool is_invisible() const;
     ATTACH_OPERATIONS()
@@ -743,7 +743,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, predicate)
   public:
     While_Ref(ParserState pstate, Expression_Obj pred, Block_Obj b)
-    : Has_Block_Ref(pstate, b), predicate_(pred)
+    : Has_Block_Ref(pstate, &b), predicate_(pred)
     { statement_type(WHILE); }
     ATTACH_OPERATIONS()
   };
