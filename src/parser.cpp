@@ -2008,6 +2008,7 @@ namespace Sass {
     stack.push_back(Scope::Media);
     Media_Block_Ptr media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
     media_block->media_queries(&parse_media_queries());
+    media_block->media_queries2(media_block->media_queries());
 
     Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;

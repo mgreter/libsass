@@ -212,7 +212,7 @@ namespace Sass {
 
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      m->media_queries(),
+                                      &m->media_queries2(),
                                       m->block()->perform(this)->block());
     mm->tabs(m->tabs());
 
@@ -362,7 +362,7 @@ namespace Sass {
     *wrapper_block << new_rule;
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      m->media_queries(),
+                                      &m->media_queries2(),
                                       wrapper_block,
                                       0);
 
@@ -476,11 +476,15 @@ namespace Sass {
       {
         Statement_Ptr ss = 0;
         Bubble_Obj node = SASS_MEMORY_CAST(Bubble, *(*slice)[j]);
-
+        Media_Block_Obj m1;
+        Media_Block_Obj m2;
+        if (parent) m1 = SASS_MEMORY_CAST(Media_Block, *parent);
+        if (node) m2 = SASS_MEMORY_CAST(Media_Block, node->node());
         if (!parent ||
             parent->statement_type() != Statement_Ref::MEDIA ||
             node->node()->statement_type() != Statement_Ref::MEDIA ||
-            static_cast<Media_Block_Ptr>(&node->node())->media_queries() == static_cast<Media_Block_Ptr>(parent)->media_queries())
+            (m1 && m2 && m1->media_queries() == m2->media_queries())
+          )
         {
           ss = &node->node();
         }
@@ -489,6 +493,7 @@ namespace Sass {
           List_Obj mq = merge_media_queries(static_cast<Media_Block_Ptr>(&node->node()), static_cast<Media_Block_Ptr>(parent));
           if (!mq->length()) continue;
           static_cast<Media_Block_Ptr>(&node->node())->media_queries(&mq);
+          static_cast<Media_Block_Ptr>(&node->node())->media_queries2(mq);
           ss = &node->node();
         }
 
