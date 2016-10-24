@@ -611,13 +611,13 @@ namespace Sass {
   class Import_Ref : public Statement_Ref {
     std::vector<Expression_Ptr> urls_;
     std::vector<Include>     incs_;
-    ADD_PROPERTY(List_Ptr,      media_queries);
+    ADD_PROPERTY(List_Ptr,      import_queries);
   public:
     Import_Ref(ParserState pstate)
     : Statement_Ref(pstate),
       urls_(std::vector<Expression_Ptr>()),
       incs_(std::vector<Include>()),
-      media_queries_(0)
+      import_queries_(0)
     { statement_type(IMPORT); }
     std::vector<Expression_Ptr>& urls() { return urls_; }
     std::vector<Include>& incs() { return incs_; }

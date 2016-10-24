@@ -66,7 +66,7 @@ namespace Sass {
     append_token("@media", media_block);
     append_mandatory_space();
     in_media_block = true;
-    media_block->media_queries()->perform(this);
+    media_block->media_queries2()->perform(this);
     in_media_block = false;
     media_block->block()->perform(this);
   }
@@ -161,9 +161,9 @@ namespace Sass {
 
       import->urls().front()->perform(this);
       if (import->urls().size() == 1) {
-        if (import->media_queries()) {
+        if (import->import_queries()) {
           append_mandatory_space();
-          import->media_queries()->perform(this);
+		  import->import_queries()->perform(this);
         }
       }
       append_delimiter();
@@ -174,9 +174,9 @@ namespace Sass {
 
         import->urls()[i]->perform(this);
         if (import->urls().size() - 1 == i) {
-          if (import->media_queries()) {
+			if (import->import_queries()) {
             append_mandatory_space();
-            import->media_queries()->perform(this);
+			import->import_queries()->perform(this);
           }
         }
         append_delimiter();

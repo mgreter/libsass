@@ -346,8 +346,8 @@ namespace Sass {
     } while (lex_css< exactly<','> >());
 
     if (!peek_css<alternatives<exactly<';'>,end_of_file>>()) {
-      List_Obj media_queries = parse_media_queries();
-      imp->media_queries(&media_queries);
+      List_Obj import_queries = parse_media_queries();
+      imp->import_queries(&import_queries);
     }
 
     for(auto location : to_import) {
@@ -2007,8 +2007,10 @@ namespace Sass {
   {
     stack.push_back(Scope::Media);
     Media_Block_Ptr media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
-    media_block->media_queries(&parse_media_queries());
-    media_block->media_queries2(media_block->media_queries());
+
+    List_Obj qwe = parse_media_queries();
+    media_block->media_queries(&qwe);
+    media_block->media_queries2(qwe);
 
     Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;
@@ -2021,7 +2023,7 @@ namespace Sass {
   List_Obj Parser::parse_media_queries()
   {
     advanceToNextToken();
-    List_Ptr media_queries = SASS_MEMORY_NEW(ctx.mem, List, pstate, 0, SASS_COMMA);
+    List_Obj media_queries = SASS_MEMORY_NEW(ctx.mem, List, pstate, 0, SASS_COMMA);
     if (!peek_css < exactly <'{'> >()) media_queries->append(&parse_media_query());
     while (lex_css < exactly <','> >()) media_queries->append(&parse_media_query());
     media_queries->update_pstate(pstate);

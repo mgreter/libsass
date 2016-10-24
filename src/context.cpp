@@ -384,7 +384,7 @@ namespace Sass {
 
     // add urls (protocol other than file) and urls without procotol to `urls` member
     // ToDo: if ctx_path is already a file resource, we should not add it here?
-    if (imp->media_queries() || protocol != "file" || imp_path.substr(0, 2) == "//") {
+    if (imp->import_queries() || protocol != "file" || imp_path.substr(0, 2) == "//") {
       imp->urls().push_back(SASS_MEMORY_NEW(mem, String_Quoted, imp->pstate(), load_path));
     }
     else if (imp_path.length() > 4 && imp_path.substr(imp_path.length() - 4, 4) == ".css") {

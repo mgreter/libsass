@@ -314,9 +314,9 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Import_Ptr imp)
   {
     Import_Ptr result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
-    if (imp->media_queries() && imp->media_queries()->size()) {
-      Expression_Ptr ex = imp->media_queries()->perform(&eval);
-      result->media_queries(dynamic_cast<List_Ptr>(ex));
+	if (imp->import_queries() && imp->import_queries()->size()) {
+		Expression_Ptr ex = imp->import_queries()->perform(&eval);
+		result->import_queries(dynamic_cast<List_Ptr>(ex));
     }
     for ( size_t i = 0, S = imp->urls().size(); i < S; ++i) {
       result->urls().push_back(imp->urls()[i]->perform(&eval));

@@ -234,7 +234,6 @@ namespace Sass {
   {
     if (m->is_invisible()) return;
 
-    List_Obj  q     = m->media_queries();
     Block_Ptr b     = m->block();
 
     // Filter out media blocks that aren't printable (process its children though)
@@ -252,7 +251,7 @@ namespace Sass {
     append_token("@media", m);
     append_mandatory_space();
     in_media_block = true;
-    q->perform(this);
+    m->media_queries()->perform(this);
     in_media_block = false;
     append_scope_opener();
 
