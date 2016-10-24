@@ -212,7 +212,7 @@ namespace Sass {
 
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      &m->media_queries2(),
+                                      &m->media_queries(),
                                       m->block()->perform(this)->block());
     mm->tabs(m->tabs());
 
@@ -362,7 +362,7 @@ namespace Sass {
     *wrapper_block << new_rule;
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      &m->media_queries2(),
+                                      &m->media_queries(),
                                       wrapper_block,
                                       0);
 
@@ -483,7 +483,7 @@ namespace Sass {
         if (!parent ||
             parent->statement_type() != Statement_Ref::MEDIA ||
             node->node()->statement_type() != Statement_Ref::MEDIA ||
-            (m1 && m2 && m1->media_queries() == m2->media_queries())
+            (m1 && m2 && &m1->media_queries() == &m2->media_queries())
           )
         {
           ss = &node->node();
@@ -492,8 +492,7 @@ namespace Sass {
         {
           List_Obj mq = merge_media_queries(static_cast<Media_Block_Ptr>(&node->node()), static_cast<Media_Block_Ptr>(parent));
           if (!mq->length()) continue;
-          static_cast<Media_Block_Ptr>(&node->node())->media_queries(&mq);
-          static_cast<Media_Block_Ptr>(&node->node())->media_queries2(mq);
+          static_cast<Media_Block_Ptr>(&node->node())->media_queries(mq);
           ss = &node->node();
         }
 
@@ -562,8 +561,8 @@ namespace Sass {
 
     for (size_t i = 0, L = m1->media_queries()->length(); i < L; i++) {
       for (size_t j = 0, K = m2->media_queries()->length(); j < K; j++) {
-        Expression_Obj l1 = m1->media_queries ()->at(i);
-        Expression_Obj l2 = m2->media_queries ()->at(j);
+        Expression_Obj l1 = m1->media_queries()->at(i);
+        Expression_Obj l2 = m2->media_queries()->at(j);
         Media_Query_Obj mq1 = SASS_MEMORY_CAST(Media_Query, l1);
         Media_Query_Obj mq2 = SASS_MEMORY_CAST(Media_Query, l2);;
         Media_Query_Obj mq = merge_media_query(mq1, mq2);

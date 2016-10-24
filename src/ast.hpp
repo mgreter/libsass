@@ -516,14 +516,13 @@ namespace Sass {
   // Media queries.
   /////////////////
   class Media_Block_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(List_Ptr, media_queries)
-    ADD_PROPERTY(List_Obj, media_queries2)
+    ADD_PROPERTY(List_Obj, media_queries)
   public:
     Media_Block_Ref(ParserState pstate, List_Ptr mqs, Block_Ptr b)
-    : Has_Block_Ref(pstate, b), media_queries_(mqs), media_queries2_(mqs)
+    : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
     Media_Block_Ref(ParserState pstate, List_Ptr mqs, Block_Ptr b, Selector_Ptr s)
-    : Has_Block_Ref(pstate, b), media_queries_(mqs), media_queries2_(mqs)
+    : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
     bool is_invisible() const;
