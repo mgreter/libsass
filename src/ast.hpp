@@ -518,10 +518,10 @@ namespace Sass {
   class Media_Block_Ref : public Has_Block_Ref {
     ADD_PROPERTY(List_Obj, media_queries)
   public:
-    Media_Block_Ref(ParserState pstate, List_Ptr mqs, Block_Ptr b)
+    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Ptr b)
     : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
-    Media_Block_Ref(ParserState pstate, List_Ptr mqs, Block_Ptr b, Selector_Ptr s)
+    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Ptr b, Selector_Ptr s)
     : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
@@ -610,13 +610,13 @@ namespace Sass {
   class Import_Ref : public Statement_Ref {
     std::vector<Expression_Ptr> urls_;
     std::vector<Include>     incs_;
-    ADD_PROPERTY(List_Ptr,      import_queries);
+    ADD_PROPERTY(List_Obj,      import_queries);
   public:
     Import_Ref(ParserState pstate)
     : Statement_Ref(pstate),
       urls_(std::vector<Expression_Ptr>()),
       incs_(std::vector<Include>()),
-      import_queries_(0)
+      import_queries_()
     { statement_type(IMPORT); }
     std::vector<Expression_Ptr>& urls() { return urls_; }
     std::vector<Include>& incs() { return incs_; }

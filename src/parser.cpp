@@ -347,7 +347,7 @@ namespace Sass {
 
     if (!peek_css<alternatives<exactly<';'>,end_of_file>>()) {
       List_Obj import_queries = parse_media_queries();
-      imp->import_queries(&import_queries);
+      imp->import_queries(import_queries);
     }
 
     for(auto location : to_import) {

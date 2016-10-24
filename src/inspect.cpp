@@ -161,7 +161,7 @@ namespace Sass {
 
       import->urls().front()->perform(this);
       if (import->urls().size() == 1) {
-        if (import->import_queries()) {
+        if (&import->import_queries()) {
           append_mandatory_space();
           import->import_queries()->perform(this);
         }
@@ -174,7 +174,7 @@ namespace Sass {
 
         import->urls()[i]->perform(this);
         if (import->urls().size() - 1 == i) {
-          if (import->import_queries()) {
+          if (&import->import_queries()) {
             append_mandatory_space();
             import->import_queries()->perform(this);
           }
