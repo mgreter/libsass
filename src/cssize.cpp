@@ -115,7 +115,7 @@ namespace Sass {
       *result << empty_node;
     }
 
-    Block_Ptr ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
+    Block_Obj ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
     for (size_t i = 0, L = ss->length(); i < L; ++i) {
       result->append(ss->at(i));
     }
@@ -132,7 +132,7 @@ namespace Sass {
                                         operator()(r->block()));
     if (&r->selector2()) rr->selector2(r->selector2());
 
-    return debubble(rr->block(), rr);
+    return &debubble(rr->block(), rr);
   }
 
   Statement_Ptr Cssize::operator()(Ruleset_Ptr r)
@@ -183,7 +183,7 @@ namespace Sass {
       rules->unshift(rr);
     }
 
-    rules = debubble(rules);
+    rules = &debubble(rules);
 
     if (!(!rules->length() ||
           !bubblable(rules->last()) ||
@@ -218,7 +218,7 @@ namespace Sass {
 
     p_stack.pop_back();
 
-    return debubble(mm->block(), &mm);
+    return &debubble(mm->block(), &mm);
   }
 
   Statement_Ptr Cssize::operator()(Supports_Block_Ptr m)
@@ -239,7 +239,7 @@ namespace Sass {
 
     p_stack.pop_back();
 
-    return debubble(mm->block(), mm);
+    return &debubble(mm->block(), mm);
   }
 
   Statement_Ptr Cssize::operator()(At_Root_Block_Ptr m)
@@ -376,13 +376,13 @@ namespace Sass {
     return s->statement_type() == Statement_Ref::RULESET || s->bubbles();
   }
 
-  Block_Ptr Cssize::flatten(Block_Ptr b)
+  Block_Obj Cssize::flatten(Block_Obj b)
   {
     Block_Obj result = SASS_MEMORY_OBJ(ctx.mem, Block, b->pstate(), 0, b->is_root());
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr ss = b->at(i);
       if (Block_Ptr bb = dynamic_cast<Block_Ptr>(ss)) {
-        Block_Ptr bs = flatten(bb);
+        Block_Obj bs = flatten(bb);
         for (size_t j = 0, K = bs->length(); j < K; ++j) {
           result->append(bs->at(j));
         }
@@ -391,7 +391,7 @@ namespace Sass {
         result->append(ss);
       }
     }
-    return &result;
+    return result;
   }
 
   std::vector<std::pair<bool, Block_Obj>> Cssize::slice_by_bubble(Block_Obj b)
@@ -442,7 +442,7 @@ namespace Sass {
     }
   }
 
-  Block_Ptr Cssize::debubble(Block_Obj children, Statement_Ptr parent)
+  Block_Obj Cssize::debubble(Block_Obj children, Statement_Ptr parent)
   {
     Has_Block_Ptr previous_parent = 0;
     std::vector<std::pair<bool, Block_Obj>> baz = slice_by_bubble(children);
@@ -540,7 +540,7 @@ namespace Sass {
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr ith = (*b)[i]->perform(this);
-      if (Block_Ptr bb = dynamic_cast<Block_Ptr>(ith)) {
+      if (Block_Obj bb = dynamic_cast<Block_Ptr>(ith)) {
         for (size_t j = 0, K = bb->length(); j < K; ++j) {
           current_block->append(bb->at(j));
         }

@@ -60,8 +60,9 @@ namespace Sass {
     Statement_Ptr bubble(Media_Block_Obj);
     Statement_Ptr bubble(Supports_Block_Ptr);
     Statement_Ptr shallow_copy(Statement_Ptr);
-    Block_Ptr debubble(Block_Obj children, Statement_Ptr parent = 0);
-    Block_Ptr flatten(Block_Ptr);
+
+    Block_Obj debubble(Block_Obj children, Statement_Ptr parent = 0);
+    Block_Obj flatten(Block_Obj);
     bool bubblable(Statement_Ptr);
 
     List_Obj merge_media_queries(Media_Block_Obj, Media_Block_Obj);
