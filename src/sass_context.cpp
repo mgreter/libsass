@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "sass.h"
+#include "ast.hpp"
 #include "file.hpp"
 #include "json.hpp"
 #include "util.hpp"
@@ -302,15 +303,12 @@ extern "C" {
       std::string input_path = safe_str(c_ctx->input_path);
       std::string output_path = safe_str(c_ctx->output_path);
 
-      // parsed root block
-      Block_Ptr root = 0;
-
       // maybe skip some entries of included files
       // we do not include stdin for data contexts
       bool skip = c_ctx->type == SASS_CONTEXT_DATA;
 
       // dispatch parse call
-      root = cpp_ctx->parse();
+      Block_Obj root(cpp_ctx->parse());
       // abort on errors
       if (!root) return 0;
 
@@ -325,7 +323,7 @@ extern "C" {
         throw(std::bad_alloc());
 
       // return parsed block
-      return root;
+      return &root;
 
     }
     // pass errors to generic error handler
