@@ -21,6 +21,9 @@ namespace Sass {
   private:
     Memory_Object* node;
   public:
+    // the empty constructor
+    Memory_Ptr()
+    : node(NULL) {};
     // the create constructor
     Memory_Ptr(Memory_Object* node)
     : node(node) {
@@ -84,6 +87,9 @@ namespace Sass {
     T* ptr () {
       // should be save to cast it here
       return static_cast<T*>(this->obj());
+    };
+    operator bool() {
+      return this->obj() != NULL;
     };
     operator bool() const {
       return this->obj() != NULL;

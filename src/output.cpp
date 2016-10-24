@@ -173,9 +173,9 @@ namespace Sass {
   void Output::operator()(Keyframe_Rule_Ptr r)
   {
     Block_Ptr b = r->block();
-    Selector_Ptr v = r->selector();
+    Selector_Obj v = r->selector2();
 
-    if (v) {
+    if (&v) {
       v->perform(this);
     }
 

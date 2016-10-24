@@ -130,7 +130,7 @@ namespace Sass {
     Keyframe_Rule_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule,
                                         r->pstate(),
                                         r->block()->perform(this)->block());
-    if (r->selector()) rr->selector(r->selector());
+    if (&r->selector2()) rr->selector2(r->selector2());
 
     return debubble(rr->block(), rr)->block();
   }

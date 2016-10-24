@@ -47,7 +47,7 @@ namespace Sass {
 
   void Inspect::operator()(Keyframe_Rule_Ptr rule)
   {
-    if (rule->selector()) rule->selector()->perform(this);
+    if (rule->selector2()) rule->selector2()->perform(this);
     if (rule->block()) rule->block()->perform(this);
   }
 

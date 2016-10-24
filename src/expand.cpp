@@ -99,7 +99,7 @@ namespace Sass {
       Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), r->block()->perform(this)->block());
       if (r->selector()) {
         selector_stack.push_back(0);
-        k->selector(static_cast<CommaSequence_Selector_Ptr>(r->selector()->perform(&eval)));
+        k->selector2(static_cast<CommaSequence_Selector_Ptr>(r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
       return k;
