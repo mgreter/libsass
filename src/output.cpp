@@ -234,7 +234,7 @@ namespace Sass {
   {
     if (m->is_invisible()) return;
 
-    List_Ptr  q     = m->media_queries();
+    List_Obj  q     = m->media_queries();
     Block_Ptr b     = m->block();
 
     // Filter out media blocks that aren't printable (process its children though)

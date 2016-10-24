@@ -210,7 +210,7 @@ namespace Sass {
 
     p_stack.push_back(m);
 
-    Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
+    Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       m->media_queries(),
                                       m->block()->perform(this)->block());
@@ -218,7 +218,7 @@ namespace Sass {
 
     p_stack.pop_back();
 
-    return debubble(mm->block(), mm)->block();
+    return debubble(mm->block(), &mm)->block();
   }
 
   Statement_Ptr Cssize::operator()(Supports_Block_Ptr m)
@@ -360,7 +360,7 @@ namespace Sass {
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     *wrapper_block << new_rule;
-    Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
+    Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       m->media_queries(),
                                       wrapper_block,
@@ -368,9 +368,7 @@ namespace Sass {
 
     mm->tabs(m->tabs());
 
-    Bubble_Ptr bubble = SASS_MEMORY_NEW(ctx.mem, Bubble, mm->pstate(), mm);
-
-    return bubble;
+    return SASS_MEMORY_NEW(ctx.mem, Bubble, mm->pstate(), &mm);
   }
 
   bool Cssize::bubblable(Statement_Ptr s)
