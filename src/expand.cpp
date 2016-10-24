@@ -536,7 +536,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(While_Ptr w)
   {
-    Expression_Ptr pred = w->predicate();
+    Expression_Obj pred = w->predicate();
     Block_Ptr body = w->block();
     Env env(environment(), true);
     env_stack.push_back(&env);

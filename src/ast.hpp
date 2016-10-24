@@ -740,9 +740,9 @@ namespace Sass {
   // The Sass `@while` control directive.
   ///////////////////////////////////////
   class While_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(Expression_Ptr, predicate)
+    ADD_PROPERTY(Expression_Obj, predicate)
   public:
-    While_Ref(ParserState pstate, Expression_Ptr pred, Block_Ptr b)
+    While_Ref(ParserState pstate, Expression_Obj pred, Block_Obj b)
     : Has_Block_Ref(pstate, b), predicate_(pred)
     { statement_type(WHILE); }
     ATTACH_OPERATIONS()
@@ -752,9 +752,9 @@ namespace Sass {
   // The @return directive for use inside SassScript functions.
   /////////////////////////////////////////////////////////////
   class Return_Ref : public Statement_Ref {
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(Expression_Obj, value)
   public:
-    Return_Ref(ParserState pstate, Expression_Ptr val)
+    Return_Ref(ParserState pstate, Expression_Obj val)
     : Statement_Ref(pstate), value_(val)
     { statement_type(RETURN); }
     ATTACH_OPERATIONS()
