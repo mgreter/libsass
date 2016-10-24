@@ -96,7 +96,7 @@ namespace Sass {
     bool directive_exists = false;
     size_t L = rr->block() ? rr->block()->length() : 0;
     for (size_t i = 0; i < L && !directive_exists; ++i) {
-      Statement_Obj s = (*r->block())[i];
+      Statement_Obj s = r->block()->at(i);
       if (s->statement_type() != Statement_Ref::BUBBLE) directive_exists = true;
       else {
         Bubble_Obj s_obj = SASS_MEMORY_CAST(Bubble, s);
@@ -275,11 +275,7 @@ namespace Sass {
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
     new_rule->block(&bb);
     new_rule->tabs(this->parent()->tabs());
-
-    size_t L = m->block() ? m->block()->length() : 0;
-    for (size_t i = 0; i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block() ? m->block()->pstate() : m->pstate());
     wrapper_block->append(new_rule);
@@ -300,10 +296,7 @@ namespace Sass {
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
     new_rule->block(&bb);
     new_rule->tabs(this->parent()->tabs());
-
-    for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     wrapper_block->append(new_rule);
@@ -325,10 +318,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-
-    for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     wrapper_block->append(new_rule);
@@ -353,10 +343,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-
-    for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     wrapper_block->append(new_rule);

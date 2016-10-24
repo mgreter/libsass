@@ -686,10 +686,10 @@ namespace Sass {
   ////////////////////////////////////
   class If_Ref : public Has_Block_Ref {
     ADD_PROPERTY(Expression_Ptr, predicate)
-    ADD_PROPERTY(Block_Ptr, alternative)
+    ADD_PROPERTY(Block_Obj, alternative)
   public:
     If_Ref(ParserState pstate, Expression_Ptr pred, Block_Obj con, Block_Obj alt = 0)
-    : Has_Block_Ref(pstate, &con), predicate_(pred), alternative_(&alt)
+    : Has_Block_Ref(pstate, &con), predicate_(pred), alternative_(alt)
     { statement_type(IF); }
     virtual bool has_content()
     {
@@ -1630,7 +1630,7 @@ namespace Sass {
     ADD_PROPERTY(Supports_Condition_Obj, condition)
   public:
     Supports_Block_Ref(ParserState pstate, Supports_Condition_Ptr condition, Block_Obj block = 0)
-    : Has_Block_Ref(pstate, &block), condition_(condition)
+    : Has_Block_Ref(pstate, block), condition_(condition)
     { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
     ATTACH_OPERATIONS()
