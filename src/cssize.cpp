@@ -23,12 +23,12 @@ namespace Sass {
 
   Block_Ptr Cssize::operator()(Block_Ptr b)
   {
-    Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, b->pstate(), b->length(), b->is_root());
+    Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, b->pstate(), b->length(), b->is_root());
     // bb->tabs(b->tabs());
-    block_stack.push_back(bb);
+    block_stack.push_back(&bb);
     append_block(b);
     block_stack.pop_back();
-    return bb;
+    return &bb;
   }
 
   Statement_Ptr Cssize::operator()(Trace_Ptr t)
@@ -107,12 +107,12 @@ namespace Sass {
 
     }
 
-    Block_Ptr result = SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate());
+    Block_Obj result = SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate());
     if (!(directive_exists || rr->is_keyframes()))
     {
       Directive_Ptr empty_node = static_cast<Directive_Ptr>(rr);
       empty_node->block(SASS_MEMORY_NEW(ctx.mem, Block, rr->block() ? rr->block()->pstate() : rr->pstate()));
-      *result << empty_node;
+      result->append(empty_node);
     }
 
     Block_Obj ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
@@ -120,7 +120,7 @@ namespace Sass {
       result->append(ss->at(i));
     }
 
-    return result;
+    return &result;
   }
 
   Statement_Ptr Cssize::operator()(Keyframe_Rule_Ptr r)
@@ -534,9 +534,9 @@ namespace Sass {
     return static_cast<Statement_Ptr>(n);
   }
 
-  void Cssize::append_block(Block_Ptr b)
+  void Cssize::append_block(Block_Obj b)
   {
-    Block_Ptr current_block = block_stack.back();
+    Block_Obj current_block = block_stack.back();
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr ith = b->at(i)->perform(this);
@@ -546,7 +546,7 @@ namespace Sass {
         }
       }
       else if (ith) {
-        *current_block << ith;
+        current_block->append(ith);
       }
     }
   }

@@ -71,7 +71,7 @@ namespace Sass {
     template <typename U>
     Statement_Ptr fallback(U x) { return fallback_impl(x); }
 
-    void append_block(Block_Ptr);
+    void append_block(Block_Obj);
   };
 
 }
