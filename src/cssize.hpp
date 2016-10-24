@@ -65,7 +65,7 @@ namespace Sass {
     bool bubblable(Statement_Ptr);
 
     List_Ptr merge_media_queries(Media_Block_Ptr, Media_Block_Ptr);
-    Media_Query_Ptr merge_media_query(Media_Query_Ptr, Media_Query_Ptr);
+    Media_Query_Obj merge_media_query(Media_Query_Obj, Media_Query_Obj);
 
     template <typename U>
     Statement_Ptr fallback(U x) { return fallback_impl(x); }
