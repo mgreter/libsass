@@ -22,7 +22,7 @@ namespace Sass {
     if (Supports_Operator_Obj op = SASS_MEMORY_CAST(Supports_Operator, cond)) {
       return op->operand() != operand();
     }
-    return SASS_MEMORY_CAST(Supports_Negation, cond);
+    return SASS_MEMORY_CAST(Supports_Negation, cond) != NULL;
   }
 
   bool Supports_Negation_Ref::needs_parens(Supports_Condition_Obj cond) const {

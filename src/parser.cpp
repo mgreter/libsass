@@ -500,7 +500,7 @@ namespace Sass {
     // make sure to move up the the last position
     lex < optional_css_whitespace >(false, true);
     // create the connector object (add parts later)
-    Ruleset_Obj ruleset = SASS_MEMORY_CREATE(ctx.mem, Ruleset, pstate);
+    Ruleset_Obj ruleset = SASS_MEMORY_OBJ(ctx.mem, Ruleset, pstate);
     // parse selector static or as schema to be evaluated later
     if (lookahead.parsable) ruleset->selector(&parse_selector_list(is_root));
     else ruleset->selector(&parse_selector_schema(lookahead.found));
