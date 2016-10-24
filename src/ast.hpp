@@ -117,6 +117,7 @@ namespace Sass {
   using Arguments_Obj = Memory_Node<Arguments_Ref>;
   using Selector_Obj = Memory_Node<Selector_Ref>;
   using Selector_Schema_Obj = Memory_Node<Selector_Schema_Ref>;
+  using Simple_Selector_Obj = Memory_Node<Simple_Selector_Ref>;
   using Placeholder_Selector_Obj = Memory_Node<Placeholder_Selector_Ref>;
   using Element_Selector_Obj = Memory_Node<Element_Selector_Ref>;
   using Class_Selector_Obj = Memory_Node<Class_Selector_Ref>;
