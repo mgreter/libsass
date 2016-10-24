@@ -67,12 +67,12 @@ namespace Sass {
       pstate.offset.line = 0;
     }
 
-  CommaSequence_Selector_Ptr Parser::parse_selector(const char* beg, Context& ctx, ParserState pstate, const char* source)
+  CommaSequence_Selector_Obj Parser::parse_selector(const char* beg, Context& ctx, ParserState pstate, const char* source)
   {
     Parser p = Parser::from_c_str(beg, ctx, pstate, source);
     // ToDo: ruby sass errors on parent references
     // ToDo: remap the source-map entries somehow
-    return &p.parse_selector_list(false);
+    return p.parse_selector_list(false);
   }
 
   bool Parser::peek_newline(const char* start)
@@ -235,9 +235,9 @@ namespace Sass {
           error("Import directives may not be used within control directives or mixins.", pstate);
         }
       }
-      Import_Ptr imp = &parse_import();
+      Import_Obj imp = parse_import();
       // if it is a url, we only add the statement
-      if (!imp->urls().empty()) block->append(imp);
+      if (!imp->urls().empty()) block->append(&imp);
       // process all resources now (add Import_Stub nodes)
       for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
         block->append(SASS_MEMORY_NEW(ctx.mem, Import_Stub, pstate, imp->incs()[i]));
@@ -251,10 +251,10 @@ namespace Sass {
 
       Lookahead lookahead = lookahead_for_include(position);
       if (!lookahead.found) css_error("Invalid CSS", " after ", ": expected selector, was ");
-      Selector_Ptr target;
+      Selector_Obj target;
       if (lookahead.has_interpolants) target = &parse_selector_schema(lookahead.found);
       else                            target = &parse_selector_list(true);
-      block->append(SASS_MEMORY_NEW(ctx.mem, Extension, pstate, target));
+      block->append(SASS_MEMORY_NEW(ctx.mem, Extension, pstate, &target));
     }
 
     // selector may contain interpolations which need delayed evaluation
@@ -288,9 +288,9 @@ namespace Sass {
     {
       // ToDo: how does it handle parse errors?
       // maybe we are expected to parse something?
-      Declaration_Ptr decl = &parse_declaration();
+      Declaration_Obj decl = parse_declaration();
       decl->tabs(indentation);
-      block->append(decl);
+      block->append(&decl);
       // maybe we have a "sub-block"
       if (peek< exactly<'{'> >()) {
         if (decl->is_indented()) ++ indentation;
@@ -309,7 +309,7 @@ namespace Sass {
   // parse imports inside the
   Import_Obj Parser::parse_import()
   {
-    Import_Ptr imp = SASS_MEMORY_NEW(ctx.mem, Import, pstate);
+    Import_Obj imp = SASS_MEMORY_NEW(ctx.mem, Import, pstate);
     std::vector<std::pair<std::string,Function_Call_Ptr>> to_import;
     bool first = true;
     do {
@@ -322,15 +322,15 @@ namespace Sass {
         Function_Call_Ptr result = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, "url", args);
 
         if (lex< quoted_string >()) {
-          Expression_Ptr the_url = &parse_string();
-          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url);
+          Expression_Obj the_url = &parse_string();
+          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), &the_url);
         }
-        else if (String_Ptr the_url = &parse_url_function_argument()) {
-          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url);
+        else if (String_Obj the_url = parse_url_function_argument()) {
+          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), &the_url);
         }
         else if (peek < skip_over_scopes < exactly < '(' >, exactly < ')' > > >(position)) {
-          Expression_Ptr the_url = &parse_list(); // parse_interpolated_chunk(lexed);
-          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url);
+          Expression_Obj the_url = &parse_list(); // parse_interpolated_chunk(lexed);
+          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), &the_url);
         }
         else {
           error("malformed URL", pstate);
@@ -353,8 +353,8 @@ namespace Sass {
     for(auto location : to_import) {
       if (location.second) {
         imp->urls().push_back(location.second);
-      } else if (!ctx.call_importers(unquote(location.first), path, pstate, imp)) {
-        ctx.import_url(imp, location.first, path);
+      } else if (!ctx.call_importers(unquote(location.first), path, pstate, &imp)) {
+        ctx.import_url(&imp, location.first, path);
       }
     }
 
@@ -381,17 +381,16 @@ namespace Sass {
     Parameters_Obj params = parse_parameters();
     if (which_type == Definition::MIXIN) stack.push_back(Scope::Mixin);
     else stack.push_back(Scope::Function);
-    Block_Ptr body = &parse_block();
+    Block_Obj body = &parse_block();
     stack.pop_back();
-    Definition_Ptr def = SASS_MEMORY_NEW(ctx.mem, Definition, source_position_of_def, name, &params, body, which_type);
-    return def;
+    return SASS_MEMORY_OBJ(ctx.mem, Definition, source_position_of_def, name, &params, &body, which_type);
   }
 
   Parameters_Obj Parser::parse_parameters()
   {
     std::string name(lexed);
     Position position = after_token;
-    Parameters_Ptr params = SASS_MEMORY_NEW(ctx.mem, Parameters, pstate);
+    Parameters_Obj params = SASS_MEMORY_OBJ(ctx.mem, Parameters, pstate);
     if (lex_css< exactly<'('> >()) {
       // if there's anything there at all
       if (!peek_css< exactly<')'> >()) {
@@ -409,18 +408,17 @@ namespace Sass {
     lex < variable >();
     std::string name(Util::normalize_underscores(lexed));
     ParserState pos = pstate;
-    Expression_Ptr val = 0;
+    Expression_Obj val;
     bool is_rest = false;
     while (lex< alternatives < spaces, block_comment > >());
     if (lex< exactly<':'> >()) { // there's a default value
       while (lex< block_comment >());
-      val = &parse_space_list();
+      val = parse_space_list();
     }
     else if (lex< exactly< ellipsis > >()) {
       is_rest = true;
     }
-    Parameter_Ptr p = SASS_MEMORY_NEW(ctx.mem, Parameter, pos, name, val, is_rest);
-    return p;
+    return SASS_MEMORY_OBJ(ctx.mem, Parameter, pos, name, &val, is_rest);
   }
 
   Arguments_Obj Parser::parse_arguments()
@@ -531,7 +529,7 @@ namespace Sass {
     String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
     // the selector schema is pretty much just a wrapper for the string schema
     Selector_Schema_Ptr selector_schema = SASS_MEMORY_NEW(ctx.mem, Selector_Schema, pstate, schema);
-    selector_schema->media_block(last_media_block);
+    selector_schema->media_block(&last_media_block);
 
     // process until end
     while (i < end_of_selector) {
@@ -616,7 +614,7 @@ namespace Sass {
     bool had_linefeed = false;
     Sequence_Selector_Ptr sel = 0;
     CommaSequence_Selector_Ptr group = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, pstate);
-    group->media_block(last_media_block);
+    group->media_block(&last_media_block);
 
     do {
       reloop = false;
@@ -700,7 +698,7 @@ namespace Sass {
     // lex < block_comment >();
     sel->head(lhs);
     sel->combinator(combinator);
-    sel->media_block(last_media_block);
+    sel->media_block(&last_media_block);
 
     if (combinator == Sequence_Selector_Ref::REFERENCE) sel->reference(reference);
     // has linfeed after combinator?
@@ -719,8 +717,8 @@ namespace Sass {
       // create the objects to wrap parent selector reference
       SimpleSequence_Selector_Ptr head = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, pstate);
       Parent_Selector_Ptr parent = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, pstate, false);
-      parent->media_block(last_media_block);
-      head->media_block(last_media_block);
+      parent->media_block(&last_media_block);
+      head->media_block(&last_media_block);
       // add simple selector
       (*head) << parent;
       // selector may not have any head yet
@@ -728,7 +726,7 @@ namespace Sass {
       // otherwise we need to create a new complex selector and set the old one as its tail
       else {
         sel = SASS_MEMORY_NEW(ctx.mem, Sequence_Selector, pstate, Sequence_Selector_Ref::ANCESTOR_OF, head, sel);
-        sel->media_block(last_media_block);
+        sel->media_block(&last_media_block);
       }
       // peek for linefeed and remember result on head
       // if (peek_newline()) head->has_line_break(true);
@@ -748,7 +746,7 @@ namespace Sass {
   {
     // init an empty compound selector wrapper
     SimpleSequence_Selector_Ptr seq = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, pstate);
-    seq->media_block(last_media_block);
+    seq->media_block(&last_media_block);
 
     // skip initial white-space
     lex< css_whitespace >();
@@ -839,7 +837,7 @@ namespace Sass {
     }
     else if (lex< placeholder >()) {
       Placeholder_Selector_Ptr sel = SASS_MEMORY_NEW(ctx.mem, Placeholder_Selector, pstate, lexed);
-      sel->media_block(last_media_block);
+      sel->media_block(&last_media_block);
       return sel;
     }
     // failed
@@ -1201,7 +1199,7 @@ namespace Sass {
     // if it's a singleton, return it directly
     if (operands.size() == 0) return conj;
     // fold all operands into one binary expression
-    Expression_Ptr ex = fold_operands(conj, operands, { Sass_OP::OR });
+    Expression_Obj ex = fold_operands(conj, operands, { Sass_OP::OR });
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
     return ex;
@@ -1222,7 +1220,7 @@ namespace Sass {
     // if it's a singleton, return it directly
     if (operands.size() == 0) return rel;
     // fold all operands into one binary expression
-    Expression_Ptr ex = fold_operands(rel, operands, { Sass_OP::AND });
+    Expression_Obj ex = fold_operands(rel, operands, { Sass_OP::AND });
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
     return ex;
@@ -1271,7 +1269,7 @@ namespace Sass {
     // correctly set to zero. After folding we also unwrap
     // single nested items. So we cannot set delay on the
     // returned result here, as we have lost nestings ...
-    Expression_Ptr ex = fold_operands(lhs, operands, operators);
+    Expression_Obj ex = fold_operands(lhs, operands, operators);
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
     return ex;
@@ -1319,7 +1317,7 @@ namespace Sass {
     }
 
     if (operands.size() == 0) return lhs;
-    Expression_Ptr ex = fold_operands(lhs, operands, operators);
+    Expression_Obj ex = fold_operands(lhs, operands, operators);
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
     return ex;
@@ -1348,7 +1346,7 @@ namespace Sass {
       left_ws = peek < css_comments >();
     }
     // operands and operators to binary expression
-    Expression_Ptr ex = fold_operands(factor, operands, operators);
+    Expression_Obj ex = fold_operands(factor, operands, operators);
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
     return ex;
@@ -2011,7 +2009,7 @@ namespace Sass {
     Media_Block_Ptr media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
     media_block->media_queries(&parse_media_queries());
 
-    Media_Block_Ptr prev_media_block = last_media_block;
+    Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;
     media_block->block(&parse_css_block());
     last_media_block = prev_media_block;
@@ -2315,8 +2313,8 @@ namespace Sass {
   Expression_Obj Parser::lex_interp_string()
   {
     Expression_Ptr rv = 0;
-    if ((rv = lex_interp< re_string_double_open, re_string_double_close >()) != NULL) return rv;
-    if ((rv = lex_interp< re_string_single_open, re_string_single_close >()) != NULL) return rv;
+    if ((rv = &lex_interp< re_string_double_open, re_string_double_close >()) != NULL) return rv;
+    if ((rv = &lex_interp< re_string_single_open, re_string_single_close >()) != NULL) return rv;
     return rv;
   }
 
@@ -2655,17 +2653,17 @@ namespace Sass {
   }
 
 
-  Expression_Ptr Parser::fold_operands(Expression_Ptr base, std::vector<Expression_Ptr>& operands, Operand op)
+  Expression_Obj Parser::fold_operands(Expression_Obj base, std::vector<Expression_Ptr>& operands, Operand op)
   {
     for (size_t i = 0, S = operands.size(); i < S; ++i) {
-      base = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), op, base, operands[i]);
+      base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), op, &base, operands[i]);
     }
     return base;
   }
 
-  Expression_Ptr Parser::fold_operands(Expression_Ptr base, std::vector<Expression_Ptr>& operands, std::vector<Operand>& ops, size_t i)
+  Expression_Obj Parser::fold_operands(Expression_Obj base, std::vector<Expression_Ptr>& operands, std::vector<Operand>& ops, size_t i)
   {
-    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(base)) {
+    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(&base)) {
       // return schema;
       if (schema->has_interpolants()) {
         if (i + 1 < operands.size() && (
@@ -2679,8 +2677,8 @@ namespace Sass {
           || (ops[0].operand == Sass_OP::LTE)
           || (ops[0].operand == Sass_OP::GTE)
         )) {
-          Expression_Ptr rhs = fold_operands(operands[i], operands, ops, i + 1);
-          rhs = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[0], schema, rhs);
+          Expression_Obj rhs = fold_operands(operands[i], operands, ops, i + 1);
+          rhs = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[0], schema, &rhs);
           return rhs;
         }
         // return schema;
@@ -2691,26 +2689,26 @@ namespace Sass {
       if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(operands[i])) {
         if (schema->has_interpolants()) {
           if (i + 1 < S) {
-            Expression_Ptr rhs = fold_operands(operands[i+1], operands, ops, i + 2);
-            rhs = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], schema, rhs);
-            base = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], base, rhs);
+            Expression_Obj rhs = fold_operands(operands[i+1], operands, ops, i + 2);
+            rhs = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], schema, &rhs);
+            base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, &rhs);
             return base;
           }
-          base = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], base, operands[i]);
+          base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
           return base;
         } else {
-          base = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], base, operands[i]);
+          base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
         }
       } else {
-        base = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], base, operands[i]);
+        base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
       }
-      Binary_Expression_Ptr b = static_cast<Binary_Expression_Ptr>(base);
+      Binary_Expression_Ptr b = static_cast<Binary_Expression_Ptr>(&base);
       if (b && ops[i].operand == Sass_OP::DIV && b->left()->is_delayed() && b->right()->is_delayed()) {
         base->is_delayed(true);
       }
     }
     // nested binary expression are never to be delayed
-    if (Binary_Expression_Ptr b = dynamic_cast<Binary_Expression_Ptr>(base)) {
+    if (Binary_Expression_Ptr b = dynamic_cast<Binary_Expression_Ptr>(&base)) {
       if (dynamic_cast<Binary_Expression_Ptr>(b->left())) base->set_delayed(false);
       if (dynamic_cast<Binary_Expression_Ptr>(b->right())) base->set_delayed(false);
     }

@@ -28,7 +28,7 @@ namespace Sass {
     Context& ctx;
     std::vector<Block_Obj> block_stack;
     std::vector<Scope> stack;
-    Media_Block_Ptr last_media_block;
+    Media_Block_Obj last_media_block;
     const char* source;
     const char* position;
     const char* end;
@@ -42,7 +42,7 @@ namespace Sass {
     bool in_at_root;
 
     Parser(Context& ctx, const ParserState& pstate)
-    : ParserState(pstate), ctx(ctx), block_stack(), stack(0), last_media_block(0),
+    : ParserState(pstate), ctx(ctx), block_stack(), stack(0), last_media_block(),
       source(0), position(0), end(0), before_token(pstate), after_token(pstate), pstate(pstate), indentation(0)
     { in_at_root = false; stack.push_back(Scope::Root); }
 
@@ -51,7 +51,7 @@ namespace Sass {
     static Parser from_c_str(const char* beg, const char* end, Context& ctx, ParserState pstate = ParserState("[CSTRING]"), const char* source = 0);
     static Parser from_token(Token t, Context& ctx, ParserState pstate = ParserState("[TOKEN]"), const char* source = 0);
     // special static parsers to convert strings into certain selectors
-    static CommaSequence_Selector_Ptr parse_selector(const char* src, Context& ctx, ParserState pstate = ParserState("[SELECTOR]"), const char* source = 0);
+    static CommaSequence_Selector_Obj parse_selector(const char* src, Context& ctx, ParserState pstate = ParserState("[SELECTOR]"), const char* source = 0);
 
 #ifdef __clang__
 
@@ -256,7 +256,6 @@ namespace Sass {
 
     bool parse_number_prefix();
     Declaration_Obj parse_declaration();
-    // Expression_Ptr parse_map_value();
     Expression_Obj parse_map();
     Expression_Obj parse_list(bool delayed = false);
     Expression_Obj parse_comma_list(bool delayed = false);
@@ -325,31 +324,31 @@ namespace Sass {
     Lookahead lookahead_for_selector(const char* start = 0);
     Lookahead lookahead_for_include(const char* start = 0);
 
-    Expression_Ptr fold_operands(Expression_Ptr base, std::vector<Expression_Ptr>& operands, Operand op);
-    Expression_Ptr fold_operands(Expression_Ptr base, std::vector<Expression_Ptr>& operands, std::vector<Operand>& ops, size_t i = 0);
+    Expression_Obj fold_operands(Expression_Obj base, std::vector<Expression_Ptr>& operands, Operand op);
+    Expression_Obj fold_operands(Expression_Obj base, std::vector<Expression_Ptr>& operands, std::vector<Operand>& ops, size_t i = 0);
 
     void throw_syntax_error(std::string message, size_t ln = 0);
     void throw_read_error(std::string message, size_t ln = 0);
 
 
     template <Prelexer::prelexer open, Prelexer::prelexer close>
-    Expression_Ptr lex_interp()
+    Expression_Obj lex_interp()
     {
       if (lex < open >(false)) {
-        String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+        String_Schema_Obj schema = SASS_MEMORY_OBJ(ctx.mem, String_Schema, pstate);
         // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-        *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+        schema->append(&SASS_MEMORY_OBJ(ctx.mem, String_Constant, pstate, lexed));
         if (position[0] == '#' && position[1] == '{') {
-          Expression_Ptr itpl = &lex_interpolation();
-          if (itpl) *schema << itpl;
+          Expression_Obj itpl = lex_interpolation();
+          if (&itpl) schema->append(&itpl);
           while (lex < close >(false)) {
             // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-            *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+            schema->append(&SASS_MEMORY_OBJ(ctx.mem, String_Constant, pstate, lexed));
             if (position[0] == '#' && position[1] == '{') {
-              Expression_Ptr itpl = &lex_interpolation();
-              if (itpl) *schema << itpl;
+              Expression_Obj itpl = lex_interpolation();
+              if (&itpl) schema->append(&itpl);
             } else {
-              return schema;
+              return &schema;
             }
           }
         } else {

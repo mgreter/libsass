@@ -1911,7 +1911,7 @@ namespace Sass {
   // error checking (e.g., ensuring that all optional parameters follow all
   // required parameters).
   /////////////////////////////////////////////////////////////////////////
-  class Parameters_Ref : public AST_Node_Ref, public Vectorized<Parameter_Ref*> {
+  class Parameters_Ref : public AST_Node_Ref, public Vectorized<Parameter_Ptr> {
     ADD_PROPERTY(bool, has_optional_parameters)
     ADD_PROPERTY(bool, has_rest_parameter)
   protected:

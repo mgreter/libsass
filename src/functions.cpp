@@ -167,7 +167,7 @@ namespace Sass {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      return Parser::parse_selector(exp_src.c_str(), ctx);
+      return &Parser::parse_selector(exp_src.c_str(), ctx);
     }
 
     template <>
@@ -183,7 +183,7 @@ namespace Sass {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      CommaSequence_Selector_Ptr sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
+      CommaSequence_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
       return (sel_list->length() > 0) ? sel_list->first() : 0;
     }
 
@@ -199,7 +199,7 @@ namespace Sass {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      CommaSequence_Selector_Ptr sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
+      CommaSequence_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
       return (sel_list->length() > 0) ? sel_list->first()->tail()->head() : 0;
     }
 
@@ -1766,8 +1766,8 @@ namespace Sass {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string(ctx.c_options) + "{";
-        CommaSequence_Selector_Ptr sel = Parser::parse_selector(exp_src.c_str(), ctx);
-        parsedSelectors.push_back(sel);
+        CommaSequence_Selector_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx);
+        parsedSelectors.push_back(&sel);
       }
 
       // Nothing to do
@@ -1817,8 +1817,8 @@ namespace Sass {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string() + "{";
-        CommaSequence_Selector_Ptr sel = Parser::parse_selector(exp_src.c_str(), ctx);
-        parsedSelectors.push_back(sel);
+        CommaSequence_Selector_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx);
+        parsedSelectors.push_back(&sel);
       }
 
       // Nothing to do
