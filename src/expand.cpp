@@ -669,7 +669,7 @@ namespace Sass {
     }
     Definition_Ptr def = static_cast<Definition_Ptr>((*env)[full_name]);
     Block_Ptr body = def->block();
-    Parameters_Ptr params = def->parameters();
+    Parameters_Obj params = def->parameters();
 
     if (c->block() && c->name() != "@content" && !body->has_content()) {
       error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), backtrace());

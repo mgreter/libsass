@@ -33,8 +33,8 @@ namespace Sass {
     Each_Ptr new_Each(std::string p, size_t l, std::vector<std::string> vars, Expression_Ptr lst, Block_Ptr b);
     While_Ptr new_While(std::string p, size_t l, Expression_Ptr pred, Block_Ptr b);
     Extension_Ptr new_Extension(std::string p, size_t l, Selector_Ptr s);
-    Definition<MIXIN>* new_Mixin_Definition(std::string p, size_t l, std::string n, Parameters_Ptr params, Block_Ptr b);
-    Definition<FUNCTION>* new_Function_Definition(std::string p, size_t l, std::string n, Parameters_Ptr params, Block_Ptr b);
+    Definition<MIXIN>* new_Mixin_Definition(std::string p, size_t l, std::string n, Parameters_Obj params, Block_Ptr b);
+    Definition<FUNCTION>* new_Function_Definition(std::string p, size_t l, std::string n, Parameters_Obj params, Block_Ptr b);
     Mixin_Call_Ptr new_Mixin_Call(std::string p, size_t l, std::string n, Arguments_Ptr args, Block_Ptr b = 0);
     // expressions
     List_Ptr new_List(std::string p, size_t l, size_t size = 0, enum Sass_Separator sep = List::space, bool argl = false);

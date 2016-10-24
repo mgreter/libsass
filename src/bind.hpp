@@ -8,7 +8,7 @@
 namespace Sass {
   typedef Environment<AST_Node_Ptr> Env;
 
-  void bind(std::string type, std::string name, Parameters_Ptr, Arguments_Ptr, Context*, Env*, Eval*);
+  void bind(std::string type, std::string name, Parameters_Obj, Arguments_Ptr, Context*, Env*, Eval*);
 }
 
 #endif
