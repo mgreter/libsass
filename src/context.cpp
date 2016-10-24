@@ -550,7 +550,7 @@ String_Constant_Obj getCst(String_Obj node) {
   return SASS_MEMORY_CAST(String_Constant, node);
 }
 
-  Block_Ptr File_Context::parse()
+  Block_Obj File_Context::parse()
   {
 
     // check if entry file is given
@@ -602,11 +602,11 @@ exit(0);
     register_resource({{ input_path, "." }, abs_path }, { contents, 0 });
 
     // create root ast tree node
-    return compile();
+    return &compile();
 
   }
 
-  Block_Ptr Data_Context::parse()
+  Block_Obj Data_Context::parse()
   {
 
     // check if source string is given
@@ -644,13 +644,13 @@ exit(0);
     register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
 
     // create root ast tree node
-    return compile();
+    return &compile();
   }
 
 
 
   // parse root block from includes
-  Block_Ptr Context::compile()
+  Block_Obj Context::compile()
   {
     // abort if there is no data
     if (resources.size() == 0) return 0;
