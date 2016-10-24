@@ -14,7 +14,7 @@ namespace Sass {
   class Cssize : public Operation_CRTP<Statement_Ptr, Cssize> {
 
     Context&                    ctx;
-    std::vector<Block_Ptr>         block_stack;
+    std::vector<Block_Obj>         block_stack;
     std::vector<Statement_Ptr>     p_stack;
     Backtrace*                  backtrace;
 

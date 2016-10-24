@@ -11,21 +11,21 @@ namespace Sass {
 
   Cssize::Cssize(Context& ctx, Backtrace* bt)
   : ctx(ctx),
-    block_stack(std::vector<Block_Ptr>()),
+    block_stack(std::vector<Block_Obj>()),
     p_stack(std::vector<Statement_Ptr>()),
     backtrace(bt)
   { }
 
   Statement_Ptr Cssize::parent()
   {
-    return p_stack.size() ? p_stack.back() : block_stack.front();
+    return p_stack.size() ? p_stack.back() : &block_stack.front();
   }
 
   Block_Ptr Cssize::operator()(Block_Ptr b)
   {
     Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, b->pstate(), b->length(), b->is_root());
     // bb->tabs(b->tabs());
-    block_stack.push_back(&bb);
+    block_stack.push_back(bb);
     append_block(b);
     block_stack.pop_back();
     return &bb;
