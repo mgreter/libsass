@@ -655,9 +655,9 @@ exit(0);
     // abort if there is no data
     if (resources.size() == 0) return 0;
     // get root block from the first style sheet
-    Block_Ptr root = sheets.at(entry_path).root;
+    Block_Obj root = sheets.at(entry_path).root;
     // abort on invalid root
-    if (root == 0) return 0;
+    if (root == false) return 0;
 
     Env global; // create root environment
     // register built-in functions on env
@@ -672,19 +672,19 @@ exit(0);
     Cssize cssize(*this, &backtrace);
     CheckNesting check_nesting;
     // check nesting
-    check_nesting(root);
+    check_nesting(&root);
     // expand and eval the tree
-    root = expand(root);
+    root = expand(&root);
     // check nesting
-    check_nesting(root);
+    check_nesting(&root);
     // merge and bubble certain rules
-    root = cssize(root);
+    root = cssize(&root);
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);
       // extend tree nodes
-      extend(root);
+      extend(&root);
     }
 
     // clean up by removing empty placeholders

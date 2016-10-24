@@ -104,9 +104,9 @@ namespace Sass {
   class StyleSheet : public Resource {
     public:
       // parsed root block
-      Block_Ptr root;
+      Block_Obj root;
     public:
-      StyleSheet(const Resource& res, Block_Ptr root)
+      StyleSheet(const Resource& res, Block_Obj root)
       : Resource(res), root(root)
       { }
   };
