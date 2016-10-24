@@ -285,7 +285,7 @@ extern "C" {
 
   }
 
-  static Block_Ptr sass_parse_block (Sass_Compiler* compiler) throw()
+  static Block_Obj sass_parse_block (Sass_Compiler* compiler) throw()
   {
 
     // assert valid pointer
@@ -323,7 +323,7 @@ extern "C" {
         throw(std::bad_alloc());
 
       // return parsed block
-      return &root;
+      return root;
 
     }
     // pass errors to generic error handler
@@ -454,7 +454,7 @@ extern "C" {
     if (compiler->c_ctx->error_status)
       return compiler->c_ctx->error_status;
     // parse the context we have set up (file or data)
-    compiler->root = sass_parse_block(compiler);
+    compiler->root = &sass_parse_block(compiler);
     // success
     return 0;
   }
@@ -471,7 +471,7 @@ extern "C" {
       return compiler->c_ctx->error_status;
     compiler->state = SASS_COMPILER_EXECUTED;
     Context* cpp_ctx = compiler->cpp_ctx;
-    Block_Ptr root = compiler->root;
+    Block_Obj root = compiler->root;
     // compile the parsed root block
     try { compiler->c_ctx->output_string = cpp_ctx->render(root); }
     // pass catched errors to generic error handler

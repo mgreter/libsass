@@ -52,7 +52,7 @@ namespace Sass {
     bool isPrintable(Supports_Block_Ptr r, Sass_Output_Style style = NESTED);
     bool isPrintable(Media_Block_Ptr r, Sass_Output_Style style = NESTED);
     bool isPrintable(Comment_Ptr b, Sass_Output_Style style = NESTED);
-    bool isPrintable(Block_Ptr b, Sass_Output_Style style = NESTED);
+    bool isPrintable(Block_Obj b, Sass_Output_Style style = NESTED);
     bool isPrintable(String_Constant_Ptr s, Sass_Output_Style style = NESTED);
     bool isPrintable(String_Quoted_Ptr s, Sass_Output_Style style = NESTED);
     bool isPrintable(Declaration_Ptr d, Sass_Output_Style style = NESTED);

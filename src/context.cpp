@@ -494,7 +494,7 @@ namespace Sass {
   void register_c_functions(Context&, Env* env, Sass_Function_List);
   void register_c_function(Context&, Env* env, Sass_Function_Entry);
 
-  char* Context::render(Block_Ptr root)
+  char* Context::render(Block_Obj root)
   {
     // check for valid block
     if (!root) return 0;

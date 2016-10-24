@@ -60,16 +60,16 @@ namespace Sass {
 
     this->parents.push_back(parent);
 
-    Block_Ptr b = dynamic_cast<Block_Ptr>(parent);
+    Block_Obj b = SASS_MEMORY_CAST(Block, *parent);
 
     if (!b) {
-      if (Has_Block_Ptr bb = dynamic_cast<Has_Block_Ptr>(parent)) {
+      if (Has_Block_Obj bb = SASS_MEMORY_CAST(Has_Block, *parent)) {
         b = bb->block();
       }
     }
 
     if (b) {
-      for (auto n : *b) {
+      for (auto n : b->elements()) {
         n->perform(this);
       }
     }
@@ -77,7 +77,7 @@ namespace Sass {
     this->parent = old_parent;
     this->parents.pop_back();
 
-    return b;
+    return &b;
   }
 
 

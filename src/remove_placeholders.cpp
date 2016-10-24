@@ -60,10 +60,10 @@ namespace Sass {
         }
 
         // Iterate into child blocks
-        Block_Ptr b = r->block();
+        Block_Obj b = r->block();
 
         for (size_t i = 0, L = b->length(); i < L; ++i) {
-            if ((*b)[i]) (*b)[i]->perform(this);
+            if (b->at(i)) b->at(i)->perform(this);
         }
     }
 

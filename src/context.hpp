@@ -89,7 +89,7 @@ namespace Sass {
     Context(struct Sass_Context&);
     virtual Block_Obj parse() = 0;
     virtual Block_Obj compile();
-    virtual char* render(Block_Ptr root);
+    virtual char* render(Block_Obj root);
     virtual char* render_srcmap();
 
     void register_resource(const Include&, const Resource&, ParserState* = 0);

@@ -1904,8 +1904,8 @@ namespace Sass {
     ParserState if_source_position = pstate;
     bool root = block_stack.back()->is_root();
     Expression_Ptr predicate = &parse_list();
-    Block_Ptr block = &parse_block(root);
-    Block_Ptr alternative = 0;
+    Block_Obj block = parse_block(root);
+    Block_Obj alternative = NULL;
 
     // only throw away comment if we parse a case
     // we want all other comments to be parsed
@@ -1934,7 +1934,7 @@ namespace Sass {
     else if (lex< kwd_to >()) inclusive = false;
     else                  error("expected 'through' or 'to' keyword in @for directive", pstate);
     Expression_Ptr upper_bound = &parse_expression();
-    Block_Ptr body = &parse_block(root);
+    Block_Obj body = parse_block(root);
     stack.pop_back();
     return SASS_MEMORY_NEW(ctx.mem, For, for_source_position, var, lower_bound, upper_bound, body, inclusive);
   }
@@ -1979,7 +1979,7 @@ namespace Sass {
     }
     if (!lex< kwd_in >()) error("expected 'in' keyword in @each directive", pstate);
     Expression_Ptr list = &parse_list();
-    Block_Ptr body = &parse_block(root);
+    Block_Obj body = parse_block(root);
     stack.pop_back();
     return SASS_MEMORY_NEW(ctx.mem, Each, each_source_position, vars, list, body);
   }
@@ -2180,7 +2180,7 @@ namespace Sass {
   At_Root_Block_Obj Parser::parse_at_root_block()
   {
     ParserState at_source_position = pstate;
-    Block_Ptr body = 0;
+    Block_Obj body = 0;
     At_Root_Query_Obj expr;
     Lookahead lookahead_result;
     LOCAL_FLAG(in_at_root, true);
@@ -2194,7 +2194,7 @@ namespace Sass {
     else if ((lookahead_result = lookahead_for_selector(position)).found) {
       Ruleset_Obj r = parse_ruleset(lookahead_result, false);
       body = SASS_MEMORY_NEW(ctx.mem, Block, r->pstate(), 1, true);
-      *body << &r;
+      body->append(&r);
     }
     At_Root_Block_Obj at_root = SASS_MEMORY_CREATE(ctx.mem, At_Root_Block, at_source_position, body);
     if (&expr) at_root->expression(&expr);

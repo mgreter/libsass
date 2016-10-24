@@ -459,7 +459,7 @@ namespace Sass {
         return false;
       }
 
-      Block_Ptr b = r->block();
+      Block_Obj b = r->block();
 
       bool hasSelectors = static_cast<CommaSequence_Selector_Ptr>(r->selector())->length() > 0;
 
@@ -470,14 +470,14 @@ namespace Sass {
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->at(i);
         if (dynamic_cast<Directive_Ptr>(stm)) {
           return true;
         } else if (Declaration_Ptr d = dynamic_cast<Declaration_Ptr>(stm)) {
           return isPrintable(d, style);
         } else if (dynamic_cast<Has_Block_Ptr>(stm)) {
-          Block_Ptr pChildBlock = ((Has_Block_Ptr)stm)->block();
-          if (isPrintable(pChildBlock, style)) {
+          Block_Obj pChildBlock = ((Has_Block_Ptr)stm)->block();
+          if (isPrintable(&pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
         } else if (Comment_Ptr c = dynamic_cast<Comment_Ptr>(stm)) {
@@ -524,20 +524,20 @@ namespace Sass {
         return false;
       }
 
-      Block_Ptr b = f->block();
+      Block_Obj b = f->block();
 
 //      bool hasSelectors = f->selector() && static_cast<CommaSequence_Selector_Ptr>(f->selector())->length() > 0;
 
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->at(i);
         if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
           hasDeclarations = true;
         }
         else if (dynamic_cast<Has_Block_Ptr>(stm)) {
-          Block_Ptr pChildBlock = ((Has_Block_Ptr)stm)->block();
-          if (isPrintable(pChildBlock, style)) {
+          Block_Obj pChildBlock = ((Has_Block_Ptr)stm)->block();
+          if (isPrintable(&pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
         }
@@ -553,10 +553,10 @@ namespace Sass {
     bool isPrintable(Media_Block_Ptr m, Sass_Output_Style style)
     {
       if (m == 0) return false;
-      Block_Ptr b = m->block();
+      Block_Obj b = m->block();
       if (b == 0) return false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->at(i);
         if (typeid(*stm) == typeid(Directive)) return true;
         else if (typeid(*stm) == typeid(Declaration)) return true;
         else if (typeid(*stm) == typeid(Comment)) {
@@ -604,13 +604,13 @@ namespace Sass {
       return false;
     };
 
-    bool isPrintable(Block_Ptr b, Sass_Output_Style style) {
-      if (b == NULL) {
+    bool isPrintable(Block_Obj b, Sass_Output_Style style) {
+      if (!b) {
         return false;
       }
 
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->at(i);
         if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
           return true;
         }
