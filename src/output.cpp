@@ -197,7 +197,7 @@ namespace Sass {
   {
     if (f->is_invisible()) return;
 
-    Supports_Condition_Ptr c = f->condition();
+    Supports_Condition_Obj c = f->condition();
     Block_Ptr b              = f->block();
 
     // Filter out feature blocks that aren't printable (process its children though)

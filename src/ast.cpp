@@ -18,15 +18,16 @@ namespace Sass {
 
   static Null sass_null(Sass::Null(ParserState("null")));
 
-  bool Supports_Operator_Ref::needs_parens(Supports_Condition_Ptr cond) const {
-    return dynamic_cast<Supports_Negation_Ptr>(cond) ||
-          (dynamic_cast<Supports_Operator_Ptr>(cond) &&
-           dynamic_cast<Supports_Operator_Ptr>(cond)->operand() != operand());
+  bool Supports_Operator_Ref::needs_parens(Supports_Condition_Obj cond) const {
+    if (Supports_Operator_Obj op = SASS_MEMORY_CAST(Supports_Operator, cond)) {
+      return op->operand() != operand();
+    }
+    return SASS_MEMORY_CAST(Supports_Negation, cond);
   }
 
-  bool Supports_Negation_Ref::needs_parens(Supports_Condition_Ptr cond) const {
-    return dynamic_cast<Supports_Negation_Ptr>(cond) ||
-          dynamic_cast<Supports_Operator_Ptr>(cond);
+  bool Supports_Negation_Ref::needs_parens(Supports_Condition_Obj cond) const {
+    return SASS_MEMORY_CAST(Supports_Negation, cond) ||
+           SASS_MEMORY_CAST(Supports_Operator, cond);
   }
 
   std::string & str_ltrim(std::string & str)

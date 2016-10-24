@@ -1709,7 +1709,7 @@ namespace Sass {
   // `@supports` rule.
   ////////////////////
   class Supports_Block_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(Supports_Condition_Ptr, condition)
+    ADD_PROPERTY(Supports_Condition_Obj, condition)
   public:
     Supports_Block_Ref(ParserState pstate, Supports_Condition_Ptr condition, Block_Ptr block = 0)
     : Has_Block_Ref(pstate, block), condition_(condition)
@@ -1726,7 +1726,7 @@ namespace Sass {
     Supports_Condition_Ref(ParserState pstate)
     : Expression_Ref(pstate)
     { }
-    virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
+    virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
     ATTACH_OPERATIONS()
   };
 
@@ -1737,14 +1737,14 @@ namespace Sass {
   public:
     enum Operand { AND, OR };
   private:
-    ADD_PROPERTY(Supports_Condition_Ptr, left);
-    ADD_PROPERTY(Supports_Condition_Ptr, right);
+    ADD_PROPERTY(Supports_Condition_Obj, left);
+    ADD_PROPERTY(Supports_Condition_Obj, right);
     ADD_PROPERTY(Operand, operand);
   public:
     Supports_Operator_Ref(ParserState pstate, Supports_Condition_Ptr l, Supports_Condition_Ptr r, Operand o)
     : Supports_Condition_Ref(pstate), left_(l), right_(r), operand_(o)
     { }
-    virtual bool needs_parens(Supports_Condition_Ptr cond) const;
+    virtual bool needs_parens(Supports_Condition_Obj cond) const;
     ATTACH_OPERATIONS()
   };
 
@@ -1753,12 +1753,12 @@ namespace Sass {
   //////////////////////////////////////////
   class Supports_Negation_Ref : public Supports_Condition_Ref {
   private:
-    ADD_PROPERTY(Supports_Condition_Ptr, condition);
+    ADD_PROPERTY(Supports_Condition_Obj, condition);
   public:
     Supports_Negation_Ref(ParserState pstate, Supports_Condition_Ptr c)
     : Supports_Condition_Ref(pstate), condition_(c)
     { }
-    virtual bool needs_parens(Supports_Condition_Ptr cond) const;
+    virtual bool needs_parens(Supports_Condition_Obj cond) const;
     ATTACH_OPERATIONS()
   };
 
@@ -1773,7 +1773,7 @@ namespace Sass {
     Supports_Declaration_Ref(ParserState pstate, Expression_Ptr f, Expression_Ptr v)
     : Supports_Condition_Ref(pstate), feature_(f), value_(v)
     { }
-    virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
+    virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
     ATTACH_OPERATIONS()
   };
 
@@ -1787,7 +1787,7 @@ namespace Sass {
     Supports_Interpolation_Ref(ParserState pstate, Expression_Ptr v)
     : Supports_Condition_Ref(pstate), value_(v)
     { }
-    virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
+    virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
     ATTACH_OPERATIONS()
   };
 

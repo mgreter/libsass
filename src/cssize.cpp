@@ -232,7 +232,7 @@ namespace Sass {
 
     Supports_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        m->pstate(),
-                                       m->condition(),
+                                       &m->condition(),
                                        m->block()->perform(this)->block());
     mm->tabs(m->tabs());
 
@@ -333,7 +333,7 @@ namespace Sass {
     *wrapper_block << new_rule;
     Supports_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        m->pstate(),
-                                       m->condition(),
+                                       &m->condition(),
                                        wrapper_block);
 
     mm->tabs(m->tabs());

@@ -48,9 +48,15 @@ namespace Sass {
   public:
     Memory_Object* obj () {
       return node;
-    }
+    };
+    Memory_Object* obj () const {
+      return node;
+    };
     Memory_Object* operator-> () {
       return node;
+    };
+    bool isNull () const {
+      return node == NULL;
     };
 
   };
@@ -77,6 +83,9 @@ namespace Sass {
     T* ptr () {
       // should be save to cast it here
       return static_cast<T*>(this->obj());
+    };
+    operator bool() const {
+      return this->obj() != NULL;
     };
   };
 

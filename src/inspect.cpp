@@ -741,9 +741,9 @@ namespace Sass {
   {
     append_token("not", sn);
     append_mandatory_space();
-    if (sn->needs_parens(sn->condition())) append_string("(");
+    if (sn->needs_parens(&sn->condition())) append_string("(");
     sn->condition()->perform(this);
-    if (sn->needs_parens(sn->condition())) append_string(")");
+    if (sn->needs_parens(&sn->condition())) append_string(")");
   }
 
   void Inspect::operator()(Supports_Declaration_Ptr sd)
