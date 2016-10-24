@@ -194,7 +194,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(At_Root_Block_Ptr a)
   {
-    Block_Ptr ab = a->block();
+    Block_Obj ab = a->block();
     Expression_Ptr ae = a->expression();
 
     if (ae) ae = ae->perform(&eval);
@@ -205,7 +205,7 @@ namespace Sass {
 
                                        ;
 
-    Block_Ptr bb = ab ? operator()(ab) : NULL;
+    Block_Obj bb = ab ? operator()(&ab) : NULL;
     At_Root_Block_Ptr aa = SASS_MEMORY_NEW(ctx.mem, At_Root_Block,
                                         a->pstate(),
                                         bb,
@@ -216,14 +216,14 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Directive_Ptr a)
   {
     LOCAL_FLAG(in_keyframes, a->is_keyframes());
-    Block_Ptr ab = a->block();
+    Block_Obj ab = a->block();
     Selector_Obj as = a->selector();
     Expression_Obj av = a->value();
     selector_stack.push_back(0);
     if (av) av = av->perform(&eval);
     if (as) as = dynamic_cast<Selector_Ptr>(as->perform(&eval));
     selector_stack.pop_back();
-    Block_Ptr bb = ab ? operator()(ab) : NULL;
+    Block_Obj bb = ab ? operator()(&ab) : NULL;
     Directive_Ptr aa = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   a->pstate(),
                                   a->keyword(),
@@ -235,11 +235,11 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
   {
-    Block_Ptr ab = d->block();
+    Block_Obj ab = d->block();
     String_Ptr old_p = d->property();
     String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
     Expression_Ptr value = d->value()->perform(&eval);
-    Block_Ptr bb = ab ? operator()(ab) : NULL;
+    Block_Obj bb = ab ? operator()(&ab) : NULL;
     if (!bb) {
       if (!value || (value->is_invisible() && !d->is_important())) return 0;
     }
@@ -389,7 +389,7 @@ namespace Sass {
       append_block(i->block());
     }
     else {
-      Block_Ptr alt = i->alternative();
+      Block_Obj alt = i->alternative();
       if (alt) append_block(alt);
     }
     call_stack.pop_back();
@@ -427,7 +427,7 @@ namespace Sass {
     call_stack.push_back(f);
     Number_Ptr it = SASS_MEMORY_NEW(env.mem, Number, low->pstate(), start, sass_end->unit());
     env.set_local(variable, it);
-    Block_Ptr body = f->block();
+    Block_Obj body = f->block();
     if (start < end) {
       if (f->is_inclusive()) ++end;
       for (double i = start;
@@ -478,7 +478,7 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(e);
-    Block_Ptr body = e->block();
+    Block_Obj body = e->block();
 
     if (map) {
       for (auto key : map->keys()) {
@@ -540,7 +540,7 @@ namespace Sass {
   Statement_Ptr Expand::operator()(While_Ptr w)
   {
     Expression_Obj pred = w->predicate();
-    Block_Ptr body = w->block();
+    Block_Obj body = w->block();
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(w);
@@ -671,7 +671,7 @@ namespace Sass {
       error("no mixin named " + c->name(), c->pstate(), backtrace());
     }
     Definition_Ptr def = static_cast<Definition_Ptr>((*env)[full_name]);
-    Block_Ptr body = def->block();
+    Block_Obj body = def->block();
     Parameters_Obj params = def->parameters();
 
     if (c->block() && c->name() != "@content" && !body->has_content()) {
@@ -702,9 +702,9 @@ namespace Sass {
 
 
     block_stack.push_back(trace_block);
-    for (auto bb : *body) {
+    for (auto bb : body->elements()) {
       Statement_Ptr ith = bb->perform(this);
-      if (ith) *trace->block() << ith;
+      if (ith) trace->block()->append(ith);
     }
     block_stack.pop_back();
 
@@ -749,12 +749,12 @@ namespace Sass {
   }
 
   // process and add to last block on stack
-  inline void Expand::append_block(Block_Ptr b)
+  inline void Expand::append_block(Block_Obj b)
   {
-    if (b->is_root()) call_stack.push_back(b);
+    if (b->is_root()) call_stack.push_back(&b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr ith = (*b)[i]->perform(this);
-      if (ith) *block_stack.back() << ith;
+      Statement_Obj ith = b->at(i)->perform(this);
+      if (ith) block_stack.back()->append(&ith);
     }
     if (b->is_root()) call_stack.pop_back();
   }
