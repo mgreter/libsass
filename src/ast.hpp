@@ -25,7 +25,7 @@
  * Block_Ptr block() which hides virtual Block_Ptr block() from Statement
  *
  */
-
+ * Block_Ptr block() which hides virtual Block_Ptr block() from Statement
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Woverloaded-virtual"
 
@@ -506,8 +506,8 @@ namespace Sass {
   class Trace_Ref : public Has_Block_Ref {
     ADD_PROPERTY(std::string, name)
   public:
-    Trace_Ref(ParserState pstate, std::string n, Block_Ptr b = 0)
-    : Has_Block_Ref(pstate, b), name_(n)
+    Trace_Ref(ParserState pstate, std::string n, Block_Obj b = 0)
+    : Has_Block_Ref(pstate, &b), name_(n)
     { }
     ATTACH_OPERATIONS()
   };
@@ -518,11 +518,11 @@ namespace Sass {
   class Media_Block_Ref : public Has_Block_Ref {
     ADD_PROPERTY(List_Obj, media_queries)
   public:
-    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Ptr b)
-    : Has_Block_Ref(pstate, b), media_queries_(mqs)
+    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Obj b)
+    : Has_Block_Ref(pstate, &b), media_queries_(mqs)
     { statement_type(MEDIA); }
-    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Ptr b, Selector_Ptr s)
-    : Has_Block_Ref(pstate, b), media_queries_(mqs)
+    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Obj b, Selector_Ptr s)
+    : Has_Block_Ref(pstate, &b), media_queries_(mqs)
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
     bool is_invisible() const;
@@ -538,8 +538,8 @@ namespace Sass {
     ADD_PROPERTY(Selector_Obj, selector)
     ADD_PROPERTY(Expression_Obj, value)
   public:
-    Directive_Ref(ParserState pstate, std::string kwd, Selector_Obj sel = 0, Block_Ptr b = 0, Expression_Obj val = 0)
-    : Has_Block_Ref(pstate, b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
+    Directive_Ref(ParserState pstate, std::string kwd, Selector_Obj sel = 0, Block_Obj b = 0, Expression_Obj val = 0)
+    : Has_Block_Ref(pstate, &b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
     { statement_type(DIRECTIVE); }
     bool bubbles() { return is_keyframes() || is_media(); }
     bool is_media() {
@@ -563,8 +563,8 @@ namespace Sass {
   class Keyframe_Rule_Ref : public Has_Block_Ref {
     ADD_PROPERTY(Selector_Obj, selector2)
   public:
-    Keyframe_Rule_Ref(ParserState pstate, Block_Ptr b)
-    : Has_Block_Ref(pstate, b), selector2_()
+    Keyframe_Rule_Ref(ParserState pstate, Block_Obj b)
+    : Has_Block_Ref(pstate, &b), selector2_()
     { statement_type(KEYFRAMERULE); }
     ATTACH_OPERATIONS()
   };
@@ -579,8 +579,8 @@ namespace Sass {
     ADD_PROPERTY(bool, is_indented)
   public:
     Declaration_Ref(ParserState pstate,
-                String_Ptr prop, Expression_Ptr val, bool i = false, Block_Ptr b = 0)
-    : Has_Block_Ref(pstate, b), property_(prop), value_(val), is_important_(i), is_indented_(false)
+                String_Ptr prop, Expression_Ptr val, bool i = false, Block_Obj b = 0)
+    : Has_Block_Ref(pstate, &b), property_(prop), value_(val), is_important_(i), is_indented_(false)
     { statement_type(DECLARATION); }
     ATTACH_OPERATIONS()
   };
@@ -696,8 +696,8 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, predicate)
     ADD_PROPERTY(Block_Ptr, alternative)
   public:
-    If_Ref(ParserState pstate, Expression_Ptr pred, Block_Ptr con, Block_Ptr alt = 0)
-    : Has_Block_Ref(pstate, con), predicate_(pred), alternative_(alt)
+    If_Ref(ParserState pstate, Expression_Ptr pred, Block_Obj con, Block_Obj alt = 0)
+    : Has_Block_Ref(pstate, &con), predicate_(pred), alternative_(&alt)
     { statement_type(IF); }
     virtual bool has_content()
     {
@@ -716,8 +716,8 @@ namespace Sass {
     ADD_PROPERTY(bool, is_inclusive)
   public:
     For_Ref(ParserState pstate,
-        std::string var, Expression_Ptr lo, Expression_Ptr hi, Block_Ptr b, bool inc)
-    : Has_Block_Ref(pstate, b),
+        std::string var, Expression_Ptr lo, Expression_Ptr hi, Block_Obj b, bool inc)
+    : Has_Block_Ref(pstate, &b),
       variable_(var), lower_bound_(lo), upper_bound_(hi), is_inclusive_(inc)
     { statement_type(FOR); }
     ATTACH_OPERATIONS()
@@ -730,8 +730,8 @@ namespace Sass {
     ADD_PROPERTY(std::vector<std::string>, variables)
     ADD_PROPERTY(Expression_Ptr, list)
   public:
-    Each_Ref(ParserState pstate, std::vector<std::string> vars, Expression_Ptr lst, Block_Ptr b)
-    : Has_Block_Ref(pstate, b), variables_(vars), list_(lst)
+    Each_Ref(ParserState pstate, std::vector<std::string> vars, Expression_Ptr lst, Block_Obj b)
+    : Has_Block_Ref(pstate, &b), variables_(vars), list_(lst)
     { statement_type(EACH); }
     ATTACH_OPERATIONS()
   };
@@ -797,9 +797,9 @@ namespace Sass {
     Definition_Ref(ParserState pstate,
                std::string n,
                Parameters_Ptr params,
-               Block_Ptr b,
+               Block_Obj b,
                Type t)
-    : Has_Block_Ref(pstate, b),
+    : Has_Block_Ref(pstate, &b),
       name_(n),
       parameters_(params),
       environment_(0),
@@ -855,8 +855,8 @@ namespace Sass {
     ADD_PROPERTY(std::string, name)
     ADD_PROPERTY(Arguments_Ptr, arguments)
   public:
-    Mixin_Call_Ref(ParserState pstate, std::string n, Arguments_Ptr args, Block_Ptr b = 0)
-    : Has_Block_Ref(pstate, b), name_(n), arguments_(args)
+    Mixin_Call_Ref(ParserState pstate, std::string n, Arguments_Ptr args, Block_Obj b = 0)
+    : Has_Block_Ref(pstate, &b), name_(n), arguments_(args)
     { }
     ATTACH_OPERATIONS()
   };
@@ -1637,8 +1637,8 @@ namespace Sass {
   class Supports_Block_Ref : public Has_Block_Ref {
     ADD_PROPERTY(Supports_Condition_Obj, condition)
   public:
-    Supports_Block_Ref(ParserState pstate, Supports_Condition_Ptr condition, Block_Ptr block = 0)
-    : Has_Block_Ref(pstate, block), condition_(condition)
+    Supports_Block_Ref(ParserState pstate, Supports_Condition_Ptr condition, Block_Obj block = 0)
+    : Has_Block_Ref(pstate, &block), condition_(condition)
     { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
     ATTACH_OPERATIONS()
