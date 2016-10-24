@@ -522,7 +522,7 @@ namespace Sass {
     return sass_copy_c_string(emitted.buffer.c_str());
   }
 
-  void Context::apply_custom_headers(Block_Ptr root, const char* ctx_path, ParserState pstate)
+  void Context::apply_custom_headers(Block_Obj root, const char* ctx_path, ParserState pstate)
   {
     // create a custom import to resolve headers
     Import_Ptr imp = SASS_MEMORY_NEW(mem, Import, pstate);
@@ -532,10 +532,10 @@ namespace Sass {
     // increase head count to skip later
     head_imports += resources.size() - 1;
     // add the statement if we have urls
-    if (!imp->urls().empty()) (*root) << imp;
+    if (!imp->urls().empty()) root->append(imp);
     // process all other resources (add Import_Stub nodes)
     for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-      (*root) << SASS_MEMORY_NEW(mem, Import_Stub, pstate, imp->incs()[i]);
+      root->append(SASS_MEMORY_NEW(mem, Import_Stub, pstate, imp->incs()[i]));
     }
   }
 

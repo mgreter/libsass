@@ -59,14 +59,14 @@ namespace Sass {
     dd->tabs(d->tabs());
 
     p_stack.push_back(dd);
-    Block_Ptr bb = d->block() ? operator()(d->block()) : NULL;
+    Block_Obj bb = d->block() ? operator()(d->block()) : NULL;
     p_stack.pop_back();
 
     if (bb && bb->length()) {
       if (dd->value() && !dd->value()->is_invisible()) {
         bb->unshift(dd);
       }
-      return bb;
+      return &bb;
     }
     else if (dd->value() && !dd->value()->is_invisible()) {
       return dd;
@@ -142,10 +142,10 @@ namespace Sass {
     // string schema is not a statement!
     // r->block() is already a string schema
     // and that is comming from propset expand
-    Block_Ptr bb = operator()(r->block());
+    Block_Obj bb = operator()(r->block());
     // this should protect us (at least a bit) from our mess
     // fixing this properly is harder that it should be ...
-    if (dynamic_cast<Statement_Ptr>((AST_Node_Ptr)bb) == NULL) {
+    if (dynamic_cast<Statement_Ptr>(&bb) == NULL) {
       error("Illegal nesting: Only properties may be nested beneath properties.", r->block()->pstate());
     }
     Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
@@ -381,7 +381,7 @@ namespace Sass {
     Block_Obj result = SASS_MEMORY_OBJ(ctx.mem, Block, b->pstate(), 0, b->is_root());
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr ss = b->at(i);
-      if (Block_Ptr bb = dynamic_cast<Block_Ptr>(ss)) {
+      if (Block_Obj bb = SASS_MEMORY_CAST_PTR(Block, ss)) {
         Block_Obj bs = flatten(bb);
         for (size_t j = 0, K = bs->length(); j < K; ++j) {
           result->append(bs->at(j));
@@ -539,8 +539,8 @@ namespace Sass {
     Block_Ptr current_block = block_stack.back();
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr ith = (*b)[i]->perform(this);
-      if (Block_Obj bb = dynamic_cast<Block_Ptr>(ith)) {
+      Statement_Ptr ith = b->at(i)->perform(this);
+      if (Block_Obj bb = SASS_MEMORY_CAST_PTR(Block, ith)) {
         for (size_t j = 0, K = bb->length(); j < K; ++j) {
           current_block->append(bb->at(j));
         }

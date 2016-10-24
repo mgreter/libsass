@@ -47,4 +47,7 @@ namespace Sass {
 #define SASS_MEMORY_CAST(Class, obj)   \
   (dynamic_cast<Class##_Ptr>(& obj))   \
 
+#define SASS_MEMORY_CAST_PTR(Class, ptr)   \
+  (dynamic_cast<Class##_Ptr>(ptr))   \
+
 #endif

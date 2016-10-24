@@ -68,7 +68,7 @@ namespace Sass {
 
 
 
-    void apply_custom_headers(Block_Ptr root, const char* path, ParserState pstate);
+    void apply_custom_headers(Block_Obj root, const char* path, ParserState pstate);
 
     std::vector<Sass_Importer_Entry> c_headers;
     std::vector<Sass_Importer_Entry> c_importers;

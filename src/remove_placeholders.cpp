@@ -12,7 +12,7 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(Block_Ptr b) {
         for (size_t i = 0, L = b->length(); i < L; ++i) {
-            (*b)[i]->perform(this);
+            b->at(i)->perform(this);
         }
     }
 

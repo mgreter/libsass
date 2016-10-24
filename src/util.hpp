@@ -46,7 +46,6 @@ namespace Sass {
     std::string normalize_sixtuplet(const std::string& col);
 
     std::string vecJoin(const std::vector<std::string>& vec, const std::string& sep);
-    bool containsAnyPrintableStatements(Block_Ptr b);
 
     bool isPrintable(Ruleset_Ptr r, Sass_Output_Style style = NESTED);
     bool isPrintable(Supports_Block_Ptr r, Sass_Output_Style style = NESTED);

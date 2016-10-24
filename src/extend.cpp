@@ -2010,7 +2010,7 @@ namespace Sass {
   }
 
 
-  bool shouldExtendBlock(Block_Ptr b) {
+  bool shouldExtendBlock(Block_Obj b) {
 
     // If a block is empty, there's no reason to extend it since any rules placed on this block
     // won't have any output. The main benefit of this is for structures like:
@@ -2026,7 +2026,7 @@ namespace Sass {
     // there are no child statements. However .a .b should have extensions applied.
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = (*b)[i];
+      Statement_Ptr stm = b->at(i);
 
       if (typeid(*stm) == typeid(Ruleset)) {
         // Do nothing. This doesn't count as a statement that causes extension since we'll iterate over this rule set in a future visit and try to extend it.
@@ -2076,7 +2076,7 @@ namespace Sass {
   void Extend::operator()(Block_Ptr b)
   {
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      (*b)[i]->perform(this);
+      b->at(i)->perform(this);
     }
     // do final check if everything was extended
     // we set `extended` flag on extended selectors

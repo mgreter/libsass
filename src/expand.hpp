@@ -29,7 +29,7 @@ namespace Sass {
 
     // it's easier to work with vectors
     std::vector<Env*>           env_stack;
-    std::vector<Block_Ptr>         block_stack;
+    std::vector<Block_Obj>         block_stack;
     std::vector<AST_Node_Ptr>      call_stack;
     std::vector<String_Ptr>        property_stack;
     std::vector<CommaSequence_Selector_Ptr> selector_stack;

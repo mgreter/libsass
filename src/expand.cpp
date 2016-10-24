@@ -2,6 +2,7 @@
 #include <iostream>
 #include <typeinfo>
 
+#include "ast.hpp"
 #include "expand.hpp"
 #include "bind.hpp"
 #include "eval.hpp"
@@ -19,7 +20,7 @@ namespace Sass {
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
-    block_stack(std::vector<Block_Ptr>()),
+    block_stack(std::vector<Block_Obj>()),
     call_stack(std::vector<AST_Node_Ptr>()),
     property_stack(std::vector<String_Ptr>()),
     selector_stack(std::vector<CommaSequence_Selector_Ptr>()),
@@ -75,7 +76,7 @@ namespace Sass {
     // set the current env as parent
     Env env(environment());
     // copy the block object (add items later)
-    Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block,
+    Block_Obj bb = SASS_MEMORY_OBJ(ctx.mem, Block,
                                 b->pstate(),
                                 b->length(),
                                 b->is_root());
@@ -88,7 +89,7 @@ namespace Sass {
     this->block_stack.pop_back();
     this->env_stack.pop_back();
     // return copy
-    return bb;
+    return &bb;
   }
 
   Statement_Ptr Expand::operator()(Ruleset_Ptr r)
@@ -333,7 +334,7 @@ namespace Sass {
   {
     // get parent node from call stack
     AST_Node_Ptr parent = call_stack.back();
-    if (parent && dynamic_cast<Block_Ptr>(parent) == NULL) {
+    if (SASS_MEMORY_CAST_PTR(Block, parent) == NULL) {
       error("Import directives may not be used within control directives or mixins.", i->pstate());
     }
     // we don't seem to need that actually afterall
@@ -697,7 +698,7 @@ namespace Sass {
 
     bind(std::string("Mixin"), c->name(), params, args, &ctx, &new_env, &eval);
 
-    Block_Ptr trace_block = SASS_MEMORY_NEW(ctx.mem, Block, c->pstate());
+    Block_Obj trace_block = SASS_MEMORY_OBJ(ctx.mem, Block, c->pstate());
     Trace_Ptr trace = SASS_MEMORY_NEW(ctx.mem, Trace, c->pstate(), c->name(), trace_block);
 
 
