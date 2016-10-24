@@ -50,6 +50,84 @@
 
 namespace Sass {
 
+  // declare classes that are instances of memory nodes
+  using AST_Node_Obj = Memory_Node<AST_Node_Ref>;
+  using Statement_Obj = Memory_Node<Statement_Ref>;
+  using Block_Obj = Memory_Node<Block_Ref>;
+  using Ruleset_Obj = Memory_Node<Ruleset_Ref>;
+  using Bubble_Obj = Memory_Node<Bubble_Ref>;
+  using Trace_Obj = Memory_Node<Trace_Ref>;
+  using Media_Block_Obj = Memory_Node<Media_Block_Ref>;
+  using Supports_Block_Obj = Memory_Node<Supports_Block_Ref>;
+  using Directive_Obj = Memory_Node<Directive_Ref>;
+  using Keyframe_Rule_Obj = Memory_Node<Keyframe_Rule_Ref>;
+  using At_Root_Block_Obj = Memory_Node<At_Root_Block_Ref>;
+  using Declaration_Obj = Memory_Node<Declaration_Ref>;
+  using Assignment_Obj = Memory_Node<Assignment_Ref>;
+  using Import_Obj = Memory_Node<Import_Ref>;
+  using Import_Stub_Obj = Memory_Node<Import_Stub_Ref>;
+  using Warning_Obj = Memory_Node<Warning_Ref>;
+  using Error_Obj = Memory_Node<Error_Ref>;
+  using Debug_Obj = Memory_Node<Debug_Ref>;
+  using Comment_Obj = Memory_Node<Comment_Ref>;
+  using PreValue_Obj = Memory_Node<PreValue_Ref>;
+  using Has_Block_Obj = Memory_Node<Has_Block_Ref>;
+  using Thunk_Obj = Memory_Node<Thunk_Ref>;
+  using If_Obj = Memory_Node<If_Ref>;
+  using For_Obj = Memory_Node<For_Ref>;
+  using Each_Obj = Memory_Node<Each_Ref>;
+  using While_Obj = Memory_Node<While_Ref>;
+  using Return_Obj = Memory_Node<Return_Ref>;
+  using Content_Obj = Memory_Node<Content_Ref>;
+  using Extension_Obj = Memory_Node<Extension_Ref>;
+  using Definition_Obj = Memory_Node<Definition_Ref>;
+  using Mixin_Call_Obj = Memory_Node<Mixin_Call_Ref>;
+  using Value_Obj = Memory_Node<Value_Ref>;
+  using Expression_Obj = Memory_Node<Expression_Ref>;
+  using List_Obj = Memory_Node<List_Ref>;
+  using Map_Obj = Memory_Node<Map_Ref>;
+  using Binary_Expression_Obj = Memory_Node<Binary_Expression_Ref>;
+  using Unary_Expression_Obj = Memory_Node<Unary_Expression_Ref>;
+  using Function_Call_Obj = Memory_Node<Function_Call_Ref>;
+  using Function_Call_Schema_Obj = Memory_Node<Function_Call_Schema_Ref>;
+  using Custom_Warning_Obj = Memory_Node<Custom_Warning_Ref>;
+  using Custom_Error_Obj = Memory_Node<Custom_Error_Ref>;
+  using Variable_Obj = Memory_Node<Variable_Ref>;
+  using Textual_Obj = Memory_Node<Textual_Ref>;
+  using Number_Obj = Memory_Node<Number_Ref>;
+  using Color_Obj = Memory_Node<Color_Ref>;
+  using Boolean_Obj = Memory_Node<Boolean_Ref>;
+  using String_Schema_Obj = Memory_Node<String_Schema_Ref>;
+  using String_Obj = Memory_Node<String_Ref>;
+  using String_Constant_Obj = Memory_Node<String_Constant_Ref>;
+  using String_Quoted_Obj = Memory_Node<String_Quoted_Ref>;
+  using Media_Query_Obj = Memory_Node<Media_Query_Ref>;
+  using Media_Query_Expression_Obj = Memory_Node<Media_Query_Expression_Ref>;
+  using Supports_Condition_Obj = Memory_Node<Supports_Condition_Ref>;
+  using Supports_Operator_Obj = Memory_Node<Supports_Operator_Ref>;
+  using Supports_Negation_Obj = Memory_Node<Supports_Negation_Ref>;
+  using Supports_Declaration_Obj = Memory_Node<Supports_Declaration_Ref>;
+  using Supports_Interpolation_Obj = Memory_Node<Supports_Interpolation_Ref>;
+  using At_Root_Query_Obj = Memory_Node<At_Root_Query_Ref>;
+  using Null_Obj = Memory_Node<Null_Ref>;
+  using Parent_Selector_Obj = Memory_Node<Parent_Selector_Ref>;
+  using Parameter_Obj = Memory_Node<Parameter_Ref>;
+  using Parameters_Obj = Memory_Node<Parameters_Ref>;
+  using Argument_Obj = Memory_Node<Argument_Ref>;
+  using Arguments_Obj = Memory_Node<Arguments_Ref>;
+  using Selector_Obj = Memory_Node<Selector_Ref>;
+  using Selector_Schema_Obj = Memory_Node<Selector_Schema_Ref>;
+  using Placeholder_Selector_Obj = Memory_Node<Placeholder_Selector_Ref>;
+  using Element_Selector_Obj = Memory_Node<Element_Selector_Ref>;
+  using Class_Selector_Obj = Memory_Node<Class_Selector_Ref>;
+  using Id_Selector_Obj = Memory_Node<Id_Selector_Ref>;
+  using Attribute_Selector_Obj = Memory_Node<Attribute_Selector_Ref>;
+  using Pseudo_Selector_Obj = Memory_Node<Pseudo_Selector_Ref>;
+  using Wrapped_Selector_Obj = Memory_Node<Wrapped_Selector_Ref>;
+  using SimpleSequence_Selector_Obj = Memory_Node<SimpleSequence_Selector_Ref>;
+  using Sequence_Selector_Obj = Memory_Node<Sequence_Selector_Ref>;
+  using CommaSequence_Selector_Obj = Memory_Node<CommaSequence_Selector_Ref>;
+
   // easier to search with name
   const bool DELAYED = true;
 
@@ -1600,7 +1678,7 @@ namespace Sass {
   /////////////////
   class Media_Query_Ref : public Expression_Ref,
                       public Vectorized<Media_Query_Expression_Ptr> {
-    ADD_PROPERTY(String_Ptr, media_type)
+    ADD_PROPERTY(String_Obj, media_type)
     ADD_PROPERTY(bool, is_negated)
     ADD_PROPERTY(bool, is_restricted)
   public:
@@ -2654,83 +2732,6 @@ namespace Sass {
   struct cmp_compound_selector { inline bool operator() (SimpleSequence_Selector_Ptr_Const l, SimpleSequence_Selector_Ptr_Const r) { return (*l < *r); } };
   struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Ptr l, const Simple_Selector_Ptr r) { return (*l < *r); } };
 
-  // declare classes that are instances of memory nodes
-  using AST_Node_Obj = Memory_Node<AST_Node_Ref>;
-  using Statement_Obj = Memory_Node<Statement_Ref>;
-  using Block_Obj = Memory_Node<Block_Ref>;
-  using Ruleset_Obj = Memory_Node<Ruleset_Ref>;
-  using Bubble_Obj = Memory_Node<Bubble_Ref>;
-  using Trace_Obj = Memory_Node<Trace_Ref>;
-  using Media_Block_Obj = Memory_Node<Media_Block_Ref>;
-  using Supports_Block_Obj = Memory_Node<Supports_Block_Ref>;
-  using Directive_Obj = Memory_Node<Directive_Ref>;
-  using Keyframe_Rule_Obj = Memory_Node<Keyframe_Rule_Ref>;
-  using At_Root_Block_Obj = Memory_Node<At_Root_Block_Ref>;
-  using Declaration_Obj = Memory_Node<Declaration_Ref>;
-  using Assignment_Obj = Memory_Node<Assignment_Ref>;
-  using Import_Obj = Memory_Node<Import_Ref>;
-  using Import_Stub_Obj = Memory_Node<Import_Stub_Ref>;
-  using Warning_Obj = Memory_Node<Warning_Ref>;
-  using Error_Obj = Memory_Node<Error_Ref>;
-  using Debug_Obj = Memory_Node<Debug_Ref>;
-  using Comment_Obj = Memory_Node<Comment_Ref>;
-  using PreValue_Obj = Memory_Node<PreValue_Ref>;
-  using Has_Block_Obj = Memory_Node<Has_Block_Ref>;
-  using Thunk_Obj = Memory_Node<Thunk_Ref>;
-  using If_Obj = Memory_Node<If_Ref>;
-  using For_Obj = Memory_Node<For_Ref>;
-  using Each_Obj = Memory_Node<Each_Ref>;
-  using While_Obj = Memory_Node<While_Ref>;
-  using Return_Obj = Memory_Node<Return_Ref>;
-  using Content_Obj = Memory_Node<Content_Ref>;
-  using Extension_Obj = Memory_Node<Extension_Ref>;
-  using Definition_Obj = Memory_Node<Definition_Ref>;
-  using Mixin_Call_Obj = Memory_Node<Mixin_Call_Ref>;
-  using Value_Obj = Memory_Node<Value_Ref>;
-  using Expression_Obj = Memory_Node<Expression_Ref>;
-  using List_Obj = Memory_Node<List_Ref>;
-  using Map_Obj = Memory_Node<Map_Ref>;
-  using Binary_Expression_Obj = Memory_Node<Binary_Expression_Ref>;
-  using Unary_Expression_Obj = Memory_Node<Unary_Expression_Ref>;
-  using Function_Call_Obj = Memory_Node<Function_Call_Ref>;
-  using Function_Call_Schema_Obj = Memory_Node<Function_Call_Schema_Ref>;
-  using Custom_Warning_Obj = Memory_Node<Custom_Warning_Ref>;
-  using Custom_Error_Obj = Memory_Node<Custom_Error_Ref>;
-  using Variable_Obj = Memory_Node<Variable_Ref>;
-  using Textual_Obj = Memory_Node<Textual_Ref>;
-  using Number_Obj = Memory_Node<Number_Ref>;
-  using Color_Obj = Memory_Node<Color_Ref>;
-  using Boolean_Obj = Memory_Node<Boolean_Ref>;
-  using String_Schema_Obj = Memory_Node<String_Schema_Ref>;
-  using String_Obj = Memory_Node<String_Ref>;
-  using String_Constant_Obj = Memory_Node<String_Constant_Ref>;
-  using String_Quoted_Obj = Memory_Node<String_Quoted_Ref>;
-  using Media_Query_Obj = Memory_Node<Media_Query_Ref>;
-  using Media_Query_Expression_Obj = Memory_Node<Media_Query_Expression_Ref>;
-  using Supports_Condition_Obj = Memory_Node<Supports_Condition_Ref>;
-  using Supports_Operator_Obj = Memory_Node<Supports_Operator_Ref>;
-  using Supports_Negation_Obj = Memory_Node<Supports_Negation_Ref>;
-  using Supports_Declaration_Obj = Memory_Node<Supports_Declaration_Ref>;
-  using Supports_Interpolation_Obj = Memory_Node<Supports_Interpolation_Ref>;
-  using At_Root_Query_Obj = Memory_Node<At_Root_Query_Ref>;
-  using Null_Obj = Memory_Node<Null_Ref>;
-  using Parent_Selector_Obj = Memory_Node<Parent_Selector_Ref>;
-  using Parameter_Obj = Memory_Node<Parameter_Ref>;
-  using Parameters_Obj = Memory_Node<Parameters_Ref>;
-  using Argument_Obj = Memory_Node<Argument_Ref>;
-  using Arguments_Obj = Memory_Node<Arguments_Ref>;
-  using Selector_Obj = Memory_Node<Selector_Ref>;
-  using Selector_Schema_Obj = Memory_Node<Selector_Schema_Ref>;
-  using Placeholder_Selector_Obj = Memory_Node<Placeholder_Selector_Ref>;
-  using Element_Selector_Obj = Memory_Node<Element_Selector_Ref>;
-  using Class_Selector_Obj = Memory_Node<Class_Selector_Ref>;
-  using Id_Selector_Obj = Memory_Node<Id_Selector_Ref>;
-  using Attribute_Selector_Obj = Memory_Node<Attribute_Selector_Ref>;
-  using Pseudo_Selector_Obj = Memory_Node<Pseudo_Selector_Ref>;
-  using Wrapped_Selector_Obj = Memory_Node<Wrapped_Selector_Ref>;
-  using SimpleSequence_Selector_Obj = Memory_Node<SimpleSequence_Selector_Ref>;
-  using Sequence_Selector_Obj = Memory_Node<Sequence_Selector_Ref>;
-  using CommaSequence_Selector_Obj = Memory_Node<CommaSequence_Selector_Ref>;
 
 }
 

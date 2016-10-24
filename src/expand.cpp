@@ -180,7 +180,7 @@ namespace Sass {
     char* str = sass_copy_c_string(str_mq.c_str());
     ctx.strings.push_back(str);
     Parser p(Parser::from_c_str(str, ctx, mq->pstate()));
-    mq = p.parse_media_queries();
+    mq = &p.parse_media_queries();
     Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       static_cast<List_Ptr>(mq->perform(&eval)),

@@ -539,16 +539,31 @@ namespace Sass {
     }
   }
 
+String_Obj getObj(Memory_Manager& mem) {
+ParserState pstate("null");
+std::string str("foobar");
+  String_Obj node = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
+  return node;
+}
+
+String_Constant_Obj getCst(String_Obj node) {
+  return SASS_MEMORY_CAST(String_Constant, node);
+}
+
   Block_Ptr File_Context::parse()
   {
 
     // check if entry file is given
     if (input_path.empty()) return 0;
 /*
-Memory_Manager mem;
-ParserState pstate("null");
-     Null_Obj node = SASS_MEMORY_CREATE(mem, Null, pstate);
-std::cerr << "[[" << node.obj() << "]]\n";
+{
+     Memory_Manager mem;
+     String_Constant_Obj cst = getCst(getObj(mem));
+
+
+std::cerr << "[[" << cst->to_string() << "]]\n";
+}
+
 exit(0);
 */
     // create absolute path from input filename

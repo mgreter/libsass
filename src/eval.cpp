@@ -1243,11 +1243,11 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Media_Query_Ptr q)
   {
-    String_Ptr t = q->media_type();
-    t = static_cast<String_Ptr>(t ? t->perform(this) : 0);
+    String_Obj t = q->media_type();
+    t = static_cast<String_Ptr>(&t ? t->perform(this) : 0);
     Media_Query_Ptr qq = SASS_MEMORY_NEW(ctx.mem, Media_Query,
                                       q->pstate(),
-                                      t,
+                                      &t,
                                       q->length(),
                                       q->is_negated(),
                                       q->is_restricted());

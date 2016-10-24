@@ -216,11 +216,11 @@ namespace Sass {
     else if (lex < kwd_err >(true)) { block->append(&parse_error()); }
     else if (lex < kwd_dbg >(true)) { block->append(&parse_debug()); }
     else if (lex < kwd_warn >(true)) { block->append(&parse_warning()); }
-    else if (lex < kwd_if_directive >(true)) { block->append(parse_if_directive()); }
-    else if (lex < kwd_for_directive >(true)) { block->append(parse_for_directive()); }
-    else if (lex < kwd_each_directive >(true)) { block->append(parse_each_directive()); }
-    else if (lex < kwd_while_directive >(true)) { block->append(parse_while_directive()); }
-    else if (lex < kwd_return_directive >(true)) { block->append(parse_return_directive()); }
+    else if (lex < kwd_if_directive >(true)) { block->append(&parse_if_directive()); }
+    else if (lex < kwd_for_directive >(true)) { block->append(&parse_for_directive()); }
+    else if (lex < kwd_each_directive >(true)) { block->append(&parse_each_directive()); }
+    else if (lex < kwd_while_directive >(true)) { block->append(&parse_while_directive()); }
+    else if (lex < kwd_return_directive >(true)) { block->append(&parse_return_directive()); }
 
     // abort if we are in function context and have nothing parsed yet
     else if (stack.back() == Scope::Function) {
@@ -265,7 +265,7 @@ namespace Sass {
     else if (lex < kwd_media >(true)) { block->append(&parse_media_block()); }
     else if (lex < kwd_at_root >(true)) { block->append(&parse_at_root_block()); }
     else if (lex < kwd_include_directive >(true)) { block->append(parse_include_directive()); }
-    else if (lex < kwd_content_directive >(true)) { block->append(parse_content_directive()); }
+    else if (lex < kwd_content_directive >(true)) { block->append(&parse_content_directive()); }
     else if (lex < kwd_supports_directive >(true)) { block->append(&parse_supports_directive()); }
     else if (lex < kwd_mixin >(true)) { block->append(parse_definition(Definition::MIXIN)); }
     else if (lex < kwd_function >(true)) { block->append(parse_definition(Definition::FUNCTION)); }
@@ -288,7 +288,7 @@ namespace Sass {
     {
       // ToDo: how does it handle parse errors?
       // maybe we are expected to parse something?
-      Declaration_Ptr decl = parse_declaration();
+      Declaration_Ptr decl = &parse_declaration();
       decl->tabs(indentation);
       block->append(decl);
       // maybe we have a "sub-block"
@@ -325,7 +325,7 @@ namespace Sass {
           Expression_Ptr the_url = parse_string();
           *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url);
         }
-        else if (String_Ptr the_url = parse_url_function_argument()) {
+        else if (String_Ptr the_url = &parse_url_function_argument()) {
           *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url);
         }
         else if (peek < skip_over_scopes < exactly < '(' >, exactly < ')' > > >(position)) {
@@ -346,8 +346,8 @@ namespace Sass {
     } while (lex_css< exactly<','> >());
 
     if (!peek_css<alternatives<exactly<';'>,end_of_file>>()) {
-      List_Ptr media_queries = parse_media_queries();
-      imp->media_queries(media_queries);
+      List_Obj media_queries = parse_media_queries();
+      imp->media_queries(&media_queries);
     }
 
     for(auto location : to_import) {
@@ -957,7 +957,7 @@ namespace Sass {
     }
   }
 
-  Declaration_Ptr Parser::parse_declaration() {
+  Declaration_Obj Parser::parse_declaration() {
     String_Ptr prop = 0;
     if (lex< sequence< optional< exactly<'*'> >, identifier_schema > >()) {
       prop = parse_identifier_schema();
@@ -975,7 +975,7 @@ namespace Sass {
     if (peek_css< exactly<';'> >()) error("style declaration must contain a value", pstate);
     if (peek_css< exactly<'{'> >()) is_indented = false; // don't indent if value is empty
     if (peek_css< static_value >()) {
-      return SASS_MEMORY_NEW(ctx.mem, Declaration, prop->pstate(), prop, parse_static_value()/*, lex<kwd_important>()*/);
+      return SASS_MEMORY_CREATE(ctx.mem, Declaration, prop->pstate(), prop, parse_static_value()/*, lex<kwd_important>()*/);
     }
     else {
       Expression_Ptr value;
@@ -996,7 +996,7 @@ namespace Sass {
         }
       }
       lex < css_comments >(false);
-      auto decl = SASS_MEMORY_NEW(ctx.mem, Declaration, prop->pstate(), prop, value/*, lex<kwd_important>()*/);
+      Declaration_Obj decl = SASS_MEMORY_CREATE(ctx.mem, Declaration, prop->pstate(), prop, value/*, lex<kwd_important>()*/);
       decl->is_indented(is_indented);
       return decl;
     }
@@ -1380,10 +1380,10 @@ namespace Sass {
       return parse_ie_keyword_arg();
     }
     else if (peek< sequence < calc_fn_call, exactly <'('> > >()) {
-      return parse_calc_function();
+      return &parse_calc_function();
     }
     else if (lex < functional_schema >()) {
-      return parse_function_call_schema();
+      return &parse_function_call_schema();
     }
     else if (lex< identifier_schema >()) {
       String_Ptr string = parse_identifier_schema();
@@ -1396,10 +1396,10 @@ namespace Sass {
       return string;
     }
     else if (peek< sequence< uri_prefix, W, real_uri_value > >()) {
-      return parse_url_function_string();
+      return &parse_url_function_string();
     }
     else if (peek< re_functional >()) {
-      return parse_function_call();
+      return &parse_function_call();
     }
     else if (lex< exactly<'+'> >()) {
       Unary_Expression_Ptr ex = SASS_MEMORY_NEW(ctx.mem, Unary_Expression, pstate, Unary_Expression::PLUS, parse_factor());
@@ -1669,7 +1669,7 @@ namespace Sass {
         // (*schema) << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, " ");
       }
       if ((e = peek< re_functional >()) && e < stop) {
-        (*schema) << parse_function_call();
+        (*schema) << &parse_function_call();
       }
       // lex an interpolant /#{...}/
       else if (lex< exactly < hash_lbrace > >()) {
@@ -1805,7 +1805,7 @@ namespace Sass {
   }
 
   // calc functions should preserve arguments
-  Function_Call_Ptr Parser::parse_calc_function()
+  Function_Call_Obj Parser::parse_calc_function()
   {
     lex< identifier >();
     std::string name(lexed);
@@ -1823,10 +1823,10 @@ namespace Sass {
     Argument_Ptr arg = SASS_MEMORY_NEW(ctx.mem, Argument, arg_pos, parse_interpolated_chunk(Token(arg_beg, arg_end)));
     Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, arg_pos);
     *args << arg;
-    return SASS_MEMORY_NEW(ctx.mem, Function_Call, call_pos, name, args);
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
   }
 
-  String_Ptr Parser::parse_url_function_string()
+  String_Obj Parser::parse_url_function_string()
   {
     std::string prefix("");
     if (lex< uri_prefix >()) {
@@ -1834,7 +1834,7 @@ namespace Sass {
     }
 
     lex < optional_spaces >();
-    String_Ptr url_string = parse_url_function_argument();
+    String_Obj url_string = parse_url_function_argument();
 
     std::string suffix("");
     if (lex< real_uri_suffix >()) {
@@ -1842,23 +1842,23 @@ namespace Sass {
     }
 
     std::string uri("");
-    if (url_string) {
+    if (&url_string) {
       uri = url_string->to_string({ NESTED, 5 });
     }
 
-    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(url_string)) {
-      String_Schema_Ptr res = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
-      (*res) << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, prefix);
-      (*res) += schema;
-      (*res) << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, suffix);
-      return res;
+    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(&url_string)) {
+      String_Schema_Obj res = SASS_MEMORY_CREATE(ctx.mem, String_Schema, pstate);
+      res->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, prefix));
+      res->append(schema);
+      res->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, suffix));
+      return &res;
     } else {
       std::string res = prefix + uri + suffix;
-      return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, res);
+      return SASS_MEMORY_CREATE(ctx.mem, String_Constant, pstate, res);
     }
   }
 
-  String_Ptr Parser::parse_url_function_argument()
+  String_Obj Parser::parse_url_function_argument()
   {
     const char* p = position;
 
@@ -1884,31 +1884,30 @@ namespace Sass {
     return 0;
   }
 
-  Function_Call_Ptr Parser::parse_function_call()
+  Function_Call_Obj Parser::parse_function_call()
   {
     lex< identifier >();
     std::string name(lexed);
 
     ParserState call_pos = pstate;
     Arguments_Ptr args = parse_arguments();
-    return SASS_MEMORY_NEW(ctx.mem, Function_Call, call_pos, name, args);
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
   }
 
-  Function_Call_Schema_Ptr Parser::parse_function_call_schema()
+  Function_Call_Schema_Obj Parser::parse_function_call_schema()
   {
     String_Ptr name = parse_identifier_schema();
     ParserState source_position_of_call = pstate;
 
-    Function_Call_Schema_Ptr the_call = SASS_MEMORY_NEW(ctx.mem, Function_Call_Schema, source_position_of_call, name, parse_arguments());
-    return the_call;
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call_Schema, source_position_of_call, name, parse_arguments());
   }
 
-  Content_Ptr Parser::parse_content_directive()
+  Content_Obj Parser::parse_content_directive()
   {
     return SASS_MEMORY_NEW(ctx.mem, Content, pstate);
   }
 
-  If_Ptr Parser::parse_if_directive(bool else_if)
+  If_Obj Parser::parse_if_directive(bool else_if)
   {
     stack.push_back(Scope::Control);
     ParserState if_source_position = pstate;
@@ -1921,7 +1920,7 @@ namespace Sass {
     // we want all other comments to be parsed
     if (lex_css< elseif_directive >()) {
       alternative = SASS_MEMORY_NEW(ctx.mem, Block, pstate);
-      (*alternative) << parse_if_directive(true);
+      alternative->append(&parse_if_directive(true));
     }
     else if (lex_css< kwd_else_directive >()) {
       alternative = &parse_block(root);
@@ -1930,7 +1929,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(ctx.mem, If, if_source_position, predicate, block, alternative);
   }
 
-  For_Ptr Parser::parse_for_directive()
+  For_Obj Parser::parse_for_directive()
   {
     stack.push_back(Scope::Control);
     ParserState for_source_position = pstate;
@@ -1975,7 +1974,7 @@ namespace Sass {
     return token;
   }
 
-  Each_Ptr Parser::parse_each_directive()
+  Each_Obj Parser::parse_each_directive()
   {
     stack.push_back(Scope::Control);
     ParserState each_source_position = pstate;
@@ -1995,7 +1994,7 @@ namespace Sass {
   }
 
   // called after parsing `kwd_while_directive`
-  While_Ptr Parser::parse_while_directive()
+  While_Obj Parser::parse_while_directive()
   {
     stack.push_back(Scope::Control);
     bool root = block_stack.back()->is_root();
@@ -2017,7 +2016,7 @@ namespace Sass {
   {
     stack.push_back(Scope::Media);
     Media_Block_Ptr media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
-    media_block->media_queries(parse_media_queries());
+    media_block->media_queries(&parse_media_queries());
 
     Media_Block_Ptr prev_media_block = last_media_block;
     last_media_block = media_block;
@@ -2027,7 +2026,7 @@ namespace Sass {
     return media_block;
   }
 
-  List_Ptr Parser::parse_media_queries()
+  List_Obj Parser::parse_media_queries()
   {
     advanceToNextToken();
     List_Ptr media_queries = SASS_MEMORY_NEW(ctx.mem, List, pstate, 0, SASS_COMMA);
@@ -2052,7 +2051,7 @@ namespace Sass {
     while (lex_css < kwd_and >()) (*media_query) << parse_media_expression();
     if (lex < identifier_schema >()) {
       String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
-      *schema << media_query->media_type();
+      *schema << &media_query->media_type();
       *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, " ");
       *schema << parse_identifier_schema();
       media_query->media_type(schema);
@@ -2156,7 +2155,7 @@ namespace Sass {
   {
     Supports_Condition_Ptr cond = 0;
     // parse something declaration like
-    Declaration_Ptr declaration = parse_declaration();
+    Declaration_Ptr declaration = &parse_declaration();
     if (!declaration) error("@supports condition expected declaration", pstate);
     cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Declaration,
                      declaration->pstate(),
@@ -2456,12 +2455,12 @@ namespace Sass {
     return SASS_MEMORY_CREATE(ctx.mem, Debug, pstate, parse_list(DELAYED));
   }
 
-  Return_Ptr Parser::parse_return_directive()
+  Return_Obj Parser::parse_return_directive()
   {
     // check that we do not have an empty list (ToDo: check if we got all cases)
     if (peek_css < alternatives < exactly < ';' >, exactly < '}' >, end_of_file > >())
     { css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was "); }
-    return SASS_MEMORY_NEW(ctx.mem, Return, pstate, parse_list());
+    return SASS_MEMORY_CREATE(ctx.mem, Return, pstate, parse_list());
   }
 
   Lookahead Parser::lookahead_for_selector(const char* start)
