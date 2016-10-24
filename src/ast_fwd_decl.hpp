@@ -59,6 +59,10 @@ namespace Sass {
     Memory_Object* operator-> () {
       return node;
     };
+  private:
+    bool isNull () {
+      return node == NULL;
+    };
     bool isNull () const {
       return node == NULL;
     };
