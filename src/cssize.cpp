@@ -488,9 +488,9 @@ namespace Sass {
         }
         else
         {
-          List_Ptr mq = merge_media_queries(static_cast<Media_Block_Ptr>(&node->node()), static_cast<Media_Block_Ptr>(parent));
+          List_Obj mq = merge_media_queries(static_cast<Media_Block_Ptr>(&node->node()), static_cast<Media_Block_Ptr>(parent));
           if (!mq->length()) continue;
-          static_cast<Media_Block_Ptr>(&node->node())->media_queries(mq);
+          static_cast<Media_Block_Ptr>(&node->node())->media_queries(&mq);
           ss = &node->node();
         }
 
@@ -550,9 +550,9 @@ namespace Sass {
     }
   }
 
-  List_Ptr Cssize::merge_media_queries(Media_Block_Obj m1, Media_Block_Obj m2)
+  List_Obj Cssize::merge_media_queries(Media_Block_Obj m1, Media_Block_Obj m2)
   {
-    List_Ptr qq = SASS_MEMORY_NEW(ctx.mem, List,
+    List_Obj qq = SASS_MEMORY_OBJ(ctx.mem, List,
                                m1->media_queries()->pstate(),
                                m1->media_queries()->length(),
                                SASS_COMMA);

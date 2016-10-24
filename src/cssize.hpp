@@ -64,7 +64,7 @@ namespace Sass {
     Statement_Ptr flatten(Statement_Ptr);
     bool bubblable(Statement_Ptr);
 
-    List_Ptr merge_media_queries(Media_Block_Obj, Media_Block_Obj);
+    List_Obj merge_media_queries(Media_Block_Obj, Media_Block_Obj);
     Media_Query_Obj merge_media_query(Media_Query_Obj, Media_Query_Obj);
 
     template <typename U>
