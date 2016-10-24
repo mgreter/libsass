@@ -48,7 +48,7 @@ namespace Sass {
     Expand(Context&, Env*, Backtrace*, std::vector<CommaSequence_Selector_Ptr>* stack = NULL);
     ~Expand() { }
 
-    Statement_Ptr operator()(Block_Ptr);
+    Block_Ptr operator()(Block_Ptr);
     Statement_Ptr operator()(Ruleset_Ptr);
     Statement_Ptr operator()(Media_Block_Ptr);
     Statement_Ptr operator()(Supports_Block_Ptr);

@@ -21,7 +21,7 @@ namespace Sass {
     return p_stack.size() ? p_stack.back() : block_stack.front();
   }
 
-  Statement_Ptr Cssize::operator()(Block_Ptr b)
+  Block_Ptr Cssize::operator()(Block_Ptr b)
   {
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, b->pstate(), b->length(), b->is_root());
     // bb->tabs(b->tabs());
@@ -59,7 +59,7 @@ namespace Sass {
     dd->tabs(d->tabs());
 
     p_stack.push_back(dd);
-    Block_Ptr bb = d->block() ? d->block()->perform(this)->block() : 0;
+    Block_Ptr bb = d->block() ? operator()(d->block()) : NULL;
     p_stack.pop_back();
 
     if (bb && bb->length()) {
@@ -89,7 +89,7 @@ namespace Sass {
                                   r->pstate(),
                                   r->keyword(),
                                   r->selector(),
-                                  r->block() ? r->block()->perform(this)->block() : 0);
+                                  r->block() ? operator()(r->block()) : 0);
     if (r->value()) rr->value(r->value());
     p_stack.pop_back();
 
@@ -115,9 +115,9 @@ namespace Sass {
       *result << empty_node;
     }
 
-    Statement_Ptr ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
-    for (size_t i = 0, L = ss->block()->length(); i < L; ++i) {
-      *result << (*ss->block())[i];
+    Block_Ptr ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
+    for (size_t i = 0, L = ss->length(); i < L; ++i) {
+      result->append(ss->at(i));
     }
 
     return result;
@@ -129,10 +129,10 @@ namespace Sass {
 
     Keyframe_Rule_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule,
                                         r->pstate(),
-                                        r->block()->perform(this)->block());
+                                        operator()(r->block()));
     if (&r->selector2()) rr->selector2(r->selector2());
 
-    return debubble(rr->block(), rr)->block();
+    return debubble(rr->block(), rr);
   }
 
   Statement_Ptr Cssize::operator()(Ruleset_Ptr r)
@@ -142,16 +142,16 @@ namespace Sass {
     // string schema is not a statement!
     // r->block() is already a string schema
     // and that is comming from propset expand
-    Statement_Ptr stmt = r->block()->perform(this);
+    Block_Ptr bb = operator()(r->block());
     // this should protect us (at least a bit) from our mess
     // fixing this properly is harder that it should be ...
-    if (dynamic_cast<Statement_Ptr>((AST_Node_Ptr)stmt) == NULL) {
+    if (dynamic_cast<Statement_Ptr>((AST_Node_Ptr)bb) == NULL) {
       error("Illegal nesting: Only properties may be nested beneath properties.", r->block()->pstate());
     }
     Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
                                   r->selector(),
-                                  stmt->block());
+                                  bb);
     rr->is_root(r->is_root());
     // rr->tabs(r->block()->tabs());
     p_stack.pop_back();
@@ -183,7 +183,7 @@ namespace Sass {
       rules->unshift(rr);
     }
 
-    rules = debubble(rules)->block();
+    rules = debubble(rules);
 
     if (!(!rules->length() ||
           !bubblable(rules->last()) ||
@@ -213,12 +213,12 @@ namespace Sass {
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       &m->media_queries(),
-                                      m->block()->perform(this)->block());
+                                      operator()(m->block()));
     mm->tabs(m->tabs());
 
     p_stack.pop_back();
 
-    return debubble(mm->block(), &mm)->block();
+    return debubble(mm->block(), &mm);
   }
 
   Statement_Ptr Cssize::operator()(Supports_Block_Ptr m)
@@ -234,12 +234,12 @@ namespace Sass {
     Supports_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        m->pstate(),
                                        &m->condition(),
-                                       m->block()->perform(this)->block());
+                                       operator()(m->block()));
     mm->tabs(m->tabs());
 
     p_stack.pop_back();
 
-    return debubble(mm->block(), mm)->block();
+    return debubble(mm->block(), mm);
   }
 
   Statement_Ptr Cssize::operator()(At_Root_Block_Ptr m)
@@ -252,13 +252,13 @@ namespace Sass {
 
     if (!tmp)
     {
-      Block_Ptr bb = m->block()->perform(this)->block();
+      Block_Obj bb = operator()(m->block());
       for (size_t i = 0, L = bb->length(); i < L; ++i) {
         // (bb->elements())[i]->tabs(m->tabs());
-        if (bubblable((*bb)[i])) (*bb)[i]->tabs((*bb)[i]->tabs() + m->tabs());
+        if (bubblable(bb->at(i))) bb->at(i)->tabs(bb->at(i)->tabs() + m->tabs());
       }
       if (bb->length() && bubblable(bb->last())) bb->last()->group_end(m->group_end());
-      return bb;
+      return &bb;
     }
 
     if (m->exclude_node(parent()))
@@ -376,36 +376,35 @@ namespace Sass {
     return s->statement_type() == Statement_Ref::RULESET || s->bubbles();
   }
 
-  Statement_Ptr Cssize::flatten(Statement_Ptr s)
+  Block_Ptr Cssize::flatten(Block_Ptr b)
   {
-    Block_Ptr bb = s->block();
-    Block_Ptr result = SASS_MEMORY_NEW(ctx.mem, Block, bb->pstate(), 0, bb->is_root());
-    for (size_t i = 0, L = bb->length(); i < L; ++i) {
-      Statement_Ptr ss = (*bb)[i];
-      if (ss->block()) {
-        ss = flatten(ss);
-        for (size_t j = 0, K = ss->block()->length(); j < K; ++j) {
-          *result << (*ss->block())[j];
+    Block_Obj result = SASS_MEMORY_OBJ(ctx.mem, Block, b->pstate(), 0, b->is_root());
+    for (size_t i = 0, L = b->length(); i < L; ++i) {
+      Statement_Ptr ss = b->at(i);
+      if (Block_Ptr bb = dynamic_cast<Block_Ptr>(ss)) {
+        Block_Ptr bs = flatten(bb);
+        for (size_t j = 0, K = bs->length(); j < K; ++j) {
+          result->append(bs->at(j));
         }
       }
       else {
-        *result << ss;
+        result->append(ss);
       }
     }
-    return result;
+    return &result;
   }
 
-  std::vector<std::pair<bool, Block_Ptr>> Cssize::slice_by_bubble(Statement_Ptr b)
+  std::vector<std::pair<bool, Block_Obj>> Cssize::slice_by_bubble(Block_Obj b)
   {
-    std::vector<std::pair<bool, Block_Ptr>> results;
-    for (size_t i = 0, L = b->block()->length(); i < L; ++i) {
-      Statement_Ptr value = (*b->block())[i];
+    std::vector<std::pair<bool, Block_Obj>> results;
+    for (size_t i = 0, L = b->length(); i < L; ++i) {
+      Statement_Ptr value = b->at(i);
       bool key = value->statement_type() == Statement_Ref::BUBBLE;
 
       if (!results.empty() && results.back().first == key)
       {
-        Block_Ptr wrapper_block = results.back().second;
-        *wrapper_block << value;
+        Block_Obj wrapper_block = results.back().second;
+        wrapper_block->append(value);
       }
       else
       {
@@ -443,26 +442,26 @@ namespace Sass {
     }
   }
 
-  Statement_Ptr Cssize::debubble(Block_Ptr children, Statement_Ptr parent)
+  Block_Ptr Cssize::debubble(Block_Obj children, Statement_Ptr parent)
   {
     Has_Block_Ptr previous_parent = 0;
-    std::vector<std::pair<bool, Block_Ptr>> baz = slice_by_bubble(children);
+    std::vector<std::pair<bool, Block_Obj>> baz = slice_by_bubble(children);
     Block_Ptr result = SASS_MEMORY_NEW(ctx.mem, Block, children->pstate());
 
     for (size_t i = 0, L = baz.size(); i < L; ++i) {
       bool is_bubble = baz[i].first;
-      Block_Ptr slice = baz[i].second;
+      Block_Obj slice = baz[i].second;
 
       if (!is_bubble) {
         if (!parent) {
-          *result << slice;
+          result->append(&slice);
         }
         else if (previous_parent) {
-          *previous_parent->block() += slice;
+          previous_parent->block()->concat(&slice);
         }
         else {
           previous_parent = static_cast<Has_Block_Ptr>(shallow_copy(parent));
-          previous_parent->block(slice);
+          previous_parent->block(&slice);
           previous_parent->tabs(parent->tabs());
 
           Has_Block_Ptr new_parent = previous_parent;
@@ -475,7 +474,7 @@ namespace Sass {
       for (size_t j = 0, K = slice->length(); j < K; ++j)
       {
         Statement_Ptr ss = 0;
-        Bubble_Obj node = SASS_MEMORY_CAST(Bubble, *(*slice)[j]);
+        Bubble_Obj node = SASS_MEMORY_CAST(Bubble, *slice->at(j));
         Media_Block_Obj m1;
         Media_Block_Obj m2;
         if (parent) m1 = SASS_MEMORY_CAST(Media_Block, *parent);
@@ -504,25 +503,25 @@ namespace Sass {
         if (!ss) continue;
 
         Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block,
-                                    children->block()->pstate(),
-                                    children->block()->length(),
-                                    children->block()->is_root());
-        *bb << ss->perform(this);
+                                    children->pstate(),
+                                    children->length(),
+                                    children->is_root());
+        bb->append(ss->perform(this));
 
         Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block,
-                                              children->block()->pstate(),
-                                              children->block()->length(),
-                                              children->block()->is_root());
+                                              children->pstate(),
+                                              children->length(),
+                                              children->is_root());
 
-        Statement_Ptr wrapper = flatten(bb);
-        *wrapper_block << wrapper;
+        Block_Obj wrapper = flatten(bb);
+        wrapper_block->append(&wrapper);
 
-        if (wrapper->block()->length()) {
+        if (wrapper->length()) {
           previous_parent = 0;
         }
 
         if (wrapper_block) {
-          *result << wrapper_block;
+          result->append(wrapper_block);
         }
       }
     }
@@ -541,9 +540,9 @@ namespace Sass {
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr ith = (*b)[i]->perform(this);
-      if (ith && ith->block()) {
-        for (size_t j = 0, K = ith->block()->length(); j < K; ++j) {
-          *current_block << (*ith->block())[j];
+      if (Block_Ptr bb = dynamic_cast<Block_Ptr>(ith)) {
+        for (size_t j = 0, K = bb->length(); j < K; ++j) {
+          current_block->append(bb->at(j));
         }
       }
       else if (ith) {

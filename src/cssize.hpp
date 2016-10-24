@@ -26,7 +26,7 @@ namespace Sass {
 
     CommaSequence_Selector_Ptr selector();
 
-    Statement_Ptr operator()(Block_Ptr);
+    Block_Ptr operator()(Block_Ptr);
     Statement_Ptr operator()(Ruleset_Ptr);
     // Statement_Ptr operator()(Bubble_Ptr);
     Statement_Ptr operator()(Media_Block_Ptr);
@@ -54,14 +54,14 @@ namespace Sass {
     Statement_Ptr operator()(Null_Ptr);
 
     Statement_Ptr parent();
-    std::vector<std::pair<bool, Block_Ptr>> slice_by_bubble(Statement_Ptr);
+    std::vector<std::pair<bool, Block_Obj>> slice_by_bubble(Block_Obj);
     Statement_Ptr bubble(Directive_Ptr);
     Statement_Ptr bubble(At_Root_Block_Ptr);
     Statement_Ptr bubble(Media_Block_Obj);
     Statement_Ptr bubble(Supports_Block_Ptr);
     Statement_Ptr shallow_copy(Statement_Ptr);
-    Statement_Ptr debubble(Block_Ptr children, Statement_Ptr parent = 0);
-    Statement_Ptr flatten(Statement_Ptr);
+    Block_Ptr debubble(Block_Obj children, Statement_Ptr parent = 0);
+    Block_Ptr flatten(Block_Ptr);
     bool bubblable(Statement_Ptr);
 
     List_Obj merge_media_queries(Media_Block_Obj, Media_Block_Obj);

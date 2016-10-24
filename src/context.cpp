@@ -672,19 +672,19 @@ exit(0);
     Cssize cssize(*this, &backtrace);
     CheckNesting check_nesting;
     // check nesting
-    root->perform(&check_nesting)->block();
+    check_nesting(root);
     // expand and eval the tree
-    root = root->perform(&expand)->block();
+    root = expand(root);
     // check nesting
-    root->perform(&check_nesting)->block();
+    check_nesting(root);
     // merge and bubble certain rules
-    root = root->perform(&cssize)->block();
+    root = cssize(root);
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);
       // extend tree nodes
-      root->perform(&extend);
+      extend(root);
     }
 
     // clean up by removing empty placeholders

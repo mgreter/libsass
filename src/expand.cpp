@@ -69,7 +69,7 @@ namespace Sass {
   }
 
   // blocks create new variable scopes
-  Statement_Ptr Expand::operator()(Block_Ptr b)
+  Block_Ptr Expand::operator()(Block_Ptr b)
   {
     // create new local environment
     // set the current env as parent
@@ -96,7 +96,8 @@ namespace Sass {
     LOCAL_FLAG(old_at_root_without_rule, at_root_without_rule);
 
     if (in_keyframes) {
-      Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), r->block()->perform(this)->block());
+      Block_Obj bb = operator()(r->block());
+      Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
         k->selector2(static_cast<CommaSequence_Selector_Ptr>(r->selector()->perform(&eval)));
@@ -146,7 +147,7 @@ namespace Sass {
       env_stack.push_back(&env);
     }
     sel->set_media_block(media_block_stack.back());
-    Block_Ptr blk = r->block()->perform(this)->block();
+    Block_Obj blk = operator()(r->block());
     Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
                                   sel,
@@ -168,7 +169,7 @@ namespace Sass {
     Supports_Block_Ptr ff = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        f->pstate(),
                                        static_cast<Supports_Condition_Ptr>(condition),
-                                       f->block()->perform(this)->block());
+                                       operator()(f->block()));
     return ff;
   }
 
@@ -184,7 +185,7 @@ namespace Sass {
     Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       static_cast<List_Ptr>(mq->perform(&eval)),
-                                      m->block()->perform(this)->block(),
+                                      operator()(m->block()),
                                       0);
     media_block_stack.pop_back();
     mm->tabs(m->tabs());
@@ -202,7 +203,9 @@ namespace Sass {
     LOCAL_FLAG(at_root_without_rule, true);
     LOCAL_FLAG(in_keyframes, false);
 
-    Block_Ptr bb = ab ? ab->perform(this)->block() : 0;
+                                       ;
+
+    Block_Ptr bb = ab ? operator()(ab) : NULL;
     At_Root_Block_Ptr aa = SASS_MEMORY_NEW(ctx.mem, At_Root_Block,
                                         a->pstate(),
                                         bb,
@@ -220,7 +223,7 @@ namespace Sass {
     if (av) av = av->perform(&eval);
     if (as) as = dynamic_cast<Selector_Ptr>(as->perform(&eval));
     selector_stack.pop_back();
-    Block_Ptr bb = ab ? ab->perform(this)->block() : 0;
+    Block_Ptr bb = ab ? operator()(ab) : NULL;
     Directive_Ptr aa = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   a->pstate(),
                                   a->keyword(),
@@ -236,7 +239,7 @@ namespace Sass {
     String_Ptr old_p = d->property();
     String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
     Expression_Ptr value = d->value()->perform(&eval);
-    Block_Ptr bb = ab ? ab->perform(this)->block() : 0;
+    Block_Ptr bb = ab ? operator()(ab) : NULL;
     if (!bb) {
       if (!value || (value->is_invisible() && !d->is_important())) return 0;
     }

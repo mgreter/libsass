@@ -415,7 +415,6 @@ namespace Sass {
     // needed for rearranging nested rulesets during CSS emission
     virtual bool   is_invisible() const { return false; }
     virtual bool   bubbles() { return false; }
-    virtual Block_Ptr block()  { return 0; }
     virtual bool has_content()
     {
       return statement_type_ == CONTENT;
@@ -448,7 +447,6 @@ namespace Sass {
       }
       return Statement_Ref::has_content();
     }
-    Block_Ptr block() { return this; }
     ATTACH_OPERATIONS()
   };
 
