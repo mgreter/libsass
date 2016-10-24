@@ -251,6 +251,11 @@ namespace Sass {
       adjust_after_pushing(element);
       return *this;
     }
+    Vectorized& concat(Vectorized* v)
+    {
+      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
+      return *this;
+    }
     Vectorized& operator+=(Vectorized* v)
     {
       for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];

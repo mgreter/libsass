@@ -550,7 +550,7 @@ namespace Sass {
     }
   }
 
-  List_Ptr Cssize::merge_media_queries(Media_Block_Ptr m1, Media_Block_Ptr m2)
+  List_Ptr Cssize::merge_media_queries(Media_Block_Obj m1, Media_Block_Obj m2)
   {
     List_Ptr qq = SASS_MEMORY_NEW(ctx.mem, List,
                                m1->media_queries()->pstate(),
@@ -559,10 +559,11 @@ namespace Sass {
 
     for (size_t i = 0, L = m1->media_queries()->length(); i < L; i++) {
       for (size_t j = 0, K = m2->media_queries()->length(); j < K; j++) {
-        Media_Query_Obj mq1 = static_cast<Media_Query_Ptr>((*m1->media_queries())[i]);
-        Media_Query_Obj mq2 = static_cast<Media_Query_Ptr>((*m2->media_queries())[j]);
+        Expression_Obj l1 = m1->media_queries ()->at(i);
+        Expression_Obj l2 = m2->media_queries ()->at(j);
+        Media_Query_Obj mq1 = SASS_MEMORY_CAST(Media_Query, l1);
+        Media_Query_Obj mq2 = SASS_MEMORY_CAST(Media_Query, l2);;
         Media_Query_Obj mq = merge_media_query(mq1, mq2);
-
         if (mq) qq->append(&mq);
       }
     }
@@ -607,15 +608,18 @@ namespace Sass {
       mod = m1.empty() ? m2 : m1;
     }
 
-    Media_Query_Obj mm = SASS_MEMORY_OBJ(ctx.mem, Media_Query,
-      mq1->pstate(), 0, mq1->length() + mq2->length(), mod == "not", mod == "only");
+    Media_Query_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Query,
+
+mq1->pstate(), 0,
+mq1->length() + mq2->length(), mod == "not", mod == "only"
+);
 
     if (!type.empty()) {
       mm->media_type(SASS_MEMORY_NEW(ctx.mem, String_Quoted, mq1->pstate(), type));
     }
 
-    *&mm += &mq2;
-    *&mm += &mq1;
+    mm->concat(&mq2);
+    mm->concat(&mq1);
 
     return mm;
   }
