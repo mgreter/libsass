@@ -2026,9 +2026,9 @@ namespace Sass {
     // there are no child statements. However .a .b should have extensions applied.
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = b->at(i);
+      Statement_Obj stm = b->at(i);
 
-      if (typeid(*stm) == typeid(Ruleset)) {
+      if (dynamic_cast<Ruleset_Ptr>(&stm)) {
         // Do nothing. This doesn't count as a statement that causes extension since we'll iterate over this rule set in a future visit and try to extend it.
       }
       else {
@@ -2076,7 +2076,8 @@ namespace Sass {
   void Extend::operator()(Block_Ptr b)
   {
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      b->at(i)->perform(this);
+		Statement_Obj stm = b->at(i);
+		stm->perform(this);
     }
     // do final check if everything was extended
     // we set `extended` flag on extended selectors

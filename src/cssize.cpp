@@ -164,7 +164,7 @@ namespace Sass {
     Block_Obj rules = SASS_MEMORY_NEW(ctx.mem, Block, rr->block()->pstate());
     for (size_t i = 0, L = rr->block()->length(); i < L; i++)
     {
-      Statement_Ptr s = rr->block()->at(i);
+      Statement_Obj s = rr->block()->at(i);
       if (bubblable(s)) rules->append(s);
       if (!bubblable(s)) props->append(s);
     }
@@ -177,7 +177,8 @@ namespace Sass {
 
       for (size_t i = 0, L = rules->length(); i < L; i++)
       {
-        rules->at(i)->tabs(rules->at(i)->tabs() + 1);
+		  Statement_Obj stm = rules->at(i);
+        stm->tabs(stm->tabs() + 1);
       }
 
       rules->unshift(rr);
@@ -255,7 +256,8 @@ namespace Sass {
       Block_Obj bb = operator()(m->block());
       for (size_t i = 0, L = bb->length(); i < L; ++i) {
         // (bb->elements())[i]->tabs(m->tabs());
-        if (bubblable(bb->at(i))) bb->at(i)->tabs(bb->at(i)->tabs() + m->tabs());
+		  Statement_Obj stm = bb->at(i);
+        if (bubblable(stm)) stm->tabs(stm->tabs() + m->tabs());
       }
       if (bb->length() && bubblable(bb->last())) bb->last()->group_end(m->group_end());
       return &bb;
@@ -358,17 +360,17 @@ namespace Sass {
     return SASS_MEMORY_NEW(ctx.mem, Bubble, mm->pstate(), &mm);
   }
 
-  bool Cssize::bubblable(Statement_Ptr s)
+  bool Cssize::bubblable(Statement_Obj s)
   {
-    return s->statement_type() == Statement_Ref::RULESET || s->bubbles();
+    return dynamic_cast<Ruleset_Ptr>(&s) || s->bubbles();
   }
 
   Block_Obj Cssize::flatten(Block_Obj b)
   {
     Block_Obj result = SASS_MEMORY_OBJ(ctx.mem, Block, b->pstate(), 0, b->is_root());
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr ss = b->at(i);
-      if (Block_Obj bb = SASS_MEMORY_CAST_PTR(Block, ss)) {
+      Statement_Obj ss = b->at(i);
+      if (Block_Obj bb = SASS_MEMORY_CAST(Block, ss)) {
         Block_Obj bs = flatten(bb);
         for (size_t j = 0, K = bs->length(); j < K; ++j) {
           result->append(bs->at(j));
@@ -385,8 +387,8 @@ namespace Sass {
   {
     std::vector<std::pair<bool, Block_Obj>> results;
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr value = b->at(i);
-      bool key = value->statement_type() == Statement_Ref::BUBBLE;
+      Statement_Obj value = b->at(i);
+      bool key = dynamic_cast<Bubble_Ptr>(&value) != NULL;
 
       if (!results.empty() && results.back().first == key)
       {
@@ -461,7 +463,8 @@ namespace Sass {
       for (size_t j = 0, K = slice->length(); j < K; ++j)
       {
         Statement_Ptr ss = 0;
-        Bubble_Obj node = SASS_MEMORY_CAST(Bubble, *slice->at(j));
+		Statement_Obj stm = slice->at(j);
+        Bubble_Obj node = SASS_MEMORY_CAST(Bubble, stm);
         Media_Block_Obj m1;
         Media_Block_Obj m2;
         if (parent) m1 = SASS_MEMORY_CAST(Media_Block, *parent);
@@ -526,7 +529,8 @@ namespace Sass {
     Block_Obj current_block = block_stack.back();
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr ith = b->at(i)->perform(this);
+		Statement_Obj stm = b->at(i);
+      Statement_Ptr ith = stm->perform(this);
       if (Block_Obj bb = SASS_MEMORY_CAST_PTR(Block, ith)) {
         for (size_t j = 0, K = bb->length(); j < K; ++j) {
           current_block->append(bb->at(j));

@@ -420,18 +420,18 @@ namespace Sass {
   ////////////////////////
   // Blocks of statements.
   ////////////////////////
-  class Block_Ref : public Statement_Ref, public Vectorized<Statement_Ptr> {
+  class Block_Ref : public Statement_Ref, public Vectorized<Statement_Obj> {
     ADD_PROPERTY(bool, is_root)
     ADD_PROPERTY(bool, is_at_root);
     // needed for properly formatted CSS emission
   protected:
-    void adjust_after_pushing(Statement_Ptr s)
+    void adjust_after_pushing(Statement_Obj s)
     {
     }
   public:
     Block_Ref(ParserState pstate, size_t s = 0, bool r = false)
     : Statement_Ref(pstate),
-      Vectorized<Statement_Ptr>(s),
+      Vectorized<Statement_Obj>(s),
       is_root_(r),
       is_at_root_(false)
     { }

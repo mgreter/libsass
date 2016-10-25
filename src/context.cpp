@@ -550,22 +550,31 @@ String_Constant_Obj getCst(String_Obj node) {
   return SASS_MEMORY_CAST(String_Constant, node);
 }
 
+Block_Obj getBlk(String_Obj node) {
+  Memory_Manager mem;
+  ParserState pstate("null");
+  std::string str("foobar");
+  Block_Obj blk = SASS_MEMORY_NEW(mem, Block, pstate);
+  String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
+  // blk->append(&string);
+  return blk;
+}
+
   Block_Obj File_Context::parse()
   {
 
     // check if entry file is given
     if (input_path.empty()) return 0;
-/*
+
 {
      Memory_Manager mem;
-     String_Constant_Obj cst = getCst(getObj(mem));
-
-
-std::cerr << "[[" << cst->to_string() << "]]\n";
+     std::cerr << "create blocks\n";
+     Block_Obj cst = getBlk(getObj(mem));
+     std::cerr << "[[" << cst->to_string() << "]]\n";
 }
 
 exit(0);
-*/
+
     // create absolute path from input filename
     // ToDo: this should be resolved via custom importers
     std::string abs_path(rel2abs(input_path, CWD));

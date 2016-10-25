@@ -470,17 +470,17 @@ namespace Sass {
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = b->at(i);
-        if (dynamic_cast<Directive_Ptr>(stm)) {
+        Statement_Obj stm = b->at(i);
+        if (dynamic_cast<Directive_Ptr>(&stm)) {
           return true;
-        } else if (Declaration_Ptr d = dynamic_cast<Declaration_Ptr>(stm)) {
+        } else if (Declaration_Ptr d = dynamic_cast<Declaration_Ptr>(&stm)) {
           return isPrintable(d, style);
-        } else if (dynamic_cast<Has_Block_Ptr>(stm)) {
-          Block_Obj pChildBlock = ((Has_Block_Ptr)stm)->block();
+        } else if (dynamic_cast<Has_Block_Ptr>(&stm)) {
+          Block_Obj pChildBlock = ((Has_Block_Ptr)&stm)->block();
           if (isPrintable(&pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
-        } else if (Comment_Ptr c = dynamic_cast<Comment_Ptr>(stm)) {
+        } else if (Comment_Ptr c = dynamic_cast<Comment_Ptr>(&stm)) {
           // keep for uncompressed
           if (style != COMPRESSED) {
             hasDeclarations = true;
@@ -531,12 +531,12 @@ namespace Sass {
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = b->at(i);
-        if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
+        Statement_Obj stm = b->at(i);
+		if (dynamic_cast<Declaration_Ptr>(&stm) || dynamic_cast<Directive_Ptr>(&stm)) {
           hasDeclarations = true;
         }
-        else if (dynamic_cast<Has_Block_Ptr>(stm)) {
-          Block_Obj pChildBlock = ((Has_Block_Ptr)stm)->block();
+        else if (dynamic_cast<Has_Block_Ptr>(&stm)) {
+          Block_Obj pChildBlock = ((Has_Block_Ptr)&stm)->block();
           if (isPrintable(&pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
@@ -556,34 +556,34 @@ namespace Sass {
       Block_Obj b = m->block();
       if (b == 0) return false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = b->at(i);
-        if (typeid(*stm) == typeid(Directive)) return true;
-        else if (typeid(*stm) == typeid(Declaration)) return true;
-        else if (typeid(*stm) == typeid(Comment)) {
-          Comment_Ptr c = (Comment_Ptr) stm;
+        Statement_Obj stm = b->at(i);
+        if (dynamic_cast<Directive_Ptr>(&stm)) return true;
+		else if (dynamic_cast<Declaration_Ptr>(&stm)) return true;
+		else if (dynamic_cast<Comment_Ptr>(&stm)) {
+          Comment_Ptr c = (Comment_Ptr) &stm;
           if (isPrintable(c, style)) {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Ruleset)) {
-          Ruleset_Ptr r = (Ruleset_Ptr) stm;
+		else if (dynamic_cast<Ruleset_Ptr>(&stm)) {
+          Ruleset_Ptr r = (Ruleset_Ptr) &stm;
           if (isPrintable(r, style)) {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Supports_Block)) {
-          Supports_Block_Ptr f = (Supports_Block_Ptr) stm;
+		else if (dynamic_cast<Supports_Block_Ptr>(&stm)) {
+          Supports_Block_Ptr f = (Supports_Block_Ptr) &stm;
           if (isPrintable(f, style)) {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Media_Block)) {
-          Media_Block_Ptr m = (Media_Block_Ptr) stm;
+		else if (dynamic_cast<Media_Block_Ptr>(&stm)) {
+          Media_Block_Ptr m = (Media_Block_Ptr) &stm;
           if (isPrintable(m, style)) {
             return true;
           }
         }
-        else if (dynamic_cast<Has_Block_Ptr>(stm) && isPrintable(((Has_Block_Ptr)stm)->block(), style)) {
+        else if (dynamic_cast<Has_Block_Ptr>(&stm) && isPrintable(((Has_Block_Ptr)&stm)->block(), style)) {
           return true;
         }
       }
@@ -610,35 +610,35 @@ namespace Sass {
       }
 
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = b->at(i);
-        if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
+        Statement_Obj stm = b->at(i);
+		if (dynamic_cast<Declaration_Ptr>(&stm) || dynamic_cast<Directive_Ptr>(&stm)) {
           return true;
         }
-        else if (typeid(*stm) == typeid(Comment)) {
-          Comment_Ptr c = (Comment_Ptr) stm;
+		else if (dynamic_cast<Comment_Ptr>(&stm)) {
+          Comment_Ptr c = (Comment_Ptr) &stm;
           if (isPrintable(c, style)) {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Ruleset)) {
-          Ruleset_Ptr r = (Ruleset_Ptr) stm;
+		else if (dynamic_cast<Ruleset_Ptr>(&stm)) {
+          Ruleset_Ptr r = (Ruleset_Ptr) &stm;
           if (isPrintable(r, style)) {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Supports_Block)) {
-          Supports_Block_Ptr f = (Supports_Block_Ptr) stm;
+		else if (dynamic_cast<Supports_Block_Ptr>(&stm)) {
+          Supports_Block_Ptr f = (Supports_Block_Ptr) &stm;
           if (isPrintable(f, style)) {
             return true;
           }
         }
-        else if (typeid(*stm) == typeid(Media_Block)) {
-          Media_Block_Ptr m = (Media_Block_Ptr) stm;
+		else if (dynamic_cast<Media_Block_Ptr>(&stm)) {
+          Media_Block_Ptr m = (Media_Block_Ptr) &stm;
           if (isPrintable(m, style)) {
             return true;
           }
         }
-        else if (dynamic_cast<Has_Block_Ptr>(stm) && isPrintable(((Has_Block_Ptr)stm)->block(), style)) {
+        else if (dynamic_cast<Has_Block_Ptr>(&stm) && isPrintable(((Has_Block_Ptr)&stm)->block(), style)) {
           return true;
         }
       }

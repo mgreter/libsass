@@ -71,7 +71,8 @@ namespace Sass {
   {
     Expression_Ptr val = 0;
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      val = b->at(i)->perform(this);
+		Statement_Obj stm = b->at(i);
+      val = stm->perform(this);
       if (val) return val;
     }
     return val;

@@ -12,7 +12,8 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(Block_Ptr b) {
         for (size_t i = 0, L = b->length(); i < L; ++i) {
-            b->at(i)->perform(this);
+			Statement_Obj st = b->at(i);
+			st->perform(this);
         }
     }
 
@@ -63,7 +64,10 @@ namespace Sass {
         Block_Obj b = r->block();
 
         for (size_t i = 0, L = b->length(); i < L; ++i) {
-            if (b->at(i)) b->at(i)->perform(this);
+			if (b->at(i)) {
+				Statement_Obj st = b->at(i);
+				st->perform(this);
+			}
         }
     }
 
