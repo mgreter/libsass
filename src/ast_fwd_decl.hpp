@@ -15,7 +15,7 @@ namespace Sass {
     long refcounter;
     long refcount;
   public:
-    Memory_Object() { refcount = 0; refcounter = 0; };
+    Memory_Object() { refcount = 0; refcounter = 1; };
     virtual ~Memory_Object() {};
   };
 
@@ -23,34 +23,34 @@ namespace Sass {
   class Memory_Ptr {
   private:
     Memory_Object* node;
+  private:
+    void init() {
+      if (node) {
+        node->refcounter += 1;
+        std::cerr << "init " << node << "\n";
+      }
+    }
   public:
     // the empty constructor
     Memory_Ptr()
-    : node(NULL) {};
+    : node(NULL) { };
     // the create constructor
     Memory_Ptr(Memory_Object* ptr)
-    : node(ptr) {
-      if (node) {
-        node->refcounter += 1;
-        // std::cerr << "increase refcount, now at " << node->refcounter << "\n";
-      }
-    };
+    : node(ptr) { init(); };
     // the copy constructor
     Memory_Ptr(const Memory_Ptr& obj)
-    : node(obj.node) {
-      if (node) {
-        node->refcounter += 1;
-        // std::cerr << "increase refcount, now at " << node->refcounter << "\n";
-      }
-    }
+    : node(obj.node) { init(); }
     ~Memory_Ptr() {
       if (this->node) {
         // this gives errors for nested?
         this->node->refcounter -= 1;
         // std::cerr << "decrease refcount, now at " << node->refcounter << "\n";
         if (this->node->refcounter == 1) {
-          std::cerr << "delete me " << node << "\n";
+          std::cerr << "delete " << node << "\n";
+          delete(this->node);
           // delete and remove
+        } else {
+          std::cerr << "decrease " << node << "\n";
         }
       }
     };

@@ -550,13 +550,20 @@ String_Constant_Obj getCst(String_Obj node) {
   return SASS_MEMORY_CAST(String_Constant, node);
 }
 
-Block_Obj getBlk(String_Obj node) {
+Block_Obj getBlk() {
   Memory_Manager mem;
   ParserState pstate("null");
   std::string str("foobar");
+  std::cerr << "ALLOC Block\n";
   Block_Obj blk = SASS_MEMORY_NEW(mem, Block, pstate);
-  String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
-  // blk->append(&string);
+  std::cerr << "ALLOC String\n";
+  String_Constant_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
+  std::cerr << "ALLOC Debug\n";
+  Debug_Obj dbg = SASS_MEMORY_CREATE(mem, Debug, pstate, &string);
+  // Sass::String_Constant_Ptr sptr = &string;
+  // Sass::Statement_Ptr ptr = sptr;
+  // Sass::Statement_Obj stm = ptr;
+  blk->append(&dbg);
   return blk;
 }
 
@@ -569,9 +576,10 @@ Block_Obj getBlk(String_Obj node) {
 {
      Memory_Manager mem;
      std::cerr << "create blocks\n";
-     Block_Obj cst = getBlk(getObj(mem));
+     Block_Obj cst = getBlk();
      std::cerr << "[[" << cst->to_string() << "]]\n";
-}
+	 std::cerr << "final\n";
+	}
 
 exit(0);
 
