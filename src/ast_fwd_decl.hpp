@@ -1,6 +1,8 @@
 #ifndef SASS_AST_FWD_DECL_H
 #define SASS_AST_FWD_DECL_H
 
+#include <iostream>
+
 /////////////////////////////////////////////
 // Forward declarations for the AST visitors.
 /////////////////////////////////////////////
@@ -10,9 +12,10 @@ namespace Sass {
   class Memory_Object {
   friend class Memory_Ptr;
   friend class Memory_Manager;
+    long refcounter;
     long refcount;
   public:
-    Memory_Object() { refcount = 0; };
+    Memory_Object() { refcount = 0; refcounter = 0; };
     virtual ~Memory_Object() {};
   };
 
@@ -25,26 +28,28 @@ namespace Sass {
     Memory_Ptr()
     : node(NULL) {};
     // the create constructor
-    Memory_Ptr(Memory_Object* node)
-    : node(node) {
+    Memory_Ptr(Memory_Object* ptr)
+    : node(ptr) {
       if (node) {
-        node->refcount += 1;
-        // std::cerr << "increase refcount, now at " << node->refcount << "\n";
+        node->refcounter += 1;
+        // std::cerr << "increase refcount, now at " << node->refcounter << "\n";
       }
     };
     // the copy constructor
     Memory_Ptr(const Memory_Ptr& obj)
     : node(obj.node) {
       if (node) {
-        node->refcount += 1;
-        // std::cerr << "increase refcount, now at " << node->refcount << "\n";
+        node->refcounter += 1;
+        // std::cerr << "increase refcount, now at " << node->refcounter << "\n";
       }
     }
     ~Memory_Ptr() {
-      if (node) {
-        node->refcount -= 1;
-        // std::cerr << "decrease refcount, now at " << node->refcount << "\n";
-        if (node->refcount == 1) {
+      if (this->node) {
+        // this gives errors for nested?
+        this->node->refcounter -= 1;
+        // std::cerr << "decrease refcount, now at " << node->refcounter << "\n";
+        if (this->node->refcounter == 1) {
+          std::cerr << "delete me " << node << "\n";
           // delete and remove
         }
       }

@@ -450,9 +450,10 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////
   class Has_Block_Ref : public Statement_Ref {
     ADD_PROPERTY(Block_Ptr, block)
+    ADD_PROPERTY(Block_Obj, oblock)
   public:
     Has_Block_Ref(ParserState pstate, Block_Obj b)
-    : Statement_Ref(pstate), block_(&b)
+    : Statement_Ref(pstate), block_(&b), oblock_(&b)
     { }
     virtual bool has_content()
     {
