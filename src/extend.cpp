@@ -1716,7 +1716,7 @@ namespace Sass {
 
     bool hasExtension = false;
 
-    Sequence_Selector_Ptr pIter = pComplexSelector;
+    Sequence_Selector_Obj pIter = pComplexSelector;
 
     while (!hasExtension && pIter) {
       SimpleSequence_Selector_Ptr pHead = pIter->head();

@@ -67,7 +67,7 @@ namespace Sass {
       break;
     }
 
-    Sequence_Selector_Ptr tail = sel->tail();
+    Sequence_Selector_Obj tail = sel->tail();
     if (tail)
     {
       Expression_Ptr tt = tail->perform(this);

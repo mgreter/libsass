@@ -2455,7 +2455,7 @@ namespace Sass {
   private:
     ADD_PROPERTY(Combinator, combinator)
     ADD_PROPERTY(SimpleSequence_Selector_Ptr, head)
-    ADD_PROPERTY(Sequence_Selector_Ptr, tail)
+    ADD_PROPERTY(Sequence_Selector_Obj, tail)
     ADD_PROPERTY(String_Ptr, reference);
   public:
     bool contains_placeholder() {
@@ -2573,7 +2573,7 @@ namespace Sass {
       SourcesSet srcs;
 
       SimpleSequence_Selector_Ptr pHead = head();
-      Sequence_Selector_Ptr  pTail = tail();
+      Sequence_Selector_Obj  pTail = tail();
 
       if (pHead) {
         SourcesSet& headSources = pHead->sources();
@@ -2589,7 +2589,7 @@ namespace Sass {
     }
     void addSources(SourcesSet& sources, Context& ctx) {
       // members.map! {|m| m.is_a?(SimpleSequence) ? m.with_more_sources(sources) : m}
-      Sequence_Selector_Ptr pIter = this;
+      Sequence_Selector_Obj pIter = this;
       while (pIter) {
         SimpleSequence_Selector_Ptr pHead = pIter->head();
 
@@ -2601,7 +2601,7 @@ namespace Sass {
       }
     }
     void clearSources() {
-      Sequence_Selector_Ptr pIter = this;
+      Sequence_Selector_Obj pIter = this;
       while (pIter) {
         SimpleSequence_Selector_Ptr pHead = pIter->head();
 

@@ -960,7 +960,7 @@ namespace Sass {
   void Inspect::operator()(Sequence_Selector_Ptr c)
   {
     SimpleSequence_Selector_Ptr      head = c->head();
-    Sequence_Selector_Ptr            tail = c->tail();
+    Sequence_Selector_Obj            tail = c->tail();
     Sequence_Selector_Ref::Combinator comb = c->combinator();
 
     if (comb == Sequence_Selector_Ref::ANCESTOR_OF && (!head || head->empty())) {

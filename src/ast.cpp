@@ -197,14 +197,14 @@ namespace Sass {
       // skip empty ancestor first
       if (l && l->is_empty_ancestor())
       {
-        l = l->tail();
+        l = &l->tail();
         l_h = l ? l->head() : 0;
         continue;
       }
       // skip empty ancestor first
       if (r && r->is_empty_ancestor())
       {
-        r = r->tail();
+        r = &r->tail();
         r_h = r ? r->head() : 0;
         continue;
       }
@@ -218,8 +218,8 @@ namespace Sass {
         if (l->combinator() != r->combinator())
         { return l->combinator() < r->combinator(); }
         // advance to next tails
-        l = l->tail();
-        r = r->tail();
+        l = &l->tail();
+        r = &r->tail();
         // fetch the next headers
         l_h = l ? l->head() : 0;
         r_h = r ? r->head() : 0;
@@ -234,8 +234,8 @@ namespace Sass {
         if (l->combinator() != r->combinator())
         { return l->combinator() < r->combinator(); }
         // advance to next tails
-        l = l->tail();
-        r = r->tail();
+        l = &l->tail();
+        r = &r->tail();
         // fetch the next headers
         l_h = l ? l->head() : 0;
         r_h = r ? r->head() : 0;
@@ -259,14 +259,14 @@ namespace Sass {
       // skip empty ancestor first
       if (l && l->is_empty_ancestor())
       {
-        l = l->tail();
+        l = &l->tail();
         l_h = l ? l->head() : 0;
         continue;
       }
       // skip empty ancestor first
       if (r && r->is_empty_ancestor())
       {
-        r = r->tail();
+        r = &r->tail();
         r_h = r ? r->head() : 0;
         continue;
       }
@@ -280,8 +280,8 @@ namespace Sass {
         if (l->combinator() != r->combinator())
         { return l->combinator() < r->combinator(); }
         // advance to next tails
-        l = l->tail();
-        r = r->tail();
+        l = &l->tail();
+        r = &r->tail();
         // fetch the next heads
         l_h = l ? l->head() : 0;
         r_h = r ? r->head() : 0;
@@ -296,8 +296,8 @@ namespace Sass {
         if (l->combinator() != r->combinator())
         { return l->combinator() == r->combinator(); }
         // advance to next tails
-        l = l->tail();
-        r = r->tail();
+        l = &l->tail();
+        r = &r->tail();
         // fetch the next heads
         l_h = l ? l->head() : 0;
         r_h = r ? r->head() : 0;
@@ -964,8 +964,8 @@ namespace Sass {
     // we have to look one tail deeper, since we cary the
     // combinator around for it (which is important here)
     if (rhs->tail() && lhs->tail() && combinator() != Sequence_Selector_Ref::ANCESTOR_OF) {
-      Sequence_Selector_Ptr lhs_tail = lhs->tail();
-      Sequence_Selector_Ptr rhs_tail = rhs->tail();
+      Sequence_Selector_Obj lhs_tail = lhs->tail();
+      Sequence_Selector_Obj rhs_tail = rhs->tail();
       if (lhs_tail->combinator() != rhs_tail->combinator()) return false;
       if (lhs_tail->head() && !rhs_tail->head()) return false;
       if (!lhs_tail->head() && rhs_tail->head()) return false;
@@ -975,7 +975,7 @@ namespace Sass {
     }
 
     bool found = false;
-    Sequence_Selector_Ptr marker = rhs;
+    Sequence_Selector_Obj marker = rhs;
     for (size_t i = 0, L = rhs->length(); i < L; ++i) {
       if (i == L-1)
       { return false; }
@@ -1005,17 +1005,17 @@ namespace Sass {
       { return false; }
       if (!(lhs->combinator() == Sequence_Selector_Ref::PRECEDES ? marker->combinator() != Sequence_Selector_Ref::PARENT_OF : lhs->combinator() == marker->combinator()))
       { return false; }
-      return lhs->tail()->is_superselector_of(marker->tail());
+      return lhs->tail()->is_superselector_of(&marker->tail());
     }
     else if (marker->combinator() != Sequence_Selector_Ref::ANCESTOR_OF)
     {
       if (marker->combinator() != Sequence_Selector_Ref::PARENT_OF)
       { return false; }
-      return lhs->tail()->is_superselector_of(marker->tail());
+      return lhs->tail()->is_superselector_of(&marker->tail());
     }
     else
     {
-      return lhs->tail()->is_superselector_of(marker->tail());
+      return lhs->tail()->is_superselector_of(&marker->tail());
     }
     // catch-all
     return false;
@@ -1044,7 +1044,7 @@ namespace Sass {
   void Sequence_Selector_Ref::append(Context& ctx, Sequence_Selector_Ptr ss)
   {
 
-    Sequence_Selector_Ptr t = ss->tail();
+    Sequence_Selector_Obj t = ss->tail();
     Combinator c = ss->combinator();
     String_Ptr r = ss->reference();
     SimpleSequence_Selector_Ptr h = ss->head();
@@ -1136,7 +1136,7 @@ namespace Sass {
 
   CommaSequence_Selector_Ptr Sequence_Selector_Ref::resolve_parent_refs(Context& ctx, CommaSequence_Selector_Ptr parents, bool implicit_parent)
   {
-    Sequence_Selector_Ptr tail = this->tail();
+    Sequence_Selector_Obj tail = this->tail();
     SimpleSequence_Selector_Ptr head = this->head();
 
     if (!this->has_real_parent_ref() && !implicit_parent) {
@@ -1272,8 +1272,8 @@ namespace Sass {
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
         Sequence_Selector_Ptr pr = this->clone(ctx);
-        pr->tail(&(*tails)[i]);
-        *rv << pr;
+        pr->tail(tails->at(i));
+        rv->append(pr);
       }
     }
     else {
@@ -1286,7 +1286,7 @@ namespace Sass {
   Sequence_Selector_Ptr Sequence_Selector_Ref::first()
   {
     // declare variables used in loop
-    Sequence_Selector_Ptr cur = this;
+    Sequence_Selector_Obj cur = this;
     SimpleSequence_Selector_Ptr_Const head;
     // processing loop
     while (cur)
@@ -1301,14 +1301,14 @@ namespace Sass {
       cur = cur->tail_;
     }
     // result
-    return cur;
+    return &cur;
   }
 
   // return the last tail that is defined
   Sequence_Selector_Ptr_Const Sequence_Selector_Ref::first() const
   {
     // declare variables used in loop
-    Sequence_Selector_Ptr_Const cur = this->tail_;
+    Sequence_Selector_Obj cur = this->tail_;
     SimpleSequence_Selector_Ptr_Const head = head_;
     // processing loop
     while (cur)
@@ -1325,7 +1325,7 @@ namespace Sass {
       cur = cur->tail_;
     }
     // result
-    return cur;
+    return &cur;
   }
 
   // return the last tail that is defined
@@ -1430,7 +1430,7 @@ namespace Sass {
       if ((*this)[i]->head()->is_empty_reference()) {
         // simply move to the next tail if we have "no" combinator
         if ((*this)[i]->combinator() == Sequence_Selector_Ref::ANCESTOR_OF) {
-          if ((*this)[i]->tail() != NULL) {
+          if ((*this)[i]->tail()) {
             if ((*this)[i]->has_line_feed()) {
               (*this)[i]->tail()->has_line_feed(true);
             }

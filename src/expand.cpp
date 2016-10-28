@@ -600,8 +600,8 @@ namespace Sass {
           if (sel->has_line_feed()) ssel->has_line_feed(true);
           Parent_Selector_Ptr ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
           ps->media_block((*extender)[i]->media_block());
-          *hh << ps;
-          ssel->tail(&sel);
+          hh->append(ps);
+          ssel->tail(sel);
           ssel->head(hh);
           sel = ssel;
         }

@@ -187,9 +187,9 @@ namespace Sass {
 
     // unwrap the selector from parent ref
     if (pToConvert->head() && pToConvert->head()->has_parent_ref()) {
-      Sequence_Selector_Ptr tail = pToConvert->tail();
+      Sequence_Selector_Obj tail = pToConvert->tail();
       if (tail) tail->has_line_feed(pToConvert->has_line_feed());
-      pToConvert = tail;
+      pToConvert = &tail;
     }
 
     while (pToConvert) {
@@ -216,7 +216,7 @@ namespace Sass {
         // pToConvert->tail()->has_line_feed(pToConvert->has_line_feed());
       }
 
-      pToConvert = pToConvert->tail();
+      pToConvert = &pToConvert->tail();
     }
 
     return node;
@@ -252,7 +252,7 @@ namespace Sass {
       if (child.isSelector()) {
         pCurrent->tail(child.selector()->clone(ctx));   // JMA - need to clone the selector, because they can end up getting shared across Node collections, and can result in an infinite loop during the call to parentSuperselector()
         // if (child.got_line_feed) pCurrent->has_line_feed(child.got_line_feed);
-        pCurrent = pCurrent->tail();
+        pCurrent = &pCurrent->tail();
       } else if (child.isCombinator()) {
         pCurrent->combinator(child.combinator());
         if (child.got_line_feed) pCurrent->has_line_feed(child.got_line_feed);
@@ -263,7 +263,7 @@ namespace Sass {
           if (nextNode.isCombinator()) {
             pCurrent->tail(SASS_MEMORY_NEW(ctx.mem, Sequence_Selector, ParserState("[NODE]"), Sequence_Selector_Ref::ANCESTOR_OF, NULL, NULL));
             if (nextNode.got_line_feed) pCurrent->tail()->has_line_feed(nextNode.got_line_feed);
-            pCurrent = pCurrent->tail();
+            pCurrent = &pCurrent->tail();
           }
         }
       } else {

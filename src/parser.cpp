@@ -708,7 +708,7 @@ namespace Sass {
     // check if we got the abort condition (ToDo: optimize)
     if (!peek_css< class_char < complex_selector_delims > >()) {
       // parse next selector in sequence
-      sel->tail(&parse_complex_selector(true));
+      sel->tail(parse_complex_selector(true));
     }
 
     // add a parent selector if we are not in a root
