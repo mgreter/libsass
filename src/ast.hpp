@@ -89,6 +89,7 @@ namespace Sass {
     { }
     virtual ~AST_Node_Ref() = 0;
     virtual size_t hash() { return 0; }
+    virtual AST_Node_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
     virtual std::string to_string(Sass_Inspect_Options opt) const;
@@ -154,6 +155,7 @@ namespace Sass {
     virtual bool is_right_interpolant() const { return is_interpolant(); }
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
+    virtual Expression_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual size_t hash() { return 0; }
   };
 
@@ -166,6 +168,7 @@ namespace Sass {
                bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : Expression_Ref(pstate, d, e, i, ct)
     { }
+    virtual PreValue_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual ~PreValue_Ref() { }
   };
 
@@ -178,6 +181,7 @@ namespace Sass {
           bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : Expression_Ref(pstate, d, e, i, ct)
     { }
+    virtual Value_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual bool operator== (const Expression& rhs) const = 0;
   };
 }
@@ -285,6 +289,92 @@ namespace Sass {
   };
   template <typename T>
   inline Vectorized<T>::~Vectorized() { }
+
+
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Mixin class for AST nodes that should behave like vectors. Uses the
+  // "Template Method" design pattern to allow subclasses to adjust their flags
+  // when certain objects are pushed.
+  /////////////////////////////////////////////////////////////////////////////
+  template <typename T>
+  class Vectorized2 {
+    std::vector<T> elements_;
+  protected:
+    size_t hash_;
+    void reset_hash() { hash_ = 0; }
+    virtual void adjust_after_pushing(T element) { }
+  public:
+    Vectorized2(size_t s = 0) : elements_(std::vector<T>()), hash_(0)
+    { elements_.reserve(s); }
+    virtual ~Vectorized2() = 0;
+    size_t length() const   { return elements_.size(); }
+    bool empty() const      { return elements_.empty(); }
+    T last() const          { return elements_.back(); }
+    T first() const         { return elements_.front(); }
+    T& operator[](size_t i) { return elements_[i]; }
+    virtual const T& at(size_t i) const { return elements_.at(i); }
+    const T& operator[](size_t i) const { return elements_[i]; }
+    virtual Vectorized2& append(T element)
+    {
+      std::cerr << "goind to append\n";
+      if (!element) return *this;
+      std::cerr << "reset hash\n";
+      reset_hash();
+      std::cerr << "push back\n";
+      elements_.push_back(element);
+      std::cerr << "adjust after\n";
+      adjust_after_pushing(element);
+      return *this;
+    }
+    virtual Vectorized2& operator<<(T element)
+    {
+      if (!element) return *this;
+      reset_hash();
+      elements_.push_back(element);
+      adjust_after_pushing(element);
+      return *this;
+    }
+    Vectorized2& concat(Vectorized2* v)
+    {
+      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
+      return *this;
+    }
+    Vectorized2& operator+=(Vectorized2* v)
+    {
+      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
+      return *this;
+    }
+    Vectorized2& unshift(T element)
+    {
+      elements_.insert(elements_.begin(), element);
+      return *this;
+    }
+    std::vector<T>& elements() { return elements_; }
+    const std::vector<T>& elements() const { return elements_; }
+    std::vector<T>& elements(std::vector<T>& e) { elements_ = e; return elements_; }
+
+    virtual size_t hash()
+    {
+      if (hash_ == 0) {
+        for (T& el : elements_) {
+          hash_combine(hash_, el->hash());
+        }
+      }
+      return hash_;
+    }
+
+    typename std::vector<T>::iterator end() { return elements_.end(); }
+    typename std::vector<T>::iterator begin() { return elements_.begin(); }
+    typename std::vector<T>::const_iterator end() const { return elements_.end(); }
+    typename std::vector<T>::const_iterator begin() const { return elements_.begin(); }
+    typename std::vector<T>::iterator erase(typename std::vector<T>::iterator el) { return elements_.erase(el); }
+    typename std::vector<T>::const_iterator erase(typename std::vector<T>::const_iterator el) { return elements_.erase(el); }
+
+  };
+  template <typename T>
+  inline Vectorized2<T>::~Vectorized2() { }
+
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
@@ -912,10 +1002,63 @@ namespace Sass {
     }
 
     virtual bool operator== (const Expression& rhs) const;
+    virtual List_Ptr copy(Memory_Manager& mem, bool recursive = false);
 
     ATTACH_OPERATIONS()
   };
 
+
+  ///////////////////////////////////////////////////////////////////////
+  // Lists of values, both comma- and space-separated (distinguished by a
+  // type-tag.) Also used to represent variable-length argument lists.
+  ///////////////////////////////////////////////////////////////////////
+  class List2_Ref : public Value_Ref, public Vectorized2<Expression_Obj> {
+    void adjust_after_pushing(Expression_Obj e) { is_expanded(false); }
+  private:
+    ADD_PROPERTY(enum Sass_Separator, separator)
+    ADD_PROPERTY(bool, is_arglist)
+    ADD_PROPERTY(bool, from_selector)
+  public:
+    List2_Ref(ParserState pstate,
+         size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
+    : Value_Ref(pstate),
+      Vectorized2<Expression_Obj>(size),
+      separator_(sep),
+      is_arglist_(argl),
+      from_selector_(false)
+    { concrete_type(LIST); }
+    std::string type() { return is_arglist_ ? "arglist" : "list"; }
+    static std::string type_name() { return "list"; }
+    const char* sep_string(bool compressed = false) const {
+      return separator() == SASS_SPACE ?
+        " " : (compressed ? "," : ", ");
+    }
+    bool is_invisible() const { return empty(); }
+    Expression_Obj value_at_index(size_t i);
+
+    virtual size_t size() const;
+
+    virtual size_t hash()
+    {
+      if (hash_ == 0) {
+        hash_ = std::hash<std::string>()(sep_string());
+        for (size_t i = 0, L = length(); i < L; ++i)
+          hash_combine(hash_, (elements()[i])->hash());
+      }
+      return hash_;
+    }
+
+    virtual void set_delayed(bool delayed)
+    {
+      is_delayed(delayed);
+      // don't set children
+    }
+
+    virtual bool operator== (const Expression& rhs) const;
+    virtual List2_Ptr copy(Memory_Manager& mem, bool recursive = false);
+
+    ATTACH_OPERATIONS()
+  };
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
@@ -945,6 +1088,7 @@ namespace Sass {
     }
 
     virtual bool operator== (const Expression& rhs) const;
+    virtual Map_Ptr copy(Memory_Manager& mem, bool recursive = false);
 
     ATTACH_OPERATIONS()
   };
@@ -1064,6 +1208,7 @@ namespace Sass {
       }
       return hash_;
     }
+    virtual Binary_Expression_Ptr copy(Memory_Manager& mem, bool recursive = false);
     enum Sass_OP type() const { return op_.operand; }
     ATTACH_OPERATIONS()
   };
@@ -1476,6 +1621,7 @@ namespace Sass {
     virtual void ltrim() = 0;
     virtual void trim() = 0;
     virtual bool operator==(const Expression& rhs) const = 0;
+    virtual String_Ptr copy(Memory_Manager& mem, bool recursive = false);
     ATTACH_OPERATIONS()
   };
   inline String_Ref::~String_Ref() { };
@@ -1563,6 +1709,7 @@ namespace Sass {
     }
 
     virtual bool operator==(const Expression& rhs) const;
+    virtual String_Constant_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual std::string inspect() const; // quotes are forced on inspection
 
     // static char auto_quote() { return '*'; }
@@ -1588,6 +1735,7 @@ namespace Sass {
       if (q && quote_mark_) quote_mark_ = q;
     }
     virtual bool operator==(const Expression& rhs) const;
+    virtual String_Quoted_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual std::string inspect() const; // quotes are forced on inspection
     ATTACH_OPERATIONS()
   };

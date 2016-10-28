@@ -10,6 +10,7 @@ namespace Sass {
 
 
   class Memory_Object {
+  protected:
   friend class Memory_Ptr;
   friend class Memory_Manager;
     long refcounter;
@@ -32,7 +33,7 @@ namespace Sass {
     : node(ptr) {
       if (node) {
         node->refcounter += 1;
-        // std::cerr << "increase refcount, now at " << node->refcounter << "\n";
+        std::cerr << "Create, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     };
     // the copy constructor
@@ -40,16 +41,17 @@ namespace Sass {
     : node(obj.node) {
       if (node) {
         node->refcounter += 1;
-        // std::cerr << "increase refcount, now at " << node->refcounter << "\n";
+        std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     }
     ~Memory_Ptr() {
       if (this->node) {
         // this gives errors for nested?
         this->node->refcounter -= 1;
-        // std::cerr << "decrease refcount, now at " << node->refcounter << "\n";
-        if (this->node->refcounter == 1) {
-          std::cerr << "delete me " << node << "\n";
+        std::cerr << "decrease refcount, " << node << " - now at " << node->refcounter << "\n";
+        if (this->node->refcounter == 0) {
+          std::cerr << "DELETE me " << node << "\n";
+          delete(node);
           // delete and remove
         }
       }
@@ -256,6 +258,10 @@ namespace Sass {
   typedef List_Ref List;
   typedef List* List_Ptr;
   typedef List const* List_Ptr_Const;
+  class List2_Ref;
+  typedef List2_Ref List2;
+  typedef List2* List2_Ptr;
+  typedef List2 const* List2_Ptr_Const;
   class Map_Ref;
   typedef Map_Ref Map;
   typedef Map* Map_Ptr;
@@ -481,6 +487,7 @@ namespace Sass {
   using Value_Obj = Memory_Node<Value_Ref>;
   using Expression_Obj = Memory_Node<Expression_Ref>;
   using List_Obj = Memory_Node<List_Ref>;
+  using List2_Obj = Memory_Node<List2_Ref>;
   using Map_Obj = Memory_Node<Map_Ref>;
   using Binary_Expression_Obj = Memory_Node<Binary_Expression_Ref>;
   using Unary_Expression_Obj = Memory_Node<Unary_Expression_Ref>;

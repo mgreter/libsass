@@ -556,18 +556,49 @@ Block_Obj getBlk(String_Obj node) {
   std::string str("foobar");
   Block_Obj blk = SASS_MEMORY_NEW(mem, Block, pstate);
   String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
+     std::cerr << "create copy\n";
+  String_Obj string_cp = string->copy(mem);
   // blk->append(&string);
   return blk;
+}
+void doit() {
+
+  Memory_Manager mem;
+  ParserState pstate("null");
+  std::string str("foobar");
+
+{
+
+List2_Obj list = SASS_MEMORY_NEW(mem, List2, pstate);
+{
+String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
+std::cerr << "APPEND now\n";
+list->append(&string);
+// list->append(&string);
+}
+     Expression_Obj obj = list->at(0);
+     std::cerr << "[[" << obj->to_sass() << "]]\n";
+
+}
+
+
 }
 
   Block_Obj File_Context::parse()
   {
 
+  Memory_Manager mem;
+  ParserState pstate("null");
+  std::string str("foobar");
+
+doit();
+exit(0);
+
+
     // check if entry file is given
     if (input_path.empty()) return 0;
 
 {
-     Memory_Manager mem;
      std::cerr << "create blocks\n";
      Block_Obj cst = getBlk(getObj(mem));
      std::cerr << "[[" << cst->to_string() << "]]\n";

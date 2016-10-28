@@ -2219,6 +2219,21 @@ namespace Sass {
     }
     return false;
   }
+  bool List2_Ref::operator== (const Expression& rhs) const
+  {
+    if (List2_Ptr_Const r = dynamic_cast<List2_Ptr_Const>(&rhs)) {
+      if (length() != r->length()) return false;
+      if (separator() != r->separator()) return false;
+      for (size_t i = 0, L = length(); i < L; ++i) {
+        Expression_Obj rv = r->at(i);
+        Expression_Obj lv = this->at(i);
+        if (!lv || !rv) return false;
+        // if (!(lv.obj() == rv.obj())) return false;
+      }
+      return true;
+    }
+    return false;
+  }
 
   bool Map_Ref::operator== (const Expression& rhs) const
   {
@@ -2246,6 +2261,18 @@ namespace Sass {
     // so we need to break before keywords
     for (size_t i = 0, L = length(); i < L; ++i) {
       if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*this)[i])) {
+        if (!arg->name().empty()) return i;
+      }
+    }
+    return length();
+  }
+  size_t List2_Ref::size() const {
+    if (!is_arglist_) return length();
+    // arglist expects a list of arguments
+    // so we need to break before keywords
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      Expression_Obj obj = this->at(i);
+      if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
         if (!arg->name().empty()) return i;
       }
     }
@@ -2308,6 +2335,18 @@ namespace Sass {
       return (*this)[i];
     }
   }
+  Expression_Obj List2_Ref::value_at_index(size_t i) {
+    if (is_arglist_) {
+    Expression_Obj obj = this->at(i);
+    if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
+        return arg->value();
+      } else {
+        return this->at(i);
+      }
+    } else {
+      return this->at(i);
+    }
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Convert map to (key, value) list.
@@ -2323,6 +2362,49 @@ namespace Sass {
     }
 
     return ret;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  // Copy implementations
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  AST_Node_Ptr AST_Node_Ref::copy(Memory_Manager& mem, bool recursive) { return this; }
+  Value_Ptr Value_Ref::copy(Memory_Manager& mem, bool recursive) { return this; }
+  String_Ptr String_Ref::copy(Memory_Manager& mem, bool recursive) { return this; }
+
+  Expression_Ptr Expression_Ref::copy(Memory_Manager& mem, bool recursive)
+  { return SASS_MEMORY_CREATE(mem, Expression_Ref, *this); }
+  PreValue_Ptr PreValue_Ref::copy(Memory_Manager& mem, bool recursive)
+  { return SASS_MEMORY_CREATE(mem, PreValue_Ref, *this); }
+
+  String_Constant_Ptr String_Constant_Ref::copy(Memory_Manager& mem, bool recursive)
+  { return SASS_MEMORY_CREATE(mem, String_Constant_Ref, *this); }
+  String_Quoted_Ptr String_Quoted_Ref::copy(Memory_Manager& mem, bool recursive)
+  { return String_Quoted_Ptr SASS_MEMORY_CREATE(mem, String_Quoted_Ref, *this); }
+
+  List_Ptr List_Ref::copy(Memory_Manager& mem, bool recursive)
+  {
+    return SASS_MEMORY_CREATE(mem, List_Ref, *this);
+  }
+  List2_Ptr List2_Ref::copy(Memory_Manager& mem, bool recursive)
+  {
+    return SASS_MEMORY_CREATE(mem, List2_Ref, *this);
+  }
+
+  Map_Ptr Map_Ref::copy(Memory_Manager& mem, bool recursive)
+  {
+    return SASS_MEMORY_CREATE(mem, Map_Ref, *this);
+  }
+
+  Binary_Expression_Ptr Binary_Expression_Ref::copy(Memory_Manager& mem, bool recursive)
+  {
+    Binary_Expression_Ptr node = SASS_MEMORY_CREATE(mem, Binary_Expression_Ref, *this);
+    if (recursive) {
+      // check if the operand rellay copied!
+      node->left(node->left()->copy(mem, recursive));
+      node->right(node->right()->copy(mem, recursive));
+    }
+    return node;
   }
 
 }
