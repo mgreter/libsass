@@ -1423,7 +1423,8 @@ namespace Sass {
             *ith << arglist->value_at_index(i);
           }
           if (arglist->is_arglist()) {
-            (Argument_Ptr)(&arglist->at(i))->value(ith);
+            Argument_Ptr arg = (Argument_Ptr)(&arglist->at(i));
+            arg->value(ith);
           } else {
             (*arglist)[i] = ith;
           }

@@ -1634,32 +1634,26 @@ namespace Sass {
 
   Argument_Ptr Arguments_Ref::get_rest_argument()
   {
-    Argument_Ptr arg = 0;
     if (this->has_rest_argument()) {
       for (auto a : this->elements()) {
         if (a->is_rest_argument()) {
-          arg = a;
-          break;
+          return a;
         }
       }
     }
-
-    return arg;
+    return NULL;
   }
 
   Argument_Ptr Arguments_Ref::get_keyword_argument()
   {
-    Argument_Ptr arg = 0;
     if (this->has_keyword_argument()) {
       for (auto a : this->elements()) {
         if (a->is_keyword_argument()) {
-          arg = a;
-          break;
+          return a;
         }
       }
     }
-
-    return arg;
+    return NULL;
   }
 
   void Arguments_Ref::adjust_after_pushing(Argument_Ptr a)
