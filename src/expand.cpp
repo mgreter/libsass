@@ -113,8 +113,8 @@ namespace Sass {
     // do some special checks for the base level rules
     if (r->is_root()) {
       if (CommaSequence_Selector_Ptr selector_list = dynamic_cast<CommaSequence_Selector_Ptr>(r->selector())) {
-        for (Sequence_Selector_Ptr complex_selector : selector_list->elements()) {
-          Sequence_Selector_Ptr tail = complex_selector;
+        for (Sequence_Selector_Obj complex_selector : selector_list->elements()) {
+          Sequence_Selector_Obj tail = complex_selector;
           while (tail) {
             if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
               if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
@@ -564,8 +564,8 @@ namespace Sass {
   void Expand::expand_selector_list(Selector_Ptr s, CommaSequence_Selector_Ptr extender) {
 
     if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(s)) {
-      for (Sequence_Selector_Ptr complex_selector : sl->elements()) {
-        Sequence_Selector_Ptr tail = complex_selector;
+      for (Sequence_Selector_Obj complex_selector : sl->elements()) {
+        Sequence_Selector_Obj tail = complex_selector;
         while (tail) {
           if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
             if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
@@ -581,7 +581,7 @@ namespace Sass {
     CommaSequence_Selector_Ptr contextualized = dynamic_cast<CommaSequence_Selector_Ptr>(s->perform(&eval));
     if (contextualized == NULL) return;
     for (auto complex_sel : contextualized->elements()) {
-      Sequence_Selector_Ptr c = complex_sel;
+      Sequence_Selector_Obj c = complex_sel;
       if (!c->head() || c->tail()) {
         std::string sel_str(contextualized->to_string(ctx.c_options));
         error("Can't extend " + sel_str + ": can't extend nested selectors", c->pstate(), backtrace());
@@ -589,7 +589,7 @@ namespace Sass {
       SimpleSequence_Selector_Ptr placeholder = c->head();
       if (contextualized->is_optional()) placeholder->is_optional(true);
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
-        Sequence_Selector_Ptr sel = (*extender)[i];
+        Sequence_Selector_Obj sel = (*extender)[i];
         if (!(sel->head() && sel->head()->length() > 0 &&
             SASS_MEMORY_CAST(Parent_Selector, (*sel->head())[0])))
         {
@@ -601,12 +601,12 @@ namespace Sass {
           Parent_Selector_Ptr ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
           ps->media_block((*extender)[i]->media_block());
           *hh << ps;
-          ssel->tail(sel);
+          ssel->tail(&sel);
           ssel->head(hh);
           sel = ssel;
         }
         // if (c->has_line_feed()) sel->has_line_feed(true);
-        ctx.subset_map.put(placeholder->to_str_vec(), std::make_pair(sel, placeholder));
+        ctx.subset_map.put(placeholder->to_str_vec(), std::make_pair(&sel, placeholder));
       }
     }
 
@@ -620,8 +620,8 @@ namespace Sass {
         if (schema->has_parent_ref()) s = eval(schema);
       }
       if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(s)) {
-        for (Sequence_Selector_Ptr cs : *sl) {
-          if (cs != NULL && cs->head() != NULL) {
+        for (Sequence_Selector_Obj cs : sl->elements()) {
+          if (cs && cs->head() != NULL) {
             cs->head()->media_block(media_block_stack.back());
           }
         }

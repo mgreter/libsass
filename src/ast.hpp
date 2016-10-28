@@ -2705,13 +2705,13 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class CommaSequence_Selector_Ref : public Selector_Ref, public Vectorized<Sequence_Selector_Ptr> {
+  class CommaSequence_Selector_Ref : public Selector_Ref, public Vectorized2<Sequence_Selector_Obj> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   protected:
     void adjust_after_pushing(Sequence_Selector_Ptr c);
   public:
     CommaSequence_Selector_Ref(ParserState pstate, size_t s = 0)
-    : Selector_Ref(pstate), Vectorized<Sequence_Selector_Ptr>(s), wspace_(0)
+    : Selector_Ref(pstate), Vectorized2<Sequence_Selector_Obj>(s), wspace_(0)
     { }
     std::string type() { return "list"; }
     // remove parent selector references
@@ -2730,7 +2730,7 @@ namespace Sass {
     {
       if (Selector_Ref::hash_ == 0) {
         hash_combine(Selector_Ref::hash_, std::hash<int>()(SELECTOR));
-        hash_combine(Selector_Ref::hash_, Vectorized::hash());
+        hash_combine(Selector_Ref::hash_, Vectorized2::hash());
       }
       return Selector_Ref::hash_;
     }
@@ -2747,18 +2747,18 @@ namespace Sass {
     }
     virtual void set_media_block(Media_Block_Ptr mb) {
       media_block(mb);
-      for (Sequence_Selector_Ptr cs : elements()) {
+      for (Sequence_Selector_Obj cs : elements()) {
         cs->set_media_block(mb);
       }
     }
     virtual bool has_wrapped_selector() {
-      for (Sequence_Selector_Ptr cs : elements()) {
+      for (Sequence_Selector_Obj cs : elements()) {
         if (cs->has_wrapped_selector()) return true;
       }
       return false;
     }
     virtual bool has_placeholder() {
-      for (Sequence_Selector_Ptr cs : elements()) {
+      for (Sequence_Selector_Obj cs : elements()) {
         if (cs->has_placeholder()) return true;
       }
       return false;
@@ -2791,7 +2791,7 @@ namespace Sass {
   }
 
   // compare function for sorting and probably other other uses
-  struct cmp_complex_selector { inline bool operator() (Sequence_Selector_Ptr_Const l, Sequence_Selector_Ptr_Const r) { return (*l < *r); } };
+  struct cmp_complex_selector { inline bool operator() (const Sequence_Selector_Obj l, const Sequence_Selector_Obj r) { return (*l < *r); } };
   struct cmp_compound_selector { inline bool operator() (SimpleSequence_Selector_Ptr_Const l, SimpleSequence_Selector_Ptr_Const r) { return (*l < *r); } };
   struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Obj l, const Simple_Selector_Obj r) { return (*l < *r); } };
 

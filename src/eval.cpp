@@ -1625,7 +1625,7 @@ namespace Sass {
     sl->media_block(s->media_block());
     sl->is_optional(s->is_optional());
     for (size_t i = 0, iL = s->length(); i < iL; ++i) {
-      rv.push_back(operator()((*s)[i]));
+      rv.push_back(operator()(&(*s)[i]));
     }
 
     // we should actually permutate parent first

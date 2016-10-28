@@ -40,7 +40,7 @@ namespace Sass {
           // Set the new placeholder selector list
           r->selector(remove_placeholders(sl));
           // Remove placeholders in wrapped selectors
-          for (Sequence_Selector_Ptr cs : *sl) {
+          for (Sequence_Selector_Obj cs : sl->elements()) {
             while (cs) {
               if (cs->head()) {
                 for (Simple_Selector_Obj ss : *cs->head()) {

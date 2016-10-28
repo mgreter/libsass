@@ -184,7 +184,7 @@ namespace Sass {
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
       CommaSequence_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
-      return (sel_list->length() > 0) ? sel_list->first() : 0;
+      return (sel_list->length() > 0) ? &sel_list->first() : 0;
     }
 
     template <>
@@ -1786,7 +1786,7 @@ namespace Sass {
 
       for(;itr != parsedSelectors.end(); ++itr) {
         CommaSequence_Selector_Ptr child = *itr;
-        std::vector<Sequence_Selector_Ptr> exploded;
+        std::vector<Sequence_Selector_Obj> exploded;
         CommaSequence_Selector_Ptr rv = child->resolve_parent_refs(ctx, result);
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
           exploded.push_back((*rv)[m]);
@@ -1837,7 +1837,7 @@ namespace Sass {
 
       for(;itr != parsedSelectors.end(); ++itr) {
         CommaSequence_Selector_Ptr child = *itr;
-        std::vector<Sequence_Selector_Ptr> newElements;
+        std::vector<Sequence_Selector_Obj> newElements;
 
         // For every COMPLEX_SELECTOR in `result`
         // For every COMPLEX_SELECTOR in `child`
@@ -1848,9 +1848,9 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Sequence_Selector_Ptr parentSeqClone = (*result)[i]->cloneFully(ctx);
-            Sequence_Selector_Ptr childSeq = (*child)[j];
-            Sequence_Selector_Ptr base = childSeq->tail();
+            Sequence_Selector_Obj parentSeqClone = (*result)[i]->cloneFully(ctx);
+            Sequence_Selector_Obj childSeq = (*child)[j];
+            Sequence_Selector_Obj base = childSeq->tail();
 
             // Must be a simple sequence
             if( childSeq->combinator() != Sequence_Selector_Ref::Combinator::ANCESTOR_OF ) {
@@ -1881,7 +1881,7 @@ namespace Sass {
             // Set parentSeqClone new tail
             parentSeqClone->innermost()->tail( base->tail() );
 
-            newElements.push_back(parentSeqClone);
+            newElements.push_back(&parentSeqClone);
           }
         }
 

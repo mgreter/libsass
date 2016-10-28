@@ -1907,23 +1907,23 @@ namespace Sass {
     extendedSomething = false;
 
     for (size_t index = 0, length = pSelectorList->length(); index < length; index++) {
-      Sequence_Selector_Ptr pSelector = (*pSelectorList)[index];
+      Sequence_Selector_Obj pSelector = (*pSelectorList)[index];
 
       // ruby sass seems to keep a list of things that have extensions and then only extend those. We don't currently do that.
       // Since it's not that expensive to check if an extension exists in the subset map and since it can be relatively expensive to
       // run through the extend code (which does a data model transformation), check if there is anything to extend before doing
       // the extend. We might be able to optimize extendComplexSelector, but this approach keeps us closer to ruby sass (which helps
       // when debugging).
-      if (!complexSelectorHasExtension(pSelector, ctx, subset_map, seen)) {
-        *pNewSelectors << pSelector;
+      if (!complexSelectorHasExtension(&pSelector, ctx, subset_map, seen)) {
+        *pNewSelectors << &pSelector;
         continue;
       }
 
       extendedSomething = true;
 
-      Node extendedSelectors = extendComplexSelector(pSelector, ctx, subset_map, seen, isReplace, true);
+      Node extendedSelectors = extendComplexSelector(&pSelector, ctx, subset_map, seen, isReplace, true);
       if (!pSelector->has_placeholder()) {
-        if (!extendedSelectors.contains(complexSelectorToNode(pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
+        if (!extendedSelectors.contains(complexSelectorToNode(&pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
           *pNewSelectors << pSelector;
           continue;
         }
@@ -1944,7 +1944,7 @@ namespace Sass {
     pNewSelectors = remove_placeholders.remove_placeholders(pNewSelectors);
 
     // unwrap all wrapped selectors with inner lists
-    for (Sequence_Selector_Ptr cur : *pNewSelectors) {
+    for (Sequence_Selector_Obj cur : pNewSelectors->elements()) {
       // process tails
       while (cur) {
         // process header
@@ -1966,7 +1966,7 @@ namespace Sass {
                   // extend the inner list of wrapped selector
                   CommaSequence_Selector_Ptr ext_sl = extendSelectorList(sl, ctx, subset_map, recseen);
                   for (size_t i = 0; i < ext_sl->length(); i += 1) {
-                    if (Sequence_Selector_Ptr ext_cs = ext_sl->at(i)) {
+                    if (Sequence_Selector_Obj ext_cs = ext_sl->at(i)) {
                       // create clones for wrapped selector and the inner list
                       Wrapped_Selector_Ptr cpy_ws = SASS_MEMORY_NEW(ctx.mem, Wrapped_Selector, *ws);
                       CommaSequence_Selector_Ptr cpy_ws_sl = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, sl->pstate());

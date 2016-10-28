@@ -1034,8 +1034,8 @@ namespace Sass {
     bool was_comma_array = in_comma_array;
     // probably ruby sass eqivalent of element_needs_parens
     if (output_style() == TO_SASS && g->length() == 1 &&
-      (!dynamic_cast<List_Ptr>((*g)[0]) &&
-       !dynamic_cast<CommaSequence_Selector_Ptr>((*g)[0]))) {
+      (!SASS_MEMORY_CAST(List, (*g)[0]) &&
+       !SASS_MEMORY_CAST(CommaSequence_Selector, (*g)[0]))) {
       append_string("(");
     }
     else if (!in_declaration && in_comma_array) {
@@ -1060,8 +1060,8 @@ namespace Sass {
     in_comma_array = was_comma_array;
     // probably ruby sass eqivalent of element_needs_parens
     if (output_style() == TO_SASS && g->length() == 1 &&
-      (!dynamic_cast<List_Ptr>((*g)[0]) &&
-       !dynamic_cast<CommaSequence_Selector_Ptr>((*g)[0]))) {
+      (!SASS_MEMORY_CAST(List, (*g)[0]) &&
+       !SASS_MEMORY_CAST(CommaSequence_Selector, (*g)[0]))) {
       append_string(",)");
     }
     else if (!in_declaration && in_comma_array) {
