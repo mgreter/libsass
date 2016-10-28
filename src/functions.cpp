@@ -1536,8 +1536,8 @@ namespace Sass {
     Signature keywords_sig = "keywords($args)";
     BUILT_IN(keywords)
     {
-      List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
-      Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
+      List_Obj arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
+      Map_Obj result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
       for (size_t i = arglist->size(), L = arglist->length(); i < L; ++i) {
         Expression_Obj obj = arglist->at(i);
         Argument_Obj arg = (Argument_Ptr)&obj;
@@ -1547,7 +1547,7 @@ namespace Sass {
                  pstate, name),
                  arg->value());
       }
-      return result;
+      return &result;
     }
 
     //////////////////////////
@@ -1651,7 +1651,7 @@ namespace Sass {
     BUILT_IN(call)
     {
       std::string name = Util::normalize_underscores(unquote(ARG("$name", String_Constant)->value()));
-      List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
+      List_Obj arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
 
       Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
       // std::string full_name(name + "[f]");
@@ -1678,7 +1678,7 @@ namespace Sass {
           *args << SASS_MEMORY_NEW(ctx.mem, Argument, pstate, expr);
         }
       }
-      Function_Call_Ptr func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, &args);
+      Function_Call_Obj func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, &args);
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
       return func->perform(&expand.eval);
 

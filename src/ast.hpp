@@ -1267,8 +1267,8 @@ namespace Sass {
     ADD_PROPERTY(bool, is_keyword_argument)
     size_t hash_;
   public:
-    Argument_Ref(ParserState pstate, Expression_Ptr val, std::string n = "", bool rest = false, bool keyword = false)
-    : Expression_Ref(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
+    Argument_Ref(ParserState pstate, Expression_Obj val, std::string n = "", bool rest = false, bool keyword = false)
+    : Expression_Ref(pstate), value_(&val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
     {
       if (!name_.empty() && is_rest_argument_) {
         error("variable-length argument may not be passed by name", pstate);

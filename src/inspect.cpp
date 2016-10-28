@@ -847,8 +847,8 @@ namespace Sass {
       return;
     }
     if (a->value()->concrete_type() == Expression::STRING) {
-      String_Constant_Ptr s = static_cast<String_Constant_Ptr>(a->value());
-      s->perform(this);
+      String_Constant_Ptr s = SASS_MEMORY_CAST_PTR(String_Constant, a->value());
+      if (s) s->perform(this);
     } else a->value()->perform(this);
     if (a->is_rest_argument()) {
       append_string("...");

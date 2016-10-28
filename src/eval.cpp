@@ -800,7 +800,7 @@ namespace Sass {
     if (!env->has(full_name)) {
       if (!env->has("*[f]")) {
         for (Argument_Obj arg : args->elements()) {
-          if (List_Ptr ls = dynamic_cast<List_Ptr>(arg->value())) {
+          if (List_Obj ls = SASS_MEMORY_CAST_PTR(List, arg->value())) {
             if (ls->size() == 0) error("() isn't a valid CSS value.", c->pstate());
           }
         }
@@ -1291,9 +1291,7 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Argument_Ptr a)
   {
-    Expression_Ptr val = a->value();
-    val = val->perform(this);
-
+    Expression_Ptr val = a->value()->perform(this);
     bool is_rest_argument = a->is_rest_argument();
     bool is_keyword_argument = a->is_keyword_argument();
 
