@@ -1382,10 +1382,10 @@ namespace Sass {
   // Function call schemas.
   /////////////////////////
   class Function_Call_Schema_Ref : public Expression_Ref {
-    ADD_PROPERTY(String_Ptr, name)
-    ADD_PROPERTY(Arguments_Ptr, arguments)
+    ADD_PROPERTY(String_Obj, name)
+    ADD_PROPERTY(Arguments_Obj, arguments)
   public:
-    Function_Call_Schema_Ref(ParserState pstate, String_Ptr n, Arguments_Ptr args)
+    Function_Call_Schema_Ref(ParserState pstate, String_Obj n, Arguments_Obj args)
     : Expression_Ref(pstate), name_(n), arguments_(args)
     { concrete_type(STRING); }
     ATTACH_OPERATIONS()

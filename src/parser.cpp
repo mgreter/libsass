@@ -1890,7 +1890,7 @@ namespace Sass {
     ParserState source_position_of_call = pstate;
     Arguments_Obj args = parse_arguments();
 
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call_Schema, source_position_of_call, &name, &args);
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call_Schema, source_position_of_call, name, args);
   }
 
   Content_Obj Parser::parse_content_directive()
