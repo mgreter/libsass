@@ -1308,16 +1308,16 @@ namespace Sass {
   // error checking (e.g., ensuring that all ordinal arguments precede all
   // named arguments).
   ////////////////////////////////////////////////////////////////////////
-  class Arguments_Ref : public Expression_Ref, public Vectorized<Argument_Ptr> {
+  class Arguments_Ref : public Expression_Ref, public Vectorized2<Argument_Obj> {
     ADD_PROPERTY(bool, has_named_arguments)
     ADD_PROPERTY(bool, has_rest_argument)
     ADD_PROPERTY(bool, has_keyword_argument)
   protected:
-    void adjust_after_pushing(Argument_Ptr a);
+    void adjust_after_pushing(Argument_Obj a);
   public:
     Arguments_Ref(ParserState pstate)
     : Expression_Ref(pstate),
-      Vectorized<Argument_Ptr>(),
+      Vectorized2<Argument_Obj>(),
       has_named_arguments_(false),
       has_rest_argument_(false),
       has_keyword_argument_(false)
