@@ -317,13 +317,9 @@ namespace Sass {
     const T& operator[](size_t i) const { return elements_[i]; }
     virtual Vectorized2& append(T element)
     {
-      std::cerr << "goind to append\n";
       if (!element) return *this;
-      std::cerr << "reset hash\n";
       reset_hash();
-      std::cerr << "push back\n";
       elements_.push_back(element);
-      std::cerr << "adjust after\n";
       adjust_after_pushing(element);
       return *this;
     }

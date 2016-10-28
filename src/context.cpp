@@ -586,7 +586,7 @@ list->append(&string);
 
   Block_Obj File_Context::parse()
   {
-
+/*
   Memory_Manager mem;
   ParserState pstate("null");
   std::string str("foobar");
@@ -605,7 +605,7 @@ exit(0);
 }
 
 exit(0);
-
+*/
     // create absolute path from input filename
     // ToDo: this should be resolved via custom importers
     std::string abs_path(rel2abs(input_path, CWD));

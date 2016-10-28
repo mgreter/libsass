@@ -33,7 +33,7 @@ namespace Sass {
     : node(ptr) {
       if (node) {
         node->refcounter += 1;
-        std::cerr << "Create, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+       //  std::cerr << "Create, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     };
     // the copy constructor
@@ -41,17 +41,17 @@ namespace Sass {
     : node(obj.node) {
       if (node) {
         node->refcounter += 1;
-        std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+       //  std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     }
     ~Memory_Ptr() {
       if (this->node) {
         // this gives errors for nested?
         this->node->refcounter -= 1;
-        std::cerr << "decrease refcount, " << node << " - now at " << node->refcounter << "\n";
+        // std::cerr << "decrease refcount, " << node << " - now at " << node->refcounter << "\n";
         if (this->node->refcounter == 0) {
-          std::cerr << "DELETE me " << node << "\n";
-          delete(node);
+          // std::cerr << "DELETE me " << node << "\n";
+          // delete(node);
           // delete and remove
         }
       }
