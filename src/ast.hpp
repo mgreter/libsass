@@ -2454,7 +2454,7 @@ namespace Sass {
     enum Combinator { ANCESTOR_OF, PARENT_OF, PRECEDES, ADJACENT_TO, REFERENCE };
   private:
     ADD_PROPERTY(Combinator, combinator)
-    ADD_PROPERTY(Compound_Selector_Ptr, head)
+    ADD_PROPERTY(Compound_Selector_Obj, head)
     ADD_PROPERTY(Complex_Selector_Obj, tail)
     ADD_PROPERTY(String_Ptr, reference);
   public:
@@ -2465,8 +2465,8 @@ namespace Sass {
     };
     Complex_Selector_Ref(ParserState pstate,
                      Combinator c = ANCESTOR_OF,
-                     Compound_Selector_Ptr h = 0,
-                     Complex_Selector_Ptr t = 0,
+                     Compound_Selector_Obj h = 0,
+                     Complex_Selector_Obj t = 0,
                      String_Ptr r = 0)
     : Selector_Ref(pstate),
       combinator_(c),
@@ -2572,7 +2572,7 @@ namespace Sass {
 
       SourcesSet srcs;
 
-      Compound_Selector_Ptr pHead = head();
+      Compound_Selector_Obj pHead = head();
       Complex_Selector_Obj  pTail = tail();
 
       if (pHead) {
@@ -2591,7 +2591,7 @@ namespace Sass {
       // members.map! {|m| m.is_a?(SimpleSequence) ? m.with_more_sources(sources) : m}
       Complex_Selector_Obj pIter = this;
       while (pIter) {
-        Compound_Selector_Ptr pHead = pIter->head();
+        Compound_Selector_Obj pHead = pIter->head();
 
         if (pHead) {
           pHead->mergeSources(sources, ctx);
@@ -2603,7 +2603,7 @@ namespace Sass {
     void clearSources() {
       Complex_Selector_Obj pIter = this;
       while (pIter) {
-        Compound_Selector_Ptr pHead = pIter->head();
+        Compound_Selector_Obj pHead = pIter->head();
 
         if (pHead) {
           pHead->clearSources();

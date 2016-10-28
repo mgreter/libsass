@@ -40,7 +40,7 @@ namespace Sass {
   {
     List_Ptr l = SASS_MEMORY_NEW(mem, List, sel->pstate(), 2);
     l->from_selector(true);
-    Compound_Selector_Ptr head = sel->head();
+    Compound_Selector_Obj head = sel->head();
     if (head && !head->is_empty_reference())
     {
       Expression_Ptr hh = head->perform(this);

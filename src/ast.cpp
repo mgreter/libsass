@@ -189,8 +189,8 @@ namespace Sass {
     // const iterators for tails
     Complex_Selector_Ptr_Const l = this;
     Complex_Selector_Ptr_Const r = &rhs;
-    Compound_Selector_Ptr l_h = l ? l->head() : 0;
-    Compound_Selector_Ptr r_h = r ? r->head() : 0;
+    Compound_Selector_Obj l_h = l ? &l->head() : 0;
+    Compound_Selector_Obj r_h = r ? &r->head() : 0;
     // process all tails
     while (true)
     {
@@ -198,14 +198,14 @@ namespace Sass {
       if (l && l->is_empty_ancestor())
       {
         l = &l->tail();
-        l_h = l ? l->head() : 0;
+        l_h = l ? &l->head() : 0;
         continue;
       }
       // skip empty ancestor first
       if (r && r->is_empty_ancestor())
       {
         r = &r->tail();
-        r_h = r ? r->head() : 0;
+        r_h = r ? &r->head() : 0;
         continue;
       }
       // check for valid selectors
@@ -221,8 +221,8 @@ namespace Sass {
         l = &l->tail();
         r = &r->tail();
         // fetch the next headers
-        l_h = l ? l->head() : 0;
-        r_h = r ? r->head() : 0;
+        l_h = l ? &l->head() : 0;
+        r_h = r ? &r->head() : 0;
       }
       // one side is null
       else if (!r_h) return true;
@@ -237,8 +237,8 @@ namespace Sass {
         l = &l->tail();
         r = &r->tail();
         // fetch the next headers
-        l_h = l ? l->head() : 0;
-        r_h = r ? r->head() : 0;
+        l_h = l ? &l->head() : 0;
+        r_h = r ? &r->head() : 0;
       }
       // heads are not equal
       else return *l_h < *r_h;
@@ -251,8 +251,8 @@ namespace Sass {
     // const iterators for tails
     Complex_Selector_Ptr_Const l = this;
     Complex_Selector_Ptr_Const r = &rhs;
-    Compound_Selector_Ptr l_h = l ? l->head() : 0;
-    Compound_Selector_Ptr r_h = r ? r->head() : 0;
+    Compound_Selector_Obj l_h = l ? &l->head() : 0;
+    Compound_Selector_Obj r_h = r ? &r->head() : 0;
     // process all tails
     while (true)
     {
@@ -260,14 +260,14 @@ namespace Sass {
       if (l && l->is_empty_ancestor())
       {
         l = &l->tail();
-        l_h = l ? l->head() : 0;
+        l_h = l ? &l->head() : 0;
         continue;
       }
       // skip empty ancestor first
       if (r && r->is_empty_ancestor())
       {
         r = &r->tail();
-        r_h = r ? r->head() : 0;
+        r_h = r ? &r->head() : 0;
         continue;
       }
       // check the pointers
@@ -283,8 +283,8 @@ namespace Sass {
         l = &l->tail();
         r = &r->tail();
         // fetch the next heads
-        l_h = l ? l->head() : 0;
-        r_h = r ? r->head() : 0;
+        l_h = l ? &l->head() : 0;
+        r_h = r ? &r->head() : 0;
       }
       // fail if only one is null
       else if (!r_h) return !l_h;
@@ -299,8 +299,8 @@ namespace Sass {
         l = &l->tail();
         r = &r->tail();
         // fetch the next heads
-        l_h = l ? l->head() : 0;
-        r_h = r ? r->head() : 0;
+        l_h = l ? &l->head() : 0;
+        r_h = r ? &r->head() : 0;
       }
       // abort
       else break;
@@ -704,7 +704,7 @@ namespace Sass {
 
   bool Compound_Selector_Ref::is_superselector_of(Complex_Selector_Ptr rhs, std::string wrapped)
   {
-    if (rhs->head()) return is_superselector_of(rhs->head(), wrapped);
+    if (rhs->head()) return is_superselector_of(&rhs->head(), wrapped);
     return false;
   }
 
@@ -849,15 +849,15 @@ namespace Sass {
     if (r_last->combinator() != Combinator::ANCESTOR_OF ) return 0;
 
     // get the headers for the last tails
-    Compound_Selector_Ptr l_last_head = l_last->head();
-    Compound_Selector_Ptr r_last_head = r_last->head();
+    Compound_Selector_Obj l_last_head = l_last->head();
+    Compound_Selector_Obj r_last_head = r_last->head();
 
     // check valid head pointers (assertion)
     SASS_ASSERT(l_last_head, "lhs head is null");
     SASS_ASSERT(r_last_head, "rhs head is null");
 
     // get the unification of the last compound selectors
-    Compound_Selector_Ptr unified = r_last_head->unify_with(l_last_head, ctx);
+    Compound_Selector_Ptr unified = r_last_head->unify_with(&l_last_head, ctx);
 
     // abort if we could not unify heads
     if (unified == 0) return 0;
@@ -959,7 +959,7 @@ namespace Sass {
     { return false; }
 
     if (l_len == 1)
-    { return lhs->head()->is_superselector_of(rhs->last()->head(), wrapping); }
+    { return lhs->head()->is_superselector_of(&rhs->last()->head(), wrapping); }
 
     // we have to look one tail deeper, since we cary the
     // combinator around for it (which is important here)
@@ -970,7 +970,7 @@ namespace Sass {
       if (lhs_tail->head() && !rhs_tail->head()) return false;
       if (!lhs_tail->head() && rhs_tail->head()) return false;
       if (lhs_tail->head() && rhs_tail->head()) {
-        if (!lhs_tail->head()->is_superselector_of(rhs_tail->head())) return false;
+        if (!lhs_tail->head()->is_superselector_of(&rhs_tail->head())) return false;
       }
     }
 
@@ -979,7 +979,7 @@ namespace Sass {
     for (size_t i = 0, L = rhs->length(); i < L; ++i) {
       if (i == L-1)
       { return false; }
-      if (lhs->head() && marker->head() && lhs->head()->is_superselector_of(marker->head(), wrapping))
+      if (lhs->head() && marker->head() && lhs->head()->is_superselector_of(&marker->head(), wrapping))
       { found = true; break; }
       marker = marker->tail();
     }
@@ -1047,7 +1047,7 @@ namespace Sass {
     Complex_Selector_Obj t = ss->tail();
     Combinator c = ss->combinator();
     String_Ptr r = ss->reference();
-    Compound_Selector_Ptr h = ss->head();
+    Compound_Selector_Obj h = ss->head();
 
     if (ss->has_line_feed()) has_line_feed(true);
     if (ss->has_line_break()) has_line_break(true);
@@ -1057,7 +1057,7 @@ namespace Sass {
       if (last()->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
         error("Invalid parent selector", pstate_);
       } else if (last()->head_ && last()->head_->length()) {
-        Compound_Selector_Ptr rh = last()->head();
+        Compound_Selector_Obj rh = last()->head();
         size_t i = 0, L = h->length();
         if (SASS_MEMORY_CAST(Element_Selector, h->first())) {
           if (Class_Selector_Ptr sq = SASS_MEMORY_CAST(Class_Selector, rh->last())) {
@@ -1089,13 +1089,13 @@ namespace Sass {
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << &(*h)[i];
           } else {
-            *last()->head_ += h;
+            last()->head_->concat(&h);
           }
         } else {
-          *last()->head_ += h;
+          last()->head_->concat(&h);
         }
       } else {
-        *last()->head_ += h;
+        last()->head_->concat(&h);
       }
     } else {
       // std::cerr << "has no or empty head\n";
@@ -1137,7 +1137,7 @@ namespace Sass {
   CommaComplex_Selector_Ptr Complex_Selector_Ref::resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent)
   {
     Complex_Selector_Obj tail = this->tail();
-    Compound_Selector_Ptr head = this->head();
+    Compound_Selector_Obj head = this->head();
 
     if (!this->has_real_parent_ref() && !implicit_parent) {
       CommaComplex_Selector_Ptr retval = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
@@ -1287,7 +1287,7 @@ namespace Sass {
   {
     // declare variables used in loop
     Complex_Selector_Obj cur = this;
-    Compound_Selector_Ptr_Const head;
+    Compound_Selector_Obj head;
     // processing loop
     while (cur)
     {
@@ -1309,7 +1309,7 @@ namespace Sass {
   {
     // declare variables used in loop
     Complex_Selector_Obj cur = this->tail_;
-    Compound_Selector_Ptr_Const head = head_;
+    Compound_Selector_Obj head = head_;
     // processing loop
     while (cur)
     {
@@ -1561,10 +1561,10 @@ namespace Sass {
 
 
       // Ignore any parent selectors, until we find the first non Selector_Reference head
-      Compound_Selector_Ptr compound_sel = c->head();
+      Compound_Selector_Obj compound_sel = c->head();
       Complex_Selector_Obj pIter = complex_sel;
       while (pIter) {
-        Compound_Selector_Ptr pHead = pIter->head();
+        Compound_Selector_Obj pHead = pIter->head();
         if (pHead && SASS_MEMORY_CAST(Parent_Selector, pHead->elements()[0]) == NULL) {
           compound_sel = pHead;
           break;
@@ -1580,7 +1580,7 @@ namespace Sass {
       compound_sel->is_optional(extendee->is_optional());
 
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
-        extends.put(compound_sel->to_str_vec(), std::make_pair(&(*extender)[i], compound_sel));
+        extends.put(compound_sel->to_str_vec(), std::make_pair(&(*extender)[i], &compound_sel));
       }
     }
   };

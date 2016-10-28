@@ -989,7 +989,7 @@ namespace Sass {
 
           Complex_Selector_Ptr pMergedWrapper = sel1.selector()->clone(ctx); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
           // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
-          Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head(), ctx);
+          Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(&sel2.selector()->head(), ctx);
           pMergedWrapper->head(pMerged);
 
           DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
@@ -1048,7 +1048,7 @@ namespace Sass {
 
             Complex_Selector_Ptr pMergedWrapper = plusSel.selector()->clone(ctx); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
             // TODO: does subject matter? Ruby: merged = plus_sel.unify(tilde_sel.members, tilde_sel.subject?)
-            Compound_Selector_Ptr pMerged = plusSel.selector()->head()->unify_with(tildeSel.selector()->head(), ctx);
+            Compound_Selector_Ptr pMerged = plusSel.selector()->head()->unify_with(&tildeSel.selector()->head(), ctx);
             pMergedWrapper->head(pMerged);
 
             DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
@@ -1097,7 +1097,7 @@ namespace Sass {
 
         Complex_Selector_Ptr pMergedWrapper = sel1.selector()->clone(ctx); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
         // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
-        Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head(), ctx);
+        Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(&sel2.selector()->head(), ctx);
         pMergedWrapper->head(pMerged);
 
         DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
@@ -1595,8 +1595,8 @@ namespace Sass {
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelector, "MEMBERS: "))
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelectorWithoutExtendSelectors, "SELF_WO_SEL: "))
 
-      Compound_Selector_Ptr pInnermostCompoundSelector = pExtComplexSelector->last()->head();
-      Compound_Selector_Ptr pUnifiedSelector = NULL;
+      Compound_Selector_Obj pInnermostCompoundSelector = pExtComplexSelector->last()->head();
+      Compound_Selector_Obj pUnifiedSelector;
 
       if (!pInnermostCompoundSelector) {
         pInnermostCompoundSelector = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pSelector->pstate());
@@ -1719,7 +1719,7 @@ namespace Sass {
     Complex_Selector_Obj pIter = pComplexSelector;
 
     while (!hasExtension && pIter) {
-      Compound_Selector_Ptr pHead = pIter->head();
+      Compound_Selector_Obj pHead = pIter->head();
 
       if (pHead) {
         SubsetMapEntries entries = subset_map.get_v(pHead->to_str_vec());
@@ -1801,10 +1801,10 @@ namespace Sass {
         continue;
       }
 
-      Compound_Selector_Ptr pCompoundSelector = sseqOrOp.selector()->head();
+      Compound_Selector_Obj pCompoundSelector = sseqOrOp.selector()->head();
 
       // RUBY: extended = sseq_or_op.do_extend(extends, parent_directives, replace, seen)
-      Node extended = extendCompoundSelector(pCompoundSelector, ctx, subset_map, seen, isReplace);
+      Node extended = extendCompoundSelector(&pCompoundSelector, ctx, subset_map, seen, isReplace);
       if (sseqOrOp.got_line_feed) extended.got_line_feed = true;
       DEBUG_PRINTLN(EXTEND_COMPLEX, "EXTENDED: " << extended)
 
@@ -1975,7 +1975,7 @@ namespace Sass {
                         Wrapped_Selector_Ptr ext_ws = SASS_MEMORY_CAST(Wrapped_Selector, ext_cs->first()->head()->first());
                         if (ext_ws/* && ext_cs->length() == 1*/) {
                           CommaComplex_Selector_Ptr ws_cs = dynamic_cast<CommaComplex_Selector_Ptr>(ext_ws->selector());
-                          Compound_Selector_Ptr ws_ss = ws_cs->first()->head();
+                          Compound_Selector_Obj ws_ss = ws_cs->first()->head();
                           if (!(
                             SASS_MEMORY_CAST(Pseudo_Selector, ws_ss->first()) ||
                             SASS_MEMORY_CAST(Element_Selector, ws_ss->first()) ||

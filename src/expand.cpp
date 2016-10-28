@@ -586,7 +586,7 @@ namespace Sass {
         std::string sel_str(contextualized->to_string(ctx.c_options));
         error("Can't extend " + sel_str + ": can't extend nested selectors", c->pstate(), backtrace());
       }
-      Compound_Selector_Ptr placeholder = c->head();
+      Compound_Selector_Obj placeholder = c->head();
       if (contextualized->is_optional()) placeholder->is_optional(true);
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
         Complex_Selector_Obj sel = (*extender)[i];
@@ -606,7 +606,7 @@ namespace Sass {
           sel = ssel;
         }
         // if (c->has_line_feed()) sel->has_line_feed(true);
-        ctx.subset_map.put(placeholder->to_str_vec(), std::make_pair(&sel, placeholder));
+        ctx.subset_map.put(placeholder->to_str_vec(), std::make_pair(&sel, &placeholder));
       }
     }
 
@@ -621,7 +621,7 @@ namespace Sass {
       }
       if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(s)) {
         for (Complex_Selector_Obj cs : sl->elements()) {
-          if (cs && cs->head() != NULL) {
+          if (cs && cs->head()) {
             cs->head()->media_block(media_block_stack.back());
           }
         }

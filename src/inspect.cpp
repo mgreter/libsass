@@ -959,7 +959,7 @@ namespace Sass {
 
   void Inspect::operator()(Complex_Selector_Ptr c)
   {
-    Compound_Selector_Ptr      head = c->head();
+    Compound_Selector_Obj      head = c->head();
     Complex_Selector_Obj            tail = c->tail();
     Complex_Selector_Ref::Combinator comb = c->combinator();
 

@@ -200,7 +200,7 @@ namespace Sass {
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
       CommaComplex_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
-      return (sel_list->length() > 0) ? sel_list->first()->tail()->head() : 0;
+      return (sel_list->length() > 0) ? &sel_list->first()->tail()->head() : 0;
     }
 
     #ifdef __MINGW32__
@@ -1876,7 +1876,7 @@ namespace Sass {
             // TODO: Add check for namespace stuff
 
             // append any selectors in childSeq's head
-            *(parentSeqClone->innermost()->head()) += (base->head());
+            parentSeqClone->innermost()->head()->concat(&base->head());
 
             // Set parentSeqClone new tail
             parentSeqClone->innermost()->tail( base->tail() );
