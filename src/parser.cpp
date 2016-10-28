@@ -318,8 +318,8 @@ namespace Sass {
         to_import.push_back(std::pair<std::string,Function_Call_Ptr>(std::string(lexed), 0));
       }
       else if (lex< uri_prefix >()) {
-        Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
-        Function_Call_Ptr result = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, "url", args);
+        Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
+        Function_Call_Obj result = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, "url", &args);
 
         if (lex< quoted_string >()) {
           Expression_Obj the_url = &parse_string();
@@ -336,7 +336,7 @@ namespace Sass {
           error("malformed URL", pstate);
         }
         if (!lex< exactly<')'> >()) error("URI is missing ')'", pstate);
-        to_import.push_back(std::pair<std::string, Function_Call_Ptr>("", result));
+        to_import.push_back(std::pair<std::string, Function_Call_Ptr>("", &result));
       }
       else {
         if (first) error("@import directive requires a url or quoted path", pstate);
@@ -425,7 +425,7 @@ namespace Sass {
   {
     std::string name(lexed);
     Position position = after_token;
-    Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
+    Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
     if (lex_css< exactly<'('> >()) {
       // if there's anything there at all
       if (!peek_css< exactly<')'> >()) {
@@ -1810,10 +1810,10 @@ namespace Sass {
           exactly < ')' >
         > >();
 
-    Argument_Ptr arg = SASS_MEMORY_NEW(ctx.mem, Argument, arg_pos, &parse_interpolated_chunk(Token(arg_beg, arg_end)));
-    Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, arg_pos);
-    *args << arg;
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
+    Argument_Obj arg = SASS_MEMORY_NEW(ctx.mem, Argument, arg_pos, &parse_interpolated_chunk(Token(arg_beg, arg_end)));
+    Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, arg_pos);
+    args->append(&arg);
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, &args);
   }
 
   String_Obj Parser::parse_url_function_string()
