@@ -459,18 +459,19 @@ namespace Sass {
   {
     std::vector<std::string> variables(e->variables());
     Expression_Ptr expr = e->list()->perform(&eval);
-    Vectorized<Expression_Ptr>* list = 0;
+    Vectorized2<Expression_Obj>* list = 0;
     Map_Ptr map = 0;
     if (expr->concrete_type() == Expression::MAP) {
       map = static_cast<Map_Ptr>(expr);
     }
     else if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(expr)) {
       Listize listize(ctx.mem);
-      list = dynamic_cast<List_Ptr>(ls->perform(&listize));
+      Expression_Obj rv = ls->perform(&listize);
+      list = dynamic_cast<List_Ptr>(&rv);
     }
     else if (expr->concrete_type() != Expression::LIST) {
       list = SASS_MEMORY_NEW(ctx.mem, List, expr->pstate(), 1, SASS_COMMA);
-      *list << expr;
+      list->append(expr);
     }
     else {
       list = static_cast<List_Ptr>(expr);
@@ -501,14 +502,14 @@ namespace Sass {
     else {
       // bool arglist = list->is_arglist();
       if (list->length() == 1 && dynamic_cast<CommaSequence_Selector_Ptr>(list)) {
-        list = dynamic_cast<Vectorized<Expression_Ptr>*>(list);
+        list = dynamic_cast<Vectorized2<Memory_Node<Expression_Ref>>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
-        Expression_Ptr e = (*list)[i];
+        Expression_Obj e = list->at(i);
         // unwrap value if the expression is an argument
-        if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(e)) e = arg->value();
+        if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(&e)) e = arg->value();
         // check if we got passed a list of args (investigate)
-        if (List_Ptr scalars = dynamic_cast<List_Ptr>(e)) {
+        if (List_Ptr scalars = dynamic_cast<List_Ptr>(&e)) {
           if (variables.size() == 1) {
             Expression_Ptr var = scalars;
             // if (arglist) var = (*scalars)[0];
@@ -523,7 +524,7 @@ namespace Sass {
           }
         } else {
           if (variables.size() > 0) {
-            env.set_local(variables[0], e);
+            env.set_local(variables.at(0), &e);
             for (size_t j = 1, K = variables.size(); j < K; ++j) {
               Expression_Ptr res = SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate());
               env.set_local(variables[j], res);

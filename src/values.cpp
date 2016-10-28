@@ -24,7 +24,8 @@ namespace Sass {
       List_Ptr_Const l = dynamic_cast<List_Ptr_Const>(val);
       union Sass_Value* list = sass_make_list(l->size(), l->separator());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
-        auto val = ast_node_to_sass_value((*l)[i]);
+        Expression_Obj obj = l->at(i);
+        auto val = ast_node_to_sass_value(&obj);
         sass_list_set_value(list, i, val);
       }
       return list;

@@ -69,13 +69,13 @@ namespace Sass {
                                               rest->separator(),
                                               true);
               // wrap each item from list as an argument
-              for (Expression_Ptr item : rest->elements()) {
-                if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(item)) {
+              for (Expression_Obj item : rest->elements()) {
+                if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(&item)) {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument, *arg);
                 } else {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
                                                 item->pstate(),
-                                                item,
+                                                &item,
                                                 "",
                                                 false,
                                                 false);
@@ -131,9 +131,11 @@ namespace Sass {
                 arglist->separator(rest->separator());
 
                 for (size_t i = 0, L = rest->size(); i < L; ++i) {
+                  Expression_Obj obj = rest->at(i);
+                  // Argument_Ptr arg = (Argument_Ptr)&obj;
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
-                                                (*rest)[i]->pstate(),
-                                                (*rest)[i],
+                                                obj->pstate(),
+                                                &obj,
                                                 "",
                                                 false,
                                                 false);
@@ -184,8 +186,9 @@ namespace Sass {
           }
         }
         // otherwise move one of the rest args into the param, converting to argument if necessary
-        if (!(a = dynamic_cast<Argument_Ptr>((*arglist)[0]))) {
-          Expression_Ptr a_to_convert = (*arglist)[0];
+        Expression_Obj obj = arglist->at(0);
+        if (!(a = dynamic_cast<Argument_Ptr>(&obj))) {
+          Expression_Ptr a_to_convert = &obj;
           a = SASS_MEMORY_NEW(ctx->mem, Argument,
                               a_to_convert->pstate(),
                               a_to_convert,

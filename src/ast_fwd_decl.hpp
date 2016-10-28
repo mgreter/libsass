@@ -93,15 +93,24 @@ namespace Sass {
     ~Memory_Node() {};
   public:
     T* operator& () {
-      // should be save to cast it here
       return static_cast<T*>(this->obj());
     };
+    T* operator& () const {
+      return static_cast<T*>(this->obj());
+    };
+    T& operator* () {
+      return *static_cast<T*>(this->obj());
+    };
+    T& operator* () const {
+      return *static_cast<T*>(this->obj());
+    };
     T* operator-> () {
-      // should be save to cast it here
+      return static_cast<T*>(this->obj());
+    };
+    T* operator-> () const {
       return static_cast<T*>(this->obj());
     };
     T* ptr () {
-      // should be save to cast it here
       return static_cast<T*>(this->obj());
     };
     operator bool() {

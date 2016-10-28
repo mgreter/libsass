@@ -2210,8 +2210,8 @@ namespace Sass {
       if (length() != r->length()) return false;
       if (separator() != r->separator()) return false;
       for (size_t i = 0, L = length(); i < L; ++i) {
-        Expression_Ptr rv = (*r)[i];
-        Expression_Ptr lv = (*this)[i];
+        Expression_Obj rv = r->at(i);
+        Expression_Obj lv = this->at(i);
         if (!lv || !rv) return false;
         if (!(*lv == *rv)) return false;
       }
@@ -2260,7 +2260,8 @@ namespace Sass {
     // arglist expects a list of arguments
     // so we need to break before keywords
     for (size_t i = 0, L = length(); i < L; ++i) {
-      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*this)[i])) {
+      Expression_Obj obj = this->at(i);
+      if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
         if (!arg->name().empty()) return i;
       }
     }
@@ -2325,20 +2326,21 @@ namespace Sass {
   // Additional method on Lists to retrieve values directly or from an encompassed Argument.
   //////////////////////////////////////////////////////////////////////////////////////////
   Expression_Ptr List_Ref::value_at_index(size_t i) {
+    Expression_Obj obj = this->at(i);
     if (is_arglist_) {
-      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*this)[i])) {
+      if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
         return arg->value();
       } else {
-        return (*this)[i];
+        return &obj;
       }
     } else {
-      return (*this)[i];
+      return &obj;
     }
   }
   Expression_Obj List2_Ref::value_at_index(size_t i) {
     if (is_arglist_) {
-    Expression_Obj obj = this->at(i);
-    if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
+      Expression_Obj obj = this->at(i);
+      if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
         return arg->value();
       } else {
         return this->at(i);

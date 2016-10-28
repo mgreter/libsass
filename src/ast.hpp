@@ -506,7 +506,7 @@ namespace Sass {
   ////////////////////////
   // Blocks of statements.
   ////////////////////////
-  class Block_Ref : public Statement_Ref, public Vectorized<Statement_Obj> {
+  class Block_Ref : public Statement_Ref, public Vectorized2<Statement_Obj> {
     ADD_PROPERTY(bool, is_root)
     ADD_PROPERTY(bool, is_at_root);
     // needed for properly formatted CSS emission
@@ -517,7 +517,7 @@ namespace Sass {
   public:
     Block_Ref(ParserState pstate, size_t s = 0, bool r = false)
     : Statement_Ref(pstate),
-      Vectorized<Statement_Obj>(s),
+      Vectorized2<Statement_Obj>(s),
       is_root_(r),
       is_at_root_(false)
     { }
@@ -955,8 +955,8 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class List_Ref : public Value_Ref, public Vectorized<Expression_Ptr> {
-    void adjust_after_pushing(Expression_Ptr e) { is_expanded(false); }
+  class List_Ref : public Value_Ref, public Vectorized2<Expression_Obj> {
+    void adjust_after_pushing(Expression_Obj e) { is_expanded(false); }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
     ADD_PROPERTY(bool, is_arglist)
@@ -965,7 +965,7 @@ namespace Sass {
     List_Ref(ParserState pstate,
          size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
     : Value_Ref(pstate),
-      Vectorized<Expression_Ptr>(size),
+      Vectorized2<Expression_Obj>(size),
       separator_(sep),
       is_arglist_(argl),
       from_selector_(false)

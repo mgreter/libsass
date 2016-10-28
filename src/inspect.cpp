@@ -373,9 +373,9 @@ namespace Sass {
     if (output_style() == TO_SASS &&
         list->length() == 1 &&
         !list->from_selector() &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<CommaSequence_Selector_Ptr>((*list)[0])) {
+        !dynamic_cast<List_Ptr>(&list->at(0)) &&
+        !dynamic_cast<List_Ptr>(&list->at(0)) &&
+        !dynamic_cast<CommaSequence_Selector_Ptr>(&list->at(0))) {
       append_string("(");
     }
     else if (!in_declaration && (list->separator() == SASS_HASH ||
@@ -391,11 +391,11 @@ namespace Sass {
     for (size_t i = 0, L = list->size(); i < L; ++i) {
       if (list->separator() == SASS_HASH)
       { sep[0] = i % 2 ? ':' : ','; }
-      Expression_Ptr list_item = (*list)[i];
+      Expression_Obj list_item = list->at(i);
       if (output_style() != TO_SASS) {
         if (list_item->is_invisible()) {
           // this fixes an issue with "" in a list
-          if (!dynamic_cast<String_Constant_Ptr>(list_item)) {
+          if (!dynamic_cast<String_Constant_Ptr>(&list_item)) {
             continue;
           }
         }
@@ -415,9 +415,9 @@ namespace Sass {
     if (output_style() == TO_SASS &&
         list->length() == 1 &&
         !list->from_selector() &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<CommaSequence_Selector_Ptr>((*list)[0])) {
+        !dynamic_cast<List_Ptr>(&list->at(0)) &&
+        !dynamic_cast<List_Ptr>(&list->at(0)) &&
+        !dynamic_cast<CommaSequence_Selector_Ptr>(&list->at(0))) {
       append_string(",)");
     }
     else if (!in_declaration && (list->separator() == SASS_HASH ||

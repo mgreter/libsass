@@ -155,7 +155,7 @@ namespace Sass {
           List_Ptr list = static_cast<List_Ptr>(dec->value());
           bool all_invisible = true;
           for (size_t list_i = 0, list_L = list->length(); list_i < list_L; ++list_i) {
-            Expression_Ptr item = (*list)[list_i];
+            Expression_Obj item = list->at(list_i);
             if (!item->is_invisible()) all_invisible = false;
           }
           if (all_invisible) bPrintExpression = false;

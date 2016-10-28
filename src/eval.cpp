@@ -219,18 +219,19 @@ namespace Sass {
     Expression_Ptr expr = e->list()->perform(this);
     Env env(environment(), true);
     exp.env_stack.push_back(&env);
-    Vectorized<Expression_Ptr>* list = 0;
+    Vectorized2<Expression_Obj>* list = 0;
     Map_Ptr map = 0;
     if (expr->concrete_type() == Expression::MAP) {
       map = static_cast<Map_Ptr>(expr);
     }
     else if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(expr)) {
       Listize listize(ctx.mem);
-      list = dynamic_cast<List_Ptr>(ls->perform(&listize));
+      Expression_Obj rv = ls->perform(&listize);
+      list = dynamic_cast<List_Ptr>(&rv);
     }
     else if (expr->concrete_type() != Expression::LIST) {
       list = SASS_MEMORY_NEW(ctx.mem, List, expr->pstate(), 1, SASS_COMMA);
-      *list << expr;
+      list->append(expr);
     }
     else {
       list = static_cast<List_Ptr>(expr);
@@ -259,14 +260,14 @@ namespace Sass {
     }
     else {
       if (list->length() == 1 && dynamic_cast<CommaSequence_Selector_Ptr>(list)) {
-        list = dynamic_cast<Vectorized<Expression_Ptr>*>(list);
+        list = dynamic_cast<Vectorized2<Memory_Node<Expression_Ref>>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
-        Expression_Ptr e = (*list)[i];
+        Expression_Obj e = list->at(i);
         // unwrap value if the expression is an argument
-        if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(e)) e = arg->value();
+        if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(&e)) e = arg->value();
         // check if we got passed a list of args (investigate)
-        if (List_Ptr scalars = dynamic_cast<List_Ptr>(e)) {
+        if (List_Ptr scalars = dynamic_cast<List_Ptr>(&e)) {
           if (variables.size() == 1) {
             Expression_Ptr var = scalars;
             env.set_local(variables[0], var);
@@ -275,13 +276,13 @@ namespace Sass {
             for (size_t j = 0, K = variables.size(); j < K; ++j) {
               Expression_Ptr res = j >= scalars->length()
                 ? SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate())
-                : (*scalars)[j];
+                : &scalars->at(j);
               env.set_local(variables[j], res);
             }
           }
         } else {
           if (variables.size() > 0) {
-            env.set_local(variables[0], e);
+            env.set_local(variables.at(0), &e);
             for (size_t j = 1, K = variables.size(); j < K; ++j) {
               // XXX: this is never hit via spec tests
               Expression_Ptr res = SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate());
@@ -1084,10 +1085,10 @@ namespace Sass {
       List_Ptr ll = SASS_MEMORY_NEW(ctx.mem, List, l->pstate(), 0, l->separator());
       // this fixes an issue with bourbon sample, not really sure why
       // if (l->size() && dynamic_cast<Null_Ptr>((*l)[0])) { res += ""; }
-      for(auto item : *l) {
+      for(Expression_Obj item : *l) {
         item->is_interpolant(l->is_interpolant());
-        std::string rl(""); interpolation(ctx, rl, item, into_quotes, l->is_interpolant());
-        bool is_null = dynamic_cast<Null_Ptr>(item) != 0; // rl != ""
+        std::string rl(""); interpolation(ctx, rl, &item, into_quotes, l->is_interpolant());
+        bool is_null = dynamic_cast<Null_Ptr>(&item) != 0; // rl != ""
         if (!is_null) *ll << SASS_MEMORY_NEW(ctx.mem, String_Quoted, item->pstate(), rl);
       }
       // Check indicates that we probably should not get a list
