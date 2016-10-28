@@ -441,18 +441,18 @@ namespace Sass {
   typedef Wrapped_Selector_Ref Wrapped_Selector;
   typedef Wrapped_Selector* Wrapped_Selector_Ptr;
   typedef Wrapped_Selector const * Wrapped_Selector_Ptr_Const;
-  class SimpleSequence_Selector_Ref;
-  typedef SimpleSequence_Selector_Ref SimpleSequence_Selector;
-  typedef SimpleSequence_Selector* SimpleSequence_Selector_Ptr;
-  typedef SimpleSequence_Selector const * SimpleSequence_Selector_Ptr_Const;
-  class Sequence_Selector_Ref;
-  typedef Sequence_Selector_Ref Sequence_Selector;
-  typedef Sequence_Selector* Sequence_Selector_Ptr;
-  typedef Sequence_Selector const * Sequence_Selector_Ptr_Const;
-  class CommaSequence_Selector_Ref;
-  typedef CommaSequence_Selector_Ref CommaSequence_Selector;
-  typedef CommaSequence_Selector* CommaSequence_Selector_Ptr;
-  typedef CommaSequence_Selector const * CommaSequence_Selector_Ptr_Const;
+  class Compound_Selector_Ref;
+  typedef Compound_Selector_Ref Compound_Selector;
+  typedef Compound_Selector* Compound_Selector_Ptr;
+  typedef Compound_Selector const * Compound_Selector_Ptr_Const;
+  class Complex_Selector_Ref;
+  typedef Complex_Selector_Ref Complex_Selector;
+  typedef Complex_Selector* Complex_Selector_Ptr;
+  typedef Complex_Selector const * Complex_Selector_Ptr_Const;
+  class CommaComplex_Selector_Ref;
+  typedef CommaComplex_Selector_Ref CommaComplex_Selector;
+  typedef CommaComplex_Selector* CommaComplex_Selector_Ptr;
+  typedef CommaComplex_Selector const * CommaComplex_Selector_Ptr_Const;
 
 
   // common classes
@@ -537,9 +537,9 @@ namespace Sass {
   using Attribute_Selector_Obj = Memory_Node<Attribute_Selector_Ref>;
   using Pseudo_Selector_Obj = Memory_Node<Pseudo_Selector_Ref>;
   using Wrapped_Selector_Obj = Memory_Node<Wrapped_Selector_Ref>;
-  using SimpleSequence_Selector_Obj = Memory_Node<SimpleSequence_Selector_Ref>;
-  using Sequence_Selector_Obj = Memory_Node<Sequence_Selector_Ref>;
-  using CommaSequence_Selector_Obj = Memory_Node<CommaSequence_Selector_Ref>;
+  using Compound_Selector_Obj = Memory_Node<Compound_Selector_Ref>;
+  using Complex_Selector_Obj = Memory_Node<Complex_Selector_Ref>;
+  using CommaComplex_Selector_Obj = Memory_Node<CommaComplex_Selector_Ref>;
 
 }
 

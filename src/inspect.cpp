@@ -375,7 +375,7 @@ namespace Sass {
         !list->from_selector() &&
         !dynamic_cast<List_Ptr>(&list->at(0)) &&
         !dynamic_cast<List_Ptr>(&list->at(0)) &&
-        !dynamic_cast<CommaSequence_Selector_Ptr>(&list->at(0))) {
+        !dynamic_cast<CommaComplex_Selector_Ptr>(&list->at(0))) {
       append_string("(");
     }
     else if (!in_declaration && (list->separator() == SASS_HASH ||
@@ -417,7 +417,7 @@ namespace Sass {
         !list->from_selector() &&
         !dynamic_cast<List_Ptr>(&list->at(0)) &&
         !dynamic_cast<List_Ptr>(&list->at(0)) &&
-        !dynamic_cast<CommaSequence_Selector_Ptr>(&list->at(0))) {
+        !dynamic_cast<CommaComplex_Selector_Ptr>(&list->at(0))) {
       append_string(",)");
     }
     else if (!in_declaration && (list->separator() == SASS_HASH ||
@@ -945,7 +945,7 @@ namespace Sass {
     in_wrapped = was;
   }
 
-  void Inspect::operator()(SimpleSequence_Selector_Ptr s)
+  void Inspect::operator()(Compound_Selector_Ptr s)
   {
     for (size_t i = 0, L = s->length(); i < L; ++i) {
       (*s)[i]->perform(this);
@@ -957,13 +957,13 @@ namespace Sass {
     }
   }
 
-  void Inspect::operator()(Sequence_Selector_Ptr c)
+  void Inspect::operator()(Complex_Selector_Ptr c)
   {
-    SimpleSequence_Selector_Ptr      head = c->head();
-    Sequence_Selector_Obj            tail = c->tail();
-    Sequence_Selector_Ref::Combinator comb = c->combinator();
+    Compound_Selector_Ptr      head = c->head();
+    Complex_Selector_Obj            tail = c->tail();
+    Complex_Selector_Ref::Combinator comb = c->combinator();
 
-    if (comb == Sequence_Selector_Ref::ANCESTOR_OF && (!head || head->empty())) {
+    if (comb == Complex_Selector_Ref::ANCESTOR_OF && (!head || head->empty())) {
       if (tail) tail->perform(this);
       return;
     }
@@ -978,30 +978,30 @@ namespace Sass {
     if (head && head->length() != 0) head->perform(this);
     bool is_empty = !head || head->length() == 0 || head->is_empty_reference();
     bool is_tail = head && !head->is_empty_reference() && tail;
-    if (output_style() == COMPRESSED && comb != Sequence_Selector_Ref::ANCESTOR_OF) scheduled_space = 0;
+    if (output_style() == COMPRESSED && comb != Complex_Selector_Ref::ANCESTOR_OF) scheduled_space = 0;
 
     switch (comb) {
-      case Sequence_Selector_Ref::ANCESTOR_OF:
+      case Complex_Selector_Ref::ANCESTOR_OF:
         if (is_tail) append_mandatory_space();
       break;
-      case Sequence_Selector_Ref::PARENT_OF:
+      case Complex_Selector_Ref::PARENT_OF:
         append_optional_space();
         append_string(">");
         append_optional_space();
       break;
-      case Sequence_Selector_Ref::ADJACENT_TO:
+      case Complex_Selector_Ref::ADJACENT_TO:
         append_optional_space();
         append_string("+");
         append_optional_space();
       break;
-      case Sequence_Selector_Ref::REFERENCE:
+      case Complex_Selector_Ref::REFERENCE:
         append_mandatory_space();
         append_string("/");
         c->reference()->perform(this);
         append_string("/");
         append_mandatory_space();
       break;
-      case Sequence_Selector_Ref::PRECEDES:
+      case Complex_Selector_Ref::PRECEDES:
         if (is_empty) append_optional_space();
         else append_mandatory_space();
         append_string("~");
@@ -1009,7 +1009,7 @@ namespace Sass {
         else append_optional_space();
       break;
     }
-    if (tail && comb != Sequence_Selector_Ref::ANCESTOR_OF) {
+    if (tail && comb != Complex_Selector_Ref::ANCESTOR_OF) {
       if (c->has_line_break()) append_optional_linefeed();
     }
     if (tail) tail->perform(this);
@@ -1020,7 +1020,7 @@ namespace Sass {
     }
   }
 
-  void Inspect::operator()(CommaSequence_Selector_Ptr g)
+  void Inspect::operator()(CommaComplex_Selector_Ptr g)
   {
 
     if (g->empty()) {
@@ -1035,7 +1035,7 @@ namespace Sass {
     // probably ruby sass eqivalent of element_needs_parens
     if (output_style() == TO_SASS && g->length() == 1 &&
       (!SASS_MEMORY_CAST(List, (*g)[0]) &&
-       !SASS_MEMORY_CAST(CommaSequence_Selector, (*g)[0]))) {
+       !SASS_MEMORY_CAST(CommaComplex_Selector, (*g)[0]))) {
       append_string("(");
     }
     else if (!in_declaration && in_comma_array) {
@@ -1061,7 +1061,7 @@ namespace Sass {
     // probably ruby sass eqivalent of element_needs_parens
     if (output_style() == TO_SASS && g->length() == 1 &&
       (!SASS_MEMORY_CAST(List, (*g)[0]) &&
-       !SASS_MEMORY_CAST(CommaSequence_Selector, (*g)[0]))) {
+       !SASS_MEMORY_CAST(CommaComplex_Selector, (*g)[0]))) {
       append_string(",)");
     }
     else if (!in_declaration && in_comma_array) {

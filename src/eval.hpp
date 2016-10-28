@@ -28,7 +28,7 @@ namespace Sass {
 
     Env* environment();
     Context& context();
-    CommaSequence_Selector_Ptr selector();
+    CommaComplex_Selector_Ptr selector();
     Backtrace* backtrace();
 
     // for evaluating function bodies
@@ -57,7 +57,7 @@ namespace Sass {
     Expression_Ptr operator()(String_Schema_Ptr);
     Expression_Ptr operator()(String_Quoted_Ptr);
     Expression_Ptr operator()(String_Constant_Ptr);
-    // Expression_Ptr operator()(CommaSequence_Selector_Ptr);
+    // Expression_Ptr operator()(CommaComplex_Selector_Ptr);
     Expression_Ptr operator()(Media_Query_Ptr);
     Expression_Ptr operator()(Media_Query_Expression_Ptr);
     Expression_Ptr operator()(At_Root_Query_Ptr);
@@ -71,8 +71,8 @@ namespace Sass {
     Expression_Ptr operator()(Comment_Ptr);
 
     // these will return selectors
-    CommaSequence_Selector_Ptr operator()(CommaSequence_Selector_Ptr);
-    CommaSequence_Selector_Ptr operator()(Sequence_Selector_Ptr);
+    CommaComplex_Selector_Ptr operator()(CommaComplex_Selector_Ptr);
+    CommaComplex_Selector_Ptr operator()(Complex_Selector_Ptr);
     Attribute_Selector_Ptr operator()(Attribute_Selector_Ptr);
     // they don't have any specific implementatio (yet)
     Element_Selector_Ptr operator()(Element_Selector_Ptr s) { return s; };
@@ -82,7 +82,7 @@ namespace Sass {
     Id_Selector_Ptr operator()(Id_Selector_Ptr s) { return s; };
     Placeholder_Selector_Ptr operator()(Placeholder_Selector_Ptr s) { return s; };
     // actual evaluated selectors
-    CommaSequence_Selector_Ptr operator()(Selector_Schema_Ptr);
+    CommaComplex_Selector_Ptr operator()(Selector_Schema_Ptr);
     Expression_Ptr operator()(Parent_Selector_Ptr);
 
     template <typename U>

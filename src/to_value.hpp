@@ -37,7 +37,7 @@ namespace Sass {
     Value_Ptr operator()(Null_Ptr);
 
     // convert to string via `To_String`
-    Value_Ptr operator()(CommaSequence_Selector_Ptr);
+    Value_Ptr operator()(CommaComplex_Selector_Ptr);
     Value_Ptr operator()(Binary_Expression_Ptr);
 
     // fallback throws error

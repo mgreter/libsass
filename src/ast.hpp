@@ -777,7 +777,7 @@ namespace Sass {
   struct Backtrace;
   typedef Environment<AST_Node_Ptr> Env;
   typedef const char* Signature;
-  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaSequence_Selector_Ptr>);
+  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaComplex_Selector_Ptr>);
   typedef const char* Signature;
   class Definition_Ref : public Has_Block_Ref {
   public:
@@ -2066,13 +2066,13 @@ namespace Sass {
     }
 
     virtual ~Simple_Selector_Ref() = 0;
-    virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
     virtual bool has_parent_ref() { return false; };
     virtual bool has_real_parent_ref() { return false; };
     virtual bool is_pseudo_element() { return false; }
     virtual bool is_pseudo_class() { return false; }
 
-    virtual bool is_superselector_of(SimpleSequence_Selector_Ptr sub) { return false; }
+    virtual bool is_superselector_of(Compound_Selector_Ptr sub) { return false; }
 
     bool operator==(const Simple_Selector_Ref& rhs) const;
     inline bool operator!=(const Simple_Selector_Ref& rhs) const { return !(*this == rhs); }
@@ -2088,7 +2088,7 @@ namespace Sass {
   // The Parent Selector Expression.
   //////////////////////////////////
   // parent selectors can occur in selectors but also
-  // inside strings in declarations (SimpleSequence_Selector).
+  // inside strings in declarations (Compound_Selector).
   // only one simple parent selector means the first case.
   class Parent_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(bool, real)
@@ -2142,7 +2142,7 @@ namespace Sass {
       else               return Constants::Specificity_Element;
     }
     virtual Simple_Selector_Ptr unify_with(Simple_Selector_Ptr, Context&);
-    virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2162,7 +2162,7 @@ namespace Sass {
     {
       return Constants::Specificity_Class;
     }
-    virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2182,7 +2182,7 @@ namespace Sass {
     {
       return Constants::Specificity_ID;
     }
-    virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2278,7 +2278,7 @@ namespace Sass {
     bool operator==(const Pseudo_Selector_Ref& rhs) const;
     bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Pseudo_Selector_Ref& rhs) const;
-    virtual SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2327,16 +2327,16 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
-  struct Sequence_Selector_Pointer_Compare {
-    bool operator() (Sequence_Selector_Ptr_Const const pLeft, Sequence_Selector_Ptr_Const const pRight) const;
+  struct Complex_Selector_Pointer_Compare {
+    bool operator() (Complex_Selector_Ptr_Const const pLeft, Complex_Selector_Ptr_Const const pRight) const;
   };
 
   ////////////////////////////////////////////////////////////////////////////
   // Simple selector sequences. Maintains flags indicating whether it contains
   // any parent references or placeholders, to simplify expansion.
   ////////////////////////////////////////////////////////////////////////////
-  typedef std::set<Sequence_Selector_Ptr, Sequence_Selector_Pointer_Compare> SourcesSet;
-  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector_Obj> {
+  typedef std::set<Complex_Selector_Ptr, Complex_Selector_Pointer_Compare> SourcesSet;
+  class Compound_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector_Obj> {
   private:
     SourcesSet sources_;
     ADD_PROPERTY(bool, extended);
@@ -2348,7 +2348,7 @@ namespace Sass {
       // if (s->has_placeholder()) has_placeholder(true);
     }
   public:
-    SimpleSequence_Selector_Ref(ParserState pstate, size_t s = 0)
+    Compound_Selector_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate),
       Vectorized<Simple_Selector_Obj>(s),
       extended_(false),
@@ -2361,22 +2361,22 @@ namespace Sass {
       return false;
     };
 
-    SimpleSequence_Selector_Ref& operator<<(Simple_Selector_Ptr element);
+    Compound_Selector_Ref& operator<<(Simple_Selector_Ptr element);
 
     bool is_universal() const
     {
       return length() == 1 && (*this)[0]->is_universal();
     }
 
-    Sequence_Selector_Ptr to_complex(Memory_Manager& mem);
-    SimpleSequence_Selector_Ptr unify_with(SimpleSequence_Selector_Ptr rhs, Context& ctx);
+    Complex_Selector_Ptr to_complex(Memory_Manager& mem);
+    Compound_Selector_Ptr unify_with(Compound_Selector_Ptr rhs, Context& ctx);
     // virtual Placeholder_Selector_Ptr find_placeholder();
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
     Simple_Selector_Ptr base()
     {
       // Implement non-const in terms of const. Safe to const_cast since this method is non-const
-      return const_cast<Simple_Selector_Ptr>(static_cast<SimpleSequence_Selector_Ptr_Const>(this)->base());
+      return const_cast<Simple_Selector_Ptr>(static_cast<Compound_Selector_Ptr_Const>(this)->base());
     }
     Simple_Selector_Ptr_Const base() const {
       if (length() == 0) return 0;
@@ -2385,9 +2385,9 @@ namespace Sass {
         return &(*this)[0];
       return 0;
     }
-    virtual bool is_superselector_of(SimpleSequence_Selector_Ptr sub, std::string wrapped = "");
-    virtual bool is_superselector_of(Sequence_Selector_Ptr sub, std::string wrapped = "");
-    virtual bool is_superselector_of(CommaSequence_Selector_Ptr sub, std::string wrapped = "");
+    virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapped = "");
+    virtual bool is_superselector_of(Complex_Selector_Ptr sub, std::string wrapped = "");
+    virtual bool is_superselector_of(CommaComplex_Selector_Ptr sub, std::string wrapped = "");
     virtual size_t hash()
     {
       if (Selector::hash_ == 0) {
@@ -2429,18 +2429,18 @@ namespace Sass {
     }
     std::vector<std::string> to_str_vec(); // sometimes need to convert to a flat "by-value" data structure
 
-    bool operator<(const SimpleSequence_Selector& rhs) const;
+    bool operator<(const Compound_Selector& rhs) const;
 
-    bool operator==(const SimpleSequence_Selector& rhs) const;
-    inline bool operator!=(const SimpleSequence_Selector& rhs) const { return !(*this == rhs); }
+    bool operator==(const Compound_Selector& rhs) const;
+    inline bool operator!=(const Compound_Selector& rhs) const { return !(*this == rhs); }
 
     SourcesSet& sources() { return sources_; }
     void clearSources() { sources_.clear(); }
     void mergeSources(SourcesSet& sources, Context& ctx);
 
-    SimpleSequence_Selector_Ptr clone(Context&) const; // does not clone the Simple_Selectors
+    Compound_Selector_Ptr clone(Context&) const; // does not clone the Simple_Selectors
 
-    SimpleSequence_Selector_Ptr minus(SimpleSequence_Selector_Ptr rhs, Context& ctx);
+    Compound_Selector_Ptr minus(Compound_Selector_Ptr rhs, Context& ctx);
     ATTACH_OPERATIONS()
   };
 
@@ -2449,13 +2449,13 @@ namespace Sass {
   // CSS selector combinators (">", "+", "~", and whitespace). Essentially a
   // linked list.
   ////////////////////////////////////////////////////////////////////////////
-  class Sequence_Selector_Ref : public Selector_Ref {
+  class Complex_Selector_Ref : public Selector_Ref {
   public:
     enum Combinator { ANCESTOR_OF, PARENT_OF, PRECEDES, ADJACENT_TO, REFERENCE };
   private:
     ADD_PROPERTY(Combinator, combinator)
-    ADD_PROPERTY(SimpleSequence_Selector_Ptr, head)
-    ADD_PROPERTY(Sequence_Selector_Obj, tail)
+    ADD_PROPERTY(Compound_Selector_Ptr, head)
+    ADD_PROPERTY(Complex_Selector_Obj, tail)
     ADD_PROPERTY(String_Ptr, reference);
   public:
     bool contains_placeholder() {
@@ -2463,10 +2463,10 @@ namespace Sass {
       if (tail() && tail()->contains_placeholder()) return true;
       return false;
     };
-    Sequence_Selector_Ref(ParserState pstate,
+    Complex_Selector_Ref(ParserState pstate,
                      Combinator c = ANCESTOR_OF,
-                     SimpleSequence_Selector_Ptr h = 0,
-                     Sequence_Selector_Ptr t = 0,
+                     Compound_Selector_Ptr h = 0,
+                     Complex_Selector_Ptr t = 0,
                      String_Ptr r = 0)
     : Selector_Ref(pstate),
       combinator_(c),
@@ -2479,7 +2479,7 @@ namespace Sass {
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
 
-    Sequence_Selector_Ptr skip_empty_reference()
+    Complex_Selector_Ptr skip_empty_reference()
     {
       if ((!head_ || !head_->length() || head_->is_empty_reference()) &&
           combinator() == Combinator::ANCESTOR_OF)
@@ -2499,36 +2499,36 @@ namespace Sass {
              combinator() == Combinator::ANCESTOR_OF;
     }
 
-    Sequence_Selector_Ptr context(Context&);
+    Complex_Selector_Ptr context(Context&);
 
 
     // front returns the first real tail
     // skips over parent and empty ones
-    Sequence_Selector_Ptr_Const first() const;
+    Complex_Selector_Ptr_Const first() const;
 
     // last returns the last real tail
-    Sequence_Selector_Ptr_Const last() const;
+    Complex_Selector_Ptr_Const last() const;
 
-    CommaSequence_Selector_Ptr tails(Context& ctx, CommaSequence_Selector_Ptr tails);
+    CommaComplex_Selector_Ptr tails(Context& ctx, CommaComplex_Selector_Ptr tails);
 
     // unconstant accessors
-    Sequence_Selector_Ptr first();
-    Sequence_Selector_Ptr last();
+    Complex_Selector_Ptr first();
+    Complex_Selector_Ptr last();
 
     // some shortcuts that should be removed
-    Sequence_Selector_Ptr_Const innermost() const { return last(); };
-    Sequence_Selector_Ptr innermost() { return last(); };
+    Complex_Selector_Ptr_Const innermost() const { return last(); };
+    Complex_Selector_Ptr innermost() { return last(); };
 
     size_t length() const;
-    CommaSequence_Selector_Ptr resolve_parent_refs(Context& ctx, CommaSequence_Selector_Ptr parents, bool implicit_parent = true);
-    virtual bool is_superselector_of(SimpleSequence_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(Sequence_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaSequence_Selector_Ptr sub, std::string wrapping = "");
+    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
+    virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapping = "");
+    virtual bool is_superselector_of(Complex_Selector_Ptr sub, std::string wrapping = "");
+    virtual bool is_superselector_of(CommaComplex_Selector_Ptr sub, std::string wrapping = "");
     // virtual Placeholder_Selector_Ptr find_placeholder();
-    CommaSequence_Selector_Ptr unify_with(Sequence_Selector_Ptr rhs, Context& ctx);
+    CommaComplex_Selector_Ptr unify_with(Complex_Selector_Ptr rhs, Context& ctx);
     Combinator clear_innermost();
-    void append(Context&, Sequence_Selector_Ptr);
-    void set_innermost(Sequence_Selector_Ptr, Combinator);
+    void append(Context&, Complex_Selector_Ptr);
+    void set_innermost(Complex_Selector_Ptr, Combinator);
     virtual size_t hash()
     {
       if (hash_ == 0) {
@@ -2561,9 +2561,9 @@ namespace Sass {
       if (tail_ && tail_->has_placeholder()) return true;
       return false;
     }
-    bool operator<(const Sequence_Selector_Ref& rhs) const;
-    bool operator==(const Sequence_Selector_Ref& rhs) const;
-    inline bool operator!=(const Sequence_Selector_Ref& rhs) const { return !(*this == rhs); }
+    bool operator<(const Complex_Selector_Ref& rhs) const;
+    bool operator==(const Complex_Selector_Ref& rhs) const;
+    inline bool operator!=(const Complex_Selector_Ref& rhs) const { return !(*this == rhs); }
     SourcesSet sources()
     {
       //s = Set.new
@@ -2572,8 +2572,8 @@ namespace Sass {
 
       SourcesSet srcs;
 
-      SimpleSequence_Selector_Ptr pHead = head();
-      Sequence_Selector_Obj  pTail = tail();
+      Compound_Selector_Ptr pHead = head();
+      Complex_Selector_Obj  pTail = tail();
 
       if (pHead) {
         SourcesSet& headSources = pHead->sources();
@@ -2589,9 +2589,9 @@ namespace Sass {
     }
     void addSources(SourcesSet& sources, Context& ctx) {
       // members.map! {|m| m.is_a?(SimpleSequence) ? m.with_more_sources(sources) : m}
-      Sequence_Selector_Obj pIter = this;
+      Complex_Selector_Obj pIter = this;
       while (pIter) {
-        SimpleSequence_Selector_Ptr pHead = pIter->head();
+        Compound_Selector_Ptr pHead = pIter->head();
 
         if (pHead) {
           pHead->mergeSources(sources, ctx);
@@ -2601,9 +2601,9 @@ namespace Sass {
       }
     }
     void clearSources() {
-      Sequence_Selector_Obj pIter = this;
+      Complex_Selector_Obj pIter = this;
       while (pIter) {
-        SimpleSequence_Selector_Ptr pHead = pIter->head();
+        Compound_Selector_Ptr pHead = pIter->head();
 
         if (pHead) {
           pHead->clearSources();
@@ -2612,25 +2612,25 @@ namespace Sass {
         pIter = pIter->tail();
       }
     }
-    Sequence_Selector_Ptr clone(Context&) const;      // does not clone SimpleSequence_Selector_Ptrs
-    Sequence_Selector_Ptr cloneFully(Context&) const; // clones SimpleSequence_Selector_Ptrs
-    // std::vector<SimpleSequence_Selector_Ptr> to_vector();
+    Complex_Selector_Ptr clone(Context&) const;      // does not clone Compound_Selector_Ptrs
+    Complex_Selector_Ptr cloneFully(Context&) const; // clones Compound_Selector_Ptrs
+    // std::vector<Compound_Selector_Ptr> to_vector();
     ATTACH_OPERATIONS()
   };
 
-  typedef std::deque<Sequence_Selector_Ptr> ComplexSelectorDeque;
-  typedef Subset_Map<std::string, std::pair<Sequence_Selector_Ptr, SimpleSequence_Selector_Ptr> > ExtensionSubsetMap;
+  typedef std::deque<Complex_Selector_Ptr> ComplexSelectorDeque;
+  typedef Subset_Map<std::string, std::pair<Complex_Selector_Ptr, Compound_Selector_Ptr> > ExtensionSubsetMap;
 
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class CommaSequence_Selector_Ref : public Selector_Ref, public Vectorized<Sequence_Selector_Obj> {
+  class CommaComplex_Selector_Ref : public Selector_Ref, public Vectorized<Complex_Selector_Obj> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   protected:
-    void adjust_after_pushing(Sequence_Selector_Ptr c);
+    void adjust_after_pushing(Complex_Selector_Ptr c);
   public:
-    CommaSequence_Selector_Ref(ParserState pstate, size_t s = 0)
-    : Selector_Ref(pstate), Vectorized<Sequence_Selector_Obj>(s), wspace_(0)
+    CommaComplex_Selector_Ref(ParserState pstate, size_t s = 0)
+    : Selector_Ref(pstate), Vectorized<Complex_Selector_Obj>(s), wspace_(0)
     { }
     std::string type() { return "list"; }
     // remove parent selector references
@@ -2639,12 +2639,12 @@ namespace Sass {
     virtual bool has_real_parent_ref();
     void remove_parent_selectors();
     // virtual Placeholder_Selector_Ptr find_placeholder();
-    CommaSequence_Selector_Ptr resolve_parent_refs(Context& ctx, CommaSequence_Selector_Ptr parents, bool implicit_parent = true);
-    virtual bool is_superselector_of(SimpleSequence_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(Sequence_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaSequence_Selector_Ptr sub, std::string wrapping = "");
-    CommaSequence_Selector_Ptr unify_with(CommaSequence_Selector_Ptr, Context&);
-    void populate_extends(CommaSequence_Selector_Ptr, Context&, ExtensionSubsetMap&);
+    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
+    virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapping = "");
+    virtual bool is_superselector_of(Complex_Selector_Ptr sub, std::string wrapping = "");
+    virtual bool is_superselector_of(CommaComplex_Selector_Ptr sub, std::string wrapping = "");
+    CommaComplex_Selector_Ptr unify_with(CommaComplex_Selector_Ptr, Context&);
+    void populate_extends(CommaComplex_Selector_Ptr, Context&, ExtensionSubsetMap&);
     virtual size_t hash()
     {
       if (Selector_Ref::hash_ == 0) {
@@ -2666,26 +2666,26 @@ namespace Sass {
     }
     virtual void set_media_block(Media_Block_Ptr mb) {
       media_block(mb);
-      for (Sequence_Selector_Obj cs : elements()) {
+      for (Complex_Selector_Obj cs : elements()) {
         cs->set_media_block(mb);
       }
     }
     virtual bool has_wrapped_selector() {
-      for (Sequence_Selector_Obj cs : elements()) {
+      for (Complex_Selector_Obj cs : elements()) {
         if (cs->has_wrapped_selector()) return true;
       }
       return false;
     }
     virtual bool has_placeholder() {
-      for (Sequence_Selector_Obj cs : elements()) {
+      for (Complex_Selector_Obj cs : elements()) {
         if (cs->has_placeholder()) return true;
       }
       return false;
     }
-    CommaSequence_Selector_Ptr clone(Context&) const;      // does not clone SimpleSequence_Selector_Ptrs
-    CommaSequence_Selector_Ptr cloneFully(Context&) const; // clones SimpleSequence_Selector_Ptrs
+    CommaComplex_Selector_Ptr clone(Context&) const;      // does not clone Compound_Selector_Ptrs
+    CommaComplex_Selector_Ptr cloneFully(Context&) const; // clones Compound_Selector_Ptrs
     virtual bool operator==(const Selector_Ref& rhs) const;
-    virtual bool operator==(const CommaSequence_Selector& rhs) const;
+    virtual bool operator==(const CommaComplex_Selector& rhs) const;
     // Selector Lists can be compared to comma lists
     virtual bool operator==(const Expression& rhs) const;
     ATTACH_OPERATIONS()
@@ -2698,10 +2698,10 @@ namespace Sass {
     // is required for proper stl collection ordering) is implemented using string comparision. This gives stable sorting
     // behavior, and can be used to determine if the selectors would have exactly idential output. operator== matches the
     // ruby sass implementations for eql, which sometimes perform order independent comparisions (like set comparisons of the
-    // members of a SimpleSequence (SimpleSequence_Selector)).
+    // members of a SimpleSequence (Compound_Selector)).
     //
     // Due to the reliance on operator== and operater< behavior, this templated method is currently only intended for
-    // use with SimpleSequence_Selector and Sequence_Selector objects.
+    // use with Compound_Selector and Complex_Selector objects.
     if (simpleSelectorOrderDependent) {
       return !(one < two) && !(two < one);
     } else {
@@ -2710,8 +2710,8 @@ namespace Sass {
   }
 
   // compare function for sorting and probably other other uses
-  struct cmp_complex_selector { inline bool operator() (const Sequence_Selector_Obj l, const Sequence_Selector_Obj r) { return (*l < *r); } };
-  struct cmp_compound_selector { inline bool operator() (SimpleSequence_Selector_Ptr_Const l, SimpleSequence_Selector_Ptr_Const r) { return (*l < *r); } };
+  struct cmp_complex_selector { inline bool operator() (const Complex_Selector_Obj l, const Complex_Selector_Obj r) { return (*l < *r); } };
+  struct cmp_compound_selector { inline bool operator() (Compound_Selector_Ptr_Const l, Compound_Selector_Ptr_Const r) { return (*l < *r); } };
   struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Obj l, const Simple_Selector_Obj r) { return (*l < *r); } };
 
 

@@ -155,7 +155,7 @@ namespace Sass {
     T* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx);
 
     template <>
-    CommaSequence_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+    CommaComplex_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
       Expression_Ptr exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
@@ -171,7 +171,7 @@ namespace Sass {
     }
 
     template <>
-    Sequence_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+    Complex_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
       Expression_Ptr exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
@@ -183,12 +183,12 @@ namespace Sass {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      CommaSequence_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
+      CommaComplex_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
       return (sel_list->length() > 0) ? &sel_list->first() : 0;
     }
 
     template <>
-    SimpleSequence_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+    Compound_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
       Expression_Ptr exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
@@ -199,7 +199,7 @@ namespace Sass {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
-      CommaSequence_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
+      CommaComplex_Selector_Obj sel_list = Parser::parse_selector(exp_src.c_str(), ctx);
       return (sel_list->length() > 0) ? sel_list->first()->tail()->head() : 0;
     }
 
@@ -1223,7 +1223,7 @@ namespace Sass {
     Signature length_sig = "length($list)";
     BUILT_IN(length)
     {
-      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(env["$list"])) {
+      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(env["$list"])) {
         return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)sl->length());
       }
       Expression_Ptr v = ARG("$list", Expression);
@@ -1232,9 +1232,9 @@ namespace Sass {
         return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)(map ? map->length() : 1));
       }
       if (v->concrete_type() == Expression::SELECTOR) {
-        if (SimpleSequence_Selector_Ptr h = dynamic_cast<SimpleSequence_Selector_Ptr>(v)) {
+        if (Compound_Selector_Ptr h = dynamic_cast<Compound_Selector_Ptr>(v)) {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)h->length());
-        } else if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(v)) {
+        } else if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(v)) {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)ls->length());
         } else {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, 1);
@@ -1252,7 +1252,7 @@ namespace Sass {
     {
       Number_Ptr n = ARG("$n", Number);
       Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
-      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(env["$list"])) {
+      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(env["$list"])) {
         size_t len = m ? m->length() : sl->length();
         bool empty = m ? m->empty() : sl->empty();
         if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate);
@@ -1373,7 +1373,7 @@ namespace Sass {
       Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
       List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
       Expression_Ptr v = ARG("$val", Expression);
-      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(env["$list"])) {
+      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(env["$list"])) {
         Listize listize(ctx.mem);
         l = dynamic_cast<List_Ptr>(sl->perform(&listize));
       }
@@ -1757,7 +1757,7 @@ namespace Sass {
         error("$selectors: At least one selector must be passed", pstate);
 
       // Parse args into vector of selectors
-      std::vector<CommaSequence_Selector_Ptr> parsedSelectors;
+      std::vector<CommaComplex_Selector_Ptr> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Ptr exp = dynamic_cast<Expression_Ptr>(arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
@@ -1770,7 +1770,7 @@ namespace Sass {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string(ctx.c_options) + "{";
-        CommaSequence_Selector_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx);
+        CommaComplex_Selector_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx);
         parsedSelectors.push_back(&sel);
       }
 
@@ -1780,14 +1780,14 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      std::vector<CommaSequence_Selector_Ptr>::iterator itr = parsedSelectors.begin();
-      CommaSequence_Selector_Ptr result = *itr;
+      std::vector<CommaComplex_Selector_Ptr>::iterator itr = parsedSelectors.begin();
+      CommaComplex_Selector_Ptr result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        CommaSequence_Selector_Ptr child = *itr;
-        std::vector<Sequence_Selector_Obj> exploded;
-        CommaSequence_Selector_Ptr rv = child->resolve_parent_refs(ctx, result);
+        CommaComplex_Selector_Ptr child = *itr;
+        std::vector<Complex_Selector_Obj> exploded;
+        CommaComplex_Selector_Ptr rv = child->resolve_parent_refs(ctx, result);
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
           exploded.push_back((*rv)[m]);
         }
@@ -1808,7 +1808,7 @@ namespace Sass {
         error("$selectors: At least one selector must be passed", pstate);
 
       // Parse args into vector of selectors
-      std::vector<CommaSequence_Selector_Ptr> parsedSelectors;
+      std::vector<CommaComplex_Selector_Ptr> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Ptr exp = dynamic_cast<Expression_Ptr>(arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
@@ -1821,7 +1821,7 @@ namespace Sass {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string() + "{";
-        CommaSequence_Selector_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx);
+        CommaComplex_Selector_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx);
         parsedSelectors.push_back(&sel);
       }
 
@@ -1831,13 +1831,13 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      std::vector<CommaSequence_Selector_Ptr>::iterator itr = parsedSelectors.begin();
-      CommaSequence_Selector_Ptr result = *itr;
+      std::vector<CommaComplex_Selector_Ptr>::iterator itr = parsedSelectors.begin();
+      CommaComplex_Selector_Ptr result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        CommaSequence_Selector_Ptr child = *itr;
-        std::vector<Sequence_Selector_Obj> newElements;
+        CommaComplex_Selector_Ptr child = *itr;
+        std::vector<Complex_Selector_Obj> newElements;
 
         // For every COMPLEX_SELECTOR in `result`
         // For every COMPLEX_SELECTOR in `child`
@@ -1848,12 +1848,12 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Sequence_Selector_Obj parentSeqClone = (*result)[i]->cloneFully(ctx);
-            Sequence_Selector_Obj childSeq = (*child)[j];
-            Sequence_Selector_Obj base = childSeq->tail();
+            Complex_Selector_Obj parentSeqClone = (*result)[i]->cloneFully(ctx);
+            Complex_Selector_Obj childSeq = (*child)[j];
+            Complex_Selector_Obj base = childSeq->tail();
 
             // Must be a simple sequence
-            if( childSeq->combinator() != Sequence_Selector_Ref::Combinator::ANCESTOR_OF ) {
+            if( childSeq->combinator() != Complex_Selector_Ref::Combinator::ANCESTOR_OF ) {
               std::string msg("Can't append  `");
               msg += childSeq->to_string();
               msg += "` to `";
@@ -1895,10 +1895,10 @@ namespace Sass {
     Signature selector_unify_sig = "selector-unify($selector1, $selector2)";
     BUILT_IN(selector_unify)
     {
-      CommaSequence_Selector_Ptr selector1 = ARGSEL("$selector1", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector_Ptr selector2 = ARGSEL("$selector2", CommaSequence_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr selector1 = ARGSEL("$selector1", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr selector2 = ARGSEL("$selector2", CommaComplex_Selector, p_contextualize);
 
-      CommaSequence_Selector_Ptr result = selector1->unify_with(selector2, ctx);
+      CommaComplex_Selector_Ptr result = selector1->unify_with(selector2, ctx);
       Listize listize(ctx.mem);
       return result->perform(&listize);
     }
@@ -1906,7 +1906,7 @@ namespace Sass {
     Signature simple_selectors_sig = "simple-selectors($selector)";
     BUILT_IN(simple_selectors)
     {
-      SimpleSequence_Selector_Ptr sel = ARGSEL("$selector", SimpleSequence_Selector, p_contextualize);
+      Compound_Selector_Ptr sel = ARGSEL("$selector", Compound_Selector, p_contextualize);
 
       List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, sel->pstate(), sel->length(), SASS_COMMA);
 
@@ -1923,14 +1923,14 @@ namespace Sass {
     Signature selector_extend_sig = "selector-extend($selector, $extendee, $extender)";
     BUILT_IN(selector_extend)
     {
-      CommaSequence_Selector_Ptr  selector = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector_Ptr  extendee = ARGSEL("$extendee", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector_Ptr  extender = ARGSEL("$extender", CommaSequence_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  selector = ARGSEL("$selector", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  extendee = ARGSEL("$extendee", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  extender = ARGSEL("$extender", CommaComplex_Selector, p_contextualize);
 
       ExtensionSubsetMap subset_map;
       extender->populate_extends(extendee, ctx, subset_map);
 
-      CommaSequence_Selector_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, false);
+      CommaComplex_Selector_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, false);
 
       Listize listize(ctx.mem);
       return result->perform(&listize);
@@ -1939,14 +1939,14 @@ namespace Sass {
     Signature selector_replace_sig = "selector-replace($selector, $original, $replacement)";
     BUILT_IN(selector_replace)
     {
-      CommaSequence_Selector_Ptr  selector = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector_Ptr  original = ARGSEL("$original", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector_Ptr  replacement = ARGSEL("$replacement", CommaSequence_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  selector = ARGSEL("$selector", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  original = ARGSEL("$original", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  replacement = ARGSEL("$replacement", CommaComplex_Selector, p_contextualize);
 
       ExtensionSubsetMap subset_map;
       replacement->populate_extends(original, ctx, subset_map);
 
-      CommaSequence_Selector_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, true);
+      CommaComplex_Selector_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, true);
 
       Listize listize(ctx.mem);
       return result->perform(&listize);
@@ -1955,7 +1955,7 @@ namespace Sass {
     Signature selector_parse_sig = "selector-parse($selector)";
     BUILT_IN(selector_parse)
     {
-      CommaSequence_Selector_Ptr sel = ARGSEL("$selector", CommaSequence_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr sel = ARGSEL("$selector", CommaComplex_Selector, p_contextualize);
 
       Listize listize(ctx.mem);
       return sel->perform(&listize);
@@ -1964,8 +1964,8 @@ namespace Sass {
     Signature is_superselector_sig = "is-superselector($super, $sub)";
     BUILT_IN(is_superselector)
     {
-      CommaSequence_Selector_Ptr  sel_sup = ARGSEL("$super", CommaSequence_Selector, p_contextualize);
-      CommaSequence_Selector_Ptr  sel_sub = ARGSEL("$sub", CommaSequence_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  sel_sup = ARGSEL("$super", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Ptr  sel_sub = ARGSEL("$sub", CommaComplex_Selector, p_contextualize);
       bool result = sel_sup->is_superselector_of(sel_sub);
       return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, result);
     }

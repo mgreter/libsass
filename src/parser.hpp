@@ -51,7 +51,7 @@ namespace Sass {
     static Parser from_c_str(const char* beg, const char* end, Context& ctx, ParserState pstate = ParserState("[CSTRING]"), const char* source = 0);
     static Parser from_token(Token t, Context& ctx, ParserState pstate = ParserState("[TOKEN]"), const char* source = 0);
     // special static parsers to convert strings into certain selectors
-    static CommaSequence_Selector_Obj parse_selector(const char* src, Context& ctx, ParserState pstate = ParserState("[SELECTOR]"), const char* source = 0);
+    static CommaComplex_Selector_Obj parse_selector(const char* src, Context& ctx, ParserState pstate = ParserState("[SELECTOR]"), const char* source = 0);
 
 #ifdef __clang__
 
@@ -242,9 +242,9 @@ namespace Sass {
     Assignment_Obj parse_assignment();
     Ruleset_Obj parse_ruleset(Lookahead lookahead, bool is_root = false);
     Selector_Schema_Obj parse_selector_schema(const char* end_of_selector);
-    CommaSequence_Selector_Obj parse_selector_list(bool at_root = false);
-    Sequence_Selector_Obj parse_complex_selector(bool in_root = true);
-    SimpleSequence_Selector_Obj parse_compound_selector();
+    CommaComplex_Selector_Obj parse_selector_list(bool at_root = false);
+    Complex_Selector_Obj parse_complex_selector(bool in_root = true);
+    Compound_Selector_Obj parse_compound_selector();
     Simple_Selector_Obj parse_simple_selector();
     Wrapped_Selector_Obj parse_negated_selector();
     Simple_Selector_Obj parse_pseudo_selector();

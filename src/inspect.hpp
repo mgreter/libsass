@@ -88,9 +88,9 @@ namespace Sass {
     virtual void operator()(Attribute_Selector_Ptr);
     virtual void operator()(Pseudo_Selector_Ptr);
     virtual void operator()(Wrapped_Selector_Ptr);
-    virtual void operator()(SimpleSequence_Selector_Ptr);
-    virtual void operator()(Sequence_Selector_Ptr);
-    virtual void operator()(CommaSequence_Selector_Ptr);
+    virtual void operator()(Compound_Selector_Ptr);
+    virtual void operator()(Complex_Selector_Ptr);
+    virtual void operator()(CommaComplex_Selector_Ptr);
 
     // template <typename U>
     // void fallback(U x) { fallback_impl(reinterpret_cast<AST_Node_Ptr>(x)); }

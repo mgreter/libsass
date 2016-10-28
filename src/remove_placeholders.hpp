@@ -18,7 +18,7 @@ namespace Sass {
         void fallback_impl(AST_Node_Ptr n) {}
 
     public:
-      CommaSequence_Selector_Ptr remove_placeholders(CommaSequence_Selector_Ptr);
+      CommaComplex_Selector_Ptr remove_placeholders(CommaComplex_Selector_Ptr);
 
     public:
         Remove_Placeholders(Context&);

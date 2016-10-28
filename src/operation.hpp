@@ -78,9 +78,9 @@ namespace Sass {
     virtual T operator()(Attribute_Selector_Ptr x)     = 0;
     virtual T operator()(Pseudo_Selector_Ptr x)        = 0;
     virtual T operator()(Wrapped_Selector_Ptr x)       = 0;
-    virtual T operator()(SimpleSequence_Selector_Ptr x)= 0;
-    virtual T operator()(Sequence_Selector_Ptr x)      = 0;
-    virtual T operator()(CommaSequence_Selector_Ptr x) = 0;
+    virtual T operator()(Compound_Selector_Ptr x)= 0;
+    virtual T operator()(Complex_Selector_Ptr x)      = 0;
+    virtual T operator()(CommaComplex_Selector_Ptr x) = 0;
 
     template <typename U>
     T fallback(U x) { return T(); }
@@ -160,9 +160,9 @@ namespace Sass {
     T operator()(Attribute_Selector_Ptr x)     { return static_cast<D*>(this)->fallback(x); }
     T operator()(Pseudo_Selector_Ptr x)        { return static_cast<D*>(this)->fallback(x); }
     T operator()(Wrapped_Selector_Ptr x)       { return static_cast<D*>(this)->fallback(x); }
-    T operator()(SimpleSequence_Selector_Ptr x){ return static_cast<D*>(this)->fallback(x); }
-    T operator()(Sequence_Selector_Ptr x)      { return static_cast<D*>(this)->fallback(x); }
-    T operator()(CommaSequence_Selector_Ptr x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Compound_Selector_Ptr x){ return static_cast<D*>(this)->fallback(x); }
+    T operator()(Complex_Selector_Ptr x)      { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CommaComplex_Selector_Ptr x) { return static_cast<D*>(this)->fallback(x); }
 
     template <typename U>
     T fallback(U x)                         { return T(); }

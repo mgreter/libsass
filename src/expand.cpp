@@ -16,14 +16,14 @@ namespace Sass {
   const unsigned int maxRecursion = 500;
   static unsigned int recursions = 0;
 
-  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<CommaSequence_Selector_Ptr>* stack)
+  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<CommaComplex_Selector_Ptr>* stack)
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
     block_stack(std::vector<Block_Obj>()),
     call_stack(std::vector<AST_Node_Ptr>()),
     property_stack(std::vector<String_Ptr>()),
-    selector_stack(std::vector<CommaSequence_Selector_Ptr>()),
+    selector_stack(std::vector<CommaComplex_Selector_Ptr>()),
     media_block_stack(std::vector<Media_Block_Ptr>()),
     backtrace_stack(std::vector<Backtrace*>()),
     in_keyframes(false),
@@ -55,7 +55,7 @@ namespace Sass {
     return 0;
   }
 
-  CommaSequence_Selector_Ptr Expand::selector()
+  CommaComplex_Selector_Ptr Expand::selector()
   {
     if (selector_stack.size() > 0)
       return selector_stack.back();
@@ -101,7 +101,7 @@ namespace Sass {
       Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
-        k->selector2(static_cast<CommaSequence_Selector_Ptr>(r->selector()->perform(&eval)));
+        k->selector2(static_cast<CommaComplex_Selector_Ptr>(r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
       return k;
@@ -112,9 +112,9 @@ namespace Sass {
 
     // do some special checks for the base level rules
     if (r->is_root()) {
-      if (CommaSequence_Selector_Ptr selector_list = dynamic_cast<CommaSequence_Selector_Ptr>(r->selector())) {
-        for (Sequence_Selector_Obj complex_selector : selector_list->elements()) {
-          Sequence_Selector_Obj tail = complex_selector;
+      if (CommaComplex_Selector_Ptr selector_list = dynamic_cast<CommaComplex_Selector_Ptr>(r->selector())) {
+        for (Complex_Selector_Obj complex_selector : selector_list->elements()) {
+          Complex_Selector_Obj tail = complex_selector;
           while (tail) {
             if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
               if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
@@ -128,13 +128,13 @@ namespace Sass {
     }
 
     Expression_Ptr ex = r->selector()->perform(&eval);
-    CommaSequence_Selector_Ptr sel = dynamic_cast<CommaSequence_Selector_Ptr>(ex);
+    CommaComplex_Selector_Ptr sel = dynamic_cast<CommaComplex_Selector_Ptr>(ex);
     if (sel == 0) throw std::runtime_error("Expanded null selector");
 
     if (sel->length() == 0 || sel->has_parent_ref()) {
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
-        CommaSequence_Selector_Ptr ll = selector_stack.at(i);
+        CommaComplex_Selector_Ptr ll = selector_stack.at(i);
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
       if (!has_parent_selector) {
@@ -464,7 +464,7 @@ namespace Sass {
     if (expr->concrete_type() == Expression::MAP) {
       map = static_cast<Map_Ptr>(expr);
     }
-    else if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(expr)) {
+    else if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(expr)) {
       Listize listize(ctx.mem);
       Expression_Obj rv = ls->perform(&listize);
       list = dynamic_cast<List_Ptr>(&rv);
@@ -501,7 +501,7 @@ namespace Sass {
     }
     else {
       // bool arglist = list->is_arglist();
-      if (list->length() == 1 && dynamic_cast<CommaSequence_Selector_Ptr>(list)) {
+      if (list->length() == 1 && dynamic_cast<CommaComplex_Selector_Ptr>(list)) {
         list = dynamic_cast<Vectorized<Expression_Obj>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
@@ -561,11 +561,11 @@ namespace Sass {
   }
 
 
-  void Expand::expand_selector_list(Selector_Ptr s, CommaSequence_Selector_Ptr extender) {
+  void Expand::expand_selector_list(Selector_Ptr s, CommaComplex_Selector_Ptr extender) {
 
-    if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(s)) {
-      for (Sequence_Selector_Obj complex_selector : sl->elements()) {
-        Sequence_Selector_Obj tail = complex_selector;
+    if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(s)) {
+      for (Complex_Selector_Obj complex_selector : sl->elements()) {
+        Complex_Selector_Obj tail = complex_selector;
         while (tail) {
           if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
             if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
@@ -578,24 +578,24 @@ namespace Sass {
     }
 
 
-    CommaSequence_Selector_Ptr contextualized = dynamic_cast<CommaSequence_Selector_Ptr>(s->perform(&eval));
+    CommaComplex_Selector_Ptr contextualized = dynamic_cast<CommaComplex_Selector_Ptr>(s->perform(&eval));
     if (contextualized == NULL) return;
     for (auto complex_sel : contextualized->elements()) {
-      Sequence_Selector_Obj c = complex_sel;
+      Complex_Selector_Obj c = complex_sel;
       if (!c->head() || c->tail()) {
         std::string sel_str(contextualized->to_string(ctx.c_options));
         error("Can't extend " + sel_str + ": can't extend nested selectors", c->pstate(), backtrace());
       }
-      SimpleSequence_Selector_Ptr placeholder = c->head();
+      Compound_Selector_Ptr placeholder = c->head();
       if (contextualized->is_optional()) placeholder->is_optional(true);
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
-        Sequence_Selector_Obj sel = (*extender)[i];
+        Complex_Selector_Obj sel = (*extender)[i];
         if (!(sel->head() && sel->head()->length() > 0 &&
             SASS_MEMORY_CAST(Parent_Selector, (*sel->head())[0])))
         {
-          SimpleSequence_Selector_Ptr hh = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, (*extender)[i]->pstate());
+          Compound_Selector_Ptr hh = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, (*extender)[i]->pstate());
           hh->media_block((*extender)[i]->media_block());
-          Sequence_Selector_Ptr ssel = SASS_MEMORY_NEW(ctx.mem, Sequence_Selector, (*extender)[i]->pstate());
+          Complex_Selector_Ptr ssel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, (*extender)[i]->pstate());
           ssel->media_block((*extender)[i]->media_block());
           if (sel->has_line_feed()) ssel->has_line_feed(true);
           Parent_Selector_Ptr ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
@@ -614,13 +614,13 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Extension_Ptr e)
   {
-    if (CommaSequence_Selector_Ptr extender = dynamic_cast<CommaSequence_Selector_Ptr>(selector())) {
+    if (CommaComplex_Selector_Ptr extender = dynamic_cast<CommaComplex_Selector_Ptr>(selector())) {
       Selector_Ptr s = e->selector();
       if (Selector_Schema_Ptr schema = dynamic_cast<Selector_Schema_Ptr>(s)) {
         if (schema->has_parent_ref()) s = eval(schema);
       }
-      if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(s)) {
-        for (Sequence_Selector_Obj cs : sl->elements()) {
+      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(s)) {
+        for (Complex_Selector_Obj cs : sl->elements()) {
           if (cs && cs->head() != NULL) {
             cs->head()->media_block(media_block_stack.back());
           }

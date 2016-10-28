@@ -21,7 +21,7 @@ namespace Sass {
 
     Env* environment();
     Context& context();
-    CommaSequence_Selector_Ptr selector();
+    CommaComplex_Selector_Ptr selector();
     Backtrace* backtrace();
 
     Context&          ctx;
@@ -32,7 +32,7 @@ namespace Sass {
     std::vector<Block_Obj>         block_stack;
     std::vector<AST_Node_Ptr>      call_stack;
     std::vector<String_Ptr>        property_stack;
-    std::vector<CommaSequence_Selector_Ptr> selector_stack;
+    std::vector<CommaComplex_Selector_Ptr> selector_stack;
     std::vector<Media_Block_Ptr>   media_block_stack;
     std::vector<Backtrace*>     backtrace_stack;
     bool                        in_keyframes;
@@ -42,10 +42,10 @@ namespace Sass {
     Statement_Ptr fallback_impl(AST_Node_Ptr n);
 
   private:
-    void expand_selector_list(Selector_Ptr, CommaSequence_Selector_Ptr extender);
+    void expand_selector_list(Selector_Ptr, CommaComplex_Selector_Ptr extender);
 
   public:
-    Expand(Context&, Env*, Backtrace*, std::vector<CommaSequence_Selector_Ptr>* stack = NULL);
+    Expand(Context&, Env*, Backtrace*, std::vector<CommaComplex_Selector_Ptr>* stack = NULL);
     ~Expand() { }
 
     Block_Ptr operator()(Block_Ptr);

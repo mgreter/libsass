@@ -57,7 +57,7 @@ namespace Sass {
     return exp.environment();
   }
 
-  CommaSequence_Selector_Ptr Eval::selector()
+  CommaComplex_Selector_Ptr Eval::selector()
   {
     return exp.selector();
   }
@@ -224,7 +224,7 @@ namespace Sass {
     if (expr->concrete_type() == Expression::MAP) {
       map = static_cast<Map_Ptr>(expr);
     }
-    else if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(expr)) {
+    else if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(expr)) {
       Listize listize(ctx.mem);
       Expression_Obj rv = ls->perform(&listize);
       list = dynamic_cast<List_Ptr>(&rv);
@@ -259,7 +259,7 @@ namespace Sass {
       }
     }
     else {
-      if (list->length() == 1 && dynamic_cast<CommaSequence_Selector_Ptr>(list)) {
+      if (list->length() == 1 && dynamic_cast<CommaComplex_Selector_Ptr>(list)) {
         list = dynamic_cast<Vectorized<Expression_Obj>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
@@ -1107,7 +1107,7 @@ namespace Sass {
     // Value
     // Textual
     // Function_Call
-    // CommaSequence_Selector
+    // CommaComplex_Selector
     // String_Quoted
     // String_Constant
     // Parent_Selector
@@ -1617,10 +1617,10 @@ namespace Sass {
     return e;
   }
 
-  CommaSequence_Selector_Ptr Eval::operator()(CommaSequence_Selector_Ptr s)
+  CommaComplex_Selector_Ptr Eval::operator()(CommaComplex_Selector_Ptr s)
   {
-    std::vector<CommaSequence_Selector_Ptr> rv;
-    CommaSequence_Selector_Ptr sl = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, s->pstate());
+    std::vector<CommaComplex_Selector_Ptr> rv;
+    CommaComplex_Selector_Ptr sl = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, s->pstate());
     sl->is_optional(s->is_optional());
     sl->media_block(s->media_block());
     sl->is_optional(s->is_optional());
@@ -1650,7 +1650,7 @@ namespace Sass {
   }
 
 
-  CommaSequence_Selector_Ptr Eval::operator()(Sequence_Selector_Ptr s)
+  CommaComplex_Selector_Ptr Eval::operator()(Complex_Selector_Ptr s)
   {
     bool implicit_parent = !exp.old_at_root_without_rule;
     return s->resolve_parent_refs(ctx, selector(), implicit_parent);
@@ -1667,21 +1667,21 @@ namespace Sass {
     return ss;
   }
 
-  CommaSequence_Selector_Ptr Eval::operator()(Selector_Schema_Ptr s)
+  CommaComplex_Selector_Ptr Eval::operator()(Selector_Schema_Ptr s)
   {
     // the parser will look for a brace to end the selector
     std::string result_str(s->contents()->perform(this)->to_string(ctx.c_options));
     result_str = unquote(Util::rtrim(result_str)) + "\n{";
     Parser p = Parser::from_c_str(result_str.c_str(), ctx, s->pstate());
     p.last_media_block = s->media_block();
-    CommaSequence_Selector_Obj sl = p.parse_selector_list(exp.block_stack.back()->is_root());
+    CommaComplex_Selector_Obj sl = p.parse_selector_list(exp.block_stack.back()->is_root());
     if (s->has_parent_ref()) sl->remove_parent_selectors();
     return operator()(&sl);
   }
 
   Expression_Ptr Eval::operator()(Parent_Selector_Ptr p)
   {
-    CommaSequence_Selector_Ptr pr = selector();
+    CommaComplex_Selector_Ptr pr = selector();
     if (pr) {
       exp.selector_stack.pop_back();
       pr = operator()(pr);

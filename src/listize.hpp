@@ -24,9 +24,9 @@ namespace Sass {
     Listize(Memory_Manager&);
     ~Listize() { }
 
-    Expression_Ptr operator()(CommaSequence_Selector_Ptr);
-    Expression_Ptr operator()(Sequence_Selector_Ptr);
-    Expression_Ptr operator()(SimpleSequence_Selector_Ptr);
+    Expression_Ptr operator()(CommaComplex_Selector_Ptr);
+    Expression_Ptr operator()(Complex_Selector_Ptr);
+    Expression_Ptr operator()(Compound_Selector_Ptr);
 
     template <typename U>
     Expression_Ptr fallback(U x) { return fallback_impl(x); }
