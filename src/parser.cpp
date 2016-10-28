@@ -596,7 +596,7 @@ namespace Sass {
     // create the initial mixin call object
     Mixin_Call_Ptr call = SASS_MEMORY_NEW(ctx.mem, Mixin_Call, pstate, name, 0, 0);
     // parse mandatory arguments
-    call->arguments(&parse_arguments());
+    call->arguments(parse_arguments());
     // parse optional block
     if (peek < exactly <'{'> >()) {
       call->block(&parse_block());
@@ -1813,7 +1813,7 @@ namespace Sass {
     Argument_Obj arg = SASS_MEMORY_NEW(ctx.mem, Argument, arg_pos, &parse_interpolated_chunk(Token(arg_beg, arg_end)));
     Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, arg_pos);
     args->append(&arg);
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, &args);
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
   }
 
   String_Obj Parser::parse_url_function_string()
@@ -1881,7 +1881,7 @@ namespace Sass {
 
     ParserState call_pos = pstate;
     Arguments_Obj args = parse_arguments();
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, &args);
+    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
   }
 
   Function_Call_Schema_Obj Parser::parse_function_call_schema()

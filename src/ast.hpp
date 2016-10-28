@@ -932,9 +932,9 @@ namespace Sass {
   //////////////////////////////////////
   class Mixin_Call_Ref : public Has_Block_Ref {
     ADD_PROPERTY(std::string, name)
-    ADD_PROPERTY(Arguments_Ptr, arguments)
+    ADD_PROPERTY(Arguments_Obj, arguments)
   public:
-    Mixin_Call_Ref(ParserState pstate, std::string n, Arguments_Ptr args, Block_Obj b = 0)
+    Mixin_Call_Ref(ParserState pstate, std::string n, Arguments_Obj args, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), name_(n), arguments_(args)
     { }
     ATTACH_OPERATIONS()
@@ -1336,14 +1336,14 @@ namespace Sass {
   //////////////////
   class Function_Call_Ref : public PreValue_Ref {
     ADD_HASHED(std::string, name)
-    ADD_HASHED(Arguments_Ptr, arguments)
+    ADD_HASHED(Arguments_Obj, arguments)
     ADD_PROPERTY(void*, cookie)
     size_t hash_;
   public:
-    Function_Call_Ref(ParserState pstate, std::string n, Arguments_Ptr args, void* cookie)
+    Function_Call_Ref(ParserState pstate, std::string n, Arguments_Obj args, void* cookie)
     : PreValue_Ref(pstate), name_(n), arguments_(args), cookie_(cookie), hash_(0)
     { concrete_type(STRING); }
-    Function_Call_Ref(ParserState pstate, std::string n, Arguments_Ptr args)
+    Function_Call_Ref(ParserState pstate, std::string n, Arguments_Obj args)
     : PreValue_Ref(pstate), name_(n), arguments_(args), cookie_(0), hash_(0)
     { concrete_type(STRING); }
 
