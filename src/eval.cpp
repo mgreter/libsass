@@ -794,7 +794,7 @@ namespace Sass {
     }
     std::string name(Util::normalize_underscores(c->name()));
     std::string full_name(name + "[f]");
-    Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, *c->arguments());
+    Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, *c->arguments());
 
     Env* env = environment();
     if (!env->has(full_name)) {
@@ -808,7 +808,7 @@ namespace Sass {
         Function_Call_Ptr lit = SASS_MEMORY_NEW(ctx.mem, Function_Call,
                                              c->pstate(),
                                              c->name(),
-                                             args);
+                                             &args);
         if (args->has_named_arguments()) {
           error("Function " + c->name() + " doesn't support keyword arguments", c->pstate());
         }
@@ -875,9 +875,9 @@ namespace Sass {
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
       if (full_name == "*[f]") {
         String_Quoted *str = SASS_MEMORY_NEW(ctx.mem, String_Quoted, c->pstate(), c->name());
-        Arguments_Ptr new_args = SASS_MEMORY_NEW(ctx.mem, Arguments, c->pstate());
-        *new_args << SASS_MEMORY_NEW(ctx.mem, Argument, c->pstate(), str);
-        *new_args += args;
+        Arguments_Obj new_args = SASS_MEMORY_NEW(ctx.mem, Arguments, c->pstate());
+        new_args->append(SASS_MEMORY_NEW(ctx.mem, Argument, c->pstate(), str));
+        new_args->concat(&args);
         args = new_args;
       }
 
@@ -1322,12 +1322,12 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Arguments_Ptr a)
   {
-    Arguments_Ptr aa = SASS_MEMORY_NEW(ctx.mem, Arguments, a->pstate());
-    if (a->length() == 0) return aa;
+    Arguments_Obj aa = SASS_MEMORY_NEW(ctx.mem, Arguments, a->pstate());
+    if (a->length() == 0) return &aa;
     for (size_t i = 0, L = a->length(); i < L; ++i) {
-      Argument_Ptr arg = static_cast<Argument_Ptr>((*a)[i]->perform(this));
+      Argument_Obj arg = static_cast<Argument_Ptr>((*a)[i]->perform(this));
       if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
-        *aa << arg;
+        aa->append(&arg);
       }
     }
 
@@ -1367,7 +1367,7 @@ namespace Sass {
 
       *aa << SASS_MEMORY_NEW(ctx.mem, Argument, kwarg->pstate(), kwarg, "", false, true);
     }
-    return aa;
+    return &aa;
   }
 
   Expression_Ptr Eval::operator()(Comment_Ptr c)
