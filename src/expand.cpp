@@ -507,7 +507,7 @@ namespace Sass {
       for (size_t i = 0, L = list->length(); i < L; ++i) {
         Expression_Obj e = list->at(i);
         // unwrap value if the expression is an argument
-        if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(&e)) e = arg->value();
+        if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, e)) e = arg->value();
         // check if we got passed a list of args (investigate)
         if (List_Ptr scalars = dynamic_cast<List_Ptr>(&e)) {
           if (variables.size() == 1) {
@@ -679,8 +679,7 @@ namespace Sass {
     if (c->block() && c->name() != "@content" && !body->has_content()) {
       error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), backtrace());
     }
-    Arguments_Obj args = static_cast<Arguments_Ptr>(c->arguments()
-                                               ->perform(&eval));
+    Arguments_Obj args = SASS_MEMORY_CAST_PTR(Arguments, c->arguments()->perform(&eval));
     Backtrace new_bt(backtrace(), c->pstate(), ", in mixin `" + c->name() + "`");
     backtrace_stack.push_back(&new_bt);
     Env new_env(def->environment());

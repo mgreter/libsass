@@ -70,7 +70,7 @@ namespace Sass {
                                               true);
               // wrap each item from list as an argument
               for (Expression_Obj item : rest->elements()) {
-                if (Argument_Obj arg = dynamic_cast<Argument_Ptr>(&item)) {
+                if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, item)) {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument, *arg);
                 } else {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
@@ -121,7 +121,8 @@ namespace Sass {
             // skip any list completely if empty
             if (ls && ls->empty() && a->is_rest_argument()) continue;
 
-            if (Argument_Obj arg = dynamic_cast<Argument_Ptr>(a->value())) {
+            Expression_Obj value = a->value();
+            if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, value)) {
               arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
             }
             // check if we have rest argument

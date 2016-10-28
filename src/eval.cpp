@@ -265,7 +265,7 @@ namespace Sass {
       for (size_t i = 0, L = list->length(); i < L; ++i) {
         Expression_Obj e = list->at(i);
         // unwrap value if the expression is an argument
-        if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(&e)) e = arg->value();
+        if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, e)) e = arg->value();
         // check if we got passed a list of args (investigate)
         if (List_Ptr scalars = dynamic_cast<List_Ptr>(&e)) {
           if (variables.size() == 1) {
@@ -799,13 +799,13 @@ namespace Sass {
     Env* env = environment();
     if (!env->has(full_name)) {
       if (!env->has("*[f]")) {
-        for (Argument_Ptr arg : args->elements()) {
+        for (Argument_Obj arg : args->elements()) {
           if (List_Ptr ls = dynamic_cast<List_Ptr>(arg->value())) {
             if (ls->size() == 0) error("() isn't a valid CSS value.", c->pstate());
           }
         }
-        args = static_cast<Arguments_Ptr>(args->perform(this));
-        Function_Call_Ptr lit = SASS_MEMORY_NEW(ctx.mem, Function_Call,
+        args = SASS_MEMORY_CAST_PTR(Arguments, args->perform(this));
+        Function_Call_Obj lit = SASS_MEMORY_NEW(ctx.mem, Function_Call,
                                              c->pstate(),
                                              c->name(),
                                              &args);
@@ -828,7 +828,7 @@ namespace Sass {
       args->set_delayed(false); // verified
     }
     if (full_name != "if[f]") {
-      args = static_cast<Arguments_Ptr>(args->perform(this));
+      args = SASS_MEMORY_CAST_PTR(Arguments, args->perform(this));
     }
     Definition_Ptr def = static_cast<Definition_Ptr>((*env)[full_name]);
 
@@ -938,7 +938,7 @@ namespace Sass {
     Env* env = environment();
     if (env->has(name)) value = static_cast<Expression_Ptr>((*env)[name]);
     else error("Undefined variable: \"" + v->name() + "\".", v->pstate());
-    if (typeid(*value) == typeid(Argument)) value = static_cast<Argument_Ptr>(value)->value();
+    if (typeid(*value) == typeid(Argument)) value = SASS_MEMORY_CAST_PTR(Argument, value)->value();
 
     // behave according to as ruby sass (add leading zero)
     if (value->concrete_type() == Expression::NUMBER) {
@@ -1047,7 +1047,7 @@ namespace Sass {
 
     bool needs_closing_brace = false;
 
-    if (Arguments_Obj args = dynamic_cast<Arguments_Ptr>(ex)) {
+    if (Arguments_Obj args = SASS_MEMORY_CAST_PTR(Arguments, ex)) {
       List_Obj ll = SASS_MEMORY_NEW(ctx.mem, List, args->pstate(), 0, SASS_COMMA);
       for(auto arg : args->elements()) {
         ll->append(arg->value());
@@ -1062,7 +1062,7 @@ namespace Sass {
         throw Exception::InvalidValue(*nr);
       }
     }
-    if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(ex)) {
+    if (Argument_Obj arg = SASS_MEMORY_CAST_PTR(Argument, ex)) {
       ex = arg->value();
     }
     if (String_Quoted_Ptr sq = dynamic_cast<String_Quoted_Ptr>(ex)) {
@@ -1325,14 +1325,14 @@ namespace Sass {
     Arguments_Obj aa = SASS_MEMORY_NEW(ctx.mem, Arguments, a->pstate());
     if (a->length() == 0) return &aa;
     for (size_t i = 0, L = a->length(); i < L; ++i) {
-      Argument_Obj arg = static_cast<Argument_Ptr>((*a)[i]->perform(this));
+      Argument_Obj arg = SASS_MEMORY_CAST_PTR(Argument, (*a)[i]->perform(this));
       if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
         aa->append(&arg);
       }
     }
 
     if (a->has_rest_argument()) {
-      Expression_Ptr splat = static_cast<Argument_Ptr>(
+      Expression_Ptr splat = SASS_MEMORY_CAST_PTR(Argument,
                             a->get_rest_argument()->perform(this)
                           )->value()->perform(this);
 
@@ -1361,7 +1361,7 @@ namespace Sass {
     }
 
     if (a->has_keyword_argument()) {
-      Expression_Ptr kwarg = static_cast<Argument_Ptr>(
+      Expression_Ptr kwarg = SASS_MEMORY_CAST_PTR(Argument,
                             a->get_keyword_argument()->perform(this)
                           )->value()->perform(this);
 

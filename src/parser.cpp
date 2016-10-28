@@ -444,7 +444,7 @@ namespace Sass {
       css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
     }
 
-    Argument_Ptr arg;
+    Argument_Obj arg;
     if (peek_css< sequence < variable, optional_css_comments, exactly<':'> > >()) {
       lex_css< variable >();
       std::string name(Util::normalize_underscores(lexed));

@@ -1423,7 +1423,7 @@ namespace Sass {
             *ith << arglist->value_at_index(i);
           }
           if (arglist->is_arglist()) {
-            Argument_Ptr arg = (Argument_Ptr)(&arglist->at(i));
+            Argument_Obj arg = (Argument_Ptr)(&arglist->at(i));
             arg->value(ith);
           } else {
             (*arglist)[i] = ith;
@@ -1540,7 +1540,7 @@ namespace Sass {
       Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
       for (size_t i = arglist->size(), L = arglist->length(); i < L; ++i) {
         Expression_Obj obj = arglist->at(i);
-        Argument_Ptr arg = (Argument_Ptr)&obj;
+        Argument_Obj arg = (Argument_Ptr)&obj;
         std::string name = std::string(arg->name());
         name = name.erase(0, 1); // sanitize name (remove dollar sign)
         *result << std::make_pair(SASS_MEMORY_NEW(ctx.mem, String_Quoted,
@@ -1667,7 +1667,7 @@ namespace Sass {
         // }
         if (arglist->is_arglist()) {
           Expression_Obj obj = arglist->at(i);
-          Argument_Ptr arg = (Argument_Ptr)&obj;
+          Argument_Obj arg = (Argument_Ptr)&obj;
           *args << SASS_MEMORY_NEW(ctx.mem, Argument,
                                    pstate,
                                    expr,
