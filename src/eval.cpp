@@ -219,7 +219,7 @@ namespace Sass {
     Expression_Ptr expr = e->list()->perform(this);
     Env env(environment(), true);
     exp.env_stack.push_back(&env);
-    Vectorized2<Expression_Obj>* list = 0;
+    Vectorized<Expression_Obj>* list = 0;
     Map_Ptr map = 0;
     if (expr->concrete_type() == Expression::MAP) {
       map = static_cast<Map_Ptr>(expr);
@@ -260,7 +260,7 @@ namespace Sass {
     }
     else {
       if (list->length() == 1 && dynamic_cast<CommaSequence_Selector_Ptr>(list)) {
-        list = dynamic_cast<Vectorized2<Memory_Node<Expression_Ref>>*>(list);
+        list = dynamic_cast<Vectorized<Expression_Obj>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
         Expression_Obj e = list->at(i);

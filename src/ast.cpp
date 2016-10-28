@@ -1596,7 +1596,7 @@ namespace Sass {
 
   SimpleSequence_Selector& SimpleSequence_Selector_Ref::operator<<(Simple_Selector_Ptr element)
   {
-    Vectorized2<Simple_Selector_Obj>::operator<<(element);
+    Vectorized<Simple_Selector_Obj>::operator<<(element);
     pstate_.offset += element->pstate().offset;
     return *this;
   }

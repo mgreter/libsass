@@ -291,87 +291,6 @@ namespace Sass {
   inline Vectorized<T>::~Vectorized() { }
 
 
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Mixin class for AST nodes that should behave like vectors. Uses the
-  // "Template Method" design pattern to allow subclasses to adjust their flags
-  // when certain objects are pushed.
-  /////////////////////////////////////////////////////////////////////////////
-  template <typename T>
-  class Vectorized2 {
-    std::vector<T> elements_;
-  protected:
-    size_t hash_;
-    void reset_hash() { hash_ = 0; }
-    virtual void adjust_after_pushing(T element) { }
-  public:
-    Vectorized2(size_t s = 0) : elements_(std::vector<T>()), hash_(0)
-    { elements_.reserve(s); }
-    virtual ~Vectorized2() = 0;
-    size_t length() const   { return elements_.size(); }
-    bool empty() const      { return elements_.empty(); }
-    T last() const          { return elements_.back(); }
-    T first() const         { return elements_.front(); }
-    T& operator[](size_t i) { return elements_[i]; }
-    virtual const T& at(size_t i) const { return elements_.at(i); }
-    const T& operator[](size_t i) const { return elements_[i]; }
-    virtual Vectorized2& append(T element)
-    {
-      if (!element) return *this;
-      reset_hash();
-      elements_.push_back(element);
-      adjust_after_pushing(element);
-      return *this;
-    }
-    virtual Vectorized2& operator<<(T element)
-    {
-      if (!element) return *this;
-      reset_hash();
-      elements_.push_back(element);
-      adjust_after_pushing(element);
-      return *this;
-    }
-    Vectorized2& concat(Vectorized2* v)
-    {
-      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
-      return *this;
-    }
-    Vectorized2& operator+=(Vectorized2* v)
-    {
-      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
-      return *this;
-    }
-    Vectorized2& unshift(T element)
-    {
-      elements_.insert(elements_.begin(), element);
-      return *this;
-    }
-    std::vector<T>& elements() { return elements_; }
-    const std::vector<T>& elements() const { return elements_; }
-    std::vector<T>& elements(std::vector<T>& e) { elements_ = e; return elements_; }
-
-    virtual size_t hash()
-    {
-      if (hash_ == 0) {
-        for (T& el : elements_) {
-          hash_combine(hash_, el->hash());
-        }
-      }
-      return hash_;
-    }
-
-    typename std::vector<T>::iterator end() { return elements_.end(); }
-    typename std::vector<T>::iterator begin() { return elements_.begin(); }
-    typename std::vector<T>::const_iterator end() const { return elements_.end(); }
-    typename std::vector<T>::const_iterator begin() const { return elements_.begin(); }
-    typename std::vector<T>::iterator erase(typename std::vector<T>::iterator el) { return elements_.erase(el); }
-    typename std::vector<T>::const_iterator erase(typename std::vector<T>::const_iterator el) { return elements_.erase(el); }
-
-  };
-  template <typename T>
-  inline Vectorized2<T>::~Vectorized2() { }
-
-
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
   // extra <std::vector> internally to maintain insertion order for interation.
@@ -506,7 +425,7 @@ namespace Sass {
   ////////////////////////
   // Blocks of statements.
   ////////////////////////
-  class Block_Ref : public Statement_Ref, public Vectorized2<Statement_Obj> {
+  class Block_Ref : public Statement_Ref, public Vectorized<Statement_Obj> {
     ADD_PROPERTY(bool, is_root)
     ADD_PROPERTY(bool, is_at_root);
     // needed for properly formatted CSS emission
@@ -517,7 +436,7 @@ namespace Sass {
   public:
     Block_Ref(ParserState pstate, size_t s = 0, bool r = false)
     : Statement_Ref(pstate),
-      Vectorized2<Statement_Obj>(s),
+      Vectorized<Statement_Obj>(s),
       is_root_(r),
       is_at_root_(false)
     { }
@@ -955,7 +874,7 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class List_Ref : public Value_Ref, public Vectorized2<Expression_Obj> {
+  class List_Ref : public Value_Ref, public Vectorized<Expression_Obj> {
     void adjust_after_pushing(Expression_Obj e) { is_expanded(false); }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
@@ -965,7 +884,7 @@ namespace Sass {
     List_Ref(ParserState pstate,
          size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
     : Value_Ref(pstate),
-      Vectorized2<Expression_Obj>(size),
+      Vectorized<Expression_Obj>(size),
       separator_(sep),
       is_arglist_(argl),
       from_selector_(false)
@@ -1008,7 +927,7 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class List2_Ref : public Value_Ref, public Vectorized2<Expression_Obj> {
+  class List2_Ref : public Value_Ref, public Vectorized<Expression_Obj> {
     void adjust_after_pushing(Expression_Obj e) { is_expanded(false); }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
@@ -1018,7 +937,7 @@ namespace Sass {
     List2_Ref(ParserState pstate,
          size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
     : Value_Ref(pstate),
-      Vectorized2<Expression_Obj>(size),
+      Vectorized<Expression_Obj>(size),
       separator_(sep),
       is_arglist_(argl),
       from_selector_(false)
@@ -1308,7 +1227,7 @@ namespace Sass {
   // error checking (e.g., ensuring that all ordinal arguments precede all
   // named arguments).
   ////////////////////////////////////////////////////////////////////////
-  class Arguments_Ref : public Expression_Ref, public Vectorized2<Argument_Obj> {
+  class Arguments_Ref : public Expression_Ref, public Vectorized<Argument_Obj> {
     ADD_PROPERTY(bool, has_named_arguments)
     ADD_PROPERTY(bool, has_rest_argument)
     ADD_PROPERTY(bool, has_keyword_argument)
@@ -1317,7 +1236,7 @@ namespace Sass {
   public:
     Arguments_Ref(ParserState pstate)
     : Expression_Ref(pstate),
-      Vectorized2<Argument_Obj>(),
+      Vectorized<Argument_Obj>(),
       has_named_arguments_(false),
       has_rest_argument_(false),
       has_keyword_argument_(false)
@@ -1626,12 +1545,12 @@ namespace Sass {
   // Interpolated strings. Meant to be reduced to flat strings during the
   // evaluation phase.
   ///////////////////////////////////////////////////////////////////////
-  class String_Schema_Ref : public String_Ref, public Vectorized2<Expression_Obj> {
+  class String_Schema_Ref : public String_Ref, public Vectorized<Expression_Obj> {
     // ADD_PROPERTY(bool, has_interpolants)
     size_t hash_;
   public:
     String_Schema_Ref(ParserState pstate, size_t size = 0, bool has_interpolants = false)
-    : String_Ref(pstate), Vectorized2<Expression_Obj>(size), hash_(0)
+    : String_Ref(pstate), Vectorized<Expression_Obj>(size), hash_(0)
     { concrete_type(STRING); }
     std::string type() { return "string"; }
     static std::string type_name() { return "string"; }
@@ -1740,14 +1659,14 @@ namespace Sass {
   // Media queries.
   /////////////////
   class Media_Query_Ref : public Expression_Ref,
-                      public Vectorized2<Media_Query_Expression_Obj> {
+                      public Vectorized<Media_Query_Expression_Obj> {
     ADD_PROPERTY(String_Obj, media_type)
     ADD_PROPERTY(bool, is_negated)
     ADD_PROPERTY(bool, is_restricted)
   public:
     Media_Query_Ref(ParserState pstate,
                 String_Ptr t = 0, size_t s = 0, bool n = false, bool r = false)
-    : Expression_Ref(pstate), Vectorized2<Media_Query_Expression_Obj>(s),
+    : Expression_Ref(pstate), Vectorized<Media_Query_Expression_Obj>(s),
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
     ATTACH_OPERATIONS()
@@ -1973,7 +1892,7 @@ namespace Sass {
   // error checking (e.g., ensuring that all optional parameters follow all
   // required parameters).
   /////////////////////////////////////////////////////////////////////////
-  class Parameters_Ref : public AST_Node_Ref, public Vectorized2<Parameter_Obj> {
+  class Parameters_Ref : public AST_Node_Ref, public Vectorized<Parameter_Obj> {
     ADD_PROPERTY(bool, has_optional_parameters)
     ADD_PROPERTY(bool, has_rest_parameter)
   protected:
@@ -2003,7 +1922,7 @@ namespace Sass {
   public:
     Parameters_Ref(ParserState pstate)
     : AST_Node_Ref(pstate),
-      Vectorized2<Parameter_Obj>(),
+      Vectorized<Parameter_Obj>(),
       has_optional_parameters_(false),
       has_rest_parameter_(false)
     { }
@@ -2417,7 +2336,7 @@ namespace Sass {
   // any parent references or placeholders, to simplify expansion.
   ////////////////////////////////////////////////////////////////////////////
   typedef std::set<Sequence_Selector_Ptr, Sequence_Selector_Pointer_Compare> SourcesSet;
-  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized2<Simple_Selector_Obj> {
+  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector_Obj> {
   private:
     SourcesSet sources_;
     ADD_PROPERTY(bool, extended);
@@ -2431,7 +2350,7 @@ namespace Sass {
   public:
     SimpleSequence_Selector_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate),
-      Vectorized2<Simple_Selector_Obj>(s),
+      Vectorized<Simple_Selector_Obj>(s),
       extended_(false),
       has_parent_reference_(false)
     { }
@@ -2473,7 +2392,7 @@ namespace Sass {
     {
       if (Selector::hash_ == 0) {
         hash_combine(Selector::hash_, std::hash<int>()(SELECTOR));
-        if (length()) hash_combine(Selector_Ref::hash_, Vectorized2::hash());
+        if (length()) hash_combine(Selector_Ref::hash_, Vectorized::hash());
       }
       return Selector_Ref::hash_;
     }
@@ -2705,13 +2624,13 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class CommaSequence_Selector_Ref : public Selector_Ref, public Vectorized2<Sequence_Selector_Obj> {
+  class CommaSequence_Selector_Ref : public Selector_Ref, public Vectorized<Sequence_Selector_Obj> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   protected:
     void adjust_after_pushing(Sequence_Selector_Ptr c);
   public:
     CommaSequence_Selector_Ref(ParserState pstate, size_t s = 0)
-    : Selector_Ref(pstate), Vectorized2<Sequence_Selector_Obj>(s), wspace_(0)
+    : Selector_Ref(pstate), Vectorized<Sequence_Selector_Obj>(s), wspace_(0)
     { }
     std::string type() { return "list"; }
     // remove parent selector references
@@ -2730,7 +2649,7 @@ namespace Sass {
     {
       if (Selector_Ref::hash_ == 0) {
         hash_combine(Selector_Ref::hash_, std::hash<int>()(SELECTOR));
-        hash_combine(Selector_Ref::hash_, Vectorized2::hash());
+        hash_combine(Selector_Ref::hash_, Vectorized::hash());
       }
       return Selector_Ref::hash_;
     }
