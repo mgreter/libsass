@@ -771,8 +771,8 @@ namespace Sass {
         // upcoming Sass may allow also trailing
         if (seq->length() > 1) {
           ParserState state(pstate);
-          Simple_Selector_Ptr cur = (*seq)[seq->length()-1];
-          Simple_Selector_Ptr prev = (*seq)[seq->length()-2];
+          Simple_Selector_Obj cur = (*seq)[seq->length()-1];
+          Simple_Selector_Obj prev = (*seq)[seq->length()-2];
           std::string sel(prev->to_string({ NESTED, 5 }));
           std::string found(cur->to_string({ NESTED, 5 }));
           if (lex < identifier >()) { found += std::string(lexed); }

@@ -144,8 +144,8 @@ namespace Sass {
     size_t L = std::min(length(), rhs.length());
     for (size_t i = 0; i < L; ++i)
     {
-      Simple_Selector_Ptr l = (*this)[i];
-      Simple_Selector_Ptr r = rhs[i];
+      Simple_Selector_Obj l = (*this)[i];
+      Simple_Selector_Obj r = rhs[i];
       if (!l && !r) return false;
       else if (!r) return false;
       else if (!l) return true;
@@ -158,7 +158,7 @@ namespace Sass {
 
   bool SimpleSequence_Selector_Ref::has_parent_ref()
   {
-    for (Simple_Selector_Ptr s : *this) {
+    for (Simple_Selector_Obj s : *this) {
       if (s && s->has_parent_ref()) return true;
     }
     return false;
@@ -166,7 +166,7 @@ namespace Sass {
 
   bool SimpleSequence_Selector_Ref::has_real_parent_ref()
   {
-    for (Simple_Selector_Ptr s : *this) {
+    for (Simple_Selector_Obj s : *this) {
       if (s && s->has_real_parent_ref()) return true;
     }
     return false;
@@ -405,7 +405,7 @@ namespace Sass {
     {
       for (i = 0, L = rhs->length(); i < L; ++i)
       {
-        if ((dynamic_cast<Pseudo_Selector_Ptr>((*rhs)[i]) || dynamic_cast<Wrapped_Selector_Ptr>((*rhs)[i])) && (*rhs)[L-1]->is_pseudo_element())
+        if ((SASS_MEMORY_CAST(Pseudo_Selector, (*rhs)[i]) || SASS_MEMORY_CAST(Wrapped_Selector, (*rhs)[i])) && (*rhs)[L-1]->is_pseudo_element())
         { found = true; break; }
       }
     }
@@ -413,23 +413,23 @@ namespace Sass {
     {
       for (i = 0, L = rhs->length(); i < L; ++i)
       {
-        if (dynamic_cast<Pseudo_Selector_Ptr>((*rhs)[i]) || dynamic_cast<Wrapped_Selector_Ptr>((*rhs)[i]))
+        if (SASS_MEMORY_CAST(Pseudo_Selector, (*rhs)[i]) || SASS_MEMORY_CAST(Wrapped_Selector, (*rhs)[i]))
         { found = true; break; }
       }
     }
     if (!found)
     {
-      SimpleSequence_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, *rhs);
-      (*cpy) << this;
-      return cpy;
+      SimpleSequence_Selector_Obj cpy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, *rhs);
+      cpy->append(this);
+      return &cpy;
     }
-    SimpleSequence_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, rhs->pstate());
+    SimpleSequence_Selector_Obj cpy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, rhs->pstate());
     for (size_t j = 0; j < i; ++j)
-    { (*cpy) << (*rhs)[j]; }
-    (*cpy) << this;
+    { cpy->append((*rhs)[j]); }
+    cpy->append(this);
     for (size_t j = i; j < L; ++j)
-    { (*cpy) << (*rhs)[j]; }
-    return cpy;
+    { cpy->append((*rhs)[j]); }
+    return &cpy;
   }
 
   Simple_Selector_Ptr Element_Selector::unify_with(Simple_Selector_Ptr rhs, Context& ctx)
@@ -478,7 +478,7 @@ namespace Sass {
       return cpy;
     }
 
-    Simple_Selector_Ptr rhs_0 = (*rhs)[0];
+    Simple_Selector_Obj rhs_0 = (*rhs)[0];
     // otherwise, this is a tag name
     if (name() == "*")
     {
@@ -486,18 +486,18 @@ namespace Sass {
       {
         // if rhs is universal, just return this tagname + rhs's qualifiers
         SimpleSequence_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, *rhs);
-        Element_Selector_Ptr ts = static_cast<Element_Selector_Ptr>(rhs_0);
-        (*cpy)[0] = this->unify_with(ts, ctx);
+        Element_Selector_Obj ts = SASS_MEMORY_CAST(Element_Selector, rhs_0);
+        (*cpy)[0] = this->unify_with(&ts, ctx);
         return cpy;
       }
-      else if (dynamic_cast<Class_Selector_Ptr>(rhs_0) || dynamic_cast<Id_Selector_Ptr>(rhs_0)) {
+      else if (SASS_MEMORY_CAST(Class_Selector, rhs_0) || SASS_MEMORY_CAST(Id_Selector, rhs_0)) {
         // qualifier is `.class`, so we can prefix with `ns|*.class`
         SimpleSequence_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, rhs->pstate());
         if (has_ns() && !rhs_0->has_ns()) {
           if (ns() != "*") (*cpy) << this;
         }
         for (size_t i = 0, L = rhs->length(); i < L; ++i)
-        { (*cpy) << (*rhs)[i]; }
+        { cpy->append((*rhs)[i]); }
         return cpy;
       }
 
@@ -511,7 +511,7 @@ namespace Sass {
       if (rhs_0->name() != "*" && rhs_0->ns() != "*" && rhs_0->name() != name()) return 0;
       // otherwise create new compound and unify first simple selector
       SimpleSequence_Selector_Ptr copy = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, *rhs);
-      (*copy)[0] = this->unify_with(rhs_0, ctx);
+      (*copy)[0] = this->unify_with(&rhs_0, ctx);
       return copy;
 
     }
@@ -532,8 +532,8 @@ namespace Sass {
   {
     for (size_t i = 0, L = rhs->length(); i < L; ++i)
     {
-      Simple_Selector_Ptr rhs_i = (*rhs)[i];
-      if (typeid(*rhs_i) == typeid(Id_Selector) && static_cast<Id_Selector_Ptr>(rhs_i)->name() != name()) {
+      Simple_Selector_Obj rhs_i = (*rhs)[i];
+      if (typeid(*rhs_i) == typeid(Id_Selector) && SASS_MEMORY_CAST(Id_Selector, rhs_i)->name() != name()) {
         return 0;
       }
     }
@@ -547,10 +547,10 @@ namespace Sass {
     {
       for (size_t i = 0, L = rhs->length(); i < L; ++i)
       {
-        Simple_Selector_Ptr rhs_i = (*rhs)[i];
+        Simple_Selector_Obj rhs_i = (*rhs)[i];
         if (typeid(*rhs_i) == typeid(Pseudo_Selector) &&
-            static_cast<Pseudo_Selector_Ptr>(rhs_i)->is_pseudo_element() &&
-            static_cast<Pseudo_Selector_Ptr>(rhs_i)->name() != name())
+            SASS_MEMORY_CAST(Pseudo_Selector, rhs_i)->is_pseudo_element() &&
+            SASS_MEMORY_CAST(Pseudo_Selector, rhs_i)->name() != name())
         { return 0; }
       }
     }
@@ -753,9 +753,9 @@ namespace Sass {
 
     for (size_t i = 0, iL = length(); i < iL; ++i)
     {
-      Selector_Ptr lhs = (*this)[i];
+      Selector_Obj lhs = &(*this)[i];
       // very special case for wrapped matches selector
-      if (Wrapped_Selector_Ptr wrapped = dynamic_cast<Wrapped_Selector_Ptr>(lhs)) {
+      if (Wrapped_Selector_Obj wrapped = SASS_MEMORY_CAST(Wrapped_Selector, lhs)) {
         if (wrapped->name() == ":not") {
           if (CommaSequence_Selector_Ptr not_list = dynamic_cast<CommaSequence_Selector_Ptr>(wrapped->selector())) {
             if (not_list->is_superselector_of(rhs, wrapped->name())) return false;
@@ -774,7 +774,7 @@ namespace Sass {
             }
           }
         }
-        Simple_Selector_Ptr rhs_sel = rhs->elements().size() > i ? (*rhs)[i] : 0;
+        Simple_Selector_Ptr rhs_sel = rhs->elements().size() > i ? &(*rhs)[i] : 0;
         if (Wrapped_Selector_Ptr wrapped_r = dynamic_cast<Wrapped_Selector_Ptr>(rhs_sel)) {
           if (wrapped->name() == wrapped_r->name()) {
           if (wrapped->is_superselector_of(wrapped_r)) {
@@ -790,8 +790,8 @@ namespace Sass {
 
     for (size_t n = 0, nL = rhs->length(); n < nL; ++n)
     {
-      auto r = (*rhs)[n];
-      if (Wrapped_Selector_Ptr wrapped = dynamic_cast<Wrapped_Selector_Ptr>(r)) {
+      Selector_Obj r = &(*rhs)[n];
+      if (Wrapped_Selector_Obj wrapped = SASS_MEMORY_CAST(Wrapped_Selector, r)) {
         if (wrapped->name() == ":not") {
           if (CommaSequence_Selector_Ptr ls = dynamic_cast<CommaSequence_Selector_Ptr>(wrapped->selector())) {
             ls->remove_parent_selectors();
@@ -906,8 +906,8 @@ namespace Sass {
     size_t iL = length();
     size_t nL = rhs.length();
     // create temporary vectors and sort them
-    std::vector<Simple_Selector_Ptr> l_lst = this->elements();
-    std::vector<Simple_Selector_Ptr> r_lst = rhs.elements();
+    std::vector<Simple_Selector_Obj> l_lst = this->elements();
+    std::vector<Simple_Selector_Obj> r_lst = rhs.elements();
     std::sort(l_lst.begin(), l_lst.end(), cmp_simple_selector());
     std::sort(r_lst.begin(), r_lst.end(), cmp_simple_selector());
     // process loop
@@ -917,8 +917,8 @@ namespace Sass {
       if (i == iL) return iL == nL;
       else if (n == nL) return iL == nL;
       // the access the vector items
-      Simple_Selector_Ptr l = l_lst[i];
-      Simple_Selector_Ptr r = r_lst[n];
+      Simple_Selector_Obj l = l_lst[i];
+      Simple_Selector_Obj r = r_lst[n];
       // skip nulls
       if (!l) ++i;
       if (!r) ++n;
@@ -1059,35 +1059,35 @@ namespace Sass {
       } else if (last()->head_ && last()->head_->length()) {
         SimpleSequence_Selector_Ptr rh = last()->head();
         size_t i = 0, L = h->length();
-        if (dynamic_cast<Element_Selector_Ptr>(h->first())) {
-          if (Class_Selector_Ptr sq = dynamic_cast<Class_Selector_Ptr>(rh->last())) {
+        if (SASS_MEMORY_CAST(Element_Selector, h->first())) {
+          if (Class_Selector_Ptr sq = SASS_MEMORY_CAST(Class_Selector, rh->last())) {
             Class_Selector_Ptr sqs = SASS_MEMORY_NEW(ctx.mem, Class_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
             sqs->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = sqs;
             rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) *rh << (*h)[i];
-          } else if (Id_Selector_Ptr sq = dynamic_cast<Id_Selector_Ptr>(rh->last())) {
+            for (i = 1; i < L; ++i) *rh << &(*h)[i];
+          } else if (Id_Selector_Ptr sq = SASS_MEMORY_CAST(Id_Selector, rh->last())) {
             Id_Selector_Ptr sqs = SASS_MEMORY_NEW(ctx.mem, Id_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
             sqs->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = sqs;
             rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) *rh << (*h)[i];
-          } else if (Element_Selector_Ptr ts = dynamic_cast<Element_Selector_Ptr>(rh->last())) {
+            for (i = 1; i < L; ++i) *rh << &(*h)[i];
+          } else if (Element_Selector_Ptr ts = SASS_MEMORY_CAST(Element_Selector, rh->last())) {
             Element_Selector_Ptr tss = SASS_MEMORY_NEW(ctx.mem, Element_Selector, *ts);
             tss->name(tss->name() + (*h)[0]->name());
             tss->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = tss;
             rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) *rh << (*h)[i];
-          } else if (Placeholder_Selector_Ptr ps = dynamic_cast<Placeholder_Selector_Ptr>(rh->last())) {
+            for (i = 1; i < L; ++i) *rh << &(*h)[i];
+          } else if (Placeholder_Selector_Ptr ps = SASS_MEMORY_CAST(Placeholder_Selector, rh->last())) {
             Placeholder_Selector_Ptr pss = SASS_MEMORY_NEW(ctx.mem, Placeholder_Selector, *ps);
             pss->name(pss->name() + (*h)[0]->name());
             pss->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = pss;
             rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) *rh << (*h)[i];
+            for (i = 1; i < L; ++i) *rh << &(*h)[i];
           } else {
             *last()->head_ += h;
           }
@@ -1153,7 +1153,7 @@ namespace Sass {
       CommaSequence_Selector_Ptr retval = 0;
       // we have a parent selector in a simple compound list
       // mix parent complex selector into the compound list
-      if (dynamic_cast<Parent_Selector_Ptr>((*head)[0])) {
+      if (SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) {
         retval = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, pstate());
         if (parents && parents->length()) {
           if (tails && tails->length() > 0) {
@@ -1225,7 +1225,7 @@ namespace Sass {
               cpy->tail((*tails)[n]->cloneFully(ctx));
               cpy->head(SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, head->pstate()));
               for (size_t i = 1, L = this->head()->length(); i < L; ++i)
-                *cpy->head() << (*this->head())[i];
+                *cpy->head() << &(*this->head())[i];
               if (!cpy->head()->length()) cpy->head(0);
               *retval << cpy->skip_empty_reference();
             }
@@ -1235,7 +1235,7 @@ namespace Sass {
             Sequence_Selector_Ptr cpy = this->clone(ctx);
             cpy->head(SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, head->pstate()));
             for (size_t i = 1, L = this->head()->length(); i < L; ++i)
-              *cpy->head() << (*this->head())[i];
+              *cpy->head() << &(*this->head())[i];
             if (!cpy->head()->length()) cpy->head(0);
             *retval << cpy->skip_empty_reference();
           }
@@ -1246,8 +1246,8 @@ namespace Sass {
         retval = this->tails(ctx, tails);
       }
 
-      for (Simple_Selector_Ptr ss : *head) {
-        if (Wrapped_Selector_Ptr ws = dynamic_cast<Wrapped_Selector_Ptr>(ss)) {
+      for (Simple_Selector_Obj ss : head->elements()) {
+        if (Wrapped_Selector_Ptr ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
           if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(ws->selector())) {
             if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, implicit_parent));
           }
@@ -1294,7 +1294,7 @@ namespace Sass {
       // get the head
       head = cur->head_;
       // abort (and return) if it is not a parent selector
-      if (!head || head->length() != 1 || !dynamic_cast<Parent_Selector_Ptr>((*head)[0])) {
+      if (!head || head->length() != 1 || !SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) {
         break;
       }
       // advance to next
@@ -1319,7 +1319,7 @@ namespace Sass {
       if (head && head->length() == 1)
       {
         // abort (and return) if it is not a parent selector
-        if (!dynamic_cast<Parent_Selector_Ptr>((*head)[0])) break;
+        if (!SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) break;
       }
       // advance to next
       cur = cur->tail_;
@@ -1565,7 +1565,7 @@ namespace Sass {
       Sequence_Selector_Ptr pIter = complex_sel;
       while (pIter) {
         SimpleSequence_Selector_Ptr pHead = pIter->head();
-        if (pHead && dynamic_cast<Parent_Selector_Ptr>(pHead->elements()[0]) == NULL) {
+        if (pHead && SASS_MEMORY_CAST(Parent_Selector, pHead->elements()[0]) == NULL) {
           compound_sel = pHead;
           break;
         }
@@ -1596,7 +1596,7 @@ namespace Sass {
 
   SimpleSequence_Selector& SimpleSequence_Selector_Ref::operator<<(Simple_Selector_Ptr element)
   {
-    Vectorized<Simple_Selector_Ptr>::operator<<(element);
+    Vectorized2<Simple_Selector_Obj>::operator<<(element);
     pstate_.offset += element->pstate().offset;
     return *this;
   }
@@ -1619,7 +1619,7 @@ namespace Sass {
           break;
         }
       }
-      if (!found) (*result) << (*this)[i];
+      if (!found) (*result) << &(*this)[i];
     }
 
     return result;

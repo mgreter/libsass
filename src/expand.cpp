@@ -116,8 +116,8 @@ namespace Sass {
         for (Sequence_Selector_Ptr complex_selector : selector_list->elements()) {
           Sequence_Selector_Ptr tail = complex_selector;
           while (tail) {
-            if (tail->head()) for (Simple_Selector* header : tail->head()->elements()) {
-              if (dynamic_cast<Parent_Selector_Ptr>(header) == NULL) continue; // skip all others
+            if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
+              if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
               std::string sel_str(complex_selector->to_string(ctx.c_options));
               error("Base-level rules cannot contain the parent-selector-referencing character '&'.", header->pstate(), backtrace());
             }
@@ -567,8 +567,8 @@ namespace Sass {
       for (Sequence_Selector_Ptr complex_selector : sl->elements()) {
         Sequence_Selector_Ptr tail = complex_selector;
         while (tail) {
-          if (tail->head()) for (Simple_Selector* header : tail->head()->elements()) {
-            if (dynamic_cast<Parent_Selector_Ptr>(header) == NULL) continue; // skip all others
+          if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
+            if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
             std::string sel_str(complex_selector->to_string(ctx.c_options));
             error("Can't extend " + sel_str + ": can't extend parent selectors", header->pstate(), backtrace());
           }
@@ -591,7 +591,7 @@ namespace Sass {
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
         Sequence_Selector_Ptr sel = (*extender)[i];
         if (!(sel->head() && sel->head()->length() > 0 &&
-            dynamic_cast<Parent_Selector_Ptr>((*sel->head())[0])))
+            SASS_MEMORY_CAST(Parent_Selector, (*sel->head())[0])))
         {
           SimpleSequence_Selector_Ptr hh = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, (*extender)[i]->pstate());
           hh->media_block((*extender)[i]->media_block());

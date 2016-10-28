@@ -1863,7 +1863,7 @@ namespace Sass {
             }
 
             // Cannot be a Universal selector
-            Element_Selector_Ptr pType = dynamic_cast<Element_Selector_Ptr>(childSeq->head()->first());
+            Element_Selector_Obj pType = SASS_MEMORY_CAST(Element_Selector, childSeq->head()->first());
             if(pType && pType->name() == "*") {
               std::string msg("Can't append  `");
               msg += childSeq->to_string();
@@ -1911,7 +1911,7 @@ namespace Sass {
       List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, sel->pstate(), sel->length(), SASS_COMMA);
 
       for (size_t i = 0, L = sel->length(); i < L; ++i) {
-        Simple_Selector* ss = (*sel)[i];
+        Simple_Selector_Obj ss = (*sel)[i];
         std::string ss_string = ss->to_string() ;
 
         *l << SASS_MEMORY_NEW(ctx.mem, String_Quoted, ss->pstate(), ss_string);

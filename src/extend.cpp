@@ -1577,8 +1577,8 @@ namespace Sass {
         ExtensionPair& pair = *groupIter;
         SimpleSequence_Selector_Ptr pCompound = pair.second;
         for (size_t index = 0; index < pCompound->length(); index++) {
-          Simple_Selector* pSimpleSelector = (*pCompound)[index];
-          (*pSels) << pSimpleSelector;
+          Simple_Selector_Obj pSimpleSelector = (*pCompound)[index];
+          (*pSels) << &pSimpleSelector;
           pCompound->extended(true);
         }
       }
@@ -1953,8 +1953,8 @@ namespace Sass {
           recseen.insert(*cur->head());
           // create a copy since we add multiple items if stuff get unwrapped
           SimpleSequence_Selector_Ptr cpy_head = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, cur->pstate());
-          for (Simple_Selector* hs : *cur->head()) {
-            if (Wrapped_Selector_Ptr ws = dynamic_cast<Wrapped_Selector_Ptr>(hs)) {
+          for (Simple_Selector_Obj hs : *cur->head()) {
+            if (Wrapped_Selector_Obj ws = SASS_MEMORY_CAST(Wrapped_Selector, hs)) {
               if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(ws->selector())) {
                 // special case for ruby ass
                 if (sl->empty()) {
@@ -1972,14 +1972,14 @@ namespace Sass {
                       CommaSequence_Selector_Ptr cpy_ws_sl = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, sl->pstate());
                       // remove parent selectors from inner selector
                       if (ext_cs->first() && ext_cs->first()->head()->length() > 0) {
-                        Wrapped_Selector_Ptr ext_ws = dynamic_cast<Wrapped_Selector_Ptr>(ext_cs->first()->head()->first());
+                        Wrapped_Selector_Ptr ext_ws = SASS_MEMORY_CAST(Wrapped_Selector, ext_cs->first()->head()->first());
                         if (ext_ws/* && ext_cs->length() == 1*/) {
                           CommaSequence_Selector_Ptr ws_cs = dynamic_cast<CommaSequence_Selector_Ptr>(ext_ws->selector());
                           SimpleSequence_Selector_Ptr ws_ss = ws_cs->first()->head();
                           if (!(
-                            dynamic_cast<Pseudo_Selector_Ptr>(ws_ss->first()) ||
-                            dynamic_cast<Element_Selector_Ptr>(ws_ss->first()) ||
-                            dynamic_cast<Placeholder_Selector_Ptr>(ws_ss->first())
+                            SASS_MEMORY_CAST(Pseudo_Selector, ws_ss->first()) ||
+                            SASS_MEMORY_CAST(Element_Selector, ws_ss->first()) ||
+                            SASS_MEMORY_CAST(Placeholder_Selector, ws_ss->first())
                           )) continue;
                         }
                         *cpy_ws_sl << ext_cs->first();
@@ -1992,10 +1992,10 @@ namespace Sass {
                   }
                 }
               } else {
-                *cpy_head << hs;
+                cpy_head->append(hs);
               }
             } else {
-              *cpy_head << hs;
+              cpy_head->append(hs);
             }
           }
           // replace header

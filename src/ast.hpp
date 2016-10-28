@@ -1973,7 +1973,7 @@ namespace Sass {
   // error checking (e.g., ensuring that all optional parameters follow all
   // required parameters).
   /////////////////////////////////////////////////////////////////////////
-  class Parameters_Ref : public AST_Node_Ref, public Vectorized<Parameter_Obj> {
+  class Parameters_Ref : public AST_Node_Ref, public Vectorized2<Parameter_Obj> {
     ADD_PROPERTY(bool, has_optional_parameters)
     ADD_PROPERTY(bool, has_rest_parameter)
   protected:
@@ -2003,7 +2003,7 @@ namespace Sass {
   public:
     Parameters_Ref(ParserState pstate)
     : AST_Node_Ref(pstate),
-      Vectorized<Parameter_Obj>(),
+      Vectorized2<Parameter_Obj>(),
       has_optional_parameters_(false),
       has_rest_parameter_(false)
     { }
@@ -2417,13 +2417,13 @@ namespace Sass {
   // any parent references or placeholders, to simplify expansion.
   ////////////////////////////////////////////////////////////////////////////
   typedef std::set<Sequence_Selector_Ptr, Sequence_Selector_Pointer_Compare> SourcesSet;
-  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector_Ptr> {
+  class SimpleSequence_Selector_Ref : public Selector_Ref, public Vectorized2<Simple_Selector_Obj> {
   private:
     SourcesSet sources_;
     ADD_PROPERTY(bool, extended);
     ADD_PROPERTY(bool, has_parent_reference);
   protected:
-    void adjust_after_pushing(Simple_Selector_Ptr s)
+    void adjust_after_pushing(Simple_Selector_Obj s)
     {
       // if (s->has_reference())   has_reference(true);
       // if (s->has_placeholder()) has_placeholder(true);
@@ -2431,7 +2431,7 @@ namespace Sass {
   public:
     SimpleSequence_Selector_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate),
-      Vectorized<Simple_Selector_Ptr>(s),
+      Vectorized2<Simple_Selector_Obj>(s),
       extended_(false),
       has_parent_reference_(false)
     { }
@@ -2462,8 +2462,8 @@ namespace Sass {
     Simple_Selector_Ptr_Const base() const {
       if (length() == 0) return 0;
       // ToDo: why is this needed?
-      if (dynamic_cast<Element_Selector_Ptr>((*this)[0]))
-        return (*this)[0];
+      if (SASS_MEMORY_CAST(Element_Selector, (*this)[0]))
+        return &(*this)[0];
       return 0;
     }
     virtual bool is_superselector_of(SimpleSequence_Selector_Ptr sub, std::string wrapped = "");
@@ -2473,7 +2473,7 @@ namespace Sass {
     {
       if (Selector::hash_ == 0) {
         hash_combine(Selector::hash_, std::hash<int>()(SELECTOR));
-        if (length()) hash_combine(Selector_Ref::hash_, Vectorized::hash());
+        if (length()) hash_combine(Selector_Ref::hash_, Vectorized2::hash());
       }
       return Selector_Ref::hash_;
     }
@@ -2488,7 +2488,7 @@ namespace Sass {
     virtual bool has_wrapped_selector()
     {
       if (length() == 0) return false;
-      if (Simple_Selector_Ptr ss = elements().front()) {
+      if (Simple_Selector_Obj ss = elements().front()) {
         if (ss->has_wrapped_selector()) return true;
       }
       return false;
@@ -2497,7 +2497,7 @@ namespace Sass {
     virtual bool has_placeholder()
     {
       if (length() == 0) return false;
-      if (Simple_Selector_Ptr ss = elements().front()) {
+      if (Simple_Selector_Obj ss = elements().front()) {
         if (ss->has_placeholder()) return true;
       }
       return false;
@@ -2506,7 +2506,7 @@ namespace Sass {
     bool is_empty_reference()
     {
       return length() == 1 &&
-             dynamic_cast<Parent_Selector_Ptr>((*this)[0]);
+             SASS_MEMORY_CAST(Parent_Selector, (*this)[0]);
     }
     std::vector<std::string> to_str_vec(); // sometimes need to convert to a flat "by-value" data structure
 
@@ -2793,7 +2793,7 @@ namespace Sass {
   // compare function for sorting and probably other other uses
   struct cmp_complex_selector { inline bool operator() (Sequence_Selector_Ptr_Const l, Sequence_Selector_Ptr_Const r) { return (*l < *r); } };
   struct cmp_compound_selector { inline bool operator() (SimpleSequence_Selector_Ptr_Const l, SimpleSequence_Selector_Ptr_Const r) { return (*l < *r); } };
-  struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Ptr l, const Simple_Selector_Ptr r) { return (*l < *r); } };
+  struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Obj l, const Simple_Selector_Obj r) { return (*l < *r); } };
 
 
 }

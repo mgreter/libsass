@@ -43,8 +43,8 @@ namespace Sass {
           for (Sequence_Selector_Ptr cs : *sl) {
             while (cs) {
               if (cs->head()) {
-                for (Simple_Selector* ss : *cs->head()) {
-                  if (Wrapped_Selector_Ptr ws = dynamic_cast<Wrapped_Selector_Ptr>(ss)) {
+                for (Simple_Selector_Obj ss : *cs->head()) {
+                  if (Wrapped_Selector_Ptr ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
                     if (CommaSequence_Selector_Ptr sl = dynamic_cast<CommaSequence_Selector_Ptr>(ws->selector())) {
                       CommaSequence_Selector_Ptr clean = remove_placeholders(sl);
                       // also clean superflous parent selectors
