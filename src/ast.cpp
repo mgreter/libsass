@@ -61,13 +61,13 @@ namespace Sass {
   void String_Schema_Ref::rtrim()
   {
     if (!empty()) {
-      if (String_Ptr str = dynamic_cast<String_Ptr>(last())) str->rtrim();
+      if (String_Ptr str = SASS_MEMORY_CAST(String, last())) str->rtrim();
     }
   }
   void String_Schema_Ref::ltrim()
   {
     if (!empty()) {
-      if (String_Ptr str = dynamic_cast<String_Ptr>(first())) str->ltrim();
+      if (String_Ptr str = SASS_MEMORY_CAST(String, first())) str->ltrim();
     }
   }
   void String_Schema_Ref::trim()
@@ -1463,16 +1463,16 @@ namespace Sass {
 
   bool Selector_Schema_Ref::has_parent_ref()
   {
-    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(contents())) {
-      return schema->length() > 0 && dynamic_cast<Parent_Selector_Ptr>(schema->at(0)) != NULL;
+    if (String_Schema_Obj schema = SASS_MEMORY_CAST_PTR(String_Schema, contents())) {
+      return schema->length() > 0 && SASS_MEMORY_CAST(Parent_Selector, schema->at(0)) != NULL;
     }
     return false;
   }
 
   bool Selector_Schema_Ref::has_real_parent_ref()
   {
-    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(contents())) {
-      Parent_Selector_Ptr p = dynamic_cast<Parent_Selector_Ptr>(schema->at(0));
+    if (String_Schema_Obj schema = SASS_MEMORY_CAST_PTR(String_Schema, contents())) {
+      Parent_Selector_Ptr p = SASS_MEMORY_CAST(Parent_Selector, schema->at(0));
       return schema->length() > 0 && p != NULL && p->is_real_parent_ref();
     }
     return false;
@@ -2169,8 +2169,8 @@ namespace Sass {
     if (String_Schema_Ptr_Const r = dynamic_cast<String_Schema_Ptr_Const>(&rhs)) {
       if (length() != r->length()) return false;
       for (size_t i = 0, L = length(); i < L; ++i) {
-        Expression_Ptr rv = (*r)[i];
-        Expression_Ptr lv = (*this)[i];
+        Expression_Obj rv = (*r)[i];
+        Expression_Obj lv = (*this)[i];
         if (!lv || !rv) return false;
         if (!(*lv == *rv)) return false;
       }

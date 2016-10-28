@@ -505,8 +505,8 @@ namespace Sass {
     if (String_Schema_Ptr s_l = dynamic_cast<String_Schema_Ptr>(b->left())) {
       if (!s_l->has_interpolant() && (!s_l->is_right_interpolant())) {
         ret_schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, b->pstate());
-        Binary_Expression_Ptr bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
-                                                    b->op(), s_l->last(), b->right());
+        Binary_Expression_Obj bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
+                                                    b->op(), &s_l->last(), b->right());
         bin_ex->is_delayed(b->left()->is_delayed() || b->right()->is_delayed()); // unverified
         for (size_t i = 0; i < s_l->length() - 1; ++i) {
           *ret_schema << s_l->at(i)->perform(this);
@@ -518,8 +518,8 @@ namespace Sass {
     if (String_Schema_Ptr s_r = dynamic_cast<String_Schema_Ptr>(b->right())) {
       if (!s_r->has_interpolant() && (!s_r->is_left_interpolant() || op_type == Sass_OP::DIV)) {
         ret_schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, b->pstate());
-        Binary_Expression_Ptr bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
-                                                    b->op(), b->left(), s_r->first());
+        Binary_Expression_Obj bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
+                                                    b->op(), b->left(), &s_r->first());
         bin_ex->is_delayed(b->left()->is_delayed() || b->right()->is_delayed()); // verified
         *ret_schema << bin_ex->perform(this);
         for (size_t i = 1; i < s_r->length(); ++i) {
@@ -622,7 +622,7 @@ namespace Sass {
       r_type = rhs->concrete_type();
 
       if (s2 && s2->has_interpolants() && s2->length()) {
-        Textual_Ptr front = dynamic_cast<Textual_Ptr>(s2->elements().front());
+        Textual_Obj front = SASS_MEMORY_CAST(Textual, s2->elements().front());
         if (front && !front->is_interpolant())
         {
           // XXX: this is never hit via spec tests
@@ -1130,9 +1130,9 @@ namespace Sass {
     size_t L = s->length();
     bool into_quotes = false;
     if (L > 1) {
-      if (!dynamic_cast<String_Quoted_Ptr>((*s)[0]) && !dynamic_cast<String_Quoted_Ptr>((*s)[L - 1])) {
-      if (String_Constant_Ptr l = dynamic_cast<String_Constant_Ptr>((*s)[0])) {
-        if (String_Constant_Ptr r = dynamic_cast<String_Constant_Ptr>((*s)[L - 1])) {
+      if (!SASS_MEMORY_CAST(String_Quoted, (*s)[0]) && !SASS_MEMORY_CAST(String_Quoted, (*s)[L - 1])) {
+      if (String_Constant_Ptr l = SASS_MEMORY_CAST(String_Constant, (*s)[0])) {
+        if (String_Constant_Ptr r = SASS_MEMORY_CAST(String_Constant, (*s)[L - 1])) {
           if (r->value().size() > 0) {
             if (l->value()[0] == '"' && r->value()[r->value().size() - 1] == '"') into_quotes = true;
             if (l->value()[0] == '\'' && r->value()[r->value().size() - 1] == '\'') into_quotes = true;
@@ -1145,12 +1145,12 @@ namespace Sass {
     bool was_interpolant = false;
     std::string res("");
     for (size_t i = 0; i < L; ++i) {
-      bool is_quoted = dynamic_cast<String_Quoted_Ptr>((*s)[i]) != NULL;
+      bool is_quoted = SASS_MEMORY_CAST(String_Quoted, (*s)[i]) != NULL;
       if (was_quoted && !(*s)[i]->is_interpolant() && !was_interpolant) { res += " "; }
       else if (i > 0 && is_quoted && !(*s)[i]->is_interpolant() && !was_interpolant) { res += " "; }
       Expression_Ptr ex = (*s)[i]->perform(this);
       interpolation(ctx, res, ex, into_quotes, ex->is_interpolant());
-      was_quoted = dynamic_cast<String_Quoted_Ptr>((*s)[i]) != NULL;
+      was_quoted = SASS_MEMORY_CAST(String_Quoted, (*s)[i]) != NULL;
       was_interpolant = (*s)[i]->is_interpolant();
 
     }

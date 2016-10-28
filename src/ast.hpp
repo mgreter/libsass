@@ -1626,12 +1626,12 @@ namespace Sass {
   // Interpolated strings. Meant to be reduced to flat strings during the
   // evaluation phase.
   ///////////////////////////////////////////////////////////////////////
-  class String_Schema_Ref : public String_Ref, public Vectorized<Expression_Ptr> {
+  class String_Schema_Ref : public String_Ref, public Vectorized2<Expression_Obj> {
     // ADD_PROPERTY(bool, has_interpolants)
     size_t hash_;
   public:
     String_Schema_Ref(ParserState pstate, size_t size = 0, bool has_interpolants = false)
-    : String_Ref(pstate), Vectorized<Expression_Ptr>(size), hash_(0)
+    : String_Ref(pstate), Vectorized2<Expression_Obj>(size), hash_(0)
     { concrete_type(STRING); }
     std::string type() { return "string"; }
     static std::string type_name() { return "string"; }
@@ -1740,14 +1740,14 @@ namespace Sass {
   // Media queries.
   /////////////////
   class Media_Query_Ref : public Expression_Ref,
-                      public Vectorized<Media_Query_Expression_Ptr> {
+                      public Vectorized2<Media_Query_Expression_Obj> {
     ADD_PROPERTY(String_Obj, media_type)
     ADD_PROPERTY(bool, is_negated)
     ADD_PROPERTY(bool, is_restricted)
   public:
     Media_Query_Ref(ParserState pstate,
                 String_Ptr t = 0, size_t s = 0, bool n = false, bool r = false)
-    : Expression_Ref(pstate), Vectorized<Media_Query_Expression_Ptr>(s),
+    : Expression_Ref(pstate), Vectorized2<Media_Query_Expression_Obj>(s),
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
     ATTACH_OPERATIONS()
