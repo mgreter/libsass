@@ -1653,7 +1653,7 @@ namespace Sass {
       std::string name = Util::normalize_underscores(unquote(ARG("$name", String_Constant)->value()));
       List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
 
-      Arguments_Ptr args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
+      Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
       // std::string full_name(name + "[f]");
       // Definition_Ptr def = d_env.has(full_name) ? static_cast<Definition_Ptr>((d_env)[full_name]) : 0;
       // Parameters_Ptr params = def ? def->parameters() : 0;
@@ -1678,7 +1678,7 @@ namespace Sass {
           *args << SASS_MEMORY_NEW(ctx.mem, Argument, pstate, expr);
         }
       }
-      Function_Call_Ptr func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, args);
+      Function_Call_Ptr func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, &args);
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
       return func->perform(&expand.eval);
 

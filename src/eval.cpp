@@ -1047,15 +1047,15 @@ namespace Sass {
 
     bool needs_closing_brace = false;
 
-    if (Arguments_Ptr args = dynamic_cast<Arguments_Ptr>(ex)) {
-      List_Ptr ll = SASS_MEMORY_NEW(ctx.mem, List, args->pstate(), 0, SASS_COMMA);
-      for(auto arg : *args) {
-        *ll << arg->value();
+    if (Arguments_Obj args = dynamic_cast<Arguments_Ptr>(ex)) {
+      List_Obj ll = SASS_MEMORY_NEW(ctx.mem, List, args->pstate(), 0, SASS_COMMA);
+      for(auto arg : args->elements()) {
+        ll->append(arg->value());
       }
       ll->is_interpolant(args->is_interpolant());
       needs_closing_brace = true;
       res += "(";
-      ex = ll;
+      ex = &ll;
     }
     if (Number_Ptr nr = dynamic_cast<Number_Ptr>(ex)) {
       if (!nr->is_valid_css_unit()) {

@@ -389,10 +389,10 @@ namespace Sass {
     }
     else if (imp_path.length() > 4 && imp_path.substr(imp_path.length() - 4, 4) == ".css") {
       String_Constant_Ptr loc = SASS_MEMORY_NEW(mem, String_Constant, pstate, unquote(load_path));
-      Argument_Ptr loc_arg = SASS_MEMORY_NEW(mem, Argument, pstate, loc);
-      Arguments_Ptr loc_args = SASS_MEMORY_NEW(mem, Arguments, pstate);
-      (*loc_args) << loc_arg;
-      Function_Call_Ptr new_url = SASS_MEMORY_NEW(mem, Function_Call, pstate, "url", loc_args);
+      Argument_Obj loc_arg = SASS_MEMORY_NEW(mem, Argument, pstate, loc);
+      Arguments_Obj loc_args = SASS_MEMORY_NEW(mem, Arguments, pstate);
+      loc_args->append(&loc_arg);
+      Function_Call_Ptr new_url = SASS_MEMORY_NEW(mem, Function_Call, pstate, "url", &loc_args);
       imp->urls().push_back(new_url);
     }
     else {
