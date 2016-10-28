@@ -133,7 +133,6 @@ namespace Sass {
 
                 for (size_t i = 0, L = rest->size(); i < L; ++i) {
                   Expression_Obj obj = rest->at(i);
-                  // Argument_Ptr arg = (Argument_Ptr)&obj;
                   arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument,
                                                 obj->pstate(),
                                                 &obj,
@@ -188,7 +187,7 @@ namespace Sass {
         }
         // otherwise move one of the rest args into the param, converting to argument if necessary
         Expression_Obj obj = arglist->at(0);
-        if (!(a = dynamic_cast<Argument_Ptr>(&obj))) {
+        if (!(a = SASS_MEMORY_CAST(Argument, obj))) {
           Expression_Ptr a_to_convert = &obj;
           a = SASS_MEMORY_NEW(ctx->mem, Argument,
                               a_to_convert->pstate(),

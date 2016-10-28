@@ -1410,23 +1410,23 @@ namespace Sass {
     Signature zip_sig = "zip($lists...)";
     BUILT_IN(zip)
     {
-      List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$lists", List));
+      List_Obj arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$lists", List));
       size_t shortest = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        List_Ptr ith = dynamic_cast<List_Ptr>(arglist->value_at_index(i));
-        Map_Ptr mith = dynamic_cast<Map_Ptr>(arglist->value_at_index(i));
+        List_Obj ith = SASS_MEMORY_CAST_PTR(List, arglist->value_at_index(i));
+        Map_Obj mith = SASS_MEMORY_CAST_PTR(Map, arglist->value_at_index(i));
         if (!ith) {
           if (mith) {
             ith = mith->to_list(ctx, pstate);
           } else {
             ith = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-            *ith << arglist->value_at_index(i);
+            ith->append(arglist->value_at_index(i));
           }
           if (arglist->is_arglist()) {
             Argument_Obj arg = (Argument_Ptr)(&arglist->at(i));
-            arg->value(ith);
+            arg->value(&ith);
           } else {
-            (*arglist)[i] = ith;
+            (*arglist)[i] = &ith;
           }
         }
         shortest = (i ? std::min(shortest, ith->length()) : ith->length());
