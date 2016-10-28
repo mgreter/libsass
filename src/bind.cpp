@@ -38,7 +38,7 @@ namespace Sass {
     size_t ip = 0, LP = ps->length();
     size_t ia = 0, LA = as->length();
     while (ia < LA) {
-      Argument_Ptr a = (*as)[ia];
+      Argument_Obj a = as->at(ia);
       if (ip >= LP) {
         // skip empty rest arguments
         if (a->is_rest_argument()) {
@@ -70,7 +70,7 @@ namespace Sass {
                                               true);
               // wrap each item from list as an argument
               for (Expression_Obj item : rest->elements()) {
-                if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(&item)) {
+                if (Argument_Obj arg = dynamic_cast<Argument_Ptr>(&item)) {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument, *arg);
                 } else {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
@@ -107,7 +107,7 @@ namespace Sass {
         } else {
 
           // create a new list object for wrapped items
-          List_Ptr arglist = SASS_MEMORY_NEW(ctx->mem, List,
+          List_Obj arglist = SASS_MEMORY_NEW(ctx->mem, List,
                                           p->pstate(),
                                           0,
                                           SASS_COMMA,
@@ -121,8 +121,8 @@ namespace Sass {
             // skip any list completely if empty
             if (ls && ls->empty() && a->is_rest_argument()) continue;
 
-            if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(a->value())) {
-              (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument, *arg);
+            if (Argument_Obj arg = dynamic_cast<Argument_Ptr>(a->value())) {
+              arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
             }
             // check if we have rest argument
             else if (a->is_rest_argument()) {
@@ -133,12 +133,12 @@ namespace Sass {
                 for (size_t i = 0, L = rest->size(); i < L; ++i) {
                   Expression_Obj obj = rest->at(i);
                   // Argument_Ptr arg = (Argument_Ptr)&obj;
-                  (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
+                  arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument,
                                                 obj->pstate(),
                                                 &obj,
                                                 "",
                                                 false,
-                                                false);
+                                                false));
                 }
               }
               // no more arguments
@@ -146,16 +146,16 @@ namespace Sass {
             }
             // wrap all other value types into Argument
             else {
-              (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
+              arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument,
                                             a->pstate(),
                                             a->value(),
                                             a->name(),
                                             false,
-                                            false);
+                                            false));
             }
           }
           // assign new arglist to environment
-          env->local_frame()[p->name()] = arglist;
+          env->local_frame()[p->name()] = &arglist;
         }
         // consumed parameter
         ++ip;

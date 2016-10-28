@@ -1325,8 +1325,8 @@ namespace Sass {
 
     virtual void set_delayed(bool delayed);
 
-    Argument_Ptr get_rest_argument();
-    Argument_Ptr get_keyword_argument();
+    Argument_Obj get_rest_argument();
+    Argument_Obj get_keyword_argument();
 
     ATTACH_OPERATIONS()
   };

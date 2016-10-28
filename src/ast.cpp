@@ -84,7 +84,7 @@ namespace Sass {
 
   void Arguments_Ref::set_delayed(bool delayed)
   {
-    for (Argument_Ptr arg : elements()) {
+    for (Argument_Obj arg : elements()) {
       if (arg) arg->set_delayed(delayed);
     }
     is_delayed(delayed);
@@ -1632,24 +1632,24 @@ namespace Sass {
     }
   }
 
-  Argument_Ptr Arguments_Ref::get_rest_argument()
+  Argument_Obj Arguments_Ref::get_rest_argument()
   {
     if (this->has_rest_argument()) {
-      for (auto a : this->elements()) {
-        if (a->is_rest_argument()) {
-          return a;
+      for (Argument_Obj arg : this->elements()) {
+        if (arg->is_rest_argument()) {
+          return arg;
         }
       }
     }
     return NULL;
   }
 
-  Argument_Ptr Arguments_Ref::get_keyword_argument()
+  Argument_Obj Arguments_Ref::get_keyword_argument()
   {
     if (this->has_keyword_argument()) {
-      for (auto a : this->elements()) {
-        if (a->is_keyword_argument()) {
-          return a;
+      for (Argument_Obj arg : this->elements()) {
+        if (arg->is_keyword_argument()) {
+          return arg;
         }
       }
     }
