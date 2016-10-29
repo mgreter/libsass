@@ -241,8 +241,8 @@ namespace Sass {
     Expression_Ptr val = 0;
 
     if (map) {
-      for (auto key : map->keys()) {
-        Expression_Ptr value = map->at(key);
+      for (Expression_Obj key : map->keys()) {
+        Expression_Obj value = map->at(key);
 
         if (variables.size() == 1) {
           List_Ptr variable = SASS_MEMORY_NEW(ctx.mem, List, map->pstate(), 2, SASS_SPACE);
@@ -250,8 +250,8 @@ namespace Sass {
           *variable << value;
           env.set_local(variables[0], variable);
         } else {
-          env.set_local(variables[0], key);
-          env.set_local(variables[1], value);
+          env.set_local(variables[0], &key);
+          env.set_local(variables[1], &value);
         }
 
         val = body->perform(this);

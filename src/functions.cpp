@@ -1464,9 +1464,9 @@ namespace Sass {
     BUILT_IN(map_get)
     {
       Map_Ptr m = ARGM("$map", Map, ctx);
-      Expression_Ptr v = ARG("$key", Expression);
+      Expression_Obj v = ARG("$key", Expression);
       try {
-        return m->at(v);
+        return &m->at(v);
       } catch (const std::out_of_range&) {
         return SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       }

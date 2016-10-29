@@ -2234,8 +2234,8 @@ namespace Sass {
     if (Map_Ptr_Const r = dynamic_cast<Map_Ptr_Const>(&rhs)) {
       if (length() != r->length()) return false;
       for (auto key : keys()) {
-        Expression_Ptr lv = at(key);
-        Expression_Ptr rv = r->at(key);
+        Expression_Obj lv = at(key);
+        Expression_Obj rv = r->at(key);
         if (!rv || !lv) return false;
         if (!(*lv == *rv)) return false;
       }
@@ -2274,7 +2274,7 @@ namespace Sass {
     return length();
   }
 
-  Expression_Ptr Hashed::at(Expression_Ptr k) const
+  Expression_Obj Hashed::at(Expression_Obj k) const
   {
     if (elements_.count(k))
     { return elements_.at(k); }

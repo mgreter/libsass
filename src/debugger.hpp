@@ -578,8 +578,8 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [Hashed]" << std::endl;
     for (auto i : expression->elements()) {
-      debug_ast(i.first, ind + " key: ");
-      debug_ast(i.second, ind + " val: ");
+      debug_ast(&i.first, ind + " key: ");
+      debug_ast(&i.second, ind + " val: ");
     }
   } else if (dynamic_cast<List_Ptr>(node)) {
     List_Ptr expression = dynamic_cast<List_Ptr>(node);

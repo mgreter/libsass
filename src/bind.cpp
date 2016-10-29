@@ -95,7 +95,7 @@ namespace Sass {
           env->local_frame()[p->name()] = arglist;
           Map_Obj argmap = SASS_MEMORY_CAST_PTR(Map, a->value());
           for (auto key : argmap->keys()) {
-            std::string name = unquote(static_cast<String_Constant_Ptr>(key)->value());
+            std::string name = unquote(SASS_MEMORY_CAST(String_Constant, key)->value());
             (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
                                           key->pstate(),
                                           argmap->at(key),
@@ -205,14 +205,14 @@ namespace Sass {
         Map_Obj argmap = SASS_MEMORY_CAST_PTR(Map, a->value());
 
         for (auto key : argmap->keys()) {
-          std::string name = "$" + unquote(static_cast<String_Constant_Ptr>(key)->value());
+          std::string name = "$" + unquote(SASS_MEMORY_CAST(String_Constant, key)->value());
 
           if (!param_map.count(name)) {
             std::stringstream msg;
             msg << callee << " has no parameter named " << name;
             error(msg.str(), a->pstate());
           }
-          env->local_frame()[name] = argmap->at(key);
+          env->local_frame()[name] = &argmap->at(&key);
         }
         ++ia;
         continue;

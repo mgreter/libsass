@@ -291,48 +291,49 @@ namespace Sass {
   inline Vectorized<T>::~Vectorized() { }
 
 
+
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
   // extra <std::vector> internally to maintain insertion order for interation.
   /////////////////////////////////////////////////////////////////////////////
   class Hashed {
   struct HashExpression {
-    size_t operator() (Expression_Ptr ex) const {
+    size_t operator() (Expression_Obj ex) const {
       return ex ? ex->hash() : 0;
     }
   };
   struct CompareExpression {
-    bool operator()(const Expression_Ptr lhs, const Expression_Ptr rhs) const {
+    bool operator()(const Expression_Obj lhs, const Expression_Obj rhs) const {
       return lhs && rhs && lhs->eq(*rhs);
     }
   };
   typedef std::unordered_map<
-    Expression_Ptr, // key
-    Expression_Ptr, // value
+    Expression_Obj, // key
+    Expression_Obj, // value
     HashExpression, // hasher
     CompareExpression // compare
-  > ExpressionMap;
+  > ExpressionMap2;
   private:
-    ExpressionMap elements_;
-    std::vector<Expression_Ptr> list_;
+    ExpressionMap2 elements_;
+    std::vector<Expression_Obj> list_;
   protected:
     size_t hash_;
-    Expression_Ptr duplicate_key_;
+    Expression_Obj duplicate_key_;
     void reset_hash() { hash_ = 0; }
     void reset_duplicate_key() { duplicate_key_ = 0; }
-    virtual void adjust_after_pushing(std::pair<Expression_Ptr, Expression_Ptr> p) { }
+    virtual void adjust_after_pushing(std::pair<Expression_Obj, Expression_Obj> p) { }
   public:
-    Hashed(size_t s = 0) : elements_(ExpressionMap(s)), list_(std::vector<Expression_Ptr>())
+    Hashed(size_t s = 0) : elements_(ExpressionMap2(s)), list_(std::vector<Expression_Obj>())
     { elements_.reserve(s); list_.reserve(s); reset_duplicate_key(); }
     virtual ~Hashed();
     size_t length() const                  { return list_.size(); }
     bool empty() const                     { return list_.empty(); }
-    bool has(Expression_Ptr k) const          { return elements_.count(k) == 1; }
-    Expression_Ptr at(Expression_Ptr k) const;
+    bool has(Expression_Obj k) const          { return elements_.count(k) == 1; }
+    Expression_Obj at(Expression_Obj k) const;
     bool has_duplicate_key() const         { return duplicate_key_ != 0; }
-    Expression_Ptr get_duplicate_key() const  { return duplicate_key_; }
-    const ExpressionMap elements() { return elements_; }
-    Hashed& operator<<(std::pair<Expression_Ptr, Expression_Ptr> p)
+    Expression_Obj get_duplicate_key() const  { return duplicate_key_; }
+    const ExpressionMap2 elements() { return elements_; }
+    Hashed& operator<<(std::pair<Expression_Obj, Expression_Obj> p)
     {
       reset_hash();
 
@@ -359,13 +360,13 @@ namespace Sass {
       reset_duplicate_key();
       return *this;
     }
-    const ExpressionMap& pairs() const { return elements_; }
-    const std::vector<Expression_Ptr>& keys() const { return list_; }
+    const ExpressionMap2& pairs() const { return elements_; }
+    const std::vector<Expression_Obj>& keys() const { return list_; }
 
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::iterator end() { return elements_.end(); }
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::iterator begin() { return elements_.begin(); }
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::const_iterator end() const { return elements_.end(); }
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::const_iterator begin() const { return elements_.begin(); }
+//    std::unordered_map<Expression_Obj, Expression_Obj>::iterator end() { return elements_.end(); }
+//    std::unordered_map<Expression_Obj, Expression_Obj>::iterator begin() { return elements_.begin(); }
+//    std::unordered_map<Expression_Obj, Expression_Obj>::const_iterator end() const { return elements_.end(); }
+//    std::unordered_map<Expression_Obj, Expression_Obj>::const_iterator begin() const { return elements_.begin(); }
 
   };
   inline Hashed::~Hashed() { }
@@ -978,7 +979,7 @@ namespace Sass {
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
   class Map_Ref : public Value_Ref, public Hashed {
-    void adjust_after_pushing(std::pair<Expression_Ptr, Expression_Ptr> p) { is_expanded(false); }
+    void adjust_after_pushing(std::pair<Expression_Obj, Expression_Obj> p) { is_expanded(false); }
   public:
     Map_Ref(ParserState pstate,
          size_t size = 0)
