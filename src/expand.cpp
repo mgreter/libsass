@@ -16,15 +16,14 @@ namespace Sass {
   const unsigned int maxRecursion = 500;
   static unsigned int recursions = 0;
 
-  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<CommaComplex_Selector_Ptr>* stack)
+  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<CommaComplex_Selector_Obj>* stack)
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
     block_stack(std::vector<Block_Obj>()),
-    call_stack(std::vector<AST_Node_Ptr>()),
-    property_stack(std::vector<String_Ptr>()),
-    selector_stack(std::vector<CommaComplex_Selector_Ptr>()),
-    media_block_stack(std::vector<Media_Block_Ptr>()),
+    call_stack(std::vector<AST_Node_Obj>()),
+    selector_stack(std::vector<CommaComplex_Selector_Obj>()),
+    media_block_stack(std::vector<Media_Block_Obj>()),
     backtrace_stack(std::vector<Backtrace*>()),
     in_keyframes(false),
     at_root_without_rule(false),
@@ -35,7 +34,6 @@ namespace Sass {
     block_stack.push_back(0);
     call_stack.push_back(0);
     // import_stack.push_back(0);
-    property_stack.push_back(0);
     if (stack == NULL) { selector_stack.push_back(0); }
     else { selector_stack.insert(selector_stack.end(), stack->begin(), stack->end()); }
     media_block_stack.push_back(0);
@@ -55,7 +53,7 @@ namespace Sass {
     return 0;
   }
 
-  CommaComplex_Selector_Ptr Expand::selector()
+  CommaComplex_Selector_Obj Expand::selector()
   {
     if (selector_stack.size() > 0)
       return selector_stack.back();
@@ -134,7 +132,7 @@ namespace Sass {
     if (sel->length() == 0 || sel->has_parent_ref()) {
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
-        CommaComplex_Selector_Ptr ll = selector_stack.at(i);
+        CommaComplex_Selector_Obj ll = selector_stack.at(i);
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
       if (!has_parent_selector) {
@@ -147,7 +145,7 @@ namespace Sass {
     if (block_stack.back()->is_root()) {
       env_stack.push_back(&env);
     }
-    sel->set_media_block(media_block_stack.back());
+    sel->set_media_block(&media_block_stack.back());
     Block_Obj blk = operator()(r->block());
     Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
@@ -333,8 +331,8 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Import_Stub_Ptr i)
   {
     // get parent node from call stack
-    AST_Node_Ptr parent = call_stack.back();
-    if (SASS_MEMORY_CAST_PTR(Block, parent) == NULL) {
+    AST_Node_Obj parent = call_stack.back();
+    if (SASS_MEMORY_CAST(Block, parent) == NULL) {
       error("Import directives may not be used within control directives or mixins.", i->pstate());
     }
     // we don't seem to need that actually afterall
@@ -614,15 +612,15 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Extension_Ptr e)
   {
-    if (CommaComplex_Selector_Ptr extender = dynamic_cast<CommaComplex_Selector_Ptr>(selector())) {
+    if (CommaComplex_Selector_Ptr extender = SASS_MEMORY_CAST(CommaComplex_Selector, selector())) {
       Selector_Ptr s = e->selector();
-      if (Selector_Schema_Ptr schema = dynamic_cast<Selector_Schema_Ptr>(s)) {
+      if (Selector_Schema_Ptr schema = SASS_MEMORY_CAST_PTR(Selector_Schema, s)) {
         if (schema->has_parent_ref()) s = eval(schema);
       }
-      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(s)) {
+      if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, s)) {
         for (Complex_Selector_Obj cs : sl->elements()) {
           if (cs && cs->head()) {
-            cs->head()->media_block(media_block_stack.back());
+            cs->head()->media_block(&media_block_stack.back());
           }
         }
       }

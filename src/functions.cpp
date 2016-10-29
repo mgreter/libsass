@@ -1757,7 +1757,7 @@ namespace Sass {
         error("$selectors: At least one selector must be passed", pstate);
 
       // Parse args into vector of selectors
-      std::vector<CommaComplex_Selector_Ptr> parsedSelectors;
+      std::vector<CommaComplex_Selector_Obj> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Ptr exp = SASS_MEMORY_CAST_PTR(Expression, arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
@@ -1780,14 +1780,14 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      std::vector<CommaComplex_Selector_Ptr>::iterator itr = parsedSelectors.begin();
-      CommaComplex_Selector_Ptr result = *itr;
+      std::vector<CommaComplex_Selector_Obj>::iterator itr = parsedSelectors.begin();
+      CommaComplex_Selector_Obj result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        CommaComplex_Selector_Ptr child = *itr;
+        CommaComplex_Selector_Obj child = *itr;
         std::vector<Complex_Selector_Obj> exploded;
-        CommaComplex_Selector_Ptr rv = child->resolve_parent_refs(ctx, result);
+        CommaComplex_Selector_Obj rv = child->resolve_parent_refs(ctx, &result);
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
           exploded.push_back((*rv)[m]);
         }
@@ -1808,7 +1808,7 @@ namespace Sass {
         error("$selectors: At least one selector must be passed", pstate);
 
       // Parse args into vector of selectors
-      std::vector<CommaComplex_Selector_Ptr> parsedSelectors;
+      std::vector<CommaComplex_Selector_Obj> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Obj exp = SASS_MEMORY_CAST_PTR(Expression, arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
@@ -1831,12 +1831,12 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      std::vector<CommaComplex_Selector_Ptr>::iterator itr = parsedSelectors.begin();
-      CommaComplex_Selector_Ptr result = *itr;
+      std::vector<CommaComplex_Selector_Obj>::iterator itr = parsedSelectors.begin();
+      CommaComplex_Selector_Obj result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        CommaComplex_Selector_Ptr child = *itr;
+        CommaComplex_Selector_Obj child = *itr;
         std::vector<Complex_Selector_Obj> newElements;
 
         // For every COMPLEX_SELECTOR in `result`
@@ -1895,10 +1895,10 @@ namespace Sass {
     Signature selector_unify_sig = "selector-unify($selector1, $selector2)";
     BUILT_IN(selector_unify)
     {
-      CommaComplex_Selector_Ptr selector1 = ARGSEL("$selector1", CommaComplex_Selector, p_contextualize);
-      CommaComplex_Selector_Ptr selector2 = ARGSEL("$selector2", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Obj selector1 = ARGSEL("$selector1", CommaComplex_Selector, p_contextualize);
+      CommaComplex_Selector_Obj selector2 = ARGSEL("$selector2", CommaComplex_Selector, p_contextualize);
 
-      CommaComplex_Selector_Ptr result = selector1->unify_with(selector2, ctx);
+      CommaComplex_Selector_Ptr result = selector1->unify_with(&selector2, ctx);
       Listize listize(ctx.mem);
       return result->perform(&listize);
     }

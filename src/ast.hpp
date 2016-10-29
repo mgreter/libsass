@@ -777,7 +777,7 @@ namespace Sass {
   struct Backtrace;
   typedef Environment<AST_Node_Obj> Env;
   typedef const char* Signature;
-  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaComplex_Selector_Ptr>);
+  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaComplex_Selector_Obj>);
   typedef const char* Signature;
   class Definition_Ref : public Has_Block_Ref {
   public:

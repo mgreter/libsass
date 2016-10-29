@@ -57,7 +57,7 @@ namespace Sass {
     return exp.environment();
   }
 
-  CommaComplex_Selector_Ptr Eval::selector()
+  CommaComplex_Selector_Obj Eval::selector()
   {
     return exp.selector();
   }
@@ -1619,7 +1619,7 @@ namespace Sass {
 
   CommaComplex_Selector_Ptr Eval::operator()(CommaComplex_Selector_Ptr s)
   {
-    std::vector<CommaComplex_Selector_Ptr> rv;
+    std::vector<CommaComplex_Selector_Obj> rv;
     CommaComplex_Selector_Ptr sl = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, s->pstate());
     sl->is_optional(s->is_optional());
     sl->media_block(s->media_block());
@@ -1653,7 +1653,7 @@ namespace Sass {
   CommaComplex_Selector_Ptr Eval::operator()(Complex_Selector_Ptr s)
   {
     bool implicit_parent = !exp.old_at_root_without_rule;
-    return s->resolve_parent_refs(ctx, selector(), implicit_parent);
+    return s->resolve_parent_refs(ctx, &selector(), implicit_parent);
 
   }
 
@@ -1681,12 +1681,12 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Parent_Selector_Ptr p)
   {
-    CommaComplex_Selector_Ptr pr = selector();
+    CommaComplex_Selector_Obj pr = selector();
     if (pr) {
       exp.selector_stack.pop_back();
-      pr = operator()(pr);
+      pr = operator()(&pr);
       exp.selector_stack.push_back(pr);
-      return pr;
+      return &pr;
     } else {
       return SASS_MEMORY_NEW(ctx.mem, Null, p->pstate());
     }
