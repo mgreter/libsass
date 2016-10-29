@@ -476,7 +476,7 @@ namespace Sass {
         } else if (Declaration_Ptr d = dynamic_cast<Declaration_Ptr>(&stm)) {
           return isPrintable(d, style);
         } else if (dynamic_cast<Has_Block_Ptr>(&stm)) {
-          Block_Obj pChildBlock = ((Has_Block_Ptr)&stm)->block();
+          Block_Obj pChildBlock = ((Has_Block_Ptr)&stm)->oblock();
           if (isPrintable(&pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
@@ -536,7 +536,7 @@ namespace Sass {
           hasDeclarations = true;
         }
         else if (dynamic_cast<Has_Block_Ptr>(&stm)) {
-          Block_Obj pChildBlock = ((Has_Block_Ptr)&stm)->block();
+          Block_Obj pChildBlock = ((Has_Block_Ptr)&stm)->oblock();
           if (isPrintable(&pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
@@ -583,7 +583,7 @@ namespace Sass {
             return true;
           }
         }
-        else if (dynamic_cast<Has_Block_Ptr>(&stm) && isPrintable(((Has_Block_Ptr)&stm)->block(), style)) {
+        else if (dynamic_cast<Has_Block_Ptr>(&stm) && isPrintable(((Has_Block_Ptr)&stm)->oblock(), style)) {
           return true;
         }
       }
@@ -638,7 +638,7 @@ namespace Sass {
             return true;
           }
         }
-        else if (dynamic_cast<Has_Block_Ptr>(&stm) && isPrintable(((Has_Block_Ptr)&stm)->block(), style)) {
+        else if (dynamic_cast<Has_Block_Ptr>(&stm) && isPrintable(((Has_Block_Ptr)&stm)->oblock(), style)) {
           return true;
         }
       }
