@@ -2620,7 +2620,7 @@ namespace Sass {
   class CommaComplex_Selector_Ref : public Selector_Ref, public Vectorized<Complex_Selector_Obj> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   protected:
-    void adjust_after_pushing(Complex_Selector_Ptr c);
+    void adjust_after_pushing(Complex_Selector_Obj c);
   public:
     CommaComplex_Selector_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate), Vectorized<Complex_Selector_Obj>(s), wspace_(0)
@@ -2631,13 +2631,12 @@ namespace Sass {
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
     void remove_parent_selectors();
-    // virtual Placeholder_Selector_Ptr find_placeholder();
-    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
+    CommaComplex_Selector_Obj resolve_parent_refs(Context& ctx, CommaComplex_Selector_Obj parents, bool implicit_parent = true);
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
     CommaComplex_Selector_Ptr unify_with(CommaComplex_Selector_Obj, Context&);
-    void populate_extends(CommaComplex_Selector_Ptr, Context&, ExtensionSubsetMap&);
+    void populate_extends(CommaComplex_Selector_Obj, Context&, ExtensionSubsetMap&);
     virtual size_t hash()
     {
       if (Selector_Ref::hash_ == 0) {
@@ -2657,7 +2656,7 @@ namespace Sass {
       }
       return sum;
     }
-    virtual void set_media_block(Media_Block_Ptr mb) {
+    virtual void set_media_block(Media_Block_Obj mb) {
       media_block(mb);
       for (Complex_Selector_Obj cs : elements()) {
         cs->set_media_block(mb);

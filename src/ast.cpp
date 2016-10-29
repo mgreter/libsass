@@ -1120,12 +1120,12 @@ namespace Sass {
 
   }
 
-  CommaComplex_Selector_Ptr CommaComplex_Selector_Ref::resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr ps, bool implicit_parent)
+  CommaComplex_Selector_Obj CommaComplex_Selector_Ref::resolve_parent_refs(Context& ctx, CommaComplex_Selector_Obj ps, bool implicit_parent)
   {
     if (!this->has_parent_ref()/* && !implicit_parent*/) return this;
-    CommaComplex_Selector_Ptr ss = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
+    CommaComplex_Selector_Obj ss = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
     for (size_t pi = 0, pL = ps->length(); pi < pL; ++pi) {
-      CommaComplex_Selector_Ptr list = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
+      CommaComplex_Selector_Obj list = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
       *list << (*ps)[pi];
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
         *ss += &(*this)[si]->resolve_parent_refs(ctx, list, implicit_parent);
@@ -1250,7 +1250,7 @@ namespace Sass {
       for (Simple_Selector_Obj ss : head->elements()) {
         if (Wrapped_Selector_Obj ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
           if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, ws->selector())) {
-            if (parents) ws->selector(sl->resolve_parent_refs(ctx, &parents, implicit_parent));
+            if (parents) ws->selector(&sl->resolve_parent_refs(ctx, &parents, implicit_parent));
           }
         }
       }
@@ -1447,7 +1447,7 @@ namespace Sass {
     return false;
   }
 
-  void CommaComplex_Selector_Ref::adjust_after_pushing(Complex_Selector_Ptr c)
+  void CommaComplex_Selector_Ref::adjust_after_pushing(Complex_Selector_Obj c)
   {
     // if (c->has_reference())   has_reference(true);
   }
@@ -1521,7 +1521,7 @@ namespace Sass {
     return final_result;
   }
 
-  void CommaComplex_Selector_Ref::populate_extends(CommaComplex_Selector_Ptr extendee, Context& ctx, ExtensionSubsetMap& extends)
+  void CommaComplex_Selector_Ref::populate_extends(CommaComplex_Selector_Obj extendee, Context& ctx, ExtensionSubsetMap& extends)
   {
 
     CommaComplex_Selector_Ptr extender = this;
