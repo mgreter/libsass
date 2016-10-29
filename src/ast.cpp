@@ -821,7 +821,7 @@ namespace Sass {
   }
 
   // create complex selector (ancestor of) from compound selector
-  Complex_Selector_Ptr Compound_Selector_Ref::to_complex(Memory_Manager& mem)
+  Complex_Selector_Obj Compound_Selector_Ref::to_complex(Memory_Manager& mem)
   {
     // create an intermediate complex selector
     return SASS_MEMORY_NEW(mem, Complex_Selector,
@@ -881,8 +881,8 @@ namespace Sass {
     if (!is_universal)
     {
       // create some temporaries to convert to node
-      Complex_Selector_Ptr fake = unified->to_complex(ctx.mem);
-      Node unified_node = complexSelectorToNode(fake, ctx);
+      Complex_Selector_Obj fake = unified->to_complex(ctx.mem);
+      Node unified_node = complexSelectorToNode(&fake, ctx);
       // add to permutate the list?
       rhsNode.plus(unified_node);
     }
@@ -1267,12 +1267,12 @@ namespace Sass {
     return 0;
   }
 
-  CommaComplex_Selector_Ptr Complex_Selector_Ref::tails(Context& ctx, CommaComplex_Selector_Ptr tails)
+  CommaComplex_Selector_Obj Complex_Selector_Ref::tails(Context& ctx, CommaComplex_Selector_Obj tails)
   {
-    CommaComplex_Selector_Ptr rv = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate_);
+    CommaComplex_Selector_Obj rv = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate_);
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector_Ptr pr = this->clone(ctx);
+        Complex_Selector_Obj pr = this->clone(ctx);
         pr->tail(tails->at(i));
         rv->append(pr);
       }

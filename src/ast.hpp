@@ -2368,7 +2368,7 @@ namespace Sass {
       return length() == 1 && (*this)[0]->is_universal();
     }
 
-    Complex_Selector_Ptr to_complex(Memory_Manager& mem);
+    Complex_Selector_Obj to_complex(Memory_Manager& mem);
     Compound_Selector_Ptr unify_with(Compound_Selector_Obj rhs, Context& ctx);
     // virtual Placeholder_Selector_Ptr find_placeholder();
     virtual bool has_parent_ref();
@@ -2502,7 +2502,7 @@ namespace Sass {
     Complex_Selector_Obj context(Context&);
 
 
-    CommaComplex_Selector_Ptr tails(Context& ctx, CommaComplex_Selector_Ptr tails);
+    CommaComplex_Selector_Obj tails(Context& ctx, CommaComplex_Selector_Obj tails);
 
     // front returns the first real tail
     // skips over parent and empty ones
