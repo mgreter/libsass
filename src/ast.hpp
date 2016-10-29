@@ -1180,7 +1180,7 @@ namespace Sass {
   // Individual argument objects for mixin and function calls.
   ////////////////////////////////////////////////////////////
   class Argument_Ref : public Expression_Ref {
-    ADD_HASHED(Expression_Ptr, value)
+    ADD_HASHED(Expression_Obj, value)
     ADD_HASHED(std::string, name)
     ADD_PROPERTY(bool, is_rest_argument)
     ADD_PROPERTY(bool, is_keyword_argument)

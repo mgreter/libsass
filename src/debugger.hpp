@@ -534,7 +534,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " [name: " << expression->name() << "] ";
     std::cerr << " [rest: " << expression->is_rest_argument() << "] ";
     std::cerr << " [keyword: " << expression->is_keyword_argument() << "] " << std::endl;
-    debug_ast(expression->value(), ind + " value: ", env);
+    debug_ast(&expression->value(), ind + " value: ", env);
   } else if (dynamic_cast<Parameters_Ptr>(node)) {
     Parameters_Ptr expression = dynamic_cast<Parameters_Ptr>(node);
     std::cerr << ind << "Parameters " << expression;

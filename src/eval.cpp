@@ -800,7 +800,7 @@ namespace Sass {
     if (!env->has(full_name)) {
       if (!env->has("*[f]")) {
         for (Argument_Obj arg : args->elements()) {
-          if (List_Obj ls = SASS_MEMORY_CAST_PTR(List, arg->value())) {
+          if (List_Obj ls = SASS_MEMORY_CAST(List, arg->value())) {
             if (ls->size() == 0) error("() isn't a valid CSS value.", c->pstate());
           }
         }
@@ -838,7 +838,7 @@ namespace Sass {
       // account for rest arguments
       if (args->has_rest_argument() && args->length() > 0) {
         // get the rest arguments list
-        List_Ptr rest = SASS_MEMORY_CAST_PTR(List, args->last()->value());
+        List_Ptr rest = SASS_MEMORY_CAST(List, args->last()->value());
         // arguments before rest argument plus rest
         if (rest) L += rest->length() - 1;
       }
@@ -934,24 +934,24 @@ namespace Sass {
   Expression_Ptr Eval::operator()(Variable_Ptr v)
   {
     std::string name(v->name());
-    Expression_Ptr value = 0;
+    Expression_Obj value;
     Env* env = environment();
     if (env->has(name)) value = SASS_MEMORY_CAST(Expression, (*env)[name]);
     else error("Undefined variable: \"" + v->name() + "\".", v->pstate());
-    if (typeid(*value) == typeid(Argument)) value = SASS_MEMORY_CAST_PTR(Argument, value)->value();
+    if (typeid(*value) == typeid(Argument)) value = SASS_MEMORY_CAST(Argument, value)->value();
 
     // behave according to as ruby sass (add leading zero)
     if (value->concrete_type() == Expression::NUMBER) {
-      value = SASS_MEMORY_NEW(ctx.mem, Number, *static_cast<Number_Ptr>(value));
-      static_cast<Number_Ptr>(value)->zero(true);
+      value = SASS_MEMORY_NEW(ctx.mem, Number, *static_cast<Number_Ptr>(&value));
+      static_cast<Number_Ptr>(&value)->zero(true);
     }
 
     value->is_interpolant(v->is_interpolant());
     if (force) value->is_expanded(false);
     value->set_delayed(false); // verified
     value = value->perform(this);
-    if(!force) (*env)[name] = value;
-    return value;
+    if(!force) (*env)[name] = &value;
+    return &value;
   }
 
   Expression_Ptr Eval::operator()(Textual_Ptr t)
@@ -1063,7 +1063,7 @@ namespace Sass {
       }
     }
     if (Argument_Obj arg = SASS_MEMORY_CAST_PTR(Argument, ex)) {
-      ex = arg->value();
+      ex = &arg->value();
     }
     if (String_Quoted_Ptr sq = dynamic_cast<String_Quoted_Ptr>(ex)) {
       if (was_itpl) {

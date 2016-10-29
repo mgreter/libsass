@@ -2352,9 +2352,9 @@ namespace Sass {
 
     for (auto key : keys()) {
       List_Obj l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
-      *l << key;
-      *l << at(key);
-      *ret << l;
+      l->append(&key);
+      l->append(at(key));
+      ret->append(&l);
     }
 
     return ret;
