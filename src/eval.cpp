@@ -758,7 +758,7 @@ namespace Sass {
     else {
       // Special cases: +/- variables which evaluate to null ouput just +/-,
       // but +/- null itself outputs the string
-      if (operand->concrete_type() == Expression::NULL_VAL && dynamic_cast<Variable_Ptr>(u->operand())) {
+      if (operand->concrete_type() == Expression::NULL_VAL && SASS_MEMORY_CAST(Variable, u->operand())) {
         u->operand(SASS_MEMORY_NEW(ctx.mem, String_Quoted, u->pstate(), ""));
       }
       // Never apply unary opertions on colors @see #2140

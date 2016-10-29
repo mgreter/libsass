@@ -1136,10 +1136,10 @@ namespace Sass {
     enum Type { PLUS, MINUS, NOT };
   private:
     ADD_HASHED(Type, type)
-    ADD_HASHED(Expression_Ptr, operand)
+    ADD_HASHED(Expression_Obj, operand)
     size_t hash_;
   public:
-    Unary_Expression_Ref(ParserState pstate, Type t, Expression_Ptr o)
+    Unary_Expression_Ref(ParserState pstate, Type t, Expression_Obj o)
     : Expression_Ref(pstate), type_(t), operand_(o), hash_(0)
     { }
     const std::string type_name() {

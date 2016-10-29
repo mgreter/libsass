@@ -557,7 +557,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " [delayed: " << expression->is_delayed() << "] ";
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->type() << "]" << std::endl;
-    debug_ast(expression->operand(), ind + " operand: ", env);
+    debug_ast(&expression->operand(), ind + " operand: ", env);
   } else if (dynamic_cast<Binary_Expression_Ptr>(node)) {
     Binary_Expression_Ptr expression = dynamic_cast<Binary_Expression_Ptr>(node);
     std::cerr << ind << "Binary_Expression " << expression;
