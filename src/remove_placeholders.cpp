@@ -45,7 +45,7 @@ namespace Sass {
               if (cs->head()) {
                 for (Simple_Selector_Obj ss : *cs->head()) {
                   if (Wrapped_Selector_Ptr ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
-                    if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, ws->selector())) {
+                    if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, ws->selector())) {
                       CommaComplex_Selector_Obj clean = remove_placeholders(&sl);
                       // also clean superflous parent selectors
                       // probably not really the correct place

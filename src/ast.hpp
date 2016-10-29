@@ -2066,13 +2066,13 @@ namespace Sass {
     }
 
     virtual ~Simple_Selector_Ref() = 0;
-    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Obj, Context&);
     virtual bool has_parent_ref() { return false; };
     virtual bool has_real_parent_ref() { return false; };
     virtual bool is_pseudo_element() { return false; }
     virtual bool is_pseudo_class() { return false; }
 
-    virtual bool is_superselector_of(Compound_Selector_Ptr sub) { return false; }
+    virtual bool is_superselector_of(Compound_Selector_Obj sub) { return false; }
 
     bool operator==(const Simple_Selector_Ref& rhs) const;
     inline bool operator!=(const Simple_Selector_Ref& rhs) const { return !(*this == rhs); }
@@ -2141,8 +2141,8 @@ namespace Sass {
       if (name() == "*") return 0;
       else               return Constants::Specificity_Element;
     }
-    virtual Simple_Selector_Ptr unify_with(Simple_Selector_Ptr, Context&);
-    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
+    virtual Simple_Selector_Ptr unify_with(Simple_Selector_Obj, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Obj, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2162,7 +2162,7 @@ namespace Sass {
     {
       return Constants::Specificity_Class;
     }
-    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Obj, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2182,7 +2182,7 @@ namespace Sass {
     {
       return Constants::Specificity_ID;
     }
-    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Obj, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2191,7 +2191,7 @@ namespace Sass {
   ///////////////////////////////////////////////////
   class Attribute_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(std::string, matcher)
-    ADD_PROPERTY(String_Obj, value) // might be interpolated
+    ADD_PROPERTY(String_Ptr, value) // might be interpolated
   public:
     Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Ptr v)
     : Simple_Selector_Ref(pstate, n), matcher_(m), value_(v)
@@ -2233,9 +2233,9 @@ namespace Sass {
 
   // Pseudo Selector cannot have any namespace?
   class Pseudo_Selector_Ref : public Simple_Selector_Ref {
-    ADD_PROPERTY(String_Obj, expression)
+    ADD_PROPERTY(String_Ptr, expression)
   public:
-    Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Obj expr = 0)
+    Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Ptr expr = 0)
     : Simple_Selector_Ref(pstate, n), expression_(expr)
     { }
 
@@ -2278,7 +2278,7 @@ namespace Sass {
     bool operator==(const Pseudo_Selector_Ref& rhs) const;
     bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Pseudo_Selector_Ref& rhs) const;
-    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
+    virtual Compound_Selector_Ptr unify_with(Compound_Selector_Obj, Context&);
     ATTACH_OPERATIONS()
   };
 
@@ -2286,12 +2286,12 @@ namespace Sass {
   // Wrapped selector -- pseudo selector that takes a list of selectors as argument(s) e.g., :not(:first-of-type), :-moz-any(ol p.blah, ul, menu, dir)
   /////////////////////////////////////////////////
   class Wrapped_Selector_Ref : public Simple_Selector_Ref {
-    ADD_PROPERTY(Selector_Obj, selector)
+    ADD_PROPERTY(Selector_Ptr, selector)
   public:
-    Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Obj sel)
+    Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Ptr sel)
     : Simple_Selector_Ref(pstate, n), selector_(sel)
     { }
-    virtual bool is_superselector_of(Wrapped_Selector_Ptr sub);
+    virtual bool is_superselector_of(Wrapped_Selector_Obj sub);
     // Selectors inside the negation pseudo-class are counted like any
     // other, but the negation itself does not count as a pseudo-class.
     virtual size_t hash()
@@ -2369,7 +2369,7 @@ namespace Sass {
     }
 
     Complex_Selector_Ptr to_complex(Memory_Manager& mem);
-    Compound_Selector_Ptr unify_with(Compound_Selector_Ptr rhs, Context& ctx);
+    Compound_Selector_Ptr unify_with(Compound_Selector_Obj rhs, Context& ctx);
     // virtual Placeholder_Selector_Ptr find_placeholder();
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
@@ -2385,9 +2385,9 @@ namespace Sass {
         return &(*this)[0];
       return 0;
     }
-    virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapped = "");
-    virtual bool is_superselector_of(Complex_Selector_Ptr sub, std::string wrapped = "");
-    virtual bool is_superselector_of(CommaComplex_Selector_Ptr sub, std::string wrapped = "");
+    virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapped = "");
+    virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapped = "");
+    virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapped = "");
     virtual size_t hash()
     {
       if (Selector::hash_ == 0) {
@@ -2521,11 +2521,11 @@ namespace Sass {
 
     size_t length() const;
     CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
-    virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(Complex_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaComplex_Selector_Ptr sub, std::string wrapping = "");
+    virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
+    virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
+    virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
     // virtual Placeholder_Selector_Ptr find_placeholder();
-    CommaComplex_Selector_Ptr unify_with(Complex_Selector_Ptr rhs, Context& ctx);
+    CommaComplex_Selector_Ptr unify_with(Complex_Selector_Obj rhs, Context& ctx);
     Combinator clear_innermost();
     void append(Context&, Complex_Selector_Ptr);
     void set_innermost(Complex_Selector_Ptr, Combinator);
@@ -2640,10 +2640,10 @@ namespace Sass {
     void remove_parent_selectors();
     // virtual Placeholder_Selector_Ptr find_placeholder();
     CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
-    virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(Complex_Selector_Ptr sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaComplex_Selector_Ptr sub, std::string wrapping = "");
-    CommaComplex_Selector_Ptr unify_with(CommaComplex_Selector_Ptr, Context&);
+    virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
+    virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
+    virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
+    CommaComplex_Selector_Ptr unify_with(CommaComplex_Selector_Obj, Context&);
     void populate_extends(CommaComplex_Selector_Ptr, Context&, ExtensionSubsetMap&);
     virtual size_t hash()
     {
