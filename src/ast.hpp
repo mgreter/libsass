@@ -1982,10 +1982,10 @@ namespace Sass {
   // re-parsed into a normal selector class.
   /////////////////////////////////////////////////////////////////////////
   class Selector_Schema_Ref : public Selector_Ref {
-    ADD_PROPERTY(String_Ptr, contents)
+    ADD_PROPERTY(String_Obj, contents)
     ADD_PROPERTY(bool, at_root);
   public:
-    Selector_Schema_Ref(ParserState pstate, String_Ptr c)
+    Selector_Schema_Ref(ParserState pstate, String_Obj c)
     : Selector_Ref(pstate), contents_(c), at_root_(false)
     { }
     virtual bool has_parent_ref();
@@ -2191,7 +2191,7 @@ namespace Sass {
   ///////////////////////////////////////////////////
   class Attribute_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(std::string, matcher)
-    ADD_PROPERTY(String_Ptr, value) // might be interpolated
+    ADD_PROPERTY(String_Obj, value) // might be interpolated
   public:
     Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Ptr v)
     : Simple_Selector_Ref(pstate, n), matcher_(m), value_(v)
@@ -2233,9 +2233,9 @@ namespace Sass {
 
   // Pseudo Selector cannot have any namespace?
   class Pseudo_Selector_Ref : public Simple_Selector_Ref {
-    ADD_PROPERTY(String_Ptr, expression)
+    ADD_PROPERTY(String_Obj, expression)
   public:
-    Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Ptr expr = 0)
+    Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Obj expr = 0)
     : Simple_Selector_Ref(pstate, n), expression_(expr)
     { }
 
@@ -2286,9 +2286,9 @@ namespace Sass {
   // Wrapped selector -- pseudo selector that takes a list of selectors as argument(s) e.g., :not(:first-of-type), :-moz-any(ol p.blah, ul, menu, dir)
   /////////////////////////////////////////////////
   class Wrapped_Selector_Ref : public Simple_Selector_Ref {
-    ADD_PROPERTY(Selector_Ptr, selector)
+    ADD_PROPERTY(Selector_Obj, selector)
   public:
-    Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Ptr sel)
+    Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Obj sel)
     : Simple_Selector_Ref(pstate, n), selector_(sel)
     { }
     virtual bool is_superselector_of(Wrapped_Selector_Ptr sub);

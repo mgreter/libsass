@@ -1955,7 +1955,7 @@ namespace Sass {
           Compound_Selector_Ptr cpy_head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, cur->pstate());
           for (Simple_Selector_Obj hs : *cur->head()) {
             if (Wrapped_Selector_Obj ws = SASS_MEMORY_CAST(Wrapped_Selector, hs)) {
-              if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(ws->selector())) {
+              if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, ws->selector())) {
                 // special case for ruby ass
                 if (sl->empty()) {
                   // this seems inconsistent but it is how ruby sass seems to remove parentheses
@@ -1964,7 +1964,7 @@ namespace Sass {
                 // has wrapped selectors
                 else {
                   // extend the inner list of wrapped selector
-                  CommaComplex_Selector_Ptr ext_sl = extendSelectorList(sl, ctx, subset_map, recseen);
+                  CommaComplex_Selector_Ptr ext_sl = extendSelectorList(&sl, ctx, subset_map, recseen);
                   for (size_t i = 0; i < ext_sl->length(); i += 1) {
                     if (Complex_Selector_Obj ext_cs = ext_sl->at(i)) {
                       // create clones for wrapped selector and the inner list
@@ -1974,7 +1974,7 @@ namespace Sass {
                       if (ext_cs->first() && ext_cs->first()->head()->length() > 0) {
                         Wrapped_Selector_Ptr ext_ws = SASS_MEMORY_CAST(Wrapped_Selector, ext_cs->first()->head()->first());
                         if (ext_ws/* && ext_cs->length() == 1*/) {
-                          CommaComplex_Selector_Ptr ws_cs = dynamic_cast<CommaComplex_Selector_Ptr>(ext_ws->selector());
+                          CommaComplex_Selector_Obj ws_cs = SASS_MEMORY_CAST(CommaComplex_Selector, ext_ws->selector());
                           Compound_Selector_Obj ws_ss = ws_cs->first()->head();
                           if (!(
                             SASS_MEMORY_CAST(Pseudo_Selector, ws_ss->first()) ||

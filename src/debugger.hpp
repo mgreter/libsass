@@ -169,7 +169,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
-    debug_ast(selector->selector(), ind + " () ", env);
+    debug_ast(&selector->selector(), ind + " () ", env);
   } else if (dynamic_cast<Pseudo_Selector_Ptr>(node)) {
     Pseudo_Selector_Ptr selector = dynamic_cast<Pseudo_Selector_Ptr>(node);
     std::cerr << ind << "Pseudo_Selector " << selector;
@@ -181,7 +181,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
-    debug_ast(selector->expression(), ind + " <= ", env);
+    debug_ast(&selector->expression(), ind + " <= ", env);
   } else if (dynamic_cast<Attribute_Selector_Ptr>(node)) {
     Attribute_Selector_Ptr selector = dynamic_cast<Attribute_Selector_Ptr>(node);
     std::cerr << ind << "Attribute_Selector " << selector;
@@ -193,7 +193,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
-    debug_ast(selector->value(), ind + "[" + selector->matcher() + "] ", env);
+    debug_ast(&selector->value(), ind + "[" + selector->matcher() + "] ", env);
   } else if (dynamic_cast<Class_Selector_Ptr>(node)) {
     Class_Selector_Ptr selector = dynamic_cast<Class_Selector_Ptr>(node);
     std::cerr << ind << "Class_Selector " << selector;
@@ -255,7 +255,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
       << (selector->has_line_feed() ? " [line-feed]": " -")
     << std::endl;
 
-    debug_ast(selector->contents(), ind + " ");
+    debug_ast(&selector->contents(), ind + " ");
     // for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
 
   } else if (dynamic_cast<Selector_Ptr>(node)) {

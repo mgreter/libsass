@@ -602,8 +602,8 @@ namespace Sass {
   {
     if (is_ns_eq(ns(), rhs.ns()) && name() == rhs.name())
     {
-      Expression_Ptr lhs_ex = expression();
-      Expression_Ptr rhs_ex = rhs.expression();
+      String_Obj lhs_ex = expression();
+      String_Obj rhs_ex = rhs.expression();
       if (rhs_ex && lhs_ex) return *lhs_ex == *rhs_ex;
       else return lhs_ex == rhs_ex;
     }
@@ -683,9 +683,9 @@ namespace Sass {
   {
     if (this->name() != sub->name()) return false;
     if (this->name() == ":current") return false;
-    if (CommaComplex_Selector_Ptr rhs_list = dynamic_cast<CommaComplex_Selector_Ptr>(sub->selector())) {
-      if (CommaComplex_Selector_Ptr lhs_list = dynamic_cast<CommaComplex_Selector_Ptr>(selector())) {
-        return lhs_list->is_superselector_of(rhs_list);
+    if (CommaComplex_Selector_Obj rhs_list = SASS_MEMORY_CAST(CommaComplex_Selector, sub->selector())) {
+      if (CommaComplex_Selector_Obj lhs_list = SASS_MEMORY_CAST(CommaComplex_Selector, selector())) {
+        return lhs_list->is_superselector_of(&rhs_list);
       }
       error("is_superselector expected a CommaComplex_Selector", sub->pstate());
     } else {
@@ -757,7 +757,7 @@ namespace Sass {
       // very special case for wrapped matches selector
       if (Wrapped_Selector_Obj wrapped = SASS_MEMORY_CAST(Wrapped_Selector, lhs)) {
         if (wrapped->name() == ":not") {
-          if (CommaComplex_Selector_Ptr not_list = dynamic_cast<CommaComplex_Selector_Ptr>(wrapped->selector())) {
+          if (CommaComplex_Selector_Ptr not_list = SASS_MEMORY_CAST(CommaComplex_Selector, wrapped->selector())) {
             if (not_list->is_superselector_of(rhs, wrapped->name())) return false;
           } else {
             throw std::runtime_error("wrapped not selector is not a list");
@@ -765,11 +765,11 @@ namespace Sass {
         }
         if (wrapped->name() == ":matches" || wrapped->name() == ":-moz-any") {
           lhs = wrapped->selector();
-          if (CommaComplex_Selector_Ptr list = dynamic_cast<CommaComplex_Selector_Ptr>(wrapped->selector())) {
-            if (Compound_Selector_Ptr comp = dynamic_cast<Compound_Selector_Ptr>(rhs)) {
+          if (CommaComplex_Selector_Obj list = SASS_MEMORY_CAST(CommaComplex_Selector, wrapped->selector())) {
+            if (Compound_Selector_Obj comp = SASS_MEMORY_CAST_PTR(Compound_Selector, rhs)) {
               if (!wrapping.empty() && wrapping != wrapped->name()) return false;
               if (wrapping.empty() || wrapping != wrapped->name()) {;
-                if (list->is_superselector_of(comp, wrapped->name())) return true;
+                if (list->is_superselector_of(&comp, wrapped->name())) return true;
               }
             }
           }
@@ -793,7 +793,7 @@ namespace Sass {
       Selector_Obj r = &(*rhs)[n];
       if (Wrapped_Selector_Obj wrapped = SASS_MEMORY_CAST(Wrapped_Selector, r)) {
         if (wrapped->name() == ":not") {
-          if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(wrapped->selector())) {
+          if (CommaComplex_Selector_Ptr ls = SASS_MEMORY_CAST(CommaComplex_Selector, wrapped->selector())) {
             ls->remove_parent_selectors();
             if (is_superselector_of(ls, wrapped->name())) return false;
           }
@@ -802,7 +802,7 @@ namespace Sass {
           if (!wrapping.empty()) {
             if (wrapping != wrapped->name()) return false;
           }
-          if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(wrapped->selector())) {
+          if (CommaComplex_Selector_Ptr ls = SASS_MEMORY_CAST(CommaComplex_Selector, wrapped->selector())) {
             ls->remove_parent_selectors();
             return (is_superselector_of(ls, wrapped->name()));
           }
@@ -1248,7 +1248,7 @@ namespace Sass {
 
       for (Simple_Selector_Obj ss : head->elements()) {
         if (Wrapped_Selector_Ptr ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
-          if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(ws->selector())) {
+          if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, ws->selector())) {
             if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, implicit_parent));
           }
         }
@@ -1463,7 +1463,7 @@ namespace Sass {
 
   bool Selector_Schema_Ref::has_parent_ref()
   {
-    if (String_Schema_Obj schema = SASS_MEMORY_CAST_PTR(String_Schema, contents())) {
+    if (String_Schema_Obj schema = SASS_MEMORY_CAST(String_Schema, contents())) {
       return schema->length() > 0 && SASS_MEMORY_CAST(Parent_Selector, schema->at(0)) != NULL;
     }
     return false;
@@ -1471,9 +1471,9 @@ namespace Sass {
 
   bool Selector_Schema_Ref::has_real_parent_ref()
   {
-    if (String_Schema_Obj schema = SASS_MEMORY_CAST_PTR(String_Schema, contents())) {
-      Parent_Selector_Ptr p = SASS_MEMORY_CAST(Parent_Selector, schema->at(0));
-      return schema->length() > 0 && p != NULL && p->is_real_parent_ref();
+    if (String_Schema_Obj schema = SASS_MEMORY_CAST(String_Schema, contents())) {
+      Parent_Selector_Obj p = SASS_MEMORY_CAST(Parent_Selector, schema->at(0));
+      return schema->length() > 0 && p && p->is_real_parent_ref();
     }
     return false;
   }
