@@ -1860,10 +1860,10 @@ namespace Sass {
   // Thunks for delayed evaluation.
   /////////////////////////////////
   class Thunk_Ref : public Expression_Ref {
-    ADD_PROPERTY(Expression_Ptr, expression)
+    ADD_PROPERTY(Expression_Obj, expression)
     ADD_PROPERTY(Env*, environment)
   public:
-    Thunk_Ref(ParserState pstate, Expression_Ptr exp, Env* env = 0)
+    Thunk_Ref(ParserState pstate, Expression_Obj exp, Env* env = 0)
     : Expression_Ref(pstate), expression_(exp), environment_(env)
     { }
   };
@@ -1873,11 +1873,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////
   class Parameter_Ref : public AST_Node_Ref {
     ADD_PROPERTY(std::string, name)
-    ADD_PROPERTY(Expression_Ptr, default_value)
+    ADD_PROPERTY(Expression_Obj, default_value)
     ADD_PROPERTY(bool, is_rest_parameter)
   public:
     Parameter_Ref(ParserState pstate,
-              std::string n, Expression_Ptr def = 0, bool rest = false)
+              std::string n, Expression_Obj def = 0, bool rest = false)
     : AST_Node_Ref(pstate), name_(n), default_value_(def), is_rest_parameter_(rest)
     {
       if (default_value_ && is_rest_parameter_) {
@@ -1941,7 +1941,7 @@ namespace Sass {
     // maybe we have optional flag
     ADD_PROPERTY(bool, is_optional)
     // parent block pointers
-    ADD_PROPERTY(Media_Block_Ptr, media_block)
+    ADD_PROPERTY(Media_Block_Obj, media_block)
   protected:
     size_t hash_;
   public:
@@ -1959,7 +1959,7 @@ namespace Sass {
     virtual unsigned long specificity() {
       return 0;
     }
-    virtual void set_media_block(Media_Block_Ptr mb) {
+    virtual void set_media_block(Media_Block_Obj mb) {
       media_block(mb);
     }
     virtual bool has_wrapped_selector() {
