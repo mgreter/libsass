@@ -1283,7 +1283,7 @@ namespace Sass {
   }
 
   // return the last tail that is defined
-  Complex_Selector_Ptr Complex_Selector_Ref::first()
+  Complex_Selector_Obj Complex_Selector_Ref::first()
   {
     // declare variables used in loop
     Complex_Selector_Obj cur = this;
@@ -1305,7 +1305,7 @@ namespace Sass {
   }
 
   // return the last tail that is defined
-  Complex_Selector_Ptr Complex_Selector_Ref::last()
+  Complex_Selector_Obj Complex_Selector_Ref::last()
   {
     // ToDo: implement with a while loop
     return tail_? tail_->last() : this;

@@ -2084,7 +2084,7 @@ namespace Sass {
     if (b->is_root()) {
       // debug_subset_map(subset_map);
       for(auto const &it : subset_map.values()) {
-        Complex_Selector_Ptr sel = it.first ? it.first->first() : NULL;
+        Complex_Selector_Ptr sel = it.first ? &it.first->first() : NULL;
         Compound_Selector_Ptr ext = it.second ? it.second : NULL;
         if (ext && (ext->extended() || ext->is_optional())) continue;
         std::string str_sel(sel->to_string({ NESTED, 5 }));
