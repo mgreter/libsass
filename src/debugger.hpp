@@ -72,7 +72,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")"
     << " [name:" << trace->name() << "]"
     << std::endl;
-    debug_ast(trace->block(), ind + " ", env);
+    debug_ast(&trace->oblock(), ind + " ", env);
   } else if (dynamic_cast<At_Root_Block_Ptr>(node)) {
     At_Root_Block_Ptr root_block = dynamic_cast<At_Root_Block_Ptr>(node);
     std::cerr << ind << "At_Root_Block " << root_block;
@@ -80,7 +80,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " " << root_block->tabs();
     std::cerr << std::endl;
     debug_ast(root_block->expression(), ind + ":", env);
-    debug_ast(root_block->block(), ind + " ", env);
+    debug_ast(&root_block->oblock(), ind + " ", env);
   } else if (dynamic_cast<CommaComplex_Selector_Ptr>(node)) {
     CommaComplex_Selector_Ptr selector = dynamic_cast<CommaComplex_Selector_Ptr>(node);
     std::cerr << ind << "CommaComplex_Selector " << selector;
@@ -291,14 +291,14 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(&block->media_queries(), ind + " =@ ");
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (block->oblock()) for(auto i : block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<Supports_Block_Ptr>(node)) {
     Supports_Block_Ptr block = dynamic_cast<Supports_Block_Ptr>(node);
     std::cerr << ind << "Supports_Block " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(&block->condition(), ind + " =@ ");
-    debug_ast(block->block(), ind + " <>");
+    debug_ast(&block->oblock(), ind + " <>");
   } else if (dynamic_cast<Supports_Operator_Ptr>(node)) {
     Supports_Operator_Ptr block = dynamic_cast<Supports_Operator_Ptr>(node);
     std::cerr << ind << "Supports_Operator " << block;
@@ -363,7 +363,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->predicate(), ind + " = ");
-    debug_ast(block->block(), ind + " <>");
+    debug_ast(&block->oblock(), ind + " <>");
     debug_ast(&block->alternative(), ind + " ><");
   } else if (dynamic_cast<Return_Ptr>(node)) {
     Return_Ptr block = dynamic_cast<Return_Ptr>(node);
@@ -409,14 +409,14 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->property(), ind + " prop: ", env);
     debug_ast(block->value(), ind + " value: ", env);
-    debug_ast(block->block(), ind + " ", env);
+    debug_ast(&block->oblock(), ind + " ", env);
   } else if (dynamic_cast<Keyframe_Rule_Ptr>(node)) {
     Keyframe_Rule_Ptr has_block = dynamic_cast<Keyframe_Rule_Ptr>(node);
     std::cerr << ind << "Keyframe_Rule " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
     if (has_block->selector2()) debug_ast(&has_block->selector2(), ind + "@");
-    if (has_block->block()) for(auto i : has_block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (has_block->oblock()) for(auto i : has_block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<Directive_Ptr>(node)) {
     Directive_Ptr block = dynamic_cast<Directive_Ptr>(node);
     std::cerr << ind << "Directive " << block;
@@ -424,25 +424,25 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " [" << block->keyword() << "] " << block->tabs() << std::endl;
     debug_ast(&block->selector(), ind + "~", env);
     debug_ast(&block->value(), ind + "+", env);
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (block->oblock()) for(auto i : block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<Each_Ptr>(node)) {
     Each_Ptr block = dynamic_cast<Each_Ptr>(node);
     std::cerr << ind << "Each " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (block->oblock()) for(auto i : block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<For_Ptr>(node)) {
     For_Ptr block = dynamic_cast<For_Ptr>(node);
     std::cerr << ind << "For " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (block->oblock()) for(auto i : block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<While_Ptr>(node)) {
     While_Ptr block = dynamic_cast<While_Ptr>(node);
     std::cerr << ind << "While " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(auto i : block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (block->oblock()) for(auto i : block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<Definition_Ptr>(node)) {
     Definition_Ptr block = dynamic_cast<Definition_Ptr>(node);
     std::cerr << ind << "Definition " << block;
@@ -454,14 +454,14 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " [native: " << block->native_function() << "] ";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->parameters(), ind + " params: ", env);
-    if (block->block()) debug_ast(block->block(), ind + " ", env);
+    if (block->oblock()) debug_ast(&block->oblock(), ind + " ", env);
   } else if (dynamic_cast<Mixin_Call_Ptr>(node)) {
     Mixin_Call_Ptr block = dynamic_cast<Mixin_Call_Ptr>(node);
     std::cerr << ind << "Mixin_Call " << block << " " << block->tabs();
     std::cerr << " [" <<  block->name() << "]";
     std::cerr << " [has_content: " << block->has_content() << "] " << std::endl;
     debug_ast(&block->arguments(), ind + " args: ");
-    if (block->block()) debug_ast(block->block(), ind + " ", env);
+    if (block->oblock()) debug_ast(&block->oblock(), ind + " ", env);
   } else if (Ruleset_Ptr ruleset = dynamic_cast<Ruleset_Ptr>(node)) {
     std::cerr << ind << "Ruleset " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -471,7 +471,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
     debug_ast(&ruleset->selector(), ind + ">");
-    debug_ast(ruleset->block(), ind + " ");
+    debug_ast(&ruleset->oblock(), ind + " ");
   } else if (dynamic_cast<Block_Ptr>(node)) {
     Block_Ptr block = dynamic_cast<Block_Ptr>(node);
     std::cerr << ind << "Block " << block;
@@ -683,7 +683,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << ind << "Has_Block " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
-    if (has_block->block()) for(auto i : has_block->block()->elements()) { debug_ast(&i, ind + " ", env); }
+    if (has_block->oblock()) for(auto i : has_block->oblock()->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<Statement_Ptr>(node)) {
     Statement_Ptr statement = dynamic_cast<Statement_Ptr>(node);
     std::cerr << ind << "Statement " << statement;
