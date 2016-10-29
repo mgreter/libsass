@@ -835,8 +835,8 @@ namespace Sass {
   {
 
     // get last tails (on the right side)
-    Complex_Selector_Ptr l_last = this->last();
-    Complex_Selector_Ptr r_last = other->last();
+    Complex_Selector_Obj l_last = this->last();
+    Complex_Selector_Obj r_last = other->last();
 
     // check valid pointers (assertion)
     SASS_ASSERT(l_last, "lhs is null");
@@ -947,10 +947,10 @@ namespace Sass {
     // check for selectors with leading or trailing combinators
     if (!lhs->head() || !rhs->head())
     { return false; }
-    Complex_Selector_Ptr_Const l_innermost = lhs->innermost();
+    Complex_Selector_Obj l_innermost = lhs->innermost();
     if (l_innermost->combinator() != Complex_Selector_Ref::ANCESTOR_OF)
     { return false; }
-    Complex_Selector_Ptr_Const r_innermost = rhs->innermost();
+    Complex_Selector_Obj r_innermost = rhs->innermost();
     if (r_innermost->combinator() != Complex_Selector_Ref::ANCESTOR_OF)
     { return false; }
     // more complex (i.e., longer) selectors are always more specific
@@ -1150,7 +1150,7 @@ namespace Sass {
 
     if (head && head->length() > 0) {
 
-      CommaComplex_Selector_Ptr retval = 0;
+      CommaComplex_Selector_Obj retval;
       // we have a parent selector in a simple compound list
       // mix parent complex selector into the compound list
       if (SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) {
@@ -1254,7 +1254,7 @@ namespace Sass {
         }
       }
 
-      return retval;
+      return &retval;
 
     }
     // has no head
