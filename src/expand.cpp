@@ -175,26 +175,26 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Media_Block_Ptr m)
   {
     media_block_stack.push_back(m);
-    Expression_Ptr mq = m->media_queries()->perform(&eval);
+    Expression_Obj mq = m->media_queries()->perform(&eval);
     std::string str_mq(mq->to_string(ctx.c_options));
     char* str = sass_copy_c_string(str_mq.c_str());
     ctx.strings.push_back(str);
     Parser p(Parser::from_c_str(str, ctx, mq->pstate()));
     mq = &p.parse_media_queries();
-    Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
+    Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      static_cast<List_Ptr>(mq->perform(&eval)),
+                                      SASS_MEMORY_CAST_PTR(List, mq->perform(&eval)),
                                       operator()(m->block()),
                                       0);
     media_block_stack.pop_back();
     mm->tabs(m->tabs());
-    return mm;
+    return &mm;
   }
 
   Statement_Ptr Expand::operator()(At_Root_Block_Ptr a)
   {
     Block_Obj ab = a->block();
-    Expression_Ptr ae = a->expression();
+    Expression_Obj ae = a->expression();
 
     if (ae) ae = ae->perform(&eval);
     else ae = SASS_MEMORY_NEW(ctx.mem, At_Root_Query, a->pstate());
@@ -205,11 +205,11 @@ namespace Sass {
                                        ;
 
     Block_Obj bb = ab ? operator()(&ab) : NULL;
-    At_Root_Block_Ptr aa = SASS_MEMORY_NEW(ctx.mem, At_Root_Block,
+    At_Root_Block_Obj aa = SASS_MEMORY_NEW(ctx.mem, At_Root_Block,
                                         a->pstate(),
                                         bb,
-                                        static_cast<At_Root_Query_Ptr>(ae));
-    return aa;
+                                        SASS_MEMORY_CAST(At_Root_Query, ae));
+    return &aa;
   }
 
   Statement_Ptr Expand::operator()(Directive_Ptr a)
@@ -220,36 +220,36 @@ namespace Sass {
     Expression_Obj av = a->value();
     selector_stack.push_back(0);
     if (av) av = av->perform(&eval);
-    if (as) as = dynamic_cast<Selector_Ptr>(as->perform(&eval));
+    if (as) as = SASS_MEMORY_CAST_PTR(Selector, as->perform(&eval));
     selector_stack.pop_back();
     Block_Obj bb = ab ? operator()(&ab) : NULL;
-    Directive_Ptr aa = SASS_MEMORY_NEW(ctx.mem, Directive,
+    Directive_Obj aa = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   a->pstate(),
                                   a->keyword(),
-                                  as,
+                                  &as,
                                   bb,
                                   av);
-    return aa;
+    return &aa;
   }
 
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
   {
     Block_Obj ab = d->block();
-    String_Ptr old_p = d->property();
-    String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
-    Expression_Ptr value = d->value()->perform(&eval);
+    String_Obj old_p = d->property();
+    String_Obj new_p = SASS_MEMORY_CAST_PTR(String, old_p->perform(&eval));
+    Expression_Obj value = d->value()->perform(&eval);
     Block_Obj bb = ab ? operator()(&ab) : NULL;
     if (!bb) {
       if (!value || (value->is_invisible() && !d->is_important())) return 0;
     }
-    Declaration_Ptr decl = SASS_MEMORY_NEW(ctx.mem, Declaration,
+    Declaration_Obj decl = SASS_MEMORY_NEW(ctx.mem, Declaration,
                                         d->pstate(),
-                                        new_p,
-                                        value,
+                                        &new_p,
+                                        &value,
                                         d->is_important(),
                                         bb);
     decl->tabs(d->tabs());
-    return decl;
+    return &decl;
   }
 
   Statement_Ptr Expand::operator()(Assignment_Ptr a)
