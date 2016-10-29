@@ -215,7 +215,7 @@ namespace Sass {
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       &m->media_queries(),
-                                      operator()(m->block()));
+                                      operator()(&m->oblock()));
     mm->tabs(m->tabs());
 
     p_stack.pop_back();
@@ -225,7 +225,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::operator()(Supports_Block_Ptr m)
   {
-    if (!m->block()->length())
+    if (!m->oblock()->length())
     { return m; }
 
     if (parent()->statement_type() == Statement_Ref::RULESET)
@@ -236,7 +236,7 @@ namespace Sass {
     Supports_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        m->pstate(),
                                        &m->condition(),
-                                       operator()(m->block()));
+                                       operator()(&m->oblock()));
     mm->tabs(m->tabs());
 
     p_stack.pop_back();
@@ -348,7 +348,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-    new_rule->block()->concat(m->block());
+    new_rule->oblock()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
     wrapper_block->append(new_rule);
@@ -449,7 +449,7 @@ namespace Sass {
           result->append(&slice);
         }
         else if (previous_parent) {
-          previous_parent->block()->concat(&slice);
+          previous_parent->oblock()->concat(&slice);
         }
         else {
           previous_parent = static_cast<Has_Block_Ptr>(shallow_copy(parent));
