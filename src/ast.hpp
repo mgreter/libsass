@@ -455,11 +455,10 @@ namespace Sass {
   // Abstract base class for statements that contain blocks of statements.
   ////////////////////////////////////////////////////////////////////////
   class Has_Block_Ref : public Statement_Ref {
-    // ADD_PROPERTY(Block_Ptr, block)
     ADD_PROPERTY(Block_Obj, oblock)
   public:
     Has_Block_Ref(ParserState pstate, Block_Obj b)
-    : Statement_Ref(pstate), /* block_(&b), */ oblock_(b)
+    : Statement_Ref(pstate), oblock_(b)
     { }
     virtual bool has_content()
     {
@@ -520,7 +519,7 @@ namespace Sass {
     Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Obj b)
     : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
-    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Obj b, Selector_Ptr s)
+    Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Obj b, Selector_Obj s)
     : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
@@ -572,13 +571,13 @@ namespace Sass {
   // Declarations -- style rules consisting of a property name and values.
   ////////////////////////////////////////////////////////////////////////
   class Declaration_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(String_Ptr, property)
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(String_Obj, property)
+    ADD_PROPERTY(Expression_Obj, value)
     ADD_PROPERTY(bool, is_important)
     ADD_PROPERTY(bool, is_indented)
   public:
     Declaration_Ref(ParserState pstate,
-                String_Ptr prop, Expression_Ptr val, bool i = false, Block_Obj b = 0)
+                String_Obj prop, Expression_Obj val, bool i = false, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), property_(prop), value_(val), is_important_(i), is_indented_(false)
     { statement_type(DECLARATION); }
     ATTACH_OPERATIONS()
@@ -589,12 +588,12 @@ namespace Sass {
   /////////////////////////////////////
   class Assignment_Ref : public Statement_Ref {
     ADD_PROPERTY(std::string, variable)
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(Expression_Obj, value)
     ADD_PROPERTY(bool, is_default)
     ADD_PROPERTY(bool, is_global)
   public:
     Assignment_Ref(ParserState pstate,
-               std::string var, Expression_Ptr val,
+               std::string var, Expression_Obj val,
                bool is_default = false,
                bool is_global = false)
     : Statement_Ref(pstate), variable_(var), value_(val), is_default_(is_default), is_global_(is_global)

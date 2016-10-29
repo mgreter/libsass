@@ -38,10 +38,10 @@ namespace Sass {
 
   Statement_Ptr Cssize::operator()(Declaration_Ptr d)
   {
-    String_Ptr property = dynamic_cast<String_Ptr>(d->property());
+    String_Obj property = SASS_MEMORY_CAST(String, d->property());
 
     if (Declaration_Ptr dd = dynamic_cast<Declaration_Ptr>(parent())) {
-      String_Ptr parent_property = dynamic_cast<String_Ptr>(dd->property());
+      String_Obj parent_property = SASS_MEMORY_CAST(String, dd->property());
       property = SASS_MEMORY_NEW(ctx.mem, String_Constant,
                                  d->property()->pstate(),
                                  parent_property->to_string() + "-" + property->to_string());

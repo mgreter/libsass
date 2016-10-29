@@ -401,14 +401,14 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << ind << "Assignment " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << block->variable() << ">> " << block->tabs() << std::endl;
-    debug_ast(block->value(), ind + "=", env);
+    debug_ast(&block->value(), ind + "=", env);
   } else if (dynamic_cast<Declaration_Ptr>(node)) {
     Declaration_Ptr block = dynamic_cast<Declaration_Ptr>(node);
     std::cerr << ind << "Declaration " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    debug_ast(block->property(), ind + " prop: ", env);
-    debug_ast(block->value(), ind + " value: ", env);
+    debug_ast(&block->property(), ind + " prop: ", env);
+    debug_ast(&block->value(), ind + " value: ", env);
     debug_ast(&block->oblock(), ind + " ", env);
   } else if (dynamic_cast<Keyframe_Rule_Ptr>(node)) {
     Keyframe_Rule_Ptr has_block = dynamic_cast<Keyframe_Rule_Ptr>(node);

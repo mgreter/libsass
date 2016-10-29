@@ -2173,8 +2173,8 @@ if (DBG) std::cerr << "complex 2\n";
     if (!declaration) error("@supports condition expected declaration", pstate);
     cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Declaration,
                      declaration->pstate(),
-                     declaration->property(),
-                     declaration->value());
+                     &declaration->property(),
+                     &declaration->value());
     // ToDo: maybe we need an additional error condition?
     return cond;
   }

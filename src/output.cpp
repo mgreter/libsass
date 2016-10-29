@@ -143,16 +143,16 @@ namespace Sass {
       if (dynamic_cast<Declaration_Ptr>(&stm)) {
         Declaration_Ptr dec = static_cast<Declaration_Ptr>(&stm);
         if (dec->value()->concrete_type() == Expression::STRING) {
-          String_Constant_Ptr valConst = static_cast<String_Constant_Ptr>(dec->value());
+          String_Constant_Obj valConst = SASS_MEMORY_CAST(String_Constant, dec->value());
           std::string val(valConst->value());
-          if (auto qstr = dynamic_cast<String_Quoted_Ptr>(valConst)) {
+          if (String_Quoted_Obj qstr = SASS_MEMORY_CAST(String_Quoted, valConst)) {
             if (!qstr->quote_mark() && val.empty()) {
               bPrintExpression = false;
             }
           }
         }
         else if (dec->value()->concrete_type() == Expression::LIST) {
-          List_Ptr list = static_cast<List_Ptr>(dec->value());
+          List_Obj list = SASS_MEMORY_CAST(List, dec->value());
           bool all_invisible = true;
           for (size_t list_i = 0, list_L = list->length(); list_i < list_L; ++list_i) {
             Expression_Obj item = list->at(list_i);

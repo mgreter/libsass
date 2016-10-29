@@ -513,9 +513,9 @@ namespace Sass {
 
     bool isPrintable(Declaration_Ptr d, Sass_Output_Style style)
     {
-      Expression_Ptr val = d->value();
-      if (String_Quoted_Ptr sq = dynamic_cast<String_Quoted_Ptr>(val)) return isPrintable(sq, style);
-      if (String_Constant_Ptr sc = dynamic_cast<String_Constant_Ptr>(val)) return isPrintable(sc, style);
+      Expression_Obj val = d->value();
+      if (String_Quoted_Obj sq = SASS_MEMORY_CAST(String_Quoted, val)) return isPrintable(&sq, style);
+      if (String_Constant_Obj sc = SASS_MEMORY_CAST(String_Constant, val)) return isPrintable(&sc, style);
       return true;
     }
 
