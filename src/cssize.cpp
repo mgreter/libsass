@@ -174,7 +174,8 @@ namespace Sass {
     {
       Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
       bb->concat(&props);
-      rr->block(&bb);
+      rr->oblock(bb);
+      rr->block(&rr->oblock());
 
       for (size_t i = 0, L = rules->length(); i < L; i++)
       {
@@ -220,7 +221,7 @@ namespace Sass {
 
     p_stack.pop_back();
 
-    return &debubble(mm->block(), &mm);
+    return &debubble(&mm->oblock(), &mm);
   }
 
   Statement_Ptr Cssize::operator()(Supports_Block_Ptr m)
@@ -241,7 +242,7 @@ namespace Sass {
 
     p_stack.pop_back();
 
-    return &debubble(mm->block(), mm);
+    return &debubble(&mm->oblock(), mm);
   }
 
   Statement_Ptr Cssize::operator()(At_Root_Block_Ptr m)
@@ -279,7 +280,7 @@ namespace Sass {
     new_rule->oblock(bb);
     new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
-    new_rule->oblock()->concat(m->block());
+    new_rule->oblock()->concat(&m->oblock());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock() ? m->oblock()->pstate() : m->pstate());
     wrapper_block->append(new_rule);
@@ -301,7 +302,7 @@ namespace Sass {
     new_rule->oblock(bb);
     new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
-    new_rule->oblock()->concat(m->block());
+    new_rule->oblock()->concat(&m->oblock());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
     wrapper_block->append(new_rule);
@@ -323,7 +324,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-    new_rule->oblock()->concat(m->block());
+    new_rule->oblock()->concat(&m->oblock());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
     wrapper_block->append(new_rule);
@@ -348,7 +349,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-    new_rule->oblock()->concat(m->block());
+    new_rule->oblock()->concat(&m->oblock());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
     wrapper_block->append(new_rule);
