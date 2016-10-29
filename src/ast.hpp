@@ -2440,7 +2440,7 @@ namespace Sass {
 
     Compound_Selector_Ptr clone(Context&) const; // does not clone the Simple_Selectors
 
-    Compound_Selector_Ptr minus(Compound_Selector_Ptr rhs, Context& ctx);
+    Compound_Selector_Obj minus(Compound_Selector_Obj rhs, Context& ctx);
     ATTACH_OPERATIONS()
   };
 
@@ -2456,7 +2456,7 @@ namespace Sass {
     ADD_PROPERTY(Combinator, combinator)
     ADD_PROPERTY(Compound_Selector_Obj, head)
     ADD_PROPERTY(Complex_Selector_Obj, tail)
-    ADD_PROPERTY(String_Ptr, reference);
+    ADD_PROPERTY(String_Obj, reference);
   public:
     bool contains_placeholder() {
       if (head() && head()->contains_placeholder()) return true;
@@ -2467,7 +2467,7 @@ namespace Sass {
                      Combinator c = ANCESTOR_OF,
                      Compound_Selector_Obj h = 0,
                      Complex_Selector_Obj t = 0,
-                     String_Ptr r = 0)
+                     String_Obj r = 0)
     : Selector_Ref(pstate),
       combinator_(c),
       head_(h), tail_(t),
@@ -2479,7 +2479,7 @@ namespace Sass {
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
 
-    Complex_Selector_Ptr skip_empty_reference()
+    Complex_Selector_Obj skip_empty_reference()
     {
       if ((!head_ || !head_->length() || head_->is_empty_reference()) &&
           combinator() == Combinator::ANCESTOR_OF)
@@ -2499,7 +2499,7 @@ namespace Sass {
              combinator() == Combinator::ANCESTOR_OF;
     }
 
-    Complex_Selector_Ptr context(Context&);
+    Complex_Selector_Obj context(Context&);
 
 
     // front returns the first real tail

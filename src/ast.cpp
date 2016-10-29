@@ -1028,11 +1028,11 @@ namespace Sass {
     return 1 + tail()->length();
   }
 
-  Complex_Selector_Ptr Complex_Selector_Ref::context(Context& ctx)
+  Complex_Selector_Obj Complex_Selector_Ref::context(Context& ctx)
   {
     if (!tail()) return 0;
     if (!head()) return tail()->context(ctx);
-    Complex_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate(), combinator(), head(), tail()->context(ctx));
+    Complex_Selector_Obj cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate(), combinator(), head(), tail()->context(ctx));
     cpy->media_block(media_block());
     return cpy;
   }
@@ -1046,7 +1046,7 @@ namespace Sass {
 
     Complex_Selector_Obj t = ss->tail();
     Combinator c = ss->combinator();
-    String_Ptr r = ss->reference();
+    String_Obj r = ss->reference();
     Compound_Selector_Obj h = ss->head();
 
     if (ss->has_line_feed()) has_line_feed(true);
@@ -1601,9 +1601,9 @@ namespace Sass {
     return *this;
   }
 
-  Compound_Selector_Ptr Compound_Selector_Ref::minus(Compound_Selector_Ptr rhs, Context& ctx)
+  Compound_Selector_Obj Compound_Selector_Ref::minus(Compound_Selector_Obj rhs, Context& ctx)
   {
-    Compound_Selector_Ptr result = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate());
+    Compound_Selector_Obj result = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate());
     // result->has_parent_reference(has_parent_reference());
 
     // not very efficient because it needs to preserve order

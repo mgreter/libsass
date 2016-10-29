@@ -1590,7 +1590,7 @@ namespace Sass {
 
       // TODO: This can return a Compound_Selector with no elements. Should that just be returning NULL?
       // RUBY: self_without_sel = Sass::Util.array_minus(members, sels)
-      Compound_Selector_Ptr pSelectorWithoutExtendSelectors = pSelector->minus(pExtCompoundSelector, ctx);
+      Compound_Selector_Obj pSelectorWithoutExtendSelectors = pSelector->minus(pExtCompoundSelector, ctx);
 
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelector, "MEMBERS: "))
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelectorWithoutExtendSelectors, "SELF_WO_SEL: "))
