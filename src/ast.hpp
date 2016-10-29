@@ -458,7 +458,7 @@ namespace Sass {
     ADD_PROPERTY(Block_Obj, oblock)
   public:
     Has_Block_Ref(ParserState pstate, Block_Obj b)
-    : Statement_Ref(pstate), /* block_(&b), */ oblock_(&b)
+    : Statement_Ref(pstate), /* block_(&b), */ oblock_(b)
     { }
     virtual bool has_content()
     {
@@ -676,10 +676,10 @@ namespace Sass {
   // CSS comments. These may be interpolated.
   ///////////////////////////////////////////
   class Comment_Ref : public Statement_Ref {
-    ADD_PROPERTY(String_Ptr, text)
+    ADD_PROPERTY(String_Obj, text)
     ADD_PROPERTY(bool, is_important)
   public:
-    Comment_Ref(ParserState pstate, String_Ptr txt, bool is_important)
+    Comment_Ref(ParserState pstate, String_Obj txt, bool is_important)
     : Statement_Ref(pstate), text_(txt), is_important_(is_important)
     { statement_type(COMMENT); }
     virtual bool is_invisible() const
@@ -691,10 +691,10 @@ namespace Sass {
   // The Sass `@if` control directive.
   ////////////////////////////////////
   class If_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(Expression_Ptr, predicate)
+    ADD_PROPERTY(Expression_Obj, predicate)
     ADD_PROPERTY(Block_Obj, alternative)
   public:
-    If_Ref(ParserState pstate, Expression_Ptr pred, Block_Obj con, Block_Obj alt = 0)
+    If_Ref(ParserState pstate, Expression_Obj pred, Block_Obj con, Block_Obj alt = 0)
     : Has_Block_Ref(pstate, &con), predicate_(pred), alternative_(alt)
     { statement_type(IF); }
     virtual bool has_content()
@@ -709,12 +709,12 @@ namespace Sass {
   /////////////////////////////////////
   class For_Ref : public Has_Block_Ref {
     ADD_PROPERTY(std::string, variable)
-    ADD_PROPERTY(Expression_Ptr, lower_bound)
-    ADD_PROPERTY(Expression_Ptr, upper_bound)
+    ADD_PROPERTY(Expression_Obj, lower_bound)
+    ADD_PROPERTY(Expression_Obj, upper_bound)
     ADD_PROPERTY(bool, is_inclusive)
   public:
     For_Ref(ParserState pstate,
-        std::string var, Expression_Ptr lo, Expression_Ptr hi, Block_Obj b, bool inc)
+        std::string var, Expression_Obj lo, Expression_Obj hi, Block_Obj b, bool inc)
     : Has_Block_Ref(pstate, b),
       variable_(var), lower_bound_(lo), upper_bound_(hi), is_inclusive_(inc)
     { statement_type(FOR); }
@@ -726,9 +726,9 @@ namespace Sass {
   //////////////////////////////////////
   class Each_Ref : public Has_Block_Ref {
     ADD_PROPERTY(std::vector<std::string>, variables)
-    ADD_PROPERTY(Expression_Ptr, list)
+    ADD_PROPERTY(Expression_Obj, list)
   public:
-    Each_Ref(ParserState pstate, std::vector<std::string> vars, Expression_Ptr lst, Block_Obj b)
+    Each_Ref(ParserState pstate, std::vector<std::string> vars, Expression_Obj lst, Block_Obj b)
     : Has_Block_Ref(pstate, b), variables_(vars), list_(lst)
     { statement_type(EACH); }
     ATTACH_OPERATIONS()
@@ -762,9 +762,9 @@ namespace Sass {
   // The Sass `@extend` directive.
   ////////////////////////////////
   class Extension_Ref : public Statement_Ref {
-    ADD_PROPERTY(Selector_Ptr, selector)
+    ADD_PROPERTY(Selector_Obj, selector)
   public:
-    Extension_Ref(ParserState pstate, Selector_Ptr s)
+    Extension_Ref(ParserState pstate, Selector_Obj s)
     : Statement_Ref(pstate), selector_(s)
     { statement_type(EXTEND); }
     ATTACH_OPERATIONS()
@@ -863,7 +863,7 @@ namespace Sass {
   // The @content directive for mixin content blocks.
   ///////////////////////////////////////////////////
   class Content_Ref : public Statement_Ref {
-    ADD_PROPERTY(Media_Block_Ptr, media_block)
+    ADD_PROPERTY(Media_Block_Obj, media_block)
   public:
     Content_Ref(ParserState pstate) : Statement_Ref(pstate)
     { statement_type(CONTENT); }

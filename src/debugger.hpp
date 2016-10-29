@@ -356,13 +356,13 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() <<
       " <" << prettyprint(block->pstate().token.ws_before()) << ">" << std::endl;
-    debug_ast(block->text(), ind + "// ", env);
+    debug_ast(&block->text(), ind + "// ", env);
   } else if (dynamic_cast<If_Ptr>(node)) {
     If_Ptr block = dynamic_cast<If_Ptr>(node);
     std::cerr << ind << "If " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    debug_ast(block->predicate(), ind + " = ");
+    debug_ast(&block->predicate(), ind + " = ");
     debug_ast(&block->oblock(), ind + " <>");
     debug_ast(&block->alternative(), ind + " ><");
   } else if (dynamic_cast<Return_Ptr>(node)) {
@@ -375,7 +375,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << ind << "Extension " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    debug_ast(block->selector(), ind + "-> ", env);
+    debug_ast(&block->selector(), ind + "-> ", env);
   } else if (dynamic_cast<Content_Ptr>(node)) {
     Content_Ptr block = dynamic_cast<Content_Ptr>(node);
     std::cerr << ind << "Content " << block;
