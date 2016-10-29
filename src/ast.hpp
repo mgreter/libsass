@@ -1037,12 +1037,12 @@ namespace Sass {
   class Binary_Expression_Ref : public PreValue_Ref {
   private:
     ADD_HASHED(Operand, op)
-    ADD_HASHED(Expression_Ptr, left)
-    ADD_HASHED(Expression_Ptr, right)
+    ADD_HASHED(Expression_Obj, left)
+    ADD_HASHED(Expression_Obj, right)
     size_t hash_;
   public:
     Binary_Expression_Ref(ParserState pstate,
-                      Operand op, Expression_Ptr lhs, Expression_Ptr rhs)
+                      Operand op, Expression_Obj lhs, Expression_Obj rhs)
     : PreValue_Ref(pstate), op_(op), left_(lhs), right_(rhs), hash_(0)
     { }
     const std::string type_name() {

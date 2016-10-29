@@ -89,8 +89,8 @@ namespace Sass {
     Expression_Ptr fallback(U x) { return fallback_impl(x); }
 
     // -- only need to define two comparisons, and the rest can be implemented in terms of them
-    static bool eq(Expression_Ptr, Expression_Ptr);
-    static bool lt(Expression_Ptr, Expression_Ptr, std::string op);
+    static bool eq(Expression_Obj, Expression_Obj);
+    static bool lt(Expression_Obj, Expression_Obj, std::string op);
     // -- arithmetic on the combinations that matter
     static Value_Ptr op_numbers(Memory_Manager&, enum Sass_OP, const Number&, const Number&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
     static Value_Ptr op_number_color(Memory_Manager&, enum Sass_OP, const Number&, const Color&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);

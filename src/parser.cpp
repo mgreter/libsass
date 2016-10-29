@@ -2736,8 +2736,8 @@ if (DBG) std::cerr << "complex 2\n";
     }
     // nested binary expression are never to be delayed
     if (Binary_Expression_Ptr b = dynamic_cast<Binary_Expression_Ptr>(&base)) {
-      if (dynamic_cast<Binary_Expression_Ptr>(b->left())) base->set_delayed(false);
-      if (dynamic_cast<Binary_Expression_Ptr>(b->right())) base->set_delayed(false);
+      if (SASS_MEMORY_CAST(Binary_Expression, b->left())) base->set_delayed(false);
+      if (SASS_MEMORY_CAST(Binary_Expression, b->right())) base->set_delayed(false);
     }
     return base;
   }

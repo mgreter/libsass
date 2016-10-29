@@ -502,7 +502,7 @@ namespace Sass {
     enum Sass_OP op_type = b->type();
 
     // only the last item will be used to eval the binary expression
-    if (String_Schema_Ptr s_l = dynamic_cast<String_Schema_Ptr>(b->left())) {
+    if (String_Schema_Ptr s_l = SASS_MEMORY_CAST(String_Schema, b->left())) {
       if (!s_l->has_interpolant() && (!s_l->is_right_interpolant())) {
         ret_schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, b->pstate());
         Binary_Expression_Obj bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
@@ -515,7 +515,7 @@ namespace Sass {
         return ret_schema->perform(this);
       }
     }
-    if (String_Schema_Ptr s_r = dynamic_cast<String_Schema_Ptr>(b->right())) {
+    if (String_Schema_Ptr s_r = SASS_MEMORY_CAST(String_Schema, b->right())) {
       if (!s_r->has_interpolant() && (!s_r->is_left_interpolant() || op_type == Sass_OP::DIV)) {
         ret_schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, b->pstate());
         Binary_Expression_Obj bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
@@ -538,8 +538,8 @@ namespace Sass {
       return b;
     }
 
-    Expression_Ptr lhs = b->left();
-    Expression_Ptr rhs = b->right();
+    Expression_Obj lhs = b->left();
+    Expression_Obj rhs = b->right();
 
     // fully evaluate their values
     if (op_type == Sass_OP::EQ ||
@@ -563,11 +563,11 @@ namespace Sass {
 
     switch (op_type) {
       case Sass_OP::AND:
-        return *lhs ? b->right()->perform(this) : lhs;
+        return *lhs ? b->right()->perform(this) : &lhs;
         break;
 
       case Sass_OP::OR:
-        return *lhs ? lhs : b->right()->perform(this);
+        return *lhs ? &lhs : b->right()->perform(this);
         break;
 
       default:
@@ -580,10 +580,10 @@ namespace Sass {
     Expression::Concrete_Type r_type = rhs->concrete_type();
 
     // Is one of the operands an interpolant?
-    String_Schema_Ptr s1 = dynamic_cast<String_Schema_Ptr>(b->left());
-    String_Schema_Ptr s2 = dynamic_cast<String_Schema_Ptr>(b->right());
-    Binary_Expression_Ptr b1 = dynamic_cast<Binary_Expression_Ptr>(b->left());
-    Binary_Expression_Ptr b2 = dynamic_cast<Binary_Expression_Ptr>(b->right());
+    String_Schema_Obj s1 = SASS_MEMORY_CAST(String_Schema, b->left());
+    String_Schema_Obj s2 = SASS_MEMORY_CAST(String_Schema, b->right());
+    Binary_Expression_Obj b1 = SASS_MEMORY_CAST(Binary_Expression, b->left());
+    Binary_Expression_Obj b2 = SASS_MEMORY_CAST(Binary_Expression, b->right());
 
     bool schema_op = false;
 
@@ -597,7 +597,7 @@ namespace Sass {
       // If possible upgrade LHS to a number
       if (op_type == Sass_OP::DIV || op_type == Sass_OP::MUL || op_type == Sass_OP::MOD || op_type == Sass_OP::ADD || op_type == Sass_OP::SUB ||
           op_type == Sass_OP::EQ) {
-        if (String_Constant_Ptr str = dynamic_cast<String_Constant_Ptr>(lhs)) {
+        if (String_Constant_Obj str = SASS_MEMORY_CAST(String_Constant, lhs)) {
           std::string value(str->value());
           const char* start = value.c_str();
           if (Prelexer::sequence < Prelexer::dimension, Prelexer::end_of_file >(start) != 0) {
@@ -605,7 +605,7 @@ namespace Sass {
             lhs = lhs->perform(this);
           }
         }
-        if (String_Constant_Ptr str = dynamic_cast<String_Constant_Ptr>(rhs)) {
+        if (String_Constant_Obj str = SASS_MEMORY_CAST(String_Constant, rhs)) {
           std::string value(str->value());
           const char* start = value.c_str();
           if (Prelexer::sequence < Prelexer::number >(start) != 0) {
@@ -671,23 +671,23 @@ namespace Sass {
     try {
       ParserState pstate(b->pstate());
       if (l_type == Expression::NUMBER && r_type == Expression::NUMBER) {
-        Number_Ptr_Const l_n = dynamic_cast<Number_Ptr_Const>(lhs);
-        Number_Ptr_Const r_n = dynamic_cast<Number_Ptr_Const>(rhs);
+        Number_Obj l_n = SASS_MEMORY_CAST(Number, lhs);
+        Number_Obj r_n = SASS_MEMORY_CAST(Number, rhs);
         rv = op_numbers(ctx.mem, op_type, *l_n, *r_n, ctx.c_options, &pstate);
       }
       else if (l_type == Expression::NUMBER && r_type == Expression::COLOR) {
-        Number_Ptr_Const l_n = dynamic_cast<Number_Ptr_Const>(lhs);
-        Color_Ptr_Const r_c = dynamic_cast<Color_Ptr_Const>(rhs);
+        Number_Obj l_n = SASS_MEMORY_CAST(Number, lhs);
+        Color_Obj r_c = SASS_MEMORY_CAST(Color, rhs);
         rv = op_number_color(ctx.mem, op_type, *l_n, *r_c, ctx.c_options, &pstate);
       }
       else if (l_type == Expression::COLOR && r_type == Expression::NUMBER) {
-        Color_Ptr_Const l_c = dynamic_cast<Color_Ptr_Const>(lhs);
-        Number_Ptr_Const r_n = dynamic_cast<Number_Ptr_Const>(rhs);
+        Color_Obj l_c = SASS_MEMORY_CAST(Color, lhs);
+        Number_Obj r_n = SASS_MEMORY_CAST(Number, rhs);
         rv = op_color_number(ctx.mem, op_type, *l_c, *r_n, ctx.c_options, &pstate);
       }
       else if (l_type == Expression::COLOR && r_type == Expression::COLOR) {
-        Color_Ptr_Const l_c = dynamic_cast<Color_Ptr_Const>(lhs);
-        Color_Ptr_Const r_c = dynamic_cast<Color_Ptr_Const>(rhs);
+        Color_Obj l_c = SASS_MEMORY_CAST(Color, lhs);
+        Color_Obj r_c = SASS_MEMORY_CAST(Color, rhs);
         rv = op_colors(ctx.mem, op_type, *l_c, *r_c, ctx.c_options, &pstate);
       }
       else {
@@ -711,10 +711,10 @@ namespace Sass {
         {
           if (str->concrete_type() == Expression::STRING)
           {
-            String_Constant_Ptr lstr = dynamic_cast<String_Constant_Ptr>(lhs);
-            String_Constant_Ptr rstr = dynamic_cast<String_Constant_Ptr>(rhs);
+            String_Constant_Obj lstr = SASS_MEMORY_CAST(String_Constant, lhs);
+            String_Constant_Obj rstr = SASS_MEMORY_CAST(String_Constant, rhs);
             if (op_type != Sass_OP::SUB) {
-              if (String_Constant_Ptr org = lstr ? lstr : rstr)
+              if (String_Constant_Obj org = lstr ? lstr : rstr)
               { str->quote_mark(org->quote_mark()); }
             }
           }
@@ -1380,18 +1380,18 @@ namespace Sass {
 
   // All the binary helpers.
 
-  bool Eval::eq(Expression_Ptr lhs, Expression_Ptr rhs)
+  bool Eval::eq(Expression_Obj lhs, Expression_Obj rhs)
   {
     // use compare operator from ast node
     return lhs && rhs && *lhs == *rhs;
   }
 
-  bool Eval::lt(Expression_Ptr lhs, Expression_Ptr rhs, std::string op)
+  bool Eval::lt(Expression_Obj lhs, Expression_Obj rhs, std::string op)
   {
-    Number_Ptr l = dynamic_cast<Number_Ptr>(lhs);
-    Number_Ptr r = dynamic_cast<Number_Ptr>(rhs);
+    Number_Obj l = SASS_MEMORY_CAST(Number, lhs);
+    Number_Obj r = SASS_MEMORY_CAST(Number, rhs);
     // use compare operator from ast node
-    if (!l || !r) throw Exception::UndefinedOperation(lhs, rhs, op);
+    if (!l || !r) throw Exception::UndefinedOperation(&lhs, &rhs, op);
     // use compare operator from ast node
     return *l < *r;
   }

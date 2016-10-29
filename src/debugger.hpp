@@ -569,8 +569,8 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " [ws_after: " << expression->op().ws_after << "] ";
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->type_name() << "]" << std::endl;
-    debug_ast(expression->left(), ind + " left:  ", env);
-    debug_ast(expression->right(), ind + " right: ", env);
+    debug_ast(&expression->left(), ind + " left:  ", env);
+    debug_ast(&expression->right(), ind + " right: ", env);
   } else if (dynamic_cast<Map_Ptr>(node)) {
     Map_Ptr expression = dynamic_cast<Map_Ptr>(node);
     std::cerr << ind << "Map " << expression;
