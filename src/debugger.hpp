@@ -79,7 +79,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << root_block->tabs();
     std::cerr << std::endl;
-    debug_ast(root_block->expression(), ind + ":", env);
+    debug_ast(&root_block->expression(), ind + ":", env);
     debug_ast(&root_block->oblock(), ind + " ", env);
   } else if (dynamic_cast<CommaComplex_Selector_Ptr>(node)) {
     CommaComplex_Selector_Ptr selector = dynamic_cast<CommaComplex_Selector_Ptr>(node);

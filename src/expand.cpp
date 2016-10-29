@@ -194,7 +194,7 @@ namespace Sass {
   Statement_Ptr Expand::operator()(At_Root_Block_Ptr a)
   {
     Block_Obj ab = a->oblock();
-    Expression_Obj ae = a->expression();
+    Expression_Obj ae = &a->expression();
 
     if (ae) ae = ae->perform(&eval);
     else ae = SASS_MEMORY_NEW(ctx.mem, At_Root_Query, a->pstate());

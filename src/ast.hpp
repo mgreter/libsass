@@ -1792,13 +1792,13 @@ namespace Sass {
   // At-root.
   ///////////
   class At_Root_Block_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(At_Root_Query_Ptr, expression)
+    ADD_PROPERTY(At_Root_Query_Obj, expression)
   public:
-    At_Root_Block_Ref(ParserState pstate, Block_Obj b = 0, At_Root_Query_Ptr e = 0)
+    At_Root_Block_Ref(ParserState pstate, Block_Obj b = 0, At_Root_Query_Obj e = 0)
     : Has_Block_Ref(pstate, b), expression_(e)
     { statement_type(ATROOT); }
     bool bubbles() { return true; }
-    bool exclude_node(Statement_Ptr s) {
+    bool exclude_node(Statement_Obj s) {
       if (expression() == 0)
       {
         return s->statement_type() == Statement_Ref::RULESET;
@@ -1806,7 +1806,7 @@ namespace Sass {
 
       if (s->statement_type() == Statement_Ref::DIRECTIVE)
       {
-        if (Directive_Ptr dir = dynamic_cast<Directive_Ptr>(s))
+        if (Directive_Ptr dir = SASS_MEMORY_CAST(Directive, s))
         {
           std::string keyword(dir->keyword());
           if (keyword.length() > 0) keyword.erase(0, 1);
@@ -1825,7 +1825,7 @@ namespace Sass {
       {
         return expression()->exclude("supports");
       }
-      if (Directive_Ptr dir = dynamic_cast<Directive_Ptr>(s))
+      if (Directive_Ptr dir = SASS_MEMORY_CAST(Directive, s))
       {
         if (dir->is_keyframes()) return expression()->exclude("keyframes");
       }
