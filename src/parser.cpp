@@ -298,7 +298,8 @@ namespace Sass {
         if (decl->is_indented()) ++ indentation;
         // parse a propset that rides on the declaration's property
         stack.push_back(Scope::Properties);
-        decl->block(&parse_block());
+        decl->oblock(parse_block());
+        decl->block(&decl->oblock());
         stack.pop_back();
         if (decl->is_indented()) -- indentation;
       }
@@ -508,7 +509,8 @@ namespace Sass {
     else ruleset->selector(&parse_selector_schema(lookahead.found));
     // then parse the inner block
     stack.push_back(Scope::Rules);
-    ruleset->block(&parse_block());
+    ruleset->oblock(parse_block());
+    ruleset->block(&ruleset->oblock());
     stack.pop_back();
     // update for end position
     ruleset->update_pstate(pstate);
@@ -2292,7 +2294,8 @@ if (DBG) std::cerr << "complex 2\n";
     lex < css_comments >(false);
 
     if (peek< exactly<'{'> >()) {
-      at_rule->block(&parse_block());
+      at_rule->oblock(parse_block());
+      at_rule->block(&at_rule->oblock());
     }
 
     return at_rule;
@@ -2306,7 +2309,8 @@ if (DBG) std::cerr << "complex 2\n";
     // strip left and right if they are of type string
     directive->value(&val);
     if (peek< exactly<'{'> >()) {
-      directive->block(&parse_block());
+      directive->oblock(parse_block());
+      directive->block(&directive->oblock());
     }
     return directive;
   }

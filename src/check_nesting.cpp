@@ -16,10 +16,10 @@ namespace Sass {
       return NULL;
   }
 
-  Block_Obj CheckNesting::visit_children(Statement_Obj parent) {
+  Statement_Obj CheckNesting::visit_children(Statement_Obj parent) {
 
     Statement_Obj old_parent = this->parent;
-/*
+
     if (At_Root_Block_Obj root = SASS_MEMORY_CAST(At_Root_Block, parent)) {
       std::vector<Statement_Obj> old_parents = this->parents;
       std::vector<Statement_Obj> new_parents;
@@ -45,14 +45,13 @@ namespace Sass {
       }
 
       At_Root_Block_Obj ar = SASS_MEMORY_CAST(At_Root_Block, parent);
-      Statement_Obj ret = this->visit_children(ar->block());
+      Statement_Obj ret = &this->visit_children(ar->block());
 
       this->parent = &old_parent;
       this->parents = old_parents;
 
       return ret;
     }
-*/
 
     if (!this->is_transparent_parent(parent, old_parent)) {
       this->parent = &parent;
@@ -76,7 +75,7 @@ namespace Sass {
     this->parent = old_parent;
     this->parents.pop_back();
 
-    return b;
+    return &b;
   }
 
 

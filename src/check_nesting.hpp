@@ -16,7 +16,7 @@ namespace Sass {
 
     Statement_Ptr fallback_impl(Statement_Ptr);
     Statement_Obj before(Statement_Obj);
-    Block_Obj visit_children(Statement_Obj);
+    Statement_Obj visit_children(Statement_Obj);
 
   public:
     CheckNesting();
