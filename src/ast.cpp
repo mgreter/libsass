@@ -1305,43 +1305,11 @@ namespace Sass {
   }
 
   // return the last tail that is defined
-  Complex_Selector_Ptr_Const Complex_Selector_Ref::first() const
-  {
-    // declare variables used in loop
-    Complex_Selector_Obj cur = this->tail_;
-    Compound_Selector_Obj head = head_;
-    // processing loop
-    while (cur)
-    {
-      // get the head
-      head = cur->head_;
-      // check for single parent ref
-      if (head && head->length() == 1)
-      {
-        // abort (and return) if it is not a parent selector
-        if (!SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) break;
-      }
-      // advance to next
-      cur = cur->tail_;
-    }
-    // result
-    return &cur;
-  }
-
-  // return the last tail that is defined
   Complex_Selector_Ptr Complex_Selector_Ref::last()
   {
     // ToDo: implement with a while loop
     return tail_? tail_->last() : this;
   }
-
-  // return the last tail that is defined
-  Complex_Selector_Ptr_Const Complex_Selector_Ref::last() const
-  {
-    // ToDo: implement with a while loop
-    return tail_? tail_->last() : this;
-  }
-
 
   Complex_Selector_Ref::Combinator Complex_Selector_Ref::clear_innermost()
   {

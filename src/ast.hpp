@@ -2502,21 +2502,16 @@ namespace Sass {
     Complex_Selector_Obj context(Context&);
 
 
-    // front returns the first real tail
-    // skips over parent and empty ones
-    Complex_Selector_Ptr_Const first() const;
-
-    // last returns the last real tail
-    Complex_Selector_Ptr_Const last() const;
-
     CommaComplex_Selector_Ptr tails(Context& ctx, CommaComplex_Selector_Ptr tails);
 
-    // unconstant accessors
+    // front returns the first real tail
+    // skips over parent and empty ones
     Complex_Selector_Ptr first();
+    // last returns the last real tail
     Complex_Selector_Ptr last();
 
     // some shortcuts that should be removed
-    Complex_Selector_Ptr_Const innermost() const { return last(); };
+    // Complex_Selector_Ptr_Const innermost() const { return last(); };
     Complex_Selector_Ptr innermost() { return last(); };
 
     size_t length() const;
