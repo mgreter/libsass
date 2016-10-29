@@ -33,7 +33,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::operator()(Trace_Ptr t)
   {
-    return t->block()->perform(this);
+    return t->oblock()->perform(this);
   }
 
   Statement_Ptr Cssize::operator()(Declaration_Ptr d)
@@ -59,7 +59,7 @@ namespace Sass {
     dd->tabs(d->tabs());
 
     p_stack.push_back(dd);
-    Block_Obj bb = d->block() ? operator()(d->block()) : NULL;
+    Block_Obj bb = d->oblock() ? operator()(&d->oblock()) : NULL;
     p_stack.pop_back();
 
     if (bb && bb->length()) {
@@ -77,7 +77,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::operator()(Directive_Ptr r)
   {
-    if (!r->block() || !r->block()->length()) return r;
+    if (!r->oblock() || !r->oblock()->length()) return r;
 
     if (parent()->statement_type() == Statement_Ref::RULESET)
     {
@@ -89,14 +89,14 @@ namespace Sass {
                                   r->pstate(),
                                   r->keyword(),
                                   r->selector(),
-                                  r->block() ? operator()(r->block()) : 0);
+                                  r->oblock() ? operator()(&r->oblock()) : 0);
     if (r->value()) rr->value(r->value());
     p_stack.pop_back();
 
     bool directive_exists = false;
-    size_t L = rr->block() ? rr->block()->length() : 0;
+    size_t L = rr->oblock() ? rr->oblock()->length() : 0;
     for (size_t i = 0; i < L && !directive_exists; ++i) {
-      Statement_Obj s = r->block()->at(i);
+      Statement_Obj s = r->oblock()->at(i);
       if (s->statement_type() != Statement_Ref::BUBBLE) directive_exists = true;
       else {
         Bubble_Obj s_obj = SASS_MEMORY_CAST(Bubble, s);
@@ -111,11 +111,12 @@ namespace Sass {
     if (!(directive_exists || rr->is_keyframes()))
     {
       Directive_Ptr empty_node = static_cast<Directive_Ptr>(rr);
-      empty_node->block(SASS_MEMORY_NEW(ctx.mem, Block, rr->block() ? rr->block()->pstate() : rr->pstate()));
+      empty_node->oblock(SASS_MEMORY_NEW(ctx.mem, Block, rr->block() ? rr->block()->pstate() : rr->pstate()));
+      empty_node->block(&empty_node->oblock());
       result->append(empty_node);
     }
 
-    Block_Obj ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
+    Block_Obj ss = debubble(rr->oblock() ? rr->oblock() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
     for (size_t i = 0, L = ss->length(); i < L; ++i) {
       result->append(ss->at(i));
     }
@@ -125,11 +126,11 @@ namespace Sass {
 
   Statement_Ptr Cssize::operator()(Keyframe_Rule_Ptr r)
   {
-    if (!r->block() || !r->block()->length()) return r;
+    if (!r->oblock() || !r->oblock()->length()) return r;
 
     Keyframe_Rule_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule,
                                         r->pstate(),
-                                        operator()(r->block()));
+                                        operator()(&r->oblock()));
     if (&r->selector2()) rr->selector2(r->selector2());
 
     return &debubble(rr->block(), rr);
@@ -140,23 +141,23 @@ namespace Sass {
     p_stack.push_back(r);
     // this can return a string schema
     // string schema is not a statement!
-    // r->block() is already a string schema
+    // r->oblock() is already a string schema
     // and that is comming from propset expand
     Block_Obj bb = operator()(r->block());
     // this should protect us (at least a bit) from our mess
     // fixing this properly is harder that it should be ...
     if (dynamic_cast<Statement_Ptr>(&bb) == NULL) {
-      error("Illegal nesting: Only properties may be nested beneath properties.", r->block()->pstate());
+      error("Illegal nesting: Only properties may be nested beneath properties.", r->oblock()->pstate());
     }
     Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
                                   r->selector(),
                                   bb);
     rr->is_root(r->is_root());
-    // rr->tabs(r->block()->tabs());
+    // rr->tabs(r->oblock()->tabs());
     p_stack.pop_back();
 
-    if (!rr->block()) {
+    if (!rr->oblock()) {
       error("Illegal nesting: Only properties may be nested beneath properties.", r->block()->pstate());
     }
 
@@ -275,7 +276,8 @@ namespace Sass {
   {
     Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
-    new_rule->block(&bb);
+    new_rule->oblock(bb);
+    new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
     new_rule->block()->concat(m->block());
 
@@ -296,7 +298,8 @@ namespace Sass {
   {
     Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
-    new_rule->block(&bb);
+    new_rule->oblock(bb);
+    new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
     new_rule->block()->concat(m->block());
 
