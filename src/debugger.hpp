@@ -272,8 +272,8 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << (block->is_interpolated() ? " [is_interpolated]": " -")
     << std::endl;
-    debug_ast(block->feature(), ind + " feature) ");
-    debug_ast(block->value(), ind + " value) ");
+    debug_ast(&block->feature(), ind + " feature) ");
+    debug_ast(&block->value(), ind + " value) ");
 
   } else if (dynamic_cast<Media_Query_Ptr>(node)) {
     Media_Query_Ptr block = dynamic_cast<Media_Query_Ptr>(node);

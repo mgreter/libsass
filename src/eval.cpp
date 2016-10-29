@@ -1262,20 +1262,20 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Media_Query_Expression_Ptr e)
   {
-    Expression_Ptr feature = e->feature();
+    Expression_Obj feature = e->feature();
     feature = (feature ? feature->perform(this) : 0);
-    if (feature && dynamic_cast<String_Quoted_Ptr>(feature)) {
+    if (feature && SASS_MEMORY_CAST(String_Quoted, feature)) {
       feature = SASS_MEMORY_NEW(ctx.mem, String_Quoted,
                                   feature->pstate(),
-                                  dynamic_cast<String_Quoted_Ptr>(feature)->value());
+                                  SASS_MEMORY_CAST(String_Quoted, feature)->value());
     }
-    Expression_Ptr value = e->value();
+    Expression_Obj value = e->value();
     value = (value ? value->perform(this) : 0);
-    if (value && dynamic_cast<String_Quoted_Ptr>(value)) {
+    if (value && SASS_MEMORY_CAST(String_Quoted, value)) {
       // XXX: this is never hit via spec tests
       value = SASS_MEMORY_NEW(ctx.mem, String_Quoted,
                                 value->pstate(),
-                                dynamic_cast<String_Quoted_Ptr>(value)->value());
+                                SASS_MEMORY_CAST(String_Quoted, value)->value());
     }
     return SASS_MEMORY_NEW(ctx.mem, Media_Query_Expression,
                            e->pstate(),

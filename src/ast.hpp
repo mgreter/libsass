@@ -1665,7 +1665,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_restricted)
   public:
     Media_Query_Ref(ParserState pstate,
-                String_Ptr t = 0, size_t s = 0, bool n = false, bool r = false)
+                String_Obj t = 0, size_t s = 0, bool n = false, bool r = false)
     : Expression_Ref(pstate), Vectorized<Media_Query_Expression_Obj>(s),
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
@@ -1676,12 +1676,12 @@ namespace Sass {
   // Media expressions (for use inside media queries).
   ////////////////////////////////////////////////////
   class Media_Query_Expression_Ref : public Expression_Ref {
-    ADD_PROPERTY(Expression_Ptr, feature)
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(Expression_Obj, feature)
+    ADD_PROPERTY(Expression_Obj, value)
     ADD_PROPERTY(bool, is_interpolated)
   public:
     Media_Query_Expression_Ref(ParserState pstate,
-                           Expression_Ptr f, Expression_Ptr v, bool i = false)
+                           Expression_Obj f, Expression_Obj v, bool i = false)
     : Expression_Ref(pstate), feature_(f), value_(v), is_interpolated_(i)
     { }
     ATTACH_OPERATIONS()
@@ -1693,7 +1693,7 @@ namespace Sass {
   class Supports_Block_Ref : public Has_Block_Ref {
     ADD_PROPERTY(Supports_Condition_Obj, condition)
   public:
-    Supports_Block_Ref(ParserState pstate, Supports_Condition_Ptr condition, Block_Obj block = 0)
+    Supports_Block_Ref(ParserState pstate, Supports_Condition_Obj condition, Block_Obj block = 0)
     : Has_Block_Ref(pstate, block), condition_(condition)
     { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
@@ -1723,7 +1723,7 @@ namespace Sass {
     ADD_PROPERTY(Supports_Condition_Obj, right);
     ADD_PROPERTY(Operand, operand);
   public:
-    Supports_Operator_Ref(ParserState pstate, Supports_Condition_Ptr l, Supports_Condition_Ptr r, Operand o)
+    Supports_Operator_Ref(ParserState pstate, Supports_Condition_Obj l, Supports_Condition_Obj r, Operand o)
     : Supports_Condition_Ref(pstate), left_(l), right_(r), operand_(o)
     { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const;
@@ -1737,7 +1737,7 @@ namespace Sass {
   private:
     ADD_PROPERTY(Supports_Condition_Obj, condition);
   public:
-    Supports_Negation_Ref(ParserState pstate, Supports_Condition_Ptr c)
+    Supports_Negation_Ref(ParserState pstate, Supports_Condition_Obj c)
     : Supports_Condition_Ref(pstate), condition_(c)
     { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const;
