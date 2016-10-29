@@ -2612,7 +2612,7 @@ namespace Sass {
   };
 
   typedef std::deque<Complex_Selector_Obj> ComplexSelectorDeque;
-  typedef Subset_Map<std::string, std::pair<Complex_Selector_Ptr, Compound_Selector_Ptr> > ExtensionSubsetMap;
+  typedef Subset_Map<std::string, std::pair<Complex_Selector_Obj, Compound_Selector_Obj> > ExtensionSubsetMap;
 
   ///////////////////////////////////
   // Comma-separated selector groups.
@@ -2703,7 +2703,7 @@ namespace Sass {
 
   // compare function for sorting and probably other other uses
   struct cmp_complex_selector { inline bool operator() (const Complex_Selector_Obj l, const Complex_Selector_Obj r) { return (*l < *r); } };
-  struct cmp_compound_selector { inline bool operator() (Compound_Selector_Ptr_Const l, Compound_Selector_Ptr_Const r) { return (*l < *r); } };
+  struct cmp_compound_selector { inline bool operator() (const Compound_Selector_Obj l, const Compound_Selector_Obj r) { return (*l < *r); } };
   struct cmp_simple_selector { inline bool operator() (const Simple_Selector_Obj l, const Simple_Selector_Obj r) { return (*l < *r); } };
 
 

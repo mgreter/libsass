@@ -62,7 +62,7 @@
 namespace Sass {
 
 
-  typedef std::pair<Complex_Selector_Ptr, Compound_Selector_Ptr> ExtensionPair;
+  typedef std::pair<Complex_Selector_Obj, Compound_Selector_Obj> ExtensionPair;
   typedef std::vector<ExtensionPair> SubsetMapEntries;
 
 #ifdef DEBUG
@@ -1532,7 +1532,7 @@ namespace Sass {
   class GroupByToAFunctor {
   public:
     KeyType operator()(ExtensionPair& extPair) const {
-      Complex_Selector_Ptr pSelector = extPair.first;
+      Complex_Selector_Obj pSelector = extPair.first;
       return *pSelector;
     }
   };
@@ -1575,7 +1575,7 @@ namespace Sass {
       Compound_Selector_Ptr pSels = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pSelector->pstate());
       for (std::vector<ExtensionPair>::iterator groupIter = group.begin(), groupIterEnd = group.end(); groupIter != groupIterEnd; groupIter++) {
         ExtensionPair& pair = *groupIter;
-        Compound_Selector_Ptr pCompound = pair.second;
+        Compound_Selector_Obj pCompound = pair.second;
         for (size_t index = 0; index < pCompound->length(); index++) {
           Simple_Selector_Obj pSimpleSelector = (*pCompound)[index];
           (*pSels) << &pSimpleSelector;
@@ -2085,7 +2085,7 @@ namespace Sass {
       // debug_subset_map(subset_map);
       for(auto const &it : subset_map.values()) {
         Complex_Selector_Ptr sel = it.first ? &it.first->first() : NULL;
-        Compound_Selector_Ptr ext = it.second ? it.second : NULL;
+        Compound_Selector_Ptr ext = it.second ? &it.second : NULL;
         if (ext && (ext->extended() || ext->is_optional())) continue;
         std::string str_sel(sel->to_string({ NESTED, 5 }));
         std::string str_ext(ext->to_string({ NESTED, 5 }));

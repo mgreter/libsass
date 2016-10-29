@@ -758,21 +758,21 @@ inline void debug_subset_map(Sass::ExtensionSubsetMap& map, std::string ind = ""
 {
   if (ind == "") std::cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
   for(auto const &it : map.values()) {
-    debug_ast(it.first, ind + "first: ");
-    debug_ast(it.second, ind + "second: ");
+    debug_ast(&it.first, ind + "first: ");
+    debug_ast(&it.second, ind + "second: ");
   }
   if (ind == "") std::cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 }
 
-typedef std::pair<Complex_Selector_Ptr, Compound_Selector_Ptr> ExtensionPair;
+typedef std::pair<Complex_Selector_Obj, Compound_Selector_Obj> ExtensionPair;
 typedef std::vector<ExtensionPair> SubsetMapEntries;
 
 inline void debug_subset_entries(SubsetMapEntries* entries, std::string ind = "")
 {
   if (ind == "") std::cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
   for(auto const &pair : *entries) {
-    debug_ast(pair.first, ind + "first: ");
-    debug_ast(pair.second, ind + "second: ");
+    debug_ast(&pair.first, ind + "first: ");
+    debug_ast(&pair.second, ind + "second: ");
   }
   if (ind == "") std::cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
 }
