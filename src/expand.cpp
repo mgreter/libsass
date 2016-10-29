@@ -96,13 +96,13 @@ namespace Sass {
 
     if (in_keyframes) {
       Block_Obj bb = operator()(r->block());
-      Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
+      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
-        k->selector2(static_cast<CommaComplex_Selector_Ptr>(r->selector()->perform(&eval)));
+        k->selector2(SASS_MEMORY_CAST_PTR(CommaComplex_Selector, r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
-      return k;
+      return &k;
     }
 
     // reset when leaving scope
@@ -125,8 +125,8 @@ namespace Sass {
       }
     }
 
-    Expression_Ptr ex = r->selector()->perform(&eval);
-    CommaComplex_Selector_Ptr sel = dynamic_cast<CommaComplex_Selector_Ptr>(ex);
+    Expression_Obj ex = r->selector()->perform(&eval);
+    CommaComplex_Selector_Obj sel = SASS_MEMORY_CAST(CommaComplex_Selector, ex);
     if (sel == 0) throw std::runtime_error("Expanded null selector");
 
     if (sel->length() == 0 || sel->has_parent_ref()) {
@@ -147,9 +147,9 @@ namespace Sass {
     }
     sel->set_media_block(&media_block_stack.back());
     Block_Obj blk = operator()(r->block());
-    Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
+    Ruleset_Obj rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
-                                  sel,
+                                  &sel,
                                   blk);
     selector_stack.pop_back();
     if (block_stack.back()->is_root()) {
@@ -159,17 +159,17 @@ namespace Sass {
     rr->is_root(r->is_root());
     rr->tabs(r->tabs());
 
-    return rr;
+    return &rr;
   }
 
   Statement_Ptr Expand::operator()(Supports_Block_Ptr f)
   {
-    Expression_Ptr condition = f->condition()->perform(&eval);
-    Supports_Block_Ptr ff = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
+    Expression_Obj condition = f->condition()->perform(&eval);
+    Supports_Block_Obj ff = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        f->pstate(),
-                                       static_cast<Supports_Condition_Ptr>(condition),
+                                       SASS_MEMORY_CAST(Supports_Condition, condition),
                                        operator()(f->block()));
-    return ff;
+    return &ff;
   }
 
   Statement_Ptr Expand::operator()(Media_Block_Ptr m)
@@ -559,9 +559,9 @@ namespace Sass {
   }
 
 
-  void Expand::expand_selector_list(Selector_Ptr s, CommaComplex_Selector_Ptr extender) {
+  void Expand::expand_selector_list(Selector_Obj s, CommaComplex_Selector_Obj extender) {
 
-    if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(s)) {
+    if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, s)) {
       for (Complex_Selector_Obj complex_selector : sl->elements()) {
         Complex_Selector_Obj tail = complex_selector;
         while (tail) {
@@ -576,8 +576,8 @@ namespace Sass {
     }
 
 
-    CommaComplex_Selector_Ptr contextualized = dynamic_cast<CommaComplex_Selector_Ptr>(s->perform(&eval));
-    if (contextualized == NULL) return;
+    CommaComplex_Selector_Obj contextualized = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, s->perform(&eval));
+    if (contextualized == false) return;
     for (auto complex_sel : contextualized->elements()) {
       Complex_Selector_Obj c = complex_sel;
       if (!c->head() || c->tail()) {
@@ -591,14 +591,14 @@ namespace Sass {
         if (!(sel->head() && sel->head()->length() > 0 &&
             SASS_MEMORY_CAST(Parent_Selector, (*sel->head())[0])))
         {
-          Compound_Selector_Ptr hh = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, (*extender)[i]->pstate());
+          Compound_Selector_Obj hh = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, (*extender)[i]->pstate());
           hh->media_block((*extender)[i]->media_block());
-          Complex_Selector_Ptr ssel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, (*extender)[i]->pstate());
+          Complex_Selector_Obj ssel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, (*extender)[i]->pstate());
           ssel->media_block((*extender)[i]->media_block());
           if (sel->has_line_feed()) ssel->has_line_feed(true);
-          Parent_Selector_Ptr ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
+          Parent_Selector_Obj ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
           ps->media_block((*extender)[i]->media_block());
-          hh->append(ps);
+          hh->append(&ps);
           ssel->tail(sel);
           ssel->head(hh);
           sel = ssel;
@@ -612,12 +612,12 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Extension_Ptr e)
   {
-    if (CommaComplex_Selector_Ptr extender = SASS_MEMORY_CAST(CommaComplex_Selector, selector())) {
-      Selector_Ptr s = e->selector();
-      if (Selector_Schema_Ptr schema = SASS_MEMORY_CAST_PTR(Selector_Schema, s)) {
-        if (schema->has_parent_ref()) s = eval(schema);
+    if (CommaComplex_Selector_Obj extender = SASS_MEMORY_CAST(CommaComplex_Selector, selector())) {
+      Selector_Obj s = e->selector();
+      if (Selector_Schema_Obj schema = SASS_MEMORY_CAST(Selector_Schema, s)) {
+        if (schema->has_parent_ref()) s = eval(&schema);
       }
-      if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, s)) {
+      if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, s)) {
         for (Complex_Selector_Obj cs : sl->elements()) {
           if (cs && cs->head()) {
             cs->head()->media_block(&media_block_stack.back());
@@ -634,9 +634,9 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Definition_Ptr d)
   {
     Env* env = environment();
-    Definition_Ptr dd = SASS_MEMORY_NEW(ctx.mem, Definition, *d);
+    Definition_Obj dd = SASS_MEMORY_NEW(ctx.mem, Definition, *d);
     env->local_frame()[d->name() +
-                        (d->type() == Definition::MIXIN ? "[m]" : "[f]")] = dd;
+                        (d->type() == Definition::MIXIN ? "[m]" : "[f]")] = &dd;
 
     if (d->type() == Definition::FUNCTION && (
       Prelexer::calc_fn_call(d->name().c_str()) ||
@@ -670,7 +670,7 @@ namespace Sass {
     if (!env->has(full_name)) {
       error("no mixin named " + c->name(), c->pstate(), backtrace());
     }
-    Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)[full_name]);
+    Definition_Obj def = SASS_MEMORY_CAST(Definition, (*env)[full_name]);
     Block_Obj body = def->block();
     Parameters_Obj params = def->parameters();
 
@@ -684,25 +684,25 @@ namespace Sass {
     env_stack.push_back(&new_env);
     if (c->block()) {
       // represent mixin content blocks as thunks/closures
-      Definition_Ptr thunk = SASS_MEMORY_NEW(ctx.mem, Definition,
+      Definition_Obj thunk = SASS_MEMORY_NEW(ctx.mem, Definition,
                                           c->pstate(),
                                           "@content",
                                           SASS_MEMORY_NEW(ctx.mem, Parameters, c->pstate()),
                                           c->block(),
                                           Definition::MIXIN);
       thunk->environment(env);
-      new_env.local_frame()["@content[m]"] = thunk;
+      new_env.local_frame()["@content[m]"] = &thunk;
     }
 
     bind(std::string("Mixin"), c->name(), params, args, &ctx, &new_env, &eval);
 
     Block_Obj trace_block = SASS_MEMORY_OBJ(ctx.mem, Block, c->pstate());
-    Trace_Ptr trace = SASS_MEMORY_NEW(ctx.mem, Trace, c->pstate(), c->name(), trace_block);
+    Trace_Obj trace = SASS_MEMORY_NEW(ctx.mem, Trace, c->pstate(), c->name(), trace_block);
 
 
     block_stack.push_back(trace_block);
     for (auto bb : body->elements()) {
-      Statement_Ptr ith = bb->perform(this);
+      Statement_Obj ith = bb->perform(this);
       if (ith) trace->block()->append(ith);
     }
     block_stack.pop_back();
@@ -711,7 +711,7 @@ namespace Sass {
     backtrace_stack.pop_back();
 
     recursions --;
-    return trace;
+    return &trace;
   }
 
   Statement_Ptr Expand::operator()(Content_Ptr c)
@@ -724,27 +724,27 @@ namespace Sass {
       selector_stack.push_back(0);
     }
 
-    Mixin_Call_Ptr call = SASS_MEMORY_NEW(ctx.mem, Mixin_Call,
+    Mixin_Call_Obj call = SASS_MEMORY_NEW(ctx.mem, Mixin_Call,
                                        c->pstate(),
                                        "@content",
                                        SASS_MEMORY_NEW(ctx.mem, Arguments, c->pstate()));
 
-    Trace_Ptr trace = dynamic_cast<Trace_Ptr>(call->perform(this));
+    Trace_Obj trace = SASS_MEMORY_CAST_PTR(Trace, call->perform(this));
 
     if (block_stack.back()->is_root()) {
       selector_stack.pop_back();
     }
 
-    return trace;
+    return &trace;
   }
 
   // produce an error if something is not implemented
   inline Statement_Ptr Expand::fallback_impl(AST_Node_Ptr n)
   {
     std::string err =std:: string("`Expand` doesn't handle ") + typeid(*n).name();
-    String_Quoted_Ptr msg = SASS_MEMORY_NEW(ctx.mem, String_Quoted, ParserState("[WARN]"), err);
+    String_Quoted_Obj msg = SASS_MEMORY_NEW(ctx.mem, String_Quoted, ParserState("[WARN]"), err);
     error("unknown internal error; please contact the LibSass maintainers", n->pstate(), backtrace());
-    return SASS_MEMORY_NEW(ctx.mem, Warning, ParserState("[WARN]"), msg);
+    return SASS_MEMORY_NEW(ctx.mem, Warning, ParserState("[WARN]"), &msg);
   }
 
   // process and add to last block on stack

@@ -41,7 +41,7 @@ namespace Sass {
     Statement_Ptr fallback_impl(AST_Node_Ptr n);
 
   private:
-    void expand_selector_list(Selector_Ptr, CommaComplex_Selector_Ptr extender);
+    void expand_selector_list(Selector_Obj, CommaComplex_Selector_Obj extender);
 
   public:
     Expand(Context&, Env*, Backtrace*, std::vector<CommaComplex_Selector_Obj>* stack = NULL);
