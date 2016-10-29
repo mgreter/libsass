@@ -510,6 +510,7 @@ namespace Sass {
     // then parse the inner block
     stack.push_back(Scope::Rules);
     ruleset->oblock(parse_block());
+    // this one is needed?
     ruleset->block(&ruleset->oblock());
     stack.pop_back();
     // update for end position
@@ -2031,6 +2032,7 @@ if (DBG) std::cerr << "complex 2\n";
     Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;
     media_block->oblock(parse_css_block());
+    // this one is needed?
     media_block->block(&media_block->oblock());
     last_media_block = prev_media_block;
     stack.pop_back();
@@ -2108,7 +2110,7 @@ if (DBG) std::cerr << "complex 2\n";
     // additional block is mandatory
     // parse inner block
     query->oblock(parse_block());
-    query->block(&query->oblock());
+    // query->block(&query->oblock());
     // return ast node
     return query;
   }
@@ -2270,7 +2272,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     if (peek< exactly<'{'> >()) {
       at_rule->oblock(parse_block());
-      at_rule->block(&at_rule->oblock());
+      // at_rule->block(&at_rule->oblock());
     }
 
     return at_rule;
@@ -2300,7 +2302,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     if (peek< exactly<'{'> >()) {
       at_rule->oblock(parse_block());
-      at_rule->block(&at_rule->oblock());
+      // at_rule->block(&at_rule->oblock());
     }
 
     return at_rule;
@@ -2315,6 +2317,7 @@ if (DBG) std::cerr << "complex 2\n";
     directive->value(&val);
     if (peek< exactly<'{'> >()) {
       directive->oblock(parse_block());
+      // this one is needed?
       directive->block(&directive->oblock());
     }
     return directive;
