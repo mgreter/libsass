@@ -2286,9 +2286,9 @@ namespace Sass {
   // Wrapped selector -- pseudo selector that takes a list of selectors as argument(s) e.g., :not(:first-of-type), :-moz-any(ol p.blah, ul, menu, dir)
   /////////////////////////////////////////////////
   class Wrapped_Selector_Ref : public Simple_Selector_Ref {
-    ADD_PROPERTY(Selector_Ptr, selector)
+    ADD_PROPERTY(Selector_Obj, selector)
   public:
-    Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Ptr sel)
+    Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Obj sel)
     : Simple_Selector_Ref(pstate, n), selector_(sel)
     { }
     virtual bool is_superselector_of(Wrapped_Selector_Obj sub);
