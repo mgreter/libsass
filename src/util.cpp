@@ -459,7 +459,7 @@ namespace Sass {
         return false;
       }
 
-      Block_Obj b = r->block();
+      Block_Obj b = r->oblock();
 
       bool hasSelectors = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector())->length() > 0;
 
@@ -524,7 +524,7 @@ namespace Sass {
         return false;
       }
 
-      Block_Obj b = f->block();
+      Block_Obj b = f->oblock();
 
 //      bool hasSelectors = f->selector() && static_cast<CommaComplex_Selector_Ptr>(f->selector())->length() > 0;
 
@@ -553,7 +553,7 @@ namespace Sass {
     bool isPrintable(Media_Block_Ptr m, Sass_Output_Style style)
     {
       if (m == 0) return false;
-      Block_Obj b = m->block();
+      Block_Obj b = m->oblock();
       if (b == 0) return false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
         Statement_Obj stm = b->at(i);

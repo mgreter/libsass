@@ -110,7 +110,7 @@ namespace Sass {
   void Output::operator()(Ruleset_Ptr r)
   {
     Selector_Obj s     = r->selector();
-    Block_Obj    b     = r->block();
+    Block_Obj    b     = r->oblock();
 
     // Filter out rulesets that aren't printable (process its children though)
     if (!Util::isPrintable(r, output_style())) {
@@ -172,7 +172,7 @@ namespace Sass {
   }
   void Output::operator()(Keyframe_Rule_Ptr r)
   {
-    Block_Obj b = r->block();
+    Block_Obj b = r->oblock();
     Selector_Obj v = r->selector2();
 
     if (&v) {
@@ -198,7 +198,7 @@ namespace Sass {
     if (f->is_invisible()) return;
 
     Supports_Condition_Obj c = f->condition();
-    Block_Obj b              = f->block();
+    Block_Obj b              = f->oblock();
 
     // Filter out feature blocks that aren't printable (process its children though)
     if (!Util::isPrintable(f, output_style())) {
@@ -234,7 +234,7 @@ namespace Sass {
   {
     if (m->is_invisible()) return;
 
-    Block_Obj b     = m->block();
+    Block_Obj b     = m->oblock();
 
     // Filter out media blocks that aren't printable (process its children though)
     if (!Util::isPrintable(m, output_style())) {
@@ -272,7 +272,7 @@ namespace Sass {
     std::string      kwd   = a->keyword();
     Selector_Obj   s     = a->selector();
     Expression_Obj v     = a->value();
-    Block_Obj      b     = a->block();
+    Block_Obj      b     = a->oblock();
 
     append_indentation();
     append_token(kwd, a);

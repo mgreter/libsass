@@ -42,13 +42,13 @@ namespace Sass {
   void Inspect::operator()(Ruleset_Ptr ruleset)
   {
     ruleset->selector()->perform(this);
-    ruleset->block()->perform(this);
+    ruleset->oblock()->perform(this);
   }
 
   void Inspect::operator()(Keyframe_Rule_Ptr rule)
   {
     if (rule->selector2()) rule->selector2()->perform(this);
-    if (rule->block()) rule->block()->perform(this);
+    if (rule->oblock()) rule->oblock()->perform(this);
   }
 
   void Inspect::operator()(Bubble_Ptr bubble)
@@ -68,7 +68,7 @@ namespace Sass {
     in_media_block = true;
     media_block->media_queries()->perform(this);
     in_media_block = false;
-    media_block->block()->perform(this);
+    media_block->oblock()->perform(this);
   }
 
   void Inspect::operator()(Supports_Block_Ptr feature_block)
@@ -77,7 +77,7 @@ namespace Sass {
     append_token("@supports", feature_block);
     append_mandatory_space();
     feature_block->condition()->perform(this);
-    feature_block->block()->perform(this);
+    feature_block->oblock()->perform(this);
   }
 
   void Inspect::operator()(At_Root_Block_Ptr at_root_block)
@@ -86,7 +86,7 @@ namespace Sass {
     append_token("@at-root ", at_root_block);
     append_mandatory_space();
     if(at_root_block->expression()) at_root_block->expression()->perform(this);
-    at_root_block->block()->perform(this);
+    at_root_block->oblock()->perform(this);
   }
 
   void Inspect::operator()(Directive_Ptr at_rule)
@@ -104,8 +104,8 @@ namespace Sass {
       append_mandatory_space();
       at_rule->value()->perform(this);
     }
-    if (at_rule->block()) {
-      at_rule->block()->perform(this);
+    if (at_rule->oblock()) {
+      at_rule->oblock()->perform(this);
     }
     else {
       append_delimiter();
@@ -233,7 +233,7 @@ namespace Sass {
     append_token("@if", cond);
     append_mandatory_space();
     cond->predicate()->perform(this);
-    cond->block()->perform(this);
+    cond->oblock()->perform(this);
     if (cond->alternative()) {
       append_optional_linefeed();
       append_indentation();
@@ -252,7 +252,7 @@ namespace Sass {
     loop->lower_bound()->perform(this);
     append_string(loop->is_inclusive() ? " through " : " to ");
     loop->upper_bound()->perform(this);
-    loop->block()->perform(this);
+    loop->oblock()->perform(this);
   }
 
   void Inspect::operator()(Each_Ptr loop)
@@ -267,7 +267,7 @@ namespace Sass {
     }
     append_string(" in ");
     loop->list()->perform(this);
-    loop->block()->perform(this);
+    loop->oblock()->perform(this);
   }
 
   void Inspect::operator()(While_Ptr loop)
@@ -276,7 +276,7 @@ namespace Sass {
     append_token("@while", loop);
     append_mandatory_space();
     loop->predicate()->perform(this);
-    loop->block()->perform(this);
+    loop->oblock()->perform(this);
   }
 
   void Inspect::operator()(Return_Ptr ret)
@@ -309,7 +309,7 @@ namespace Sass {
     }
     append_string(def->name());
     def->parameters()->perform(this);
-    def->block()->perform(this);
+    def->oblock()->perform(this);
   }
 
   void Inspect::operator()(Mixin_Call_Ptr call)
@@ -321,11 +321,11 @@ namespace Sass {
     if (call->arguments()) {
       call->arguments()->perform(this);
     }
-    if (call->block()) {
+    if (call->oblock()) {
       append_optional_space();
-      call->block()->perform(this);
+      call->oblock()->perform(this);
     }
-    if (!call->block()) append_delimiter();
+    if (!call->oblock()) append_delimiter();
   }
 
   void Inspect::operator()(Content_Ptr content)
