@@ -1806,7 +1806,7 @@ namespace Sass {
 
       if (s->statement_type() == Statement_Ref::DIRECTIVE)
       {
-        if (Directive_Ptr dir = SASS_MEMORY_CAST(Directive, s))
+        if (Directive_Obj dir = SASS_MEMORY_CAST(Directive, s))
         {
           std::string keyword(dir->keyword());
           if (keyword.length() > 0) keyword.erase(0, 1);
@@ -1825,7 +1825,7 @@ namespace Sass {
       {
         return expression()->exclude("supports");
       }
-      if (Directive_Ptr dir = SASS_MEMORY_CAST(Directive, s))
+      if (Directive_Obj dir = SASS_MEMORY_CAST(Directive, s))
       {
         if (dir->is_keyframes()) return expression()->exclude("keyframes");
       }
