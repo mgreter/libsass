@@ -606,17 +606,17 @@ namespace Sass {
   // necessary to store a list of each in an Import node.
   ////////////////////////////////////////////////////////////////////////////
   class Import_Ref : public Statement_Ref {
-    std::vector<Expression_Ptr> urls_;
+    std::vector<Expression_Obj> urls_;
     std::vector<Include>     incs_;
     ADD_PROPERTY(List_Obj,      import_queries);
   public:
     Import_Ref(ParserState pstate)
     : Statement_Ref(pstate),
-      urls_(std::vector<Expression_Ptr>()),
+      urls_(std::vector<Expression_Obj>()),
       incs_(std::vector<Include>()),
       import_queries_()
     { statement_type(IMPORT); }
-    std::vector<Expression_Ptr>& urls() { return urls_; }
+    std::vector<Expression_Obj>& urls() { return urls_; }
     std::vector<Include>& incs() { return incs_; }
     ATTACH_OPERATIONS()
   };

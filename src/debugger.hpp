@@ -394,7 +394,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     // std::vector<std::string>         files_;
-    for (auto imp : block->urls()) debug_ast(imp, ind + "@: ", env);
+    for (auto imp : block->urls()) debug_ast(&imp, ind + "@: ", env);
     debug_ast(&block->import_queries(), ind + "@@ ");
   } else if (dynamic_cast<Assignment_Ptr>(node)) {
     Assignment_Ptr block = dynamic_cast<Assignment_Ptr>(node);
