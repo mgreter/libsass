@@ -1749,10 +1749,10 @@ namespace Sass {
   /////////////////////////////////////////////////////
   class Supports_Declaration_Ref : public Supports_Condition_Ref {
   private:
-    ADD_PROPERTY(Expression_Ptr, feature);
-    ADD_PROPERTY(Expression_Ptr, value);
+    ADD_PROPERTY(Expression_Obj, feature);
+    ADD_PROPERTY(Expression_Obj, value);
   public:
-    Supports_Declaration_Ref(ParserState pstate, Expression_Ptr f, Expression_Ptr v)
+    Supports_Declaration_Ref(ParserState pstate, Expression_Obj f, Expression_Obj v)
     : Supports_Condition_Ref(pstate), feature_(f), value_(v)
     { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
@@ -1764,9 +1764,9 @@ namespace Sass {
   ///////////////////////////////////////////////
   class Supports_Interpolation_Ref : public Supports_Condition_Ref {
   private:
-    ADD_PROPERTY(Expression_Ptr, value);
+    ADD_PROPERTY(Expression_Obj, value);
   public:
-    Supports_Interpolation_Ref(ParserState pstate, Expression_Ptr v)
+    Supports_Interpolation_Ref(ParserState pstate, Expression_Obj v)
     : Supports_Condition_Ref(pstate), value_(v)
     { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
@@ -1778,10 +1778,10 @@ namespace Sass {
   /////////////////////////////////////////////////
   class At_Root_Query_Ref : public Expression_Ref {
   private:
-    ADD_PROPERTY(Expression_Ptr, feature)
-    ADD_PROPERTY(Expression_Ptr, value)
+    ADD_PROPERTY(Expression_Obj, feature)
+    ADD_PROPERTY(Expression_Obj, value)
   public:
-    At_Root_Query_Ref(ParserState pstate, Expression_Ptr f = 0, Expression_Ptr v = 0, bool i = false)
+    At_Root_Query_Ref(ParserState pstate, Expression_Obj f = 0, Expression_Obj v = 0, bool i = false)
     : Expression_Ref(pstate), feature_(f), value_(v)
     { }
     bool exclude(std::string str);

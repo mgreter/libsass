@@ -317,15 +317,15 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << ind << "At_Root_Query " << block;
     std::cerr << " (" << pstate_source_position(node) << ")"
     << std::endl;
-    debug_ast(block->feature(), ind + " feature) ");
-    debug_ast(block->value(), ind + " value) ");
+    debug_ast(&block->feature(), ind + " feature) ");
+    debug_ast(&block->value(), ind + " value) ");
   } else if (dynamic_cast<Supports_Declaration_Ptr>(node)) {
     Supports_Declaration_Ptr block = dynamic_cast<Supports_Declaration_Ptr>(node);
     std::cerr << ind << "Supports_Declaration " << block;
     std::cerr << " (" << pstate_source_position(node) << ")"
     << std::endl;
-    debug_ast(block->feature(), ind + " feature) ");
-    debug_ast(block->value(), ind + " value) ");
+    debug_ast(&block->feature(), ind + " feature) ");
+    debug_ast(&block->value(), ind + " value) ");
   } else if (dynamic_cast<Block_Ptr>(node)) {
     Block_Ptr root_block = dynamic_cast<Block_Ptr>(node);
     std::cerr << ind << "Block " << root_block;

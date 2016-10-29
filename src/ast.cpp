@@ -94,7 +94,7 @@ namespace Sass {
   bool At_Root_Query_Ref::exclude(std::string str)
   {
     bool with = feature() && unquote(feature()->to_string()).compare("with") == 0;
-    List_Ptr l = static_cast<List_Ptr>(value());
+    List_Ptr l = static_cast<List_Ptr>(&value()); // ToDo: make dynamic
     std::string v;
 
     if (with)

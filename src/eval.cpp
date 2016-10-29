@@ -1196,8 +1196,8 @@ namespace Sass {
     Expression_Ptr right = c->right()->perform(this);
     Supports_Operator_Ptr cc = SASS_MEMORY_NEW(ctx.mem, Supports_Operator,
                                  c->pstate(),
-                                 static_cast<Supports_Condition_Ptr>(left),
-                                 static_cast<Supports_Condition_Ptr>(right),
+                                 dynamic_cast<Supports_Condition_Ptr>(left),
+                                 dynamic_cast<Supports_Condition_Ptr>(right),
                                  c->operand());
     return cc;
   }
@@ -1207,7 +1207,7 @@ namespace Sass {
     Expression_Ptr condition = c->condition()->perform(this);
     Supports_Negation_Ptr cc = SASS_MEMORY_NEW(ctx.mem, Supports_Negation,
                                  c->pstate(),
-                                 static_cast<Supports_Condition_Ptr>(condition));
+                                 dynamic_cast<Supports_Condition_Ptr>(condition));
     return cc;
   }
 
@@ -1233,15 +1233,15 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(At_Root_Query_Ptr e)
   {
-    Expression_Ptr feature = e->feature();
+    Expression_Obj feature = e->feature();
     feature = (feature ? feature->perform(this) : 0);
-    Expression_Ptr value = e->value();
+    Expression_Obj value = e->value();
     value = (value ? value->perform(this) : 0);
-    Expression_Ptr ee = SASS_MEMORY_NEW(ctx.mem, At_Root_Query,
+    Expression_Obj ee = SASS_MEMORY_NEW(ctx.mem, At_Root_Query,
                                      e->pstate(),
-                                     static_cast<String_Ptr>(feature),
+                                     dynamic_cast<String_Ptr>(&feature),
                                      value);
-    return ee;
+    return &ee;
   }
 
   Expression_Ptr Eval::operator()(Media_Query_Ptr q)
