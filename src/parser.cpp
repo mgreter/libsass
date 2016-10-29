@@ -511,7 +511,7 @@ namespace Sass {
     stack.push_back(Scope::Rules);
     ruleset->oblock(parse_block());
     // this one is needed?
-    ruleset->block(&ruleset->oblock());
+    // ruleset->block(&ruleset->oblock());
     stack.pop_back();
     // update for end position
     ruleset->update_pstate(pstate);
@@ -2033,7 +2033,7 @@ if (DBG) std::cerr << "complex 2\n";
     last_media_block = media_block;
     media_block->oblock(parse_css_block());
     // this one is needed?
-    media_block->block(&media_block->oblock());
+    // media_block->block(&media_block->oblock());
     last_media_block = prev_media_block;
     stack.pop_back();
     return media_block;
@@ -2318,7 +2318,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (peek< exactly<'{'> >()) {
       directive->oblock(parse_block());
       // this one is needed?
-      directive->block(&directive->oblock());
+      // directive->block(&directive->oblock());
     }
     return directive;
   }

@@ -454,15 +454,15 @@ namespace Sass {
   // Abstract base class for statements that contain blocks of statements.
   ////////////////////////////////////////////////////////////////////////
   class Has_Block_Ref : public Statement_Ref {
-    ADD_PROPERTY(Block_Ptr, block)
+    // ADD_PROPERTY(Block_Ptr, block)
     ADD_PROPERTY(Block_Obj, oblock)
   public:
     Has_Block_Ref(ParserState pstate, Block_Obj b)
-    : Statement_Ref(pstate), block_(&b), oblock_(&b)
+    : Statement_Ref(pstate), /* block_(&b), */ oblock_(&b)
     { }
     virtual bool has_content()
     {
-      return (block_ && block_->has_content()) || Statement_Ref::has_content();
+      return (oblock_ && oblock_->has_content()) || Statement_Ref::has_content();
     }
     virtual ~Has_Block_Ref() = 0;
   };

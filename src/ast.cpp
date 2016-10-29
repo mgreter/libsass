@@ -1698,8 +1698,8 @@ namespace Sass {
   }
 
   bool Media_Block_Ref::is_invisible() const {
-    for (size_t i = 0, L = block()->length(); i < L; ++i) {
-		Statement_Obj stm = block()->at(i);
+    for (size_t i = 0, L = oblock()->length(); i < L; ++i) {
+      Statement_Obj stm = oblock()->at(i);
       if (!stm->is_invisible()) return false;
     }
     return true;
