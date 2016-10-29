@@ -374,10 +374,10 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Comment_Ptr c)
   {
     eval.is_in_comment = true;
-    auto rv = SASS_MEMORY_NEW(ctx.mem, Comment, c->pstate(), static_cast<String_Ptr>(c->text()->perform(&eval)), c->is_important());
+    Comment_Obj rv = SASS_MEMORY_NEW(ctx.mem, Comment, c->pstate(), SASS_MEMORY_CAST_PTR(String, c->text()->perform(&eval)), c->is_important());
     eval.is_in_comment = false;
     // TODO: eval the text, once we're parsing/storing it as a String_Schema
-    return rv;
+    return &rv;
   }
 
   Statement_Ptr Expand::operator()(If_Ptr i)
@@ -402,16 +402,16 @@ namespace Sass {
   Statement_Ptr Expand::operator()(For_Ptr f)
   {
     std::string variable(f->variable());
-    Expression_Ptr low = f->lower_bound()->perform(&eval);
+    Expression_Obj low = f->lower_bound()->perform(&eval);
     if (low->concrete_type() != Expression::NUMBER) {
       throw Exception::TypeMismatch(*low, "integer");
     }
-    Expression_Ptr high = f->upper_bound()->perform(&eval);
+    Expression_Obj high = f->upper_bound()->perform(&eval);
     if (high->concrete_type() != Expression::NUMBER) {
       throw Exception::TypeMismatch(*high, "integer");
     }
-    Number_Ptr sass_start = static_cast<Number_Ptr>(low);
-    Number_Ptr sass_end = static_cast<Number_Ptr>(high);
+    Number_Obj sass_start = SASS_MEMORY_CAST(Number, low);
+    Number_Obj sass_end = SASS_MEMORY_CAST(Number, high);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
       std::stringstream msg; msg << "Incompatible units: '"
@@ -425,8 +425,8 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(f);
-    Number_Ptr it = SASS_MEMORY_NEW(env.mem, Number, low->pstate(), start, sass_end->unit());
-    env.set_local(variable, it);
+    Number_Obj it = SASS_MEMORY_NEW(env.mem, Number, low->pstate(), start, sass_end->unit());
+    env.set_local(variable, &it);
     Block_Obj body = f->block();
     if (start < end) {
       if (f->is_inclusive()) ++end;
@@ -434,7 +434,7 @@ namespace Sass {
            i < end;
            ++i) {
         it->value(i);
-        env.set_local(variable, it);
+        env.set_local(variable, &it);
         append_block(body);
       }
     } else {
@@ -443,7 +443,7 @@ namespace Sass {
            i > end;
            --i) {
         it->value(i);
-        env.set_local(variable, it);
+        env.set_local(variable, &it);
         append_block(body);
       }
     }
@@ -457,23 +457,23 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Each_Ptr e)
   {
     std::vector<std::string> variables(e->variables());
-    Expression_Ptr expr = e->list()->perform(&eval);
+    Expression_Obj expr = e->list()->perform(&eval);
     Vectorized<Expression_Obj>* list = 0;
-    Map_Ptr map = 0;
+    Map_Obj map;
     if (expr->concrete_type() == Expression::MAP) {
-      map = static_cast<Map_Ptr>(expr);
+      map = SASS_MEMORY_CAST(Map, expr);
     }
-    else if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(expr)) {
+    else if (CommaComplex_Selector_Ptr ls = SASS_MEMORY_CAST(CommaComplex_Selector, expr)) {
       Listize listize(ctx.mem);
       Expression_Obj rv = ls->perform(&listize);
-      list = dynamic_cast<List_Ptr>(&rv);
+      list = SASS_MEMORY_CAST(List, rv);
     }
     else if (expr->concrete_type() != Expression::LIST) {
       list = SASS_MEMORY_NEW(ctx.mem, List, expr->pstate(), 1, SASS_COMMA);
       list->append(expr);
     }
     else {
-      list = static_cast<List_Ptr>(expr);
+      list = SASS_MEMORY_CAST(List, expr);
     }
     // remember variables and then reset them
     Env env(environment(), true);
@@ -483,24 +483,24 @@ namespace Sass {
 
     if (map) {
       for (auto key : map->keys()) {
-        Expression_Ptr k = key->perform(&eval);
-        Expression_Ptr v = map->at(key)->perform(&eval);
+        Expression_Obj k = key->perform(&eval);
+        Expression_Obj v = map->at(key)->perform(&eval);
 
         if (variables.size() == 1) {
-          List_Ptr variable = SASS_MEMORY_NEW(ctx.mem, List, map->pstate(), 2, SASS_SPACE);
+          List_Obj variable = SASS_MEMORY_NEW(ctx.mem, List, map->pstate(), 2, SASS_SPACE);
           *variable << k;
           *variable << v;
-          env.set_local(variables[0], variable);
+          env.set_local(variables[0], &variable);
         } else {
-          env.set_local(variables[0], k);
-          env.set_local(variables[1], v);
+          env.set_local(variables[0], &k);
+          env.set_local(variables[1], &v);
         }
         append_block(body);
       }
     }
     else {
       // bool arglist = list->is_arglist();
-      if (list->length() == 1 && dynamic_cast<CommaComplex_Selector_Ptr>(list)) {
+      if (list->length() == 1 && SASS_MEMORY_CAST_PTR(CommaComplex_Selector, list)) {
         list = dynamic_cast<Vectorized<Expression_Obj>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
@@ -508,25 +508,25 @@ namespace Sass {
         // unwrap value if the expression is an argument
         if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, e)) e = arg->value();
         // check if we got passed a list of args (investigate)
-        if (List_Ptr scalars = dynamic_cast<List_Ptr>(&e)) {
+        if (List_Obj scalars = SASS_MEMORY_CAST(List, e)) {
           if (variables.size() == 1) {
-            Expression_Ptr var = scalars;
+            List_Obj var = scalars;
             // if (arglist) var = (*scalars)[0];
-            env.set_local(variables[0], var);
+            env.set_local(variables[0], &var);
           } else {
             for (size_t j = 0, K = variables.size(); j < K; ++j) {
-              Expression_Ptr res = j >= scalars->length()
+              Expression_Obj res = j >= scalars->length()
                 ? SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate())
                 : (*scalars)[j]->perform(&eval);
-              env.set_local(variables[j], res);
+              env.set_local(variables[j], &res);
             }
           }
         } else {
           if (variables.size() > 0) {
             env.set_local(variables.at(0), &e);
             for (size_t j = 1, K = variables.size(); j < K; ++j) {
-              Expression_Ptr res = SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate());
-              env.set_local(variables[j], res);
+              Expression_Obj res = SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate());
+              env.set_local(variables[j], &res);
             }
           }
         }
