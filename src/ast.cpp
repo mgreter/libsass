@@ -2347,11 +2347,11 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Convert map to (key, value) list.
   //////////////////////////////////////////////////////////////////////////////////////////
-  List_Ptr Map_Ref::to_list(Context& ctx, ParserState& pstate) {
-    List_Ptr ret = SASS_MEMORY_NEW(ctx.mem, List, pstate, length(), SASS_COMMA);
+  List_Obj Map_Ref::to_list(Context& ctx, ParserState& pstate) {
+    List_Obj ret = SASS_MEMORY_NEW(ctx.mem, List, pstate, length(), SASS_COMMA);
 
     for (auto key : keys()) {
-      List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
+      List_Obj l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
       *l << key;
       *l << at(key);
       *ret << l;

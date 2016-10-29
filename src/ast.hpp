@@ -194,7 +194,7 @@ namespace std {
   template<>
   struct hash<Sass::Expression_Obj>
   {
-    size_t operator()(Sass::Expression_Ptr s) const
+    size_t operator()(Sass::Expression_Obj s) const
     {
       return s->hash();
     }
@@ -988,7 +988,7 @@ namespace Sass {
     std::string type() { return "map"; }
     static std::string type_name() { return "map"; }
     bool is_invisible() const { return empty(); }
-    List_Ptr to_list(Context& ctx, ParserState& pstate);
+    List_Obj to_list(Context& ctx, ParserState& pstate);
 
     virtual size_t hash()
     {

@@ -1291,10 +1291,10 @@ namespace Sass {
     Signature set_nth_sig = "set-nth($list, $n, $value)";
     BUILT_IN(set_nth)
     {
-      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
-      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
-      Number_Ptr n = ARG("$n", Number);
-      Expression_Ptr v = ARG("$value", Expression);
+      Map_Obj m = SASS_MEMORY_CAST(Map, env["$list"]);
+      List_Obj l = SASS_MEMORY_CAST(List, env["$list"]);
+      Number_Obj n = ARG("$n", Number);
+      Expression_Obj v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1315,9 +1315,9 @@ namespace Sass {
     Signature index_sig = "index($list, $value)";
     BUILT_IN(index)
     {
-      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
-      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
-      Expression_Ptr v = ARG("$value", Expression);
+      Map_Obj m = SASS_MEMORY_CAST(Map, env["$list"]);
+      List_Obj l = SASS_MEMORY_CAST(List, env["$list"]);
+      Expression_Obj v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1334,11 +1334,11 @@ namespace Sass {
     Signature join_sig = "join($list1, $list2, $separator: auto)";
     BUILT_IN(join)
     {
-      Map_Ptr m1 = SASS_MEMORY_CAST(Map, env["$list1"]);
-      Map_Ptr m2 = SASS_MEMORY_CAST(Map, env["$list2"]);
-      List_Ptr l1 = SASS_MEMORY_CAST(List, env["$list1"]);
-      List_Ptr l2 = SASS_MEMORY_CAST(List, env["$list2"]);
-      String_Constant_Ptr sep = ARG("$separator", String_Constant);
+      Map_Obj m1 = SASS_MEMORY_CAST(Map, env["$list1"]);
+      Map_Obj m2 = SASS_MEMORY_CAST(Map, env["$list2"]);
+      List_Obj l1 = SASS_MEMORY_CAST(List, env["$list1"]);
+      List_Obj l2 = SASS_MEMORY_CAST(List, env["$list2"]);
+      String_Constant_Obj sep = ARG("$separator", String_Constant);
       enum Sass_Separator sep_val = (l1 ? l1->separator() : SASS_SPACE);
       if (!l1) {
         l1 = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
@@ -1361,23 +1361,23 @@ namespace Sass {
       if (sep_str == "space") sep_val = SASS_SPACE;
       else if (sep_str == "comma") sep_val = SASS_COMMA;
       else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
-      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
-      *result += l1;
-      *result += l2;
-      return result;
+      List_Obj result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
+      *result += &l1;
+      *result += &l2;
+      return &result;
     }
 
     Signature append_sig = "append($list, $val, $separator: auto)";
     BUILT_IN(append)
     {
-      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
-      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
-      Expression_Ptr v = ARG("$val", Expression);
+      Map_Obj m = SASS_MEMORY_CAST(Map, env["$list"]);
+      List_Obj l = SASS_MEMORY_CAST(List, env["$list"]);
+      Expression_Obj v = ARG("$val", Expression);
       if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, env["$list"])) {
         Listize listize(ctx.mem);
         l = SASS_MEMORY_CAST_PTR(List, sl->perform(&listize));
       }
-      String_Constant_Ptr sep = ARG("$separator", String_Constant);
+      String_Constant_Obj sep = ARG("$separator", String_Constant);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1385,12 +1385,12 @@ namespace Sass {
       if (m) {
         l = m->to_list(ctx, pstate);
       }
-      List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length() + 1, l->separator());
+      List_Obj result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length() + 1, l->separator());
       std::string sep_str(unquote(sep->value()));
       if (sep_str == "space") result->separator(SASS_SPACE);
       else if (sep_str == "comma") result->separator(SASS_COMMA);
       else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
-      *result += l;
+      *result += &l;
       bool is_arglist = l->is_arglist();
       result->is_arglist(is_arglist);
       if (is_arglist) {
@@ -1404,7 +1404,7 @@ namespace Sass {
       } else {
         *result << v;
       }
-      return result;
+      return &result;
     }
 
     Signature zip_sig = "zip($lists...)";
