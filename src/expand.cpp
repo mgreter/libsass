@@ -235,7 +235,8 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
   {
     Block_Obj ab = d->block();
-    String_Ptr old_p = d->property();
+    String_Obj old_p = d->property();
+    // String_Ptr new_p = dynamic_cast<String_Ptr>(old_p->perform(&eval));
     String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
     Expression_Obj value = d->value()->perform(&eval);
     Block_Obj bb = ab ? operator()(&ab) : NULL;
@@ -259,7 +260,7 @@ namespace Sass {
     if (a->is_global()) {
       if (a->is_default()) {
         if (env->has_global(var)) {
-          Expression_Ptr e = SASS_MEMORY_CAST(Expression, env->get_global(var));
+          Expression_Obj e = SASS_MEMORY_CAST(Expression, env->get_global(var));
           if (!e || e->concrete_type() == Expression::NULL_VAL) {
             env->set_global(var, a->value()->perform(&eval));
           }
@@ -278,7 +279,7 @@ namespace Sass {
         while (cur && cur->is_lexical()) {
           if (cur->has_local(var)) {
             if (AST_Node_Obj node = cur->get_local(var)) {
-              Expression_Ptr e = SASS_MEMORY_CAST(Expression, node);
+              Expression_Obj e = SASS_MEMORY_CAST(Expression, node);
               if (!e || e->concrete_type() == Expression::NULL_VAL) {
                 cur->set_local(var, a->value()->perform(&eval));
               }
@@ -294,7 +295,7 @@ namespace Sass {
       }
       else if (env->has_global(var)) {
         if (AST_Node_Obj node = env->get_global(var)) {
-          Expression_Ptr e = SASS_MEMORY_CAST(Expression, node);
+          Expression_Obj e = SASS_MEMORY_CAST(Expression, node);
           if (!e || e->concrete_type() == Expression::NULL_VAL) {
             env->set_global(var, a->value()->perform(&eval));
           }
@@ -315,17 +316,17 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Import_Ptr imp)
   {
-    Import_Ptr result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
+    Import_Obj result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
     if (imp->import_queries() && imp->import_queries()->size()) {
-      Expression_Ptr ex = imp->import_queries()->perform(&eval);
-      result->import_queries(dynamic_cast<List_Ptr>(ex));
+      Expression_Obj ex = imp->import_queries()->perform(&eval);
+      result->import_queries(SASS_MEMORY_CAST(List, ex));
     }
     for ( size_t i = 0, S = imp->urls().size(); i < S; ++i) {
       result->urls().push_back(imp->urls()[i]->perform(&eval));
     }
     // all resources have been dropped for Input_Stubs
     // for ( size_t i = 0, S = imp->incs().size(); i < S; ++i) {}
-    return result;
+    return &result;
   }
 
   Statement_Ptr Expand::operator()(Import_Stub_Ptr i)
