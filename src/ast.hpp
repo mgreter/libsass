@@ -192,7 +192,7 @@ namespace Sass {
 
 namespace std {
   template<>
-  struct hash<Sass::Expression_Ptr>
+  struct hash<Sass::Expression_Obj>
   {
     size_t operator()(Sass::Expression_Ptr s) const
     {
@@ -200,9 +200,9 @@ namespace std {
     }
   };
   template<>
-  struct equal_to<Sass::Expression_Ptr>
+  struct equal_to<Sass::Expression_Obj>
   {
-    bool operator()( Sass::Expression_Ptr lhs,  Sass::Expression_Ptr rhs) const
+    bool operator()( Sass::Expression_Obj lhs,  Sass::Expression_Obj rhs) const
     {
       return lhs->hash() == rhs->hash();
     }
@@ -783,7 +783,7 @@ namespace Sass {
   public:
     enum Type { MIXIN, FUNCTION };
     ADD_PROPERTY(std::string, name)
-    ADD_PROPERTY(Parameters_Ptr, parameters)
+    ADD_PROPERTY(Parameters_Obj, parameters)
     ADD_PROPERTY(Env*, environment)
     ADD_PROPERTY(Type, type)
     ADD_PROPERTY(Native_Function, native_function)
@@ -794,7 +794,7 @@ namespace Sass {
   public:
     Definition_Ref(ParserState pstate,
                std::string n,
-               Parameters_Ptr params,
+               Parameters_Obj params,
                Block_Obj b,
                Type t)
     : Has_Block_Ref(pstate, b),
@@ -811,7 +811,7 @@ namespace Sass {
     Definition_Ref(ParserState pstate,
                Signature sig,
                std::string n,
-               Parameters_Ptr params,
+               Parameters_Obj params,
                Native_Function func_ptr,
                bool overload_stub = false)
     : Has_Block_Ref(pstate, 0),
@@ -828,7 +828,7 @@ namespace Sass {
     Definition_Ref(ParserState pstate,
                Signature sig,
                std::string n,
-               Parameters_Ptr params,
+               Parameters_Obj params,
                Sass_Function_Entry c_func,
                bool whatever,
                bool whatever2)
@@ -896,7 +896,7 @@ namespace Sass {
         " " : (compressed ? "," : ", ");
     }
     bool is_invisible() const { return empty(); }
-    Expression_Ptr value_at_index(size_t i);
+    Expression_Obj value_at_index(size_t i);
 
     virtual size_t size() const;
 

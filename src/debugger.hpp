@@ -453,7 +453,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     // std::cerr << " [signature: " << block->signature() << "] ";
     std::cerr << " [native: " << block->native_function() << "] ";
     std::cerr << " " << block->tabs() << std::endl;
-    debug_ast(block->parameters(), ind + " params: ", env);
+    debug_ast(&block->parameters(), ind + " params: ", env);
     if (block->oblock()) debug_ast(&block->oblock(), ind + " ", env);
   } else if (dynamic_cast<Mixin_Call_Ptr>(node)) {
     Mixin_Call_Ptr block = dynamic_cast<Mixin_Call_Ptr>(node);

@@ -1148,10 +1148,10 @@ namespace Sass {
     BUILT_IN(min)
     {
       List_Ptr arglist = ARG("$numbers", List);
-      Number_Ptr least = 0;
+      Number_Obj least;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Ptr val = arglist->value_at_index(i);
-        Number_Ptr xi = SASS_MEMORY_CAST_PTR(Number, val);
+        Expression_Obj val = arglist->value_at_index(i);
+        Number_Obj xi = SASS_MEMORY_CAST(Number, val);
         if (!xi) {
           error("\"" + val->to_string(ctx.c_options) + "\" is not a number for `min'", pstate);
         }
@@ -1159,17 +1159,17 @@ namespace Sass {
           if (*xi < *least) least = xi;
         } else least = xi;
       }
-      return least;
+      return &least;
     }
 
     Signature max_sig = "max($numbers...)";
     BUILT_IN(max)
     {
       List_Ptr arglist = ARG("$numbers", List);
-      Number_Ptr greatest = 0;
+      Number_Obj greatest;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Ptr val = arglist->value_at_index(i);
-        Number_Ptr xi = SASS_MEMORY_CAST_PTR(Number, val);
+        Expression_Obj val = arglist->value_at_index(i);
+        Number_Obj xi = SASS_MEMORY_CAST(Number, val);
         if (!xi) {
           error("\"" + val->to_string(ctx.c_options) + "\" is not a number for `max'", pstate);
         }
@@ -1177,7 +1177,7 @@ namespace Sass {
           if (*greatest < *xi) greatest = xi;
         } else greatest = xi;
       }
-      return greatest;
+      return &greatest;
     }
 
     Signature random_sig = "random($limit:false)";
@@ -1282,9 +1282,9 @@ namespace Sass {
         return l;
       }
       else {
-        Expression_Ptr rv = l->value_at_index(static_cast<int>(index));
+        Expression_Obj rv = l->value_at_index(static_cast<int>(index));
         rv->set_delayed(false);
-        return rv;
+        return &rv;
       }
     }
 
@@ -1413,8 +1413,8 @@ namespace Sass {
       List_Obj arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$lists", List));
       size_t shortest = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        List_Obj ith = SASS_MEMORY_CAST_PTR(List, arglist->value_at_index(i));
-        Map_Obj mith = SASS_MEMORY_CAST_PTR(Map, arglist->value_at_index(i));
+        List_Obj ith = SASS_MEMORY_CAST(List, arglist->value_at_index(i));
+        Map_Obj mith = SASS_MEMORY_CAST(Map, arglist->value_at_index(i));
         if (!ith) {
           if (mith) {
             ith = mith->to_list(ctx, pstate);
@@ -1436,7 +1436,7 @@ namespace Sass {
       for (size_t i = 0; i < shortest; ++i) {
         List_Ptr zipper = SASS_MEMORY_NEW(ctx.mem, List, pstate, L);
         for (size_t j = 0; j < L; ++j) {
-          *zipper << (*static_cast<List_Ptr>(arglist->value_at_index(j)))[i];
+          *zipper << SASS_MEMORY_CAST(List, arglist->value_at_index(j))->at(i);
         }
         *zippers << zipper;
       }
@@ -1659,7 +1659,7 @@ namespace Sass {
       // Parameters_Ptr params = def ? def->parameters() : 0;
       // size_t param_size = params ? params->length() : 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Ptr expr = arglist->value_at_index(i);
+        Expression_Obj expr = arglist->value_at_index(i);
         // if (params && params->has_rest_parameter()) {
         //   Parameter_Obj p = param_size > i ? (*params)[i] : 0;
         //   List_Ptr list = SASS_MEMORY_CAST(List, expr);
@@ -1759,14 +1759,14 @@ namespace Sass {
       // Parse args into vector of selectors
       std::vector<CommaComplex_Selector_Obj> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Ptr exp = SASS_MEMORY_CAST_PTR(Expression, arglist->value_at_index(i));
+        Expression_Obj exp = SASS_MEMORY_CAST(Expression, arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
           std::stringstream msg;
           msg << "$selectors: null is not a valid selector: it must be a string,\n";
           msg << "a list of strings, or a list of lists of strings for 'selector-nest'";
           error(msg.str(), pstate);
         }
-        if (String_Constant_Ptr str = SASS_MEMORY_CAST_PTR(String_Constant, exp)) {
+        if (String_Constant_Obj str = SASS_MEMORY_CAST(String_Constant, exp)) {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string(ctx.c_options) + "{";
@@ -1810,7 +1810,7 @@ namespace Sass {
       // Parse args into vector of selectors
       std::vector<CommaComplex_Selector_Obj> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Obj exp = SASS_MEMORY_CAST_PTR(Expression, arglist->value_at_index(i));
+        Expression_Obj exp = SASS_MEMORY_CAST(Expression, arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
           std::stringstream msg;
           msg << "$selectors: null is not a valid selector: it must be a string,\n";

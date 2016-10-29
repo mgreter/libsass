@@ -2319,7 +2319,7 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Additional method on Lists to retrieve values directly or from an encompassed Argument.
   //////////////////////////////////////////////////////////////////////////////////////////
-  Expression_Ptr List_Ref::value_at_index(size_t i) {
+  Expression_Obj List_Ref::value_at_index(size_t i) {
     Expression_Obj obj = this->at(i);
     if (is_arglist_) {
       if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
