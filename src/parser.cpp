@@ -299,7 +299,7 @@ namespace Sass {
         // parse a propset that rides on the declaration's property
         stack.push_back(Scope::Properties);
         decl->oblock(parse_block());
-        decl->block(&decl->oblock());
+        // decl->block(&decl->oblock());
         stack.pop_back();
         if (decl->is_indented()) -- indentation;
       }
@@ -604,7 +604,7 @@ namespace Sass {
     // parse optional block
     if (peek < exactly <'{'> >()) {
       call->oblock(parse_block());
-      call->block(&call->oblock());
+      // call->block(&call->oblock());
     }
     // return ast node
     return call;
@@ -2012,7 +2012,7 @@ if (DBG) std::cerr << "complex 2\n";
     call->predicate(predicate);
     // parse mandatory block
     call->oblock(parse_block(root));
-    call->block(&call->oblock());
+    // call->block(&call->oblock());
     // return ast node
     stack.pop_back();
     // return ast node

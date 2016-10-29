@@ -112,7 +112,7 @@ namespace Sass {
     {
       Directive_Ptr empty_node = static_cast<Directive_Ptr>(rr);
       empty_node->oblock(SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock() ? rr->oblock()->pstate() : rr->pstate()));
-      empty_node->block(&empty_node->oblock());
+      // empty_node->block(&empty_node->oblock());
       result->append(empty_node);
     }
 
@@ -175,11 +175,11 @@ namespace Sass {
       Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
       bb->concat(&props);
       rr->oblock(bb);
-      rr->block(&rr->oblock());
+      // rr->block(&rr->oblock());
 
       for (size_t i = 0, L = rules->length(); i < L; i++)
       {
-		  Statement_Obj stm = rules->at(i);
+        Statement_Obj stm = rules->at(i);
         stm->tabs(stm->tabs() + 1);
       }
 
@@ -278,7 +278,7 @@ namespace Sass {
     Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
     new_rule->oblock(bb);
-    new_rule->block(&new_rule->oblock());
+    // new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
     new_rule->oblock()->concat(&m->oblock());
 
@@ -300,7 +300,7 @@ namespace Sass {
     Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
     new_rule->oblock(bb);
-    new_rule->block(&new_rule->oblock());
+    // new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
     new_rule->oblock()->concat(&m->oblock());
 
@@ -455,7 +455,7 @@ namespace Sass {
         else {
           previous_parent = static_cast<Has_Block_Ptr>(shallow_copy(parent));
           previous_parent->oblock(&slice);
-          previous_parent->block(&previous_parent->oblock());
+          // previous_parent->block(&previous_parent->oblock());
           previous_parent->tabs(parent->tabs());
 
           Has_Block_Ptr new_parent = previous_parent;
