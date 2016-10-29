@@ -8,6 +8,7 @@
 /////////////////////////////////////////////
 namespace Sass {
 
+#define DBG false
 
   class Memory_Object {
   protected:
@@ -16,7 +17,9 @@ namespace Sass {
     long refcounter;
     long refcount;
   public:
-    Memory_Object() { refcount = 0; refcounter = 0; };
+    Memory_Object() {
+    	if (DBG) std::cerr << "Create " << this << "\n";
+    	refcount = 0; refcounter = 0; };
     virtual ~Memory_Object() {};
   };
 
@@ -33,25 +36,41 @@ namespace Sass {
     : node(ptr) {
       if (node) {
         node->refcounter += 1;
-       //  std::cerr << "Create, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+        if (DBG) std::cerr << "Object, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     };
+    // copy assignment operator
+    Memory_Ptr& operator=(const Memory_Ptr& rhs) {
+      node = rhs.node;
+      if (node) node->refcounter ++;
+      if (DBG) std::cerr << "COPY, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+      return *this;
+    };
+    // move assignment operator
+    Memory_Ptr& operator=(Memory_Ptr&& rhs) {
+      node = rhs.node;
+      if (node) node->refcounter ++;
+      if (DBG) std::cerr << "MOVE, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+      return *this;
+    };
+
+
     // the copy constructor
     Memory_Ptr(const Memory_Ptr& obj)
     : node(obj.node) {
       if (node) {
         node->refcounter += 1;
-       //  std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+        if (DBG) std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     }
     ~Memory_Ptr() {
       if (this->node) {
         // this gives errors for nested?
         this->node->refcounter -= 1;
-        // std::cerr << "decrease refcount, " << node << " - now at " << node->refcounter << "\n";
+       if (DBG)  std::cerr << "decrease refcount, " << node << " - now at " << node->refcounter << "\n";
         if (this->node->refcounter == 0) {
-          // std::cerr << "DELETE me " << node << "\n";
-          // delete(node);
+         if (DBG)  std::cerr << "DELETE me " << node << "\n";
+         if (DBG)  delete(node);
           // delete and remove
         }
       }

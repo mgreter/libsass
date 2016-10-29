@@ -24,6 +24,8 @@
 // Another case with delayed values are colors. In compressed mode
 // only processed values get compressed (other are left as written).
 
+#define DBG false
+
 #include <typeinfo>
 #include <tuple>
 
@@ -612,10 +614,10 @@ namespace Sass {
   {
     bool reloop = true;
     bool had_linefeed = false;
-    Complex_Selector_Ptr sel = 0;
+    Complex_Selector_Obj sel;
     CommaComplex_Selector_Ptr group = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate);
     group->media_block(&last_media_block);
-
+if (DBG) std::cerr << "SEL LIST\n";
     do {
       reloop = false;
 
@@ -626,7 +628,7 @@ namespace Sass {
 
 
       // now parse the complex selector
-      sel = &parse_complex_selector(in_root);
+      sel = parse_complex_selector(in_root);
 
       if (!sel) return group;
 
@@ -643,9 +645,10 @@ namespace Sass {
         had_linefeed = had_linefeed || peek_newline();
         // remember line break (also between some commas)
       }
-      (*group) << sel;
+      group->append(sel);
     }
     while (reloop);
+if (DBG) std::cerr << "SEL LIST END\n";
     while (lex_css< kwd_optional >()) {
       group->is_optional(true);
     }
@@ -665,16 +668,19 @@ namespace Sass {
 
     String_Ptr reference = 0;
     lex < block_comment >();
-
-    Complex_Selector_Ptr sel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate);
+if (DBG) std::cerr << "complex 1\n";
+    Complex_Selector_Obj sel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate);
 
     // parse the left hand side
-    Compound_Selector_Ptr lhs = 0;
+    Compound_Selector_Obj lhs;
     // special case if it starts with combinator ([+~>])
     if (!peek_css< class_char < selector_combinator_ops > >()) {
       // parse the left hand side
-      lhs = &parse_compound_selector();
+if (DBG) std::cerr << "parse_compound_selector 1\n";
+      lhs = parse_compound_selector();
+if (DBG) std::cerr << "parse_compound_selector 2\n";
     }
+if (DBG) std::cerr << "parse_compound_selector 3\n";
 
     // check for end of file condition
     if (peek < end_of_file >()) return 0;
@@ -692,24 +698,31 @@ namespace Sass {
       if (!lex < exactly < '/' > >()) return 0; // ToDo: error msg?
     }
     else /* if (lex< zero >()) */   combinator = Complex_Selector_Ref::ANCESTOR_OF;
+if (DBG) std::cerr << "parse_compound_selector 6\n";
 
     if (!lhs && combinator == Complex_Selector_Ref::ANCESTOR_OF) return 0;
 
     // lex < block_comment >();
+if (DBG) std::cerr << "parse_compound_selector 7 " << &sel->head() << " vs " << &lhs << "\n";
     sel->head(lhs);
+if (DBG) std::cerr << "parse_compound_selector 7a\n";
     sel->combinator(combinator);
+if (DBG) std::cerr << "parse_compound_selector 7b\n";
     sel->media_block(&last_media_block);
+if (DBG) std::cerr << "parse_compound_selector 7c\n";
 
     if (combinator == Complex_Selector_Ref::REFERENCE) sel->reference(reference);
     // has linfeed after combinator?
     sel->has_line_break(peek_newline());
     // sel->has_line_feed(has_line_feed);
 
+if (DBG) std::cerr << "parse_compound_selector 8\n";
     // check if we got the abort condition (ToDo: optimize)
     if (!peek_css< class_char < complex_selector_delims > >()) {
       // parse next selector in sequence
       sel->tail(parse_complex_selector(true));
     }
+if (DBG) std::cerr << "parse_compound_selector 9\n";
 
     // add a parent selector if we are not in a root
     // also skip adding parent ref if we only have refs
@@ -720,7 +733,7 @@ namespace Sass {
       parent->media_block(&last_media_block);
       head->media_block(&last_media_block);
       // add simple selector
-      (*head) << parent;
+      head->append(parent);
       // selector may not have any head yet
       if (!sel->head()) { sel->head(head); }
       // otherwise we need to create a new complex selector and set the old one as its tail
@@ -733,7 +746,7 @@ namespace Sass {
     }
 
     sel->update_pstate(pstate);
-
+if (DBG) std::cerr << "complex 2\n";
     // complex selector
     return sel;
   }
@@ -2367,7 +2380,7 @@ namespace Sass {
       >
     >(false);
     if (match) {
-      // std::cerr << "[[" << std::string(lexed) << "]\n";
+      // if (DBG) std::cerr << "[[" << std::string(lexed) << "]\n";
       return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
     }
     return NULL;
@@ -2394,7 +2407,7 @@ namespace Sass {
     lex < spaces >(false);
     Expression_Ptr token = &lex_almost_any_value_token();
     if (!token) return 0;
-    // std::cerr << "LEX [" << std::string(lexed) << "]\n";
+    // if (DBG) std::cerr << "LEX [" << std::string(lexed) << "]\n";
     schema->append(token);
     if (*position == 0) {
       schema->rtrim();

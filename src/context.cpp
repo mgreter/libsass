@@ -12,6 +12,7 @@
 #include "context.hpp"
 #include "plugins.hpp"
 #include "constants.hpp"
+#include "debugger.hpp"
 #include "parser.hpp"
 #include "file.hpp"
 #include "inspect.hpp"
@@ -29,6 +30,8 @@
 #include "sass2scss.h"
 #include "prelexer.hpp"
 #include "emitter.hpp"
+
+#define DBG false
 
 namespace Sass {
   using namespace Constants;
@@ -316,7 +319,9 @@ namespace Sass {
     sass_import_take_source(import);
     sass_import_take_srcmap(import);
     // then parse the root block
+    if (DBG) std::cerr << "START PARSING\n";
     Block_Obj root = p.parse();
+    if (DBG) std::cerr << "PARSED ========================================================================\n";
     // delete memory of current stack frame
     sass_delete_import(import_stack.back());
     // remove current stack frame
@@ -326,6 +331,7 @@ namespace Sass {
       ast_pair(inc.abs_path, { res, &root });
     // register resulting resource
     sheets.insert(ast_pair);
+    if (DBG) std::cerr << "ENDP ========================================================================\n";
 
   }
 
@@ -556,7 +562,7 @@ Block_Obj getBlk(String_Obj node) {
   std::string str("foobar");
   Block_Obj blk = SASS_MEMORY_NEW(mem, Block, pstate);
   String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
-     std::cerr << "create copy\n";
+     if (DBG) std::cerr << "create copy\n";
   String_Obj string_cp = string->copy(mem);
   // blk->append(&string);
   return blk;
@@ -572,12 +578,12 @@ void doit() {
 List2_Obj list = SASS_MEMORY_NEW(mem, List2, pstate);
 {
 String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
-std::cerr << "APPEND now\n";
+if (DBG) std::cerr << "APPEND now\n";
 list->append(&string);
 // list->append(&string);
 }
      Expression_Obj obj = list->at(0);
-     std::cerr << "[[" << obj->to_sass() << "]]\n";
+     if (DBG) std::cerr << "[[" << obj->to_sass() << "]]\n";
 
 }
 
@@ -692,26 +698,35 @@ exit(0);
   // parse root block from includes
   Block_Obj Context::compile()
   {
+    if (DBG) std::cerr << "COMP ========================================================================\n";
     // abort if there is no data
     if (resources.size() == 0) return 0;
     // get root block from the first style sheet
     Block_Obj root = sheets.at(entry_path).root;
     // abort on invalid root
     if (root == false) return 0;
+    if (DBG) std::cerr << "COMP 1 ========================================================================\n";
 
     Env global; // create root environment
     // register built-in functions on env
     register_built_in_functions(*this, &global);
     // register custom functions (defined via C-API)
+    if (DBG) std::cerr << "COMP 2 ========================================================================\n";
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
     { register_c_function(*this, &global, c_functions[i]); }
+
+    if (DBG) std::cerr << "COMP 3 ========================================================================\n";
+
     // create initial backtrace entry
     Backtrace backtrace(0, ParserState("", 0), "");
     // create crtp visitor objects
     Expand expand(*this, &global, &backtrace);
     Cssize cssize(*this, &backtrace);
     CheckNesting check_nesting;
+    if (DBG) std::cerr << "COMP 4 ========================================================================\n";
+    if (DBG) debug_ast(&root);
     // check nesting
+    if (DBG) std::cerr << "COMP 5 ========================================================================\n";
     check_nesting(&root);
     // expand and eval the tree
     root = expand(&root);
@@ -726,6 +741,7 @@ exit(0);
       // extend tree nodes
       extend(&root);
     }
+    if (DBG) debug_ast(&root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?

@@ -56,7 +56,7 @@ namespace Sass {
     // only call destructor if initialized
     // if (np->refcount) np->~Memory_Object();
     // always free the memory
-    free(np);
+    // free(np);
   }
 
   void Memory_Manager::remove(Memory_Object* np)
