@@ -2123,7 +2123,6 @@ namespace Sass {
     virtual bool has_placeholder() {
       return true;
     }
-    // virtual Placeholder_Selector_Ptr find_placeholder();
     virtual ~Placeholder_Selector_Ref() {};
     ATTACH_OPERATIONS()
   };
@@ -2193,8 +2192,8 @@ namespace Sass {
     ADD_PROPERTY(std::string, matcher)
     ADD_PROPERTY(String_Ptr, value) // might be interpolated
   public:
-    Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Ptr v)
-    : Simple_Selector_Ref(pstate, n), matcher_(m), value_(v)
+    Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Obj v)
+    : Simple_Selector_Ref(pstate, n), matcher_(m), value_(&v)
     { }
     virtual size_t hash()
     {

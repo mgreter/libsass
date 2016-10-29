@@ -1660,10 +1660,10 @@ namespace Sass {
   // XXX: this is never hit via spec tests
   Attribute_Selector_Ptr Eval::operator()(Attribute_Selector_Ptr s)
   {
-    String_Ptr attr = s->value();
+    String_Obj attr = s->value();
     if (attr) { attr = static_cast<String_Ptr>(attr->perform(this)); }
     Attribute_Selector_Ptr ss = SASS_MEMORY_NEW(ctx.mem, Attribute_Selector, *s);
-    ss->value(attr);
+    ss->value(&attr);
     return ss;
   }
 
