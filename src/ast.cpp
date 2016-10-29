@@ -1041,7 +1041,7 @@ namespace Sass {
   // check if we need to append some headers
   // then we need to check for the combinator
   // only then we can safely set the new tail
-  void Complex_Selector_Ref::append(Context& ctx, Complex_Selector_Ptr ss)
+  void Complex_Selector_Ref::append(Context& ctx, Complex_Selector_Obj ss)
   {
 
     Complex_Selector_Obj t = ss->tail();
@@ -1128,25 +1128,26 @@ namespace Sass {
       CommaComplex_Selector_Ptr list = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
       *list << (*ps)[pi];
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
-        *ss += (*this)[si]->resolve_parent_refs(ctx, list, implicit_parent);
+        *ss += &(*this)[si]->resolve_parent_refs(ctx, list, implicit_parent);
       }
     }
     return ss;
   }
 
-  CommaComplex_Selector_Ptr Complex_Selector_Ref::resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent)
+  CommaComplex_Selector_Obj Complex_Selector_Ref::resolve_parent_refs(Context& ctx, CommaComplex_Selector_Obj parents, bool implicit_parent)
   {
     Complex_Selector_Obj tail = this->tail();
     Compound_Selector_Obj head = this->head();
 
     if (!this->has_real_parent_ref() && !implicit_parent) {
-      CommaComplex_Selector_Ptr retval = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
+      CommaComplex_Selector_Obj retval = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate());
       *retval << this;
       return retval;
     }
 
     // first resolve_parent_refs the tail (which may return an expanded list)
-    CommaComplex_Selector_Ptr tails = tail ? tail->resolve_parent_refs(ctx, parents, implicit_parent) : 0;
+    CommaComplex_Selector_Obj tails;
+    if (tail) tails = tail->resolve_parent_refs(ctx, parents, implicit_parent);
 
     if (head && head->length() > 0) {
 
@@ -1243,13 +1244,13 @@ namespace Sass {
       }
       // no parent selector in head
       else {
-        retval = this->tails(ctx, tails);
+        retval = this->tails(ctx, &tails);
       }
 
       for (Simple_Selector_Obj ss : head->elements()) {
         if (Wrapped_Selector_Obj ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
           if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, ws->selector())) {
-            if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, implicit_parent));
+            if (parents) ws->selector(sl->resolve_parent_refs(ctx, &parents, implicit_parent));
           }
         }
       }
@@ -1259,7 +1260,7 @@ namespace Sass {
     }
     // has no head
     else {
-      return this->tails(ctx, tails);
+      return this->tails(ctx, &tails);
     }
 
     // unreachable
@@ -1321,7 +1322,7 @@ namespace Sass {
     return c;
   }
 
-  void Complex_Selector_Ref::set_innermost(Complex_Selector_Ptr val, Combinator c)
+  void Complex_Selector_Ref::set_innermost(Complex_Selector_Obj val, Combinator c)
   {
     if (!tail())
     { tail(val); combinator(c); }

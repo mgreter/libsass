@@ -1653,7 +1653,7 @@ namespace Sass {
   CommaComplex_Selector_Ptr Eval::operator()(Complex_Selector_Ptr s)
   {
     bool implicit_parent = !exp.old_at_root_without_rule;
-    return s->resolve_parent_refs(ctx, &selector(), implicit_parent);
+    return &s->resolve_parent_refs(ctx, &selector(), implicit_parent);
 
   }
 

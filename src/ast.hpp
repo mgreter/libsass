@@ -2511,19 +2511,17 @@ namespace Sass {
     Complex_Selector_Obj last();
 
     // some shortcuts that should be removed
-    // Complex_Selector_Ptr_Const innermost() const { return last(); };
     Complex_Selector_Obj innermost() { return last(); };
 
     size_t length() const;
-    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
+    CommaComplex_Selector_Obj resolve_parent_refs(Context& ctx, CommaComplex_Selector_Obj parents, bool implicit_parent = true);
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
-    // virtual Placeholder_Selector_Ptr find_placeholder();
     CommaComplex_Selector_Ptr unify_with(Complex_Selector_Obj rhs, Context& ctx);
     Combinator clear_innermost();
-    void append(Context&, Complex_Selector_Ptr);
-    void set_innermost(Complex_Selector_Ptr, Combinator);
+    void append(Context&, Complex_Selector_Obj);
+    void set_innermost(Complex_Selector_Obj, Combinator);
     virtual size_t hash()
     {
       if (hash_ == 0) {
@@ -2541,7 +2539,7 @@ namespace Sass {
       if (tail()) sum += tail()->specificity();
       return sum;
     }
-    virtual void set_media_block(Media_Block_Ptr mb) {
+    virtual void set_media_block(Media_Block_Obj mb) {
       media_block(mb);
       if (tail_) tail_->set_media_block(mb);
       if (head_) head_->set_media_block(mb);
