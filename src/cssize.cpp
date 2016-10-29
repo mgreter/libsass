@@ -254,7 +254,7 @@ namespace Sass {
 
     if (!tmp)
     {
-      Block_Obj bb = operator()(m->block());
+      Block_Obj bb = operator()(&m->oblock());
       for (size_t i = 0, L = bb->length(); i < L; ++i) {
         // (bb->elements())[i]->tabs(m->tabs());
 		  Statement_Obj stm = bb->at(i);
@@ -279,7 +279,7 @@ namespace Sass {
     new_rule->oblock(bb);
     new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
-    new_rule->block()->concat(m->block());
+    new_rule->oblock()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock() ? m->oblock()->pstate() : m->pstate());
     wrapper_block->append(new_rule);
@@ -301,7 +301,7 @@ namespace Sass {
     new_rule->oblock(bb);
     new_rule->block(&new_rule->oblock());
     new_rule->tabs(this->parent()->tabs());
-    new_rule->block()->concat(m->block());
+    new_rule->oblock()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
     wrapper_block->append(new_rule);
@@ -323,7 +323,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-    new_rule->block()->concat(m->block());
+    new_rule->oblock()->concat(m->block());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
     wrapper_block->append(new_rule);
