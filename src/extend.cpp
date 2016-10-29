@@ -2049,7 +2049,7 @@ namespace Sass {
 
     // Ruby sass seems to filter nodes that don't have any content well before we get here. I'm not sure the repercussions
     // of doing so, so for now, let's just not extend things that won't be output later.
-    if (!shouldExtendBlock(pObject->block())) {
+    if (!shouldExtendBlock(pObject->oblock())) {
       DEBUG_PRINTLN(EXTEND_OBJECT, "RETURNING WITHOUT EXTEND ATTEMPT")
       return;
     }
@@ -2103,24 +2103,24 @@ namespace Sass {
   void Extend::operator()(Ruleset_Ptr pRuleset)
   {
     extendObjectWithSelectorAndBlock( pRuleset, ctx, subset_map);
-    pRuleset->block()->perform(this);
+    pRuleset->oblock()->perform(this);
   }
 
   void Extend::operator()(Supports_Block_Ptr pFeatureBlock)
   {
-    pFeatureBlock->block()->perform(this);
+    pFeatureBlock->oblock()->perform(this);
   }
 
   void Extend::operator()(Media_Block_Ptr pMediaBlock)
   {
-    pMediaBlock->block()->perform(this);
+    pMediaBlock->oblock()->perform(this);
   }
 
   void Extend::operator()(Directive_Ptr a)
   {
     // CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(a->selector());
     // selector_stack.push_back(ls);
-    if (a->block()) a->block()->perform(this);
+    if (a->oblock()) a->oblock()->perform(this);
     // exp.selector_stack.pop_back();
   }
 }
