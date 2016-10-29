@@ -709,7 +709,7 @@ exit(0);
 
     Env global; // create root environment
     // register built-in functions on env
-    register_built_in_functions(*this, &global);
+    if (!DBG) register_built_in_functions(*this, &global);
     // register custom functions (defined via C-API)
     if (DBG) std::cerr << "COMP 2 ========================================================================\n";
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
@@ -729,11 +729,15 @@ exit(0);
     if (DBG) std::cerr << "COMP 5 ========================================================================\n";
     check_nesting(&root);
     // expand and eval the tree
+    if (DBG) std::cerr << "COMP 6 ========================================================================\n";
     root = expand(&root);
+    if (DBG) std::cerr << "COMP 7 ========================================================================\n";
     // check nesting
     check_nesting(&root);
+    if (DBG) std::cerr << "COMP 8 ========================================================================\n";
     // merge and bubble certain rules
     root = cssize(&root);
+    if (DBG) std::cerr << "COMP 9 ========================================================================\n";
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
@@ -741,6 +745,7 @@ exit(0);
       // extend tree nodes
       extend(&root);
     }
+    if (DBG) std::cerr << "COMP 10 ========================================================================\n";
     if (DBG) debug_ast(&root);
 
     // clean up by removing empty placeholders

@@ -41,16 +41,30 @@ namespace Sass {
     };
     // copy assignment operator
     Memory_Ptr& operator=(const Memory_Ptr& rhs) {
+      void* cur_ptr = (void*) node;
+      void* rhs_ptr = (void*) rhs.node;
+      if (cur_ptr == rhs_ptr) {
+        return *this;
+      }
       node = rhs.node;
-      if (node) node->refcounter ++;
-      if (DBG) std::cerr << "COPY, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+      if (node) {
+        node->refcounter ++;
+        if (DBG) std::cerr << "COPY, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+      }
       return *this;
     };
     // move assignment operator
     Memory_Ptr& operator=(Memory_Ptr&& rhs) {
+      void* cur_ptr = (void*) node;
+      void* rhs_ptr = (void*) rhs.node;
+      if (cur_ptr == rhs_ptr) {
+        return *this;
+      }
       node = rhs.node;
-      if (node) node->refcounter ++;
-      if (DBG) std::cerr << "MOVE, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+      if (node) {
+        node->refcounter ++;
+        if (DBG) std::cerr << "MOVE, " << node << " - increase refcount, now at " << node->refcounter << "\n";
+      }
       return *this;
     };
 
