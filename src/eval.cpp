@@ -145,7 +145,7 @@ namespace Sass {
     Env env(exp.environment());
     exp.env_stack.push_back(&env);
     if (*i->predicate()->perform(this)) {
-      rv = i->block()->perform(this);
+      rv = i->oblock()->perform(this);
     }
     else {
       Block_Obj alt = i->alternative();
@@ -184,7 +184,7 @@ namespace Sass {
     exp.env_stack.push_back(&env);
     Number_Ptr it = SASS_MEMORY_NEW(env.mem, Number, low->pstate(), start, sass_end->unit());
     env.set_local(variable, it);
-    Block_Obj body = f->block();
+    Block_Obj body = f->oblock();
     Expression_Ptr val = 0;
     if (start < end) {
       if (f->is_inclusive()) ++end;
@@ -237,7 +237,7 @@ namespace Sass {
       list = static_cast<List_Ptr>(expr);
     }
 
-    Block_Obj body = e->block();
+    Block_Obj body = e->oblock();
     Expression_Ptr val = 0;
 
     if (map) {
@@ -301,7 +301,7 @@ namespace Sass {
   Expression_Ptr Eval::operator()(While_Ptr w)
   {
     Expression_Obj pred = w->predicate();
-    Block_Obj body = w->block();
+    Block_Obj body = w->oblock();
     Env env(environment(), true);
     exp.env_stack.push_back(&env);
     while (*pred->perform(this)) {
@@ -331,7 +331,7 @@ namespace Sass {
     if (env->has("@warn[f]")) {
 
       Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)["@warn[f]"]);
-      // Block_Obj          body   = def->block();
+      // Block_Obj          body   = def->oblock();
       // Native_Function func   = def->native_function();
       Sass_Function_Entry c_function = def->c_function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
@@ -367,7 +367,7 @@ namespace Sass {
     if (env->has("@error[f]")) {
 
       Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)["@error[f]"]);
-      // Block_Obj          body   = def->block();
+      // Block_Obj          body   = def->oblock();
       // Native_Function func   = def->native_function();
       Sass_Function_Entry c_function = def->c_function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
@@ -400,7 +400,7 @@ namespace Sass {
     if (env->has("@debug[f]")) {
 
       Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)["@debug[f]"]);
-      // Block_Obj          body   = def->block();
+      // Block_Obj          body   = def->oblock();
       // Native_Function func   = def->native_function();
       Sass_Function_Entry c_function = def->c_function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
@@ -850,7 +850,7 @@ namespace Sass {
     }
 
     Expression_Ptr     result = c;
-    Block_Obj          body   = def->block();
+    Block_Obj          body   = def->oblock();
     Native_Function func   = def->native_function();
     Sass_Function_Entry c_function = def->c_function();
 

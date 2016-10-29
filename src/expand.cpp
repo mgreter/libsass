@@ -95,7 +95,7 @@ namespace Sass {
     LOCAL_FLAG(old_at_root_without_rule, at_root_without_rule);
 
     if (in_keyframes) {
-      Block_Obj bb = operator()(r->block());
+      Block_Obj bb = operator()(&r->oblock());
       Keyframe_Rule_Obj k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
@@ -146,7 +146,7 @@ namespace Sass {
       env_stack.push_back(&env);
     }
     sel->set_media_block(&media_block_stack.back());
-    Block_Obj blk = operator()(r->block());
+    Block_Obj blk = operator()(&r->oblock());
     Ruleset_Obj rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
                                   &sel,
@@ -168,7 +168,7 @@ namespace Sass {
     Supports_Block_Obj ff = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        f->pstate(),
                                        SASS_MEMORY_CAST(Supports_Condition, condition),
-                                       operator()(f->block()));
+                                       operator()(&f->oblock()));
     return &ff;
   }
 
@@ -184,7 +184,7 @@ namespace Sass {
     Media_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       SASS_MEMORY_CAST_PTR(List, mq->perform(&eval)),
-                                      operator()(m->block()),
+                                      operator()(&m->oblock()),
                                       0);
     media_block_stack.pop_back();
     mm->tabs(m->tabs());
@@ -193,7 +193,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(At_Root_Block_Ptr a)
   {
-    Block_Obj ab = a->block();
+    Block_Obj ab = a->oblock();
     Expression_Obj ae = a->expression();
 
     if (ae) ae = ae->perform(&eval);
@@ -215,7 +215,7 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Directive_Ptr a)
   {
     LOCAL_FLAG(in_keyframes, a->is_keyframes());
-    Block_Obj ab = a->block();
+    Block_Obj ab = a->oblock();
     Selector_Obj as = a->selector();
     Expression_Obj av = a->value();
     selector_stack.push_back(0);
@@ -234,7 +234,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
   {
-    Block_Obj ab = d->block();
+    Block_Obj ab = d->oblock();
     String_Obj old_p = d->property();
     // String_Ptr new_p = dynamic_cast<String_Ptr>(old_p->perform(&eval));
     String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
@@ -386,7 +386,7 @@ namespace Sass {
     env_stack.push_back(&env);
     call_stack.push_back(i);
     if (*i->predicate()->perform(&eval)) {
-      append_block(i->block());
+      append_block(i->oblock());
     }
     else {
       Block_Obj alt = i->alternative();
@@ -427,7 +427,7 @@ namespace Sass {
     call_stack.push_back(f);
     Number_Obj it = SASS_MEMORY_NEW(env.mem, Number, low->pstate(), start, sass_end->unit());
     env.set_local(variable, &it);
-    Block_Obj body = f->block();
+    Block_Obj body = f->oblock();
     if (start < end) {
       if (f->is_inclusive()) ++end;
       for (double i = start;
@@ -479,7 +479,7 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(e);
-    Block_Obj body = e->block();
+    Block_Obj body = e->oblock();
 
     if (map) {
       for (auto key : map->keys()) {
@@ -541,7 +541,7 @@ namespace Sass {
   Statement_Ptr Expand::operator()(While_Ptr w)
   {
     Expression_Obj pred = w->predicate();
-    Block_Obj body = w->block();
+    Block_Obj body = w->oblock();
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(w);
@@ -672,10 +672,10 @@ namespace Sass {
       error("no mixin named " + c->name(), c->pstate(), backtrace());
     }
     Definition_Obj def = SASS_MEMORY_CAST(Definition, (*env)[full_name]);
-    Block_Obj body = def->block();
+    Block_Obj body = def->oblock();
     Parameters_Obj params = def->parameters();
 
-    if (c->block() && c->name() != "@content" && !body->has_content()) {
+    if (c->oblock() && c->name() != "@content" && !body->has_content()) {
       error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), backtrace());
     }
     Arguments_Obj args = SASS_MEMORY_CAST_PTR(Arguments, c->arguments()->perform(&eval));
@@ -683,13 +683,13 @@ namespace Sass {
     backtrace_stack.push_back(&new_bt);
     Env new_env(def->environment());
     env_stack.push_back(&new_env);
-    if (c->block()) {
+    if (c->oblock()) {
       // represent mixin content blocks as thunks/closures
       Definition_Obj thunk = SASS_MEMORY_NEW(ctx.mem, Definition,
                                           c->pstate(),
                                           "@content",
                                           SASS_MEMORY_NEW(ctx.mem, Parameters, c->pstate()),
-                                          c->block(),
+                                          c->oblock(),
                                           Definition::MIXIN);
       thunk->environment(env);
       new_env.local_frame()["@content[m]"] = &thunk;
@@ -704,7 +704,7 @@ namespace Sass {
     block_stack.push_back(trace_block);
     for (auto bb : body->elements()) {
       Statement_Obj ith = bb->perform(this);
-      if (ith) trace->block()->append(ith);
+      if (ith) trace->oblock()->append(ith);
     }
     block_stack.pop_back();
 

@@ -61,7 +61,7 @@ namespace Sass {
         }
 
         // Iterate into child blocks
-        Block_Obj b = r->block();
+        Block_Obj b = r->oblock();
 
         for (size_t i = 0, L = b->length(); i < L; ++i) {
 			if (b->at(i)) {
@@ -72,14 +72,14 @@ namespace Sass {
     }
 
     void Remove_Placeholders::operator()(Media_Block_Ptr m) {
-        operator()(m->block());
+        operator()(&m->oblock());
     }
     void Remove_Placeholders::operator()(Supports_Block_Ptr m) {
-        operator()(m->block());
+        operator()(&m->oblock());
     }
 
     void Remove_Placeholders::operator()(Directive_Ptr a) {
-        if (a->block()) a->block()->perform(this);
+        if (a->oblock()) a->oblock()->perform(this);
     }
 
 }

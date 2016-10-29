@@ -603,7 +603,8 @@ namespace Sass {
     call->arguments(parse_arguments());
     // parse optional block
     if (peek < exactly <'{'> >()) {
-      call->block(&parse_block());
+      call->oblock(parse_block());
+      call->block(&call->oblock());
     }
     // return ast node
     return call;
@@ -2010,7 +2011,8 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Ptr predicate = &parse_list();
     call->predicate(predicate);
     // parse mandatory block
-    call->block(&parse_block(root));
+    call->oblock(parse_block(root));
+    call->block(&call->oblock());
     // return ast node
     stack.pop_back();
     // return ast node
@@ -2028,7 +2030,8 @@ if (DBG) std::cerr << "complex 2\n";
 
     Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;
-    media_block->block(&parse_css_block());
+    media_block->oblock(parse_css_block());
+    media_block->block(&media_block->oblock());
     last_media_block = prev_media_block;
     stack.pop_back();
     return media_block;
@@ -2104,7 +2107,8 @@ if (DBG) std::cerr << "complex 2\n";
     Supports_Block_Obj query = SASS_MEMORY_CREATE(ctx.mem, Supports_Block, pstate, &cond);
     // additional block is mandatory
     // parse inner block
-    query->block(&parse_block());
+    query->oblock(parse_block());
+    query->block(&query->oblock());
     // return ast node
     return query;
   }
@@ -2265,7 +2269,8 @@ if (DBG) std::cerr << "complex 2\n";
     lex < css_comments >(false);
 
     if (peek< exactly<'{'> >()) {
-      at_rule->block(&parse_block());
+      at_rule->oblock(parse_block());
+      at_rule->block(&at_rule->oblock());
     }
 
     return at_rule;
