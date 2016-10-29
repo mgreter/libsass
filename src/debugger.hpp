@@ -181,7 +181,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
-    debug_ast(selector->expression(), ind + " <= ", env);
+    debug_ast(&selector->expression(), ind + " <= ", env);
   } else if (dynamic_cast<Attribute_Selector_Ptr>(node)) {
     Attribute_Selector_Ptr selector = dynamic_cast<Attribute_Selector_Ptr>(node);
     std::cerr << ind << "Attribute_Selector " << selector;

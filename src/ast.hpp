@@ -2190,6 +2190,7 @@ namespace Sass {
   ///////////////////////////////////////////////////
   class Attribute_Selector_Ref : public Simple_Selector_Ref {
     ADD_PROPERTY(std::string, matcher)
+    // this cannot be changed to obj atm!
     ADD_PROPERTY(String_Ptr, value) // might be interpolated
   public:
     Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Obj v)
@@ -2232,9 +2233,9 @@ namespace Sass {
 
   // Pseudo Selector cannot have any namespace?
   class Pseudo_Selector_Ref : public Simple_Selector_Ref {
-    ADD_PROPERTY(String_Ptr, expression)
+    ADD_PROPERTY(String_Obj, expression)
   public:
-    Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Ptr expr = 0)
+    Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Obj expr = 0)
     : Simple_Selector_Ref(pstate, n), expression_(expr)
     { }
 
