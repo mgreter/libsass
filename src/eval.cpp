@@ -85,7 +85,7 @@ namespace Sass {
     if (a->is_global()) {
       if (a->is_default()) {
         if (env->has_global(var)) {
-          Expression_Ptr e = dynamic_cast<Expression_Ptr>(env->get_global(var));
+          Expression_Ptr e = SASS_MEMORY_CAST(Expression, env->get_global(var));
           if (!e || e->concrete_type() == Expression::NULL_VAL) {
             env->set_global(var, a->value()->perform(this));
           }
@@ -103,8 +103,8 @@ namespace Sass {
         auto cur = env;
         while (cur && cur->is_lexical()) {
           if (cur->has_local(var)) {
-            if (AST_Node_Ptr node = cur->get_local(var)) {
-              Expression_Ptr e = dynamic_cast<Expression_Ptr>(node);
+            if (AST_Node_Obj node = cur->get_local(var)) {
+              Expression_Ptr e = SASS_MEMORY_CAST(Expression, node);
               if (!e || e->concrete_type() == Expression::NULL_VAL) {
                 cur->set_local(var, a->value()->perform(this));
               }
@@ -119,8 +119,8 @@ namespace Sass {
         throw std::runtime_error("Env not in sync");
       }
       else if (env->has_global(var)) {
-        if (AST_Node_Ptr node = env->get_global(var)) {
-          Expression_Ptr e = dynamic_cast<Expression_Ptr>(node);
+        if (AST_Node_Obj node = env->get_global(var)) {
+          Expression_Ptr e = SASS_MEMORY_CAST(Expression, node);
           if (!e || e->concrete_type() == Expression::NULL_VAL) {
             env->set_global(var, a->value()->perform(this));
           }
@@ -330,7 +330,7 @@ namespace Sass {
     // try to use generic function
     if (env->has("@warn[f]")) {
 
-      Definition_Ptr def = static_cast<Definition_Ptr>((*env)["@warn[f]"]);
+      Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)["@warn[f]"]);
       // Block_Obj          body   = def->block();
       // Native_Function func   = def->native_function();
       Sass_Function_Entry c_function = def->c_function();
@@ -366,7 +366,7 @@ namespace Sass {
     // try to use generic function
     if (env->has("@error[f]")) {
 
-      Definition_Ptr def = static_cast<Definition_Ptr>((*env)["@error[f]"]);
+      Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)["@error[f]"]);
       // Block_Obj          body   = def->block();
       // Native_Function func   = def->native_function();
       Sass_Function_Entry c_function = def->c_function();
@@ -399,7 +399,7 @@ namespace Sass {
     // try to use generic function
     if (env->has("@debug[f]")) {
 
-      Definition_Ptr def = static_cast<Definition_Ptr>((*env)["@debug[f]"]);
+      Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)["@debug[f]"]);
       // Block_Obj          body   = def->block();
       // Native_Function func   = def->native_function();
       Sass_Function_Entry c_function = def->c_function();
@@ -830,7 +830,7 @@ namespace Sass {
     if (full_name != "if[f]") {
       args = SASS_MEMORY_CAST_PTR(Arguments, args->perform(this));
     }
-    Definition_Ptr def = static_cast<Definition_Ptr>((*env)[full_name]);
+    Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)[full_name]);
 
     if (def->is_overload_stub()) {
       std::stringstream ss;
@@ -838,7 +838,7 @@ namespace Sass {
       // account for rest arguments
       if (args->has_rest_argument() && args->length() > 0) {
         // get the rest arguments list
-        List_Ptr rest = dynamic_cast<List_Ptr>(args->last()->value());
+        List_Ptr rest = SASS_MEMORY_CAST_PTR(List, args->last()->value());
         // arguments before rest argument plus rest
         if (rest) L += rest->length() - 1;
       }
@@ -846,7 +846,7 @@ namespace Sass {
       full_name = ss.str();
       std::string resolved_name(full_name);
       if (!env->has(resolved_name)) error("overloaded function `" + std::string(c->name()) + "` given wrong number of arguments", c->pstate());
-      def = static_cast<Definition_Ptr>((*env)[resolved_name]);
+      def = SASS_MEMORY_CAST(Definition, (*env)[resolved_name]);
     }
 
     Expression_Ptr     result = c;
@@ -893,8 +893,8 @@ namespace Sass {
       for(size_t i = 0; i < params->length(); i++) {
         Parameter_Obj param = params->at(i);
         std::string key = param->name();
-        AST_Node_Ptr node = fn_env.get_local(key);
-        Expression_Ptr arg = static_cast<Expression_Ptr>(node);
+        AST_Node_Obj node = fn_env.get_local(key);
+        Expression_Ptr arg = SASS_MEMORY_CAST(Expression, node);
         sass_list_set_value(c_args, i, arg->perform(&to_c));
       }
       union Sass_Value* c_val = c_func(c_args, c_function, ctx.c_compiler);
@@ -936,7 +936,7 @@ namespace Sass {
     std::string name(v->name());
     Expression_Ptr value = 0;
     Env* env = environment();
-    if (env->has(name)) value = static_cast<Expression_Ptr>((*env)[name]);
+    if (env->has(name)) value = SASS_MEMORY_CAST(Expression, (*env)[name]);
     else error("Undefined variable: \"" + v->name() + "\".", v->pstate());
     if (typeid(*value) == typeid(Argument)) value = SASS_MEMORY_CAST_PTR(Argument, value)->value();
 

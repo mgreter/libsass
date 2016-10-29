@@ -95,7 +95,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
 
-    for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
+    for(auto i : selector->elements()) { debug_ast(&i, ind + " ", env); }
 
 //  } else if (dynamic_cast<Expression_Ptr>(node)) {
 //    Expression_Ptr expression = dynamic_cast<Expression_Ptr>(node);
@@ -136,9 +136,9 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
       }
       // if (del = "/") del += selector->reference()->perform(&to_string) + "/";
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
-    debug_ast(selector->head(), ind + " " /* + "[" + del + "]" */, env);
+    debug_ast(&selector->head(), ind + " " /* + "[" + del + "]" */, env);
     if (selector->tail()) {
-      debug_ast(selector->tail(), ind + "{" + del + "}", env);
+      debug_ast(&selector->tail(), ind + "{" + del + "}", env);
     } else if(del != " ") {
       std::cerr << ind << " |" << del << "| {trailing op}" << std::endl;
     }
@@ -157,7 +157,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
-    for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
+    for(auto i : selector->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<Wrapped_Selector_Ptr>(node)) {
     Wrapped_Selector_Ptr selector = dynamic_cast<Wrapped_Selector_Ptr>(node);
     std::cerr << ind << "Wrapped_Selector " << selector;
@@ -283,7 +283,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
       << (block->is_restricted() ? " [is_restricted]": " -")
     << std::endl;
     debug_ast(&block->media_type(), ind + " ");
-    for(auto i : block->elements()) { debug_ast(i, ind + " ", env); }
+    for(auto i : block->elements()) { debug_ast(&i, ind + " ", env); }
 
   } else if (dynamic_cast<Media_Block_Ptr>(node)) {
     Media_Block_Ptr block = dynamic_cast<Media_Block_Ptr>(node);
@@ -497,14 +497,14 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->name() << "]" << std::endl;
     std::string name(expression->name());
-    if (env && env->has(name)) debug_ast(static_cast<Expression_Ptr>((*env)[name]), ind + " -> ", env);
+    if (env && env->has(name)) debug_ast(SASS_MEMORY_CAST(Expression, (*env)[name]), ind + " -> ", env);
   } else if (dynamic_cast<Function_Call_Schema_Ptr>(node)) {
     Function_Call_Schema_Ptr expression = dynamic_cast<Function_Call_Schema_Ptr>(node);
     std::cerr << ind << "Function_Call_Schema " << expression;
     std::cerr << " [interpolant: " << expression->is_interpolant() << "] ";
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << "" << std::endl;
-    debug_ast(expression->name(), ind + "name: ", env);
+    debug_ast(&expression->name(), ind + "name: ", env);
     debug_ast(&expression->arguments(), ind + " args: ", env);
   } else if (dynamic_cast<Function_Call_Ptr>(node)) {
     Function_Call_Ptr expression = dynamic_cast<Function_Call_Ptr>(node);
@@ -651,7 +651,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     if (expression->is_left_interpolant()) std::cerr << " [left interpolant] ";
     if (expression->is_right_interpolant()) std::cerr << " [right interpolant] ";
     std::cerr << " <" << prettyprint(expression->pstate().token.ws_before()) << ">" << std::endl;
-    for(auto i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for(auto i : expression->elements()) { debug_ast(&i, ind + " ", env); }
   } else if (dynamic_cast<String_Ptr>(node)) {
     String_Ptr expression = dynamic_cast<String_Ptr>(node);
     std::cerr << ind << "String " << expression;

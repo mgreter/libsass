@@ -13,7 +13,7 @@ namespace Sass {
   class Listize;
   class Context;
   class Eval;
-  typedef Environment<AST_Node_Ptr> Env;
+  typedef Environment<AST_Node_Obj> Env;
   struct Backtrace;
 
   class Expand : public Operation_CRTP<Statement_Ptr, Expand> {

@@ -775,7 +775,7 @@ namespace Sass {
   // by a type tag.
   /////////////////////////////////////////////////////////////////////////////
   struct Backtrace;
-  typedef Environment<AST_Node_Ptr> Env;
+  typedef Environment<AST_Node_Obj> Env;
   typedef const char* Signature;
   typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaComplex_Selector_Ptr>);
   typedef const char* Signature;

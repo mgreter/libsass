@@ -189,7 +189,7 @@ namespace Sass {
   #endif
 
   // compile implementation for AST_Node
-  template class Environment<AST_Node_Ptr>;
+  template class Environment<AST_Node_Obj>;
 
 }
 

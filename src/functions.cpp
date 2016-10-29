@@ -108,7 +108,7 @@ namespace Sass {
     T* get_arg(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace)
     {
       // Minimal error handling -- the expectation is that built-ins will be written correctly!
-      T* val = dynamic_cast<T*>(env[argname]);
+      T* val = dynamic_cast<T*>(&env[argname]);
       if (!val) {
         std::string msg("argument `");
         msg += argname;
@@ -124,10 +124,10 @@ namespace Sass {
     Map_Ptr get_arg_m(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx)
     {
       // Minimal error handling -- the expectation is that built-ins will be written correctly!
-      Map_Ptr val = dynamic_cast<Map_Ptr>(env[argname]);
+      Map_Ptr val = SASS_MEMORY_CAST(Map, env[argname]);
       if (val) return val;
 
-      List_Ptr lval = dynamic_cast<List_Ptr>(env[argname]);
+      List_Ptr lval = SASS_MEMORY_CAST(List, env[argname]);
       if (lval && lval->length() == 0) return SASS_MEMORY_NEW(ctx.mem, Map, pstate, 0);
 
       // fallback on get_arg for error handling
@@ -156,14 +156,14 @@ namespace Sass {
 
     template <>
     CommaComplex_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
-      Expression_Ptr exp = ARG(argname, Expression);
+      Expression_Obj exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
         msg << argname << ": null is not a valid selector: it must be a string,\n";
         msg << "a list of strings, or a list of lists of strings for `" << function_name(sig) << "'";
         error(msg.str(), pstate);
       }
-      if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
+      if (String_Constant_Ptr str = SASS_MEMORY_CAST(String_Constant, exp)) {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
@@ -172,14 +172,14 @@ namespace Sass {
 
     template <>
     Complex_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
-      Expression_Ptr exp = ARG(argname, Expression);
+      Expression_Obj exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
         msg << argname << ": null is not a valid selector: it must be a string,\n";
         msg << "a list of strings, or a list of lists of strings for `" << function_name(sig) << "'";
         error(msg.str(), pstate);
       }
-      if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
+      if (String_Constant_Ptr str = SASS_MEMORY_CAST(String_Constant, exp)) {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
@@ -189,13 +189,13 @@ namespace Sass {
 
     template <>
     Compound_Selector_Ptr get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
-      Expression_Ptr exp = ARG(argname, Expression);
+      Expression_Obj exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
         msg << argname << ": null is not a string for `" << function_name(sig) << "'";
         error(msg.str(), pstate);
       }
-      if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
+      if (String_Constant_Ptr str = SASS_MEMORY_CAST(String_Constant, exp)) {
         str->quote_mark(0);
       }
       std::string exp_src = exp->to_string(ctx.c_options) + "{";
@@ -521,7 +521,7 @@ namespace Sass {
     BUILT_IN(saturate)
     {
       // CSS3 filter function overload: pass literal through directly
-      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$amount"]);
+      Number_Ptr amount = SASS_MEMORY_CAST(Number, env["$amount"]);
       if (!amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "saturate(" + env["$color"]->to_string(ctx.c_options) + ")");
       }
@@ -581,7 +581,7 @@ namespace Sass {
     BUILT_IN(grayscale)
     {
       // CSS3 filter function overload: pass literal through directly
-      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$color"]);
+      Number_Ptr amount = SASS_MEMORY_CAST(Number, env["$color"]);
       if (amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "grayscale(" + amount->to_string(ctx.c_options) + ")");
       }
@@ -617,7 +617,7 @@ namespace Sass {
     BUILT_IN(invert)
     {
       // CSS3 filter function overload: pass literal through directly
-      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$color"]);
+      Number_Ptr amount = SASS_MEMORY_CAST(Number, env["$color"]);
       if (amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "invert(" + amount->to_string(ctx.c_options) + ")");
       }
@@ -638,13 +638,13 @@ namespace Sass {
     Signature opacity_sig = "opacity($color)";
     BUILT_IN(alpha)
     {
-      String_Constant_Ptr ie_kwd = dynamic_cast<String_Constant_Ptr>(env["$color"]);
+      String_Constant_Ptr ie_kwd = SASS_MEMORY_CAST(String_Constant, env["$color"]);
       if (ie_kwd) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "alpha(" + ie_kwd->value() + ")");
       }
 
       // CSS3 filter function overload: pass literal through directly
-      Number_Ptr amount = dynamic_cast<Number_Ptr>(env["$color"]);
+      Number_Ptr amount = SASS_MEMORY_CAST(Number, env["$color"]);
       if (amount) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "opacity(" + amount->to_string(ctx.c_options) + ")");
       }
@@ -690,13 +690,13 @@ namespace Sass {
     BUILT_IN(adjust_color)
     {
       Color_Ptr color = ARG("$color", Color);
-      Number_Ptr r = dynamic_cast<Number_Ptr>(env["$red"]);
-      Number_Ptr g = dynamic_cast<Number_Ptr>(env["$green"]);
-      Number_Ptr b = dynamic_cast<Number_Ptr>(env["$blue"]);
-      Number_Ptr h = dynamic_cast<Number_Ptr>(env["$hue"]);
-      Number_Ptr s = dynamic_cast<Number_Ptr>(env["$saturation"]);
-      Number_Ptr l = dynamic_cast<Number_Ptr>(env["$lightness"]);
-      Number_Ptr a = dynamic_cast<Number_Ptr>(env["$alpha"]);
+      Number_Ptr r = SASS_MEMORY_CAST(Number, env["$red"]);
+      Number_Ptr g = SASS_MEMORY_CAST(Number, env["$green"]);
+      Number_Ptr b = SASS_MEMORY_CAST(Number, env["$blue"]);
+      Number_Ptr h = SASS_MEMORY_CAST(Number, env["$hue"]);
+      Number_Ptr s = SASS_MEMORY_CAST(Number, env["$saturation"]);
+      Number_Ptr l = SASS_MEMORY_CAST(Number, env["$lightness"]);
+      Number_Ptr a = SASS_MEMORY_CAST(Number, env["$alpha"]);
 
       bool rgb = r || g || b;
       bool hsl = h || s || l;
@@ -745,13 +745,13 @@ namespace Sass {
     BUILT_IN(scale_color)
     {
       Color_Ptr color = ARG("$color", Color);
-      Number_Ptr r = dynamic_cast<Number_Ptr>(env["$red"]);
-      Number_Ptr g = dynamic_cast<Number_Ptr>(env["$green"]);
-      Number_Ptr b = dynamic_cast<Number_Ptr>(env["$blue"]);
-      Number_Ptr h = dynamic_cast<Number_Ptr>(env["$hue"]);
-      Number_Ptr s = dynamic_cast<Number_Ptr>(env["$saturation"]);
-      Number_Ptr l = dynamic_cast<Number_Ptr>(env["$lightness"]);
-      Number_Ptr a = dynamic_cast<Number_Ptr>(env["$alpha"]);
+      Number_Ptr r = SASS_MEMORY_CAST(Number, env["$red"]);
+      Number_Ptr g = SASS_MEMORY_CAST(Number, env["$green"]);
+      Number_Ptr b = SASS_MEMORY_CAST(Number, env["$blue"]);
+      Number_Ptr h = SASS_MEMORY_CAST(Number, env["$hue"]);
+      Number_Ptr s = SASS_MEMORY_CAST(Number, env["$saturation"]);
+      Number_Ptr l = SASS_MEMORY_CAST(Number, env["$lightness"]);
+      Number_Ptr a = SASS_MEMORY_CAST(Number, env["$alpha"]);
 
       bool rgb = r || g || b;
       bool hsl = h || s || l;
@@ -801,13 +801,13 @@ namespace Sass {
     BUILT_IN(change_color)
     {
       Color_Ptr color = ARG("$color", Color);
-      Number_Ptr r = dynamic_cast<Number_Ptr>(env["$red"]);
-      Number_Ptr g = dynamic_cast<Number_Ptr>(env["$green"]);
-      Number_Ptr b = dynamic_cast<Number_Ptr>(env["$blue"]);
-      Number_Ptr h = dynamic_cast<Number_Ptr>(env["$hue"]);
-      Number_Ptr s = dynamic_cast<Number_Ptr>(env["$saturation"]);
-      Number_Ptr l = dynamic_cast<Number_Ptr>(env["$lightness"]);
-      Number_Ptr a = dynamic_cast<Number_Ptr>(env["$alpha"]);
+      Number_Ptr r = SASS_MEMORY_CAST(Number, env["$red"]);
+      Number_Ptr g = SASS_MEMORY_CAST(Number, env["$green"]);
+      Number_Ptr b = SASS_MEMORY_CAST(Number, env["$blue"]);
+      Number_Ptr h = SASS_MEMORY_CAST(Number, env["$hue"]);
+      Number_Ptr s = SASS_MEMORY_CAST(Number, env["$saturation"]);
+      Number_Ptr l = SASS_MEMORY_CAST(Number, env["$lightness"]);
+      Number_Ptr a = SASS_MEMORY_CAST(Number, env["$alpha"]);
 
       bool rgb = r || g || b;
       bool hsl = h || s || l;
@@ -882,34 +882,34 @@ namespace Sass {
     Signature unquote_sig = "unquote($string)";
     BUILT_IN(sass_unquote)
     {
-      AST_Node_Ptr arg = env["$string"];
-      if (String_Quoted_Ptr string_quoted = dynamic_cast<String_Quoted_Ptr>(arg)) {
+      AST_Node_Obj arg = env["$string"];
+      if (String_Quoted_Ptr string_quoted = SASS_MEMORY_CAST(String_Quoted, arg)) {
         String_Constant_Ptr result = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, string_quoted->value());
         // remember if the string was quoted (color tokens)
         result->is_delayed(true); // delay colors
         return result;
       }
-      else if (dynamic_cast<String_Constant_Ptr>(arg)) {
-        return (Expression_Ptr) arg;
+      else if (SASS_MEMORY_CAST(String_Constant, arg)) {
+        return (Expression_Ptr) &arg;
       }
       else {
         Sass_Output_Style oldstyle = ctx.c_options.output_style;
         ctx.c_options.output_style = SASS_STYLE_NESTED;
         std::string val(arg->to_string(ctx.c_options));
-        val = dynamic_cast<Null_Ptr>(arg) ? "null" : val;
+        val = SASS_MEMORY_CAST(Null, arg) ? "null" : val;
         ctx.c_options.output_style = oldstyle;
 
         deprecated_function("Passing " + val + ", a non-string value, to unquote()", pstate);
-        return (Expression_Ptr) arg;
+        return (Expression_Ptr) &arg;
       }
     }
 
     Signature quote_sig = "quote($string)";
     BUILT_IN(sass_quote)
     {
-      AST_Node_Ptr arg = env["$string"];
+      AST_Node_Obj arg = env["$string"];
       // only set quote mark to true if already a string
-      if (String_Quoted_Ptr qstr = dynamic_cast<String_Quoted_Ptr>(arg)) {
+      if (String_Quoted_Ptr qstr = SASS_MEMORY_CAST(String_Quoted, arg)) {
         qstr->quote_mark('*');
         return qstr;
       }
@@ -973,7 +973,7 @@ namespace Sass {
           str = ins + str;
         }
 
-        if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
+        if (String_Quoted_Ptr ss = SASS_MEMORY_CAST_PTR(String_Quoted, s)) {
           if (ss->quote_mark()) str = quote(str);
         }
       }
@@ -1040,7 +1040,7 @@ namespace Sass {
           utf8::advance(end, end_at - start_at + 1, str.end());
           newstr = std::string(start, end);
         }
-        if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
+        if (String_Quoted_Ptr ss = SASS_MEMORY_CAST_PTR(String_Quoted, s)) {
           if(ss->quote_mark()) newstr = quote(newstr);
         }
       }
@@ -1062,7 +1062,7 @@ namespace Sass {
         }
       }
 
-      if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
+      if (String_Quoted_Ptr ss = SASS_MEMORY_CAST_PTR(String_Quoted, s)) {
         String_Quoted_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, String_Quoted, *ss);
         cpy->value(str);
         return cpy;
@@ -1083,7 +1083,7 @@ namespace Sass {
         }
       }
 
-      if (String_Quoted_Ptr ss = dynamic_cast<String_Quoted_Ptr>(s)) {
+      if (String_Quoted_Ptr ss = SASS_MEMORY_CAST_PTR(String_Quoted, s)) {
         String_Quoted_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, String_Quoted, *ss);
         cpy->value(str);
         return cpy;
@@ -1151,7 +1151,7 @@ namespace Sass {
       Number_Ptr least = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Ptr val = arglist->value_at_index(i);
-        Number_Ptr xi = dynamic_cast<Number_Ptr>(val);
+        Number_Ptr xi = SASS_MEMORY_CAST_PTR(Number, val);
         if (!xi) {
           error("\"" + val->to_string(ctx.c_options) + "\" is not a number for `min'", pstate);
         }
@@ -1169,7 +1169,7 @@ namespace Sass {
       Number_Ptr greatest = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Ptr val = arglist->value_at_index(i);
-        Number_Ptr xi = dynamic_cast<Number_Ptr>(val);
+        Number_Ptr xi = SASS_MEMORY_CAST_PTR(Number, val);
         if (!xi) {
           error("\"" + val->to_string(ctx.c_options) + "\" is not a number for `max'", pstate);
         }
@@ -1183,10 +1183,10 @@ namespace Sass {
     Signature random_sig = "random($limit:false)";
     BUILT_IN(random)
     {
-      AST_Node_Ptr arg = env["$limit"];
-      Value_Ptr v = dynamic_cast<Value_Ptr>(arg);
-      Number_Ptr l = dynamic_cast<Number_Ptr>(arg);
-      Boolean_Ptr b = dynamic_cast<Boolean_Ptr>(arg);
+      AST_Node_Obj arg = env["$limit"];
+      Value_Ptr v = SASS_MEMORY_CAST(Value, arg);
+      Number_Ptr l = SASS_MEMORY_CAST(Number, arg);
+      Boolean_Ptr b = SASS_MEMORY_CAST(Boolean, arg);
       if (l) {
         double v = l->value();
         if (v < 1) {
@@ -1223,25 +1223,25 @@ namespace Sass {
     Signature length_sig = "length($list)";
     BUILT_IN(length)
     {
-      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(env["$list"])) {
+      if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, env["$list"])) {
         return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)sl->length());
       }
       Expression_Ptr v = ARG("$list", Expression);
       if (v->concrete_type() == Expression::MAP) {
-        Map_Ptr map = dynamic_cast<Map_Ptr>(env["$list"]);
+        Map_Ptr map = SASS_MEMORY_CAST(Map, env["$list"]);
         return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)(map ? map->length() : 1));
       }
       if (v->concrete_type() == Expression::SELECTOR) {
         if (Compound_Selector_Ptr h = dynamic_cast<Compound_Selector_Ptr>(v)) {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)h->length());
-        } else if (CommaComplex_Selector_Ptr ls = dynamic_cast<CommaComplex_Selector_Ptr>(v)) {
+        } else if (CommaComplex_Selector_Ptr ls = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, v)) {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, (double)ls->length());
         } else {
           return SASS_MEMORY_NEW(ctx.mem, Number, pstate, 1);
         }
       }
 
-      List_Ptr list = dynamic_cast<List_Ptr>(env["$list"]);
+      List_Ptr list = SASS_MEMORY_CAST(List, env["$list"]);
       return SASS_MEMORY_NEW(ctx.mem, Number,
                              pstate,
                              (double)(list ? list->size() : 1));
@@ -1251,8 +1251,8 @@ namespace Sass {
     BUILT_IN(nth)
     {
       Number_Ptr n = ARG("$n", Number);
-      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
-      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(env["$list"])) {
+      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
+      if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, env["$list"])) {
         size_t len = m ? m->length() : sl->length();
         bool empty = m ? m->empty() : sl->empty();
         if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate);
@@ -1262,7 +1262,7 @@ namespace Sass {
         Listize listize(ctx.mem);
         return (*sl)[static_cast<int>(index)]->perform(&listize);
       }
-      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
       if (n->value() == 0) error("argument `$n` of `" + std::string(sig) + "` must be non-zero", pstate);
       // if the argument isn't a list, then wrap it in a singleton list
       if (!m && !l) {
@@ -1291,8 +1291,8 @@ namespace Sass {
     Signature set_nth_sig = "set-nth($list, $n, $value)";
     BUILT_IN(set_nth)
     {
-      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
-      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
+      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
       Number_Ptr n = ARG("$n", Number);
       Expression_Ptr v = ARG("$value", Expression);
       if (!l) {
@@ -1315,8 +1315,8 @@ namespace Sass {
     Signature index_sig = "index($list, $value)";
     BUILT_IN(index)
     {
-      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
-      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
+      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
       Expression_Ptr v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
@@ -1334,10 +1334,10 @@ namespace Sass {
     Signature join_sig = "join($list1, $list2, $separator: auto)";
     BUILT_IN(join)
     {
-      Map_Ptr m1 = dynamic_cast<Map_Ptr>(env["$list1"]);
-      Map_Ptr m2 = dynamic_cast<Map_Ptr>(env["$list2"]);
-      List_Ptr l1 = dynamic_cast<List_Ptr>(env["$list1"]);
-      List_Ptr l2 = dynamic_cast<List_Ptr>(env["$list2"]);
+      Map_Ptr m1 = SASS_MEMORY_CAST(Map, env["$list1"]);
+      Map_Ptr m2 = SASS_MEMORY_CAST(Map, env["$list2"]);
+      List_Ptr l1 = SASS_MEMORY_CAST(List, env["$list1"]);
+      List_Ptr l2 = SASS_MEMORY_CAST(List, env["$list2"]);
       String_Constant_Ptr sep = ARG("$separator", String_Constant);
       enum Sass_Separator sep_val = (l1 ? l1->separator() : SASS_SPACE);
       if (!l1) {
@@ -1370,12 +1370,12 @@ namespace Sass {
     Signature append_sig = "append($list, $val, $separator: auto)";
     BUILT_IN(append)
     {
-      Map_Ptr m = dynamic_cast<Map_Ptr>(env["$list"]);
-      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      Map_Ptr m = SASS_MEMORY_CAST(Map, env["$list"]);
+      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
       Expression_Ptr v = ARG("$val", Expression);
-      if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(env["$list"])) {
+      if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, env["$list"])) {
         Listize listize(ctx.mem);
-        l = dynamic_cast<List_Ptr>(sl->perform(&listize));
+        l = SASS_MEMORY_CAST_PTR(List, sl->perform(&listize));
       }
       String_Constant_Ptr sep = ARG("$separator", String_Constant);
       if (!l) {
@@ -1446,7 +1446,7 @@ namespace Sass {
     Signature list_separator_sig = "list_separator($list)";
     BUILT_IN(list_separator)
     {
-      List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
+      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << ARG("$list", Expression);
@@ -1662,7 +1662,7 @@ namespace Sass {
         Expression_Ptr expr = arglist->value_at_index(i);
         // if (params && params->has_rest_parameter()) {
         //   Parameter_Obj p = param_size > i ? (*params)[i] : 0;
-        //   List_Ptr list = dynamic_cast<List_Ptr>(expr);
+        //   List_Ptr list = SASS_MEMORY_CAST(List, expr);
         //   if (list && p && !p->is_rest_parameter()) expr = (*list)[0];
         // }
         if (arglist->is_arglist()) {
@@ -1759,14 +1759,14 @@ namespace Sass {
       // Parse args into vector of selectors
       std::vector<CommaComplex_Selector_Ptr> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Ptr exp = dynamic_cast<Expression_Ptr>(arglist->value_at_index(i));
+        Expression_Ptr exp = SASS_MEMORY_CAST_PTR(Expression, arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
           std::stringstream msg;
           msg << "$selectors: null is not a valid selector: it must be a string,\n";
           msg << "a list of strings, or a list of lists of strings for 'selector-nest'";
           error(msg.str(), pstate);
         }
-        if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
+        if (String_Constant_Ptr str = SASS_MEMORY_CAST_PTR(String_Constant, exp)) {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string(ctx.c_options) + "{";
@@ -1810,14 +1810,14 @@ namespace Sass {
       // Parse args into vector of selectors
       std::vector<CommaComplex_Selector_Ptr> parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
-        Expression_Ptr exp = dynamic_cast<Expression_Ptr>(arglist->value_at_index(i));
+        Expression_Obj exp = SASS_MEMORY_CAST_PTR(Expression, arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
           std::stringstream msg;
           msg << "$selectors: null is not a valid selector: it must be a string,\n";
           msg << "a list of strings, or a list of lists of strings for 'selector-append'";
           error(msg.str(), pstate);
         }
-        if (String_Constant_Ptr str =dynamic_cast<String_Constant_Ptr>(exp)) {
+        if (String_Constant_Ptr str = SASS_MEMORY_CAST(String_Constant, exp)) {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string() + "{";

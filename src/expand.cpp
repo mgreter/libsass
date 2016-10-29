@@ -261,7 +261,7 @@ namespace Sass {
     if (a->is_global()) {
       if (a->is_default()) {
         if (env->has_global(var)) {
-          Expression_Ptr e = dynamic_cast<Expression_Ptr>(env->get_global(var));
+          Expression_Ptr e = SASS_MEMORY_CAST(Expression, env->get_global(var));
           if (!e || e->concrete_type() == Expression::NULL_VAL) {
             env->set_global(var, a->value()->perform(&eval));
           }
@@ -279,8 +279,8 @@ namespace Sass {
         auto cur = env;
         while (cur && cur->is_lexical()) {
           if (cur->has_local(var)) {
-            if (AST_Node_Ptr node = cur->get_local(var)) {
-              Expression_Ptr e = dynamic_cast<Expression_Ptr>(node);
+            if (AST_Node_Obj node = cur->get_local(var)) {
+              Expression_Ptr e = SASS_MEMORY_CAST(Expression, node);
               if (!e || e->concrete_type() == Expression::NULL_VAL) {
                 cur->set_local(var, a->value()->perform(&eval));
               }
@@ -295,8 +295,8 @@ namespace Sass {
         throw std::runtime_error("Env not in sync");
       }
       else if (env->has_global(var)) {
-        if (AST_Node_Ptr node = env->get_global(var)) {
-          Expression_Ptr e = dynamic_cast<Expression_Ptr>(node);
+        if (AST_Node_Obj node = env->get_global(var)) {
+          Expression_Ptr e = SASS_MEMORY_CAST(Expression, node);
           if (!e || e->concrete_type() == Expression::NULL_VAL) {
             env->set_global(var, a->value()->perform(&eval));
           }
@@ -672,7 +672,7 @@ namespace Sass {
     if (!env->has(full_name)) {
       error("no mixin named " + c->name(), c->pstate(), backtrace());
     }
-    Definition_Ptr def = static_cast<Definition_Ptr>((*env)[full_name]);
+    Definition_Ptr def = SASS_MEMORY_CAST(Definition, (*env)[full_name]);
     Block_Obj body = def->block();
     Parameters_Obj params = def->parameters();
 
