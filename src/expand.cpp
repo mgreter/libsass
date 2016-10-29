@@ -112,7 +112,7 @@ namespace Sass {
 
     // do some special checks for the base level rules
     if (r->is_root()) {
-      if (CommaComplex_Selector_Ptr selector_list = dynamic_cast<CommaComplex_Selector_Ptr>(r->selector())) {
+      if (CommaComplex_Selector_Obj selector_list = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector())) {
         for (Complex_Selector_Obj complex_selector : selector_list->elements()) {
           Complex_Selector_Obj tail = complex_selector;
           while (tail) {

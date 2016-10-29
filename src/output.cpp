@@ -109,7 +109,7 @@ namespace Sass {
 
   void Output::operator()(Ruleset_Ptr r)
   {
-    Selector_Ptr s     = r->selector();
+    Selector_Obj s     = r->selector();
     Block_Obj    b     = r->block();
 
     // Filter out rulesets that aren't printable (process its children though)

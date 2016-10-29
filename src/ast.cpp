@@ -1690,7 +1690,7 @@ namespace Sass {
   }
 
   bool Ruleset_Ref::is_invisible() const {
-    if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(selector())) {
+    if (CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, selector())) {
       for (size_t i = 0, L = sl->length(); i < L; ++i)
         if (!(*sl)[i]->has_placeholder()) return false;
     }

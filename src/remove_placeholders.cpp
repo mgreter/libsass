@@ -34,23 +34,23 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(Ruleset_Ptr r) {
         // Create a new selector group without placeholders
-        CommaComplex_Selector_Ptr sl = static_cast<CommaComplex_Selector_Ptr>(r->selector());
+        CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector());
 
         if (sl) {
           // Set the new placeholder selector list
-          r->selector(remove_placeholders(sl));
+          r->selector(remove_placeholders(&sl));
           // Remove placeholders in wrapped selectors
           for (Complex_Selector_Obj cs : sl->elements()) {
             while (cs) {
               if (cs->head()) {
                 for (Simple_Selector_Obj ss : *cs->head()) {
                   if (Wrapped_Selector_Ptr ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
-                    if (CommaComplex_Selector_Ptr sl = dynamic_cast<CommaComplex_Selector_Ptr>(ws->selector())) {
-                      CommaComplex_Selector_Ptr clean = remove_placeholders(sl);
+                    if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, ws->selector())) {
+                      CommaComplex_Selector_Obj clean = remove_placeholders(&sl);
                       // also clean superflous parent selectors
                       // probably not really the correct place
                       clean->remove_parent_selectors();
-                      ws->selector(clean);
+                      ws->selector(&clean);
                     }
                   }
                 }

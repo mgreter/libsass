@@ -470,7 +470,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (ruleset->at_root() ? " [@ROOT]" : "");
     std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
-    debug_ast(ruleset->selector(), ind + ">");
+    debug_ast(&ruleset->selector(), ind + ">");
     debug_ast(ruleset->block(), ind + " ");
   } else if (dynamic_cast<Block_Ptr>(node)) {
     Block_Ptr block = dynamic_cast<Block_Ptr>(node);

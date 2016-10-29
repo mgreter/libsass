@@ -473,11 +473,11 @@ namespace Sass {
   // of style declarations.
   /////////////////////////////////////////////////////////////////////////////
   class Ruleset_Ref : public Has_Block_Ref {
-    ADD_PROPERTY(Selector_Ptr, selector)
+    ADD_PROPERTY(Selector_Obj, selector)
     ADD_PROPERTY(bool, at_root);
     ADD_PROPERTY(bool, is_root);
   public:
-    Ruleset_Ref(ParserState pstate, Selector_Ptr s = 0, Block_Obj b = 0)
+    Ruleset_Ref(ParserState pstate, Selector_Obj s = 0, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), selector_(s), at_root_(false), is_root_(false)
     { statement_type(RULESET); }
     bool is_invisible() const;

@@ -461,7 +461,7 @@ namespace Sass {
 
       Block_Obj b = r->block();
 
-      bool hasSelectors = static_cast<CommaComplex_Selector_Ptr>(r->selector())->length() > 0;
+      bool hasSelectors = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector())->length() > 0;
 
       if (!hasSelectors) {
         return false;

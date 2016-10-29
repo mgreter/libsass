@@ -2055,13 +2055,13 @@ namespace Sass {
     }
 
     bool extendedSomething = false;
-    CommaComplex_Selector_Ptr pNewSelectorList = Extend::extendSelectorList(static_cast<CommaComplex_Selector_Ptr>(pObject->selector()), ctx, subset_map, false, extendedSomething);
+    CommaComplex_Selector_Obj pNewSelectorList = Extend::extendSelectorList(SASS_MEMORY_CAST(CommaComplex_Selector, pObject->selector()), ctx, subset_map, false, extendedSomething);
 
     if (extendedSomething && pNewSelectorList) {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND ORIGINAL SELECTORS: " << static_cast<CommaComplex_Selector_Ptr>(pObject->selector())->to_string(ctx.c_options))
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND SETTING NEW SELECTORS: " << pNewSelectorList->to_string(ctx.c_options))
       pNewSelectorList->remove_parent_selectors();
-      pObject->selector(pNewSelectorList);
+      pObject->selector(&pNewSelectorList);
     } else {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND DID NOT TRY TO EXTEND ANYTHING")
     }
@@ -2102,7 +2102,7 @@ namespace Sass {
 
   void Extend::operator()(Ruleset_Ptr pRuleset)
   {
-    extendObjectWithSelectorAndBlock(pRuleset, ctx, subset_map);
+    extendObjectWithSelectorAndBlock( pRuleset, ctx, subset_map);
     pRuleset->block()->perform(this);
   }
 
