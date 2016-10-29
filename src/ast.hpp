@@ -2611,7 +2611,7 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
-  typedef std::deque<Complex_Selector_Ptr> ComplexSelectorDeque;
+  typedef std::deque<Complex_Selector_Obj> ComplexSelectorDeque;
   typedef Subset_Map<std::string, std::pair<Complex_Selector_Ptr, Compound_Selector_Ptr> > ExtensionSubsetMap;
 
   ///////////////////////////////////

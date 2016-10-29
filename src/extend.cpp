@@ -318,8 +318,8 @@ namespace Sass {
     Node result = Node::createCollection();
 
     for (ComplexSelectorDeque::const_iterator iter = deque.begin(), iterEnd = deque.end(); iter != iterEnd; iter++) {
-      Complex_Selector_Ptr pChild = *iter;
-      result.collection()->push_back(complexSelectorToNode(pChild, ctx));
+      Complex_Selector_Obj pChild = *iter;
+      result.collection()->push_back(complexSelectorToNode(&pChild, ctx));
     }
 
     return result;
@@ -331,7 +331,7 @@ namespace Sass {
 
     Context& mCtx;
 
-    bool operator()(Complex_Selector_Ptr pOne, Complex_Selector_Ptr pTwo, Complex_Selector_Ptr& pOut) const {
+    bool operator()(Complex_Selector_Obj pOne, Complex_Selector_Obj pTwo, Complex_Selector_Obj& pOut) const {
       /*
       This code is based on the following block from ruby sass' subweave
         do |s1, s2|
@@ -351,12 +351,12 @@ namespace Sass {
         return false;
       }
 
-      if (parentSuperselector(pOne, pTwo, mCtx)) {
+      if (parentSuperselector(&pOne, &pTwo, mCtx)) {
         pOut = pTwo;
         return true;
       }
 
-      if (parentSuperselector(pTwo, pOne, mCtx)) {
+      if (parentSuperselector(&pTwo, &pOne, mCtx)) {
         pOut = pOne;
         return true;
       }
@@ -382,7 +382,7 @@ namespace Sass {
     }
 
 
-    Complex_Selector_Ptr pCompareOut = NULL;
+    Complex_Selector_Obj pCompareOut;
     if (comparator(x[i], y[j], pCompareOut)) {
       DEBUG_PRINTLN(LCS, "RETURNING AFTER ELEM COMPARE")
       lcs_backtrace(c, x, y, i - 1, j - 1, comparator, out);
@@ -419,9 +419,9 @@ namespace Sass {
 
     for (size_t i = 1; i < x.size(); i++) {
       for (size_t j = 1; j < y.size(); j++) {
-        Complex_Selector_Ptr pCompareOut = NULL;
+        Complex_Selector_Obj pCompareOut;
 
-        if (comparator(x[i], y[j], pCompareOut)) {
+        if (comparator(&x[i], &y[j], pCompareOut)) {
           c[i][j] = c[i - 1][j - 1] + 1;
         } else {
           c[i][j] = std::max(c[i][j - 1], c[i - 1][j]);
