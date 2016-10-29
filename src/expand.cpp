@@ -235,8 +235,8 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
   {
     Block_Obj ab = d->block();
-    String_Obj old_p = d->property();
-    String_Obj new_p = SASS_MEMORY_CAST_PTR(String, old_p->perform(&eval));
+    String_Ptr old_p = d->property();
+    String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
     Expression_Obj value = d->value()->perform(&eval);
     Block_Obj bb = ab ? operator()(&ab) : NULL;
     if (!bb) {
@@ -244,7 +244,7 @@ namespace Sass {
     }
     Declaration_Obj decl = SASS_MEMORY_NEW(ctx.mem, Declaration,
                                         d->pstate(),
-                                        &new_p,
+                                        new_p,
                                         &value,
                                         d->is_important(),
                                         bb);
