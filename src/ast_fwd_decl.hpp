@@ -1,8 +1,9 @@
 #ifndef SASS_AST_FWD_DECL_H
 #define SASS_AST_FWD_DECL_H
 
-#include <iostream>
 #include <vector>
+#include <iostream>
+#include <algorithm>
 
 /////////////////////////////////////////////
 // Forward declarations for the AST visitors.
@@ -12,27 +13,27 @@ namespace Sass {
 #define DBG false
 #define MEM true
 
+  class Memory_Ptr;
+
   class Memory_Object {
   protected:
   friend class Memory_Ptr;
   friend class Memory_Manager;
+    static std::vector<Memory_Object*> all;
+    static bool taint;
     long refcounter;
     long refcount;
     bool dbg;
   public:
-    Memory_Object() {
-      if (DBG) std::cerr << "Create " << this << "\n";
-      dbg = false;
-      refcount = 0;
-      refcounter = 0;
-      std::vector<void*> parents;
-    };
+    static void debugEnd();
+    Memory_Object();
     void setDbg(bool val) {
       this->dbg = val;
     }
-    virtual ~Memory_Object() {
-      if (dbg) std::cerr << "DEstruCT " << this << "\n";
-    };
+    static void setTaint(bool val) {
+      taint = val;
+    }
+    virtual ~Memory_Object();
     long getRefCount() {
       return refcounter;
     }

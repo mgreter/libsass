@@ -984,7 +984,7 @@ if (DBG) std::cerr << "complex 2\n";
   }
 
   Declaration_Obj Parser::parse_declaration() {
-    String_Ptr prop = 0;
+    String_Obj prop;
     if (lex< sequence< optional< exactly<'*'> >, identifier_schema > >()) {
       prop = &parse_identifier_schema();
     }
@@ -1004,7 +1004,7 @@ if (DBG) std::cerr << "complex 2\n";
       return SASS_MEMORY_CREATE(ctx.mem, Declaration, prop->pstate(), prop, &parse_static_value()/*, lex<kwd_important>()*/);
     }
     else {
-      Expression_Ptr value;
+      Expression_Obj value;
       Lookahead lookahead = lookahead_for_value(position);
       if (lookahead.found) {
         if (lookahead.has_interpolants) {
@@ -1015,7 +1015,7 @@ if (DBG) std::cerr << "complex 2\n";
       }
       else {
         value = &parse_list(DELAYED);
-        if (List_Ptr list = dynamic_cast<List_Ptr>(value)) {
+        if (List_Ptr list = SASS_MEMORY_CAST(List, value)) {
           if (list->length() == 0 && !peek< exactly <'{'> >()) {
             css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
           }
@@ -1362,8 +1362,6 @@ if (DBG) std::cerr << "complex 2\n";
     advanceToNextToken();
     ParserState state(pstate);
     Expression_Obj factor = parse_factor();
-    return factor;
-    debug_ast(&factor);
     // if it's a singleton, return it (don't wrap it)
     std::vector<Expression_Ptr> operands; // factors
     std::vector<Operand> operators; // ops
@@ -2193,7 +2191,7 @@ if (DBG) std::cerr << "complex 2\n";
     cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Declaration,
                      declaration->pstate(),
                      &declaration->property(),
-                     &declaration->value());
+                     declaration->value());
     // ToDo: maybe we need an additional error condition?
     return cond;
   }

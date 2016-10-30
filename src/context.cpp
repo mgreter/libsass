@@ -132,7 +132,6 @@ namespace Sass {
   Context::~Context()
   {
     std::cerr << "Context gone\n";
-    sheets.clear();
 
     // resources were allocated by strdup or malloc
     for (size_t i = 0; i < resources.size(); ++i) {
@@ -150,6 +149,10 @@ namespace Sass {
     }
     // clear inner structures (vectors) and input source
     resources.clear(); import_stack.clear();
+    sheets.clear();
+
+    // Memory_Object::debugEnd();
+
   }
 
   Data_Context::~Data_Context()
@@ -549,73 +552,8 @@ namespace Sass {
     }
   }
 
-String_Obj getObj(Memory_Manager& mem) {
-ParserState pstate("null");
-std::string str("foobar");
-  String_Obj node = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
-  return node;
-}
-
-String_Constant_Obj getCst(String_Obj node) {
-  return SASS_MEMORY_CAST(String_Constant, node);
-}
-
-Block_Obj getBlk(String_Obj node) {
-  Memory_Manager mem;
-  ParserState pstate("null");
-  std::string str("foobar");
-  Block_Obj blk = SASS_MEMORY_NEW(mem, Block, pstate);
-  String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
-     if (DBG) std::cerr << "create copy\n";
-  String_Obj string_cp = string->copy(mem);
-  // blk->append(&string);
-  return blk;
-}
-void doit() {
-
-  Memory_Manager mem;
-  ParserState pstate("null");
-  std::string str("foobar");
-
-{
-
-List_Obj list = SASS_MEMORY_NEW(mem, List, pstate);
-{
-String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
-if (DBG) std::cerr << "APPEND now\n";
-list->append(&string);
-// list->append(&string);
-}
-     Expression_Obj obj = list->at(0);
-     if (DBG) std::cerr << "[[" << obj->to_sass() << "]]\n";
-
-}
-
-
-}
-
   Block_Obj File_Context::parse()
   {
-/*
-  Memory_Manager mem;
-  ParserState pstate("null");
-  std::string str("foobar");
-
-doit();
-exit(0);
-
-
-    // check if entry file is given
-    if (input_path.empty()) return 0;
-
-{
-     std::cerr << "create blocks\n";
-     Block_Obj cst = getBlk(getObj(mem));
-     std::cerr << "[[" << cst->to_string() << "]]\n";
-}
-
-exit(0);
-*/
     // create absolute path from input filename
     // ToDo: this should be resolved via custom importers
     std::string abs_path(rel2abs(input_path, CWD));
@@ -652,7 +590,7 @@ exit(0);
     register_resource({{ input_path, "." }, abs_path }, { contents, 0 });
 
     // create root ast tree node
-    return &compile();
+    return compile();
 
   }
 
@@ -694,7 +632,7 @@ exit(0);
     register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
 
     // create root ast tree node
-    return &compile();
+    return compile();
   }
 
 
@@ -754,6 +692,7 @@ exit(0);
 
     // merge and bubble certain rules
     if (DBG) debug_ast(&root);
+return root;
     root = cssize(&root);
 
 

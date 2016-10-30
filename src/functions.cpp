@@ -43,7 +43,7 @@ namespace Sass {
     Parser sig_parser = Parser::from_c_str(sig, ctx, ParserState("[built-in function]"));
     sig_parser.lex<Prelexer::identifier>();
     std::string name(Util::normalize_underscores(sig_parser.lexed));
-    Parameters_Ptr params = &sig_parser.parse_parameters();
+    Parameters_Obj params = sig_parser.parse_parameters();
     return SASS_MEMORY_NEW(ctx.mem, Definition,
                            ParserState("[built-in function]"),
                            sig,
@@ -66,7 +66,7 @@ namespace Sass {
                                     exactly < Constants::debug_kwd >
                    >              >();
     std::string name(Util::normalize_underscores(sig_parser.lexed));
-    Parameters_Ptr params = &sig_parser.parse_parameters();
+    Parameters_Obj params = sig_parser.parse_parameters();
     return SASS_MEMORY_NEW(ctx.mem, Definition,
                            ParserState("[c function]"),
                            sig,

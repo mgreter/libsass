@@ -7,6 +7,37 @@
 
 namespace Sass {
 
+  void Memory_Object::debugEnd() {
+    std::cerr << "###################################\n";
+    std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
+    std::cerr << "###################################\n";
+    for (auto var : all) {
+      std::cerr << "MISS " << var << "\n";
+      if (AST_Node_Ptr ast = dynamic_cast<AST_Node_Ptr>(var)) {
+        debug_ast(ast);
+      }
+    }
+  }
+
+  std::vector<Memory_Object*> Memory_Object::all;
+  bool Memory_Object::taint = false;
+
+  Memory_Object::Memory_Object() {
+      // if (DBG)
+      std::cerr << "Create " << this << "\n";
+      dbg = false;
+      refcount = 0;
+      refcounter = 0;
+      if (taint) all.push_back(this);
+      std::vector<void*> parents;
+    };
+    Memory_Object::~Memory_Object() {
+      if (dbg) std::cerr << "DEstruCT " << this << "\n";
+      all.erase(std::remove(all.begin(), all.end(), this), all.end());
+    };
+
+
+
   void Memory_Ptr::decRefCount(std::string event) {
     if (this->node) {
       this->node->refcounter -= 1;
@@ -22,6 +53,10 @@ namespace Sass {
 
   void Memory_Ptr::incRefCount(std::string event) {
     if (this->node) {
+      if (this->node->refcounter == 0) {
+        if (this->node->dbg) std::cerr << "PICKUP\n";
+        // this->node->all.push_back(&*this->node);
+      }
       this->node->refcounter += 1;
       if (this->node->dbg)  std::cerr << "+ " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
     }
