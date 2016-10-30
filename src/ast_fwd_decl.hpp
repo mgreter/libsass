@@ -9,7 +9,7 @@
 /////////////////////////////////////////////
 namespace Sass {
 
-#define DBG true
+#define DBG false
 #define MEM true
 
   class Memory_Object {
@@ -18,15 +18,20 @@ namespace Sass {
   friend class Memory_Manager;
     long refcounter;
     long refcount;
+    bool dbg;
   public:
     Memory_Object() {
       if (DBG) std::cerr << "Create " << this << "\n";
+      dbg = false;
       refcount = 0;
       refcounter = 0;
       std::vector<void*> parents;
     };
+    void setDbg(bool val) {
+      this->dbg = val;
+    }
     virtual ~Memory_Object() {
-      // if (DBG) std::cerr << "DEstruCT " << this << "\n";
+      if (dbg) std::cerr << "DEstruCT " << this << "\n";
     };
     long getRefCount() {
       return refcounter;
@@ -37,57 +42,22 @@ namespace Sass {
   class Memory_Ptr {
   private:
     Memory_Object* node;
+  private:
+    void decRefCount(std::string event);
+    void incRefCount(std::string event);
   public:
     // the empty constructor
     Memory_Ptr()
     : node(NULL) {};
     // the create constructor
-    Memory_Ptr(Memory_Object* ptr)
-    : node(ptr) {
-      if (node) {
-        node->refcounter += 1;
-
-        // if (DBG) std::cerr << "Object, " << node << " - increase refcount, now at " << node->refcounter << "\n";
-      }
-    };
+    Memory_Ptr(Memory_Object* ptr);
     // copy assignment operator
-    Memory_Ptr& operator=(const Memory_Ptr& rhs) {
-      void* cur_ptr = (void*) node;
-      void* rhs_ptr = (void*) rhs.node;
-      if (cur_ptr == rhs_ptr) {
-        return *this;
-      }
-      node = rhs.node;
-      if (node) {
-        node->refcounter ++;
-        // if (DBG) std::cerr << "COPY, " << node << " - increase refcount, now at " << node->refcounter << "\n";
-      }
-      return *this;
-    };
+    Memory_Ptr& operator=(const Memory_Ptr& rhs);
     // move assignment operator
-    Memory_Ptr& operator=(Memory_Ptr&& rhs) {
-      void* cur_ptr = (void*) node;
-      void* rhs_ptr = (void*) rhs.node;
-      if (cur_ptr == rhs_ptr) {
-        return *this;
-      }
-      node = rhs.node;
-      if (node) {
-        node->refcounter ++;
-        // if (DBG) std::cerr << "MOVE, " << node << " - increase refcount, now at " << node->refcounter << "\n";
-      }
-      return *this;
-    };
-
-
+    Memory_Ptr& operator=(Memory_Ptr&& rhs);
     // the copy constructor
-    Memory_Ptr(const Memory_Ptr& obj)
-    : node(obj.node) {
-      if (node) {
-        node->refcounter += 1;
-        // if (DBG) std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
-      }
-    }
+    Memory_Ptr(const Memory_Ptr& obj);
+    // destructor
     ~Memory_Ptr();
   public:
     Memory_Object* obj () {

@@ -527,9 +527,6 @@ namespace Sass {
         emitted.buffer += format_source_mapping_url(source_map_file);
       }
     }
-    debug_ast(&root);
-    root = 0;
-    std::cerr << "HELLO\n";
     // create a copy of the resulting buffer string
     // this must be freed or taken over by implementor
     return sass_copy_c_string(emitted.buffer.c_str());
@@ -733,13 +730,9 @@ exit(0);
     if (DBG) std::cerr << "COMP 4 ========================================================================\n";
     // check nesting
     if (DBG) std::cerr << "COMP 5 ========================================================================\n";
-debug_ast(root);
+// root->setDbg(true);
     check_nesting(root);
-    check_nesting.reset();
-debug_ast(root);
-sheets.clear(); // one in sheets, where the other?
-exit(0);
-return root;
+    // check_nesting.reset();
     // expand and eval the tree
     if (DBG) std::cerr << "COMP 6 ========================================================================\n";
     // Ruleset_Ptr asd = SASS_MEMORY_CAST(Ruleset, root->at(0));
