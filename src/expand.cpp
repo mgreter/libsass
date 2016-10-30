@@ -6,6 +6,7 @@
 #include "expand.hpp"
 #include "bind.hpp"
 #include "eval.hpp"
+#include "debugger.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
 #include "parser.hpp"
@@ -320,6 +321,7 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Import_Ptr imp)
   {
     Import_Obj result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
+    debug_ast(&result);
     if (imp->import_queries() && imp->import_queries()->size()) {
       Expression_Obj ex = imp->import_queries()->perform(&eval);
       result->import_queries(SASS_MEMORY_CAST(List, ex));
@@ -758,9 +760,7 @@ namespace Sass {
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr stm = &b->at(i);
       Statement_Ptr ith = stm->perform(this);
-      std::cerr << "append " << stm << "\n";
       if (ith) block_stack.back()->append(ith);
-      std::cerr << "appended " << stm << "\n";
     }
     if (b->is_root()) call_stack.pop_back();
   }

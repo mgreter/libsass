@@ -204,7 +204,6 @@ namespace Sass {
 
   static Block_Obj sass_parse_block(Sass_Compiler* compiler) throw()
   {
-std::cerr << "sass_parse_block\n";
 	  // assert valid pointer
 	  if (compiler == 0) return 0;
 	  // The cpp context must be set by now
@@ -383,7 +382,6 @@ extern "C" {
   Sass_File_Context* ADDCALL sass_make_file_context(const char* input_path)
   {
     Memory_Object::setTaint(true);
-    std::cerr << "sass_make_file_ctx\n";
     struct Sass_File_Context* ctx = (struct Sass_File_Context*) calloc(1, sizeof(struct Sass_File_Context));
     if (ctx == 0) { std::cerr << "Error allocating memory for file context" << std::endl; return 0; }
     ctx->type = SASS_CONTEXT_FILE;

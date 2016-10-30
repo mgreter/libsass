@@ -321,6 +321,7 @@ namespace Sass {
   Import_Obj Parser::parse_import()
   {
     Import_Obj imp = SASS_MEMORY_NEW(ctx.mem, Import, pstate);
+    debug_ast(&imp);
     std::vector<std::pair<std::string,Function_Call_Ptr>> to_import;
     bool first = true;
     do {
@@ -493,10 +494,7 @@ namespace Sass {
     if (lookahead.has_interpolants && lookahead.found) {
       val = &parse_value_schema(lookahead.found);
     } else {
-      std::cerr << "parse assign val\n";
       Expression_Obj ls = parse_list();
-      std::cerr << "parsed assign val\n";
-      debug_ast(&ls);
       val = &ls;
     }
     bool is_default = false;
@@ -1219,9 +1217,7 @@ if (DBG) std::cerr << "complex 2\n";
     advanceToNextToken();
     ParserState state(pstate);
     // parse the left hand side conjunction
-    std::cerr << "parse conh\n";
     Expression_Obj conj = parse_conjunction();
-    return conj;
     // parse multiple right hand sides
     std::vector<Expression_Ptr> operands;
     while (lex_css< kwd_or >())
@@ -1382,7 +1378,6 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Obj ex = fold_operands(factor, operands, operators);
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
-    std::cerr << "end\n";
     return ex;
   }
   // EO parse_operators

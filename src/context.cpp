@@ -131,7 +131,7 @@ namespace Sass {
 
   Context::~Context()
   {
-    std::cerr << "Context gone\n";
+    if (DBG) std::cerr << "Context gone\n";
 
     // resources were allocated by strdup or malloc
     for (size_t i = 0; i < resources.size(); ++i) {
@@ -538,14 +538,15 @@ namespace Sass {
   void Context::apply_custom_headers(Block_Obj root, const char* ctx_path, ParserState pstate)
   {
     // create a custom import to resolve headers
-    Import_Ptr imp = SASS_MEMORY_NEW(mem, Import, pstate);
+    Import_Obj imp = SASS_MEMORY_NEW(mem, Import, pstate);
+
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
-    call_headers(entry_path, ctx_path, pstate, imp);
+    call_headers(entry_path, ctx_path, pstate, &imp);
     // increase head count to skip later
     head_imports += resources.size() - 1;
     // add the statement if we have urls
-    if (!imp->urls().empty()) root->append(imp);
+    if (!imp->urls().empty()) root->append(&imp);
     // process all other resources (add Import_Stub nodes)
     for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
       root->append(SASS_MEMORY_NEW(mem, Import_Stub, pstate, imp->incs()[i]));
@@ -676,7 +677,7 @@ namespace Sass {
     // expand and eval the tree
     if (DBG) std::cerr << "COMP 6 ========================================================================\n";
     // Ruleset_Ptr asd = SASS_MEMORY_CAST(Ruleset, root->at(0));
-    Ruleset_Ptr r = SASS_MEMORY_CAST(Ruleset, root->at(0));
+    // Ruleset_Ptr r = SASS_MEMORY_CAST(Ruleset, root->at(0));
     // CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector());
     if (DBG) debug_ast(&root);
     // debug_ast(&root, "BEF: ");

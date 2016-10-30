@@ -109,7 +109,7 @@ namespace Sass {
       StyleSheet(const Resource& res, Block_Obj root)
       : Resource(res), root(root)
       {
-      std::cerr << "Stylesheet gone\n";
+        if (DBG) std::cerr << "Stylesheet gone\n";
       }
   };
 

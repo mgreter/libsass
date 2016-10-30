@@ -174,8 +174,8 @@ namespace Sass {
 
     if (props->length())
     {
-      Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
-      // bb->concat(&props); // leaks
+      Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
+      bb->concat(&props); // leaks
       rr->oblock(bb);
       // rr->block(&rr->oblock());
 

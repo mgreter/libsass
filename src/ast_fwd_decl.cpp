@@ -8,13 +8,15 @@
 namespace Sass {
 
   void Memory_Object::debugEnd() {
-    std::cerr << "###################################\n";
-    std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
-    std::cerr << "###################################\n";
-    for (auto var : all) {
-      std::cerr << "MISS " << var << "\n";
-      if (AST_Node_Ptr ast = dynamic_cast<AST_Node_Ptr>(var)) {
-        debug_ast(ast);
+    if (!all.empty()) {
+      std::cerr << "###################################\n";
+      std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
+      std::cerr << "###################################\n";
+      for (auto var : all) {
+        std::cerr << "MISS " << var << "\n";
+        if (AST_Node_Ptr ast = dynamic_cast<AST_Node_Ptr>(var)) {
+          debug_ast(ast);
+        }
       }
     }
   }
@@ -23,8 +25,7 @@ namespace Sass {
   bool Memory_Object::taint = false;
 
   Memory_Object::Memory_Object() {
-      // if (DBG)
-      std::cerr << "Create " << this << "\n";
+      if (DBG && taint) std::cerr << "Create " << this << "\n";
       dbg = false;
       refcount = 0;
       refcounter = 0;
@@ -44,9 +45,9 @@ namespace Sass {
       if (this->node->dbg)  std::cerr << "- " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
       if (this->node->refcounter == 0) {
         AST_Node_Ptr ptr = SASS_MEMORY_CAST(AST_Node, *this->node);
-        std::cerr << "DELETE NODE " << node << "\n";
-        debug_ast(ptr, "DELETE: ");
-        if (MEM)  delete(node);
+        if (DBG) std::cerr << "DELETE NODE " << node << "\n";
+        if (DBG) debug_ast(ptr, "DELETE: ");
+        if (MEM) delete(node);
       }
     }
   }
