@@ -1619,7 +1619,7 @@ namespace Sass {
 
   CommaComplex_Selector_Ptr Eval::operator()(CommaComplex_Selector_Ptr s)
   {
-    std::vector<CommaComplex_Selector_Obj> rv;
+    std::vector<CommaComplex_Selector_Ptr> rv;
     CommaComplex_Selector_Ptr sl = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, s->pstate());
     sl->is_optional(s->is_optional());
     sl->media_block(s->media_block());

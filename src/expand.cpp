@@ -95,14 +95,14 @@ namespace Sass {
     LOCAL_FLAG(old_at_root_without_rule, at_root_without_rule);
 
     if (in_keyframes) {
-      Block_Obj bb = operator()(&r->oblock());
-      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
+      Block_Ptr bb = operator()(&r->oblock());
+      Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
         k->selector2(SASS_MEMORY_CAST_PTR(CommaComplex_Selector, r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
-      return &k;
+      return k;
     }
 
     // reset when leaving scope
@@ -110,16 +110,16 @@ namespace Sass {
 
     // do some special checks for the base level rules
     if (r->is_root()) {
-      if (CommaComplex_Selector_Obj selector_list = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector())) {
+      if (CommaComplex_Selector_Ptr selector_list = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector())) {
         for (Complex_Selector_Obj complex_selector : selector_list->elements()) {
-          Complex_Selector_Obj tail = complex_selector;
+          Complex_Selector_Ptr tail = &complex_selector;
           while (tail) {
             if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
               if (SASS_MEMORY_CAST(Parent_Selector, header) == NULL) continue; // skip all others
               std::string sel_str(complex_selector->to_string(ctx.c_options));
               error("Base-level rules cannot contain the parent-selector-referencing character '&'.", header->pstate(), backtrace());
             }
-            tail = tail->tail();
+            tail = &tail->tail();
           }
         }
       }
