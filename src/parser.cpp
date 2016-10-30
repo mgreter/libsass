@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include "parser.hpp"
+#include "debugger.hpp"
 #include "file.hpp"
 #include "inspect.hpp"
 #include "constants.hpp"
@@ -259,7 +260,16 @@ namespace Sass {
 
     // selector may contain interpolations which need delayed evaluation
     else if (!(lookahead_result = lookahead_for_selector(position)).error)
-    { block->append(&parse_ruleset(lookahead_result, is_root)); }
+    {
+      {
+      Ruleset_Obj r = parse_ruleset(lookahead_result, is_root);
+      // debug_ast(&r, "PARSED: ");
+      // r->setDbg(true);
+      block->append(&r);
+    }
+      block->at(0)->setDbg(false);
+      // debug_ast(&block, "ADDED: ");
+   }
 
     // parse multiple specific keyword directives
     else if (lex < kwd_media >(true)) { block->append(&parse_media_block()); }

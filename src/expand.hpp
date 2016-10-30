@@ -21,7 +21,7 @@ namespace Sass {
 
     Env* environment();
     Context& context();
-    CommaComplex_Selector_Obj selector();
+    CommaComplex_Selector_Ptr selector();
     Backtrace* backtrace();
 
     Context&          ctx;

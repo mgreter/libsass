@@ -706,7 +706,8 @@ exit(0);
     // abort if there is no data
     if (resources.size() == 0) return 0;
     // get root block from the first style sheet
-    Block_Ptr root = &sheets.at(entry_path).root;
+    // debug_ast(&sheets.at(entry_path).root, "inc: ");
+    Block_Obj root = sheets.at(entry_path).root;
     // abort on invalid root
     if (root == false) return 0;
     // if (DBG) debug_ast(root);
@@ -731,32 +732,43 @@ exit(0);
     // check nesting
     if (DBG) std::cerr << "COMP 5 ========================================================================\n";
 // root->setDbg(true);
-    check_nesting(root);
+    // debug_ast(&root);
+    check_nesting(&root);
     // check_nesting.reset();
     // expand and eval the tree
     if (DBG) std::cerr << "COMP 6 ========================================================================\n";
     // Ruleset_Ptr asd = SASS_MEMORY_CAST(Ruleset, root->at(0));
-    if (DBG) debug_ast(root);
-    root = expand(root);
+    Ruleset_Ptr r = SASS_MEMORY_CAST(Ruleset, root->at(0));
+    // CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector());
+    if (DBG) debug_ast(&root);
+    // debug_ast(&root, "BEF: ");
+    // r->setDbg(true);
+    root = expand(&root);
+    // r->setDbg(false);
+    // debug_ast(&root, "AFTER EXPAND ");
+    // exit(0);
     if (DBG) std::cerr << "COMP 7 ========================================================================\n";
     // check nesting
-    check_nesting(root);
+    check_nesting(&root);
     if (DBG) std::cerr << "COMP 8 ========================================================================\n";
+
     // merge and bubble certain rules
-    if (DBG) debug_ast(root);
-    root = cssize(root);
-    if (DBG) debug_ast(root);
+    if (DBG) debug_ast(&root);
+    root = cssize(&root);
+
+
+    if (DBG) debug_ast(&root);
     if (DBG) std::cerr << "COMP 9 ========================================================================\n";
     // should we extend something?
-    if (DBG) debug_ast(root);
+    if (DBG) debug_ast(&root);
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);
       // extend tree nodes
-      extend(root);
+      extend(&root);
     }
     if (DBG) std::cerr << "COMP 10 ========================================================================\n";
-    if (DBG) debug_ast(root);
+    if (DBG) debug_ast(&root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?

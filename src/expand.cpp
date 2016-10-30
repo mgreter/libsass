@@ -53,7 +53,7 @@ namespace Sass {
     return 0;
   }
 
-  CommaComplex_Selector_Obj Expand::selector()
+  CommaComplex_Selector_Ptr Expand::selector()
   {
     if (selector_stack.size() > 0)
       return selector_stack.back();
@@ -92,6 +92,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Ruleset_Ptr r)
   {
+
     LOCAL_FLAG(old_at_root_without_rule, at_root_without_rule);
 
     if (in_keyframes) {
@@ -133,7 +134,7 @@ namespace Sass {
     if (sel->length() == 0 || sel->has_parent_ref()) {
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
-        CommaComplex_Selector_Obj ll = selector_stack.at(i);
+        CommaComplex_Selector_Ptr ll = selector_stack.at(i);
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
       if (!has_parent_selector) {
@@ -615,7 +616,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Extension_Ptr e)
   {
-    if (CommaComplex_Selector_Obj extender = SASS_MEMORY_CAST(CommaComplex_Selector, selector())) {
+    if (CommaComplex_Selector_Ptr extender = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, selector())) {
       Selector_Obj s = e->selector();
       if (Selector_Schema_Obj schema = SASS_MEMORY_CAST(Selector_Schema, s)) {
         if (schema->has_parent_ref()) s = eval(&schema);
@@ -755,9 +756,11 @@ namespace Sass {
   {
     if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Obj stm = b->at(i);
+      Statement_Ptr stm = &b->at(i);
       Statement_Ptr ith = stm->perform(this);
+      std::cerr << "append " << stm << "\n";
       if (ith) block_stack.back()->append(ith);
+      std::cerr << "appended " << stm << "\n";
     }
     if (b->is_root()) call_stack.pop_back();
   }

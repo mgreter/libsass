@@ -5,6 +5,7 @@
 
 #include "cssize.hpp"
 #include "context.hpp"
+#include "debugger.hpp"
 #include "backtrace.hpp"
 
 namespace Sass {
@@ -149,10 +150,11 @@ namespace Sass {
     if (dynamic_cast<Statement_Ptr>(bb) == NULL) {
       error("Illegal nesting: Only properties may be nested beneath properties.", r->oblock()->pstate());
     }
-    Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
+    Ruleset_Obj rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
                                   r->selector(),
                                   bb);
+
     rr->is_root(r->is_root());
     // rr->tabs(r->oblock()->tabs());
     p_stack.pop_back();
@@ -161,7 +163,7 @@ namespace Sass {
       error("Illegal nesting: Only properties may be nested beneath properties.", r->oblock()->pstate());
     }
 
-    Block_Ptr props = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
+    Block_Obj props = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
     Block_Ptr rules = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
     for (size_t i = 0, L = rr->oblock()->length(); i < L; i++)
     {
@@ -173,17 +175,17 @@ namespace Sass {
     if (props->length())
     {
       Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
-      bb->concat(props);
+      bb->concat(&props);
       rr->oblock(bb);
       // rr->block(&rr->oblock());
 
       for (size_t i = 0, L = rules->length(); i < L; i++)
       {
-        Statement_Obj stm = rules->at(i);
+        Statement_Ptr stm = &rules->at(i);
         stm->tabs(stm->tabs() + 1);
       }
 
-      rules->unshift(rr);
+      rules->unshift(&rr);
     }
 
     rules = debubble(rules);
@@ -534,7 +536,9 @@ namespace Sass {
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Obj stm = b->at(i);
+      debug_ast(&stm);
       Statement_Ptr ith = stm->perform(this);
+      debug_ast(ith);
       if (Block_Ptr bb = SASS_MEMORY_CAST_PTR(Block, ith)) {
         for (size_t j = 0, K = bb->length(); j < K; ++j) {
           current_block->append(bb->at(j));

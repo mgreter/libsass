@@ -237,9 +237,9 @@ namespace Sass {
     virtual Vectorized& append(T element)
     {
       if (!element) return *this;
-      reset_hash();
+      // reset_hash();
       elements_.push_back(element);
-      adjust_after_pushing(element);
+      // adjust_after_pushing(element);
       return *this;
     }
     virtual Vectorized& operator<<(T element)
