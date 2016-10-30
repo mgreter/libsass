@@ -31,8 +31,6 @@
 #include "prelexer.hpp"
 #include "emitter.hpp"
 
-#define DBG false
-
 namespace Sass {
   using namespace Constants;
   using namespace File;
@@ -709,7 +707,7 @@ exit(0);
 
     Env global; // create root environment
     // register built-in functions on env
-    if (!DBG) register_built_in_functions(*this, &global);
+    if (!MEM) register_built_in_functions(*this, &global);
     // register custom functions (defined via C-API)
     if (DBG) std::cerr << "COMP 2 ========================================================================\n";
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
@@ -724,21 +722,25 @@ exit(0);
     Cssize cssize(*this, &backtrace);
     CheckNesting check_nesting;
     if (DBG) std::cerr << "COMP 4 ========================================================================\n";
-    if (DBG) debug_ast(&root);
     // check nesting
     if (DBG) std::cerr << "COMP 5 ========================================================================\n";
     check_nesting(&root);
     // expand and eval the tree
     if (DBG) std::cerr << "COMP 6 ========================================================================\n";
+    // Ruleset_Ptr asd = SASS_MEMORY_CAST(Ruleset, root->at(0));
+    if (DBG) debug_ast(&root);
     root = expand(&root);
     if (DBG) std::cerr << "COMP 7 ========================================================================\n";
     // check nesting
     check_nesting(&root);
     if (DBG) std::cerr << "COMP 8 ========================================================================\n";
     // merge and bubble certain rules
+    if (DBG) debug_ast(&root);
     root = cssize(&root);
+    if (DBG) debug_ast(&root);
     if (DBG) std::cerr << "COMP 9 ========================================================================\n";
     // should we extend something?
+    if (DBG) debug_ast(&root);
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);

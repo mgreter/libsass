@@ -54,9 +54,9 @@ namespace Sass {
   void Memory_Manager::deallocate(Memory_Object* np)
   {
     // only call destructor if initialized
-    // if (np->refcount) np->~Memory_Object();
+    // if (!MEM) if (np->refcount) np->~Memory_Object();
     // always free the memory
-    // free(np);
+    // if (!MEM) free(np);
   }
 
   void Memory_Manager::remove(Memory_Object* np)

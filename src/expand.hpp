@@ -29,7 +29,7 @@ namespace Sass {
 
     // it's easier to work with vectors
     std::vector<Env*>           env_stack;
-    std::vector<Block_Obj>         block_stack;
+    std::vector<Block_Ptr>         block_stack;
     std::vector<AST_Node_Obj>      call_stack;
     std::vector<CommaComplex_Selector_Obj> selector_stack;
     std::vector<Media_Block_Obj>   media_block_stack;
@@ -74,7 +74,7 @@ namespace Sass {
     template <typename U>
     Statement_Ptr fallback(U x) { return fallback_impl(x); }
 
-    void append_block(Block_Obj);
+    void append_block(Block_Ptr);
   };
 
 }

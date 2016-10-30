@@ -14,7 +14,7 @@ namespace Sass {
   class Cssize : public Operation_CRTP<Statement_Ptr, Cssize> {
 
     Context&                    ctx;
-    std::vector<Block_Obj>         block_stack;
+    std::vector<Block_Ptr>         block_stack;
     std::vector<Statement_Ptr>     p_stack;
     Backtrace*                  backtrace;
 
@@ -54,24 +54,24 @@ namespace Sass {
     Statement_Ptr operator()(Null_Ptr);
 
     Statement_Ptr parent();
-    std::vector<std::pair<bool, Block_Obj>> slice_by_bubble(Block_Obj);
+    std::vector<std::pair<bool, Block_Ptr>> slice_by_bubble(Block_Ptr);
     Statement_Ptr bubble(Directive_Ptr);
     Statement_Ptr bubble(At_Root_Block_Ptr);
-    Statement_Ptr bubble(Media_Block_Obj);
+    Statement_Ptr bubble(Media_Block_Ptr);
     Statement_Ptr bubble(Supports_Block_Ptr);
     Statement_Ptr shallow_copy(Statement_Ptr);
 
-    Block_Obj debubble(Block_Obj children, Statement_Ptr parent = 0);
-    Block_Obj flatten(Block_Obj);
-    bool bubblable(Statement_Obj);
+    Block_Ptr debubble(Block_Ptr children, Statement_Ptr parent = 0);
+    Block_Ptr flatten(Block_Ptr);
+    bool bubblable(Statement_Ptr);
 
-    List_Obj merge_media_queries(Media_Block_Obj, Media_Block_Obj);
-    Media_Query_Obj merge_media_query(Media_Query_Obj, Media_Query_Obj);
+    List_Ptr merge_media_queries(Media_Block_Ptr, Media_Block_Ptr);
+    Media_Query_Ptr merge_media_query(Media_Query_Ptr, Media_Query_Ptr);
 
     template <typename U>
     Statement_Ptr fallback(U x) { return fallback_impl(x); }
 
-    void append_block(Block_Obj);
+    void append_block(Block_Ptr);
   };
 
 }

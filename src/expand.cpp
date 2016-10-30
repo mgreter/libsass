@@ -20,7 +20,7 @@ namespace Sass {
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
-    block_stack(std::vector<Block_Obj>()),
+    block_stack(std::vector<Block_Ptr>()),
     call_stack(std::vector<AST_Node_Obj>()),
     selector_stack(std::vector<CommaComplex_Selector_Obj>()),
     media_block_stack(std::vector<Media_Block_Obj>()),
@@ -74,7 +74,7 @@ namespace Sass {
     // set the current env as parent
     Env env(environment());
     // copy the block object (add items later)
-    Block_Obj bb = SASS_MEMORY_OBJ(ctx.mem, Block,
+    Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block,
                                 b->pstate(),
                                 b->length(),
                                 b->is_root());
@@ -87,7 +87,7 @@ namespace Sass {
     this->block_stack.pop_back();
     this->env_stack.pop_back();
     // return copy
-    return &bb;
+    return bb;
   }
 
   Statement_Ptr Expand::operator()(Ruleset_Ptr r)
@@ -125,8 +125,9 @@ namespace Sass {
       }
     }
 
-    Expression_Obj ex = r->selector()->perform(&eval);
-    CommaComplex_Selector_Obj sel = SASS_MEMORY_CAST(CommaComplex_Selector, ex);
+    Expression_Ptr ex = 0;
+    if (r->selector()) ex = r->selector()->perform(&eval);
+    CommaComplex_Selector_Ptr sel = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, ex);
     if (sel == 0) throw std::runtime_error("Expanded null selector");
 
     if (sel->length() == 0 || sel->has_parent_ref()) {
@@ -146,10 +147,11 @@ namespace Sass {
       env_stack.push_back(&env);
     }
     sel->set_media_block(&media_block_stack.back());
-    Block_Obj blk = operator()(&r->oblock());
-    Ruleset_Obj rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
+    Block_Ptr blk = 0;
+    if (r->oblock()) blk = operator()(&r->oblock());
+    Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
-                                  &sel,
+                                  sel,
                                   blk);
     selector_stack.pop_back();
     if (block_stack.back()->is_root()) {
@@ -159,7 +161,7 @@ namespace Sass {
     rr->is_root(r->is_root());
     rr->tabs(r->tabs());
 
-    return &rr;
+    return rr;
   }
 
   Statement_Ptr Expand::operator()(Supports_Block_Ptr f)
@@ -344,7 +346,7 @@ namespace Sass {
     );
     ctx.import_stack.push_back(import);
     const std::string& abs_path(i->resource().abs_path);
-    append_block(ctx.sheets.at(abs_path).root);
+    append_block(&ctx.sheets.at(abs_path).root);
     sass_delete_import(ctx.import_stack.back());
     ctx.import_stack.pop_back();
     return 0;
@@ -386,10 +388,10 @@ namespace Sass {
     env_stack.push_back(&env);
     call_stack.push_back(i);
     if (*i->predicate()->perform(&eval)) {
-      append_block(i->oblock());
+      append_block(&i->oblock());
     }
     else {
-      Block_Obj alt = i->alternative();
+      Block_Ptr alt = &i->alternative();
       if (alt) append_block(alt);
     }
     call_stack.pop_back();
@@ -427,7 +429,7 @@ namespace Sass {
     call_stack.push_back(f);
     Number_Obj it = SASS_MEMORY_NEW(env.mem, Number, low->pstate(), start, sass_end->unit());
     env.set_local(variable, &it);
-    Block_Obj body = f->oblock();
+    Block_Ptr body = &f->oblock();
     if (start < end) {
       if (f->is_inclusive()) ++end;
       for (double i = start;
@@ -479,7 +481,7 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(e);
-    Block_Obj body = e->oblock();
+    Block_Ptr body = &e->oblock();
 
     if (map) {
       for (auto key : map->keys()) {
@@ -541,7 +543,7 @@ namespace Sass {
   Statement_Ptr Expand::operator()(While_Ptr w)
   {
     Expression_Obj pred = w->predicate();
-    Block_Obj body = w->oblock();
+    Block_Ptr body = &w->oblock();
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(w);
@@ -701,7 +703,7 @@ namespace Sass {
     Trace_Obj trace = SASS_MEMORY_NEW(ctx.mem, Trace, c->pstate(), c->name(), trace_block);
 
 
-    block_stack.push_back(trace_block);
+    block_stack.push_back(&trace_block);
     for (auto bb : body->elements()) {
       Statement_Obj ith = bb->perform(this);
       if (ith) trace->oblock()->append(ith);
@@ -749,13 +751,13 @@ namespace Sass {
   }
 
   // process and add to last block on stack
-  inline void Expand::append_block(Block_Obj b)
+  inline void Expand::append_block(Block_Ptr b)
   {
-    if (b->is_root()) call_stack.push_back(&b);
+    if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-		Statement_Obj stm = b->at(i);
-      Statement_Obj ith = stm->perform(this);
-      if (ith) block_stack.back()->append(&ith);
+      Statement_Obj stm = b->at(i);
+      Statement_Ptr ith = stm->perform(this);
+      if (ith) block_stack.back()->append(ith);
     }
     if (b->is_root()) call_stack.pop_back();
   }

@@ -2462,7 +2462,7 @@ namespace Sass {
     Complex_Selector_Obj innermost() { return last(); };
 
     size_t length() const;
-    CommaComplex_Selector_Obj resolve_parent_refs(Context& ctx, CommaComplex_Selector_Obj parents, bool implicit_parent = true);
+    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
@@ -2579,7 +2579,7 @@ namespace Sass {
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
     void remove_parent_selectors();
-    CommaComplex_Selector_Obj resolve_parent_refs(Context& ctx, CommaComplex_Selector_Obj parents, bool implicit_parent = true);
+    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
