@@ -45,7 +45,7 @@ namespace Sass {
         if (i > 1) gp = this->parents.at(i - 2);
 
         if (!this->is_transparent_parent(p, gp)) {
-          this->parent = &p;
+          this->parent = p;
           break;
         }
       }
@@ -78,7 +78,7 @@ namespace Sass {
         // n->perform(this);
       }
     }
-    this->parent = &old_parent;
+    this->parent = old_parent;
     this->parents.pop_back();
 
     return b;
@@ -116,35 +116,35 @@ namespace Sass {
     if (!this->parent) return true;
 
     if (SASS_MEMORY_CAST(Content, node))
-    { this->invalid_content_parent(this->parent); }
+    { this->invalid_content_parent(&this->parent); }
 
     if (is_charset(node))
-    { this->invalid_charset_parent(this->parent); }
+    { this->invalid_charset_parent(&this->parent); }
 
     if (SASS_MEMORY_CAST(Extension, node))
-    { this->invalid_extend_parent(this->parent); }
+    { this->invalid_extend_parent(&this->parent); }
 
     // if (SASS_MEMORY_CAST(Import, node))
     // { this->invalid_import_parent(this->parent); }
 
     if (this->is_mixin(node))
-    { this->invalid_mixin_definition_parent(this->parent); }
+    { this->invalid_mixin_definition_parent(&this->parent); }
 
     if (this->is_function(node))
-    { this->invalid_function_parent(this->parent); }
+    { this->invalid_function_parent(&this->parent); }
 
     if (this->is_function(this->parent))
     { this->invalid_function_child(&node); }
 
     if (SASS_MEMORY_CAST(Declaration, node))
-    { this->invalid_prop_parent(this->parent); }
+    { this->invalid_prop_parent(&this->parent); }
 
     if (
-      SASS_MEMORY_CAST_PTR(Declaration, this->parent)
+      SASS_MEMORY_CAST(Declaration, this->parent)
     ) { this->invalid_prop_child(&node); }
 
     if (SASS_MEMORY_CAST(Return, node))
-    { this->invalid_return_parent(this->parent); }
+    { this->invalid_return_parent(&this->parent); }
 
     return true;
   }

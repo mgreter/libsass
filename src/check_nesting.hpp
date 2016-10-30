@@ -11,7 +11,7 @@ namespace Sass {
   class CheckNesting : public Operation_CRTP<Statement_Ptr, CheckNesting> {
 
     std::vector<Statement_Obj>  parents;
-    Statement_Ptr               parent;
+    Statement_Obj               parent;
     Definition_Obj              current_mixin_definition;
 
     Statement_Ptr fallback_impl(Statement_Ptr);
