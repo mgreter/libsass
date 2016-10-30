@@ -13,6 +13,7 @@ name(Env& env, Env& d_env, Context& ctx, Signature sig, ParserState pstate, Back
 namespace Sass {
   struct Backtrace;
   typedef Environment<AST_Node_Obj> Env;
+  typedef Environment<AST_Node_Ptr> Env2;
   typedef const char* Signature;
   typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaComplex_Selector_Obj>);
 

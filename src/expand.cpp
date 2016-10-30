@@ -217,21 +217,21 @@ namespace Sass {
   Statement_Ptr Expand::operator()(Directive_Ptr a)
   {
     LOCAL_FLAG(in_keyframes, a->is_keyframes());
-    Block_Obj ab = a->oblock();
-    Selector_Obj as = a->selector();
-    Expression_Obj av = a->value();
+    Block_Ptr ab = &a->oblock();
+    Selector_Ptr as = &a->selector();
+    Expression_Ptr av = &a->value();
     selector_stack.push_back(0);
     if (av) av = av->perform(&eval);
     if (as) as = SASS_MEMORY_CAST_PTR(Selector, as->perform(&eval));
     selector_stack.pop_back();
-    Block_Obj bb = ab ? operator()(&ab) : NULL;
-    Directive_Obj aa = SASS_MEMORY_NEW(ctx.mem, Directive,
+    Block_Ptr bb = ab ? operator()(ab) : NULL;
+    Directive_Ptr aa = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   a->pstate(),
                                   a->keyword(),
-                                  &as,
+                                  as,
                                   bb,
                                   av);
-    return &aa;
+    return aa;
   }
 
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
