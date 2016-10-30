@@ -31,7 +31,7 @@ namespace Sass {
     std::vector<Env*>           env_stack;
     std::vector<Block_Ptr>         block_stack;
     std::vector<AST_Node_Obj>      call_stack;
-    std::vector<CommaComplex_Selector_Obj> selector_stack;
+    std::vector<CommaComplex_Selector_Ptr> selector_stack;
     std::vector<Media_Block_Obj>   media_block_stack;
     std::vector<Backtrace*>     backtrace_stack;
     bool                        in_keyframes;

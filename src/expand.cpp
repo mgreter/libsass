@@ -22,7 +22,7 @@ namespace Sass {
     env_stack(std::vector<Env*>()),
     block_stack(std::vector<Block_Ptr>()),
     call_stack(std::vector<AST_Node_Obj>()),
-    selector_stack(std::vector<CommaComplex_Selector_Obj>()),
+    selector_stack(std::vector<CommaComplex_Selector_Ptr>()),
     media_block_stack(std::vector<Media_Block_Obj>()),
     backtrace_stack(std::vector<Backtrace*>()),
     in_keyframes(false),
@@ -35,7 +35,7 @@ namespace Sass {
     call_stack.push_back(0);
     // import_stack.push_back(0);
     if (stack == NULL) { selector_stack.push_back(0); }
-    else { selector_stack.insert(selector_stack.end(), stack->begin(), stack->end()); }
+    // else { selector_stack.insert(selector_stack.end(), stack->begin(), stack->end()); }
     media_block_stack.push_back(0);
     backtrace_stack.push_back(0);
     backtrace_stack.push_back(bt);
@@ -240,19 +240,19 @@ namespace Sass {
     String_Obj old_p = d->property();
     // String_Ptr new_p = dynamic_cast<String_Ptr>(old_p->perform(&eval));
     String_Ptr new_p = static_cast<String_Ptr>(old_p->perform(&eval));
-    Expression_Obj value = d->value()->perform(&eval);
-    Block_Obj bb = ab ? operator()(&ab) : NULL;
+    Expression_Ptr value = d->value()->perform(&eval);
+    Block_Ptr bb = ab ? operator()(&ab) : NULL;
     if (!bb) {
       if (!value || (value->is_invisible() && !d->is_important())) return 0;
     }
-    Declaration_Obj decl = SASS_MEMORY_NEW(ctx.mem, Declaration,
+    Declaration_Ptr decl = SASS_MEMORY_NEW(ctx.mem, Declaration,
                                         d->pstate(),
                                         new_p,
-                                        &value,
+                                        value,
                                         d->is_important(),
                                         bb);
     decl->tabs(d->tabs());
-    return &decl;
+    return decl;
   }
 
   Statement_Ptr Expand::operator()(Assignment_Ptr a)

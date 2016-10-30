@@ -49,7 +49,7 @@ namespace Sass {
     // these are guaranteed to be freed
     std::vector<char*> strings;
     std::vector<Resource> resources;
-    std::map<const std::string, const StyleSheet> sheets;
+    std::map<const std::string, StyleSheet> sheets;
     Subset_Map<std::string, std::pair<Complex_Selector_Obj, Compound_Selector_Obj> > subset_map;
     std::vector<Sass_Import_Entry> import_stack;
 

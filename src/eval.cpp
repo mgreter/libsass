@@ -864,7 +864,7 @@ namespace Sass {
       exp.backtrace_stack.push_back(&here);
       // eval the body if user-defined or special, invoke underlying CPP function if native
       if (body && !Prelexer::re_special_fun(name.c_str())) { result = body->perform(this); }
-      else if (func) { result = func(fn_env, *env, ctx, def->signature(), c->pstate(), backtrace(), exp.selector_stack); }
+      // else if (func) { result = func(fn_env, *env, ctx, def->signature(), c->pstate(), backtrace(), exp.selector_stack); }
       if (!result) error(std::string("Function ") + c->name() + " did not return a value", c->pstate());
       exp.backtrace_stack.pop_back();
     }
@@ -1680,12 +1680,12 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Parent_Selector_Ptr p)
   {
-    CommaComplex_Selector_Obj pr = selector();
+    CommaComplex_Selector_Ptr pr = &selector();
     if (pr) {
       exp.selector_stack.pop_back();
-      pr = operator()(&pr);
+      pr = operator()(pr);
       exp.selector_stack.push_back(pr);
-      return &pr;
+      return pr;
     } else {
       return SASS_MEMORY_NEW(ctx.mem, Null, p->pstate());
     }

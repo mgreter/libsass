@@ -131,6 +131,9 @@ namespace Sass {
 
   Context::~Context()
   {
+    std::cerr << "Context gone\n";
+    sheets.clear();
+
     // resources were allocated by strdup or malloc
     for (size_t i = 0; i < resources.size(); ++i) {
       free(resources[i].contents);
@@ -320,13 +323,16 @@ namespace Sass {
     if (DBG) std::cerr << "START PARSING\n";
     Block_Obj root = p.parse();
     if (DBG) std::cerr << "PARSED ========================================================================\n";
+    if (DBG) debug_ast(&root);
     // delete memory of current stack frame
     sass_delete_import(import_stack.back());
     // remove current stack frame
     import_stack.pop_back();
+    if (DBG) debug_ast(&root);
     // create key/value pair for ast node
-    std::pair<const std::string, const StyleSheet>
-      ast_pair(inc.abs_path, { res, &root });
+    std::pair<const std::string, StyleSheet>
+      ast_pair(inc.abs_path, { res, root });
+    if (DBG) debug_ast(&root);
     // register resulting resource
     sheets.insert(ast_pair);
     if (DBG) std::cerr << "ENDP ========================================================================\n";
@@ -521,6 +527,9 @@ namespace Sass {
         emitted.buffer += format_source_mapping_url(source_map_file);
       }
     }
+    debug_ast(&root);
+    root = 0;
+    std::cerr << "HELLO\n";
     // create a copy of the resulting buffer string
     // this must be freed or taken over by implementor
     return sass_copy_c_string(emitted.buffer.c_str());
@@ -700,14 +709,14 @@ exit(0);
     // abort if there is no data
     if (resources.size() == 0) return 0;
     // get root block from the first style sheet
-    Block_Obj root = sheets.at(entry_path).root;
+    Block_Ptr root = &sheets.at(entry_path).root;
     // abort on invalid root
     if (root == false) return 0;
+    // if (DBG) debug_ast(root);
     if (DBG) std::cerr << "COMP 1 ========================================================================\n";
-
     Env global; // create root environment
     // register built-in functions on env
-    if (!MEM) register_built_in_functions(*this, &global);
+   // if (!MEM) register_built_in_functions(*this, &global);
     // register custom functions (defined via C-API)
     if (DBG) std::cerr << "COMP 2 ========================================================================\n";
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
@@ -724,31 +733,36 @@ exit(0);
     if (DBG) std::cerr << "COMP 4 ========================================================================\n";
     // check nesting
     if (DBG) std::cerr << "COMP 5 ========================================================================\n";
-    check_nesting(&root);
+debug_ast(root);
+    check_nesting(root);
+debug_ast(root);
+sheets.clear(); // one in sheets, where the other?
+exit(0);
+return root;
     // expand and eval the tree
     if (DBG) std::cerr << "COMP 6 ========================================================================\n";
     // Ruleset_Ptr asd = SASS_MEMORY_CAST(Ruleset, root->at(0));
-    if (DBG) debug_ast(&root);
-    root = expand(&root);
+    if (DBG) debug_ast(root);
+    root = expand(root);
     if (DBG) std::cerr << "COMP 7 ========================================================================\n";
     // check nesting
-    check_nesting(&root);
+    check_nesting(root);
     if (DBG) std::cerr << "COMP 8 ========================================================================\n";
     // merge and bubble certain rules
-    if (DBG) debug_ast(&root);
-    root = cssize(&root);
-    if (DBG) debug_ast(&root);
+    if (DBG) debug_ast(root);
+    root = cssize(root);
+    if (DBG) debug_ast(root);
     if (DBG) std::cerr << "COMP 9 ========================================================================\n";
     // should we extend something?
-    if (DBG) debug_ast(&root);
+    if (DBG) debug_ast(root);
     if (!subset_map.empty()) {
       // create crtp visitor object
       Extend extend(*this, subset_map);
       // extend tree nodes
-      extend(&root);
+      extend(root);
     }
     if (DBG) std::cerr << "COMP 10 ========================================================================\n";
-    if (DBG) debug_ast(&root);
+    if (DBG) debug_ast(root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?

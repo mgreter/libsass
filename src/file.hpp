@@ -108,7 +108,9 @@ namespace Sass {
     public:
       StyleSheet(const Resource& res, Block_Obj root)
       : Resource(res), root(root)
-      { }
+      {
+      std::cerr << "Stylesheet gone\n";
+      }
   };
 
   namespace File {

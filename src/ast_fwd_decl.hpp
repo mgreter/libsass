@@ -2,6 +2,7 @@
 #define SASS_AST_FWD_DECL_H
 
 #include <iostream>
+#include <vector>
 
 /////////////////////////////////////////////
 // Forward declarations for the AST visitors.
@@ -19,11 +20,17 @@ namespace Sass {
     long refcount;
   public:
     Memory_Object() {
-    	if (DBG) std::cerr << "Create " << this << "\n";
-    	refcount = 0; refcounter = 0; };
+      if (DBG) std::cerr << "Create " << this << "\n";
+      refcount = 0;
+      refcounter = 0;
+      std::vector<void*> parents;
+    };
     virtual ~Memory_Object() {
       // if (DBG) std::cerr << "DEstruCT " << this << "\n";
     };
+    long getRefCount() {
+      return refcounter;
+    }
   };
 
 
@@ -39,6 +46,7 @@ namespace Sass {
     : node(ptr) {
       if (node) {
         node->refcounter += 1;
+
         // if (DBG) std::cerr << "Object, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     };
@@ -80,18 +88,7 @@ namespace Sass {
         // if (DBG) std::cerr << "Copy, " << node << " - increase refcount, now at " << node->refcounter << "\n";
       }
     }
-    ~Memory_Ptr() {
-      if (this->node) {
-        // this gives errors for nested?
-        this->node->refcounter -= 1;
-        // if (DBG)  std::cerr << "decrease refcount, " << node << " - now at " << node->refcounter << "\n";
-        if (this->node->refcounter == 0) {
-         if (DBG)  std::cerr << "DELETE me " << node << "\n";
-         if (MEM)  delete(node);
-          // delete and remove
-        }
-      }
-    };
+    ~Memory_Ptr();
   public:
     Memory_Object* obj () {
       return node;
