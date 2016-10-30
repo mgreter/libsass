@@ -735,6 +735,7 @@ exit(0);
     if (DBG) std::cerr << "COMP 5 ========================================================================\n";
 debug_ast(root);
     check_nesting(root);
+    check_nesting.reset();
 debug_ast(root);
 sheets.clear(); // one in sheets, where the other?
 exit(0);

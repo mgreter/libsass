@@ -10,7 +10,7 @@ namespace Sass {
 
   class CheckNesting : public Operation_CRTP<Statement_Ptr, CheckNesting> {
 
-    std::vector<Statement_Ptr>  parents;
+    std::vector<Statement_Obj>  parents;
     Statement_Ptr               parent;
     Definition_Obj              current_mixin_definition;
 
@@ -21,6 +21,7 @@ namespace Sass {
   public:
     CheckNesting();
     ~CheckNesting() { }
+    void reset();
 
     Statement_Ptr operator()(Block_Ptr);
     Statement_Ptr operator()(Definition_Ptr);

@@ -6,10 +6,16 @@
 namespace Sass {
 
   CheckNesting::CheckNesting()
-  : parents(std::vector<Statement_Ptr>()),
+  : parents(std::vector<Statement_Obj>()),
     parent(0),
     current_mixin_definition(0)
   { }
+
+  void CheckNesting::reset() {
+    parent = 0;
+    current_mixin_definition = 0;
+    parents.clear();
+  }
 
   Statement_Obj CheckNesting::before(Statement_Obj s) {
       if (this->should_visit(s)) return s;
@@ -18,28 +24,28 @@ namespace Sass {
 
   Statement_Obj CheckNesting::visit_children(Statement_Ptr parent) {
 
-    Statement_Ptr old_parent = this->parent;
+    Statement_Obj old_parent = this->parent;
 
     if (At_Root_Block_Obj root = SASS_MEMORY_CAST_PTR(At_Root_Block, parent)) {
-      std::vector<Statement_Ptr> old_parents = this->parents;
-      std::vector<Statement_Ptr> new_parents;
+      std::vector<Statement_Obj> old_parents = this->parents;
+      std::vector<Statement_Obj> new_parents;
 
       for (size_t i = 0, L = this->parents.size(); i < L; i++) {
         Statement_Obj p = this->parents.at(i);
         if (!root->exclude_node(&p)) {
-          new_parents.push_back(&p);
+          new_parents.push_back(p);
         }
       }
       this->parents = new_parents;
 
       for (size_t i = this->parents.size(); i > 0; i--) {
-        Statement_Ptr p;
-        Statement_Ptr gp;
+        Statement_Obj p;
+        Statement_Obj gp;
         if (i > 0) p = this->parents.at(i - 1);
         if (i > 1) gp = this->parents.at(i - 2);
 
         if (!this->is_transparent_parent(p, gp)) {
-          this->parent = p;
+          this->parent = &p;
           break;
         }
       }
@@ -47,7 +53,7 @@ namespace Sass {
       At_Root_Block_Obj ar = SASS_MEMORY_CAST_PTR(At_Root_Block, parent);
       Statement_Obj ret = &this->visit_children(&ar->oblock());
 
-      this->parent = old_parent;
+      this->parent = &old_parent;
       this->parents = old_parents;
 
       return ret;
@@ -72,7 +78,7 @@ namespace Sass {
         // n->perform(this);
       }
     }
-    this->parent = old_parent;
+    this->parent = &old_parent;
     this->parents.pop_back();
 
     return b;
