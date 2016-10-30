@@ -575,7 +575,7 @@ void doit() {
 
 {
 
-List2_Obj list = SASS_MEMORY_NEW(mem, List2, pstate);
+List_Obj list = SASS_MEMORY_NEW(mem, List, pstate);
 {
 String_Obj string = SASS_MEMORY_CREATE(mem, String_Constant, pstate, str);
 if (DBG) std::cerr << "APPEND now\n";

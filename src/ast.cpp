@@ -2182,21 +2182,6 @@ namespace Sass {
     }
     return false;
   }
-  bool List2_Ref::operator== (const Expression& rhs) const
-  {
-    if (List2_Ptr_Const r = dynamic_cast<List2_Ptr_Const>(&rhs)) {
-      if (length() != r->length()) return false;
-      if (separator() != r->separator()) return false;
-      for (size_t i = 0, L = length(); i < L; ++i) {
-        Expression_Obj rv = r->at(i);
-        Expression_Obj lv = this->at(i);
-        if (!lv || !rv) return false;
-        // if (!(lv.obj() == rv.obj())) return false;
-      }
-      return true;
-    }
-    return false;
-  }
 
   bool Map_Ref::operator== (const Expression& rhs) const
   {
@@ -2219,18 +2204,6 @@ namespace Sass {
   }
 
   size_t List_Ref::size() const {
-    if (!is_arglist_) return length();
-    // arglist expects a list of arguments
-    // so we need to break before keywords
-    for (size_t i = 0, L = length(); i < L; ++i) {
-      Expression_Obj obj = this->at(i);
-      if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
-        if (!arg->name().empty()) return i;
-      }
-    }
-    return length();
-  }
-  size_t List2_Ref::size() const {
     if (!is_arglist_) return length();
     // arglist expects a list of arguments
     // so we need to break before keywords
@@ -2300,18 +2273,6 @@ namespace Sass {
       return &obj;
     }
   }
-  Expression_Obj List2_Ref::value_at_index(size_t i) {
-    if (is_arglist_) {
-      Expression_Obj obj = this->at(i);
-      if (Argument_Ref* arg = dynamic_cast<Argument_Ref*>(&obj)) {
-        return arg->value();
-      } else {
-        return this->at(i);
-      }
-    } else {
-      return this->at(i);
-    }
-  }
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Convert map to (key, value) list.
@@ -2350,10 +2311,6 @@ namespace Sass {
   List_Ptr List_Ref::copy(Memory_Manager& mem, bool recursive)
   {
     return SASS_MEMORY_CREATE(mem, List_Ref, *this);
-  }
-  List2_Ptr List2_Ref::copy(Memory_Manager& mem, bool recursive)
-  {
-    return SASS_MEMORY_CREATE(mem, List2_Ref, *this);
   }
 
   Map_Ptr Map_Ref::copy(Memory_Manager& mem, bool recursive)

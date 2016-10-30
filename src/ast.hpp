@@ -922,58 +922,6 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
-
-  ///////////////////////////////////////////////////////////////////////
-  // Lists of values, both comma- and space-separated (distinguished by a
-  // type-tag.) Also used to represent variable-length argument lists.
-  ///////////////////////////////////////////////////////////////////////
-  class List2_Ref : public Value_Ref, public Vectorized<Expression_Obj> {
-    void adjust_after_pushing(Expression_Obj e) { is_expanded(false); }
-  private:
-    ADD_PROPERTY(enum Sass_Separator, separator)
-    ADD_PROPERTY(bool, is_arglist)
-    ADD_PROPERTY(bool, from_selector)
-  public:
-    List2_Ref(ParserState pstate,
-         size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
-    : Value_Ref(pstate),
-      Vectorized<Expression_Obj>(size),
-      separator_(sep),
-      is_arglist_(argl),
-      from_selector_(false)
-    { concrete_type(LIST); }
-    std::string type() { return is_arglist_ ? "arglist" : "list"; }
-    static std::string type_name() { return "list"; }
-    const char* sep_string(bool compressed = false) const {
-      return separator() == SASS_SPACE ?
-        " " : (compressed ? "," : ", ");
-    }
-    bool is_invisible() const { return empty(); }
-    Expression_Obj value_at_index(size_t i);
-
-    virtual size_t size() const;
-
-    virtual size_t hash()
-    {
-      if (hash_ == 0) {
-        hash_ = std::hash<std::string>()(sep_string());
-        for (size_t i = 0, L = length(); i < L; ++i)
-          hash_combine(hash_, (elements()[i])->hash());
-      }
-      return hash_;
-    }
-
-    virtual void set_delayed(bool delayed)
-    {
-      is_delayed(delayed);
-      // don't set children
-    }
-
-    virtual bool operator== (const Expression& rhs) const;
-    virtual List2_Ptr copy(Memory_Manager& mem, bool recursive = false);
-
-    ATTACH_OPERATIONS()
-  };
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
