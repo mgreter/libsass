@@ -8,13 +8,13 @@ namespace Sass {
 
   typedef Environment<AST_Node_Obj> Env;
 
-  class CheckNesting : public Operation_CRTP<Statement_Ptr, CheckNesting> {
+  class CheckNesting : public Operation_CRTP<Statement_Obj, CheckNesting> {
 
     std::vector<Statement_Obj>  parents;
     Statement_Obj               parent;
-    Definition_Ptr              current_mixin_definition;
+    Definition_Obj              current_mixin_definition;
 
-    Statement_Ptr fallback_impl(Statement_Ptr);
+    Statement_Obj fallback_impl(Statement_Obj);
     Statement_Obj before(Statement_Obj);
     Statement_Obj visit_children(Statement_Obj);
 
@@ -22,11 +22,11 @@ namespace Sass {
     CheckNesting();
     ~CheckNesting() { }
 
-    Statement_Ptr operator()(Block_Ptr);
-    Statement_Ptr operator()(Definition_Ptr);
+    Statement_Obj operator()(Block_Obj);
+    Statement_Obj operator()(Definition_Obj);
 
     template <typename U>
-    Statement_Ptr fallback(U x) {
+    Statement_Obj fallback(U x) {
         return fallback_impl(&this->before(SASS_MEMORY_CAST_PTR(Statement, x)));
     }
 

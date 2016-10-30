@@ -79,29 +79,29 @@ namespace Sass {
   }
 
 
-  Statement_Ptr CheckNesting::operator()(Block_Ptr b)
+  Statement_Obj CheckNesting::operator()(Block_Obj b)
   {
-    return &this->visit_children(b);
+    return this->visit_children(&b);
   }
 
-  Statement_Ptr CheckNesting::operator()(Definition_Ptr n)
+  Statement_Obj CheckNesting::operator()(Definition_Obj n)
   {
-    if (!is_mixin(n)) return n;
+    if (!is_mixin(&n)) return &n;
 
     Definition_Obj old_mixin_definition = this->current_mixin_definition;
     this->current_mixin_definition = n;
 
-    visit_children(n);
+    visit_children(&n);
 
     this->current_mixin_definition = &old_mixin_definition;
 
-    return n;
+    return &n;
   }
 
-  Statement_Ptr CheckNesting::fallback_impl(Statement_Ptr s)
+  Statement_Obj CheckNesting::fallback_impl(Statement_Obj s)
   {
-    Block_Obj b1 = SASS_MEMORY_CAST_PTR(Block, s);
-    Has_Block_Obj b2 = SASS_MEMORY_CAST_PTR(Has_Block, s);
+    Block_Obj b1 = SASS_MEMORY_CAST(Block, s);
+    Has_Block_Obj b2 = SASS_MEMORY_CAST(Has_Block, s);
     return b1 || b2 ? &visit_children(s) : s;
   }
 
