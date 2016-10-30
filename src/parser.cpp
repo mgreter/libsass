@@ -488,12 +488,16 @@ namespace Sass {
     if (peek_css< alternatives < exactly<';'>, end_of_file > >()) {
       css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
     }
-    Expression_Ptr val;
+    Expression_Obj val;
     Lookahead lookahead = lookahead_for_value(position);
     if (lookahead.has_interpolants && lookahead.found) {
       val = &parse_value_schema(lookahead.found);
     } else {
-      val = &parse_list();
+      std::cerr << "parse assign val\n";
+      Expression_Obj ls = parse_list();
+      std::cerr << "parsed assign val\n";
+      debug_ast(&ls);
+      val = &ls;
     }
     bool is_default = false;
     bool is_global = false;
@@ -501,8 +505,7 @@ namespace Sass {
       if (lex< default_flag >()) is_default = true;
       else if (lex< global_flag >()) is_global = true;
     }
-    Assignment_Ptr var = SASS_MEMORY_NEW(ctx.mem, Assignment, var_source_position, name, val, is_default, is_global);
-    return var;
+    return SASS_MEMORY_NEW(ctx.mem, Assignment, var_source_position, name, val, is_default, is_global);
   }
 
   // a ruleset connects a selector and a block
@@ -1128,7 +1131,7 @@ if (DBG) std::cerr << "complex 2\n";
     }
 
     // now try to parse a space list
-    Expression_Ptr list = &parse_space_list();
+    Expression_Obj list = parse_space_list();
     // if it's a singleton, return it (don't wrap it)
     if (!peek_css< exactly<','> >(position)) {
       // set_delay doesn't apply to list children
@@ -1138,9 +1141,9 @@ if (DBG) std::cerr << "complex 2\n";
     }
 
     // if we got so far, we actually do have a comma list
-    List_Ptr comma_list = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2, SASS_COMMA);
+    List_Obj comma_list = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2, SASS_COMMA);
     // wrap the first expression
-    (*comma_list) << list;
+    comma_list->append(list);
 
     while (lex_css< exactly<','> >())
     {
@@ -1161,14 +1164,14 @@ if (DBG) std::cerr << "complex 2\n";
       comma_list->append(&parse_space_list());
     }
     // return the list
-    return comma_list;
+    return &comma_list;
   }
   // EO parse_comma_list
 
   // will return singletons unwrapped
   Expression_Obj Parser::parse_space_list()
   {
-    Expression_Ptr disj1 = &parse_disjunction();
+    Expression_Obj disj1 = parse_disjunction();
     // if it's a singleton, return it (don't wrap it)
     if (peek_css< alternatives <
           // exactly<'!'>,
@@ -1185,8 +1188,8 @@ if (DBG) std::cerr << "complex 2\n";
         > >(position)
     ) { return disj1; }
 
-    List_Ptr space_list = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2, SASS_SPACE);
-    (*space_list) << disj1;
+    List_Obj space_list = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2, SASS_SPACE);
+    space_list->append(disj1);
 
     while (!(peek_css< alternatives <
                // exactly<'!'>,
@@ -1206,7 +1209,7 @@ if (DBG) std::cerr << "complex 2\n";
       space_list->append(&parse_disjunction());
     }
     // return the list
-    return space_list;
+    return &space_list;
   }
   // EO parse_space_list
 
@@ -1216,7 +1219,9 @@ if (DBG) std::cerr << "complex 2\n";
     advanceToNextToken();
     ParserState state(pstate);
     // parse the left hand side conjunction
-    Expression_Ptr conj = &parse_conjunction();
+    std::cerr << "parse conh\n";
+    Expression_Obj conj = parse_conjunction();
+    return conj;
     // parse multiple right hand sides
     std::vector<Expression_Ptr> operands;
     while (lex_css< kwd_or >())
@@ -1237,11 +1242,14 @@ if (DBG) std::cerr << "complex 2\n";
     advanceToNextToken();
     ParserState state(pstate);
     // parse the left hand side relation
-    Expression_Ptr rel = &parse_relation();
+    Expression_Obj rel = parse_relation();
     // parse multiple right hand sides
     std::vector<Expression_Ptr> operands;
-    while (lex_css< kwd_and >())
+    std::vector<Expression_Obj> operands2;
+    while (lex_css< kwd_and >()) {
       operands.push_back(&parse_relation());
+      operands2.push_back(operands.back());
+    }
     // if it's a singleton, return it directly
     if (operands.size() == 0) return rel;
     // fold all operands into one binary expression
@@ -1258,7 +1266,7 @@ if (DBG) std::cerr << "complex 2\n";
     advanceToNextToken();
     ParserState state(pstate);
     // parse the left hand side expression
-    Expression_Ptr lhs = &parse_expression();
+    Expression_Obj lhs = parse_expression();
     std::vector<Expression_Ptr> operands;
     std::vector<Operand> operators;
     // if it's a singleton, return it (don't wrap it)
@@ -1313,7 +1321,7 @@ if (DBG) std::cerr << "complex 2\n";
     // parses multiple add and subtract operations
     // NOTE: make sure that identifiers starting with
     // NOTE: dashes do NOT count as subtract operation
-    Expression_Ptr lhs = &parse_operators();
+    Expression_Obj lhs = parse_operators();
     // if it's a singleton, return it (don't wrap it)
     if (!(peek_css< exactly<'+'> >(position) ||
           // condition is a bit misterious, but some combinations should not be counted as operations
@@ -1353,7 +1361,9 @@ if (DBG) std::cerr << "complex 2\n";
   {
     advanceToNextToken();
     ParserState state(pstate);
-    Expression_Ptr factor = &parse_factor();
+    Expression_Obj factor = parse_factor();
+    return factor;
+    debug_ast(&factor);
     // if it's a singleton, return it (don't wrap it)
     std::vector<Expression_Ptr> operands; // factors
     std::vector<Operand> operators; // ops
@@ -1374,6 +1384,7 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Obj ex = fold_operands(factor, operands, operators);
     state.offset = pstate - state + pstate.offset;
     ex->pstate(state);
+    std::cerr << "end\n";
     return ex;
   }
   // EO parse_operators
@@ -1953,12 +1964,12 @@ if (DBG) std::cerr << "complex 2\n";
     lex_variable();
     std::string var(Util::normalize_underscores(lexed));
     if (!lex< kwd_from >()) error("expected 'from' keyword in @for directive", pstate);
-    Expression_Ptr lower_bound = &parse_expression();
+    Expression_Obj lower_bound = parse_expression();
     bool inclusive = false;
     if (lex< kwd_through >()) inclusive = true;
     else if (lex< kwd_to >()) inclusive = false;
     else                  error("expected 'through' or 'to' keyword in @for directive", pstate);
-    Expression_Ptr upper_bound = &parse_expression();
+    Expression_Obj upper_bound = parse_expression();
     Block_Obj body = parse_block(root);
     stack.pop_back();
     return SASS_MEMORY_NEW(ctx.mem, For, for_source_position, var, lower_bound, upper_bound, body, inclusive);
