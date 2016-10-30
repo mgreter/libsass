@@ -692,9 +692,8 @@ namespace Sass {
 
     // merge and bubble certain rules
     if (DBG) debug_ast(&root);
-return root;
-    root = cssize(&root);
 
+    root = cssize(&root);
 
     if (DBG) debug_ast(&root);
     if (DBG) std::cerr << "COMP 9 ========================================================================\n";

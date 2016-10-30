@@ -27,7 +27,7 @@ namespace Sass {
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, b->pstate(), b->length(), b->is_root());
     // bb->tabs(b->tabs());
     block_stack.push_back(bb);
-    append_block(b);
+    append_block(b, bb);
     block_stack.pop_back();
     return bb;
   }
@@ -175,7 +175,7 @@ namespace Sass {
     if (props->length())
     {
       Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock()->pstate());
-      bb->concat(&props);
+      // bb->concat(&props); // leaks
       rr->oblock(bb);
       // rr->block(&rr->oblock());
 
@@ -187,6 +187,9 @@ namespace Sass {
 
       rules->unshift(&rr);
     }
+
+    return rules;
+    // would leak
 
     rules = debubble(rules);
 
@@ -412,6 +415,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::shallow_copy(Statement_Ptr s)
   {
+    return s;
     switch (s->statement_type())
     {
       case Statement_Ref::RULESET:
@@ -530,22 +534,18 @@ namespace Sass {
     return static_cast<Statement_Ptr>(n);
   }
 
-  void Cssize::append_block(Block_Ptr b)
+  void Cssize::append_block(Block_Ptr b, Block_Ptr cur)
   {
-    Block_Ptr current_block = block_stack.back();
-
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Obj stm = b->at(i);
-      debug_ast(&stm);
-      Statement_Ptr ith = stm->perform(this);
-      debug_ast(ith);
-      if (Block_Ptr bb = SASS_MEMORY_CAST_PTR(Block, ith)) {
+      Statement_Obj ith = stm->perform(this);
+      if (Block_Ptr bb = SASS_MEMORY_CAST(Block, ith)) {
         for (size_t j = 0, K = bb->length(); j < K; ++j) {
-          current_block->append(bb->at(j));
+          cur->append(bb->at(j));
         }
       }
       else if (ith) {
-        current_block->append(ith);
+        cur->append(ith);
       }
     }
   }
