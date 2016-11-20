@@ -799,7 +799,7 @@ namespace Sass {
   struct Backtrace;
   typedef Environment<AST_Node_Obj> Env;
   typedef const char* Signature;
-  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaComplex_Selector_Ptr>);
+  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<Selector_List_Ptr>);
   typedef const char* Signature;
   class Definition_Ref : public Has_Block_Ref {
   public:
@@ -2401,7 +2401,7 @@ namespace Sass {
     }
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapped = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapped = "");
-    virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapped = "");
+    virtual bool is_superselector_of(Selector_List_Obj sub, std::string wrapped = "");
     virtual size_t hash()
     {
       if (Selector::hash_ == 0) {
@@ -2517,7 +2517,7 @@ namespace Sass {
     Complex_Selector_Obj context(Context&);
 
 
-    CommaComplex_Selector_Ptr tails(Context& ctx, CommaComplex_Selector_Ptr tails);
+    Selector_List_Ptr tails(Context& ctx, Selector_List_Ptr tails);
 
     // front returns the first real tail
     // skips over parent and empty ones
@@ -2529,11 +2529,11 @@ namespace Sass {
     Complex_Selector_Obj innermost() { return last(); };
 
     size_t length() const;
-    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
+    Selector_List_Ptr resolve_parent_refs(Context& ctx, Selector_List_Ptr parents, bool implicit_parent = true);
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
-    CommaComplex_Selector_Ptr unify_with(Complex_Selector_Ptr rhs, Context& ctx);
+    virtual bool is_superselector_of(Selector_List_Obj sub, std::string wrapping = "");
+    Selector_List_Ptr unify_with(Complex_Selector_Ptr rhs, Context& ctx);
     Combinator clear_innermost();
     void append(Context&, Complex_Selector_Obj);
     void set_innermost(Complex_Selector_Obj, Combinator);
@@ -2633,12 +2633,12 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class CommaComplex_Selector_Ref : public Selector_Ref, public Vectorized<Complex_Selector_Obj> {
+  class Selector_List_Ref : public Selector_Ref, public Vectorized<Complex_Selector_Obj> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   protected:
     void adjust_after_pushing(Complex_Selector_Obj c);
   public:
-    CommaComplex_Selector_Ref(ParserState pstate, size_t s = 0)
+    Selector_List_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate), Vectorized<Complex_Selector_Obj>(s), wspace_(0)
     { }
     std::string type() { return "list"; }
@@ -2647,12 +2647,12 @@ namespace Sass {
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
     void remove_parent_selectors();
-    CommaComplex_Selector_Ptr resolve_parent_refs(Context& ctx, CommaComplex_Selector_Ptr parents, bool implicit_parent = true);
+    Selector_List_Ptr resolve_parent_refs(Context& ctx, Selector_List_Ptr parents, bool implicit_parent = true);
     virtual bool is_superselector_of(Compound_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaComplex_Selector_Obj sub, std::string wrapping = "");
-    CommaComplex_Selector_Ptr unify_with(CommaComplex_Selector_Ptr, Context&);
-    void populate_extends(CommaComplex_Selector_Obj, Context&, ExtensionSubsetMap&);
+    virtual bool is_superselector_of(Selector_List_Obj sub, std::string wrapping = "");
+    Selector_List_Ptr unify_with(Selector_List_Ptr, Context&);
+    void populate_extends(Selector_List_Obj, Context&, ExtensionSubsetMap&);
     virtual size_t hash()
     {
       if (Selector_Ref::hash_ == 0) {
@@ -2690,13 +2690,13 @@ namespace Sass {
       }
       return false;
     }
-    CommaComplex_Selector_Ptr klone(Context&) const;      // does not clone Compound_Selector_Ptrs
-    CommaComplex_Selector_Ptr cloneFully(Context&) const; // clones Compound_Selector_Ptrs
+    Selector_List_Ptr klone(Context&) const;      // does not clone Compound_Selector_Ptrs
+    Selector_List_Ptr cloneFully(Context&) const; // clones Compound_Selector_Ptrs
     virtual bool operator==(const Selector_Ref& rhs) const;
-    virtual bool operator==(const CommaComplex_Selector& rhs) const;
+    virtual bool operator==(const Selector_List& rhs) const;
     // Selector Lists can be compared to comma lists
     virtual bool operator==(const Expression& rhs) const;
-    virtual CommaComplex_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    virtual Selector_List_Ptr copy(Memory_Manager& mem, bool recursive = false);
     ATTACH_OPERATIONS()
   };
 

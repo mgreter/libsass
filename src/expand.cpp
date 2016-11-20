@@ -17,14 +17,14 @@ namespace Sass {
   const unsigned int maxRecursion = 500;
   static unsigned int recursions = 0;
 
-  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<CommaComplex_Selector_Ptr>* stack)
+  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<Selector_List_Ptr>* stack)
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
     block_stack(std::vector<Block_Ptr>()),
     call_stack(std::vector<AST_Node_Obj>()),
     // property_stack(std::vector<String_Ptr>()),
-    selector_stack(std::vector<CommaComplex_Selector_Ptr>()),
+    selector_stack(std::vector<Selector_List_Ptr>()),
     media_block_stack(std::vector<Media_Block_Ptr>()),
     backtrace_stack(std::vector<Backtrace*>()),
     in_keyframes(false),
@@ -56,7 +56,7 @@ namespace Sass {
     return 0;
   }
 
-  CommaComplex_Selector_Ptr Expand::selector()
+  Selector_List_Ptr Expand::selector()
   {
     if (selector_stack.size() > 0)
       return selector_stack.back();
@@ -102,7 +102,7 @@ namespace Sass {
       Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
-        k->selector2(SASS_MEMORY_CAST_PTR(CommaComplex_Selector, r->selector()->perform(&eval)));
+        k->selector2(SASS_MEMORY_CAST_PTR(Selector_List, r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
       return k->copy(ctx.mem);
@@ -113,7 +113,7 @@ namespace Sass {
 
     // do some special checks for the base level rules
     if (r->is_root()) {
-      if (CommaComplex_Selector_Ptr selector_list = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector())) {
+      if (Selector_List_Ptr selector_list = SASS_MEMORY_CAST(Selector_List, r->selector())) {
         for (Complex_Selector_Obj complex_selector : selector_list->elements()) {
           Complex_Selector_Ptr tail = &complex_selector;
           while (tail) {
@@ -130,13 +130,13 @@ namespace Sass {
 
     Expression_Obj ex = 0;
     if (r->selector()) ex = r->selector()->perform(&eval);
-    CommaComplex_Selector_Obj sel = SASS_MEMORY_CAST(CommaComplex_Selector, ex);
+    Selector_List_Obj sel = SASS_MEMORY_CAST(Selector_List, ex);
     if (sel == 0) throw std::runtime_error("Expanded null selector");
 
     if (sel->length() == 0 || sel->has_parent_ref()) {
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
-        CommaComplex_Selector_Ptr ll = selector_stack.at(i);
+        Selector_List_Ptr ll = selector_stack.at(i);
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
       if (!has_parent_selector) {
@@ -474,7 +474,7 @@ namespace Sass {
     if (expr->concrete_type() == Expression::MAP) {
       map = SASS_MEMORY_CAST(Map, expr);
     }
-    else if (CommaComplex_Selector_Ptr ls = SASS_MEMORY_CAST(CommaComplex_Selector, expr)) {
+    else if (Selector_List_Ptr ls = SASS_MEMORY_CAST(Selector_List, expr)) {
       Listize listize(ctx.mem);
       Expression_Obj rv = ls->perform(&listize);
       list = SASS_MEMORY_CAST(List, rv);
@@ -511,7 +511,7 @@ namespace Sass {
     }
     else {
       // bool arglist = list->is_arglist();
-      if (list->length() == 1 && SASS_MEMORY_CAST(CommaComplex_Selector, list)) {
+      if (list->length() == 1 && SASS_MEMORY_CAST(Selector_List, list)) {
         list = SASS_MEMORY_CAST(List, list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
@@ -571,9 +571,9 @@ namespace Sass {
   }
 
 
-  void Expand::expand_selector_list(Selector_Obj s, CommaComplex_Selector_Obj extender) {
+  void Expand::expand_selector_list(Selector_Obj s, Selector_List_Obj extender) {
 
-    if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, s)) {
+    if (Selector_List_Obj sl = SASS_MEMORY_CAST(Selector_List, s)) {
       for (Complex_Selector_Obj complex_selector : sl->elements()) {
         Complex_Selector_Obj tail = complex_selector;
         while (tail) {
@@ -588,7 +588,7 @@ namespace Sass {
     }
 
 
-    CommaComplex_Selector_Obj contextualized = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, s->perform(&eval));
+    Selector_List_Obj contextualized = SASS_MEMORY_CAST_PTR(Selector_List, s->perform(&eval));
     if (contextualized == false) return;
     for (auto complex_sel : contextualized->elements()) {
       Complex_Selector_Obj c = complex_sel;
@@ -624,12 +624,12 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Extension_Ptr e)
   {
-    if (CommaComplex_Selector_Ptr extender = SASS_MEMORY_CAST_PTR(CommaComplex_Selector, selector())) {
+    if (Selector_List_Ptr extender = SASS_MEMORY_CAST_PTR(Selector_List, selector())) {
       Selector_Obj s = e->selector();
       if (Selector_Schema_Obj schema = SASS_MEMORY_CAST(Selector_Schema, s)) {
         if (schema->has_parent_ref()) s = eval(&schema);
       }
-      if (CommaComplex_Selector_Obj sl = SASS_MEMORY_CAST(CommaComplex_Selector, s)) {
+      if (Selector_List_Obj sl = SASS_MEMORY_CAST(Selector_List, s)) {
         for (Complex_Selector_Obj cs : sl->elements()) {
           if (cs && cs->head()) {
             cs->head()->media_block(media_block_stack.back());

@@ -24,7 +24,7 @@ namespace Sass {
     Cssize(Context&, Backtrace*);
     ~Cssize() { }
 
-    CommaComplex_Selector_Ptr selector();
+    Selector_List_Ptr selector();
 
     Block_Ptr operator()(Block_Ptr);
     Statement_Ptr operator()(Ruleset_Ptr);

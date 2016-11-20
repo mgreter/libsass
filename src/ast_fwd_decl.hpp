@@ -464,10 +464,10 @@ namespace Sass {
   typedef Complex_Selector_Ref Complex_Selector;
   typedef Complex_Selector* Complex_Selector_Ptr;
   typedef Complex_Selector const * Complex_Selector_Ptr_Const;
-  class CommaComplex_Selector_Ref;
-  typedef CommaComplex_Selector_Ref CommaComplex_Selector;
-  typedef CommaComplex_Selector* CommaComplex_Selector_Ptr;
-  typedef CommaComplex_Selector const * CommaComplex_Selector_Ptr_Const;
+  class Selector_List_Ref;
+  typedef Selector_List_Ref Selector_List;
+  typedef Selector_List* Selector_List_Ptr;
+  typedef Selector_List const * Selector_List_Ptr_Const;
 
 
   // common classes
@@ -556,7 +556,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Wrapped_Selector);
   IMPL_MEM_OBJ(Compound_Selector);
   IMPL_MEM_OBJ(Complex_Selector);
-  IMPL_MEM_OBJ(CommaComplex_Selector);
+  IMPL_MEM_OBJ(Selector_List);
 
 }
 

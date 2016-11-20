@@ -88,8 +88,8 @@ namespace Sass {
     return arg->value()->perform(this);
   }
 
-  // CommaComplex_Selector is converted to a string
-  Value_Ptr To_Value::operator()(CommaComplex_Selector_Ptr s)
+  // Selector_List is converted to a string
+  Value_Ptr To_Value::operator()(Selector_List_Ptr s)
   {
     return SASS_MEMORY_NEW(mem, String_Quoted,
                            s->pstate(),

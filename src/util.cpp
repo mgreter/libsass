@@ -461,7 +461,7 @@ namespace Sass {
 
       Block_Obj b = r->oblock();
 
-      CommaComplex_Selector_Ptr sl = SASS_MEMORY_CAST(CommaComplex_Selector, r->selector());
+      Selector_List_Ptr sl = SASS_MEMORY_CAST(Selector_List, r->selector());
       bool hasSelectors = sl ? sl->length() > 0 : false;
 
       if (!hasSelectors) {
@@ -527,7 +527,7 @@ namespace Sass {
 
       Block_Obj b = f->oblock();
 
-//      bool hasSelectors = f->selector() && static_cast<CommaComplex_Selector_Ptr>(f->selector())->length() > 0;
+//      bool hasSelectors = f->selector() && static_cast<Selector_List_Ptr>(f->selector())->length() > 0;
 
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;

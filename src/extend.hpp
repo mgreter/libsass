@@ -24,13 +24,13 @@ namespace Sass {
 
   public:
     static Node subweave(Node& one, Node& two, Context& ctx);
-    static CommaComplex_Selector_Ptr extendSelectorList(CommaComplex_Selector_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<Compound_Selector>& seen);
-    static CommaComplex_Selector_Ptr extendSelectorList(CommaComplex_Selector_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething);
-    static CommaComplex_Selector_Ptr extendSelectorList(CommaComplex_Selector_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace = false) {
+    static Selector_List_Ptr extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<Compound_Selector>& seen);
+    static Selector_List_Ptr extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething);
+    static Selector_List_Ptr extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace = false) {
       bool extendedSomething = false;
       return extendSelectorList(pSelectorList, ctx, subset_map, isReplace, extendedSomething);
     }
-    static CommaComplex_Selector_Ptr extendSelectorList(CommaComplex_Selector_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, std::set<Compound_Selector>& seen) {
+    static Selector_List_Ptr extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, std::set<Compound_Selector>& seen) {
       bool isReplace = false;
       bool extendedSomething = false;
       return extendSelectorList(pSelectorList, ctx, subset_map, isReplace, extendedSomething, seen);

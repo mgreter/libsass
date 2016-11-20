@@ -70,7 +70,7 @@ namespace Sass {
       pstate.offset.line = 0;
     }
 
-  CommaComplex_Selector_Obj Parser::parse_selector(const char* beg, Context& ctx, ParserState pstate, const char* source)
+  Selector_List_Obj Parser::parse_selector(const char* beg, Context& ctx, ParserState pstate, const char* source)
   {
     Parser p = Parser::from_c_str(beg, ctx, pstate, source);
     // ToDo: ruby sass errors on parent references
@@ -611,12 +611,12 @@ namespace Sass {
 
   // parse a list of complex selectors
   // this is the main entry point for most
-  CommaComplex_Selector_Obj Parser::parse_selector_list(bool in_root)
+  Selector_List_Obj Parser::parse_selector_list(bool in_root)
   {
     bool reloop = true;
     bool had_linefeed = false;
     Complex_Selector_Obj sel;
-    CommaComplex_Selector_Ptr group = SASS_MEMORY_NEW(ctx.mem, CommaComplex_Selector, pstate);
+    Selector_List_Ptr group = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate);
     group->media_block(last_media_block);
 if (DBG) std::cerr << "SEL LIST\n";
     do {
@@ -863,7 +863,7 @@ if (DBG) std::cerr << "complex 2\n";
     lex< pseudo_not >();
     std::string name(lexed);
     ParserState nsource_position = pstate;
-    CommaComplex_Selector_Obj negated = parse_selector_list(true);
+    Selector_List_Obj negated = parse_selector_list(true);
     if (!lex< exactly<')'> >()) {
       error("negated selector is missing ')'", pstate);
     }
@@ -907,7 +907,7 @@ if (DBG) std::cerr << "complex 2\n";
           return SASS_MEMORY_NEW(ctx.mem, Pseudo_Selector, p, name, expr);
         }
       }
-      else if (CommaComplex_Selector_Obj wrapped = parse_selector_list(true)) {
+      else if (Selector_List_Obj wrapped = parse_selector_list(true)) {
         if (wrapped && lex_css< exactly<')'> >()) {
           return SASS_MEMORY_NEW(ctx.mem, Wrapped_Selector, p, name, &wrapped);
         }

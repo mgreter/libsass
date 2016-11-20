@@ -14,7 +14,7 @@ namespace Sass {
   : mem(mem)
   {  }
 
-  Expression_Ptr Listize::operator()(CommaComplex_Selector_Ptr sel)
+  Expression_Ptr Listize::operator()(Selector_List_Ptr sel)
   {
     List_Ptr l = SASS_MEMORY_NEW(mem, List, sel->pstate(), sel->length(), SASS_COMMA);
     l->from_selector(true);
