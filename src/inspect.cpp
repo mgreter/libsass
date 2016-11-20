@@ -131,7 +131,8 @@ namespace Sass {
     if (dec->value()->concrete_type() == Expression::SELECTOR) {
       Memory_Manager mem;
       Listize listize(mem);
-      dec->value()->perform(&listize)->perform(this);
+      Expression_Obj ls = dec->value()->perform(&listize);
+      ls->perform(this);
     } else {
       dec->value()->perform(this);
     }

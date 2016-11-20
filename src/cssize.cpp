@@ -51,7 +51,7 @@ namespace Sass {
       }
     }
 
-    Declaration_Ptr dd = SASS_MEMORY_NEW(ctx.mem, Declaration,
+    Declaration_Obj dd = SASS_MEMORY_NEW(ctx.mem, Declaration,
                                       d->pstate(),
                                       property,
                                       d->value(),
@@ -59,18 +59,18 @@ namespace Sass {
     dd->is_indented(d->is_indented());
     dd->tabs(d->tabs());
 
-    p_stack.push_back(dd);
-    Block_Ptr bb = d->oblock() ? operator()(&d->oblock()) : NULL;
+    p_stack.push_back(&dd);
+    Block_Obj bb = d->oblock() ? operator()(&d->oblock()) : NULL;
     p_stack.pop_back();
 
     if (bb && bb->length()) {
       if (dd->value() && !dd->value()->is_invisible()) {
-        bb->unshift(dd);
+        bb->unshift(&dd);
       }
-      return bb->copy(ctx.mem);
+      return bb->copy2(ctx.mem, __FILE__, __LINE__);
     }
     else if (dd->value() && !dd->value()->is_invisible()) {
-      return dd;
+      return dd->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     return 0;
@@ -86,7 +86,7 @@ namespace Sass {
     }
 
     p_stack.push_back(r);
-    Directive_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Directive,
+    Directive_Obj rr = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   r->pstate(),
                                   r->keyword(),
                                   r->selector(),
@@ -111,12 +111,12 @@ namespace Sass {
     Block_Ptr result = SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate());
     if (!(directive_exists || rr->is_keyframes()))
     {
-      Directive_Ptr empty_node = static_cast<Directive_Ptr>(rr);
+      Directive_Ptr empty_node = SASS_MEMORY_CAST(Directive, rr);
       empty_node->oblock(SASS_MEMORY_NEW(ctx.mem, Block, rr->oblock() ? rr->oblock()->pstate() : rr->pstate()));
       result->append(empty_node);
     }
 
-    Block_Obj ss = debubble(rr->oblock() ? &rr->oblock() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
+    Block_Obj ss = debubble(rr->oblock() ? &rr->oblock() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), &rr);
     for (size_t i = 0, L = ss->length(); i < L; ++i) {
       result->append(ss->at(i));
     }
@@ -128,12 +128,12 @@ namespace Sass {
   {
     if (!r->oblock() || !r->oblock()->length()) return r;
 
-    Keyframe_Rule_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule,
+    Keyframe_Rule_Obj rr = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule,
                                         r->pstate(),
                                         operator()(&r->oblock()));
     if (&r->selector2()) rr->selector2(r->selector2());
 
-    return debubble(&rr->oblock(), rr);
+    return debubble(&rr->oblock(), &rr);
   }
 
   Statement_Ptr Cssize::operator()(Ruleset_Ptr r)
@@ -240,7 +240,7 @@ namespace Sass {
 
     p_stack.push_back(m);
 
-    Supports_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
+    Supports_Block_Obj mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        m->pstate(),
                                        &m->condition(),
                                        operator()(&m->oblock()));
@@ -248,7 +248,7 @@ namespace Sass {
 
     p_stack.pop_back();
 
-    return debubble(&mm->oblock(), mm);
+    return debubble(&mm->oblock(), &mm);
   }
 
   Statement_Ptr Cssize::operator()(At_Root_Block_Ptr m)
@@ -282,13 +282,13 @@ namespace Sass {
   Statement_Ptr Cssize::bubble(Directive_Ptr m)
   {
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
-    Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
+    Has_Block_Obj new_rule = static_cast<Has_Block_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
     new_rule->oblock(bb);
     new_rule->tabs(this->parent()->tabs());
     new_rule->oblock()->concat(&m->oblock());
 
     Block_Obj wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock() ? m->oblock()->pstate() : m->pstate());
-    wrapper_block->append(new_rule);
+    wrapper_block->append(&new_rule);
     Directive_Obj mm = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   m->pstate(),
                                   m->keyword(),
@@ -303,13 +303,13 @@ namespace Sass {
   Statement_Ptr Cssize::bubble(At_Root_Block_Ptr m)
   {
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
-    Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
+    Has_Block_Obj new_rule = static_cast<Has_Block_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
     new_rule->oblock(bb);
     new_rule->tabs(this->parent()->tabs());
     new_rule->oblock()->concat(&m->oblock());
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->oblock()->pstate());
-    wrapper_block->append(new_rule);
+    wrapper_block->append(&new_rule);
     At_Root_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, At_Root_Block,
                                         m->pstate(),
                                         wrapper_block,
@@ -320,7 +320,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::bubble(Supports_Block_Ptr m)
   {
-    Ruleset_Ptr parent = static_cast<Ruleset_Ptr>(shallow_copy(this->parent()));
+    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
 
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, parent->oblock()->pstate());
     Ruleset_Ptr new_rule = SASS_MEMORY_NEW(ctx.mem, Ruleset,
@@ -345,7 +345,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::bubble(Media_Block_Ptr m)
   {
-    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(shallow_copy(this->parent()));
+    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
 
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, parent->oblock()->pstate());
     Ruleset_Ptr new_rule = SASS_MEMORY_NEW(ctx.mem, Ruleset,
@@ -414,35 +414,9 @@ namespace Sass {
     return results;
   }
 
-  Statement_Ptr Cssize::shallow_copy(Statement_Ptr s)
-  {
-    switch (s->statement_type())
-    {
-      case Statement_Ref::RULESET:
-        return SASS_MEMORY_NEW(ctx.mem, Ruleset, *static_cast<Ruleset_Ptr>(s));
-      case Statement_Ref::MEDIA:
-        return SASS_MEMORY_NEW(ctx.mem, Media_Block, *static_cast<Media_Block_Ptr>(s));
-      case Statement_Ref::BUBBLE:
-        return SASS_MEMORY_NEW(ctx.mem, Bubble, *static_cast<Bubble_Ptr>(s));
-      case Statement_Ref::DIRECTIVE:
-        return SASS_MEMORY_NEW(ctx.mem, Directive, *static_cast<Directive_Ptr>(s));
-      case Statement_Ref::SUPPORTS:
-        return SASS_MEMORY_NEW(ctx.mem, Supports_Block, *static_cast<Supports_Block_Ptr>(s));
-      case Statement_Ref::ATROOT:
-        return SASS_MEMORY_NEW(ctx.mem, At_Root_Block, *static_cast<At_Root_Block_Ptr>(s));
-      case Statement_Ref::KEYFRAMERULE:
-        return SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, *static_cast<Keyframe_Rule_Ptr>(s));
-      case Statement_Ref::NONE:
-      default:
-        error("unknown internal error; please contact the LibSass maintainers", s->pstate(), backtrace);
-        String_Quoted_Ptr msg = SASS_MEMORY_NEW(ctx.mem, String_Quoted, ParserState("[WARN]"), std::string("`CSSize` can't clone ") + typeid(*s).name());
-        return SASS_MEMORY_NEW(ctx.mem, Warning, ParserState("[WARN]"), msg);
-    }
-  }
-
   Block_Ptr Cssize::debubble(Block_Ptr children, Statement_Ptr parent)
   {
-    Has_Block_Ptr previous_parent = 0;
+    Has_Block_Obj previous_parent = 0;
     std::vector<std::pair<bool, Block_Obj>> baz = slice_by_bubble(children);
     Block_Obj result = SASS_MEMORY_NEW(ctx.mem, Block, children->pstate());
 
@@ -458,13 +432,11 @@ namespace Sass {
           previous_parent->oblock()->concat(&slice);
         }
         else {
-          previous_parent = static_cast<Has_Block_Ptr>(shallow_copy(parent));
+          previous_parent = static_cast<Has_Block_Ptr>(parent->copy2(ctx.mem, __FILE__, __LINE__));
           previous_parent->oblock(slice);
           previous_parent->tabs(parent->tabs());
 
-          Has_Block_Ptr new_parent = previous_parent;
-
-          result->append(new_parent);
+          result->append(&previous_parent);
         }
         continue;
       }

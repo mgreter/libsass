@@ -28,7 +28,7 @@ namespace Sass {
 
     Env* environment();
     Context& context();
-    Selector_List_Ptr selector();
+    Selector_List_Obj selector();
     Backtrace* backtrace();
 
     // for evaluating function bodies

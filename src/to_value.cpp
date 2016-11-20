@@ -58,7 +58,7 @@ namespace Sass {
   // List is a valid value
   Value_Ptr To_Value::operator()(List_Ptr l)
   {
-    List_Ptr ll = SASS_MEMORY_NEW(mem, List,
+    List_Obj ll = SASS_MEMORY_NEW(mem, List,
                                l->pstate(),
                                l->length(),
                                l->separator(),
@@ -66,7 +66,7 @@ namespace Sass {
     for (size_t i = 0, L = l->length(); i < L; ++i) {
       *ll << (*l)[i]->perform(this);
     }
-    return ll;
+    return ll->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   // Map is a valid value

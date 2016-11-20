@@ -611,6 +611,10 @@ extern "C" {
     ctx->error_json = 0;
     ctx->error_file = 0;
     ctx->included_files = 0;
+    // debug leaked memory
+    #ifdef MEMDBG
+    if (MEM) Memory_Object::debugEnd();
+    #endif
     // now clear the options
     sass_clear_options(ctx);
   }
@@ -625,9 +629,6 @@ extern "C" {
     compiler->cpp_ctx = 0;
     compiler->c_ctx = 0;
     compiler->root = 0;
-    #ifdef MEMDBG
-    if (MEM) Memory_Object::debugEnd();
-    #endif
     free(compiler);
   }
 

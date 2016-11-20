@@ -1159,7 +1159,7 @@ namespace Sass {
           if (*xi < *least) least = xi;
         } else least = xi;
       }
-      return least->copy(ctx.mem);
+      return least->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     Signature max_sig = "max($numbers...)";
@@ -1177,7 +1177,7 @@ namespace Sass {
           if (*greatest < *xi) greatest = xi;
         } else greatest = xi;
       }
-      return greatest->copy(ctx.mem);
+      return greatest->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     Signature random_sig = "random($limit:false)";
@@ -1262,7 +1262,7 @@ namespace Sass {
         Listize listize(ctx.mem);
         return (*sl)[static_cast<int>(index)]->perform(&listize);
       }
-      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
+      List_Obj l = SASS_MEMORY_CAST(List, env["$list"]);
       if (n->value() == 0) error("argument `$n` of `" + std::string(sig) + "` must be non-zero", pstate);
       // if the argument isn't a list, then wrap it in a singleton list
       if (!m && !l) {
@@ -1279,12 +1279,12 @@ namespace Sass {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << m->keys()[static_cast<unsigned int>(index)];
         *l << m->at(m->keys()[static_cast<unsigned int>(index)]);
-        return l;
+        return l->copy2(ctx.mem, __FILE__, __LINE__);
       }
       else {
         Expression_Obj rv = l->value_at_index(static_cast<int>(index));
         rv->set_delayed(false);
-        return rv->copy(ctx.mem);
+        return rv->copy2(ctx.mem, __FILE__, __LINE__);
       }
     }
 
@@ -1364,7 +1364,7 @@ namespace Sass {
       List_Obj result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
       *result += &l1;
       *result += &l2;
-      return result->copy(ctx.mem);
+      return result->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     Signature append_sig = "append($list, $val, $separator: auto)";
@@ -1404,7 +1404,7 @@ namespace Sass {
       } else {
         *result << v;
       }
-      return result->copy(ctx.mem);
+      return result->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     Signature zip_sig = "zip($lists...)";
@@ -1446,10 +1446,10 @@ namespace Sass {
     Signature list_separator_sig = "list_separator($list)";
     BUILT_IN(list_separator)
     {
-      List_Ptr l = SASS_MEMORY_CAST(List, env["$list"]);
+      List_Obj l = SASS_MEMORY_CAST(List, env["$list"]);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        *l << ARG("$list", Expression);
+        l->append(ARG("$list", Expression));
       }
       return SASS_MEMORY_NEW(ctx.mem, String_Quoted,
                                pstate,
@@ -1463,11 +1463,13 @@ namespace Sass {
     Signature map_get_sig = "map-get($map, $key)";
     BUILT_IN(map_get)
     {
-      Map_Ptr m = ARGM("$map", Map, ctx);
+      // leaks for "map-get((), foo)" if not Obj
+      // investigate why this is (unexpected)
+      Map_Obj m = ARGM("$map", Map, ctx);
       Expression_Obj v = ARG("$key", Expression);
       try {
         Expression_Obj val = m->at(v); // XXX
-		return val ? val->copy(ctx.mem) : SASS_MEMORY_NEW(ctx.mem, Null, pstate);
+        return val ? val->copy2(ctx.mem, __FILE__, __LINE__) : SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       } catch (const std::out_of_range&) {
         return SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       }
@@ -1477,15 +1479,15 @@ namespace Sass {
     Signature map_has_key_sig = "map-has-key($map, $key)";
     BUILT_IN(map_has_key)
     {
-      Map_Ptr m = ARGM("$map", Map, ctx);
-      Expression_Ptr v = ARG("$key", Expression);
+      Map_Obj m = ARGM("$map", Map, ctx);
+      Expression_Obj v = ARG("$key", Expression);
       return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, m->has(v));
     }
 
     Signature map_keys_sig = "map-keys($map)";
     BUILT_IN(map_keys)
     {
-      Map_Ptr m = ARGM("$map", Map, ctx);
+      Map_Obj m = ARGM("$map", Map, ctx);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
       for ( auto key : m->keys()) {
         *result << key;
@@ -1496,7 +1498,7 @@ namespace Sass {
     Signature map_values_sig = "map-values($map)";
     BUILT_IN(map_values)
     {
-      Map_Ptr m = ARGM("$map", Map, ctx);
+      Map_Obj m = ARGM("$map", Map, ctx);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
       for ( auto key : m->keys()) {
         *result << m->at(key);
@@ -1507,13 +1509,14 @@ namespace Sass {
     Signature map_merge_sig = "map-merge($map1, $map2)";
     BUILT_IN(map_merge)
     {
-      Map_Ptr m1 = ARGM("$map1", Map, ctx);
-      Map_Ptr m2 = ARGM("$map2", Map, ctx);
+      Map_Obj m1 = ARGM("$map1", Map, ctx);
+      Map_Obj m2 = ARGM("$map2", Map, ctx);
 
       size_t len = m1->length() + m2->length();
       Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, len);
-      *result += m1;
-      *result += m2;
+      // concat not implemented for maps
+      *result += &m1;
+      *result += &m2;
       return result;
     }
 
@@ -1521,8 +1524,8 @@ namespace Sass {
     BUILT_IN(map_remove)
     {
       bool remove;
-      Map_Ptr m = ARGM("$map", Map, ctx);
-      List_Ptr arglist = ARG("$keys", List);
+      Map_Obj m = ARGM("$map", Map, ctx);
+      List_Obj arglist = ARG("$keys", List);
       Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
       for (auto key : m->keys()) {
         remove = false;
@@ -1548,7 +1551,7 @@ namespace Sass {
                  pstate, name),
                  arg->value());
       }
-      return result->copy(ctx.mem);
+      return result->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     //////////////////////////
@@ -1681,6 +1684,7 @@ namespace Sass {
       }
       Function_Call_Obj func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, &args);
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
+      func->via_call(true); // calc invoke is allowed
       return func->perform(&expand.eval);
 
     }
@@ -1691,7 +1695,9 @@ namespace Sass {
 
     Signature not_sig = "not($value)";
     BUILT_IN(sass_not)
-    { return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, ARG("$value", Expression)->is_false()); }
+    {
+      return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, ARG("$value", Expression)->is_false());
+    }
 
     Signature if_sig = "if($condition, $if-true, $if-false)";
     // BUILT_IN(sass_if)
@@ -1699,7 +1705,8 @@ namespace Sass {
     BUILT_IN(sass_if)
     {
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
-      bool is_true = !ARG("$condition", Expression)->perform(&expand.eval)->is_false();
+      Expression_Obj cond = ARG("$condition", Expression)->perform(&expand.eval);
+      bool is_true = !cond->is_false();
       Expression_Ptr res = ARG(is_true ? "$if-true" : "$if-false", Expression);
       res = res->perform(&expand.eval);
       res->set_delayed(false); // clone?
@@ -1730,7 +1737,7 @@ namespace Sass {
       Expression_Ptr v = ARG("$value", Expression);
       if (v->concrete_type() == Expression::NULL_VAL) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "null");
-      } else if (v->concrete_type() == Expression::BOOLEAN && *v == 0) {
+      } else if (v->concrete_type() == Expression::BOOLEAN && v->is_false()) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "false");
       } else if (v->concrete_type() == Expression::STRING) {
         return v;
@@ -1849,7 +1856,7 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Complex_Selector_Obj parentSeqClone = (*result)[i]->cloneFully(ctx);
+            Complex_Selector_Obj parentSeqClone = (*result)[i]->clone2(ctx.mem, __FILE__, __LINE__);
             Complex_Selector_Obj childSeq = (*child)[j];
             Complex_Selector_Obj base = childSeq->tail();
 
@@ -1899,7 +1906,7 @@ namespace Sass {
       Selector_List_Obj selector1 = ARGSEL("$selector1", Selector_List_Obj, p_contextualize);
       Selector_List_Obj selector2 = ARGSEL("$selector2", Selector_List_Obj, p_contextualize);
 
-      Selector_List_Ptr result = selector1->unify_with(&selector2, ctx);
+      Selector_List_Obj result = selector1->unify_with(&selector2, ctx);
       Listize listize(ctx.mem);
       return result->perform(&listize);
     }
@@ -1931,7 +1938,7 @@ namespace Sass {
       ExtensionSubsetMap subset_map;
       extender->populate_extends(extendee, ctx, subset_map);
 
-      Selector_List_Ptr result = Extend::extendSelectorList(selector, ctx, subset_map, false);
+      Selector_List_Obj result = Extend::extendSelectorList(selector, ctx, subset_map, false);
 
       Listize listize(ctx.mem);
       return result->perform(&listize);

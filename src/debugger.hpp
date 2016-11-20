@@ -14,7 +14,7 @@ inline void debug_sources_set(SourcesSet& set, std::string ind = "")
 {
   if (ind == "") std::cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
   for(auto const &pair : set) {
-    debug_ast(pair, ind + "");
+    debug_ast(&pair, ind + "");
     // debug_ast(set[pair], ind + "first: ");
   }
   if (ind == "") std::cerr << "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
@@ -234,7 +234,8 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
   } else if (dynamic_cast<Placeholder_Selector_Ptr>(node)) {
 
     Placeholder_Selector_Ptr selector = dynamic_cast<Placeholder_Selector_Ptr>(node);
-    std::cerr << ind << "Placeholder_Selector [" << selector->ns_name() << "] " << selector
+    std::cerr << ind << "Placeholder_Selector [" << selector->ns_name() << "] " << selector;
+    std::cerr << " (" << pstate_source_position(selector) << ")"
       << " <" << selector->hash() << ">"
       << " [@media:" << selector->media_block() << "]"
       << (selector->is_optional() ? " [is_optional]": " -")
@@ -461,6 +462,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
   } else if (dynamic_cast<Mixin_Call_Ptr>(node)) {
     Mixin_Call_Ptr block = dynamic_cast<Mixin_Call_Ptr>(node);
     std::cerr << ind << "Mixin_Call " << block << " " << block->tabs();
+    std::cerr << " (" << pstate_source_position(block) << ")";
     std::cerr << " [" <<  block->name() << "]";
     std::cerr << " [has_content: " << block->has_content() << "] " << std::endl;
     debug_ast(&block->arguments(), ind + " args: ");

@@ -16,13 +16,13 @@ namespace Sass {
 
   Expression_Ptr Listize::operator()(Selector_List_Ptr sel)
   {
-    List_Ptr l = SASS_MEMORY_NEW(mem, List, sel->pstate(), sel->length(), SASS_COMMA);
+    List_Obj l = SASS_MEMORY_NEW(mem, List, sel->pstate(), sel->length(), SASS_COMMA);
     l->from_selector(true);
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
-      if (!(*sel)[i]) continue;
-      *l << (*sel)[i]->perform(this);
+      if (!sel->at(i)) continue;
+      l->append(sel->at(i)->perform(this));
     }
-    if (l->length()) return l->copy(mem);
+    if (l->length()) return l->copy2(mem, __FILE__, __LINE__);
     return SASS_MEMORY_NEW(mem, Null, l->pstate());
   }
 
@@ -38,7 +38,7 @@ namespace Sass {
 
   Expression_Ptr Listize::operator()(Complex_Selector_Ptr sel)
   {
-    List_Ptr l = SASS_MEMORY_NEW(mem, List, sel->pstate(), 2);
+    List_Obj l = SASS_MEMORY_NEW(mem, List, sel->pstate(), 2);
     l->from_selector(true);
     Compound_Selector_Obj head = sel->head();
     if (head && !head->is_empty_reference())
@@ -70,13 +70,13 @@ namespace Sass {
     Complex_Selector_Obj tail = sel->tail();
     if (tail)
     {
-      Expression_Ptr tt = tail->perform(this);
-      if (tt && tt->concrete_type() == Expression::LIST)
-      { *l += static_cast<List_Ptr>(tt); }
-      else if (tt) *l << static_cast<List_Ptr>(tt);
+      Expression_Obj tt = tail->perform(this);
+      if (List_Ptr ls = SASS_MEMORY_CAST(List, tt))
+      { l->concat(ls); }
+      // else if (tt) *l << static_cast<List_Ptr>(tt);
     }
     if (l->length() == 0) return 0;
-    return l->copy(mem);
+    return l->copy2(mem, __FILE__, __LINE__);
   }
 
   Expression_Ptr Listize::fallback_impl(AST_Node_Ptr n)

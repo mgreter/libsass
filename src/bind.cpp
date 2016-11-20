@@ -123,7 +123,7 @@ namespace Sass {
 
             Expression_Obj value = a->value();
             if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, value)) {
-              arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
+              arglist->append(arg->copy2(ctx->mem, __FILE__, __LINE__));
             }
             // check if we have rest argument
             else if (a->is_rest_argument()) {

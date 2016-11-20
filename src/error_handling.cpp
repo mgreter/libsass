@@ -1,5 +1,6 @@
 #include "sass.hpp"
 #include "ast.hpp"
+#include "debugger.hpp"
 #include "prelexer.hpp"
 #include "backtrace.hpp"
 #include "error_handling.hpp"

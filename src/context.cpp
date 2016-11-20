@@ -149,7 +149,7 @@ namespace Sass {
     }
     // clear inner structures (vectors) and input source
     resources.clear(); import_stack.clear();
-    sheets.clear();
+    subset_map.clear(), sheets.clear();
 
   }
 

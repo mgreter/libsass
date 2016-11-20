@@ -597,7 +597,7 @@ namespace Sass {
     // normalize underscores to hyphens
     std::string name(Util::normalize_underscores(lexed));
     // create the initial mixin call object
-    Mixin_Call_Ptr call = SASS_MEMORY_NEW(ctx.mem, Mixin_Call, pstate, name, 0, 0);
+    Mixin_Call_Obj call = SASS_MEMORY_NEW(ctx.mem, Mixin_Call, pstate, name, 0, 0);
     // parse mandatory arguments
     call->arguments(parse_arguments());
     // parse optional block
@@ -605,7 +605,7 @@ namespace Sass {
       call->oblock(parse_block());
     }
     // return ast node
-    return call;
+    return call->copy2(ctx.mem, __FILE__, __LINE__);
   }
   // EO parse_include_directive
 
@@ -616,7 +616,7 @@ namespace Sass {
     bool reloop = true;
     bool had_linefeed = false;
     Complex_Selector_Obj sel;
-    Selector_List_Ptr group = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate);
+    Selector_List_Obj group = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate);
     group->media_block(last_media_block);
 if (DBG) std::cerr << "SEL LIST\n";
     do {
@@ -631,7 +631,7 @@ if (DBG) std::cerr << "SEL LIST\n";
       // now parse the complex selector
       sel = parse_complex_selector(in_root);
 
-      if (!sel) return group;
+      if (!sel) return group->copy2(ctx.mem, __FILE__, __LINE__);
 
       sel->has_line_feed(had_linefeed);
 
@@ -656,7 +656,7 @@ if (DBG) std::cerr << "SEL LIST END\n";
     // update for end position
     group->update_pstate(pstate);
     if (sel) sel->last()->has_line_break(false);
-    return group;
+    return group->copy2(ctx.mem, __FILE__, __LINE__);
   }
   // EO parse_selector_list
 
@@ -729,7 +729,7 @@ if (DBG) std::cerr << "parse_compound_selector 9\n";
     // also skip adding parent ref if we only have refs
     if (!sel->has_parent_ref() && !in_at_root && !in_root) {
       // create the objects to wrap parent selector reference
-      Compound_Selector_Ptr head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate);
+      Compound_Selector_Obj head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate);
       Parent_Selector_Ptr parent = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, pstate, false);
       parent->media_block(last_media_block);
       head->media_block(last_media_block);
@@ -1655,7 +1655,7 @@ if (DBG) std::cerr << "complex 2\n";
   String_Schema_Obj Parser::parse_value_schema(const char* stop)
   {
     // initialize the string schema object to add tokens
-    String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Obj schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
 
     if (peek<exactly<'}'>>()) {
       css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
@@ -1770,7 +1770,7 @@ if (DBG) std::cerr << "complex 2\n";
       return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(id.begin, id.end));
     }
 
-    String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Obj schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
     while (i < id.end) {
       p = find_first_in_interval< exactly<hash_lbrace>, block_comment >(i, id.end);
       if (p) {
@@ -1808,7 +1808,7 @@ if (DBG) std::cerr << "complex 2\n";
         break;
       }
     }
-    return schema;
+    return schema ? schema->copy2(ctx.mem, __FILE__, __LINE__) : 0;
   }
 
   // calc functions should preserve arguments
@@ -2007,7 +2007,7 @@ if (DBG) std::cerr << "complex 2\n";
     stack.push_back(Scope::Control);
     bool root = block_stack.back()->is_root();
     // create the initial while call object
-    While_Ptr call = SASS_MEMORY_NEW(ctx.mem, While, pstate, 0, 0);
+    While_Obj call = SASS_MEMORY_NEW(ctx.mem, While, pstate, 0, 0);
     // parse mandatory predicate
     Expression_Obj predicate = parse_list();
     call->predicate(predicate);
@@ -2016,23 +2016,23 @@ if (DBG) std::cerr << "complex 2\n";
     // return ast node
     stack.pop_back();
     // return ast node
-    return call;
+    return call->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   // EO parse_while_directive
   Media_Block_Obj Parser::parse_media_block()
   {
     stack.push_back(Scope::Media);
-    Media_Block_Ptr media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
+    Media_Block_Obj media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
 
     media_block->media_queries(parse_media_queries());
 
-    Media_Block_Ptr prev_media_block = last_media_block;
-    last_media_block = media_block;
+    Media_Block_Obj prev_media_block = last_media_block;
+    last_media_block = &media_block;
     media_block->oblock(parse_css_block());
-    last_media_block = prev_media_block;
+    last_media_block = &prev_media_block;
     stack.pop_back();
-    return media_block;
+    return media_block->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   List_Obj Parser::parse_media_queries()
@@ -2042,7 +2042,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (!peek_css < exactly <'{'> >()) queries->append(&parse_media_query());
     while (lex_css < exactly <','> >()) queries->append(&parse_media_query());
     queries->update_pstate(pstate);
-    return queries;
+    return queries->copy2(ctx.mem, __FILE__, __LINE__);;
   }
 
   // Expression_Ptr Parser::parse_media_query()
@@ -2228,17 +2228,17 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Obj feature = parse_list();
     if (!lex_css< exactly<':'> >()) error("style declaration must contain a value", pstate);
     Expression_Obj expression = parse_list();
-    List_Ptr value = SASS_MEMORY_NEW(ctx.mem, List, feature->pstate(), 1);
+    List_Obj value = SASS_MEMORY_NEW(ctx.mem, List, feature->pstate(), 1);
 
     if (expression->concrete_type() == Expression::LIST) {
-        value = static_cast<List_Ptr>(&expression);
+        value = SASS_MEMORY_CAST(List, expression);
     }
     else *value << expression;
 
     At_Root_Query_Obj cond = SASS_MEMORY_CREATE(ctx.mem, At_Root_Query,
                                           value->pstate(),
                                           feature,
-                                          value);
+                                          &value);
     if (!lex_css< exactly<')'> >()) error("unclosed parenthesis in @at-root expression", pstate);
     return cond;
   }
@@ -2405,7 +2405,7 @@ if (DBG) std::cerr << "complex 2\n";
   String_Schema_Obj Parser::parse_almost_any_value()
   {
 
-    String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Obj schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
     if (*position == 0) return 0;
     lex < spaces >(false);
     Expression_Obj token = lex_almost_any_value_token();
@@ -2414,7 +2414,7 @@ if (DBG) std::cerr << "complex 2\n";
     schema->append(token);
     if (*position == 0) {
       schema->rtrim();
-      return schema;
+	  return schema->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     while ((token = &lex_almost_any_value_token())) {
@@ -2425,7 +2425,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     schema->rtrim();
 
-    return schema;
+    return schema->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   Warning_Obj Parser::parse_warning()

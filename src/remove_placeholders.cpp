@@ -22,8 +22,8 @@ namespace Sass {
       Selector_List_Ptr new_sl = SASS_MEMORY_NEW(ctx.mem, Selector_List, sl->pstate());
 
       for (size_t i = 0, L = sl->length(); i < L; ++i) {
-          if (!(*sl)[i]->contains_placeholder()) {
-              *new_sl << (*sl)[i];
+          if (!sl->at(i)->contains_placeholder()) {
+              new_sl->append(sl->at(i));
           }
       }
 

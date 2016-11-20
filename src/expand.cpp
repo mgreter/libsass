@@ -17,14 +17,14 @@ namespace Sass {
   const unsigned int maxRecursion = 500;
   static unsigned int recursions = 0;
 
-  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<Selector_List_Ptr>* stack)
+  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<Selector_List_Obj>* stack)
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
     block_stack(std::vector<Block_Ptr>()),
     call_stack(std::vector<AST_Node_Obj>()),
     // property_stack(std::vector<String_Ptr>()),
-    selector_stack(std::vector<Selector_List_Ptr>()),
+    selector_stack(std::vector<Selector_List_Obj>()),
     media_block_stack(std::vector<Media_Block_Ptr>()),
     backtrace_stack(std::vector<Backtrace*>()),
     in_keyframes(false),
@@ -56,7 +56,7 @@ namespace Sass {
     return 0;
   }
 
-  Selector_List_Ptr Expand::selector()
+  Selector_List_Obj Expand::selector()
   {
     if (selector_stack.size() > 0)
       return selector_stack.back();
@@ -77,20 +77,21 @@ namespace Sass {
     // set the current env as parent
     Env env(environment());
     // copy the block object (add items later)
-    Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block,
+    Block_Obj bb = SASS_MEMORY_NEW(ctx.mem, Block,
                                 b->pstate(),
                                 b->length(),
                                 b->is_root());
     // setup block and env stack
-    this->block_stack.push_back(bb);
+    this->block_stack.push_back(&bb);
     this->env_stack.push_back(&env);
     // operate on block
+    // this may throw up!
     this->append_block(b);
     // revert block and env stack
     this->block_stack.pop_back();
     this->env_stack.pop_back();
     // return copy
-    return bb;
+    return bb ? bb->copy2(ctx.mem, __FILE__, __LINE__) : 0;
   }
 
   Statement_Ptr Expand::operator()(Ruleset_Ptr r)
@@ -99,13 +100,13 @@ namespace Sass {
 
     if (in_keyframes) {
       Block_Ptr bb = operator()(&r->oblock());
-      Keyframe_Rule_Ptr k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
+      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), bb);
       if (r->selector()) {
         selector_stack.push_back(0);
         k->selector2(SASS_MEMORY_CAST_PTR(Selector_List, r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
-      return k->copy(ctx.mem);
+      return k->copy2(ctx.mem, __FILE__, __LINE__);
     }
 
     // reset when leaving scope
@@ -136,7 +137,7 @@ namespace Sass {
     if (sel->length() == 0 || sel->has_parent_ref()) {
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
-        Selector_List_Ptr ll = selector_stack.at(i);
+        Selector_List_Obj ll = selector_stack.at(i);
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
       if (!has_parent_selector) {
@@ -150,7 +151,7 @@ namespace Sass {
       env_stack.push_back(&env);
     }
     sel->set_media_block(media_block_stack.back());
-    Block_Ptr blk = 0;
+    Block_Obj blk = 0;
     if (r->oblock()) blk = operator()(&r->oblock());
     Ruleset_Ptr rr = SASS_MEMORY_NEW(ctx.mem, Ruleset,
                                   r->pstate(),
@@ -174,7 +175,7 @@ namespace Sass {
                                        f->pstate(),
                                        SASS_MEMORY_CAST(Supports_Condition, condition),
                                        operator()(&f->oblock()));
-    return ff->copy(ctx.mem);
+    return ff->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   Statement_Ptr Expand::operator()(Media_Block_Ptr m)
@@ -186,14 +187,16 @@ namespace Sass {
     ctx.strings.push_back(str);
     Parser p(Parser::from_c_str(str, ctx, mq->pstate()));
     mq = &p.parse_media_queries(); // re-assign now
+    List_Obj ls = SASS_MEMORY_CAST_PTR(List, mq->perform(&eval));
+    Block_Obj blk = operator()(&m->oblock());
     Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      SASS_MEMORY_CAST_PTR(List, mq->perform(&eval)),
-                                      operator()(&m->oblock()),
+                                      ls,
+                                      blk,
                                       0);
     media_block_stack.pop_back();
     mm->tabs(m->tabs());
-    return mm ? mm->copy(ctx.mem) : 0;
+    return mm;
   }
 
   Statement_Ptr Expand::operator()(At_Root_Block_Ptr a)
@@ -214,7 +217,7 @@ namespace Sass {
                                         a->pstate(),
                                         bb,
                                         SASS_MEMORY_CAST(At_Root_Query, ae));
-    return aa ? aa->copy(ctx.mem) : 0;
+    return aa ? aa->copy2(ctx.mem, __FILE__, __LINE__) : 0;
   }
 
   Statement_Ptr Expand::operator()(Directive_Ptr a)
@@ -234,7 +237,7 @@ namespace Sass {
                                   as,
                                   bb,
                                   av);
-    return aa ? aa->copy(ctx.mem) : 0;
+    return aa;
   }
 
   Statement_Ptr Expand::operator()(Declaration_Ptr d)
@@ -242,14 +245,14 @@ namespace Sass {
     Block_Obj ab = d->oblock();
     String_Obj old_p = d->property();
     Expression_Obj prop = old_p->perform(&eval);
-    String_Ptr new_p = SASS_MEMORY_CAST(String, prop);
+    String_Obj new_p = SASS_MEMORY_CAST(String, prop);
     // we might get a color back
     if (!new_p) {
       std::string str(prop->to_string(ctx.c_options));
       new_p = SASS_MEMORY_NEW(ctx.mem, String_Constant, old_p->pstate(), str);
     }
-    Expression_Ptr value = d->value()->perform(&eval);
-    Block_Ptr bb = ab ? operator()(&ab) : NULL;
+    Expression_Obj value = d->value()->perform(&eval);
+    Block_Obj bb = ab ? operator()(&ab) : NULL;
     if (!bb) {
       if (!value || (value->is_invisible() && !d->is_important())) return 0;
     }
@@ -326,7 +329,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Import_Ptr imp)
   {
-    Import_Ptr result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
+    Import_Obj result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
     if (imp->import_queries() && imp->import_queries()->size()) {
       Expression_Obj ex = imp->import_queries()->perform(&eval);
       result->import_queries(SASS_MEMORY_CAST(List, ex));
@@ -336,7 +339,7 @@ namespace Sass {
     }
     // all resources have been dropped for Input_Stubs
     // for ( size_t i = 0, S = imp->incs().size(); i < S; ++i) {}
-    return result;
+    return result->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   Statement_Ptr Expand::operator()(Import_Stub_Ptr i)
@@ -387,7 +390,7 @@ namespace Sass {
     Comment_Ptr rv = SASS_MEMORY_NEW(ctx.mem, Comment, c->pstate(), SASS_MEMORY_CAST_PTR(String, c->text()->perform(&eval)), c->is_important());
     eval.is_in_comment = false;
     // TODO: eval the text, once we're parsing/storing it as a String_Schema
-    return rv->copy(ctx.mem);
+    return rv;
   }
 
   Statement_Ptr Expand::operator()(If_Ptr i)
@@ -556,8 +559,10 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(w);
-    while (*pred->perform(&eval)) {
+    Expression_Obj cond = pred->perform(&eval);
+    while (*&cond) {
       append_block(body);
+      cond = pred->perform(&eval);
     }
     call_stack.pop_back();
     env_stack.pop_back();
@@ -616,7 +621,7 @@ namespace Sass {
           sel = ssel;
         }
         // if (c->has_line_feed()) sel->has_line_feed(true);
-        ctx.subset_map.put(placeholder->to_str_vec(), std::make_pair(&sel, &placeholder));
+        ctx.subset_map.put(placeholder->to_str_vec(), std::make_pair(sel, placeholder));
       }
     }
 
@@ -624,7 +629,7 @@ namespace Sass {
 
   Statement_Ptr Expand::operator()(Extension_Ptr e)
   {
-    if (Selector_List_Ptr extender = SASS_MEMORY_CAST_PTR(Selector_List, selector())) {
+    if (Selector_List_Obj extender = SASS_MEMORY_CAST(Selector_List, selector())) {
       Selector_Obj s = e->selector();
       if (Selector_Schema_Obj schema = SASS_MEMORY_CAST(Selector_Schema, s)) {
         if (schema->has_parent_ref()) s = eval(&schema);
@@ -649,7 +654,7 @@ namespace Sass {
     Definition_Obj dd = SASS_MEMORY_NEW(ctx.mem, Definition, *d);
     env->local_frame()[d->name() +
                         (d->type() == Definition::MIXIN ? "[m]" : "[f]")] = &dd;
-
+/*
     if (d->type() == Definition::FUNCTION && (
       Prelexer::calc_fn_call(d->name().c_str()) ||
       d->name() == "element"    ||
@@ -662,7 +667,7 @@ namespace Sass {
          d->pstate()
       );
     }
-
+*/
 
     // set the static link so we can have lexical scoping
     dd->environment(env);
@@ -689,7 +694,8 @@ namespace Sass {
     if (c->oblock() && c->name() != "@content" && !body->has_content()) {
       error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), backtrace());
     }
-    Arguments_Obj args = SASS_MEMORY_CAST_PTR(Arguments, c->arguments()->perform(&eval));
+    Expression_Obj rv = c->arguments()->perform(&eval);
+    Arguments_Obj args = SASS_MEMORY_CAST(Arguments, rv);
     Backtrace new_bt(backtrace(), c->pstate(), ", in mixin `" + c->name() + "`");
     backtrace_stack.push_back(&new_bt);
     Env new_env(def->environment());
@@ -709,7 +715,7 @@ namespace Sass {
     bind(std::string("Mixin"), c->name(), params, args, &ctx, &new_env, &eval);
 
     Block_Obj trace_block = SASS_MEMORY_OBJ(ctx.mem, Block, c->pstate());
-    Trace_Ptr trace = SASS_MEMORY_NEW(ctx.mem, Trace, c->pstate(), c->name(), trace_block);
+    Trace_Obj trace = SASS_MEMORY_NEW(ctx.mem, Trace, c->pstate(), c->name(), trace_block);
 
 
     block_stack.push_back(&trace_block);
@@ -723,7 +729,7 @@ namespace Sass {
     backtrace_stack.pop_back();
 
     recursions --;
-    return trace;
+    return trace->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   Statement_Ptr Expand::operator()(Content_Ptr c)
@@ -747,7 +753,7 @@ namespace Sass {
       selector_stack.pop_back();
     }
 
-    return trace->copy(ctx.mem);
+    return trace->copy2(ctx.mem, __FILE__, __LINE__);
   }
 
   // produce an error if something is not implemented
@@ -765,7 +771,7 @@ namespace Sass {
     if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr stm = &b->at(i);
-      Statement_Ptr ith = stm->perform(this);
+      Statement_Obj ith = stm->perform(this);
       if (ith) block_stack.back()->append(ith);
     }
     if (b->is_root()) call_stack.pop_back();

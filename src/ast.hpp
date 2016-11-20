@@ -12,6 +12,11 @@
 #include <unordered_map>
 #include "sass/base.h"
 
+#define ATTACH_AST_OPERATIONS(klass) \
+  virtual klass##_Ptr copy(Memory_Manager& mem, bool recursive = false) const; \
+  virtual klass##_Ptr copy2(Memory_Manager& mem, std::string file = __FILE__, int line = __LINE__) const; \
+  virtual klass##_Ptr clone2(Memory_Manager& mem, std::string file = __FILE__, int line = __LINE__) const; \
+
 #ifdef __clang__
 
 /*
@@ -87,13 +92,19 @@ namespace Sass {
     AST_Node_Ref(ParserState pstate)
     : pstate_(pstate)
     { }
+    AST_Node_Ref(const AST_Node_Ref* ptr)
+    : pstate_(ptr->pstate_)
+    { }
     virtual ~AST_Node_Ref() = 0;
     virtual size_t hash() { return 0; }
-    virtual AST_Node_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    virtual AST_Node_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual AST_Node_Ptr copy2(Memory_Manager& mem, std::string file, int line) const = 0;
+    virtual AST_Node_Ptr clone2(Memory_Manager& mem, std::string file, int line) const = 0;
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
     virtual std::string to_string(Sass_Inspect_Options opt) const;
     virtual std::string to_string() const;
+    virtual void cloneChildren(Memory_Manager& mem, std::string file, int line) {};
   public:
     void update_pstate(const ParserState& pstate);
     void set_pstate_offset(const Offset& offset);
@@ -142,12 +153,20 @@ namespace Sass {
       is_interpolant_(i),
       concrete_type_(ct)
     { }
+    Expression_Ref(const Expression_Ref* ptr)
+    : AST_Node_Ref(ptr),
+      is_delayed_(ptr->is_delayed_),
+      is_expanded_(ptr->is_expanded_),
+      is_interpolant_(ptr->is_interpolant_),
+      concrete_type_(ptr->concrete_type_)
+    { }
     virtual operator bool() { return true; }
     virtual ~Expression_Ref() { }
     virtual std::string type() { return ""; /* TODO: raise an error? */ }
     virtual bool is_invisible() const { return false; }
     static std::string type_name() { return ""; }
     virtual bool is_false() { return false; }
+    // virtual bool is_true() { return !is_false(); }
     virtual bool operator== (const Expression& rhs) const { return false; }
     virtual bool eq(const Expression& rhs) const { return *this == rhs; };
     virtual void set_delayed(bool delayed) { is_delayed(delayed); }
@@ -156,7 +175,9 @@ namespace Sass {
     virtual bool is_right_interpolant() const { return is_interpolant(); }
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
-    virtual Expression_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    virtual Expression_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual Expression_Ptr copy2(Memory_Manager& mem, std::string file, int line) const = 0;
+    virtual Expression_Ptr clone2(Memory_Manager& mem, std::string file, int line) const = 0;
     virtual size_t hash() { return 0; }
   };
 
@@ -169,7 +190,12 @@ namespace Sass {
                bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : Expression_Ref(pstate, d, e, i, ct)
     { }
-    virtual PreValue_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    PreValue_Ref(const PreValue_Ref* ptr)
+    : Expression_Ref(ptr)
+    { }
+    virtual PreValue_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual PreValue_Ptr copy2(Memory_Manager& mem, std::string file, int line) const = 0;
+    virtual PreValue_Ptr clone2(Memory_Manager& mem, std::string file, int line) const = 0;
     virtual ~PreValue_Ref() { }
   };
 
@@ -182,7 +208,12 @@ namespace Sass {
           bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : Expression_Ref(pstate, d, e, i, ct)
     { }
-    virtual Value_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    Value_Ref(const Value_Ref* ptr)
+    : Expression_Ref(ptr)
+    { }
+    virtual Value_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual Value_Ptr copy2(Memory_Manager& mem, std::string file, int line) const = 0;
+    virtual Value_Ptr clone2(Memory_Manager& mem, std::string file, int line) const = 0;
     virtual bool operator== (const Expression& rhs) const = 0;
   };
 }
@@ -230,10 +261,12 @@ namespace Sass {
     virtual ~Vectorized() = 0;
     size_t length() const   { return elements_.size(); }
     bool empty() const      { return elements_.empty(); }
+    void clear()            { return elements_.clear(); }
     T last() const          { return elements_.back(); }
     T first() const         { return elements_.front(); }
     T& operator[](size_t i) { return elements_[i]; }
     virtual const T& at(size_t i) const { return elements_.at(i); }
+    virtual T& at(size_t i) { return elements_.at(i); }
     const T& operator[](size_t i) const { return elements_[i]; }
     virtual Vectorized& append(T element)
     {
@@ -413,6 +446,12 @@ namespace Sass {
     Statement_Ref(ParserState pstate, Statement_Type st = NONE, size_t t = 0)
     : AST_Node_Ref(pstate), statement_type_(st), tabs_(t), group_end_(false)
      { }
+    Statement_Ref(const Statement_Ref* ptr)
+    : AST_Node_Ref(ptr),
+      statement_type_(ptr->statement_type_),
+      tabs_(ptr->tabs_),
+      group_end_(ptr->group_end_)
+     { }
     virtual ~Statement_Ref() = 0;
     // needed for rearranging nested rulesets during CSS emission
     virtual bool   is_invisible() const { return false; }
@@ -442,6 +481,12 @@ namespace Sass {
       is_root_(r),
       is_at_root_(false)
     { }
+    Block_Ref(const Block_Ref* ptr)
+    : Statement_Ref(ptr),
+      Vectorized<Statement_Obj>(*ptr),
+      is_root_(ptr->is_root_),
+      is_at_root_(ptr->is_at_root_)
+    { }
     virtual bool has_content()
     {
       for (size_t i = 0, L = elements().size(); i < L; ++i) {
@@ -449,7 +494,7 @@ namespace Sass {
       }
       return Statement_Ref::has_content();
     }
-    virtual Block_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Block)
     ATTACH_OPERATIONS()
   };
 
@@ -461,6 +506,9 @@ namespace Sass {
   public:
     Has_Block_Ref(ParserState pstate, Block_Obj b)
     : Statement_Ref(pstate), oblock_(b)
+    { }
+    Has_Block_Ref(const Has_Block_Ref* ptr)
+    : Statement_Ref(ptr), oblock_(ptr->oblock_)
     { }
     virtual bool has_content()
     {
@@ -482,8 +530,14 @@ namespace Sass {
     Ruleset_Ref(ParserState pstate, Selector_Obj s = 0, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), selector_(s), at_root_(false), is_root_(false)
     { statement_type(RULESET); }
+    Ruleset_Ref(const Ruleset_Ref* ptr)
+    : Has_Block_Ref(ptr),
+      selector_(ptr->selector_),
+      at_root_(ptr->at_root_),
+      is_root_(ptr->is_root_)
+    { statement_type(RULESET); }
     bool is_invisible() const;
-    virtual Ruleset_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Ruleset)
     ATTACH_OPERATIONS()
   };
 
@@ -497,8 +551,13 @@ namespace Sass {
     Bubble_Ref(ParserState pstate, Statement_Obj n, Statement_Obj g = 0, size_t t = 0)
     : Statement_Ref(pstate, Statement_Ref::BUBBLE, t), node_(n), group_end_(g == 0)
     { }
+    Bubble_Ref(const Bubble_Ref* ptr)
+    : Statement_Ref(ptr),
+      node_(ptr->node_),
+      group_end_(ptr->group_end_)
+    { }
     bool bubbles() { return true; }
-    virtual Bubble_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Bubble)
     ATTACH_OPERATIONS()
   };
 
@@ -511,7 +570,11 @@ namespace Sass {
     Trace_Ref(ParserState pstate, std::string n, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), name_(n)
     { }
-    virtual Trace_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Trace_Ref(const Trace* ptr)
+    : Has_Block_Ref(ptr),
+      name_(ptr->name_)
+    { }
+    ATTACH_AST_OPERATIONS(Trace)
     ATTACH_OPERATIONS()
   };
 
@@ -527,9 +590,12 @@ namespace Sass {
     Media_Block_Ref(ParserState pstate, List_Obj mqs, Block_Obj b, Selector_Obj s)
     : Has_Block_Ref(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
+    Media_Block_Ref(const Media_Block_Ref* ptr)
+    : Has_Block_Ref(ptr), media_queries_(ptr->media_queries_)
+    { statement_type(MEDIA); }
     bool bubbles() { return true; }
     bool is_invisible() const;
-    virtual Media_Block_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Media_Block)
     ATTACH_OPERATIONS()
   };
 
@@ -545,6 +611,12 @@ namespace Sass {
     Directive_Ref(ParserState pstate, std::string kwd, Selector_Obj sel = 0, Block_Obj b = 0, Expression_Obj val = 0)
     : Has_Block_Ref(pstate, b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
     { statement_type(DIRECTIVE); }
+    Directive_Ref(const Directive_Ref* ptr)
+    : Has_Block_Ref(ptr),
+      keyword_(ptr->keyword_),
+      selector_(ptr->selector_),
+      value_(ptr->value_) // set value manually if needed
+    { statement_type(DIRECTIVE); }
     bool bubbles() { return is_keyframes() || is_media(); }
     bool is_media() {
       return keyword_.compare("@-webkit-media") == 0 ||
@@ -558,7 +630,7 @@ namespace Sass {
              keyword_.compare("@-o-keyframes") == 0 ||
              keyword_.compare("@keyframes") == 0;
     }
-    virtual Directive_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Directive)
     ATTACH_OPERATIONS()
   };
 
@@ -571,7 +643,10 @@ namespace Sass {
     Keyframe_Rule_Ref(ParserState pstate, Block_Obj b)
     : Has_Block_Ref(pstate, b), selector2_()
     { statement_type(KEYFRAMERULE); }
-    virtual Keyframe_Rule_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Keyframe_Rule_Ref(const Keyframe_Rule_Ref* ptr)
+    : Has_Block_Ref(ptr), selector2_(ptr->selector2_)
+    { statement_type(KEYFRAMERULE); }
+    ATTACH_AST_OPERATIONS(Keyframe_Rule)
     ATTACH_OPERATIONS()
   };
 
@@ -588,7 +663,14 @@ namespace Sass {
                 String_Obj prop, Expression_Obj val, bool i = false, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), property_(prop), value_(val), is_important_(i), is_indented_(false)
     { statement_type(DECLARATION); }
-    virtual Declaration_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Declaration_Ref(const Declaration_Ref* ptr)
+    : Has_Block_Ref(ptr),
+      property_(ptr->property_),
+      value_(ptr->value_),
+      is_important_(ptr->is_important_),
+      is_indented_(ptr->is_indented_)
+    { statement_type(DECLARATION); }
+    ATTACH_AST_OPERATIONS(Declaration)
     ATTACH_OPERATIONS()
   };
 
@@ -607,7 +689,14 @@ namespace Sass {
                bool is_global = false)
     : Statement_Ref(pstate), variable_(var), value_(val), is_default_(is_default), is_global_(is_global)
     { statement_type(ASSIGNMENT); }
-    virtual Assignment_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Assignment_Ref(const Assignment_Ref* ptr)
+    : Statement_Ref(ptr),
+      variable_(ptr->variable_),
+      value_(ptr->value_),
+      is_default_(ptr->is_default_),
+      is_global_(ptr->is_global_)
+    { statement_type(ASSIGNMENT); }
+    ATTACH_AST_OPERATIONS(Assignment)
     ATTACH_OPERATIONS()
   };
 
@@ -626,9 +715,15 @@ namespace Sass {
       incs_(std::vector<Include>()),
       import_queries_()
     { statement_type(IMPORT); }
+    Import_Ref(const Import_Ref* ptr)
+    : Statement_Ref(ptr),
+      urls_(ptr->urls_),
+      incs_(ptr->incs_),
+      import_queries_(ptr->import_queries_)
+    { statement_type(IMPORT); }
     std::vector<Expression_Obj>& urls() { return urls_; }
     std::vector<Include>& incs() { return incs_; }
-    virtual Import_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Import)
     ATTACH_OPERATIONS()
   };
 
@@ -644,7 +739,10 @@ namespace Sass {
     Import_Stub_Ref(ParserState pstate, Include res)
     : Statement_Ref(pstate), resource_(res)
     { statement_type(IMPORT_STUB); }
-    virtual Import_Stub_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Import_Stub_Ref(const Import_Stub_Ref* ptr)
+    : Statement_Ref(ptr), resource_(ptr->resource_)
+    { statement_type(IMPORT_STUB); }
+    ATTACH_AST_OPERATIONS(Import_Stub)
     ATTACH_OPERATIONS()
   };
 
@@ -657,7 +755,10 @@ namespace Sass {
     Warning_Ref(ParserState pstate, Expression_Obj msg)
     : Statement_Ref(pstate), message_(msg)
     { statement_type(WARNING); }
-    virtual Warning_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Warning_Ref(const Warning_Ref* ptr)
+    : Statement_Ref(ptr), message_(ptr->message_)
+    { statement_type(WARNING); }
+    ATTACH_AST_OPERATIONS(Warning)
     ATTACH_OPERATIONS()
   };
 
@@ -670,7 +771,10 @@ namespace Sass {
     Error_Ref(ParserState pstate, Expression_Obj msg)
     : Statement_Ref(pstate), message_(msg)
     { statement_type(ERROR); }
-    virtual Error_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Error_Ref(const Error_Ref* ptr)
+    : Statement_Ref(ptr), message_(ptr->message_)
+    { statement_type(ERROR); }
+    ATTACH_AST_OPERATIONS(Error)
     ATTACH_OPERATIONS()
   };
 
@@ -683,7 +787,10 @@ namespace Sass {
     Debug_Ref(ParserState pstate, Expression_Obj val)
     : Statement_Ref(pstate), value_(val)
     { statement_type(DEBUGSTMT); }
-    virtual Debug_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Debug_Ref(const Debug_Ref* ptr)
+    : Statement_Ref(ptr), value_(ptr->value_)
+    { statement_type(DEBUGSTMT); }
+    ATTACH_AST_OPERATIONS(Debug)
     ATTACH_OPERATIONS()
   };
 
@@ -697,9 +804,14 @@ namespace Sass {
     Comment_Ref(ParserState pstate, String_Obj txt, bool is_important)
     : Statement_Ref(pstate), text_(txt), is_important_(is_important)
     { statement_type(COMMENT); }
+    Comment_Ref(const Comment_Ref* ptr)
+    : Statement_Ref(ptr),
+      text_(ptr->text_),
+      is_important_(ptr->is_important_)
+    { statement_type(COMMENT); }
     virtual bool is_invisible() const
     { return /* is_important() == */ false; }
-    virtual Comment_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Comment)
     ATTACH_OPERATIONS()
   };
 
@@ -713,11 +825,14 @@ namespace Sass {
     If_Ref(ParserState pstate, Expression_Obj pred, Block_Obj con, Block_Obj alt = 0)
     : Has_Block_Ref(pstate, &con), predicate_(pred), alternative_(alt)
     { statement_type(IF); }
+    If_Ref(const If_Ref* ptr)
+    : Has_Block_Ref(ptr), predicate_(ptr->predicate_), alternative_(ptr->alternative_)
+    { statement_type(IF); }
     virtual bool has_content()
     {
       return Has_Block_Ref::has_content() || (alternative_ && alternative_->has_content());
     }
-    virtual If_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(If)
     ATTACH_OPERATIONS()
   };
 
@@ -735,7 +850,14 @@ namespace Sass {
     : Has_Block_Ref(pstate, b),
       variable_(var), lower_bound_(lo), upper_bound_(hi), is_inclusive_(inc)
     { statement_type(FOR); }
-    virtual For_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    For_Ref(const For_Ref* ptr)
+    : Has_Block_Ref(ptr),
+      variable_(ptr->variable_),
+      lower_bound_(ptr->lower_bound_),
+      upper_bound_(ptr->upper_bound_),
+      is_inclusive_(ptr->is_inclusive_)
+    { statement_type(FOR); }
+    ATTACH_AST_OPERATIONS(For)
     ATTACH_OPERATIONS()
   };
 
@@ -749,7 +871,10 @@ namespace Sass {
     Each_Ref(ParserState pstate, std::vector<std::string> vars, Expression_Obj lst, Block_Obj b)
     : Has_Block_Ref(pstate, b), variables_(vars), list_(lst)
     { statement_type(EACH); }
-    virtual Each_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Each_Ref(const Each_Ref* ptr)
+    : Has_Block_Ref(ptr), variables_(ptr->variables_), list_(ptr->list_)
+    { statement_type(EACH); }
+    ATTACH_AST_OPERATIONS(Each)
     ATTACH_OPERATIONS()
   };
 
@@ -762,7 +887,10 @@ namespace Sass {
     While_Ref(ParserState pstate, Expression_Obj pred, Block_Obj b)
     : Has_Block_Ref(pstate, b), predicate_(pred)
     { statement_type(WHILE); }
-    virtual While_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    While_Ref(const While_Ref* ptr)
+    : Has_Block_Ref(ptr), predicate_(ptr->predicate_)
+    { statement_type(WHILE); }
+    ATTACH_AST_OPERATIONS(While)
     ATTACH_OPERATIONS()
   };
 
@@ -775,7 +903,10 @@ namespace Sass {
     Return_Ref(ParserState pstate, Expression_Obj val)
     : Statement_Ref(pstate), value_(val)
     { statement_type(RETURN); }
-    virtual Return_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Return_Ref(const Return_Ref* ptr)
+    : Statement_Ref(ptr), value_(ptr->value_)
+    { statement_type(RETURN); }
+    ATTACH_AST_OPERATIONS(Return)
     ATTACH_OPERATIONS()
   };
 
@@ -788,7 +919,10 @@ namespace Sass {
     Extension_Ref(ParserState pstate, Selector_Obj s)
     : Statement_Ref(pstate), selector_(s)
     { statement_type(EXTEND); }
-    virtual Extension_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Extension_Ref(const Extension_Ref* ptr)
+    : Statement_Ref(ptr), selector_(ptr->selector_)
+    { statement_type(EXTEND); }
+    ATTACH_AST_OPERATIONS(Extension)
     ATTACH_OPERATIONS()
   };
 
@@ -799,7 +933,7 @@ namespace Sass {
   struct Backtrace;
   typedef Environment<AST_Node_Obj> Env;
   typedef const char* Signature;
-  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<Selector_List_Ptr>);
+  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<Selector_List_Obj>);
   typedef const char* Signature;
   class Definition_Ref : public Has_Block_Ref {
   public:
@@ -814,6 +948,19 @@ namespace Sass {
     ADD_PROPERTY(bool, is_overload_stub)
     ADD_PROPERTY(Signature, signature)
   public:
+    Definition_Ref(const Definition_Ref* ptr)
+    : Has_Block_Ref(ptr),
+      name_(ptr->name_),
+      parameters_(ptr->parameters_),
+      environment_(ptr->environment_),
+      type_(ptr->type_),
+      native_function_(ptr->native_function_),
+      c_function_(ptr->c_function_),
+      cookie_(ptr->cookie_),
+      is_overload_stub_(ptr->is_overload_stub_),
+      signature_(ptr->signature_)
+    { }
+
     Definition_Ref(ParserState pstate,
                std::string n,
                Parameters_Obj params,
@@ -865,7 +1012,7 @@ namespace Sass {
       is_overload_stub_(false),
       signature_(sig)
     { }
-    virtual Definition_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Definition)
     ATTACH_OPERATIONS()
   };
 
@@ -879,7 +1026,12 @@ namespace Sass {
     Mixin_Call_Ref(ParserState pstate, std::string n, Arguments_Obj args, Block_Obj b = 0)
     : Has_Block_Ref(pstate, b), name_(n), arguments_(args)
     { }
-    virtual Mixin_Call_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Mixin_Call_Ref(const Mixin_Call_Ref* ptr)
+    : Has_Block_Ref(ptr),
+      name_(ptr->name_),
+      arguments_(ptr->arguments_)
+    { }
+    ATTACH_AST_OPERATIONS(Mixin_Call)
     ATTACH_OPERATIONS()
   };
 
@@ -891,7 +1043,9 @@ namespace Sass {
   public:
     Content_Ref(ParserState pstate) : Statement_Ref(pstate)
     { statement_type(CONTENT); }
-    virtual Content_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Content_Ref(const Content_Ref* ptr) : Statement_Ref(ptr)
+    { statement_type(CONTENT); }
+    ATTACH_AST_OPERATIONS(Content)
     ATTACH_OPERATIONS()
   };
 
@@ -913,6 +1067,13 @@ namespace Sass {
       separator_(sep),
       is_arglist_(argl),
       from_selector_(false)
+    { concrete_type(LIST); }
+    List_Ref(const List_Ref* ptr)
+    : Value_Ref(ptr),
+      Vectorized<Expression_Obj>(*ptr),
+      separator_(ptr->separator_),
+      is_arglist_(ptr->is_arglist_),
+      from_selector_(ptr->from_selector_)
     { concrete_type(LIST); }
     std::string type() { return is_arglist_ ? "arglist" : "list"; }
     static std::string type_name() { return "list"; }
@@ -942,8 +1103,8 @@ namespace Sass {
     }
 
     virtual bool operator== (const Expression& rhs) const;
-    virtual List_Ptr copy(Memory_Manager& mem, bool recursive = false);
 
+    ATTACH_AST_OPERATIONS(List)
     ATTACH_OPERATIONS()
   };
 
@@ -957,6 +1118,10 @@ namespace Sass {
          size_t size = 0)
     : Value_Ref(pstate),
       Hashed(size)
+    { concrete_type(MAP); }
+    Map_Ref(const Map_Ref* ptr)
+    : Value_Ref(ptr),
+      Hashed(*ptr)
     { concrete_type(MAP); }
     std::string type() { return "map"; }
     static std::string type_name() { return "map"; }
@@ -976,8 +1141,8 @@ namespace Sass {
     }
 
     virtual bool operator== (const Expression& rhs) const;
-    virtual Map_Ptr copy(Memory_Manager& mem, bool recursive = false);
 
+    ATTACH_AST_OPERATIONS(Map)
     ATTACH_OPERATIONS()
   };
 
@@ -1017,6 +1182,13 @@ namespace Sass {
     Binary_Expression_Ref(ParserState pstate,
                       Operand op, Expression_Obj lhs, Expression_Obj rhs)
     : PreValue_Ref(pstate), op_(op), left_(lhs), right_(rhs), hash_(0)
+    { }
+    Binary_Expression_Ref(const Binary_Expression_Ref* ptr)
+    : PreValue_Ref(ptr),
+      op_(ptr->op_),
+      left_(ptr->left_),
+      right_(ptr->right_),
+      hash_(ptr->hash_)
     { }
     const std::string type_name() {
       switch (type()) {
@@ -1096,8 +1268,8 @@ namespace Sass {
       }
       return hash_;
     }
-    virtual Binary_Expression_Ptr copy(Memory_Manager& mem, bool recursive = false);
     enum Sass_OP type() const { return op_.operand; }
+    ATTACH_AST_OPERATIONS(Binary_Expression)
     ATTACH_OPERATIONS()
   };
 
@@ -1114,6 +1286,12 @@ namespace Sass {
   public:
     Unary_Expression_Ref(ParserState pstate, Type t, Expression_Obj o)
     : Expression_Ref(pstate), type_(t), operand_(o), hash_(0)
+    { }
+    Unary_Expression_Ref(const Unary_Expression_Ref* ptr)
+    : Expression_Ref(ptr),
+      type_(ptr->type_),
+      operand_(ptr->operand_),
+      hash_(ptr->hash_)
     { }
     const std::string type_name() {
       switch (type_) {
@@ -1146,7 +1324,7 @@ namespace Sass {
       };
       return hash_;
     }
-    virtual Unary_Expression_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Unary_Expression)
     ATTACH_OPERATIONS()
   };
 
@@ -1164,7 +1342,19 @@ namespace Sass {
     : Expression_Ref(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
     {
       if (!name_.empty() && is_rest_argument_) {
-        error("variable-length argument may not be passed by name", pstate);
+        error("variable-length argument may not be passed by name", pstate_);
+      }
+    }
+    Argument_Ref(const Argument_Ref* ptr)
+    : Expression_Ref(ptr),
+      value_(ptr->value_),
+      name_(ptr->name_),
+      is_rest_argument_(ptr->is_rest_argument_),
+      is_keyword_argument_(ptr->is_keyword_argument_),
+      hash_(ptr->hash_)
+    {
+      if (!name_.empty() && is_rest_argument_) {
+        error("variable-length argument may not be passed by name", pstate_);
       }
     }
 
@@ -1193,8 +1383,7 @@ namespace Sass {
       return hash_;
     }
 
-    virtual Argument_Ptr copy(Memory_Manager& mem, bool recursive = false);
-
+    ATTACH_AST_OPERATIONS(Argument)
     ATTACH_OPERATIONS()
   };
 
@@ -1217,14 +1406,20 @@ namespace Sass {
       has_rest_argument_(false),
       has_keyword_argument_(false)
     { }
+    Arguments_Ref(const Arguments_Ref* ptr)
+    : Expression_Ref(ptr),
+      Vectorized<Argument_Obj>(*ptr),
+      has_named_arguments_(ptr->has_named_arguments_),
+      has_rest_argument_(ptr->has_rest_argument_),
+      has_keyword_argument_(ptr->has_keyword_argument_)
+    { }
 
     virtual void set_delayed(bool delayed);
-
-    virtual Arguments_Ptr copy(Memory_Manager& mem, bool recursive = false);
 
     Argument_Obj get_rest_argument();
     Argument_Obj get_keyword_argument();
 
+    ATTACH_AST_OPERATIONS(Arguments)
     ATTACH_OPERATIONS()
   };
 
@@ -1234,14 +1429,23 @@ namespace Sass {
   class Function_Call_Ref : public PreValue_Ref {
     ADD_HASHED(std::string, name)
     ADD_HASHED(Arguments_Obj, arguments)
+    ADD_PROPERTY(bool, via_call)
     ADD_PROPERTY(void*, cookie)
     size_t hash_;
   public:
     Function_Call_Ref(ParserState pstate, std::string n, Arguments_Obj args, void* cookie)
-    : PreValue_Ref(pstate), name_(n), arguments_(args), cookie_(cookie), hash_(0)
+    : PreValue_Ref(pstate), name_(n), arguments_(args), via_call_(false), cookie_(cookie), hash_(0)
     { concrete_type(FUNCTION); }
     Function_Call_Ref(ParserState pstate, std::string n, Arguments_Obj args)
-    : PreValue_Ref(pstate), name_(n), arguments_(args), cookie_(0), hash_(0)
+    : PreValue_Ref(pstate), name_(n), arguments_(args), via_call_(false), cookie_(0), hash_(0)
+    { concrete_type(FUNCTION); }
+    Function_Call_Ref(const Function_Call_Ref* ptr)
+    : PreValue_Ref(ptr),
+      name_(ptr->name_),
+      arguments_(ptr->arguments_),
+      via_call_(ptr->via_call_),
+      cookie_(ptr->cookie_),
+      hash_(ptr->hash_)
     { concrete_type(FUNCTION); }
 
     virtual bool operator==(const Expression& rhs) const
@@ -1271,8 +1475,7 @@ namespace Sass {
       }
       return hash_;
     }
-    virtual Function_Call_Ptr copy(Memory_Manager& mem, bool recursive = false);
-
+    ATTACH_AST_OPERATIONS(Function_Call)
     ATTACH_OPERATIONS()
   };
 
@@ -1286,7 +1489,12 @@ namespace Sass {
     Function_Call_Schema_Ref(ParserState pstate, String_Obj n, Arguments_Obj args)
     : Expression_Ref(pstate), name_(n), arguments_(args)
     { concrete_type(STRING); }
-    virtual Function_Call_Schema_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Function_Call_Schema_Ref(const Function_Call_Schema_Ref* ptr)
+    : Expression_Ref(ptr),
+      name_(ptr->name_),
+      arguments_(ptr->arguments_)
+    { concrete_type(STRING); }
+    ATTACH_AST_OPERATIONS(Function_Call_Schema)
     ATTACH_OPERATIONS()
   };
 
@@ -1298,6 +1506,9 @@ namespace Sass {
   public:
     Variable_Ref(ParserState pstate, std::string n)
     : PreValue_Ref(pstate), name_(n)
+    { }
+    Variable_Ref(const Variable_Ref* ptr)
+    : PreValue_Ref(ptr), name_(ptr->name_)
     { }
 
     virtual bool operator==(const Expression& rhs) const
@@ -1319,7 +1530,7 @@ namespace Sass {
       return std::hash<std::string>()(name());
     }
 
-    virtual Variable_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Variable)
     ATTACH_OPERATIONS()
   };
 
@@ -1338,6 +1549,12 @@ namespace Sass {
     Textual_Ref(ParserState pstate, Type t, std::string val)
     : Expression_Ref(pstate, DELAYED), type_(t), value_(val),
       hash_(0)
+    { }
+    Textual_Ref(const Textual_Ref* ptr)
+    : Expression_Ref(ptr),
+      type_(ptr->type_),
+      value_(ptr->value_),
+      hash_(ptr->hash_)
     { }
 
     virtual bool operator==(const Expression& rhs) const
@@ -1363,7 +1580,7 @@ namespace Sass {
       return hash_;
     }
 
-    virtual Textual_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Textual)
     ATTACH_OPERATIONS()
   };
 
@@ -1378,6 +1595,15 @@ namespace Sass {
     size_t hash_;
   public:
     Number_Ref(ParserState pstate, double val, std::string u = "", bool zero = true);
+
+    Number_Ref(const Number_Ref* ptr)
+    : Value_Ref(ptr),
+      value_(ptr->value_), zero_(ptr->zero_),
+      numerator_units_(ptr->numerator_units_),
+      denominator_units_(ptr->denominator_units_),
+      hash_(ptr->hash_)
+    { concrete_type(NUMBER); }
+
     bool zero() { return zero_; }
     bool is_valid_css_unit() const;
     std::vector<std::string>& numerator_units()   { return numerator_units_; }
@@ -1410,8 +1636,7 @@ namespace Sass {
     virtual bool operator< (const Number_Ref& rhs) const;
     virtual bool operator== (const Expression& rhs) const;
     virtual bool eq(const Expression& rhs) const;
-    virtual Number_Ptr copy(Memory_Manager& mem, bool recursive = false);
-
+    ATTACH_AST_OPERATIONS(Number)
     ATTACH_OPERATIONS()
   };
 
@@ -1430,6 +1655,15 @@ namespace Sass {
     : Value_Ref(pstate), r_(r), g_(g), b_(b), a_(a), disp_(disp),
       hash_(0)
     { concrete_type(COLOR); }
+    Color_Ref(const Color_Ref* ptr)
+    : Value_Ref(ptr),
+      r_(ptr->r_),
+      g_(ptr->g_),
+      b_(ptr->b_),
+      a_(ptr->a_),
+      disp_(ptr->disp_),
+      hash_(ptr->hash_)
+    { concrete_type(COLOR); }
     std::string type() { return "color"; }
     static std::string type_name() { return "color"; }
 
@@ -1446,7 +1680,7 @@ namespace Sass {
 
     virtual bool operator== (const Expression& rhs) const;
 
-    virtual Color_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Color)
     ATTACH_OPERATIONS()
   };
 
@@ -1459,8 +1693,11 @@ namespace Sass {
     Custom_Error_Ref(ParserState pstate, std::string msg)
     : Value_Ref(pstate), message_(msg)
     { concrete_type(C_ERROR); }
+    Custom_Error_Ref(const Custom_Error_Ref* ptr)
+    : Value_Ref(ptr), message_(ptr->message_)
+    { concrete_type(C_ERROR); }
     virtual bool operator== (const Expression& rhs) const;
-    virtual Custom_Error_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Custom_Error)
     ATTACH_OPERATIONS()
   };
 
@@ -1473,8 +1710,11 @@ namespace Sass {
     Custom_Warning_Ref(ParserState pstate, std::string msg)
     : Value_Ref(pstate), message_(msg)
     { concrete_type(C_WARNING); }
+    Custom_Warning_Ref(const Custom_Warning_Ref* ptr)
+    : Value_Ref(ptr), message_(ptr->message_)
+    { concrete_type(C_WARNING); }
     virtual bool operator== (const Expression& rhs) const;
-    virtual Custom_Warning_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Custom_Warning)
     ATTACH_OPERATIONS()
   };
 
@@ -1488,6 +1728,11 @@ namespace Sass {
     Boolean_Ref(ParserState pstate, bool val)
     : Value_Ref(pstate), value_(val),
       hash_(0)
+    { concrete_type(BOOLEAN); }
+    Boolean_Ref(const Boolean_Ref* ptr)
+    : Value_Ref(ptr),
+      value_(ptr->value_),
+      hash_(ptr->hash_)
     { concrete_type(BOOLEAN); }
     virtual operator bool() { return value_; }
     std::string type() { return "bool"; }
@@ -1504,7 +1749,7 @@ namespace Sass {
 
     virtual bool operator== (const Expression& rhs) const;
 
-    virtual Boolean_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Boolean)
     ATTACH_OPERATIONS()
   };
 
@@ -1517,13 +1762,18 @@ namespace Sass {
     String_Ref(ParserState pstate, bool delayed = false)
     : Value_Ref(pstate, delayed)
     { concrete_type(STRING); }
+    String_Ref(const String_Ref* ptr)
+    : Value_Ref(ptr)
+    { concrete_type(STRING); }
     static std::string type_name() { return "string"; }
     virtual ~String_Ref() = 0;
     virtual void rtrim() = 0;
     virtual void ltrim() = 0;
     virtual void trim() = 0;
     virtual bool operator==(const Expression& rhs) const = 0;
-    virtual String_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    virtual String_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual String_Ptr copy2(Memory_Manager& mem, std::string file, int line) const = 0;
+    virtual String_Ptr clone2(Memory_Manager& mem, std::string file, int line) const = 0;
     ATTACH_OPERATIONS()
   };
   inline String_Ref::~String_Ref() { };
@@ -1539,6 +1789,12 @@ namespace Sass {
     String_Schema_Ref(ParserState pstate, size_t size = 0, bool has_interpolants = false)
     : String_Ref(pstate), Vectorized<Expression_Obj>(size), hash_(0)
     { concrete_type(STRING); }
+    String_Schema_Ref(const String_Schema_Ref* ptr)
+    : String_Ref(ptr),
+      Vectorized<Expression_Obj>(*ptr),
+      hash_(ptr->hash_)
+    { concrete_type(STRING); }
+
     std::string type() { return "string"; }
     static std::string type_name() { return "string"; }
 
@@ -1569,7 +1825,7 @@ namespace Sass {
     }
 
     virtual bool operator==(const Expression& rhs) const;
-    virtual String_Schema_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(String_Schema)
     ATTACH_OPERATIONS()
   };
 
@@ -1583,6 +1839,13 @@ namespace Sass {
   protected:
     size_t hash_;
   public:
+    String_Constant_Ref(const String_Constant_Ref* ptr)
+    : String_Ref(ptr),
+      quote_mark_(ptr->quote_mark_),
+      can_compress_whitespace_(ptr->can_compress_whitespace_),
+      value_(ptr->value_),
+      hash_(ptr->hash_)
+    { }
     String_Constant_Ref(ParserState pstate, std::string val)
     : String_Ref(pstate), quote_mark_(0), can_compress_whitespace_(false), value_(read_css_string(val)), hash_(0)
     { }
@@ -1611,13 +1874,13 @@ namespace Sass {
     }
 
     virtual bool operator==(const Expression& rhs) const;
-    virtual String_Constant_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual std::string inspect() const; // quotes are forced on inspection
 
     // static char auto_quote() { return '*'; }
     static char double_quote() { return '"'; }
     static char single_quote() { return '\''; }
 
+    ATTACH_AST_OPERATIONS(String_Constant)
     ATTACH_OPERATIONS()
   };
 
@@ -1636,9 +1899,12 @@ namespace Sass {
       }
       if (q && quote_mark_) quote_mark_ = q;
     }
+    String_Quoted_Ref(const String_Quoted_Ref* ptr)
+    : String_Constant(ptr)
+    { }
     virtual bool operator==(const Expression& rhs) const;
-    virtual String_Quoted_Ptr copy(Memory_Manager& mem, bool recursive = false);
     virtual std::string inspect() const; // quotes are forced on inspection
+    ATTACH_AST_OPERATIONS(String_Quoted)
     ATTACH_OPERATIONS()
   };
 
@@ -1656,7 +1922,14 @@ namespace Sass {
     : Expression_Ref(pstate), Vectorized<Media_Query_Expression_Obj>(s),
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
-    virtual Media_Query_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Media_Query_Ref(const Media_Query_Ref* ptr)
+    : Expression_Ref(ptr),
+      Vectorized<Media_Query_Expression_Obj>(*ptr),
+      media_type_(ptr->media_type_),
+      is_negated_(ptr->is_negated_),
+      is_restricted_(ptr->is_restricted_)
+    { }
+    ATTACH_AST_OPERATIONS(Media_Query)
     ATTACH_OPERATIONS()
   };
 
@@ -1672,7 +1945,13 @@ namespace Sass {
                            Expression_Obj f, Expression_Obj v, bool i = false)
     : Expression_Ref(pstate), feature_(f), value_(v), is_interpolated_(i)
     { }
-    virtual Media_Query_Expression_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Media_Query_Expression_Ref(const Media_Query_Expression_Ref* ptr)
+    : Expression_Ref(ptr),
+      feature_(ptr->feature_),
+      value_(ptr->value_),
+      is_interpolated_(ptr->is_interpolated_)
+    { }
+    ATTACH_AST_OPERATIONS(Media_Query_Expression)
     ATTACH_OPERATIONS()
   };
 
@@ -1685,8 +1964,11 @@ namespace Sass {
     Supports_Block_Ref(ParserState pstate, Supports_Condition_Obj condition, Block_Obj block = 0)
     : Has_Block_Ref(pstate, block), condition_(condition)
     { statement_type(SUPPORTS); }
+    Supports_Block_Ref(const Supports_Block_Ref* ptr)
+    : Has_Block_Ref(ptr), condition_(ptr->condition_)
+    { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
-    virtual Supports_Block_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Supports_Block)
     ATTACH_OPERATIONS()
   };
 
@@ -1698,8 +1980,11 @@ namespace Sass {
     Supports_Condition_Ref(ParserState pstate)
     : Expression_Ref(pstate)
     { }
+    Supports_Condition_Ref(const Supports_Condition_Ref* ptr)
+    : Expression_Ref(ptr)
+    { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
-    virtual Supports_Condition_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Supports_Condition)
     ATTACH_OPERATIONS()
   };
 
@@ -1717,8 +2002,14 @@ namespace Sass {
     Supports_Operator_Ref(ParserState pstate, Supports_Condition_Obj l, Supports_Condition_Obj r, Operand o)
     : Supports_Condition_Ref(pstate), left_(l), right_(r), operand_(o)
     { }
+    Supports_Operator_Ref(const Supports_Operator_Ref* ptr)
+    : Supports_Condition_Ref(ptr),
+      left_(ptr->left_),
+      right_(ptr->right_),
+      operand_(ptr->operand_)
+    { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const;
-    virtual Supports_Operator_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Supports_Operator)
     ATTACH_OPERATIONS()
   };
 
@@ -1732,8 +2023,11 @@ namespace Sass {
     Supports_Negation_Ref(ParserState pstate, Supports_Condition_Obj c)
     : Supports_Condition_Ref(pstate), condition_(c)
     { }
+    Supports_Negation_Ref(const Supports_Negation_Ref* ptr)
+    : Supports_Condition_Ref(ptr), condition_(ptr->condition_)
+    { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const;
-    virtual Supports_Negation_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Supports_Negation)
     ATTACH_OPERATIONS()
   };
 
@@ -1748,8 +2042,13 @@ namespace Sass {
     Supports_Declaration_Ref(ParserState pstate, Expression_Obj f, Expression_Obj v)
     : Supports_Condition_Ref(pstate), feature_(f), value_(v)
     { }
+    Supports_Declaration_Ref(const Supports_Declaration_Ref* ptr)
+    : Supports_Condition_Ref(ptr),
+      feature_(ptr->feature_),
+      value_(ptr->value_)
+    { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
-    virtual Supports_Declaration_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Supports_Declaration)
     ATTACH_OPERATIONS()
   };
 
@@ -1763,8 +2062,12 @@ namespace Sass {
     Supports_Interpolation_Ref(ParserState pstate, Expression_Obj v)
     : Supports_Condition_Ref(pstate), value_(v)
     { }
+    Supports_Interpolation_Ref(const Supports_Interpolation_Ref* ptr)
+    : Supports_Condition_Ref(ptr),
+      value_(ptr->value_)
+    { }
     virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
-    virtual Supports_Interpolation_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Supports_Interpolation)
     ATTACH_OPERATIONS()
   };
 
@@ -1779,8 +2082,13 @@ namespace Sass {
     At_Root_Query_Ref(ParserState pstate, Expression_Obj f = 0, Expression_Obj v = 0, bool i = false)
     : Expression_Ref(pstate), feature_(f), value_(v)
     { }
+    At_Root_Query_Ref(const At_Root_Query_Ref* ptr)
+    : Expression_Ref(ptr),
+      feature_(ptr->feature_),
+      value_(ptr->value_)
+    { }
     bool exclude(std::string str);
-    virtual At_Root_Query_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(At_Root_Query)
     ATTACH_OPERATIONS()
   };
 
@@ -1792,6 +2100,9 @@ namespace Sass {
   public:
     At_Root_Block_Ref(ParserState pstate, Block_Obj b = 0, At_Root_Query_Obj e = 0)
     : Has_Block_Ref(pstate, b), expression_(e)
+    { statement_type(ATROOT); }
+    At_Root_Block_Ref(const At_Root_Block_Ref* ptr)
+    : Has_Block_Ref(ptr), expression_(ptr->expression_)
     { statement_type(ATROOT); }
     bool bubbles() { return true; }
     bool exclude_node(Statement_Obj s) {
@@ -1827,7 +2138,7 @@ namespace Sass {
       }
       return false;
     }
-    virtual At_Root_Block_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(At_Root_Block)
     ATTACH_OPERATIONS()
   };
 
@@ -1837,6 +2148,7 @@ namespace Sass {
   class Null_Ref : public Value_Ref {
   public:
     Null_Ref(ParserState pstate) : Value_Ref(pstate) { concrete_type(NULL_VAL); }
+    Null_Ref(const Null_Ref* ptr) : Value_Ref(ptr) { concrete_type(NULL_VAL); }
     std::string type() { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const { return true; }
@@ -1850,7 +2162,7 @@ namespace Sass {
 
     virtual bool operator== (const Expression& rhs) const;
 
-    virtual Null_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Null)
     ATTACH_OPERATIONS()
   };
 
@@ -1879,10 +2191,20 @@ namespace Sass {
     : AST_Node_Ref(pstate), name_(n), default_value_(def), is_rest_parameter_(rest)
     {
       if (default_value_ && is_rest_parameter_) {
-        error("variable-length parameter may not have a default value", pstate);
+        error("variable-length parameter may not have a default value", pstate_);
       }
     }
-    virtual Parameter_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Parameter_Ref(const Parameter_Ref* ptr)
+    : AST_Node_Ref(ptr),
+      name_(ptr->name_),
+      default_value_(ptr->default_value_),
+      is_rest_parameter_(ptr->is_rest_parameter_)
+    {
+      if (default_value_ && is_rest_parameter_) {
+        error("variable-length parameter may not have a default value", pstate_);
+      }
+    }
+    ATTACH_AST_OPERATIONS(Parameter)
     ATTACH_OPERATIONS()
   };
 
@@ -1925,7 +2247,13 @@ namespace Sass {
       has_optional_parameters_(false),
       has_rest_parameter_(false)
     { }
-    virtual Parameters_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    Parameters_Ref(const Parameters_Ref* ptr)
+    : AST_Node_Ref(ptr),
+      Vectorized<Parameter_Obj>(*ptr),
+      has_optional_parameters_(ptr->has_optional_parameters_),
+      has_rest_parameter_(ptr->has_rest_parameter_)
+    { }
+    ATTACH_AST_OPERATIONS(Parameters)
     ATTACH_OPERATIONS()
   };
 
@@ -1957,6 +2285,15 @@ namespace Sass {
       media_block_(0),
       hash_(0)
     { concrete_type(SELECTOR); }
+    Selector_Ref(const Selector_Ref* ptr)
+    : Expression_Ref(ptr),
+      // has_reference_(ptr->has_reference_),
+      has_line_feed_(ptr->has_line_feed_),
+      has_line_break_(ptr->has_line_break_),
+      is_optional_(ptr->is_optional_),
+      media_block_(ptr->media_block_),
+      hash_(ptr->hash_)
+    { concrete_type(SELECTOR); }
     virtual ~Selector_Ref() = 0;
     virtual size_t hash() = 0;
     virtual unsigned long specificity() {
@@ -1977,7 +2314,9 @@ namespace Sass {
     virtual bool has_real_parent_ref() {
       return false;
     }
-    virtual Selector_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    virtual Selector_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual Selector_Ptr copy2(Memory_Manager& mem, std::string file, int line) const = 0;
+    virtual Selector_Ptr clone2(Memory_Manager& mem, std::string file, int line) const = 0;
   };
   inline Selector_Ref::~Selector_Ref() { }
 
@@ -1992,6 +2331,11 @@ namespace Sass {
     Selector_Schema_Ref(ParserState pstate, String_Obj c)
     : Selector_Ref(pstate), contents_(c), at_root_(false)
     { }
+    Selector_Schema_Ref(const Selector_Schema_Ref* ptr)
+    : Selector_Ref(ptr),
+      contents_(ptr->contents_),
+      at_root_(ptr->at_root_)
+    { }
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
     virtual size_t hash() {
@@ -2000,7 +2344,7 @@ namespace Sass {
       }
       return hash_;
     }
-    virtual Selector_Schema_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Selector_Schema)
     ATTACH_OPERATIONS()
   };
 
@@ -2023,6 +2367,12 @@ namespace Sass {
         name_ = n.substr(pos + 1);
       }
     }
+    Simple_Selector_Ref(const Simple_Selector_Ref* ptr)
+    : Selector_Ref(ptr),
+      ns_(ptr->ns_),
+      name_(ptr->name_),
+      has_ns_(ptr->has_ns_)
+    { }
     virtual bool unique() const
     {
       return false;
@@ -2084,7 +2434,9 @@ namespace Sass {
 
     bool operator<(const Simple_Selector_Ref& rhs) const;
     // default implementation should work for most of the simple selectors (otherwise overload)
-    virtual Simple_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false) = 0;
+    virtual Simple_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false) const = 0;
+    virtual Simple_Selector_Ptr copy2(Memory_Manager& mem, std::string file = __FILE__, int line = __LINE__) const = 0;
+    virtual Simple_Selector_Ptr clone2(Memory_Manager& mem, std::string file = __FILE__, int line = __LINE__) const = 0;
     ATTACH_OPERATIONS();
   };
   inline Simple_Selector_Ref::~Simple_Selector_Ref() { }
@@ -2102,6 +2454,9 @@ namespace Sass {
     Parent_Selector_Ref(ParserState pstate, bool r = true)
     : Simple_Selector_Ref(pstate, "&"), real_(r)
     { /* has_reference(true); */ }
+    Parent_Selector_Ref(const Parent_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr), real_(ptr->real_)
+    { /* has_reference(true); */ }
     bool is_real_parent_ref() { return real(); };
     virtual bool has_parent_ref() { return true; };
     virtual bool has_real_parent_ref() { return is_real_parent_ref(); };
@@ -2111,7 +2466,7 @@ namespace Sass {
     }
     std::string type() { return "selector"; }
     static std::string type_name() { return "selector"; }
-    virtual Parent_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Parent_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2123,6 +2478,9 @@ namespace Sass {
     Placeholder_Selector_Ref(ParserState pstate, std::string n)
     : Simple_Selector_Ref(pstate, n)
     { }
+    Placeholder_Selector_Ref(const Placeholder_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr)
+    { }
     virtual unsigned long specificity()
     {
       return Constants::Specificity_Base;
@@ -2131,7 +2489,7 @@ namespace Sass {
       return true;
     }
     virtual ~Placeholder_Selector_Ref() {};
-    virtual Placeholder_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Placeholder_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2143,6 +2501,9 @@ namespace Sass {
     Element_Selector_Ref(ParserState pstate, std::string n)
     : Simple_Selector_Ref(pstate, n)
     { }
+    Element_Selector_Ref(const Element_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr)
+    { }
     virtual unsigned long specificity()
     {
       if (name() == "*") return 0;
@@ -2150,7 +2511,7 @@ namespace Sass {
     }
     virtual Simple_Selector_Ptr unify_with(Simple_Selector_Ptr, Context&);
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
-    virtual Element_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Element_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2162,6 +2523,9 @@ namespace Sass {
     Class_Selector_Ref(ParserState pstate, std::string n)
     : Simple_Selector_Ref(pstate, n)
     { }
+    Class_Selector_Ref(const Class_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr)
+    { }
     virtual bool unique() const
     {
       return false;
@@ -2171,7 +2535,7 @@ namespace Sass {
       return Constants::Specificity_Class;
     }
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
-    virtual Class_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Class_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2183,6 +2547,9 @@ namespace Sass {
     Id_Selector_Ref(ParserState pstate, std::string n)
     : Simple_Selector_Ref(pstate, n)
     { }
+    Id_Selector_Ref(const Id_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr)
+    { }
     virtual bool unique() const
     {
       return true;
@@ -2192,7 +2559,7 @@ namespace Sass {
       return Constants::Specificity_ID;
     }
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
-    virtual Id_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Id_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2206,6 +2573,11 @@ namespace Sass {
   public:
     Attribute_Selector_Ref(ParserState pstate, std::string n, std::string m, String_Obj v)
     : Simple_Selector_Ref(pstate, n), matcher_(m), value_(v)
+    { }
+    Attribute_Selector_Ref(const Attribute_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr),
+      matcher_(ptr->matcher_),
+      value_(ptr->value_)
     { }
     virtual size_t hash()
     {
@@ -2224,7 +2596,7 @@ namespace Sass {
     bool operator==(const Attribute_Selector_Ref& rhs) const;
     bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Attribute_Selector_Ref& rhs) const;
-    virtual Attribute_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Attribute_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2249,6 +2621,9 @@ namespace Sass {
   public:
     Pseudo_Selector_Ref(ParserState pstate, std::string n, String_Obj expr = 0)
     : Simple_Selector_Ref(pstate, n), expression_(expr)
+    { }
+    Pseudo_Selector_Ref(const Pseudo_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr), expression_(ptr->expression_)
     { }
 
     // A pseudo-class always consists of a "colon" (:) followed by the name
@@ -2291,7 +2666,7 @@ namespace Sass {
     bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Pseudo_Selector_Ref& rhs) const;
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr, Context&);
-    virtual Pseudo_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    ATTACH_AST_OPERATIONS(Pseudo_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2303,6 +2678,9 @@ namespace Sass {
   public:
     Wrapped_Selector_Ref(ParserState pstate, std::string n, Selector_Obj sel)
     : Simple_Selector_Ref(pstate, n), selector_(sel)
+    { }
+    Wrapped_Selector_Ref(const Wrapped_Selector_Ref* ptr)
+    : Simple_Selector_Ref(ptr), selector_(ptr->selector_)
     { }
     virtual bool is_superselector_of(Wrapped_Selector_Obj sub);
     // Selectors inside the negation pseudo-class are counted like any
@@ -2337,19 +2715,20 @@ namespace Sass {
     bool operator==(const Wrapped_Selector_Ref& rhs) const;
     bool operator<(const Simple_Selector_Ref& rhs) const;
     bool operator<(const Wrapped_Selector_Ref& rhs) const;
-    virtual Wrapped_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    virtual void cloneChildren(Memory_Manager& mem, std::string file, int line);
+    ATTACH_AST_OPERATIONS(Wrapped_Selector)
     ATTACH_OPERATIONS()
   };
 
   struct Complex_Selector_Pointer_Compare {
-    bool operator() (Complex_Selector_Ptr_Const const pLeft, Complex_Selector_Ptr_Const const pRight) const;
+    bool operator() (const Complex_Selector_Obj& pLeft, const Complex_Selector_Obj& pRight) const;
   };
 
   ////////////////////////////////////////////////////////////////////////////
   // Simple selector sequences. Maintains flags indicating whether it contains
   // any parent references or placeholders, to simplify expansion.
   ////////////////////////////////////////////////////////////////////////////
-  typedef std::set<Complex_Selector_Ptr, Complex_Selector_Pointer_Compare> SourcesSet;
+  typedef std::set<Complex_Selector_Obj, Complex_Selector_Pointer_Compare> SourcesSet;
   class Compound_Selector_Ref : public Selector_Ref, public Vectorized<Simple_Selector_Obj> {
   private:
     SourcesSet sources_;
@@ -2367,6 +2746,12 @@ namespace Sass {
       Vectorized<Simple_Selector_Obj>(s),
       extended_(false),
       has_parent_reference_(false)
+    { }
+    Compound_Selector_Ref(const Compound_Selector_Ref* ptr)
+    : Selector_Ref(ptr),
+      Vectorized<Simple_Selector_Obj>(*ptr),
+      extended_(ptr->extended_),
+      has_parent_reference_(ptr->has_parent_reference_)
     { }
     bool contains_placeholder() {
       for (size_t i = 0, L = length(); i < L; ++i) {
@@ -2452,10 +2837,9 @@ namespace Sass {
     void clearSources() { sources_.clear(); }
     void mergeSources(SourcesSet& sources, Context& ctx);
 
-    Compound_Selector_Ptr klone(Context&) const; // does not clone the Simple_Selectors
-
     Compound_Selector_Ptr minus(Compound_Selector_Ptr rhs, Context& ctx);
-    virtual Compound_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    virtual void cloneChildren(Memory_Manager& mem, std::string file, int line);
+    ATTACH_AST_OPERATIONS(Compound_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2487,10 +2871,13 @@ namespace Sass {
       combinator_(c),
       head_(h), tail_(t),
       reference_(r)
-    {
-      // if ((h && h->has_reference())   || (t && t->has_reference()))   has_reference(true);
-      // if ((h && h->has_placeholder()) || (t && t->has_placeholder())) has_placeholder(true);
-    }
+    {}
+    Complex_Selector_Ref(const Complex_Selector_Ref* ptr)
+    : Selector_Ref(ptr),
+      combinator_(ptr->combinator_),
+      head_(ptr->head_), tail_(ptr->tail_),
+      reference_(ptr->reference_)
+    {};
     virtual bool has_parent_ref();
     virtual bool has_real_parent_ref();
 
@@ -2620,10 +3007,9 @@ namespace Sass {
         pIter = &pIter->tail();
       }
     }
-    Complex_Selector_Ptr klone(Context&) const;      // does not clone Compound_Selector_Ptrs
-    Complex_Selector_Ptr cloneFully(Context&) const; // clones Compound_Selector_Ptrs
-    // std::vector<Compound_Selector_Ptr> to_vector();
-    virtual Complex_Selector_Ptr copy(Memory_Manager& mem, bool recursive = false);
+
+    virtual void cloneChildren(Memory_Manager& mem, std::string file, int line);
+    ATTACH_AST_OPERATIONS(Complex_Selector)
     ATTACH_OPERATIONS()
   };
 
@@ -2640,6 +3026,11 @@ namespace Sass {
   public:
     Selector_List_Ref(ParserState pstate, size_t s = 0)
     : Selector_Ref(pstate), Vectorized<Complex_Selector_Obj>(s), wspace_(0)
+    { }
+    Selector_List_Ref(const Selector_List_Ref* ptr)
+    : Selector_Ref(ptr),
+      Vectorized<Complex_Selector_Obj>(*ptr),
+      wspace_(ptr->wspace_)
     { }
     std::string type() { return "list"; }
     // remove parent selector references
@@ -2690,13 +3081,12 @@ namespace Sass {
       }
       return false;
     }
-    Selector_List_Ptr klone(Context&) const;      // does not clone Compound_Selector_Ptrs
-    Selector_List_Ptr cloneFully(Context&) const; // clones Compound_Selector_Ptrs
     virtual bool operator==(const Selector_Ref& rhs) const;
     virtual bool operator==(const Selector_List& rhs) const;
     // Selector Lists can be compared to comma lists
     virtual bool operator==(const Expression& rhs) const;
-    virtual Selector_List_Ptr copy(Memory_Manager& mem, bool recursive = false);
+    virtual void cloneChildren(Memory_Manager& mem, std::string file, int line);
+    ATTACH_AST_OPERATIONS(Selector_List)
     ATTACH_OPERATIONS()
   };
 

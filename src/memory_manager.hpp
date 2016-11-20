@@ -50,4 +50,10 @@ namespace Sass {
 #define SASS_MEMORY_CAST_PTR(Class, ptr)   \
   (dynamic_cast<Class##_Ptr>(ptr))   \
 
+#define SASS_MEMORY_COPY(mgr, Class, obj)   \
+  (obj->copy2(mgr, __FILE__, __LINE__))   \
+
+#define SASS_MEMORY_CLONE(mgr, Class, obj)   \
+  (obj->clone2(mgr, __FILE__, __LINE__))   \
+
 #endif

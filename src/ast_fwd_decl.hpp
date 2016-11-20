@@ -26,6 +26,7 @@ namespace Sass {
     static bool taint;
     long refcounter;
     long refcount;
+    bool keep;
     bool dbg;
   public:
 #ifdef MEMDBG
@@ -40,6 +41,9 @@ namespace Sass {
     }
     void setDbg(bool val) {
       this->dbg = val;
+    }
+    void setKeep(bool val) {
+      this->keep = val;
     }
     static void setTaint(bool val) {
       taint = val;
@@ -474,7 +478,6 @@ namespace Sass {
   class Context;
   class Expand;
   class Eval;
-
 
   // declare classes that are instances of memory nodes
   // #define IMPL_MEM_OBJ(type) using type##_Obj = Memory_Node<type##_Ref>

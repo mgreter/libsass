@@ -59,7 +59,6 @@ namespace Sass {
     Statement_Ptr bubble(At_Root_Block_Ptr);
     Statement_Ptr bubble(Media_Block_Ptr);
     Statement_Ptr bubble(Supports_Block_Ptr);
-    Statement_Ptr shallow_copy(Statement_Ptr);
 
     Block_Ptr debubble(Block_Ptr children, Statement_Ptr parent = 0);
     Block_Ptr flatten(Block_Ptr);

@@ -29,6 +29,7 @@ namespace Sass {
   Memory_Object::Memory_Object() {
     if (DBG && taint) std::cerr << "Create " << this << "\n";
       dbg = false;
+      keep = false;
       refcount = 0;
       refcounter = 0;
   #ifdef MEMDBG
@@ -56,7 +57,7 @@ namespace Sass {
         if (this->node->dbg) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) debug_ast(ptr, "DELETE: ");
-        if (MEM) delete(node);
+        if (MEM && !node->keep) delete(node);
       }
     }
   }
@@ -68,7 +69,9 @@ namespace Sass {
         // this->node->all.push_back(&*this->node);
       }
       this->node->refcounter += 1;
-      if (this->node->dbg)  std::cerr << "+ " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
+      if (this->node->dbg) {
+        std::cerr << "+ " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
+      }
     }
   }
 
