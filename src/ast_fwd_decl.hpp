@@ -14,13 +14,13 @@ namespace Sass {
 #define MEM true
 // #define MEMDBG
 
-  class Memory_Ptr;
+  class SharedPtr;
 
-  class Memory_Object {
+  class SharedObject {
   protected:
-  friend class Memory_Ptr;
+  friend class SharedPtr;
   friend class Memory_Manager;
-    static std::vector<Memory_Object*> all;
+    static std::vector<SharedObject*> all;
     std::string allocated;
     size_t line;
     static bool taint;
@@ -32,7 +32,7 @@ namespace Sass {
 #ifdef MEMDBG
     static void debugEnd();
 #endif
-    Memory_Object();
+    SharedObject();
     std::string getAllocation() {
       return allocated;
     }
@@ -48,43 +48,43 @@ namespace Sass {
     static void setTaint(bool val) {
       taint = val;
     }
-    virtual ~Memory_Object();
+    virtual ~SharedObject();
     long getRefCount() {
       return refcounter;
     }
   };
 
 
-  class Memory_Ptr {
+  class SharedPtr {
   private:
-    Memory_Object* node;
+    SharedObject* node;
   private:
     void decRefCount(std::string event);
     void incRefCount(std::string event);
   public:
     // the empty constructor
-    Memory_Ptr()
+    SharedPtr()
     : node(NULL) {};
     // the create constructor
-    Memory_Ptr(Memory_Object* ptr);
+    SharedPtr(SharedObject* ptr);
     // copy assignment operator
-    Memory_Ptr& operator=(const Memory_Ptr& rhs);
+    SharedPtr& operator=(const SharedPtr& rhs);
     // move assignment operator
-    Memory_Ptr& operator=(Memory_Ptr&& rhs);
+    SharedPtr& operator=(SharedPtr&& rhs);
     // the copy constructor
-    Memory_Ptr(const Memory_Ptr& obj);
+    SharedPtr(const SharedPtr& obj);
     // the move constructor
-    // Memory_Ptr(Memory_Ptr&& obj);
+    // SharedPtr(SharedPtr&& obj);
     // destructor
-    ~Memory_Ptr();
+    ~SharedPtr();
   public:
-    Memory_Object* obj () {
+    SharedObject* obj () {
       return node;
     };
-    Memory_Object* obj () const {
+    SharedObject* obj () const {
       return node;
     };
-    Memory_Object* operator-> () {
+    SharedObject* operator-> () {
       return node;
     };
     bool isNull () {
@@ -103,16 +103,16 @@ namespace Sass {
   };
 
   template < typename T >
-  class Memory_Node : private Memory_Ptr {
+  class Memory_Node : private SharedPtr {
   public:
     Memory_Node()
-    : Memory_Ptr(NULL) {};
+    : SharedPtr(NULL) {};
     Memory_Node(T* node)
-    : Memory_Ptr(node) {};
+    : SharedPtr(node) {};
     Memory_Node(T&& node)
-    : Memory_Ptr(node) {};
+    : SharedPtr(node) {};
     Memory_Node(const T& node)
-    : Memory_Ptr(node) {};
+    : SharedPtr(node) {};
     ~Memory_Node() {};
   public:
     T* operator& () {
