@@ -654,7 +654,7 @@ namespace Sass {
     Definition_Obj dd = SASS_MEMORY_NEW(ctx.mem, Definition, *d);
     env->local_frame()[d->name() +
                         (d->type() == Definition::MIXIN ? "[m]" : "[f]")] = &dd;
-/*
+
     if (d->type() == Definition::FUNCTION && (
       Prelexer::calc_fn_call(d->name().c_str()) ||
       d->name() == "element"    ||
@@ -667,7 +667,6 @@ namespace Sass {
          d->pstate()
       );
     }
-*/
 
     // set the static link so we can have lexical scoping
     dd->environment(env);
