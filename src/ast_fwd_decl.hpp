@@ -12,7 +12,7 @@ namespace Sass {
 
 #define DBG false
 #define MEM true
-// #define MEMDBG
+// #define DEBUG_SHARED_PTR
 
   class SharedPtr;
 
@@ -29,7 +29,7 @@ namespace Sass {
     bool keep;
     bool dbg;
   public:
-#ifdef MEMDBG
+#ifdef DEBUG_SHARED_PTR
     static void debugEnd();
 #endif
     SharedObject();

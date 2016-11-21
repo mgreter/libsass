@@ -612,7 +612,7 @@ extern "C" {
     ctx->error_file = 0;
     ctx->included_files = 0;
     // debug leaked memory
-    #ifdef MEMDBG
+    #ifdef DEBUG_SHARED_PTR
     if (MEM) SharedObject::debugEnd();
     #endif
     // now clear the options

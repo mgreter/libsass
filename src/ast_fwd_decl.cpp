@@ -7,7 +7,7 @@
 
 namespace Sass {
 
-  #ifdef MEMDBG
+  #ifdef DEBUG_SHARED_PTR
   void SharedObject::debugEnd() {
     if (!all.empty()) {
       std::cerr << "###################################\n";
@@ -32,14 +32,14 @@ namespace Sass {
       keep = false;
       refcount = 0;
       refcounter = 0;
-  #ifdef MEMDBG
+  #ifdef DEBUG_SHARED_PTR
       if (taint) all.push_back(this);
   #endif
       std::vector<void*> parents;
     };
     SharedObject::~SharedObject() {
       if (dbg) std::cerr << "DEstruCT " << this << "\n";
-  #ifdef MEMDBG
+  #ifdef DEBUG_SHARED_PTR
       if(!all.empty()) { // check needed for MSVC (no clue why?)
         all.erase(std::remove(all.begin(), all.end(), this), all.end());
       }
