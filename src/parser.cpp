@@ -605,7 +605,7 @@ namespace Sass {
       call->oblock(parse_block());
     }
     // return ast node
-    return call->copy2(ctx.mem, __FILE__, __LINE__);
+    return call.survive();
   }
   // EO parse_include_directive
 
@@ -631,7 +631,7 @@ if (DBG) std::cerr << "SEL LIST\n";
       // now parse the complex selector
       sel = parse_complex_selector(in_root);
 
-      if (!sel) return group->copy2(ctx.mem, __FILE__, __LINE__);
+      if (!sel) return group.survive();
 
       sel->has_line_feed(had_linefeed);
 
@@ -656,7 +656,7 @@ if (DBG) std::cerr << "SEL LIST END\n";
     // update for end position
     group->update_pstate(pstate);
     if (sel) sel->last()->has_line_break(false);
-    return group->copy2(ctx.mem, __FILE__, __LINE__);
+    return group.survive();
   }
   // EO parse_selector_list
 
@@ -1808,7 +1808,7 @@ if (DBG) std::cerr << "complex 2\n";
         break;
       }
     }
-    return schema ? schema->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return schema ? schema.survive() : 0;
   }
 
   // calc functions should preserve arguments
@@ -2016,7 +2016,7 @@ if (DBG) std::cerr << "complex 2\n";
     // return ast node
     stack.pop_back();
     // return ast node
-    return call->copy2(ctx.mem, __FILE__, __LINE__);
+    return call.survive();
   }
 
   // EO parse_while_directive
@@ -2032,7 +2032,7 @@ if (DBG) std::cerr << "complex 2\n";
     media_block->oblock(parse_css_block());
     last_media_block = &prev_media_block;
     stack.pop_back();
-    return media_block->copy2(ctx.mem, __FILE__, __LINE__);
+    return media_block.survive();
   }
 
   List_Obj Parser::parse_media_queries()
@@ -2042,7 +2042,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (!peek_css < exactly <'{'> >()) queries->append(&parse_media_query());
     while (lex_css < exactly <','> >()) queries->append(&parse_media_query());
     queries->update_pstate(pstate);
-    return queries->copy2(ctx.mem, __FILE__, __LINE__);;
+    return queries.survive();;
   }
 
   // Expression_Ptr Parser::parse_media_query()
@@ -2414,7 +2414,7 @@ if (DBG) std::cerr << "complex 2\n";
     schema->append(token);
     if (*position == 0) {
       schema->rtrim();
-	  return schema->copy2(ctx.mem, __FILE__, __LINE__);
+	  return schema.survive();
     }
 
     while ((token = &lex_almost_any_value_token())) {
@@ -2425,7 +2425,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     schema->rtrim();
 
-    return schema->copy2(ctx.mem, __FILE__, __LINE__);
+    return schema.survive();
   }
 
   Warning_Obj Parser::parse_warning()

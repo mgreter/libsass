@@ -14,18 +14,18 @@ namespace Sass {
   // In the future, this class may implement a custom allocator.
   /////////////////////////////////////////////////////////////////////////////
   class Memory_Manager {
-    std::vector<SharedObject*> nodes;
+    std::vector<SharedObj*> nodes;
 
   public:
     Memory_Manager(size_t size = 0);
     ~Memory_Manager();
 
-    bool has(SharedObject* np);
-    SharedObject* allocate(size_t size);
-    void deallocate(SharedObject* np);
-    void remove(SharedObject* np);
-    void destroy(SharedObject* np);
-    SharedObject* add(SharedObject* np, std::string file = "", size_t line = std::string::npos);
+    bool has(SharedObj* np);
+    SharedObj* allocate(size_t size);
+    void deallocate(SharedObj* np);
+    void remove(SharedObj* np);
+    void destroy(SharedObj* np);
+    SharedObj* add(SharedObj* np, std::string file = "", size_t line = std::string::npos);
 
   };
 }

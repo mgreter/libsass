@@ -347,8 +347,8 @@ namespace Sass {
   class Eval;
 
   // declare classes that are instances of memory nodes
-  // #define IMPL_MEM_OBJ(type) using type##_Obj = Memory_Node<type##_Ref>
-  #define IMPL_MEM_OBJ(type) typedef Memory_Node<type##_Ref> type##_Obj
+  // #define IMPL_MEM_OBJ(type) using type##_Obj = SharedImpl<type##_Ref>
+  #define IMPL_MEM_OBJ(type) typedef SharedImpl<type##_Ref> type##_Obj
 
   IMPL_MEM_OBJ(AST_Node);
   IMPL_MEM_OBJ(Statement);

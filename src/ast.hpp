@@ -86,7 +86,7 @@ namespace Sass {
   //////////////////////////////////////////////////////////
   // Abstract base class for all abstract syntax tree nodes.
   //////////////////////////////////////////////////////////
-  class AST_Node_Ref : public SharedObject {
+  class AST_Node_Ref : public SharedObj {
     ADD_PROPERTY(ParserState, pstate)
   public:
     AST_Node_Ref(ParserState pstate)

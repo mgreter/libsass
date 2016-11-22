@@ -382,7 +382,7 @@ extern "C" {
 
   Sass_File_Context* ADDCALL sass_make_file_context(const char* input_path)
   {
-    SharedObject::setTaint(true);
+    SharedObj::setTaint(true);
     struct Sass_File_Context* ctx = (struct Sass_File_Context*) calloc(1, sizeof(struct Sass_File_Context));
     if (ctx == 0) { std::cerr << "Error allocating memory for file context" << std::endl; return 0; }
     ctx->type = SASS_CONTEXT_FILE;
@@ -613,7 +613,7 @@ extern "C" {
     ctx->included_files = 0;
     // debug leaked memory
     #ifdef DEBUG_SHARED_PTR
-    if (MEM) SharedObject::debugEnd();
+    if (MEM) SharedObj::debugEnd();
     #endif
     // now clear the options
     sass_clear_options(ctx);

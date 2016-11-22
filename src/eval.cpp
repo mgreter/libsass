@@ -154,7 +154,7 @@ namespace Sass {
       if (alt) rv = alt->perform(this);
     }
     exp.env_stack.pop_back();
-    return rv ? rv->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return rv.survive();
   }
 
   // For does not create a new env scope
@@ -468,7 +468,7 @@ namespace Sass {
     ll->is_interpolant(l->is_interpolant());
     ll->from_selector(l->from_selector());
     ll->is_expanded(true);
-    return ll ? ll->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return ll.survive();
   }
 
   Expression_Ptr Eval::operator()(Map_Ptr m)
@@ -496,7 +496,7 @@ namespace Sass {
     }
 
     mm->is_expanded(true);
-    return mm->copy2(ctx.mem, __FILE__, __LINE__);
+    return mm.survive();
   }
 
   Expression_Ptr Eval::operator()(Binary_Expression_Ptr b_in)
@@ -542,7 +542,7 @@ namespace Sass {
     if (!force && op_type == Sass_OP::DIV && b->is_delayed()) {
       b->right(b->right()->perform(this));
       b->left(b->left()->perform(this));
-      return b->copy2(ctx.mem, __FILE__, __LINE__);
+      return b.survive();
     }
 
     Expression_Obj lhs = b->left();
@@ -571,11 +571,11 @@ namespace Sass {
     Binary_Expression_Obj u3 = b;
     switch (op_type) {
       case Sass_OP::AND: {
-        return *lhs ? b->right()->perform(this) : lhs->copy2(ctx.mem, __FILE__, __LINE__);
+        return *lhs ? b->right()->perform(this) : lhs.survive();
       } break;
 
       case Sass_OP::OR: {
-        return *lhs ? lhs->copy2(ctx.mem, __FILE__, __LINE__) : b->right()->perform(this);
+        return *lhs ? lhs.survive() : b->right()->perform(this);
       } break;
 
       default:
@@ -748,7 +748,7 @@ namespace Sass {
       }
     }
 
-    return rv ? rv->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return rv.survive();
 
   }
 
@@ -938,7 +938,7 @@ namespace Sass {
     result = result->perform(this);
     result->is_interpolant(c->is_interpolant());
     exp.env_stack.pop_back();
-    return result->copy2(ctx.mem, __FILE__, __LINE__);
+    return result.survive();
   }
 
   Expression_Ptr Eval::operator()(Function_Call_Schema_Ptr s)
@@ -1051,7 +1051,7 @@ namespace Sass {
       } break;
     }
     result->is_interpolant(t->is_interpolant());
-    return result->copy2(ctx.mem, __FILE__, __LINE__);
+    return result.survive();
   }
 
   Expression_Ptr Eval::operator()(Color_Ptr c)
@@ -1195,7 +1195,7 @@ namespace Sass {
     if (str->quote_mark()) str->quote_mark('*');
     else if (!is_in_comment) str->value(string_to_output(str->value()));
     str->is_interpolant(s->is_interpolant());
-    return str->copy2(ctx.mem, __FILE__, __LINE__);
+    return str.survive();
   }
 
 
@@ -1208,7 +1208,7 @@ namespace Sass {
       c->is_delayed(true);
       return c;
     }
-    return s; // ->copy2(ctx.mem, __FILE__, __LINE__);
+    return s;
   }
 
   Expression_Ptr Eval::operator()(String_Quoted_Ptr s)
@@ -1287,7 +1287,7 @@ namespace Sass {
     for (size_t i = 0, L = q->length(); i < L; ++i) {
       *qq << static_cast<Media_Query_Expression_Ptr>((*q)[i]->perform(this));
     }
-    return qq->copy2(ctx.mem, __FILE__, __LINE__);
+    return qq.survive();
   }
 
   Expression_Ptr Eval::operator()(Media_Query_Expression_Ptr e)
@@ -1351,7 +1351,7 @@ namespace Sass {
   Expression_Ptr Eval::operator()(Arguments_Ptr a)
   {
     Arguments_Obj aa = SASS_MEMORY_NEW(ctx.mem, Arguments, a->pstate());
-    if (a->length() == 0) return aa->copy2(ctx.mem, __FILE__, __LINE__);
+    if (a->length() == 0) return aa.survive();
     for (size_t i = 0, L = a->length(); i < L; ++i) {
       Expression_Obj rv = (*a)[i]->perform(this);
       Argument_Ptr arg = SASS_MEMORY_CAST(Argument, rv);
@@ -1395,7 +1395,7 @@ namespace Sass {
 
       *aa << SASS_MEMORY_NEW(ctx.mem, Argument, kwarg->pstate(), kwarg, "", false, true);
     }
-    return aa->copy2(ctx.mem, __FILE__, __LINE__);
+    return aa.survive();
   }
 
   Expression_Ptr Eval::operator()(Comment_Ptr c)
@@ -1677,7 +1677,7 @@ namespace Sass {
       }
 
     }
-    return sl->copy2(ctx.mem, __FILE__, __LINE__);
+    return sl.survive();
   }
 
 
@@ -1692,7 +1692,7 @@ namespace Sass {
   {
     String_Obj attr = s->value();
     if (attr) { attr = static_cast<String_Ptr>(attr->perform(this)); }
-    Attribute_Selector_Ptr ss = SASS_MEMORY_NEW(ctx.mem, Attribute_Selector, *s);
+    Attribute_Selector_Ptr ss = s->copy2(ctx.mem, __FILE__, __LINE__);
     ss->value(attr);
     return ss->copy2(ctx.mem, __FILE__, __LINE__);
   }
@@ -1716,7 +1716,7 @@ namespace Sass {
       exp.selector_stack.pop_back();
       Selector_List_Obj rv = operator()(&pr);
       exp.selector_stack.push_back(rv);
-      return rv->copy2(ctx.mem, __FILE__, __LINE__);
+      return rv.survive();
     } else {
       return SASS_MEMORY_NEW(ctx.mem, Null, p->pstate());
     }

@@ -2,13 +2,14 @@
 #include <iostream>
 #include <typeinfo>
 
+#include "SharedPtr.hpp"
 #include "../ast_fwd_decl.hpp"
 #include "../debugger.hpp"
 
 namespace Sass {
 
   #ifdef DEBUG_SHARED_PTR
-  void SharedObject::debugEnd() {
+  void SharedObj::debugEnd() {
     if (!all.empty()) {
       std::cerr << "###################################\n";
       std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
@@ -21,14 +22,13 @@ namespace Sass {
       }
     }
   }
-  std::vector<SharedObject*> SharedObject::all;
+  std::vector<SharedObj*> SharedObj::all;
   #endif
 
-  bool SharedObject::taint = false;
+  bool SharedObj::taint = false;
 
-  SharedObject::SharedObject() {
+  SharedObj::SharedObj() : detached(false), dbg(false) {
     if (DBG && taint) std::cerr << "Create " << this << "\n";
-      dbg = false;
       refcount = 0;
       refcounter = 0;
   #ifdef DEBUG_SHARED_PTR
@@ -36,7 +36,7 @@ namespace Sass {
   #endif
       std::vector<void*> parents;
     };
-    SharedObject::~SharedObject() {
+    SharedObj::~SharedObj() {
       if (dbg) std::cerr << "DEstruCT " << this << "\n";
   #ifdef DEBUG_SHARED_PTR
       if(!all.empty()) { // check needed for MSVC (no clue why?)
@@ -60,7 +60,7 @@ namespace Sass {
         if (DBG) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) debug_ast(ptr, "DELETE: ");
   #endif
-        if (MEM) delete(node);
+        if (MEM && !node->detached) delete(node);
       }
     }
   }
@@ -68,6 +68,7 @@ namespace Sass {
   void SharedPtr::incRefCount(std::string event) {
     if (this->node) {
       this->node->refcounter += 1;
+      this->node->detached = false;
   #ifdef DEBUG_SHARED_PTR
       if (this->node->dbg) {
         std::cerr << "+ " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
@@ -82,7 +83,7 @@ namespace Sass {
 
 
   // the create constructor
-  SharedPtr::SharedPtr(SharedObject* ptr)
+  SharedPtr::SharedPtr(SharedObj* ptr)
   : node(ptr) {
     incRefCount("ctor");
   }

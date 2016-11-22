@@ -1,6 +1,8 @@
 #ifndef SASS_MEMORY_SHARED_PTR_H
 #define SASS_MEMORY_SHARED_PTR_H
 
+#include <vector>
+
 namespace Sass {
 
 #define DBG false
@@ -9,22 +11,23 @@ namespace Sass {
 
   class SharedPtr;
 
-  class SharedObject {
+  class SharedObj {
   protected:
   friend class SharedPtr;
   friend class Memory_Manager;
-    static std::vector<SharedObject*> all;
+    static std::vector<SharedObj*> all;
     std::string allocated;
     size_t line;
     static bool taint;
     long refcounter;
     long refcount;
+    bool detached;
     bool dbg;
   public:
 #ifdef DEBUG_SHARED_PTR
     static void debugEnd();
 #endif
-    SharedObject();
+    SharedObj();
     std::string getAllocation() {
       return allocated;
     }
@@ -39,7 +42,7 @@ namespace Sass {
     static void setTaint(bool val) {
       taint = val;
     }
-    virtual ~SharedObject();
+    virtual ~SharedObj();
     long getRefCount() {
       return refcounter;
     }
@@ -48,7 +51,7 @@ namespace Sass {
 
   class SharedPtr {
   private:
-    SharedObject* node;
+    SharedObj* node;
   private:
     void decRefCount(std::string event);
     void incRefCount(std::string event);
@@ -57,7 +60,7 @@ namespace Sass {
     SharedPtr()
     : node(NULL) {};
     // the create constructor
-    SharedPtr(SharedObject* ptr);
+    SharedPtr(SharedObj* ptr);
     // copy assignment operator
     SharedPtr& operator=(const SharedPtr& rhs);
     // move assignment operator
@@ -69,13 +72,13 @@ namespace Sass {
     // destructor
     ~SharedPtr();
   public:
-    SharedObject* obj () {
+    SharedObj* obj () {
       return node;
     };
-    SharedObject* obj () const {
+    SharedObj* obj () const {
       return node;
     };
-    SharedObject* operator-> () {
+    SharedObj* operator-> () {
       return node;
     };
     bool isNull () {
@@ -83,6 +86,16 @@ namespace Sass {
     };
     bool isNull () const {
       return node == NULL;
+    };
+    SharedObj* detach() {
+      node->detached = true;
+      return node;
+    };
+    SharedObj* detach() const {
+      if (node) {
+        node->detached = true;
+      }
+      return node;
     };
     operator bool() {
       return node != NULL;
@@ -94,17 +107,17 @@ namespace Sass {
   };
 
   template < typename T >
-  class Memory_Node : private SharedPtr {
+  class SharedImpl : private SharedPtr {
   public:
-    Memory_Node()
+    SharedImpl()
     : SharedPtr(NULL) {};
-    Memory_Node(T* node)
+    SharedImpl(T* node)
     : SharedPtr(node) {};
-    Memory_Node(T&& node)
+    SharedImpl(T&& node)
     : SharedPtr(node) {};
-    Memory_Node(const T& node)
+    SharedImpl(const T& node)
     : SharedPtr(node) {};
-    ~Memory_Node() {};
+    ~SharedImpl() {};
   public:
     T* operator& () {
       return static_cast<T*>(this->obj());
@@ -127,6 +140,10 @@ namespace Sass {
     T* ptr () {
       return static_cast<T*>(this->obj());
     };
+    T* survive() {
+      if (this->obj() == NULL) return 0;
+      return static_cast<T*>(this->detach());
+    }
     operator bool() {
       return this->obj() != NULL;
     };
