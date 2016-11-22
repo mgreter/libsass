@@ -7,7 +7,7 @@ namespace Sass {
 
 #define DBG false
 #define MEM true
-#define DEBUG_SHARED_PTR
+// #define DEBUG_SHARED_PTR
 
   class SharedPtr;
 

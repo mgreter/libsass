@@ -76,7 +76,7 @@ namespace Sass {
       val = stm->perform(this);
       if (val) return val;
     }
-    return val ? val->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return val;
   }
 
   Expression_Ptr Eval::operator()(Assignment_Ptr a)
@@ -210,7 +210,7 @@ namespace Sass {
       }
     }
     exp.env_stack.pop_back();
-    return val ? val->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return val;
   }
 
   // Eval does not create a new env scope
@@ -297,7 +297,7 @@ namespace Sass {
       }
     }
     exp.env_stack.pop_back();
-    return val ? val->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return val.survive();
   }
 
   Expression_Ptr Eval::operator()(While_Ptr w)
@@ -311,7 +311,7 @@ namespace Sass {
       Expression_Obj val = body->perform(this);
       if (val) {
         exp.env_stack.pop_back();
-        return val ? val->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+        return val.survive();
       }
       cond = pred->perform(this);
     }
@@ -537,7 +537,7 @@ namespace Sass {
     }
 
     Binary_Expression_Obj unleak2 = b;
-    b = b->copy2(ctx.mem, __FILE__, __LINE__);
+    // b = b->copy2(ctx.mem, __FILE__, __LINE__);
     // don't eval delayed expressions (the '/' when used as a separator)
     if (!force && op_type == Sass_OP::DIV && b->is_delayed()) {
       b->right(b->right()->perform(this));
@@ -793,7 +793,7 @@ namespace Sass {
       return result;
     }
     // unreachable
-    return u->copy2(ctx.mem, __FILE__, __LINE__);
+    return u;
   }
 
   Expression_Ptr Eval::operator()(Function_Call_Ptr c)
@@ -807,7 +807,7 @@ namespace Sass {
     std::string name(Util::normalize_underscores(c->name()));
     std::string full_name(name + "[f]");
     // we make a clone here, need to implement that further
-    Arguments_Obj args = c->arguments()->copy2(ctx.mem, __FILE__, __LINE__);
+    Arguments_Obj args = c->arguments();
 
     Env* env = environment();
     if (!env->has(full_name) || (!c->via_call() && Prelexer::re_special_fun(name.c_str()))) {
@@ -1056,20 +1056,17 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Color_Ptr c)
   {
-    Color_Obj obj = c;
-    return c ? obj->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return c;
   }
 
   Expression_Ptr Eval::operator()(Number_Ptr n)
   {
-    Number_Obj obj = n;
-    return n ? obj->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return n;
   }
 
   Expression_Ptr Eval::operator()(Boolean_Ptr b)
   {
-    Boolean_Obj obj = b;
-    return b ? obj->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return b;
   }
 
   void Eval::interpolation(Context& ctx, std::string& res, Expression_Obj ex, bool into_quotes, bool was_itpl) {
@@ -1316,7 +1313,7 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Null_Ptr n)
   {
-    return n->copy2(ctx.mem, __FILE__, __LINE__);
+    return n;
   }
 
   Expression_Ptr Eval::operator()(Argument_Ptr a)
@@ -1472,12 +1469,12 @@ namespace Sass {
       Number rh(r);
       v->value(ops[op](lv, rh.value() * r.convert_factor(l)));
       // v->normalize();
-      return v->copy2(mem, __FILE__, __LINE__);
+      return v;
 
       v->value(ops[op](lv, tmp.value()));
     }
     v->normalize();
-    return v->copy2(mem, __FILE__, __LINE__);
+    return v;
   }
 
   Value_Ptr Eval::op_number_color(Memory_Manager& mem, enum Sass_OP op, const Number& l, const Color& rh, struct Sass_Inspect_Options opt, ParserState* pstate)
@@ -1694,7 +1691,7 @@ namespace Sass {
     if (attr) { attr = static_cast<String_Ptr>(attr->perform(this)); }
     Attribute_Selector_Ptr ss = s->copy2(ctx.mem, __FILE__, __LINE__);
     ss->value(attr);
-    return ss->copy2(ctx.mem, __FILE__, __LINE__);
+    return ss;
   }
 
   Selector_List_Ptr Eval::operator()(Selector_Schema_Ptr s)

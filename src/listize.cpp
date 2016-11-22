@@ -22,7 +22,7 @@ namespace Sass {
       if (!sel->at(i)) continue;
       l->append(sel->at(i)->perform(this));
     }
-    if (l->length()) return l->copy2(mem, __FILE__, __LINE__);
+    if (l->length()) return l.survive();
     return SASS_MEMORY_NEW(mem, Null, l->pstate());
   }
 
@@ -76,7 +76,7 @@ namespace Sass {
       // else if (tt) *l << static_cast<List_Ptr>(tt);
     }
     if (l->length() == 0) return 0;
-    return l->copy2(mem, __FILE__, __LINE__);
+    return l.survive();
   }
 
   Expression_Ptr Listize::fallback_impl(AST_Node_Ptr n)

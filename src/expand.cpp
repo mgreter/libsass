@@ -91,7 +91,7 @@ namespace Sass {
     this->block_stack.pop_back();
     this->env_stack.pop_back();
     // return copy
-    return bb ? bb->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return bb.survive();
   }
 
   Statement_Ptr Expand::operator()(Ruleset_Ptr r)
@@ -106,7 +106,7 @@ namespace Sass {
         k->selector2(SASS_MEMORY_CAST_PTR(Selector_List, r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
-      return k->copy2(ctx.mem, __FILE__, __LINE__);
+      return k.survive();
     }
 
     // reset when leaving scope
@@ -175,7 +175,7 @@ namespace Sass {
                                        f->pstate(),
                                        SASS_MEMORY_CAST(Supports_Condition, condition),
                                        operator()(&f->oblock()));
-    return ff->copy2(ctx.mem, __FILE__, __LINE__);
+    return ff.survive();
   }
 
   Statement_Ptr Expand::operator()(Media_Block_Ptr m)
@@ -217,7 +217,7 @@ namespace Sass {
                                         a->pstate(),
                                         bb,
                                         SASS_MEMORY_CAST(At_Root_Query, ae));
-    return aa ? aa->copy2(ctx.mem, __FILE__, __LINE__) : 0;
+    return aa.survive();
   }
 
   Statement_Ptr Expand::operator()(Directive_Ptr a)
@@ -339,7 +339,7 @@ namespace Sass {
     }
     // all resources have been dropped for Input_Stubs
     // for ( size_t i = 0, S = imp->incs().size(); i < S; ++i) {}
-    return result->copy2(ctx.mem, __FILE__, __LINE__);
+    return result.survive();
   }
 
   Statement_Ptr Expand::operator()(Import_Stub_Ptr i)
@@ -447,6 +447,7 @@ namespace Sass {
       for (double i = start;
            i < end;
            ++i) {
+        it = it->copy2(ctx.mem, __FILE__, __LINE__);
         it->value(i);
         env.set_local(variable, &it);
         append_block(body);
@@ -456,6 +457,7 @@ namespace Sass {
       for (double i = start;
            i > end;
            --i) {
+        it = it->copy2(ctx.mem, __FILE__, __LINE__);
         it->value(i);
         env.set_local(variable, &it);
         append_block(body);
@@ -728,7 +730,7 @@ namespace Sass {
     backtrace_stack.pop_back();
 
     recursions --;
-    return trace->copy2(ctx.mem, __FILE__, __LINE__);
+    return trace.survive();
   }
 
   Statement_Ptr Expand::operator()(Content_Ptr c)
@@ -752,7 +754,7 @@ namespace Sass {
       selector_stack.pop_back();
     }
 
-    return trace->copy2(ctx.mem, __FILE__, __LINE__);
+    return trace.survive();
   }
 
   // produce an error if something is not implemented

@@ -1159,7 +1159,7 @@ namespace Sass {
           if (*xi < *least) least = xi;
         } else least = xi;
       }
-      return least->copy2(ctx.mem, __FILE__, __LINE__);
+      return least.survive();
     }
 
     Signature max_sig = "max($numbers...)";
@@ -1177,7 +1177,7 @@ namespace Sass {
           if (*greatest < *xi) greatest = xi;
         } else greatest = xi;
       }
-      return greatest->copy2(ctx.mem, __FILE__, __LINE__);
+      return greatest.survive();
     }
 
     Signature random_sig = "random($limit:false)";
@@ -1279,12 +1279,12 @@ namespace Sass {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
         *l << m->keys()[static_cast<unsigned int>(index)];
         *l << m->at(m->keys()[static_cast<unsigned int>(index)]);
-        return l->copy2(ctx.mem, __FILE__, __LINE__);
+        return l.survive();
       }
       else {
         Expression_Obj rv = l->value_at_index(static_cast<int>(index));
         rv->set_delayed(false);
-        return rv->copy2(ctx.mem, __FILE__, __LINE__);
+        return rv.survive();
       }
     }
 
@@ -1364,7 +1364,7 @@ namespace Sass {
       List_Obj result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
       *result += &l1;
       *result += &l2;
-      return result->copy2(ctx.mem, __FILE__, __LINE__);
+      return result.survive();
     }
 
     Signature append_sig = "append($list, $val, $separator: auto)";
@@ -1404,7 +1404,7 @@ namespace Sass {
       } else {
         *result << v;
       }
-      return result->copy2(ctx.mem, __FILE__, __LINE__);
+      return result.survive();
     }
 
     Signature zip_sig = "zip($lists...)";
@@ -1469,7 +1469,7 @@ namespace Sass {
       Expression_Obj v = ARG("$key", Expression);
       try {
         Expression_Obj val = m->at(v); // XXX
-        return val ? val->copy2(ctx.mem, __FILE__, __LINE__) : SASS_MEMORY_NEW(ctx.mem, Null, pstate);
+        return val ? val.survive() : SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       } catch (const std::out_of_range&) {
         return SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       }
@@ -1551,7 +1551,7 @@ namespace Sass {
                  pstate, name),
                  arg->value());
       }
-      return result->copy2(ctx.mem, __FILE__, __LINE__);
+      return result.survive();
     }
 
     //////////////////////////

@@ -2005,7 +2005,7 @@ namespace Sass {
         cur = cur->tail();
       }
     }
-    return pNewSelectors->copy2(ctx.mem, __FILE__, __LINE__);
+    return pNewSelectors.survive();
 
   }
 
