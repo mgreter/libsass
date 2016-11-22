@@ -1856,7 +1856,7 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Complex_Selector_Obj parentSeqClone = (*result)[i]->clone2(ctx.mem, __FILE__, __LINE__);
+            Complex_Selector_Obj parentSeqClone = (*result)[i]->clone2(ctx.mem);
             Complex_Selector_Obj childSeq = (*child)[j];
             Complex_Selector_Obj base = childSeq->tail();
 

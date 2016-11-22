@@ -455,7 +455,7 @@ namespace Sass {
       return lm->perform(this);
     }
     // check if we should expand it
-    if (l->is_expanded()) return l; // ->copy2(ctx.mem, __FILE__, __LINE__);
+    if (l->is_expanded()) return l; // ->copy2(ctx.mem);
     // regular case for unevaluated lists
     List_Obj ll = SASS_MEMORY_NEW(ctx.mem, List,
                                l->pstate(),
@@ -537,7 +537,7 @@ namespace Sass {
     }
 
     Binary_Expression_Obj unleak2 = b;
-    // b = b->copy2(ctx.mem, __FILE__, __LINE__);
+    // b = b->copy2(ctx.mem);
     // don't eval delayed expressions (the '/' when used as a separator)
     if (!force && op_type == Sass_OP::DIV && b->is_delayed()) {
       b->right(b->right()->perform(this));
@@ -1689,7 +1689,7 @@ namespace Sass {
   {
     String_Obj attr = s->value();
     if (attr) { attr = static_cast<String_Ptr>(attr->perform(this)); }
-    Attribute_Selector_Ptr ss = s->copy2(ctx.mem, __FILE__, __LINE__);
+    Attribute_Selector_Ptr ss = s->copy2(ctx.mem);
     ss->value(attr);
     return ss;
   }

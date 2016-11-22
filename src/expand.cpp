@@ -447,7 +447,7 @@ namespace Sass {
       for (double i = start;
            i < end;
            ++i) {
-        it = it->copy2(ctx.mem, __FILE__, __LINE__);
+        it = it->copy2(ctx.mem);
         it->value(i);
         env.set_local(variable, &it);
         append_block(body);
@@ -457,7 +457,7 @@ namespace Sass {
       for (double i = start;
            i > end;
            --i) {
-        it = it->copy2(ctx.mem, __FILE__, __LINE__);
+        it = it->copy2(ctx.mem);
         it->value(i);
         env.set_local(variable, &it);
         append_block(body);

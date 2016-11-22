@@ -15,30 +15,34 @@ namespace Sass {
   protected:
   friend class SharedPtr;
   friend class Memory_Manager;
+#ifdef DEBUG_SHARED_PTR
     static std::vector<SharedObj*> all;
     std::string allocated;
     size_t line;
+#endif
     static bool taint;
     long refcounter;
     long refcount;
     bool detached;
+#ifdef DEBUG_SHARED_PTR
     bool dbg;
+#endif
   public:
 #ifdef DEBUG_SHARED_PTR
     static void debugEnd();
 #endif
     SharedObj();
+#ifdef DEBUG_SHARED_PTR
     std::string getAllocation() {
       return allocated;
     }
     size_t getLine() {
       return line;
     }
-  #ifdef DEBUG_SHARED_PTR
     void setDbg(bool val) {
       this->dbg = val;
     }
-  #endif
+#endif
     static void setTaint(bool val) {
       taint = val;
     }

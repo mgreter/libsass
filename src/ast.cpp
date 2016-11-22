@@ -314,7 +314,7 @@ namespace Sass {
   {
     if (empty()) return rhs;
 //    Compound_Selector_Obj unleak = 0;
-    Compound_Selector_Ptr unified = rhs->copy2(ctx.mem, __FILE__, __LINE__);
+    Compound_Selector_Ptr unified = rhs->copy2(ctx.mem);
     for (size_t i = 0, L = length(); i < L; ++i)
     {
       if (!unified) break;
@@ -1163,10 +1163,10 @@ return rhs;
               for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
                 Complex_Selector_Obj t = (*tails)[n];
                 Complex_Selector_Obj parent = (*parents)[i];
-                Complex_Selector_Obj s = parent->clone2(ctx.mem, __FILE__, __LINE__);
-                Complex_Selector_Obj ss = this->clone2(ctx.mem, __FILE__, __LINE__);
-                ss->tail(t ? t->clone2(ctx.mem, __FILE__, __LINE__) : 0);
-                Compound_Selector_Obj h = head_->copy2(ctx.mem, __FILE__, __LINE__);
+                Complex_Selector_Obj s = parent->clone2(ctx.mem);
+                Complex_Selector_Obj ss = this->clone2(ctx.mem);
+                ss->tail(t ? t->clone2(ctx.mem) : 0);
+                Compound_Selector_Obj h = head_->copy2(ctx.mem);
                 // remove parent selector from sequence
                 if (h->length()) h->erase(h->begin());
                 ss->head(h->length() ? &h : 0);
@@ -1190,15 +1190,15 @@ return rhs;
           else {
             for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
               Complex_Selector_Obj parent = (*parents)[i];
-              Complex_Selector_Obj s = parent->clone2(ctx.mem, __FILE__, __LINE__);
-              Complex_Selector_Obj ss = this->clone2(ctx.mem, __FILE__, __LINE__);
+              Complex_Selector_Obj s = parent->clone2(ctx.mem);
+              Complex_Selector_Obj ss = this->clone2(ctx.mem);
               // this is only if valid if the parent has no trailing op
               // otherwise we cannot append more simple selectors to head
               if (parent->last()->combinator() != ANCESTOR_OF) {
                 throw Exception::InvalidParent(&parent, &ss);
               }
-              ss->tail(tail ? tail->clone2(ctx.mem, __FILE__, __LINE__) : 0);
-              Compound_Selector_Obj h = head_->copy2(ctx.mem, __FILE__, __LINE__);
+              ss->tail(tail ? tail->clone2(ctx.mem) : 0);
+              Compound_Selector_Obj h = head_->copy2(ctx.mem);
               // remove parent selector from sequence
               if (h->length()) h->erase(h->begin());
               ss->head(h->length() ? &h : 0);
@@ -1223,8 +1223,8 @@ return rhs;
         else {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
-              Complex_Selector_Obj cpy = this->clone2(ctx.mem, __FILE__, __LINE__);
-              cpy->tail((*tails)[n]->clone2(ctx.mem, __FILE__, __LINE__));
+              Complex_Selector_Obj cpy = this->clone2(ctx.mem);
+              cpy->tail((*tails)[n]->clone2(ctx.mem));
               cpy->head(SASS_MEMORY_NEW(ctx.mem, Compound_Selector, head->pstate()));
               for (size_t i = 1, L = this->head()->length(); i < L; ++i)
                 *cpy->head() << &(*this->head())[i];
@@ -1234,7 +1234,7 @@ return rhs;
           }
           // have no parent nor tails
           else {
-            Complex_Selector_Obj cpy = this->clone2(ctx.mem, __FILE__, __LINE__);
+            Complex_Selector_Obj cpy = this->clone2(ctx.mem);
             cpy->head(SASS_MEMORY_NEW(ctx.mem, Compound_Selector, head->pstate()));
             for (size_t i = 1, L = this->head()->length(); i < L; ++i)
               *cpy->head() << &(*this->head())[i];
@@ -1273,7 +1273,7 @@ return rhs;
     Selector_List_Ptr rv = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate_);
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector_Obj pr = this->clone2(ctx.mem, __FILE__, __LINE__);
+        Complex_Selector_Obj pr = this->clone2(ctx.mem);
         pr->tail(tails->at(i));
         rv->append(pr);
       }
@@ -1331,29 +1331,29 @@ return rhs;
     { tail()->set_innermost(val, c); }
   }
 
-  void Complex_Selector_Ref::cloneChildren(Memory_Manager& mem, std::string file, int line)
+  void Complex_Selector_Ref::cloneChildren(Memory_Manager& mem)
   {
-    if (head()) head(head()->clone2(mem, file, line));
-    if (tail()) tail(tail()->clone2(mem, file, line));
+    if (head()) head(head()->clone2(mem));
+    if (tail()) tail(tail()->clone2(mem));
   }
 
-  void Compound_Selector_Ref::cloneChildren(Memory_Manager& mem, std::string file, int line)
+  void Compound_Selector_Ref::cloneChildren(Memory_Manager& mem)
   {
     for (size_t i = 0, l = length(); i < l; i++) {
-      at(i) = at(i)->clone2(mem, file, line);
+      at(i) = at(i)->clone2(mem);
     }
   }
 
-  void Selector_List_Ref::cloneChildren(Memory_Manager& mem, std::string file, int line)
+  void Selector_List_Ref::cloneChildren(Memory_Manager& mem)
   {
     for (size_t i = 0, l = length(); i < l; i++) {
-      at(i) = at(i)->clone2(mem, file, line);
+      at(i) = at(i)->clone2(mem);
     }
   }
 
-  void Wrapped_Selector::cloneChildren(Memory_Manager& mem, std::string file, int line)
+  void Wrapped_Selector::cloneChildren(Memory_Manager& mem)
   {
-    selector(selector()->clone2(mem, file, line));
+    selector(selector()->clone2(mem));
   }
 
   // remove parent selector references
@@ -1564,7 +1564,7 @@ return rhs;
   void Compound_Selector_Ref::mergeSources(SourcesSet& sources, Context& ctx)
   {
     for (SourcesSet::iterator iterator = sources.begin(), endIterator = sources.end(); iterator != endIterator; ++iterator) {
-      this->sources_.insert((*iterator)->clone2(ctx.mem, __FILE__, __LINE__));
+      this->sources_.insert((*iterator)->clone2(ctx.mem));
     }
   }
 
@@ -2261,21 +2261,42 @@ return rhs;
   // Copy implementations
   //////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef DEBUG_SHARED_PTR
+
 #define IMPLEMENT_AST_OPERATORS(klass) \
   klass##_Ptr klass##_Ref::copy(Memory_Manager& mem, bool recursive) const { return SASS_MEMORY_NEW(mem, klass, this); } \
-  klass##_Ptr klass##_Ref::copy2(Memory_Manager& mem, std::string file, int line) const { \
+  klass##_Ptr klass##_Ref::copy2(Memory_Manager& mem) const { \
     void* heap = mem.allocate(sizeof(klass)); \
     klass##_Ptr cpy = new (heap) klass(this); \
-    mem.add(cpy, __FILE__, __LINE__); \
+    mem.add(cpy); \
     cpy->allocated = file; \
     cpy->line = line; \
     return cpy; \
   } \
-  klass##_Ptr klass##_Ref::clone2(Memory_Manager& mem, std::string file, int line) const { \
-    klass##_Ptr cpy = copy2(mem, file, line); \
-    cpy->cloneChildren(mem, file, line); \
+  klass##_Ptr klass##_Ref::clone2(Memory_Manager& mem) const { \
+    klass##_Ptr cpy = copy2(mem); \
+    cpy->cloneChildren(mem); \
     return cpy; \
   } \
+
+#else
+
+#define IMPLEMENT_AST_OPERATORS(klass) \
+  klass##_Ptr klass##_Ref::copy(Memory_Manager& mem, bool recursive) const { return SASS_MEMORY_NEW(mem, klass, this); } \
+  klass##_Ptr klass##_Ref::copy2(Memory_Manager& mem) const { \
+    void* heap = mem.allocate(sizeof(klass)); \
+    klass##_Ptr cpy = new (heap) klass(this); \
+    mem.add(cpy); \
+    return cpy; \
+  } \
+  klass##_Ptr klass##_Ref::clone2(Memory_Manager& mem) const { \
+    klass##_Ptr cpy = copy2(mem); \
+    cpy->cloneChildren(mem); \
+    return cpy; \
+  } \
+
+#endif
+
 
 
 

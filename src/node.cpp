@@ -18,7 +18,7 @@ namespace Sass {
   Node Node::createSelector(Complex_Selector_Ptr pSelector, Context& ctx) {
     NodeDequePtr null;
 
-    Complex_Selector_Ptr pStripped = pSelector->copy2(ctx.mem, __FILE__, __LINE__);
+    Complex_Selector_Ptr pStripped = pSelector->copy2(ctx.mem);
     pStripped->tail(NULL);
     pStripped->combinator(Complex_Selector_Ref::ANCESTOR_OF);
 
@@ -60,7 +60,7 @@ namespace Sass {
       }
     }
 
-    Node n(mType, mCombinator, mpSelector ? mpSelector->copy2(ctx.mem, __FILE__, __LINE__) : NULL, pNewCollection);
+    Node n(mType, mCombinator, mpSelector ? mpSelector->copy2(ctx.mem) : NULL, pNewCollection);
     n.got_line_feed = got_line_feed;
     return n;
   }
@@ -251,7 +251,7 @@ namespace Sass {
       Node& child = *childIter;
 
       if (child.isSelector()) {
-        pCurrent->tail(child.selector()->copy2(ctx.mem, __FILE__, __LINE__)); // clone2(ctx.mem, __FILE__, __LINE__));   // JMA - need to clone the selector, because they can end up getting shared across Node collections, and can result in an infinite loop during the call to parentSuperselector()
+        pCurrent->tail(child.selector()->copy2(ctx.mem)); // clone2(ctx.mem));   // JMA - need to clone the selector, because they can end up getting shared across Node collections, and can result in an infinite loop during the call to parentSuperselector()
         // if (child.got_line_feed) pCurrent->has_line_feed(child.got_line_feed);
         pCurrent = &pCurrent->tail();
       } else if (child.isCombinator()) {
@@ -279,7 +279,7 @@ namespace Sass {
     if (toConvert.got_line_feed) pFirst->has_line_feed(toConvert.got_line_feed);
     // pFirst->has_line_feed(pFirst->has_line_feed() || pFirst->tail()->has_line_feed() || toConvert.got_line_feed);
     pFirst->head(fakeHead);
-    return pFirst->copy2(ctx.mem, __FILE__, __LINE__);
+    return pFirst->copy2(ctx.mem);
   }
 
   // A very naive trim function, which removes duplicates in a node

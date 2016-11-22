@@ -282,7 +282,7 @@ namespace Sass {
   Statement_Ptr Cssize::bubble(Directive_Ptr m)
   {
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
-    Has_Block_Obj new_rule = static_cast<Has_Block_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
+    Has_Block_Obj new_rule = static_cast<Has_Block_Ptr>(this->parent()->copy2(ctx.mem));
     new_rule->oblock(bb);
     new_rule->tabs(this->parent()->tabs());
     new_rule->oblock()->concat(&m->oblock());
@@ -303,7 +303,7 @@ namespace Sass {
   Statement_Ptr Cssize::bubble(At_Root_Block_Ptr m)
   {
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, this->parent()->pstate());
-    Has_Block_Obj new_rule = static_cast<Has_Block_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
+    Has_Block_Obj new_rule = static_cast<Has_Block_Ptr>(this->parent()->copy2(ctx.mem));
     new_rule->oblock(bb);
     new_rule->tabs(this->parent()->tabs());
     new_rule->oblock()->concat(&m->oblock());
@@ -320,7 +320,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::bubble(Supports_Block_Ptr m)
   {
-    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
+    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(this->parent()->copy2(ctx.mem));
 
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, parent->oblock()->pstate());
     Ruleset_Ptr new_rule = SASS_MEMORY_NEW(ctx.mem, Ruleset,
@@ -345,7 +345,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::bubble(Media_Block_Ptr m)
   {
-    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(this->parent()->copy2(ctx.mem, __FILE__, __LINE__));
+    Ruleset_Obj parent = static_cast<Ruleset_Ptr>(this->parent()->copy2(ctx.mem));
 
     Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, parent->oblock()->pstate());
     Ruleset_Ptr new_rule = SASS_MEMORY_NEW(ctx.mem, Ruleset,
@@ -432,7 +432,7 @@ namespace Sass {
           previous_parent->oblock()->concat(&slice);
         }
         else {
-          previous_parent = static_cast<Has_Block_Ptr>(parent->copy2(ctx.mem, __FILE__, __LINE__));
+          previous_parent = static_cast<Has_Block_Ptr>(parent->copy2(ctx.mem));
           previous_parent->oblock(slice);
           previous_parent->tabs(parent->tabs());
 

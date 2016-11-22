@@ -51,10 +51,12 @@ inline std::string pstate_source_position(AST_Node_Ptr node)
   Position end(start + node->pstate().offset);
   str << (start.file == std::string::npos ? -1 : start.file)
     << "@[" << start.line << ":" << start.column << "]"
-    << "-[" << end.line << ":" << end.column << "]"
-    << "x" << node->getRefCount() << "";
-  str << " " << node->getAllocation()
+    << "-[" << end.line << ":" << end.column << "]";
+#ifdef DEBUG_SHARED_PTR
+      str << "x" << node->getRefCount() << ""
+      << " " << node->getAllocation()
       << "@" << node->getLine();
+#endif
   return str.str();
 }
 

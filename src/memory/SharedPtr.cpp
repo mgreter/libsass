@@ -27,7 +27,11 @@ namespace Sass {
 
   bool SharedObj::taint = false;
 
-  SharedObj::SharedObj() : detached(false), dbg(false) {
+  SharedObj::SharedObj() : detached(false)
+#ifdef DEBUG_SHARED_PTR
+  , dbg(false)
+#endif
+{
     if (DBG && taint) std::cerr << "Create " << this << "\n";
       refcount = 0;
       refcounter = 0;
@@ -37,8 +41,8 @@ namespace Sass {
       std::vector<void*> parents;
     };
     SharedObj::~SharedObj() {
-      if (dbg) std::cerr << "DEstruCT " << this << "\n";
   #ifdef DEBUG_SHARED_PTR
+      if (dbg) std::cerr << "DEstruCT " << this << "\n";
       if(!all.empty()) { // check needed for MSVC (no clue why?)
         all.erase(std::remove(all.begin(), all.end(), this), all.end());
       }
@@ -54,8 +58,8 @@ namespace Sass {
       if (this->node->dbg)  std::cerr << "- " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
   #endif
       if (this->node->refcounter == 0) {
-        AST_Node_Ptr ptr = SASS_MEMORY_CAST_PTR(AST_Node, this->node);
   #ifdef DEBUG_SHARED_PTR
+        AST_Node_Ptr ptr = SASS_MEMORY_CAST_PTR(AST_Node, this->node);
         if (this->node->dbg) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) debug_ast(ptr, "DELETE: ");

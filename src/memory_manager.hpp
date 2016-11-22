@@ -36,13 +36,13 @@ namespace Sass {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SASS_MEMORY_NEW(mgr, Class, ...)                                                 \
-  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__), __FILE__, __LINE__)))   \
+  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
 
 #define SASS_MEMORY_CREATE(mgr, Class, ...)                                                 \
-  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__), __FILE__, __LINE__)))   \
+  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
 
 #define SASS_MEMORY_OBJ(mgr, Class, ...)                                                 \
-  Class##_Obj(static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__), __FILE__, __LINE__)))   \
+  Class##_Obj(static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
 
 #define SASS_MEMORY_CAST(Class, obj)   \
   (dynamic_cast<Class##_Ptr>(& obj))   \
@@ -51,9 +51,9 @@ namespace Sass {
   (dynamic_cast<Class##_Ptr>(ptr))   \
 
 #define SASS_MEMORY_COPY(mgr, Class, obj)   \
-  (obj->copy2(mgr, __FILE__, __LINE__))   \
+  (obj->copy2(mgr))   \
 
 #define SASS_MEMORY_CLONE(mgr, Class, obj)   \
-  (obj->clone2(mgr, __FILE__, __LINE__))   \
+  (obj->clone2(mgr))   \
 
 #endif

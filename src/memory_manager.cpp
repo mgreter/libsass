@@ -28,8 +28,10 @@ namespace Sass {
   {
     // object has been initialized
     // it can be "deleted" from now on
+#ifdef DEBUG_SHARED_PTR
     np->allocated = file;
     np->line = line;
+#endif
     np->refcounter = 0;
     np->refcount = 1;
     return np;
