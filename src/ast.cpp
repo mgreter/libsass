@@ -1256,7 +1256,7 @@ return rhs;
         }
       }
 
-      return retval->copy2(ctx.mem, __FILE__, __LINE__);
+      return retval.survive();
 
     }
     // has no head

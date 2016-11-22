@@ -67,10 +67,10 @@ namespace Sass {
       if (dd->value() && !dd->value()->is_invisible()) {
         bb->unshift(&dd);
       }
-      return bb->copy2(ctx.mem, __FILE__, __LINE__);
+      return bb.survive();
     }
     else if (dd->value() && !dd->value()->is_invisible()) {
-      return dd->copy2(ctx.mem, __FILE__, __LINE__);
+      return dd.survive();
     }
 
     return 0;

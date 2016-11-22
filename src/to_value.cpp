@@ -66,7 +66,7 @@ namespace Sass {
     for (size_t i = 0, L = l->length(); i < L; ++i) {
       *ll << (*l)[i]->perform(this);
     }
-    return ll->copy2(ctx.mem, __FILE__, __LINE__);
+    return ll.survive();
   }
 
   // Map is a valid value

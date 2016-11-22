@@ -455,7 +455,7 @@ namespace Sass {
       return lm->perform(this);
     }
     // check if we should expand it
-    if (l->is_expanded()) return l->copy2(ctx.mem, __FILE__, __LINE__);
+    if (l->is_expanded()) return l; // ->copy2(ctx.mem, __FILE__, __LINE__);
     // regular case for unevaluated lists
     List_Obj ll = SASS_MEMORY_NEW(ctx.mem, List,
                                l->pstate(),
