@@ -36,13 +36,13 @@ namespace Sass {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SASS_MEMORY_NEW(mgr, Class, ...)                                                 \
-  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+  new Class(__VA_ARGS__)   \
 
 #define SASS_MEMORY_CREATE(mgr, Class, ...)                                                 \
-  (static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+  new Class(__VA_ARGS__)   \
 
 #define SASS_MEMORY_OBJ(mgr, Class, ...)                                                 \
-  Class##_Obj(static_cast<Class*>(mgr.add(new (mgr.allocate(sizeof(Class))) Class(__VA_ARGS__))))   \
+  Class##_Obj(new Class(__VA_ARGS__))   \
 
 #define SASS_MEMORY_CAST(Class, obj)   \
   (dynamic_cast<Class##_Ptr>(& obj))   \

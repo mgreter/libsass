@@ -1385,12 +1385,12 @@ namespace Sass {
       if (m) {
         l = m->to_list(ctx, pstate);
       }
-      List_Obj result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length() + 1, l->separator());
+      List_Ptr result = l->copy2(ctx.mem);
       std::string sep_str(unquote(sep->value()));
       if (sep_str == "space") result->separator(SASS_SPACE);
       else if (sep_str == "comma") result->separator(SASS_COMMA);
       else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
-      *result += &l;
+      // *result += &l;
       bool is_arglist = l->is_arglist();
       result->is_arglist(is_arglist);
       if (is_arglist) {
@@ -1404,7 +1404,9 @@ namespace Sass {
       } else {
         *result << v;
       }
-      return result.survive();
+      return result;
+// return l.survive();
+      // return result.survive();
     }
 
     Signature zip_sig = "zip($lists...)";

@@ -33,7 +33,7 @@ namespace Sass {
     np->line = line;
 #endif
     np->refcounter = 0;
-    np->refcount = 1;
+    // np->refcount = 1;
     return np;
   }
 
@@ -48,7 +48,7 @@ namespace Sass {
     // allocate requested memory
     void* heap = ::operator new(size);
     // init internal refcount status to zero
-    (static_cast<SharedObj*>(heap))->refcount = 0;
+    // (static_cast<SharedObj*>(heap))->refcount = 0;
     // add the memory under our management
     if (!MEM) nodes.push_back(static_cast<SharedObj*>(heap));
     // cast object to its initial type

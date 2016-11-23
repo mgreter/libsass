@@ -32,14 +32,15 @@ namespace Sass {
   , dbg(false)
 #endif
 {
-    if (DBG && taint) std::cerr << "Create " << this << "\n";
-      refcount = 0;
+      // refcount = 0;
       refcounter = 0;
   #ifdef DEBUG_SHARED_PTR
+    if (DBG && taint) std::cerr << "Create " << this << "\n";
       if (taint) all.push_back(this);
-  #endif
       std::vector<void*> parents;
+  #endif
     };
+
     SharedObj::~SharedObj() {
   #ifdef DEBUG_SHARED_PTR
       if (dbg) std::cerr << "DEstruCT " << this << "\n";
@@ -51,7 +52,7 @@ namespace Sass {
 
 
 
-  void SharedPtr::decRefCount(std::string event) {
+  void SharedPtr::decRefCount() {
     if (this->node) {
       this->node->refcounter -= 1;
   #ifdef DEBUG_SHARED_PTR
@@ -69,7 +70,7 @@ namespace Sass {
     }
   }
 
-  void SharedPtr::incRefCount(std::string event) {
+  void SharedPtr::incRefCount() {
     if (this->node) {
       this->node->refcounter += 1;
       this->node->detached = false;
@@ -82,14 +83,14 @@ namespace Sass {
   }
 
   SharedPtr::~SharedPtr() {
-    decRefCount("dtor");
+    decRefCount();
   }
 
 
   // the create constructor
   SharedPtr::SharedPtr(SharedObj* ptr)
   : node(ptr) {
-    incRefCount("ctor");
+    incRefCount();
   }
   // copy assignment operator
   SharedPtr& SharedPtr::operator=(const SharedPtr& rhs) {
@@ -98,9 +99,9 @@ namespace Sass {
     if (cur_ptr == rhs_ptr) {
       return *this;
     }
-    decRefCount("COPY");
+    decRefCount();
     node = rhs.node;
-    incRefCount("COPY");
+    incRefCount();
     return *this;
   }
   // move assignment operator
@@ -110,9 +111,9 @@ namespace Sass {
     if (cur_ptr == rhs_ptr) {
       return *this;
     }
-    decRefCount("MOVE");
+    decRefCount();
     node = rhs.node;
-    incRefCount("MOVE");
+    incRefCount();
     return *this;
   }
 
@@ -120,7 +121,7 @@ namespace Sass {
   // the copy constructor
   SharedPtr::SharedPtr(const SharedPtr& obj)
   : node(obj.node) {
-    incRefCount("copy");
+    incRefCount();
   }
 /*
   // the move constructor

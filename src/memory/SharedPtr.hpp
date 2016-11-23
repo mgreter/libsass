@@ -22,7 +22,7 @@ namespace Sass {
 #endif
     static bool taint;
     long refcounter;
-    long refcount;
+    // long refcount;
     bool detached;
 #ifdef DEBUG_SHARED_PTR
     bool dbg;
@@ -57,8 +57,8 @@ namespace Sass {
   private:
     SharedObj* node;
   private:
-    void decRefCount(std::string event);
-    void incRefCount(std::string event);
+    void decRefCount();
+    void incRefCount();
   public:
     // the empty constructor
     SharedPtr()
