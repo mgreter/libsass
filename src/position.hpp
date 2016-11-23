@@ -16,18 +16,45 @@ namespace Sass {
       Offset(const size_t line, const size_t column);
 
       // return new position, incremented by the given string
-      Offset add(const char* begin, const char* end);
-      Offset inc(const char* begin, const char* end) const;
+      inline Offset add(const char* begin, const char* end) {
+        if (end == 0) return *this;
+        while (begin < end && *begin) {
+          if (*begin == '\n') {
+            ++ line;
+            // start new line
+            column = 0;
+          } else {
+            ++ column;
+          }
+          ++begin;
+        }
+        return *this;
+      }
+      inline Offset inc(const char* begin, const char* end) const {
+        Offset offset(line, column);
+        offset.add(begin, end);
+        return offset;
+      }
 
       // init/create instance from const char substring
       static Offset init(const char* beg, const char* end);
 
     public: // overload operators for position
-      void operator+= (const Offset &pos);
-      bool operator== (const Offset &pos) const;
-      bool operator!= (const Offset &pos) const;
-      Offset operator+ (const Offset &off) const;
-      Offset operator- (const Offset &off) const;
+      inline bool operator== (const Offset &pos) const {
+        return line == pos.line && column == pos.column;
+      }
+      inline bool operator!= (const Offset &pos) const {
+        return line != pos.line || column != pos.column;
+      }
+      inline void operator+= (const Offset &off){
+        *this = Offset(line + off.line, off.line > 0 ? off.column : column + off.column);
+      }
+      inline Offset operator+ (const Offset &off) const {
+        return Offset(line + off.line, off.line > 0 ? off.column : column + off.column);
+      }
+      inline Offset operator- (const Offset &off) const {
+        return Offset(line - off.line, off.line == line ? column - off.column : column);
+      }
 
     public: // overload output stream operator
       // friend std::ostream& operator<<(std::ostream& strm, const Offset& off);
@@ -50,14 +77,33 @@ namespace Sass {
       Position(const size_t file, const size_t line, const size_t column);
 
     public: // overload operators for position
-      void operator+= (const Offset &off);
-      bool operator== (const Position &pos) const;
-      bool operator!= (const Position &pos) const;
-      const Position operator+ (const Offset &off) const;
-      const Offset operator- (const Offset &off) const;
+      inline bool operator== (const Position &pos) const {
+        return file == pos.file && line == pos.line && column == pos.column;
+      };
+      inline bool operator!= (const Position &pos) const {
+        return file == pos.file || line != pos.line || column != pos.column;
+      };
+      inline void operator+= (const Offset &off) {
+        *this = Position(file, line + off.line, off.line > 0 ? off.column : column + off.column);
+      };
+      inline const Position operator+ (const Offset &off) const {
+        return Position(file, line + off.line, off.line > 0 ? off.column : column + off.column);
+      };
+      inline const Offset operator- (const Offset &off) const {
+        return Offset(line - off.line, off.line == line ? column - off.column : column);
+      };
+
       // return new position, incremented by the given string
-      Position add(const char* begin, const char* end);
-      Position inc(const char* begin, const char* end) const;
+      inline Position add(const char* begin, const char* end) {
+        Offset::add(begin, end);
+        return *this;
+      };
+
+      inline Position inc(const char* begin, const char* end) const {
+        Offset offset(line, column);
+        offset = offset.inc(begin, end);
+        return Position(file, offset);
+      };
 
     public: // overload output stream operator
       // friend std::ostream& operator<<(std::ostream& strm, const Position& pos);
@@ -106,9 +152,9 @@ namespace Sass {
       ParserState(const char* path, const char* src, const Token& token, const Position& position, Offset offset = Offset(0, 0));
 
     public: // down casts
-      Offset off() { return *this; }
-      Position pos() { return *this; }
-      ParserState pstate() { return *this; }
+      inline Offset off() { return *this; }
+      inline Position pos() { return *this; }
+      inline ParserState pstate() { return *this; }
 
     public:
       const char* path;

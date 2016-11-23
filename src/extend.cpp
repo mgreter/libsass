@@ -1620,7 +1620,7 @@ namespace Sass {
       // get rid of the last Compound_Selector and replace it with this one. I think the reason this code is more
       // complex is that Complex_Selector contains a combinator, but in ruby combinators have already been filtered
       // out and aren't operated on.
-      Complex_Selector_Obj pNewSelector = pExtComplexSelector->clone2(); // clone verified
+      Complex_Selector_Obj pNewSelector = SASS_MEMORY_CLONE(pExtComplexSelector); // clone verified
 
       Complex_Selector_Obj pNewInnerMost = SASS_MEMORY_NEW(Complex_Selector, pSelector->pstate(), Complex_Selector_Ref::ANCESTOR_OF, pUnifiedSelector, NULL);
 
@@ -2005,7 +2005,7 @@ namespace Sass {
         cur = cur->tail();
       }
     }
-    return pNewSelectors.survive();
+    SASS_MEMORY_RETURN(pNewSelectors);
 
   }
 

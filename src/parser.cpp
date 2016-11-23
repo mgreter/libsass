@@ -386,14 +386,14 @@ namespace Sass {
     else stack.push_back(Scope::Function);
     Block_Obj body = parse_block();
     stack.pop_back();
-    return SASS_MEMORY_OBJ(Definition, source_position_of_def, name, &params, &body, which_type);
+    return SASS_MEMORY_NEW(Definition, source_position_of_def, name, &params, &body, which_type);
   }
 
   Parameters_Obj Parser::parse_parameters()
   {
     std::string name(lexed);
     Position position = after_token;
-    Parameters_Obj params = SASS_MEMORY_OBJ(Parameters, pstate);
+    Parameters_Obj params = SASS_MEMORY_NEW(Parameters, pstate);
     if (lex_css< exactly<'('> >()) {
       // if there's anything there at all
       if (!peek_css< exactly<')'> >()) {
@@ -421,7 +421,7 @@ namespace Sass {
     else if (lex< exactly< ellipsis > >()) {
       is_rest = true;
     }
-    return SASS_MEMORY_OBJ(Parameter, pos, name, &val, is_rest);
+    return SASS_MEMORY_NEW(Parameter, pos, name, &val, is_rest);
   }
 
   Arguments_Obj Parser::parse_arguments()
@@ -503,7 +503,7 @@ namespace Sass {
     // make sure to move up the the last position
     lex < optional_css_whitespace >(false, true);
     // create the connector object (add parts later)
-    Ruleset_Obj ruleset = SASS_MEMORY_OBJ(Ruleset, pstate);
+    Ruleset_Obj ruleset = SASS_MEMORY_NEW(Ruleset, pstate);
     // parse selector static or as schema to be evaluated later
     if (lookahead.parsable) ruleset->selector(&parse_selector_list(is_root));
     else ruleset->selector(&parse_selector_schema(lookahead.found));
@@ -605,7 +605,7 @@ namespace Sass {
       call->oblock(parse_block());
     }
     // return ast node
-    return call.survive();
+    SASS_MEMORY_RETURN(call);
   }
   // EO parse_include_directive
 
@@ -631,7 +631,7 @@ if (DBG) std::cerr << "SEL LIST\n";
       // now parse the complex selector
       sel = parse_complex_selector(in_root);
 
-      if (!sel) return group.survive();
+      if (!sel) SASS_MEMORY_RETURN(group);
 
       sel->has_line_feed(had_linefeed);
 
@@ -656,7 +656,7 @@ if (DBG) std::cerr << "SEL LIST END\n";
     // update for end position
     group->update_pstate(pstate);
     if (sel) sel->last()->has_line_break(false);
-    return group.survive();
+    SASS_MEMORY_RETURN(group);
   }
   // EO parse_selector_list
 
@@ -2016,7 +2016,7 @@ if (DBG) std::cerr << "complex 2\n";
     // return ast node
     stack.pop_back();
     // return ast node
-    return call.survive();
+    SASS_MEMORY_RETURN(call);
   }
 
   // EO parse_while_directive
@@ -2032,7 +2032,7 @@ if (DBG) std::cerr << "complex 2\n";
     media_block->oblock(parse_css_block());
     last_media_block = &prev_media_block;
     stack.pop_back();
-    return media_block.survive();
+    SASS_MEMORY_RETURN(media_block);
   }
 
   List_Obj Parser::parse_media_queries()
@@ -2042,14 +2042,14 @@ if (DBG) std::cerr << "complex 2\n";
     if (!peek_css < exactly <'{'> >()) queries->append(&parse_media_query());
     while (lex_css < exactly <','> >()) queries->append(&parse_media_query());
     queries->update_pstate(pstate);
-    return queries.survive();;
+    SASS_MEMORY_RETURN(queries);;
   }
 
   // Expression_Ptr Parser::parse_media_query()
   Media_Query_Obj Parser::parse_media_query()
   {
     advanceToNextToken();
-    Media_Query_Obj media_query = SASS_MEMORY_OBJ(Media_Query, pstate);
+    Media_Query_Obj media_query = SASS_MEMORY_NEW(Media_Query, pstate);
     if (lex < kwd_not >()) { media_query->is_negated(true); lex < css_comments >(false); }
     else if (lex < kwd_only >()) { media_query->is_restricted(true); lex < css_comments >(false); }
 
@@ -2061,7 +2061,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (lex < identifier_schema >()) {
       String_Schema_Ptr schema = SASS_MEMORY_NEW(String_Schema, pstate);
       schema->append(&media_query->media_type());
-      schema->append(&SASS_MEMORY_OBJ(String_Constant, pstate, " "));
+      schema->append(SASS_MEMORY_NEW(String_Constant, pstate, " "));
       schema->append(&parse_identifier_schema());
       media_query->media_type(schema);
     }
@@ -2076,7 +2076,7 @@ if (DBG) std::cerr << "complex 2\n";
   {
     if (lex < identifier_schema >()) {
       String_Obj ss = parse_identifier_schema();
-      return SASS_MEMORY_OBJ(Media_Query_Expression, pstate, &ss, 0, true);
+      return SASS_MEMORY_NEW(Media_Query_Expression, pstate, &ss, 0, true);
     }
     if (!lex_css< exactly<'('> >()) {
       error("media query expression must begin with '('", pstate);
@@ -2093,7 +2093,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (!lex_css< exactly<')'> >()) {
       error("unclosed parenthesis in media query expression", pstate);
     }
-    return SASS_MEMORY_OBJ(Media_Query_Expression, feature->pstate(), feature, expression);
+    return SASS_MEMORY_NEW(Media_Query_Expression, feature->pstate(), feature, expression);
   }
 
   // lexed after `kwd_supports_directive`
@@ -2414,7 +2414,7 @@ if (DBG) std::cerr << "complex 2\n";
     schema->append(token);
     if (*position == 0) {
       schema->rtrim();
-	  return schema.survive();
+	  SASS_MEMORY_RETURN(schema);
     }
 
     while ((token = &lex_almost_any_value_token())) {
@@ -2425,7 +2425,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     schema->rtrim();
 
-    return schema.survive();
+    SASS_MEMORY_RETURN(schema);
   }
 
   Warning_Obj Parser::parse_warning()

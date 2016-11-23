@@ -66,7 +66,7 @@ namespace Sass {
     for (size_t i = 0, L = l->length(); i < L; ++i) {
       *ll << (*l)[i]->perform(this);
     }
-    return ll.survive();
+    SASS_MEMORY_RETURN(ll);
   }
 
   // Map is a valid value

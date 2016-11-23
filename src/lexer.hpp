@@ -11,31 +11,95 @@ namespace Sass {
     //####################################
 
     // Match standard control chars
-    const char* kwd_at(const char* src);
-    const char* kwd_dot(const char* src);
-    const char* kwd_comma(const char* src);
-    const char* kwd_colon(const char* src);
-    const char* kwd_star(const char* src);
-    const char* kwd_plus(const char* src);
-    const char* kwd_minus(const char* src);
-    const char* kwd_slash(const char* src);
+    inline const char* kwd_at(const char* src) { return *src == '@' ? src + 1 : 0; }
+    inline const char* kwd_dot(const char* src) { return *src == '.' ? src + 1 : 0; }
+    inline const char* kwd_comma(const char* src) { return *src == ',' ? src + 1 : 0; };
+    inline const char* kwd_colon(const char* src) { return *src == ':' ? src + 1 : 0; };
+    inline const char* kwd_star(const char* src) { return *src == '*' ? src + 1 : 0; };
+    inline const char* kwd_plus(const char* src) { return *src == '+' ? src + 1 : 0; };
+    inline const char* kwd_minus(const char* src) { return *src == '-' ? src + 1 : 0; };
+    inline const char* kwd_slash(const char* src) { return *src == '/' ? src + 1 : 0; };
 
     //####################################
     // BASIC CLASS MATCHERS
     //####################################
 
-    // These are locale independant
-    bool is_space(const char& src);
-    bool is_alpha(const char& src);
-    bool is_punct(const char& src);
-    bool is_digit(const char& src);
-    bool is_alnum(const char& src);
-    bool is_xdigit(const char& src);
-    bool is_unicode(const char& src);
-    bool is_nonascii(const char& src);
-    bool is_character(const char& src);
-    bool is_uri_character(const char& src);
-    bool escapable_character(const char& src);
+    inline bool is_alpha(const char& chr)
+    {
+      return unsigned(chr - 'A') <= 'Z' - 'A' ||
+             unsigned(chr - 'a') <= 'z' - 'a';
+    }
+
+    inline bool is_space(const char& chr)
+    {
+      // adapted the technique from is_alpha
+      return chr == ' ' || unsigned(chr - '\t') <= '\r' - '\t';
+    }
+
+    inline bool is_digit(const char& chr)
+    {
+      // adapted the technique from is_alpha
+      return unsigned(chr - '0') <= '9' - '0';
+    }
+
+    inline bool is_xdigit(const char& chr)
+    {
+      // adapted the technique from is_alpha
+      return unsigned(chr - '0') <= '9' - '0' ||
+             unsigned(chr - 'a') <= 'f' - 'a' ||
+             unsigned(chr - 'A') <= 'F' - 'A';
+    }
+
+    inline bool is_punct(const char& chr)
+    {
+      // locale independent
+      return chr == '.';
+    }
+
+    inline bool is_alnum(const char& chr)
+    {
+      return is_alpha(chr) || is_digit(chr);
+    }
+
+    // check if char is outside ascii range
+    inline bool is_unicode(const char& chr)
+    {
+      // check for unicode range
+      return unsigned(chr) > 127;
+    }
+
+    // check if char is outside ascii range
+    // but with specific ranges (copied from Ruby Sass)
+    inline bool is_nonascii(const char& chr)
+    {
+      return (
+        (unsigned(chr) >= 128 && unsigned(chr) <= 15572911) ||
+        (unsigned(chr) >= 15630464 && unsigned(chr) <= 15712189) ||
+        (unsigned(chr) >= 4036001920)
+      );
+    }
+
+    // check if char is within a reduced ascii range
+    // valid in a uri (copied from Ruby Sass)
+    inline bool is_uri_character(const char& chr)
+    {
+      return (unsigned(chr) > 41 && unsigned(chr) < 127) ||
+             unsigned(chr) == ':' || unsigned(chr) == '/';
+    }
+
+    // check if char is within a reduced ascii range
+    // valid for escaping (copied from Ruby Sass)
+    inline bool is_escapable_character(const char& chr)
+    {
+      return unsigned(chr) > 31 && unsigned(chr) < 127;
+    }
+
+    // Match word character (look ahead)
+    inline bool is_character(const char& chr)
+    {
+      // valid alpha, numeric or unicode char (plus hyphen)
+      return is_alnum(chr) || is_unicode(chr) || chr == '-';
+    }
 
     // Match a single ctype predicate.
     const char* space(const char* src);

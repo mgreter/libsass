@@ -359,9 +359,28 @@ namespace Sass {
     const char* H(const char* src);
     const char* W(const char* src);
     // `UNICODE` makes VS sad
-    const char* UUNICODE(const char* src);
-    const char* NONASCII(const char* src);
-    const char* ESCAPE(const char* src);
+
+    inline const char* UUNICODE(const char* src) {
+      return sequence< exactly<'\\'>,
+                       between<H, 1, 6>,
+                       optional< W >
+                       >(src);
+    }
+    inline const char* NONASCII(const char* src) {
+      return nonascii(src);
+    }
+    inline const char* ESCAPE(const char* src) {
+      return alternatives<
+        UUNICODE,
+        sequence<
+          exactly<'\\'>,
+          alternatives<
+            NONASCII,
+            escapable_character
+          >
+        >
+      >(src);
+    }
     const char* real_uri_suffix(const char* src);
     // const char* real_uri_prefix(const char* src);
     const char* real_uri_value(const char* src);

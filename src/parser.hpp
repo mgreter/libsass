@@ -335,15 +335,15 @@ namespace Sass {
     Expression_Obj lex_interp()
     {
       if (lex < open >(false)) {
-        String_Schema_Obj schema = SASS_MEMORY_OBJ(String_Schema, pstate);
+        String_Schema_Obj schema = SASS_MEMORY_NEW(String_Schema, pstate);
         // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-        schema->append(&SASS_MEMORY_OBJ(String_Constant, pstate, lexed));
+        schema->append(SASS_MEMORY_NEW(String_Constant, pstate, lexed));
         if (position[0] == '#' && position[1] == '{') {
           Expression_Obj itpl = lex_interpolation();
           if (&itpl) schema->append(&itpl);
           while (lex < close >(false)) {
             // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-            schema->append(&SASS_MEMORY_OBJ(String_Constant, pstate, lexed));
+            schema->append(SASS_MEMORY_NEW(String_Constant, pstate, lexed));
             if (position[0] == '#' && position[1] == '{') {
               Expression_Obj itpl = lex_interpolation();
               if (&itpl) schema->append(&itpl);

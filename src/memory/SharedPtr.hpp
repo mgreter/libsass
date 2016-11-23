@@ -15,37 +15,10 @@ namespace Sass {
   protected:
   friend class SharedPtr;
   friend class Memory_Manager;
-#ifdef DEBUG_SHARED_PTR
-    static std::vector<SharedObj*> all;
-    std::string allocated;
-    size_t line;
-#endif
-    static bool taint;
     long refcounter;
-    // long refcount;
     bool detached;
-#ifdef DEBUG_SHARED_PTR
-    bool dbg;
-#endif
   public:
-#ifdef DEBUG_SHARED_PTR
-    static void debugEnd();
-#endif
     SharedObj();
-#ifdef DEBUG_SHARED_PTR
-    std::string getAllocation() {
-      return allocated;
-    }
-    size_t getLine() {
-      return line;
-    }
-    void setDbg(bool val) {
-      this->dbg = val;
-    }
-#endif
-    static void setTaint(bool val) {
-      taint = val;
-    }
     virtual ~SharedObj();
     long getRefCount() {
       return refcounter;
@@ -57,8 +30,8 @@ namespace Sass {
   private:
     SharedObj* node;
   private:
-    void decRefCount();
-    void incRefCount();
+    inline void decRefCount();
+    inline void incRefCount();
   public:
     // the empty constructor
     SharedPtr()
@@ -76,35 +49,35 @@ namespace Sass {
     // destructor
     ~SharedPtr();
   public:
-    SharedObj* obj () {
+    inline SharedObj* obj () {
       return node;
     };
-    SharedObj* obj () const {
+    inline SharedObj* obj () const {
       return node;
     };
-    SharedObj* operator-> () {
+    inline SharedObj* operator-> () {
       return node;
     };
-    bool isNull () {
+    inline bool isNull () {
       return node == NULL;
     };
-    bool isNull () const {
+    inline bool isNull () const {
       return node == NULL;
     };
-    SharedObj* detach() {
+    inline SharedObj* detach() {
       node->detached = true;
       return node;
     };
-    SharedObj* detach() const {
+    inline SharedObj* detach() const {
       if (node) {
         node->detached = true;
       }
       return node;
     };
-    operator bool() {
+    inline operator bool() {
       return node != NULL;
     };
-    operator bool() const {
+    inline operator bool() const {
       return node != NULL;
     };
 
@@ -119,43 +92,60 @@ namespace Sass {
     : SharedPtr(node) {};
     SharedImpl(T&& node)
     : SharedPtr(node) {};
-    SharedImpl(const T& node)
+    inline SharedImpl(const T& node)
     : SharedPtr(node) {};
     ~SharedImpl() {};
   public:
-    T* operator& () {
+    inline T* operator& () {
       return static_cast<T*>(this->obj());
     };
-    T* operator& () const {
+    inline T* operator& () const {
       return static_cast<T*>(this->obj());
     };
-    T& operator* () {
+    inline T& operator* () {
       return *static_cast<T*>(this->obj());
     };
-    T& operator* () const {
+    inline T& operator* () const {
       return *static_cast<T*>(this->obj());
     };
-    T* operator-> () {
+    inline T* operator-> () {
       return static_cast<T*>(this->obj());
     };
-    T* operator-> () const {
+    inline T* operator-> () const {
       return static_cast<T*>(this->obj());
     };
-    T* ptr () {
+    inline T* ptr () {
       return static_cast<T*>(this->obj());
     };
-    T* survive() {
+    inline T* survive() {
       if (this->obj() == NULL) return 0;
       return static_cast<T*>(this->detach());
     }
-    operator bool() {
+    inline operator bool() {
       return this->obj() != NULL;
     };
-    operator bool() const {
+    inline operator bool() const {
       return this->obj() != NULL;
     };
   };
 
 }
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef DEBUG_SHARED_PTR
+  #define SASS_MEMORY_COPY(ptr) ptr->copy2(__FILE__, __LINE__)
+  #define SASS_MEMORY_CLONE(ptr) ptr->clone2(__FILE__, __LINE__)
+  #define SASS_MEMORY_NEW(Class, ...) new Class(__VA_ARGS__, __FILE__, __LINE__)
+#else
+  #define SASS_MEMORY_COPY(ptr) ptr->copy2()
+  #define SASS_MEMORY_CLONE(ptr) ptr->clone2()
+  #define SASS_MEMORY_NEW(Class, ...) new Class(__VA_ARGS__)
+#endif
+
+#define SASS_MEMORY_RETURN(obj) return obj.survive()
+#define SASS_MEMORY_CAST(Class, obj) (dynamic_cast<Class##_Ptr>(&obj))
+#define SASS_MEMORY_CAST_PTR(Class, ptr) (dynamic_cast<Class##_Ptr>(ptr))
 
 #endif

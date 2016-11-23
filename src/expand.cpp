@@ -16,6 +16,7 @@ namespace Sass {
   // simple endless recursion protection
   const unsigned int maxRecursion = 500;
   static unsigned int recursions = 0;
+  static unsigned int blocks = 0;
 
   Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<Selector_List_Obj>* stack)
   : ctx(ctx),
@@ -91,7 +92,7 @@ namespace Sass {
     this->block_stack.pop_back();
     this->env_stack.pop_back();
     // return copy
-    return bb.survive();
+    SASS_MEMORY_RETURN(bb);
   }
 
   Statement_Ptr Expand::operator()(Ruleset_Ptr r)
@@ -106,7 +107,7 @@ namespace Sass {
         k->selector2(SASS_MEMORY_CAST_PTR(Selector_List, r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
-      return k.survive();
+      SASS_MEMORY_RETURN(k);
     }
 
     // reset when leaving scope
@@ -175,7 +176,7 @@ namespace Sass {
                                        f->pstate(),
                                        SASS_MEMORY_CAST(Supports_Condition, condition),
                                        operator()(&f->oblock()));
-    return ff.survive();
+    SASS_MEMORY_RETURN(ff);
   }
 
   Statement_Ptr Expand::operator()(Media_Block_Ptr m)
@@ -217,7 +218,7 @@ namespace Sass {
                                         a->pstate(),
                                         bb,
                                         SASS_MEMORY_CAST(At_Root_Query, ae));
-    return aa.survive();
+    SASS_MEMORY_RETURN(aa);
   }
 
   Statement_Ptr Expand::operator()(Directive_Ptr a)
@@ -339,7 +340,7 @@ namespace Sass {
     }
     // all resources have been dropped for Input_Stubs
     // for ( size_t i = 0, S = imp->incs().size(); i < S; ++i) {}
-    return result.survive();
+    SASS_MEMORY_RETURN(result);
   }
 
   Statement_Ptr Expand::operator()(Import_Stub_Ptr i)
@@ -447,7 +448,7 @@ namespace Sass {
       for (double i = start;
            i < end;
            ++i) {
-        it = it->copy2();
+        it = SASS_MEMORY_COPY(it);
         it->value(i);
         env.set_local(variable, &it);
         append_block(body);
@@ -457,7 +458,7 @@ namespace Sass {
       for (double i = start;
            i > end;
            --i) {
-        it = it->copy2();
+        it = SASS_MEMORY_COPY(it);
         it->value(i);
         env.set_local(variable, &it);
         append_block(body);
@@ -715,7 +716,7 @@ namespace Sass {
 
     bind(std::string("Mixin"), c->name(), params, args, &ctx, &new_env, &eval);
 
-    Block_Obj trace_block = SASS_MEMORY_OBJ(Block, c->pstate());
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), c->name(), trace_block);
 
 
@@ -730,7 +731,7 @@ namespace Sass {
     backtrace_stack.pop_back();
 
     recursions --;
-    return trace.survive();
+    SASS_MEMORY_RETURN(trace);
   }
 
   Statement_Ptr Expand::operator()(Content_Ptr c)
@@ -754,11 +755,11 @@ namespace Sass {
       selector_stack.pop_back();
     }
 
-    return trace.survive();
+    SASS_MEMORY_RETURN(trace);
   }
 
   // produce an error if something is not implemented
-  inline Statement_Ptr Expand::fallback_impl(AST_Node_Ptr n)
+  Statement_Ptr Expand::fallback_impl(AST_Node_Ptr n)
   {
     std::string err =std:: string("`Expand` doesn't handle ") + typeid(*n).name();
     String_Quoted_Obj msg = SASS_MEMORY_NEW(String_Quoted, ParserState("[WARN]"), err);
@@ -767,8 +768,10 @@ namespace Sass {
   }
 
   // process and add to last block on stack
-  inline void Expand::append_block(Block_Ptr b)
+  void Expand::append_block(Block_Ptr b)
   {
+    // blocks++;
+    // std::cerr << "blocks: " << call_stack.size() << "\n";
     if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr stm = &b->at(i);
@@ -776,6 +779,7 @@ namespace Sass {
       if (ith) block_stack.back()->append(ith);
     }
     if (b->is_root()) call_stack.pop_back();
+    // blocks--;
   }
 
 }

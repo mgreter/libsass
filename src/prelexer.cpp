@@ -1393,29 +1393,6 @@ namespace Sass {
       > >(src);
     }
 
-    const char* UUNICODE(const char* src) {
-      return sequence< exactly<'\\'>,
-                       between<H, 1, 6>,
-                       optional< W >
-                       >(src);
-    }
-
-    const char* NONASCII(const char* src) {
-      return nonascii(src);
-    }
-
-    const char* ESCAPE(const char* src) {
-      return alternatives<
-        UUNICODE,
-        sequence<
-          exactly<'\\'>,
-          alternatives<
-            NONASCII,
-            escapable_character
-          >
-        >
-      >(src);
-    }
 
 
     // const char* real_uri_prefix(const char* src) {

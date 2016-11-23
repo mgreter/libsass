@@ -314,7 +314,7 @@ namespace Sass {
   {
     if (empty()) return rhs;
 //    Compound_Selector_Obj unleak = 0;
-    Compound_Selector_Ptr unified = rhs->copy2(); // verified
+    Compound_Selector_Ptr unified = SASS_MEMORY_COPY(rhs); // verified
     for (size_t i = 0, L = length(); i < L; ++i)
     {
       if (!unified) break;
@@ -1163,10 +1163,10 @@ return rhs;
               for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
                 Complex_Selector_Obj t = (*tails)[n];
                 Complex_Selector_Obj parent = (*parents)[i];
-                Complex_Selector_Obj s = parent->clone2(); // verified
-                Complex_Selector_Obj ss = this->copy2(); // verified
-                ss->tail(t ? t->copy2() : 0); // verified
-                Compound_Selector_Obj h = head_->copy2(); // verified
+                Complex_Selector_Obj s = SASS_MEMORY_CLONE(parent); // verified
+                Complex_Selector_Obj ss = SASS_MEMORY_COPY(this); // verified
+                ss->tail(t ? SASS_MEMORY_COPY(t) : 0); // verified
+                Compound_Selector_Obj h = SASS_MEMORY_COPY(head_); // verified
                 // remove parent selector from sequence
                 if (h->length()) h->erase(h->begin());
                 ss->head(h->length() ? &h : 0);
@@ -1190,15 +1190,15 @@ return rhs;
           else {
             for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
               Complex_Selector_Obj parent = (*parents)[i];
-              Complex_Selector_Obj s = parent->clone2(); // verified
-              Complex_Selector_Obj ss = this->copy2(); // verified
+              Complex_Selector_Obj s = SASS_MEMORY_CLONE(parent); // verified
+              Complex_Selector_Obj ss = SASS_MEMORY_COPY(this); // verified
               // this is only if valid if the parent has no trailing op
               // otherwise we cannot append more simple selectors to head
               if (parent->last()->combinator() != ANCESTOR_OF) {
                 throw Exception::InvalidParent(&parent, &ss);
               }
               ss->tail(tail); // seems ok
-              Compound_Selector_Obj h = head_->copy2(); // verified
+              Compound_Selector_Obj h = SASS_MEMORY_COPY(head_); // verified
               // remove parent selector from sequence
               if (h->length()) h->erase(h->begin());
               ss->head(h->length() ? &h : 0);
@@ -1256,7 +1256,7 @@ return rhs;
         }
       }
 
-      return retval.survive();
+      SASS_MEMORY_RETURN(retval);
 
     }
     // has no head
@@ -1273,7 +1273,7 @@ return rhs;
     Selector_List_Ptr rv = SASS_MEMORY_NEW(Selector_List, pstate_);
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector_Obj pr = this->copy2(); // verified
+        Complex_Selector_Obj pr = SASS_MEMORY_COPY(this); // verified
         pr->tail(tails->at(i));
         rv->append(pr);
       }

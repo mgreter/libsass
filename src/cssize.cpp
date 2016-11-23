@@ -67,10 +67,10 @@ namespace Sass {
       if (dd->value() && !dd->value()->is_invisible()) {
         bb->unshift(&dd);
       }
-      return bb.survive();
+      SASS_MEMORY_RETURN(bb);
     }
     else if (dd->value() && !dd->value()->is_invisible()) {
-      return dd.survive();
+      SASS_MEMORY_RETURN(dd);
     }
 
     return 0;
@@ -432,7 +432,7 @@ namespace Sass {
           previous_parent->oblock()->concat(&slice);
         }
         else {
-          previous_parent = static_cast<Has_Block_Ptr>(parent->copy2());
+          previous_parent = static_cast<Has_Block_Ptr>(SASS_MEMORY_COPY(parent));
           previous_parent->oblock(slice);
           previous_parent->tabs(parent->tabs());
 
@@ -512,9 +512,7 @@ namespace Sass {
 		Statement_Obj stm = b->at(i);
       Statement_Obj ith = stm->perform(this);
       if (Block_Ptr bb = SASS_MEMORY_CAST(Block, ith)) {
-        for (size_t j = 0, K = bb->length(); j < K; ++j) {
-          cur->append(bb->at(j));
-        }
+        cur->concat(bb);
       }
       else if (ith) {
         cur->append(ith);

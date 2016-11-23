@@ -30,21 +30,4 @@ namespace Sass {
   };
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Use macros for the allocation task, since overloading operator `new`
-// has been proven to be flaky under certain compilers (see comment below).
-///////////////////////////////////////////////////////////////////////////////
-
-#define SASS_MEMORY_NEW(Class, ...)                                                 \
-  new Class(__VA_ARGS__)   \
-
-#define SASS_MEMORY_OBJ(Class, ...)                                                 \
-  Class##_Obj(new Class(__VA_ARGS__))   \
-
-#define SASS_MEMORY_CAST(Class, obj)   \
-  (dynamic_cast<Class##_Ptr>(& obj))   \
-
-#define SASS_MEMORY_CAST_PTR(Class, ptr)   \
-  (dynamic_cast<Class##_Ptr>(ptr))   \
-
 #endif

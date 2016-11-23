@@ -1159,7 +1159,7 @@ namespace Sass {
           if (*xi < *least) least = xi;
         } else least = xi;
       }
-      return least.survive();
+      SASS_MEMORY_RETURN(least);
     }
 
     Signature max_sig = "max($numbers...)";
@@ -1177,7 +1177,7 @@ namespace Sass {
           if (*greatest < *xi) greatest = xi;
         } else greatest = xi;
       }
-      return greatest.survive();
+      SASS_MEMORY_RETURN(greatest);
     }
 
     Signature random_sig = "random($limit:false)";
@@ -1279,12 +1279,12 @@ namespace Sass {
         l = SASS_MEMORY_NEW(List, pstate, 1);
         *l << m->keys()[static_cast<unsigned int>(index)];
         *l << m->at(m->keys()[static_cast<unsigned int>(index)]);
-        return l.survive();
+        SASS_MEMORY_RETURN(l);
       }
       else {
         Expression_Obj rv = l->value_at_index(static_cast<int>(index));
         rv->set_delayed(false);
-        return rv.survive();
+        SASS_MEMORY_RETURN(rv);
       }
     }
 
@@ -1364,7 +1364,7 @@ namespace Sass {
       List_Obj result = SASS_MEMORY_NEW(List, pstate, len, sep_val);
       *result += &l1;
       *result += &l2;
-      return result.survive();
+      SASS_MEMORY_RETURN(result);
     }
 
     Signature append_sig = "append($list, $val, $separator: auto)";
@@ -1385,7 +1385,7 @@ namespace Sass {
       if (m) {
         l = m->to_list(ctx, pstate);
       }
-      List_Ptr result = l->copy2();
+      List_Ptr result = SASS_MEMORY_COPY(l);
       std::string sep_str(unquote(sep->value()));
       if (sep_str != "auto") { // check default first
         if (sep_str == "space") result->separator(SASS_SPACE);
@@ -1404,8 +1404,8 @@ namespace Sass {
         *result << v;
       }
       return result;
-// return l.survive();
-      // return result.survive();
+// SASS_MEMORY_RETURN(l);
+      // SASS_MEMORY_RETURN(result);
     }
 
     Signature zip_sig = "zip($lists...)";
@@ -1552,7 +1552,7 @@ namespace Sass {
                  pstate, name),
                  arg->value());
       }
-      return result.survive();
+      SASS_MEMORY_RETURN(result);
     }
 
     //////////////////////////

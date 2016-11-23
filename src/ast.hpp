@@ -281,7 +281,11 @@ namespace Sass {
     }
     Vectorized& concat(Vectorized* v)
     {
-      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
+      elements_.insert(
+        elements_.end(),
+        v->begin(),
+        v->end()
+      );
       return *this;
     }
     Vectorized& operator+=(Vectorized* v)
@@ -2372,10 +2376,14 @@ namespace Sass {
     }
     virtual std::string ns_name() const
     {
-      std::string name("");
-      if (has_ns_)
-        name += ns_ + "|";
-      return name + name_;
+      std::string name;
+	  if (has_ns_) {
+	    name.reserve(name_.length() + ns_.length() + 1);
+		name.append(ns_);
+		name.append("|");
+      }
+	  name.append(name_);
+	  return name;
     }
     virtual size_t hash()
     {

@@ -18,7 +18,7 @@ namespace Sass {
   Node Node::createSelector(Complex_Selector_Ptr pSelector, Context& ctx) {
     NodeDequePtr null;
 
-    Complex_Selector_Ptr pStripped = pSelector->copy2();
+    Complex_Selector_Ptr pStripped = SASS_MEMORY_COPY(pSelector);
     pStripped->tail(NULL);
     pStripped->combinator(Complex_Selector_Ref::ANCESTOR_OF);
 
@@ -60,7 +60,7 @@ namespace Sass {
       }
     }
 
-    Node n(mType, mCombinator, mpSelector ? mpSelector->copy2() : NULL, pNewCollection);
+    Node n(mType, mCombinator, mpSelector ? SASS_MEMORY_COPY(mpSelector) : NULL, pNewCollection);
     n.got_line_feed = got_line_feed;
     return n;
   }
@@ -279,7 +279,7 @@ namespace Sass {
     if (toConvert.got_line_feed) pFirst->has_line_feed(toConvert.got_line_feed);
     // pFirst->has_line_feed(pFirst->has_line_feed() || pFirst->tail()->has_line_feed() || toConvert.got_line_feed);
     pFirst->head(fakeHead);
-    return pFirst->copy2();
+    return SASS_MEMORY_COPY(pFirst);
   }
 
   // A very naive trim function, which removes duplicates in a node

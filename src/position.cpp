@@ -33,55 +33,7 @@ namespace Sass {
   // increase offset by given string (mostly called by lexer)
   // increase line counter and count columns on the last line
   // ToDo: make the col count utf8 aware
-  Offset Offset::add(const char* begin, const char* end)
-  {
-    if (end == 0) return *this;
-    while (begin < end && *begin) {
-      if (*begin == '\n') {
-        ++ line;
-        // start new line
-        column = 0;
-      } else {
-        ++ column;
-      }
-      ++begin;
-    }
-    return *this;
-  }
 
-  // increase offset by given string (mostly called by lexer)
-  // increase line counter and count columns on the last line
-  Offset Offset::inc(const char* begin, const char* end) const
-  {
-    Offset offset(line, column);
-    offset.add(begin, end);
-    return offset;
-  }
-
-  bool Offset::operator== (const Offset &pos) const
-  {
-    return line == pos.line && column == pos.column;
-  }
-
-  bool Offset::operator!= (const Offset &pos) const
-  {
-    return line != pos.line || column != pos.column;
-  }
-
-  void Offset::operator+= (const Offset &off)
-  {
-    *this = Offset(line + off.line, off.line > 0 ? off.column : column + off.column);
-  }
-
-  Offset Offset::operator+ (const Offset &off) const
-  {
-    return Offset(line + off.line, off.line > 0 ? off.column : column + off.column);
-  }
-
-  Offset Offset::operator- (const Offset &off) const
-  {
-    return Offset(line - off.line, off.line == line ? column - off.column : column);
-  }
 
   Position::Position(const size_t file)
   : Offset(0, 0), file(file) { }
@@ -105,43 +57,7 @@ namespace Sass {
   ParserState::ParserState(const char* path, const char* src, const Token& token, const Position& position, Offset offset)
   : Position(position), path(path), src(src), offset(offset), token(token) { }
 
-  Position Position::add(const char* begin, const char* end)
-  {
-    Offset::add(begin, end);
-    return *this;
-  }
 
-  Position Position::inc(const char* begin, const char* end) const
-  {
-    Offset offset(line, column);
-    offset = offset.inc(begin, end);
-    return Position(file, offset);
-  }
-
-  bool Position::operator== (const Position &pos) const
-  {
-    return file == pos.file && line == pos.line && column == pos.column;
-  }
-
-  bool Position::operator!= (const Position &pos) const
-  {
-    return file == pos.file || line != pos.line || column != pos.column;
-  }
-
-  void Position::operator+= (const Offset &off)
-  {
-    *this = Position(file, line + off.line, off.line > 0 ? off.column : column + off.column);
-  }
-
-  const Position Position::operator+ (const Offset &off) const
-  {
-    return Position(file, line + off.line, off.line > 0 ? off.column : column + off.column);
-  }
-
-  const Offset Position::operator- (const Offset &off) const
-  {
-    return Offset(line - off.line, off.line == line ? column - off.column : column);
-  }
 
   /* not used anymore - remove?
   std::ostream& operator<<(std::ostream& strm, const Offset& off)

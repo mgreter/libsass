@@ -154,7 +154,7 @@ namespace Sass {
       if (alt) rv = alt->perform(this);
     }
     exp.env_stack.pop_back();
-    return rv.survive();
+    SASS_MEMORY_RETURN(rv);
   }
 
   // For does not create a new env scope
@@ -297,7 +297,7 @@ namespace Sass {
       }
     }
     exp.env_stack.pop_back();
-    return val.survive();
+    SASS_MEMORY_RETURN(val);
   }
 
   Expression_Ptr Eval::operator()(While_Ptr w)
@@ -311,7 +311,7 @@ namespace Sass {
       Expression_Obj val = body->perform(this);
       if (val) {
         exp.env_stack.pop_back();
-        return val.survive();
+        SASS_MEMORY_RETURN(val);
       }
       cond = pred->perform(this);
     }
@@ -468,7 +468,7 @@ namespace Sass {
     ll->is_interpolant(l->is_interpolant());
     ll->from_selector(l->from_selector());
     ll->is_expanded(true);
-    return ll.survive();
+    SASS_MEMORY_RETURN(ll);
   }
 
   Expression_Ptr Eval::operator()(Map_Ptr m)
@@ -496,7 +496,7 @@ namespace Sass {
     }
 
     mm->is_expanded(true);
-    return mm.survive();
+    SASS_MEMORY_RETURN(mm);
   }
 
   Expression_Ptr Eval::operator()(Binary_Expression_Ptr b_in)
@@ -541,7 +541,7 @@ namespace Sass {
     if (!force && op_type == Sass_OP::DIV && b->is_delayed()) {
       b->right(b->right()->perform(this));
       b->left(b->left()->perform(this));
-      return b.survive();
+      SASS_MEMORY_RETURN(b);
     }
 
     Expression_Obj lhs = b->left();
@@ -747,7 +747,7 @@ namespace Sass {
       }
     }
 
-    return rv.survive();
+    SASS_MEMORY_RETURN(rv);
 
   }
 
@@ -937,7 +937,7 @@ namespace Sass {
     result = result->perform(this);
     result->is_interpolant(c->is_interpolant());
     exp.env_stack.pop_back();
-    return result.survive();
+    SASS_MEMORY_RETURN(result);
   }
 
   Expression_Ptr Eval::operator()(Function_Call_Schema_Ptr s)
@@ -1050,7 +1050,7 @@ namespace Sass {
       } break;
     }
     result->is_interpolant(t->is_interpolant());
-    return result.survive();
+    SASS_MEMORY_RETURN(result);
   }
 
   Expression_Ptr Eval::operator()(Color_Ptr c)
@@ -1191,7 +1191,7 @@ namespace Sass {
     if (str->quote_mark()) str->quote_mark('*');
     else if (!is_in_comment) str->value(string_to_output(str->value()));
     str->is_interpolant(s->is_interpolant());
-    return str.survive();
+    SASS_MEMORY_RETURN(str);
   }
 
 
@@ -1283,7 +1283,7 @@ namespace Sass {
     for (size_t i = 0, L = q->length(); i < L; ++i) {
       *qq << static_cast<Media_Query_Expression_Ptr>((*q)[i]->perform(this));
     }
-    return qq.survive();
+    SASS_MEMORY_RETURN(qq);
   }
 
   Expression_Ptr Eval::operator()(Media_Query_Expression_Ptr e)
@@ -1347,7 +1347,7 @@ namespace Sass {
   Expression_Ptr Eval::operator()(Arguments_Ptr a)
   {
     Arguments_Obj aa = SASS_MEMORY_NEW(Arguments, a->pstate());
-    if (a->length() == 0) return aa.survive();
+    if (a->length() == 0) SASS_MEMORY_RETURN(aa);
     for (size_t i = 0, L = a->length(); i < L; ++i) {
       Expression_Obj rv = (*a)[i]->perform(this);
       Argument_Ptr arg = SASS_MEMORY_CAST(Argument, rv);
@@ -1391,7 +1391,7 @@ namespace Sass {
 
       *aa << SASS_MEMORY_NEW(Argument, kwarg->pstate(), kwarg, "", false, true);
     }
-    return aa.survive();
+    SASS_MEMORY_RETURN(aa);
   }
 
   Expression_Ptr Eval::operator()(Comment_Ptr c)
@@ -1673,7 +1673,7 @@ namespace Sass {
       }
 
     }
-    return sl.survive();
+    SASS_MEMORY_RETURN(sl);
   }
 
 
@@ -1711,7 +1711,7 @@ namespace Sass {
       exp.selector_stack.pop_back();
       Selector_List_Obj rv = operator()(&pr);
       exp.selector_stack.push_back(rv);
-      return rv.survive();
+      SASS_MEMORY_RETURN(rv);
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());
     }
