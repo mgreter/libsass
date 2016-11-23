@@ -987,7 +987,7 @@ namespace Sass {
           DEBUG_PRINTLN(ALL, "sel1: " << sel1)
           DEBUG_PRINTLN(ALL, "sel2: " << sel2)
 
-          Complex_Selector_Obj pMergedWrapper = sel1.selector()->clone2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
+          Complex_Selector_Obj pMergedWrapper = sel1.selector()->copy2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
           // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
           Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(&sel2.selector()->head(), ctx);
           pMergedWrapper->head(pMerged);
@@ -1046,7 +1046,7 @@ namespace Sass {
             DEBUG_PRINTLN(ALL, "PLUS SEL: " << plusSel)
             DEBUG_PRINTLN(ALL, "TILDE SEL: " << tildeSel)
 
-            Complex_Selector_Obj pMergedWrapper = plusSel.selector()->clone2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
+            Complex_Selector_Obj pMergedWrapper = plusSel.selector()->copy2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
             // TODO: does subject matter? Ruby: merged = plus_sel.unify(tilde_sel.members, tilde_sel.subject?)
             Compound_Selector_Ptr pMerged = plusSel.selector()->head()->unify_with(&tildeSel.selector()->head(), ctx);
             pMergedWrapper->head(pMerged);
@@ -1095,7 +1095,7 @@ namespace Sass {
         DEBUG_PRINTLN(ALL, "sel1: " << sel1)
         DEBUG_PRINTLN(ALL, "sel2: " << sel2)
 
-        Complex_Selector_Obj pMergedWrapper = sel1.selector()->clone2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
+        Complex_Selector_Obj pMergedWrapper = sel1.selector()->copy2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
         // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
         Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(&sel2.selector()->head(), ctx);
         pMergedWrapper->head(pMerged);
@@ -1620,7 +1620,7 @@ namespace Sass {
       // get rid of the last Compound_Selector and replace it with this one. I think the reason this code is more
       // complex is that Complex_Selector contains a combinator, but in ruby combinators have already been filtered
       // out and aren't operated on.
-      Complex_Selector_Obj pNewSelector = pExtComplexSelector->clone2(); // ->first();
+      Complex_Selector_Obj pNewSelector = pExtComplexSelector->clone2(); // clone verified
 
       Complex_Selector_Obj pNewInnerMost = SASS_MEMORY_NEW(Complex_Selector, pSelector->pstate(), Complex_Selector_Ref::ANCESTOR_OF, pUnifiedSelector, NULL);
 
@@ -1954,7 +1954,7 @@ namespace Sass {
           Compound_Selector_Obj cpy_head = SASS_MEMORY_NEW(Compound_Selector, cur->pstate());
           for (Simple_Selector_Obj hs : *cur->head()) {
             if (Wrapped_Selector_Obj ws = SASS_MEMORY_CAST(Wrapped_Selector, hs)) {
-              ws->selector(ws->selector()->clone2());
+              ws->selector(ws->selector()->copy2());
               if (Selector_List_Obj sl = SASS_MEMORY_CAST(Selector_List, ws->selector())) {
                 // special case for ruby ass
                 if (sl->empty()) {
