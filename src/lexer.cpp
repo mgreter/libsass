@@ -29,19 +29,6 @@ namespace Sass {
     // BASIC CLASS MATCHERS
     //####################################
 
-    // create matchers that advance the position
-    const char* space(const char* src) { return is_space(*src) ? src + 1 : 0; }
-    const char* alpha(const char* src) { return is_alpha(*src) ? src + 1 : 0; }
-    const char* unicode(const char* src) { return is_unicode(*src) ? src + 1 : 0; }
-    const char* nonascii(const char* src) { return is_nonascii(*src) ? src + 1 : 0; }
-    const char* digit(const char* src) { return is_digit(*src) ? src + 1 : 0; }
-    const char* xdigit(const char* src) { return is_xdigit(*src) ? src + 1 : 0; }
-    const char* alnum(const char* src) { return is_alnum(*src) ? src + 1 : 0; }
-    const char* punct(const char* src) { return is_punct(*src) ? src + 1 : 0; }
-    const char* hyphen(const char* src) { return *src && *src == '-' ? src + 1 : 0; }
-    const char* character(const char* src) { return is_character(*src) ? src + 1 : 0; }
-    const char* uri_character(const char* src) { return is_uri_character(*src) ? src + 1 : 0; }
-    const char* escapable_character(const char* src) { return is_escapable_character(*src) ? src + 1 : 0; }
 
     // Match multiple ctype characters.
     const char* spaces(const char* src) { return one_plus<space>(src); }

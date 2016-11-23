@@ -101,19 +101,19 @@ namespace Sass {
       return is_alnum(chr) || is_unicode(chr) || chr == '-';
     }
 
-    // Match a single ctype predicate.
-    const char* space(const char* src);
-    const char* alpha(const char* src);
-    const char* digit(const char* src);
-    const char* xdigit(const char* src);
-    const char* alnum(const char* src);
-    const char* punct(const char* src);
-    const char* hyphen(const char* src);
-    const char* unicode(const char* src);
-    const char* nonascii(const char* src);
-    const char* character(const char* src);
-    const char* uri_character(const char* src);
-    const char* escapable_character(const char* src);
+    // create matchers that advance the position
+    inline const char* space(const char* src) { return is_space(*src) ? src + 1 : 0; }
+    inline const char* alpha(const char* src) { return is_alpha(*src) ? src + 1 : 0; }
+    inline const char* unicode(const char* src) { return is_unicode(*src) ? src + 1 : 0; }
+    inline const char* nonascii(const char* src) { return is_nonascii(*src) ? src + 1 : 0; }
+    inline const char* digit(const char* src) { return is_digit(*src) ? src + 1 : 0; }
+    inline const char* xdigit(const char* src) { return is_xdigit(*src) ? src + 1 : 0; }
+    inline const char* alnum(const char* src) { return is_alnum(*src) ? src + 1 : 0; }
+    inline const char* punct(const char* src) { return is_punct(*src) ? src + 1 : 0; }
+    inline const char* hyphen(const char* src) { return *src && *src == '-' ? src + 1 : 0; }
+    inline const char* character(const char* src) { return is_character(*src) ? src + 1 : 0; }
+    inline const char* uri_character(const char* src) { return is_uri_character(*src) ? src + 1 : 0; }
+    inline const char* escapable_character(const char* src) { return is_escapable_character(*src) ? src + 1 : 0; }
 
     // Match multiple ctype characters.
     const char* spaces(const char* src);
