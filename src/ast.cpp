@@ -1523,8 +1523,7 @@ return rhs;
 
   std::vector<std::string> Compound_Selector_Ref::to_str_vec()
   {
-    std::vector<std::string> result;
-    result.reserve(length());
+    std::vector<std::string> result(length());
     for (size_t i = 0, L = length(); i < L; ++i)
     { result.push_back((*this)[i]->to_string()); }
     return result;

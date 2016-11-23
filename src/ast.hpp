@@ -257,7 +257,7 @@ namespace Sass {
     virtual void adjust_after_pushing(T element) { }
   public:
     Vectorized(size_t s = 0) : elements_(std::vector<T>()), hash_(0)
-    { elements_.reserve(s); }
+    { /* elements_.reserve(s); */ }
     virtual ~Vectorized() = 0;
     size_t length() const   { return elements_.size(); }
     bool empty() const      { return elements_.empty(); }
@@ -358,7 +358,7 @@ namespace Sass {
     virtual void adjust_after_pushing(std::pair<Expression_Obj, Expression_Obj> p) { }
   public:
     Hashed(size_t s = 0) : elements_(ExpressionMap2(s)), list_(std::vector<Expression_Obj>())
-    { elements_.reserve(s); list_.reserve(s); reset_duplicate_key(); }
+    { elements_.reserve(s); /* list_.reserve(s); */ reset_duplicate_key(); }
     virtual ~Hashed();
     size_t length() const                  { return list_.size(); }
     bool empty() const                     { return list_.empty(); }

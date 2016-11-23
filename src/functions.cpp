@@ -1387,13 +1387,12 @@ namespace Sass {
       }
       List_Ptr result = l->copy2();
       std::string sep_str(unquote(sep->value()));
-      if (sep_str == "space") result->separator(SASS_SPACE);
-      else if (sep_str == "comma") result->separator(SASS_COMMA);
-      else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
-      // *result += &l;
-      bool is_arglist = l->is_arglist();
-      result->is_arglist(is_arglist);
-      if (is_arglist) {
+      if (sep_str != "auto") { // check default first
+        if (sep_str == "space") result->separator(SASS_SPACE);
+        else if (sep_str == "comma") result->separator(SASS_COMMA);
+        else error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
+      }
+      if (l->is_arglist()) {
         *result << SASS_MEMORY_NEW(Argument,
                                    v->pstate(),
                                    v,

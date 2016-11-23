@@ -53,29 +53,33 @@ namespace Sass {
 
 
   void SharedPtr::decRefCount() {
-    if (this->node) {
-      this->node->refcounter -= 1;
+    if (node) {
+      -- node->refcounter;
   #ifdef DEBUG_SHARED_PTR
-      if (this->node->dbg)  std::cerr << "- " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
+      if (node->dbg)  std::cerr << "- " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
   #endif
-      if (this->node->refcounter == 0) {
+      if (node->refcounter == 0) {
   #ifdef DEBUG_SHARED_PTR
-        AST_Node_Ptr ptr = SASS_MEMORY_CAST_PTR(AST_Node, this->node);
-        if (this->node->dbg) std::cerr << "DELETE NODE " << node << "\n";
+        AST_Node_Ptr ptr = SASS_MEMORY_CAST_PTR(AST_Node, node);
+        if (node->dbg) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) std::cerr << "DELETE NODE " << node << "\n";
         if (DBG) debug_ast(ptr, "DELETE: ");
   #endif
-        if (MEM && !node->detached) delete(node);
+#ifdef MEM
+		if (!node->detached) {
+			delete(node);
+		}
+#endif
       }
     }
   }
 
   void SharedPtr::incRefCount() {
-    if (this->node) {
-      this->node->refcounter += 1;
-      this->node->detached = false;
+    if (node) {
+      ++ node->refcounter;
+      node->detached = false;
   #ifdef DEBUG_SHARED_PTR
-      if (this->node->dbg) {
+      if (node->dbg) {
         std::cerr << "+ " << node << " X " << node->refcounter << " (" << this << ") " << event << "\n";
       }
   #endif
