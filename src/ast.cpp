@@ -314,7 +314,7 @@ namespace Sass {
   {
     if (empty()) return rhs;
 //    Compound_Selector_Obj unleak = 0;
-    Compound_Selector_Ptr unified = rhs->copy2(ctx.mem);
+    Compound_Selector_Ptr unified = rhs->copy2();
     for (size_t i = 0, L = length(); i < L; ++i)
     {
       if (!unified) break;
@@ -429,14 +429,14 @@ namespace Sass {
     {
       rhs->append(this);
       return rhs;
-      Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
+      Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(Compound_Selector, *rhs);
       cpy->append(this);
       return cpy;
     }
 rhs->elements().insert(rhs->elements().begin() + i, this);
 return rhs;
 
-    Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
+    Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(Compound_Selector, rhs->pstate());
     for (size_t j = 0; j < i; ++j)
     { cpy->append((*rhs)[j]); }
     cpy->append(this);
@@ -493,7 +493,7 @@ return rhs;
       if (typeid(*rhs_0) == typeid(Element_Selector))
       {
         // if rhs is universal, just return this tagname + rhs's qualifiers
-        // Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
+        // Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(Compound_Selector, *rhs);
         Element_Selector_Ptr ts = SASS_MEMORY_CAST_PTR(Element_Selector, rhs_0);
         rhs->at(0) = this->unify_with(ts, ctx);
         return rhs;
@@ -515,13 +515,13 @@ return rhs;
       // if rhs is universal, just return this tagname + rhs's qualifiers
       if (rhs_0->name() != "*" && rhs_0->ns() != "*" && rhs_0->name() != name()) return 0;
       // otherwise create new compound and unify first simple selector
-      // Compound_Selector_Ptr copy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
+      // Compound_Selector_Ptr copy = SASS_MEMORY_NEW(Compound_Selector, *rhs);
       rhs->at(0) = this->unify_with(rhs_0, ctx);
       return rhs;
 
     }
     // else it's a tag name and a bunch of qualifiers -- just append them
-    // Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
+    // Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(Compound_Selector, rhs->pstate());
     if (name() != "*") rhs->elements().insert(rhs->begin(), this);
     return rhs;
   }
@@ -822,10 +822,10 @@ return rhs;
   }
 
   // create complex selector (ancestor of) from compound selector
-  Complex_Selector_Obj Compound_Selector_Ref::to_complex(Memory_Manager& mem)
+  Complex_Selector_Obj Compound_Selector_Ref::to_complex()
   {
     // create an intermediate complex selector
-    return SASS_MEMORY_NEW(mem, Complex_Selector,
+    return SASS_MEMORY_NEW(Complex_Selector,
                            pstate(),
                            Complex_Selector_Ref::ANCESTOR_OF,
                            this,
@@ -882,7 +882,7 @@ return rhs;
     if (!is_universal)
     {
       // create some temporaries to convert to node
-      Complex_Selector_Obj fake = unified->to_complex(ctx.mem);
+      Complex_Selector_Obj fake = unified->to_complex();
       Node unified_node = complexSelectorToNode(&fake, ctx);
       // add to permutate the list?
       rhsNode.plus(unified_node);
@@ -890,7 +890,7 @@ return rhs;
 
     // do some magic we inherit from node and extend
     Node node = Extend::subweave(lhsNode, rhsNode, ctx);
-    Selector_List_Ptr result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr result = SASS_MEMORY_NEW(Selector_List, pstate());
     NodeDequePtr col = node.collection(); // move from collection to list
     for (NodeDeque::iterator it = col->begin(), end = col->end(); it != end; it++)
     { (*result) << nodeToComplexSelector(Node::naiveTrim(*it, ctx), ctx); }
@@ -1033,7 +1033,7 @@ return rhs;
   {
     if (!tail()) return 0;
     if (!head()) return tail()->context(ctx);
-    Complex_Selector_Obj cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate(), combinator(), head(), tail()->context(ctx));
+    Complex_Selector_Obj cpy = SASS_MEMORY_NEW(Complex_Selector, pstate(), combinator(), head(), tail()->context(ctx));
     cpy->media_block(media_block());
     return cpy;
   }
@@ -1062,28 +1062,28 @@ return rhs;
         size_t i = 0, L = h->length();
         if (SASS_MEMORY_CAST(Element_Selector, h->first())) {
           if (Class_Selector_Ptr sq = SASS_MEMORY_CAST(Class_Selector, rh->last())) {
-            Class_Selector_Ptr sqs = SASS_MEMORY_NEW(ctx.mem, Class_Selector, *sq);
+            Class_Selector_Ptr sqs = SASS_MEMORY_NEW(Class_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
             sqs->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = sqs;
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << &(*h)[i];
           } else if (Id_Selector_Ptr sq = SASS_MEMORY_CAST(Id_Selector, rh->last())) {
-            Id_Selector_Ptr sqs = SASS_MEMORY_NEW(ctx.mem, Id_Selector, *sq);
+            Id_Selector_Ptr sqs = SASS_MEMORY_NEW(Id_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
             sqs->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = sqs;
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << &(*h)[i];
           } else if (Element_Selector_Ptr ts = SASS_MEMORY_CAST(Element_Selector, rh->last())) {
-            Element_Selector_Ptr tss = SASS_MEMORY_NEW(ctx.mem, Element_Selector, *ts);
+            Element_Selector_Ptr tss = SASS_MEMORY_NEW(Element_Selector, *ts);
             tss->name(tss->name() + (*h)[0]->name());
             tss->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = tss;
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << &(*h)[i];
           } else if (Placeholder_Selector_Ptr ps = SASS_MEMORY_CAST(Placeholder_Selector, rh->last())) {
-            Placeholder_Selector_Ptr pss = SASS_MEMORY_NEW(ctx.mem, Placeholder_Selector, *ps);
+            Placeholder_Selector_Ptr pss = SASS_MEMORY_NEW(Placeholder_Selector, *ps);
             pss->name(pss->name() + (*h)[0]->name());
             pss->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = pss;
@@ -1104,7 +1104,7 @@ return rhs;
 
     if (last()) {
       if (last()->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
-        Complex_Selector_Ptr inter = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate());
+        Complex_Selector_Ptr inter = SASS_MEMORY_NEW(Complex_Selector, pstate());
         inter->reference(r);
         inter->combinator(c);
         inter->tail(t);
@@ -1124,9 +1124,9 @@ return rhs;
   Selector_List_Ptr Selector_List_Ref::resolve_parent_refs(Context& ctx, Selector_List_Ptr ps, bool implicit_parent)
   {
     if (!this->has_parent_ref()/* && !implicit_parent*/) return this;
-    Selector_List_Ptr ss = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr ss = SASS_MEMORY_NEW(Selector_List, pstate());
     for (size_t pi = 0, pL = ps->length(); pi < pL; ++pi) {
-      Selector_List_Obj list = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+      Selector_List_Obj list = SASS_MEMORY_NEW(Selector_List, pstate());
       list->append(ps->at(pi));
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
         Selector_List_Obj rv = at(si)->resolve_parent_refs(ctx, &list, implicit_parent);
@@ -1142,7 +1142,7 @@ return rhs;
     Compound_Selector_Obj head = this->head();
 
     if (!this->has_real_parent_ref() && !implicit_parent) {
-      Selector_List_Ptr retval = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+      Selector_List_Ptr retval = SASS_MEMORY_NEW(Selector_List, pstate());
       *retval << this;
       return retval;
     }
@@ -1156,17 +1156,17 @@ return rhs;
       // we have a parent selector in a simple compound list
       // mix parent complex selector into the compound list
       if (SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) {
-        retval = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+        retval = SASS_MEMORY_NEW(Selector_List, pstate());
         if (parents && parents->length()) {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
               for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
                 Complex_Selector_Obj t = (*tails)[n];
                 Complex_Selector_Obj parent = (*parents)[i];
-                Complex_Selector_Obj s = parent->clone2(ctx.mem);
-                Complex_Selector_Obj ss = this->clone2(ctx.mem);
-                ss->tail(t ? t->clone2(ctx.mem) : 0);
-                Compound_Selector_Obj h = head_->copy2(ctx.mem);
+                Complex_Selector_Obj s = parent->clone2();
+                Complex_Selector_Obj ss = this->clone2();
+                ss->tail(t ? t->clone2() : 0);
+                Compound_Selector_Obj h = head_->copy2();
                 // remove parent selector from sequence
                 if (h->length()) h->erase(h->begin());
                 ss->head(h->length() ? &h : 0);
@@ -1190,15 +1190,15 @@ return rhs;
           else {
             for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
               Complex_Selector_Obj parent = (*parents)[i];
-              Complex_Selector_Obj s = parent->clone2(ctx.mem);
-              Complex_Selector_Obj ss = this->clone2(ctx.mem);
+              Complex_Selector_Obj s = parent->clone2();
+              Complex_Selector_Obj ss = this->clone2();
               // this is only if valid if the parent has no trailing op
               // otherwise we cannot append more simple selectors to head
               if (parent->last()->combinator() != ANCESTOR_OF) {
                 throw Exception::InvalidParent(&parent, &ss);
               }
-              ss->tail(tail ? tail->clone2(ctx.mem) : 0);
-              Compound_Selector_Obj h = head_->copy2(ctx.mem);
+              ss->tail(tail ? tail->clone2() : 0);
+              Compound_Selector_Obj h = head_->copy2();
               // remove parent selector from sequence
               if (h->length()) h->erase(h->begin());
               ss->head(h->length() ? &h : 0);
@@ -1223,9 +1223,9 @@ return rhs;
         else {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
-              Complex_Selector_Obj cpy = this->clone2(ctx.mem);
-              cpy->tail((*tails)[n]->clone2(ctx.mem));
-              cpy->head(SASS_MEMORY_NEW(ctx.mem, Compound_Selector, head->pstate()));
+              Complex_Selector_Obj cpy = this->clone2();
+              cpy->tail((*tails)[n]->clone2());
+              cpy->head(SASS_MEMORY_NEW(Compound_Selector, head->pstate()));
               for (size_t i = 1, L = this->head()->length(); i < L; ++i)
                 *cpy->head() << &(*this->head())[i];
               if (!cpy->head()->length()) cpy->head(0);
@@ -1234,8 +1234,8 @@ return rhs;
           }
           // have no parent nor tails
           else {
-            Complex_Selector_Obj cpy = this->clone2(ctx.mem);
-            cpy->head(SASS_MEMORY_NEW(ctx.mem, Compound_Selector, head->pstate()));
+            Complex_Selector_Obj cpy = this->clone2();
+            cpy->head(SASS_MEMORY_NEW(Compound_Selector, head->pstate()));
             for (size_t i = 1, L = this->head()->length(); i < L; ++i)
               *cpy->head() << &(*this->head())[i];
             if (!cpy->head()->length()) cpy->head(0);
@@ -1270,10 +1270,10 @@ return rhs;
 
   Selector_List_Ptr Complex_Selector_Ref::tails(Context& ctx, Selector_List_Ptr tails)
   {
-    Selector_List_Ptr rv = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate_);
+    Selector_List_Ptr rv = SASS_MEMORY_NEW(Selector_List, pstate_);
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector_Obj pr = this->clone2(ctx.mem);
+        Complex_Selector_Obj pr = this->clone2();
         pr->tail(tails->at(i));
         rv->append(pr);
       }
@@ -1331,29 +1331,29 @@ return rhs;
     { tail()->set_innermost(val, c); }
   }
 
-  void Complex_Selector_Ref::cloneChildren(Memory_Manager& mem)
+  void Complex_Selector_Ref::cloneChildren()
   {
-    if (head()) head(head()->clone2(mem));
-    if (tail()) tail(tail()->clone2(mem));
+    if (head()) head(head()->clone2());
+    if (tail()) tail(tail()->clone2());
   }
 
-  void Compound_Selector_Ref::cloneChildren(Memory_Manager& mem)
+  void Compound_Selector_Ref::cloneChildren()
   {
     for (size_t i = 0, l = length(); i < l; i++) {
-      at(i) = at(i)->clone2(mem);
+      at(i) = at(i)->clone2();
     }
   }
 
-  void Selector_List_Ref::cloneChildren(Memory_Manager& mem)
+  void Selector_List_Ref::cloneChildren()
   {
     for (size_t i = 0, l = length(); i < l; i++) {
-      at(i) = at(i)->clone2(mem);
+      at(i) = at(i)->clone2();
     }
   }
 
-  void Wrapped_Selector::cloneChildren(Memory_Manager& mem)
+  void Wrapped_Selector::cloneChildren()
   {
-    selector(selector()->clone2(mem));
+    selector(selector()->clone2());
   }
 
   // remove parent selector references
@@ -1481,7 +1481,7 @@ return rhs;
     }
 
     // Creates the final Selector_List by combining all the complex selectors
-    Selector_List_Ptr final_result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr final_result = SASS_MEMORY_NEW(Selector_List, pstate());
     for (auto itr = unified_complex_selectors.begin(); itr != unified_complex_selectors.end(); ++itr) {
       *final_result << *itr;
     }
@@ -1539,7 +1539,7 @@ return rhs;
 
   Compound_Selector_Ptr Compound_Selector_Ref::minus(Compound_Selector_Ptr rhs, Context& ctx)
   {
-    Compound_Selector_Ptr result = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate());
+    Compound_Selector_Ptr result = SASS_MEMORY_NEW(Compound_Selector, pstate());
     // result->has_parent_reference(has_parent_reference());
 
     // not very efficient because it needs to preserve order
@@ -1564,7 +1564,7 @@ return rhs;
   void Compound_Selector_Ref::mergeSources(SourcesSet& sources, Context& ctx)
   {
     for (SourcesSet::iterator iterator = sources.begin(), endIterator = sources.end(); iterator != endIterator; ++iterator) {
-      this->sources_.insert((*iterator)->clone2(ctx.mem));
+      this->sources_.insert((*iterator)->clone2());
     }
   }
 
@@ -2245,10 +2245,10 @@ return rhs;
   // Convert map to (key, value) list.
   //////////////////////////////////////////////////////////////////////////////////////////
   List_Obj Map_Ref::to_list(Context& ctx, ParserState& pstate) {
-    List_Obj ret = SASS_MEMORY_NEW(ctx.mem, List, pstate, length(), SASS_COMMA);
+    List_Obj ret = SASS_MEMORY_NEW(List, pstate, length(), SASS_COMMA);
 
     for (auto key : keys()) {
-      List_Obj l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
+      List_Obj l = SASS_MEMORY_NEW(List, pstate, 2);
       l->append(&key);
       l->append(at(key));
       ret->append(&l);
@@ -2264,8 +2264,8 @@ return rhs;
 #ifdef DEBUG_SHARED_PTR
 
 #define IMPLEMENT_AST_OPERATORS(klass) \
-  klass##_Ptr klass##_Ref::copy(Memory_Manager& mem, bool recursive) const { return SASS_MEMORY_NEW(mem, klass, this); } \
-  klass##_Ptr klass##_Ref::copy2(Memory_Manager& mem) const { \
+  klass##_Ptr klass##_Ref::copy(bool recursive) const { return SASS_MEMORY_NEW(klass, this); } \
+  klass##_Ptr klass##_Ref::copy2() const { \
     void* heap = mem.allocate(sizeof(klass)); \
     klass##_Ptr cpy = new (heap) klass(this); \
     mem.add(cpy); \
@@ -2273,25 +2273,22 @@ return rhs;
     cpy->line = line; \
     return cpy; \
   } \
-  klass##_Ptr klass##_Ref::clone2(Memory_Manager& mem) const { \
-    klass##_Ptr cpy = copy2(mem); \
-    cpy->cloneChildren(mem); \
+  klass##_Ptr klass##_Ref::clone2() const { \
+    klass##_Ptr cpy = copy2(); \
+    cpy->cloneChildren(); \
     return cpy; \
   } \
 
 #else
 
 #define IMPLEMENT_AST_OPERATORS(klass) \
-  klass##_Ptr klass##_Ref::copy(Memory_Manager& mem, bool recursive) const { return SASS_MEMORY_NEW(mem, klass, this); } \
-  klass##_Ptr klass##_Ref::copy2(Memory_Manager& mem) const { \
-    void* heap = mem.allocate(sizeof(klass)); \
-    klass##_Ptr cpy = new (heap) klass(this); \
-    mem.add(cpy); \
-    return cpy; \
+  klass##_Ptr klass##_Ref::copy(bool recursive) const { return SASS_MEMORY_NEW(klass, this); } \
+  klass##_Ptr klass##_Ref::copy2() const { \
+    return new klass(this); \
   } \
-  klass##_Ptr klass##_Ref::clone2(Memory_Manager& mem) const { \
-    klass##_Ptr cpy = copy2(mem); \
-    cpy->cloneChildren(mem); \
+  klass##_Ptr klass##_Ref::clone2() const { \
+    klass##_Ptr cpy = copy2(); \
+    cpy->cloneChildren(); \
     return cpy; \
   } \
 

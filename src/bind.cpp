@@ -63,7 +63,7 @@ namespace Sass {
           // We should always get a list for rest arguments
           if (List_Obj rest = SASS_MEMORY_CAST(List, a->value())) {
               // create a new list object for wrapped items
-              List_Ptr arglist = SASS_MEMORY_NEW(ctx->mem, List,
+              List_Ptr arglist = SASS_MEMORY_NEW(List,
                                               p->pstate(),
                                               0,
                                               rest->separator(),
@@ -71,9 +71,9 @@ namespace Sass {
               // wrap each item from list as an argument
               for (Expression_Obj item : rest->elements()) {
                 if (Argument_Obj arg = SASS_MEMORY_CAST(Argument, item)) {
-                  (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument, *arg);
+                  (*arglist) << SASS_MEMORY_NEW(Argument, *arg);
                 } else {
-                  (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
+                  (*arglist) << SASS_MEMORY_NEW(Argument,
                                                 item->pstate(),
                                                 &item,
                                                 "",
@@ -91,12 +91,12 @@ namespace Sass {
         } else if (a->is_keyword_argument()) {
 
           // expand keyword arguments into their parameters
-          List_Ptr arglist = SASS_MEMORY_NEW(ctx->mem, List, p->pstate(), 0, SASS_COMMA, true);
+          List_Ptr arglist = SASS_MEMORY_NEW(List, p->pstate(), 0, SASS_COMMA, true);
           env->local_frame()[p->name()] = arglist;
           Map_Obj argmap = SASS_MEMORY_CAST(Map, a->value());
           for (auto key : argmap->keys()) {
             std::string name = unquote(SASS_MEMORY_CAST(String_Constant, key)->value());
-            (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
+            (*arglist) << SASS_MEMORY_NEW(Argument,
                                           key->pstate(),
                                           argmap->at(key),
                                           "$" + name,
@@ -107,7 +107,7 @@ namespace Sass {
         } else {
 
           // create a new list object for wrapped items
-          List_Obj arglist = SASS_MEMORY_NEW(ctx->mem, List,
+          List_Obj arglist = SASS_MEMORY_NEW(List,
                                           p->pstate(),
                                           0,
                                           SASS_COMMA,
@@ -133,7 +133,7 @@ namespace Sass {
 
                 for (size_t i = 0, L = rest->size(); i < L; ++i) {
                   Expression_Obj obj = rest->at(i);
-                  arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument,
+                  arglist->append(SASS_MEMORY_NEW(Argument,
                                                 obj->pstate(),
                                                 &obj,
                                                 "",
@@ -146,7 +146,7 @@ namespace Sass {
             }
             // wrap all other value types into Argument
             else {
-              arglist->append(SASS_MEMORY_NEW(ctx->mem, Argument,
+              arglist->append(SASS_MEMORY_NEW(Argument,
                                             a->pstate(),
                                             a->value(),
                                             a->name(),
@@ -189,7 +189,7 @@ namespace Sass {
         Expression_Obj obj = arglist->at(0);
         if (!(a = SASS_MEMORY_CAST(Argument, obj))) {
           Expression_Ptr a_to_convert = &obj;
-          a = SASS_MEMORY_NEW(ctx->mem, Argument,
+          a = SASS_MEMORY_NEW(Argument,
                               a_to_convert->pstate(),
                               a_to_convert,
                               "",
@@ -265,7 +265,7 @@ namespace Sass {
       // cerr << "********" << endl;
       if (!env->has_local(leftover->name())) {
         if (leftover->is_rest_parameter()) {
-          env->local_frame()[leftover->name()] = SASS_MEMORY_NEW(ctx->mem, List,
+          env->local_frame()[leftover->name()] = SASS_MEMORY_NEW(List,
                                                                    leftover->pstate(),
                                                                    0,
                                                                    SASS_COMMA,

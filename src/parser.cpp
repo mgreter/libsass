@@ -42,7 +42,7 @@ namespace Sass {
     p.source   = source ? source : beg;
     p.position = beg ? beg : p.source;
     p.end      = p.position + strlen(p.position);
-    Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate);
+    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate);
     p.block_stack.push_back(root);
     root->is_root(true);
     return p;
@@ -56,7 +56,7 @@ namespace Sass {
     p.source   = source ? source : beg;
     p.position = beg ? beg : p.source;
     p.end      = end ? end : p.position + strlen(p.position);
-    Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate);
+    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate);
     p.block_stack.push_back(root);
     root->is_root(true);
     return p;
@@ -90,7 +90,7 @@ namespace Sass {
     p.source   = source ? source : t.begin;
     p.position = t.begin ? t.begin : p.source;
     p.end      = t.end ? t.end : p.position + strlen(p.position);
-    Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate);
+    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate);
     p.block_stack.push_back(root);
     root->is_root(true);
     return p;
@@ -100,7 +100,7 @@ namespace Sass {
   Block_Obj Parser::parse()
   {
     bool is_root = false;
-    Block_Obj root = SASS_MEMORY_CREATE(ctx.mem, Block, pstate, 0, true);
+    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate, 0, true);
     read_bom();
 
     // custom headers
@@ -138,7 +138,7 @@ namespace Sass {
       css_error("Invalid CSS", " after ", ": expected \"{\", was ");
     }
     // create new block and push to the selector stack
-    Block_Obj block = SASS_MEMORY_CREATE(ctx.mem, Block, pstate, 0, is_root);
+    Block_Obj block = SASS_MEMORY_CREATE(Block, pstate, 0, is_root);
     block_stack.push_back(block);
 
     if (!parse_block_nodes()) css_error("Invalid CSS", " after ", ": expected \"}\", was ");;
@@ -243,7 +243,7 @@ namespace Sass {
       if (!imp->urls().empty()) block->append(&imp);
       // process all resources now (add Import_Stub nodes)
       for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-        block->append(SASS_MEMORY_NEW(ctx.mem, Import_Stub, pstate, imp->incs()[i]));
+        block->append(SASS_MEMORY_NEW(Import_Stub, pstate, imp->incs()[i]));
       }
     }
 
@@ -257,7 +257,7 @@ namespace Sass {
       Selector_Obj target;
       if (lookahead.has_interpolants) target = &parse_selector_schema(lookahead.found);
       else                            target = &parse_selector_list(true);
-      block->append(SASS_MEMORY_NEW(ctx.mem, Extension, pstate, &target));
+      block->append(SASS_MEMORY_NEW(Extension, pstate, &target));
     }
 
     // selector may contain interpolations which need delayed evaluation
@@ -312,7 +312,7 @@ namespace Sass {
   // parse imports inside the
   Import_Obj Parser::parse_import()
   {
-    Import_Obj imp = SASS_MEMORY_NEW(ctx.mem, Import, pstate);
+    Import_Obj imp = SASS_MEMORY_NEW(Import, pstate);
     std::vector<std::pair<std::string,Function_Call_Obj>> to_import;
     bool first = true;
     do {
@@ -321,19 +321,19 @@ namespace Sass {
         to_import.push_back(std::pair<std::string,Function_Call_Obj>(std::string(lexed), 0));
       }
       else if (lex< uri_prefix >()) {
-        Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
-        Function_Call_Obj result = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, "url", &args);
+        Arguments_Obj args = SASS_MEMORY_NEW(Arguments, pstate);
+        Function_Call_Obj result = SASS_MEMORY_NEW(Function_Call, pstate, "url", &args);
 
         if (lex< quoted_string >()) {
           Expression_Obj the_url = &parse_string();
-          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), &the_url);
+          *args << SASS_MEMORY_NEW(Argument, the_url->pstate(), &the_url);
         }
         else if (String_Obj the_url = parse_url_function_argument()) {
-          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), &the_url);
+          *args << SASS_MEMORY_NEW(Argument, the_url->pstate(), &the_url);
         }
         else if (peek < skip_over_scopes < exactly < '(' >, exactly < ')' > > >(position)) {
           Expression_Obj the_url = parse_list(); // parse_interpolated_chunk(lexed);
-          *args << SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), &the_url);
+          *args << SASS_MEMORY_NEW(Argument, the_url->pstate(), &the_url);
         }
         else {
           error("malformed URL", pstate);
@@ -386,14 +386,14 @@ namespace Sass {
     else stack.push_back(Scope::Function);
     Block_Obj body = parse_block();
     stack.pop_back();
-    return SASS_MEMORY_OBJ(ctx.mem, Definition, source_position_of_def, name, &params, &body, which_type);
+    return SASS_MEMORY_OBJ(Definition, source_position_of_def, name, &params, &body, which_type);
   }
 
   Parameters_Obj Parser::parse_parameters()
   {
     std::string name(lexed);
     Position position = after_token;
-    Parameters_Obj params = SASS_MEMORY_OBJ(ctx.mem, Parameters, pstate);
+    Parameters_Obj params = SASS_MEMORY_OBJ(Parameters, pstate);
     if (lex_css< exactly<'('> >()) {
       // if there's anything there at all
       if (!peek_css< exactly<')'> >()) {
@@ -421,14 +421,14 @@ namespace Sass {
     else if (lex< exactly< ellipsis > >()) {
       is_rest = true;
     }
-    return SASS_MEMORY_OBJ(ctx.mem, Parameter, pos, name, &val, is_rest);
+    return SASS_MEMORY_OBJ(Parameter, pos, name, &val, is_rest);
   }
 
   Arguments_Obj Parser::parse_arguments()
   {
     std::string name(lexed);
     Position position = after_token;
-    Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, pstate);
+    Arguments_Obj args = SASS_MEMORY_NEW(Arguments, pstate);
     if (lex_css< exactly<'('> >()) {
       // if there's anything there at all
       if (!peek_css< exactly<')'> >()) {
@@ -454,7 +454,7 @@ namespace Sass {
       ParserState p = pstate;
       lex_css< exactly<':'> >();
       Expression_Obj val = parse_space_list();
-      arg = SASS_MEMORY_NEW(ctx.mem, Argument, p, val, name);
+      arg = SASS_MEMORY_NEW(Argument, p, val, name);
     }
     else {
       bool is_arglist = false;
@@ -467,7 +467,7 @@ namespace Sass {
         )) is_keyword = true;
         else is_arglist = true;
       }
-      arg = SASS_MEMORY_NEW(ctx.mem, Argument, pstate, val, "", is_arglist, is_keyword);
+      arg = SASS_MEMORY_NEW(Argument, pstate, val, "", is_arglist, is_keyword);
     }
     return arg;
   }
@@ -494,7 +494,7 @@ namespace Sass {
       if (lex< default_flag >()) is_default = true;
       else if (lex< global_flag >()) is_global = true;
     }
-    return SASS_MEMORY_NEW(ctx.mem, Assignment, var_source_position, name, val, is_default, is_global);
+    return SASS_MEMORY_NEW(Assignment, var_source_position, name, val, is_default, is_global);
   }
 
   // a ruleset connects a selector and a block
@@ -503,7 +503,7 @@ namespace Sass {
     // make sure to move up the the last position
     lex < optional_css_whitespace >(false, true);
     // create the connector object (add parts later)
-    Ruleset_Obj ruleset = SASS_MEMORY_OBJ(ctx.mem, Ruleset, pstate);
+    Ruleset_Obj ruleset = SASS_MEMORY_OBJ(Ruleset, pstate);
     // parse selector static or as schema to be evaluated later
     if (lookahead.parsable) ruleset->selector(&parse_selector_list(is_root));
     else ruleset->selector(&parse_selector_schema(lookahead.found));
@@ -529,9 +529,9 @@ namespace Sass {
     lex< optional_spaces >();
     const char* i = position;
     // selector schema re-uses string schema implementation
-    String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Ptr schema = SASS_MEMORY_NEW(String_Schema, pstate);
     // the selector schema is pretty much just a wrapper for the string schema
-    Selector_Schema_Ptr selector_schema = SASS_MEMORY_NEW(ctx.mem, Selector_Schema, pstate, schema);
+    Selector_Schema_Ptr selector_schema = SASS_MEMORY_NEW(Selector_Schema, pstate, schema);
     selector_schema->media_block(last_media_block);
 
     // process until end
@@ -539,7 +539,7 @@ namespace Sass {
       // try to parse mutliple interpolants
       if (const char* p = find_first_in_interval< exactly<hash_lbrace>, block_comment >(i, end_of_selector)) {
         // accumulate the preceding segment if the position has advanced
-        if (i < p) schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, p)));
+        if (i < p) schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(i, p)));
         // check if the interpolation only contains white-space (error out)
         if (peek < sequence < optional_spaces, exactly<rbrace> > >(p+2)) { position = p+2;
           css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
@@ -560,7 +560,7 @@ namespace Sass {
       // add the last segment if there is one
       else {
         // make sure to add the last bits of the string up to the end (if any)
-        if (i < end_of_selector) schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, end_of_selector)));
+        if (i < end_of_selector) schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(i, end_of_selector)));
         // exit loop
         i = end_of_selector;
       }
@@ -597,7 +597,7 @@ namespace Sass {
     // normalize underscores to hyphens
     std::string name(Util::normalize_underscores(lexed));
     // create the initial mixin call object
-    Mixin_Call_Obj call = SASS_MEMORY_NEW(ctx.mem, Mixin_Call, pstate, name, 0, 0);
+    Mixin_Call_Obj call = SASS_MEMORY_NEW(Mixin_Call, pstate, name, 0, 0);
     // parse mandatory arguments
     call->arguments(parse_arguments());
     // parse optional block
@@ -616,7 +616,7 @@ namespace Sass {
     bool reloop = true;
     bool had_linefeed = false;
     Complex_Selector_Obj sel;
-    Selector_List_Obj group = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate);
+    Selector_List_Obj group = SASS_MEMORY_NEW(Selector_List, pstate);
     group->media_block(last_media_block);
 if (DBG) std::cerr << "SEL LIST\n";
     do {
@@ -670,7 +670,7 @@ if (DBG) std::cerr << "SEL LIST END\n";
     String_Ptr reference = 0;
     lex < block_comment >();
 if (DBG) std::cerr << "complex 1\n";
-    Complex_Selector_Obj sel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate);
+    Complex_Selector_Obj sel = SASS_MEMORY_NEW(Complex_Selector, pstate);
 
     // parse the left hand side
     Compound_Selector_Obj lhs;
@@ -695,7 +695,7 @@ if (DBG) std::cerr << "parse_compound_selector 3\n";
       // comments are allowed, but not spaces?
       combinator = Complex_Selector_Ref::REFERENCE;
       if (!lex < re_reference_combinator >()) return 0;
-      reference = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+      reference = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
       if (!lex < exactly < '/' > >()) return 0; // ToDo: error msg?
     }
     else /* if (lex< zero >()) */   combinator = Complex_Selector_Ref::ANCESTOR_OF;
@@ -729,8 +729,8 @@ if (DBG) std::cerr << "parse_compound_selector 9\n";
     // also skip adding parent ref if we only have refs
     if (!sel->has_parent_ref() && !in_at_root && !in_root) {
       // create the objects to wrap parent selector reference
-      Compound_Selector_Obj head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate);
-      Parent_Selector_Ptr parent = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, pstate, false);
+      Compound_Selector_Obj head = SASS_MEMORY_NEW(Compound_Selector, pstate);
+      Parent_Selector_Ptr parent = SASS_MEMORY_NEW(Parent_Selector, pstate, false);
       parent->media_block(last_media_block);
       head->media_block(last_media_block);
       // add simple selector
@@ -739,7 +739,7 @@ if (DBG) std::cerr << "parse_compound_selector 9\n";
       if (!sel->head()) { sel->head(head); }
       // otherwise we need to create a new complex selector and set the old one as its tail
       else {
-        sel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate, Complex_Selector_Ref::ANCESTOR_OF, head, sel);
+        sel = SASS_MEMORY_NEW(Complex_Selector, pstate, Complex_Selector_Ref::ANCESTOR_OF, head, sel);
         sel->media_block(last_media_block);
       }
       // peek for linefeed and remember result on head
@@ -759,7 +759,7 @@ if (DBG) std::cerr << "complex 2\n";
   Compound_Selector_Obj Parser::parse_compound_selector()
   {
     // init an empty compound selector wrapper
-    Compound_Selector_Obj seq = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate);
+    Compound_Selector_Obj seq = SASS_MEMORY_NEW(Compound_Selector, pstate);
     seq->media_block(last_media_block);
 
     // skip initial white-space
@@ -780,7 +780,7 @@ if (DBG) std::cerr << "complex 2\n";
       {
         // this produces a linefeed!?
         seq->has_parent_reference(true);
-        (*seq) << SASS_MEMORY_NEW(ctx.mem, Parent_Selector, pstate);
+        (*seq) << SASS_MEMORY_NEW(Parent_Selector, pstate);
         // parent selector only allowed at start
         // upcoming Sass may allow also trailing
         if (seq->length() > 1) {
@@ -797,7 +797,7 @@ if (DBG) std::cerr << "complex 2\n";
       // parse type selector
       else if (lex< re_type_selector >(false))
       {
-        seq->append(SASS_MEMORY_NEW(ctx.mem, Element_Selector, pstate, lexed));
+        seq->append(SASS_MEMORY_NEW(Element_Selector, pstate, lexed));
       }
       // peek for abort conditions
       else if (peek< spaces >()) break;
@@ -826,16 +826,16 @@ if (DBG) std::cerr << "complex 2\n";
   {
     lex < css_comments >(false);
     if (lex< class_name >()) {
-      return SASS_MEMORY_NEW(ctx.mem, Class_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(Class_Selector, pstate, lexed);
     }
     else if (lex< id_name >()) {
-      return SASS_MEMORY_NEW(ctx.mem, Id_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(Id_Selector, pstate, lexed);
     }
     else if (lex< quoted_string >()) {
-      return SASS_MEMORY_NEW(ctx.mem, Element_Selector, pstate, unquote(lexed));
+      return SASS_MEMORY_NEW(Element_Selector, pstate, unquote(lexed));
     }
     else if (lex< alternatives < variable, number, static_reference_combinator > >()) {
-      return SASS_MEMORY_NEW(ctx.mem, Element_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(Element_Selector, pstate, lexed);
     }
     else if (peek< pseudo_not >()) {
       return &parse_negated_selector();
@@ -850,7 +850,7 @@ if (DBG) std::cerr << "complex 2\n";
       return &parse_attribute_selector();
     }
     else if (lex< placeholder >()) {
-      Placeholder_Selector_Ptr sel = SASS_MEMORY_NEW(ctx.mem, Placeholder_Selector, pstate, lexed);
+      Placeholder_Selector_Ptr sel = SASS_MEMORY_NEW(Placeholder_Selector, pstate, lexed);
       sel->media_block(last_media_block);
       return sel;
     }
@@ -868,7 +868,7 @@ if (DBG) std::cerr << "complex 2\n";
       error("negated selector is missing ')'", pstate);
     }
     name.erase(name.size() - 1);
-    return SASS_MEMORY_NEW(ctx.mem, Wrapped_Selector, nsource_position, name, &negated);
+    return SASS_MEMORY_NEW(Wrapped_Selector, nsource_position, name, &negated);
   }
 
   // a pseudo selector often starts with one or two colons
@@ -901,15 +901,15 @@ if (DBG) std::cerr << "complex 2\n";
           >()
       ) {
         lex_css< alternatives < static_value, binomial > >();
-        String_Constant_Ptr expr = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+        String_Constant_Ptr expr = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
         if (expr && lex_css< exactly<')'> >()) {
           expr->can_compress_whitespace(true);
-          return SASS_MEMORY_NEW(ctx.mem, Pseudo_Selector, p, name, expr);
+          return SASS_MEMORY_NEW(Pseudo_Selector, p, name, expr);
         }
       }
       else if (Selector_List_Obj wrapped = parse_selector_list(true)) {
         if (wrapped && lex_css< exactly<')'> >()) {
-          return SASS_MEMORY_NEW(ctx.mem, Wrapped_Selector, p, name, &wrapped);
+          return SASS_MEMORY_NEW(Wrapped_Selector, p, name, &wrapped);
         }
       }
 
@@ -917,7 +917,7 @@ if (DBG) std::cerr << "complex 2\n";
     // EO if pseudo selector
 
     else if (lex < sequence< optional < pseudo_prefix >, identifier > >()) {
-      return SASS_MEMORY_NEW(ctx.mem, Pseudo_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(Pseudo_Selector, pstate, lexed);
     }
     else if(lex < pseudo_prefix >()) {
       css_error("Invalid CSS", " after ", ": expected pseudoclass or pseudoelement, was ");
@@ -934,7 +934,7 @@ if (DBG) std::cerr << "complex 2\n";
     ParserState p = pstate;
     if (!lex_css< attribute_name >()) error("invalid attribute name in attribute selector", pstate);
     std::string name(lexed);
-    if (lex_css< alternatives < exactly<']'>, exactly<'/'> > >()) return SASS_MEMORY_NEW(ctx.mem, Attribute_Selector, p, name, "", 0);
+    if (lex_css< alternatives < exactly<']'>, exactly<'/'> > >()) return SASS_MEMORY_NEW(Attribute_Selector, p, name, "", 0);
     if (!lex_css< alternatives< exact_match, class_match, dash_match,
                                 prefix_match, suffix_match, substring_match > >()) {
       error("invalid operator in attribute selector for " + name, pstate);
@@ -943,7 +943,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     String_Obj value = 0;
     if (lex_css< identifier >()) {
-      value = SASS_MEMORY_NEW(ctx.mem, String_Constant, p, lexed);
+      value = SASS_MEMORY_NEW(String_Constant, p, lexed);
     }
     else if (lex_css< quoted_string >()) {
       value = &parse_interpolated_chunk(lexed, true); // needed!
@@ -953,7 +953,7 @@ if (DBG) std::cerr << "complex 2\n";
     }
 
     if (!lex_css< alternatives < exactly<']'>, exactly<'/'> > >()) error("unterminated attribute selector for " + name, pstate);
-    return SASS_MEMORY_NEW(ctx.mem, Attribute_Selector, p, name, matcher, value);
+    return SASS_MEMORY_NEW(Attribute_Selector, p, name, matcher, value);
   }
 
   /* parse block comment and add to block */
@@ -965,7 +965,7 @@ if (DBG) std::cerr << "complex 2\n";
       bool is_important = lexed.begin[2] == '!';
       // flag on second param is to skip loosely over comments
       String_Obj contents = parse_interpolated_chunk(lexed, true);
-      block->append(SASS_MEMORY_NEW(ctx.mem, Comment, pstate, contents, is_important));
+      block->append(SASS_MEMORY_NEW(Comment, pstate, contents, is_important));
     }
   }
 
@@ -975,7 +975,7 @@ if (DBG) std::cerr << "complex 2\n";
       prop = parse_identifier_schema();
     }
     else if (lex< sequence< optional< exactly<'*'> >, identifier, zero_plus< block_comment > > >()) {
-      prop = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+      prop = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
     }
     else {
       css_error("Invalid CSS", " after ", ": expected \"}\", was ");
@@ -987,7 +987,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (peek_css< exactly<';'> >()) error("style declaration must contain a value", pstate);
     if (peek_css< exactly<'{'> >()) is_indented = false; // don't indent if value is empty
     if (peek_css< static_value >()) {
-      return SASS_MEMORY_CREATE(ctx.mem, Declaration, prop->pstate(), prop, &parse_static_value()/*, lex<kwd_important>()*/);
+      return SASS_MEMORY_CREATE(Declaration, prop->pstate(), prop, &parse_static_value()/*, lex<kwd_important>()*/);
     }
     else {
       Expression_Obj value;
@@ -1008,7 +1008,7 @@ if (DBG) std::cerr << "complex 2\n";
         }
       }
       lex < css_comments >(false);
-      Declaration_Obj decl = SASS_MEMORY_CREATE(ctx.mem, Declaration, prop->pstate(), prop, value/*, lex<kwd_important>()*/);
+      Declaration_Obj decl = SASS_MEMORY_CREATE(Declaration, prop->pstate(), prop, value/*, lex<kwd_important>()*/);
       decl->is_indented(is_indented);
       return decl;
     }
@@ -1033,11 +1033,11 @@ if (DBG) std::cerr << "complex 2\n";
   Expression_Obj Parser::parse_map()
   {
     Expression_Obj key = parse_list();
-    List_Obj map = SASS_MEMORY_NEW(ctx.mem, List, pstate, 0, SASS_HASH);
+    List_Obj map = SASS_MEMORY_NEW(List, pstate, 0, SASS_HASH);
     if (String_Quoted_Ptr str = SASS_MEMORY_CAST(String_Quoted, key)) {
       if (!str->quote_mark() && !str->is_delayed()) {
         if (Color_Ptr_Const col = name_to_color(str->value())) {
-          Color_Ptr c = SASS_MEMORY_NEW(ctx.mem, Color, *col);
+          Color_Ptr c = SASS_MEMORY_NEW(Color, *col);
           c->pstate(str->pstate());
           c->disp(str->value());
           key = c;
@@ -1064,7 +1064,7 @@ if (DBG) std::cerr << "complex 2\n";
       if (String_Quoted_Ptr str = SASS_MEMORY_CAST(String_Quoted, key)) {
         if (!str->quote_mark() && !str->is_delayed()) {
           if (Color_Ptr_Const col = name_to_color(str->value())) {
-            Color_Ptr c = SASS_MEMORY_NEW(ctx.mem, Color, *col);
+            Color_Ptr c = SASS_MEMORY_NEW(Color, *col);
             c->pstate(str->pstate());
             c->disp(str->value());
             key = c;
@@ -1115,7 +1115,7 @@ if (DBG) std::cerr << "complex 2\n";
         > >(position))
     {
       // return an empty list (nothing to delay)
-      return SASS_MEMORY_NEW(ctx.mem, List, pstate, 0);
+      return SASS_MEMORY_NEW(List, pstate, 0);
     }
 
     // now try to parse a space list
@@ -1129,7 +1129,7 @@ if (DBG) std::cerr << "complex 2\n";
     }
 
     // if we got so far, we actually do have a comma list
-    List_Obj comma_list = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2, SASS_COMMA);
+    List_Obj comma_list = SASS_MEMORY_NEW(List, pstate, 2, SASS_COMMA);
     // wrap the first expression
     comma_list->append(list);
 
@@ -1176,7 +1176,7 @@ if (DBG) std::cerr << "complex 2\n";
         > >(position)
     ) { return disj1; }
 
-    List_Obj space_list = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2, SASS_SPACE);
+    List_Obj space_list = SASS_MEMORY_NEW(List, pstate, 2, SASS_SPACE);
     space_list->append(disj1);
 
     while (!(peek_css< alternatives <
@@ -1417,23 +1417,23 @@ if (DBG) std::cerr << "complex 2\n";
       return &parse_function_call();
     }
     else if (lex< exactly<'+'> >()) {
-      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(ctx.mem, Unary_Expression, pstate, Unary_Expression::PLUS, &parse_factor());
+      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(Unary_Expression, pstate, Unary_Expression::PLUS, &parse_factor());
       if (ex && ex->operand()) ex->is_delayed(ex->operand()->is_delayed());
       return ex;
     }
     else if (lex< exactly<'-'> >()) {
-      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(ctx.mem, Unary_Expression, pstate, Unary_Expression::MINUS, &parse_factor());
+      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(Unary_Expression, pstate, Unary_Expression::MINUS, &parse_factor());
       if (ex && ex->operand()) ex->is_delayed(ex->operand()->is_delayed());
       return ex;
     }
     else if (lex< sequence< kwd_not > >()) {
-      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(ctx.mem, Unary_Expression, pstate, Unary_Expression::NOT, &parse_factor());
+      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(Unary_Expression, pstate, Unary_Expression::NOT, &parse_factor());
       if (ex && ex->operand()) ex->is_delayed(ex->operand()->is_delayed());
       return ex;
     }
     else if (peek < sequence < one_plus < alternatives < css_whitespace, exactly<'-'>, exactly<'+'> > >, number > >()) {
       if (parse_number_prefix()) return &parse_value(); // prefix is positive
-      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(ctx.mem, Unary_Expression, pstate, Unary_Expression::MINUS, &parse_value());;
+      Unary_Expression_Ptr ex = SASS_MEMORY_NEW(Unary_Expression, pstate, Unary_Expression::MINUS, &parse_value());;
       if (ex->operand()) ex->is_delayed(ex->operand()->is_delayed());
       return ex;
     }
@@ -1448,17 +1448,17 @@ if (DBG) std::cerr << "complex 2\n";
     lex< css_comments >(false);
     if (lex< ampersand >())
     {
-      return SASS_MEMORY_NEW(ctx.mem, Parent_Selector, pstate); }
+      return SASS_MEMORY_NEW(Parent_Selector, pstate); }
 
     if (lex< kwd_important >())
-    { return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, "!important"); }
+    { return SASS_MEMORY_NEW(String_Constant, pstate, "!important"); }
 
     // parse `10%4px` into separated items and not a schema
     if (lex< sequence < percentage, lookahead < number > > >())
-    { return SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::PERCENTAGE, lexed); }
+    { return SASS_MEMORY_NEW(Textual, pstate, Textual::PERCENTAGE, lexed); }
 
     if (lex< sequence < number, lookahead< sequence < op, number > > > >())
-    { return SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::NUMBER, lexed); }
+    { return SASS_MEMORY_NEW(Textual, pstate, Textual::NUMBER, lexed); }
 
     // string may be interpolated
     if (lex< sequence < quoted_string, lookahead < exactly <'-'> > > >())
@@ -1472,45 +1472,45 @@ if (DBG) std::cerr << "complex 2\n";
     { return &parse_string(); }
 
     if (lex< kwd_true >())
-    { return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, true); }
+    { return SASS_MEMORY_NEW(Boolean, pstate, true); }
 
     if (lex< kwd_false >())
-    { return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, false); }
+    { return SASS_MEMORY_NEW(Boolean, pstate, false); }
 
     if (lex< kwd_null >())
-    { return SASS_MEMORY_NEW(ctx.mem, Null, pstate); }
+    { return SASS_MEMORY_NEW(Null, pstate); }
 
     if (lex< identifier >()) {
-      return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+      return SASS_MEMORY_NEW(String_Constant, pstate, lexed);
     }
 
     if (lex< percentage >())
-    { return SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::PERCENTAGE, lexed); }
+    { return SASS_MEMORY_NEW(Textual, pstate, Textual::PERCENTAGE, lexed); }
 
     // match hex number first because 0x000 looks like a number followed by an identifier
     if (lex< sequence < alternatives< hex, hex0 >, negate < exactly<'-'> > > >())
-    { return SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::HEX, lexed); }
+    { return SASS_MEMORY_NEW(Textual, pstate, Textual::HEX, lexed); }
 
     if (lex< sequence < exactly <'#'>, identifier > >())
-    { return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, lexed); }
+    { return SASS_MEMORY_NEW(String_Quoted, pstate, lexed); }
 
     // also handle the 10em- foo special case
     // alternatives < exactly < '.' >, .. > -- `1.5em-.75em` is split into a list, not a binary expression
     if (lex< sequence< dimension, optional< sequence< exactly<'-'>, lookahead< alternatives < space > > > > > >())
-    { return SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::DIMENSION, lexed); }
+    { return SASS_MEMORY_NEW(Textual, pstate, Textual::DIMENSION, lexed); }
 
     if (lex< sequence< static_component, one_plus< strict_identifier > > >())
-    { return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed); }
+    { return SASS_MEMORY_NEW(String_Constant, pstate, lexed); }
 
     if (lex< number >())
-    { return SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::NUMBER, lexed); }
+    { return SASS_MEMORY_NEW(Textual, pstate, Textual::NUMBER, lexed); }
 
     if (lex< variable >())
-    { return SASS_MEMORY_NEW(ctx.mem, Variable, pstate, Util::normalize_underscores(lexed)); }
+    { return SASS_MEMORY_NEW(Variable, pstate, Util::normalize_underscores(lexed)); }
 
     // Special case handling for `%` proceeding an interpolant.
     if (lex< sequence< exactly<'%'>, optional< percentage > > >())
-    { return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed); }
+    { return SASS_MEMORY_NEW(String_Constant, pstate, lexed); }
 
     css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
 
@@ -1528,12 +1528,12 @@ if (DBG) std::cerr << "complex 2\n";
                     find_first_in_interval< exactly<hash_lbrace>, block_comment >(i, chunk.end);
 
     if (!p) {
-      String_Quoted_Ptr str_quoted = SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, std::string(i, chunk.end));
+      String_Quoted_Ptr str_quoted = SASS_MEMORY_NEW(String_Quoted, pstate, std::string(i, chunk.end));
       if (!constant && str_quoted->quote_mark()) str_quoted->quote_mark('*');
       return str_quoted;
     }
 
-    String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Ptr schema = SASS_MEMORY_NEW(String_Schema, pstate);
     schema->is_interpolant(true);
     while (i < chunk.end) {
       p = constant ? find_first_in_interval< exactly<hash_lbrace> >(i, chunk.end) :
@@ -1541,7 +1541,7 @@ if (DBG) std::cerr << "complex 2\n";
       if (p) {
         if (i < p) {
           // accumulate the preceding segment if it's nonempty
-          schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, p)));
+          schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(i, p)));
         }
         // we need to skip anything inside strings
         // create a new target in parser/prelexer
@@ -1563,7 +1563,7 @@ if (DBG) std::cerr << "complex 2\n";
       }
       else { // no interpolants left; add the last segment if nonempty
         // check if we need quotes here (was not sure after merge)
-        if (i < chunk.end) schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, chunk.end)));
+        if (i < chunk.end) schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(i, chunk.end)));
         break;
       }
       ++ i;
@@ -1582,7 +1582,7 @@ if (DBG) std::cerr << "complex 2\n";
     --str.end;
     --position;
 
-    String_Constant_Ptr str_node = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, str.time_wspace());
+    String_Constant_Ptr str_node = SASS_MEMORY_NEW(String_Constant, pstate, str.time_wspace());
     return str_node;
   }
 
@@ -1599,15 +1599,15 @@ if (DBG) std::cerr << "complex 2\n";
     // see if there any interpolants
     const char* p = find_first_in_interval< exactly<hash_lbrace>, block_comment >(str.begin, str.end);
     if (!p) {
-      return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, std::string(str.begin, str.end));
+      return SASS_MEMORY_NEW(String_Quoted, pstate, std::string(str.begin, str.end));
     }
 
-    String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Ptr schema = SASS_MEMORY_NEW(String_Schema, pstate);
     while (i < str.end) {
       p = find_first_in_interval< exactly<hash_lbrace>, block_comment >(i, str.end);
       if (p) {
         if (i < p) {
-          schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, p))); // accumulate the preceding segment if it's nonempty
+          schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(i, p))); // accumulate the preceding segment if it's nonempty
         }
         if (peek < sequence < optional_spaces, exactly<rbrace> > >(p+2)) { position = p+2;
           css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
@@ -1627,7 +1627,7 @@ if (DBG) std::cerr << "complex 2\n";
       }
       else { // no interpolants left; add the last segment if nonempty
         if (i < str.end) {
-          schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(i, str.end)));
+          schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(i, str.end)));
         }
         break;
       }
@@ -1637,17 +1637,17 @@ if (DBG) std::cerr << "complex 2\n";
 
   String_Obj Parser::parse_ie_keyword_arg()
   {
-    String_Schema_Ptr kwd_arg = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate, 3);
+    String_Schema_Ptr kwd_arg = SASS_MEMORY_NEW(String_Schema, pstate, 3);
     if (lex< variable >()) {
-      *kwd_arg << SASS_MEMORY_NEW(ctx.mem, Variable, pstate, Util::normalize_underscores(lexed));
+      *kwd_arg << SASS_MEMORY_NEW(Variable, pstate, Util::normalize_underscores(lexed));
     } else {
       lex< alternatives< identifier_schema, identifier > >();
-      *kwd_arg << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+      *kwd_arg << SASS_MEMORY_NEW(String_Constant, pstate, lexed);
     }
     lex< exactly<'='> >();
-    *kwd_arg << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+    *kwd_arg << SASS_MEMORY_NEW(String_Constant, pstate, lexed);
     if (peek< variable >()) kwd_arg->append(&parse_list());
-    else if (lex< number >()) kwd_arg->append(SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::NUMBER, Util::normalize_decimals(lexed)));
+    else if (lex< number >()) kwd_arg->append(SASS_MEMORY_NEW(Textual, pstate, Textual::NUMBER, Util::normalize_decimals(lexed)));
     else if (peek < ie_keyword_arg_value >()) { kwd_arg->append(&parse_list()); }
     return kwd_arg;
   }
@@ -1655,7 +1655,7 @@ if (DBG) std::cerr << "complex 2\n";
   String_Schema_Obj Parser::parse_value_schema(const char* stop)
   {
     // initialize the string schema object to add tokens
-    String_Schema_Obj schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Obj schema = SASS_MEMORY_NEW(String_Schema, pstate);
 
     if (peek<exactly<'}'>>()) {
       css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
@@ -1673,7 +1673,7 @@ if (DBG) std::cerr << "complex 2\n";
       }
       if (need_space) {
         need_space = false;
-        // schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, " "));
+        // schema->append(SASS_MEMORY_NEW(String_Constant, pstate, " "));
       }
       if ((e = peek< re_functional >()) && e < stop) {
         schema->append(&parse_function_call());
@@ -1686,7 +1686,7 @@ if (DBG) std::cerr << "complex 2\n";
         }
         Expression_Obj ex = 0;
         if (lex< re_static_expression >()) {
-          ex = SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+          ex = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
         } else {
           ex = parse_list();
         }
@@ -1698,12 +1698,12 @@ if (DBG) std::cerr << "complex 2\n";
       // lex some string constants or other valid token
       // Note: [-+] chars are left over from i.e. `#{3}+3`
       else if (lex< alternatives < exactly<'%'>, exactly < '-' >, exactly < '+' > > >()) {
-        schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed));
+        schema->append(SASS_MEMORY_NEW(String_Constant, pstate, lexed));
       }
       // lex a quoted string
       else if (lex< quoted_string >()) {
         // need_space = true;
-        // if (schema->length()) schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, " "));
+        // if (schema->length()) schema->append(SASS_MEMORY_NEW(String_Constant, pstate, " "));
         // else need_space = true;
         schema->append(&parse_string());
         if ((*position == '"' || *position == '\'') || peek < alternatives < alpha > >()) {
@@ -1712,7 +1712,7 @@ if (DBG) std::cerr << "complex 2\n";
         if (peek < exactly < '-' > >()) break;
       }
       else if (lex< sequence < identifier > >()) {
-        schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed));
+        schema->append(SASS_MEMORY_NEW(String_Constant, pstate, lexed));
         if ((*position == '"' || *position == '\'') || peek < alternatives < alpha > >()) {
            // need_space = true;
         }
@@ -1720,26 +1720,26 @@ if (DBG) std::cerr << "complex 2\n";
       // lex (normalized) variable
       else if (lex< variable >()) {
         std::string name(Util::normalize_underscores(lexed));
-        schema->append(SASS_MEMORY_NEW(ctx.mem, Variable, pstate, name));
+        schema->append(SASS_MEMORY_NEW(Variable, pstate, name));
       }
       // lex percentage value
       else if (lex< percentage >()) {
-        schema->append(SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::PERCENTAGE, lexed));
+        schema->append(SASS_MEMORY_NEW(Textual, pstate, Textual::PERCENTAGE, lexed));
       }
       // lex dimension value
       else if (lex< dimension >()) {
-        schema->append(SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::DIMENSION, lexed));
+        schema->append(SASS_MEMORY_NEW(Textual, pstate, Textual::DIMENSION, lexed));
       }
       // lex number value
       else if (lex< number >()) {
-        schema->append( SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::NUMBER, lexed));
+        schema->append( SASS_MEMORY_NEW(Textual, pstate, Textual::NUMBER, lexed));
       }
       // lex hex color value
       else if (lex< sequence < hex, negate < exactly < '-' > > > >()) {
-        schema->append(SASS_MEMORY_NEW(ctx.mem, Textual, pstate, Textual::HEX, lexed));
+        schema->append(SASS_MEMORY_NEW(Textual, pstate, Textual::HEX, lexed));
       }
       else if (lex< sequence < exactly <'#'>, identifier > >()) {
-        schema->append(SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, lexed));
+        schema->append(SASS_MEMORY_NEW(String_Quoted, pstate, lexed));
       }
       // lex a value in parentheses
       else if (peek< parenthese_scope >()) {
@@ -1751,7 +1751,7 @@ if (DBG) std::cerr << "complex 2\n";
       ++num_items;
     }
     if (position != stop) {
-      schema->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(position, stop)));
+      schema->append(SASS_MEMORY_NEW(String_Constant, pstate, std::string(position, stop)));
       position = stop;
     }
     end = ee;
@@ -1767,10 +1767,10 @@ if (DBG) std::cerr << "complex 2\n";
     // see if there any interpolants
     const char* p = find_first_in_interval< exactly<hash_lbrace>, block_comment >(id.begin, id.end);
     if (!p) {
-      return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, std::string(id.begin, id.end));
+      return SASS_MEMORY_NEW(String_Constant, pstate, std::string(id.begin, id.end));
     }
 
-    String_Schema_Obj schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Obj schema = SASS_MEMORY_NEW(String_Schema, pstate);
     while (i < id.end) {
       p = find_first_in_interval< exactly<hash_lbrace>, block_comment >(i, id.end);
       if (p) {
@@ -1827,10 +1827,10 @@ if (DBG) std::cerr << "complex 2\n";
           exactly < ')' >
         > >();
 
-    Argument_Obj arg = SASS_MEMORY_NEW(ctx.mem, Argument, arg_pos, &parse_interpolated_chunk(Token(arg_beg, arg_end)));
-    Arguments_Obj args = SASS_MEMORY_NEW(ctx.mem, Arguments, arg_pos);
+    Argument_Obj arg = SASS_MEMORY_NEW(Argument, arg_pos, &parse_interpolated_chunk(Token(arg_beg, arg_end)));
+    Arguments_Obj args = SASS_MEMORY_NEW(Arguments, arg_pos);
     args->append(&arg);
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
+    return SASS_MEMORY_CREATE(Function_Call, call_pos, name, args);
   }
 
   String_Obj Parser::parse_url_function_string()
@@ -1854,14 +1854,14 @@ if (DBG) std::cerr << "complex 2\n";
     }
 
     if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(&url_string)) {
-      String_Schema_Obj res = SASS_MEMORY_CREATE(ctx.mem, String_Schema, pstate);
-      res->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, prefix));
+      String_Schema_Obj res = SASS_MEMORY_CREATE(String_Schema, pstate);
+      res->append(SASS_MEMORY_NEW(String_Constant, pstate, prefix));
       res->append(schema);
-      res->append(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, suffix));
+      res->append(SASS_MEMORY_NEW(String_Constant, pstate, suffix));
       return &res;
     } else {
       std::string res = prefix + uri + suffix;
-      return SASS_MEMORY_CREATE(ctx.mem, String_Constant, pstate, res);
+      return SASS_MEMORY_CREATE(String_Constant, pstate, res);
     }
   }
 
@@ -1885,7 +1885,7 @@ if (DBG) std::cerr << "complex 2\n";
     }
     else if (uri != "") {
       std::string res = Util::rtrim(uri);
-      return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, res);
+      return SASS_MEMORY_NEW(String_Constant, pstate, res);
     }
 
     return 0;
@@ -1898,7 +1898,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     ParserState call_pos = pstate;
     Arguments_Obj args = parse_arguments();
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call, call_pos, name, args);
+    return SASS_MEMORY_CREATE(Function_Call, call_pos, name, args);
   }
 
   Function_Call_Schema_Obj Parser::parse_function_call_schema()
@@ -1907,12 +1907,12 @@ if (DBG) std::cerr << "complex 2\n";
     ParserState source_position_of_call = pstate;
     Arguments_Obj args = parse_arguments();
 
-    return SASS_MEMORY_CREATE(ctx.mem, Function_Call_Schema, source_position_of_call, name, args);
+    return SASS_MEMORY_CREATE(Function_Call_Schema, source_position_of_call, name, args);
   }
 
   Content_Obj Parser::parse_content_directive()
   {
-    return SASS_MEMORY_NEW(ctx.mem, Content, pstate);
+    return SASS_MEMORY_NEW(Content, pstate);
   }
 
   If_Obj Parser::parse_if_directive(bool else_if)
@@ -1927,14 +1927,14 @@ if (DBG) std::cerr << "complex 2\n";
     // only throw away comment if we parse a case
     // we want all other comments to be parsed
     if (lex_css< elseif_directive >()) {
-      alternative = SASS_MEMORY_NEW(ctx.mem, Block, pstate);
+      alternative = SASS_MEMORY_NEW(Block, pstate);
       alternative->append(&parse_if_directive(true));
     }
     else if (lex_css< kwd_else_directive >()) {
       alternative = &parse_block(root);
     }
     stack.pop_back();
-    return SASS_MEMORY_NEW(ctx.mem, If, if_source_position, predicate, block, alternative);
+    return SASS_MEMORY_NEW(If, if_source_position, predicate, block, alternative);
   }
 
   For_Obj Parser::parse_for_directive()
@@ -1953,7 +1953,7 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Obj upper_bound = parse_expression();
     Block_Obj body = parse_block(root);
     stack.pop_back();
-    return SASS_MEMORY_NEW(ctx.mem, For, for_source_position, var, lower_bound, upper_bound, body, inclusive);
+    return SASS_MEMORY_NEW(For, for_source_position, var, lower_bound, upper_bound, body, inclusive);
   }
 
   // helper to parse a var token
@@ -1998,7 +1998,7 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Obj list = parse_list();
     Block_Obj body = parse_block(root);
     stack.pop_back();
-    return SASS_MEMORY_NEW(ctx.mem, Each, each_source_position, vars, list, body);
+    return SASS_MEMORY_NEW(Each, each_source_position, vars, list, body);
   }
 
   // called after parsing `kwd_while_directive`
@@ -2007,7 +2007,7 @@ if (DBG) std::cerr << "complex 2\n";
     stack.push_back(Scope::Control);
     bool root = block_stack.back()->is_root();
     // create the initial while call object
-    While_Obj call = SASS_MEMORY_NEW(ctx.mem, While, pstate, 0, 0);
+    While_Obj call = SASS_MEMORY_NEW(While, pstate, 0, 0);
     // parse mandatory predicate
     Expression_Obj predicate = parse_list();
     call->predicate(predicate);
@@ -2023,7 +2023,7 @@ if (DBG) std::cerr << "complex 2\n";
   Media_Block_Obj Parser::parse_media_block()
   {
     stack.push_back(Scope::Media);
-    Media_Block_Obj media_block = SASS_MEMORY_NEW(ctx.mem, Media_Block, pstate, 0, 0);
+    Media_Block_Obj media_block = SASS_MEMORY_NEW(Media_Block, pstate, 0, 0);
 
     media_block->media_queries(parse_media_queries());
 
@@ -2038,7 +2038,7 @@ if (DBG) std::cerr << "complex 2\n";
   List_Obj Parser::parse_media_queries()
   {
     advanceToNextToken();
-    List_Obj queries = SASS_MEMORY_NEW(ctx.mem, List, pstate, 0, SASS_COMMA);
+    List_Obj queries = SASS_MEMORY_NEW(List, pstate, 0, SASS_COMMA);
     if (!peek_css < exactly <'{'> >()) queries->append(&parse_media_query());
     while (lex_css < exactly <','> >()) queries->append(&parse_media_query());
     queries->update_pstate(pstate);
@@ -2049,7 +2049,7 @@ if (DBG) std::cerr << "complex 2\n";
   Media_Query_Obj Parser::parse_media_query()
   {
     advanceToNextToken();
-    Media_Query_Obj media_query = SASS_MEMORY_OBJ(ctx.mem, Media_Query, pstate);
+    Media_Query_Obj media_query = SASS_MEMORY_OBJ(Media_Query, pstate);
     if (lex < kwd_not >()) { media_query->is_negated(true); lex < css_comments >(false); }
     else if (lex < kwd_only >()) { media_query->is_restricted(true); lex < css_comments >(false); }
 
@@ -2059,9 +2059,9 @@ if (DBG) std::cerr << "complex 2\n";
 
     while (lex_css < kwd_and >()) media_query->append(&parse_media_expression());
     if (lex < identifier_schema >()) {
-      String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+      String_Schema_Ptr schema = SASS_MEMORY_NEW(String_Schema, pstate);
       schema->append(&media_query->media_type());
-      schema->append(&SASS_MEMORY_OBJ(ctx.mem, String_Constant, pstate, " "));
+      schema->append(&SASS_MEMORY_OBJ(String_Constant, pstate, " "));
       schema->append(&parse_identifier_schema());
       media_query->media_type(schema);
     }
@@ -2076,7 +2076,7 @@ if (DBG) std::cerr << "complex 2\n";
   {
     if (lex < identifier_schema >()) {
       String_Obj ss = parse_identifier_schema();
-      return SASS_MEMORY_OBJ(ctx.mem, Media_Query_Expression, pstate, &ss, 0, true);
+      return SASS_MEMORY_OBJ(Media_Query_Expression, pstate, &ss, 0, true);
     }
     if (!lex_css< exactly<'('> >()) {
       error("media query expression must begin with '('", pstate);
@@ -2093,7 +2093,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (!lex_css< exactly<')'> >()) {
       error("unclosed parenthesis in media query expression", pstate);
     }
-    return SASS_MEMORY_OBJ(ctx.mem, Media_Query_Expression, feature->pstate(), feature, expression);
+    return SASS_MEMORY_OBJ(Media_Query_Expression, feature->pstate(), feature, expression);
   }
 
   // lexed after `kwd_supports_directive`
@@ -2102,7 +2102,7 @@ if (DBG) std::cerr << "complex 2\n";
   {
     Supports_Condition_Obj cond = parse_supports_condition();
     // create the ast node object for the support queries
-    Supports_Block_Obj query = SASS_MEMORY_CREATE(ctx.mem, Supports_Block, pstate, cond);
+    Supports_Block_Obj query = SASS_MEMORY_CREATE(Supports_Block, pstate, cond);
     // additional block is mandatory
     // parse inner block
     query->oblock(parse_block());
@@ -2126,7 +2126,7 @@ if (DBG) std::cerr << "complex 2\n";
   {
     if (!lex < kwd_not >()) return 0;
     Supports_Condition_Obj cond = parse_supports_condition_in_parens();
-    return SASS_MEMORY_CREATE(ctx.mem, Supports_Negation, pstate, &cond);
+    return SASS_MEMORY_CREATE(Supports_Negation, pstate, &cond);
   }
 
   Supports_Condition_Obj Parser::parse_supports_operator()
@@ -2142,8 +2142,8 @@ if (DBG) std::cerr << "complex 2\n";
       lex < css_whitespace >();
       Supports_Condition_Obj right = parse_supports_condition_in_parens();
 
-      // Supports_Condition_Ptr cc = SASS_MEMORY_NEW(ctx.mem, Supports_Condition, *static_cast<Supports_Condition_Ptr>(cond));
-      cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Operator, pstate, &cond, &right, op);
+      // Supports_Condition_Ptr cc = SASS_MEMORY_NEW(Supports_Condition, *static_cast<Supports_Condition_Ptr>(cond));
+      cond = SASS_MEMORY_CREATE(Supports_Operator, pstate, &cond, &right, op);
     }
     return cond;
   }
@@ -2155,7 +2155,7 @@ if (DBG) std::cerr << "complex 2\n";
     String_Obj interp = parse_interpolated_chunk(lexed);
     if (!interp) return 0;
 
-    return SASS_MEMORY_NEW(ctx.mem, Supports_Interpolation, pstate, &interp);
+    return SASS_MEMORY_NEW(Supports_Interpolation, pstate, &interp);
   }
 
   // TODO: This needs some major work. Although feature conditions
@@ -2166,7 +2166,7 @@ if (DBG) std::cerr << "complex 2\n";
     // parse something declaration like
     Declaration_Obj declaration = parse_declaration();
     if (!declaration) error("@supports condition expected declaration", pstate);
-    cond = SASS_MEMORY_CREATE(ctx.mem, Supports_Declaration,
+    cond = SASS_MEMORY_CREATE(Supports_Declaration,
                      declaration->pstate(),
                      &declaration->property(),
                      declaration->value());
@@ -2209,10 +2209,10 @@ if (DBG) std::cerr << "complex 2\n";
     }
     else if ((lookahead_result = lookahead_for_selector(position)).found) {
       Ruleset_Obj r = parse_ruleset(lookahead_result, false);
-      body = SASS_MEMORY_NEW(ctx.mem, Block, r->pstate(), 1, true);
+      body = SASS_MEMORY_NEW(Block, r->pstate(), 1, true);
       body->append(&r);
     }
-    At_Root_Block_Obj at_root = SASS_MEMORY_CREATE(ctx.mem, At_Root_Block, at_source_position, body);
+    At_Root_Block_Obj at_root = SASS_MEMORY_CREATE(At_Root_Block, at_source_position, body);
     if (&expr) at_root->expression(&expr);
     return at_root;
   }
@@ -2228,14 +2228,14 @@ if (DBG) std::cerr << "complex 2\n";
     Expression_Obj feature = parse_list();
     if (!lex_css< exactly<':'> >()) error("style declaration must contain a value", pstate);
     Expression_Obj expression = parse_list();
-    List_Obj value = SASS_MEMORY_NEW(ctx.mem, List, feature->pstate(), 1);
+    List_Obj value = SASS_MEMORY_NEW(List, feature->pstate(), 1);
 
     if (expression->concrete_type() == Expression::LIST) {
         value = SASS_MEMORY_CAST(List, expression);
     }
     else *value << expression;
 
-    At_Root_Query_Obj cond = SASS_MEMORY_CREATE(ctx.mem, At_Root_Query,
+    At_Root_Query_Obj cond = SASS_MEMORY_CREATE(At_Root_Query,
                                           value->pstate(),
                                           feature,
                                           &value);
@@ -2249,7 +2249,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     if (lexed == "@else") error("Invalid CSS: @else must come after @if", pstate);
 
-    Directive_Ptr at_rule = SASS_MEMORY_CREATE(ctx.mem, Directive, pstate, kwd);
+    Directive_Ptr at_rule = SASS_MEMORY_CREATE(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
       at_rule->selector(&parse_selector_list(true));
@@ -2278,7 +2278,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     if (lexed == "@else") error("Invalid CSS: @else must come after @if", pstate);
 
-    Directive_Obj at_rule = SASS_MEMORY_CREATE(ctx.mem, Directive, pstate, kwd);
+    Directive_Obj at_rule = SASS_MEMORY_CREATE(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
       at_rule->selector(&parse_selector_list(true));
@@ -2304,7 +2304,7 @@ if (DBG) std::cerr << "complex 2\n";
 
   Directive_Obj Parser::parse_directive()
   {
-    Directive_Obj directive = SASS_MEMORY_CREATE(ctx.mem, Directive, pstate, lexed);
+    Directive_Obj directive = SASS_MEMORY_CREATE(Directive, pstate, lexed);
     String_Schema_Obj val = parse_almost_any_value();
     // strip left and right if they are of type string
     directive->value(&val);
@@ -2384,7 +2384,7 @@ if (DBG) std::cerr << "complex 2\n";
     >(false);
     if (match) {
       // if (DBG) std::cerr << "[[" << std::string(lexed) << "]\n";
-      return SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+      return SASS_MEMORY_NEW(String_Constant, pstate, lexed);
     }
     return NULL;
   }
@@ -2405,7 +2405,7 @@ if (DBG) std::cerr << "complex 2\n";
   String_Schema_Obj Parser::parse_almost_any_value()
   {
 
-    String_Schema_Obj schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+    String_Schema_Obj schema = SASS_MEMORY_NEW(String_Schema, pstate);
     if (*position == 0) return 0;
     lex < spaces >(false);
     Expression_Obj token = lex_almost_any_value_token();
@@ -2437,7 +2437,7 @@ if (DBG) std::cerr << "complex 2\n";
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(ctx.mem, Warning, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(Warning, pstate, parse_list(DELAYED));
   }
 
   Error_Obj Parser::parse_error()
@@ -2449,7 +2449,7 @@ if (DBG) std::cerr << "complex 2\n";
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(ctx.mem, Error, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(Error, pstate, parse_list(DELAYED));
   }
 
   Debug_Obj Parser::parse_debug()
@@ -2461,7 +2461,7 @@ if (DBG) std::cerr << "complex 2\n";
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(ctx.mem, Debug, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_CREATE(Debug, pstate, parse_list(DELAYED));
   }
 
   Return_Obj Parser::parse_return_directive()
@@ -2469,7 +2469,7 @@ if (DBG) std::cerr << "complex 2\n";
     // check that we do not have an empty list (ToDo: check if we got all cases)
     if (peek_css < alternatives < exactly < ';' >, exactly < '}' >, end_of_file > >())
     { css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was "); }
-    return SASS_MEMORY_CREATE(ctx.mem, Return, pstate, &parse_list());
+    return SASS_MEMORY_CREATE(Return, pstate, &parse_list());
   }
 
   Lookahead Parser::lookahead_for_selector(const char* start)
@@ -2674,7 +2674,7 @@ if (DBG) std::cerr << "complex 2\n";
   Expression_Obj Parser::fold_operands(Expression_Obj base, std::vector<Expression_Obj>& operands, Operand op)
   {
     for (size_t i = 0, S = operands.size(); i < S; ++i) {
-      base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), op, &base, operands[i]);
+      base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), op, &base, operands[i]);
     }
     return base;
   }
@@ -2696,7 +2696,7 @@ if (DBG) std::cerr << "complex 2\n";
           || (ops[0].operand == Sass_OP::GTE)
         )) {
           Expression_Obj rhs = fold_operands(operands[i], operands, ops, i + 1);
-          rhs = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[0], schema, &rhs);
+          rhs = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[0], schema, &rhs);
           return rhs;
         }
         // return schema;
@@ -2708,17 +2708,17 @@ if (DBG) std::cerr << "complex 2\n";
         if (schema->has_interpolants()) {
           if (i + 1 < S) {
             Expression_Obj rhs = fold_operands(operands[i+1], operands, ops, i + 2);
-            rhs = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, base->pstate(), ops[i], schema, &rhs);
-            base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, &rhs);
+            rhs = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[i], schema, &rhs);
+            base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, &rhs);
             return base;
           }
-          base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
+          base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
           return base;
         } else {
-          base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
+          base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
         }
       } else {
-        base = SASS_MEMORY_CREATE(ctx.mem, Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
+        base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
       }
       Binary_Expression_Ptr b = static_cast<Binary_Expression_Ptr>(&base);
       if (b && ops[i].operand == Sass_OP::DIV && b->left()->is_delayed() && b->right()->is_delayed()) {

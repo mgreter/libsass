@@ -291,10 +291,10 @@ namespace Sass {
     // TODO: figure out a better way to create a Complex_Selector from scratch
     // TODO: There's got to be a better way. This got ugly quick...
     Position noPosition(-1, -1, -1);
-    Element_Selector_Obj fakeParent = SASS_MEMORY_NEW(ctx.mem, Element_Selector, ParserState("[FAKE]"), "temp");
-    Compound_Selector_Obj fakeHead = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, ParserState("[FAKE]"), 1 /*size*/);
+    Element_Selector_Obj fakeParent = SASS_MEMORY_NEW(Element_Selector, ParserState("[FAKE]"), "temp");
+    Compound_Selector_Obj fakeHead = SASS_MEMORY_NEW(Compound_Selector, ParserState("[FAKE]"), 1 /*size*/);
     fakeHead->elements().push_back(&fakeParent);
-    Complex_Selector_Obj fakeParentContainer = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, ParserState("[FAKE]"), Complex_Selector_Ref::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
+    Complex_Selector_Obj fakeParentContainer = SASS_MEMORY_NEW(Complex_Selector, ParserState("[FAKE]"), Complex_Selector_Ref::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
 
     pOne->set_innermost(&fakeParentContainer, Complex_Selector_Ref::ANCESTOR_OF);
     pTwo->set_innermost(&fakeParentContainer, Complex_Selector_Ref::ANCESTOR_OF);
@@ -654,10 +654,10 @@ namespace Sass {
     // TODO: figure out a better way to create a Complex_Selector from scratch
     // TODO: There's got to be a better way. This got ugly quick...
     Position noPosition(-1, -1, -1);
-    Element_Selector_Obj fakeParent = SASS_MEMORY_NEW(ctx.mem, Element_Selector, ParserState("[FAKE]"), "temp");
-    Compound_Selector_Obj fakeHead = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, ParserState("[FAKE]"), 1 /*size*/);
+    Element_Selector_Obj fakeParent = SASS_MEMORY_NEW(Element_Selector, ParserState("[FAKE]"), "temp");
+    Compound_Selector_Obj fakeHead = SASS_MEMORY_NEW(Compound_Selector, ParserState("[FAKE]"), 1 /*size*/);
     fakeHead->elements().push_back(&fakeParent);
-    Complex_Selector_Obj fakeParentContainer = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, ParserState("[FAKE]"), Complex_Selector_Ref::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
+    Complex_Selector_Obj fakeParentContainer = SASS_MEMORY_NEW(Complex_Selector, ParserState("[FAKE]"), Complex_Selector_Ref::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
 
     Complex_Selector_Obj pOneWithFakeParent = nodeToComplexSelector(one, ctx);
     pOneWithFakeParent->set_innermost(&fakeParentContainer, Complex_Selector_Ref::ANCESTOR_OF);
@@ -987,7 +987,7 @@ namespace Sass {
           DEBUG_PRINTLN(ALL, "sel1: " << sel1)
           DEBUG_PRINTLN(ALL, "sel2: " << sel2)
 
-          Complex_Selector_Obj pMergedWrapper = sel1.selector()->clone2(ctx.mem); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
+          Complex_Selector_Obj pMergedWrapper = sel1.selector()->clone2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
           // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
           Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(&sel2.selector()->head(), ctx);
           pMergedWrapper->head(pMerged);
@@ -1046,7 +1046,7 @@ namespace Sass {
             DEBUG_PRINTLN(ALL, "PLUS SEL: " << plusSel)
             DEBUG_PRINTLN(ALL, "TILDE SEL: " << tildeSel)
 
-            Complex_Selector_Obj pMergedWrapper = plusSel.selector()->clone2(ctx.mem); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
+            Complex_Selector_Obj pMergedWrapper = plusSel.selector()->clone2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
             // TODO: does subject matter? Ruby: merged = plus_sel.unify(tilde_sel.members, tilde_sel.subject?)
             Compound_Selector_Ptr pMerged = plusSel.selector()->head()->unify_with(&tildeSel.selector()->head(), ctx);
             pMergedWrapper->head(pMerged);
@@ -1095,7 +1095,7 @@ namespace Sass {
         DEBUG_PRINTLN(ALL, "sel1: " << sel1)
         DEBUG_PRINTLN(ALL, "sel2: " << sel2)
 
-        Complex_Selector_Obj pMergedWrapper = sel1.selector()->clone2(ctx.mem); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
+        Complex_Selector_Obj pMergedWrapper = sel1.selector()->clone2(); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
         // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
         Compound_Selector_Ptr pMerged = sel1.selector()->head()->unify_with(&sel2.selector()->head(), ctx);
         pMergedWrapper->head(pMerged);
@@ -1572,7 +1572,7 @@ namespace Sass {
       DEBUG_EXEC(EXTEND_COMPOUND, printComplexSelector(&seq, "SEQ: "))
 
 // changing this makes aua
-      Compound_Selector_Obj pSels = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pSelector->pstate());
+      Compound_Selector_Obj pSels = SASS_MEMORY_NEW(Compound_Selector, pSelector->pstate());
       for (std::vector<ExtensionPair>::iterator groupIter = group.begin(), groupIterEnd = group.end(); groupIter != groupIterEnd; groupIter++) {
         ExtensionPair& pair = *groupIter;
         Compound_Selector_Obj pCompound = pair.second;
@@ -1598,7 +1598,7 @@ namespace Sass {
       Compound_Selector_Obj pInnermostCompoundSelector = pExtComplexSelector->last()->head();
 
       if (!pInnermostCompoundSelector) {
-        pInnermostCompoundSelector = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pSelector->pstate());
+        pInnermostCompoundSelector = SASS_MEMORY_NEW(Compound_Selector, pSelector->pstate());
       }
 	  // std::cerr << "IN: " << &pSelectorWithoutExtendSelectors << "\n";
 	  Compound_Selector_Obj pUnifiedSelector = pInnermostCompoundSelector->unify_with(&pSelectorWithoutExtendSelectors, ctx);
@@ -1620,9 +1620,9 @@ namespace Sass {
       // get rid of the last Compound_Selector and replace it with this one. I think the reason this code is more
       // complex is that Complex_Selector contains a combinator, but in ruby combinators have already been filtered
       // out and aren't operated on.
-      Complex_Selector_Obj pNewSelector = pExtComplexSelector->clone2(ctx.mem); // ->first();
+      Complex_Selector_Obj pNewSelector = pExtComplexSelector->clone2(); // ->first();
 
-      Complex_Selector_Obj pNewInnerMost = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pSelector->pstate(), Complex_Selector_Ref::ANCESTOR_OF, pUnifiedSelector, NULL);
+      Complex_Selector_Obj pNewInnerMost = SASS_MEMORY_NEW(Complex_Selector, pSelector->pstate(), Complex_Selector_Ref::ANCESTOR_OF, pUnifiedSelector, NULL);
 
       Complex_Selector_Ref::Combinator combinator = pNewSelector->clear_innermost();
       pNewSelector->set_innermost(&pNewInnerMost, combinator);
@@ -1901,7 +1901,7 @@ namespace Sass {
   */
   Selector_List_Ptr Extend::extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<Compound_Selector>& seen) {
 
-    Selector_List_Obj pNewSelectors = SASS_MEMORY_NEW(ctx.mem, Selector_List, pSelectorList->pstate(), pSelectorList->length());
+    Selector_List_Obj pNewSelectors = SASS_MEMORY_NEW(Selector_List, pSelectorList->pstate(), pSelectorList->length());
 
     extendedSomething = false;
 
@@ -1951,15 +1951,15 @@ namespace Sass {
           std::set<Compound_Selector> recseen(seen);
           recseen.insert(*cur->head());
           // create a copy since we add multiple items if stuff get unwrapped
-          Compound_Selector_Obj cpy_head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, cur->pstate());
+          Compound_Selector_Obj cpy_head = SASS_MEMORY_NEW(Compound_Selector, cur->pstate());
           for (Simple_Selector_Obj hs : *cur->head()) {
             if (Wrapped_Selector_Obj ws = SASS_MEMORY_CAST(Wrapped_Selector, hs)) {
-              ws->selector(ws->selector()->clone2(ctx.mem));
+              ws->selector(ws->selector()->clone2());
               if (Selector_List_Obj sl = SASS_MEMORY_CAST(Selector_List, ws->selector())) {
                 // special case for ruby ass
                 if (sl->empty()) {
                   // this seems inconsistent but it is how ruby sass seems to remove parentheses
-                  cpy_head->append(SASS_MEMORY_NEW(ctx.mem, Element_Selector, hs->pstate(), ws->name()));
+                  cpy_head->append(SASS_MEMORY_NEW(Element_Selector, hs->pstate(), ws->name()));
                 }
                 // has wrapped selectors
                 else {
@@ -1968,8 +1968,8 @@ namespace Sass {
                   for (size_t i = 0; i < ext_sl->length(); i += 1) {
                     if (Complex_Selector_Obj ext_cs = ext_sl->at(i)) {
                       // create clones for wrapped selector and the inner list
-                      Wrapped_Selector_Obj cpy_ws = SASS_MEMORY_NEW(ctx.mem, Wrapped_Selector, *ws);
-                      Selector_List_Obj cpy_ws_sl = SASS_MEMORY_NEW(ctx.mem, Selector_List, sl->pstate());
+                      Wrapped_Selector_Obj cpy_ws = SASS_MEMORY_NEW(Wrapped_Selector, *ws);
+                      Selector_List_Obj cpy_ws_sl = SASS_MEMORY_NEW(Selector_List, sl->pstate());
                       // remove parent selectors from inner selector
                       if (ext_cs->first() && ext_cs->first()->head()->length() > 0) {
                         Wrapped_Selector_Ptr ext_ws = SASS_MEMORY_CAST(Wrapped_Selector, ext_cs->first()->head()->first());

@@ -58,7 +58,7 @@ namespace Sass {
   // List is a valid value
   Value_Ptr To_Value::operator()(List_Ptr l)
   {
-    List_Obj ll = SASS_MEMORY_NEW(mem, List,
+    List_Obj ll = SASS_MEMORY_NEW(List,
                                l->pstate(),
                                l->length(),
                                l->separator(),
@@ -91,7 +91,7 @@ namespace Sass {
   // Selector_List is converted to a string
   Value_Ptr To_Value::operator()(Selector_List_Ptr s)
   {
-    return SASS_MEMORY_NEW(mem, String_Quoted,
+    return SASS_MEMORY_NEW(String_Quoted,
                            s->pstate(),
                            s->to_string(ctx.c_options));
   }
@@ -99,7 +99,7 @@ namespace Sass {
   // Binary_Expression is converted to a string
   Value_Ptr To_Value::operator()(Binary_Expression_Ptr s)
   {
-    return SASS_MEMORY_NEW(mem, String_Quoted,
+    return SASS_MEMORY_NEW(String_Quoted,
                            s->pstate(),
                            s->to_string(ctx.c_options));
   }

@@ -396,14 +396,14 @@ namespace Sass {
     // add urls (protocol other than file) and urls without procotol to `urls` member
     // ToDo: if ctx_path is already a file resource, we should not add it here?
     if (imp->import_queries() || protocol != "file" || imp_path.substr(0, 2) == "//") {
-      imp->urls().push_back(SASS_MEMORY_NEW(mem, String_Quoted, imp->pstate(), load_path));
+      imp->urls().push_back(SASS_MEMORY_NEW(String_Quoted, imp->pstate(), load_path));
     }
     else if (imp_path.length() > 4 && imp_path.substr(imp_path.length() - 4, 4) == ".css") {
-      String_Constant_Ptr loc = SASS_MEMORY_NEW(mem, String_Constant, pstate, unquote(load_path));
-      Argument_Obj loc_arg = SASS_MEMORY_NEW(mem, Argument, pstate, loc);
-      Arguments_Obj loc_args = SASS_MEMORY_NEW(mem, Arguments, pstate);
+      String_Constant_Ptr loc = SASS_MEMORY_NEW(String_Constant, pstate, unquote(load_path));
+      Argument_Obj loc_arg = SASS_MEMORY_NEW(Argument, pstate, loc);
+      Arguments_Obj loc_args = SASS_MEMORY_NEW(Arguments, pstate);
       loc_args->append(&loc_arg);
-      Function_Call_Ptr new_url = SASS_MEMORY_NEW(mem, Function_Call, pstate, "url", &loc_args);
+      Function_Call_Ptr new_url = SASS_MEMORY_NEW(Function_Call, pstate, "url", &loc_args);
       imp->urls().push_back(new_url);
     }
     else {
@@ -536,7 +536,7 @@ namespace Sass {
   void Context::apply_custom_headers(Block_Obj root, const char* ctx_path, ParserState pstate)
   {
     // create a custom import to resolve headers
-    Import_Obj imp = SASS_MEMORY_NEW(mem, Import, pstate);
+    Import_Obj imp = SASS_MEMORY_NEW(Import, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
     call_headers(entry_path, ctx_path, pstate, &imp);
@@ -546,7 +546,7 @@ namespace Sass {
     if (!imp->urls().empty()) root->append(&imp);
     // process all other resources (add Import_Stub nodes)
     for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-      root->append(SASS_MEMORY_NEW(mem, Import_Stub, pstate, imp->incs()[i]));
+      root->append(SASS_MEMORY_NEW(Import_Stub, pstate, imp->incs()[i]));
     }
   }
 
@@ -640,11 +640,11 @@ namespace Sass {
   {
 /*
 ParserState pstate("[NA]");
-List_Obj ls = SASS_MEMORY_NEW(mem, List, pstate);
-Number_Obj nr = SASS_MEMORY_NEW(mem, Number, pstate, 42);
+List_Obj ls = SASS_MEMORY_NEW(List, pstate);
+Number_Obj nr = SASS_MEMORY_NEW(Number, pstate, 42);
 ls->append(&nr);
 debug_ast(&ls);
-List_Ptr ls2 = ls->copy(mem, true);
+List_Ptr ls2 = ls->copy(true);
 debug_ast(ls2);
 exit(0);
 */
@@ -760,7 +760,7 @@ exit(0);
 
   void register_overload_stub(Context& ctx, std::string name, Env* env)
   {
-    Definition_Ptr stub = SASS_MEMORY_NEW(ctx.mem, Definition,
+    Definition_Ptr stub = SASS_MEMORY_NEW(Definition,
                                        ParserState("[built-in function]"),
                                        0,
                                        name,

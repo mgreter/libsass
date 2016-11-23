@@ -18,7 +18,7 @@ namespace Sass {
   Node Node::createSelector(Complex_Selector_Ptr pSelector, Context& ctx) {
     NodeDequePtr null;
 
-    Complex_Selector_Ptr pStripped = pSelector->copy2(ctx.mem);
+    Complex_Selector_Ptr pStripped = pSelector->copy2();
     pStripped->tail(NULL);
     pStripped->combinator(Complex_Selector_Ref::ANCESTOR_OF);
 
@@ -60,7 +60,7 @@ namespace Sass {
       }
     }
 
-    Node n(mType, mCombinator, mpSelector ? mpSelector->copy2(ctx.mem) : NULL, pNewCollection);
+    Node n(mType, mCombinator, mpSelector ? mpSelector->copy2() : NULL, pNewCollection);
     n.got_line_feed = got_line_feed;
     return n;
   }
@@ -239,7 +239,7 @@ namespace Sass {
 
     std::string noPath("");
     Position noPosition(-1, -1, -1);
-    Complex_Selector_Obj pFirst = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, ParserState("[NODE]"), Complex_Selector_Ref::ANCESTOR_OF, NULL, NULL);
+    Complex_Selector_Obj pFirst = SASS_MEMORY_NEW(Complex_Selector, ParserState("[NODE]"), Complex_Selector_Ref::ANCESTOR_OF, NULL, NULL);
 
     Complex_Selector_Obj pCurrent = pFirst;
 
@@ -251,7 +251,7 @@ namespace Sass {
       Node& child = *childIter;
 
       if (child.isSelector()) {
-        pCurrent->tail(child.selector()->copy2(ctx.mem)); // clone2(ctx.mem));   // JMA - need to clone the selector, because they can end up getting shared across Node collections, and can result in an infinite loop during the call to parentSuperselector()
+        pCurrent->tail(child.selector()->copy2()); // clone2());   // JMA - need to clone the selector, because they can end up getting shared across Node collections, and can result in an infinite loop during the call to parentSuperselector()
         // if (child.got_line_feed) pCurrent->has_line_feed(child.got_line_feed);
         pCurrent = &pCurrent->tail();
       } else if (child.isCombinator()) {
@@ -262,7 +262,7 @@ namespace Sass {
         if (childIter+1 != childIterEnd) {
           Node& nextNode = *(childIter+1);
           if (nextNode.isCombinator()) {
-            pCurrent->tail(SASS_MEMORY_NEW(ctx.mem, Complex_Selector, ParserState("[NODE]"), Complex_Selector_Ref::ANCESTOR_OF, NULL, NULL));
+            pCurrent->tail(SASS_MEMORY_NEW(Complex_Selector, ParserState("[NODE]"), Complex_Selector_Ref::ANCESTOR_OF, NULL, NULL));
             if (nextNode.got_line_feed) pCurrent->tail()->has_line_feed(nextNode.got_line_feed);
             pCurrent = &pCurrent->tail();
           }
@@ -273,13 +273,13 @@ namespace Sass {
     }
 
     // Put the dummy Compound_Selector in the first position, for consistency with the rest of libsass
-    Compound_Selector_Ptr fakeHead = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, ParserState("[NODE]"), 1);
-    Parent_Selector_Ptr selectorRef = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, ParserState("[NODE]"));
+    Compound_Selector_Ptr fakeHead = SASS_MEMORY_NEW(Compound_Selector, ParserState("[NODE]"), 1);
+    Parent_Selector_Ptr selectorRef = SASS_MEMORY_NEW(Parent_Selector, ParserState("[NODE]"));
     fakeHead->elements().push_back(selectorRef);
     if (toConvert.got_line_feed) pFirst->has_line_feed(toConvert.got_line_feed);
     // pFirst->has_line_feed(pFirst->has_line_feed() || pFirst->tail()->has_line_feed() || toConvert.got_line_feed);
     pFirst->head(fakeHead);
-    return pFirst->copy2(ctx.mem);
+    return pFirst->copy2();
   }
 
   // A very naive trim function, which removes duplicates in a node

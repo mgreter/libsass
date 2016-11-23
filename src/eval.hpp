@@ -92,18 +92,18 @@ namespace Sass {
     static bool eq(Expression_Obj, Expression_Obj);
     static bool lt(Expression_Obj, Expression_Obj, std::string op);
     // -- arithmetic on the combinations that matter
-    static Value_Ptr op_numbers(Memory_Manager&, enum Sass_OP, const Number&, const Number&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
-    static Value_Ptr op_number_color(Memory_Manager&, enum Sass_OP, const Number&, const Color&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
-    static Value_Ptr op_color_number(Memory_Manager&, enum Sass_OP, const Color&, const Number&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
-    static Value_Ptr op_colors(Memory_Manager&, enum Sass_OP, const Color&, const Color&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
-    static Value_Ptr op_strings(Memory_Manager&, Sass::Operand, Value&, Value&, struct Sass_Inspect_Options opt, ParserState* pstate = 0, bool interpolant = false);
+    static Value_Ptr op_numbers(enum Sass_OP, const Number&, const Number&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
+    static Value_Ptr op_number_color(enum Sass_OP, const Number&, const Color&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
+    static Value_Ptr op_color_number(enum Sass_OP, const Color&, const Number&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
+    static Value_Ptr op_colors(enum Sass_OP, const Color&, const Color&, struct Sass_Inspect_Options opt, ParserState* pstate = 0);
+    static Value_Ptr op_strings(Sass::Operand, Value&, Value&, struct Sass_Inspect_Options opt, ParserState* pstate = 0, bool interpolant = false);
 
   private:
     void interpolation(Context& ctx, std::string& res, Expression_Obj ex, bool into_quotes, bool was_itpl = false);
 
   };
 
-  Expression_Ptr cval_to_astnode(Memory_Manager& mem, union Sass_Value* v, Context& ctx, Backtrace* backtrace, ParserState pstate = ParserState("[AST]"));
+  Expression_Ptr cval_to_astnode(union Sass_Value* v, Context& ctx, Backtrace* backtrace, ParserState pstate = ParserState("[AST]"));
 
 }
 

@@ -16,14 +16,14 @@ namespace Sass {
 
   Expression_Ptr Listize::operator()(Selector_List_Ptr sel)
   {
-    List_Obj l = SASS_MEMORY_NEW(mem, List, sel->pstate(), sel->length(), SASS_COMMA);
+    List_Obj l = SASS_MEMORY_NEW(List, sel->pstate(), sel->length(), SASS_COMMA);
     l->from_selector(true);
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
       if (!sel->at(i)) continue;
       l->append(sel->at(i)->perform(this));
     }
     if (l->length()) return l.survive();
-    return SASS_MEMORY_NEW(mem, Null, l->pstate());
+    return SASS_MEMORY_NEW(Null, l->pstate());
   }
 
   Expression_Ptr Listize::operator()(Compound_Selector_Ptr sel)
@@ -33,12 +33,12 @@ namespace Sass {
       Expression_Ptr e = (*sel)[i]->perform(this);
       if (e) str += e->to_string();
     }
-    return SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), str);
+    return SASS_MEMORY_NEW(String_Quoted, sel->pstate(), str);
   }
 
   Expression_Ptr Listize::operator()(Complex_Selector_Ptr sel)
   {
-    List_Obj l = SASS_MEMORY_NEW(mem, List, sel->pstate(), 2);
+    List_Obj l = SASS_MEMORY_NEW(List, sel->pstate(), 2);
     l->from_selector(true);
     Compound_Selector_Obj head = sel->head();
     if (head && !head->is_empty_reference())
@@ -52,16 +52,16 @@ namespace Sass {
     switch(sel->combinator())
     {
       case Complex_Selector_Ref::PARENT_OF:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), ">");
+        *l << SASS_MEMORY_NEW(String_Quoted, sel->pstate(), ">");
       break;
       case Complex_Selector_Ref::ADJACENT_TO:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "+");
+        *l << SASS_MEMORY_NEW(String_Quoted, sel->pstate(), "+");
       break;
       case Complex_Selector_Ref::REFERENCE:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "/" + reference + "/");
+        *l << SASS_MEMORY_NEW(String_Quoted, sel->pstate(), "/" + reference + "/");
       break;
       case Complex_Selector_Ref::PRECEDES:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "~");
+        *l << SASS_MEMORY_NEW(String_Quoted, sel->pstate(), "~");
       break;
       case Complex_Selector_Ref::ANCESTOR_OF:
       break;
