@@ -314,7 +314,7 @@ namespace Sass {
   {
     if (empty()) return rhs;
 //    Compound_Selector_Obj unleak = 0;
-    Compound_Selector_Ptr unified = rhs->copy2();
+    Compound_Selector_Ptr unified = rhs->copy2(); // verified
     for (size_t i = 0, L = length(); i < L; ++i)
     {
       if (!unified) break;
@@ -1163,10 +1163,10 @@ return rhs;
               for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
                 Complex_Selector_Obj t = (*tails)[n];
                 Complex_Selector_Obj parent = (*parents)[i];
-                Complex_Selector_Obj s = parent->clone2(); // veified
-                Complex_Selector_Obj ss = this->copy2(); // seems ok
-                ss->tail(t ? t->copy2() : 0); // seems ok
-                Compound_Selector_Obj h = head_->copy2();
+                Complex_Selector_Obj s = parent->clone2(); // verified
+                Complex_Selector_Obj ss = this->copy2(); // verified
+                ss->tail(t ? t->copy2() : 0); // verified
+                Compound_Selector_Obj h = head_->copy2(); // verified
                 // remove parent selector from sequence
                 if (h->length()) h->erase(h->begin());
                 ss->head(h->length() ? &h : 0);
@@ -1191,14 +1191,14 @@ return rhs;
             for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
               Complex_Selector_Obj parent = (*parents)[i];
               Complex_Selector_Obj s = parent->clone2(); // verified
-              Complex_Selector_Obj ss = this->copy2(); // seems ok
+              Complex_Selector_Obj ss = this->copy2(); // verified
               // this is only if valid if the parent has no trailing op
               // otherwise we cannot append more simple selectors to head
               if (parent->last()->combinator() != ANCESTOR_OF) {
                 throw Exception::InvalidParent(&parent, &ss);
               }
-              ss->tail(tail ? tail->copy2() : 0); // seems ok
-              Compound_Selector_Obj h = head_->copy2();
+              ss->tail(tail); // seems ok
+              Compound_Selector_Obj h = head_->copy2(); // verified
               // remove parent selector from sequence
               if (h->length()) h->erase(h->begin());
               ss->head(h->length() ? &h : 0);
@@ -1223,8 +1223,8 @@ return rhs;
         else {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
-              Complex_Selector_Obj cpy = this->copy2(); // seems ok
-              cpy->tail((*tails)[n]->copy2()); // seems ok
+              Complex_Selector_Obj cpy = this; // seems ok
+              cpy->tail((*tails)[n]); // seems ok
               cpy->head(SASS_MEMORY_NEW(Compound_Selector, head->pstate()));
               for (size_t i = 1, L = this->head()->length(); i < L; ++i)
                 *cpy->head() << &(*this->head())[i];
@@ -1273,7 +1273,7 @@ return rhs;
     Selector_List_Ptr rv = SASS_MEMORY_NEW(Selector_List, pstate_);
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector_Obj pr = this->copy2();
+        Complex_Selector_Obj pr = this->copy2(); // verified
         pr->tail(tails->at(i));
         rv->append(pr);
       }
@@ -1563,7 +1563,7 @@ return rhs;
   void Compound_Selector_Ref::mergeSources(SourcesSet& sources, Context& ctx)
   {
     for (SourcesSet::iterator iterator = sources.begin(), endIterator = sources.end(); iterator != endIterator; ++iterator) {
-      this->sources_.insert((*iterator)->copy2());
+      this->sources_.insert((*iterator)->copy2()); // copy to avoid circular reference
     }
   }
 
@@ -2263,7 +2263,6 @@ return rhs;
 #ifdef DEBUG_SHARED_PTR
 
 #define IMPLEMENT_AST_OPERATORS(klass) \
-  klass##_Ptr klass##_Ref::copy(bool recursive) const { return SASS_MEMORY_NEW(klass, this); } \
   klass##_Ptr klass##_Ref::copy2() const { \
     void* heap = mem.allocate(sizeof(klass)); \
     klass##_Ptr cpy = new (heap) klass(this); \
@@ -2281,7 +2280,6 @@ return rhs;
 #else
 
 #define IMPLEMENT_AST_OPERATORS(klass) \
-  klass##_Ptr klass##_Ref::copy(bool recursive) const { return SASS_MEMORY_NEW(klass, this); } \
   klass##_Ptr klass##_Ref::copy2() const { \
     return new klass(this); \
   } \

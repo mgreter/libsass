@@ -13,7 +13,6 @@
 #include "sass/base.h"
 
 #define ATTACH_AST_OPERATIONS(klass) \
-  virtual klass##_Ptr copy(bool recursive = false) const; \
   virtual klass##_Ptr copy2() const; \
   virtual klass##_Ptr clone2() const; \
 
@@ -97,7 +96,6 @@ namespace Sass {
     { }
     virtual ~AST_Node_Ref() = 0;
     virtual size_t hash() { return 0; }
-    virtual AST_Node_Ptr copy(bool recursive = false) const = 0;
     virtual AST_Node_Ptr copy2() const = 0;
     virtual AST_Node_Ptr clone2() const = 0;
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
@@ -175,7 +173,6 @@ namespace Sass {
     virtual bool is_right_interpolant() const { return is_interpolant(); }
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
-    virtual Expression_Ptr copy(bool recursive = false) const = 0;
     virtual Expression_Ptr copy2() const = 0;
     virtual Expression_Ptr clone2() const = 0;
     virtual size_t hash() { return 0; }
@@ -193,7 +190,6 @@ namespace Sass {
     PreValue_Ref(const PreValue_Ref* ptr)
     : Expression_Ref(ptr)
     { }
-    virtual PreValue_Ptr copy(bool recursive = false) const = 0;
     virtual PreValue_Ptr copy2() const = 0;
     virtual PreValue_Ptr clone2() const = 0;
     virtual ~PreValue_Ref() { }
@@ -211,7 +207,6 @@ namespace Sass {
     Value_Ref(const Value_Ref* ptr)
     : Expression_Ref(ptr)
     { }
-    virtual Value_Ptr copy(bool recursive = false) const = 0;
     virtual Value_Ptr copy2() const = 0;
     virtual Value_Ptr clone2() const = 0;
     virtual bool operator== (const Expression& rhs) const = 0;
@@ -1771,7 +1766,6 @@ namespace Sass {
     virtual void ltrim() = 0;
     virtual void trim() = 0;
     virtual bool operator==(const Expression& rhs) const = 0;
-    virtual String_Ptr copy(bool recursive = false) const = 0;
     virtual String_Ptr copy2() const = 0;
     virtual String_Ptr clone2() const = 0;
     ATTACH_OPERATIONS()
@@ -2314,7 +2308,6 @@ namespace Sass {
     virtual bool has_real_parent_ref() {
       return false;
     }
-    virtual Selector_Ptr copy(bool recursive = false) const = 0;
     virtual Selector_Ptr copy2() const = 0;
     virtual Selector_Ptr clone2() const = 0;
   };
@@ -2434,7 +2427,6 @@ namespace Sass {
 
     bool operator<(const Simple_Selector_Ref& rhs) const;
     // default implementation should work for most of the simple selectors (otherwise overload)
-    virtual Simple_Selector_Ptr copy(bool recursive = false) const = 0;
     virtual Simple_Selector_Ptr copy2() const = 0;
     virtual Simple_Selector_Ptr clone2() const = 0;
     ATTACH_OPERATIONS();

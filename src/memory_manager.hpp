@@ -38,9 +38,6 @@ namespace Sass {
 #define SASS_MEMORY_NEW(Class, ...)                                                 \
   new Class(__VA_ARGS__)   \
 
-#define SASS_MEMORY_CREATE(Class, ...)                                                 \
-  new Class(__VA_ARGS__)   \
-
 #define SASS_MEMORY_OBJ(Class, ...)                                                 \
   Class##_Obj(new Class(__VA_ARGS__))   \
 
@@ -49,11 +46,5 @@ namespace Sass {
 
 #define SASS_MEMORY_CAST_PTR(Class, ptr)   \
   (dynamic_cast<Class##_Ptr>(ptr))   \
-
-#define SASS_MEMORY_COPY(Class, obj)   \
-  (obj->copy2(mgr))   \
-
-#define SASS_MEMORY_CLONE(Class, obj)   \
-  (obj->clone2(mgr))   \
 
 #endif

@@ -42,7 +42,7 @@ namespace Sass {
     p.source   = source ? source : beg;
     p.position = beg ? beg : p.source;
     p.end      = p.position + strlen(p.position);
-    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate);
+    Block_Obj root = SASS_MEMORY_NEW(Block, pstate);
     p.block_stack.push_back(root);
     root->is_root(true);
     return p;
@@ -56,7 +56,7 @@ namespace Sass {
     p.source   = source ? source : beg;
     p.position = beg ? beg : p.source;
     p.end      = end ? end : p.position + strlen(p.position);
-    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate);
+    Block_Obj root = SASS_MEMORY_NEW(Block, pstate);
     p.block_stack.push_back(root);
     root->is_root(true);
     return p;
@@ -90,7 +90,7 @@ namespace Sass {
     p.source   = source ? source : t.begin;
     p.position = t.begin ? t.begin : p.source;
     p.end      = t.end ? t.end : p.position + strlen(p.position);
-    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate);
+    Block_Obj root = SASS_MEMORY_NEW(Block, pstate);
     p.block_stack.push_back(root);
     root->is_root(true);
     return p;
@@ -100,7 +100,7 @@ namespace Sass {
   Block_Obj Parser::parse()
   {
     bool is_root = false;
-    Block_Obj root = SASS_MEMORY_CREATE(Block, pstate, 0, true);
+    Block_Obj root = SASS_MEMORY_NEW(Block, pstate, 0, true);
     read_bom();
 
     // custom headers
@@ -138,7 +138,7 @@ namespace Sass {
       css_error("Invalid CSS", " after ", ": expected \"{\", was ");
     }
     // create new block and push to the selector stack
-    Block_Obj block = SASS_MEMORY_CREATE(Block, pstate, 0, is_root);
+    Block_Obj block = SASS_MEMORY_NEW(Block, pstate, 0, is_root);
     block_stack.push_back(block);
 
     if (!parse_block_nodes()) css_error("Invalid CSS", " after ", ": expected \"}\", was ");;
@@ -987,7 +987,7 @@ if (DBG) std::cerr << "complex 2\n";
     if (peek_css< exactly<';'> >()) error("style declaration must contain a value", pstate);
     if (peek_css< exactly<'{'> >()) is_indented = false; // don't indent if value is empty
     if (peek_css< static_value >()) {
-      return SASS_MEMORY_CREATE(Declaration, prop->pstate(), prop, &parse_static_value()/*, lex<kwd_important>()*/);
+      return SASS_MEMORY_NEW(Declaration, prop->pstate(), prop, &parse_static_value()/*, lex<kwd_important>()*/);
     }
     else {
       Expression_Obj value;
@@ -1008,7 +1008,7 @@ if (DBG) std::cerr << "complex 2\n";
         }
       }
       lex < css_comments >(false);
-      Declaration_Obj decl = SASS_MEMORY_CREATE(Declaration, prop->pstate(), prop, value/*, lex<kwd_important>()*/);
+      Declaration_Obj decl = SASS_MEMORY_NEW(Declaration, prop->pstate(), prop, value/*, lex<kwd_important>()*/);
       decl->is_indented(is_indented);
       return decl;
     }
@@ -1830,7 +1830,7 @@ if (DBG) std::cerr << "complex 2\n";
     Argument_Obj arg = SASS_MEMORY_NEW(Argument, arg_pos, &parse_interpolated_chunk(Token(arg_beg, arg_end)));
     Arguments_Obj args = SASS_MEMORY_NEW(Arguments, arg_pos);
     args->append(&arg);
-    return SASS_MEMORY_CREATE(Function_Call, call_pos, name, args);
+    return SASS_MEMORY_NEW(Function_Call, call_pos, name, args);
   }
 
   String_Obj Parser::parse_url_function_string()
@@ -1854,14 +1854,14 @@ if (DBG) std::cerr << "complex 2\n";
     }
 
     if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(&url_string)) {
-      String_Schema_Obj res = SASS_MEMORY_CREATE(String_Schema, pstate);
+      String_Schema_Obj res = SASS_MEMORY_NEW(String_Schema, pstate);
       res->append(SASS_MEMORY_NEW(String_Constant, pstate, prefix));
       res->append(schema);
       res->append(SASS_MEMORY_NEW(String_Constant, pstate, suffix));
       return &res;
     } else {
       std::string res = prefix + uri + suffix;
-      return SASS_MEMORY_CREATE(String_Constant, pstate, res);
+      return SASS_MEMORY_NEW(String_Constant, pstate, res);
     }
   }
 
@@ -1898,7 +1898,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     ParserState call_pos = pstate;
     Arguments_Obj args = parse_arguments();
-    return SASS_MEMORY_CREATE(Function_Call, call_pos, name, args);
+    return SASS_MEMORY_NEW(Function_Call, call_pos, name, args);
   }
 
   Function_Call_Schema_Obj Parser::parse_function_call_schema()
@@ -1907,7 +1907,7 @@ if (DBG) std::cerr << "complex 2\n";
     ParserState source_position_of_call = pstate;
     Arguments_Obj args = parse_arguments();
 
-    return SASS_MEMORY_CREATE(Function_Call_Schema, source_position_of_call, name, args);
+    return SASS_MEMORY_NEW(Function_Call_Schema, source_position_of_call, name, args);
   }
 
   Content_Obj Parser::parse_content_directive()
@@ -2102,7 +2102,7 @@ if (DBG) std::cerr << "complex 2\n";
   {
     Supports_Condition_Obj cond = parse_supports_condition();
     // create the ast node object for the support queries
-    Supports_Block_Obj query = SASS_MEMORY_CREATE(Supports_Block, pstate, cond);
+    Supports_Block_Obj query = SASS_MEMORY_NEW(Supports_Block, pstate, cond);
     // additional block is mandatory
     // parse inner block
     query->oblock(parse_block());
@@ -2126,7 +2126,7 @@ if (DBG) std::cerr << "complex 2\n";
   {
     if (!lex < kwd_not >()) return 0;
     Supports_Condition_Obj cond = parse_supports_condition_in_parens();
-    return SASS_MEMORY_CREATE(Supports_Negation, pstate, &cond);
+    return SASS_MEMORY_NEW(Supports_Negation, pstate, &cond);
   }
 
   Supports_Condition_Obj Parser::parse_supports_operator()
@@ -2143,7 +2143,7 @@ if (DBG) std::cerr << "complex 2\n";
       Supports_Condition_Obj right = parse_supports_condition_in_parens();
 
       // Supports_Condition_Ptr cc = SASS_MEMORY_NEW(Supports_Condition, *static_cast<Supports_Condition_Ptr>(cond));
-      cond = SASS_MEMORY_CREATE(Supports_Operator, pstate, &cond, &right, op);
+      cond = SASS_MEMORY_NEW(Supports_Operator, pstate, &cond, &right, op);
     }
     return cond;
   }
@@ -2166,7 +2166,7 @@ if (DBG) std::cerr << "complex 2\n";
     // parse something declaration like
     Declaration_Obj declaration = parse_declaration();
     if (!declaration) error("@supports condition expected declaration", pstate);
-    cond = SASS_MEMORY_CREATE(Supports_Declaration,
+    cond = SASS_MEMORY_NEW(Supports_Declaration,
                      declaration->pstate(),
                      &declaration->property(),
                      declaration->value());
@@ -2212,7 +2212,7 @@ if (DBG) std::cerr << "complex 2\n";
       body = SASS_MEMORY_NEW(Block, r->pstate(), 1, true);
       body->append(&r);
     }
-    At_Root_Block_Obj at_root = SASS_MEMORY_CREATE(At_Root_Block, at_source_position, body);
+    At_Root_Block_Obj at_root = SASS_MEMORY_NEW(At_Root_Block, at_source_position, body);
     if (&expr) at_root->expression(&expr);
     return at_root;
   }
@@ -2235,7 +2235,7 @@ if (DBG) std::cerr << "complex 2\n";
     }
     else *value << expression;
 
-    At_Root_Query_Obj cond = SASS_MEMORY_CREATE(At_Root_Query,
+    At_Root_Query_Obj cond = SASS_MEMORY_NEW(At_Root_Query,
                                           value->pstate(),
                                           feature,
                                           &value);
@@ -2249,7 +2249,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     if (lexed == "@else") error("Invalid CSS: @else must come after @if", pstate);
 
-    Directive_Ptr at_rule = SASS_MEMORY_CREATE(Directive, pstate, kwd);
+    Directive_Ptr at_rule = SASS_MEMORY_NEW(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
       at_rule->selector(&parse_selector_list(true));
@@ -2278,7 +2278,7 @@ if (DBG) std::cerr << "complex 2\n";
 
     if (lexed == "@else") error("Invalid CSS: @else must come after @if", pstate);
 
-    Directive_Obj at_rule = SASS_MEMORY_CREATE(Directive, pstate, kwd);
+    Directive_Obj at_rule = SASS_MEMORY_NEW(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
       at_rule->selector(&parse_selector_list(true));
@@ -2304,7 +2304,7 @@ if (DBG) std::cerr << "complex 2\n";
 
   Directive_Obj Parser::parse_directive()
   {
-    Directive_Obj directive = SASS_MEMORY_CREATE(Directive, pstate, lexed);
+    Directive_Obj directive = SASS_MEMORY_NEW(Directive, pstate, lexed);
     String_Schema_Obj val = parse_almost_any_value();
     // strip left and right if they are of type string
     directive->value(&val);
@@ -2437,7 +2437,7 @@ if (DBG) std::cerr << "complex 2\n";
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(Warning, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_NEW(Warning, pstate, parse_list(DELAYED));
   }
 
   Error_Obj Parser::parse_error()
@@ -2449,7 +2449,7 @@ if (DBG) std::cerr << "complex 2\n";
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(Error, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_NEW(Error, pstate, parse_list(DELAYED));
   }
 
   Debug_Obj Parser::parse_debug()
@@ -2461,7 +2461,7 @@ if (DBG) std::cerr << "complex 2\n";
         stack.back() != Scope::Rules) {
       error("Illegal nesting: Only properties may be nested beneath properties.", pstate);
     }
-    return SASS_MEMORY_CREATE(Debug, pstate, parse_list(DELAYED));
+    return SASS_MEMORY_NEW(Debug, pstate, parse_list(DELAYED));
   }
 
   Return_Obj Parser::parse_return_directive()
@@ -2469,7 +2469,7 @@ if (DBG) std::cerr << "complex 2\n";
     // check that we do not have an empty list (ToDo: check if we got all cases)
     if (peek_css < alternatives < exactly < ';' >, exactly < '}' >, end_of_file > >())
     { css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was "); }
-    return SASS_MEMORY_CREATE(Return, pstate, &parse_list());
+    return SASS_MEMORY_NEW(Return, pstate, &parse_list());
   }
 
   Lookahead Parser::lookahead_for_selector(const char* start)
@@ -2674,7 +2674,7 @@ if (DBG) std::cerr << "complex 2\n";
   Expression_Obj Parser::fold_operands(Expression_Obj base, std::vector<Expression_Obj>& operands, Operand op)
   {
     for (size_t i = 0, S = operands.size(); i < S; ++i) {
-      base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), op, &base, operands[i]);
+      base = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), op, &base, operands[i]);
     }
     return base;
   }
@@ -2709,16 +2709,16 @@ if (DBG) std::cerr << "complex 2\n";
           if (i + 1 < S) {
             Expression_Obj rhs = fold_operands(operands[i+1], operands, ops, i + 2);
             rhs = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[i], schema, &rhs);
-            base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, &rhs);
+            base = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[i], &base, &rhs);
             return base;
           }
-          base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
+          base = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
           return base;
         } else {
-          base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
+          base = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
         }
       } else {
-        base = SASS_MEMORY_CREATE(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
+        base = SASS_MEMORY_NEW(Binary_Expression, base->pstate(), ops[i], &base, operands[i]);
       }
       Binary_Expression_Ptr b = static_cast<Binary_Expression_Ptr>(&base);
       if (b && ops[i].operand == Sass_OP::DIV && b->left()->is_delayed() && b->right()->is_delayed()) {

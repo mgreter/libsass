@@ -455,7 +455,7 @@ namespace Sass {
       return lm->perform(this);
     }
     // check if we should expand it
-    if (l->is_expanded()) return l; // ->copy2(ctx.mem);
+    if (l->is_expanded()) return l;
     // regular case for unevaluated lists
     List_Obj ll = SASS_MEMORY_NEW(List,
                                l->pstate(),
@@ -537,7 +537,6 @@ namespace Sass {
     }
 
     Binary_Expression_Obj unleak2 = b;
-    // b = b->copy2(ctx.mem);
     // don't eval delayed expressions (the '/' when used as a separator)
     if (!force && op_type == Sass_OP::DIV && b->is_delayed()) {
       b->right(b->right()->perform(this));
@@ -1687,11 +1686,10 @@ namespace Sass {
   // XXX: this is never hit via spec tests
   Attribute_Selector_Ptr Eval::operator()(Attribute_Selector_Ptr s)
   {
-    String_Obj attr = s->value();
-    if (attr) { attr = static_cast<String_Ptr>(attr->perform(this)); }
-    Attribute_Selector_Ptr ss = s->copy2();
-    ss->value(attr);
-    return ss;
+    if (String_Obj attr = s->value()) {
+      s->value(static_cast<String_Ptr>(attr->perform(this)));
+    }
+    return s;
   }
 
   Selector_List_Ptr Eval::operator()(Selector_Schema_Ptr s)
