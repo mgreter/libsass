@@ -1347,14 +1347,14 @@ namespace Sass {
       if (ls && ls->is_arglist()) {
         for (auto as : *ls) arglist->push2(as);
       } else if (ms) {
-        aa->push(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), ms, "", false, true));
+        aa->push2(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), ms, "", false, true));
       } else if (ls) {
         for (auto as : *ls) arglist->push2(as);
       } else {
         arglist->push2(splat);
       }
       if (arglist->length()) {
-        aa->push2(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), arglist, "", true));
+        aa->push(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), arglist, "", true)); // verified
       }
     }
 
@@ -1363,7 +1363,7 @@ namespace Sass {
                             a->get_keyword_argument()->perform(this)
                           )->value()->perform(this);
 
-      aa->push(SASS_MEMORY_NEW(ctx.mem, Argument, kwarg->pstate(), kwarg, "", false, true));
+      aa->push2(SASS_MEMORY_NEW(ctx.mem, Argument, kwarg->pstate(), kwarg, "", false, true));
     }
 
     return aa;

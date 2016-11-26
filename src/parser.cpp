@@ -323,14 +323,14 @@ namespace Sass {
 
         if (lex< quoted_string >()) {
           Expression_Ptr the_url = parse_string();
-          args->push(SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url));
+          args->push2(SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url));
         }
         else if (String_Ptr the_url = parse_url_function_argument()) {
-          args->push(SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url));
+          args->push2(SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url));
         }
         else if (peek < skip_over_scopes < exactly < '(' >, exactly < ')' > > >(position)) {
           Expression_Ptr the_url = parse_list(); // parse_interpolated_chunk(lexed);
-          args->push(SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url));
+          args->push2(SASS_MEMORY_NEW(ctx.mem, Argument, the_url->pstate(), the_url));
         }
         else {
           error("malformed URL", pstate);
