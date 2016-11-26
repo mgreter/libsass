@@ -38,7 +38,7 @@ namespace Sass {
   {
     union Sass_Value* v = sass_make_list(l->length(), l->separator());
     for (size_t i = 0, L = l->length(); i < L; ++i) {
-      sass_list_set_value(v, i, (*l)[i]->perform(this));
+      sass_list_set_value(v, i, l->get(i)->perform(this));
     }
     return v;
   }
@@ -59,7 +59,7 @@ namespace Sass {
   {
     union Sass_Value* v = sass_make_list(a->length(), SASS_COMMA);
     for (size_t i = 0, L = a->length(); i < L; ++i) {
-      sass_list_set_value(v, i, (*a)[i]->perform(this));
+      sass_list_set_value(v, i, a->get(i)->perform(this));
     }
     return v;
   }

@@ -1260,7 +1260,7 @@ namespace Sass {
         if (index < 0 || index > len - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate);
         // return (*sl)[static_cast<int>(index)];
         Listize listize(ctx.mem);
-        return (*sl)[static_cast<int>(index)]->perform(&listize);
+        return sl->at(static_cast<int>(index))->perform(&listize);
       }
       List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
       if (n->value() == 0) error("argument `$n` of `" + std::string(sig) + "` must be non-zero", pstate);
@@ -1307,7 +1307,7 @@ namespace Sass {
       if (index < 0 || index > l->length() - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length(), l->separator());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
-        *result << ((i == index) ? v : (*l)[i]);
+        *result << ((i == index) ? v : l->at(i));
       }
       return result;
     }
@@ -1423,9 +1423,9 @@ namespace Sass {
             *ith << arglist->value_at_index(i);
           }
           if (arglist->is_arglist()) {
-            ((Argument_Ptr)(*arglist)[i])->value(ith);
+            ((Argument_Ptr)arglist->get(i))->value(ith);
           } else {
-            (*arglist)[i] = ith;
+            arglist->get(i) = ith;
           }
         }
         shortest = (i ? std::min(shortest, ith->length()) : ith->length());
@@ -1435,7 +1435,7 @@ namespace Sass {
       for (size_t i = 0; i < shortest; ++i) {
         List_Ptr zipper = SASS_MEMORY_NEW(ctx.mem, List, pstate, L);
         for (size_t j = 0; j < L; ++j) {
-          *zipper << (*static_cast<List_Ptr>(arglist->value_at_index(j)))[i];
+          *zipper << static_cast<List_Ptr>(arglist->value_at_index(j))->get(i);
         }
         *zippers << zipper;
       }
@@ -1465,7 +1465,8 @@ namespace Sass {
       Map_Ptr m = ARGM("$map", Map, ctx);
       Expression_Ptr v = ARG("$key", Expression);
       try {
-        return m->at(v);
+        Expression_Ptr rv = m->at(v);
+        return rv ? rv : SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       } catch (const std::out_of_range&) {
         return SASS_MEMORY_NEW(ctx.mem, Null, pstate);
       }
@@ -1538,11 +1539,11 @@ namespace Sass {
       List_Ptr arglist = SASS_MEMORY_NEW(ctx.mem, List, *ARG("$args", List));
       Map_Ptr result = SASS_MEMORY_NEW(ctx.mem, Map, pstate, 1);
       for (size_t i = arglist->size(), L = arglist->length(); i < L; ++i) {
-        std::string name = std::string(((Argument_Ptr)(*arglist)[i])->name());
+        std::string name = std::string(((Argument_Ptr)arglist->get(i))->name());
         name = name.erase(0, 1); // sanitize name (remove dollar sign)
         *result << std::make_pair(SASS_MEMORY_NEW(ctx.mem, String_Quoted,
                  pstate, name),
-                 ((Argument_Ptr)(*arglist)[i])->value());
+                 ((Argument_Ptr)arglist->get(i))->value());
       }
       return result;
     }
@@ -1663,7 +1664,7 @@ namespace Sass {
         //   if (list && p && !p->is_rest_parameter()) expr = (*list)[0];
         // }
         if (arglist->is_arglist()) {
-          Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*arglist)[i]);
+          Argument_Ptr arg = dynamic_cast<Argument_Ptr>(arglist->get(i));
           *args << SASS_MEMORY_NEW(ctx.mem, Argument,
                                    pstate,
                                    expr,
@@ -1785,7 +1786,7 @@ namespace Sass {
         std::vector<Complex_Selector_Ptr> exploded;
         Selector_List_Ptr rv = child->resolve_parent_refs(ctx, result);
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
-          exploded.push_back((*rv)[m]);
+          exploded.push_back(rv->get(m));
         }
         result->elements(exploded);
       }
@@ -1844,8 +1845,8 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Complex_Selector_Ptr parentSeqClone = (*result)[i]->cloneFully(ctx);
-            Complex_Selector_Ptr childSeq = (*child)[j];
+            Complex_Selector_Ptr parentSeqClone = result->get(i)->cloneFully(ctx);
+            Complex_Selector_Ptr childSeq = child->get(j);
             Complex_Selector_Ptr base = childSeq->tail();
 
             // Must be a simple sequence
@@ -1907,7 +1908,7 @@ namespace Sass {
       List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, sel->pstate(), sel->length(), SASS_COMMA);
 
       for (size_t i = 0, L = sel->length(); i < L; ++i) {
-        Simple_Selector* ss = (*sel)[i];
+        Simple_Selector* ss = sel->get(i);
         std::string ss_string = ss->to_string() ;
 
         *l << SASS_MEMORY_NEW(ctx.mem, String_Quoted, ss->pstate(), ss_string);

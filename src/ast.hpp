@@ -227,11 +227,20 @@ namespace Sass {
     virtual ~Vectorized() = 0;
     size_t length() const   { return elements_.size(); }
     bool empty() const      { return elements_.empty(); }
-    T last() const          { return elements_.back(); }
-    T first() const         { return elements_.front(); }
-    T& operator[](size_t i) { return elements_[i]; }
-    virtual const T& at(size_t i) const { return elements_.at(i); }
-    const T& operator[](size_t i) const { return elements_[i]; }
+    void clear()            { return elements_.clear(); }
+
+
+    const T& last() const          { return elements_.back(); }
+    const T& first() const         { return elements_.front(); }
+
+    // access with range checks (may throw)
+    inline T& at(size_t i) { return elements_.at(i); }
+    inline const T& at(size_t i) const { return elements_.at(i); }
+    // access without boundary checks (fastest)
+    // call this only if you know the boundaries
+    inline T& get(size_t i) { return elements_[i]; }
+    inline const T& get(size_t i) const { return elements_[i]; }
+
     virtual Vectorized& operator<<(T element)
     {
       if (!element) return *this;
@@ -240,9 +249,18 @@ namespace Sass {
       adjust_after_pushing(element);
       return *this;
     }
+    Vectorized& concat(Vectorized* v)
+    {
+      elements_.insert(
+        elements_.end(),
+        v->begin(),
+        v->end()
+      );
+      return *this;
+    }
     Vectorized& operator+=(Vectorized* v)
     {
-      for (size_t i = 0, L = v->length(); i < L; ++i) *this << (*v)[i];
+      for (size_t i = 0, L = v->length(); i < L; ++i) *this << v->get(i);
       return *this;
     }
     Vectorized& unshift(T element)
@@ -312,7 +330,12 @@ namespace Sass {
     size_t length() const                  { return list_.size(); }
     bool empty() const                     { return list_.empty(); }
     bool has(Expression_Ptr k) const          { return elements_.count(k) == 1; }
-    Expression_Ptr at(Expression_Ptr k) const;
+    Expression_Ptr at(Expression_Ptr k) const {
+      auto got = elements_.find(k);
+      if (got != elements_.end())
+      { return elements_.at(k); }
+      else { return NULL; }
+    }
     bool has_duplicate_key() const         { return duplicate_key_ != 0; }
     Expression_Ptr get_duplicate_key() const  { return duplicate_key_; }
     const ExpressionMap elements() { return elements_; }
@@ -1205,7 +1228,7 @@ namespace Sass {
         if (!(m && name() == m->name())) return false;
         if (!(m && arguments()->length() == m->arguments()->length())) return false;
         for (size_t i =0, L = arguments()->length(); i < L; ++i)
-          if (!((*arguments())[i] == (*m->arguments())[i])) return false;
+          if (arguments()->get(i) != m->arguments()->get(i)) return false;
         return true;
       }
       catch (std::bad_cast&)
@@ -2284,7 +2307,7 @@ namespace Sass {
     { }
     bool contains_placeholder() {
       for (size_t i = 0, L = length(); i < L; ++i) {
-        if ((*this)[i]->has_placeholder()) return true;
+        if (this->get(i)->has_placeholder()) return true;
       }
       return false;
     };
@@ -2293,7 +2316,7 @@ namespace Sass {
 
     bool is_universal() const
     {
-      return length() == 1 && (*this)[0]->is_universal();
+      return length() == 1 && get(0)->is_universal();
     }
 
     Complex_Selector_Ptr to_complex(Memory_Manager& mem);
@@ -2309,8 +2332,8 @@ namespace Sass {
     const Simple_Selector* base() const {
       if (length() == 0) return 0;
       // ToDo: why is this needed?
-      if (dynamic_cast<Type_Selector*>((*this)[0]))
-        return (*this)[0];
+      if (dynamic_cast<Type_Selector*>(get(0)))
+        return get(0);
       return 0;
     }
     virtual bool is_superselector_of(Compound_Selector_Ptr sub, std::string wrapped = "");
@@ -2328,7 +2351,7 @@ namespace Sass {
     {
       int sum = 0;
       for (size_t i = 0, L = length(); i < L; ++i)
-      { sum += (*this)[i]->specificity(); }
+      { sum += get(i)->specificity(); }
       return sum;
     }
 
@@ -2353,7 +2376,7 @@ namespace Sass {
     bool is_empty_reference()
     {
       return length() == 1 &&
-             dynamic_cast<Parent_Selector_Ptr>((*this)[0]);
+             dynamic_cast<Parent_Selector_Ptr>(get(0));
     }
     std::vector<std::string> to_str_vec(); // sometimes need to convert to a flat "by-value" data structure
 
@@ -2587,7 +2610,7 @@ namespace Sass {
       unsigned long specificity = 0;
       for (size_t i = 0, L = length(); i < L; ++i)
       {
-        specificity = (*this)[i]->specificity();
+        specificity = get(i)->specificity();
         if (sum < specificity) sum = specificity;
       }
       return sum;

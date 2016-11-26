@@ -29,7 +29,7 @@ namespace Sass {
     }
     if (output_style() == NESTED) indentation += block->tabs();
     for (size_t i = 0, L = block->length(); i < L; ++i) {
-      (*block)[i]->perform(this);
+      block->get(i)->perform(this);
     }
     if (output_style() == NESTED) indentation -= block->tabs();
     if (!block->is_root()) {
@@ -373,9 +373,9 @@ namespace Sass {
     if (output_style() == TO_SASS &&
         list->length() == 1 &&
         !list->from_selector() &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<Selector_List_Ptr>((*list)[0])) {
+        !dynamic_cast<List_Ptr>(list->get(0)) &&
+        !dynamic_cast<List_Ptr>(list->get(0)) &&
+        !dynamic_cast<Selector_List_Ptr>(list->get(0))) {
       append_string("(");
     }
     else if (!in_declaration && (list->separator() == SASS_HASH ||
@@ -391,7 +391,7 @@ namespace Sass {
     for (size_t i = 0, L = list->size(); i < L; ++i) {
       if (list->separator() == SASS_HASH)
       { sep[0] = i % 2 ? ':' : ','; }
-      Expression_Ptr list_item = (*list)[i];
+      Expression_Ptr list_item = list->get(i);
       if (output_style() != TO_SASS) {
         if (list_item->is_invisible()) {
           // this fixes an issue with "" in a list
@@ -415,9 +415,9 @@ namespace Sass {
     if (output_style() == TO_SASS &&
         list->length() == 1 &&
         !list->from_selector() &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<List_Ptr>((*list)[0]) &&
-        !dynamic_cast<Selector_List_Ptr>((*list)[0])) {
+        !dynamic_cast<List_Ptr>(list->get(0)) &&
+        !dynamic_cast<List_Ptr>(list->get(0)) &&
+        !dynamic_cast<Selector_List_Ptr>(list->get(0))) {
       append_string(",)");
     }
     else if (!in_declaration && (list->separator() == SASS_HASH ||
@@ -685,9 +685,9 @@ namespace Sass {
     // Evaluation should turn these into String_Constants,
     // so this method is only for inspection purposes.
     for (size_t i = 0, L = ss->length(); i < L; ++i) {
-      if ((*ss)[i]->is_interpolant()) append_string("#{");
-      (*ss)[i]->perform(this);
-      if ((*ss)[i]->is_interpolant()) append_string("}");
+      if (ss->get(i)->is_interpolant()) append_string("#{");
+      ss->get(i)->perform(this);
+      if (ss->get(i)->is_interpolant()) append_string("}");
     }
   }
 
@@ -769,11 +769,11 @@ namespace Sass {
       mq->media_type()->perform(this);
     }
     else {
-      (*mq)[i++]->perform(this);
+      mq->get(i++)->perform(this);
     }
     for (size_t L = mq->length(); i < L; ++i) {
       append_string(" and ");
-      (*mq)[i]->perform(this);
+      mq->get(i)->perform(this);
     }
   }
 
@@ -827,10 +827,10 @@ namespace Sass {
   {
     append_string("(");
     if (!p->empty()) {
-      (*p)[0]->perform(this);
+      p->get(0)->perform(this);
       for (size_t i = 1, L = p->length(); i < L; ++i) {
         append_comma_separator();
-        (*p)[i]->perform(this);
+        p->get(i)->perform(this);
       }
     }
     append_string(")");
@@ -859,11 +859,11 @@ namespace Sass {
   {
     append_string("(");
     if (!a->empty()) {
-      (*a)[0]->perform(this);
+      a->get(0)->perform(this);
       for (size_t i = 1, L = a->length(); i < L; ++i) {
         append_string(", "); // verified
         // Sass Bug? append_comma_separator();
-        (*a)[i]->perform(this);
+        a->get(i)->perform(this);
       }
     }
     append_string(")");
@@ -948,7 +948,7 @@ namespace Sass {
   void Inspect::operator()(Compound_Selector_Ptr s)
   {
     for (size_t i = 0, L = s->length(); i < L; ++i) {
-      (*s)[i]->perform(this);
+      s->get(i)->perform(this);
     }
     if (s->has_line_break()) {
       if (output_style() != COMPACT) {
@@ -1034,8 +1034,8 @@ namespace Sass {
     bool was_comma_array = in_comma_array;
     // probably ruby sass eqivalent of element_needs_parens
     if (output_style() == TO_SASS && g->length() == 1 &&
-      (!dynamic_cast<List_Ptr>((*g)[0]) &&
-       !dynamic_cast<Selector_List_Ptr>((*g)[0]))) {
+      (!dynamic_cast<List_Ptr>(g->get(0)) &&
+       !dynamic_cast<Selector_List_Ptr>(g->get(0)))) {
       append_string("(");
     }
     else if (!in_declaration && in_comma_array) {
@@ -1046,11 +1046,11 @@ namespace Sass {
 
     for (size_t i = 0, L = g->length(); i < L; ++i) {
       if (!in_wrapped && i == 0) append_indentation();
-      if ((*g)[i] == 0) continue;
-      schedule_mapping((*g)[i]->last());
-      // add_open_mapping((*g)[i]->last());
-      (*g)[i]->perform(this);
-      // add_close_mapping((*g)[i]->last());
+      if (g->get(i) == 0) continue;
+      schedule_mapping(g->get(i)->last());
+      // add_open_mapping(g->get(i)->last());
+      g->get(i)->perform(this);
+      // add_close_mapping(g->get(i)->last());
       if (i < L - 1) {
         scheduled_space = 0;
         append_comma_separator();
@@ -1060,8 +1060,8 @@ namespace Sass {
     in_comma_array = was_comma_array;
     // probably ruby sass eqivalent of element_needs_parens
     if (output_style() == TO_SASS && g->length() == 1 &&
-      (!dynamic_cast<List_Ptr>((*g)[0]) &&
-       !dynamic_cast<Selector_List_Ptr>((*g)[0]))) {
+      (!dynamic_cast<List_Ptr>(g->get(0)) &&
+       !dynamic_cast<Selector_List_Ptr>(g->get(0)))) {
       append_string(",)");
     }
     else if (!in_declaration && in_comma_array) {

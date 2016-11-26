@@ -115,7 +115,7 @@ namespace Sass {
     // Filter out rulesets that aren't printable (process its children though)
     if (!Util::isPrintable(r, output_style())) {
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (dynamic_cast<Has_Block_Ptr>(stm)) {
           if (typeid(*stm) != typeid(Declaration)) {
             stm->perform(this);
@@ -137,7 +137,7 @@ namespace Sass {
     s->perform(this);
     append_scope_opener(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = (*b)[i];
+      Statement_Ptr stm = b->get(i);
       bool bPrintExpression = true;
       // Check print conditions
       if (typeid(*stm) == typeid(Declaration)) {
@@ -155,7 +155,7 @@ namespace Sass {
           List_Ptr list = static_cast<List_Ptr>(dec->value());
           bool all_invisible = true;
           for (size_t list_i = 0, list_L = list->length(); list_i < list_L; ++list_i) {
-            Expression_Ptr item = (*list)[list_i];
+            Expression_Ptr item = list->get(list_i);
             if (!item->is_invisible()) all_invisible = false;
           }
           if (all_invisible) bPrintExpression = false;
@@ -186,7 +186,7 @@ namespace Sass {
 
     append_scope_opener();
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = (*b)[i];
+      Statement_Ptr stm = b->get(i);
       stm->perform(this);
       if (i < L - 1) append_special_linefeed();
     }
@@ -203,7 +203,7 @@ namespace Sass {
     // Filter out feature blocks that aren't printable (process its children though)
     if (!Util::isPrintable(f, output_style())) {
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (dynamic_cast<Has_Block_Ptr>(stm)) {
           stm->perform(this);
         }
@@ -219,7 +219,7 @@ namespace Sass {
     append_scope_opener();
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = (*b)[i];
+      Statement_Ptr stm = b->get(i);
       stm->perform(this);
       if (i < L - 1) append_special_linefeed();
     }
@@ -240,7 +240,7 @@ namespace Sass {
     // Filter out media blocks that aren't printable (process its children though)
     if (!Util::isPrintable(m, output_style())) {
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (dynamic_cast<Has_Block_Ptr>(stm)) {
           stm->perform(this);
         }
@@ -257,7 +257,7 @@ namespace Sass {
     append_scope_opener();
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      if ((*b)[i]) (*b)[i]->perform(this);
+      if (b->get(i)) b->get(i)->perform(this);
       if (i < L - 1) append_special_linefeed();
     }
 
@@ -300,7 +300,7 @@ namespace Sass {
     bool format = kwd != "@font-face";;
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = (*b)[i];
+      Statement_Ptr stm = b->get(i);
       stm->perform(this);
       if (i < L - 1 && format) append_special_linefeed();
     }

@@ -1577,7 +1577,7 @@ namespace Sass {
         ExtensionPair& pair = *groupIter;
         Compound_Selector_Ptr pCompound = pair.second;
         for (size_t index = 0; index < pCompound->length(); index++) {
-          Simple_Selector* pSimpleSelector = (*pCompound)[index];
+          Simple_Selector* pSimpleSelector = pCompound->get(index);
           (*pSels) << pSimpleSelector;
           pCompound->extended(true);
         }
@@ -1907,7 +1907,7 @@ namespace Sass {
     extendedSomething = false;
 
     for (size_t index = 0, length = pSelectorList->length(); index < length; index++) {
-      Complex_Selector_Ptr pSelector = (*pSelectorList)[index];
+      Complex_Selector_Ptr pSelector = pSelectorList->get(index);
 
       // ruby sass seems to keep a list of things that have extensions and then only extend those. We don't currently do that.
       // Since it's not that expensive to check if an extension exists in the subset map and since it can be relatively expensive to
@@ -2026,7 +2026,7 @@ namespace Sass {
     // there are no child statements. However .a .b should have extensions applied.
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr stm = (*b)[i];
+      Statement_Ptr stm = b->get(i);
 
       if (typeid(*stm) == typeid(Ruleset)) {
         // Do nothing. This doesn't count as a statement that causes extension since we'll iterate over this rule set in a future visit and try to extend it.
@@ -2076,7 +2076,7 @@ namespace Sass {
   void Extend::operator()(Block_Ptr b)
   {
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      (*b)[i]->perform(this);
+      b->get(i)->perform(this);
     }
     // do final check if everything was extended
     // we set `extended` flag on extended selectors

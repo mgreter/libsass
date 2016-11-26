@@ -71,7 +71,7 @@ namespace Sass {
   {
     Expression_Ptr val = 0;
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      val = (*b)[i]->perform(this);
+      val = b->get(i)->perform(this);
       if (val) return val;
     }
     return val;
@@ -261,7 +261,7 @@ namespace Sass {
         list = dynamic_cast<Vectorized<Expression_Ptr>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
-        Expression_Ptr e = (*list)[i];
+        Expression_Ptr e = list->get(i);
         // unwrap value if the expression is an argument
         if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(e)) e = arg->value();
         // check if we got passed a list of args (investigate)
@@ -274,7 +274,7 @@ namespace Sass {
             for (size_t j = 0, K = variables.size(); j < K; ++j) {
               Expression_Ptr res = j >= scalars->length()
                 ? SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate())
-                : (*scalars)[j];
+                : scalars->get(j);
               env.set_local(variables[j], res);
             }
           }
@@ -435,8 +435,8 @@ namespace Sass {
                                 l->length() / 2);
       for (size_t i = 0, L = l->length(); i < L; i += 2)
       {
-        Expression_Ptr key = (*l)[i+0]->perform(this);
-        Expression_Ptr val = (*l)[i+1]->perform(this);
+        Expression_Ptr key = l->get(i+0)->perform(this);
+        Expression_Ptr val = l->get(i+1)->perform(this);
         // make sure the color key never displays its real name
         key->is_delayed(true); // verified
         *lm << std::make_pair(key, val);
@@ -457,7 +457,7 @@ namespace Sass {
                                l->separator(),
                                l->is_arglist());
     for (size_t i = 0, L = l->length(); i < L; ++i) {
-      *ll << (*l)[i]->perform(this);
+      *ll << l->get(i)->perform(this);
     }
     ll->is_interpolant(l->is_interpolant());
     ll->from_selector(l->from_selector());
@@ -730,7 +730,7 @@ namespace Sass {
     if (rv) {
       if (schema_op) {
         // XXX: this is never hit via spec tests
-        (*s2)[0] = rv;
+        s2->get(0) = rv;
         rv = s2->perform(this);
       }
     }
@@ -889,7 +889,7 @@ namespace Sass {
       To_C to_c;
       union Sass_Value* c_args = sass_make_list(params[0].length(), SASS_COMMA);
       for(size_t i = 0; i < params[0].length(); i++) {
-        std::string key = params[0][i]->name();
+        std::string key = params[0].get(i)->name();
         AST_Node_Ptr node = fn_env.get_local(key);
         Expression_Ptr arg = static_cast<Expression_Ptr>(node);
         sass_list_set_value(c_args, i, arg->perform(&to_c));
@@ -1127,9 +1127,9 @@ namespace Sass {
     size_t L = s->length();
     bool into_quotes = false;
     if (L > 1) {
-      if (!dynamic_cast<String_Quoted_Ptr>((*s)[0]) && !dynamic_cast<String_Quoted_Ptr>((*s)[L - 1])) {
-      if (String_Constant_Ptr l = dynamic_cast<String_Constant_Ptr>((*s)[0])) {
-        if (String_Constant_Ptr r = dynamic_cast<String_Constant_Ptr>((*s)[L - 1])) {
+      if (!dynamic_cast<String_Quoted_Ptr>(s->get(0)) && !dynamic_cast<String_Quoted_Ptr>(s->get(L - 1))) {
+      if (String_Constant_Ptr l = dynamic_cast<String_Constant_Ptr>(s->get(0))) {
+        if (String_Constant_Ptr r = dynamic_cast<String_Constant_Ptr>(s->get(L - 1))) {
           if (r->value().size() > 0) {
             if (l->value()[0] == '"' && r->value()[r->value().size() - 1] == '"') into_quotes = true;
             if (l->value()[0] == '\'' && r->value()[r->value().size() - 1] == '\'') into_quotes = true;
@@ -1142,13 +1142,13 @@ namespace Sass {
     bool was_interpolant = false;
     std::string res("");
     for (size_t i = 0; i < L; ++i) {
-      bool is_quoted = dynamic_cast<String_Quoted_Ptr>((*s)[i]) != NULL;
-      if (was_quoted && !(*s)[i]->is_interpolant() && !was_interpolant) { res += " "; }
-      else if (i > 0 && is_quoted && !(*s)[i]->is_interpolant() && !was_interpolant) { res += " "; }
-      Expression_Ptr ex = (*s)[i]->perform(this);
+      bool is_quoted = dynamic_cast<String_Quoted_Ptr>(s->get(i)) != NULL;
+      if (was_quoted && !s->get(i)->is_interpolant() && !was_interpolant) { res += " "; }
+      else if (i > 0 && is_quoted && !s->get(i)->is_interpolant() && !was_interpolant) { res += " "; }
+      Expression_Ptr ex = s->get(i)->perform(this);
       interpolation(ctx, res, ex, into_quotes, ex->is_interpolant());
-      was_quoted = dynamic_cast<String_Quoted_Ptr>((*s)[i]) != NULL;
-      was_interpolant = (*s)[i]->is_interpolant();
+      was_quoted = dynamic_cast<String_Quoted_Ptr>(s->get(i)) != NULL;
+      was_interpolant = s->get(i)->is_interpolant();
 
     }
     if (!s->is_interpolant()) {
@@ -1252,7 +1252,7 @@ namespace Sass {
                                       q->is_negated(),
                                       q->is_restricted());
     for (size_t i = 0, L = q->length(); i < L; ++i) {
-      *qq << static_cast<Media_Query_Expression_Ptr>((*q)[i]->perform(this));
+      *qq << static_cast<Media_Query_Expression_Ptr>(q->get(i)->perform(this));
     }
     return qq;
   }
@@ -1322,7 +1322,7 @@ namespace Sass {
     Arguments_Ptr aa = SASS_MEMORY_NEW(ctx.mem, Arguments, a->pstate());
     if (a->length() == 0) return aa;
     for (size_t i = 0, L = a->length(); i < L; ++i) {
-      Argument_Ptr arg = static_cast<Argument_Ptr>((*a)[i]->perform(this));
+      Argument_Ptr arg = static_cast<Argument_Ptr>(a->get(i)->perform(this));
       if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
         *aa << arg;
       }
@@ -1625,7 +1625,7 @@ namespace Sass {
     sl->media_block(s->media_block());
     sl->is_optional(s->is_optional());
     for (size_t i = 0, iL = s->length(); i < iL; ++i) {
-      rv.push_back(operator()((*s)[i]));
+      rv.push_back(operator()(s->get(i)));
     }
 
     // we should actually permutate parent first
@@ -1635,7 +1635,7 @@ namespace Sass {
       bool abort = true;
       for (size_t i = 0, iL = rv.size(); i < iL; ++i) {
         if (rv[i]->length() > round) {
-          *sl << (*rv[i])[round];
+          *sl << rv[i]->get(round);
           abort = false;
         }
       }

@@ -96,7 +96,7 @@ namespace Sass {
     bool directive_exists = false;
     size_t L = rr->block() ? rr->block()->length() : 0;
     for (size_t i = 0; i < L && !directive_exists; ++i) {
-      Statement_Ptr s = (*r->block())[i];
+      Statement_Ptr s = r->block()->get(i);
       if (s->statement_type() != Statement::BUBBLE) directive_exists = true;
       else {
         s = static_cast<Bubble_Ptr>(s)->node();
@@ -116,7 +116,7 @@ namespace Sass {
 
     Statement_Ptr ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
     for (size_t i = 0, L = ss->block()->length(); i < L; ++i) {
-      *result << (*ss->block())[i];
+      *result << ss->block()->get(i);
     }
 
     return result;
@@ -163,7 +163,7 @@ namespace Sass {
     Block_Ptr rules = SASS_MEMORY_NEW(ctx.mem, Block, rr->block()->pstate());
     for (size_t i = 0, L = rr->block()->length(); i < L; i++)
     {
-      Statement_Ptr s = (*rr->block())[i];
+      Statement_Ptr s = rr->block()->get(i);
       if (bubblable(s)) *rules << s;
       if (!bubblable(s)) *props << s;
     }
@@ -176,7 +176,7 @@ namespace Sass {
 
       for (size_t i = 0, L = rules->length(); i < L; i++)
       {
-        (*rules)[i]->tabs((*rules)[i]->tabs() + 1);
+        rules->get(i)->tabs(rules->get(i)->tabs() + 1);
       }
 
       rules->unshift(rr);
@@ -254,7 +254,7 @@ namespace Sass {
       Block_Ptr bb = m->block()->perform(this)->block();
       for (size_t i = 0, L = bb->length(); i < L; ++i) {
         // (bb->elements())[i]->tabs(m->tabs());
-        if (bubblable((*bb)[i])) (*bb)[i]->tabs((*bb)[i]->tabs() + m->tabs());
+        if (bubblable(bb->get(i))) bb->get(i)->tabs(bb->get(i)->tabs() + m->tabs());
       }
       if (bb->length() && bubblable(bb->last())) bb->last()->group_end(m->group_end());
       return bb;
@@ -277,7 +277,7 @@ namespace Sass {
 
     size_t L = m->block() ? m->block()->length() : 0;
     for (size_t i = 0; i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
+      *new_rule->block() << m->block()->get(i);
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block() ? m->block()->pstate() : m->pstate());
@@ -301,7 +301,7 @@ namespace Sass {
     new_rule->tabs(this->parent()->tabs());
 
     for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
+      *new_rule->block() << m->block()->get(i);
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
@@ -326,7 +326,7 @@ namespace Sass {
     new_rule->tabs(parent->tabs());
 
     for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
+      *new_rule->block() << m->block()->get(i);
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
@@ -354,7 +354,7 @@ namespace Sass {
     new_rule->tabs(parent->tabs());
 
     for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << (*m->block())[i];
+      *new_rule->block() << m->block()->get(i);
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
@@ -382,11 +382,11 @@ namespace Sass {
     Block_Ptr bb = s->block();
     Block_Ptr result = SASS_MEMORY_NEW(ctx.mem, Block, bb->pstate(), 0, bb->is_root());
     for (size_t i = 0, L = bb->length(); i < L; ++i) {
-      Statement_Ptr ss = (*bb)[i];
+      Statement_Ptr ss = bb->get(i);
       if (ss->block()) {
         ss = flatten(ss);
         for (size_t j = 0, K = ss->block()->length(); j < K; ++j) {
-          *result << (*ss->block())[j];
+          *result << ss->block()->get(j);
         }
       }
       else {
@@ -400,7 +400,7 @@ namespace Sass {
   {
     std::vector<std::pair<bool, Block_Ptr>> results;
     for (size_t i = 0, L = b->block()->length(); i < L; ++i) {
-      Statement_Ptr value = (*b->block())[i];
+      Statement_Ptr value = b->block()->get(i);
       bool key = value->statement_type() == Statement::BUBBLE;
 
       if (!results.empty() && results.back().first == key)
@@ -476,7 +476,7 @@ namespace Sass {
       for (size_t j = 0, K = slice->length(); j < K; ++j)
       {
         Statement_Ptr ss = 0;
-        Bubble_Ptr node = static_cast<Bubble_Ptr>((*slice)[j]);
+        Bubble_Ptr node = static_cast<Bubble_Ptr>(slice->get(j));
 
         if (!parent ||
             parent->statement_type() != Statement::MEDIA ||
@@ -537,10 +537,10 @@ namespace Sass {
     Block_Ptr current_block = block_stack.back();
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr ith = (*b)[i]->perform(this);
+      Statement_Ptr ith = b->get(i)->perform(this);
       if (ith && ith->block()) {
         for (size_t j = 0, K = ith->block()->length(); j < K; ++j) {
-          *current_block << (*ith->block())[j];
+          *current_block << ith->block()->get(j);
         }
       }
       else if (ith) {
@@ -558,8 +558,8 @@ namespace Sass {
 
     for (size_t i = 0, L = m1->media_queries()->length(); i < L; i++) {
       for (size_t j = 0, K = m2->media_queries()->length(); j < K; j++) {
-        Media_Query_Ptr mq1 = static_cast<Media_Query_Ptr>((*m1->media_queries())[i]);
-        Media_Query_Ptr mq2 = static_cast<Media_Query_Ptr>((*m2->media_queries())[j]);
+        Media_Query_Ptr mq1 = static_cast<Media_Query_Ptr>(m1->media_queries()->get(i));
+        Media_Query_Ptr mq2 = static_cast<Media_Query_Ptr>(m2->media_queries()->get(j));
         Media_Query_Ptr mq = merge_media_query(mq1, mq2);
 
         if (mq) *qq << mq;

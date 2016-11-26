@@ -19,8 +19,8 @@ namespace Sass {
     List_Ptr l = SASS_MEMORY_NEW(mem, List, sel->pstate(), sel->length(), SASS_COMMA);
     l->from_selector(true);
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
-      if (!(*sel)[i]) continue;
-      *l << (*sel)[i]->perform(this);
+      if (!sel->get(i)) continue;
+      *l << sel->get(i)->perform(this);
     }
     if (l->length()) return l;
     return SASS_MEMORY_NEW(mem, Null, l->pstate());
@@ -30,7 +30,7 @@ namespace Sass {
   {
     std::string str;
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
-      Expression_Ptr e = (*sel)[i]->perform(this);
+      Expression_Ptr e = sel->get(i)->perform(this);
       if (e) str += e->to_string();
     }
     return SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), str);

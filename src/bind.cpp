@@ -16,7 +16,7 @@ namespace Sass {
     std::map<std::string, Parameter_Ptr> param_map;
 
     for (size_t i = 0, L = as->length(); i < L; ++i) {
-      if (auto str = dynamic_cast<String_Quoted_Ptr>((*as)[i]->value())) {
+      if (auto str = dynamic_cast<String_Quoted_Ptr>(as->get(i)->value())) {
         // force optional quotes (only if needed)
         if (str->quote_mark()) {
           str->quote_mark('*');
@@ -27,7 +27,7 @@ namespace Sass {
     // Set up a map to ensure named arguments refer to actual parameters. Also
     // eval each default value left-to-right, wrt env, populating env as we go.
     for (size_t i = 0, L = ps->length(); i < L; ++i) {
-      Parameter_Ptr p = (*ps)[i];
+      Parameter_Ptr p = ps->get(i);
       param_map[p->name()] = p;
       // if (p->default_value()) {
       //   env->local_frame()[p->name()] = p->default_value()->perform(eval->with(env));
@@ -38,7 +38,7 @@ namespace Sass {
     size_t ip = 0, LP = ps->length();
     size_t ia = 0, LA = as->length();
     while (ia < LA) {
-      Argument_Ptr a = (*as)[ia];
+      Argument_Ptr a = as->get(ia);
       if (ip >= LP) {
         // skip empty rest arguments
         if (a->is_rest_argument()) {
@@ -53,7 +53,7 @@ namespace Sass {
         msg << " for `" << name << "'";
         return error(msg.str(), as->pstate());
       }
-      Parameter_Ptr p = (*ps)[ip];
+      Parameter_Ptr p = ps->get(ip);
 
       // If the current parameter is the rest parameter, process and break the loop
       if (p->is_rest_parameter()) {
@@ -115,7 +115,7 @@ namespace Sass {
           // consume the next args
           while (ia < LA) {
             // get and post inc
-            a = (*as)[ia++];
+            a = as->get(ia++);
             // maybe we have another list as argument
             List_Ptr ls = dynamic_cast<List_Ptr>(a->value());
             // skip any list completely if empty
@@ -132,8 +132,8 @@ namespace Sass {
 
                 for (size_t i = 0, L = rest->size(); i < L; ++i) {
                   (*arglist) << SASS_MEMORY_NEW(ctx->mem, Argument,
-                                                (*rest)[i]->pstate(),
-                                                (*rest)[i],
+                                                rest->get(i)->pstate(),
+                                                rest->get(i),
                                                 "",
                                                 false,
                                                 false);
@@ -184,8 +184,8 @@ namespace Sass {
           }
         }
         // otherwise move one of the rest args into the param, converting to argument if necessary
-        if (!(a = dynamic_cast<Argument_Ptr>((*arglist)[0]))) {
-          Expression_Ptr a_to_convert = (*arglist)[0];
+        if (!(a = dynamic_cast<Argument_Ptr>(arglist->get(0)))) {
+          Expression_Ptr a_to_convert = arglist->get(0);
           a = SASS_MEMORY_NEW(ctx->mem, Argument,
                               a_to_convert->pstate(),
                               a_to_convert,
@@ -256,7 +256,7 @@ namespace Sass {
     // That's only okay if they have default values, or were already bound by
     // named arguments, or if it's a single rest-param.
     for (size_t i = ip; i < LP; ++i) {
-      Parameter_Ptr leftover = (*ps)[i];
+      Parameter_Ptr leftover = ps->get(i);
       // cerr << "env for default params:" << endl;
       // env->print();
       // cerr << "********" << endl;

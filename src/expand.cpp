@@ -500,7 +500,7 @@ namespace Sass {
         list = dynamic_cast<Vectorized<Expression_Ptr>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
-        Expression_Ptr e = (*list)[i];
+        Expression_Ptr e = list->get(i);
         // unwrap value if the expression is an argument
         if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(e)) e = arg->value();
         // check if we got passed a list of args (investigate)
@@ -513,7 +513,7 @@ namespace Sass {
             for (size_t j = 0, K = variables.size(); j < K; ++j) {
               Expression_Ptr res = j >= scalars->length()
                 ? SASS_MEMORY_NEW(ctx.mem, Null, expr->pstate())
-                : (*scalars)[j]->perform(&eval);
+                : scalars->get(j)->perform(&eval);
               env.set_local(variables[j], res);
             }
           }
@@ -584,17 +584,17 @@ namespace Sass {
       Compound_Selector_Ptr placeholder = c->head();
       if (contextualized->is_optional()) placeholder->is_optional(true);
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
-        Complex_Selector_Ptr sel = (*extender)[i];
+        Complex_Selector_Ptr sel = extender->get(i);
         if (!(sel->head() && sel->head()->length() > 0 &&
-            dynamic_cast<Parent_Selector_Ptr>((*sel->head())[0])))
+            dynamic_cast<Parent_Selector_Ptr>(sel->head()->get(0))))
         {
-          Compound_Selector_Ptr hh = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, (*extender)[i]->pstate());
-          hh->media_block((*extender)[i]->media_block());
-          Complex_Selector_Ptr ssel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, (*extender)[i]->pstate());
-          ssel->media_block((*extender)[i]->media_block());
+          Compound_Selector_Ptr hh = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, extender->get(i)->pstate());
+          hh->media_block(extender->get(i)->media_block());
+          Complex_Selector_Ptr ssel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, extender->get(i)->pstate());
+          ssel->media_block(extender->get(i)->media_block());
           if (sel->has_line_feed()) ssel->has_line_feed(true);
-          Parent_Selector_Ptr ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
-          ps->media_block((*extender)[i]->media_block());
+          Parent_Selector_Ptr ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, extender->get(i)->pstate());
+          ps->media_block(extender->get(i)->media_block());
           *hh << ps;
           ssel->tail(sel);
           ssel->head(hh);
@@ -750,7 +750,7 @@ namespace Sass {
   {
     if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Ptr ith = (*b)[i]->perform(this);
+      Statement_Ptr ith = b->get(i)->perform(this);
       if (ith) *block_stack.back() << ith;
     }
     if (b->is_root()) call_stack.pop_back();

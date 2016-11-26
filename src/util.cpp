@@ -470,7 +470,7 @@ namespace Sass {
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (dynamic_cast<Directive_Ptr>(stm)) {
           return true;
         } else if (Declaration_Ptr d = dynamic_cast<Declaration_Ptr>(stm)) {
@@ -531,7 +531,7 @@ namespace Sass {
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
           hasDeclarations = true;
         }
@@ -556,7 +556,7 @@ namespace Sass {
       Block_Ptr b = m->block();
       if (b == 0) return false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (typeid(*stm) == typeid(Directive)) return true;
         else if (typeid(*stm) == typeid(Declaration)) return true;
         else if (typeid(*stm) == typeid(Comment)) {
@@ -610,7 +610,7 @@ namespace Sass {
       }
 
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement_Ptr stm = (*b)[i];
+        Statement_Ptr stm = b->get(i);
         if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
           return true;
         }

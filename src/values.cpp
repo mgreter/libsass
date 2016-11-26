@@ -24,7 +24,7 @@ namespace Sass {
       const List* l = dynamic_cast<const List*>(val);
       union Sass_Value* list = sass_make_list(l->size(), l->separator());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
-        auto val = ast_node_to_sass_value((*l)[i]);
+        auto val = ast_node_to_sass_value(l->get(i));
         sass_list_set_value(list, i, val);
       }
       return list;
