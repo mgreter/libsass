@@ -1687,15 +1687,15 @@ namespace Sass {
 
     Signature not_sig = "not($value)";
     BUILT_IN(sass_not)
-    { return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, ARG("$value", Expression)->is_false()); }
+    { return SASS_MEMORY_NEW(ctx.mem, Boolean, pstate, !ARG("$value", Expression)->is_true()); }
 
     Signature if_sig = "if($condition, $if-true, $if-false)";
     // BUILT_IN(sass_if)
-    // { return ARG("$condition", Expression)->is_false() ? ARG("$if-false", Expression) : ARG("$if-true", Expression); }
+    // { return ARG("$condition", Expression)->is_true() ? ARG("$if-true", Expression) : ARG("$if-false", Expression); }
     BUILT_IN(sass_if)
     {
       Expand expand(ctx, &d_env, backtrace, &selector_stack);
-      bool is_true = !ARG("$condition", Expression)->perform(&expand.eval)->is_false();
+      bool is_true = ARG("$condition", Expression)->perform(&expand.eval)->is_true();
       Expression_Ptr res = ARG(is_true ? "$if-true" : "$if-false", Expression);
       res = res->perform(&expand.eval);
       res->set_delayed(false); // clone?
@@ -1726,7 +1726,7 @@ namespace Sass {
       Expression_Ptr v = ARG("$value", Expression);
       if (v->concrete_type() == Expression::NULL_VAL) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "null");
-      } else if (v->concrete_type() == Expression::BOOLEAN && *v == 0) {
+      } else if (v->concrete_type() == Expression::BOOLEAN && !v->is_true()) {
         return SASS_MEMORY_NEW(ctx.mem, String_Quoted, pstate, "false");
       } else if (v->concrete_type() == Expression::STRING) {
         return v;

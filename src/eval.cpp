@@ -143,7 +143,7 @@ namespace Sass {
     Expression_Ptr rv = 0;
     Env env(exp.environment());
     exp.env_stack.push_back(&env);
-    if (*i->predicate()->perform(this)) {
+    if (i->predicate()->perform(this)->is_true()) {
       rv = i->block()->perform(this);
     }
     else {
@@ -302,7 +302,7 @@ namespace Sass {
     Block_Ptr body = w->block();
     Env env(environment(), true);
     exp.env_stack.push_back(&env);
-    while (*pred->perform(this)) {
+    while (pred->perform(this)->is_true()) {
       Expression_Ptr val = body->perform(this);
       if (val) {
         exp.env_stack.pop_back();
@@ -561,11 +561,11 @@ namespace Sass {
 
     switch (op_type) {
       case Sass_OP::AND:
-        return *lhs ? b->right()->perform(this) : lhs;
+        return lhs->is_true() ? b->right()->perform(this) : lhs;
         break;
 
       case Sass_OP::OR:
-        return *lhs ? lhs : b->right()->perform(this);
+        return lhs->is_true() ? lhs : b->right()->perform(this);
         break;
 
       default:
@@ -742,7 +742,7 @@ namespace Sass {
   {
     Expression_Ptr operand = u->operand()->perform(this);
     if (u->type() == Unary_Expression::NOT) {
-      Boolean_Ptr result = SASS_MEMORY_NEW(ctx.mem, Boolean, u->pstate(), (bool)*operand);
+      Boolean_Ptr result = SASS_MEMORY_NEW(ctx.mem, Boolean, u->pstate(), operand->is_true());
       result->value(!result->value());
       return result;
     }

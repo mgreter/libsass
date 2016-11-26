@@ -622,7 +622,7 @@ namespace Sass {
   bool Pseudo_Selector::operator< (const Pseudo_Selector& rhs) const
   {
     if (is_ns_eq(ns(), rhs.ns()) && name() == rhs.name())
-    { return *(expression()) < *(rhs.expression()); }
+    { return false; /* *(expression()) < *(rhs.expression()); */ } // was never implemented -> used bool
     if (is_ns_eq(ns(), rhs.ns()))
     { return name() < rhs.name(); }
     return ns() < rhs.ns();
@@ -660,7 +660,7 @@ namespace Sass {
   bool Wrapped_Selector::operator< (const Wrapped_Selector& rhs) const
   {
     if (is_ns_eq(ns(), rhs.ns()) && name() == rhs.name())
-    { return *(selector()) < *(rhs.selector()); }
+    { return false; /* *(selector()) < *(rhs.selector()); */ } // was never implemented, used bool
     if (is_ns_eq(ns(), rhs.ns()))
     { return name() < rhs.name(); }
     return ns() < rhs.ns();

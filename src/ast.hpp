@@ -85,13 +85,14 @@ namespace Sass {
   class AST_Node : public Memory_Object {
     ADD_PROPERTY(ParserState, pstate)
   public:
-    AST_Node(ParserState pstate)
+    AST_Node(const ParserState& pstate)
     : pstate_(pstate)
     { }
     virtual ~AST_Node() = 0;
-    virtual size_t hash() { return 0; }
-    virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
-    virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
+    virtual size_t hash() = 0;
+    std::string inspect() const { return to_string({ INSPECT, 5 }); }
+    std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
+
     virtual std::string to_string(Sass_Inspect_Options opt) const;
     virtual std::string to_string() const;
     // virtual Block_Ptr block() { return 0; }
@@ -107,11 +108,41 @@ namespace Sass {
 
 
   //////////////////////////////////////////////////////////////////////
+  // CRTP class for memory operations
+  // Implements basic clone and copy
+  //////////////////////////////////////////////////////////////////////
+  template <typename Derived, typename Base>
+  class AST_Base : public AST_Node {
+  public:
+    AST_Base(ParserState pstate)
+    : AST_Node(pstate)
+    { }
+    virtual Derived* KLONE(Context& ctx) const {
+      return new Derived(static_cast<Derived const&>(*this));
+    }
+  };
+
+  template <typename Derived, typename Base>
+  class AST_Class : public AST_Node {
+  public:
+    AST_Class(ParserState pstate)
+    : AST_Node(pstate)
+    { }
+    virtual Derived* KLONE(Context& ctx) const {
+      return new Derived(static_cast<Derived const&>(*this));
+    }
+  };
+
+  // macro to create ast classes with memory crtp implementation
+  #define SASS_AST_BASE(type, base) class type : public AST_Base<type, base>
+  #define SASS_AST_CLASS(type, base) class type : public AST_Class<type, base>
+
+  //////////////////////////////////////////////////////////////////////
   // Abstract base class for expressions. This side of the AST hierarchy
   // represents elements in value contexts, which exist primarily to be
   // evaluated and returned.
   //////////////////////////////////////////////////////////////////////
-  class Expression : public AST_Node {
+  SASS_AST_BASE (Expression, AST_Node) {
   public:
     enum Concrete_Type {
       NONE,
@@ -136,18 +167,17 @@ namespace Sass {
   public:
     Expression(ParserState pstate,
                bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : AST_Node(pstate),
+    : AST_Base<Expression, AST_Node>(pstate),
       is_delayed_(d),
       is_expanded_(e),
       is_interpolant_(i),
       concrete_type_(ct)
     { }
-    virtual operator bool() { return true; }
     virtual ~Expression() { }
     virtual std::string type() { return ""; /* TODO: raise an error? */ }
     virtual bool is_invisible() const { return false; }
     static std::string type_name() { return ""; }
-    virtual bool is_false() { return false; }
+    virtual bool is_true() { return true; }
     virtual bool operator== (const Expression& rhs) const { return false; }
     virtual bool eq(const Expression& rhs) const { return *this == rhs; };
     virtual void set_delayed(bool delayed) { is_delayed(delayed); }
@@ -478,6 +508,7 @@ namespace Sass {
       return Statement::has_content();
     }
     Block_Ptr block() { return this; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -511,6 +542,7 @@ namespace Sass {
     : Has_Block(pstate, b), selector_(s), at_root_(false), is_root_(false)
     { statement_type(RULESET); }
     bool is_invisible() const;
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -525,6 +557,7 @@ namespace Sass {
     : Statement(pstate, Statement::BUBBLE, t), node_(n), group_end_(g == 0)
     { }
     bool bubbles() { return true; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -537,6 +570,7 @@ namespace Sass {
     Trace(ParserState pstate, std::string n, Block_Ptr b = 0)
     : Has_Block(pstate, b), name_(n)
     { }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -554,6 +588,7 @@ namespace Sass {
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
     bool is_invisible() const;
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -582,6 +617,7 @@ namespace Sass {
              keyword_.compare("@-o-keyframes") == 0 ||
              keyword_.compare("@keyframes") == 0;
     }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -594,6 +630,7 @@ namespace Sass {
     Keyframe_Rule(ParserState pstate, Block_Ptr b)
     : Has_Block(pstate, b), selector_(0)
     { statement_type(KEYFRAMERULE); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -610,6 +647,7 @@ namespace Sass {
                 String_Ptr prop, Expression_Ptr val, bool i = false, Block_Ptr b = 0)
     : Has_Block(pstate, b), property_(prop), value_(val), is_important_(i), is_indented_(false)
     { statement_type(DECLARATION); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -628,6 +666,7 @@ namespace Sass {
                bool is_global = false)
     : Statement(pstate), variable_(var), value_(val), is_default_(is_default), is_global_(is_global)
     { statement_type(ASSIGNMENT); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -648,6 +687,7 @@ namespace Sass {
     { statement_type(IMPORT); }
     std::vector<Expression_Ptr>& urls() { return urls_; }
     std::vector<Include>& incs() { return incs_; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -663,6 +703,7 @@ namespace Sass {
     Import_Stub(ParserState pstate, Include res)
     : Statement(pstate), resource_(res)
     { statement_type(IMPORT_STUB); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -675,6 +716,7 @@ namespace Sass {
     Warning(ParserState pstate, Expression_Ptr msg)
     : Statement(pstate), message_(msg)
     { statement_type(WARNING); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -687,6 +729,7 @@ namespace Sass {
     Error(ParserState pstate, Expression_Ptr msg)
     : Statement(pstate), message_(msg)
     { statement_type(ERROR); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -699,6 +742,7 @@ namespace Sass {
     Debug(ParserState pstate, Expression_Ptr val)
     : Statement(pstate), value_(val)
     { statement_type(DEBUGSTMT); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -714,6 +758,7 @@ namespace Sass {
     { statement_type(COMMENT); }
     virtual bool is_invisible() const
     { return /* is_important() == */ false; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -731,6 +776,7 @@ namespace Sass {
     {
       return Has_Block::has_content() || (alternative_ && alternative_->has_content());
     }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -748,6 +794,7 @@ namespace Sass {
     : Has_Block(pstate, b),
       variable_(var), lower_bound_(lo), upper_bound_(hi), is_inclusive_(inc)
     { statement_type(FOR); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -761,6 +808,7 @@ namespace Sass {
     Each(ParserState pstate, std::vector<std::string> vars, Expression_Ptr lst, Block_Ptr b)
     : Has_Block(pstate, b), variables_(vars), list_(lst)
     { statement_type(EACH); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -773,6 +821,7 @@ namespace Sass {
     While(ParserState pstate, Expression_Ptr pred, Block_Ptr b)
     : Has_Block(pstate, b), predicate_(pred)
     { statement_type(WHILE); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -785,6 +834,7 @@ namespace Sass {
     Return(ParserState pstate, Expression_Ptr val)
     : Statement(pstate), value_(val)
     { statement_type(RETURN); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -797,6 +847,7 @@ namespace Sass {
     Extension(ParserState pstate, Selector_Ptr s)
     : Statement(pstate), selector_(s)
     { statement_type(EXTEND); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -873,6 +924,7 @@ namespace Sass {
       is_overload_stub_(false),
       signature_(sig)
     { }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -886,6 +938,7 @@ namespace Sass {
     Mixin_Call(ParserState pstate, std::string n, Arguments_Ptr args, Block_Ptr b = 0)
     : Has_Block(pstate, b), name_(n), arguments_(args)
     { }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -897,6 +950,7 @@ namespace Sass {
   public:
     Content(ParserState pstate) : Statement(pstate)
     { statement_type(CONTENT); }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1472,15 +1526,15 @@ namespace Sass {
   class Boolean : public Value {
     ADD_HASHED(bool, value)
     size_t hash_;
+
   public:
     Boolean(ParserState pstate, bool val)
     : Value(pstate), value_(val),
       hash_(0)
     { concrete_type(BOOLEAN); }
-    virtual operator bool() { return value_; }
     std::string type() { return "bool"; }
     static std::string type_name() { return "bool"; }
-    virtual bool is_false() { return !value_; }
+    virtual bool is_true() { return value_; }
 
     virtual size_t hash()
     {
@@ -1668,6 +1722,7 @@ namespace Sass {
     : Has_Block(pstate, block), condition_(condition)
     { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1680,6 +1735,7 @@ namespace Sass {
     : Expression(pstate)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1756,6 +1812,7 @@ namespace Sass {
     : Expression(pstate), feature_(f), value_(v)
     { }
     bool exclude(std::string str);
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1802,6 +1859,7 @@ namespace Sass {
       }
       return false;
     }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1814,8 +1872,7 @@ namespace Sass {
     std::string type() { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const { return true; }
-    operator bool() { return false; }
-    bool is_false() { return true; }
+    bool is_true() { return false; }
 
     virtual size_t hash()
     {
@@ -1855,6 +1912,7 @@ namespace Sass {
         error("variable-length parameter may not have a default value", pstate);
       }
     }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1905,6 +1963,7 @@ namespace Sass {
       elements_.push_back(element);
       adjust_after_pushing(element);
     }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 

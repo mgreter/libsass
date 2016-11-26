@@ -382,7 +382,7 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(i);
-    if (*i->predicate()->perform(&eval)) {
+    if (i->predicate()->perform(&eval)->is_true()) {
       append_block(i->block());
     }
     else {
@@ -541,7 +541,7 @@ namespace Sass {
     Env env(environment(), true);
     env_stack.push_back(&env);
     call_stack.push_back(w);
-    while (*pred->perform(&eval)) {
+    while (pred->perform(&eval)->is_true()) {
       append_block(body);
     }
     call_stack.pop_back();
