@@ -1892,7 +1892,7 @@ namespace Sass {
   /*
    This is the equivalent of ruby's CommaSequence.do_extend.
   */
-  CommaSequence_Selector* Extend::extendSelectorList(CommaSequence_Selector* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething) {
+  Selector_List* Extend::extendSelectorList(Selector_List* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething) {
     std::set<SimpleSequence_Selector> seen;
     return extendSelectorList(pSelectorList, ctx, subset_map, isReplace, extendedSomething, seen);
   }
@@ -1900,9 +1900,9 @@ namespace Sass {
   /*
    This is the equivalent of ruby's CommaSequence.do_extend.
   */
-  CommaSequence_Selector* Extend::extendSelectorList(CommaSequence_Selector* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<SimpleSequence_Selector>& seen) {
+  Selector_List* Extend::extendSelectorList(Selector_List* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<SimpleSequence_Selector>& seen) {
 
-    CommaSequence_Selector* pNewSelectors = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, pSelectorList->pstate(), pSelectorList->length());
+    Selector_List* pNewSelectors = SASS_MEMORY_NEW(ctx.mem, Selector_List, pSelectorList->pstate(), pSelectorList->length());
 
     extendedSomething = false;
 
@@ -1955,7 +1955,7 @@ namespace Sass {
           SimpleSequence_Selector* cpy_head = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, cur->pstate());
           for (Simple_Selector* hs : *cur->head()) {
             if (Wrapped_Selector* ws = dynamic_cast<Wrapped_Selector*>(hs)) {
-              if (CommaSequence_Selector* sl = dynamic_cast<CommaSequence_Selector*>(ws->selector())) {
+              if (Selector_List* sl = dynamic_cast<Selector_List*>(ws->selector())) {
                 // special case for ruby ass
                 if (sl->empty()) {
                   // this seems inconsistent but it is how ruby sass seems to remove parentheses
@@ -1964,17 +1964,17 @@ namespace Sass {
                 // has wrapped selectors
                 else {
                   // extend the inner list of wrapped selector
-                  CommaSequence_Selector* ext_sl = extendSelectorList(sl, ctx, subset_map, recseen);
+                  Selector_List* ext_sl = extendSelectorList(sl, ctx, subset_map, recseen);
                   for (size_t i = 0; i < ext_sl->length(); i += 1) {
                     if (Sequence_Selector* ext_cs = ext_sl->at(i)) {
                       // create clones for wrapped selector and the inner list
                       Wrapped_Selector* cpy_ws = SASS_MEMORY_NEW(ctx.mem, Wrapped_Selector, *ws);
-                      CommaSequence_Selector* cpy_ws_sl = SASS_MEMORY_NEW(ctx.mem, CommaSequence_Selector, sl->pstate());
+                      Selector_List* cpy_ws_sl = SASS_MEMORY_NEW(ctx.mem, Selector_List, sl->pstate());
                       // remove parent selectors from inner selector
                       if (ext_cs->first() && ext_cs->first()->head()->length() > 0) {
                         Wrapped_Selector* ext_ws = dynamic_cast<Wrapped_Selector*>(ext_cs->first()->head()->first());
                         if (ext_ws/* && ext_cs->length() == 1*/) {
-                          CommaSequence_Selector* ws_cs = dynamic_cast<CommaSequence_Selector*>(ext_ws->selector());
+                          Selector_List* ws_cs = dynamic_cast<Selector_List*>(ext_ws->selector());
                           SimpleSequence_Selector* ws_ss = ws_cs->first()->head();
                           if (!(
                             dynamic_cast<Pseudo_Selector*>(ws_ss->first()) ||
@@ -2045,7 +2045,7 @@ namespace Sass {
   template <typename ObjectType>
   static void extendObjectWithSelectorAndBlock(ObjectType* pObject, Context& ctx, ExtensionSubsetMap& subset_map) {
 
-    DEBUG_PRINTLN(EXTEND_OBJECT, "FOUND SELECTOR: " << static_cast<CommaSequence_Selector*>(pObject->selector())->to_string(ctx.c_options))
+    DEBUG_PRINTLN(EXTEND_OBJECT, "FOUND SELECTOR: " << static_cast<Selector_List*>(pObject->selector())->to_string(ctx.c_options))
 
     // Ruby sass seems to filter nodes that don't have any content well before we get here. I'm not sure the repercussions
     // of doing so, so for now, let's just not extend things that won't be output later.
@@ -2055,10 +2055,10 @@ namespace Sass {
     }
 
     bool extendedSomething = false;
-    CommaSequence_Selector* pNewSelectorList = Extend::extendSelectorList(static_cast<CommaSequence_Selector*>(pObject->selector()), ctx, subset_map, false, extendedSomething);
+    Selector_List* pNewSelectorList = Extend::extendSelectorList(static_cast<Selector_List*>(pObject->selector()), ctx, subset_map, false, extendedSomething);
 
     if (extendedSomething && pNewSelectorList) {
-      DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND ORIGINAL SELECTORS: " << static_cast<CommaSequence_Selector*>(pObject->selector())->to_string(ctx.c_options))
+      DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND ORIGINAL SELECTORS: " << static_cast<Selector_List*>(pObject->selector())->to_string(ctx.c_options))
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND SETTING NEW SELECTORS: " << pNewSelectorList->to_string(ctx.c_options))
       pNewSelectorList->remove_parent_selectors();
       pObject->selector(pNewSelectorList);
@@ -2117,7 +2117,7 @@ namespace Sass {
 
   void Extend::operator()(Directive* a)
   {
-    // CommaSequence_Selector* ls = dynamic_cast<CommaSequence_Selector*>(a->selector());
+    // Selector_List* ls = dynamic_cast<Selector_List*>(a->selector());
     // selector_stack.push_back(ls);
     if (a->block()) a->block()->perform(this);
     // exp.selector_stack.pop_back();

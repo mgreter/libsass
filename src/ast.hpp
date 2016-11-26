@@ -767,7 +767,7 @@ namespace Sass {
   struct Backtrace;
   typedef Environment<AST_Node*> Env;
   typedef const char* Signature;
-  typedef Expression* (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<CommaSequence_Selector*>);
+  typedef Expression* (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<Selector_List*>);
   typedef const char* Signature;
   class Definition : public Has_Block {
   public:
@@ -2319,7 +2319,7 @@ namespace Sass {
     }
     virtual bool is_superselector_of(SimpleSequence_Selector* sub, std::string wrapped = "");
     virtual bool is_superselector_of(Sequence_Selector* sub, std::string wrapped = "");
-    virtual bool is_superselector_of(CommaSequence_Selector* sub, std::string wrapped = "");
+    virtual bool is_superselector_of(Selector_List* sub, std::string wrapped = "");
     virtual size_t hash()
     {
       if (Selector::hash_ == 0) {
@@ -2441,7 +2441,7 @@ namespace Sass {
     // last returns the last real tail
     const Sequence_Selector* last() const;
 
-    CommaSequence_Selector* tails(Context& ctx, CommaSequence_Selector* tails);
+    Selector_List* tails(Context& ctx, Selector_List* tails);
 
     // unconstant accessors
     Sequence_Selector* first();
@@ -2452,12 +2452,12 @@ namespace Sass {
     Sequence_Selector* innermost() { return last(); };
 
     size_t length() const;
-    CommaSequence_Selector* resolve_parent_refs(Context& ctx, CommaSequence_Selector* parents, bool implicit_parent = true);
+    Selector_List* resolve_parent_refs(Context& ctx, Selector_List* parents, bool implicit_parent = true);
     virtual bool is_superselector_of(SimpleSequence_Selector* sub, std::string wrapping = "");
     virtual bool is_superselector_of(Sequence_Selector* sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaSequence_Selector* sub, std::string wrapping = "");
+    virtual bool is_superselector_of(Selector_List* sub, std::string wrapping = "");
     // virtual Placeholder_Selector* find_placeholder();
-    CommaSequence_Selector* unify_with(Sequence_Selector* rhs, Context& ctx);
+    Selector_List* unify_with(Sequence_Selector* rhs, Context& ctx);
     Combinator clear_innermost();
     void append(Context&, Sequence_Selector*);
     void set_innermost(Sequence_Selector*, Combinator);
@@ -2556,12 +2556,12 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class CommaSequence_Selector : public Selector, public Vectorized<Sequence_Selector*> {
+  class Selector_List : public Selector, public Vectorized<Sequence_Selector*> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   protected:
     void adjust_after_pushing(Sequence_Selector* c);
   public:
-    CommaSequence_Selector(ParserState pstate, size_t s = 0)
+    Selector_List(ParserState pstate, size_t s = 0)
     : Selector(pstate), Vectorized<Sequence_Selector*>(s), wspace_(0)
     { }
     std::string type() { return "list"; }
@@ -2571,12 +2571,12 @@ namespace Sass {
     virtual bool has_real_parent_ref();
     void remove_parent_selectors();
     // virtual Placeholder_Selector* find_placeholder();
-    CommaSequence_Selector* resolve_parent_refs(Context& ctx, CommaSequence_Selector* parents, bool implicit_parent = true);
+    Selector_List* resolve_parent_refs(Context& ctx, Selector_List* parents, bool implicit_parent = true);
     virtual bool is_superselector_of(SimpleSequence_Selector* sub, std::string wrapping = "");
     virtual bool is_superselector_of(Sequence_Selector* sub, std::string wrapping = "");
-    virtual bool is_superselector_of(CommaSequence_Selector* sub, std::string wrapping = "");
-    CommaSequence_Selector* unify_with(CommaSequence_Selector*, Context&);
-    void populate_extends(CommaSequence_Selector*, Context&, ExtensionSubsetMap&);
+    virtual bool is_superselector_of(Selector_List* sub, std::string wrapping = "");
+    Selector_List* unify_with(Selector_List*, Context&);
+    void populate_extends(Selector_List*, Context&, ExtensionSubsetMap&);
     virtual size_t hash()
     {
       if (Selector::hash_ == 0) {
@@ -2614,10 +2614,10 @@ namespace Sass {
       }
       return false;
     }
-    CommaSequence_Selector* clone(Context&) const;      // does not clone SimpleSequence_Selector*s
-    CommaSequence_Selector* cloneFully(Context&) const; // clones SimpleSequence_Selector*s
+    Selector_List* clone(Context&) const;      // does not clone SimpleSequence_Selector*s
+    Selector_List* cloneFully(Context&) const; // clones SimpleSequence_Selector*s
     virtual bool operator==(const Selector& rhs) const;
-    virtual bool operator==(const CommaSequence_Selector& rhs) const;
+    virtual bool operator==(const Selector_List& rhs) const;
     // Selector Lists can be compared to comma lists
     virtual bool operator==(const Expression& rhs) const;
     ATTACH_OPERATIONS()

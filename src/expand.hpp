@@ -21,7 +21,7 @@ namespace Sass {
 
     Env* environment();
     Context& context();
-    CommaSequence_Selector* selector();
+    Selector_List* selector();
     Backtrace* backtrace();
 
     Context&          ctx;
@@ -32,7 +32,7 @@ namespace Sass {
     std::vector<Block*>         block_stack;
     std::vector<AST_Node*>      call_stack;
     std::vector<String*>        property_stack;
-    std::vector<CommaSequence_Selector*> selector_stack;
+    std::vector<Selector_List*> selector_stack;
     std::vector<Media_Block*>   media_block_stack;
     std::vector<Backtrace*>     backtrace_stack;
     bool                        in_keyframes;
@@ -42,10 +42,10 @@ namespace Sass {
     Statement* fallback_impl(AST_Node* n);
 
   private:
-    void expand_selector_list(Selector*, CommaSequence_Selector* extender);
+    void expand_selector_list(Selector*, Selector_List* extender);
 
   public:
-    Expand(Context&, Env*, Backtrace*, std::vector<CommaSequence_Selector*>* stack = NULL);
+    Expand(Context&, Env*, Backtrace*, std::vector<Selector_List*>* stack = NULL);
     ~Expand() { }
 
     Statement* operator()(Block*);

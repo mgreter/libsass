@@ -90,7 +90,7 @@ namespace Sass {
     virtual void operator()(Wrapped_Selector*);
     virtual void operator()(SimpleSequence_Selector*);
     virtual void operator()(Sequence_Selector*);
-    virtual void operator()(CommaSequence_Selector*);
+    virtual void operator()(Selector_List*);
 
     // template <typename U>
     // void fallback(U x) { fallback_impl(reinterpret_cast<AST_Node*>(x)); }

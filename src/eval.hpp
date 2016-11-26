@@ -28,7 +28,7 @@ namespace Sass {
 
     Env* environment();
     Context& context();
-    CommaSequence_Selector* selector();
+    Selector_List* selector();
     Backtrace* backtrace();
 
     // for evaluating function bodies
@@ -57,7 +57,7 @@ namespace Sass {
     Expression* operator()(String_Schema*);
     Expression* operator()(String_Quoted*);
     Expression* operator()(String_Constant*);
-    // Expression* operator()(CommaSequence_Selector*);
+    // Expression* operator()(Selector_List*);
     Expression* operator()(Media_Query*);
     Expression* operator()(Media_Query_Expression*);
     Expression* operator()(At_Root_Query*);
@@ -71,8 +71,8 @@ namespace Sass {
     Expression* operator()(Comment*);
 
     // these will return selectors
-    CommaSequence_Selector* operator()(CommaSequence_Selector*);
-    CommaSequence_Selector* operator()(Sequence_Selector*);
+    Selector_List* operator()(Selector_List*);
+    Selector_List* operator()(Sequence_Selector*);
     Attribute_Selector* operator()(Attribute_Selector*);
     // they don't have any specific implementatio (yet)
     Element_Selector* operator()(Element_Selector* s) { return s; };
@@ -82,7 +82,7 @@ namespace Sass {
     Id_Selector* operator()(Id_Selector* s) { return s; };
     Placeholder_Selector* operator()(Placeholder_Selector* s) { return s; };
     // actual evaluated selectors
-    CommaSequence_Selector* operator()(Selector_Schema*);
+    Selector_List* operator()(Selector_Schema*);
     Expression* operator()(Parent_Selector*);
 
     template <typename U>

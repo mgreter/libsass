@@ -85,7 +85,7 @@ namespace Sass {
     Wrapped_Selector* new_Wrapped_Selector(std::string p, size_t l, std::string n, Simple_Base* sel);
     SimpleSequence_Selector* new_SimpleSequence_Selector(std::string p, size_t l, size_t s = 0);
     Sequence_Selector* new_Sequence_Selector(std::string p, size_t l, Sequence_Selector::Combinator c, Sequence_Selector* ctx, SimpleSequence_Selector* sel);
-    CommaSequence_Selector* new_CommaSequence_Selector(std::string p, size_t l, size_t s = 0);
+    Selector_List* new_Selector_List(std::string p, size_t l, size_t s = 0);
   };
 }
 

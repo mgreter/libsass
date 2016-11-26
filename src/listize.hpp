@@ -24,7 +24,7 @@ namespace Sass {
     Listize(Memory_Manager&);
     ~Listize() { }
 
-    Expression* operator()(CommaSequence_Selector*);
+    Expression* operator()(Selector_List*);
     Expression* operator()(Sequence_Selector*);
     Expression* operator()(SimpleSequence_Selector*);
 

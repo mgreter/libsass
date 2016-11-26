@@ -15,14 +15,14 @@ namespace Sass {
   const unsigned int maxRecursion = 500;
   static unsigned int recursions = 0;
 
-  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<CommaSequence_Selector*>* stack)
+  Expand::Expand(Context& ctx, Env* env, Backtrace* bt, std::vector<Selector_List*>* stack)
   : ctx(ctx),
     eval(Eval(*this)),
     env_stack(std::vector<Env*>()),
     block_stack(std::vector<Block*>()),
     call_stack(std::vector<AST_Node*>()),
     property_stack(std::vector<String*>()),
-    selector_stack(std::vector<CommaSequence_Selector*>()),
+    selector_stack(std::vector<Selector_List*>()),
     media_block_stack(std::vector<Media_Block*>()),
     backtrace_stack(std::vector<Backtrace*>()),
     in_keyframes(false),
@@ -54,7 +54,7 @@ namespace Sass {
     return 0;
   }
 
-  CommaSequence_Selector* Expand::selector()
+  Selector_List* Expand::selector()
   {
     if (selector_stack.size() > 0)
       return selector_stack.back();
@@ -99,7 +99,7 @@ namespace Sass {
       Keyframe_Rule* k = SASS_MEMORY_NEW(ctx.mem, Keyframe_Rule, r->pstate(), r->block()->perform(this)->block());
       if (r->selector()) {
         selector_stack.push_back(0);
-        k->selector(static_cast<CommaSequence_Selector*>(r->selector()->perform(&eval)));
+        k->selector(static_cast<Selector_List*>(r->selector()->perform(&eval)));
         selector_stack.pop_back();
       }
       return k;
@@ -110,7 +110,7 @@ namespace Sass {
 
     // do some special checks for the base level rules
     if (r->is_root()) {
-      if (CommaSequence_Selector* selector_list = dynamic_cast<CommaSequence_Selector*>(r->selector())) {
+      if (Selector_List* selector_list = dynamic_cast<Selector_List*>(r->selector())) {
         for (Sequence_Selector* complex_selector : selector_list->elements()) {
           Sequence_Selector* tail = complex_selector;
           while (tail) {
@@ -126,13 +126,13 @@ namespace Sass {
     }
 
     Expression* ex = r->selector()->perform(&eval);
-    CommaSequence_Selector* sel = dynamic_cast<CommaSequence_Selector*>(ex);
+    Selector_List* sel = dynamic_cast<Selector_List*>(ex);
     if (sel == 0) throw std::runtime_error("Expanded null selector");
 
     if (sel->length() == 0 || sel->has_parent_ref()) {
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
-        CommaSequence_Selector* ll = selector_stack.at(i);
+        Selector_List* ll = selector_stack.at(i);
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
       if (!has_parent_selector) {
@@ -460,7 +460,7 @@ namespace Sass {
     if (expr->concrete_type() == Expression::MAP) {
       map = static_cast<Map*>(expr);
     }
-    else if (CommaSequence_Selector* ls = dynamic_cast<CommaSequence_Selector*>(expr)) {
+    else if (Selector_List* ls = dynamic_cast<Selector_List*>(expr)) {
       Listize listize(ctx.mem);
       list = dynamic_cast<List*>(ls->perform(&listize));
     }
@@ -496,7 +496,7 @@ namespace Sass {
     }
     else {
       // bool arglist = list->is_arglist();
-      if (list->length() == 1 && dynamic_cast<CommaSequence_Selector*>(list)) {
+      if (list->length() == 1 && dynamic_cast<Selector_List*>(list)) {
         list = dynamic_cast<Vectorized<Expression*>*>(list);
       }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
@@ -556,9 +556,9 @@ namespace Sass {
   }
 
 
-  void Expand::expand_selector_list(Selector* s, CommaSequence_Selector* extender) {
+  void Expand::expand_selector_list(Selector* s, Selector_List* extender) {
 
-    if (CommaSequence_Selector* sl = dynamic_cast<CommaSequence_Selector*>(s)) {
+    if (Selector_List* sl = dynamic_cast<Selector_List*>(s)) {
       for (Sequence_Selector* complex_selector : sl->elements()) {
         Sequence_Selector* tail = complex_selector;
         while (tail) {
@@ -573,7 +573,7 @@ namespace Sass {
     }
 
 
-    CommaSequence_Selector* contextualized = dynamic_cast<CommaSequence_Selector*>(s->perform(&eval));
+    Selector_List* contextualized = dynamic_cast<Selector_List*>(s->perform(&eval));
     if (contextualized == NULL) return;
     for (auto complex_sel : contextualized->elements()) {
       Sequence_Selector* c = complex_sel;
@@ -609,12 +609,12 @@ namespace Sass {
 
   Statement* Expand::operator()(Extension* e)
   {
-    if (CommaSequence_Selector* extender = dynamic_cast<CommaSequence_Selector*>(selector())) {
+    if (Selector_List* extender = dynamic_cast<Selector_List*>(selector())) {
       Selector* s = e->selector();
       if (Selector_Schema* schema = dynamic_cast<Selector_Schema*>(s)) {
         if (schema->has_parent_ref()) s = eval(schema);
       }
-      if (CommaSequence_Selector* sl = dynamic_cast<CommaSequence_Selector*>(s)) {
+      if (Selector_List* sl = dynamic_cast<Selector_List*>(s)) {
         for (Sequence_Selector* cs : *sl) {
           if (cs != NULL && cs->head() != NULL) {
             cs->head()->media_block(media_block_stack.back());
