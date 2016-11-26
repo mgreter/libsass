@@ -391,7 +391,7 @@ namespace Sass {
       String_Constant_Ptr loc = SASS_MEMORY_NEW(mem, String_Constant, pstate, unquote(load_path));
       Argument_Ptr loc_arg = SASS_MEMORY_NEW(mem, Argument, pstate, loc);
       Arguments_Ptr loc_args = SASS_MEMORY_NEW(mem, Arguments, pstate);
-      loc_args->push(loc_arg);
+      loc_args->push2(loc_arg);
       Function_Call_Ptr new_url = SASS_MEMORY_NEW(mem, Function_Call, pstate, "url", loc_args);
       imp->urls().push_back(new_url);
     }
@@ -532,10 +532,10 @@ namespace Sass {
     // increase head count to skip later
     head_imports += resources.size() - 1;
     // add the statement if we have urls
-    if (!imp->urls().empty()) root->push(imp);
+    if (!imp->urls().empty()) root->push2(imp);
     // process all other resources (add Import_Stub nodes)
     for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-      root->push(SASS_MEMORY_NEW(mem, Import_Stub, pstate, imp->incs()[i]));
+      root->push2(SASS_MEMORY_NEW(mem, Import_Stub, pstate, imp->incs()[i]));
     }
   }
 

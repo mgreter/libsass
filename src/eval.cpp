@@ -229,7 +229,7 @@ namespace Sass {
     }
     else if (expr->concrete_type() != Expression::LIST) {
       list = SASS_MEMORY_NEW(ctx.mem, List, expr->pstate(), 1, SASS_COMMA);
-      list->push(expr);
+      list->push2(expr);
     }
     else {
       list = static_cast<List_Ptr>(expr);
@@ -244,8 +244,8 @@ namespace Sass {
 
         if (variables.size() == 1) {
           List_Ptr variable = SASS_MEMORY_NEW(ctx.mem, List, map->pstate(), 2, SASS_SPACE);
-          variable->push(key);
-          variable->push(value);
+          variable->push2(key);
+          variable->push2(value);
           env.set_local(variables[0], variable);
         } else {
           env.set_local(variables[0], key);
@@ -457,7 +457,7 @@ namespace Sass {
                                l->separator(),
                                l->is_arglist());
     for (size_t i = 0, L = l->length(); i < L; ++i) {
-      ll->push(l->get(i)->perform(this));
+      ll->push2(l->get(i)->perform(this));
     }
     ll->is_interpolant(l->is_interpolant());
     ll->from_selector(l->from_selector());
@@ -507,9 +507,9 @@ namespace Sass {
                                                     b->op(), s_l->last(), b->right());
         bin_ex->is_delayed(b->left()->is_delayed() || b->right()->is_delayed()); // unverified
         for (size_t i = 0; i < s_l->length() - 1; ++i) {
-          ret_schema->push(s_l->at(i)->perform(this));
+          ret_schema->push2(s_l->at(i)->perform(this));
         }
-        ret_schema->push(bin_ex->perform(this));
+        ret_schema->push2(bin_ex->perform(this));
         return ret_schema->perform(this);
       }
     }
@@ -519,9 +519,9 @@ namespace Sass {
         Binary_Expression_Ptr bin_ex = SASS_MEMORY_NEW(ctx.mem, Binary_Expression, b->pstate(),
                                                     b->op(), b->left(), s_r->first());
         bin_ex->is_delayed(b->left()->is_delayed() || b->right()->is_delayed()); // verified
-        ret_schema->push(bin_ex->perform(this));
+        ret_schema->push2(bin_ex->perform(this));
         for (size_t i = 1; i < s_r->length(); ++i) {
-          ret_schema->push(s_r->at(i)->perform(this));
+          ret_schema->push2(s_r->at(i)->perform(this));
         }
         return ret_schema->perform(this);
       }
@@ -924,8 +924,8 @@ namespace Sass {
     Expression_Ptr evaluated_name = s->name()->perform(this);
     Expression_Ptr evaluated_args = s->arguments()->perform(this);
     String_Schema_Ptr ss = SASS_MEMORY_NEW(ctx.mem, String_Schema, s->pstate(), 2);
-    ss->push(evaluated_name);
-    ss->push(evaluated_args);
+    ss->push2(evaluated_name);
+    ss->push2(evaluated_args);
     return ss->perform(this);
   }
 
@@ -1048,7 +1048,7 @@ namespace Sass {
     if (Arguments_Ptr args = dynamic_cast<Arguments_Ptr>(ex)) {
       List_Ptr ll = SASS_MEMORY_NEW(ctx.mem, List, args->pstate(), 0, SASS_COMMA);
       for(auto arg : *args) {
-        ll->push(arg->value());
+        ll->push2(arg->value());
       }
       ll->is_interpolant(args->is_interpolant());
       needs_closing_brace = true;
@@ -1087,7 +1087,7 @@ namespace Sass {
         item->is_interpolant(l->is_interpolant());
         std::string rl(""); interpolation(ctx, rl, item, into_quotes, l->is_interpolant());
         bool is_null = dynamic_cast<Null_Ptr>(item) != 0; // rl != ""
-        if (!is_null) ll->push(SASS_MEMORY_NEW(ctx.mem, String_Quoted, item->pstate(), rl));
+        if (!is_null) ll->push2(SASS_MEMORY_NEW(ctx.mem, String_Quoted, item->pstate(), rl));
       }
       // Check indicates that we probably should not get a list
       // here. Normally single list items are already unwrapped.
@@ -1253,7 +1253,7 @@ namespace Sass {
                                       q->is_negated(),
                                       q->is_restricted());
     for (size_t i = 0, L = q->length(); i < L; ++i) {
-      qq->push(static_cast<Media_Query_Expression_Ptr>(q->get(i)->perform(this)));
+      qq->push2(static_cast<Media_Query_Expression_Ptr>(q->get(i)->perform(this)));
     }
     return qq;
   }
@@ -1592,7 +1592,7 @@ namespace Sass {
       case SASS_LIST: {
         List_Ptr l = SASS_MEMORY_NEW(mem, List, pstate, sass_list_get_length(v), sass_list_get_separator(v));
         for (size_t i = 0, L = sass_list_get_length(v); i < L; ++i) {
-          l->push(cval_to_astnode(mem, sass_list_get_value(v, i), ctx, backtrace, pstate));
+          l->push2(cval_to_astnode(mem, sass_list_get_value(v, i), ctx, backtrace, pstate));
         }
         e = l;
       } break;
@@ -1636,7 +1636,7 @@ namespace Sass {
       bool abort = true;
       for (size_t i = 0, iL = rv.size(); i < iL; ++i) {
         if (rv[i]->length() > round) {
-          sl->push(rv[i]->get(round));
+          sl->push2(rv[i]->get(round));
           abort = false;
         }
       }
