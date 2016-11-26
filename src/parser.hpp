@@ -342,16 +342,16 @@ namespace Sass {
       if (lex < open >(false)) {
         String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
         // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-        *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+        schema->push(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed));
         if (position[0] == '#' && position[1] == '{') {
           Expression_Ptr itpl = lex_interpolation();
-          if (itpl) *schema << itpl;
+          if (itpl) schema->push(itpl);
           while (lex < close >(false)) {
             // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-            *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
+            schema->push(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed));
             if (position[0] == '#' && position[1] == '{') {
               Expression_Ptr itpl = lex_interpolation();
-              if (itpl) *schema << itpl;
+              if (itpl) schema->push(itpl);
             } else {
               return schema;
             }

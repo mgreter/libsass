@@ -241,6 +241,14 @@ namespace Sass {
     inline T& get(size_t i) { return elements_[i]; }
     inline const T& get(size_t i) const { return elements_[i]; }
 
+    void push(T element)
+    {
+      if (!element) return;
+      reset_hash();
+      elements_.push_back(element);
+      adjust_after_pushing(element);
+    }
+/*
     virtual Vectorized& operator<<(T element)
     {
       if (!element) return *this;
@@ -249,18 +257,19 @@ namespace Sass {
       adjust_after_pushing(element);
       return *this;
     }
-    Vectorized& concat(Vectorized* v)
+*/
+    void concat(Vectorized* v)
     {
       elements_.insert(
         elements_.end(),
         v->begin(),
         v->end()
       );
-      return *this;
+      reset_hash();
     }
     Vectorized& operator+=(Vectorized* v)
     {
-      for (size_t i = 0, L = v->length(); i < L; ++i) *this << v->get(i);
+      for (size_t i = 0, L = v->length(); i < L; ++i) this->push(v->get(i));
       return *this;
     }
     Vectorized& unshift(T element)
@@ -275,7 +284,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        for (T& el : elements_) {
+        for (const T& el : elements_) {
           hash_combine(hash_, el->hash());
         }
       }

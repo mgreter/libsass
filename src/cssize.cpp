@@ -111,12 +111,12 @@ namespace Sass {
     {
       Directive_Ptr empty_node = static_cast<Directive_Ptr>(rr);
       empty_node->block(SASS_MEMORY_NEW(ctx.mem, Block, rr->block() ? rr->block()->pstate() : rr->pstate()));
-      *result << empty_node;
+      result->push(empty_node);
     }
 
     Statement_Ptr ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
     for (size_t i = 0, L = ss->block()->length(); i < L; ++i) {
-      *result << ss->block()->get(i);
+      result->push(ss->block()->get(i));
     }
 
     return result;
@@ -164,8 +164,8 @@ namespace Sass {
     for (size_t i = 0, L = rr->block()->length(); i < L; i++)
     {
       Statement_Ptr s = rr->block()->get(i);
-      if (bubblable(s)) *rules << s;
-      if (!bubblable(s)) *props << s;
+      if (bubblable(s)) rules->push(s);
+      if (!bubblable(s)) props->push(s);
     }
 
     if (props->length())
@@ -277,11 +277,11 @@ namespace Sass {
 
     size_t L = m->block() ? m->block()->length() : 0;
     for (size_t i = 0; i < L; ++i) {
-      *new_rule->block() << m->block()->get(i);
+      new_rule->block()->push(m->block()->get(i));
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block() ? m->block()->pstate() : m->pstate());
-    *wrapper_block << new_rule;
+    wrapper_block->push(new_rule);
     Directive_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Directive,
                                   m->pstate(),
                                   m->keyword(),
@@ -301,11 +301,11 @@ namespace Sass {
     new_rule->tabs(this->parent()->tabs());
 
     for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << m->block()->get(i);
+      new_rule->block()->push(m->block()->get(i));
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
-    *wrapper_block << new_rule;
+    wrapper_block->push(new_rule);
     At_Root_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, At_Root_Block,
                                         m->pstate(),
                                         wrapper_block,
@@ -326,11 +326,11 @@ namespace Sass {
     new_rule->tabs(parent->tabs());
 
     for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << m->block()->get(i);
+      new_rule->block()->push(m->block()->get(i));
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
-    *wrapper_block << new_rule;
+    wrapper_block->push(new_rule);
     Supports_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Supports_Block,
                                        m->pstate(),
                                        m->condition(),
@@ -354,11 +354,11 @@ namespace Sass {
     new_rule->tabs(parent->tabs());
 
     for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      *new_rule->block() << m->block()->get(i);
+      new_rule->block()->push(m->block()->get(i));
     }
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
-    *wrapper_block << new_rule;
+    wrapper_block->push(new_rule);
     Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
                                       m->media_queries(),
@@ -386,11 +386,11 @@ namespace Sass {
       if (ss->block()) {
         ss = flatten(ss);
         for (size_t j = 0, K = ss->block()->length(); j < K; ++j) {
-          *result << ss->block()->get(j);
+          result->push(ss->block()->get(j));
         }
       }
       else {
-        *result << ss;
+        result->push(ss);
       }
     }
     return result;
@@ -406,12 +406,12 @@ namespace Sass {
       if (!results.empty() && results.back().first == key)
       {
         Block_Ptr wrapper_block = results.back().second;
-        *wrapper_block << value;
+        wrapper_block->push(value);
       }
       else
       {
         Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, value->pstate());
-        *wrapper_block << value;
+        wrapper_block->push(value);
         results.push_back(std::make_pair(key, wrapper_block));
       }
     }
@@ -456,7 +456,7 @@ namespace Sass {
 
       if (!is_bubble) {
         if (!parent) {
-          *result << slice;
+          result->push(slice);
         }
         else if (previous_parent) {
           *previous_parent->block() += slice;
@@ -468,7 +468,7 @@ namespace Sass {
 
           Has_Block_Ptr new_parent = previous_parent;
 
-          *result << new_parent;
+          result->push(new_parent);
         }
         continue;
       }
@@ -504,7 +504,7 @@ namespace Sass {
                                     children->block()->pstate(),
                                     children->block()->length(),
                                     children->block()->is_root());
-        *bb << ss->perform(this);
+        bb->push(ss->perform(this));
 
         Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block,
                                               children->block()->pstate(),
@@ -512,14 +512,14 @@ namespace Sass {
                                               children->block()->is_root());
 
         Statement_Ptr wrapper = flatten(bb);
-        *wrapper_block << wrapper;
+        wrapper_block->push(wrapper);
 
         if (wrapper->block()->length()) {
           previous_parent = 0;
         }
 
         if (wrapper_block) {
-          *result << wrapper_block;
+          result->push(wrapper_block);
         }
       }
     }
@@ -540,11 +540,11 @@ namespace Sass {
       Statement_Ptr ith = b->get(i)->perform(this);
       if (ith && ith->block()) {
         for (size_t j = 0, K = ith->block()->length(); j < K; ++j) {
-          *current_block << ith->block()->get(j);
+          current_block->push(ith->block()->get(j));
         }
       }
       else if (ith) {
-        *current_block << ith;
+        current_block->push(ith);
       }
     }
   }
@@ -562,7 +562,7 @@ namespace Sass {
         Media_Query_Ptr mq2 = static_cast<Media_Query_Ptr>(m2->media_queries()->get(j));
         Media_Query_Ptr mq = merge_media_query(mq1, mq2);
 
-        if (mq) *qq << mq;
+        if (mq) qq->push(mq);
       }
     }
 

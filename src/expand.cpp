@@ -466,7 +466,7 @@ namespace Sass {
     }
     else if (expr->concrete_type() != Expression::LIST) {
       list = SASS_MEMORY_NEW(ctx.mem, List, expr->pstate(), 1, SASS_COMMA);
-      *list << expr;
+      list->push(expr);
     }
     else {
       list = static_cast<List_Ptr>(expr);
@@ -484,8 +484,8 @@ namespace Sass {
 
         if (variables.size() == 1) {
           List_Ptr variable = SASS_MEMORY_NEW(ctx.mem, List, map->pstate(), 2, SASS_SPACE);
-          *variable << k;
-          *variable << v;
+          variable->push(k);
+          variable->push(v);
           env.set_local(variables[0], variable);
         } else {
           env.set_local(variables[0], k);
@@ -701,7 +701,7 @@ namespace Sass {
     block_stack.push_back(trace_block);
     for (auto bb : *body) {
       Statement_Ptr ith = bb->perform(this);
-      if (ith) *trace->block() << ith;
+      if (ith) trace->block()->push(ith);
     }
     block_stack.pop_back();
 
@@ -751,7 +751,7 @@ namespace Sass {
     if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Ptr ith = b->get(i)->perform(this);
-      if (ith) *block_stack.back() << ith;
+      if (ith) block_stack.back()->push(ith);
     }
     if (b->is_root()) call_stack.pop_back();
   }

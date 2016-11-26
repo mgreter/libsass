@@ -890,7 +890,7 @@ namespace Sass {
     Selector_List_Ptr result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     NodeDequePtr col = node.collection(); // move from collection to list
     for (NodeDeque::iterator it = col->begin(), end = col->end(); it != end; it++)
-    { (*result) << nodeToComplexSelector(Node::naiveTrim(*it, ctx), ctx); }
+    { result->push(nodeToComplexSelector(Node::naiveTrim(*it, ctx), ctx)); }
 
     // only return if list has some entries
     return result->length() ? result : 0;
@@ -1124,7 +1124,7 @@ namespace Sass {
     Selector_List_Ptr ss = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     for (size_t pi = 0, pL = ps->length(); pi < pL; ++pi) {
       Selector_List_Ptr list = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
-      *list << ps->get(pi);
+      list->push(ps->get(pi));
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
         *ss += get(si)->resolve_parent_refs(ctx, list, implicit_parent);
       }
@@ -1139,7 +1139,7 @@ namespace Sass {
 
     if (!this->has_real_parent_ref() && !implicit_parent) {
       Selector_List_Ptr retval = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
-      *retval << this;
+      retval->push(this);
       return retval;
     }
 
@@ -1177,7 +1177,7 @@ namespace Sass {
                 s->pstate(pstate());
                 // append new tail
                 s->append(ctx, ss);
-                *retval << s;
+                retval->push(s);
               }
             }
           }
@@ -1211,7 +1211,7 @@ namespace Sass {
               s->pstate(pstate());
               // append new tail
               s->append(ctx, ss);
-              *retval << s;
+              retval->push(s);
             }
           }
         }
@@ -1225,7 +1225,7 @@ namespace Sass {
               for (size_t i = 1, L = this->head()->length(); i < L; ++i)
                 *cpy->head() << this->head()->get(i);
               if (!cpy->head()->length()) cpy->head(NULL);
-              *retval << cpy->skip_empty_reference();
+              retval->push(cpy->skip_empty_reference());
             }
           }
           // have no parent nor tails
@@ -1235,7 +1235,7 @@ namespace Sass {
             for (size_t i = 1, L = this->head()->length(); i < L; ++i)
               *cpy->head() << this->head()->get(i);
             if (!cpy->head()->length()) cpy->head(NULL);
-            *retval << cpy->skip_empty_reference();
+            retval->push(cpy->skip_empty_reference());
           }
         }
       }
@@ -1271,11 +1271,11 @@ namespace Sass {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
         Complex_Selector_Ptr pr = this->clone(ctx);
         pr->tail(tails->get(i));
-        *rv << pr;
+        rv->push(pr);
       }
     }
     else {
-      *rv << this;
+      rv->push(this);
     }
     return rv;
   }
@@ -1407,7 +1407,7 @@ namespace Sass {
     cpy->is_optional(this->is_optional());
     cpy->media_block(this->media_block());
     for (size_t i = 0, L = length(); i < L; ++i) {
-      *cpy << get(i)->cloneFully(ctx);
+      cpy->push(get(i)->cloneFully(ctx));
     }
     return cpy;
   }
@@ -1545,7 +1545,7 @@ namespace Sass {
     // Creates the final Selector_List by combining all the complex selectors
     Selector_List_Ptr final_result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     for (auto itr = unified_complex_selectors.begin(); itr != unified_complex_selectors.end(); ++itr) {
-      *final_result << *itr;
+      final_result->push(*itr);
     }
     return final_result;
   }
@@ -1594,7 +1594,7 @@ namespace Sass {
 
   Compound_Selector& Compound_Selector::operator<<(Simple_Selector* element)
   {
-    Vectorized<Simple_Selector*>::operator<<(element);
+    Vectorized<Simple_Selector*>::push(element);
     pstate_.offset += element->pstate().offset;
     return *this;
   }
@@ -2307,9 +2307,9 @@ namespace Sass {
 
     for (auto key : keys()) {
       List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
-      *l << key;
-      *l << at(key);
-      *ret << l;
+      l->push(key);
+      l->push(at(key));
+      ret->push(l);
     }
 
     return ret;

@@ -103,7 +103,7 @@ namespace Sass {
                                   sass_list_get_length(val),
                                   sass_list_get_separator(val));
         for (size_t i = 0, L = sass_list_get_length(val); i < L; ++i) {
-          *l << sass_value_to_ast_node(mem, sass_list_get_value(val, i));
+          l->push(sass_value_to_ast_node(mem, sass_list_get_value(val, i)));
         }
         return l;
       }

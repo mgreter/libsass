@@ -1915,7 +1915,7 @@ namespace Sass {
       // the extend. We might be able to optimize extendComplexSelector, but this approach keeps us closer to ruby sass (which helps
       // when debugging).
       if (!complexSelectorHasExtension(pSelector, ctx, subset_map, seen)) {
-        *pNewSelectors << pSelector;
+        pNewSelectors->push(pSelector);
         continue;
       }
 
@@ -1924,7 +1924,7 @@ namespace Sass {
       Node extendedSelectors = extendComplexSelector(pSelector, ctx, subset_map, seen, isReplace, true);
       if (!pSelector->has_placeholder()) {
         if (!extendedSelectors.contains(complexSelectorToNode(pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
-          *pNewSelectors << pSelector;
+          pNewSelectors->push(pSelector);
           continue;
         }
       }
@@ -1934,7 +1934,7 @@ namespace Sass {
         if(isReplace && iterator == iteratorBegin && extendedSelectors.collection()->size() > 1 ) continue;
 
         Node& childNode = *iterator;
-        *pNewSelectors << nodeToComplexSelector(childNode, ctx);
+        pNewSelectors->push(nodeToComplexSelector(childNode, ctx));
       }
     }
 
@@ -1959,7 +1959,7 @@ namespace Sass {
                 // special case for ruby ass
                 if (sl->empty()) {
                   // this seems inconsistent but it is how ruby sass seems to remove parentheses
-                  *cpy_head << SASS_MEMORY_NEW(ctx.mem, Type_Selector, hs->pstate(), ws->name());
+                  cpy_head->push(SASS_MEMORY_NEW(ctx.mem, Type_Selector, hs->pstate(), ws->name()));
                 }
                 // has wrapped selectors
                 else {
@@ -1982,20 +1982,20 @@ namespace Sass {
                             dynamic_cast<Placeholder_Selector_Ptr>(ws_ss->first())
                           )) continue;
                         }
-                        *cpy_ws_sl << ext_cs->first();
+                        cpy_ws_sl->push(ext_cs->first());
                       }
                       // assign list to clone
                       cpy_ws->selector(cpy_ws_sl);
                       // append the clone
-                      *cpy_head << cpy_ws;
+                      cpy_head->push(cpy_ws);
                     }
                   }
                 }
               } else {
-                *cpy_head << hs;
+                cpy_head->push(hs);
               }
             } else {
-              *cpy_head << hs;
+              cpy_head->push(hs);
             }
           }
           // replace header

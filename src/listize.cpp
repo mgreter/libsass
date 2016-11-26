@@ -20,7 +20,7 @@ namespace Sass {
     l->from_selector(true);
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
       if (!sel->get(i)) continue;
-      *l << sel->get(i)->perform(this);
+      l->push(sel->get(i)->perform(this));
     }
     if (l->length()) return l;
     return SASS_MEMORY_NEW(mem, Null, l->pstate());
@@ -44,7 +44,7 @@ namespace Sass {
     if (head && !head->is_empty_reference())
     {
       Expression_Ptr hh = head->perform(this);
-      if (hh) *l << hh;
+      if (hh) l->push(hh);
     }
 
     std::string reference = ! sel->reference() ? ""
@@ -52,16 +52,16 @@ namespace Sass {
     switch(sel->combinator())
     {
       case Complex_Selector::PARENT_OF:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), ">");
+        l->push(SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), ">"));
       break;
       case Complex_Selector::ADJACENT_TO:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "+");
+        l->push(SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "+"));
       break;
       case Complex_Selector::REFERENCE:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "/" + reference + "/");
+        l->push(SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "/" + reference + "/"));
       break;
       case Complex_Selector::PRECEDES:
-        *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "~");
+        l->push(SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "~"));
       break;
       case Complex_Selector::ANCESTOR_OF:
       break;
@@ -73,7 +73,7 @@ namespace Sass {
       Expression_Ptr tt = tail->perform(this);
       if (tt && tt->concrete_type() == Expression::LIST)
       { *l += static_cast<List_Ptr>(tt); }
-      else if (tt) *l << static_cast<List_Ptr>(tt);
+      else if (tt) l->push(static_cast<List_Ptr>(tt));
     }
     if (l->length() == 0) return 0;
     return l;
