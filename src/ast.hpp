@@ -2063,9 +2063,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////
   // Element selectors (and the universal selector) -- e.g., div, span, *.
   /////////////////////////////////////////////////////////////////////
-  class Element_Selector : public Simple_Selector {
+  class Type_Selector : public Simple_Selector {
   public:
-    Element_Selector(ParserState pstate, std::string n)
+    Type_Selector(ParserState pstate, std::string n)
     : Simple_Selector(pstate, n)
     { }
     virtual unsigned long specificity()
@@ -2313,7 +2313,7 @@ namespace Sass {
     const Simple_Selector* base() const {
       if (length() == 0) return 0;
       // ToDo: why is this needed?
-      if (dynamic_cast<Element_Selector*>((*this)[0]))
+      if (dynamic_cast<Type_Selector*>((*this)[0]))
         return (*this)[0];
       return 0;
     }

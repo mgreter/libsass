@@ -291,7 +291,7 @@ namespace Sass {
     // TODO: figure out a better way to create a Complex_Selector from scratch
     // TODO: There's got to be a better way. This got ugly quick...
     Position noPosition(-1, -1, -1);
-    Element_Selector fakeParent(ParserState("[FAKE]"), "temp");
+    Type_Selector fakeParent(ParserState("[FAKE]"), "temp");
     Compound_Selector fakeHead(ParserState("[FAKE]"), 1 /*size*/);
     fakeHead.elements().push_back(&fakeParent);
     Complex_Selector fakeParentContainer(ParserState("[FAKE]"), Complex_Selector::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
@@ -654,7 +654,7 @@ namespace Sass {
     // TODO: figure out a better way to create a Complex_Selector from scratch
     // TODO: There's got to be a better way. This got ugly quick...
     Position noPosition(-1, -1, -1);
-    Element_Selector fakeParent(ParserState("[FAKE]"), "temp");
+    Type_Selector fakeParent(ParserState("[FAKE]"), "temp");
     Compound_Selector fakeHead(ParserState("[FAKE]"), 1 /*size*/);
     fakeHead.elements().push_back(&fakeParent);
     Complex_Selector fakeParentContainer(ParserState("[FAKE]"), Complex_Selector::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
@@ -1959,7 +1959,7 @@ namespace Sass {
                 // special case for ruby ass
                 if (sl->empty()) {
                   // this seems inconsistent but it is how ruby sass seems to remove parentheses
-                  *cpy_head << SASS_MEMORY_NEW(ctx.mem, Element_Selector, hs->pstate(), ws->name());
+                  *cpy_head << SASS_MEMORY_NEW(ctx.mem, Type_Selector, hs->pstate(), ws->name());
                 }
                 // has wrapped selectors
                 else {
@@ -1978,7 +1978,7 @@ namespace Sass {
                           Compound_Selector* ws_ss = ws_cs->first()->head();
                           if (!(
                             dynamic_cast<Pseudo_Selector*>(ws_ss->first()) ||
-                            dynamic_cast<Element_Selector*>(ws_ss->first()) ||
+                            dynamic_cast<Type_Selector*>(ws_ss->first()) ||
                             dynamic_cast<Placeholder_Selector*>(ws_ss->first())
                           )) continue;
                         }

@@ -430,7 +430,7 @@ namespace Sass {
     return cpy;
   }
 
-  Simple_Selector* Element_Selector::unify_with(Simple_Selector* rhs, Context& ctx)
+  Simple_Selector* Type_Selector::unify_with(Simple_Selector* rhs, Context& ctx)
   {
     // check if ns can be extended
     // true for no ns or universal
@@ -441,7 +441,7 @@ namespace Sass {
       if (!rhs->is_universal_ns())
       {
         // creaty the copy inside (avoid unnecessary copies)
-        Element_Selector* ts = SASS_MEMORY_NEW(ctx.mem, Element_Selector, *this);
+        Type_Selector* ts = SASS_MEMORY_NEW(ctx.mem, Type_Selector, *this);
         // overwrite the name if star is given as name
         if (ts->name() == "*") { ts->name(rhs->name()); }
         // now overwrite the namespace name and flag
@@ -455,7 +455,7 @@ namespace Sass {
     if (name() == "*" && rhs->name() != "*")
     {
       // creaty the copy inside (avoid unnecessary copies)
-      Element_Selector* ts = SASS_MEMORY_NEW(ctx.mem, Element_Selector, *this);
+      Type_Selector* ts = SASS_MEMORY_NEW(ctx.mem, Type_Selector, *this);
       // simply set the new name
       ts->name(rhs->name());
       // return copy
@@ -465,7 +465,7 @@ namespace Sass {
     return this;
   }
 
-  Compound_Selector* Element_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector* Type_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
   {
     // TODO: handle namespaces
 
@@ -480,11 +480,11 @@ namespace Sass {
     // otherwise, this is a tag name
     if (name() == "*")
     {
-      if (typeid(*rhs_0) == typeid(Element_Selector))
+      if (typeid(*rhs_0) == typeid(Type_Selector))
       {
         // if rhs is universal, just return this tagname + rhs's qualifiers
         Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
-        Element_Selector* ts = static_cast<Element_Selector*>(rhs_0);
+        Type_Selector* ts = static_cast<Type_Selector*>(rhs_0);
         (*cpy)[0] = this->unify_with(ts, ctx);
         return cpy;
       }
@@ -503,7 +503,7 @@ namespace Sass {
       return rhs;
     }
 
-    if (typeid(*rhs_0) == typeid(Element_Selector))
+    if (typeid(*rhs_0) == typeid(Type_Selector))
     {
       // if rhs is universal, just return this tagname + rhs's qualifiers
       if (rhs_0->name() != "*" && rhs_0->ns() != "*" && rhs_0->name() != name()) return 0;
@@ -1057,7 +1057,7 @@ namespace Sass {
       } else if (last()->head_ && last()->head_->length()) {
         Compound_Selector* rh = last()->head();
         size_t i = 0, L = h->length();
-        if (dynamic_cast<Element_Selector*>(h->first())) {
+        if (dynamic_cast<Type_Selector*>(h->first())) {
           if (Class_Selector* sq = dynamic_cast<Class_Selector*>(rh->last())) {
             Class_Selector* sqs = SASS_MEMORY_NEW(ctx.mem, Class_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
@@ -1072,8 +1072,8 @@ namespace Sass {
             (*rh)[rh->length()-1] = sqs;
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << (*h)[i];
-          } else if (Element_Selector* ts = dynamic_cast<Element_Selector*>(rh->last())) {
-            Element_Selector* tss = SASS_MEMORY_NEW(ctx.mem, Element_Selector, *ts);
+          } else if (Type_Selector* ts = dynamic_cast<Type_Selector*>(rh->last())) {
+            Type_Selector* tss = SASS_MEMORY_NEW(ctx.mem, Type_Selector, *ts);
             tss->name(tss->name() + (*h)[0]->name());
             tss->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = tss;
