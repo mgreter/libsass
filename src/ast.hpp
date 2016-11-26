@@ -210,19 +210,16 @@ namespace std {
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////////
-  // Mixin class for AST nodes that should behave like vectors. Uses the
-  // "Template Method" design pattern to allow subclasses to adjust their flags
-  // when certain objects are pushed.
+  // Mixin class for AST nodes that should behave like vectors.
   /////////////////////////////////////////////////////////////////////////////
   template <typename T>
   class Vectorized {
-    std::vector<T> elements_;
   protected:
     size_t hash_;
+    std::vector<T> elements_;
     void reset_hash() { hash_ = 0; }
-    virtual void adjust_after_pushing(T element) { }
   public:
-    Vectorized(size_t s = 0) : elements_(std::vector<T>()), hash_(0)
+    Vectorized(size_t s = 0) : hash_(0), elements_(std::vector<T>())
     { elements_.reserve(s); }
     virtual ~Vectorized() = 0;
     size_t length() const   { return elements_.size(); }
@@ -246,7 +243,6 @@ namespace Sass {
       if (!element) return;
       reset_hash();
       elements_.push_back(element);
-      adjust_after_pushing(element);
     }
 
     void push2(T element)
@@ -254,7 +250,6 @@ namespace Sass {
       if (!element) return;
       reset_hash();
       elements_.push_back(element);
-      // adjust_after_pushing(element);
     }
 
     void concat(Vectorized* v)
@@ -300,6 +295,28 @@ namespace Sass {
   };
   template <typename T>
   inline Vectorized<T>::~Vectorized() { }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Specialized Vector function for lists with constraints.
+  // Used by Arguments and Parameters to verify valid state.
+  /////////////////////////////////////////////////////////////////////////////
+  template <typename T>
+  class CheckedVectorized : public Vectorized<T> {
+  protected:
+    virtual void adjust_after_pushing(const T&) = 0;
+  public:
+    // constructor with size argument
+    CheckedVectorized(size_t s = 0)
+    : Vectorized<T>(s) { }
+    // specialized push method
+    void push(T element)
+    {
+      if (!element) return;
+      this->reset_hash();
+      this->elements_.push_back(element);
+      adjust_after_pushing(element);
+    }
+  };
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
@@ -1183,16 +1200,17 @@ namespace Sass {
   // error checking (e.g., ensuring that all ordinal arguments precede all
   // named arguments).
   ////////////////////////////////////////////////////////////////////////
-  class Arguments : public Expression, public Vectorized<Argument_Ptr> {
+  class Arguments : public Expression, public CheckedVectorized<Argument_Ptr> {
     ADD_PROPERTY(bool, has_named_arguments)
     ADD_PROPERTY(bool, has_rest_argument)
     ADD_PROPERTY(bool, has_keyword_argument)
   protected:
-    void adjust_after_pushing(Argument_Ptr a);
+    // implement check function for specialized vector
+    void adjust_after_pushing(const Argument_Ptr& a);
   public:
     Arguments(ParserState pstate)
     : Expression(pstate),
-      Vectorized<Argument_Ptr>(),
+      CheckedVectorized<Argument_Ptr>(),
       has_named_arguments_(false),
       has_rest_argument_(false),
       has_keyword_argument_(false)
@@ -1879,6 +1897,14 @@ namespace Sass {
       has_optional_parameters_(false),
       has_rest_parameter_(false)
     { }
+    // overwrite base method
+    void push(Parameter_Ptr element)
+    {
+      if (!element) return;
+      reset_hash();
+      elements_.push_back(element);
+      adjust_after_pushing(element);
+    }
     ATTACH_OPERATIONS()
   };
 

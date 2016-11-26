@@ -9,7 +9,7 @@ namespace Sass {
   class Operation {
   public:
     virtual T operator()(AST_Node_Ptr x)               = 0;
-    virtual ~Operation()                            { }
+    ~Operation()                            { }
     // statements
     virtual T operator()(Block_Ptr x)                  = 0;
     virtual T operator()(Ruleset_Ptr x)                = 0;

@@ -1655,7 +1655,7 @@ namespace Sass {
     return arg;
   }
 
-  void Arguments::adjust_after_pushing(Argument_Ptr a)
+  void Arguments::adjust_after_pushing(const Argument_Ptr& a)
   {
     if (!a->name().empty()) {
       if (/* has_rest_argument_ || */ has_keyword_argument_) {
