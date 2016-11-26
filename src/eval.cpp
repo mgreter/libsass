@@ -874,7 +874,7 @@ namespace Sass {
       if (full_name == "*[f]") {
         String_Quoted_Ptr str = SASS_MEMORY_NEW(ctx.mem, String_Quoted, c->pstate(), c->name());
         Arguments_Ptr new_args = SASS_MEMORY_NEW(ctx.mem, Arguments, c->pstate());
-        new_args->push(SASS_MEMORY_NEW(ctx.mem, Argument, c->pstate(), str));
+        new_args->push2(SASS_MEMORY_NEW(ctx.mem, Argument, c->pstate(), str));
         new_args->concat(args);
         args = new_args;
       }
@@ -1306,7 +1306,7 @@ namespace Sass {
                                         0,
                                         SASS_COMMA,
                                         true);
-        wrapper->push(val);
+        wrapper->push2(val);
         val = wrapper;
       }
     }

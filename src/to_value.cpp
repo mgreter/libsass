@@ -64,7 +64,7 @@ namespace Sass {
                                l->separator(),
                                l->is_arglist());
     for (size_t i = 0, L = l->length(); i < L; ++i) {
-      ll->push(l->get(i)->perform(this));
+      ll->push2(l->get(i)->perform(this));
     }
     return ll;
   }

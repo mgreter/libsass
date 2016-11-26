@@ -71,9 +71,9 @@ namespace Sass {
               // wrap each item from list as an argument
               for (Expression_Ptr item : rest->elements()) {
                 if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(item)) {
-                  arglist->push(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
+                  arglist->push2(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
                 } else {
-                  arglist->push(SASS_MEMORY_NEW(ctx->mem, Argument,
+                  arglist->push2(SASS_MEMORY_NEW(ctx->mem, Argument,
                                                 item->pstate(),
                                                 item,
                                                 "",
@@ -96,7 +96,7 @@ namespace Sass {
           Map_Ptr argmap = static_cast<Map_Ptr>(a->value());
           for (auto key : argmap->keys()) {
             std::string name = unquote(static_cast<String_Constant_Ptr>(key)->value());
-            arglist->push(SASS_MEMORY_NEW(ctx->mem, Argument,
+            arglist->push2(SASS_MEMORY_NEW(ctx->mem, Argument,
                                           key->pstate(),
                                           argmap->at(key),
                                           "$" + name,
@@ -122,7 +122,7 @@ namespace Sass {
             if (ls && ls->empty() && a->is_rest_argument()) continue;
 
             if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(a->value())) {
-              arglist->push(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
+              arglist->push2(SASS_MEMORY_NEW(ctx->mem, Argument, *arg));
             }
             // check if we have rest argument
             else if (a->is_rest_argument()) {
@@ -131,7 +131,7 @@ namespace Sass {
                 arglist->separator(rest->separator());
 
                 for (size_t i = 0, L = rest->size(); i < L; ++i) {
-                  arglist->push(SASS_MEMORY_NEW(ctx->mem, Argument,
+                  arglist->push2(SASS_MEMORY_NEW(ctx->mem, Argument,
                                                 rest->get(i)->pstate(),
                                                 rest->get(i),
                                                 "",
@@ -144,7 +144,7 @@ namespace Sass {
             }
             // wrap all other value types into Argument
             else {
-              arglist->push(SASS_MEMORY_NEW(ctx->mem, Argument,
+              arglist->push2(SASS_MEMORY_NEW(ctx->mem, Argument,
                                             a->pstate(),
                                             a->value(),
                                             a->name(),

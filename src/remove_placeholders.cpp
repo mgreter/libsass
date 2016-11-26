@@ -22,7 +22,7 @@ namespace Sass {
 
       for (size_t i = 0, L = sl->length(); i < L; ++i) {
           if (!sl->get(i)->contains_placeholder()) {
-              new_sl->push(sl->get(i));
+              new_sl->push2(sl->get(i));
           }
       }
 
