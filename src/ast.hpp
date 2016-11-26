@@ -892,7 +892,7 @@ namespace Sass {
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
   class List : public Value, public Vectorized<Expression_Ptr> {
-    void adjust_after_pushing(Expression_Ptr e) { is_expanded(false); }
+    void adjust_after_pushing(Expression_Ptr e) { /* is_expanded(false); */ }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
     ADD_PROPERTY(bool, is_arglist)
@@ -942,7 +942,7 @@ namespace Sass {
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
   class Map : public Value, public Hashed {
-    void adjust_after_pushing(std::pair<Expression_Ptr, Expression_Ptr> p) { is_expanded(false); }
+    void adjust_after_pushing(std::pair<Expression_Ptr, Expression_Ptr> p) { /* is_expanded(false); */ }
   public:
     Map(ParserState pstate,
          size_t size = 0)
