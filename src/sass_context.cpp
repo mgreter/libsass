@@ -26,39 +26,10 @@ namespace Sass {
     std::string str(stream.str());
     return json_mkstring(str.c_str());
   }
-}
-
-extern "C" {
-  using namespace Sass;
-
-  static void sass_clear_options (struct Sass_Options* options);
-  static void sass_reset_options (struct Sass_Options* options);
-  static void copy_options(struct Sass_Options* to, struct Sass_Options* from) {
-    // free assigned memory
-    sass_clear_options(to);
-    // move memory
-    *to = *from;
-    // Reset pointers on source
-    sass_reset_options(from);
-  }
-
-  #define IMPLEMENT_SASS_OPTION_ACCESSOR(type, option) \
-    type ADDCALL sass_option_get_##option (struct Sass_Options* options) { return options->option; } \
-    void ADDCALL sass_option_set_##option (struct Sass_Options* options, type option) { options->option = option; }
-  #define IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(type, option, def) \
-    type ADDCALL sass_option_get_##option (struct Sass_Options* options) { return safe_str(options->option, def); } \
-    void ADDCALL sass_option_set_##option (struct Sass_Options* options, type option) \
-    { free(options->option); options->option = option || def ? sass_copy_c_string(option ? option : def) : 0; }
-
-  #define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
-    type ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option; }
-  #define IMPLEMENT_SASS_CONTEXT_TAKER(type, option) \
-    type sass_context_take_##option (struct Sass_Context* ctx) \
-    { type foo = ctx->option; ctx->option = 0; return foo; }
 
   static int handle_error(Sass_Context* c_ctx) {
     try {
-     throw;
+      throw;
     }
     catch (Exception::Base& e) {
       std::stringstream msg_stream;
@@ -68,7 +39,7 @@ extern "C" {
       bool got_newline = false;
       msg_stream << msg_prefix << ": ";
       const char* msg = e.what();
-      while(msg && *msg) {
+      while (msg && *msg) {
         if (*msg == '\r') {
           got_newline = true;
         } else if (*msg == '\n') {
@@ -87,12 +58,12 @@ extern "C" {
           std::string rel_path(Sass::File::abs2rel(path, cwd, cwd));
           msg_stream << std::string(msg_prefix.size() + 2, ' ');
           msg_stream << (i == 1 ? " on line " : " from line ");
-          msg_stream << e.pstate.line+1 << " of " << rel_path << "\n";
+          msg_stream << e.pstate.line + 1 << " of " << rel_path << "\n";
         }
       } else {
         std::string rel_path(Sass::File::abs2rel(e.pstate.path, cwd, cwd));
         msg_stream << std::string(msg_prefix.size() + 2, ' ');
-        msg_stream << " on line " << e.pstate.line+1 << " of " << rel_path << "\n";
+        msg_stream << " on line " << e.pstate.line + 1 << " of " << rel_path << "\n";
       }
 
       // now create the code trace (ToDo: maybe have util functions?)
@@ -107,7 +78,7 @@ extern "C" {
         while (line_end && *line_end && *line_end != '\n') {
           if (*line_end == '\n') break;
           if (*line_end == '\r') break;
-          line_end ++;
+          ++ line_end;
         }
         size_t max_left = 42; size_t max_right = 78;
         size_t move_in = e.pstate.column > max_left ? e.pstate.column - max_left : 0;
@@ -120,17 +91,18 @@ extern "C" {
       JsonNode* json_err = json_mkobject();
       json_append_member(json_err, "status", json_mknumber(1));
       json_append_member(json_err, "file", json_mkstring(e.pstate.path));
-      json_append_member(json_err, "line", json_mknumber((double)(e.pstate.line+1)));
-      json_append_member(json_err, "column", json_mknumber((double)(e.pstate.column+1)));
+      json_append_member(json_err, "line", json_mknumber((double)(e.pstate.line + 1)));
+      json_append_member(json_err, "column", json_mknumber((double)(e.pstate.column + 1)));
       json_append_member(json_err, "message", json_mkstring(e.what()));
       json_append_member(json_err, "formatted", json_mkstream(msg_stream));
-      try { c_ctx->error_json = json_stringify(json_err, "  "); } catch(...) {}
+      try { c_ctx->error_json = json_stringify(json_err, "  "); }
+      catch(...) {}
       c_ctx->error_message = sass_copy_string(msg_stream.str());
       c_ctx->error_text = sass_copy_c_string(e.what());
       c_ctx->error_status = 1;
       c_ctx->error_file = sass_copy_c_string(e.pstate.path);
-      c_ctx->error_line = e.pstate.line+1;
-      c_ctx->error_column = e.pstate.column+1;
+      c_ctx->error_line = e.pstate.line + 1;
+      c_ctx->error_column = e.pstate.column + 1;
       c_ctx->error_src = e.pstate.src;
       c_ctx->output_string = 0;
       c_ctx->source_map_string = 0;
@@ -221,6 +193,86 @@ extern "C" {
     return c_ctx->error_status;
   }
 
+
+  static Block_Ptr sass_parse_block (Sass_Compiler* compiler) throw()
+  {
+
+    // assert valid pointer
+    if (compiler == 0) return 0;
+    // The cpp context must be set by now
+    Context* cpp_ctx = compiler->cpp_ctx;
+    Sass_Context* c_ctx = compiler->c_ctx;
+    // We will take care to wire up the rest
+    compiler->cpp_ctx->c_compiler = compiler;
+    compiler->state = SASS_COMPILER_PARSED;
+
+    try {
+
+      // get input/output path from options
+      std::string input_path = safe_str(c_ctx->input_path);
+      std::string output_path = safe_str(c_ctx->output_path);
+
+      // maybe skip some entries of included files
+      // we do not include stdin for data contexts
+      bool skip = c_ctx->type == SASS_CONTEXT_DATA;
+
+      // dispatch parse call for root block
+      Block_Ptr root(cpp_ctx->parse());
+      // abort on errors
+      if (!root) return 0;
+
+      // skip all prefixed files? (ToDo: check srcmap)
+      // IMO source-maps should point to headers already
+      // therefore don't skip it for now. re-enable or
+      // remove completely once this is tested
+      size_t headers = cpp_ctx->head_imports;
+
+      // copy the included files on to the context (dont forget to free later)
+      if (copy_strings(cpp_ctx->get_included_files(skip, headers), &c_ctx->included_files) == NULL)
+        throw(std::bad_alloc());
+
+      // return parsed block
+      return root;
+
+    }
+    // pass errors to generic error handler
+    catch (...) { handle_errors(c_ctx); }
+
+    // error
+    return 0;
+
+  }
+
+}
+
+extern "C" {
+  using namespace Sass;
+
+  static void sass_clear_options (struct Sass_Options* options);
+  static void sass_reset_options (struct Sass_Options* options);
+  static void copy_options(struct Sass_Options* to, struct Sass_Options* from) {
+    // free assigned memory
+    sass_clear_options(to);
+    // move memory
+    *to = *from;
+    // Reset pointers on source
+    sass_reset_options(from);
+  }
+
+  #define IMPLEMENT_SASS_OPTION_ACCESSOR(type, option) \
+    type ADDCALL sass_option_get_##option (struct Sass_Options* options) { return options->option; } \
+    void ADDCALL sass_option_set_##option (struct Sass_Options* options, type option) { options->option = option; }
+  #define IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(type, option, def) \
+    type ADDCALL sass_option_get_##option (struct Sass_Options* options) { return safe_str(options->option, def); } \
+    void ADDCALL sass_option_set_##option (struct Sass_Options* options, type option) \
+    { free(options->option); options->option = option || def ? sass_copy_c_string(option ? option : def) : 0; }
+
+  #define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
+    type ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option; }
+  #define IMPLEMENT_SASS_CONTEXT_TAKER(type, option) \
+    type sass_context_take_##option (struct Sass_Context* ctx) \
+    { type foo = ctx->option; ctx->option = 0; return foo; }
+
   // generic compilation function (not exported, use file/data compile instead)
   static Sass_Compiler* sass_prepare_context (Sass_Context* c_ctx, Context* cpp_ctx) throw()
   {
@@ -274,58 +326,6 @@ extern "C" {
 
       // use to parse block
       return compiler;
-
-    }
-    // pass errors to generic error handler
-    catch (...) { handle_errors(c_ctx); }
-
-    // error
-    return 0;
-
-  }
-
-  static Block_Ptr sass_parse_block (Sass_Compiler* compiler) throw()
-  {
-
-    // assert valid pointer
-    if (compiler == 0) return 0;
-    // The cpp context must be set by now
-    Context* cpp_ctx = compiler->cpp_ctx;
-    Sass_Context* c_ctx = compiler->c_ctx;
-    // We will take care to wire up the rest
-    compiler->cpp_ctx->c_compiler = compiler;
-    compiler->state = SASS_COMPILER_PARSED;
-
-    try {
-
-      // get input/output path from options
-      std::string input_path = safe_str(c_ctx->input_path);
-      std::string output_path = safe_str(c_ctx->output_path);
-
-      // parsed root block
-      Block_Ptr root = 0;
-
-      // maybe skip some entries of included files
-      // we do not include stdin for data contexts
-      bool skip = c_ctx->type == SASS_CONTEXT_DATA;
-
-      // dispatch parse call
-      root = cpp_ctx->parse();
-      // abort on errors
-      if (!root) return 0;
-
-      // skip all prefixed files? (ToDo: check srcmap)
-      // IMO source-maps should point to headers already
-      // therefore don't skip it for now. re-enable or
-      // remove completely once this is tested
-      size_t headers = cpp_ctx->head_imports;
-
-      // copy the included files on to the context (dont forget to free later)
-      if (copy_strings(cpp_ctx->get_included_files(skip, headers), &c_ctx->included_files) == NULL)
-        throw(std::bad_alloc());
-
-      // return parsed block
-      return root;
 
     }
     // pass errors to generic error handler
@@ -613,6 +613,8 @@ extern "C" {
     Context* cpp_ctx = compiler->cpp_ctx;
     if (cpp_ctx) delete(cpp_ctx);
     compiler->cpp_ctx = 0;
+    compiler->c_ctx = 0;
+    compiler->root = 0;
     free(compiler);
   }
 
