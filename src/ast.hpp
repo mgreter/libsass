@@ -249,6 +249,14 @@ namespace Sass {
       adjust_after_pushing(element);
     }
 
+    void push2(T element)
+    {
+      if (!element) return;
+      reset_hash();
+      elements_.push_back(element);
+      // adjust_after_pushing(element);
+    }
+
     void concat(Vectorized* v)
     {
       elements_.insert(

@@ -1267,7 +1267,7 @@ namespace Sass {
       // if the argument isn't a list, then wrap it in a singleton list
       if (!m && !l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l->push(ARG("$list", Expression));
+        l->push2(ARG("$list", Expression));
       }
       size_t len = m ? m->length() : l->length();
       bool empty = m ? m->empty() : l->empty();
@@ -1277,8 +1277,8 @@ namespace Sass {
 
       if (m) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l->push(m->keys()[static_cast<unsigned int>(index)]);
-        l->push(m->at(m->keys()[static_cast<unsigned int>(index)]));
+        l->push2(m->keys()[static_cast<unsigned int>(index)]);
+        l->push2(m->at(m->keys()[static_cast<unsigned int>(index)]));
         return l;
       }
       else {
@@ -1297,7 +1297,7 @@ namespace Sass {
       Expression_Ptr v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l->push(ARG("$list", Expression));
+        l->push2(ARG("$list", Expression));
       }
       if (m) {
         l = m->to_list(ctx, pstate);
@@ -1307,7 +1307,7 @@ namespace Sass {
       if (index < 0 || index > l->length() - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, l->length(), l->separator());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
-        result->push((i == index) ? v : l->at(i));
+        result->push2((i == index) ? v : l->at(i));
       }
       return result;
     }
@@ -1320,7 +1320,7 @@ namespace Sass {
       Expression_Ptr v = ARG("$value", Expression);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l->push(ARG("$list", Expression));
+        l->push2(ARG("$list", Expression));
       }
       if (m) {
         l = m->to_list(ctx, pstate);
@@ -1342,12 +1342,12 @@ namespace Sass {
       enum Sass_Separator sep_val = (l1 ? l1->separator() : SASS_SPACE);
       if (!l1) {
         l1 = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l1->push(ARG("$list1", Expression));
+        l1->push2(ARG("$list1", Expression));
         sep_val = (l2 ? l2->separator() : SASS_SPACE);
       }
       if (!l2) {
         l2 = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l2->push(ARG("$list2", Expression));
+        l2->push2(ARG("$list2", Expression));
       }
       if (m1) {
         l1 = m1->to_list(ctx, pstate);
@@ -1380,7 +1380,7 @@ namespace Sass {
       String_Constant_Ptr sep = ARG("$separator", String_Constant);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l->push(ARG("$list", Expression));
+        l->push2(ARG("$list", Expression));
       }
       if (m) {
         l = m->to_list(ctx, pstate);
@@ -1394,7 +1394,7 @@ namespace Sass {
       bool is_arglist = l->is_arglist();
       result->is_arglist(is_arglist);
       if (is_arglist) {
-        result->push(SASS_MEMORY_NEW(ctx.mem, Argument,
+        result->push2(SASS_MEMORY_NEW(ctx.mem, Argument,
                                    v->pstate(),
                                    v,
                                    "",
@@ -1402,7 +1402,7 @@ namespace Sass {
                                    false));
 
       } else {
-        result->push(v);
+        result->push2(v);
       }
       return result;
     }
@@ -1420,7 +1420,7 @@ namespace Sass {
             ith = mith->to_list(ctx, pstate);
           } else {
             ith = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-            ith->push(arglist->value_at_index(i));
+            ith->push2(arglist->value_at_index(i));
           }
           if (arglist->is_arglist()) {
             ((Argument_Ptr)arglist->get(i))->value(ith);
@@ -1435,9 +1435,9 @@ namespace Sass {
       for (size_t i = 0; i < shortest; ++i) {
         List_Ptr zipper = SASS_MEMORY_NEW(ctx.mem, List, pstate, L);
         for (size_t j = 0; j < L; ++j) {
-          zipper->push(static_cast<List_Ptr>(arglist->value_at_index(j))->get(i));
+          zipper->push2(static_cast<List_Ptr>(arglist->value_at_index(j))->get(i));
         }
-        zippers->push(zipper);
+        zippers->push2(zipper);
       }
       return zippers;
     }
@@ -1448,7 +1448,7 @@ namespace Sass {
       List_Ptr l = dynamic_cast<List_Ptr>(env["$list"]);
       if (!l) {
         l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 1);
-        l->push(ARG("$list", Expression));
+        l->push2(ARG("$list", Expression));
       }
       return SASS_MEMORY_NEW(ctx.mem, String_Quoted,
                                pstate,
@@ -1487,7 +1487,7 @@ namespace Sass {
       Map_Ptr m = ARGM("$map", Map, ctx);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
       for ( auto key : m->keys()) {
-        result->push(key);
+        result->push2(key);
       }
       return result;
     }
@@ -1498,7 +1498,7 @@ namespace Sass {
       Map_Ptr m = ARGM("$map", Map, ctx);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, m->length(), SASS_COMMA);
       for ( auto key : m->keys()) {
-        result->push(m->at(key));
+        result->push2(m->at(key));
       }
       return result;
     }
@@ -1665,14 +1665,14 @@ namespace Sass {
         // }
         if (arglist->is_arglist()) {
           Argument_Ptr arg = dynamic_cast<Argument_Ptr>(arglist->get(i));
-          args->push(SASS_MEMORY_NEW(ctx.mem, Argument,
+          args->push2(SASS_MEMORY_NEW(ctx.mem, Argument,
                                    pstate,
                                    expr,
                                    arg ? arg->name() : "",
                                    arg ? arg->is_rest_argument() : false,
                                    arg ? arg->is_keyword_argument() : false));
         } else {
-          args->push(SASS_MEMORY_NEW(ctx.mem, Argument, pstate, expr));
+          args->push2(SASS_MEMORY_NEW(ctx.mem, Argument, pstate, expr));
         }
       }
       Function_Call_Ptr func = SASS_MEMORY_NEW(ctx.mem, Function_Call, pstate, name, args);
@@ -1911,7 +1911,7 @@ namespace Sass {
         Simple_Selector* ss = sel->get(i);
         std::string ss_string = ss->to_string() ;
 
-        l->push(SASS_MEMORY_NEW(ctx.mem, String_Quoted, ss->pstate(), ss_string));
+        l->push2(SASS_MEMORY_NEW(ctx.mem, String_Quoted, ss->pstate(), ss_string));
       }
 
       return l;

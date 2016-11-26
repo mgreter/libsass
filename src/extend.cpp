@@ -513,7 +513,7 @@ namespace Sass {
             end
 
             if !isMoreSpecificOuter then
-              tempResult.push(seq1)
+              tempResult.push2(seq1)
             end
           end
 
@@ -901,10 +901,10 @@ namespace Sass {
             end
           elsif op1 == '>' && %w[~ +].include?(op2)
             res.unshift sel2, op2
-            seq1.push sel1, op1
+            seq1.push2 sel1, op1
           elsif op2 == '>' && %w[~ +].include?(op1)
             res.unshift sel1, op1
-            seq2.push sel2, op2
+            seq2.push2 sel2, op2
           elsif op1 == op2
             return unless merged = sel1.unify(sel2.members, sel2.subject?)
             res.unshift merged, op1
@@ -1403,7 +1403,7 @@ namespace Sass {
             end
 
             for seqs in sub do
-              tempResult.push(seqs + last_current)
+              tempResult.push2(seqs + last_current)
             end
           end
 
@@ -1438,7 +1438,7 @@ namespace Sass {
             for seqs in sub do
               toPush = seqs + last_current
 
-              tempResult.push(seqs + last_current)
+              tempResult.push2(seqs + last_current)
             end
 
           end
@@ -1915,7 +1915,7 @@ namespace Sass {
       // the extend. We might be able to optimize extendComplexSelector, but this approach keeps us closer to ruby sass (which helps
       // when debugging).
       if (!complexSelectorHasExtension(pSelector, ctx, subset_map, seen)) {
-        pNewSelectors->push(pSelector);
+        pNewSelectors->push2(pSelector);
         continue;
       }
 
@@ -1924,7 +1924,7 @@ namespace Sass {
       Node extendedSelectors = extendComplexSelector(pSelector, ctx, subset_map, seen, isReplace, true);
       if (!pSelector->has_placeholder()) {
         if (!extendedSelectors.contains(complexSelectorToNode(pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
-          pNewSelectors->push(pSelector);
+          pNewSelectors->push2(pSelector);
           continue;
         }
       }
@@ -1934,7 +1934,7 @@ namespace Sass {
         if(isReplace && iterator == iteratorBegin && extendedSelectors.collection()->size() > 1 ) continue;
 
         Node& childNode = *iterator;
-        pNewSelectors->push(nodeToComplexSelector(childNode, ctx));
+        pNewSelectors->push2(nodeToComplexSelector(childNode, ctx));
       }
     }
 
@@ -1959,7 +1959,7 @@ namespace Sass {
                 // special case for ruby ass
                 if (sl->empty()) {
                   // this seems inconsistent but it is how ruby sass seems to remove parentheses
-                  cpy_head->push(SASS_MEMORY_NEW(ctx.mem, Type_Selector, hs->pstate(), ws->name()));
+                  cpy_head->push2(SASS_MEMORY_NEW(ctx.mem, Type_Selector, hs->pstate(), ws->name()));
                 }
                 // has wrapped selectors
                 else {
@@ -1982,20 +1982,20 @@ namespace Sass {
                             dynamic_cast<Placeholder_Selector_Ptr>(ws_ss->first())
                           )) continue;
                         }
-                        cpy_ws_sl->push(ext_cs->first());
+                        cpy_ws_sl->push2(ext_cs->first());
                       }
                       // assign list to clone
                       cpy_ws->selector(cpy_ws_sl);
                       // append the clone
-                      cpy_head->push(cpy_ws);
+                      cpy_head->push2(cpy_ws);
                     }
                   }
                 }
               } else {
-                cpy_head->push(hs);
+                cpy_head->push2(hs);
               }
             } else {
-              cpy_head->push(hs);
+              cpy_head->push2(hs);
             }
           }
           // replace header
