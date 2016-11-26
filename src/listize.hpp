@@ -26,7 +26,7 @@ namespace Sass {
 
     Expression* operator()(Selector_List*);
     Expression* operator()(Sequence_Selector*);
-    Expression* operator()(SimpleSequence_Selector*);
+    Expression* operator()(Compound_Selector*);
 
     template <typename U>
     Expression* fallback(U x) { return fallback_impl(x); }

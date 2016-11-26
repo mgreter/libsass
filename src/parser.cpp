@@ -671,7 +671,7 @@ namespace Sass {
     Sequence_Selector* sel = SASS_MEMORY_NEW(ctx.mem, Sequence_Selector, pstate);
 
     // parse the left hand side
-    SimpleSequence_Selector* lhs = 0;
+    Compound_Selector* lhs = 0;
     // special case if it starts with combinator ([+~>])
     if (!peek_css< class_char < selector_combinator_ops > >()) {
       // parse the left hand side
@@ -717,7 +717,7 @@ namespace Sass {
     // also skip adding parent ref if we only have refs
     if (!sel->has_parent_ref() && !in_at_root && !in_root) {
       // create the objects to wrap parent selector reference
-      SimpleSequence_Selector* head = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, pstate);
+      Compound_Selector* head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate);
       Parent_Selector* parent = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, pstate, false);
       parent->media_block(last_media_block);
       head->media_block(last_media_block);
@@ -744,10 +744,10 @@ namespace Sass {
   // parse one compound selector, which is basically
   // a list of simple selectors (directly adjacent)
   // lex them exactly (without skipping white-space)
-  SimpleSequence_Selector* Parser::parse_compound_selector()
+  Compound_Selector* Parser::parse_compound_selector()
   {
     // init an empty compound selector wrapper
-    SimpleSequence_Selector* seq = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, pstate);
+    Compound_Selector* seq = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate);
     seq->media_block(last_media_block);
 
     // skip initial white-space

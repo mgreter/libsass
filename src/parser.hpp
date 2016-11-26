@@ -244,7 +244,7 @@ namespace Sass {
     Selector_Schema* parse_selector_schema(const char* end_of_selector);
     Selector_List* parse_selector_list(bool at_root = false);
     Sequence_Selector* parse_complex_selector(bool in_root = true);
-    SimpleSequence_Selector* parse_compound_selector();
+    Compound_Selector* parse_compound_selector();
     Simple_Selector* parse_simple_selector();
     Wrapped_Selector* parse_negated_selector();
     Simple_Selector* parse_pseudo_selector();

@@ -945,7 +945,7 @@ namespace Sass {
     in_wrapped = was;
   }
 
-  void Inspect::operator()(SimpleSequence_Selector* s)
+  void Inspect::operator()(Compound_Selector* s)
   {
     for (size_t i = 0, L = s->length(); i < L; ++i) {
       (*s)[i]->perform(this);
@@ -959,7 +959,7 @@ namespace Sass {
 
   void Inspect::operator()(Sequence_Selector* c)
   {
-    SimpleSequence_Selector*      head = c->head();
+    Compound_Selector*      head = c->head();
     Sequence_Selector*            tail = c->tail();
     Sequence_Selector::Combinator comb = c->combinator();
 

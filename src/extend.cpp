@@ -62,7 +62,7 @@
 namespace Sass {
 
 
-  typedef std::pair<Sequence_Selector*, SimpleSequence_Selector*> ExtensionPair;
+  typedef std::pair<Sequence_Selector*, Compound_Selector*> ExtensionPair;
   typedef std::vector<ExtensionPair> SubsetMapEntries;
 
 #ifdef DEBUG
@@ -81,7 +81,7 @@ namespace Sass {
   }
 
 
-  std::ostream& operator<<(std::ostream& os, SimpleSequence_Selector& compoundSelector) {
+  std::ostream& operator<<(std::ostream& os, Compound_Selector& compoundSelector) {
     for (size_t i = 0, L = compoundSelector.length(); i < L; ++i) {
       if (i > 0) os << ", ";
       os << compoundSelector[i]->to_string();
@@ -94,7 +94,7 @@ namespace Sass {
     return os;
   }
 
-  // Print a string representation of a SimpleSequence_Selector
+  // Print a string representation of a Compound_Selector
   static void printSimpleSelector(Simple_Selector* pSimpleSelector, const char* message=NULL, bool newline=true) {
 
     if (message) {
@@ -112,13 +112,13 @@ namespace Sass {
     }
   }
 
-  // Print a string representation of a SimpleSequence_Selector
-    typedef std::pair<SimpleSequence_Selector*, Sequence_Selector*> SelsNewSeqPair;
+  // Print a string representation of a Compound_Selector
+    typedef std::pair<Compound_Selector*, Sequence_Selector*> SelsNewSeqPair;
     typedef std::vector<SelsNewSeqPair> SelsNewSeqPairCollection;
 
 
-  // Print a string representation of a SimpleSequence_Selector
-  static void printCompoundSelector(SimpleSequence_Selector* pCompoundSelector, const char* message=NULL, bool newline=true) {
+  // Print a string representation of a Compound_Selector
+  static void printCompoundSelector(Compound_Selector* pCompoundSelector, const char* message=NULL, bool newline=true) {
 
     if (message) {
       std::cerr << message;
@@ -201,7 +201,7 @@ namespace Sass {
         std::cerr << ", ";
       }
       std::cerr << "[";
-      SimpleSequence_Selector* pSels = pair.first;
+      Compound_Selector* pSels = pair.first;
       Sequence_Selector* pNewSelector = pair.second;
       std::cerr << "[" << *pSels << "], ";
       printComplexSelector(pNewSelector, NULL, false);
@@ -255,7 +255,7 @@ namespace Sass {
 
     for (SubsetMapEntries::iterator iterator = entries.begin(), endIterator = entries.end(); iterator != endIterator; ++iterator) {
       Sequence_Selector* pExtComplexSelector = iterator->first;    // The selector up to where the @extend is (ie, the thing to merge)
-      SimpleSequence_Selector* pExtCompoundSelector = iterator->second; // The stuff after the @extend
+      Compound_Selector* pExtCompoundSelector = iterator->second; // The stuff after the @extend
 
       if (iterator != entries.begin()) {
         os << ", ";
@@ -292,7 +292,7 @@ namespace Sass {
     // TODO: There's got to be a better way. This got ugly quick...
     Position noPosition(-1, -1, -1);
     Element_Selector fakeParent(ParserState("[FAKE]"), "temp");
-    SimpleSequence_Selector fakeHead(ParserState("[FAKE]"), 1 /*size*/);
+    Compound_Selector fakeHead(ParserState("[FAKE]"), 1 /*size*/);
     fakeHead.elements().push_back(&fakeParent);
     Sequence_Selector fakeParentContainer(ParserState("[FAKE]"), Sequence_Selector::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
 
@@ -655,7 +655,7 @@ namespace Sass {
     // TODO: There's got to be a better way. This got ugly quick...
     Position noPosition(-1, -1, -1);
     Element_Selector fakeParent(ParserState("[FAKE]"), "temp");
-    SimpleSequence_Selector fakeHead(ParserState("[FAKE]"), 1 /*size*/);
+    Compound_Selector fakeHead(ParserState("[FAKE]"), 1 /*size*/);
     fakeHead.elements().push_back(&fakeParent);
     Sequence_Selector fakeParentContainer(ParserState("[FAKE]"), Sequence_Selector::ANCESTOR_OF, &fakeHead /*head*/, NULL /*tail*/);
 
@@ -989,7 +989,7 @@ namespace Sass {
 
           Sequence_Selector* pMergedWrapper = sel1.selector()->clone(ctx); // Clone the Sequence_Selector to get back to something we can transform to a node once we replace the head with the unification result
           // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
-          SimpleSequence_Selector* pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head(), ctx);
+          Compound_Selector* pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head(), ctx);
           pMergedWrapper->head(pMerged);
 
           DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
@@ -1048,7 +1048,7 @@ namespace Sass {
 
             Sequence_Selector* pMergedWrapper = plusSel.selector()->clone(ctx); // Clone the Sequence_Selector to get back to something we can transform to a node once we replace the head with the unification result
             // TODO: does subject matter? Ruby: merged = plus_sel.unify(tilde_sel.members, tilde_sel.subject?)
-            SimpleSequence_Selector* pMerged = plusSel.selector()->head()->unify_with(tildeSel.selector()->head(), ctx);
+            Compound_Selector* pMerged = plusSel.selector()->head()->unify_with(tildeSel.selector()->head(), ctx);
             pMergedWrapper->head(pMerged);
 
             DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
@@ -1097,7 +1097,7 @@ namespace Sass {
 
         Sequence_Selector* pMergedWrapper = sel1.selector()->clone(ctx); // Clone the Sequence_Selector to get back to something we can transform to a node once we replace the head with the unification result
         // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
-        SimpleSequence_Selector* pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head(), ctx);
+        Compound_Selector* pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head(), ctx);
         pMergedWrapper->head(pMerged);
 
         DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
@@ -1512,7 +1512,7 @@ namespace Sass {
     Sequence_Selector* pComplexSelector,
     Context& ctx,
     ExtensionSubsetMap& subset_map,
-    std::set<SimpleSequence_Selector> seen, bool isReplace, bool isOriginal);
+    std::set<Compound_Selector> seen, bool isReplace, bool isOriginal);
 
 
 
@@ -1537,10 +1537,10 @@ namespace Sass {
     }
   };
   static Node extendCompoundSelector(
-    SimpleSequence_Selector* pSelector,
+    Compound_Selector* pSelector,
     Context& ctx,
     ExtensionSubsetMap& subset_map,
-    std::set<SimpleSequence_Selector> seen, bool isReplace) {
+    std::set<Compound_Selector> seen, bool isReplace) {
 
     DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelector, "EXTEND COMPOUND: "))
     // TODO: Ruby has another loop here to skip certain members?
@@ -1556,7 +1556,7 @@ namespace Sass {
     GroupedByToAResult arr;
     group_by_to_a(entries, extPairKeyFunctor, arr);
 
-    typedef std::pair<SimpleSequence_Selector*, Sequence_Selector*> SelsNewSeqPair;
+    typedef std::pair<Compound_Selector*, Sequence_Selector*> SelsNewSeqPair;
     typedef std::vector<SelsNewSeqPair> SelsNewSeqPairCollection;
 
 
@@ -1572,10 +1572,10 @@ namespace Sass {
       DEBUG_EXEC(EXTEND_COMPOUND, printComplexSelector(&seq, "SEQ: "))
 
 
-      SimpleSequence_Selector* pSels = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, pSelector->pstate());
+      Compound_Selector* pSels = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pSelector->pstate());
       for (std::vector<ExtensionPair>::iterator groupIter = group.begin(), groupIterEnd = group.end(); groupIter != groupIterEnd; groupIter++) {
         ExtensionPair& pair = *groupIter;
-        SimpleSequence_Selector* pCompound = pair.second;
+        Compound_Selector* pCompound = pair.second;
         for (size_t index = 0; index < pCompound->length(); index++) {
           Simple_Selector* pSimpleSelector = (*pCompound)[index];
           (*pSels) << pSimpleSelector;
@@ -1586,20 +1586,20 @@ namespace Sass {
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSels, "SELS: "))
 
       Sequence_Selector* pExtComplexSelector = &seq;    // The selector up to where the @extend is (ie, the thing to merge)
-      SimpleSequence_Selector* pExtCompoundSelector = pSels; // All the simple selectors to be replaced from the current compound selector from all extensions
+      Compound_Selector* pExtCompoundSelector = pSels; // All the simple selectors to be replaced from the current compound selector from all extensions
 
-      // TODO: This can return a SimpleSequence_Selector with no elements. Should that just be returning NULL?
+      // TODO: This can return a Compound_Selector with no elements. Should that just be returning NULL?
       // RUBY: self_without_sel = Sass::Util.array_minus(members, sels)
-      SimpleSequence_Selector* pSelectorWithoutExtendSelectors = pSelector->minus(pExtCompoundSelector, ctx);
+      Compound_Selector* pSelectorWithoutExtendSelectors = pSelector->minus(pExtCompoundSelector, ctx);
 
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelector, "MEMBERS: "))
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelectorWithoutExtendSelectors, "SELF_WO_SEL: "))
 
-      SimpleSequence_Selector* pInnermostCompoundSelector = pExtComplexSelector->last()->head();
-      SimpleSequence_Selector* pUnifiedSelector = NULL;
+      Compound_Selector* pInnermostCompoundSelector = pExtComplexSelector->last()->head();
+      Compound_Selector* pUnifiedSelector = NULL;
 
       if (!pInnermostCompoundSelector) {
-        pInnermostCompoundSelector = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, pSelector->pstate());
+        pInnermostCompoundSelector = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pSelector->pstate());
       }
 
       pUnifiedSelector = pInnermostCompoundSelector->unify_with(pSelectorWithoutExtendSelectors, ctx);
@@ -1618,7 +1618,7 @@ namespace Sass {
       // next if group.map {|e, _| check_directives_match!(e, parent_directives)}.none?
 
       // TODO: This seems a little fishy to me. See if it causes any problems. From the ruby, we should be able to just
-      // get rid of the last SimpleSequence_Selector and replace it with this one. I think the reason this code is more
+      // get rid of the last Compound_Selector and replace it with this one. I think the reason this code is more
       // complex is that Sequence_Selector contains a combinator, but in ruby combinators have already been filtered
       // out and aren't operated on.
       Sequence_Selector* pNewSelector = pExtComplexSelector->cloneFully(ctx); // ->first();
@@ -1669,7 +1669,7 @@ namespace Sass {
     for (SelsNewSeqPairCollection::iterator holderIter = holder.begin(), holderIterEnd = holder.end(); holderIter != holderIterEnd; holderIter++) {
       SelsNewSeqPair& pair = *holderIter;
 
-      SimpleSequence_Selector* pSels = pair.first;
+      Compound_Selector* pSels = pair.first;
       Sequence_Selector* pNewSelector = pair.second;
 
 
@@ -1679,7 +1679,7 @@ namespace Sass {
       }
 
 
-      std::set<SimpleSequence_Selector> recurseSeen(seen);
+      std::set<Compound_Selector> recurseSeen(seen);
       recurseSeen.insert(*pSels);
 
 
@@ -1712,14 +1712,14 @@ namespace Sass {
     Sequence_Selector* pComplexSelector,
     Context& ctx,
     ExtensionSubsetMap& subset_map,
-    std::set<SimpleSequence_Selector>& seen) {
+    std::set<Compound_Selector>& seen) {
 
     bool hasExtension = false;
 
     Sequence_Selector* pIter = pComplexSelector;
 
     while (!hasExtension && pIter) {
-      SimpleSequence_Selector* pHead = pIter->head();
+      Compound_Selector* pHead = pIter->head();
 
       if (pHead) {
         SubsetMapEntries entries = subset_map.get_v(pHead->to_str_vec());
@@ -1772,7 +1772,7 @@ namespace Sass {
     Sequence_Selector* pComplexSelector,
     Context& ctx,
     ExtensionSubsetMap& subset_map,
-    std::set<SimpleSequence_Selector> seen, bool isReplace, bool isOriginal) {
+    std::set<Compound_Selector> seen, bool isReplace, bool isOriginal) {
 
     Node complexSelector = complexSelectorToNode(pComplexSelector, ctx);
     DEBUG_PRINTLN(EXTEND_COMPLEX, "EXTEND COMPLEX: " << complexSelector)
@@ -1801,7 +1801,7 @@ namespace Sass {
         continue;
       }
 
-      SimpleSequence_Selector* pCompoundSelector = sseqOrOp.selector()->head();
+      Compound_Selector* pCompoundSelector = sseqOrOp.selector()->head();
 
       // RUBY: extended = sseq_or_op.do_extend(extends, parent_directives, replace, seen)
       Node extended = extendCompoundSelector(pCompoundSelector, ctx, subset_map, seen, isReplace);
@@ -1809,7 +1809,7 @@ namespace Sass {
       DEBUG_PRINTLN(EXTEND_COMPLEX, "EXTENDED: " << extended)
 
 
-      // Prepend the SimpleSequence_Selector based on the choices logic; choices seems to be extend but with an ruby Array instead of a Sequence
+      // Prepend the Compound_Selector based on the choices logic; choices seems to be extend but with an ruby Array instead of a Sequence
       // due to the member mapping: choices = extended.map {|seq| seq.members}
       Sequence_Selector* pJustCurrentCompoundSelector = sseqOrOp.selector();
 
@@ -1893,14 +1893,14 @@ namespace Sass {
    This is the equivalent of ruby's CommaSequence.do_extend.
   */
   Selector_List* Extend::extendSelectorList(Selector_List* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething) {
-    std::set<SimpleSequence_Selector> seen;
+    std::set<Compound_Selector> seen;
     return extendSelectorList(pSelectorList, ctx, subset_map, isReplace, extendedSomething, seen);
   }
 
   /*
    This is the equivalent of ruby's CommaSequence.do_extend.
   */
-  Selector_List* Extend::extendSelectorList(Selector_List* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<SimpleSequence_Selector>& seen) {
+  Selector_List* Extend::extendSelectorList(Selector_List* pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<Compound_Selector>& seen) {
 
     Selector_List* pNewSelectors = SASS_MEMORY_NEW(ctx.mem, Selector_List, pSelectorList->pstate(), pSelectorList->length());
 
@@ -1949,10 +1949,10 @@ namespace Sass {
       while (cur) {
         // process header
         if (cur->head() && seen.find(*cur->head()) == seen.end()) {
-          std::set<SimpleSequence_Selector> recseen(seen);
+          std::set<Compound_Selector> recseen(seen);
           recseen.insert(*cur->head());
           // create a copy since we add multiple items if stuff get unwrapped
-          SimpleSequence_Selector* cpy_head = SASS_MEMORY_NEW(ctx.mem, SimpleSequence_Selector, cur->pstate());
+          Compound_Selector* cpy_head = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, cur->pstate());
           for (Simple_Selector* hs : *cur->head()) {
             if (Wrapped_Selector* ws = dynamic_cast<Wrapped_Selector*>(hs)) {
               if (Selector_List* sl = dynamic_cast<Selector_List*>(ws->selector())) {
@@ -1975,7 +1975,7 @@ namespace Sass {
                         Wrapped_Selector* ext_ws = dynamic_cast<Wrapped_Selector*>(ext_cs->first()->head()->first());
                         if (ext_ws/* && ext_cs->length() == 1*/) {
                           Selector_List* ws_cs = dynamic_cast<Selector_List*>(ext_ws->selector());
-                          SimpleSequence_Selector* ws_ss = ws_cs->first()->head();
+                          Compound_Selector* ws_ss = ws_cs->first()->head();
                           if (!(
                             dynamic_cast<Pseudo_Selector*>(ws_ss->first()) ||
                             dynamic_cast<Element_Selector*>(ws_ss->first()) ||
@@ -2084,7 +2084,7 @@ namespace Sass {
       // debug_subset_map(subset_map);
       for(auto const &it : subset_map.values()) {
         Sequence_Selector* sel = it.first ? it.first->first() : NULL;
-        SimpleSequence_Selector* ext = it.second ? it.second : NULL;
+        Compound_Selector* ext = it.second ? it.second : NULL;
         if (ext && (ext->extended() || ext->is_optional())) continue;
         std::string str_sel(sel->to_string({ NESTED, 5 }));
         std::string str_ext(ext->to_string({ NESTED, 5 }));
