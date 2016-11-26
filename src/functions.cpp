@@ -171,7 +171,7 @@ namespace Sass {
     }
 
     template <>
-    Sequence_Selector* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
+    Complex_Selector* get_arg_sel(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace, Context& ctx) {
       Expression* exp = ARG(argname, Expression);
       if (exp->concrete_type() == Expression::NULL_VAL) {
         std::stringstream msg;
@@ -1782,7 +1782,7 @@ namespace Sass {
 
       for(;itr != parsedSelectors.end(); ++itr) {
         Selector_List* child = *itr;
-        std::vector<Sequence_Selector*> exploded;
+        std::vector<Complex_Selector*> exploded;
         Selector_List* rv = child->resolve_parent_refs(ctx, result);
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
           exploded.push_back((*rv)[m]);
@@ -1833,7 +1833,7 @@ namespace Sass {
 
       for(;itr != parsedSelectors.end(); ++itr) {
         Selector_List* child = *itr;
-        std::vector<Sequence_Selector*> newElements;
+        std::vector<Complex_Selector*> newElements;
 
         // For every COMPLEX_SELECTOR in `result`
         // For every COMPLEX_SELECTOR in `child`
@@ -1844,12 +1844,12 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Sequence_Selector* parentSeqClone = (*result)[i]->cloneFully(ctx);
-            Sequence_Selector* childSeq = (*child)[j];
-            Sequence_Selector* base = childSeq->tail();
+            Complex_Selector* parentSeqClone = (*result)[i]->cloneFully(ctx);
+            Complex_Selector* childSeq = (*child)[j];
+            Complex_Selector* base = childSeq->tail();
 
             // Must be a simple sequence
-            if( childSeq->combinator() != Sequence_Selector::Combinator::ANCESTOR_OF ) {
+            if( childSeq->combinator() != Complex_Selector::Combinator::ANCESTOR_OF ) {
               std::string msg("Can't append  `");
               msg += childSeq->to_string();
               msg += "` to `";

@@ -36,7 +36,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), str);
   }
 
-  Expression* Listize::operator()(Sequence_Selector* sel)
+  Expression* Listize::operator()(Complex_Selector* sel)
   {
     List* l = SASS_MEMORY_NEW(mem, List, sel->pstate(), 2);
     l->from_selector(true);
@@ -51,23 +51,23 @@ namespace Sass {
       : sel->reference()->to_string();
     switch(sel->combinator())
     {
-      case Sequence_Selector::PARENT_OF:
+      case Complex_Selector::PARENT_OF:
         *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), ">");
       break;
-      case Sequence_Selector::ADJACENT_TO:
+      case Complex_Selector::ADJACENT_TO:
         *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "+");
       break;
-      case Sequence_Selector::REFERENCE:
+      case Complex_Selector::REFERENCE:
         *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "/" + reference + "/");
       break;
-      case Sequence_Selector::PRECEDES:
+      case Complex_Selector::PRECEDES:
         *l << SASS_MEMORY_NEW(mem, String_Quoted, sel->pstate(), "~");
       break;
-      case Sequence_Selector::ANCESTOR_OF:
+      case Complex_Selector::ANCESTOR_OF:
       break;
     }
 
-    Sequence_Selector* tail = sel->tail();
+    Complex_Selector* tail = sel->tail();
     if (tail)
     {
       Expression* tt = tail->perform(this);

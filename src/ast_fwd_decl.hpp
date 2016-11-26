@@ -81,7 +81,7 @@ namespace Sass {
   class Pseudo_Selector;
   class Wrapped_Selector;
   class Compound_Selector;
-  class Sequence_Selector;
+  class Complex_Selector;
   class Selector_List;
 
   // common classes

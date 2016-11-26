@@ -89,7 +89,7 @@ namespace Sass {
     virtual void operator()(Pseudo_Selector*);
     virtual void operator()(Wrapped_Selector*);
     virtual void operator()(Compound_Selector*);
-    virtual void operator()(Sequence_Selector*);
+    virtual void operator()(Complex_Selector*);
     virtual void operator()(Selector_List*);
 
     // template <typename U>

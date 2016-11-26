@@ -72,7 +72,7 @@ namespace Sass {
 
     // these will return selectors
     Selector_List* operator()(Selector_List*);
-    Selector_List* operator()(Sequence_Selector*);
+    Selector_List* operator()(Complex_Selector*);
     Attribute_Selector* operator()(Attribute_Selector*);
     // they don't have any specific implementatio (yet)
     Element_Selector* operator()(Element_Selector* s) { return s; };

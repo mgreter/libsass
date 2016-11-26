@@ -111,8 +111,8 @@ namespace Sass {
     // do some special checks for the base level rules
     if (r->is_root()) {
       if (Selector_List* selector_list = dynamic_cast<Selector_List*>(r->selector())) {
-        for (Sequence_Selector* complex_selector : selector_list->elements()) {
-          Sequence_Selector* tail = complex_selector;
+        for (Complex_Selector* complex_selector : selector_list->elements()) {
+          Complex_Selector* tail = complex_selector;
           while (tail) {
             if (tail->head()) for (Simple_Selector* header : tail->head()->elements()) {
               if (dynamic_cast<Parent_Selector*>(header) == NULL) continue; // skip all others
@@ -559,8 +559,8 @@ namespace Sass {
   void Expand::expand_selector_list(Selector* s, Selector_List* extender) {
 
     if (Selector_List* sl = dynamic_cast<Selector_List*>(s)) {
-      for (Sequence_Selector* complex_selector : sl->elements()) {
-        Sequence_Selector* tail = complex_selector;
+      for (Complex_Selector* complex_selector : sl->elements()) {
+        Complex_Selector* tail = complex_selector;
         while (tail) {
           if (tail->head()) for (Simple_Selector* header : tail->head()->elements()) {
             if (dynamic_cast<Parent_Selector*>(header) == NULL) continue; // skip all others
@@ -576,7 +576,7 @@ namespace Sass {
     Selector_List* contextualized = dynamic_cast<Selector_List*>(s->perform(&eval));
     if (contextualized == NULL) return;
     for (auto complex_sel : contextualized->elements()) {
-      Sequence_Selector* c = complex_sel;
+      Complex_Selector* c = complex_sel;
       if (!c->head() || c->tail()) {
         std::string sel_str(contextualized->to_string(ctx.c_options));
         error("Can't extend " + sel_str + ": can't extend nested selectors", c->pstate(), backtrace());
@@ -584,13 +584,13 @@ namespace Sass {
       Compound_Selector* placeholder = c->head();
       if (contextualized->is_optional()) placeholder->is_optional(true);
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
-        Sequence_Selector* sel = (*extender)[i];
+        Complex_Selector* sel = (*extender)[i];
         if (!(sel->head() && sel->head()->length() > 0 &&
             dynamic_cast<Parent_Selector*>((*sel->head())[0])))
         {
           Compound_Selector* hh = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, (*extender)[i]->pstate());
           hh->media_block((*extender)[i]->media_block());
-          Sequence_Selector* ssel = SASS_MEMORY_NEW(ctx.mem, Sequence_Selector, (*extender)[i]->pstate());
+          Complex_Selector* ssel = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, (*extender)[i]->pstate());
           ssel->media_block((*extender)[i]->media_block());
           if (sel->has_line_feed()) ssel->has_line_feed(true);
           Parent_Selector* ps = SASS_MEMORY_NEW(ctx.mem, Parent_Selector, (*extender)[i]->pstate());
@@ -615,7 +615,7 @@ namespace Sass {
         if (schema->has_parent_ref()) s = eval(schema);
       }
       if (Selector_List* sl = dynamic_cast<Selector_List*>(s)) {
-        for (Sequence_Selector* cs : *sl) {
+        for (Complex_Selector* cs : *sl) {
           if (cs != NULL && cs->head() != NULL) {
             cs->head()->media_block(media_block_stack.back());
           }
