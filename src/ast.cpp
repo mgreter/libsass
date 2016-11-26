@@ -516,7 +516,7 @@ namespace Sass {
     // else it's a tag name and a bunch of qualifiers -- just append them
     Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
     if (name() != "*") (*cpy) << this;
-    (*cpy) += rhs;
+    cpy->concat(rhs);
     return cpy;
   }
 
@@ -1126,7 +1126,7 @@ namespace Sass {
       Selector_List_Ptr list = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
       list->push(ps->get(pi));
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
-        *ss += get(si)->resolve_parent_refs(ctx, list, implicit_parent);
+        ss->concat(get(si)->resolve_parent_refs(ctx, list, implicit_parent));
       }
     }
     return ss;

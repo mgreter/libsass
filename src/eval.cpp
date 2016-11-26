@@ -875,7 +875,7 @@ namespace Sass {
         String_Quoted_Ptr str = SASS_MEMORY_NEW(ctx.mem, String_Quoted, c->pstate(), c->name());
         Arguments_Ptr new_args = SASS_MEMORY_NEW(ctx.mem, Arguments, c->pstate());
         new_args->push(SASS_MEMORY_NEW(ctx.mem, Argument, c->pstate(), str));
-        *new_args += args;
+        new_args->concat(args);
         args = new_args;
       }
 

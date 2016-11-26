@@ -248,16 +248,7 @@ namespace Sass {
       elements_.push_back(element);
       adjust_after_pushing(element);
     }
-/*
-    virtual Vectorized& operator<<(T element)
-    {
-      if (!element) return *this;
-      reset_hash();
-      elements_.push_back(element);
-      adjust_after_pushing(element);
-      return *this;
-    }
-*/
+
     void concat(Vectorized* v)
     {
       elements_.insert(
@@ -267,16 +258,16 @@ namespace Sass {
       );
       reset_hash();
     }
-    Vectorized& operator+=(Vectorized* v)
+
+    void unshift(T element)
     {
-      for (size_t i = 0, L = v->length(); i < L; ++i) this->push(v->get(i));
-      return *this;
+      elements_.insert(
+        elements_.begin(),
+        element
+      );
+      reset_hash();
     }
-    Vectorized& unshift(T element)
-    {
-      elements_.insert(elements_.begin(), element);
-      return *this;
-    }
+
     std::vector<T>& elements() { return elements_; }
     const std::vector<T>& elements() const { return elements_; }
     std::vector<T>& elements(std::vector<T>& e) { elements_ = e; return elements_; }

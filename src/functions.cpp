@@ -1362,8 +1362,8 @@ namespace Sass {
       else if (sep_str == "comma") sep_val = SASS_COMMA;
       else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
       List_Ptr result = SASS_MEMORY_NEW(ctx.mem, List, pstate, len, sep_val);
-      *result += l1;
-      *result += l2;
+      result->concat(l1);
+      result->concat(l2);
       return result;
     }
 
@@ -1390,7 +1390,7 @@ namespace Sass {
       if (sep_str == "space") result->separator(SASS_SPACE);
       else if (sep_str == "comma") result->separator(SASS_COMMA);
       else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate);
-      *result += l;
+      result->concat(l);
       bool is_arglist = l->is_arglist();
       result->is_arglist(is_arglist);
       if (is_arglist) {
@@ -1873,7 +1873,7 @@ namespace Sass {
             // TODO: Add check for namespace stuff
 
             // append any selectors in childSeq's head
-            *(parentSeqClone->innermost()->head()) += (base->head());
+            parentSeqClone->innermost()->head()->concat(base->head());
 
             // Set parentSeqClone new tail
             parentSeqClone->innermost()->tail( base->tail() );

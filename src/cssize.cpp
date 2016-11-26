@@ -171,7 +171,7 @@ namespace Sass {
     if (props->length())
     {
       Block_Ptr bb = SASS_MEMORY_NEW(ctx.mem, Block, rr->block()->pstate());
-      *bb += props;
+      bb->concat(props);
       rr->block(bb);
 
       for (size_t i = 0, L = rules->length(); i < L; i++)
@@ -459,7 +459,7 @@ namespace Sass {
           result->push(slice);
         }
         else if (previous_parent) {
-          *previous_parent->block() += slice;
+          previous_parent->block()->concat(slice);
         }
         else {
           previous_parent = static_cast<Has_Block_Ptr>(shallow_copy(parent));
@@ -607,17 +607,18 @@ namespace Sass {
     }
 
     Media_Query_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Query,
-
-mq1->pstate(), 0,
-mq1->length() + mq2->length(), mod == "not", mod == "only"
-);
+      mq1->pstate(), 0,
+      mq1->length() + mq2->length(),
+      mod == "not",
+      mod == "only"
+    );
 
     if (!type.empty()) {
       mm->media_type(SASS_MEMORY_NEW(ctx.mem, String_Quoted, mq1->pstate(), type));
     }
 
-    *mm += mq2;
-    *mm += mq1;
+    mm->concat(mq2);
+    mm->concat(mq1);
     return mm;
   }
 }

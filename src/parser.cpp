@@ -1849,7 +1849,7 @@ namespace Sass {
     if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(url_string)) {
       String_Schema_Ptr res = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
       res->push(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, prefix));
-      (*res) += schema;
+      res->concat(schema);
       res->push(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, suffix));
       return res;
     } else {

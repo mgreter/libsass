@@ -72,7 +72,7 @@ namespace Sass {
     {
       Expression_Ptr tt = tail->perform(this);
       if (tt && tt->concrete_type() == Expression::LIST)
-      { *l += static_cast<List_Ptr>(tt); }
+      { l->concat(static_cast<List_Ptr>(tt)); }
       else if (tt) l->push(static_cast<List_Ptr>(tt));
     }
     if (l->length() == 0) return 0;
