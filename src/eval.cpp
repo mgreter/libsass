@@ -1325,7 +1325,7 @@ namespace Sass {
     for (size_t i = 0, L = a->length(); i < L; ++i) {
       Argument_Ptr arg = static_cast<Argument_Ptr>(a->get(i)->perform(this));
       if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
-        aa->push(arg);
+        aa->push2(arg);
       }
     }
 
@@ -1345,16 +1345,16 @@ namespace Sass {
                                       true);
 
       if (ls && ls->is_arglist()) {
-        for (auto as : *ls) arglist->push(as);
+        for (auto as : *ls) arglist->push2(as);
       } else if (ms) {
         aa->push(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), ms, "", false, true));
       } else if (ls) {
-        for (auto as : *ls) arglist->push(as);
+        for (auto as : *ls) arglist->push2(as);
       } else {
-        arglist->push(splat);
+        arglist->push2(splat);
       }
       if (arglist->length()) {
-        aa->push(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), arglist, "", true));
+        aa->push2(SASS_MEMORY_NEW(ctx.mem, Argument, splat->pstate(), arglist, "", true));
       }
     }
 

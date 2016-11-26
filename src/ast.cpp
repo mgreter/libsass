@@ -1476,11 +1476,6 @@ namespace Sass {
     return false;
   }
 
-  void Selector_List::adjust_after_pushing(Complex_Selector_Ptr c)
-  {
-    // if (c->has_reference())   has_reference(true);
-  }
-
   // it's a superselector if every selector of the right side
   // list is a superselector of the given left side selector
   bool Complex_Selector::is_superselector_of(Selector_List_Ptr sub, std::string wrapping)

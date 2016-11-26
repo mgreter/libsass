@@ -446,10 +446,6 @@ namespace Sass {
     ADD_PROPERTY(bool, is_root)
     ADD_PROPERTY(bool, is_at_root);
     // needed for properly formatted CSS emission
-  protected:
-    void adjust_after_pushing(Statement_Ptr s)
-    {
-    }
   public:
     Block(ParserState pstate, size_t s = 0, bool r = false)
     : Statement(pstate),
@@ -892,7 +888,6 @@ namespace Sass {
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
   class List : public Value, public Vectorized<Expression_Ptr> {
-    void adjust_after_pushing(Expression_Ptr e) { /* is_expanded(false); */ }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
     ADD_PROPERTY(bool, is_arglist)
@@ -942,7 +937,6 @@ namespace Sass {
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
   class Map : public Value, public Hashed {
-    void adjust_after_pushing(std::pair<Expression_Ptr, Expression_Ptr> p) { /* is_expanded(false); */ }
   public:
     Map(ParserState pstate,
          size_t size = 0)
@@ -2300,12 +2294,6 @@ namespace Sass {
     SourcesSet sources_;
     ADD_PROPERTY(bool, extended);
     ADD_PROPERTY(bool, has_parent_reference);
-  protected:
-    void adjust_after_pushing(Simple_Selector* s)
-    {
-      // if (s->has_reference())   has_reference(true);
-      // if (s->has_placeholder()) has_placeholder(true);
-    }
   public:
     Compound_Selector(ParserState pstate, size_t s = 0)
     : Selector(pstate),
@@ -2585,8 +2573,6 @@ namespace Sass {
   ///////////////////////////////////
   class Selector_List : public Selector, public Vectorized<Complex_Selector_Ptr> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
-  protected:
-    void adjust_after_pushing(Complex_Selector_Ptr c);
   public:
     Selector_List(ParserState pstate, size_t s = 0)
     : Selector(pstate), Vectorized<Complex_Selector_Ptr>(s), wspace_(0)
