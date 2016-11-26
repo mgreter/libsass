@@ -10,9 +10,9 @@ namespace Sass {
   class   Arguments;
   class   Context;
   class   Eval;
-  typedef Environment<AST_Node*> Env;
+  typedef Environment<AST_Node_Ptr> Env;
 
-  void bind(std::string type, std::string name, Parameters*, Arguments*, Context*, Env*, Eval*);
+  void bind(std::string type, std::string name, Parameters_Ptr, Arguments_Ptr, Context*, Env*, Eval*);
 }
 
 #endif

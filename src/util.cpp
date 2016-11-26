@@ -454,14 +454,14 @@ namespace Sass {
       }
     }
 
-    bool isPrintable(Ruleset* r, Sass_Output_Style style) {
+    bool isPrintable(Ruleset_Ptr r, Sass_Output_Style style) {
       if (r == NULL) {
         return false;
       }
 
-      Block* b = r->block();
+      Block_Ptr b = r->block();
 
-      bool hasSelectors = static_cast<Selector_List*>(r->selector())->length() > 0;
+      bool hasSelectors = static_cast<Selector_List_Ptr>(r->selector())->length() > 0;
 
       if (!hasSelectors) {
         return false;
@@ -470,17 +470,17 @@ namespace Sass {
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
-        if (dynamic_cast<Directive*>(stm)) {
+        Statement_Ptr stm = (*b)[i];
+        if (dynamic_cast<Directive_Ptr>(stm)) {
           return true;
-        } else if (Declaration* d = dynamic_cast<Declaration*>(stm)) {
+        } else if (Declaration_Ptr d = dynamic_cast<Declaration_Ptr>(stm)) {
           return isPrintable(d, style);
-        } else if (dynamic_cast<Has_Block*>(stm)) {
-          Block* pChildBlock = ((Has_Block*)stm)->block();
+        } else if (dynamic_cast<Has_Block_Ptr>(stm)) {
+          Block_Ptr pChildBlock = ((Has_Block_Ptr)stm)->block();
           if (isPrintable(pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
-        } else if (Comment* c = dynamic_cast<Comment*>(stm)) {
+        } else if (Comment_Ptr c = dynamic_cast<Comment_Ptr>(stm)) {
           // keep for uncompressed
           if (style != COMPRESSED) {
             hasDeclarations = true;
@@ -501,42 +501,42 @@ namespace Sass {
       return false;
     }
 
-    bool isPrintable(String_Constant* s, Sass_Output_Style style)
+    bool isPrintable(String_Constant_Ptr s, Sass_Output_Style style)
     {
       return ! s->value().empty();
     }
 
-    bool isPrintable(String_Quoted* s, Sass_Output_Style style)
+    bool isPrintable(String_Quoted_Ptr s, Sass_Output_Style style)
     {
       return true;
     }
 
-    bool isPrintable(Declaration* d, Sass_Output_Style style)
+    bool isPrintable(Declaration_Ptr d, Sass_Output_Style style)
     {
-      Expression* val = d->value();
-      if (String_Quoted* sq = dynamic_cast<String_Quoted*>(val)) return isPrintable(sq, style);
-      if (String_Constant* sc = dynamic_cast<String_Constant*>(val)) return isPrintable(sc, style);
+      Expression_Ptr val = d->value();
+      if (String_Quoted_Ptr sq = dynamic_cast<String_Quoted_Ptr>(val)) return isPrintable(sq, style);
+      if (String_Constant_Ptr sc = dynamic_cast<String_Constant_Ptr>(val)) return isPrintable(sc, style);
       return true;
     }
 
-    bool isPrintable(Supports_Block* f, Sass_Output_Style style) {
+    bool isPrintable(Supports_Block_Ptr f, Sass_Output_Style style) {
       if (f == NULL) {
         return false;
       }
 
-      Block* b = f->block();
+      Block_Ptr b = f->block();
 
-//      bool hasSelectors = f->selector() && static_cast<Selector_List*>(f->selector())->length() > 0;
+//      bool hasSelectors = f->selector() && static_cast<Selector_List_Ptr>(f->selector())->length() > 0;
 
       bool hasDeclarations = false;
       bool hasPrintableChildBlocks = false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
+        Statement_Ptr stm = (*b)[i];
         if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
           hasDeclarations = true;
         }
-        else if (dynamic_cast<Has_Block*>(stm)) {
-          Block* pChildBlock = ((Has_Block*)stm)->block();
+        else if (dynamic_cast<Has_Block_Ptr>(stm)) {
+          Block_Ptr pChildBlock = ((Has_Block_Ptr)stm)->block();
           if (isPrintable(pChildBlock, style)) {
             hasPrintableChildBlocks = true;
           }
@@ -550,47 +550,47 @@ namespace Sass {
       return false;
     }
 
-    bool isPrintable(Media_Block* m, Sass_Output_Style style)
+    bool isPrintable(Media_Block_Ptr m, Sass_Output_Style style)
     {
       if (m == 0) return false;
-      Block* b = m->block();
+      Block_Ptr b = m->block();
       if (b == 0) return false;
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
+        Statement_Ptr stm = (*b)[i];
         if (typeid(*stm) == typeid(Directive)) return true;
         else if (typeid(*stm) == typeid(Declaration)) return true;
         else if (typeid(*stm) == typeid(Comment)) {
-          Comment* c = (Comment*) stm;
+          Comment_Ptr c = (Comment_Ptr) stm;
           if (isPrintable(c, style)) {
             return true;
           }
         }
         else if (typeid(*stm) == typeid(Ruleset)) {
-          Ruleset* r = (Ruleset*) stm;
+          Ruleset_Ptr r = (Ruleset_Ptr) stm;
           if (isPrintable(r, style)) {
             return true;
           }
         }
         else if (typeid(*stm) == typeid(Supports_Block)) {
-          Supports_Block* f = (Supports_Block*) stm;
+          Supports_Block_Ptr f = (Supports_Block_Ptr) stm;
           if (isPrintable(f, style)) {
             return true;
           }
         }
         else if (typeid(*stm) == typeid(Media_Block)) {
-          Media_Block* m = (Media_Block*) stm;
+          Media_Block_Ptr m = (Media_Block_Ptr) stm;
           if (isPrintable(m, style)) {
             return true;
           }
         }
-        else if (dynamic_cast<Has_Block*>(stm) && isPrintable(((Has_Block*)stm)->block(), style)) {
+        else if (dynamic_cast<Has_Block_Ptr>(stm) && isPrintable(((Has_Block_Ptr)stm)->block(), style)) {
           return true;
         }
       }
       return false;
     }
 
-    bool isPrintable(Comment* c, Sass_Output_Style style)
+    bool isPrintable(Comment_Ptr c, Sass_Output_Style style)
     {
       // keep for uncompressed
       if (style != COMPRESSED) {
@@ -604,41 +604,41 @@ namespace Sass {
       return false;
     };
 
-    bool isPrintable(Block* b, Sass_Output_Style style) {
+    bool isPrintable(Block_Ptr b, Sass_Output_Style style) {
       if (b == NULL) {
         return false;
       }
 
       for (size_t i = 0, L = b->length(); i < L; ++i) {
-        Statement* stm = (*b)[i];
+        Statement_Ptr stm = (*b)[i];
         if (typeid(*stm) == typeid(Declaration) || typeid(*stm) == typeid(Directive)) {
           return true;
         }
         else if (typeid(*stm) == typeid(Comment)) {
-          Comment* c = (Comment*) stm;
+          Comment_Ptr c = (Comment_Ptr) stm;
           if (isPrintable(c, style)) {
             return true;
           }
         }
         else if (typeid(*stm) == typeid(Ruleset)) {
-          Ruleset* r = (Ruleset*) stm;
+          Ruleset_Ptr r = (Ruleset_Ptr) stm;
           if (isPrintable(r, style)) {
             return true;
           }
         }
         else if (typeid(*stm) == typeid(Supports_Block)) {
-          Supports_Block* f = (Supports_Block*) stm;
+          Supports_Block_Ptr f = (Supports_Block_Ptr) stm;
           if (isPrintable(f, style)) {
             return true;
           }
         }
         else if (typeid(*stm) == typeid(Media_Block)) {
-          Media_Block* m = (Media_Block*) stm;
+          Media_Block_Ptr m = (Media_Block_Ptr) stm;
           if (isPrintable(m, style)) {
             return true;
           }
         }
-        else if (dynamic_cast<Has_Block*>(stm) && isPrintable(((Has_Block*)stm)->block(), style)) {
+        else if (dynamic_cast<Has_Block_Ptr>(stm) && isPrintable(((Has_Block_Ptr)stm)->block(), style)) {
           return true;
         }
       }

@@ -21,7 +21,7 @@ namespace Sass {
     { }
 
 
-    InvalidParent::InvalidParent(Selector* parent, Selector* selector)
+    InvalidParent::InvalidParent(Selector_Ptr parent, Selector_Ptr selector)
     : Base(selector->pstate()), parent(parent), selector(selector)
     {
       msg = "Invalid parent selector for \"";

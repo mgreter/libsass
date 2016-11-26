@@ -38,10 +38,10 @@ namespace Sass {
 
     class InvalidParent : public Base {
       protected:
-        Selector* parent;
-        Selector* selector;
+        Selector_Ptr parent;
+        Selector_Ptr selector;
       public:
-        InvalidParent(Selector* parent, Selector* selector);
+        InvalidParent(Selector_Ptr parent, Selector_Ptr selector);
         virtual ~InvalidParent() throw() {};
     };
 

@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "ast_fwd_decl.hpp"
+
 namespace Sass {
 
   class Block;
@@ -105,9 +107,9 @@ namespace Sass {
   class StyleSheet : public Resource {
     public:
       // parsed root block
-      Block* root;
+      Block_Ptr root;
     public:
-      StyleSheet(const Resource& res, Block* root)
+      StyleSheet(const Resource& res, Block_Ptr root)
       : Resource(res), root(root)
       { }
   };

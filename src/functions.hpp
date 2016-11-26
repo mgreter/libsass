@@ -6,8 +6,8 @@
 #include "environment.hpp"
 #include "sass/functions.h"
 
-#define BUILT_IN(name) Expression*\
-name(Env& env, Env& d_env, Context& ctx, Signature sig, ParserState pstate, Backtrace* backtrace, std::vector<Selector_List*> selector_stack)
+#define BUILT_IN(name) Expression_Ptr \
+name(Env& env, Env& d_env, Context& ctx, Signature sig, ParserState pstate, Backtrace* backtrace, std::vector<Selector_List_Ptr> selector_stack)
 
 namespace Sass {
   class Context;
@@ -15,12 +15,12 @@ namespace Sass {
   class AST_Node;
   class Expression;
   class Definition;
-  typedef Environment<AST_Node*> Env;
+  typedef Environment<AST_Node_Ptr> Env;
   typedef const char* Signature;
-  typedef Expression* (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<Selector_List*>);
+  typedef Expression_Ptr (*Native_Function)(Env&, Env&, Context&, Signature, ParserState, Backtrace*, std::vector<Selector_List_Ptr>);
 
-  Definition* make_native_function(Signature, Native_Function, Context& ctx);
-  Definition* make_c_function(Sass_Function_Entry c_func, Context& ctx);
+  Definition_Ptr make_native_function(Signature, Native_Function, Context& ctx);
+  Definition_Ptr make_c_function(Sass_Function_Entry c_func, Context& ctx);
 
   std::string function_name(Signature);
 

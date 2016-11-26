@@ -239,7 +239,7 @@ namespace Sass {
     }
   }
 
-  void Emitter::append_scope_opener(AST_Node* node)
+  void Emitter::append_scope_opener(AST_Node_Ptr node)
   {
     scheduled_linefeed = 0;
     append_optional_space();
@@ -250,7 +250,7 @@ namespace Sass {
     // append_optional_space();
     ++ indentation;
   }
-  void Emitter::append_scope_closer(AST_Node* node)
+  void Emitter::append_scope_closer(AST_Node_Ptr node)
   {
     -- indentation;
     scheduled_linefeed = 0;

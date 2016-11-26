@@ -179,7 +179,7 @@ namespace Sass {
     for (typename std::map<std::string, T>::iterator i = local_frame_.begin(); i != local_frame_.end(); ++i) {
       if (!ends_with(i->first, "[f]") && !ends_with(i->first, "[f]4") && !ends_with(i->first, "[f]2")) {
         std::cerr << prefix << std::string(indent, ' ') << i->first << " "  << i->second;
-        if (Value* val = dynamic_cast<Value*>(i->second))
+        if (Value_Ptr val = dynamic_cast<Value_Ptr>(i->second))
         { std::cerr << " : " << val->to_string(); }
         std::cerr << std::endl;
       }
@@ -189,7 +189,7 @@ namespace Sass {
   #endif
 
   // compile implementation for AST_Node
-  template class Environment<AST_Node*>;
+  template class Environment<AST_Node_Ptr>;
 
 }
 

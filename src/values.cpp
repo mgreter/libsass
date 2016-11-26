@@ -64,7 +64,7 @@ namespace Sass {
   }
 
   // convert value from C-API to C++ side
-  Value* sass_value_to_ast_node (Memory_Manager& mem, const union Sass_Value* val)
+  Value_Ptr sass_value_to_ast_node (Memory_Manager& mem, const union Sass_Value* val)
   {
     switch (sass_value_get_tag(val)) {
       case SASS_NUMBER:
@@ -98,7 +98,7 @@ namespace Sass {
         }
       break;
       case SASS_LIST: {
-        List* l = SASS_MEMORY_NEW(mem, List,
+        List_Ptr l = SASS_MEMORY_NEW(mem, List,
                                   ParserState("[C-VALUE]"),
                                   sass_list_get_length(val),
                                   sass_list_get_separator(val));
@@ -109,7 +109,7 @@ namespace Sass {
       }
       break;
       case SASS_MAP: {
-        Map* m = SASS_MEMORY_NEW(mem, Map, ParserState("[C-VALUE]"));
+        Map_Ptr m = SASS_MEMORY_NEW(mem, Map, ParserState("[C-VALUE]"));
         for (size_t i = 0, L = sass_map_get_length(val); i < L; ++i) {
           *m << std::make_pair(
             sass_value_to_ast_node(mem, sass_map_get_key(val, i)),

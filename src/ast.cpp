@@ -17,15 +17,15 @@ namespace Sass {
 
   static Null sass_null(Sass::Null(ParserState("null")));
 
-  bool Supports_Operator::needs_parens(Supports_Condition* cond) const {
-    return dynamic_cast<Supports_Negation*>(cond) ||
-          (dynamic_cast<Supports_Operator*>(cond) &&
-           dynamic_cast<Supports_Operator*>(cond)->operand() != operand());
+  bool Supports_Operator::needs_parens(Supports_Condition_Ptr cond) const {
+    return dynamic_cast<Supports_Negation_Ptr>(cond) ||
+          (dynamic_cast<Supports_Operator_Ptr>(cond) &&
+           dynamic_cast<Supports_Operator_Ptr>(cond)->operand() != operand());
   }
 
-  bool Supports_Negation::needs_parens(Supports_Condition* cond) const {
-    return dynamic_cast<Supports_Negation*>(cond) ||
-          dynamic_cast<Supports_Operator*>(cond);
+  bool Supports_Negation::needs_parens(Supports_Condition_Ptr cond) const {
+    return dynamic_cast<Supports_Negation_Ptr>(cond) ||
+          dynamic_cast<Supports_Operator_Ptr>(cond);
   }
 
   std::string & str_ltrim(std::string & str)
@@ -59,13 +59,13 @@ namespace Sass {
   void String_Schema::rtrim()
   {
     if (!empty()) {
-      if (String* str = dynamic_cast<String*>(last())) str->rtrim();
+      if (String_Ptr str = dynamic_cast<String_Ptr>(last())) str->rtrim();
     }
   }
   void String_Schema::ltrim()
   {
     if (!empty()) {
-      if (String* str = dynamic_cast<String*>(first())) str->ltrim();
+      if (String_Ptr str = dynamic_cast<String_Ptr>(first())) str->ltrim();
     }
   }
   void String_Schema::trim()
@@ -82,7 +82,7 @@ namespace Sass {
 
   void Arguments::set_delayed(bool delayed)
   {
-    for (Argument* arg : elements()) {
+    for (Argument_Ptr arg : elements()) {
       if (arg) arg->set_delayed(delayed);
     }
     is_delayed(delayed);
@@ -92,7 +92,7 @@ namespace Sass {
   bool At_Root_Query::exclude(std::string str)
   {
     bool with = feature() && unquote(feature()->to_string()).compare("with") == 0;
-    List* l = static_cast<List*>(value());
+    List_Ptr l = static_cast<List_Ptr>(value());
     std::string v;
 
     if (with)
@@ -187,8 +187,8 @@ namespace Sass {
     // const iterators for tails
     const Complex_Selector* l = this;
     const Complex_Selector* r = &rhs;
-    Compound_Selector* l_h = l ? l->head() : 0;
-    Compound_Selector* r_h = r ? r->head() : 0;
+    Compound_Selector_Ptr l_h = l ? l->head() : 0;
+    Compound_Selector_Ptr r_h = r ? r->head() : 0;
     // process all tails
     while (true)
     {
@@ -249,8 +249,8 @@ namespace Sass {
     // const iterators for tails
     const Complex_Selector* l = this;
     const Complex_Selector* r = &rhs;
-    Compound_Selector* l_h = l ? l->head() : 0;
-    Compound_Selector* r_h = r ? r->head() : 0;
+    Compound_Selector_Ptr l_h = l ? l->head() : 0;
+    Compound_Selector_Ptr r_h = r ? r->head() : 0;
     // process all tails
     while (true)
     {
@@ -307,9 +307,9 @@ namespace Sass {
     return false;
   }
 
-  Compound_Selector* Compound_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Compound_Selector::unify_with(Compound_Selector_Ptr rhs, Context& ctx)
   {
-    Compound_Selector* unified = rhs;
+    Compound_Selector_Ptr unified = rhs;
     for (size_t i = 0, L = length(); i < L; ++i)
     {
       if (!unified) break;
@@ -365,8 +365,8 @@ namespace Sass {
     size_t iL = length();
     size_t nL = rhs.length();
     // create temporary vectors and sort them
-    std::vector<Complex_Selector*> l_lst = this->elements();
-    std::vector<Complex_Selector*> r_lst = rhs.elements();
+    std::vector<Complex_Selector_Ptr> l_lst = this->elements();
+    std::vector<Complex_Selector_Ptr> r_lst = rhs.elements();
     std::sort(l_lst.begin(), l_lst.end(), cmp_complex_selector());
     std::sort(r_lst.begin(), r_lst.end(), cmp_complex_selector());
     // process loop
@@ -376,8 +376,8 @@ namespace Sass {
       if (i == iL) return iL == nL;
       else if (n == nL) return iL == nL;
       // the access the vector items
-      Complex_Selector* l = l_lst[i];
-      Complex_Selector* r = r_lst[n];
+      Complex_Selector_Ptr l = l_lst[i];
+      Complex_Selector_Ptr r = r_lst[n];
       // skip nulls
       if (!l) ++i;
       else if (!r) ++n;
@@ -391,7 +391,7 @@ namespace Sass {
     return true;
   }
 
-  Compound_Selector* Simple_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Simple_Selector::unify_with(Compound_Selector_Ptr rhs, Context& ctx)
   {
     for (size_t i = 0, L = rhs->length(); i < L; ++i)
     { if (to_string(ctx.c_options) == (*rhs)[i]->to_string(ctx.c_options)) return rhs; }
@@ -403,7 +403,7 @@ namespace Sass {
     {
       for (i = 0, L = rhs->length(); i < L; ++i)
       {
-        if ((dynamic_cast<Pseudo_Selector*>((*rhs)[i]) || dynamic_cast<Wrapped_Selector*>((*rhs)[i])) && (*rhs)[L-1]->is_pseudo_element())
+        if ((dynamic_cast<Pseudo_Selector_Ptr>((*rhs)[i]) || dynamic_cast<Wrapped_Selector_Ptr>((*rhs)[i])) && (*rhs)[L-1]->is_pseudo_element())
         { found = true; break; }
       }
     }
@@ -411,17 +411,17 @@ namespace Sass {
     {
       for (i = 0, L = rhs->length(); i < L; ++i)
       {
-        if (dynamic_cast<Pseudo_Selector*>((*rhs)[i]) || dynamic_cast<Wrapped_Selector*>((*rhs)[i]))
+        if (dynamic_cast<Pseudo_Selector_Ptr>((*rhs)[i]) || dynamic_cast<Wrapped_Selector_Ptr>((*rhs)[i]))
         { found = true; break; }
       }
     }
     if (!found)
     {
-      Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
+      Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
       (*cpy) << this;
       return cpy;
     }
-    Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
+    Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
     for (size_t j = 0; j < i; ++j)
     { (*cpy) << (*rhs)[j]; }
     (*cpy) << this;
@@ -465,13 +465,13 @@ namespace Sass {
     return this;
   }
 
-  Compound_Selector* Type_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Type_Selector::unify_with(Compound_Selector_Ptr rhs, Context& ctx)
   {
     // TODO: handle namespaces
 
     // if the rhs is empty, just return a copy of this
     if (rhs->length() == 0) {
-      Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
+      Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
       (*cpy) << this;
       return cpy;
     }
@@ -483,14 +483,14 @@ namespace Sass {
       if (typeid(*rhs_0) == typeid(Type_Selector))
       {
         // if rhs is universal, just return this tagname + rhs's qualifiers
-        Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
+        Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
         Type_Selector* ts = static_cast<Type_Selector*>(rhs_0);
         (*cpy)[0] = this->unify_with(ts, ctx);
         return cpy;
       }
-      else if (dynamic_cast<Class_Selector*>(rhs_0) || dynamic_cast<Id_Selector*>(rhs_0)) {
+      else if (dynamic_cast<Class_Selector_Ptr>(rhs_0) || dynamic_cast<Id_Selector_Ptr>(rhs_0)) {
         // qualifier is `.class`, so we can prefix with `ns|*.class`
-        Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
+        Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
         if (has_ns() && !rhs_0->has_ns()) {
           if (ns() != "*") (*cpy) << this;
         }
@@ -508,30 +508,30 @@ namespace Sass {
       // if rhs is universal, just return this tagname + rhs's qualifiers
       if (rhs_0->name() != "*" && rhs_0->ns() != "*" && rhs_0->name() != name()) return 0;
       // otherwise create new compound and unify first simple selector
-      Compound_Selector* copy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
+      Compound_Selector_Ptr copy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *rhs);
       (*copy)[0] = this->unify_with(rhs_0, ctx);
       return copy;
 
     }
     // else it's a tag name and a bunch of qualifiers -- just append them
-    Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
+    Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, rhs->pstate());
     if (name() != "*") (*cpy) << this;
     (*cpy) += rhs;
     return cpy;
   }
 
-  Compound_Selector* Class_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Class_Selector::unify_with(Compound_Selector_Ptr rhs, Context& ctx)
   {
     rhs->has_line_break(has_line_break());
     return Simple_Selector::unify_with(rhs, ctx);
   }
 
-  Compound_Selector* Id_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Id_Selector::unify_with(Compound_Selector_Ptr rhs, Context& ctx)
   {
     for (size_t i = 0, L = rhs->length(); i < L; ++i)
     {
       Simple_Selector* rhs_i = (*rhs)[i];
-      if (typeid(*rhs_i) == typeid(Id_Selector) && static_cast<Id_Selector*>(rhs_i)->name() != name()) {
+      if (typeid(*rhs_i) == typeid(Id_Selector) && static_cast<Id_Selector_Ptr>(rhs_i)->name() != name()) {
         return 0;
       }
     }
@@ -539,7 +539,7 @@ namespace Sass {
     return Simple_Selector::unify_with(rhs, ctx);
   }
 
-  Compound_Selector* Pseudo_Selector::unify_with(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Pseudo_Selector::unify_with(Compound_Selector_Ptr rhs, Context& ctx)
   {
     if (is_pseudo_element())
     {
@@ -547,8 +547,8 @@ namespace Sass {
       {
         Simple_Selector* rhs_i = (*rhs)[i];
         if (typeid(*rhs_i) == typeid(Pseudo_Selector) &&
-            static_cast<Pseudo_Selector*>(rhs_i)->is_pseudo_element() &&
-            static_cast<Pseudo_Selector*>(rhs_i)->name() != name())
+            static_cast<Pseudo_Selector_Ptr>(rhs_i)->is_pseudo_element() &&
+            static_cast<Pseudo_Selector_Ptr>(rhs_i)->name() != name())
         { return 0; }
       }
     }
@@ -600,8 +600,8 @@ namespace Sass {
   {
     if (is_ns_eq(ns(), rhs.ns()) && name() == rhs.name())
     {
-      Expression* lhs_ex = expression();
-      Expression* rhs_ex = rhs.expression();
+      Expression_Ptr lhs_ex = expression();
+      Expression_Ptr rhs_ex = rhs.expression();
       if (rhs_ex && lhs_ex) return *lhs_ex == *rhs_ex;
       else return lhs_ex == rhs_ex;
     }
@@ -677,12 +677,12 @@ namespace Sass {
     return ns() < rhs.ns();
   }
 
-  bool Wrapped_Selector::is_superselector_of(Wrapped_Selector* sub)
+  bool Wrapped_Selector::is_superselector_of(Wrapped_Selector_Ptr sub)
   {
     if (this->name() != sub->name()) return false;
     if (this->name() == ":current") return false;
-    if (Selector_List* rhs_list = dynamic_cast<Selector_List*>(sub->selector())) {
-      if (Selector_List* lhs_list = dynamic_cast<Selector_List*>(selector())) {
+    if (Selector_List_Ptr rhs_list = dynamic_cast<Selector_List_Ptr>(sub->selector())) {
+      if (Selector_List_Ptr lhs_list = dynamic_cast<Selector_List_Ptr>(selector())) {
         return lhs_list->is_superselector_of(rhs_list);
       }
       error("is_superselector expected a Selector_List", sub->pstate());
@@ -692,23 +692,23 @@ namespace Sass {
     return false;
   }
 
-  bool Compound_Selector::is_superselector_of(Selector_List* rhs, std::string wrapped)
+  bool Compound_Selector::is_superselector_of(Selector_List_Ptr rhs, std::string wrapped)
   {
-    for (Complex_Selector* item : rhs->elements()) {
+    for (Complex_Selector_Ptr item : rhs->elements()) {
       if (is_superselector_of(item, wrapped)) return true;
     }
     return false;
   }
 
-  bool Compound_Selector::is_superselector_of(Complex_Selector* rhs, std::string wrapped)
+  bool Compound_Selector::is_superselector_of(Complex_Selector_Ptr rhs, std::string wrapped)
   {
     if (rhs->head()) return is_superselector_of(rhs->head(), wrapped);
     return false;
   }
 
-  bool Compound_Selector::is_superselector_of(Compound_Selector* rhs, std::string wrapping)
+  bool Compound_Selector::is_superselector_of(Compound_Selector_Ptr rhs, std::string wrapping)
   {
-    Compound_Selector* lhs = this;
+    Compound_Selector_Ptr lhs = this;
     Simple_Selector* lbase = lhs->base();
     Simple_Selector* rbase = rhs->base();
 
@@ -751,11 +751,11 @@ namespace Sass {
 
     for (size_t i = 0, iL = length(); i < iL; ++i)
     {
-      Selector* lhs = (*this)[i];
+      Selector_Ptr lhs = (*this)[i];
       // very special case for wrapped matches selector
-      if (Wrapped_Selector* wrapped = dynamic_cast<Wrapped_Selector*>(lhs)) {
+      if (Wrapped_Selector_Ptr wrapped = dynamic_cast<Wrapped_Selector_Ptr>(lhs)) {
         if (wrapped->name() == ":not") {
-          if (Selector_List* not_list = dynamic_cast<Selector_List*>(wrapped->selector())) {
+          if (Selector_List_Ptr not_list = dynamic_cast<Selector_List_Ptr>(wrapped->selector())) {
             if (not_list->is_superselector_of(rhs, wrapped->name())) return false;
           } else {
             throw std::runtime_error("wrapped not selector is not a list");
@@ -763,8 +763,8 @@ namespace Sass {
         }
         if (wrapped->name() == ":matches" || wrapped->name() == ":-moz-any") {
           lhs = wrapped->selector();
-          if (Selector_List* list = dynamic_cast<Selector_List*>(wrapped->selector())) {
-            if (Compound_Selector* comp = dynamic_cast<Compound_Selector*>(rhs)) {
+          if (Selector_List_Ptr list = dynamic_cast<Selector_List_Ptr>(wrapped->selector())) {
+            if (Compound_Selector_Ptr comp = dynamic_cast<Compound_Selector_Ptr>(rhs)) {
               if (!wrapping.empty() && wrapping != wrapped->name()) return false;
               if (wrapping.empty() || wrapping != wrapped->name()) {;
                 if (list->is_superselector_of(comp, wrapped->name())) return true;
@@ -773,7 +773,7 @@ namespace Sass {
           }
         }
         Simple_Selector* rhs_sel = rhs->elements().size() > i ? (*rhs)[i] : 0;
-        if (Wrapped_Selector* wrapped_r = dynamic_cast<Wrapped_Selector*>(rhs_sel)) {
+        if (Wrapped_Selector_Ptr wrapped_r = dynamic_cast<Wrapped_Selector_Ptr>(rhs_sel)) {
           if (wrapped->name() == wrapped_r->name()) {
           if (wrapped->is_superselector_of(wrapped_r)) {
              continue;
@@ -789,9 +789,9 @@ namespace Sass {
     for (size_t n = 0, nL = rhs->length(); n < nL; ++n)
     {
       auto r = (*rhs)[n];
-      if (Wrapped_Selector* wrapped = dynamic_cast<Wrapped_Selector*>(r)) {
+      if (Wrapped_Selector_Ptr wrapped = dynamic_cast<Wrapped_Selector_Ptr>(r)) {
         if (wrapped->name() == ":not") {
-          if (Selector_List* ls = dynamic_cast<Selector_List*>(wrapped->selector())) {
+          if (Selector_List_Ptr ls = dynamic_cast<Selector_List_Ptr>(wrapped->selector())) {
             ls->remove_parent_selectors();
             if (is_superselector_of(ls, wrapped->name())) return false;
           }
@@ -800,7 +800,7 @@ namespace Sass {
           if (!wrapping.empty()) {
             if (wrapping != wrapped->name()) return false;
           }
-          if (Selector_List* ls = dynamic_cast<Selector_List*>(wrapped->selector())) {
+          if (Selector_List_Ptr ls = dynamic_cast<Selector_List_Ptr>(wrapped->selector())) {
             ls->remove_parent_selectors();
             return (is_superselector_of(ls, wrapped->name()));
           }
@@ -819,7 +819,7 @@ namespace Sass {
   }
 
   // create complex selector (ancestor of) from compound selector
-  Complex_Selector* Compound_Selector::to_complex(Memory_Manager& mem)
+  Complex_Selector_Ptr Compound_Selector::to_complex(Memory_Manager& mem)
   {
     // create an intermediate complex selector
     return SASS_MEMORY_NEW(mem, Complex_Selector,
@@ -829,12 +829,12 @@ namespace Sass {
                            0);
   }
 
-  Selector_List* Complex_Selector::unify_with(Complex_Selector* other, Context& ctx)
+  Selector_List_Ptr Complex_Selector::unify_with(Complex_Selector_Ptr other, Context& ctx)
   {
 
     // get last tails (on the right side)
-    Complex_Selector* l_last = this->last();
-    Complex_Selector* r_last = other->last();
+    Complex_Selector_Ptr l_last = this->last();
+    Complex_Selector_Ptr r_last = other->last();
 
     // check valid pointers (assertion)
     SASS_ASSERT(l_last, "lhs is null");
@@ -847,15 +847,15 @@ namespace Sass {
     if (r_last->combinator() != Combinator::ANCESTOR_OF ) return 0;
 
     // get the headers for the last tails
-    Compound_Selector* l_last_head = l_last->head();
-    Compound_Selector* r_last_head = r_last->head();
+    Compound_Selector_Ptr l_last_head = l_last->head();
+    Compound_Selector_Ptr r_last_head = r_last->head();
 
     // check valid head pointers (assertion)
     SASS_ASSERT(l_last_head, "lhs head is null");
     SASS_ASSERT(r_last_head, "rhs head is null");
 
     // get the unification of the last compound selectors
-    Compound_Selector* unified = r_last_head->unify_with(l_last_head, ctx);
+    Compound_Selector_Ptr unified = r_last_head->unify_with(l_last_head, ctx);
 
     // abort if we could not unify heads
     if (unified == 0) return 0;
@@ -879,7 +879,7 @@ namespace Sass {
     if (!is_universal)
     {
       // create some temporaries to convert to node
-      Complex_Selector* fake = unified->to_complex(ctx.mem);
+      Complex_Selector_Ptr fake = unified->to_complex(ctx.mem);
       Node unified_node = complexSelectorToNode(fake, ctx);
       // add to permutate the list?
       rhsNode.plus(unified_node);
@@ -887,7 +887,7 @@ namespace Sass {
 
     // do some magic we inherit from node and extend
     Node node = Extend::subweave(lhsNode, rhsNode, ctx);
-    Selector_List* result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     NodeDequePtr col = node.collection(); // move from collection to list
     for (NodeDeque::iterator it = col->begin(), end = col->end(); it != end; it++)
     { (*result) << nodeToComplexSelector(Node::naiveTrim(*it, ctx), ctx); }
@@ -934,14 +934,14 @@ namespace Sass {
     return *pLeft < *pRight;
   }
 
-  bool Complex_Selector::is_superselector_of(Compound_Selector* rhs, std::string wrapping)
+  bool Complex_Selector::is_superselector_of(Compound_Selector_Ptr rhs, std::string wrapping)
   {
     return last()->head() && last()->head()->is_superselector_of(rhs, wrapping);
   }
 
-  bool Complex_Selector::is_superselector_of(Complex_Selector* rhs, std::string wrapping)
+  bool Complex_Selector::is_superselector_of(Complex_Selector_Ptr rhs, std::string wrapping)
   {
-    Complex_Selector* lhs = this;
+    Complex_Selector_Ptr lhs = this;
     // check for selectors with leading or trailing combinators
     if (!lhs->head() || !rhs->head())
     { return false; }
@@ -962,8 +962,8 @@ namespace Sass {
     // we have to look one tail deeper, since we cary the
     // combinator around for it (which is important here)
     if (rhs->tail() && lhs->tail() && combinator() != Complex_Selector::ANCESTOR_OF) {
-      Complex_Selector* lhs_tail = lhs->tail();
-      Complex_Selector* rhs_tail = rhs->tail();
+      Complex_Selector_Ptr lhs_tail = lhs->tail();
+      Complex_Selector_Ptr rhs_tail = rhs->tail();
       if (lhs_tail->combinator() != rhs_tail->combinator()) return false;
       if (lhs_tail->head() && !rhs_tail->head()) return false;
       if (!lhs_tail->head() && rhs_tail->head()) return false;
@@ -973,7 +973,7 @@ namespace Sass {
     }
 
     bool found = false;
-    Complex_Selector* marker = rhs;
+    Complex_Selector_Ptr marker = rhs;
     for (size_t i = 0, L = rhs->length(); i < L; ++i) {
       if (i == L-1)
       { return false; }
@@ -1026,11 +1026,11 @@ namespace Sass {
     return 1 + tail()->length();
   }
 
-  Complex_Selector* Complex_Selector::context(Context& ctx)
+  Complex_Selector_Ptr Complex_Selector::context(Context& ctx)
   {
     if (!tail()) return 0;
     if (!head()) return tail()->context(ctx);
-    Complex_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate(), combinator(), head(), tail()->context(ctx));
+    Complex_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate(), combinator(), head(), tail()->context(ctx));
     cpy->media_block(media_block());
     return cpy;
   }
@@ -1039,13 +1039,13 @@ namespace Sass {
   // check if we need to append some headers
   // then we need to check for the combinator
   // only then we can safely set the new tail
-  void Complex_Selector::append(Context& ctx, Complex_Selector* ss)
+  void Complex_Selector::append(Context& ctx, Complex_Selector_Ptr ss)
   {
 
-    Complex_Selector* t = ss->tail();
+    Complex_Selector_Ptr t = ss->tail();
     Combinator c = ss->combinator();
-    String* r = ss->reference();
-    Compound_Selector* h = ss->head();
+    String_Ptr r = ss->reference();
+    Compound_Selector_Ptr h = ss->head();
 
     if (ss->has_line_feed()) has_line_feed(true);
     if (ss->has_line_break()) has_line_break(true);
@@ -1055,18 +1055,18 @@ namespace Sass {
       if (last()->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
         error("Invalid parent selector", pstate_);
       } else if (last()->head_ && last()->head_->length()) {
-        Compound_Selector* rh = last()->head();
+        Compound_Selector_Ptr rh = last()->head();
         size_t i = 0, L = h->length();
         if (dynamic_cast<Type_Selector*>(h->first())) {
-          if (Class_Selector* sq = dynamic_cast<Class_Selector*>(rh->last())) {
-            Class_Selector* sqs = SASS_MEMORY_NEW(ctx.mem, Class_Selector, *sq);
+          if (Class_Selector_Ptr sq = dynamic_cast<Class_Selector_Ptr>(rh->last())) {
+            Class_Selector_Ptr sqs = SASS_MEMORY_NEW(ctx.mem, Class_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
             sqs->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = sqs;
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << (*h)[i];
-          } else if (Id_Selector* sq = dynamic_cast<Id_Selector*>(rh->last())) {
-            Id_Selector* sqs = SASS_MEMORY_NEW(ctx.mem, Id_Selector, *sq);
+          } else if (Id_Selector_Ptr sq = dynamic_cast<Id_Selector_Ptr>(rh->last())) {
+            Id_Selector_Ptr sqs = SASS_MEMORY_NEW(ctx.mem, Id_Selector, *sq);
             sqs->name(sqs->name() + (*h)[0]->name());
             sqs->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = sqs;
@@ -1079,8 +1079,8 @@ namespace Sass {
             (*rh)[rh->length()-1] = tss;
             rh->pstate(h->pstate());
             for (i = 1; i < L; ++i) *rh << (*h)[i];
-          } else if (Placeholder_Selector* ps = dynamic_cast<Placeholder_Selector*>(rh->last())) {
-            Placeholder_Selector* pss = SASS_MEMORY_NEW(ctx.mem, Placeholder_Selector, *ps);
+          } else if (Placeholder_Selector_Ptr ps = dynamic_cast<Placeholder_Selector_Ptr>(rh->last())) {
+            Placeholder_Selector_Ptr pss = SASS_MEMORY_NEW(ctx.mem, Placeholder_Selector, *ps);
             pss->name(pss->name() + (*h)[0]->name());
             pss->pstate((*h)[0]->pstate());
             (*rh)[rh->length()-1] = pss;
@@ -1101,7 +1101,7 @@ namespace Sass {
 
     if (last()) {
       if (last()->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
-        Complex_Selector* inter = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate());
+        Complex_Selector_Ptr inter = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, pstate());
         inter->reference(r);
         inter->combinator(c);
         inter->tail(t);
@@ -1118,12 +1118,12 @@ namespace Sass {
 
   }
 
-  Selector_List* Selector_List::resolve_parent_refs(Context& ctx, Selector_List* ps, bool implicit_parent)
+  Selector_List_Ptr Selector_List::resolve_parent_refs(Context& ctx, Selector_List_Ptr ps, bool implicit_parent)
   {
     if (!this->has_parent_ref()/* && !implicit_parent*/) return this;
-    Selector_List* ss = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr ss = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     for (size_t pi = 0, pL = ps->length(); pi < pL; ++pi) {
-      Selector_List* list = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+      Selector_List_Ptr list = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
       *list << (*ps)[pi];
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
         *ss += (*this)[si]->resolve_parent_refs(ctx, list, implicit_parent);
@@ -1132,37 +1132,37 @@ namespace Sass {
     return ss;
   }
 
-  Selector_List* Complex_Selector::resolve_parent_refs(Context& ctx, Selector_List* parents, bool implicit_parent)
+  Selector_List_Ptr Complex_Selector::resolve_parent_refs(Context& ctx, Selector_List_Ptr parents, bool implicit_parent)
   {
-    Complex_Selector* tail = this->tail();
-    Compound_Selector* head = this->head();
+    Complex_Selector_Ptr tail = this->tail();
+    Compound_Selector_Ptr head = this->head();
 
     if (!this->has_real_parent_ref() && !implicit_parent) {
-      Selector_List* retval = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+      Selector_List_Ptr retval = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
       *retval << this;
       return retval;
     }
 
     // first resolve_parent_refs the tail (which may return an expanded list)
-    Selector_List* tails = tail ? tail->resolve_parent_refs(ctx, parents, implicit_parent) : 0;
+    Selector_List_Ptr tails = tail ? tail->resolve_parent_refs(ctx, parents, implicit_parent) : 0;
 
     if (head && head->length() > 0) {
 
-      Selector_List* retval = 0;
+      Selector_List_Ptr retval = 0;
       // we have a parent selector in a simple compound list
       // mix parent complex selector into the compound list
-      if (dynamic_cast<Parent_Selector*>((*head)[0])) {
+      if (dynamic_cast<Parent_Selector_Ptr>((*head)[0])) {
         retval = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
         if (parents && parents->length()) {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
               for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
-                Complex_Selector* t = (*tails)[n];
-                Complex_Selector* parent = (*parents)[i];
-                Complex_Selector* s = parent->cloneFully(ctx);
-                Complex_Selector* ss = this->clone(ctx);
+                Complex_Selector_Ptr t = (*tails)[n];
+                Complex_Selector_Ptr parent = (*parents)[i];
+                Complex_Selector_Ptr s = parent->cloneFully(ctx);
+                Complex_Selector_Ptr ss = this->clone(ctx);
                 ss->tail(t ? t->clone(ctx) : 0);
-                Compound_Selector* h = head_->clone(ctx);
+                Compound_Selector_Ptr h = head_->clone(ctx);
                 // remove parent selector from sequence
                 if (h->length()) h->erase(h->begin());
                 ss->head(h->length() ? h : 0);
@@ -1185,16 +1185,16 @@ namespace Sass {
           // loop above is inside out
           else {
             for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
-              Complex_Selector* parent = (*parents)[i];
-              Complex_Selector* s = parent->cloneFully(ctx);
-              Complex_Selector* ss = this->clone(ctx);
+              Complex_Selector_Ptr parent = (*parents)[i];
+              Complex_Selector_Ptr s = parent->cloneFully(ctx);
+              Complex_Selector_Ptr ss = this->clone(ctx);
               // this is only if valid if the parent has no trailing op
               // otherwise we cannot append more simple selectors to head
               if (parent->last()->combinator() != ANCESTOR_OF) {
                 throw Exception::InvalidParent(parent, ss);
               }
               ss->tail(tail ? tail->clone(ctx) : 0);
-              Compound_Selector* h = head_->clone(ctx);
+              Compound_Selector_Ptr h = head_->clone(ctx);
               // remove parent selector from sequence
               if (h->length()) h->erase(h->begin());
               ss->head(h->length() ? h : 0);
@@ -1219,7 +1219,7 @@ namespace Sass {
         else {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
-              Complex_Selector* cpy = this->clone(ctx);
+              Complex_Selector_Ptr cpy = this->clone(ctx);
               cpy->tail((*tails)[n]->cloneFully(ctx));
               cpy->head(SASS_MEMORY_NEW(ctx.mem, Compound_Selector, head->pstate()));
               for (size_t i = 1, L = this->head()->length(); i < L; ++i)
@@ -1230,7 +1230,7 @@ namespace Sass {
           }
           // have no parent nor tails
           else {
-            Complex_Selector* cpy = this->clone(ctx);
+            Complex_Selector_Ptr cpy = this->clone(ctx);
             cpy->head(SASS_MEMORY_NEW(ctx.mem, Compound_Selector, head->pstate()));
             for (size_t i = 1, L = this->head()->length(); i < L; ++i)
               *cpy->head() << (*this->head())[i];
@@ -1245,8 +1245,8 @@ namespace Sass {
       }
 
       for (Simple_Selector* ss : *head) {
-        if (Wrapped_Selector* ws = dynamic_cast<Wrapped_Selector*>(ss)) {
-          if (Selector_List* sl = dynamic_cast<Selector_List*>(ws->selector())) {
+        if (Wrapped_Selector_Ptr ws = dynamic_cast<Wrapped_Selector_Ptr>(ss)) {
+          if (Selector_List_Ptr sl = dynamic_cast<Selector_List_Ptr>(ws->selector())) {
             if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, implicit_parent));
           }
         }
@@ -1264,12 +1264,12 @@ namespace Sass {
     return 0;
   }
 
-  Selector_List* Complex_Selector::tails(Context& ctx, Selector_List* tails)
+  Selector_List_Ptr Complex_Selector::tails(Context& ctx, Selector_List_Ptr tails)
   {
-    Selector_List* rv = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate_);
+    Selector_List_Ptr rv = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate_);
     if (tails && tails->length()) {
       for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector* pr = this->clone(ctx);
+        Complex_Selector_Ptr pr = this->clone(ctx);
         pr->tail((*tails)[i]);
         *rv << pr;
       }
@@ -1281,10 +1281,10 @@ namespace Sass {
   }
 
   // return the last tail that is defined
-  Complex_Selector* Complex_Selector::first()
+  Complex_Selector_Ptr Complex_Selector::first()
   {
     // declare variables used in loop
-    Complex_Selector* cur = this;
+    Complex_Selector_Ptr cur = this;
     const Compound_Selector* head;
     // processing loop
     while (cur)
@@ -1292,7 +1292,7 @@ namespace Sass {
       // get the head
       head = cur->head_;
       // abort (and return) if it is not a parent selector
-      if (!head || head->length() != 1 || !dynamic_cast<Parent_Selector*>((*head)[0])) {
+      if (!head || head->length() != 1 || !dynamic_cast<Parent_Selector_Ptr>((*head)[0])) {
         break;
       }
       // advance to next
@@ -1317,7 +1317,7 @@ namespace Sass {
       if (head && head->length() == 1)
       {
         // abort (and return) if it is not a parent selector
-        if (!dynamic_cast<Parent_Selector*>((*head)[0])) break;
+        if (!dynamic_cast<Parent_Selector_Ptr>((*head)[0])) break;
       }
       // advance to next
       cur = cur->tail_;
@@ -1327,7 +1327,7 @@ namespace Sass {
   }
 
   // return the last tail that is defined
-  Complex_Selector* Complex_Selector::last()
+  Complex_Selector_Ptr Complex_Selector::last()
   {
     // ToDo: implement with a while loop
     return tail_? tail_->last() : this;
@@ -1351,7 +1351,7 @@ namespace Sass {
     return c;
   }
 
-  void Complex_Selector::set_innermost(Complex_Selector* val, Combinator c)
+  void Complex_Selector::set_innermost(Complex_Selector_Ptr val, Combinator c)
   {
     if (!tail())
     { tail(val); combinator(c); }
@@ -1359,18 +1359,18 @@ namespace Sass {
     { tail()->set_innermost(val, c); }
   }
 
-  Complex_Selector* Complex_Selector::clone(Context& ctx) const
+  Complex_Selector_Ptr Complex_Selector::clone(Context& ctx) const
   {
-    Complex_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, *this);
+    Complex_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, *this);
     cpy->is_optional(this->is_optional());
     cpy->media_block(this->media_block());
     if (tail()) cpy->tail(tail()->clone(ctx));
     return cpy;
   }
 
-  Complex_Selector* Complex_Selector::cloneFully(Context& ctx) const
+  Complex_Selector_Ptr Complex_Selector::cloneFully(Context& ctx) const
   {
-    Complex_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, *this);
+    Complex_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Complex_Selector, *this);
     cpy->is_optional(this->is_optional());
     cpy->media_block(this->media_block());
     if (head()) {
@@ -1384,26 +1384,26 @@ namespace Sass {
     return cpy;
   }
 
-  Compound_Selector* Compound_Selector::clone(Context& ctx) const
+  Compound_Selector_Ptr Compound_Selector::clone(Context& ctx) const
   {
-    Compound_Selector* cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *this);
+    Compound_Selector_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, *this);
     cpy->is_optional(this->is_optional());
     cpy->media_block(this->media_block());
     cpy->extended(this->extended());
     return cpy;
   }
 
-  Selector_List* Selector_List::clone(Context& ctx) const
+  Selector_List_Ptr Selector_List::clone(Context& ctx) const
   {
-    Selector_List* cpy = SASS_MEMORY_NEW(ctx.mem, Selector_List, *this);
+    Selector_List_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Selector_List, *this);
     cpy->is_optional(this->is_optional());
     cpy->media_block(this->media_block());
     return cpy;
   }
 
-  Selector_List* Selector_List::cloneFully(Context& ctx) const
+  Selector_List_Ptr Selector_List::cloneFully(Context& ctx) const
   {
-    Selector_List* cpy = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr cpy = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     cpy->is_optional(this->is_optional());
     cpy->media_block(this->media_block());
     for (size_t i = 0, L = length(); i < L; ++i) {
@@ -1413,7 +1413,7 @@ namespace Sass {
   }
 
   /* not used anymore - remove?
-  Placeholder_Selector* Selector::find_placeholder()
+  Placeholder_Selector_Ptr Selector::find_placeholder()
   {
     return 0;
   }*/
@@ -1445,7 +1445,7 @@ namespace Sass {
 
   bool Selector_List::has_parent_ref()
   {
-    for (Complex_Selector* s : *this) {
+    for (Complex_Selector_Ptr s : *this) {
       if (s && s->has_parent_ref()) return true;
     }
     return false;
@@ -1453,7 +1453,7 @@ namespace Sass {
 
   bool Selector_List::has_real_parent_ref()
   {
-    for (Complex_Selector* s : *this) {
+    for (Complex_Selector_Ptr s : *this) {
       if (s && s->has_real_parent_ref()) return true;
     }
     return false;
@@ -1461,29 +1461,29 @@ namespace Sass {
 
   bool Selector_Schema::has_parent_ref()
   {
-    if (String_Schema* schema = dynamic_cast<String_Schema*>(contents())) {
-      return schema->length() > 0 && dynamic_cast<Parent_Selector*>(schema->at(0)) != NULL;
+    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(contents())) {
+      return schema->length() > 0 && dynamic_cast<Parent_Selector_Ptr>(schema->at(0)) != NULL;
     }
     return false;
   }
 
   bool Selector_Schema::has_real_parent_ref()
   {
-    if (String_Schema* schema = dynamic_cast<String_Schema*>(contents())) {
-      Parent_Selector* p = dynamic_cast<Parent_Selector*>(schema->at(0));
+    if (String_Schema_Ptr schema = dynamic_cast<String_Schema_Ptr>(contents())) {
+      Parent_Selector_Ptr p = dynamic_cast<Parent_Selector_Ptr>(schema->at(0));
       return schema->length() > 0 && p != NULL && p->is_real_parent_ref();
     }
     return false;
   }
 
-  void Selector_List::adjust_after_pushing(Complex_Selector* c)
+  void Selector_List::adjust_after_pushing(Complex_Selector_Ptr c)
   {
     // if (c->has_reference())   has_reference(true);
   }
 
   // it's a superselector if every selector of the right side
   // list is a superselector of the given left side selector
-  bool Complex_Selector::is_superselector_of(Selector_List *sub, std::string wrapping)
+  bool Complex_Selector::is_superselector_of(Selector_List_Ptr sub, std::string wrapping)
   {
     // Check every rhs selector against left hand list
     for(size_t i = 0, L = sub->length(); i < L; ++i) {
@@ -1494,7 +1494,7 @@ namespace Sass {
 
   // it's a superselector if every selector of the right side
   // list is a superselector of the given left side selector
-  bool Selector_List::is_superselector_of(Selector_List *sub, std::string wrapping)
+  bool Selector_List::is_superselector_of(Selector_List_Ptr sub, std::string wrapping)
   {
     // Check every rhs selector against left hand list
     for(size_t i = 0, L = sub->length(); i < L; ++i) {
@@ -1505,7 +1505,7 @@ namespace Sass {
 
   // it's a superselector if every selector on the right side
   // is a superselector of any one of the left side selectors
-  bool Selector_List::is_superselector_of(Compound_Selector *sub, std::string wrapping)
+  bool Selector_List::is_superselector_of(Compound_Selector_Ptr sub, std::string wrapping)
   {
     // Check every lhs selector against right hand
     for(size_t i = 0, L = length(); i < L; ++i) {
@@ -1516,7 +1516,7 @@ namespace Sass {
 
   // it's a superselector if every selector on the right side
   // is a superselector of any one of the left side selectors
-  bool Selector_List::is_superselector_of(Complex_Selector *sub, std::string wrapping)
+  bool Selector_List::is_superselector_of(Complex_Selector_Ptr sub, std::string wrapping)
   {
     // Check every lhs selector against right hand
     for(size_t i = 0, L = length(); i < L; ++i) {
@@ -1525,15 +1525,15 @@ namespace Sass {
     return false;
   }
 
-  Selector_List* Selector_List::unify_with(Selector_List* rhs, Context& ctx) {
-    std::vector<Complex_Selector*> unified_complex_selectors;
+  Selector_List_Ptr Selector_List::unify_with(Selector_List_Ptr rhs, Context& ctx) {
+    std::vector<Complex_Selector_Ptr> unified_complex_selectors;
     // Unify all of children with RHS's children, storing the results in `unified_complex_selectors`
     for (size_t lhs_i = 0, lhs_L = length(); lhs_i < lhs_L; ++lhs_i) {
-      Complex_Selector* seq1 = (*this)[lhs_i];
+      Complex_Selector_Ptr seq1 = (*this)[lhs_i];
       for(size_t rhs_i = 0, rhs_L = rhs->length(); rhs_i < rhs_L; ++rhs_i) {
-        Complex_Selector* seq2 = (*rhs)[rhs_i];
+        Complex_Selector_Ptr seq2 = (*rhs)[rhs_i];
 
-        Selector_List* result = seq1->unify_with(seq2, ctx);
+        Selector_List_Ptr result = seq1->unify_with(seq2, ctx);
         if( result ) {
           for(size_t i = 0, L = result->length(); i < L; ++i) {
             unified_complex_selectors.push_back( (*result)[i] );
@@ -1543,27 +1543,27 @@ namespace Sass {
     }
 
     // Creates the final Selector_List by combining all the complex selectors
-    Selector_List* final_result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
+    Selector_List_Ptr final_result = SASS_MEMORY_NEW(ctx.mem, Selector_List, pstate());
     for (auto itr = unified_complex_selectors.begin(); itr != unified_complex_selectors.end(); ++itr) {
       *final_result << *itr;
     }
     return final_result;
   }
 
-  void Selector_List::populate_extends(Selector_List* extendee, Context& ctx, ExtensionSubsetMap& extends)
+  void Selector_List::populate_extends(Selector_List_Ptr extendee, Context& ctx, ExtensionSubsetMap& extends)
   {
 
-    Selector_List* extender = this;
+    Selector_List_Ptr extender = this;
     for (auto complex_sel : extendee->elements()) {
-      Complex_Selector* c = complex_sel;
+      Complex_Selector_Ptr c = complex_sel;
 
 
       // Ignore any parent selectors, until we find the first non Selector_Reference head
-      Compound_Selector* compound_sel = c->head();
-      Complex_Selector* pIter = complex_sel;
+      Compound_Selector_Ptr compound_sel = c->head();
+      Complex_Selector_Ptr pIter = complex_sel;
       while (pIter) {
-        Compound_Selector* pHead = pIter->head();
-        if (pHead && dynamic_cast<Parent_Selector*>(pHead->elements()[0]) == NULL) {
+        Compound_Selector_Ptr pHead = pIter->head();
+        if (pHead && dynamic_cast<Parent_Selector_Ptr>(pHead->elements()[0]) == NULL) {
           compound_sel = pHead;
           break;
         }
@@ -1599,9 +1599,9 @@ namespace Sass {
     return *this;
   }
 
-  Compound_Selector* Compound_Selector::minus(Compound_Selector* rhs, Context& ctx)
+  Compound_Selector_Ptr Compound_Selector::minus(Compound_Selector_Ptr rhs, Context& ctx)
   {
-    Compound_Selector* result = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate());
+    Compound_Selector_Ptr result = SASS_MEMORY_NEW(ctx.mem, Compound_Selector, pstate());
     // result->has_parent_reference(has_parent_reference());
 
     // not very efficient because it needs to preserve order
@@ -1630,9 +1630,9 @@ namespace Sass {
     }
   }
 
-  Argument* Arguments::get_rest_argument()
+  Argument_Ptr Arguments::get_rest_argument()
   {
-    Argument* arg = 0;
+    Argument_Ptr arg = 0;
     if (this->has_rest_argument()) {
       for (auto a : this->elements()) {
         if (a->is_rest_argument()) {
@@ -1645,9 +1645,9 @@ namespace Sass {
     return arg;
   }
 
-  Argument* Arguments::get_keyword_argument()
+  Argument_Ptr Arguments::get_keyword_argument()
   {
-    Argument* arg = 0;
+    Argument_Ptr arg = 0;
     if (this->has_keyword_argument()) {
       for (auto a : this->elements()) {
         if (a->is_keyword_argument()) {
@@ -1660,7 +1660,7 @@ namespace Sass {
     return arg;
   }
 
-  void Arguments::adjust_after_pushing(Argument* a)
+  void Arguments::adjust_after_pushing(Argument_Ptr a)
   {
     if (!a->name().empty()) {
       if (/* has_rest_argument_ || */ has_keyword_argument_) {
@@ -1694,7 +1694,7 @@ namespace Sass {
   }
 
   bool Ruleset::is_invisible() const {
-    if (Selector_List* sl = dynamic_cast<Selector_List*>(selector())) {
+    if (Selector_List_Ptr sl = dynamic_cast<Selector_List_Ptr>(selector())) {
       for (size_t i = 0, L = sl->length(); i < L; ++i)
         if (!(*sl)[i]->has_placeholder()) return false;
     }
@@ -2172,8 +2172,8 @@ namespace Sass {
     if (const String_Schema* r = dynamic_cast<const String_Schema*>(&rhs)) {
       if (length() != r->length()) return false;
       for (size_t i = 0, L = length(); i < L; ++i) {
-        Expression* rv = (*r)[i];
-        Expression* lv = (*this)[i];
+        Expression_Ptr rv = (*r)[i];
+        Expression_Ptr lv = (*this)[i];
         if (!lv || !rv) return false;
         if (!(*lv == *rv)) return false;
       }
@@ -2207,8 +2207,8 @@ namespace Sass {
       if (length() != r->length()) return false;
       if (separator() != r->separator()) return false;
       for (size_t i = 0, L = length(); i < L; ++i) {
-        Expression* rv = (*r)[i];
-        Expression* lv = (*this)[i];
+        Expression_Ptr rv = (*r)[i];
+        Expression_Ptr lv = (*this)[i];
         if (!lv || !rv) return false;
         if (!(*lv == *rv)) return false;
       }
@@ -2222,8 +2222,8 @@ namespace Sass {
     if (const Map* r = dynamic_cast<const Map*>(&rhs)) {
       if (length() != r->length()) return false;
       for (auto key : keys()) {
-        Expression* lv = at(key);
-        Expression* rv = r->at(key);
+        Expression_Ptr lv = at(key);
+        Expression_Ptr rv = r->at(key);
         if (!rv || !lv) return false;
         if (!(*lv == *rv)) return false;
       }
@@ -2242,14 +2242,14 @@ namespace Sass {
     // arglist expects a list of arguments
     // so we need to break before keywords
     for (size_t i = 0, L = length(); i < L; ++i) {
-      if (Argument* arg = dynamic_cast<Argument*>((*this)[i])) {
+      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*this)[i])) {
         if (!arg->name().empty()) return i;
       }
     }
     return length();
   }
 
-  Expression* Hashed::at(Expression* k) const
+  Expression_Ptr Hashed::at(Expression_Ptr k) const
   {
     if (elements_.count(k))
     { return elements_.at(k); }
@@ -2272,7 +2272,7 @@ namespace Sass {
     Inspect i(emitter);
     i.in_declaration = true;
     // ToDo: inspect should be const
-    const_cast<AST_Node*>(this)->perform(&i);
+    const_cast<AST_Node_Ptr>(this)->perform(&i);
     return i.get_buffer();
   }
 
@@ -2294,9 +2294,9 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Additional method on Lists to retrieve values directly or from an encompassed Argument.
   //////////////////////////////////////////////////////////////////////////////////////////
-  Expression* List::value_at_index(size_t i) {
+  Expression_Ptr List::value_at_index(size_t i) {
     if (is_arglist_) {
-      if (Argument* arg = dynamic_cast<Argument*>((*this)[i])) {
+      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>((*this)[i])) {
         return arg->value();
       } else {
         return (*this)[i];
@@ -2309,11 +2309,11 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Convert map to (key, value) list.
   //////////////////////////////////////////////////////////////////////////////////////////
-  List* Map::to_list(Context& ctx, ParserState& pstate) {
-    List* ret = SASS_MEMORY_NEW(ctx.mem, List, pstate, length(), SASS_COMMA);
+  List_Ptr Map::to_list(Context& ctx, ParserState& pstate) {
+    List_Ptr ret = SASS_MEMORY_NEW(ctx.mem, List, pstate, length(), SASS_COMMA);
 
     for (auto key : keys()) {
-      List* l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
+      List_Ptr l = SASS_MEMORY_NEW(ctx.mem, List, pstate, 2);
       *l << key;
       *l << at(key);
       *ret << l;

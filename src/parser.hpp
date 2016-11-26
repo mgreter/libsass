@@ -26,9 +26,9 @@ namespace Sass {
     enum Scope { Root, Mixin, Function, Media, Control, Properties, Rules };
 
     Context& ctx;
-    std::vector<Block*> block_stack;
+    std::vector<Block_Ptr> block_stack;
     std::vector<Scope> stack;
-    Media_Block* last_media_block;
+    Media_Block_Ptr last_media_block;
     const char* source;
     const char* position;
     const char* end;
@@ -51,7 +51,7 @@ namespace Sass {
     static Parser from_c_str(const char* beg, const char* end, Context& ctx, ParserState pstate = ParserState("[CSTRING]"), const char* source = 0);
     static Parser from_token(Token t, Context& ctx, ParserState pstate = ParserState("[TOKEN]"), const char* source = 0);
     // special static parsers to convert strings into certain selectors
-    static Selector_List* parse_selector(const char* src, Context& ctx, ParserState pstate = ParserState("[SELECTOR]"), const char* source = 0);
+    static Selector_List_Ptr parse_selector(const char* src, Context& ctx, ParserState pstate = ParserState("[SELECTOR]"), const char* source = 0);
 
 #ifdef __clang__
 
@@ -231,93 +231,93 @@ namespace Sass {
                    const std::string& middle = ", was: ");
     void read_bom();
 
-    Block* parse();
-    Import* parse_import();
-    Definition* parse_definition(Definition::Type which_type);
-    Parameters* parse_parameters();
-    Parameter* parse_parameter();
-    Mixin_Call* parse_include_directive();
-    Arguments* parse_arguments();
-    Argument* parse_argument();
-    Assignment* parse_assignment();
-    Ruleset* parse_ruleset(Lookahead lookahead, bool is_root = false);
-    Selector_Schema* parse_selector_schema(const char* end_of_selector);
-    Selector_List* parse_selector_list(bool at_root = false);
-    Complex_Selector* parse_complex_selector(bool in_root = true);
-    Compound_Selector* parse_compound_selector();
+    Block_Ptr parse();
+    Import_Ptr parse_import();
+    Definition_Ptr parse_definition(Definition::Type which_type);
+    Parameters_Ptr parse_parameters();
+    Parameter_Ptr parse_parameter();
+    Mixin_Call_Ptr parse_include_directive();
+    Arguments_Ptr parse_arguments();
+    Argument_Ptr parse_argument();
+    Assignment_Ptr parse_assignment();
+    Ruleset_Ptr parse_ruleset(Lookahead lookahead, bool is_root = false);
+    Selector_Schema_Ptr parse_selector_schema(const char* end_of_selector);
+    Selector_List_Ptr parse_selector_list(bool at_root = false);
+    Complex_Selector_Ptr parse_complex_selector(bool in_root = true);
+    Compound_Selector_Ptr parse_compound_selector();
     Simple_Selector* parse_simple_selector();
-    Wrapped_Selector* parse_negated_selector();
+    Wrapped_Selector_Ptr parse_negated_selector();
     Simple_Selector* parse_pseudo_selector();
-    Attribute_Selector* parse_attribute_selector();
-    Block* parse_block(bool is_root = false);
-    Block* parse_css_block(bool is_root = false);
+    Attribute_Selector_Ptr parse_attribute_selector();
+    Block_Ptr parse_block(bool is_root = false);
+    Block_Ptr parse_css_block(bool is_root = false);
     bool parse_block_nodes(bool is_root = false);
     bool parse_block_node(bool is_root = false);
 
     bool parse_number_prefix();
-    Declaration* parse_declaration();
-    Expression* parse_map_value();
-    Expression* parse_map();
-    Expression* parse_list(bool delayed = false);
-    Expression* parse_comma_list(bool delayed = false);
-    Expression* parse_space_list();
-    Expression* parse_disjunction();
-    Expression* parse_conjunction();
-    Expression* parse_relation();
-    Expression* parse_expression();
-    Expression* parse_operators();
-    Expression* parse_factor();
-    Expression* parse_value2();
-    Expression* parse_value();
-    Function_Call* parse_calc_function();
-    Function_Call* parse_function_call();
-    Function_Call_Schema* parse_function_call_schema();
-    String* parse_url_function_string();
-    String* parse_url_function_argument();
-    String* parse_interpolated_chunk(Token, bool constant = false);
-    String* parse_string();
-    String_Constant* parse_static_expression();
-    // String_Constant* parse_static_property();
-    String_Constant* parse_static_value();
-    String* parse_ie_property();
-    String* parse_ie_keyword_arg();
-    String_Schema* parse_value_schema(const char* stop);
-    String* parse_identifier_schema();
-    // String_Schema* parse_url_schema();
-    If* parse_if_directive(bool else_if = false);
-    For* parse_for_directive();
-    Each* parse_each_directive();
-    While* parse_while_directive();
-    Return* parse_return_directive();
-    Content* parse_content_directive();
+    Declaration_Ptr parse_declaration();
+    Expression_Ptr parse_map_value();
+    Expression_Ptr parse_map();
+    Expression_Ptr parse_list(bool delayed = false);
+    Expression_Ptr parse_comma_list(bool delayed = false);
+    Expression_Ptr parse_space_list();
+    Expression_Ptr parse_disjunction();
+    Expression_Ptr parse_conjunction();
+    Expression_Ptr parse_relation();
+    Expression_Ptr parse_expression();
+    Expression_Ptr parse_operators();
+    Expression_Ptr parse_factor();
+    Expression_Ptr parse_value2();
+    Expression_Ptr parse_value();
+    Function_Call_Ptr parse_calc_function();
+    Function_Call_Ptr parse_function_call();
+    Function_Call_Schema_Ptr parse_function_call_schema();
+    String_Ptr parse_url_function_string();
+    String_Ptr parse_url_function_argument();
+    String_Ptr parse_interpolated_chunk(Token, bool constant = false);
+    String_Ptr parse_string();
+    String_Constant_Ptr parse_static_expression();
+    // String_Constant_Ptr parse_static_property();
+    String_Constant_Ptr parse_static_value();
+    String_Ptr parse_ie_property();
+    String_Ptr parse_ie_keyword_arg();
+    String_Schema_Ptr parse_value_schema(const char* stop);
+    String_Ptr parse_identifier_schema();
+    // String_Schema_Ptr parse_url_schema();
+    If_Ptr parse_if_directive(bool else_if = false);
+    For_Ptr parse_for_directive();
+    Each_Ptr parse_each_directive();
+    While_Ptr parse_while_directive();
+    Return_Ptr parse_return_directive();
+    Content_Ptr parse_content_directive();
     void parse_charset_directive();
-    Media_Block* parse_media_block();
-    List* parse_media_queries();
-    Media_Query* parse_media_query();
-    Media_Query_Expression* parse_media_expression();
-    Supports_Block* parse_supports_directive();
-    Supports_Condition* parse_supports_condition();
-    Supports_Condition* parse_supports_negation();
-    Supports_Condition* parse_supports_operator();
-    Supports_Condition* parse_supports_interpolation();
-    Supports_Condition* parse_supports_declaration();
-    Supports_Condition* parse_supports_condition_in_parens();
-    At_Root_Block* parse_at_root_block();
-    At_Root_Query* parse_at_root_query();
-    String_Schema* parse_almost_any_value();
-    Directive* parse_special_directive();
-    Directive* parse_prefixed_directive();
-    Directive* parse_directive();
-    Warning* parse_warning();
-    Error* parse_error();
-    Debug* parse_debug();
+    Media_Block_Ptr parse_media_block();
+    List_Ptr parse_media_queries();
+    Media_Query_Ptr parse_media_query();
+    Media_Query_Expression_Ptr parse_media_expression();
+    Supports_Block_Ptr parse_supports_directive();
+    Supports_Condition_Ptr parse_supports_condition();
+    Supports_Condition_Ptr parse_supports_negation();
+    Supports_Condition_Ptr parse_supports_operator();
+    Supports_Condition_Ptr parse_supports_interpolation();
+    Supports_Condition_Ptr parse_supports_declaration();
+    Supports_Condition_Ptr parse_supports_condition_in_parens();
+    At_Root_Block_Ptr parse_at_root_block();
+    At_Root_Query_Ptr parse_at_root_query();
+    String_Schema_Ptr parse_almost_any_value();
+    Directive_Ptr parse_special_directive();
+    Directive_Ptr parse_prefixed_directive();
+    Directive_Ptr parse_directive();
+    Warning_Ptr parse_warning();
+    Error_Ptr parse_error();
+    Debug_Ptr parse_debug();
 
     // be more like ruby sass
-    Expression* lex_almost_any_value_token();
-    Expression* lex_almost_any_value_chars();
-    Expression* lex_interp_string();
-    Expression* lex_interp_uri();
-    Expression* lex_interpolation();
+    Expression_Ptr lex_almost_any_value_token();
+    Expression_Ptr lex_almost_any_value_chars();
+    Expression_Ptr lex_interp_string();
+    Expression_Ptr lex_interp_uri();
+    Expression_Ptr lex_interpolation();
 
     // these will throw errors
     Token lex_variable();
@@ -329,28 +329,28 @@ namespace Sass {
     Lookahead lookahead_for_selector(const char* start = 0);
     Lookahead lookahead_for_include(const char* start = 0);
 
-    Expression* fold_operands(Expression* base, std::vector<Expression*>& operands, Operand op);
-    Expression* fold_operands(Expression* base, std::vector<Expression*>& operands, std::vector<Operand>& ops, size_t i = 0);
+    Expression_Ptr fold_operands(Expression_Ptr base, std::vector<Expression_Ptr>& operands, Operand op);
+    Expression_Ptr fold_operands(Expression_Ptr base, std::vector<Expression_Ptr>& operands, std::vector<Operand>& ops, size_t i = 0);
 
     void throw_syntax_error(std::string message, size_t ln = 0);
     void throw_read_error(std::string message, size_t ln = 0);
 
 
     template <Prelexer::prelexer open, Prelexer::prelexer close>
-    Expression* lex_interp()
+    Expression_Ptr lex_interp()
     {
       if (lex < open >(false)) {
-        String_Schema* schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
+        String_Schema_Ptr schema = SASS_MEMORY_NEW(ctx.mem, String_Schema, pstate);
         // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
         *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
         if (position[0] == '#' && position[1] == '{') {
-          Expression* itpl = lex_interpolation();
+          Expression_Ptr itpl = lex_interpolation();
           if (itpl) *schema << itpl;
           while (lex < close >(false)) {
             // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
             *schema << SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed);
             if (position[0] == '#' && position[1] == '{') {
-              Expression* itpl = lex_interpolation();
+              Expression_Ptr itpl = lex_interpolation();
               if (itpl) *schema << itpl;
             } else {
               return schema;
