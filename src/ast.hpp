@@ -85,6 +85,9 @@ namespace Sass {
   class AST_Node : public Memory_Object {
     ADD_PROPERTY(ParserState, pstate)
   public:
+    AST_Node(const AST_Node& node)
+    : pstate_(node.pstate_)
+    { }
     AST_Node(const ParserState& pstate)
     : pstate_(pstate)
     { }
@@ -112,21 +115,25 @@ namespace Sass {
   // Implements basic clone and copy
   //////////////////////////////////////////////////////////////////////
   template <typename Derived, typename Base>
-  class AST_Base : public AST_Node {
+  class AST_Base : public Base {
   public:
-    AST_Base(ParserState pstate)
-    : AST_Node(pstate)
+    template<typename... T>
+    AST_Base(T&&... args)
+    : Base(args...)
     { }
+/*
     virtual Derived* KLONE(Context& ctx) const {
       return new Derived(static_cast<Derived const&>(*this));
     }
+*/
   };
 
   template <typename Derived, typename Base>
-  class AST_Class : public AST_Node {
+  class AST_Class : public Base {
   public:
-    AST_Class(ParserState pstate)
-    : AST_Node(pstate)
+    template<typename... T>
+    AST_Class(T&&... args)
+    : Base(args...)
     { }
     virtual Derived* KLONE(Context& ctx) const {
       return new Derived(static_cast<Derived const&>(*this));
@@ -165,7 +172,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_interpolant)
     ADD_PROPERTY(Concrete_Type, concrete_type)
   public:
-    Expression(ParserState pstate,
+    Expression(const ParserState& pstate,
                bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : AST_Base<Expression, AST_Node>(pstate),
       is_delayed_(d),
@@ -177,7 +184,7 @@ namespace Sass {
     virtual std::string type() { return ""; /* TODO: raise an error? */ }
     virtual bool is_invisible() const { return false; }
     static std::string type_name() { return ""; }
-    virtual bool is_true() { return true; }
+    virtual bool is_true() = 0;
     virtual bool operator== (const Expression& rhs) const { return false; }
     virtual bool eq(const Expression& rhs) const { return *this == rhs; };
     virtual void set_delayed(bool delayed) { is_delayed(delayed); }
@@ -192,25 +199,27 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
   // Still just an expression, but with a to_string method
   //////////////////////////////////////////////////////////////////////
-  class PreValue : public Expression {
+  SASS_AST_BASE (PreValue, Expression) {
   public:
-    PreValue(ParserState pstate,
+    PreValue(const ParserState& pstate,
                bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : Expression(pstate, d, e, i, ct)
+    : AST_Base<PreValue, Expression>(pstate, d, e, i, ct)
     { }
+    virtual bool is_true() { return true; };
     virtual ~PreValue() { }
   };
 
   //////////////////////////////////////////////////////////////////////
   // base class for values that support operations
   //////////////////////////////////////////////////////////////////////
-  class Value : public Expression {
+  SASS_AST_BASE (Value, Expression) {
   public:
-    Value(ParserState pstate,
+    Value(const ParserState& pstate,
           bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
-    : Expression(pstate, d, e, i, ct)
+    : AST_Base<Value, Expression>(pstate, d, e, i, ct)
     { }
     virtual bool operator== (const Expression& rhs) const = 0;
+    virtual bool is_true() { return true; };
   };
 }
 
@@ -471,7 +480,7 @@ namespace Sass {
     ADD_PROPERTY(size_t, tabs)
     ADD_PROPERTY(bool, group_end)
   public:
-    Statement(ParserState pstate, Statement_Type st = NONE, size_t t = 0)
+    Statement(const ParserState& pstate, Statement_Type st = NONE, size_t t = 0)
     : AST_Node(pstate), block_(0), statement_type_(st), tabs_(t), group_end_(false)
      { }
     virtual ~Statement() = 0;
@@ -494,7 +503,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_at_root);
     // needed for properly formatted CSS emission
   public:
-    Block(ParserState pstate, size_t s = 0, bool r = false)
+    Block(const ParserState& pstate, size_t s = 0, bool r = false)
     : Statement(pstate),
       Vectorized<Statement_Ptr>(s),
       is_root_(r),
@@ -518,7 +527,7 @@ namespace Sass {
   class Has_Block : public Statement {
     ADD_PROPERTY(Block_Ptr, block)
   public:
-    Has_Block(ParserState pstate, Block_Ptr b)
+    Has_Block(const ParserState& pstate, Block_Ptr b)
     : Statement(pstate), block_(b)
     { }
     virtual bool has_content()
@@ -538,7 +547,7 @@ namespace Sass {
     ADD_PROPERTY(bool, at_root);
     ADD_PROPERTY(bool, is_root);
   public:
-    Ruleset(ParserState pstate, Selector_Ptr s = 0, Block_Ptr b = 0)
+    Ruleset(const ParserState& pstate, Selector_Ptr s = 0, Block_Ptr b = 0)
     : Has_Block(pstate, b), selector_(s), at_root_(false), is_root_(false)
     { statement_type(RULESET); }
     bool is_invisible() const;
@@ -553,7 +562,7 @@ namespace Sass {
     ADD_PROPERTY(Statement_Ptr, node)
     ADD_PROPERTY(bool, group_end)
   public:
-    Bubble(ParserState pstate, Statement_Ptr n, Statement_Ptr g = 0, size_t t = 0)
+    Bubble(const ParserState& pstate, Statement_Ptr n, Statement_Ptr g = 0, size_t t = 0)
     : Statement(pstate, Statement::BUBBLE, t), node_(n), group_end_(g == 0)
     { }
     bool bubbles() { return true; }
@@ -567,7 +576,7 @@ namespace Sass {
   class Trace : public Has_Block {
     ADD_PROPERTY(std::string, name)
   public:
-    Trace(ParserState pstate, std::string n, Block_Ptr b = 0)
+    Trace(const ParserState& pstate, std::string n, Block_Ptr b = 0)
     : Has_Block(pstate, b), name_(n)
     { }
     size_t hash() { return 0; }
@@ -580,10 +589,10 @@ namespace Sass {
   class Media_Block : public Has_Block {
     ADD_PROPERTY(List_Ptr, media_queries)
   public:
-    Media_Block(ParserState pstate, List_Ptr mqs, Block_Ptr b)
+    Media_Block(const ParserState& pstate, List_Ptr mqs, Block_Ptr b)
     : Has_Block(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
-    Media_Block(ParserState pstate, List_Ptr mqs, Block_Ptr b, Selector_Ptr s)
+    Media_Block(const ParserState& pstate, List_Ptr mqs, Block_Ptr b, Selector_Ptr s)
     : Has_Block(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
@@ -601,7 +610,7 @@ namespace Sass {
     ADD_PROPERTY(Selector_Ptr, selector)
     ADD_PROPERTY(Expression_Ptr, value)
   public:
-    Directive(ParserState pstate, std::string kwd, Selector_Ptr sel = 0, Block_Ptr b = 0, Expression_Ptr val = 0)
+    Directive(const ParserState& pstate, std::string kwd, Selector_Ptr sel = 0, Block_Ptr b = 0, Expression_Ptr val = 0)
     : Has_Block(pstate, b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
     { statement_type(DIRECTIVE); }
     bool bubbles() { return is_keyframes() || is_media(); }
@@ -627,7 +636,7 @@ namespace Sass {
   class Keyframe_Rule : public Has_Block {
     ADD_PROPERTY(Selector_Ptr, selector)
   public:
-    Keyframe_Rule(ParserState pstate, Block_Ptr b)
+    Keyframe_Rule(const ParserState& pstate, Block_Ptr b)
     : Has_Block(pstate, b), selector_(0)
     { statement_type(KEYFRAMERULE); }
     size_t hash() { return 0; }
@@ -643,7 +652,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_important)
     ADD_PROPERTY(bool, is_indented)
   public:
-    Declaration(ParserState pstate,
+    Declaration(const ParserState& pstate,
                 String_Ptr prop, Expression_Ptr val, bool i = false, Block_Ptr b = 0)
     : Has_Block(pstate, b), property_(prop), value_(val), is_important_(i), is_indented_(false)
     { statement_type(DECLARATION); }
@@ -660,7 +669,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_default)
     ADD_PROPERTY(bool, is_global)
   public:
-    Assignment(ParserState pstate,
+    Assignment(const ParserState& pstate,
                std::string var, Expression_Ptr val,
                bool is_default = false,
                bool is_global = false)
@@ -679,7 +688,7 @@ namespace Sass {
     std::vector<Include>     incs_;
     ADD_PROPERTY(List_Ptr,      media_queries);
   public:
-    Import(ParserState pstate)
+    Import(const ParserState& pstate)
     : Statement(pstate),
       urls_(std::vector<Expression_Ptr>()),
       incs_(std::vector<Include>()),
@@ -700,7 +709,7 @@ namespace Sass {
     std::string imp_path() { return resource_.imp_path; };
     Include resource() { return resource_; };
 
-    Import_Stub(ParserState pstate, Include res)
+    Import_Stub(const ParserState& pstate, Include res)
     : Statement(pstate), resource_(res)
     { statement_type(IMPORT_STUB); }
     size_t hash() { return 0; }
@@ -713,7 +722,7 @@ namespace Sass {
   class Warning : public Statement {
     ADD_PROPERTY(Expression_Ptr, message)
   public:
-    Warning(ParserState pstate, Expression_Ptr msg)
+    Warning(const ParserState& pstate, Expression_Ptr msg)
     : Statement(pstate), message_(msg)
     { statement_type(WARNING); }
     size_t hash() { return 0; }
@@ -726,7 +735,7 @@ namespace Sass {
   class Error : public Statement {
     ADD_PROPERTY(Expression_Ptr, message)
   public:
-    Error(ParserState pstate, Expression_Ptr msg)
+    Error(const ParserState& pstate, Expression_Ptr msg)
     : Statement(pstate), message_(msg)
     { statement_type(ERROR); }
     size_t hash() { return 0; }
@@ -739,7 +748,7 @@ namespace Sass {
   class Debug : public Statement {
     ADD_PROPERTY(Expression_Ptr, value)
   public:
-    Debug(ParserState pstate, Expression_Ptr val)
+    Debug(const ParserState& pstate, Expression_Ptr val)
     : Statement(pstate), value_(val)
     { statement_type(DEBUGSTMT); }
     size_t hash() { return 0; }
@@ -753,7 +762,7 @@ namespace Sass {
     ADD_PROPERTY(String_Ptr, text)
     ADD_PROPERTY(bool, is_important)
   public:
-    Comment(ParserState pstate, String_Ptr txt, bool is_important)
+    Comment(const ParserState& pstate, String_Ptr txt, bool is_important)
     : Statement(pstate), text_(txt), is_important_(is_important)
     { statement_type(COMMENT); }
     virtual bool is_invisible() const
@@ -769,7 +778,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, predicate)
     ADD_PROPERTY(Block_Ptr, alternative)
   public:
-    If(ParserState pstate, Expression_Ptr pred, Block_Ptr con, Block_Ptr alt = 0)
+    If(const ParserState& pstate, Expression_Ptr pred, Block_Ptr con, Block_Ptr alt = 0)
     : Has_Block(pstate, con), predicate_(pred), alternative_(alt)
     { statement_type(IF); }
     virtual bool has_content()
@@ -789,7 +798,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, upper_bound)
     ADD_PROPERTY(bool, is_inclusive)
   public:
-    For(ParserState pstate,
+    For(const ParserState& pstate,
         std::string var, Expression_Ptr lo, Expression_Ptr hi, Block_Ptr b, bool inc)
     : Has_Block(pstate, b),
       variable_(var), lower_bound_(lo), upper_bound_(hi), is_inclusive_(inc)
@@ -805,7 +814,7 @@ namespace Sass {
     ADD_PROPERTY(std::vector<std::string>, variables)
     ADD_PROPERTY(Expression_Ptr, list)
   public:
-    Each(ParserState pstate, std::vector<std::string> vars, Expression_Ptr lst, Block_Ptr b)
+    Each(const ParserState& pstate, std::vector<std::string> vars, Expression_Ptr lst, Block_Ptr b)
     : Has_Block(pstate, b), variables_(vars), list_(lst)
     { statement_type(EACH); }
     size_t hash() { return 0; }
@@ -818,7 +827,7 @@ namespace Sass {
   class While : public Has_Block {
     ADD_PROPERTY(Expression_Ptr, predicate)
   public:
-    While(ParserState pstate, Expression_Ptr pred, Block_Ptr b)
+    While(const ParserState& pstate, Expression_Ptr pred, Block_Ptr b)
     : Has_Block(pstate, b), predicate_(pred)
     { statement_type(WHILE); }
     size_t hash() { return 0; }
@@ -831,7 +840,7 @@ namespace Sass {
   class Return : public Statement {
     ADD_PROPERTY(Expression_Ptr, value)
   public:
-    Return(ParserState pstate, Expression_Ptr val)
+    Return(const ParserState& pstate, Expression_Ptr val)
     : Statement(pstate), value_(val)
     { statement_type(RETURN); }
     size_t hash() { return 0; }
@@ -844,7 +853,7 @@ namespace Sass {
   class Extension : public Statement {
     ADD_PROPERTY(Selector_Ptr, selector)
   public:
-    Extension(ParserState pstate, Selector_Ptr s)
+    Extension(const ParserState& pstate, Selector_Ptr s)
     : Statement(pstate), selector_(s)
     { statement_type(EXTEND); }
     size_t hash() { return 0; }
@@ -873,7 +882,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_overload_stub)
     ADD_PROPERTY(Signature, signature)
   public:
-    Definition(ParserState pstate,
+    Definition(const ParserState& pstate,
                std::string n,
                Parameters_Ptr params,
                Block_Ptr b,
@@ -889,7 +898,7 @@ namespace Sass {
       is_overload_stub_(false),
       signature_(0)
     { }
-    Definition(ParserState pstate,
+    Definition(const ParserState& pstate,
                Signature sig,
                std::string n,
                Parameters_Ptr params,
@@ -906,7 +915,7 @@ namespace Sass {
       is_overload_stub_(overload_stub),
       signature_(sig)
     { }
-    Definition(ParserState pstate,
+    Definition(const ParserState& pstate,
                Signature sig,
                std::string n,
                Parameters_Ptr params,
@@ -935,7 +944,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, name)
     ADD_PROPERTY(Arguments_Ptr, arguments)
   public:
-    Mixin_Call(ParserState pstate, std::string n, Arguments_Ptr args, Block_Ptr b = 0)
+    Mixin_Call(const ParserState& pstate, std::string n, Arguments_Ptr args, Block_Ptr b = 0)
     : Has_Block(pstate, b), name_(n), arguments_(args)
     { }
     size_t hash() { return 0; }
@@ -948,7 +957,7 @@ namespace Sass {
   class Content : public Statement {
     ADD_PROPERTY(Media_Block_Ptr, media_block)
   public:
-    Content(ParserState pstate) : Statement(pstate)
+    Content(const ParserState& pstate) : Statement(pstate)
     { statement_type(CONTENT); }
     size_t hash() { return 0; }
     ATTACH_OPERATIONS()
@@ -964,7 +973,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, from_selector)
   public:
-    List(ParserState pstate,
+    List(const ParserState& pstate,
          size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
     : Value(pstate),
       Vectorized<Expression_Ptr>(size),
@@ -1009,7 +1018,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class Map : public Value, public Hashed {
   public:
-    Map(ParserState pstate,
+    Map(const ParserState& pstate,
          size_t size = 0)
     : Value(pstate),
       Hashed(size)
@@ -1069,7 +1078,7 @@ namespace Sass {
     ADD_HASHED(Expression_Ptr, right)
     size_t hash_;
   public:
-    Binary_Expression(ParserState pstate,
+    Binary_Expression(const ParserState& pstate,
                       Operand op, Expression_Ptr lhs, Expression_Ptr rhs)
     : PreValue(pstate), op_(op), left_(lhs), right_(rhs), hash_(0)
     { }
@@ -1166,7 +1175,7 @@ namespace Sass {
     ADD_HASHED(Expression_Ptr, operand)
     size_t hash_;
   public:
-    Unary_Expression(ParserState pstate, Type t, Expression_Ptr o)
+    Unary_Expression(const ParserState& pstate, Type t, Expression_Ptr o)
     : Expression(pstate), type_(t), operand_(o), hash_(0)
     { }
     const std::string type_name() {
@@ -1192,7 +1201,14 @@ namespace Sass {
       }
       catch (...) { throw; }
     }
-    virtual size_t hash()
+
+    // *****************************************************
+    // final implementations
+    // *****************************************************
+
+    // calculate hash on demand only
+    // reset if something changes
+    size_t hash()
     {
       if (hash_ == 0) {
         hash_ = std::hash<size_t>()(type_);
@@ -1200,6 +1216,8 @@ namespace Sass {
       };
       return hash_;
     }
+    bool is_true() { return true; };
+
     ATTACH_OPERATIONS()
   };
 
@@ -1213,7 +1231,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_keyword_argument)
     size_t hash_;
   public:
-    Argument(ParserState pstate, Expression_Ptr val, std::string n = "", bool rest = false, bool keyword = false)
+    Argument(const ParserState& pstate, Expression_Ptr val, std::string n = "", bool rest = false, bool keyword = false)
     : Expression(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
     {
       if (!name_.empty() && is_rest_argument_) {
@@ -1245,6 +1263,7 @@ namespace Sass {
       }
       return hash_;
     }
+    bool is_true() { return true; };
 
     ATTACH_OPERATIONS()
   };
@@ -1262,7 +1281,7 @@ namespace Sass {
     // implement check function for specialized vector
     void adjust_after_pushing(const Argument_Ptr& a);
   public:
-    Arguments(ParserState pstate)
+    Arguments(const ParserState& pstate)
     : Expression(pstate),
       CheckedVectorized<Argument_Ptr>(),
       has_named_arguments_(false),
@@ -1274,6 +1293,7 @@ namespace Sass {
 
     Argument_Ptr get_rest_argument();
     Argument_Ptr get_keyword_argument();
+    bool is_true() { return true; };
 
     ATTACH_OPERATIONS()
   };
@@ -1287,10 +1307,10 @@ namespace Sass {
     ADD_PROPERTY(void*, cookie)
     size_t hash_;
   public:
-    Function_Call(ParserState pstate, std::string n, Arguments_Ptr args, void* cookie)
+    Function_Call(const ParserState& pstate, std::string n, Arguments_Ptr args, void* cookie)
     : PreValue(pstate), name_(n), arguments_(args), cookie_(cookie), hash_(0)
     { concrete_type(STRING); }
-    Function_Call(ParserState pstate, std::string n, Arguments_Ptr args)
+    Function_Call(const ParserState& pstate, std::string n, Arguments_Ptr args)
     : PreValue(pstate), name_(n), arguments_(args), cookie_(0), hash_(0)
     { concrete_type(STRING); }
 
@@ -1332,9 +1352,10 @@ namespace Sass {
     ADD_PROPERTY(String_Ptr, name)
     ADD_PROPERTY(Arguments_Ptr, arguments)
   public:
-    Function_Call_Schema(ParserState pstate, String_Ptr n, Arguments_Ptr args)
+    Function_Call_Schema(const ParserState& pstate, String_Ptr n, Arguments_Ptr args)
     : Expression(pstate), name_(n), arguments_(args)
     { concrete_type(STRING); }
+    bool is_true() { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1344,7 +1365,7 @@ namespace Sass {
   class Variable : public PreValue {
     ADD_PROPERTY(std::string, name)
   public:
-    Variable(ParserState pstate, std::string n)
+    Variable(const ParserState& pstate, std::string n)
     : PreValue(pstate), name_(n)
     { }
 
@@ -1382,7 +1403,7 @@ namespace Sass {
     ADD_HASHED(std::string, value)
     size_t hash_;
   public:
-    Textual(ParserState pstate, Type t, std::string val)
+    Textual(const ParserState& pstate, Type t, std::string val)
     : Expression(pstate, DELAYED), type_(t), value_(val),
       hash_(0)
     { }
@@ -1410,6 +1431,8 @@ namespace Sass {
       return hash_;
     }
 
+    bool is_true() { return true; };
+
     ATTACH_OPERATIONS()
   };
 
@@ -1423,7 +1446,7 @@ namespace Sass {
     std::vector<std::string> denominator_units_;
     size_t hash_;
   public:
-    Number(ParserState pstate, double val, std::string u = "", bool zero = true);
+    Number(const ParserState& pstate, double val, std::string u = "", bool zero = true);
     bool zero() { return zero_; }
     bool is_valid_css_unit() const;
     std::vector<std::string>& numerator_units()   { return numerator_units_; }
@@ -1471,7 +1494,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, disp)
     size_t hash_;
   public:
-    Color(ParserState pstate, double r, double g, double b, double a = 1, const std::string disp = "")
+    Color(const ParserState& pstate, double r, double g, double b, double a = 1, const std::string disp = "")
     : Value(pstate), r_(r), g_(g), b_(b), a_(a), disp_(disp),
       hash_(0)
     { concrete_type(COLOR); }
@@ -1500,7 +1523,7 @@ namespace Sass {
   class Custom_Error : public Value {
     ADD_PROPERTY(std::string, message)
   public:
-    Custom_Error(ParserState pstate, std::string msg)
+    Custom_Error(const ParserState& pstate, std::string msg)
     : Value(pstate), message_(msg)
     { concrete_type(C_ERROR); }
     virtual bool operator== (const Expression& rhs) const;
@@ -1513,7 +1536,7 @@ namespace Sass {
   class Custom_Warning : public Value {
     ADD_PROPERTY(std::string, message)
   public:
-    Custom_Warning(ParserState pstate, std::string msg)
+    Custom_Warning(const ParserState& pstate, std::string msg)
     : Value(pstate), message_(msg)
     { concrete_type(C_WARNING); }
     virtual bool operator== (const Expression& rhs) const;
@@ -1528,7 +1551,7 @@ namespace Sass {
     size_t hash_;
 
   public:
-    Boolean(ParserState pstate, bool val)
+    Boolean(const ParserState& pstate, bool val)
     : Value(pstate), value_(val),
       hash_(0)
     { concrete_type(BOOLEAN); }
@@ -1555,7 +1578,7 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////
   class String : public Value {
   public:
-    String(ParserState pstate, bool delayed = false)
+    String(const ParserState& pstate, bool delayed = false)
     : Value(pstate, delayed)
     { concrete_type(STRING); }
     static std::string type_name() { return "string"; }
@@ -1576,7 +1599,7 @@ namespace Sass {
     // ADD_PROPERTY(bool, has_interpolants)
     size_t hash_;
   public:
-    String_Schema(ParserState pstate, size_t size = 0, bool has_interpolants = false)
+    String_Schema(const ParserState& pstate, size_t size = 0, bool has_interpolants = false)
     : String(pstate), Vectorized<Expression_Ptr>(size), hash_(0)
     { concrete_type(STRING); }
     std::string type() { return "string"; }
@@ -1623,16 +1646,16 @@ namespace Sass {
   protected:
     size_t hash_;
   public:
-    String_Constant(ParserState pstate, std::string val)
+    String_Constant(const ParserState& pstate, std::string val)
     : String(pstate), quote_mark_(0), can_compress_whitespace_(false), value_(read_css_string(val)), hash_(0)
     { }
-    String_Constant(ParserState pstate, const char* beg)
+    String_Constant(const ParserState& pstate, const char* beg)
     : String(pstate), quote_mark_(0), can_compress_whitespace_(false), value_(read_css_string(std::string(beg))), hash_(0)
     { }
-    String_Constant(ParserState pstate, const char* beg, const char* end)
+    String_Constant(const ParserState& pstate, const char* beg, const char* end)
     : String(pstate), quote_mark_(0), can_compress_whitespace_(false), value_(read_css_string(std::string(beg, end-beg))), hash_(0)
     { }
-    String_Constant(ParserState pstate, const Token& tok)
+    String_Constant(const ParserState& pstate, const Token& tok)
     : String(pstate), quote_mark_(0), can_compress_whitespace_(false), value_(read_css_string(std::string(tok.begin, tok.end))), hash_(0)
     { }
     std::string type() { return "string"; }
@@ -1665,7 +1688,7 @@ namespace Sass {
   ////////////////////////////////////////////////////////
   class String_Quoted : public String_Constant {
   public:
-    String_Quoted(ParserState pstate, std::string val, char q = 0,
+    String_Quoted(const ParserState& pstate, std::string val, char q = 0,
     	bool keep_utf8_escapes = false, bool skip_unquoting = false,
     	bool strict_unquoting = true)
     : String_Constant(pstate, val)
@@ -1689,11 +1712,12 @@ namespace Sass {
     ADD_PROPERTY(bool, is_negated)
     ADD_PROPERTY(bool, is_restricted)
   public:
-    Media_Query(ParserState pstate,
+    Media_Query(const ParserState& pstate,
                 String_Ptr t = 0, size_t s = 0, bool n = false, bool r = false)
     : Expression(pstate), Vectorized<Media_Query_Expression_Ptr>(s),
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
+    bool is_true() { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1705,10 +1729,11 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, value)
     ADD_PROPERTY(bool, is_interpolated)
   public:
-    Media_Query_Expression(ParserState pstate,
+    Media_Query_Expression(const ParserState& pstate,
                            Expression_Ptr f, Expression_Ptr v, bool i = false)
     : Expression(pstate), feature_(f), value_(v), is_interpolated_(i)
     { }
+    bool is_true() { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1718,11 +1743,12 @@ namespace Sass {
   class Supports_Block : public Has_Block {
     ADD_PROPERTY(Supports_Condition_Ptr, condition)
   public:
-    Supports_Block(ParserState pstate, Supports_Condition_Ptr condition, Block_Ptr block = 0)
+    Supports_Block(const ParserState& pstate, Supports_Condition_Ptr condition, Block_Ptr block = 0)
     : Has_Block(pstate, block), condition_(condition)
     { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
     size_t hash() { return 0; }
+    bool is_true() { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1731,11 +1757,12 @@ namespace Sass {
   //////////////////////////////////////////////////////
   class Supports_Condition : public Expression {
   public:
-    Supports_Condition(ParserState pstate)
+    Supports_Condition(const ParserState& pstate)
     : Expression(pstate)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
     size_t hash() { return 0; }
+    bool is_true() { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1750,7 +1777,7 @@ namespace Sass {
     ADD_PROPERTY(Supports_Condition_Ptr, right);
     ADD_PROPERTY(Operand, operand);
   public:
-    Supports_Operator(ParserState pstate, Supports_Condition_Ptr l, Supports_Condition_Ptr r, Operand o)
+    Supports_Operator(const ParserState& pstate, Supports_Condition_Ptr l, Supports_Condition_Ptr r, Operand o)
     : Supports_Condition(pstate), left_(l), right_(r), operand_(o)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const;
@@ -1764,7 +1791,7 @@ namespace Sass {
   private:
     ADD_PROPERTY(Supports_Condition_Ptr, condition);
   public:
-    Supports_Negation(ParserState pstate, Supports_Condition_Ptr c)
+    Supports_Negation(const ParserState& pstate, Supports_Condition_Ptr c)
     : Supports_Condition(pstate), condition_(c)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const;
@@ -1779,7 +1806,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, feature);
     ADD_PROPERTY(Expression_Ptr, value);
   public:
-    Supports_Declaration(ParserState pstate, Expression_Ptr f, Expression_Ptr v)
+    Supports_Declaration(const ParserState& pstate, Expression_Ptr f, Expression_Ptr v)
     : Supports_Condition(pstate), feature_(f), value_(v)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
@@ -1793,7 +1820,7 @@ namespace Sass {
   private:
     ADD_PROPERTY(Expression_Ptr, value);
   public:
-    Supports_Interpolation(ParserState pstate, Expression_Ptr v)
+    Supports_Interpolation(const ParserState& pstate, Expression_Ptr v)
     : Supports_Condition(pstate), value_(v)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
@@ -1808,11 +1835,12 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, feature)
     ADD_PROPERTY(Expression_Ptr, value)
   public:
-    At_Root_Query(ParserState pstate, Expression_Ptr f = 0, Expression_Ptr v = 0, bool i = false)
+    At_Root_Query(const ParserState& pstate, Expression_Ptr f = 0, Expression_Ptr v = 0, bool i = false)
     : Expression(pstate), feature_(f), value_(v)
     { }
     bool exclude(std::string str);
     size_t hash() { return 0; }
+    bool is_true() { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1822,7 +1850,7 @@ namespace Sass {
   class At_Root_Block : public Has_Block {
     ADD_PROPERTY(At_Root_Query_Ptr, expression)
   public:
-    At_Root_Block(ParserState pstate, Block_Ptr b = 0, At_Root_Query_Ptr e = 0)
+    At_Root_Block(const ParserState& pstate, Block_Ptr b = 0, At_Root_Query_Ptr e = 0)
     : Has_Block(pstate, b), expression_(e)
     { statement_type(ATROOT); }
     bool bubbles() { return true; }
@@ -1868,7 +1896,7 @@ namespace Sass {
   //////////////////
   class Null : public Value {
   public:
-    Null(ParserState pstate) : Value(pstate) { concrete_type(NULL_VAL); }
+    Null(const ParserState& pstate) : Value(pstate) { concrete_type(NULL_VAL); }
     std::string type() { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const { return true; }
@@ -1891,7 +1919,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, expression)
     ADD_PROPERTY(Env*, environment)
   public:
-    Thunk(ParserState pstate, Expression_Ptr exp, Env* env = 0)
+    Thunk(const ParserState& pstate, Expression_Ptr exp, Env* env = 0)
     : Expression(pstate), expression_(exp), environment_(env)
     { }
   };
@@ -1904,7 +1932,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Ptr, default_value)
     ADD_PROPERTY(bool, is_rest_parameter)
   public:
-    Parameter(ParserState pstate,
+    Parameter(const ParserState& pstate,
               std::string n, Expression_Ptr def = 0, bool rest = false)
     : AST_Node(pstate), name_(n), default_value_(def), is_rest_parameter_(rest)
     {
@@ -1949,7 +1977,7 @@ namespace Sass {
       }
     }
   public:
-    Parameters(ParserState pstate)
+    Parameters(const ParserState& pstate)
     : AST_Node(pstate),
       Vectorized<Parameter_Ptr>(),
       has_optional_parameters_(false),
@@ -1983,7 +2011,7 @@ namespace Sass {
   protected:
     size_t hash_;
   public:
-    Selector(ParserState pstate, bool r = false, bool h = false)
+    Selector(const ParserState& pstate, bool r = false, bool h = false)
     : Expression(pstate),
       // has_reference_(r),
       has_line_feed_(false),
@@ -1994,6 +2022,7 @@ namespace Sass {
     { concrete_type(SELECTOR); }
     virtual ~Selector() = 0;
     virtual size_t hash() = 0;
+    virtual bool is_true() { return true; };
     virtual unsigned long specificity() {
       return 0;
     }
@@ -2023,7 +2052,7 @@ namespace Sass {
     ADD_PROPERTY(String_Ptr, contents)
     ADD_PROPERTY(bool, at_root);
   public:
-    Selector_Schema(ParserState pstate, String_Ptr c)
+    Selector_Schema(const ParserState& pstate, String_Ptr c)
     : Selector(pstate), contents_(c), at_root_(false)
     { }
     virtual bool has_parent_ref();
@@ -2045,7 +2074,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, name)
     ADD_PROPERTY(bool, has_ns)
   public:
-    Simple_Selector(ParserState pstate, std::string n = "")
+    Simple_Selector(const ParserState& pstate, std::string n = "")
     : Selector(pstate), ns_(""), name_(n), has_ns_(false)
     {
       size_t pos = n.find('|');
@@ -2131,7 +2160,7 @@ namespace Sass {
   class Parent_Selector : public Simple_Selector {
     ADD_PROPERTY(bool, real)
   public:
-    Parent_Selector(ParserState pstate, bool r = true)
+    Parent_Selector(const ParserState& pstate, bool r = true)
     : Simple_Selector(pstate, "&"), real_(r)
     { /* has_reference(true); */ }
     bool is_real_parent_ref() { return real(); };
@@ -2151,7 +2180,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   class Placeholder_Selector : public Simple_Selector {
   public:
-    Placeholder_Selector(ParserState pstate, std::string n)
+    Placeholder_Selector(const ParserState& pstate, std::string n)
     : Simple_Selector(pstate, n)
     { }
     virtual unsigned long specificity()
@@ -2171,7 +2200,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////
   class Type_Selector : public Simple_Selector {
   public:
-    Type_Selector(ParserState pstate, std::string n)
+    Type_Selector(const ParserState& pstate, std::string n)
     : Simple_Selector(pstate, n)
     { }
     virtual unsigned long specificity()
@@ -2189,7 +2218,7 @@ namespace Sass {
   ////////////////////////////////////////////////
   class Class_Selector : public Simple_Selector {
   public:
-    Class_Selector(ParserState pstate, std::string n)
+    Class_Selector(const ParserState& pstate, std::string n)
     : Simple_Selector(pstate, n)
     { }
     virtual bool unique() const
@@ -2209,7 +2238,7 @@ namespace Sass {
   ////////////////////////////////////////////////
   class Id_Selector : public Simple_Selector {
   public:
-    Id_Selector(ParserState pstate, std::string n)
+    Id_Selector(const ParserState& pstate, std::string n)
     : Simple_Selector(pstate, n)
     { }
     virtual bool unique() const
@@ -2231,7 +2260,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, matcher)
     ADD_PROPERTY(String_Ptr, value) // might be interpolated
   public:
-    Attribute_Selector(ParserState pstate, std::string n, std::string m, String_Ptr v)
+    Attribute_Selector(const ParserState& pstate, std::string n, std::string m, String_Ptr v)
     : Simple_Selector(pstate, n), matcher_(m), value_(v)
     { }
     virtual size_t hash()
@@ -2273,7 +2302,7 @@ namespace Sass {
   class Pseudo_Selector : public Simple_Selector {
     ADD_PROPERTY(String_Ptr, expression)
   public:
-    Pseudo_Selector(ParserState pstate, std::string n, String_Ptr expr = 0)
+    Pseudo_Selector(const ParserState& pstate, std::string n, String_Ptr expr = 0)
     : Simple_Selector(pstate, n), expression_(expr)
     { }
 
@@ -2326,7 +2355,7 @@ namespace Sass {
   class Wrapped_Selector : public Simple_Selector {
     ADD_PROPERTY(Selector_Ptr, selector)
   public:
-    Wrapped_Selector(ParserState pstate, std::string n, Selector_Ptr sel)
+    Wrapped_Selector(const ParserState& pstate, std::string n, Selector_Ptr sel)
     : Simple_Selector(pstate, n), selector_(sel)
     { }
     virtual bool is_superselector_of(Wrapped_Selector_Ptr sub);
@@ -2380,7 +2409,7 @@ namespace Sass {
     ADD_PROPERTY(bool, extended);
     ADD_PROPERTY(bool, has_parent_reference);
   public:
-    Compound_Selector(ParserState pstate, size_t s = 0)
+    Compound_Selector(const ParserState& pstate, size_t s = 0)
     : Selector(pstate),
       Vectorized<Simple_Selector*>(s),
       extended_(false),
@@ -2495,7 +2524,7 @@ namespace Sass {
       if (tail() && tail()->contains_placeholder()) return true;
       return false;
     };
-    Complex_Selector(ParserState pstate,
+    Complex_Selector(const ParserState& pstate,
                      Combinator c = ANCESTOR_OF,
                      Compound_Selector_Ptr h = 0,
                      Complex_Selector_Ptr t = 0,
@@ -2659,7 +2688,7 @@ namespace Sass {
   class Selector_List : public Selector, public Vectorized<Complex_Selector_Ptr> {
     ADD_PROPERTY(std::vector<std::string>, wspace)
   public:
-    Selector_List(ParserState pstate, size_t s = 0)
+    Selector_List(const ParserState& pstate, size_t s = 0)
     : Selector(pstate), Vectorized<Complex_Selector_Ptr>(s), wspace_(0)
     { }
     std::string type() { return "list"; }

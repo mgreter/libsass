@@ -1703,7 +1703,7 @@ namespace Sass {
     return true;
   }
 
-  Number::Number(ParserState pstate, double val, std::string u, bool zero)
+  Number::Number(const ParserState& pstate, double val, std::string u, bool zero)
   : Value(pstate),
     value_(val),
     zero_(zero),
