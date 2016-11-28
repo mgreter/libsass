@@ -79,36 +79,6 @@ namespace Sass {
   }
   //////////////////////////////////////////////////////////
 
-  //////////////////////////////////////////////////////////
-  // Abstract base class for all abstract syntax tree nodes.
-  //////////////////////////////////////////////////////////
-  class AST_Node : public Memory_Object {
-    ADD_PROPERTY(ParserState, pstate)
-  public:
-    AST_Node(const AST_Node& node)
-    : pstate_(node.pstate_)
-    { }
-    AST_Node(const ParserState& pstate)
-    : pstate_(pstate)
-    { }
-    virtual ~AST_Node() = 0;
-    virtual size_t hash() = 0;
-    std::string inspect() const { return to_string({ INSPECT, 5 }); }
-    std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
-
-    virtual std::string to_string(Sass_Inspect_Options opt) const;
-    virtual std::string to_string() const;
-    // virtual Block_Ptr block() { return 0; }
-  public:
-    void update_pstate(const ParserState& pstate);
-    void set_pstate_offset(const Offset& offset);
-  public:
-    Offset off() { return pstate(); }
-    Position pos() { return pstate(); }
-    ATTACH_OPERATIONS()
-  };
-  inline AST_Node::~AST_Node() { }
-
 
   //////////////////////////////////////////////////////////////////////
   // CRTP class for memory operations
@@ -143,6 +113,38 @@ namespace Sass {
   // macro to create ast classes with memory crtp implementation
   #define SASS_AST_BASE(type, base) class type : public AST_Base<type, base>
   #define SASS_AST_CLASS(type, base) class type : public AST_Class<type, base>
+
+
+  //////////////////////////////////////////////////////////
+  // Abstract base class for all abstract syntax tree nodes.
+  //////////////////////////////////////////////////////////
+  SASS_AST_BASE (AST_Node, Memory_Object) {
+    ADD_PROPERTY(ParserState, pstate)
+  public:
+    AST_Node(const AST_Node& node)
+    : AST_Base<AST_Node, Memory_Object>(),
+      pstate_(node.pstate_)
+    { }
+    AST_Node(const ParserState& pstate)
+    : AST_Base<AST_Node, Memory_Object>(),
+      pstate_(pstate)
+    { }
+    virtual ~AST_Node() = 0;
+    std::string inspect() const { return to_string({ INSPECT, 5 }); }
+    std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
+
+    virtual std::string to_string(Sass_Inspect_Options opt) const;
+    virtual std::string to_string() const;
+    // virtual Block_Ptr block() { return 0; }
+  public:
+    void update_pstate(const ParserState& pstate);
+    void set_pstate_offset(const Offset& offset);
+  public:
+    Offset off() { return pstate(); }
+    Position pos() { return pstate(); }
+    ATTACH_OPERATIONS()
+  };
+  inline AST_Node::~AST_Node() { }
 
   //////////////////////////////////////////////////////////////////////
   // Abstract base class for expressions. This side of the AST hierarchy
@@ -184,7 +186,7 @@ namespace Sass {
     virtual std::string type() { return ""; /* TODO: raise an error? */ }
     virtual bool is_invisible() const { return false; }
     static std::string type_name() { return ""; }
-    virtual bool is_true() = 0;
+    virtual bool is_true() const = 0;
     virtual bool operator== (const Expression& rhs) const { return false; }
     virtual bool eq(const Expression& rhs) const { return *this == rhs; };
     virtual void set_delayed(bool delayed) { is_delayed(delayed); }
@@ -205,7 +207,7 @@ namespace Sass {
                bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : AST_Base<PreValue, Expression>(pstate, d, e, i, ct)
     { }
-    virtual bool is_true() { return true; };
+    virtual bool is_true() const { return true; };
     virtual ~PreValue() { }
   };
 
@@ -219,7 +221,7 @@ namespace Sass {
     : AST_Base<Value, Expression>(pstate, d, e, i, ct)
     { }
     virtual bool operator== (const Expression& rhs) const = 0;
-    virtual bool is_true() { return true; };
+    virtual bool is_true() const { return true; };
   };
 }
 
@@ -447,7 +449,7 @@ namespace Sass {
   // represents elements in expansion contexts, which exist primarily to be
   // rewritten and macro-expanded.
   /////////////////////////////////////////////////////////////////////////
-  class Statement : public AST_Node {
+  SASS_AST_BASE (Statement, AST_Node) {
   public:
     enum Statement_Type {
       NONE,
@@ -481,7 +483,8 @@ namespace Sass {
     ADD_PROPERTY(bool, group_end)
   public:
     Statement(const ParserState& pstate, Statement_Type st = NONE, size_t t = 0)
-    : AST_Node(pstate), block_(0), statement_type_(st), tabs_(t), group_end_(false)
+    : AST_Base<Statement, AST_Node>(pstate),
+      block_(0), statement_type_(st), tabs_(t), group_end_(false)
      { }
     virtual ~Statement() = 0;
     // needed for rearranging nested rulesets during CSS emission
@@ -492,6 +495,7 @@ namespace Sass {
     {
       return statement_type_ == CONTENT;
     }
+    virtual size_t hash() = 0;
   };
   inline Statement::~Statement() { }
 
@@ -1216,7 +1220,7 @@ namespace Sass {
       };
       return hash_;
     }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
 
     ATTACH_OPERATIONS()
   };
@@ -1263,7 +1267,7 @@ namespace Sass {
       }
       return hash_;
     }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
 
     ATTACH_OPERATIONS()
   };
@@ -1293,7 +1297,7 @@ namespace Sass {
 
     Argument_Ptr get_rest_argument();
     Argument_Ptr get_keyword_argument();
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
 
     ATTACH_OPERATIONS()
   };
@@ -1355,7 +1359,7 @@ namespace Sass {
     Function_Call_Schema(const ParserState& pstate, String_Ptr n, Arguments_Ptr args)
     : Expression(pstate), name_(n), arguments_(args)
     { concrete_type(STRING); }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1431,7 +1435,7 @@ namespace Sass {
       return hash_;
     }
 
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
 
     ATTACH_OPERATIONS()
   };
@@ -1557,7 +1561,7 @@ namespace Sass {
     { concrete_type(BOOLEAN); }
     std::string type() { return "bool"; }
     static std::string type_name() { return "bool"; }
-    virtual bool is_true() { return value_; }
+    virtual bool is_true() const { return value_; }
 
     virtual size_t hash()
     {
@@ -1689,8 +1693,8 @@ namespace Sass {
   class String_Quoted : public String_Constant {
   public:
     String_Quoted(const ParserState& pstate, std::string val, char q = 0,
-    	bool keep_utf8_escapes = false, bool skip_unquoting = false,
-    	bool strict_unquoting = true)
+      bool keep_utf8_escapes = false, bool skip_unquoting = false,
+      bool strict_unquoting = true)
     : String_Constant(pstate, val)
     {
       if (skip_unquoting == false) {
@@ -1717,7 +1721,7 @@ namespace Sass {
     : Expression(pstate), Vectorized<Media_Query_Expression_Ptr>(s),
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1733,7 +1737,7 @@ namespace Sass {
                            Expression_Ptr f, Expression_Ptr v, bool i = false)
     : Expression(pstate), feature_(f), value_(v), is_interpolated_(i)
     { }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1748,7 +1752,7 @@ namespace Sass {
     { statement_type(SUPPORTS); }
     bool bubbles() { return true; }
     size_t hash() { return 0; }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1762,7 +1766,7 @@ namespace Sass {
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
     size_t hash() { return 0; }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1840,7 +1844,7 @@ namespace Sass {
     { }
     bool exclude(std::string str);
     size_t hash() { return 0; }
-    bool is_true() { return true; };
+    bool is_true() const { return true; };
     ATTACH_OPERATIONS()
   };
 
@@ -1900,7 +1904,7 @@ namespace Sass {
     std::string type() { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const { return true; }
-    bool is_true() { return false; }
+    bool is_true() const { return false; }
 
     virtual size_t hash()
     {
@@ -2022,7 +2026,7 @@ namespace Sass {
     { concrete_type(SELECTOR); }
     virtual ~Selector() = 0;
     virtual size_t hash() = 0;
-    virtual bool is_true() { return true; };
+    virtual bool is_true() const { return true; };
     virtual unsigned long specificity() {
       return 0;
     }

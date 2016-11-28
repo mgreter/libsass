@@ -921,11 +921,9 @@ namespace Sass {
 
   Expression_Ptr Eval::operator()(Function_Call_Schema_Ptr s)
   {
-    Expression_Ptr evaluated_name = s->name()->perform(this);
-    Expression_Ptr evaluated_args = s->arguments()->perform(this);
     String_Schema_Ptr ss = SASS_MEMORY_NEW(ctx.mem, String_Schema, s->pstate(), 2);
-    ss->push2(evaluated_name);
-    ss->push2(evaluated_args);
+    ss->push2(s->name()->perform(this));
+    ss->push2(s->arguments()->perform(this));
     return ss->perform(this);
   }
 
