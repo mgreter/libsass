@@ -39,6 +39,7 @@ namespace Sass {
     virtual T operator()(Mixin_Call_Ptr x)             = 0;
     // expressions
     virtual T operator()(List_Ptr x)                   = 0;
+    virtual T operator()(List3<Media_Query>* x)                   = 0;
     virtual T operator()(Map_Ptr x)                    = 0;
     virtual T operator()(Binary_Expression_Ptr x)      = 0;
     virtual T operator()(Unary_Expression_Ptr x)       = 0;
@@ -121,6 +122,7 @@ namespace Sass {
     T operator()(Mixin_Call_Ptr x)             { return static_cast<D*>(this)->fallback(x); }
     // expressions
     T operator()(List_Ptr x)                   { return static_cast<D*>(this)->fallback(x); }
+    T operator()(List3<Media_Query>* x)                   { return static_cast<D*>(this)->fallback(x); }
     T operator()(Map_Ptr x)                    { return static_cast<D*>(this)->fallback(x); }
     T operator()(Binary_Expression_Ptr x)      { return static_cast<D*>(this)->fallback(x); }
     T operator()(Unary_Expression_Ptr x)       { return static_cast<D*>(this)->fallback(x); }

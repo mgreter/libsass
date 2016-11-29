@@ -108,8 +108,10 @@ namespace Sass {
   class Mixin_Call;
   typedef Mixin_Call* Mixin_Call_Ptr;
 
-  class List;
-  typedef List* List_Ptr;
+  template <typename T>
+  class List3;
+  typedef List3<Expression> List;
+  typedef List3<Expression>* List_Ptr;
 
   class Map;
   typedef Map* Map_Ptr;
@@ -164,6 +166,9 @@ namespace Sass {
 
   class Media_Query;
   typedef Media_Query* Media_Query_Ptr;
+
+  typedef List3<Media_Query> Media_Query_List;
+  typedef List3<Media_Query>* Media_Query_List_Ptr;
 
   class Media_Query_Expression;
   typedef Media_Query_Expression* Media_Query_Expression_Ptr;

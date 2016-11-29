@@ -195,7 +195,7 @@ namespace Sass {
     virtual bool is_right_interpolant() const { return is_interpolant(); }
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
-    virtual size_t hash() { return 0; }
+    virtual size_t hash() = 0;
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -208,6 +208,7 @@ namespace Sass {
     : AST_Base<PreValue, Expression>(pstate, d, e, i, ct)
     { }
     virtual bool is_true() const { return true; };
+    virtual size_t hash() { return 0; }
     virtual ~PreValue() { }
   };
 
@@ -220,8 +221,9 @@ namespace Sass {
           bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
     : AST_Base<Value, Expression>(pstate, d, e, i, ct)
     { }
-    virtual bool operator== (const Expression& rhs) const = 0;
+    virtual bool operator== (const Expression& rhs) const { return false; };
     virtual bool is_true() const { return true; };
+    virtual size_t hash() { return 0; }
   };
 }
 
@@ -587,16 +589,19 @@ namespace Sass {
     ATTACH_OPERATIONS()
   };
 
+typedef List3<Media_Query>* MediaQueryList;
+typedef List3<Media_Query> MediaQueryListObj;
+
   /////////////////
   // Media queries.
   /////////////////
   class Media_Block : public Has_Block {
-    ADD_PROPERTY(List_Ptr, media_queries)
+    ADD_PROPERTY(MediaQueryList, media_queries)
   public:
-    Media_Block(const ParserState& pstate, List_Ptr mqs, Block_Ptr b)
+    Media_Block(const ParserState& pstate, MediaQueryList mqs, Block_Ptr b)
     : Has_Block(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
-    Media_Block(const ParserState& pstate, List_Ptr mqs, Block_Ptr b, Selector_Ptr s)
+    Media_Block(const ParserState& pstate, MediaQueryList mqs, Block_Ptr b, Selector_Ptr s)
     : Has_Block(pstate, b), media_queries_(mqs)
     { statement_type(MEDIA); }
     bool bubbles() { return true; }
@@ -690,7 +695,7 @@ namespace Sass {
   class Import : public Statement {
     std::vector<Expression_Ptr> urls_;
     std::vector<Include>     incs_;
-    ADD_PROPERTY(List_Ptr,      media_queries);
+    ADD_PROPERTY(MediaQueryList,      media_queries);
   public:
     Import(const ParserState& pstate)
     : Statement(pstate),
@@ -971,16 +976,17 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class List : public Value, public Vectorized<Expression_Ptr> {
+  template <typename T>
+  class List3 : public Value, public Vectorized<T*> {
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, from_selector)
   public:
-    List(const ParserState& pstate,
+    List3(const ParserState& pstate,
          size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false)
     : Value(pstate),
-      Vectorized<Expression_Ptr>(size),
+      Vectorized<T*>(size),
       separator_(sep),
       is_arglist_(argl),
       from_selector_(false)
@@ -991,19 +997,19 @@ namespace Sass {
       return separator() == SASS_SPACE ?
         " " : (compressed ? "," : ", ");
     }
-    bool is_invisible() const { return empty(); }
-    Expression_Ptr value_at_index(size_t i);
+    bool is_invisible() const { return this->empty(); }
+    T* value_at_index(size_t i);
 
     virtual size_t size() const;
 
     virtual size_t hash()
     {
-      if (hash_ == 0) {
-        hash_ = std::hash<std::string>()(sep_string());
-        for (size_t i = 0, L = length(); i < L; ++i)
-          hash_combine(hash_, (elements()[i])->hash());
+      if (this->hash_ == 0) {
+        this->hash_ = std::hash<std::string>()(sep_string());
+        for (size_t i = 0, L = this->length(); i < L; ++i)
+          hash_combine(this->hash_, this->get(i)->hash());
       }
-      return hash_;
+      return this->hash_;
     }
 
     virtual void set_delayed(bool delayed)
@@ -1012,7 +1018,7 @@ namespace Sass {
       // don't set children
     }
 
-    virtual bool operator== (const Expression& rhs) const;
+    virtual bool operator== (const T& rhs) const;
 
     ATTACH_OPERATIONS()
   };
@@ -1298,6 +1304,7 @@ namespace Sass {
     Argument_Ptr get_rest_argument();
     Argument_Ptr get_keyword_argument();
     bool is_true() const { return true; };
+    size_t hash() { return 0; }
 
     ATTACH_OPERATIONS()
   };
@@ -1360,6 +1367,7 @@ namespace Sass {
     : Expression(pstate), name_(n), arguments_(args)
     { concrete_type(STRING); }
     bool is_true() const { return true; };
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1722,6 +1730,7 @@ namespace Sass {
       media_type_(t), is_negated_(n), is_restricted_(r)
     { }
     bool is_true() const { return true; };
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1738,6 +1747,7 @@ namespace Sass {
     : Expression(pstate), feature_(f), value_(v), is_interpolated_(i)
     { }
     bool is_true() const { return true; };
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 
@@ -1828,6 +1838,7 @@ namespace Sass {
     : Supports_Condition(pstate), value_(v)
     { }
     virtual bool needs_parens(Supports_Condition_Ptr cond) const { return false; }
+    size_t hash() { return 0; }
     ATTACH_OPERATIONS()
   };
 

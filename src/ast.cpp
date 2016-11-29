@@ -2196,7 +2196,8 @@ namespace Sass {
     return false;
   }
 
-  bool List::operator== (const Expression& rhs) const
+  template <>
+  bool List3<Expression>::operator== (const Expression& rhs) const
   {
     if (const List* r = dynamic_cast<const List*>(&rhs)) {
       if (length() != r->length()) return false;
@@ -2204,6 +2205,23 @@ namespace Sass {
       for (size_t i = 0, L = length(); i < L; ++i) {
         Expression_Ptr rv = r->get(i);
         Expression_Ptr lv = get(i);
+        if (!lv || !rv) return false;
+        if (!(*lv == *rv)) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  template <>
+  bool List3<Media_Query>::operator== (const Media_Query& rhs) const
+  {
+    if (const List3* r = dynamic_cast<const List3*>(&rhs)) {
+      if (length() != r->length()) return false;
+      if (separator() != r->separator()) return false;
+      for (size_t i = 0, L = length(); i < L; ++i) {
+        Media_Query* rv = r->get(i);
+        Media_Query* lv = this->get(i);
         if (!lv || !rv) return false;
         if (!(*lv == *rv)) return false;
       }
@@ -2232,7 +2250,8 @@ namespace Sass {
     return rhs.concrete_type() == NULL_VAL;
   }
 
-  size_t List::size() const {
+  template <>
+  size_t List3<Expression>::size() const {
     if (!is_arglist_) return length();
     // arglist expects a list of arguments
     // so we need to break before keywords
@@ -2243,6 +2262,20 @@ namespace Sass {
     }
     return length();
   }
+
+  template <>
+  size_t List3<Media_Query>::size() const {
+    if (!is_arglist_) return length();
+    // arglist expects a list of arguments
+    // so we need to break before keywords
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(get(i))) {
+        if (!arg->name().empty()) return i;
+      }
+    }
+    return length();
+  }
+
 
   bool Binary_Expression::is_left_interpolant(void) const
   {
@@ -2282,7 +2315,8 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Additional method on Lists to retrieve values directly or from an encompassed Argument.
   //////////////////////////////////////////////////////////////////////////////////////////
-  Expression_Ptr List::value_at_index(size_t i) {
+  template <>
+  Expression_Ptr List3<Expression>::value_at_index(size_t i) {
     if (is_arglist_) {
       if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(get(i))) {
         return arg->value();
@@ -2293,6 +2327,20 @@ namespace Sass {
       return get(i);
     }
   }
+  /*
+  template <>
+  Expression_Ptr List3<Statement>::value_at_index(size_t i) {
+    if (is_arglist_) {
+      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(get(i))) {
+        return arg->value();
+      } else {
+        return get(i);
+      }
+    } else {
+      return get(i);
+    }
+  }
+  */
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Convert map to (key, value) list.

@@ -49,6 +49,7 @@ namespace Sass {
     // expressions
     virtual void operator()(Map_Ptr);
     virtual void operator()(List_Ptr);
+    virtual void operator()(List3<Media_Query>*);
     virtual void operator()(Binary_Expression_Ptr);
     virtual void operator()(Unary_Expression_Ptr);
     virtual void operator()(Function_Call_Ptr);

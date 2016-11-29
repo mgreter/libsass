@@ -183,7 +183,7 @@ namespace Sass {
     mq = p.parse_media_queries();
     Media_Block_Ptr mm = SASS_MEMORY_NEW(ctx.mem, Media_Block,
                                       m->pstate(),
-                                      static_cast<List_Ptr>(mq->perform(&eval)),
+                                      static_cast<MediaQueryList>(mq->perform(&eval)),
                                       m->block()->perform(this)->block(),
                                       0);
     media_block_stack.pop_back();
@@ -316,7 +316,7 @@ namespace Sass {
     Import_Ptr result = SASS_MEMORY_NEW(ctx.mem, Import, imp->pstate());
     if (imp->media_queries() && imp->media_queries()->size()) {
       Expression_Ptr ex = imp->media_queries()->perform(&eval);
-      result->media_queries(dynamic_cast<List_Ptr>(ex));
+      result->media_queries(dynamic_cast<MediaQueryList>(ex));
     }
     for ( size_t i = 0, S = imp->urls().size(); i < S; ++i) {
       result->urls().push_back(imp->urls()[i]->perform(&eval));

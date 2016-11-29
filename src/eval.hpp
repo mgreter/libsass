@@ -44,6 +44,7 @@ namespace Sass {
     Expression_Ptr operator()(Debug_Ptr);
 
     Expression_Ptr operator()(List_Ptr);
+    Expression_Ptr operator()(List3<Media_Query>*);
     Expression_Ptr operator()(Map_Ptr);
     Expression_Ptr operator()(Binary_Expression_Ptr);
     Expression_Ptr operator()(Unary_Expression_Ptr);
@@ -58,7 +59,7 @@ namespace Sass {
     Expression_Ptr operator()(String_Quoted_Ptr);
     Expression_Ptr operator()(String_Constant_Ptr);
     // Expression_Ptr operator()(Selector_List_Ptr);
-    Expression_Ptr operator()(Media_Query_Ptr);
+    Media_Query_Ptr operator()(Media_Query_Ptr);
     Expression_Ptr operator()(Media_Query_Expression_Ptr);
     Expression_Ptr operator()(At_Root_Query_Ptr);
     Expression_Ptr operator()(Supports_Operator_Ptr);

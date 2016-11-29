@@ -465,6 +465,46 @@ namespace Sass {
     return ll;
   }
 
+
+  Expression_Ptr Eval::operator()(List3<Media_Query>* l)
+  {
+    // special case for unevaluated map
+    if (l->separator() == SASS_HASH) {
+      Map_Ptr lm = SASS_MEMORY_NEW(ctx.mem, Map,
+                                l->pstate(),
+                                l->length() / 2);
+      for (size_t i = 0, L = l->length(); i < L; i += 2)
+      {
+        Expression_Ptr key = l->get(i+0)->perform(this);
+        Expression_Ptr val = l->get(i+1)->perform(this);
+        // make sure the color key never displays its real name
+        key->is_delayed(true); // verified
+        *lm << std::make_pair(key, val);
+      }
+      if (lm->has_duplicate_key()) {
+        throw Exception::DuplicateKeyError(*lm, *l);
+      }
+
+      lm->is_interpolant(l->is_interpolant());
+      return lm->perform(this);
+    }
+    // check if we should expand it
+    if (l->is_expanded()) return l;
+    // regular case for unevaluated lists
+    List3<Media_Query>* ll = SASS_MEMORY_NEW(ctx.mem, List3<Media_Query>,
+                               l->pstate(),
+                               l->length(),
+                               l->separator(),
+                               l->is_arglist());
+    for (size_t i = 0, L = l->length(); i < L; ++i) {
+      ll->push2(operator()(l->get(i)));
+    }
+    ll->is_interpolant(l->is_interpolant());
+    ll->from_selector(l->from_selector());
+    ll->is_expanded(true);
+    return ll;
+  }
+
   Expression_Ptr Eval::operator()(Map_Ptr m)
   {
     if (m->is_expanded()) return m;
@@ -1240,7 +1280,7 @@ namespace Sass {
     return ee;
   }
 
-  Expression_Ptr Eval::operator()(Media_Query_Ptr q)
+  Media_Query_Ptr Eval::operator()(Media_Query_Ptr q)
   {
     String_Ptr t = q->media_type();
     t = static_cast<String_Ptr>(t ? t->perform(this) : 0);

@@ -346,7 +346,7 @@ namespace Sass {
     } while (lex_css< exactly<','> >());
 
     if (!peek_css<alternatives<exactly<';'>,end_of_file>>()) {
-      List_Ptr media_queries = parse_media_queries();
+      MediaQueryList media_queries = parse_media_queries();
       imp->media_queries(media_queries);
     }
 
@@ -2027,10 +2027,10 @@ namespace Sass {
     return media_block;
   }
 
-  List_Ptr Parser::parse_media_queries()
+  MediaQueryList Parser::parse_media_queries()
   {
     advanceToNextToken();
-    List_Ptr media_queries = SASS_MEMORY_NEW(ctx.mem, List, pstate, 0, SASS_COMMA);
+    MediaQueryList media_queries = SASS_MEMORY_NEW(ctx.mem, MediaQueryListObj, pstate, 0, SASS_COMMA);
     if (!peek_css < exactly <'{'> >()) media_queries->push2(parse_media_query());
     while (lex_css < exactly <','> >()) media_queries->push2(parse_media_query());
     media_queries->update_pstate(pstate);
@@ -2306,7 +2306,7 @@ namespace Sass {
     return directive;
   }
 
-  Expression_Ptr Parser::lex_interpolation()
+  String_Ptr Parser::lex_interpolation()
   {
     if (lex < interpolant >(true) != NULL) {
       return parse_interpolated_chunk(lexed, true);

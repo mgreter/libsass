@@ -115,9 +115,7 @@ namespace Sass {
     }
 
     Statement_Ptr ss = debubble(rr->block() ? rr->block() : SASS_MEMORY_NEW(ctx.mem, Block, rr->pstate()), rr);
-    for (size_t i = 0, L = ss->block()->length(); i < L; ++i) {
-      result->push2(ss->block()->get(i));
-    }
+    result->concat(ss->block());
 
     return result;
   }
@@ -274,11 +272,7 @@ namespace Sass {
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
     new_rule->block(bb);
     new_rule->tabs(this->parent()->tabs());
-
-    size_t L = m->block() ? m->block()->length() : 0;
-    for (size_t i = 0; i < L; ++i) {
-      new_rule->block()->push2(m->block()->get(i));
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block() ? m->block()->pstate() : m->pstate());
     wrapper_block->push2(new_rule);
@@ -299,10 +293,7 @@ namespace Sass {
     Has_Block_Ptr new_rule = static_cast<Has_Block_Ptr>(shallow_copy(this->parent()));
     new_rule->block(bb);
     new_rule->tabs(this->parent()->tabs());
-
-    for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      new_rule->block()->push2(m->block()->get(i));
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     wrapper_block->push2(new_rule);
@@ -324,10 +315,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-
-    for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      new_rule->block()->push2(m->block()->get(i));
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     wrapper_block->push2(new_rule);
@@ -352,10 +340,7 @@ namespace Sass {
                                         parent->selector(),
                                         bb);
     new_rule->tabs(parent->tabs());
-
-    for (size_t i = 0, L = m->block()->length(); i < L; ++i) {
-      new_rule->block()->push2(m->block()->get(i));
-    }
+    new_rule->block()->concat(m->block());
 
     Block_Ptr wrapper_block = SASS_MEMORY_NEW(ctx.mem, Block, m->block()->pstate());
     wrapper_block->push2(new_rule);
@@ -487,7 +472,7 @@ namespace Sass {
         }
         else
         {
-          List_Ptr mq = merge_media_queries(static_cast<Media_Block_Ptr>(node->node()), static_cast<Media_Block_Ptr>(parent));
+          MediaQueryList mq = merge_media_queries(static_cast<Media_Block_Ptr>(node->node()), static_cast<Media_Block_Ptr>(parent));
           if (!mq->length()) continue;
           static_cast<Media_Block_Ptr>(node->node())->media_queries(mq);
           ss = node->node();
@@ -549,9 +534,9 @@ namespace Sass {
     }
   }
 
-  List_Ptr Cssize::merge_media_queries(Media_Block_Ptr m1, Media_Block_Ptr m2)
+  MediaQueryList Cssize::merge_media_queries(Media_Block_Ptr m1, Media_Block_Ptr m2)
   {
-    List_Ptr qq = SASS_MEMORY_NEW(ctx.mem, List,
+    MediaQueryList qq = SASS_MEMORY_NEW(ctx.mem, MediaQueryListObj,
                                m1->media_queries()->pstate(),
                                m1->media_queries()->length(),
                                SASS_COMMA);

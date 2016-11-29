@@ -292,7 +292,7 @@ namespace Sass {
     Content_Ptr parse_content_directive();
     void parse_charset_directive();
     Media_Block_Ptr parse_media_block();
-    List_Ptr parse_media_queries();
+    MediaQueryList parse_media_queries();
     Media_Query_Ptr parse_media_query();
     Media_Query_Expression_Ptr parse_media_expression();
     Supports_Block_Ptr parse_supports_directive();
@@ -317,7 +317,7 @@ namespace Sass {
     Expression_Ptr lex_almost_any_value_chars();
     Expression_Ptr lex_interp_string();
     Expression_Ptr lex_interp_uri();
-    Expression_Ptr lex_interpolation();
+    String_Ptr lex_interpolation();
 
     // these will throw errors
     Token lex_variable();
@@ -344,13 +344,13 @@ namespace Sass {
         // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
         schema->push2(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed));
         if (position[0] == '#' && position[1] == '{') {
-          Expression_Ptr itpl = lex_interpolation();
+          String_Ptr itpl = lex_interpolation();
           if (itpl) schema->push2(itpl);
           while (lex < close >(false)) {
             // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
             schema->push2(SASS_MEMORY_NEW(ctx.mem, String_Constant, pstate, lexed));
             if (position[0] == '#' && position[1] == '{') {
-              Expression_Ptr itpl = lex_interpolation();
+              String_Ptr itpl = lex_interpolation();
               if (itpl) schema->push2(itpl);
             } else {
               return schema;

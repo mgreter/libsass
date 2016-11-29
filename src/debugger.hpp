@@ -581,6 +581,19 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
       debug_ast(i.first, ind + " key: ");
       debug_ast(i.second, ind + " val: ");
     }
+  } else if (dynamic_cast<List3<Media_Query>*>(node)) {
+    List3<Media_Query>* expression = dynamic_cast<List3<Media_Query>*>(node);
+    std::cerr << ind << "List " << expression;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " (" << expression->length() << ") " <<
+      (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_HASH ? "Map" : "Space ") <<
+      " [delayed: " << expression->is_delayed() << "] " <<
+      " [interpolant: " << expression->is_interpolant() << "] " <<
+      " [listized: " << expression->from_selector() << "] " <<
+      " [arglist: " << expression->is_arglist() << "] " <<
+      " [hash: " << expression->hash() << "] " <<
+      std::endl;
+    for(auto i : expression->elements()) { debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<List_Ptr>(node)) {
     List_Ptr expression = dynamic_cast<List_Ptr>(node);
     std::cerr << ind << "List " << expression;
