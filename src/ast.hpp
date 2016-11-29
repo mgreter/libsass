@@ -365,9 +365,10 @@ namespace Sass {
   // Mixin class for AST nodes that should behave like a hash table. Uses an
   // extra <std::vector> internally to maintain insertion order for interation.
   /////////////////////////////////////////////////////////////////////////////
+  template <typename T>
   class Hashed {
   struct HashExpression {
-    size_t operator() (Expression_Ptr ex) const {
+    size_t operator() (T ex) const {
       return ex ? ex->hash() : 0;
     }
   };
@@ -377,37 +378,37 @@ namespace Sass {
     }
   };
   typedef std::unordered_map<
-    Expression_Ptr, // key
-    Expression_Ptr, // value
+    T, // key
+    T, // value
     HashExpression, // hasher
     CompareExpression // compare
   > ExpressionMap;
   private:
     ExpressionMap elements_;
-    std::vector<Expression_Ptr> list_;
+    std::vector<T> list_;
   protected:
     size_t hash_;
-    Expression_Ptr duplicate_key_;
+    T duplicate_key_;
     void reset_hash() { hash_ = 0; }
     void reset_duplicate_key() { duplicate_key_ = 0; }
-    virtual void adjust_after_pushing(std::pair<Expression_Ptr, Expression_Ptr> p) { }
+    virtual void adjust_after_pushing(std::pair<T, T> p) { }
   public:
-    Hashed(size_t s = 0) : elements_(ExpressionMap(s)), list_(std::vector<Expression_Ptr>())
+    Hashed(size_t s = 0) : elements_(ExpressionMap(s)), list_(std::vector<T>())
     { elements_.reserve(s); list_.reserve(s); reset_duplicate_key(); }
-    virtual ~Hashed();
+    virtual ~Hashed() = 0;
     size_t length() const                  { return list_.size(); }
     bool empty() const                     { return list_.empty(); }
-    bool has(Expression_Ptr k) const          { return elements_.count(k) == 1; }
-    Expression_Ptr at(Expression_Ptr k) const {
+    bool has(T k) const          { return elements_.count(k) == 1; }
+    T at(T k) const {
       auto got = elements_.find(k);
       if (got != elements_.end())
       { return elements_.at(k); }
       else { return NULL; }
     }
     bool has_duplicate_key() const         { return duplicate_key_ != 0; }
-    Expression_Ptr get_duplicate_key() const  { return duplicate_key_; }
+    T get_duplicate_key() const  { return duplicate_key_; }
     const ExpressionMap elements() { return elements_; }
-    Hashed& operator<<(std::pair<Expression_Ptr, Expression_Ptr> p)
+    Hashed& operator<<(std::pair<T, T> p)
     {
       reset_hash();
 
@@ -435,15 +436,16 @@ namespace Sass {
       return *this;
     }
     const ExpressionMap& pairs() const { return elements_; }
-    const std::vector<Expression_Ptr>& keys() const { return list_; }
+    const std::vector<T>& keys() const { return list_; }
 
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::iterator end() { return elements_.end(); }
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::iterator begin() { return elements_.begin(); }
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::const_iterator end() const { return elements_.end(); }
-    std::unordered_map<Expression_Ptr, Expression_Ptr>::const_iterator begin() const { return elements_.begin(); }
+    typename std::unordered_map<T, T>::iterator end() { return elements_.end(); }
+    typename std::unordered_map<T, T>::iterator begin() { return elements_.begin(); }
+    typename std::unordered_map<T, T>::const_iterator end() const { return elements_.end(); }
+    typename std::unordered_map<T, T>::const_iterator begin() const { return elements_.begin(); }
 
   };
-  inline Hashed::~Hashed() { }
+  template <typename T>
+  inline Hashed<T>::~Hashed() { }
 
 
   /////////////////////////////////////////////////////////////////////////
@@ -1026,7 +1028,7 @@ typedef List3<Media_Query> MediaQueryListObj;
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
-  class Map : public Value, public Hashed {
+  class Map : public Value, public Hashed<Expression*> {
   public:
     Map(const ParserState& pstate,
          size_t size = 0)
@@ -1037,6 +1039,8 @@ typedef List3<Media_Query> MediaQueryListObj;
     static std::string type_name() { return "map"; }
     bool is_invisible() const { return empty(); }
     List_Ptr to_list(Context& ctx, ParserState& pstate);
+
+    virtual ~Map() {};
 
     virtual size_t hash()
     {

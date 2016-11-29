@@ -95,7 +95,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
 
-    for(auto i : selector->elements()) { debug_ast(i, ind + " ", env); }
+    for(Complex_Selector_Ptr i : selector->elements()) { debug_ast(i, ind + " ", env); }
 
 //  } else if (dynamic_cast<Expression_Ptr>(node)) {
 //    Expression_Ptr expression = dynamic_cast<Expression_Ptr>(node);
@@ -290,7 +290,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << ind << "Media_Block " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    debug_ast(block->media_queries(), ind + " =@ ");
+    for (auto i : block->media_queries()->elements()) debug_ast(i, ind + " =@ ");
     if (block->block()) for(auto i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
   } else if (dynamic_cast<Supports_Block_Ptr>(node)) {
     Supports_Block_Ptr block = dynamic_cast<Supports_Block_Ptr>(node);
@@ -395,7 +395,7 @@ inline void debug_ast(AST_Node_Ptr node, std::string ind, Env* env)
     std::cerr << " " << block->tabs() << std::endl;
     // std::vector<std::string>         files_;
     for (auto imp : block->urls()) debug_ast(imp, ind + "@: ", env);
-    debug_ast(block->media_queries(), ind + "@@ ");
+    for (auto i : block->media_queries()->elements()) debug_ast(i, ind + " @@ ");
   } else if (dynamic_cast<Assignment_Ptr>(node)) {
     Assignment_Ptr block = dynamic_cast<Assignment_Ptr>(node);
     std::cerr << ind << "Assignment " << block;

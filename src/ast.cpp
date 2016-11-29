@@ -2265,14 +2265,6 @@ namespace Sass {
 
   template <>
   size_t List3<Media_Query>::size() const {
-    if (!is_arglist_) return length();
-    // arglist expects a list of arguments
-    // so we need to break before keywords
-    for (size_t i = 0, L = length(); i < L; ++i) {
-      if (Argument_Ptr arg = dynamic_cast<Argument_Ptr>(get(i))) {
-        if (!arg->name().empty()) return i;
-      }
-    }
     return length();
   }
 
