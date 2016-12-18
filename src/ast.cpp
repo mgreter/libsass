@@ -4,6 +4,7 @@
 #include "node.hpp"
 #include "extend.hpp"
 #include "emitter.hpp"
+#include "debugger.hpp"
 #include "color_maps.hpp"
 #include "ast_fwd_decl.hpp"
 #include <set>
@@ -182,6 +183,20 @@ namespace Sass {
   {
     return (head() && head()->has_real_parent_ref()) ||
            (tail() && tail()->has_real_parent_ref());
+  }
+
+  bool Selector_List::contains(Complex_Selector_Ptr sel, bool simpleSelectorOrderDependent) {
+    for (Complex_Selector_Obj cur : elements()) {
+      /*debug_ast(sel);
+      debug_ast(&cur);
+      std::cerr << "======\n";*/
+      if (!simpleSelectorOrderDependent) {
+        if (!(*sel < *cur) && !(*cur < *sel)) return true;
+      } else {
+        if (*sel == *cur) return true;
+      }
+    }
+    return false;
   }
 
   bool Complex_Selector::operator< (const Complex_Selector& rhs) const
@@ -1485,7 +1500,7 @@ namespace Sass {
     return final_result;
   }
 
-  void Selector_List::populate_extends(Selector_List_Obj extendee, Context& ctx, ExtensionSubsetMap& extends)
+  void Selector_List::populate_extends(Selector_List_Obj extendee, Context& ctx, SubsetMap& extends)
   {
 
     Selector_List_Ptr extender = this;

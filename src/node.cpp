@@ -4,6 +4,7 @@
 #include "node.hpp"
 #include "context.hpp"
 #include "parser.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -70,9 +71,12 @@ namespace Sass {
 
     for (NodeDeque::iterator iter = mpCollection->begin(), iterEnd = mpCollection->end(); iter != iterEnd; iter++) {
       Node& toTest = *iter;
-
+ /*debug_node(&toTest);
+ debug_node(&potentialChild);
+ std::cerr << "======\n";*/
       if (nodesEqual(toTest, potentialChild, simpleSelectorOrderDependent)) {
         found = true;
+ // std::cerr << "====== found\n";
         break;
       }
     }
@@ -222,6 +226,21 @@ namespace Sass {
     return node;
   }
 
+
+  Selector_List_Ptr nodeToSelectorList(const Node& toConvert, Context& ctx) {
+    if (toConvert.isNil()) {
+      return NULL;
+    }
+
+    Selector_List_Obj sl = SASS_MEMORY_NEW(Selector_List, "[NODE]");
+
+    for (NodeDeque::iterator it = toConvert.collection()->begin(), itBegin = toConvert.collection()->begin(), itEnd = toConvert.collection()->end(); it != itEnd; ++it) {
+      sl->append(nodeToComplexSelector(*it, ctx));
+    }
+
+    return sl.detach();
+
+  }
 
   Complex_Selector_Ptr nodeToComplexSelector(const Node& toConvert, Context& ctx) {
     if (toConvert.isNil()) {

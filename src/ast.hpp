@@ -3008,7 +3008,7 @@ namespace Sass {
   };
 
   typedef std::deque<Complex_Selector_Obj> ComplexSelectorDeque;
-  typedef Subset_Map<std::string, std::pair<Complex_Selector_Obj, Compound_Selector_Obj> > ExtensionSubsetMap;
+  typedef Subset_Map<std::string, std::pair<Complex_Selector_Obj, Compound_Selector_Obj> > SubsetMap;
 
   ///////////////////////////////////
   // Comma-separated selector groups.
@@ -3037,7 +3037,7 @@ namespace Sass {
     virtual bool is_superselector_of(Complex_Selector_Obj sub, std::string wrapping = "");
     virtual bool is_superselector_of(Selector_List_Obj sub, std::string wrapping = "");
     Selector_List_Ptr unify_with(Selector_List_Ptr, Context&);
-    void populate_extends(Selector_List_Obj, Context&, ExtensionSubsetMap&);
+    void populate_extends(Selector_List_Obj, Context&, SubsetMap&);
     virtual size_t hash()
     {
       if (Selector::hash_ == 0) {
@@ -3075,6 +3075,7 @@ namespace Sass {
       }
       return false;
     }
+    virtual bool contains(Complex_Selector_Ptr, bool);
     virtual bool operator==(const Selector& rhs) const;
     virtual bool operator==(const Selector_List& rhs) const;
     // Selector Lists can be compared to comma lists

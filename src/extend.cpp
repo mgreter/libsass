@@ -7,6 +7,7 @@
 #include "node.hpp"
 #include "sass_util.hpp"
 #include "remove_placeholders.hpp"
+#include "debugger.hpp"
 #include "debug.hpp"
 #include <iostream>
 #include <deque>
@@ -1510,7 +1511,7 @@ namespace Sass {
   static Node extendComplexSelector(
     Complex_Selector_Ptr pComplexSelector,
     Context& ctx,
-    ExtensionSubsetMap& subset_map,
+    SubsetMap& subset_map,
     std::set<Compound_Selector> seen, bool isReplace, bool isOriginal);
 
 
@@ -1538,7 +1539,7 @@ namespace Sass {
   static Node extendCompoundSelector(
     Compound_Selector_Ptr pSelector,
     Context& ctx,
-    ExtensionSubsetMap& subset_map,
+    SubsetMap& subset_map,
     std::set<Compound_Selector> seen, bool isReplace) {
 
     DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelector, "EXTEND COMPOUND: "))
@@ -1689,7 +1690,12 @@ namespace Sass {
 
 //        DEBUG_PRINTLN(EXTEND_COMPOUND, "EXTENDED AT THIS POINT: " << extendedSelectors)
 //        DEBUG_PRINTLN(EXTEND_COMPOUND, "SELECTOR EXISTS ALREADY: " << newSelector << " " << extendedSelectors.contains(newSelector, false /*simpleSelectorOrderDependent*/));
+      Selector_List_Obj pCpxSel = nodeToSelectorList(extendedSelectors, ctx);
+      pCpxSel->remove_parent_selectors();
+      Complex_Selector_Obj ppsel = nodeToComplexSelector(newSelector, ctx);
+      // pSelector = pSelector->first();
 
+        // if (!pCpxSel->contains(&ppsel, false /*simpleSelectorOrderDependent*/)) {
         if (!extendedSelectors.contains(newSelector, false /*simpleSelectorOrderDependent*/)) {
 //          DEBUG_PRINTLN(EXTEND_COMPOUND, "ADDING NEW SELECTOR")
           extendedSelectors.collection()->push_back(newSelector);
@@ -1706,7 +1712,7 @@ namespace Sass {
   static bool complexSelectorHasExtension(
     Complex_Selector_Ptr pComplexSelector,
     Context& ctx,
-    ExtensionSubsetMap& subset_map,
+    SubsetMap& subset_map,
     std::set<Compound_Selector>& seen) {
 
     bool hasExtension = false;
@@ -1766,7 +1772,7 @@ namespace Sass {
   static Node extendComplexSelector(
     Complex_Selector_Ptr pComplexSelector,
     Context& ctx,
-    ExtensionSubsetMap& subset_map,
+    SubsetMap& subset_map,
     std::set<Compound_Selector> seen, bool isReplace, bool isOriginal) {
 
     Node complexSelector = complexSelectorToNode(pComplexSelector, ctx);
@@ -1887,7 +1893,7 @@ namespace Sass {
   /*
    This is the equivalent of ruby's CommaSequence.do_extend.
   */
-  Selector_List_Ptr Extend::extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething) {
+  Selector_List_Ptr Extend::extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, SubsetMap& subset_map, bool isReplace, bool& extendedSomething) {
     std::set<Compound_Selector> seen;
     return extendSelectorList(pSelectorList, ctx, subset_map, isReplace, extendedSomething, seen);
   }
@@ -1895,7 +1901,7 @@ namespace Sass {
   /*
    This is the equivalent of ruby's CommaSequence.do_extend.
   */
-  Selector_List_Ptr Extend::extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, ExtensionSubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<Compound_Selector>& seen) {
+  Selector_List_Ptr Extend::extendSelectorList(Selector_List_Obj pSelectorList, Context& ctx, SubsetMap& subset_map, bool isReplace, bool& extendedSomething, std::set<Compound_Selector>& seen) {
 
     Selector_List_Obj pNewSelectors = SASS_MEMORY_NEW(Selector_List, pSelectorList->pstate(), pSelectorList->length());
 
@@ -1917,8 +1923,14 @@ namespace Sass {
       extendedSomething = true;
 
       Node extendedSelectors = extendComplexSelector(&pSelector, ctx, subset_map, seen, isReplace, true);
+
+      Selector_List_Obj pCpxSel = nodeToSelectorList(extendedSelectors, ctx);
+      pCpxSel->remove_parent_selectors();
+      pSelector = pSelector->first();
+
       if (!pSelector->has_placeholder()) {
-        if (!extendedSelectors.contains(complexSelectorToNode(&pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
+        // if (!extendedSelectors.contains(complexSelectorToNode(&pSelector, ctx), true /*simpleSelectorOrderDependent*/)) {
+        if (!pCpxSel->contains(&pSelector, true /*simpleSelectorOrderDependent*/)) {
           pNewSelectors->append(pSelector);
           continue;
         }
@@ -2039,7 +2051,7 @@ namespace Sass {
 
   // Extend a ruleset by extending the selectors and updating them on the ruleset. The block's rules don't need to change.
   template <typename ObjectType>
-  static void extendObjectWithSelectorAndBlock(ObjectType* pObject, Context& ctx, ExtensionSubsetMap& subset_map) {
+  static void extendObjectWithSelectorAndBlock(ObjectType* pObject, Context& ctx, SubsetMap& subset_map) {
 
     DEBUG_PRINTLN(EXTEND_OBJECT, "FOUND SELECTOR: " << static_cast<Selector_List_Ptr>(pObject->selector())->to_string(ctx.c_options))
 
@@ -2065,7 +2077,7 @@ namespace Sass {
 
 
 
-  Extend::Extend(Context& ctx, ExtensionSubsetMap& ssm)
+  Extend::Extend(Context& ctx, SubsetMap& ssm)
   : ctx(ctx), subset_map(ssm)
   { }
 
