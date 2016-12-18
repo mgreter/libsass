@@ -286,11 +286,11 @@ namespace Sass {
         l_h = l ? &l->head() : 0;
         r_h = r ? &r->head() : 0;
       }
-      // fail if only one is null
-      else if (!r_h) return !l_h;
-      else if (!l_h) return !r_h;
-      // heads ok and equal
-      else if (*l_h == *r_h)
+      // equals if other head is empty
+      else if ((!l_h && !r_h) ||
+               (!l_h && r_h->empty()) ||
+               (!r_h && l_h->empty()) ||
+               (*l_h == *r_h))
       {
         // check combinator after heads
         if (l->combinator() != r->combinator())
@@ -564,11 +564,25 @@ namespace Sass {
 
   bool Attribute_Selector::operator== (const Attribute_Selector& rhs) const
   {
-    return (name() == rhs.name())
+    // get optional value state
+    bool no_lhs_val = value().isNull();
+    bool no_rhs_val = rhs.value().isNull();
+    // both are null, therefore equal
+    if (no_lhs_val && no_rhs_val) {
+      return (name() == rhs.name())
+        && (matcher() == rhs.matcher())
+        && (is_ns_eq(ns(), rhs.ns()));
+    }
+    // both are defined, evaluate
+    if (no_lhs_val == no_rhs_val) {
+      return (name() == rhs.name())
         && (matcher() == rhs.matcher())
         && (is_ns_eq(ns(), rhs.ns()))
-        && (&value() && &rhs.value())
         && (*value() == *rhs.value());
+    }
+    // not equal
+    return false;
+
   }
 
   bool Attribute_Selector::operator== (const Simple_Selector& rhs) const
