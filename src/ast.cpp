@@ -190,8 +190,9 @@ namespace Sass {
       /*debug_ast(sel);
       debug_ast(&cur);
       std::cerr << "======\n";*/
+      // if (selectors_equal(*sel, *cur, !simpleSelectorOrderDependent)) return true;
       if (!simpleSelectorOrderDependent) {
-        if (!(*sel < *cur) && !(*cur < *sel)) return true;
+        if (!(*sel < *cur || *cur < *sel)) return true;
       } else {
         if (*sel == *cur) return true;
       }
@@ -336,6 +337,34 @@ namespace Sass {
     return unified.detach();
   }
 
+  bool Selector::operator== (const Selector& rhs) const
+  {
+    if (Selector_List_Ptr_Const sl = dynamic_cast<Selector_List_Ptr_Const>(this)) return *sl == rhs;
+    if (Simple_Selector_Ptr_Const sp = dynamic_cast<Simple_Selector_Ptr_Const>(this)) return *sp == rhs;
+    throw "invalid selector base classes to compare";
+    return false;
+  }
+
+  bool Selector::operator< (const Selector& rhs) const
+  {
+    if (Selector_List_Ptr_Const sl = dynamic_cast<Selector_List_Ptr_Const>(this)) return *sl < rhs;
+    if (Simple_Selector_Ptr_Const sp = dynamic_cast<Simple_Selector_Ptr_Const>(this)) return *sp < rhs;
+    throw "invalid selector base classes to compare";
+    return false;
+  }
+
+  bool Simple_Selector::operator== (const Selector& rhs) const
+  {
+    if (Simple_Selector_Ptr_Const sp = dynamic_cast<Simple_Selector_Ptr_Const>(&rhs)) return *this == *sp;
+    return false;
+  }
+
+  bool Simple_Selector::operator< (const Selector& rhs) const
+  {
+    if (Simple_Selector_Ptr_Const sp = dynamic_cast<Simple_Selector_Ptr_Const>(&rhs)) return *this < *sp;
+    return false;
+  }
+
   bool Simple_Selector::operator== (const Simple_Selector& rhs) const
   {
     if (Pseudo_Selector_Ptr_Const lp = dynamic_cast<Pseudo_Selector_Ptr_Const>(this)) return *lp == rhs;
@@ -406,6 +435,23 @@ namespace Sass {
       ++i; ++n;
     }
     // no mismatch
+    return true;
+  }
+
+  bool Selector_List::operator< (const Selector& rhs) const
+  {
+    if (Selector_List_Ptr_Const sp = dynamic_cast<Selector_List_Ptr_Const>(&rhs)) return *this < *sp;
+    return false;
+  }
+
+  bool Selector_List::operator< (const Selector_List& rhs) const
+  {
+    if (this->length() != rhs.length()) return false;
+    for (size_t i = 0; i < rhs.length(); i ++) {
+      // debug_ast(&at(i));
+      // debug_ast(&rhs.at(i));
+      if (!(*at(i) < *rhs.at(i))) return false;
+    }
     return true;
   }
 
@@ -554,12 +600,17 @@ namespace Sass {
 
   bool Attribute_Selector::operator< (const Attribute_Selector& rhs) const
   {
-
     if (is_ns_eq(ns(), rhs.ns())) {
       if (name() == rhs.name()) {
         if (matcher() == rhs.matcher()) {
-          return &value() && &rhs.value() &&
-                 *value() < *rhs.value();
+          bool no_lhs_val = value().isNull();
+          bool no_rhs_val = rhs.value().isNull();
+          if (no_lhs_val && no_rhs_val) {
+            return true;
+          }
+          if (!no_lhs_val && !no_rhs_val) {
+            return *value() < *rhs.value();
+          }
         } else { return matcher() < rhs.matcher(); }
       } else { return name() < rhs.name(); }
     }

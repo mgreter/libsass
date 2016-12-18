@@ -1771,6 +1771,9 @@ namespace Sass {
     virtual void ltrim() = 0;
     virtual void trim() = 0;
     virtual bool operator==(const Expression& rhs) const = 0;
+    virtual bool operator<(const Expression& rhs) const {
+      return this->to_string() < rhs.to_string();
+    };
     ATTACH_VIRTUAL_AST_OPERATIONS(String);
     ATTACH_OPERATIONS()
   };
@@ -2312,6 +2315,9 @@ namespace Sass {
     virtual bool has_real_parent_ref() {
       return false;
     }
+    // dispatch to correct handlers
+    virtual bool operator<(const Selector& rhs) const;
+    virtual bool operator==(const Selector& rhs) const;
     ATTACH_VIRTUAL_AST_OPERATIONS(Selector);
   };
   inline Selector::~Selector() { }
@@ -2425,9 +2431,11 @@ namespace Sass {
 
     virtual bool is_superselector_of(Compound_Selector_Obj sub) { return false; }
 
+    bool operator==(const Selector& rhs) const;
     bool operator==(const Simple_Selector& rhs) const;
     inline bool operator!=(const Simple_Selector& rhs) const { return !(*this == rhs); }
 
+    bool operator<(const Selector& rhs) const;
     bool operator<(const Simple_Selector& rhs) const;
     // default implementation should work for most of the simple selectors (otherwise overload)
     ATTACH_VIRTUAL_AST_OPERATIONS(Simple_Selector);
@@ -3076,7 +3084,9 @@ namespace Sass {
       return false;
     }
     virtual bool contains(Complex_Selector_Ptr, bool);
+    virtual bool operator<(const Selector& rhs) const;
     virtual bool operator==(const Selector& rhs) const;
+    virtual bool operator<(const Selector_List& rhs) const;
     virtual bool operator==(const Selector_List& rhs) const;
     // Selector Lists can be compared to comma lists
     virtual bool operator==(const Expression& rhs) const;

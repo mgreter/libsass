@@ -1693,10 +1693,10 @@ namespace Sass {
       Selector_List_Obj pCpxSel = nodeToSelectorList(extendedSelectors, ctx);
       pCpxSel->remove_parent_selectors();
       Complex_Selector_Obj ppsel = nodeToComplexSelector(newSelector, ctx);
-      // pSelector = pSelector->first();
+      ppsel = ppsel->first();
 
-        // if (!pCpxSel->contains(&ppsel, false /*simpleSelectorOrderDependent*/)) {
-        if (!extendedSelectors.contains(newSelector, false /*simpleSelectorOrderDependent*/)) {
+        if (!pCpxSel->contains(&ppsel, false /*simpleSelectorOrderDependent*/)) {
+        // if (!extendedSelectors.contains(newSelector, false /*simpleSelectorOrderDependent*/)) {
 //          DEBUG_PRINTLN(EXTEND_COMPOUND, "ADDING NEW SELECTOR")
           extendedSelectors.collection()->push_back(newSelector);
         }
