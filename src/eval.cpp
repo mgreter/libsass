@@ -884,7 +884,8 @@ namespace Sass {
         c->pstate().path,
         c->pstate().line + 1,
         c->pstate().column + 1,
-        SASS_CALLEE_FUNCTION
+        SASS_CALLEE_FUNCTION,
+        { env }
       });
 
       // eval the body if user-defined or special, invoke underlying CPP function if native
@@ -924,7 +925,8 @@ namespace Sass {
         c->pstate().path,
         c->pstate().line + 1,
         c->pstate().column + 1,
-        SASS_CALLEE_C_FUNCTION
+        SASS_CALLEE_C_FUNCTION,
+        { env }
       });
 
       To_C to_c;
