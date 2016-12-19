@@ -167,7 +167,7 @@ namespace Sass {
     {
       Statement_Ptr s = &rr->block()->at(i);
       if (bubblable(s)) rules->append(s);
-      if (!bubblable(s)) props->append(s);
+      else props->append(s);
     }
 
     if (props->length())
@@ -318,6 +318,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::bubble(Supports_Block_Ptr m)
   {
+    // ToDo: this doesn't look kosher
     Ruleset_Obj parent = static_cast<Ruleset_Ptr>(SASS_MEMORY_COPY(this->parent()));
 
     Block_Ptr bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
@@ -343,6 +344,7 @@ namespace Sass {
 
   Statement_Ptr Cssize::bubble(Media_Block_Ptr m)
   {
+    // ToDo: this doesn't look kosher
     Ruleset_Obj parent = static_cast<Ruleset_Ptr>(SASS_MEMORY_COPY(this->parent()));
 
     Block_Ptr bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
@@ -368,7 +370,7 @@ namespace Sass {
 
   bool Cssize::bubblable(Statement_Ptr s)
   {
-    return dynamic_cast<Ruleset_Ptr>(s) || s->bubbles();
+    return SASS_MEMORY_ISA_PTR(Ruleset, s) || s->bubbles();
   }
 
   Block_Ptr Cssize::flatten(Block_Ptr b)
@@ -395,7 +397,7 @@ namespace Sass {
 
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement_Obj value = b->at(i);
-      bool key = dynamic_cast<Bubble_Ptr>(&value) != NULL;
+      bool key = SASS_MEMORY_IS(Bubble, value);
 
       if (!results.empty() && results.back().first == key)
       {

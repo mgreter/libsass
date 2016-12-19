@@ -34,16 +34,16 @@ namespace Sass {
     return ex ? ex->hash() : 0;
   }
 
-  size_t HashSimpleSelector::operator() (Simple_Selector_Obj ex) const {
+  size_t HashSimpleSelector::operator() (const Simple_Selector_Obj& ex) const {
     return ex ? ex->hash() : 0;
   }
 
 
-  bool CompareExpression::operator()(const Expression_Obj& lhs, const Expression_Obj& rhs) const {
-    return lhs && rhs && lhs->eq(*rhs);
+  bool EqualExpression::operator()(const Expression_Obj& lhs, const Expression_Obj& rhs) const {
+    return lhs && rhs && *lhs == *rhs;
   }
 
-  bool CompareSimpleSelector::operator()(Simple_Selector_Obj lhs, Simple_Selector_Obj rhs) const {
+  bool EqualSimpleSelector::operator()(const Simple_Selector_Obj& lhs, const Simple_Selector_Obj& rhs) const {
     return &lhs && &rhs && *lhs == *rhs;
   }
 
@@ -1214,6 +1214,14 @@ namespace Sass {
     return ss;
   }
 
+
+  // special clone implementation that can safe up to 10% performance
+  static Complex_Selector_Ptr cloneSelectorTails(const Complex_Selector_Obj& in) {
+    auto cpy = SASS_MEMORY_COPY(in);
+    if (cpy->tail()) cpy->tail(cloneSelectorTails(cpy->tail()));
+    return cpy;
+  }
+
   Selector_List_Ptr Complex_Selector::resolve_parent_refs(Context& ctx, Selector_List_Ptr parents, bool implicit_parent)
   {
     Complex_Selector_Obj tail = this->tail();
@@ -1241,7 +1249,8 @@ namespace Sass {
               for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
                 Complex_Selector_Obj t = (*tails)[n];
                 Complex_Selector_Obj parent = (*parents)[i];
-                Complex_Selector_Obj s = SASS_MEMORY_CLONE(parent);
+                Complex_Selector_Obj ps = cloneSelectorTails(parent);
+                if (ps->head()) ps->head(SASS_MEMORY_COPY(ps->head()));
                 Complex_Selector_Obj ss = SASS_MEMORY_CLONE(this);
                 ss->tail(t ? SASS_MEMORY_CLONE(t) : 0);
                 Compound_Selector_Obj h = SASS_MEMORY_COPY(head_);
@@ -1256,10 +1265,10 @@ namespace Sass {
                   (*h)[0]->pstate(state);
                 }
                 // keep old parser state
-                s->pstate(pstate());
+                ps->pstate(pstate());
                 // append new tail
-                s->append(ctx, ss);
-                retval->append(s);
+                ps->append(ctx, ss);
+                retval->append(ps);
               }
             }
           }

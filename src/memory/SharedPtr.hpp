@@ -38,6 +38,17 @@ namespace Sass {
 
   #endif
 
+  // you must only call this on final classes
+  #define SASS_MEMORY_IS(Class, obj) \
+    (typeid(Class) == typeid(*obj)) \
+
+  // a variant that return a static pointer
+  #define SASS_MEMORY_ISA(Class, obj) \
+    (typeid(Class) == typeid(*obj) ? static_cast<Class*>(&obj) : 0) \
+
+  #define SASS_MEMORY_ISA_PTR(Class, ptr) \
+    (typeid(Class) == typeid(*ptr) ? static_cast<Class*>(ptr) : 0) \
+
   #define SASS_MEMORY_CAST(Class, obj) \
     (dynamic_cast<Class##_Ptr>(&obj)) \
 

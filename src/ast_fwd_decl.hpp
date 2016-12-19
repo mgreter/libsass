@@ -357,28 +357,28 @@ namespace Sass {
   struct HashExpression {
     size_t operator() (Expression_Obj ex) const;
   };
-  struct CompareExpression {
+  struct EqualExpression {
     bool operator()(const Expression_Obj& lhs, const Expression_Obj& rhs) const;
   };
 
   struct HashSimpleSelector {
-    size_t operator() (Simple_Selector_Obj ex) const;
+    size_t operator() (const Simple_Selector_Obj& ex) const;
   };
 
-  struct CompareSimpleSelector {
-    bool operator()(Simple_Selector_Obj lhs, Simple_Selector_Obj rhs) const;
+  struct EqualSimpleSelector {
+    bool operator()(const Simple_Selector_Obj& lhs, const Simple_Selector_Obj& rhs) const;
   };
 
   typedef std::unordered_map<
     Expression_Obj, // key
     Expression_Obj, // value
     HashExpression, // hasher
-    CompareExpression // compare
+    EqualExpression // compare
   > ExpressionMap;
   typedef std::unordered_set<
     Expression_Obj, // value
     HashExpression, // hasher
-    CompareExpression // compare
+    EqualExpression // compare
   > ExpressionSet;
 
   typedef std::string Subset_Map_Key;

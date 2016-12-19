@@ -2818,7 +2818,7 @@ namespace Sass {
     bool is_empty_reference()
     {
       return length() == 1 &&
-             SASS_MEMORY_CAST(Parent_Selector, (*this)[0]);
+             SASS_MEMORY_IS(Parent_Selector, (*this)[0]);
     }
     std::vector<Subset_Map_Key> to_str_vec(); // sometimes need to convert to a flat "by-value" data structure
 

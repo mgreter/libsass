@@ -109,13 +109,10 @@ namespace Sass {
   {
     if (!this->parent) return true;
 
-    if (SASS_MEMORY_CAST_PTR(Content, node))
+    if (SASS_MEMORY_IS(Content, node) || is_charset(node))
     { this->invalid_content_parent(this->parent); }
 
-    if (is_charset(node))
-    { this->invalid_charset_parent(this->parent); }
-
-    if (SASS_MEMORY_CAST_PTR(Extension, node))
+    if (SASS_MEMORY_IS(Extension, node))
     { this->invalid_extend_parent(this->parent); }
 
     // if (SASS_MEMORY_CAST(Import, node))
@@ -130,14 +127,13 @@ namespace Sass {
     if (this->is_function(this->parent))
     { this->invalid_function_child(node); }
 
-    if (SASS_MEMORY_CAST_PTR(Declaration, node))
+    if (SASS_MEMORY_IS(Declaration, node))
     { this->invalid_prop_parent(this->parent); }
 
-    if (
-      SASS_MEMORY_CAST_PTR(Declaration, this->parent)
-    ) { this->invalid_prop_child(node); }
+    if (SASS_MEMORY_IS(Declaration, this->parent))
+    { this->invalid_prop_child(node); }
 
-    if (SASS_MEMORY_CAST_PTR(Return, node))
+    if (SASS_MEMORY_IS(Return, node))
     { this->invalid_return_parent(this->parent); }
 
     return true;
@@ -168,8 +164,8 @@ namespace Sass {
   void CheckNesting::invalid_extend_parent(Statement_Ptr parent)
   {
     if (!(
-        SASS_MEMORY_CAST_PTR(Ruleset, parent) ||
-        SASS_MEMORY_CAST_PTR(Mixin_Call, parent) ||
+        SASS_MEMORY_IS(Ruleset, parent) ||
+        SASS_MEMORY_IS(Mixin_Call, parent) ||
         is_mixin(parent)
     )) {
       throw Exception::InvalidSass(
@@ -214,12 +210,12 @@ namespace Sass {
   {
     for (Statement_Ptr pp : this->parents) {
       if (
-          SASS_MEMORY_CAST_PTR(Each, pp) ||
-          SASS_MEMORY_CAST_PTR(For, pp) ||
-          SASS_MEMORY_CAST_PTR(If, pp) ||
-          SASS_MEMORY_CAST_PTR(While, pp) ||
-          SASS_MEMORY_CAST_PTR(Trace, pp) ||
-          SASS_MEMORY_CAST_PTR(Mixin_Call, pp) ||
+          SASS_MEMORY_IS(Each, pp) ||
+          SASS_MEMORY_IS(For, pp) ||
+          SASS_MEMORY_IS(If, pp) ||
+          SASS_MEMORY_IS(While, pp) ||
+          SASS_MEMORY_IS(Trace, pp) ||
+          SASS_MEMORY_IS(Mixin_Call, pp) ||
           is_mixin(pp)
       ) {
         throw Exception::InvalidSass(
@@ -234,12 +230,12 @@ namespace Sass {
   {
     for (Statement_Ptr pp : this->parents) {
       if (
-          SASS_MEMORY_CAST_PTR(Each, pp) ||
-          SASS_MEMORY_CAST_PTR(For, pp) ||
-          SASS_MEMORY_CAST_PTR(If, pp) ||
-          SASS_MEMORY_CAST_PTR(While, pp) ||
-          SASS_MEMORY_CAST_PTR(Trace, pp) ||
-          SASS_MEMORY_CAST_PTR(Mixin_Call, pp) ||
+          SASS_MEMORY_IS(Each, pp) ||
+          SASS_MEMORY_IS(For, pp) ||
+          SASS_MEMORY_IS(If, pp) ||
+          SASS_MEMORY_IS(While, pp) ||
+          SASS_MEMORY_IS(Trace, pp) ||
+          SASS_MEMORY_IS(Mixin_Call, pp) ||
           is_mixin(pp)
       ) {
         throw Exception::InvalidSass(
@@ -253,17 +249,17 @@ namespace Sass {
   void CheckNesting::invalid_function_child(Statement_Ptr child)
   {
     if (!(
-        SASS_MEMORY_CAST_PTR(Each, child) ||
-        SASS_MEMORY_CAST_PTR(For, child) ||
-        SASS_MEMORY_CAST_PTR(If, child) ||
-        SASS_MEMORY_CAST_PTR(While, child) ||
-        SASS_MEMORY_CAST_PTR(Trace, child) ||
-        SASS_MEMORY_CAST_PTR(Comment, child) ||
-        SASS_MEMORY_CAST_PTR(Debug, child) ||
-        SASS_MEMORY_CAST_PTR(Return, child) ||
-        SASS_MEMORY_CAST_PTR(Variable, child) ||
-        SASS_MEMORY_CAST_PTR(Warning, child) ||
-        SASS_MEMORY_CAST_PTR(Error, child)
+        SASS_MEMORY_IS(Each, child) ||
+        SASS_MEMORY_IS(For, child) ||
+        SASS_MEMORY_IS(If, child) ||
+        SASS_MEMORY_IS(While, child) ||
+        SASS_MEMORY_IS(Trace, child) ||
+        SASS_MEMORY_IS(Comment, child) ||
+        SASS_MEMORY_IS(Debug, child) ||
+        SASS_MEMORY_IS(Return, child) ||
+        SASS_MEMORY_IS(Variable, child) ||
+        SASS_MEMORY_IS(Warning, child) ||
+        SASS_MEMORY_IS(Error, child)
     )) {
       throw Exception::InvalidSass(
         child->pstate(),
@@ -275,14 +271,14 @@ namespace Sass {
   void CheckNesting::invalid_prop_child(Statement_Ptr child)
   {
     if (!(
-        SASS_MEMORY_CAST_PTR(Each, child) ||
-        SASS_MEMORY_CAST_PTR(For, child) ||
-        SASS_MEMORY_CAST_PTR(If, child) ||
-        SASS_MEMORY_CAST_PTR(While, child) ||
-        SASS_MEMORY_CAST_PTR(Trace, child) ||
-        SASS_MEMORY_CAST_PTR(Comment, child) ||
-        SASS_MEMORY_CAST_PTR(Declaration, child) ||
-        SASS_MEMORY_CAST_PTR(Mixin_Call, child)
+        SASS_MEMORY_IS(Each, child) ||
+        SASS_MEMORY_IS(For, child) ||
+        SASS_MEMORY_IS(If, child) ||
+        SASS_MEMORY_IS(While, child) ||
+        SASS_MEMORY_IS(Trace, child) ||
+        SASS_MEMORY_IS(Comment, child) ||
+        SASS_MEMORY_IS(Declaration, child) ||
+        SASS_MEMORY_IS(Mixin_Call, child)
     )) {
       throw Exception::InvalidSass(
         child->pstate(),
@@ -296,10 +292,10 @@ namespace Sass {
     if (!(
         is_mixin(parent) ||
         is_directive_node(parent) ||
-        SASS_MEMORY_CAST_PTR(Ruleset, parent) ||
-        SASS_MEMORY_CAST_PTR(Keyframe_Rule, parent) ||
-        SASS_MEMORY_CAST_PTR(Declaration, parent) ||
-        SASS_MEMORY_CAST_PTR(Mixin_Call, parent)
+        SASS_MEMORY_IS(Ruleset, parent) ||
+        SASS_MEMORY_IS(Keyframe_Rule, parent) ||
+        SASS_MEMORY_IS(Declaration, parent) ||
+        SASS_MEMORY_IS(Mixin_Call, parent)
     )) {
       throw Exception::InvalidSass(
         parent->pstate(),
@@ -326,12 +322,12 @@ namespace Sass {
                              !is_root_node(grandparent) &&
                              !is_at_root_node(grandparent);
 
-    return SASS_MEMORY_CAST_PTR(Import, parent) ||
-           SASS_MEMORY_CAST_PTR(Each, parent) ||
-           SASS_MEMORY_CAST_PTR(For, parent) ||
-           SASS_MEMORY_CAST_PTR(If, parent) ||
-           SASS_MEMORY_CAST_PTR(While, parent) ||
-           SASS_MEMORY_CAST_PTR(Trace, parent) ||
+    return SASS_MEMORY_IS(Import, parent) ||
+           SASS_MEMORY_IS(Each, parent) ||
+           SASS_MEMORY_IS(For, parent) ||
+           SASS_MEMORY_IS(If, parent) ||
+           SASS_MEMORY_IS(While, parent) ||
+           SASS_MEMORY_IS(Trace, parent) ||
            valid_bubble_node;
   }
 
@@ -355,7 +351,7 @@ namespace Sass {
 
   bool CheckNesting::is_root_node(Statement_Ptr n)
   {
-    if (SASS_MEMORY_CAST_PTR(Ruleset, n)) return false;
+    if (SASS_MEMORY_IS(Ruleset, n)) return false;
 
     Block_Ptr b = SASS_MEMORY_CAST_PTR(Block, n);
     return b && b->is_root();
@@ -363,14 +359,14 @@ namespace Sass {
 
   bool CheckNesting::is_at_root_node(Statement_Ptr n)
   {
-    return SASS_MEMORY_CAST_PTR(At_Root_Block, n) != NULL;
+    return SASS_MEMORY_IS(At_Root_Block, n);
   }
 
   bool CheckNesting::is_directive_node(Statement_Ptr n)
   {
-    return SASS_MEMORY_CAST_PTR(Directive, n) ||
-           SASS_MEMORY_CAST_PTR(Import, n) ||
-           SASS_MEMORY_CAST_PTR(Media_Block, n) ||
-           SASS_MEMORY_CAST_PTR(Supports_Block, n);
+    return SASS_MEMORY_IS(Directive, n) ||
+           SASS_MEMORY_IS(Import, n) ||
+           SASS_MEMORY_IS(Media_Block, n) ||
+           SASS_MEMORY_IS(Supports_Block, n);
   }
 }
