@@ -1199,7 +1199,7 @@ namespace Sass {
 
   }
 
-  Selector_List_Ptr Selector_List::resolve_parent_refs(Context& ctx, Selector_List_Ptr ps, bool implicit_parent)
+  Selector_List_Ptr Selector_List::resolve_parent_refs(Context& ctx, Selector_List_Ptr ps, std::vector<Selector_List_Obj>& pstack, bool implicit_parent)
   {
     if (!this->has_parent_ref()/* && !implicit_parent*/) return this;
     Selector_List_Ptr ss = SASS_MEMORY_NEW(Selector_List, pstate());
@@ -1207,14 +1207,14 @@ namespace Sass {
       Selector_List_Obj list = SASS_MEMORY_NEW(Selector_List, pstate());
       list->append(ps->at(pi));
       for (size_t si = 0, sL = this->length(); si < sL; ++si) {
-        Selector_List_Obj rv = at(si)->resolve_parent_refs(ctx, &list, implicit_parent);
+        Selector_List_Obj rv = at(si)->resolve_parent_refs(ctx, &list, pstack, implicit_parent);
         ss->concat(&rv);
       }
     }
     return ss;
   }
 
-  Selector_List_Ptr Complex_Selector::resolve_parent_refs(Context& ctx, Selector_List_Ptr parents, bool implicit_parent)
+  Selector_List_Ptr Complex_Selector::resolve_parent_refs(Context& ctx, Selector_List_Ptr parents, std::vector<Selector_List_Obj>& pstack, bool implicit_parent)
   {
     Complex_Selector_Obj tail = this->tail();
     Compound_Selector_Obj head = this->head();
@@ -1226,7 +1226,7 @@ namespace Sass {
     }
 
     // first resolve_parent_refs the tail (which may return an expanded list)
-    Selector_List_Obj tails = tail ? tail->resolve_parent_refs(ctx, parents, implicit_parent) : 0;
+    Selector_List_Obj tails = tail ? tail->resolve_parent_refs(ctx, parents, pstack, implicit_parent) : 0;
 
     if (head && head->length() > 0) {
 
@@ -1235,6 +1235,16 @@ namespace Sass {
       // mix parent complex selector into the compound list
       if (SASS_MEMORY_CAST(Parent_Selector, (*head)[0])) {
         retval = SASS_MEMORY_NEW(Selector_List, pstate());
+
+        // it turns out that real parent references reach
+        // across @at-root rules, which comes unexpected
+        if (parents == NULL && head->has_real_parent_ref()) {
+          int i = pstack.size() - 1;
+          while (!parents && i > -1) {
+            parents = &pstack.at(i--);
+          }
+        }
+
         if (parents && parents->length()) {
           if (tails && tails->length() > 0) {
             for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
@@ -1329,7 +1339,7 @@ namespace Sass {
       for (Simple_Selector_Obj ss : head->elements()) {
         if (Wrapped_Selector_Ptr ws = SASS_MEMORY_CAST(Wrapped_Selector, ss)) {
           if (Selector_List_Ptr sl = SASS_MEMORY_CAST(Selector_List, ws->selector())) {
-            if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, implicit_parent));
+            if (parents) ws->selector(sl->resolve_parent_refs(ctx, parents, pstack, implicit_parent));
           }
         }
       }

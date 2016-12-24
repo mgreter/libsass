@@ -131,12 +131,14 @@ namespace Sass {
     if (sel == 0) throw std::runtime_error("Expanded null selector");
 
     if (sel->length() == 0 || sel->has_parent_ref()) {
+      bool has_any_parents = false;
       bool has_parent_selector = false;
       for (size_t i = 0, L = selector_stack.size(); i < L && !has_parent_selector; i++) {
         Selector_List_Obj ll = selector_stack.at(i);
+        has_any_parents = has_any_parents && !ll.isNull();
         has_parent_selector = ll != 0 && ll->length() > 0;
       }
-      if (!has_parent_selector) {
+      if ((has_any_parents || sel->has_real_parent_ref()) && !has_parent_selector) {
         error("Base-level rules cannot contain the parent-selector-referencing character '&'.", sel->pstate(), backtrace());
       }
     }
