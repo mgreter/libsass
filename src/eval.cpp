@@ -621,7 +621,7 @@ namespace Sass {
         if (String_Constant_Ptr str = SASS_MEMORY_CAST(String_Constant, rhs)) {
           std::string value(str->value());
           const char* start = value.c_str();
-          if (Prelexer::sequence < Prelexer::dimension, Prelexer::number >(start) != 0) {
+          if (Prelexer::sequence < Prelexer::number >(start) != 0) {
             Textual_Obj r = SASS_MEMORY_NEW(Textual, b->pstate(), Textual::DIMENSION, str->value());
             rhs = r->perform(this);
           }
