@@ -1,0 +1,39 @@
+#!/bin/bash
+
+PLUGIN=$1
+RUBY_BIN=ruby
+SASS_SPEC_PATH=sass-spec
+SASSC_BIN=sassc/bin/sassc
+SASS_SPEC_SPEC_DIR=plugins/libsass-${PLUGIN}/test
+
+if [ -e ./tester ] ; then
+  SASSC_BIN=./tester
+fi
+
+if [ -d ./build/lib ] ; then
+  cp -a build/lib lib
+fi
+
+if [ "x$1" == "x" ] ; then
+  echo "No plugin name given"
+  exit 1
+fi
+
+mkdir -p plugins
+if [ ! -d plugins/libsass-${PLUGIN} ] ; then
+  git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN} --branch develop
+fi
+if [ ! -d plugins/libsass-${PLUGIN}/build ] ; then
+  mkdir plugins/libsass-${PLUGIN}/build
+fi
+
+cd plugins/libsass-${PLUGIN}/build
+cmake -G "Unix Makefiles" -D LIBSASS_DIR="../../.." ..
+make -j2
+cd ../../..
+
+ls -la plugins/libsass-${PLUGIN}/build
+
+${SASSC_BIN} --plugin-path plugins/libsass-${PLUGIN}/build ${SASS_SPEC_SPEC_DIR}/basic/input.scss > ${SASS_SPEC_SPEC_DIR}/basic/result.css
+${SASSC_BIN} --plugin-path plugins/libsass-${PLUGIN}/build ${SASS_SPEC_SPEC_DIR}/basic/input.scss --sourcemap > /dev/null
+diff ${SASS_SPEC_SPEC_DIR}/basic/expected_output.css ${SASS_SPEC_SPEC_DIR}/basic/result.css
