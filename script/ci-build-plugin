@@ -1,3 +1,5 @@
+#!/bin/bash
+
 PLUGIN=$1
 RUBY_BIN=ruby
 SASS_SPEC_PATH=sass-spec
@@ -29,6 +31,8 @@ cd plugins/libsass-${PLUGIN}/build
 cmake -G "Unix Makefiles" -D LIBSASS_DIR="../../.." ..
 make -j2
 cd ../../..
+
+ls -la plugins/libsass-${PLUGIN}/build
 
 ${SASSC_BIN} --plugin-path plugins/libsass-${PLUGIN}/build ${SASS_SPEC_SPEC_DIR}/basic/input.scss > ${SASS_SPEC_SPEC_DIR}/basic/result.css
 diff ${SASS_SPEC_SPEC_DIR}/basic/expected_output.css ${SASS_SPEC_SPEC_DIR}/basic/result.css

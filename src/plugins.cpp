@@ -167,7 +167,11 @@ namespace Sass {
       struct dirent *dirp;
       if((dp  = opendir(path.c_str())) == NULL) return -1;
       while ((dirp = readdir(dp)) != NULL) {
-        if (!ends_with(dirp->d_name, ".so")) continue;
+        #if __APPLE__
+          if (!ends_with(dirp->d_name, ".dylib")) continue;
+        #else
+          if (!ends_with(dirp->d_name, ".so")) continue;
+        #endif
         if (load_plugin(path + dirp->d_name)) ++ loaded;
       }
       closedir(dp);
