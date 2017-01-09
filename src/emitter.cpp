@@ -112,7 +112,7 @@ namespace Sass {
 
   char Emitter::last_char()
   {
-    return wbuf.buffer.back();
+    return *wbuf.buffer.rbegin();
   }
 
   // append a single char to the buffer
