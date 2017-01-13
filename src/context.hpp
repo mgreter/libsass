@@ -26,14 +26,14 @@ namespace Sass {
 
   class Context {
   public:
-    void import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path);
+    void import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path, bool is_root);
     bool call_headers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp)
-    { return call_loader(load_path, ctx_path, pstate, imp, c_headers, false); };
-    bool call_importers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp)
-    { return call_loader(load_path, ctx_path, pstate, imp, c_importers, true); };
+    { return call_loader(load_path, ctx_path, pstate, imp, c_headers, true, false); };
+    bool call_importers(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, bool is_root)
+    { return call_loader(load_path, ctx_path, pstate, imp, c_importers, is_root, true); };
 
   private:
-    bool call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, std::vector<Sass_Importer_Entry> importers, bool only_one = true);
+    bool call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, std::vector<Sass_Importer_Entry> importers, bool is_root, bool only_one = true);
 
   public:
     const std::string CWD;
@@ -91,9 +91,9 @@ namespace Sass {
     virtual char* render(Block_Obj root);
     virtual char* render_srcmap();
 
-    void register_resource(const Include&, const Resource&, ParserState* = 0);
+    void register_resource(const Include&, const Resource&, bool is_root, ParserState* = 0);
     std::vector<Include> find_includes(const Importer& import);
-    Include load_import(const Importer&, ParserState pstate);
+    Include load_import(const Importer&, bool is_root, ParserState pstate);
 
     Sass_Output_Style output_style() { return c_options.output_style; };
     std::vector<std::string> get_included_files(bool skip = false, size_t headers = 0);

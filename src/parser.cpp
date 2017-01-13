@@ -93,20 +93,15 @@ namespace Sass {
   }
 
   /* main entry point to parse root block */
-  Block_Obj Parser::parse()
+  Block_Obj Parser::parse(bool is_root)
   {
-    bool is_root = false;
-    Block_Obj root = SASS_MEMORY_NEW(Block, pstate, 0, true);
+
     read_bom();
 
-    // custom headers
-    if (ctx.resources.size() == 1) {
-    is_root = true;
-      ctx.apply_custom_headers(&root, path, pstate);
-    }
-
+    Block_Obj root = SASS_MEMORY_NEW(Block, pstate, 0, is_root);
+    if (ctx.resources.size() == 1) ctx.apply_custom_headers(&root, path, pstate);
     block_stack.push_back(root);
-    /* bool rv = */ parse_block_nodes(is_root);
+    parse_block_nodes(is_root);
     block_stack.pop_back();
 
     // update for end position
@@ -231,6 +226,8 @@ namespace Sass {
           error("Import directives may not be used within control directives or mixins.", pstate);
         }
       }
+      // this puts the parsed doc into sheets
+      // import stub will fetch this in expand
       Import_Obj imp = parse_import();
       // if it is a url, we only add the statement
       if (!imp->urls().empty()) block->append(&imp);
@@ -345,8 +342,14 @@ namespace Sass {
     for(auto location : to_import) {
       if (location.second) {
         imp->urls().push_back(&location.second);
-      } else if (!ctx.call_importers(unquote(location.first), path, pstate, &imp)) {
-        ctx.import_url(&imp, location.first, path);
+      }
+      else {
+        bool is_root = block_stack.back()->is_root();
+        // check if custom importers want to take over the handling
+        if (!ctx.call_importers(unquote(location.first), path, pstate, &imp, is_root)) {
+          // nobody wants it, so we do our import
+          ctx.import_url(&imp, location.first, path, is_root);
+        }
       }
     }
 

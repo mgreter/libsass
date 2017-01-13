@@ -250,7 +250,7 @@ namespace Sass {
 
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
-  void Context::register_resource(const Include& inc, const Resource& res, ParserState* prstate)
+  void Context::register_resource(const Include& inc, const Resource& res, bool is_root, ParserState* prstate)
   {
 
     // do not parse same resource twice
@@ -317,7 +317,7 @@ namespace Sass {
     sass_import_take_source(import);
     sass_import_take_srcmap(import);
     // then parse the root block
-    Block_Obj root = p.parse();
+    Block_Obj root = p.parse(is_root);
     // delete memory of current stack frame
     sass_delete_import(import_stack.back());
     // remove current stack frame
@@ -331,7 +331,7 @@ namespace Sass {
   }
 
   // Add a new import to the context (called from `import_url`)
-  Include Context::load_import(const Importer& imp, ParserState pstate)
+  Include Context::load_import(const Importer& imp, bool is_root, ParserState pstate)
   {
 
     // search for valid imports (ie. partials) on the filesystem
@@ -359,7 +359,7 @@ namespace Sass {
       // the memory buffer returned must be freed by us!
       if (char* contents = read_file(resolved[0].abs_path)) {
         // register the newly resolved file resource
-        register_resource(resolved[0], { contents, 0 }, &pstate);
+        register_resource(resolved[0], { contents, 0 }, is_root, &pstate);
         // return resolved entry
         return resolved[0];
       }
@@ -370,7 +370,7 @@ namespace Sass {
 
   }
 
-  void Context::import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path) {
+  void Context::import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path, bool is_root) {
 
     ParserState pstate(imp->pstate());
     std::string imp_path(unquote(load_path));
@@ -398,7 +398,7 @@ namespace Sass {
     }
     else {
       const Importer importer(imp_path, ctx_path);
-      Include include(load_import(importer, pstate));
+      Include include(load_import(importer, is_root, pstate));
       if (include.abs_path.empty()) {
         error("File to import not found or unreadable: " + imp_path + ".\nParent style sheet: " + ctx_path, pstate);
       }
@@ -409,7 +409,7 @@ namespace Sass {
 
 
   // call custom importers on the given (unquoted) load_path and eventually parse the resulting style_sheet
-  bool Context::call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, std::vector<Sass_Importer_Entry> importers, bool only_one)
+  bool Context::call_loader(const std::string& load_path, const char* ctx_path, ParserState& pstate, Import_Ptr imp, std::vector<Sass_Importer_Entry> importers, bool is_root, bool only_one)
   {
     // unique counter
     size_t count = 0;
@@ -471,7 +471,7 @@ namespace Sass {
             // or resolves the file on the filesystem
             // added and resolved via `add_file`
             // finally stores everything on `imp`
-            import_url(imp, abs_path, ctx_path);
+            import_url(imp, abs_path, ctx_path, is_root);
           }
           // move to next
           ++it_includes;
@@ -579,7 +579,7 @@ namespace Sass {
     import_stack.push_back(import);
 
     // create the source entry for file entry
-    register_resource({{ input_path, "." }, abs_path }, { contents, 0 });
+    register_resource({{ input_path, "." }, abs_path }, { contents, 0 }, true);
 
     // create root ast tree node
     return compile();
@@ -621,7 +621,7 @@ namespace Sass {
     import_stack.push_back(import);
 
     // register a synthetic resource (path does not really exist, skip in includes)
-    register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
+    register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str }, true);
 
     // create root ast tree node
     return compile();

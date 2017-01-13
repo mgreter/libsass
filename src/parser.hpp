@@ -231,7 +231,7 @@ namespace Sass {
                    const std::string& middle = ", was: ");
     void read_bom();
 
-    Block_Obj parse();
+    Block_Obj parse(bool is_root = false);
     Import_Obj parse_import();
     Definition_Obj parse_definition(Definition::Type which_type);
     Parameters_Obj parse_parameters();
