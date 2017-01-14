@@ -1,6 +1,7 @@
 #ifndef SASS_CONTEXT_H
 #define SASS_CONTEXT_H
 
+#include <thread>
 #include <string>
 #include <vector>
 #include <map>
@@ -38,6 +39,7 @@ namespace Sass {
   public:
     const std::string CWD;
     struct Sass_Options& c_options;
+    std::vector<std::thread*> threads;
     std::string entry_path;
     size_t head_imports;
     Plugins plugins;

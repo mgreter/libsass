@@ -247,12 +247,15 @@ namespace Sass {
     return vec;
   }
 
+void func1(int a, int b){
+    //blahblah implementation
+}
+
 
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
   void Context::register_resource(const Include& inc, const Resource& res, ParserState* prstate)
   {
-
     // do not parse same resource twice
     // maybe raise an error in this case
     // if (sheets.count(inc.abs_path)) {
@@ -311,13 +314,19 @@ namespace Sass {
       }
     }
 
-    // create a parser instance from the given c_str buffer
-    Parser p(Parser::from_c_str(contents, *this, pstate));
+    std::thread* t = new std::thread(func1,1,2);
+    threads.push_back(t);
+    t.join();
+    delete t;
+
+    Block_Obj root;
     // do not yet dispose these buffers
     sass_import_take_source(import);
     sass_import_take_srcmap(import);
+    // create a parser instance from the given c_str buffer
+    Parser p(Parser::from_c_str(contents, *this, pstate));
     // then parse the root block
-    Block_Obj root = p.parse();
+    root = p.parse();
     // delete memory of current stack frame
     sass_delete_import(import_stack.back());
     // remove current stack frame
