@@ -72,7 +72,7 @@ namespace Sass {
     resources(),
     sheets(),
     subset_map(),
-    import_stack(),
+    // import_stack(),
 
     c_headers               (std::vector<Sass_Importer_Entry>()),
     c_importers             (std::vector<Sass_Importer_Entry>()),
@@ -140,13 +140,13 @@ namespace Sass {
     for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
     // everything that gets put into sources will be freed by us
     // this shouldn't have anything in it anyway!?
-    for (size_t m = 0; m < import_stack.size(); ++m) {
-      sass_import_take_source(import_stack[m]);
-      sass_import_take_srcmap(import_stack[m]);
-      sass_delete_import(import_stack[m]);
-    }
+//    for (size_t m = 0; m < import_stack.size(); ++m) {
+//      sass_import_take_source(import_stack[m]);
+//      sass_import_take_srcmap(import_stack[m]);
+//      sass_delete_import(import_stack[m]);
+//    }
     // clear inner structures (vectors) and input source
-    resources.clear(); import_stack.clear();
+    resources.clear(); // import_stack.clear();
     subset_map.clear(), sheets.clear();
   }
 

@@ -58,7 +58,6 @@ namespace Sass {
     std::vector<Resource> resources;
     std::map<const std::string, StyleSheet> sheets;
     Subset_Map subset_map;
-    std::vector<Sass_Import_Entry> import_stack;
     std::vector<Sass_Callee> callee_stack;
 
     struct Sass_Compiler* c_compiler;
@@ -148,6 +147,15 @@ namespace Sass {
     }
     virtual ~Data_Context();
     virtual Block_Obj parse();
+  };
+
+  class ThreadCtx {
+  public:
+    Context& ctx;
+    std::vector<Sass_Import_Entry> import_stack;
+    ThreadCtx(Context& ctx, std::vector<Sass_Import_Entry> import_stack)
+    : ctx(ctx), import_stack(import_stack)
+    {}
   };
 
 }
