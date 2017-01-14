@@ -72,7 +72,7 @@ namespace Sass {
     resources(),
     sheets(),
     subset_map(),
-    // import_stack(),
+    import_stack(),
 
     c_headers               (std::vector<Sass_Importer_Entry>()),
     c_importers             (std::vector<Sass_Importer_Entry>()),
@@ -291,11 +291,17 @@ try {
     mtx2.unlock();
 
 }
+    ThreadCtx::ThreadCtx(Context& ctx, std::vector<Sass_Import_Entry> import_stack)
+    : ctx(ctx), import_stack(import_stack)
+    {}
+    ThreadCtx::ThreadCtx(Context& ctx)
+    : ctx(ctx), import_stack(ctx.import_stack)
+    {}
 
 
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
-  void Context::register_resource(const Include& inc, const Resource& res, ParserState* prstate)
+  void Context::register_resource(const ThreadCtx& tctx, const Include& inc, const Resource& res, ParserState* prstate)
   {
     // do not parse same resource twice
     // maybe raise an error in this case
@@ -407,7 +413,7 @@ try {
       // the memory buffer returned must be freed by us!
       if (char* contents = read_file(resolved[0].abs_path)) {
         // register the newly resolved file resource
-        register_resource(resolved[0], { contents, 0 }, &pstate);
+        register_resource(*this, resolved[0], { contents, 0 }, &pstate);
         // return resolved entry
         return resolved[0];
       }
@@ -493,7 +499,7 @@ try {
           // handle error message passed back from custom importer
           // it may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include)) {
-            if (source || srcmap) register_resource({ importer, uniq_path }, { source, srcmap }, &pstate);
+            if (source || srcmap) register_resource(*this, { importer, uniq_path }, { source, srcmap }, &pstate);
             if (line == std::string::npos && column == std::string::npos) error(err_message, pstate);
             else error(err_message, ParserState(ctx_path, source, Position(line, column)));
           }
@@ -507,7 +513,7 @@ try {
             // attach information to AST node
             imp->incs().push_back(include);
             // register the resource buffers
-            register_resource(include, { source, srcmap }, &pstate);
+            register_resource(*this, include, { source, srcmap }, &pstate);
           }
           // only a path was retuned
           // try to load it like normal
@@ -627,7 +633,7 @@ try {
     import_stack.push_back(import);
 
     // create the source entry for file entry
-    register_resource({{ input_path, "." }, abs_path }, { contents, 0 });
+    register_resource(*this, {{ input_path, "." }, abs_path }, { contents, 0 });
 
     wait_for_parsers();
 
@@ -671,7 +677,7 @@ try {
     import_stack.push_back(import);
 
     // register a synthetic resource (path does not really exist, skip in includes)
-    register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
+    register_resource(*this, {{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
 
     wait_for_parsers();
 

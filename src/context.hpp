@@ -28,6 +28,14 @@ struct Sass_Function;
 
 namespace Sass {
 
+  class ThreadCtx {
+  public:
+    Context& ctx;
+    std::vector<Sass_Import_Entry> import_stack;
+    ThreadCtx(Context& ctx, std::vector<Sass_Import_Entry> import_stack);
+    ThreadCtx(Context& ctx);
+  };
+
   class Context {
   public:
     void import_url (Import_Ptr imp, std::string load_path, const std::string& ctx_path);
@@ -58,6 +66,7 @@ namespace Sass {
     std::vector<Resource> resources;
     std::map<const std::string, StyleSheet> sheets;
     Subset_Map subset_map;
+    std::vector<Sass_Import_Entry> import_stack;
     std::vector<Sass_Callee> callee_stack;
 
     struct Sass_Compiler* c_compiler;
@@ -99,7 +108,7 @@ namespace Sass {
     virtual char* render(Block_Obj root);
     virtual char* render_srcmap();
 
-    void register_resource(const Include&, const Resource&, ParserState* = 0);
+    void register_resource(const ThreadCtx& tctx, const Include&, const Resource&, ParserState* = 0);
     std::vector<Include> find_includes(const Importer& import);
     Include load_import(const Importer&, ParserState pstate);
 
@@ -147,15 +156,6 @@ namespace Sass {
     }
     virtual ~Data_Context();
     virtual Block_Obj parse();
-  };
-
-  class ThreadCtx {
-  public:
-    Context& ctx;
-    std::vector<Sass_Import_Entry> import_stack;
-    ThreadCtx(Context& ctx, std::vector<Sass_Import_Entry> import_stack)
-    : ctx(ctx), import_stack(import_stack)
-    {}
   };
 
 }
