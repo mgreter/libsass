@@ -30,23 +30,6 @@ namespace Sass {
            SASS_MEMORY_CAST(Supports_Operator, cond);
   }
 
-  size_t HashExpression::operator() (Expression_Obj ex) const {
-    return ex ? ex->hash() : 0;
-  }
-
-  size_t HashSimpleSelector::operator() (Simple_Selector_Obj ex) const {
-    return ex ? ex->hash() : 0;
-  }
-
-
-  bool CompareExpression::operator()(const Expression_Obj& lhs, const Expression_Obj& rhs) const {
-    return lhs && rhs && lhs->eq(*rhs);
-  }
-
-  bool CompareSimpleSelector::operator()(Simple_Selector_Obj lhs, Simple_Selector_Obj rhs) const {
-    return &lhs && &rhs && *lhs == *rhs;
-  }
-
   std::string & str_ltrim(std::string & str)
   {
     auto it2 =  std::find_if( str.begin() , str.end() , [](char ch){ return !std::isspace<char>(ch , std::locale::classic() ) ; } );
@@ -1011,10 +994,6 @@ namespace Sass {
     }
     // no mismatch
     return true;
-  }
-
-  bool Complex_Selector_Pointer_Compare::operator() (const Complex_Selector_Obj& pLeft, const Complex_Selector_Obj& pRight) const {
-    return *pLeft < *pRight;
   }
 
   bool Complex_Selector::is_superselector_of(Compound_Selector_Obj rhs, std::string wrapping)
