@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 
+#include <unistd.h>
 #include "ast.hpp"
 #include "util.hpp"
 #include "sass.h"
@@ -251,6 +252,46 @@ void func1(int a, int b){
     //blahblah implementation
 }
 
+std::mutex mtx2;
+
+void foo(int a, int b) {
+}
+
+void doit(Context* ctx, Sass_Import_Entry import, std::vector<Sass_Import_Entry>* import_stack,
+	const char* contents, ParserState pstate, Include inc, Resource res, std::exception_ptr* err_ptr) {
+
+    mtx2.lock();
+    ctx->mtx.lock();
+try {
+    // add the entry to the stack
+    import_stack->push_back(import);
+    // do not yet dispose these buffers
+    sass_import_take_source(import);
+    sass_import_take_srcmap(import);
+    // create a parser instance from the given c_str buffer
+    Parser p(Parser::from_c_str(contents, *ctx, pstate));
+    // then parse the root block
+    ctx->mtx.unlock();
+    Block_Obj root = p.parse();
+    ctx->mtx.lock();
+    // delete memory of current stack frame
+    sass_delete_import(import_stack->back());
+    // remove current stack frame
+    import_stack->pop_back();
+
+    // create key/value pair for ast node
+    std::pair<const std::string, StyleSheet>
+      ast_pair(inc.abs_path, { res, root });
+    // register resulting resource
+    ctx->sheets.insert(ast_pair);
+} catch (...) {
+  *err_ptr = std::current_exception();
+}
+    ctx->mtx.unlock();
+    mtx2.unlock();
+
+}
+
 
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
@@ -286,8 +327,6 @@ void func1(int a, int b){
       res.contents,
       res.srcmap
     );
-    // add the entry to the stack
-    import_stack.push_back(import);
 
     // get pointer to the loaded content
     const char* contents = resources[idx].contents;
@@ -298,11 +337,11 @@ void func1(int a, int b){
     ParserState pstate(strings.back(), contents, idx);
 
     // check existing import stack for possible recursion
-    for (size_t i = 0; i < import_stack.size() - 2; ++i) {
+    for (size_t i = 0; i < import_stack.size() - 1; ++i) {
       auto parent = import_stack[i];
       if (std::strcmp(parent->abs_path, import->abs_path) == 0) {
         std::string stack("An @import loop has been found:");
-        for (size_t n = 1; n < i + 2; ++n) {
+        for (size_t n = 1; n < i + 1; ++n) {
           stack += "\n    " + std::string(import_stack[n]->imp_path) +
             " imports " + std::string(import_stack[n+1]->imp_path);
         }
@@ -314,28 +353,28 @@ void func1(int a, int b){
       }
     }
 
-    std::thread* t = new std::thread(func1,1,2);
-    threads.push_back(t);
-    t.join();
-    delete t;
+    std::exception_ptr* err_ptr = new std::exception_ptr();
+    if (false && idx == 0) {
+      doit(this, import, &import_stack, contents, pstate, inc, res, err_ptr);
+      if (*err_ptr) std::rethrow_exception(*err_ptr);
+      // delete err_ptr;
+      std::thread* t = new std::thread(foo,1,2);
+      mtx.lock();
+      threads.push_back(t);
+      errors.push_back(err_ptr);
+      mtx.unlock();
+      // t.join();
+    } else {
+      std::thread* t = new std::thread(doit,this, import, &import_stack, contents, pstate, inc, res, err_ptr);
+      mtx.lock();
+      threads.push_back(t);
+      errors.push_back(err_ptr);
+      mtx.unlock();
+      // t->join();
+      // if (err_ptr) std::rethrow_exception(err_ptr);
+    }
 
-    Block_Obj root;
-    // do not yet dispose these buffers
-    sass_import_take_source(import);
-    sass_import_take_srcmap(import);
-    // create a parser instance from the given c_str buffer
-    Parser p(Parser::from_c_str(contents, *this, pstate));
-    // then parse the root block
-    root = p.parse();
-    // delete memory of current stack frame
-    sass_delete_import(import_stack.back());
-    // remove current stack frame
-    import_stack.pop_back();
-    // create key/value pair for ast node
-    std::pair<const std::string, StyleSheet>
-      ast_pair(inc.abs_path, { res, root });
-    // register resulting resource
-    sheets.insert(ast_pair);
+
 
   }
 
@@ -590,6 +629,8 @@ void func1(int a, int b){
     // create the source entry for file entry
     register_resource({{ input_path, "." }, abs_path }, { contents, 0 });
 
+    wait_for_parsers();
+
     // create root ast tree node
     return compile();
 
@@ -632,10 +673,29 @@ void func1(int a, int b){
     // register a synthetic resource (path does not really exist, skip in includes)
     register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
 
+    wait_for_parsers();
+
     // create root ast tree node
     return compile();
   }
 
+  void Context::wait_for_parsers()
+  {
+    for(size_t i = 0; i < threads.size(); i++) {
+      try {
+        threads[i]->join();
+      } catch (std::exception& e) {
+        std::cerr << "[[" << e.what() << "]]\n";
+      }
+      // delete threads[i];
+    }
+    for(size_t i = 0; i < errors.size(); i++) {
+      if (*errors[i]) {
+        // this absolutely leaks memory!
+        std::rethrow_exception(*errors[i]);
+      }
+    }
+  }
 
 
   // parse root block from includes

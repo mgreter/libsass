@@ -1,7 +1,10 @@
 #ifndef SASS_CONTEXT_H
 #define SASS_CONTEXT_H
 
+#include <mutex>
 #include <thread>
+#include <future>
+
 #include <string>
 #include <vector>
 #include <map>
@@ -40,6 +43,10 @@ namespace Sass {
     const std::string CWD;
     struct Sass_Options& c_options;
     std::vector<std::thread*> threads;
+    std::vector<std::exception_ptr*> errors;
+    std::mutex mtx;
+    void wait_for_parsers();
+
     std::string entry_path;
     size_t head_imports;
     Plugins plugins;
