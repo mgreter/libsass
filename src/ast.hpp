@@ -2358,6 +2358,7 @@ namespace Sass {
     ADD_PROPERTY(Simple_Type, simple_type)
     ADD_PROPERTY(bool, has_ns)
   public:
+    bool is_ns_eq(const Simple_Selector& r) const;
     Simple_Selector(ParserState pstate, std::string n = "")
     : Selector(pstate), ns_(""), name_(n), has_ns_(false)
     {
