@@ -19,6 +19,19 @@ if [ "x$1" == "x" ] ; then
   exit 1
 fi
 
+if [ "x$COVERAGE" == "0" ] ; then
+  unset COVERAGE
+fi
+
+export EXTRA_CFLAGS=""
+export EXTRA_CXXFLAGS=""
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+  # osx doesn't seem to know gcov lib?
+  export EXTRA_LDFLAGS="--coverage"
+else
+  export EXTRA_LDFLAGS="-lgcov --coverage"
+fi
+
 mkdir -p plugins
 if [ ! -d plugins/libsass-${PLUGIN} ] ; then
   git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN}
@@ -29,7 +42,7 @@ fi
 
 cd plugins/libsass-${PLUGIN}/build
 cmake -G "Unix Makefiles" -D LIBSASS_DIR="../../.." ..
-make -j2
+make VERBOSE=1 -j2
 cd ../../..
 
 # glob only works on paths relative to imports
