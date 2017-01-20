@@ -22,8 +22,14 @@ matrix:
       compiler: gcc
       env: AUTOTOOLS=no COVERAGE=yes BUILD=static
     - os: linux
-      compiler: gcc
+      compiler: g++-5
       env: AUTOTOOLS=yes COVERAGE=no BUILD=shared
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
     - os: linux
       compiler: clang++-3.6
       env: AUTOTOOLS=no COVERAGE=yes BUILD=static
@@ -35,7 +41,7 @@ matrix:
           packages:
             - clang-3.6
     - os: linux
-      compiler: clang
+      compiler: clang++-3.5
       env: AUTOTOOLS=yes COVERAGE=no BUILD=shared
     - os: osx
       compiler: clang

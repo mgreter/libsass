@@ -34,7 +34,7 @@ fi
 
 mkdir -p plugins
 if [ ! -d plugins/libsass-${PLUGIN} ] ; then
-  git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN}
+  git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN} --branch develop
 fi
 if [ ! -d plugins/libsass-${PLUGIN}/build ] ; then
   mkdir plugins/libsass-${PLUGIN}/build
