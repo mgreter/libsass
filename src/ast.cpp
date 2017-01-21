@@ -7,6 +7,7 @@
 #include "emitter.hpp"
 #include "color_maps.hpp"
 #include "ast_fwd_decl.hpp"
+#include "error_handling.hpp"
 #include <set>
 #include <iomanip>
 #include <iostream>
@@ -1886,7 +1887,7 @@ namespace Sass {
     // maybe convert to other unit
     // easier implemented on its own
     try { convert(prefered, strict); }
-    catch (incompatibleUnits& err)
+    catch (Exception::IncompatibleUnits& err)
     { error(err.what(), pstate()); }
     catch (...) { throw; }
 

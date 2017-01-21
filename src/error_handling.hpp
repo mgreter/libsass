@@ -2,9 +2,12 @@
 #define SASS_ERROR_HANDLING_H
 
 #include <string>
+#include <vector>
 #include <sstream>
 #include <stdexcept>
 #include "position.hpp"
+#include "ast_fwd_decl.hpp"
+#include "sass/functions.h"
 
 namespace Sass {
 
@@ -136,9 +139,10 @@ namespace Sass {
 
     class IncompatibleUnits : public OperationError {
       protected:
-        const Number& lhs;
-        const Number& rhs;
+        const std::string lunit;
+        const std::string runit;
       public:
+        IncompatibleUnits(Sass::UnitType a, Sass::UnitType b);
         IncompatibleUnits(const Number& lhs, const Number& rhs);
         virtual ~IncompatibleUnits() throw() {};
     };

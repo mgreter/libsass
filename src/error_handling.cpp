@@ -1,5 +1,6 @@
 #include "sass.hpp"
 #include "ast.hpp"
+#include "units.hpp"
 #include "prelexer.hpp"
 #include "backtrace.hpp"
 #include "error_handling.hpp"
@@ -111,13 +112,27 @@ namespace Sass {
     }
 
     IncompatibleUnits::IncompatibleUnits(const Number& lhs, const Number& rhs)
-    : lhs(lhs), rhs(rhs)
+    : lunit(lhs.unit()), runit(rhs.unit())
     {
-      msg  = "Incompatible units: '";
-      msg += rhs.unit();
-      msg += "' and '";
-      msg += lhs.unit();
-      msg += "'.";
+      std::stringstream ss;
+      ss << "Incompatible units: ";
+      ss << "'" << runit << "' and ";
+      ss << "'" << lunit << "'.";
+      // hold on to string on stack!
+      std::string str(ss.str());
+      msg = str.c_str();
+    }
+
+    IncompatibleUnits::IncompatibleUnits(Sass::UnitType lhs, Sass::UnitType rhs)
+    : lunit(unit_to_string(lhs)), runit(unit_to_string(rhs))
+    {
+      std::stringstream ss;
+      ss << "Incompatible units: ";
+      ss << "'" << runit << "' and ";
+      ss << "'" << lunit << "'.";
+      // hold on to string on stack!
+      std::string str(ss.str());
+      msg = str.c_str();
     }
 
     AlphaChannelsNotEqual::AlphaChannelsNotEqual(Expression_Ptr_Const lhs, Expression_Ptr_Const rhs, const std::string& op)
