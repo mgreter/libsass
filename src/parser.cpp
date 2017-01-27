@@ -554,6 +554,8 @@ namespace Sass {
         }
         // skip over all nested inner interpolations up to our own delimiter
         const char* j = skip_over_scopes< exactly<hash_lbrace>, exactly<rbrace> >(p + 2, end_of_selector);
+        // check if we have reached the end of file (there are certainly other places to fix)
+        if (j == 0) css_error("Invalid CSS", " after ", ": expected expression (e.g. 1px, bold), was ");
         // pass inner expression to the parser to resolve nested interpolations
         pstate.add(p, p+2);
         Expression_Obj interpolant = Parser::from_c_str(p+2, j, ctx, pstate).parse_list();

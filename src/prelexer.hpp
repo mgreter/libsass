@@ -405,6 +405,7 @@ namespace Sass {
     template<prelexer mx, prelexer skip>
     const char* find_first_in_interval(const char* beg, const char* end) {
       bool esc = false;
+      if (beg == 0) return 0;
       while ((beg < end) && *beg) {
         if (esc) esc = false;
         else if (*beg == '\\') esc = true;
