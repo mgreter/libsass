@@ -51,7 +51,8 @@ namespace Sass {
   : exp(exp),
     ctx(exp.ctx),
     force(false),
-    is_in_comment(false)
+    is_in_comment(false),
+    is_in_selector_schema(false)
   {
     bool_true = SASS_MEMORY_NEW(Boolean, "[NA]", true);
     bool_false = SASS_MEMORY_NEW(Boolean, "[NA]", false);
