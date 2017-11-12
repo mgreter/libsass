@@ -1842,7 +1842,7 @@ namespace Sass {
   }
 
   // hotfix to avoid invalid nested `:not` selectors
-  // probably the wrong place, but this should ultimatively
+  // probably the wrong place, but this should ultimately
   // be fixed by implement superselector correctly for `:not`
   // first use of "find" (ATM only implemented for selectors)
   bool hasNotSelector(AST_Node_Obj obj) {
@@ -1858,6 +1858,15 @@ namespace Sass {
     if (s->name() == ":not") {
       if (exp.selector_stack.back()) {
         if (s->selector()->find(hasNotSelector)) {
+          s->selector()->clear();
+          s->name(" ");
+        } else if (s->selector()->length() == 1) {
+          Complex_Selector_Ptr cs = s->selector()->at(0);
+          if (cs->tail()) {
+            s->selector()->clear();
+            s->name(" ");
+          }
+        } else if (s->selector()->length() > 1) {
           s->selector()->clear();
           s->name(" ");
         }
