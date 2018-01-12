@@ -348,7 +348,7 @@ namespace Sass {
     denominators.clear();
 
     // recreate sorted units vectors
-    for (auto exp : exponents) {
+    for (auto __exp = (exponents).begin(); __exp != (exponents).end(); ++__exp) { auto exp = *(__exp);
       int &exponent = exp.second;
       while (exponent > 0 && exponent --)
         numerators.push_back(exp.first);

@@ -332,7 +332,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        for (T& el : elements_) {
+        for (auto __el = (elements_).begin(); __el != (elements_).end(); ++__el) { T& el = *(__el);
           hash_combine(hash_, el->hash());
         }
       }
@@ -398,7 +398,7 @@ namespace Sass {
         return *this;
       }
 
-      for (auto key : h->keys()) {
+      for (auto __key = (h->keys()).begin(); __key != (h->keys()).end(); ++__key) { auto key = *(__key);
         *this << std::make_pair(key, h->at(key));
       }
 
@@ -1140,7 +1140,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        for (auto key : keys()) {
+        for (auto __key = (keys()).begin(); __key != (keys()).end(); ++__key) { auto key = *(__key);
           hash_combine(hash_, key->hash());
           hash_combine(hash_, at(key)->hash());
         }
@@ -1480,8 +1480,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_ = std::hash<std::string>()(name());
-        for (auto argument : arguments()->elements())
-        { hash_combine(hash_, argument->hash()); }
+        for (auto __argument = (arguments()->elements()).begin(); __argument != (arguments()->elements()).end(); ++__argument) { auto argument = *(__argument); hash_combine(hash_, argument->hash()); }
       }
       return hash_;
     }
@@ -1572,10 +1571,8 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_ = std::hash<double>()(value_);
-        for (const auto numerator : numerators)
-        { hash_combine(hash_, std::hash<std::string>()(numerator)); }
-        for (const auto denominator : denominators)
-        { hash_combine(hash_, std::hash<std::string>()(denominator)); }
+        for (auto __numerator = (numerators).begin(); __numerator != (numerators).end(); ++__numerator) { const auto numerator = *(__numerator); hash_combine(hash_, std::hash<std::string>()(numerator)); }
+        for (auto __denominator = (denominators).begin(); __denominator != (denominators).end(); ++__denominator) { const auto denominator = *(__denominator); hash_combine(hash_, std::hash<std::string>()(denominator)); }
       }
       return hash_;
     }
@@ -1748,7 +1745,7 @@ namespace Sass {
     bool is_right_interpolant(void) const;
     // void has_interpolants(bool tc) { }
     bool has_interpolants() {
-      for (auto el : elements()) {
+      for (auto __el = (elements()).begin(); __el != (elements()).end(); ++__el) { auto el = *(__el);
         if (el->is_interpolant()) return true;
       }
       return false;
@@ -1758,8 +1755,7 @@ namespace Sass {
     virtual size_t hash()
     {
       if (hash_ == 0) {
-        for (auto string : elements())
-        { hash_combine(hash_, string->hash()); }
+        for (auto __string = (elements()).begin(); __string != (elements()).end(); ++__string) { auto string = *(__string); hash_combine(hash_, string->hash()); }
       }
       return hash_;
     }
@@ -2971,12 +2967,12 @@ namespace Sass {
     }
     virtual void set_media_block(Media_Block_Ptr mb) {
       media_block(mb);
-      for (Complex_Selector_Obj cs : elements()) {
+      for (auto __cs = (elements()).begin(); __cs != (elements()).end(); ++__cs) { Complex_Selector_Obj cs = *(__cs);
         cs->set_media_block(mb);
       }
     }
     virtual bool has_placeholder() {
-      for (Complex_Selector_Obj cs : elements()) {
+      for (auto __cs = (elements()).begin(); __cs != (elements()).end(); ++__cs) { Complex_Selector_Obj cs = *(__cs);
         if (cs->has_placeholder()) return true;
       }
       return false;
