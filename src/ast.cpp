@@ -4,6 +4,7 @@
 #include "node.hpp"
 #include "eval.hpp"
 #include "extend.hpp"
+#include "debugger.hpp"
 #include "emitter.hpp"
 #include "color_maps.hpp"
 #include "ast_fwd_decl.hpp"
@@ -427,6 +428,15 @@ namespace Sass {
 
   bool Simple_Selector::operator< (const Simple_Selector& rhs) const
   {
+/*
+    if (Cast<Id_Selector>(&rhs)) { return false; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return false; }
+    if (Cast<Class_Selector>(&rhs)) { return false; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return false; }
+    if (Cast<Attribute_Selector>(&rhs)) { return false; }
+    if (Cast<Element_Selector>(&rhs)) { return false; }
+*/
+
     // solve the double dispatch problem by using RTTI information via dynamic cast
     if (const Pseudo_Selector* lhs = Cast<Pseudo_Selector>(this)) {return *lhs < rhs; }
     else if (const Wrapped_Selector* lhs = Cast<Wrapped_Selector>(this)) {return *lhs < rhs; }
@@ -666,12 +676,15 @@ namespace Sass {
 
   bool Attribute_Selector::operator< (const Simple_Selector& rhs) const
   {
-    if (Cast<Element_Selector>(&rhs)) { return true; }
+    if (Cast<Id_Selector>(&rhs)) { return false; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return false; }
+    if (Cast<Class_Selector>(&rhs)) { return false; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return false; }
+    if (Cast<Attribute_Selector>(&rhs)) { return false; }
+    if (Cast<Element_Selector>(&rhs)) { return false; }
+    if (Cast<Wrapped_Selector>(&rhs)) { return false; }
     if (Attribute_Selector_Ptr_Const w = Cast<Attribute_Selector>(&rhs)) { return *this < *w; }
-    // better to throw an error here!?
-    if (is_ns_eq(rhs))
-    { return name() < rhs.name(); }
-    return ns() < rhs.ns();
+    throw std::runtime_error("Invalid rhs for Attribute Selector comparison");
   }
 
   bool Attribute_Selector::operator== (const Attribute_Selector& rhs) const
@@ -723,12 +736,89 @@ namespace Sass {
 
   bool Element_Selector::operator< (const Simple_Selector& rhs) const
   {
-    if (Cast<Attribute_Selector>(&rhs)) { return false; }
-    if (Element_Selector_Ptr_Const w = Cast<Element_Selector>(&rhs)) { return *this < *w; }
-    // better to throw an error here!?
+    if (Cast<Id_Selector>(&rhs)) { return 'e' < '#'; }
+    if (Cast<Class_Selector>(&rhs)) { return 'e' < '.'; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return 'x' < ':'; }
+    if (Cast<Attribute_Selector>(&rhs)) { return 'x' < '['; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return 'e' < '%'; }
+    if (auto s = Cast<Element_Selector>(&rhs)) { return *this < *s; }
+    // if (Wrapped_Selector_Ptr_Const w = Cast<Wrapped_Selector>(&rhs)) { return false; }
+    throw std::runtime_error("Invalid rhs for Element Selector comparison");
+  }
+
+  bool Class_Selector::operator< (const Class_Selector& rhs) const
+  {
     if (is_ns_eq(rhs))
-    { return name() < rhs.name(); }
+    { 
+      if (rhs.has_ns_ && has_ns_)
+        return name() < rhs.name();
+      if (!rhs.has_ns_ && !has_ns_)
+        return name() < rhs.name();
+      return true;
+    }
     return ns() < rhs.ns();
+  }
+
+  bool Class_Selector::operator< (const Simple_Selector& rhs) const
+  {
+    if (Cast<Id_Selector>(&rhs)) { return '.' < '#'; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return '.' < ':'; }
+    if (Cast<Element_Selector>(&rhs)) { return '.' < 'e'; }
+    if (Cast<Attribute_Selector>(&rhs)) { return '.' < '['; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return '.' < '%'; }
+    if (auto s = Cast<Class_Selector>(&rhs)) { return *this < *s; }
+    // if (Wrapped_Selector_Ptr_Const w = Cast<Wrapped_Selector>(&rhs)) { return false; }
+    throw std::runtime_error("Invalid rhs for Class Selector comparison");
+  }
+
+  bool Id_Selector::operator< (const Id_Selector& rhs) const
+  {
+    if (is_ns_eq(rhs))
+    { 
+      if (rhs.has_ns_ && has_ns_)
+        return name() < rhs.name();
+      if (!rhs.has_ns_ && !has_ns_)
+        return name() < rhs.name();
+      return true;
+    }
+    return ns() < rhs.ns();
+  }
+
+  bool Id_Selector::operator< (const Simple_Selector& rhs) const
+  {
+    if (Cast<Class_Selector>(&rhs)) { return '#' < '.'; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return '#' < ':'; }
+    if (Cast<Element_Selector>(&rhs)) { return '#' < 'e'; }
+    if (Cast<Attribute_Selector>(&rhs)) { return '#' < '['; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return '#' < '%'; }
+    if (auto s = Cast<Id_Selector>(&rhs)) { return *this < *s; }
+    // if (Wrapped_Selector_Ptr_Const w = Cast<Wrapped_Selector>(&rhs)) { return false; }
+    throw std::runtime_error("Invalid rhs for ID Selector comparison");
+  }
+
+  bool Placeholder_Selector::operator< (const Placeholder_Selector& rhs) const
+  {
+    if (is_ns_eq(rhs))
+    { 
+      if (rhs.has_ns_ && has_ns_)
+        return name() < rhs.name();
+      if (!rhs.has_ns_ && !has_ns_)
+        return name() < rhs.name();
+      return true;
+    }
+    return ns() < rhs.ns();
+  }
+
+  bool Placeholder_Selector::operator< (const Simple_Selector& rhs) const
+  {
+    if (Cast<Id_Selector>(&rhs)) { return '.' < '#'; }
+    if (Cast<Class_Selector>(&rhs)) { return '#' < '.'; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return '#' < ':'; }
+    if (Cast<Element_Selector>(&rhs)) { return '#' < 'e'; }
+    if (Cast<Attribute_Selector>(&rhs)) { return '#' < '['; }
+    if (auto s = Cast<Placeholder_Selector>(&rhs)) { return *this < *s; }
+    // if (Wrapped_Selector_Ptr_Const w = Cast<Wrapped_Selector>(&rhs)) { return false; }
+    throw std::runtime_error("Invalid rhs for Placeholder Selector comparison");
   }
 
   bool Element_Selector::operator== (const Element_Selector& rhs) const
@@ -786,10 +876,15 @@ namespace Sass {
 
   bool Pseudo_Selector::operator< (const Simple_Selector& rhs) const
   {
-    if (Pseudo_Selector_Ptr_Const w = Cast<Pseudo_Selector>(&rhs))
-    {
-      return *this < *w;
-    }
+    if (Cast<Id_Selector>(&rhs)) { return ':' < '#'; }
+    if (Cast<Class_Selector>(&rhs)) { return ':' < '.'; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return ':' < ':'; }
+    if (Cast<Element_Selector>(&rhs)) { return ':' < 'e'; }
+    if (Cast<Attribute_Selector>(&rhs)) { return ':' < '['; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return ':' < '%'; }
+    if (auto s = Cast<Pseudo_Selector>(&rhs)) { return *this < *s; }
+    throw std::runtime_error("Invalid rhs for Pseudo Selector comparison");
+
     if (is_ns_eq(rhs))
     { return name() < rhs.name(); }
     return ns() < rhs.ns();
@@ -823,10 +918,16 @@ namespace Sass {
 
   bool Wrapped_Selector::operator< (const Simple_Selector& rhs) const
   {
-    if (Wrapped_Selector_Ptr_Const w = Cast<Wrapped_Selector>(&rhs))
-    {
-      return *this < *w;
-    }
+    if (Cast<Id_Selector>(&rhs)) { return true; }
+    if (Cast<Placeholder_Selector>(&rhs)) { return true; }
+    if (Cast<Class_Selector>(&rhs)) { return true; }
+    if (Cast<Pseudo_Selector>(&rhs)) { return true; }
+    if (Cast<Attribute_Selector>(&rhs)) { return true; }
+    if (Cast<Element_Selector>(&rhs)) { return true; }
+
+    if (auto s = Cast<Wrapped_Selector>(&rhs)) { return *this < *s; }
+    throw std::runtime_error("Invalid rhs for Wrapped Selector comparison");
+
     if (is_ns_eq(rhs))
     { return name() < rhs.name(); }
     return ns() < rhs.ns();

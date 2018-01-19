@@ -2508,6 +2508,8 @@ namespace Sass {
       return true;
     }
     virtual ~Placeholder_Selector() {};
+    virtual bool operator<(const Simple_Selector& rhs) const;
+    virtual bool operator<(const Placeholder_Selector& rhs) const;
     ATTACH_AST_OPERATIONS(Placeholder_Selector)
     ATTACH_OPERATIONS()
   };
@@ -2554,6 +2556,10 @@ namespace Sass {
       return Constants::Specificity_Class;
     }
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr);
+    // virtual bool operator==(const Simple_Selector& rhs) const;
+    // virtual bool operator==(const Class_Selector& rhs) const;
+    virtual bool operator<(const Simple_Selector& rhs) const;
+    virtual bool operator<(const Class_Selector& rhs) const;
     ATTACH_AST_OPERATIONS(Class_Selector)
     ATTACH_OPERATIONS()
   };
@@ -2574,6 +2580,8 @@ namespace Sass {
       return Constants::Specificity_ID;
     }
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr);
+    virtual bool operator<(const Simple_Selector& rhs) const;
+    virtual bool operator<(const Id_Selector& rhs) const;
     ATTACH_AST_OPERATIONS(Id_Selector)
     ATTACH_OPERATIONS()
   };
