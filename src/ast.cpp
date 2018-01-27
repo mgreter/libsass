@@ -1924,9 +1924,6 @@ namespace Sass {
         UnitClass crhs = get_unit_type(urhs);
         // skip units we cannot convert
         if (clhs != crhs) continue;
-        // get the conversion factor for units
-        double f(conversion_factor(ulhs, urhs, clhs, crhs));
-        if (f == 0) throw std::runtime_error("Whats up? " + lhs + " vs " + rhs);
         // if right denominator is bigger than lhs, we want to keep it in rhs unit
         if (exponents[rhs] < 0 && exponents[lhs] > 0 && - exponents[rhs] > exponents[lhs]) {
           // get the conversion factor for units
@@ -1937,6 +1934,8 @@ namespace Sass {
           exponents[lhs] = 0;
           factor /= f;
         } else {
+          // get the conversion factor for units
+          double f(conversion_factor(ulhs, urhs, clhs, crhs));
           // right hand side has been consumned
           f = std::pow(f, exponents[rhs]);
           exponents[lhs] += exponents[rhs];
