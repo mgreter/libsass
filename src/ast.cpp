@@ -1884,25 +1884,20 @@ namespace Sass {
     std::map<std::string, int> exponents;
 
     // need to create normalized copy
-    std::vector<std::string>& noms(numerator_units_);
-    std::vector<std::string>& denoms(denominator_units_);
+    std::vector<std::string> noms(numerator_units());
+    std::vector<std::string> denoms(denominator_units());
 
     // initialize by summing up occurences in unit vectors
     // this will already cancel out equivalent units (e.q. px/px)
     for (size_t i = 0; i < iL; i ++) exponents[noms[i]] += unit_exp(noms[i]);
     for (size_t n = 0; n < nL; n ++) exponents[denoms[n]] -= unit_exp(denoms[n]);
 
-    // create vector with all units
-    std::vector<std::string> all;
-    all.insert(all.end(), noms.begin(), noms.end());
-    all.insert(all.end(), denoms.begin(), denoms.end());
-
     // the final conversion factor
     double factor = 1;
 
-    for (size_t i = 0, iL = all.size(); i < iL; i++) {
-      for (size_t n = std::max(i + 1, noms.size()); n < iL; n++) {
-        std::string &lhs = all[i], &rhs = all[n];
+    for (size_t i = 0; i < iL; i++) {
+      for (size_t n = 0; n < nL; n++) {
+        std::string &lhs = noms[i], &rhs = denoms[n];
         int &lhsexp = exponents[lhs], &rhsexp = exponents[rhs];
         double f(convert_units(lhs, rhs, lhsexp, rhsexp));
         if (f == 0) continue;
@@ -1911,35 +1906,21 @@ namespace Sass {
     }
 
     // now we can build up the new unit arrays
-    noms.clear(); numerator_units_.clear();
-    denoms.clear(); denominator_units_.clear();
+    numerator_units().clear();
+    denominator_units().clear();
 
-    // build them by iterating over the exponents
-    for (const std::string& unit : all)
-    {
-      int exp = exponents[unit];
-      if (exp == 0) continue;
-      // maybe there is more effecient way to push
-      // the same item multiple times to a vector?
-      if (exp == + 1) {
-        numerator_units_.push_back(unit);
-      }
-      else if (exp == - 1) {
-        denominator_units_.push_back(unit);
-      }
-      else {
-        std::ostringstream strs;
-        strs << unit << "^";
-        if (exp < 0) {
-          strs << - exp;
-          denominator_units_.push_back(strs.str());
-        }
-        else if (exp > 0) {
-          strs << + exp;
-          numerator_units_.push_back(strs.str());
-        }
-      }
-      exponents[unit] = 0;
+    for (size_t i = 0; i < iL; i++) {
+      std::string& unit = noms[i];
+      int &exponent = exponents[unit];
+      while (exponent && exponent --)
+        numerator_units().push_back(unit);
+    }
+
+    for (size_t n = 0; n < nL; n++) {
+      std::string& unit = denoms[n];
+      int &exponent = exponents[unit];
+      while (exponent && exponent ++)
+        denominator_units().push_back(unit);
     }
 
     // apply factor to value_
@@ -1951,6 +1932,7 @@ namespace Sass {
 
     // maybe convert to other unit
     // easier implemented on its own
+    // used i.e. for less-equal compare
     try { convert(prefered, strict); }
     catch (Exception::IncompatibleUnits& err)
     { error(err.what(), pstate()); }
