@@ -410,7 +410,13 @@ namespace Sass {
                    one_plus < exactly<'-'> >,
                    strict_identifier_alpha
                  >
-               > >
+               > >,
+               optional <
+                 sequence <
+                   exactly < '^' >,
+                   number
+                 >
+               >
              >(src);
     }
 

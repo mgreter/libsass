@@ -33,6 +33,7 @@
 #define ARG(argname, argtype) get_arg<argtype>(argname, env, sig, pstate, backtrace)
 #define ARGR(argname, argtype, lo, hi) get_arg_r(argname, env, sig, pstate, lo, hi, backtrace)
 #define ARGM(argname, argtype, ctx) get_arg_m(argname, env, sig, pstate, backtrace, ctx)
+#define ARGN(argname) get_arg_n(argname, env, sig, pstate, backtrace)
 
 namespace Sass {
   using std::stringstream;
@@ -146,6 +147,15 @@ namespace Sass {
         msg << lo << " and " << hi;
         error(msg.str(), pstate, backtrace);
       }
+      return val;
+    }
+
+    Number_Ptr get_arg_n(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtrace* backtrace)
+    {
+      // Minimal error handling -- the expectation is that built-ins will be written correctly!
+      Number_Ptr val = get_arg<Number>(argname, env, sig, pstate, backtrace);
+      val = SASS_MEMORY_COPY(val);
+      val->normalize();
       return val;
     }
 
@@ -1196,7 +1206,7 @@ namespace Sass {
     Signature percentage_sig = "percentage($number)";
     BUILT_IN(percentage)
     {
-      Number_Ptr n = ARG("$number", Number);
+      Number_Ptr n = ARGN("$number");
       if (!n->is_unitless()) error("argument $number of `" + std::string(sig) + "` must be unitless", pstate);
       return SASS_MEMORY_NEW(Number, pstate, n->value() * 100, "%");
     }
@@ -1204,8 +1214,7 @@ namespace Sass {
     Signature round_sig = "round($number)";
     BUILT_IN(round)
     {
-      Number_Ptr n = ARG("$number", Number);
-      Number_Ptr r = SASS_MEMORY_COPY(n);
+      Number_Ptr r = ARGN("$number");
       r->pstate(pstate);
       r->value(Sass::round(r->value(), ctx.c_options.precision));
       return r;
@@ -1214,8 +1223,7 @@ namespace Sass {
     Signature ceil_sig = "ceil($number)";
     BUILT_IN(ceil)
     {
-      Number_Ptr n = ARG("$number", Number);
-      Number_Ptr r = SASS_MEMORY_COPY(n);
+      Number_Ptr r = ARGN("$number");
       r->pstate(pstate);
       r->value(std::ceil(r->value()));
       return r;
@@ -1224,8 +1232,7 @@ namespace Sass {
     Signature floor_sig = "floor($number)";
     BUILT_IN(floor)
     {
-      Number_Ptr n = ARG("$number", Number);
-      Number_Ptr r = SASS_MEMORY_COPY(n);
+      Number_Ptr r = ARGN("$number");
       r->pstate(pstate);
       r->value(std::floor(r->value()));
       return r;
@@ -1672,17 +1679,17 @@ namespace Sass {
 
     Signature unit_sig = "unit($number)";
     BUILT_IN(unit)
-    { return SASS_MEMORY_NEW(String_Quoted, pstate, quote(ARG("$number", Number)->unit(), '"')); }
+    { return SASS_MEMORY_NEW(String_Quoted, pstate, quote(ARGN("$number")->unit(), '"')); }
 
     Signature unitless_sig = "unitless($number)";
     BUILT_IN(unitless)
-    { return SASS_MEMORY_NEW(Boolean, pstate, ARG("$number", Number)->is_unitless()); }
+    { return SASS_MEMORY_NEW(Boolean, pstate, ARGN("$number")->is_unitless()); }
 
     Signature comparable_sig = "comparable($number-1, $number-2)";
     BUILT_IN(comparable)
     {
-      Number_Ptr n1 = ARG("$number-1", Number);
-      Number_Ptr n2 = ARG("$number-2", Number);
+      Number_Ptr n1 = ARGN("$number-1");
+      Number_Ptr n2 = ARGN("$number-2");
       if (n1->is_unitless() || n2->is_unitless()) {
         return SASS_MEMORY_NEW(Boolean, pstate, true);
       }

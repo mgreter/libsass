@@ -1,6 +1,7 @@
 #include "sass.hpp"
 #include <stdexcept>
 #include "units.hpp"
+#include "util.hpp"
 #include "error_handling.hpp"
 
 namespace Sass {
@@ -161,8 +162,17 @@ namespace Sass {
     return "CUSTOM:" + s;
   }
 
+  double unit_exp(std::string& u)
+  {
+    size_t pos = u.find_first_of('^');
+    if (pos == std::string::npos) return 1;
+    std::string exp(u.substr(pos + 1));
+    u = u.substr(0, pos); // overwrite
+    return sass_strtod(exp.c_str());
+  }
+
   // throws incompatibleUnits exceptions
-  double conversion_factor(const std::string& s1, const std::string& s2, bool strict)
+  double conversion_factor(const std::string& s1, const std::string& s2, bool& invalid, bool strict)
   {
     // assert for same units
     if (s1 == s2) return 1;
@@ -172,13 +182,16 @@ namespace Sass {
     // query unit group types
     UnitClass t1 = get_unit_type(u1);
     UnitClass t2 = get_unit_type(u2);
+    // mark invalid convert
+    invalid = t1 != t2;
     // get absolute offset
     // used for array acces
     size_t i1 = u1 - t1;
     size_t i2 = u2 - t2;
     // error if units are not of the same group
     // don't error for multiplication and division
-    if (strict && t1 != t2) throw Exception::IncompatibleUnits(u1, u2);
+    if (strict && invalid) throw Exception::IncompatibleUnits(u1, u2);
+    else if (invalid) return 0;
     // only process known units
     if (u1 != UNKNOWN && u2 != UNKNOWN) {
       switch (t1) {
@@ -191,6 +204,31 @@ namespace Sass {
         case UnitClass::INCOMMENSURABLE:   return 0;
         default: break;
       }
+    }
+    // fallback
+    return 0;
+  }
+
+  // throws incompatibleUnits exceptions
+  double conversion_factor(UnitType u1, UnitType u2, UnitClass t1, UnitClass t2)
+  {
+    if (t1 != t2) return 0;
+    if (u1 == UNKNOWN) return 0;
+    if (u2 == UNKNOWN) return 0;
+    // get absolute offset
+    // used for array acces
+    size_t i1 = u1 - t1;
+    size_t i2 = u2 - t2;
+    // only process known units
+    switch (t1) {
+      case UnitClass::LENGTH:            return size_conversion_factors[i1][i2];
+      case UnitClass::ANGLE:             return angle_conversion_factors[i1][i2];
+      case UnitClass::TIME:              return time_conversion_factors[i1][i2];
+      case UnitClass::FREQUENCY:         return frequency_conversion_factors[i1][i2];
+      case UnitClass::RESOLUTION:        return resolution_conversion_factors[i1][i2];
+      // ToDo: should we throw error here?
+      case UnitClass::INCOMMENSURABLE:   return 0;
+      default: break;
     }
     // fallback
     return 0;

@@ -538,6 +538,7 @@ namespace Sass {
     // can contain scientific notation which we do not want!
 
     // first sample
+    n->normalize();
     std::stringstream ss;
     ss.precision(12);
     ss << n->value();

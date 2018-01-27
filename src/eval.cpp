@@ -812,6 +812,7 @@ namespace Sass {
       if (l_type == Expression::NUMBER && r_type == Expression::NUMBER) {
         Number_Ptr l_n = Cast<Number>(lhs);
         Number_Ptr r_n = Cast<Number>(rhs);
+        l_n->normalize(); r_n->normalize();
         rv = op_numbers(op_type, *l_n, *r_n, ctx.c_options, pstate);
       }
       else if (l_type == Expression::NUMBER && r_type == Expression::COLOR) {
@@ -1527,7 +1528,7 @@ namespace Sass {
 
     Number tmp(&r); // copy
     bool strict = op != Sass_OP::MUL && op != Sass_OP::DIV;
-    tmp.normalize(l.find_convertible_unit(), strict);
+    // tmp.normalize(l.find_convertible_unit(), strict);
     std::string l_unit(l.unit());
     std::string r_unit(tmp.unit());
     Number_Obj v = SASS_MEMORY_COPY(&l); // copy
@@ -1535,6 +1536,7 @@ namespace Sass {
     if (l_unit.empty() && (op == Sass_OP::ADD || op == Sass_OP::SUB || op == Sass_OP::MOD)) {
       v->numerator_units() = r.numerator_units();
       v->denominator_units() = r.denominator_units();
+      v->normalize();
     }
 
     if (op == Sass_OP::MUL) {
@@ -1555,11 +1557,14 @@ namespace Sass {
         v->numerator_units().push_back(r.denominator_units()[i]);
       }
     } else {
-      v->value(ops[op](lv, r.value() * r.convert_factor(l)));
+      Number_Obj z = SASS_MEMORY_COPY(&l); // copy
+      Number_Obj y = SASS_MEMORY_COPY(&r); // copy
+      z->normalize(); y->normalize();
+      v->value(ops[op](lv, y->value() * y->convert_factor(z)));
       // v->normalize();
       return v.detach();
     }
-    v->normalize();
+    // v->normalize();
     return v.detach();
   }
 
