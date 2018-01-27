@@ -2020,7 +2020,6 @@ namespace Sass {
 
     // overall conversion
     double factor = 1;
-    bool invalid = false;
 
     // process all left numerators
     while (l_num_it != l_num_end)
@@ -2038,7 +2037,7 @@ namespace Sass {
         // get and increment afterwards
         const std::string r_num = *(r_num_it);
         // get possible converstion factor for units
-        double conversion = conversion_factor(l_num, r_num, invalid, false);
+        double conversion = conversion_factor(l_num, r_num, false);
         // skip incompatible numerator
         if (conversion == 0) {
           ++ r_num_it;
@@ -2076,7 +2075,7 @@ namespace Sass {
         // get and increment afterwards
         const std::string r_den = *(r_den_it);
         // get possible converstion factor for units
-        double conversion = conversion_factor(l_den, r_den, invalid, false);
+        double conversion = conversion_factor(l_den, r_den, false);
         // skip incompatible denominator
         if (conversion == 0) {
           ++ r_den_it;
@@ -2130,7 +2129,6 @@ namespace Sass {
 
     // the final conversion factor
     double factor = 1;
-    bool invalid = false;
 
     std::vector<std::string>::iterator denom_it = denominator_units_.begin();
     std::vector<std::string>::iterator denom_end = denominator_units_.end();
@@ -2149,7 +2147,7 @@ namespace Sass {
       if (string_to_unit(denom) == UNKNOWN) continue;
       // we now have two convertable units
       // add factor for current conversion
-      factor *= conversion_factor(denom, prefered, invalid, strict);
+      factor *= conversion_factor(denom, prefered, strict);
       // update nominator/denominator exponent
       ++ exponents[denom]; -- exponents[prefered];
     }
@@ -2170,7 +2168,7 @@ namespace Sass {
       if (string_to_unit(nom) == UNKNOWN) continue;
       // we now have two convertable units
       // add factor for current conversion
-      factor *= conversion_factor(nom, prefered, invalid, strict);
+      factor *= conversion_factor(nom, prefered, strict);
       // update nominator/denominator exponent
       -- exponents[nom]; ++ exponents[prefered];
     }

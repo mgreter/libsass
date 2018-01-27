@@ -172,7 +172,7 @@ namespace Sass {
   }
 
   // throws incompatibleUnits exceptions
-  double conversion_factor(const std::string& s1, const std::string& s2, bool& invalid, bool strict)
+  double conversion_factor(const std::string& s1, const std::string& s2, bool strict)
   {
     // assert for same units
     if (s1 == s2) return 1;
@@ -183,7 +183,7 @@ namespace Sass {
     UnitClass t1 = get_unit_type(u1);
     UnitClass t2 = get_unit_type(u2);
     // mark invalid convert
-    invalid = t1 != t2;
+    bool invalid = t1 != t2;
     // get absolute offset
     // used for array acces
     size_t i1 = u1 - t1;

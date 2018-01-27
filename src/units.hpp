@@ -64,7 +64,7 @@ namespace Sass {
   std::string get_unit_class(Sass::UnitType unit);
   std::string unit_to_class(const std::string&);
   // throws incompatibleUnits exceptions
-  double conversion_factor(const std::string&, const std::string&, bool& invalid, bool = true);
+  double conversion_factor(const std::string&, const std::string&, bool = true);
   double conversion_factor(UnitType, UnitType, UnitClass, UnitClass);
 
   // this will normalize the unit
