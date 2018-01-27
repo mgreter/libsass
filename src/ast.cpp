@@ -1835,8 +1835,9 @@ namespace Sass {
         // if (!nominator && u[r] == '/') error(...)
         if (u[r] == '/')
           nominator = false;
-        else if (u[r] == '*')
-          nominator = true;
+        // strange math parsing?
+        // else if (u[r] == '*')
+        //  nominator = true;
         l = r + 1;
       }
     }
@@ -1900,7 +1901,6 @@ namespace Sass {
 
     // the final conversion factor
     double factor = 1;
-    bool invalid = false;
 
 
     for (size_t i = 0, iL = all.size(); i < iL; i++) {
@@ -1927,8 +1927,6 @@ namespace Sass {
         // get the conversion factor for units
         double f(conversion_factor(ulhs, urhs, clhs, crhs));
         if (f == 0) throw std::runtime_error("Whats up? " + lhs + " vs " + rhs);
-        // std::cerr << "convert " << lhs << "^" << exponents[lhs] << " and " << rhs << "^" << exponents[rhs] << "\n";
-        // std::cerr << "factor" << f << " with exp " << std::pow(f, exponents[rhs]) << "\n";
         // if right denominator is bigger than lhs, we want to keep it in rhs unit
         if (exponents[rhs] < 0 && exponents[lhs] > 0 && - exponents[rhs] > exponents[lhs]) {
           // get the conversion factor for units
