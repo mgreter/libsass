@@ -1889,6 +1889,7 @@ namespace Sass {
     std::reverse(noms.begin(), noms.end());
 
     // initialize by summing up occurences in unit vectors
+    // this will already cancel out equivalent units
     for (size_t i = 0, S = noms.size(); i < S; ++i)
       exponents[noms[i]] += unit_exp(noms[i]);
     for (size_t i = 0, S = denoms.size(); i < S; ++i)
@@ -1902,46 +1903,13 @@ namespace Sass {
     // the final conversion factor
     double factor = 1;
 
-
     for (size_t i = 0, iL = all.size(); i < iL; i++) {
       for (size_t n = std::max(i + 1, noms.size()); n < iL; n++) {
-        // get units for both sides
-        std::string& lhs = all[i];
-        std::string& rhs = all[n];
-        // do not convert same ones
-        if (lhs == rhs) continue;
-        // skip already canceled out unit
-        if (exponents[lhs] == 0) continue;
-        if (exponents[rhs] == 0) continue;
-        // check if it can be converted
-        UnitType ulhs = string_to_unit(lhs);
-        UnitType urhs = string_to_unit(rhs);
-        // skip units we cannot convert
-        if (ulhs == UNKNOWN) continue;
-        if (urhs == UNKNOWN) continue;
-        // query unit group types
-        UnitClass clhs = get_unit_type(ulhs);
-        UnitClass crhs = get_unit_type(urhs);
-        // skip units we cannot convert
-        if (clhs != crhs) continue;
-        // if right denominator is bigger than lhs, we want to keep it in rhs unit
-        if (exponents[rhs] < 0 && exponents[lhs] > 0 && - exponents[rhs] > exponents[lhs]) {
-          // get the conversion factor for units
-          double f(conversion_factor(urhs, ulhs, clhs, crhs));
-          // right hand side has been consumned
-          f = std::pow(f, exponents[lhs]);
-          exponents[rhs] += exponents[lhs];
-          exponents[lhs] = 0;
-          factor /= f;
-        } else {
-          // get the conversion factor for units
-          double f(conversion_factor(ulhs, urhs, clhs, crhs));
-          // right hand side has been consumned
-          f = std::pow(f, exponents[rhs]);
-          exponents[lhs] += exponents[rhs];
-          exponents[rhs] = 0;
-          factor /= f;
-        }
+        std::string &lhs = all[i], &rhs = all[n];
+        int &lhsexp = exponents[lhs], &rhsexp = exponents[rhs];
+        double f(convert_units(lhs, rhs, lhsexp, rhsexp));
+        if (f == 0) continue;
+        factor /= f;
       }
     }
 
@@ -1950,9 +1918,9 @@ namespace Sass {
     denoms.clear(); denominator_units_.clear();
 
     // build them by iterating over the exponents
-    for (auto unit : all)
+    for (const std::string& unit : all)
     {
-      auto exp = exponents[unit];
+      int exp = exponents[unit];
       if (exp == 0) continue;
       // maybe there is more effecient way to push
       // the same item multiple times to a vector?
@@ -1981,8 +1949,8 @@ namespace Sass {
     // best precision this way
     value_ *= factor;
 
-    std::sort (numerator_units_.begin(), numerator_units_.end());
-    std::sort (denominator_units_.begin(), denominator_units_.end());
+    std::sort (numerator_units().begin(), numerator_units().end());
+    std::sort (denominator_units().begin(), denominator_units().end());
 
     // maybe convert to other unit
     // easier implemented on its own

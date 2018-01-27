@@ -234,4 +234,42 @@ namespace Sass {
     return 0;
   }
 
+  double convert_units(const std::string& lhs, const std::string& rhs, int& lhsexp, int& rhsexp)
+  {
+    // do not convert same ones
+    if (lhs == rhs) return 0;
+    // skip already canceled out unit
+    if (lhsexp == 0) return 0;
+    if (rhsexp == 0) return 0;
+    // check if it can be converted
+    UnitType ulhs = string_to_unit(lhs);
+    UnitType urhs = string_to_unit(rhs);
+    // skip units we cannot convert
+    if (ulhs == UNKNOWN) return 0;
+    if (urhs == UNKNOWN) return 0;
+    // query unit group types
+    UnitClass clhs = get_unit_type(ulhs);
+    UnitClass crhs = get_unit_type(urhs);
+    // skip units we cannot convert
+    if (clhs != crhs) return 0;
+    // if right denominator is bigger than lhs, we want to keep it in rhs unit
+    if (rhsexp < 0 && lhsexp > 0 && - rhsexp > lhsexp) {
+      // get the conversion factor for units
+      double f(conversion_factor(urhs, ulhs, clhs, crhs));
+      // left hand side has been consumned
+      f = std::pow(f, lhsexp);
+      rhsexp += lhsexp;
+      lhsexp = 0;
+      return f;
+    } else {
+      // get the conversion factor for units
+      double f(conversion_factor(ulhs, urhs, clhs, crhs));
+      // right hand side has been consumned
+      f = std::pow(f, rhsexp);
+      lhsexp += rhsexp;
+      rhsexp = 0;
+      return f;
+    }
+    return 0;
+  }
 }

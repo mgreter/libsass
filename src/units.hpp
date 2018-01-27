@@ -67,6 +67,8 @@ namespace Sass {
   double conversion_factor(const std::string&, const std::string&, bool = true);
   double conversion_factor(UnitType, UnitType, UnitClass, UnitClass);
 
+  double convert_units(const std::string&, const std::string&, int&, int&);
+
   // this will normalize the unit
   double unit_exp(std::string&);
 
