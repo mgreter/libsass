@@ -1871,8 +1871,11 @@ namespace Sass {
   void Number::normalize(const std::string& prefered, bool strict)
   {
 
+    size_t iL = numerator_units().size();
+    size_t nL = denominator_units().size();
+
     // no conversion if unit is empty or we only have one single unit
-    if (prefered.empty() && numerator_units_.size() + denominator_units_.size() < 2) return;
+    if (prefered.empty() && iL + nL < 2) return;
 
     // first make sure same units cancel each other out
     // it seems that a map table will fit nicely to do this
@@ -1881,19 +1884,13 @@ namespace Sass {
     std::map<std::string, int> exponents;
 
     // need to create normalized copy
-    std::vector<std::string> noms(numerator_units_);
-    std::vector<std::string> denoms(denominator_units_);
-    // std::reverse(denoms.begin(), denoms.end());
-    // std::sort (denoms.begin(), denoms.end());
-    // std::sort (noms.begin(), noms.end());
-    std::reverse(noms.begin(), noms.end());
+    std::vector<std::string>& noms(numerator_units_);
+    std::vector<std::string>& denoms(denominator_units_);
 
     // initialize by summing up occurences in unit vectors
-    // this will already cancel out equivalent units
-    for (size_t i = 0, S = noms.size(); i < S; ++i)
-      exponents[noms[i]] += unit_exp(noms[i]);
-    for (size_t i = 0, S = denoms.size(); i < S; ++i)
-      exponents[denoms[i]] -= unit_exp(denoms[i]);
+    // this will already cancel out equivalent units (e.q. px/px)
+    for (size_t i = 0; i < iL; i ++) exponents[noms[i]] += unit_exp(noms[i]);
+    for (size_t n = 0; n < nL; n ++) exponents[denoms[n]] -= unit_exp(denoms[n]);
 
     // create vector with all units
     std::vector<std::string> all;
