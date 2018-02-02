@@ -538,7 +538,7 @@ extern "C" {
     if (options->c_functions) {
       Sass_Function_List this_func_data = options->c_functions;
       while (this_func_data && *this_func_data) {
-        free(*this_func_data);
+        sass_delete_function(*this_func_data);
         ++this_func_data;
       }
     }
