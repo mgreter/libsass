@@ -56,6 +56,8 @@ namespace Sass {
       #ifndef _WIN32
         char wd[wd_len];
         char* pwd = getcwd(wd, wd_len);
+        // we should check error for more detailed info (e.g. ENOENT)
+        // http://man7.org/linux/man-pages/man2/getcwd.2.html#ERRORS
         if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
         std::string cwd = pwd;
       #else
@@ -70,12 +72,57 @@ namespace Sass {
       return cwd;
     }
 
+    // create fully qualified path name
+    // only to be used on windows for UNC path
+    // Note that this does collapse x/../y sections into y.
+    // This is by design. If /foo on your system is a symlink
+    // to /bar/baz, then /foo/../cd is actually /bar/cd,
+    // not /cd as a naive ../ removal would give you.
+    std::string fqwinpath(std::string path)
+    {
+      std::string token;
+      std::istringstream ss(path);
+      std::vector<std::string> paths;
+      while (getline(ss, token, '/')) {
+          if (token == ".") continue;
+          paths.push_back(token);
+      }
+      size_t skips = 0;
+      std::vector<std::string> fqs;
+      auto it = paths.rbegin();
+      auto end = paths.rend();
+      for (; it != end; ++ it) {
+        if (*it == "") {
+          // skip empty entries
+        } else if ((*it)[0] != 0 && (*it)[1] == ':' && (*it)[2] == 0) {
+          // always include drive letter
+          fqs.push_back(*it);
+        } else if (*it == "..") {
+          // skip next directory
+          skips += 1;
+        } else if (skips > 0) {
+          // directory skipped
+          skips -= 1;
+        } else {
+          fqs.push_back(*it);
+        }
+      }
+      it = fqs.rbegin();
+      end = fqs.rend();
+      std::ostringstream fq;
+      for (; it != end; ++ it) {
+        if (fq.tellp()) fq << "/";
+        fq << *it;
+      }
+      return fq.str();
+    }
+
     // test if path exists and is a file
     bool file_exists(const std::string& path)
     {
       #ifdef _WIN32
         // windows unicode filepaths are encoded in utf16
-        std::string abspath(join_paths(get_cwd(), path));
+        std::string abspath(fqwinpath(join_paths(get_cwd(), path)));
         std::wstring wpath(UTF_8::convert_to_utf16("\\\\?\\" + abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD dwAttrib = GetFileAttributesW(wpath.c_str());
@@ -200,6 +247,13 @@ namespace Sass {
       if (is_absolute_path(r)) return r;
       if (l[l.length()-1] != '/') l += '/';
 
+      // this does a logical cleanup of the right hand path
+      // Note that this does collapse x/../y sections into y.
+      // This is by design. If /foo on your system is a symlink
+      // to /bar/baz, then /foo/../cd is actually /bar/cd,
+      // not /cd as a naive ../ removal would give you.
+      // will only work on leading double dot dirs on rhs
+      // therefore it is safe if lhs is already resolved cwd
       while ((r.length() > 3) && ((r.substr(0, 3) == "../") || (r.substr(0, 3)) == "..\\")) {
         size_t L = l.length(), pos = find_last_folder_separator(l, L - 2);
         bool is_slash = pos + 2 == L && (l[pos+1] == '/' || l[pos+1] == '\\');
@@ -396,7 +450,7 @@ namespace Sass {
         BYTE* pBuffer;
         DWORD dwBytes;
         // windows unicode filepaths are encoded in utf16
-        std::string abspath(join_paths(get_cwd(), path));
+        std::string abspath(fqwinpath(join_paths(get_cwd(), path)));
         std::wstring wpath(UTF_8::convert_to_utf16("\\\\?\\" + abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         HANDLE hFile = CreateFileW(wpath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
