@@ -23,6 +23,11 @@
 #include "sass_functions.hpp"
 #include "sass2scss.h"
 
+#define BOOST_FILESYSTEM_SOURCE
+#define BOOST_ERROR_CODE_HEADER_ONLY
+#include <boost/system/error_code.hpp>
+#include <boost/filesystem.hpp>
+
 #ifdef _WIN32
 # include <windows.h>
 
@@ -79,6 +84,7 @@ namespace Sass {
         wchar_t resolved[32768];
         // windows unicode filepaths are encoded in utf16
         std::string abspath(join_paths(get_cwd(), path));
+        std::cerr << "test: " << boost::filesystem::weakly_canonical("\\\\?\\" + abspath) << "\n";
         std::wstring wpath(UTF_8::convert_to_utf16("\\\\?\\" + abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
@@ -411,6 +417,7 @@ namespace Sass {
         wchar_t resolved[32768];
         // windows unicode filepaths are encoded in utf16
         std::string abspath(join_paths(get_cwd(), path));
+        std::cerr << "read: " << boost::filesystem::canonical(abspath) << "\n";
         std::wstring wpath(UTF_8::convert_to_utf16("\\\\?\\" + abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
