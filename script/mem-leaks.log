@@ -1,0 +1,252 @@
+################################################################################
+==20218== Memcheck, a memory error detector
+==20218== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20218== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20218== Command: ../sassc/bin/sassc ../sass-spec/spec/output_styles/compressed/scss/css_invisible_comments/input.scss
+==20218== 
+==20218== 
+==20218== Process terminating with default action of signal 2 (SIGINT)
+==20218==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20218==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20218==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20218==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20218==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20218==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20218==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20218==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20218==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20218== 
+==20218== HEAP SUMMARY:
+==20218==     in use at exit: 3,300 bytes in 49 blocks
+==20218==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20218== 
+==20218== LEAK SUMMARY:
+==20218==    definitely lost: 0 bytes in 0 blocks
+==20218==    indirectly lost: 0 bytes in 0 blocks
+==20218==      possibly lost: 0 bytes in 0 blocks
+==20218==    still reachable: 3,300 bytes in 49 blocks
+==20218==                       of which reachable via heuristic:
+==20218==                         stdstring          : 1,588 bytes in 42 blocks
+==20218==         suppressed: 0 bytes in 0 blocks
+==20218== Reachable blocks (those to which a pointer was found) are not shown.
+==20218== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20218== 
+==20218== For counts of detected and suppressed errors, rerun with: -v
+==20218== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+################################################################################
+==20224== Memcheck, a memory error detector
+==20224== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20224== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20224== Command: ../sassc/bin/sassc ../sass-spec/spec/output_styles/nested/scss/quotes-in-interpolated-strings/input.scss
+==20224== 
+==20224== 
+==20224== Process terminating with default action of signal 2 (SIGINT)
+==20224==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20224==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20224==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20224==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20224==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20224==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20224==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20224==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20224==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20224== 
+==20224== HEAP SUMMARY:
+==20224==     in use at exit: 3,300 bytes in 49 blocks
+==20224==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20224== 
+==20224== LEAK SUMMARY:
+==20224==    definitely lost: 0 bytes in 0 blocks
+==20224==    indirectly lost: 0 bytes in 0 blocks
+==20224==      possibly lost: 0 bytes in 0 blocks
+==20224==    still reachable: 3,300 bytes in 49 blocks
+==20224==                       of which reachable via heuristic:
+==20224==                         stdstring          : 1,588 bytes in 42 blocks
+==20224==         suppressed: 0 bytes in 0 blocks
+==20224== Reachable blocks (those to which a pointer was found) are not shown.
+==20224== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20224== 
+==20224== For counts of detected and suppressed errors, rerun with: -v
+==20224== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+################################################################################
+==20222== Memcheck, a memory error detector
+==20222== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20222== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20222== Command: ../sassc/bin/sassc ../sass-spec/spec/output_styles/nested/parser/interpolate/04_space_list_quoted/02_variable/input.scss
+==20222== 
+==20222== 
+==20222== Process terminating with default action of signal 2 (SIGINT)
+==20222==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20222==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20222==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20222==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20222==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20222==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20222==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20222==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20222==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20222== 
+==20222== HEAP SUMMARY:
+==20222==     in use at exit: 3,300 bytes in 49 blocks
+==20222==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20222== 
+==20222== LEAK SUMMARY:
+==20222==    definitely lost: 0 bytes in 0 blocks
+==20222==    indirectly lost: 0 bytes in 0 blocks
+==20222==      possibly lost: 0 bytes in 0 blocks
+==20222==    still reachable: 3,300 bytes in 49 blocks
+==20222==                       of which reachable via heuristic:
+==20222==                         stdstring          : 1,588 bytes in 42 blocks
+==20222==         suppressed: 0 bytes in 0 blocks
+==20222== Reachable blocks (those to which a pointer was found) are not shown.
+==20222== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20222== 
+==20222== For counts of detected and suppressed errors, rerun with: -v
+==20222== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+################################################################################
+==20226== Memcheck, a memory error detector
+==20226== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20226== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20226== Command: ../sassc/bin/sassc ../sass-spec/spec/output_styles/compressed/scss/mixins_with_args/input.scss
+==20226== 
+==20226== 
+==20226== Process terminating with default action of signal 2 (SIGINT)
+==20226==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20226==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20226==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20226==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20226==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20226==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20226==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20226==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20226==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20226== 
+==20226== HEAP SUMMARY:
+==20226==     in use at exit: 3,300 bytes in 49 blocks
+==20226==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20226== 
+==20226== LEAK SUMMARY:
+==20226==    definitely lost: 0 bytes in 0 blocks
+==20226==    indirectly lost: 0 bytes in 0 blocks
+==20226==      possibly lost: 0 bytes in 0 blocks
+==20226==    still reachable: 3,300 bytes in 49 blocks
+==20226==                       of which reachable via heuristic:
+==20226==                         stdstring          : 1,588 bytes in 42 blocks
+==20226==         suppressed: 0 bytes in 0 blocks
+==20226== Reachable blocks (those to which a pointer was found) are not shown.
+==20226== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20226== 
+==20226== For counts of detected and suppressed errors, rerun with: -v
+==20226== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+################################################################################
+==20228== Memcheck, a memory error detector
+==20228== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20228== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20228== Command: ../sassc/bin/sassc ../sass-spec/spec/libsass-closed-issues/issue_77/input.scss
+==20228== 
+==20228== 
+==20228== Process terminating with default action of signal 2 (SIGINT)
+==20228==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20228==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20228==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20228==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20228==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20228==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20228==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20228==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20228==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20228== 
+==20228== HEAP SUMMARY:
+==20228==     in use at exit: 3,300 bytes in 49 blocks
+==20228==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20228== 
+==20228== LEAK SUMMARY:
+==20228==    definitely lost: 0 bytes in 0 blocks
+==20228==    indirectly lost: 0 bytes in 0 blocks
+==20228==      possibly lost: 0 bytes in 0 blocks
+==20228==    still reachable: 3,300 bytes in 49 blocks
+==20228==                       of which reachable via heuristic:
+==20228==                         stdstring          : 1,588 bytes in 42 blocks
+==20228==         suppressed: 0 bytes in 0 blocks
+==20228== Reachable blocks (those to which a pointer was found) are not shown.
+==20228== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20228== 
+==20228== For counts of detected and suppressed errors, rerun with: -v
+==20228== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+################################################################################
+==20229== Memcheck, a memory error detector
+==20229== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20229== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20229== Command: ../sassc/bin/sassc ../sass-spec/spec/output_styles/compact/parser/interpolate/19_escapes_single_quoted_lowercase/01_inline/input.scss
+==20229== 
+==20229== 
+==20229== Process terminating with default action of signal 2 (SIGINT)
+==20229==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20229==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20229==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20229==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20229==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20229==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20229==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20229==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20229==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20229== 
+==20229== HEAP SUMMARY:
+==20229==     in use at exit: 3,300 bytes in 49 blocks
+==20229==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20229== 
+==20229== LEAK SUMMARY:
+==20229==    definitely lost: 0 bytes in 0 blocks
+==20229==    indirectly lost: 0 bytes in 0 blocks
+==20229==      possibly lost: 0 bytes in 0 blocks
+==20229==    still reachable: 3,300 bytes in 49 blocks
+==20229==                       of which reachable via heuristic:
+==20229==                         stdstring          : 1,588 bytes in 42 blocks
+==20229==         suppressed: 0 bytes in 0 blocks
+==20229== Reachable blocks (those to which a pointer was found) are not shown.
+==20229== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20229== 
+==20229== For counts of detected and suppressed errors, rerun with: -v
+==20229== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+################################################################################
+==20230== Memcheck, a memory error detector
+==20230== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==20230== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==20230== Command: ../sassc/bin/sassc ../sass-spec/spec/libsass-closed-issues/issue_976/input.scss
+==20230== 
+==20230== 
+==20230== Process terminating with default action of signal 2 (SIGINT)
+==20230==    at 0x59A92CE: __open_nocancel (syscall-template.S:84)
+==20230==    by 0x594009D: _IO_file_open (fileops.c:221)
+==20230==    by 0x59401E2: _IO_file_fopen@@GLIBC_2.2.5 (fileops.c:328)
+==20230==    by 0x5934A03: __fopen_internal (iofopen.c:86)
+==20230==    by 0x542DD6A: std::random_device::_M_init(std::string const&) (in /usr/lib64/gcc/x86_64-pc-linux-gnu/4.9.3/libstdc++.so.6.0.20)
+==20230==    by 0x4399B1: Sass::Functions::GetSeed() (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20230==    by 0x40C238: _GLOBAL__sub_I_functions.cpp (in /root/perl-libsass/libsass/sassc/bin/sassc)
+==20230==    by 0x5B0E9C: __libc_csu_init (elf-init.c:88)
+==20230==    by 0x58EF6EE: (below main) (libc-start.c:245)
+==20230== 
+==20230== HEAP SUMMARY:
+==20230==     in use at exit: 3,300 bytes in 49 blocks
+==20230==   total heap usage: 49 allocs, 0 frees, 3,300 bytes allocated
+==20230== 
+==20230== LEAK SUMMARY:
+==20230==    definitely lost: 0 bytes in 0 blocks
+==20230==    indirectly lost: 0 bytes in 0 blocks
+==20230==      possibly lost: 0 bytes in 0 blocks
+==20230==    still reachable: 3,300 bytes in 49 blocks
+==20230==                       of which reachable via heuristic:
+==20230==                         stdstring          : 1,588 bytes in 42 blocks
+==20230==         suppressed: 0 bytes in 0 blocks
+==20230== Reachable blocks (those to which a pointer was found) are not shown.
+==20230== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==20230== 
+==20230== For counts of detected and suppressed errors, rerun with: -v
+==20230== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+

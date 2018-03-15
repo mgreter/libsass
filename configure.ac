@@ -60,7 +60,7 @@ if test "x$enable_tests" = "xyes"; then
   # test need minitest gem
   AC_PATH_PROG(RUBY, [ruby])
   AC_PATH_PROG(TAPOUT, [tapout])
-  AC_REQUIRE_AUX_FILE([tap-driver])
+  # AC_REQUIRE_FILE([tap-driver])
   AC_REQUIRE_AUX_FILE([tap-runner])
   AC_ARG_WITH(sassc-dir,
               AS_HELP_STRING([--with-sassc-dir=<dir>], [specify directory of sassc sources for testing (default: sassc)]),

@@ -25,6 +25,8 @@ else
   AM_CXXFLAGS += -std=c++0x
 endif
 
+TEST_EXTENSIONS = .rb
+
 if ENABLE_TESTS
 
 noinst_PROGRAMS = tester
@@ -58,14 +60,11 @@ TESTS = \
 	$(SASS_SPEC_PATH)/spec/types
 
 SASS_TEST_FLAGS = -V 3.5 --impl libsass
-LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) ./script/tap-driver
-AM_LOG_FLAGS = -c ./tester $(LOG_FLAGS)
+
 if USE_TAP
-	AM_LOG_FLAGS += -t
-	SASS_TEST_FLAGS += -t | tapout
-	LOG_COMPILER = ./script/tap-runner $(RUBY) $(SASS_SPEC_PATH)/sass-spec.rb
-else
-	LOG_COMPILER = $(RUBY) $(SASS_SPEC_PATH)/sass-spec.rb
+	TESTS = $(SASS_SPEC_PATH)/sass-spec.rb
+	RB_LOG_COMPILER = ./script/tap-runner
+	AM_RB_LOG_FLAGS = $(RUBY)
 endif
 
 SASS_TESTER = $(RUBY) $(SASS_SPEC_PATH)/sass-spec.rb
