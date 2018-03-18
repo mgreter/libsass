@@ -154,18 +154,16 @@ namespace Sass {
       return false;
     }
 
-    // would like to replace this without stringification
+    // replaced compare without stringification
     // https://github.com/sass/sass/issues/2229
-    // SimpleSelectorSet lset, rset;
-    std::set<std::string> lset, rset;
+    SelectorSet lset, rset;
 
     if (lbase && rbase)
     {
-      if (lbase->to_string() == rbase->to_string()) {
-        for (size_t i = 1, L = length(); i < L; ++i)
-        { lset.insert((*this)[i]->to_string()); }
-        for (size_t i = 1, L = rhs->length(); i < L; ++i)
-        { rset.insert((*rhs)[i]->to_string()); }
+      if (*lbase == *rbase) {
+        // create ordered sets for includes query
+        lset.insert(this->begin(), this->end());
+        rset.insert(rhs->begin(), rhs->end());
         return includes(rset.begin(), rset.end(), lset.begin(), lset.end());
       }
       return false;
@@ -203,8 +201,7 @@ namespace Sass {
           }}
         }
       }
-      // match from here on as strings
-      lset.insert(wlhs->to_string());
+      lset.insert(wlhs);
     }
 
     for (size_t n = 0, nL = rhs->length(); n < nL; ++n)
@@ -227,7 +224,7 @@ namespace Sass {
           }
         }
       }
-      rset.insert(r->to_string());
+      rset.insert(r);
     }
 
     //for (auto l : lset) { cerr << "l: " << l << endl; }
@@ -864,16 +861,15 @@ namespace Sass {
     for (size_t i = 0, L = length(); i < L; ++i)
     {
       bool found = false;
-      std::string thisSelector((*this)[i]->to_string());
       for (size_t j = 0, M = rhs->length(); j < M; ++j)
       {
-        if (thisSelector == (*rhs)[j]->to_string())
+        if (*get(i) == *rhs->get(j))
         {
           found = true;
           break;
         }
       }
-      if (!found) result->append((*this)[i]);
+      if (!found) result->append(get(i));
     }
 
     return result;

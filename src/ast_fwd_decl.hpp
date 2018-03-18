@@ -414,6 +414,7 @@ namespace Sass {
   typedef std::pair<Complex_Selector_Obj, SubSetMapPairs> SubSetMapResult;
   typedef std::vector<SubSetMapResult> SubSetMapResults;
 
+  typedef std::set<Selector_Obj, OrderNodes> SelectorSet;
   typedef std::deque<Complex_Selector_Obj> ComplexSelectorDeque;
   typedef std::set<Simple_Selector_Obj, OrderNodes> SimpleSelectorSet;
   typedef std::set<Complex_Selector_Obj, OrderNodes> ComplexSelectorSet;

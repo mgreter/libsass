@@ -34,7 +34,7 @@ namespace Sass {
   Compound_Selector_Ptr Simple_Selector::unify_with(Compound_Selector_Ptr rhs)
   {
     for (size_t i = 0, L = rhs->length(); i < L; ++i)
-    { if (to_string() == rhs->at(i)->to_string()) return rhs; }
+    { if (*this == *rhs->get(i)) return rhs; }
 
     // check for pseudo elements because they are always last
     size_t i, L;
