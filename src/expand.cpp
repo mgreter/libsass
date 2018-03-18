@@ -125,10 +125,8 @@ namespace Sass {
       }
     }
     else {
-      if (sel->length() == 0 || sel->has_parent_ref()) {
-        if (sel->has_real_parent_ref() && !has_parent_selector) {
-          error("Base-level rules cannot contain the parent-selector-referencing character '&'.", sel->pstate(), traces);
-        }
+      if (sel->length() == 0 || (sel->has_real_parent_ref() && !has_parent_selector)) {
+        error("Base-level rules cannot contain the parent-selector-referencing character '&'.", sel->pstate(), traces);
       }
     }
 
