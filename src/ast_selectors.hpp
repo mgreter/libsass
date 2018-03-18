@@ -139,7 +139,7 @@ namespace Sass {
   ////////////////////////////////////////////
   class Simple_Selector : public Selector {
   public:
-    enum Simple_Type {
+    enum Type {
       ID_SEL,
       TYPE_SEL,
       CLASS_SEL,
@@ -152,7 +152,7 @@ namespace Sass {
   public:
     ADD_CONSTREF(std::string, ns)
     ADD_CONSTREF(std::string, name)
-    ADD_PROPERTY(Simple_Type, simple_type)
+    ADD_PROPERTY(Type, simple_type)
     ADD_PROPERTY(bool, has_ns)
   public:
     Simple_Selector(ParserState pstate, std::string n = "")
@@ -313,12 +313,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////
   // Element selectors (and the universal selector) -- e.g., div, span, *.
   /////////////////////////////////////////////////////////////////////
-  class Element_Selector : public Simple_Selector {
+  class Type_Selector : public Simple_Selector {
   public:
-    Element_Selector(ParserState pstate, std::string n)
+    Type_Selector(ParserState pstate, std::string n)
     : Simple_Selector(pstate, n)
     { simple_type(TYPE_SEL); }
-    Element_Selector(const Element_Selector* ptr)
+    Type_Selector(const Type_Selector* ptr)
     : Simple_Selector(ptr)
     { simple_type(TYPE_SEL); }
     virtual unsigned long specificity() const
@@ -330,9 +330,9 @@ namespace Sass {
     virtual Compound_Selector_Ptr unify_with(Compound_Selector_Ptr);
     virtual bool operator<(const Simple_Selector& rhs) const;
     virtual bool operator==(const Simple_Selector& rhs) const;
-    virtual bool operator<(const Element_Selector& rhs) const;
-    virtual bool operator==(const Element_Selector& rhs) const;
-    ATTACH_AST_OPERATIONS(Element_Selector)
+    virtual bool operator<(const Type_Selector& rhs) const;
+    virtual bool operator==(const Type_Selector& rhs) const;
+    ATTACH_AST_OPERATIONS(Type_Selector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -564,7 +564,7 @@ namespace Sass {
     Simple_Selector_Ptr base() const {
       if (length() == 0) return 0;
       // ToDo: why is this needed?
-      if (Cast<Element_Selector>((*this)[0]))
+      if (Cast<Type_Selector>((*this)[0]))
         return (*this)[0];
       return 0;
     }

@@ -64,7 +64,7 @@ namespace Sass {
     return rhs;
   }
 
-  Simple_Selector_Ptr Element_Selector::unify_with(Simple_Selector_Ptr rhs)
+  Simple_Selector_Ptr Type_Selector::unify_with(Simple_Selector_Ptr rhs)
   {
     // check if ns can be extended
     // true for no ns or universal
@@ -95,7 +95,7 @@ namespace Sass {
     return this;
   }
 
-  Compound_Selector_Ptr Element_Selector::unify_with(Compound_Selector_Ptr rhs)
+  Compound_Selector_Ptr Type_Selector::unify_with(Compound_Selector_Ptr rhs)
   {
     // TODO: handle namespaces
 
@@ -109,10 +109,10 @@ namespace Sass {
     // otherwise, this is a tag name
     if (name() == "*")
     {
-      if (typeid(*rhs_0) == typeid(Element_Selector))
+      if (typeid(*rhs_0) == typeid(Type_Selector))
       {
         // if rhs is universal, just return this tagname + rhs's qualifiers
-        Element_Selector_Ptr ts = Cast<Element_Selector>(rhs_0);
+        Type_Selector_Ptr ts = Cast<Type_Selector>(rhs_0);
         rhs->at(0) = this->unify_with(ts);
         return rhs;
       }
@@ -128,7 +128,7 @@ namespace Sass {
       return rhs;
     }
 
-    if (typeid(*rhs_0) == typeid(Element_Selector))
+    if (typeid(*rhs_0) == typeid(Type_Selector))
     {
       // if rhs is universal, just return this tagname + rhs's qualifiers
       if (rhs_0->name() != "*" && rhs_0->ns() != "*" && rhs_0->name() != name()) return 0;

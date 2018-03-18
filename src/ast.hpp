@@ -133,7 +133,7 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
   class Expression : public AST_Node {
   public:
-    enum Concrete_Type {
+    enum Type {
       NONE,
       BOOLEAN,
       NUMBER,
@@ -155,10 +155,10 @@ namespace Sass {
     ADD_PROPERTY(bool, is_delayed)
     ADD_PROPERTY(bool, is_expanded)
     ADD_PROPERTY(bool, is_interpolant)
-    ADD_PROPERTY(Concrete_Type, concrete_type)
+    ADD_PROPERTY(Type, concrete_type)
   public:
     Expression(ParserState pstate,
-               bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
+               bool d = false, bool e = false, bool i = false, Type ct = NONE)
     : AST_Node(pstate),
       is_delayed_(d),
       is_expanded_(e),
@@ -361,7 +361,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   class Statement : public AST_Node {
   public:
-    enum Statement_Type {
+    enum Type {
       NONE,
       RULESET,
       MEDIA,
@@ -387,11 +387,11 @@ namespace Sass {
       IF
     };
   private:
-    ADD_PROPERTY(Statement_Type, statement_type)
+    ADD_PROPERTY(Type, statement_type)
     ADD_PROPERTY(size_t, tabs)
     ADD_PROPERTY(bool, group_end)
   public:
-    Statement(ParserState pstate, Statement_Type st = NONE, size_t t = 0)
+    Statement(ParserState pstate, Type st = NONE, size_t t = 0)
     : AST_Node(pstate), statement_type_(st), tabs_(t), group_end_(false)
      { }
     Statement(const Statement* ptr)

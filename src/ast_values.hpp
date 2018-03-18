@@ -39,7 +39,7 @@ namespace Sass {
   class PreValue : public Expression {
   public:
     PreValue(ParserState pstate,
-               bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
+               bool d = false, bool e = false, bool i = false, Type ct = NONE)
     : Expression(pstate, d, e, i, ct)
     { }
     PreValue(const PreValue* ptr)
@@ -55,7 +55,7 @@ namespace Sass {
   class Value : public PreValue {
   public:
     Value(ParserState pstate,
-          bool d = false, bool e = false, bool i = false, Concrete_Type ct = NONE)
+          bool d = false, bool e = false, bool i = false, Type ct = NONE)
     : PreValue(pstate, d, e, i, ct)
     { }
     Value(const Value* ptr)
