@@ -112,7 +112,6 @@ namespace Sass {
 
       Color_RGBA_Obj new_c = SASS_MEMORY_COPY(c_arg);
       new_c->a(ALPHA_NUM("$alpha"));
-      new_c->disp("");
       return new_c.detach();
     }
 
@@ -144,11 +143,11 @@ namespace Sass {
     Color_RGBA* colormix(Context& ctx, ParserState& pstate, Color* color1, Color* color2, double weight) {
       Color_RGBA_Obj c1 = color1->toRGBA();
       Color_RGBA_Obj c2 = color2->toRGBA();
-      double p = weight/100;
-      double w = 2*p - 1;
+      double p = weight / 100.0;
+      double w = 2.0 * p - 1.0;
       double a = c1->a() - c2->a();
 
-      double w1 = (((w * a == -1) ? w : (w + a)/(1 + w*a)) + 1)/2.0;
+      double w1 = (((w * a == -1) ? w : (w + a) / (1 + w * a)) + 1) / 2.0;
       double w2 = 1 - w1;
 
       return SASS_MEMORY_NEW(Color_RGBA,
@@ -162,8 +161,8 @@ namespace Sass {
     Signature mix_sig = "mix($color-1, $color-2, $weight: 50%)";
     BUILT_IN(mix)
     {
-      Color_Obj  color1 = ARG("$color-1", Color);
-      Color_Obj  color2 = ARG("$color-2", Color);
+      Color_Obj color1 = ARG("$color-1", Color);
+      Color_Obj color2 = ARG("$color-2", Color);
       double weight = DARG_U_PRCT("$weight");
       return colormix(ctx, pstate, color1, color2, weight);
 
