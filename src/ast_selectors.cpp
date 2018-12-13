@@ -106,8 +106,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Simple_Selector::Simple_Selector(ParserState pstate, std::string n)
-  : Selector(pstate), ns_(""), name_(n), has_ns_(false)
+  : Selector(pstate), ns_(""), name_(""), has_ns_(false)
   {
+    name(read_hex_escapes(n));
     size_t pos = n.find('|');
     // found some namespace
     if (pos != std::string::npos) {

@@ -285,12 +285,18 @@ namespace Sass {
           // replace bell character
           // if (cp == '\n') cp = 32;
 
-          // use a very simple approach to convert via utf8 lib
-          // maybe there is a more elegant way; maybe we shoud
-          // convert the whole output from string to a stream!?
-          // allocate memory for utf8 char and convert to utf8
-          unsigned char u[5] = {0,0,0,0,0}; utf8::append(cp, u);
-          for(size_t m = 0; m < 5 && u[m]; m++) result.push_back(u[m]);
+          if (cp == 10) {
+            result.push_back('\\');
+            result.push_back('a');
+            result.push_back(' ');
+          } else {
+            // use a very simple approach to convert via utf8 lib
+            // maybe there is a more elegant way; maybe we shoud
+            // convert the whole output from string to a stream!?
+            // allocate memory for utf8 char and convert to utf8
+            unsigned char u[5] = {0,0,0,0,0}; utf8::append(cp, u);
+            for(size_t m = 0; m < 5 && u[m]; m++) result.push_back(u[m]);
+          }
 
           // skip some more chars?
           i += len - 1; skipped = false;
@@ -308,6 +314,11 @@ namespace Sass {
       }
 
       else {
+
+        // do not include unnecessary backslashes
+        if (isalpha(s[i]) && result.back() == '\\') {
+            result.pop_back();
+        }
 
         result.push_back(s[i]);
 
