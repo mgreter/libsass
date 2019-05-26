@@ -20,6 +20,9 @@ namespace Sass {
 
     Env* environment();
     Selector_List_Obj selector();
+    Selector_List_Obj popFromSelectorStack();
+    SelectorStack2 getSelectorStack2();
+    void pushToSelectorStack(SelectorList_Obj selector);
 
     Context&          ctx;
     Backtraces&       traces;
@@ -33,7 +36,9 @@ namespace Sass {
     EnvStack      env_stack;
     BlockStack    block_stack;
     CallStack     call_stack;
-    SelectorStack selector_stack;
+  private:
+    SelectorStack2 selector_stack2;
+  public:
     MediaStack    media_stack;
 
     Boolean_Obj bool_true;
@@ -42,7 +47,7 @@ namespace Sass {
     void expand_selector_list(Selector_Obj, Selector_List_Obj extender);
 
   public:
-    Expand(Context&, Env*, SelectorStack* stack = NULL);
+    Expand(Context&, Env*, SelectorStack2* stack = NULL);
     ~Expand() { }
 
     Block* operator()(Block*);

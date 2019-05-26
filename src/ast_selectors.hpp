@@ -82,6 +82,7 @@ namespace Sass {
     // store computed hash
     mutable size_t hash_;
   public:
+    Selector_List_Obj eval(Eval& eval);
     Selector_Schema(ParserState pstate, String_Obj c);
     bool has_parent_ref() const;
     bool has_real_parent_ref() const;
@@ -132,11 +133,13 @@ namespace Sass {
     virtual bool has_placeholder();
 
     virtual ~Simple_Selector() = 0;
+    virtual CompoundSelector* unify_with(CompoundSelector*);
     virtual Compound_Selector* unify_with(Compound_Selector*);
 
     virtual bool has_parent_ref() const override;
     virtual bool has_real_parent_ref() const override;
     virtual bool is_pseudo_element() const;
+    virtual bool is_superselector_of(const CompoundSelector* sub) const;
     virtual bool is_superselector_of(const Compound_Selector* sub) const;
 
     bool operator<(const Selector& rhs) const final override;
@@ -222,6 +225,7 @@ namespace Sass {
       return Constants::UnificationOrder_Element;
     }
     Simple_Selector* unify_with(Simple_Selector*);
+    CompoundSelector* unify_with(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
@@ -242,6 +246,7 @@ namespace Sass {
     {
       return Constants::UnificationOrder_Class;
     }
+    CompoundSelector* unify_with(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
@@ -262,6 +267,7 @@ namespace Sass {
     {
       return Constants::UnificationOrder_Id;
     }
+    CompoundSelector* unify_with(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
@@ -328,6 +334,7 @@ namespace Sass {
     bool operator==(const Simple_Selector& rhs) const final override;
     bool operator<(const Pseudo_Selector& rhs) const;
     bool operator==(const Pseudo_Selector& rhs) const;
+    CompoundSelector* unify_with(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     ATTACH_AST_OPERATIONS(Pseudo_Selector)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -383,6 +390,7 @@ namespace Sass {
     void append(Simple_Selector_Obj element) override;
     bool is_universal() const;
     Complex_Selector_Obj to_complex();
+    CompoundSelector* unify_with(CompoundSelector* rhs);
     Compound_Selector* unify_with(Compound_Selector* rhs);
     // virtual Placeholder_Selector* find_placeholder();
     bool has_parent_ref() const override;
@@ -395,6 +403,7 @@ namespace Sass {
     virtual unsigned long specificity() const override;
     virtual bool has_placeholder();
     bool is_empty_reference();
+    CompoundSelector_Obj toCompSelector();
     int unification_order() const override
     {
       throw std::runtime_error("unification_order for Compound_Selector is undefined");
@@ -449,14 +458,14 @@ namespace Sass {
 
     bool empty() const;
 
+    ComplexSelector_Obj toCplxSelector();
+
     bool has_parent_ref() const override;
     bool has_real_parent_ref() const override;
     Complex_Selector_Obj skip_empty_reference();
 
     // can still have a tail
     bool is_empty_ancestor() const;
-
-    Selector_List* tails(Selector_List* tails);
 
     // front returns the first real tail
     // skips over parent and empty ones
@@ -468,13 +477,11 @@ namespace Sass {
     Complex_Selector* mutable_last();
 
     size_t length() const;
-    Selector_List* resolve_parent_refs(SelectorStack& pstack, Backtraces& traces, bool implicit_parent = true);
     bool is_superselector_of(const Compound_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Complex_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Selector_List* sub, std::string wrapping = "") const;
     Selector_List* unify_with(Complex_Selector* rhs);
     Combinator clear_innermost();
-    void append(Complex_Selector_Obj, Backtraces& traces);
     void set_innermost(Complex_Selector_Obj, Combinator);
 
     size_t hash() const override;
@@ -507,23 +514,225 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+  ////////////////////////////////////////////////////////////////////////////
+  // Complex Selectors are the most important class of selectors.
+  // A Selector List consists of Complex Selectors (separated by comma)
+  // Complex Selectors are itself a list of Compounds and Combinators
+  // Between each item there is an implicit ancestor of combinator
+  ////////////////////////////////////////////////////////////////////////////
+  class ComplexSelector final : public Selector, public Vectorized<CompoundOrCombinator_Obj> {
+    ADD_PROPERTY(bool, chroots)
+  public:
+    ComplexSelector(ParserState pstate);
+    size_t hash() const override {
+      return 0;
+    }
+    bool has_placeholder() const;
+    bool contains_placeholder() const;
+    void cloneChildren() override;
+    bool has_parent_ref() const override;
+    bool has_real_parent_ref() const override;
+    int unification_order() const override {
+      throw std::runtime_error("unification_order for Compound_Selector is undefined");
+    }
+    // SelectorList* unify_with(ComplexSelector* rhs);
+    Complex_Selector_Obj toComplexSelector();
+    SelectorList* resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent = true);
+    virtual unsigned long specificity() const override;
+
+    SelectorList* unify_with(ComplexSelector* rhs);
+
+    bool operator<(const Selector& rhs) const override;
+    bool operator==(const Selector& rhs) const override;
+    bool operator<(const SelectorList& rhs) const;
+    bool operator==(const SelectorList& rhs) const;
+    bool operator<(const ComplexSelector& rhs) const;
+    bool operator==(const ComplexSelector& rhs) const;
+    bool operator<(const CompoundSelector& rhs) const;
+    bool operator==(const CompoundSelector& rhs) const;
+    bool operator<(const Simple_Selector& rhs) const;
+    bool operator==(const Simple_Selector& rhs) const;
+
+    ATTACH_AST_OPERATIONS(ComplexSelector)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Base class for complex selector components
+  ////////////////////////////////////////////////////////////////////////////
+  class CompoundOrCombinator : public Selector {
+  public:
+    CompoundOrCombinator(ParserState pstate);
+    size_t hash() const override = 0;
+    void cloneChildren() override;
+    bool has_parent_ref() const override = 0;
+    bool has_real_parent_ref() const override = 0;
+    virtual bool has_placeholder() const = 0;
+    virtual bool contains_placeholder() const = 0;
+    int unification_order() const override {
+      throw std::runtime_error("unification_order for Compound_Selector is undefined");
+    }
+    virtual bool isCompound() const { return false; };
+    virtual bool isCombinator() const { return false; };
+    virtual unsigned long specificity() const override;
+    bool operator<(const Selector& rhs) const override;
+    bool operator==(const Selector& rhs) const override;
+    ATTACH_VIRTUAL_AST_OPERATIONS(CompoundOrCombinator);
+  };
+
+  ////////////////////////////////////////////////////////////////////////////
+  // A specific combinator between compound selectors
+  ////////////////////////////////////////////////////////////////////////////
+  class SelectorCombinator final : public CompoundOrCombinator {
+  public:
+    enum Combinator { CHILD, GENERAL, ADJACENT };
+  private:
+    HASH_CONSTREF(Combinator, combinator)
+  public:
+    SelectorCombinator(ParserState pstate, Combinator combinator);
+
+    bool has_parent_ref() const override { return false; }
+    bool has_real_parent_ref() const override { return false; }
+    bool has_placeholder() const override { return false; }
+    bool contains_placeholder() const override { return false; }
+
+
+    // Query type of combinator
+    bool isCombinator() const override { return true; };
+    bool isChildCombinator() const { return combinator_ == CHILD; }
+    bool isGeneralCombinator() const { return combinator_ == GENERAL; }
+    bool isAdjacentCombinator() const { return combinator_ == ADJACENT; }
+
+    bool isNextSibling() const { return isChildCombinator(); }
+    bool isFollowingSibling() const { return isGeneralCombinator(); }
+
+    Complex_Selector::Combinator toComplexCombinator() const {
+      switch (combinator()) {
+        case CHILD:    return Complex_Selector::PARENT_OF; break;
+        case GENERAL:  return Complex_Selector::PRECEDES; break;
+        case ADJACENT: return Complex_Selector::ADJACENT_TO; break;
+      }
+      return Complex_Selector::ANCESTOR_OF;
+      // throw runtime_error("unreachable code reached");
+    }
+
+    size_t hash() const override {
+      return std::hash<int>()(combinator_);
+    }
+    void cloneChildren() override;
+    int unification_order() const override {
+      throw std::runtime_error("unification_order for SelectorCombinator is undefined");
+    }
+    virtual unsigned long specificity() const override;
+    bool operator<(const Selector& rhs) const override;
+    bool operator==(const Selector& rhs) const override;
+    bool operator<(const SelectorCombinator& rhs) const;
+    bool operator==(const SelectorCombinator& rhs) const;
+    ATTACH_AST_OPERATIONS(SelectorCombinator)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  ////////////////////////////////////////////////////////////////////////////
+  // A compound selector consists of multiple simple selectors
+  ////////////////////////////////////////////////////////////////////////////
+  class CompoundSelector final : public CompoundOrCombinator, public Vectorized<Simple_Selector_Obj> {
+    ADD_PROPERTY(bool, hasRealParent)
+  public:
+    CompoundSelector(ParserState pstate);
+    size_t hash() const override {
+      return 0;
+    }
+    CompoundSelector* unify_with(CompoundSelector* rhs);
+
+    bool is_superselector_of(const CompoundSelector* sub, std::string wrapped = "") const;
+    bool is_superselector_of(const ComplexSelector* sub, std::string wrapped = "") const;
+    bool is_superselector_of(const SelectorList* sub, std::string wrapped = "") const;
+
+    void cloneChildren() override;
+    bool has_parent_ref() const override;
+    bool has_real_parent_ref() const override;
+    bool has_placeholder() const override;
+    bool contains_placeholder() const override;
+    int unification_order() const override {
+      throw std::runtime_error("unification_order for CompoundSelector is undefined");
+    }
+    std::vector<ComplexSelector_Obj> resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent = true);
+    Compound_Selector_Obj toCompoundSelector();
+    virtual bool isCompound() const override { return true; };
+    virtual unsigned long specificity() const override;
+
+    bool operator<(const Selector& rhs) const override;
+    bool operator==(const Selector& rhs) const override;
+    bool operator<(const SelectorList& rhs) const;
+    bool operator==(const SelectorList& rhs) const;
+    bool operator<(const ComplexSelector& rhs) const;
+    bool operator==(const ComplexSelector& rhs) const;
+    bool operator<(const CompoundSelector& rhs) const;
+    bool operator==(const CompoundSelector& rhs) const;
+    bool operator<(const Simple_Selector& rhs) const;
+    bool operator==(const Simple_Selector& rhs) const;
+
+    ATTACH_AST_OPERATIONS(CompoundSelector)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  ///////////////////////////////////
+  // Comma-separated selector groups.
+  ///////////////////////////////////
+  class SelectorList final : public Selector, public Vectorized<ComplexSelector_Obj> {
+    ADD_PROPERTY(Selector_Schema_Obj, schemaOnlyToCopy)
+  public:
+    SelectorList(ParserState pstate, size_t s = 0);
+    std::string type() const override { return "list"; }
+    Selector_List_Obj toSelectorList() const;
+    size_t hash() const override {
+      return 0;
+    }
+    SelectorList_Obj eval(Eval& eval);
+    void remove_parent_selectors();
+    void cloneChildren() override;
+    bool has_parent_ref() const override;
+    bool has_real_parent_ref() const override;
+    int unification_order() const override {
+      throw std::runtime_error("unification_order for Compound_Selector is undefined");
+    }
+    SelectorList* resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent = true);
+    virtual unsigned long specificity() const override;
+
+    bool operator<(const Selector& rhs) const override;
+    bool operator==(const Selector& rhs) const override;
+    bool operator<(const SelectorList& rhs) const;
+    bool operator==(const SelectorList& rhs) const;
+    bool operator<(const ComplexSelector& rhs) const;
+    bool operator==(const ComplexSelector& rhs) const;
+    bool operator<(const CompoundSelector& rhs) const;
+    bool operator==(const CompoundSelector& rhs) const;
+    bool operator<(const Simple_Selector& rhs) const;
+    bool operator==(const Simple_Selector& rhs) const;
+    // Selector Lists can be compared to comma lists
+    bool operator<(const Expression& rhs) const override;
+    bool operator==(const Expression& rhs) const override;
+
+    ATTACH_AST_OPERATIONS(SelectorList)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
   class Selector_List final : public Selector, public Vectorized<Complex_Selector_Obj> {
     ADD_PROPERTY(Selector_Schema_Obj, schema)
-    ADD_CONSTREF(std::vector<std::string>, wspace)
   protected:
     void adjust_after_pushing(Complex_Selector_Obj c) override;
   public:
-    Selector_List(ParserState pstate, size_t s = 0);
+      Selector_List(ParserState pstate, size_t s = 0);
     std::string type() const override { return "list"; }
     // remove parent selector references
     // basically unwraps parsed selectors
     bool has_parent_ref() const override;
     bool has_real_parent_ref() const override;
     void remove_parent_selectors();
-    Selector_List* resolve_parent_refs(SelectorStack& pstack, Backtraces& traces, bool implicit_parent = true);
+    SelectorList_Obj toSelList() const;
     bool is_superselector_of(const Compound_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Complex_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Selector_List* sub, std::string wrapping = "") const;

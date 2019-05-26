@@ -260,6 +260,15 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_cmp.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_selectors.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\eval_selectors.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+
+    
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_unify.cpp">
       <Filter>Sources</Filter>
     </ClCompile>

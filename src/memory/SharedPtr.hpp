@@ -172,7 +172,7 @@ namespace Sass {
 
     operator const std::string() const {
       if (node) return node->to_string();
-      return "[nullptr]";
+      return "null";
     }
 
     using SharedPtr::isNull;

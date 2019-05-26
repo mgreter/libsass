@@ -33,6 +33,19 @@ namespace Sass {
 
     }
 
+    SelectorList* Remove_Placeholders::remove_placeholders(SelectorList* sl)
+    {
+      SelectorList* new_sl = SASS_MEMORY_NEW(SelectorList, sl->pstate());
+
+      for (size_t i = 0, L = sl->length(); i < L; ++i) {
+        if (!sl->at(i)->contains_placeholder()) {
+          new_sl->append(sl->at(i));
+        }
+      }
+
+      return new_sl;
+
+    }
 
     void Remove_Placeholders::operator()(Ruleset* r) {
         // Create a new selector group without placeholders
@@ -40,7 +53,7 @@ namespace Sass {
 
         if (sl) {
           // Set the new placeholder selector list
-          r->selector(remove_placeholders(sl));
+          r->selector((remove_placeholders(sl)));
           // Remove placeholders in wrapped selectors
           for (Complex_Selector_Obj cs : sl->elements()) {
             while (cs) {

@@ -6,6 +6,7 @@
 #include "file.hpp"
 #include "inspect.hpp"
 #include "constants.hpp"
+#include "debugger.hpp"
 #include "util.hpp"
 #include "prelexer.hpp"
 #include "color_maps.hpp"
@@ -74,7 +75,7 @@ namespace Sass {
   {
     Parser p = Parser::from_c_str(beg, ctx, traces, pstate, source, allow_parent);
     // ToDo: remap the source-map entries somehow
-    return p.parse_selector_list(false);
+    return p.parseSelectorList(false)->toSelectorList();
   }
 
   bool Parser::peek_newline(const char* start)
@@ -263,14 +264,14 @@ namespace Sass {
       if (!lookahead.found) css_error("Invalid CSS", " after ", ": expected selector, was ");
       Selector_List_Obj target;
       if (!lookahead.has_interpolants) {
-        target = parse_selector_list(true);
+        block->append(SASS_MEMORY_NEW(Extension, pstate,
+          parseSelectorList(true)));
       }
       else {
-        target = SASS_MEMORY_NEW(Selector_List, pstate);
-        target->schema(parse_selector_schema(lookahead.found, true));
+        auto sc = parse_selector_schema(lookahead.found, true);
+        block->append(SASS_MEMORY_NEW(Extension, pstate, sc));
       }
 
-      block->append(SASS_MEMORY_NEW(Extension, pstate, target));
     }
 
     // selector may contain interpolations which need delayed evaluation
@@ -530,11 +531,19 @@ namespace Sass {
     // create the connector object (add parts later)
     Ruleset_Obj ruleset = SASS_MEMORY_NEW(Ruleset, pstate);
     // parse selector static or as schema to be evaluated later
-    if (lookahead.parsable) ruleset->selector(parse_selector_list(false));
+    if (lookahead.parsable) {
+      SelectorList_Obj asd = parseSelectorList(false);
+      // debug_ast(asd);
+      Selector_List_Obj sel = toSelector_List(asd);
+      ruleset->selector(sel);
+    }
     else {
       Selector_List_Obj list = SASS_MEMORY_NEW(Selector_List, pstate);
-      list->schema(parse_selector_schema(lookahead.position, false));
-      ruleset->selector(list);
+      auto sc = parse_selector_schema(lookahead.position, false);
+      list->schema(sc);
+      ruleset->schema(sc);
+      // Somewhere we access a null
+      ruleset->selector((list));
     }
     // then parse the inner block
     stack.push_back(Scope::Rules);
@@ -674,212 +683,7 @@ namespace Sass {
   }
   // EO parse_include_directive
 
-  // parse a list of complex selectors
-  // this is the main entry point for most
-  Selector_List_Obj Parser::parse_selector_list(bool chroot)
-  {
-    bool reloop;
-    bool had_linefeed = false;
-    NESTING_GUARD(nestings);
-    Complex_Selector_Obj sel;
-    Selector_List_Obj group = SASS_MEMORY_NEW(Selector_List, pstate);
-    group->media_block(last_media_block);
-
-    if (peek_css< alternatives < end_of_file, exactly <'{'>, exactly <','> > >()) {
-      css_error("Invalid CSS", " after ", ": expected selector, was ");
-    }
-
-    do {
-      reloop = false;
-
-      had_linefeed = had_linefeed || peek_newline();
-
-      if (peek_css< alternatives < class_char < selector_list_delims > > >())
-        break; // in case there are superfluous commas at the end
-
-      // now parse the complex selector
-      sel = parse_complex_selector(chroot);
-
-      if (!sel) return group.detach();
-
-      sel->has_line_feed(had_linefeed);
-
-      had_linefeed = false;
-
-      while (peek_css< exactly<','> >())
-      {
-        lex< css_comments >(false);
-        // consume everything up and including the comma separator
-        reloop = lex< exactly<','> >() != 0;
-        // remember line break (also between some commas)
-        had_linefeed = had_linefeed || peek_newline();
-        // remember line break (also between some commas)
-      }
-      group->append(sel);
-    }
-    while (reloop);
-    while (lex_css< kwd_optional >()) {
-      group->is_optional(true);
-    }
-    // update for end position
-    group->update_pstate(pstate);
-    if (sel) sel->mutable_last()->has_line_break(false);
-    return group.detach();
-  }
-  // EO parse_selector_list
-
-  // a complex selector combines a compound selector with another
-  // complex selector, with one of four combinator operations.
-  // the compound selector (head) is optional, since the combinator
-  // can come first in the whole selector sequence (like `> DIV').
-  Complex_Selector_Obj Parser::parse_complex_selector(bool chroot)
-  {
-
-    NESTING_GUARD(nestings);
-    String_Obj reference;
-    lex < block_comment >();
-    advanceToNextToken();
-    Complex_Selector_Obj sel = SASS_MEMORY_NEW(Complex_Selector, pstate);
-
-    if (peek < end_of_file >()) return {};
-
-    // parse the left hand side
-    Compound_Selector_Obj lhs;
-    // special case if it starts with combinator ([+~>])
-    if (!peek_css< class_char < selector_combinator_ops > >()) {
-      // parse the left hand side
-      lhs = parse_compound_selector();
-    }
-
-
-    // parse combinator between lhs and rhs
-    Complex_Selector::Combinator combinator = Complex_Selector::ANCESTOR_OF;
-    if      (lex< exactly<'+'> >()) combinator = Complex_Selector::ADJACENT_TO;
-    else if (lex< exactly<'~'> >()) combinator = Complex_Selector::PRECEDES;
-    else if (lex< exactly<'>'> >()) combinator = Complex_Selector::PARENT_OF;
-    else if (lex< sequence < exactly<'/'>, negate < exactly < '*' > > > >()) {
-      // comments are allowed, but not spaces?
-      combinator = Complex_Selector::REFERENCE;
-      if (!lex < re_reference_combinator >()) return {};
-      reference = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
-      if (!lex < exactly < '/' > >()) return {}; // ToDo: error msg?
-    }
-
-    if (!lhs && combinator == Complex_Selector::ANCESTOR_OF) return {};
-
-    // lex < block_comment >();
-    sel->head(lhs);
-    sel->combinator(combinator);
-    sel->media_block(last_media_block);
-
-    if (combinator == Complex_Selector::REFERENCE) sel->reference(reference);
-    // has linfeed after combinator?
-    sel->has_line_break(peek_newline());
-    // sel->has_line_feed(has_line_feed);
-
-    // check if we got the abort condition (ToDo: optimize)
-    if (!peek_css< class_char < complex_selector_delims > >()) {
-      // parse next selector in sequence
-      sel->tail(parse_complex_selector(true));
-    }
-
-    // add a parent selector if we are not in a root
-    // also skip adding parent ref if we only have refs
-    if (!sel->has_parent_ref() && !chroot) {
-      // create the objects to wrap parent selector reference
-      Compound_Selector_Obj head = SASS_MEMORY_NEW(Compound_Selector, pstate);
-      Parent_Selector* parent = SASS_MEMORY_NEW(Parent_Selector, pstate, false);
-      parent->media_block(last_media_block);
-      head->media_block(last_media_block);
-      // add simple selector
-      head->append(parent);
-      // selector may not have any head yet
-      if (!sel->head()) { sel->head(head); }
-      // otherwise we need to create a new complex selector and set the old one as its tail
-      else {
-        sel = SASS_MEMORY_NEW(Complex_Selector, pstate, Complex_Selector::ANCESTOR_OF, head, sel);
-        sel->media_block(last_media_block);
-      }
-      // peek for linefeed and remember result on head
-      // if (peek_newline()) head->has_line_break(true);
-    }
-
-    sel->update_pstate(pstate);
-    // complex selector
-    return sel;
-  }
-  // EO parse_complex_selector
-
-  // parse one compound selector, which is basically
-  // a list of simple selectors (directly adjacent)
-  // lex them exactly (without skipping white-space)
-  Compound_Selector_Obj Parser::parse_compound_selector()
-  {
-    // init an empty compound selector wrapper
-    Compound_Selector_Obj seq = SASS_MEMORY_NEW(Compound_Selector, pstate);
-    seq->media_block(last_media_block);
-
-    // skip initial white-space
-    lex< css_whitespace >();
-
-    // parse list
-    while (true)
-    {
-      // remove all block comments (don't skip white-space)
-      lex< delimited_by< slash_star, star_slash, false > >(false);
-      // parse functional
-      if (match < re_pseudo_selector >())
-      {
-        seq->append(parse_simple_selector());
-      }
-      // parse parent selector
-      else if (lex< exactly<'&'> >(false))
-      {
-        if (!allow_parent) error("Parent selectors aren't allowed here.");
-        // this produces a linefeed!?
-        seq->has_parent_reference(true);
-        seq->append(SASS_MEMORY_NEW(Parent_Selector, pstate));
-        // parent selector only allowed at start
-        // upcoming Sass may allow also trailing
-        if (seq->length() > 1) {
-          ParserState state(pstate);
-          Simple_Selector_Obj cur = (*seq)[seq->length()-1];
-          Simple_Selector_Obj prev = (*seq)[seq->length()-2];
-          std::string sel(prev->to_string({ NESTED, 5 }));
-          std::string found(cur->to_string({ NESTED, 5 }));
-          if (lex < identifier >()) { found += std::string(lexed); }
-          error("Invalid CSS after \"" + sel + "\": expected \"{\", was \"" + found + "\"\n\n"
-            "\"" + found + "\" may only be used at the beginning of a compound selector.", state);
-        }
-      }
-      // parse type selector
-      else if (lex< re_type_selector >(false))
-      {
-        seq->append(SASS_MEMORY_NEW(Type_Selector, pstate, lexed));
-      }
-      // peek for abort conditions
-      else if (peek< spaces >()) break;
-      else if (peek< end_of_file >()) { break; }
-      else if (peek_css < class_char < selector_combinator_ops > >()) break;
-      else if (peek_css < class_char < complex_selector_delims > >()) break;
-      // otherwise parse another simple selector
-      else {
-        Simple_Selector_Obj sel = parse_simple_selector();
-        if (!sel) return {};
-        seq->append(sel);
-      }
-    }
-
-    if (seq && !peek_css<alternatives<end_of_file,exactly<'{'>>>()) {
-      seq->has_line_break(peek_newline());
-    }
-
-    // EO while true
-    return seq;
-
-  }
-  // EO parse_compound_selector
-
+  
   Simple_Selector_Obj Parser::parse_simple_selector()
   {
     lex < css_comments >(false);
@@ -921,7 +725,7 @@ namespace Sass {
     lex< pseudo_not >();
     std::string name(lexed);
     ParserState nsource_position = pstate;
-    Selector_List_Obj negated = parse_selector_list(true);
+    Selector_List_Obj negated = parseSelectorList(true)->toSelectorList();
     if (!lex< exactly<')'> >()) {
       error("negated selector is missing ')'");
     }
@@ -965,7 +769,8 @@ namespace Sass {
           return SASS_MEMORY_NEW(Pseudo_Selector, p, name, expr);
         }
       }
-      else if (Selector_List_Obj wrapped = parse_selector_list(true)) {
+      else if (SelectorList_Obj wrapped2 = parseSelectorList(true)) {
+        Selector_List_Obj wrapped = wrapped2->toSelectorList();
         if (wrapped && lex_css< exactly<')'> >()) {
           return SASS_MEMORY_NEW(Wrapped_Selector, p, name, wrapped);
         }
@@ -2569,7 +2374,7 @@ namespace Sass {
     Directive* at_rule = SASS_MEMORY_NEW(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
-      at_rule->selector(parse_selector_list(false));
+      at_rule->selector(parseSelectorList(false)->toSelectorList());
     }
 
     lex < css_comments >(false);
@@ -2599,7 +2404,7 @@ namespace Sass {
     Directive_Obj at_rule = SASS_MEMORY_NEW(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
-      at_rule->selector(parse_selector_list(false));
+      at_rule->selector(parseSelectorList(false)->toSelectorList());
     }
 
     lex < css_comments >(false);

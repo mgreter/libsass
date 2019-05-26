@@ -11,6 +11,7 @@
 #include "node.hpp"
 #include "sass_util.hpp"
 #include "remove_placeholders.hpp"
+#include "debugger.hpp"
 #include "debug.hpp"
 #include <iostream>
 #include <deque>
@@ -1750,7 +1751,7 @@ namespace Sass {
     // we can do this since subset_map is "static"
     auto memoized = memoizeComplex.find(selector);
     if (memoized != memoizeComplex.end()) {
-      return memoized->second;
+      // return memoized->second;
     }
 
     // convert the input selector to extend node format
@@ -1878,8 +1879,8 @@ namespace Sass {
     // we can do this since subset_map is "static"
     auto memoized = memoizeList.find(pSelectorList);
     if (memoized != memoizeList.end()) {
-      extendedSomething = true;
-      return memoized->second;
+      // extendedSomething = true;
+      // return memoized->second;
     }
 
     extendedSomething = false;
@@ -1970,9 +1971,9 @@ namespace Sass {
                     }
                   }
                   if (eval && extended) {
-                    eval->exp.selector_stack.push_back(pNewSelectors);
-                    cpy_head->perform(eval);
-                    eval->exp.selector_stack.pop_back();
+                    eval->exp.pushToSelectorStack(pNewSelectors->toSelList());
+                    Selector_List_Obj tmp = cpy_head->perform(eval);
+                    eval->exp.popFromSelectorStack();
                   }
                 }
                 // has wrapped selectors
@@ -2057,13 +2058,21 @@ namespace Sass {
     bool extendedSomething = false;
 
     CompoundSelectorSet seen;
-    Selector_List_Obj pNewSelectorList = extendSelectorList(pObject->selector(), false, extendedSomething, seen);
+    Selector_List_Obj qwe = (pObject->selector());
+    // debug_ast(qwe);
+    Selector_List_Obj asd = toSelector_List(qwe);
+    pObject->selector(asd);
+    // debug_ast(asd);
+    if (*asd == *qwe) {
+      // std::cerr << "THEY ARE EQUAL\n";
+    }
+    Selector_List_Obj pNewSelectorList = extendSelectorList(asd, false, extendedSomething, seen);
 
     if (extendedSomething && pNewSelectorList) {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND ORIGINAL SELECTORS: " << pObject->selector()->to_string())
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND SETTING NEW SELECTORS: " << pNewSelectorList->to_string())
       pNewSelectorList->remove_parent_selectors();
-      pObject->selector(pNewSelectorList);
+      pObject->selector(toSelector_List(pNewSelectorList));
     } else {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND DID NOT TRY TO EXTEND ANYTHING")
     }
@@ -2125,8 +2134,8 @@ namespace Sass {
   void Extend::operator()(Directive* a)
   {
     // Selector_List* ls = Cast<Selector_List>(a->selector());
-    // selector_stack.push_back(ls);
+    // exp.pushToSelectorStack(ls);
     if (a->block()) a->block()->perform(this);
-    // exp.selector_stack.pop_back();
+    // exp.popFromSelectorStack();
   }
 }

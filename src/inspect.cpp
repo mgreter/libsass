@@ -970,6 +970,86 @@ namespace Sass {
     }
   }
 
+  void Inspect::operator()(SelectorList* g)
+  {
+
+    if (g->empty()) {
+      if (output_style() == TO_SASS) {
+        append_token("()", g);
+      }
+      return;
+    }
+
+
+    bool was_comma_array = in_comma_array;
+    // probably ruby sass eqivalent of element_needs_parens
+    if (output_style() == TO_SASS && g->length() == 1 &&
+      (!Cast<List>((*g)[0]) &&
+        !Cast<SelectorList>((*g)[0]))) {
+      append_string("(");
+    }
+    else if (!in_declaration && in_comma_array) {
+      append_string("(");
+    }
+
+    if (in_declaration) in_comma_array = true;
+
+    for (size_t i = 0, L = g->length(); i < L; ++i) {
+      if (!in_wrapped && i == 0) append_indentation();
+      if ((*g)[i] == 0) continue;
+      schedule_mapping(g->at(i)->last());
+      // add_open_mapping((*g)[i]->last());
+      (*g)[i]->perform(this);
+      // add_close_mapping((*g)[i]->last());
+      if (i < L - 1) {
+        scheduled_space = 0;
+        append_comma_separator();
+      }
+    }
+
+    in_comma_array = was_comma_array;
+    // probably ruby sass eqivalent of element_needs_parens
+    if (output_style() == TO_SASS && g->length() == 1 &&
+      (!Cast<List>((*g)[0]) &&
+        !Cast<SelectorList>((*g)[0]))) {
+      append_string(",)");
+    }
+    else if (!in_declaration && in_comma_array) {
+      append_string(")");
+    }
+
+  }
+  void Inspect::operator()(ComplexSelector* sel)
+  {
+    // Dispatch all items to most specific implementation
+    for (auto item : sel->elements()) item->perform(this);
+  }
+
+  void Inspect::operator()(CompoundSelector* sel)
+  {
+    if (sel->hasRealParent()) append_string("&");
+    // Dispatch all items to most specific implementation
+    for (auto item : sel->elements()) item->perform(this);
+  }
+
+  void Inspect::operator()(SelectorCombinator* sel)
+  {
+    append_optional_space();
+    switch (sel->combinator()) {
+      case SelectorCombinator::Combinator::CHILD: append_string(">"); break;
+      case SelectorCombinator::Combinator::GENERAL: append_string("~"); break;
+      case SelectorCombinator::Combinator::ADJACENT: append_string("+"); break;
+    }
+    append_optional_space();
+  }
+
+  void Inspect::operator()(CompoundOrCombinator* sel)
+  {
+    // Only know two different types I could be
+    if (auto comp = Cast<CompoundSelector>(sel)) operator()(comp);
+    if (auto comb = Cast<SelectorCombinator>(sel)) operator()(comb);
+  }
+
   void Inspect::operator()(Complex_Selector* c)
   {
     Compound_Selector_Obj      head = c->head();

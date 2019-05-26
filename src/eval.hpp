@@ -33,7 +33,7 @@ namespace Sass {
     const std::string cwd();
     Selector_List_Obj selector();
     CalleeStack& callee_stack();
-    SelectorStack& selector_stack();
+    SelectorStack2 selector_stack2();
     bool& old_at_root_without_rule();
     struct Sass_Inspect_Options& options();
     struct Sass_Inspect_Options options2();
@@ -78,6 +78,11 @@ namespace Sass {
     Expression* operator()(Comment*);
 
     // these will return selectors
+    SelectorList* operator()(SelectorList*);
+    SelectorList* operator()(ComplexSelector*);
+    CompoundSelector* operator()(CompoundSelector*);
+    CompoundOrCombinator* operator()(CompoundOrCombinator*);
+
     Selector_List* operator()(Selector_List*);
     Selector_List* operator()(Complex_Selector*);
     Compound_Selector* operator()(Compound_Selector*);

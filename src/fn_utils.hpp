@@ -15,7 +15,7 @@ namespace Sass {
     Signature sig, \
     ParserState pstate, \
     Backtraces& traces, \
-    SelectorStack& selector_stack
+    SelectorStack2 selector_stack
 
   typedef const char* Signature;
   typedef PreValue* (*Native_Function)(FN_PROTOTYPE);

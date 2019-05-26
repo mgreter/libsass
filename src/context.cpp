@@ -20,6 +20,7 @@
 #include "inspect.hpp"
 #include "output.hpp"
 #include "expand.hpp"
+#include "debugger.hpp"
 #include "eval.hpp"
 #include "check_nesting.hpp"
 #include "cssize.hpp"
@@ -658,6 +659,29 @@ namespace Sass {
     if (resources.size() == 0) return {};
     // get root block from the first style sheet
     Block_Obj root = sheets.at(entry_path).root;
+    /*
+    SelectorList_Obj list = SASS_MEMORY_NEW(SelectorList, root->pstate());
+    SelectorCombinator_Obj combinator = SASS_MEMORY_NEW(SelectorCombinator, root->pstate(), SelectorCombinator::GENERAL);
+    CompoundSelector_Obj compound = SASS_MEMORY_NEW(CompoundSelector, root->pstate());
+    ComplexSelector_Obj complex = SASS_MEMORY_NEW(ComplexSelector, root->pstate());
+
+    Simple_Selector_Obj simple = SASS_MEMORY_NEW(Type_Selector, root->pstate(), "asd");
+
+    compound->append(simple);
+
+    complex->append(combinator);
+    complex->append(compound);
+
+    list->append(complex);
+    // list->append(complex);
+
+
+    auto ls = list->toSelectorList()->toSelList()->toSelectorList();
+    debug_ast(ls);
+    std::cerr << ls->to_string() << "\n";
+    */
+//    debug_ast(root);
+    // exit(1);
     // abort on invalid root
     if (root.isNull()) return {};
     Env global; // create root environment
@@ -678,10 +702,12 @@ namespace Sass {
     }
     // expand and eval the tree
     root = expand(root);
+ //   debug_ast(root);
     // check nesting
     check_nesting(root);
     // merge and bubble certain rules
     root = cssize(root);
+ //   debug_ast(root);
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
@@ -690,11 +716,13 @@ namespace Sass {
       // extend tree nodes
       extend(root);
     }
+    // debug_ast(root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders;
     root->perform(&remove_placeholders);
+  //  debug_ast(root, "FIN: ");
     // return processed tree
     return root;
   }

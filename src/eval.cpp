@@ -14,6 +14,7 @@
 #include "ast.hpp"
 #include "bind.hpp"
 #include "util.hpp"
+#include "debugger.hpp"
 #include "inspect.hpp"
 #include "operators.hpp"
 #include "environment.hpp"
@@ -74,7 +75,9 @@ namespace Sass {
 
   Selector_List_Obj Eval::selector()
   {
-    return exp.selector();
+    auto asd = exp.selector();
+    if (asd.isNull()) return asd;
+    return asd->toSelList()->toSelectorList();
   }
 
   std::vector<Sass_Callee>& Eval::callee_stack()
@@ -83,9 +86,9 @@ namespace Sass {
   }
 
 
-  SelectorStack& Eval::selector_stack()
+  SelectorStack2 Eval::selector_stack2()
   {
-    return exp.selector_stack;
+    return exp.getSelectorStack2();
   }
 
   bool& Eval::old_at_root_without_rule()
@@ -1065,7 +1068,7 @@ namespace Sass {
         result = body->perform(this);
       }
       else if (func) {
-        result = func(fn_env, *env, ctx, def->signature(), c->pstate(), traces, exp.selector_stack);
+        result = func(fn_env, *env, ctx, def->signature(), c->pstate(), traces, exp.getSelectorStack2());
       }
       if (!result) {
         error(std::string("Function ") + c->name() + " finished without @return", c->pstate(), traces);
@@ -1512,15 +1515,22 @@ namespace Sass {
     return 0;
   }
 
-  Selector_List* Eval::operator()(Selector_List* s)
+  Selector_List* Eval::operator()(Selector_List* sin)
   {
-    SelectorStack rv;
+    SelectorStack2 rv;
+    // debug_ast(sin);
+    // debug_ast(sin->toSelList());
+    SelectorList_Obj asd = sin->toSelList();
+    Selector_List_Obj s = asd->toSelectorList();
+    // debug_ast(s, "out: ");
     Selector_List_Obj sl = SASS_MEMORY_NEW(Selector_List, s->pstate());
     sl->is_optional(s->is_optional());
     sl->media_block(s->media_block());
     sl->is_optional(s->is_optional());
     for (size_t i = 0, iL = s->length(); i < iL; ++i) {
-      rv.push_back(operator()((*s)[i]));
+      Selector_List_Obj asd = operator()(s->get(i));
+      SelectorList_Obj sel = asd->toSelList();
+      rv.push_back(sel);
     }
 
     // we should actually permutate parent first
@@ -1530,7 +1540,7 @@ namespace Sass {
       bool abort = true;
       for (size_t i = 0, iL = rv.size(); i < iL; ++i) {
         if (rv[i]->length() > round) {
-          sl->append((*rv[i])[round]);
+          sl->append((*rv[i])[round]->toComplexSelector());
           abort = false;
         }
       }
@@ -1547,31 +1557,18 @@ namespace Sass {
 
   Selector_List* Eval::operator()(Complex_Selector* s)
   {
-    bool implicit_parent = !exp.old_at_root_without_rule;
-    if (is_in_selector_schema) exp.selector_stack.push_back({});
-    Selector_List_Obj resolved = s->resolve_parent_refs(exp.selector_stack, traces, implicit_parent);
-    if (is_in_selector_schema) exp.selector_stack.pop_back();
-    for (size_t i = 0; i < resolved->length(); i++) {
-      Complex_Selector* is = resolved->at(i)->mutable_first();
-      while (is) {
-        if (is->head()) {
-          is->head(operator()(is->head()));
-        }
-        is = is->tail();
-      }
-    }
-    return resolved.detach();
+    ComplexSelector_Obj sel = s->toCplxSelector();
+    SelectorList_Obj ss = operator()(sel);
+    Selector_List_Obj rv = ss->toSelectorList();
+    return rv.detach();
   }
 
   Compound_Selector* Eval::operator()(Compound_Selector* s)
   {
-    for (size_t i = 0; i < s->length(); i++) {
-      Simple_Selector* ss = s->at(i);
-      // skip parents here (called via resolve_parent_refs)
-      if (ss == NULL || Cast<Parent_Selector>(ss)) continue;
-      s->at(i) = Cast<Simple_Selector>(ss->perform(this));
-    }
-    return s;
+    CompoundSelector_Obj sel = s->toCompSelector();
+    CompoundSelector_Obj ss = operator()(sel);
+    Compound_Selector_Obj rv = ss->toCompoundSelector();
+    return rv.detach();
   }
 
   Selector_List* Eval::operator()(Selector_Schema* s)
@@ -1587,7 +1584,8 @@ namespace Sass {
     p.last_media_block = s->media_block();
     // a selector schema may or may not connect to parent?
     bool chroot = s->connect_parent() == false;
-    Selector_List_Obj sl = p.parse_selector_list(chroot);
+    SelectorList_Obj sll = p.parseSelectorList(chroot);
+    Selector_List_Obj sl = sll->toSelectorList();
     flag_is_in_selector_schema.reset();
     return operator()(sl);
   }
@@ -1595,9 +1593,9 @@ namespace Sass {
   Expression* Eval::operator()(Parent_Selector* p)
   {
     if (Selector_List_Obj pr = selector()) {
-      exp.selector_stack.pop_back();
+      exp.popFromSelectorStack();
       Selector_List_Obj rv = operator()(pr);
-      exp.selector_stack.push_back(rv);
+      exp.pushToSelectorStack(rv->toSelList());
       return rv.detach();
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());
@@ -1607,9 +1605,9 @@ namespace Sass {
   Expression* Eval::operator()(Parent_Reference* p)
   {
     if (Selector_List_Obj pr = selector()) {
-      exp.selector_stack.pop_back();
+      exp.popFromSelectorStack();
       Selector_List_Obj rv = operator()(pr);
-      exp.selector_stack.push_back(rv);
+      exp.pushToSelectorStack(rv->toSelList());
       return rv.detach();
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());
@@ -1634,9 +1632,9 @@ namespace Sass {
 
   Wrapped_Selector* Eval::operator()(Wrapped_Selector* s)
   {
-
     if (s->name() == ":not") {
-      if (exp.selector_stack.back()) {
+      auto stack = exp.getSelectorStack2();
+      if (stack.back()) {
         if (s->selector()->find(hasNotSelector)) {
           s->selector()->clear();
           s->name(" ");

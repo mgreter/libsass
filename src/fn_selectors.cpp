@@ -17,7 +17,7 @@ namespace Sass {
         error("$selectors: At least one selector must be passed for `selector-nest'", pstate, traces);
 
       // Parse args into vector of selectors
-      SelectorStack parsedSelectors;
+      SelectorStack2 parsedSelectors;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Obj exp = Cast<Expression>(arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
@@ -31,7 +31,7 @@ namespace Sass {
         }
         std::string exp_src = exp->to_string(ctx.c_options);
         Selector_List_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx, traces);
-        parsedSelectors.push_back(sel);
+        parsedSelectors.push_back(sel->toSelList());
       }
 
       // Nothing to do
@@ -40,24 +40,25 @@ namespace Sass {
       }
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
-      SelectorStack::iterator itr = parsedSelectors.begin();
-      Selector_List_Obj result = *itr;
+      SelectorStack2::iterator itr = parsedSelectors.begin();
+      SelectorList_Obj result = *itr;
       ++itr;
 
       for(;itr != parsedSelectors.end(); ++itr) {
-        Selector_List_Obj child = *itr;
-        std::vector<Complex_Selector_Obj> exploded;
+        SelectorList_Obj child = *itr;
+        std::vector<ComplexSelector_Obj> exploded;
         selector_stack.push_back(result);
-        Selector_List_Obj rv = child->resolve_parent_refs(selector_stack, traces);
+        SelectorList_Obj rvs = child->resolve_parent_refs(selector_stack, traces);
+        Selector_List_Obj rv = rvs->toSelectorList();
         selector_stack.pop_back();
         for (size_t m = 0, mLen = rv->length(); m < mLen; ++m) {
-          exploded.push_back((*rv)[m]);
+          exploded.push_back((*rv)[m]->toCplxSelector());
         }
         result->elements(exploded);
       }
 
       Listize listize;
-      return Cast<Value>(result->perform(&listize));
+      return Cast<Value>(result->toSelectorList()->perform(&listize));
     }
 
     Signature selector_append_sig = "selector-append($selectors...)";

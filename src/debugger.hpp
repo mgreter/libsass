@@ -1,6 +1,8 @@
 #ifndef SASS_DEBUGGER_H
 #define SASS_DEBUGGER_H
 
+#include <queue>
+#include <vector>
 #include <string>
 #include <sstream>
 #include "node.hpp"
@@ -9,6 +11,35 @@
 using namespace Sass;
 
 inline void debug_ast(AST_Node* node, std::string ind = "", Env* env = 0);
+
+inline std::string debug_vec(AST_Node* node) {
+  if (node == NULL) return "null";
+  else return node->to_string();
+}
+
+template <class T>
+inline std::string debug_vec(std::vector<T> vec) {
+  std::stringstream out;
+  out << "[";
+  for (size_t i = 0; i < vec.size(); i += 1) {
+    if (i > 0) out << ", ";
+    out << debug_vec(vec[i]);
+  }
+  out << "]";
+  return out.str();
+}
+
+template <class T>
+inline std::string debug_vec(std::queue<T> vec) {
+  std::stringstream out;
+  out << "{";
+  for (size_t i = 0; i < vec.size(); i += 1) {
+    if (i > 0) out << ", ";
+    out << debug_vec(vec[i]);
+  }
+  out << "}";
+  return out.str();
+}
 
 inline void debug_ast(const AST_Node* node, std::string ind = "", Env* env = 0) {
   debug_ast(const_cast<AST_Node*>(node), ind, env);
@@ -90,6 +121,27 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << std::endl;
     debug_ast(root_block->expression(), ind + ":", env);
     debug_ast(root_block->block(), ind + " ", env);
+
+
+  } else if (Cast<SelectorList>(node)) {
+    SelectorList* selector = Cast<SelectorList>(node);
+    std::cerr << ind << "SelectorList " << selector;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " <" << selector->hash() << ">";
+    // std::cerr << " [@media:" << selector->media_block() << "]";
+    // std::cerr << (selector->is_invisible() ? " [INVISIBLE]": " -");
+    // std::cerr << (selector->has_placeholder() ? " [PLACEHOLDER]": " -");
+    // std::cerr << (selector->is_optional() ? " [is_optional]": " -");
+    std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
+    std::cerr << (selector->has_real_parent_ref() ? " [real-parent]": " -");
+    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    std::cerr << std::endl;
+    // debug_ast(selector->schema(), ind + "#{} ");
+
+    for(const ComplexSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
+
+
   } else if (Cast<Selector_List>(node)) {
     Selector_List* selector = Cast<Selector_List>(node);
     std::cerr << ind << "Selector_List " << selector;
@@ -110,6 +162,70 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
 //  } else if (Cast<Expression>(node)) {
 //    Expression* expression = Cast<Expression>(node);
 //    std::cerr << ind << "Expression " << expression << " " << expression->concrete_type() << std::endl;
+
+  } else if (Cast<ComplexSelector>(node)) {
+    ComplexSelector* selector = Cast<ComplexSelector>(node);
+    std::cerr << ind << "ComplexSelector " << selector
+      << " (" << pstate_source_position(node) << ")"
+      << " <" << selector->hash() << ">"
+      << " [" << (selector->chroots() ? "ROOT" : "CONNECT") << "]"
+      << " [length:" << longToHex(selector->length()) << "]"
+      << " [weight:" << longToHex(selector->specificity()) << "]"
+      // << " [@media:" << selector->media_block() << "]"
+      // << (selector->is_invisible() ? " [INVISIBLE]": " -")
+      // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
+      // << (selector->is_optional() ? " [is_optional]": " -")
+      << (selector->has_parent_ref() ? " [has parent]": " -")
+      << (selector->has_real_parent_ref() ? " [real parent]": " -")
+      << (selector->has_line_feed() ? " [line-feed]": " -")
+      << (selector->has_line_break() ? " [line-break]": " -")
+      << " -- \n";
+
+    for(const CompoundOrCombinator_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
+
+  } else if (Cast<SelectorCombinator>(node)) {
+    SelectorCombinator* selector = Cast<SelectorCombinator>(node);
+    std::cerr << ind << "SelectorCombinator " << selector
+      << " (" << pstate_source_position(node) << ")"
+      << " <" << selector->hash() << ">"
+      // << " [length:" << longToHex(selector->length()) << "]"
+      << " [weight:" << longToHex(selector->specificity()) << "]"
+      // << " [@media:" << selector->media_block() << "]"
+      // << (selector->is_invisible() ? " [INVISIBLE]": " -")
+      // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
+      // << (selector->is_optional() ? " [is_optional]": " -")
+      << (selector->has_parent_ref() ? " [has parent]": " -")
+      << (selector->has_real_parent_ref() ? " [real parent]": " -")
+      << (selector->has_line_feed() ? " [line-feed]": " -")
+      << (selector->has_line_break() ? " [line-break]": " -")
+      // << " [" << selector->combinator() << "]"
+      << " -- ";
+
+      std::string del;
+      switch (selector->combinator()) {
+        case SelectorCombinator::CHILD:    del = ">"; break;
+        case SelectorCombinator::GENERAL:  del = "~"; break;
+        case SelectorCombinator::ADJACENT: del = "+"; break;
+      }
+
+      std::cerr << "[" << del << "]" << "\n";
+
+  } else if (Cast<CompoundSelector>(node)) {
+    CompoundSelector* selector = Cast<CompoundSelector>(node);
+    std::cerr << ind << "CompoundSelector " << selector;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " <" << selector->hash() << ">";
+    std::cerr << (selector->hasRealParent() ? " [REAL PARENT]" : "") << ">";
+    std::cerr << " [weight:" << longToHex(selector->specificity()) << "]";
+    std::cerr << " [@media:" << selector->media_block() << "]";
+    // std::cerr << (selector->extended() ? " [extended]": " -");
+    // std::cerr << (selector->is_optional() ? " [is_optional]": " -");
+    // std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
+    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    std::cerr << "\n";
+    // std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
+    for(const Simple_Selector_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
 
   } else if (Cast<Parent_Reference>(node)) {
     Parent_Reference* selector = Cast<Parent_Reference>(node);

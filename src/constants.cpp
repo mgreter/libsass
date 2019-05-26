@@ -161,6 +161,10 @@ namespace Sass {
     extern const char uri_chars[]  = ":;/?!%&#@|[]{}'`^\"*+-.,_=~";
     extern const char real_uri_chars[]  = "#%&";
 
+    extern const char selector_combinator_child[] = ">";
+    extern const char selector_combinator_general[] = "~";
+    extern const char selector_combinator_adjacent[] = "+";
+
     // some specific constant character classes
     // they must be static to be useable by lexer
     extern const char static_ops[]      = "*/%";

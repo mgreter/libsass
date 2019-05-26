@@ -234,6 +234,13 @@ namespace Sass {
     void clear()            { return elements_.clear(); }
     T last() const          { return elements_.back(); }
     T first() const         { return elements_.front(); }
+
+    T shift() {
+      T first = elements_.begin();
+      elements_.erase(first);
+      return *first;
+    }
+
     T& operator[](size_t i) { return elements_[i]; }
     virtual const T& at(size_t i) const { return elements_.at(i); }
     virtual T& at(size_t i) { return elements_.at(i); }
@@ -249,7 +256,11 @@ namespace Sass {
     }
     virtual void concat(Vectorized* v)
     {
-      for (size_t i = 0, L = v->length(); i < L; ++i) this->append((*v)[i]);
+      elements().insert(elements().end(), v->begin(), v->end());
+    }
+    virtual void concat(std::vector<T> v)
+    {
+      elements().insert(elements().end(), v.begin(), v.end());
     }
     Vectorized& unshift(T element)
     {
@@ -435,6 +446,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   class Ruleset final : public Has_Block {
     ADD_PROPERTY(Selector_List_Obj, selector)
+    ADD_PROPERTY(Selector_Schema_Obj, schema)
     ADD_PROPERTY(bool, is_root);
   public:
     Ruleset(ParserState pstate, Selector_List_Obj s = {}, Block_Obj b = {});
@@ -504,7 +516,7 @@ namespace Sass {
   class Keyframe_Rule final : public Has_Block {
     // according to css spec, this should be <keyframes-name>
     // <keyframes-name> = <custom-ident> | <string>
-    ADD_PROPERTY(Selector_List_Obj, name)
+    ADD_PROPERTY(SelectorList_Obj, name)
   public:
     Keyframe_Rule(ParserState pstate, Block_Obj b);
     ATTACH_AST_OPERATIONS(Keyframe_Rule)
@@ -682,8 +694,10 @@ namespace Sass {
   ////////////////////////////////
   class Extension final : public Statement {
     ADD_PROPERTY(Selector_List_Obj, selector)
+    ADD_PROPERTY(Selector_Schema_Obj, schema)
   public:
-    Extension(ParserState pstate, Selector_List_Obj s);
+    Extension(ParserState pstate, SelectorList_Obj s);
+    Extension(ParserState pstate, Selector_Schema_Obj s);
     ATTACH_AST_OPERATIONS(Extension)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -888,6 +902,21 @@ namespace Sass {
     ATTACH_AST_OPERATIONS(Parameters)
     ATTACH_CRTP_PERFORM_METHODS()
   };
+
+  Selector_List_Obj toSelector_List(Selector_List* sel);
+  Selector_List_Obj toSelector_List(SelectorList* sel);
+  SelectorList_Obj toSelectorList(Selector_List* sel);
+  SelectorList_Obj toSelectorList(SelectorList* sel);
+
+  Complex_Selector_Obj toComplex_Selector(Complex_Selector* sel);
+  Complex_Selector_Obj toComplex_Selector(ComplexSelector* sel);
+  ComplexSelector_Obj toComplexSelector(Complex_Selector* sel);
+  ComplexSelector_Obj toComplexSelector(ComplexSelector* sel);
+
+  Compound_Selector_Obj toCompound_Selector(Compound_Selector* sel);
+  Compound_Selector_Obj toCompound_Selector(CompoundSelector* sel);
+  CompoundSelector_Obj toCompoundSelector(Compound_Selector* sel);
+  CompoundSelector_Obj toCompoundSelector(CompoundSelector* sel);
 
 }
 

@@ -164,16 +164,21 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Ruleset::Ruleset(ParserState pstate, Selector_List_Obj s, Block_Obj b)
-  : Has_Block(pstate, b), selector_(s), is_root_(false)
+  : Has_Block(pstate, b), selector_(s), schema_(), is_root_(false)
   { statement_type(RULESET); }
   Ruleset::Ruleset(const Ruleset* ptr)
   : Has_Block(ptr),
     selector_(ptr->selector_),
+    schema_(ptr->schema_),
     is_root_(ptr->is_root_)
   { statement_type(RULESET); }
 
   bool Ruleset::is_invisible() const {
     if (Selector_List* sl = Cast<Selector_List>(selector())) {
+      for (size_t i = 0, L = sl->length(); i < L; ++i)
+        if (!(*sl)[i]->has_placeholder()) return false;
+    }
+    if (SelectorList * sl = Cast<SelectorList>(selector())) {
       for (size_t i = 0, L = sl->length(); i < L; ++i)
         if (!(*sl)[i]->has_placeholder()) return false;
     }
@@ -450,11 +455,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Extension::Extension(ParserState pstate, Selector_List_Obj s)
-  : Statement(pstate), selector_(s)
+  Extension::Extension(ParserState pstate, SelectorList_Obj s)
+  : Statement(pstate), selector_(s->toSelectorList()), schema_()
   { statement_type(EXTEND); }
+  Extension::Extension(ParserState pstate, Selector_Schema_Obj s)
+    : Statement(pstate), selector_(), schema_(s)
+  {
+    statement_type(EXTEND);
+  }
   Extension::Extension(const Extension* ptr)
-  : Statement(ptr), selector_(ptr->selector_)
+  : Statement(ptr), selector_(ptr->selector_), schema_(ptr->schema_)
   { statement_type(EXTEND); }
 
   /////////////////////////////////////////////////////////////////////////
@@ -918,6 +928,75 @@ namespace Sass {
         coreError("required parameters must precede optional parameters", p->pstate());
       }
     }
+  }
+
+  Selector_List_Obj toSelector_List(Selector_List* sel)
+  {
+    if (sel == NULL) return {};
+    SelectorList_Obj rv = sel->toSelList();
+    return rv->toSelectorList();
+  }
+  Selector_List_Obj toSelector_List(SelectorList* sel)
+  {
+    if (sel == NULL) return {};
+    return sel->toSelectorList();
+  }
+  SelectorList_Obj toSelectorList(Selector_List* sel)
+  {
+    if (sel == NULL) return {};
+    return sel->toSelList();
+  }
+  SelectorList_Obj toSelectorList(SelectorList* sel)
+  {
+    if (sel == NULL) return {};
+    Selector_List_Obj rv = sel->toSelectorList();
+    return rv->toSelList();
+  }
+
+  Compound_Selector_Obj toCompound_Selector(Compound_Selector* sel)
+  {
+    if (sel == NULL) return {};
+    CompoundSelector_Obj rv = sel->toCompSelector();
+    return rv->toCompoundSelector();
+  }
+  Compound_Selector_Obj toCompound_Selector(CompoundSelector* sel)
+  {
+    if (sel == NULL) return {};
+    return sel->toCompoundSelector();
+  }
+  CompoundSelector_Obj toCompoundSelector(Compound_Selector* sel)
+  {
+    if (sel == NULL) return {};
+    return sel->toCompSelector();
+  }
+  CompoundSelector_Obj toCompoundSelector(CompoundSelector* sel)
+  {
+    if (sel == NULL) return {};
+    Compound_Selector_Obj rv = sel->toCompoundSelector();
+    return rv->toCompSelector();
+  }
+
+  Complex_Selector_Obj toComplex_Selector(Complex_Selector* sel)
+  {
+    if (sel == NULL) return {};
+    ComplexSelector_Obj rv = sel->toCplxSelector();
+    return rv->toComplexSelector();
+  }
+  Complex_Selector_Obj toComplex_Selector(ComplexSelector* sel)
+  {
+    if (sel == NULL) return {};
+    return sel->toComplexSelector();
+  }
+  ComplexSelector_Obj toComplexSelector(Complex_Selector* sel)
+  {
+    if (sel == NULL) return {};
+    return sel->toCplxSelector();
+  }
+  ComplexSelector_Obj toComplexSelector(ComplexSelector* sel)
+  {
+    if (sel == NULL) return {};
+    Complex_Selector_Obj rv = sel->toComplexSelector();
+    return rv->toCplxSelector();
   }
 
   /////////////////////////////////////////////////////////////////////////

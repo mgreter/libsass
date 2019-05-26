@@ -118,6 +118,11 @@ namespace Sass {
   class Complex_Selector;
   class Selector_List;
 
+  class CompoundOrCombinator;
+  class SelectorCombinator;
+  class CompoundSelector;
+  class ComplexSelector;
+  class SelectorList;
 
   // common classes
   class Context;
@@ -207,6 +212,13 @@ namespace Sass {
   IMPL_MEM_OBJ(Complex_Selector);
   IMPL_MEM_OBJ(Selector_List);
 
+
+  IMPL_MEM_OBJ(CompoundOrCombinator);
+  IMPL_MEM_OBJ(SelectorCombinator);
+  IMPL_MEM_OBJ(CompoundSelector);
+  IMPL_MEM_OBJ(ComplexSelector);
+  IMPL_MEM_OBJ(SelectorList);
+
   // ###########################################################################
   // Implement compare, order and hashing operations for AST Nodes
   // ###########################################################################
@@ -249,10 +261,14 @@ namespace Sass {
       return ref->hash();
     }
   };
+  template <class T>
+  bool ComparePtrsFunction(const T* lhs, const T* rhs) {
+    return *lhs == *rhs;
+  }
   struct ComparePtrs {
     template <class T>
     bool operator() (const T *lhs, const T *rhs) const {
-      return *lhs == *rhs;
+      return ComparePtrsFunction<T>(lhs, rhs);
     }
   };
 
@@ -295,6 +311,7 @@ namespace Sass {
   typedef std::vector<Sass_Callee> CalleeStack;
   typedef std::vector<AST_Node_Obj> CallStack;
   typedef std::vector<Media_Block*> MediaStack;
+  typedef std::vector<SelectorList_Obj> SelectorStack2;
   typedef std::vector<Selector_List_Obj> SelectorStack;
   typedef std::vector<Sass_Import_Entry> ImporterStack;
 
@@ -335,6 +352,8 @@ namespace Sass {
   DECLARE_BASE_CAST(Supports_Condition)
   DECLARE_BASE_CAST(Selector)
   DECLARE_BASE_CAST(Simple_Selector)
+
+  DECLARE_BASE_CAST(CompoundOrCombinator)
 
 }
 

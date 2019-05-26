@@ -143,6 +143,7 @@ namespace Sass {
         }
       }
       Function_Call_Obj func = SASS_MEMORY_NEW(Function_Call, pstate, name, args);
+
       Expand expand(ctx, &d_env, &selector_stack);
       func->via_call(true); // calc invoke is allowed
       if (ff) func->func(ff);

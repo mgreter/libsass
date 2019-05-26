@@ -90,6 +90,12 @@ namespace Sass {
     virtual void operator()(Complex_Selector*);
     virtual void operator()(Selector_List*);
 
+    virtual void operator()(CompoundOrCombinator*);
+    virtual void operator()(SelectorCombinator*);
+    virtual void operator()(CompoundSelector*);
+    virtual void operator()(ComplexSelector*);
+    virtual void operator()(SelectorList*);
+
     virtual std::string lbracket(List*);
     virtual std::string rbracket(List*);
 

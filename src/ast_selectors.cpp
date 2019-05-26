@@ -4,6 +4,7 @@
 #include "node.hpp"
 #include "eval.hpp"
 #include "extend.hpp"
+#include "debugger.hpp"
 #include "emitter.hpp"
 #include "color_maps.hpp"
 #include "ast_fwd_decl.hpp"
@@ -203,6 +204,18 @@ namespace Sass {
   }
 
   bool Simple_Selector::is_superselector_of(const Compound_Selector* sub) const
+  {
+    return false;
+  }
+  bool Simple_Selector::is_superselector_of(const CompoundSelector* sub) const
+  {
+    return false;
+  }
+  bool CompoundSelector::is_superselector_of(const CompoundSelector* sub, std::string wrapped) const
+  {
+    return false;
+  }
+  bool CompoundSelector::is_superselector_of(const ComplexSelector* sub, std::string wrapped) const
   {
     return false;
   }
@@ -451,6 +464,24 @@ namespace Sass {
     }
     return false;
   };
+  bool CompoundSelector::contains_placeholder() const {
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      if ((*this)[i]->has_placeholder()) return true;
+    }
+    return false;
+  };
+  bool ComplexSelector::contains_placeholder() const {
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      if ((*this)[i]->has_placeholder()) return true;
+    }
+    return false;
+  };
+  bool ComplexSelector::has_placeholder() const {
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      if ((*this)[i]->has_placeholder()) return true;
+    }
+    return false;
+  };
 
   void Compound_Selector::cloneChildren()
   {
@@ -476,9 +507,25 @@ namespace Sass {
     }
     return false;
   }
+  bool CompoundSelector::has_parent_ref() const
+  {
+    if (hasRealParent()) return true;
+    for (Simple_Selector_Obj s : *this) {
+      if (s && s->has_parent_ref()) return true;
+    }
+    return false;
+  }
 
   bool Compound_Selector::has_real_parent_ref() const
   {
+    for (Simple_Selector_Obj s : *this) {
+      if (s && s->has_real_parent_ref()) return true;
+    }
+    return false;
+  }
+  bool CompoundSelector::has_real_parent_ref() const
+  {
+    if (hasRealParent()) return true;
     for (Simple_Selector_Obj s : *this) {
       if (s && s->has_real_parent_ref()) return true;
     }
@@ -488,6 +535,14 @@ namespace Sass {
   bool Compound_Selector::is_superselector_of(const Selector_List* rhs, std::string wrapped) const
   {
     for (Complex_Selector_Obj item : rhs->elements()) {
+      if (is_superselector_of(item, wrapped)) return true;
+    }
+    return false;
+  }
+
+  bool CompoundSelector::is_superselector_of(const SelectorList* rhs, std::string wrapped) const
+  {
+    for (ComplexSelector_Obj item : rhs->elements()) {
       if (is_superselector_of(item, wrapped)) return true;
     }
     return false;
@@ -634,6 +689,14 @@ namespace Sass {
   }
 
   bool Compound_Selector::has_placeholder()
+  {
+    if (length() == 0) return false;
+    if (Simple_Selector_Obj ss = elements().front()) {
+      if (ss->has_placeholder()) return true;
+    }
+    return false;
+  }
+  bool CompoundSelector::has_placeholder() const
   {
     if (length() == 0) return false;
     if (Simple_Selector_Obj ss = elements().front()) {
@@ -825,6 +888,22 @@ namespace Sass {
     return f(this);
   }
 
+  bool ComplexSelector::has_parent_ref() const
+  {
+    if (!chroots()) return true;
+    for (auto item : elements()) {
+      if (item->has_parent_ref()) return true;
+    }
+    return false;
+  }
+  bool ComplexSelector::has_real_parent_ref() const
+  {
+    for (auto item : elements()) {
+      if (item->has_real_parent_ref()) return true;
+    }
+    return false;
+  }
+
   bool Complex_Selector::has_parent_ref() const
   {
     return (head() && head()->has_parent_ref()) ||
@@ -924,250 +1003,272 @@ namespace Sass {
     return 1 + tail()->length();
   }
 
-  // append another complex selector at the end
-  // check if we need to append some headers
-  // then we need to check for the combinator
-  // only then we can safely set the new tail
-  void Complex_Selector::append(Complex_Selector_Obj ss, Backtraces& traces)
-  {
 
-    Complex_Selector_Obj t = ss->tail();
-    Combinator c = ss->combinator();
-    String_Obj r = ss->reference();
-    Compound_Selector_Obj h = ss->head();
+  template <class T>
+  std::vector<std::vector<T>>
+  permutate(std::vector<std::vector<T>> in) {
 
-    if (ss->has_line_feed()) has_line_feed(true);
-    if (ss->has_line_break()) has_line_break(true);
+    size_t L = in.size();
+    size_t n = in.size() - 1;
+    size_t* state = new size_t[L];
+    std::vector< std::vector<T>> out;
 
-    // append old headers
-    if (h && h->length()) {
-      if (last()->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
-        traces.push_back(Backtrace(pstate()));
-        throw Exception::InvalidParent(this, traces, ss);
-      } else if (last()->head_ && last()->head_->length()) {
-        Compound_Selector_Obj rh = last()->head();
-        size_t i;
-        size_t L = h->length();
-        if (Cast<Type_Selector>(h->first())) {
-          if (Class_Selector* cs = Cast<Class_Selector>(rh->last())) {
-            Class_Selector* sqs = SASS_MEMORY_COPY(cs);
-            sqs->name(sqs->name() + (*h)[0]->name());
-            sqs->pstate((*h)[0]->pstate());
-            (*rh)[rh->length()-1] = sqs;
-            rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) rh->append((*h)[i]);
-          } else if (Id_Selector* is = Cast<Id_Selector>(rh->last())) {
-            Id_Selector* sqs = SASS_MEMORY_COPY(is);
-            sqs->name(sqs->name() + (*h)[0]->name());
-            sqs->pstate((*h)[0]->pstate());
-            (*rh)[rh->length()-1] = sqs;
-            rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) rh->append((*h)[i]);
-          } else if (Type_Selector* ts = Cast<Type_Selector>(rh->last())) {
-            Type_Selector* tss = SASS_MEMORY_COPY(ts);
-            tss->name(tss->name() + (*h)[0]->name());
-            tss->pstate((*h)[0]->pstate());
-            (*rh)[rh->length()-1] = tss;
-            rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) rh->append((*h)[i]);
-          } else if (Placeholder_Selector* ps = Cast<Placeholder_Selector>(rh->last())) {
-            Placeholder_Selector* pss = SASS_MEMORY_COPY(ps);
-            pss->name(pss->name() + (*h)[0]->name());
-            pss->pstate((*h)[0]->pstate());
-            (*rh)[rh->length()-1] = pss;
-            rh->pstate(h->pstate());
-            for (i = 1; i < L; ++i) rh->append((*h)[i]);
-          } else {
-            last()->head_->concat(h);
+    // First initialize all states for every permutation group
+    for (size_t i = 0; i < L; i += 1) {
+      if (in[i].size() == 0) return {};
+      state[i] = in[i].size() - 1;
+    }
+
+    while (true) {
+      /*
+      std::cerr << "PERM: ";
+      for (size_t p = 0; p < L; p++)
+      { std::cerr << state[p] << " "; }
+      std::cerr << "\n";
+      */
+      std::vector<T> perm;
+      // Create one permutation for state
+      for (size_t i = 0; i < L; i += 1) {
+        perm.push_back(in.at(i).at(in[i].size() - state[i] - 1));
+      }
+      // Current group finished
+      if (state[n] == 0) {
+        // Find position of next decrement
+        while (n > 0 && state[--n] == 0)
+        {
+
+        }
+        // Check for end condition
+        if (state[n] != 0) {
+          // Decrease next on the left side
+          state[n] -= 1;
+          // Reset all counters to the right
+          for (size_t p = n + 1; p < L; p += 1) {
+            state[p] = in[p].size() - 1;
           }
-        } else {
-          last()->head_->concat(h);
+          // Restart from end
+          n = L - 1;
         }
-      } else if (last()->head_) {
-        last()->head_->concat(h);
+        else {
+          out.push_back(perm);
+          break;
+        }
       }
-    } else {
-      // std::cerr << "has no or empty head\n";
+      else {
+        state[n] -= 1;
+      }
+      out.push_back(perm);
     }
 
-    Complex_Selector* last = mutable_last();
-    if (last) {
-      if (last->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
-        Complex_Selector* inter = SASS_MEMORY_NEW(Complex_Selector, pstate());
-        inter->reference(r);
-        inter->combinator(c);
-        inter->tail(t);
-        last->tail(inter);
-      } else {
-        if (last->combinator() == ANCESTOR_OF) {
-          last->combinator(c);
-          last->reference(r);
-        }
-        last->tail(t);
-      }
-    }
-
+    delete[] state;
+    return out;
   }
 
-  Selector_List* Complex_Selector::resolve_parent_refs(SelectorStack& pstack, Backtraces& traces, bool implicit_parent)
-  {
-    Complex_Selector_Obj tail = this->tail();
-    Compound_Selector_Obj head = this->head();
-    Selector_List* parents = pstack.back();
+  void debug_groups(std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> groups) {
+    for (size_t i = 0; i < groups.size(); i += 1) {
+      std::cerr << i << ": [";
+      for (auto items : groups[i]) {
+        std::cerr << " { ";
+        for (auto item : items) {
+          std::cerr << item->to_string() << " ";
+        }
+        std::cerr << " } ";
+      }
+      std::cerr << "]\n";
+    }
+  }
 
-    if (!this->has_real_parent_ref() && !implicit_parent) {
-      Selector_List* retval = SASS_MEMORY_NEW(Selector_List, pstate(), 1);
-      retval->append(this);
-      return retval;
+  std::vector<ComplexSelector_Obj>
+  CompoundSelector::resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent)
+  {
+
+    auto parent = pstack.back();
+    std::vector<ComplexSelector_Obj> rv;
+
+    for (Simple_Selector_Obj ss : elements()) {
+      if (Wrapped_Selector * ws = Cast<Wrapped_Selector>(ss)) {
+        if (Selector_List * sl = Cast<Selector_List>(ws->selector())) {
+          if (parent) {
+            SelectorList_Obj asd = sl->toSelList();
+            SelectorList_Obj qwe = asd->resolve_parent_refs(pstack, traces, implicit_parent);
+            ws->selector(qwe->toSelectorList());
+          }
+        }
+      }
     }
 
-    // first resolve_parent_refs the tail (which may return an expanded list)
-    Selector_List_Obj tails = tail ? tail->resolve_parent_refs(pstack, traces, implicit_parent) : 0;
 
-    if (head && head->length() > 0) {
-
-      Selector_List_Obj retval;
-      // we have a parent selector in a simple compound list
-      // mix parent complex selector into the compound list
-      if (Cast<Parent_Selector>((*head)[0])) {
-        retval = SASS_MEMORY_NEW(Selector_List, pstate());
-
+    // Mix with parents from stack
+    if (hasRealParent()) {
+      if (parent.isNull() && has_real_parent_ref()) {
         // it turns out that real parent references reach
         // across @at-root rules, which comes unexpected
-        if (parents == NULL && head->has_real_parent_ref()) {
-          int i = pstack.size() - 1;
-          while (!parents && i > -1) {
-            parents = pstack.at(i--);
-          }
-        }
-
-        if (parents && parents->length()) {
-          if (tails && tails->length() > 0) {
-            for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
-              for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
-                Complex_Selector_Obj t = (*tails)[n];
-                Complex_Selector_Obj parent = (*parents)[i];
-                Complex_Selector_Obj s = SASS_MEMORY_CLONE(parent);
-                Complex_Selector_Obj ss = SASS_MEMORY_CLONE(this);
-                ss->tail(t ? SASS_MEMORY_CLONE(t) : NULL);
-                Compound_Selector_Obj h = SASS_MEMORY_COPY(head_);
-                // remove parent selector from sequence
-                if (h->length()) {
-                  h->erase(h->begin());
-                  ss->head(h);
-                } else {
-                  ss->head({});
-                }
-                // adjust for parent selector (1 char)
-                // if (h->length()) {
-                //   ParserState state(h->at(0)->pstate());
-                //   state.offset.column += 1;
-                //   state.column -= 1;
-                //   (*h)[0]->pstate(state);
-                // }
-                // keep old parser state
-                s->pstate(pstate());
-                // append new tail
-                s->append(ss, traces);
-                retval->append(s);
-              }
-            }
-          }
-          // have no tails but parents
-          // loop above is inside out
-          else {
-            for (size_t i = 0, iL = parents->length(); i < iL; ++i) {
-              Complex_Selector_Obj parent = (*parents)[i];
-              Complex_Selector_Obj s = SASS_MEMORY_CLONE(parent);
-              Complex_Selector_Obj ss = SASS_MEMORY_CLONE(this);
-              // this is only if valid if the parent has no trailing op
-              // otherwise we cannot append more simple selectors to head
-              if (parent->last()->combinator() != ANCESTOR_OF) {
-                traces.push_back(Backtrace(pstate()));
-                throw Exception::InvalidParent(parent, traces, ss);
-              }
-              ss->tail(tail ? SASS_MEMORY_CLONE(tail) : NULL);
-              Compound_Selector_Obj h = SASS_MEMORY_COPY(head_);
-              // remove parent selector from sequence
-              if (h->length()) {
-                h->erase(h->begin());
-                ss->head(h);
-              } else {
-                ss->head({});
-              }
-              // \/ IMO ruby sass bug \/
-              ss->has_line_feed(false);
-              // adjust for parent selector (1 char)
-              // if (h->length()) {
-              //   ParserState state(h->at(0)->pstate());
-              //   state.offset.column += 1;
-              //   state.column -= 1;
-              //   (*h)[0]->pstate(state);
-              // }
-              // keep old parser state
-              s->pstate(pstate());
-              // append new tail
-              s->append(ss, traces);
-              retval->append(s);
-            }
-          }
-        }
-        // have no parent but some tails
-        else {
-          if (tails && tails->length() > 0) {
-            for (size_t n = 0, nL = tails->length(); n < nL; ++n) {
-              Complex_Selector_Obj cpy = SASS_MEMORY_CLONE(this);
-              cpy->tail(SASS_MEMORY_CLONE(tails->at(n)));
-              cpy->head(SASS_MEMORY_NEW(Compound_Selector, head->pstate()));
-              for (size_t i = 1, L = this->head()->length(); i < L; ++i)
-                cpy->head()->append((*this->head())[i]);
-              if (!cpy->head()->length()) cpy->head({});
-              retval->append(cpy->skip_empty_reference());
-            }
-          }
-          // have no parent nor tails
-          else {
-            Complex_Selector_Obj cpy = SASS_MEMORY_CLONE(this);
-            cpy->head(SASS_MEMORY_NEW(Compound_Selector, head->pstate()));
-            for (size_t i = 1, L = this->head()->length(); i < L; ++i)
-              cpy->head()->append((*this->head())[i]);
-            if (!cpy->head()->length()) cpy->head({});
-            retval->append(cpy->skip_empty_reference());
-          }
+        int i = pstack.size() - 1;
+        while (!parent && i > -1) {
+          auto asd = pstack.at(i--);
+          if (asd.isNull()) parent = {};
+          else parent = asd;
         }
       }
-      // no parent selector in head
+
+      if (parent.isNull()) {
+        auto sel = SASS_MEMORY_NEW(ComplexSelector, pstate());
+        sel->append(this);
+        return { sel };
+      }
       else {
-        retval = this->tails(tails);
-      }
+        for (auto complex : parent->elements()) {
+          // The parent complex selector has a compound selector
+          if (CompoundSelector_Obj tail = Cast<CompoundSelector>(complex->last())) {
+            // Create a copy to alter it
+            complex = complex->copy();
+            tail = tail->copy();
 
-      for (Simple_Selector_Obj ss : head->elements()) {
-        if (Wrapped_Selector* ws = Cast<Wrapped_Selector>(ss)) {
-          if (Selector_List* sl = Cast<Selector_List>(ws->selector())) {
-            if (parents) ws->selector(sl->resolve_parent_refs(pstack, traces, implicit_parent));
+            // CHeck if we can merge front with back
+            if (length() > 0 && tail->length() > 0) {
+              Simple_Selector_Obj back = tail->last();
+              Simple_Selector_Obj front = first();
+              auto simple_back = Cast<Simple_Selector>(back);
+              auto simple_front = Cast<Type_Selector>(front);
+              if (simple_front && simple_back) {
+/*
+                if (last()->combinator() != ANCESTOR_OF && c != ANCESTOR_OF) {
+                  traces.push_back(Backtrace(pstate()));
+                  throw Exception::InvalidParent(this, traces, ss);
+                }
+                */
+                simple_back = simple_back->copy();
+                auto name = simple_back->name();
+                name += simple_front->name();
+                simple_back->name(name);
+                tail->elements().back() = simple_back;
+                for (size_t i = 1; i < length(); i += 1) {
+                  tail->append(at(i));
+                }
+              }
+              else {
+                tail->concat(this);
+              }
+            }
+            else {
+              tail->concat(this);
+            }
+
+
+            // Update the 
+            complex->elements().back() = tail;
+            // Append to results
+            rv.push_back(complex);
+          }
+          else {
+            // Can't insert parent that ends with a combinator
+            // where the parent selector is followed by something
+            if (parent && length() > 0) {
+              throw Exception::InvalidParent(parent, traces, this);
+            }
+            /*if (length() > 0 && tail->length() > 0) {
+              Simple_Selector_Obj back = tail->last();
+            }
+            std::cerr << "COMBINE\n";*/
+            // Create a copy to alter it
+            complex = complex->copy();
+            // Just append ourself
+            complex->append(this);
+            // Append to results
+            rv.push_back(complex);
           }
         }
       }
-
-      return retval.detach();
-
     }
-    // has no head
-    return this->tails(tails);
+
+    // No parents
+    else {
+      // Create a new wrapper to wrap ourself
+      auto complex = SASS_MEMORY_NEW(ComplexSelector, pstate());
+      // Just append ourself
+      complex->append(this);
+      // Append to results
+      rv.push_back(complex);
+    }
+
+    return rv;
+
+  }
+  
+    /* better return std::vector? only - is empty container anyway? */
+  SelectorList* ComplexSelector::resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent)
+  {
+
+    std::vector<std::vector<ComplexSelector_Obj>> vars;
+
+    // debug_ast(this, "In: ");
+
+
+    auto parent = pstack.back();
+    if (!chroots() && parent) {
+
+      // CHeck why this makes it behave to at-root!?
+      if (!has_real_parent_ref() && !implicit_parent) {
+        SelectorList* retval = SASS_MEMORY_NEW(SelectorList, pstate(), 1);
+        retval->append(this);
+        return retval;
+      }
+
+      // std::cerr << "DOING IT " << has_real_parent_ref() << "\n";
+      vars.push_back(parent->elements());
+    }
+
+    for (auto sel : elements()) {
+      if (CompoundSelector_Obj comp = Cast<CompoundSelector>(sel)) {
+        auto asd = comp->resolve_parent_refs(pstack, traces, implicit_parent);
+        if (asd.size() > 0) vars.push_back(asd);
+      }
+      else {
+        // ToDo: merge together sequences whenever possible
+        auto cont = SASS_MEMORY_NEW(ComplexSelector, pstate());
+        cont->append(sel);
+        vars.push_back({ cont });
+      }
+    }
+    /*
+    for (auto a : vars) {
+      std::cerr << "[ ";
+      for (auto b : a) {
+        std::cerr << " { " << b->to_string() << " }";
+      }
+      std::cerr << " ]\n";
+    }
+    */
+    // Need complex selectors to preserve linefeeds
+    std::vector<std::vector<ComplexSelector_Obj>> res = permutate(vars);
+
+    auto lst = SASS_MEMORY_NEW(SelectorList, pstate());
+    for (auto items : res) {
+      if (items.size() > 0) {
+        ComplexSelector_Obj first = items[0]->copy();
+        first->has_line_feed(first->has_line_feed() || (!has_real_parent_ref() && has_line_feed()));
+        // if (has_real_parent_ref()) first->has_line_feed(false);
+        // first->has_line_break(first->has_line_break() || has_line_break());
+        first->chroots(true); // has been resolved by now
+        for (size_t i = 1; i < items.size(); i += 1) {
+          first->concat(items[i]);
+        }
+        lst->append(first);
+      }
+    }
+    // debug_ast(lst);
+       return lst;
+
+
   }
 
-  Selector_List* Complex_Selector::tails(Selector_List* tails)
+  SelectorList* SelectorList::resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent)
   {
-    Selector_List* rv = SASS_MEMORY_NEW(Selector_List, pstate_);
-    if (tails && tails->length()) {
-      for (size_t i = 0, iL = tails->length(); i < iL; ++i) {
-        Complex_Selector_Obj pr = SASS_MEMORY_CLONE(this);
-        pr->tail(tails->at(i));
-        rv->append(pr);
-      }
-    }
-    else {
-      rv->append(this);
+    if (!has_parent_ref()) return this;
+    SelectorList* rv = SASS_MEMORY_NEW(SelectorList, pstate());
+    for (auto sel : elements()) {
+      SelectorList_Obj rvs = sel->resolve_parent_refs(pstack, traces, implicit_parent);
+      rv->concat(rvs);
     }
     return rv;
   }
@@ -1258,14 +1359,12 @@ namespace Sass {
   Selector_List::Selector_List(ParserState pstate, size_t s)
   : Selector(pstate),
     Vectorized<Complex_Selector_Obj>(s),
-    schema_({}),
-    wspace_(0)
+    schema_({})
   { }
   Selector_List::Selector_List(const Selector_List* ptr)
   : Selector(ptr),
     Vectorized<Complex_Selector_Obj>(*ptr),
-    schema_(ptr->schema_),
-    wspace_(ptr->wspace_)
+    schema_(ptr->schema_)
   { }
 
   bool Selector_List::find ( bool (*f)(AST_Node_Obj) )
@@ -1281,26 +1380,47 @@ namespace Sass {
   Selector_List_Obj Selector_List::eval(Eval& eval)
   {
     Selector_List_Obj list = schema() ?
-      eval(schema()) : eval(this);
+      eval(schema())
+      : eval(this);
     list->schema(schema());
     return list;
   }
 
-  Selector_List* Selector_List::resolve_parent_refs(SelectorStack& pstack, Backtraces& traces, bool implicit_parent)
+  Selector_List_Obj Selector_Schema::eval(Eval& eval)
   {
-    if (!this->has_parent_ref()) return this;
-    Selector_List* ss = SASS_MEMORY_NEW(Selector_List, pstate());
-    for (size_t si = 0, sL = this->length(); si < sL; ++si) {
-      Selector_List_Obj rv = at(si)->resolve_parent_refs(pstack, traces, implicit_parent);
-      ss->concat(rv);
-    }
-    return ss;
+    return eval(this);
+  }
+
+  SelectorList_Obj SelectorList::eval(Eval& eval)
+  {
+    /*
+    SelectorList_Obj list = schema() ?
+      eval(schema()) : eval(this);
+    list->schema(schema());
+    return list;
+    */
+    return eval(this);
   }
 
   void Selector_List::cloneChildren()
   {
     for (size_t i = 0, l = length(); i < l; i++) {
       at(i) = SASS_MEMORY_CLONE(at(i));
+    }
+  }
+
+  // remove parent selector references
+  // basically unwraps parsed selectors
+  void SelectorList::remove_parent_selectors()
+  {
+    // Check every rhs selector against left hand list
+    for (auto complex : elements()) {
+      complex->chroots(true);
+      for (auto sel : complex->elements()) {
+        if (auto compound = Cast<CompoundSelector>(sel)) {
+          compound->hasRealParent(false);
+        }
+      }
     }
   }
 
@@ -1329,6 +1449,13 @@ namespace Sass {
     }
   }
 
+  bool SelectorList::has_parent_ref() const
+  {
+    for (ComplexSelector_Obj s : elements()) {
+      if (s && s->has_parent_ref()) return true;
+    }
+    return false;
+  }
   bool Selector_List::has_parent_ref() const
   {
     for (Complex_Selector_Obj s : elements()) {
@@ -1340,6 +1467,13 @@ namespace Sass {
   bool Selector_List::has_real_parent_ref() const
   {
     for (Complex_Selector_Obj s : elements()) {
+      if (s && s->has_real_parent_ref()) return true;
+    }
+    return false;
+  }
+  bool SelectorList::has_real_parent_ref() const
+  {
+    for (ComplexSelector_Obj s : elements()) {
       if (s && s->has_real_parent_ref()) return true;
     }
     return false;
@@ -1459,6 +1593,378 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  SelectorList::SelectorList(ParserState pstate, size_t s)
+  : Selector(pstate),
+    Vectorized<ComplexSelector_Obj>(s),
+    schemaOnlyToCopy_()
+  { }
+  SelectorList::SelectorList(const SelectorList* ptr)
+    : Selector(ptr),
+    Vectorized<ComplexSelector_Obj>(),
+    schemaOnlyToCopy_(ptr->schemaOnlyToCopy_)
+  { }
+
+  void SelectorList::cloneChildren()
+  {
+    /* for (size_t i = 0, l = length(); i < l; i++) {
+      at(i) = SASS_MEMORY_CLONE(at(i));
+    }*/
+  }
+
+  unsigned long SelectorList::specificity() const
+  {
+    return 0;
+  }
+
+  Selector_List_Obj SelectorList::toSelectorList() const {
+    Selector_List_Obj list = SASS_MEMORY_NEW(Selector_List, pstate());
+    // optional only used for extend?
+    list->pstate(pstate());
+    list->schema(schemaOnlyToCopy());
+    list->is_optional(is_optional());
+    list->media_block(media_block());
+    // check what we need to preserve
+    list->has_line_feed(has_line_feed());
+    list->has_line_break(has_line_break());
+    for (auto& item : elements()) {
+      list->append(item->toComplexSelector());
+    }
+    return list;
+  }
+
+  SelectorList_Obj Selector_List::toSelList() const {
+    SelectorList_Obj list = SASS_MEMORY_NEW(SelectorList, pstate());
+    // optional only used for extend?
+    list->pstate(pstate());
+    list->is_optional(is_optional());
+    list->schemaOnlyToCopy(schema());
+    list->media_block(media_block());
+    // check what we need to preserve
+    list->has_line_feed(has_line_feed());
+    list->has_line_break(has_line_break());
+    // remove_parent_selectors();
+    for (auto& item : elements()) {
+      list->append(item->toCplxSelector());
+    }
+    return list;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ComplexSelector::ComplexSelector(ParserState pstate)
+  : Selector(pstate),
+    Vectorized<CompoundOrCombinator_Obj>(),
+    chroots_(false)
+  {
+  }
+  ComplexSelector::ComplexSelector(const ComplexSelector* ptr)
+  : Selector(ptr),
+    Vectorized<CompoundOrCombinator_Obj>(*ptr),
+    chroots_(ptr->chroots())
+  {
+  }
+
+  void ComplexSelector::cloneChildren()
+  {
+    /* for (size_t i = 0, l = length(); i < l; i++) {
+      at(i) = SASS_MEMORY_CLONE(at(i));
+    }*/
+  }
+
+  unsigned long ComplexSelector::specificity() const
+  {
+    return 0;
+  }
+
+  Complex_Selector_Obj ComplexSelector::toComplexSelector() {
+    size_t count = 0;
+    std::vector<CompoundOrCombinator_Obj> els(elements());
+
+    Complex_Selector_Obj sel;
+    Complex_Selector_Obj tail;
+
+    while (count < els.size()) {
+
+      Complex_Selector_Obj cur;
+
+      // check if we have only one left
+      if (els.size() == count + 1) {
+#ifdef DEBUGSEL
+        std::cerr << "have one item left\n";
+#endif
+
+        if (SelectorCombinator_Obj combinator = Cast<SelectorCombinator>(els[count])) {
+          cur = SASS_MEMORY_NEW(Complex_Selector, pstate(), combinator->toComplexCombinator());
+#ifdef DEBUGSEL
+          std::cerr << "have only a combinator [" << cur->to_string() << "]\n";
+#endif
+        }
+        else if (CompoundSelector_Obj compound = Cast<CompoundSelector>(els[count])) {
+          cur = SASS_MEMORY_NEW(Complex_Selector, pstate(),
+            Complex_Selector::ANCESTOR_OF, compound->toCompoundSelector());
+#ifdef DEBUGSEL
+          std::cerr << "have only a compound [" << cur->to_string() << "]\n";
+#endif
+        }
+
+        count += 1;
+
+      }
+      // we have at least two
+      else {
+#ifdef DEBUGSEL
+      std::cerr << "have two or more items\n";
+#endif
+
+      // Check if we are starting with a combinator
+      if (CompoundSelector_Obj compound = Cast<CompoundSelector>(els[count])) {
+        if (SelectorCombinator_Obj combinator = Cast<SelectorCombinator>(els[count + 1])) {
+          // Check if we are followed by a compound selector
+          cur = SASS_MEMORY_NEW(Complex_Selector, pstate(),
+            combinator->toComplexCombinator(), compound->toCompoundSelector());
+#ifdef DEBUGSEL
+          std::cerr << "have compound + combinator [" << cur->to_string() << "]\n";
+#endif
+          count += 2;
+        }
+        else {
+          cur = SASS_MEMORY_NEW(Complex_Selector, pstate(),
+            Complex_Selector::ANCESTOR_OF, compound->toCompoundSelector());
+#ifdef DEBUGSEL
+          std::cerr << "have only a compound [" << cur->to_string() << "]\n";
+#endif
+          count += 1;
+        }
+      }
+      // we have a lonely combinator
+      else if (SelectorCombinator_Obj combinator = Cast<SelectorCombinator>(els[count])) {
+        cur = SASS_MEMORY_NEW(Complex_Selector, pstate(), combinator->toComplexCombinator());
+#ifdef DEBUGSEL
+        std::cerr << "have only a combinator [" << cur->to_string() << "]\n";
+#endif
+        count += 1;
+      }
+      else {
+        std::cerr << "WHAT TYPE?\n";
+      }
+
+      }
+
+      if (sel.isNull()) {
+#ifdef DEBUGSEL
+        std::cerr << "Have first selector\n";
+#endif
+        tail = cur;
+        sel = cur;
+      }
+      else {
+#ifdef DEBUGSEL
+        std::cerr << "Append to the tail [" << sel->to_string() << "]\n";
+#endif
+        tail->tail(cur);
+        tail = cur;
+      }
+
+    }
+
+#ifdef DEBUGSEL
+    std::cerr << "RETURN [" << sel->to_string() << "]\n";
+#endif
+
+    if (!chroots()) {
+
+      // create the objects to wrap parent selector reference
+      Compound_Selector_Obj head = SASS_MEMORY_NEW(Compound_Selector, pstate());
+      Parent_Selector* parent = SASS_MEMORY_NEW(Parent_Selector, pstate(), false);
+      parent->media_block(media_block());
+      head->media_block(media_block());
+      // add simple selector
+      head->append(parent);
+      // selector may not have any head yet
+      if (!sel->head()) { sel->head(head); }
+      // otherwise we need to create a new complex selector and set the old one as its tail
+      else {
+        sel = SASS_MEMORY_NEW(Complex_Selector, pstate(), Complex_Selector::ANCESTOR_OF, head, sel);
+        sel->media_block(media_block());
+      }
+
+    }
+
+    // check what we need to preserve
+    sel->has_line_feed(has_line_feed());
+    sel->has_line_break(has_line_break());
+    sel->media_block(media_block());
+
+
+
+    return sel;
+  }
+
+  ComplexSelector_Obj Complex_Selector::toCplxSelector() {
+    ComplexSelector_Obj sel = SASS_MEMORY_NEW(ComplexSelector, pstate());
+    // std::cerr << "Convert [" << to_string() << "]\n";
+    Complex_Selector_Obj cur = this;
+
+    sel->chroots(true);
+
+    if (cur->head() && cur->head()->length() == 1) {
+      if (Parent_Selector_Obj par = Cast<Parent_Selector>(cur->head()->at(0))) {
+        if (!par->real()) {
+          if (cur->combinator() == Complex_Selector::Combinator::ANCESTOR_OF) {
+            cur = cur->tail();
+            sel->chroots(false);
+          }
+          else {
+            cur = cur->copy();
+            cur->head({});
+            sel->chroots(false);
+          }
+        }
+      }
+    }
+
+    while (cur) {
+
+      if (cur->head() && !cur->head()->empty()) {
+        sel->append(cur->head()->toCompSelector());
+        // std::cerr << "Has head\n";
+      }
+      if (cur->combinator()) {
+        // std::cerr << "Has combinator\n";
+        switch (cur->combinator()) {
+        case Complex_Selector::Combinator::PARENT_OF:
+            sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate(), SelectorCombinator::Combinator::CHILD));
+          break;
+          case Complex_Selector::Combinator::ADJACENT_TO:
+            sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate(), SelectorCombinator::Combinator::ADJACENT));
+            break;
+          case Complex_Selector::Combinator::PRECEDES:
+            sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate(), SelectorCombinator::Combinator::GENERAL));
+            break;
+          case Complex_Selector::Combinator::REFERENCE: break;
+          case Complex_Selector::Combinator::ANCESTOR_OF: break;
+        }
+      }
+
+      cur = cur->tail();
+    }
+
+    // check what we need to preserve
+    sel->has_line_feed(has_line_feed());
+    sel->has_line_break(has_line_break());
+    sel->media_block(media_block());
+
+    return sel;
+  }
+
+  Compound_Selector_Obj CompoundSelector::toCompoundSelector() {
+    Compound_Selector_Obj sel = SASS_MEMORY_NEW(Compound_Selector, pstate());
+    if (hasRealParent()) {
+      // std::cerr << "HAVING A REAL PARENT\n";
+      sel->append(SASS_MEMORY_NEW(Parent_Selector, pstate()));
+    }
+    sel->has_line_feed(has_line_feed());
+    sel->has_line_break(has_line_break());
+    sel->media_block(media_block());
+    sel->concat(this);
+    return sel;
+  }
+
+  CompoundSelector_Obj Compound_Selector::toCompSelector() {
+    CompoundSelector_Obj sel = SASS_MEMORY_NEW(CompoundSelector, pstate());
+    sel->has_line_feed(has_line_feed());
+    sel->has_line_break(has_line_break());
+    sel->media_block(media_block());
+    sel->elements(elements());
+    if (sel->length() > 0) {
+      if (Cast<Parent_Selector>(sel->at(0))) {
+        sel->erase(sel->begin());
+        sel->hasRealParent(true);
+      }
+    }
+    return sel;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  CompoundOrCombinator::CompoundOrCombinator(ParserState pstate)
+  : Selector(pstate)
+  {
+  }
+
+  CompoundOrCombinator::CompoundOrCombinator(const CompoundOrCombinator* ptr)
+  : Selector(ptr)
+  { }
+
+  void CompoundOrCombinator::cloneChildren()
+  {
+    /* for (size_t i = 0, l = length(); i < l; i++) {
+      at(i) = SASS_MEMORY_CLONE(at(i));
+    }*/
+  }
+
+  unsigned long CompoundOrCombinator::specificity() const
+  {
+    return 0;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  SelectorCombinator::SelectorCombinator(ParserState pstate, SelectorCombinator::Combinator combinator)
+    : CompoundOrCombinator(pstate),
+    combinator_(combinator)
+  {
+  }
+  SelectorCombinator::SelectorCombinator(const SelectorCombinator* ptr)
+    : CompoundOrCombinator(ptr),
+      combinator_(ptr->combinator())
+  { }
+
+  void SelectorCombinator::cloneChildren()
+  {
+    /* for (size_t i = 0, l = length(); i < l; i++) {
+      at(i) = SASS_MEMORY_CLONE(at(i));
+    }*/
+  }
+
+  unsigned long SelectorCombinator::specificity() const
+  {
+    return 0;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  CompoundSelector::CompoundSelector(ParserState pstate)
+    : CompoundOrCombinator(pstate),
+      Vectorized<Simple_Selector_Obj>(),
+      hasRealParent_(false)
+  {
+  }
+  CompoundSelector::CompoundSelector(const CompoundSelector* ptr)
+    : CompoundOrCombinator(ptr),
+      Vectorized<Simple_Selector_Obj>(*ptr),
+      hasRealParent_(ptr->hasRealParent())
+  { }
+
+  void CompoundSelector::cloneChildren()
+  {
+    /* for (size_t i = 0, l = length(); i < l; i++) {
+      at(i) = SASS_MEMORY_CLONE(at(i));
+    }*/
+  }
+
+  unsigned long CompoundSelector::specificity() const
+  {
+    return 0;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   IMPLEMENT_AST_OPERATORS(Selector_Schema);
   IMPLEMENT_AST_OPERATORS(Placeholder_Selector);
   IMPLEMENT_AST_OPERATORS(Parent_Selector);
@@ -1471,5 +1977,11 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Pseudo_Selector);
   IMPLEMENT_AST_OPERATORS(Wrapped_Selector);
   IMPLEMENT_AST_OPERATORS(Selector_List);
+
+
+  IMPLEMENT_AST_OPERATORS(SelectorCombinator);
+  IMPLEMENT_AST_OPERATORS(CompoundSelector);
+  IMPLEMENT_AST_OPERATORS(ComplexSelector);
+  IMPLEMENT_AST_OPERATORS(SelectorList);
 
 }

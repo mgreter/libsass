@@ -114,6 +114,13 @@ namespace Sass {
     virtual T operator()(Compound_Selector* x)= 0;
     virtual T operator()(Complex_Selector* x)      = 0;
     virtual T operator()(Selector_List* x) = 0;
+
+    virtual T operator()(CompoundOrCombinator* x) = 0;
+    virtual T operator()(SelectorCombinator* x) = 0;
+    virtual T operator()(CompoundSelector* x) = 0;
+    virtual T operator()(ComplexSelector* x) = 0;
+    virtual T operator()(SelectorList* x) = 0;
+
   };
 
   // example: Operation_CRTP<Expression*, Eval>
@@ -197,6 +204,12 @@ namespace Sass {
     T operator()(Compound_Selector* x){ return static_cast<D*>(this)->fallback(x); }
     T operator()(Complex_Selector* x)      { return static_cast<D*>(this)->fallback(x); }
     T operator()(Selector_List* x) { return static_cast<D*>(this)->fallback(x); }
+
+    T operator()(CompoundOrCombinator* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(SelectorCombinator* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CompoundSelector* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ComplexSelector* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(SelectorList* x) { return static_cast<D*>(this)->fallback(x); }
 
     // fallback with specific type U
     // will be called if not overloaded

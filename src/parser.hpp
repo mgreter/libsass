@@ -259,9 +259,12 @@ namespace Sass {
     Argument_Obj parse_argument();
     Assignment_Obj parse_assignment();
     Ruleset_Obj parse_ruleset(Lookahead lookahead);
+    SelectorList_Obj parseSelectorList(bool chroot);
     Selector_List_Obj parse_selector_list(bool chroot);
+    ComplexSelector_Obj parseComplexSelector(bool chroot);
     Complex_Selector_Obj parse_complex_selector(bool chroot);
     Selector_Schema_Obj parse_selector_schema(const char* end_of_selector, bool chroot);
+    CompoundSelector_Obj parseCompoundSelector();
     Compound_Selector_Obj parse_compound_selector();
     Simple_Selector_Obj parse_simple_selector();
     Wrapped_Selector_Obj parse_negated_selector();
