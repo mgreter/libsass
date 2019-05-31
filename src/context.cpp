@@ -891,6 +891,7 @@ namespace Sass {
     register_function(ctx, inspect_sig, inspect, env);
     register_function(ctx, unique_id_sig, unique_id, env);
     // Selector functions
+    register_function(ctx, selector_trim_sig, selector_trim, env);
     register_function(ctx, selector_nest_sig, selector_nest, env);
     register_function(ctx, selector_append_sig, selector_append, env);
     register_function(ctx, selector_extend_sig, selector_extend, env);

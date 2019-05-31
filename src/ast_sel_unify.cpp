@@ -968,7 +968,7 @@ namespace Sass {
 
   }
 
-
+  /*
   Compound_Selector* Compound_Selector::unify_with(Compound_Selector* rhs)
   {
     CompoundSelector_Obj asd = toCompoundSelector(this);
@@ -976,6 +976,7 @@ namespace Sass {
     CompoundSelector_Obj sel = asd->unify_with(qwe);
     return toCompound_Selector(sel).detach();
   }
+  */
 
   CompoundSelector* CompoundSelector::unify_with(CompoundSelector* rhs)
   {
@@ -1185,159 +1186,38 @@ namespace Sass {
 
   }
 
-  Selector_List* Complex_Selector::unify_with(Complex_Selector* rhs)
+  SelectorList* Complex_Selector::unify_with(ComplexSelector* rhs)
   {
-
-    ComplexSelector_Obj asd = toComplexSelector(this);
-    ComplexSelector_Obj qwe = toComplexSelector(rhs);
-    SelectorList_Obj uni = asd->unify_with(qwe);
-    return toSelector_List(uni).detach();
-
-    #ifdef DEBUG_UNIFY
-    const std::string debug_call = "unify(Complex[" + this->to_string() + "], Complex[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
-    #endif
-
-    // get last tails (on the right side)
-    Complex_Selector* l_last = this->mutable_last();
-    Complex_Selector* r_last = rhs->mutable_last();
-
-    // check valid pointers (assertion)
-    SASS_ASSERT(l_last, "lhs is null");
-    SASS_ASSERT(r_last, "rhs is null");
-
-    // Not sure about this check, but closest way I could check
-    // was to see if this is a ruby 'SimpleSequence' equivalent.
-    // It seems to do the job correctly as some specs react to this
-    if (l_last->combinator() != Combinator::ANCESTOR_OF) return nullptr;
-    if (r_last->combinator() != Combinator::ANCESTOR_OF) return nullptr;
-
-    // get the headers for the last tails
-    Compound_Selector* l_last_head = l_last->head();
-    Compound_Selector* r_last_head = r_last->head();
-
-    // check valid head pointers (assertion)
-    SASS_ASSERT(l_last_head, "lhs head is null");
-    SASS_ASSERT(r_last_head, "rhs head is null");
-
-    // get the unification of the last compound selectors
-    Compound_Selector_Obj unified = r_last_head->unify_with(l_last_head);
-
-    // abort if we could not unify heads
-    if (unified == nullptr) return nullptr;
-
-    // move the head
-    if (l_last_head->is_universal()) l_last->head({});
-    r_last->head(unified);
-
-    #ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " before weave: lhs=" << this->to_string() << " rhs=" << rhs->to_string() << std::endl;
-    #endif
-
-    // create nodes from both selectors
-    Node lhsNode = complexSelectorToNode(this);
-    Node rhsNode = complexSelectorToNode(rhs);
-
-    // Complex_Selector_Obj fake = unified->to_complex();
-    // Node unified_node = complexSelectorToNode(fake);
-    // // add to permutate the list?
-    // rhsNode.plus(unified_node);
-
-    // do some magic we inherit from node and extend
-    Node node = subweave(lhsNode, rhsNode);
-    Selector_List_Obj result = SASS_MEMORY_NEW(Selector_List, pstate(), node.collection()->size());
-    for (auto &item : *node.collection()) {
-      result->append(nodeToComplexSelector(Node::naiveTrim(item)));
-    }
-
-    #ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = " << result->to_string() << std::endl;
-    #endif
-
-    // only return if list has some entries
-    return result->length() ? result.detach() : nullptr;
+    ComplexSelector_Obj self = toComplexSelector(this);
+    SelectorList_Obj rv = self->unify_with(rhs);
+    return rv.detach();
   }
-  /*
-  SelectorList* ComplexSelector::unify_with(ComplexSelector* rhs)
-  {
-#ifdef DEBUG_UNIFY
-    const std::string debug_call = "unify(Complex[" + this->to_string() + "], Complex[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
-#endif
 
-    // get last tails (on the right side)
-    Complex_Selector* l_last = this->mutable_last();
-    Complex_Selector* r_last = rhs->mutable_last();
+  SelectorList* Selector_List::unify_with(SelectorList* rhs) {
 
-    // check valid pointers (assertion)
-    SASS_ASSERT(l_last, "lhs is null");
-    SASS_ASSERT(r_last, "rhs is null");
+    SelectorList_Obj self = toSelectorList(this);
+    return self->unify_with(rhs);
 
-    // Not sure about this check, but closest way I could check
-    // was to see if this is a ruby 'SimpleSequence' equivalent.
-    // It seems to do the job correctly as some specs react to this
-    if (l_last->combinator() != Combinator::ANCESTOR_OF) return nullptr;
-    if (r_last->combinator() != Combinator::ANCESTOR_OF) return nullptr;
-
-    // get the headers for the last tails
-    Compound_Selector* l_last_head = l_last->head();
-    Compound_Selector* r_last_head = r_last->head();
-
-    // check valid head pointers (assertion)
-    SASS_ASSERT(l_last_head, "lhs head is null");
-    SASS_ASSERT(r_last_head, "rhs head is null");
-
-    // get the unification of the last compound selectors
-    Compound_Selector_Obj unified = r_last_head->unify_with(l_last_head);
-
-    // abort if we could not unify heads
-    if (unified == nullptr) return nullptr;
-
-    // move the head
-    if (l_last_head->is_universal()) l_last->head({});
-    r_last->head(unified);
-
-#ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " before weave: lhs=" << this->to_string() << " rhs=" << rhs->to_string() << std::endl;
-#endif
-
-    // create nodes from both selectors
-    Node lhsNode = complexSelectorToNode(this);
-    Node rhsNode = complexSelectorToNode(rhs);
-
-    // Complex_Selector_Obj fake = unified->to_complex();
-    // Node unified_node = complexSelectorToNode(fake);
-    // // add to permutate the list?
-    // rhsNode.plus(unified_node);
-
-    // do some magic we inherit from node and extend
-    Node node = subweave(lhsNode, rhsNode);
-    Selector_List_Obj result = SASS_MEMORY_NEW(Selector_List, pstate(), node.collection()->size());
-    for (auto& item : *node.collection()) {
-      result->append(nodeToComplexSelector(Node::naiveTrim(item)));
-    }
-    
-#ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = " << result->to_string() << std::endl;
-#endif
-
-    // only return if list has some entries
-    return result->length() ? result.detach() : nullptr;
   }
-  */
+
   Selector_List* Selector_List::unify_with(Selector_List* rhs) {
-    #ifdef DEBUG_UNIFY
-    const std::string debug_call = "unify(List[" + this->to_string() + "], List[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
-    #endif
 
-    std::vector<Complex_Selector_Obj> result;
+    SelectorList_Obj r = toSelectorList(rhs);
+    SelectorList_Obj rv = unify_with(r);
+    Selector_List_Obj rvv = toSelector_List(rv);
+    return rvv.detach();
+
+  }
+
+  SelectorList* SelectorList::unify_with(SelectorList* rhs) {
+
+    std::vector<ComplexSelector_Obj> result;
     // Unify all of children with RHS's children, storing the results in `unified_complex_selectors`
-    for (Complex_Selector_Obj& seq1 : elements()) {
-      for (Complex_Selector_Obj& seq2 : rhs->elements()) {
-        Complex_Selector_Obj seq1_copy = SASS_MEMORY_CLONE(seq1);
-        Complex_Selector_Obj seq2_copy = SASS_MEMORY_CLONE(seq2);
-        Selector_List_Obj unified = seq1_copy->unify_with(seq2_copy);
+    for (ComplexSelector_Obj& seq1 : elements()) {
+      for (ComplexSelector_Obj& seq2 : rhs->elements()) {
+        ComplexSelector_Obj seq1_copy = seq1->clone();
+        ComplexSelector_Obj seq2_copy = seq2->clone();
+        SelectorList_Obj unified = seq1_copy->unify_with(seq2_copy);
         if (unified) {
           result.reserve(result.size() + unified->length());
           std::copy(unified->begin(), unified->end(), std::back_inserter(result));
@@ -1346,14 +1226,13 @@ namespace Sass {
     }
 
     // Creates the final Selector_List by combining all the complex selectors
-    Selector_List* final_result = SASS_MEMORY_NEW(Selector_List, pstate(), result.size());
-    for (Complex_Selector_Obj& sel : result) {
+    SelectorList* final_result = SASS_MEMORY_NEW(SelectorList, pstate(), result.size());
+    for (ComplexSelector_Obj& sel : result) {
       final_result->append(sel);
     }
-    #ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = " << final_result->to_string() << std::endl;
-    #endif
+
     return final_result;
+
   }
 
 }

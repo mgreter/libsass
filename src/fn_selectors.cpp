@@ -1,5 +1,6 @@
 #include "parser.hpp"
 #include "extend.hpp"
+#include "extender.hpp"
 #include "fn_utils.hpp"
 #include "fn_selectors.hpp"
 
@@ -114,7 +115,7 @@ namespace Sass {
         // Replace result->elements with newElements
         for (size_t i = 0, resultLen = result->length(); i < resultLen; ++i) {
           for (size_t j = 0, childLen = child->length(); j < childLen; ++j) {
-            Complex_Selector_Obj parentSeqClone = SASS_MEMORY_CLONE((*result)[i]);
+            Complex_Selector_Obj parentSeqClone = (*result)[i]->clone();
             Complex_Selector_Obj childSeq = (*child)[j];
             Complex_Selector_Obj base = childSeq->tail();
 
@@ -178,6 +179,30 @@ namespace Sass {
       }
 
       return l;
+    }
+
+    bool isOriginal(ComplexSelector_Obj complex)
+    {
+      return false;
+    }
+
+    Signature selector_trim_sig = "selector-trim($selectors)";
+    BUILT_IN(selector_trim)
+    {
+      Selector_List_Obj  selectors = ARGSELS("$selectors");
+      SelectorList_Obj  selector = toSelectorList(selectors);
+
+      Extender extender;
+      std::vector<ComplexSelector_Obj> sels;
+      sels.insert(sels.begin(), selector->begin(), selector->end());
+      auto rv = extender.trim(sels, isOriginal);
+
+      SelectorList_Obj result = SASS_MEMORY_NEW(SelectorList, ParserState("{tmp}"));
+      result->concat(rv);
+
+      Listize listize;
+      return Cast<Value>(result->perform(&listize));
+
     }
 
     Signature selector_extend_sig = "selector-extend($selector, $extendee, $extender)";

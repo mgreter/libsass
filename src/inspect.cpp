@@ -1022,7 +1022,12 @@ namespace Sass {
   void Inspect::operator()(ComplexSelector* sel)
   {
     // Dispatch all items to most specific implementation
-    for (auto item : sel->elements()) item->perform(this);
+    bool joinit = false;
+    for (auto item : sel->elements()) {
+      if (joinit) append_string(" ");
+      item->perform(this);
+      joinit = true;
+    }
   }
 
   void Inspect::operator()(CompoundSelector* sel)

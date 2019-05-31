@@ -23,8 +23,11 @@ namespace Sass {
     Listize();
     ~Listize() { }
 
+    Expression* operator()(SelectorList*);
     Expression* operator()(Selector_List*);
+    Expression* operator()(ComplexSelector*);
     Expression* operator()(Complex_Selector*);
+    Expression* operator()(CompoundSelector*);
     Expression* operator()(Compound_Selector*);
 
     // generic fallback

@@ -1515,61 +1515,28 @@ namespace Sass {
     return 0;
   }
 
-  Selector_List* Eval::operator()(Selector_List* sin)
-  {
-    SelectorStack2 rv;
-    // debug_ast(sin);
-    // debug_ast(sin->toSelList());
-    SelectorList_Obj asd = sin->toSelList();
-    Selector_List_Obj s = asd->toSelectorList();
-    // debug_ast(s, "out: ");
-    Selector_List_Obj sl = SASS_MEMORY_NEW(Selector_List, s->pstate());
-    sl->is_optional(s->is_optional());
-    sl->media_block(s->media_block());
-    sl->is_optional(s->is_optional());
-    for (size_t i = 0, iL = s->length(); i < iL; ++i) {
-      Selector_List_Obj asd = operator()(s->get(i));
-      SelectorList_Obj sel = asd->toSelList();
-      rv.push_back(sel);
-    }
-
-    // we should actually permutate parent first
-    // but here we have permutated the selector first
-    size_t round = 0;
-    while (round != std::string::npos) {
-      bool abort = true;
-      for (size_t i = 0, iL = rv.size(); i < iL; ++i) {
-        if (rv[i]->length() > round) {
-          sl->append((*rv[i])[round]->toComplexSelector());
-          abort = false;
-        }
-      }
-      if (abort) {
-        round = std::string::npos;
-      } else {
-        ++ round;
-      }
-
-    }
-    return sl.detach();
-  }
-
 
   Selector_List* Eval::operator()(Complex_Selector* s)
   {
     ComplexSelector_Obj sel = s->toCplxSelector();
-    SelectorList_Obj ss = operator()(sel);
-    Selector_List_Obj rv = ss->toSelectorList();
-    return rv.detach();
+    SelectorList_Obj rv = operator()(sel);
+    return toSelector_List(rv).detach();
   }
 
   Compound_Selector* Eval::operator()(Compound_Selector* s)
   {
     CompoundSelector_Obj sel = s->toCompSelector();
-    CompoundSelector_Obj ss = operator()(sel);
-    Compound_Selector_Obj rv = ss->toCompoundSelector();
-    return rv.detach();
+    CompoundSelector_Obj rv = operator()(sel);
+    return toCompound_Selector(rv).detach();
   }
+
+  Selector_List* Eval::operator()(Selector_List* sin)
+  {
+    SelectorList_Obj asd = sin->toSelList();
+    SelectorList_Obj rv = operator()(asd);
+    return toSelector_List(rv).detach();
+  }
+
 
   Selector_List* Eval::operator()(Selector_Schema* s)
   {

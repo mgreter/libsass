@@ -7,6 +7,7 @@
 #include <string>
 
 #include "listize.hpp"
+#include "debugger.hpp"
 #include "context.hpp"
 #include "backtrace.hpp"
 #include "error_handling.hpp"
@@ -16,19 +17,20 @@ namespace Sass {
   Listize::Listize()
   {  }
 
-  Expression* Listize::operator()(Selector_List* sel)
+  Expression* Listize::operator()(SelectorList* sel)
   {
     List_Obj l = SASS_MEMORY_NEW(List, sel->pstate(), sel->length(), SASS_COMMA);
     l->from_selector(true);
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
       if (!sel->at(i)) continue;
+      // Complex_Selector_Obj cplx = toComplex_Selector(sel->at(i));
       l->append(sel->at(i)->perform(this));
     }
     if (l->length()) return l.detach();
     return SASS_MEMORY_NEW(Null, l->pstate());
   }
 
-  Expression* Listize::operator()(Compound_Selector* sel)
+  Expression* Listize::operator()(CompoundSelector* sel)
   {
     std::string str;
     for (size_t i = 0, L = sel->length(); i < L; ++i) {
@@ -38,47 +40,45 @@ namespace Sass {
     return SASS_MEMORY_NEW(String_Quoted, sel->pstate(), str);
   }
 
-  Expression* Listize::operator()(Complex_Selector* sel)
+  Expression* Listize::operator()(ComplexSelector* sel)
   {
-    List_Obj l = SASS_MEMORY_NEW(List, sel->pstate(), 2);
+    List_Obj l = SASS_MEMORY_NEW(List, sel->pstate());
+    // ToDo: investigate what this does
     l->from_selector(true);
-    Compound_Selector_Obj head = sel->head();
-    if (head && !head->is_empty_reference())
-    {
-      Expression* hh = head->perform(this);
-      if (hh) l->append(hh);
+
+    for (auto component : sel->elements()) {
+      if (CompoundSelector_Obj compound = Cast<CompoundSelector>(component)) {
+        if (!compound->empty()) {
+          Expression_Obj hh = compound->perform(this);
+          if (hh) l->append(hh);
+        }
+      }
+      else if (component) {
+        l->append(SASS_MEMORY_NEW(String_Quoted, component->pstate(), component->to_string()));
+      }
     }
 
-    std::string reference = ! sel->reference() ? ""
-      : sel->reference()->to_string();
-    switch(sel->combinator())
-    {
-      case Complex_Selector::PARENT_OF:
-        l->append(SASS_MEMORY_NEW(String_Quoted, sel->pstate(), ">"));
-      break;
-      case Complex_Selector::ADJACENT_TO:
-        l->append(SASS_MEMORY_NEW(String_Quoted, sel->pstate(), "+"));
-      break;
-      case Complex_Selector::REFERENCE:
-        l->append(SASS_MEMORY_NEW(String_Quoted, sel->pstate(), "/" + reference + "/"));
-      break;
-      case Complex_Selector::PRECEDES:
-        l->append(SASS_MEMORY_NEW(String_Quoted, sel->pstate(), "~"));
-      break;
-      case Complex_Selector::ANCESTOR_OF:
-      break;
-      default: break;
-    }
-
-    Complex_Selector_Obj tail = sel->tail();
-    if (tail)
-    {
-      Expression_Obj tt = tail->perform(this);
-      if (List* ls = Cast<List>(tt))
-      { l->concat(ls); }
-    }
     if (l->length() == 0) return 0;
     return l.detach();
+  }
+
+
+  Expression* Listize::operator()(Selector_List* sel)
+  {
+    SelectorList_Obj rhs = toSelectorList(sel);
+    return operator()(rhs);
+  }
+
+  Expression* Listize::operator()(Compound_Selector* sel)
+  {
+    CompoundSelector_Obj s = toCompoundSelector(sel);
+    return operator()(s);
+  }
+
+  Expression* Listize::operator()(Complex_Selector* sel)
+  {
+    ComplexSelector_Obj s = toComplexSelector(sel);
+    return operator()(s);
   }
 
 }

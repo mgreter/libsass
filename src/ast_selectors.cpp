@@ -1545,7 +1545,35 @@ namespace Sass {
       compound_sel->is_optional(extendee->is_optional());
 
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
+        // std::cerr << "BUT " << compound_sel->to_string() << "\n";
         extends.put(compound_sel, std::make_pair((*extender)[i], compound_sel));
+      }
+    }
+  };
+
+  void SelectorList::populate_extends(SelectorList_Obj extendee, SubsetMap2& extends)
+  {
+
+    auto extender = this;
+    for (auto complex_sel : extendee->elements()) {
+      ComplexSelector_Obj c = complex_sel;
+
+
+      // Ignore any parent selectors, until we find the first non Selectorerence head
+      CompoundSelector_Obj compound_sel = c->first();
+
+      /*
+      if (!pIter->head() || pIter->tail()) {
+        coreError("nested selectors may not be extended", c->pstate());
+      }
+      */
+
+      compound_sel->is_optional(extendee->is_optional());
+
+      for (size_t i = 0, L = extender->length(); i < L; ++i) {
+        ComplexSelector_Obj lhs = (*extender)[i];
+        // std::cerr << "PUT " << compound_sel->to_string() << "\n";
+        extends.put(compound_sel, std::make_pair(lhs, compound_sel));
       }
     }
   };
@@ -1941,13 +1969,15 @@ namespace Sass {
   CompoundSelector::CompoundSelector(ParserState pstate)
     : CompoundOrCombinator(pstate),
       Vectorized<Simple_Selector_Obj>(),
-      hasRealParent_(false)
+      hasRealParent_(false),
+      extended_(false)
   {
   }
   CompoundSelector::CompoundSelector(const CompoundSelector* ptr)
     : CompoundOrCombinator(ptr),
       Vectorized<Simple_Selector_Obj>(*ptr),
-      hasRealParent_(ptr->hasRealParent())
+      hasRealParent_(ptr->hasRealParent()),
+      extended_(ptr->extended())
   { }
 
   void CompoundSelector::cloneChildren()
@@ -1956,6 +1986,15 @@ namespace Sass {
       at(i) = SASS_MEMORY_CLONE(at(i));
     }*/
   }
+
+  // Wrap the compound selector with a complex selector
+  ComplexSelector* CompoundSelector::wrapInComplex()
+  {
+    auto complex = SASS_MEMORY_NEW(ComplexSelector, pstate());
+    complex->append(this);
+    return complex;
+  }
+
 
   unsigned long CompoundSelector::specificity() const
   {

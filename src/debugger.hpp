@@ -7,6 +7,7 @@
 #include <sstream>
 #include "node.hpp"
 #include "ast_fwd_decl.hpp"
+#include "extension.hpp"
 
 using namespace Sass;
 
@@ -15,6 +16,18 @@ inline void debug_ast(AST_Node* node, std::string ind = "", Env* env = 0);
 inline std::string debug_vec(AST_Node* node) {
   if (node == NULL) return "null";
   else return node->to_string();
+}
+
+inline std::string debug_vec(Extension2& ext) {
+  std::stringstream out;
+  out << debug_vec(ext.extender);
+  out << " {@extend ";
+  out << debug_vec(ext.target);
+  if (ext.isOptional) {
+    out << " !optional";
+  }
+  out << "}";
+  return out.str();
 }
 
 template <class T>
@@ -40,6 +53,35 @@ inline std::string debug_vec(std::queue<T> vec) {
   out << "}";
   return out.str();
 }
+
+template <class T, class U, class O>
+inline std::string debug_vec(std::map<T, U, O> vec) {
+  std::stringstream out;
+  out << "{";
+  for (auto it = vec.begin(); it != vec.end(); it++)
+  {
+    out << debug_vec(it->first) // string (key)
+      << ": "
+      << debug_vec(it->second); // string's value 
+  }
+  out << "}";
+  return out.str();
+}
+
+template <class T, class U>
+inline std::string debug_vec(std::set<T, U> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto item : vec) {
+    if (joinit) out << ", ";
+    out << debug_vec(item);
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
 
 inline void debug_ast(const AST_Node* node, std::string ind = "", Env* env = 0) {
   debug_ast(const_cast<AST_Node*>(node), ind, env);

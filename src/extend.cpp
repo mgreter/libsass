@@ -981,8 +981,10 @@ namespace Sass {
 
           Complex_Selector_Obj pMergedWrapper = SASS_MEMORY_CLONE(sel1.selector()); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
           // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
-          Compound_Selector* pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head());
-          pMergedWrapper->head(pMerged);
+          CompoundSelector_Obj rhs = toCompoundSelector(sel2.selector()->head());
+          CompoundSelector_Obj lhs = toCompoundSelector(sel1.selector()->head());
+          CompoundSelector_Obj pMerged = lhs->unify_with(rhs);
+          pMergedWrapper->head(toCompound_Selector(pMerged));
 
           DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
 
@@ -1038,8 +1040,11 @@ namespace Sass {
 
             Complex_Selector_Obj pMergedWrapper = SASS_MEMORY_CLONE(plusSel.selector()); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
             // TODO: does subject matter? Ruby: merged = plus_sel.unify(tilde_sel.members, tilde_sel.subject?)
-            Compound_Selector* pMerged = plusSel.selector()->head()->unify_with(tildeSel.selector()->head());
-            pMergedWrapper->head(pMerged);
+
+            CompoundSelector_Obj rhs = toCompoundSelector(tildeSel.selector()->head());
+            CompoundSelector_Obj lhs = toCompoundSelector(plusSel.selector()->head());
+            CompoundSelector_Obj pMerged = lhs->unify_with(rhs);
+            pMergedWrapper->head(toCompound_Selector(pMerged));
 
             DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
 
@@ -1087,8 +1092,10 @@ namespace Sass {
 
         Complex_Selector_Obj pMergedWrapper = SASS_MEMORY_CLONE(sel1.selector()); // Clone the Complex_Selector to get back to something we can transform to a node once we replace the head with the unification result
         // TODO: does subject matter? Ruby: return unless merged = sel1.unify(sel2.members, sel2.subject?)
-        Compound_Selector* pMerged = sel1.selector()->head()->unify_with(sel2.selector()->head());
-        pMergedWrapper->head(pMerged);
+        CompoundSelector_Obj rhs = toCompoundSelector(sel2.selector()->head());
+        CompoundSelector_Obj lhs = toCompoundSelector(sel1.selector()->head());
+        CompoundSelector_Obj pMerged = lhs->unify_with(rhs);
+        pMergedWrapper->head(toCompound_Selector(pMerged));
 
         DEBUG_EXEC(ALL, printCompoundSelector(pMerged, "MERGED: "))
 
@@ -1579,7 +1586,10 @@ namespace Sass {
       if (!pInnermostCompoundSelector) {
         pInnermostCompoundSelector = SASS_MEMORY_NEW(Compound_Selector, pSelector->pstate());
       }
-      Compound_Selector_Obj pUnifiedSelector = pInnermostCompoundSelector->unify_with(pSelectorWithoutExtendSelectors);
+      CompoundSelector_Obj rhs = toCompoundSelector(pSelectorWithoutExtendSelectors);
+      CompoundSelector_Obj lhs = toCompoundSelector(pInnermostCompoundSelector);
+      CompoundSelector_Obj pMerged = lhs->unify_with(rhs);
+      Compound_Selector_Obj pUnifiedSelector = toCompound_Selector(pMerged);
 
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pInnermostCompoundSelector, "LHS: "))
       DEBUG_EXEC(EXTEND_COMPOUND, printCompoundSelector(pSelectorWithoutExtendSelectors, "RHS: "))
@@ -2138,4 +2148,124 @@ namespace Sass {
     if (a->block()) a->block()->perform(this);
     // exp.popFromSelectorStack();
   }
+
+
+
+
+
+
+
+
+
+
+  Extend2::Extend2(SubsetMap2& ssm)
+    : subset_map(ssm), eval(NULL)
+  { }
+
+  void Extend2::setEval(Eval& e) {
+    eval = &e;
+  }
+
+  void Extend2::operator()(Block* b)
+  {
+    for (size_t i = 0, L = b->length(); i < L; ++i) {
+      Statement_Obj stm = b->at(i);
+      stm->perform(this);
+    }
+    // do final check if everything was extended
+    // we set `extended` flag on extended selectors
+    if (b->is_root()) {
+      // debug_subset_map(subset_map);
+      for (auto const& it : subset_map.values()) {
+        const ComplexSelector* sel = nullptr;
+        const CompoundSelector* ext = nullptr;
+        if (it.first) sel = it.first;
+        if (it.second) ext = it.second;
+        if (ext && (ext->extended() || ext->is_optional())) continue;
+        std::string str_sel(sel ? sel->to_string({ NESTED, 5 }) : "NULL");
+        std::string str_ext(ext ? ext->to_string({ NESTED, 5 }) : "NULL");
+        // debug_ast(sel, "sel: ");
+        // debug_ast(ext, "ext: ");
+        error("\"" + str_sel + "\" failed to @extend \"" + str_ext + "\".\n"
+          "The selector \"" + str_ext + "\" was not found.\n"
+          "Use \"@extend " + str_ext + " !optional\" if the"
+          " extend should be able to fail.", (ext ? ext->pstate() : NULL), eval->exp.traces);
+      }
+    }
+
+  }
+
+  void Extend2::operator()(Ruleset* pRuleset)
+  {
+    std::cerr << "Extend2 not support RUleset yet\n";
+    // extendObjectWithSelectorAndBlock(pRuleset);
+    pRuleset->block()->perform(this);
+  }
+
+  void Extend2::operator()(Supports_Block* pFeatureBlock)
+  {
+    pFeatureBlock->block()->perform(this);
+  }
+
+  void Extend2::operator()(Media_Block* pMediaBlock)
+  {
+    pMediaBlock->block()->perform(this);
+  }
+
+  void Extend2::operator()(Directive* a)
+  {
+    // Selector_List* ls = Cast<Selector_List>(a->selector());
+    // exp.pushToSelectorStack(ls);
+    if (a->block()) a->block()->perform(this);
+    // exp.popFromSelectorStack();
+  }
+
+
+
+
+  // check if selector has something to be extended by subset_map
+  bool Extend2::complexSelectorHasExtension(ComplexSelector* selector, CompoundSelectorSet2& seen) {
+
+    bool hasExtension = false;
+
+    ComplexSelector_Obj pIter = selector;
+
+    for (CompoundSelector_Obj pHead : selector->elements()) {
+
+      if (pHead) {
+        SubSetMapPairs2 entries = subset_map.get_v(pHead);
+        for (SubSetMapPair2 ext : entries) {
+          // check if both selectors have the same media block parent
+          // if (ext.first->media_block() == pComplexSelector->media_block()) continue;
+          if (ext.second->media_block() == 0) continue;
+          if (pHead->media_block() &&
+            ext.second->media_block()->media_queries() &&
+            pHead->media_block()->media_queries()
+            ) {
+            std::string query_left(ext.second->media_block()->media_queries()->to_string());
+            std::string query_right(pHead->media_block()->media_queries()->to_string());
+            if (query_left == query_right) continue;
+          }
+
+          // fail if one goes across media block boundaries
+          std::stringstream err;
+          std::string cwd(Sass::File::get_cwd());
+          ParserState pstate(ext.second->pstate());
+          std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
+          err << "You may not @extend an outer selector from within @media.\n";
+          err << "You may only @extend selectors within the same directive.\n";
+          err << "From \"@extend " << ext.second->to_string() << "\"";
+          err << " on line " << pstate.line + 1 << " of " << rel_path << "\n";
+          error(err.str(), selector->pstate(), eval->exp.traces);
+        }
+        if (entries.size() > 0) hasExtension = true;
+      }
+    }
+
+    return hasExtension;
+  }
+
+
+
+
 }

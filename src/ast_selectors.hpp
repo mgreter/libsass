@@ -391,7 +391,7 @@ namespace Sass {
     bool is_universal() const;
     Complex_Selector_Obj to_complex();
     CompoundSelector* unify_with(CompoundSelector* rhs);
-    Compound_Selector* unify_with(Compound_Selector* rhs);
+    // Compound_Selector* unify_with(Compound_Selector* rhs);
     // virtual Placeholder_Selector* find_placeholder();
     bool has_parent_ref() const override;
     bool has_real_parent_ref() const override;
@@ -480,7 +480,8 @@ namespace Sass {
     bool is_superselector_of(const Compound_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Complex_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Selector_List* sub, std::string wrapping = "") const;
-    Selector_List* unify_with(Complex_Selector* rhs);
+    // Selector_List* unify_with(Complex_Selector* rhs);
+    SelectorList* unify_with(ComplexSelector* rhs);
     Combinator clear_innermost();
     void set_innermost(Complex_Selector_Obj, Combinator);
 
@@ -637,12 +638,15 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////////
   class CompoundSelector final : public CompoundOrCombinator, public Vectorized<Simple_Selector_Obj> {
     ADD_PROPERTY(bool, hasRealParent)
+    ADD_PROPERTY(bool, extended)
   public:
     CompoundSelector(ParserState pstate);
     size_t hash() const override {
       return 0;
     }
     CompoundSelector* unify_with(CompoundSelector* rhs);
+
+    ComplexSelector* wrapInComplex();
 
     bool is_superselector_of(const CompoundSelector* sub, std::string wrapped = "") const;
     bool is_superselector_of(const ComplexSelector* sub, std::string wrapped = "") const;
@@ -689,6 +693,10 @@ namespace Sass {
       return 0;
     }
     SelectorList_Obj eval(Eval& eval);
+
+    SelectorList* unify_with(SelectorList*);
+    void populate_extends(SelectorList_Obj, SubsetMap2&);
+
     void remove_parent_selectors();
     void cloneChildren() override;
     bool has_parent_ref() const override;
@@ -737,6 +745,7 @@ namespace Sass {
     bool is_superselector_of(const Complex_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Selector_List* sub, std::string wrapping = "") const;
     Selector_List* unify_with(Selector_List*);
+    SelectorList* unify_with(SelectorList*);
     void populate_extends(Selector_List_Obj, Subset_Map&);
     Selector_List_Obj eval(Eval& eval);
 

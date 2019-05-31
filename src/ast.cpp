@@ -455,7 +455,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Extension::Extension(ParserState pstate, SelectorList_Obj s)
+    Extension::Extension(ParserState pstate, SelectorList_Obj s)
   : Statement(pstate), selector_(s->toSelectorList()), schema_()
   { statement_type(EXTEND); }
   Extension::Extension(ParserState pstate, Selector_Schema_Obj s)

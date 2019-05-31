@@ -10,6 +10,7 @@ namespace Sass {
     #define ARGSEL(argname) get_arg_sel(argname, env, sig, pstate, traces, ctx)
     #define ARGSELS(argname) get_arg_sels(argname, env, sig, pstate, traces, ctx)
 
+    BUILT_IN(selector_trim);
     BUILT_IN(selector_nest);
     BUILT_IN(selector_append);
     BUILT_IN(selector_extend);
@@ -19,6 +20,7 @@ namespace Sass {
     BUILT_IN(simple_selectors);
     BUILT_IN(selector_parse);
 
+    extern Signature selector_trim_sig;
     extern Signature selector_nest_sig;
     extern Signature selector_append_sig;
     extern Signature selector_extend_sig;

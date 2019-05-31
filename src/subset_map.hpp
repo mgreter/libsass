@@ -71,6 +71,19 @@ namespace Sass {
     const std::vector<SubSetMapPair> values(void) { return values_; }
   };
 
+  class SubsetMap2 {
+  private:
+    std::vector<SubSetMapPair2> values_;
+    std::map<Simple_Selector_Obj, std::vector<std::pair<CompoundSelector_Obj, size_t> >, OrderNodes > hash_;
+  public:
+    void put(const CompoundSelector_Obj& sel, const SubSetMapPair2& value);
+    std::vector<SubSetMapPair2> get_kv(const CompoundSelector_Obj& s);
+    std::vector<SubSetMapPair2> get_v(const CompoundSelector_Obj& s);
+    bool empty() { return values_.empty(); }
+    void clear() { values_.clear(); hash_.clear(); }
+    const std::vector<SubSetMapPair2> values(void) { return values_; }
+  };
+
 }
 
 #endif

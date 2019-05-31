@@ -129,6 +129,8 @@ namespace Sass {
   class Expand;
   class Eval;
 
+  class Extension2;
+
   // declare classes that are instances of memory nodes
   // #define IMPL_MEM_OBJ(type) using type##_Obj = SharedImpl<type>
   #define IMPL_MEM_OBJ(type) typedef SharedImpl<type> type##_Obj
@@ -296,8 +298,16 @@ namespace Sass {
   typedef std::vector<SubSetMapPair> SubSetMapPairs;
   typedef std::vector<SubSetMapLookup> SubSetMapLookups;
 
+  typedef std::pair<ComplexSelector_Obj, CompoundSelector_Obj> SubSetMapPair2;
+  typedef std::pair<CompoundSelector_Obj, ComplexSelector_Obj> SubSetMapLookup2;
+  typedef std::vector<SubSetMapPair2> SubSetMapPairs2;
+  typedef std::vector<SubSetMapLookup2> SubSetMapLookups2;
+
   typedef std::pair<Complex_Selector_Obj, SubSetMapPairs> SubSetMapResult;
   typedef std::vector<SubSetMapResult> SubSetMapResults;
+
+  typedef std::pair<ComplexSelector_Obj, SubSetMapPairs2> SubSetMapResult2;
+  typedef std::vector<SubSetMapResult2> SubSetMapResults2;
 
   typedef std::set<Selector_Obj, OrderNodes> SelectorSet;
 
@@ -306,6 +316,10 @@ namespace Sass {
   typedef std::set<Complex_Selector_Obj, OrderNodes> ComplexSelectorSet;
   typedef std::set<Compound_Selector_Obj, OrderNodes> CompoundSelectorSet;
   typedef std::unordered_set<Simple_Selector_Obj, HashNodes, CompareNodes> SimpleSelectorDict;
+
+  typedef std::deque<ComplexSelector_Obj> ComplexSelectorDeque2;
+  typedef std::set<ComplexSelector_Obj, OrderNodes> ComplexSelectorSet2;
+  typedef std::set<CompoundSelector_Obj, OrderNodes> CompoundSelectorSet2;
 
   typedef std::vector<Block*> BlockStack;
   typedef std::vector<Sass_Callee> CalleeStack;

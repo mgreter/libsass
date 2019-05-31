@@ -32,7 +32,10 @@ namespace Sass {
     BUILT_IN(length)
     {
       if (Selector_List* sl = Cast<Selector_List>(env["$list"])) {
-        return SASS_MEMORY_NEW(Number, pstate, (double)sl->length());
+        return SASS_MEMORY_NEW(Number, pstate, (double) sl->length());
+      }
+      if (SelectorList * sl = Cast<SelectorList>(env["$list"])) {
+        return SASS_MEMORY_NEW(Number, pstate, (double) sl->length());
       }
       Expression* v = ARG("$list", Expression);
       if (v->concrete_type() == Expression::MAP) {
@@ -40,9 +43,13 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate, (double)(map ? map->length() : 1));
       }
       if (v->concrete_type() == Expression::SELECTOR) {
-        if (Compound_Selector* h = Cast<Compound_Selector>(v)) {
+        if (Compound_Selector * h = Cast<Compound_Selector>(v)) {
+          return SASS_MEMORY_NEW(Number, pstate, (double)h->length());
+        } else if (CompoundSelector * h = Cast<CompoundSelector>(v)) {
           return SASS_MEMORY_NEW(Number, pstate, (double)h->length());
         } else if (Selector_List* ls = Cast<Selector_List>(v)) {
+          return SASS_MEMORY_NEW(Number, pstate, (double)ls->length());
+        } else if (SelectorList * ls = Cast<SelectorList>(v)) {
           return SASS_MEMORY_NEW(Number, pstate, (double)ls->length());
         } else {
           return SASS_MEMORY_NEW(Number, pstate, 1);
@@ -61,6 +68,16 @@ namespace Sass {
       double nr = ARGVAL("$n");
       Map* m = Cast<Map>(env["$list"]);
       if (Selector_List* sl = Cast<Selector_List>(env["$list"])) {
+        size_t len = m ? m->length() : sl->length();
+        bool empty = m ? m->empty() : sl->empty();
+        if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate, traces);
+        double index = std::floor(nr < 0 ? len + nr : nr - 1);
+        if (index < 0 || index > len - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate, traces);
+        // return (*sl)[static_cast<int>(index)];
+        Listize listize;
+        return Cast<Value>((*sl)[static_cast<int>(index)]->perform(&listize));
+      }
+      else if (SelectorList * sl = Cast<SelectorList>(env["$list"])) {
         size_t len = m ? m->length() : sl->length();
         bool empty = m ? m->empty() : sl->empty();
         if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate, traces);
@@ -190,6 +207,10 @@ namespace Sass {
       List_Obj l = Cast<List>(env["$list"]);
       Expression_Obj v = ARG("$val", Expression);
       if (Selector_List* sl = Cast<Selector_List>(env["$list"])) {
+        Listize listize;
+        l = Cast<List>(sl->perform(&listize));
+      }
+      else if (SelectorList * sl = Cast<SelectorList>(env["$list"])) {
         Listize listize;
         l = Cast<List>(sl->perform(&listize));
       }
