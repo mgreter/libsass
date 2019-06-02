@@ -339,11 +339,21 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Pseudo_Selector::Pseudo_Selector(ParserState pstate, std::string n, String_Obj expr)
-  : Simple_Selector(pstate, n), expression_(expr)
+  Pseudo_Selector::Pseudo_Selector(ParserState pstate, std::string name)
+  : Simple_Selector(pstate, name),
+    normalized_(name),
+    expression_({}),
+    selector_({}),
+    isSyntacticClass_(true),
+    isClass_(true)
   { simple_type(PSEUDO_SEL); }
   Pseudo_Selector::Pseudo_Selector(const Pseudo_Selector* ptr)
-  : Simple_Selector(ptr), expression_(ptr->expression_)
+  : Simple_Selector(ptr),
+    normalized_(ptr->normalized()),
+    expression_(ptr->expression()),
+    selector_(ptr->selector()),
+    isSyntacticClass_(ptr->isSyntacticClass()),
+    isClass_(ptr->isClass())
   { simple_type(PSEUDO_SEL); }
 
   // A pseudo-element is made of two colons (::) followed by the name.
@@ -364,6 +374,7 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_combine(hash_, Simple_Selector::hash());
+      if (selector_) hash_combine(hash_, selector_->hash());
       if (expression_) hash_combine(hash_, expression_->hash());
     }
     return hash_;
@@ -379,14 +390,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Wrapped_Selector::Wrapped_Selector(ParserState pstate, std::string n, Selector_List_Obj sel)
-  : Simple_Selector(pstate, n), selector_(sel)
-  { simple_type(WRAPPED_SEL); }
-  Wrapped_Selector::Wrapped_Selector(const Wrapped_Selector* ptr)
-  : Simple_Selector(ptr), selector_(ptr->selector_)
-  { simple_type(WRAPPED_SEL); }
-
-  bool Wrapped_Selector::is_superselector_of(const Wrapped_Selector* sub) const
+  bool Pseudo_Selector::isSuperselectorOf(const Pseudo_Selector* sub) const
   {
     if (this->name() != sub->name()) return false;
     if (this->name() == ":current") return false;
@@ -402,35 +406,27 @@ namespace Sass {
   // Selectors inside the negation pseudo-class are counted like any
   // other, but the negation itself does not count as a pseudo-class.
 
-  void Wrapped_Selector::cloneChildren()
+  void Pseudo_Selector::cloneChildren()
   {
-    selector(SASS_MEMORY_CLONE(selector()));
+    if (selector().isNull()) selector({});
+    else selector(SASS_MEMORY_CLONE(selector()));
   }
 
-  size_t Wrapped_Selector::hash() const
-  {
-    if (hash_ == 0) {
-      hash_combine(hash_, Simple_Selector::hash());
-      if (selector_) hash_combine(hash_, selector_->hash());
-    }
-    return hash_;
-  }
-
-  bool Wrapped_Selector::has_parent_ref() const {
+  bool Pseudo_Selector::has_parent_ref() const {
     if (!selector()) return false;
     return selector()->has_parent_ref();
   }
 
-  bool Wrapped_Selector::has_real_parent_ref() const {
+  bool Pseudo_Selector::has_real_parent_ref() const {
     if (!selector()) return false;
     return selector()->has_real_parent_ref();
   }
-
+/*
   unsigned long Wrapped_Selector::specificity() const
   {
     return selector_ ? selector_->specificity() : 0;
   }
-
+  
   bool Wrapped_Selector::find ( bool (*f)(AST_Node_Obj) )
   {
     // check children first
@@ -440,7 +436,7 @@ namespace Sass {
     // execute last
     return f(this);
   }
-
+  */
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -587,20 +583,23 @@ namespace Sass {
     {
       const Selector* wlhs = (*this)[i].ptr();
       // very special case for wrapped matches selector
-      if (const Wrapped_Selector* wrapped = Cast<Wrapped_Selector>(wlhs)) {
+      if (const Pseudo_Selector * wrapped = Cast<Pseudo_Selector>(wlhs)) {
+        if (wrapped->selector()) {
         if (wrapped->name() == ":not") {
           if (Selector_List_Obj not_list = Cast<Selector_List>(wrapped->selector())) {
             if (not_list->is_superselector_of(rhs, wrapped->name())) return false;
-          } else {
+          }
+          else {
             throw std::runtime_error("wrapped not selector is not a list");
           }
         }
         if (wrapped->name() == ":matches" || wrapped->name() == ":-moz-any") {
           wlhs = wrapped->selector();
           if (Selector_List_Obj list = Cast<Selector_List>(wrapped->selector())) {
-            if (const Compound_Selector* comp = Cast<Compound_Selector>(rhs)) {
+            if (const Compound_Selector * comp = Cast<Compound_Selector>(rhs)) {
               if (!wrapping.empty() && wrapping != wrapped->name()) return false;
-              if (wrapping.empty() || wrapping != wrapped->name()) {;
+              if (wrapping.empty() || wrapping != wrapped->name()) {
+                ;
                 if (list->is_superselector_of(comp, wrapped->name())) return true;
               }
             }
@@ -608,13 +607,16 @@ namespace Sass {
         }
         Simple_Selector* rhs_sel = nullptr;
         if (rhs->elements().size() > i) rhs_sel = (*rhs)[i];
-        if (Wrapped_Selector* wrapped_r = Cast<Wrapped_Selector>(rhs_sel)) {
+        if (Pseudo_Selector * wrapped_r = Cast<Pseudo_Selector>(rhs_sel)) {
           if (wrapped->name() == wrapped_r->name()) {
-          if (wrapped->is_superselector_of(wrapped_r)) {
-             continue;
-          }}
+            if (wrapped->isSuperselectorOf(wrapped_r)) {
+              continue;
+            }
+          }
+        }
         }
       }
+
       lset.insert(wlhs);
     }
 
@@ -624,7 +626,7 @@ namespace Sass {
     for (size_t n = 0, nL = rhs->length(); n < nL; ++n)
     {
       Selector_Obj r = (*rhs)[n];
-      if (Wrapped_Selector_Obj wrapped = Cast<Wrapped_Selector>(r)) {
+      if (Pseudo_Selector_Obj wrapped = Cast<Pseudo_Selector>(r)) {
         if (wrapped->name() == ":not") {
           if (Selector_List_Obj ls = Cast<Selector_List>(wrapped->selector())) {
             ls->remove_parent_selectors(); // unverified
@@ -641,6 +643,9 @@ namespace Sass {
           }
         }
       }
+
+
+
       rset.insert(r);
     }
 
@@ -916,85 +921,6 @@ namespace Sass {
            (tail() && tail()->has_real_parent_ref());
   }
 
-  bool Complex_Selector::is_superselector_of(const Compound_Selector* rhs, std::string wrapping) const
-  {
-    return last()->head() && last()->head()->is_superselector_of(rhs, wrapping);
-  }
-
-  bool Complex_Selector::is_superselector_of(const Complex_Selector* rhs, std::string wrapping) const
-  {
-    const Complex_Selector* lhs = this;
-    // check for selectors with leading or trailing combinators
-    if (!lhs->head() || !rhs->head())
-    { return false; }
-    const Complex_Selector* l_innermost = lhs->last();
-    if (l_innermost->combinator() != Complex_Selector::ANCESTOR_OF)
-    { return false; }
-    const Complex_Selector* r_innermost = rhs->last();
-    if (r_innermost->combinator() != Complex_Selector::ANCESTOR_OF)
-    { return false; }
-    // more complex (i.e., longer) selectors are always more specific
-    size_t l_len = lhs->length(), r_len = rhs->length();
-    if (l_len > r_len)
-    { return false; }
-
-    if (l_len == 1)
-    { return lhs->head()->is_superselector_of(rhs->last()->head(), wrapping); }
-
-    // we have to look one tail deeper, since we cary the
-    // combinator around for it (which is important here)
-    if (rhs->tail() && lhs->tail() && combinator() != Complex_Selector::ANCESTOR_OF) {
-      Complex_Selector_Obj lhs_tail = lhs->tail();
-      Complex_Selector_Obj rhs_tail = rhs->tail();
-      if (lhs_tail->combinator() != rhs_tail->combinator()) return false;
-      if (lhs_tail->head() && !rhs_tail->head()) return false;
-      if (!lhs_tail->head() && rhs_tail->head()) return false;
-      if (lhs_tail->head() && rhs_tail->head()) {
-        if (!lhs_tail->head()->is_superselector_of(rhs_tail->head())) return false;
-      }
-    }
-
-    bool found = false;
-    const Complex_Selector* marker = rhs;
-    for (size_t i = 0, L = rhs->length(); i < L; ++i) {
-      if (i == L-1)
-      { return false; }
-      if (lhs->head() && marker->head() && lhs->head()->is_superselector_of(marker->head(), wrapping))
-      { found = true; break; }
-      marker = marker->tail();
-    }
-    if (!found)
-    { return false; }
-
-    /*
-      Hmm, I hope I have the logic right:
-
-      if lhs has a combinator:
-        if !(marker has a combinator) return false
-        if !(lhs.combinator == '~' ? marker.combinator != '>' : lhs.combinator == marker.combinator) return false
-        return lhs.tail-without-innermost.is_superselector_of(marker.tail-without-innermost)
-      else if marker has a combinator:
-        if !(marker.combinator == ">") return false
-        return lhs.tail.is_superselector_of(marker.tail)
-      else
-        return lhs.tail.is_superselector_of(marker.tail)
-    */
-    if (lhs->combinator() != Complex_Selector::ANCESTOR_OF)
-    {
-      if (marker->combinator() == Complex_Selector::ANCESTOR_OF)
-      { return false; }
-      if (!(lhs->combinator() == Complex_Selector::PRECEDES ? marker->combinator() != Complex_Selector::PARENT_OF : lhs->combinator() == marker->combinator()))
-      { return false; }
-      return lhs->tail()->is_superselector_of(marker->tail());
-    }
-    else if (marker->combinator() != Complex_Selector::ANCESTOR_OF)
-    {
-      if (marker->combinator() != Complex_Selector::PARENT_OF)
-      { return false; }
-      return lhs->tail()->is_superselector_of(marker->tail());
-    }
-    return lhs->tail()->is_superselector_of(marker->tail());
-  }
 
   size_t Complex_Selector::length() const
   {
@@ -1086,7 +1012,7 @@ namespace Sass {
     std::vector<ComplexSelector_Obj> rv;
 
     for (Simple_Selector_Obj ss : elements()) {
-      if (Wrapped_Selector * ws = Cast<Wrapped_Selector>(ss)) {
+      if (Pseudo_Selector * ws = Cast<Pseudo_Selector>(ss)) {
         if (Selector_List * sl = Cast<Selector_List>(ws->selector())) {
           if (parent) {
             SelectorList_Obj asd = sl->toSelList();
@@ -1095,6 +1021,7 @@ namespace Sass {
           }
         }
       }
+
     }
 
 
@@ -1349,6 +1276,123 @@ namespace Sass {
     // Check every rhs selector against left hand list
     for(size_t i = 0, L = sub->length(); i < L; ++i) {
       if (!is_superselector_of((*sub)[i], wrapping)) return false;
+    }
+    return true;
+  }
+
+  bool Complex_Selector::is_superselector_of(const Compound_Selector* rhs, std::string wrapping) const
+  {
+    return last()->head() && last()->head()->is_superselector_of(rhs, wrapping);
+  }
+
+  bool Complex_Selector::is_superselector_of(const Complex_Selector* rhs, std::string wrapping) const
+  {
+    const Complex_Selector* lhs = this;
+    // check for selectors with leading or trailing combinators
+    if (!lhs->head() || !rhs->head())
+    {
+      return false;
+    }
+    const Complex_Selector* l_innermost = lhs->last();
+    if (l_innermost->combinator() != Complex_Selector::ANCESTOR_OF)
+    {
+      return false;
+    }
+    const Complex_Selector* r_innermost = rhs->last();
+    if (r_innermost->combinator() != Complex_Selector::ANCESTOR_OF)
+    {
+      return false;
+    }
+    // more complex (i.e., longer) selectors are always more specific
+    size_t l_len = lhs->length(), r_len = rhs->length();
+    if (l_len > r_len)
+    {
+      return false;
+    }
+
+    if (l_len == 1)
+    {
+      return lhs->head()->is_superselector_of(rhs->last()->head(), wrapping);
+    }
+
+    // we have to look one tail deeper, since we cary the
+    // combinator around for it (which is important here)
+    if (rhs->tail() && lhs->tail() && combinator() != Complex_Selector::ANCESTOR_OF) {
+      Complex_Selector_Obj lhs_tail = lhs->tail();
+      Complex_Selector_Obj rhs_tail = rhs->tail();
+      if (lhs_tail->combinator() != rhs_tail->combinator()) return false;
+      if (lhs_tail->head() && !rhs_tail->head()) return false;
+      if (!lhs_tail->head() && rhs_tail->head()) return false;
+      if (lhs_tail->head() && rhs_tail->head()) {
+        if (!lhs_tail->head()->is_superselector_of(rhs_tail->head())) return false;
+      }
+    }
+
+    bool found = false;
+    const Complex_Selector* marker = rhs;
+    for (size_t i = 0, L = rhs->length(); i < L; ++i) {
+      if (i == L - 1)
+      {
+        return false;
+      }
+      if (lhs->head() && marker->head() && lhs->head()->is_superselector_of(marker->head(), wrapping))
+      {
+        found = true; break;
+      }
+      marker = marker->tail();
+    }
+    if (!found)
+    {
+      return false;
+    }
+
+    /*
+      Hmm, I hope I have the logic right:
+
+      if lhs has a combinator:
+        if !(marker has a combinator) return false
+        if !(lhs.combinator == '~' ? marker.combinator != '>' : lhs.combinator == marker.combinator) return false
+        return lhs.tail-without-innermost.is_superselector_of(marker.tail-without-innermost)
+      else if marker has a combinator:
+        if !(marker.combinator == ">") return false
+        return lhs.tail.is_superselector_of(marker.tail)
+      else
+        return lhs.tail.is_superselector_of(marker.tail)
+    */
+    if (lhs->combinator() != Complex_Selector::ANCESTOR_OF)
+    {
+      if (marker->combinator() == Complex_Selector::ANCESTOR_OF)
+      {
+        return false;
+      }
+      if (!(lhs->combinator() == Complex_Selector::PRECEDES ? marker->combinator() != Complex_Selector::PARENT_OF : lhs->combinator() == marker->combinator()))
+      {
+        return false;
+      }
+      return lhs->tail()->is_superselector_of(marker->tail());
+    }
+    else if (marker->combinator() != Complex_Selector::ANCESTOR_OF)
+    {
+      if (marker->combinator() != Complex_Selector::PARENT_OF)
+      {
+        return false;
+      }
+      return lhs->tail()->is_superselector_of(marker->tail());
+    }
+    return lhs->tail()->is_superselector_of(marker->tail());
+  }
+
+  bool ComplexSelector::isSuperselectorOf(const CompoundSelector* sub) const
+  {
+    std::cerr << "Implement cplx comp sup\n";
+    return false;
+  }
+
+  bool ComplexSelector::isSuperselectorOf(const SelectorList* sub) const
+  {
+    // Check every rhs selector against left hand list
+    for (size_t i = 0, L = sub->length(); i < L; ++i) {
+      if (!isSuperselectorOf((*sub)[i])) return false;
     }
     return true;
   }
@@ -2014,7 +2058,6 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Class_Selector);
   IMPLEMENT_AST_OPERATORS(Id_Selector);
   IMPLEMENT_AST_OPERATORS(Pseudo_Selector);
-  IMPLEMENT_AST_OPERATORS(Wrapped_Selector);
   IMPLEMENT_AST_OPERATORS(Selector_List);
 
 

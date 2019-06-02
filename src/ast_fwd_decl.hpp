@@ -113,7 +113,6 @@ namespace Sass {
   class Attribute_Selector;
 
   class Pseudo_Selector;
-  class Wrapped_Selector;
   class Compound_Selector;
   class Complex_Selector;
   class Selector_List;
@@ -209,7 +208,6 @@ namespace Sass {
   IMPL_MEM_OBJ(Id_Selector);
   IMPL_MEM_OBJ(Attribute_Selector);
   IMPL_MEM_OBJ(Pseudo_Selector);
-  IMPL_MEM_OBJ(Wrapped_Selector);
   IMPL_MEM_OBJ(Compound_Selector);
   IMPL_MEM_OBJ(Complex_Selector);
   IMPL_MEM_OBJ(Selector_List);

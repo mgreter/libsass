@@ -267,7 +267,7 @@ namespace Sass {
     CompoundSelector_Obj parseCompoundSelector();
     Compound_Selector_Obj parse_compound_selector();
     Simple_Selector_Obj parse_simple_selector();
-    Wrapped_Selector_Obj parse_negated_selector();
+    Pseudo_Selector_Obj parse_negated_selector2();
     Simple_Selector_Obj parse_pseudo_selector();
     Attribute_Selector_Obj parse_attribute_selector();
     Block_Obj parse_block(bool is_root = false);

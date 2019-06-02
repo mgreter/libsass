@@ -1950,53 +1950,80 @@ namespace Sass {
           // create a copy since we add multiple items if stuff get unwrapped
           Compound_Selector_Obj cpy_head = SASS_MEMORY_NEW(Compound_Selector, cur->pstate());
           for (Simple_Selector_Obj hs : *cur->head()) {
-            if (Wrapped_Selector_Obj ws = Cast<Wrapped_Selector>(hs)) {
-              ws->selector(SASS_MEMORY_CLONE(ws->selector()));
-              if (Selector_List_Obj sl = Cast<Selector_List>(ws->selector())) {
-                // special case for ruby ass
-                if (sl->empty()) {
-                  // this seems inconsistent but it is how ruby sass seems to remove parentheses
-                  cpy_head->append(SASS_MEMORY_NEW(Type_Selector, hs->pstate(), ws->name()));
-                }
-                // has wrapped not selectors
-                else if (ws->name() == ":not") {
-                  // extend the inner list of wrapped selector
-                  bool extended = false;
-                  Selector_List_Obj ext_sl = extendSelectorList(sl, false, extended, recseen);
-                  for (size_t i = 0; i < ext_sl->length(); i += 1) {
-                    if (Complex_Selector_Obj ext_cs = ext_sl->at(i)) {
-                      // create clones for wrapped selector and the inner list
-                      Wrapped_Selector_Obj cpy_ws = SASS_MEMORY_COPY(ws);
-                      Selector_List_Obj cpy_ws_sl = SASS_MEMORY_NEW(Selector_List, sl->pstate());
-                      // remove parent selectors from inner selector
-                      Compound_Selector_Obj ext_head;
-                      if (ext_cs->first()) ext_head = ext_cs->first()->head();
-                      if (ext_head && ext_head && ext_head->length() > 0) {
-                        cpy_ws_sl->append(ext_cs->mutable_first());
+
+
+
+
+
+
+
+
+
+
+              if (Pseudo_Selector_Obj ws = Cast<Pseudo_Selector>(hs)) {
+                if (ws->selector()) {
+                  ws->selector(SASS_MEMORY_CLONE(ws->selector()));
+                  if (Selector_List_Obj sl = Cast<Selector_List>(ws->selector())) {
+                    // special case for ruby ass
+                    if (sl->empty()) {
+                      // this seems inconsistent but it is how ruby sass seems to remove parentheses
+                      cpy_head->append(SASS_MEMORY_NEW(Type_Selector, hs->pstate(), ws->name()));
+                    }
+                    // has wrapped not selectors
+                    else if (ws->name() == ":not") {
+                      // extend the inner list of wrapped selector
+                      bool extended = false;
+                      Selector_List_Obj ext_sl = extendSelectorList(sl, false, extended, recseen);
+                      for (size_t i = 0; i < ext_sl->length(); i += 1) {
+                        if (Complex_Selector_Obj ext_cs = ext_sl->at(i)) {
+                          // create clones for wrapped selector and the inner list
+                          Pseudo_Selector_Obj cpy_ws = SASS_MEMORY_COPY(ws);
+                          Selector_List_Obj cpy_ws_sl = SASS_MEMORY_NEW(Selector_List, sl->pstate());
+                          // remove parent selectors from inner selector
+                          Compound_Selector_Obj ext_head;
+                          if (ext_cs->first()) ext_head = ext_cs->first()->head();
+                          if (ext_head && ext_head && ext_head->length() > 0) {
+                            cpy_ws_sl->append(ext_cs->mutable_first());
+                          }
+                          // assign list to clone
+                          cpy_ws->selector(cpy_ws_sl);
+                          // append the clone
+                          cpy_head->append(cpy_ws);
+                        }
                       }
-                      // assign list to clone
-                      cpy_ws->selector(cpy_ws_sl);
-                      // append the clone
+                      if (eval && extended) {
+                        eval->exp.pushToSelectorStack(pNewSelectors->toSelList());
+                        Selector_List_Obj tmp = cpy_head->perform(eval);
+                        eval->exp.popFromSelectorStack();
+                      }
+                    }
+                    // has wrapped selectors
+                    else {
+                      Pseudo_Selector_Obj cpy_ws = SASS_MEMORY_COPY(ws);
+                      Selector_List_Obj ext_sl = extendSelectorList(sl, recseen);
+                      cpy_ws->selector(ext_sl);
                       cpy_head->append(cpy_ws);
                     }
                   }
-                  if (eval && extended) {
-                    eval->exp.pushToSelectorStack(pNewSelectors->toSelList());
-                    Selector_List_Obj tmp = cpy_head->perform(eval);
-                    eval->exp.popFromSelectorStack();
+                  else {
+                    cpy_head->append(hs);
                   }
                 }
-                // has wrapped selectors
                 else {
-                  Wrapped_Selector_Obj cpy_ws = SASS_MEMORY_COPY(ws);
-                  Selector_List_Obj ext_sl = extendSelectorList(sl, recseen);
-                  cpy_ws->selector(ext_sl);
-                  cpy_head->append(cpy_ws);
+                  cpy_head->append(hs);
                 }
-              } else {
-                cpy_head->append(hs);
               }
-            } else {
+
+
+
+
+
+
+
+
+
+
+            else {
               cpy_head->append(hs);
             }
           }

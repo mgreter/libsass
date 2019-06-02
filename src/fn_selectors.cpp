@@ -250,9 +250,12 @@ namespace Sass {
     Signature is_superselector_sig = "is-superselector($super, $sub)";
     BUILT_IN(is_superselector)
     {
-      Selector_List_Obj  sel_sup = ARGSELS("$super");
-      Selector_List_Obj  sel_sub = ARGSELS("$sub");
-      bool result = sel_sup->is_superselector_of(sel_sub);
+      Selector_List_Obj  sel_sups = ARGSELS("$super");
+      Selector_List_Obj  sel_subs = ARGSELS("$sub");
+      SelectorList_Obj  sel_sup = toSelectorList(sel_sups);
+      SelectorList_Obj  sel_sub = toSelectorList(sel_subs);
+
+      bool result = sel_sup->isSuperselectorOf(sel_sub);
       return SASS_MEMORY_NEW(Boolean, pstate, result);
     }
 

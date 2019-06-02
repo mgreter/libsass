@@ -702,7 +702,6 @@ namespace Sass {
     }
     // expand and eval the tree
     root = expand(root);
- //   debug_ast(root);
     // check nesting
     check_nesting(root);
     // merge and bubble certain rules

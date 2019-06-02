@@ -1591,13 +1591,13 @@ namespace Sass {
   // be fixed by implement superselector correctly for `:not`
   // first use of "find" (ATM only implemented for selectors)
   bool hasNotSelector(AST_Node_Obj obj) {
-    if (Wrapped_Selector* w = Cast<Wrapped_Selector>(obj)) {
+    if (Pseudo_Selector * w = Cast<Pseudo_Selector>(obj)) {
       return w->name() == ":not";
     }
     return false;
   }
 
-  Wrapped_Selector* Eval::operator()(Wrapped_Selector* s)
+  Pseudo_Selector* Eval::operator()(Pseudo_Selector* s)
   {
     if (s->name() == ":not") {
       auto stack = exp.getSelectorStack2();
@@ -1605,7 +1605,8 @@ namespace Sass {
         if (s->selector()->find(hasNotSelector)) {
           s->selector()->clear();
           s->name(" ");
-        } else {
+        }
+        else {
           for (size_t i = 0; i < s->selector()->length(); ++i) {
             Complex_Selector* cs = s->selector()->at(i);
             if (cs->tail()) {

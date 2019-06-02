@@ -59,8 +59,8 @@ namespace Sass {
             while (cs) {
               if (cs->head()) {
                 for (Simple_Selector_Obj& ss : cs->head()->elements()) {
-                  if (Wrapped_Selector* ws = Cast<Wrapped_Selector>(ss)) {
-                    if (Selector_List* wsl = Cast<Selector_List>(ws->selector())) {
+                  if (Pseudo_Selector * ws = Cast<Pseudo_Selector>(ss)) {
+                    if (Selector_List * wsl = Cast<Selector_List>(ws->selector())) {
                       Selector_List* clean = remove_placeholders(wsl);
                       // also clean superflous parent selectors
                       // probably not really the correct place
@@ -68,6 +68,7 @@ namespace Sass {
                       ws->selector(clean);
                     }
                   }
+
                 }
               }
               cs = cs->tail();

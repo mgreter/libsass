@@ -87,12 +87,11 @@ namespace Sass {
     Selector_List* operator()(Complex_Selector*);
     Compound_Selector* operator()(Compound_Selector*);
     Simple_Selector* operator()(Simple_Selector* s);
-    Wrapped_Selector* operator()(Wrapped_Selector* s);
+    Pseudo_Selector* operator()(Pseudo_Selector* s);
 
     // they don't have any specific implementation (yet)
     Id_Selector* operator()(Id_Selector* s) { return s; };
     Class_Selector* operator()(Class_Selector* s) { return s; };
-    Pseudo_Selector* operator()(Pseudo_Selector* s) { return s; };
     Type_Selector* operator()(Type_Selector* s) { return s; };
     Attribute_Selector* operator()(Attribute_Selector* s) { return s; };
     Placeholder_Selector* operator()(Placeholder_Selector* s) { return s; };

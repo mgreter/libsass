@@ -892,7 +892,6 @@ namespace Sass {
       case CLASS_SEL: return (const Class_Selector&) *this == rhs; break;
       case PARENT_SEL: return (const Parent_Selector&) *this == rhs; break;
       case PSEUDO_SEL: return (const Pseudo_Selector&) *this == rhs; break;
-      case WRAPPED_SEL: return (const Wrapped_Selector&) *this == rhs; break;
       case ATTRIBUTE_SEL: return (const Attribute_Selector&) *this == rhs; break;
       case PLACEHOLDER_SEL: return (const Placeholder_Selector&) *this == rhs; break;
     }
@@ -929,12 +928,6 @@ namespace Sass {
   bool Pseudo_Selector::operator== (const Simple_Selector& rhs) const
   {
     auto sel = Cast<Pseudo_Selector>(&rhs);
-    return sel ? *this == *sel : false;
-  }
-
-  bool Wrapped_Selector::operator== (const Simple_Selector& rhs) const
-  {
-    auto sel = Cast<Wrapped_Selector>(&rhs);
     return sel ? *this == *sel : false;
   }
 
@@ -995,15 +988,12 @@ namespace Sass {
     if (lname != rname) return false;
     String_Obj lhs_ex = expression();
     String_Obj rhs_ex = rhs.expression();
-    if (rhs_ex && lhs_ex) return *lhs_ex == *rhs_ex;
-    else return lhs_ex.ptr() == rhs_ex.ptr();
-  }
-
-  bool Wrapped_Selector::operator== (const Wrapped_Selector& rhs) const
-  {
-    // Wrapped has no namespacing
-    if (name() != rhs.name()) return false;
-    return *(selector()) == *(rhs.selector());
+    Selector_List_Obj lhs_sel = selector();
+    Selector_List_Obj rhs_sel = rhs.selector();
+    if (rhs_sel && lhs_sel) return *lhs_sel == *rhs_sel;
+    else if (rhs_ex && lhs_ex) return *lhs_ex == *rhs_ex;
+    else return lhs_ex.ptr() == rhs_ex.ptr()
+      && lhs_sel.ptr() == rhs_sel.ptr();
   }
 
   bool Attribute_Selector::operator== (const Attribute_Selector& rhs) const
@@ -1045,7 +1035,6 @@ namespace Sass {
       case CLASS_SEL: return (const Class_Selector&) *this < rhs; break;
       case PARENT_SEL: return (const Parent_Selector&) *this < rhs; break;
       case PSEUDO_SEL: return (const Pseudo_Selector&) *this < rhs; break;
-      case WRAPPED_SEL: return (const Wrapped_Selector&) *this < rhs; break;
       case ATTRIBUTE_SEL: return (const Attribute_Selector&) *this < rhs; break;
       case PLACEHOLDER_SEL: return (const Placeholder_Selector&) *this < rhs; break;
     }
@@ -1120,23 +1109,6 @@ namespace Sass {
     }
     const Pseudo_Selector& sel =
       (const Pseudo_Selector&) rhs;
-    return *this < sel;
-  }
-
-  bool Wrapped_Selector::operator< (const Simple_Selector& rhs) const
-  {
-    switch (rhs.simple_type()) {
-      case ID_SEL: return '(' < '#'; break;
-      case TYPE_SEL: return '(' < 's'; break;
-      case CLASS_SEL: return '(' < '.'; break;
-      case PARENT_SEL: return '(' < '&'; break;
-      case PSEUDO_SEL: return '(' < ':'; break;
-      case ATTRIBUTE_SEL: return '(' < '['; break;
-      case PLACEHOLDER_SEL: return '(' < '%'; break;
-      case WRAPPED_SEL: /* let if fall through */ break;
-    }
-    const Wrapped_Selector& sel =
-      (const Wrapped_Selector&) rhs;
     return *this < sel;
   }
 
@@ -1241,16 +1213,12 @@ namespace Sass {
     { return lname < rname; }
     String_Obj lhs_ex = expression();
     String_Obj rhs_ex = rhs.expression();
-    if (rhs_ex && lhs_ex) return *lhs_ex < *rhs_ex;
-    else return lhs_ex.ptr() < rhs_ex.ptr();
-  }
-
-  bool Wrapped_Selector::operator< (const Wrapped_Selector& rhs) const
-  {
-    // Wrapped has no namespacing
-    if (name() != rhs.name())
-    { return name() < rhs.name(); }
-    return *(selector()) < *(rhs.selector());
+    Selector_List_Obj lhs_sel = selector();
+    Selector_List_Obj rhs_sel = rhs.selector();
+    if (rhs_sel && lhs_sel) return *lhs_sel < *rhs_sel;
+    else if (rhs_ex && lhs_ex) return *lhs_ex < *rhs_ex;
+    else return lhs_ex.ptr() < rhs_ex.ptr()
+      && lhs_sel.ptr() < rhs_sel.ptr();
   }
 
   bool Attribute_Selector::operator< (const Attribute_Selector& rhs) const
@@ -1279,9 +1247,55 @@ namespace Sass {
   {
     return combinator() < rhs.combinator();
   }
+
   bool SelectorCombinator::operator==(const SelectorCombinator& rhs) const
   {
     return combinator() == rhs.combinator();
+  }
+
+  /*#########################################################################*/
+  /*#########################################################################*/
+
+  bool SelectorCombinator::operator==(const CompoundOrCombinator& rhs) const
+  {
+    if (const SelectorCombinator* sel = Cast<SelectorCombinator>(&rhs)) {
+      return operator==(*sel);
+    }
+    return false;
+  }
+
+  bool SelectorCombinator::operator<(const CompoundOrCombinator& rhs) const
+  {
+    if (const SelectorCombinator* sel = Cast<SelectorCombinator>(&rhs)) {
+      return operator<(*sel);
+    }
+    return false;
+  }
+
+  bool CompoundSelector::operator==(const CompoundOrCombinator& rhs) const
+  {
+    if (const CompoundSelector* sel = Cast<CompoundSelector>(&rhs)) {
+      return operator==(*sel);
+    }
+    return false;
+  }
+
+  bool CompoundSelector::operator<(const CompoundOrCombinator& rhs) const
+  {
+    if (const CompoundSelector* sel = Cast<CompoundSelector>(&rhs)) {
+      return operator<(*sel);
+    }
+    return false;
+  }
+
+  bool Selector_Schema::operator==(const Selector_Schema& rhs) const
+  {
+    return false;
+  }
+
+  bool Selector_Schema::operator<(const Selector_Schema& rhs) const
+  {
+    return false;
   }
 
   /*#########################################################################*/

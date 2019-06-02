@@ -110,6 +110,12 @@ namespace Sass {
     void update_pstate(const ParserState& pstate);
     Offset off() { return pstate(); }
     Position pos() { return pstate(); }
+
+    virtual bool operator< (const AST_Node& rhs) const { return false; }
+    virtual bool operator== (const AST_Node& rhs) const { return false; }
+    virtual bool operator> (const AST_Node& rhs) const { return rhs < *this; }
+    virtual bool operator!= (const AST_Node& rhs) const { return !(rhs == *this); }
+
     ATTACH_ABSTRACT_AST_OPERATIONS(AST_Node);
     ATTACH_ABSTRACT_CRTP_PERFORM_METHODS()
   };

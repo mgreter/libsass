@@ -94,10 +94,22 @@ private:
   virtual klass* copy() const override = 0; \
   virtual klass* clone() const override = 0; \
 
+#define ATTACH_VIRTUAL_CMP_OPERATIONS(klass) \
+  virtual bool operator<(const klass& rhs) const = 0; \
+  virtual bool operator==(const klass& rhs) const = 0; \
+  virtual bool operator>(const klass& rhs) const { return rhs < *this; }; \
+  virtual bool operator!=(const klass& rhs) const { return !(rhs == *this); }; \
+
 #define ATTACH_AST_OPERATIONS(klass) \
   klass(const klass* ptr); \
   virtual klass* copy() const override; \
   virtual klass* clone() const override; \
+
+#define ATTACH_CMP_OPERATIONS(klass) \
+  virtual bool operator<(const klass& rhs) const; \
+  virtual bool operator==(const klass& rhs) const; \
+  virtual bool operator>(const klass& rhs) const { return rhs < *this; }; \
+  virtual bool operator!=(const klass& rhs) const { return !(rhs == *this); }; \
 
 #endif
 

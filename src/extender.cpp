@@ -14,6 +14,7 @@
 #include "expand.hpp"
 #include "node.hpp"
 #include "sass_util.hpp"
+#include "dart_helpers.hpp"
 #include "remove_placeholders.hpp"
 #include "debugger.hpp"
 #include "debug.hpp"
@@ -186,7 +187,7 @@ namespace Sass {
       sels = paths(extendedNotExpanded);
 
     for (std::vector<ComplexSelector_Obj> path : sels) {
-
+      // weave()
     }
 
     return {};
@@ -253,29 +254,6 @@ namespace Sass {
       // false; // complex2.minSpecificity >= maxSpecificity && complex2->is_superselector_of(complex1));
   }
 
-  // Equivalent to dart `cnt.any`
-  // Pass additional closure variables to `fn`
-  template <class T, class U, typename ...Args>
-  bool hasAny(T cnt, U fn, Args... args) {
-    for (auto item : cnt) {
-      if (fn(item, args...)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // Equivalent to dart `cnt.take(len).any`
-  // Pass additional closure variables to `fn`
-  template <class T, class U, typename ...Args>
-  bool hasSubAny(T cnt, size_t len, U fn, Args... args) {
-    for (size_t i = 0; i < len; i++) {
-      if (fn(cnt[i], args...)) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   // Rotates the element in list from [start] (inclusive) to [end] (exclusive)
   // one index higher, looping the final element back to [start].

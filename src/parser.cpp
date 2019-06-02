@@ -697,7 +697,7 @@ namespace Sass {
       return SASS_MEMORY_NEW(Type_Selector, pstate, lexed);
     }
     else if (peek< pseudo_not >()) {
-      return parse_negated_selector();
+      return parse_negated_selector2();
     }
     else if (peek< re_pseudo_selector >()) {
       return parse_pseudo_selector();
@@ -720,7 +720,7 @@ namespace Sass {
     return {};
   }
 
-  Wrapped_Selector_Obj Parser::parse_negated_selector()
+  Pseudo_Selector_Obj Parser::parse_negated_selector2()
   {
     lex< pseudo_not >();
     std::string name(lexed);
@@ -730,7 +730,13 @@ namespace Sass {
       error("negated selector is missing ')'");
     }
     name.erase(name.size() - 1);
-    return SASS_MEMORY_NEW(Wrapped_Selector, nsource_position, name, negated);
+
+    Pseudo_Selector* sel = SASS_MEMORY_NEW(Pseudo_Selector, nsource_position, name);
+    // debug_ast(negated);
+    sel->selector(negated);
+    return sel;
+
+    // return SASS_MEMORY_NEW(Wrapped_Selector, nsource_position, name, negated);
   }
 
   // a pseudo selector often starts with one or two colons
@@ -766,13 +772,19 @@ namespace Sass {
         String_Constant_Obj expr = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
         if (lex_css< exactly<')'> >()) {
           expr->can_compress_whitespace(true);
-          return SASS_MEMORY_NEW(Pseudo_Selector, p, name, expr);
+          Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name);
+          pseudo->expression(expr);
+          return pseudo;
         }
       }
       else if (SelectorList_Obj wrapped2 = parseSelectorList(true)) {
         Selector_List_Obj wrapped = wrapped2->toSelectorList();
         if (wrapped && lex_css< exactly<')'> >()) {
-          return SASS_MEMORY_NEW(Wrapped_Selector, p, name, wrapped);
+
+          Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name);
+          pseudo->selector(wrapped);
+          return pseudo;
+
         }
       }
 
