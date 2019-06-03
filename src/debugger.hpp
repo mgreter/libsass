@@ -9,6 +9,9 @@
 #include "ast_fwd_decl.hpp"
 #include "extension.hpp"
 
+#include "tsl/ordered_map.h"
+#include "tsl/ordered_set.h"
+
 using namespace Sass;
 
 inline void debug_ast(AST_Node* node, std::string ind = "", Env* env = 0);
@@ -58,11 +61,48 @@ template <class T, class U, class O>
 inline std::string debug_vec(std::map<T, U, O> vec) {
   std::stringstream out;
   out << "{";
+  bool joinit = false;
   for (auto it = vec.begin(); it != vec.end(); it++)
   {
+    if (joinit) out << ", ";
     out << debug_vec(it->first) // string (key)
       << ": "
-      << debug_vec(it->second); // string's value 
+      << debug_vec(it->second); // string's value
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
+template <class T, class U, class O, class V>
+inline std::string debug_vec(std::unordered_map<T, U, O, V> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto it = vec.begin(); it != vec.end(); it++)
+  {
+    if (joinit) out << ", ";
+    out << debug_vec(it->first) // string (key)
+      << ": "
+      << debug_vec(it->second); // string's value
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
+template <class T, class U, class O, class V>
+inline std::string debug_vec(tsl::ordered_map<T, U, O, V> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto it = vec.begin(); it != vec.end(); it++)
+  {
+    if (joinit) out << ", ";
+    out << debug_vec(it->first) // string (key)
+      << ": "
+      << debug_vec(const_cast<U&>(it->second)); // string's value
+    joinit = true;
   }
   out << "}";
   return out.str();
@@ -70,6 +110,20 @@ inline std::string debug_vec(std::map<T, U, O> vec) {
 
 template <class T, class U>
 inline std::string debug_vec(std::set<T, U> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto item : vec) {
+    if (joinit) out << ", ";
+    out << debug_vec(item);
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
+template <class T, class U, class O, class V>
+inline std::string debug_vec(tsl::ordered_set<T, U, O, V> vec) {
   std::stringstream out;
   out << "{";
   bool joinit = false;

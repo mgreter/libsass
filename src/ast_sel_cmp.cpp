@@ -54,6 +54,7 @@ namespace Sass {
 
   bool SelectorList::operator== (const Selector& rhs) const
   {
+    std::cerr << "ASDASD\n";
     if (auto sl = Cast<Selector_List>(&rhs)) { return *this == *sl; }
     else if (auto ss = Cast<Simple_Selector>(&rhs)) { return *this == *ss; }
     else if (auto cpx = Cast<Complex_Selector>(&rhs)) { return *this == *cpx; }
@@ -79,14 +80,26 @@ namespace Sass {
 
   bool Selector_List::operator== (const Selector& rhs) const
   {
-    if (auto sl = Cast<Selector_List>(&rhs)) { return *this == *sl; }
+    if (doDebug) std::cerr << "FOOBAR\n";
+    if (auto sl = Cast<Selector_List>(&rhs)) {
+      if (doDebug) std::cerr << " 1\n";
+      return *this == *sl; }
     else if (auto ss = Cast<Simple_Selector>(&rhs)) { return *this == *ss; }
-    else if (auto cpx = Cast<Complex_Selector>(&rhs)) { return *this == *cpx; }
+    else if (auto cpx = Cast<Complex_Selector>(&rhs)) {
+      if (doDebug) std::cerr << " 5\n";
+      return *this == *cpx; }
     else if (auto cpd = Cast<Compound_Selector>(&rhs)) { return *this == *cpd; }
-    else if (auto sel = Cast<SelectorList>(&rhs)) { return *this == *sel; }
-    else if (auto sel = Cast<ComplexSelector>(&rhs)) { return *this == *sel; }
+    else if (auto sel = Cast<SelectorList>(&rhs)) {
+      auto qwe = sel->toSelectorList();
+      if (doDebug) std::cerr << " 2\n";
+      return *this == *qwe; }
+    else if (auto sel = Cast<ComplexSelector>(&rhs)) {
+      if (doDebug) std::cerr << " 4\n";
+      return *this == *sel; }
     else if (auto sel = Cast<CompoundSelector>(&rhs)) { return *this == *sel; }
-    else if (auto ls = Cast<List>(&rhs)) { return *this == *ls; }
+    else if (auto ls = Cast<List>(&rhs)) {
+      if (doDebug) std::cerr << " 3\n";
+      return *this == *ls; }
     throw std::runtime_error("invalid selector base classes to compare");
   }
 
@@ -1051,7 +1064,6 @@ namespace Sass {
       case CLASS_SEL: return '#' < '.'; break;
       case PARENT_SEL: return '#' < '&'; break;
       case PSEUDO_SEL: return '#' < ':'; break;
-      case WRAPPED_SEL: return '#' < '('; break;
       case ATTRIBUTE_SEL: return '#' < '['; break;
       case PLACEHOLDER_SEL: return '#' < '%'; break;
       case ID_SEL: /* let if fall through */ break;
@@ -1068,7 +1080,6 @@ namespace Sass {
       case CLASS_SEL: return 'e' < '.'; break;
       case PARENT_SEL: return 'e' < '&'; break;
       case PSEUDO_SEL: return 'e' < ':'; break;
-      case WRAPPED_SEL: return 'e' < '('; break;
       case ATTRIBUTE_SEL: return 'e' < '['; break;
       case PLACEHOLDER_SEL: return 'e' < '%'; break;
       case TYPE_SEL: /* let if fall through */ break;
@@ -1085,7 +1096,6 @@ namespace Sass {
       case TYPE_SEL: return '.' < 's'; break;
       case PARENT_SEL: return '.' < '&'; break;
       case PSEUDO_SEL: return '.' < ':'; break;
-      case WRAPPED_SEL: return '.' < '('; break;
       case ATTRIBUTE_SEL: return '.' < '['; break;
       case PLACEHOLDER_SEL: return '.' < '%'; break;
       case CLASS_SEL: /* let if fall through */ break;
@@ -1102,7 +1112,6 @@ namespace Sass {
       case TYPE_SEL: return ':' < 's'; break;
       case CLASS_SEL: return ':' < '.'; break;
       case PARENT_SEL: return ':' < '&'; break;
-      case WRAPPED_SEL: return ':' < '('; break;
       case ATTRIBUTE_SEL: return ':' < '['; break;
       case PLACEHOLDER_SEL: return ':' < '%'; break;
       case PSEUDO_SEL: /* let if fall through */ break;
@@ -1119,7 +1128,6 @@ namespace Sass {
       case TYPE_SEL: return '&' < 's'; break;
       case CLASS_SEL: return '&' < '.'; break;
       case PSEUDO_SEL: return '&' < ':'; break;
-      case WRAPPED_SEL: return '&' < '('; break;
       case ATTRIBUTE_SEL: return '&' < '['; break;
       case PLACEHOLDER_SEL: return '&' < '%'; break;
       case PARENT_SEL: /* let if fall through */ break;
@@ -1137,7 +1145,6 @@ namespace Sass {
       case CLASS_SEL: return '[' < '.'; break;
       case PARENT_SEL: return '[' < '&'; break;
       case PSEUDO_SEL: return '[' < ':'; break;
-      case WRAPPED_SEL: return '[' < '('; break;
       case PLACEHOLDER_SEL: return '[' < '%'; break;
       case ATTRIBUTE_SEL: /* let if fall through */ break;
     }
@@ -1154,7 +1161,6 @@ namespace Sass {
       case CLASS_SEL: return '%' < '.'; break;
       case PARENT_SEL: return '%' < '&'; break;
       case PSEUDO_SEL: return '%' < ':'; break;
-      case WRAPPED_SEL: return '%' < '('; break;
       case ATTRIBUTE_SEL: return '%' < '['; break;
       case PLACEHOLDER_SEL: /* let if fall through */ break;
     }

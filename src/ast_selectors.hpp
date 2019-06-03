@@ -36,6 +36,8 @@
 
 namespace Sass {
 
+  std::string normName(std::string str);
+
   /////////////////////////////////////////////////////////////////////////
   // Some helper functions
   /////////////////////////////////////////////////////////////////////////
@@ -132,7 +134,6 @@ namespace Sass {
       CLASS_SEL,
       PSEUDO_SEL,
       PARENT_SEL,
-      WRAPPED_SEL,
       ATTRIBUTE_SEL,
       PLACEHOLDER_SEL,
     };
@@ -160,6 +161,9 @@ namespace Sass {
     virtual ~Simple_Selector() = 0;
     virtual CompoundSelector* unify_with(CompoundSelector*);
     virtual Compound_Selector* unify_with(Compound_Selector*);
+
+    ComplexSelector_Obj wrapInComplex();
+    CompoundSelector_Obj wrapInCompound();
 
     virtual bool has_parent_ref() const override;
     virtual bool has_real_parent_ref() const override;
@@ -365,6 +369,8 @@ namespace Sass {
       return Constants::UnificationOrder_PseudoClass;
     }
 
+    Pseudo_Selector_Obj withSelector(SelectorList_Obj selector);
+
     bool isSuperselectorOf(const Pseudo_Selector* sub) const;
 
     bool operator<(const Simple_Selector& rhs) const final override;
@@ -381,7 +387,7 @@ namespace Sass {
   // Simple selector sequences. Maintains flags indicating whether it contains
   // any parent references or placeholders, to simplify expansion.
   ////////////////////////////////////////////////////////////////////////////
-  class Compound_Selector final : public Selector, public Vectorized<Simple_Selector_Obj> {
+  class Compound_Selector final : public Selector, public Vectorized<Simple_Selector_Obj, Compound_Selector> {
   private:
     ComplexSelectorSet sources_;
     ADD_PROPERTY(bool, extended);
@@ -527,7 +533,7 @@ namespace Sass {
   // Complex Selectors are itself a list of Compounds and Combinators
   // Between each item there is an implicit ancestor of combinator
   ////////////////////////////////////////////////////////////////////////////
-  class ComplexSelector final : public Selector, public Vectorized<CompoundOrCombinator_Obj> {
+  class ComplexSelector final : public Selector, public Vectorized<CompoundOrCombinator_Obj, ComplexSelector> {
     ADD_PROPERTY(bool, chroots)
   public:
     ComplexSelector(ParserState pstate);
@@ -552,6 +558,8 @@ namespace Sass {
     bool isSuperselectorOf(const CompoundSelector* sub) const;
     bool isSuperselectorOf(const ComplexSelector* sub) const;
     bool isSuperselectorOf(const SelectorList* sub) const;
+
+    SelectorList_Obj wrapInList();
 
     bool operator<(const Selector& rhs) const override;
     bool operator==(const Selector& rhs) const override;
@@ -648,7 +656,7 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////////
   // A compound selector consists of multiple simple selectors
   ////////////////////////////////////////////////////////////////////////////
-  class CompoundSelector final : public CompoundOrCombinator, public Vectorized<Simple_Selector_Obj> {
+  class CompoundSelector final : public CompoundOrCombinator, public Vectorized<Simple_Selector_Obj, CompoundSelector> {
     ADD_PROPERTY(bool, hasRealParent)
     ADD_PROPERTY(bool, extended)
   public:
@@ -698,7 +706,7 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class SelectorList final : public Selector, public Vectorized<ComplexSelector_Obj> {
+  class SelectorList final : public Selector, public Vectorized<ComplexSelector_Obj, SelectorList> {
     ADD_PROPERTY(Selector_Schema_Obj, schemaOnlyToCopy)
   public:
     SelectorList(ParserState pstate, size_t s = 0);
@@ -746,7 +754,7 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class Selector_List final : public Selector, public Vectorized<Complex_Selector_Obj> {
+  class Selector_List final : public Selector, public Vectorized<Complex_Selector_Obj, Selector_List> {
     ADD_PROPERTY(Selector_Schema_Obj, schema)
   protected:
     void adjust_after_pushing(Complex_Selector_Obj c) override;

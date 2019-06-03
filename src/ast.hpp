@@ -36,6 +36,8 @@
 
 namespace Sass {
 
+  extern bool doDebug;
+
   // easier to search with name
   const bool DELAYED = true;
 
@@ -92,6 +94,7 @@ namespace Sass {
     // allow implicit conversion to string
     // needed for by SharedPtr implementation
     operator std::string() {
+      if (doDebug) std::cerr << "";
       return to_string();
     }
 
@@ -224,7 +227,7 @@ namespace Sass {
   // "Template Method" design pattern to allow subclasses to adjust their flags
   // when certain objects are pushed.
   /////////////////////////////////////////////////////////////////////////////
-  template <typename T>
+  template <typename T, typename U>
   class Vectorized {
     std::vector<T> elements_;
   protected:
@@ -260,13 +263,15 @@ namespace Sass {
         adjust_after_pushing(element);
       }
     }
-    virtual void concat(Vectorized* v)
+    virtual U* concat(Vectorized* v)
     {
       elements().insert(elements().end(), v->begin(), v->end());
+      return static_cast<U*>(this);
     }
-    virtual void concat(std::vector<T> v)
+    virtual U* concat(std::vector<T> v)
     {
       elements().insert(elements().end(), v.begin(), v.end());
+      return static_cast<U*>(this);
     }
     Vectorized& unshift(T element)
     {
@@ -301,8 +306,8 @@ namespace Sass {
     typename std::vector<T>::const_iterator erase(typename std::vector<T>::const_iterator el) { return elements_.erase(el); }
 
   };
-  template <typename T>
-  inline Vectorized<T>::~Vectorized() { }
+  template <typename T, typename U>
+  inline Vectorized<T, U>::~Vectorized() { }
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
@@ -421,7 +426,7 @@ namespace Sass {
   ////////////////////////
   // Blocks of statements.
   ////////////////////////
-  class Block final : public Statement, public Vectorized<Statement_Obj> {
+  class Block final : public Statement, public Vectorized<Statement_Obj, Block> {
     ADD_PROPERTY(bool, is_root)
     // needed for properly formatted CSS emission
   protected:
@@ -811,7 +816,7 @@ namespace Sass {
   // error checking (e.g., ensuring that all ordinal arguments precede all
   // named arguments).
   ////////////////////////////////////////////////////////////////////////
-  class Arguments final : public Expression, public Vectorized<Argument_Obj> {
+  class Arguments final : public Expression, public Vectorized<Argument_Obj, Arguments> {
     ADD_PROPERTY(bool, has_named_arguments)
     ADD_PROPERTY(bool, has_rest_argument)
     ADD_PROPERTY(bool, has_keyword_argument)
@@ -830,7 +835,7 @@ namespace Sass {
   // Media queries.
   /////////////////
   class Media_Query final : public Expression,
-                            public Vectorized<Media_Query_Expression_Obj> {
+                            public Vectorized<Media_Query_Expression_Obj, Media_Query> {
     ADD_PROPERTY(String_Obj, media_type)
     ADD_PROPERTY(bool, is_negated)
     ADD_PROPERTY(bool, is_restricted)
@@ -898,7 +903,7 @@ namespace Sass {
   // error checking (e.g., ensuring that all optional parameters follow all
   // required parameters).
   /////////////////////////////////////////////////////////////////////////
-  class Parameters final : public AST_Node, public Vectorized<Parameter_Obj> {
+  class Parameters final : public AST_Node, public Vectorized<Parameter_Obj, Parameters> {
     ADD_PROPERTY(bool, has_optional_parameters)
     ADD_PROPERTY(bool, has_rest_parameter)
   protected:

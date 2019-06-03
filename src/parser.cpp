@@ -735,8 +735,6 @@ namespace Sass {
     // debug_ast(negated);
     sel->selector(negated);
     return sel;
-
-    // return SASS_MEMORY_NEW(Wrapped_Selector, nsource_position, name, negated);
   }
 
   // a pseudo selector often starts with one or two colons

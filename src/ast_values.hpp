@@ -60,7 +60,7 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class List : public Value, public Vectorized<Expression_Obj> {
+  class List : public Value, public Vectorized<Expression_Obj, List> {
     void adjust_after_pushing(Expression_Obj e) override { is_expanded(false); }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
@@ -386,7 +386,7 @@ namespace Sass {
   // Interpolated strings. Meant to be reduced to flat strings during the
   // evaluation phase.
   ///////////////////////////////////////////////////////////////////////
-  class String_Schema final : public String, public Vectorized<PreValue_Obj> {
+  class String_Schema final : public String, public Vectorized<PreValue_Obj, String_Schema> {
     ADD_PROPERTY(bool, css)
     mutable size_t hash_;
   public:

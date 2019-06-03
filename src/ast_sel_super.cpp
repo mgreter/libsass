@@ -22,19 +22,6 @@
 
 namespace Sass {
 
-  std::string normName(std::string str) {
-    std::string name = str;
-    std::replace(name.begin(), name.end(), '_', '-');
-    if (name[0] == ':') {
-      name = name.substr(1);
-    }
-    if (name[0] == '-' && name[1] == 'm' && name[2] == 'o' && name[3] == 'z' && name[4] == '-') {
-      name = name.substr(5);
-    }
-    return name;
-  }
-
-
   // Returns all pseudo selectors in [compound] that have
   // a selector argument, and that have the given [name].
   std::vector<Pseudo_Selector_Obj> selectorPseudoNamed(
@@ -213,6 +200,9 @@ namespace Sass {
   bool complexIsSuperselector(std::vector<CompoundOrCombinator_Obj> complex1,
     std::vector<CompoundOrCombinator_Obj> complex2) {
     
+    // std::cerr << "====================================================\n";
+    // std::cerr << "complexIsSuperselector " << debug_vec(complex1) << " vs " << debug_vec(complex2) << "\n";
+
     // Selectors with trailing operators are neither superselectors nor subselectors.
     if (!complex1.empty() && Cast<SelectorCombinator>(complex1.back())) return false;
     if (!complex2.empty() && Cast<SelectorCombinator>(complex2.back())) return false;

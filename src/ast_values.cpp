@@ -52,7 +52,7 @@ namespace Sass {
 
   List::List(ParserState pstate, size_t size, enum Sass_Separator sep, bool argl, bool bracket)
   : Value(pstate),
-    Vectorized<Expression_Obj>(size),
+    Vectorized<Expression_Obj, List>(size),
     separator_(sep),
     is_arglist_(argl),
     is_bracketed_(bracket),
@@ -61,7 +61,7 @@ namespace Sass {
 
   List::List(const List* ptr)
   : Value(ptr),
-    Vectorized<Expression_Obj>(*ptr),
+    Vectorized<Expression_Obj, List>(*ptr),
     separator_(ptr->separator_),
     is_arglist_(ptr->is_arglist_),
     is_bracketed_(ptr->is_bracketed_),
@@ -758,12 +758,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   String_Schema::String_Schema(ParserState pstate, size_t size, bool css)
-  : String(pstate), Vectorized<PreValue_Obj>(size), css_(css), hash_(0)
+  : String(pstate), Vectorized<PreValue_Obj, String_Schema>(size), css_(css), hash_(0)
   { concrete_type(STRING); }
 
   String_Schema::String_Schema(const String_Schema* ptr)
   : String(ptr),
-    Vectorized<PreValue_Obj>(*ptr),
+    Vectorized<PreValue_Obj, String_Schema>(*ptr),
     css_(ptr->css_),
     hash_(ptr->hash_)
   { concrete_type(STRING); }

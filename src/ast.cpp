@@ -17,6 +17,8 @@
 
 namespace Sass {
 
+  bool doDebug = false;
+
   static Null sass_null(ParserState("null"));
 
   const char* sass_op_to_name(enum Sass_OP op) {
@@ -128,12 +130,12 @@ namespace Sass {
 
   Block::Block(ParserState pstate, size_t s, bool r)
   : Statement(pstate),
-    Vectorized<Statement_Obj>(s),
+    Vectorized<Statement_Obj, Block>(s),
     is_root_(r)
   { }
   Block::Block(const Block* ptr)
   : Statement(ptr),
-    Vectorized<Statement_Obj>(*ptr),
+    Vectorized<Statement_Obj, Block>(*ptr),
     is_root_(ptr->is_root_)
   { }
 
@@ -682,14 +684,14 @@ namespace Sass {
 
   Arguments::Arguments(ParserState pstate)
   : Expression(pstate),
-    Vectorized<Argument_Obj>(),
+    Vectorized<Argument_Obj, Arguments>(),
     has_named_arguments_(false),
     has_rest_argument_(false),
     has_keyword_argument_(false)
   { }
   Arguments::Arguments(const Arguments* ptr)
   : Expression(ptr),
-    Vectorized<Argument_Obj>(*ptr),
+    Vectorized<Argument_Obj, Arguments>(*ptr),
     has_named_arguments_(ptr->has_named_arguments_),
     has_rest_argument_(ptr->has_rest_argument_),
     has_keyword_argument_(ptr->has_keyword_argument_)
@@ -764,12 +766,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Media_Query::Media_Query(ParserState pstate, String_Obj t, size_t s, bool n, bool r)
-  : Expression(pstate), Vectorized<Media_Query_Expression_Obj>(s),
+  : Expression(pstate), Vectorized<Media_Query_Expression_Obj, Media_Query>(s),
     media_type_(t), is_negated_(n), is_restricted_(r)
   { }
   Media_Query::Media_Query(const Media_Query* ptr)
   : Expression(ptr),
-    Vectorized<Media_Query_Expression_Obj>(*ptr),
+    Vectorized<Media_Query_Expression_Obj, Media_Query>(*ptr),
     media_type_(ptr->media_type_),
     is_negated_(ptr->is_negated_),
     is_restricted_(ptr->is_restricted_)
@@ -895,13 +897,13 @@ namespace Sass {
 
   Parameters::Parameters(ParserState pstate)
   : AST_Node(pstate),
-    Vectorized<Parameter_Obj>(),
+    Vectorized<Parameter_Obj, Parameters>(),
     has_optional_parameters_(false),
     has_rest_parameter_(false)
   { }
   Parameters::Parameters(const Parameters* ptr)
   : AST_Node(ptr),
-    Vectorized<Parameter_Obj>(*ptr),
+    Vectorized<Parameter_Obj, Parameters>(*ptr),
     has_optional_parameters_(ptr->has_optional_parameters_),
     has_rest_parameter_(ptr->has_rest_parameter_)
   { }

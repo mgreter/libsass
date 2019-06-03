@@ -1,7 +1,37 @@
 #ifndef SASS_DART_HELPERS_H
 #define SASS_DART_HELPERS_H
 
+#include "tsl/ordered_map.h"
+#include "tsl/ordered_set.h"
+
 namespace Sass {
+
+  template <class T, class U, class V>
+  std::vector<U> mapValues(const std::map<T, U, V>& m) {
+    std::vector<U> result;
+    for (typename std::map<T, U, V>::const_iterator it = m.begin(); it != m.end(); ++it) {
+      result.push_back(it->second);
+    }
+    return result;
+  }
+
+  template <class T, class U, class V, class W>
+  std::vector<U> mapValues(const std::unordered_map<T, U, V, W>& m) {
+    std::vector<U> result;
+    for (typename std::unordered_map<T, U, V, W>::const_iterator it = m.begin(); it != m.end(); ++it) {
+      result.push_back(it->second);
+    }
+    return result;
+  }
+
+  template <class T, class U, class V, class W>
+  std::vector<U> mapValues(const tsl::ordered_map<T, U, V, W>& m) {
+    std::vector<U> result;
+    for (typename tsl::ordered_map<T, U, V, W>::const_iterator it = m.begin(); it != m.end(); ++it) {
+      result.push_back(it->second);
+    }
+    return result;
+  }
 
   template <class T>
   std::vector<T> expandList(std::vector<std::vector<T>> vec) {
@@ -10,6 +40,19 @@ namespace Sass {
       for (auto item : items) {
         flattened.push_back(item);
       }
+    }
+    return flattened;
+  }
+
+  // Equivalent to dart `cnt.any`
+  // Pass additional closure variables to `fn`
+  template <class T, class U, typename ...Args>
+  T expandListFn(T cnt, U fn, Args... args) {
+    T flattened;
+    for (auto item : cnt) {
+      auto rv = fn(item, args...);
+      flattened.insert(flattened.end(),
+        rv.begin(), rv.end());
     }
     return flattened;
   }
@@ -39,7 +82,7 @@ namespace Sass {
   }
 
   // https://www.geeksforgeeks.org/longest-common-subsequence/
-// https://www.geeksforgeeks.org/printing-longest-common-subsequence/
+  // https://www.geeksforgeeks.org/printing-longest-common-subsequence/
   template <class T>
   std::vector<SharedImpl<T>> lcs(std::vector<SharedImpl<T>>& X, std::vector<SharedImpl<T>>& Y) {
     std::size_t m = X.size() - 1;

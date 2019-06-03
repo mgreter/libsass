@@ -12,45 +12,59 @@
 #include "subset_map.hpp"
 #include "ast_fwd_decl.hpp"
 
+#include "tsl/ordered_map.h"
+#include "tsl/ordered_set.h"
+
 namespace Sass {
 
-  typedef std::map<
+  typedef tsl::ordered_set<
+    ComplexSelector_Obj,
+    HashNodes,
+    CompareNodes
+  > ExtCplxSelSet;
+
+  typedef tsl::ordered_set<
     Simple_Selector_Obj,
-    std::set<
-      // Ruleset_Obj,
-      SelectorList_Obj,
-      OrderNodes
-    >,
-    OrderNodes
+    HashNodes,
+    CompareNodes
+  > ExtSmplSelSet;
+
+  typedef tsl::ordered_set<
+    SelectorList_Obj,
+    HashNodes,
+    CompareNodes
+  > ExtListSelSet;
+
+  typedef tsl::ordered_map<
+    Simple_Selector_Obj,
+    ExtListSelSet,
+    HashNodes,
+    CompareNodes
   > ExtSelMap;
 
-  typedef std::map<
+  typedef tsl::ordered_map <
+    ComplexSelector_Obj,
+    Extension2,
+    HashNodes,
+    CompareNodes
+  > ExtSelExtMapEntry;
+
+  typedef tsl::ordered_map<
     Simple_Selector_Obj,
-    std::map<
-      ComplexSelector_Obj,
-      Extension2,
-      OrderNodes
-    >,
-    OrderNodes
+    ExtSelExtMapEntry,
+    HashNodes,
+    CompareNodes
   > ExtSelExtMap;
 
-  typedef std::map<
+  typedef tsl::ordered_map <
     Simple_Selector_Obj,
     std::vector<
       Extension2
     >,
-    OrderNodes
+    HashNodes,
+    CompareNodes
   > ExtByExtMap;
 
-  typedef std::set<
-    ComplexSelector_Obj,
-    OrderNodes
-  > ExtCplxSelSet;
-
-  typedef std::set<
-    Simple_Selector_Obj,
-    OrderNodes
-  > ExtSmplSelSet;
 
   class Extender : public Operation_CRTP<void, Extender> {
 
@@ -109,10 +123,13 @@ namespace Sass {
 
     std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap extensions);
 
+    std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, ExtCplxSelSet set);
     std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, bool (*isOriginal)(ComplexSelector_Obj complex));
+    
 
 
   private:
+    std::vector<Extension2> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet targetsUsed);
     static SelectorList_Obj _extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, ExtendMode mode);
 
   public:

@@ -23,6 +23,21 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  std::string normName(std::string str) {
+    std::string name = str;
+    std::replace(name.begin(), name.end(), '_', '-');
+    if (name[0] == ':') {
+      name = name.substr(1);
+    }
+    if (name[0] == '-' && name[1] == 'm' && name[2] == 'o' && name[3] == 'z' && name[4] == '-') {
+      name = name.substr(5);
+    }
+    return name;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   Selector::Selector(ParserState pstate)
   : Expression(pstate),
     has_line_feed_(false),
@@ -341,7 +356,7 @@ namespace Sass {
 
   Pseudo_Selector::Pseudo_Selector(ParserState pstate, std::string name)
   : Simple_Selector(pstate, name),
-    normalized_(name),
+    normalized_(normName(name)),
     expression_({}),
     selector_({}),
     isSyntacticClass_(true),
@@ -442,14 +457,14 @@ namespace Sass {
 
   Compound_Selector::Compound_Selector(ParserState pstate, size_t s)
   : Selector(pstate),
-    Vectorized<Simple_Selector_Obj>(s),
+    Vectorized<Simple_Selector_Obj, Compound_Selector>(s),
     extended_(false),
     has_parent_reference_(false)
   { }
 
   Compound_Selector::Compound_Selector(const Compound_Selector* ptr)
   : Selector(ptr),
-    Vectorized<Simple_Selector_Obj>(*ptr),
+    Vectorized<Simple_Selector_Obj, Compound_Selector>(*ptr),
     extended_(ptr->extended_),
     has_parent_reference_(ptr->has_parent_reference_)
   { }
@@ -718,7 +733,7 @@ namespace Sass {
 
   void Compound_Selector::append(Simple_Selector_Obj element)
   {
-    Vectorized<Simple_Selector_Obj>::append(element);
+    Vectorized<Simple_Selector_Obj, Compound_Selector>::append(element);
     pstate_.offset += element->pstate().offset;
   }
 
@@ -1402,12 +1417,12 @@ namespace Sass {
 
   Selector_List::Selector_List(ParserState pstate, size_t s)
   : Selector(pstate),
-    Vectorized<Complex_Selector_Obj>(s),
+    Vectorized<Complex_Selector_Obj, Selector_List>(s),
     schema_({})
   { }
   Selector_List::Selector_List(const Selector_List* ptr)
   : Selector(ptr),
-    Vectorized<Complex_Selector_Obj>(*ptr),
+    Vectorized<Complex_Selector_Obj, Selector_List>(*ptr),
     schema_(ptr->schema_)
   { }
 
@@ -1667,12 +1682,12 @@ namespace Sass {
 
   SelectorList::SelectorList(ParserState pstate, size_t s)
   : Selector(pstate),
-    Vectorized<ComplexSelector_Obj>(s),
+    Vectorized<ComplexSelector_Obj, SelectorList>(s),
     schemaOnlyToCopy_()
   { }
   SelectorList::SelectorList(const SelectorList* ptr)
     : Selector(ptr),
-    Vectorized<ComplexSelector_Obj>(),
+    Vectorized<ComplexSelector_Obj, SelectorList>(),
     schemaOnlyToCopy_(ptr->schemaOnlyToCopy_)
   { }
 
@@ -1726,13 +1741,13 @@ namespace Sass {
 
   ComplexSelector::ComplexSelector(ParserState pstate)
   : Selector(pstate),
-    Vectorized<CompoundOrCombinator_Obj>(),
+    Vectorized<CompoundOrCombinator_Obj, ComplexSelector>(),
     chroots_(false)
   {
   }
   ComplexSelector::ComplexSelector(const ComplexSelector* ptr)
   : Selector(ptr),
-    Vectorized<CompoundOrCombinator_Obj>(*ptr),
+    Vectorized<CompoundOrCombinator_Obj, ComplexSelector>(*ptr),
     chroots_(ptr->chroots())
   {
   }
@@ -1939,7 +1954,7 @@ namespace Sass {
     sel->has_line_feed(has_line_feed());
     sel->has_line_break(has_line_break());
     sel->media_block(media_block());
-    sel->concat(this);
+    sel->concat(elements());
     return sel;
   }
 
@@ -2012,14 +2027,14 @@ namespace Sass {
 
   CompoundSelector::CompoundSelector(ParserState pstate)
     : CompoundOrCombinator(pstate),
-      Vectorized<Simple_Selector_Obj>(),
+      Vectorized<Simple_Selector_Obj, CompoundSelector>(),
       hasRealParent_(false),
       extended_(false)
   {
   }
   CompoundSelector::CompoundSelector(const CompoundSelector* ptr)
     : CompoundOrCombinator(ptr),
-      Vectorized<Simple_Selector_Obj>(*ptr),
+      Vectorized<Simple_Selector_Obj, CompoundSelector>(*ptr),
       hasRealParent_(ptr->hasRealParent()),
       extended_(ptr->extended())
   { }
@@ -2044,6 +2059,37 @@ namespace Sass {
   {
     return 0;
   }
+
+  CompoundSelector_Obj Simple_Selector::wrapInCompound()
+  {
+    CompoundSelector_Obj selector =
+      SASS_MEMORY_NEW(CompoundSelector, pstate());
+    selector->append(this);
+    return selector;
+  }
+  ComplexSelector_Obj Simple_Selector::wrapInComplex()
+  {
+    ComplexSelector_Obj selector =
+      SASS_MEMORY_NEW(ComplexSelector, pstate());
+    selector->append(wrapInCompound());
+    return selector;
+  }
+
+  SelectorList_Obj ComplexSelector::wrapInList()
+  {
+    SelectorList_Obj selector =
+      SASS_MEMORY_NEW(SelectorList, pstate());
+    selector->append(this);
+    return selector;
+  }
+
+  Pseudo_Selector_Obj Pseudo_Selector::withSelector(SelectorList_Obj selector)
+  {
+    Pseudo_Selector_Obj pseudo = copy();
+    pseudo->selector(toSelector_List(selector));
+    return pseudo;
+  }
+
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

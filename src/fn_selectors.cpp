@@ -212,13 +212,22 @@ namespace Sass {
       Selector_List_Obj  extendee = ARGSELS("$extendee");
       Selector_List_Obj  extender = ARGSELS("$extender");
 
+      SelectorList_Obj  selectors = toSelectorList(selector);
+      SelectorList_Obj  targets = toSelectorList(extendee);
+      SelectorList_Obj  source = toSelectorList(extender);
+
+      SelectorList_Obj res = Extender::extend(selectors, source, targets);
+
+      Listize listize;
+      return Cast<Value>(res->perform(&listize));
+
       Subset_Map subset_map;
       extender->populate_extends(extendee, subset_map);
       Extend extend(subset_map);
 
       Selector_List_Obj result = extend.extendSelectorList(selector, false);
 
-      Listize listize;
+//      Listize listize;
       return Cast<Value>(result->perform(&listize));
     }
 
