@@ -307,6 +307,7 @@ namespace Sass {
     for (size_t i = 0; i < compound->length(); i++) {
       Simple_Selector_Obj simple = compound->get(i);
       auto extended = extendSimple(simple, extensions, targetsUsed);
+      // std::cerr << "targetUsed after " << debug_vec(targetsUsed) << "\n";
       // std::cerr << "  " << debug_vec(extended) << "\n";
       if (extended.empty()/* == null */) {
         // std::cerr << "Add option 1\n";
@@ -464,7 +465,7 @@ namespace Sass {
     return unifiedPaths;
   }
 
-  std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet targetsUsed) {
+  std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet& targetsUsed) {
 
     auto ext = extensions.find(simple);
     if (ext == extensions.end()) return {};
@@ -472,7 +473,7 @@ namespace Sass {
     targetsUsed.insert(simple);
     if (mode == ExtendMode::REPLACE) {
       auto rv = mapValues(extenders);
-      // std::cerr << "GOT VALUES\n";
+      // std::cerr << "HAS REPLACE MODE\n";
       return rv;
     }
 
@@ -486,7 +487,7 @@ namespace Sass {
     return result;
   }
 
-  std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet targetsUsed) {
+  std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet& targetsUsed) {
 
     if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(simple)) {
       // if (simple.selector != null) // Implement/Checks what this does?

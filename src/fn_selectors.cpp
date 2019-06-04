@@ -189,51 +189,36 @@ namespace Sass {
     Signature selector_trim_sig = "selector-trim($selectors)";
     BUILT_IN(selector_trim)
     {
-      Selector_List_Obj  selectors = ARGSELS("$selectors");
-      SelectorList_Obj  selector = toSelectorList(selectors);
-
+      SelectorList_Obj  selector = ARGSELS2("$selectors");
       Extender extender;
-      std::vector<ComplexSelector_Obj> sels;
-      sels.insert(sels.begin(), selector->begin(), selector->end());
-      auto rv = extender.trim(sels, isOriginal);
-
+      std::vector<ComplexSelector_Obj> list;
+      list.insert(list.begin(), selector->begin(), selector->end());
       SelectorList_Obj result = SASS_MEMORY_NEW(SelectorList, ParserState("{tmp}"));
-      result->concat(rv);
-
-      Listize listize;
-      return Cast<Value>(result->perform(&listize));
+      result->concat(extender.trim(list, isOriginal));
+      return Cast<Value>(Listize::perform(result));
 
     }
 
     Signature selector_extend_sig = "selector-extend($selector, $extendee, $extender)";
     BUILT_IN(selector_extend)
     {
-      Selector_List_Obj  selector = ARGSELS("$selector");
-      Selector_List_Obj  extendee = ARGSELS("$extendee");
-      Selector_List_Obj  extender = ARGSELS("$extender");
-
-      SelectorList_Obj  selectors = toSelectorList(selector);
-      SelectorList_Obj  targets = toSelectorList(extendee);
-      SelectorList_Obj  source = toSelectorList(extender);
-
-      SelectorList_Obj res = Extender::extend(selectors, source, targets);
-
-      Listize listize;
-      return Cast<Value>(res->perform(&listize));
-
-      Subset_Map subset_map;
-      extender->populate_extends(extendee, subset_map);
-      Extend extend(subset_map);
-
-      Selector_List_Obj result = extend.extendSelectorList(selector, false);
-
-//      Listize listize;
-      return Cast<Value>(result->perform(&listize));
+      SelectorList_Obj selector = ARGSELS2("$selector");
+      SelectorList_Obj target = ARGSELS2("$extendee");
+      SelectorList_Obj source = ARGSELS2("$extender");
+      SelectorList_Obj result = Extender::extend(selector, source, target);
+      return Cast<Value>(Listize::perform(result));
     }
 
     Signature selector_replace_sig = "selector-replace($selector, $original, $replacement)";
     BUILT_IN(selector_replace)
     {
+      SelectorList_Obj selector = ARGSELS2("$selector");
+      SelectorList_Obj target = ARGSELS2("$original");
+      SelectorList_Obj source = ARGSELS2("$replacement");
+      SelectorList_Obj result = Extender::replace(selector, source, target);
+      return Cast<Value>(Listize::perform(result));
+
+/*
       Selector_List_Obj selector = ARGSELS("$selector");
       Selector_List_Obj original = ARGSELS("$original");
       Selector_List_Obj replacement = ARGSELS("$replacement");
@@ -245,6 +230,7 @@ namespace Sass {
 
       Listize listize;
       return Cast<Value>(result->perform(&listize));
+*/
     }
 
     Signature selector_parse_sig = "selector-parse($selector)";

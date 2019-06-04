@@ -17,6 +17,13 @@ namespace Sass {
   Listize::Listize()
   {  }
 
+  Expression* Listize::perform(AST_Node* node)
+  {
+    Listize listize;
+    return node->perform(&listize);
+
+  }
+
   Expression* Listize::operator()(SelectorList* sel)
   {
     List_Obj l = SASS_MEMORY_NEW(List, sel->pstate(), sel->length(), SASS_COMMA);

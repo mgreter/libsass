@@ -71,6 +71,13 @@ namespace Sass {
       pstate.offset.line = 0;
     }
 
+  SelectorList_Obj Parser::parse_selector2(const char* beg, Context& ctx, Backtraces traces, ParserState pstate, const char* source, bool allow_parent)
+  {
+    Parser p = Parser::from_c_str(beg, ctx, traces, pstate, source, allow_parent);
+    // ToDo: remap the source-map entries somehow
+    return p.parseSelectorList(false);
+  }
+
   Selector_List_Obj Parser::parse_selector(const char* beg, Context& ctx, Backtraces traces, ParserState pstate, const char* source, bool allow_parent)
   {
     Parser p = Parser::from_c_str(beg, ctx, traces, pstate, source, allow_parent);

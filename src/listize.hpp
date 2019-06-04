@@ -20,6 +20,10 @@ namespace Sass {
   class Listize : public Operation_CRTP<Expression*, Listize> {
 
   public:
+
+    static Expression* perform(AST_Node* node);
+
+  public:
     Listize();
     ~Listize() { }
 

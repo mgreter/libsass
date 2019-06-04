@@ -8,7 +8,9 @@ namespace Sass {
   namespace Functions {
 
     #define ARGSEL(argname) get_arg_sel(argname, env, sig, pstate, traces, ctx)
+    #define ARGSEL2(argname) get_arg_sel2(argname, env, sig, pstate, traces, ctx)
     #define ARGSELS(argname) get_arg_sels(argname, env, sig, pstate, traces, ctx)
+    #define ARGSELS2(argname) get_arg_sels2(argname, env, sig, pstate, traces, ctx)
 
     BUILT_IN(selector_trim);
     BUILT_IN(selector_nest);
