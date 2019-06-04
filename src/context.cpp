@@ -26,6 +26,7 @@
 #include "cssize.hpp"
 #include "listize.hpp"
 #include "extend.hpp"
+#include "extender.hpp"
 #include "remove_placeholders.hpp"
 #include "sass_functions.hpp"
 #include "backtrace.hpp"
@@ -75,6 +76,7 @@ namespace Sass {
     c_options(c_ctx),
     entry_path(""),
     head_imports(0),
+    extender(Extender::NORMAL),
     plugins(),
     emitter(c_options),
 

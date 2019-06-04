@@ -1,16 +1,13 @@
 #ifndef SASS_EXTENDER_H
 #define SASS_EXTENDER_H
 
-#include <string>
 #include <set>
+#include <map>
+#include <string>
 
-#include "ast.hpp"
-#include "node.hpp"
-#include "eval.hpp"
-#include "extension.hpp"
-#include "operation.hpp"
-#include "subset_map.hpp"
 #include "ast_fwd_decl.hpp"
+#include "operation.hpp"
+#include "extension.hpp"
 
 #include "tsl/ordered_map.h"
 #include "tsl/ordered_set.h"

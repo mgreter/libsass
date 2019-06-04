@@ -17,6 +17,7 @@
 #include "subset_map.hpp"
 #include "backtrace.hpp"
 #include "output.hpp"
+#include "extender.hpp"
 #include "plugins.hpp"
 #include "file.hpp"
 
@@ -41,6 +42,7 @@ namespace Sass {
     struct Sass_Options& c_options;
     std::string entry_path;
     size_t head_imports;
+    Extender extender;
     Plugins plugins;
     Output emitter;
 
@@ -52,6 +54,7 @@ namespace Sass {
     std::vector<char*> strings;
     std::vector<Resource> resources;
     std::map<const std::string, StyleSheet> sheets;
+
     Subset_Map subset_map;
     ImporterStack import_stack;
     std::vector<Sass_Callee> callee_stack;

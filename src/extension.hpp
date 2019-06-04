@@ -1,14 +1,6 @@
 #ifndef SASS_EXTENSION_H
 #define SASS_EXTENSION_H
 
-#include <string>
-#include <set>
-
-#include "ast.hpp"
-#include "node.hpp"
-#include "eval.hpp"
-#include "operation.hpp"
-#include "subset_map.hpp"
 #include "ast_fwd_decl.hpp"
 
 namespace Sass {
