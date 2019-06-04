@@ -1490,7 +1490,7 @@ namespace Sass {
           // move line feed from inner to outer selector (very hacky indeed)
           if (last_current.collection() && last_current.collection()->front().selector()) {
             toPush.got_line_feed = last_current.collection()->front().got_line_feed;
-            last_current.collection()->front().selector()->has_line_feed(false);
+            last_current.collection()->front().selector()->hasPreLineFeed(false);
             last_current.collection()->front().got_line_feed = false;
           }
 
@@ -1647,7 +1647,7 @@ namespace Sass {
       DEBUG_EXEC(EXTEND_COMPOUND, printSourcesSet(pSelector->sources(), "SOURCES THIS EXTEND WHICH SHOULD BE SAME STILL: "))
 
 
-      if (pSels->has_line_feed()) pNewSelector->has_line_feed(true);
+      if (pSels->hasPostLineBreak()) pNewSelector->hasPreLineFeed(true);
 
       holder.push_back(std::make_pair(pSels, pNewSelector));
     }
@@ -1823,7 +1823,7 @@ namespace Sass {
 
       if (!isSuperselector) {
         // add a complex selector composed only of COMPOUND to EXTENDED
-        if (sseqOrOp.got_line_feed) sseqSel->has_line_feed(sseqOrOp.got_line_feed);
+        if (sseqOrOp.got_line_feed) sseqSel->hasPreLineFeed(sseqOrOp.got_line_feed);
         extended.collection()->push_front(complexSelectorToNode(sseqSel));
       }
 
@@ -1970,7 +1970,7 @@ namespace Sass {
                       cpy_head->append(SASS_MEMORY_NEW(Type_Selector, hs->pstate(), ws->name()));
                     }
                     // has wrapped not selectors
-                    else if (ws->name() == ":not") {
+                    else if (ws->name() == "not") {
                       // extend the inner list of wrapped selector
                       bool extended = false;
                       Selector_List_Obj ext_sl = extendSelectorList(sl, false, extended, recseen);

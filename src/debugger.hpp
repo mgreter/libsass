@@ -230,8 +230,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     // std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
     std::cerr << (selector->has_real_parent_ref() ? " [real-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
     // debug_ast(selector->schema(), ind + "#{} ");
 
@@ -248,8 +248,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->has_placeholder() ? " [PLACEHOLDER]": " -");
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
     debug_ast(selector->schema(), ind + "#{} ");
 
@@ -273,8 +273,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       // << (selector->is_optional() ? " [is_optional]": " -")
       << (selector->has_parent_ref() ? " [has parent]": " -")
       << (selector->has_real_parent_ref() ? " [real parent]": " -")
-      << (selector->has_line_feed() ? " [line-feed]": " -")
-      << (selector->has_line_break() ? " [line-break]": " -")
+      // << (selector->has_line_feed() ? " [line-feed]": " -")
+      // << (selector->has_line_break() ? " [line-break]": " -")
       << " -- \n";
 
     for(const CompoundOrCombinator_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
@@ -292,8 +292,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       // << (selector->is_optional() ? " [is_optional]": " -")
       << (selector->has_parent_ref() ? " [has parent]": " -")
       << (selector->has_real_parent_ref() ? " [real parent]": " -")
-      << (selector->has_line_feed() ? " [line-feed]": " -")
-      << (selector->has_line_break() ? " [line-break]": " -")
+      // << (selector->has_line_feed() ? " [line-feed]": " -")
+      // << (selector->has_line_break() ? " [line-break]": " -")
       // << " [" << selector->combinator() << "]"
       << " -- ";
 
@@ -317,8 +317,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     // std::cerr << (selector->extended() ? " [extended]": " -");
     // std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     // std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << "\n";
     // std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
     for(const Simple_Selector_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
@@ -354,8 +354,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
       << (selector->is_optional() ? " [is_optional]": " -")
       << (selector->has_parent_ref() ? " [has parent]": " -")
-      << (selector->has_line_feed() ? " [line-feed]": " -")
-      << (selector->has_line_break() ? " [line-break]": " -")
+      // << (selector->has_line_feed() ? " [line-feed]": " -")
+      // << (selector->has_line_break() ? " [line-break]": " -")
       << " -- ";
       std::string del;
       switch (selector->combinator()) {
@@ -385,8 +385,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->extended() ? " [extended]": " -");
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
     for(const Simple_Selector_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
   } else if (Cast<Pseudo_Selector>(node)) {
@@ -397,8 +397,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    std::cerr << (selector->isClass() ? " [isClass]": " -");
+    std::cerr << (selector->isSyntacticClass() ? " [isSyntacticClass]": " -");
     std::cerr << std::endl;
     debug_ast(selector->expression(), ind + " <= ", env);
     debug_ast(selector->selector(), ind + " || ", env);
@@ -410,8 +410,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
     debug_ast(selector->value(), ind + "[" + selector->matcher() + "] ", env);
   } else if (Cast<Class_Selector>(node)) {
@@ -422,8 +422,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
   } else if (Cast<Id_Selector>(node)) {
     Id_Selector* selector = Cast<Id_Selector>(node);
@@ -433,8 +433,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
   } else if (Cast<Type_Selector>(node)) {
     Type_Selector* selector = Cast<Type_Selector>(node);
@@ -444,8 +444,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -");
-    std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
+    // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">";
     std::cerr << std::endl;
   } else if (Cast<Placeholder_Selector>(node)) {
@@ -456,15 +456,15 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       << " <" << selector->hash() << ">"
       << " [@media:" << selector->media_block() << "]"
       << (selector->is_optional() ? " [is_optional]": " -")
-      << (selector->has_line_break() ? " [line-break]": " -")
-      << (selector->has_line_feed() ? " [line-feed]": " -")
+      // << (selector->has_line_break() ? " [line-break]": " -")
+      // << (selector->has_line_feed() ? " [line-feed]": " -")
     << std::endl;
 
   } else if (Cast<Simple_Selector>(node)) {
     Simple_Selector* selector = Cast<Simple_Selector>(node);
     std::cerr << ind << "Simple_Selector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -") << (selector->has_line_feed() ? " [line-feed]": " -") << std::endl;
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -") << (selector->has_line_feed() ? " [line-feed]": " -") << std::endl;
 
   } else if (Cast<Selector_Schema>(node)) {
     Selector_Schema* selector = Cast<Selector_Schema>(node);
@@ -480,9 +480,9 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
   } else if (Cast<Selector>(node)) {
     Selector* selector = Cast<Selector>(node);
     std::cerr << ind << "Selector " << selector;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << (selector->has_line_break() ? " [line-break]": " -")
-      << (selector->has_line_feed() ? " [line-feed]": " -")
+    std::cerr << " (" << pstate_source_position(node) << ")"
+    // std::cerr << (selector->has_line_break() ? " [line-break]": " -")
+      // << (selector->has_line_feed() ? " [line-feed]": " -")
     << std::endl;
 
   } else if (Cast<Media_Query_Expression>(node)) {

@@ -269,6 +269,7 @@ namespace Sass {
     Compound_Selector_Obj parse_compound_selector();
     Simple_Selector_Obj parse_simple_selector();
     Pseudo_Selector_Obj parse_negated_selector2();
+    Expression* parse_binominal();
     Simple_Selector_Obj parse_pseudo_selector();
     Attribute_Selector_Obj parse_attribute_selector();
     Block_Obj parse_block(bool is_root = false);
@@ -345,6 +346,8 @@ namespace Sass {
     Token lex_identifier();
 
     void parse_block_comments();
+
+    Expression* parseDeclarationValue(bool allowEmpty = false);
 
     Lookahead lookahead_for_value(const char* start = 0);
     Lookahead lookahead_for_selector(const char* start = 0);

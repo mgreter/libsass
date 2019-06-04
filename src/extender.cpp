@@ -193,9 +193,9 @@ namespace Sass {
           // }
         }
         else {
-            extendedNotExpanded.clear();
+
           // Note: dart-sass checks for null!?
-          // if (!extendedNotExpanded.empty()) {
+          if (extendedNotExpanded.empty()) {
             for (size_t n = 0; n < i; n++) {
               if (CompoundSelector_Obj compound = Cast<CompoundSelector>(complex->at(n))) {
                 // std::cerr << "ADD ITEM " << n << "\n";
@@ -204,7 +204,7 @@ namespace Sass {
                 });
               }
             }
-          // }
+          }
           extendedNotExpanded.push_back(extended);
           // std::cerr << "EXT NOT EMPTY " << debug_vec(extendedNotExpanded) << "\n";
         }
@@ -246,7 +246,7 @@ namespace Sass {
       for (std::vector<CompoundOrCombinator_Obj> components : ww) {
 
         ComplexSelector_Obj cplx = SASS_MEMORY_NEW(ComplexSelector, "[ext]");
-        cplx->has_line_break(complex->has_line_break());
+        cplx->hasPreLineFeed(complex->hasPreLineFeed());
         cplx->elements(components);
 
         // Make sure that copies of [complex] retain their status
@@ -445,14 +445,14 @@ namespace Sass {
       // var specificity = _sourceSpecificityFor(compound);
       for (auto state : path) {
         // state.assertCompatibleMediaContext(mediaQueryContext);
-        lineBreak = lineBreak || state.extender->has_line_break();
+        lineBreak = lineBreak || state.extender->hasPreLineFeed();
         // specificity = math.max(specificity, state.specificity);
       }
 
       // std::vector<ComplexSelector_Obj> unifiedPath;
       for (std::vector<CompoundOrCombinator_Obj> components : complexes) {
         auto sel = SASS_MEMORY_NEW(ComplexSelector, "[ext]");
-        sel->has_line_break(lineBreak);
+        sel->hasPreLineFeed(lineBreak);
         sel->elements(components);
         unifiedPaths.push_back(sel);
       }
@@ -644,8 +644,7 @@ namespace Sass {
   {
     Complex_Selector_Obj c1 = complex1->toComplexSelector();
     Complex_Selector_Obj c2 = complex2->toComplexSelector();
-    return c2->is_superselector_of(c1);
-      // false; // complex2.minSpecificity >= maxSpecificity && complex2->is_superselector_of(complex1));
+    return complex2->isSuperselectorOf(complex1);
   }
 
 

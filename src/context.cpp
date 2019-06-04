@@ -715,13 +715,13 @@ namespace Sass {
       // extend tree nodes
       extend(root);
     }
-    // debug_ast(root);
+ //   debug_ast(root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders;
     root->perform(&remove_placeholders);
-  //  debug_ast(root, "FIN: ");
+  //    (root, "FIN: ");
     // return processed tree
     return root;
   }

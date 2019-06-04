@@ -102,7 +102,7 @@ namespace Sass {
 
       if (!sel) return group.detach();
 
-      sel->has_line_feed(had_linefeed);
+      sel->hasPreLineFeed(had_linefeed);
 
       had_linefeed = false;
 
@@ -199,7 +199,7 @@ namespace Sass {
     }
 
     if (seq && !peek_css<alternatives<end_of_file,exactly<'{'>>>()) {
-      seq->has_line_break(peek_newline());
+      seq->hasPostLineBreak(peek_newline());
     }
 
     // We may have set hasRealParent

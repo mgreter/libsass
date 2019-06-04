@@ -12,6 +12,7 @@
 #include "ast.hpp"
 #include "inspect.hpp"
 #include "context.hpp"
+#include "debugger.hpp"
 #include "listize.hpp"
 #include "color_maps.hpp"
 #include "utf8/checked.h"
@@ -887,8 +888,6 @@ namespace Sass {
   void Inspect::operator()(Placeholder_Selector* s)
   {
     append_token(s->name(), s);
-    if (s->has_line_break()) append_optional_linefeed();
-    if (s->has_line_break()) append_indentation();
 
   }
 
@@ -900,15 +899,11 @@ namespace Sass {
   void Inspect::operator()(Class_Selector* s)
   {
     append_token(s->ns_name(), s);
-    if (s->has_line_break()) append_optional_linefeed();
-    if (s->has_line_break()) append_indentation();
   }
 
   void Inspect::operator()(Id_Selector* s)
   {
     append_token(s->ns_name(), s);
-    if (s->has_line_break()) append_optional_linefeed();
-    if (s->has_line_break()) append_indentation();
   }
 
   void Inspect::operator()(Attribute_Selector* s)
@@ -932,10 +927,16 @@ namespace Sass {
 
   void Inspect::operator()(Pseudo_Selector* s)
   {
-    if (s->name() == " ") {
-      append_string("");
+    if (s->name() == "") {
+      // append_string("[what]");
     }
     else {
+
+      append_string(":");
+      if (s->isSyntacticElement()) {
+        append_string(":");
+      }
+
       append_token(s->ns_name(), s);
       if (s->expression()) {
         append_string("(");
@@ -952,18 +953,6 @@ namespace Sass {
         in_comma_array = was_comma_array;
         append_string(")");
         in_wrapped = was;
-      }
-    }
-  }
-
-  void Inspect::operator()(Compound_Selector* s)
-  {
-    for (size_t i = 0, L = s->length(); i < L; ++i) {
-      (*s)[i]->perform(this);
-    }
-    if (s->has_line_break()) {
-      if (output_style() != COMPACT) {
-        append_optional_linefeed();
       }
     }
   }
@@ -1019,20 +1008,38 @@ namespace Sass {
   }
   void Inspect::operator()(ComplexSelector* sel)
   {
-    // Dispatch all items to most specific implementation
-    bool joinit = false;
-    for (auto item : sel->elements()) {
-      if (joinit) append_string(" ");
-      item->perform(this);
-      joinit = true;
+    bool many = false;
+    if (sel->hasPreLineFeed()) {
+      append_optional_linefeed();
     }
+    for (auto& item : sel->elements()) {
+      if (many) append_optional_space();
+      item->perform(this);
+      many = true;
+    }
+  }
+
+  void Inspect::operator()(CompoundOrCombinator* sel)
+  {
+    // You should probably never call this method directly
+    // But in case anyone does, we will do the upcasting
+    if (auto comp = Cast<CompoundSelector>(sel)) operator()(comp);
+    if (auto comb = Cast<SelectorCombinator>(sel)) operator()(comb);
   }
 
   void Inspect::operator()(CompoundSelector* sel)
   {
-    if (sel->hasRealParent()) append_string("&");
-    // Dispatch all items to most specific implementation
-    for (auto item : sel->elements()) item->perform(this);
+    if (sel->hasRealParent()) {
+      append_string("&");
+    }
+    for (auto& item : sel->elements()) {
+      item->perform(this);
+    }
+    if (sel->hasPostLineBreak()) {
+      if (output_style() != COMPACT) {
+        append_optional_linefeed();
+      }
+    }
   }
 
   void Inspect::operator()(SelectorCombinator* sel)
@@ -1046,125 +1053,19 @@ namespace Sass {
     append_optional_space();
   }
 
-  void Inspect::operator()(CompoundOrCombinator* sel)
+  void Inspect::operator()(Selector_List* sel)
   {
-    // Only know two different types I could be
-    if (auto comp = Cast<CompoundSelector>(sel)) operator()(comp);
-    if (auto comb = Cast<SelectorCombinator>(sel)) operator()(comb);
+    operator()(toSelectorList(sel));
   }
 
-  void Inspect::operator()(Complex_Selector* c)
+  void Inspect::operator()(Complex_Selector* sel)
   {
-    Compound_Selector_Obj      head = c->head();
-    Complex_Selector_Obj            tail = c->tail();
-    Complex_Selector::Combinator comb = c->combinator();
-
-    if (comb == Complex_Selector::ANCESTOR_OF && (!head || head->empty())) {
-      if (tail) tail->perform(this);
-      return;
-    }
-
-    if (c->has_line_feed()) {
-      if (!(c->has_parent_ref())) {
-        append_optional_linefeed();
-        append_indentation();
-      }
-    }
-
-    if (head && head->length() != 0) head->perform(this);
-    bool is_empty = !head || head->length() == 0 || head->is_empty_reference();
-    bool is_tail = head && !head->is_empty_reference() && tail;
-    if (output_style() == COMPRESSED && comb != Complex_Selector::ANCESTOR_OF) scheduled_space = 0;
-
-    switch (comb) {
-      case Complex_Selector::ANCESTOR_OF:
-        if (is_tail) append_mandatory_space();
-      break;
-      case Complex_Selector::PARENT_OF:
-        append_optional_space();
-        append_string(">");
-        append_optional_space();
-      break;
-      case Complex_Selector::ADJACENT_TO:
-        append_optional_space();
-        append_string("+");
-        append_optional_space();
-      break;
-      case Complex_Selector::REFERENCE:
-        append_mandatory_space();
-        append_string("/");
-        if (c->reference()) c->reference()->perform(this);
-        append_string("/");
-        append_mandatory_space();
-      break;
-      case Complex_Selector::PRECEDES:
-        if (is_empty) append_optional_space();
-        else append_mandatory_space();
-        append_string("~");
-        if (tail) append_mandatory_space();
-        else append_optional_space();
-      break;
-      default: break;
-    }
-    if (tail && comb != Complex_Selector::ANCESTOR_OF) {
-      if (c->has_line_break()) append_optional_linefeed();
-    }
-    if (tail) tail->perform(this);
-    if (!tail && c->has_line_break()) {
-      if (output_style() == COMPACT) {
-        append_mandatory_space();
-      }
-    }
+    operator()(toComplexSelector(sel));
   }
 
-  void Inspect::operator()(Selector_List* g)
+  void Inspect::operator()(Compound_Selector* sel)
   {
-
-    if (g->empty()) {
-      if (output_style() == TO_SASS) {
-        append_token("()", g);
-      }
-      return;
-    }
-
-
-    bool was_comma_array = in_comma_array;
-    // probably ruby sass eqivalent of element_needs_parens
-    if (output_style() == TO_SASS && g->length() == 1 &&
-      (!Cast<List>((*g)[0]) &&
-       !Cast<Selector_List>((*g)[0]))) {
-      append_string("(");
-    }
-    else if (!in_declaration && in_comma_array) {
-      append_string("(");
-    }
-
-    if (in_declaration) in_comma_array = true;
-
-    for (size_t i = 0, L = g->length(); i < L; ++i) {
-      if (!in_wrapped && i == 0) append_indentation();
-      if ((*g)[i] == 0) continue;
-      schedule_mapping(g->at(i)->last());
-      // add_open_mapping((*g)[i]->last());
-      (*g)[i]->perform(this);
-      // add_close_mapping((*g)[i]->last());
-      if (i < L - 1) {
-        scheduled_space = 0;
-        append_comma_separator();
-      }
-    }
-
-    in_comma_array = was_comma_array;
-    // probably ruby sass eqivalent of element_needs_parens
-    if (output_style() == TO_SASS && g->length() == 1 &&
-      (!Cast<List>((*g)[0]) &&
-       !Cast<Selector_List>((*g)[0]))) {
-      append_string(",)");
-    }
-    else if (!in_declaration && in_comma_array) {
-      append_string(")");
-    }
-
+    operator()(toCompoundSelector(sel));
   }
 
 }

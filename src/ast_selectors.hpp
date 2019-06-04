@@ -70,9 +70,9 @@ namespace Sass {
   /////////////////////////////////////////
   class Selector : public Expression {
     // line break before list separator
-    ADD_PROPERTY(bool, has_line_feed)
+    // ADD_PROPERTY(bool, has_line_feed)
     // line break after list separator
-    ADD_PROPERTY(bool, has_line_break)
+    // ADD_PROPERTY(bool, has_line_break)
     // maybe we have optional flag
     ADD_PROPERTY(bool, is_optional)
     // must not be a reference counted object
@@ -159,7 +159,7 @@ namespace Sass {
     virtual bool has_placeholder();
 
     virtual ~Simple_Selector() = 0;
-    virtual CompoundSelector* unify_with(CompoundSelector*);
+    virtual CompoundSelector* unifyWith(CompoundSelector*);
     virtual Compound_Selector* unify_with(Compound_Selector*);
 
     ComplexSelector_Obj wrapInComplex();
@@ -168,8 +168,7 @@ namespace Sass {
     virtual bool has_parent_ref() const override;
     virtual bool has_real_parent_ref() const override;
     virtual bool is_pseudo_element() const;
-    virtual bool is_superselector_of(const CompoundSelector* sub) const;
-    virtual bool is_superselector_of(const Compound_Selector* sub) const;
+    virtual bool isSuperselectorOf(const CompoundSelector* sub) const;
 
     bool operator<(const Selector& rhs) const final override;
     bool operator==(const Selector& rhs) const final override;
@@ -251,7 +250,7 @@ namespace Sass {
       return Constants::UnificationOrder_Element;
     }
     Simple_Selector* unify_with(Simple_Selector*);
-    CompoundSelector* unify_with(CompoundSelector*) override;
+    CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
@@ -271,7 +270,7 @@ namespace Sass {
     {
       return Constants::UnificationOrder_Class;
     }
-    CompoundSelector* unify_with(CompoundSelector*) override;
+    CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
@@ -291,7 +290,7 @@ namespace Sass {
     {
       return Constants::UnificationOrder_Id;
     }
-    CompoundSelector* unify_with(CompoundSelector*) override;
+    CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
@@ -338,6 +337,10 @@ namespace Sass {
            name == ":first-letter";
   }
 
+  /// Returns whether [name] is the name of a pseudo-element that can be written
+  /// with pseudo-class syntax (`:before`, `:after`, `:first-line`, or
+  /// `:first-letter`)
+
   // Pseudo Selector cannot have any namespace?
   class Pseudo_Selector final : public Simple_Selector {
     ADD_PROPERTY(std::string, normalized)
@@ -346,7 +349,7 @@ namespace Sass {
     ADD_PROPERTY(bool, isSyntacticClass)
     ADD_PROPERTY(bool, isClass)
   public:
-    Pseudo_Selector(ParserState pstate, std::string n);
+    Pseudo_Selector(ParserState pstate, std::string n, bool element = false);
     virtual bool is_pseudo_element() const override;
     size_t hash() const override;
 
@@ -375,7 +378,7 @@ namespace Sass {
 
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
-    CompoundSelector* unify_with(CompoundSelector*) override;
+    CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
     ATTACH_CMP_OPERATIONS(Pseudo_Selector)
     ATTACH_AST_OPERATIONS(Pseudo_Selector)
@@ -392,6 +395,8 @@ namespace Sass {
     ComplexSelectorSet sources_;
     ADD_PROPERTY(bool, extended);
     ADD_PROPERTY(bool, has_parent_reference);
+    // line break after list separator
+    ADD_PROPERTY(bool, hasPostLineBreak)
   protected:
     void adjust_after_pushing(Simple_Selector_Obj s) override
     {
@@ -410,9 +415,6 @@ namespace Sass {
     bool has_parent_ref() const override;
     bool has_real_parent_ref() const override;
     Simple_Selector* base() const;
-    bool is_superselector_of(const Compound_Selector* sub, std::string wrapped = "") const;
-    bool is_superselector_of(const Complex_Selector* sub, std::string wrapped = "") const;
-    bool is_superselector_of(const Selector_List* sub, std::string wrapped = "") const;
     size_t hash() const override;
     virtual unsigned long specificity() const override;
     virtual bool has_placeholder();
@@ -456,7 +458,9 @@ namespace Sass {
     HASH_CONSTREF(Combinator, combinator)
     HASH_PROPERTY(Compound_Selector_Obj, head)
     HASH_PROPERTY(Complex_Selector_Obj, tail)
-    HASH_PROPERTY(String_Obj, reference);
+    HASH_PROPERTY(String_Obj, reference)
+    // line break before list separator
+    ADD_PROPERTY(bool, hasPreLineFeed)
   public:
     bool contains_placeholder() {
       if (head() && head()->contains_placeholder()) return true;
@@ -490,9 +494,7 @@ namespace Sass {
     Complex_Selector* mutable_last();
 
     size_t length() const;
-    bool is_superselector_of(const Compound_Selector* sub, std::string wrapping = "") const;
     bool is_superselector_of(const Complex_Selector* sub, std::string wrapping = "") const;
-    bool is_superselector_of(const Selector_List* sub, std::string wrapping = "") const;
     // Selector_List* unify_with(Complex_Selector* rhs);
     SelectorList* unify_with(ComplexSelector* rhs);
     Combinator clear_innermost();
@@ -535,8 +537,17 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////////
   class ComplexSelector final : public Selector, public Vectorized<CompoundOrCombinator_Obj, ComplexSelector> {
     ADD_PROPERTY(bool, chroots)
+    // line break before list separator
+    ADD_PROPERTY(bool, hasPreLineFeed)
   public:
     ComplexSelector(ParserState pstate);
+
+    // Returns true if the first components
+    // is a compound selector and fullfills
+    // a few other criterias.
+    bool canHaveRealParent() const;
+
+
     size_t hash() const override {
       return 0;
     }
@@ -585,6 +596,7 @@ namespace Sass {
     void cloneChildren() override;
     bool has_parent_ref() const override = 0;
     bool has_real_parent_ref() const override = 0;
+    virtual bool canHaveRealParent() const = 0;
     virtual bool has_placeholder() const = 0;
     virtual bool contains_placeholder() const = 0;
     int unification_order() const override {
@@ -609,11 +621,11 @@ namespace Sass {
     HASH_CONSTREF(Combinator, combinator)
   public:
     SelectorCombinator(ParserState pstate, Combinator combinator);
-
     bool has_parent_ref() const override { return false; }
     bool has_real_parent_ref() const override { return false; }
     bool has_placeholder() const override { return false; }
     bool contains_placeholder() const override { return false; }
+    bool canHaveRealParent() const override { return false; }
 
 
     // Query type of combinator
@@ -659,8 +671,15 @@ namespace Sass {
   class CompoundSelector final : public CompoundOrCombinator, public Vectorized<Simple_Selector_Obj, CompoundSelector> {
     ADD_PROPERTY(bool, hasRealParent)
     ADD_PROPERTY(bool, extended)
+    // line break after list separator
+    ADD_PROPERTY(bool, hasPostLineBreak)
   public:
     CompoundSelector(ParserState pstate);
+
+    // Returns true if this compound selector
+    // fullfills various criterias.
+    bool canHaveRealParent() const;
+
     size_t hash() const override {
       return 0;
     }
@@ -668,9 +687,9 @@ namespace Sass {
 
     ComplexSelector* wrapInComplex();
 
-    bool is_superselector_of(const CompoundSelector* sub, std::string wrapped = "") const;
-    bool is_superselector_of(const ComplexSelector* sub, std::string wrapped = "") const;
-    bool is_superselector_of(const SelectorList* sub, std::string wrapped = "") const;
+    bool isSuperselectorOf(const CompoundSelector* sub, std::string wrapped = "") const;
+    bool isSuperselectorOf(const ComplexSelector* sub, std::string wrapped = "") const;
+    bool isSuperselectorOf(const SelectorList* sub, std::string wrapped = "") const;
 
     void cloneChildren() override;
     bool has_parent_ref() const override;
@@ -720,6 +739,11 @@ namespace Sass {
     SelectorList* unify_with(SelectorList*);
     void populate_extends(SelectorList_Obj, SubsetMap2&);
 
+    // Returns true if all complex selectors
+    // can have real parents, meaning every
+    // first component does allow for it
+    bool canHaveRealParent() const;
+
     void remove_parent_selectors();
     void cloneChildren() override;
     bool has_parent_ref() const override;
@@ -767,9 +791,6 @@ namespace Sass {
     bool has_real_parent_ref() const override;
     void remove_parent_selectors();
     SelectorList_Obj toSelList() const;
-    bool is_superselector_of(const Compound_Selector* sub, std::string wrapping = "") const;
-    bool is_superselector_of(const Complex_Selector* sub, std::string wrapping = "") const;
-    bool is_superselector_of(const Selector_List* sub, std::string wrapping = "") const;
     Selector_List* unify_with(Selector_List*);
     SelectorList* unify_with(SelectorList*);
     void populate_extends(Selector_List_Obj, Subset_Map&);

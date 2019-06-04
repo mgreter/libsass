@@ -15,6 +15,26 @@
 
 namespace Sass {
 
+  // Special case insensitive string matcher. We can optimize
+  // the more general compare case quite a bit by requiring
+  // consumers to obey some rules (lowercase and no space).
+  // - `literal` must only contain lower case ascii characters
+  // there is one edge case where this could give false positives
+  // test could contain a (non-ascii) char exactly 32 below literal
+  bool equalsLiteral(const std::string& literal, const std::string test) {
+    // Work directly on characters
+    const char* src = test.c_str();
+    const char* lit = literal.c_str();
+    // There is a small chance that the search string
+    // Is longer than the rest of the string to look at
+    while (*lit && (*src == *lit || *src + 32 == *lit)) {
+      ++src, ++lit;
+    }
+    // True if literal is at end
+    // If not test was too long
+    return *lit == 0;
+  }
+
   double round(double val, size_t precision)
   {
     // Disable FMA3-optimized implementation when compiling with VS2013 for x64 targets

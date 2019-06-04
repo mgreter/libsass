@@ -1,12 +1,38 @@
+#include <numeric>;
+
 #include "parser.hpp"
 #include "extend.hpp"
 #include "extender.hpp"
+#include "debugger.hpp"
 #include "fn_utils.hpp"
 #include "fn_selectors.hpp"
 
 namespace Sass {
 
   namespace Functions {
+    /*
+    std::string selectorString(std::vector<std::string> name) {
+      std::string string = selectorStringOrNull();
+      if (string != null) return string;
+
+      throw _exception(
+        "$this is not a valid selector: it must be a string,\n"
+        "a list of strings, or a list of lists of strings.",
+        name);
+    }
+
+    SelectorList_Obj assertSelector(std::string name, bool allowParent = false) {
+      std::string string(selectorString(name));
+      try {
+        return SelectorList.parse(string, allowParent: allowParent);
+      } on SassFormatException catch (error) {
+        // TODO(nweiz): colorize this if we're running in an environment where
+        // that works.
+        throw _exception(error.toString());
+      }
+    }
+    */
+
 
     Signature selector_nest_sig = "selector-nest($selectors...)";
     BUILT_IN(selector_nest)
@@ -61,6 +87,50 @@ namespace Sass {
       Listize listize;
       return Cast<Value>(result->toSelectorList()->perform(&listize));
     }
+    /*
+    CompoundSelector_Obj prependParent(CompoundSelector_Obj compound) {
+      auto first = compound->first();
+      // if (first is UniversalSelector) return null;
+      if (Cast<Type_Selector>(first)) {
+        if (first->ns() == "") return {};
+        auto compound = SASS_MEMORY_NEW(CompoundSelector, "[tmp]");
+        return CompoundSelector([
+          ParentSelector(suffix:first.name.name),
+            ...compound.components.skip(1)
+        ]);
+      }
+      else {
+        return CompoundSelector([ParentSelector(), ...compound.components]);
+      }
+    }
+
+    SelectorList_Obj appendAndResolve(SelectorList_Obj parent, SelectorList_Obj child)
+    {
+      auto list = SASS_MEMORY_NEW(SelectorList, "[tmp]");
+      for (auto complex : child->elements()) {
+        CompoundOrCombinator_Obj component = complex->first();
+        if (CompoundSelector_Obj compound = Cast<CompoundSelector>(component)) {
+          auto newCompound = preapreParent(compound);
+          if (newCompound.isNull()) {
+            // error("Can0t append", pstate, traces);
+          }
+          auto cplx = SASS_MEMORY_NEW(ComplexSelector, "[tmp]");
+          cplx->append(newCompound);
+          for (size_t n = 1; n < complex->length(); n += 1) {
+            cplx->append(complex->get(n));
+          }
+          list->append(cplx);
+        }
+        else {
+          // error "Can appent"
+        }
+      }
+
+      // return list->resolveParentSelectors(parent);
+      return {};
+
+    }
+    */
 
     Signature selector_append_sig = "selector-append($selectors...)";
     BUILT_IN(selector_append)
@@ -68,11 +138,14 @@ namespace Sass {
       List* arglist = ARG("$selectors", List);
 
       // Not enough parameters
-      if( arglist->length() == 0 )
-        error("$selectors: At least one selector must be passed for `selector-append'", pstate, traces);
+      if (arglist->empty()) {
+        error("$selectors: At least one selector must be "
+          "passed for `selector-append'", pstate, traces);
+      }
 
       // Parse args into vector of selectors
-      SelectorStack parsedSelectors;
+      SelectorStack2 parsedSelectors;
+      parsedSelectors.push_back({});
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Obj exp = Cast<Expression>(arglist->value_at_index(i));
         if (exp->concrete_type() == Expression::NULL_VAL) {
@@ -85,17 +158,60 @@ namespace Sass {
           str->quote_mark(0);
         }
         std::string exp_src = exp->to_string();
-        Selector_List_Obj sel = Parser::parse_selector(exp_src.c_str(), ctx, traces,
+        SelectorList_Obj sel = Parser::parse_selector2(exp_src.c_str(), ctx, traces,
                                                        exp->pstate(), pstate.src,
-                                                       /*allow_parent=*/false);
+                                                       /*allow_parent=*/true);
 
-        parsedSelectors.push_back(sel);
+        for (auto asd : sel->elements()) {
+          // asd->chroots(false);
+          if (asd->empty()) {
+            std::cerr << "EMPTY\n";
+            auto qwe = SASS_MEMORY_NEW(CompoundSelector, "[tmp]");
+            // qwe->hasRealParent(true);
+            asd->append(qwe);
+          }
+          if (CompoundSelector_Obj comp = Cast<CompoundSelector>(asd->first())) {
+            comp->hasRealParent(true);
+            asd->chroots(true);
+          }
+        }
+
+        if (parsedSelectors.size() > 1) {
+
+          if (!sel->canHaveRealParent()) {
+            auto parent = parsedSelectors.back();
+            for (auto asd : parent->elements()) {
+              if (CompoundSelector_Obj comp = Cast<CompoundSelector>(asd->first())) {
+                comp->hasRealParent(false);
+              }
+            }
+            error("Can't append \"" + sel->to_string() + "\" to \"" +
+            parent->to_string() + "\" for `selector-append'", pstate, traces);
+          }
+
+          // Build the resolved stack from the left. It's cheaper to directly
+          // calculate and update each resolved selcted from the left, than to
+          // recursively calculate them from the right side, as we would need
+          // to go through the whole stack depth to build the final results.
+          // E.g. 'a', 'b', 'x, y' => 'a' => 'a b' => 'a b x, a b y'
+          // vs 'a', 'b', 'x, y' => 'x' => 'b x' => 'a b x', 'y' ...
+          parsedSelectors.push_back(sel->resolve_parent_refs(parsedSelectors, traces, true));
+        }
+        else {
+          parsedSelectors.push_back(sel);
+        }
       }
 
       // Nothing to do
       if( parsedSelectors.empty() ) {
         return SASS_MEMORY_NEW(Null, pstate);
       }
+
+      return Cast<Value>(Listize::perform(parsedSelectors.back()));
+
+
+
+      /*
 
       // Set the first element as the `result`, keep appending to as we go down the parsedSelector vector.
       SelectorStack::iterator itr = parsedSelectors.begin();
@@ -151,30 +267,28 @@ namespace Sass {
 
       Listize listize;
       return Cast<Value>(result->perform(&listize));
+      */
     }
 
     Signature selector_unify_sig = "selector-unify($selector1, $selector2)";
     BUILT_IN(selector_unify)
     {
-      Selector_List_Obj selector1 = ARGSELS("$selector1");
-      Selector_List_Obj selector2 = ARGSELS("$selector2");
-
-      Selector_List_Obj result = selector1->unify_with(selector2);
-      Listize listize;
-      return Cast<Value>(result->perform(&listize));
+      SelectorList_Obj selector1 = ARGSELS2("$selector1");
+      SelectorList_Obj selector2 = ARGSELS2("$selector2");
+      SelectorList_Obj result = selector1->unify_with(selector2);
+      return Cast<Value>(Listize::perform(result));
     }
 
     Signature simple_selectors_sig = "simple-selectors($selector)";
     BUILT_IN(simple_selectors)
     {
-      Compound_Selector_Obj sel = ARGSEL("$selector");
+      CompoundSelector_Obj sel = ARGSEL2("$selector");
 
       List* l = SASS_MEMORY_NEW(List, sel->pstate(), sel->length(), SASS_COMMA);
 
       for (size_t i = 0, L = sel->length(); i < L; ++i) {
         Simple_Selector_Obj ss = (*sel)[i];
         std::string ss_string = ss->to_string() ;
-
         l->append(SASS_MEMORY_NEW(String_Quoted, ss->pstate(), ss_string));
       }
 
@@ -217,39 +331,20 @@ namespace Sass {
       SelectorList_Obj source = ARGSELS2("$replacement");
       SelectorList_Obj result = Extender::replace(selector, source, target);
       return Cast<Value>(Listize::perform(result));
-
-/*
-      Selector_List_Obj selector = ARGSELS("$selector");
-      Selector_List_Obj original = ARGSELS("$original");
-      Selector_List_Obj replacement = ARGSELS("$replacement");
-      Subset_Map subset_map;
-      replacement->populate_extends(original, subset_map);
-      Extend extend(subset_map);
-
-      Selector_List_Obj result = extend.extendSelectorList(selector, true);
-
-      Listize listize;
-      return Cast<Value>(result->perform(&listize));
-*/
     }
 
     Signature selector_parse_sig = "selector-parse($selector)";
     BUILT_IN(selector_parse)
     {
-      Selector_List_Obj sel = ARGSELS("$selector");
-
-      Listize listize;
-      return Cast<Value>(sel->perform(&listize));
+      SelectorList_Obj selector = ARGSELS2("$selector");
+      return Cast<Value>(Listize::perform(selector));
     }
 
     Signature is_superselector_sig = "is-superselector($super, $sub)";
     BUILT_IN(is_superselector)
     {
-      Selector_List_Obj  sel_sups = ARGSELS("$super");
-      Selector_List_Obj  sel_subs = ARGSELS("$sub");
-      SelectorList_Obj  sel_sup = toSelectorList(sel_sups);
-      SelectorList_Obj  sel_sub = toSelectorList(sel_subs);
-
+      SelectorList_Obj sel_sup = ARGSELS2("$super");
+      SelectorList_Obj sel_sub = ARGSELS2("$sub");
       bool result = sel_sup->isSuperselectorOf(sel_sub);
       return SASS_MEMORY_NEW(Boolean, pstate, result);
     }

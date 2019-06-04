@@ -666,7 +666,7 @@ namespace Sass {
           hh->media_block((*extender)[i]->media_block());
           Complex_Selector_Obj ssel = SASS_MEMORY_NEW(Complex_Selector, (*extender)[i]->pstate());
           ssel->media_block((*extender)[i]->media_block());
-          if (sel->has_line_feed()) ssel->has_line_feed(true);
+          if (sel->hasPreLineFeed()) ssel->hasPreLineFeed(true);
           Parent_Selector_Obj ps = SASS_MEMORY_NEW(Parent_Selector, (*extender)[i]->pstate());
           ps->media_block((*extender)[i]->media_block());
           hh->append(ps);

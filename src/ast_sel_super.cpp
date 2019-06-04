@@ -18,11 +18,16 @@
 
 #include "ast_fwd_decl.hpp"
 #include "ast_selectors.hpp"
+#include "prelexer.hpp"
 #include "debugger.hpp"
 
 namespace Sass {
 
-  // Returns all pseudo selectors in [compound] that have
+  bool listIsSuperslector(
+    std::vector<ComplexSelector_Obj> list1,
+    std::vector<ComplexSelector_Obj> list2);
+
+    // Returns all pseudo selectors in [compound] that have
   // a selector argument, and that have the given [name].
   std::vector<Pseudo_Selector_Obj> selectorPseudoNamed(
     CompoundSelector_Obj compound, std::string name)
@@ -40,28 +45,38 @@ namespace Sass {
     return rv;
   }
 
+  /// For example, `.foo` is a superselector of `:matches(.foo)`.
+  bool isSubselectorPseudo(const std::string& norm)
+  {
+    return equalsLiteral("any", norm)
+      || equalsLiteral("matches", norm)
+      || equalsLiteral("nth-child", norm)
+      || equalsLiteral("nth-last-child", norm);
+  }
+
+
   bool simpleIsSuperselectorOfSimple(
     Simple_Selector_Obj simple, Simple_Selector_Obj theirSimple)
   {
+
     if (*simple == *theirSimple) return true;
 
     if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(theirSimple)) {
-      // if(theirSimple.selector != null) {
-      /// For example, `.foo` is a superselector of `:matches(.foo)`.
-      // final _subselectorPseudos = { 'matches', 'any', 'nth-child', 'nth-last-child' };
-
-      if (pseudo->name() == "any" ||
-        pseudo->name() == "matches" ||
-        pseudo->name() == "nth-child" ||
-        pseudo->name() == "nth-last-child") {
-        std::cerr << "Implement pseudo stuff\n";
+      if (pseudo->selector() && isSubselectorPseudo(pseudo->normalized())) {
+        for (auto cpx : pseudo->selector()->elements()) {
+          ComplexSelector_Obj complex = toComplexSelector(cpx);
+          // Make sure we have exacly one items
+          if (complex->length() != 1) return false;
+          // That items must be a compound selector
+          if (auto compound = Cast<CompoundSelector>(complex->at(0))) {
+            // It must contain the lhs simple selector
+            if (!compound->contains(simple)) return false;
+          }
+        }
+        return true;
       }
-
-      // }
     }
-    else {
-      return false;
-    }
+    return false;
   }
 
   // Returns whether [simple] is a superselector of [compound].
@@ -74,6 +89,71 @@ namespace Sass {
       if (simpleIsSuperselectorOfSimple(simple, simple2)) {
         return true;
       }
+    }
+    return false;
+  }
+
+
+
+  bool typeIsSuperselectorOfCompound(
+    Type_Selector_Obj type,
+    CompoundSelector_Obj compound)
+  {
+    for (Simple_Selector_Obj simple : compound->elements()) {
+      if (Type_Selector_Obj rhs = Cast<Type_Selector>(rhs)) {
+        if (*type != *rhs) return true;
+      }
+    }
+    return false;
+  }
+
+  bool idIsSuperselectorOfCompound(
+    Id_Selector_Obj id,
+    CompoundSelector_Obj compound)
+  {
+    for (Simple_Selector_Obj simple : compound->elements()) {
+      if (Id_Selector_Obj rhs = Cast<Id_Selector>(rhs)) {
+        if (*id != *rhs) return true;
+      }
+    }
+    return false;
+  }
+
+  bool pseudoIsSuperselectorOfPseudo(
+    Pseudo_Selector_Obj pseudo1,
+    Pseudo_Selector_Obj pseudo2,
+    ComplexSelector_Obj parent
+  )
+  {
+    if (pseudo1->name() == pseudo2->name() && pseudo2->selector()) {
+      SelectorList_Obj list = toSelectorList(pseudo2->selector());
+      // std::cerr << "GO INTO OTHER LOOP " << debug_vec(list) << " [" << debug_vec(parent) << "]\n";
+      return listIsSuperslector(list->elements(), { parent });
+    }
+    return false;
+  }
+
+  bool pseudoNotIsSuperselectorOfCompound(
+    Pseudo_Selector_Obj pseudo1,
+    CompoundSelector_Obj compound2,
+    ComplexSelector_Obj parent)
+  {
+    // return compound2.components.any((simple2) ->
+    for (Simple_Selector_Obj simple2 : compound2->elements()) {
+      if (Type_Selector_Obj type2 = Cast<Type_Selector>(simple2)) {
+        if (CompoundSelector_Obj compound1 = Cast<CompoundSelector>(parent->last())) {
+          if (typeIsSuperselectorOfCompound(type2, compound1)) return true;
+        }
+      }
+      else if (Id_Selector_Obj id2 = Cast<Id_Selector>(simple2)) {
+        if (CompoundSelector_Obj compound1 = Cast<CompoundSelector>(parent->last())) {
+          if (idIsSuperselectorOfCompound(id2, compound1)) return true;
+        }
+      }
+      else if (Pseudo_Selector_Obj pseudo2 = Cast<Pseudo_Selector>(simple2)) {
+        if (pseudoIsSuperselectorOfPseudo(pseudo1, pseudo2, parent)) return true;
+      }
+        // pseudoIsSuperselectorOfPseudo
     }
     return false;
   }
@@ -134,6 +214,14 @@ namespace Sass {
 
     }
     else if (name == "not") {
+      // return pseudo1.selector.components.every((complex) ->
+      for (Complex_Selector_Obj complex : pseudo1->selector()->elements()) {
+        ComplexSelector_Obj asd = complex->toCplxSelector();
+        if (!pseudoNotIsSuperselectorOfCompound(pseudo1, compound2, asd)) return false;
+      }
+      return true;
+      // std::cerr << "IN NOT\n";
+
 
     }
     else if (name == "current") {
@@ -170,8 +258,9 @@ namespace Sass {
     for (Simple_Selector_Obj simple1 : compound1->elements()) {
       Pseudo_Selector_Obj pseudo1 = Cast<Pseudo_Selector>(simple1);
       if (pseudo1 && pseudo1->selector()) {
+        // std::cerr << "NOW WE HAVE A PSEUO WITH SEL\n";
         if (!selectorPseudoIsSuperselector(pseudo1, compound2, parents_from, parents_to)) {
-          // std::cerr << "RETURN FALSE1\n";
+          // std::cerr << "selectorPseudoIsSuperselector FALSE\n";
           return false;
         }
       }
@@ -185,16 +274,36 @@ namespace Sass {
     // with pseudo-elements that [compound2] doesn't share.
     for (Simple_Selector_Obj simple2 : compound2->elements()) {
       Pseudo_Selector_Obj pseudo2 = Cast<Pseudo_Selector>(simple2);
+      // if (pseudo2) // std::cerr << "IS A PSEUDO\n";
       if (pseudo2 && pseudo2->isElement()) {
+        // if (pseudo2) // std::cerr << "AND IS ELEMENT\n";
         if (!simpleIsSuperselectorOfCompound(pseudo2, compound1)) {
           // std::cerr << "is not simple 1\n";
           return false;
         }
       }
+      else {
+        // std::cerr << "IS NOT PSEUDO NOR ELEMENT\n";
+      }
     }
 
-    // std::cerr << "CMP OK\n";
+    // std::cerr << "CMP OK - RET TRUE\n";
     return true;
+  }
+
+  bool compoundIsSuperselector(
+    CompoundSelector_Obj compound1,
+    CompoundSelector_Obj compound2,
+    std::vector<CompoundOrCombinator_Obj> parents)
+  {
+    bool rv = compoundIsSuperselector(
+      compound1, compound2,
+      parents.begin(), parents.end()
+    );
+    // if (compound1->empty()) return true;
+    // if (compound2->empty()) return false;
+    // std::cerr << "SUPI " << debug_vec(compound1) << " vs " << debug_vec(compound2) << " => " << (rv ? "true" : "false") << "\n";
+    return rv;
   }
 
   bool complexIsSuperselector(std::vector<CompoundOrCombinator_Obj> complex1,
@@ -247,6 +356,16 @@ namespace Sass {
         std::vector<CompoundOrCombinator_Obj>::iterator parents_from = complex2.begin();
         std::advance(parents_from, i2 + 1); // equivalent to dart `.skip(i2 + 1)`
         bool rv = compoundIsSuperselector(compound1, compound2, parents_from, parents_to);
+        std::vector<CompoundOrCombinator_Obj> pp;
+
+        std::vector<CompoundOrCombinator_Obj>::iterator end = parents_to;
+        std::vector<CompoundOrCombinator_Obj>::iterator beg = parents_from;
+        while (beg != end) {
+          pp.push_back(*beg);
+          beg++;
+        }
+
+        // std::cerr << "compoundIsSuperselector" << debug_vec(compound1) << " vs " << debug_vec(compound2) << " with [" << debug_vec(pp) << "]\n";
         // std::cerr << "RETURN REM1 " << (rv ? "true" : "false") << "\n";
         return rv;
       }
@@ -355,7 +474,7 @@ namespace Sass {
     // std::cerr << "HERE 3\n";
     cplx2->concat(complex2); cplx2->append(base);
     // std::cerr << "HERE 4\n";
-    return cplx1->toComplexSelector()->is_superselector_of(cplx2->toComplexSelector());
+    return cplx1->isSuperselectorOf(cplx2);
   }
 
   std::vector<std::vector<CompoundOrCombinator_Obj>> unifyComplex(
@@ -373,7 +492,7 @@ namespace Sass {
         }
         else {
           for (Simple_Selector_Obj simple : comp->elements()) {
-            unifiedBase = simple->unify_with(unifiedBase);
+            unifiedBase = simple->unifyWith(unifiedBase);
             if (unifiedBase.isNull()) return {};
           }
         }

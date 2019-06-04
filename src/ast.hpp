@@ -250,6 +250,18 @@ namespace Sass {
       return *first;
     }
 
+    bool contains(const T& el) const {
+      auto cur = begin(), stop = end();
+      while (cur != stop) {
+        // ToDo: trust `!=`
+        if (!(*cur == *el)) {
+          return false;
+        }
+        cur++;
+      }
+      return false;
+    }
+
     T& operator[](size_t i) { return elements_[i]; }
     virtual const T& at(size_t i) const { return elements_.at(i); }
     virtual T& at(size_t i) { return elements_.at(i); }

@@ -1005,7 +1005,9 @@ namespace Sass {
     Selector_List_Obj rhs_sel = rhs.selector();
     if (rhs_sel && lhs_sel) return *lhs_sel == *rhs_sel;
     else if (rhs_ex && lhs_ex) return *lhs_ex == *rhs_ex;
-    else return lhs_ex.ptr() == rhs_ex.ptr()
+    else return
+      isElement() == rhs.isElement()
+      && lhs_ex.ptr() == rhs_ex.ptr()
       && lhs_sel.ptr() == rhs_sel.ptr();
   }
 
@@ -1223,7 +1225,9 @@ namespace Sass {
     Selector_List_Obj rhs_sel = rhs.selector();
     if (rhs_sel && lhs_sel) return *lhs_sel < *rhs_sel;
     else if (rhs_ex && lhs_ex) return *lhs_ex < *rhs_ex;
-    else return lhs_ex.ptr() < rhs_ex.ptr()
+    else return
+      isElement() < rhs.isElement()
+      && lhs_ex.ptr() < rhs_ex.ptr()
       && lhs_sel.ptr() < rhs_sel.ptr();
   }
 

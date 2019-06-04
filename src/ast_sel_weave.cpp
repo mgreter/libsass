@@ -336,7 +336,7 @@ namespace Sass {
       components1.pop_back(); components2.pop_back();
 
       if (combinator1->isGeneralCombinator() && combinator2->isGeneralCombinator()) {
-        if (compound1->toCompoundSelector()->is_superselector_of(compound2->toCompoundSelector())) { // XXX
+        if (compound1->isSuperselectorOf(compound2)) { // XXX
           std::vector< std::vector< CompoundOrCombinator_Obj >> items;
           std::vector< CompoundOrCombinator_Obj> item;
           item.push_back(compound2);
@@ -344,7 +344,7 @@ namespace Sass {
           items.push_back(item);
           result.insert(result.begin(), items);
         }
-        else if (compound2->toCompoundSelector()->is_superselector_of(compound1->toCompoundSelector())) { // XXX
+        else if (compound2->isSuperselectorOf(compound1)) { // XXX
           std::vector< std::vector< CompoundOrCombinator_Obj >> items;
           std::vector< CompoundOrCombinator_Obj> item;
           item.push_back(compound1);
@@ -383,7 +383,7 @@ namespace Sass {
         SelectorCombinator_Obj followingSiblingCombinator = combinator1->isFollowingSibling() ? combinator1 : combinator2;
         SelectorCombinator_Obj nextSiblingCombinator = combinator1->isFollowingSibling() ? combinator2 : combinator1;
 
-        if (followingSiblingSelector->is_superselector_of(nextSiblingSelector)) {
+        if (followingSiblingSelector->isSuperselectorOf(nextSiblingSelector)) {
           result.insert(result.begin(), { { nextSiblingSelector, nextSiblingCombinator } });
         }
         else {
@@ -438,7 +438,7 @@ namespace Sass {
       if (combinator1->isChildCombinator() && !components2.empty()) {
         CompoundSelector_Obj back1 = Cast<CompoundSelector>(components1.back());
         CompoundSelector_Obj back2 = Cast<CompoundSelector>(components2.back());
-        if (back1 && back2 && back2->is_superselector_of(back1)) {
+        if (back1 && back2 && back2->isSuperselectorOf(back1)) {
           components2.pop_back();
         }
       }
@@ -453,7 +453,7 @@ namespace Sass {
       if (combinator2->isChildCombinator() && !components1.empty()) {
         CompoundSelector_Obj back1 = Cast<CompoundSelector>(components1.back());
         CompoundSelector_Obj back2 = Cast<CompoundSelector>(components2.back());
-        if (back1 && back2 && back1->is_superselector_of(back2)) {
+        if (back1 && back2 && back1->isSuperselectorOf(back2)) {
           components1.pop_back();
         }
       }

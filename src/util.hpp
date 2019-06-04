@@ -30,6 +30,7 @@ namespace Sass {
     return m;
   }
 
+  bool equalsLiteral(const std::string& literal, const std::string test);
   double round(double val, size_t precision = 0);
   double sass_strtod(const char* str);
   const char* safe_str(const char *, const char* = "");

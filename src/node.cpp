@@ -25,7 +25,7 @@ namespace Sass {
     pStripped->combinator(Complex_Selector::ANCESTOR_OF);
 
     Node n(SELECTOR, Complex_Selector::ANCESTOR_OF, pStripped, null /*pCollection*/);
-    n.got_line_feed = pSelector.has_line_feed();
+    n.got_line_feed = pSelector.hasPreLineFeed();
     return n;
   }
 
@@ -50,7 +50,7 @@ namespace Sass {
 
   Node::Node(const TYPE& type, Complex_Selector::Combinator combinator, Complex_Selector* pSelector, NodeDequePtr& pCollection)
   : got_line_feed(false), mType(type), mCombinator(combinator), mpSelector(pSelector), mpCollection(pCollection)
-  { if (pSelector) got_line_feed = pSelector->has_line_feed(); }
+  { if (pSelector) got_line_feed = pSelector->hasPreLineFeed(); }
 
 
   Node Node::klone() const {
@@ -180,13 +180,13 @@ namespace Sass {
       return Node::createNil();
     }
     Node node = Node::createCollection();
-    node.got_line_feed = pToConvert->has_line_feed();
-    bool has_lf = pToConvert->has_line_feed();
+    node.got_line_feed = pToConvert->hasPreLineFeed();
+    bool has_lf = pToConvert->hasPreLineFeed();
 
     // unwrap the selector from parent ref
     if (pToConvert->head() && pToConvert->head()->has_parent_ref()) {
       Complex_Selector_Obj tail = pToConvert->tail();
-      if (tail) tail->has_line_feed(pToConvert->has_line_feed());
+      if (tail) tail->hasPreLineFeed(pToConvert->hasPreLineFeed());
       pToConvert = tail;
     }
 
@@ -200,7 +200,7 @@ namespace Sass {
         if (has_lf) node.collection()->back().got_line_feed = has_lf;
         if (pToConvert->head() || empty_parent_ref) {
           if (pToConvert->tail()) {
-            pToConvert->tail()->has_line_feed(pToConvert->has_line_feed());
+            pToConvert->tail()->hasPreLineFeed(pToConvert->hasPreLineFeed());
           }
         }
         has_lf = false;
@@ -241,8 +241,8 @@ namespace Sass {
 
     Complex_Selector_Obj pCurrent = pFirst;
 
-    if (toConvert.isSelector()) pFirst->has_line_feed(toConvert.got_line_feed);
-    if (toConvert.isCombinator()) pFirst->has_line_feed(toConvert.got_line_feed);
+    if (toConvert.isSelector()) pFirst->hasPreLineFeed(toConvert.got_line_feed);
+    if (toConvert.isCombinator()) pFirst->hasPreLineFeed(toConvert.got_line_feed);
 
     for (NodeDeque::iterator childIter = childNodes.begin(), childIterEnd = childNodes.end(); childIter != childIterEnd; childIter++) {
 
@@ -256,14 +256,14 @@ namespace Sass {
         pCurrent = pCurrent->tail();
       } else if (child.isCombinator()) {
         pCurrent->combinator(child.combinator());
-        if (child.got_line_feed) pCurrent->has_line_feed(child.got_line_feed);
+        if (child.got_line_feed) pCurrent->hasPreLineFeed(child.got_line_feed);
 
         // if the next node is also a combinator, create another Complex_Selector to hold it so it doesn't replace the current combinator
         if (childIter+1 != childIterEnd) {
           Node& nextNode = *(childIter+1);
           if (nextNode.isCombinator()) {
             pCurrent->tail(SASS_MEMORY_NEW(Complex_Selector, ParserState("[NODE]"), Complex_Selector::ANCESTOR_OF, {}, {}));
-            if (nextNode.got_line_feed) pCurrent->tail()->has_line_feed(nextNode.got_line_feed);
+            if (nextNode.got_line_feed) pCurrent->tail()->hasPreLineFeed(nextNode.got_line_feed);
             pCurrent = pCurrent->tail();
           }
         }
@@ -276,7 +276,7 @@ namespace Sass {
     Compound_Selector* fakeHead = SASS_MEMORY_NEW(Compound_Selector, ParserState("[NODE]"), 1);
     Parent_Selector* selectorRef = SASS_MEMORY_NEW(Parent_Selector, ParserState("[NODE]"));
     fakeHead->elements().push_back(selectorRef);
-    if (toConvert.got_line_feed) pFirst->has_line_feed(toConvert.got_line_feed);
+    if (toConvert.got_line_feed) pFirst->hasPreLineFeed(toConvert.got_line_feed);
     // pFirst->has_line_feed(pFirst->has_line_feed() || pFirst->tail()->has_line_feed() || toConvert.got_line_feed);
     pFirst->head(fakeHead);
     return SASS_MEMORY_COPY(pFirst);

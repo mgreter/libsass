@@ -1592,26 +1592,27 @@ namespace Sass {
   // first use of "find" (ATM only implemented for selectors)
   bool hasNotSelector(AST_Node_Obj obj) {
     if (Pseudo_Selector * w = Cast<Pseudo_Selector>(obj)) {
-      return w->name() == ":not";
+      return w->name() == "not";
     }
     return false;
   }
 
   Pseudo_Selector* Eval::operator()(Pseudo_Selector* s)
   {
-    if (s->name() == ":not") {
+
+    if (s->name() == "not") {
       auto stack = exp.getSelectorStack2();
       if (stack.back()) {
         if (s->selector()->find(hasNotSelector)) {
           s->selector()->clear();
-          s->name(" ");
+          s->name("");
         }
         else {
           for (size_t i = 0; i < s->selector()->length(); ++i) {
             Complex_Selector* cs = s->selector()->at(i);
             if (cs->tail()) {
               s->selector()->clear();
-              s->name(" ");
+              s->name("");
             }
           }
         }

@@ -738,70 +738,195 @@ namespace Sass {
     }
     name.erase(name.size() - 1);
 
-    Pseudo_Selector* sel = SASS_MEMORY_NEW(Pseudo_Selector, nsource_position, name);
+    Pseudo_Selector* sel = SASS_MEMORY_NEW(Pseudo_Selector, nsource_position, name.substr(1));
     // debug_ast(negated);
     sel->selector(negated);
     return sel;
   }
 
+  // Pseudo-class selectors that take unadorned selectors as arguments.
+  bool isSelectorPseudoClass(const std::string& test)
+  {
+    return equalsLiteral("not", test)
+      || equalsLiteral("matches", test)
+      || equalsLiteral("current", test)
+      || equalsLiteral("any", test)
+      || equalsLiteral("has", test)
+      || equalsLiteral("host", test)
+      || equalsLiteral("host-context", test);
+  };
+
+  // Pseudo-element selectors that take unadorned selectors as arguments.
+  bool isSelectorPseudoElement(const std::string& test)
+  {
+    return equalsLiteral("slotted", test);
+  };
+
+  // Pseudo-element selectors that has binominals
+  bool isSelectorPseudoBinominal(const std::string& test)
+  {
+    return equalsLiteral("nth-child", test)
+      || equalsLiteral("nth-last-child", test);
+  };
+
+
+  // Returns [name] without a vendor prefix.
+  // If [name] has no vendor prefix, it's returned as-is.
+  std::string unvendor(std::string name) {
+    if (name.size() < 2) return name;
+    if (name[0] != '-') return name;
+    if (name[1] == '-') return name;
+    for (size_t i = 2; i < name.size(); i++) {
+      if (name[i] == '-') return name.substr(i + 1);
+    }
+    return name;
+  }
+
   // a pseudo selector often starts with one or two colons
   // it can contain more selectors inside parentheses
   Simple_Selector_Obj Parser::parse_pseudo_selector() {
-    if (lex< sequence<
-          pseudo_prefix,
-          // we keep the space within the name, strange enough
-          // ToDo: refactor output to schedule the space for it
-          // or do we really want to keep the real white-space?
-          sequence< identifier, optional < block_comment >, exactly<'('> >
-        > >())
-    {
 
-      std::string name(lexed);
-      name.erase(name.size() - 1);
-      ParserState p = pstate;
+    /*
+    Expression_Obj argument;
+    SelectorList_Obj selector;
+    // Lex one or two colon characters
+    if (lex<sequence<pseudo_prefix>>()) {
+      std::string colons(lexed);
+      // Check if it is a pseudo element
+      bool element = colons.size() == 2;
+      // Identifier must directly follow
+      if (lex<identifier>(false)) {
+        // Name without any colons
+        // But can have vendor prefix
+        std::string name(lexed);
+        // Create normalized name
+        std::string norm(unvendor(name));
+        // Check for wrapped selector
+        if (lex<exactly<'('>>(false)) {
 
-      // specially parse static stuff
-      // ToDo: really everything static?
-      if (peek_css <
-            sequence <
-              alternatives <
-                static_value,
-                binomial
-              >,
-              optional_css_whitespace,
-              exactly<')'>
-            >
-          >()
-      ) {
-        lex_css< alternatives < static_value, binomial > >();
-        String_Constant_Obj expr = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
-        if (lex_css< exactly<')'> >()) {
-          expr->can_compress_whitespace(true);
-          Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name);
-          pseudo->expression(expr);
-          return pseudo;
+          std::cerr << "PARSI 0\n";
+
+          if (element) {
+            std::cerr << "PARSI 21\n";
+            if (isSelectorPseudoElement(norm)) {
+              selector = parseSelectorList(true);
+            }
+            else {
+              std::cerr << "PARSI 22\n";
+              argument = parseDeclarationValue(true);
+            }
+          }
+          else if (isSelectorPseudoClass(norm)) {
+            std::cerr << "PARSI 23\n";
+            selector = parseSelectorList(true);
+          }
+          else if (isSelectorPseudoBinominal(norm)) {
+            std::cerr << "PARSI Bino\n";
+            if (lex_css< alternatives < static_value, binomial > >()) {
+              if (lexed) {
+                std::cerr << "WTF\n";
+                argument = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
+              }
+              else {
+                css_error("Invalid CSS", " after ", ": expected \")\", was ");
+              }
+            }
+          }
+          else {
+            std::cerr << "PARSI\n";
+            argument = parseDeclarationValue(true);
+            std::cerr << "PARSI2\n";
+          }
+
+          if (lex<exactly<')'>>()) {
+            Pseudo_Selector* pseudo = SASS_MEMORY_NEW(
+              Pseudo_Selector, pstate, name, element);
+            pseudo->expression(argument);
+            pseudo->selector(toSelector_List(selector));
+            // debug_ast(pseudo);
+            return pseudo;
+          }
+          std::cerr << "HAS BINO\n";
+
         }
-      }
-      else if (SelectorList_Obj wrapped2 = parseSelectorList(true)) {
-        Selector_List_Obj wrapped = wrapped2->toSelectorList();
-        if (wrapped && lex_css< exactly<')'> >()) {
-
-          Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name);
-          pseudo->selector(wrapped);
-          return pseudo;
-
+        // element pseudo selector
+        else {
+          std::cerr << "RETURNI NOWI\n";
+          return SASS_MEMORY_NEW(Pseudo_Selector, pstate, name, element);
         }
+
+      }
+    }
+    */
+
+    // Lex one or two colon characters
+    if (lex<pseudo_prefix>()) {
+      std::string colons(lexed);
+      // Check if it is a pseudo element
+      bool element = colons.size() == 2;
+
+      if (lex< sequence<
+        // we keep the space within the name, strange enough
+        // ToDo: refactor output to schedule the space for it
+        // or do we really want to keep the real white-space?
+        sequence< identifier, optional < block_comment >, exactly<'('> >
+      > >())
+      {
+
+        std::string name(lexed);
+        name.erase(name.size() - 1);
+        ParserState p = pstate;
+
+        // specially parse static stuff
+        // ToDo: really everything static?
+        if (peek_css <
+          sequence <
+          alternatives <
+          static_value,
+          binomial
+          >,
+          optional_css_whitespace,
+          exactly<')'>
+          >
+        >()
+          ) {
+          lex_css< alternatives < static_value, binomial > >();
+          String_Constant_Obj expr = SASS_MEMORY_NEW(String_Constant, pstate, lexed);
+          if (lex_css< exactly<')'> >()) {
+            expr->can_compress_whitespace(true);
+            Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name, element);
+            pseudo->expression(expr);
+            return pseudo;
+          }
+        }
+        else if (SelectorList_Obj wrapped2 = parseSelectorList(true)) {
+          Selector_List_Obj wrapped = wrapped2->toSelectorList();
+          if (wrapped && lex_css< exactly<')'> >()) {
+
+            Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name, element);
+            pseudo->selector(wrapped);
+            return pseudo;
+
+          }
+        }
+
+      }
+      // EO if pseudo selector
+
+      else if (lex < sequence< optional < pseudo_prefix >, identifier > >()) {
+        return SASS_MEMORY_NEW(Pseudo_Selector, pstate, lexed, element);
+      }
+      else if (lex < pseudo_prefix >()) {
+        css_error("Invalid CSS", " after ", ": expected pseudoclass or pseudoelement, was ");
       }
 
     }
-    // EO if pseudo selector
+    else {
+      lex < identifier >(); // needed for error message?
+      css_error("Invalid CSS", " after ", ": expected selector, was ");
+      // std::cerr << "no colons";
+    }
 
-    else if (lex < sequence< optional < pseudo_prefix >, identifier > >()) {
-      return SASS_MEMORY_NEW(Pseudo_Selector, pstate, lexed);
-    }
-    else if(lex < pseudo_prefix >()) {
-      css_error("Invalid CSS", " after ", ": expected pseudoclass or pseudoelement, was ");
-    }
 
     css_error("Invalid CSS", " after ", ": expected \")\", was ");
 
@@ -870,6 +995,16 @@ namespace Sass {
       String_Obj contents = parse_interpolated_chunk(lexed, true, false);
       block->append(SASS_MEMORY_NEW(Comment, pstate, contents, is_important));
     }
+  }
+
+  Expression* Parser::parseDeclarationValue(bool allowEmpty)
+  {
+    std::cerr << "NOPSI\n";
+    // ToDo: far from original implementation
+    lex< skip_over_scopes<exactly <'('>, exactly <')'>> >();
+    // retrack one char to expose closing brace
+    utf8::unchecked::retreat(position, 1);
+    return SASS_MEMORY_NEW(String_Constant, pstate, lexed);
   }
 
   Declaration_Obj Parser::parse_declaration() {
@@ -2482,6 +2617,7 @@ namespace Sass {
     lex <
       one_plus <
         alternatives <
+          exactly <'>'>,
           sequence <
             exactly <'\\'>,
             any_char
