@@ -65,6 +65,9 @@ namespace Sass {
     }
 
 
+    Extension2 withExtender(ComplexSelector_Obj newExtender);
+
+
   };
 
 }

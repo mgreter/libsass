@@ -191,7 +191,40 @@ namespace Sass {
     // if (right.isOptional && right.mediaContext == null) return left;
     // if (left.isOptional && left.mediaContext == null) return right;
 
+    if (rhs.isOptional) {
+      std::cerr << "MERGE LEFT " << debug_vec(lhs) << "\n";
+      return lhs;
+    }
+    if (lhs.isOptional) {
+      std::cerr << "MERGE RIGHT " << debug_vec(rhs) << "\n";
+      return rhs;
+    }
 
+    std::cerr << "MUST MERGE EXTENSION\n";
+    Extension2 rv(lhs);
+    rv.isOptional = true;
+    rv.isOriginal = false;
+    return rv;
+
+
+  }
+  mapAddAll2(ExtSelExtMap& dest, ExtSelExtMap& source)
+  {
+    for (auto it : source) {
+      auto key = it.first;
+      auto& inner = it.second;
+      ExtSelExtMap::iterator dmap = dest.find(key);
+      if (dmap == dest.end()) {
+        std::cerr << "ADD FULLY\n";
+        dest[key] = inner;
+      }
+      else {
+        for (auto it2 : inner) {
+          ExtSelExtMapEntry& imap = dest[key];
+          imap[it2.first] = it2.second;
+        }
+      }
+    }
   }
 
   // ToDo: rename extender to parent, since it is not involved in extending stuff
@@ -248,9 +281,167 @@ namespace Sass {
       return;
     }
 
+    std::cerr << "HAS NEW FOR " << debug_vec(newExtensions) << "\n";
+
+    //     var newExtensionsByTarget = {target: newExtensions};
+
+    ExtSelExtMap newExtensionsByTarget;
+    newExtensionsByTarget[target] = newExtensions;
+
+    if (existingExtensions != extensionsByExtender.end()) {
+      std::cerr << "DO MAP\n";
+      auto additionalExtensions =
+        extendExistingExtensions(existingExtensions->second, newExtensionsByTarget);
+
+      if (!additionalExtensions.empty()) {
+        std::cerr << "MAP ADD ALL2\n";
+        mapAddAll2(newExtensionsByTarget, additionalExtensions);
+        std::cerr << "MAP ADDED " << debug_keys(newExtensionsByTarget) << "\n";
+      }
+    }
+
+    if (rules != selectors.end()) {
+      std::cerr << "Extend existing style rules" << "\n";
+      extendExistingStyleRules(rules->second, newExtensionsByTarget);
+    }
+
+    std::cerr << "Done";
+
   }
 
 
+  /// Extend [extensions] using [newExtensions].
+  void Extender::extendExistingStyleRules(ExtListSelSet rules,
+    ExtSelExtMap newExtensions
+  )
+  {
+    std::cerr << "in extendStyle " << debug_vec(rules) << "\n";
+    std::cerr << "in extendStyle " << debug_vec(newExtensions) << "\n";
+    // Is a modifyableCssStyleRUle in dart sass
+    for (SelectorList_Obj rule : rules) {
+      auto oldValue = rule;
+      // try
+      std::cerr << "extend rule " << debug_vec(oldValue) << "\n";
+      auto ext = extendList(rule, newExtensions);
+      std::cerr << " res " << debug_vec(ext) << "\n";
+      // catch
+
+      // If no extends actually happenedit (for example becaues unification
+      // failed), we don't need to re-register the selector.
+      if (*oldValue = rule) continue;
+
+    }
+    std::cerr << "_extendExistingStyleRules2\n";
+  }
+
+  /// Extend [extensions] using [newExtensions].
+///
+/// Note that this does duplicate some work done by
+/// [_extendExistingStyleRules], but it's necessary to expand each extension's
+/// extender separately without reference to the full selector list, so that
+/// relevant results don't get trimmed too early.
+///
+/// Returns extensions that should be added to [newExtensions] before
+/// extending selectors in order to properly handle extension loops such as:
+///
+///     .c {x: y; @extend .a}
+///     .x.y.a {@extend .b}
+///     .z.b {@extend .c}
+///
+/// Returns `null` if there are no extensions to add.
+  ExtSelExtMap Extender::extendExistingExtensions(
+    std::vector<Extension2> oldExtensions,
+    ExtSelExtMap& newExtensions)
+  {
+
+    ExtSelExtMap additionalExtensions;
+
+    std::cerr << "extendExistingExtensions" << "\n";
+
+    for (Extension2 extension : oldExtensions) {
+      ExtSelExtMapEntry sources = extensions[extension.target];
+      std::vector<ComplexSelector_Obj> selectors;
+      // try {
+      selectors = extendComplex(
+        extension.extender,
+        newExtensions
+      );
+      if (selectors.empty()) {
+        continue;
+      }
+
+      // } catch () {
+      /*
+on SassException catch (error) {
+        throw SassException(
+            "From ${extension.extenderSpan.message('')}\n"
+            "${error.message}",
+            error.span);
+      */
+      // }
+
+      bool containsExtension = *selectors.front() == *extension.extender;
+      bool first = false;
+      for (ComplexSelector_Obj complex : selectors) {
+        // If the output contains the original complex 
+        // selector, there's no need to recreate it.
+        if (containsExtension && first) {
+          first = false;
+          continue;
+        }
+
+        Extension2 withExtender2 = extension.withExtender(complex);
+        ExtSelExtMapEntry::iterator existingExtension = sources.find(complex); // 
+
+        if (existingExtension != sources.end()) {
+          auto sec = existingExtension->second;
+          std::cerr << "MERGED LHS " << debug_vec(sec) << "\n";
+          std::cerr << "MERGED RHS " << debug_vec(withExtender2) << "\n";
+          Extension2 merged = mergeExtension(existingExtension->second, withExtender2);
+          std::cerr << "MERGED " << debug_vec(merged) << "\n";
+          // existingExtension->second = merged; // compiler error???
+          sources[complex] = merged;
+        }
+        else {
+          std::cerr << "WITH EXTENDER " + debug_vec(withExtender2) << "\n";
+          sources[complex] = withExtender2;
+          for (auto component : complex->elements()) {
+            if (auto compound = component->getCompound()) {
+              for (auto simple : compound->elements()) {
+                std::cerr << "  EXTBY " << debug_vec(simple) << "\n";
+                extensionsByExtender[simple].push_back(withExtender2);
+              }
+            }
+          }
+
+          if (newExtensions.find(extension.target) != newExtensions.end()) {
+            std::cerr << " ADDITIONAL SOURCE\n";
+            auto& additionalSources = additionalExtensions[extension.target];
+            additionalSources[complex] = withExtender2;
+          }
+
+        }
+
+        std::cerr << "OUT MERGE\n";
+
+      }
+
+      // If [selectors] doesn't contain [extension.extender], for example if it
+      // was replaced due to :not() expansion, we must get rid of the old
+      // version.
+      if (!containsExtension) {
+        std::cerr << "ERASE " << debug_vec(extension.extender) << "\n";
+        sources.erase(extension.extender);
+      }
+
+
+    }
+
+    std::cerr << "RV ADDIT " + debug_vec(additionalExtensions) << "\n";
+
+    return additionalExtensions;
+
+  }
 
   template <class T, class U>
   bool setContains(T key, std::set<T, U> set)
@@ -298,10 +489,13 @@ namespace Sass {
 
     auto tt = trim(extended, originals);
 
-    // std::cerr << "TRIMMED " << debug_vec(tt) << "\n";
+    std::cerr << "TRIMMED " << debug_vec(tt) << "\n";
 
     SelectorList_Obj rv = SASS_MEMORY_NEW(SelectorList, list->pstate());
     rv->concat(tt);
+
+    std::cerr << "RETURN extendList " << debug_vec(rv) << "\n";
+
     return rv;
   }
 
@@ -460,6 +654,8 @@ namespace Sass {
     for (size_t i = 0; i < compound->length(); i++) {
       Simple_Selector_Obj simple = compound->get(i);
       std::cerr << "SIMPLE IN " << debug_vec(simple) << "\n";
+      if (extensions.find(simple) != extensions.end())
+        std::cerr << "STARTCOMP " << debug_values(extensions[simple]) << "\n";
       auto extended = extendSimple(simple, extensions, targetsUsed);
       std::cerr << "GOT2 " << debug_vec(extended) << "\n";
       // std::cerr << "targetUsed after " << debug_vec(targetsUsed) << "\n";
@@ -494,10 +690,14 @@ namespace Sass {
 
     // std::cerr << "OPTIONS " << debug_vec(options) << "\n";
 
-    std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
+    // std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
 
 
-    // If [_mode] isn't [ExtendMode.normal] and we didn't use all
+    if (targetsUsed.empty()) {
+      std::cerr << "IS NULL" << "\n";
+    }
+
+      // If [_mode] isn't [ExtendMode.normal] and we didn't use all
     // the targets in [extensions], extension fails for [compound].
     if (targetsUsed.size() != extensions.size()) {
       if (!targetsUsed.empty()) {
@@ -514,7 +714,7 @@ namespace Sass {
         // state.assertCompatibleMediaContext(mediaQueryContext);
         result.push_back(exts[n].extender);
       }
-      std::cerr << "EASY CASE\n";
+      std::cerr << "HAS ONLY ONE OPTION " << debug_vec(result) << "\n";
       return result;
     }
 
@@ -619,18 +819,24 @@ namespace Sass {
 
     }
 
-    std::cerr << "----- " << debug_vec(unifiedPaths) << "\n";
+    std::cerr << "UNIFIED " << debug_vec(unifiedPaths) << "\n";
 
     return unifiedPaths;
   }
 
   std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed) {
 
+    // Class_Selector_Obj cs = SASS_MEMORY_NEW(Class_Selector, "[tmp]", ".first"); if (extensions.find(cs) != extensions.end()) { std::cerr << ".FIRST MAP " << debug_keys(extensions[cs]) << "\n"; }
+
+    std::cerr << "DO " << debug_vec(simple) << "\n";
     auto ext = extensions.find(simple);
     if (ext == extensions.end()) return {};
     ExtSelExtMapEntry extenders = ext->second;
-    std::cerr << "insert one in used targets\n";
+
+    std::cerr << "START " << debug_values(extenders) << "\n";
+
     if (!targetsUsed.empty()) {
+      std::cerr << "insert one in used targets\n";
       targetsUsed.insert(simple);
     }
     if (mode == ExtendMode::REPLACE) {
@@ -641,14 +847,15 @@ namespace Sass {
 
     std::vector<Extension2> result;
     auto exts = extensionForSimple(simple);
+    extenders = extensions[simple]; // re-fetch?
     std::cerr << "EXT WITH " << debug_vec(exts) << "\n";
-    std::cerr << "PLUS " << debug_vec(extenders) << "\n";
+    std::cerr << "PLUS " << debug_values(extenders) << "\n";
     result.push_back(exts);
     for (auto extender : extenders) {
       result.push_back(extender.second);
     }
     //    if (_mode == ExtendMode.replace) return extenders.values.toList();
-    std::cerr << "RESULTS " << debug_vec(result) << "\n";
+    // std::cerr << "RESULTS " << debug_vec(result) << "\n";
 
     return result;
   }
@@ -666,11 +873,13 @@ namespace Sass {
         if (vec.empty()) { vec = { extensionForSimple(extend) }; }
         rv.insert(rv.end(), { vec });
       }
-      // std::cerr << "EARLY RET " << debug_vec(rv) << "\n";
+      std::cerr << "EARLY RET " << debug_vec(rv) << "\n";
       return rv;
     }
 
     std::cerr << "WA PSEUDO " << debug_vec(simple) << "\n";
+    if (extensions.find(simple) != extensions.end())
+      std::cerr << "STARTSMP " << debug_values(extensions[simple]) << "\n";
     std::vector<Extension2> result = extendWithoutPseudo(simple, extensions, targetsUsed);
     std::cerr << "GOT1 " << debug_vec(result) << "\n";
 
@@ -845,7 +1054,7 @@ namespace Sass {
     // the result so that, if two selectors are identical, we keep the first one.
   redo:
 
-    if (cnt++ > 50) exit(0);
+    // if (cnt++ > 50) exit(0);
 
     for (size_t i = selectors.size() - 1; i != std::string::npos; i--) {
 
@@ -866,7 +1075,7 @@ namespace Sass {
       }
 
       numOriginals++;
-      // std::cerr << "ADD ORIGINAL " << i << "\n";
+      std::cerr << "ADD ORIGINAL " << debug_vec(complex1) << "\n";
       // ToDo: convert to a dequeue?
       result.insert(result.begin(), complex1);
       // Do next iteration
@@ -889,16 +1098,17 @@ namespace Sass {
     // and thus that if there are two identical selectors only one is trimmed.
     // std::cerr << "CHECK ANY1\n";
     if (hasAny(result, dontTrimComplex, complex1, maxSpecificity)) {
-      // std::cerr << "HAS RESULT " << i << "\n";
+      std::cerr << "TRIM FROM RESULT " << debug_vec(complex1) << "\n";
       continue;
     }
     // std::cerr << "CHECK ANY2\n";
     if (hasSubAny(selectors, i, dontTrimComplex, complex1, maxSpecificity)) {
-      // std::cerr << "HAS SELECTOR " << i << "\n";
+      // WE NEED SPECIFICITY CHECK HERE!!!!!! DAMANAMDNA
+      std::cerr << "TRIM FROM SELECTORS " << debug_vec(complex1) << "\n";
       continue;
     }
 
-    // std::cerr << "ADD FOREIGN " << debug_vec(complex1) << "\n";
+    std::cerr << "ADD FOREIGN " << debug_vec(complex1) << "\n";
     result.insert(result.begin(), complex1);
     // std::cerr << "------------------------------\n";
 

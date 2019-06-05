@@ -123,6 +123,15 @@ namespace Sass {
     void addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend /*, Extension_Obj target *//*, media context */);
     SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions);
 
+    void extendExistingStyleRules(
+      ExtListSelSet rules,
+      ExtSelExtMap newExtensions);
+
+    ExtSelExtMap extendExistingExtensions(
+      std::vector<Extension2> extensions,
+      ExtSelExtMap& newExtensions);
+
+
     std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);
     std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal = false);
     std::vector<std::vector<Extension2>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed);
