@@ -77,9 +77,6 @@ namespace Sass {
     Expression* operator()(Arguments*);
     Expression* operator()(Comment*);
 
-    // The extension will be consumed
-    Expression* operator()(Extension*);
-
     // these will return selectors
     SelectorList* operator()(SelectorList*);
     SelectorList* operator()(ComplexSelector*);

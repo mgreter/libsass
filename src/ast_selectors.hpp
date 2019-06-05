@@ -843,6 +843,22 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+  ////////////////////////////////
+  // The Sass `@extend` directive.
+  ////////////////////////////////
+  class ExtendRule final : public Statement {
+    ADD_PROPERTY(bool, isOptional)
+    // This should be a simple selector only!
+    ADD_PROPERTY(Selector_List_Obj, selector)
+    ADD_PROPERTY(SelectorList_Obj, selector2)
+    ADD_PROPERTY(Selector_Schema_Obj, schema)
+  public:
+    ExtendRule(ParserState pstate, SelectorList_Obj s);
+    ExtendRule(ParserState pstate, Selector_Schema_Obj s);
+    ATTACH_AST_OPERATIONS(ExtendRule)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
   // compare function for sorting and probably other other uses
   struct cmp_complex_selector { inline bool operator() (const Complex_Selector_Obj l, const Complex_Selector_Obj r) { return (*l < *r); } };
   struct cmp_compound_selector { inline bool operator() (const Compound_Selector_Obj l, const Compound_Selector_Obj r) { return (*l < *r); } };

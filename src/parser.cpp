@@ -271,12 +271,16 @@ namespace Sass {
       if (!lookahead.found) css_error("Invalid CSS", " after ", ": expected selector, was ");
       Selector_List_Obj target;
       if (!lookahead.has_interpolants) {
-        block->append(SASS_MEMORY_NEW(Extension, pstate,
-          parseSelectorList(true)));
+        auto selector = parseSelectorList(true);
+        auto extender = SASS_MEMORY_NEW(ExtendRule, pstate, selector);
+        extender->isOptional(selector && selector->is_optional());
+        block->append(extender);
       }
       else {
-        auto sc = parse_selector_schema(lookahead.found, true);
-        block->append(SASS_MEMORY_NEW(Extension, pstate, sc));
+        auto selector = parse_selector_schema(lookahead.found, true);
+        auto extender = SASS_MEMORY_NEW(ExtendRule, pstate, selector);
+        // extender->isOptional(selector && selector->is_optional());
+        block->append(extender);
       }
 
     }
@@ -541,6 +545,7 @@ namespace Sass {
     if (lookahead.parsable) {
       SelectorList_Obj asd = parseSelectorList(false);
       // debug_ast(asd);
+      ruleset->selector2(asd);
       Selector_List_Obj sel = toSelector_List(asd);
       ruleset->selector(sel);
     }

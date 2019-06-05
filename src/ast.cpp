@@ -459,16 +459,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-    Extension::Extension(ParserState pstate, SelectorList_Obj s)
-  : Statement(pstate), selector_(s->toSelectorList()), selector2_(s), schema_()
+    ExtendRule::ExtendRule(ParserState pstate, SelectorList_Obj s)
+  : Statement(pstate), isOptional_(false), selector_(s->toSelectorList()), selector2_(s), schema_()
   { statement_type(EXTEND); }
-  Extension::Extension(ParserState pstate, Selector_Schema_Obj s)
-    : Statement(pstate), selector_(), selector2_(), schema_(s)
+  ExtendRule::ExtendRule(ParserState pstate, Selector_Schema_Obj s)
+    : Statement(pstate), isOptional_(false), selector_(), selector2_(), schema_(s)
   {
     statement_type(EXTEND);
   }
-  Extension::Extension(const Extension* ptr)
+  ExtendRule::ExtendRule(const ExtendRule* ptr)
   : Statement(ptr),
+    isOptional_(ptr->isOptional_),
     selector_(ptr->selector_),
     selector2_(ptr->selector2_),
     schema_(ptr->schema_)
@@ -1020,7 +1021,7 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(For);
   IMPLEMENT_AST_OPERATORS(If);
   IMPLEMENT_AST_OPERATORS(Mixin_Call);
-  IMPLEMENT_AST_OPERATORS(Extension);
+  IMPLEMENT_AST_OPERATORS(ExtendRule);
   IMPLEMENT_AST_OPERATORS(Media_Query);
   IMPLEMENT_AST_OPERATORS(Media_Query_Expression);
   IMPLEMENT_AST_OPERATORS(Debug);

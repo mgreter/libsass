@@ -91,6 +91,20 @@ inline std::string debug_vec(std::unordered_map<T, U, O, V> vec) {
   return out.str();
 }
 
+inline std::string debug_vec(ExtListSelSet& vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto it = vec.begin(); it != vec.end(); it++)
+  {
+    if (joinit) out << ", ";
+    out << debug_vec(*it); // string (key)
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
 template <class T, class U, class O, class V>
 inline std::string debug_vec(tsl::ordered_map<T, U, O, V> vec) {
   std::stringstream out;
@@ -102,6 +116,21 @@ inline std::string debug_vec(tsl::ordered_map<T, U, O, V> vec) {
     out << debug_vec(it->first) // string (key)
       << ": "
       << debug_vec(const_cast<U&>(it->second)); // string's value
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
+template <class T, class U, class O, class V>
+inline std::string debug_keys(tsl::ordered_map<T, U, O, V> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto it = vec.begin(); it != vec.end(); it++)
+  {
+    if (joinit) out << ", ";
+    out << debug_vec(it->first);
     joinit = true;
   }
   out << "}";
@@ -589,9 +618,9 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "Return " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-  } else if (Cast<Extension>(node)) {
-    Extension* block = Cast<Extension>(node);
-    std::cerr << ind << "Extension " << block;
+  } else if (Cast<ExtendRule>(node)) {
+    ExtendRule* block = Cast<ExtendRule>(node);
+    std::cerr << ind << "ExtendRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->selector(), ind + "-> ", env);

@@ -19,6 +19,7 @@ namespace Sass {
   public:
 
     Env* environment();
+    SelectorList_Obj selector2();
     Selector_List_Obj selector();
     Selector_List_Obj popFromSelectorStack();
     SelectorStack2 getSelectorStack2();
@@ -44,7 +45,7 @@ namespace Sass {
     Boolean_Obj bool_true;
 
   private:
-    void expand_selector_list(Selector_Obj, Selector_List_Obj extender, Extension* e);
+    void expand_selector_list(Selector_Obj, Selector_List_Obj extender, ExtendRule* e);
 
   public:
     Expand(Context&, Env*, SelectorStack2* stack = NULL);
@@ -69,7 +70,7 @@ namespace Sass {
     Statement* operator()(Each*);
     Statement* operator()(While*);
     Statement* operator()(Return*);
-    Statement* operator()(Extension*);
+    Statement* operator()(ExtendRule*);
     Statement* operator()(Definition*);
     Statement* operator()(Mixin_Call*);
     Statement* operator()(Content*);

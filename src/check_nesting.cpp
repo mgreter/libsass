@@ -145,7 +145,7 @@ namespace Sass {
     if (is_charset(node))
     { this->invalid_charset_parent(this->parent, node); }
 
-    if (Cast<Extension>(node))
+    if (Cast<ExtendRule>(node))
     { this->invalid_extend_parent(this->parent, node); }
 
     // if (Cast<Import>(node))

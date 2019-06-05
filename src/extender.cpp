@@ -112,27 +112,48 @@ namespace Sass {
     // }
 
     if (!extensions.empty()) {
+      std::cerr << "has extensions (" << debug_vec(original) << ") WITH " << debug_keys(extensions) << "\n";
       // ToDo: media context is passed here
       // ToDo: this can throw in dart sass
-      selector = extendList(original, extensions);
+      std::cerr << "  " << debug_vec(extensions) << "\n";
+      std::cerr << "  " << debug_keys(selectors) << "\n";
+      auto res = extendList(original, extensions);
+      std::cerr << "selector extended " << debug_vec(res) << "\n";
+      std::cerr << "  " << debug_vec(extensions) << "\n";
+      selector->elements(res->elements());
+      /*
+      on SassException catch (error) {
+        throw SassException(
+            "From ${error.span.message('')}\n"
+            "${error.message}",
+            selectorSpan);
+      }
+      */
     }
 
     registerSelector(selector /*, rule*/);
 
+    std::cerr << "after reg sel - selectors " << debug_keys(selectors) << "\n";
+    std::cerr << "  " << debug_vec(extensions) << "\n";
 
+    // this must exit
+    if (!extensions.empty()) {
+      // exit(0);
+    }
   }
 
   // Registers the [SimpleSelector]s in [list]
   // to point to [rule] in [selectors].
   void Extender::registerSelector(SelectorList_Obj list)
   {
+    std::cerr << "REGSEL " << debug_vec(list) << "\n";
     if (list.isNull() || list->empty()) return;
     for (auto complex : list->elements()) {
       for (auto component : complex->elements()) {
         if (auto compound = component->getCompound()) {
           for (auto simple : compound->elements()) {
             // _selectors.putIfAbsent(simple, () = > Set()).add(rule);
-            std::cerr << "REGEED " << debug_vec(list) << "\n";
+            std::cerr << "  GED " << debug_vec(simple) << "\n";
             selectors[simple].insert(list);
             if (auto pseudo = simple->getPseudoSelector()) {
               registerSelector(toSelectorList(pseudo->selector()) /*, rule */);
@@ -146,11 +167,90 @@ namespace Sass {
 
   }
 
-  // ToDo: rename extender to parent, since it is not involved in extending stuff
-  void Extender::addExtension(CompoundSelector_Obj extender /*, Extension_Obj target *//*, media context */)
+  Extension2 mergeExtension(Extension2 lhs, Extension2 rhs)
   {
-    std::cerr << "addExtension @extend " << debug_vec(extender) << "\n";
+    /*
+    if (left.extender != right.extender || left.target != right.target) {
+      throw ArgumentError("$left and $right aren't the same extension.");
+    }
+
+    if (left.mediaContext != null &&
+        right.mediaContext != null &&
+        !listEquals(left.mediaContext, right.mediaContext)) {
+      throw SassException(
+          "From ${left.span.message('')}\n"
+          "You may not @extend the same selector from within different media "
+          "queries.",
+          right.span);
+    }
+
+    */
+
+    // If one extension is optional and doesn't add a
+    // special media context, it doesn't need to be merged.
+    // if (right.isOptional && right.mediaContext == null) return left;
+    // if (left.isOptional && left.mediaContext == null) return right;
+
+
   }
+
+  // ToDo: rename extender to parent, since it is not involved in extending stuff
+  // ToDo: check why dart sass passes the ExtendRule around (is this the main selector?)
+  void Extender::addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend /*, Extension_Obj target *//*, media context */)
+  {
+    std::cerr << "addExtension for " << debug_vec(target) << " in " << debug_vec(extender) << "\n";
+
+    auto rules = selectors.find(target);
+
+    ExtSelExtMapEntry newExtensions;
+
+    auto existingExtensions = extensionsByExtender.find(target);
+
+    std::cerr << "PUT EXT1 " << debug_vec(target) << "\n";
+    ExtSelExtMapEntry& sources = extensions[target];
+
+    for (auto complex : extender->elements()) {
+      Extension2 state(complex);
+      // ToDo: fine-tune public API
+      state.target = target;
+      state.isOptional = extend->isOptional();
+
+      auto existingState = sources.find(complex);
+      if (existingState != sources.end()) {
+        // If there's already an extend from [extender] to [target],
+        // we don't need to re-run the extension. We may need to
+        // mark the extension as mandatory, though.
+        // sources.insert(complex, mergeExtension(existingState->second, state);
+        std::cerr << "merge extensions\n";
+        exit(1);
+        continue;
+      }
+
+      sources[complex] = state;
+
+      for (auto component : complex->elements()) {
+        if (auto compound = component->getCompound()) {
+          for (auto simple : compound->elements()) {
+            extensionsByExtender[simple].push_back(state);
+            // sourceSpecificity[simple] = complex.maxSpecificity;
+          }
+        }
+      }
+
+      if (rules != selectors.end() && existingExtensions != extensionsByExtender.end()) {
+        newExtensions[complex] = state;
+      }
+
+    }
+
+    if (newExtensions.empty()) {
+      std::cerr << "DONE\n";
+      return;
+    }
+
+  }
+
+
 
   template <class T, class U>
   bool setContains(T key, std::set<T, U> set)
@@ -194,7 +294,7 @@ namespace Sass {
       return list;
     }
 
-    // std::cerr << "EXTENDED " << debug_vec(extended) << "\n";
+    std::cerr << "EXTENDED " << debug_vec(extended) << "\n";
 
     auto tt = trim(extended, originals);
 
@@ -233,9 +333,9 @@ namespace Sass {
     for (size_t i = 0; i < complex->length(); i += 1) {
       CompoundOrCombinator_Obj component = complex->get(i);
       if (CompoundSelector_Obj compound = Cast<CompoundSelector>(component)) {
-        // std::cerr << "COMP IN " << debug_vec(compound) << "\n";
+        std::cerr << "COMP IN " << debug_vec(compound) << "\n";
         std::vector<ComplexSelector_Obj> extended = extendCompound(compound, extensions, isOriginal);
-        // std::cerr << "COMP RV " << debug_vec(extended) << "\n";
+        std::cerr << "COMP RV " << debug_vec(extended) << "\n";
         if (extended.empty()) {
           // std::cerr << "ADD AS EXT IS EMPTY\n";
           // Note: dart-sass checks for null!?
@@ -359,7 +459,9 @@ namespace Sass {
 
     for (size_t i = 0; i < compound->length(); i++) {
       Simple_Selector_Obj simple = compound->get(i);
+      std::cerr << "SIMPLE IN " << debug_vec(simple) << "\n";
       auto extended = extendSimple(simple, extensions, targetsUsed);
+      std::cerr << "GOT2 " << debug_vec(extended) << "\n";
       // std::cerr << "targetUsed after " << debug_vec(targetsUsed) << "\n";
       // std::cerr << "  " << debug_vec(extended) << "\n";
       if (extended.empty()/* == null */) {
@@ -386,19 +488,20 @@ namespace Sass {
     }
 
     if (options.empty()) {
-      // std::cerr << "FAIL: OPTIONS IS NULL\n";
+      std::cerr << "FAIL: OPTIONS IS NULL\n";
       return {};
     }
 
     // std::cerr << "OPTIONS " << debug_vec(options) << "\n";
 
-    // std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
+    std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
+
 
     // If [_mode] isn't [ExtendMode.normal] and we didn't use all
     // the targets in [extensions], extension fails for [compound].
     if (targetsUsed.size() != extensions.size()) {
       if (!targetsUsed.empty()) {
-        // std::cerr << "FAIL: SIZE MISMATCH\n";
+        std::cerr << "FAIL: SIZE MISMATCH\n";
         return {};
       }
     }
@@ -411,7 +514,7 @@ namespace Sass {
         // state.assertCompatibleMediaContext(mediaQueryContext);
         result.push_back(exts[n].extender);
       }
-      // std::cerr << "EASY CASE\n";
+      std::cerr << "EASY CASE\n";
       return result;
     }
 
@@ -490,7 +593,10 @@ namespace Sass {
         }
 
         complexes = unifyComplex(toUnify);
-        if (complexes.empty()) return {};
+        if (complexes.empty()) {
+          std::cerr << "FOOBAR\n";
+          return {};
+        }
 
       }
 
@@ -513,7 +619,7 @@ namespace Sass {
 
     }
 
-    // std::cerr << "----- " << debug_vec(unifiedPaths) << "\n";
+    std::cerr << "----- " << debug_vec(unifiedPaths) << "\n";
 
     return unifiedPaths;
   }
@@ -522,20 +628,27 @@ namespace Sass {
 
     auto ext = extensions.find(simple);
     if (ext == extensions.end()) return {};
-    auto extenders = ext->second;
-    targetsUsed.insert(simple);
+    ExtSelExtMapEntry extenders = ext->second;
+    std::cerr << "insert one in used targets\n";
+    if (!targetsUsed.empty()) {
+      targetsUsed.insert(simple);
+    }
     if (mode == ExtendMode::REPLACE) {
       auto rv = mapValues(extenders);
-      // std::cerr << "HAS REPLACE MODE\n";
+      std::cerr << "HAS REPLACE MODE\n";
       return rv;
     }
 
     std::vector<Extension2> result;
-    result.push_back(extensionForSimple(simple));
-    for (const auto& extender : extenders) {
+    auto exts = extensionForSimple(simple);
+    std::cerr << "EXT WITH " << debug_vec(exts) << "\n";
+    std::cerr << "PLUS " << debug_vec(extenders) << "\n";
+    result.push_back(exts);
+    for (auto extender : extenders) {
       result.push_back(extender.second);
     }
     //    if (_mode == ExtendMode.replace) return extenders.values.toList();
+    std::cerr << "RESULTS " << debug_vec(result) << "\n";
 
     return result;
   }
@@ -557,8 +670,9 @@ namespace Sass {
       return rv;
     }
 
-    std::vector<Extension2> result =
-      extendWithoutPseudo(simple, extensions, targetsUsed);
+    std::cerr << "WA PSEUDO " << debug_vec(simple) << "\n";
+    std::vector<Extension2> result = extendWithoutPseudo(simple, extensions, targetsUsed);
+    std::cerr << "GOT1 " << debug_vec(result) << "\n";
 
 
     if (result.empty()) return {};

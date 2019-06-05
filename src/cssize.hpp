@@ -44,7 +44,7 @@ namespace Sass {
     // Statement* operator()(Each*);
     // Statement* operator()(While*);
     // Statement* operator()(Return*);
-    // Statement* operator()(Extension*);
+    // Statement* operator()(ExtendRule*);
     // Statement* operator()(Definition*);
     // Statement* operator()(Mixin_Call*);
     // Statement* operator()(Content*);

@@ -299,7 +299,7 @@ namespace Sass {
     append_delimiter();
   }
 
-  void Inspect::operator()(Extension* extend)
+  void Inspect::operator()(ExtendRule* extend)
   {
     append_indentation();
     append_token("@extend", extend);

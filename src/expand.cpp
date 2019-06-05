@@ -11,6 +11,7 @@
 #include "eval.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
+#include "debugger.hpp"
 #include "parser.hpp"
 #include "sass_functions.hpp"
 
@@ -65,6 +66,16 @@ namespace Sass {
       auto asd = selector_stack2.back();
       if (asd.isNull()) return {};
       return asd->toSelectorList();
+    }
+    return {};
+  }
+
+  SelectorList_Obj Expand::selector2()
+  {
+    if (selector_stack2.size() > 0) {
+      auto asd = selector_stack2.back();
+      if (asd.isNull()) return {};
+      return asd;
     }
     return {};
   }
@@ -127,6 +138,7 @@ namespace Sass {
           popFromSelectorStack();
         }
       }
+
       return k.detach();
     }
 
@@ -168,6 +180,13 @@ namespace Sass {
         }
       }
     }
+
+    // Register every selector for lookup when extended
+    SelectorList_Obj sss = r->selector2();
+    ctx.extender.addSelector(sss);
+    std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
+
+    sel = r->selector2()->toSelectorList();
 
     // do not connect parent again
     sel->remove_parent_selectors();
@@ -630,7 +649,7 @@ namespace Sass {
   }
 
 
-  void Expand::expand_selector_list(Selector_Obj s, Selector_List_Obj extender, Extension* e) {
+  void Expand::expand_selector_list(Selector_Obj s, Selector_List_Obj extender, ExtendRule* e) {
 
     if (Selector_List_Obj sl = Cast<Selector_List>(s)) {
       for (Complex_Selector_Obj complex_selector : sl->elements()) {
@@ -678,14 +697,11 @@ namespace Sass {
         ctx.subset_map.put(target, std::make_pair(sel, target));
       }
 
-      // Register every selector for lookup when extended
-      ctx.extender.addSelector(toSelectorList(extender));
-
     }
 
   }
 
-  Statement* Expand::operator()(Extension* e)
+  Statement* Expand::operator()(ExtendRule* e)
   {
 
     if (Selector_List_Obj extender = selector()) {
@@ -716,8 +732,37 @@ namespace Sass {
       pushToSelectorStack({});
       expand_selector_list(sl, extender, e);
       popFromSelectorStack();
+
     }
-    return 0;
+
+    auto list = e->selector2();
+    for (auto complex : list->elements()) {
+
+      if (complex->length() != 1) {
+        std::cerr << "complex selectors may not be extended." << "\n"; exit(1);
+      }
+
+      if (auto compound = complex->first()->getCompound()) {
+
+        if (compound->length() != 1) {
+          std::cerr <<
+            "compound selectors may no longer be extended.\n"
+            "Consider `@extend ${compound.components.join(', ')}` instead.\n"
+            "See http://bit.ly/ExtendCompound for details.\n";
+        }
+
+        std::cerr << "CALLING WITH PARENT: " << debug_vec(selector2()) << "\n";
+        ctx.extender.addExtension(selector2(), compound->first(), e);
+
+      }
+      else {
+        std::cerr << "complex selectors may not be extended." << "\n"; exit(1);
+      }
+    }
+    return nullptr;
+
+
+    return nullptr;
   }
 
   Statement* Expand::operator()(Definition* d)

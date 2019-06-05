@@ -120,7 +120,7 @@ namespace Sass {
 
     // Extends [list] using [extensions].
     /*, List<CssMediaQuery> mediaQueryContext*/
-    void addExtension(CompoundSelector_Obj extender /*, Extension_Obj target *//*, media context */);
+    void addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend /*, Extension_Obj target *//*, media context */);
     SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions);
 
     std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);

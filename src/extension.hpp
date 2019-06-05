@@ -31,7 +31,7 @@ namespace Sass {
     // or `null` if it can apply within any context.
     // std::vector<Media_Query_Obj> mediaContext;
 
-    // Extension(ComplexSelector_Obj extender, Simple_Selector_Obj )
+    // ExtendRule(ComplexSelector_Obj extender, Simple_Selector_Obj )
 
 
     // Creates a one-off extension that's not intended to be modified over time.

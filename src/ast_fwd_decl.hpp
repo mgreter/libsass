@@ -59,7 +59,7 @@ namespace Sass {
   class While;
   class Return;
   class Content;
-  class Extension;
+  class ExtendRule;
   class Definition;
 
   class List;
@@ -161,7 +161,7 @@ namespace Sass {
   IMPL_MEM_OBJ(While);
   IMPL_MEM_OBJ(Return);
   IMPL_MEM_OBJ(Content);
-  IMPL_MEM_OBJ(Extension);
+  IMPL_MEM_OBJ(ExtendRule);
   IMPL_MEM_OBJ(Definition);
   IMPL_MEM_OBJ(Mixin_Call);
   IMPL_MEM_OBJ(Value);
