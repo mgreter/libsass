@@ -630,7 +630,7 @@ namespace Sass {
   }
 
 
-  void Expand::expand_selector_list(Selector_Obj s, Selector_List_Obj extender) {
+  void Expand::expand_selector_list(Selector_Obj s, Selector_List_Obj extender, Extension* e) {
 
     if (Selector_List_Obj sl = Cast<Selector_List>(s)) {
       for (Complex_Selector_Obj complex_selector : sl->elements()) {
@@ -677,6 +677,10 @@ namespace Sass {
         // if (c->has_line_feed()) sel->has_line_feed(true);
         ctx.subset_map.put(target, std::make_pair(sel, target));
       }
+
+      // Register every selector for lookup when extended
+      ctx.extender.addSelector(toSelectorList(extender));
+
     }
 
   }
@@ -710,7 +714,7 @@ namespace Sass {
         }
       }
       pushToSelectorStack({});
-      expand_selector_list(sl, extender);
+      expand_selector_list(sl, extender, e);
       popFromSelectorStack();
     }
     return 0;

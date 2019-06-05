@@ -14,6 +14,12 @@
 
 namespace Sass {
 
+
+  typedef std::tuple<
+    Selector_List_Obj, // modified
+    Selector_List_Obj // original
+  > ExtSelTuple;
+
   typedef tsl::ordered_set<
     ComplexSelector_Obj,
     HashNodes,
@@ -114,20 +120,22 @@ namespace Sass {
 
     // Extends [list] using [extensions].
     /*, List<CssMediaQuery> mediaQueryContext*/
-    SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap extensions);
-    std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap extensions);
-    std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap extensions, bool inOriginal = false);
-    std::vector<std::vector<Extension2>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet& targetsUsed);
+    void addExtension(CompoundSelector_Obj extender /*, Extension_Obj target *//*, media context */);
+    SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions);
 
-    std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap extensions);
+    std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);
+    std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal = false);
+    std::vector<std::vector<Extension2>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed);
 
-    std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, ExtCplxSelSet set);
+    std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions);
+
+    std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, ExtCplxSelSet& set);
     std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, bool (*isOriginal)(ComplexSelector_Obj complex));
     
 
 
   private:
-    std::vector<Extension2> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet& targetsUsed);
+    std::vector<Extension2> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed);
     static SelectorList_Obj _extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, ExtendMode mode);
 
   public:
@@ -155,6 +163,22 @@ namespace Sass {
     /// [first law of extend]: https://github.com/sass/sass/issues/324#issuecomment-4607184
     // std::set<ComplexSelector_Obj> originals;
 
+
+
+
+
+    // Adds [selector] to this extender, with [selectorSpan] as the span covering
+    // the selector and [ruleSpan] as the span covering the entire style rule.
+    // Extends [selector] using any registered extensions, then returns an empty
+    // [ModifiableCssStyleRule] with the resulting selector. If any more relevant
+    // extensions are added, the returned rule is automatically updated.
+    // The [mediaContext] is the media query context in which the selector was
+    // defined, or `null` if it was defined at the top level of the document.
+    void addSelector(SelectorList_Obj selector);
+
+    // Registers the [SimpleSelector]s in [list]
+    // to point to [rule] in [selectors].
+    void registerSelector(SelectorList_Obj list /*, rule */);
 
 
   };

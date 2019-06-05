@@ -1,4 +1,4 @@
-#include <numeric>;
+#include <numeric>
 
 #include "parser.hpp"
 #include "extend.hpp"

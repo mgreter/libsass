@@ -162,6 +162,12 @@ namespace Sass {
     virtual CompoundSelector* unifyWith(CompoundSelector*);
     virtual Compound_Selector* unify_with(Compound_Selector*);
 
+    /* helper function for syntax sugar */
+    virtual Id_Selector* getIdSelector() { return NULL; }
+    virtual Type_Selector* getTypeSelector() { return NULL; }
+    virtual Pseudo_Selector* getPseudoSelector() { return NULL; }
+
+
     ComplexSelector_Obj wrapInComplex();
     CompoundSelector_Obj wrapInCompound();
 
@@ -252,6 +258,7 @@ namespace Sass {
     Simple_Selector* unify_with(Simple_Selector*);
     CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
+    Type_Selector* getTypeSelector() override { return this; }
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
     ATTACH_CMP_OPERATIONS(Type_Selector)
@@ -292,6 +299,7 @@ namespace Sass {
     }
     CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
+    Id_Selector* getIdSelector() final override { return this; }
     bool operator<(const Simple_Selector& rhs) const final override;
     bool operator==(const Simple_Selector& rhs) const final override;
     ATTACH_CMP_OPERATIONS(Id_Selector)
@@ -345,6 +353,7 @@ namespace Sass {
   class Pseudo_Selector final : public Simple_Selector {
     ADD_PROPERTY(std::string, normalized)
     ADD_PROPERTY(String_Obj, expression)
+    ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(bool, isSyntacticClass)
     ADD_PROPERTY(bool, isClass)
@@ -376,10 +385,11 @@ namespace Sass {
 
     bool isSuperselectorOf(const Pseudo_Selector* sub) const;
 
-    bool operator<(const Simple_Selector& rhs) const final override;
-    bool operator==(const Simple_Selector& rhs) const final override;
     CompoundSelector* unifyWith(CompoundSelector*) override;
     Compound_Selector* unify_with(Compound_Selector*) override;
+    Pseudo_Selector* getPseudoSelector() final override { return this; }
+    bool operator<(const Simple_Selector& rhs) const final override;
+    bool operator==(const Simple_Selector& rhs) const final override;
     ATTACH_CMP_OPERATIONS(Pseudo_Selector)
     ATTACH_AST_OPERATIONS(Pseudo_Selector)
     void cloneChildren() override;
@@ -602,8 +612,14 @@ namespace Sass {
     int unification_order() const override {
       throw std::runtime_error("unification_order for Compound_Selector is undefined");
     }
+
     virtual bool isCompound() const { return false; };
     virtual bool isCombinator() const { return false; };
+
+    /* helper function for syntax sugar */
+    virtual CompoundSelector* getCompound() { return NULL; }
+    virtual SelectorCombinator* getCombinator() { return NULL; }
+
     virtual unsigned long specificity() const override;
     bool operator<(const Selector& rhs) const override;
     bool operator==(const Selector& rhs) const override;
@@ -627,6 +643,8 @@ namespace Sass {
     bool contains_placeholder() const override { return false; }
     bool canHaveRealParent() const override { return false; }
 
+    /* helper function for syntax sugar */
+    SelectorCombinator* getCombinator() final override { return this; }
 
     // Query type of combinator
     bool isCombinator() const override { return true; };
@@ -686,6 +704,9 @@ namespace Sass {
     CompoundSelector* unify_with(CompoundSelector* rhs);
 
     ComplexSelector* wrapInComplex();
+
+    /* helper function for syntax sugar */
+    CompoundSelector* getCompound() final override { return this; }
 
     bool isSuperselectorOf(const CompoundSelector* sub, std::string wrapped = "") const;
     bool isSuperselectorOf(const ComplexSelector* sub, std::string wrapped = "") const;

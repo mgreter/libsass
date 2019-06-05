@@ -1,3 +1,5 @@
+#include "extender.hpp"
+#include "extender.hpp"
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
@@ -87,16 +89,67 @@ namespace Sass {
 
     return selector;
 
-    exit(1);
+  }
 
-    /*
+  // Adds [selector] to this extender, with [selectorSpan] as the span covering
+  // the selector and [ruleSpan] as the span covering the entire style rule.
+  // Extends [selector] using any registered extensions, then returns an empty
+  // [ModifiableCssStyleRule] with the resulting selector. If any more relevant
+  // extensions are added, the returned rule is automatically updated.
+  // The [mediaContext] is the media query context in which the selector was
+  // defined, or `null` if it was defined at the top level of the document.
+  void Extender::addSelector(SelectorList_Obj selector)
+  {
 
-    var extenders = Map<ComplexSelector, Extension>.fromIterable(
-      source.components,
-      value: (complex) = > Extension.oneOff(complex as ComplexSelector));
-      */
+    SelectorList_Obj original = selector;
+    // if (!originalSelector->isInvisible()) {
+    std::cerr << "ADD SELECTOR " << debug_vec(original) << "\n";
 
-    // return _extendOrReplace(selector, source, targets, ExtendMode.REPLACE);
+    // Remember all original complex selectors
+    for (auto complex : selector->elements()) {
+      originals.insert(complex);
+    }
+    // }
+
+    if (!extensions.empty()) {
+      // ToDo: media context is passed here
+      // ToDo: this can throw in dart sass
+      selector = extendList(original, extensions);
+    }
+
+    registerSelector(selector /*, rule*/);
+
+
+  }
+
+  // Registers the [SimpleSelector]s in [list]
+  // to point to [rule] in [selectors].
+  void Extender::registerSelector(SelectorList_Obj list)
+  {
+    if (list.isNull() || list->empty()) return;
+    for (auto complex : list->elements()) {
+      for (auto component : complex->elements()) {
+        if (auto compound = component->getCompound()) {
+          for (auto simple : compound->elements()) {
+            // _selectors.putIfAbsent(simple, () = > Set()).add(rule);
+            std::cerr << "REGEED " << debug_vec(list) << "\n";
+            selectors[simple].insert(list);
+            if (auto pseudo = simple->getPseudoSelector()) {
+              registerSelector(toSelectorList(pseudo->selector()) /*, rule */);
+              // simple is PseudoSelector && simple.selector != null) {
+              // _registerSelector(simple.selector, rule);
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  // ToDo: rename extender to parent, since it is not involved in extending stuff
+  void Extender::addExtension(CompoundSelector_Obj extender /*, Extension_Obj target *//*, media context */)
+  {
+    std::cerr << "addExtension @extend " << debug_vec(extender) << "\n";
   }
 
   template <class T, class U>
@@ -105,7 +158,7 @@ namespace Sass {
     return set.find(key) != set.end();
   }
 
-  SelectorList_Obj Extender::extendList(SelectorList_Obj list, ExtSelExtMap extensions)
+  SelectorList_Obj Extender::extendList(SelectorList_Obj list, ExtSelExtMap& extensions)
   {
 
     // std::cerr << "in extend list " << debug_vec(list) << "\n";
@@ -152,7 +205,7 @@ namespace Sass {
     return rv;
   }
 
-  std::vector<ComplexSelector_Obj> Extender::extendComplex(ComplexSelector_Obj complex, ExtSelExtMap extensions)
+  std::vector<ComplexSelector_Obj> Extender::extendComplex(ComplexSelector_Obj complex, ExtSelExtMap& extensions)
   {
 
     // The complex selectors that each compound selector in [complex.components]
@@ -286,7 +339,7 @@ namespace Sass {
     return extension;
   }
 
-  std::vector<ComplexSelector_Obj> Extender::extendCompound(CompoundSelector_Obj compound, ExtSelExtMap extensions, bool inOriginal)
+  std::vector<ComplexSelector_Obj> Extender::extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal)
   {
 
     // If there's more than one target and they all need to
@@ -465,7 +518,7 @@ namespace Sass {
     return unifiedPaths;
   }
 
-  std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet& targetsUsed) {
+  std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed) {
 
     auto ext = extensions.find(simple);
     if (ext == extensions.end()) return {};
@@ -487,7 +540,7 @@ namespace Sass {
     return result;
   }
 
-  std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap extensions, ExtSmplSelSet& targetsUsed) {
+  std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed) {
 
     if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(simple)) {
       // if (simple.selector != null) // Implement/Checks what this does?
@@ -565,7 +618,7 @@ namespace Sass {
   }
 
 
-  std::vector<Pseudo_Selector_Obj> Extender::extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap extensions)
+  std::vector<Pseudo_Selector_Obj> Extender::extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions)
   {
     auto sel = toSelectorList(pseudo->selector());
     // std::cerr << "CALL extend list\n";
@@ -659,7 +712,7 @@ namespace Sass {
     }
   }
 
-  std::vector<ComplexSelector_Obj> Extender::trim(std::vector<ComplexSelector_Obj> selectors, ExtCplxSelSet set)
+  std::vector<ComplexSelector_Obj> Extender::trim(std::vector<ComplexSelector_Obj> selectors, ExtCplxSelSet& set)
   {
 
 

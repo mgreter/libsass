@@ -44,7 +44,7 @@ namespace Sass {
     Boolean_Obj bool_true;
 
   private:
-    void expand_selector_list(Selector_Obj, Selector_List_Obj extender);
+    void expand_selector_list(Selector_Obj, Selector_List_Obj extender, Extension* e);
 
   public:
     Expand(Context&, Env*, SelectorStack2* stack = NULL);

@@ -363,6 +363,7 @@ namespace Sass {
   : Simple_Selector(pstate, name),
     normalized_(normName(name)),
     expression_({}),
+    selector2_({}),
     selector_({}),
     isSyntacticClass_(!element),
     isClass_(!element && !isFakePseudoElement(normalized_))
@@ -371,6 +372,7 @@ namespace Sass {
   : Simple_Selector(ptr),
     normalized_(ptr->normalized()),
     expression_(ptr->expression()),
+    selector2_(ptr->selector2()),
     selector_(ptr->selector()),
     isSyntacticClass_(ptr->isSyntacticClass()),
     isClass_(ptr->isClass())

@@ -1515,6 +1515,15 @@ namespace Sass {
     return 0;
   }
 
+  Expression* Eval::operator()(Extension* extend)
+  {
+    auto list = extend->selector2();
+    for (auto complex : list->elements()) {
+      ctx.extender.addExtension(complex->first()->getCompound());
+    }
+    return nullptr;
+  }
+
 
   Selector_List* Eval::operator()(Complex_Selector* s)
   {

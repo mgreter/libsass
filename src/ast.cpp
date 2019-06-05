@@ -166,10 +166,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Ruleset::Ruleset(ParserState pstate, Selector_List_Obj s, Block_Obj b)
-  : Has_Block(pstate, b), selector_(s), schema_(), is_root_(false)
+  : Has_Block(pstate, b), selector2_(toSelectorList(s)), selector_(s), schema_(), is_root_(false)
   { statement_type(RULESET); }
   Ruleset::Ruleset(const Ruleset* ptr)
   : Has_Block(ptr),
+    selector2_(ptr->selector2_),
     selector_(ptr->selector_),
     schema_(ptr->schema_),
     is_root_(ptr->is_root_)
@@ -243,11 +244,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Directive::Directive(ParserState pstate, std::string kwd, Selector_List_Obj sel, Block_Obj b, Expression_Obj val)
-  : Has_Block(pstate, b), keyword_(kwd), selector_(sel), value_(val) // set value manually if needed
+  : Has_Block(pstate, b), keyword_(kwd), selector2_(toSelectorList(sel)), selector_(sel), value_(val) // set value manually if needed
   { statement_type(DIRECTIVE); }
   Directive::Directive(const Directive* ptr)
   : Has_Block(ptr),
     keyword_(ptr->keyword_),
+    selector2_(ptr->selector2_),
     selector_(ptr->selector_),
     value_(ptr->value_) // set value manually if needed
   { statement_type(DIRECTIVE); }
@@ -458,15 +460,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
     Extension::Extension(ParserState pstate, SelectorList_Obj s)
-  : Statement(pstate), selector_(s->toSelectorList()), schema_()
+  : Statement(pstate), selector_(s->toSelectorList()), selector2_(s), schema_()
   { statement_type(EXTEND); }
   Extension::Extension(ParserState pstate, Selector_Schema_Obj s)
-    : Statement(pstate), selector_(), schema_(s)
+    : Statement(pstate), selector_(), selector2_(), schema_(s)
   {
     statement_type(EXTEND);
   }
   Extension::Extension(const Extension* ptr)
-  : Statement(ptr), selector_(ptr->selector_), schema_(ptr->schema_)
+  : Statement(ptr),
+    selector_(ptr->selector_),
+    selector2_(ptr->selector2_),
+    schema_(ptr->schema_)
   { statement_type(EXTEND); }
 
   /////////////////////////////////////////////////////////////////////////

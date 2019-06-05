@@ -682,7 +682,7 @@ namespace Sass {
     debug_ast(ls);
     std::cerr << ls->to_string() << "\n";
     */
-//    debug_ast(root);
+debug_ast(root);
     // exit(1);
     // abort on invalid root
     if (root.isNull()) return {};

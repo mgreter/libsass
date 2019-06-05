@@ -468,6 +468,7 @@ namespace Sass {
   // of style declarations.
   /////////////////////////////////////////////////////////////////////////////
   class Ruleset final : public Has_Block {
+    ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(Selector_Schema_Obj, schema)
     ADD_PROPERTY(bool, is_root);
@@ -522,6 +523,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class Directive final : public Has_Block {
     ADD_CONSTREF(std::string, keyword)
+    ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(Expression_Obj, value)
   public:
@@ -716,7 +718,9 @@ namespace Sass {
   // The Sass `@extend` directive.
   ////////////////////////////////
   class Extension final : public Statement {
+    // This should be a simple selector only!
     ADD_PROPERTY(Selector_List_Obj, selector)
+    ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_Schema_Obj, schema)
   public:
     Extension(ParserState pstate, SelectorList_Obj s);
