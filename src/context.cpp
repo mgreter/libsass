@@ -718,7 +718,7 @@ namespace Sass {
       // extend tree nodes
       extend(root);
     }
- //   debug_ast(root);
+    debug_ast(root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?

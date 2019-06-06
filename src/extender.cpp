@@ -208,7 +208,7 @@ namespace Sass {
 
 
   }
-  mapAddAll2(ExtSelExtMap& dest, ExtSelExtMap& source)
+  void mapAddAll2(ExtSelExtMap& dest, ExtSelExtMap& source)
   {
     for (auto it : source) {
       auto key = it.first;
@@ -265,7 +265,10 @@ namespace Sass {
         if (auto compound = component->getCompound()) {
           for (auto simple : compound->elements()) {
             extensionsByExtender[simple].push_back(state);
-            // sourceSpecificity[simple] = complex.maxSpecificity;
+            if (sourceSpecificity.find(simple) == sourceSpecificity.end()) {
+              sourceSpecificity[simple] = complex->maxSpecificity();
+              std::cerr << "SETTTTING TO " << complex->maxSpecificity() << "\n";
+            }
           }
         }
       }
@@ -302,7 +305,11 @@ namespace Sass {
 
     if (rules != selectors.end()) {
       std::cerr << "Extend existing style rules" << "\n";
-      extendExistingStyleRules(rules->second, newExtensionsByTarget);
+      auto& rules2 = selectors[target];
+      extendExistingStyleRules(rules2, newExtensionsByTarget);
+      for (auto rule : rules2) {
+        std::cerr << "FINAL " << rule.ptr() << " - " << debug_vec(rule) << "\n";
+      }
     }
 
     std::cerr << "Done";
@@ -311,24 +318,31 @@ namespace Sass {
 
 
   /// Extend [extensions] using [newExtensions].
-  void Extender::extendExistingStyleRules(ExtListSelSet rules,
-    ExtSelExtMap newExtensions
+  void Extender::extendExistingStyleRules(ExtListSelSet& rules,
+    ExtSelExtMap& newExtensions
   )
   {
     std::cerr << "in extendStyle " << debug_vec(rules) << "\n";
     std::cerr << "in extendStyle " << debug_vec(newExtensions) << "\n";
     // Is a modifyableCssStyleRUle in dart sass
     for (SelectorList_Obj rule : rules) {
-      auto oldValue = rule;
+      SelectorList_Obj oldValue = rule->copy();
       // try
       std::cerr << "extend rule " << debug_vec(oldValue) << "\n";
-      auto ext = extendList(rule, newExtensions);
+      SelectorList_Obj ext = extendList(rule, newExtensions);
       std::cerr << " res " << debug_vec(ext) << "\n";
       // catch
 
       // If no extends actually happenedit (for example becaues unification
       // failed), we don't need to re-register the selector.
-      if (*oldValue = rule) continue;
+      std::cerr << "CHECK IF CHANGED [" << debug_vec(oldValue) << "] vs [" << debug_vec(ext) << "]\n";
+      if (*oldValue == *ext) {
+        std::cerr << "THEY ARE EQUAL\n";
+        continue;
+      }
+      std::cerr << "REGISTER NEW SELECTOR" << debug_vec(ext) << "\n";
+      rule->elements(ext->elements());
+      registerSelector(rule);
 
     }
     std::cerr << "_extendExistingStyleRules2\n";
@@ -616,19 +630,40 @@ on SassException catch (error) {
     return wwrv;
   }
 
-  Extension2 extensionForSimple(Simple_Selector_Obj simple)
+  // Returns the maximum specificity of the given [simple] source selector.
+  size_t Extender::maxSourceSpecificity(Simple_Selector_Obj simple)
+  {
+    auto it = sourceSpecificity.find(simple);
+    if (it == sourceSpecificity.end()) return 0;
+    return it->second;
+  }
+
+  // Returns the maximum specificity for sources that went into producing [compound].
+  size_t Extender::maxSourceSpecificity(CompoundSelector_Obj compound)
+  {
+    size_t specificity = 0;
+    for (auto simple : compound->elements()) {
+      size_t src = maxSourceSpecificity(simple);
+      std::cerr << "  PART " << src << "\n";
+      specificity = std::max(specificity,
+        src);
+    }
+    return specificity;
+  }
+
+  Extension2 Extender::extensionForSimple(Simple_Selector_Obj simple)
   {
     Extension2 extension(simple->wrapInComplex());
-    // specificity: _sourceSpecificity[simple]
+    extension.specificity = maxSourceSpecificity(simple);
     extension.isOriginal = true;
     return extension;
   }
 
-  Extension2 extensionForCompound(std::vector<Simple_Selector_Obj> simples)
+  Extension2 Extender::extensionForCompound(std::vector<Simple_Selector_Obj> simples)
   {
     CompoundSelector_Obj compound = SASS_MEMORY_NEW(CompoundSelector, ParserState("[ext]"));
     Extension2 extension(compound->concat(simples)->wrapInComplex());
-    // specificity: _sourceSpecificity[simple]
+    // extension.specificity = sourceSpecificity[simple];
     extension.isOriginal = true;
     return extension;
   }
@@ -1018,6 +1053,8 @@ on SassException catch (error) {
 
   bool dontTrimComplex(ComplexSelector_Obj complex2, ComplexSelector_Obj complex1, size_t maxSpecificity)
   {
+    std::cerr << "Test " << complex2->minSpecificity() << " vs " << maxSpecificity << "\n";
+    if (complex2->minSpecificity() < maxSpecificity) return false;
     Complex_Selector_Obj c1 = complex1->toComplexSelector();
     Complex_Selector_Obj c2 = complex2->toComplexSelector();
     return complex2->isSuperselectorOf(complex1);
@@ -1069,7 +1106,7 @@ on SassException catch (error) {
       for (size_t j = 0; j < numOriginals; j++) {
         if (*result[j] == *complex1) {
           rotateSlice(result, 0, j + 1);
-          // std::cerr << "REDO\n";
+          std::cerr << "ROTATE & REDO\n";
           goto redo;
         }
       }
@@ -1089,7 +1126,8 @@ on SassException catch (error) {
     size_t maxSpecificity = 0;
     for (CompoundOrCombinator_Obj component : complex1->elements()) {
       if (CompoundSelector_Obj compound = Cast<CompoundSelector>(component)) {
-        // maxSpecificity = std::max(maxSpecificity, sourceSpecificityFor(compound));
+        maxSpecificity = std::max(maxSpecificity, maxSourceSpecificity(compound));
+        std::cerr << "MAX NOW AT " << maxSpecificity << "\n";
       }
     }
 
@@ -1097,11 +1135,18 @@ on SassException catch (error) {
     // ensures we aren't comparing against a selector that's already been trimmed,
     // and thus that if there are two identical selectors only one is trimmed.
     // std::cerr << "CHECK ANY1\n";
+    std::cerr << "RESULTS " << debug_vec(result) << "\n";
     if (hasAny(result, dontTrimComplex, complex1, maxSpecificity)) {
       std::cerr << "TRIM FROM RESULT " << debug_vec(complex1) << "\n";
       continue;
     }
     // std::cerr << "CHECK ANY2\n";
+
+    std::vector<ComplexSelector_Obj> selectors2;
+    for (size_t n = 0; n < i; n++) {
+      selectors2.push_back(selectors[n]);
+    }
+    std::cerr << "selectors " << debug_vec(selectors2) << "\n";
     if (hasSubAny(selectors, i, dontTrimComplex, complex1, maxSpecificity)) {
       // WE NEED SPECIFICITY CHECK HERE!!!!!! DAMANAMDNA
       std::cerr << "TRIM FROM SELECTORS " << debug_vec(complex1) << "\n";

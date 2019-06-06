@@ -1438,15 +1438,15 @@ namespace Sass {
   { }
   SelectorList::SelectorList(const SelectorList* ptr)
     : Selector(ptr),
-    Vectorized<ComplexSelector_Obj, SelectorList>(),
+    Vectorized<ComplexSelector_Obj, SelectorList>(*ptr),
     schemaOnlyToCopy_(ptr->schemaOnlyToCopy_)
   { }
 
   void SelectorList::cloneChildren()
   {
-    /* for (size_t i = 0, l = length(); i < l; i++) {
+    for (size_t i = 0, l = length(); i < l; i++) {
       at(i) = SASS_MEMORY_CLONE(at(i));
-    }*/
+    }
   }
 
   unsigned long SelectorList::specificity() const
@@ -1514,7 +1514,11 @@ namespace Sass {
 
   unsigned long ComplexSelector::specificity() const
   {
-    return 0;
+    int sum = 0;
+    for (auto component : elements()) {
+      sum += component->specificity();
+    }
+    return sum;
   }
 
   Complex_Selector_Obj ComplexSelector::toComplexSelector() {
@@ -1812,7 +1816,10 @@ namespace Sass {
 
   unsigned long CompoundSelector::specificity() const
   {
-    return 0;
+    int sum = 0;
+    for (size_t i = 0, L = length(); i < L; ++i)
+    { sum += get(i)->specificity(); }
+    return sum;
   }
 
   CompoundSelector_Obj Simple_Selector::wrapInCompound()

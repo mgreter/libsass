@@ -562,4 +562,60 @@ namespace Sass {
     return listIsSuperslector(elements(), sub->elements());
   }
 
+  size_t SelectorList::maxSpecificity() const
+  {
+    size_t specificity = 0;
+    for (auto complex : elements()) {
+      specificity = std::max(specificity, complex->maxSpecificity());
+    }
+    return specificity;
+  }
+
+  size_t SelectorList::minSpecificity() const
+  {
+    size_t specificity = 0;
+    for (auto complex : elements()) {
+      specificity = std::min(specificity, complex->minSpecificity());
+    }
+    return specificity;
+  }
+
+
+
+  size_t CompoundSelector::maxSpecificity() const
+  {
+    size_t specificity = 0;
+    for (auto simple : elements()) {
+      specificity += simple->maxSpecificity();
+    }
+    return specificity;
+  }
+
+  size_t CompoundSelector::minSpecificity() const
+  {
+    size_t specificity = 0;
+    for (auto simple : elements()) {
+      specificity += simple->minSpecificity();
+    }
+    return specificity;
+  }
+
+  size_t ComplexSelector::maxSpecificity() const
+  {
+    size_t specificity = 0;
+    for (auto component : elements()) {
+      specificity += component->maxSpecificity();
+    }
+    return specificity;
+  }
+
+  size_t ComplexSelector::minSpecificity() const
+  {
+    size_t specificity = 0;
+    for (auto component : elements()) {
+      specificity += component->minSpecificity();
+    }
+    return specificity;
+  }
+
 }

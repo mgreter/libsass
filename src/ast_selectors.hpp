@@ -84,11 +84,17 @@ namespace Sass {
     Selector(ParserState pstate);
     virtual ~Selector() = 0;
     size_t hash() const override = 0;
-    virtual unsigned long specificity() const = 0;
     virtual int unification_order() const = 0;
     virtual void set_media_block(Media_Block* mb);
     virtual bool has_parent_ref() const;
     virtual bool has_real_parent_ref() const;
+
+    // you should reset this to null on containers
+    virtual unsigned long specificity() const = 0;
+    // by default we return the regular specificity
+    // you must override this for all containers
+    virtual size_t maxSpecificity() const { return specificity(); }
+    virtual size_t minSpecificity() const { return specificity(); }
     // dispatch to correct handlers
     ATTACH_VIRTUAL_CMP_OPERATIONS(Selector)
     ATTACH_VIRTUAL_AST_OPERATIONS(Selector)
@@ -582,6 +588,9 @@ namespace Sass {
 
     SelectorList_Obj wrapInList();
 
+    size_t maxSpecificity() const;
+    size_t minSpecificity() const;
+
     bool operator<(const Selector& rhs) const override;
     bool operator==(const Selector& rhs) const override;
     bool operator<(const SelectorList& rhs) const;
@@ -612,6 +621,9 @@ namespace Sass {
     int unification_order() const override {
       throw std::runtime_error("unification_order for Compound_Selector is undefined");
     }
+
+    size_t maxSpecificity() const { return 0; }
+    size_t minSpecificity() const { return 0; }
 
     virtual bool isCompound() const { return false; };
     virtual bool isCombinator() const { return false; };
@@ -651,6 +663,9 @@ namespace Sass {
     bool isChildCombinator() const { return combinator_ == CHILD; }
     bool isGeneralCombinator() const { return combinator_ == GENERAL; }
     bool isAdjacentCombinator() const { return combinator_ == ADJACENT; }
+
+    size_t maxSpecificity() const { return 0; }
+    size_t minSpecificity() const { return 0; }
 
     bool isNextSibling() const { return isChildCombinator(); }
     bool isFollowingSibling() const { return isGeneralCombinator(); }
@@ -725,6 +740,9 @@ namespace Sass {
     virtual bool isCompound() const override { return true; };
     virtual unsigned long specificity() const override;
 
+    size_t maxSpecificity() const;
+    size_t minSpecificity() const;
+
     bool operator<(const Selector& rhs) const override;
     bool operator==(const Selector& rhs) const override;
 
@@ -778,6 +796,9 @@ namespace Sass {
     // bool isSuperselectorOf(const Compound_Selector* sub, std::string wrapping = "") const;
     // bool isSuperselectorOf(const Complex_Selector* sub, std::string wrapping = "") const;
     bool isSuperselectorOf(const SelectorList* sub) const;
+
+    size_t maxSpecificity() const;
+    size_t minSpecificity() const;
 
 
     bool operator<(const Selector& rhs) const override;

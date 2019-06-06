@@ -92,11 +92,19 @@ namespace Sass {
     // the extensions that those extenders define.
     ExtByExtMap extensionsByExtender;
 
+    std::unordered_map<
+      Simple_Selector_Obj,
+      size_t,
+      HashNodes,
+      CompareNodes
+    > sourceSpecificity;
+
     // A set of [ComplexSelector]s that were originally part of their
     // component [SelectorList]s, as opposed to being added by `@extend`.
     // This allows us to ensure that we don't trim any selectors
     // that need to exist to satisfy the [first law of extend][].
     ExtCplxSelSet originals;
+
 
   public:
 
@@ -110,7 +118,7 @@ namespace Sass {
       extensions(),
       extensionsByExtender(),
       // mediaContexts(),
-      // sourceSpecificity(),
+      sourceSpecificity(),
       originals()
     {};
 
@@ -124,12 +132,18 @@ namespace Sass {
     SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions);
 
     void extendExistingStyleRules(
-      ExtListSelSet rules,
-      ExtSelExtMap newExtensions);
+      ExtListSelSet& rules,
+      ExtSelExtMap& newExtensions);
 
     ExtSelExtMap extendExistingExtensions(
       std::vector<Extension2> extensions,
       ExtSelExtMap& newExtensions);
+
+
+    size_t maxSourceSpecificity(Simple_Selector_Obj simple);
+    size_t maxSourceSpecificity(CompoundSelector_Obj compound);
+    Extension2 extensionForSimple(Simple_Selector_Obj simple);
+    Extension2 extensionForCompound(std::vector<Simple_Selector_Obj> simples);
 
 
     std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);
