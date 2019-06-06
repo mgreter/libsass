@@ -564,9 +564,7 @@ namespace Sass {
     bool canHaveRealParent() const;
 
 
-    size_t hash() const override {
-      return 0;
-    }
+    size_t hash() const override;
     bool has_placeholder() const;
     bool contains_placeholder() const;
     void cloneChildren() override;

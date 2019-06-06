@@ -24,28 +24,34 @@ namespace Sass {
 
   bool ComplexSelector::operator== (const Selector& rhs) const
   {
+    if (auto cpx = Cast<ComplexSelector>(&rhs)) { return *this == *cpx; }
     return false;
   }
   bool ComplexSelector::operator< (const Selector& rhs) const
   {
+    if (auto cpx = Cast<ComplexSelector>(&rhs)) { return *this < *cpx; }
     return false;
   }
 
   bool CompoundOrCombinator::operator== (const Selector& rhs) const
   {
+    if (auto cpx = Cast<CompoundOrCombinator>(&rhs)) { return *this == *cpx; }
     return false;
   }
   bool CompoundOrCombinator::operator< (const Selector& rhs) const
   {
+    if (auto cpx = Cast<CompoundOrCombinator>(&rhs)) { return *this < *cpx; }
     return false;
   }
 
   bool SelectorCombinator::operator== (const Selector& rhs) const
   {
+    if (auto cpx = Cast<SelectorCombinator>(&rhs)) { return *this == *cpx; }
     return false;
   }
   bool SelectorCombinator::operator< (const Selector& rhs) const
   {
+    if (auto cpx = Cast<SelectorCombinator>(&rhs)) { return *this < *cpx; }
     return false;
   }
 
@@ -161,7 +167,7 @@ namespace Sass {
     if (auto ch = Cast<Compound_Selector>(&rhs)) return *this == *ch;
 
     else if (auto sel = Cast<SelectorList>(&rhs)) { return *this == *sel; }
-    else if (auto sel = Cast<ComplexSelector>(&rhs)) { return *this == *sel; }
+    else if (auto sel = Cast<ComplexSelector>(&rhs)) { return *sel == *this; }
     else if (auto sel = Cast<CompoundSelector>(&rhs)) { return *this == *sel; }
 
     throw std::runtime_error("invalid selector base classes to compare");

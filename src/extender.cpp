@@ -238,8 +238,11 @@ namespace Sass {
     ExtSelExtMapEntry newExtensions;
 
     auto existingExtensions = extensionsByExtender.find(target);
-
+    bool notExistingYet = existingExtensions != extensionsByExtender.end();
     std::cerr << "PUT EXT1 " << debug_vec(target) << "\n";
+    if (existingExtensions != extensionsByExtender.end()) {
+      std::cerr << "EXISTS " << existingExtensions->second.size() << "\n";
+    }
     ExtSelExtMapEntry& sources = extensions[target];
 
     for (auto complex : extender->elements()) {
@@ -273,7 +276,15 @@ namespace Sass {
         }
       }
 
-      if (rules != selectors.end() && existingExtensions != extensionsByExtender.end()) {
+      if (selectors.find(target) != selectors.end()) {
+        std::cerr << "DADA RULES IS NOT NULL\n";
+      }
+      else if (existingExtensions != extensionsByExtender.end()) {
+        std::cerr << "existingExtensions IS NOT NULL\n";
+      }
+
+      if (selectors.find(target) != selectors.end() || existingExtensions != extensionsByExtender.end()) {
+        std::cerr << "HAVE NEW EXT " << debug_vec(complex) << "\n";
         newExtensions[complex] = state;
       }
 
@@ -291,8 +302,12 @@ namespace Sass {
     ExtSelExtMap newExtensionsByTarget;
     newExtensionsByTarget[target] = newExtensions;
 
-    if (existingExtensions != extensionsByExtender.end()) {
-      std::cerr << "DO MAP\n";
+    existingExtensions = extensionsByExtender.find(target);
+    notExistingYet = existingExtensions != extensionsByExtender.end();
+
+
+    if (notExistingYet && !existingExtensions->second.empty()) {
+      std::cerr << "DO MAP " << debug_vec(existingExtensions->second) << "\n";
       auto additionalExtensions =
         extendExistingExtensions(existingExtensions->second, newExtensionsByTarget);
 
@@ -500,6 +515,7 @@ on SassException catch (error) {
     }
 
     std::cerr << "EXTENDED " << debug_vec(extended) << "\n";
+    std::cerr << "ORIGINALS " << debug_vec(originals) << "\n";
 
     auto tt = trim(extended, originals);
 
@@ -1089,6 +1105,20 @@ on SassException catch (error) {
     // This is n² on the sequences, but only comparing between separate sequences
     // should limit the quadratic behavior. We iterate from last to first and reverse
     // the result so that, if two selectors are identical, we keep the first one.
+
+    std::cerr << "DA SELCT" << debug_vec(selectors) << "\n";
+    std::cerr << "SET CONISTS " << debug_vec(set) << "\n";
+
+    if (selectors.size() > 1) {
+      debug_ast(selectors.at(1));
+      debug_ast(set.back());
+
+      if (*selectors.at(1) == *set.back()) {
+        std::cerr << "indentity ok\n";
+      }
+
+    }
+
   redo:
 
     // if (cnt++ > 50) exit(0);
@@ -1098,7 +1128,9 @@ on SassException catch (error) {
       // std::cerr << "LOOP " << i << "\n";
     // if (cnt++ > 10) break;
     ComplexSelector_Obj complex1 = selectors.at(i);
+
     if (set.find(complex1) != set.end()) {
+      std::cerr << "COMPLEX " << debug_vec(complex1) << " NOT FOUND IN SET\n";
       // std::cerr << "HAS ORG " << i << "\n";
       // Make sure we don't include duplicate originals, which could
       // happen if a style rule extends a component of its own selector.
@@ -1125,6 +1157,7 @@ on SassException catch (error) {
     // that has specificity greater or equal to this.
     size_t maxSpecificity = 0;
     for (CompoundOrCombinator_Obj component : complex1->elements()) {
+      std::cerr << "check max\n";
       if (CompoundSelector_Obj compound = Cast<CompoundSelector>(component)) {
         maxSpecificity = std::max(maxSpecificity, maxSourceSpecificity(compound));
         std::cerr << "MAX NOW AT " << maxSpecificity << "\n";

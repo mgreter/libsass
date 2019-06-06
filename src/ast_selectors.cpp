@@ -493,6 +493,16 @@ namespace Sass {
     }
     return false;
   };
+
+  size_t ComplexSelector::hash() const
+  {
+    if (Selector::hash_ == 0) {
+      hash_combine(Selector::hash_, Vectorized::hash());
+      hash_combine(Selector::hash_, std::hash<bool>()(chroots_));
+    }
+    return Selector::hash_;
+  }
+
   bool ComplexSelector::has_placeholder() const {
     for (size_t i = 0, L = length(); i < L; ++i) {
       if ((*this)[i]->has_placeholder()) return true;
