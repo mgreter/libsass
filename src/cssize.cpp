@@ -161,6 +161,8 @@ namespace Sass {
                                   r->selector(),
                                   bb);
 
+    rr->selector2(r->selector2());
+
     rr->is_root(r->is_root());
     // rr->tabs(r->block()->tabs());
     p_stack.pop_back();

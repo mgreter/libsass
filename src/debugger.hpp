@@ -735,7 +735,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
-    debug_ast(ruleset->selector(), ind + ">");
+    debug_ast(ruleset->selector2(), ind + ">");
     debug_ast(ruleset->block(), ind + " ");
   } else if (Cast<Block>(node)) {
     Block* block = Cast<Block>(node);

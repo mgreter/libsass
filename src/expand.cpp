@@ -183,6 +183,7 @@ namespace Sass {
 
     // Register every selector for lookup when extended
     SelectorList_Obj sss = r->selector2();
+    // debug_ast(sss, "sss: ");
     ctx.extender.addSelector(sss);
     std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
@@ -202,6 +203,8 @@ namespace Sass {
                                   r->pstate(),
                                   toSelector_List(sel),
                                   blk);
+    rr->selector2(sss);
+    // debug_ast(rr->selector2(), "vvv: ");
     popFromSelectorStack();
     if (block_stack.back()->is_root()) {
       env_stack.pop_back();

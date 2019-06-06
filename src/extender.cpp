@@ -103,7 +103,7 @@ namespace Sass {
 
     SelectorList_Obj original = selector;
     // if (!originalSelector->isInvisible()) {
-    std::cerr << "ADD SELECTOR " << debug_vec(original) << "\n";
+    std::cerr << "ADD SELECTOR " << selector.ptr() << " - " << debug_vec(original) << "\n";
 
     // Remember all original complex selectors
     for (auto complex : selector->elements()) {
