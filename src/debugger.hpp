@@ -308,7 +308,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "ComplexSelector " << selector
       << " (" << pstate_source_position(node) << ")"
       << " <" << selector->hash() << ">"
-      << " [" << (selector->chroots() ? "ROOT" : "CONNECT") << "]"
+      << " [" << (selector->chroots() ? "CHROOT" : "CONNECT") << "]"
       << " [length:" << longToHex(selector->length()) << "]"
       << " [weight:" << longToHex(selector->specificity()) << "]"
       // << " [@media:" << selector->media_block() << "]"

@@ -126,7 +126,7 @@ namespace Sass {
       Block* bb = operator()(r->block());
       Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), bb);
       if (r->schema()) {
-        // std::cerr << "GOT SCHEMA\n";
+          // std::cerr << "GOT SCHEMA\n";
           pushToSelectorStack({});
           k->name(toSelectorList(r->schema()->eval(eval)));
           popFromSelectorStack();
@@ -142,6 +142,20 @@ namespace Sass {
       return k.detach();
     }
 
+    if (r->schema()) {
+      // std::cerr << "GOT SCHEMA\n";
+      pushToSelectorStack({});
+      SelectorList_Obj sel = toSelectorList(r->schema()->eval(eval));
+      if (r->selector2()) {
+        std::cerr << "OVERWRITE\n";
+      }
+      r->selector2(sel);
+      for (auto complex : sel->elements()) {
+        complex->chroots(false);
+      }
+      popFromSelectorStack();
+    }
+
     // reset when leaving scope
     LOCAL_FLAG(at_root_without_rule, false);
 
@@ -154,7 +168,8 @@ namespace Sass {
     }
 
     Selector_List_Obj sel = toSelector_List(r->selector());
-    if (sel) sel = sel->eval(eval);
+
+    // if (sel) sel = sel->eval(eval);
 
     // check for parent selectors in base level rules
     if (r->is_root() || (block_stack.back() && block_stack.back()->is_root())) {
@@ -181,17 +196,21 @@ namespace Sass {
       }
     }
 
-    // Register every selector for lookup when extended
     SelectorList_Obj sss = r->selector2();
+    r->selector2(eval(sss));
+    // debug_ast(r->selector2());
+
+    // Register every selector for lookup when extended
+    // SelectorList_Obj sss = r->selector2();
     // debug_ast(sss, "sss: ");
-    ctx.extender.addSelector(sss);
+    ctx.extender.addSelector(r->selector2());
     // std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
     sel = r->selector2()->toSelectorList();
 
     // do not connect parent again
     sel->remove_parent_selectors();
-    pushToSelectorStack(sel->toSelList());
+    pushToSelectorStack(r->selector2());
     Env env(environment());
     if (block_stack.back()->is_root()) {
       env_stack.push_back(&env);
@@ -203,9 +222,9 @@ namespace Sass {
                                   r->pstate(),
                                   toSelector_List(sel),
                                   blk);
-    rr->selector2(sss);
     // debug_ast(rr->selector2(), "vvv: ");
     popFromSelectorStack();
+    rr->selector2(r->selector2());
     if (block_stack.back()->is_root()) {
       env_stack.pop_back();
     }
@@ -725,6 +744,8 @@ namespace Sass {
           pushToSelectorStack({});
           sl = eval(e->schema());
           popFromSelectorStack();
+          e->selector2(sl->toSelList());
+          e->selector(sl);
         }
       }
       for (Complex_Selector_Obj cs : sl->elements()) {
