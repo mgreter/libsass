@@ -185,7 +185,7 @@ namespace Sass {
       for (size_t i = 0, L = sl->length(); i < L; ++i)
         if (!(*sl)[i]->has_placeholder()) return false;
     }
-    return true;
+    return false; // ToDo: hide real invisible ones
   }
 
   /////////////////////////////////////////////////////////////////////////

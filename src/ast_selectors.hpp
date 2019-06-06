@@ -620,6 +620,8 @@ namespace Sass {
       throw std::runtime_error("unification_order for Compound_Selector is undefined");
     }
 
+    ComplexSelector* wrapInComplex();
+
     size_t maxSpecificity() const { return 0; }
     size_t minSpecificity() const { return 0; }
 
@@ -711,12 +713,8 @@ namespace Sass {
     // fullfills various criterias.
     bool canHaveRealParent() const;
 
-    size_t hash() const override {
-      return 0;
-    }
+    size_t hash() const override;
     CompoundSelector* unify_with(CompoundSelector* rhs);
-
-    ComplexSelector* wrapInComplex();
 
     /* helper function for syntax sugar */
     CompoundSelector* getCompound() final override { return this; }

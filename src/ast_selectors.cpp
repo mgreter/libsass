@@ -503,6 +503,15 @@ namespace Sass {
     return Selector::hash_;
   }
 
+  size_t CompoundSelector::hash() const
+  {
+    if (Selector::hash_ == 0) {
+      hash_combine(Selector::hash_, Vectorized::hash());
+      hash_combine(Selector::hash_, std::hash<bool>()(hasRealParent_));
+    }
+    return Selector::hash_;
+  }
+
   bool ComplexSelector::has_placeholder() const {
     for (size_t i = 0, L = length(); i < L; ++i) {
       if ((*this)[i]->has_placeholder()) return true;
@@ -1816,7 +1825,7 @@ namespace Sass {
   }
 
   // Wrap the compound selector with a complex selector
-  ComplexSelector* CompoundSelector::wrapInComplex()
+  ComplexSelector* CompoundOrCombinator::wrapInComplex()
   {
     auto complex = SASS_MEMORY_NEW(ComplexSelector, pstate());
     complex->append(this);

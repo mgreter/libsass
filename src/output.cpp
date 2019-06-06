@@ -116,6 +116,7 @@ namespace Sass {
     SelectorList_Obj s     = r->selector2();
     Block_Obj    b     = r->block();
 
+
     // Filter out rulesets that aren't printable (process its children though)
     if (!Util::isPrintable(r, output_style())) {
       for (size_t i = 0, L = b->length(); i < L; ++i) {

@@ -555,7 +555,7 @@ namespace Sass {
 
       Block_Obj b = r->block();
 
-      Selector_List* sl = Cast<Selector_List>(r->selector());
+      Selector_List* sl = toSelector_List(r->selector2());
       bool hasSelectors = sl ? sl->length() > 0 : false;
 
       if (!hasSelectors) {

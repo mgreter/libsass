@@ -1,6 +1,7 @@
 #ifndef SASS_DART_HELPERS_H
 #define SASS_DART_HELPERS_H
 
+#include "debugger.hpp"
 #include "tsl/ordered_map.h"
 #include "tsl/ordered_set.h"
 
@@ -88,12 +89,18 @@ namespace Sass {
     std::size_t m = X.size() - 1;
     std::size_t n = Y.size() - 1;
 
+    //std::cerr << "LCS 1\n";
+
     std::vector<SharedImpl<T>> lcs;
     if (m == std::string::npos) return lcs;
     if (n == std::string::npos) return lcs;
 
+    //std::cerr << "LCS 2\n";
+
 #define L(i,j) l[ (i) * m + j ]
     std::size_t* l = new std::size_t[(m + 1) * (n + 1)];
+
+    //std::cerr << "LCS 3\n";
 
     /* Following steps build L[m+1][n+1] in bottom up fashion. Note
       that L[i][j] contains length of LCS of X[0..i-1] and Y[0..j-1] */
@@ -108,8 +115,14 @@ namespace Sass {
       }
     }
 
+    //std::cerr << "LCS 4\n";
+
     // Following code is used to print LCS
     std::size_t index = L(m, n);
+    lcs.reserve(index);
+    for (size_t o = 0; o < index; o++) {
+      lcs[o] = {};
+    }
 
     // Create an array to store the lcs groups
     // std::vector<Selector_Group_Obj> lcs(index);
@@ -117,13 +130,19 @@ namespace Sass {
     // Start from the right-most-bottom-most corner and
     // one by one store objects in lcs[]
     std::size_t i = m, j = n;
+    //std::cerr << "LCS 5\n";
     while (i > 0 && j > 0) {
 
       // If current objects in X[] and Y are same, then
       // current object is part of LCS
+      //std::cerr << "LCS 6 " << i << " : " << j << "\n";
+      //std::cerr << debug_vec(Y[j - 1]) << "\n";
+      //std::cerr << debug_vec(X[j - 1]) << "\n";
       if (*X[i - 1] == *Y[j - 1])
       {
+        //std::cerr << "they are the same\n";
         lcs[index - 1] = X[i - 1]; // Put current object in result
+        //std::cerr << "assigned\n";
         i--; j--; index--;     // reduce values of i, j and index
       }
 
@@ -133,7 +152,12 @@ namespace Sass {
         i--;
       else
         j--;
+
+      //std::cerr << "LCS 8\n";
+
     }
+
+    //std::cerr << "LCS 9\n";
 
     delete[] l;
     return lcs;
@@ -162,11 +186,12 @@ namespace Sass {
 
   template <class T>
   std::vector<T> lcs2(std::vector<T>& X, std::vector<T>& Y, bool(*select)(T, T, T&)) {
+    // std::cerr << "run lcs2\n";
+
     std::size_t m = X.size() - 1;
     std::size_t n = Y.size() - 1;
-
-    // std::cerr << "LCS IN X: " << debug_vec(X) << "\n";
-    // std::cerr << "LCS IN Y: " << debug_vec(Y) << "\n";
+    // std::cerr << "LCS2 IN X: " << debug_vec(X) << "\n";
+    // std::cerr << "LCS2 IN Y: " << debug_vec(Y) << "\n";
 
     std::vector<T> lcs;
     if (m == std::string::npos) return lcs;
@@ -214,12 +239,18 @@ namespace Sass {
     std::cerr << "]\n";
     */
 
+    // std::cerr << "close to the end\n";
+
     // Following code is used to print LCS
     auto rv = backtrack(m, n, s, l, b, m, n);
 
+    // std::cerr << "backtracked\n";
+
     delete[] l;
     delete[] s;
-    delete[] b;
+    // delete[] b;
+
+    // std::cerr << "deallocated\n";
 
     return rv;
 

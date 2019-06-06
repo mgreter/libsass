@@ -8,6 +8,7 @@
 #include "eval.hpp"
 #include "extend.hpp"
 #include "emitter.hpp"
+#include "debugger.hpp"
 #include "color_maps.hpp"
 #include "ast_fwd_decl.hpp"
 #include <set>
@@ -35,6 +36,7 @@ namespace Sass {
 
   bool CompoundOrCombinator::operator== (const Selector& rhs) const
   {
+    // std::cerr << "generic CompoundOrCombinator cmp\n";
     if (auto cpx = Cast<CompoundOrCombinator>(&rhs)) { return *this == *cpx; }
     return false;
   }
@@ -60,7 +62,7 @@ namespace Sass {
 
   bool SelectorList::operator== (const Selector& rhs) const
   {
-    std::cerr << "ASDASD\n";
+    // std::cerr << "ASDASD\n";
     if (auto sl = Cast<Selector_List>(&rhs)) { return *this == *sl; }
     else if (auto ss = Cast<Simple_Selector>(&rhs)) { return *this == *ss; }
     else if (auto cpx = Cast<Complex_Selector>(&rhs)) { return *this == *cpx; }
@@ -391,6 +393,7 @@ namespace Sass {
 
   bool CompoundSelector::operator== (const CompoundSelector& rhs) const
   {
+    // std::cerr << "comp vs comp\n";
     if (&rhs == this) return true;
     if (rhs.length() != length()) return false;
     std::unordered_set<const Simple_Selector*, HashPtr, ComparePtrs> lhs_set;
@@ -1266,6 +1269,7 @@ namespace Sass {
 
   bool SelectorCombinator::operator==(const SelectorCombinator& rhs) const
   {
+    // std::cerr << "specific SelectorCombinator cmp\n";
     return combinator() == rhs.combinator();
   }
 
@@ -1274,6 +1278,7 @@ namespace Sass {
 
   bool SelectorCombinator::operator==(const CompoundOrCombinator& rhs) const
   {
+    // std::cerr << "asd cmp 2\n";
     if (const SelectorCombinator* sel = Cast<SelectorCombinator>(&rhs)) {
       return operator==(*sel);
     }
@@ -1290,9 +1295,13 @@ namespace Sass {
 
   bool CompoundSelector::operator==(const CompoundOrCombinator& rhs) const
   {
+    // std::cerr << "asd cmp 1 == " << to_string() << "\n";
+    // std::cerr << "asd cmp 1 == " << rhs.to_string() << "\n";
     if (const CompoundSelector* sel = Cast<CompoundSelector>(&rhs)) {
+      // std::cerr << "call other one\n";
       return operator==(*sel);
     }
+    // std::cerr << "asd cmp 1 not euqal\n";
     return false;
   }
 

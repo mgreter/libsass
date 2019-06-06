@@ -462,6 +462,7 @@ namespace Sass {
   bool complexIsParentSuperselector(std::vector<CompoundOrCombinator_Obj> complex1,
     std::vector<CompoundOrCombinator_Obj> complex2) {
     // Try some simple heuristics to see if we can avoid allocations.
+    if (complex1.empty() && complex2.empty()) return false;
     if (Cast<SelectorCombinator>(complex1.front())) return false;
     if (Cast<SelectorCombinator>(complex2.front())) return false;
     if (complex1.size() > complex2.size()) return false;
