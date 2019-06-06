@@ -185,7 +185,7 @@ namespace Sass {
     SelectorList_Obj sss = r->selector2();
     // debug_ast(sss, "sss: ");
     ctx.extender.addSelector(sss);
-    std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
+    // std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
     sel = r->selector2()->toSelectorList();
 
@@ -754,7 +754,7 @@ namespace Sass {
             "See http://bit.ly/ExtendCompound for details.\n";
         }
 
-        std::cerr << "CALLING WITH PARENT: " << debug_vec(selector2()) << "\n";
+        // std::cerr << "CALLING WITH PARENT: " << debug_vec(selector2()) << "\n";
         ctx.extender.addExtension(selector2(), compound->first(), e);
 
       }

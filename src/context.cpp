@@ -704,16 +704,16 @@ namespace Sass {
     }
 //    debug_ast(root);
     // expand and eval the tree
-    debug_ast(root);
+    // debug_ast(root);
     root = expand(root);
-    debug_ast(root, "EXP: ");
+    // debug_ast(root, "EXP: ");
     // check nesting
     check_nesting(root);
-    debug_ast(root);
+    // debug_ast(root);
     // merge and bubble certain rules
     root = cssize(root);
  //   debug_ast(root);
-    debug_ast(root);
+    // debug_ast(root);
     // should we extend something?
     if (!subset_map.empty()) {
       // create crtp visitor object
@@ -722,7 +722,7 @@ namespace Sass {
       // extend tree nodes
       // extend(root);
     }
-    debug_ast(root);
+    // debug_ast(root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
