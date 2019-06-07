@@ -108,7 +108,7 @@ namespace Sass {
 
     // Remember all original complex selectors
     for (auto complex : selector->elements()) {
-      std::cerr << "INSERT ORIGINAL1 " << debug_vec(complex) << "\n";
+      std::cerr << "INSERT ORIGINAL1 " << debug_vec(complex) << " - " << complex.ptr() << "\n";
       originals.insert(complex);
     }
     // }
@@ -714,10 +714,24 @@ on SassException catch (error) {
     // bool targetsUsed = mode == ExtendMode::NORMAL || extensions.length < 2
     //   ? null
     //   : Set<SimpleSelector>();
-    ExtSmplSelSet targetsUsed;
+    ExtSmplSelSet targetsUsed2;
+
+    ExtSmplSelSet* targetsUsed = nullptr;
+
+
 
     std::cerr << "extendCompound IN " << std::string(compound) << "\n";
     std::cerr << "extendCompound EXT " << debug_vec(extensions) << "\n";
+
+    if (mode == ExtendMode::NORMAL || extensions.size() < 2) {
+
+    }
+    else {
+      std::cerr << "SETUP targetsUsed\n";
+      targetsUsed = &targetsUsed2;
+    }
+
+    std::cerr << "INITIALIZED targetsUsed to " << debug_vec(targetsUsed) << "\n";
 
     std::vector<ComplexSelector_Obj> result;
 
@@ -766,19 +780,22 @@ on SassException catch (error) {
 
     std::cerr << "OPTIONS " << debug_vec(options) << "\n";
 
-    std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
+    // std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
 
 
-    if (targetsUsed.empty()) {
+    if (targetsUsed == nullptr) {
       std::cerr << "IS NULL" << "\n";
     }
 
       // If [_mode] isn't [ExtendMode.normal] and we didn't use all
     // the targets in [extensions], extension fails for [compound].
-    if (targetsUsed.size() != extensions.size()) {
-      if (!targetsUsed.empty()) {
-        std::cerr << "FAIL: SIZE MISMATCH\n";
-        return {};
+    if (targetsUsed != nullptr) {
+
+      if (targetsUsed->size() != extensions.size()) {
+        if (!targetsUsed->empty()) {
+          std::cerr << "FAIL: SIZE MISMATCH\n";
+          return {};
+        }
       }
     }
 
@@ -823,7 +840,9 @@ on SassException catch (error) {
     std::vector<ComplexSelector_Obj> unifiedPaths;
     std::cerr << "from opts " << debug_vec(options) << "\n";
     std::vector<std::vector<Extension2>> prePaths = paths(options);
+
     std::cerr << "prePaths " << debug_vec(prePaths) << "\n";
+
     for (size_t i = 0; i < prePaths.size(); i += 1) {
       std::vector<std::vector<CompoundOrCombinator_Obj>> complexes;
       std::vector<Extension2> path = prePaths.at(i);
@@ -853,7 +872,7 @@ on SassException catch (error) {
             ComplexSelector_Obj sel = state.extender;
             if (CompoundSelector_Obj compound = Cast<CompoundSelector>(sel->last())) {
               std::cerr << "INSERT ORIGINALS3 " << debug_vec(compound) << "\n";
-              originals.insert(originals.begin(), compound->begin(), compound->end());
+              originals.insert(originals.end(), compound->last());
             }
           }
           else {
@@ -892,6 +911,7 @@ on SassException catch (error) {
         sel->elements(components);
         unifiedPaths.push_back(sel);
       }
+
       // unifiedPaths.push_back(unifiedPath);
 
     }
@@ -901,7 +921,7 @@ on SassException catch (error) {
     return unifiedPaths;
   }
 
-  std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed) {
+  std::vector<Extension2> Extender::extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed) {
 
     // Class_Selector_Obj cs = SASS_MEMORY_NEW(Class_Selector, "[tmp]", ".first"); if (extensions.find(cs) != extensions.end()) { std::cerr << ".FIRST MAP " << debug_keys(extensions[cs]) << "\n"; }
 
@@ -913,10 +933,13 @@ on SassException catch (error) {
     std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";
 
     // dart insert sometimes also in empty
-    // if (!targetsUsed.empty()) {
+    if (targetsUsed != nullptr) {
       std::cerr << "insert one in used targets\n";
-      targetsUsed.insert(simple);
-      // }
+      targetsUsed->insert(simple);
+    }
+    else {
+      std::cerr << "targetUsed is NULL\n";
+    }
     if (mode == ExtendMode::REPLACE) {
       auto rv = mapValues(extenders);
       std::cerr << "HAS REPLACE MODE\n";
@@ -938,7 +961,7 @@ on SassException catch (error) {
     return result;
   }
 
-  std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed) {
+  std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed) {
 
     std::cerr << "start extendSimple\n";
     std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";

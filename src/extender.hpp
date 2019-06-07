@@ -148,7 +148,7 @@ namespace Sass {
 
     std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);
     std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal = false);
-    std::vector<std::vector<Extension2>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed);
+    std::vector<std::vector<Extension2>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
 
     std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions);
 
@@ -158,7 +158,7 @@ namespace Sass {
 
 
   private:
-    std::vector<Extension2> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed);
+    std::vector<Extension2> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
     static SelectorList_Obj _extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, ExtendMode mode);
 
   public:

@@ -210,6 +210,11 @@ inline std::string debug_vec(std::unordered_set<T, U, O, V> vec) {
   return out.str();
 }
 
+inline std::string debug_vec(ExtSmplSelSet* node) {
+  if (node == NULL) return "null";
+  else return debug_vec(*node);
+}
+
 
 inline void debug_ast(const AST_Node* node, std::string ind = "", Env* env = 0) {
   debug_ast(const_cast<AST_Node*>(node), ind, env);
