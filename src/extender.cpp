@@ -590,7 +590,7 @@ on SassException catch (error) {
           // Note: dart-sass checks for null!?
           if (extendedNotExpanded.empty()) {
             for (size_t n = 0; n < i; n++) {
-                // std::cerr << "ADD ITEM " << debug_vec(complex->at(n)) << "\n";
+              // std::cerr << "ADD ITEM " << debug_vec(complex->at(n)) << "\n";
                 extendedNotExpanded.push_back({
                   complex->at(n)->wrapInComplex()
                 });
@@ -651,9 +651,6 @@ on SassException catch (error) {
           // std::cerr << "INSERT ORIGINAL2 " << debug_vec(cplx) << "\n";
           // std::cerr << "BEFORE " << debug_vec(originals) << "\n";
           size_t sz = originals.size();
-          if (sz == 3) {
-            // std::cerr << "DEBUG HERE\n";
-          }
 
           originals.insert(cplx);
           // std::cerr << "AFTER " << debug_vec(originals) << "\n";
@@ -908,17 +905,18 @@ on SassException catch (error) {
 
     // Class_Selector_Obj cs = SASS_MEMORY_NEW(Class_Selector, "[tmp]", ".first"); if (extensions.find(cs) != extensions.end()) { // std::cerr << ".FIRST MAP " << debug_keys(extensions[cs]) << "\n"; }
 
-    // std::cerr << "DO " << debug_vec(simple) << "\n";
+    // std::cerr << "extendWithoutPseudo " << debug_vec(simple) << "\n";
     auto ext = extensions.find(simple);
     if (ext == extensions.end()) return {};
     ExtSelExtMapEntry extenders = ext->second;
-
     // std::cerr << "START " << debug_values(extenders) << "\n";
+    // std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";
 
-    if (!targetsUsed.empty()) {
+    // dart insert sometimes also in empty
+    // if (!targetsUsed.empty()) {
       // std::cerr << "insert one in used targets\n";
       targetsUsed.insert(simple);
-    }
+      // }
     if (mode == ExtendMode::REPLACE) {
       auto rv = mapValues(extenders);
       // std::cerr << "HAS REPLACE MODE\n";
@@ -943,6 +941,7 @@ on SassException catch (error) {
   std::vector<std::vector<Extension2>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet& targetsUsed) {
 
     // std::cerr << "start extendSimple\n";
+    // std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";
     if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(simple)) {
       // std::cerr << "cast to pseudo ok\n";
       if (pseudo->selector2()) {
