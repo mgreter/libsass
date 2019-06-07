@@ -5,6 +5,7 @@
 #include "ast.hpp"
 #include "output.hpp"
 #include "util.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -113,8 +114,23 @@ namespace Sass {
 
   void Output::operator()(Ruleset* r)
   {
-    SelectorList_Obj s     = r->selector2();
+    SelectorList_Obj s2     = r->selector2();
     Block_Obj    b     = r->block();
+
+    if (!s2 || s2->empty()) return;
+
+    // remove placeholders
+    SelectorList_Obj s = s2->copy();
+    s->clear();
+    for (size_t i = 0; i < s2->length(); i += 1) {
+      if (!s2->get(i)->has_placeholder()) {
+        s->append(s2->get(i));
+      }
+    }
+
+    if (!s || s->empty()) return;
+
+    // debug_ast(s);
 
 
     // Filter out rulesets that aren't printable (process its children though)
