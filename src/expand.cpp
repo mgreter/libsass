@@ -131,8 +131,8 @@ namespace Sass {
           k->name(toSelectorList(r->schema()->eval(eval)));
           popFromSelectorStack();
       }
-      else if (r->selector()) {
-        if (SelectorList_Obj s = toSelectorList(r->selector())) {
+      else if (r->selector2()) {
+        if (SelectorList_Obj s = r->selector2()) {
           pushToSelectorStack({});
           k->name(s->eval(eval));
           popFromSelectorStack();
@@ -167,15 +167,16 @@ namespace Sass {
       has_parent_selector = ll != 0 && ll->length() > 0;
     }
 
-    Selector_List_Obj sel = toSelector_List(r->selector());
+    SelectorList_Obj sel = r->selector2();
 
     // if (sel) sel = sel->eval(eval);
 
     // check for parent selectors in base level rules
+/*
     if (r->is_root() || (block_stack.back() && block_stack.back()->is_root())) {
-      if (Selector_List* selector_list = Cast<Selector_List>(r->selector())) {
-        for (Complex_Selector_Obj complex_selector : selector_list->elements()) {
-          Complex_Selector* tail = complex_selector;
+      if (SelectorList* selector_list = r->selector2()) {
+        for (ComplexSelector_Obj complex_selector : selector_list->elements()) {
+          ComplexSelector* tail = complex_selector;
           while (tail) {
             if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
               Parent_Selector* ptr = Cast<Parent_Selector>(header);
@@ -195,6 +196,7 @@ namespace Sass {
         }
       }
     }
+    */
 
     SelectorList_Obj sss = r->selector2();
     r->selector2(eval(sss));
@@ -207,7 +209,7 @@ namespace Sass {
     ctx.extender.addSelector(r->selector2());
     // std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
-    sel = r->selector2()->toSelectorList();
+    sel = r->selector2();
 
     // do not connect parent again
     sel->remove_parent_selectors();
@@ -221,7 +223,7 @@ namespace Sass {
     if (r->block()) blk = operator()(r->block());
     Ruleset* rr = SASS_MEMORY_NEW(Ruleset,
                                   r->pstate(),
-                                  toSelector_List(sel),
+                                  sel,
                                   blk);
     // debug_ast(rr->selector2(), "vvv: ");
     popFromSelectorStack();

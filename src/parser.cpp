@@ -546,8 +546,8 @@ namespace Sass {
       SelectorList_Obj asd = parseSelectorList(false);
       // debug_ast(asd);
       ruleset->selector2(asd);
-      Selector_List_Obj sel = toSelector_List(asd);
-      ruleset->selector(sel);
+      // Selector_List_Obj sel = toSelector_List(asd);
+      // ruleset->selector(sel);
     }
     else {
       Selector_List_Obj list = SASS_MEMORY_NEW(Selector_List, pstate);
@@ -555,7 +555,7 @@ namespace Sass {
       list->schema(sc);
       ruleset->schema(sc);
       // Somewhere we access a null
-      ruleset->selector((list));
+      // ruleset->selector((list));
       ruleset->selector2(toSelectorList(list));
       // std::cerr << "PARSE SCHEMA\n";
       // debug_ast(list);

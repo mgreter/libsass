@@ -49,31 +49,11 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(Ruleset* r) {
         // Create a new selector group without placeholders
-        Selector_List_Obj sl = Cast<Selector_List>(r->selector());
+        SelectorList_Obj sl = r->selector2();
 
         if (sl) {
           // Set the new placeholder selector list
-          r->selector((remove_placeholders(sl)));
-          // Remove placeholders in wrapped selectors
-          for (Complex_Selector_Obj cs : sl->elements()) {
-            while (cs) {
-              if (cs->head()) {
-                for (Simple_Selector_Obj& ss : cs->head()->elements()) {
-                  if (Pseudo_Selector * ws = Cast<Pseudo_Selector>(ss)) {
-                    if (SelectorList * wsl = Cast<SelectorList>(ws->selector2())) {
-                      SelectorList* clean = remove_placeholders(wsl);
-                      // also clean superflous parent selectors
-                      // probably not really the correct place
-                      clean->remove_parent_selectors();
-                      ws->selector2(clean);
-                    }
-                  }
-
-                }
-              }
-              cs = cs->tail();
-            }
-          }
+          r->selector2((remove_placeholders(sl)));
         }
 
         // Iterate into child blocks

@@ -158,7 +158,7 @@ namespace Sass {
     }
     Ruleset_Obj rr = SASS_MEMORY_NEW(Ruleset,
                                   r->pstate(),
-                                  r->selector(),
+                                  r->selector2(),
                                   bb);
 
     rr->selector2(r->selector2());
@@ -336,7 +336,7 @@ namespace Sass {
     Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
     Ruleset* new_rule = SASS_MEMORY_NEW(Ruleset,
                                         parent->pstate(),
-                                        parent->selector(),
+                                        parent->selector2(),
                                         bb);
     new_rule->tabs(parent->tabs());
     new_rule->block()->concat(m->block());
@@ -361,7 +361,7 @@ namespace Sass {
     Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
     Ruleset* new_rule = SASS_MEMORY_NEW(Ruleset,
                                         parent->pstate(),
-                                        parent->selector(),
+                                        parent->selector2(),
                                         bb);
     new_rule->tabs(parent->tabs());
     new_rule->block()->concat(m->block());

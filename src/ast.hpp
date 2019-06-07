@@ -469,11 +469,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   class Ruleset final : public Has_Block {
     ADD_PROPERTY(SelectorList_Obj, selector2)
-    ADD_PROPERTY(Selector_List_Obj, selector)
+    // ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(Selector_Schema_Obj, schema)
     ADD_PROPERTY(bool, is_root);
   public:
-    Ruleset(ParserState pstate, Selector_List_Obj s = {}, Block_Obj b = {});
+    Ruleset(ParserState pstate, SelectorList_Obj s = {}, Block_Obj b = {});
     bool is_invisible() const override;
     ATTACH_AST_OPERATIONS(Ruleset)
     ATTACH_CRTP_PERFORM_METHODS()

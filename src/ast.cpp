@@ -165,23 +165,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Ruleset::Ruleset(ParserState pstate, Selector_List_Obj s, Block_Obj b)
-  : Has_Block(pstate, b), selector2_(toSelectorList(s)), selector_(s), schema_(), is_root_(false)
+  Ruleset::Ruleset(ParserState pstate, SelectorList_Obj s, Block_Obj b)
+  : Has_Block(pstate, b), selector2_(s), schema_(), is_root_(false)
   { statement_type(RULESET); }
   Ruleset::Ruleset(const Ruleset* ptr)
   : Has_Block(ptr),
     selector2_(ptr->selector2_),
-    selector_(ptr->selector_),
+    // selector_(ptr->selector_),
     schema_(ptr->schema_),
     is_root_(ptr->is_root_)
   { statement_type(RULESET); }
 
   bool Ruleset::is_invisible() const {
-    if (Selector_List* sl = Cast<Selector_List>(selector())) {
-      for (size_t i = 0, L = sl->length(); i < L; ++i)
-        if (!(*sl)[i]->has_placeholder()) return false;
-    }
-    if (SelectorList * sl = Cast<SelectorList>(selector())) {
+    if (SelectorList * sl = Cast<SelectorList>(selector2())) {
       for (size_t i = 0, L = sl->length(); i < L; ++i)
         if (!(*sl)[i]->has_placeholder()) return false;
     }

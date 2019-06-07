@@ -2092,7 +2092,8 @@ namespace Sass {
     }
 
     bool extendedSomething = false;
-
+    std::cerr << "Still using this?\n";
+    /*
     CompoundSelectorSet seen;
     Selector_List_Obj qwe = (pObject->selector());
     // debug_ast(qwe);
@@ -2112,6 +2113,7 @@ namespace Sass {
     } else {
       DEBUG_PRINTLN(EXTEND_OBJECT, "EXTEND DID NOT TRY TO EXTEND ANYTHING")
     }
+    */
   }
 
   Extend::Extend(Subset_Map& ssm)
