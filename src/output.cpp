@@ -289,7 +289,7 @@ namespace Sass {
   void Output::operator()(Directive* a)
   {
     std::string      kwd   = a->keyword();
-    Selector_Obj   s     = a->selector();
+    Selector_Obj   s     = a->selector2();
     Expression_Obj v     = a->value();
     Block_Obj      b     = a->block();
 

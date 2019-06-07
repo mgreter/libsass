@@ -94,7 +94,7 @@ namespace Sass {
     Directive_Obj rr = SASS_MEMORY_NEW(Directive,
                                   r->pstate(),
                                   r->keyword(),
-                                  r->selector(),
+                                  r->selector2(),
                                   r->block() ? operator()(r->block()) : 0);
     if (r->value()) rr->value(r->value());
     p_stack.pop_back();
@@ -300,7 +300,7 @@ namespace Sass {
     Directive_Obj mm = SASS_MEMORY_NEW(Directive,
                                   m->pstate(),
                                   m->keyword(),
-                                  m->selector(),
+                                  m->selector2(),
                                   wrapper_block);
     if (m->value()) mm->value(m->value());
 

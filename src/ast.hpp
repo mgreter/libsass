@@ -524,10 +524,10 @@ namespace Sass {
   class Directive final : public Has_Block {
     ADD_CONSTREF(std::string, keyword)
     ADD_PROPERTY(SelectorList_Obj, selector2)
-    ADD_PROPERTY(Selector_List_Obj, selector)
+    // ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(Expression_Obj, value)
   public:
-    Directive(ParserState pstate, std::string kwd, Selector_List_Obj sel = {}, Block_Obj b = {}, Expression_Obj val = {});
+    Directive(ParserState pstate, std::string kwd, SelectorList_Obj sel = {}, Block_Obj b = {}, Expression_Obj val = {});
     bool bubbles() override;
     bool is_media();
     bool is_keyframes();

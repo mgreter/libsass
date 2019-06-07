@@ -101,11 +101,11 @@ namespace Sass {
   {
     append_indentation();
     append_token(at_rule->keyword(), at_rule);
-    if (at_rule->selector()) {
+    if (at_rule->selector2()) {
       append_mandatory_space();
       bool was_wrapped = in_wrapped;
       in_wrapped = true;
-      at_rule->selector()->perform(this);
+      at_rule->selector2()->perform(this);
       in_wrapped = was_wrapped;
     }
     if (at_rule->value()) {

@@ -2534,7 +2534,7 @@ namespace Sass {
     Directive* at_rule = SASS_MEMORY_NEW(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
-      at_rule->selector(parseSelectorList(false)->toSelectorList());
+      at_rule->selector2(parseSelectorList(false));
     }
 
     lex < css_comments >(false);
@@ -2564,7 +2564,7 @@ namespace Sass {
     Directive_Obj at_rule = SASS_MEMORY_NEW(Directive, pstate, kwd);
     Lookahead lookahead = lookahead_for_include(position);
     if (lookahead.found && !lookahead.has_interpolants) {
-      at_rule->selector(parseSelectorList(false)->toSelectorList());
+      at_rule->selector2(parseSelectorList(false));
     }
 
     lex < css_comments >(false);

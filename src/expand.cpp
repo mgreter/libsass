@@ -298,7 +298,7 @@ namespace Sass {
   {
     LOCAL_FLAG(in_keyframes, a->is_keyframes());
     Block* ab = a->block();
-    Selector_List* as = a->selector();
+    SelectorList* as = a->selector2();
     Expression* av = a->value();
     pushToSelectorStack({});
     if (av) av = av->perform(&eval);

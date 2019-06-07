@@ -243,14 +243,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Directive::Directive(ParserState pstate, std::string kwd, Selector_List_Obj sel, Block_Obj b, Expression_Obj val)
-  : Has_Block(pstate, b), keyword_(kwd), selector2_(toSelectorList(sel)), selector_(sel), value_(val) // set value manually if needed
+  Directive::Directive(ParserState pstate, std::string kwd, SelectorList_Obj sel, Block_Obj b, Expression_Obj val)
+  : Has_Block(pstate, b), keyword_(kwd), selector2_(sel), value_(val) // set value manually if needed
   { statement_type(DIRECTIVE); }
   Directive::Directive(const Directive* ptr)
   : Has_Block(ptr),
     keyword_(ptr->keyword_),
     selector2_(ptr->selector2_),
-    selector_(ptr->selector_),
     value_(ptr->value_) // set value manually if needed
   { statement_type(DIRECTIVE); }
 
