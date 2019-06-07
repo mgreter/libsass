@@ -653,10 +653,112 @@ namespace Sass {
   }
 
 
+  template <class T>
+  std::vector<std::vector<T>>
+    permutate2(std::vector<std::vector<T>> in) {
+
+    size_t L = in.size();
+    size_t n = 0;
+    size_t* state = new size_t[L];
+    std::vector< std::vector<T>> out;
+
+    if (L == 0) return {};
+
+    // First initialize all states for every permutation group
+    for (size_t i = 0; i < L; i += 1) {
+      if (in[i].size() == 0) return {};
+      state[i] = in[i].size() - 1;
+    }
+    std::cerr << "\n";
+
+    while (true) {
+
+      std::cerr << "PERM: ";
+      for (size_t p = 0; p < L; p++)
+      { std::cerr << state[p] << " "; }
+      std::cerr << "\n";
+
+      std::vector<T> perm;
+      // Create one permutation for state
+      for (size_t i = 0; i < L; i += 1) {
+        perm.push_back(in.at(i).at(in[i].size() - state[i] - 1));
+      }
+      // Current group finished
+      if (state[n] == 0) {
+        // Find position of next decrement
+        while (n < L && state[++n] == 0)
+        {
+
+        }
+
+        std::cerr << "DECR at " << n << " L is " << L << "\n";
+
+        if (n == L) {
+          out.push_back(perm);
+          break;
+        }
+
+        if (n == L - 1 && state[n] == 0) {
+          std::cerr << "FINISH\n";
+        }
+
+          std::cerr << "reset " << n << "\n";
+        // Check for end condition
+
+        state[n] -= 1;
+
+        for (size_t p = 0; p < n; p += 1) {
+          state[p] = in[p].size() - 1;
+        }
+
+        // Restart from front
+        n = 0;
+
+
+        /*
+
+
+
+        if (state[n] != L - 1) {
+          // Decrease next on the left side
+          state[n] -= 1;
+          // Reset all counters to the left
+          for (size_t p = 0; p < n; p += 1) {
+            state[p] = in[p].size() - 1;
+          }
+        }
+        else {
+          std::cerr << "final\n";
+          out.push_back(perm);
+          break;
+        }
+*/
+
+      }
+      else {
+        state[n] -= 1;
+      }
+      out.push_back(perm);
+    }
+
+    delete[] state;
+    return out;
+  }
+
 
   // parse root block from includes
   Block_Obj Context::compile()
   {
+
+    std::vector < std::vector <int>> test;
+    test.push_back({ 1, 2 });
+    test.push_back({ 3, 4 });
+    test.push_back({ 5, 6 });
+
+    // auto asd = permutate2(test);
+    // std::cerr << "PERMUTATE " << debug_dude(asd) << "\n";
+    // exit(1);
+    // [[1, 3, 5], [2, 3, 5], [1, 4, 5], [2, 4, 5], [1, 3, 6], [2, 3, 6], [1, 4, 6], [2, 4, 6]]
     // abort if there is no data
     if (resources.size() == 0) return {};
     // get root block from the first style sheet

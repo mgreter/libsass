@@ -21,6 +21,26 @@ inline std::string debug_vec(AST_Node* node) {
   else return node->to_string();
 }
 
+inline std::string debug_dude(std::vector<std::vector<int>> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinOut = false;
+  for (auto ct : vec) {
+    if (joinOut) out << ", ";
+    joinOut = true;
+    out << "{";
+    bool joinIn = false;
+    for (auto nr : ct) {
+      if (joinIn) out << ", ";
+      joinIn = true;
+      out << nr;
+    }
+    out << "}";
+  }
+  out << "}";
+  return out.str();
+}
+
 inline std::string debug_vec(Extension2& ext) {
   std::stringstream out;
   out << debug_vec(ext.extender);
@@ -210,7 +230,7 @@ inline std::string debug_vec(std::unordered_set<T, U, O, V> vec) {
   return out.str();
 }
 
-inline std::string debug_vec(bool val) {
+inline std::string debug_bool(bool val) {
   return val ? "true" : "false";
 }
 inline std::string debug_vec(ExtSmplSelSet* node) {
