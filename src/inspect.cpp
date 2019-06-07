@@ -943,13 +943,13 @@ namespace Sass {
         s->expression()->perform(this);
         append_string(")");
       }
-      else if (s->selector()) {
+      else if (s->selector2()) {
         bool was = in_wrapped;
         in_wrapped = true;
         append_string("(");
         bool was_comma_array = in_comma_array;
         in_comma_array = false;
-        s->selector()->perform(this);
+        s->selector2()->perform(this);
         in_comma_array = was_comma_array;
         append_string(")");
         in_wrapped = was;

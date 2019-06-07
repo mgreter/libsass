@@ -475,7 +475,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->isSyntacticClass() ? " [isSyntacticClass]": " -");
     std::cerr << std::endl;
     debug_ast(selector->expression(), ind + " <= ", env);
-    debug_ast(selector->selector(), ind + " || ", env);
+    debug_ast(selector->selector2(), ind + " || ", env);
   } else if (Cast<Attribute_Selector>(node)) {
     Attribute_Selector* selector = Cast<Attribute_Selector>(node);
     std::cerr << ind << "Attribute_Selector " << selector;

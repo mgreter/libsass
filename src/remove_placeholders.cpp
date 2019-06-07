@@ -60,12 +60,12 @@ namespace Sass {
               if (cs->head()) {
                 for (Simple_Selector_Obj& ss : cs->head()->elements()) {
                   if (Pseudo_Selector * ws = Cast<Pseudo_Selector>(ss)) {
-                    if (Selector_List * wsl = Cast<Selector_List>(ws->selector())) {
-                      Selector_List* clean = remove_placeholders(wsl);
+                    if (SelectorList * wsl = Cast<SelectorList>(ws->selector2())) {
+                      SelectorList* clean = remove_placeholders(wsl);
                       // also clean superflous parent selectors
                       // probably not really the correct place
                       clean->remove_parent_selectors();
-                      ws->selector(clean);
+                      ws->selector2(clean);
                     }
                   }
 

@@ -35,7 +35,7 @@ namespace Sass {
     std::vector<Pseudo_Selector_Obj> rv;
     for (Simple_Selector_Obj sel : compound->elements()) {
       if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(sel)) {
-        if (/* pseudo->isClass() && */ pseudo->selector()) {
+        if (/* pseudo->isClass() && */ pseudo->selector2()) {
           if (normName(sel->name()) == normName(name)) {
             rv.push_back(sel);
           }
@@ -62,8 +62,8 @@ namespace Sass {
     if (*simple == *theirSimple) return true;
 
     if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(theirSimple)) {
-      if (pseudo->selector() && isSubselectorPseudo(pseudo->normalized())) {
-        for (auto cpx : pseudo->selector()->elements()) {
+      if (pseudo->selector2() && isSubselectorPseudo(pseudo->normalized())) {
+        for (auto cpx : pseudo->selector2()->elements()) {
           ComplexSelector_Obj complex = toComplexSelector(cpx);
           // Make sure we have exacly one items
           if (complex->length() != 1) return false;
@@ -125,8 +125,8 @@ namespace Sass {
     ComplexSelector_Obj parent
   )
   {
-    if (pseudo1->name() == pseudo2->name() && pseudo2->selector()) {
-      SelectorList_Obj list = toSelectorList(pseudo2->selector());
+    if (pseudo1->name() == pseudo2->name() && pseudo2->selector2()) {
+      SelectorList_Obj list = toSelectorList(pseudo2->selector2());
       // std::cerr << "GO INTO OTHER LOOP " << debug_vec(list) << " [" << debug_vec(parent) << "]\n";
       return listIsSuperslector(list->elements(), { parent });
     }
@@ -178,9 +178,9 @@ namespace Sass {
 
       std::vector<Pseudo_Selector_Obj> pseudos =
         selectorPseudoNamed(compound2, name);
-      SelectorList_Obj selector1 = toSelectorList(pseudo1->selector());
+      SelectorList_Obj selector1 = toSelectorList(pseudo1->selector2());
       for (Pseudo_Selector_Obj pseudo2 : pseudos) {
-        SelectorList_Obj selector2 = toSelectorList(pseudo2->selector());
+        SelectorList_Obj selector2 = toSelectorList(pseudo2->selector2());
         if (selector1->isSuperselectorOf(selector2)) {
           return true;
         }
@@ -203,9 +203,9 @@ namespace Sass {
       std::vector<Pseudo_Selector_Obj> pseudos =
         selectorPseudoNamed(compound2, name);
       // std::cerr << "SELS [" << debug_vec(pseudos) << "]\n";
-      SelectorList_Obj selector1 = toSelectorList(pseudo1->selector());
+      SelectorList_Obj selector1 = toSelectorList(pseudo1->selector2());
       for (Pseudo_Selector_Obj pseudo2 : pseudos) {
-        SelectorList_Obj selector2 = toSelectorList(pseudo2->selector());
+        SelectorList_Obj selector2 = toSelectorList(pseudo2->selector2());
         if (selector1->isSuperselectorOf(selector2)) {
           // std::cerr << "GOT true\n";
           return true;
@@ -215,9 +215,8 @@ namespace Sass {
     }
     else if (name == "not") {
       // return pseudo1.selector.components.every((complex) ->
-      for (Complex_Selector_Obj complex : pseudo1->selector()->elements()) {
-        ComplexSelector_Obj asd = complex->toCplxSelector();
-        if (!pseudoNotIsSuperselectorOfCompound(pseudo1, compound2, asd)) return false;
+      for (ComplexSelector_Obj complex : pseudo1->selector2()->elements()) {
+        if (!pseudoNotIsSuperselectorOfCompound(pseudo1, compound2, complex)) return false;
       }
       return true;
       // std::cerr << "IN NOT\n";
@@ -257,7 +256,7 @@ namespace Sass {
     // a matching selector in [compound2.components].
     for (Simple_Selector_Obj simple1 : compound1->elements()) {
       Pseudo_Selector_Obj pseudo1 = Cast<Pseudo_Selector>(simple1);
-      if (pseudo1 && pseudo1->selector()) {
+      if (pseudo1 && pseudo1->selector2()) {
         // std::cerr << "NOW WE HAVE A PSEUO WITH SEL\n";
         if (!selectorPseudoIsSuperselector(pseudo1, compound2, parents_from, parents_to)) {
           // std::cerr << "selectorPseudoIsSuperselector FALSE\n";

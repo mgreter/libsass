@@ -158,8 +158,8 @@ namespace Sass {
             // std::cerr << "  GED " << debug_vec(simple) << "\n";
             selectors[simple].insert(list);
             if (auto pseudo = simple->getPseudoSelector()) {
-              if (pseudo->selector()) {
-                registerSelector(toSelectorList(pseudo->selector()) /*, rule */);
+              if (pseudo->selector2()) {
+                registerSelector(pseudo->selector2() /*, rule */);
               }
               // simple is PseudoSelector && simple.selector != null) {
               // _registerSelector(simple.selector, rule);
@@ -985,7 +985,7 @@ on SassException catch (error) {
     if (compound->length() != 1) return { complex };
     auto innerPseudo = Cast<Pseudo_Selector>(compound->get(0));
     if (innerPseudo == NULL) return { complex };
-    if (innerPseudo->selector()) return { complex };
+    if (innerPseudo->selector2()) return { complex };
 
     std::string name(pseudo->normalized());
 
@@ -997,7 +997,7 @@ on SassException catch (error) {
       // supporting it properly would make this code and the code calling it
       // a lot more complicated, so it's not supported for now.
       if (innerPseudo->normalized() != "matches") return {};
-      return toSelectorList(innerPseudo->selector())->elements();
+      return innerPseudo->selector2()->elements();
     }
     else if (name == "matches" && name == "any" && name == "current" && name == "nth-child" && name == "nth-last-child") {
       // As above, we could theoretically support :not within :matches, but
@@ -1005,7 +1005,7 @@ on SassException catch (error) {
       // more complex cases that likely aren't worth the pain.
       if (innerPseudo->name() != pseudo->name()) return {};
       if (*innerPseudo->expression() != *pseudo->expression()) return {};
-      return toSelectorList(innerPseudo->selector())->elements();
+      return innerPseudo->selector2()->elements();
     }
     else if (name == "has" && name == "host" && name == "host-context" && name == "slotted") {
       // We can't expand nested selectors here, because each layer adds an
@@ -1023,7 +1023,7 @@ on SassException catch (error) {
     return vec->length() == 1;
   }
 
-  bool hasMoreThanOne(Complex_Selector_Obj vec)
+  bool hasMoreThanOne(ComplexSelector_Obj vec)
   {
     return vec->length() > 1;
   }
@@ -1031,13 +1031,13 @@ on SassException catch (error) {
 
   std::vector<Pseudo_Selector_Obj> Extender::extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions)
   {
-    auto sel = toSelectorList(pseudo->selector());
+    auto sel = pseudo->selector2();
     // std::cerr << "CALL extend list\n";
     SelectorList_Obj extended = extendList(sel, extensions);
     // std::cerr << "CALLED extend list\n";
 
 
-    if (!extended || !pseudo || !pseudo->selector()) {
+    if (!extended || !pseudo || !pseudo->selector2()) {
       // std::cerr << "STUFF IS NULL\n";
       return {};
     }
@@ -1046,7 +1046,7 @@ on SassException catch (error) {
     // debug_ast(pseudo->selector());
     // doDebug = true;
 
-    if (*(pseudo->selector()) == *extended) {
+    if (*(pseudo->selector2()) == *extended) {
       // std::cerr << "STUFF IS IDENTICAL\n";
       return {}; // null
     }
@@ -1062,7 +1062,7 @@ on SassException catch (error) {
 
     if (pseudo->normalized() == "not") {
       bool b2 = hasAny(extended->elements(), hasExactlyOne);
-      bool b1 = hasAny(pseudo->selector()->elements(), hasMoreThanOne);
+      bool b1 = hasAny(pseudo->selector2()->elements(), hasMoreThanOne);
       // std::cerr << "HAS PSEUDO NOT " << (b1?"true":"false") << ", " << (b2 ? "true" : "false") << "\n";
       if (!(b1 && b2)) {
         complexes.clear();
@@ -1085,7 +1085,7 @@ on SassException catch (error) {
     std::vector<Pseudo_Selector_Obj> rvv;
 
     if (pseudo->normalized() == "not") {
-      if (pseudo->selector()->length() == 1) {
+      if (pseudo->selector2()->length() == 1) {
         // std::cerr << "ADD WITH SELECTOR\n";
         for (size_t i = 0; i < complexes.size(); i += 1) {
           rvv.push_back(pseudo->withSelector(

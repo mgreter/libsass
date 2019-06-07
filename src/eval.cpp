@@ -1598,7 +1598,7 @@ namespace Sass {
 
   Pseudo_Selector* Eval::operator()(Pseudo_Selector* s)
   {
-
+    /*
     if (s->name() == "not") {
       auto stack = exp.getSelectorStack2();
       if (stack.back()) {
@@ -1617,6 +1617,7 @@ namespace Sass {
         }
       }
     }
+    */
     return s;
   };
 

@@ -1957,8 +1957,8 @@ namespace Sass {
 
 
 
-
-
+            std::cerr << "STILL USING THIS?\n";
+            /*
 
               if (Pseudo_Selector_Obj ws = Cast<Pseudo_Selector>(hs)) {
                 if (ws->selector()) {
@@ -2013,6 +2013,7 @@ namespace Sass {
                   cpy_head->append(hs);
                 }
               }
+              */
 
 
 
@@ -2021,11 +2022,9 @@ namespace Sass {
 
 
 
-
-
-            else {
+            // else {
               cpy_head->append(hs);
-            }
+              // }
           }
           // replace header
           cur->head(cpy_head);

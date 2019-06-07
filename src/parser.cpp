@@ -737,7 +737,7 @@ namespace Sass {
     lex< pseudo_not >();
     std::string name(lexed);
     ParserState nsource_position = pstate;
-    Selector_List_Obj negated = parseSelectorList(true)->toSelectorList();
+    SelectorList_Obj negated = parseSelectorList(true);
     if (!lex< exactly<')'> >()) {
       error("negated selector is missing ')'");
     }
@@ -745,7 +745,7 @@ namespace Sass {
 
     Pseudo_Selector* sel = SASS_MEMORY_NEW(Pseudo_Selector, nsource_position, name.substr(1));
     // debug_ast(negated);
-    sel->selector(negated);
+    sel->selector2(negated);
     return sel;
   }
 
@@ -904,12 +904,11 @@ namespace Sass {
             return pseudo;
           }
         }
-        else if (SelectorList_Obj wrapped2 = parseSelectorList(true)) {
-          Selector_List_Obj wrapped = wrapped2->toSelectorList();
+        else if (SelectorList_Obj wrapped = parseSelectorList(true)) {
           if (wrapped && lex_css< exactly<')'> >()) {
 
             Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name, element);
-            pseudo->selector(wrapped);
+            pseudo->selector2(wrapped);
             return pseudo;
 
           }

@@ -364,7 +364,7 @@ namespace Sass {
     normalized_(normName(name)),
     expression_({}),
     selector2_({}),
-    selector_({}),
+    // selector_({}),
     isSyntacticClass_(!element),
     isClass_(!element && !isFakePseudoElement(normalized_))
   { simple_type(PSEUDO_SEL); }
@@ -373,7 +373,7 @@ namespace Sass {
     normalized_(ptr->normalized()),
     expression_(ptr->expression()),
     selector2_(ptr->selector2()),
-    selector_(ptr->selector()),
+    // selector_(ptr->selector()),
     isSyntacticClass_(ptr->isSyntacticClass()),
     isClass_(ptr->isClass())
   { simple_type(PSEUDO_SEL); }
@@ -395,7 +395,7 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_combine(hash_, Simple_Selector::hash());
-      if (selector_) hash_combine(hash_, selector_->hash());
+      if (selector2_) hash_combine(hash_, selector2_->hash());
       if (expression_) hash_combine(hash_, expression_->hash());
     }
     return hash_;
@@ -415,8 +415,8 @@ namespace Sass {
   {
     if (this->name() != sub->name()) return false;
     if (this->name() == ":current") return false;
-    SelectorList_Obj lhs_list = toSelectorList(selector());
-    SelectorList_Obj rhs_list = toSelectorList(sub->selector());
+    SelectorList_Obj lhs_list = toSelectorList(selector2());
+    SelectorList_Obj rhs_list = toSelectorList(sub->selector2());
     return lhs_list && rhs_list && lhs_list->isSuperselectorOf(rhs_list);
     coreError("is_superselector expected a Selector_List", sub->pstate());
     return false;
@@ -427,18 +427,18 @@ namespace Sass {
 
   void Pseudo_Selector::cloneChildren()
   {
-    if (selector().isNull()) selector({});
-    else selector(SASS_MEMORY_CLONE(selector()));
+    if (selector2().isNull()) selector2({});
+    else selector2(SASS_MEMORY_CLONE(selector2()));
   }
 
   bool Pseudo_Selector::has_parent_ref() const {
-    if (!selector()) return false;
-    return selector()->has_parent_ref();
+    if (!selector2()) return false;
+    return selector2()->has_parent_ref();
   }
 
   bool Pseudo_Selector::has_real_parent_ref() const {
-    if (!selector()) return false;
-    return selector()->has_real_parent_ref();
+    if (!selector2()) return false;
+    return selector2()->has_real_parent_ref();
   }
 /*
   unsigned long Wrapped_Selector::specificity() const
@@ -931,11 +931,11 @@ namespace Sass {
 
     for (Simple_Selector_Obj ss : elements()) {
       if (Pseudo_Selector * ws = Cast<Pseudo_Selector>(ss)) {
-        if (Selector_List * sl = Cast<Selector_List>(ws->selector())) {
+        if (SelectorList * asd = Cast<SelectorList>(ws->selector2())) {
           if (parent) {
-            SelectorList_Obj asd = sl->toSelList();
+            // SelectorList_Obj asd = sl->toSelList();
             SelectorList_Obj qwe = asd->resolve_parent_refs(pstack, traces, implicit_parent);
-            ws->selector(qwe->toSelectorList());
+            ws->selector2(qwe);
           }
         }
       }
@@ -1867,7 +1867,7 @@ namespace Sass {
   Pseudo_Selector_Obj Pseudo_Selector::withSelector(SelectorList_Obj selector)
   {
     Pseudo_Selector_Obj pseudo = copy();
-    pseudo->selector(toSelector_List(selector));
+    pseudo->selector2(selector);
     return pseudo;
   }
 

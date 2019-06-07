@@ -360,7 +360,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, normalized)
     ADD_PROPERTY(String_Obj, expression)
     ADD_PROPERTY(SelectorList_Obj, selector2)
-    ADD_PROPERTY(Selector_List_Obj, selector)
+    // ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(bool, isSyntacticClass)
     ADD_PROPERTY(bool, isClass)
   public:

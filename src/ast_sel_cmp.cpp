@@ -1010,8 +1010,8 @@ namespace Sass {
     if (lname != rname) return false;
     String_Obj lhs_ex = expression();
     String_Obj rhs_ex = rhs.expression();
-    Selector_List_Obj lhs_sel = selector();
-    Selector_List_Obj rhs_sel = rhs.selector();
+    SelectorList_Obj lhs_sel = selector2();
+    SelectorList_Obj rhs_sel = rhs.selector2();
     if (rhs_sel && lhs_sel) return *lhs_sel == *rhs_sel;
     else if (rhs_ex && lhs_ex) return *lhs_ex == *rhs_ex;
     else return
@@ -1230,8 +1230,8 @@ namespace Sass {
     { return lname < rname; }
     String_Obj lhs_ex = expression();
     String_Obj rhs_ex = rhs.expression();
-    Selector_List_Obj lhs_sel = selector();
-    Selector_List_Obj rhs_sel = rhs.selector();
+    SelectorList_Obj lhs_sel = selector2();
+    SelectorList_Obj rhs_sel = rhs.selector2();
     if (rhs_sel && lhs_sel) return *lhs_sel < *rhs_sel;
     else if (rhs_ex && lhs_ex) return *lhs_ex < *rhs_ex;
     else return
