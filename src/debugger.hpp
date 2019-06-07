@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include "node.hpp"
+#include "ast.hpp"
 #include "ast_fwd_decl.hpp"
 #include "extension.hpp"
 
@@ -1000,54 +1000,6 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
   if (ind == "") std::cerr << "####################################################################\n";
 }
 
-inline void debug_node(Node* node, std::string ind = "")
-{
-  if (ind == "") std::cerr << "#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-  if (node->isCombinator()) {
-    std::cerr << ind;
-    std::cerr << "Combinator ";
-    std::cerr << node << " ";
-    if (node->got_line_feed) std::cerr << "[LF] ";
-    switch (node->combinator()) {
-      case Complex_Selector::ADJACENT_TO: std::cerr << "{+} "; break;
-      case Complex_Selector::PARENT_OF:   std::cerr << "{>} "; break;
-      case Complex_Selector::PRECEDES:    std::cerr << "{~} "; break;
-      case Complex_Selector::REFERENCE:   std::cerr << "{@} "; break;
-      case Complex_Selector::ANCESTOR_OF: std::cerr << "{ } "; break;
-    }
-    std::cerr << std::endl;
-    // debug_ast(node->combinator(), ind + "  ");
-  } else if (node->isSelector()) {
-    std::cerr << ind;
-    std::cerr << "Selector ";
-    std::cerr << node << " ";
-    if (node->got_line_feed) std::cerr << "[LF] ";
-    std::cerr << std::endl;
-    debug_ast(node->selector(), ind + "  ");
-  } else if (node->isCollection()) {
-    std::cerr << ind;
-    std::cerr << "Collection ";
-    std::cerr << node << " ";
-    if (node->got_line_feed) std::cerr << "[LF] ";
-    std::cerr << std::endl;
-    for(auto n : (*node->collection())) {
-      debug_node(&n, ind + "  ");
-    }
-  } else if (node->isNil()) {
-    std::cerr << ind;
-    std::cerr << "Nil ";
-    std::cerr << node << " ";
-    if (node->got_line_feed) std::cerr << "[LF] ";
-    std::cerr << std::endl;
-  } else {
-    std::cerr << ind;
-    std::cerr << "OTHER ";
-    std::cerr << node << " ";
-    if (node->got_line_feed) std::cerr << "[LF] ";
-    std::cerr << std::endl;
-  }
-  if (ind == "") std::cerr << "#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-}
 
 /*
 inline void debug_ast(const AST_Node* node, std::string ind = "", Env* env = 0)
@@ -1055,10 +1007,6 @@ inline void debug_ast(const AST_Node* node, std::string ind = "", Env* env = 0)
   debug_ast(const_cast<AST_Node*>(node), ind, env);
 }
 */
-inline void debug_node(const Node* node, std::string ind = "")
-{
-  debug_node(const_cast<Node*>(node), ind);
-}
 
 inline void debug_subset_map(Sass::Subset_Map& map, std::string ind = "")
 {
