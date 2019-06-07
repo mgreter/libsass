@@ -205,9 +205,9 @@ namespace Sass {
     // Register every selector for lookup when extended
     // SelectorList_Obj sss = r->selector2();
     // debug_ast(sss, "sss: ");
-    std::cerr << " CALL ADD " << debug_vec(r->selector2()) << "\n";
+    // std::cerr << " CALL ADD " << debug_vec(r->selector2()) << "\n";
     ctx.extender.addSelector(r->selector2());
-    std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
+    // std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
     sel = r->selector2();
 
