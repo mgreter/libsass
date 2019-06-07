@@ -255,8 +255,8 @@ namespace Sass {
   /// If there are no combinators to be merged, returns an empty list. If the
   /// combinators can't be merged, returns `null`.
   bool mergeInitialCombinators(
-    std::vector<CompoundOrCombinator_Obj> components1,
-    std::vector<CompoundOrCombinator_Obj> components2,
+    std::vector<CompoundOrCombinator_Obj>& components1,
+    std::vector<CompoundOrCombinator_Obj>& components2,
     std::vector<SelectorCombinator_Obj>& result) {
 
     std::vector<SelectorCombinator_Obj> combinators1;
@@ -297,8 +297,8 @@ namespace Sass {
   /// If there are no combinators to be merged, returns an empty list. If the
   /// sequences can't be merged, returns `null`.
   bool mergeFinalCombinators(
-    std::vector<CompoundOrCombinator_Obj> components1,
-    std::vector<CompoundOrCombinator_Obj> components2,
+    std::vector<CompoundOrCombinator_Obj>& components1,
+    std::vector<CompoundOrCombinator_Obj>& components2,
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>>& result) {
 
     if (components1.empty() || !Cast<SelectorCombinator>(components1.back())) {
@@ -525,11 +525,11 @@ namespace Sass {
 
       std::vector<std::vector<CompoundOrCombinator_Obj>> newPrefixes;
       for (std::vector<CompoundOrCombinator_Obj> prefix : prefixes) {
-        // std::cerr << "WEAVE PREFIXE: " << debug_vec(prefix) << "\n";
-        // std::cerr << "    W PARENTS: " << debug_vec(parents) << "\n";
+        std::cerr << "WEAVE PREFIXE: " << debug_vec(prefix) << "\n";
+        std::cerr << "    W PARENTS: " << debug_vec(parents) << "\n";
         auto parentPrefixes = weaveParents(prefix, parents);
         // std::cerr << "WEAVE RV: " << debug_vec(parentPrefixes) << "\n";
-        // if (parentPrefixes.isNull()) continue;
+        if (parentPrefixes.empty()) continue;
 
         for (auto& parentPrefix : parentPrefixes) {
           parentPrefix.push_back(target);
@@ -548,8 +548,8 @@ namespace Sass {
     std::vector<CompoundOrCombinator_Obj> parents1,
     std::vector<CompoundOrCombinator_Obj> parents2) {
 
-    // std::cerr << "weave parent1: " << debug_vec(parents1) << "\n";
-    // std::cerr << "weave parent2: " << debug_vec(parents2) << "\n";
+    std::cerr << "weave parent1: " << debug_vec(parents1) << "\n";
+    std::cerr << "weave parent2: " << debug_vec(parents2) << "\n";
 
     std::vector<CompoundOrCombinator_Obj>& queue1 = parents1;
     std::vector<CompoundOrCombinator_Obj>& queue2 = parents2;
@@ -559,11 +559,11 @@ namespace Sass {
     if (!mergeInitialCombinators(queue1, queue2, initialCombinators)) return {};
     if (!mergeFinalCombinators(queue1, queue2, finalCombinators)) return {};
 
-    // std::cerr << "weave initial: " << debug_vec(initialCombinators) << "\n";
-    // std::cerr << "weave final: " << debug_vec(finalCombinators) << "\n";
+    std::cerr << "weave initial: " << debug_vec(initialCombinators) << "\n";
+    std::cerr << "weave final: " << debug_vec(finalCombinators) << "\n";
 
-    // std::cerr << "weave parent1: " << debug_vec(parents1) << "\n";
-    // std::cerr << "weave parent2: " << debug_vec(parents2) << "\n";
+    std::cerr << "weave parent1: " << debug_vec(queue1) << "\n";
+    std::cerr << "weave parent2: " << debug_vec(queue2) << "\n";
 
     // Make sure there's at most one `:root` in the output.
     CompoundSelector_Obj root1 = _firstIfRoot(queue1);
@@ -588,19 +588,19 @@ namespace Sass {
       // std::cerr << "BOTH ROOTS NULL\n";
     }
 
-    // std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
-    // std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
+    std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
+    std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
     
     std::vector<std::vector<CompoundOrCombinator_Obj>> groups1 = _groupSelectors(queue1);
     std::vector<std::vector<CompoundOrCombinator_Obj>> groups2 = _groupSelectors(queue2);
 
-    // std::cerr << "weave groups1: " << debug_vec(groups1) << "\n";
-    // std::cerr << "weave groups2: " << debug_vec(groups2) << "\n";
+    std::cerr << "weave groups1: " << debug_vec(groups1) << "\n";
+    std::cerr << "weave groups2: " << debug_vec(groups2) << "\n";
 
     // ToDo: this path is not fully implemented yet
     std::vector<std::vector<CompoundOrCombinator_Obj>> LCS = lcs2<std::vector<CompoundOrCombinator_Obj>>(groups2, groups1, cmpGroups);
 
-    // std::cerr << "weave LCS: " << debug_vec(LCS) << "\n";
+    std::cerr << "weave LCS: " << debug_vec(LCS) << "\n";
 
     // ToDo: this should be easier to downcase vector elements?
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> choices;

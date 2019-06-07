@@ -137,6 +137,22 @@ inline std::string debug_vec(tsl::ordered_map<T, U, O, V> vec) {
   return out.str();
 }
 
+
+template <class T, class U, class O, class V>
+inline std::string debug_vals(tsl::ordered_map<T, U, O, V> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto it = vec.begin(); it != vec.end(); it++)
+  {
+    if (joinit) out << ", ";
+    out << debug_vec(const_cast<U&>(it->second)); // string's value
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
 template <class T, class U, class O, class V>
 inline std::string debug_keys(tsl::ordered_map<T, U, O, V> vec) {
   std::stringstream out;

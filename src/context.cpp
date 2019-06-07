@@ -702,7 +702,7 @@ namespace Sass {
       auto styles = sheet.second;
       check_nesting(styles.root);
     }
-    debug_ast(root);
+    /// debug_ast(root);
     //    debug_ast(root);
     // expand and eval the tree
     // debug_ast(root);
@@ -723,7 +723,7 @@ namespace Sass {
       // extend tree nodes
       // extend(root);
     }
-    debug_ast(root);
+    /// debug_ast(root);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
