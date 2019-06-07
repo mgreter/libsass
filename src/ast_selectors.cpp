@@ -9,6 +9,7 @@
 #include "color_maps.hpp"
 #include "ast_fwd_decl.hpp"
 #include "ast_selectors.hpp"
+#include "error_handling.hpp"
 #include <array>
 #include <set>
 #include <iomanip>
@@ -1049,8 +1050,13 @@ namespace Sass {
 
     // debug_ast(this, "In: ");
 
-
     auto parent = pstack.back();
+
+    if (has_real_parent_ref() && !parent) {
+      // traces.push_back(Backtrace(pstate));
+      throw Exception::TopLevelParent(traces, pstate());
+    }
+
     if (!chroots() && parent) {
 
       // CHeck why this makes it behave to at-root!?

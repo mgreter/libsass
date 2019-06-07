@@ -132,6 +132,12 @@ namespace Sass {
       prefix = err.errtype();
     }
 
+    TopLevelParent::TopLevelParent(Backtraces traces, ParserState pstate)
+      : Base(pstate, "Top-level selectors may not contain the parent selector \"&\".", traces)
+    {
+
+    }
+
   }
 
 

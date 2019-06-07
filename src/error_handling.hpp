@@ -205,9 +205,15 @@ namespace Sass {
     };
 
     class SassValueError : public Base {
-      public:
-        SassValueError(Backtraces traces, ParserState pstate, OperationError& err);
-        virtual ~SassValueError() throw() {};
+    public:
+      SassValueError(Backtraces traces, ParserState pstate, OperationError& err);
+      virtual ~SassValueError() throw() {};
+    };
+
+    class TopLevelParent : public Base {
+    public:
+      TopLevelParent(Backtraces traces, ParserState pstate);
+      virtual ~TopLevelParent() throw() {};
     };
 
   }
