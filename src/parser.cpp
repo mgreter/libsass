@@ -556,6 +556,10 @@ namespace Sass {
       ruleset->schema(sc);
       // Somewhere we access a null
       ruleset->selector((list));
+      ruleset->selector2(toSelectorList(list));
+      // std::cerr << "PARSE SCHEMA\n";
+      // debug_ast(list);
+      // debug_ast(toSelectorList(list));
     }
     // then parse the inner block
     stack.push_back(Scope::Rules);

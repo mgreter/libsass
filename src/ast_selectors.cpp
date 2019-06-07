@@ -97,12 +97,13 @@ namespace Sass {
     return hash_;
   }
 
-  bool Selector_Schema::has_parent_ref() const
+
+  bool Selector_Schema::containsParentRef() const
   {
     if (String_Schema_Obj schema = Cast<String_Schema>(contents())) {
-      if (schema->empty()) return false;
-      const auto& first = *schema->at(0);
-      return typeid(first) == typeid(Parent_Selector);
+      for (auto item : schema->elements()) {
+        if (Cast<Parent_Reference>(item)) return true;
+      }
     }
     return false;
   }

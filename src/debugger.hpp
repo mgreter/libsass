@@ -307,7 +307,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
     // std::cerr << (selector->has_line_feed() ? " [line-feed]": " -");
     std::cerr << std::endl;
-    // debug_ast(selector->schema(), ind + "#{} ");
+    debug_ast(selector->schemaOnlyToCopy(), ind + "#{} ");
 
     for(const ComplexSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " ", env); }
 
@@ -766,6 +766,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->selector2(), ind + ">");
+    // debug_ast(ruleset->selector(), ind + ">");
     debug_ast(ruleset->block(), ind + " ");
   } else if (Cast<Block>(node)) {
     Block* block = Cast<Block>(node);

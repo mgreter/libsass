@@ -144,16 +144,16 @@ namespace Sass {
 
     if (r->schema()) {
       // std::cerr << "GOT SCHEMA\n";
-      pushToSelectorStack({});
+      // pushToSelectorStack({});
       SelectorList_Obj sel = toSelectorList(r->schema()->eval(eval));
       if (r->selector2()) {
-        std::cerr << "OVERWRITE\n";
+        // std::cerr << "OVERWRITE\n";
       }
       r->selector2(sel);
       for (auto complex : sel->elements()) {
         complex->chroots(false);
       }
-      popFromSelectorStack();
+      // popFromSelectorStack();
     }
 
     // reset when leaving scope

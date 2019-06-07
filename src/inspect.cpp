@@ -885,6 +885,11 @@ namespace Sass {
     if (p->real()) append_string("&");
   }
 
+  void Inspect::operator()(Parent_Reference* p)
+  {
+    append_string("&");
+  }
+
   void Inspect::operator()(Placeholder_Selector* s)
   {
     append_token(s->name(), s);

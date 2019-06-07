@@ -32,6 +32,7 @@ namespace Sass {
     EnvStack& env_stack();
     const std::string cwd();
     Selector_List_Obj selector();
+    SelectorList_Obj selector2();
     CalleeStack& callee_stack();
     SelectorStack2 selector_stack2();
     bool& old_at_root_without_rule();

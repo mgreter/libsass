@@ -77,7 +77,14 @@ namespace Sass {
   {
     auto asd = exp.selector();
     if (asd.isNull()) return asd;
-    return asd->toSelList()->toSelectorList();
+    return asd;
+  }
+
+  SelectorList_Obj Eval::selector2()
+  {
+    auto asd = exp.selector2();
+    if (asd.isNull()) return asd;
+    return asd;
   }
 
   std::vector<Sass_Callee>& Eval::callee_stack()
@@ -1539,20 +1546,27 @@ namespace Sass {
 
   Selector_List* Eval::operator()(Selector_Schema* s)
   {
+    // std::cerr << "eval schema\n";
     LOCAL_FLAG(is_in_selector_schema, true);
     // the parser will look for a brace to end the selector
+    // debug_ast(s->contents(), "contents: ");
     Expression_Obj sel = s->contents()->perform(this);
     std::string result_str(sel->to_string(options()));
     result_str = unquote(Util::rtrim(result_str));
+    // std::cerr << "PARSE { " << result_str << " }\n";
     char* temp_cstr = sass_copy_c_string(result_str.c_str());
     ctx.strings.push_back(temp_cstr); // attach to context
     Parser p = Parser::from_c_str(temp_cstr, ctx, traces, s->pstate());
     p.last_media_block = s->media_block();
-    // a selector schema may or may not connect to parent?
-    bool chroot = s->connect_parent() == false;
-    SelectorList_Obj sll = p.parseSelectorList(chroot);
+
+    // If a schema contains a reference to parent it is already
+    // connected to it, so don't connect implicitly anymore
+    // bool chroot = s->containsParentRef() == true;
+    SelectorList_Obj sll = p.parseSelectorList(true);
+    // debug_ast(sll, "parsed: ");
     Selector_List_Obj sl = sll->toSelectorList();
     flag_is_in_selector_schema.reset();
+    // debug_ast(sl, "sel: ");
     return operator()(sl);
   }
 
@@ -1570,10 +1584,11 @@ namespace Sass {
 
   Expression* Eval::operator()(Parent_Reference* p)
   {
-    if (Selector_List_Obj pr = selector()) {
+   // std::cerr << "Eval Parent Ref\n";
+    if (SelectorList_Obj pr = selector2()) {
       exp.popFromSelectorStack();
-      Selector_List_Obj rv = operator()(pr);
-      exp.pushToSelectorStack(rv->toSelList());
+      SelectorList_Obj rv = operator()(pr);
+      exp.pushToSelectorStack(rv);
       return rv.detach();
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());

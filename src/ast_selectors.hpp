@@ -116,6 +116,9 @@ namespace Sass {
   public:
     Selector_List_Obj eval(Eval& eval);
     Selector_Schema(ParserState pstate, String_Obj c);
+
+    bool containsParentRef() const;
+
     bool has_parent_ref() const;
     bool has_real_parent_ref() const;
     bool operator<(const Selector& rhs) const;

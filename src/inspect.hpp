@@ -72,6 +72,7 @@ namespace Sass {
     virtual void operator()(At_Root_Query*);
     virtual void operator()(Null*);
     virtual void operator()(Parent_Selector* p);
+    virtual void operator()(Parent_Reference* p);
     // parameters and arguments
     virtual void operator()(Parameter*);
     virtual void operator()(Parameters*);
