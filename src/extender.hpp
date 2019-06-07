@@ -22,8 +22,8 @@ namespace Sass {
 
   typedef tsl::ordered_set<
     ComplexSelector_Obj,
-    HashNodes,
-    CompareNodes
+    HashPtrNodes,
+    ComparePtrNodes
   > ExtCplxSelSet;
 
   typedef tsl::ordered_set<

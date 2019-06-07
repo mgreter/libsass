@@ -498,7 +498,7 @@ namespace Sass {
   {
     if (Selector::hash_ == 0) {
       hash_combine(Selector::hash_, Vectorized::hash());
-      hash_combine(Selector::hash_, std::hash<bool>()(chroots_));
+      hash_combine(Selector::hash_, chroots_);
     }
     return Selector::hash_;
   }
@@ -507,7 +507,7 @@ namespace Sass {
   {
     if (Selector::hash_ == 0) {
       hash_combine(Selector::hash_, Vectorized::hash());
-      hash_combine(Selector::hash_, std::hash<bool>()(hasRealParent_));
+      hash_combine(Selector::hash_, hasRealParent_);
     }
     return Selector::hash_;
   }

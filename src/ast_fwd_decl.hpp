@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <math.h>
 #include <deque>
 #include <vector>
 #include <typeinfo>
@@ -222,6 +223,28 @@ namespace Sass {
   // ###########################################################################
   // Implement compare, order and hashing operations for AST Nodes
   // ###########################################################################
+
+  struct HashPtrNodes {
+    template <class T>
+    size_t operator() (const T& ex) const {
+      return(size_t) ex.ptr();
+    }
+  };
+
+  template <class T>
+  bool ComparePtrFunction(const T& lhs, const T& rhs) {
+    // code around sass logic issue. 1px == 1 is true
+    // but both items are still different keys in maps
+    if (lhs.isNull()) return rhs.isNull();
+    if (rhs.isNull()) return lhs.isNull();
+    return lhs.ptr() == rhs.ptr();
+  }
+  struct ComparePtrNodes {
+    template <class T>
+    bool operator() (const T& lhs, const T& rhs) const {
+      return ComparePtrFunction<T>(lhs, rhs);
+    }
+  };
 
   struct HashNodes {
     template <class T>

@@ -196,6 +196,20 @@ inline std::string debug_vec(tsl::ordered_set<T, U, O, V> vec) {
   return out.str();
 }
 
+template <class T, class U, class O, class V>
+inline std::string debug_vec(std::unordered_set<T, U, O, V> vec) {
+  std::stringstream out;
+  out << "{";
+  bool joinit = false;
+  for (auto item : vec) {
+    if (joinit) out << ", ";
+    out << debug_vec(item);
+    joinit = true;
+  }
+  out << "}";
+  return out.str();
+}
+
 
 inline void debug_ast(const AST_Node* node, std::string ind = "", Env* env = 0) {
   debug_ast(const_cast<AST_Node*>(node), ind, env);
@@ -240,7 +254,7 @@ inline std::string pstate_source_position(AST_Node* node)
   std::stringstream str;
   Position start(node->pstate());
   Position end(start + node->pstate().offset);
-  str << (start.file == std::string::npos ? -1 : start.file)
+  str << (start.file == std::string::npos ? 99999999 : start.file)
     << "@[" << start.line << ":" << start.column << "]"
     << "-[" << end.line << ":" << end.column << "]";
 #ifdef DEBUG_SHARED_PTR
