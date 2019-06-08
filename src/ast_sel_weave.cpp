@@ -322,7 +322,7 @@ namespace Sass {
 
     if (components1.empty() || !Cast<SelectorCombinator>(components1.back())) {
       if (components2.empty() || !Cast<SelectorCombinator>(components2.back())) {
-        // std::cerr << "NOT COMPOUNDY\n";
+        // std::cerr << "NOT COMPOUNDY FINAL " << debug_vec(result) << "\n";
         return true;
       }
     }
@@ -440,31 +440,48 @@ namespace Sass {
 
         // std::cerr << "second case\n";
 
+        // std::cerr << "compound1 " << debug_vec(compound1) << "\n";
+        // std::cerr << "compound2 " << debug_vec(compound2) << "\n";
+
         CompoundSelector_Obj followingSiblingSelector = combinator1->isFollowingSibling() ? compound1 : compound2;
         CompoundSelector_Obj nextSiblingSelector = combinator1->isFollowingSibling() ? compound2 : compound1;
 
         SelectorCombinator_Obj followingSiblingCombinator = combinator1->isFollowingSibling() ? combinator1 : combinator2;
         SelectorCombinator_Obj nextSiblingCombinator = combinator1->isFollowingSibling() ? combinator2 : combinator1;
 
+        // std::cerr << "followingSiblingSelector " << debug_vec(followingSiblingSelector) << "\n";
+        // std::cerr << "nextSiblingSelector " << debug_vec(nextSiblingSelector) << "\n";
+
         if (followingSiblingSelector->isSuperselectorOf(nextSiblingSelector)) {
+          // std::cerr << "IS SUPERSELECTOR\n";
           result.insert(result.begin(), { { nextSiblingSelector, nextSiblingCombinator } });
         }
         else {
+          // std::cerr << "Unify compounds\n";
           CompoundSelector_Obj unified = compound1->unify_with(compound2);
+          // std::cerr << "unified " << debug_vec(unified) << "\n";
           std::vector<std::vector<CompoundOrCombinator_Obj>> items;
-          items.insert(items.begin(), {
+          std::vector<CompoundOrCombinator_Obj> head = {
             followingSiblingSelector,
             followingSiblingCombinator,
             nextSiblingSelector,
             nextSiblingCombinator,
-            });
+          };
+          // std::cerr << "head " << debug_vec(head) << "\n";
+
           if (!unified.isNull()) {
             items.insert(items.begin(), {
               unified, nextSiblingCombinator,
               });
           }
+
+          items.insert(items.begin(), head);
+
           result.insert(result.begin(), { items });
         }
+
+        // std::cerr << "2 OVER " << debug_vec(result) << "\n";
+
       }
       else if (combinator1->isChildCombinator() &&
         (combinator2->isNextSibling() ||
@@ -499,10 +516,14 @@ namespace Sass {
         return false; // null
       }
 
+      // std::cerr << "MERGE AGAIN1 " << debug_vec(result) << "\n";
+
       return mergeFinalCombinators(components1, components2, result);
     }
     else if (!combinator1.isNull()) {
+      // std::cerr << "CASE NR 6\n";
       if (combinator1->isChildCombinator() && !components2.empty()) {
+        // std::cerr << "Has child with c2\n";
         CompoundSelector_Obj back1 = Cast<CompoundSelector>(components1.back());
         CompoundSelector_Obj back2 = Cast<CompoundSelector>(components2.back());
         if (back1 && back2 && back2->isSuperselectorOf(back1)) {
@@ -514,9 +535,14 @@ namespace Sass {
       } });
       components1.pop_back();
 
+      // std::cerr << "components1 " << debug_vec(components1) << "\n";
+      // std::cerr << "components2 " << debug_vec(components2) << "\n";
+      // std::cerr << "result " << debug_vec(result) << "\n";
+
       return mergeFinalCombinators(components1, components2, result);
     }
     else {
+      // std::cerr << "CASE NR 7\n";
       if (combinator2->isChildCombinator() && !components1.empty()) {
         CompoundSelector_Obj back1 = Cast<CompoundSelector>(components1.back());
         CompoundSelector_Obj back2 = Cast<CompoundSelector>(components2.back());
@@ -674,8 +700,14 @@ namespace Sass {
 
     std::vector<SelectorCombinator_Obj> initialCombinators;
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> finalCombinators;
-    if (!mergeInitialCombinators(queue1, queue2, initialCombinators)) return {};
-    if (!mergeFinalCombinators(queue1, queue2, finalCombinators)) return {};
+    if (!mergeInitialCombinators(queue1, queue2, initialCombinators)) {
+      // std::cerr << "could not merge initial\n";
+      return {};
+    }
+    if (!mergeFinalCombinators(queue1, queue2, finalCombinators)) {
+      // std::cerr << "could not merge final\n";
+      return {};
+    }
 
     // std::cerr << "weave initial: " << debug_vec(initialCombinators) << "\n";
     // std::cerr << "weave final: " << debug_vec(finalCombinators) << "\n";

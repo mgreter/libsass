@@ -78,10 +78,8 @@ namespace Sass {
 
   CompoundSelector* Simple_Selector::unifyWith(CompoundSelector* rhs)
   {
-#ifdef DEBUG_UNIFY
-    const std::string debug_call = "unify(Simple[" + this->to_string() + "], Compound[" + rhs->to_string() + "])";
-    // std::cerr << debug_call << std::endl;
-#endif
+
+    // std::cerr << "unify simple " << debug_vec(this) << " with " << debug_vec(rhs) << "\n";
 
     if (rhs->length() == 1) {
       if (rhs->at(0)->is_universal()) {
