@@ -86,42 +86,34 @@ namespace Sass {
   // https://www.geeksforgeeks.org/printing-longest-common-subsequence/
   template <class T>
   std::vector<SharedImpl<T>> lcs(std::vector<SharedImpl<T>>& X, std::vector<SharedImpl<T>>& Y) {
-    std::size_t m = X.size() - 1;
-    std::size_t n = Y.size() - 1;
-
-    //std::cerr << "LCS 1\n";
+    std::size_t m = X.size();
+    std::size_t n = Y.size();
 
     std::vector<SharedImpl<T>> lcs;
-    if (m == std::string::npos) return lcs;
-    if (n == std::string::npos) return lcs;
+    if (m == 0) return lcs;
+    if (n == 0) return lcs;
 
-    //std::cerr << "LCS 2\n";
-
-#define L(i,j) l[ (i) * m + j ]
-    std::size_t* l = new std::size_t[(m + 1) * (n + 1)];
-
-    //std::cerr << "LCS 3\n";
+    size_t L[m + 1][n + 1];
 
     /* Following steps build L[m+1][n+1] in bottom up fashion. Note
       that L[i][j] contains length of LCS of X[0..i-1] and Y[0..j-1] */
     for (size_t i = 0; i <= m; i++) {
       for (size_t j = 0; j <= n; j++) {
         if (i == 0 || j == 0)
-          L(i, j) = 0;
+          L[i][j] = 0;
         else if (*X[i - 1] == *Y[j - 1])
-          L(i, j) = L(i - 1, j - 1) + 1;
+          L[i][j] = L[i - 1][j - 1] + 1;
         else
-          L(i, j) = std::max(L(i - 1, j), L(i, j - 1));
+          L[i][j] = std::max(L[i - 1][j], L[i][j - 1]);
       }
     }
 
-    //std::cerr << "LCS 4\n";
-
     // Following code is used to print LCS
-    std::size_t index = L(m, n);
+    std::size_t index = L[m][n];
+
     lcs.reserve(index);
     for (size_t o = 0; o < index; o++) {
-      lcs[o] = {};
+      lcs.push_back({});
     }
 
     // Create an array to store the lcs groups
@@ -130,36 +122,33 @@ namespace Sass {
     // Start from the right-most-bottom-most corner and
     // one by one store objects in lcs[]
     std::size_t i = m, j = n;
-    //std::cerr << "LCS 5\n";
+    // // std::cerr << "LCS 5\n";
     while (i > 0 && j > 0) {
 
       // If current objects in X[] and Y are same, then
       // current object is part of LCS
-      //std::cerr << "LCS 6 " << i << " : " << j << "\n";
-      //std::cerr << debug_vec(Y[j - 1]) << "\n";
-      //std::cerr << debug_vec(X[j - 1]) << "\n";
+      // // std::cerr << "LCS 6 " << i << " : " << j << "\n";
+      // // std::cerr << debug_vec(Y[j - 1]) << "\n";
+      // // std::cerr << debug_vec(X[j - 1]) << "\n";
       if (*X[i - 1] == *Y[j - 1])
       {
-        //std::cerr << "they are the same\n";
+        // // std::cerr << "they are the same\n";
         lcs[index - 1] = X[i - 1]; // Put current object in result
-        //std::cerr << "assigned\n";
+        // // std::cerr << "assigned\n";
         i--; j--; index--;     // reduce values of i, j and index
       }
 
       // If not same, then find the larger of two and
       // go in the direction of larger value
-      else if (L(i - 1, j) > L(i, j - 1))
+      else if (L[i - 1][j] > L[i][j - 1])
         i--;
       else
         j--;
 
-      //std::cerr << "LCS 8\n";
+      //  // std::cerr << "LCS 8\n";
 
     }
 
-    //std::cerr << "LCS 9\n";
-
-    delete[] l;
     return lcs;
   }
 

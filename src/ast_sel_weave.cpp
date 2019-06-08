@@ -339,6 +339,7 @@ namespace Sass {
     return groups;
   }
 
+  
 
   /// Extracts leading [Combinator]s from [components1] and [components2] and
   /// merges them together into a single list of combinators.
@@ -353,29 +354,39 @@ namespace Sass {
     std::vector<SelectorCombinator_Obj> combinators1;
     while (!components1.empty() && Cast<SelectorCombinator>(components1.front())) {
       SelectorCombinator_Obj front = Cast<SelectorCombinator>(components1.front());
+      // std::cerr << "erase from components1\n";
       components1.erase(components1.begin());
       combinators1.push_back(front);
     }
 
     std::vector<SelectorCombinator_Obj> combinators2;
-    while (!combinators2.empty() && Cast<SelectorCombinator>(combinators2.front())) {
+    while (!components2.empty() && Cast<SelectorCombinator>(components2.front())) {
       SelectorCombinator_Obj front = Cast<SelectorCombinator>(components2.front());
+      // std::cerr << "erase from components2\n";
       components2.erase(components2.begin());
       combinators2.push_back(front);
     }
 
     // If neither sequence of combinators is a subsequence of the other, they
     // cannot be merged successfully.
-    auto LCS = lcs<SelectorCombinator>(combinators1, combinators2);
+    // std::cerr << "LCS in " << debug_vec(combinators1) << " & " << debug_vec(combinators2) << "\n";
+    
+    std::vector< SelectorCombinator_Obj> LCS = lcs<SelectorCombinator>(combinators1, combinators2);
+
+    // std::cerr << "LCS " << debug_vec(LCS) << "\n";
 
     if (LCS.size() == combinators1.size() && std::equal(LCS.begin(), LCS.end(), combinators1.begin(), ComparePtrsFunction<SelectorCombinator>)) {
+      // std::cerr << "return combintors2\n";
       result = combinators2; // Does this work?
       return true;
     }
     if (LCS.size() == combinators2.size() && std::equal(LCS.begin(), LCS.end(), combinators2.begin(), ComparePtrsFunction<SelectorCombinator>)) {
+      // std::cerr << "return combintors1\n";
       result = combinators1; // Does this work?
       return true;
     }
+
+    // std::cerr << "failed to merge initial\n";
 
     return false; // null
 
@@ -653,8 +664,8 @@ namespace Sass {
     // std::cerr << "weave initial: " << debug_vec(initialCombinators) << "\n";
     // std::cerr << "weave final: " << debug_vec(finalCombinators) << "\n";
 
-    // std::cerr << "weave parent1: " << debug_vec(queue1) << "\n";
-    // std::cerr << "weave parent2: " << debug_vec(queue2) << "\n";
+    // std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
+    // std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
 
     // Make sure there's at most one `:root` in the output.
     CompoundSelector_Obj root1 = _firstIfRoot(queue1);
