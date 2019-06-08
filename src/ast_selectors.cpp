@@ -111,13 +111,14 @@ namespace Sass {
   bool Selector_Schema::mustChroot() const
   {
     // debug_ast(this);
+    // ToDo: we must parse better or check after parsing
+    // Note: it might become ambigous after parsing!
     if (String_Schema_Obj schema = Cast<String_Schema>(contents())) {
       for (auto item : schema->elements()) {
         if (auto str = Cast<String_Constant>(item)) {
-          if (str->value() == " & ") return true;
-          if (str->value() == "& ") return true;
-          if (str->value() == " &") return true;
-          if (str->value() == "&") return true;
+          const std::string val(str->value());
+          size_t n = 0;  while (val[n] && isspace(val[n])) n++;
+          if (val[n] == '&') return true;
         }
       }
     }
