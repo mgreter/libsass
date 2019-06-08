@@ -716,53 +716,12 @@ namespace Sass {
   Statement* Expand::operator()(ExtendRule* e)
   {
 
-    if (false) {
-
-      if (Selector_List_Obj extender = selector()) {
-        // THis MUST be ptr, memory frenzy
-        Selector_List* sl = toSelector_List(e->selector2()).detach();
-        // abort on invalid selector
-        // if (sl == NULL) return NULL;
-
-
-        if (Selector_Schema * schema = e->schema()) {
-          if (schema->has_real_parent_ref()) {
-            // put root block on stack again (ignore parents)
-            // selector schema must not connect in eval!
-            block_stack.push_back(block_stack.at(1));
-            sl = toSelector_List(eval(e->schema())).detach();
-            block_stack.pop_back();
-          }
-          else {
-            pushToSelectorStack({});
-            sl = toSelector_List(eval(e->schema())).detach();
-            popFromSelectorStack();
-            e->selector2(sl->toSelList());
-            // e->selector(sl);
-          }
-        }
-        // for (Complex_Selector_Obj cs : sl->elements()) {
-          // if (!cs.isNull() && !cs->head().isNull()) {
-          //   cs->head()->media_block(media_stack.back());
-          // }
-        // }
-        pushToSelectorStack({});
-        expand_selector_list(sl, extender, e);
-        popFromSelectorStack();
-
-      }
-
+    // evaluate schema first
+    if (e->schema()) {
+      e->selector2(eval(e->schema()));
     }
-    else {
-      // new implementation
-      if (Selector_Schema * schema = e->schema()) {
-      }
-      else {
-        e->selector2(eval(e->selector2()));
-      }
-
-
-    }
+    // evaluate the selector
+    e->selector2(eval(e->selector2()));
 
 
     auto list = e->selector2();
