@@ -964,6 +964,7 @@ namespace Sass {
     // Mix with parents from stack
     if (hasRealParent()) {
       if (parent.isNull() && has_real_parent_ref()) {
+        std::cerr << "IN CLAUSE REAL\n";
         // it turns out that real parent references reach
         // across @at-root rules, which comes unexpected
         int i = pstack.size() - 1;
@@ -1068,12 +1069,16 @@ namespace Sass {
 
     auto parent = pstack.back();
 
+    std::cerr << "resolve parents in " << debug_vec(this) << " with " << debug_vec(parent) << "\n";
+
     if (has_real_parent_ref() && !parent) {
       // traces.push_back(Backtrace(pstate));
       throw Exception::TopLevelParent(traces, pstate());
     }
 
     if (!chroots() && parent) {
+
+      std::cerr << "IN not chroots and parent\n";
 
       // CHeck why this makes it behave to at-root!?
       if (!has_real_parent_ref() && !implicit_parent) {
@@ -1088,7 +1093,9 @@ namespace Sass {
 
     for (auto sel : elements()) {
       if (CompoundSelector_Obj comp = Cast<CompoundSelector>(sel)) {
+        std::cerr << "RESOLVE IN " << debug_vec(comp) << "\n";
         auto asd = comp->resolve_parent_refs(pstack, traces, implicit_parent);
+        std::cerr << "RESOLVED COMP " << debug_vec(asd) << "\n";
         if (asd.size() > 0) vars.push_back(asd);
       }
       else {

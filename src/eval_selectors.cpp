@@ -47,7 +47,9 @@ namespace Sass {
     for (size_t i = 0, iL = s->length(); i < iL; ++i) {
       // std::cerr << "Eval item\n";
       ComplexSelector* sel = (*s)[i];
-      rv.push_back(operator()(sel));
+      SelectorList_Obj asd = operator()(sel);
+      std::cerr << "OP SL " << debug_vec(asd) << "\n";
+      rv.push_back(asd);
     }
 
     // we should actually permutate parent first
@@ -82,8 +84,10 @@ namespace Sass {
     bool implicit_parent = !exp.old_at_root_without_rule;
     if (is_in_selector_schema) exp.pushToSelectorStack({});
     SelectorList_Obj other;
+
     if (true) {
       other = s->resolve_parent_refs(exp.getSelectorStack2(), traces, implicit_parent);
+      std::cerr << "other " << debug_vec(other) << "\n";
       // toComplexSelector()
         // ->toSelList();
     }
