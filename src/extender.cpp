@@ -652,6 +652,11 @@ on SassException catch (error) {
 
         ComplexSelector_Obj cplx = SASS_MEMORY_NEW(ComplexSelector, "[ext]");
         cplx->hasPreLineFeed(complex->hasPreLineFeed());
+        for (auto pp : path) {
+          if (pp->hasPreLineFeed()) {
+            cplx->hasPreLineFeed(true);
+          }
+        }
         cplx->elements(components);
 
         // Make sure that copies of [complex] retain their status
