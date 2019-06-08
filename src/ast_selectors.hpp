@@ -879,7 +879,6 @@ namespace Sass {
   class ExtendRule final : public Statement {
     ADD_PROPERTY(bool, isOptional)
     // This should be a simple selector only!
-    // ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_Schema_Obj, schema)
   public:

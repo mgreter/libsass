@@ -738,11 +738,11 @@ namespace Sass {
           // e->selector(sl);
         }
       }
-      for (Complex_Selector_Obj cs : sl->elements()) {
-        if (!cs.isNull() && !cs->head().isNull()) {
-          cs->head()->media_block(media_stack.back());
-        }
-      }
+      // for (Complex_Selector_Obj cs : sl->elements()) {
+        // if (!cs.isNull() && !cs->head().isNull()) {
+        //   cs->head()->media_block(media_stack.back());
+        // }
+      // }
       pushToSelectorStack({});
       expand_selector_list(sl, extender, e);
       popFromSelectorStack();
