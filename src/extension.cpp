@@ -20,6 +20,7 @@
 
 namespace Sass {
 
+  // Static function to create a copy with a new extender
   Extension Extension::withExtender(ComplexSelector_Obj newExtender)
   {
     Extension extension(newExtender);
@@ -28,5 +29,28 @@ namespace Sass {
     extension.target = target;
     return extension;
   }
+
+  size_t Extension::hash() const {
+    size_t hash = 0;
+    if (target) hash_combine(hash, target->hash());
+    if (extender) hash_combine(hash, extender->hash());
+    return hash;
+  }
+
+  bool HashExtensionFn(const Extension& extension) {
+    size_t hash = extension.extender->hash();
+    hash_combine(hash, extension.target->hash());
+    return hash;
+  }
+
+  bool CompareExtensionFn(const Extension& lhs, const Extension& rhs) {
+    return CompareNodesFn(lhs.extender, rhs.extender)
+      && CompareNodesFn(lhs.target, rhs.target);
+  }
+
+  bool Extension::operator== (const Extension& rhs) const {
+    return CompareNodesFn(extender, rhs.extender);
+  }
+
 
 }

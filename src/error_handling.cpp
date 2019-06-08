@@ -138,6 +138,14 @@ namespace Sass {
 
     }
 
+    UnsatisfiedExtend::UnsatisfiedExtend(Backtraces traces, Extension extension)
+      : Base(extension.target->pstate(), "The target selector was not found.\n"
+        "Use \"@extend " + extension.target->to_string() + " !optional\" to avoid this error.", traces)
+    {
+
+    }
+    
+
   }
 
 

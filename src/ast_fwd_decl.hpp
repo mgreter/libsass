@@ -253,28 +253,30 @@ namespace Sass {
     }
   };
   template <class T>
-  bool OrderFunction(const T& lhs, const T& rhs) {
+  bool OrderNodesFn(const T& lhs, const T& rhs) {
       return !lhs.isNull() && !rhs.isNull() && *lhs < *rhs;
   };
   struct OrderNodes {
     template <class T>
     bool operator() (const T& lhs, const T& rhs) const {
-      return OrderFunction<T>(lhs, rhs);
+      return OrderNodesFn<T>(lhs, rhs);
     }
   };
   template <class T>
-  bool CompareFunction(const T& lhs, const T& rhs) {
+  bool CompareNodesFn(const T& lhs, const T& rhs) {
       // code around sass logic issue. 1px == 1 is true
       // but both items are still different keys in maps
       if (dynamic_cast<Number*>(lhs.ptr()))
         if (dynamic_cast<Number*>(rhs.ptr()))
           return lhs->hash() == rhs->hash();
-      return !lhs.isNull() && !rhs.isNull() && *lhs == *rhs;
+      if (lhs.isNull()) return rhs.isNull();
+      else if (rhs.isNull()) return false;
+      else return *lhs == *rhs;
   }
   struct CompareNodes {
     template <class T>
     bool operator() (const T& lhs, const T& rhs) const {
-      return CompareFunction<T>(lhs, rhs);
+      return CompareNodesFn<T>(lhs, rhs);
     }
   };
 

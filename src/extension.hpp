@@ -2,8 +2,16 @@
 #define SASS_EXTENSION_H
 
 #include "ast_fwd_decl.hpp"
+#include "tsl/ordered_map.h"
+#include "tsl/ordered_set.h"
 
 namespace Sass {
+
+  class Extension;
+
+  bool HashExtensionFn(const Extension& extension);
+
+  bool CompareExtensionFn(const Extension& lhs, const Extension& rhs);
 
   class Extension {
 
@@ -27,6 +35,8 @@ namespace Sass {
     // originally in the document, rather than one defined with `@extend`.
     bool isOriginal;
 
+    bool isSatisfied;
+
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
     // std::vector<Media_Query_Obj> mediaContext;
@@ -41,7 +51,8 @@ namespace Sass {
       target({}),
       specificity(0),
       isOptional(true),
-      isOriginal(false) {
+      isOriginal(false),
+      isSatisfied(false) {
 
     }
 
@@ -51,7 +62,8 @@ namespace Sass {
       target(extension.target),
       specificity(extension.specificity),
       isOptional(extension.isOptional),
-      isOriginal(extension.isOriginal) {
+      isOriginal(extension.isOriginal),
+      isSatisfied(extension.isSatisfied) {
 
     }
 
@@ -60,16 +72,40 @@ namespace Sass {
       target({}),
       specificity(0),
       isOptional(false),
-      isOriginal(false) {
+      isOriginal(false),
+      isSatisfied(false) {
 
     }
 
-
     Extension withExtender(ComplexSelector_Obj newExtender);
 
+    size_t operator() (const Extension& extension) const {
+      return HashExtensionFn(extension);
+    }
+
+    bool operator() (const Extension& lhs, const Extension& rhs) const {
+      return CompareExtensionFn(lhs, rhs);
+    }
+
+    bool operator== (const Extension& rhs) const;
+
+    size_t hash() const;
 
   };
 
+  typedef std::unordered_set<Extension> ExtensionSet;
+
+}
+
+// Add global hash function
+namespace std {
+  template<> class
+    hash<Sass::Extension> {
+  public:
+    size_t operator()(const Sass::Extension& extension) const {
+      return extension.hash();
+    }
+  };
 }
 
 #endif

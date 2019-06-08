@@ -39,12 +39,22 @@ namespace Sass {
     return _extendOrReplace(selector, source, targets, ExtendMode::REPLACE);
   }
 
+  ExtSmplSelSet Extender::getSimpleSelectors() const
+  {
+    ExtSmplSelSet set;
+    for (auto entry : selectors) {
+      set.insert(entry.first);
+    }
+    return set;
+  }
+
   SelectorList_Obj Extender::_extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets, ExtendMode mode)
   {
     ExtSelExtMapEntry extenders;
 
     for (auto complex : source->elements()) {
       // std::cerr << "REGISTER CPLX " << debug_vec(complex) << "\n";
+      // Extension.oneOff(complex as ComplexSelector)
       extenders[complex] = Extension(complex);
     }
 
@@ -360,7 +370,7 @@ namespace Sass {
   }
 
 
-  /// Extend [extensions] using [newExtensions].
+  // Extend [extensions] using [newExtensions].
   void Extender::extendExistingStyleRules(ExtListSelSet& rules,
     ExtSelExtMap& newExtensions
   )

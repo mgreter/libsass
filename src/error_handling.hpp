@@ -216,6 +216,12 @@ namespace Sass {
       virtual ~TopLevelParent() throw() {};
     };
 
+    class UnsatisfiedExtend : public Base {
+    public:
+      UnsatisfiedExtend(Backtraces traces, Extension extension);
+      virtual ~UnsatisfiedExtend() throw() {};
+    };
+
   }
 
   void warn(std::string msg, ParserState pstate);

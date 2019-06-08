@@ -784,6 +784,22 @@ namespace Sass {
     debug_ast(ls);
     std::cerr << ls->to_string() << "\n";
     */
+/*
+    Extension asd;
+    Extension qwe;
+
+    std::hash<Extension> hash_fn;
+    std::cerr << "hash_fn " << hash_fn(asd) << "\n";
+
+    ExtensionSet foobar;
+    std::cerr << "DO IT\n";
+    foobar.insert(asd);
+    if (foobar.find(asd) != foobar.end()) {
+      std::cerr << "FOUND VIA OTHER\n";
+    };
+    std::cerr << "FINISHED\n";
+    exit(1);
+    */
 
     // exit(1);
     // abort on invalid root
@@ -794,6 +810,7 @@ namespace Sass {
     // register custom functions (defined via C-API)
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
     { register_c_function(*this, &global, c_functions[i]); }
+
     // create initial backtrace entry
     // create crtp visitor objects
     Expand expand(*this, &global);
@@ -818,13 +835,65 @@ namespace Sass {
  //   debug_ast(root);
     // debug_ast(root);
     // should we extend something?
-    if (!subset_map.empty()) {
+    // if (!subset_map.empty()) {
       // create crtp visitor object
       // Extend extend(subset_map);
       // extend.setEval(expand.eval);
       // extend tree nodes
       // extend(root);
+    // }
+
+    /*
+      Iterable<Extension> extensionsWhereTarget(
+      bool callback(SimpleSelector target)) sync* {
+        stderr.writeln("extensionsWhereTarget");
+
+      for (var target in extender.extensions.keys) {
+      if (!callback(target)) continue;
+      for (var extension in extender.extensions[target].values) {
+        if (extension is MergedExtension) {
+          yield* extension
+              .unmerge()
+              .where((extension) => !extension.isOptional);
+        } else if (!extension.isOptional) {
+          yield extension;
+        }
+      }
     }
+  }
+
+  */
+
+  // std::cerr << "DONE ORIGINALS " << debug_vec(extender.originals) << "\n";
+    // std::cerr << "DONE EXTENSIONS " << debug_vec(extender.extensions) << "\n";
+
+    auto originals = extender.getSimpleSelectors();
+    for (auto target : extender.extensions) {
+      Simple_Selector_Obj key = target.first;
+      ExtSelExtMapEntry val = target.second;
+      if (originals.find(key) == originals.end()) {
+        // std::cerr << "throw for extension-\n";
+        Extension extension(val.front().second);
+        if (extension.isOptional) continue;
+        throw Exception::UnsatisfiedExtend(traces, extension);
+      }
+
+      // if (!callback(target)) continue;
+
+
+    }
+
+    // extender.extensionsWhereTarget(originalSelectors.contains)
+
+    for (auto map : extender.extensions) {
+      for (auto entry : map.second) {
+        Extension& extension = entry.second;
+        if (!extension.isSatisfied) {
+        }
+      }
+    }
+
+
     /// debug_ast(root);
 
     // clean up by removing empty placeholders

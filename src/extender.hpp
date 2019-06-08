@@ -20,6 +20,7 @@ namespace Sass {
     Selector_List_Obj // original
   > ExtSelTuple;
 
+  // This is special (ptrs!)
   typedef tsl::ordered_set<
     ComplexSelector_Obj,
     HashPtrNodes,
@@ -75,7 +76,7 @@ namespace Sass {
 
     enum ExtendMode { TARGETS, REPLACE, NORMAL, };
 
-  private:
+  public:
 
     // The mode that controls this extender's behavior.
     ExtendMode mode;
@@ -121,6 +122,8 @@ namespace Sass {
       sourceSpecificity(),
       originals()
     {};
+
+    ExtSmplSelSet getSimpleSelectors() const;
 
   public:
     static SelectorList_Obj extend(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target);
