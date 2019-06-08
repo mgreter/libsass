@@ -130,8 +130,8 @@ namespace Sass {
     // std::cerr << "group2" << debug_vec(group2) << "\n";;
 
     if (group1.size() == group2.size() && std::equal(group1.begin(), group1.end(), group2.begin(), ComparePtrsFunction<CompoundOrCombinator>)) {
-      // std::cerr << "GOT equal\n";
       select = group1;
+      // std::cerr << "GOT equal " << debug_vec(select) << "\n";
       return true;
     }
 
@@ -141,30 +141,34 @@ namespace Sass {
     }
     if (!Cast<CompoundSelector>(group2.front())) {
       // std::cerr << "group2 no front compound\n";
+      select = {};
       return false; // null
     }
 
     if (complexIsParentSuperselector(group1, group2)) {
-      // std::cerr << "GOT equal 2\n";
       select = group2;
+      // std::cerr << "GOT equal 2 " << debug_vec(select) << "\n";
       return true;
     }
     if (complexIsParentSuperselector(group2, group1)) {
-      // std::cerr << "GOT equal 3\n";
       select = group1;
+      // std::cerr << "GOT equal 3 " << debug_vec(select) << "\n";
       return true;
     }
 
     if (!_mustUnify(group1, group2)) {
       // std::cerr << "GOT MUST UNIFY\n";
+      select = {};
       return false;
     }
+
+    // std::cerr << "unify complex now\n";
 
     std::vector<std::vector<CompoundOrCombinator_Obj>> unified = unifyComplex({ group1, group2 });
     if (unified.empty()) return false; // null
     if (unified.size() > 1) return false; // null
     select = unified.front();
-    // std::cerr << "GOT equal 4\n";
+    // std::cerr << "GOT equal 4 " << debug_vec(select) << "\n";
     return true;
   }
 
@@ -749,7 +753,7 @@ namespace Sass {
 
     // ToDo: this path is not fully implemented yet
     std::vector<std::vector<CompoundOrCombinator_Obj>> LCS =
-      lcs23<std::vector<CompoundOrCombinator_Obj>>(groups2, groups1, cmpGroups);
+      lcs23<std::vector<CompoundOrCombinator_Obj>>(groups1, groups2, cmpGroups);
 
     // std::cerr << "weave LCS23: " << debug_vec(LCS) << "\n";
 
