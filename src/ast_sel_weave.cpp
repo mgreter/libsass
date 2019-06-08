@@ -38,15 +38,15 @@ namespace Sass {
       if (in[i].size() == 0) return {};
       state[i] = in[i].size() - 1;
     }
-    // std::cerr << "\n";
+    // // std::cerr << "\n";
     // int cnt = 0;
     while (true) {
       // if (cnt++ > 10) exit(1);
       for (size_t p = 0; p < L; p++)
       {
-        // std::cerr << state[p] << " ";
+        // // std::cerr << state[p] << " ";
       }
-      // std::cerr << "\n";
+      // // std::cerr << "\n";
 
       std::vector<T> perm;
       // Create one permutation for state
@@ -99,12 +99,12 @@ namespace Sass {
   template <class T>
   std::vector<std::vector<T>> paths(std::vector<std::vector<T>> choices) {
 
-    std::cerr << "PERMUTATE " << debug_vec(choices) << "\n";
+    // std::cerr << "PERMUTATE " << debug_vec(choices) << "\n";
 
 
     auto qwe = permutate3(choices);
 
-    std::cerr << "PERMUTATED " << debug_vec(qwe) << "\n";
+    // std::cerr << "PERMUTATED " << debug_vec(qwe) << "\n";
 
     return qwe;
 
@@ -189,8 +189,8 @@ namespace Sass {
       queue2.erase(queue2.begin());
     }
 
-    std::cerr << "CHUNK1 " << debug_vec(chunk1) << "\n";
-    std::cerr << "CHUNK2 " << debug_vec(chunk2) << "\n";
+    // std::cerr << "CHUNK1 " << debug_vec(chunk1) << "\n";
+    // std::cerr << "CHUNK2 " << debug_vec(chunk2) << "\n";
 
     if (chunk1.empty() && chunk2.empty()) return {};
     if (chunk1.empty()) return { chunk2 };
@@ -202,47 +202,47 @@ namespace Sass {
     choice2.insert(choice2.end(), chunk2.begin(), chunk2.end());
     choice2.insert(choice2.end(), chunk1.begin(), chunk1.end());
 
-    std::cerr << "CHOICE1 " << debug_vec(choice1) << "\n";
-    std::cerr << "CHOICE2 " << debug_vec(choice2) << "\n";
+    // std::cerr << "CHOICE1 " << debug_vec(choice1) << "\n";
+    // std::cerr << "CHOICE2 " << debug_vec(choice2) << "\n";
 
     return { choice1, choice2 };
   }
 
   bool cmpGroups(std::vector<CompoundOrCombinator_Obj> group1, std::vector<CompoundOrCombinator_Obj> group2, std::vector<CompoundOrCombinator_Obj>& select) {
 
-    std::cerr << "cmp group 1\n";
+    // std::cerr << "cmp group 1\n";
 
-    std::cerr << "group1" << debug_vec(group1) << "\n";
-    std::cerr << "group2" << debug_vec(group2) << "\n";;
+    // std::cerr << "group1" << debug_vec(group1) << "\n";
+    // std::cerr << "group2" << debug_vec(group2) << "\n";;
 
     if (group1.size() == group2.size() && std::equal(group1.begin(), group1.end(), group2.begin(), ComparePtrsFunction<CompoundOrCombinator>)) {
-      std::cerr << "GOT equal\n";
+      // std::cerr << "GOT equal\n";
       select = group1;
       return true;
     }
 
     if (!Cast<CompoundSelector>(group1.front())) {
-      std::cerr << "group1 no front compound\n";
+      // std::cerr << "group1 no front compound\n";
       return false; // null
     }
     if (!Cast<CompoundSelector>(group2.front())) {
-      std::cerr << "group2 no front compound\n";
+      // std::cerr << "group2 no front compound\n";
       return false; // null
     }
 
     if (complexIsParentSuperselector(group1, group2)) {
-      std::cerr << "GOT equal 2\n";
+      // std::cerr << "GOT equal 2\n";
       select = group2;
       return true;
     }
     if (complexIsParentSuperselector(group2, group1)) {
-      std::cerr << "GOT equal 3\n";
+      // std::cerr << "GOT equal 3\n";
       select = group1;
       return true;
     }
 
     if (!_mustUnify(group1, group2)) {
-      std::cerr << "GOT MUST UNIFY\n";
+      // std::cerr << "GOT MUST UNIFY\n";
       return false;
     }
 
@@ -250,17 +250,17 @@ namespace Sass {
     if (unified.empty()) return false; // null
     if (unified.size() > 1) return false; // null
     select = unified.front();
-    std::cerr << "GOT equal 4\n";
+    // std::cerr << "GOT equal 4\n";
     return true;
   }
 
   bool cmpChunks2(std::vector< std::vector<CompoundOrCombinator_Obj>> seq, std::vector<CompoundOrCombinator_Obj> group) {
     if (seq.empty()) return true;
-    std::cerr << "--- DO COMPARE 2: "<< "\n";
-    std::cerr << "  lhs: " << debug_vec(seq.front()) << "\n";
-    std::cerr << "  rhs: " << debug_vec(group) << "\n";
+    // std::cerr << "--- DO COMPARE 2: "<< "\n";
+    // std::cerr << "  lhs: " << debug_vec(seq.front()) << "\n";
+    // std::cerr << "  rhs: " << debug_vec(group) << "\n";
     bool rv = complexIsParentSuperselector(seq.front(), group);
-    std::cerr << "  ==== " << debug_bool(rv) << "\n";
+    // std::cerr << "  ==== " << debug_bool(rv) << "\n";
     return rv;
   }
 
@@ -286,7 +286,7 @@ namespace Sass {
   std::vector<std::vector<CompoundOrCombinator_Obj>> _groupSelectors(
     std::vector<CompoundOrCombinator_Obj> components) {
 
-    // std::cerr << "COMPONENTS: " << debug_vec(components) << "\n";
+    // // std::cerr << "COMPONENTS: " << debug_vec(components) << "\n";
 
     std::vector<std::vector<CompoundOrCombinator_Obj>> groups;
 
@@ -316,25 +316,25 @@ namespace Sass {
     while (i < components.size()) {
       std::vector<CompoundOrCombinator_Obj> group;
       while (i < components.size()) {
-        // std::cerr << "ADD ITEM: " << std::string(components[i]) << "\n";
+        // // std::cerr << "ADD ITEM: " << std::string(components[i]) << "\n";
         group.push_back(components[i++]);
-        // std::cerr << "ADDED ITEM: " << "\n";
+        // // std::cerr << "ADDED ITEM: " << "\n";
         if (i == components.size()) break;
         if (Cast<SelectorCombinator>(components[i])) {
-          // std::cerr << "SKIP 1" << "\n";
+          // // std::cerr << "SKIP 1" << "\n";
           break;
         }
-        // std::cerr << "MORE\n";
+        // // std::cerr << "MORE\n";
         if (Cast<SelectorCombinator>(group.back())) {
-          // std::cerr << "SKIP 2" << "\n";
+          // // std::cerr << "SKIP 2" << "\n";
           break;
         }
-        // std::cerr << "GO ON" << "\n";
+        // // std::cerr << "GO ON" << "\n";
       }
       groups.push_back(group);
     }
 
-    // std::cerr << "GROUPS OUT: " << debug_vec(groups) << "\n";
+    // // std::cerr << "GROUPS OUT: " << debug_vec(groups) << "\n";
 
     return groups;
   }
@@ -354,7 +354,7 @@ namespace Sass {
     std::vector<SelectorCombinator_Obj> combinators1;
     while (!components1.empty() && Cast<SelectorCombinator>(components1.front())) {
       SelectorCombinator_Obj front = Cast<SelectorCombinator>(components1.front());
-      std::cerr << "erase from components1\n";
+      // std::cerr << "erase from components1\n";
       components1.erase(components1.begin());
       combinators1.push_back(front);
     }
@@ -362,31 +362,31 @@ namespace Sass {
     std::vector<SelectorCombinator_Obj> combinators2;
     while (!components2.empty() && Cast<SelectorCombinator>(components2.front())) {
       SelectorCombinator_Obj front = Cast<SelectorCombinator>(components2.front());
-      std::cerr << "erase from components2\n";
+      // std::cerr << "erase from components2\n";
       components2.erase(components2.begin());
       combinators2.push_back(front);
     }
 
     // If neither sequence of combinators is a subsequence of the other, they
     // cannot be merged successfully.
-    std::cerr << "LCS in " << debug_vec(combinators1) << " & " << debug_vec(combinators2) << "\n";
+    // std::cerr << "LCS in " << debug_vec(combinators1) << " & " << debug_vec(combinators2) << "\n";
     
     std::vector< SelectorCombinator_Obj> LCS = lcs<SelectorCombinator>(combinators1, combinators2);
 
-    std::cerr << "LCS " << debug_vec(LCS) << "\n";
+    // std::cerr << "LCS " << debug_vec(LCS) << "\n";
 
     if (LCS.size() == combinators1.size() && std::equal(LCS.begin(), LCS.end(), combinators1.begin(), ComparePtrsFunction<SelectorCombinator>)) {
-      std::cerr << "return combintors2\n";
+      // std::cerr << "return combinators2\n";
       result = combinators2; // Does this work?
       return true;
     }
     if (LCS.size() == combinators2.size() && std::equal(LCS.begin(), LCS.end(), combinators2.begin(), ComparePtrsFunction<SelectorCombinator>)) {
-      std::cerr << "return combintors1\n";
+      // std::cerr << "return combinators1\n";
       result = combinators1; // Does this work?
       return true;
     }
 
-    std::cerr << "failed to merge initial\n";
+    // std::cerr << "failed to merge initial\n";
 
     return false; // null
 
@@ -403,14 +403,19 @@ namespace Sass {
     std::vector<CompoundOrCombinator_Obj>& components2,
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>>& result) {
 
+    // std::cerr << "mergeFinalCombinators c1 " << debug_vec(components1) << "\n";
+    // std::cerr << "mergeFinalCombinators c2 " << debug_vec(components2) << "\n";
+
     if (components1.empty() || !Cast<SelectorCombinator>(components1.back())) {
       if (components2.empty() || !Cast<SelectorCombinator>(components2.back())) {
+        // std::cerr << "NOT COMPOUNDY\n";
         return true;
       }
     }
     
     std::vector<SelectorCombinator_Obj> combinators1;
     while (!components1.empty() && Cast<SelectorCombinator>(components1.back())) {
+      // std::cerr << "ERASE C1\n";
       SelectorCombinator_Obj back = Cast<SelectorCombinator>(components1.back());
       components1.erase(components1.end() - 1);
       combinators1.push_back(back);
@@ -418,18 +423,22 @@ namespace Sass {
 
     std::vector<SelectorCombinator_Obj> combinators2;
     while (!components2.empty() && Cast<SelectorCombinator>(components2.back())) {
+      // std::cerr << "ERASE C2\n";
       SelectorCombinator_Obj back = Cast<SelectorCombinator>(components2.back());
       components2.erase(components2.end() - 1);
       combinators2.push_back(back);
     }
 
+    // std::cerr << "c1 " << debug_vec(components1) << "\n";
+    // std::cerr << "c2 " << debug_vec(components2) << "\n";
+
     if (combinators1.size() > 1 || combinators2.size() > 1) {
       // If there are multiple combinators, something hacky's going on. If one
       // is a supersequence of the other, use that, otherwise give up.
-      //std::cerr << "DO LCS " << debug_vec(combinators1) << "\n";
-      //std::cerr << "DO LCS " << debug_vec(combinators2) << "\n";
+      // std::cerr << "DO LCS " << debug_vec(combinators1) << "\n";
+      // std::cerr << "DO LCS " << debug_vec(combinators2) << "\n";
       auto LCS = lcs<SelectorCombinator>(combinators1, combinators2);
-      //std::cerr << "DID LCS " << debug_vec(LCS) << "\n";
+      // std::cerr << "DID LCS " << debug_vec(LCS) << "\n";
 
       if (LCS.size() == combinators1.size() && std::equal(LCS.begin(), LCS.end(), combinators1.begin(), ComparePtrsFunction<SelectorCombinator>)) {
         std::vector<std::vector<CompoundOrCombinator_Obj>> items;
@@ -448,6 +457,9 @@ namespace Sass {
       else {
         return false; // null
       }
+
+      // std::cerr << "RESULT " << debug_vec(result) << "\n";
+
       return true;
     }
 
@@ -456,12 +468,21 @@ namespace Sass {
     SelectorCombinator_Obj combinator1, combinator2;
     if (!combinators1.empty()) combinator1 = combinators1.front();
     if (!combinators2.empty()) combinator2 = combinators2.front();
+
+    // std::cerr << "combinator1 " << debug_vec(combinator1) << "\n";
+    // std::cerr << "combinator2 " << debug_vec(combinator2) << "\n";
+
     if (!combinator1.isNull() && !combinator2.isNull()) {
+      // std::cerr << "GO INTO IF 1\n";
       auto compound1 = Cast<CompoundSelector>(components1.back());
       auto compound2 = Cast<CompoundSelector>(components2.back());
       components1.pop_back(); components2.pop_back();
 
+      // std::cerr << "c1 " << debug_vec(components1) << "\n";
+      // std::cerr << "c2 " << debug_vec(components2) << "\n";
+
       if (combinator1->isGeneralCombinator() && combinator2->isGeneralCombinator()) {
+        // std::cerr << "both general combinator\n";
         if (compound1->isSuperselectorOf(compound2)) { // XXX
           std::vector< std::vector< CompoundOrCombinator_Obj >> items;
           std::vector< CompoundOrCombinator_Obj> item;
@@ -503,6 +524,8 @@ namespace Sass {
       else if ((combinator1->isGeneralCombinator() && combinator2->isChildCombinator()) ||
         (combinator1->isChildCombinator() && combinator2->isGeneralCombinator())) {
 
+        // std::cerr << "second case\n";
+
         CompoundSelector_Obj followingSiblingSelector = combinator1->isFollowingSibling() ? compound1 : compound2;
         CompoundSelector_Obj nextSiblingSelector = combinator1->isFollowingSibling() ? compound2 : compound1;
 
@@ -532,6 +555,7 @@ namespace Sass {
       else if (combinator1->isChildCombinator() &&
         (combinator2->isNextSibling() ||
           combinator2->isFollowingSibling())) {
+        // std::cerr << "third case\n";
         result.insert(result.begin(), { {
             compound2, combinator2,
         } });
@@ -541,6 +565,7 @@ namespace Sass {
       else if (combinator2->isChildCombinator() &&
         (combinator1->isNextSibling() ||
           combinator1->isFollowingSibling())) {
+        // std::cerr << "fourth case\n";
         result.insert(result.begin(), { {
             compound1, combinator1,
         } });
@@ -548,6 +573,7 @@ namespace Sass {
         components2.push_back(combinator2);
       }
       else if (*combinator1 == *combinator2) {
+        // std::cerr << "fifth case\n";
         CompoundSelector_Obj unified = compound1->unify_with(compound2);
         if (unified.isNull()) return false; // null
         result.insert(result.begin(), { {
@@ -555,6 +581,7 @@ namespace Sass {
         } });
       }
       else {
+        // std::cerr << "last case\n";
         return false; // null
       }
 
@@ -598,39 +625,39 @@ namespace Sass {
     std::vector<std::vector<CompoundOrCombinator_Obj>> prefixes;
     prefixes.push_back(complexes.at(0));
 
-    std::cerr << "PREFIXES IN: " << debug_vec(prefixes) << "\n";
-    std::cerr << "COMPLEXES IN: " << debug_vec(complexes) << "\n";
+    // std::cerr << "PREFIXES IN: " << debug_vec(prefixes) << "\n";
+    // std::cerr << "COMPLEXES IN: " << debug_vec(complexes) << "\n";
 
     // debug_ast(prefixes, "PREFIXES IN ");
 
     for (size_t i = 1; i < complexes.size(); i += 1) {
 
       if (complexes[i].empty()) {
-        // std::cerr << "SKIP EMPTY complexes[" << i << "]\n";
+        // // std::cerr << "SKIP EMPTY complexes[" << i << "]\n";
         continue;
       }
       std::vector<CompoundOrCombinator_Obj>& complex = complexes[i];
       CompoundOrCombinator_Obj target = complex.back();
       if (complex.size() == 1) {
         for (auto& prefix : prefixes) {
-          // std::cerr << "ADD " << target->to_string() << "\n";
+          // // std::cerr << "ADD " << target->to_string() << "\n";
           prefix.push_back(target);
         }
-        std::cerr << "CONTINUE1\n";
+        // std::cerr << "CONTINUE1\n";
         continue;
       }
-      std::cerr << "NOT REACHING YET\n";
-      std::cerr << "COMPLEX: " << debug_vec(complex) << "\n";
+      // std::cerr << "NOT REACHING YET\n";
+      // std::cerr << "COMPLEX: " << debug_vec(complex) << "\n";
       std::vector<CompoundOrCombinator_Obj> parents = complex;
       parents.pop_back();
-      std::cerr << "PARENTS: " << debug_vec(parents) << "\n";
+      // std::cerr << "PARENTS: " << debug_vec(parents) << "\n";
 
       std::vector<std::vector<CompoundOrCombinator_Obj>> newPrefixes;
       for (std::vector<CompoundOrCombinator_Obj> prefix : prefixes) {
-        std::cerr << "WEAVE PREFIXE: " << debug_vec(prefix) << "\n";
-        std::cerr << "    W PARENTS: " << debug_vec(parents) << "\n";
+        // std::cerr << "WEAVE PREFIXE: " << debug_vec(prefix) << "\n";
+        // std::cerr << "    W PARENTS: " << debug_vec(parents) << "\n";
         auto parentPrefixes = weaveParents(prefix, parents);
-        std::cerr << "WEAVE RV: " << debug_vec(parentPrefixes) << "\n";
+        // std::cerr << "WEAVE RV: " << debug_vec(parentPrefixes) << "\n";
         if (parentPrefixes.empty()) continue;
 
         for (auto& parentPrefix : parentPrefixes) {
@@ -641,7 +668,7 @@ namespace Sass {
       prefixes = newPrefixes;
 
     }
-    // std::cerr << "PREFIXES OUT: " << debug_vec(prefixes) << "\n";
+    // // std::cerr << "PREFIXES OUT: " << debug_vec(prefixes) << "\n";
     return prefixes;
 
   }
@@ -650,8 +677,8 @@ namespace Sass {
     std::vector<CompoundOrCombinator_Obj> parents1,
     std::vector<CompoundOrCombinator_Obj> parents2) {
 
-    std::cerr << "weave parent1: " << debug_vec(parents1) << "\n";
-    std::cerr << "weave parent2: " << debug_vec(parents2) << "\n";
+    // std::cerr << "weave parent1: " << debug_vec(parents1) << "\n";
+    // std::cerr << "weave parent2: " << debug_vec(parents2) << "\n";
 
     std::vector<CompoundOrCombinator_Obj>& queue1 = parents1;
     std::vector<CompoundOrCombinator_Obj>& queue2 = parents2;
@@ -661,18 +688,18 @@ namespace Sass {
     if (!mergeInitialCombinators(queue1, queue2, initialCombinators)) return {};
     if (!mergeFinalCombinators(queue1, queue2, finalCombinators)) return {};
 
-    std::cerr << "weave initial: " << debug_vec(initialCombinators) << "\n";
-    std::cerr << "weave final: " << debug_vec(finalCombinators) << "\n";
+    // std::cerr << "weave initial: " << debug_vec(initialCombinators) << "\n";
+    // std::cerr << "weave final: " << debug_vec(finalCombinators) << "\n";
 
-    std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
-    std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
+    // std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
+    // std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
 
     // Make sure there's at most one `:root` in the output.
     CompoundSelector_Obj root1 = _firstIfRoot(queue1);
     CompoundSelector_Obj root2 = _firstIfRoot(queue2);
 
-    std::cerr << "weave root1: " << std::string(root1) << "\n";
-    std::cerr << "weave root2: " << std::string(root2) << "\n";
+    // std::cerr << "weave root1: " << std::string(root1) << "\n";
+    // std::cerr << "weave root2: " << std::string(root2) << "\n";
 
     if (!root1.isNull() && !root2.isNull()) {
       CompoundSelector_Obj root = root1->unify_with(root2);
@@ -687,22 +714,22 @@ namespace Sass {
       queue1.insert(queue1.begin(), root2);
     }
     else {
-      std::cerr << "BOTH ROOTS NULL\n";
+      // std::cerr << "BOTH ROOTS NULL\n";
     }
 
-    std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
-    std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
+    // std::cerr << "weave queue1: " << debug_vec(queue1) << "\n";
+    // std::cerr << "weave queue2: " << debug_vec(queue2) << "\n";
     
     std::vector<std::vector<CompoundOrCombinator_Obj>> groups1 = _groupSelectors(queue1);
     std::vector<std::vector<CompoundOrCombinator_Obj>> groups2 = _groupSelectors(queue2);
 
-    std::cerr << "weave groups1: " << debug_vec(groups1) << "\n";
-    std::cerr << "weave groups2: " << debug_vec(groups2) << "\n";
+    // std::cerr << "weave groups1: " << debug_vec(groups1) << "\n";
+    // std::cerr << "weave groups2: " << debug_vec(groups2) << "\n";
 
     // ToDo: this path is not fully implemented yet
     std::vector<std::vector<CompoundOrCombinator_Obj>> LCS = lcs2<std::vector<CompoundOrCombinator_Obj>>(groups2, groups1, cmpGroups);
 
-    std::cerr << "weave LCS: " << debug_vec(LCS) << "\n";
+    // std::cerr << "weave LCS: " << debug_vec(LCS) << "\n";
 
     // ToDo: this should be easier to downcase vector elements?
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> choices;
@@ -710,7 +737,7 @@ namespace Sass {
     choice.insert(choice.begin(), initialCombinators.begin(), initialCombinators.end());
     choices.push_back({ choice });
 
-    // std::cerr << "weave choices: " << debug_vec(choices) << "\n";
+    // // std::cerr << "weave choices: " << debug_vec(choices) << "\n";
 
     for (auto group : LCS) {
       std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> chunks2 = _chunks(groups1, groups2, group, cmpChunks2);
@@ -722,25 +749,25 @@ namespace Sass {
         expanded.push_back(expandList(chk));
       }
       std::vector<std::vector<CompoundOrCombinator_Obj>> chunks = expandList(chunks2);
-      std::cerr << "CHUNKED " << debug_vec(expanded) << "\n";
+      // std::cerr << "CHUNKED " << debug_vec(expanded) << "\n";
       // (chunk) => chunk.expand((group) => group)
 
-      // std::cerr << "LCS chunks: " << debug_vec(chunks) << "\n";
+      // // std::cerr << "LCS chunks: " << debug_vec(chunks) << "\n";
       // std::vector<std::vector<CompoundOrCombinator_Obj>> expanded = expandList(chunks2);
       choices.push_back(expanded);
       choices.push_back({ group });
       groups1.erase(groups1.begin());
       groups2.erase(groups2.begin());
 
-      std::cerr << "CHOICES " << debug_vec(choices) << "\n";
-      std::cerr << "GROUPS1 " << debug_vec(groups1) << "\n";
-      std::cerr << "GROUPS2 " << debug_vec(groups2) << "\n";
+      // std::cerr << "CHOICES " << debug_vec(choices) << "\n";
+      // std::cerr << "GROUPS1 " << debug_vec(groups1) << "\n";
+      // std::cerr << "GROUPS2 " << debug_vec(groups2) << "\n";
 
     }
 
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> chunks = _chunks(groups1, groups2, {}, cmpChunks);
 
-    // std::cerr << "weave chunks: " << debug_vec(chunks) << "\n";
+    // // std::cerr << "weave chunks: " << debug_vec(chunks) << "\n";
 
     std::vector<std::vector<CompoundOrCombinator_Obj>> choicer;
 
@@ -752,13 +779,13 @@ namespace Sass {
 
     choices.push_back(choicer);
 
-    std::cerr << "CHOICER1 " << debug_vec(choices) << "\n";
+    // std::cerr << "CHOICER1 " << debug_vec(choices) << "\n";
 
     for (auto fin : finalCombinators) {
       choices.push_back(fin);
     }
 
-    std::cerr << "CHOICER2 " << debug_vec(choices) << "\n";
+    // std::cerr << "CHOICER2 " << debug_vec(choices) << "\n";
 
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> choices2;
     for (auto choice : choices) {
@@ -767,15 +794,15 @@ namespace Sass {
       }
     }
 
-    std::cerr << "CHOICER3 " << debug_vec(choices2) << "\n";
+    // std::cerr << "CHOICER3 " << debug_vec(choices2) << "\n";
 
     // ToDo: remove empty choices
 
-    // std::cerr << "weave choices: " << debug_vec(choices2) << "\n";
+    // // std::cerr << "weave choices: " << debug_vec(choices2) << "\n";
 
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> pathes = paths(choices2);
 
-    std::cerr << "PATHS " << debug_vec(pathes) << "\n";
+    // std::cerr << "PATHS " << debug_vec(pathes) << "\n";
 
     std::vector<std::vector<CompoundOrCombinator_Obj>> rv;
 

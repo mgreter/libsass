@@ -648,7 +648,7 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////////
   class SelectorCombinator final : public CompoundOrCombinator {
   public:
-    enum Combinator { CHILD, GENERAL, ADJACENT };
+    enum Combinator { CHILD /* > */, GENERAL /* ~ */, ADJACENT /* + */};
   private:
     HASH_CONSTREF(Combinator, combinator)
   public:
@@ -671,8 +671,8 @@ namespace Sass {
     size_t maxSpecificity() const { return 0; }
     size_t minSpecificity() const { return 0; }
 
-    bool isNextSibling() const { return isChildCombinator(); }
-    bool isFollowingSibling() const { return isGeneralCombinator(); }
+    bool isNextSibling() const { return isAdjacentCombinator(); } /* + */
+    bool isFollowingSibling() const { return isGeneralCombinator(); } /* ~ */
 
     Complex_Selector::Combinator toComplexCombinator() const {
       switch (combinator()) {
