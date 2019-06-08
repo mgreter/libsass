@@ -435,8 +435,8 @@ namespace Sass {
           result.insert(result.begin(), choices);
         }
       }
-      else if ((combinator1->isGeneralCombinator() && combinator2->isChildCombinator()) ||
-        (combinator1->isChildCombinator() && combinator2->isGeneralCombinator())) {
+      else if ((combinator1->isGeneralCombinator() && combinator2->isNextSibling()) ||
+        (combinator1->isNextSibling() && combinator2->isGeneralCombinator())) {
 
         // std::cerr << "second case\n";
 
