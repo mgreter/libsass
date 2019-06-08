@@ -104,10 +104,33 @@ namespace Sass {
         return rhs;
       }
     }
+
+
+    CompoundSelector_Obj result = SASS_MEMORY_NEW(CompoundSelector, rhs->pstate());
+
+    bool addedThis = false;
+    for (auto simple : rhs->elements()) {
+      // Make sure pseudo selectors always come last.
+      if (!addedThis && simple->getPseudoSelector()) {
+        result->append(this);
+        addedThis = true;
+      }
+      result->append(simple);
+    }
+
+    if (!addedThis) {
+      result->append(this);
+    }
+
+    return result.detach();
+
     const int lhs_order = this->unification_order();
     size_t i = rhs->length();
     while (i > 0 && lhs_order < rhs->at(i - 1)->unification_order()) --i;
     rhs->insert(rhs->begin() + i, this);
+
+
+
 #ifdef DEBUG_UNIFY
     std::cerr << "> " << debug_call << " = " << "Compound[" << rhs->to_string() << "]" << std::endl;
 #endif

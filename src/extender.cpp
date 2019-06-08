@@ -103,15 +103,17 @@ namespace Sass {
   {
 
     SelectorList_Obj original = selector;
-    // if (!originalSelector->isInvisible()) {
+    if (!original->isInvisible()) {
     // std::cerr << "ADD SELECTOR " << /* selector.ptr() <<  " - " << */ debug_vec(original) << "\n";
 
     // Remember all original complex selectors
     for (auto complex : selector->elements()) {
+      // debug_ast(complex);
+      // exit(1);
       // std::cerr << "INSERT ORIGINAL1 " << debug_vec(complex) << " - " << complex.ptr() << "\n";
       originals.insert(complex);
     }
-    // }
+    }
 
     if (!extensions.empty()) {
       // std::cerr << "has extensions (" << debug_vec(original) << ") WITH " << debug_keys(extensions) << "\n";
@@ -874,7 +876,7 @@ on SassException catch (error) {
           SASS_MEMORY_NEW(CompoundSelector, "[ext]");
         for (size_t n = 0; n < path.size(); n += 1) {
           ComplexSelector_Obj sel = path[n].extender;
-          // std::cerr << "BEFORE " << debug_vec(sel) << "\n";
+          // std::cerr << "BEFORE2 " << debug_vec(sel) << "\n";
           if (CompoundSelector_Obj compound = Cast<CompoundSelector>(sel->last())) {
             mergedSelector->concat(compound->elements());
           }
@@ -888,6 +890,7 @@ on SassException catch (error) {
 
         for (auto state : path) {
           if (state.isOriginal) {
+            // std::cerr << "IS ORIGINAL\n";
             ComplexSelector_Obj sel = state.extender;
             if (CompoundSelector_Obj compound = Cast<CompoundSelector>(sel->last())) {
               // std::cerr << "INSERT ORIGINALS3 " << debug_vec(compound) << "\n";
@@ -898,7 +901,7 @@ on SassException catch (error) {
             toUnify.push_back(state.extender->elements());
           }
         }
-
+        // std::cerr << "toUnify " << debug_vec(toUnify) << "\n";
         if (!originals.empty()) {
 
           CompoundSelector_Obj merged =
@@ -907,7 +910,12 @@ on SassException catch (error) {
           toUnify.insert(toUnify.begin(), { merged });
         }
 
+        // std::cerr << "toUnify " << debug_vec(toUnify) << "\n";
+
         complexes = unifyComplex(toUnify);
+
+        // std::cerr << "complexes " << debug_vec(complexes) << "\n";
+
         if (complexes.empty()) {
           // std::cerr << "FOOBAR\n";
           return {};
@@ -1192,11 +1200,9 @@ on SassException catch (error) {
       // debug_ast(selectors.at(1));
       // debug_ast(set.back());
 
-      if (*selectors.at(1) == *set.back()) {
-        // std::cerr << "indentity ok\n";
-      }
-
     }
+
+    // std::cerr << "START LOOP\n";
 
   redo:
 

@@ -587,6 +587,81 @@ namespace Sass {
 
   }
 
+  // https://www.geeksforgeeks.org/longest-common-subsequence/
+  // https://www.geeksforgeeks.org/printing-longest-common-subsequence/
+  template <class T>
+  std::vector<T> lcs23(std::vector<T>& X, std::vector<T>& Y, bool(*select)(T, T, T&)) {
+    std::size_t m = X.size();
+    std::size_t n = Y.size();
+
+    std::vector<T> lcs;
+    if (m == 0) return lcs;
+    if (n == 0) return lcs;
+
+    size_t L[m + 1][n + 1];
+    bool B[m + 1][n + 1];
+    T R[m + 1][n + 1];
+
+    /* Following steps build L[m+1][n+1] in bottom up fashion. Note
+      that L[i][j] contains length of LCS of X[0..i-1] and Y[0..j-1] */
+    for (size_t i = 0; i <= m; i++) {
+      for (size_t j = 0; j <= n; j++) {
+        if (i == 0 || j == 0)
+          L[i][j] = 0;
+        else {
+          B[i - 1][j - 1] = select(X[i - 1], Y[j - 1], R[i - 1][j - 1]);
+          if (B[i-1][j-1])
+            L[i][j] = L[i - 1][j - 1] + 1;
+          else
+            L[i][j] = std::max(L[i - 1][j], L[i][j - 1]);
+        }
+      }
+    }
+
+    // Following code is used to print LCS
+    std::size_t index = L[m][n];
+
+    lcs.reserve(index);
+    for (size_t o = 0; o < index; o++) {
+      lcs.push_back({});
+    }
+
+    // Create an array to store the lcs groups
+    // std::vector<Selector_Group_Obj> lcs(index);
+
+    // Start from the right-most-bottom-most corner and
+    // one by one store objects in lcs[]
+    std::size_t i = m, j = n;
+    // // // std::cerr << "LCS 5\n";
+    while (i > 0 && j > 0) {
+
+      // If current objects in X[] and Y are same, then
+      // current object is part of LCS
+      // // // std::cerr << "LCS 6 " << i << " : " << j << "\n";
+      // // // std::cerr << debug_vec(Y[j - 1]) << "\n";
+      // // // std::cerr << debug_vec(X[j - 1]) << "\n";
+      if (B[i - 1][j - 1])
+      {
+        // // // std::cerr << "they are the same\n";
+        lcs[index - 1] = R[i - 1][j - 1]; // Put current object in result
+        // // // std::cerr << "assigned\n";
+        i--; j--; index--;     // reduce values of i, j and index
+      }
+
+      // If not same, then find the larger of two and
+      // go in the direction of larger value
+      else if (L[i - 1][j] > L[i][j - 1])
+        i--;
+      else
+        j--;
+
+      //  // // std::cerr << "LCS 8\n";
+
+    }
+
+    return lcs;
+  }
+
   std::vector<std::vector<CompoundOrCombinator_Obj>> weaveParents(
     std::vector<CompoundOrCombinator_Obj> parents1,
     std::vector<CompoundOrCombinator_Obj> parents2) {
@@ -641,9 +716,10 @@ namespace Sass {
     // std::cerr << "weave groups2: " << debug_vec(groups2) << "\n";
 
     // ToDo: this path is not fully implemented yet
-    std::vector<std::vector<CompoundOrCombinator_Obj>> LCS = lcs2<std::vector<CompoundOrCombinator_Obj>>(groups2, groups1, cmpGroups);
+    std::vector<std::vector<CompoundOrCombinator_Obj>> LCS =
+      lcs23<std::vector<CompoundOrCombinator_Obj>>(groups2, groups1, cmpGroups);
 
-    // std::cerr << "weave LCS: " << debug_vec(LCS) << "\n";
+    // std::cerr << "weave LCS23: " << debug_vec(LCS) << "\n";
 
     // ToDo: this should be easier to downcase vector elements?
     std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> choices;

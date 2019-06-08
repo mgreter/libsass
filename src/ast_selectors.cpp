@@ -121,7 +121,7 @@ namespace Sass {
         }
       }
     }
-    // std::cerr << "HAS NO PARENT REF\n";
+    // // std::cerr << "HAS NO PARENT REF\n";
     return false;
   }
   bool Selector_Schema::has_real_parent_ref() const
@@ -637,7 +637,7 @@ namespace Sass {
   bool CompoundSelector::has_placeholder() const
   {
     if (length() == 0) return false;
-    if (Simple_Selector_Obj ss = elements().front()) {
+    for (Simple_Selector_Obj ss : elements()) {
       if (ss->has_placeholder()) return true;
     }
     return false;
@@ -882,10 +882,10 @@ namespace Sass {
 
     while (true) {
       /*
-      std::cerr << "PERM: ";
+      // std::cerr << "PERM: ";
       for (size_t p = 0; p < L; p++)
-      { std::cerr << state[p] << " "; }
-      std::cerr << "\n";
+      { // std::cerr << state[p] << " "; }
+      // std::cerr << "\n";
       */
       std::vector<T> perm;
       // Create one permutation for state
@@ -927,15 +927,15 @@ namespace Sass {
 
   void debug_groups(std::vector<std::vector<std::vector<CompoundOrCombinator_Obj>>> groups) {
     for (size_t i = 0; i < groups.size(); i += 1) {
-      std::cerr << i << ": [";
+      // std::cerr << i << ": [";
       for (auto items : groups[i]) {
-        std::cerr << " { ";
+        // std::cerr << " { ";
         for (auto item : items) {
-          std::cerr << item->to_string() << " ";
+          // std::cerr << item->to_string() << " ";
         }
-        std::cerr << " } ";
+        // std::cerr << " } ";
       }
-      std::cerr << "]\n";
+      // std::cerr << "]\n";
     }
   }
 
@@ -1031,7 +1031,7 @@ namespace Sass {
             /*if (length() > 0 && tail->length() > 0) {
               Simple_Selector_Obj back = tail->last();
             }
-            std::cerr << "COMBINE\n";*/
+            // std::cerr << "COMBINE\n";*/
             // Create a copy to alter it
             complex = complex->copy();
             // Just append ourself
@@ -1081,7 +1081,7 @@ namespace Sass {
         return retval;
       }
 
-      // std::cerr << "DOING IT " << has_real_parent_ref() << "\n";
+      // // std::cerr << "DOING IT " << has_real_parent_ref() << "\n";
       vars.push_back(parent->elements());
     }
 
@@ -1099,11 +1099,11 @@ namespace Sass {
     }
     /*
     for (auto a : vars) {
-      std::cerr << "[ ";
+      // std::cerr << "[ ";
       for (auto b : a) {
-        std::cerr << " { " << b->to_string() << " }";
+        // std::cerr << " { " << b->to_string() << " }";
       }
-      std::cerr << " ]\n";
+      // std::cerr << " ]\n";
     }
     */
     // Need complex selectors to preserve linefeeds
@@ -1132,7 +1132,7 @@ namespace Sass {
   SelectorList* SelectorList::resolve_parent_refs(SelectorStack2 pstack, Backtraces& traces, bool implicit_parent)
   {
     if (!has_parent_ref()) {
-      // std::cerr << "ret this\n";
+      // // std::cerr << "ret this\n";
       return this;
     }
     SelectorList* rv = SASS_MEMORY_NEW(SelectorList, pstate());
@@ -1224,7 +1224,7 @@ namespace Sass {
 
   bool ComplexSelector::isSuperselectorOf(const CompoundSelector* sub) const
   {
-    std::cerr << "Implement cplx comp sup\n";
+    // std::cerr << "Implement cplx comp sup\n";
     return false;
   }
 
@@ -1396,7 +1396,7 @@ namespace Sass {
       compound_sel->is_optional(extendee->is_optional());
 
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
-        // std::cerr << "BUT " << compound_sel->to_string() << "\n";
+        // // std::cerr << "BUT " << compound_sel->to_string() << "\n";
         extends.put(compound_sel, std::make_pair((*extender)[i], compound_sel));
       }
     }
@@ -1423,7 +1423,7 @@ namespace Sass {
 
       for (size_t i = 0, L = extender->length(); i < L; ++i) {
         ComplexSelector_Obj lhs = (*extender)[i];
-        // std::cerr << "PUT " << compound_sel->to_string() << "\n";
+        // // std::cerr << "PUT " << compound_sel->to_string() << "\n";
         extends.put(compound_sel, std::make_pair(lhs, compound_sel));
       }
     }
@@ -1576,20 +1576,20 @@ namespace Sass {
       // check if we have only one left
       if (els.size() == count + 1) {
 #ifdef DEBUGSEL
-        std::cerr << "have one item left\n";
+        // std::cerr << "have one item left\n";
 #endif
 
         if (SelectorCombinator_Obj combinator = Cast<SelectorCombinator>(els[count])) {
           cur = SASS_MEMORY_NEW(Complex_Selector, pstate(), combinator->toComplexCombinator());
 #ifdef DEBUGSEL
-          std::cerr << "have only a combinator [" << cur->to_string() << "]\n";
+          // std::cerr << "have only a combinator [" << cur->to_string() << "]\n";
 #endif
         }
         else if (CompoundSelector_Obj compound = Cast<CompoundSelector>(els[count])) {
           cur = SASS_MEMORY_NEW(Complex_Selector, pstate(),
             Complex_Selector::ANCESTOR_OF, compound->toCompoundSelector());
 #ifdef DEBUGSEL
-          std::cerr << "have only a compound [" << cur->to_string() << "]\n";
+          // std::cerr << "have only a compound [" << cur->to_string() << "]\n";
 #endif
         }
 
@@ -1599,7 +1599,7 @@ namespace Sass {
       // we have at least two
       else {
 #ifdef DEBUGSEL
-      std::cerr << "have two or more items\n";
+      // std::cerr << "have two or more items\n";
 #endif
 
       // Check if we are starting with a combinator
@@ -1609,7 +1609,7 @@ namespace Sass {
           cur = SASS_MEMORY_NEW(Complex_Selector, pstate(),
             combinator->toComplexCombinator(), compound->toCompoundSelector());
 #ifdef DEBUGSEL
-          std::cerr << "have compound + combinator [" << cur->to_string() << "]\n";
+          // std::cerr << "have compound + combinator [" << cur->to_string() << "]\n";
 #endif
           count += 2;
         }
@@ -1617,7 +1617,7 @@ namespace Sass {
           cur = SASS_MEMORY_NEW(Complex_Selector, pstate(),
             Complex_Selector::ANCESTOR_OF, compound->toCompoundSelector());
 #ifdef DEBUGSEL
-          std::cerr << "have only a compound [" << cur->to_string() << "]\n";
+          // std::cerr << "have only a compound [" << cur->to_string() << "]\n";
 #endif
           count += 1;
         }
@@ -1626,26 +1626,26 @@ namespace Sass {
       else if (SelectorCombinator_Obj combinator = Cast<SelectorCombinator>(els[count])) {
         cur = SASS_MEMORY_NEW(Complex_Selector, pstate(), combinator->toComplexCombinator());
 #ifdef DEBUGSEL
-        std::cerr << "have only a combinator [" << cur->to_string() << "]\n";
+        // std::cerr << "have only a combinator [" << cur->to_string() << "]\n";
 #endif
         count += 1;
       }
       else {
-        std::cerr << "WHAT TYPE?\n";
+        // std::cerr << "WHAT TYPE?\n";
       }
 
       }
 
       if (sel.isNull()) {
 #ifdef DEBUGSEL
-        std::cerr << "Have first selector\n";
+        // std::cerr << "Have first selector\n";
 #endif
         tail = cur;
         sel = cur;
       }
       else {
 #ifdef DEBUGSEL
-        std::cerr << "Append to the tail [" << sel->to_string() << "]\n";
+        // std::cerr << "Append to the tail [" << sel->to_string() << "]\n";
 #endif
         tail->tail(cur);
         tail = cur;
@@ -1654,7 +1654,7 @@ namespace Sass {
     }
 
 #ifdef DEBUGSEL
-    std::cerr << "RETURN [" << sel->to_string() << "]\n";
+    // std::cerr << "RETURN [" << sel->to_string() << "]\n";
 #endif
 
     if (!chroots()) {
@@ -1688,7 +1688,7 @@ namespace Sass {
 
   ComplexSelector_Obj Complex_Selector::toCplxSelector() {
     ComplexSelector_Obj sel = SASS_MEMORY_NEW(ComplexSelector, pstate());
-    // std::cerr << "Convert [" << to_string() << "]\n";
+    // // std::cerr << "Convert [" << to_string() << "]\n";
     Complex_Selector_Obj cur = this;
 
     sel->chroots(true);
@@ -1713,10 +1713,10 @@ namespace Sass {
 
       if (cur->head() && !cur->head()->empty()) {
         sel->append(cur->head()->toCompSelector());
-        // std::cerr << "Has head\n";
+        // // std::cerr << "Has head\n";
       }
       if (cur->combinator()) {
-        // std::cerr << "Has combinator\n";
+        // // std::cerr << "Has combinator\n";
         switch (cur->combinator()) {
         case Complex_Selector::Combinator::PARENT_OF:
             sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate(), SelectorCombinator::Combinator::CHILD));
@@ -1746,7 +1746,7 @@ namespace Sass {
   Compound_Selector_Obj CompoundSelector::toCompoundSelector() {
     Compound_Selector_Obj sel = SASS_MEMORY_NEW(Compound_Selector, pstate());
     if (hasRealParent()) {
-      // std::cerr << "HAVING A REAL PARENT\n";
+      // // std::cerr << "HAVING A REAL PARENT\n";
       sel->append(SASS_MEMORY_NEW(Parent_Selector, pstate()));
     }
     // sel->has_line_feed(has_line_feed());
@@ -1899,12 +1899,30 @@ namespace Sass {
     return get(0)->canHaveRealParent();
   }
 
+  bool ComplexSelector::isInvisible() const
+  {
+    for (size_t i = 0; i < length(); i += 1) {
+      if (CompoundSelector_Obj compound = get(i)->getCompound()) {
+        if (compound->isInvisible()) return true;
+      }
+    }
+    return false;
+  }
+
   bool SelectorList::canHaveRealParent() const
   {
     for (size_t i = 0; i < length(); i += 1) {
       if (!get(i)->canHaveRealParent()) return false;
     }
     return true;
+  }
+
+  bool SelectorList::isInvisible() const
+  {
+    for (size_t i = 0; i < length(); i += 1) {
+      if (get(i)->isInvisible()) return true;
+    }
+    return false;
   }
 
   bool CompoundSelector::canHaveRealParent() const
@@ -1916,6 +1934,14 @@ namespace Sass {
       if (front->ns() != "") return false;
     }
     return true;
+  }
+
+  bool CompoundSelector::isInvisible() const
+  {
+    for (size_t i = 0; i < length(); i += 1) {
+      if (get(i)->isInvisible()) return true;
+    }
+    return false;
   }
 
 

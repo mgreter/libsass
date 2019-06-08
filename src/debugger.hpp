@@ -326,6 +326,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "SelectorList " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << selector->hash() << ">";
+    std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
+    std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     // std::cerr << " [@media:" << selector->media_block() << "]";
     // std::cerr << (selector->is_invisible() ? " [INVISIBLE]": " -");
     // std::cerr << (selector->has_placeholder() ? " [PLACEHOLDER]": " -");
@@ -369,7 +371,9 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       << " [" << (selector->chroots() ? "CHROOT" : "CONNECT") << "]"
       << " [length:" << longToHex(selector->length()) << "]"
       << " [weight:" << longToHex(selector->specificity()) << "]"
-      // << " [@media:" << selector->media_block() << "]"
+      << (selector->is_invisible() ? " [is_invisible]" : " -")
+      << (selector->isInvisible() ? " [isInvisible]" : " -")
+    // << " [@media:" << selector->media_block() << "]"
       // << (selector->is_invisible() ? " [INVISIBLE]": " -")
       // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
       // << (selector->is_optional() ? " [is_optional]": " -")
@@ -416,7 +420,9 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->hasRealParent() ? " [REAL PARENT]" : "") << ">";
     std::cerr << " [weight:" << longToHex(selector->specificity()) << "]";
     std::cerr << " [@media:" << selector->media_block() << "]";
-    // std::cerr << (selector->extended() ? " [extended]": " -");
+    std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
+    std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
+      // std::cerr << (selector->extended() ? " [extended]": " -");
     // std::cerr << (selector->is_optional() ? " [is_optional]": " -");
     // std::cerr << (selector->has_parent_ref() ? " [has-parent]": " -");
     // std::cerr << (selector->has_line_break() ? " [line-break]": " -");
@@ -558,6 +564,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       << " <" << selector->hash() << ">"
       << " [@media:" << selector->media_block() << "]"
       << (selector->is_optional() ? " [is_optional]": " -")
+      << (selector->isInvisible() ? " [isInvisible]" : " -")
       // << (selector->has_line_break() ? " [line-break]": " -")
       // << (selector->has_line_feed() ? " [line-feed]": " -")
     << std::endl;

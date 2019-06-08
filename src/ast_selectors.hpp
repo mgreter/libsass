@@ -186,6 +186,8 @@ namespace Sass {
     virtual bool is_pseudo_element() const;
     virtual bool isSuperselectorOf(const CompoundSelector* sub) const;
 
+    virtual bool isInvisible() const { return false; }
+
     bool operator<(const Selector& rhs) const final override;
     bool operator==(const Selector& rhs) const final override;
     virtual bool operator<(const Selector_List& rhs) const;
@@ -244,6 +246,9 @@ namespace Sass {
     {
       return Constants::UnificationOrder_Placeholder;
     }
+
+    bool isInvisible() const override { return true; }
+
     virtual ~Placeholder_Selector() {};
     virtual unsigned long specificity() const override;
     virtual bool has_placeholder() override;
@@ -566,6 +571,7 @@ namespace Sass {
     // is a compound selector and fullfills
     // a few other criterias.
     bool canHaveRealParent() const;
+    bool isInvisible() const;
 
 
     size_t hash() const override;
@@ -716,6 +722,8 @@ namespace Sass {
     // Returns true if this compound selector
     // fullfills various criterias.
     bool canHaveRealParent() const;
+    bool isInvisible() const;
+
 
     size_t hash() const override;
     CompoundSelector* unify_with(CompoundSelector* rhs);
@@ -782,6 +790,7 @@ namespace Sass {
     // can have real parents, meaning every
     // first component does allow for it
     bool canHaveRealParent() const;
+    bool isInvisible() const;
 
     void remove_parent_selectors();
     void cloneChildren() override;

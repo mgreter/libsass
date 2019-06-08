@@ -932,6 +932,7 @@ namespace Sass {
 
   void Inspect::operator()(Pseudo_Selector* s)
   {
+
     if (s->name() == "") {
       // append_string("[what]");
     }
@@ -991,7 +992,7 @@ namespace Sass {
       if (!in_wrapped && i == 0) append_indentation();
       if ((*g)[i] == 0) continue;
       // Temp solution to hide placeholders
-      if ((*g)[i]->has_placeholder()) continue;
+      // if ((*g)[i]->has_placeholder()) continue;
       schedule_mapping(g->at(i)->last());
       // add_open_mapping((*g)[i]->last());
       (*g)[i]->perform(this);
