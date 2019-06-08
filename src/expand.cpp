@@ -156,64 +156,36 @@ namespace Sass {
       // popFromSelectorStack();
     }
 
+    // std::cerr << "eval ruleset\n";
+
     // reset when leaving scope
     LOCAL_FLAG(at_root_without_rule, false);
 
-    // `&` is allowed in `@at-root`!
-    bool has_parent_selector = false;
-    SelectorStack2 stack = getSelectorStack2();
-    for (size_t i = 0, L = stack.size(); i < L && !has_parent_selector; i++) {
-      SelectorList_Obj ll = stack.at(i);
-      has_parent_selector = ll != 0 && ll->length() > 0;
-    }
-
     SelectorList_Obj sel = r->selector2();
 
-    // if (sel) sel = sel->eval(eval);
+    // SelectorList_Obj sss = r->selector2();
+    // std::cerr << "eval selector\n";
 
-    // check for parent selectors in base level rules
-/*
-    if (r->is_root() || (block_stack.back() && block_stack.back()->is_root())) {
-      if (SelectorList* selector_list = r->selector2()) {
-        for (ComplexSelector_Obj complex_selector : selector_list->elements()) {
-          ComplexSelector* tail = complex_selector;
-          while (tail) {
-            if (tail->head()) for (Simple_Selector_Obj header : tail->head()->elements()) {
-              Parent_Selector* ptr = Cast<Parent_Selector>(header);
-              if (ptr == NULL || (!ptr->real() || has_parent_selector)) continue;
-              std::string sel_str(complex_selector->to_string(ctx.c_options));
-              error("Base-level rules cannot contain the parent-selector-referencing character '&'.", header->pstate(), traces);
-            }
-            tail = tail->tail();
-          }
-        }
-      }
-    }
-    else {
-      if (sel->length() == 0 || sel->has_parent_ref()) {
-        if (sel->has_real_parent_ref() && !has_parent_selector) {
-          error("Base-level rules cannot contain the parent-selector-referencing character '&'.", sel->pstate(), traces);
-        }
-      }
-    }
-    */
-
-    SelectorList_Obj sss = r->selector2();
-    r->selector2(eval(sss));
+    // r->selector2(eval(sss));
     // debug_ast(r->selector2());
 
     // Register every selector for lookup when extended
     // SelectorList_Obj sss = r->selector2();
     // debug_ast(sss, "sss: ");
     // std::cerr << " CALL ADD " << debug_vec(r->selector2()) << "\n";
-    ctx.extender.addSelector(r->selector2());
     // std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
-    sel = r->selector2();
+    // sel = r->selector2();
+
+
+    // debug_ast(sel);
+    SelectorList_Obj evaled = eval(sel);
+    // std::cerr << "= EVALED " << debug_vec(evaled) << "\n";
+    // r->selector2(evaled);
 
     // do not connect parent again
-    sel->remove_parent_selectors();
-    pushToSelectorStack(r->selector2());
+    // sel->remove_parent_selectors();
+    pushToSelectorStack(evaled);
     Env env(environment());
     if (block_stack.back()->is_root()) {
       env_stack.push_back(&env);
@@ -223,17 +195,20 @@ namespace Sass {
     if (r->block()) blk = operator()(r->block());
     Ruleset* rr = SASS_MEMORY_NEW(Ruleset,
                                   r->pstate(),
-                                  sel,
+                                  evaled,
                                   blk);
-    // debug_ast(rr->selector2(), "vvv: ");
     popFromSelectorStack();
-    rr->selector2(r->selector2());
+    // debug_ast(rr->selector2(), "vvv: ");
+    // rr->selector2(r->selector2());
+    // rr->selector2(r->selector2());
     if (block_stack.back()->is_root()) {
       env_stack.pop_back();
     }
 
     rr->is_root(r->is_root());
     rr->tabs(r->tabs());
+
+    ctx.extender.addSelector(rr->selector2());
 
     return rr;
   }
@@ -821,6 +796,9 @@ namespace Sass {
 
   Statement* Expand::operator()(Mixin_Call* c)
   {
+
+    // std::cerr << "CALL MIXIN\n";
+
     if (recursions > maxRecursion) {
       throw Exception::StackError(traces, *c);
     }
