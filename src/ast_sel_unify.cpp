@@ -54,7 +54,7 @@ namespace Sass {
   {
 #ifdef DEBUG_UNIFY
     const std::string debug_call = "unify(Compound[" + this->to_string() + "], Compound[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
+    // std::cerr << debug_call << std::endl;
 #endif
 
     if (empty()) return rhs;
@@ -66,7 +66,7 @@ namespace Sass {
     }
 
 #ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = Compound[" << unified->to_string() << "]" << std::endl;
+    // std::cerr << "> " << debug_call << " = Compound[" << unified->to_string() << "]" << std::endl;
 #endif
     return unified.detach();
   }
@@ -80,27 +80,22 @@ namespace Sass {
   {
 #ifdef DEBUG_UNIFY
     const std::string debug_call = "unify(Simple[" + this->to_string() + "], Compound[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
+    // std::cerr << debug_call << std::endl;
 #endif
 
     if (rhs->length() == 1) {
       if (rhs->at(0)->is_universal()) {
+        // std::cerr << "IS UNIVERSAL\n";
         CompoundSelector* this_compound = SASS_MEMORY_NEW(CompoundSelector, pstate());
         this_compound->append(SASS_MEMORY_COPY(this));
         CompoundSelector* unified = rhs->at(0)->unifyWith(this_compound);
         if (unified == nullptr || unified != this_compound) delete this_compound;
-
-#ifdef DEBUG_UNIFY
-        std::cerr << "> " << debug_call << " = " << "Compound[" << unified->to_string() << "]" << std::endl;
-#endif
         return unified;
       }
     }
     for (const Simple_Selector_Obj& sel : rhs->elements()) {
       if (*this == *sel) {
-#ifdef DEBUG_UNIFY
-        std::cerr << "> " << debug_call << " = " << "Compound[" << rhs->to_string() << "]" << std::endl;
-#endif
+        // std::cerr << "CONTAINS OURSELF\n";
         return rhs;
       }
     }
@@ -112,43 +107,37 @@ namespace Sass {
     for (auto simple : rhs->elements()) {
       // Make sure pseudo selectors always come last.
       if (!addedThis && simple->getPseudoSelector()) {
+        // std::cerr << "APPEND THIS BEFORE PSEUDO\n";
         result->append(this);
         addedThis = true;
       }
+      // std::cerr << "APPEND SIMPLE\n";
       result->append(simple);
     }
 
     if (!addedThis) {
+      // std::cerr << "APPEND THIS FINAL\n";
       result->append(this);
     }
 
+    // std::cerr << "UNIFIED SIMPLE " << debug_vec(result) << "\n";
+
     return result.detach();
 
-    const int lhs_order = this->unification_order();
-    size_t i = rhs->length();
-    while (i > 0 && lhs_order < rhs->at(i - 1)->unification_order()) --i;
-    rhs->insert(rhs->begin() + i, this);
-
-
-
-#ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = " << "Compound[" << rhs->to_string() << "]" << std::endl;
-#endif
-    return rhs;
   }
 
   Simple_Selector* Type_Selector::unify_with(Simple_Selector* rhs)
   {
     #ifdef DEBUG_UNIFY
     const std::string debug_call = "unify(Type[" + this->to_string() + "], Simple[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
+    // std::cerr << debug_call << std::endl;
     #endif
 
     bool rhs_ns = false;
     if (!(is_ns_eq(*rhs) || rhs->is_universal_ns())) {
       if (!is_universal_ns()) {
         #ifdef DEBUG_UNIFY
-        std::cerr << "> " << debug_call << " = nullptr" << std::endl;
+        // std::cerr << "> " << debug_call << " = nullptr" << std::endl;
         #endif
         return nullptr;
       }
@@ -158,7 +147,7 @@ namespace Sass {
     if (!(name_ == rhs->name() || rhs->is_universal())) {
       if (!(is_universal())) {
         #ifdef DEBUG_UNIFY
-        std::cerr << "> " << debug_call << " = nullptr" << std::endl;
+        // std::cerr << "> " << debug_call << " = nullptr" << std::endl;
         #endif
         return nullptr;
       }
@@ -170,7 +159,7 @@ namespace Sass {
     }
     if (rhs_name) name(rhs->name());
     #ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = Simple[" << this->to_string() << "]" << std::endl;
+    // std::cerr << "> " << debug_call << " = Simple[" << this->to_string() << "]" << std::endl;
     #endif
     return this;
   }
@@ -184,13 +173,13 @@ namespace Sass {
   {
 #ifdef DEBUG_UNIFY
     const std::string debug_call = "unify(Type[" + this->to_string() + "], Compound[" + rhs->to_string() + "])";
-    std::cerr << debug_call << std::endl;
+    // std::cerr << debug_call << std::endl;
 #endif
 
     if (rhs->empty()) {
       rhs->append(this);
 #ifdef DEBUG_UNIFY
-      std::cerr << "> " << debug_call << " = Compound[" << rhs->to_string() << "]" << std::endl;
+      // std::cerr << "> " << debug_call << " = Compound[" << rhs->to_string() << "]" << std::endl;
 #endif
       return rhs;
     }
@@ -199,7 +188,7 @@ namespace Sass {
       Simple_Selector* unified = unify_with(rhs_0);
       if (unified == nullptr) {
 #ifdef DEBUG_UNIFY
-        std::cerr << "> " << debug_call << " = nullptr" << std::endl;
+        // std::cerr << "> " << debug_call << " = nullptr" << std::endl;
 #endif
         return nullptr;
       }
@@ -209,7 +198,7 @@ namespace Sass {
       rhs->insert(rhs->begin(), this);
     }
 #ifdef DEBUG_UNIFY
-    std::cerr << "> " << debug_call << " = Compound[" << rhs->to_string() << "]" << std::endl;
+    // std::cerr << "> " << debug_call << " = Compound[" << rhs->to_string() << "]" << std::endl;
 #endif
     return rhs;
   }
@@ -246,16 +235,56 @@ namespace Sass {
     return toCompound_Selector(unifyWith(toCompoundSelector(rhs))).detach();
   }
 
-  CompoundSelector* Pseudo_Selector::unifyWith(CompoundSelector* rhs)
+  CompoundSelector* Pseudo_Selector::unifyWith(CompoundSelector* compound)
   {
-    if (is_pseudo_element()) {
-      for (const Simple_Selector_Obj& sel : rhs->elements()) {
-        if (Pseudo_Selector * pseudo_sel = Cast<Pseudo_Selector>(sel)) {
-          if (pseudo_sel->is_pseudo_element() && pseudo_sel->name() != name()) return nullptr;
-        }
+    // std::cerr << "unify pseudo " << debug_vec(this) << " with " << debug_vec(compound) << "\n";
+
+    if (compound->length() == 1 && compound->first()->is_universal()) {
+      // std::cerr << "implement universal pseudo\n";
+      // return compound->first()->unifyWith({ this });
+    }
+
+    for (const Simple_Selector_Obj& sel : compound->elements()) {
+      if (*this == *sel) {
+        // std::cerr << "CONTAINS OURSELF\n";
+        return compound;
       }
     }
-    return Simple_Selector::unifyWith(rhs);
+
+
+    CompoundSelector_Obj result = SASS_MEMORY_NEW(CompoundSelector, compound->pstate());
+
+    bool addedThis = false;
+    for (auto simple : compound->elements()) {
+      // Make sure pseudo selectors always come last.
+      if (Pseudo_Selector_Obj pseudo = simple->getPseudoSelector()) {
+        if (pseudo->isElement()) {
+          // A given compound selector may only contain one pseudo element. If
+          // [compound] has a different one than [this], unification fails.
+          if (isElement()) {
+            // std::cerr << "FAILED\n";
+            return {};
+          }
+          // std::cerr << "APPEND THIS BEFORE PSEUDO\n";
+          // Otherwise, this is a pseudo selector and
+          // should come before pseduo elements.
+          result->append(this);
+          addedThis = true;
+        }
+      }
+      // std::cerr << "APPEND SIMPLE\n";
+      result->append(simple);
+    }
+
+    if (!addedThis) {
+      // std::cerr << "APPEND THIS FINAL\n";
+      result->append(this);
+    }
+
+    // std::cerr << "UNIFIED PSEUDO " << debug_vec(result) << "\n";
+
+    return result.detach();
+
   }
 
   SelectorList* ComplexSelector::unify_with(ComplexSelector* rhs)
@@ -265,17 +294,17 @@ namespace Sass {
 
     std::vector<std::vector<CompoundOrCombinator_Obj>> rv = unifyComplex({ elements(), rhs->elements() });
 
-    // std::cerr << "here 91\n";
+    // // std::cerr << "here 91\n";
 
     for (std::vector<CompoundOrCombinator_Obj> items : rv) {
       ComplexSelector_Obj sel = SASS_MEMORY_NEW(ComplexSelector, pstate());
-      // std::cerr << "foobar \n";
+      // // std::cerr << "foobar \n";
       sel->concat(items);
       // debug_ast(sel);
       list->append(sel);
     }
 
-    // std::cerr << "here 99\n";
+    // // std::cerr << "here 99\n";
     // debug_ast(list);
     return list.detach();
 
