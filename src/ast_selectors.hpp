@@ -845,7 +845,7 @@ namespace Sass {
     Selector_List* unify_with(Selector_List*);
     SelectorList* unify_with(SelectorList*);
     void populate_extends(Selector_List_Obj, Subset_Map&);
-    Selector_List_Obj eval(Eval& eval);
+    SelectorList_Obj eval(Eval& eval);
 
     size_t hash() const override;
     virtual unsigned long specificity() const override;
@@ -879,7 +879,7 @@ namespace Sass {
   class ExtendRule final : public Statement {
     ADD_PROPERTY(bool, isOptional)
     // This should be a simple selector only!
-    // ADD_PROPERTY(Selector_List_Obj, selector)
+    ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_Schema_Obj, schema)
   public:

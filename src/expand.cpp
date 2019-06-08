@@ -718,7 +718,7 @@ namespace Sass {
 
     if (Selector_List_Obj extender = selector()) {
       // THis MUST be ptr, memory frenzy
-      SelectorList* sl = e->selector2();
+      Selector_List* sl = e->selector();
       // abort on invalid selector
       // if (sl == NULL) return NULL;
 
@@ -728,22 +728,23 @@ namespace Sass {
           // put root block on stack again (ignore parents)
           // selector schema must not connect in eval!
           block_stack.push_back(block_stack.at(1));
-          sl = eval(e->schema());
+          sl = toSelector_List(eval(e->schema())).detach();
           block_stack.pop_back();
         } else {
           pushToSelectorStack({});
-          sl = eval(e->schema());
+          sl = toSelector_List(eval(e->schema())).detach();
           popFromSelectorStack();
-          e->selector2(sl);
+          e->selector2(sl->toSelList());
+          e->selector(sl);
         }
       }
-      for (ComplexSelector_Obj cs : sl->elements()) {
-        // if (!cs.isNull() && !cs->head().isNull()) {
-        //   cs->head()->media_block(media_stack.back());
-        // }
+      for (Complex_Selector_Obj cs : sl->elements()) {
+        if (!cs.isNull() && !cs->head().isNull()) {
+          cs->head()->media_block(media_stack.back());
+        }
       }
       pushToSelectorStack({});
-      // expand_selector_list(sl, extender, e);
+      expand_selector_list(sl, extender, e);
       popFromSelectorStack();
 
     }
