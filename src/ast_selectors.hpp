@@ -118,6 +118,7 @@ namespace Sass {
     Selector_Schema(ParserState pstate, String_Obj c);
 
     bool containsParentRef() const;
+    bool mustChroot() const;
 
     bool has_parent_ref() const;
     bool has_real_parent_ref() const;

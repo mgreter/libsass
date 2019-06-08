@@ -108,7 +108,22 @@ namespace Sass {
     }
     return false;
   }
-
+  bool Selector_Schema::mustChroot() const
+  {
+    // debug_ast(this);
+    if (String_Schema_Obj schema = Cast<String_Schema>(contents())) {
+      for (auto item : schema->elements()) {
+        if (auto str = Cast<String_Constant>(item)) {
+          if (str->value() == " & ") return true;
+          if (str->value() == "& ") return true;
+          if (str->value() == " &") return true;
+          if (str->value() == "&") return true;
+        }
+      }
+    }
+    // std::cerr << "HAS NO PARENT REF\n";
+    return false;
+  }
   bool Selector_Schema::has_real_parent_ref() const
   {
     if (String_Schema_Obj schema = Cast<String_Schema>(contents())) {

@@ -150,9 +150,11 @@ namespace Sass {
         // std::cerr << "OVERWRITE\n";
       }
       r->selector2(sel);
+      bool chroot = r->schema()->mustChroot();
       for (auto complex : sel->elements()) {
-        complex->chroots(false);
+        complex->chroots(chroot);
       }
+      // debug_ast(r->schema());
       // popFromSelectorStack();
     }
 
