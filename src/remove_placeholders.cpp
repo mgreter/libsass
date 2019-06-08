@@ -32,15 +32,56 @@ namespace Sass {
       return new_sl;
 
     }
+    /*
+    Pseudo_Selector* Remove_Placeholders::remove_placeholders(Pseudo_Selector* sl)
+    {
+      SelectorList* new_sl = SASS_MEMORY_NEW(SelectorList, sl->pstate());
 
+      for (size_t i = 0, L = sl->length(); i < L; ++i) {
+        if (!sl->at(i)->hasPlaceholder()) {
+          new_sl->append(sl->at(i));
+        }
+      }
+
+      return new_sl;
+
+    }
+
+    CompoundSelector* Remove_Placeholders::remove_placeholders(CompoundSelector* sl)
+    {
+      SelectorList* new_sl = SASS_MEMORY_NEW(CompoundSelector, sl->pstate());
+
+      for (size_t i = 0, L = sl->length(); i < L; ++i) {
+        if (!sl->at(i)->hasPlaceholder()) {
+          new_sl->append(sl->at(i));
+        }
+      }
+
+      return new_sl;
+
+    }
+
+
+    ComplexSelector* Remove_Placeholders::remove_placeholders(ComplexSelector* sl)
+    {
+      SelectorList* new_sl = SASS_MEMORY_NEW(SelectorList, sl->pstate());
+
+      for (size_t i = 0, L = sl->length(); i < L; ++i) {
+        if (!sl->at(i)->hasPlaceholder()) {
+          new_sl->append(sl->at(i));
+        }
+      }
+
+      return new_sl;
+
+    }
+    */
     SelectorList* Remove_Placeholders::remove_placeholders(SelectorList* sl)
     {
       SelectorList* new_sl = SASS_MEMORY_NEW(SelectorList, sl->pstate());
 
       for (size_t i = 0, L = sl->length(); i < L; ++i) {
-        if (!sl->at(i)->contains_placeholder()) {
-          new_sl->append(sl->at(i));
-        }
+        // new_sl->append(remove_placeholders(sl->at(i)));
       }
 
       return new_sl;

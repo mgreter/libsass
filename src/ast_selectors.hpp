@@ -187,6 +187,7 @@ namespace Sass {
     virtual bool isSuperselectorOf(const CompoundSelector* sub) const;
 
     virtual bool isInvisible() const { return false; }
+    virtual bool hasPlaceholder() const { return false; }
 
     bool operator<(const Selector& rhs) const final override;
     bool operator==(const Selector& rhs) const final override;
@@ -248,6 +249,7 @@ namespace Sass {
     }
 
     bool isInvisible() const override { return true; }
+    bool hasPlaceholder() const override { return true; }
 
     virtual ~Placeholder_Selector() {};
     virtual unsigned long specificity() const override;
@@ -379,6 +381,10 @@ namespace Sass {
 
     bool has_parent_ref() const override;
     bool has_real_parent_ref() const override;
+
+    bool isInvisible() const override;
+
+    bool hasPlaceholder() const override;
 
     // Whether this is a pseudo-element selector.
     // This is `true` if and only if [isClass] is `false`.
@@ -572,6 +578,7 @@ namespace Sass {
     // a few other criterias.
     bool canHaveRealParent() const;
     bool isInvisible() const;
+    bool hasPlaceholder() const;
 
 
     size_t hash() const override;
@@ -623,7 +630,10 @@ namespace Sass {
     void cloneChildren() override;
     bool has_parent_ref() const override = 0;
     bool has_real_parent_ref() const override = 0;
+
+    virtual bool hasPlaceholder() const = 0;
     virtual bool canHaveRealParent() const = 0;
+
     virtual bool has_placeholder() const = 0;
     virtual bool contains_placeholder() const = 0;
     int unification_order() const override {
@@ -664,6 +674,7 @@ namespace Sass {
     bool has_placeholder() const override { return false; }
     bool contains_placeholder() const override { return false; }
     bool canHaveRealParent() const override { return false; }
+    bool hasPlaceholder() const override { return false; }
 
     /* helper function for syntax sugar */
     SelectorCombinator* getCombinator() final override { return this; }
@@ -722,6 +733,7 @@ namespace Sass {
     // Returns true if this compound selector
     // fullfills various criterias.
     bool canHaveRealParent() const;
+    bool hasPlaceholder() const;
     bool isInvisible() const;
 
 
@@ -790,6 +802,7 @@ namespace Sass {
     // can have real parents, meaning every
     // first component does allow for it
     bool canHaveRealParent() const;
+    bool hasPlaceholder() const;
     bool isInvisible() const;
 
     void remove_parent_selectors();

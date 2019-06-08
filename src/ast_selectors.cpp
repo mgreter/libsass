@@ -458,6 +458,13 @@ namespace Sass {
     if (!selector2()) return false;
     return selector2()->has_real_parent_ref();
   }
+  bool Pseudo_Selector::isInvisible() const
+  {
+    if (SelectorList_Obj list = selector2()) {
+      return list->isInvisible();
+    }
+    return false;
+  }
 /*
   unsigned long Wrapped_Selector::specificity() const
   {
@@ -1927,6 +1934,14 @@ namespace Sass {
     return false;
   }
 
+  bool ComplexSelector::hasPlaceholder() const
+  {
+    for (size_t i = 0; i < length(); i += 1) {
+      if (get(i)->hasPlaceholder()) return true;
+    }
+    return false;
+  }
+
   bool SelectorList::canHaveRealParent() const
   {
     for (size_t i = 0; i < length(); i += 1) {
@@ -1952,6 +1967,30 @@ namespace Sass {
       if (front->ns() != "") return false;
     }
     return true;
+  }
+
+  bool CompoundSelector::hasPlaceholder() const
+  {
+    for (size_t i = 0; i < length(); i += 1) {
+      if (get(i)->hasPlaceholder()) return true;
+    }
+    return false;
+  }
+
+  bool SelectorList::hasPlaceholder() const
+  {
+    for (size_t i = 0; i < length(); i += 1) {
+      if (get(i)->hasPlaceholder()) return true;
+    }
+    return false;
+  }
+
+  bool Pseudo_Selector::hasPlaceholder() const
+  {
+    if (SelectorList_Obj list = selector2()) {
+      // return list->hasPlaceholder();
+    }
+    return false;
   }
 
   bool CompoundSelector::isInvisible() const
