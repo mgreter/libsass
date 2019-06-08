@@ -964,7 +964,7 @@ namespace Sass {
     // Mix with parents from stack
     if (hasRealParent()) {
       if (parent.isNull() && has_real_parent_ref()) {
-        std::cerr << "IN CLAUSE REAL\n";
+        // std::cerr << "IN CLAUSE REAL\n";
         // it turns out that real parent references reach
         // across @at-root rules, which comes unexpected
         int i = pstack.size() - 1;
@@ -1022,6 +1022,7 @@ namespace Sass {
             // Update the 
             complex->elements().back() = tail;
             // Append to results
+            // std::cerr << "APP2 " << debug_vec(complex) << "\n";
             rv.push_back(complex);
           }
           else {
@@ -1039,6 +1040,7 @@ namespace Sass {
             // Just append ourself
             complex->append(this);
             // Append to results
+            // std::cerr << "APP1 " << debug_vec(complex) << "\n";
             rv.push_back(complex);
           }
         }
@@ -1052,8 +1054,11 @@ namespace Sass {
       // Just append ourself
       complex->append(this);
       // Append to results
+      // std::cerr << "APP " << debug_vec(complex) << "\n";
       rv.push_back(complex);
     }
+
+    // std::cerr << "++ DUH " << debug_vec(rv) << "\n";
 
     return rv;
 
@@ -1069,7 +1074,9 @@ namespace Sass {
 
     auto parent = pstack.back();
 
-    std::cerr << "resolve parents in " << debug_vec(this) << " with " << debug_vec(parent) << "\n";
+    // std::cerr << "resolve parents in " << debug_vec(this) << " with " << debug_vec(parent) << "\n";
+
+    // debug_ast(this, "RESOLVE: ");
 
     if (has_real_parent_ref() && !parent) {
       // traces.push_back(Backtrace(pstate));
@@ -1078,7 +1085,7 @@ namespace Sass {
 
     if (!chroots() && parent) {
 
-      std::cerr << "IN not chroots and parent\n";
+      // std::cerr << "IN not chroots and parent\n";
 
       // CHeck why this makes it behave to at-root!?
       if (!has_real_parent_ref() && !implicit_parent) {
@@ -1093,9 +1100,9 @@ namespace Sass {
 
     for (auto sel : elements()) {
       if (CompoundSelector_Obj comp = Cast<CompoundSelector>(sel)) {
-        std::cerr << "RESOLVE IN " << debug_vec(comp) << "\n";
+        // std::cerr << "RESOLVE IN " << debug_vec(comp) << "\n";
         auto asd = comp->resolve_parent_refs(pstack, traces, implicit_parent);
-        std::cerr << "RESOLVED COMP " << debug_vec(asd) << "\n";
+        // std::cerr << "RESOLVED COMP " << debug_vec(asd) << "\n";
         if (asd.size() > 0) vars.push_back(asd);
       }
       else {
@@ -1114,6 +1121,9 @@ namespace Sass {
       // std::cerr << " ]\n";
     }
     */
+
+    // std::cerr << "resolve complex before permutate " << debug_vec(vars) << "\n";
+
     // Need complex selectors to preserve linefeeds
     std::vector<std::vector<ComplexSelector_Obj>> res = permutate(vars);
 

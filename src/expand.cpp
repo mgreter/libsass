@@ -150,7 +150,8 @@ namespace Sass {
         // std::cerr << "OVERWRITE\n";
       }
       r->selector2(sel);
-      bool chroot = r->schema()->mustChroot();
+      // debug_ast(sel);
+      bool chroot = sel->has_real_parent_ref();
       for (auto complex : sel->elements()) {
         complex->chroots(chroot);
       }
@@ -181,11 +182,11 @@ namespace Sass {
 
     // debug_ast(sel);
 
-    std::cerr << "Eval " << debug_vec(sel) << "\n";
+    // std::cerr << "Eval " << debug_vec(sel) << "\n";
     SelectorList_Obj evaled = eval(sel);
-    std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
+    // std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
     ctx.extender.addSelector(evaled);
-    std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
+    // std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
 
     // std::cerr << "= EVALED " << debug_vec(evaled) << "\n";
     // r->selector2(evaled);
@@ -765,7 +766,7 @@ namespace Sass {
             "See http://bit.ly/ExtendCompound for details.\n";
         }
 
-        std::cerr << "CALLING WITH PARENT: " << debug_vec(selector2()) << "\n";
+        // std::cerr << "CALLING WITH PARENT: " << debug_vec(selector2()) << "\n";
         ctx.extender.addExtension(selector2(), compound->first(), e);
 
       }

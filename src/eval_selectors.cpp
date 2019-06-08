@@ -48,7 +48,7 @@ namespace Sass {
       // std::cerr << "Eval item\n";
       ComplexSelector* sel = (*s)[i];
       SelectorList_Obj asd = operator()(sel);
-      std::cerr << "OP SL " << debug_vec(asd) << "\n";
+      // std::cerr << "OP SL " << debug_vec(asd) << "\n";
       rv.push_back(asd);
     }
 
@@ -87,7 +87,7 @@ namespace Sass {
 
     if (true) {
       other = s->resolve_parent_refs(exp.getSelectorStack2(), traces, implicit_parent);
-      std::cerr << "other " << debug_vec(other) << "\n";
+      // std::cerr << "other " << debug_vec(other) << "\n";
       // toComplexSelector()
         // ->toSelList();
     }

@@ -806,8 +806,8 @@ namespace Sass {
     }
     //    debug_ast(root);
     // expand and eval the tree
-    // debug_ast(root);
     root = expand(root);
+    // debug_ast(root); exit(1);
     // debug_ast(root);
     // debug_ast(root, "EXP: ");
     // check nesting

@@ -1543,7 +1543,7 @@ namespace Sass {
     return toSelector_List(rv).detach();
   }
 
-
+  // ToDO: return SelectorList
   Selector_List* Eval::operator()(Selector_Schema* s)
   {
     // std::cerr << "eval schema\n";
@@ -1563,11 +1563,12 @@ namespace Sass {
     // connected to it, so don't connect implicitly anymore
     // bool chroot = s->containsParentRef() == true;
     SelectorList_Obj sll = p.parseSelectorList(true);
+    // debug_ast(sll, "PARSED: ");
     // debug_ast(sll, "parsed: ");
     Selector_List_Obj sl = sll->toSelectorList();
     flag_is_in_selector_schema.reset();
     // debug_ast(sl, "sel: ");
-    return operator()(sl);
+    return sl.detach(); //  operator()(sl);
   }
 
   Expression* Eval::operator()(Parent_Selector* p)
