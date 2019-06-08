@@ -5,7 +5,7 @@
 
 namespace Sass {
 
-  class Extension2 {
+  class Extension {
 
   public:
 
@@ -36,7 +36,7 @@ namespace Sass {
 
     // Creates a one-off extension that's not intended to be modified over time.
     // If [specificity] isn't passed, it defaults to `extender.maxSpecificity`.
-    Extension2(ComplexSelector_Obj extender) :
+    Extension(ComplexSelector_Obj extender) :
       extender(extender),
       target({}),
       specificity(0),
@@ -46,7 +46,7 @@ namespace Sass {
     }
 
     // Copy constructor
-    Extension2(const Extension2& extension) :
+    Extension(const Extension& extension) :
       extender(extension.extender),
       target(extension.target),
       specificity(extension.specificity),
@@ -55,7 +55,7 @@ namespace Sass {
 
     }
 
-    Extension2() :
+    Extension() :
       extender({}),
       target({}),
       specificity(0),
@@ -65,7 +65,7 @@ namespace Sass {
     }
 
 
-    Extension2 withExtender(ComplexSelector_Obj newExtender);
+    Extension withExtender(ComplexSelector_Obj newExtender);
 
 
   };

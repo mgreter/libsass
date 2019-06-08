@@ -47,7 +47,7 @@ namespace Sass {
 
   typedef tsl::ordered_map <
     ComplexSelector_Obj,
-    Extension2,
+    Extension,
     HashNodes,
     CompareNodes
   > ExtSelExtMapEntry;
@@ -62,7 +62,7 @@ namespace Sass {
   typedef tsl::ordered_map <
     Simple_Selector_Obj,
     std::vector<
-      Extension2
+      Extension
     >,
     HashNodes,
     CompareNodes
@@ -136,19 +136,19 @@ namespace Sass {
       ExtSelExtMap& newExtensions);
 
     ExtSelExtMap extendExistingExtensions(
-      std::vector<Extension2> extensions,
+      std::vector<Extension> extensions,
       ExtSelExtMap& newExtensions);
 
 
     size_t maxSourceSpecificity(Simple_Selector_Obj simple);
     size_t maxSourceSpecificity(CompoundSelector_Obj compound);
-    Extension2 extensionForSimple(Simple_Selector_Obj simple);
-    Extension2 extensionForCompound(std::vector<Simple_Selector_Obj> simples);
+    Extension extensionForSimple(Simple_Selector_Obj simple);
+    Extension extensionForCompound(std::vector<Simple_Selector_Obj> simples);
 
 
     std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);
     std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal = false);
-    std::vector<std::vector<Extension2>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
+    std::vector<std::vector<Extension>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
 
     std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions);
 
@@ -158,7 +158,7 @@ namespace Sass {
 
 
   private:
-    std::vector<Extension2> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
+    std::vector<Extension> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
     static SelectorList_Obj _extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, ExtendMode mode);
 
   public:
@@ -172,10 +172,10 @@ namespace Sass {
     // std::map<Simple_Selector_Obj, Set<ModifiableCssStyleRule>> _selectors;
 
     // A map from all extended simple selectors to the sources of those extensions.
-    // std::map<Simple_Selector_Obj, std::map<ComplexSelector_Obj, Extension2, OrderNodes>> extensions;
+    // std::map<Simple_Selector_Obj, std::map<ComplexSelector_Obj, Extension, OrderNodes>> extensions;
 
     // A map from all simple selectors in extenders to the extensions that those extenders define.
-    // std::map<Simple_Selector_Obj, std::vector<Extension2>> extensionsByExtender;
+    // std::map<Simple_Selector_Obj, std::vector<Extension>> extensionsByExtender;
 
     /// A set of [ComplexSelector]s that were originally part of
     /// their component [SelectorList]s, as opposed to being added by `@extend`.

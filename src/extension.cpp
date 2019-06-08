@@ -20,9 +20,9 @@
 
 namespace Sass {
 
-  Extension2 Extension2::withExtender(ComplexSelector_Obj newExtender)
+  Extension Extension::withExtender(ComplexSelector_Obj newExtender)
   {
-    Extension2 extension(newExtender);
+    Extension extension(newExtender);
     extension.specificity = specificity;
     extension.isOptional = isOptional;
     extension.target = target;

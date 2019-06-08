@@ -14,7 +14,6 @@
 #include "debugger.hpp"
 #include "parser.hpp"
 #include "sass_functions.hpp"
-#include "remove_placeholders.hpp"
 
 namespace Sass {
 
@@ -185,11 +184,9 @@ namespace Sass {
 
     // std::cerr << "Eval " << debug_vec(sel) << "\n";
     SelectorList_Obj evaled = eval(sel);
-    Remove_Placeholders remove;
-    evaled = remove.remove_placeholders(evaled);
-    std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
+    // std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
     ctx.extender.addSelector(evaled);
-    std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
+    // std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
 
     // std::cerr << "= EVALED " << debug_vec(evaled) << "\n";
     // r->selector2(evaled);

@@ -41,7 +41,7 @@ inline std::string debug_dude(std::vector<std::vector<int>> vec) {
   return out.str();
 }
 
-inline std::string debug_vec(Extension2& ext) {
+inline std::string debug_vec(Extension& ext) {
   std::stringstream out;
   out << debug_vec(ext.extender);
   out << " {@extend ";

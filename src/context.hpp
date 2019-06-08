@@ -46,6 +46,11 @@ namespace Sass {
     Plugins plugins;
     Output emitter;
 
+    // Extensions that haven't yet been satisfied by some upstream module. This
+    // adds extensions when they're defined but not satisfied, and removes them
+    // when they're satisfied by any module.
+   // var unsatisfiedExtensions = Set<Extension>.identity();
+
     // generic ast node garbage container
     // used to avoid possible circular refs
     CallStack ast_gc;

@@ -129,7 +129,7 @@ namespace Sass {
   class Expand;
   class Eval;
 
-  class Extension2;
+  class Extension;
 
   // declare classes that are instances of memory nodes
   // #define IMPL_MEM_OBJ(type) using type##_Obj = SharedImpl<type>

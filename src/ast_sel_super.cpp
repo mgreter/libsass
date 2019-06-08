@@ -127,7 +127,7 @@ namespace Sass {
   {
     if (pseudo1->name() == pseudo2->name() && pseudo2->selector2()) {
       SelectorList_Obj list = toSelectorList(pseudo2->selector2());
-      // std::cerr << "GO INTO OTHER LOOP " << debug_vec(list) << " [" << debug_vec(parent) << "]\n";
+      // // std::cerr << "GO INTO OTHER LOOP " << debug_vec(list) << " [" << debug_vec(parent) << "]\n";
       return listIsSuperslector(list->elements(), { parent });
     }
     return false;
@@ -199,15 +199,15 @@ namespace Sass {
 
     }
     else if (name == "has" || name == "host" || name == "host-context" || name == "slotted") {
-      // std::cerr << "IN HAS\n";
+      // // std::cerr << "IN HAS\n";
       std::vector<Pseudo_Selector_Obj> pseudos =
         selectorPseudoNamed(compound2, name);
-      // std::cerr << "SELS [" << debug_vec(pseudos) << "]\n";
+      // // std::cerr << "SELS [" << debug_vec(pseudos) << "]\n";
       SelectorList_Obj selector1 = toSelectorList(pseudo1->selector2());
       for (Pseudo_Selector_Obj pseudo2 : pseudos) {
         SelectorList_Obj selector2 = toSelectorList(pseudo2->selector2());
         if (selector1->isSuperselectorOf(selector2)) {
-          // std::cerr << "GOT true\n";
+          // // std::cerr << "GOT true\n";
           return true;
         }
       }
@@ -219,7 +219,7 @@ namespace Sass {
         if (!pseudoNotIsSuperselectorOfCompound(pseudo1, compound2, complex)) return false;
       }
       return true;
-      // std::cerr << "IN NOT\n";
+      // // std::cerr << "IN NOT\n";
 
 
     }
@@ -250,21 +250,21 @@ namespace Sass {
     std::vector<CompoundOrCombinator_Obj>::iterator parents_from,
     std::vector<CompoundOrCombinator_Obj>::iterator parents_to) {
 
-    // std::cerr << "CMP SUP [" << std::string(compound1) << "/" << std::string(compound2) << "]\n";
+    // // std::cerr << "CMP SUP [" << std::string(compound1) << "/" << std::string(compound2) << "]\n";
 
     // Every selector in [compound1.components] must have
     // a matching selector in [compound2.components].
     for (Simple_Selector_Obj simple1 : compound1->elements()) {
       Pseudo_Selector_Obj pseudo1 = Cast<Pseudo_Selector>(simple1);
       if (pseudo1 && pseudo1->selector2()) {
-        // std::cerr << "NOW WE HAVE A PSEUO WITH SEL\n";
+        // // std::cerr << "NOW WE HAVE A PSEUO WITH SEL\n";
         if (!selectorPseudoIsSuperselector(pseudo1, compound2, parents_from, parents_to)) {
-          // std::cerr << "selectorPseudoIsSuperselector FALSE\n";
+          // // std::cerr << "selectorPseudoIsSuperselector FALSE\n";
           return false;
         }
       }
       else if (!simpleIsSuperselectorOfCompound(simple1, compound2)) {
-        // std::cerr << "is not simple 0\n";
+        // // std::cerr << "is not simple 0\n";
         return false;
       }
     }
@@ -273,20 +273,20 @@ namespace Sass {
     // with pseudo-elements that [compound2] doesn't share.
     for (Simple_Selector_Obj simple2 : compound2->elements()) {
       Pseudo_Selector_Obj pseudo2 = Cast<Pseudo_Selector>(simple2);
-      // if (pseudo2) // std::cerr << "IS A PSEUDO\n";
+      // if (pseudo2) // // std::cerr << "IS A PSEUDO\n";
       if (pseudo2 && pseudo2->isElement()) {
-        // if (pseudo2) // std::cerr << "AND IS ELEMENT\n";
+        // if (pseudo2) // // std::cerr << "AND IS ELEMENT\n";
         if (!simpleIsSuperselectorOfCompound(pseudo2, compound1)) {
-          // std::cerr << "is not simple 1\n";
+          // // std::cerr << "is not simple 1\n";
           return false;
         }
       }
       else {
-        // std::cerr << "IS NOT PSEUDO NOR ELEMENT\n";
+        // // std::cerr << "IS NOT PSEUDO NOR ELEMENT\n";
       }
     }
 
-    // std::cerr << "CMP OK - RET TRUE\n";
+    // // std::cerr << "CMP OK - RET TRUE\n";
     return true;
   }
 
@@ -301,15 +301,15 @@ namespace Sass {
     );
     // if (compound1->empty()) return true;
     // if (compound2->empty()) return false;
-    // std::cerr << "SUPI " << debug_vec(compound1) << " vs " << debug_vec(compound2) << " => " << (rv ? "true" : "false") << "\n";
+    // // std::cerr << "SUPI " << debug_vec(compound1) << " vs " << debug_vec(compound2) << " => " << (rv ? "true" : "false") << "\n";
     return rv;
   }
 
   bool complexIsSuperselector(std::vector<CompoundOrCombinator_Obj> complex1,
     std::vector<CompoundOrCombinator_Obj> complex2) {
     
-    // std::cerr << "====================================================\n";
-    // std::cerr << "complexIsSuperselector " << debug_vec(complex1) << " vs " << debug_vec(complex2) << "\n";
+    // // std::cerr << "====================================================\n";
+    // // std::cerr << "complexIsSuperselector " << debug_vec(complex1) << " vs " << debug_vec(complex2) << "\n";
 
     // Selectors with trailing operators are neither superselectors nor subselectors.
     if (!complex1.empty() && Cast<SelectorCombinator>(complex1.back())) return false;
@@ -318,37 +318,37 @@ namespace Sass {
     size_t i1 = 0, i2 = 0;
     while (true) {
 
-      // std::cerr << "Run " << i1 << "/" << i2 << "\n";
+      // // std::cerr << "Run " << i1 << "/" << i2 << "\n";
       size_t remaining1 = complex1.size() - i1;
       size_t remaining2 = complex2.size() - i2;
-      // std::cerr << "Rem " << remaining1 << "/" << remaining2 << "\n";
+      // // std::cerr << "Rem " << remaining1 << "/" << remaining2 << "\n";
 
       if (remaining1 == 0 || remaining2 == 0) {
-        // std::cerr << "Check complex 0\n";
+        // // std::cerr << "Check complex 0\n";
         return false;
       }
       // More complex selectors are never
       // superselectors of less complex ones.
       if (remaining1 > remaining2) {
-        // std::cerr << "Check complex 1\n";
+        // // std::cerr << "Check complex 1\n";
         return false;
       }
 
       // Selectors with leading operators are
       // neither superselectors nor subselectors.
       if (Cast<SelectorCombinator>(complex1[i1])) {
-        // std::cerr << "Check complex 2 [" << std::string(complex1[i1]) << "]\n";
+        // // std::cerr << "Check complex 2 [" << std::string(complex1[i1]) << "]\n";
         return false;
       }
       if (Cast<SelectorCombinator>(complex2[i2])) {
-        // std::cerr << "Check complex 3 [" << std::string(complex2[i2]) << "]\n";
+        // // std::cerr << "Check complex 3 [" << std::string(complex2[i2]) << "]\n";
         return false;
       }
 
       CompoundSelector_Obj compound1 = Cast<CompoundSelector>(complex1[i1]);
       CompoundSelector_Obj compound2 = Cast<CompoundSelector>(complex2.back());
 
-      // std::cerr << "DO [" << std::string(compound1) << "/" << std::string(compound2) << "]\n";
+      // // std::cerr << "DO [" << std::string(compound1) << "/" << std::string(compound2) << "]\n";
 
       if (remaining1 == 1) {
         std::vector<CompoundOrCombinator_Obj>::iterator parents_to = complex2.end();
@@ -364,8 +364,8 @@ namespace Sass {
           beg++;
         }
 
-        // std::cerr << "compoundIsSuperselector" << debug_vec(compound1) << " vs " << debug_vec(compound2) << " with [" << debug_vec(pp) << "]\n";
-        // std::cerr << "RETURN REM1 " << (rv ? "true" : "false") << "\n";
+        // // std::cerr << "compoundIsSuperselector" << debug_vec(compound1) << " vs " << debug_vec(compound2) << " with [" << debug_vec(pp) << "]\n";
+        // // std::cerr << "RETURN REM1 " << (rv ? "true" : "false") << "\n";
         return rv;
       }
 
@@ -384,13 +384,13 @@ namespace Sass {
           std::advance(parents_from, i2 + 1); // equivalent to dart `.skip`
           std::advance(parents_to, afterSuperselector); // equivalent to dart `.take`
           if (compoundIsSuperselector(compound1, compound2, parents_from, parents_to)) {
-            // std::cerr << "CMP BREAK\n";
+            // // std::cerr << "CMP BREAK\n";
             break;
           }
         }
       }
       if (afterSuperselector == complex2.size()) {
-        // std::cerr << "RETURN AFTER SUP\n";
+        // // std::cerr << "RETURN AFTER SUP\n";
         return false;
       }
 
@@ -400,24 +400,24 @@ namespace Sass {
       SelectorCombinator_Obj combinator1 = Cast<SelectorCombinator>(component1);
       SelectorCombinator_Obj combinator2 = Cast<SelectorCombinator>(component2);
 
-      // std::cerr << "COMBIN [" << std::string(combinator1) << "/" << std::string(combinator2) << "]\n";
+      // // std::cerr << "COMBIN [" << std::string(combinator1) << "/" << std::string(combinator2) << "]\n";
 
       if (!combinator1.isNull()) {
 
         if (combinator2.isNull()) {
-          // std::cerr << "COMB2 NULL\n";
+          // // std::cerr << "COMB2 NULL\n";
           return false;
         }
         // `.a ~ .b` is a superselector of `.a + .b`,
         // but otherwise the combinators must match.
         if (combinator1->isFollowingSibling()) {
           if (combinator2->isChildCombinator()) {
-            // std::cerr << "COMB2 IS CHILD\n";
+            // // std::cerr << "COMB2 IS CHILD\n";
             return false;
           }
         }
         else if (*combinator1 != *combinator2) {
-          // std::cerr << "COMB NO EQUAL\n";
+          // // std::cerr << "COMB NO EQUAL\n";
           return false;
         }
 
@@ -425,24 +425,24 @@ namespace Sass {
         // `.foo > .bar .baz`, despite the fact that `.baz` is a superselector of
         // `.bar > .baz` and `.bar .baz`. Same goes for `+` and `~`.
         if (remaining1 == 3 && remaining2 > 3) {
-          // std::cerr << "COMB STRANGE\n";
+          // // std::cerr << "COMB STRANGE\n";
           return false;
         }
 
-        // std::cerr << "INCREMENT 1\n";
+        // // std::cerr << "INCREMENT 1\n";
         i1 += 2; i2 = afterSuperselector + 1;
 
       }
       else if (!combinator2.isNull()) {
         if (!combinator2->isChildCombinator()) {
-          // std::cerr << "RET INC 2\n";
+          // // std::cerr << "RET INC 2\n";
           return false;
         }
-        // std::cerr << "INCREMENT 2\n";
+        // // std::cerr << "INCREMENT 2\n";
         i1 += 1; i2 = afterSuperselector + 1;
       }
       else {
-        // std::cerr << "INCREMENT 3\n";
+        // // std::cerr << "INCREMENT 3\n";
         i1 += 1; i2 = afterSuperselector;
       }
     }
@@ -465,15 +465,15 @@ namespace Sass {
     if (Cast<SelectorCombinator>(complex1.front())) return false;
     if (Cast<SelectorCombinator>(complex2.front())) return false;
     if (complex1.size() > complex2.size()) return false;
-    // std::cerr << "HERE 1\n";
+    // // std::cerr << "HERE 1\n";
     CompoundSelector_Obj base = SASS_MEMORY_NEW(CompoundSelector, ParserState("[tmp]"));
     ComplexSelector_Obj cplx1 = SASS_MEMORY_NEW(ComplexSelector, ParserState("[tmp]"));
     ComplexSelector_Obj cplx2 = SASS_MEMORY_NEW(ComplexSelector, ParserState("[tmp]"));
-    // std::cerr << "HERE 2\n";
+    // // std::cerr << "HERE 2\n";
     cplx1->concat(complex1); cplx1->append(base);
-    // std::cerr << "HERE 3\n";
+    // // std::cerr << "HERE 3\n";
     cplx2->concat(complex2); cplx2->append(base);
-    // std::cerr << "HERE 4\n";
+    // // std::cerr << "HERE 4\n";
     return cplx1->isSuperselectorOf(cplx2);
   }
 
@@ -483,7 +483,7 @@ namespace Sass {
     SASS_ASSERT(!complexes.empty(), "Can't unify empty list");
     if (complexes.size() == 1) return complexes;
 
-    std::cerr << "UNIFY COMPLEX " << debug_vec(complexes) << "\n";
+    // std::cerr << "UNIFY COMPLEX " << debug_vec(complexes) << "\n";
 
     CompoundSelector_Obj unifiedBase = SASS_MEMORY_NEW(CompoundSelector, ParserState("[tmp]"));
     for (auto complex : complexes) {
@@ -491,14 +491,14 @@ namespace Sass {
       if (CompoundSelector * comp = base->getCompound()) {
         if (unifiedBase->empty()) {
           unifiedBase->concat(comp);
-          std::cerr << "base is empty " << debug_vec(unifiedBase) << "\n";
+          // std::cerr << "base is empty " << debug_vec(unifiedBase) << "\n";
         }
         else {
-          std::cerr << "base has some\n";
+          // std::cerr << "base has some\n";
           for (Simple_Selector_Obj simple : comp->elements()) {
-            std::cerr << "UNIFY " << debug_vec(simple) << "\n";
+            // std::cerr << "UNIFY " << debug_vec(simple) << "\n";
             unifiedBase = simple->unifyWith(unifiedBase);
-            std::cerr << "REC UNIFIED " << debug_vec(unifiedBase) << "\n";
+            // std::cerr << "REC UNIFIED " << debug_vec(unifiedBase) << "\n";
             if (unifiedBase.isNull()) return {};
           }
         }
@@ -507,9 +507,9 @@ namespace Sass {
         return {};
       }
     }
-    std::cerr << "unifiedBase " << debug_vec(unifiedBase) << "\n";
+    // std::cerr << "unifiedBase " << debug_vec(unifiedBase) << "\n";
 
-    std::cerr << "complexes " << debug_vec(complexes) << "\n";
+    // std::cerr << "complexes " << debug_vec(complexes) << "\n";
 
     std::vector<std::vector<CompoundOrCombinator_Obj>> complexesWithoutBases;
     for (size_t i = 0; i < complexes.size(); i += 1) {
@@ -518,17 +518,17 @@ namespace Sass {
       complexesWithoutBases.push_back(sel);
     }
 
-    std::cerr << "complexesWithoutBases " << debug_vec(complexesWithoutBases) << "\n";
+    // std::cerr << "complexesWithoutBases " << debug_vec(complexesWithoutBases) << "\n";
 
     // [[], [*]]
-    // std::cerr << "here 2\n";
+    // // std::cerr << "here 2\n";
     complexesWithoutBases.back().push_back(unifiedBase);
 
-    std::cerr << "BEFORE WEAVE " << debug_vec(complexesWithoutBases) << "\n";
+    // std::cerr << "BEFORE WEAVE " << debug_vec(complexesWithoutBases) << "\n";
 
     auto rv = weave(complexesWithoutBases);
 
-    std::cerr << "AFTER WEAVE " << debug_vec(rv) << "\n";
+    // std::cerr << "AFTER WEAVE " << debug_vec(rv) << "\n";
 
     // debug_ast(rv, "WEAVE: ");
 
@@ -565,13 +565,13 @@ namespace Sass {
 
   bool ComplexSelector::isSuperselectorOf(const ComplexSelector* sub) const
   {
-    // std::cerr << "Check complexIsSuperselector\n";
+    // // std::cerr << "Check complexIsSuperselector\n";
     return complexIsSuperselector(elements(), sub->elements());
   }
 
   bool SelectorList::isSuperselectorOf(const SelectorList* sub) const
   {
-    // std::cerr << "Check listIsSuperslector\n";
+    // // std::cerr << "Check listIsSuperslector\n";
     return listIsSuperslector(elements(), sub->elements());
   }
 
