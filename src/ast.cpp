@@ -455,17 +455,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
     ExtendRule::ExtendRule(ParserState pstate, SelectorList_Obj s)
-  : Statement(pstate), isOptional_(false), selector_(s->toSelectorList()), selector2_(s), schema_()
+  : Statement(pstate), isOptional_(false), selector2_(s), schema_()
   { statement_type(EXTEND); }
   ExtendRule::ExtendRule(ParserState pstate, Selector_Schema_Obj s)
-    : Statement(pstate), isOptional_(false), selector_(), selector2_(), schema_(s)
+    : Statement(pstate), isOptional_(false), selector2_(), schema_(s)
   {
     statement_type(EXTEND);
   }
   ExtendRule::ExtendRule(const ExtendRule* ptr)
   : Statement(ptr),
     isOptional_(ptr->isOptional_),
-    selector_(ptr->selector_),
     selector2_(ptr->selector2_),
     schema_(ptr->schema_)
   { statement_type(EXTEND); }
