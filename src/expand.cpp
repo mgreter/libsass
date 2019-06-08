@@ -174,14 +174,19 @@ namespace Sass {
     // Register every selector for lookup when extended
     // SelectorList_Obj sss = r->selector2();
     // debug_ast(sss, "sss: ");
-    // std::cerr << " CALL ADD " << debug_vec(r->selector2()) << "\n";
     // std::cerr << " AFTER SEL " << debug_vec(r->selector2()) << "\n";
 
     // sel = r->selector2();
 
 
     // debug_ast(sel);
+
     SelectorList_Obj evaled = eval(sel);
+
+    std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
+    ctx.extender.addSelector(evaled);
+    std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
+
     // std::cerr << "= EVALED " << debug_vec(evaled) << "\n";
     // r->selector2(evaled);
 
@@ -210,7 +215,6 @@ namespace Sass {
     rr->is_root(r->is_root());
     rr->tabs(r->tabs());
 
-    ctx.extender.addSelector(rr->selector2());
 
     return rr;
   }

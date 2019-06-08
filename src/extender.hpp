@@ -201,7 +201,7 @@ namespace Sass {
 
     // Registers the [SimpleSelector]s in [list]
     // to point to [rule] in [selectors].
-    void registerSelector(SelectorList_Obj list /*, rule */);
+    void registerSelector(SelectorList_Obj list, SelectorList_Obj rule);
 
 
   };
