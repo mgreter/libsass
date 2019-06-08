@@ -718,7 +718,7 @@ namespace Sass {
 
     if (Selector_List_Obj extender = selector()) {
       // THis MUST be ptr, memory frenzy
-      Selector_List* sl = e->selector();
+      SelectorList* sl = e->selector2();
       // abort on invalid selector
       // if (sl == NULL) return NULL;
 
@@ -734,17 +734,16 @@ namespace Sass {
           pushToSelectorStack({});
           sl = eval(e->schema());
           popFromSelectorStack();
-          e->selector2(sl->toSelList());
-          e->selector(sl);
+          e->selector2(sl);
         }
       }
-      for (Complex_Selector_Obj cs : sl->elements()) {
-        if (!cs.isNull() && !cs->head().isNull()) {
-          cs->head()->media_block(media_stack.back());
-        }
+      for (ComplexSelector_Obj cs : sl->elements()) {
+        // if (!cs.isNull() && !cs->head().isNull()) {
+        //   cs->head()->media_block(media_stack.back());
+        // }
       }
       pushToSelectorStack({});
-      expand_selector_list(sl, extender, e);
+      // expand_selector_list(sl, extender, e);
       popFromSelectorStack();
 
     }

@@ -703,7 +703,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "ExtendRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    debug_ast(block->selector(), ind + "-> ", env);
+    debug_ast(block->selector2(), ind + "-> ", env);
   } else if (Cast<Content>(node)) {
     Content* block = Cast<Content>(node);
     std::cerr << ind << "Content " << block;

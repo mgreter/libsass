@@ -1281,14 +1281,21 @@ namespace Sass {
 
   Selector_List_Obj Selector_List::eval(Eval& eval)
   {
-    Selector_List_Obj list = schema() ?
-      eval(schema())
-      : eval(this);
-    list->schema(schema());
-    return list;
+    if (schema()) {
+      SelectorList_Obj list = eval(schema());
+      list->schemaOnlyToCopy(schema());
+      return list->toSelectorList();
+    }
+    else {
+      Selector_List_Obj list = eval(this);
+      list->schema(schema());
+      return list;
+    }
+      
+
   }
 
-  Selector_List_Obj Selector_Schema::eval(Eval& eval)
+  SelectorList_Obj Selector_Schema::eval(Eval& eval)
   {
     return eval(this);
   }

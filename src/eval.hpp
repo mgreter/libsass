@@ -98,7 +98,7 @@ namespace Sass {
     Placeholder_Selector* operator()(Placeholder_Selector* s) { return s; };
 
     // actual evaluated selectors
-    Selector_List* operator()(Selector_Schema*);
+    SelectorList* operator()(Selector_Schema*);
     Expression* operator()(Parent_Selector*);
     Expression* operator()(Parent_Reference*);
 

@@ -1544,7 +1544,7 @@ namespace Sass {
   }
 
   // ToDO: return SelectorList
-  Selector_List* Eval::operator()(Selector_Schema* s)
+  SelectorList* Eval::operator()(Selector_Schema* s)
   {
     // std::cerr << "eval schema\n";
     LOCAL_FLAG(is_in_selector_schema, true);
@@ -1568,7 +1568,7 @@ namespace Sass {
     Selector_List_Obj sl = sll->toSelectorList();
     flag_is_in_selector_schema.reset();
     // debug_ast(sl, "sel: ");
-    return sl.detach(); //  operator()(sl);
+    return sll.detach(); //  operator()(sl);
   }
 
   Expression* Eval::operator()(Parent_Selector* p)

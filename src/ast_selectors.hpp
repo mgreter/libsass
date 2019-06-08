@@ -114,7 +114,7 @@ namespace Sass {
     // store computed hash
     mutable size_t hash_;
   public:
-    Selector_List_Obj eval(Eval& eval);
+    SelectorList_Obj eval(Eval& eval);
     Selector_Schema(ParserState pstate, String_Obj c);
 
     bool containsParentRef() const;
@@ -879,7 +879,7 @@ namespace Sass {
   class ExtendRule final : public Statement {
     ADD_PROPERTY(bool, isOptional)
     // This should be a simple selector only!
-    ADD_PROPERTY(Selector_List_Obj, selector)
+    // ADD_PROPERTY(Selector_List_Obj, selector)
     ADD_PROPERTY(SelectorList_Obj, selector2)
     ADD_PROPERTY(Selector_Schema_Obj, schema)
   public:
