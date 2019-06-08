@@ -103,6 +103,14 @@ namespace Sass {
                            s->to_string(ctx.c_options));
   }
 
+  // Selector_List is converted to a string
+  Value* To_Value::operator()(SelectorList* s)
+  {
+    return SASS_MEMORY_NEW(String_Quoted,
+      s->pstate(),
+      s->to_string(ctx.c_options));
+  }
+
   // Binary_Expression is converted to a string
   Value* To_Value::operator()(Binary_Expression* s)
   {

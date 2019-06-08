@@ -556,7 +556,12 @@ namespace Sass {
     if (expr->concrete_type() == Expression::MAP) {
       map = Cast<Map>(expr);
     }
-    else if (Selector_List* ls = Cast<Selector_List>(expr)) {
+    else if (Selector_List * ls = Cast<Selector_List>(expr)) {
+      Listize listize;
+      Expression_Obj rv = ls->perform(&listize);
+      list = Cast<List>(rv);
+    }
+    else if (SelectorList * ls = Cast<SelectorList>(expr)) {
       Listize listize;
       Expression_Obj rv = ls->perform(&listize);
       list = Cast<List>(rv);
