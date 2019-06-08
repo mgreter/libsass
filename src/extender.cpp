@@ -799,7 +799,7 @@ on SassException catch (error) {
 
     // std::cerr << "OPTIONS " << debug_vec(options) << "\n";
 
-    // std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
+/////    // std::cerr << "CHECK HERE " << targetsUsed.size() << " vs " << extensions.size() << "\n";
 
 
     if (targetsUsed == nullptr) {
