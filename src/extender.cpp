@@ -555,7 +555,7 @@ on SassException catch (error) {
     SelectorList_Obj rv = SASS_MEMORY_NEW(SelectorList, list->pstate());
     rv->concat(tt);
 
-    // std::cerr << "RETURN extendList " << debug_vec(rv) << "\n";
+    // // std::cerr << "RETURN extendList " << debug_vec(rv) << "\n";
 
     return rv;
   }
@@ -954,7 +954,10 @@ on SassException catch (error) {
 
     // std::cerr << "extendWithoutPseudo " << debug_vec(simple) << "\n";
     auto ext = extensions.find(simple);
-    if (ext == extensions.end()) return {};
+    if (ext == extensions.end()) {
+      // std::cerr << "HAS NO EXTENSIONS\n";
+      return {};
+    }
     ExtSelExtMapEntry extenders = ext->second;
     // std::cerr << "START " << debug_values(extenders) << "\n";
     // std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";
@@ -993,9 +996,9 @@ on SassException catch (error) {
     // std::cerr << "start extendSimple\n";
     // std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";
     if (Pseudo_Selector_Obj pseudo = Cast<Pseudo_Selector>(simple)) {
-      // std::cerr << "cast to pseudo ok\n";
       if (pseudo->selector2()) {
-        // std::cerr << "pseudo does have selector\n";
+        // std::cerr << "Cast to Pseudo OK " << debug_vec(simple) << "\n";
+        // // std::cerr << "pseudo does have selector\n";
         // if (simple.selector != null) // Implement/Checks what this does?
         auto extended = extendPseudo(pseudo, extensions);
         // std::cerr << "extended pseudo " << debug_vec(extended) << "\n";
@@ -1003,6 +1006,8 @@ on SassException catch (error) {
         std::vector<std::vector<Extension2>> rv;
         for (auto extend : extended) {
           auto vec = extendWithoutPseudo(extend, extensions, targetsUsed);
+          // std::cerr << "withoutPseudo RV " << debug_vec(vec) << "\n";
+
           if (vec.empty()) { vec = { extensionForSimple(extend) }; }
           rv.insert(rv.end(), { vec });
         }
@@ -1027,18 +1032,37 @@ on SassException catch (error) {
 
   std::vector<ComplexSelector_Obj> extendPseudoComplex(ComplexSelector_Obj complex, Pseudo_Selector_Obj pseudo) {
 
-    if (complex->length() != 1) return { complex };
-    auto compound = Cast<CompoundSelector>(complex->get(0));
-    if (compound == NULL) return { complex };
+    // std::cerr << "extendPseudoComplex " << debug_vec(complex) << "\n";
 
-    if (compound->length() != 1) return { complex };
+    if (complex->length() != 1) {
+      // std::cerr << "RETURN 1\n";
+      return { complex };
+    }
+    auto compound = Cast<CompoundSelector>(complex->get(0));
+    if (compound == NULL) {
+      // std::cerr << "RETURN 2\n";
+      return { complex };
+    }
+
+    if (compound->length() != 1) {
+      // std::cerr << "RETURN 3\n";
+      return { complex };
+    }
     auto innerPseudo = Cast<Pseudo_Selector>(compound->get(0));
-    if (innerPseudo == NULL) return { complex };
-    if (innerPseudo->selector2()) return { complex };
+    if (innerPseudo == NULL) {
+      // std::cerr << "RETURN 4\n";
+      return { complex };
+    }
+    // std::cerr << "inner " << debug_vec(innerPseudo->selector2()) << "\n";
+    if (!innerPseudo->selector2()) {
+      // std::cerr << "RETURN 5\n";
+      return { complex };
+    }
 
     std::string name(pseudo->normalized());
 
     if (name == "not") {
+      // std::cerr << "extendPseudoComplex NOT\n";
       // In theory, if there's a `:not` nested within another `:not`, the
       // inner `:not`'s contents should be unified with the return value.
       // For example, if `:not(.foo)` extends `.bar`, `:not(.bar)` should
@@ -1109,23 +1133,24 @@ on SassException catch (error) {
     // either way we aren't breaking anything that isn't already broken.
     std::vector<ComplexSelector_Obj> complexes = extended->elements();
 
+    // std::cerr << "complexes " << debug_vec(complexes) << "\n";
+
     if (pseudo->normalized() == "not") {
       bool b2 = hasAny(extended->elements(), hasExactlyOne);
       bool b1 = hasAny(pseudo->selector2()->elements(), hasMoreThanOne);
+
       // std::cerr << "HAS PSEUDO NOT " << (b1?"true":"false") << ", " << (b2 ? "true" : "false") << "\n";
-      if (!(b1 && b2)) {
+
+      if (!b1 && b2) {
         complexes.clear();
         for (auto complex : extended->elements()) {
           if (complex->length() <= 1) {
             complexes.push_back(complex);
           }
         }
-        // std::cerr << "HAS PSEUDO NOT\n";
+        // std::cerr << "HAS PSEUDO CLEAN " << debug_vec(complexes) << "\n";
       }
     }
-
-    // std::cerr << "AFTER WHERE " << debug_vec(complexes) << "\n";
-    // std::cerr << "++++++++++++++++++++++++++++++++++++++++++++++\n";
 
     auto rv = expandListFn(complexes, extendPseudoComplex, pseudo);
 
@@ -1133,14 +1158,18 @@ on SassException catch (error) {
 
     std::vector<Pseudo_Selector_Obj> rvv;
 
+    // Older browsers support `:not`, but only with a single complex selector.
+    // In order to support those browsers, we break up the contents of a `:not`
+    // unless it originally contained a selector list.
     if (pseudo->normalized() == "not") {
       if (pseudo->selector2()->length() == 1) {
-        // std::cerr << "ADD WITH SELECTOR\n";
-        for (size_t i = 0; i < complexes.size(); i += 1) {
+        // std::cerr << "UNROOL NOT PSEUDO " << debug_vec(rv) << "\n";
+        for (size_t i = 0; i < rv.size(); i += 1) {
           rvv.push_back(pseudo->withSelector(
-            complexes[i]->wrapInList()
+            rv[i]->wrapInList()
           ));
         }
+        // std::cerr << "UNROOLED " << debug_vec(rvv) << "\n";
         return rvv;
       }
     }
