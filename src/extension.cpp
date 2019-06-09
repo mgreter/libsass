@@ -52,5 +52,17 @@ namespace Sass {
     return CompareNodesFn(extender, rhs.extender);
   }
 
+  // Asserts that the [mediaContext] for a selector is
+  // compatible with the query context for this extender.
+  void Extension::assertCompatibleMediaContext(Media_Block_Obj mediaContext) {
+    /*
+    if (this.mediaContext == null) return;
+    if (mediaContext != null && listEquals(this.mediaContext, mediaContext))
+      return;
+
+    throw SassException(
+      "You may not @extend selectors across media queries.", span);
+      */
+  }
 
 }

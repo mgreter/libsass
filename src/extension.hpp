@@ -39,7 +39,7 @@ namespace Sass {
 
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
-    // std::vector<Media_Query_Obj> mediaContext;
+    Media_Block_Obj mediaContext;
 
     // ExtendRule(ComplexSelector_Obj extender, Simple_Selector_Obj )
 
@@ -52,7 +52,8 @@ namespace Sass {
       specificity(0),
       isOptional(true),
       isOriginal(false),
-      isSatisfied(false) {
+      isSatisfied(false),
+      mediaContext({}) {
 
     }
 
@@ -63,7 +64,8 @@ namespace Sass {
       specificity(extension.specificity),
       isOptional(extension.isOptional),
       isOriginal(extension.isOriginal),
-      isSatisfied(extension.isSatisfied) {
+      isSatisfied(extension.isSatisfied),
+      mediaContext(extension.mediaContext) {
 
     }
 
@@ -73,9 +75,14 @@ namespace Sass {
       specificity(0),
       isOptional(false),
       isOriginal(false),
-      isSatisfied(false) {
-
+      isSatisfied(false),
+      mediaContext({}) {
     }
+
+
+    /// Asserts that the [mediaContext] for a selector is compatible with the
+    /// query context for this extender.
+    void assertCompatibleMediaContext(Media_Block_Obj mediaContext);
 
     Extension withExtender(ComplexSelector_Obj newExtender);
 

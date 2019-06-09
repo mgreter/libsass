@@ -88,7 +88,7 @@ namespace Sass {
 
         // std::cerr << "ORIGINALS: " << debug_vec(extender.originals) << "\n";
 
-        selector = extender.extendList(selector, extensions);
+        selector = extender.extendList(selector, extensions, {});
 
         // std::cerr << "GOT BACK2 " << debug_vec(selector) << "\n";
 
@@ -109,7 +109,7 @@ namespace Sass {
   // extensions are added, the returned rule is automatically updated.
   // The [mediaContext] is the media query context in which the selector was
   // defined, or `null` if it was defined at the top level of the document.
-  void Extender::addSelector(SelectorList_Obj selector)
+  void Extender::addSelector(SelectorList_Obj selector, Media_Block_Obj mediaContext)
   {
 
     SelectorList_Obj original = selector;
@@ -131,7 +131,7 @@ namespace Sass {
       // ToDo: this can throw in dart sass
       // std::cerr << "  _extensions: " << debug_vec(extensions) << "\n";
       // std::cerr << "  _selectors: " << debug_keys(selectors) << "\n";
-      auto res = extendList(original, extensions);
+      auto res = extendList(original, extensions, mediaContext);
       // std::cerr << "selector extended " << debug_vec(res) << "\n";
       // std::cerr << "  _extensions: " << debug_vec(extensions) << "\n";
       selector->elements(res->elements());
@@ -144,6 +144,11 @@ namespace Sass {
       }
       */
     }
+
+    if (!mediaContext.isNull()) {
+      mediaContexts[selector] = mediaContext;
+    }
+
 
     registerSelector(selector, selector);
 
@@ -382,7 +387,7 @@ namespace Sass {
       SelectorList_Obj oldValue = rule->copy();
       // try
       // std::cerr << "extend rule " << debug_vec(oldValue) << "\n";
-      SelectorList_Obj ext = extendList(rule, newExtensions);
+      SelectorList_Obj ext = extendList(rule, newExtensions, mediaContexts[rule]);
       // std::cerr << " res " << debug_vec(ext) << "\n";
       // catch
 
@@ -431,7 +436,8 @@ namespace Sass {
       // try {
       selectors = extendComplex(
         extension.extender,
-        newExtensions
+        newExtensions,
+        extension.mediaContext
       );
       if (selectors.empty()) {
         continue;
@@ -519,7 +525,7 @@ on SassException catch (error) {
     return set.find(key) != set.end();
   }
 
-  SelectorList_Obj Extender::extendList(SelectorList_Obj list, ExtSelExtMap& extensions)
+  SelectorList_Obj Extender::extendList(SelectorList_Obj list, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext)
   {
 
     // std::cerr << "in extend list " << debug_vec(list) << "\n";
@@ -531,7 +537,7 @@ on SassException catch (error) {
       ComplexSelector_Obj complex = list->get(i);
       // std::cerr << "CPLX IN " << std::string(complex) << "\n";
       std::vector<ComplexSelector_Obj> result =
-        extendComplex(complex, extensions);
+        extendComplex(complex, extensions, mediaQueryContext);
       // std::cerr << "CPLX RV " << debug_vec(result) << "\n";
       if (result.empty()) {
         if (!extended.empty()) {
@@ -570,7 +576,7 @@ on SassException catch (error) {
     return rv;
   }
 
-  std::vector<ComplexSelector_Obj> Extender::extendComplex(ComplexSelector_Obj complex, ExtSelExtMap& extensions)
+  std::vector<ComplexSelector_Obj> Extender::extendComplex(ComplexSelector_Obj complex, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext)
   {
     // std::cerr << "extendComplex " << debug_vec(complex) << "\n";
     // The complex selectors that each compound selector in [complex.components]
@@ -600,7 +606,7 @@ on SassException catch (error) {
       // std::cerr << "COMPONENT " << debug_vec(component) << "\n";
       if (CompoundSelector_Obj compound = Cast<CompoundSelector>(component)) {
         // std::cerr << "COMP IN " << debug_vec(compound) << "\n";
-        std::vector<ComplexSelector_Obj> extended = extendCompound(compound, extensions, isOriginal);
+        std::vector<ComplexSelector_Obj> extended = extendCompound(compound, extensions, mediaQueryContext, isOriginal);
         // std::cerr << "COMP RV " << debug_vec(extended) << "\n";
         if (extended.empty()) {
           // std::cerr << "ADD AS EXT IS EMPTY\n";
@@ -681,7 +687,7 @@ on SassException catch (error) {
         if (first && originals.find(complex) != originals.end()) {
           // std::cerr << "INSERT ORIGINAL2 " << debug_vec(cplx) << "\n";
           // std::cerr << "BEFORE " << debug_vec(originals) << "\n";
-          size_t sz = originals.size();
+          // size_t sz = originals.size();
 
           originals.insert(cplx);
           // std::cerr << "AFTER " << debug_vec(originals) << "\n";
@@ -737,7 +743,7 @@ on SassException catch (error) {
     return extension;
   }
 
-  std::vector<ComplexSelector_Obj> Extender::extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal)
+  std::vector<ComplexSelector_Obj> Extender::extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext, bool inOriginal)
   {
 
     // If there's more than one target and they all need to
@@ -775,7 +781,7 @@ on SassException catch (error) {
       if (extensions.find(simple) != extensions.end()) {
         // std::cerr << "STARTCOMP " << debug_values(extensions[simple]) << "\n";
       }
-      auto extended = extendSimple(simple, extensions, targetsUsed);
+      auto extended = extendSimple(simple, extensions, mediaQueryContext, targetsUsed);
       // std::cerr << "GOT2 " << debug_vec(extended) << "\n";
       // std::cerr << "targetUsed after " << debug_vec(targetsUsed) << "\n";
       // std::cerr << "  " << debug_vec(extended) << "\n";
@@ -835,6 +841,7 @@ on SassException catch (error) {
     if (options.size() == 1) {
       std::vector<Extension> exts = options[0];
       for (size_t n = 0; n < exts.size(); n += 1) {
+        exts[n].assertCompatibleMediaContext(mediaQueryContext);
         // state.assertCompatibleMediaContext(mediaQueryContext);
         result.push_back(exts[n].extender);
       }
@@ -936,7 +943,7 @@ on SassException catch (error) {
       bool lineBreak = false;
       // var specificity = _sourceSpecificityFor(compound);
       for (auto state : path) {
-        // state.assertCompatibleMediaContext(mediaQueryContext);
+        state.assertCompatibleMediaContext(mediaQueryContext);
         lineBreak = lineBreak || state.extender->hasPreLineFeed();
         // specificity = math.max(specificity, state.specificity);
       }
@@ -1001,7 +1008,7 @@ on SassException catch (error) {
     return result;
   }
 
-  std::vector<std::vector<Extension>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed) {
+  std::vector<std::vector<Extension>> Extender::extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext, ExtSmplSelSet* targetsUsed) {
 
     // std::cerr << "start extendSimple\n";
     // std::cerr << "targetsUsed " << debug_vec(targetsUsed) << "\n";
@@ -1010,7 +1017,7 @@ on SassException catch (error) {
         // std::cerr << "Cast to Pseudo OK " << debug_vec(simple) << "\n";
         // // std::cerr << "pseudo does have selector\n";
         // if (simple.selector != null) // Implement/Checks what this does?
-        auto extended = extendPseudo(pseudo, extensions);
+        auto extended = extendPseudo(pseudo, extensions, mediaQueryContext);
         // std::cerr << "extended pseudo " << debug_vec(extended) << "\n";
 
         std::vector<std::vector<Extension>> rv;
@@ -1040,7 +1047,7 @@ on SassException catch (error) {
     return { result };
   }
 
-  std::vector<ComplexSelector_Obj> extendPseudoComplex(ComplexSelector_Obj complex, Pseudo_Selector_Obj pseudo) {
+  std::vector<ComplexSelector_Obj> extendPseudoComplex(ComplexSelector_Obj complex, Pseudo_Selector_Obj pseudo, Media_Block_Obj mediaQueryContext) {
 
     // std::cerr << "extendPseudoComplex " << debug_vec(complex) << "\n";
 
@@ -1112,11 +1119,11 @@ on SassException catch (error) {
   }
 
 
-  std::vector<Pseudo_Selector_Obj> Extender::extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions)
+  std::vector<Pseudo_Selector_Obj> Extender::extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext)
   {
     auto sel = pseudo->selector2();
     // std::cerr << "CALL extend list\n";
-    SelectorList_Obj extended = extendList(sel, extensions);
+    SelectorList_Obj extended = extendList(sel, extensions, mediaQueryContext);
     // std::cerr << "CALLED extend list\n";
 
 
@@ -1162,7 +1169,7 @@ on SassException catch (error) {
       }
     }
 
-    auto rv = expandListFn(complexes, extendPseudoComplex, pseudo);
+    auto rv = expandListFn(complexes, extendPseudoComplex, pseudo, mediaQueryContext);
 
     // std::cerr << "AFTER EXPAND " << debug_vec(rv) << "\n";
 
@@ -1224,7 +1231,7 @@ on SassException catch (error) {
     // TODO(mgreter): Check how this perfoms in C++ (up the limit)
     if (selectors.size() > 100) return selectors;
 
-    size_t cnt = 0;
+    // size_t cnt = 0;
 
     // std::cerr << "DO TRIM " << debug_vec(selectors) << "\n";
     // std::cerr << "SET CONISTS " << debug_vec(set) << "\n";

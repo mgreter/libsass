@@ -93,6 +93,17 @@ namespace Sass {
     // the extensions that those extenders define.
     ExtByExtMap extensionsByExtender;
 
+    // A map from CSS rules to the media query contexts they're defined in.
+    // This tracks the contexts in which each style rule is defined.
+    // If a rule is defined at the top level, it doesn't have an entry.
+    tsl::ordered_map<
+      SelectorList_Obj,
+      Media_Block_Obj,
+      HashPtrNodes,
+      ComparePtrNodes
+    > mediaContexts;
+
+
     std::unordered_map<
       Simple_Selector_Obj,
       size_t,
@@ -132,7 +143,7 @@ namespace Sass {
     // Extends [list] using [extensions].
     /*, List<CssMediaQuery> mediaQueryContext*/
     void addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend /*, Extension_Obj target *//*, media context */);
-    SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions);
+    SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions, Media_Block_Obj mediaContext);
 
     void extendExistingStyleRules(
       ExtListSelSet& rules,
@@ -149,11 +160,11 @@ namespace Sass {
     Extension extensionForCompound(std::vector<Simple_Selector_Obj> simples);
 
 
-    std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions);
-    std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, bool inOriginal = false);
-    std::vector<std::vector<Extension>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
+    std::vector<ComplexSelector_Obj> extendComplex(ComplexSelector_Obj list, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext);
+    std::vector<ComplexSelector_Obj> extendCompound(CompoundSelector_Obj compound, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext, bool inOriginal = false);
+    std::vector<std::vector<Extension>> extendSimple(Simple_Selector_Obj simple, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext, ExtSmplSelSet* targetsUsed);
 
-    std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions);
+    std::vector<Pseudo_Selector_Obj> extendPseudo(Pseudo_Selector_Obj pseudo, ExtSelExtMap& extensions, Media_Block_Obj mediaQueryContext);
 
     std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, ExtCplxSelSet& set);
     std::vector<ComplexSelector_Obj> trim(std::vector<ComplexSelector_Obj> selectors, bool (*isOriginal)(ComplexSelector_Obj complex));
@@ -200,7 +211,7 @@ namespace Sass {
     // extensions are added, the returned rule is automatically updated.
     // The [mediaContext] is the media query context in which the selector was
     // defined, or `null` if it was defined at the top level of the document.
-    void addSelector(SelectorList_Obj selector);
+    void addSelector(SelectorList_Obj selector, Media_Block_Obj mediaContext);
 
     // Registers the [SimpleSelector]s in [list]
     // to point to [rule] in [selectors].

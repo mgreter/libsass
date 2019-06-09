@@ -185,7 +185,7 @@ namespace Sass {
     // std::cerr << "Eval " << debug_vec(sel) << "\n";
     SelectorList_Obj evaled = eval(sel);
     // std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
-    ctx.extender.addSelector(evaled);
+    ctx.extender.addSelector(evaled, media_stack.back());
     // std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
 
     // std::cerr << "= EVALED " << debug_vec(evaled) << "\n";
