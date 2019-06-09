@@ -2314,6 +2314,7 @@ namespace Sass {
     if (!peek_css < exactly <'{'> >()) queries->append(parse_media_query());
     while (lex_css < exactly <','> >()) queries->append(parse_media_query());
     queries->update_pstate(pstate);
+//    debug_ast(queries);
     return queries.detach();
   }
 

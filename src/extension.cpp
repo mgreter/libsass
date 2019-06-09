@@ -55,16 +55,22 @@ namespace Sass {
   // Asserts that the [mediaContext] for a selector is
   // compatible with the query context for this extender.
   void Extension::assertCompatibleMediaContext(Media_Block_Obj mediaQueryContext, Backtraces& traces) {
+
+    // assertion is done after they have been evaled
+    // currenty they are expanded at a later stage (bad)
+
     // debug_ast(mediaContext);
     // debug_ast(mediaQueryContext);
 
-    // if (mediaContext) std::cerr << "ASSERT MC1 " << this->mediaContext.ptr() << "\n";
-    // if (mediaQueryContext) std::cerr << "ASSERT MC2 " << mediaQueryContext.ptr() << "\n";
+    // if (mediaContext) std::cerr << "ASSERT MC1 " << this->mediaContext->to_string() << "\n";
+    // if (mediaQueryContext) std::cerr << "ASSERT MC2 " << mediaQueryContext->to_string() << "\n";
 
     if (this->mediaContext.isNull()) return;
     if (mediaQueryContext && ComparePtrFunction(mediaContext->block(), mediaQueryContext->block())) return;
 
-    // throw Exception::ExtendAcrossMedia(traces, *this);
+    if (mediaQueryContext && mediaQueryContext->to_string() == mediaContext->to_string()) return;
+
+    throw Exception::ExtendAcrossMedia(traces, *this);
 
     // throw Exception::TopLevelParent(traces)
 
