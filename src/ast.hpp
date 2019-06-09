@@ -835,6 +835,20 @@ namespace Sass {
   /////////////////
   // Media queries.
   /////////////////
+  class Media_Block2 final : public Has_Block, public Vectorized<Media_Query_Obj, Media_Block2> {
+    ADD_PROPERTY(List_Obj, schema)
+  public:
+    Media_Block2(ParserState pstate, Block_Obj b = {});
+    Media_Block2(ParserState pstate, List_Obj mqs, Block_Obj b);
+    bool bubbles() override;
+    bool is_invisible() const override;
+    ATTACH_AST_OPERATIONS(Media_Block2)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  /////////////////
+  // Media queries.
+  /////////////////
   class Media_Query final : public Expression,
                             public Vectorized<Media_Query_Expression_Obj, Media_Query> {
     ADD_PROPERTY(String_Obj, media_type)
@@ -842,6 +856,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_restricted)
   public:
     Media_Query(ParserState pstate, String_Obj t = {}, size_t s = 0, bool n = false, bool r = false);
+    size_t hash() { return 0;  }
     ATTACH_AST_OPERATIONS(Media_Query)
     ATTACH_CRTP_PERFORM_METHODS()
   };

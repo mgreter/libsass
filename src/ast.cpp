@@ -236,6 +236,40 @@ namespace Sass {
     return true;
   }
 
+  Media_Block2::Media_Block2(ParserState pstate, Block_Obj block) :
+    Has_Block(pstate, block),
+    Vectorized(),
+    schema_({})
+  {
+    statement_type(MEDIA);
+  }
+
+  Media_Block2::Media_Block2(ParserState pstate, List_Obj schema, Block_Obj block) :
+    Has_Block(pstate, block),
+    Vectorized(),
+    schema_(schema)
+  {
+
+  }
+
+  bool Media_Block2::bubbles()
+  {
+    return false;
+  }
+
+  bool Media_Block2::is_invisible() const
+  {
+    return false;
+  }
+
+  Media_Block2::Media_Block2(const Media_Block2* ptr) :
+    Has_Block(ptr),
+    Vectorized(*ptr),
+    schema_(ptr->schema_)
+  {
+    statement_type(MEDIA);
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -1006,6 +1040,7 @@ namespace Sass {
 
   IMPLEMENT_AST_OPERATORS(Ruleset);
   IMPLEMENT_AST_OPERATORS(Media_Block);
+  IMPLEMENT_AST_OPERATORS(Media_Block2);
   IMPLEMENT_AST_OPERATORS(Import);
   IMPLEMENT_AST_OPERATORS(Import_Stub);
   IMPLEMENT_AST_OPERATORS(Directive);

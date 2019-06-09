@@ -222,6 +222,14 @@ namespace Sass {
       virtual ~UnsatisfiedExtend() throw() {};
     };
 
+    class ExtendAcrossMedia : public Base {
+    public:
+      ExtendAcrossMedia(Backtraces traces, Extension extension);
+      virtual ~ExtendAcrossMedia() throw() {};
+    };
+
+    
+
   }
 
   void warn(std::string msg, ParserState pstate);

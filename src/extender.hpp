@@ -8,7 +8,9 @@
 #include "ast_fwd_decl.hpp"
 #include "operation.hpp"
 #include "extension.hpp"
+#include "backtrace.hpp"
 
+#include "tsl/ordered_map.h"
 #include "tsl/ordered_map.h"
 #include "tsl/ordered_set.h"
 
@@ -81,6 +83,10 @@ namespace Sass {
     // The mode that controls this extender's behavior.
     ExtendMode mode;
 
+    // Shared backtraces with context and expander. Needed the throw
+    // errors when e.g. extending accross media query boundaries.
+    Backtraces& traces;
+
     // A map from all simple selectors in the stylesheet to the rules that
     // contain them.This is used to find which rules an `@extend` applies to.
     ExtSelMap selectors;
@@ -103,7 +109,7 @@ namespace Sass {
       ComparePtrNodes
     > mediaContexts;
 
-
+    
     std::unordered_map<
       Simple_Selector_Obj,
       size_t,
@@ -120,29 +126,21 @@ namespace Sass {
 
   public:
 
-    Extender() {};
+    Extender(Backtraces& traces);;
     ~Extender() {};
 
 
-    Extender(ExtendMode mode) :
-      mode(mode),
-      selectors(),
-      extensions(),
-      extensionsByExtender(),
-      // mediaContexts(),
-      sourceSpecificity(),
-      originals()
-    {};
+    Extender(ExtendMode mode, Backtraces& traces);
 
     ExtSmplSelSet getSimpleSelectors() const;
 
   public:
-    static SelectorList_Obj extend(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target);
-    static SelectorList_Obj replace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target);
+    static SelectorList_Obj extend(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, Backtraces& traces);
+    static SelectorList_Obj replace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, Backtraces& traces);
 
     // Extends [list] using [extensions].
     /*, List<CssMediaQuery> mediaQueryContext*/
-    void addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend /*, Extension_Obj target *//*, media context */);
+    void addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend, Media_Block_Obj mediaQueryContext);
     SelectorList_Obj extendList(SelectorList_Obj list, ExtSelExtMap& extensions, Media_Block_Obj mediaContext);
 
     void extendExistingStyleRules(
@@ -173,7 +171,7 @@ namespace Sass {
 
   private:
     std::vector<Extension> extendWithoutPseudo(Simple_Selector_Obj simple, ExtSelExtMap& extensions, ExtSmplSelSet* targetsUsed);
-    static SelectorList_Obj _extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, ExtendMode mode);
+    static SelectorList_Obj _extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj target, ExtendMode mode, Backtraces& traces);
 
   public:
 

@@ -305,7 +305,7 @@ namespace Sass {
     BUILT_IN(selector_trim)
     {
       SelectorList_Obj  selector = ARGSELS2("$selectors");
-      Extender extender;
+      Extender extender(Extender::NORMAL, traces);
       std::vector<ComplexSelector_Obj> list;
       list.insert(list.begin(), selector->begin(), selector->end());
       SelectorList_Obj result = SASS_MEMORY_NEW(SelectorList, ParserState("{tmp}"));
@@ -320,7 +320,7 @@ namespace Sass {
       SelectorList_Obj selector = ARGSELS2("$selector");
       SelectorList_Obj target = ARGSELS2("$extendee");
       SelectorList_Obj source = ARGSELS2("$extender");
-      SelectorList_Obj result = Extender::extend(selector, source, target);
+      SelectorList_Obj result = Extender::extend(selector, source, target, traces);
       return Cast<Value>(Listize::perform(result));
     }
 
@@ -330,7 +330,7 @@ namespace Sass {
       SelectorList_Obj selector = ARGSELS2("$selector");
       SelectorList_Obj target = ARGSELS2("$original");
       SelectorList_Obj source = ARGSELS2("$replacement");
-      SelectorList_Obj result = Extender::replace(selector, source, target);
+      SelectorList_Obj result = Extender::replace(selector, source, target, traces);
       return Cast<Value>(Listize::perform(result));
     }
 

@@ -43,7 +43,6 @@ namespace Sass {
     struct Sass_Options& c_options;
     std::string entry_path;
     size_t head_imports;
-    Extender extender;
     Plugins plugins;
     Output emitter;
 
@@ -65,6 +64,7 @@ namespace Sass {
     ImporterStack import_stack;
     std::vector<Sass_Callee> callee_stack;
     std::vector<Backtrace> traces;
+    Extender extender;
 
     struct Sass_Compiler* c_compiler;
 

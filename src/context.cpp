@@ -76,7 +76,6 @@ namespace Sass {
     c_options(c_ctx),
     entry_path(""),
     head_imports(0),
-    extender(Extender::NORMAL),
     plugins(),
     emitter(c_options),
 
@@ -88,6 +87,7 @@ namespace Sass {
     import_stack(),
     callee_stack(),
     traces(),
+    extender(Extender::NORMAL, traces),
     c_compiler(NULL),
 
     c_headers               (std::vector<Sass_Importer_Entry>()),

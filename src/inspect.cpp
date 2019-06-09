@@ -74,9 +74,13 @@ namespace Sass {
     append_token("@media", media_block);
     append_mandatory_space();
     in_media_block = true;
-    media_block->media_queries()->perform(this);
+    if (media_block->media_queries()) {
+      media_block->media_queries()->perform(this);
+    }
     in_media_block = false;
-    media_block->block()->perform(this);
+    if (media_block->block()) {
+      media_block->block()->perform(this);
+    }
   }
 
   void Inspect::operator()(Supports_Block* feature_block)

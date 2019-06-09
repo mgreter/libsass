@@ -29,15 +29,19 @@
 
 namespace Sass {
 
-  SelectorList_Obj Extender::extend(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets)
-  {
-    return _extendOrReplace(selector, source, targets, ExtendMode::TARGETS);
-  }
+  Extender::Extender(Backtraces& traces) :
+    traces(traces) {}
 
-  SelectorList_Obj Extender::replace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets)
-  {
-    return _extendOrReplace(selector, source, targets, ExtendMode::REPLACE);
-  }
+  Extender::Extender(ExtendMode mode, Backtraces& traces) :
+    mode(mode),
+    traces(traces),
+    selectors(),
+    extensions(),
+    extensionsByExtender(),
+    // mediaContexts(),
+    sourceSpecificity(),
+    originals()
+  {}
 
   ExtSmplSelSet Extender::getSimpleSelectors() const
   {
@@ -48,7 +52,17 @@ namespace Sass {
     return set;
   }
 
-  SelectorList_Obj Extender::_extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets, ExtendMode mode)
+  SelectorList_Obj Extender::extend(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets, Backtraces& traces)
+  {
+    return _extendOrReplace(selector, source, targets, ExtendMode::TARGETS, traces);
+  }
+
+  SelectorList_Obj Extender::replace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets, Backtraces& traces)
+  {
+    return _extendOrReplace(selector, source, targets, ExtendMode::REPLACE, traces);
+  }
+
+  SelectorList_Obj Extender::_extendOrReplace(SelectorList_Obj selector, SelectorList_Obj source, SelectorList_Obj targets, ExtendMode mode, Backtraces& traces)
   {
     ExtSelExtMapEntry extenders;
 
@@ -77,7 +91,7 @@ namespace Sass {
 
         // std::cerr << "EXTS: " << debug_vec(extensions) << "\n";
 
-        Extender extender(mode);
+        Extender extender(mode, traces);
 
         if (!selector->is_invisible()) {
           for (auto sel : selector->elements()) {
@@ -253,7 +267,7 @@ namespace Sass {
 
   // ToDo: rename extender to parent, since it is not involved in extending stuff
   // ToDo: check why dart sass passes the ExtendRule around (is this the main selector?)
-  void Extender::addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend /*, Extension_Obj target *//*, media context */)
+  void Extender::addExtension(SelectorList_Obj extender, Simple_Selector_Obj target, ExtendRule_Obj extend, Media_Block_Obj mediaQueryContext)
   {
     // std::cerr << "addExtension for " << debug_vec(target) << " in " << debug_vec(extender) << "\n";
 
@@ -287,6 +301,7 @@ namespace Sass {
       // ToDo: fine-tune public API
       state.target = target;
       state.isOptional = extend->isOptional();
+      state.mediaContext = mediaQueryContext;
 
       // std::cerr << "SOURCES " << debug_keys(sources) << "\n";
       auto existingState = sources.find(complex);
@@ -841,7 +856,7 @@ on SassException catch (error) {
     if (options.size() == 1) {
       std::vector<Extension> exts = options[0];
       for (size_t n = 0; n < exts.size(); n += 1) {
-        exts[n].assertCompatibleMediaContext(mediaQueryContext);
+        exts[n].assertCompatibleMediaContext(mediaQueryContext, traces);
         // state.assertCompatibleMediaContext(mediaQueryContext);
         result.push_back(exts[n].extender);
       }
@@ -943,7 +958,7 @@ on SassException catch (error) {
       bool lineBreak = false;
       // var specificity = _sourceSpecificityFor(compound);
       for (auto state : path) {
-        state.assertCompatibleMediaContext(mediaQueryContext);
+        state.assertCompatibleMediaContext(mediaQueryContext, traces);
         lineBreak = lineBreak || state.extender->hasPreLineFeed();
         // specificity = math.max(specificity, state.specificity);
       }

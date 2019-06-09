@@ -45,7 +45,7 @@ namespace Sass {
         else pushToSelectorStack(item);
       }
     }
-    media_stack.push_back(nullptr);
+    media_stack.push_back({});
   }
 
   Env* Expand::environment()
@@ -164,7 +164,6 @@ namespace Sass {
     // reset when leaving scope
     LOCAL_FLAG(at_root_without_rule, false);
 
-    SelectorList_Obj sel = r->selector2();
 
     // SelectorList_Obj sss = r->selector2();
     // std::cerr << "eval selector\n";
@@ -183,9 +182,8 @@ namespace Sass {
     // debug_ast(sel);
 
     // std::cerr << "Eval " << debug_vec(sel) << "\n";
-    SelectorList_Obj evaled = eval(sel);
+    SelectorList_Obj evaled = eval(r->selector2());
     // std::cerr << "CALL ADD " << debug_vec(evaled) << "\n";
-    ctx.extender.addSelector(evaled, media_stack.back());
     // std::cerr << "AFTER SEL " << debug_vec(evaled) << "\n";
 
     // std::cerr << "= EVALED " << debug_vec(evaled) << "\n";
@@ -198,14 +196,17 @@ namespace Sass {
     if (block_stack.back()->is_root()) {
       env_stack.push_back(&env);
     }
-    sel->set_media_block(media_stack.back());
+    evaled->set_media_block(media_stack.back());
     Block_Obj blk;
     if (r->block()) blk = operator()(r->block());
     Ruleset* rr = SASS_MEMORY_NEW(Ruleset,
                                   r->pstate(),
                                   evaled,
                                   blk);
+
+
     popFromSelectorStack();
+
     // debug_ast(rr->selector2(), "vvv: ");
     // rr->selector2(r->selector2());
     // rr->selector2(r->selector2());
@@ -216,6 +217,7 @@ namespace Sass {
     rr->is_root(r->is_root());
     rr->tabs(r->tabs());
 
+    ctx.extender.addSelector(evaled, media_stack.back());
 
     return rr;
   }
@@ -742,7 +744,7 @@ namespace Sass {
         }
 
         // std::cerr << "CALLING WITH PARENT: " << debug_vec(selector2()) << "\n";
-        ctx.extender.addExtension(selector2(), compound->first(), e);
+        ctx.extender.addExtension(selector2(), compound->first(), e, media_stack.back());
 
       }
       else {

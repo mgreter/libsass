@@ -4,6 +4,7 @@
 #include "ast_fwd_decl.hpp"
 #include "tsl/ordered_map.h"
 #include "tsl/ordered_set.h"
+#include "backtrace.hpp"
 
 namespace Sass {
 
@@ -82,7 +83,7 @@ namespace Sass {
 
     /// Asserts that the [mediaContext] for a selector is compatible with the
     /// query context for this extender.
-    void assertCompatibleMediaContext(Media_Block_Obj mediaContext);
+    void assertCompatibleMediaContext(Media_Block_Obj mediaContext, Backtraces& traces);
 
     Extension withExtender(ComplexSelector_Obj newExtender);
 

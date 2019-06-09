@@ -38,6 +38,7 @@ namespace Sass {
   class Trace;
 
   class Media_Block;
+  class Media_Block2;
   class Supports_Block;
   class Directive;
 
@@ -142,6 +143,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Bubble);
   IMPL_MEM_OBJ(Trace);
   IMPL_MEM_OBJ(Media_Block);
+  IMPL_MEM_OBJ(Media_Block2);
   IMPL_MEM_OBJ(Supports_Block);
   IMPL_MEM_OBJ(Directive);
   IMPL_MEM_OBJ(Keyframe_Rule);
@@ -347,7 +349,7 @@ namespace Sass {
   typedef std::vector<Block*> BlockStack;
   typedef std::vector<Sass_Callee> CalleeStack;
   typedef std::vector<AST_Node_Obj> CallStack;
-  typedef std::vector<Media_Block*> MediaStack;
+  typedef std::vector<Media_Block_Obj> MediaStack;
   typedef std::vector<SelectorList_Obj> SelectorStack2;
   typedef std::vector<Selector_List_Obj> SelectorStack;
   typedef std::vector<Sass_Import_Entry> ImporterStack;
