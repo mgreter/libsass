@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "lexer.hpp"
 #include "prelexer.hpp"
+#include "debugger.hpp"
 #include "constants.hpp"
 #include "utf8/checked.h"
 
@@ -555,11 +556,15 @@ namespace Sass {
 
       Block_Obj b = r->block();
 
-      Selector_List* sl = toSelector_List(r->selector2());
+      SelectorList* sl = r->selector2();
       bool hasSelectors = sl ? sl->length() > 0 : false;
 
       if (!hasSelectors) {
         return false;
+      }
+
+      if (sl->isInvisible()) {
+        // return false;
       }
 
       bool hasDeclarations = false;
@@ -654,27 +659,32 @@ namespace Sass {
         Statement_Obj stm = b->at(i);
         if (Cast<Directive>(stm)) return true;
         else if (Cast<Declaration>(stm)) return true;
-        else if (Comment* c = Cast<Comment>(stm)) {
+        else if (Comment * c = Cast<Comment>(stm)) {
           if (isPrintable(c, style)) {
             return true;
           }
         }
-        else if (Ruleset* r = Cast<Ruleset>(stm)) {
+        else if (Ruleset * r = Cast<Ruleset>(stm)) {
           if (isPrintable(r, style)) {
             return true;
           }
         }
-        else if (Supports_Block* f = Cast<Supports_Block>(stm)) {
+        else if (Supports_Block * f = Cast<Supports_Block>(stm)) {
           if (isPrintable(f, style)) {
             return true;
           }
         }
-        else if (Media_Block* mb = Cast<Media_Block>(stm)) {
+        else if (Media_Block * mb = Cast<Media_Block>(stm)) {
           if (isPrintable(mb, style)) {
             return true;
           }
         }
-        else if (Has_Block* b = Cast<Has_Block>(stm)) {
+        else if (CssMediaRule * mb = Cast<CssMediaRule>(stm)) {
+          if (isPrintable(mb, style)) {
+            return true;
+          }
+        }
+        else if (Has_Block * b = Cast<Has_Block>(stm)) {
           if (isPrintable(b->block(), style)) {
             return true;
           }
@@ -682,6 +692,51 @@ namespace Sass {
       }
       return false;
     }
+
+
+    bool isPrintable(CssMediaRule* m, Sass_Output_Style style)
+    {
+      if (m == 0) return false;
+      Block_Obj b = m->block();
+      if (b == 0) return false;
+      for (size_t i = 0, L = b->length(); i < L; ++i) {
+        Statement_Obj stm = b->at(i);
+        if (Cast<Directive>(stm)) return true;
+        else if (Cast<Declaration>(stm)) return true;
+        else if (Comment * c = Cast<Comment>(stm)) {
+          if (isPrintable(c, style)) {
+            return true;
+          }
+        }
+        else if (Ruleset * r = Cast<Ruleset>(stm)) {
+          if (isPrintable(r, style)) {
+            return true;
+          }
+        }
+        else if (Supports_Block * f = Cast<Supports_Block>(stm)) {
+          if (isPrintable(f, style)) {
+            return true;
+          }
+        }
+        else if (Media_Block * mb = Cast<Media_Block>(stm)) {
+          if (isPrintable(mb, style)) {
+            return true;
+          }
+        }
+        else if (CssMediaRule * mb = Cast<CssMediaRule>(stm)) {
+          if (isPrintable(mb, style)) {
+            return true;
+          }
+        }
+        else if (Has_Block * b = Cast<Has_Block>(stm)) {
+          if (isPrintable(b->block(), style)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
 
     bool isPrintable(Comment* c, Sass_Output_Style style)
     {
@@ -722,7 +777,12 @@ namespace Sass {
             return true;
           }
         }
-        else if (Media_Block* m = Cast<Media_Block>(stm)) {
+        else if (Media_Block * m = Cast<Media_Block>(stm)) {
+          if (isPrintable(m, style)) {
+            return true;
+          }
+        }
+        else if (CssMediaRule * m = Cast<CssMediaRule>(stm)) {
           if (isPrintable(m, style)) {
             return true;
           }

@@ -191,9 +191,9 @@ namespace Sass {
   bool Ruleset::is_invisible() const {
     if (SelectorList * sl = Cast<SelectorList>(selector2())) {
       for (size_t i = 0, L = sl->length(); i < L; ++i)
-        if (!(*sl)[i]->has_placeholder()) return false;
+        if (!(*sl)[i]->isInvisible()) return false;
     }
-    return false; // ToDo: hide real invisible ones
+    return true; // ToDo: hide real invisible ones
   }
 
   /////////////////////////////////////////////////////////////////////////

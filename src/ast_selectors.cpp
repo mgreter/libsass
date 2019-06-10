@@ -1937,10 +1937,10 @@ namespace Sass {
   {
     for (size_t i = 0; i < length(); i += 1) {
       if (CompoundSelector_Obj compound = get(i)->getCompound()) {
-        if (compound->isInvisible()) return true;
+        if (!compound->isInvisible()) return false;
       }
     }
-    return false;
+    return true;
   }
 
   bool SelectorList::canHaveRealParent() const
@@ -1954,9 +1954,9 @@ namespace Sass {
   bool SelectorList::isInvisible() const
   {
     for (size_t i = 0; i < length(); i += 1) {
-      if (get(i)->isInvisible()) return true;
+      if (!get(i)->isInvisible()) return false;
     }
-    return false;
+    return true;
   }
 
   bool CompoundSelector::canHaveRealParent() const
@@ -1973,9 +1973,9 @@ namespace Sass {
   bool CompoundSelector::isInvisible() const
   {
     for (size_t i = 0; i < length(); i += 1) {
-      if (get(i)->isInvisible()) return true;
+      if (!get(i)->isInvisible()) return false;
     }
-    return false;
+    return true;
   }
 
 
