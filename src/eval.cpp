@@ -537,8 +537,6 @@ namespace Sass {
     for (size_t i = 0, L = l->length(); i < L; ++i) {
       ll->append((*l)[i]->perform(this));
     }
-    // std::cerr << "EVALED\n";
-    // debug_ast(ll);
     ll->is_interpolant(l->is_interpolant());
     ll->from_selector(l->from_selector());
     ll->is_expanded(true);

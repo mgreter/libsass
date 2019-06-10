@@ -295,7 +295,6 @@ namespace Sass {
     }
 
     // parse multiple specific keyword directives
-    // else if (lex < kwd_media >(true)) { block->append(parseMediaRule()); }
     else if (lex < kwd_media >(true)) { block->append(parse_media_block()); }
     else if (lex < kwd_at_root >(true)) { block->append(parse_at_root_block()); }
     else if (lex < kwd_include_directive >(true)) { block->append(parse_include_directive()); }
@@ -2417,13 +2416,10 @@ namespace Sass {
   // EO parse_while_directive
   Media_Block_Obj Parser::parse_media_block()
   {
-    MediaRule_Obj rule = SASS_MEMORY_NEW(MediaRule, pstate);
-    rule->schema(parse_media_queries());
-
-
     stack.push_back(Scope::Media);
     Media_Block_Obj media_block = SASS_MEMORY_NEW(Media_Block, pstate, {}, {});
-    media_block->media_queries(rule->schema());
+
+    media_block->media_queries(parse_media_queries());
 
     Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;
