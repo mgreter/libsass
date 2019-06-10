@@ -258,9 +258,11 @@ namespace Sass {
     // Parser p(Parser::from_c_str(str, ctx, traces, mq->pstate()));
 
     // debug_ast(m->schema());
+    // debug_ast(m->schema());
     Expression_Obj mq = eval(m->schema());
     // debug_ast(mq);
-    std::string str_mq(mq->to_string(ctx.c_options));
+    // debug_ast(mq);
+    std::string str_mq(mq->to_css(ctx.c_options));
     char* str = sass_copy_c_string(str_mq.c_str());
     // std::cerr << "reparse: '" << str << "'\n";
     Parser parser(Parser::from_c_str(str, ctx, traces, mq->pstate()));

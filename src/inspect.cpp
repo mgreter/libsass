@@ -622,6 +622,11 @@ namespace Sass {
     // add unit now
     res += n->unit();
 
+    if (opt.output_style == TO_CSS && !n->is_valid_css_unit()) {
+      // traces.push_back(Backtrace(nr->pstate()));
+      throw Exception::InvalidValue({}, *n);
+    }
+
     // output the final token
     append_token(res, n);
   }

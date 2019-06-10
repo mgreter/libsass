@@ -82,6 +82,18 @@ namespace Sass {
     return i.get_buffer();
   }
 
+  const std::string AST_Node::to_css(Sass_Inspect_Options opt) const
+  {
+    opt.output_style = TO_CSS;
+    Sass_Output_Options out(opt);
+    Emitter emitter(out);
+    Inspect i(emitter);
+    i.in_declaration = true;
+    // ToDo: inspect should be const
+    const_cast<AST_Node*>(this)->perform(&i);
+    return i.get_buffer();
+  }
+
   const std::string AST_Node::to_string() const
   {
     return to_string({ NESTED, 5 });

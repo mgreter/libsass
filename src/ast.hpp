@@ -105,6 +105,7 @@ namespace Sass {
     virtual std::string inspect() const { return to_string({ INSPECT, 5 }); }
     virtual std::string to_sass() const { return to_string({ TO_SASS, 5 }); }
     virtual const std::string to_string(Sass_Inspect_Options opt) const;
+    virtual const std::string to_css(Sass_Inspect_Options opt) const;
     virtual const std::string to_string() const;
     virtual void cloneChildren() {};
     // generic find function (not fully implemented yet)
