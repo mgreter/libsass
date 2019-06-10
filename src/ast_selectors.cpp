@@ -2148,7 +2148,7 @@ namespace Sass {
     }
 
     CssMediaQuery_Obj query = SASS_MEMORY_NEW(CssMediaQuery, pstate());
-    query->type(modifier == ourModifier ? this->modifier() : other->modifier());
+    query->modifier(modifier == ourModifier ? this->modifier() : other->modifier());
     query->type(ourType.empty() ? other->type() : this->type());
     query->features(features);
     return query;

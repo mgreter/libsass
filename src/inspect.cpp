@@ -86,8 +86,14 @@ namespace Sass {
     append_token("@media", rule);
     append_mandatory_space();
     in_media_block = true;
+    bool joinIt = false;
     for (auto query : rule->elements()) {
+      if (joinIt) {
+        append_comma_separator();
+        append_optional_space();
+      }
       operator()(query);
+      joinIt = true;
     }
     if (rule->block()) {
       rule->block()->perform(this);
@@ -104,7 +110,6 @@ namespace Sass {
     }
     if (!query->type().empty()) {
       append_string(query->type());
-      append_mandatory_space();
       joinIt = true;
     }
     for (auto feature : query->features()) {

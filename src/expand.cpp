@@ -262,6 +262,7 @@ namespace Sass {
     // debug_ast(mq);
     std::string str_mq(mq->to_string(ctx.c_options));
     char* str = sass_copy_c_string(str_mq.c_str());
+    // std::cerr << "reparse: '" << str << "'\n";
     Parser parser(Parser::from_c_str(str, ctx, traces, mq->pstate()));
 
     // Create a new CSS only representation of the media rule

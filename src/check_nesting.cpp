@@ -388,7 +388,9 @@ namespace Sass {
   {
     return Cast<Directive>(n) ||
            Cast<Import>(n) ||
-           Cast<Media_Block>(n) ||
-           Cast<Supports_Block>(n);
+      Cast<Media_Block>(n) ||
+      Cast<MediaRule>(n) ||
+      Cast<CssMediaRule>(n) ||
+      Cast<Supports_Block>(n);
   }
 }

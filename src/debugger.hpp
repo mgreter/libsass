@@ -639,6 +639,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     CssMediaQuery* query = Cast<CssMediaQuery>(node);
     std::cerr << ind << "CssMediaQuery " << query;
     std::cerr << " (" << pstate_source_position(query) << ")";
+    std::cerr << " [" << (query->modifier()) << "] ";
+    std::cerr << " [" << (query->type()) << "] ";
     std::cerr << " " << debug_vec(query->features());
     std::cerr << std::endl;
   }

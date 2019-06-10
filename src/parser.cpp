@@ -295,6 +295,7 @@ namespace Sass {
     }
 
     // parse multiple specific keyword directives
+    else if (lex < kwd_media >(true)) { block->append(parseMediaRule()); }
     else if (lex < kwd_media >(true)) { block->append(parse_media_block()); }
     else if (lex < kwd_at_root >(true)) { block->append(parse_at_root_block()); }
     else if (lex < kwd_include_directive >(true)) { block->append(parse_include_directive()); }
@@ -2296,15 +2297,15 @@ namespace Sass {
   {
     std::vector<CssMediaQuery_Obj> result;
     // std::cerr << "parse queries\n";
-    while (auto query = parseCssMediaQuery()) {
+    do {
       // debug_ast(query);
       // std::cerr << "parse query\n";
-      result.push_back(query);
-      if (*position != 0) {
-        std::cerr << "Not fully consumed\n";
+      if (auto query = parseCssMediaQuery()) {
+        // debug_ast(query);
+        result.push_back(query);
       }
       // std::cerr << "[" << position << "]\n";
-    }
+    } while (lex<exactly<','>>());
     return result;
   }
 
@@ -2334,6 +2335,9 @@ namespace Sass {
       if (token1.empty()) {
         return {};
       }
+      else {
+        // std::cerr << "token1 == " << token1 << "\n";
+      }
 
       // std::cerr << "parsed tokens 2 " << token1 << "\n";
 
@@ -2343,20 +2347,28 @@ namespace Sass {
       // std::cerr << "parse tokens 3\n";
 
       if (token2.empty()) {
-        result->type(token1);
+        // result->type(token1);
         // std::cerr << "Parsed 1 [" << token1 << "]\n";
-        return result;
+        // return result;
+      }
+      else {
+//        std::cerr << "token2 == " << token2 << "\n";
       }
 
-      // std::cerr << "parsed " << token1 << "\n";
-      // std::cerr << "parsed " << token2 << "\n";
+      // std::cerr << "parsed1 " << token1 << "\n";
+      // std::cerr << "parsed2 " << token2 << "\n";
 
-      if (lex < kwd_and >()) {
+      if (equalsLiteral("and", token2)) {
         result->type(token1);
       }
       else {
-        result->modifier(token1);
-        result->type(token2);
+        if (token2.empty()) {
+          result->type(token1);
+        }
+        else {
+          result->modifier(token1);
+          result->type(token2);
+        }
 
         if (lex < kwd_and >()) {
           lex<css_comments>(false);
@@ -2367,7 +2379,7 @@ namespace Sass {
         }
 
       }
-
+      
     }
 
     // std::cerr << "parsed all features " << result.ptr() << "\n";
@@ -2379,11 +2391,19 @@ namespace Sass {
 
     do {
       lex<css_comments>(false);
-      // Should be: parseDeclarationValue;
-      List_Obj list = parse_list(DELAYED);
-      // In dart sass parser returns a pure string
-      std::string decl("(" + list->to_string() + ")");
-      queries.push_back(decl);
+
+      if (lex<exactly<'('>>()) {
+        // In dart sass parser returns a pure string
+        if (lex < skip_over_scopes < exactly < '(' >, exactly < ')' > > >()) {
+          std::string decl("(" + std::string(lexed));
+          // std::cerr << "push " << decl << "\n";
+          queries.push_back(decl);
+        }
+        // Should be: parseDeclarationValue;
+        if (!lex<exactly<')'>>()) {
+
+        }
+      }
     } while (lex < kwd_and >());
 
     result->features(queries);
@@ -2396,6 +2416,7 @@ namespace Sass {
         return {};
       }
     }
+    // std::cerr << "lexed " << result->type() << "\n";
 
     return result;
   }

@@ -8,6 +8,7 @@
 
 #include "cssize.hpp"
 #include "context.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -509,10 +510,20 @@ namespace Sass {
         Statement_Obj stm = slice->at(j);
         // this has to go now here (too bad)
         Bubble_Obj node = Cast<Bubble>(stm);
+
+        CssMediaRule* rule1 = NULL;
+        CssMediaRule* rule2 = NULL;
+        if (parent) rule1 = Cast<CssMediaRule>(parent);
+        if (node) rule2 = Cast<CssMediaRule>(node->node());
+        if (rule1 || rule2) {
+          ss = node->node();
+        }
+
         Media_Block* m1 = NULL;
         Media_Block* m2 = NULL;
         if (parent) m1 = Cast<Media_Block>(parent);
         if (node) m2 = Cast<Media_Block>(node->node());
+        if (m1 || m2) {
         if (!parent ||
             parent->statement_type() != Statement::MEDIA ||
             node->node()->statement_type() != Statement::MEDIA ||
@@ -531,10 +542,14 @@ namespace Sass {
           if (Media_Block* b = Cast<Media_Block>(node->node())) {
             b->media_queries(mq);
           }
-          ss = node->node();
+}
         }
 
-        if (!ss) continue;
+        ss = node->node();
+
+        if (!ss) {
+          continue;
+        }
 
         ss->tabs(ss->tabs() + node->tabs());
         ss->group_end(node->group_end());
