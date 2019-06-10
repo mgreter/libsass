@@ -1080,6 +1080,8 @@ namespace Sass {
 
     if (has_real_parent_ref() && !parent) {
       // traces.push_back(Backtrace(pstate));
+      // std::cerr << "resolving parents\n";
+      // debug_ast(parent);
       throw Exception::TopLevelParent(traces, pstate());
     }
 

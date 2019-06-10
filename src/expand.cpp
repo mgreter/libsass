@@ -838,7 +838,7 @@ namespace Sass {
   Statement* Expand::operator()(Mixin_Call* c)
   {
 
-    // std::cerr << "CALL MIXIN\n";
+    // std::cerr << "CALL MIXIN 0\n";
 
     if (recursions > maxRecursion) {
       throw Exception::StackError(traces, *c);
@@ -871,6 +871,8 @@ namespace Sass {
       { env }
     });
 
+   //  std::cerr << "CALL MIXIN 1\n";
+
     Env new_env(def->environment());
     env_stack.push_back(&new_env);
     if (c->block()) {
@@ -887,6 +889,8 @@ namespace Sass {
       new_env.local_frame()["@content[m]"] = thunk;
     }
 
+   //  std::cerr << "CALL MIXIN 2\n";
+
     bind(std::string("Mixin"), c->name(), params, args, &new_env, &eval, traces);
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
@@ -896,6 +900,7 @@ namespace Sass {
     if (Block* pr = block_stack.back()) {
       trace_block->is_root(pr->is_root());
     }
+   //  std::cerr << "CALL MIXIN 3\n";
     block_stack.push_back(trace_block);
     for (auto bb : body->elements()) {
       if (Ruleset* r = Cast<Ruleset>(bb)) {
@@ -906,6 +911,7 @@ namespace Sass {
     }
     block_stack.pop_back();
     env->del_global("is_in_mixin");
+    // std::cerr << "CALL MIXIN 4\n";
 
     ctx.callee_stack.pop_back();
     env_stack.pop_back();
@@ -922,7 +928,7 @@ namespace Sass {
     if (!env->has("@content[m]")) return 0;
 
     if (block_stack.back()->is_root()) {
-      pushToSelectorStack({});
+      // pushToSelectorStack({});
     }
 
     Arguments_Obj args = c->arguments();
@@ -936,7 +942,7 @@ namespace Sass {
     Trace_Obj trace = Cast<Trace>(call->perform(this));
 
     if (block_stack.back()->is_root()) {
-      popFromSelectorStack();
+      // popFromSelectorStack();
     }
 
     return trace.detach();

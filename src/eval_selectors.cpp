@@ -86,6 +86,7 @@ namespace Sass {
     SelectorList_Obj other;
 
     if (true) {
+      // std::cerr << "Resolve parents for complex now\n";
       other = s->resolve_parent_refs(exp.getSelectorStack2(), traces, implicit_parent);
       // std::cerr << "other " << debug_vec(other) << "\n";
       // toComplexSelector()
