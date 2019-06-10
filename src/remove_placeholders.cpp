@@ -5,7 +5,16 @@
 #include "remove_placeholders.hpp"
 #include "context.hpp"
 #include "inspect.hpp"
+#include "debugger.hpp"
 #include <iostream>
+#include <algorithm>
+
+template<class T, class UnaryPredicate>
+void Vec_RemoveAll_If(std::vector<T>& vec, UnaryPredicate* predicate)
+{
+  vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
+}
+
 
 namespace Sass {
 
@@ -33,18 +42,54 @@ namespace Sass {
 
     }
 
-    SelectorList* Remove_Placeholders::remove_placeholders(SelectorList* sl)
-    {
-      SelectorList* new_sl = SASS_MEMORY_NEW(SelectorList, sl->pstate());
+// Remove empty pseudo/simple
+// Remove empty compound
+// Remove empty complex
+// Leave empty lists
 
-      for (size_t i = 0, L = sl->length(); i < L; ++i) {
-        if (!sl->at(i)->contains_placeholder()) {
-          new_sl->append(sl->at(i));
+    template <class T>
+    bool checkIsEmpty(T* cnt) {
+      return cnt && cnt->empty();
+    }
+
+    void Remove_Placeholders::remove_placeholders(Simple_Selector* simple)
+    {
+      if (simple == nullptr) return;
+      if (Pseudo_Selector * pseudo = simple->getPseudoSelector()) {
+        if (pseudo->selector2()) remove_placeholders(pseudo->selector2());
+      }
+    }
+
+    void Remove_Placeholders::remove_placeholders(CompoundSelector* compound)
+    {
+      if (compound == nullptr) return;
+      for (size_t i = 0, L = compound->length(); i < L; ++i) {
+        remove_placeholders(compound->get(i));
+      }
+      Vec_RemoveAll_If(compound->elements(), checkIsEmpty<Simple_Selector>);
+    }
+
+    void Remove_Placeholders::remove_placeholders(ComplexSelector* complex)
+    {
+      if (complex == nullptr) return;
+      if (complex->contains_placeholder()) {
+        complex->clear(); // remove all
+      }
+      for (size_t i = 0, L = complex->length(); i < L; ++i) {
+        if (CompoundSelector* compound = complex->get(i)->getCompound()) {
+          remove_placeholders(compound);
         }
       }
+      Vec_RemoveAll_If(complex->elements(), checkIsEmpty<CompoundOrCombinator>);
+    }
 
-      return new_sl;
-
+    SelectorList* Remove_Placeholders::remove_placeholders(SelectorList* sl)
+    {
+      for (size_t i = 0, L = sl->length(); i < L; ++i) {
+        remove_placeholders(sl->at(i));
+      }
+      Vec_RemoveAll_If(sl->elements(), checkIsEmpty<ComplexSelector>);
+      return sl;
     }
 
     void Remove_Placeholders::operator()(Ruleset* r) {

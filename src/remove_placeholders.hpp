@@ -13,6 +13,11 @@ namespace Sass {
 
     public:
       Selector_List* remove_placeholders(Selector_List*);
+
+      void remove_placeholders(Simple_Selector* simple);
+      void remove_placeholders(CompoundSelector* complex);
+      void remove_placeholders(ComplexSelector* complex);
+
       SelectorList* remove_placeholders(SelectorList*);
 
     public:

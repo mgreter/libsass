@@ -156,7 +156,7 @@ namespace Sass {
     Simple_Selector(ParserState pstate, std::string n = "");
     virtual std::string ns_name() const;
     size_t hash() const override;
-    bool empty() const;
+    virtual bool empty() const;
     // namespace compare functions
     bool is_ns_eq(const Simple_Selector& r) const;
     // namespace query functions
@@ -376,6 +376,8 @@ namespace Sass {
     Pseudo_Selector(ParserState pstate, std::string n, bool element = false);
     virtual bool is_pseudo_element() const override;
     size_t hash() const override;
+
+    bool empty() const;
 
     bool has_parent_ref() const override;
     bool has_real_parent_ref() const override;
@@ -623,7 +625,12 @@ namespace Sass {
     void cloneChildren() override;
     bool has_parent_ref() const override = 0;
     bool has_real_parent_ref() const override = 0;
+
+    // By default we consider instances not empty
+    virtual bool empty() const { return false; }
+
     virtual bool canHaveRealParent() const = 0;
+
     virtual bool has_placeholder() const = 0;
     virtual bool contains_placeholder() const = 0;
     int unification_order() const override {
@@ -723,6 +730,10 @@ namespace Sass {
     // fullfills various criterias.
     bool canHaveRealParent() const;
     bool isInvisible() const;
+
+    bool empty() const override {
+      return Vectorized::empty();
+    }
 
 
     size_t hash() const override;

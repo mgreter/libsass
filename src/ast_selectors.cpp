@@ -1920,6 +1920,13 @@ namespace Sass {
     return pseudo;
   }
 
+  bool Pseudo_Selector::empty() const
+  {
+    // Only considered empty if selector is
+    // available but has not items in it.
+    return selector2() && selector2()->empty();
+  }
+
   bool ComplexSelector::canHaveRealParent() const
   {
     if (empty()) { return true; }
