@@ -105,6 +105,11 @@ private:
   virtual klass* copy() const override; \
   virtual klass* clone() const override; \
 
+#define ATTACH_PURE_AST_OPERATIONS(klass) \
+  klass(const klass* ptr); \
+  virtual klass* copy() const; \
+  virtual klass* clone() const; \
+
 #define ATTACH_CMP_OPERATIONS(klass) \
   virtual bool operator<(const klass& rhs) const; \
   virtual bool operator==(const klass& rhs) const; \

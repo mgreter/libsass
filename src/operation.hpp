@@ -49,6 +49,11 @@ namespace Sass {
     virtual T operator()(Supports_Block* x)         = 0;
     virtual T operator()(Media_Block* x) = 0;
     virtual T operator()(Media_Block2* x) = 0;
+
+    virtual T operator()(MediaRule* x) = 0;
+    virtual T operator()(CssMediaRule* x) = 0;
+    virtual T operator()(CssMediaQuery* x) = 0;
+
     virtual T operator()(At_Root_Block* x)          = 0;
     virtual T operator()(Directive* x)              = 0;
     virtual T operator()(Keyframe_Rule* x)          = 0;
@@ -139,6 +144,15 @@ namespace Sass {
     T operator()(Supports_Block* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(Media_Block* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Media_Block2* x) { return static_cast<D*>(this)->fallback(x); }
+
+    T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CssMediaRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CssMediaQuery* x) { return static_cast<D*>(this)->fallback(x); }
+
+
+
+
+
     T operator()(At_Root_Block* x)          { return static_cast<D*>(this)->fallback(x); }
     T operator()(Directive* x)              { return static_cast<D*>(this)->fallback(x); }
     T operator()(Keyframe_Rule* x)          { return static_cast<D*>(this)->fallback(x); }

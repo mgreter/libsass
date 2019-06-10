@@ -308,6 +308,10 @@ namespace Sass {
     For_Obj parse_for_directive();
     Each_Obj parse_each_directive();
     While_Obj parse_while_directive();
+    MediaRule_Obj parseMediaRule();
+    std::vector<CssMediaQuery_Obj> parseCssMediaQueries();
+    std::string parseIdentifier();
+    CssMediaQuery_Obj parseCssMediaQuery();
     Return_Obj parse_return_directive();
     Content_Obj parse_content_directive();
     void parse_charset_directive();

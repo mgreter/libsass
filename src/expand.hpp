@@ -41,11 +41,13 @@ namespace Sass {
     SelectorStack2 selector_stack2;
   public:
     MediaStack    media_stack;
+    MediaStack2    mediaStack;
 
     Boolean_Obj bool_true;
 
   private:
     void expand_selector_list(Selector_Obj, Selector_List_Obj extender, ExtendRule* e);
+    std::vector<CssMediaQuery_Obj> mergeMediaQueries(const std::vector<CssMediaQuery_Obj>& lhs, const std::vector<CssMediaQuery_Obj>& rhs);
 
   public:
     Expand(Context&, Env*, SelectorStack2* stack = NULL);
@@ -53,6 +55,9 @@ namespace Sass {
 
     Block* operator()(Block*);
     Statement* operator()(Ruleset*);
+
+    Statement* operator()(MediaRule*);
+
     Statement* operator()(Media_Block*);
     Statement* operator()(Supports_Block*);
     Statement* operator()(At_Root_Block*);

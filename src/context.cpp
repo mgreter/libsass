@@ -821,7 +821,6 @@ namespace Sass {
       auto styles = sheet.second;
       check_nesting(styles.root);
     }
-    //    debug_ast(root);
     // expand and eval the tree
     root = expand(root);
     // debug_ast(root); exit(1);
@@ -832,7 +831,7 @@ namespace Sass {
     // debug_ast(root);
     // merge and bubble certain rules
     root = cssize(root);
- //   debug_ast(root);
+    //   debug_ast(root);
     // debug_ast(root);
     // should we extend something?
     // if (!subset_map.empty()) {
@@ -900,6 +899,8 @@ namespace Sass {
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders;
     root->perform(&remove_placeholders);
+    // debug_ast(root, "ROOT: "); exit(1);
+
   //    (root, "FIN: ");
     // return processed tree
     return root;

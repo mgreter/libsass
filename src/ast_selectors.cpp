@@ -1973,6 +1973,198 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  MediaRule::MediaRule(ParserState pstate, Block_Obj block) :
+    Has_Block(pstate, block),
+    schema_({})
+  {
+    statement_type(MEDIA);
+  }
+
+  MediaRule::MediaRule(const MediaRule* ptr) :
+    Has_Block(*ptr),
+    schema_(ptr->schema_)
+  {
+    statement_type(MEDIA);
+  }
+
+  CssMediaRule::CssMediaRule(ParserState pstate, Block_Obj block) :
+    Has_Block(pstate, block),
+    Vectorized()
+  {
+    statement_type(MEDIA);
+  }
+
+  CssMediaRule::CssMediaRule(const CssMediaRule* ptr) :
+    Has_Block(*ptr),
+    Vectorized(*ptr)
+  {
+    statement_type(MEDIA);
+  }
+
+  CssMediaQuery::CssMediaQuery(ParserState pstate) :
+    AST_Node(pstate),
+    modifier_(""),
+    type_(""),
+    features_()
+  {
+  }
+
+  template <typename T>
+  bool IsSubset(std::vector<T> A, std::vector<T> B)
+  {
+    std::sort(A.begin(), A.end());
+    std::sort(B.begin(), B.end());
+    return std::includes(A.begin(), A.end(), B.begin(), B.end());
+  }
+
+  template <typename T>
+  bool isSubsetOrEqual(std::vector<T> const& a, std::vector<T> const& b) {
+    for (auto const& av : a) {
+      if (std::find(b.begin(), b.end(), av) == b.end())
+        return false;
+    }
+    return true;
+  }
+
+
+  CssMediaQuery_Obj CssMediaQuery::merge(CssMediaQuery_Obj& other)
+  {
+
+    std::string ourType(this->type());
+    std::string theirType(other->type());
+    std::string ourModifier(this->modifier());
+    std::string theirModifier(other->modifier());
+
+    std::transform(ourType.begin(), ourType.end(), ourType.begin(), ::tolower);
+    std::transform(theirType.begin(), theirType.end(), theirType.begin(), ::tolower);
+    std::transform(ourModifier.begin(), ourModifier.end(), ourModifier.begin(), ::tolower);
+    std::transform(theirModifier.begin(), theirModifier.end(), theirModifier.begin(), ::tolower);
+
+    std::string type;
+    std::string modifier;
+    std::vector<std::string> features;
+
+    if (ourType.empty() && theirType.empty()) {
+      CssMediaQuery_Obj query = SASS_MEMORY_NEW(CssMediaQuery, pstate());
+      std::vector<std::string> f1(this->features());
+      std::vector<std::string> f2(other->features());
+      features.insert(features.end(), f1.begin(), f1.end());
+      features.insert(features.end(), f2.begin(), f2.end());
+      query->features(features);
+      return query;
+    }
+
+    if ((ourModifier == "not") != (theirModifier == "not")) {
+      if (ourType == theirType) {
+        std::vector<std::string> negativeFeatures =
+          ourModifier == "not" ? this->features() : other->features();
+        std::vector<std::string> positiveFeatures =
+          ourModifier == "not" ? other->features() : this->features();
+
+        // If the negative features are a subset of the positive features, the
+        // query is empty. For example, `not screen and (color)` has no
+        // intersection with `screen and (color) and (grid)`.
+        // However, `not screen and (color)` *does* intersect with `screen and
+        // (grid)`, because it means `not (screen and (color))` and so it allows
+        // a screen with no color but with a grid.
+        if (isSubsetOrEqual(negativeFeatures, positiveFeatures)) {
+          return SASS_MEMORY_NEW(CssMediaQuery, pstate());
+        }
+        else {
+          return {};
+        }
+      }
+      else if (this->matchesAllTypes() || other->matchesAllTypes()) {
+        return {};
+      }
+
+      if (ourModifier == "not") {
+        modifier = theirModifier;
+        type = theirType;
+        features = other->features();
+      }
+      else {
+        modifier = ourModifier;
+        type = ourType;
+        features = this->features();
+      }
+    }
+    else if (ourModifier == "not") {
+      SASS_ASSERT(theirModifier == "not", "modifiers not is sync");
+
+      // CSS has no way of representing "neither screen nor print".
+      if (ourType != theirType) return {};
+
+      auto moreFeatures = this->features().size() > other->features().size()
+        ? this->features()
+        : other->features();
+      auto fewerFeatures = this->features().size() > other->features().size()
+        ? other->features()
+        : this->features();
+
+      // If one set of features is a superset of the other, use those features
+      // because they're strictly narrower.
+      if (isSubsetOrEqual(fewerFeatures, moreFeatures)) {
+        modifier = ourModifier; // "not"
+        type = ourType;
+        features = moreFeatures;
+      }
+      else {
+        // Otherwise, there's no way to represent the intersection.
+        return {};
+      }
+
+    }
+    else {
+      if (this->matchesAllTypes()) {
+        modifier = theirModifier;
+        // Omit the type if either input query did, since that indicates that they
+        // aren't targeting a browser that requires "all and".
+        type = (other->matchesAllTypes() && ourType.empty()) ? "" : theirType;
+        std::vector<std::string> f1(this->features());
+        std::vector<std::string> f2(other->features());
+        features.insert(features.end(), f1.begin(), f1.end());
+        features.insert(features.end(), f2.begin(), f2.end());
+      }
+      else if (other->matchesAllTypes()) {
+        modifier = ourModifier;
+        type = ourType;
+        std::vector<std::string> f1(this->features());
+        std::vector<std::string> f2(other->features());
+        features.insert(features.end(), f1.begin(), f1.end());
+        features.insert(features.end(), f2.begin(), f2.end());
+      }
+      else if (ourType != theirType) {
+        return SASS_MEMORY_NEW(CssMediaQuery, pstate());
+      }
+      else {
+        modifier = ourModifier.empty() ? theirModifier : ourModifier;
+        type = ourType;
+        std::vector<std::string> f1(this->features());
+        std::vector<std::string> f2(other->features());
+        features.insert(features.end(), f1.begin(), f1.end());
+        features.insert(features.end(), f2.begin(), f2.end());
+      }
+    }
+
+    CssMediaQuery_Obj query = SASS_MEMORY_NEW(CssMediaQuery, pstate());
+    query->type(modifier == ourModifier ? this->modifier() : other->modifier());
+    query->type(ourType.empty() ? other->type() : this->type());
+    query->features(features);
+    return query;
+  }
+
+  CssMediaQuery::CssMediaQuery(const CssMediaQuery* ptr) :
+    AST_Node(*ptr),
+    modifier_(ptr->modifier_),
+    type_(ptr->type_),
+    features_(ptr->features_)
+  {
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   IMPLEMENT_AST_OPERATORS(Selector_Schema);
   IMPLEMENT_AST_OPERATORS(Placeholder_Selector);
   IMPLEMENT_AST_OPERATORS(Parent_Selector);

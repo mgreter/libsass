@@ -8,6 +8,7 @@
 
 #include "cssize.hpp"
 #include "context.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -220,10 +221,14 @@ namespace Sass {
   Statement* Cssize::operator()(Media_Block* m)
   {
     if (parent()->statement_type() == Statement::RULESET)
-    { return bubble(m); }
+    {
+      return bubble(m);
+    }
 
     if (parent()->statement_type() == Statement::MEDIA)
-    { return SASS_MEMORY_NEW(Bubble, m->pstate(), m); }
+    {
+      return SASS_MEMORY_NEW(Bubble, m->pstate(), m);
+    }
 
     p_stack.push_back(m);
 
@@ -231,6 +236,30 @@ namespace Sass {
                                       m->pstate(),
                                       m->media_queries(),
                                       operator()(m->block()));
+    mm->tabs(m->tabs());
+
+    p_stack.pop_back();
+
+    return debubble(mm->block(), mm);
+  }
+
+  Statement* Cssize::operator()(CssMediaRule* m)
+  {
+    if (parent()->statement_type() == Statement::RULESET)
+    {
+      return bubble(m);
+    }
+
+    if (parent()->statement_type() == Statement::MEDIA)
+    {
+      return SASS_MEMORY_NEW(Bubble, m->pstate(), m);
+    }
+
+    p_stack.push_back(m);
+
+    CssMediaRule_Obj mm = SASS_MEMORY_NEW(CssMediaRule, m->pstate(), m->block());
+    mm->concat(m->elements());
+    mm->block(operator()(m->block()));
     mm->tabs(m->tabs());
 
     p_stack.pop_back();
@@ -378,6 +407,30 @@ namespace Sass {
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 
+  Statement* Cssize::bubble(CssMediaRule* m)
+  {
+    Ruleset_Obj parent = Cast<Ruleset>(SASS_MEMORY_COPY(this->parent()));
+
+    Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
+    Ruleset* new_rule = SASS_MEMORY_NEW(Ruleset,
+      parent->pstate(),
+      parent->selector2(),
+      bb);
+    new_rule->tabs(parent->tabs());
+    new_rule->block()->concat(m->block());
+
+    Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
+    wrapper_block->append(new_rule);
+    CssMediaRule_Obj mm = SASS_MEMORY_NEW(CssMediaRule,
+      m->pstate(),
+      wrapper_block);
+    mm->concat(m->elements());
+
+    mm->tabs(m->tabs());
+
+    return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
+  }
+
   bool Cssize::bubblable(Statement* s)
   {
     return Cast<Ruleset>(s) || s->bubbles();
@@ -457,10 +510,20 @@ namespace Sass {
         Statement_Obj stm = slice->at(j);
         // this has to go now here (too bad)
         Bubble_Obj node = Cast<Bubble>(stm);
+
+        CssMediaRule* rule1 = NULL;
+        CssMediaRule* rule2 = NULL;
+        if (parent) rule1 = Cast<CssMediaRule>(parent);
+        if (node) rule2 = Cast<CssMediaRule>(node->node());
+        if (rule1 || rule2) {
+          ss = node->node();
+        }
+
         Media_Block* m1 = NULL;
         Media_Block* m2 = NULL;
         if (parent) m1 = Cast<Media_Block>(parent);
         if (node) m2 = Cast<Media_Block>(node->node());
+        if (m1 || m2) {
         if (!parent ||
             parent->statement_type() != Statement::MEDIA ||
             node->node()->statement_type() != Statement::MEDIA ||
@@ -479,10 +542,14 @@ namespace Sass {
           if (Media_Block* b = Cast<Media_Block>(node->node())) {
             b->media_queries(mq);
           }
+          
           ss = node->node();
         }
+        }
 
-        if (!ss) continue;
+        if (!ss) {
+          continue;
+        }
 
         ss->tabs(ss->tabs() + node->tabs());
         ss->group_end(node->group_end());

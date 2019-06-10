@@ -832,6 +832,77 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+
+  // A Media Ruleset before it has been evaluated
+  // Could be already final or an interpolation
+  class MediaRule final : public Has_Block {
+    ADD_PROPERTY(List_Obj, schema)
+  public:
+    MediaRule(ParserState pstate, Block_Obj block = {});
+
+    bool bubbles() override { return false; };
+    bool is_invisible() const override { return false; };
+    ATTACH_AST_OPERATIONS(MediaRule)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  // A Media Ruleset after it has been evaluated
+  // Representing the static or resulting css
+  class CssMediaRule final : public Has_Block,
+    public Vectorized<CssMediaQuery_Obj, CssMediaRule> {
+  public:
+    CssMediaRule(ParserState pstate, Block_Obj b);
+    bool bubbles() override { return true; };
+    bool is_invisible() const override { return false; };
+    ATTACH_AST_OPERATIONS(CssMediaRule)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  // Media Queries after they have been evaluated
+  // Representing the static or resulting css
+  class CssMediaQuery final : public AST_Node {
+
+    // The modifier, probably either "not" or "only".
+    // This may be `null` if no modifier is in use.
+    ADD_PROPERTY(std::string, modifier);
+
+    // The media type, for example "screen" or "print".
+    // This may be `null`. If so, [features] will not be empty.
+    ADD_PROPERTY(std::string, type);
+
+    // Feature queries, including parentheses.
+    ADD_PROPERTY(std::vector<std::string>, features);
+
+  public:
+    CssMediaQuery(ParserState pstate);
+
+  public:
+
+    // Returns true if this query is empty
+    // Meaning it has no type and features
+    bool empty() const {
+      return type_.empty()
+        && modifier_.empty()
+        && features_.empty();
+    }
+
+    // Whether this media query matches all media types.
+    bool matchesAllTypes() const {
+      return type_.empty() || equalsLiteral("all", type_);
+    }
+
+    // Merges this with [other] and adds a query that matches the intersection
+    // of both inputs to [result]. Returns false if the result is unrepresentable
+    CssMediaQuery_Obj merge(CssMediaQuery_Obj& other);
+
+
+
+  public:
+    size_t hash() const { return true; }
+    ATTACH_AST_OPERATIONS(CssMediaQuery)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
   /////////////////
   // Media queries.
   /////////////////

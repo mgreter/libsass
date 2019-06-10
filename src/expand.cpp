@@ -32,7 +32,8 @@ namespace Sass {
     block_stack(BlockStack()),
     call_stack(CallStack()),
     selector_stack2(SelectorStack2()),
-    media_stack(MediaStack())
+    media_stack(MediaStack()),
+    mediaStack(MediaStack2())
   {
     env_stack.push_back(nullptr);
     env_stack.push_back(env);
@@ -230,6 +231,54 @@ namespace Sass {
                                        Cast<Supports_Condition>(condition),
                                        operator()(f->block()));
     return ff.detach();
+  }
+
+  std::vector<CssMediaQuery_Obj> Expand::mergeMediaQueries(
+    const std::vector<CssMediaQuery_Obj>& lhs,
+    const std::vector<CssMediaQuery_Obj>& rhs)
+  {
+    std::vector<CssMediaQuery_Obj> queries;
+    for (CssMediaQuery_Obj query1 : lhs) {
+      for (CssMediaQuery_Obj query2 : rhs) {
+        CssMediaQuery_Obj result = query1->merge(query2);
+        if (result && !result->empty()) {
+          queries.push_back(result);
+        }
+      }
+    }
+    return queries;
+  }
+
+  Statement* Expand::operator()(MediaRule* m)
+  {
+    if (mediaStack.size() == 1) {
+      // std::cerr << "I haz previous\n";
+    }
+
+    // Parser p(Parser::from_c_str(str, ctx, traces, mq->pstate()));
+
+    // debug_ast(m->schema());
+    Expression_Obj mq = eval(m->schema());
+    // debug_ast(mq);
+    std::string str_mq(mq->to_string(ctx.c_options));
+    char* str = sass_copy_c_string(str_mq.c_str());
+    Parser parser(Parser::from_c_str(str, ctx, traces, mq->pstate()));
+
+    // Create a new CSS only representation of the media rule
+    CssMediaRule_Obj css = SASS_MEMORY_NEW(CssMediaRule, m->pstate(), m->block());
+    std::vector<CssMediaQuery_Obj> parsed = parser.parseCssMediaQueries();
+    if (mediaStack.size() && mediaStack.back()) {
+      auto& parent = mediaStack.back()->elements();
+      css->concat(mergeMediaQueries(parent, parsed));
+    }
+    else {
+      css->concat(parsed);
+    }
+    mediaStack.push_back(css);
+    css->block(operator()(m->block()));
+    mediaStack.pop_back();
+    return css.detach();
+
   }
 
   Statement* Expand::operator()(Media_Block* m)

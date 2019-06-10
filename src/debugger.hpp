@@ -41,6 +41,10 @@ inline std::string debug_dude(std::vector<std::vector<int>> vec) {
   return out.str();
 }
 
+inline std::string debug_vec(std::string& str) {
+  return str;
+}
+
 inline std::string debug_vec(Extension& ext) {
   std::stringstream out;
   out << debug_vec(ext.extender);
@@ -612,6 +616,39 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     << std::endl;
     debug_ast(block->media_type(), ind + " ");
     for(const auto& i : block->elements()) { debug_ast(i, ind + " ", env); }
+  }
+  else if (Cast<MediaRule>(node)) {
+    MediaRule* rule = Cast<MediaRule>(node);
+    std::cerr << ind << "MediaRule " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << " " << rule->tabs() << std::endl;
+    debug_ast(rule->schema(), ind + " =@ ");
+    debug_ast(rule->block(), ind + " ");
+  }
+  else if (Cast<CssMediaRule>(node)) {
+    CssMediaRule* rule = Cast<CssMediaRule>(node);
+    std::cerr << ind << "CssMediaRule " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << " " << rule->tabs() << std::endl;
+    for (auto item : rule->elements()) {
+      debug_ast(item, ind + " == ");
+    }
+    debug_ast(rule->block(), ind + " ");
+  }
+  else if (Cast<CssMediaQuery>(node)) {
+    CssMediaQuery* query = Cast<CssMediaQuery>(node);
+    std::cerr << ind << "CssMediaQuery " << query;
+    std::cerr << " (" << pstate_source_position(query) << ")";
+    std::cerr << " " << debug_vec(query->features());
+    std::cerr << std::endl;
+  }
+  else if (Cast<Media_Block>(node)) {
+    Media_Block* block = Cast<Media_Block>(node);
+    std::cerr << ind << "Media_Block " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " " << block->tabs() << std::endl;
+    debug_ast(block->media_queries(), ind + " =@ ");
+    if (block->block()) for (const Statement_Obj& i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
 
   } else if (Cast<Media_Block>(node)) {
     Media_Block* block = Cast<Media_Block>(node);

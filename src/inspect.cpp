@@ -68,6 +68,56 @@ namespace Sass {
     append_scope_closer();
   }
 
+  void Inspect::operator()(MediaRule* rule)
+  {
+    append_indentation();
+    append_token("@media", rule);
+    append_mandatory_space();
+    in_media_block = true;
+    in_media_block = false;
+    if (rule->block()) {
+      rule->block()->perform(this);
+    }
+  }
+
+  void Inspect::operator()(CssMediaRule* rule)
+  {
+    append_indentation();
+    append_token("@media", rule);
+    append_mandatory_space();
+    in_media_block = true;
+    for (auto query : rule->elements()) {
+      operator()(query);
+    }
+    if (rule->block()) {
+      rule->block()->perform(this);
+    }
+
+  }
+
+  void Inspect::operator()(CssMediaQuery* query)
+  {
+    bool joinIt = false;
+    if (!query->modifier().empty()) {
+      append_string(query->modifier());
+      append_mandatory_space();
+    }
+    if (!query->type().empty()) {
+      append_string(query->type());
+      append_mandatory_space();
+      joinIt = true;
+    }
+    for (auto feature : query->features()) {
+      if (joinIt) {
+        append_mandatory_space();
+        append_string("and");
+        append_mandatory_space();
+      }
+      append_string(feature);
+      joinIt = true;
+    }
+  }
+
   void Inspect::operator()(Media_Block* media_block)
   {
     append_indentation();

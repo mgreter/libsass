@@ -1038,9 +1038,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // If you forget to add a class here you will get
+  // undefined reference to `vtable for Sass::Class'
+
   IMPLEMENT_AST_OPERATORS(Ruleset);
   IMPLEMENT_AST_OPERATORS(Media_Block);
   IMPLEMENT_AST_OPERATORS(Media_Block2);
+
+  IMPLEMENT_AST_OPERATORS(MediaRule);
+  IMPLEMENT_AST_OPERATORS(CssMediaRule);
+  IMPLEMENT_AST_OPERATORS(CssMediaQuery);
+
+
   IMPLEMENT_AST_OPERATORS(Import);
   IMPLEMENT_AST_OPERATORS(Import_Stub);
   IMPLEMENT_AST_OPERATORS(Directive);

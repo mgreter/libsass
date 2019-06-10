@@ -67,6 +67,9 @@ namespace Sass {
     virtual void operator()(Supports_Negation*);
     virtual void operator()(Supports_Declaration*);
     virtual void operator()(Supports_Interpolation*);
+    virtual void operator()(MediaRule*);
+    virtual void operator()(CssMediaRule*);
+    virtual void operator()(CssMediaQuery*);
     virtual void operator()(Media_Query*);
     virtual void operator()(Media_Query_Expression*);
     virtual void operator()(At_Root_Query*);

@@ -295,6 +295,7 @@ namespace Sass {
     }
 
     // parse multiple specific keyword directives
+    // else if (lex < kwd_media >(true)) { block->append(parseMediaRule()); }
     else if (lex < kwd_media >(true)) { block->append(parse_media_block()); }
     else if (lex < kwd_at_root >(true)) { block->append(parse_at_root_block()); }
     else if (lex < kwd_include_directive >(true)) { block->append(parse_include_directive()); }
@@ -2291,13 +2292,138 @@ namespace Sass {
     return call.detach();
   }
 
+
+  std::vector<CssMediaQuery_Obj> Parser::parseCssMediaQueries()
+  {
+    std::vector<CssMediaQuery_Obj> result;
+    // std::cerr << "parse queries\n";
+    while (auto query = parseCssMediaQuery()) {
+      // debug_ast(query);
+      // std::cerr << "parse query\n";
+      result.push_back(query);
+      if (*position != 0) {
+        std::cerr << "Not fully consumed\n";
+      }
+      // std::cerr << "[" << position << "]\n";
+    }
+    return result;
+  }
+
+  std::string Parser::parseIdentifier()
+  {
+    if (lex < identifier >(false)) {
+      return std::string(lexed);
+    }
+    return std::string();
+  }
+
+  CssMediaQuery_Obj Parser::parseCssMediaQuery()
+  {
+    CssMediaQuery_Obj result = SASS_MEMORY_NEW(CssMediaQuery, pstate);
+    lex<css_comments>(false);
+
+    // std::cerr << "start parser query\n";
+    // std::cerr << position << "\n";
+    // Check if any tokens are to parse
+    if (!peek_css<exactly<'('>>()) {
+
+      // std::cerr << "parse tokens 1\n";
+
+      std::string token1(parseIdentifier());
+      lex<css_comments>(false);
+
+      if (token1.empty()) {
+        return {};
+      }
+
+      // std::cerr << "parsed tokens 2 " << token1 << "\n";
+
+      std::string token2(parseIdentifier());
+      lex<css_comments>(false);
+
+      // std::cerr << "parse tokens 3\n";
+
+      if (token2.empty()) {
+        result->type(token1);
+        // std::cerr << "Parsed 1 [" << token1 << "]\n";
+        return result;
+      }
+
+      // std::cerr << "parsed " << token1 << "\n";
+      // std::cerr << "parsed " << token2 << "\n";
+
+      if (lex < kwd_and >()) {
+        result->type(token1);
+      }
+      else {
+        result->modifier(token1);
+        result->type(token2);
+
+        if (lex < kwd_and >()) {
+          lex<css_comments>(false);
+        }
+        else {
+          // std::cerr << "Parsed 2\n";
+          return result;
+        }
+
+      }
+
+    }
+
+    // std::cerr << "parsed all features " << result.ptr() << "\n";
+
+    // auto identifier2 = parseIdentifier();
+    // parseWhitespaceWithComments();
+
+    std::vector<std::string> queries;
+
+    do {
+      lex<css_comments>(false);
+      // Should be: parseDeclarationValue;
+      List_Obj list = parse_list(DELAYED);
+      // In dart sass parser returns a pure string
+      std::string decl("(" + list->to_string() + ")");
+      queries.push_back(decl);
+    } while (lex < kwd_and >());
+
+    result->features(queries);
+
+    // std::cerr << "DID IT\n";
+
+    if (result->features().empty()) {
+      if (result->type().empty()) {
+        // std::cerr << "IS EMPTY?\n";
+        return {};
+      }
+    }
+
+    return result;
+  }
+
+
+  // EO parse_while_directive
+  MediaRule_Obj Parser::parseMediaRule()
+  {
+    MediaRule_Obj rule = SASS_MEMORY_NEW(MediaRule, pstate);
+    stack.push_back(Scope::Media);
+    rule->schema(parse_media_queries());
+    parse_block_comments();
+    rule->block(parse_css_block());
+    stack.pop_back();
+    return rule;
+  }
+
   // EO parse_while_directive
   Media_Block_Obj Parser::parse_media_block()
   {
+    MediaRule_Obj rule = SASS_MEMORY_NEW(MediaRule, pstate);
+    rule->schema(parse_media_queries());
+
+
     stack.push_back(Scope::Media);
     Media_Block_Obj media_block = SASS_MEMORY_NEW(Media_Block, pstate, {}, {});
-
-    media_block->media_queries(parse_media_queries());
+    media_block->media_queries(rule->schema());
 
     Media_Block_Obj prev_media_block = last_media_block;
     last_media_block = media_block;
