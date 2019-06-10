@@ -773,9 +773,11 @@ namespace Sass {
     // evaluate schema first
     if (e->schema()) {
       e->selector2(eval(e->schema()));
+      e->isOptional(e->selector2()->is_optional());
     }
     // evaluate the selector
     e->selector2(eval(e->selector2()));
+
 
 
     auto list = e->selector2();
