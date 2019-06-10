@@ -1801,13 +1801,15 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  CompoundOrCombinator::CompoundOrCombinator(ParserState pstate)
-  : Selector(pstate)
+  CompoundOrCombinator::CompoundOrCombinator(ParserState pstate, bool postLineBreak)
+  : Selector(pstate),
+    hasPostLineBreak_(postLineBreak)
   {
   }
 
   CompoundOrCombinator::CompoundOrCombinator(const CompoundOrCombinator* ptr)
-  : Selector(ptr)
+  : Selector(ptr),
+    hasPostLineBreak_(ptr->hasPostLineBreak())
   { }
 
   void CompoundOrCombinator::cloneChildren()
@@ -1825,13 +1827,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SelectorCombinator::SelectorCombinator(ParserState pstate, SelectorCombinator::Combinator combinator)
-    : CompoundOrCombinator(pstate),
+  SelectorCombinator::SelectorCombinator(ParserState pstate, SelectorCombinator::Combinator combinator, bool postLineBreak)
+    : CompoundOrCombinator(pstate, postLineBreak),
     combinator_(combinator)
   {
   }
   SelectorCombinator::SelectorCombinator(const SelectorCombinator* ptr)
-    : CompoundOrCombinator(ptr),
+    : CompoundOrCombinator(ptr->pstate(), false),
       combinator_(ptr->combinator())
   { }
 
@@ -1850,20 +1852,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  CompoundSelector::CompoundSelector(ParserState pstate)
-    : CompoundOrCombinator(pstate),
+  CompoundSelector::CompoundSelector(ParserState pstate, bool postLineBreak)
+    : CompoundOrCombinator(pstate, postLineBreak),
       Vectorized<Simple_Selector_Obj, CompoundSelector>(),
       hasRealParent_(false),
-      extended_(false),
-      hasPostLineBreak_(false)
+      extended_(false)
   {
   }
   CompoundSelector::CompoundSelector(const CompoundSelector* ptr)
     : CompoundOrCombinator(ptr),
       Vectorized<Simple_Selector_Obj, CompoundSelector>(*ptr),
       hasRealParent_(ptr->hasRealParent()),
-      extended_(ptr->extended()),
-      hasPostLineBreak_(ptr->hasPostLineBreak())
+      extended_(ptr->extended())
   { }
 
   void CompoundSelector::cloneChildren()

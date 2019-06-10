@@ -377,6 +377,8 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
       << " [weight:" << longToHex(selector->specificity()) << "]"
       << (selector->is_invisible() ? " [is_invisible]" : " -")
       << (selector->isInvisible() ? " [isInvisible]" : " -")
+      << (selector->hasPreLineFeed() ? " [hasPreLineFeed]" : " -")
+
     // << " [@media:" << selector->media_block() << "]"
       // << (selector->is_invisible() ? " [INVISIBLE]": " -")
       // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
@@ -424,6 +426,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << (selector->hasRealParent() ? " [REAL PARENT]" : "") << ">";
     std::cerr << " [weight:" << longToHex(selector->specificity()) << "]";
     std::cerr << " [@media:" << selector->media_block() << "]";
+    std::cerr << (selector->hasPostLineBreak() ? " [hasPostLineBreak]" : " -");
     std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
       // std::cerr << (selector->extended() ? " [extended]": " -");

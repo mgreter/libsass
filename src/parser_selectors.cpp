@@ -44,15 +44,15 @@ namespace Sass {
 
       // check for child (+) combinator
       if (lex < exactly < selector_combinator_child > >()) {
-        sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate, SelectorCombinator::CHILD));
+        sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate, SelectorCombinator::CHILD, peek_newline()));
       }
       // check for general sibling (~) combinator
       else if (lex < exactly < selector_combinator_general > >()) {
-        sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate, SelectorCombinator::GENERAL));
+        sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate, SelectorCombinator::GENERAL, peek_newline()));
       }
       // check for adjecant sibling (+) combinator
       else if (lex < exactly < selector_combinator_adjacent > >()) {
-        sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate, SelectorCombinator::ADJACENT));
+        sel->append(SASS_MEMORY_NEW(SelectorCombinator, pstate, SelectorCombinator::ADJACENT, peek_newline()));
       }
       // check if we can parse a compound selector
       else if (CompoundSelector_Obj compound = parseCompoundSelector()) {

@@ -619,8 +619,10 @@ namespace Sass {
   // Base class for complex selector components
   ////////////////////////////////////////////////////////////////////////////
   class CompoundOrCombinator : public Selector {
+    // line break after list separator
+    ADD_PROPERTY(bool, hasPostLineBreak)
   public:
-    CompoundOrCombinator(ParserState pstate);
+    CompoundOrCombinator(ParserState pstate, bool postLineBreak = false);
     size_t hash() const override = 0;
     void cloneChildren() override;
     bool has_parent_ref() const override = 0;
@@ -665,7 +667,7 @@ namespace Sass {
   private:
     HASH_CONSTREF(Combinator, combinator)
   public:
-    SelectorCombinator(ParserState pstate, Combinator combinator);
+    SelectorCombinator(ParserState pstate, Combinator combinator, bool postLineBreak = false);
     bool has_parent_ref() const override { return false; }
     bool has_real_parent_ref() const override { return false; }
     bool has_placeholder() const override { return false; }
@@ -721,10 +723,8 @@ namespace Sass {
   class CompoundSelector final : public CompoundOrCombinator, public Vectorized<Simple_Selector_Obj, CompoundSelector> {
     ADD_PROPERTY(bool, hasRealParent)
     ADD_PROPERTY(bool, extended)
-    // line break after list separator
-    ADD_PROPERTY(bool, hasPostLineBreak)
   public:
-    CompoundSelector(ParserState pstate);
+    CompoundSelector(ParserState pstate, bool postLineBreak = false);
 
     // Returns true if this compound selector
     // fullfills various criterias.

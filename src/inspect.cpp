@@ -1108,6 +1108,8 @@ namespace Sass {
     for (auto& item : sel->elements()) {
       item->perform(this);
     }
+    // Add the post line break (from ruby sass)
+    // Dart sass uses another logic for newlines
     if (sel->hasPostLineBreak()) {
       if (output_style() != COMPACT) {
         append_optional_linefeed();
@@ -1124,6 +1126,13 @@ namespace Sass {
       case SelectorCombinator::Combinator::ADJACENT: append_string("+"); break;
     }
     append_optional_space();
+    // Add the post line break (from ruby sass)
+    // Dart sass uses another logic for newlines
+    if (sel->hasPostLineBreak()) {
+      if (output_style() != COMPACT) {
+        // append_optional_linefeed();
+      }
+    }
   }
 
   void Inspect::operator()(Selector_List* sel)
