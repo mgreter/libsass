@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "check_nesting.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -198,6 +199,7 @@ namespace Sass {
         Cast<Mixin_Call>(parent) ||
         is_mixin(parent)
     )) {
+      // debug_ast(parent);
       error(node, traces, "Extend directives may only be used within rules.");
     }
   }

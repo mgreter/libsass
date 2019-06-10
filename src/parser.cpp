@@ -295,7 +295,7 @@ namespace Sass {
     }
 
     // parse multiple specific keyword directives
-    else if (lex < kwd_media >(true)) { block->append(parseMediaRule()); }
+    // else if (lex < kwd_media >(true)) { block->append(parseMediaRule()); }
     else if (lex < kwd_media >(true)) { block->append(parse_media_block()); }
     else if (lex < kwd_at_root >(true)) { block->append(parse_at_root_block()); }
     else if (lex < kwd_include_directive >(true)) { block->append(parse_include_directive()); }

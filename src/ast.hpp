@@ -841,7 +841,7 @@ namespace Sass {
   public:
     MediaRule(ParserState pstate, Block_Obj block = {});
 
-    bool bubbles() override { return false; };
+    bool bubbles() override { return true; };
     bool is_invisible() const override { return false; };
     ATTACH_AST_OPERATIONS(MediaRule)
     ATTACH_CRTP_PERFORM_METHODS()
