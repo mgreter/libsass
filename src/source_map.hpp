@@ -53,6 +53,7 @@ private:
         smap()
       { }
     public:
+      // ToDo: should be ostringstream
       std::string buffer;
       SourceMap smap;
   };

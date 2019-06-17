@@ -15,6 +15,44 @@ namespace Sass {
   Supports_Block::Supports_Block(const Supports_Block* ptr)
   : Has_Block(ptr), condition_(ptr->condition_)
   { statement_type(SUPPORTS); }
+
+  bool Supports_Block::is_invisible() const
+  {
+    Block* b = block();
+
+    bool hasDeclarations = false;
+    bool hasPrintableChildBlocks = false;
+    for (size_t i = 0, L = b->length(); i < L; ++i) {
+      Statement_Obj stm = b->at(i);
+      if (Cast<Declaration>(stm) || Cast<AtRule>(stm)) {
+        hasDeclarations = true;
+      }
+      else if (CssStyleRule * b = Cast<CssStyleRule>(stm)) {
+        Block_Obj pChildBlock = b->block();
+        if (!b->is_invisible()) {
+          if (!pChildBlock->is_invisible()) {
+            hasPrintableChildBlocks = true;
+          }
+        }
+      }
+      else if (Has_Block * b = Cast<Has_Block>(stm)) {
+        Block_Obj pChildBlock = b->block();
+        if (!b->is_invisible()) {
+          if (!pChildBlock->is_invisible()) {
+            hasPrintableChildBlocks = true;
+          }
+        }
+      }
+
+      if (hasDeclarations || hasPrintableChildBlocks) {
+        return false;
+      }
+    }
+
+    return true;
+
+  }
+
   bool Supports_Block::bubbles() { return true; }
 
   /////////////////////////////////////////////////////////////////////////

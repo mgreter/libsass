@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <string>
 
+#include "debugger.hpp"
 #include "listize.hpp"
 #include "context.hpp"
 #include "backtrace.hpp"
@@ -13,58 +14,26 @@
 
 namespace Sass {
 
-  Listize::Listize()
-  {  }
-
-  Expression* Listize::perform(AST_Node* node)
+  Value* Listize::listize(SelectorList* selectors)
   {
-    Listize listize;
-    return node->perform(&listize);
+    List_Obj list = SASS_MEMORY_NEW(List,
+      selectors->pstate(), selectors->length(), SASS_COMMA);
+    for (size_t i = 0, L = selectors->length(); i < L; ++i) {
+      list->append(listize(selectors->get(i)));
+    }
+    if (list->length()) return list.detach();
+    return SASS_MEMORY_NEW(Null, list->pstate());
   }
 
-  Expression* Listize::operator()(SelectorList* sel)
+  Value* Listize::listize(ComplexSelector* selector)
   {
-    List_Obj l = SASS_MEMORY_NEW(List, sel->pstate(), sel->length(), SASS_COMMA);
-    l->from_selector(true);
-    for (size_t i = 0, L = sel->length(); i < L; ++i) {
-      if (!sel->at(i)) continue;
-      l->append(sel->at(i)->perform(this));
+    List_Obj list = SASS_MEMORY_NEW(List,
+      selector->pstate(), selector->length(), SASS_SPACE);
+    for (auto component : selector->elements()) {
+      list->append(SASS_MEMORY_NEW(StringLiteral,
+        component->pstate(), component->to_css()));
     }
-    if (l->length()) return l.detach();
-    return SASS_MEMORY_NEW(Null, l->pstate());
-  }
-
-  Expression* Listize::operator()(CompoundSelector* sel)
-  {
-    std::string str;
-    for (size_t i = 0, L = sel->length(); i < L; ++i) {
-      Expression* e = (*sel)[i]->perform(this);
-      if (e) str += e->to_string();
-    }
-    return SASS_MEMORY_NEW(String_Quoted, sel->pstate(), str);
-  }
-
-  Expression* Listize::operator()(ComplexSelector* sel)
-  {
-    List_Obj l = SASS_MEMORY_NEW(List, sel->pstate());
-    // ToDo: investigate what this does
-    // Note: seems reated to parent ref
-    l->from_selector(true);
-
-    for (auto component : sel->elements()) {
-      if (CompoundSelectorObj compound = Cast<CompoundSelector>(component)) {
-        if (!compound->empty()) {
-          Expression_Obj hh = compound->perform(this);
-          if (hh) l->append(hh);
-        }
-      }
-      else if (component) {
-        l->append(SASS_MEMORY_NEW(String_Quoted, component->pstate(), component->to_string()));
-      }
-    }
-
-    if (l->length() == 0) return 0;
-    return l.detach();
+    return list.detach();
   }
 
 }

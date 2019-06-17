@@ -27,14 +27,19 @@ namespace Sass {
     OutputBuffer get_buffer(void);
 
     virtual void operator()(Map*);
-    virtual void operator()(Ruleset*);
+    virtual void operator()(CssStyleRule*);
     virtual void operator()(Supports_Block*);
     virtual void operator()(CssMediaRule*);
-    virtual void operator()(Directive*);
     virtual void operator()(Keyframe_Rule*);
     virtual void operator()(Import*);
-    virtual void operator()(Comment*);
+    virtual void operator()(StaticImport*);
+    virtual void operator()(CssComment*);
+    virtual void operator()(LoudComment*);
+    virtual void operator()(SilentComment*);
     virtual void operator()(Number*);
+
+    virtual void operator()(StringLiteral*);
+
     virtual void operator()(String_Quoted*);
     virtual void operator()(String_Constant*);
 

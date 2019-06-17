@@ -6,17 +6,17 @@ namespace Sass {
 
   template <typename T>
   Environment<T>::Environment(bool is_shadow)
-  : local_frame_(environment_map<std::string, T>()),
+  : local_frame_(environment_map(T)()),
     parent_(0), is_shadow_(false)
   { }
   template <typename T>
   Environment<T>::Environment(Environment<T>* env, bool is_shadow)
-  : local_frame_(environment_map<std::string, T>()),
+  : local_frame_(environment_map(T)()),
     parent_(env), is_shadow_(is_shadow)
   { }
   template <typename T>
   Environment<T>::Environment(Environment<T>& env, bool is_shadow)
-  : local_frame_(environment_map<std::string, T>()),
+  : local_frame_(environment_map(T)()),
     parent_(&env), is_shadow_(is_shadow)
   { }
 
@@ -45,13 +45,14 @@ namespace Sass {
   }
 
   template <typename T>
-  environment_map<std::string, T>& Environment<T>::local_frame() {
+  environment_map(T)& Environment<T>::local_frame() {
     return local_frame_;
   }
 
   template <typename T>
   bool Environment<T>::has_local(const std::string& key) const
-  { return local_frame_.find(key) != local_frame_.end(); }
+  {
+    return local_frame_.count(key) == 1; }
 
   template <typename T> EnvResult
   Environment<T>::find_local(const std::string& key)

@@ -5,6 +5,9 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#include <vector>
+#include <string>
+#include <unordered_map>
 #include "sass/functions.h"
 #include "memory/SharedPtr.hpp"
 
@@ -27,16 +30,34 @@ namespace Sass {
   class Statement;
   class Value;
   class Declaration;
-  class Ruleset;
+  class StyleRule;
   class Bubble;
   class Trace;
 
   class MediaRule;
+
+  class CssNode;
+  class CssString;
+  class CssValue;
+  // class CssSelectors;
   class CssMediaRule;
   class CssMediaQuery;
+  class CssAtRule;
+  class CssComment;
+  class CssDeclaration;
+  class CssImport;
+  class CssKeyframeBlock;
+  class CssString;
+  class CssMediaQuery;
+  class CssMediaRule;
+  class CssStyleRule;
+  class CssStylesheet;
+  class CssSupportsRule;
+
+
 
   class Supports_Block;
-  class Directive;
+  class AtRule;
 
   class Keyframe_Rule;
   class At_Root_Block;
@@ -46,9 +67,15 @@ namespace Sass {
   class Import_Stub;
   class Warning;
 
+  class ImportRule;
+  class ImportBase;
+  class StaticImport;
+  class DynamicImport;
+
   class Error;
   class Debug;
-  class Comment;
+  class LoudComment;
+  class SilentComment;
 
   class If;
   class For;
@@ -64,9 +91,10 @@ namespace Sass {
   class Function;
 
   class Mixin_Call;
+  class ParenthesizedExpression;
   class Binary_Expression;
   class Unary_Expression;
-  class Function_Call;
+  class FunctionExpression;
   class Custom_Warning;
   class Custom_Error;
 
@@ -79,12 +107,13 @@ namespace Sass {
   class String;
   class Null;
 
-  class String_Schema;
+  class Interpolation;
+  class StringLiteral;
+  class StringExpression2;
+
   class String_Constant;
   class String_Quoted;
 
-  class Media_Query;
-  class Media_Query_Expression;
   class Supports_Condition;
   class Supports_Operator;
   class Supports_Negation;
@@ -99,7 +128,6 @@ namespace Sass {
   class Selector;
 
 
-  class Selector_Schema;
   class PlaceholderSelector;
   class TypeSelector;
   class ClassSelector;
@@ -124,6 +152,7 @@ namespace Sass {
   // declare classes that are instances of memory nodes
   // Note: also add a mapping without underscore
   // ToDo: move to camelCase vars in the future
+  // ToDo: rename from impl to e.g alias
   #define IMPL_MEM_OBJ(type) \
     typedef SharedImpl<type> type##Obj; \
     typedef SharedImpl<type> type##_Obj; \
@@ -131,24 +160,47 @@ namespace Sass {
   IMPL_MEM_OBJ(AST_Node);
   IMPL_MEM_OBJ(Statement);
   IMPL_MEM_OBJ(Block);
-  IMPL_MEM_OBJ(Ruleset);
+  IMPL_MEM_OBJ(StyleRule);
   IMPL_MEM_OBJ(Bubble);
   IMPL_MEM_OBJ(Trace);
   IMPL_MEM_OBJ(MediaRule);
+
+  IMPL_MEM_OBJ(CssNode);
+  IMPL_MEM_OBJ(CssString);
+  IMPL_MEM_OBJ(CssValue);
+  // IMPL_MEM_OBJ(CssSelectors);
   IMPL_MEM_OBJ(CssMediaRule);
   IMPL_MEM_OBJ(CssMediaQuery);
+  // IMPLEMENT_AST_OPERATORS(CssNode);
+  IMPL_MEM_OBJ(CssAtRule);
+  IMPL_MEM_OBJ(CssComment);
+  IMPL_MEM_OBJ(CssDeclaration);
+  IMPL_MEM_OBJ(CssImport);
+  IMPL_MEM_OBJ(CssKeyframeBlock);
+  IMPL_MEM_OBJ(CssMediaQuery);
+  IMPL_MEM_OBJ(CssMediaRule);
+  IMPL_MEM_OBJ(CssStyleRule);
+  IMPL_MEM_OBJ(CssStylesheet);
+  IMPL_MEM_OBJ(CssSupportsRule);
+
+
   IMPL_MEM_OBJ(Supports_Block);
-  IMPL_MEM_OBJ(Directive);
+  IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
   IMPL_MEM_OBJ(At_Root_Block);
   IMPL_MEM_OBJ(Declaration);
   IMPL_MEM_OBJ(Assignment);
   IMPL_MEM_OBJ(Import);
   IMPL_MEM_OBJ(Import_Stub);
+  IMPL_MEM_OBJ(ImportRule);
+  IMPL_MEM_OBJ(ImportBase);
+  IMPL_MEM_OBJ(StaticImport);
+  IMPL_MEM_OBJ(DynamicImport);
   IMPL_MEM_OBJ(Warning);
   IMPL_MEM_OBJ(Error);
   IMPL_MEM_OBJ(Debug);
-  IMPL_MEM_OBJ(Comment);
+  IMPL_MEM_OBJ(LoudComment);
+  IMPL_MEM_OBJ(SilentComment);
   IMPL_MEM_OBJ(PreValue);
   IMPL_MEM_OBJ(Has_Block);
   IMPL_MEM_OBJ(If);
@@ -165,9 +217,10 @@ namespace Sass {
   IMPL_MEM_OBJ(List);
   IMPL_MEM_OBJ(Map);
   IMPL_MEM_OBJ(Function);
+  IMPL_MEM_OBJ(ParenthesizedExpression);
   IMPL_MEM_OBJ(Binary_Expression);
   IMPL_MEM_OBJ(Unary_Expression);
-  IMPL_MEM_OBJ(Function_Call);
+  IMPL_MEM_OBJ(FunctionExpression);
   IMPL_MEM_OBJ(Custom_Warning);
   IMPL_MEM_OBJ(Custom_Error);
   IMPL_MEM_OBJ(Variable);
@@ -176,12 +229,12 @@ namespace Sass {
   IMPL_MEM_OBJ(Color_RGBA);
   IMPL_MEM_OBJ(Color_HSLA);
   IMPL_MEM_OBJ(Boolean);
-  IMPL_MEM_OBJ(String_Schema);
   IMPL_MEM_OBJ(String);
   IMPL_MEM_OBJ(String_Constant);
   IMPL_MEM_OBJ(String_Quoted);
-  IMPL_MEM_OBJ(Media_Query);
-  IMPL_MEM_OBJ(Media_Query_Expression);
+  IMPL_MEM_OBJ(Interpolation);
+  IMPL_MEM_OBJ(StringLiteral);
+  IMPL_MEM_OBJ(StringExpression2);
   IMPL_MEM_OBJ(Supports_Condition);
   IMPL_MEM_OBJ(Supports_Operator);
   IMPL_MEM_OBJ(Supports_Negation);
@@ -195,7 +248,6 @@ namespace Sass {
   IMPL_MEM_OBJ(Argument);
   IMPL_MEM_OBJ(Arguments);
   IMPL_MEM_OBJ(Selector);
-  IMPL_MEM_OBJ(Selector_Schema);
   IMPL_MEM_OBJ(SimpleSelector);
   IMPL_MEM_OBJ(PlaceholderSelector);
   IMPL_MEM_OBJ(TypeSelector);
@@ -220,9 +272,6 @@ namespace Sass {
   typedef std::vector<CssMediaRuleObj> MediaStack;
   typedef std::vector<SelectorListObj> SelectorStack;
   typedef std::vector<Sass_Import_Entry> ImporterStack;
-
-  // only to switch implementations for testing
-  #define environment_map std::map
 
   // ###########################################################################
   // explicit type conversion functions
@@ -259,6 +308,7 @@ namespace Sass {
   DECLARE_BASE_CAST(Selector)
   DECLARE_BASE_CAST(SimpleSelector)
   DECLARE_BASE_CAST(SelectorComponent)
+  DECLARE_BASE_CAST(ImportBase);
 
 }
 

@@ -21,12 +21,12 @@ namespace Sass {
     ~Cssize() { }
 
     Block* operator()(Block*);
-    Statement* operator()(Ruleset*);
+    Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);
     Statement* operator()(CssMediaRule*);
     Statement* operator()(Supports_Block*);
     Statement* operator()(At_Root_Block*);
-    Statement* operator()(Directive*);
+    Statement* operator()(AtRule*);
     Statement* operator()(Keyframe_Rule*);
     Statement* operator()(Trace*);
     Statement* operator()(Declaration*);
@@ -35,7 +35,6 @@ namespace Sass {
     // Statement* operator()(Import_Stub*);
     // Statement* operator()(Warning*);
     // Statement* operator()(Error*);
-    // Statement* operator()(Comment*);
     // Statement* operator()(If*);
     // Statement* operator()(For*);
     // Statement* operator()(Each*);
@@ -49,7 +48,7 @@ namespace Sass {
 
     Statement* parent();
     std::vector<std::pair<bool, Block_Obj>> slice_by_bubble(Block*);
-    Statement* bubble(Directive*);
+    Statement* bubble(AtRule*);
     Statement* bubble(At_Root_Block*);
     Statement* bubble(CssMediaRule*);
     Statement* bubble(Supports_Block*);

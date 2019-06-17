@@ -7,6 +7,7 @@
 
 namespace Sass {
 
+  class LineScanner;
 
   class Offset {
 
@@ -30,9 +31,6 @@ namespace Sass {
       Offset operator+ (const Offset &off) const;
       Offset operator- (const Offset &off) const;
 
-    public: // overload output stream operator
-      // friend std::ostream& operator<<(std::ostream& strm, const Offset& off);
-
     public:
       Offset off() { return *this; }
 
@@ -45,6 +43,7 @@ namespace Sass {
   class Position : public Offset {
 
     public: // c-tor
+      Position(LineScanner& scanner);
       Position(const size_t file); // line(0), column(0)
       Position(const size_t file, const Offset& offset);
       Position(const size_t line, const size_t column); // file(-1)
@@ -60,10 +59,8 @@ namespace Sass {
       Position add(const char* begin, const char* end);
       Position inc(const char* begin, const char* end) const;
 
-    public: // overload output stream operator
-      // friend std::ostream& operator<<(std::ostream& strm, const Position& pos);
-
     public:
+      const char* position;
       size_t file;
 
   };

@@ -55,6 +55,16 @@ namespace Sass {
     return s;
   }
 
+  Value* To_Value::operator()(Interpolation* s)
+  {
+    return s;
+  }
+
+  Value* To_Value::operator()(StringLiteral* s)
+  {
+    return s;
+  }
+
   // List is a valid value
   Value* To_Value::operator()(List* l)
   {
@@ -110,5 +120,14 @@ namespace Sass {
                            s->pstate(),
                            s->to_string(ctx.c_options));
   }
+
+  // Binary_Expression is converted to a string
+  Value* To_Value::operator()(ParenthesizedExpression* s)
+  {
+    return SASS_MEMORY_NEW(String_Quoted,
+      s->pstate(),
+      s->to_string(ctx.c_options));
+  }
+
 
 };

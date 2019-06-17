@@ -53,6 +53,7 @@
 
 // For C++ helper
 #include <string>
+#include <cstdint>
 
 // output behaviours
 namespace Sass {

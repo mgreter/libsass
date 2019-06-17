@@ -29,7 +29,7 @@ namespace Sass {
 
     if (this->mediaContext.isNull()) return;
 
-    if (mediaQueryContext && ObjPtrEqualityFn(mediaContext->block(), mediaQueryContext->block())) return;
+    if (mediaQueryContext && mediaContext->block() == mediaQueryContext->block()) return;
 
     if (ObjEqualityFn<CssMediaRuleObj>(mediaQueryContext, mediaContext)) return;
 

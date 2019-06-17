@@ -4,8 +4,13 @@
 #include "emitter.hpp"
 #include "util_string.hpp"
 #include "util.hpp"
+#include "character.hpp"
 
 namespace Sass {
+
+  // Import some namespaces
+  using namespace Charcode;
+  using namespace Character;
 
   Emitter::Emitter(struct Sass_Output_Options& opt)
   : wbuf(),
@@ -17,10 +22,8 @@ namespace Sass {
     scheduled_crutch(0),
     scheduled_mapping(0),
     in_custom_property(false),
-    in_comment(false),
-    in_wrapped(false),
-    in_media_block(false),
     in_declaration(false),
+    separators(),
     in_space_array(false),
     in_comma_array(false)
   { }
@@ -117,12 +120,12 @@ namespace Sass {
   }
 
   // append a single char to the buffer
-  void Emitter::append_char(const char chr)
+  void Emitter::append_char(uint8_t chr)
   {
     // write space/lf
     flush_schedules();
     // add to buffer
-    wbuf.buffer += chr;
+    wbuf.buffer+= (unsigned char) chr;
     // account for data in source-maps
     wbuf.smap.append(Offset(chr));
   }
@@ -130,33 +133,22 @@ namespace Sass {
   // append some text or token to the buffer
   void Emitter::append_string(const std::string& text)
   {
-
     // write space/lf
     flush_schedules();
-
-    if (in_comment) {
-      std::string out = Util::normalize_newlines(text);
-      if (output_style() == COMPACT) {
-        out = comment_to_compact_string(out);
-      }
-      wbuf.smap.append(Offset(out));
-      wbuf.buffer += std::move(out);
-    } else {
-      // add to buffer
-      wbuf.buffer += text;
-      // account for data in source-maps
-      wbuf.smap.append(Offset(text));
-    }
+    // add to buffer
+    wbuf.buffer += text;
+    // account for data in source-maps
+    wbuf.smap.append(Offset(text));
   }
 
   // append some white-space only text
   void Emitter::append_wspace(const std::string& text)
   {
     if (text.empty()) return;
-    if (peek_linefeed(text.c_str())) {
-      scheduled_space = 0;
-      append_mandatory_linefeed();
-    }
+    // if (peek_linefeed(text.c_str())) {
+      // scheduled_space = 0;
+      // append_mandatory_linefeed();
+    // }
   }
 
   // append some text or token to the buffer
@@ -172,6 +164,93 @@ namespace Sass {
       scheduled_crutch = 0;
     }
     append_string(text);
+    add_close_mapping(node);
+  }
+
+  // append some text or token to the buffer
+  // this adds source-mappings for node start and end
+  void Emitter::append_css(const std::string& text, const AST_Node* node, bool to_css)
+  {
+    //std::cerr << "append css " << text << "\n";
+    flush_schedules();
+    add_open_mapping(node);
+    // hotfix for browser issues
+    // this is pretty ugly indeed
+    if (scheduled_crutch) {
+      add_open_mapping(scheduled_crutch);
+      scheduled_crutch = 0;
+    }
+
+    bool afterNewline = false;
+    for (size_t i = 0, iL = text.length(); i < iL; i += 1) {
+      uint8_t chr = text[i];
+
+      if (to_css) {
+        if (chr == $lf) {
+          append_char($space);
+          afterNewline = true;
+        }
+        else if (chr == $lf) {
+          if (!afterNewline) {
+            append_char($space);
+          }
+        }
+        else {
+          append_char(chr);
+          afterNewline = false;
+        }
+      }
+      else {
+        switch (chr) {
+          // Write newline characters and unprintable ASCII characters as escapes.
+        case $nul:
+        case $soh:
+        case $stx:
+        case $etx:
+        case $eot:
+        case $enq:
+        case $ack:
+        case $bel:
+        case $bs:
+        case $lf:
+        case $vt:
+        case $ff:
+        case $cr:
+        case $so:
+        case $si:
+        case $dle:
+        case $dc1:
+        case $dc2:
+        case $dc3:
+        case $dc4:
+        case $nak:
+        case $syn:
+        case $etb:
+        case $can:
+        case $em:
+        case $sub:
+        case $esc:
+        case $fs:
+        case $gs:
+        case $rs:
+        case $us:
+          append_char($backslash);
+          if (chr > 0xF) append_char(hexCharFor(chr >> 4));
+          append_char(hexCharFor(chr & 0xF));
+          if (iL == i + 1) break;
+          if (isHex(text[i + 1]) || text[i + 1] == $space || text[i + 1] == $tab) {
+            append_char($space);
+          }
+          break;
+        default:
+          append_char(chr);
+          break;
+        }
+      }
+    }
+
+    // append_string(text);
+
     add_close_mapping(node);
   }
 

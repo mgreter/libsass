@@ -11,8 +11,13 @@
 #include "eval.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
-#include "parser.hpp"
 #include "sass_functions.hpp"
+#include "error_handling.hpp"
+#include "debugger.hpp"
+
+#include "parser_scss.hpp"
+#include "parser_selector.hpp"
+#include "parser_media_query.hpp"
 
 namespace Sass {
 
@@ -27,6 +32,13 @@ namespace Sass {
     in_keyframes(false),
     at_root_without_rule(false),
     old_at_root_without_rule(false),
+    _styleRule(),
+    _inFunction(false),
+    _inUnknownAtRule(false),
+    _atRootExcludingStyleRule(false),
+    _inKeyframes(false),
+    plainCss(false),
+    // _stylesheet(),
     env_stack(),
     block_stack(),
     call_stack(),
@@ -145,43 +157,45 @@ namespace Sass {
     return bb.detach();
   }
 
-  Statement* Expand::operator()(Ruleset* r)
+  Statement* Expand::operator()(StyleRule* r)
   {
     LOCAL_FLAG(old_at_root_without_rule, at_root_without_rule);
+
+    LocalOption<StyleRuleObj> oldStyleRule(_styleRule, r);
 
     if (in_keyframes) {
       Block* bb = operator()(r->block());
       Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), bb);
-      if (r->schema()) {
+      if (r->interpolation()) {
         pushToSelectorStack({});
-        k->name(eval(r->schema()));
+        auto val = eval.interpolationToValue(r->interpolation(), true, false);
+        k->name2(SASS_MEMORY_NEW(StringLiteral, "[pstate]", val));
         popFromSelectorStack();
       }
-      else if (r->selector()) {
-        if (SelectorListObj s = r->selector()) {
-          pushToSelectorStack({});
-          k->name(eval(s));
-          popFromSelectorStack();
-        }
-      }
+      // else if (r->selector()) {
+      //   if (SelectorListObj s = r->selector()) {
+      //     pushToSelectorStack({});
+      //     k->name(eval(s));
+      //     popFromSelectorStack();
+      //   }
+      // }
 
       return k.detach();
     }
 
-    if (r->schema()) {
-      SelectorListObj sel = eval(r->schema());
-      r->selector(sel);
-      bool chroot = sel->has_real_parent_ref();
-      for (auto complex : sel->elements()) {
-        complex->chroots(chroot);
-      }
-
+    SelectorListObj slist;
+    if (r->interpolation()) {
+      Sass_Import_Entry imp = ctx.import_stack.back();
+      bool plainCss = imp->type == SASS_IMPORT_CSS;
+      slist = itplToSelector(r->interpolation(), plainCss);
     }
 
     // reset when leaving scope
     LOCAL_FLAG(at_root_without_rule, false);
+    SASS_ASSERT(slist, "must have selectors");
 
-    SelectorListObj evaled = eval(r->selector());
+    SelectorListObj evaled = slist->resolveParentSelectors(
+      getSelectorStack().back(), traces, !old_at_root_without_rule);
     // do not connect parent again
     Env env(environment());
     if (block_stack.back()->is_root()) {
@@ -196,16 +210,18 @@ namespace Sass {
     if (r->block()) blk = operator()(r->block());
     popFromOriginalStack();
     popFromSelectorStack();
-    Ruleset* rr = SASS_MEMORY_NEW(Ruleset,
-                                  r->pstate(),
-                                  evaled,
-                                  blk);
+
+    CssStyleRule* rr = SASS_MEMORY_NEW(CssStyleRule,
+      r->pstate(),
+      evaled);
 
     if (block_stack.back()->is_root()) {
       env_stack.pop_back();
     }
 
-    rr->is_root(r->is_root());
+    rr->concat(blk->elements());
+    rr->block(blk);
+
     rr->tabs(r->tabs());
 
     return rr;
@@ -221,14 +237,27 @@ namespace Sass {
     return ff.detach();
   }
 
-  std::vector<CssMediaQuery_Obj> Expand::mergeMediaQueries(
-    const std::vector<CssMediaQuery_Obj>& lhs,
-    const std::vector<CssMediaQuery_Obj>& rhs)
+  bool Expand::isInMixin()
   {
-    std::vector<CssMediaQuery_Obj> queries;
-    for (CssMediaQuery_Obj query1 : lhs) {
-      for (CssMediaQuery_Obj query2 : rhs) {
-        CssMediaQuery_Obj result = query1->merge(query2);
+    for (Sass_Callee& callee : ctx.callee_stack) {
+      if (callee.type == SASS_CALLEE_MIXIN) return true;
+    }
+    return false;
+  }
+
+  bool Expand::isInContentBlock()
+  {
+    return false;
+  }
+
+  std::vector<CssMediaQueryObj> Expand::mergeMediaQueries(
+    const std::vector<CssMediaQueryObj>& lhs,
+    const std::vector<CssMediaQueryObj>& rhs)
+  {
+    std::vector<CssMediaQueryObj> queries;
+    for (CssMediaQueryObj query1 : lhs) {
+      for (CssMediaQueryObj query2 : rhs) {
+        CssMediaQueryObj result = query1->merge(query2);
         if (result && !result->empty()) {
           queries.push_back(result);
         }
@@ -239,20 +268,25 @@ namespace Sass {
 
   Statement* Expand::operator()(MediaRule* m)
   {
-    Expression_Obj mq = eval(m->schema());
-    std::string str_mq(mq->to_css(ctx.c_options));
+    Expression_Obj mq;
+    std::string str_mq;
+    ParserState state(m->pstate());
+    if (m->query()) {
+      state = m->query()->pstate();
+      str_mq = performInterpolation(m->query());
+    }
     char* str = sass_copy_c_string(str_mq.c_str());
     ctx.strings.push_back(str);
-    Parser parser(Parser::from_c_str(str, ctx, traces, mq->pstate()));
+    MediaQueryParser p2(ctx, str, state.path, state.file);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule, m->pstate(), m->block());
-    std::vector<CssMediaQuery_Obj> parsed = parser.parseCssMediaQueries();
+    std::vector<CssMediaQueryObj> parsed = p2.parse();
     if (mediaStack.size() && mediaStack.back()) {
       auto& parent = mediaStack.back()->elements();
-      css->concat(mergeMediaQueries(parent, parsed));
+      css->Vectorized::concat(mergeMediaQueries(parent, parsed));
     }
     else {
-      css->concat(parsed);
+      css->Vectorized::concat(parsed);
     }
     mediaStack.push_back(css);
     css->block(operator()(m->block()));
@@ -264,39 +298,90 @@ namespace Sass {
   Statement* Expand::operator()(At_Root_Block* a)
   {
     Block_Obj ab = a->block();
-    Expression_Obj ae = a->expression();
-
-    if (ae) ae = ae->perform(&eval);
+    At_Root_Query_Obj ae = a->expression();
+    if (ae) ae = eval(ae);
     else ae = SASS_MEMORY_NEW(At_Root_Query, a->pstate());
 
-    LOCAL_FLAG(at_root_without_rule, Cast<At_Root_Query>(ae)->exclude("rule"));
-    LOCAL_FLAG(in_keyframes, false);
+    /*
+    if (false && _inKeyframes && ae->exclude("keyframes")) {
+      LOCAL_FLAG(_inKeyframes, false);
+      Block_Obj bb = ab ? operator()(ab) : NULL;
+      At_Root_Block_Obj aa = SASS_MEMORY_NEW(At_Root_Block,
+        a->pstate(),
+        Cast<At_Root_Query>(ae),
+        bb);
+      return aa.detach();
 
-                                       ;
+    }
 
-    Block_Obj bb = ab ? operator()(ab) : NULL;
-    At_Root_Block_Obj aa = SASS_MEMORY_NEW(At_Root_Block,
-                                        a->pstate(),
-                                        bb,
-                                        Cast<At_Root_Query>(ae));
-    return aa.detach();
+    else if (false && _inUnknownAtRule) {
+      LOCAL_FLAG(_inUnknownAtRule, false);
+      Block_Obj bb = ab ? operator()(ab) : NULL;
+      At_Root_Block_Obj aa = SASS_MEMORY_NEW(At_Root_Block,
+        a->pstate(),
+        Cast<At_Root_Query>(ae),
+        bb);
+
+      return aa.detach();
+
+    }
+    else {*/
+      LOCAL_FLAG(in_keyframes, false);
+      LOCAL_FLAG(_inUnknownAtRule, false);
+      LOCAL_FLAG(at_root_without_rule, ae->exclude("rule"));
+      Block_Obj bb = ab ? operator()(ab) : NULL;
+      At_Root_Block_Obj aa = SASS_MEMORY_NEW(At_Root_Block,
+        a->pstate(),
+        Cast<At_Root_Query>(ae),
+        bb);
+
+      return aa.detach();
+
+    // }
+
   }
 
-  Statement* Expand::operator()(Directive* a)
+  SelectorListObj Expand::itplToSelector(Interpolation* itpl, bool plainCss)
   {
-    LOCAL_FLAG(in_keyframes, a->is_keyframes());
+    auto text = interpolationToValue(itpl, true);
+    char* cstr = sass_copy_c_string(text.c_str());
+    ctx.strings.push_back(cstr);
+    SelectorParser p2(ctx, cstr, itpl->pstate().path, itpl->pstate().file);
+    p2._allowPlaceholder = plainCss == false;
+    p2._allowParent = plainCss == false;
+    return p2.parse();
+  }
+
+  Statement* Expand::operator()(AtRule* a)
+  {
     Block* ab = a->block();
-    SelectorList* as = a->selector();
+
+    // SelectorList* as = a->selector();
     Expression* av = a->value();
-    pushToSelectorStack({});
-    if (av) av = av->perform(&eval);
-    if (as) as = eval(as);
-    popFromSelectorStack();
+    std::string name(a->keyword());
+
+    if (a->value2()) {
+      av = SASS_MEMORY_NEW(StringLiteral, "[pstate]", interpolationToValue(a->value2(), true));
+      // if (as) as->clear();
+    }
+
+    if (name.empty() && a->interpolation()) {
+      name = interpolationToValue(a->interpolation(), true, true);
+    }
+
+
+    std::string normalized(Util::unvendor(name));
+    LOCAL_FLAG(in_keyframes, normalized == "keyframes");
+    LOCAL_FLAG(_inKeyframes, normalized == "keyframes");
+    LOCAL_FLAG(_inUnknownAtRule, normalized != "keyframes");
+    if (name[0] != 0 && name[0] != '@') {
+      name = "@" + name;
+    }
+
     Block* bb = ab ? operator()(ab) : NULL;
-    Directive* aa = SASS_MEMORY_NEW(Directive,
+    AtRule* aa = SASS_MEMORY_NEW(AtRule,
                                   a->pstate(),
-                                  a->keyword(),
-                                  as,
+                                  name,
                                   bb,
                                   av);
     return aa;
@@ -304,32 +389,59 @@ namespace Sass {
 
   Statement* Expand::operator()(Declaration* d)
   {
+
+
+    if (!isInStyleRule() && !_inUnknownAtRule && !_inKeyframes) {
+      error(
+        "Declarations may only be used within style rules.",
+        d->pstate(), traces);
+    }
+
     Block_Obj ab = d->block();
     String_Obj old_p = d->property();
     Expression_Obj prop = old_p->perform(&eval);
+
+    if (auto itpl = Cast<Interpolation>(old_p)) {
+      auto text = interpolationToValue(itpl, true);
+      prop = SASS_MEMORY_NEW(String_Constant, old_p->pstate(), text, true);
+    }
+
     String_Obj new_p = Cast<String>(prop);
     // we might get a color back
     if (!new_p) {
       std::string str(prop->to_string(ctx.c_options));
-      new_p = SASS_MEMORY_NEW(String_Constant, old_p->pstate(), str);
+      new_p = SASS_MEMORY_NEW(StringLiteral, old_p->pstate(), str);
     }
     Expression_Obj value = d->value();
     if (value) value = value->perform(&eval);
+
+    bool is_custom_prop = false;
+
+    if (String_Constant * str = Cast<String_Constant>(value)) {
+      if (!d->is_custom_property()) {
+        std::string text(str->value());
+        Util::ascii_str_ltrim(text);
+        str->value(text);
+      }
+    }
+
+
     Block_Obj bb = ab ? operator()(ab) : NULL;
     if (!bb) {
-      if (!value || (value->is_invisible() && !d->is_important())) {
-        if (d->is_custom_property()) {
+      if (!value || (value->is_invisible())) {
+        if (d->is_custom_property() || is_custom_prop) {
           error("Custom property values may not be empty.", d->value()->pstate(), traces);
         } else {
           return nullptr;
         }
       }
     }
+
+
     Declaration* decl = SASS_MEMORY_NEW(Declaration,
                                         d->pstate(),
                                         new_p,
                                         value,
-                                        d->is_important(),
                                         d->is_custom_property(),
                                         bb);
     decl->tabs(d->tabs());
@@ -339,8 +451,26 @@ namespace Sass {
   Statement* Expand::operator()(Assignment* a)
   {
     Env* env = environment();
-    const std::string& var(a->variable());
+    std::string var(a->variable());
     if (a->is_global()) {
+      if (env->is_global()) {
+        if (!env->has_global(var)) {
+          deprecatedDart(
+            "As of Dart Sass 2.0.0, !global assignments won't be able to\n"
+            "declare new variables.Since this assignment is at the root of the stylesheet,\n"
+            "the !global flag is unnecessary and can safely be removed.",
+            true, a->pstate());
+        }
+      }
+      else {
+        if (!env->has_global(var)) {
+          deprecatedDart(
+            "As of Dart Sass 2.0.0, !global assignments won't be able to\n"
+            "declare new variables. Consider adding `" + var + ": null` at the root of the\n"
+            "stylesheet.",
+            true, a->pstate());
+        }
+      }
       if (a->is_default()) {
         if (env->has_global(var)) {
           Expression_Obj e = Cast<Expression>(env->get_global(var));
@@ -399,34 +529,75 @@ namespace Sass {
 
   Statement* Expand::operator()(Import* imp)
   {
+    // std::cerr << "visit an import\n";
     Import_Obj result = SASS_MEMORY_NEW(Import, imp->pstate());
     if (imp->import_queries() && imp->import_queries()->size()) {
       Expression_Obj ex = imp->import_queries()->perform(&eval);
-      result->import_queries(Cast<List>(ex));
+      std::string reparse(ex->to_string());
+      ParserState state(ex->pstate());
+      char* str = sass_copy_c_string(reparse.c_str());
+      ctx.strings.push_back(str);
+      MediaQueryParser p2(ctx, str, state.path, state.file);
+      auto queries = p2.parse();
+      result->queries(queries);
+      result->import_queries({});
     }
     for ( size_t i = 0, S = imp->urls().size(); i < S; ++i) {
       result->urls().push_back(imp->urls()[i]->perform(&eval));
     }
     // all resources have been dropped for Input_Stubs
-    // for ( size_t i = 0, S = imp->incs().size(); i < S; ++i) {}
+
+    for ( size_t i = 0, S = imp->incs().size(); i < S; ++i) {
+      Include inc = imp->incs()[i];
+      // std::cerr << "convert incs to import stubs " << inc.type << "\n";
+      Import_StubObj stub = SASS_MEMORY_NEW(Import_Stub, "[pstate]", inc);
+      stub->perform(this);
+    }
+
     return result.detach();
+  }
+
+  Statement* Expand::operator()(ImportRule* rule)
+  {
+    for (ImportBaseObj import : rule->elements()) {
+      if (import) import->perform(this);
+    }
+    return rule;
+  }
+
+  // Adds a CSS import for [import].
+  Statement* Expand::operator()(StaticImport* rule)
+  {
+
+    if (rule->url()) rule->url(rule->url()->perform(&eval));
+    if (rule->media()) {
+      std::string str(eval.interpolationToValue(rule->media(), true, true));
+      rule->media(SASS_MEMORY_NEW(Interpolation, "[pstate]"));
+      rule->media()->append(SASS_MEMORY_NEW(StringLiteral, "[pstate]", str));
+    }
+    if (rule->supports()) { rule->supports(rule->supports()->perform(&eval)); }
+    return rule;
+  }
+
+  // Adds the stylesheet imported by [import] to the current document.
+  Statement* Expand::operator()(DynamicImport* rule)
+  {
+    std::cerr << "visit dynamicImport" << "\n";
+    return rule;
   }
 
   Statement* Expand::operator()(Import_Stub* i)
   {
+    // std::cerr << "visit an import stub (dynamicImport)" << "\n";
     traces.push_back(Backtrace(i->pstate()));
     // get parent node from call stack
     AST_Node_Obj parent = call_stack.back();
-    if (Cast<Block>(parent) == NULL) {
-      error("Import directives may not be used within control directives or mixins.", i->pstate(), traces);
-    }
     // we don't seem to need that actually afterall
     Sass_Import_Entry import = sass_make_import(
       i->imp_path().c_str(),
       i->abs_path().c_str(),
       0, 0
     );
-    ctx.import_stack.push_back(import);
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, i->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, i->pstate(), i->imp_path(), trace_block, 'i');
@@ -434,7 +605,11 @@ namespace Sass {
     block_stack.push_back(trace_block);
 
     const std::string& abs_path(i->resource().abs_path);
-    append_block(ctx.sheets.at(abs_path).root);
+    StyleSheet sheet = ctx.sheets.at(abs_path);
+    import->type = sheet.syntax;
+    ctx.import_stack.push_back(import);
+    append_block(sheet.root);
+
     sass_delete_import(ctx.import_stack.back());
     ctx.import_stack.pop_back();
     block_stack.pop_back();
@@ -463,18 +638,16 @@ namespace Sass {
     return 0;
   }
 
-  Statement* Expand::operator()(Comment* c)
+  Statement* Expand::operator()(LoudComment* c)
   {
-    if (ctx.output_style() == COMPRESSED) {
-      // comments should not be evaluated in compact
-      // https://github.com/sass/libsass/issues/2359
-      if (!c->is_important()) return NULL;
-    }
-    eval.is_in_comment = true;
-    Comment* rv = SASS_MEMORY_NEW(Comment, c->pstate(), Cast<String>(c->text()->perform(&eval)), c->is_important());
-    eval.is_in_comment = false;
-    // TODO: eval the text, once we're parsing/storing it as a String_Schema
-    return rv;
+    std::string text(performInterpolation(c->text()));
+    bool preserve = text[2] == '!';
+    return SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve);
+  }
+
+  Statement* Expand::operator()(SilentComment* c)
+  {
+    return c;
   }
 
   Statement* Expand::operator()(If* i)
@@ -503,20 +676,20 @@ namespace Sass {
     Expression_Obj low = f->lower_bound()->perform(&eval);
     if (low->concrete_type() != Expression::NUMBER) {
       traces.push_back(Backtrace(low->pstate()));
-      throw Exception::TypeMismatch(traces, *low, "integer");
+      throw Exception::TypeMismatch(traces, *low, "a number");
     }
     Expression_Obj high = f->upper_bound()->perform(&eval);
     if (high->concrete_type() != Expression::NUMBER) {
       traces.push_back(Backtrace(high->pstate()));
-      throw Exception::TypeMismatch(traces, *high, "integer");
+      throw Exception::TypeMismatch(traces, *high, "a number");
     }
     Number_Obj sass_start = Cast<Number>(low);
     Number_Obj sass_end = Cast<Number>(high);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
-      std::stringstream msg; msg << "Incompatible units: '"
-        << sass_start->unit() << "' and '"
-        << sass_end->unit() << "'.";
+      std::stringstream msg; msg << "Incompatible units "
+        << sass_start->unit() << " and "
+        << sass_end->unit() << ".";
       error(msg.str(), low->pstate(), traces);
     }
     double start = sass_start->value();
@@ -562,7 +735,7 @@ namespace Sass {
       map = Cast<Map>(expr);
     }
     else if (SelectorList * ls = Cast<SelectorList>(expr)) {
-      Expression_Obj rv = Listize::perform(ls);
+      Expression_Obj rv = Listize::listize(ls);
       list = Cast<List>(rv);
     }
     else if (expr->concrete_type() != Expression::LIST) {
@@ -658,20 +831,144 @@ namespace Sass {
     return 0;
   }
 
+  std::string Expand::joinStrings(
+    std::vector<std::string>& strings,
+    const char* const separator)
+  {
+    switch (strings.size())
+    {
+    case 0:
+      return "";
+    case 1:
+      return strings[0];
+    default:
+      std::ostringstream os;
+      std::move(strings.begin(), strings.end() - 1,
+        std::ostream_iterator<std::string>(os, separator));
+      os << *strings.rbegin();
+      return os.str();
+    }
+  }
+
+  /// Evaluates [interpolation].
+  ///
+  /// If [warnForColor] is `true`, this will emit a warning for any named color
+  /// values passed into the interpolation.
+  std::string Expand::performInterpolation(InterpolationObj interpolation, bool warnForColor)
+  {
+    // return eval(interpolation)->value();
+    std::vector<std::string> results;
+
+    // debug_ast(interpolation);
+
+    for (auto value : interpolation->elements()) {
+
+      if (StringLiteral * str = Cast<StringLiteral>(value)) {
+        results.push_back(str->text());
+        continue;
+      }
+
+      Expression* expression = value;
+
+      ExpressionObj result = expression->perform(&eval);
+
+      if (Cast<Null>(result)) continue;
+      if (result == nullptr) continue;
+
+      /*
+      if (warnForColor &&
+        result is SassColor &&
+        namesByColor.containsKey(result)) {
+        var alternative = BinaryOperationExpression(
+          BinaryOperator.plus,
+          StringExpression(Interpolation([""], null), quotes: true),
+          expression);
+        _warn(
+          "You probably don't mean to use the color value "
+          "${namesByColor[result]} in interpolation here.\n"
+          "It may end up represented as $result, which will likely produce "
+          "invalid CSS.\n"
+          "Always quote color names when using them as strings or map keys "
+          '(for example, "${namesByColor[result]}").\n'
+          "If you really want to use the color value here, use '$alternative'.",
+          expression.span);
+      }
+      */
+
+      if (String_Constant* str = Cast<String_Constant>(result)) {
+        String_Constant_Obj sobj = SASS_MEMORY_COPY(str);
+        sobj->quote_mark(0);
+        // return _serialize(result, expression, quote: false);
+        // ToDo: quote = false
+        results.push_back(sobj->to_css());
+
+      }
+      else {
+        // return _serialize(result, expression, quote: false);
+
+        // ToDo: quote = false
+        results.push_back(result->to_css());
+
+      }
+
+    }
+
+    return joinStrings(results);
+
+  }
+
+  /// Evaluates [interpolation] and wraps the result in a [CssValue].
+  ///
+  /// If [trim] is `true`, removes whitespace around the result. If
+  /// [warnForColor] is `true`, this will emit a warning for any named color
+  /// values passed into the interpolation.
+  std::string Expand::interpolationToValue(InterpolationObj interpolation,
+    bool trim, bool warnForColor)
+  {
+    std::string result = performInterpolation(interpolation, warnForColor);
+    if (trim) { Util::ascii_str_trim(result); } // ToDo: excludeEscape: true
+    return result;
+    // return CssValue(trim ? trimAscii(result, excludeEscape: true) : result,
+    //   interpolation.span);
+  }
+
+
   Statement* Expand::operator()(ExtendRule* e)
   {
 
-    // evaluate schema first
-    if (e->schema()) {
-      e->selector(eval(e->schema()));
-      e->isOptional(e->selector()->is_optional());
+    if (!isInStyleRule() && !isInMixin() && !isInContentBlock()) {
+      error(
+        "@extend may only be used within style rules.",
+        e->pstate(), traces);
     }
-    // evaluate the selector
-    e->selector(eval(e->selector()));
 
-    if (e->selector()) {
+    InterpolationObj itpl = e->selector();
 
-      for (auto complex : e->selector()->elements()) {
+    std::string text = interpolationToValue(itpl, true);
+
+    /*
+    var list = _adjustParseError(
+      targetText,
+      () = > SelectorList.parse(
+        trimAscii(targetText.value, excludeEscape: true),
+        logger: _logger,
+        allowParent : false));
+        */
+
+    // Sass_Import_Entry parent = ctx.import_stack.back();
+    char* cstr = sass_copy_c_string(text.c_str());
+    ctx.strings.push_back(cstr);
+    SelectorParser p2(ctx, cstr, "foobar", 0);
+    if (block_stack.size() > 2) {
+      Block* b = block_stack.at(block_stack.size() - 2);
+      if (b->is_root()) p2._allowParent = false;
+    }
+
+    SelectorListObj slist = p2.parse();
+
+    if (slist) {
+
+      for (auto complex : slist->elements()) {
 
         if (complex->length() != 1) {
           error("complex selectors may not be extended.", complex->pstate(), traces);
@@ -713,11 +1010,11 @@ namespace Sass {
   {
     Env* env = environment();
     Definition_Obj dd = SASS_MEMORY_COPY(d);
+
     env->local_frame()[d->name() +
                         (d->type() == Definition::MIXIN ? "[m]" : "[f]")] = dd;
 
     if (d->type() == Definition::FUNCTION && (
-      Prelexer::calc_fn_call(d->name().c_str()) ||
       d->name() == "element"    ||
       d->name() == "expression" ||
       d->name() == "url"
@@ -753,7 +1050,8 @@ namespace Sass {
     Parameters_Obj params = def->parameters();
 
     if (c->block() && c->name() != "@content" && !body->has_content()) {
-      error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), traces);
+      // error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), traces);
+      error("Mixin doesn't accept a content block.", c->pstate(), traces);
     }
     Expression_Obj rv = c->arguments()->perform(&eval);
     Arguments_Obj args = Cast<Arguments>(rv);
@@ -795,9 +1093,6 @@ namespace Sass {
     }
     block_stack.push_back(trace_block);
     for (auto bb : body->elements()) {
-      if (Ruleset* r = Cast<Ruleset>(bb)) {
-        r->is_root(trace_block->is_root());
-      }
       Statement_Obj ith = bb->perform(this);
       if (ith) trace->block()->append(ith);
     }

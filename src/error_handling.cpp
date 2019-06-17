@@ -26,9 +26,10 @@ namespace Sass {
     InvalidParent::InvalidParent(Selector* parent, Backtraces traces, Selector* selector)
     : Base(selector->pstate(), def_msg, traces), parent(parent), selector(selector)
     {
-      msg = "Invalid parent selector for "
-        "\"" + selector->to_string(Sass_Inspect_Options()) + "\": "
-        "\"" + parent->to_string(Sass_Inspect_Options()) + "\"";
+      msg = "Parent "
+        // "\"" + selector->to_string(Sass_Inspect_Options()) + "\": "
+        "\"" + parent->to_string(Sass_Inspect_Options()) + "\""
+        " is incompatible with this selector.";
     }
 
     InvalidVarKwdType::InvalidVarKwdType(ParserState pstate, Backtraces traces, std::string name, const Argument* arg)
@@ -41,19 +42,25 @@ namespace Sass {
     InvalidArgumentType::InvalidArgumentType(ParserState pstate, Backtraces traces, std::string fn, std::string arg, std::string type, const Value* value)
     : Base(pstate, def_msg, traces), fn(fn), arg(arg), type(type), value(value)
     {
-      msg = arg + ": \"";
+      msg = arg + ": ";
       if (value) msg += value->to_string(Sass_Inspect_Options());
-      msg += "\" is not a " + type + " for `" + fn + "'";
+      msg += " is not a " + type + ".";
     }
 
     MissingArgument::MissingArgument(ParserState pstate, Backtraces traces, std::string fn, std::string arg, std::string fntype)
     : Base(pstate, def_msg, traces), fn(fn), arg(arg), fntype(fntype)
     {
-      msg = fntype + " " + fn + " is missing argument " + arg + ".";
+      msg = "Missing argument " + arg + ".";
+    }
+
+    InvalidCss::InvalidCss(ParserState pstate, Backtraces traces, std::string msg)
+    : Base(pstate, msg, traces)
+    {
+      // msg = "Invalid CSS after \""
     }
 
     InvalidSyntax::InvalidSyntax(ParserState pstate, Backtraces traces, std::string msg)
-    : Base(pstate, msg, traces)
+      : Base(pstate, msg, traces)
     { }
 
     NestingLimitError::NestingLimitError(ParserState pstate, Backtraces traces, std::string msg)
@@ -63,13 +70,14 @@ namespace Sass {
     DuplicateKeyError::DuplicateKeyError(Backtraces traces, const Map& dup, const Expression& org)
     : Base(org.pstate(), def_msg, traces), dup(dup), org(org)
     {
-      msg = "Duplicate key " + dup.get_duplicate_key()->inspect() + " in map (" + org.inspect() + ").";
+      // msg = "Duplicate key " + dup.get_duplicate_key()->inspect() + " in map (" + org.inspect() + ").";
+      msg = "Duplicate key."; // dart-sass keeps it simple ...
     }
 
     TypeMismatch::TypeMismatch(Backtraces traces, const Expression& var, const std::string type)
     : Base(var.pstate(), def_msg, traces), var(var), type(type)
     {
-      msg = var.to_string() + " is not an " + type + ".";
+      msg = var.to_string() + " is not " + type + ".";
     }
 
     InvalidValue::InvalidValue(Backtraces traces, const Expression& val)
@@ -86,12 +94,12 @@ namespace Sass {
 
     IncompatibleUnits::IncompatibleUnits(const Units& lhs, const Units& rhs)
     {
-      msg = "Incompatible units: '" + rhs.unit() + "' and '" + lhs.unit() + "'.";
+      msg = "Incompatible units " + rhs.unit() + " and " + lhs.unit() + ".";
     }
 
     IncompatibleUnits::IncompatibleUnits(const UnitType lhs, const UnitType rhs)
     {
-      msg = std::string("Incompatible units: '") + unit_to_string(rhs) + "' and '" + unit_to_string(lhs) + "'.";
+      msg = std::string("Incompatible units ") + unit_to_string(rhs) + " and " + unit_to_string(lhs) + ".";
     }
 
     AlphaChannelsNotEqual::AlphaChannelsNotEqual(const Expression* lhs, const Expression* rhs, enum Sass_OP op)
@@ -112,9 +120,9 @@ namespace Sass {
     UndefinedOperation::UndefinedOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op)
     : OperationError(), lhs(lhs), rhs(rhs), op(op)
     {
-      msg = def_op_msg + ": \"" +
+      msg = def_op_msg + " \"" +
         lhs->to_string({ NESTED, 5 }) +
-        " " + sass_op_to_name(op) + " " +
+        " " + sass_op_separator(op) + " " +
         rhs->to_string({ TO_SASS, 5 }) +
         "\".";
     }
@@ -153,13 +161,12 @@ namespace Sass {
     }
     
 
-  }
+    InvalidUnicode::InvalidUnicode(ParserState pstate, Backtraces traces)
+      : Base(pstate, "Invalid UTF-8.", traces)
+    {
+    }
 
-
-  void warn(std::string msg, ParserState pstate)
-  {
-    std::cerr << "Warning: " << msg << std::endl;
-  }
+}
 
   void warning(std::string msg, ParserState pstate)
   {
@@ -172,23 +179,6 @@ namespace Sass {
     std::cerr << msg << std::endl << std::endl;
   }
 
-  void warn(std::string msg, ParserState pstate, Backtrace* bt)
-  {
-    warn(msg, pstate);
-  }
-
-  void deprecated_function(std::string msg, ParserState pstate)
-  {
-    std::string cwd(Sass::File::get_cwd());
-    std::string abs_path(Sass::File::rel2abs(pstate.path, cwd, cwd));
-    std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
-    std::string output_path(Sass::File::path_for_console(rel_path, abs_path, pstate.path));
-
-    std::cerr << "DEPRECATION WARNING: " << msg << std::endl;
-    std::cerr << "will be an error in future versions of Sass." << std::endl;
-    std::cerr << "        on line " << pstate.line+1 << " of " << output_path << std::endl;
-  }
-
   void deprecated(std::string msg, std::string msg2, bool with_column, ParserState pstate)
   {
     std::string cwd(Sass::File::get_cwd());
@@ -197,12 +187,27 @@ namespace Sass {
     std::string output_path(Sass::File::path_for_console(rel_path, pstate.path, pstate.path));
 
     std::cerr << "DEPRECATION WARNING on line " << pstate.line + 1;
-    if (with_column) std::cerr << ", column " << pstate.column + pstate.offset.column + 1;
+    if (with_column) std::cerr << ", column " << pstate.column + 1;
     if (output_path.length()) std::cerr << " of " << output_path;
     std::cerr << ":" << std::endl;
     std::cerr << msg << std::endl;
     if (msg2.length()) std::cerr << msg2 << std::endl;
     std::cerr << std::endl;
+  }
+
+  void deprecatedDart(std::string msg, bool with_column, ParserState pstate)
+  {
+    std::string cwd(Sass::File::get_cwd());
+    std::string abs_path(Sass::File::rel2abs(pstate.path, cwd, cwd));
+    std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
+    std::string output_path(Sass::File::path_for_console(rel_path, pstate.path, pstate.path));
+
+    std::cerr << "DEPRECATION WARNING: ";
+    std::cerr << msg << std::endl;
+    std::cerr << std::endl;
+
+    // ToDo: add source indicator
+
   }
 
   void deprecated_bind(std::string msg, ParserState pstate)
@@ -215,13 +220,6 @@ namespace Sass {
     std::cerr << "WARNING: " << msg << std::endl;
     std::cerr << "        on line " << pstate.line+1 << " of " << output_path << std::endl;
     std::cerr << "This will be an error in future versions of Sass." << std::endl;
-  }
-
-  // should be replaced with error with backtraces
-  void coreError(std::string msg, ParserState pstate)
-  {
-    Backtraces traces;
-    throw Exception::InvalidSyntax(pstate, traces, msg);
   }
 
   void error(std::string msg, ParserState pstate, Backtraces& traces)

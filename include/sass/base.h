@@ -87,6 +87,9 @@ ADDAPI char* ADDCALL sass_string_unquote (const char* str);
 // Hardcoded version 3.4 for time being
 ADDAPI const char* ADDCALL libsass_version(void);
 
+// Hardcoded until removed completely
+ADDAPI const char* ADDCALL sass2scss_version(void);
+
 // Get compiled libsass language
 ADDAPI const char* ADDCALL libsass_language_version(void);
 

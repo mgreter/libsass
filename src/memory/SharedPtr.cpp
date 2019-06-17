@@ -26,8 +26,10 @@ namespace Sass {
       }
     }
   }
+  size_t SharedObj::objCount = 0;
   std::vector<SharedObj*> SharedObj::all;
-  #endif
+  std::unordered_set<size_t> SharedObj::deleted;
+#endif
 
   bool SharedObj::taint = false;
 }

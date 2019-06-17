@@ -1,14 +1,13 @@
+#include "ast_values.hpp"
+#include "ast_values.hpp"
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 #include "ast.hpp"
+#include "character.hpp"
+#include "interpolation.hpp"
 
 namespace Sass {
-
-  void str_rtrim(std::string& str, const std::string& delimiters = " \f\n\r\t\v")
-  {
-    str.erase( str.find_last_not_of( delimiters ) + 1 );
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -62,31 +61,7 @@ namespace Sass {
     return hash_;
   }
 
-  void List::set_delayed(bool delayed)
-  {
-    is_delayed(delayed);
-    // don't set children
-  }
-
-  bool List::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<List>(&rhs)) {
-      if (length() < r->length()) return true;
-      if (length() > r->length()) return false;
-      const auto& left = elements();
-      const auto& right = r->elements();
-      for (size_t i = 0; i < left.size(); i += 1) {
-        if (*left[i] < *right[i]) return true;
-        if (*left[i] == *right[i]) continue;
-        return false;
-      }
-      return false;
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool List::operator== (const Expression& rhs) const
+  bool List::operator== (const Value& rhs) const
   {
     if (auto r = Cast<List>(&rhs)) {
       if (length() != r->length()) return false;
@@ -100,6 +75,9 @@ namespace Sass {
         else if (*lv != *rv) return false;
       }
       return true;
+    }
+    if (auto m = Cast<Map>(&rhs)) {
+      return m->empty() && empty();
     }
     return false;
   }
@@ -117,6 +95,20 @@ namespace Sass {
     return length();
   }
 
+  environment_map(ExpressionObj) List::getNormalizedArgMap()
+  {
+    environment_map(ExpressionObj) map;
+    if (is_arglist_) {
+      for (Expression* item : elements()) {
+        if (Argument * arg = Cast<Argument>(item)) {
+          if (arg->name().empty()) continue;
+          map[arg->name()] = arg->value();
+        }
+      }
+    }
+    return map;
+  }
+
 
   Expression_Obj List::value_at_index(size_t i) {
     Expression_Obj obj = this->at(i);
@@ -129,6 +121,23 @@ namespace Sass {
     } else {
       return obj;
     }
+  }
+
+  std::vector<Expression_Obj> List::values()
+  {
+    if (is_arglist_) {
+      std::vector<Expression_Obj> values;
+      for (Expression* item : elements()) {
+        if (Argument* arg = Cast<Argument>(item)) {
+          values.push_back(arg->value());
+        }
+        else {
+          values.push_back(item);
+        }
+      }
+      return values;
+    }
+    return elements();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -144,32 +153,7 @@ namespace Sass {
     Hashed(*ptr)
   { concrete_type(MAP); }
 
-  bool Map::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Map>(&rhs)) {
-      if (length() < r->length()) return true;
-      if (length() > r->length()) return false;
-      const auto& lkeys = keys();
-      const auto& rkeys = r->keys();
-      for (size_t i = 0; i < lkeys.size(); i += 1) {
-        if (*lkeys[i] < *rkeys[i]) return true;
-        if (*lkeys[i] == *rkeys[i]) continue;
-        return false;
-      }
-      const auto& lvals = values();
-      const auto& rvals = r->values();
-      for (size_t i = 0; i < lvals.size(); i += 1) {
-        if (*lvals[i] < *rvals[i]) return true;
-        if (*lvals[i] == *rvals[i]) continue;
-        return false;
-      }
-      return false;
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Map::operator== (const Expression& rhs) const
+  bool Map::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Map>(&rhs)) {
       if (length() != r->length()) return false;
@@ -186,13 +170,17 @@ namespace Sass {
   }
 
   List_Obj Map::to_list(ParserState& pstate) {
-    List_Obj ret = SASS_MEMORY_NEW(List, pstate, length(), SASS_COMMA);
+    List_Obj ret = SASS_MEMORY_NEW(List, pstate, length(), SASS_UNDEF);
 
     for (auto key : keys()) {
       List_Obj l = SASS_MEMORY_NEW(List, pstate, 2);
       l->append(key);
       l->append(at(key));
       ret->append(l);
+    }
+
+    if (ret->length() > 1) {
+      ret->separator(SASS_COMMA);
     }
 
     return ret;
@@ -215,7 +203,7 @@ namespace Sass {
 
   Binary_Expression::Binary_Expression(ParserState pstate,
                     Operand op, Expression_Obj lhs, Expression_Obj rhs)
-  : PreValue(pstate), op_(op), left_(lhs), right_(rhs), hash_(0)
+  : PreValue(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
   { }
 
   Binary_Expression::Binary_Expression(const Binary_Expression* ptr)
@@ -223,58 +211,28 @@ namespace Sass {
     op_(ptr->op_),
     left_(ptr->left_),
     right_(ptr->right_),
+    allowsSlash_(ptr->allowsSlash_),
     hash_(ptr->hash_)
   { }
-
-  bool Binary_Expression::is_left_interpolant(void) const
-  {
-    return is_interpolant() || (left() && left()->is_left_interpolant());
-  }
-  bool Binary_Expression::is_right_interpolant(void) const
-  {
-    return is_interpolant() || (right() && right()->is_right_interpolant());
-  }
-
-  const std::string Binary_Expression::type_name()
-  {
-    return sass_op_to_name(optype());
-  }
 
   const std::string Binary_Expression::separator()
   {
     return sass_op_separator(optype());
   }
 
-  bool Binary_Expression::has_interpolant() const
-  {
-    return is_left_interpolant() ||
-            is_right_interpolant();
-  }
-
   void Binary_Expression::set_delayed(bool delayed)
   {
     right()->set_delayed(delayed);
     left()->set_delayed(delayed);
-    is_delayed(delayed);
-  }
-
-  bool Binary_Expression::operator<(const Expression& rhs) const
-  {
-    if (auto m = Cast<Binary_Expression>(&rhs)) {
-      return type() < m->type() ||
-        *left() < *m->left() ||
-        *right() < *m->right();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
+    allowsSlash(delayed);
   }
 
   bool Binary_Expression::operator==(const Expression& rhs) const
   {
     if (auto m = Cast<Binary_Expression>(&rhs)) {
       return type() == m->type() &&
-             *left() == *m->left() &&
-             *right() == *m->right();
+        *left() == *m->left() &&
+        *right() == *m->right();
     }
     return false;
   }
@@ -300,23 +258,7 @@ namespace Sass {
   : Value(ptr), definition_(ptr->definition_), is_css_(ptr->is_css_)
   { concrete_type(FUNCTION_VAL); }
 
-  bool Function::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Function>(&rhs)) {
-      auto d1 = Cast<Definition>(definition());
-      auto d2 = Cast<Definition>(r->definition());
-      if (d1 == nullptr) return d2 != nullptr;
-      else if (d2 == nullptr) return false;
-      if (is_css() == r->is_css()) {
-        return d1 < d2;
-      }
-      return r->is_css();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Function::operator== (const Expression& rhs) const
+  bool Function::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Function>(&rhs)) {
       auto d1 = Cast<Definition>(definition());
@@ -336,39 +278,28 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Function_Call::Function_Call(ParserState pstate, String_Obj n, Arguments_Obj args, void* cookie)
-  : PreValue(pstate), sname_(n), arguments_(args), func_(), via_call_(false), cookie_(cookie), hash_(0)
-  { concrete_type(FUNCTION); }
-  Function_Call::Function_Call(ParserState pstate, String_Obj n, Arguments_Obj args, Function_Obj func)
-  : PreValue(pstate), sname_(n), arguments_(args), func_(func), via_call_(false), cookie_(0), hash_(0)
-  { concrete_type(FUNCTION); }
-  Function_Call::Function_Call(ParserState pstate, String_Obj n, Arguments_Obj args)
-  : PreValue(pstate), sname_(n), arguments_(args), via_call_(false), cookie_(0), hash_(0)
+  FunctionExpression::FunctionExpression(ParserState pstate, InterpolationObj n, ArgumentsObj args, std::string ns)
+  : PreValue(pstate), sname_(n), arguments_(args), ns_(ns), via_call_(false), cookie_(0), hash_(0)
   { concrete_type(FUNCTION); }
 
-  Function_Call::Function_Call(ParserState pstate, std::string n, Arguments_Obj args, void* cookie)
-  : PreValue(pstate), sname_(SASS_MEMORY_NEW(String_Constant, pstate, n)), arguments_(args), func_(), via_call_(false), cookie_(cookie), hash_(0)
-  { concrete_type(FUNCTION); }
-  Function_Call::Function_Call(ParserState pstate, std::string n, Arguments_Obj args, Function_Obj func)
-  : PreValue(pstate), sname_(SASS_MEMORY_NEW(String_Constant, pstate, n)), arguments_(args), func_(func), via_call_(false), cookie_(0), hash_(0)
-  { concrete_type(FUNCTION); }
-  Function_Call::Function_Call(ParserState pstate, std::string n, Arguments_Obj args)
-  : PreValue(pstate), sname_(SASS_MEMORY_NEW(String_Constant, pstate, n)), arguments_(args), via_call_(false), cookie_(0), hash_(0)
+  FunctionExpression::FunctionExpression(ParserState pstate, std::string n, Arguments_Obj args, std::string ns)
+    : PreValue(pstate), sname_(SASS_MEMORY_NEW(Interpolation, pstate, SASS_MEMORY_NEW(StringLiteral, pstate, n))), arguments_(args), ns_(ns), via_call_(false), cookie_(0), hash_(0)
   { concrete_type(FUNCTION); }
 
-  Function_Call::Function_Call(const Function_Call* ptr)
+  FunctionExpression::FunctionExpression(const FunctionExpression* ptr)
   : PreValue(ptr),
     sname_(ptr->sname_),
     arguments_(ptr->arguments_),
     func_(ptr->func_),
+    ns_(ptr->ns_),
     via_call_(ptr->via_call_),
     cookie_(ptr->cookie_),
     hash_(ptr->hash_)
   { concrete_type(FUNCTION); }
 
-  bool Function_Call::operator==(const Expression& rhs) const
+  bool FunctionExpression::operator==(const Expression& rhs) const
   {
-    if (auto m = Cast<Function_Call>(&rhs)) {
+    if (auto m = Cast<FunctionExpression>(&rhs)) {
       if (*sname() != *m->sname()) return false;
       if (arguments()->length() != m->arguments()->length()) return false;
       for (size_t i = 0, L = arguments()->length(); i < L; ++i)
@@ -378,7 +309,7 @@ namespace Sass {
     return false;
   }
 
-  size_t Function_Call::hash() const
+  size_t FunctionExpression::hash() const
   {
     if (hash_ == 0) {
       hash_ = std::hash<std::string>()(name());
@@ -388,12 +319,12 @@ namespace Sass {
     return hash_;
   }
 
-  std::string Function_Call::name() const
+  std::string FunctionExpression::name() const
   {
     return sname();
   }
 
-  bool Function_Call::is_css() {
+  bool FunctionExpression::is_css() {
     if (func_) return func_->is_css();
     return false;
   }
@@ -430,6 +361,8 @@ namespace Sass {
     Units(),
     value_(val),
     zero_(zero),
+    lhsAsSlash_(),
+    rhsAsSlash_(),
     hash_(0)
   {
     size_t l = 0;
@@ -460,7 +393,9 @@ namespace Sass {
   Number::Number(const Number* ptr)
   : Value(ptr),
     Units(ptr),
-    value_(ptr->value_), zero_(ptr->zero_),
+    value_(ptr->value_),
+    lhsAsSlash_(ptr->lhsAsSlash_),
+    rhsAsSlash_(ptr->rhsAsSlash_),
     hash_(ptr->hash_)
   { concrete_type(NUMBER); }
 
@@ -489,17 +424,9 @@ namespace Sass {
     return hash_;
   }
 
-  bool Number::operator< (const Expression& rhs) const
+  bool Number::operator== (const Value& rhs) const
   {
-    if (auto n = Cast<Number>(&rhs)) {
-      return *this < *n;
-    }
-    return false;
-  }
-
-  bool Number::operator== (const Expression& rhs) const
-  {
-    if (auto n = Cast<Number>(&rhs)) {
+    if (const Number* n = Cast<Number>(&rhs)) {
       return *this == *n;
     }
     return false;
@@ -534,15 +461,41 @@ namespace Sass {
     }
     // ensure both have same units
     l.normalize(); r.normalize();
-    Units &lhs_unit = l, &rhs_unit = r;
+    Units& lhs_unit = l, & rhs_unit = r;
     if (!(lhs_unit == rhs_unit)) {
       /* ToDo: do we always get usefull backtraces? */
-      throw Exception::IncompatibleUnits(rhs, *this);
+      throw Exception::IncompatibleUnits(*this, rhs);
     }
     if (lhs_unit == rhs_unit) {
       return l.value() < r.value();
-    } else {
+    }
+    else {
       return lhs_unit < rhs_unit;
+    }
+  }
+
+  bool Number::operator> (const Number& rhs) const
+  {
+    // unitless or only having one unit are equivalent (3.4)
+    // therefore we need to reduce the units beforehand
+    Number l(*this), r(rhs); l.reduce(); r.reduce();
+    size_t lhs_units = l.numerators.size() + l.denominators.size();
+    size_t rhs_units = r.numerators.size() + r.denominators.size();
+    if (!lhs_units || !rhs_units) {
+      return l.value() > r.value();
+    }
+    // ensure both have same units
+    l.normalize(); r.normalize();
+    Units& lhs_unit = l, & rhs_unit = r;
+    if (!(lhs_unit == rhs_unit)) {
+      /* ToDo: do we always get usefull backtraces? */
+      throw Exception::IncompatibleUnits(*this, rhs);
+    }
+    if (lhs_unit == rhs_unit) {
+      return l.value() > r.value();
+    }
+    else {
+      return lhs_unit > rhs_unit;
     }
   }
 
@@ -563,35 +516,6 @@ namespace Sass {
     hash_(ptr->hash_)
   { concrete_type(COLOR); }
 
-  bool Color::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Color_RGBA>(&rhs)) {
-      return *this < *r;
-    }
-    else if (auto r = Cast<Color_HSLA>(&rhs)) {
-      return *this < *r;
-    }
-    else if (auto r = Cast<Color>(&rhs)) {
-      return a_ < r->a();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Color::operator== (const Expression& rhs) const
-  {
-    if (auto r = Cast<Color_RGBA>(&rhs)) {
-      return *this == *r;
-    }
-    else if (auto r = Cast<Color_HSLA>(&rhs)) {
-      return *this == *r;
-    }
-    else if (auto r = Cast<Color>(&rhs)) {
-      return a_ == r->a();
-    }
-    return false;
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -607,30 +531,13 @@ namespace Sass {
     b_(ptr->b_)
   { concrete_type(COLOR); }
 
-  bool Color_RGBA::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Color_RGBA>(&rhs)) {
-      if (r_ < r->r()) return true;
-      if (r_ > r->r()) return false;
-      if (g_ < r->g()) return true;
-      if (g_ > r->g()) return false;
-      if (b_ < r->b()) return true;
-      if (b_ > r->b()) return false;
-      if (a_ < r->a()) return true;
-      if (a_ > r->a()) return false;
-      return false; // is equal
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Color_RGBA::operator== (const Expression& rhs) const
+  bool Color_RGBA::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Color_RGBA>(&rhs)) {
       return r_ == r->r() &&
-             g_ == r->g() &&
-             b_ == r->b() &&
-             a_ == r->a();
+        g_ == r->g() &&
+        b_ == r->b() &&
+        a_ == r->a();
     }
     return false;
   }
@@ -709,30 +616,13 @@ namespace Sass {
     // hash_(ptr->hash_)
   { concrete_type(COLOR); }
 
-  bool Color_HSLA::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Color_HSLA>(&rhs)) {
-      if (h_ < r->h()) return true;
-      if (h_ > r->h()) return false;
-      if (s_ < r->s()) return true;
-      if (s_ > r->s()) return false;
-      if (l_ < r->l()) return true;
-      if (l_ > r->l()) return false;
-      if (a_ < r->a()) return true;
-      if (a_ > r->a()) return false;
-      return false; // is equal
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Color_HSLA::operator== (const Expression& rhs) const
+  bool Color_HSLA::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Color_HSLA>(&rhs)) {
       return h_ == r->h() &&
-             s_ == r->s() &&
-             l_ == r->l() &&
-             a_ == r->a();
+        s_ == r->s() &&
+        l_ == r->l() &&
+        a_ == r->a();
     }
     return false;
   }
@@ -797,16 +687,7 @@ namespace Sass {
   : Value(ptr), message_(ptr->message_)
   { concrete_type(C_ERROR); }
 
-  bool Custom_Error::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Custom_Error>(&rhs)) {
-      return message() < r->message();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Custom_Error::operator== (const Expression& rhs) const
+  bool Custom_Error::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Custom_Error>(&rhs)) {
       return message() == r->message();
@@ -825,16 +706,7 @@ namespace Sass {
   : Value(ptr), message_(ptr->message_)
   { concrete_type(C_WARNING); }
 
-  bool Custom_Warning::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Custom_Warning>(&rhs)) {
-      return message() < r->message();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Custom_Warning::operator== (const Expression& rhs) const
+  bool Custom_Warning::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Custom_Warning>(&rhs)) {
       return message() == r->message();
@@ -856,15 +728,7 @@ namespace Sass {
     hash_(ptr->hash_)
   { concrete_type(BOOLEAN); }
 
- bool Boolean::operator< (const Expression& rhs) const
-  {
-    if (auto r = Cast<Boolean>(&rhs)) {
-      return (value() < r->value());
-    }
-    return false;
-  }
-
- bool Boolean::operator== (const Expression& rhs) const
+ bool Boolean::operator== (const Value& rhs) const
  {
    if (auto r = Cast<Boolean>(&rhs)) {
      return (value() == r->value());
@@ -893,84 +757,163 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  String_Schema::String_Schema(ParserState pstate, size_t size, bool css)
-  : String(pstate), Vectorized<PreValue_Obj>(size), css_(css), hash_(0)
-  { concrete_type(STRING); }
-
-  String_Schema::String_Schema(const String_Schema* ptr)
-  : String(ptr),
-    Vectorized<PreValue_Obj>(*ptr),
-    css_(ptr->css_),
-    hash_(ptr->hash_)
-  { concrete_type(STRING); }
-
-  void String_Schema::rtrim()
+  // Should be? asPlain in dart-sass
+  std::string Interpolation::getPlainString()
   {
-    if (!empty()) {
-      if (String* str = Cast<String>(last())) str->rtrim();
+    if (empty()) {
+      // std::cerr << "should return empty\n";
+      return "";
+    }
+    if (length() > 1) {
+      return "";
+    }
+    if (StringLiteral* str = Cast<StringLiteral>(first())) {
+      return str->text();
+    }
+    else {
+      // deb// ugger << "plain is not a string?\n";
+      return "";
     }
   }
 
-  bool String_Schema::is_left_interpolant(void) const
+  StringLiteral* Interpolation::getInitialPlain()
   {
-    return length() && first()->is_left_interpolant();
-  }
-  bool String_Schema::is_right_interpolant(void) const
-  {
-    return length() && last()->is_right_interpolant();
+    if (StringLiteral * str = Cast<StringLiteral>(first())) {
+      return str;
+    }
+
+    return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "");
   }
 
-  bool String_Schema::operator< (const Expression& rhs) const
+  Interpolation::Interpolation(ParserState pstate, Expression* ex) :
+    String(pstate), Vectorized<ExpressionObj>()
   {
-    if (auto r = Cast<String_Schema>(&rhs)) {
-      if (length() < r->length()) return true;
-      if (length() > r->length()) return false;
-      for (size_t i = 0, L = length(); i < L; ++i) {
-        if (*get(i) < *r->get(i)) return true;
-        if (*get(i) == *r->get(i)) continue;
-        return false;
+    if (ex != nullptr) append(ex);
+  }
+
+  Interpolation::Interpolation(const Interpolation* ptr) :
+    String(ptr), Vectorized<ExpressionObj>(ptr)
+  {
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  uint8_t StringExpression2::findBestQuote()
+  {
+    using namespace Character;
+    bool containsDoubleQuote = false;
+    for (auto item : text_->elements()) {
+      if (auto str = Cast<String_Constant>(item)) {
+        auto& value = str->value();
+        for (size_t i = 0; i < value.size(); i++) {
+          uint8_t codeUnit = value[i];
+          if (codeUnit == $single_quote) return $double_quote;
+          if (codeUnit == $double_quote) containsDoubleQuote = true;
+        }
       }
-      // Is equal
-      return false;
     }
-    // compare/sort by type
-    return type() < rhs.type();
+    return containsDoubleQuote ? $single_quote : $double_quote;
   }
 
-  bool String_Schema::operator== (const Expression& rhs) const
+  StringExpression2* StringExpression2::plain(ParserState pstate, std::string text, bool quotes)
   {
-    if (auto r = Cast<String_Schema>(&rhs)) {
-      if (length() != r->length()) return false;
-      for (size_t i = 0, L = length(); i < L; ++i) {
-        auto rv = (*r)[i];
-        auto lv = (*this)[i];
-        if (*lv != *rv) return false;
+    Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, pstate);
+    itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, text));
+    return SASS_MEMORY_NEW(StringExpression2, pstate, itpl, quotes);
+  }
+
+  InterpolationObj StringExpression2::getAsInterpolation(bool escape, uint8_t quote)
+  {
+    InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, "[pstate]");
+
+    if (!hasQuotes()) return text_;
+    // quote ? ? = hasQuotes ? _bestQuote() : null;
+    if (!quote && hasQuotes()) quote = findBestQuote();
+    InterpolationBuffer buffer;
+
+    using namespace Character;
+
+    if (quote != 0) {
+      buffer.write(quote);
+    }
+
+    for (auto value : text_->elements()) {
+      // assert(value is Expression || value is String);
+      if (StringLiteral * str = Cast<StringLiteral>(value)) {
+        std::string value(str->text());
+        for (size_t i = 0; i < value.size(); i++) {
+
+          uint8_t codeUnit = value[i];
+
+          if (isNewline(codeUnit)) {
+            buffer.write($backslash);
+            buffer.write($a);
+            if (i != value.size() - 1) {
+              uint8_t next = value[i + 1];
+              if (isWhitespace(next) || isHex(next)) {
+                buffer.write($space);
+              }
+            }
+          }
+          else {
+            if (codeUnit == quote ||
+              codeUnit == $backslash ||
+              (escape &&
+                codeUnit == $hash &&
+                i < value.size() - 1 &&
+                value[i + 1] == $lbrace)) {
+              // std::cerr << "ADD BACKSLASH\n";
+              buffer.write($backslash);
+            }
+            buffer.write(codeUnit);
+          }
+
+        }
       }
-      return true;
+      else if (Expression * ex = Cast<Expression>(value)) {
+        buffer.add(ex);
+      }
+      else {
+        std::cerr << "nono item in schema\n";
+      }
     }
-    return false;
+
+    if (quote != 0) {
+      buffer.write(quote);
+    }
+    return buffer.getInterpolation();
+
+
+    // itpl->has
+    // return text_;
   }
 
-  bool String_Schema::has_interpolants()
+  StringExpression2::StringExpression2(ParserState pstate, InterpolationObj text, bool quote) :
+    String(pstate), text_(text), hasQuotes_(quote)
   {
-    for (auto el : elements()) {
-      if (el->is_interpolant()) return true;
-    }
-    return false;
+
   }
 
-  size_t String_Schema::hash() const
+  StringExpression2::StringExpression2(const StringExpression2* ptr) :
+    String(ptr),
+    text_(ptr->text_),
+    hasQuotes_(ptr->hasQuotes_)
   {
-    if (hash_ == 0) {
-      for (auto string : elements())
-        hash_combine(hash_, string->hash());
-    }
-    return hash_;
   }
 
-  void String_Schema::set_delayed(bool delayed)
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  StringLiteral::StringLiteral(ParserState pstate, std::string text) :
+    String(pstate), text_(text)
   {
-    is_delayed(delayed);
+  }
+
+  StringLiteral::StringLiteral(const StringLiteral* ptr) :
+    String(ptr),
+    text_(ptr->text_)
+  {
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -1000,19 +943,7 @@ namespace Sass {
     return value_.empty() && quote_mark_ == 0;
   }
 
-  bool String_Constant::operator< (const Expression& rhs) const
-  {
-    if (auto qstr = Cast<String_Quoted>(&rhs)) {
-      return value() < qstr->value();
-    }
-    else if (auto cstr = Cast<String_Constant>(&rhs)) {
-      return value() < cstr->value();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool String_Constant::operator== (const Expression& rhs) const
+  bool String_Constant::operator== (const Value& rhs) const
   {
     if (auto qstr = Cast<String_Quoted>(&rhs)) {
       return value() == qstr->value();
@@ -1026,11 +957,6 @@ namespace Sass {
   std::string String_Constant::inspect() const
   {
     return quote(value_, '*');
-  }
-
-  void String_Constant::rtrim()
-  {
-    str_rtrim(value_);
   }
 
   size_t String_Constant::hash() const
@@ -1051,27 +977,18 @@ namespace Sass {
   {
     if (skip_unquoting == false) {
       value_ = unquote(value_, &quote_mark_, keep_utf8_escapes, strict_unquoting);
+      if (q && quote_mark_) quote_mark_ = q;
     }
-    if (q && quote_mark_) quote_mark_ = q;
+    else {
+      if (q) quote_mark_ = q;
+    }
   }
 
   String_Quoted::String_Quoted(const String_Quoted* ptr)
   : String_Constant(ptr)
   { }
 
-  bool String_Quoted::operator< (const Expression& rhs) const
-  {
-    if (auto qstr = Cast<String_Quoted>(&rhs)) {
-      return value() < qstr->value();
-    }
-    else if (auto cstr = Cast<String_Constant>(&rhs)) {
-      return value() < cstr->value();
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool String_Quoted::operator== (const Expression& rhs) const
+  bool String_Quoted::operator== (const Value& rhs) const
   {
     if (auto qstr = Cast<String_Quoted>(&rhs)) {
       return value() == qstr->value();
@@ -1097,16 +1014,7 @@ namespace Sass {
   Null::Null(const Null* ptr) : Value(ptr)
   { concrete_type(NULL_VAL); }
 
-  bool Null::operator< (const Expression& rhs) const
-  {
-    if (Cast<Null>(&rhs)) {
-      return false;
-    }
-    // compare/sort by type
-    return type() < rhs.type();
-  }
-
-  bool Null::operator== (const Expression& rhs) const
+  bool Null::operator== (const Value& rhs) const
   {
     return Cast<Null>(&rhs) != nullptr;
   }
@@ -1134,7 +1042,7 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Map);
   IMPLEMENT_AST_OPERATORS(Binary_Expression);
   IMPLEMENT_AST_OPERATORS(Function);
-  IMPLEMENT_AST_OPERATORS(Function_Call);
+  IMPLEMENT_AST_OPERATORS(FunctionExpression);
   IMPLEMENT_AST_OPERATORS(Variable);
   IMPLEMENT_AST_OPERATORS(Number);
   IMPLEMENT_AST_OPERATORS(Color_RGBA);
@@ -1142,7 +1050,9 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Custom_Error);
   IMPLEMENT_AST_OPERATORS(Custom_Warning);
   IMPLEMENT_AST_OPERATORS(Boolean);
-  IMPLEMENT_AST_OPERATORS(String_Schema);
+  IMPLEMENT_AST_OPERATORS(Interpolation);
+  IMPLEMENT_AST_OPERATORS(StringLiteral);
+  IMPLEMENT_AST_OPERATORS(StringExpression2);
   IMPLEMENT_AST_OPERATORS(String_Constant);
   IMPLEMENT_AST_OPERATORS(String_Quoted);
   IMPLEMENT_AST_OPERATORS(Null);

@@ -75,6 +75,9 @@ struct Sass_Context : Sass_Options
   // store context type info
   enum Sass_Input_Style type;
 
+  // store parser type info
+  enum Sass_Import_Type parser;
+
   // generated output data
   char* output_string;
 

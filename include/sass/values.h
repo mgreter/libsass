@@ -32,7 +32,11 @@ enum Sass_Separator {
   SASS_SPACE,
   // only used internally to represent a hash map before evaluation
   // otherwise we would be too early to check for duplicate keys
-  SASS_HASH
+  SASS_HASH,
+  // A separator that hasn't yet been determined.
+  // Singleton lists and empty lists don't have separators defiend. This means
+  // that list functions will prefer other lists' separators if possible.
+  SASS_UNDEF,
 };
 
 // Value Operators
@@ -40,7 +44,7 @@ enum Sass_OP {
   AND, OR,                   // logical connectives
   EQ, NEQ, GT, GTE, LT, LTE, // arithmetic relations
   ADD, SUB, MUL, DIV, MOD,   // arithmetic functions
-  NUM_OPS                    // so we know how big to make the op table
+  IESEQ, NUM_OPS             // so we know how big to make the op table
 };
 
 // Creator functions for all value types

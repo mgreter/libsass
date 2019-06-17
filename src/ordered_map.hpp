@@ -1,6 +1,8 @@
 #ifndef SASS_ORDERED_MAP_H
 #define SASS_ORDERED_MAP_H
 
+#include <unordered_map>
+
 namespace Sass {
 
   // ##########################################################################
@@ -27,6 +29,8 @@ namespace Sass {
 
     // Keep insertion order
     std::vector<Key> _keys;
+    // That does not makes sense
+    // Value might be updated ...
     std::vector<T> _values;
 
     const KeyEqual _keyEqual;
@@ -89,6 +93,16 @@ namespace Sass {
         return _map[key];
       }
       throw std::runtime_error("Key does not exist");
+    }
+
+    T& operator[](const std::string& key) {
+      if (hasKey(key)) {
+        return _map[key];
+      }
+      T& value = _map[key];
+      _keys.push_back(key);
+      _values.push_back(value);
+      return value;
     }
 
     using iterator = typename std::vector<Key>::iterator;

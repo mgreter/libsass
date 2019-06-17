@@ -9,6 +9,10 @@
 #include <type_traits>
 #include <vector>
 
+#ifdef DEBUG_SHARED_PTR
+#include <unordered_set>
+#endif
+
 // https://lokiastari.com/blog/2014/12/30/c-plus-plus-by-example-smart-pointer/index.html
 // https://lokiastari.com/blog/2015/01/15/c-plus-plus-by-example-smart-pointer-part-ii/index.html
 // https://lokiastari.com/blog/2015/01/23/c-plus-plus-by-example-smart-pointer-part-iii/index.html
@@ -60,6 +64,7 @@ namespace Sass {
    public:
     SharedObj() : refcount(0), detached(false) {
       #ifdef DEBUG_SHARED_PTR
+      this->objId = ++objCount;
       if (taint) all.push_back(this);
       #endif
     }
@@ -71,6 +76,7 @@ namespace Sass {
           break;
         }
       }
+      erased = true;
       #endif
     }
 
@@ -99,9 +105,15 @@ namespace Sass {
     #ifdef DEBUG_SHARED_PTR
     std::string file;
     size_t line;
+  public:
+    size_t objId;
+  protected:
     bool dbg = false;
+    bool erased = false;
+    static size_t objCount;
     static std::vector<SharedObj*> all;
-    #endif
+    static std::unordered_set<size_t> deleted;
+#endif
   };
 
   // SharedPtr is a intermediate (template-less) base class for SharedImpl.
@@ -137,15 +149,29 @@ namespace Sass {
     SharedObj* detach() {
       if (node != nullptr) node->detached = true;
       #ifdef DEBUG_SHARED_PTR
-      if (node->dbg) {
+      if (node && node->dbg) {
         std::cerr << "DETACHING NODE\n";
       }
       #endif 
       return node;
     }
 
-    SharedObj* obj() const { return node; }
-    SharedObj* operator->() const { return node; }
+    SharedObj* obj() const {
+      #ifdef DEBUG_SHARED_PTR
+      if (node && node->deleted.count(node->objId) == 1) {
+        std::cerr << "ACCESSING DELETED " << node << "\n";
+      }
+      #endif
+      return node;
+    }
+    SharedObj* operator->() const {
+      #ifdef DEBUG_SHARED_PTR
+      if (node && node->deleted.count(node->objId) == 1) {
+        std::cerr << "ACCESSING DELETED " << node << "\n";
+      }
+      #endif
+      return node;
+    }
     bool isNull() const { return node == nullptr; }
     operator bool() const { return node != nullptr; }
 
@@ -159,13 +185,18 @@ namespace Sass {
       #endif
       if (node->refcount == 0 && !node->detached) {
         #ifdef DEBUG_SHARED_PTR
-        if (node->dbg) std::cerr << "DELETE NODE " << node << "\n";
+          if (node->dbg) {
+            std::cerr << "DELETE NODE " << node << "\n";
+          }
+          node->deleted.insert(node->objId);
         #endif
         delete node;
       }
       else if (node->refcount == 0) {
         #ifdef DEBUG_SHARED_PTR
-        if (node->dbg) std::cerr << "NODE EVAEDED DELETE " << node << "\n";
+        if (node->dbg) {
+          std::cerr << "NODE EVAEDED DELETE " << node << "\n";
+        }
         #endif
       }
     }

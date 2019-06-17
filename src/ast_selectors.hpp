@@ -6,6 +6,8 @@
 #include "sass.hpp"
 #include "ast.hpp"
 
+#include "visitor_selector.hpp"
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -38,7 +40,7 @@ namespace Sass {
   /////////////////////////////////////////
   // Abstract base class for CSS selectors.
   /////////////////////////////////////////
-  class Selector : public Expression {
+  class Selector : public AST_Node {
   protected:
     mutable size_t hash_;
   public:
@@ -46,38 +48,27 @@ namespace Sass {
     virtual ~Selector() = 0;
     size_t hash() const override = 0;
     virtual bool has_real_parent_ref() const;
+    virtual bool is_invisible() const { return false; }
     // you should reset this to null on containers
     virtual unsigned long specificity() const = 0;
     // by default we return the regular specificity
     // you must override this for all containers
     virtual size_t maxSpecificity() const { return specificity(); }
     virtual size_t minSpecificity() const { return specificity(); }
+    // Calls the appropriate visit method on [visitor].
+    virtual void accept(SelectorVisitor<void>& visitor) = 0;
     // dispatch to correct handlers
-    ATTACH_VIRTUAL_CMP_OPERATIONS(Selector)
-    ATTACH_VIRTUAL_AST_OPERATIONS(Selector)
+    virtual bool operator==(const Selector& rhs) const {
+      throw std::runtime_error("invalid selector compare");
+    }
+    virtual bool operator!=(const Selector& rhs) const {
+      return !(*this == rhs);
+    };
+
+    // ATTACH_VIRTUAL_EQ_OPERATIONS(Selector)
+    ATTACH_VIRTUAL_COPY_OPERATIONS(Selector)
   };
   inline Selector::~Selector() { }
-
-  /////////////////////////////////////////////////////////////////////////
-  // Interpolated selectors -- the interpolated String will be expanded and
-  // re-parsed into a normal selector class.
-  /////////////////////////////////////////////////////////////////////////
-  class Selector_Schema final : public AST_Node {
-    ADD_PROPERTY(String_Schema_Obj, contents)
-    ADD_PROPERTY(bool, connect_parent);
-    // store computed hash
-    mutable size_t hash_;
-  public:
-    Selector_Schema(ParserState pstate, String_Obj c);
-
-    bool has_real_parent_ref() const;
-    // selector schema is not yet a final selector, so we do not
-    // have a specificity for it yet. We need to
-    virtual unsigned long specificity() const;
-    size_t hash() const override;
-    ATTACH_AST_OPERATIONS(Selector_Schema)
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
 
   ////////////////////////////////////////////
   // Abstract base class for simple selectors.
@@ -94,9 +85,9 @@ namespace Sass {
     };
   public:
     HASH_CONSTREF(std::string, ns)
-    HASH_CONSTREF(std::string, name)
-    ADD_PROPERTY(Simple_Type, simple_type)
-    HASH_PROPERTY(bool, has_ns)
+      HASH_CONSTREF(std::string, name)
+      ADD_PROPERTY(Simple_Type, simple_type)
+      HASH_PROPERTY(bool, has_ns)
   public:
     SimpleSelector(ParserState pstate, std::string n = "");
     virtual std::string ns_name() const;
@@ -106,9 +97,6 @@ namespace Sass {
     bool is_ns_eq(const SimpleSelector& r) const;
     // namespace query functions
     bool is_universal_ns() const;
-    bool is_empty_ns() const;
-    bool has_empty_ns() const;
-    bool has_qualified_ns() const;
     // name query functions
     bool is_universal() const;
     virtual bool has_placeholder();
@@ -125,25 +113,21 @@ namespace Sass {
     CompoundSelectorObj wrapInCompound();
 
     virtual bool isInvisible() const { return false; }
-    virtual bool is_pseudo_element() const;
+    // virtual bool is_pseudo_element() const;
     virtual bool has_real_parent_ref() const override;
 
-    bool operator==(const Selector& rhs) const final override;
-
-    virtual bool operator==(const SelectorList& rhs) const;
-    virtual bool operator==(const ComplexSelector& rhs) const;
-    virtual bool operator==(const CompoundSelector& rhs) const;
-
-    ATTACH_VIRTUAL_CMP_OPERATIONS(SimpleSelector);
-    ATTACH_VIRTUAL_AST_OPERATIONS(SimpleSelector);
+    ATTACH_VIRTUAL_EQ_OPERATIONS(SimpleSelector);
+    ATTACH_VIRTUAL_COPY_OPERATIONS(SimpleSelector);
     ATTACH_CRTP_PERFORM_METHODS();
 
   };
   inline SimpleSelector::~SimpleSelector() { }
 
-  /////////////////////////////////////////////////////////////////////////
-  // Placeholder selectors (e.g., "%foo") for use in extend-only selectors.
-  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+  // A placeholder selector. (e.g. `%foo`). This doesn't match any elements.
+  // It's intended to be extended using `@extend`. It's not a plain CSS
+  // selector — it should be removed before emitting a CSS document.
+  /////////////////////////////////////////////////////////////////////////////
   class PlaceholderSelector final : public SimpleSelector {
   public:
     PlaceholderSelector(ParserState pstate, std::string n);
@@ -151,13 +135,24 @@ namespace Sass {
     virtual unsigned long specificity() const override;
     virtual bool has_placeholder() override;
     bool operator==(const SimpleSelector& rhs) const override;
-    ATTACH_CMP_OPERATIONS(PlaceholderSelector)
-    ATTACH_AST_OPERATIONS(PlaceholderSelector)
+
+    // Returns whether this is a private selector.
+    // That is, whether it begins with `-` or `_`.
+    bool isPrivate() const;
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitPlaceholderSelector(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(PlaceholderSelector)
+    ATTACH_COPY_OPERATIONS(PlaceholderSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   /////////////////////////////////////////////////////////////////////
-  // Type selectors (and the universal selector) -- e.g., div, span, *.
+  // A type selector. (e.g., `div`, `span` or `*`).
+  // This selects elements whose name equals the given name.
   /////////////////////////////////////////////////////////////////////
   class TypeSelector final : public SimpleSelector {
   public:
@@ -167,75 +162,158 @@ namespace Sass {
     CompoundSelector* unifyWith(CompoundSelector*) override;
     TypeSelector* getTypeSelector() override { return this; }
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(TypeSelector)
-    ATTACH_AST_OPERATIONS(TypeSelector)
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitTypeSelector(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(TypeSelector)
+    ATTACH_COPY_OPERATIONS(TypeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  ////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////
   // Class selectors  -- i.e., .foo.
-  ////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////
   class ClassSelector final : public SimpleSelector {
   public:
-    ClassSelector(ParserState pstate, std::string n);
+    ClassSelector(ParserState pstate, std::string name);
     virtual unsigned long specificity() const override;
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(ClassSelector)
-    ATTACH_AST_OPERATIONS(ClassSelector)
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitClassSelector(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(ClassSelector)
+    ATTACH_COPY_OPERATIONS(ClassSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  ////////////////////////////////////////////////
-  // ID selectors -- i.e., #foo.
-  ////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////
+  // An ID selector (i.e. `#foo`). This selects elements 
+  // whose `id` attribute exactly matches the given name.
+  /////////////////////////////////////////////////////////
   class IDSelector final : public SimpleSelector {
   public:
-    IDSelector(ParserState pstate, std::string n);
+    IDSelector(ParserState pstate, std::string name);
     virtual unsigned long specificity() const override;
     CompoundSelector* unifyWith(CompoundSelector*) override;
     IDSelector* getIdSelector() final override { return this; }
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(IDSelector)
-    ATTACH_AST_OPERATIONS(IDSelector)
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitIDSelector(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(IDSelector)
+    ATTACH_COPY_OPERATIONS(IDSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  ///////////////////////////////////////////////////
-  // Attribute selectors -- e.g., [src*=".jpg"], etc.
-  ///////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////
+  // An attribute selector. This selects for elements
+  // with the given attribute, and optionally with a
+  // value matching certain conditions as well.
+  /////////////////////////////////////////////////////////
   class AttributeSelector final : public SimpleSelector {
-    ADD_CONSTREF(std::string, matcher)
-    // this cannot be changed to obj atm!!!!!!????!!!!!!!
-    ADD_PROPERTY(String_Obj, value) // might be interpolated
+
+    // The operator that defines the semantics of [value].
+    // If this is empty, this matches any element with the given property,
+    // regardless of this value. It's empty if and only if [value] is empty.
+    ADD_CONSTREF(std::string, op);
+
+    // An assertion about the value of [name].
+    // The precise semantics of this string are defined by [op].
+    // If this is `null`, this matches any element with the given property,
+    // regardless of this value. It's `null` if and only if [op] is `null`.
+    ADD_PROPERTY(std::string, value);
+
+      // The modifier which indicates how the attribute selector should be
+    // processed. See for example [case-sensitivity][] modifiers.
+    // [case-sensitivity]: https://www.w3.org/TR/selectors-4/#attribute-case
+    // If [op] is empty, this is always empty as well.
     ADD_PROPERTY(char, modifier);
+
+    // Defines if we parsed an identifier value. Dart-sass
+    // does this check again in serialize.visitAttributeSelector.
+    // We want to avoid this and do the check at parser stage.
+    ADD_PROPERTY(bool, isIdentifier);
+
   public:
-    AttributeSelector(ParserState pstate, std::string n, std::string m, String_Obj v, char o = 0);
-    size_t hash() const override;
+
+    // By value constructor
+    AttributeSelector(
+      ParserState pstate,
+      std::string name,
+      std::string op,
+      std::string value,
+      char modifier = 0);
+
     virtual unsigned long specificity() const override;
+
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(AttributeSelector)
-    ATTACH_AST_OPERATIONS(AttributeSelector)
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitAttributeSelector(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(AttributeSelector)
+    ATTACH_COPY_OPERATIONS(AttributeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  //////////////////////////////////////////////////////////////////
-  // Pseudo selectors -- e.g., :first-child, :nth-of-type(...), etc.
-  //////////////////////////////////////////////////////////////////
-  // Pseudo Selector cannot have any namespace?
+  /////////////////////////////////////////////////////////////////////
+  // A pseudo-class or pseudo-element selector (e.g., `:content`
+  // or `:nth-child`). The semantics of a specific pseudo selector
+  // depends on its name. Some selectors take arguments, including
+  // other selectors. Sass manually encodes logic for each pseudo
+  // selector that takes a selector as an argument, to ensure that
+  // extension and other selector operations work properly.
+  /////////////////////////////////////////////////////////////////////
   class PseudoSelector final : public SimpleSelector {
-    ADD_PROPERTY(std::string, normalized)
-    ADD_PROPERTY(String_Obj, argument)
-    ADD_PROPERTY(SelectorListObj, selector)
-    ADD_PROPERTY(bool, isSyntacticClass)
-    ADD_PROPERTY(bool, isClass)
+
+    // Like [name], but without any vendor prefixes.
+    ADD_PROPERTY(std::string, normalized);
+
+    // The non-selector argument passed to this selector. This is
+    // `null` if there's no argument. If [argument] and [selector]
+    // are both non-`null`, the selector follows the argument.
+    ADD_PROPERTY(std::string, argument);
+
+    // The selector argument passed to this selector. This is `null`
+    // if there's no selector. If [argument] and [selector] are
+    // both non-`null`, the selector follows the argument.
+    ADD_PROPERTY(SelectorListObj, selector);
+
+    // Whether this is syntactically a pseudo-class selector. This is
+    // the same as [isClass] unless this selector is a pseudo-element
+    // that was written syntactically as a pseudo-class (`:before`,
+    // `:after`, `:first-line`, or `:first-letter`). This is
+    // `true` if and only if [isSyntacticElement] is `false`.
+    ADD_PROPERTY(bool, isSyntacticClass);
+
+    // Whether this is a pseudo-class selector.
+    // This is `true` if and only if [isElement] is `false`.
+    ADD_PROPERTY(bool, isClass);
+
   public:
-    PseudoSelector(ParserState pstate, std::string n, bool element = false);
-    virtual bool is_pseudo_element() const override;
+
+    // By value constructor
+    PseudoSelector(
+      ParserState pstate,
+      std::string name,
+      bool element = false);
+
     size_t hash() const override;
-
     bool empty() const override;
-
+    bool is_invisible() const override;
     bool has_real_parent_ref() const override;
+    bool is_pseudo_element() const;
 
     // Whether this is a pseudo-element selector.
     // This is `true` if and only if [isClass] is `false`.
@@ -245,14 +323,22 @@ namespace Sass {
     // This is `true` if and only if [isSyntacticClass] is `false`.
     bool isSyntacticElement() const { return !isSyntacticClass(); }
 
-    virtual unsigned long specificity() const override;
-    PseudoSelectorObj withSelector(SelectorListObj selector);
+    // Returns a new [PseudoSelector] based on ourself,
+    // but with the selector replaced with [selector].
+    PseudoSelector* withSelector(SelectorList* selector);
 
+    virtual unsigned long specificity() const override;
     CompoundSelector* unifyWith(CompoundSelector*) override;
     PseudoSelector* getPseudoSelector() final override { return this; }
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(PseudoSelector)
-    ATTACH_AST_OPERATIONS(PseudoSelector)
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitPseudoSelector(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(PseudoSelector)
+    ATTACH_COPY_OPERATIONS(PseudoSelector)
     void cloneChildren() override;
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -281,7 +367,7 @@ namespace Sass {
     bool has_placeholder() const;
     bool has_real_parent_ref() const override;
 
-    SelectorList* resolve_parent_refs(SelectorStack pstack, Backtraces& traces, bool implicit_parent = true);
+    std::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
     virtual unsigned long specificity() const override;
 
     SelectorList* unifyWith(ComplexSelector* rhs);
@@ -293,13 +379,13 @@ namespace Sass {
     size_t maxSpecificity() const override;
     size_t minSpecificity() const override;
 
-    bool operator==(const Selector& rhs) const override;
-    bool operator==(const SelectorList& rhs) const;
-    bool operator==(const CompoundSelector& rhs) const;
-    bool operator==(const SimpleSelector& rhs) const;
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitComplexSelector(this);
+    }
 
-    ATTACH_CMP_OPERATIONS(ComplexSelector)
-    ATTACH_AST_OPERATIONS(ComplexSelector)
+    ATTACH_EQ_OPERATIONS(ComplexSelector)
+    ATTACH_COPY_OPERATIONS(ComplexSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -313,7 +399,6 @@ namespace Sass {
     SelectorComponent(ParserState pstate, bool postLineBreak = false);
     size_t hash() const override = 0;
     void cloneChildren() override;
-
 
     // By default we consider instances not empty
     virtual bool empty() const { return false; }
@@ -336,9 +421,8 @@ namespace Sass {
     virtual const SelectorCombinator* getCombinator() const { return NULL; }
 
     virtual unsigned long specificity() const override;
-    bool operator==(const Selector& rhs) const override = 0;
-    ATTACH_VIRTUAL_CMP_OPERATIONS(SelectorComponent);
-    ATTACH_VIRTUAL_AST_OPERATIONS(SelectorComponent);
+    ATTACH_VIRTUAL_EQ_OPERATIONS(SelectorComponent);
+    ATTACH_VIRTUAL_COPY_OPERATIONS(SelectorComponent);
   };
 
   ////////////////////////////////////////////////////////////////////////////
@@ -390,13 +474,18 @@ namespace Sass {
     size_t hash() const override {
       return std::hash<int>()(combinator_);
     }
-    void cloneChildren() override;
+
     virtual unsigned long specificity() const override;
-    bool operator==(const Selector& rhs) const override;
     bool operator==(const SelectorComponent& rhs) const override;
 
-    ATTACH_CMP_OPERATIONS(SelectorCombinator)
-    ATTACH_AST_OPERATIONS(SelectorCombinator)
+
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitSelectorCombinator(this);
+    }
+
+    ATTACH_EQ_OPERATIONS(SelectorCombinator)
+    ATTACH_COPY_OPERATIONS(SelectorCombinator)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -429,7 +518,7 @@ namespace Sass {
     void cloneChildren() override;
     bool has_real_parent_ref() const override;
     bool has_placeholder() const override;
-    std::vector<ComplexSelectorObj> resolve_parent_refs(SelectorStack pstack, Backtraces& traces, bool implicit_parent = true);
+    std::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
 
     virtual bool isCompound() const override { return true; };
     virtual unsigned long specificity() const override;
@@ -437,16 +526,15 @@ namespace Sass {
     size_t maxSpecificity() const override;
     size_t minSpecificity() const override;
 
-    bool operator==(const Selector& rhs) const override;
-
     bool operator==(const SelectorComponent& rhs) const override;
 
-    bool operator==(const SelectorList& rhs) const;
-    bool operator==(const ComplexSelector& rhs) const;
-    bool operator==(const SimpleSelector& rhs) const;
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitCompoundSelector(this);
+    }
 
-    ATTACH_CMP_OPERATIONS(CompoundSelector)
-    ATTACH_AST_OPERATIONS(CompoundSelector)
+    ATTACH_EQ_OPERATIONS(CompoundSelector)
+    ATTACH_COPY_OPERATIONS(CompoundSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -454,13 +542,10 @@ namespace Sass {
   // Comma-separated selector groups.
   ///////////////////////////////////
   class SelectorList final : public Selector, public Vectorized<ComplexSelectorObj> {
-  private:
-    // maybe we have optional flag
-    // ToDo: should be at ExtendRule?
-    ADD_PROPERTY(bool, is_optional)
   public:
     SelectorList(ParserState pstate, size_t s = 0);
-    std::string type() const override { return "list"; }
+    SelectorList(ParserState pstate, const std::vector<ComplexSelectorObj>&);
+    // std::string type() const override { return "list"; }
     size_t hash() const override;
 
     SelectorList* unifyWith(SelectorList*);
@@ -472,7 +557,8 @@ namespace Sass {
 
     void cloneChildren() override;
     bool has_real_parent_ref() const override;
-    SelectorList* resolve_parent_refs(SelectorStack pstack, Backtraces& traces, bool implicit_parent = true);
+
+    SelectorList* resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
     virtual unsigned long specificity() const override;
 
     bool isSuperselectorOf(const SelectorList* sub) const;
@@ -480,15 +566,13 @@ namespace Sass {
     size_t maxSpecificity() const override;
     size_t minSpecificity() const override;
 
-    bool operator==(const Selector& rhs) const override;
-    bool operator==(const ComplexSelector& rhs) const;
-    bool operator==(const CompoundSelector& rhs) const;
-    bool operator==(const SimpleSelector& rhs) const;
-    // Selector Lists can be compared to comma lists
-    bool operator==(const Expression& rhs) const override;
+    // Calls the appropriate visit method on [visitor].
+    void accept(SelectorVisitor<void>& visitor) override {
+      return visitor.visitSelectorList(this);
+    }
 
-    ATTACH_CMP_OPERATIONS(SelectorList)
-    ATTACH_AST_OPERATIONS(SelectorList)
+    ATTACH_EQ_OPERATIONS(SelectorList)
+    ATTACH_COPY_OPERATIONS(SelectorList)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -498,12 +582,10 @@ namespace Sass {
   class ExtendRule final : public Statement {
     ADD_PROPERTY(bool, isOptional)
     // This should be a simple selector only!
-    ADD_PROPERTY(SelectorListObj, selector)
-    ADD_PROPERTY(Selector_Schema_Obj, schema)
+    ADD_PROPERTY(InterpolationObj, selector)
   public:
-    ExtendRule(ParserState pstate, SelectorListObj s);
-    ExtendRule(ParserState pstate, Selector_Schema_Obj s);
-    ATTACH_AST_OPERATIONS(ExtendRule)
+    ExtendRule(ParserState pstate, InterpolationObj s, bool optional = false);
+    ATTACH_COPY_OPERATIONS(ExtendRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

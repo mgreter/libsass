@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sass/context.h"
+#include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
 
 namespace Sass {
@@ -61,7 +62,7 @@ namespace Sass {
     std::string find_include(const std::string& file, const std::vector<std::string> paths);
 
     // split a path string delimited by semicolons or colons (OS dependent)
-    std::vector<std::string> split_path_list(const char* paths);
+    // std::vector<std::string> split_path_list(std::string paths);
 
     // try to load the given filename
     // returned memory must be freed
@@ -93,9 +94,11 @@ namespace Sass {
     public:
       // resolved absolute path
       std::string abs_path;
+      // which importer to use
+      Sass_Import_Type type;
     public:
-      Include(const Importer& imp, std::string abs_path)
-      : Importer(imp), abs_path(abs_path)
+      Include(const Importer& imp, std::string abs_path, Sass_Import_Type type)
+      : Importer(imp), abs_path(abs_path), type(type)
       { }
   };
 

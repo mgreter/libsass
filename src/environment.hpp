@@ -9,11 +9,19 @@
 #include <string>
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
+#include "util_string.hpp"
 
 namespace Sass {
 
+  #define environment_map(T) \
+    std::unordered_map< \
+      std::string, T, \
+      Util::hashIgnoreSeparator, \
+      Util::equalsIgnoreSeparator \
+    > \
+
   // this defeats the whole purpose of environment being templatable!!
-  typedef environment_map<std::string, AST_Node_Obj>::iterator EnvIter;
+  typedef environment_map(AST_Node_Obj)::iterator EnvIter;
 
   class EnvResult {
     public:
@@ -27,7 +35,7 @@ namespace Sass {
   template <typename T>
   class Environment {
     // TODO: test with map
-    environment_map<std::string, T> local_frame_;
+    environment_map(T) local_frame_;
     ADD_PROPERTY(Environment*, parent)
     ADD_PROPERTY(bool, is_shadow)
 
@@ -52,7 +60,7 @@ namespace Sass {
 
     // scope operates on the current frame
 
-    environment_map<std::string, T>& local_frame();
+    environment_map(T)& local_frame();
 
     bool has_local(const std::string& key) const;
 

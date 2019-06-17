@@ -10,10 +10,20 @@ namespace Sass {
     Remove_Placeholders::Remove_Placeholders()
     { }
 
+    bool isInvisible(Statement* stmt) {
+      return stmt->is_invisible();
+    }
+
     void Remove_Placeholders::operator()(Block* b) {
+
       for (size_t i = 0, L = b->length(); i < L; ++i) {
         if (b->get(i)) b->get(i)->perform(this);
       }
+
+      auto& foo = b->elements();
+
+      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
+
     }
 
     void Remove_Placeholders::remove_placeholders(SimpleSelector* simple)
@@ -28,6 +38,7 @@ namespace Sass {
       for (size_t i = 0, L = compound->length(); i < L; ++i) {
         if (compound->get(i)) remove_placeholders(compound->get(i));
       }
+      listEraseItemIf(compound->elements(), listIsInvisible<SimpleSelector>);
       listEraseItemIf(compound->elements(), listIsEmpty<SimpleSelector>);
     }
 
@@ -60,7 +71,7 @@ namespace Sass {
       if (rule->block()) operator()(rule->block());
     }
 
-    void Remove_Placeholders::operator()(Ruleset* r)
+    void Remove_Placeholders::operator()(CssStyleRule* r)
     {
       if (SelectorListObj sl = r->selector()) {
         // Set the new placeholder selector list
@@ -78,7 +89,7 @@ namespace Sass {
       if (m->block()) operator()(m->block());
     }
 
-    void Remove_Placeholders::operator()(Directive* a)
+    void Remove_Placeholders::operator()(AtRule* a)
     {
       if (a->block()) a->block()->perform(this);
     }

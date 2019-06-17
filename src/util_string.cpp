@@ -1,4 +1,5 @@
 #include "util_string.hpp"
+#include "character.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -27,23 +28,71 @@ namespace Sass {
       return *lit == 0;
     }
 
+    // returns a lowercase copy
+    std::string ascii_str_tolower(std::string s) {
+      ascii_str_tolower(&s);
+      return s;
+    }
+
+    // operates directly on the passed string
     void ascii_str_tolower(std::string* s) {
       for (auto& ch : *s) {
         ch = ascii_tolower(static_cast<unsigned char>(ch));
       }
     }
 
+    // returns an uppercase copy
+    std::string ascii_str_toupper(std::string s) {
+      ascii_str_toupper(&s);
+      return s;
+    }
+
+    // operates directly on the passed string
     void ascii_str_toupper(std::string* s) {
       for (auto& ch : *s) {
         ch = ascii_toupper(static_cast<unsigned char>(ch));
       }
     }
 
-    std::string rtrim(std::string str) {
-      auto it = std::find_if_not(str.rbegin(), str.rend(), ascii_isspace);
-      str.erase(str.rend() - it);
-      return str;
+	  void ascii_str_rtrim(std::string& s)
+	  {
+      auto it = std::find_if_not(s.rbegin(), s.rend(), Character::isWhitespace);
+      s.erase(s.rend() - it);
     }
+
+	  void ascii_str_ltrim(std::string& s)
+	  {
+      if (s.begin() == s.end()) return;
+      auto it = std::find_if_not(s.begin(), s.end(), Character::isWhitespace);
+      s.erase(s.begin(), it);
+    }
+
+	  void ascii_str_trim(std::string& s)
+	  {
+      ascii_str_ltrim(s);
+      ascii_str_rtrim(s);
+    }
+
+    // split string by delimiter
+    std::vector<std::string> split_string(std::string str, char delimiter, bool trimSpace)
+    {
+      std::vector<std::string> paths;
+      if (str.empty()) return paths;
+      // find delimiter via prelexer (return zero at end)
+      size_t start = 0, end = str.find_first_of(delimiter);
+      // search until null delimiter
+      while (end != std::string::npos) {
+        // add substring from current position to delimiter
+        paths.push_back(str.substr(start, end - start));
+        start = end + 1; // skip delimiter
+        end = str.find_first_of(delimiter, start);
+      }
+      // add substring from current position to end
+      paths.push_back(str.substr(start, end - start));
+      // return back
+      return paths;
+    }
+
 
     // ###########################################################################
     // Returns [name] without a vendor prefix.
@@ -61,18 +110,6 @@ namespace Sass {
     }
     // EO unvendor
 
-    std::string rtrim(const std::string& str) {
-
-      std::string trimmed = str;
-      size_t pos_ws = trimmed.find_last_not_of(" \t\n\v\f\r");
-      if (pos_ws != std::string::npos) {
-        trimmed.erase(pos_ws + 1);
-      }
-      else {
-        trimmed.clear();
-      }
-      return trimmed;
-    }
 
     std::string normalize_newlines(const std::string& str) {
       std::string result;
@@ -92,43 +129,6 @@ namespace Sass {
       }
       result.append(str, pos, std::string::npos);
       return result;
-    }
-
-    std::string normalize_underscores(const std::string& str) {
-      std::string normalized = str;
-      std::replace(normalized.begin(), normalized.end(), '_', '-');
-      return normalized;
-    }
-
-    std::string normalize_decimals(const std::string& str) {
-      std::string normalized;
-      if (!str.empty() && str[0] == '.') {
-        normalized.reserve(str.size() + 1);
-        normalized += '0';
-        normalized += str;
-      }
-      else {
-        normalized = str;
-      }
-      return normalized;
-    }
-
-    char opening_bracket_for(char closing_bracket) {
-      switch (closing_bracket) {
-      case ')': return '(';
-      case ']': return '[';
-      case '}': return '{';
-      default: return '\0';
-      }
-    }
-
-    char closing_bracket_for(char opening_bracket) {
-      switch (opening_bracket) {
-      case '(': return ')';
-      case '[': return ']';
-      case '{': return '}';
-      default: return '\0';
-      }
     }
 
   }

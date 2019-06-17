@@ -25,7 +25,6 @@
 #include "error_handling.hpp"
 #include "util.hpp"
 #include "util_string.hpp"
-#include "sass2scss.h"
 
 #ifdef _WIN32
 # include <windows.h>
@@ -236,12 +235,16 @@ namespace Sass {
     {
       // magic algorith goes here!!
 
-      // if the file is outside this directory show the absolute path
+    // std::cerr << "rel " << rel_path << "\n";
+    // std::cerr << "abs " << abs_path << "\n";
+    // std::cerr << "pstate " << orig_path << "\n";
+
+    // if the file is outside this directory show the absolute path
       if (rel_path.substr(0, 3) == "../") {
         return orig_path;
       }
       // this seems to work most of the time
-      return abs_path == orig_path ? abs_path : rel_path;
+      return abs_path == orig_path ? rel_path : rel_path;
     }
 
     // create an absolute path by resolving relative paths with cwd
@@ -343,22 +346,22 @@ namespace Sass {
       // create full path (maybe relative)
       std::string rel_path(join_paths(base, name));
       std::string abs_path(join_paths(root, rel_path));
-      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       // next test variation with underscore
       rel_path = join_paths(base, "_" + name);
       abs_path = join_paths(root, rel_path);
-      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       // next test exts plus underscore
       for(auto ext : exts) {
         rel_path = join_paths(base, "_" + name + ext);
         abs_path = join_paths(root, rel_path);
-        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       }
       // next test plain name with exts
       for(auto ext : exts) {
         rel_path = join_paths(base, name + ext);
         abs_path = join_paths(root, rel_path);
-        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       }
       // index files
       if (includes.size() == 0) {
@@ -370,13 +373,13 @@ namespace Sass {
         for(auto ext : exts) {
           rel_path = join_paths(base, join_paths(name, "_index" + ext));
           abs_path = join_paths(root, rel_path);
-          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
         }
         // next test plain index exts
         for(auto ext : exts) {
           rel_path = join_paths(base, join_paths(name, "index" + ext));
           abs_path = join_paths(root, rel_path);
-          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
         }
       }
       // nothing found
@@ -485,39 +488,14 @@ namespace Sass {
         contents[size] = '\0';
         contents[size + 1] = '\0';
       #endif
-      std::string extension;
-      if (path.length() > 5) {
-        extension = path.substr(path.length() - 5, 5);
-      }
-      Util::ascii_str_tolower(&extension);
-      if (extension == ".sass" && contents != 0) {
-        char * converted = sass2scss(contents, SASS2SCSS_PRETTIFY_1 | SASS2SCSS_KEEP_COMMENT);
-        free(contents); // free the indented contents
-        return converted; // should be freed by caller
-      } else {
-        return contents;
-      }
+      return contents;
     }
 
     // split a path string delimited by semicolons or colons (OS dependent)
-    std::vector<std::string> split_path_list(const char* str)
-    {
-      std::vector<std::string> paths;
-      if (str == NULL) return paths;
-      // find delimiter via prelexer (return zero at end)
-      const char* end = Prelexer::find_first<PATH_SEP>(str);
-      // search until null delimiter
-      while (end) {
-        // add path from current position to delimiter
-        paths.push_back(std::string(str, end - str));
-        str = end + 1; // skip delimiter
-        end = Prelexer::find_first<PATH_SEP>(str);
-      }
-      // add path from current position to end
-      paths.push_back(std::string(str));
-      // return back
-      return paths;
-    }
+    // std::vector<std::string> split_path_list(std::string str)
+    // {
+    //   return Util::split_string(str, PATH_SEP);
+    // }
 
   }
 }

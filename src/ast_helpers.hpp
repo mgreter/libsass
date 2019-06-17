@@ -205,6 +205,12 @@ namespace Sass {
     return cnt && cnt->empty();
   }
 
+  // Return if Vector is empty
+  template <class T>
+  bool listIsInvisible(T* cnt) {
+    return cnt && cnt->is_invisible();
+  }
+
   // Erase items from vector that match predicate
   template<class T, class UnaryPredicate>
   void listEraseItemIf(T& vec, UnaryPredicate* predicate)
@@ -282,7 +288,7 @@ namespace Sass {
     return Util::equalsLiteral("nth-child", test)
       || Util::equalsLiteral("nth-last-child", test);
   }
-  // isSelectorPseudoBinominal
+  // EO isSelectorPseudoBinominal
 
   // ###########################################################################
   // ###########################################################################
