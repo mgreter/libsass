@@ -4,6 +4,7 @@
 #include "ast.hpp"
 
 #include "util_string.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -97,8 +98,8 @@ namespace Sass {
     const SimpleSelectorObj& simple,
     const CompoundSelectorObj& compound)
   {
-    for (SimpleSelectorObj simple2 : compound->elements()) {
-      if (simpleIsSuperselector(simple, simple2)) {
+    for (SimpleSelectorObj theirSimple : compound->elements()) {
+      if (simpleIsSuperselector(simple, theirSimple)) {
         return true;
       }
     }
@@ -252,7 +253,7 @@ namespace Sass {
       for (auto simple2 : compound2->elements()) {
         if (PseudoSelectorObj pseudo2 = simple2->getPseudoSelector()) {
           if (pseudo1->name() != pseudo2->name()) continue;
-          if (!ObjEqualityFn(pseudo1->argument(), pseudo2->argument())) continue;
+          if (pseudo1->argument() != pseudo2->argument()) continue;
           if (pseudo1->selector()->isSuperselectorOf(pseudo2->selector())) return true;
         }
       }

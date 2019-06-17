@@ -25,10 +25,6 @@ namespace Sass {
     Eval(Expand& exp);
     ~Eval();
 
-    bool force;
-    bool is_in_comment;
-    bool is_in_selector_schema;
-
     Boolean_Obj bool_true;
     Boolean_Obj bool_false;
 
@@ -38,6 +34,12 @@ namespace Sass {
     CalleeStack& callee_stack();
     struct Sass_Inspect_Options& options();
     struct Sass_Compiler* compiler();
+
+    std::string serialize(AST_Node* node);
+
+    std::string joinStrings(std::vector<std::string>& strings, const char* const separator);
+    std::string performInterpolation(InterpolationObj interpolation, bool warnForColor);
+    std::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
 
     // for evaluating function bodies
     Expression* operator()(Block*);
@@ -53,19 +55,23 @@ namespace Sass {
 
     Expression* operator()(List*);
     Expression* operator()(Map*);
+    Expression* operator()(ParenthesizedExpression*);
     Expression* operator()(Binary_Expression*);
+    Expression* evalBinOp(Binary_Expression* b_in);
     Expression* operator()(Unary_Expression*);
-    Expression* operator()(Function_Call*);
+    Expression* operator()(FunctionExpression*);
     Expression* operator()(Variable*);
     Expression* operator()(Number*);
     Expression* operator()(Color_RGBA*);
     Expression* operator()(Color_HSLA*);
     Expression* operator()(Boolean*);
-    Expression* operator()(String_Schema*);
+
+    Expression* operator()(StringLiteral*);
+    String_Constant* operator()(Interpolation*);
+    Expression* operator()(StringExpression2*);
+
     Expression* operator()(String_Quoted*);
     Expression* operator()(String_Constant*);
-    Media_Query* operator()(Media_Query*);
-    Expression* operator()(Media_Query_Expression*);
     Expression* operator()(At_Root_Query*);
     Expression* operator()(Supports_Operator*);
     Expression* operator()(Supports_Negation*);
@@ -74,34 +80,16 @@ namespace Sass {
     Expression* operator()(Null*);
     Expression* operator()(Argument*);
     Expression* operator()(Arguments*);
-    Expression* operator()(Comment*);
-
-    // these will return selectors
-    SelectorList* operator()(SelectorList*);
-    SelectorList* operator()(ComplexSelector*);
-    CompoundSelector* operator()(CompoundSelector*);
-    SelectorComponent* operator()(SelectorComponent*);
-    SimpleSelector* operator()(SimpleSelector* s);
-    PseudoSelector* operator()(PseudoSelector* s);
-
-    // they don't have any specific implementation (yet)
-    IDSelector* operator()(IDSelector* s) { return s; };
-    ClassSelector* operator()(ClassSelector* s) { return s; };
-    TypeSelector* operator()(TypeSelector* s) { return s; };
-    AttributeSelector* operator()(AttributeSelector* s) { return s; };
-    PlaceholderSelector* operator()(PlaceholderSelector* s) { return s; };
+    Expression* operator()(LoudComment*);
+    Expression* operator()(SilentComment*);
 
     // actual evaluated selectors
-    SelectorList* operator()(Selector_Schema*);
     Expression* operator()(Parent_Reference*);
 
     // generic fallback
     template <typename U>
     Expression* fallback(U x)
     { return Cast<Expression>(x); }
-
-  private:
-    void interpolation(Context& ctx, std::string& res, Expression_Obj ex, bool into_quotes, bool was_itpl = false);
 
   };
 

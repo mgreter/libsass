@@ -52,6 +52,37 @@ namespace Sass {
   }
   // EO flattenInner
 
+
+  // ##########################################################################
+  // ##########################################################################
+  template <typename T>
+  std::vector<T> flattenVertically(std::vector<std::vector<T>> lists)
+  {
+    std::vector<T> result;
+    // Loop until all arrays are exhausted
+    size_t lvl = 0; bool consumed = false; do {
+      // aborts when nothing more can be consumed
+      consumed = false;
+      // loop over all arrays at the 1st level
+      for (size_t i = 0, iL = lists.size(); i < iL; ++i) {
+        // check for items to consume at 2nd level
+        if (lists[i].size() > lvl) {
+          // consume item at 2nd level depth
+          result.push_back(lists[i][lvl]);
+          // maybe we have some more
+          consumed = true;
+        }
+      }
+      // check next depth level
+      ++lvl;
+    }
+    // abort once nothing is consumed
+    while (consumed);
+    // return flat list
+    return result;
+  }
+  // EO flatVertically
+
   // ##########################################################################
   // Equivalent to dart `cnt.any`
   // Pass additional closure variables to `fn`

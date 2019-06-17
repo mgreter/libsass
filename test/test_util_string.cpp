@@ -29,7 +29,7 @@ std::string escape_string(const std::string& str) {
 }
 
 #define ASSERT_TRUE(cond) \
-  if (!cond) { \
+  if (!(cond)) { \
     std::cerr << \
       "Expected condition to be true at " << __FILE__ << ":" << __LINE__ << \
       std::endl; \
@@ -38,6 +38,16 @@ std::string escape_string(const std::string& str) {
 
 #define ASSERT_FALSE(cond) \
   ASSERT_TRUE(!(cond)) \
+
+#define ASSERT_NR_EQ(a, b) \
+  if (a != b) { \
+    std::cerr << \
+      "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
+      "\n  LHS: [" << a << "]" \
+      "\n  RHS: [" << b << "]" << \
+      std::endl; \
+    return false; \
+  } \
 
 #define ASSERT_STR_EQ(a, b) \
   if (a != b) { \
@@ -87,24 +97,6 @@ bool TestNormalizeNewlinesMixed() {
   return true;
 }
 
-bool TestNormalizeUnderscores() {
-  std::string normalized = Sass::Util::normalize_underscores("a_b_c");
-  ASSERT_STR_EQ("a-b-c", normalized);
-  return true;
-}
-
-bool TestNormalizeDecimalsLeadingZero() {
-  std::string normalized = Sass::Util::normalize_decimals("0.5");
-  ASSERT_STR_EQ("0.5", normalized);
-  return true;
-}
-
-bool TestNormalizeDecimalsNoLeadingZero() {
-  std::string normalized = Sass::Util::normalize_decimals(".5");
-  ASSERT_STR_EQ("0.5", normalized);
-  return true;
-}
-
 bool testEqualsLiteral() {
   ASSERT_TRUE(Sass::Util::equalsLiteral("moz", "moz"));
   ASSERT_TRUE(Sass::Util::equalsLiteral(":moz", ":moz"));
@@ -142,6 +134,33 @@ bool TestUnvendor() {
   return true;
 }
 
+bool TestSplitString1() {
+  std::vector<std::string> list =
+    Sass::Util::split_string("a,b,c", ',');
+  ASSERT_NR_EQ(3, list.size());
+  ASSERT_STR_EQ("a", list[0]);
+  ASSERT_STR_EQ("b", list[1]);
+  ASSERT_STR_EQ("c", list[2]);
+  return true;
+}
+
+bool TestSplitString2() {
+  std::vector<std::string> list =
+    Sass::Util::split_string("a,b,", ',');
+  ASSERT_NR_EQ(3, list.size());
+  ASSERT_STR_EQ("a", list[0]);
+  ASSERT_STR_EQ("b", list[1]);
+  ASSERT_STR_EQ("", list[2]);
+  return true;
+}
+
+bool TestSplitStringEmpty() {
+  std::vector<std::string> list =
+    Sass::Util::split_string("", ',');
+  ASSERT_NR_EQ(0, list.size());
+  return true;
+}
+
 bool Test_ascii_str_to_lower() {
   std::string str = "A B";
   Sass::Util::ascii_str_tolower(&str);
@@ -151,6 +170,7 @@ bool Test_ascii_str_to_lower() {
 
 bool Test_ascii_str_to_upper() {
   std::string str = "a b";
+  ASSERT_STR_EQ("A B", Sass::Util::ascii_str_toupper(str));
   Sass::Util::ascii_str_toupper(&str);
   ASSERT_STR_EQ("A B", str);
   return true;
@@ -181,6 +201,20 @@ bool Test_ascii_isspace() {
   return true;
 }
 
+bool TestEqualsIgnoreSeparator() {
+  ASSERT_TRUE(Sass::Util::ascii_str_equals_ignore_separator("fOo", "FoO"));
+  ASSERT_TRUE(Sass::Util::ascii_str_equals_ignore_separator("fOo-BaR", "FoO_bAr"));
+  ASSERT_TRUE(Sass::Util::ascii_str_equals_ignore_separator("FoO_bAr", "fOo-BaR"));
+  return true;
+}
+
+bool TestHashIgnoreSeparator() {
+  ASSERT_TRUE(Sass::Util::hash_ignore_separator("fOo") == Sass::Util::hash_ignore_separator("FoO"));
+  ASSERT_TRUE(Sass::Util::hash_ignore_separator("fOo-BaR") == Sass::Util::hash_ignore_separator("FoO_bAr"));
+  ASSERT_TRUE(Sass::Util::hash_ignore_separator("FoO_bAr") == Sass::Util::hash_ignore_separator("fOo-BaR"));
+  return true;
+}
+
 }  // namespace
 
 #define TEST(fn) \
@@ -200,16 +234,18 @@ int main(int argc, char **argv) {
   TEST(TestNormalizeNewlinesCRLF);
   TEST(TestNormalizeNewlinesFF);
   TEST(TestNormalizeNewlinesMixed);
-  TEST(TestNormalizeUnderscores);
-  TEST(TestNormalizeDecimalsLeadingZero);
-  TEST(TestNormalizeDecimalsNoLeadingZero);
   TEST(testEqualsLiteral);
   TEST(TestUnvendor);
+  TEST(TestSplitStringEmpty);
+  TEST(TestSplitString1);
+  TEST(TestSplitString2);
   TEST(Test_ascii_str_to_lower);
   TEST(Test_ascii_str_to_upper);
   TEST(Test_ascii_isalpha);
   TEST(Test_ascii_isxdigit);
   TEST(Test_ascii_isspace);
+  TEST(TestEqualsIgnoreSeparator);
+  TEST(TestHashIgnoreSeparator);
   std::cerr << argv[0] << ": Passed: " << passed.size()
             << ", failed: " << failed.size()
             << "." << std::endl;

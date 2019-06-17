@@ -250,7 +250,6 @@ $(DESTDIR)$(PREFIX)/include/%.h: include/%.h \
 	$(INSTALL) -v -m0644 "$<" "$@"
 
 install-headers: $(DESTDIR)$(PREFIX)/include/sass.h \
-                 $(DESTDIR)$(PREFIX)/include/sass2scss.h \
                  $(DESTDIR)$(PREFIX)/include/sass/base.h \
                  $(DESTDIR)$(PREFIX)/include/sass/version.h \
                  $(DESTDIR)$(PREFIX)/include/sass/values.h \

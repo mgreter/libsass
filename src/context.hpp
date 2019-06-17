@@ -79,7 +79,7 @@ namespace Sass {
 
     virtual ~Context();
     Context(struct Sass_Context&);
-    virtual Block_Obj parse() = 0;
+    virtual Block_Obj parse(Sass_Import_Type type) = 0;
     virtual Block_Obj compile();
     virtual char* render(Block_Obj root);
     virtual char* render_srcmap();
@@ -116,7 +116,7 @@ namespace Sass {
     : Context(ctx)
     { }
     virtual ~File_Context();
-    virtual Block_Obj parse();
+    virtual Block_Obj parse(Sass_Import_Type type);
   };
 
   class Data_Context : public Context {
@@ -132,7 +132,7 @@ namespace Sass {
       ctx.srcmap_string = 0; // passed away
     }
     virtual ~Data_Context();
-    virtual Block_Obj parse();
+    virtual Block_Obj parse(Sass_Import_Type type);
   };
 
 }

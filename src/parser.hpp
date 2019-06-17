@@ -1,404 +1,216 @@
 #ifndef SASS_PARSER_H
 #define SASS_PARSER_H
 
-// sass.hpp must go before all system headers to get the
-// __EXTENSIONS__ fix on Solaris.
-#include "sass.hpp"
+// Parser has a great chance for stack overflow
+// To fix this once and for all we need a different approach
+// http://lambda-the-ultimate.org/node/1599
+// Basically we should not call into recursion, but rather
+// return some continuation bit, of course we still need to
+// add our ast nodes somewhere (instead of returning as now)
 
 #include <string>
-#include <vector>
 
-#include "ast.hpp"
-#include "position.hpp"
-#include "context.hpp"
-#include "position.hpp"
-#include "prelexer.hpp"
-
-#ifndef MAX_NESTING
-// Note that this limit is not an exact science
-// it depends on various factors, which some are
-// not under our control (compile time or even OS
-// dependent settings on the available stack size)
-// It should fix most common segfault cases though.
-#define MAX_NESTING 512
-#endif
-
-struct Lookahead {
-  const char* found;
-  const char* error;
-  const char* position;
-  bool parsable;
-  bool has_interpolants;
-  bool is_custom_property;
-};
+#include "character.hpp"
+#include "scanner_span.hpp"
+#include "interpolation.hpp"
+#include "error_handling.hpp"
 
 namespace Sass {
 
-  class Parser : public ParserState {
-  public:
-
-    enum Scope { Root, Mixin, Function, Media, Control, Properties, Rules, AtRoot };
-
-    Context& ctx;
-    std::vector<Block_Obj> block_stack;
-    std::vector<Scope> stack;
-    const char* source;
-    const char* position;
-    const char* end;
-    Position before_token;
-    Position after_token;
-    ParserState pstate;
-    Backtraces traces;
-    size_t indentation;
-    size_t nestings;
-    bool allow_parent;
-
-    Token lexed;
-
-    Parser(Context& ctx, const ParserState& pstate, Backtraces traces, bool allow_parent = true)
-    : ParserState(pstate), ctx(ctx), block_stack(), stack(0),
-      source(0), position(0), end(0), before_token(pstate), after_token(pstate),
-      pstate(pstate), traces(traces), indentation(0), nestings(0), allow_parent(allow_parent)
-    {
-      stack.push_back(Scope::Root);
-    }
-
-    // static Parser from_string(const std::string& src, Context& ctx, ParserState pstate = ParserState("[STRING]"));
-    static Parser from_c_str(const char* src, Context& ctx, Backtraces, ParserState pstate = ParserState("[CSTRING]"), const char* source = nullptr, bool allow_parent = true);
-    static Parser from_c_str(const char* beg, const char* end, Context& ctx, Backtraces, ParserState pstate = ParserState("[CSTRING]"), const char* source = nullptr, bool allow_parent = true);
-    static Parser from_token(Token t, Context& ctx, Backtraces, ParserState pstate = ParserState("[TOKEN]"), const char* source = nullptr);
-    // special static parsers to convert strings into certain selectors
-    static SelectorListObj parse_selector(const char* src, Context& ctx, Backtraces, ParserState pstate = ParserState("[SELECTOR]"), const char* source = nullptr, bool allow_parent = true);
-
-#ifdef __clang__
-
-    // lex and peak uses the template parameter to branch on the action, which
-    // triggers clangs tautological comparison on the single-comparison
-    // branches. This is not a bug, just a merging of behaviour into
-    // one function
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wtautological-compare"
-
-#endif
-
-
-    // skip current token and next whitespace
-    // moves ParserState right before next token
-    void advanceToNextToken();
-
-    bool peek_newline(const char* start = 0);
-
-    // skip over spaces, tabs and line comments
-    template <Prelexer::prelexer mx>
-    const char* sneak(const char* start = 0)
-    {
-      using namespace Prelexer;
-
-      // maybe use optional start position from arguments?
-      const char* it_position = start ? start : position;
-
-      // skip white-space?
-      if (mx == spaces ||
-          mx == no_spaces ||
-          mx == css_comments ||
-          mx == css_whitespace ||
-          mx == optional_spaces ||
-          mx == optional_css_comments ||
-          mx == optional_css_whitespace
-      ) {
-        return it_position;
-      }
-
-      // skip over spaces, tabs and sass line comments
-      const char* pos = optional_css_whitespace(it_position);
-      // always return a valid position
-      return pos ? pos : it_position;
-
-    }
-
-    // match will not skip over space, tabs and line comment
-    // return the position where the lexer match will occur
-    template <Prelexer::prelexer mx>
-    const char* match(const char* start = 0)
-    {
-      // match the given prelexer
-      return mx(position);
-    }
-
-    // peek will only skip over space, tabs and line comment
-    // return the position where the lexer match will occur
-    template <Prelexer::prelexer mx>
-    const char* peek(const char* start = 0)
-    {
-
-      // sneak up to the actual token we want to lex
-      // this should skip over white-space if desired
-      const char* it_before_token = sneak < mx >(start);
-
-      // match the given prelexer
-      const char* match = mx(it_before_token);
-
-      // check if match is in valid range
-      return match <= end ? match : 0;
-
-    }
-
-    // white-space handling is built into the lexer
-    // this way you do not need to parse it yourself
-    // some matchers don't accept certain white-space
-    // we do not support start arg, since we manipulate
-    // sourcemap offset and we modify the position pointer!
-    // lex will only skip over space, tabs and line comment
-    template <Prelexer::prelexer mx>
-    const char* lex(bool lazy = true, bool force = false)
-    {
-
-      if (*position == 0) return 0;
-
-      // position considered before lexed token
-      // we can skip whitespace or comments for
-      // lazy developers (but we need control)
-      const char* it_before_token = position;
-
-      // sneak up to the actual token we want to lex
-      // this should skip over white-space if desired
-      if (lazy) it_before_token = sneak < mx >(position);
-
-      // now call matcher to get position after token
-      const char* it_after_token = mx(it_before_token);
-
-      // check if match is in valid range
-      if (it_after_token > end) return 0;
-
-      // maybe we want to update the parser state anyway?
-      if (force == false) {
-        // assertion that we got a valid match
-        if (it_after_token == 0) return 0;
-        // assertion that we actually lexed something
-        if (it_after_token == it_before_token) return 0;
-      }
-
-      // create new lexed token object (holds the parse results)
-      lexed = Token(position, it_before_token, it_after_token);
-
-      // advance position (add whitespace before current token)
-      before_token = after_token.add(position, it_before_token);
-
-      // update after_token position for current token
-      after_token.add(it_before_token, it_after_token);
-
-      // ToDo: could probably do this incremetal on original object (API wants offset?)
-      pstate = ParserState(path, source, lexed, before_token, after_token - before_token);
-
-      // advance internal char iterator
-      return position = it_after_token;
-
-    }
-
-    // lex_css skips over space, tabs, line and block comment
-    // all block comments will be consumed and thrown away
-    // source-map position will point to token after the comment
-    template <Prelexer::prelexer mx>
-    const char* lex_css()
-    {
-      // copy old token
-      Token prev = lexed;
-      // store previous pointer
-      const char* oldpos = position;
-      Position bt = before_token;
-      Position at = after_token;
-      ParserState op = pstate;
-      // throw away comments
-      // update srcmap position
-      lex < Prelexer::css_comments >();
-      // now lex a new token
-      const char* pos = lex< mx >();
-      // maybe restore prev state
-      if (pos == 0) {
-        pstate = op;
-        lexed = prev;
-        position = oldpos;
-        after_token = at;
-        before_token = bt;
-      }
-      // return match
-      return pos;
-    }
-
-    // all block comments will be skipped and thrown away
-    template <Prelexer::prelexer mx>
-    const char* peek_css(const char* start = 0)
-    {
-      // now peek a token (skip comments first)
-      return peek< mx >(peek < Prelexer::css_comments >(start));
-    }
-
-#ifdef __clang__
-
-#pragma clang diagnostic pop
-
-#endif
-
-    void error(std::string msg);
-    void error(std::string msg, Position pos);
-    // generate message with given and expected sample
-    // text before and in the middle are configurable
-    void css_error(const std::string& msg,
-                   const std::string& prefix = " after ",
-                   const std::string& middle = ", was: ",
-                   const bool trim = true);
-    void read_bom();
-
-    Block_Obj parse();
-    Import_Obj parse_import();
-    Definition_Obj parse_definition(Definition::Type which_type);
-    Parameters_Obj parse_parameters();
-    Parameter_Obj parse_parameter();
-    Mixin_Call_Obj parse_include_directive();
-    Arguments_Obj parse_arguments();
-    Argument_Obj parse_argument();
-    Assignment_Obj parse_assignment();
-    Ruleset_Obj parse_ruleset(Lookahead lookahead);
-    SelectorListObj parseSelectorList(bool chroot);
-    ComplexSelectorObj parseComplexSelector(bool chroot);
-    Selector_Schema_Obj parse_selector_schema(const char* end_of_selector, bool chroot);
-    CompoundSelectorObj parseCompoundSelector();
-    SimpleSelectorObj parse_simple_selector();
-    PseudoSelectorObj parse_negated_selector2();
-    Expression* parse_binominal();
-    SimpleSelectorObj parse_pseudo_selector();
-    AttributeSelectorObj parse_attribute_selector();
-    Block_Obj parse_block(bool is_root = false);
-    Block_Obj parse_css_block(bool is_root = false);
-    bool parse_block_nodes(bool is_root = false);
-    bool parse_block_node(bool is_root = false);
-
-    Declaration_Obj parse_declaration();
-    Expression_Obj parse_map();
-    Expression_Obj parse_bracket_list();
-    Expression_Obj parse_list(bool delayed = false);
-    Expression_Obj parse_comma_list(bool delayed = false);
-    Expression_Obj parse_space_list();
-    Expression_Obj parse_disjunction();
-    Expression_Obj parse_conjunction();
-    Expression_Obj parse_relation();
-    Expression_Obj parse_expression();
-    Expression_Obj parse_operators();
-    Expression_Obj parse_factor();
-    Expression_Obj parse_value();
-    Function_Call_Obj parse_calc_function();
-    Function_Call_Obj parse_function_call();
-    Function_Call_Obj parse_function_call_schema();
-    String_Obj parse_url_function_string();
-    String_Obj parse_url_function_argument();
-    String_Obj parse_interpolated_chunk(Token, bool constant = false, bool css = true);
-    String_Obj parse_string();
-    Value_Obj parse_static_value();
-    String_Schema_Obj parse_css_variable_value();
-    String_Obj parse_ie_property();
-    String_Obj parse_ie_keyword_arg();
-    String_Schema_Obj parse_value_schema(const char* stop);
-    String_Obj parse_identifier_schema();
-    If_Obj parse_if_directive(bool else_if = false);
-    For_Obj parse_for_directive();
-    Each_Obj parse_each_directive();
-    While_Obj parse_while_directive();
-    MediaRule_Obj parseMediaRule();
-    std::vector<CssMediaQuery_Obj> parseCssMediaQueries();
-    std::string parseIdentifier();
-    CssMediaQuery_Obj parseCssMediaQuery();
-    Return_Obj parse_return_directive();
-    Content_Obj parse_content_directive();
-    void parse_charset_directive();
-    List_Obj parse_media_queries();
-    Media_Query_Obj parse_media_query();
-    Media_Query_Expression_Obj parse_media_expression();
-    Supports_Block_Obj parse_supports_directive();
-    Supports_Condition_Obj parse_supports_condition(bool top_level);
-    Supports_Condition_Obj parse_supports_negation();
-    Supports_Condition_Obj parse_supports_operator(bool top_level);
-    Supports_Condition_Obj parse_supports_interpolation();
-    Supports_Condition_Obj parse_supports_declaration();
-    Supports_Condition_Obj parse_supports_condition_in_parens(bool parens_required);
-    At_Root_Block_Obj parse_at_root_block();
-    At_Root_Query_Obj parse_at_root_query();
-    String_Schema_Obj parse_almost_any_value();
-    Directive_Obj parse_directive();
-    Warning_Obj parse_warning();
-    Error_Obj parse_error();
-    Debug_Obj parse_debug();
-
-    Value* color_or_string(const std::string& lexed) const;
-
-    // be more like ruby sass
-    Expression_Obj lex_almost_any_value_token();
-    Expression_Obj lex_almost_any_value_chars();
-    Expression_Obj lex_interp_string();
-    Expression_Obj lex_interp_uri();
-    Expression_Obj lex_interpolation();
-
-    // these will throw errors
-    Token lex_variable();
-    Token lex_identifier();
-
-    void parse_block_comments(bool store = true);
-
-    Lookahead lookahead_for_value(const char* start = 0);
-    Lookahead lookahead_for_selector(const char* start = 0);
-    Lookahead lookahead_for_include(const char* start = 0);
-
-    Expression_Obj fold_operands(Expression_Obj base, std::vector<Expression_Obj>& operands, Operand op);
-    Expression_Obj fold_operands(Expression_Obj base, std::vector<Expression_Obj>& operands, std::vector<Operand>& ops, size_t i = 0);
-
-    void throw_syntax_error(std::string message, size_t ln = 0);
-    void throw_read_error(std::string message, size_t ln = 0);
-
-
-    template <Prelexer::prelexer open, Prelexer::prelexer close>
-    Expression_Obj lex_interp()
-    {
-      if (lex < open >(false)) {
-        String_Schema_Obj schema = SASS_MEMORY_NEW(String_Schema, pstate);
-        // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-        schema->append(SASS_MEMORY_NEW(String_Constant, pstate, lexed));
-        if (position[0] == '#' && position[1] == '{') {
-          Expression_Obj itpl = lex_interpolation();
-          if (!itpl.isNull()) schema->append(itpl);
-          while (lex < close >(false)) {
-            // std::cerr << "LEX [[" << std::string(lexed) << "]]\n";
-            schema->append(SASS_MEMORY_NEW(String_Constant, pstate, lexed));
-            if (position[0] == '#' && position[1] == '{') {
-              Expression_Obj itpl = lex_interpolation();
-              if (!itpl.isNull()) schema->append(itpl);
-            } else {
-              return schema;
-            }
-          }
-        } else {
-          return SASS_MEMORY_NEW(String_Constant, pstate, lexed);
-        }
-      }
-      return {};
-    }
-
-  public:
-    static Number* lexed_number(const ParserState& pstate, const std::string& parsed);
-    static Number* lexed_dimension(const ParserState& pstate, const std::string& parsed);
-    static Number* lexed_percentage(const ParserState& pstate, const std::string& parsed);
-    static Value* lexed_hex_color(const ParserState& pstate, const std::string& parsed);
-  private:
-    Number* lexed_number(const std::string& parsed) { return lexed_number(pstate, parsed); };
-    Number* lexed_dimension(const std::string& parsed) { return lexed_dimension(pstate, parsed); };
-    Number* lexed_percentage(const std::string& parsed) { return lexed_percentage(pstate, parsed); };
-    Value* lexed_hex_color(const std::string& parsed) { return lexed_hex_color(pstate, parsed); };
-
-    static const char* re_attr_sensitive_close(const char* src);
-    static const char* re_attr_insensitive_close(const char* src);
+  class Logger {
 
   };
 
-  size_t check_bom_chars(const char* src, const char *end, const unsigned char* bom, size_t len);
+  class Parser {
+
+  public:
+
+    Context& context;
+
+    /// Returns whether [string1] and [string2] are equal, ignoring ASCII case.
+    bool equalsIgnoreCase(std::string string1, std::string string2)
+    {
+      if (string1.length() != string2.length()) return false;
+      if (string1 == string2) return true;
+      for (size_t i = 0; i < string1.length(); i++) {
+        if (!Character::characterEqualsIgnoreCase(string1[i], string2[i])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    Parser(Context& context, const char* content, const char* path, size_t srcid) :
+      context(context), scanner(content, path, srcid)
+    {}
+
+  public: // protected
+
+    // The scanner that scans through the text being parsed.
+    SpanScanner scanner;
+
+    // The logger to use when emitting warnings.
+    Logger logger;
+
+  public:
+
+    // Returns whether [text] is a valid CSS identifier.
+    bool isIdentifier(std::string text);
+
+    // Consumes whitespace, including any comments.
+    virtual void whitespace();
+
+    // Like [whitespace], but returns whether any was consumed.
+    // bool scanWhitespace();
+
+    // Consumes whitespace, but not comments.
+    void whitespaceWithoutComments();
+
+    // Consumes spaces and tabs.
+    void spaces();
+
+    // Consumes and ignores a comment if possible.
+    // Returns whether the comment was consumed.
+    bool scanComment();
+
+    // Consumes and ignores a silent (Sass-style) comment.
+    virtual void silentComment();
+
+    // Consumes and ignores a loud (CSS-style) comment.
+    void loudComment();
+
+    // Consumes a plain CSS identifier. If [unit] is `true`, this 
+    // doesn't parse a `-` followed by a digit. This ensures that 
+    // `1px-2px` parses as subtraction rather than the unit `px-2px`.
+    std::string identifier(bool unit = false);
+
+    // Consumes a chunk of a plain CSS identifier after the name start.
+    std::string identifierBody();
+
+    // Like [_identifierBody], but parses the body into the [text] buffer.
+    void _identifierBody(StringBuffer& text, bool unit = false);
+
+    // Consumes a plain CSS string. This returns the parsed contents of the 
+    // string—that is, it doesn't include quotes and its escapes are resolved.
+    std::string string();
+
+    // Consumes and returns a natural number.
+    // That is, a non - negative integer.
+    // Doesn't support scientific notation.
+    double naturalNumber();
+
+    // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`,
+    // or `"}"` and returns their contents as a string. If [allowEmpty]
+    // is `false` (the default), this requires at least one token.
+    std::string declarationValue(bool allowEmpty = false);
+
+    // Consumes a `url()` token if possible, and returns `null` otherwise.
+    std::string tryUrl();
+
+    // Consumes a Sass variable name, and returns
+    // its name without the dollar sign.
+    std::string variableName();
+
+    // Consumes an escape sequence and returns the text that defines it.
+    // If [identifierStart] is true, this normalizes the escape sequence
+    // as though it were at the beginning of an identifier.
+    std::string escape(bool identifierStart = false);
+
+    // Consumes an escape sequence and returns the character it represents.
+    uint32_t escapeCharacter();
+
+    // Consumes the next character if it matches [condition].
+    // Returns whether or not the character was consumed.
+    bool scanCharIf(bool (*condition)(uint8_t character));
+
+    // Consumes the next character if it's equal
+    // to [letter], ignoring ASCII case.
+    bool scanCharIgnoreCase(uint32_t letter);
+
+    // Consumes the next character and asserts that
+    // it's equal to [letter], ignoring ASCII case.
+    void expectCharIgnoreCase(uint32_t letter);
+
+    // Returns whether the scanner is immediately before a number. This follows [the CSS algorithm].
+    // [the CSS algorithm]: https://drafts.csswg.org/css-syntax-3/#starts-with-a-number
+    bool lookingAtNumber() const;
+
+    // Returns whether the scanner is immediately before a plain CSS identifier.
+    // If [forward] is passed, this looks that many characters forward instead.
+    // This is based on [the CSS algorithm][], but it assumes all backslashes start escapes.
+    // [the CSS algorithm]: https://drafts.csswg.org/css-syntax-3/#would-start-an-identifier
+    bool lookingAtIdentifier(size_t forward = 0) const;
+
+    // Returns whether the scanner is immediately before a sequence
+    // of characters that could be part of a plain CSS identifier body.
+    bool lookingAtIdentifierBody();
+
+    // Consumes an identifier if its name exactly matches [text].
+    bool scanIdentifier(std::string text);
+
+    // Consumes an identifier and asserts that its name exactly matches [text].
+    void expectIdentifier(std::string text, std::string name = "");
+
+    // Runs [consumer] and returns the source text that it consumes.
+    // std::string rawText(std::string(Parser::*)());
+    // std::string rawText(void(Parser::*)());
+
+    // ToDo: make template to ignore return type
+    template <typename T, typename X>
+    std::string rawText(T(X::* consumer)())
+    {
+      const char* start = scanner.position;
+      // We need to clean up after ourself
+      (static_cast<X*>(this)->*consumer)();
+      return scanner.substring(start);
+    }
+
+    // Prints a warning to standard error, associated with [span].
+    void warn(std::string message, ParserState pstate) {
+      warning(message, pstate);
+    }
+
+    // Prints a warning to standard error, associated with [span].
+    // void warn(std::string message /* , FileSpan span */) {
+    //   // throw Exception::InvalidSyntax("[pstate]", {}, message);
+    //   std::cerr << "Warn: " << message << "\n";
+    //   // logger.warn(message, span: span);
+    // }
+
+    // Throws an error associated with [span].
+    // void error(std::string message /*, FileSpan span */) {
+    //   throw Exception::InvalidSyntax("[pstate]", {}, message);
+    //   std::cerr << "Error: " << message << "\n";
+    //   // throw StringScannerException(message, span, scanner.string);
+    // }
+
+    // Throws an error associated with [span].
+    void error(std::string message, ParserState pstate /*, FileSpan span */) {
+      throw Exception::InvalidSyntax(pstate, {}, message);
+    }
+
+    // Prints a source span highlight of the current location being scanned.
+    // If [message] is passed, prints that as well. This is
+    // intended for use when debugging parser failures.
+    void debug(std::string message) {
+      std::cerr << "DEBUG: " << message << "\n";
+      if (message.empty()) {
+        // print(scanner.emptySpan.highlight(color: true));
+      }
+      else {
+        // print(scanner.emptySpan.message(message.toString(), color: true));
+      }
+    }
+
+    // If [position] is separated from the previous non-whitespace character
+    // in `scanner.string` by one or more newlines, returns the offset of the
+    // last separating newline. Otherwise returns [position]. This helps avoid 
+    // missing token errors pointing at the next closing bracket rather than
+    // the line where the problem actually occurred.
+    // const char* _firstNewlineBefore(const char* position);
+
+  };
+
 }
 
 #endif

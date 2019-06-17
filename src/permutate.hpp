@@ -69,7 +69,7 @@ namespace Sass {
   }
   // EO permutate
 
-  // ToDo: this variant is used in resolve_parent_refs
+  // ToDo: this variant is used in resolveParentSelectors
   template <class T>
   std::vector<std::vector<T>>
     permutateAlt(const std::vector<std::vector<T>>& in) {

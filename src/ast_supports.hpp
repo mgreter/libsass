@@ -43,8 +43,9 @@ namespace Sass {
     ADD_PROPERTY(Supports_Condition_Obj, condition)
   public:
     Supports_Block(ParserState pstate, Supports_Condition_Obj condition, Block_Obj block = {});
+    bool is_invisible() const override;
     bool bubbles() override;
-    ATTACH_AST_OPERATIONS(Supports_Block)
+    ATTACH_COPY_OPERATIONS(Supports_Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -55,7 +56,7 @@ namespace Sass {
   public:
     Supports_Condition(ParserState pstate);
     virtual bool needs_parens(Supports_Condition_Obj cond) const { return false; }
-    ATTACH_AST_OPERATIONS(Supports_Condition)
+    ATTACH_COPY_OPERATIONS(Supports_Condition)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -72,7 +73,7 @@ namespace Sass {
   public:
     Supports_Operator(ParserState pstate, Supports_Condition_Obj l, Supports_Condition_Obj r, Operand o);
     virtual bool needs_parens(Supports_Condition_Obj cond) const override;
-    ATTACH_AST_OPERATIONS(Supports_Operator)
+    ATTACH_COPY_OPERATIONS(Supports_Operator)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -85,7 +86,7 @@ namespace Sass {
   public:
     Supports_Negation(ParserState pstate, Supports_Condition_Obj c);
     virtual bool needs_parens(Supports_Condition_Obj cond) const override;
-    ATTACH_AST_OPERATIONS(Supports_Negation)
+    ATTACH_COPY_OPERATIONS(Supports_Negation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -99,7 +100,7 @@ namespace Sass {
   public:
     Supports_Declaration(ParserState pstate, Expression_Obj f, Expression_Obj v);
     virtual bool needs_parens(Supports_Condition_Obj cond) const override;
-    ATTACH_AST_OPERATIONS(Supports_Declaration)
+    ATTACH_COPY_OPERATIONS(Supports_Declaration)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -112,7 +113,7 @@ namespace Sass {
   public:
     Supports_Interpolation(ParserState pstate, Expression_Obj v);
     virtual bool needs_parens(Supports_Condition_Obj cond) const override;
-    ATTACH_AST_OPERATIONS(Supports_Interpolation)
+    ATTACH_COPY_OPERATIONS(Supports_Interpolation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

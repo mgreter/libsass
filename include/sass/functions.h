@@ -40,6 +40,14 @@ typedef struct Sass_Function* (*Sass_Function_List);
 typedef union Sass_Value* (*Sass_Function_Fn)
   (const union Sass_Value*, Sass_Function_Entry cb, struct Sass_Compiler* compiler);
 
+// Type of parser to use
+enum Sass_Import_Type {
+  SASS_IMPORT_AUTO,
+  SASS_IMPORT_SCSS,
+  SASS_IMPORT_SASS,
+  SASS_IMPORT_CSS,
+};
+
 // Type of function calls
 enum Sass_Callee_Type {
   SASS_CALLEE_MIXIN,

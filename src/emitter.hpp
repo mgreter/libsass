@@ -6,6 +6,7 @@
 #include "sass.hpp"
 
 #include "sass/base.h"
+#include "sass/values.h"
 #include "source_map.hpp"
 #include "ast_fwd_decl.hpp"
 
@@ -45,15 +46,10 @@ namespace Sass {
     public:
       // output strings different in custom css properties
       bool in_custom_property;
-      // output strings different in comments
-      bool in_comment;
-      // selector list does not get linefeeds
-      bool in_wrapped;
-      // lists always get a space after delimiter
-      bool in_media_block;
       // nested list must not have parentheses
       bool in_declaration;
       // nested lists need parentheses
+      std::vector<Sass_Separator> separators;
       bool in_space_array;
       bool in_comma_array;
 
@@ -72,12 +68,14 @@ namespace Sass {
       // append some text or token to the buffer
       void append_string(const std::string& text);
       // append a single character to buffer
-      void append_char(const char chr);
+      void append_char(uint8_t chr);
       // append some white-space only text
       void append_wspace(const std::string& text);
       // append some text or token to the buffer
       // this adds source-mappings for node start and end
       void append_token(const std::string& text, const AST_Node* node);
+      // this restores escapes for css strings ...
+      void append_css(const std::string& text, const AST_Node* node, bool to_css = false);
       // query last appended character
       char last_char();
 

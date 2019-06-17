@@ -953,7 +953,7 @@ namespace Sass {
       // doing so would require this method and its callers to handle much
       // more complex cases that likely aren't worth the pain.
       if (innerPseudo->name() != pseudo->name()) return {};
-      if (!ObjEquality()(innerPseudo->argument(), pseudo->argument())) return {};
+      if (innerPseudo->argument() != pseudo->argument()) return {};
       return innerPseudo->selector()->elements();
     }
     else if (name == "has" && name == "host" && name == "host-context" && name == "slotted") {

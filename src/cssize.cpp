@@ -58,9 +58,8 @@ namespace Sass {
                                       d->pstate(),
                                       property,
                                       d->value(),
-                                      d->is_important(),
                                       d->is_custom_property());
-    dd->is_indented(d->is_indented());
+    // dd->is_indented(d->is_indented());
     dd->tabs(d->tabs());
 
     p_stack.push_back(dd);
@@ -80,7 +79,7 @@ namespace Sass {
     return 0;
   }
 
-  Statement* Cssize::operator()(Directive* r)
+  Statement* Cssize::operator()(AtRule* r)
   {
     if (!r->block() || !r->block()->length()) return r;
 
@@ -90,10 +89,9 @@ namespace Sass {
     }
 
     p_stack.push_back(r);
-    Directive_Obj rr = SASS_MEMORY_NEW(Directive,
+    AtRuleObj rr = SASS_MEMORY_NEW(AtRule,
                                   r->pstate(),
                                   r->keyword(),
-                                  r->selector(),
                                   r->block() ? operator()(r->block()) : 0);
     if (r->value()) rr->value(r->value());
     p_stack.pop_back();
@@ -107,7 +105,7 @@ namespace Sass {
         Bubble_Obj s_obj = Cast<Bubble>(s);
         s = s_obj->node();
         if (s->statement_type() != Statement::DIRECTIVE) directive_exists = false;
-        else directive_exists = (Cast<Directive>(s)->keyword() == rr->keyword());
+        else directive_exists = (Cast<AtRule>(s)->keyword() == rr->keyword());
       }
 
     }
@@ -115,7 +113,7 @@ namespace Sass {
     Block* result = SASS_MEMORY_NEW(Block, rr->pstate());
     if (!(directive_exists || rr->is_keyframes()))
     {
-      Directive* empty_node = Cast<Directive>(rr);
+      AtRule* empty_node = Cast<AtRule>(rr);
       empty_node->block(SASS_MEMORY_NEW(Block, rr->block() ? rr->block()->pstate() : rr->pstate()));
       result->append(empty_node);
     }
@@ -137,56 +135,49 @@ namespace Sass {
     Keyframe_Rule_Obj rr = SASS_MEMORY_NEW(Keyframe_Rule,
                                         r->pstate(),
                                         operator()(r->block()));
+
     if (!r->name().isNull()) rr->name(r->name());
+    if (!r->name2().isNull()) rr->name2(r->name2());
 
     return debubble(rr->block(), rr);
   }
 
-  Statement* Cssize::operator()(Ruleset* r)
+  Statement* Cssize::operator()(CssStyleRule* r)
   {
     p_stack.push_back(r);
-    // this can return a string schema
-    // string schema is not a statement!
-    // r->block() is already a string schema
-    // and that is comming from propset expand
     Block* bb = operator()(r->block());
-    // this should protect us (at least a bit) from our mess
-    // fixing this properly is harder that it should be ...
-    if (Cast<Statement>(bb) == NULL) {
-      error("Illegal nesting: Only properties may be nested beneath properties.", r->block()->pstate(), traces);
-    }
-    Ruleset_Obj rr = SASS_MEMORY_NEW(Ruleset,
-                                  r->pstate(),
-                                  r->selector(),
-                                  bb);
+    CssStyleRuleObj rr = SASS_MEMORY_NEW(CssStyleRule,
+      r->pstate(),
+      r->selector());
+    rr->block(bb);
 
-    rr->is_root(r->is_root());
-    // rr->tabs(r->block()->tabs());
+    // rr->is_root(r->is_root());
     p_stack.pop_back();
 
-    if (!rr->block()) {
-      error("Illegal nesting: Only properties may be nested beneath properties.", r->block()->pstate(), traces);
-    }
 
     Block_Obj props = SASS_MEMORY_NEW(Block, rr->block()->pstate());
     Block* rules = SASS_MEMORY_NEW(Block, rr->block()->pstate());
     for (size_t i = 0, L = rr->block()->length(); i < L; i++)
     {
       Statement* s = rr->block()->at(i);
-      if (bubblable(s)) rules->append(s);
-      if (!bubblable(s)) props->append(s);
+      if (bubblable(s)) {
+        rules->append(s);
+      }
+      else {
+        props->append(s);
+      }
     }
 
     if (props->length())
     {
-      Block_Obj pb = SASS_MEMORY_NEW(Block, rr->block()->pstate());
-      pb->concat(props);
-      rr->block(pb);
 
-      for (size_t i = 0, L = rules->length(); i < L; i++)
+      rr->block(SASS_MEMORY_NEW(Block,
+        rr->block()->pstate(),
+        props->elements()));
+
+      for (Statement* stmt : rules->elements())
       {
-        Statement* stm = rules->at(i);
-        stm->tabs(stm->tabs() + 1);
+        stmt->tabs(stmt->tabs() + 1);
       }
 
       rules->unshift(rr);
@@ -201,8 +192,8 @@ namespace Sass {
     }
 
     if (!(!rules->length() ||
-          !bubblable(rules->last()) ||
-          parent()->statement_type() == Statement::RULESET))
+      !bubblable(rules->last()) ||
+      parent()->statement_type() == Statement::RULESET))
     {
       rules->last()->group_end(true);
     }
@@ -229,7 +220,7 @@ namespace Sass {
     p_stack.push_back(m);
 
     CssMediaRuleObj mm = SASS_MEMORY_NEW(CssMediaRule, m->pstate(), m->block());
-    mm->concat(m->elements());
+    mm->Vectorized::concat(m->elements());
     mm->block(operator()(m->block()));
     mm->tabs(m->tabs());
 
@@ -287,20 +278,27 @@ namespace Sass {
     return bubble(m);
   }
 
-  Statement* Cssize::bubble(Directive* m)
+  Statement* Cssize::bubble(AtRule* m)
   {
     Block* bb = SASS_MEMORY_NEW(Block, this->parent()->pstate());
-    Has_Block_Obj new_rule = Cast<Has_Block>(SASS_MEMORY_COPY(this->parent()));
-    new_rule->block(bb);
-    new_rule->tabs(this->parent()->tabs());
-    new_rule->block()->concat(m->block());
-
+    StatementObj cp = SASS_MEMORY_COPY(this->parent());
     Block_Obj wrapper_block = SASS_MEMORY_NEW(Block, m->block() ? m->block()->pstate() : m->pstate());
-    wrapper_block->append(new_rule);
-    Directive_Obj mm = SASS_MEMORY_NEW(Directive,
+    if (CssStyleRule* new_rule = Cast<CssStyleRule>(cp)) {
+      new_rule->block(bb);
+      new_rule->tabs(this->parent()->tabs());
+      new_rule->block()->concat(m->block());
+      wrapper_block->append(new_rule);
+    }
+    else if (Has_Block * new_rule = Cast<Has_Block>(cp)) {
+      new_rule->block(bb);
+      new_rule->tabs(this->parent()->tabs());
+      new_rule->block()->concat(m->block());
+      wrapper_block->append(new_rule);
+    }
+
+    AtRuleObj mm = SASS_MEMORY_NEW(AtRule,
                                   m->pstate(),
                                   m->keyword(),
-                                  m->selector(),
                                   wrapper_block);
     if (m->value()) mm->value(m->value());
 
@@ -312,9 +310,15 @@ namespace Sass {
   {
     if (!m || !m->block()) return NULL;
     Block* bb = SASS_MEMORY_NEW(Block, this->parent()->pstate());
-    Has_Block_Obj new_rule = Cast<Has_Block>(SASS_MEMORY_COPY(this->parent()));
+    StatementObj cp = SASS_MEMORY_COPY(this->parent());
     Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
-    if (new_rule) {
+    if (CssStyleRule * new_rule = Cast<CssStyleRule>(cp)) {
+      new_rule->block(bb);
+      new_rule->tabs(this->parent()->tabs());
+      new_rule->block()->concat(m->block());
+      wrapper_block->append(new_rule);
+    }
+    if (Has_Block * new_rule = Cast<Has_Block>(cp)) {
       new_rule->block(bb);
       new_rule->tabs(this->parent()->tabs());
       new_rule->block()->concat(m->block());
@@ -323,64 +327,76 @@ namespace Sass {
 
     At_Root_Block* mm = SASS_MEMORY_NEW(At_Root_Block,
                                         m->pstate(),
-                                        wrapper_block,
-                                        m->expression());
+                                        m->expression(),
+                                        wrapper_block);
     Bubble* bubble = SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
     return bubble;
   }
 
   Statement* Cssize::bubble(Supports_Block* m)
   {
-    Ruleset_Obj parent = Cast<Ruleset>(SASS_MEMORY_COPY(this->parent()));
+    if (CssStyleRuleObj parent = Cast<CssStyleRule>(SASS_MEMORY_COPY(this->parent()))) {
 
-    Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
-    Ruleset* new_rule = SASS_MEMORY_NEW(Ruleset,
-                                        parent->pstate(),
-                                        parent->selector(),
-                                        bb);
-    new_rule->tabs(parent->tabs());
-    new_rule->block()->concat(m->block());
+      Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
+      CssStyleRule* new_rule = SASS_MEMORY_NEW(CssStyleRule,
+        parent->pstate(),
+        parent->selector());
+      new_rule->block(bb);
+      new_rule->tabs(parent->tabs());
+      new_rule->block()->concat(m->block());
+      new_rule->concat(m->block()->elements());
 
-    Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
-    wrapper_block->append(new_rule);
-    Supports_Block* mm = SASS_MEMORY_NEW(Supports_Block,
-                                       m->pstate(),
-                                       m->condition(),
-                                       wrapper_block);
+      Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
+      wrapper_block->append(new_rule);
+      Supports_Block* mm = SASS_MEMORY_NEW(Supports_Block,
+        m->pstate(),
+        m->condition(),
+        wrapper_block);
 
-    mm->tabs(m->tabs());
+      mm->tabs(m->tabs());
 
-    Bubble* bubble = SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
-    return bubble;
+      Bubble* bubble = SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
+      return bubble;
+
+    }
+
+
+    return nullptr;
+
   }
 
   Statement* Cssize::bubble(CssMediaRule* m)
   {
-    Ruleset_Obj parent = Cast<Ruleset>(SASS_MEMORY_COPY(this->parent()));
+    if (CssStyleRuleObj parent = Cast<CssStyleRule>(SASS_MEMORY_COPY(this->parent()))) {
 
-    Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
-    Ruleset* new_rule = SASS_MEMORY_NEW(Ruleset,
-      parent->pstate(),
-      parent->selector(),
-      bb);
-    new_rule->tabs(parent->tabs());
-    new_rule->block()->concat(m->block());
+      Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
+      CssStyleRule* new_rule = SASS_MEMORY_NEW(CssStyleRule,
+        parent->pstate(),
+        parent->selector());
+      new_rule->block(bb);
+      new_rule->tabs(parent->tabs());
+      new_rule->block()->concat(m->block());
+      new_rule->concat(m->block()->elements());
 
-    Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
-    wrapper_block->append(new_rule);
-    CssMediaRuleObj mm = SASS_MEMORY_NEW(CssMediaRule,
-      m->pstate(),
-      wrapper_block);
-    mm->concat(m->elements());
+      Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
+      wrapper_block->append(new_rule);
+      CssMediaRuleObj mm = SASS_MEMORY_NEW(CssMediaRule,
+        m->pstate(),
+        wrapper_block);
+      mm->Vectorized::concat(m->elements());
 
-    mm->tabs(m->tabs());
+      mm->tabs(m->tabs());
 
-    return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
+      return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
+
+    }
+
+    return nullptr;
   }
 
   bool Cssize::bubblable(Statement* s)
   {
-    return Cast<Ruleset>(s) || s->bubbles();
+    return Cast<CssStyleRule>(s) || s->bubbles();
   }
 
   Block* Cssize::flatten(const Block* b)
@@ -426,7 +442,7 @@ namespace Sass {
 
   Block* Cssize::debubble(Block* children, Statement* parent)
   {
-    Has_Block_Obj previous_parent;
+    BlockObj previousBlock;
     std::vector<std::pair<bool, Block_Obj>> baz = slice_by_bubble(children);
     Block_Obj result = SASS_MEMORY_NEW(Block, children->pstate());
 
@@ -438,15 +454,22 @@ namespace Sass {
         if (!parent) {
           result->append(slice);
         }
-        else if (previous_parent) {
-          previous_parent->block()->concat(slice);
+        else if (previousBlock) {
+          previousBlock->concat(slice);
         }
-        else {
-          previous_parent = SASS_MEMORY_COPY(parent);
-          previous_parent->block(slice);
-          previous_parent->tabs(parent->tabs());
-
-          result->append(previous_parent);
+        else if (Has_Block_Obj prev = Cast<Has_Block>(parent)) {
+          previousBlock = slice;
+          prev = SASS_MEMORY_COPY(prev);
+          prev->block(slice);
+          prev->tabs(parent->tabs());
+          result->append(prev);
+        }
+        else if (CssStyleRuleObj prev = Cast<CssStyleRule>(parent)) {
+          previousBlock = slice;
+          prev = SASS_MEMORY_COPY(prev);
+          prev->block(slice);
+          prev->tabs(parent->tabs());
+          result->append(prev);
         }
         continue;
       }
@@ -490,7 +513,7 @@ namespace Sass {
         wrapper_block->append(wrapper);
 
         if (wrapper->length()) {
-          previous_parent = {};
+          previousBlock = {};
         }
 
         if (wrapper_block) {

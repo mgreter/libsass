@@ -22,7 +22,7 @@ namespace Sass {
   {
     std::stringstream msg_stream;
     JsonNode* json_err = json_mkobject();
-    msg_stream << "Internal Error: " << msg << std::endl;
+    msg_stream << "Error: " << msg << std::endl;
     json_append_member(json_err, "status", json_mknumber(severety));
     json_append_member(json_err, "message", json_mkstring(msg.c_str()));
     json_append_member(json_err, "formatted", json_mkstream(msg_stream));
@@ -177,7 +177,7 @@ namespace Sass {
       bool skip = c_ctx->type == SASS_CONTEXT_DATA;
 
       // dispatch parse call
-      Block_Obj root(cpp_ctx->parse());
+      Block_Obj root(cpp_ctx->parse(SASS_IMPORT_AUTO));
       // abort on errors
       if (!root) return {};
 

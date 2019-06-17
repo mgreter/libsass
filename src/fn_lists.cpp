@@ -6,6 +6,7 @@
 #include "operators.hpp"
 #include "fn_utils.hpp"
 #include "fn_lists.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -18,12 +19,16 @@ namespace Sass {
     Signature keywords_sig = "keywords($args)";
     BUILT_IN(keywords)
     {
-      List_Obj arglist = SASS_MEMORY_COPY(ARG("$args", List)); // copy
+      List_Obj arglist = SASS_MEMORY_COPY(ARG("$args", List, "an argument list")); // copy
       Map_Obj result = SASS_MEMORY_NEW(Map, pstate, 1);
+      if (!arglist->is_arglist()) {
+        error("$args: " + arglist->to_string() + " is not an argument list.", pstate, traces);
+      }
       for (size_t i = arglist->size(), L = arglist->length(); i < L; ++i) {
         Expression_Obj obj = arglist->at(i);
         Argument_Obj arg = (Argument*) obj.ptr(); // XXX
         std::string name = std::string(arg->name());
+        Util::ascii_normalize_underscore(name);
         name = name.erase(0, 1); // sanitize name (remove dollar sign)
         *result << std::make_pair(SASS_MEMORY_NEW(String_Quoted,
                  pstate, name),
@@ -35,22 +40,10 @@ namespace Sass {
     Signature length_sig = "length($list)";
     BUILT_IN(length)
     {
-      if (SelectorList * sl = Cast<SelectorList>(env["$list"])) {
-        return SASS_MEMORY_NEW(Number, pstate, (double) sl->length());
-      }
-      Expression* v = ARG("$list", Expression);
+      Expression* v = ARG("$list", Expression, "an expression");
       if (v->concrete_type() == Expression::MAP) {
         Map* map = Cast<Map>(env["$list"]);
         return SASS_MEMORY_NEW(Number, pstate, (double)(map ? map->length() : 1));
-      }
-      if (v->concrete_type() == Expression::SELECTOR) {
-        if (CompoundSelector * h = Cast<CompoundSelector>(v)) {
-          return SASS_MEMORY_NEW(Number, pstate, (double)h->length());
-        } else if (SelectorList * ls = Cast<SelectorList>(v)) {
-          return SASS_MEMORY_NEW(Number, pstate, (double)ls->length());
-        } else {
-          return SASS_MEMORY_NEW(Number, pstate, 1);
-        }
       }
 
       List* list = Cast<List>(env["$list"]);
@@ -64,26 +57,26 @@ namespace Sass {
     {
       double nr = ARGVAL("$n");
       Map* m = Cast<Map>(env["$list"]);
-      if (SelectorList * sl = Cast<SelectorList>(env["$list"])) {
-        size_t len = m ? m->length() : sl->length();
-        bool empty = m ? m->empty() : sl->empty();
-        if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate, traces);
-        double index = std::floor(nr < 0 ? len + nr : nr - 1);
-        if (index < 0 || index > len - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate, traces);
-        return Cast<Value>(Listize::perform(sl->get(static_cast<int>(index))));
-      }
       List_Obj l = Cast<List>(env["$list"]);
-      if (nr == 0) error("argument `$n` of `" + std::string(sig) + "` must be non-zero", pstate, traces);
+      if (nr == 0) error("$n: List index may not be 0.", pstate, traces);
       // if the argument isn't a list, then wrap it in a singleton list
       if (!m && !l) {
         l = SASS_MEMORY_NEW(List, pstate, 1);
-        l->append(ARG("$list", Expression));
+        l->append(ARG("$list", Expression, "an expression"));
       }
       size_t len = m ? m->length() : l->length();
       bool empty = m ? m->empty() : l->empty();
       if (empty) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate, traces);
       double index = std::floor(nr < 0 ? len + nr : nr - 1);
-      if (index < 0 || index > len - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate, traces);
+      if (index < 0 || index > len - 1) {
+        if (std::floor(nr) == 0) error("$n: List index may not be 0.", pstate, traces);
+        std::stringstream strm;
+        strm << "$n: Invalid index ";
+        strm << std::floor(nr);
+        strm << " for a list with ";
+        strm << l->length() << " elements.";
+        error(strm.str(), pstate, traces);
+      }
 
       if (m) {
         l = SASS_MEMORY_NEW(List, pstate, 2);
@@ -93,7 +86,7 @@ namespace Sass {
       }
       else {
         Value_Obj rv = l->value_at_index(static_cast<int>(index));
-        rv->set_delayed(false);
+        rv = SASS_MEMORY_COPY(rv);
         return rv.detach();
       }
     }
@@ -103,18 +96,26 @@ namespace Sass {
     {
       Map_Obj m = Cast<Map>(env["$list"]);
       List_Obj l = Cast<List>(env["$list"]);
-      Number_Obj n = ARG("$n", Number);
-      Expression_Obj v = ARG("$value", Expression);
+      Number_Obj n = ARGNUM("$n");
+      Expression_Obj v = ARG("$value", Expression, "an expression");
       if (!l) {
         l = SASS_MEMORY_NEW(List, pstate, 1);
-        l->append(ARG("$list", Expression));
+        l->append(ARG("$list", Expression, "an expression"));
       }
       if (m) {
         l = m->to_list(pstate);
       }
       if (l->empty()) error("argument `$list` of `" + std::string(sig) + "` must not be empty", pstate, traces);
       double index = std::floor(n->value() < 0 ? l->length() + n->value() : n->value() - 1);
-      if (index < 0 || index > l->length() - 1) error("index out of bounds for `" + std::string(sig) + "`", pstate, traces);
+      if (index < 0 || index > l->length() - 1) {
+        if (std::floor(n->value()) == 0) error("$n: List index may not be 0.", pstate, traces);
+        std::stringstream strm;
+        strm << "$n: Invalid index ";
+        strm << std::floor(n->value());
+        strm << " for a list with ";
+        strm << l->length() << " elements.";
+        error(strm.str(), pstate, traces);
+      }
       List* result = SASS_MEMORY_NEW(List, pstate, l->length(), l->separator(), false, l->is_bracketed());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
         result->append(((i == index) ? v : (*l)[i]));
@@ -127,10 +128,10 @@ namespace Sass {
     {
       Map_Obj m = Cast<Map>(env["$list"]);
       List_Obj l = Cast<List>(env["$list"]);
-      Expression_Obj v = ARG("$value", Expression);
+      Expression_Obj v = ARG("$value", Expression, "an expression");
       if (!l) {
         l = SASS_MEMORY_NEW(List, pstate, 1);
-        l->append(ARG("$list", Expression));
+        l->append(ARG("$list", Expression, "an expression"));
       }
       if (m) {
         l = m->to_list(pstate);
@@ -148,32 +149,65 @@ namespace Sass {
       Map_Obj m2 = Cast<Map>(env["$list2"]);
       List_Obj l1 = Cast<List>(env["$list1"]);
       List_Obj l2 = Cast<List>(env["$list2"]);
-      String_Constant_Obj sep = ARG("$separator", String_Constant);
-      enum Sass_Separator sep_val = (l1 ? l1->separator() : SASS_SPACE);
-      Value* bracketed = ARG("$bracketed", Value);
+      Sass_Separator l1sep = SASS_UNDEF;
+      Sass_Separator l2sep = SASS_UNDEF;
+      String_Constant_Obj sep = ARGSTRC("$separator");
+      enum Sass_Separator sep_val = SASS_UNDEF; // (l1 ? l1->separator() : SASS_SPACE);
+      Value* bracketed = ARG("$bracketed", Value, "a value");
       bool is_bracketed = (l1 ? l1->is_bracketed() : false);
       if (!l1) {
         l1 = SASS_MEMORY_NEW(List, pstate, 1);
-        l1->append(ARG("$list1", Expression));
-        sep_val = (l2 ? l2->separator() : SASS_SPACE);
+        l1->append(ARG("$list1", Expression, "an expression"));
+        l1->separator(SASS_UNDEF);
+        // sep_val = (l2 ? l2->separator() : SASS_UNDEF);
         is_bracketed = (l2 ? l2->is_bracketed() : false);
       }
       if (!l2) {
         l2 = SASS_MEMORY_NEW(List, pstate, 1);
-        l2->append(ARG("$list2", Expression));
+        l2->append(ARG("$list2", Expression, "an expression"));
+        l2->separator(SASS_UNDEF);
       }
       if (m1) {
         l1 = m1->to_list(pstate);
-        sep_val = SASS_COMMA;
+        // sep_val = SASS_COMMA;
       }
       if (m2) {
         l2 = m2->to_list(pstate);
       }
+
+
       size_t len = l1->length() + l2->length();
       std::string sep_str = unquote(sep->value());
       if (sep_str == "space") sep_val = SASS_SPACE;
       else if (sep_str == "comma") sep_val = SASS_COMMA;
-      else if (sep_str != "auto") error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate, traces);
+      else if (sep_str != "auto") error("$separator: Must be \"space\", \"comma\", or \"auto\".", pstate, traces);
+
+      if (l1) { l1sep = l1->separator(); }
+      if (l2) { l2sep = l2->separator(); }
+
+      if (sep->value() == "auto") {
+        // std::cerr << "is auto\n";
+        // debug_ast(l1);
+        if (l1sep != SASS_UNDEF) {
+          // std::cerr << "from l1 " << debug_vec(l1) << "\n";
+          sep_val = l1sep;
+        }
+        else if (l2sep != SASS_UNDEF) {
+          // std::cerr << "from l2 " << debug_vec(l2) << "\n";
+          sep_val = l2sep;
+        }
+        else {
+          sep_val = SASS_SPACE;
+        }
+      }
+      else if (sep->value() == "space") {
+        sep_val = SASS_SPACE;
+      }
+      else if (sep->value() == "comma") {
+        sep_val = SASS_COMMA;
+      }
+
+
       String_Constant_Obj bracketed_as_str = Cast<String_Constant>(bracketed);
       bool bracketed_is_auto = bracketed_as_str && unquote(bracketed_as_str->value()) == "auto";
       if (!bracketed_is_auto) {
@@ -190,24 +224,21 @@ namespace Sass {
     {
       Map_Obj m = Cast<Map>(env["$list"]);
       List_Obj l = Cast<List>(env["$list"]);
-      Expression_Obj v = ARG("$val", Expression);
-      if (SelectorList * sl = Cast<SelectorList>(env["$list"])) {
-        l = Cast<List>(Listize::perform(sl));
-      }
-      String_Constant_Obj sep = ARG("$separator", String_Constant);
+      Expression_Obj v = ARG("$val", Expression, "an expression");
+      String_Constant_Obj sep = ARGSTRC("$separator");
       if (!l) {
         l = SASS_MEMORY_NEW(List, pstate, 1);
-        l->append(ARG("$list", Expression));
+        l->append(ARG("$list", Expression, "an expression"));
       }
       if (m) {
         l = m->to_list(pstate);
       }
-      List* result = SASS_MEMORY_COPY(l);
+      ListObj result = SASS_MEMORY_COPY(l);
       std::string sep_str(unquote(sep->value()));
       if (sep_str != "auto") { // check default first
         if (sep_str == "space") result->separator(SASS_SPACE);
         else if (sep_str == "comma") result->separator(SASS_COMMA);
-        else error("argument `$separator` of `" + std::string(sig) + "` must be `space`, `comma`, or `auto`", pstate, traces);
+        else error("$separator: Must be \"space\", \"comma\", or \"auto\".", pstate, traces);
       }
       if (l->is_arglist()) {
         result->append(SASS_MEMORY_NEW(Argument,
@@ -220,13 +251,16 @@ namespace Sass {
       } else {
         result->append(v);
       }
-      return result;
+      if (!result->empty() && result->separator() == SASS_UNDEF) {
+        result->separator(SASS_SPACE);
+      }
+      return result.detach();
     }
 
     Signature zip_sig = "zip($lists...)";
     BUILT_IN(zip)
     {
-      List_Obj arglist = SASS_MEMORY_COPY(ARG("$lists", List));
+      List_Obj arglist = SASS_MEMORY_COPY(ARGLIST("$lists"));
       size_t shortest = 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         List_Obj ith = Cast<List>(arglist->value_at_index(i));
@@ -259,23 +293,36 @@ namespace Sass {
       return zippers;
     }
 
-    Signature list_separator_sig = "list_separator($list)";
+    Signature list_separator_sig = "list-separator($list)";
     BUILT_IN(list_separator)
     {
-      List_Obj l = Cast<List>(env["$list"]);
+      MapObj m = Cast<Map>(env["$list"]);
+      ListObj l = Cast<List>(env["$list"]);
+      if (m) {
+        if (m->empty()) { return SASS_MEMORY_NEW(StringLiteral, pstate, "space"); }
+        else { return SASS_MEMORY_NEW(StringLiteral, pstate, "comma"); }
+      }
+      std::string sep = "space";
       if (!l) {
         l = SASS_MEMORY_NEW(List, pstate, 1);
-        l->append(ARG("$list", Expression));
+        l->append(ARG("$list", Expression, "an expression"));
+        if (l->separator() == SASS_COMMA) sep = "comma";
+        else if (l->separator() == SASS_SPACE) sep = "space";
       }
-      return SASS_MEMORY_NEW(String_Quoted,
+      else {
+        if (l->separator() == SASS_COMMA) sep = "comma";
+        else if (l->separator() == SASS_SPACE) sep = "space";
+      }
+
+      return SASS_MEMORY_NEW(StringLiteral,
                                pstate,
-                               l->separator() == SASS_COMMA ? "comma" : "space");
+                               sep);
     }
 
     Signature is_bracketed_sig = "is-bracketed($list)";
     BUILT_IN(is_bracketed)
     {
-      Value_Obj value = ARG("$list", Value);
+      Value_Obj value = ARG("$list", Value, "a value");
       List_Obj list = Cast<List>(value);
       return SASS_MEMORY_NEW(Boolean, pstate, list && list->is_bracketed());
     }

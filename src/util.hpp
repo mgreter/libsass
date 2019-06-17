@@ -36,12 +36,7 @@ namespace Sass {
   void free_string_array(char **);
   char **copy_strings(const std::vector<std::string>&, char ***, int = 0);
   std::string read_css_string(const std::string& str, bool css = true);
-  std::string evacuate_escapes(const std::string& str);
   std::string string_to_output(const std::string& str);
-  std::string comment_to_compact_string(const std::string& text);
-  std::string read_hex_escapes(const std::string& str);
-  std::string escape_string(const std::string& str);
-  void newline_to_space(std::string& str);
 
   std::string quote(const std::string&, char q = 0);
   std::string unquote(const std::string&, char* q = 0, bool keep_utf8_sequences = false, bool strict = true);
@@ -50,8 +45,6 @@ namespace Sass {
   bool is_hex_doublet(double n);
   bool is_color_doublet(double r, double g, double b);
 
-  bool peek_linefeed(const char* start);
-
   // Returns true iff `elements` ⊆ `container`.
   template <typename C, typename T>
   bool contains_all(C container, T elements) {
@@ -59,6 +52,10 @@ namespace Sass {
       if (container.find(el) == container.end()) return false;
     }
     return true;
+  }
+
+  inline bool string_constains(const std::string& str, const char chr) {
+    return str.find(chr) != std::string::npos;
   }
 
   // C++20 `starts_with` equivalent.
@@ -89,17 +86,5 @@ namespace Sass {
     return ends_with(str, suffix, std::strlen(suffix));
   }
 
-  namespace Util {
-
-    bool isPrintable(Ruleset* r, Sass_Output_Style style = NESTED);
-    bool isPrintable(Supports_Block* r, Sass_Output_Style style = NESTED);
-    bool isPrintable(CssMediaRule* r, Sass_Output_Style style = NESTED);
-    bool isPrintable(Comment* b, Sass_Output_Style style = NESTED);
-    bool isPrintable(Block_Obj b, Sass_Output_Style style = NESTED);
-    bool isPrintable(String_Constant* s, Sass_Output_Style style = NESTED);
-    bool isPrintable(String_Quoted* s, Sass_Output_Style style = NESTED);
-    bool isPrintable(Declaration* d, Sass_Output_Style style = NESTED);
-
-  }
 }
 #endif

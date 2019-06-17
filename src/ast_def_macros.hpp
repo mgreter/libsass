@@ -1,6 +1,15 @@
 #ifndef SASS_AST_DEF_MACROS_H
 #define SASS_AST_DEF_MACROS_H
 
+#ifndef MAX_NESTING
+// Note that this limit is not an exact science
+// it depends on various factors, which some are
+// not under our control (compile time or even OS
+// dependent settings on the available stack size)
+// It should fix most common segfault cases though.
+#define MAX_NESTING 512
+#endif
+
 // Helper class to switch a flag and revert once we go out of scope
 template <class T>
 class LocalOption {
@@ -69,45 +78,51 @@ private:
 
 #ifdef DEBUG_SHARED_PTR
 
-#define ATTACH_ABSTRACT_AST_OPERATIONS(klass) \
+#define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
   virtual klass* copy(std::string, size_t) const = 0; \
   virtual klass* clone(std::string, size_t) const = 0; \
 
-#define ATTACH_VIRTUAL_AST_OPERATIONS(klass) \
+#define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
   virtual klass* copy(std::string, size_t) const override = 0; \
   virtual klass* clone(std::string, size_t) const override = 0; \
 
-#define ATTACH_AST_OPERATIONS(klass) \
+#define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
   virtual klass* copy(std::string, size_t) const override; \
   virtual klass* clone(std::string, size_t) const override; \
 
 #else
 
-#define ATTACH_ABSTRACT_AST_OPERATIONS(klass) \
+#define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
   virtual klass* copy() const = 0; \
   virtual klass* clone() const = 0; \
 
-#define ATTACH_VIRTUAL_AST_OPERATIONS(klass) \
+#define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
   virtual klass* copy() const override = 0; \
   virtual klass* clone() const override = 0; \
 
-#define ATTACH_AST_OPERATIONS(klass) \
+#define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
   virtual klass* copy() const override; \
   virtual klass* clone() const override; \
 
 #endif
 
-#define ATTACH_VIRTUAL_CMP_OPERATIONS(klass) \
+#define ATTACH_VIRTUAL_EQ_OPERATIONS(klass) \
   virtual bool operator==(const klass& rhs) const = 0; \
   virtual bool operator!=(const klass& rhs) const { return !(*this == rhs); }; \
 
-#define ATTACH_CMP_OPERATIONS(klass) \
+#define ATTACH_EQ_OPERATIONS(klass) \
   virtual bool operator==(const klass& rhs) const; \
   virtual bool operator!=(const klass& rhs) const { return !(*this == rhs); }; \
+
+#define ATTACH_CMP_OPERATIONS(klass) \
+  virtual bool operator<(const klass& rhs) const; \
+  bool operator>(const klass& rhs) const { return rhs < *this; }; \
+  bool operator<=(const klass& rhs) const { return !(rhs < *this); }; \
+  bool operator>=(const klass& rhs) const { return !(*this < rhs); }; \
 
 #ifdef DEBUG_SHARED_PTR
 

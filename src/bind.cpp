@@ -15,11 +15,15 @@ namespace Sass {
   {
     std::string callee(type + " " + name);
 
-    std::map<std::string, Parameter_Obj> param_map;
+    size_t asL = 0, psL = 0;
+    if (as) asL = as->length();
+    if (ps) psL = ps->length();
+
+    environment_map(Parameter_Obj) param_map;
     List_Obj varargs = SASS_MEMORY_NEW(List, as->pstate());
     varargs->is_arglist(true); // enable keyword size handling
 
-    for (size_t i = 0, L = as->length(); i < L; ++i) {
+    for (size_t i = 0, L = asL; i < L; ++i) {
       if (auto str = Cast<String_Quoted>((*as)[i]->value())) {
         // force optional quotes (only if needed)
         if (str->quote_mark()) {
@@ -30,7 +34,7 @@ namespace Sass {
 
     // Set up a map to ensure named arguments refer to actual parameters. Also
     // eval each default value left-to-right, wrt env, populating env as we go.
-    for (size_t i = 0, L = ps->length(); i < L; ++i) {
+    for (size_t i = 0, L = psL; i < L; ++i) {
       Parameter_Obj  p = ps->at(i);
       param_map[p->name()] = p;
       // if (p->default_value()) {
@@ -39,8 +43,8 @@ namespace Sass {
     }
 
     // plug in all args; if we have leftover params, deal with it later
-    size_t ip = 0, LP = ps->length();
-    size_t ia = 0, LA = as->length();
+    size_t ip = 0, LP = psL;
+    size_t ia = 0, LA = asL;
     while (ia < LA) {
       Argument_Obj a = as->at(ia);
       if (ip >= LP) {
@@ -53,8 +57,11 @@ namespace Sass {
           }
         }
         std::stringstream msg;
-        msg << "wrong number of arguments (" << LA << " for " << LP << ")";
-        msg << " for `" << name << "'";
+        msg << "Only " << LP << " ";
+        msg << (LP == 1 ? "argument" : "arguments");
+        msg << " allowed, but " << LA << " ";
+        msg << (LA == 1 ? "was" : "were");
+        msg << " passed.";
         return error(msg.str(), as->pstate(), traces);
       }
       Parameter_Obj p = ps->at(ip);
@@ -101,6 +108,15 @@ namespace Sass {
           for (auto key : argmap->keys()) {
             if (String_Constant_Obj str = Cast<String_Constant>(key)) {
               std::string param = unquote(str->value());
+              arglist->append(SASS_MEMORY_NEW(Argument,
+                key->pstate(),
+                argmap->at(key),
+                "$" + param,
+                false,
+                false));
+            }
+            else if (StringLiteralObj str = Cast<StringLiteral>(key)) {
+              std::string param = unquote(str->text());
               arglist->append(SASS_MEMORY_NEW(Argument,
                                               key->pstate(),
                                               argmap->at(key),
@@ -230,7 +246,7 @@ namespace Sass {
 
           if (!param_map.count(param)) {
             std::stringstream msg;
-            msg << callee << " has no parameter named " << param;
+            msg << "No argument named " << param << ".";
             error(msg.str(), a->pstate(), traces);
           }
           env->local_frame()[param] = argmap->at(key);
@@ -259,7 +275,7 @@ namespace Sass {
             varargs->append(a);
           } else {
             std::stringstream msg;
-            msg << callee << " has no parameter named " << a->name();
+            msg << "No argument named " << a->name() << ".";
             error(msg.str(), a->pstate(), traces);
           }
         }

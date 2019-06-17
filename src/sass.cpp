@@ -126,6 +126,12 @@ extern "C" {
   }
 
   // Get compiled libsass version
+  const char* ADDCALL sass2scss_version(void)
+  {
+    return "obsolete";
+  }
+
+  // Get compiled libsass version
   const char* ADDCALL libsass_language_version(void)
   {
     return LIBSASS_LANGUAGE_VERSION;

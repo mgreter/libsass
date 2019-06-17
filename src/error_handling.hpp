@@ -66,6 +66,12 @@ namespace Sass {
         virtual ~InvalidParent() throw() {};
     };
 
+    class InvalidUnicode : public Base {
+    public:
+      InvalidUnicode(ParserState pstate, Backtraces traces);
+      virtual ~InvalidUnicode() throw() {};
+    };
+
     class MissingArgument : public Base {
       protected:
         std::string fn;
@@ -96,11 +102,18 @@ namespace Sass {
         virtual ~InvalidVarKwdType() throw() {};
     };
 
-    class InvalidSyntax : public Base {
+    class InvalidCss : public Base {
       public:
-        InvalidSyntax(ParserState pstate, Backtraces traces, std::string msg);
-        virtual ~InvalidSyntax() throw() {};
+        InvalidCss(ParserState pstate, Backtraces traces, std::string msg);
+        virtual ~InvalidCss() throw() {};
     };
+
+    class InvalidSyntax : public Base {
+    public:
+      InvalidSyntax(ParserState pstate, Backtraces traces, std::string msg);
+      virtual ~InvalidSyntax() throw() {};
+    };
+
 
     class NestingLimitError : public Base {
       public:
@@ -234,16 +247,12 @@ namespace Sass {
 
   }
 
-  void warn(std::string msg, ParserState pstate);
-  void warn(std::string msg, ParserState pstate, Backtrace* bt);
   void warning(std::string msg, ParserState pstate);
 
-  void deprecated_function(std::string msg, ParserState pstate);
   void deprecated(std::string msg, std::string msg2, bool with_column, ParserState pstate);
+  // Migrate to new dart sass output
+  void deprecatedDart(std::string msg, bool with_column, ParserState pstate);
   void deprecated_bind(std::string msg, ParserState pstate);
-  // void deprecated(std::string msg, ParserState pstate, Backtrace* bt);
-
-  void coreError(std::string msg, ParserState pstate);
   void error(std::string msg, ParserState pstate, Backtraces& traces);
 
 }

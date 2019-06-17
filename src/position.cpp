@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include "position.hpp"
+#include "scanner_line.hpp"
 
 namespace Sass {
 
@@ -104,17 +105,23 @@ namespace Sass {
     return Offset(line - off.line, off.line == line ? column - off.column : column);
   }
 
+  Position::Position(LineScanner& scanner) :
+    Offset(scanner.offset),
+    position(scanner.position),
+    file(scanner.srcid)
+  {}
+
   Position::Position(const size_t file)
   : Offset(0, 0), file(file) { }
 
   Position::Position(const size_t file, const Offset& offset)
-  : Offset(offset), file(file) { }
+  : Offset(offset), position(0), file(file) { }
 
   Position::Position(const size_t line, const size_t column)
-  : Offset(line, column), file(-1) { }
+  : Offset(line, column), position(0), file(-1) { }
 
   Position::Position(const size_t file, const size_t line, const size_t column)
-  : Offset(line, column), file(file) { }
+  : Offset(line, column), position(0), file(file) { }
 
 
   ParserState::ParserState(const char* path, const char* src, const size_t file)
@@ -163,22 +170,5 @@ namespace Sass {
   {
     return Offset(line - off.line, off.line == line ? column - off.column : column);
   }
-
-  /* not used anymore - remove?
-  std::ostream& operator<<(std::ostream& strm, const Offset& off)
-  {
-    if (off.line == string::npos) strm << "-1:"; else strm << off.line << ":";
-    if (off.column == string::npos) strm << "-1"; else strm << off.column;
-    return strm;
-  } */
-
-  /* not used anymore - remove?
-  std::ostream& operator<<(std::ostream& strm, const Position& pos)
-  {
-    if (pos.file != string::npos) strm << pos.file << ":";
-    if (pos.line == string::npos) strm << "-1:"; else strm << pos.line << ":";
-    if (pos.column == string::npos) strm << "-1"; else strm << pos.column;
-    return strm;
-  } */
 
 }
