@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ast_fwd_decl.hpp"
+#include "source_span.hpp"
 #include "base64vlq.hpp"
 #include "position.hpp"
 #include "mapping.hpp"
@@ -40,9 +41,10 @@ namespace Sass {
   private:
 
     sass::string serialize_mappings();
-
+  public:
     sass::vector<Mapping> mappings;
-    Position current_position;
+  private:
+    Offset current_position;
 public:
     sass::string file;
 private:
@@ -54,7 +56,8 @@ private:
       OutputBuffer(void)
       : buffer(),
         smap()
-      { }
+      {
+      }
     public:
       sass::string buffer;
       SourceMap smap;

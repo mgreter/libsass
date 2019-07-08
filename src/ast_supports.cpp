@@ -9,104 +9,57 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsRule::SupportsRule(SourceSpan pstate, SupportsConditionObj condition, Block_Obj block)
-  : ParentStatement(pstate, block), condition_(condition)
-  { statement_type(SUPPORTS); }
+  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, Block_Obj block)
+  : ParentStatement(pstate, block), condition_(condition), idxs_(0)
+  {}
   SupportsRule::SupportsRule(const SupportsRule* ptr)
-  : ParentStatement(ptr), condition_(ptr->condition_)
-  { statement_type(SUPPORTS); }
-  bool SupportsRule::bubbles() { return true; }
+  : ParentStatement(ptr), condition_(ptr->condition_), idxs_(ptr->idxs_)
+  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsCondition::SupportsCondition(SourceSpan pstate)
+  SupportsCondition::SupportsCondition(const SourceSpan& pstate)
   : Expression(pstate)
   { }
 
-  SupportsCondition::SupportsCondition(const SupportsCondition* ptr)
-  : Expression(ptr)
-  { }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsOperation::SupportsOperation(SourceSpan pstate, SupportsConditionObj l, SupportsConditionObj r, Operand o)
+  SupportsOperation::SupportsOperation(const SourceSpan& pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o)
   : SupportsCondition(pstate), left_(l), right_(r), operand_(o)
   { }
-  SupportsOperation::SupportsOperation(const SupportsOperation* ptr)
-  : SupportsCondition(ptr),
-    left_(ptr->left_),
-    right_(ptr->right_),
-    operand_(ptr->operand_)
-  { }
-
-  bool SupportsOperation::needs_parens(SupportsConditionObj cond) const
-  {
-    if (SupportsOperationObj op = Cast<SupportsOperation>(cond)) {
-      return op->operand() != operand();
-    }
-    return Cast<SupportsNegation>(cond) != NULL;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsNegation::SupportsNegation(SourceSpan pstate, SupportsConditionObj c)
+  SupportsNegation::SupportsNegation(const SourceSpan& pstate, SupportsCondition_Obj c)
   : SupportsCondition(pstate), condition_(c)
   { }
-  SupportsNegation::SupportsNegation(const SupportsNegation* ptr)
-  : SupportsCondition(ptr), condition_(ptr->condition_)
-  { }
-
-  bool SupportsNegation::needs_parens(SupportsConditionObj cond) const
-  {
-    return Cast<SupportsNegation>(cond) ||
-           Cast<SupportsOperation>(cond);
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsDeclaration::SupportsDeclaration(SourceSpan pstate, ExpressionObj f, ExpressionObj v)
+  SupportsDeclaration::SupportsDeclaration(const SourceSpan& pstate, ExpressionObj f, ExpressionObj v)
   : SupportsCondition(pstate), feature_(f), value_(v)
   { }
-  SupportsDeclaration::SupportsDeclaration(const SupportsDeclaration* ptr)
-  : SupportsCondition(ptr),
-    feature_(ptr->feature_),
-    value_(ptr->value_)
-  { }
-
-  bool SupportsDeclaration::needs_parens(SupportsConditionObj cond) const
-  {
-    return false;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Interpolation::Supports_Interpolation(SourceSpan pstate, ExpressionObj v)
+  SupportsInterpolation::SupportsInterpolation(const SourceSpan& pstate, ExpressionObj v)
   : SupportsCondition(pstate), value_(v)
   { }
-  Supports_Interpolation::Supports_Interpolation(const Supports_Interpolation* ptr)
-  : SupportsCondition(ptr),
-    value_(ptr->value_)
-  { }
-
-  bool Supports_Interpolation::needs_parens(SupportsConditionObj cond) const
-  {
-    return false;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   IMPLEMENT_AST_OPERATORS(SupportsRule);
-  IMPLEMENT_AST_OPERATORS(SupportsCondition);
-  IMPLEMENT_AST_OPERATORS(SupportsOperation);
-  IMPLEMENT_AST_OPERATORS(SupportsNegation);
-  IMPLEMENT_AST_OPERATORS(SupportsDeclaration);
-  IMPLEMENT_AST_OPERATORS(Supports_Interpolation);
+  // IMPLEMENT_AST_OPERATORS(SupportsCondition);
+  // IMPLEMENT_AST_OPERATORS(SupportsOperation);
+  // IMPLEMENT_AST_OPERATORS(SupportsNegation);
+  // IMPLEMENT_AST_OPERATORS(SupportsDeclaration);
+  // IMPLEMENT_AST_OPERATORS(SupportsInterpolation);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

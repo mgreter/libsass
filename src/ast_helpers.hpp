@@ -33,9 +33,11 @@ namespace Sass {
   // Implement compare and hashing operations for raw pointers
   // ###########################################################################
 
+  const std::hash<std::size_t> hasher;
+
   template <class T>
   size_t PtrHashFn(const T* ptr) {
-    return std::hash<std::size_t>()((size_t)ptr);
+    return ((size_t)ptr) >> 3;
   }
 
   struct PtrHash {
@@ -124,7 +126,7 @@ namespace Sass {
   bool PtrObjEqualityFn(const T* lhs, const T* rhs) {
     if (lhs == nullptr) return rhs == nullptr;
     else if (rhs == nullptr) return false;
-    else return *lhs == *rhs;
+    else return lhs == rhs || *lhs == *rhs;
   }
 
   struct PtrObjEquality {
@@ -158,7 +160,7 @@ namespace Sass {
   bool PtrObjLessThanFn(const T* lhs, const T* rhs) {
     if (lhs == nullptr) return rhs != nullptr;
     else if (rhs == nullptr) return false;
-    else return *lhs < *rhs;
+    else return lhs != rhs && *lhs < *rhs;
   }
 
   struct PtrObjLessThan {
@@ -203,6 +205,12 @@ namespace Sass {
   template <class T>
   bool listIsEmpty(T* cnt) {
     return cnt && cnt->empty();
+  }
+
+  // Return if Vector is empty
+  template <class T>
+  bool listIsInvisible(T* cnt) {
+    return cnt && (cnt->empty() || cnt->is_invisible() && !cnt->isImpossible());
   }
 
   // Erase items from vector that match predicate
@@ -282,7 +290,7 @@ namespace Sass {
     return Util::equalsLiteral("nth-child", test)
       || Util::equalsLiteral("nth-last-child", test);
   }
-  // isSelectorPseudoBinominal
+  // EO isSelectorPseudoBinominal
 
   // ###########################################################################
   // ###########################################################################

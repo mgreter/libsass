@@ -21,7 +21,7 @@ namespace Sass {
   {
     sass::vector<sass::string> list;
     while (cur) {
-      list.push_back(cur->string);
+      list.emplace_back(cur->string);
       cur = cur->next;
     }
     return list;
@@ -80,10 +80,11 @@ extern "C" {
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
-    paths.push_back(File::dir_name(import->abs_path));
+    paths.emplace_back(File::dir_name(import->abs_path));
     paths.insert( paths.end(), incs.begin(), incs.end() );
     // now resolve the file path relative to lookup paths
-    sass::string resolved(File::find_include(file, paths));
+    sass::string resolved(File::find_include(file,
+      compiler->cpp_ctx->CWD, paths, compiler->cpp_ctx->fileExistsCache));
     return sass_copy_c_string(resolved.c_str());
   }
 
@@ -94,10 +95,10 @@ extern "C" {
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
-    paths.push_back(File::dir_name(import->abs_path));
+    paths.emplace_back(File::dir_name(import->abs_path));
     paths.insert( paths.end(), incs.begin(), incs.end() );
     // now resolve the file path relative to lookup paths
-    sass::string resolved(File::find_file(file, paths));
+    sass::string resolved(File::find_file(file, compiler->cpp_ctx->CWD, paths, compiler->cpp_ctx->fileExistsCache));
     return sass_copy_c_string(resolved.c_str());
   }
 
@@ -107,7 +108,9 @@ extern "C" {
   char* ADDCALL sass_find_include (const char* file, struct Sass_Options* opt)
   {
     sass::vector<sass::string> vec(list2vec(opt->include_paths));
-    sass::string resolved(File::find_include(file, vec));
+    std::unordered_map<sass::string, bool> cache;
+    sass::string resolved(File::find_include(file,
+      File::get_cwd(), vec, cache));
     return sass_copy_c_string(resolved.c_str());
   }
 
@@ -116,7 +119,9 @@ extern "C" {
   char* ADDCALL sass_find_file (const char* file, struct Sass_Options* opt)
   {
     sass::vector<sass::string> vec(list2vec(opt->include_paths));
-    sass::string resolved(File::find_file(file, vec));
+    std::unordered_map<sass::string, bool> cache;
+    sass::string resolved(File::find_file(file,
+      File::get_cwd(), vec, cache));
     return sass_copy_c_string(resolved.c_str());
   }
 
@@ -124,6 +129,12 @@ extern "C" {
   const char* ADDCALL libsass_version(void)
   {
     return LIBSASS_VERSION;
+  }
+
+  // Get compiled libsass version
+  const char* ADDCALL sass2scss_version(void)
+  {
+    return "obsolete";
   }
 
   // Get compiled libsass version

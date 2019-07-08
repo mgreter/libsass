@@ -9,7 +9,6 @@
 #include <sass/values.h>
 #include <sass/functions.h>
 #include <sass/context.h>
-#include <sass2scss.h>
 
 #endif
 

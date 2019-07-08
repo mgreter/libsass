@@ -10,9 +10,13 @@
 #define BUFFERSIZE 255
 #include "b64/encode.h"
 
+#include "memory.hpp"
+#include "sass_functions.hpp"
 #include "sass_context.hpp"
 #include "stylesheet.hpp"
+#include "environment_stack.hpp"
 #include "plugins.hpp"
+#include "logger.hpp"
 #include "output.hpp"
 
 namespace Sass {
@@ -28,6 +32,9 @@ namespace Sass {
   private:
     bool call_loader(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp, sass::vector<Sass_Importer_Entry> importers, bool only_one = true);
 
+  protected:
+    void prepareEnvironment();
+
   public:
     const sass::string CWD;
     struct Sass_Options& c_options;
@@ -36,17 +43,35 @@ namespace Sass {
     Plugins plugins;
     Output emitter;
 
-    // generic ast node garbage container
-    // used to avoid possible circular refs
-    CallStack ast_gc;
+    std::vector<CallableObj> fnCache;
+    sass::vector<EnvFrame*> varStack;
+    std::unordered_map<sass::string, bool> fileExistsCache;
+
+    EnvRoot varRoot;
+
+    UserDefinedCallable* content;
+
+    // Main call stack for error reporting
+    // sass::vector<BackTrace> callStack;
+
+    // The logger is created on context instantiation.
+    // It assigns a specific logger according to options.
+    Logger* logger;
+
+    IdxRef assigningTo;
+
     // resources add under our control
     // these are guaranteed to be freed
-    sass::vector<char*> strings;
+    sass::vector<char*> strings2;
     sass::vector<Resource> resources;
     std::map<const sass::string, StyleSheet> sheets;
     ImporterStack import_stack;
     sass::vector<Sass_Callee> callee_stack;
-    sass::vector<Backtrace> traces;
+
+    EnvKeyMap<CallableObj> functions;
+    // EnvKeyMap<BuiltInCallableObj> builtins;
+    // EnvKeyMap<ExternalCallableObj> externals;
+
     Extender extender;
 
     struct Sass_Compiler* c_compiler;
@@ -79,14 +104,21 @@ namespace Sass {
 
     virtual ~Context();
     Context(struct Sass_Context&);
-    virtual Block_Obj parse() = 0;
+    virtual Block_Obj parse(Sass_Import_Type type) = 0;
     virtual Block_Obj compile();
     virtual char* render(Block_Obj root);
     virtual char* render_srcmap();
+    virtual char* render_stderr();
 
     void register_resource(const Include&, const Resource&);
     void register_resource(const Include&, const Resource&, SourceSpan&);
+
+    // search for valid imports (e.g. partials) on the file-system
+    // returns multiple valid result for ambiguous import path
     sass::vector<Include> find_includes(const Importer& import);
+
+
+    // Add a new import to the context (called from `import_url`)
     Include load_import(const Importer&, SourceSpan pstate);
 
     Sass_Output_Style output_style() { return c_options.output_style; };
@@ -100,12 +132,6 @@ namespace Sass {
     sass::string format_embedded_source_map();
     sass::string format_source_mapping_url(const sass::string& out_path);
 
-
-    // void register_built_in_functions(Env* env);
-    // void register_function(Signature sig, Native_Function f, Env* env);
-    // void register_function(Signature sig, Native_Function f, size_t arity, Env* env);
-    // void register_overload_stub(sass::string name, Env* env);
-
   public:
     const sass::string& cwd() { return CWD; };
   };
@@ -116,7 +142,7 @@ namespace Sass {
     : Context(ctx)
     { }
     virtual ~File_Context();
-    virtual Block_Obj parse();
+    virtual Block_Obj parse(Sass_Import_Type type);
   };
 
   class Data_Context : public Context {
@@ -132,7 +158,7 @@ namespace Sass {
       ctx.srcmap_string = 0; // passed away
     }
     virtual ~Data_Context();
-    virtual Block_Obj parse();
+    virtual Block_Obj parse(Sass_Import_Type type);
   };
 
 }

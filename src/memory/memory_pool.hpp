@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <climits>
 #include <vector>
+#include "config.hpp"
+#include "../settings.hpp"
 
 namespace Sass {
 

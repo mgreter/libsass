@@ -8,587 +8,1057 @@
 #include "fn_colors.hpp"
 #include "util.hpp"
 #include "util_string.hpp"
+#include "character.hpp"
+#include "listize.hpp"
+#include "logger.hpp"
 
 namespace Sass {
 
   namespace Functions {
 
-    bool string_argument(AST_Node_Obj obj) {
-      String_Constant* s = Cast<String_Constant>(obj);
+    /// Returns [color1] and [color2], mixed together and weighted by [weight].
+    SassColor* _mixColors(SassColor* color1, SassColor* color2,
+      SassNumber* weight, const SourceSpan& pstate, Logger& logger)
+    {
+
+      // This algorithm factors in both the user-provided weight (w) and the
+      // difference between the alpha values of the two colors (a) to decide how
+      // to perform the weighted average of the two RGB values.
+      // It works by first normalizing both parameters to be within [-1, 1], where
+      // 1 indicates "only use color1", -1 indicates "only use color2", and all
+      // values in between indicated a proportionately weighted average.
+      // Once we have the normalized variables w and a, we apply the formula
+      // (w + a)/(1 + w*a) to get the combined weight (in [-1, 1]) of color1. This
+      // formula has two especially nice properties:
+      //   * When either w or a are -1 or 1, the combined weight is also that
+      //     number (cases where w * a == -1 are undefined, and handled as a
+      //     special case).
+      //   * When a is 0, the combined weight is w, and vice versa.
+      // Finally, the weight of color1 is renormalized to be within [0, 1] and the
+      // weight of color2 is given by 1 minus the weight of color1.
+      double weightScale = weight->valueInRange(0.0, 100.0,
+        logger, pstate, "weight") / 100.0;
+      double normalizedWeight = weightScale * 2 - 1;
+      double alphaDistance = color1->a() - color2->a();
+
+      double combinedWeight1 = normalizedWeight * alphaDistance == -1
+        ? normalizedWeight : (normalizedWeight + alphaDistance) /
+        (1.0 + normalizedWeight * alphaDistance);
+      double weight1 = (combinedWeight1 + 1) / 2;
+      double weight2 = 1 - weight1;
+
+      return SASS_MEMORY_NEW(Color_RGBA, pstate,
+        fuzzyRound(color1->r() * weight1 + color2->r() * weight2, logger.epsilon),
+        fuzzyRound(color1->g() * weight1 + color2->g() * weight2, logger.epsilon),
+        fuzzyRound(color1->b() * weight1 + color2->b() * weight2, logger.epsilon),
+        color1->a() * weightScale + color2->a() * (1 - weightScale));
+    }
+
+    double scaleValue(double current, double scale, double max) {
+      return current + (scale > 0.0 ? max - current : current) * scale;
+    }
+
+    bool isVar(const Value* obj) {
+      if (obj == nullptr) return false;
+      const SassString* s = obj->isString();
       if (s == nullptr) return false;
+      if (s->hasQuotes()) return false;
       const sass::string& str = s->value();
-      return starts_with(str, "calc(") ||
-             starts_with(str, "var(");
+      return starts_with(str, "var(");
     }
 
-    void hsla_alpha_percent_deprecation(const SourceSpan& pstate, const sass::string val)
-    {
-
-      sass::string msg("Passing a percentage as the alpha value to hsla() will be interpreted");
-      sass::string tail("differently in future versions of Sass. For now, use " + val + " instead.");
-
-      deprecated(msg, tail, false, pstate);
-
+    bool isSpecialNumber(const Value* obj) {
+      if (obj == nullptr) return false;
+      const SassString* s = obj->isString();
+      if (s == nullptr) return false;
+      if (s->hasQuotes()) return false;
+      const sass::string& str = s->value();
+      if (str.length() < 6) return false;
+      return starts_with(str, "calc(")
+        || starts_with(str, "var(")
+        || starts_with(str, "env(")
+        || starts_with(str, "min(")
+        || starts_with(str, "max(");
     }
 
-    Signature rgb_sig = "rgb($red, $green, $blue)";
-    BUILT_IN(rgb)
+    double _percentageOrUnitless2(Logger& logger, Number* number, double max, sass::string name, BackTraces traces) {
+      double value = 0.0;
+      if (!number->hasUnits()) {
+        value = number->value();
+      }
+      else if (number->hasUnit(Strings::percent)) {
+        value = max * number->value() / 100;
+      }
+      else {
+        // callStackFrame frame(logger, BackTrace(number->pstate()));
+        error(name + ": Expected " + number->to_css() +
+          " to have no units or \"%\".", number->pstate(), logger);
+      }
+      if (value < 0.0) return 0.0;
+      if (value > max) return max;
+      return value;
+    }
+
+    /// Returns whether [value] is an unquoted string that start with `var(` and
+    /// contains `/`.
+    bool _isVarSlash(Value* value) {
+      if (SassString * string = value->isString()) {
+        return starts_with(string->value(), "var(") &&
+          string_constains(string->value(), '/');
+      }
+      return false;
+    }
+
+    Value* _parseChannels2(sass::string name, sass::vector<sass::string> argumentNames, Value* channels, const SourceSpan& pstate, BackTraces traces)
     {
-      if (
-        string_argument(env["$red"]) ||
-        string_argument(env["$green"]) ||
-        string_argument(env["$blue"])
-      ) {
-        return SASS_MEMORY_NEW(String_Constant, pstate, "rgb("
-                                                        + env["$red"]->to_string()
-                                                        + ", "
-                                                        + env["$green"]->to_string()
-                                                        + ", "
-                                                        + env["$blue"]->to_string()
-                                                        + ")"
-        );
+      if (isVar(channels)) {
+        sass::sstream fncall;
+        fncall << name << "("
+          << channels->to_css() << ")";
+        return SASS_MEMORY_NEW(SassString,
+          pstate, fncall.str());
       }
 
-      return SASS_MEMORY_NEW(Color_RGBA,
-                             pstate,
-                             COLOR_NUM("$red"),
-                             COLOR_NUM("$green"),
-                             COLOR_NUM("$blue"));
-    }
+      SassListObj list = channels->isList();
 
-    Signature rgba_4_sig = "rgba($red, $green, $blue, $alpha)";
-    BUILT_IN(rgba_4)
-    {
-      if (
-        string_argument(env["$red"]) ||
-        string_argument(env["$green"]) ||
-        string_argument(env["$blue"]) ||
-        string_argument(env["$alpha"])
-      ) {
-        return SASS_MEMORY_NEW(String_Constant, pstate, "rgba("
-                                                        + env["$red"]->to_string()
-                                                        + ", "
-                                                        + env["$green"]->to_string()
-                                                        + ", "
-                                                        + env["$blue"]->to_string()
-                                                        + ", "
-                                                        + env["$alpha"]->to_string()
-                                                        + ")"
-        );
+      if (!list) {
+        list = SASS_MEMORY_NEW(SassList, pstate);
+        list->append(channels);
       }
 
-      return SASS_MEMORY_NEW(Color_RGBA,
-                             pstate,
-                             COLOR_NUM("$red"),
-                             COLOR_NUM("$green"),
-                             COLOR_NUM("$blue"),
-                             ALPHA_NUM("$alpha"));
-    }
-
-    Signature rgba_2_sig = "rgba($color, $alpha)";
-    BUILT_IN(rgba_2)
-    {
-      if (
-        string_argument(env["$color"])
-      ) {
-        return SASS_MEMORY_NEW(String_Constant, pstate, "rgba("
-                                                        + env["$color"]->to_string()
-                                                        + ", "
-                                                        + env["$alpha"]->to_string()
-                                                        + ")"
-        );
-      }
-
-      Color_RGBA_Obj c_arg = ARG("$color", Color)->toRGBA();
-
-      if (
-        string_argument(env["$alpha"])
-      ) {
-        sass::ostream strm;
-        strm << "rgba("
-                 << (int)c_arg->r() << ", "
-                 << (int)c_arg->g() << ", "
-                 << (int)c_arg->b() << ", "
-                 << env["$alpha"]->to_string()
-             << ")";
-        return SASS_MEMORY_NEW(String_Constant, pstate, strm.str());
-      }
-
-      Color_RGBA_Obj new_c = SASS_MEMORY_COPY(c_arg);
-      new_c->a(ALPHA_NUM("$alpha"));
-      new_c->disp("");
-      return new_c.detach();
-    }
-
-    ////////////////
-    // RGB FUNCTIONS
-    ////////////////
-
-    Signature red_sig = "red($color)";
-    BUILT_IN(red)
-    {
-      Color_RGBA_Obj color = ARG("$color", Color)->toRGBA();
-      return SASS_MEMORY_NEW(Number, pstate, color->r());
-    }
-
-    Signature green_sig = "green($color)";
-    BUILT_IN(green)
-    {
-      Color_RGBA_Obj color = ARG("$color", Color)->toRGBA();
-      return SASS_MEMORY_NEW(Number, pstate, color->g());
-    }
-
-    Signature blue_sig = "blue($color)";
-    BUILT_IN(blue)
-    {
-      Color_RGBA_Obj color = ARG("$color", Color)->toRGBA();
-      return SASS_MEMORY_NEW(Number, pstate, color->b());
-    }
-
-    Color_RGBA* colormix(Context& ctx, SourceSpan& pstate, Color* color1, Color* color2, double weight) {
-      Color_RGBA_Obj c1 = color1->toRGBA();
-      Color_RGBA_Obj c2 = color2->toRGBA();
-      double p = weight/100;
-      double w = 2*p - 1;
-      double a = c1->a() - c2->a();
-
-      double w1 = (((w * a == -1) ? w : (w + a)/(1 + w*a)) + 1)/2.0;
-      double w2 = 1 - w1;
-
-      return SASS_MEMORY_NEW(Color_RGBA,
-                             pstate,
-                             Sass::round(w1*c1->r() + w2*c2->r(), ctx.c_options.precision),
-                             Sass::round(w1*c1->g() + w2*c2->g(), ctx.c_options.precision),
-                             Sass::round(w1*c1->b() + w2*c2->b(), ctx.c_options.precision),
-                             c1->a()*p + c2->a()*(1-p));
-    }
-
-    Signature mix_sig = "mix($color1, $color2, $weight: 50%)";
-    BUILT_IN(mix)
-    {
-      Color_Obj  color1 = ARG("$color1", Color);
-      Color_Obj  color2 = ARG("$color2", Color);
-      double weight = DARG_U_PRCT("$weight");
-      return colormix(ctx, pstate, color1, color2, weight);
-
-    }
-
-    ////////////////
-    // HSL FUNCTIONS
-    ////////////////
-
-    Signature hsl_sig = "hsl($hue, $saturation, $lightness)";
-    BUILT_IN(hsl)
-    {
-      if (
-        string_argument(env["$hue"]) ||
-        string_argument(env["$saturation"]) ||
-        string_argument(env["$lightness"])
-      ) {
-        return SASS_MEMORY_NEW(String_Constant, pstate, "hsl("
-                                                        + env["$hue"]->to_string()
-                                                        + ", "
-                                                        + env["$saturation"]->to_string()
-                                                        + ", "
-                                                        + env["$lightness"]->to_string()
-                                                        + ")"
-        );
-      }
-
-      return SASS_MEMORY_NEW(Color_HSLA,
-        pstate,
-        ARGVAL("$hue"),
-        ARGVAL("$saturation"),
-        ARGVAL("$lightness"),
-        1.0);
-
-    }
-
-    Signature hsla_sig = "hsla($hue, $saturation, $lightness, $alpha)";
-    BUILT_IN(hsla)
-    {
-      if (
-        string_argument(env["$hue"]) ||
-        string_argument(env["$saturation"]) ||
-        string_argument(env["$lightness"]) ||
-        string_argument(env["$alpha"])
-      ) {
-        return SASS_MEMORY_NEW(String_Constant, pstate, "hsla("
-                                                        + env["$hue"]->to_string()
-                                                        + ", "
-                                                        + env["$saturation"]->to_string()
-                                                        + ", "
-                                                        + env["$lightness"]->to_string()
-                                                        + ", "
-                                                        + env["$alpha"]->to_string()
-                                                        + ")"
-        );
-      }
-
-      Number* alpha = ARG("$alpha", Number);
-      if (alpha && alpha->unit() == "%") {
-        Number_Obj val = SASS_MEMORY_COPY(alpha);
-        val->numerators.clear(); // convert
-        val->value(val->value() / 100.0);
-        sass::string nr(val->to_string(ctx.c_options));
-        hsla_alpha_percent_deprecation(pstate, nr);
-      }
-
-      return SASS_MEMORY_NEW(Color_HSLA,
-        pstate,
-        ARGVAL("$hue"),
-        ARGVAL("$saturation"),
-        ARGVAL("$lightness"),
-        ARGVAL("$alpha"));
-
-    }
-
-    /////////////////////////////////////////////////////////////////////////
-    // Query functions
-    /////////////////////////////////////////////////////////////////////////
-
-    Signature hue_sig = "hue($color)";
-    BUILT_IN(hue)
-    {
-      Color_HSLA_Obj col = ARG("$color", Color)->toHSLA();
-      return SASS_MEMORY_NEW(Number, pstate, col->h(), "deg");
-    }
-
-    Signature saturation_sig = "saturation($color)";
-    BUILT_IN(saturation)
-    {
-      Color_HSLA_Obj col = ARG("$color", Color)->toHSLA();
-      return SASS_MEMORY_NEW(Number, pstate, col->s(), "%");
-    }
-
-    Signature lightness_sig = "lightness($color)";
-    BUILT_IN(lightness)
-    {
-      Color_HSLA_Obj col = ARG("$color", Color)->toHSLA();
-      return SASS_MEMORY_NEW(Number, pstate, col->l(), "%");
-    }
-
-    /////////////////////////////////////////////////////////////////////////
-    // HSL manipulation functions
-    /////////////////////////////////////////////////////////////////////////
-
-    Signature adjust_hue_sig = "adjust-hue($color, $degrees)";
-    BUILT_IN(adjust_hue)
-    {
-      Color* col = ARG("$color", Color);
-      double degrees = ARGVAL("$degrees");
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->h(absmod(copy->h() + degrees, 360.0));
-      return copy.detach();
-    }
-
-    Signature lighten_sig = "lighten($color, $amount)";
-    BUILT_IN(lighten)
-    {
-      Color* col = ARG("$color", Color);
-      double amount = DARG_U_PRCT("$amount");
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->l(clip(copy->l() + amount, 0.0, 100.0));
-      return copy.detach();
-
-    }
-
-    Signature darken_sig = "darken($color, $amount)";
-    BUILT_IN(darken)
-    {
-      Color* col = ARG("$color", Color);
-      double amount = DARG_U_PRCT("$amount");
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->l(clip(copy->l() - amount, 0.0, 100.0));
-      return copy.detach();
-    }
-
-    Signature saturate_sig = "saturate($color, $amount: false)";
-    BUILT_IN(saturate)
-    {
-      // CSS3 filter function overload: pass literal through directly
-      if (!Cast<Number>(env["$amount"])) {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, "saturate(" + env["$color"]->to_string(ctx.c_options) + ")");
-      }
-
-      Color* col = ARG("$color", Color);
-      double amount = DARG_U_PRCT("$amount");
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->s(clip(copy->s() + amount, 0.0, 100.0));
-      return copy.detach();
-    }
-
-    Signature desaturate_sig = "desaturate($color, $amount)";
-    BUILT_IN(desaturate)
-    {
-      Color* col = ARG("$color", Color);
-      double amount = DARG_U_PRCT("$amount");
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->s(clip(copy->s() - amount, 0.0, 100.0));
-      return copy.detach();
-    }
-
-    Signature grayscale_sig = "grayscale($color)";
-    BUILT_IN(grayscale)
-    {
-      // CSS3 filter function overload: pass literal through directly
-      Number* amount = Cast<Number>(env["$color"]);
-      if (amount) {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, "grayscale(" + amount->to_string(ctx.c_options) + ")");
-      }
-
-      Color* col = ARG("$color", Color);
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->s(0.0); // just reset saturation
-      return copy.detach();
-    }
-
-    /////////////////////////////////////////////////////////////////////////
-    // Misc manipulation functions
-    /////////////////////////////////////////////////////////////////////////
-
-    Signature complement_sig = "complement($color)";
-    BUILT_IN(complement)
-    {
-      Color* col = ARG("$color", Color);
-      Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->h(absmod(copy->h() - 180.0, 360.0));
-      return copy.detach();
-    }
-
-    Signature invert_sig = "invert($color, $weight: 100%)";
-    BUILT_IN(invert)
-    {
-      // CSS3 filter function overload: pass literal through directly
-      Number* amount = Cast<Number>(env["$color"]);
-      double weight = DARG_U_PRCT("$weight");
-      if (amount) {
-        // TODO: does not throw on 100% manually passed as value
-        if (weight < 100.0) {
-          error("Only one argument may be passed to the plain-CSS invert() function.", pstate, traces);
+      bool isCommaSeparated = list->separator() == SASS_COMMA;
+      bool isBracketed = list->hasBrackets();
+      if (isCommaSeparated || isBracketed) {
+        sass::sstream msg;
+        msg << "$channels must be";
+        if (isBracketed) msg << " an unbracketed";
+        if (isCommaSeparated) {
+          msg << (isBracketed ? "," : " a");
+          msg << " space-separated";
         }
-        return SASS_MEMORY_NEW(String_Quoted, pstate, "invert(" + amount->to_string(ctx.c_options) + ")");
+        msg << " list.";
+        error(msg.str(), pstate, traces);
       }
 
-      Color* col = ARG("$color", Color);
-      Color_RGBA_Obj inv = col->copyAsRGBA();
-      inv->r(clip(255.0 - inv->r(), 0.0, 255.0));
-      inv->g(clip(255.0 - inv->g(), 0.0, 255.0));
-      inv->b(clip(255.0 - inv->b(), 0.0, 255.0));
-      return colormix(ctx, pstate, inv, col, weight);
+      if (list->length() > 3) {
+        sass::sstream msg;
+        msg << "Only 3 elements allowed, but "
+          << list->length() << " were passed.";
+        error(msg.str(), pstate, traces);
+      }
+      else if (list->length() < 3) {
+        bool hasVar = false;
+        for (Value* item : list->elements()) {
+          if (isVar(item)) {
+            hasVar = true;
+            break;
+          }
+        }
+        if (hasVar || (!list->empty() && _isVarSlash(list->last()))) {
+          sass::sstream fncall;
+          fncall << name << "(";
+          for (size_t i = 0, iL = list->length(); i < iL; i++) {
+            if (i > 0) { fncall << " "; }
+            fncall << list->get(i)->to_css();
+          }
+          fncall << ")";
+          return SASS_MEMORY_NEW(SassString,
+            pstate, fncall.str());
+        }
+        else {
+          sass::string argument = argumentNames[list->length()];
+          error(
+            "Missing element " + argument + ".",
+            pstate, traces);
+        }
+      }
+
+      Number* secondNumber = list->get(2)->isNumber();
+      SassString* secondString = list->get(2)->isString();
+      if (secondNumber && secondNumber->hasAsSlash()) {
+        SassList* rv = SASS_MEMORY_NEW(SassList, pstate);
+        rv->append(list->get(0));
+        rv->append(list->get(1));
+        rv->append(secondNumber->lhsAsSlash());
+        rv->append(secondNumber->rhsAsSlash());
+        return rv;
+      }
+      else if (secondString &&
+        !secondString->hasQuotes() &&
+        string_constains(secondString->value(), '/')) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        for (size_t i = 0, iL = list->length(); i < iL; i++) {
+          if (i > 0) { fncall << " "; }
+          fncall << list->get(i)->to_css();
+
+        }
+        fncall << ")";
+        return SASS_MEMORY_NEW(SassString,
+          pstate, fncall.str());
+      }
+      else {
+        return list;
+      }
+
     }
 
-    /////////////////////////////////////////////////////////////////////////
-    // Opacity functions
-    /////////////////////////////////////////////////////////////////////////
-
-    Signature alpha_sig = "alpha($color)";
-    Signature opacity_sig = "opacity($color)";
-    BUILT_IN(alpha)
+    SassString* _functionString(sass::string name, sass::vector<ValueObj> arguments, const SourceSpan& pstate)
     {
-      String_Constant* ie_kwd = Cast<String_Constant>(env["$color"]);
-      if (ie_kwd) {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, "alpha(" + ie_kwd->value() + ")");
+      bool addComma = false;
+      sass::sstream fncall;
+      fncall << name << "(";
+      for (Value* arg : arguments) {
+        if (addComma) fncall << ", ";
+        fncall << arg->to_css();
+        addComma = true;
       }
-
-      // CSS3 filter function overload: pass literal through directly
-      Number* amount = Cast<Number>(env["$color"]);
-      if (amount) {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, "opacity(" + amount->to_string(ctx.c_options) + ")");
-      }
-
-      return SASS_MEMORY_NEW(Number, pstate, ARG("$color", Color)->a());
+      fncall << ")";
+      return SASS_MEMORY_NEW(SassString,
+        pstate, fncall.str());
     }
 
-    Signature opacify_sig = "opacify($color, $amount)";
-    Signature fade_in_sig = "fade-in($color, $amount)";
-    BUILT_IN(opacify)
+    SassString* _functionRgbString(sass::string name, Color_RGBA* color, Value* alpha, const SourceSpan& pstate)
     {
-      Color* col = ARG("$color", Color);
-      double amount = DARG_U_FACT("$amount");
-      Color_Obj copy = SASS_MEMORY_COPY(col);
-      copy->a(clip(col->a() + amount, 0.0, 1.0));
-      return copy.detach();
+      sass::sstream fncall;
+      fncall << name << "(";
+      fncall << color->r() << ", ";
+      fncall << color->g() << ", ";
+      fncall << color->b() << ", ";
+      fncall << alpha->to_css() << ")";
+      return SASS_MEMORY_NEW(SassString,
+        pstate, fncall.str());
     }
 
-    Signature transparentize_sig = "transparentize($color, $amount)";
-    Signature fade_out_sig = "fade-out($color, $amount)";
-    BUILT_IN(transparentize)
+    Value* _rgbTwoArg2(sass::string name, sass::vector<ValueObj> arguments, const SourceSpan& pstate, Logger& logger)
     {
-      Color* col = ARG("$color", Color);
-      double amount = DARG_U_FACT("$amount");
-      Color_Obj copy = SASS_MEMORY_COPY(col);
-      copy->a(std::max(col->a() - amount, 0.0));
-      return copy.detach();
+      // Check if any `calc()` or `var()` are passed
+      if (isVar(arguments[0])) {
+        return _functionString(
+          name, arguments, pstate);
+      }
+      else if (isVar(arguments[1])) {
+        if (Color* first = arguments[0]->isColor()) {
+          SassColorObj rgba = first->toRGBA();
+          return _functionRgbString(name,
+            rgba, arguments[1], pstate);
+        }
+        else {
+          return _functionString(
+            name, arguments, pstate);
+        }
+      }
+      else if (isSpecialNumber(arguments[1])) {
+        SassColorObj color = arguments[0]->assertColor(logger, Strings::color);
+        SassColorObj rgba = color->toRGBA();
+        return _functionRgbString(name,
+          rgba, arguments[1], pstate);
+      }
+
+      SassColorObj color = arguments[0]->assertColor(logger, Strings::color);
+      SassNumber* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
+      // callStackFrame frame(logger,
+      //   BackTrace(pstate, name));
+      color = SASS_MEMORY_COPY(color);
+      color->a(_percentageOrUnitless2(
+        logger, alpha, 1.0, "$alpha", {}));
+      color->disp("");
+      return color.detach();
     }
 
-    ////////////////////////
-    // OTHER COLOR FUNCTIONS
-    ////////////////////////
+    namespace Colors {
 
-    Signature adjust_color_sig = "adjust-color($color, $red: false, $green: false, $blue: false, $hue: false, $saturation: false, $lightness: false, $alpha: false)";
-    BUILT_IN(adjust_color)
-    {
-      Color* col = ARG("$color", Color);
-      Number* r = Cast<Number>(env["$red"]);
-      Number* g = Cast<Number>(env["$green"]);
-      Number* b = Cast<Number>(env["$blue"]);
-      Number* h = Cast<Number>(env["$hue"]);
-      Number* s = Cast<Number>(env["$saturation"]);
-      Number* l = Cast<Number>(env["$lightness"]);
-      Number* a = Cast<Number>(env["$alpha"]);
+      BUILT_IN_FN(rgb_4)
+      {
+        return _rgb(Strings::rgb, arguments, "", pstate, *ctx.logger);
+      }
 
-      bool rgb = r || g || b;
-      bool hsl = h || s || l;
+      BUILT_IN_FN(rgb_3)
+      {
+        return _rgb(Strings::rgb, arguments, "", pstate, *ctx.logger);
+      }
 
-      if (rgb && hsl) {
-        error("Cannot specify HSL and RGB values for a color at the same time for `adjust-color'", pstate, traces);
+      BUILT_IN_FN(rgb_2)
+      {
+        return _rgbTwoArg2(Strings::rgb, arguments, pstate, *ctx.logger);
       }
-      else if (rgb) {
-        Color_RGBA_Obj c = col->copyAsRGBA();
-        if (r) c->r(c->r() + DARG_R_BYTE("$red"));
-        if (g) c->g(c->g() + DARG_R_BYTE("$green"));
-        if (b) c->b(c->b() + DARG_R_BYTE("$blue"));
-        if (a) c->a(c->a() + DARG_R_FACT("$alpha"));
-        return c.detach();
+
+
+      BUILT_IN_FN(rgb_1)
+      {
+        ValueObj parsed = _parseChannels2(
+          Strings::rgb, { "$red", "$green", "$blue" },
+          arguments[0], pstate, {});
+        if (SassString * str = parsed->isString()) {
+          parsed.detach();
+          return str;
+        }
+        if (SassList * list = parsed->isList()) { // Ex
+          return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger);
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
-      else if (hsl) {
-        Color_HSLA_Obj c = col->copyAsHSLA();
-        if (h) c->h(c->h() + absmod(h->value(), 360.0));
-        if (s) c->s(c->s() + DARG_R_PRCT("$saturation"));
-        if (l) c->l(c->l() + DARG_R_PRCT("$lightness"));
-        if (a) c->a(c->a() + DARG_R_FACT("$alpha"));
-        return c.detach();
+
+
+      BUILT_IN_FN(rgba_4)
+      {
+        return _rgb("rgba", arguments, "", pstate, *ctx.logger);
       }
-      else if (a) {
-        Color_Obj c = SASS_MEMORY_COPY(col);
-        c->a(c->a() + DARG_R_FACT("$alpha"));
-        c->a(clip(c->a(), 0.0, 1.0));
-        return c.detach();
+
+
+      BUILT_IN_FN(rgba_3)
+      {
+        return _rgb(Strings::rgba, arguments, "", pstate, *ctx.logger);
       }
-      error("not enough arguments for `adjust-color'", pstate, traces);
-      // unreachable
-      return col;
+
+
+      BUILT_IN_FN(rgba_2)
+      {
+        return _rgbTwoArg2(Strings::rgba, arguments, pstate, *ctx.logger);
+      }
+
+
+      BUILT_IN_FN(rgba_1)
+      {
+        ValueObj parsed = _parseChannels2(
+          Strings::rgba, { "$red", "$green", "$blue" },
+          arguments[0], pstate, {});
+        if (SassString* str = parsed->isString()) {
+          parsed.detach();
+          return str;
+        }
+        if (SassList * list = parsed->isList()) { // Ex
+          return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger);
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+      }
+
+
+      BUILT_IN_FN(hsl_4)
+      {
+        return _hsl(Strings::hsl, arguments, "", pstate, *ctx.logger);
+      }
+
+
+      BUILT_IN_FN(hsl_3)
+      {
+        return _hsl(Strings::hsl, arguments, "", pstate, *ctx.logger);
+      }
+
+
+      BUILT_IN_FN(hsl_2)
+      {
+        // hsl(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
+        // and functions are parsed after variable substitution.
+        if (isVar(arguments[0]) || isVar(arguments[1])) {
+          return _functionString(Strings::hsl, arguments, pstate);
+        }
+        throw Exception::SassScriptException2(
+          "Missing argument $lightness.",
+          *ctx.logger, pstate);
+      }
+
+
+      BUILT_IN_FN(hsl_1)
+      {
+        ValueObj parsed = _parseChannels2(
+          Strings::hsl, { "$hue", "$saturation", "$lightness" },
+          arguments[0], pstate, {});
+        if (SassString* str = parsed->isString()) { // Ex
+          parsed.detach();
+          return str;
+        }
+        if (SassList * list = parsed->isList()) { // Ex
+          return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger);
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+      }
+
+
+      BUILT_IN_FN(hsla_4)
+      {
+        return _hsl("hsla", arguments, "", pstate, *ctx.logger);
+      }
+
+
+      BUILT_IN_FN(hsla_3)
+      {
+        return _hsl(Strings::hsla, arguments, "", pstate, *ctx.logger);
+      }
+
+
+      BUILT_IN_FN(hsla_2)
+      {
+        // hsl(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
+        // and functions are parsed after variable substitution.
+        if (isVar(arguments[0]) || isVar(arguments[1])) {
+          return _functionString(Strings::hsla, arguments, pstate);
+        }
+        throw Exception::SassScriptException2(
+          "Missing argument $lightness.",
+          *ctx.logger, pstate);
+      }
+
+
+      BUILT_IN_FN(hsla_1)
+      {
+        ValueObj parsed = _parseChannels2(
+          Strings::hsla, { "$hue", "$saturation", "$lightness" },
+          arguments[0], pstate, {});
+        if (SassString* str = parsed->isString()) { // Ex
+          parsed.detach();
+          return str;
+        }
+        if (SassList * list = parsed->isList()) { // Ex
+          return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger);
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+      }
+
+      BUILT_IN_FN(red)
+      {
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          round(arguments[0]->assertColor(*ctx.logger, Strings::color)->r()));
+      }
+
+      BUILT_IN_FN(green)
+      {
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          round(arguments[0]->assertColor(*ctx.logger, Strings::color)->g()));
+      }
+
+      BUILT_IN_FN(blue)
+      {
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          round(arguments[0]->assertColor(*ctx.logger, Strings::color)->b()));
+      }
+
+      BUILT_IN_FN(invert)
+      {
+        SassNumber* weight = arguments[1]->assertNumber(*ctx.logger, "weight");
+        if (arguments[0]->isNumber()) {
+          if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
+            throw Exception::SassRuntimeException2(
+              "Only one argument may be passed "
+              "to the plain-CSS invert() function.",
+              *ctx.logger);
+          }
+          return _functionString("invert", { arguments[0] }, pstate);
+        }
+
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassColorObj inverse = color->copyAsRGBA();
+        inverse->r(clamp(255.0 - color->r(), 0.0, 255.0));
+        inverse->g(clamp(255.0 - color->g(), 0.0, 255.0));
+        inverse->b(clamp(255.0 - color->b(), 0.0, 255.0));
+        return _mixColors(inverse, color,
+          weight, pstate, *ctx.logger);
+      }
+
+      BUILT_IN_FN(hue)
+      {
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->h(), "deg");
+      }
+
+      BUILT_IN_FN(saturation)
+      {
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->s(), Strings::percent);
+      }
+
+
+      BUILT_IN_FN(lightness)
+      {
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->l(), Strings::percent);
+      }
+
+      BUILT_IN_FN(adjustHue)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* degrees = arguments[1]->assertNumber(*ctx.logger, "degrees");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->h(absmod(copy->h() + degrees->value(), 360.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(complement)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->h(absmod(copy->h() + 180.0, 360.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(grayscale)
+      {
+        // Gracefully handle if number is passed
+        if (arguments[0]->isNumber()) {
+          return _functionString("grayscale",
+            arguments, pstate);
+        }
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->s(0.0); // remove saturation
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(lighten)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->l(clamp(copy->l() + nr, 0.0, 100.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(darken)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->l(clamp(copy->l() - nr, 0.0, 100.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(saturate_2)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        // ToDo: this was working without before?
+        if (copy->h() == 0 && nr > 0.0) copy->h(100.0);
+        copy->s(clamp(copy->s() + nr, 0.0, 100.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(saturate_1)
+      {
+        SassNumber* number = arguments[0]->assertNumber(*ctx.logger, Strings::amount);
+        return SASS_MEMORY_NEW(SassString, pstate,
+          "saturate(" + number->to_css() + ")");
+      }
+
+      BUILT_IN_FN(desaturate)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->s(clamp(copy->s() - nr, 0.0, 100.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(opacify)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->a(clamp(copy->a() + nr, 0.0, 1.0));
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(transparentize)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->a(clamp(copy->a() - nr, 0.0, 1.0));
+        return copy.detach();
+      }
+
+
+      // Implements regex check against /^[a-zA-Z]+\s*=/
+      bool isMsFilterStart(const sass::string& text)
+      {
+        auto it = text.begin();
+        // The filter must start with alpha
+        if (!Character::isAlphabetic(*it)) return false;
+        while (it != text.end() && Character::isAlphabetic(*it)) ++it;
+        while (it != text.end() && Character::isWhitespace(*it)) ++it;
+        return it != text.end() && *it == '=';
+      }
+
+      BUILT_IN_FN(alpha_one)
+      {
+        Value* argument = arguments[0];
+
+        if (SassString * string = argument->isString()) {
+          if (isMsFilterStart(string->value())) {
+            return _functionString(Strings::alpha, arguments, pstate);
+          }
+        }
+
+        /*
+        if (argument is SassString &&
+          !argument.hasQuotes &&
+          argument.text.contains(_microsoftFilterStart)) {
+          // Support the proprietary Microsoft alpha() function.
+          return _functionString(Strings::alpha, arguments);
+        }
+        */
+        SassColorObj color = argument->assertColor(*ctx.logger, Strings::color);
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
+      }
+
+
+      BUILT_IN_FN(alpha_any)
+      {
+        size_t size = arguments[0]->lengthAsList();
+
+        if (size == 0) {
+          throw Exception::SassRuntimeException2(
+            "Missing argument $color.",
+            *ctx.logger);
+        }
+
+        bool isOnlyIeFilters = true;
+        for (Value* value : arguments[0]->iterator()) {
+          if (SassString* string = value->isString()) {
+            if (!isMsFilterStart(string->value())) {
+              isOnlyIeFilters = false;
+              break;
+            }
+          }
+          else {
+            isOnlyIeFilters = false;
+            break;
+          }
+        }
+        if (isOnlyIeFilters) {
+          // Support the proprietary Microsoft alpha() function.
+          return _functionString(Strings::alpha, arguments, pstate);
+        }
+
+        sass::sstream strm;
+        strm << "Only 1 argument allowed, but ";
+        strm << size << " were passed.";
+        throw Exception::SassRuntimeException2(
+          strm.str(), *ctx.logger);
+      }
+
+
+      BUILT_IN_FN(opacity)
+      {
+        // Gracefully handle if number is passed
+        if (arguments[0]->isNumber()) {
+          return _functionString("opacity",
+            arguments, pstate);
+        }
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
+      }
+
+
+      BUILT_IN_FN(ieHexStr)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        // clip should not be needed here
+        double r = clip(color->r(), 0.0, 255.0);
+        double g = clip(color->g(), 0.0, 255.0);
+        double b = clip(color->b(), 0.0, 255.0);
+        double a = clip(color->a(), 0.0, 1.0) * 255.0;
+        sass::sstream ss;
+        ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
+        ss << std::hex << std::setw(2) << fuzzyRound(a, ctx.logger->epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(r, ctx.logger->epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(g, ctx.logger->epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(b, ctx.logger->epsilon);
+        return SASS_MEMORY_NEW(SassString, pstate, ss.str());
+      }
+
+      Number* getKwdArg(EnvKeyFlatMap<ValueObj>& keywords, const EnvKey& name, Logger& logger)
+      {
+        EnvKey variable("$" + name.norm());
+        auto kv = keywords.find(variable);
+        // Return null since args are optional
+        if (kv == keywords.end()) return nullptr;
+        // Get the number object from found keyword
+        SassNumber* num = kv->second->assertNumber(logger, name.orig());
+        // Only consume keyword once
+        keywords.erase(kv);
+        // Return the number
+        return num;
+      }
+
+      BUILT_IN_FN(adjust)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassArgumentList* argumentList = arguments[1]
+          ->assertArgumentList(*ctx.logger, "kwargs");
+        if (!argumentList->empty()) {
+          SourceSpan span(color->pstate());
+          callStackFrame frame(*ctx.logger, BackTrace(
+            span, Strings::colorAdjust));
+          throw Exception::SassRuntimeException2(
+            "Only one positional argument is allowed. All "
+            "other arguments must be passed by name.",
+            *ctx.logger);
+        }
+
+        // ToDo: solve without erase ...
+        EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
+
+        SassNumber* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
+        SassNumber* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
+        SassNumber* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
+        SassNumber* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
+        SassNumber* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
+        SassNumber* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
+        SassNumber* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+
+        double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::red) : 0.0;
+        double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::green) : 0.0;
+        double b = nr_b ? nr_b->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::blue) : 0.0;
+        double s = nr_s ? nr_s->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::saturation) : 0.0;
+        double l = nr_l ? nr_l->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::lightness) : 0.0;
+        double a = nr_a ? nr_a->valueInRange(-1.0, 1.0, *ctx.logger, pstate, Strings::alpha) : 0.0;
+        double h = nr_h ? nr_h->value() : 0.0; // Hue is a very special case
+
+        if (!keywords.empty()) {
+          sass::vector<sass::string> keys;
+          for (auto& kv : keywords) {
+            keys.emplace_back(kv.first.orig());
+          }
+          sass::sstream msg;
+          size_t iL = keys.size();
+          msg << "No argument" <<
+            (iL > 1 ? "s" : "") <<
+            " named ";
+          for (size_t i = 0; i < iL; i++) {
+            if (i > 0) {
+              msg << (i == iL - 1 ?
+                " and " : ", ");
+            }
+            msg << keys[i];
+          }
+          msg << ".";
+          throw Exception::SassRuntimeException2(
+            msg.str(), *ctx.logger);
+        }
+
+        bool hasRgb = nr_r || nr_g || nr_b;
+        bool hasHsl = nr_h || nr_s || nr_l;
+
+        if (hasRgb && hasHsl) {
+          throw Exception::InvalidSyntax(*ctx.logger,
+            "RGB parameters may not be passed along with HSL parameters.");
+        }
+        else if (hasRgb) {
+          Color_RGBA_Obj c = color->copyAsRGBA();
+          if (nr_r) c->r(clamp(c->r() + r, 0.0, 255.0));
+          if (nr_g) c->g(clamp(c->g() + g, 0.0, 255.0));
+          if (nr_b) c->b(clamp(c->b() + b, 0.0, 255.0));
+          if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (hasHsl) {
+          Color_HSLA_Obj c = color->copyAsHSLA();
+          if (nr_h) c->h(absmod(c->h() + h, 360.0));
+          if (nr_s) c->s(clamp(c->s() + s, 0.0, 100.0));
+          if (nr_l) c->l(clamp(c->l() + l, 0.0, 100.0));
+          if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (nr_a) {
+          Color_Obj c = SASS_MEMORY_COPY(color);
+          if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
+          return c.detach();
+        }
+        return color.detach();
+      }
+
+      BUILT_IN_FN(change)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassArgumentList* argumentList = arguments[1]
+          ->assertArgumentList(*ctx.logger, "kwargs");
+        if (!argumentList->empty()) {
+          SourceSpan span(color->pstate());
+          callStackFrame frame(*ctx.logger, BackTrace(
+            span, Strings::colorChange));
+          throw Exception::SassRuntimeException2(
+            "Only one positional argument is allowed. All "
+            "other arguments must be passed by name.",
+            *ctx.logger);
+        }
+
+        // ToDo: solve without erase ...
+        EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
+
+        SassNumber* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
+        SassNumber* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
+        SassNumber* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
+        SassNumber* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
+        SassNumber* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
+        SassNumber* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
+        SassNumber* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+
+        double r = nr_r ? nr_r->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::red) : 0.0;
+        double g = nr_g ? nr_g->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::green) : 0.0;
+        double b = nr_b ? nr_b->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::blue) : 0.0;
+        double s = nr_s ? nr_s->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::saturation) : 0.0;
+        double l = nr_l ? nr_l->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::lightness) : 0.0;
+        double a = nr_a ? nr_a->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::alpha) : 0.0;
+        double h = nr_h ? nr_h->value() : 0.0; // Hue is a very special case
+
+        if (!keywords.empty()) {
+          sass::vector<sass::string> keys;
+          for (auto& kv : keywords) {
+            keys.emplace_back(kv.first.orig());
+          }
+          sass::sstream msg;
+          size_t iL = keys.size();
+          msg << "No argument" <<
+            (iL > 1 ? "s" : "") <<
+            " named ";
+          for (size_t i = 0; i < iL; i++) {
+            if (i > 0) {
+              msg << (i == iL - 1 ?
+                " and " : ", ");
+            }
+            msg << keys[i];
+          }
+          msg << ".";
+          throw Exception::SassRuntimeException2(
+            msg.str(), *ctx.logger);
+        }
+
+        bool hasRgb = nr_r || nr_g || nr_b;
+        bool hasHsl = nr_h || nr_s || nr_l;
+
+        if (hasRgb && hasHsl) {
+          throw Exception::InvalidSyntax(*ctx.logger,
+            "RGB parameters may not be passed along with HSL parameters.");
+        }
+        else if (hasRgb) {
+          Color_RGBA_Obj c = color->copyAsRGBA();
+          if (nr_r) c->r(clamp(r, 0.0, 255.0));
+          if (nr_g) c->g(clamp(g, 0.0, 255.0));
+          if (nr_b) c->b(clamp(b, 0.0, 255.0));
+          if (nr_a) c->a(clamp(a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (hasHsl) {
+          Color_HSLA_Obj c = color->copyAsHSLA();
+          if (nr_h) c->h(absmod(h, 360.0));
+          if (nr_s) c->s(clamp(s, 0.0, 100.0));
+          if (nr_l) c->l(clamp(l, 0.0, 100.0));
+          if (nr_a) c->a(clamp(a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (nr_a) {
+          Color_Obj c = SASS_MEMORY_COPY(color);
+          if (nr_a) c->a(clamp(a, 0.0, 1.0));
+          return c.detach();
+        }
+        return color.detach();
+      }
+
+      BUILT_IN_FN(scale)
+      {
+        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        SassArgumentList* argumentList = arguments[1]
+          ->assertArgumentList(*ctx.logger, "kwargs");
+        if (!argumentList->empty()) {
+          SourceSpan span(color->pstate());
+          callStackFrame frame(*ctx.logger, BackTrace(
+            span, Strings::scaleColor));
+          throw Exception::SassRuntimeException2(
+            "Only one positional argument is allowed. All "
+            "other arguments must be passed by name.",
+            *ctx.logger);
+        }
+
+        // ToDo: solve without erase ...
+        EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
+
+        SassNumber* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
+        SassNumber* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
+        SassNumber* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
+        SassNumber* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
+        SassNumber* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
+        SassNumber* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+
+        double r = nr_r ? nr_r->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::red)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::red) / 100.0 : 0.0;
+        double g = nr_g ? nr_g->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::green)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::green) / 100.0 : 0.0;
+        double b = nr_b ? nr_b->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::blue)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::blue) / 100.0 : 0.0;
+        double s = nr_s ? nr_s->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::saturation)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::saturation) / 100.0 : 0.0;
+        double l = nr_l ? nr_l->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::lightness)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::lightness) / 100.0 : 0.0;
+        double a = nr_a ? nr_a->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::alpha)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::alpha) / 100.0 : 0.0;
+
+        if (!keywords.empty()) {
+          sass::vector<sass::string> keys;
+          for (auto& kv : keywords) {
+            keys.emplace_back(kv.first.orig());
+          }
+          sass::sstream msg;
+          size_t iL = keys.size();
+          msg << "No argument" <<
+            (iL > 1 ? "s" : "") <<
+            " named ";
+          for (size_t i = 0; i < iL; i++) {
+            if (i > 0) {
+              msg << (i == iL - 1 ?
+                " and " : ", ");
+            }
+            msg << keys[i];
+          }
+          msg << ".";
+          throw Exception::SassRuntimeException2(
+            msg.str(), *ctx.logger);
+        }
+
+        bool hasRgb = nr_r || nr_g || nr_b;
+        bool hasHsl = nr_s || nr_l;
+
+        if (hasRgb && hasHsl) {
+          throw Exception::InvalidSyntax(*ctx.logger,
+            "RGB parameters may not be passed along with HSL parameters.");
+        }
+        else if (hasRgb) {
+          Color_RGBA_Obj c = color->copyAsRGBA();
+          if (nr_r) c->r(scaleValue(c->r(), r, 255.0));
+          if (nr_g) c->g(scaleValue(c->g(), g, 255.0));
+          if (nr_b) c->b(scaleValue(c->b(), b, 255.0));
+          if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
+          return c.detach();
+        }
+        else if (hasHsl) {
+          Color_HSLA_Obj c = color->copyAsHSLA();
+          if (nr_s) c->s(scaleValue(c->s(), s, 100.0));
+          if (nr_l) c->l(scaleValue(c->l(), l, 100.0));
+          if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
+          return c.detach();
+        }
+        else if (nr_a) {
+          Color_Obj c = SASS_MEMORY_COPY(color);
+          if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
+          return c.detach();
+        }
+        return color.detach();
+      }
+
+      BUILT_IN_FN(mix)
+      {
+        SassColorObj color1 = arguments[0]->assertColor(*ctx.logger, "color1");
+        SassColorObj color2 = arguments[1]->assertColor(*ctx.logger, "color2");
+        SassNumber* weight = arguments[2]->assertNumber(*ctx.logger, "weight");
+        return _mixColors(color1, color2, weight, pstate, *ctx.logger);
+      }
+
     }
 
-    Signature scale_color_sig = "scale-color($color, $red: false, $green: false, $blue: false, $hue: false, $saturation: false, $lightness: false, $alpha: false)";
-    BUILT_IN(scale_color)
-    {
-      Color* col = ARG("$color", Color);
-      Number* r = Cast<Number>(env["$red"]);
-      Number* g = Cast<Number>(env["$green"]);
-      Number* b = Cast<Number>(env["$blue"]);
-      Number* h = Cast<Number>(env["$hue"]);
-      Number* s = Cast<Number>(env["$saturation"]);
-      Number* l = Cast<Number>(env["$lightness"]);
-      Number* a = Cast<Number>(env["$alpha"]);
-
-      bool rgb = r || g || b;
-      bool hsl = h || s || l;
-
-      if (rgb && hsl) {
-        error("Cannot specify HSL and RGB values for a color at the same time for `scale-color'", pstate, traces);
+    /// Asserts that [number] is a percentage or has no units, and normalizes the
+    /// value.
+    ///
+    /// If [number] has no units, its value is clamped to be greater than `0` or
+    /// less than [max] and returned. If [number] is a percentage, it's scaled to be
+    /// within `0` and [max]. Otherwise, this throws a [SassScriptException].
+    ///
+    /// [name] is used to identify the argument in the error message.
+    double _percentageOrUnitless(Number* number, double max, sass::string name, Logger& traces) {
+      double value = 0.0;
+      if (!number->hasUnits()) {
+        value = number->value();
       }
-      else if (rgb) {
-        Color_RGBA_Obj c = col->copyAsRGBA();
-        double rscale = (r ? DARG_R_PRCT("$red") : 0.0) / 100.0;
-        double gscale = (g ? DARG_R_PRCT("$green") : 0.0) / 100.0;
-        double bscale = (b ? DARG_R_PRCT("$blue") : 0.0) / 100.0;
-        double ascale = (a ? DARG_R_PRCT("$alpha") : 0.0) / 100.0;
-        if (rscale) c->r(c->r() + rscale * (rscale > 0.0 ? 255.0 - c->r() : c->r()));
-        if (gscale) c->g(c->g() + gscale * (gscale > 0.0 ? 255.0 - c->g() : c->g()));
-        if (bscale) c->b(c->b() + bscale * (bscale > 0.0 ? 255.0 - c->b() : c->b()));
-        if (ascale) c->a(c->a() + ascale * (ascale > 0.0 ? 1.0 - c->a() : c->a()));
-        return c.detach();
+      else if (number->hasUnit(Strings::percent)) {
+        value = max * number->value() / 100;
       }
-      else if (hsl) {
-        Color_HSLA_Obj c = col->copyAsHSLA();
-        double hscale = (h ? DARG_R_PRCT("$hue") : 0.0) / 100.0;
-        double sscale = (s ? DARG_R_PRCT("$saturation") : 0.0) / 100.0;
-        double lscale = (l ? DARG_R_PRCT("$lightness") : 0.0) / 100.0;
-        double ascale = (a ? DARG_R_PRCT("$alpha") : 0.0) / 100.0;
-        if (hscale) c->h(c->h() + hscale * (hscale > 0.0 ? 360.0 - c->h() : c->h()));
-        if (sscale) c->s(c->s() + sscale * (sscale > 0.0 ? 100.0 - c->s() : c->s()));
-        if (lscale) c->l(c->l() + lscale * (lscale > 0.0 ? 100.0 - c->l() : c->l()));
-        if (ascale) c->a(c->a() + ascale * (ascale > 0.0 ? 1.0 - c->a() : c->a()));
-        return c.detach();
+      else {
+        // callStackFrame frame(traces, BackTrace(number->pstate()));
+        error(name + ": Expected " + number->to_css() +
+          " to have no units or \"%\".", number->pstate(), traces);
       }
-      else if (a) {
-        Color_Obj c = SASS_MEMORY_COPY(col);
-        double ascale = DARG_R_PRCT("$alpha") / 100.0;
-        c->a(c->a() + ascale * (ascale > 0.0 ? 1.0 - c->a() : c->a()));
-        c->a(clip(c->a(), 0.0, 1.0));
-        return c.detach();
-      }
-      error("not enough arguments for `scale-color'", pstate, traces);
-      // unreachable
-      return col;
+      if (value < 0.0) return 0.0;
+      if (value > max) return max;
+      return value;
     }
 
-    Signature change_color_sig = "change-color($color, $red: false, $green: false, $blue: false, $hue: false, $saturation: false, $lightness: false, $alpha: false)";
-    BUILT_IN(change_color)
+    // Who calls me, shouldn't we go from value? Why ast node?
+    Number* assertNumber(AST_Node* node, sass::string name, const SourceSpan& pstate, BackTraces traces)
     {
-      Color* col = ARG("$color", Color);
-      Number* r = Cast<Number>(env["$red"]);
-      Number* g = Cast<Number>(env["$green"]);
-      Number* b = Cast<Number>(env["$blue"]);
-      Number* h = Cast<Number>(env["$hue"]);
-      Number* s = Cast<Number>(env["$saturation"]);
-      Number* l = Cast<Number>(env["$lightness"]);
-      Number* a = Cast<Number>(env["$alpha"]);
-
-      bool rgb = r || g || b;
-      bool hsl = h || s || l;
-
-      if (rgb && hsl) {
-        error("Cannot specify HSL and RGB values for a color at the same time for `change-color'", pstate, traces);
+      if (node == nullptr) return nullptr;
+      Number* nr = Cast<Number>(node);
+      if (nr == nullptr) {
+        error(name + ": " + node->to_string()
+          + " is not a number.", pstate, traces);
       }
-      else if (rgb) {
-        Color_RGBA_Obj c = col->copyAsRGBA();
-        if (r) c->r(DARG_U_BYTE("$red"));
-        if (g) c->g(DARG_U_BYTE("$green"));
-        if (b) c->b(DARG_U_BYTE("$blue"));
-        if (a) c->a(DARG_U_FACT("$alpha"));
-        return c.detach();
-      }
-      else if (hsl) {
-        Color_HSLA_Obj c = col->copyAsHSLA();
-        if (h) c->h(absmod(h->value(), 360.0));
-        if (s) c->s(DARG_U_PRCT("$saturation"));
-        if (l) c->l(DARG_U_PRCT("$lightness"));
-        if (a) c->a(DARG_U_FACT("$alpha"));
-        return c.detach();
-      }
-      else if (a) {
-        Color_Obj c = SASS_MEMORY_COPY(col);
-        c->a(clip(DARG_U_FACT("$alpha"), 0.0, 1.0));
-        return c.detach();
-      }
-      error("not enough arguments for `change-color'", pstate, traces);
-      // unreachable
-      return col;
+      return nr;
     }
 
-    Signature ie_hex_str_sig = "ie-hex-str($color)";
-    BUILT_IN(ie_hex_str)
+    Value* _rgb(const sass::string& name, const sass::vector<ValueObj>& arguments, Signature sig, const SourceSpan& pstate, Logger& logger)
     {
-      Color* col = ARG("$color", Color);
-      Color_RGBA_Obj c = col->toRGBA();
-      double r = clip(c->r(), 0.0, 255.0);
-      double g = clip(c->g(), 0.0, 255.0);
-      double b = clip(c->b(), 0.0, 255.0);
-      double a = clip(c->a(), 0.0, 1.0) * 255.0;
+      Value* _r = arguments[0];
+      Value* _g = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a)) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _r->to_css() << ", ";
+        fncall << _g->to_css() << ", ";
+        fncall << _b->to_css();
+        if (_a) { fncall << ", " << _a->to_css(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(SassString, pstate, fncall.str());
+      }
 
-      sass::ostream ss;
-      ss << '#' << std::setw(2) << std::setfill('0');
-      ss << std::hex << std::setw(2) << static_cast<unsigned long>(Sass::round(a, ctx.c_options.precision));
-      ss << std::hex << std::setw(2) << static_cast<unsigned long>(Sass::round(r, ctx.c_options.precision));
-      ss << std::hex << std::setw(2) << static_cast<unsigned long>(Sass::round(g, ctx.c_options.precision));
-      ss << std::hex << std::setw(2) << static_cast<unsigned long>(Sass::round(b, ctx.c_options.precision));
+      Number* r = _r->assertNumber(logger, Strings::red);
+      Number* g = _g->assertNumber(logger, Strings::green);
+      Number* b = _b->assertNumber(logger, Strings::blue);
+      Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      sass::string result = ss.str();
-      Util::ascii_str_toupper(&result);
-      return SASS_MEMORY_NEW(String_Quoted, pstate, result);
+      return SASS_MEMORY_NEW(Color_RGBA, pstate,
+        fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
+        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0);
+
+    }
+
+    Value* _hsl(const sass::string& name, const sass::vector<ValueObj>& arguments, Signature sig, const SourceSpan& pstate, Logger& logger)
+    {
+      Value* _h = arguments[0];
+      Value* _s = arguments[1];
+      Value* _l = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a)) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _h->to_css() << ", ";
+        fncall << _s->to_css() << ", ";
+        fncall << _l->to_css();
+        if (_a) { fncall << ", " << _a->to_css(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(SassString, pstate, fncall.str());
+      }
+
+      Number* h = _h->assertNumber(logger, "hue");
+      Number* s = _s->assertNumber(logger, Strings::saturation);
+      Number* l = _l->assertNumber(logger, Strings::lightness);
+      Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      return SASS_MEMORY_NEW(Color_HSLA, pstate,
+        h->value(),
+        clamp(s->value(), 0.0, 100.0),
+        clamp(l->value(), 0.0, 100.0),
+        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0);
+
     }
 
   }

@@ -68,7 +68,6 @@ enum Sass_Output_Style {
   SASS_STYLE_COMPRESSED,
   // only used internaly
   SASS_STYLE_INSPECT,
-  SASS_STYLE_TO_SASS,
   SASS_STYLE_TO_CSS
 };
 
@@ -86,6 +85,9 @@ ADDAPI char* ADDCALL sass_string_unquote (const char* str);
 // Implemented sass language version
 // Hardcoded version 3.4 for time being
 ADDAPI const char* ADDCALL libsass_version(void);
+
+// Hardcoded until removed completely
+ADDAPI const char* ADDCALL sass2scss_version(void);
 
 // Get compiled libsass language
 ADDAPI const char* ADDCALL libsass_language_version(void);

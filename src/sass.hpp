@@ -2,7 +2,7 @@
 #ifndef SASS_SASS_H
 #define SASS_SASS_H
 
-// undefine extensions macro to tell sys includes
+// Undefine extensions macro to tell sys includes
 // that we do not want any macros to be exported
 // mainly fixes an issue on SmartOS (SEC macro)
 #undef __EXTENSIONS__
@@ -47,18 +47,52 @@
 # endif
 #endif
 
+// OS specific line feed
+// since std::endl flushes
+#ifndef STRMLF
+# ifdef _WIN32
+#  define STRMLF '\n'
+# else
+#  define STRMLF '\n'
+# endif
+#endif
 
-// Include C-API header
+// include C-API header
 #include "sass/base.h"
 
 // Include allocator
 #include "memory.hpp"
 
+// Include random seed
+#include "randomize.hpp"
+
+// #include "../../parallel-hashmap/parallel_hashmap/phmap.h"
+// #include "../../ordered-map/include/tsl/ordered_set.h"
+// #include "robin_hood.hpp"
+
+#ifdef USE_TSL_HOPSCOTCH
+#include "tessil/hopscotch_map.h"
+#include "tessil/hopscotch_set.h"
+#define UnorderedMap tsl::hopscotch_map
+#define UnorderedSet tsl::hopscotch_set
+#else
+#include <unordered_map>
+#include <unordered_set>
+#define UnorderedMap std::unordered_map
+#define UnorderedSet std::unordered_set
+#endif
+
+// Always use tessil implementation
+#include "tessil/ordered_map.h"
+#define OrderedMap tsl::ordered_map
+
 // For C++ helper
 #include <string>
+#include <cstdint>
 #include <vector>
+#include <deque>
 
-// output behavior
+// output behaviors
 namespace Sass {
 
   // create some C++ aliases for the most used options
@@ -68,7 +102,6 @@ namespace Sass {
   const static Sass_Output_Style COMPRESSED = SASS_STYLE_COMPRESSED;
   // only used internal to trigger ruby inspect behavior
   const static Sass_Output_Style INSPECT = SASS_STYLE_INSPECT;
-  const static Sass_Output_Style TO_SASS = SASS_STYLE_TO_SASS;
   const static Sass_Output_Style TO_CSS = SASS_STYLE_TO_CSS;
 
   // helper to aid dreaded MSVC debug mode
@@ -85,6 +118,21 @@ enum Sass_Input_Style {
   SASS_CONTEXT_FOLDER
 };
 
+
+#define SASS_LOGGER_MONO 1
+#define SASS_LOGGER_COLOR 2
+#define SASS_LOGGER_ASCII 4
+#define SASS_LOGGER_UNICODE 8
+
+// Logging style
+enum Sass_Logger_Style {
+  SASS_LOGGER_AUTO = 0,
+  SASS_LOGGER_ASCII_MONO = SASS_LOGGER_ASCII | SASS_LOGGER_MONO,
+  SASS_LOGGER_ASCII_COLOR = SASS_LOGGER_ASCII | SASS_LOGGER_COLOR,
+  SASS_LOGGER_UNICODE_MONO = SASS_LOGGER_UNICODE | SASS_LOGGER_MONO,
+  SASS_LOGGER_UNICODE_COLOR = SASS_LOGGER_UNICODE | SASS_LOGGER_COLOR,
+};
+
 // simple linked list
 struct string_list {
   string_list* next;
@@ -94,7 +142,7 @@ struct string_list {
 // sass config options structure
 struct Sass_Inspect_Options {
 
-  // Output style for the generated css code
+  // Output style for the generated CSS code
   // A value from above SASS_STYLE_* constants
   enum Sass_Output_Style output_style;
 
@@ -122,7 +170,7 @@ struct Sass_Output_Options : Sass_Inspect_Options {
   bool source_comments;
 
   // initialization list (constructor with defaults)
-  Sass_Output_Options(struct Sass_Inspect_Options opt,
+  Sass_Output_Options(struct Sass_Inspect_Options& opt,
                       const char* indent = "  ",
                       const char* linefeed = "\n",
                       bool source_comments = false)
@@ -143,5 +191,17 @@ struct Sass_Output_Options : Sass_Inspect_Options {
   { }
 
 };
+
+#include <cassert>
+
+#ifdef NDEBUG
+#define SASS_ASSERT(cond, msg) ((void)0)
+#else
+#ifdef DEBUG
+#define SASS_ASSERT(cond, msg) assert(cond && msg)
+#else
+#define SASS_ASSERT(cond, msg) ((void)0)
+#endif
+#endif
 
 #endif

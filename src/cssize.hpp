@@ -8,62 +8,63 @@
 
 namespace Sass {
 
-  struct Backtrace;
+  struct BackTrace;
 
   class Cssize : public Operation_CRTP<Statement*, Cssize> {
 
-    Backtraces&                 traces;
-    BlockStack      block_stack;
-    sass::vector<Statement*>  p_stack;
+    // Share callStack with outside
+    BackTraces& callStack;
+
+    sass::vector<CssParentNodeObj>  cssStack;
 
   public:
     Cssize(Context&);
     ~Cssize() { }
 
     Block* operator()(Block*);
-    Statement* operator()(StyleRule*);
+    Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);
     Statement* operator()(CssMediaRule*);
-    Statement* operator()(SupportsRule*);
-    Statement* operator()(AtRootRule*);
-    Statement* operator()(AtRule*);
+    Statement* operator()(CssSupportsRule*);
+    Statement* operator()(CssAtRootRule*);
+    Statement* operator()(CssAtRule*);
     Statement* operator()(Keyframe_Rule*);
     Statement* operator()(Trace*);
-    Statement* operator()(Declaration*);
     // Statement* operator()(Assignment*);
     // Statement* operator()(Import*);
     // Statement* operator()(Import_Stub*);
-    // Statement* operator()(WarningRule*);
-    // Statement* operator()(Error*);
-    // Statement* operator()(Comment*);
+    // Statement* operator()(WarnRule*);
+    // Statement* operator()(ErrorRule*);
     // Statement* operator()(If*);
-    // Statement* operator()(ForRule*);
-    // Statement* operator()(EachRule*);
+    // Statement* operator()(For*);
+    // Statement* operator()(Each*);
     // Statement* operator()(WhileRule*);
     // Statement* operator()(Return*);
     // Statement* operator()(ExtendRule*);
-    // Statement* operator()(Definition*);
-    // Statement* operator()(Mixin_Call*);
-    // Statement* operator()(Content*);
-    Statement* operator()(Null*);
+    // Statement* operator()(ContentRule*);
+    // Not used anymore? Why do we not get nulls here?
+    // they seem to be already catched earlier
+    // Statement* operator()(Null*);
 
-    Statement* parent();
-    sass::vector<std::pair<bool, Block_Obj>> slice_by_bubble(Block*);
-    Statement* bubble(AtRule*);
-    Statement* bubble(AtRootRule*);
+    CssParentNode* parent();
+    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
+
+    Statement* bubble(CssAtRule*);
+    Statement* bubble(CssAtRootRule*);
     Statement* bubble(CssMediaRule*);
-    Statement* bubble(SupportsRule*);
+    Statement* bubble(CssSupportsRule*);
 
-    Block* debubble(Block* children, Statement* parent = 0);
-    Block* flatten(const Block*);
-    bool bubblable(Statement*);
+    sass::vector<StatementObj> debubble(
+      const sass::vector<StatementObj>&,
+      Statement* parent = nullptr);
 
-    // generic fallback
+    void slice_by_bubble(const sass::vector<StatementObj>& children, std::vector<std::pair<bool, sass::vector<StatementObj>>>&);
+
+    // generic fall-back
     template <typename U>
     Statement* fallback(U x)
     { return Cast<Statement>(x); }
 
-    void append_block(Block*, Block*);
   };
 
 }

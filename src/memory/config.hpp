@@ -17,4 +17,8 @@
 // Currently unused and for later optimization
 #define SassAllocatorArenaHeadSize 0
 
+// Performance optimization
+// Hard-code once we're sure
+#define AssignableRefCount 3
+
 #endif

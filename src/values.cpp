@@ -4,70 +4,60 @@
 
 #include "sass.h"
 #include "values.hpp"
+#include "ast.hpp"
 
 #include <stdint.h>
 
 namespace Sass {
 
   // convert value from C++ side to C-API
-  union Sass_Value* ast_node_to_sass_value (const Expression* val)
+  union Sass_Value* ast_node_to_sass_value (const Value* val)
   {
-    if (val->concrete_type() == Expression::NUMBER)
-    {
-      const Number* res = Cast<Number>(val);
-      return sass_make_number(res->value(), res->unit().c_str());
+    if (val == nullptr) return nullptr;
+    if (const Number* number = val->isNumber())
+    {   
+      return sass_make_number(number->value(), number->unit().c_str());
     }
-    else if (val->concrete_type() == Expression::COLOR)
-    {
-      if (const Color_RGBA* rgba = Cast<Color_RGBA>(val)) {
-        return sass_make_color(rgba->r(), rgba->g(), rgba->b(), rgba->a());
-      } else {
-        // ToDo: allow to also use HSLA colors!!
-        Color_RGBA_Obj col = Cast<Color>(val)->copyAsRGBA();
-        return sass_make_color(col->r(), col->g(), col->b(), col->a());
-      }
+    else if (const Color_RGBA* rgba = val->isColorRGBA()) {
+      return sass_make_color(rgba->r(), rgba->g(), rgba->b(), rgba->a());
     }
-    else if (val->concrete_type() == Expression::LIST)
+    else if (const Color_HSLA* hsla = val->isColorHSLA()) {
+      Color_RGBA_Obj col = hsla->copyAsRGBA();
+      return sass_make_color(col->r(), col->g(), col->b(), col->a());
+    }
+    else if (const SassList* l = val->isList())
     {
-      const List* l = Cast<List>(val);
-      union Sass_Value* list = sass_make_list(l->size(), l->separator(), l->is_bracketed());
+      union Sass_Value* list = sass_make_list(l->length(), l->separator(), l->hasBrackets());
       for (size_t i = 0, L = l->length(); i < L; ++i) {
-        ExpressionObj obj = l->at(i);
+        ValueObj obj = l->at(i);
         auto val = ast_node_to_sass_value(obj);
         sass_list_set_value(list, i, val);
       }
       return list;
     }
-    else if (val->concrete_type() == Expression::MAP)
+    else if (const SassMap* m = val->isMap())
     {
-      const Map* m = Cast<Map>(val);
-      union Sass_Value* map = sass_make_map(m->length());
-      size_t i = 0; for (ExpressionObj key : m->keys()) {
-        sass_map_set_key(map, i, ast_node_to_sass_value(key));
-        sass_map_set_value(map, i, ast_node_to_sass_value(m->at(key)));
+      union Sass_Value* map = sass_make_map(m->size());
+      size_t i = 0; for (auto kv : m->elements()) {
+        sass_map_set_key(map, i, ast_node_to_sass_value(kv.first));
+        sass_map_set_value(map, i, ast_node_to_sass_value(kv.second));
         ++ i;
       }
       return map;
     }
-    else if (val->concrete_type() == Expression::NULL_VAL)
+    else if (val->isNull())
     {
       return sass_make_null();
     }
-    else if (val->concrete_type() == Expression::BOOLEAN)
+    else if (const SassBoolean* res = val->isBoolean())
     {
-      const Boolean* res = Cast<Boolean>(val);
       return sass_make_boolean(res->value());
     }
-    else if (val->concrete_type() == Expression::STRING)
+    else if (const SassString* cstr = val->isString())
     {
-      if (const String_Quoted* qstr = Cast<String_Quoted>(val))
-      {
-        return sass_make_qstring(qstr->value().c_str());
-      }
-      else if (const String_Constant* cstr = Cast<String_Constant>(val))
-      {
-        return sass_make_string(cstr->value().c_str());
-      }
+      return cstr->hasQuotes()
+        ? sass_make_qstring(cstr->value().c_str())
+        : sass_make_string(cstr->value().c_str());
     }
     return sass_make_error("unknown sass value type");
   }
@@ -95,28 +85,30 @@ namespace Sass {
                                sass_color_get_a(val));
       case SASS_STRING:
         if (sass_string_is_quoted(val)) {
-          return SASS_MEMORY_NEW(String_Quoted,
+          return SASS_MEMORY_NEW(SassString,
                                  SourceSpan("[C-VALUE]"),
-                                 sass_string_get_value(val));
+                                 sass_string_get_value(val),
+                                 true);
         }
-        return SASS_MEMORY_NEW(String_Constant,
+        return SASS_MEMORY_NEW(SassString,
                                  SourceSpan("[C-VALUE]"),
-                                 sass_string_get_value(val));
+                                 sass_string_get_value(val),
+                                 false);
       case SASS_LIST: {
-        List* l = SASS_MEMORY_NEW(List,
+        SassList* l = SASS_MEMORY_NEW(SassList,
                                   SourceSpan("[C-VALUE]"),
-                                  sass_list_get_length(val),
+          sass::vector<ValueObj>(), // sass_list_get_length(val),
                                   sass_list_get_separator(val));
         for (size_t i = 0, L = sass_list_get_length(val); i < L; ++i) {
           l->append(sass_value_to_ast_node(sass_list_get_value(val, i)));
         }
-        l->is_bracketed(sass_list_get_is_bracketed(val));
+        l->hasBrackets(sass_list_get_is_bracketed(val));
         return l;
       }
       case SASS_MAP: {
         Map* m = SASS_MEMORY_NEW(Map, SourceSpan("[C-VALUE]"));
         for (size_t i = 0, L = sass_map_get_length(val); i < L; ++i) {
-          *m << std::make_pair(
+          m->insert(
             sass_value_to_ast_node(sass_map_get_key(val, i)),
             sass_value_to_ast_node(sass_map_get_value(val, i)));
         }

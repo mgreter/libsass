@@ -2,22 +2,28 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 #include "ast.hpp"
+#include "sass_values.hpp"
 
 #include "remove_placeholders.hpp"
 #include "sass_functions.hpp"
-#include "check_nesting.hpp"
 #include "fn_selectors.hpp"
 #include "fn_strings.hpp"
 #include "fn_numbers.hpp"
 #include "fn_colors.hpp"
-#include "fn_miscs.hpp"
+#include "fn_meta.hpp"
 #include "fn_lists.hpp"
 #include "fn_maps.hpp"
 #include "context.hpp"
-#include "expand.hpp"
-#include "parser.hpp"
 #include "cssize.hpp"
-#include "source.hpp"
+#include "eval.hpp"
+
+#include "parser_scss.hpp"
+#include "parser_sass.hpp"
+#include "parser_css.hpp"
+
+#include "permutate.hpp"
+#include "debugger.hpp"
+#include "logger.hpp"
 
 namespace Sass {
   using namespace Constants;
@@ -49,15 +55,18 @@ namespace Sass {
     head_imports(0),
     plugins(),
     emitter(c_options),
-
-    ast_gc(),
-    strings(),
+    varRoot(),
+    // callStack(),
+    logger(new Logger(sass_option_get_precision(&c_ctx), c_ctx.logstyle)),
+    strings2(),
     resources(),
     sheets(),
     import_stack(),
     callee_stack(),
-    traces(),
-    extender(Extender::NORMAL, traces),
+    functions(),
+    // builtins(),
+    // externals(),
+    extender(Extender::NORMAL, logger->callStack),
     c_compiler(NULL),
 
     c_headers               (sass::vector<Sass_Importer_Entry>()),
@@ -76,7 +85,7 @@ namespace Sass {
 
     // Sass 3.4: The current working directory will no longer be placed onto the Sass load path by default.
     // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.
-    // include_paths.push_back(CWD);
+    // include_paths.emplace_back(CWD);
 
     // collect more paths from different options
     collect_include_paths(c_options.include_path);
@@ -86,9 +95,9 @@ namespace Sass {
 
     // load plugins and register custom behaviors
     for(auto plug : plugin_paths) plugins.load_plugins(plug);
-    for(auto fn : plugins.get_headers()) c_headers.push_back(fn);
-    for(auto fn : plugins.get_importers()) c_importers.push_back(fn);
-    for(auto fn : plugins.get_functions()) c_functions.push_back(fn);
+    for(auto fn : plugins.get_headers()) c_headers.emplace_back(fn);
+    for(auto fn : plugins.get_importers()) c_importers.emplace_back(fn);
+    for(auto fn : plugins.get_functions()) c_functions.emplace_back(fn);
 
     // sort the items by priority (lowest first)
     sort (c_headers.begin(), c_headers.end(), sort_importers);
@@ -100,17 +109,17 @@ namespace Sass {
 
   void Context::add_c_function(Sass_Function_Entry function)
   {
-    c_functions.push_back(function);
+    c_functions.emplace_back(function);
   }
   void Context::add_c_header(Sass_Importer_Entry header)
   {
-    c_headers.push_back(header);
+    c_headers.emplace_back(header);
     // need to sort the array afterwards (no big deal)
     sort (c_headers.begin(), c_headers.end(), sort_importers);
   }
   void Context::add_c_importer(Sass_Importer_Entry importer)
   {
-    c_importers.push_back(importer);
+    c_importers.emplace_back(importer);
     // need to sort the array afterwards (no big deal)
     sort (c_importers.begin(), c_importers.end(), sort_importers);
   }
@@ -123,7 +132,7 @@ namespace Sass {
       free(resources[i].srcmap);
     }
     // free all strings we kept alive during compiler execution
-    for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
+    // for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
     // everything that gets put into sources will be freed by us
     // this shouldn't have anything in it anyway!?
     for (size_t m = 0; m < import_stack.size(); ++m) {
@@ -134,6 +143,11 @@ namespace Sass {
     // clear inner structures (vectors) and input source
     resources.clear(); import_stack.clear();
     sheets.clear();
+    functions.clear();
+    // builtins.clear();
+    // externals.clear();
+    // release logger
+    delete logger;
   }
 
   Data_Context::~Data_Context()
@@ -151,25 +165,12 @@ namespace Sass {
 
   void Context::collect_include_paths(const char* paths_str)
   {
-    if (paths_str) {
-      const char* beg = paths_str;
-      const char* end = Prelexer::find_first<PATH_SEP>(beg);
-
-      while (end) {
-        sass::string path(beg, end - beg);
-        if (!path.empty()) {
-          if (*path.rbegin() != '/') path += '/';
-          include_paths.push_back(path);
-        }
-        beg = end + 1;
-        end = Prelexer::find_first<PATH_SEP>(beg);
-      }
-
-      sass::string path(beg);
-      if (!path.empty()) {
-        if (*path.rbegin() != '/') path += '/';
-        include_paths.push_back(path);
-      }
+    if (paths_str == nullptr) return;
+    sass::vector<sass::string> paths =
+      Util::split_string(paths_str);
+    for (sass::string path : paths) {
+      if (*path.rbegin() != '/') path += '/';
+      include_paths.emplace_back(path);
     }
   }
 
@@ -184,25 +185,12 @@ namespace Sass {
 
   void Context::collect_plugin_paths(const char* paths_str)
   {
-    if (paths_str) {
-      const char* beg = paths_str;
-      const char* end = Prelexer::find_first<PATH_SEP>(beg);
-
-      while (end) {
-        sass::string path(beg, end - beg);
-        if (!path.empty()) {
-          if (*path.rbegin() != '/') path += '/';
-          plugin_paths.push_back(path);
-        }
-        beg = end + 1;
-        end = Prelexer::find_first<PATH_SEP>(beg);
-      }
-
-      sass::string path(beg);
-      if (!path.empty()) {
-        if (*path.rbegin() != '/') path += '/';
-        plugin_paths.push_back(path);
-      }
+    if (paths_str == nullptr) return;
+    sass::vector<sass::string> paths =
+      Util::split_string(paths_str);
+    for (sass::string path : paths) {
+      if (*path.rbegin() != '/') path += '/';
+      plugin_paths.emplace_back(path);
     }
   }
 
@@ -220,14 +208,14 @@ namespace Sass {
   sass::vector<Include> Context::find_includes(const Importer& import)
   {
     // make sure we resolve against an absolute path
-    sass::string base_path(rel2abs(import.base_path));
+    sass::string base_path(rel2abs(import.base_path, ".", CWD));
     // first try to resolve the load path relative to the base path
-    sass::vector<Include> vec(resolve_includes(base_path, import.imp_path));
+    sass::vector<Include> vec(resolve_includes(base_path, import.imp_path, CWD, fileExistsCache));
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = include_paths.size(); vec.size() == 0 && i < S; ++i)
     {
       // call resolve_includes and individual base path and append all results
-      sass::vector<Include> resolved(resolve_includes(include_paths[i], import.imp_path));
+      sass::vector<Include> resolved(resolve_includes(include_paths[i], import.imp_path, CWD, fileExistsCache));
       if (resolved.size()) vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
     // return vector
@@ -255,12 +243,12 @@ namespace Sass {
 
     // put resources under our control
     // the memory will be freed later
-    resources.push_back(res);
+    resources.emplace_back(res);
 
     // add a relative link to the working directory
-    included_files.push_back(inc.abs_path);
+    included_files.emplace_back(inc.abs_path);
     // add a relative link  to the source map output file
-    srcmap_links.push_back(abs2rel(inc.abs_path, source_map_file, CWD));
+    srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
 
     // get pointer to the loaded content
     Sass_Import_Entry import = sass_make_import(
@@ -269,49 +257,110 @@ namespace Sass {
       res.contents,
       res.srcmap
     );
+
+    if (Util::ascii_str_ends_with_insensitive(inc.abs_path, ".css")) {
+      import->type = SASS_IMPORT_CSS;
+    }
+    else if (Util::ascii_str_ends_with_insensitive(inc.abs_path, ".sass")) {
+      import->type = SASS_IMPORT_SASS;
+    }
+    else {
+      import->type = SASS_IMPORT_SCSS;
+    }
+
     // add the entry to the stack
-    import_stack.push_back(import);
+    import_stack.emplace_back(import);
 
     // get pointer to the loaded content
     const char* contents = resources[idx].contents;
-    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
-      inc.abs_path.c_str(), contents, idx);
-
+    // keep a copy of the path around (for parserstates)
+    // ToDo: we clean it, but still not very elegant!?
+    // strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
     // create the initial parser state from resource
-    SourceSpan pstate(source);
+    // SourceSpan pstate(strings.back(), contents, idx);
+    SourceSpan pstate(SourceSpan(inc.abs_path.c_str()));
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
-      auto parent = import_stack[i];
+      Sass_Import_Entry parent = import_stack[i];
       if (std::strcmp(parent->abs_path, import->abs_path) == 0) {
-        sass::string cwd(File::get_cwd());
         // make path relative to the current directory
         sass::string stack("An @import loop has been found:");
         for (size_t n = 1; n < i + 2; ++n) {
-          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->abs_path, cwd, cwd)) +
-            " imports " + sass::string(File::abs2rel(import_stack[n+1]->abs_path, cwd, cwd));
+          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->abs_path, CWD, CWD)) +
+            " imports " + sass::string(File::abs2rel(import_stack[n+1]->abs_path, CWD, CWD));
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
-        throw Exception::InvalidSyntax(pstate, traces, stack);
+        throw Exception::InvalidSyntax(*logger, stack);
         // error(stack, prstate ? *prstate : pstate, import_stack);
       }
     }
 
-    // create a parser instance from the given c_str buffer
-    Parser p(source, *this, traces);
-    // do not yet dispose these buffers
-    sass_import_take_source(import);
-    sass_import_take_srcmap(import);
-    // then parse the root block
-    Block_Obj root = p.parse();
+    sass::string text(contents);
+    
+    Block_Obj root;
+
+    bool isPlainCss = false;
+
+    // callStackFrame frame(*logger,
+    //   BackTrace("[import]", "@import"));
+
+    if (import->type == SASS_IMPORT_CSS) {
+
+      auto qwe = SASS_MEMORY_NEW(SourceFile,
+        inc.abs_path.c_str(), contents, idx);
+      CssParser p2(*this, qwe);
+      // do not yet dispose these buffers
+      sass_import_take_source(import);
+      sass_import_take_srcmap(import);
+      // p2._allow
+      root = SASS_MEMORY_NEW(Block, SourceSpan("[blk]"), 0, true);
+      root->elements26(p2.parse());
+      root->is_root(true);
+      isPlainCss = true;
+
+    }
+    else if (import->type == SASS_IMPORT_SASS) {
+
+      auto qwe = SASS_MEMORY_NEW(SourceFile,
+        inc.abs_path.c_str(), contents, idx);
+      SassParser p2(*this, qwe);
+      // do not yet dispose these buffers
+      sass_import_take_source(import);
+      sass_import_take_srcmap(import);
+      // p2._allow
+      root = SASS_MEMORY_NEW(Block, SourceSpan("[blk]"), 0, true);
+      root->elements26(p2.parse());
+      root->is_root(true);
+
+    }
+    else {
+
+      SourceFileObj qwe = SASS_MEMORY_NEW(SourceFile,
+        inc.abs_path.c_str(), contents, idx);
+      // create a parser instance from the given c_str buffer
+      ScssParser p2(*this, qwe);
+      // do not yet dispose these buffers
+      sass_import_take_source(import);
+      sass_import_take_srcmap(import);
+      // then parse the root block
+      root = SASS_MEMORY_NEW(Block, SourceSpan("[blk]"), p2.parse(), true);
+      // debug_ast(root);
+    }
+
+    StyleSheet stylesheet(res, root);
+    stylesheet.plainCss = isPlainCss;
+    stylesheet.syntax = import->type;
+
     // delete memory of current stack frame
-    sass_delete_import(import_stack.back());
+    sass_delete_import(import);
     // remove current stack frame
     import_stack.pop_back();
+
     // create key/value pair for ast node
     std::pair<const sass::string, StyleSheet>
-      ast_pair(inc.abs_path, { res, root });
+      ast_pair(inc.abs_path, stylesheet);
     // register resulting resource
     sheets.insert(ast_pair);
   }
@@ -320,29 +369,27 @@ namespace Sass {
   // memory of the resources will be freed by us on exit
   void Context::register_resource(const Include& inc, const Resource& res, SourceSpan& prstate)
   {
-    traces.push_back(Backtrace(prstate));
+    // Add a call stack frame
+    callStackFrame frame(*logger,
+      BackTrace(prstate, Strings::importRule));
     register_resource(inc, res);
-    traces.pop_back();
   }
 
   // Add a new import to the context (called from `import_url`)
   Include Context::load_import(const Importer& imp, SourceSpan pstate)
   {
 
-    // search for valid imports (ie. partials) on the filesystem
-    // this may return more than one valid result (ambiguous imp_path)
+    // search for valid imports (e.g. partials) on the file-system
+    // returns multiple valid result for ambiguous import path
     const sass::vector<Include> resolved(find_includes(imp));
 
     // error nicely on ambiguous imp_path
     if (resolved.size() > 1) {
-      sass::ostream msg_stream;
-      msg_stream << "It's not clear which file to import for ";
-      msg_stream << "'@import \"" << imp.imp_path << "\"'." << "\n";
-      msg_stream << "Candidates:" << "\n";
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
       for (size_t i = 0, L = resolved.size(); i < L; ++i)
       { msg_stream << "  " << resolved[i].imp_path << "\n"; }
-      msg_stream << "Please delete or rename all but one of these files." << "\n";
-      error(msg_stream.str(), pstate, traces);
+      error(msg_stream.str(), pstate, *logger);
     }
 
     // process the resolved entry
@@ -352,7 +399,7 @@ namespace Sass {
       if (use_cache && sheets.count(resolved[0].abs_path)) return resolved[0];
       // try to read the content of the resolved file entry
       // the memory buffer returned must be freed by us!
-      if (char* contents = read_file(resolved[0].abs_path)) {
+      if (char* contents = slurp_file(resolved[0].abs_path, CWD)) {
         // register the newly resolved file resource
         register_resource(resolved[0], { contents, 0 }, pstate);
         // return resolved entry
@@ -361,7 +408,7 @@ namespace Sass {
     }
 
     // nothing found
-    return { imp, "" };
+    return { imp, "", SASS_IMPORT_AUTO };
 
   }
 
@@ -370,36 +417,13 @@ namespace Sass {
     SourceSpan pstate(imp->pstate());
     sass::string imp_path(unquote(load_path));
     sass::string protocol("file");
-
-    using namespace Prelexer;
-    if (const char* proto = sequence< identifier, exactly<':'>, exactly<'/'>, exactly<'/'> >(imp_path.c_str())) {
-
-      protocol = sass::string(imp_path.c_str(), proto - 3);
-      // if (protocol.compare("file") && true) { }
+    const Importer importer(imp_path, ctx_path);
+    Include include(load_import(importer, pstate));
+    if (include.abs_path.empty()) {
+      error("Can't find stylesheet to import.",
+        imp->pstate(), *logger);
     }
-
-    // add urls (protocol other than file) and urls without protocol to `urls` member
-    // ToDo: if ctx_path is already a file resource, we should not add it here?
-    if (imp->import_queries() || protocol != "file" || imp_path.substr(0, 2) == "//") {
-      imp->urls().push_back(SASS_MEMORY_NEW(String_Quoted, imp->pstate(), load_path));
-    }
-    else if (imp_path.length() > 4 && imp_path.substr(imp_path.length() - 4, 4) == ".css") {
-      String_Constant* loc = SASS_MEMORY_NEW(String_Constant, pstate, unquote(load_path));
-      Argument_Obj loc_arg = SASS_MEMORY_NEW(Argument, pstate, loc);
-      Arguments_Obj loc_args = SASS_MEMORY_NEW(Arguments, pstate);
-      loc_args->append(loc_arg);
-      Function_Call* new_url = SASS_MEMORY_NEW(Function_Call, pstate, sass::string("url"), loc_args);
-      imp->urls().push_back(new_url);
-    }
-    else {
-      const Importer importer(imp_path, ctx_path);
-      Include include(load_import(importer, pstate));
-      if (include.abs_path.empty()) {
-        error("File to import not found or unreadable: " + imp_path + ".", pstate, traces);
-      }
-      imp->incs().push_back(include);
-    }
-
+    imp->incs().emplace_back(include);
   }
 
 
@@ -422,9 +446,9 @@ namespace Sass {
         Sass_Import_List it_includes = includes;
         while (*it_includes) { ++count;
           // create unique path to use as key
-          sass::string uniq_path = load_path;
+        sass::string uniq_path = load_path;
           if (!only_one && count) {
-            sass::ostream path_strm;
+            sass::sstream path_strm;
             path_strm << uniq_path << ":" << count;
             uniq_path = path_strm.str();
           }
@@ -440,9 +464,13 @@ namespace Sass {
           // handle error message passed back from custom importer
           // it may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            if (source || srcmap) register_resource({ importer, uniq_path }, { source, srcmap }, pstate);
-            if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, traces);
-            else { error(err_message, { pstate.source, { line, column } }, traces); }
+            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, { source, srcmap }, pstate);
+            if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
+            // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
+            else {
+              std::cerr << "re implement this\n";
+              exit(1);
+            }
           }
           // content for import was set
           else if (source) {
@@ -450,9 +478,9 @@ namespace Sass {
             // use the created uniq_path as fallback (maybe enforce)
             sass::string path_key(abs_path ? abs_path : uniq_path);
             // create the importer struct
-            Include include(importer, path_key);
+            Include include(importer, path_key, include_ent->type);
             // attach information to AST node
-            imp->incs().push_back(include);
+            imp->incs().emplace_back(include);
             // register the resource buffers
             register_resource(include, { source, srcmap }, pstate);
           }
@@ -483,12 +511,8 @@ namespace Sass {
     return has_import;
   }
 
-  void register_function(Context&, Signature sig, Native_Function f, Env* env);
-  void register_function(Context&, Signature sig, Native_Function f, size_t arity, Env* env);
-  void register_overload_stub(Context&, sass::string name, Env* env);
-  void register_built_in_functions(Context&, Env* env);
-  void register_c_functions(Context&, Env* env, Sass_Function_List);
-  void register_c_function(Context&, Env* env, Sass_Function_Entry);
+  void register_built_in_functions(Context&);
+  void register_c_function2(Context&, Sass_Function_Entry);
 
   char* Context::render(Block_Obj root)
   {
@@ -499,7 +523,7 @@ namespace Sass {
     // finish emitter stream
     emitter.finalize();
     // get the resulting buffer from stream
-    OutputBuffer emitted = emitter.get_buffer();
+    OutputBuffer& emitted = emitter.get_buffer();
     // should we append a source map url?
     if (!c_options.omit_source_map_url) {
       // generate an embedded source map
@@ -521,7 +545,7 @@ namespace Sass {
   void Context::apply_custom_headers(Block_Obj root, const char* ctx_path, SourceSpan pstate)
   {
     // create a custom import to resolve headers
-    Import_Obj imp = SASS_MEMORY_NEW(Import, pstate);
+    ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
     call_headers(entry_path, ctx_path, pstate, imp);
@@ -535,7 +559,7 @@ namespace Sass {
     }
   }
 
-  Block_Obj File_Context::parse()
+  Block_Obj File_Context::parse(Sass_Import_Type type)
   {
 
     // check if entry file is given
@@ -543,24 +567,22 @@ namespace Sass {
 
     // create absolute path from input filename
     // ToDo: this should be resolved via custom importers
-    sass::string abs_path(rel2abs(input_path, CWD));
+    sass::string abs_path(rel2abs(input_path, CWD, CWD));
 
     // try to load the entry file
-    char* contents = read_file(abs_path);
+    char* contents = slurp_file(abs_path, CWD);
 
     // alternatively also look inside each include path folder
     // I think this differs from ruby sass (IMO too late to remove)
     for (size_t i = 0, S = include_paths.size(); contents == 0 && i < S; ++i) {
       // build absolute path for this include path entry
-      abs_path = rel2abs(input_path, include_paths[i]);
+      abs_path = rel2abs(input_path, include_paths[i], CWD);
       // try to load the resulting path
-      contents = read_file(abs_path);
+      contents = slurp_file(abs_path, CWD);
     }
 
     // abort early if no content could be loaded (various reasons)
-    if (!contents) throw std::runtime_error(
-      "File to read not found or unreadable: "
-      + std::string(input_path.c_str()));
+    if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path.c_str()));
 
     // store entry path
     entry_path = abs_path;
@@ -573,100 +595,108 @@ namespace Sass {
       0
     );
     // add the entry to the stack
-    import_stack.push_back(import);
+    import_stack.emplace_back(import);
+
+    // Prepare environment
+    prepareEnvironment();
 
     // create the source entry for file entry
-    register_resource({{ input_path, "." }, abs_path }, { contents, 0 });
+    register_resource({{ input_path, "." }, abs_path, type }, { contents, 0 });
 
     // create root ast tree node
     return compile();
 
   }
 
-  Block_Obj Data_Context::parse()
+  Block_Obj Data_Context::parse(Sass_Import_Type type)
   {
 
     // check if source string is given
     if (!source_c_str) return {};
 
     // convert indented sass syntax
-    if(c_options.is_indented_syntax_src) {
-      // call sass2scss to convert the string
-      char * converted = sass2scss(source_c_str,
-        // preserve the structure as much as possible
-        SASS2SCSS_PRETTIFY_1 | SASS2SCSS_KEEP_COMMENT);
-      // replace old source_c_str with converted
-      free(source_c_str); source_c_str = converted;
-    }
+    // c_options.is_indented_syntax_src
 
     // remember entry path (defaults to stdin for string)
     entry_path = input_path.empty() ? "stdin" : input_path;
 
     // ToDo: this may be resolved via custom importers
-    sass::string abs_path(rel2abs(entry_path));
-    char* abs_path_c_str = sass_copy_c_string(abs_path.c_str());
-    strings.push_back(abs_path_c_str);
+    sass::string abs_path(rel2abs(entry_path, ".", CWD));
+    // char* abs_path_c_str = sass_copy_c_string(abs_path.c_str());
+    // strings2.emplace_back(abs_path_c_str);
 
     // create entry only for the import stack
     Sass_Import_Entry import = sass_make_import(
       entry_path.c_str(),
-      abs_path_c_str,
+      abs_path.c_str(),
       source_c_str,
       srcmap_c_str
     );
     // add the entry to the stack
-    import_stack.push_back(import);
+    import_stack.emplace_back(import);
+
+    // Prepare environment
+    prepareEnvironment();
 
     // register a synthetic resource (path does not really exist, skip in includes)
-    register_resource({{ input_path, "." }, input_path }, { source_c_str, srcmap_c_str });
+    register_resource({{ input_path, "." }, input_path, type }, { source_c_str, srcmap_c_str });
 
     // create root ast tree node
     return compile();
   }
 
+  void Context::prepareEnvironment()
+  {
+
+    // register built-in functions on env
+    register_built_in_functions(*this);
+
+    varStack.push_back(&varRoot);
+
+    // register custom functions (defined via C-API)
+    for (size_t i = 0, S = c_functions.size(); i < S; ++i)
+    {
+      ScopedStackFrame<EnvFrame> scoped(varStack, &varRoot);
+      register_c_function2(*this, c_functions[i]);
+    }
+
+
+  }
+
   // parse root block from includes
   Block_Obj Context::compile()
   {
+
     // abort if there is no data
     if (resources.size() == 0) return {};
     // get root block from the first style sheet
-    Block_Obj root = sheets.at(entry_path).root;
+    StyleSheet sheet = sheets.at(entry_path);
+    Block_Obj root = sheet.root;
     // abort on invalid root
     if (root.isNull()) return {};
-    Env global; // create root environment
-    // register built-in functions on env
-    register_built_in_functions(*this, &global);
-    // register custom functions (defined via C-API)
-    for (size_t i = 0, S = c_functions.size(); i < S; ++i)
-    { register_c_function(*this, &global, c_functions[i]); }
-    // create initial backtrace entry
-    // create crtp visitor objects
-    Expand expand(*this, &global);
-    Cssize cssize(*this);
-    CheckNesting check_nesting;
-    // check nesting in all files
-    for (auto sheet : sheets) {
-      auto styles = sheet.second;
-      check_nesting(styles.root);
+
+    Eval eval(*this);
+    eval.plainCss = sheet.plainCss;
+    EnvScope scoped(varRoot, varRoot.getIdxs());
+    for (size_t i = 0; i < fnCache.size(); i++) {
+      varRoot.functions[i] = fnCache[i];
     }
-    // expand and eval the tree
-    root = expand(root);
+    root = eval.visitRootBlock99(root); // 50%
 
     Extension unsatisfied;
     // check that all extends were used
     if (extender.checkForUnsatisfiedExtends(unsatisfied)) {
-      throw Exception::UnsatisfiedExtend(traces, unsatisfied);
+      throw Exception::UnsatisfiedExtend(*logger, unsatisfied);
     }
 
-    // check nesting
-    check_nesting(root);
-    // merge and bubble certain rules
-    root = cssize(root);
+    // This can use up to 10% runtime
+    Cssize cssize(*this);
+    root = cssize(root); // 5%
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders;
-    root->perform(&remove_placeholders);
+    root->perform(&remove_placeholders); // 3%
 
     // return processed tree
     return root;
@@ -676,11 +706,12 @@ namespace Sass {
   sass::string Context::format_embedded_source_map()
   {
     sass::string map = emitter.render_srcmap(*this);
-    sass::istream is( map.c_str() );
-    sass::ostream buffer;
+    std::istringstream is( map.c_str() );
+    std::ostringstream buffer;
     base64::encoder E;
     E.encode(is, buffer);
-    sass::string url = "data:application/json;base64," + buffer.str();
+    sass::string url = "data:application/json;base64,";
+    url += buffer.str().c_str();
     url.erase(url.size() - 1);
     return "/*# sourceMappingURL=" + url + " */";
   }
@@ -698,6 +729,11 @@ namespace Sass {
     return sass_copy_c_string(map.c_str());
   }
 
+  char* Context::render_stderr()
+  {
+    sass::string err = logger->errors.str();
+    return sass_copy_c_string(err.c_str());
+  }
 
   // for data context we want to start after "stdin"
   // we probably always want to skip the header includes?
@@ -713,151 +749,210 @@ namespace Sass {
       return includes;
   }
 
-  void register_function(Context& ctx, Signature sig, Native_Function f, Env* env)
+  void register_built_in_function(Context& ctx, sass::string name, sass::string prototype, SassFnSig cb)
   {
-    Definition* def = make_native_function(sig, f, ctx);
-    def->environment(env);
-    (*env)[def->name() + "[f]"] = def;
+    ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    // ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
+    ctx.functions.insert(std::make_pair(name, callable));
+    ctx.varRoot.createFunction(name);
+    ctx.fnCache.push_back(callable);
+    // ctx.varRoot.functions.push_back(callable);
   }
 
-  void register_function(Context& ctx, Signature sig, Native_Function f, size_t arity, Env* env)
+  void register_external_function(Context& ctx, sass::string name, sass::string prototype, Sass_Function_Entry cb)
   {
-    Definition* def = make_native_function(sig, f, ctx);
-    sass::ostream ss;
-    ss << def->name() << "[f]" << arity;
-    def->environment(env);
-    (*env)[ss.str()] = def;
-  }
-
-  void register_overload_stub(Context& ctx, sass::string name, Env* env)
-  {
-    Definition* stub = SASS_MEMORY_NEW(Definition,
-                                       SourceSpan{ "[built-in function]" },
-                                       nullptr,
-                                       name,
-                                       Parameters_Obj{},
-                                       nullptr,
-                                       true);
-    (*env)[name + "[f]"] = stub;
+    // ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    // ctx.builtins.insert(std::make_pair(name, new ExternalCallable(name, args, cb)));
   }
 
 
-  void register_built_in_functions(Context& ctx, Env* env)
+  void register_built_in_overloads(Context& ctx, sass::string name,
+    std::vector<std::pair<sass::string, SassFnSig>> overloads)
+  {
+    SassFnPairs pairs;
+    for (auto overload : overloads) {
+      ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, overload.first);
+      pairs.emplace_back(std::make_pair(args, overload.second));
+    }
+    // ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, pairs)));
+    auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
+    ctx.functions.insert(std::make_pair(name, callable));
+    ctx.varRoot.createFunction(name);
+    ctx.fnCache.push_back(callable);
+
+  }
+
+  union Sass_Value* customSassFn(
+    const union Sass_Value* s_args,
+    void* cookie
+  ) {
+    return sass_clone_value(s_args);
+  }
+
+  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct Sass_Compiler* compiler)
+  {
+    // we actually abuse the void* to store an "int"
+    return sass_clone_value(v);
+  }
+
+  void register_built_in_functions(Context& ctx)
   {
     using namespace Functions;
-    // RGB Functions
-    register_function(ctx, rgb_sig, rgb, env);
-    register_overload_stub(ctx, "rgba", env);
-    register_function(ctx, rgba_4_sig, rgba_4, 4, env);
-    register_function(ctx, rgba_2_sig, rgba_2, 2, env);
-    register_function(ctx, red_sig, red, env);
-    register_function(ctx, green_sig, green, env);
-    register_function(ctx, blue_sig, blue, env);
-    register_function(ctx, mix_sig, mix, env);
-    // HSL Functions
-    register_function(ctx, hsl_sig, hsl, env);
-    register_function(ctx, hsla_sig, hsla, env);
-    register_function(ctx, hue_sig, hue, env);
-    register_function(ctx, saturation_sig, saturation, env);
-    register_function(ctx, lightness_sig, lightness, env);
-    register_function(ctx, adjust_hue_sig, adjust_hue, env);
-    register_function(ctx, lighten_sig, lighten, env);
-    register_function(ctx, darken_sig, darken, env);
-    register_function(ctx, saturate_sig, saturate, env);
-    register_function(ctx, desaturate_sig, desaturate, env);
-    register_function(ctx, grayscale_sig, grayscale, env);
-    register_function(ctx, complement_sig, complement, env);
-    register_function(ctx, invert_sig, invert, env);
-    // Opacity Functions
-    register_function(ctx, alpha_sig, alpha, env);
-    register_function(ctx, opacity_sig, alpha, env);
-    register_function(ctx, opacify_sig, opacify, env);
-    register_function(ctx, fade_in_sig, opacify, env);
-    register_function(ctx, transparentize_sig, transparentize, env);
-    register_function(ctx, fade_out_sig, transparentize, env);
-    // Other Color Functions
-    register_function(ctx, adjust_color_sig, adjust_color, env);
-    register_function(ctx, scale_color_sig, scale_color, env);
-    register_function(ctx, change_color_sig, change_color, env);
-    register_function(ctx, ie_hex_str_sig, ie_hex_str, env);
-    // String Functions
-    register_function(ctx, unquote_sig, sass_unquote, env);
-    register_function(ctx, quote_sig, sass_quote, env);
-    register_function(ctx, str_length_sig, str_length, env);
-    register_function(ctx, str_insert_sig, str_insert, env);
-    register_function(ctx, str_index_sig, str_index, env);
-    register_function(ctx, str_slice_sig, str_slice, env);
-    register_function(ctx, to_upper_case_sig, to_upper_case, env);
-    register_function(ctx, to_lower_case_sig, to_lower_case, env);
-    // Number Functions
-    register_function(ctx, percentage_sig, percentage, env);
-    register_function(ctx, round_sig, round, env);
-    register_function(ctx, ceil_sig, ceil, env);
-    register_function(ctx, floor_sig, floor, env);
-    register_function(ctx, abs_sig, abs, env);
-    register_function(ctx, min_sig, min, env);
-    register_function(ctx, max_sig, max, env);
-    register_function(ctx, random_sig, random, env);
+
+    // EnvFrame local(&ctx.varRoot, true);
+    // ScopedStackFrame<EnvFrame>
+    //   scoped(ctx.varStack.root, &local);
+
     // List Functions
-    register_function(ctx, length_sig, length, env);
-    register_function(ctx, nth_sig, nth, env);
-    register_function(ctx, set_nth_sig, set_nth, env);
-    register_function(ctx, index_sig, index, env);
-    register_function(ctx, join_sig, join, env);
-    register_function(ctx, append_sig, append, env);
-    register_function(ctx, zip_sig, zip, env);
-    register_function(ctx, list_separator_sig, list_separator, env);
-    register_function(ctx, is_bracketed_sig, is_bracketed, env);
+    register_built_in_function(ctx, "length", "$list", Functions::Lists::length);
+    register_built_in_function(ctx, "nth", "$list, $n", Functions::Lists::nth);
+    register_built_in_function(ctx, "set-nth", "$list, $n, $value", Functions::Lists::setNth);
+    register_built_in_function(ctx, "join", "$list1, $list2, $separator: auto, $bracketed: auto", Functions::Lists::join);
+    register_built_in_function(ctx, "append", "$list, $val, $separator: auto", Functions::Lists::append);
+    register_built_in_function(ctx, "zip", "$lists...", Functions::Lists::zip);
+    register_built_in_function(ctx, "index", "$list, $value", Functions::Lists::index);
+    register_built_in_function(ctx, "list-separator", "$list", Functions::Lists::separator);
+    register_built_in_function(ctx, "is-bracketed", "$list", Functions::Lists::isBracketed);
+
     // Map Functions
-    register_function(ctx, map_get_sig, map_get, env);
-    register_function(ctx, map_merge_sig, map_merge, env);
-    register_function(ctx, map_remove_sig, map_remove, env);
-    register_function(ctx, map_keys_sig, map_keys, env);
-    register_function(ctx, map_values_sig, map_values, env);
-    register_function(ctx, map_has_key_sig, map_has_key, env);
-    register_function(ctx, keywords_sig, keywords, env);
-    // Introspection Functions
-    register_function(ctx, type_of_sig, type_of, env);
-    register_function(ctx, unit_sig, unit, env);
-    register_function(ctx, unitless_sig, unitless, env);
-    register_function(ctx, comparable_sig, comparable, env);
-    register_function(ctx, variable_exists_sig, variable_exists, env);
-    register_function(ctx, global_variable_exists_sig, global_variable_exists, env);
-    register_function(ctx, function_exists_sig, function_exists, env);
-    register_function(ctx, mixin_exists_sig, mixin_exists, env);
-    register_function(ctx, feature_exists_sig, feature_exists, env);
-    register_function(ctx, call_sig, call, env);
-    register_function(ctx, content_exists_sig, content_exists, env);
-    register_function(ctx, get_function_sig, get_function, env);
-    // Boolean Functions
-    register_function(ctx, not_sig, sass_not, env);
-    register_function(ctx, if_sig, sass_if, env);
-    // Misc Functions
-    register_function(ctx, inspect_sig, inspect, env);
-    register_function(ctx, unique_id_sig, unique_id, env);
+    register_built_in_function(ctx, "map-get", "$map, $key", Functions::Maps::get);
+    register_built_in_function(ctx, "map-merge", "$map1, $map2", Functions::Maps::merge);
+    register_built_in_overloads(ctx, "map-remove", {
+        std::make_pair("$map", Functions::Maps::remove_one),
+        std::make_pair("$map, $key, $keys...", Functions::Maps::remove_many)
+      });
+
+    // register_built_in_function(ctx, "remove", "$list", Functions::Maps::remove); // overloaded
+    register_built_in_function(ctx, "map-keys", "$map", Functions::Maps::keys);
+    register_built_in_function(ctx, "map-values", "$map", Functions::Maps::values);
+    register_built_in_function(ctx, "map-has-key", "$map, $key", Functions::Maps::hasKey);
+
+    // Math Functions
+    register_built_in_function(ctx, "round", "$number", Functions::Math::round);
+    register_built_in_function(ctx, "ceil", "$number", Functions::Math::ceil);
+    register_built_in_function(ctx, "floor", "$number", Functions::Math::floor);
+    register_built_in_function(ctx, "abs", "$number", Functions::Math::abs);
+    register_built_in_function(ctx, "max", "$numbers...", Functions::Math::max);
+    register_built_in_function(ctx, "min", "$numbers...", Functions::Math::min);
+    register_built_in_function(ctx, "random", "$limit: null", Functions::Math::random);
+    register_built_in_function(ctx, "unit", "$number", Functions::Math::unit);
+    register_built_in_function(ctx, "percentage", "$number", Functions::Math::percentage);
+    register_built_in_function(ctx, "unitless", "$number", Functions::Math::isUnitless);
+    register_built_in_function(ctx, "comparable", "$number1, $number2", Functions::Math::compatible);
+
+    // String functions
+    register_built_in_function(ctx, "unquote", "$string", Functions::Strings::unquote);
+    register_built_in_function(ctx, "quote", "$string", Functions::Strings::quote);
+    register_built_in_function(ctx, "to-upper-case", "$string", Functions::Strings::toUpperCase);
+    register_built_in_function(ctx, "to-lower-case", "$string", Functions::Strings::toLowerCase);
+    register_built_in_function(ctx, "str-length", "$string", Functions::Strings::length);
+    register_built_in_function(ctx, "str-insert", "$string, $insert, $index", Functions::Strings::insert);
+    register_built_in_function(ctx, "str-index", "$string, $substring", Functions::Strings::index);
+    register_built_in_function(ctx, "str-slice", "$string, $start-at, $end-at: -1", Functions::Strings::slice);
+    register_built_in_function(ctx, "unique-id", "", Functions::Strings::uniqueId);
+
+    // Color functions
+    register_built_in_overloads(ctx, "rgb", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::rgb_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::rgb_3),
+        std::make_pair("$color, $alpha", Functions::Colors::rgb_2),
+        std::make_pair("$channels", Functions::Colors::rgb_1),
+      });
+    register_built_in_overloads(ctx, "rgba", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::rgba_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::rgba_3),
+        std::make_pair("$color, $alpha", Functions::Colors::rgba_2),
+        std::make_pair("$channels", Functions::Colors::rgba_1),
+      });
+    register_built_in_overloads(ctx, "hsl", {
+        std::make_pair("$hue, $saturation, $lightness, $alpha", Functions::Colors::hsl_4),
+        std::make_pair("$hue, $saturation, $lightness", Functions::Colors::hsl_3),
+        std::make_pair("$color, $alpha", Functions::Colors::hsl_2),
+        std::make_pair("$channels", Functions::Colors::hsl_1),
+      });
+    register_built_in_overloads(ctx, "hsla", {
+        std::make_pair("$hue, $saturation, $lightness, $alpha", Functions::Colors::hsla_4),
+        std::make_pair("$hue, $saturation, $lightness", Functions::Colors::hsla_3),
+        std::make_pair("$color, $alpha", Functions::Colors::hsla_2),
+        std::make_pair("$channels", Functions::Colors::hsla_1),
+      });
+
+    register_built_in_function(ctx, "red", "$color", Functions::Colors::red);
+    register_built_in_function(ctx, "green", "$color", Functions::Colors::green);
+    register_built_in_function(ctx, "blue", "$color", Functions::Colors::blue);
+    register_built_in_function(ctx, "hue", "$color", Functions::Colors::hue);
+    register_built_in_function(ctx, "lightness", "$color", Functions::Colors::lightness);
+    register_built_in_function(ctx, "saturation", "$color", Functions::Colors::saturation);
+    register_built_in_function(ctx, "invert", "$color, $weight: 100%", Functions::Colors::invert);
+    register_built_in_function(ctx, "grayscale", "$color", Functions::Colors::grayscale);
+    register_built_in_function(ctx, "complement", "$color", Functions::Colors::complement);
+    register_built_in_function(ctx, "lighten", "$color, $amount", Functions::Colors::lighten);
+    register_built_in_function(ctx, "darken", "$color, $amount", Functions::Colors::darken);
+    register_built_in_function(ctx, "desaturate", "$color, $amount", Functions::Colors::desaturate);
+    register_built_in_overloads(ctx, "saturate", {
+        std::make_pair("$amount", Functions::Colors::saturate_1),
+        std::make_pair("$color, $amount", Functions::Colors::saturate_2),
+      });
+    
+    register_built_in_function(ctx, "adjust-hue", "$color, $degrees", Functions::Colors::adjustHue);
+    register_built_in_function(ctx, "adjust-color", "$color, $kwargs...", Functions::Colors::adjust);
+    register_built_in_function(ctx, "change-color", "$color, $kwargs...", Functions::Colors::change);
+    register_built_in_function(ctx, "scale-color", "$color, $kwargs...", Functions::Colors::scale);
+    register_built_in_function(ctx, "mix", "$color1, $color2, $weight: 50%", Functions::Colors::mix);
+
+    // Opacity functions
+    register_built_in_function(ctx, "opacify", "$color, $amount", Functions::Colors::opacify);
+    register_built_in_function(ctx, "fade-in", "$color, $amount", Functions::Colors::opacify);
+    register_built_in_function(ctx, "fade-out", "$color, $amount", Functions::Colors::transparentize);
+    register_built_in_function(ctx, "transparentize", "$color, $amount", Functions::Colors::transparentize);
+    register_built_in_function(ctx, "ie-hex-str", "$color", Functions::Colors::ieHexStr);
+    register_built_in_overloads(ctx, "alpha", {
+        std::make_pair("$color", Functions::Colors::alpha_one),
+        std::make_pair("$args...", Functions::Colors::alpha_any),
+      });
+    register_built_in_function(ctx, "opacity", "$color", Functions::Colors::opacity);
+
     // Selector functions
-    register_function(ctx, selector_nest_sig, selector_nest, env);
-    register_function(ctx, selector_append_sig, selector_append, env);
-    register_function(ctx, selector_extend_sig, selector_extend, env);
-    register_function(ctx, selector_replace_sig, selector_replace, env);
-    register_function(ctx, selector_unify_sig, selector_unify, env);
-    register_function(ctx, is_superselector_sig, is_superselector, env);
-    register_function(ctx, simple_selectors_sig, simple_selectors, env);
-    register_function(ctx, selector_parse_sig, selector_parse, env);
+    register_built_in_function(ctx, "selector-nest", "$selectors...", Functions::Selectors::nest);
+    register_built_in_function(ctx, "selector-append", "$selectors...", Functions::Selectors::append);
+    register_built_in_function(ctx, "selector-extend", "$selector, $extendee, $extender", Functions::Selectors::extend);
+    register_built_in_function(ctx, "selector-replace", "$selector, $original, $replacement", Functions::Selectors::replace);
+    register_built_in_function(ctx, "selector-unify", "$selector1, $selector2", Functions::Selectors::unify);
+    register_built_in_function(ctx, "is-superselector", "$super, $sub", Functions::Selectors::isSuper);
+    register_built_in_function(ctx, "simple-selectors", "$selector", Functions::Selectors::simple);
+    register_built_in_function(ctx, "selector-parse", "$selector", Functions::Selectors::parse);
+
+    // Meta functions
+    register_built_in_function(ctx, "feature-exists", "$feature", Functions::Meta::featureExists);
+    register_built_in_function(ctx, "type-of", "$value", Functions::Meta::typeOf);
+    register_built_in_function(ctx, "inspect", "$value", Functions::Meta::inspect);
+    register_built_in_function(ctx, "keywords", "$args", Functions::Meta::keywords);
+
+    // ToDo: dart-sass keeps them on the local environment scope, see below:
+    // These functions are defined in the context of the evaluator because
+    // they need access to the [_environment] or other local state.
+    register_built_in_function(ctx, "global-variable-exists", "$name, $module: null", Functions::Meta::globalVariableExists);
+    register_built_in_function(ctx, "variable-exists", "$name", Functions::Meta::variableExists);
+    register_built_in_function(ctx, "function-exists", "$name, $module: null", Functions::Meta::functionExists);
+    register_built_in_function(ctx, "mixin-exists", "$name, $module: null", Functions::Meta::mixinExists);
+    register_built_in_function(ctx, "content-exists", "", Functions::Meta::contentExists);
+    // register_built_in_function(ctx, "module-variables", "$module", Functions::Meta::moduleVariables);
+    // register_built_in_function(ctx, "module-functions", "$module", Functions::Meta::moduleFunctions);
+    register_built_in_function(ctx, "get-function", "$name, $css: false, $module: null", Functions::Meta::getFunction);
+    register_built_in_function(ctx, "call", "$function, $args...", Functions::Meta::call);
+
   }
 
-  void register_c_functions(Context& ctx, Env* env, Sass_Function_List descrs)
+  void register_c_function2(Context& ctx, Sass_Function_Entry descr)
   {
-    while (descrs && *descrs) {
-      register_c_function(ctx, env, *descrs);
-      ++descrs;
-    }
-  }
-  void register_c_function(Context& ctx, Env* env, Sass_Function_Entry descr)
-  {
-    Definition* def = make_c_function(descr, ctx);
-    def->environment(env);
-    (*env)[def->name() + "[f]"] = def;
+    EnvFrame local(&ctx.varRoot, true);
+    ScopedStackFrame<EnvFrame> scoped(ctx.varStack, &local);
+    ExternalCallable* callable = make_c_function2(descr, ctx);
+    callable->idxs(local.getIdxs());
+    ctx.functions.insert(std::make_pair(callable->name(), callable));
+    ctx.varRoot.createFunction(callable->name());
+    ctx.fnCache.push_back(callable);
   }
 
 }

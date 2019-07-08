@@ -10,26 +10,15 @@
 
 namespace Sass {
 
-  struct Backtrace;
+  struct BackTrace;
 
-  class Listize : public Operation_CRTP<Expression*, Listize> {
-
-  public:
-
-    static Expression* perform(AST_Node* node);
+  class Listize {
 
   public:
-    Listize();
-    ~Listize() { }
 
-    Expression* operator()(SelectorList*);
-    Expression* operator()(ComplexSelector*);
-    Expression* operator()(CompoundSelector*);
+    static Value* listize(SelectorList*);
+    static Value* listize(ComplexSelector*);
 
-    // generic fallback
-    template <typename U>
-    Expression* fallback(U x)
-    { return Cast<Expression>(x); }
   };
 
 }

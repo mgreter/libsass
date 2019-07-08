@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include "logger.hpp"
 #include "units.hpp"
 #include "position.hpp"
 #include "backtrace.hpp"
@@ -16,33 +17,28 @@
 
 namespace Sass {
 
-  struct Backtrace;
+  struct BackTrace;
 
   namespace Exception {
 
-    const sass::string def_msg = "Invalid sass detected";
-    const sass::string def_op_msg = "Undefined operation";
-    const sass::string def_op_null_msg = "Invalid null operation";
-    const sass::string def_nesting_limit = "Code too deeply nested";
+    const sass::string def_msg("Invalid sass detected");
+    const sass::string def_op_null_msg("Invalid null operation");
+    const sass::string def_nesting_limit("Code too deeply nested");
+
+    const sass::string msg_recursion_limit =
+      "Too deep recursion detected. This can be caused by too deep level nesting.\n"
+      "LibSass will abort here in order to avoid a possible stack overflow.\n";
 
     class Base : public std::runtime_error {
       protected:
         sass::string msg;
-        sass::string prefix;
       public:
-        SourceSpan pstate;
-        Backtraces traces;
+        StackTraces traces;
       public:
-        Base(SourceSpan pstate, sass::string msg, Backtraces traces);
-        virtual const char* errtype() const { return prefix.c_str(); }
+        Base(sass::string msg, BackTraces traces);
+        Base(sass::string msg, BackTraces traces, SourceSpan pstate);
         virtual const char* what() const throw() { return msg.c_str(); }
-        virtual ~Base() throw() {};
-    };
-
-    class InvalidSass : public Base {
-      public:
-        InvalidSass(SourceSpan pstate, Backtraces traces, sass::string msg);
-        virtual ~InvalidSass() throw() {};
+        virtual ~Base() noexcept {};
     };
 
     class InvalidParent : public Base {
@@ -50,50 +46,52 @@ namespace Sass {
         Selector* parent;
         Selector* selector;
       public:
-        InvalidParent(Selector* parent, Backtraces traces, Selector* selector);
-        virtual ~InvalidParent() throw() {};
+        InvalidParent(Selector* parent, BackTraces traces, Selector* selector);
+        virtual ~InvalidParent() noexcept {};
     };
 
-    class MissingArgument : public Base {
-      protected:
-        sass::string fn;
-        sass::string arg;
-        sass::string fntype;
-      public:
-        MissingArgument(SourceSpan pstate, Backtraces traces, sass::string fn, sass::string arg, sass::string fntype);
-        virtual ~MissingArgument() throw() {};
-    };
-
-    class InvalidArgumentType : public Base {
-      protected:
-        sass::string fn;
-        sass::string arg;
-        sass::string type;
-        const Value* value;
-      public:
-        InvalidArgumentType(SourceSpan pstate, Backtraces traces, sass::string fn, sass::string arg, sass::string type, const Value* value = 0);
-        virtual ~InvalidArgumentType() throw() {};
-    };
-
-    class InvalidVarKwdType : public Base {
-      protected:
-        sass::string name;
-        const Argument* arg;
-      public:
-        InvalidVarKwdType(SourceSpan pstate, Backtraces traces, sass::string name, const Argument* arg = 0);
-        virtual ~InvalidVarKwdType() throw() {};
+    class InvalidUnicode : public Base {
+    public:
+      InvalidUnicode(SourceSpan pstate, BackTraces traces);
+      virtual ~InvalidUnicode() noexcept {};
     };
 
     class InvalidSyntax : public Base {
-      public:
-        InvalidSyntax(SourceSpan pstate, Backtraces traces, sass::string msg);
-        virtual ~InvalidSyntax() throw() {};
+    public:
+      InvalidSyntax(BackTraces traces, sass::string msg);
+      virtual ~InvalidSyntax() noexcept {};
     };
 
-    class NestingLimitError : public Base {
+    // Push pstate to back traces on our own
+    class SassScriptException3 : public Base {
+    public:
+      SassScriptException3(sass::string msg,
+        BackTraces traces, SourceSpan pstate,
+        sass::string name = "");
+      ~SassScriptException3() noexcept {};
+    };
+
+    class SassScriptException2 : public Base {
+    public:
+      SassScriptException2(sass::string msg,
+        BackTraces traces, SourceSpan pstate,
+        sass::string name = "");
+      ~SassScriptException2() noexcept {};
+    };
+
+    class SassRuntimeException2 : public Base {
+    public:
+      SassRuntimeException2(sass::string msg, BackTraces traces);
+      SassRuntimeException2(sass::string msg, BackTraces traces, SourceSpan pstate);
+      virtual const char* what() const throw() { return msg.c_str(); }
+      ~SassRuntimeException2() noexcept {};
+    };
+
+
+    class RecursionLimitError : public Base {
       public:
-        NestingLimitError(SourceSpan pstate, Backtraces traces, sass::string msg = def_nesting_limit);
-        virtual ~NestingLimitError() throw() {};
+        RecursionLimitError(SourceSpan pstate, BackTraces traces);
+        virtual ~RecursionLimitError() noexcept {};
     };
 
     class DuplicateKeyError : public Base {
@@ -101,37 +99,16 @@ namespace Sass {
         const Map& dup;
         const Expression& org;
       public:
-        DuplicateKeyError(Backtraces traces, const Map& dup, const Expression& org);
+        DuplicateKeyError(BackTraces traces, const Map& dup, const Expression& org);
         virtual const char* errtype() const { return "Error"; }
-        virtual ~DuplicateKeyError() throw() {};
-    };
-
-    class TypeMismatch : public Base {
-      protected:
-        const Expression& var;
-        const sass::string type;
-      public:
-        TypeMismatch(Backtraces traces, const Expression& var, const sass::string type);
-        virtual const char* errtype() const { return "Error"; }
-        virtual ~TypeMismatch() throw() {};
+        virtual ~DuplicateKeyError() noexcept {};
     };
 
     class InvalidValue : public Base {
-      protected:
-        const Expression& val;
       public:
-        InvalidValue(Backtraces traces, const Expression& val);
+        InvalidValue(BackTraces traces, const Value& val);
         virtual const char* errtype() const { return "Error"; }
-        virtual ~InvalidValue() throw() {};
-    };
-
-    class StackError : public Base {
-      protected:
-        const AST_Node& node;
-      public:
-        StackError(Backtraces traces, const AST_Node& node);
-        virtual const char* errtype() const { return "SystemStackError"; }
-        virtual ~StackError() throw() {};
+        virtual ~InvalidValue() noexcept {};
     };
 
     /* common virtual base class (has no pstate or trace) */
@@ -139,23 +116,20 @@ namespace Sass {
       protected:
         sass::string msg;
       public:
-        OperationError(sass::string msg = def_op_msg)
+        OperationError(sass::string msg = sass::string("Undefined operation"))
         : std::runtime_error(msg.c_str()), msg(msg)
         {};
       public:
         virtual const char* errtype() const { return "Error"; }
         virtual const char* what() const throw() { return msg.c_str(); }
-        virtual ~OperationError() throw() {};
+        virtual ~OperationError() noexcept {};
     };
 
     class ZeroDivisionError : public OperationError {
-      protected:
-        const Expression& lhs;
-        const Expression& rhs;
       public:
         ZeroDivisionError(const Expression& lhs, const Expression& rhs);
         virtual const char* errtype() const { return "ZeroDivisionError"; }
-        virtual ~ZeroDivisionError() throw() {};
+        virtual ~ZeroDivisionError() noexcept {};
     };
 
     class IncompatibleUnits : public OperationError {
@@ -164,75 +138,52 @@ namespace Sass {
         // const Sass::UnitType rhs;
       public:
         IncompatibleUnits(const Units& lhs, const Units& rhs);
-        IncompatibleUnits(const UnitType lhs, const UnitType rhs);
-        virtual ~IncompatibleUnits() throw() {};
+        virtual ~IncompatibleUnits() noexcept {};
     };
 
     class UndefinedOperation : public OperationError {
-      protected:
-        const Expression* lhs;
-        const Expression* rhs;
-        const Sass_OP op;
       public:
         UndefinedOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op);
         // virtual const char* errtype() const { return "Error"; }
-        virtual ~UndefinedOperation() throw() {};
+        virtual ~UndefinedOperation() noexcept {};
     };
 
-    class InvalidNullOperation : public UndefinedOperation {
+    class InvalidNullOperation : public OperationError {
       public:
         InvalidNullOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op);
-        virtual ~InvalidNullOperation() throw() {};
+        virtual ~InvalidNullOperation() noexcept {};
     };
 
     class AlphaChannelsNotEqual : public OperationError {
-      protected:
-        const Expression* lhs;
-        const Expression* rhs;
-        const Sass_OP op;
       public:
-        AlphaChannelsNotEqual(const Expression* lhs, const Expression* rhs, enum Sass_OP op);
+        AlphaChannelsNotEqual(const Color_RGBA* lhs, const Color_RGBA* rhs, enum Sass_OP op);
         // virtual const char* errtype() const { return "Error"; }
-        virtual ~AlphaChannelsNotEqual() throw() {};
-    };
-
-    class SassValueError : public Base {
-    public:
-      SassValueError(Backtraces traces, SourceSpan pstate, OperationError& err);
-      virtual ~SassValueError() throw() {};
+        virtual ~AlphaChannelsNotEqual() noexcept {};
     };
 
     class TopLevelParent : public Base {
     public:
-      TopLevelParent(Backtraces traces, SourceSpan pstate);
-      virtual ~TopLevelParent() throw() {};
+      TopLevelParent(BackTraces traces, SourceSpan pstate);
+      virtual ~TopLevelParent() noexcept {};
     };
 
     class UnsatisfiedExtend : public Base {
     public:
-      UnsatisfiedExtend(Backtraces traces, Extension extension);
-      virtual ~UnsatisfiedExtend() throw() {};
+      UnsatisfiedExtend(BackTraces traces, Extension extension);
+      virtual ~UnsatisfiedExtend() noexcept {};
     };
 
     class ExtendAcrossMedia : public Base {
     public:
-      ExtendAcrossMedia(Backtraces traces, Extension extension);
-      virtual ~ExtendAcrossMedia() throw() {};
+      ExtendAcrossMedia(BackTraces traces, Extension extension);
+      virtual ~ExtendAcrossMedia() noexcept {};
     };
 
   }
 
-  void warn(sass::string msg, SourceSpan pstate);
-  void warn(sass::string msg, SourceSpan pstate, Backtrace* bt);
-  void warning(sass::string msg, SourceSpan pstate);
-
-  void deprecated_function(sass::string msg, SourceSpan pstate);
   void deprecated(sass::string msg, sass::string msg2, bool with_column, SourceSpan pstate);
-  void deprecated_bind(sass::string msg, SourceSpan pstate);
-  // void deprecated(sass::string msg, SourceSpan pstate, Backtrace* bt);
-
-  void coreError(sass::string msg, SourceSpan pstate);
-  void error(sass::string msg, SourceSpan pstate, Backtraces& traces);
+  // Migrate to new dart sass output
+  void error(const sass::string& msg, SourceSpan pstate, BackTraces& traces);
 
 }
 

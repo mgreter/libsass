@@ -6,6 +6,7 @@
 #include "sass.hpp"
 
 #include "sass/base.h"
+#include "sass/values.h"
 #include "source_map.hpp"
 #include "ast_fwd_decl.hpp"
 
@@ -23,7 +24,7 @@ namespace Sass {
     public:
       const sass::string& buffer(void) { return wbuf.buffer; }
       const SourceMap smap(void) { return wbuf.smap; }
-      const OutputBuffer output(void) { return wbuf; }
+      const OutputBuffer& output(void) { return wbuf; }
       // proxy methods for source maps
       void add_source_index(size_t idx);
       void set_filename(const sass::string& str);
@@ -45,15 +46,10 @@ namespace Sass {
     public:
       // output strings different in custom css properties
       bool in_custom_property;
-      // output strings different in comments
-      bool in_comment;
-      // selector list does not get linefeeds
-      bool in_wrapped;
-      // lists always get a space after delimiter
-      bool in_media_block;
       // nested list must not have parentheses
       bool in_declaration;
       // nested lists need parentheses
+      sass::vector<Sass_Separator> separators;
       bool in_space_array;
       bool in_comma_array;
 
@@ -70,11 +66,13 @@ namespace Sass {
       void prepend_string(const sass::string& text);
       void prepend_output(const OutputBuffer& out);
       // append some text or token to the buffer
+      void write_string(const sass::string& text);
       void append_string(const sass::string& text);
+      void append_string(const char* text, size_t repeat);
+      void append_string(const sass::string& text, size_t repeat);
       // append a single character to buffer
-      void append_char(const char chr);
-      // append some white-space only text
-      void append_wspace(const sass::string& text);
+      void write_char(uint8_t chr);
+      void append_char(uint8_t chr);
       // append some text or token to the buffer
       // this adds source-mappings for node start and end
       void append_token(const sass::string& text, const AST_Node* node);

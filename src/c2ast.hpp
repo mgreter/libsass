@@ -7,7 +7,7 @@
 
 namespace Sass {
 
-  Value* c2ast(union Sass_Value* v, Backtraces traces, SourceSpan pstate);
+  Value* c2ast(union Sass_Value* v, BackTraces traces, SourceSpan pstate);
 
 }
 

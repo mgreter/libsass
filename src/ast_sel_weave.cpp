@@ -14,6 +14,13 @@ namespace Sass {
   bool hasRoot(const CompoundSelector* compound)
   {
     // Libsass does not yet know the root selector
+    for (const SimpleSelector* simple : compound->elements()) {
+      if (const PseudoSelector* pseudo = simple->getPseudoSelector()) {
+        if (pseudo->isClass() && pseudo->normalized() == "root") {
+          return true;
+        }
+      }
+    }
     return false;
   }
   // EO hasRoot
@@ -24,8 +31,8 @@ namespace Sass {
   // ##########################################################################
   bool isUnique(const SimpleSelector* simple)
   {
-    if (Cast<IDSelector>(simple)) return true;
-    if (const PseudoSelector * pseudo = Cast<PseudoSelector>(simple)) {
+    if (simple->getIDSelector()) return true;
+    if (const PseudoSelector * pseudo = simple->getPseudoSelector()) {
       if (pseudo->is_pseudo_element()) return true;
     }
     return false;
@@ -47,7 +54,7 @@ namespace Sass {
       if (const CompoundSelector * compound = component->getCompound()) {
         for (const SimpleSelector* sel : compound->elements()) {
           if (isUnique(sel)) {
-            uniqueSelectors1.push_back(sel);
+            uniqueSelectors1.emplace_back(sel);
           }
         }
       }
@@ -86,11 +93,11 @@ namespace Sass {
       return true;
     }
 
-    if (!Cast<CompoundSelector>(group1.front())) {
+    if (!group1.front()->getCompound()) {
       select = {};
       return false;
     }
-    if (!Cast<CompoundSelector>(group2.front())) {
+    if (!group2.front()->getCompound()) {
       select = {};
       return false;
     }
@@ -166,13 +173,13 @@ namespace Sass {
 
     sass::vector<T> chunk1;
     while (!done(queue1, group)) {
-      chunk1.push_back(queue1.front());
+      chunk1.emplace_back(queue1.front());
       queue1.erase(queue1.begin());
     }
 
     sass::vector<T> chunk2;
     while (!done(queue2, group)) {
-      chunk2.push_back(queue2.front());
+      chunk2.emplace_back(queue2.front());
       queue2.erase(queue2.begin());
     }
 
@@ -196,7 +203,7 @@ namespace Sass {
   CompoundSelectorObj getFirstIfRoot(sass::vector<SelectorComponentObj>& queue) {
     if (queue.empty()) return {};
     SelectorComponent* first = queue.front();
-    if (CompoundSelector* sel = Cast<CompoundSelector>(first)) {
+    if (CompoundSelector* sel = first->getCompound()) {
       if (!hasRoot(sel)) return {};
       queue.erase(queue.begin());
       return sel;
@@ -219,19 +226,19 @@ namespace Sass {
     for (size_t i = 0; i < components.size(); i += 1) {
       if (CompoundSelector* compound = components[i]->getCompound()) {
         if (lastWasCompound) {
-          groups.push_back(group);
+          groups.emplace_back(group);
           group.clear();
         }
-        group.push_back(compound);
+        group.emplace_back(compound);
         lastWasCompound = true;
       }
       else if (SelectorCombinator* combinator = components[i]->getCombinator()) {
-        group.push_back(combinator);
+        group.emplace_back(combinator);
         lastWasCompound = false;
       }
     }
     if (!group.empty()) {
-      groups.push_back(group);
+      groups.emplace_back(group);
     }
     return groups;
   }
@@ -245,22 +252,22 @@ namespace Sass {
   // ##########################################################################
   bool mergeInitialCombinators(
     sass::vector<SelectorComponentObj>& components1,
-    sass::vector<SelectorComponentObj>& components2,
-    sass::vector<SelectorComponentObj>& result)
+      sass::vector<SelectorComponentObj>& components2,
+        sass::vector<SelectorComponentObj>& result)
   {
 
     sass::vector<SelectorComponentObj> combinators1;
-    while (!components1.empty() && Cast<SelectorCombinator>(components1.front())) {
-      SelectorCombinatorObj front = Cast<SelectorCombinator>(components1.front());
+    while (!components1.empty() && components1.front()->getCombinator()) {
+      SelectorCombinator* front = components1.front()->getCombinator();
       components1.erase(components1.begin());
-      combinators1.push_back(front);
+      combinators1.emplace_back(front);
     }
 
     sass::vector<SelectorComponentObj> combinators2;
-    while (!components2.empty() && Cast<SelectorCombinator>(components2.front())) {
-      SelectorCombinatorObj front = Cast<SelectorCombinator>(components2.front());
+    while (!components2.empty() && components2.front()->getCombinator()) {
+      SelectorCombinator* front = components2.front()->getCombinator();
       components2.erase(components2.begin());
-      combinators2.push_back(front);
+      combinators2.emplace_back(front);
     }
 
     // If neither sequence of combinators is a subsequence
@@ -293,27 +300,27 @@ namespace Sass {
     sass::vector<sass::vector<sass::vector<SelectorComponentObj>>>& result)
   {
 
-    if (components1.empty() || !Cast<SelectorCombinator>(components1.back())) {
-      if (components2.empty() || !Cast<SelectorCombinator>(components2.back())) {
+    if (components1.empty() || components1.back()->getCombinator() == nullptr) {
+      if (components2.empty() || components2.back()->getCombinator() == nullptr) {
         return true;
       }
     }
     
     sass::vector<SelectorComponentObj> combinators1;
-    while (!components1.empty() && Cast<SelectorCombinator>(components1.back())) {
-      SelectorCombinatorObj back = Cast<SelectorCombinator>(components1.back());
+    while (!components1.empty() && components1.back()->getCombinator() != nullptr) {
+      SelectorCombinatorObj back = components1.back()->getCombinator();
       components1.erase(components1.end() - 1);
-      combinators1.push_back(back);
+      combinators1.emplace_back(back);
     }
 
     sass::vector<SelectorComponentObj> combinators2;
-    while (!components2.empty() && Cast<SelectorCombinator>(components2.back())) {
-      SelectorCombinatorObj back = Cast<SelectorCombinator>(components2.back());
+    while (!components2.empty() && components2.back()->getCombinator() != nullptr) {
+      SelectorCombinatorObj back = components2.back()->getCombinator();
       components2.erase(components2.end() - 1);
-      combinators2.push_back(back);
+      combinators2.emplace_back(back);
     }
 
-    // reverse now as we used push_back (faster than new alloc)
+    // reverse now as we used emplace_back (faster than new alloc)
     std::reverse(combinators1.begin(), combinators1.end());
     std::reverse(combinators2.begin(), combinators2.end());
 
@@ -341,8 +348,8 @@ namespace Sass {
 
     if (!combinator1.isNull() && !combinator2.isNull()) {
 
-      CompoundSelector* compound1 = Cast<CompoundSelector>(components1.back());
-      CompoundSelector* compound2 = Cast<CompoundSelector>(components2.back());
+      CompoundSelector* compound1 = components1.back()->getCompound();
+      CompoundSelector* compound2 = components2.back()->getCompound();
 
       components1.pop_back();
       components2.pop_back();
@@ -362,7 +369,7 @@ namespace Sass {
           if (CompoundSelector* unified = compound1->unifyWith(compound2)) {
             choices.push_back({ unified, combinator1 });
           }
-          result.push_back(choices);
+          result.emplace_back(choices);
         }
       }
       else if ((combinator1->isGeneralCombinator() && combinator2->isAdjacentCombinator()) ||
@@ -393,19 +400,19 @@ namespace Sass {
             nextSiblingCombinator,
           });
 
-          result.push_back(items);
+          result.emplace_back(items);
         }
 
       }
       else if (combinator1->isChildCombinator() && (combinator2->isAdjacentCombinator() || combinator2->isGeneralCombinator())) {
         result.push_back({ { compound2, combinator2 } });
-        components1.push_back(compound1);
-        components1.push_back(combinator1);
+        components1.emplace_back(compound1);
+        components1.emplace_back(combinator1);
       }
       else if (combinator2->isChildCombinator() && (combinator1->isAdjacentCombinator() || combinator1->isGeneralCombinator())) {
         result.push_back({ { compound1, combinator1 } });
-        components2.push_back(compound2);
-        components2.push_back(combinator2);
+        components2.emplace_back(compound2);
+        components2.emplace_back(combinator2);
       }
       else if (*combinator1 == *combinator2) {
         CompoundSelectorObj unified = compound1->unifyWith(compound2);
@@ -422,8 +429,8 @@ namespace Sass {
     else if (!combinator1.isNull()) {
 
       if (combinator1->isChildCombinator() && !components2.empty()) {
-        const CompoundSelector* back1 = Cast<CompoundSelector>(components1.back());
-        const CompoundSelector* back2 = Cast<CompoundSelector>(components2.back());
+        const CompoundSelector* back1 = components1.back()->getCompound();
+        const CompoundSelector* back2 = components2.back()->getCompound();
         if (back1 && back2 && back2->isSuperselectorOf(back1)) {
           components2.pop_back();
         }
@@ -438,8 +445,8 @@ namespace Sass {
     }
 
     if (combinator2->isChildCombinator() && !components1.empty()) {
-      const CompoundSelector* back1 = Cast<CompoundSelector>(components1.back());
-      const CompoundSelector* back2 = Cast<CompoundSelector>(components2.back());
+      const CompoundSelector* back1 = components1.back()->getCompound();
+      const CompoundSelector* back2 = components2.back()->getCompound();
       if (back1 && back2 && back1->isSuperselectorOf(back2)) {
         components1.pop_back();
       }
@@ -468,7 +475,7 @@ namespace Sass {
 
     sass::vector<sass::vector<SelectorComponentObj>> prefixes;
 
-    prefixes.push_back(complexes.at(0));
+    prefixes.emplace_back(complexes.at(0));
 
     for (size_t i = 1; i < complexes.size(); i += 1) {
 
@@ -479,7 +486,7 @@ namespace Sass {
       SelectorComponent* target = complex.back();
       if (complex.size() == 1) {
         for (auto& prefix : prefixes) {
-          prefix.push_back(target);
+          prefix.emplace_back(target);
         }
         continue;
       }
@@ -494,8 +501,8 @@ namespace Sass {
           parentPrefixes = weaveParents(prefix, parents);
         if (parentPrefixes.empty()) continue;
         for (auto& parentPrefix : parentPrefixes) {
-          parentPrefix.push_back(target);
-          newPrefixes.push_back(parentPrefix);
+          parentPrefix.emplace_back(target);
+          newPrefixes.emplace_back(parentPrefix);
         }
       }
       prefixes = newPrefixes;
@@ -574,13 +581,13 @@ namespace Sass {
         expanded = flattenInner(chunks);
 
       // Prepare data structures
-      choices.push_back(expanded);
+      choices.emplace_back(expanded);
       choices.push_back({ group });
       if (!groups1.empty()) {
-        groups1.erase(groups1.begin());
+      groups1.erase(groups1.begin());
       }
       if (!groups2.empty()) {
-        groups2.erase(groups2.begin());
+      groups2.erase(groups2.begin());
       }
 
     }

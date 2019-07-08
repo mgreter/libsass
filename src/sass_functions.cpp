@@ -166,29 +166,30 @@ extern "C" {
   size_t ADDCALL sass_callee_get_line(Sass_Callee_Entry entry) { return entry->line; }
   size_t ADDCALL sass_callee_get_column(Sass_Callee_Entry entry) { return entry->column; }
   enum Sass_Callee_Type ADDCALL sass_callee_get_type(Sass_Callee_Entry entry) { return entry->type; }
-  Sass_Env_Frame ADDCALL sass_callee_get_env (Sass_Callee_Entry entry) { return &entry->env; }
-
+  
   // Getters and Setters for environments (lexical, local and global)
-  union Sass_Value* ADDCALL sass_env_get_lexical (Sass_Env_Frame env, const char* name) {
-    Expression* ex = Cast<Expression>((*env->frame)[name]);
-    return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
+  union Sass_Value* ADDCALL sass_env_get_lexical (struct Sass_Compiler* compiler, const char* name) {
+    return ast_node_to_sass_value(compiler->cpp_ctx->varRoot.getLexicalVariable(Sass::EnvKey(name)));
   }
-  void ADDCALL sass_env_set_lexical (Sass_Env_Frame env, const char* name, union Sass_Value* val) {
-    (*env->frame)[name] = sass_value_to_ast_node(val);
+
+  void ADDCALL sass_env_set_lexical (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+    compiler->cpp_ctx->varRoot.setLexicalVariable(Sass::EnvKey(name), sass_value_to_ast_node(val));
   }
-  union Sass_Value* ADDCALL sass_env_get_local (Sass_Env_Frame env, const char* name) {
-    Expression* ex = Cast<Expression>(env->frame->get_local(name));
-    return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
+
+  union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler* compiler, const char* name) {
+    return ast_node_to_sass_value(compiler->cpp_ctx->varRoot.getLocalVariable(Sass::EnvKey(name)));
   }
-  void ADDCALL sass_env_set_local (Sass_Env_Frame env, const char* name, union Sass_Value* val) {
-    env->frame->set_local(name, sass_value_to_ast_node(val));
+
+  void ADDCALL sass_env_set_local (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+    compiler->cpp_ctx->varRoot.setLocalVariable(Sass::EnvKey(name), sass_value_to_ast_node(val));
   }
-  union Sass_Value* ADDCALL sass_env_get_global (Sass_Env_Frame env, const char* name) {
-    Expression* ex = Cast<Expression>(env->frame->get_global(name));
-    return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
+
+  union Sass_Value* ADDCALL sass_env_get_global (struct Sass_Compiler* compiler, const char* name) {
+    return ast_node_to_sass_value(compiler->cpp_ctx->varRoot.getGlobalVariable(Sass::EnvKey(name)));
   }
-  void ADDCALL sass_env_set_global (Sass_Env_Frame env, const char* name, union Sass_Value* val) {
-    env->frame->set_global(name, sass_value_to_ast_node(val));
+
+  void ADDCALL sass_env_set_global (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+    compiler->cpp_ctx->varRoot.setGlobalVariable(Sass::EnvKey(name), sass_value_to_ast_node(val));
   }
 
   // Getter for import entry

@@ -308,36 +308,36 @@ extern "C" {
         case Sass_OP::GTE: return sass_make_boolean(Operators::gte(lhs, rhs));
         case Sass_OP::LT:  return sass_make_boolean(Operators::lt(lhs, rhs));
         case Sass_OP::LTE: return sass_make_boolean(Operators::lte(lhs, rhs));
-        case Sass_OP::AND: return ast_node_to_sass_value(lhs->is_false() ? lhs : rhs);
-        case Sass_OP::OR:  return ast_node_to_sass_value(lhs->is_false() ? rhs : lhs);
+        case Sass_OP::AND: return ast_node_to_sass_value(lhs->isTruthy() ? rhs : lhs);
+        case Sass_OP::OR:  return ast_node_to_sass_value(lhs->isTruthy() ? lhs : rhs);
         default: break;
       }
 
       if (sass_value_is_number(a) && sass_value_is_number(b)) {
-        const Number* l_n = Cast<Number>(lhs);
-        const Number* r_n = Cast<Number>(rhs);
-        rv = Operators::op_numbers(op, *l_n, *r_n, options, l_n->pstate());
+        const Number* l_n = lhs->isNumber();
+        const Number* r_n = rhs->isNumber();
+        rv = Operators::op_numbers(op, *l_n, *r_n, l_n->pstate());
       }
       else if (sass_value_is_number(a) && sass_value_is_color(a)) {
-        const Number* l_n = Cast<Number>(lhs);
+        const Number* l_n = lhs->isNumber();
         // Direct HSLA operations are not supported
         // All color maths will be deprecated anyway
-        Color_RGBA_Obj r_c = Cast<Color>(rhs)->toRGBA();
+        Color_RGBA_Obj r_c = rhs->isColor()->toRGBA();
         rv = Operators::op_number_color(op, *l_n, *r_c, options, l_n->pstate());
       }
       else if (sass_value_is_color(a) && sass_value_is_number(b)) {
         // Direct HSLA operations are not supported
         // All color maths will be deprecated anyway
-        Color_RGBA_Obj l_c = Cast<Color>(lhs)->toRGBA();
-        const Number* r_n = Cast<Number>(rhs);
+        Color_RGBA_Obj l_c = lhs->isColor()->toRGBA();
+        const Number* r_n = rhs->isNumber();
         rv = Operators::op_color_number(op, *l_c, *r_n, options, l_c->pstate());
       }
       else if (sass_value_is_color(a) && sass_value_is_color(b)) {
         // Direct HSLA operations are not supported
         // All color maths will be deprecated anyway
-        Color_RGBA_Obj l_c = Cast<Color>(lhs)->toRGBA();
-        Color_RGBA_Obj r_c = Cast<Color>(rhs)->toRGBA();
-        rv = Operators::op_colors(op, *l_c, *r_c, options, l_c->pstate());
+        Color_RGBA_Obj l_c = lhs->isColor()->toRGBA();
+        Color_RGBA_Obj r_c = rhs->isColor()->toRGBA();
+        rv = Operators::op_colors(op, *l_c, *r_c, l_c->pstate());
       }
       else /* convert other stuff to string and apply operation */ {
         rv = Operators::op_strings(op, *lhs, *rhs, options, lhs->pstate());
@@ -346,12 +346,12 @@ extern "C" {
       // ToDo: maybe we should return null value?
       if (!rv) return sass_make_error("invalid return value");
 
-      // convert result back to ast node
+      // convert result back to AST node
       return ast_node_to_sass_value(rv.ptr());
     }
 
     // simply pass the error message back to the caller for now
-    catch (Exception::InvalidSass& e) { return sass_make_error(e.what()); }
+    // catch (Exception::InvalidSass& e) { return sass_make_error(e.what()); }
     catch (std::bad_alloc&) { return sass_make_error("memory exhausted"); }
     catch (std::exception& e) { return sass_make_error(e.what()); }
     catch (sass::string& e) { return sass_make_error(e.c_str()); }

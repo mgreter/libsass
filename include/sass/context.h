@@ -67,6 +67,9 @@ ADDAPI struct Sass_Options* ADDCALL sass_data_context_get_options (struct Sass_D
 ADDAPI void ADDCALL sass_file_context_set_options (struct Sass_File_Context* file_ctx, struct Sass_Options* opt);
 ADDAPI void ADDCALL sass_data_context_set_options (struct Sass_Data_Context* data_ctx, struct Sass_Options* opt);
 
+// Prints message to stderr with color for windows
+ADDAPI void ADDCALL sass_print_stderr(const char* message);
+ADDAPI void ADDCALL sass_context_print_stderr(struct Sass_Context* ctx);
 
 // Getters for Context_Option values
 ADDAPI int ADDCALL sass_option_get_precision (struct Sass_Options* options);
@@ -111,6 +114,7 @@ ADDAPI void ADDCALL sass_option_set_c_functions (struct Sass_Options* options, S
 
 // Getters for Sass_Context values
 ADDAPI const char* ADDCALL sass_context_get_output_string (struct Sass_Context* ctx);
+ADDAPI const char* ADDCALL sass_context_get_stderr_string(struct Sass_Context* ctx);
 ADDAPI int ADDCALL sass_context_get_error_status (struct Sass_Context* ctx);
 ADDAPI const char* ADDCALL sass_context_get_error_json (struct Sass_Context* ctx);
 ADDAPI const char* ADDCALL sass_context_get_error_text (struct Sass_Context* ctx);

@@ -16,92 +16,261 @@ namespace Sass {
   class Expand;
   class Context;
 
-  class Eval : public Operation_CRTP<Expression*, Eval> {
+  class Eval : public Operation_CRTP<Value*, Eval> {
+
+  private:
 
    public:
-    Expand& exp;
+
+     bool inMixin;
+     BlockStack blockStack;
+     MediaStack mediaStack;
+     SelectorStack originalStack;
+     SelectorStack selectorStack;
+
+     // The style rule that defines the current parent selector, if any.
+     StyleRuleObj _styleRule;
+
+     // The name of the current declaration parent. Used for BEM-
+     // declaration blocks as in `div { prefix: { suffix: val; } }`;
+     sass::string _declarationName;
+
+     // Whether we're currently executing a function.
+     bool _inFunction = false;
+
+     // Whether we're currently building the output of an unknown at rule.
+     bool _inUnknownAtRule = false;
+
+     // Whether we're directly within an `@at-root`
+     // rule that excludes style rules.
+     bool _atRootExcludingStyleRule = false;
+
+     // Whether we're currently building the output of a `@keyframes` rule.
+     bool _inKeyframes = false;
+
+     bool plainCss = false;
+
+     // Old flags
+     bool              at_root_without_rule;
+
+
     Context& ctx;
-    Backtraces& traces;
-    Eval(Expand& exp);
+    BackTraces& traces;
+    Eval(Context& ctx);
     ~Eval();
 
-    bool force;
-    bool is_in_comment;
-    bool is_in_selector_schema;
+    Value* _runUserDefinedCallable(
+      ArgumentResults& arguments,
+      UserDefinedCallable* callable,
+      UserDefinedCallable* content,
+      bool isMixinCall,
+      Value* (Eval::* run)(UserDefinedCallable*, Trace*),
+      Trace* trace,
+      const SourceSpan& pstate);
+
+    Value* _runBuiltInCallable(
+      ArgumentInvocation* arguments,
+      BuiltInCallable* callable,
+      const SourceSpan& pstate,
+      bool selfAssign);
+
+    Value* _runBuiltInCallables(
+      ArgumentInvocation* arguments,
+      BuiltInCallables* callable,
+      const SourceSpan& pstate,
+      bool selfAssign);
 
     Boolean_Obj bool_true;
     Boolean_Obj bool_false;
 
-    Env* environment();
-    EnvStack& env_stack();
+    SelectorListObj& selector();
+    SelectorListObj& original();
+
+    bool isInContentBlock() const;
+
+    // Whether we're currently building the output of a style rule.
+    bool isInStyleRule();
+
+
+    std::pair<sass::vector<ExpressionObj>, EnvKeyFlatMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
+
     const sass::string cwd();
     CalleeStack& callee_stack();
     struct Sass_Inspect_Options& options();
     struct Sass_Compiler* compiler();
 
+    Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, const SourceSpan& pstate);
+
+    sass::string serialize(AST_Node* node);
+
+    Interpolation* evalInterpolation(InterpolationObj interpolation, bool warnForColor);
+    sass::string performInterpolation(InterpolationObj interpolation, bool warnForColor);
+    sass::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
+
+    ArgumentInvocation* visitArgumentInvocation(ArgumentInvocation* args);
+
+    Value* operator()(ContentRule* node) { return visitContentRule(node); }
+    Value* operator()(FunctionRule* node) { return visitFunctionRule(node); }
+    Value* operator()(MixinRule* node) { return visitMixinRule(node); }
+    Value* operator()(IncludeRule* node) { return visitIncludeRule(node); }
+    Value* operator()(ExtendRule* node) { return visitExtendRule(node); }
+    Value* operator()(StyleRule* node) { return visitStyleRule(node); }
+    Value* operator()(SupportsRule* node) { return visitSupportsRule(node); }
+    Value* operator()(MediaRule* node) { return visitMediaRule(node); }
+    Value* operator()(AtRootRule* node) { return visitAtRootRule(node); }
+    Value* operator()(AtRule* node) { return visitAtRule(node); }
+    Value* operator()(Declaration* node) { return visitDeclaration(node); }
+    Value* operator()(Assignment* node) { return visitVariableDeclaration(node); }
+    Value* operator()(MapMerge* node) { return visitMapMerge(node); }
+    Value* operator()(Import* node) { return visitImport99(node); }
+    Value* operator()(ImportRule* node) { return visitImportRule99(node); }
+    Value* operator()(StaticImport* node) { return visitStaticImport99(node); }
+    Value* operator()(DynamicImport* node) { return visitDynamicImport99(node); }
+    Value* operator()(Import_Stub* node) { return visitImportStub99(node); }
+    Value* operator()(SilentComment* node) { return visitSilentComment(node); }
+    Value* operator()(LoudComment* node) { return visitLoudComment(node); }
+    Value* operator()(If* node) { return visitIfRule(node); }
+    Value* operator()(For* f) { return visitForRule(f); }
+    Value* operator()(Each* node) { return visitEachRule(node); }
+    Value* operator()(WhileRule* node) { return visitWhileRule(node); }
+
+    Value* visitBlock(Block* node);
+
     // for evaluating function bodies
-    Expression* operator()(Block*);
-    Expression* operator()(Assignment*);
-    Expression* operator()(If*);
-    Expression* operator()(ForRule*);
-    Expression* operator()(EachRule*);
-    Expression* operator()(WhileRule*);
-    Expression* operator()(Return*);
-    Expression* operator()(WarningRule*);
-    Expression* operator()(ErrorRule*);
-    Expression* operator()(DebugRule*);
+    Value* operator()(Block*);
+    Value* operator()(Return*);
+    Value* operator()(WarnRule*);
+    void visitWarnRule(WarnRule* node);
 
-    Expression* operator()(List*);
-    Expression* operator()(Map*);
-    Expression* operator()(Binary_Expression*);
-    Expression* operator()(Unary_Expression*);
-    Expression* operator()(Function_Call*);
-    Expression* operator()(Variable*);
-    Expression* operator()(Number*);
-    Expression* operator()(Color_RGBA*);
-    Expression* operator()(Color_HSLA*);
-    Expression* operator()(Boolean*);
-    Expression* operator()(String_Schema*);
-    Expression* operator()(String_Quoted*);
-    Expression* operator()(String_Constant*);
-    Media_Query* operator()(Media_Query*);
-    Expression* operator()(Media_Query_Expression*);
-    Expression* operator()(At_Root_Query*);
-    Expression* operator()(SupportsOperation*);
-    Expression* operator()(SupportsNegation*);
-    Expression* operator()(SupportsDeclaration*);
-    Expression* operator()(Supports_Interpolation*);
-    Expression* operator()(Null*);
-    Expression* operator()(Argument*);
-    Expression* operator()(Arguments*);
-    Expression* operator()(Comment*);
+    Value* operator()(ErrorRule*);
+    void visitErrorRule(ErrorRule* node);
 
-    // these will return selectors
-    SelectorList* operator()(SelectorList*);
-    SelectorList* operator()(ComplexSelector*);
-    CompoundSelector* operator()(CompoundSelector*);
-    SelectorComponent* operator()(SelectorComponent*);
-    SimpleSelector* operator()(SimpleSelector* s);
-    PseudoSelector* operator()(PseudoSelector* s);
+    Value* operator()(DebugRule*);
+    void visitDebugRule(DebugRule* node);
 
-    // they don't have any specific implementation (yet)
-    IDSelector* operator()(IDSelector* s) { return s; };
-    ClassSelector* operator()(ClassSelector* s) { return s; };
-    TypeSelector* operator()(TypeSelector* s) { return s; };
-    AttributeSelector* operator()(AttributeSelector* s) { return s; };
-    PlaceholderSelector* operator()(PlaceholderSelector* s) { return s; };
+    SassMap* operator()(SassMap*);
+    SassList* operator()(SassList*);
+    Map* operator()(MapExpression*);
+    SassList* operator()(ListExpression*);
+    Value* operator()(ValueExpression*);
+    Value* operator()(ParenthesizedExpression*);
+    Value* operator()(Binary_Expression*);
+    Value* evalBinOp(Binary_Expression* b_in);
+    Value* operator()(Unary_Expression*);
+    Callable* _getFunction(const IdxRef& fidx, const sass::string& name, const sass::string& ns);
+    Callable* _getMixin(const IdxRef& fidx, const EnvKey& name, const sass::string& ns);
+    Value* _runFunctionCallable(ArgumentInvocation* arguments, Callable* callable, const SourceSpan& pstate, bool selfAssign);
+    Value* operator()(FunctionExpression*);
+    Value* operator()(IfExpression*);
+    Value* operator()(Variable*);
+    Value* operator()(Number*);
+    Value* operator()(Color_RGBA*);
+    Value* operator()(Color_HSLA*);
+    Value* operator()(Boolean*);
+
+    SassString* operator()(Interpolation*);
+    Value* operator()(StringExpression*);
+
+    Value* operator()(SassString*);
+    // Value* operator()(ItplString*);
+    Value* operator()(Null*);
+    Value* operator()(Argument*);
+
+    inline void keywordMapMap2(
+      EnvKeyFlatMap<ValueObj>& result,
+      const EnvKeyFlatMap<ExpressionObj>& map)
+    {
+      for (auto kv : map) {
+        result[kv.first] =
+          kv.second->perform(this);
+      }
+    }
+
+    void _addRestMap(EnvKeyFlatMap<ValueObj>& values, SassMap* map, const SourceSpan& nodeForSpan);
+    void _addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, SassMap* map, const SourceSpan& nodeForSpan);
+	  void _evaluateArguments(ArgumentInvocation* arguments, ArgumentResults& evaluated);
+
+    sass::string _evaluateToCss(Expression* expression, bool quote = true);
+
+    sass::string _serialize(Expression* expression, bool quote = true);
+
+    sass::string _parenthesize(SupportsCondition* condition);
+    sass::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand);
+    sass::string _visitSupportsCondition(SupportsCondition* condition);
+
+    SassString* operator()(SupportsCondition*);
 
     // actual evaluated selectors
-    SelectorList* operator()(Selector_Schema*);
-    Expression* operator()(Parent_Reference*);
+    Value* operator()(Parent_Reference*);
+
+    Value* _runAndCheck(UserDefinedCallable*, Trace*);
+
+    Value* visitSupportsRule(SupportsRule* node);
+    sass::vector<CssMediaQueryObj> mergeMediaQueries(const sass::vector<CssMediaQueryObj>& lhs, const sass::vector<CssMediaQueryObj>& rhs);
+    Value* visitMediaRule(MediaRule* node);
+
+    Value* visitAtRootRule(AtRootRule* a);
+
+    CssString* interpolationToCssString(InterpolationObj interpolation, bool trim, bool warnForColor);
+
+    Value* visitAtRule(AtRule* node);
+
+    Value* visitDeclaration(Declaration* node);
+
+    Value* visitVariableDeclaration(Assignment* a);
+
+    Value* visitMapMerge(MapMerge* a);
+
+    Value* visitLoudComment(LoudComment* c);
+
+    Value* visitIfRule(If* i);
+
+    Value* visitForRule(For* f);
+
+    Value* visitExtendRule(ExtendRule* e);
+
+    Value* visitStyleRule(StyleRule* r);
+
+    SelectorListObj itplToSelector(Interpolation* itpl, bool plainCss, bool allowParent = true);
+
+    Value* visitEachRule(Each* e);
+
+    Value* visitWhileRule(WhileRule* node);
+
+    Value* visitContentRule(ContentRule* c);
+
+    Value* visitMixinRule(MixinRule* rule);
+
+    Value* visitFunctionRule(FunctionRule* rule);
+
+    Value* _runWithBlock(UserDefinedCallable* callable, Trace* trace);
+
+    Value* visitIncludeRule(IncludeRule* node);
+
+    Value* visitSilentComment(SilentComment* c);
+
+    Value* visitImportStub99(Import_Stub* i);
+
+    Value* visitDynamicImport99(DynamicImport* rule);
+
+    sass::vector<CssMediaQueryObj> evalMediaQueries(Interpolation* itpl);
+
+    Value* visitStaticImport99(StaticImport* rule);
+
+    Value* visitImportRule99(ImportRule* rule);
+
+    Value* visitImport99(Import* imp);
+
+    void append_block(Block* block);
+
+    bool isInMixin();
+
+    Block* visitRootBlock99(Block* b);
 
     // generic fallback
     template <typename U>
-    Expression* fallback(U x)
-    { return Cast<Expression>(x); }
-
-  private:
-    void interpolation(Context& ctx, sass::string& res, ExpressionObj ex, bool into_quotes, bool was_itpl = false);
+    Value* fallback(U x)
+    { return Cast<Value>(x); }
 
   };
 

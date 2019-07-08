@@ -2,6 +2,16 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+// Some functions are heavily inspired by perl
+// https://perldoc.perl.org/File/Basename.html
+// https://perldoc.perl.org/File/Spec.html
+
+#if defined (_MSC_VER) // Visual studio
+#define thread_local __declspec( thread )
+#elif defined (__GCC__) // GCC
+#define thread_local __thread
+#endif
+
 #ifdef _WIN32
 # ifdef __MINGW32__
 #  ifndef off64_t
@@ -13,19 +23,20 @@
 #else
 # include <unistd.h>
 #endif
+
 #include <cstdio>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include <sys/stat.h>
 #include "file.hpp"
 #include "context.hpp"
-#include "prelexer.hpp"
+#include "character.hpp"
 #include "utf8_string.hpp"
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "util.hpp"
 #include "util_string.hpp"
-#include "sass2scss.h"
 
 #ifdef _WIN32
 # include <windows.h>
@@ -35,7 +46,7 @@
 inline static Sass::sass::string wstring_to_string(const std::wstring& wstr)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wchar_converter;
-    return wchar_converter.to_bytes(wstr);
+    return wchar_converter.to_bytes(wstr).c_str();
 }
 # else // mingw(/gcc) does not support C++11's codecvt yet.
 inline static Sass::sass::string wstring_to_string(const std::wstring &wstr)
@@ -76,28 +87,39 @@ namespace Sass {
       return cwd;
     }
 
+
     // test if path exists and is a file
-    bool file_exists(const sass::string& path)
+    // takes a cache map to improve performance
+    bool file_exists(const sass::string& path, const sass::string& CWD, std::unordered_map<sass::string, bool>& cache)
     {
       #ifdef _WIN32
         wchar_t resolved[32768];
-        // windows unicode filepaths are encoded in utf16
-        sass::string abspath(join_paths(get_cwd(), path));
+        // windows unicode file-paths are encoded in utf16
+        sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
+        }
+        auto it = cache.find(abspath);
+        if (it != cache.end()) {
+          return it->second;
         }
         std::wstring wpath(UTF_8::convert_to_utf16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
-        DWORD dwAttrib = GetFileAttributesW(resolved);
-        return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-               (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
+        DWORD dwAttrib = GetFileAttributesW(resolved); // was 3%
+        bool result = (dwAttrib != INVALID_FILE_ATTRIBUTES
+          && (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
+        cache[abspath] = result;
+        return result;
       #else
         struct stat st_buf;
-        return (stat (path.c_str(), &st_buf) == 0) &&
-               (!S_ISDIR (st_buf.st_mode));
+        sass::string abspath(join_paths(CWD, path));
+        bool result = (stat (abspath.c_str(), &st_buf) == 0)
+          && (!S_ISDIR (st_buf.st_mode));
+        cache[abspath] = result;
+        return result;
       #endif
     }
 
@@ -106,17 +128,18 @@ namespace Sass {
     bool is_absolute_path(const sass::string& path)
     {
       #ifdef _WIN32
-        if (path.length() >= 2 && Util::ascii_isalpha(path[0]) && path[1] == ':') return true;
+        if (path.length() >= 3 && Character::isAlphabetic(path[0]) && path[1] == ':') return true;
       #endif
       size_t i = 0;
       // check if we have a protocol
-      if (path[i] && Util::ascii_isalpha(static_cast<unsigned char>(path[i]))) {
+      if (path[i] && Character::isAlphabetic(static_cast<unsigned char>(path[i]))) {
         // skip over all alphanumeric characters
-        while (path[i] && Util::ascii_isalnum(static_cast<unsigned char>(path[i]))) ++i;
+        while (path[i] && Character::isAlphanumeric(static_cast<unsigned char>(path[i]))) ++i;
         i = i && path[i] == ':' ? i + 1 : 0;
       }
       return path[i] == '/';
     }
+    // EO is_absolute_path
 
     // helper function to find the last directory separator
     inline size_t find_last_folder_separator(const sass::string& path, size_t limit = sass::string::npos)
@@ -139,6 +162,7 @@ namespace Sass {
       }
       return pos;
     }
+    // EO find_last_folder_separator
 
     // return only the directory part of path
     sass::string dir_name(const sass::string& path)
@@ -147,6 +171,7 @@ namespace Sass {
       if (pos == sass::string::npos) return "";
       else return path.substr(0, pos+1);
     }
+    // EO dir_name
 
     // return only the filename part of path
     sass::string base_name(const sass::string& path)
@@ -155,9 +180,10 @@ namespace Sass {
       if (pos == sass::string::npos) return path;
       else return path.substr(pos+1);
     }
+    // EO base_name
 
     // do a logical clean up of the path
-    // no physical check on the filesystem
+    // no physical check on the file-system
     sass::string make_canonical_path (sass::string path)
     {
 
@@ -169,19 +195,18 @@ namespace Sass {
         replace(path.begin(), path.end(), '\\', '/');
       #endif
 
-      pos = 0; // remove all self references inside the path string
+      pos = 0; // remove all self references inside the path string (`/./`)
       while((pos = path.find("/./", pos)) != sass::string::npos) path.erase(pos, 2);
 
       // remove all leading and trailing self references
       while(path.size() >= 2 && path[0] == '.' && path[1] == '/') path.erase(0, 2);
       while((pos = path.length()) > 1 && path[pos - 2] == '/' && path[pos - 1] == '.') path.erase(pos - 2);
 
-
       size_t proto = 0;
       // check if we have a protocol
-      if (path[proto] && Util::ascii_isalpha(static_cast<unsigned char>(path[proto]))) {
+      if (path[proto] && Character::isAlphabetic(path[proto])) {
         // skip over all alphanumeric characters
-        while (path[proto] && Util::ascii_isalnum(static_cast<unsigned char>(path[proto++]))) {}
+        while (path[proto] && Character::isAlphanumeric(path[proto++])) {}
         // then skip over the mandatory colon
         if (proto && path[proto] == ':') ++ proto;
       }
@@ -195,9 +220,12 @@ namespace Sass {
       return path;
 
     }
+    // EO make_canonical_path
 
     // join two path segments cleanly together
     // but only if right side is not absolute yet
+    // Can we avoid the two string copies?
+    // OK, one copy is needed anyway
     sass::string join_paths(sass::string l, sass::string r)
     {
 
@@ -231,38 +259,35 @@ namespace Sass {
 
       return l + r;
     }
+    // EO join_paths
 
-    sass::string path_for_console(const sass::string& rel_path, const sass::string& abs_path, const sass::string& orig_path)
+    sass::string rel2dbg(const sass::string& rel_path, const sass::string& orig_path)
     {
-      // magic algorith goes here!!
-
       // if the file is outside this directory show the absolute path
-      if (rel_path.substr(0, 3) == "../") {
-        return orig_path;
-      }
-      // this seems to work most of the time
-      return abs_path == orig_path ? abs_path : rel_path;
+      return rel_path.substr(0, 3) == "../" ? orig_path : rel_path;
     }
+    // EO rel2dbg
 
     // create an absolute path by resolving relative paths with cwd
-    sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& cwd)
+    sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
-      return make_canonical_path(join_paths(join_paths(cwd + "/", base + "/"), path));
+      return make_canonical_path(join_paths(join_paths(CWD + "/", base + "/"), path));
     }
+    // EO rel2abs
 
     // create a path that is relative to the given base directory
     // path and base will first be resolved against cwd to make them absolute
-    sass::string abs2rel(const sass::string& path, const sass::string& base, const sass::string& cwd)
+    sass::string abs2rel(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
 
-      sass::string abs_path = rel2abs(path, cwd);
-      sass::string abs_base = rel2abs(base, cwd);
+      sass::string abs_path = rel2abs(path, CWD, CWD);
+      sass::string abs_base = rel2abs(base, CWD, CWD);
 
       size_t proto = 0;
       // check if we have a protocol
-      if (path[proto] && Util::ascii_isalpha(static_cast<unsigned char>(path[proto]))) {
+      if (path[proto] && Character::isAlphabetic(static_cast<unsigned char>(path[proto]))) {
         // skip over all alphanumeric characters
-        while (path[proto] && Util::ascii_isalnum(static_cast<unsigned char>(path[proto++]))) {}
+        while (path[proto] && Character::isAlphanumeric(static_cast<unsigned char>(path[proto++]))) {}
         // then skip over the mandatory colon
         if (proto && path[proto] == ':') ++ proto;
       }
@@ -286,8 +311,8 @@ namespace Sass {
         #ifdef FS_CASE_SENSITIVE
           if (abs_path[i] != abs_base[i]) break;
         #else
-          // compare the charactes in a case insensitive manner
-          // windows fs is only case insensitive in ascii ranges
+          // compare the characters in a case insensitive manner
+          // windows FS is only case insensitive in ASCII ranges
           if (Util::ascii_tolower(static_cast<unsigned char>(abs_path[i])) !=
               Util::ascii_tolower(static_cast<unsigned char>(abs_base[i]))) break;
         #endif
@@ -325,6 +350,7 @@ namespace Sass {
 
       return result;
     }
+    // EO abs2rel
 
     // Resolution order for ambiguous imports:
     // (1) filename as given
@@ -333,7 +359,12 @@ namespace Sass {
     // (4) given + extension
     // (5) given + _index.scss
     // (6) given + _index.sass
-    sass::vector<Include> resolve_includes(const sass::string& root, const sass::string& file, const sass::vector<sass::string>& exts)
+    sass::vector<Include> resolve_includes(
+      const sass::string& root,
+      const sass::string& file,
+      const sass::string& CWD,
+      std::unordered_map<sass::string, bool>& cache,
+      const std::vector<sass::string>& exts)
     {
       sass::string filename = join_paths(root, file);
       // split the filename
@@ -343,22 +374,22 @@ namespace Sass {
       // create full path (maybe relative)
       sass::string rel_path(join_paths(base, name));
       sass::string abs_path(join_paths(root, rel_path));
-      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+      if (file_exists(abs_path, CWD, cache)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       // next test variation with underscore
       rel_path = join_paths(base, "_" + name);
       abs_path = join_paths(root, rel_path);
-      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
-      // next test exts plus underscore
+      if (file_exists(abs_path, CWD, cache)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+      // next test extensions plus underscore
       for(auto ext : exts) {
         rel_path = join_paths(base, "_" + name + ext);
         abs_path = join_paths(root, rel_path);
-        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+        if (file_exists(abs_path, CWD, cache)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       }
-      // next test plain name with exts
+      // next test plain name with extensions
       for(auto ext : exts) {
         rel_path = join_paths(base, name + ext);
         abs_path = join_paths(root, rel_path);
-        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+        if (file_exists(abs_path, CWD, cache)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       }
       // index files
       if (includes.size() == 0) {
@@ -366,63 +397,52 @@ namespace Sass {
         for(auto ext : exts) {
           if (ends_with(name, ext)) return includes;
         }
-        // next test underscore index exts
+        // next test underscore index extensions
         for(auto ext : exts) {
           rel_path = join_paths(base, join_paths(name, "_index" + ext));
           abs_path = join_paths(root, rel_path);
-          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+          if (file_exists(abs_path, CWD, cache)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
         }
-        // next test plain index exts
+        // next test plain index extensions
         for(auto ext : exts) {
           rel_path = join_paths(base, join_paths(name, "index" + ext));
           abs_path = join_paths(root, rel_path);
-          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path });
+          if (file_exists(abs_path, CWD, cache)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
         }
       }
       // nothing found
       return includes;
     }
+    // EO resolve_includes
 
-    sass::vector<sass::string> find_files(const sass::string& file, const sass::vector<sass::string> paths)
+    // Private helper function for find_file
+    sass::vector<sass::string> _find_file(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths, std::unordered_map<sass::string, bool>& cache)
     {
       sass::vector<sass::string> includes;
       for (sass::string path : paths) {
         sass::string abs_path(join_paths(path, file));
-        if (file_exists(abs_path)) includes.push_back(abs_path);
+        if (file_exists(abs_path, CWD, cache)) includes.emplace_back(abs_path);
       }
       return includes;
     }
-
-    sass::vector<sass::string> find_files(const sass::string& file, struct Sass_Compiler* compiler)
-    {
-      // get the last import entry to get current base directory
-      // struct Sass_Options* options = sass_compiler_get_options(compiler);
-      Sass_Import_Entry import = sass_compiler_get_last_import(compiler);
-      const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
-      // create the vector with paths to lookup
-      sass::vector<sass::string> paths(1 + incs.size());
-      paths.push_back(dir_name(import->abs_path));
-      paths.insert(paths.end(), incs.begin(), incs.end());
-      // dispatch to find files in paths
-      return find_files(file, paths);
-    }
+    // EO find_files
 
     // helper function to search one file in all include paths
     // this is normally not used internally by libsass (C-API sugar)
-    sass::string find_file(const sass::string& file, const sass::vector<sass::string> paths)
+    sass::string find_file(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths, std::unordered_map<sass::string, bool>& cache)
     {
       if (file.empty()) return file;
-      auto res = find_files(file, paths);
+      auto res = _find_file(file, CWD, paths, cache);
       return res.empty() ? "" : res.front();
     }
 
     // helper function to resolve a filename
-    sass::string find_include(const sass::string& file, const sass::vector<sass::string> paths)
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths, std::unordered_map<sass::string, bool>& cache)
     {
       // search in every include path for a match
       for (size_t i = 0, S = paths.size(); i < S; ++i)
       {
-        sass::vector<Include> resolved(resolve_includes(paths[i], file));
+        sass::vector<Include> resolved(resolve_includes(paths[i], file, CWD, cache));
         if (resolved.size()) return resolved[0].abs_path;
       }
       // nothing found
@@ -432,14 +452,14 @@ namespace Sass {
     // try to load the given filename
     // returned memory must be freed
     // will auto convert .sass files
-    char* read_file(const sass::string& path)
+    char* slurp_file(const sass::string& path, const sass::string& CWD)
     {
       #ifdef _WIN32
-        BYTE* pBuffer;
+        char* contents;
         DWORD dwBytes;
         wchar_t resolved[32768];
-        // windows unicode filepaths are encoded in utf16
-        sass::string abspath(join_paths(get_cwd(), path));
+        // windows unicode file-paths are encoded in utf16
+        sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
@@ -452,15 +472,12 @@ namespace Sass {
         if (hFile == INVALID_HANDLE_VALUE) return 0;
         DWORD dwFileLength = GetFileSize(hFile, NULL);
         if (dwFileLength == INVALID_FILE_SIZE) return 0;
-        // allocate an extra byte for the null char
-        // and another one for edge-cases in lexer
-        pBuffer = (BYTE*)malloc((dwFileLength+2)*sizeof(BYTE));
-        ReadFile(hFile, pBuffer, dwFileLength, &dwBytes, NULL);
-        pBuffer[dwFileLength+0] = '\0';
-        pBuffer[dwFileLength+1] = '\0';
+        // allocate an extra byte for the null terminator
+        contents = (char*) sass_alloc_memory(size_t(dwFileLength) + 1);
+        if (!ReadFile(hFile, contents, dwFileLength, &dwBytes, NULL))
+          throw Exception::OperationError("Could not read file");
+        contents[dwFileLength] = '\0'; // ensure null terminator
         CloseHandle(hFile);
-        // just convert from unsigned char*
-        char* contents = (char*) pBuffer;
       #else
         // Read the file using `<cstdio>` instead of `<fstream>` for better portability.
         // The `<fstream>` header initializes `<locale>` and this buggy in GCC4/5 with static linking.
@@ -472,7 +489,7 @@ namespace Sass {
         FILE* fd = std::fopen(path.c_str(), "rb");
         if (fd == nullptr) return nullptr;
         const std::size_t size = st.st_size;
-        char* contents = static_cast<char*>(malloc(st.st_size + 2 * sizeof(char)));
+        char* contents = static_cast<char*>(sass_alloc_memory(st.st_size + 1 * sizeof(char)));
         if (std::fread(static_cast<void*>(contents), 1, size, fd) != size) {
           free(contents);
           std::fclose(fd);
@@ -483,41 +500,10 @@ namespace Sass {
           return nullptr;
         }
         contents[size] = '\0';
-        contents[size + 1] = '\0';
       #endif
-      sass::string extension;
-      if (path.length() > 5) {
-        extension = path.substr(path.length() - 5, 5);
-      }
-      Util::ascii_str_tolower(&extension);
-      if (extension == ".sass" && contents != 0) {
-        char * converted = sass2scss(contents, SASS2SCSS_PRETTIFY_1 | SASS2SCSS_KEEP_COMMENT);
-        free(contents); // free the indented contents
-        return converted; // should be freed by caller
-      } else {
-        return contents;
-      }
+      return contents;
     }
-
-    // split a path string delimited by semicolons or colons (OS dependent)
-    sass::vector<sass::string> split_path_list(const char* str)
-    {
-      sass::vector<sass::string> paths;
-      if (str == NULL) return paths;
-      // find delimiter via prelexer (return zero at end)
-      const char* end = Prelexer::find_first<PATH_SEP>(str);
-      // search until null delimiter
-      while (end) {
-        // add path from current position to delimiter
-        paths.push_back(sass::string(str, end - str));
-        str = end + 1; // skip delimiter
-        end = Prelexer::find_first<PATH_SEP>(str);
-      }
-      // add path from current position to end
-      paths.push_back(sass::string(str));
-      // return back
-      return paths;
-    }
+    // EO slurp_file
 
   }
 }

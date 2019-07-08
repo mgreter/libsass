@@ -19,52 +19,60 @@ namespace Sass {
   // ##########################################################################
 
   // This is special (ptrs!)
-  typedef std::unordered_set<
+  typedef UnorderedSet<
     ComplexSelectorObj,
     ObjPtrHash,
     ObjPtrEquality
   > ExtCplxSelSet;
 
-  typedef std::unordered_set<
+  typedef UnorderedSet<
     SimpleSelectorObj,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    Sass::Allocator<SimpleSelectorObj>
   > ExtSmplSelSet;
 
-  typedef std::unordered_set<
+  // This is a very busy set
+  typedef UnorderedSet<
     SelectorListObj,
     ObjPtrHash,
-    ObjPtrEquality
+    ObjPtrEquality,
+    Sass::Allocator<SelectorListObj>
   > ExtListSelSet;
 
-  typedef std::unordered_map<
+  // This is a very busy map
+  typedef UnorderedMap<
     SimpleSelectorObj,
     ExtListSelSet,
     ObjHash,
     ObjEquality
+    // , Sass::Allocator<SimpleSelectorObj>
   > ExtSelMap;
 
-  typedef ordered_map<
+  typedef OrderedMap<
     ComplexSelectorObj,
     Extension,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    Sass::Allocator<std::pair<ComplexSelectorObj, Extension>>
   > ExtSelExtMapEntry;
 
-  typedef std::unordered_map<
+  typedef UnorderedMap<
     SimpleSelectorObj,
     ExtSelExtMapEntry,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    Sass::Allocator<std::pair<const SimpleSelectorObj, ExtSelExtMapEntry>>
   > ExtSelExtMap;
 
-  typedef std::unordered_map <
+  typedef UnorderedMap<
     SimpleSelectorObj,
     sass::vector<
       Extension
     >,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<Extension>>>
   > ExtByExtMap;
 
   class Extender : public Operation_CRTP<void, Extender> {
@@ -81,10 +89,10 @@ namespace Sass {
     ExtendMode mode;
 
     // ##########################################################################
-    // Shared backtraces with context and expander. Needed the throw
+    // Shared back-traces with context and expander. Needed the throw
     // errors when e.g. extending across media query boundaries.
     // ##########################################################################
-    Backtraces& traces;
+    BackTraces& traces;
 
     // ##########################################################################
     // A map from all simple selectors in the stylesheet to the rules that
@@ -109,11 +117,15 @@ namespace Sass {
     // This tracks the contexts in which each style rule is defined.
     // If a rule is defined at the top level, it doesn't have an entry.
     // ##########################################################################
-    ordered_map<
+    OrderedMap<
       SelectorListObj,
       CssMediaRuleObj,
       ObjPtrHash,
-      ObjPtrEquality
+      ObjPtrEquality,
+      Sass::Allocator<std::pair<
+        SelectorListObj,
+        CssMediaRuleObj
+      >>
     > mediaContexts;
     
     // ##########################################################################
@@ -123,11 +135,15 @@ namespace Sass {
     // selectors that need to exist to satisfy the [second law that of extend][].
     // [second law of extend]: https://github.com/sass/sass/issues/324#issuecomment-4607184
     // ##########################################################################
-    std::unordered_map<
+    UnorderedMap<
       SimpleSelectorObj,
       size_t,
       ObjPtrHash,
-      ObjPtrEquality
+      ObjPtrEquality,
+      Sass::Allocator<std::pair<
+      const SimpleSelectorObj,
+      size_t
+      >>
     > sourceSpecificity;
 
     // ##########################################################################
@@ -140,15 +156,11 @@ namespace Sass {
 
   public:
 
-    // Constructor without default [mode].
-    // [traces] are needed to throw errors.
-    Extender(Backtraces& traces);
-
     // ##########################################################################
     // Constructor with specific [mode].
     // [traces] are needed to throw errors.
     // ##########################################################################
-    Extender(ExtendMode mode, Backtraces& traces);
+    Extender(ExtendMode mode, BackTraces& traces);
 
     // ##########################################################################
     // Empty desctructor
@@ -165,7 +177,7 @@ namespace Sass {
       SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
-      Backtraces& traces);
+      BackTraces& traces);
 
     // ##########################################################################
     // Returns a copy of [selector] with [targets] replaced by [source].
@@ -174,7 +186,7 @@ namespace Sass {
       SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
-      Backtraces& traces);
+      BackTraces& traces);
 
     // ##########################################################################
     // Adds [selector] to this extender, with [selectorSpan] as the span covering
@@ -237,7 +249,7 @@ namespace Sass {
       const SelectorListObj& source,
       const SelectorListObj& target,
       const ExtendMode mode,
-      Backtraces& traces);
+      BackTraces& traces);
 
     // ##########################################################################
     // Returns an extension that combines [left] and [right]. Throws 

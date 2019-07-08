@@ -14,8 +14,8 @@
 #include "source_map.hpp"
 
 namespace Sass {
-  SourceMap::SourceMap() : current_position(0, 0, 0), file("stdin") { }
-  SourceMap::SourceMap(const sass::string& file) : current_position(0, 0, 0), file(file) { }
+  SourceMap::SourceMap() : current_position(), file("stdin") { }
+  SourceMap::SourceMap(const sass::string& file) : current_position(), file(file) { }
 
   sass::string SourceMap::render_srcmap(Context &ctx) {
 
@@ -41,7 +41,7 @@ namespace Sass {
     for (size_t i = 0; i < source_index.size(); ++i) {
       sass::string source(links[source_index[i]]);
       if (ctx.c_options.source_map_file_urls) {
-        source = File::rel2abs(source);
+        source = File::rel2abs(source, ".", ctx.CWD);
         // check for windows abs path
         if (source[0] == '/') {
           // ends up with three slashes
@@ -96,7 +96,7 @@ namespace Sass {
       const size_t generated_column = mappings[i].generated_position.column;
       const size_t original_line = mappings[i].original_position.line;
       const size_t original_column = mappings[i].original_position.column;
-      const size_t original_file = mappings[i].original_position.file;
+      const size_t original_file = mappings[i].file;
 
       if (generated_line != previous_generated_line) {
         previous_generated_column = 0;
@@ -175,28 +175,33 @@ namespace Sass {
 
   void SourceMap::add_open_mapping(const AST_Node* node)
   {
-    const SourceSpan& span(node->pstate());
-    Position from(span.getSrcId(), span.position);
-    mappings.push_back(Mapping(from, current_position));
+    const SourceSpan& pstate = node->pstate();
+    mappings.emplace_back(Mapping{
+      pstate.getSrcId(),
+      pstate.position,
+      current_position
+    });
   }
 
   void SourceMap::add_close_mapping(const AST_Node* node)
   {
-    const SourceSpan& span(node->pstate());
-    Position to(span.getSrcId(), span.position + span.offset);
-    mappings.push_back(Mapping(to, current_position));
+    const SourceSpan& pstate = node->pstate();
+    mappings.emplace_back(Mapping{
+      pstate.getSrcId(),
+      pstate.position + pstate.span,
+      current_position
+    });
   }
 
   SourceSpan SourceMap::remap(const SourceSpan& pstate) {
-    for (size_t i = 0; i < mappings.size(); ++i) {
-      if (
-        mappings[i].generated_position.file == pstate.getSrcId() &&
-        mappings[i].generated_position.line == pstate.position.line &&
-        mappings[i].generated_position.column == pstate.position.column
-      ) return SourceSpan(pstate.source, mappings[i].original_position, pstate.offset);
-    }
-    return SourceSpan(pstate.source, Position(-1, -1, -1), Offset(0, 0));
-
+    // for (size_t i = 0; i < mappings.size(); ++i) {
+    //   if (
+    //     mappings[i].file == pstate.getSrcId() &&
+    //     mappings[i].generated_position.line == pstate.position.line &&
+    //     mappings[i].generated_position.column == pstate.position.column
+    //   ) return SourceSpan(pstate.path, pstate.src, mappings[i].original_position, pstate.offset);
+    // }
+    return SourceSpan(pstate.source);
   }
 
 }

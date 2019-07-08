@@ -24,19 +24,23 @@ namespace Sass {
     sass::vector<AST_Node*> top_nodes;
 
   public:
-    OutputBuffer get_buffer(void);
+    OutputBuffer& get_buffer(void);
 
     virtual void operator()(Map*);
-    virtual void operator()(StyleRule*);
+    virtual void operator()(CssStyleRule*);
     virtual void operator()(SupportsRule*);
+    virtual void operator()(CssSupportsRule*);
     virtual void operator()(CssMediaRule*);
-    virtual void operator()(AtRule*);
     virtual void operator()(Keyframe_Rule*);
     virtual void operator()(Import*);
-    virtual void operator()(Comment*);
+    virtual void operator()(StaticImport*);
+    virtual void operator()(CssComment*);
+    virtual void operator()(LoudComment*);
+    virtual void operator()(SilentComment*);
     virtual void operator()(Number*);
-    virtual void operator()(String_Quoted*);
-    virtual void operator()(String_Constant*);
+
+    // virtual void operator()(ItplString*);
+    virtual void operator()(SassString*);
 
     void fallback_impl(AST_Node* n);
 

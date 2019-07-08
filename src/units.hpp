@@ -5,6 +5,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include "memory.hpp"
+#include "ast_def_macros.hpp"
 
 namespace Sass {
 
@@ -63,15 +65,32 @@ namespace Sass {
       numerators(),
       denominators()
     { }
+
     // copy constructor
     Units(const Units* ptr) :
       numerators(ptr->numerators),
       denominators(ptr->denominators)
     { }
+
+    Units(const Units& ptr) :
+      numerators(ptr.numerators),
+      denominators(ptr.denominators)
+    { }
+
+    // move constructor
+    Units(Units&& other) noexcept :
+      numerators(std::move(other.numerators)),
+      denominators(std::move(other.denominators))
+    { }
+
     // convert to string
     sass::string unit() const;
     // get if units are empty
     bool is_unitless() const;
+
+    bool hasUnits() const {
+      return !is_unitless();
+    }
     // return if valid for css
     bool is_valid_css_unit() const;
     // reduce units for output
@@ -81,11 +100,12 @@ namespace Sass {
     // returns conversion factor
     double normalize();
     // compare operations
-    bool operator< (const Units& rhs) const;
-    bool operator== (const Units& rhs) const;
-    bool operator!= (const Units& rhs) const;
+    ATTACH_EQ_OPERATIONS(Units);
+    ATTACH_CMP_OPERATIONS(Units);
     // factor to convert into given units
     double convert_factor(const Units&) const;
+    // 
+    bool hasUnit(sass::string numerator);
   };
 
   extern const double size_conversion_factors[6][6];
@@ -98,8 +118,6 @@ namespace Sass {
   enum Sass::UnitType string_to_unit(const sass::string&);
   const char* unit_to_string(Sass::UnitType unit);
   enum Sass::UnitClass get_unit_type(Sass::UnitType unit);
-  sass::string get_unit_class(Sass::UnitType unit);
-  sass::string unit_to_class(const sass::string&);
   // throws incompatibleUnits exceptions
   double conversion_factor(const sass::string&, const sass::string&);
   double conversion_factor(UnitType, UnitType, UnitClass, UnitClass);

@@ -4,23 +4,24 @@
 #include "sass/base.h"
 #include "sass/context.h"
 #include "ast_fwd_decl.hpp"
+#include "backtrace.hpp"
 
 // sass config options structure
 struct Sass_Options : Sass_Output_Options {
 
-  // embed sourceMappingUrl as data uri
+  // embed sourceMappingUrl as data URI
   bool source_map_embed;
 
   // embed include contents in maps
   bool source_map_contents;
 
-  // create file urls for sources
+  // create file URLs for sources
   bool source_map_file_urls;
 
   // Disable sourceMappingUrl in css output
   bool omit_source_map_url;
 
-  // Treat source_string as sass (as opposed to scss)
+  // Treat source_string as sass (as opposed to SCSS)
   bool is_indented_syntax_src;
 
   // The input path is used for source map
@@ -45,7 +46,7 @@ struct Sass_Options : Sass_Output_Options {
 
   // Include paths (linked string list)
   struct string_list* include_paths;
-  // Plugin paths (linked string list)
+  // Plug-in paths (linked string list)
   struct string_list* plugin_paths;
 
   // Path to source map file
@@ -56,7 +57,7 @@ struct Sass_Options : Sass_Output_Options {
   // Directly inserted in source maps
   char* source_map_root;
 
-  // Custom functions that can be called from sccs code
+  // Custom functions that can be called from SCSS code
   Sass_Function_List c_functions;
 
   // List of custom importers
@@ -75,8 +76,17 @@ struct Sass_Context : Sass_Options
   // store context type info
   enum Sass_Input_Style type;
 
+  // store parser type info
+  enum Sass_Import_Type parser;
+
+  // logger style (color/unicode)
+  enum Sass_Logger_Style logstyle;
+
   // generated output data
   char* output_string;
+
+  // generated stderr data
+  char* stderr_string;
 
   // generated source map json
   char* source_map_string;
@@ -114,7 +124,7 @@ struct Sass_Data_Context : Sass_Context {
 
 };
 
-// link c and cpp context
+// link C and CPP context
 struct Sass_Compiler {
   // progress status
   Sass_Compiler_State state;

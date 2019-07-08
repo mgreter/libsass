@@ -9,6 +9,8 @@
 #include "../debugger.hpp"
 #endif
 
+#include "../source.hpp"
+
 namespace Sass {
 
   #ifdef DEBUG_SHARED_PTR
@@ -20,14 +22,24 @@ namespace Sass {
       for (SharedObj* var : all) {
         if (AST_Node* ast = dynamic_cast<AST_Node*>(var)) {
           debug_ast(ast);
-        } else {
+        }
+        else if (SourceData * ast = dynamic_cast<SourceData*>(var)) {
+          std::cerr << "LEAKED SOURCE " << var->getDbgFile() << ":" << var->getDbgLine() << "\n";
+        }
+        else {
           std::cerr << "LEAKED " << var << "\n";
         }
       }
+      all.clear();
+      deleted.clear();
+      objCount = 0;
     }
   }
+  size_t SharedObj::objCount = 0;
   sass::vector<SharedObj*> SharedObj::all;
-  #endif
+  std::unordered_set<size_t> SharedObj::deleted;
+  size_t SharedObj::maxRefCount = 0;
+#endif
 
   bool SharedObj::taint = false;
 }

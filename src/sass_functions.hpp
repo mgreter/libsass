@@ -4,6 +4,7 @@
 #include "sass.h"
 #include "environment.hpp"
 #include "fn_utils.hpp"
+#include "backtrace.hpp"
 
 // Struct to hold custom function callback
 struct Sass_Function {
@@ -22,12 +23,8 @@ struct Sass_Import {
   char* error;
   size_t line;
   size_t column;
-};
-
-// External environments
-struct Sass_Env {
-  // links to parent frames
-  Sass::Env* frame;
+  // the import type
+  Sass_Import_Type type;
 };
 
 // External call entry
@@ -37,7 +34,6 @@ struct Sass_Callee {
   size_t line;
   size_t column;
   enum Sass_Callee_Type type;
-  struct Sass_Env env;
 };
 
 // Struct to hold importer callback

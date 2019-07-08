@@ -5,8 +5,42 @@
 #include <utility>
 #include <iterator>
 #include <functional>
+#include "ast_helpers.hpp"
 
 namespace Sass {
+
+  // ##########################################################################
+  // Returns a new list containing the elements between [start] and [end].
+  // ##########################################################################
+  template <class T>
+  sass::vector<T> sublist(const sass::vector<T>& vec,
+    size_t start, size_t end = sass::string::npos)
+  {
+    if (end == sass::string::npos) { end = vec.size(); }
+    return sass::vector<T>(vec.begin() + start, vec.begin() + end);
+  }
+
+  // ##########################################################################
+  // Removes the objects in the range [start] inclusive to [end] exclusive.
+  // ##########################################################################
+  template <class T>
+  void removeRange(sass::vector<T>& vec,
+    size_t start, size_t end = sass::string::npos)
+  {
+    if (end == sass::string::npos) { end = vec.size(); }
+    vec.erase(vec.begin() + start, vec.begin() + end);
+  }
+
+  // ##########################################################################
+  // ##########################################################################
+  template <class T, class V>
+  size_t indexOf(const sass::vector<T>& vec, const V& item)
+  {
+    for (size_t i = 0; i < vec.size(); i += 1) {
+      if (ObjEqualityFn<T>(vec[i], item)) return i;
+    }
+    return sass::string::npos;
+  }
 
   // ##########################################################################
   // Flatten `vector<vector<T>>` to `vector<T>`
@@ -51,6 +85,37 @@ namespace Sass {
     return outer;
   }
   // EO flattenInner
+
+
+  // ##########################################################################
+  // ##########################################################################
+  template <typename T>
+  sass::vector<T> flattenVertically(sass::vector<sass::vector<T>> lists)
+  {
+    sass::vector<T> result;
+    // Loop until all arrays are exhausted
+    size_t lvl = 0; bool consumed = false; do {
+      // aborts when nothing more can be consumed
+      consumed = false;
+      // loop over all arrays at the 1st level
+      for (size_t i = 0, iL = lists.size(); i < iL; ++i) {
+        // check for items to consume at 2nd level
+        if (lists[i].size() > lvl) {
+          // consume item at 2nd level depth
+          result.emplace_back(lists[i][lvl]);
+          // maybe we have some more
+          consumed = true;
+        }
+      }
+      // check next depth level
+      ++lvl;
+    }
+    // abort once nothing is consumed
+    while (consumed);
+    // return flat list
+    return result;
+  }
+  // EO flatVertically
 
   // ##########################################################################
   // Equivalent to dart `cnt.any`
@@ -159,7 +224,7 @@ namespace Sass {
         // Note: we push instead of unshift
         // Note: reverse the vector later
         // ToDo: is deque more performant?
-        lcs.push_back(RES(i - 1, j - 1));
+        lcs.emplace_back(RES(i - 1, j - 1));
         // reduce values of i, j and index
         i -= 1; j -= 1; index -= 1;
       }
@@ -175,7 +240,7 @@ namespace Sass {
 
     }
 
-    // reverse now as we used push_back
+    // reverse now as we used emplace_back
     std::reverse(lcs.begin(), lcs.end());
 
     // Delete temp memory on heap

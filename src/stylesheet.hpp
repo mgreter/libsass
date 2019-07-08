@@ -5,6 +5,7 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
 #include "extender.hpp"
 #include "file.hpp"
@@ -16,9 +17,15 @@ namespace Sass {
   class StyleSheet : public Resource {
     public:
 
+      // Whether this was parsed from a plain CSS stylesheet.
+      bool plainCss;
+
       // The canonical URL for this module's source file. This may be `null`
       // if the module was loaded from a string without a URL provided.
-      // Uri get url;
+      // Sass_Import_Entry import;
+
+      // the import type
+      Sass_Import_Type syntax;
 
       // Modules that this module uses.
       // List<Module> get upstream;

@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
+#include "ast_selectors.hpp"
 
 namespace Sass {
 
@@ -20,7 +21,8 @@ namespace Sass {
     SASS_ASSERT(!complexes.empty(), "Can't unify empty list");
     if (complexes.size() == 1) return complexes;
 
-    CompoundSelectorObj unifiedBase = SASS_MEMORY_NEW(CompoundSelector, SourceSpan("[phony]"));
+    CompoundSelectorObj unifiedBase = SASS_MEMORY_NEW(CompoundSelector,
+      SourceSpan("[phony]"));
     for (auto complex : complexes) {
       SelectorComponentObj base = complex.back();
       if (CompoundSelector * comp = base->getCompound()) {
@@ -43,10 +45,10 @@ namespace Sass {
     for (size_t i = 0; i < complexes.size(); i += 1) {
       sass::vector<SelectorComponentObj> sel = complexes[i];
       sel.pop_back(); // remove last item (base) from the list
-      complexesWithoutBases.push_back(std::move(sel));
+      complexesWithoutBases.emplace_back(std::move(sel));
     }
 
-    complexesWithoutBases.back().push_back(unifiedBase);
+    complexesWithoutBases.back().emplace_back(unifiedBase);
 
     return weave(complexesWithoutBases);
 
@@ -71,7 +73,7 @@ namespace Sass {
   // EO CompoundSelector::unifyWith(CompoundSelector*)
 
   // ##########################################################################
-  // Returns the compoments of a [CompoundSelector] that matches only elements
+  // Returns the components of a [CompoundSelector] that matches only elements
   // matched by both this and [compound]. By default, this just returns a copy
   // of [compound] with this selector added to the end, or returns the original
   // array if this selector already exists in it. Returns `null` if unification
@@ -84,11 +86,9 @@ namespace Sass {
 
     if (rhs->length() == 1) {
       if (rhs->get(0)->is_universal()) {
-        CompoundSelector* this_compound = SASS_MEMORY_NEW(CompoundSelector, pstate());
-        this_compound->append(SASS_MEMORY_COPY(this));
-        CompoundSelector* unified = rhs->get(0)->unifyWith(this_compound);
-        if (unified == nullptr || unified != this_compound) delete this_compound;
-        return unified;
+        CompoundSelectorObj this_compound = SASS_MEMORY_COPY(this)->wrapInCompound();
+        CompoundSelectorObj unified = rhs->get(0)->unifyWith(this_compound);
+        return unified.detach();
       }
     }
     for (const SimpleSelectorObj& sel : rhs->elements()) {
@@ -97,22 +97,23 @@ namespace Sass {
       }
     }
 
-    CompoundSelectorObj result = SASS_MEMORY_NEW(CompoundSelector, rhs->pstate());
+    sass::vector<SimpleSelectorObj> results;
+    results.reserve(rhs->length() + 1);
 
     bool addedThis = false;
     for (auto simple : rhs->elements()) {
       // Make sure pseudo selectors always come last.
       if (!addedThis && simple->getPseudoSelector()) {
-        result->append(this);
+        results.push_back(this);
         addedThis = true;
       }
-      result->append(simple);
+      results.push_back(simple);
     }
-
     if (!addedThis) {
-      result->append(this);
+      results.push_back(this);
     }
-    return result.detach();
+    return SASS_MEMORY_NEW(CompoundSelector,
+      rhs->pstate(), std::move(results));
 
   }
   // EO SimpleSelector::unifyWith(CompoundSelector*)
@@ -126,7 +127,7 @@ namespace Sass {
       rhs->append(this);
       return rhs;
     }
-    TypeSelector* type = Cast<TypeSelector>(rhs->at(0));
+    TypeSelector* type = rhs->at(0)->getTypeSelector();
     if (type != nullptr) {
       SimpleSelector* unified = unifyWith(type);
       if (unified == nullptr) {
@@ -146,7 +147,7 @@ namespace Sass {
   CompoundSelector* IDSelector::unifyWith(CompoundSelector* rhs)
   {
     for (const SimpleSelector* sel : rhs->elements()) {
-      if (const IDSelector* id_sel = Cast<IDSelector>(sel)) {
+      if (const IDSelector* id_sel = sel->getIDSelector()) {
         if (id_sel->name() != name()) return nullptr;
       }
     }
@@ -159,17 +160,15 @@ namespace Sass {
   CompoundSelector* PseudoSelector::unifyWith(CompoundSelector* compound)
   {
 
-    if (compound->length() == 1 && compound->first()->is_universal()) {
-      // std::cerr << "implement universal pseudo\n";
-    }
-
     for (const SimpleSelectorObj& sel : compound->elements()) {
       if (*this == *sel) {
         return compound;
       }
     }
 
-    CompoundSelectorObj result = SASS_MEMORY_NEW(CompoundSelector, compound->pstate());
+    sass::vector<SimpleSelectorObj> results;
+    results.reserve(compound->length() + 1);
+    // CompoundSelectorObj result = SASS_MEMORY_NEW(CompoundSelector, compound->pstate());
 
     bool addedThis = false;
     for (auto simple : compound->elements()) {
@@ -182,19 +181,20 @@ namespace Sass {
             return {};
           }
           // Otherwise, this is a pseudo selector and
-          // should come before pseduo elements.
-          result->append(this);
+          // should come before pseudo elements.
+          results.push_back(this);
           addedThis = true;
         }
       }
-      result->append(simple);
+      results.push_back(simple);
     }
 
     if (!addedThis) {
-      result->append(this);
+      results.push_back(this);
     }
 
-    return result.detach();
+    return SASS_MEMORY_NEW(CompoundSelector,
+      compound->pstate(), std::move(results));
 
   }
   // EO PseudoSelector::unifyWith(CompoundSelector*
@@ -206,27 +206,29 @@ namespace Sass {
   // or [TypeSelector]s. If no such selector can be produced, returns `null`.
   // Note: libsass handles universal selector directly within the type selector
   // ##########################################################################
-  SimpleSelector* TypeSelector::unifyWith(const SimpleSelector* rhs)
+  SimpleSelector* TypeSelector::unifyWith(const SimpleSelector* rhs2)
   {
-    bool rhs_ns = false;
-    if (!(is_ns_eq(*rhs) || rhs->is_universal_ns())) {
-      if (!is_universal_ns()) {
-        return nullptr;
+    if (auto rhs = Cast<NameSpaceSelector>(rhs2)) {
+      bool rhs_ns = false;
+      if (!(is_ns_eq(*rhs) || rhs->is_universal_ns())) {
+        if (!is_universal_ns()) {
+          return nullptr;
+        }
+        rhs_ns = true;
       }
-      rhs_ns = true;
-    }
-    bool rhs_name = false;
-    if (!(name_ == rhs->name() || rhs->is_universal())) {
-      if (!(is_universal())) {
-        return nullptr;
+      bool rhs_name = false;
+      if (!(name_ == rhs->name() || rhs->is_universal())) {
+        if (!(is_universal())) {
+          return nullptr;
+        }
+        rhs_name = true;
       }
-      rhs_name = true;
+      if (rhs_ns) {
+        ns(rhs->ns());
+        has_ns(rhs->has_ns());
+      }
+      if (rhs_name) name(rhs->name());
     }
-    if (rhs_ns) {
-      ns(rhs->ns());
-      has_ns(rhs->has_ns());
-    }
-    if (rhs_name) name(rhs->name());
     return this;
   }
   // EO TypeSelector::unifyWith(const SimpleSelector*)
@@ -237,15 +239,16 @@ namespace Sass {
   // ##########################################################################
   SelectorList* ComplexSelector::unifyWith(ComplexSelector* rhs)
   {
-    SelectorListObj list = SASS_MEMORY_NEW(SelectorList, pstate());
     sass::vector<sass::vector<SelectorComponentObj>> rv =
        unifyComplex({ elements(), rhs->elements() });
-    for (sass::vector<SelectorComponentObj> items : rv) {
-      ComplexSelectorObj sel = SASS_MEMORY_NEW(ComplexSelector, pstate());
-      sel->elements() = std::move(items);
-      list->append(sel);
+    sass::vector<ComplexSelectorObj> list;
+    list.reserve(rv.size());
+    for (sass::vector<SelectorComponentObj>& items : rv) {
+      list.push_back(SASS_MEMORY_NEW(ComplexSelector,
+        pstate(), std::move(items)));
     }
-    return list.detach();
+    return SASS_MEMORY_NEW(SelectorList,
+      pstate(), std::move(list));
   }
   // EO ComplexSelector::unifyWith(ComplexSelector*)
 

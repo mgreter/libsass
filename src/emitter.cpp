@@ -4,8 +4,13 @@
 #include "emitter.hpp"
 #include "util_string.hpp"
 #include "util.hpp"
+#include "character.hpp"
 
 namespace Sass {
+
+  // Import some namespaces
+  using namespace Charcode;
+  using namespace Character;
 
   Emitter::Emitter(struct Sass_Output_Options& opt)
   : wbuf(),
@@ -17,10 +22,8 @@ namespace Sass {
     scheduled_crutch(0),
     scheduled_mapping(0),
     in_custom_property(false),
-    in_comment(false),
-    in_wrapped(false),
-    in_media_block(false),
     in_declaration(false),
+    separators(),
     in_space_array(false),
     in_comma_array(false)
   { }
@@ -48,13 +51,21 @@ namespace Sass {
   { wbuf.smap.file = str; }
 
   void Emitter::schedule_mapping(const AST_Node* node)
-  { scheduled_mapping = node; }
+  {
+    scheduled_mapping = node;
+  }
   void Emitter::add_open_mapping(const AST_Node* node)
-  { wbuf.smap.add_open_mapping(node); }
+  {
+    wbuf.smap.add_open_mapping(node);
+  }
   void Emitter::add_close_mapping(const AST_Node* node)
-  { wbuf.smap.add_close_mapping(node); }
+  {
+    wbuf.smap.add_close_mapping(node);
+  }
   SourceSpan Emitter::remap(const SourceSpan& pstate)
-  { return wbuf.smap.remap(pstate); }
+  {
+    return wbuf.smap.remap(pstate);
+  }
 
   // MAIN BUFFER MANIPULATION
 
@@ -80,16 +91,25 @@ namespace Sass {
         linefeeds += opt.linefeed;
       scheduled_space = 0;
       scheduled_linefeed = 0;
-      append_string(linefeeds);
+      if (scheduled_delimiter) {
+        scheduled_delimiter = false;
+        write_char(';');
+      }
+      write_string(linefeeds);
 
-    } else if (scheduled_space) {
+    }
+    else if (scheduled_space) {
       sass::string spaces(scheduled_space, ' ');
       scheduled_space = 0;
-      append_string(spaces);
+      if (scheduled_delimiter) {
+        scheduled_delimiter = false;
+        write_char(';');
+      }
+      write_string(spaces);
     }
-    if (scheduled_delimiter) {
+    else if (scheduled_delimiter) {
       scheduled_delimiter = false;
-      append_string(";");
+      write_char(';');
     }
   }
 
@@ -117,12 +137,21 @@ namespace Sass {
   }
 
   // append a single char to the buffer
-  void Emitter::append_char(const char chr)
+  void Emitter::append_char(uint8_t chr)
   {
     // write space/lf
     flush_schedules();
     // add to buffer
-    wbuf.buffer += chr;
+    wbuf.buffer.push_back((unsigned char) chr);
+    // account for data in source-maps
+    wbuf.smap.append(Offset(chr));
+  }
+
+  // append a single char to the buffer
+  void Emitter::write_char(uint8_t chr)
+  {
+    // add to buffer
+    wbuf.buffer.push_back((unsigned char)chr);
     // account for data in source-maps
     wbuf.smap.append(Offset(chr));
   }
@@ -130,33 +159,49 @@ namespace Sass {
   // append some text or token to the buffer
   void Emitter::append_string(const sass::string& text)
   {
-
     // write space/lf
     flush_schedules();
-
-    if (in_comment) {
-      sass::string out = Util::normalize_newlines(text);
-      if (output_style() == COMPACT) {
-        out = comment_to_compact_string(out);
-      }
-      wbuf.smap.append(Offset(out));
-      wbuf.buffer += std::move(out);
-    } else {
-      // add to buffer
-      wbuf.buffer += text;
-      // account for data in source-maps
-      wbuf.smap.append(Offset(text));
-    }
+    // add to buffer
+    wbuf.buffer.append(text);
+    // account for data in source-maps
+    wbuf.smap.append(Offset(text));
   }
 
-  // append some white-space only text
-  void Emitter::append_wspace(const sass::string& text)
+  // append some text or token to the buffer
+  void Emitter::write_string(const sass::string& text)
   {
-    if (text.empty()) return;
-    if (peek_linefeed(text.c_str())) {
-      scheduled_space = 0;
-      append_mandatory_linefeed();
+    // add to buffer
+    wbuf.buffer.append(text);
+    // account for data in source-maps
+    wbuf.smap.append(Offset(text));
+  }
+
+  // append some text or token to the buffer
+  void Emitter::append_string(const sass::string& text, size_t repeat)
+  {
+    // write space/lf
+    flush_schedules();
+    // add to buffer
+    // wbuf.buffer.append(text, repeat);
+    for (size_t i = 0; i < repeat; i += 1) {
+      wbuf.buffer.append(text);
     }
+    // account for data in source-maps
+    wbuf.smap.append(Offset(text) * (uint32_t)repeat);
+  }
+
+  // append some text or token to the buffer
+  void Emitter::append_string(const char* text, size_t repeat)
+  {
+    // write space/lf
+    flush_schedules();
+    // add to buffer
+    // wbuf.buffer.append(text, repeat);
+    for (size_t i = 0; i < repeat; i += 1) {
+      wbuf.buffer.append(text);
+    }
+    // account for data in source-maps
+    wbuf.smap.append(Offset(text) * (uint32_t)repeat);
   }
 
   // append some text or token to the buffer
@@ -171,7 +216,7 @@ namespace Sass {
       add_open_mapping(scheduled_crutch);
       scheduled_crutch = 0;
     }
-    append_string(text);
+    write_string(text);
     add_close_mapping(node);
   }
 
@@ -184,10 +229,7 @@ namespace Sass {
     if (in_declaration && in_comma_array) return;
     if (scheduled_linefeed && indentation)
       scheduled_linefeed = 1;
-    sass::string indent = "";
-    for (size_t i = 0; i < indentation; i++)
-      indent += opt.indent;
-    append_string(indent);
+    append_string(opt.indent, indentation); // 1.5%
   }
 
   void Emitter::append_delimiter()
@@ -207,14 +249,14 @@ namespace Sass {
   void Emitter::append_comma_separator()
   {
     // scheduled_space = 0;
-    append_string(",");
+    append_char(',');
     append_optional_space();
   }
 
   void Emitter::append_colon_separator()
   {
     scheduled_space = 0;
-    append_string(":");
+    append_char(':');
     if (!in_custom_property) append_optional_space();
   }
 
@@ -225,7 +267,7 @@ namespace Sass {
 
   void Emitter::append_optional_space()
   {
-    if ((output_style() != COMPRESSED) && buffer().size()) {
+    if ((output_style() != COMPRESSED) && wbuf.buffer.size()) {
       unsigned char lst = buffer().at(buffer().length() - 1);
       if (!isspace(lst) || scheduled_delimiter) {
         if (last_char() != '(') {
@@ -269,7 +311,7 @@ namespace Sass {
     append_optional_space();
     flush_schedules();
     if (node) add_open_mapping(node);
-    append_string("{");
+    write_char('{');
     append_optional_linefeed();
     // append_optional_space();
     ++ indentation;
@@ -286,7 +328,7 @@ namespace Sass {
     } else {
       append_optional_space();
     }
-    append_string("}");
+    append_char('}');
     if (node) add_close_mapping(node);
     append_optional_linefeed();
     if (indentation != 0) return;

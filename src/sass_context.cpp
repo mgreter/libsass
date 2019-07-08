@@ -4,12 +4,18 @@
 #include "ast.hpp"
 
 #include "sass_functions.hpp"
+#include "sass_context.hpp"
+#include "backtrace.hpp"
+#include "terminal.hpp"
+#include "source.hpp"
 #include "json.hpp"
+#include <iomanip>
 
 #define LFEED "\n"
 
 // C++ helper
 namespace Sass {
+
   // see sass_copy_c_string(sass::string str)
   static inline JsonNode* json_mkstream(const sass::ostream& stream)
   {
@@ -22,7 +28,7 @@ namespace Sass {
   {
     sass::ostream msg_stream;
     JsonNode* json_err = json_mkobject();
-    msg_stream << "Internal Error: " << msg << std::endl;
+    msg_stream << "Error: " << msg << STRMLF;
     json_append_member(json_err, "status", json_mknumber(severety));
     json_append_member(json_err, "message", json_mkstring(msg.c_str()));
     json_append_member(json_err, "formatted", json_mkstream(msg_stream));
@@ -32,18 +38,26 @@ namespace Sass {
     c_ctx->error_text = sass_copy_c_string(msg.c_str());
     c_ctx->error_status = severety;
     c_ctx->output_string = 0;
+    c_ctx->stderr_string = 0;
     c_ctx->source_map_string = 0;
     json_delete(json_err);
   }
+
+
+
+
 
   static int handle_error(Sass_Context* c_ctx) {
     try {
       throw;
     }
     catch (Exception::Base& e) {
-      sass::ostream msg_stream;
+
+      Logger logger(10, c_ctx->logstyle);
+
+      sass::ostream& msg_stream = logger.errors;
       sass::string cwd(Sass::File::get_cwd());
-      sass::string msg_prefix(e.errtype());
+      sass::string msg_prefix("Error");
       bool got_newline = false;
       msg_stream << msg_prefix << ": ";
       const char* msg = e.what();
@@ -55,7 +69,7 @@ namespace Sass {
           got_newline = true;
         }
         else if (got_newline) {
-          msg_stream << sass::string(msg_prefix.size() + 2, ' ');
+          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
           got_newline = false;
         }
         msg_stream << *msg;
@@ -63,56 +77,21 @@ namespace Sass {
       }
       if (!got_newline) msg_stream << "\n";
 
+      SourceSpan pstate("[NOPE]");
       if (e.traces.empty()) {
-        // we normally should have some traces, still here as a fallback
-        sass::string rel_path(Sass::File::abs2rel(e.pstate.getPath(), cwd, cwd));
-        msg_stream << sass::string(msg_prefix.size() + 2, ' ');
-        msg_stream << " on line " << e.pstate.getLine() << " of " << rel_path << "\n";
+        std::cerr << "THIS IS OLD AND NOT YET\n";
       }
       else {
-        sass::string rel_path(Sass::File::abs2rel(e.pstate.getPath(), cwd, cwd));
-        msg_stream << traces_to_string(e.traces, "        ");
+        pstate = e.traces.back().pstate;
       }
 
-      // now create the code trace (ToDo: maybe have util functions?)
-      if (e.pstate.position.line != sass::string::npos &&
-          e.pstate.position.column != sass::string::npos &&
-          e.pstate.source != nullptr) {
-        Offset offset(e.pstate.position);
-        size_t lines = offset.line;
-        // scan through src until target line
-        // move line_beg pointer to line start
-        const char* line_beg;
-        for (line_beg = e.pstate.getRawData(); *line_beg != '\0'; ++line_beg) {
-          if (lines == 0) break;
-          if (*line_beg == '\n') --lines;
-        }
-        // move line_end before next newline character
-        const char* line_end;
-        for (line_end = line_beg; *line_end != '\0'; ++line_end) {
-          if (*line_end == '\n' || *line_end == '\r') break;
-        }
-        if (*line_end != '\0') ++line_end;
-        size_t line_len = line_end - line_beg;
-        size_t move_in = 0; size_t shorten = 0;
-        size_t left_chars = 42; size_t max_chars = 76;
-        // reported excerpt should not exceed `max_chars` chars
-        if (offset.column > line_len) left_chars = offset.column;
-        if (offset.column > left_chars) move_in = offset.column - left_chars;
-        if (line_len > max_chars + move_in) shorten = line_len - move_in - max_chars;
-        utf8::advance(line_beg, move_in, line_end);
-        utf8::retreat(line_end, shorten, line_beg);
-        sass::string sanitized; sass::string marker(offset.column - move_in, '-');
-        utf8::replace_invalid(line_beg, line_end, std::back_inserter(sanitized));
-        msg_stream << ">> " << sanitized << "\n";
-        msg_stream << "   " << marker << "^\n";
-      }
-
+      sass::string rel_path(Sass::File::abs2rel(pstate.getPath(), cwd, cwd));
+      logger.errors << logger.traces_to_string(e.traces, "  ");
       JsonNode* json_err = json_mkobject();
       json_append_member(json_err, "status", json_mknumber(1));
-      json_append_member(json_err, "file", json_mkstring(e.pstate.getPath()));
-      json_append_member(json_err, "line", json_mknumber((double)(e.pstate.getLine())));
-      json_append_member(json_err, "column", json_mknumber((double)(e.pstate.getColumn())));
+      json_append_member(json_err, "file", json_mkstring(pstate.getPath()));
+      json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
+      json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
       json_append_member(json_err, "message", json_mkstring(e.what()));
       json_append_member(json_err, "formatted", json_mkstream(msg_stream));
       try { c_ctx->error_json = json_stringify(json_err, "  "); }
@@ -120,16 +99,17 @@ namespace Sass {
       c_ctx->error_message = sass_copy_string(msg_stream.str());
       c_ctx->error_text = sass_copy_c_string(e.what());
       c_ctx->error_status = 1;
-      c_ctx->error_file = sass_copy_c_string(e.pstate.getPath());
-      c_ctx->error_line = e.pstate.getLine();
-      c_ctx->error_column = e.pstate.getColumn();
-      c_ctx->error_src = sass_copy_c_string(e.pstate.getRawData());
+      c_ctx->error_file = sass_copy_c_string(pstate.getPath());
+      c_ctx->error_line = pstate.getLine();
+      c_ctx->error_column = pstate.getColumn();
+      c_ctx->error_src = sass_copy_c_string(pstate.getRawData());
       c_ctx->output_string = 0;
+      c_ctx->stderr_string = 0;
       c_ctx->source_map_string = 0;
       json_delete(json_err);
     }
     catch (std::bad_alloc& ba) {
-      sass::ostream msg_stream;
+      sass::sstream msg_stream;
       msg_stream << "Unable to allocate memory: " << ba.what();
       handle_string_error(c_ctx, msg_stream.str(), 2);
     }
@@ -160,7 +140,7 @@ namespace Sass {
 
     // assert valid pointer
     if (compiler == 0) return {};
-    // The cpp context must be set by now
+    // The CPP context must be set by now
     Context* cpp_ctx = compiler->cpp_ctx;
     Sass_Context* c_ctx = compiler->c_ctx;
     // We will take care to wire up the rest
@@ -178,7 +158,7 @@ namespace Sass {
       bool skip = c_ctx->type == SASS_CONTEXT_DATA;
 
       // dispatch parse call
-      Block_Obj root(cpp_ctx->parse());
+      Block_Obj root(cpp_ctx->parse(SASS_IMPORT_AUTO));
       // abort on errors
       if (!root) return {};
 
@@ -188,7 +168,7 @@ namespace Sass {
       // remove completely once this is tested
       size_t headers = cpp_ctx->head_imports;
 
-      // copy the included files on to the context (dont forget to free later)
+      // copy the included files on to the context (don't forget to free later)
       if (copy_strings(cpp_ctx->get_included_files(skip, headers), &c_ctx->included_files) == NULL)
         throw(std::bad_alloc());
 
@@ -241,6 +221,32 @@ extern "C" {
     { type foo = ctx->option; ctx->option = 0; return foo; }
 
 
+
+  bool IsConsoleRedirected() {
+    HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
+    if (handle != INVALID_HANDLE_VALUE) {
+      DWORD filetype = GetFileType(handle);
+      if (!((filetype == FILE_TYPE_UNKNOWN) && (GetLastError() != ERROR_SUCCESS))) {
+        DWORD mode;
+        filetype &= ~(FILE_TYPE_REMOTE);
+        if (filetype == FILE_TYPE_CHAR) {
+          bool retval = GetConsoleMode(handle, &mode);
+          if ((retval == false) && (GetLastError() == ERROR_INVALID_HANDLE)) {
+            return true;
+          }
+          else {
+            return false;
+          }
+        }
+        else {
+          return true;
+        }
+      }
+    }
+    // TODO: Not even a stdout so this is not even a console?
+    return false;
+  }
+
   // generic compilation function (not exported, use file/data compile instead)
   static Sass_Compiler* sass_prepare_context (Sass_Context* c_ctx, Context* cpp_ctx) throw()
   {
@@ -285,7 +291,7 @@ extern "C" {
 
       // allocate a new compiler instance
       void* ctxmem = calloc(1, sizeof(struct Sass_Compiler));
-      if (ctxmem == 0) { std::cerr << "Error allocating memory for context" << std::endl; return 0; }
+      if (ctxmem == 0) { std::cerr << "Error allocating memory for context" << STRMLF; return 0; }
       Sass_Compiler* compiler = (struct Sass_Compiler*) ctxmem;
       compiler->state = SASS_COMPILER_CREATED;
 
@@ -293,6 +299,7 @@ extern "C" {
       compiler->c_ctx = c_ctx;
       compiler->cpp_ctx = cpp_ctx;
       cpp_ctx->c_compiler = compiler;
+      cpp_ctx->logger->style = c_ctx->logstyle;
 
       // use to parse block
       return compiler;
@@ -315,7 +322,9 @@ extern "C" {
 
     try {
       // call each compiler step
+      // This is parse and execute now
       sass_compiler_parse(compiler);
+      // This is only emitting stuff
       sass_compiler_execute(compiler);
     }
     // pass errors to generic error handler
@@ -336,7 +345,7 @@ extern "C" {
   Sass_Options* ADDCALL sass_make_options (void)
   {
     struct Sass_Options* options = (struct Sass_Options*) calloc(1, sizeof(struct Sass_Options));
-    if (options == 0) { std::cerr << "Error allocating memory for options" << std::endl; return 0; }
+    if (options == 0) { std::cerr << "Error allocating memory for options" << STRMLF; return 0; }
     init_options(options);
     return options;
   }
@@ -347,7 +356,8 @@ extern "C" {
     SharedObj::setTaint(true);
     #endif
     struct Sass_File_Context* ctx = (struct Sass_File_Context*) calloc(1, sizeof(struct Sass_File_Context));
-    if (ctx == 0) { std::cerr << "Error allocating memory for file context" << std::endl; return 0; }
+    if (ctx == 0) { std::cerr << "Error allocating memory for file context" << STRMLF; return 0; }
+    ctx->logstyle = IsConsoleRedirected() ? SASS_LOGGER_ASCII_MONO : SASS_LOGGER_UNICODE_COLOR;
     ctx->type = SASS_CONTEXT_FILE;
     init_options(ctx);
     try {
@@ -366,7 +376,8 @@ extern "C" {
     SharedObj::setTaint(true);
     #endif
     struct Sass_Data_Context* ctx = (struct Sass_Data_Context*) calloc(1, sizeof(struct Sass_Data_Context));
-    if (ctx == 0) { std::cerr << "Error allocating memory for data context" << std::endl; return 0; }
+    if (ctx == 0) { std::cerr << "Error allocating memory for data context" << STRMLF; return 0; }
+    ctx->logstyle = IsConsoleRedirected() ? SASS_LOGGER_ASCII_MONO : SASS_LOGGER_UNICODE_COLOR;
     ctx->type = SASS_CONTEXT_DATA;
     init_options(ctx);
     try {
@@ -377,6 +388,17 @@ extern "C" {
       handle_errors(ctx);
     }
     return ctx;
+  }
+
+  void ADDCALL sass_context_print_stderr(struct Sass_Context* ctx)
+  {
+    const char* message = sass_context_get_stderr_string(ctx);
+    if (message != nullptr) Terminal::print(message, true);
+  }
+
+  void ADDCALL sass_print_stderr(const char* message)
+  {
+    Terminal::print(message, true);
   }
 
   struct Sass_Compiler* ADDCALL sass_make_data_compiler (struct Sass_Data_Context* data_ctx)
@@ -444,18 +466,27 @@ extern "C" {
     if (compiler->state != SASS_COMPILER_PARSED) return -1;
     if (compiler->c_ctx == NULL) return 1;
     if (compiler->cpp_ctx == NULL) return 1;
-    if (compiler->root.isNull()) return 1;
-    if (compiler->c_ctx->error_status)
-      return compiler->c_ctx->error_status;
-    compiler->state = SASS_COMPILER_EXECUTED;
     Context* cpp_ctx = compiler->cpp_ctx;
+    if (compiler->root.isNull()) {
+      compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
+      return 1;
+    }
+    if (compiler->c_ctx->error_status) {
+      compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
+      return compiler->c_ctx->error_status;
+    }
+    compiler->state = SASS_COMPILER_EXECUTED;
     Block_Obj root = compiler->root;
     // compile the parsed root block
     try { compiler->c_ctx->output_string = cpp_ctx->render(root); }
-    // pass catched errors to generic error handler
-    catch (...) { return handle_errors(compiler->c_ctx) | 1; }
+    // pass caught errors to generic error handler
+    catch (...) {
+      compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
+      return handle_errors(compiler->c_ctx) | 1;
+    }
     // generate source map json and store on context
     compiler->c_ctx->source_map_string = cpp_ctx->render_srcmap();
+    compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
     // success
     return 0;
   }
@@ -538,6 +569,7 @@ extern "C" {
     if (ctx == 0) return;
     // release the allocated memory (mostly via sass_copy_c_string)
     if (ctx->output_string)     free(ctx->output_string);
+    if (ctx->stderr_string)     free(ctx->stderr_string);
     if (ctx->source_map_string) free(ctx->source_map_string);
     if (ctx->error_message)     free(ctx->error_message);
     if (ctx->error_text)        free(ctx->error_text);
@@ -547,6 +579,7 @@ extern "C" {
     free_string_array(ctx->included_files);
     // play safe and reset properties
     ctx->output_string = 0;
+    ctx->stderr_string = 0;
     ctx->source_map_string = 0;
     ctx->error_message = 0;
     ctx->error_text = 0;
@@ -557,6 +590,7 @@ extern "C" {
     // debug leaked memory
     #ifdef DEBUG_SHARED_PTR
       SharedObj::dumpMemLeaks();
+      SharedObj::reportRefCounts();
     #endif
     // now clear the options
     sass_clear_options(ctx);
@@ -655,6 +689,7 @@ extern "C" {
   IMPLEMENT_SASS_CONTEXT_GETTER(size_t, error_line);
   IMPLEMENT_SASS_CONTEXT_GETTER(size_t, error_column);
   IMPLEMENT_SASS_CONTEXT_GETTER(const char*, output_string);
+  IMPLEMENT_SASS_CONTEXT_GETTER(const char*, stderr_string);
   IMPLEMENT_SASS_CONTEXT_GETTER(const char*, source_map_string);
   IMPLEMENT_SASS_CONTEXT_GETTER(char**, included_files);
 
@@ -665,6 +700,7 @@ extern "C" {
   IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_file);
   IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_src);
   IMPLEMENT_SASS_CONTEXT_TAKER(char*, output_string);
+  IMPLEMENT_SASS_CONTEXT_TAKER(char*, stderr_string);
   IMPLEMENT_SASS_CONTEXT_TAKER(char*, source_map_string);
   IMPLEMENT_SASS_CONTEXT_TAKER(char**, included_files);
 

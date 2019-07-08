@@ -2,79 +2,74 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
-#include "ast2c.hpp"
 #include "ast.hpp"
+#include "sass_values.hpp"
 
 namespace Sass {
 
-  union Sass_Value* AST2C::operator()(Boolean* b)
-  { return sass_make_boolean(b->value()); }
-
-  union Sass_Value* AST2C::operator()(Number* n)
-  { return sass_make_number(n->value(), n->unit().c_str()); }
-
-  union Sass_Value* AST2C::operator()(Custom_Warning* w)
-  { return sass_make_warning(w->message().c_str()); }
-
-  union Sass_Value* AST2C::operator()(Custom_Error* e)
-  { return sass_make_error(e->message().c_str()); }
-
-  union Sass_Value* AST2C::operator()(Color_RGBA* c)
-  { return sass_make_color(c->r(), c->g(), c->b(), c->a()); }
-
-  union Sass_Value* AST2C::operator()(Color_HSLA* c)
-  {
-    Color_RGBA_Obj rgba = c->copyAsRGBA();
-    return operator()(rgba.ptr());
+  union Sass_Value* Boolean::toSassValue() const {
+    return sass_make_boolean(value());
   }
 
-  union Sass_Value* AST2C::operator()(String_Constant* s)
-  {
-    if (s->quote_mark()) {
-      return sass_make_qstring(s->value().c_str());
-    } else {
-      return sass_make_string(s->value().c_str());
+  union Sass_Value* Number::toSassValue() const {
+    return sass_make_number(value(), unit().c_str());
+  }
+
+  union Sass_Value* Custom_Warning::toSassValue() const {
+    return sass_make_warning(message().c_str());
+  }
+
+  union Sass_Value* Custom_Error::toSassValue() const {
+    return sass_make_error(message().c_str());
+  }
+
+  union Sass_Value* Color_RGBA::toSassValue() const {
+    return sass_make_color(r(), g(), b(), a());
+  }
+
+  union Sass_Value* Color_HSLA::toSassValue() const {
+    Color_RGBA_Obj rgba = copyAsRGBA();
+    return rgba->toSassValue();
+  }
+
+  union Sass_Value* SassString::toSassValue() const {
+    if (hasQuotes()) {
+      return sass_make_qstring(value().c_str());
+    }
+    else {
+      return sass_make_string(value().c_str());
     }
   }
 
-  union Sass_Value* AST2C::operator()(String_Quoted* s)
-  { return sass_make_qstring(s->value().c_str()); }
-
-  union Sass_Value* AST2C::operator()(List* l)
-  {
-    union Sass_Value* v = sass_make_list(l->length(), l->separator(), l->is_bracketed());
-    for (size_t i = 0, L = l->length(); i < L; ++i) {
-      sass_list_set_value(v, i, (*l)[i]->perform(this));
+  union Sass_Value* SassList::toSassValue() const {
+    union Sass_Value* v = sass_make_list(length(), separator(), hasBrackets());
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      sass_list_set_value(v, i, get(i)->toSassValue());
     }
     return v;
   }
 
-  union Sass_Value* AST2C::operator()(Map* m)
-  {
-    union Sass_Value* v = sass_make_map(m->length());
+  union Sass_Value* Map::toSassValue() const {
+    union Sass_Value* v = sass_make_map(size());
     int i = 0;
-    for (auto key : m->keys()) {
-      sass_map_set_key(v, i, key->perform(this));
-      sass_map_set_value(v, i, m->at(key)->perform(this));
+    for (auto kv : elements()) {
+      sass_map_set_key(v, i, kv.first->toSassValue());
+      sass_map_set_value(v, i, kv.second->toSassValue());
       i++;
     }
     return v;
   }
 
-  union Sass_Value* AST2C::operator()(Arguments* a)
-  {
-    union Sass_Value* v = sass_make_list(a->length(), SASS_COMMA, false);
-    for (size_t i = 0, L = a->length(); i < L; ++i) {
-      sass_list_set_value(v, i, (*a)[i]->perform(this));
-    }
-    return v;
+  union Sass_Value* Null::toSassValue() const {
+    return sass_make_null();
   }
 
-  union Sass_Value* AST2C::operator()(Argument* a)
-  { return a->value()->perform(this); }
+  union Sass_Value* Parent_Reference::toSassValue() const {
+    return sass_make_null();
+  }
 
-  // not strictly necessary because of the fallback
-  union Sass_Value* AST2C::operator()(Null* n)
-  { return sass_make_null(); }
+  union Sass_Value* SassFunction::toSassValue() const {
+    return sass_make_null();
+  }
 
 };

@@ -162,7 +162,7 @@ namespace Sass {
   }
 
   namespace Colors {
-    const SourceSpan color_table("[COLOR TABLE]");
+    const SourceSpan color_table(SourceSpan("[COLOR TABLE]"));
     const Color_RGBA aliceblue(color_table, 240, 248, 255, 1);
     const Color_RGBA antiquewhite(color_table, 250, 235, 215, 1);
     const Color_RGBA cyan(color_table, 0, 255, 255, 1);
@@ -631,6 +631,10 @@ namespace Sass {
   {
     auto p = colors_to_names->find(key);
     if (p != colors_to_names->end()) {
+      sass::string rv = p->second;
+      // Match dart-sass output
+      if (rv == "magenta") { return "fuchsia"; }
+      if (rv == "cyan") { return "aqua"; }
       return p->second;
     }
     return nullptr;
@@ -639,14 +643,6 @@ namespace Sass {
   const char* color_to_name(const double key)
   {
     return color_to_name((int)key);
-  }
-
-  const char* color_to_name(const Color_RGBA& c)
-  {
-    double key = c.r() * 0x10000
-               + c.g() * 0x100
-               + c.b();
-    return color_to_name(key);
   }
 
 }

@@ -2,6 +2,7 @@
 #define SASS_BASE64VLQ_H
 
 #include <string>
+#include "memory.hpp"
 
 namespace Sass {
 

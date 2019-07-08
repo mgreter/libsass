@@ -16,13 +16,23 @@ CFLAGS   ?= -Wall
 CXXFLAGS ?= -Wall
 LDFLAGS  ?= -Wall
 ifndef COVERAGE
-  CFLAGS   += -O2
-  CXXFLAGS += -O2
-  LDFLAGS  += -O2
+  CFLAGS   += -O3 -pipe -DNDEBUG -fomit-frame-pointer
+  CXXFLAGS += -O3 -pipe -DNDEBUG -fomit-frame-pointer
+  LDFLAGS  += -O3 -pipe -DNDEBUG -fomit-frame-pointer
 else
   CFLAGS   += -O1 -fno-omit-frame-pointer
   CXXFLAGS += -O1 -fno-omit-frame-pointer
   LDFLAGS  += -O1 -fno-omit-frame-pointer
+endif
+ifeq "$(LIBSASS_GPO)" "generate"
+  CFLAGS   += -fprofile-generate
+  CXXFLAGS += -fprofile-generate
+  LDFLAGS  += -fprofile-generate -Wl,-fprofile-instr-generate
+endif
+ifeq "$(LIBSASS_GPO)" "use"
+  CFLAGS   += -fprofile-use
+  CXXFLAGS += -fprofile-use
+  LDFLAGS  += -fprofile-use -Wl,-fprofile-instr-use
 endif
 CAT ?= $(if $(filter $(OS),Windows_NT),type,cat)
 
@@ -177,6 +187,7 @@ endif
 include Makefile.conf
 OBJECTS = $(addprefix src/,$(SOURCES:.cpp=.o))
 COBJECTS = $(addprefix src/,$(CSOURCES:.c=.o))
+HEADOBJS = $(addprefix src/,$(HPPFILES:.hpp=.hpp.gch))
 RCOBJECTS = $(RESOURCES:.rc=.o)
 
 DEBUG_LVL ?= NONE
@@ -185,6 +196,7 @@ CLEANUPS ?=
 CLEANUPS += $(RCOBJECTS)
 CLEANUPS += $(COBJECTS)
 CLEANUPS += $(OBJECTS)
+CLEANUPS += $(HEADOBJS)
 CLEANUPS += $(LIBSASS_LIB)
 
 all: $(BUILD)
@@ -218,14 +230,17 @@ lib/libsass.dll: $(COBJECTS) $(OBJECTS) $(RCOBJECTS) | lib
 	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) \
 	-s -Wl,--subsystem,windows,--out-implib,lib/libsass.a
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-%.o: %.rc
+$(RCOBJECTS): %.o: %.rc
 	$(WINDRES) -i $< -o $@
 
-%.o: %.cpp
+$(OBJECTS): %.o: %.cpp $(HEADOBJS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(COBJECTS): %.o: %.c $(HEADOBJS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(HEADOBJS): %.hpp.gch: %.hpp
+	$(CXX) $(CXXFLAGS) -x c++-header -c -o $@ $<
 
 %: %.o static
 	$(CXX) $(CXXFLAGS) -o $@ $+ $(LDFLAGS) $(LDLIBS)
@@ -252,7 +267,6 @@ $(DESTDIR)$(PREFIX)/include/%.h: include/%.h \
 	$(INSTALL) -v -m0644 "$<" "$@"
 
 install-headers: $(DESTDIR)$(PREFIX)/include/sass.h \
-                 $(DESTDIR)$(PREFIX)/include/sass2scss.h \
                  $(DESTDIR)$(PREFIX)/include/sass/base.h \
                  $(DESTDIR)$(PREFIX)/include/sass/version.h \
                  $(DESTDIR)$(PREFIX)/include/sass/values.h \

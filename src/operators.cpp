@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include "operators.hpp"
+#include "ast_values.hpp"
 
 namespace Sass {
 
@@ -24,14 +25,14 @@ namespace Sass {
     }
 
     typedef double (*bop)(double, double);
-    bop ops[Sass_OP::NUM_OPS] = {
+    bop ops[] = {
       0, 0, // and, or
       0, 0, 0, 0, 0, 0, // eq, neq, gt, gte, lt, lte
       add, sub, mul, div, mod
     };
 
     /* static function, has no pstate or traces */
-    bool eq(ExpressionObj lhs, ExpressionObj rhs)
+    bool eq(ValueObj lhs, ValueObj rhs)
     {
       // operation is undefined if one is not a number
       if (!lhs || !rhs) throw Exception::UndefinedOperation(lhs, rhs, Sass_OP::EQ);
@@ -40,11 +41,11 @@ namespace Sass {
     }
 
     /* static function, throws OperationError, has no pstate or traces */
-    bool cmp(ExpressionObj lhs, ExpressionObj rhs, const Sass_OP op)
+    bool cmp(ValueObj lhs, ValueObj rhs, const Sass_OP op)
     {
       // can only compare numbers!?
-      Number_Obj l = Cast<Number>(lhs);
-      Number_Obj r = Cast<Number>(rhs);
+      Number_Obj l = lhs->isNumber();
+      Number_Obj r = rhs->isNumber();
       // operation is undefined if one is not a number
       if (!l || !r) throw Exception::UndefinedOperation(lhs, rhs, op);
       // use compare operator from ast node
@@ -52,13 +53,14 @@ namespace Sass {
     }
 
     /* static functions, throws OperationError, has no pstate or traces */
-    bool lt(ExpressionObj lhs, ExpressionObj rhs) { return cmp(lhs, rhs, Sass_OP::LT); }
-    bool neq(ExpressionObj lhs, ExpressionObj rhs) { return eq(lhs, rhs) == false; }
-    bool gt(ExpressionObj lhs, ExpressionObj rhs) { return !cmp(lhs, rhs, Sass_OP::GT) && neq(lhs, rhs); }
-    bool lte(ExpressionObj lhs, ExpressionObj rhs) { return cmp(lhs, rhs, Sass_OP::LTE) || eq(lhs, rhs); }
-    bool gte(ExpressionObj lhs, ExpressionObj rhs) { return !cmp(lhs, rhs, Sass_OP::GTE) || eq(lhs, rhs); }
+    bool lt(ValueObj lhs, ValueObj rhs) { return cmp(lhs, rhs, Sass_OP::LT); }
+    bool neq(ValueObj lhs, ValueObj rhs) { return eq(lhs, rhs) == false; }
+    bool gt(ValueObj lhs, ValueObj rhs) { return !cmp(lhs, rhs, Sass_OP::GT) && neq(lhs, rhs); }
+    bool lte(ValueObj lhs, ValueObj rhs) { return cmp(lhs, rhs, Sass_OP::LTE) || eq(lhs, rhs); }
+    bool gte(ValueObj lhs, ValueObj rhs) { return !cmp(lhs, rhs, Sass_OP::GTE) || eq(lhs, rhs); }
 
     /* colour math deprecation warning */
+    // remove this in 4.0
     void op_color_deprecation(enum Sass_OP op, sass::string lsh, sass::string rhs, const SourceSpan& pstate)
     {
       deprecated(
@@ -74,14 +76,14 @@ namespace Sass {
     {
       enum Sass_OP op = operand.operand;
 
-      String_Quoted* lqstr = Cast<String_Quoted>(&lhs);
-      String_Quoted* rqstr = Cast<String_Quoted>(&rhs);
+      SassString* lqstr = lhs.isString();
+      SassString* rqstr = rhs.isString();
 
       sass::string lstr(lqstr ? lqstr->value() : lhs.to_string(opt));
       sass::string rstr(rqstr ? rqstr->value() : rhs.to_string(opt));
 
-      if (Cast<Null>(&lhs)) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
-      if (Cast<Null>(&rhs)) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
+      // if (lhs.isNull()) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
+      // if (Cast<Null>(&rhs)) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
 
       sass::string sep;
       switch (op) {
@@ -101,7 +103,7 @@ namespace Sass {
 
       if (op == Sass_OP::ADD) {
         // create string that might be quoted on output (but do not unquote what we pass)
-        return SASS_MEMORY_NEW(String_Quoted, pstate, lstr + rstr, 0, false, true);
+        return SASS_MEMORY_NEW(SassString, pstate, lstr + rstr);
       }
 
       // add whitespace around operator
@@ -112,16 +114,16 @@ namespace Sass {
       }
 
       if (op == Sass_OP::SUB || op == Sass_OP::DIV) {
-        if (lqstr && lqstr->quote_mark()) lstr = quote(lstr);
-        if (rqstr && rqstr->quote_mark()) rstr = quote(rstr);
+        if (lqstr && lqstr->hasQuotes()) lstr = quote(lstr);
+        if (rqstr && rqstr->hasQuotes()) rstr = quote(rstr);
       }
 
-      return SASS_MEMORY_NEW(String_Constant, pstate, lstr + sep + rstr);
+      return SASS_MEMORY_NEW(SassString, pstate, lstr + sep + rstr);
     }
 
     /* ToDo: allow to operate also with hsla colors */
     /* static function, throws OperationError, has no traces but optional pstate for returned value */
-    Value* op_colors(enum Sass_OP op, const Color_RGBA& lhs, const Color_RGBA& rhs, struct Sass_Inspect_Options opt, const SourceSpan& pstate, bool delayed)
+    Value* op_colors(enum Sass_OP op, const Color_RGBA& lhs, const Color_RGBA& rhs, const SourceSpan& pstate)
     {
 
       if (lhs.a() != rhs.a()) {
@@ -142,33 +144,68 @@ namespace Sass {
     }
 
     /* static function, throws OperationError, has no traces but optional pstate for returned value */
-    Value* op_numbers(enum Sass_OP op, const Number& lhs, const Number& rhs, struct Sass_Inspect_Options opt, const SourceSpan& pstate, bool delayed)
+    Value* op_numbers(enum Sass_OP op, const Number& lhs, const Number& rhs, const SourceSpan& pstate)
     {
       double lval = lhs.value();
       double rval = rhs.value();
 
       if (op == Sass_OP::MOD && rval == 0) {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, "NaN");
+        return SASS_MEMORY_NEW(Number, pstate, NAN);
       }
 
       if (op == Sass_OP::DIV && rval == 0) {
         sass::string result(lval ? "Infinity" : "NaN");
-        return SASS_MEMORY_NEW(String_Quoted, pstate, result);
+        if (lval) return SASS_MEMORY_NEW(Number, pstate, INFINITY);
+        else return SASS_MEMORY_NEW(Number, pstate, NAN);
       }
 
       size_t l_n_units = lhs.numerators.size();
-      size_t l_d_units = lhs.numerators.size();
-      size_t r_n_units = rhs.denominators.size();
+      size_t l_d_units = lhs.denominators.size();
+      size_t r_n_units = rhs.numerators.size();
       size_t r_d_units = rhs.denominators.size();
-      // optimize out the most common and simplest case
-      if (l_n_units == r_n_units && l_d_units == r_d_units) {
-        if (l_n_units + l_d_units <= 1 && r_n_units + r_d_units <= 1) {
-          if (lhs.numerators == rhs.numerators) {
-            if (lhs.denominators == rhs.denominators) {
-              Number* v = SASS_MEMORY_COPY(&lhs);
-              v->value(ops[op](lval, rval));
-              return v;
+      size_t l_units = l_n_units + l_d_units;
+      size_t r_units = r_n_units + r_d_units;
+
+      if (r_units == 0) {
+        if (l_units <= 1) {
+          Number* v = SASS_MEMORY_COPY(&lhs);
+          v->value(ops[op](lval, rval));
+          return v;
+        }
+      }
+      else if (l_units == 0) {
+        if (r_units == 1) {
+          Number* v = SASS_MEMORY_COPY(&lhs);
+          v->value(ops[op](lval, rval));
+          if (op == Sass_OP::DIV) {
+            v->numerators = rhs.denominators;
+            v->denominators = rhs.numerators;
+          }
+          else {
+            v->numerators = rhs.numerators;
+            v->denominators = rhs.denominators;
+          }
+          return v;
+         }
+      }
+      else if (l_units == 1 && r_units == 1) {
+        if (lhs.numerators == rhs.numerators) {
+          if (lhs.denominators == rhs.denominators) {
+            Number* v = SASS_MEMORY_COPY(&lhs);
+            v->value(ops[op](lval, rval));
+            if (op == Sass_OP::DIV) {
+              v->numerators.clear();
+              v->denominators.clear();
             }
+            else if (op == Sass_OP::MUL) {
+              std::copy(
+                rhs.numerators.begin(), rhs.numerators.end(),
+                std::back_inserter(v->numerators));
+              std::copy(
+                rhs.denominators.begin(), rhs.denominators.end(),
+                std::back_inserter(v->denominators));
+            }
+            return v;
           }
         }
       }
@@ -201,6 +238,9 @@ namespace Sass {
         v->reduce();
       }
       else {
+        // Todo: Avoid unecessary copy
+        // Only needed if at least two units are used
+        // Can work directly if both sides are equal
         Number ln(lhs), rn(rhs);
         ln.reduce(); rn.reduce();
         double f(rn.convert_factor(ln));
@@ -212,7 +252,7 @@ namespace Sass {
     }
 
     /* static function, throws OperationError, has no traces but optional pstate for returned value */
-    Value* op_number_color(enum Sass_OP op, const Number& lhs, const Color_RGBA& rhs, struct Sass_Inspect_Options opt, const SourceSpan& pstate, bool delayed)
+    Value* op_number_color(enum Sass_OP op, const Number& lhs, const Color_RGBA& rhs, struct Sass_Inspect_Options opt, const SourceSpan& pstate)
     {
       double lval = lhs.value();
 
@@ -231,11 +271,11 @@ namespace Sass {
         case Sass_OP::DIV: {
           sass::string color(rhs.to_string(opt));
           op_color_deprecation(op, lhs.to_string(), color, pstate);
-          return SASS_MEMORY_NEW(String_Quoted,
+          return SASS_MEMORY_NEW(SassString,
                                 pstate,
                                 lhs.to_string(opt)
                                 + sass_op_separator(op)
-                                + color);
+                                + color, true);
         }
         default: break;
       }
@@ -243,11 +283,11 @@ namespace Sass {
     }
 
     /* static function, throws OperationError, has no traces but optional pstate for returned value */
-    Value* op_color_number(enum Sass_OP op, const Color_RGBA& lhs, const Number& rhs, struct Sass_Inspect_Options opt, const SourceSpan& pstate, bool delayed)
+    Value* op_color_number(enum Sass_OP op, const Color_RGBA& lhs, const Number& rhs, struct Sass_Inspect_Options opt, const SourceSpan& pstate)
     {
       double rval = rhs.value();
 
-      if ((op == Sass_OP::DIV || op == Sass_OP::DIV) && rval == 0) {
+      if (op == Sass_OP::DIV && rval == 0) {
         // comparison of Fixnum with Float failed?
         throw Exception::ZeroDivisionError(lhs, rhs);
       }

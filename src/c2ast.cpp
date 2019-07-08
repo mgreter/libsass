@@ -8,7 +8,7 @@
 
 namespace Sass {
 
-  Value* c2ast(union Sass_Value* v, Backtraces traces, SourceSpan pstate)
+  Value* c2ast(union Sass_Value* v, BackTraces traces, SourceSpan pstate)
   {
     using std::strlen;
     using std::strcpy;
@@ -25,23 +25,28 @@ namespace Sass {
       } break;
       case SASS_STRING: {
         if (sass_string_is_quoted(v))
-          e = SASS_MEMORY_NEW(String_Quoted, pstate, sass_string_get_value(v));
+          e = SASS_MEMORY_NEW(SassString, pstate, sass_string_get_value(v), true);
         else {
-          e = SASS_MEMORY_NEW(String_Constant, pstate, sass_string_get_value(v));
+          e = SASS_MEMORY_NEW(SassString, pstate, sass_string_get_value(v), false);
         }
       } break;
       case SASS_LIST: {
-        List* l = SASS_MEMORY_NEW(List, pstate, sass_list_get_length(v), sass_list_get_separator(v));
-        for (size_t i = 0, L = sass_list_get_length(v); i < L; ++i) {
-          l->append(c2ast(sass_list_get_value(v, i), traces, pstate));
+        // sass_list_get_length(v),
+        size_t L = sass_list_get_length(v);
+        sass::vector<ValueObj> values;
+        values.reserve(L);
+        for (size_t i = 0; i < L; ++i) {
+          values.emplace_back(c2ast(sass_list_get_value(v, i), traces, pstate));
         }
-        l->is_bracketed(sass_list_get_is_bracketed(v));
+        SassList* l = SASS_MEMORY_NEW(SassList, pstate,
+          std::move(values), sass_list_get_separator(v));
+        l->hasBrackets(sass_list_get_is_bracketed(v));
         e = l;
       } break;
       case SASS_MAP: {
         Map* m = SASS_MEMORY_NEW(Map, pstate);
         for (size_t i = 0, L = sass_map_get_length(v); i < L; ++i) {
-          *m << std::make_pair(
+          m->insert(
             c2ast(sass_map_get_key(v, i), traces, pstate),
             c2ast(sass_map_get_value(v, i), traces, pstate));
         }
@@ -51,7 +56,7 @@ namespace Sass {
         e = SASS_MEMORY_NEW(Null, pstate);
       } break;
       case SASS_ERROR: {
-        error("Error in C function: " + sass::string(sass_error_get_message(v)), pstate, traces);
+        error("ErrorRule in C function: " + sass::string(sass_error_get_message(v)), pstate, traces);
       } break;
       case SASS_WARNING: {
         error("Warning in C function: " + sass::string(sass_warning_get_message(v)), pstate, traces);

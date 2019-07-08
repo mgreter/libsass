@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include <iostream>
+#include <sstream>
 #include "output.hpp"
 #include "plugins.hpp"
 #include "util.hpp"
@@ -62,6 +63,9 @@ namespace Sass {
     typedef Sass_Function_List (*__plugin_load_fns__)(void);
     typedef Sass_Importer_List (*__plugin_load_imps__)(void);
 
+    sass::sstream strm; strm << getHashSeed();
+    SET_ENV("SASS_HASH_SEED", strm.str().c_str());
+
     if (LOAD_LIB(plugin, path))
     {
       // try to load initial function to query libsass version suppor
@@ -73,21 +77,21 @@ namespace Sass {
         if (LOAD_LIB_FN(__plugin_load_fns__, plugin_load_functions, "libsass_load_functions"))
         {
           Sass_Function_List fns = plugin_load_functions(), _p = fns;
-          while (fns && *fns) { functions.push_back(*fns); ++ fns; }
+          while (fns && *fns) { functions.emplace_back(*fns); ++ fns; }
           sass_free_memory(_p); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_importers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))
         {
           Sass_Importer_List imps = plugin_load_importers(), _p = imps;
-          while (imps && *imps) { importers.push_back(*imps); ++ imps; }
+          while (imps && *imps) { importers.emplace_back(*imps); ++ imps; }
           sass_free_memory(_p); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_headers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_headers, "libsass_load_headers"))
         {
           Sass_Importer_List imps = plugin_load_headers(), _p = imps;
-          while (imps && *imps) { headers.push_back(*imps); ++ imps; }
+          while (imps && *imps) { headers.emplace_back(*imps); ++ imps; }
           sass_free_memory(_p); // only delete the container, items not yet
         }
         // success
@@ -96,16 +100,16 @@ namespace Sass {
       else
       {
         // print debug message to stderr (should not happen)
-        std::cerr << "failed loading 'libsass_support' in <" << path << ">" << std::endl;
-        if (const char* dlsym_error = dlerror()) std::cerr << dlsym_error << std::endl;
+        std::cerr << "failed loading 'libsass_support' in <" << path << ">" << STRMLF;
+        if (const char* dlsym_error = dlerror()) std::cerr << dlsym_error << STRMLF;
         CLOSE_LIB(plugin);
       }
     }
     else
     {
       // print debug message to stderr (should not happen)
-      std::cerr << "failed loading plugin <" << path << ">" << std::endl;
-      if (const char* dlopen_error = dlerror()) std::cerr << dlopen_error << std::endl;
+      std::cerr << "failed loading plugin <" << path << ">" << STRMLF;
+      if (const char* dlopen_error = dlerror()) std::cerr << dlopen_error << STRMLF;
     }
 
     return false;
@@ -154,7 +158,7 @@ namespace Sass {
           {
             // report the error to the console (should not happen)
             // seems like we got strange data from the system call?
-            std::cerr << "filename in plugin path has invalid utf8?" << std::endl;
+            std::cerr << "filename in plugin path has invalid utf8?" << STRMLF;
           }
         }
       }
@@ -162,7 +166,7 @@ namespace Sass {
       {
         // report the error to the console (should not happen)
         // implementors should make sure to provide valid utf8
-        std::cerr << "plugin path contains invalid utf8" << std::endl;
+        std::cerr << "plugin path contains invalid utf8" << STRMLF;
       }
 
     #else

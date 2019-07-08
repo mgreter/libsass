@@ -3,8 +3,10 @@
 #include "sass.hpp"
 
 #include "constants.hpp"
+#include "terminal.hpp"
 
 namespace Sass {
+
   namespace Constants {
 
     extern const unsigned long MaxCallStack = 1024;
@@ -30,153 +32,6 @@ namespace Sass {
     extern const int UnificationOrder_PseudoElement = 6;
     extern const int UnificationOrder_Placeholder = 7;
 
-    // sass keywords
-    extern const char at_root_kwd[]       = "@at-root";
-    extern const char import_kwd[]        = "@import";
-    extern const char mixin_kwd[]         = "@mixin";
-    extern const char function_kwd[]      = "@function";
-    extern const char return_kwd[]        = "@return";
-    extern const char include_kwd[]       = "@include";
-    extern const char content_kwd[]       = "@content";
-    extern const char extend_kwd[]        = "@extend";
-    extern const char if_kwd[]            = "@if";
-    extern const char else_kwd[]          = "@else";
-    extern const char if_after_else_kwd[] = "if";
-    extern const char for_kwd[]           = "@for";
-    extern const char from_kwd[]          = "from";
-    extern const char to_kwd[]            = "to";
-    extern const char of_kwd[]            = "of";
-    extern const char through_kwd[]       = "through";
-    extern const char each_kwd[]          = "@each";
-    extern const char in_kwd[]            = "in";
-    extern const char while_kwd[]         = "@while";
-    extern const char warn_kwd[]          = "@warn";
-    extern const char error_kwd[]         = "@error";
-    extern const char debug_kwd[]         = "@debug";
-    extern const char default_kwd[]       = "default";
-    extern const char global_kwd[]        = "global";
-    extern const char null_kwd[]          = "null";
-    extern const char optional_kwd[]      = "optional";
-    extern const char with_kwd[]          = "with";
-    extern const char without_kwd[]       = "without";
-    extern const char all_kwd[]           = "all";
-    extern const char rule_kwd[]          = "rule";
-
-    // css standard units
-    extern const char em_kwd[]   = "em";
-    extern const char ex_kwd[]   = "ex";
-    extern const char px_kwd[]   = "px";
-    extern const char cm_kwd[]   = "cm";
-    extern const char mm_kwd[]   = "mm";
-    extern const char pt_kwd[]   = "pt";
-    extern const char pc_kwd[]   = "pc";
-    extern const char deg_kwd[]  = "deg";
-    extern const char rad_kwd[]  = "rad";
-    extern const char grad_kwd[] = "grad";
-    extern const char turn_kwd[] = "turn";
-    extern const char ms_kwd[]   = "ms";
-    extern const char s_kwd[]    = "s";
-    extern const char Hz_kwd[]   = "Hz";
-    extern const char kHz_kwd[]  = "kHz";
-
-    // vendor prefixes
-    extern const char vendor_opera_kwd[]    = "-o-";
-    extern const char vendor_webkit_kwd[]   = "-webkit-";
-    extern const char vendor_mozilla_kwd[]  = "-moz-";
-    extern const char vendor_ms_kwd[]       = "-ms-";
-    extern const char vendor_khtml_kwd[]    = "-khtml-";
-
-    // css functions and keywords
-    extern const char charset_kwd[]      = "@charset";
-    extern const char media_kwd[]        = "@media";
-    extern const char supports_kwd[]     = "@supports";
-    extern const char keyframes_kwd[]    = "keyframes";
-    extern const char only_kwd[]         = "only";
-    extern const char rgb_fn_kwd[]       = "rgb(";
-    extern const char url_fn_kwd[]       = "url(";
-    extern const char url_kwd[]          = "url";
-    // extern const char url_prefix_fn_kwd[] = "url-prefix(";
-    extern const char important_kwd[]    = "important";
-    extern const char pseudo_not_fn_kwd[] = ":not(";
-    extern const char even_kwd[]         = "even";
-    extern const char odd_kwd[]          = "odd";
-    extern const char progid_kwd[]       = "progid";
-    extern const char expression_kwd[]   = "expression";
-    extern const char calc_fn_kwd[]      = "calc";
-
-    extern const char almost_any_value_class[] = "\"'#!;{}";
-
-    // css selector keywords
-    extern const char sel_deep_kwd[] = "/deep/";
-
-    // css attribute-matching operators
-    extern const char tilde_equal[]  = "~=";
-    extern const char pipe_equal[]   = "|=";
-    extern const char caret_equal[]  = "^=";
-    extern const char dollar_equal[] = "$=";
-    extern const char star_equal[]   = "*=";
-
-    // relational & logical operators and constants
-    extern const char and_kwd[]   = "and";
-    extern const char or_kwd[]    = "or";
-    extern const char not_kwd[]   = "not";
-    extern const char gt[]        = ">";
-    extern const char gte[]       = ">=";
-    extern const char lt[]        = "<";
-    extern const char lte[]       = "<=";
-    extern const char eq[]        = "==";
-    extern const char neq[]       = "!=";
-    extern const char true_kwd[]  = "true";
-    extern const char false_kwd[] = "false";
-
-    // definition keywords
-    extern const char using_kwd[]   = "using";
-
-    // miscellaneous punctuation and delimiters
-    extern const char percent_str[]     = "%";
-    extern const char empty_str[]       = "";
-    extern const char slash_slash[]     = "//";
-    extern const char slash_star[]      = "/*";
-    extern const char star_slash[]      = "*/";
-    extern const char hash_lbrace[]     = "#{";
-    extern const char rbrace[]          = "}";
-    extern const char rparen[]          = ")";
-    extern const char sign_chars[]      = "-+";
-    extern const char op_chars[]        = "-+";
-    extern const char hyphen[]          = "-";
-    extern const char ellipsis[]        = "...";
-    // extern const char url_space_chars[] = " \t\r\n\f";
-    // type names
-    extern const char numeric_name[]    = "numeric value";
-    extern const char number_name[]     = "number";
-    extern const char percentage_name[] = "percentage";
-    extern const char dimension_name[]  = "numeric dimension";
-    extern const char string_name[]     = "string";
-    extern const char bool_name[]       = "bool";
-    extern const char color_name[]      = "color";
-    extern const char list_name[]       = "list";
-    extern const char map_name[]        = "map";
-    extern const char arglist_name[]    = "arglist";
-
-    // constants for uri parsing (RFC 3986 Appendix A.)
-    extern const char uri_chars[]  = ":;/?!%&#@|[]{}'`^\"*+-.,_=~";
-    extern const char real_uri_chars[]  = "#%&";
-
-    extern const char selector_combinator_child[] = ">";
-    extern const char selector_combinator_general[] = "~";
-    extern const char selector_combinator_adjacent[] = "+";
-
-    // some specific constant character classes
-    // they must be static to be useable by lexer
-    extern const char static_ops[]      = "*/%";
-    // some character classes for the parser
-    extern const char selector_list_delims[] = "){};!";
-    extern const char complex_selector_delims[] = ",){};!";
-    extern const char selector_combinator_ops[] = "+~>";
-    // optional modifiers for alternative compare context
-    extern const char attribute_compare_modifiers[] = "~|^$*";
-    extern const char selector_lookahead_ops[] = "*&%,()[]";
-
     // byte order marks
     // (taken from http://en.wikipedia.org/wiki/Byte_order_mark)
     extern const unsigned char utf_8_bom[]      = { 0xEF, 0xBB, 0xBF };
@@ -196,4 +51,40 @@ namespace Sass {
     extern const unsigned char gb_18030_bom[]   = { 0x84, 0x31, 0x95, 0x33 };
 
   }
+}
+
+namespace Sass {
+
+  namespace Constants {
+
+    extern const char empty[] = "";
+
+  }
+
+}
+
+
+namespace Terminal {
+
+  const char reset[] = "\033[m";
+  const char bold[] = "\033[1m";
+  const char red[] = "\033[31m";
+  const char green[] = "\033[32m";
+  const char yellow[] = "\033[33m";
+  const char blue[] = "\033[34m";
+  const char magenta[] = "\033[35m";
+  const char cyan[] = "\033[36m";
+  const char bold_red[] = "\033[1;31m";
+  const char bold_green[] = "\033[1;32m";
+  const char bold_yellow[] = "\033[1;33m";
+  const char bold_blue[] = "\033[1;34m";
+  const char bold_magenta[] = "\033[1;35m";
+  const char bold_cyan[] = "\033[1;36m";
+  const char bg_red[] = "\033[41m";
+  const char bg_green[] = "\033[42m";
+  const char bg_yellow[] = "\033[43m";
+  const char bg_blue[] = "\033[44m";
+  const char bg_magenta[] = "\033[45m";
+  const char bg_cyan[] = "\033[46m";
+
 }
