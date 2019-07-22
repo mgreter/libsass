@@ -159,7 +159,7 @@ namespace Sass {
     {
       CompoundSelectorObj sel = ARGSEL("$selector");
 
-      List* l = SASS_MEMORY_NEW(List, sel->pstate(), sel->length(), SASS_COMMA);
+      SassList* l = SASS_MEMORY_NEW(SassList, sel->pstate(), SASS_COMMA);
 
       for (size_t i = 0, L = sel->length(); i < L; ++i) {
         const SimpleSelectorObj& ss = sel->get(i);

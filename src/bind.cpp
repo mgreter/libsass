@@ -2,6 +2,7 @@
 #include "bind.hpp"
 #include "ast.hpp"
 #include "backtrace.hpp"
+#include "debugger.hpp"
 #include "context.hpp"
 #include "expand.hpp"
 #include "eval.hpp"
@@ -19,7 +20,7 @@ namespace Sass {
     if (as) asL = as->length();
     if (ps) psL = ps->length();
 
-    environment_map(Parameter_Obj) param_map;
+    NormalizedMap<Parameter_Obj> param_map;
     List_Obj varargs = SASS_MEMORY_NEW(List, as->pstate());
     varargs->is_arglist(true); // enable keyword size handling
 
@@ -47,12 +48,19 @@ namespace Sass {
     size_t ia = 0, LA = asL;
     while (ia < LA) {
       Argument_Obj a = as->at(ia);
+      // std::cerr << "first run\n";
+      // debug_ast(a);
       if (ip >= LP) {
         // skip empty rest arguments
         if (a->is_rest_argument()) {
           if (List_Obj l = Cast<List>(a->value())) {
             if (l->length() == 0) {
-              ++ ia; continue;
+              ++ia; continue;
+            }
+          }
+          if (SassList_Obj l = Cast<SassList>(a->value())) {
+            if (l->length() == 0) {
+              ++ia; continue;
             }
           }
         }
@@ -72,29 +80,57 @@ namespace Sass {
         if (a->is_rest_argument()) {
 
           // We should always get a list for rest arguments
-          if (List_Obj rest = Cast<List>(a->value())) {
-              // create a new list object for wrapped items
-              List* arglist = SASS_MEMORY_NEW(List,
-                                              p->pstate(),
-                                              0,
-                                              rest->separator(),
-                                              true);
-              // wrap each item from list as an argument
-              for (Expression_Obj item : rest->elements()) {
-                if (Argument_Obj arg = Cast<Argument>(item)) {
-                  arglist->append(SASS_MEMORY_COPY(arg)); // copy
-                } else {
-                  arglist->append(SASS_MEMORY_NEW(Argument,
-                                                  item->pstate(),
-                                                  item,
-                                                  "",
-                                                  false,
-                                                  false));
-                }
+          if (SassList_Obj rest = Cast<SassList>(a->value())) {
+            // std::cerr << "Got a SassList\n";
+            // create a new list object for wrapped items
+            List* arglist = SASS_MEMORY_NEW(List,
+              p->pstate(),
+              0,
+              rest->separator(),
+              true);
+            // wrap each item from list as an argument
+            for (Expression_Obj item : rest->elements()) {
+              if (Argument_Obj arg = Cast<Argument>(item)) {
+                arglist->append(SASS_MEMORY_COPY(arg)); // copy
               }
-              // assign new arglist to environment
-              env->local_frame()[p->name()] = arglist;
+              else {
+                arglist->append(SASS_MEMORY_NEW(Argument,
+                  item->pstate(),
+                  item,
+                  "",
+                  false,
+                  false));
+              }
             }
+            // assign new arglist to environment
+            // std::cerr << "Assign " << p->name() << "\n";
+            env->local_frame()[p->name()] = arglist;
+          }
+          // We should always get a list for rest arguments
+          else if (List_Obj rest = Cast<List>(a->value())) {
+            // create a new list object for wrapped items
+            List* arglist = SASS_MEMORY_NEW(List,
+              p->pstate(),
+              0,
+              rest->separator(),
+              true);
+            // wrap each item from list as an argument
+            for (Expression_Obj item : rest->elements()) {
+              if (Argument_Obj arg = Cast<Argument>(item)) {
+                arglist->append(SASS_MEMORY_COPY(arg)); // copy
+              }
+              else {
+                arglist->append(SASS_MEMORY_NEW(Argument,
+                  item->pstate(),
+                  item,
+                  "",
+                  false,
+                  false));
+              }
+            }
+            // assign new arglist to environment
+            env->local_frame()[p->name()] = arglist;
+          }
           // invalid state
           else {
             throw std::runtime_error("invalid state");
@@ -103,6 +139,7 @@ namespace Sass {
 
           // expand keyword arguments into their parameters
           List* arglist = SASS_MEMORY_NEW(List, p->pstate(), 0, SASS_COMMA, true);
+          // std::cerr << "Assign2 " << p->name() << "\n";
           env->local_frame()[p->name()] = arglist;
           Map_Obj argmap = Cast<Map>(a->value());
           for (auto key : argmap->keys()) {
@@ -143,8 +180,10 @@ namespace Sass {
             a = (*as)[ia++];
             // maybe we have another list as argument
             List_Obj ls = Cast<List>(a->value());
+            SassListObj lsl = Cast<SassList>(a->value());
             // skip any list completely if empty
             if (ls && ls->empty() && a->is_rest_argument()) continue;
+            if (lsl && lsl->empty() && a->is_rest_argument()) continue;
 
             Expression_Obj value = a->value();
             if (Argument_Obj arg = Cast<Argument>(value)) {
@@ -153,17 +192,30 @@ namespace Sass {
             // check if we have rest argument
             else if (a->is_rest_argument()) {
               // preserve the list separator from rest args
-              if (List_Obj rest = Cast<List>(a->value())) {
+              if (SassListObj rest = Cast<SassList>(a->value())) {
+                arglist->separator(rest->separator());
+
+                for (size_t i = 0, L = rest->length(); i < L; ++i) {
+                  ValueObj obj = rest->get(i);
+                  arglist->append(SASS_MEMORY_NEW(Argument,
+                    obj->pstate(),
+                    obj,
+                    "",
+                    false,
+                    false));
+                }
+              }
+              else if (List_Obj rest = Cast<List>(a->value())) {
                 arglist->separator(rest->separator());
 
                 for (size_t i = 0, L = rest->length(); i < L; ++i) {
                   Expression_Obj obj = rest->value_at_index(i);
                   arglist->append(SASS_MEMORY_NEW(Argument,
-                                                obj->pstate(),
-                                                obj,
-                                                "",
-                                                false,
-                                                false));
+                    obj->pstate(),
+                    obj,
+                    "",
+                    false,
+                    false));
                 }
               }
               // no more arguments
@@ -180,6 +232,7 @@ namespace Sass {
             }
           }
           // assign new arglist to environment
+          // std::cerr << "Assign3 " << p->name() << "\n";
           env->local_frame()[p->name()] = arglist;
         }
         // consumed parameter
@@ -192,45 +245,91 @@ namespace Sass {
       else if (a->is_rest_argument()) {
         // normal param and rest arg
         List_Obj arglist = Cast<List>(a->value());
-        if (!arglist) {
+        SassListObj arglist2 = Cast<SassList>(a->value());
+        // debug_ast(arglist, "== ");
+        if (!arglist && !arglist2) {
           if (Expression_Obj arg = Cast<Expression>(a->value())) {
-            arglist = SASS_MEMORY_NEW(List, a->pstate(), 1);
-            arglist->append(arg);
+            arglist2 = SASS_MEMORY_NEW(SassList, a->pstate());
+            arglist2->append(arg);
           }
         }
 
-        // empty rest arg - treat all args as default values
-        if (!arglist || !arglist->length()) {
-          break;
-        } else {
-          if (arglist->length() > LP - ip && !ps->has_rest_parameter()) {
-            size_t arg_count = (arglist->length() + LA - 1);
-            std::stringstream msg;
-            msg << callee << " takes " << LP;
-            msg << (LP == 1 ? " argument" : " arguments");
-            msg << " but " << arg_count;
-            msg << (arg_count == 1 ? " was passed" : " were passed.");
-            deprecated_bind(msg.str(), as->pstate());
+        // debug_ast(a->value());
 
-            while (arglist->length() > LP - ip) {
-              arglist->elements().erase(arglist->elements().end() - 1);
+        if (arglist2) {
+          // std::cerr << "go a sass list\n";
+          if (!arglist2 || !arglist2->length()) {
+            break;
+          }
+          else {
+            if (arglist2->length() > LP - ip && !ps->has_rest_parameter()) {
+              size_t arg_count = (arglist2->length() + LA - 1);
+              std::stringstream msg;
+              msg << callee << " takes " << LP;
+              msg << (LP == 1 ? " argument" : " arguments");
+              msg << " but " << arg_count;
+              msg << (arg_count == 1 ? " was passed" : " were passed.");
+              deprecated_bind(msg.str(), as->pstate());
+
+              while (arglist2->length() > LP - ip) {
+                arglist2->elements().erase(arglist2->elements().end() - 1);
+              }
             }
           }
+          // otherwise move one of the rest args into the param, converting to argument if necessary
+          Expression_Obj obj = arglist2->at(0);
+          if (!(a = Cast<Argument>(obj))) {
+            Expression* a_to_convert = obj;
+            a = SASS_MEMORY_NEW(Argument,
+              a_to_convert->pstate(),
+              a_to_convert,
+              "",
+              false,
+              false);
+          }
+          arglist2->elements().erase(arglist2->elements().begin());
+          if (!arglist2->length() || (ip + 1 == LP)) {
+            ++ia;
+          }
+
         }
-        // otherwise move one of the rest args into the param, converting to argument if necessary
-        Expression_Obj obj = arglist->at(0);
-        if (!(a = Cast<Argument>(obj))) {
-          Expression* a_to_convert = obj;
-          a = SASS_MEMORY_NEW(Argument,
-                              a_to_convert->pstate(),
-                              a_to_convert,
-                              "",
-                              false,
-                              false);
-        }
-        arglist->elements().erase(arglist->elements().begin());
-        if (!arglist->length() || (!arglist->is_arglist() && ip + 1 == LP)) {
-          ++ia;
+        else {
+          // std::cerr << "got regular list\n";
+          // empty rest arg - treat all args as default values
+          if (!arglist || !arglist->length()) {
+            break;
+          }
+          else {
+            if (arglist->length() > LP - ip && !ps->has_rest_parameter()) {
+              size_t arg_count = (arglist->length() + LA - 1);
+              std::stringstream msg;
+              msg << callee << " takes " << LP;
+              msg << (LP == 1 ? " argument" : " arguments");
+              msg << " but " << arg_count;
+              msg << (arg_count == 1 ? " was passed" : " were passed.");
+              deprecated_bind(msg.str(), as->pstate());
+
+              while (arglist->length() > LP - ip) {
+                arglist->elements().erase(arglist->elements().end() - 1);
+              }
+            }
+          }
+          // otherwise move one of the rest args into the param, converting to argument if necessary
+          Expression_Obj obj = arglist->at(0);
+          if (!(a = Cast<Argument>(obj))) {
+            Expression* a_to_convert = obj;
+            a = SASS_MEMORY_NEW(Argument,
+              a_to_convert->pstate(),
+              a_to_convert,
+              "",
+              false,
+              false);
+          }
+          arglist->elements().erase(arglist->elements().begin());
+          if (!arglist->length() || (!arglist->is_arglist() && ip + 1 == LP)) {
+            ++ia;
+          }
+
         }
 
       } else if (a->is_keyword_argument()) {
@@ -249,6 +348,7 @@ namespace Sass {
             msg << "No argument named " << param << ".";
             error(msg.str(), a->pstate(), traces);
           }
+          // std::cerr << "Assign4 " << p->name() << "\n";
           env->local_frame()[param] = argmap->at(key);
         }
         ++ia;
@@ -265,6 +365,7 @@ namespace Sass {
           error(msg.str(), a->pstate(), traces);
         }
         // ordinal arg -- bind it to the next param
+        // std::cerr << "Assign5 " << p->name() << "\n";
         env->local_frame()[p->name()] = a->value();
         ++ip;
       }
@@ -293,6 +394,7 @@ namespace Sass {
               << "provided more than once in call to " << callee;
           error(msg.str(), a->pstate(), traces);
         }
+        // std::cerr << "Assign6 " << p->name() << "\n";
         env->local_frame()[a->name()] = a->value();
       }
     }
@@ -308,10 +410,12 @@ namespace Sass {
       // cerr << "********" << endl;
       if (!env->has_local(leftover->name())) {
         if (leftover->is_rest_parameter()) {
+          // std::cerr << "Assign7 " << leftover->name() << "\n";
           env->local_frame()[leftover->name()] = varargs;
         }
         else if (leftover->default_value()) {
           Expression* dv = leftover->default_value()->perform(eval);
+          // std::cerr << "Assign8 " << leftover->name() << "\n";
           env->local_frame()[leftover->name()] = dv;
         }
         else {

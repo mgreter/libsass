@@ -6,17 +6,17 @@ namespace Sass {
 
   template <typename T>
   Environment<T>::Environment(bool is_shadow)
-  : local_frame_(environment_map(T)()),
+  : local_frame_(NormalizedMap<T>()),
     parent_(0), is_shadow_(false)
   { }
   template <typename T>
   Environment<T>::Environment(Environment<T>* env, bool is_shadow)
-  : local_frame_(environment_map(T)()),
+  : local_frame_(NormalizedMap<T>()),
     parent_(env), is_shadow_(is_shadow)
   { }
   template <typename T>
   Environment<T>::Environment(Environment<T>& env, bool is_shadow)
-  : local_frame_(environment_map(T)()),
+  : local_frame_(NormalizedMap<T>()),
     parent_(&env), is_shadow_(is_shadow)
   { }
 
@@ -45,7 +45,7 @@ namespace Sass {
   }
 
   template <typename T>
-  environment_map(T)& Environment<T>::local_frame() {
+  NormalizedMap<T>& Environment<T>::local_frame() {
     return local_frame_;
   }
 

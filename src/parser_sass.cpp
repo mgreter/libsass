@@ -12,7 +12,7 @@ namespace Sass {
 
   Interpolation* SassParser::styleRuleSelector()
   {
-    Position start(scanner.offset);
+    Position start(scanner);
     InterpolationBuffer buffer;
     do {
       buffer.addInterpolation(almostAnyValue());
@@ -26,8 +26,12 @@ namespace Sass {
   void SassParser::expectStatementSeparator(std::string name) {
     if (!atEndOfStatement()) _expectNewline();
     if (_peekIndentation() <= _currentIndentation) return;
+    std::stringstream strm;
+    strm << "Nothing may be indented ";
+    if (name.empty()) { strm << "here."; }
+    else { strm << "beneath a " + name + "."; }
     scanner.error(
-      "Nothing may be indented ${name == null ? 'here' : 'beneath a $name'}."/*,
+      strm.str()/*,
       position: _nextIndentationEnd.position*/);
   }
 
@@ -170,7 +174,7 @@ namespace Sass {
 
   SilentComment* SassParser::_silentComment()
   {
-    Position start(scanner.offset);
+    Position start(scanner);
     scanner.expect("//");
     StringBuffer buffer;
     size_t parentIndentation = _currentIndentation;
@@ -217,7 +221,7 @@ namespace Sass {
 
   LoudComment* SassParser::_loudComment()
   {
-    Position start(scanner.offset);
+	Position start(scanner);
     scanner.expect("/*");
 
     bool first = true;
@@ -227,7 +231,7 @@ namespace Sass {
     while (true) {
       if (first) {
         // If the first line is empty, ignore it.
-        Position beginningOfComment(scanner.offset);
+        Position beginningOfComment(scanner);
         spaces();
         if (isNewline(scanner.peekChar())) {
           _readIndentation();

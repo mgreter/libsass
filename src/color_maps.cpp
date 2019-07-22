@@ -645,12 +645,4 @@ namespace Sass {
     return color_to_name((int)key);
   }
 
-  const char* color_to_name(const Color_RGBA& c)
-  {
-    double key = c.r() * 0x10000
-               + c.g() * 0x100
-               + c.b();
-    return color_to_name(key);
-  }
-
 }

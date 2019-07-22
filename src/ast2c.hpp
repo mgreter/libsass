@@ -22,6 +22,7 @@ namespace Sass {
     union Sass_Value* operator()(String_Quoted*);
     union Sass_Value* operator()(Custom_Warning*);
     union Sass_Value* operator()(Custom_Error*);
+    union Sass_Value* operator()(SassList*);
     union Sass_Value* operator()(List*);
     union Sass_Value* operator()(Map*);
     union Sass_Value* operator()(Null*);

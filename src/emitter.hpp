@@ -69,8 +69,6 @@ namespace Sass {
       void append_string(const std::string& text);
       // append a single character to buffer
       void append_char(uint8_t chr);
-      // append some white-space only text
-      void append_wspace(const std::string& text);
       // append some text or token to the buffer
       // this adds source-mappings for node start and end
       void append_token(const std::string& text, const AST_Node* node);

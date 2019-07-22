@@ -24,8 +24,8 @@ namespace Sass {
     SelectorStack original_stack \
 
   typedef const char* Signature;
-  typedef PreValue* (*Native_Function)(FN_PROTOTYPE);
-  #define BUILT_IN(name) PreValue* name(FN_PROTOTYPE)
+  typedef Value* (*Native_Function)(FN_PROTOTYPE);
+  #define BUILT_IN(name) Value* name(FN_PROTOTYPE)
 
   #define ARG(argname, argtype, type) get_arg<argtype>(argname, env, sig, pstate, traces, type)
   #define ARGCOL(argname) get_arg<Color>(argname, env, sig, pstate, traces, "a color")
@@ -55,8 +55,6 @@ namespace Sass {
 
     Map* get_arg_m(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces); // maps only
     Number* get_arg_n(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces); // numbers only
-    double alpha_num(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces); // colors only
-    double color_num(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces); // colors only
     double get_arg_r(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces, double lo, double hi, std::string unit = ""); // colors only
     double get_arg_val(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces); // shared
     SelectorListObj get_arg_sels(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces, Context& ctx); // selectors only

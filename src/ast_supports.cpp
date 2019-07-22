@@ -9,14 +9,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Block::Supports_Block(ParserState pstate, Supports_Condition_Obj condition, Block_Obj block)
+  SupportsRule::SupportsRule(ParserState pstate, SupportsCondition_Obj condition, Block_Obj block)
   : Has_Block(pstate, block), condition_(condition)
   { statement_type(SUPPORTS); }
-  Supports_Block::Supports_Block(const Supports_Block* ptr)
+  SupportsRule::SupportsRule(const SupportsRule* ptr)
   : Has_Block(ptr), condition_(ptr->condition_)
   { statement_type(SUPPORTS); }
 
-  bool Supports_Block::is_invisible() const
+  bool SupportsRule::is_invisible() const
   {
     Block* b = block();
 
@@ -53,69 +53,51 @@ namespace Sass {
 
   }
 
-  bool Supports_Block::bubbles() { return true; }
+  bool SupportsRule::bubbles() { return true; }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Condition::Supports_Condition(ParserState pstate)
+  SupportsCondition::SupportsCondition(ParserState pstate)
   : Expression(pstate)
   { }
 
-  Supports_Condition::Supports_Condition(const Supports_Condition* ptr)
-  : Expression(ptr)
-  { }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Operator::Supports_Operator(ParserState pstate, Supports_Condition_Obj l, Supports_Condition_Obj r, Operand o)
-  : Supports_Condition(pstate), left_(l), right_(r), operand_(o)
-  { }
-  Supports_Operator::Supports_Operator(const Supports_Operator* ptr)
-  : Supports_Condition(ptr),
-    left_(ptr->left_),
-    right_(ptr->right_),
-    operand_(ptr->operand_)
+  SupportsOperation::SupportsOperation(ParserState pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o)
+  : SupportsCondition(pstate), left_(l), right_(r), operand_(o)
   { }
 
-  bool Supports_Operator::needs_parens(Supports_Condition_Obj cond) const
+  bool SupportsOperation::needs_parens(SupportsCondition_Obj cond) const
   {
-    if (Supports_Operator_Obj op = Cast<Supports_Operator>(cond)) {
+    if (SupportsOperation_Obj op = Cast<SupportsOperation>(cond)) {
       return op->operand() != operand();
     }
-    return Cast<Supports_Negation>(cond) != NULL;
+    return Cast<SupportsNegation>(cond) != NULL;
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Negation::Supports_Negation(ParserState pstate, Supports_Condition_Obj c)
-  : Supports_Condition(pstate), condition_(c)
-  { }
-  Supports_Negation::Supports_Negation(const Supports_Negation* ptr)
-  : Supports_Condition(ptr), condition_(ptr->condition_)
+  SupportsNegation::SupportsNegation(ParserState pstate, SupportsCondition_Obj c)
+  : SupportsCondition(pstate), condition_(c)
   { }
 
-  bool Supports_Negation::needs_parens(Supports_Condition_Obj cond) const
+  bool SupportsNegation::needs_parens(SupportsCondition_Obj cond) const
   {
-    return Cast<Supports_Negation>(cond) ||
-           Cast<Supports_Operator>(cond);
+    return Cast<SupportsNegation>(cond) ||
+           Cast<SupportsOperation>(cond);
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Declaration::Supports_Declaration(ParserState pstate, Expression_Obj f, Expression_Obj v)
-  : Supports_Condition(pstate), feature_(f), value_(v)
-  { }
-  Supports_Declaration::Supports_Declaration(const Supports_Declaration* ptr)
-  : Supports_Condition(ptr),
-    feature_(ptr->feature_),
-    value_(ptr->value_)
+  SupportsDeclaration::SupportsDeclaration(ParserState pstate, Expression_Obj f, Expression_Obj v)
+  : SupportsCondition(pstate), feature_(f), value_(v)
   { }
 
-  bool Supports_Declaration::needs_parens(Supports_Condition_Obj cond) const
+  bool SupportsDeclaration::needs_parens(SupportsCondition_Obj cond) const
   {
     return false;
   }
@@ -123,15 +105,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Supports_Interpolation::Supports_Interpolation(ParserState pstate, Expression_Obj v)
-  : Supports_Condition(pstate), value_(v)
-  { }
-  Supports_Interpolation::Supports_Interpolation(const Supports_Interpolation* ptr)
-  : Supports_Condition(ptr),
-    value_(ptr->value_)
+  SupportsInterpolation::SupportsInterpolation(ParserState pstate, Expression_Obj v)
+  : SupportsCondition(pstate), value_(v)
   { }
 
-  bool Supports_Interpolation::needs_parens(Supports_Condition_Obj cond) const
+  bool SupportsInterpolation::needs_parens(SupportsCondition_Obj cond) const
   {
     return false;
   }
@@ -139,12 +117,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  IMPLEMENT_AST_OPERATORS(Supports_Block);
-  IMPLEMENT_AST_OPERATORS(Supports_Condition);
-  IMPLEMENT_AST_OPERATORS(Supports_Operator);
-  IMPLEMENT_AST_OPERATORS(Supports_Negation);
-  IMPLEMENT_AST_OPERATORS(Supports_Declaration);
-  IMPLEMENT_AST_OPERATORS(Supports_Interpolation);
+  IMPLEMENT_AST_OPERATORS(SupportsRule);
+  // IMPLEMENT_AST_OPERATORS(SupportsCondition);
+  // IMPLEMENT_AST_OPERATORS(SupportsOperation);
+  // IMPLEMENT_AST_OPERATORS(SupportsNegation);
+  // IMPLEMENT_AST_OPERATORS(SupportsDeclaration);
+  // IMPLEMENT_AST_OPERATORS(SupportsInterpolation);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

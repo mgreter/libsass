@@ -21,9 +21,6 @@
 
 namespace Sass {
 
-  // simple endless recursion protection
-  const size_t maxRecursion = 500;
-
   Expand::Expand(Context& ctx, Env* env, SelectorStack* stack, SelectorStack* originals)
   : ctx(ctx),
     traces(ctx.traces),
@@ -172,13 +169,6 @@ namespace Sass {
         k->name2(SASS_MEMORY_NEW(StringLiteral, "[pstate]", val));
         popFromSelectorStack();
       }
-      // else if (r->selector()) {
-      //   if (SelectorListObj s = r->selector()) {
-      //     pushToSelectorStack({});
-      //     k->name(eval(s));
-      //     popFromSelectorStack();
-      //   }
-      // }
 
       return k.detach();
     }
@@ -227,13 +217,15 @@ namespace Sass {
     return rr;
   }
 
-  Statement* Expand::operator()(Supports_Block* f)
+  Statement* Expand::operator()(SupportsRule* f)
   {
     Expression_Obj condition = f->condition()->perform(&eval);
-    Supports_Block_Obj ff = SASS_MEMORY_NEW(Supports_Block,
+    CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
                                        f->pstate(),
-                                       Cast<Supports_Condition>(condition),
-                                       operator()(f->block()));
+                                       condition);
+    Block* bb = operator()(f->block());
+    ff->block(bb);
+    ff->tabs(f->tabs());
     return ff.detach();
   }
 
@@ -301,7 +293,6 @@ namespace Sass {
     At_Root_Query_Obj ae = a->expression();
     if (ae) ae = eval(ae);
     else ae = SASS_MEMORY_NEW(At_Root_Query, a->pstate());
-
     /*
     if (false && _inKeyframes && ae->exclude("keyframes")) {
       LOCAL_FLAG(_inKeyframes, false);
@@ -356,7 +347,6 @@ namespace Sass {
   {
     Block* ab = a->block();
 
-    // SelectorList* as = a->selector();
     Expression* av = a->value();
     std::string name(a->keyword());
 
@@ -531,15 +521,19 @@ namespace Sass {
   {
     // std::cerr << "visit an import\n";
     Import_Obj result = SASS_MEMORY_NEW(Import, imp->pstate());
-    if (imp->import_queries() && imp->import_queries()->size()) {
-      Expression_Obj ex = imp->import_queries()->perform(&eval);
-      std::string reparse(ex->to_string());
-      ParserState state(ex->pstate());
+    if (!imp->queries2().empty()) {
+      std::vector<std::string> results;
+      std::vector<ExpressionObj> queries = imp->queries2();
+      for (auto& query : queries) {
+        results.push_back(query->perform(&eval)->to_string());
+      }
+      std::string reparse(joinStrings(results, ", "));
+      ParserState state(imp->pstate());
       char* str = sass_copy_c_string(reparse.c_str());
       ctx.strings.push_back(str);
       MediaQueryParser p2(ctx, str, state.path, state.file);
-      auto queries = p2.parse();
-      result->queries(queries);
+      auto queries2 = p2.parse();
+      result->queries(queries2);
       result->import_queries({});
     }
     for ( size_t i = 0, S = imp->urls().size(); i < S; ++i) {
@@ -729,21 +723,27 @@ namespace Sass {
   {
     std::vector<std::string> variables(e->variables());
     Expression_Obj expr = e->list()->perform(&eval);
-    List_Obj list;
+    SassList_Obj list;
     Map_Obj map;
     if (expr->concrete_type() == Expression::MAP) {
       map = Cast<Map>(expr);
     }
-    else if (SelectorList * ls = Cast<SelectorList>(expr)) {
-      Expression_Obj rv = Listize::listize(ls);
-      list = Cast<List>(rv);
-    }
     else if (expr->concrete_type() != Expression::LIST) {
-      list = SASS_MEMORY_NEW(List, expr->pstate(), 1, SASS_COMMA);
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), SASS_COMMA);
       list->append(expr);
     }
+    else if (SassList * slist = Cast<SassList>(expr)) {
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), slist->separator());
+      list->hasBrackets(slist->hasBrackets());
+      for (auto item : slist->elements()) {
+        list->append(item);
+      }
+    }
+    else if (List * ls = Cast<List>(expr)) {
+      list = list_to_sass_list(ls);
+    }
     else {
-      list = Cast<List>(expr);
+      list = Cast<SassList>(expr);
     }
     // remember variables and then reset them
     Env env(environment(), true);
@@ -757,7 +757,7 @@ namespace Sass {
         Expression_Obj v = map->at(key)->perform(&eval);
 
         if (variables.size() == 1) {
-          List_Obj variable = SASS_MEMORY_NEW(List, map->pstate(), 2, SASS_SPACE);
+          SassList_Obj variable = SASS_MEMORY_NEW(SassList, map->pstate(), SASS_SPACE);
           variable->append(k);
           variable->append(v);
           env.set_local(variables[0], variable);
@@ -768,11 +768,56 @@ namespace Sass {
         append_block(body);
       }
     }
-    else {
+    else if (SassList * sasslist = Cast<SassList>(expr)) {
       // bool arglist = list->is_arglist();
-      if (list->length() == 1 && Cast<SelectorList>(list)) {
-        list = Cast<List>(list);
+      for (size_t i = 0, L = sasslist->length(); i < L; ++i) {
+        Expression_Obj item = sasslist->at(i);
+        // unwrap value if the expression is an argument
+        if (Argument_Obj arg = Cast<Argument>(item)) item = arg->value();
+        // check if we got passed a list of args (investigate)
+        if (List_Obj scalars = Cast<List>(item)) {
+          if (variables.size() == 1) {
+            List_Obj var = scalars;
+            // if (arglist) var = (*scalars)[0];
+            env.set_local(variables[0], var);
+          }
+          else {
+            for (size_t j = 0, K = variables.size(); j < K; ++j) {
+              Expression_Obj res = j >= scalars->length()
+                ? SASS_MEMORY_NEW(Null, expr->pstate())
+                : (*scalars)[j]->perform(&eval);
+              env.set_local(variables[j], res);
+            }
+          }
+        }
+        else if (SassList_Obj scalars = Cast<SassList>(item)) {
+          if (variables.size() == 1) {
+            SassList_Obj var = scalars;
+            // if (arglist) var = (*scalars)[0];
+            env.set_local(variables[0], var);
+          }
+          else {
+            for (size_t j = 0, K = variables.size(); j < K; ++j) {
+              Expression_Obj res = j >= scalars->length()
+                ? SASS_MEMORY_NEW(Null, expr->pstate())
+                : (*scalars)[j]->perform(&eval);
+              env.set_local(variables[j], res);
+            }
+          }
+        }
+        else {
+          if (variables.size() > 0) {
+            env.set_local(variables.at(0), item);
+            for (size_t j = 1, K = variables.size(); j < K; ++j) {
+              Expression_Obj res = SASS_MEMORY_NEW(Null, expr->pstate());
+              env.set_local(variables[j], res);
+            }
+          }
+        }
+        append_block(body);
       }
+    }
+    else {
       for (size_t i = 0, L = list->length(); i < L; ++i) {
         Expression_Obj item = list->at(i);
         // unwrap value if the expression is an argument
@@ -783,7 +828,8 @@ namespace Sass {
             List_Obj var = scalars;
             // if (arglist) var = (*scalars)[0];
             env.set_local(variables[0], var);
-          } else {
+          }
+          else {
             for (size_t j = 0, K = variables.size(); j < K; ++j) {
               Expression_Obj res = j >= scalars->length()
                 ? SASS_MEMORY_NEW(Null, expr->pstate())
@@ -791,7 +837,23 @@ namespace Sass {
               env.set_local(variables[j], res);
             }
           }
-        } else {
+        }
+        else if (SassList_Obj scalars = Cast<SassList>(item)) {
+          if (variables.size() == 1) {
+            SassList_Obj var = scalars;
+            // if (arglist) var = (*scalars)[0];
+            env.set_local(variables[0], var);
+          }
+          else {
+            for (size_t j = 0, K = variables.size(); j < K; ++j) {
+              Expression_Obj res = j >= scalars->length()
+                ? SASS_MEMORY_NEW(Null, expr->pstate())
+                : (*scalars)[j]->perform(&eval);
+              env.set_local(variables[j], res);
+            }
+          }
+        }
+        else {
           if (variables.size() > 0) {
             env.set_local(variables.at(0), item);
             for (size_t j = 1, K = variables.size(); j < K; ++j) {
@@ -822,12 +884,6 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
-  }
-
-  Statement* Expand::operator()(Return* r)
-  {
-    error("@return may only be used within a function", r->pstate(), traces);
     return 0;
   }
 
@@ -1014,18 +1070,6 @@ namespace Sass {
     env->local_frame()[d->name() +
                         (d->type() == Definition::MIXIN ? "[m]" : "[f]")] = dd;
 
-    if (d->type() == Definition::FUNCTION && (
-      d->name() == "element"    ||
-      d->name() == "expression" ||
-      d->name() == "url"
-    )) {
-      deprecated(
-        "Naming a function \"" + d->name() + "\" is disallowed and will be an error in future versions of Sass.",
-        "This name conflicts with an existing CSS function with special parse rules.",
-        false, d->pstate()
-      );
-    }
-
     // set the static link so we can have lexical scoping
     dd->environment(env);
     return 0;
@@ -1034,11 +1078,7 @@ namespace Sass {
   Statement* Expand::operator()(Mixin_Call* c)
   {
 
-    if (recursions > maxRecursion) {
-      throw Exception::StackError(traces, *c);
-    }
-
-    recursions ++;
+    RECURSION_GUARD(recursions, c->pstate());
 
     Env* env = environment();
     std::string full_name(c->name() + "[m]");
@@ -1053,7 +1093,9 @@ namespace Sass {
       // error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), traces);
       error("Mixin doesn't accept a content block.", c->pstate(), traces);
     }
+    // debug_ast(c->arguments(), "IN: ");
     Expression_Obj rv = c->arguments()->perform(&eval);
+    // debug_ast(rv, "OUT: ");
     Arguments_Obj args = Cast<Arguments>(rv);
     std::string msg(", in mixin `" + c->name() + "`");
     traces.push_back(Backtrace(c->pstate(), msg));
@@ -1103,7 +1145,6 @@ namespace Sass {
     env_stack.pop_back();
     traces.pop_back();
 
-    recursions --;
     return trace.detach();
   }
 

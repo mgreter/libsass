@@ -13,6 +13,13 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
+  // Converts [selector] to a CSS string. If [inspect] is `true`, this will emit an
+  // unambiguous representation of the source structure. Note however that, although
+  // this will be valid SCSS, it may not be valid CSS. If [inspect] is `false` and
+  // [selector] can't be represented in plain CSS, throws a [SassScriptException].
+  std::string serializeSelector(Selector* selector, bool inspect = false);
+
+
   class SerializeVisitor :
     public CssVisitor<void>,
     public ValueVisitor<void>,
@@ -48,11 +55,39 @@ namespace Sass {
 
     size_t _indentWidth;
 
+  public:
+
     SerializeVisitor(
       bool inspect = false,
       bool quote = true,
       bool useSpaces = true);
 
+    std::string getString()
+    {
+      return _buffer.toString();
+    }
+
+  private:
+
+    template <typename T>
+    void _writeBetween(
+      std::vector<T> iterable,
+      std::string joiner,
+      void(*cb)(T& value))
+    {
+      bool first = true;
+      for (T& value : iterable) {
+        if (first) {
+          first = false;
+        }
+        else {
+          // _buffer.write(text);
+        }
+        cb(value);
+      }
+    }
+
+  public:
 
     // Writes a line feed, unless this emitting compressed CSS.
     void _writeLineFeed() {
@@ -93,7 +128,7 @@ namespace Sass {
     void visitNumber(Number* value) override;
 
     // void visitCssImport(CssImport* node) override;
-    void visitCssMediaRule(CssMediaRule* node) override;
+   // void visitCssMediaRule(CssMediaRule* node) override;
 
     void visitAttributeSelector(AttributeSelector* attribute) override;
     void visitClassSelector(ClassSelector* klass) override;

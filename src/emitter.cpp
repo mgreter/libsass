@@ -141,16 +141,6 @@ namespace Sass {
     wbuf.smap.append(Offset(text));
   }
 
-  // append some white-space only text
-  void Emitter::append_wspace(const std::string& text)
-  {
-    if (text.empty()) return;
-    // if (peek_linefeed(text.c_str())) {
-      // scheduled_space = 0;
-      // append_mandatory_linefeed();
-    // }
-  }
-
   // append some text or token to the buffer
   // this adds source-mappings for node start and end
   void Emitter::append_token(const std::string& text, const AST_Node* node)

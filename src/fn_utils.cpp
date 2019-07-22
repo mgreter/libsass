@@ -53,7 +53,11 @@ namespace Sass {
       AST_Node* value = env[argname];
       if (Map* map = Cast<Map>(value)) return map;
       List* list = Cast<List>(value);
+      SassList* slist = Cast<SassList>(value);
       if (list && list->length() == 0) {
+        return SASS_MEMORY_NEW(Map, pstate, 0);
+      }
+      if (slist && slist->empty()) {
         return SASS_MEMORY_NEW(Map, pstate, 0);
       }
       return get_arg<Map>(argname, env, sig, pstate, traces, "a map");
@@ -67,6 +71,7 @@ namespace Sass {
       double v = tmpnr.value();
       if (!(lo <= v && v <= hi)) {
         std::stringstream msg;
+        if (!argname.empty()) msg << argname << ": ";
         msg << "Expected " << v << unit << " to be within ";
         msg << lo << unit << " and " << hi << unit << ".";
         error(msg.str(), pstate, traces);
@@ -88,29 +93,6 @@ namespace Sass {
       Number tmpnr(val);
       tmpnr.reduce();
       return tmpnr.value();
-    }
-
-    double color_num(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces)
-    {
-      Number* val = get_arg<Number>(argname, env, sig, pstate, traces, "a number");
-      Number tmpnr(val);
-      tmpnr.reduce();
-      if (tmpnr.unit() == "%") {
-        return std::min(std::max(tmpnr.value() * 255 / 100.0, 0.0), 255.0);
-      } else {
-        return std::min(std::max(tmpnr.value(), 0.0), 255.0);
-      }
-    }
-
-    double alpha_num(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces) {
-      Number* val = get_arg<Number>(argname, env, sig, pstate, traces, "a number");
-      Number tmpnr(val);
-      tmpnr.reduce();
-      if (tmpnr.unit() == "%") {
-        return std::min(std::max(tmpnr.value(), 0.0), 100.0);
-      } else {
-        return std::min(std::max(tmpnr.value(), 0.0), 1.0);
-      }
     }
 
     SelectorListObj get_arg_sels(const std::string& argname, Env& env, Signature sig, ParserState pstate, Backtraces traces, Context& ctx) {

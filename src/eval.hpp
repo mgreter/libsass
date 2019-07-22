@@ -42,49 +42,63 @@ namespace Sass {
     std::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
 
     // for evaluating function bodies
-    Expression* operator()(Block*);
-    Expression* operator()(Assignment*);
-    Expression* operator()(If*);
-    Expression* operator()(For*);
-    Expression* operator()(Each*);
-    Expression* operator()(While*);
-    Expression* operator()(Return*);
-    Expression* operator()(Warning*);
-    Expression* operator()(Error*);
-    Expression* operator()(Debug*);
+    Value* operator()(Block*);
+    Value* operator()(Assignment*);
+    Value* operator()(If*);
+    Value* operator()(For*);
+    Value* operator()(Each*);
+    Value* operator()(While*);
+    Value* operator()(Return*);
+    Value* operator()(Warning*);
+    Value* operator()(Error*);
+    Value* operator()(Debug*);
 
-    Expression* operator()(List*);
-    Expression* operator()(Map*);
-    Expression* operator()(ParenthesizedExpression*);
-    Expression* operator()(Binary_Expression*);
-    Expression* evalBinOp(Binary_Expression* b_in);
-    Expression* operator()(Unary_Expression*);
+    // Expression* operator()(List*);
+    Value* operator()(Map*);
+    Map* operator()(MapExpression*);
+    SassList* operator()(ListExpression*);
+    Value* operator()(ParenthesizedExpression*);
+    Value* operator()(Binary_Expression*);
+    Value* evalBinOp(Binary_Expression* b_in);
+    Value* operator()(Unary_Expression*);
     Expression* operator()(FunctionExpression*);
-    Expression* operator()(Variable*);
-    Expression* operator()(Number*);
-    Expression* operator()(Color_RGBA*);
-    Expression* operator()(Color_HSLA*);
-    Expression* operator()(Boolean*);
+    Value* operator()(Variable*);
+    Value* operator()(Number*);
+    Value* operator()(Color_RGBA*);
+    Value* operator()(Color_HSLA*);
+    Value* operator()(Boolean*);
 
-    Expression* operator()(StringLiteral*);
+    Value* operator()(StringLiteral*);
     String_Constant* operator()(Interpolation*);
-    Expression* operator()(StringExpression2*);
+    Value* operator()(StringExpression*);
 
-    Expression* operator()(String_Quoted*);
-    Expression* operator()(String_Constant*);
+    Value* operator()(String_Quoted*);
+    Value* operator()(String_Constant*);
     Expression* operator()(At_Root_Query*);
-    Expression* operator()(Supports_Operator*);
-    Expression* operator()(Supports_Negation*);
-    Expression* operator()(Supports_Declaration*);
-    Expression* operator()(Supports_Interpolation*);
-    Expression* operator()(Null*);
+    Value* operator()(Null*);
     Expression* operator()(Argument*);
     Expression* operator()(Arguments*);
-    Expression* operator()(LoudComment*);
-    Expression* operator()(SilentComment*);
+    Value* operator()(LoudComment*);
+    Value* operator()(SilentComment*);
+
+    Value* operator()(SupportsRule*);
+
+    std::string _evaluateToCss(Expression* expression, bool quote = true);
+
+    std::string _serialize(Value* expression, bool quote = true);
+
+    std::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand* operand);
+    std::string _visitSupportsCondition(SupportsCondition* condition);
+
+    String* operator()(SupportsCondition*);
+
+    // Expression* operator()(SupportsOperation*);
+    // Expression* operator()(SupportsNegation*);
+    // Expression* operator()(SupportsDeclaration*);
+    // Expression* operator()(SupportsInterpolation*);
 
     // actual evaluated selectors
-    Expression* operator()(Parent_Reference*);
+    Value* operator()(Parent_Reference*);
 
     // generic fallback
     template <typename U>

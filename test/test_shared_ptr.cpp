@@ -1,15 +1,10 @@
 #include "../src/memory/SharedPtr.hpp"
+#include "assert.hpp"
 
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#define ASSERT(cond) \
-  if (!(cond)) { \
-    std::cerr << "Assertion failed: " #cond " at " __FILE__ << ":" << __LINE__ << std::endl; \
-    return false; \
-  } \
 
 class TestObj : public Sass::SharedObj {
  public:
@@ -161,17 +156,8 @@ bool TestComparisonWithNullptr() {
   return true;
 }
 
-#define TEST(fn) \
-  if (fn()) { \
-    passed.push_back(#fn); \
-  } else { \
-    failed.push_back(#fn); \
-    std::cerr << "Failed: " #fn << std::endl; \
-  } \
-
 int main(int argc, char **argv) {
-  std::vector<std::string> passed;
-  std::vector<std::string> failed;
+  INIT_TEST_RESULTS;
   TEST(TestOneSharedPtr);
   TEST(TestTwoSharedPtrs);
   TEST(TestSelfAssignment);
@@ -183,8 +169,5 @@ int main(int argc, char **argv) {
   TEST(TestDetachNull);
   TEST(TestComparisonWithSharedPtr);
   TEST(TestComparisonWithNullptr);
-  std::cerr << argv[0] << ": Passed: " << passed.size()
-            << ", failed: " << failed.size()
-            << "." << std::endl;
-  return failed.size();
+  REPORT_TEST_RESULTS;
 }

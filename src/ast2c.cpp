@@ -49,6 +49,15 @@ namespace Sass {
     return v;
   }
 
+  union Sass_Value* AST2C::operator()(SassList* l)
+  {
+    union Sass_Value* v = sass_make_list(l->length(), l->separator(), l->hasBrackets());
+    for (size_t i = 0, L = l->length(); i < L; ++i) {
+      sass_list_set_value(v, i, (*l)[i]->perform(this));
+    }
+    return v;
+  }
+
   union Sass_Value* AST2C::operator()(Map* m)
   {
     union Sass_Value* v = sass_make_map(m->length());

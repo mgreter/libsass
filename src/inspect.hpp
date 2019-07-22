@@ -4,11 +4,14 @@
 #include "position.hpp"
 #include "operation.hpp"
 #include "emitter.hpp"
+#include "visitor_selector.hpp"
 
 namespace Sass {
   class Context;
 
-  class Inspect : public Operation_CRTP<void, Inspect>, public Emitter {
+  // public SelectorVisitor<void>
+  class Inspect : public Operation_CRTP<void, Inspect>, public Emitter,
+  public SelectorVisitor<void> {
   protected:
     // import all the class-specific methods and override as desired
     using Operation_CRTP<void, Inspect>::operator();
@@ -29,7 +32,7 @@ namespace Sass {
     virtual void operator()(Block*);
     // virtual void operator()(Keyframe_Rule*);
     // virtual void operator()(Bubble*);
-    // virtual void operator()(Supports_Block*);
+    // virtual void operator()(SupportsRule*);
     // virtual void operator()(At_Root_Block*);
     virtual void operator()(AtRule*);
     virtual void operator()(Declaration*);
@@ -44,6 +47,7 @@ namespace Sass {
     // virtual void operator()(Error*);
     // virtual void operator()(Debug*);
     virtual void operator()(CssComment*);
+    void _writeMapElement(Expression* value);
     // virtual void operator()(If*);
     // virtual void operator()(For*);
     // virtual void operator()(Each*);
@@ -57,6 +61,7 @@ namespace Sass {
     virtual void operator()(Map*);
     virtual void operator()(Function*);
     virtual void operator()(List*);
+    virtual void operator()(SassList*);
     // virtual void operator()(ParenthesizedExpression*);
     virtual void operator()(Binary_Expression*);
     virtual void operator()(Unary_Expression*);
@@ -73,14 +78,14 @@ namespace Sass {
 
     virtual void operator()(StringLiteral*);
     virtual void operator()(Interpolation*);
-    virtual void operator()(StringExpression2*);
+    virtual void operator()(StringExpression*);
 
     virtual void operator()(Custom_Error*);
     virtual void operator()(Custom_Warning*);
-    virtual void operator()(Supports_Operator*);
-    virtual void operator()(Supports_Negation*);
-    virtual void operator()(Supports_Declaration*);
-    virtual void operator()(Supports_Interpolation*);
+    virtual void operator()(SupportsOperation*);
+    virtual void operator()(SupportsNegation*);
+    virtual void operator()(SupportsDeclaration*);
+    virtual void operator()(SupportsInterpolation*);
     virtual void operator()(MediaRule*);
     virtual void operator()(CssMediaRule*);
     virtual void operator()(CssMediaQuery*);
@@ -94,18 +99,28 @@ namespace Sass {
     virtual void operator()(Arguments*);
     // selectors
     virtual void operator()(PlaceholderSelector*);
-    virtual void operator()(TypeSelector*);
     virtual void operator()(ClassSelector*);
-    virtual void operator()(IDSelector*);
-    virtual void operator()(AttributeSelector*);
-    virtual void operator()(PseudoSelector*);
     // virtual void operator()(SelectorComponent*);
     virtual void operator()(SelectorCombinator*);
     virtual void operator()(CompoundSelector*);
-    virtual void operator()(ComplexSelector*);
     virtual void operator()(SelectorList*);
     virtual std::string lbracket(List*);
     virtual std::string rbracket(List*);
+    virtual std::string lbracket(SassList*);
+    virtual std::string rbracket(SassList*);
+
+    // Implement those first without override
+    void visitAttributeSelector(AttributeSelector* attribute)override;
+    void visitClassSelector(ClassSelector* klass)override;
+    void visitComplexSelector(ComplexSelector* complex)override;
+    void visitCompoundSelector(CompoundSelector* compound)override;
+    void visitSelectorCombinator(SelectorCombinator* combinator)override;
+    void visitIDSelector(IDSelector* id)override;
+    void visitPlaceholderSelector(PlaceholderSelector* placeholder)override;
+    void visitPseudoSelector(PseudoSelector* pseudo)override;
+    void visitSelectorList(SelectorList* list)override;
+    void visitTypeSelector(TypeSelector* type)override;
+
 
   };
 

@@ -3,7 +3,6 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
-#include "prelexer.hpp"
 #include "backtrace.hpp"
 #include "error_handling.hpp"
 
@@ -18,8 +17,8 @@ namespace Sass {
       prefix("Error"), pstate(pstate), traces(traces)
     { }
 
-    InvalidSass::InvalidSass(ParserState pstate, Backtraces traces, std::string msg, char* owned_src)
-    : Base(pstate, msg, traces), owned_src(owned_src)
+    InvalidSass::InvalidSass(ParserState pstate, Backtraces traces, std::string msg)
+    : Base(pstate, msg, traces)
     { }
 
 
@@ -53,19 +52,12 @@ namespace Sass {
       msg = "Missing argument " + arg + ".";
     }
 
-    InvalidCss::InvalidCss(ParserState pstate, Backtraces traces, std::string msg)
-    : Base(pstate, msg, traces)
-    {
-      // msg = "Invalid CSS after \""
-    }
-
     InvalidSyntax::InvalidSyntax(ParserState pstate, Backtraces traces, std::string msg)
       : Base(pstate, msg, traces)
     { }
 
-    NestingLimitError::NestingLimitError(ParserState pstate, Backtraces traces, std::string msg)
-    : Base(pstate, msg, traces)
-    { }
+    RecursionLimitError::RecursionLimitError(ParserState pstate, Backtraces traces)
+      : Base(pstate, msg_recursion_limit, traces) {}
 
     DuplicateKeyError::DuplicateKeyError(Backtraces traces, const Map& dup, const Expression& org)
     : Base(org.pstate(), def_msg, traces), dup(dup), org(org)
@@ -83,13 +75,7 @@ namespace Sass {
     InvalidValue::InvalidValue(Backtraces traces, const Expression& val)
     : Base(val.pstate(), def_msg, traces), val(val)
     {
-      msg = val.to_string() + " isn't a valid CSS value.";
-    }
-
-    StackError::StackError(Backtraces traces, const AST_Node& node)
-    : Base(node.pstate(), def_msg, traces), node(node)
-    {
-      msg = "stack level too deep";
+      msg = val.inspect() + " isn't a valid CSS value.";
     }
 
     IncompatibleUnits::IncompatibleUnits(const Units& lhs, const Units& rhs)

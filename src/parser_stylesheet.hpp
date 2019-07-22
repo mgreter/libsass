@@ -27,9 +27,9 @@ namespace Sass {
 
   public:
 
-
     StylesheetParser(Context& context, const char* content, const char* path, size_t srcid) :
       BaseParser(context, content, path, srcid),
+      _recursion(0),
       _isUseAllowed(true),
       _inMixin(false),
       _mixinHasContent(false),
@@ -42,6 +42,11 @@ namespace Sass {
     {}
 
   public:
+
+    size_t _recursion = 0;
+
+    // Backtraces traces;
+
     // Whether we've consumed a rule other than `@charset`, `@forward`, or
     // `@use`.
     bool _isUseAllowed = true;
@@ -193,7 +198,7 @@ namespace Sass {
 
     bool _isPlainImportUrl(const std::string& url) const;
 
-    std::pair<Supports_Condition_Obj, InterpolationObj> tryImportQueries();
+    std::pair<SupportsCondition_Obj, InterpolationObj> tryImportQueries();
 
     Mixin_Call* _includeRule(Position start); // IncludeRule
 
@@ -206,7 +211,7 @@ namespace Sass {
     Return* _returnRule(Position start); // ReturnRule
 
     // SupportsRule
-    Supports_Block* supportsRule(Position start);
+    SupportsRule* supportsRule(Position start);
 
     // UseRule _useRule(LineScannerState start);
 
@@ -237,7 +242,7 @@ namespace Sass {
     Expression* _parentheses();
 
     // Not yet evaluated, therefore not Map yet
-    List* _map(Expression* first, Position start); // MapExpression
+    Expression* _map(Expression* first, Position start); // MapExpression
 
     Expression* _hashExpression();
 
@@ -251,7 +256,7 @@ namespace Sass {
 
     Expression* _minusExpression();
 
-    StringExpression2* _importantExpression();
+    StringExpression* _importantExpression();
 
     Unary_Expression* _unaryOperation();
 
@@ -263,17 +268,17 @@ namespace Sass {
 
     double _tryExponent();
 
-    StringExpression2* _unicodeRange();
+    StringExpression* _unicodeRange();
 
     Variable* _variable();
 
     Parent_Reference* _selector(); // SelectorExpression
 
-    StringExpression2* interpolatedString();
+    StringExpression* interpolatedString();
 
     virtual Expression* identifierLike();
 
-    StringExpression2* trySpecialFunction(std::string name, LineScannerState2 start);
+    StringExpression* trySpecialFunction(std::string name, LineScannerState2 start);
 
     bool _tryMinMaxContents(InterpolationBuffer& buffer, bool allowComma = true);
 
@@ -285,7 +290,7 @@ namespace Sass {
 
     Interpolation* almostAnyValue();
 
-    StringExpression2* _interpolatedDeclarationValue(bool allowEmpty = false);
+    StringExpression* _interpolatedDeclarationValue(bool allowEmpty = false);
 
     Interpolation* interpolatedIdentifier();
 
@@ -301,11 +306,11 @@ namespace Sass {
 
     Expression* _expressionUntilComparison();
 
-    Supports_Condition* _supportsCondition();
+    SupportsCondition* _supportsCondition();
 
-    Supports_Condition* _supportsConditionInParens();
+    SupportsCondition* _supportsConditionInParens();
 
-    Supports_Negation* _trySupportsNegation();
+    SupportsNegation* _trySupportsNegation();
 
     // Returns whether the scanner is immediately before an identifier that may contain
     // interpolation. This is based on the CSS algorithm, but it assumes all backslashes

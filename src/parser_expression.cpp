@@ -123,8 +123,8 @@ namespace Sass {
 
 	  if (!spaceExpressions.empty()) {
 		  spaceExpressions.push_back(singleExpression);
-		  List* list = SASS_MEMORY_NEW(List,
-			  "[pstate]", 0, SASS_SPACE);
+		  ListExpression* list = SASS_MEMORY_NEW(ListExpression,
+			  "[pstate]", SASS_SPACE);
 		  list->concat(spaceExpressions);
 		  singleExpression = list;
 		  spaceExpressions.clear();

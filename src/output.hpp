@@ -28,7 +28,8 @@ namespace Sass {
 
     virtual void operator()(Map*);
     virtual void operator()(CssStyleRule*);
-    virtual void operator()(Supports_Block*);
+    virtual void operator()(SupportsRule*);
+    virtual void operator()(CssSupportsRule*);
     virtual void operator()(CssMediaRule*);
     virtual void operator()(Keyframe_Rule*);
     virtual void operator()(Import*);
@@ -39,7 +40,6 @@ namespace Sass {
     virtual void operator()(Number*);
 
     virtual void operator()(StringLiteral*);
-
     virtual void operator()(String_Quoted*);
     virtual void operator()(String_Constant*);
 

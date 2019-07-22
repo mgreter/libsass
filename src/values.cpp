@@ -103,14 +103,14 @@ namespace Sass {
                                  ParserState("[C-VALUE]"),
                                  sass_string_get_value(val));
       case SASS_LIST: {
-        List* l = SASS_MEMORY_NEW(List,
+        SassList* l = SASS_MEMORY_NEW(SassList,
                                   ParserState("[C-VALUE]"),
-                                  sass_list_get_length(val),
+                                  // sass_list_get_length(val),
                                   sass_list_get_separator(val));
         for (size_t i = 0, L = sass_list_get_length(val); i < L; ++i) {
           l->append(sass_value_to_ast_node(sass_list_get_value(val, i)));
         }
-        l->is_bracketed(sass_list_get_is_bracketed(val));
+        l->hasBrackets(sass_list_get_is_bracketed(val));
         return l;
       }
       case SASS_MAP: {

@@ -3,7 +3,6 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
-#include "to_value.hpp"
 
 namespace Sass {
 
@@ -55,11 +54,6 @@ namespace Sass {
     return s;
   }
 
-  Value* To_Value::operator()(Interpolation* s)
-  {
-    return s;
-  }
-
   Value* To_Value::operator()(StringLiteral* s)
   {
     return s;
@@ -68,11 +62,26 @@ namespace Sass {
   // List is a valid value
   Value* To_Value::operator()(List* l)
   {
-    List_Obj ll = SASS_MEMORY_NEW(List,
+    SassList_Obj ll = SASS_MEMORY_NEW(SassList,
                                l->pstate(),
-                               l->length(),
+                               // l->length(),
                                l->separator(),
-                               l->is_arglist(),
+      // false,
+                               l->is_bracketed());
+    for (size_t i = 0, L = l->length(); i < L; ++i) {
+      ll->append((*l)[i]->perform(this));
+    }
+    return ll.detach();
+  }
+
+  // List is a valid value
+  Value* To_Value::operator()(SassList* l)
+  {
+    SassList_Obj ll = SASS_MEMORY_NEW(SassList,
+                               l->pstate(),
+                               // l->length(),
+                               l->separator(),
+      // false,
                                l->is_bracketed());
     for (size_t i = 0, L = l->length(); i < L; ++i) {
       ll->append((*l)[i]->perform(this));
@@ -104,30 +113,5 @@ namespace Sass {
     if (!arg->name().empty()) return 0;
     return arg->value()->perform(this);
   }
-
-  // SelectorList is converted to a string
-  Value* To_Value::operator()(SelectorList* s)
-  {
-    return SASS_MEMORY_NEW(String_Quoted,
-                           s->pstate(),
-                           s->to_string(ctx.c_options));
-  }
-
-  // Binary_Expression is converted to a string
-  Value* To_Value::operator()(Binary_Expression* s)
-  {
-    return SASS_MEMORY_NEW(String_Quoted,
-                           s->pstate(),
-                           s->to_string(ctx.c_options));
-  }
-
-  // Binary_Expression is converted to a string
-  Value* To_Value::operator()(ParenthesizedExpression* s)
-  {
-    return SASS_MEMORY_NEW(String_Quoted,
-      s->pstate(),
-      s->to_string(ctx.c_options));
-  }
-
 
 };

@@ -31,11 +31,12 @@ namespace Sass {
         }
       } break;
       case SASS_LIST: {
-        List* l = SASS_MEMORY_NEW(List, pstate, sass_list_get_length(v), sass_list_get_separator(v));
+        // sass_list_get_length(v), 
+        SassList* l = SASS_MEMORY_NEW(SassList, pstate, sass_list_get_separator(v));
         for (size_t i = 0, L = sass_list_get_length(v); i < L; ++i) {
           l->append(c2ast(sass_list_get_value(v, i), traces, pstate));
         }
-        l->is_bracketed(sass_list_get_is_bracketed(v));
+        l->hasBrackets(sass_list_get_is_bracketed(v));
         e = l;
       } break;
       case SASS_MAP: {

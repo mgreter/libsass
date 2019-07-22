@@ -5,8 +5,6 @@
 
 namespace Sass {
 
-  int count = 0;
-
   // Import some namespaces
   using namespace Charcode;
   using namespace Character;

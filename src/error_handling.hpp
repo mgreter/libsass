@@ -25,6 +25,10 @@ namespace Sass {
     const std::string def_op_null_msg = "Invalid null operation";
     const std::string def_nesting_limit = "Code too deeply neested";
 
+    const std::string msg_recursion_limit =
+      "Too deep recursion detected. This can be caused by too deep level nesting.\n"
+      "LibSass will abort here in order to avoid a possible stack overflow.\n";
+
     class Base : public std::runtime_error {
       protected:
         std::string msg;
@@ -41,20 +45,16 @@ namespace Sass {
 
     class InvalidSass : public Base {
       public:
-        InvalidSass(InvalidSass& other) : Base(other), owned_src(other.owned_src) {
-          // Assumes that `this` will outlive `other`.
-          other.owned_src = nullptr;
+        InvalidSass(InvalidSass& other) : Base(other) {
         }
 
         // Required because the copy constructor's argument is not const.
         // Can't use `std::move` here because we build on Visual Studio 2013.
-        InvalidSass(InvalidSass &&other) : Base(other), owned_src(other.owned_src) {
-          other.owned_src = nullptr;
+        InvalidSass(InvalidSass &&other) : Base(other) {
         }
 
-        InvalidSass(ParserState pstate, Backtraces traces, std::string msg, char* owned_src = nullptr);
-        virtual ~InvalidSass() throw() { sass_free_memory(owned_src); };
-        char *owned_src;
+        InvalidSass(ParserState pstate, Backtraces traces, std::string msg);
+        virtual ~InvalidSass() throw() { };
     };
 
     class InvalidParent : public Base {
@@ -102,12 +102,6 @@ namespace Sass {
         virtual ~InvalidVarKwdType() throw() {};
     };
 
-    class InvalidCss : public Base {
-      public:
-        InvalidCss(ParserState pstate, Backtraces traces, std::string msg);
-        virtual ~InvalidCss() throw() {};
-    };
-
     class InvalidSyntax : public Base {
     public:
       InvalidSyntax(ParserState pstate, Backtraces traces, std::string msg);
@@ -115,10 +109,10 @@ namespace Sass {
     };
 
 
-    class NestingLimitError : public Base {
+    class RecursionLimitError : public Base {
       public:
-        NestingLimitError(ParserState pstate, Backtraces traces, std::string msg = def_nesting_limit);
-        virtual ~NestingLimitError() throw() {};
+        RecursionLimitError(ParserState pstate, Backtraces traces);
+        virtual ~RecursionLimitError() throw() {};
     };
 
     class DuplicateKeyError : public Base {
@@ -148,15 +142,6 @@ namespace Sass {
         InvalidValue(Backtraces traces, const Expression& val);
         virtual const char* errtype() const { return "Error"; }
         virtual ~InvalidValue() throw() {};
-    };
-
-    class StackError : public Base {
-      protected:
-        const AST_Node& node;
-      public:
-        StackError(Backtraces traces, const AST_Node& node);
-        virtual const char* errtype() const { return "SystemStackError"; }
-        virtual ~StackError() throw() {};
     };
 
     /* common virtual base class (has no pstate or trace) */

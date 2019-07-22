@@ -21,12 +21,9 @@ namespace Sass {
     virtual void perform(Operation<void>* op) = 0; \
     virtual Value* perform(Operation<Value*>* op) = 0; \
     virtual std::string perform(Operation<std::string>* op) = 0; \
-    virtual AST_Node* perform(Operation<AST_Node*>* op) = 0; \
-    virtual Selector* perform(Operation<Selector*>* op) = 0; \
     virtual Statement* perform(Operation<Statement*>* op) = 0; \
     virtual Expression* perform(Operation<Expression*>* op) = 0; \
     virtual union Sass_Value* perform(Operation<union Sass_Value*>* op) = 0; \
-    virtual Supports_Condition* perform(Operation<Supports_Condition*>* op) = 0; \
 
   // you must add operators to every class
   // ensures `this` of actual instance type
@@ -36,12 +33,9 @@ namespace Sass {
     virtual void perform(Operation<void>* op) override { return (*op)(this); } \
     virtual Value* perform(Operation<Value*>* op) override { return (*op)(this); } \
     virtual std::string perform(Operation<std::string>* op) override { return (*op)(this); } \
-    virtual AST_Node* perform(Operation<AST_Node*>* op) override { return (*op)(this); } \
-    virtual Selector* perform(Operation<Selector*>* op) override { return (*op)(this); } \
     virtual Statement* perform(Operation<Statement*>* op) override { return (*op)(this); } \
     virtual Expression* perform(Operation<Expression*>* op) override { return (*op)(this); } \
     virtual union Sass_Value* perform(Operation<union Sass_Value*>* op) override { return (*op)(this); } \
-    virtual Supports_Condition* perform(Operation<Supports_Condition*>* op) override { return (*op)(this); } \
 
   template<typename T>
   class Operation {
@@ -52,12 +46,16 @@ namespace Sass {
     virtual T operator()(StyleRule* x)                = 0;
     virtual T operator()(Bubble* x)                 = 0;
     virtual T operator()(Trace* x)                  = 0;
-    virtual T operator()(Supports_Block* x)         = 0;
+    virtual T operator()(MapExpression* x) = 0;
+    virtual T operator()(ListExpression* x) = 0;
+    virtual T operator()(SupportsRule* x)         = 0;
     virtual T operator()(MediaRule* x) = 0;
     virtual T operator()(CssString* x) = 0;
     virtual T operator()(CssStyleRule* x) = 0;
     virtual T operator()(CssMediaRule* x) = 0;
     virtual T operator()(CssMediaQuery* x) = 0;
+    virtual T operator()(CssSupportsRule* x) = 0;
+    
     virtual T operator()(At_Root_Block* x)          = 0;
     virtual T operator()(AtRule* x)              = 0;
     virtual T operator()(Keyframe_Rule* x)          = 0;
@@ -86,7 +84,8 @@ namespace Sass {
     virtual T operator()(Mixin_Call* x)             = 0;
     // expressions
     virtual T operator()(Null* x)                   = 0;
-    virtual T operator()(List* x)                   = 0;
+    virtual T operator()(List* x) = 0;
+    virtual T operator()(SassList* x) = 0;
     virtual T operator()(Map* x)                    = 0;
     virtual T operator()(Function* x)               = 0;
     virtual T operator()(ParenthesizedExpression* x) = 0;
@@ -106,14 +105,14 @@ namespace Sass {
 
     virtual T operator()(StringLiteral* x) = 0;
     virtual T operator()(Interpolation* x) = 0;
-    virtual T operator()(StringExpression2* x) = 0;
+    virtual T operator()(StringExpression* x) = 0;
 
 
-    virtual T operator()(Supports_Condition* x)     = 0;
-    virtual T operator()(Supports_Operator* x)      = 0;
-    virtual T operator()(Supports_Negation* x)      = 0;
-    virtual T operator()(Supports_Declaration* x)   = 0;
-    virtual T operator()(Supports_Interpolation* x) = 0;
+    virtual T operator()(SupportsCondition* x)     = 0;
+    // virtual T operator()(SupportsOperation* x)      = 0;
+    // virtual T operator()(SupportsNegation* x)      = 0;
+    // virtual T operator()(SupportsDeclaration* x)   = 0;
+    // virtual T operator()(SupportsInterpolation* x) = 0;
     virtual T operator()(At_Root_Query* x)          = 0;
     virtual T operator()(Parent_Reference* x)        = 0;
     // parameters and arguments
@@ -148,13 +147,18 @@ namespace Sass {
     T operator()(Block* x)                  { return static_cast<D*>(this)->fallback(x); }
     T operator()(StyleRule* x)                { return static_cast<D*>(this)->fallback(x); }
     T operator()(Bubble* x)                 { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Trace* x)                  { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Supports_Block* x)         { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Trace* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ListExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(MapExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(SupportsRule* x)         { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
+
     T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssString* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStyleRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssMediaRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssMediaQuery* x) { return static_cast<D*>(this)->fallback(x); }
+    
     T operator()(At_Root_Block* x)          { return static_cast<D*>(this)->fallback(x); }
     T operator()(AtRule* x)              { return static_cast<D*>(this)->fallback(x); }
     T operator()(Keyframe_Rule* x)          { return static_cast<D*>(this)->fallback(x); }
@@ -182,7 +186,8 @@ namespace Sass {
     T operator()(Mixin_Call* x)             { return static_cast<D*>(this)->fallback(x); }
     // expressions
     T operator()(Null* x)                   { return static_cast<D*>(this)->fallback(x); }
-    T operator()(List* x)                   { return static_cast<D*>(this)->fallback(x); }
+    T operator()(List* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(SassList* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Map* x)                    { return static_cast<D*>(this)->fallback(x); }
     T operator()(Function* x)               { return static_cast<D*>(this)->fallback(x); }
     T operator()(ParenthesizedExpression* x) { return static_cast<D*>(this)->fallback(x); }
@@ -200,15 +205,15 @@ namespace Sass {
 
     T operator()(StringLiteral* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Interpolation* x) { return static_cast<D*>(this)->fallback(x); }
-    T operator()(StringExpression2* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(StringExpression* x) { return static_cast<D*>(this)->fallback(x); }
 
     T operator()(String_Constant* x)        { return static_cast<D*>(this)->fallback(x); }
     T operator()(String_Quoted* x)          { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Supports_Condition* x)     { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Supports_Operator* x)      { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Supports_Negation* x)      { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Supports_Declaration* x)   { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Supports_Interpolation* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(SupportsCondition* x)     { return static_cast<D*>(this)->fallback(x); }
+    // T operator()(SupportsOperation* x)      { return static_cast<D*>(this)->fallback(x); }
+    // T operator()(SupportsNegation* x)      { return static_cast<D*>(this)->fallback(x); }
+    // T operator()(SupportsDeclaration* x)   { return static_cast<D*>(this)->fallback(x); }
+    // T operator()(SupportsInterpolation* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(At_Root_Query* x)          { return static_cast<D*>(this)->fallback(x); }
     T operator()(Parent_Reference* x)        { return static_cast<D*>(this)->fallback(x); }
     // parameters and arguments

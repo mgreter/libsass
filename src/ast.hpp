@@ -199,7 +199,6 @@ namespace Sass {
   protected:
     mutable size_t hash_;
     void reset_hash() { hash_ = 0; }
-    virtual void adjust_after_pushing(T element) { }
   public:
     Vectorized(size_t s = 0) : hash_(0)
     { elements_.reserve(s); }
@@ -293,9 +292,6 @@ namespace Sass {
       }
       reset_hash();
       elements_.insert(end(), element);
-      // ToDo: Mostly used by parameters and arguments
-      // ToDo: Find a more elegant way to support this
-      adjust_after_pushing(element);
     }
 
     // Check if an item already exists
@@ -486,8 +482,6 @@ namespace Sass {
   class Block final : public Statement, public Vectorized<Statement_Obj> {
     ADD_PROPERTY(bool, is_root)
     // needed for properly formatted CSS emission
-  protected:
-    void adjust_after_pushing(Statement_Obj s) override {}
   public:
     Block(ParserState pstate, size_t s = 0, bool r = false);
     Block(ParserState pstate, std::vector<StatementObj> vec, bool r = false);
@@ -496,7 +490,7 @@ namespace Sass {
       return isInvisible();
     }
     bool has_content() override;
-    ATTACH_COPY_OPERATIONS(Block)
+    // ATTACH_COPY_OPERATIONS(Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -531,7 +525,7 @@ namespace Sass {
   public:
     StyleRule(ParserState pstate, Interpolation* s, Block_Obj b = {});
     bool empty() const { return block().isNull() || block()->empty(); }
-    ATTACH_COPY_OPERATIONS(StyleRule)
+    // ATTACH_COPY_OPERATIONS(StyleRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -567,7 +561,7 @@ namespace Sass {
   public:
     Bubble(ParserState pstate, Statement_Obj n, Statement_Obj g = {}, size_t t = 0);
     bool bubbles() override;
-    ATTACH_COPY_OPERATIONS(Bubble)
+    // ATTACH_COPY_OPERATIONS(Bubble)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -579,8 +573,86 @@ namespace Sass {
     ADD_CONSTREF(std::string, name)
   public:
     Trace(ParserState pstate, std::string n, Block_Obj b = {}, char type = 'm');
-    ATTACH_COPY_OPERATIONS(Trace)
     ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  ///////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////
+
+  class ListExpression : public Expression {
+    ADD_PROPERTY(std::vector<ExpressionObj>, contents);
+    ADD_PROPERTY(Sass_Separator, separator);
+    ADD_PROPERTY(bool, hasBrackets);
+  public:
+    ListExpression(ParserState pstate, Sass_Separator separator = SASS_UNDEF);
+    void concat(std::vector<ExpressionObj>& expressions) {
+      std::copy(
+        expressions.begin(), expressions.end(),
+        std::back_inserter(contents_)
+      );
+    }
+    size_t size() const {
+      return contents_.size();
+    }
+    Expression* get(size_t i) {
+      return contents_[i];
+    }
+    void append(Expression* expression) {
+      contents_.push_back(expression);
+    }
+    std::string toString() {
+      // var buffer = StringBuffer();
+      // if (hasBrackets) buffer.writeCharCode($lbracket);
+      // buffer.write(contents
+      //   .map((element) = >
+      //     _elementNeedsParens(element) ? "($element)" : element.toString())
+      //   .join(separator == ListSeparator.comma ? ", " : " "));
+      // if (hasBrackets) buffer.writeCharCode($rbracket);
+      // return buffer.toString();
+      return "ListExpression";
+    }
+    // Returns whether [expression], contained in [this],
+    // needs parentheses when printed as Sass source.
+    bool _elementNeedsParens(Expression* expression) {
+      /*
+      if (expression is ListExpression) {
+        if (expression.contents.length < 2) return false;
+        if (expression.hasBrackets) return false;
+        return separator == ListSeparator.comma
+            ? separator == ListSeparator.comma
+            : separator != ListSeparator.undecided;
+      }
+
+      if (separator != ListSeparator.space) return false;
+
+      if (expression is UnaryOperationExpression) {
+        return expression.operator == UnaryOperator.plus ||
+            expression.operator == UnaryOperator.minus;
+      }
+
+      */
+      return false;
+    }
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  ///////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////
+
+  class MapExpression final : public Expression {
+    ADD_PROPERTY(std::vector<ExpressionObj>, kvlist);
+  public:
+    void append(Expression* kv) {
+      kvlist_.push_back(kv);
+    }
+    size_t size() const {
+      return kvlist_.size();
+    }
+    Expression* get(size_t i) {
+      return kvlist_[i];
+    }
+    MapExpression(ParserState pstate);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -608,8 +680,8 @@ namespace Sass {
   public:
     Declaration(ParserState pstate, String_Obj prop, Expression_Obj val = {}, bool c = false, Block_Obj b = {});
     bool is_invisible() const override;
-    ATTACH_COPY_OPERATIONS(Declaration)
-      ATTACH_CRTP_PERFORM_METHODS()
+    // ATTACH_COPY_OPERATIONS(Declaration)
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
   /////////////////////////////////////
@@ -622,7 +694,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_global)
   public:
     Assignment(ParserState pstate, std::string var, Expression_Obj val, bool is_default = false, bool is_global = false);
-    ATTACH_COPY_OPERATIONS(Assignment)
+    // ATTACH_COPY_OPERATIONS(Assignment)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -634,12 +706,12 @@ namespace Sass {
 
   class StaticImport final : public ImportBase {
     ADD_PROPERTY(InterpolationObj, url);
-    ADD_PROPERTY(Supports_Condition_Obj, supports);
+    ADD_PROPERTY(SupportsCondition_Obj, supports);
     ADD_PROPERTY(InterpolationObj, media);
     ADD_PROPERTY(bool, outOfOrder);
   public:
-    StaticImport(ParserState pstate, InterpolationObj url, Supports_Condition_Obj supports = {}, InterpolationObj media = {});
-    ATTACH_COPY_OPERATIONS(StaticImport);
+    StaticImport(ParserState pstate, InterpolationObj url, SupportsCondition_Obj supports = {}, InterpolationObj media = {});
+    // ATTACH_COPY_OPERATIONS(StaticImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -647,7 +719,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, url);
   public:
     DynamicImport(ParserState pstate, std::string url);
-    ATTACH_COPY_OPERATIONS(DynamicImport);
+    // ATTACH_COPY_OPERATIONS(DynamicImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -655,7 +727,7 @@ namespace Sass {
   class ImportRule final : public Statement, public Vectorized<ImportBaseObj> {
   public:
     ImportRule(ParserState pstate);
-    ATTACH_COPY_OPERATIONS(ImportRule);
+    // ATTACH_COPY_OPERATIONS(ImportRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -667,15 +739,16 @@ namespace Sass {
     std::vector<Expression_Obj> urls_;
     std::vector<Include>        incs_;
     std::vector<ImportBaseObj> imports_;
-    ADD_PROPERTY(List_Obj,      import_queries);
+    ADD_PROPERTY(std::vector<ExpressionObj>, import_queries);
     ADD_PROPERTY(std::vector<CssMediaQueryObj>, queries);
   public:
     Import(ParserState pstate);
     std::vector<Include>& incs();
-    std::vector<Expression_Obj>& urls();
+    std::vector<ExpressionObj>& urls();
     std::vector<ImportBaseObj>& imports();
+    std::vector<ExpressionObj>& queries2();
     bool is_invisible() const override;
-    ATTACH_COPY_OPERATIONS(Import)
+    // ATTACH_COPY_OPERATIONS(Import)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -691,7 +764,7 @@ namespace Sass {
     // Sass_Import_Entry import();
     std::string imp_path();
     std::string abs_path();
-    ATTACH_COPY_OPERATIONS(Import_Stub)
+    // ATTACH_COPY_OPERATIONS(Import_Stub)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -702,7 +775,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, message)
   public:
     Warning(ParserState pstate, Expression_Obj msg);
-    ATTACH_COPY_OPERATIONS(Warning)
+    // ATTACH_COPY_OPERATIONS(Warning)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -713,7 +786,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, message)
   public:
     Error(ParserState pstate, Expression_Obj msg);
-    ATTACH_COPY_OPERATIONS(Error)
+    // ATTACH_COPY_OPERATIONS(Error)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -724,7 +797,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, value)
   public:
     Debug(ParserState pstate, Expression_Obj val);
-    ATTACH_COPY_OPERATIONS(Debug)
+    // ATTACH_COPY_OPERATIONS(Debug)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -736,7 +809,7 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, text)
   public:
     LoudComment(ParserState pstate, InterpolationObj itpl);
-    ATTACH_COPY_OPERATIONS(LoudComment)
+    // ATTACH_COPY_OPERATIONS(LoudComment)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -747,7 +820,7 @@ namespace Sass {
     SilentComment(ParserState pstate, std::string text);
     // not used in dart sass beside tests!?
     // std::string getDocComment() const;
-    ATTACH_COPY_OPERATIONS(SilentComment)
+    // ATTACH_COPY_OPERATIONS(SilentComment)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -760,7 +833,7 @@ namespace Sass {
   public:
     If(ParserState pstate, Expression_Obj pred, Block_Obj con, Block_Obj alt = {});
     virtual bool has_content() override;
-    ATTACH_COPY_OPERATIONS(If)
+    // ATTACH_COPY_OPERATIONS(If)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -774,7 +847,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_inclusive)
   public:
     For(ParserState pstate, std::string var, Expression_Obj lo, Expression_Obj hi, bool inc = false, Block_Obj b = {});
-    ATTACH_COPY_OPERATIONS(For)
+    // ATTACH_COPY_OPERATIONS(For)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -786,7 +859,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, list)
   public:
     Each(ParserState pstate, std::vector<std::string> vars, Expression_Obj lst, Block_Obj b = {});
-    ATTACH_COPY_OPERATIONS(Each)
+    // ATTACH_COPY_OPERATIONS(Each)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -797,7 +870,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, predicate)
   public:
     While(ParserState pstate, Expression_Obj pred, Block_Obj b = {});
-    ATTACH_COPY_OPERATIONS(While)
+    // ATTACH_COPY_OPERATIONS(While)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -808,7 +881,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, value)
   public:
     Return(ParserState pstate, Expression_Obj val);
-    ATTACH_COPY_OPERATIONS(Return)
+    // ATTACH_COPY_OPERATIONS(Return)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -861,7 +934,7 @@ namespace Sass {
     ADD_PROPERTY(Parameters_Obj, block_parameters)
   public:
     Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params = {}, Block_Obj b = {});
-    ATTACH_COPY_OPERATIONS(Mixin_Call)
+    // ATTACH_COPY_OPERATIONS(Mixin_Call)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -872,7 +945,7 @@ namespace Sass {
     ADD_PROPERTY(Arguments_Obj, arguments)
   public:
     Content(ParserState pstate, Arguments_Obj args);
-    ATTACH_COPY_OPERATIONS(Content)
+    // ATTACH_COPY_OPERATIONS(Content)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -881,7 +954,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, expression)
   public:
     ParenthesizedExpression(ParserState pstate, Expression* expression);
-    ATTACH_COPY_OPERATIONS(ParenthesizedExpression);
+    // ATTACH_COPY_OPERATIONS(ParenthesizedExpression);
     ATTACH_CRTP_PERFORM_METHODS();
   };
   ////////////////////////////////////////////////////////////////////////////
@@ -897,7 +970,7 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, operand)
   public:
     Unary_Expression(ParserState pstate, Type t, Expression_Obj o);
-    ATTACH_COPY_OPERATIONS(Unary_Expression)
+    // ATTACH_COPY_OPERATIONS(Unary_Expression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -912,7 +985,7 @@ namespace Sass {
 
     bool bubbles() override { return true; };
     bool is_invisible() const override { return false; };
-    ATTACH_COPY_OPERATIONS(MediaRule)
+    // ATTACH_COPY_OPERATIONS(MediaRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -926,7 +999,7 @@ namespace Sass {
   public:
     At_Root_Query(ParserState pstate, Expression_Obj f = {}, Expression_Obj v = {}, bool i = false);
     bool exclude(std::string str);
-    ATTACH_COPY_OPERATIONS(At_Root_Query)
+    // ATTACH_COPY_OPERATIONS(At_Root_Query)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -939,7 +1012,7 @@ namespace Sass {
     At_Root_Block(ParserState pstate, At_Root_Query_Obj e = {}, Block_Obj b = {});
     bool bubbles() override;
     bool exclude_node(Statement_Obj s);
-    ATTACH_COPY_OPERATIONS(At_Root_Block)
+    // ATTACH_COPY_OPERATIONS(At_Root_Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -972,8 +1045,8 @@ namespace Sass {
     Arguments(ParserState pstate);
     Argument_Obj get_rest_argument();
     Argument_Obj get_keyword_argument();
-    ATTACH_COPY_OPERATIONS(Arguments)
-      ATTACH_CRTP_PERFORM_METHODS()
+    // ATTACH_COPY_OPERATIONS(Arguments)
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
   /////////////////////////////////////////////////////////
@@ -985,7 +1058,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_rest_parameter)
   public:
     Parameter(ParserState pstate, std::string n, Expression_Obj def = {}, bool rest = false);
-    ATTACH_COPY_OPERATIONS(Parameter)
+    // ATTACH_COPY_OPERATIONS(Parameter)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -999,7 +1072,7 @@ namespace Sass {
     ADD_PROPERTY(bool, has_rest_parameter)
   public:
     Parameters(ParserState pstate);
-    ATTACH_COPY_OPERATIONS(Parameters)
+    // ATTACH_COPY_OPERATIONS(Parameters)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -1009,6 +1082,15 @@ namespace Sass {
 #include "ast_values.hpp"
 #include "ast_supports.hpp"
 #include "ast_selectors.hpp"
+
+namespace Sass {
+
+  List* sass_list_to_list(SassList* list);
+  SassList* list_to_sass_list(List* list);
+
+}
+
+
 
 #ifdef __clang__
 

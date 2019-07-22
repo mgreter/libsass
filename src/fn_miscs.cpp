@@ -109,21 +109,15 @@ namespace Sass {
       } else if (ff) {
         name = ff->name();
       }
+      else {
+        error("$function: " + envValueToString(env, "$function") + " is not a function reference.", pstate, traces);
+      }
 
       List_Obj arglist = SASS_MEMORY_COPY(ARG("$args", List, "an argument list"));
 
       Arguments_Obj args = SASS_MEMORY_NEW(Arguments, pstate);
-      // std::string full_name(name + "[f]");
-      // Definition* def = d_env.has(full_name) ? Cast<Definition>((d_env)[full_name]) : 0;
-      // Parameters* params = def ? def->parameters() : 0;
-      // size_t param_size = params ? params->length() : 0;
       for (size_t i = 0, L = arglist->length(); i < L; ++i) {
         Expression_Obj expr = arglist->value_at_index(i);
-        // if (params && params->has_rest_parameter()) {
-        //   Parameter_Obj p = param_size > i ? (*params)[i] : 0;
-        //   List* list = Cast<List>(expr);
-        //   if (list && p && !p->is_rest_parameter()) expr = (*list)[0];
-        // }
         if (arglist->is_arglist()) {
           Expression_Obj obj = arglist->at(i);
           Argument_Obj arg = (Argument*) obj.ptr(); // XXX
@@ -140,9 +134,9 @@ namespace Sass {
       FunctionExpressionObj func = SASS_MEMORY_NEW(FunctionExpression, pstate, name, args, "");
 
       Expand expand(ctx, &d_env, &selector_stack, &original_stack);
-      // func->via_call(true); // calc invoke is allowed
       if (ff) func->func(ff);
-      return Cast<PreValue>(func->perform(&expand.eval));
+      auto retv = expand.eval(func);
+      return Cast<Value>(retv);
     }
 
     ////////////////////

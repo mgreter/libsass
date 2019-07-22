@@ -83,7 +83,7 @@ namespace Sass {
     while (true) {
       whitespace();
 
-      Position before(scanner.offset);
+      Position before(scanner);
       if (!scanner.peekChar(next)) {
         goto endOfLoop;
       }
@@ -160,7 +160,7 @@ namespace Sass {
 
       compound->hasRealParent(true);
       if (lookingAtIdentifierBody()) {
-        Position before(scanner.offset);
+        Position before(scanner);
         std::string body(identifierBody());
         SimpleSelectorObj simple = SASS_MEMORY_NEW(TypeSelector,
           scanner.pstate(before), body);
@@ -368,7 +368,7 @@ namespace Sass {
     unvendored = Util::unvendor(unvendored);
 
     std::string argument;
-    // Position beforeArgument(scanner.offset);
+    // Position beforeArgument(scanner);
     SelectorListObj selector = SASS_MEMORY_NEW(SelectorList, scanner.pstate());
     if (element) {
       if (isSelectorPseudoElement(unvendored)) {

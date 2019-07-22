@@ -223,7 +223,9 @@ namespace Sass {
         break;
       }
       else if (next == $nul || isNewline(next)) {
-        scanner.error("Expected ${String.fromCharCode(quote)}.");
+        std::stringstream strm;
+        strm << "Expected " << quote << ".";
+        scanner.error(strm.str());
       }
       else if (next == $backslash) {
         if (isNewline(scanner.peekChar(1))) {

@@ -113,7 +113,7 @@ namespace Sass {
 
     SelectorListObj itplToSelector(Interpolation*, bool plainCss = false);
 
-    Statement* operator()(Supports_Block*);
+    Statement* operator()(SupportsRule*);
     Statement* operator()(At_Root_Block*);
     Statement* operator()(AtRule*);
     Statement* operator()(Declaration*);
@@ -132,7 +132,6 @@ namespace Sass {
     Statement* operator()(For*);
     Statement* operator()(Each*);
     Statement* operator()(While*);
-    Statement* operator()(Return*);
     Statement* operator()(ExtendRule*);
     Statement* operator()(Definition*);
     Statement* operator()(Mixin_Call*);

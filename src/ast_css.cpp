@@ -122,12 +122,29 @@ namespace Sass {
     CssNode(ptr)
   {}
 
-  CssSupportsRule::CssSupportsRule(ParserState pstate) :
-    CssNode(pstate)
-  {}
+  CssSupportsRule::CssSupportsRule(ParserState pstate, ExpressionObj condition) :
+    CssParentNode(pstate),
+    condition_(condition)
+  {
+    statement_type(Statement::SUPPORTS);
+  }
+
+  bool CssSupportsRule::is_invisible() const
+  {
+    return block_ == nullptr || block_->isInvisible();
+  }
+
+  bool CssSupportsRule::bubbles()
+  {
+    return true;
+  }
+
   CssSupportsRule::CssSupportsRule(const CssSupportsRule* ptr) :
-    CssNode(ptr)
-  {}
+    CssParentNode(ptr),
+    condition_(ptr->condition_)
+  {
+    statement_type(Statement::SUPPORTS);
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
