@@ -421,9 +421,9 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " <" << selector->hash() << ">";
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
 
-  } else if (Cast<Pseudo_Selector>(node)) {
-    Pseudo_Selector* selector = Cast<Pseudo_Selector>(node);
-    std::cerr << ind << "Pseudo_Selector " << selector;
+  } else if (Cast<PseudoSelector>(node)) {
+    PseudoSelector* selector = Cast<PseudoSelector>(node);
+    std::cerr << ind << "PseudoSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << selector->hash() << ">";
     std::cerr << " <<" << selector->ns_name() << ">>";
@@ -432,40 +432,40 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << std::endl;
     debug_ast(selector->argument(), ind + " <= ", env);
     debug_ast(selector->selector(), ind + " || ", env);
-  } else if (Cast<Attribute_Selector>(node)) {
-    Attribute_Selector* selector = Cast<Attribute_Selector>(node);
-    std::cerr << ind << "Attribute_Selector " << selector;
+  } else if (Cast<AttributeSelector>(node)) {
+    AttributeSelector* selector = Cast<AttributeSelector>(node);
+    std::cerr << ind << "AttributeSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << selector->hash() << ">";
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << std::endl;
     debug_ast(selector->value(), ind + "[" + selector->matcher() + "] ", env);
-  } else if (Cast<Class_Selector>(node)) {
-    Class_Selector* selector = Cast<Class_Selector>(node);
-    std::cerr << ind << "Class_Selector " << selector;
+  } else if (Cast<ClassSelector>(node)) {
+    ClassSelector* selector = Cast<ClassSelector>(node);
+    std::cerr << ind << "ClassSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << selector->hash() << ">";
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << std::endl;
-  } else if (Cast<Id_Selector>(node)) {
-    Id_Selector* selector = Cast<Id_Selector>(node);
-    std::cerr << ind << "Id_Selector " << selector;
+  } else if (Cast<IDSelector>(node)) {
+    IDSelector* selector = Cast<IDSelector>(node);
+    std::cerr << ind << "IDSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << selector->hash() << ">";
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << std::endl;
-  } else if (Cast<Type_Selector>(node)) {
-    Type_Selector* selector = Cast<Type_Selector>(node);
-    std::cerr << ind << "Type_Selector " << selector;
+  } else if (Cast<TypeSelector>(node)) {
+    TypeSelector* selector = Cast<TypeSelector>(node);
+    std::cerr << ind << "TypeSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << selector->hash() << ">";
     std::cerr << " <<" << selector->ns_name() << ">>";
     std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">";
     std::cerr << std::endl;
-  } else if (Cast<Placeholder_Selector>(node)) {
+  } else if (Cast<PlaceholderSelector>(node)) {
 
-    Placeholder_Selector* selector = Cast<Placeholder_Selector>(node);
-    std::cerr << ind << "Placeholder_Selector [" << selector->ns_name() << "] " << selector;
+    PlaceholderSelector* selector = Cast<PlaceholderSelector>(node);
+    std::cerr << ind << "PlaceholderSelector [" << selector->ns_name() << "] " << selector;
     std::cerr << " (" << pstate_source_position(selector) << ")"
       << " <" << selector->hash() << ">"
       << (selector->isInvisible() ? " [isInvisible]" : " -")

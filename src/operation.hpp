@@ -110,12 +110,12 @@ namespace Sass {
     virtual T operator()(Arguments* x)              = 0;
     // selectors
     virtual T operator()(Selector_Schema* x)        = 0;
-    virtual T operator()(Placeholder_Selector* x)   = 0;
-    virtual T operator()(Type_Selector* x)       = 0;
-    virtual T operator()(Class_Selector* x)         = 0;
-    virtual T operator()(Id_Selector* x)            = 0;
-    virtual T operator()(Attribute_Selector* x)     = 0;
-    virtual T operator()(Pseudo_Selector* x)        = 0;
+    virtual T operator()(PlaceholderSelector* x)   = 0;
+    virtual T operator()(TypeSelector* x)       = 0;
+    virtual T operator()(ClassSelector* x)         = 0;
+    virtual T operator()(IDSelector* x)            = 0;
+    virtual T operator()(AttributeSelector* x)     = 0;
+    virtual T operator()(PseudoSelector* x)        = 0;
     virtual T operator()(SelectorComponent* x) = 0;
     virtual T operator()(SelectorCombinator* x) = 0;
     virtual T operator()(CompoundSelector* x) = 0;
@@ -196,12 +196,12 @@ namespace Sass {
     T operator()(Arguments* x)              { return static_cast<D*>(this)->fallback(x); }
     // selectors
     T operator()(Selector_Schema* x)        { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Placeholder_Selector* x)   { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Type_Selector* x)       { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Class_Selector* x)         { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Id_Selector* x)            { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Attribute_Selector* x)     { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Pseudo_Selector* x)        { return static_cast<D*>(this)->fallback(x); }
+    T operator()(PlaceholderSelector* x)   { return static_cast<D*>(this)->fallback(x); }
+    T operator()(TypeSelector* x)       { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ClassSelector* x)         { return static_cast<D*>(this)->fallback(x); }
+    T operator()(IDSelector* x)            { return static_cast<D*>(this)->fallback(x); }
+    T operator()(AttributeSelector* x)     { return static_cast<D*>(this)->fallback(x); }
+    T operator()(PseudoSelector* x)        { return static_cast<D*>(this)->fallback(x); }
     T operator()(SelectorComponent* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(SelectorCombinator* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CompoundSelector* x) { return static_cast<D*>(this)->fallback(x); }

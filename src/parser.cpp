@@ -677,13 +677,13 @@ namespace Sass {
   {
     lex < css_comments >(false);
     if (lex< class_name >()) {
-      return SASS_MEMORY_NEW(Class_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(ClassSelector, pstate, lexed);
     }
     else if (lex< id_name >()) {
-      return SASS_MEMORY_NEW(Id_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(IDSelector, pstate, lexed);
     }
     else if (lex< alternatives < variable, number, static_reference_combinator > >()) {
-      return SASS_MEMORY_NEW(Type_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(TypeSelector, pstate, lexed);
     }
     else if (peek< pseudo_not >()) {
       return parse_negated_selector2();
@@ -698,7 +698,7 @@ namespace Sass {
       return parse_attribute_selector();
     }
     else if (lex< placeholder >()) {
-      return SASS_MEMORY_NEW(Placeholder_Selector, pstate, lexed);
+      return SASS_MEMORY_NEW(PlaceholderSelector, pstate, lexed);
     }
     else {
       css_error("Invalid CSS", " after ", ": expected selector, was ");
@@ -707,7 +707,7 @@ namespace Sass {
     return {};
   }
 
-  Pseudo_Selector_Obj Parser::parse_negated_selector2()
+  PseudoSelectorObj Parser::parse_negated_selector2()
   {
     lex< pseudo_not >();
     std::string name(lexed);
@@ -718,7 +718,7 @@ namespace Sass {
     }
     name.erase(name.size() - 1);
 
-    Pseudo_Selector* sel = SASS_MEMORY_NEW(Pseudo_Selector, nsource_position, name.substr(1));
+    PseudoSelector* sel = SASS_MEMORY_NEW(PseudoSelector, nsource_position, name.substr(1));
     sel->selector(negated);
     return sel;
   }
@@ -753,7 +753,7 @@ namespace Sass {
           std::string parsed(lexed); // always compacting binominals (as dart-sass)
           parsed.erase(std::unique(parsed.begin(), parsed.end(), BothAreSpaces), parsed.end());
           String_Constant_Obj arg = SASS_MEMORY_NEW(String_Constant, pstate, parsed);
-          Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name, element);
+          PseudoSelector* pseudo = SASS_MEMORY_NEW(PseudoSelector, p, name, element);
           if (lex < sequence < css_whitespace, insensitive < of_kwd >>>(false)) {
             pseudo->selector(parseSelectorList(true));
           }
@@ -768,7 +768,7 @@ namespace Sass {
           }
           if (SelectorListObj wrapped = parseSelectorList(true)) {
             if (wrapped && lex_css< exactly<')'> >()) {
-              Pseudo_Selector* pseudo = SASS_MEMORY_NEW(Pseudo_Selector, p, name, element);
+              PseudoSelector* pseudo = SASS_MEMORY_NEW(PseudoSelector, p, name, element);
               pseudo->selector(wrapped);
               return pseudo;
             }
@@ -779,7 +779,7 @@ namespace Sass {
       // EO if pseudo selector
 
       else if (lex < sequence< optional < pseudo_prefix >, identifier > >()) {
-        return SASS_MEMORY_NEW(Pseudo_Selector, pstate, lexed, element);
+        return SASS_MEMORY_NEW(PseudoSelector, pstate, lexed, element);
       }
       else if (lex < pseudo_prefix >()) {
         css_error("Invalid CSS", " after ", ": expected pseudoclass or pseudoelement, was ");
@@ -808,17 +808,17 @@ namespace Sass {
     return sequence < insensitive<'i'>, re_attr_sensitive_close >(src);
   }
 
-  Attribute_Selector_Obj Parser::parse_attribute_selector()
+  AttributeSelectorObj Parser::parse_attribute_selector()
   {
     ParserState p = pstate;
     if (!lex_css< attribute_name >()) error("invalid attribute name in attribute selector");
     std::string name(lexed);
     if (lex_css< re_attr_sensitive_close >()) {
-      return SASS_MEMORY_NEW(Attribute_Selector, p, name, "", {}, {});
+      return SASS_MEMORY_NEW(AttributeSelector, p, name, "", {}, {});
     }
     else if (lex_css< re_attr_insensitive_close >()) {
       char modifier = lexed.begin[0];
-      return SASS_MEMORY_NEW(Attribute_Selector, p, name, "", {}, modifier);
+      return SASS_MEMORY_NEW(AttributeSelector, p, name, "", {}, modifier);
     }
     if (!lex_css< alternatives< exact_match, class_match, dash_match,
                                 prefix_match, suffix_match, substring_match > >()) {
@@ -838,11 +838,11 @@ namespace Sass {
     }
 
     if (lex_css< re_attr_sensitive_close >()) {
-      return SASS_MEMORY_NEW(Attribute_Selector, p, name, matcher, value, 0);
+      return SASS_MEMORY_NEW(AttributeSelector, p, name, matcher, value, 0);
     }
     else if (lex_css< re_attr_insensitive_close >()) {
       char modifier = lexed.begin[0];
-      return SASS_MEMORY_NEW(Attribute_Selector, p, name, matcher, value, modifier);
+      return SASS_MEMORY_NEW(AttributeSelector, p, name, matcher, value, modifier);
     }
     error("unterminated attribute selector for " + name);
     return {}; // to satisfy compilers (error must not return)

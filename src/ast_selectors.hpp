@@ -117,9 +117,9 @@ namespace Sass {
     virtual CompoundSelector* unifyWith(CompoundSelector*);
 
     /* helper function for syntax sugar */
-    virtual Id_Selector* getIdSelector() { return NULL; }
-    virtual Type_Selector* getTypeSelector() { return NULL; }
-    virtual Pseudo_Selector* getPseudoSelector() { return NULL; }
+    virtual IDSelector* getIdSelector() { return NULL; }
+    virtual TypeSelector* getTypeSelector() { return NULL; }
+    virtual PseudoSelector* getPseudoSelector() { return NULL; }
 
     ComplexSelectorObj wrapInComplex();
     CompoundSelectorObj wrapInCompound();
@@ -144,77 +144,77 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Placeholder selectors (e.g., "%foo") for use in extend-only selectors.
   /////////////////////////////////////////////////////////////////////////
-  class Placeholder_Selector final : public SimpleSelector {
+  class PlaceholderSelector final : public SimpleSelector {
   public:
-    Placeholder_Selector(ParserState pstate, std::string n);
+    PlaceholderSelector(ParserState pstate, std::string n);
     bool isInvisible() const override { return true; }
     virtual unsigned long specificity() const override;
     virtual bool has_placeholder() override;
     bool operator==(const SimpleSelector& rhs) const override;
-    ATTACH_CMP_OPERATIONS(Placeholder_Selector)
-    ATTACH_AST_OPERATIONS(Placeholder_Selector)
+    ATTACH_CMP_OPERATIONS(PlaceholderSelector)
+    ATTACH_AST_OPERATIONS(PlaceholderSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   /////////////////////////////////////////////////////////////////////
   // Type selectors (and the universal selector) -- e.g., div, span, *.
   /////////////////////////////////////////////////////////////////////
-  class Type_Selector final : public SimpleSelector {
+  class TypeSelector final : public SimpleSelector {
   public:
-    Type_Selector(ParserState pstate, std::string n);
+    TypeSelector(ParserState pstate, std::string n);
     virtual unsigned long specificity() const override;
     SimpleSelector* unifyWith(const SimpleSelector*);
     CompoundSelector* unifyWith(CompoundSelector*) override;
-    Type_Selector* getTypeSelector() override { return this; }
+    TypeSelector* getTypeSelector() override { return this; }
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(Type_Selector)
-    ATTACH_AST_OPERATIONS(Type_Selector)
+    ATTACH_CMP_OPERATIONS(TypeSelector)
+    ATTACH_AST_OPERATIONS(TypeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   ////////////////////////////////////////////////
   // Class selectors  -- i.e., .foo.
   ////////////////////////////////////////////////
-  class Class_Selector final : public SimpleSelector {
+  class ClassSelector final : public SimpleSelector {
   public:
-    Class_Selector(ParserState pstate, std::string n);
+    ClassSelector(ParserState pstate, std::string n);
     virtual unsigned long specificity() const override;
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(Class_Selector)
-    ATTACH_AST_OPERATIONS(Class_Selector)
+    ATTACH_CMP_OPERATIONS(ClassSelector)
+    ATTACH_AST_OPERATIONS(ClassSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   ////////////////////////////////////////////////
   // ID selectors -- i.e., #foo.
   ////////////////////////////////////////////////
-  class Id_Selector final : public SimpleSelector {
+  class IDSelector final : public SimpleSelector {
   public:
-    Id_Selector(ParserState pstate, std::string n);
+    IDSelector(ParserState pstate, std::string n);
     virtual unsigned long specificity() const override;
     CompoundSelector* unifyWith(CompoundSelector*) override;
-    Id_Selector* getIdSelector() final override { return this; }
+    IDSelector* getIdSelector() final override { return this; }
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(Id_Selector)
-    ATTACH_AST_OPERATIONS(Id_Selector)
+    ATTACH_CMP_OPERATIONS(IDSelector)
+    ATTACH_AST_OPERATIONS(IDSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   ///////////////////////////////////////////////////
   // Attribute selectors -- e.g., [src*=".jpg"], etc.
   ///////////////////////////////////////////////////
-  class Attribute_Selector final : public SimpleSelector {
+  class AttributeSelector final : public SimpleSelector {
     ADD_CONSTREF(std::string, matcher)
     // this cannot be changed to obj atm!!!!!!????!!!!!!!
     ADD_PROPERTY(String_Obj, value) // might be interpolated
     ADD_PROPERTY(char, modifier);
   public:
-    Attribute_Selector(ParserState pstate, std::string n, std::string m, String_Obj v, char o = 0);
+    AttributeSelector(ParserState pstate, std::string n, std::string m, String_Obj v, char o = 0);
     size_t hash() const override;
     virtual unsigned long specificity() const override;
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(Attribute_Selector)
-    ATTACH_AST_OPERATIONS(Attribute_Selector)
+    ATTACH_CMP_OPERATIONS(AttributeSelector)
+    ATTACH_AST_OPERATIONS(AttributeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -222,14 +222,14 @@ namespace Sass {
   // Pseudo selectors -- e.g., :first-child, :nth-of-type(...), etc.
   //////////////////////////////////////////////////////////////////
   // Pseudo Selector cannot have any namespace?
-  class Pseudo_Selector final : public SimpleSelector {
+  class PseudoSelector final : public SimpleSelector {
     ADD_PROPERTY(std::string, normalized)
     ADD_PROPERTY(String_Obj, argument)
     ADD_PROPERTY(SelectorListObj, selector)
     ADD_PROPERTY(bool, isSyntacticClass)
     ADD_PROPERTY(bool, isClass)
   public:
-    Pseudo_Selector(ParserState pstate, std::string n, bool element = false);
+    PseudoSelector(ParserState pstate, std::string n, bool element = false);
     virtual bool is_pseudo_element() const override;
     size_t hash() const override;
 
@@ -246,13 +246,13 @@ namespace Sass {
     bool isSyntacticElement() const { return !isSyntacticClass(); }
 
     virtual unsigned long specificity() const override;
-    Pseudo_Selector_Obj withSelector(SelectorListObj selector);
+    PseudoSelectorObj withSelector(SelectorListObj selector);
 
     CompoundSelector* unifyWith(CompoundSelector*) override;
-    Pseudo_Selector* getPseudoSelector() final override { return this; }
+    PseudoSelector* getPseudoSelector() final override { return this; }
     bool operator==(const SimpleSelector& rhs) const final override;
-    ATTACH_CMP_OPERATIONS(Pseudo_Selector)
-    ATTACH_AST_OPERATIONS(Pseudo_Selector)
+    ATTACH_CMP_OPERATIONS(PseudoSelector)
+    ATTACH_AST_OPERATIONS(PseudoSelector)
     void cloneChildren() override;
     ATTACH_CRTP_PERFORM_METHODS()
   };
