@@ -57,15 +57,6 @@ namespace Sass {
     virtual size_t minSpecificity() const { return specificity(); }
     // Calls the appropriate visit method on [visitor].
     virtual void accept(SelectorVisitor<void>& visitor) = 0;
-    // dispatch to correct handlers
-    virtual bool operator==(const Selector& rhs) const {
-      throw std::runtime_error("invalid selector compare");
-    }
-    virtual bool operator!=(const Selector& rhs) const {
-      return !(*this == rhs);
-    };
-
-    // ATTACH_VIRTUAL_EQ_OPERATIONS(Selector)
     ATTACH_VIRTUAL_COPY_OPERATIONS(Selector)
   };
   inline Selector::~Selector() { }
@@ -126,7 +117,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   // A placeholder selector. (e.g. `%foo`). This doesn't match any elements.
   // It's intended to be extended using `@extend`. It's not a plain CSS
-  // selector — it should be removed before emitting a CSS document.
+  // selector â€” it should be removed before emitting a CSS document.
   /////////////////////////////////////////////////////////////////////////////
   class PlaceholderSelector final : public SimpleSelector {
   public:
@@ -485,7 +476,7 @@ namespace Sass {
     }
 
     ATTACH_EQ_OPERATIONS(SelectorCombinator)
-    ATTACH_COPY_OPERATIONS(SelectorCombinator)
+    // ATTACH_COPY_OPERATIONS(SelectorCombinator)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -550,6 +541,10 @@ namespace Sass {
 
     SelectorList* unifyWith(SelectorList*);
 
+    // SassList* asSassList()
+    // {
+    // }
+
     // Returns true if all complex selectors
     // can have real parents, meaning every
     // first component does allow for it
@@ -585,7 +580,8 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, selector)
   public:
     ExtendRule(ParserState pstate, InterpolationObj s, bool optional = false);
-    ATTACH_COPY_OPERATIONS(ExtendRule)
+    // ATTACH_COPY_OPERATIONS(ExtendRule)
+    ATTACH_EQ_OPERATIONS(ExtendRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

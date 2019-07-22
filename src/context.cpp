@@ -15,11 +15,13 @@
 #include "context.hpp"
 #include "expand.hpp"
 #include "cssize.hpp"
-#include "debugger.hpp"
 
 #include "parser_scss.hpp"
 #include "parser_sass.hpp"
 #include "parser_css.hpp"
+
+#include "permutate.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
   using namespace Constants;
@@ -409,7 +411,7 @@ namespace Sass {
 
     // add urls (protocol other than file) and urls without procotol to `urls` member
     // ToDo: if ctx_path is already a file resource, we should not add it here?
-    if (imp->import_queries() || protocol != "file" || imp_path.substr(0, 2) == "//") {
+    if (!imp->queries2().empty() || protocol != "file" || imp_path.substr(0, 2) == "//") {
       imp->urls().push_back(SASS_MEMORY_NEW(String_Quoted, imp->pstate(), load_path));
     }
     else if (imp_path.length() > 4 && imp_path.substr(imp_path.length() - 4, 4) == ".css") {
@@ -663,13 +665,17 @@ namespace Sass {
     { register_c_function(*this, &global, c_functions[i]); }
     // create initial backtrace entry
     // create crtp visitor objects
+    // std::vector<std::vector<std::string>> in
+    //   = { {"1", "2"}, {"3", "4"}, {"5", "6"} };
+    // auto out = permutate(in);
+    // std::cerr << "permutateAlt " << debug_vec(out) << "\n";
+    // auto alt = permutateAlt(in);
+    // std::cerr << "permutateAlt " << debug_vec(alt) << "\n";
     Expand expand(*this, &global);
     // expand._stylesheet = sheet;
     expand.plainCss = sheet.plainCss;
     Cssize cssize(*this);
     // expand and eval the tree
-    // debug_ast(root, "BEF: ");
-    // debug_ast(root);
     root = expand(root);
     // debug_ast(root);
 

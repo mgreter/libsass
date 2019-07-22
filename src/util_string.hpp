@@ -38,8 +38,6 @@ namespace Sass {
     // ###########################################################################
     std::string unvendor(const std::string& name);
 
-    std::string normalize_newlines(const std::string& str);
-
     // Locale-independent ASCII character routines.
 
     inline bool ascii_isalpha(unsigned char c) {

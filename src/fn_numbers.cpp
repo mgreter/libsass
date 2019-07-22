@@ -19,6 +19,7 @@
 #include "windows.h"
 #include "wincrypt.h"
 #endif
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -85,6 +86,8 @@ namespace Sass {
     Signature floor_sig = "floor($number)";
     BUILT_IN(floor)
     {
+      auto val = env["$number"];
+      // debug_ast(val);
       Number_Obj r = ARGN("$number");
       r->value(std::floor(r->value()));
       r->pstate(pstate);

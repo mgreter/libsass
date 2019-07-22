@@ -78,7 +78,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\stylesheet.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast2c.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\c2ast.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\to_value.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\units.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\utf8.h" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\utf8\checked.h" />
@@ -147,7 +146,6 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_media_query.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\plugins.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\position.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\prelexer.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\backtrace.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\operators.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\remove_placeholders.cpp" />
@@ -159,7 +157,6 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\stylesheet.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast2c.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\c2ast.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\to_value.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\units.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\utf8_string.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\util.cpp" />

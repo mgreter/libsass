@@ -75,7 +75,7 @@ namespace Sass {
 
     StringBuffer text;
 
-    std::vector<PreValueObj> contents;
+    std::vector<ValueObj> contents;
 
   public:
     InterpolationBuffer() :
@@ -126,12 +126,12 @@ namespace Sass {
       text.writeln(str);
     }
 
-    void write(const PreValueObj& expression) {
+    void write(const ValueObj& expression) {
       flushText();
       contents.push_back(expression);
     }
 
-    void add(const PreValueObj& expression) {
+    void add(const ValueObj& expression) {
       flushText();
       contents.push_back(expression);
     }

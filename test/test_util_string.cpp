@@ -1,4 +1,5 @@
 #include "../src/util_string.hpp"
+#include "assert.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -6,96 +7,6 @@
 #include <vector>
 
 namespace {
-
-std::string escape_string(const std::string& str) {
-  std::string out;
-  out.reserve(str.size());
-  for (char c : str) {
-    switch (c) {
-      case '\n':
-        out.append("\\n");
-        break;
-      case '\r':
-        out.append("\\r");
-        break;
-      case '\f':
-        out.append("\\f");
-        break;
-      default:
-        out += c;
-    }
-  }
-  return out;
-}
-
-#define ASSERT_TRUE(cond) \
-  if (!(cond)) { \
-    std::cerr << \
-      "Expected condition to be true at " << __FILE__ << ":" << __LINE__ << \
-      std::endl; \
-    return false; \
-  } \
-
-#define ASSERT_FALSE(cond) \
-  ASSERT_TRUE(!(cond)) \
-
-#define ASSERT_NR_EQ(a, b) \
-  if (a != b) { \
-    std::cerr << \
-      "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
-      "\n  LHS: [" << a << "]" \
-      "\n  RHS: [" << b << "]" << \
-      std::endl; \
-    return false; \
-  } \
-
-#define ASSERT_STR_EQ(a, b) \
-  if (a != b) { \
-    std::cerr << \
-      "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
-      "\n  LHS: [" << escape_string(a) << "]" \
-      "\n  RHS: [" << escape_string(b) << "]" << \
-      std::endl; \
-    return false; \
-  } \
-
-bool TestNormalizeNewlinesNoNewline() {
-  std::string input = "a";
-  std::string normalized = Sass::Util::normalize_newlines(input);
-  ASSERT_STR_EQ(input, normalized);
-  return true;
-}
-
-bool TestNormalizeNewlinesLF() {
-  std::string input = "a\nb";
-  std::string normalized = Sass::Util::normalize_newlines(input);
-  ASSERT_STR_EQ(input, normalized);
-  return true;
-}
-
-bool TestNormalizeNewlinesCR() {
-  std::string normalized = Sass::Util::normalize_newlines("a\rb");
-  ASSERT_STR_EQ("a\nb", normalized);
-  return true;
-}
-
-bool TestNormalizeNewlinesCRLF() {
-  std::string normalized = Sass::Util::normalize_newlines("a\r\nb\r\n");
-  ASSERT_STR_EQ("a\nb\n", normalized);
-  return true;
-}
-
-bool TestNormalizeNewlinesFF() {
-  std::string normalized = Sass::Util::normalize_newlines("a\fb\f");
-  ASSERT_STR_EQ("a\nb\n", normalized);
-  return true;
-}
-
-bool TestNormalizeNewlinesMixed() {
-  std::string normalized = Sass::Util::normalize_newlines("a\fb\nc\rd\r\ne\ff");
-  ASSERT_STR_EQ("a\nb\nc\nd\ne\nf", normalized);
-  return true;
-}
 
 bool testEqualsLiteral() {
   ASSERT_TRUE(Sass::Util::equalsLiteral("moz", "moz"));
@@ -217,23 +128,8 @@ bool TestHashIgnoreSeparator() {
 
 }  // namespace
 
-#define TEST(fn) \
-  if (fn()) { \
-    passed.push_back(#fn); \
-  } else { \
-    failed.push_back(#fn); \
-    std::cerr << "Failed: " #fn << std::endl; \
-  } \
-
 int main(int argc, char **argv) {
-  std::vector<std::string> passed;
-  std::vector<std::string> failed;
-  TEST(TestNormalizeNewlinesNoNewline);
-  TEST(TestNormalizeNewlinesLF);
-  TEST(TestNormalizeNewlinesCR);
-  TEST(TestNormalizeNewlinesCRLF);
-  TEST(TestNormalizeNewlinesFF);
-  TEST(TestNormalizeNewlinesMixed);
+  INIT_TEST_RESULTS;
   TEST(testEqualsLiteral);
   TEST(TestUnvendor);
   TEST(TestSplitStringEmpty);
@@ -246,8 +142,5 @@ int main(int argc, char **argv) {
   TEST(Test_ascii_isspace);
   TEST(TestEqualsIgnoreSeparator);
   TEST(TestHashIgnoreSeparator);
-  std::cerr << argv[0] << ": Passed: " << passed.size()
-            << ", failed: " << failed.size()
-            << "." << std::endl;
-  return failed.size();
+  REPORT_TEST_RESULTS;
 }

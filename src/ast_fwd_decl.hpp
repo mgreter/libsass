@@ -24,7 +24,6 @@ namespace Sass {
 
   class Parent_Reference;
 
-  class PreValue;
   class Block;
   class Expression;
   class Statement;
@@ -33,6 +32,9 @@ namespace Sass {
   class StyleRule;
   class Bubble;
   class Trace;
+
+  class MapExpression;
+  class ListExpression;
 
   class MediaRule;
 
@@ -56,7 +58,7 @@ namespace Sass {
 
 
 
-  class Supports_Block;
+  class SupportsRule;
   class AtRule;
 
   class Keyframe_Rule;
@@ -87,6 +89,8 @@ namespace Sass {
   class Definition;
 
   class List;
+  class SassList;
+  class SassArgumentList;
   class Map;
   class Function;
 
@@ -109,16 +113,16 @@ namespace Sass {
 
   class Interpolation;
   class StringLiteral;
-  class StringExpression2;
+  class StringExpression;
 
   class String_Constant;
   class String_Quoted;
 
-  class Supports_Condition;
-  class Supports_Operator;
-  class Supports_Negation;
-  class Supports_Declaration;
-  class Supports_Interpolation;
+  class SupportsCondition;
+  class SupportsOperation;
+  class SupportsNegation;
+  class SupportsDeclaration;
+  class SupportsInterpolation;
   
   class At_Root_Query;
   class Parameter;
@@ -165,6 +169,9 @@ namespace Sass {
   IMPL_MEM_OBJ(Trace);
   IMPL_MEM_OBJ(MediaRule);
 
+  IMPL_MEM_OBJ(MapExpression);
+  IMPL_MEM_OBJ(ListExpression);
+
   IMPL_MEM_OBJ(CssNode);
   IMPL_MEM_OBJ(CssString);
   IMPL_MEM_OBJ(CssValue);
@@ -184,7 +191,7 @@ namespace Sass {
   IMPL_MEM_OBJ(CssSupportsRule);
 
 
-  IMPL_MEM_OBJ(Supports_Block);
+  IMPL_MEM_OBJ(SupportsRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
   IMPL_MEM_OBJ(At_Root_Block);
@@ -201,7 +208,6 @@ namespace Sass {
   IMPL_MEM_OBJ(Debug);
   IMPL_MEM_OBJ(LoudComment);
   IMPL_MEM_OBJ(SilentComment);
-  IMPL_MEM_OBJ(PreValue);
   IMPL_MEM_OBJ(Has_Block);
   IMPL_MEM_OBJ(If);
   IMPL_MEM_OBJ(For);
@@ -215,6 +221,8 @@ namespace Sass {
   IMPL_MEM_OBJ(Value);
   IMPL_MEM_OBJ(Expression);
   IMPL_MEM_OBJ(List);
+  IMPL_MEM_OBJ(SassList);
+  IMPL_MEM_OBJ(SassArgumentList);
   IMPL_MEM_OBJ(Map);
   IMPL_MEM_OBJ(Function);
   IMPL_MEM_OBJ(ParenthesizedExpression);
@@ -234,12 +242,12 @@ namespace Sass {
   IMPL_MEM_OBJ(String_Quoted);
   IMPL_MEM_OBJ(Interpolation);
   IMPL_MEM_OBJ(StringLiteral);
-  IMPL_MEM_OBJ(StringExpression2);
-  IMPL_MEM_OBJ(Supports_Condition);
-  IMPL_MEM_OBJ(Supports_Operator);
-  IMPL_MEM_OBJ(Supports_Negation);
-  IMPL_MEM_OBJ(Supports_Declaration);
-  IMPL_MEM_OBJ(Supports_Interpolation);
+  IMPL_MEM_OBJ(StringExpression);
+  IMPL_MEM_OBJ(SupportsCondition);
+  IMPL_MEM_OBJ(SupportsOperation);
+  IMPL_MEM_OBJ(SupportsNegation);
+  IMPL_MEM_OBJ(SupportsDeclaration);
+  IMPL_MEM_OBJ(SupportsInterpolation);
   IMPL_MEM_OBJ(At_Root_Query);
   IMPL_MEM_OBJ(Null);
   IMPL_MEM_OBJ(Parent_Reference);
@@ -298,13 +306,12 @@ namespace Sass {
   DECLARE_BASE_CAST(Expression)
   DECLARE_BASE_CAST(Statement)
   DECLARE_BASE_CAST(Has_Block)
-  DECLARE_BASE_CAST(PreValue)
   DECLARE_BASE_CAST(Value)
   DECLARE_BASE_CAST(List)
   DECLARE_BASE_CAST(Color)
   DECLARE_BASE_CAST(String)
   DECLARE_BASE_CAST(String_Constant)
-  DECLARE_BASE_CAST(Supports_Condition)
+  DECLARE_BASE_CAST(SupportsCondition)
   DECLARE_BASE_CAST(Selector)
   DECLARE_BASE_CAST(SimpleSelector)
   DECLARE_BASE_CAST(SelectorComponent)

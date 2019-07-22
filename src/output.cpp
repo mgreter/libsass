@@ -6,8 +6,14 @@
 #include "output.hpp"
 #include "util.hpp"
 #include "debugger.hpp"
+#include "charcode.hpp"
+#include "character.hpp"
 
 namespace Sass {
+
+  // Import some namespaces
+  using namespace Charcode;
+  using namespace Character;
 
   Output::Output(Sass_Output_Options& opt)
     : Inspect(Emitter(opt)),
@@ -177,6 +183,14 @@ namespace Sass {
             }
           }
         }
+        else if (const StringLiteral * valConst = Cast<StringLiteral>(dec->value())) {
+          const std::string& val = valConst->text();
+          if (const String_Quoted * qstr = Cast<const String_Quoted>(valConst)) {
+            if (!qstr->quote_mark() && val.empty()) {
+              bPrintExpression = false;
+            }
+          }
+        }
         else if (List * list = Cast<List>(dec->value())) {
           bool all_invisible = true;
           for (size_t list_i = 0, list_L = list->length(); list_i < list_L; ++list_i) {
@@ -204,22 +218,22 @@ namespace Sass {
     Selector_Obj v = r->name();
     StringLiteralObj v2 = r->name2();
 
-    // std::cerr << "ASDASDASDADS\n";
-    // debug_ast(r);
 
-    if (!v.isNull()) {
-      v->perform(this);
-    }
+    // Disabled, never seen in specs
+    // if (!v.isNull()) {
+    //   v->perform(this);
+    // }
 
     if (!v2.isNull()) {
       append_indentation();
       v2->perform(this);
     }
 
-    if (!b) {
-      append_colon_separator();
-      return;
-    }
+    // Disabled, never seen in specs
+    // if (!b) {
+    //   append_colon_separator();
+    //   return;
+    // }
 
     append_scope_opener();
     for (size_t i = 0, L = b->length(); i < L; ++i) {
@@ -230,11 +244,39 @@ namespace Sass {
     append_scope_closer();
   }
 
-  void Output::operator()(Supports_Block* f)
+  void Output::operator()(CssSupportsRule* rule)
+  {
+
+    if (output_style() == NESTED) {
+      indentation += rule->tabs();
+    }
+
+    append_indentation();
+    append_token("@supports", rule);
+    append_mandatory_space();
+    rule->condition()->perform(this);
+    append_scope_opener();
+
+    Block* b = rule->block();
+    size_t L = b ? b->length() : 0;
+    for (size_t i = 0; i < L; ++i) {
+      b->get(i)->perform(this);
+      if (i < L - 1) append_special_linefeed();
+    }
+
+    if (output_style() == NESTED) {
+      indentation -= rule->tabs();
+    }
+
+    append_scope_closer();
+
+  }
+
+  void Output::operator()(SupportsRule* f)
   {
     if (f->is_invisible()) return;
 
-    Supports_Condition_Obj c = f->condition();
+    SupportsCondition_Obj c = f->condition();
     Block_Obj b = f->block();
 
     if (output_style() == NESTED) indentation += f->tabs();

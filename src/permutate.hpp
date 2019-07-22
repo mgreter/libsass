@@ -7,13 +7,17 @@ namespace Sass {
 
   // Returns a list of all possible paths through the given lists.
   //
-  // For example, given `[[1, 2], [3, 4], [5]]`, this returns:
+  // For example, given `[[1, 2], [3, 4], [5, 6]]`, this returns:
   //
   // ```
   // [[1, 3, 5],
   //  [2, 3, 5],
   //  [1, 4, 5],
-  //  [2, 4, 5]]
+  //  [2, 4, 5],
+  //  [1, 3, 6],
+  //  [2, 3, 6],
+  //  [1, 4, 6],
+  //  [2, 4, 6]]
   // ```
   // 
   // Note: called `paths` in dart-sass
@@ -70,9 +74,24 @@ namespace Sass {
   // EO permutate
 
   // ToDo: this variant is used in resolveParentSelectors
+  // Returns a list of all possible paths through the given lists.
+  //
+  // For example, given `[[1, 2], [3, 4], [5, 6]]`, this returns:
+  //
+  // ```
+  // [[1, 3, 5],
+  //  [1, 3, 6],
+  //  [1, 4, 5],
+  //  [1, 4, 6],
+  //  [2, 3, 5],
+  //  [2, 3, 6],
+  //  [2, 4, 5],
+  //  [2, 4, 6]]
+  // ```
+  // 
   template <class T>
-  std::vector<std::vector<T>>
-    permutateAlt(const std::vector<std::vector<T>>& in) {
+  std::vector<std::vector<T>> permutateAlt(
+    const std::vector<std::vector<T>>& in) {
 
     size_t L = in.size();
     size_t n = in.size() - 1;

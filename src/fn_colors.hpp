@@ -16,10 +16,6 @@ namespace Sass {
     #define DARG_R_PRCT(argname) get_arg_r(argname, env, sig, pstate, traces, - 100.0, 100.0, "%") // double
     #define DARG_R_CENT(argname) get_arg_r(argname, env, sig, pstate, traces, - 100.0, 100.0) // double
 
-    // macros for color related inputs (rbg and alpha/opacity values)
-    #define COLOR_NUM(argname) color_num(argname, env, sig, pstate, traces) // double
-    #define ALPHA_NUM(argname) alpha_num(argname, env, sig, pstate, traces) // double
-
     extern Signature rgb_4_sig;
     extern Signature rgb_3_sig;
     extern Signature rgb_2_sig;
@@ -104,6 +100,10 @@ namespace Sass {
     BUILT_IN(scale_color);
     BUILT_IN(change_color);
     BUILT_IN(ie_hex_str);
+
+    Value* _rgb(std::string name, std::vector<ValueObj> arguments, Signature sig, ParserState pstate, Backtraces traces);
+
+    Value* _hsl(std::string name, std::vector<ValueObj> arguments, Signature sig, ParserState pstate, Backtraces traces);
 
   }
 

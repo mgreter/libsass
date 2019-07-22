@@ -11,31 +11,41 @@
 #include "ast_def_macros.hpp"
 #include "util_string.hpp"
 
+#include <unordered_map>
+#include <unordered_set>
+
 namespace Sass {
 
-  #define environment_map(T) \
-    std::unordered_map< \
-      std::string, T, \
-      Util::hashIgnoreSeparator, \
-      Util::equalsIgnoreSeparator \
-    > \
+  template<class T>
+  using NormalizedMap = std::unordered_map<
+    std::string, T,
+    Util::hashIgnoreSeparator,
+    Util::equalsIgnoreSeparator
+  >;
+
+  using NormalizeSet = std::unordered_set<
+    std::string,
+    Util::hashIgnoreSeparator,
+    Util::equalsIgnoreSeparator
+  >;
+  
 
   // this defeats the whole purpose of environment being templatable!!
-  typedef environment_map(AST_Node_Obj)::iterator EnvIter;
+  typedef NormalizedMap<AST_Node_Obj>::iterator EnvMapIter;
 
   class EnvResult {
     public:
-      EnvIter it;
+      EnvMapIter it;
       bool found;
     public:
-      EnvResult(EnvIter it, bool found)
+      EnvResult(EnvMapIter it, bool found)
       : it(it), found(found) {}
   };
 
   template <typename T>
   class Environment {
     // TODO: test with map
-    environment_map(T) local_frame_;
+    NormalizedMap<T> local_frame_;
     ADD_PROPERTY(Environment*, parent)
     ADD_PROPERTY(bool, is_shadow)
 
@@ -60,7 +70,7 @@ namespace Sass {
 
     // scope operates on the current frame
 
-    environment_map(T)& local_frame();
+    NormalizedMap<T>& local_frame();
 
     bool has_local(const std::string& key) const;
 

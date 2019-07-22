@@ -315,7 +315,6 @@ namespace Sass {
   const Color_RGBA* name_to_color(const char*);
   const Color_RGBA* name_to_color(const std::string&);
   const char* color_to_name(const int);
-  const char* color_to_name(const Color_RGBA&);
   const char* color_to_name(const double);
 
 }

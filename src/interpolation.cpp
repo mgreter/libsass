@@ -24,7 +24,7 @@ namespace Sass {
   Interpolation* InterpolationBuffer::getInterpolation()
   {
     Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, "[pstate]");
-    for (PreValueObj item : contents) {
+    for (ValueObj item : contents) {
       // Appends an Expression
       itpl->append(item);
     }
@@ -38,7 +38,7 @@ namespace Sass {
   Interpolation* InterpolationBuffer::getInterpolation(ParserState pstate)
   {
     InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
-    for (PreValueObj item : contents) {
+    for (ValueObj item : contents) {
       // Appends an Expression
       itpl->append(item);
     }

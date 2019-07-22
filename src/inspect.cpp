@@ -196,7 +196,7 @@ namespace Sass {
     }
   }
 
-  // void Inspect::operator()(Supports_Block* feature_block)
+  // void Inspect::operator()(SupportsRule* feature_block)
   // {
   //   append_indentation();
   //   append_token("@supports", feature_block);
@@ -472,10 +472,37 @@ namespace Sass {
   //   append_token("@content", content);
   //   append_delimiter();
   // }
-  // 
+  //
+
+  void Inspect::_writeMapElement(Expression* ex)
+  {
+    if (Value * value = Cast<Value>(ex)) {
+      bool needsParens = false;
+      if (List * list = Cast<List>(value)) {
+        needsParens = list->separator() == SASS_COMMA;
+        if (list->is_bracketed()) needsParens = false;
+      }
+      else if (SassList * list = Cast<SassList>(value)) {
+        needsParens = list->separator() == SASS_COMMA;
+        if (list->hasBrackets()) needsParens = false;
+      }
+      if (needsParens) {
+        append_char($lparen);
+        value->perform(this);
+        append_char($rparen);
+      }
+      else {
+        value->perform(this);
+      }
+    }
+    else {
+      ex->perform(this);
+    }
+  }
+
   void Inspect::operator()(Map* map)
   {
-    if (output_style() == TO_SASS && map->empty()) {
+    if ((output_style() == TO_SASS/* || output_style() == INSPECT*/) && map->empty()) {
       append_string("()");
       return;
     }
@@ -485,11 +512,9 @@ namespace Sass {
     append_string("(");
     for (auto key : map->keys()) {
       if (items_output) append_comma_separator();
-      key->perform(this);
+      _writeMapElement(key);
       append_colon_separator();
-      LOCAL_FLAG(in_space_array, true);
-      LOCAL_FLAG(in_comma_array, true);
-      map->at(key)->perform(this);
+      _writeMapElement(map->at(key));
       items_output = true;
     }
     append_string(")");
@@ -503,6 +528,194 @@ namespace Sass {
     return list->is_bracketed() ? "]" : ")";
   }
 
+  std::string Inspect::lbracket(SassList* list) {
+    return list->hasBrackets() ? "[" : "(";
+  }
+
+  std::string Inspect::rbracket(SassList* list) {
+    return list->hasBrackets() ? "]" : ")";
+  }
+  void Inspect::visitAttributeSelector(AttributeSelector* attribute)
+  {
+    append_string("[");
+    add_open_mapping(attribute);
+    append_token(attribute->ns_name(), attribute);
+    if (!attribute->op().empty()) {
+      append_string(attribute->op());
+      // std::cerr << "serialize " << attribute->isIdentifier() << "\n";
+      if (attribute->isIdentifier() && !starts_with(attribute->value(), "--")) {
+        append_string(attribute->value());
+        if (attribute->modifier() != 0) {
+          append_optional_space();
+        }
+      }
+      else {
+        // std::cerr << "VisitAttrSel " << attribute->isIdentifier() << "\n";
+        visitQuotedString(attribute->value());
+        if (attribute->modifier() != 0) {
+          append_optional_space();
+        }
+      }
+    }
+    add_close_mapping(attribute);
+    if (attribute->modifier() != 0) {
+      append_mandatory_space();
+      append_char(attribute->modifier());
+    }
+    append_string("]");
+  }
+
+  void Inspect::visitClassSelector(ClassSelector* klass)
+  {
+    append_token(klass->ns_name(), klass);
+  }
+
+  void Inspect::visitComplexSelector(ComplexSelector* complex)
+  {
+    bool many = false;
+    if (complex->hasPreLineFeed()) {
+      append_optional_linefeed();
+    }
+    for (SelectorComponentObj& item : complex->elements()) {
+      if (many) append_optional_space();
+      if (SelectorCombinator* combinator = item->getCombinator()) {
+        visitSelectorCombinator(combinator);
+      }
+      else if (CompoundSelector* compound = item->getCompound()) {
+        visitCompoundSelector(compound);
+      }
+      many = true;
+    }
+  }
+
+  void Inspect::visitCompoundSelector(CompoundSelector* compound)
+  {
+    if (compound->hasRealParent()) {
+      append_string("&");
+    }
+    for (SimpleSelectorObj& item : compound->elements()) {
+      item->accept(*this);
+    }
+    // Add the post line break (from ruby sass)
+    // Dart sass uses another logic for newlines
+    if (compound->hasPostLineBreak()) {
+      if (output_style() != COMPACT) {
+        append_optional_linefeed();
+      }
+    }
+  }
+
+  void Inspect::visitSelectorCombinator(SelectorCombinator* combinator)
+  {
+    append_optional_space();
+    switch (combinator->combinator()) {
+    case SelectorCombinator::Combinator::CHILD: append_string(">"); break;
+    case SelectorCombinator::Combinator::GENERAL: append_string("~"); break;
+    case SelectorCombinator::Combinator::ADJACENT: append_string("+"); break;
+    }
+    append_optional_space();
+    // Add the post line break (from ruby sass)
+    // Dart sass uses another logic for newlines
+    // if (combinator->hasPostLineBreak()) {
+    //   if (output_style() != COMPACT) {
+    //     // append_optional_linefeed();
+    //   }
+    // }
+  }
+
+  void Inspect::visitIDSelector(IDSelector* id)
+  {
+    append_token(id->ns_name(), id);
+  }
+
+  void Inspect::visitPlaceholderSelector(PlaceholderSelector* placeholder)
+  {
+    append_token(placeholder->name(), placeholder);
+  }
+
+  void Inspect::visitPseudoSelector(PseudoSelector* pseudo)
+  {
+    if (pseudo->name() != "") {
+      append_string(":");
+      if (pseudo->isSyntacticElement()) {
+        append_string(":");
+      }
+      append_token(pseudo->ns_name(), pseudo);
+      // this whole logic can be done simpler!? copy object?
+      if (pseudo->selector() || !pseudo->argument().empty()) {
+        append_string("(");
+        append_string(pseudo->argument());
+        if (pseudo->selector() && !pseudo->argument().empty()) {
+          if (!pseudo->selector()->empty()) {
+            append_mandatory_space();
+          }
+        }
+        bool was_comma_array = in_comma_array;
+        in_comma_array = false;
+        if (pseudo->selector()) {
+          visitSelectorList(pseudo->selector());
+        }
+        in_comma_array = was_comma_array;
+        append_string(")");
+      }
+    }
+  }
+
+  void Inspect::visitSelectorList(SelectorList* list)
+  {
+    if (list->empty()) {
+      if (output_style() == TO_SASS) {
+        append_token("()", list);
+      }
+      return;
+    }
+
+    bool was_comma_array = in_comma_array;
+    // probably ruby sass eqivalent of element_needs_parens
+    if (output_style() == TO_SASS && list->length() == 1 &&
+      (!Cast<List>(list->get(0)) &&
+        Cast<SassList>(list->get(0)) &&
+        !Cast<SelectorList>(list->get(0)))) {
+      append_string("(");
+    }
+    else if (!in_declaration && in_comma_array) {
+      append_string("(");
+    }
+
+    if (in_declaration) in_comma_array = true;
+
+    for (size_t i = 0, L = list->length(); i < L; ++i) {
+
+      if (i == 0) append_indentation();
+      if ((*list)[i] == nullptr) continue;
+      schedule_mapping(list->get(i)->last());
+      // add_open_mapping(list->get(i)->last());
+      visitComplexSelector(list->get(i));
+      // add_close_mapping(list->get(i)->last());
+      if (i < L - 1) {
+        scheduled_space = 0;
+        append_comma_separator();
+      }
+    }
+
+    in_comma_array = was_comma_array;
+    // probably ruby sass eqivalent of element_needs_parens
+    if (output_style() == TO_SASS && list->length() == 1 &&
+      (!Cast<List>((*list)[0]) &&
+        Cast<SassList>((*list)[0]) &&
+        !Cast<SelectorList>(list->get(0)))) {
+      append_string(",)");
+    }
+    else if (!in_declaration && in_comma_array) {
+      append_string(")");
+    }
+  }
+
+  void Inspect::visitTypeSelector(TypeSelector* type)
+  {
+    append_token(type->ns_name(), type);
+  }
+
   // Returns whether [value] needs parentheses as an
   // element in a list with the given [separator].
   bool _elementNeedsParens(Sass_Separator separator, List* value) {
@@ -514,8 +727,43 @@ namespace Sass {
       : value->separator() != SASS_UNDEF;
   }
 
+  // Returns whether [value] needs parentheses as an
+  // element in a list with the given [separator].
+  bool _elementNeedsParens(Sass_Separator separator, const Value* value) {
+    // std::cerr << "Elements needs parens " << separator << " vs " << value->separator() << "\n";
+    if (const SassList * list = Cast<SassList>(value)) {
+      if (list->length() < 2) return false;
+      if (list->hasBrackets()) return false;
+      return separator == SASS_COMMA
+        ? list->separator() == SASS_COMMA
+        : list->separator() != SASS_UNDEF;
+    }
+    if (const List * list = Cast<List>(value)) {
+      if (list->length() < 2) return false;
+      if (list->is_bracketed()) return false;
+      return separator == SASS_COMMA
+        ? list->separator() == SASS_COMMA
+        : list->separator() != SASS_UNDEF;
+    }
+    return false;
+  }
+
   void Inspect::operator()(List* list)
   {
+    SassListObj temp = SASS_MEMORY_NEW(SassList, list->pstate(), list->separator());
+    temp->hasBrackets(list->is_bracketed());
+    for (Expression* item : list->elements()) {
+      if (Cast<Value>(item)) {
+        temp->append(Cast<Value>(item));
+      }
+      else {
+        goto skipnew;
+      }
+    }
+    return temp->perform(this);
+
+    skipnew:
+
     // debug_ast(list);
     if (list->empty() && (output_style() == TO_SASS || list->is_bracketed())) {
       append_string(lbracket(list));
@@ -537,15 +785,15 @@ namespace Sass {
     // probably ruby sass eqivalent of element_needs_parens
     else if (
       (output_style() == TO_SASS || output_style() == INSPECT) &&
-        list->separator() == SASS_COMMA &&
-        list->length() == 1
-    ) {
+      list->separator() == SASS_COMMA &&
+      list->length() == 1
+      ) {
       append_string(lbracket(list));
     }
-    else if (!in_declaration && (list->separator() == SASS_HASH ||
-        (list->separator() == SASS_SPACE && in_space_array) ||
-        (list->separator() == SASS_COMMA && in_comma_array)
-    )) {
+    else if (!in_declaration && (
+      (list->separator() == SASS_SPACE && in_space_array) ||
+      (list->separator() == SASS_COMMA && in_comma_array)
+      )) {
       append_string(lbracket(list));
     }
     else if (!in_declaration && separators.size() > 0 && _elementNeedsParens(separators.back(), list)) {
@@ -557,17 +805,7 @@ namespace Sass {
     separators.push_back(list->separator());
 
     for (size_t i = 0, L = list->size(); i < L; ++i) {
-      if (list->separator() == SASS_HASH)
-      { sep[0] = i % 2 ? ':' : ','; }
       Expression_Obj list_item = list->at(i);
-      if (output_style() != TO_SASS) {
-        if (list_item->is_invisible()) {
-          // this fixes an issue with "" in a list
-          if (!Cast<String_Constant>(list_item)) {
-            continue;
-          }
-        }
-      }
       if (items_output) {
         append_string(sep);
       }
@@ -591,20 +829,95 @@ namespace Sass {
     // probably ruby sass eqivalent of element_needs_parens
     else if (
       (output_style() == TO_SASS || output_style() == INSPECT) &&
-        list->separator() == SASS_COMMA &&
-        list->length() == 1 
-    ) {
+      list->separator() == SASS_COMMA &&
+      list->length() == 1
+      ) {
       append_string(",");
       append_string(rbracket(list));
     }
-    else if (!in_declaration && (list->separator() == SASS_HASH ||
-        (list->separator() == SASS_SPACE && in_space_array) ||
-        (list->separator() == SASS_COMMA && in_comma_array)
-    )) {
+    else if (!in_declaration && (
+      (list->separator() == SASS_SPACE && in_space_array) ||
+      (list->separator() == SASS_COMMA && in_comma_array)
+      )) {
       append_string(rbracket(list));
     }
     else if (!in_declaration && separators.size() > 0 && _elementNeedsParens(separators.back(), list)) {
       append_string(rbracket(list));
+    }
+
+  }
+
+  void Inspect::operator()(SassList* list)
+  {
+    bool inspect = output_style() == INSPECT
+      || output_style() == TO_SASS;
+
+    if (list->hasBrackets()) {
+      append_char($lbracket);
+    }
+
+    else if (list->empty()) {
+      if (!inspect) {
+        // std::cerr << "() isn't a valid CSS value";
+        throw Exception::InvalidValue({}, *list);
+      }
+      append_char($lparen);
+      append_char($rparen);
+      return;
+    }
+
+    bool singleton = inspect &&
+      list->length() == 1 &&
+      list->separator() == SASS_COMMA;
+    if (singleton && !list->hasBrackets()) {
+      append_char($lparen);
+    }
+
+    add_open_mapping(list);
+
+    std::vector<ValueObj> values
+      = list->elements();
+
+    bool first = true;
+    std::string joiner =
+      list->separator() == SASS_SPACE ? " " :
+      output_style() == COMPRESSED ? "," : ", ";
+    for (Value* value : values) {
+      // Only print `null` when inspecting
+      if (!inspect && value->isBlank()) continue;
+      if (first == false) {
+        append_string(joiner);
+      }
+      else {
+        first = false;
+      }
+      if (inspect) {
+        bool needsParens = _elementNeedsParens(
+          list->separator(), value);
+        if (needsParens) {
+          append_char($lparen);
+        }
+        value->perform(this);
+        if (needsParens) {
+          append_char($rparen);
+        }
+      }
+      else {
+        value->perform(this);
+      }
+    }
+
+    add_close_mapping(list);
+
+    if (singleton) {
+      append_char($comma);
+      if (!list->hasBrackets()) {
+        append_char($rparen);
+      }
+    }
+
+    if (list->hasBrackets()) {
+      append_char($rbracket);
     }
 
   }
@@ -861,7 +1174,7 @@ namespace Sass {
     }
     // append_string("Interpolation");
   }
-  void Inspect::operator()(StringExpression2* s)
+  void Inspect::operator()(StringExpression* s)
   {
     auto itpl = s->getAsInterpolation();
     // .toString()
@@ -872,7 +1185,7 @@ namespace Sass {
     // if (s->hasQuotes()) append_string("\"");
     // append_token(s->value(), s);
     // append_string(s->text());
-    // append_string("StringExpression2");
+    // append_string("StringExpression");
   }
 
 
@@ -902,18 +1215,18 @@ namespace Sass {
     append_token(w->message(), w);
   }
 
-  void Inspect::operator()(Supports_Operator* so)
+  void Inspect::operator()(SupportsOperation* so)
   {
 
     if (so->needs_parens(so->left())) append_string("(");
     so->left()->perform(this);
     if (so->needs_parens(so->left())) append_string(")");
 
-    if (so->operand() == Supports_Operator::AND) {
+    if (so->operand() == SupportsOperation::AND) {
       append_mandatory_space();
       append_token("and", so);
       append_mandatory_space();
-    } else if (so->operand() == Supports_Operator::OR) {
+    } else if (so->operand() == SupportsOperation::OR) {
       append_mandatory_space();
       append_token("or", so);
       append_mandatory_space();
@@ -924,7 +1237,7 @@ namespace Sass {
     if (so->needs_parens(so->right())) append_string(")");
   }
 
-  void Inspect::operator()(Supports_Negation* sn)
+  void Inspect::operator()(SupportsNegation* sn)
   {
     append_token("not", sn);
     append_mandatory_space();
@@ -933,7 +1246,7 @@ namespace Sass {
     if (sn->needs_parens(sn->condition())) append_string(")");
   }
 
-  void Inspect::operator()(Supports_Declaration* sd)
+  void Inspect::operator()(SupportsDeclaration* sd)
   {
     append_string("(");
     sd->feature()->perform(this);
@@ -942,7 +1255,7 @@ namespace Sass {
     append_string(")");
   }
 
-  void Inspect::operator()(Supports_Interpolation* sd)
+  void Inspect::operator()(SupportsInterpolation* sd)
   {
     if (String_Quoted * str = Cast<String_Quoted>(sd->value())) {
       // return _evaluateToCss(condition.expression, quote: false);
@@ -1042,151 +1355,19 @@ namespace Sass {
     append_string(")");
   }
 
-  // void Inspect::operator()(Parent_Reference* p)
-  // {
-  //   append_string("&");
-  // }
+  void Inspect::operator()(ClassSelector* s)
+  {
+    s->accept(*this);
+  }
 
   void Inspect::operator()(PlaceholderSelector* s)
   {
-    append_token(s->name(), s);
-
-  }
-
-  void Inspect::operator()(TypeSelector* s)
-  {
-    append_token(s->ns_name(), s);
-  }
-
-  void Inspect::operator()(ClassSelector* s)
-  {
-    append_token(s->ns_name(), s);
-  }
-
-  void Inspect::operator()(IDSelector* s)
-  {
-    append_token(s->ns_name(), s);
-  }
-
-  void Inspect::operator()(AttributeSelector* s)
-  {
-    append_string("[");
-    add_open_mapping(s);
-    append_token(s->ns_name(), s);
-    if (!s->op().empty()) {
-      append_string(s->op());
-      // std::cerr << "serialize " << s->isIdentifier() << "\n";
-      if (s->isIdentifier() && !starts_with(s->value(), "--")) {
-        append_string(s->value());
-        if (s->modifier() != 0) {
-          append_optional_space();
-        }
-      }
-      else {
-        // std::cerr << "VisitAttrSel " << s->isIdentifier() << "\n";
-        visitQuotedString(s->value());
-        if (s->modifier() != 0) {
-          append_optional_space();
-        }
-      }
-    }
-    add_close_mapping(s);
-    if (s->modifier() != 0) {
-      append_mandatory_space();
-      append_char(s->modifier());
-    }
-    append_string("]");
-  }
-
-  void Inspect::operator()(PseudoSelector* s)
-  {
-
-    if (s->name() != "") {
-      append_string(":");
-      if (s->isSyntacticElement()) {
-        append_string(":");
-      }
-      append_token(s->ns_name(), s);
-      if (s->selector() || !s->argument().empty()) {
-        append_string("(");
-        append_string(s->argument());
-        if (s->selector() && !s->argument().empty()) {
-          if (!s->selector()->empty()) {
-            append_mandatory_space();
-          }
-        }
-        bool was_comma_array = in_comma_array;
-        in_comma_array = false;
-        if (s->selector()) {
-          s->selector()->perform(this);
-        }
-        in_comma_array = was_comma_array;
-        append_string(")");
-      }
-    }
+    // s->accept(*this);
   }
 
   void Inspect::operator()(SelectorList* g)
   {
-
-    if (g->empty()) {
-      if (output_style() == TO_SASS) {
-        append_token("()", g);
-      }
-      return;
-    }
-
-
-    bool was_comma_array = in_comma_array;
-    // probably ruby sass eqivalent of element_needs_parens
-    if (output_style() == TO_SASS && g->length() == 1 &&
-      (!Cast<List>((*g)[0]) &&
-        !Cast<SelectorList>((*g)[0]))) {
-      append_string("(");
-    }
-    else if (!in_declaration && in_comma_array) {
-      append_string("(");
-    }
-
-    if (in_declaration) in_comma_array = true;
-
-    for (size_t i = 0, L = g->length(); i < L; ++i) {
-
-      if (i == 0) append_indentation();
-      if ((*g)[i] == nullptr) continue;
-      schedule_mapping(g->at(i)->last());
-      // add_open_mapping((*g)[i]->last());
-      (*g)[i]->perform(this);
-      // add_close_mapping((*g)[i]->last());
-      if (i < L - 1) {
-        scheduled_space = 0;
-        append_comma_separator();
-      }
-    }
-
-    in_comma_array = was_comma_array;
-    // probably ruby sass eqivalent of element_needs_parens
-    if (output_style() == TO_SASS && g->length() == 1 &&
-      (!Cast<List>((*g)[0]) &&
-        !Cast<SelectorList>((*g)[0]))) {
-      append_string(",)");
-    }
-    else if (!in_declaration && in_comma_array) {
-      append_string(")");
-    }
-
-  }
-  void Inspect::operator()(ComplexSelector* sel)
-  {
-    bool many = false;
-    if (sel->hasPreLineFeed()) {
-      append_optional_linefeed();
-    }
-    for (auto& item : sel->elements()) {
-      if (many) append_optional_space();
-      item->perform(this);
-      many = true;
-    }
+    g->accept(*this);
   }
 
   // void Inspect::operator()(SelectorComponent* sel)
@@ -1199,37 +1380,14 @@ namespace Sass {
 
   void Inspect::operator()(CompoundSelector* sel)
   {
-    if (sel->hasRealParent()) {
-      append_string("&");
-    }
-    for (auto& item : sel->elements()) {
-      item->perform(this);
-    }
-    // Add the post line break (from ruby sass)
-    // Dart sass uses another logic for newlines
-    if (sel->hasPostLineBreak()) {
-      if (output_style() != COMPACT) {
-        append_optional_linefeed();
-      }
-    }
+    // entry point is listize
+    visitCompoundSelector(sel);
   }
 
   void Inspect::operator()(SelectorCombinator* sel)
   {
-    append_optional_space();
-    switch (sel->combinator()) {
-      case SelectorCombinator::Combinator::CHILD: append_string(">"); break;
-      case SelectorCombinator::Combinator::GENERAL: append_string("~"); break;
-      case SelectorCombinator::Combinator::ADJACENT: append_string("+"); break;
-    }
-    append_optional_space();
-    // Add the post line break (from ruby sass)
-    // Dart sass uses another logic for newlines
-    if (sel->hasPostLineBreak()) {
-      if (output_style() != COMPACT) {
-        // append_optional_linefeed();
-      }
-    }
+    // entry point is listize
+    visitSelectorCombinator(sel);
   }
 
 }

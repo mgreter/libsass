@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -152,11 +153,6 @@ namespace Sass {
     Vectorized<Statement_Obj>(s),
     is_root_(r)
   { }
-  Block::Block(const Block* ptr)
-  : Statement(ptr),
-    Vectorized<Statement_Obj>(ptr),
-    is_root_(ptr->is_root_)
-  { }
 
   Block::Block(ParserState pstate, std::vector<StatementObj> vec, bool r) :
     Statement(pstate),
@@ -202,11 +198,6 @@ namespace Sass {
     : Has_Block(pstate, b), interpolation_(s)
   { statement_type(RULESET); }
 
-  StyleRule::StyleRule(const StyleRule* ptr)
-  : Has_Block(ptr),
-    interpolation_(ptr->interpolation_)
-  { statement_type(RULESET); }
-
   bool CssStyleRule::is_invisible() const {
     bool sel_invisible = true;
     bool els_invisible = true;
@@ -234,11 +225,6 @@ namespace Sass {
   Bubble::Bubble(ParserState pstate, Statement_Obj n, Statement_Obj g, size_t t)
   : Statement(pstate, Statement::BUBBLE, t), node_(n), group_end_(g == nullptr)
   { }
-  Bubble::Bubble(const Bubble* ptr)
-  : Statement(ptr),
-    node_(ptr->node_),
-    group_end_(ptr->group_end_)
-  { }
 
   bool Bubble::bubbles()
   {
@@ -251,11 +237,23 @@ namespace Sass {
   Trace::Trace(ParserState pstate, std::string n, Block_Obj b, char type)
   : Has_Block(pstate, b), type_(type), name_(n)
   { }
-  Trace::Trace(const Trace* ptr)
-  : Has_Block(ptr),
-    type_(ptr->type_),
-    name_(ptr->name_)
-  { }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ListExpression::ListExpression(ParserState pstate, Sass_Separator separator) :
+    Expression(pstate),
+    contents_(),
+    separator_(separator),
+    hasBrackets_(false)
+  {
+  }
+
+  MapExpression::MapExpression(ParserState pstate) :
+    Expression(pstate),
+    kvlist_()
+  {
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -311,13 +309,6 @@ namespace Sass {
   : Has_Block(pstate, b), property_(prop), value_(val), is_custom_property_(c)
   { statement_type(DECLARATION); }
 
-  Declaration::Declaration(const Declaration* ptr)
-  : Has_Block(ptr),
-    property_(ptr->property_),
-    value_(ptr->value_),
-    is_custom_property_(ptr->is_custom_property_)
-  { statement_type(DECLARATION); }
-
   bool Declaration::is_invisible() const
   {
     if (is_custom_property()) return false;
@@ -330,13 +321,6 @@ namespace Sass {
 
   Assignment::Assignment(ParserState pstate, std::string var, Expression_Obj val, bool is_default, bool is_global)
   : Statement(pstate), variable_(var), value_(val), is_default_(is_default), is_global_(is_global)
-  { statement_type(ASSIGNMENT); }
-  Assignment::Assignment(const Assignment* ptr)
-  : Statement(ptr),
-    variable_(ptr->variable_),
-    value_(ptr->value_),
-    is_default_(ptr->is_default_),
-    is_global_(ptr->is_global_)
   { statement_type(ASSIGNMENT); }
 
   /////////////////////////////////////////////////////////////////////////
@@ -358,22 +342,13 @@ namespace Sass {
   StaticImport::StaticImport(
     ParserState pstate,
     InterpolationObj url,
-    Supports_Condition_Obj supports,
+    SupportsCondition_Obj supports,
     InterpolationObj media) :
     ImportBase(pstate),
     url_(url),
     supports_(supports),
     media_(media),
     outOfOrder_(true)
-  {}
-
-  StaticImport::StaticImport(
-    const StaticImport* ptr) :
-    ImportBase(ptr),
-    url_(ptr->url_),
-    supports_(ptr->supports_),
-    media_(ptr->media_),
-    outOfOrder_(ptr->outOfOrder_)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -386,12 +361,6 @@ namespace Sass {
     url_(url)
   {}
 
-  DynamicImport::DynamicImport(
-    const DynamicImport* ptr) :
-    ImportBase(ptr),
-    url_(ptr->url_)
-  {}
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -399,12 +368,6 @@ namespace Sass {
     ParserState pstate) :
     Statement(pstate),
     Vectorized()
-  {}
-
-  ImportRule::ImportRule(
-    const ImportRule* ptr) :
-    Statement(ptr),
-    Vectorized(ptr)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -418,18 +381,11 @@ namespace Sass {
     import_queries_(),
     queries_()
   { statement_type(IMPORT); }
-  Import::Import(const Import* ptr)
-  : ImportBase(ptr),
-    urls_(ptr->urls_),
-    incs_(ptr->incs_),
-    imports_(ptr->imports_),
-    import_queries_(ptr->import_queries_),
-    queries_(ptr->queries_)
-  { statement_type(IMPORT); }
 
   std::vector<Include>& Import::incs() { return incs_; }
   std::vector<Expression_Obj>& Import::urls() { return urls_; }
   std::vector<ImportBaseObj>& Import::imports() { return imports_; }
+  std::vector<ExpressionObj>& Import::queries2() { return import_queries_; }
 
   bool Import::is_invisible() const
   {
@@ -442,9 +398,6 @@ namespace Sass {
   Import_Stub::Import_Stub(ParserState pstate, Include res/*, Sass_Import_Entry imp*/)
   : ImportBase(pstate), resource_(res)//, import_(imp)
   { statement_type(IMPORT_STUB); }
-  Import_Stub::Import_Stub(const Import_Stub* ptr)
-  : ImportBase(ptr), resource_(ptr->resource_)//, import_(ptr->import_)
-  { statement_type(IMPORT_STUB); }
   Include Import_Stub::resource() { return resource_; };
   // Sass_Import_Entry Import_Stub::import() { return import_; };
   std::string Import_Stub::imp_path() { return resource_.imp_path; };
@@ -456,18 +409,12 @@ namespace Sass {
   Warning::Warning(ParserState pstate, Expression_Obj msg)
   : Statement(pstate), message_(msg)
   { statement_type(WARNING); }
-  Warning::Warning(const Warning* ptr)
-  : Statement(ptr), message_(ptr->message_)
-  { statement_type(WARNING); }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   Error::Error(ParserState pstate, Expression_Obj msg)
   : Statement(pstate), message_(msg)
-  { statement_type(ERROR); }
-  Error::Error(const Error* ptr)
-  : Statement(ptr), message_(ptr->message_)
   { statement_type(ERROR); }
 
   /////////////////////////////////////////////////////////////////////////
@@ -476,21 +423,12 @@ namespace Sass {
   Debug::Debug(ParserState pstate, Expression_Obj val)
   : Statement(pstate), value_(val)
   { statement_type(DEBUGSTMT); }
-  Debug::Debug(const Debug* ptr)
-  : Statement(ptr), value_(ptr->value_)
-  { statement_type(DEBUGSTMT); }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   LoudComment::LoudComment(ParserState pstate, InterpolationObj itpl)
     : Statement(pstate), text_(itpl)
-  {
-    statement_type(COMMENT);
-  }
-  LoudComment::LoudComment(const LoudComment* ptr)
-    : Statement(ptr),
-    text_(ptr->text_)
   {
     statement_type(COMMENT);
   }
@@ -503,23 +441,12 @@ namespace Sass {
   {
     statement_type(COMMENT);
   }
-  SilentComment::SilentComment(const SilentComment* ptr)
-    : Statement(ptr),
-    text_(ptr->text_)
-  {
-    statement_type(COMMENT);
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   If::If(ParserState pstate, Expression_Obj pred, Block_Obj con, Block_Obj alt)
   : Has_Block(pstate, con), predicate_(pred), alternative_(alt)
-  { statement_type(IF); }
-  If::If(const If* ptr)
-  : Has_Block(ptr),
-    predicate_(ptr->predicate_),
-    alternative_(ptr->alternative_)
   { statement_type(IF); }
 
   bool If::has_content()
@@ -535,22 +462,12 @@ namespace Sass {
   : Has_Block(pstate, b),
     variable_(var), lower_bound_(lo), upper_bound_(hi), is_inclusive_(inc)
   { statement_type(FOR); }
-  For::For(const For* ptr)
-  : Has_Block(ptr),
-    variable_(ptr->variable_),
-    lower_bound_(ptr->lower_bound_),
-    upper_bound_(ptr->upper_bound_),
-    is_inclusive_(ptr->is_inclusive_)
-  { statement_type(FOR); }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   Each::Each(ParserState pstate, std::vector<std::string> vars, Expression_Obj lst, Block_Obj b)
   : Has_Block(pstate, b), variables_(vars), list_(lst)
-  { statement_type(EACH); }
-  Each::Each(const Each* ptr)
-  : Has_Block(ptr), variables_(ptr->variables_), list_(ptr->list_)
   { statement_type(EACH); }
 
   /////////////////////////////////////////////////////////////////////////
@@ -559,18 +476,12 @@ namespace Sass {
   While::While(ParserState pstate, Expression_Obj pred, Block_Obj b)
   : Has_Block(pstate, b), predicate_(pred)
   { statement_type(WHILE); }
-  While::While(const While* ptr)
-  : Has_Block(ptr), predicate_(ptr->predicate_)
-  { statement_type(WHILE); }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   Return::Return(ParserState pstate, Expression_Obj val)
   : Statement(pstate), value_(val)
-  { statement_type(RETURN); }
-  Return::Return(const Return* ptr)
-  : Statement(ptr), value_(ptr->value_)
   { statement_type(RETURN); }
 
   /////////////////////////////////////////////////////////////////////////
@@ -581,12 +492,6 @@ namespace Sass {
   {
     statement_type(EXTEND);
   }
-
-  ExtendRule::ExtendRule(const ExtendRule* ptr)
-    : Statement(ptr),
-    isOptional_(ptr->isOptional_),
-    selector_(ptr->selector_)
-  { statement_type(EXTEND); }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -666,12 +571,6 @@ namespace Sass {
   Mixin_Call::Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params, Block_Obj b)
   : Has_Block(pstate, b), name_(n), arguments_(args), block_parameters_(b_params)
   { }
-  Mixin_Call::Mixin_Call(const Mixin_Call* ptr)
-  : Has_Block(ptr),
-    name_(ptr->name_),
-    arguments_(ptr->arguments_),
-    block_parameters_(ptr->block_parameters_)
-  { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -679,10 +578,6 @@ namespace Sass {
   Content::Content(ParserState pstate, Arguments_Obj args)
   : Statement(pstate),
     arguments_(args)
-  { statement_type(CONTENT); }
-  Content::Content(const Content* ptr)
-  : Statement(ptr),
-    arguments_(ptr->arguments_)
   { statement_type(CONTENT); }
 
   /////////////////////////////////////////////////////////////////////////
@@ -708,22 +603,11 @@ namespace Sass {
     expression_(expression)
   {}
 
-  ParenthesizedExpression::ParenthesizedExpression(
-    const ParenthesizedExpression* ptr) :
-    Expression(ptr),
-    expression_(ptr->expression())
-  {}
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   Unary_Expression::Unary_Expression(ParserState pstate, Type t, Expression_Obj o)
   : Expression(pstate), optype_(t), operand_(o)
-  { }
-  Unary_Expression::Unary_Expression(const Unary_Expression* ptr)
-  : Expression(ptr),
-    optype_(ptr->optype_),
-    operand_(ptr->operand_)
   { }
 
   /////////////////////////////////////////////////////////////////////////
@@ -758,10 +642,6 @@ namespace Sass {
   Arguments::Arguments(ParserState pstate)
   : Expression(pstate),
     Vectorized<Argument_Obj>()
-  { }
-  Arguments::Arguments(const Arguments* ptr)
-  : Expression(ptr),
-    Vectorized<Argument_Obj>(*ptr)
   { }
 
   ArgumentObj Arguments::get_rest_argument()
@@ -817,36 +697,37 @@ namespace Sass {
   At_Root_Query::At_Root_Query(ParserState pstate, Expression_Obj f, Expression_Obj v, bool i)
   : Expression(pstate), feature_(f), value_(v)
   { }
-  At_Root_Query::At_Root_Query(const At_Root_Query* ptr)
-  : Expression(ptr),
-    feature_(ptr->feature_),
-    value_(ptr->value_)
-  { }
 
   bool At_Root_Query::exclude(std::string str)
   {
     bool with = feature() && unquote(feature()->to_string()).compare("with") == 0;
     // bool with = feature() && Util::equalsLiteral("(with", unquote(feature()->to_string())) /*&&
     //  !Util::equalsLiteral("(without", unquote(feature()->to_string()))*/;
-    List* l = Cast<List>(value().ptr());
+    auto val = value();
+    // debug_ast(val);
+    ListObj l = Cast<List>(val.ptr());
+    SassList* sl = Cast<SassList>(value().ptr());
+    if (l) {
+      sl = list_to_sass_list(l);
+    }
     std::string v;
 
     if (with)
     {
-      if (!l || l->length() == 0) return str.compare("rule") != 0;
-      for (size_t i = 0, L = l->length(); i < L; ++i)
+      if (!sl || sl->length() == 0) return str.compare("rule") != 0;
+      for (size_t i = 0, L = sl->length(); i < L; ++i)
       {
-        v = unquote((*l)[i]->to_string());
+        v = unquote(sl->get(i)->to_string());
         if (v.compare("all") == 0 || v == str) return false;
       }
       return true;
     }
     else
     {
-      if (!l || !l->length()) return str.compare("rule") == 0;
-      for (size_t i = 0, L = l->length(); i < L; ++i)
+      if (!sl || !sl->length()) return str.compare("rule") == 0;
+      for (size_t i = 0, L = sl->length(); i < L; ++i)
       {
-        v = unquote((*l)[i]->to_string());
+        v = unquote(sl->get(i)->to_string());
         if (v.compare("all") == 0 || v == str) return true;
       }
       return false;
@@ -858,9 +739,6 @@ namespace Sass {
 
   At_Root_Block::At_Root_Block(ParserState pstate, At_Root_Query_Obj e, Block_Obj b)
   : Has_Block(pstate, b), expression_(e)
-  { statement_type(ATROOT); }
-  At_Root_Block::At_Root_Block(const At_Root_Block* ptr)
-  : Has_Block(ptr), expression_(ptr->expression_)
   { statement_type(ATROOT); }
 
   bool At_Root_Block::bubbles() {
@@ -907,12 +785,6 @@ namespace Sass {
   Parameter::Parameter(ParserState pstate, std::string n, Expression_Obj def, bool rest)
   : AST_Node(pstate), name_(n), default_value_(def), is_rest_parameter_(rest)
   { }
-  Parameter::Parameter(const Parameter* ptr)
-  : AST_Node(ptr),
-    name_(ptr->name_),
-    default_value_(ptr->default_value_),
-    is_rest_parameter_(ptr->is_rest_parameter_)
-  { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -923,12 +795,6 @@ namespace Sass {
     has_optional_parameters_(false),
     has_rest_parameter_(false)
   { }
-  Parameters::Parameters(const Parameters* ptr)
-  : AST_Node(ptr),
-    Vectorized<Parameter_Obj>(*ptr),
-    has_optional_parameters_(ptr->has_optional_parameters_),
-    has_rest_parameter_(ptr->has_rest_parameter_)
-  { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -936,44 +802,61 @@ namespace Sass {
   // If you forget to add a class here you will get
   // undefined reference to `vtable for Sass::Class'
 
-  IMPLEMENT_AST_OPERATORS(StyleRule);
-  IMPLEMENT_AST_OPERATORS(MediaRule);
-  IMPLEMENT_AST_OPERATORS(Import);
-  IMPLEMENT_AST_OPERATORS(Import_Stub);
-  IMPLEMENT_AST_OPERATORS(ImportRule);
-  IMPLEMENT_AST_OPERATORS(StaticImport);
-  IMPLEMENT_AST_OPERATORS(DynamicImport);
+  // IMPLEMENT_AST_OPERATORS(StyleRule);
+  // IMPLEMENT_AST_OPERATORS(MediaRule);
+  // IMPLEMENT_AST_OPERATORS(Import);
+  // IMPLEMENT_AST_OPERATORS(Import_Stub);
+  // IMPLEMENT_AST_OPERATORS(ImportRule);
+  // IMPLEMENT_AST_OPERATORS(StaticImport);
+  // IMPLEMENT_AST_OPERATORS(DynamicImport);
   IMPLEMENT_AST_OPERATORS(AtRule);
-  IMPLEMENT_AST_OPERATORS(At_Root_Block);
-  IMPLEMENT_AST_OPERATORS(While);
-  IMPLEMENT_AST_OPERATORS(Each);
-  IMPLEMENT_AST_OPERATORS(For);
-  IMPLEMENT_AST_OPERATORS(If);
-  IMPLEMENT_AST_OPERATORS(Mixin_Call);
-  IMPLEMENT_AST_OPERATORS(ExtendRule);
-  IMPLEMENT_AST_OPERATORS(Debug);
-  IMPLEMENT_AST_OPERATORS(Error);
-  IMPLEMENT_AST_OPERATORS(Warning);
-  IMPLEMENT_AST_OPERATORS(Assignment);
-  IMPLEMENT_AST_OPERATORS(Return);
-  IMPLEMENT_AST_OPERATORS(At_Root_Query);
-  IMPLEMENT_AST_OPERATORS(LoudComment);
-  IMPLEMENT_AST_OPERATORS(SilentComment);
-  IMPLEMENT_AST_OPERATORS(Parameters);
-  IMPLEMENT_AST_OPERATORS(Parameter);
-  IMPLEMENT_AST_OPERATORS(Arguments);
+  // IMPLEMENT_AST_OPERATORS(At_Root_Block);
+  // IMPLEMENT_AST_OPERATORS(While);
+  // IMPLEMENT_AST_OPERATORS(Each);
+  // IMPLEMENT_AST_OPERATORS(For);
+  // IMPLEMENT_AST_OPERATORS(If);
+  // IMPLEMENT_AST_OPERATORS(Mixin_Call);
+  // IMPLEMENT_AST_OPERATORS(ExtendRule);
+  // IMPLEMENT_AST_OPERATORS(Debug);
+  // IMPLEMENT_AST_OPERATORS(Error);
+  // IMPLEMENT_AST_OPERATORS(Warning);
+  // IMPLEMENT_AST_OPERATORS(Assignment);
+  // IMPLEMENT_AST_OPERATORS(Return);
+  // IMPLEMENT_AST_OPERATORS(At_Root_Query);
+  // IMPLEMENT_AST_OPERATORS(LoudComment);
+  // IMPLEMENT_AST_OPERATORS(SilentComment);
+  // IMPLEMENT_AST_OPERATORS(Parameters);
+  // IMPLEMENT_AST_OPERATORS(Parameter);
+  // IMPLEMENT_AST_OPERATORS(Arguments);
   IMPLEMENT_AST_OPERATORS(Argument);
-  IMPLEMENT_AST_OPERATORS(Unary_Expression);
-  IMPLEMENT_AST_OPERATORS(ParenthesizedExpression);
-  IMPLEMENT_AST_OPERATORS(Block);
-  IMPLEMENT_AST_OPERATORS(Content);
-  IMPLEMENT_AST_OPERATORS(Trace);
+  // IMPLEMENT_AST_OPERATORS(Unary_Expression);
+  // IMPLEMENT_AST_OPERATORS(ParenthesizedExpression);
+  // IMPLEMENT_AST_OPERATORS(Block);
+  // IMPLEMENT_AST_OPERATORS(Content);
+  // IMPLEMENT_AST_OPERATORS(Trace);
   IMPLEMENT_AST_OPERATORS(Keyframe_Rule);
-  IMPLEMENT_AST_OPERATORS(Bubble);
+  // IMPLEMENT_AST_OPERATORS(Bubble);
   IMPLEMENT_AST_OPERATORS(Definition);
-  IMPLEMENT_AST_OPERATORS(Declaration);
+  // IMPLEMENT_AST_OPERATORS(Declaration);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+  SassList* list_to_sass_list(List* list) {
+    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), list->separator());
+    rv->hasBrackets(list->is_bracketed());
+    for (auto item : list->elements()) {
+      rv->append(item);
+    }
+    return rv;
+  }
+
+  List* sass_list_to_list(SassList* list) {
+    List* rv = SASS_MEMORY_NEW(List, list->pstate(), 0, list->separator());
+    rv->is_bracketed(list->hasBrackets());
+    for (auto item : list->elements()) {
+      rv->append(item);
+    }
+    return rv;
+  }
 
 }

@@ -129,11 +129,14 @@ namespace Sass {
       ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  class CssSupportsRule : public CssNode {
+  class CssSupportsRule : public CssParentNode {
+    ADD_PROPERTY(ExpressionObj, condition);
   public:
-    CssSupportsRule(ParserState pstate);
+    CssSupportsRule(ParserState pstate, ExpressionObj condition);
+    bool is_invisible() const override;
+    bool bubbles() override;
     ATTACH_COPY_OPERATIONS(CssSupportsRule)
-      ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
 

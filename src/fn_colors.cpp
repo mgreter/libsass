@@ -99,7 +99,7 @@ namespace Sass {
       }
     }
 
-    Number* getColorScale(environment_map(ExpressionObj)& keywords, const std::string& name, ParserState pstate, Backtraces traces)
+    Number* getColorScale(NormalizedMap<ExpressionObj>& keywords, const std::string& name, ParserState pstate, Backtraces traces)
     {
 
       auto pos = keywords.find(name);
@@ -112,6 +112,7 @@ namespace Sass {
         }
         if (nr->value() < -100.0 || nr->value() > 100.0) {
           std::stringstream msg;
+          if (!name.empty()) msg << name << ": ";
           msg << "Expected " << nr->to_string();
           msg << " to be within -100% and 100%.";
           error(msg.str(), nr->pstate(), traces);
@@ -127,7 +128,7 @@ namespace Sass {
     }
 
 
-    Number* getColorArg(environment_map(ExpressionObj)& keywords, const std::string& name, ParserState pstate, Backtraces traces)
+    Number* getColorArg(NormalizedMap<ExpressionObj>& keywords, const std::string& name, ParserState pstate, Backtraces traces)
     {
 
       auto pos = keywords.find(name);
@@ -144,7 +145,7 @@ namespace Sass {
       return nullptr;
     }
 
-    Number* getColorArgInRange(environment_map(ExpressionObj)& keywords, const std::string& name, double lo, double hi, ParserState pstate, Backtraces traces)
+    Number* getColorArgInRange(NormalizedMap<ExpressionObj>& keywords, const std::string& name, double lo, double hi, ParserState pstate, Backtraces traces)
     {
 
       auto pos = keywords.find(name);
@@ -155,7 +156,7 @@ namespace Sass {
           // error(name + ": Expected " + ex->to_string() +
           //   " to have unit \"%\".", ex->pstate(), traces);
         }
-        valueInRange(nr->value(), lo, hi, "", nr->pstate(), traces);
+        valueInRange(nr->value(), lo, hi, name, nr->pstate(), traces);
         keywords.erase(name);
         return nr;
       }
@@ -196,15 +197,15 @@ namespace Sass {
           pstate, fncall.str());
       }
 
-      List* list = Cast<List>(channels);
+      SassList* list = Cast<SassList>(channels);
 
       if (!list) {
-        list = SASS_MEMORY_NEW(List, pstate);
+        list = SASS_MEMORY_NEW(SassList, pstate);
         list->append(channels);
       }
 
       bool isCommaSeparated = list->separator() == SASS_COMMA;
-      bool isBracketed = list->is_bracketed();
+      bool isBracketed = list->hasBrackets();
       if (isCommaSeparated || isBracketed) {
         std::stringstream msg;
         msg << "$channels must be";
@@ -253,7 +254,7 @@ namespace Sass {
       Number* secondNumber = Cast<Number>(list->get(2));
       String_Constant* secondString = Cast<String_Constant>(list->get(2));
       if (secondNumber && secondNumber->hasAsSlash()) {
-        List* rv = SASS_MEMORY_NEW(List, pstate);
+        SassList* rv = SASS_MEMORY_NEW(SassList, pstate);
         rv->append(list->get(0));
         rv->append(list->get(1));
         rv->append(secondNumber->lhsAsSlash());
@@ -351,7 +352,75 @@ namespace Sass {
 
     }
 
+    Value* _rgb(std::string name, std::vector<ValueObj> arguments, Signature sig, ParserState pstate, Backtraces traces)
+    {
+      AST_Node* _r = arguments[0];
+      AST_Node* _g = arguments[1];
+      AST_Node* _b = arguments[2];
+      AST_Node* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a)) {
+        std::stringstream fncall;
+        fncall << name << "(";
+        fncall << _r->to_css() << ", ";
+        fncall << _g->to_css() << ", ";
+        fncall << _b->to_css();
+        if (_a) { fncall << ", " << _a->to_css(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(StringLiteral, pstate, fncall.str());
+      }
+
+      Number* r = assertNumber(_r, "$red", pstate, traces);
+      Number* g = assertNumber(_g, "$green", pstate, traces);
+      Number* b = assertNumber(_b, "$blue", pstate, traces);
+      Number* a = _a ? assertNumber(_a, "$alpha", pstate, traces) : nullptr;
+
+      return SASS_MEMORY_NEW(Color_RGBA, pstate,
+        fuzzyRound(_percentageOrUnitless(r, 255, "$red", traces)),
+        fuzzyRound(_percentageOrUnitless(g, 255, "$green", traces)),
+        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", traces)),
+        a ? _percentageOrUnitless(a, 1.0, "$alpha", traces) : 1.0);
+
+    }
+
     Value* _hsl(std::string name, std::vector<ExpressionObj> arguments, Signature sig, ParserState pstate, Backtraces traces)
+    {
+      AST_Node* _h = arguments[0];
+      AST_Node* _s = arguments[1];
+      AST_Node* _l = arguments[2];
+      AST_Node* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a)) {
+        std::stringstream fncall;
+        fncall << name << "(";
+        fncall << _h->to_css() << ", ";
+        fncall << _s->to_css() << ", ";
+        fncall << _l->to_css();
+        if (_a) { fncall << ", " << _a->to_css(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(StringLiteral, pstate, fncall.str());
+      }
+
+      Number* h = assertNumber(_h, "$hue", pstate, traces);
+      Number* s = assertNumber(_s, "$saturation", pstate, traces);
+      Number* l = assertNumber(_l, "$lightness", pstate, traces);
+      Number* a = _a ? assertNumber(_a, "$alpha", pstate, traces) : nullptr;
+
+      return SASS_MEMORY_NEW(Color_HSLA, pstate,
+        h->value(),
+        clamp(s->value(), 0.0, 100.0),
+        clamp(l->value(), 0.0, 100.0),
+        a ? _percentageOrUnitless(a, 1.0, "$alpha", traces) : 1.0);
+
+    }
+
+    Value* _hsl(std::string name, std::vector<ValueObj> arguments, Signature sig, ParserState pstate, Backtraces traces)
     {
       AST_Node* _h = arguments[0];
       AST_Node* _s = arguments[1];
@@ -478,6 +547,9 @@ namespace Sass {
       if (List * list = Cast<List>(parsed)) {
         return _rgb("rgba", list->elements(), rgba_1_sig, pstate, traces);
       }
+      if (SassList * list = Cast<SassList>(parsed)) {
+        return _rgb("rgba", list->elements(), rgba_1_sig, pstate, traces);
+      }
       return nullptr;
     }
 
@@ -514,6 +586,9 @@ namespace Sass {
         return str;
       }
       if (List * list = Cast<List>(parsed)) {
+        return _rgb("rgb", list->elements(), rgb_1_sig, pstate, traces);
+      }
+      if (SassList * list = Cast<SassList>(parsed)) {
         return _rgb("rgb", list->elements(), rgb_1_sig, pstate, traces);
       }
       return nullptr;
@@ -568,6 +643,9 @@ namespace Sass {
       if (List * list = Cast<List>(parsed)) {
         return _hsl("hsl", list->elements(), hsl_1_sig, pstate, traces);
       }
+      if (SassList * list = Cast<SassList>(parsed)) {
+        return _hsl("hsl", list->elements(), hsl_1_sig, pstate, traces);
+      }
       return nullptr;
     }
 
@@ -618,6 +696,9 @@ namespace Sass {
         return str;
       }
       if (List * list = Cast<List>(parsed)) {
+        return _hsl("hsla", list->elements(), hsla_1_sig, pstate, traces);
+      }
+      if (SassList * list = Cast<SassList>(parsed)) {
         return _hsl("hsla", list->elements(), hsla_1_sig, pstate, traces);
       }
       return nullptr;
@@ -758,7 +839,7 @@ namespace Sass {
       Number* amount = ARGNUM("$amount");
       Color_HSLA_Obj copy = color->copyAsHSLA();
       valueInRange(amount->value(), 0.0, 100.0,
-        "", amount->pstate(), traces);
+        "$amount", amount->pstate(), traces);
       copy->s(clip(copy->s() + amount->value(), 0.0, 100.0));
       return copy.detach();
     }
@@ -879,7 +960,7 @@ namespace Sass {
       Color* color = assertColor(arguments[0], "$color", pstate, traces);
       List* argumentList = Cast<List>(arguments[1]); // is rest...
       checkPositionalArgs(argumentList, traces);
-      environment_map(ExpressionObj) keywords =
+      NormalizedMap<ExpressionObj> keywords =
         argumentList->getNormalizedArgMap();
 
       // ToDo _fuzzyRoundOrNull
@@ -952,7 +1033,7 @@ namespace Sass {
       Color* color = assertColor(arguments[0], "$color", pstate, traces);
       List* argumentList = Cast<List>(arguments[1]); // is rest...
       checkPositionalArgs(argumentList, traces);
-      environment_map(ExpressionObj) keywords =
+      NormalizedMap<ExpressionObj> keywords =
         argumentList->getNormalizedArgMap();
 
       Number* r = getColorScale(keywords, "$red", pstate, traces);
@@ -1022,7 +1103,7 @@ namespace Sass {
       Color* color = assertColor(arguments[0], "$color", pstate, traces);
       List* argumentList = Cast<List>(arguments[1]); // is rest...
       checkPositionalArgs(argumentList, traces);
-      environment_map(ExpressionObj) keywords =
+      NormalizedMap<ExpressionObj> keywords =
         argumentList->getNormalizedArgMap();
 
       // ToDo _fuzzyRoundOrNull

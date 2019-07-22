@@ -42,7 +42,11 @@ class LocalOption {
 
 #define NESTING_GUARD(name) \
   LocalOption<size_t> cnt_##name(name, name + 1); \
-  if (name > MAX_NESTING) throw Exception::NestingLimitError(pstate, traces); \
+  if (name > MAX_NESTING) throw Exception::RecursionLimitError(scanner.pstate(), {}); \
+
+#define RECURSION_GUARD(name, pstate) \
+  LocalOption<size_t> cnt_##name(name, name + 1); \
+  if (name > MAX_NESTING) throw Exception::RecursionLimitError(pstate, traces); \
 
 #define ADD_PROPERTY(type, name)\
 protected:\
@@ -79,13 +83,21 @@ private:
 #ifdef DEBUG_SHARED_PTR
 
 #define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
-  virtual klass* copy(std::string, size_t) const = 0; \
-  virtual klass* clone(std::string, size_t) const = 0; \
+  virtual klass* copy(std::string, size_t) const { \
+    throw std::runtime_error("Copy not implemented"); \
+  } \
+  virtual klass* clone(std::string, size_t) const { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
 
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
-  virtual klass* copy(std::string, size_t) const override = 0; \
-  virtual klass* clone(std::string, size_t) const override = 0; \
+  virtual klass* copy(std::string, size_t) const override { \
+    throw std::runtime_error("Copy not implemented"); \
+  } \
+  virtual klass* clone(std::string, size_t) const override { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
 
 #define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
@@ -95,13 +107,21 @@ private:
 #else
 
 #define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
-  virtual klass* copy() const = 0; \
-  virtual klass* clone() const = 0; \
+  virtual klass* copy() const { \
+    throw std::runtime_error("Copy not implemented"); \
+  } \
+  virtual klass* clone() const { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
 
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
-  virtual klass* copy() const override = 0; \
-  virtual klass* clone() const override = 0; \
+  virtual klass* copy() const override { \
+    throw std::runtime_error("Copy not implemented"); \
+  } \
+  virtual klass* clone() const override { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
 
 #define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \

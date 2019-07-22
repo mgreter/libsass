@@ -4,6 +4,8 @@
 #include "sass.hpp"
 #include "ast.hpp"
 
+#include "LUrlParser/LUrlParser.hpp"
+
 #include "charcode.hpp"
 #include "character.hpp"
 #include "util_string.hpp"
@@ -84,7 +86,7 @@ namespace Sass {
     bool guarded = false;
     bool global = false;
 
-    Position flagStart(scanner.offset);
+    Position flagStart(scanner);
     while (scanner.scanChar($exclamation)) {
        std::string flag = identifier();
        if (flag == "default") {
@@ -322,9 +324,9 @@ namespace Sass {
     try {
 
       if (lookingAtChildren()) {
-        ParserState pstate = scanner.pstate(scanner.offset);
+        ParserState pstate = scanner.pstate(scanner);
         Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, pstate);
-        value = SASS_MEMORY_NEW(StringExpression2, pstate, itpl, true);
+        value = SASS_MEMORY_NEW(StringExpression, pstate, itpl, true);
       }
       else {
         value = expression();
@@ -703,9 +705,9 @@ namespace Sass {
     // buffer.write($rparen);
     // ex2 = buffer2.toSchema();
 
-    List* lst = Cast<List>(ex2);
+    ListExpression* lst = Cast<ListExpression>(ex2);
     if (lst == nullptr) {
-      lst = SASS_MEMORY_NEW(List, "[pstate]");
+      lst = SASS_MEMORY_NEW(ListExpression, "[pstate]");
       lst->append(ex2);
     }
 
@@ -947,10 +949,12 @@ namespace Sass {
       }
       else if (auto stat = Cast<StaticImport>(argument)) {
         imp->urls().push_back(stat->url());
-        if (!imp->import_queries()) {
-          imp->import_queries(SASS_MEMORY_NEW(List, "[pstate]"));
+        // if (!imp->import_queries()) {
+          // imp->import_queries(SASS_MEMORY_NEW(List, "[pstate]"));
+        // }
+        if (stat->media()) {
+          imp->queries2().push_back(stat->media());
         }
-        if (stat->media()) imp->import_queries()->append(stat->media());
       }
       else if (auto imp2 = Cast<Import>(argument)) {
         for (auto inc : imp2->incs()) {
@@ -1043,11 +1047,21 @@ namespace Sass {
   /*
   std::string StylesheetParser::parseImportUrl(std::string url)
   {
+
     // Backwards-compatibility for implementations that
     // allow absolute Windows paths in imports.
-    // if (p.windows.isAbsolute(url)) {
+    if (File::is_absolute_path(url)) {
     //   return p.windows.toUri(url).toString();
-    // }
+    }
+    
+
+    using LUrlParser::clParseURL;
+    clParseURL clURL = clParseURL::ParseURL(url);
+
+    if (clURL.IsValid()) {
+
+    }
+
 
     // Throw a [FormatException] if [url] is invalid.
     // Uri.parse(url);
@@ -1070,16 +1084,16 @@ namespace Sass {
 
   // Consumes a supports condition and/or a media query after an `@import`.
   // Returns `null` if neither type of query can be found.
-  std::pair<Supports_Condition_Obj, InterpolationObj> StylesheetParser::tryImportQueries()
+  std::pair<SupportsCondition_Obj, InterpolationObj> StylesheetParser::tryImportQueries()
   {
-    Supports_Condition_Obj supports;
+    SupportsCondition_Obj supports;
     if (scanIdentifier("supports")) {
       scanner.expectChar($lparen);
       Position start(scanner);
       if (scanIdentifier("not")) {
         whitespace();
-        Supports_Condition* condition = _supportsConditionInParens();
-        supports = SASS_MEMORY_NEW(Supports_Negation,
+        SupportsCondition* condition = _supportsConditionInParens();
+        supports = SASS_MEMORY_NEW(SupportsNegation,
           scanner.pstate(start), condition);
       }
       else if (scanner.peekChar() == $lparen) {
@@ -1090,7 +1104,7 @@ namespace Sass {
         scanner.expectChar($colon);
         whitespace();
         Expression* value = expression();
-        supports = SASS_MEMORY_NEW(Supports_Declaration,
+        supports = SASS_MEMORY_NEW(SupportsDeclaration,
           scanner.pstate(start), name, value);
       }
       scanner.expectChar($rparen);
@@ -1218,7 +1232,7 @@ namespace Sass {
   AtRule* StylesheetParser::mozDocumentRule(Position start, Interpolation* name)
   {
 
-    Position valueStart(scanner.offset);
+    Position valueStart(scanner);
     InterpolationBuffer buffer;
     // bool needsDeprecationWarning = false;
 
@@ -1241,7 +1255,7 @@ namespace Sass {
           else {
             scanner.expectChar($lparen);
             whitespace();
-            StringExpression2Obj argument = interpolatedString();
+            StringExpressionObj argument = interpolatedString();
             scanner.expectChar($rparen);
 
             buffer.write(identifier);
@@ -1262,7 +1276,7 @@ namespace Sass {
         else if (identifier == "regexp") {
           buffer.write("regexp(");
           scanner.expectChar($lparen);
-          StringExpression2Obj str = interpolatedString();
+          StringExpressionObj str = interpolatedString();
           buffer.addInterpolation(str->getAsInterpolation());
           scanner.expectChar($rparen);
           buffer.write($rparen);
@@ -1320,11 +1334,11 @@ relase. For details, see http://bit.ly/moz-document.
 
   // Consumes a `@supports` rule.
   // [start] should point before the `@`.
-  Supports_Block* StylesheetParser::supportsRule(Position start)
+  SupportsRule* StylesheetParser::supportsRule(Position start)
   {
     auto condition = _supportsCondition();
     whitespace();
-    return _withChildren<Supports_Block>(
+    return _withChildren<SupportsRule>(
       &StylesheetParser::_childStatement,
       condition);
   }
@@ -1409,14 +1423,10 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.expectChar($lparen);
     whitespace();
     std::vector<ParameterObj> parameters;
-    std::unordered_set<
-      std::string,
-      Util::hashIgnoreSeparator,
-      Util::equalsIgnoreSeparator
-    > named;
+    NormalizeSet named;
     std::string restArgument;
     while (scanner.peekChar() == $dollar) {
-      Position variableStart(scanner.offset);
+      Position variableStart(scanner);
       std::string name(variableName());
       whitespace();
 
@@ -1470,12 +1480,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     std::vector<ExpressionObj> positional;
 
-    std::unordered_map<
-      std::string,
-      ExpressionObj,
-      Util::hashIgnoreSeparator,
-      Util::equalsIgnoreSeparator
-    > named;
+    NormalizedMap<ExpressionObj> named;
 
     // Convert to old libsass arguments (ToDo: refactor)
     ArgumentsObj args = SASS_MEMORY_NEW(Arguments,
@@ -1549,6 +1554,8 @@ relase. For details, see http://bit.ly/moz-document.
   Expression* StylesheetParser::expression(bool bracketList, bool singleEquals, bool(StylesheetParser::* until)())
   {
 
+    NESTING_GUARD(_recursion);
+
     if (until != nullptr && (this->*until)()) {
       scanner.error("Expected expression.");
     }
@@ -1561,9 +1568,9 @@ relase. For details, see http://bit.ly/moz-document.
       whitespace();
 
       if (scanner.scanChar($rbracket)) {
-        List* list = SASS_MEMORY_NEW(List,
-          scanner.pstate(start), 0, SASS_UNDEF);
-        list->is_bracketed(true);
+        ListExpression* list = SASS_MEMORY_NEW(ListExpression,
+          scanner.pstate(start), SASS_UNDEF);
+        list->hasBrackets(true);
         return list;
       }
     }
@@ -1842,30 +1849,30 @@ relase. For details, see http://bit.ly/moz-document.
       if (ep.singleExpression != nullptr) {
         ep.commaExpressions.push_back(ep.singleExpression);
       }
-      List* list = SASS_MEMORY_NEW(List,
-        scanner.pstate(start), 0, SASS_COMMA);
+      ListExpression* list = SASS_MEMORY_NEW(ListExpression,
+        scanner.pstate(start), SASS_COMMA);
       list->concat(ep.commaExpressions);
-      list->is_bracketed(bracketList);
+      list->hasBrackets(bracketList);
       return list;
     }
     else if (bracketList &&
         !ep.spaceExpressions.empty() &&
         ep.singleEqualsOperand == nullptr) {
       ep.resolveOperations();
-      List* list = SASS_MEMORY_NEW(List,
-        scanner.pstate(start), 0, SASS_SPACE);
+      ListExpression* list = SASS_MEMORY_NEW(ListExpression,
+        scanner.pstate(start), SASS_SPACE);
       ep.spaceExpressions.push_back(ep.singleExpression);
       list->concat(ep.spaceExpressions);
-      list->is_bracketed(true);
+      list->hasBrackets(true);
       return list;
     }
     else {
       ep.resolveSpaceExpressions();
       if (bracketList) {
-        List* list = SASS_MEMORY_NEW(List,
-          scanner.pstate(start), 0, SASS_UNDEF);
+        ListExpression* list = SASS_MEMORY_NEW(ListExpression,
+          scanner.pstate(start), SASS_UNDEF);
         list->append(ep.singleExpression);
-        list->is_bracketed(true);
+        list->hasBrackets(true);
         return list;
       }
       return ep.singleExpression.detach();
@@ -1889,6 +1896,7 @@ relase. For details, see http://bit.ly/moz-document.
   // Consumes an expression that doesn't contain any top-level whitespace.
   Expression* StylesheetParser::_singleExpression()
   {
+    NESTING_GUARD(_recursion);
     uint8_t first = scanner.peekChar();
     switch (first) {
       // Note: when adding a new case, make sure it's reflected in
@@ -2026,9 +2034,9 @@ relase. For details, see http://bit.ly/moz-document.
     if (!_lookingAtExpression()) {
       scanner.expectChar($rparen);
       // ToDo: ListExpression
-      return SASS_MEMORY_NEW(List,
+      return SASS_MEMORY_NEW(ListExpression,
         scanner.pstate(start),
-        0, SASS_UNDEF);
+        SASS_UNDEF);
     }
 
     ExpressionObj first = _expressionUntilComma();
@@ -2048,9 +2056,11 @@ relase. For details, see http://bit.ly/moz-document.
       expressions = { first };
 
     // We did parse a comma above
-    ListObj list = SASS_MEMORY_NEW(List,
+// This one fails
+    ListExpressionObj list = SASS_MEMORY_NEW(
+      ListExpression,
       scanner.pstate(start),
-      1, SASS_COMMA);
+      SASS_COMMA);
 
     while (true) {
       if (!_lookingAtExpression()) {
@@ -2066,9 +2076,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     scanner.expectChar($rparen);
     // ToDo: ListExpression
-    for (auto item : expressions) {
-      list->append(item);
-    }
+    list->concat(expressions);
     list->update_pstate(scanner.pstate(start));
     return list.detach();
   }
@@ -2077,11 +2085,13 @@ relase. For details, see http://bit.ly/moz-document.
   // Consumes a map expression. This expects to be called after the
   // first colon in the map, with [first] as the expression before
   // the colon and [start] the point before the opening parenthesis.
-  List* StylesheetParser::_map(Expression* first, Position start)
+  Expression* StylesheetParser::_map(Expression* first, Position start)
   {
-    ListObj map = SASS_MEMORY_NEW(List,
-      scanner.pstate(start),
-      0, SASS_HASH);
+    // ListObj map = SASS_MEMORY_NEW(List,
+    //   scanner.pstate(start),
+    //   0, SASS_HASH);
+    MapExpressionObj map = SASS_MEMORY_NEW(
+      MapExpression, scanner.pstate(start));
 
     map->append(first);
     map->append(_expressionUntilComma());
@@ -2131,7 +2141,7 @@ relase. For details, see http://bit.ly/moz-document.
     buffer.write($hash);
     buffer.addInterpolation(identifier);
     ParserState pstate(scanner.pstate(start));
-    return SASS_MEMORY_NEW(StringExpression2,
+    return SASS_MEMORY_NEW(StringExpression,
       pstate, buffer.getInterpolation(pstate));
   }
 
@@ -2241,7 +2251,7 @@ relase. For details, see http://bit.ly/moz-document.
   // EO _minusExpression
 
   // Consumes an `!important` expression.
-  StringExpression2* StylesheetParser::_importantExpression()
+  StringExpression* StylesheetParser::_importantExpression()
   {
     SASS_ASSERT(scanner.peekChar() == $exclamation,
       "importantExpression expects an exclamation");
@@ -2249,7 +2259,7 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.readChar();
     whitespace();
     expectIdentifier("important");
-    return StringExpression2::plain(
+    return StringExpression::plain(
       scanner.pstate(start), "!important");
   }
   // EO _importantExpression
@@ -2377,7 +2387,7 @@ relase. For details, see http://bit.ly/moz-document.
   // EO _tryExponent
 
   // Consumes a unicode range expression.
-  StringExpression2* StylesheetParser::_unicodeRange()
+  StringExpression* StylesheetParser::_unicodeRange()
   {
     LineScannerState2 state = scanner.state();
     expectCharIgnoreCase($u);
@@ -2393,7 +2403,7 @@ relase. For details, see http://bit.ly/moz-document.
       for (; i < 6; i++) {
         if (!scanner.scanChar($question)) break;
       }
-      return StringExpression2::plain(
+      return StringExpression::plain(
         scanner.spanFrom(state.offset),
         scanner.substring(state.position)
       );
@@ -2412,7 +2422,7 @@ relase. For details, see http://bit.ly/moz-document.
       scanner.error("Expected end of identifier.");
     }
 
-    return StringExpression2::plain(
+    return StringExpression::plain(
       scanner.pstate(state.offset),
       scanner.substring(state.position)
     );
@@ -2469,7 +2479,7 @@ relase. For details, see http://bit.ly/moz-document.
   // _selector
 
   // Consumes a quoted string expression.
-  StringExpression2* StylesheetParser::interpolatedString()
+  StringExpression* StylesheetParser::interpolatedString()
   {
     // NOTE: this logic is largely duplicated in ScssParser.interpolatedString.
     // Most changes here should be mirrored there.
@@ -2494,7 +2504,9 @@ relase. For details, see http://bit.ly/moz-document.
         break;
       }
       else if (next == $nul || isNewline(next)) {
-        scanner.error("Expected ${String.fromCharCode(quote)}.");
+        std::stringstream strm;
+        strm << "Expected " << quote << ".";
+        scanner.error(strm.str());
       }
       else if (next == $backslash) {
         if (!scanner.peekChar(second, 1)) {
@@ -2523,7 +2535,7 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     InterpolationObj itpl = buffer.getInterpolation();
-    return SASS_MEMORY_NEW(StringExpression2,
+    return SASS_MEMORY_NEW(StringExpression,
       itpl->pstate(), itpl, true);
 
   }
@@ -2587,12 +2599,12 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     std::string ns;
-    Position beforeName(scanner.offset);
+    Position beforeName(scanner);
     uint8_t next = scanner.peekChar();
     if (next == $dot) {
 
       if (scanner.peekChar(1) == $dot) {
-        return SASS_MEMORY_NEW(StringExpression2,
+        return SASS_MEMORY_NEW(StringExpression,
           scanner.pstate(beforeName), identifier);
       }
 
@@ -2620,7 +2632,7 @@ relase. For details, see http://bit.ly/moz-document.
         scanner.pstate(start), identifier, args, ns);
     }
     else {
-      return SASS_MEMORY_NEW(StringExpression2,
+      return SASS_MEMORY_NEW(StringExpression,
         identifier->pstate(), identifier);
     }
 
@@ -2629,7 +2641,7 @@ relase. For details, see http://bit.ly/moz-document.
 
   // If [name] is the name of a function with special syntax, consumes it.
   // Otherwise, returns `null`. [start] is the location before the beginning of [name].
-  StringExpression2* StylesheetParser::trySpecialFunction(std::string name, LineScannerState2 start)
+  StringExpression* StylesheetParser::trySpecialFunction(std::string name, LineScannerState2 start)
   {
     uint8_t next = 0;
     InterpolationBuffer buffer;
@@ -2655,7 +2667,7 @@ relase. For details, see http://bit.ly/moz-document.
         return nullptr;
       }
 
-      return SASS_MEMORY_NEW(StringExpression2,
+      return SASS_MEMORY_NEW(StringExpression,
         scanner.pstate(start), buffer.getInterpolation());
     }
     else if (normalized == "progid") {
@@ -2672,19 +2684,19 @@ relase. For details, see http://bit.ly/moz-document.
     else if (normalized == "url") {
       InterpolationObj contents = _tryUrlContents(start);
       if (contents == nullptr) return nullptr;
-      return SASS_MEMORY_NEW(StringExpression2,
+      return SASS_MEMORY_NEW(StringExpression,
         scanner.pstate(start), contents);
     }
     else {
       return nullptr;
     }
 
-    StringExpression2Obj qwe = _interpolatedDeclarationValue(true);
+    StringExpressionObj qwe = _interpolatedDeclarationValue(true);
     buffer.addInterpolation(qwe->text());
     scanner.expectChar($rparen);
     buffer.write($rparen);
 
-    return SASS_MEMORY_NEW(StringExpression2,
+    return SASS_MEMORY_NEW(StringExpression,
       scanner.pstate(start), buffer.getInterpolation());
   }
   // trySpecialFunction
@@ -2810,7 +2822,7 @@ relase. For details, see http://bit.ly/moz-document.
     if (!scanner.scanChar($lparen)) return false;
     buffer.write(name);
     buffer.write($lparen);
-    StringExpression2Obj decl = _interpolatedDeclarationValue(true);
+    StringExpressionObj decl = _interpolatedDeclarationValue(true);
     buffer.addInterpolation(decl->getAsInterpolation());
     buffer.write($rparen);
     if (!scanner.scanChar($rparen)) return false;
@@ -2887,7 +2899,7 @@ relase. For details, see http://bit.ly/moz-document.
       scanner.pstate(start), fnName);
     InterpolationObj contents = _tryUrlContents(start);
     if (contents != nullptr) {
-      return SASS_MEMORY_NEW(StringExpression2,
+      return SASS_MEMORY_NEW(StringExpression,
         scanner.pstate(start), contents);
     }
 
@@ -2912,7 +2924,7 @@ relase. For details, see http://bit.ly/moz-document.
     // const char* start = scanner.position;
     InterpolationBuffer buffer;
     const char* commentStart;
-    StringExpression2Obj strex;
+    StringExpressionObj strex;
     LineScannerState2 start = scanner.state();
     Interpolation* contents;
     uint8_t next = 0;
@@ -3006,7 +3018,7 @@ relase. For details, see http://bit.ly/moz-document.
   // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`, or `"}"` and 
   // returns their contents as a string. If [allowEmpty] is `false` (the default), this
   // requires at least one token. Unlike [declarationValue], this allows interpolation.
-  StringExpression2* StylesheetParser::_interpolatedDeclarationValue(bool allowEmpty)
+  StringExpression* StylesheetParser::_interpolatedDeclarationValue(bool allowEmpty)
   {
     // NOTE: this logic is largely duplicated in Parser.declarationValue and
     // isIdentifier in utils.dart. Most changes here should be mirrored there.
@@ -3020,7 +3032,7 @@ relase. For details, see http://bit.ly/moz-document.
     uint8_t next = 0;
 
     InterpolationObj itpl;
-    StringExpression2Obj strex;
+    StringExpressionObj strex;
 
     while (true) {
       if (!scanner.peekChar(next)) {
@@ -3146,7 +3158,7 @@ relase. For details, see http://bit.ly/moz-document.
       scanner.error("Expected token.");
     }
     itpl = buffer.getInterpolation();
-    return SASS_MEMORY_NEW(StringExpression2,
+    return SASS_MEMORY_NEW(StringExpression,
       scanner.spanFrom(start), itpl);
 
   }
@@ -3368,7 +3380,7 @@ relase. For details, see http://bit.ly/moz-document.
   }
 
   // Consumes a `@supports` condition.
-  Supports_Condition* StylesheetParser::_supportsCondition()
+  SupportsCondition* StylesheetParser::_supportsCondition()
   {
     Position start(scanner);
     uint8_t first = scanner.peekChar();
@@ -3376,28 +3388,28 @@ relase. For details, see http://bit.ly/moz-document.
       Position start(scanner);
       expectIdentifier("not");
       whitespace();
-      return SASS_MEMORY_NEW(Supports_Negation,
+      return SASS_MEMORY_NEW(SupportsNegation,
         scanner.pstate(start), _supportsConditionInParens());
     }
 
-    Supports_Condition_Obj condition =
+    SupportsCondition_Obj condition =
       _supportsConditionInParens();
     whitespace();
     while (lookingAtIdentifier()) {
-      Supports_Operator::Operand op;
+      SupportsOperation::Operand op;
       if (scanIdentifier("or")) {
-        op = Supports_Operator::OR;
+        op = SupportsOperation::OR;
       }
       else {
         expectIdentifier("and");
-        op = Supports_Operator::AND;
+        op = SupportsOperation::AND;
       }
 
       whitespace();
-      Supports_Condition_Obj right =
+      SupportsCondition_Obj right =
         _supportsConditionInParens();
       
-      condition = SASS_MEMORY_NEW(Supports_Operator,
+      condition = SASS_MEMORY_NEW(SupportsOperation,
         scanner.pstate(start), condition, right, op);
       whitespace();
     }
@@ -3407,11 +3419,11 @@ relase. For details, see http://bit.ly/moz-document.
   // EO _supportsCondition
 
   // Consumes a parenthesized supports condition, or an interpolation.
-  Supports_Condition* StylesheetParser::_supportsConditionInParens()
+  SupportsCondition* StylesheetParser::_supportsConditionInParens()
   {
     Position start(scanner);
     if (scanner.peekChar() == $hash) {
-      return SASS_MEMORY_NEW(Supports_Interpolation,
+      return SASS_MEMORY_NEW(SupportsInterpolation,
         scanner.pstate(start), singleInterpolation());
     }
 
@@ -3419,7 +3431,7 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
     uint8_t next = scanner.peekChar();
     if (next == $lparen || next == $hash) {
-      Supports_Condition_Obj condition
+      SupportsCondition_Obj condition
         = _supportsCondition();
       whitespace();
       scanner.expectChar($rparen);
@@ -3427,7 +3439,7 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     if (next == $n || next == $N) {
-      Supports_Negation_Obj negation
+      SupportsNegation_Obj negation
         = _trySupportsNegation();
       if (negation != nullptr) {
         scanner.expectChar($rparen);
@@ -3441,13 +3453,13 @@ relase. For details, see http://bit.ly/moz-document.
     ExpressionObj value = expression();
     scanner.expectChar($rparen);
 
-    return SASS_MEMORY_NEW(Supports_Declaration,
+    return SASS_MEMORY_NEW(SupportsDeclaration,
       scanner.pstate(start), name, value);
   }
   // EO _supportsConditionInParens
 
   // Tries to consume a negated supports condition. Returns `null` if it fails.
-  Supports_Negation* StylesheetParser::_trySupportsNegation()
+  SupportsNegation* StylesheetParser::_trySupportsNegation()
   {
     LineScannerState2 start = scanner.state();
     if (!scanIdentifier("not") || scanner.isDone()) {
@@ -3463,7 +3475,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     whitespace();
 
-    return SASS_MEMORY_NEW(Supports_Negation,
+    return SASS_MEMORY_NEW(SupportsNegation,
       scanner.pstate(start),
       _supportsConditionInParens());
 

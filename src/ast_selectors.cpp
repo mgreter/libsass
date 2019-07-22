@@ -98,7 +98,7 @@ namespace Sass {
   bool SimpleSelector::has_real_parent_ref() const
   {
     return false;
-  };
+  }
 
   CompoundSelectorObj SimpleSelector::wrapInCompound()
   {
@@ -456,10 +456,6 @@ namespace Sass {
     combinator_(combinator)
   {
   }
-  SelectorCombinator::SelectorCombinator(const SelectorCombinator* ptr)
-    : SelectorComponent(ptr->pstate(), false),
-      combinator_(ptr->combinator())
-  { }
 
   unsigned long SelectorCombinator::specificity() const
   {
@@ -549,14 +545,6 @@ namespace Sass {
 
   MediaRule::MediaRule(ParserState pstate, InterpolationObj list, Block_Obj block) :
     Has_Block(pstate, block), query_(list)
-  {
-    statement_type(MEDIA);
-  }
-
-
-  MediaRule::MediaRule(const MediaRule* ptr) :
-    Has_Block(ptr),
-    query_(ptr->query_)
   {
     statement_type(MEDIA);
   }
@@ -786,13 +774,15 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // ToDo: IMO only containers should need copy operations
+  // All other selectors should be quite static after eval
   IMPLEMENT_AST_OPERATORS(PlaceholderSelector);
   IMPLEMENT_AST_OPERATORS(AttributeSelector);
   IMPLEMENT_AST_OPERATORS(TypeSelector);
   IMPLEMENT_AST_OPERATORS(ClassSelector);
   IMPLEMENT_AST_OPERATORS(IDSelector);
   IMPLEMENT_AST_OPERATORS(PseudoSelector);
-  IMPLEMENT_AST_OPERATORS(SelectorCombinator);
+  // IMPLEMENT_AST_OPERATORS(SelectorCombinator);
   IMPLEMENT_AST_OPERATORS(CompoundSelector);
   IMPLEMENT_AST_OPERATORS(ComplexSelector);
   IMPLEMENT_AST_OPERATORS(SelectorList);

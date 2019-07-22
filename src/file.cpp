@@ -19,7 +19,6 @@
 #include <sys/stat.h>
 #include "file.hpp"
 #include "context.hpp"
-#include "prelexer.hpp"
 #include "utf8_string.hpp"
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
@@ -105,7 +104,7 @@ namespace Sass {
     bool is_absolute_path(const std::string& path)
     {
       #ifdef _WIN32
-        if (path.length() >= 2 && Util::ascii_isalpha(path[0]) && path[1] == ':') return true;
+        if (path.length() >= 3 && Util::ascii_isalpha(path[0]) && path[1] == ':') return true;
       #endif
       size_t i = 0;
       // check if we have a protocol

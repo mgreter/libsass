@@ -81,16 +81,16 @@ namespace Sass {
   // interpolation. [start] should point before the `@`.
   ImportRule* CssParser::_cssImportRule(Position start) {
 
-    // Position urlStart(scanner.offset);
+    // Position urlStart(scanner);
     uint8_t next = scanner.peekChar();
     ExpressionObj url;
     if (next == $u || next == $U) {
       url = dynamicUrl();
     }
     else {
-      StringExpression2Obj ex = interpolatedString();
+      StringExpressionObj ex = interpolatedString();
       InterpolationObj itpl = ex->getAsInterpolation(); // static = true
-      url = SASS_MEMORY_NEW(StringExpression2, ex->pstate(), itpl);
+      url = SASS_MEMORY_NEW(StringExpression, ex->pstate(), itpl);
       // StringExpression(itpl.asInterpolation(static: true));
     }
 
@@ -197,15 +197,15 @@ namespace Sass {
     InterpolationObj identifier = interpolatedIdentifier();
     std::string plain(identifier->getPlainString());
 
-    StringExpression2Obj specialFunction = trySpecialFunction(
+    StringExpressionObj specialFunction = trySpecialFunction(
       Util::ascii_str_tolower(plain), pos);
     if (specialFunction != nullptr) {
       return specialFunction;
     }
 
-    Position beforeArguments(scanner.offset);
+    Position beforeArguments(scanner);
     if (!scanner.scanChar($lparen)) {
-      return SASS_MEMORY_NEW(StringExpression2,
+      return SASS_MEMORY_NEW(StringExpression,
         scanner.pstate(start), identifier);
     }
 
@@ -232,7 +232,7 @@ namespace Sass {
     }
 
     Interpolation* name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());
-    name->append(SASS_MEMORY_NEW(StringExpression2, identifier->pstate(), identifier));
+    name->append(SASS_MEMORY_NEW(StringExpression, identifier->pstate(), identifier));
     return SASS_MEMORY_NEW(FunctionExpression, identifier->pstate(), name, args, "");
 
   }

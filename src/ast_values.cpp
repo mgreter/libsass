@@ -12,21 +12,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  PreValue::PreValue(ParserState pstate, bool d, bool e, bool i, Type ct)
-  : Expression(pstate, d, e, i, ct)
-  { }
-  PreValue::PreValue(const PreValue* ptr)
-  : Expression(ptr)
-  { }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   Value::Value(ParserState pstate, bool d, bool e, bool i, Type ct)
-  : PreValue(pstate, d, e, i, ct)
+  : Expression(pstate, d, e, i, ct)
   { }
   Value::Value(const Value* ptr)
-  : PreValue(ptr)
+  : Expression(ptr)
   { }
 
   /////////////////////////////////////////////////////////////////////////
@@ -37,8 +30,7 @@ namespace Sass {
     Vectorized<Expression_Obj>(size),
     separator_(sep),
     is_arglist_(argl),
-    is_bracketed_(bracket),
-    from_selector_(false)
+    is_bracketed_(bracket)
   { concrete_type(LIST); }
 
   List::List(const List* ptr)
@@ -46,8 +38,7 @@ namespace Sass {
     Vectorized<Expression_Obj>(*ptr),
     separator_(ptr->separator_),
     is_arglist_(ptr->is_arglist_),
-    is_bracketed_(ptr->is_bracketed_),
-    from_selector_(ptr->from_selector_)
+    is_bracketed_(ptr->is_bracketed_)
   { concrete_type(LIST); }
 
   size_t List::hash() const
@@ -95,9 +86,9 @@ namespace Sass {
     return length();
   }
 
-  environment_map(ExpressionObj) List::getNormalizedArgMap()
+  NormalizedMap<ExpressionObj> List::getNormalizedArgMap()
   {
-    environment_map(ExpressionObj) map;
+    NormalizedMap<ExpressionObj> map;
     if (is_arglist_) {
       for (Expression* item : elements()) {
         if (Argument * arg = Cast<Argument>(item)) {
@@ -169,11 +160,11 @@ namespace Sass {
     return false;
   }
 
-  List_Obj Map::to_list(ParserState& pstate) {
-    List_Obj ret = SASS_MEMORY_NEW(List, pstate, length(), SASS_UNDEF);
+  SassListObj Map::to_list(ParserState& pstate) {
+    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, SASS_UNDEF);
 
     for (auto key : keys()) {
-      List_Obj l = SASS_MEMORY_NEW(List, pstate, 2);
+      SassListObj l = SASS_MEMORY_NEW(SassList, pstate);
       l->append(key);
       l->append(at(key));
       ret->append(l);
@@ -203,16 +194,7 @@ namespace Sass {
 
   Binary_Expression::Binary_Expression(ParserState pstate,
                     Operand op, Expression_Obj lhs, Expression_Obj rhs)
-  : PreValue(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
-  { }
-
-  Binary_Expression::Binary_Expression(const Binary_Expression* ptr)
-  : PreValue(ptr),
-    op_(ptr->op_),
-    left_(ptr->left_),
-    right_(ptr->right_),
-    allowsSlash_(ptr->allowsSlash_),
-    hash_(ptr->hash_)
+  : Expression(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
   { }
 
   const std::string Binary_Expression::separator()
@@ -225,16 +207,6 @@ namespace Sass {
     right()->set_delayed(delayed);
     left()->set_delayed(delayed);
     allowsSlash(delayed);
-  }
-
-  bool Binary_Expression::operator==(const Expression& rhs) const
-  {
-    if (auto m = Cast<Binary_Expression>(&rhs)) {
-      return type() == m->type() &&
-        *left() == *m->left() &&
-        *right() == *m->right();
-    }
-    return false;
   }
 
   size_t Binary_Expression::hash() const
@@ -252,10 +224,6 @@ namespace Sass {
 
   Function::Function(ParserState pstate, Definition_Obj def, bool css)
   : Value(pstate), definition_(def), is_css_(css)
-  { concrete_type(FUNCTION_VAL); }
-
-  Function::Function(const Function* ptr)
-  : Value(ptr), definition_(ptr->definition_), is_css_(ptr->is_css_)
   { concrete_type(FUNCTION_VAL); }
 
   bool Function::operator== (const Value& rhs) const
@@ -279,35 +247,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   FunctionExpression::FunctionExpression(ParserState pstate, InterpolationObj n, ArgumentsObj args, std::string ns)
-  : PreValue(pstate), sname_(n), arguments_(args), ns_(ns), via_call_(false), cookie_(0), hash_(0)
+  : Expression(pstate), sname_(n), arguments_(args), ns_(ns), via_call_(false), cookie_(0), hash_(0)
   { concrete_type(FUNCTION); }
 
   FunctionExpression::FunctionExpression(ParserState pstate, std::string n, Arguments_Obj args, std::string ns)
-    : PreValue(pstate), sname_(SASS_MEMORY_NEW(Interpolation, pstate, SASS_MEMORY_NEW(StringLiteral, pstate, n))), arguments_(args), ns_(ns), via_call_(false), cookie_(0), hash_(0)
+    : Expression(pstate), sname_(SASS_MEMORY_NEW(Interpolation, pstate, SASS_MEMORY_NEW(StringLiteral, pstate, n))), arguments_(args), ns_(ns), via_call_(false), cookie_(0), hash_(0)
   { concrete_type(FUNCTION); }
-
-  FunctionExpression::FunctionExpression(const FunctionExpression* ptr)
-  : PreValue(ptr),
-    sname_(ptr->sname_),
-    arguments_(ptr->arguments_),
-    func_(ptr->func_),
-    ns_(ptr->ns_),
-    via_call_(ptr->via_call_),
-    cookie_(ptr->cookie_),
-    hash_(ptr->hash_)
-  { concrete_type(FUNCTION); }
-
-  bool FunctionExpression::operator==(const Expression& rhs) const
-  {
-    if (auto m = Cast<FunctionExpression>(&rhs)) {
-      if (*sname() != *m->sname()) return false;
-      if (arguments()->length() != m->arguments()->length()) return false;
-      for (size_t i = 0, L = arguments()->length(); i < L; ++i)
-        if (*arguments()->get(i) != *m->arguments()->get(i)) return false;
-      return true;
-    }
-    return false;
-  }
 
   size_t FunctionExpression::hash() const
   {
@@ -333,20 +278,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Variable::Variable(ParserState pstate, std::string n)
-  : PreValue(pstate), name_(n)
+  : Expression(pstate), name_(n)
   { concrete_type(VARIABLE); }
-
-  Variable::Variable(const Variable* ptr)
-  : PreValue(ptr), name_(ptr->name_)
-  { concrete_type(VARIABLE); }
-
-  bool Variable::operator==(const Expression& rhs) const
-  {
-    if (auto e = Cast<Variable>(&rhs)) {
-      return name() == e->name();
-    }
-    return false;
-  }
 
   size_t Variable::hash() const
   {
@@ -495,6 +428,7 @@ namespace Sass {
       return l.value() > r.value();
     }
     else {
+      // ToDo: implement directly?
       return lhs_unit > rhs_unit;
     }
   }
@@ -683,10 +617,6 @@ namespace Sass {
   : Value(pstate), message_(msg)
   { concrete_type(C_ERROR); }
 
-  Custom_Error::Custom_Error(const Custom_Error* ptr)
-  : Value(ptr), message_(ptr->message_)
-  { concrete_type(C_ERROR); }
-
   bool Custom_Error::operator== (const Value& rhs) const
   {
     if (auto r = Cast<Custom_Error>(&rhs)) {
@@ -700,10 +630,6 @@ namespace Sass {
 
   Custom_Warning::Custom_Warning(ParserState pstate, std::string msg)
   : Value(pstate), message_(msg)
-  { concrete_type(C_WARNING); }
-
-  Custom_Warning::Custom_Warning(const Custom_Warning* ptr)
-  : Value(ptr), message_(ptr->message_)
   { concrete_type(C_WARNING); }
 
   bool Custom_Warning::operator== (const Value& rhs) const
@@ -791,15 +717,10 @@ namespace Sass {
     if (ex != nullptr) append(ex);
   }
 
-  Interpolation::Interpolation(const Interpolation* ptr) :
-    String(ptr), Vectorized<ExpressionObj>(ptr)
-  {
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  uint8_t StringExpression2::findBestQuote()
+  uint8_t StringExpression::findBestQuote()
   {
     using namespace Character;
     bool containsDoubleQuote = false;
@@ -816,14 +737,14 @@ namespace Sass {
     return containsDoubleQuote ? $single_quote : $double_quote;
   }
 
-  StringExpression2* StringExpression2::plain(ParserState pstate, std::string text, bool quotes)
+  StringExpression* StringExpression::plain(ParserState pstate, std::string text, bool quotes)
   {
     Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, pstate);
     itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, text));
-    return SASS_MEMORY_NEW(StringExpression2, pstate, itpl, quotes);
+    return SASS_MEMORY_NEW(StringExpression, pstate, itpl, quotes);
   }
 
-  InterpolationObj StringExpression2::getAsInterpolation(bool escape, uint8_t quote)
+  InterpolationObj StringExpression::getAsInterpolation(bool escape, uint8_t quote)
   {
     InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, "[pstate]");
 
@@ -889,13 +810,13 @@ namespace Sass {
     // return text_;
   }
 
-  StringExpression2::StringExpression2(ParserState pstate, InterpolationObj text, bool quote) :
+  StringExpression::StringExpression(ParserState pstate, InterpolationObj text, bool quote) :
     String(pstate), text_(text), hasQuotes_(quote)
   {
 
   }
 
-  StringExpression2::StringExpression2(const StringExpression2* ptr) :
+  StringExpression::StringExpression(const StringExpression* ptr) :
     String(ptr),
     text_(ptr->text_),
     hasQuotes_(ptr->hasQuotes_)
@@ -914,6 +835,19 @@ namespace Sass {
     String(ptr),
     text_(ptr->text_)
   {
+  }
+
+  bool StringLiteral::operator== (const Value& rhs) const
+  {
+    if (const StringLiteral * str = Cast<StringLiteral>(&rhs)) {
+      return text() == str->text();
+    }
+    return false;
+  }
+
+  bool StringLiteral::isBlank() const
+  {
+    return /* !hasQuotes() && */ text_.empty();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -956,7 +890,12 @@ namespace Sass {
 
   std::string String_Constant::inspect() const
   {
-    return quote(value_, '*');
+    if (quote_mark_ == 0) {
+      return quote(value_, '*');
+    }
+    else {
+      return quote(value_, '*');
+    }
   }
 
   size_t String_Constant::hash() const
@@ -1011,9 +950,6 @@ namespace Sass {
   : Value(pstate)
   { concrete_type(NULL_VAL); }
 
-  Null::Null(const Null* ptr) : Value(ptr)
-  { concrete_type(NULL_VAL); }
-
   bool Null::operator== (const Value& rhs) const
   {
     return Cast<Null>(&rhs) != nullptr;
@@ -1031,34 +967,125 @@ namespace Sass {
   : Value(pstate)
   { concrete_type(PARENT); }
 
-  Parent_Reference::Parent_Reference(const Parent_Reference* ptr)
-  : Value(ptr)
-  { concrete_type(PARENT); }
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  SassList::SassList(
+    ParserState pstate,
+    Sass_Separator separator,
+    bool hasBrackets) :
+    Value(pstate),
+    Vectorized(),
+    separator_(separator),
+    hasBrackets_(hasBrackets)
+  {
+    concrete_type(LIST);
+  }
+
+  SassList::SassList(
+    const SassList* ptr) :
+    Value(ptr),
+    Vectorized(ptr),
+    separator_(ptr->separator_),
+    hasBrackets_(ptr->hasBrackets_)
+  {
+    concrete_type(LIST);
+  }
+
+  bool SassList::isBlank() const
+  {
+    for (const Value* value : elements()) {
+      if (!value->isBlank()) return false;
+    }
+    return true;
+  }
+
+  size_t SassList::hash() const
+  {
+    if (hash_ == 0) {
+      hash_ = std::hash<std::size_t>()(separator());
+      hash_combine(hash_, std::hash<bool>()(hasBrackets()));
+      for (size_t i = 0, L = length(); i < L; ++i)
+        hash_combine(hash_, (elements()[i])->hash());
+    }
+    return hash_;
+  }
+
+  bool SassList::operator==(const Value& rhs) const
+  {
+    if (const SassList* r = Cast<SassList>(&rhs)) {
+      if (length() != r->length()) return false;
+      if (separator() != r->separator()) return false;
+      if (hasBrackets() != r->hasBrackets()) return false;
+      for (size_t i = 0, L = length(); i < L; ++i) {
+        auto rv = r->get(i);
+        auto lv = this->get(i);
+        if (!lv && rv) return false;
+        else if (!rv && lv) return false;
+        else if (!(*lv == *rv)) return false;
+      }
+      return true;
+    }
+    if (const Map * r = Cast<Map>(&rhs)) {
+      return empty() && r->empty();
+    }
+    return false;
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   IMPLEMENT_AST_OPERATORS(List);
   IMPLEMENT_AST_OPERATORS(Map);
-  IMPLEMENT_AST_OPERATORS(Binary_Expression);
-  IMPLEMENT_AST_OPERATORS(Function);
-  IMPLEMENT_AST_OPERATORS(FunctionExpression);
-  IMPLEMENT_AST_OPERATORS(Variable);
+  IMPLEMENT_AST_OPERATORS(SassList);
+  IMPLEMENT_AST_OPERATORS(SassArgumentList);
+  // IMPLEMENT_AST_OPERATORS(Binary_Expression);
+  // IMPLEMENT_AST_OPERATORS(Function);
+  // IMPLEMENT_AST_OPERATORS(FunctionExpression);
+  // IMPLEMENT_AST_OPERATORS(Variable);
   IMPLEMENT_AST_OPERATORS(Number);
   IMPLEMENT_AST_OPERATORS(Color_RGBA);
   IMPLEMENT_AST_OPERATORS(Color_HSLA);
-  IMPLEMENT_AST_OPERATORS(Custom_Error);
-  IMPLEMENT_AST_OPERATORS(Custom_Warning);
+  // IMPLEMENT_AST_OPERATORS(Custom_Error);
+  // IMPLEMENT_AST_OPERATORS(Custom_Warning);
   IMPLEMENT_AST_OPERATORS(Boolean);
-  IMPLEMENT_AST_OPERATORS(Interpolation);
+  // IMPLEMENT_AST_OPERATORS(Interpolation);
   IMPLEMENT_AST_OPERATORS(StringLiteral);
-  IMPLEMENT_AST_OPERATORS(StringExpression2);
   IMPLEMENT_AST_OPERATORS(String_Constant);
   IMPLEMENT_AST_OPERATORS(String_Quoted);
-  IMPLEMENT_AST_OPERATORS(Null);
-  IMPLEMENT_AST_OPERATORS(Parent_Reference);
+  // IMPLEMENT_AST_OPERATORS(Null);
+  // IMPLEMENT_AST_OPERATORS(Parent_Reference);
+
+  IMPLEMENT_AST_OPERATORS(StringExpression);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  SassArgumentList::SassArgumentList(
+    ParserState pstate,
+    Sass_Separator separator,
+    keywordMap keywords) :
+    SassList(pstate, separator, false),
+    keywords_(keywords)
+  {
+  }
+
+  SassArgumentList::SassArgumentList(
+    const SassArgumentList* ptr) :
+    SassList(ptr),
+    keywords_(ptr->keywords_)
+  {
+  }
+
+  bool SassArgumentList::operator==(const Value& rhs) const
+  {
+    if (const SassList * r = Cast<SassList>(&rhs)) {
+      return SassList::operator==(*r);
+    }
+    if (const Map * r = Cast<Map>(&rhs)) {
+      return SassList::operator==(*r);
+    }
+    return false;
+  }
 
 }

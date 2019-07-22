@@ -19,14 +19,12 @@
 #include "environment.hpp"
 #include "position.hpp"
 #include "sass/values.h"
-#include "to_value.hpp"
 #include "ast2c.hpp"
 #include "c2ast.hpp"
 #include "context.hpp"
 #include "backtrace.hpp"
 #include "lexer.hpp"
 #include "debugger.hpp"
-#include "prelexer.hpp"
 #include "expand.hpp"
 #include "color_maps.hpp"
 #include "sass_functions.hpp"
@@ -88,17 +86,17 @@ namespace Sass {
     return ctx.callee_stack;
   }
 
-  Expression* Eval::operator()(Block* b)
+  Value* Eval::operator()(Block* b)
   {
     Expression* val = 0;
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       val = b->at(i)->perform(this);
-      if (val) return val;
+      if (val) return Cast<Value>(val);
     }
-    return val;
+    return Cast<Value>(val);
   }
 
-  Expression* Eval::operator()(Assignment* a)
+  Value* Eval::operator()(Assignment* a)
   {
     Env* env = environment();
     std::string var(a->variable());
@@ -150,7 +148,7 @@ namespace Sass {
             else {
               throw std::runtime_error("Env not in sync");
             }
-            return 0;
+            return nullptr;
           }
           cur = cur->parent();
         }
@@ -174,10 +172,10 @@ namespace Sass {
     else {
       env->set_lexical(var, a->value()->perform(this));
     }
-    return 0;
+    return nullptr;
   }
 
-  Expression* Eval::operator()(If* i)
+  Value* Eval::operator()(If* i)
   {
     Expression_Obj rv;
     Env env(environment());
@@ -191,12 +189,12 @@ namespace Sass {
       if (alt) rv = alt->perform(this);
     }
     env_stack().pop_back();
-    return rv.detach();
+    return Cast<Value>(rv.detach());
   }
 
   // For does not create a new env scope
   // But iteration vars are reset afterwards
-  Expression* Eval::operator()(For* f)
+  Value* Eval::operator()(For* f)
   {
     std::string variable(f->variable());
     Expression_Obj low = f->lower_bound()->perform(this);
@@ -247,32 +245,43 @@ namespace Sass {
       }
     }
     env_stack().pop_back();
-    return val;
+    return Cast<Value>(val);
   }
 
   // Eval does not create a new env scope
   // But iteration vars are reset afterwards
-  Expression* Eval::operator()(Each* e)
+  Value* Eval::operator()(Each* e)
   {
     std::vector<std::string> variables(e->variables());
     Expression_Obj expr = e->list()->perform(this);
     Env env(environment(), true);
     env_stack().push_back(&env);
-    List_Obj list;
+    SassListObj list;
     Map* map = nullptr;
     if (expr->concrete_type() == Expression::MAP) {
       map = Cast<Map>(expr);
     }
-    else if (SelectorList * ls = Cast<SelectorList>(expr)) {
-      Expression_Obj rv = Listize::listize(ls);
-      list = Cast<List>(rv);
-    }
     else if (expr->concrete_type() != Expression::LIST) {
-      list = SASS_MEMORY_NEW(List, expr->pstate(), 1, SASS_COMMA);
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), SASS_COMMA);
       list->append(expr);
     }
+    else if (SassList * slist = Cast<SassList>(expr)) {
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), slist->separator());
+      list->hasBrackets(slist->hasBrackets());
+      for (auto item : slist->elements()) {
+        if (Argument * arg = Cast<Argument>(item)) {
+          list->append(arg->value());
+        }
+        else {
+          list->append(item);
+        }
+      }
+    }
+    else if (List * l = Cast<List>(expr)) {
+      list = list_to_sass_list(l);
+    }
     else {
-      list = Cast<List>(expr);
+      list = Cast<SassList>(expr);
     }
 
     Block_Obj body = e->block();
@@ -283,7 +292,8 @@ namespace Sass {
         Expression_Obj value = map->at(key);
 
         if (variables.size() == 1) {
-          List* variable = SASS_MEMORY_NEW(List, map->pstate(), 2, SASS_SPACE);
+          SassList* variable = SASS_MEMORY_NEW(SassList,
+            map->pstate(), SASS_SPACE);
           variable->append(key);
           variable->append(value);
           env.set_local(variables[0], variable);
@@ -297,19 +307,17 @@ namespace Sass {
       }
     }
     else {
-      if (list->length() == 1 && Cast<SelectorList>(list)) {
-        list = Cast<List>(list);
-      }
       for (size_t i = 0, L = list->length(); i < L; ++i) {
         Expression* item = list->at(i);
         // unwrap value if the expression is an argument
         if (Argument* arg = Cast<Argument>(item)) item = arg->value();
         // check if we got passed a list of args (investigate)
-        if (List* scalars = Cast<List>(item)) {
+        /* if (List * scalars = Cast<List>(item)) {
           if (variables.size() == 1) {
             Expression* var = scalars;
             env.set_local(variables[0], var);
-          } else {
+          }
+          else {
             // XXX: this is never hit via spec tests
             for (size_t j = 0, K = variables.size(); j < K; ++j) {
               Expression* res = j >= scalars->length()
@@ -318,7 +326,23 @@ namespace Sass {
               env.set_local(variables[j], res);
             }
           }
-        } else {
+        }
+        else */ if (SassList * scalars = Cast<SassList>(item)) {
+          if (variables.size() == 1) {
+            Expression* var = scalars;
+            env.set_local(variables[0], var);
+          }
+          else {
+            // XXX: this is never hit via spec tests
+            for (size_t j = 0, K = variables.size(); j < K; ++j) {
+              Expression* res = j >= scalars->length()
+                ? SASS_MEMORY_NEW(Null, expr->pstate())
+                : scalars->at(j);
+              env.set_local(variables[j], res);
+            }
+          }
+        }
+        else {
           if (variables.size() > 0) {
             env.set_local(variables.at(0), item);
             for (size_t j = 1, K = variables.size(); j < K; ++j) {
@@ -332,10 +356,10 @@ namespace Sass {
       }
     }
     env_stack().pop_back();
-    return val.detach();
+    return Cast<Value>(val.detach());
   }
 
-  Expression* Eval::operator()(While* w)
+  Value* Eval::operator()(While* w)
   {
     Expression_Obj pred = w->predicate();
     Block_Obj body = w->block();
@@ -346,20 +370,20 @@ namespace Sass {
       Expression_Obj val = body->perform(this);
       if (val) {
         env_stack().pop_back();
-        return val.detach();
+        return Cast<Value>(val.detach());
       }
       cond = pred->perform(this);
     }
     env_stack().pop_back();
-    return 0;
+    return nullptr;
   }
 
-  Expression* Eval::operator()(Return* r)
+  Value* Eval::operator()(Return* r)
   {
-    return r->value()->perform(this);
+    return Cast<Value>(r->value()->perform(this));
   }
 
-  Expression* Eval::operator()(Warning* w)
+  Value* Eval::operator()(Warning* w)
   {
     Sass_Output_Style outstyle = options().output_style;
     options().output_style = NESTED;
@@ -393,7 +417,7 @@ namespace Sass {
       callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
-      return 0;
+      return nullptr;
 
     }
 
@@ -404,10 +428,10 @@ namespace Sass {
     std::cerr << std::endl;
     options().output_style = outstyle;
     traces.pop_back();
-    return 0;
+    return nullptr;
   }
 
-  Expression* Eval::operator()(Error* e)
+  Value* Eval::operator()(Error* e)
   {
     Sass_Output_Style outstyle = options().output_style;
     options().output_style = NESTED;
@@ -441,17 +465,17 @@ namespace Sass {
       callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
-      return 0;
+      return nullptr;
 
     }
 
     std::string result(message->to_sass());
     options().output_style = outstyle;
     error(result, e->pstate(), traces);
-    return 0;
+    return nullptr;
   }
 
-  Expression* Eval::operator()(Debug* d)
+  Value* Eval::operator()(Debug* d)
   {
     Sass_Output_Style outstyle = options().output_style;
     options().output_style = NESTED;
@@ -485,7 +509,7 @@ namespace Sass {
       callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
-      return 0;
+      return nullptr;
 
     }
 
@@ -497,92 +521,70 @@ namespace Sass {
 
     std::cerr << output_path << ":" << d->pstate().line+1 << " DEBUG: " << result;
     std::cerr << std::endl;
-    return 0;
+    return nullptr;
   }
 
-
-  Expression* Eval::operator()(List* l)
+  SassList* Eval::operator()(ListExpression* l)
   {
-    // special case for unevaluated map
-    if (l->separator() == SASS_HASH) {
-      Map_Obj lm = SASS_MEMORY_NEW(Map,
-                                l->pstate(),
-                                l->length() / 2);
-      for (size_t i = 0, L = l->length(); i < L; i += 2)
-      {
-        Expression_Obj key = (*l)[i+0]->perform(this);
-        Expression_Obj val = (*l)[i+1]->perform(this);
-        *lm << std::make_pair(key, val);
-      }
-      if (lm->has_duplicate_key()) {
-        traces.push_back(Backtrace(l->pstate()));
-        throw Exception::DuplicateKeyError(traces, *lm, *l);
-      }
-
-      return lm->perform(this);
-    }
-
+    // debug_ast(l, "ListExp IN: ");
     // regular case for unevaluated lists
-    List_Obj ll = SASS_MEMORY_NEW(List,
-                               l->pstate(),
-                               l->length(),
-                               l->separator(),
-                               l->is_arglist(),
-                               l->is_bracketed());
-    for (size_t i = 0, L = l->length(); i < L; ++i) {
-      ll->append((*l)[i]->perform(this));
+    SassListObj ll = SASS_MEMORY_NEW(SassList,
+      l->pstate(),
+      // l->length(),
+      l->separator() // ,
+      // l->is_arglist(),
+      // l->is_bracketed()
+    );
+    ll->hasBrackets(l->hasBrackets());
+    for (size_t i = 0, L = l->size(); i < L; ++i) {
+      ll->append(l->get(i)->perform(this));
     }
-    ll->from_selector(l->from_selector());
+    // debug_ast(ll, "ListExp OF: ");
     return ll.detach();
   }
 
-  Expression* Eval::operator()(Map* m)
+  Map* Eval::operator()(MapExpression* m)
   {
-    // make sure we're not starting with duplicate keys.
-    // the duplicate key state will have been set in the parser phase.
-    if (m->has_duplicate_key()) {
-      traces.push_back(Backtrace(m->pstate()));
-      throw Exception::DuplicateKeyError(traces, *m, *m);
+    std::vector<ExpressionObj> kvlist = m->kvlist();
+    MapObj map = SASS_MEMORY_NEW(Map,
+      m->pstate(), kvlist.size() / 2);
+    for (size_t i = 0, L = kvlist.size(); i < L; i += 2)
+    {
+      Expression_Obj key = kvlist[i + 0]->perform(this);
+      Expression_Obj val = kvlist[i + 1]->perform(this);
+      *map << std::make_pair(key, val);
+    }
+    if (map->has_duplicate_key()) {
+      traces.push_back(Backtrace(map->pstate()));
+      throw Exception::DuplicateKeyError(traces, *map, *m);
     }
 
-    Map_Obj mm = SASS_MEMORY_NEW(Map,
-                                m->pstate(),
-                                m->length());
-    for (auto key : m->keys()) {
-      Expression* ex_key = key->perform(this);
-      Expression* ex_val = m->at(key);
-      if (ex_val == NULL) continue;
-      ex_val = ex_val->perform(this);
-      *mm << std::make_pair(ex_key, ex_val);
-    }
-
-    // check the evaluated keys aren't duplicates.
-    if (mm->has_duplicate_key()) {
-      traces.push_back(Backtrace(m->pstate()));
-      throw Exception::DuplicateKeyError(traces, *mm, *m);
-    }
-
-    return mm.detach();
+    return map.detach(); //  ->perform(this);
   }
 
-  Expression* Eval::operator()(ParenthesizedExpression* ex)
+  Value* Eval::operator()(Map* m)
+  {
+    return m;
+  }
+
+  Value* Eval::operator()(ParenthesizedExpression* ex)
   {
     // return ex->expression();
     if (ex->expression()) {
       // ex->expression(ex->expression()->perform(this));
-      return ex->expression()->perform(this);
+      return Cast<Value>(ex->expression()->perform(this));
     }
-    return ex;
+    return Cast<Value>(ex);
   }
 
-  Expression* Eval::operator()(Binary_Expression* b_in)
+  Value* Eval::operator()(Binary_Expression* b_in)
   {
     auto rv = evalBinOp(b_in);
     // if ()
     return rv;
   }
 
-  Expression* Eval::evalBinOp(Binary_Expression* b_in)
+  Value* Eval::evalBinOp(Binary_Expression* b_in)
   {
 
     Sass_OP op_type = b_in->optype();
@@ -592,12 +594,12 @@ namespace Sass {
     switch (op_type) {
     case Sass_OP::AND:
       lhs = lhs->perform(this);
-      if (!*lhs) return lhs.detach();
-      return rhs->perform(this);
+      if (!*lhs) return Cast<Value>(lhs.detach());
+      return Cast<Value>(rhs->perform(this));
     case Sass_OP::OR:
       lhs = lhs->perform(this);
-      if (*lhs) return lhs.detach();
-      return rhs->perform(this);
+      if (*lhs) return Cast<Value>(lhs.detach());
+      return Cast<Value>(rhs->perform(this));
     case Sass_OP::EQ:
       lhs = lhs->perform(this);
       rhs = rhs->perform(this);
@@ -663,9 +665,8 @@ namespace Sass {
       lhs = lhs->perform(this);
       rhs = rhs->perform(this);
 
-      To_Value to_value(ctx);
-      Value_Obj v_l = Cast<Value>(lhs->perform(&to_value));
-      Value_Obj v_r = Cast<Value>(rhs->perform(&to_value));
+      Value_Obj v_l = Cast<Value>(lhs);
+      Value_Obj v_r = Cast<Value>(rhs);
 
       std::string str("");
       str += v_l->to_string(options());
@@ -688,13 +689,6 @@ namespace Sass {
     }
     if (Cast<FunctionExpression>(rhs)) {
       b->set_delayed(false);
-    }
-
-    if (SelectorList* sl = Cast<SelectorList>(lhs)) {
-      lhs = SASS_MEMORY_NEW(String_Constant, "[pstate]", sl->to_css());
-    }
-    if (SelectorList* sr = Cast<SelectorList>(rhs)) {
-      rhs = SASS_MEMORY_NEW(String_Constant, "[pstate]", sr->to_css());
     }
 
     while (Variable* l_v = Cast<Variable>(lhs)) {
@@ -845,27 +839,6 @@ namespace Sass {
     Expression::Type l_type;
     Expression::Type r_type;
 
-    SelectorList* sl = Cast<SelectorList>(lhs);
-    SelectorList* sr = Cast<SelectorList>(rhs);
-    if (sl && sr) {
-      // avoid the need to compare against expressions (only values)
-      lhs = SASS_MEMORY_NEW(String_Constant, "[pstate]", sl->to_css());
-      rhs = SASS_MEMORY_NEW(String_Constant, "[pstate]", sr->to_css());
-    }
-    else if (sl || sr) {
-      if (sl) lhs = SASS_MEMORY_NEW(String_Constant, "[pstate]", sl->inspect());
-      if (sr) rhs = SASS_MEMORY_NEW(String_Constant, "[pstate]", sr->inspect());
-      switch (op_type) {
-      case Sass_OP::EQ:  return SASS_MEMORY_NEW(Boolean, b->pstate(), false);
-      case Sass_OP::NEQ: return SASS_MEMORY_NEW(Boolean, b->pstate(), true);
-      case Sass_OP::GT:  throw Exception::UndefinedOperation(lhs, rhs, op_type);
-      case Sass_OP::GTE: throw Exception::UndefinedOperation(lhs, rhs, op_type);
-      case Sass_OP::LT:  throw Exception::UndefinedOperation(lhs, rhs, op_type);
-      case Sass_OP::LTE: throw Exception::UndefinedOperation(lhs, rhs, op_type);
-      default: break;
-      }
-    }
-
     // see if it's a relational expression
     try {
       switch(op_type) {
@@ -898,6 +871,7 @@ namespace Sass {
         l_n->reduce(); r_n->reduce();
         rv = Operators::op_numbers(op_type, *l_n, *r_n, options(), pstate);
       }
+      /* handled above 
       else if (l_type == Expression::NUMBER && r_type == Expression::COLOR) {
         Number* l_n = Cast<Number>(lhs);
         Color_RGBA_Obj r_c = Cast<Color>(rhs)->toRGBA();
@@ -913,11 +887,11 @@ namespace Sass {
         Color_RGBA_Obj r_c = Cast<Color>(rhs)->toRGBA();
         rv = Operators::op_colors(op_type, *l_c, *r_c, options(), pstate);
       }
+      */
       else {
-        To_Value to_value(ctx);
         // this will leak if perform does not return a value!
-        Value_Obj v_l = Cast<Value>(lhs->perform(&to_value));
-        Value_Obj v_r = Cast<Value>(rhs->perform(&to_value));
+        Value_Obj v_l = Cast<Value>(lhs);
+        Value_Obj v_r = Cast<Value>(rhs);
         bool interpolant = false;
         if (op_type == Sass_OP::SUB) interpolant = false;
         // if (op_type == Sass_OP::DIV) interpolant = true;
@@ -957,7 +931,7 @@ namespace Sass {
 
   }
 
-  Expression* Eval::operator()(Unary_Expression* u)
+  Value* Eval::operator()(Unary_Expression* u)
   {
     Expression_Obj operand = u->operand()->perform(this);
     if (u->optype() == Unary_Expression::NOT) {
@@ -1002,11 +976,13 @@ namespace Sass {
                              u->inspect());
     }
     // unreachable
-    return u;
+    return Cast<Value>(u);
   }
 
   Expression* Eval::operator()(FunctionExpression* c)
   {
+
+    // NESTING_GUARD(_recursion)
 
     if (traces.size() > Constants::MaxCallStack) {
         // XXX: this is never hit via spec tests
@@ -1027,7 +1003,7 @@ namespace Sass {
         std::string str(evaluated_name);
         str += evaluated_args->to_string();
         return (SASS_MEMORY_NEW(String_Constant, c->pstate(), str));
-        return c;
+        return Cast<Value>(c);
       }
      //  return ;
     }
@@ -1041,11 +1017,16 @@ namespace Sass {
     Env* env = environment();
     if (!c->func() && !env->has(full_name) /* || (!c->via_call() && Prelexer::re_special_fun(name.c_str()))*/) {
       if (!env->has("*[f]")) {
+        /* check now done earlier
         for (Argument_Obj arg : args->elements()) {
           if (List_Obj ls = Cast<List>(arg->value())) {
             if (ls->size() == 0) error("() isn't a valid CSS value.", c->pstate(), traces);
           }
+          if (SassList_Obj ls = Cast<SassList>(arg->value())) {
+            if (ls->length() == 0) error("() isn't a valid CSS value.", c->pstate(), traces);
+          }
         }
+        */
         args = Cast<Arguments>(args->perform(this));
         if (!args->empty()) args->last()->is_rest_argument(false);
         FunctionExpressionObj lit = SASS_MEMORY_NEW(FunctionExpression,
@@ -1115,7 +1096,11 @@ namespace Sass {
     Native_Function func   = def->native_function();
     Sass_Function_Entry c_function = def->c_function();
 
-    if (c->is_css()) return result.detach();
+    if (c->is_css()) {
+      return SASS_MEMORY_NEW(String_Constant, result->pstate(), result->to_css());
+      std::cerr << "return css\n";
+      return Cast<Value>(result.detach());
+    }
 
     Parameters_Obj params = def->parameters();
     Env fn_env(def->environment());
@@ -1206,6 +1191,9 @@ namespace Sass {
       if (c_val != c_args)
         sass_delete_value(c_val);
     }
+    else {
+      std::cerr << "return a pure ref\n";
+    }
 
     // link back to function definition
     // only do this for custom functions
@@ -1222,16 +1210,16 @@ namespace Sass {
     return result.detach();
   }
 
-  Expression* Eval::operator()(Variable* v)
+  Value* Eval::operator()(Variable* v)
   {
     Expression_Obj value;
     Env* env = environment();
     std::string name(v->name());
     EnvResult rv(env->find(name));
-    if (rv.found) value = static_cast<Expression*>(rv.it->second.ptr());
+    if (rv.found) value = rv.it->second.ptr();
     else error("Undefined variable.", v->pstate(), traces);
     if (Argument* arg = Cast<Argument>(value)) value = arg->value();
-
+    // debug_ast(value, "RES: ");
     if (Number * nr = Cast<Number>(value)) {
       nr->lhsAsSlash({});
       nr->rhsAsSlash({});
@@ -1239,30 +1227,31 @@ namespace Sass {
 
     value = value->perform(this);
     rv.it->second = value;
-    return value.detach();
+    // debug_ast(value);
+    return Cast<Value>(value.detach());
   }
 
-  Expression* Eval::operator()(Color_RGBA* c)
+  Value* Eval::operator()(Color_RGBA* c)
   {
     return c;
   }
 
-  Expression* Eval::operator()(Color_HSLA* c)
+  Value* Eval::operator()(Color_HSLA* c)
   {
     return c;
   }
 
-  Expression* Eval::operator()(Number* n)
+  Value* Eval::operator()(Number* n)
   {
     return n;
   }
 
-  Expression* Eval::operator()(Boolean* b)
+  Value* Eval::operator()(Boolean* b)
   {
     return b;
   }
 
-  Expression* Eval::operator()(StringLiteral* s)
+  Value* Eval::operator()(StringLiteral* s)
   {
     return s;
   }
@@ -1357,7 +1346,7 @@ namespace Sass {
       interpolationToValue(s, false, true), true);
   }
 
-  Expression* Eval::operator()(StringExpression2* node)
+  Value* Eval::operator()(StringExpression* node)
   {
 
     // debug_ast(node, "STREX ");
@@ -1375,7 +1364,7 @@ namespace Sass {
         // std::cerr << "APPEND STRING1 [" << lit->value() << "]\n";
         strings.push_back(lit->value());
       }
-        // else if (StringExpression2 * ex = Cast<StringExpression2>(item)) {
+        // else if (StringExpression * ex = Cast<StringExpression>(item)) {
       //   auto qwe = ex->perform(this);
       //   strings.push_back(qwe->to_css(options()));
       // }
@@ -1420,12 +1409,12 @@ namespace Sass {
 
   }
 
-  Expression* Eval::operator()(String_Constant* s)
+  Value* Eval::operator()(String_Constant* s)
   {
     return s;
   }
 
-  Expression* Eval::operator()(String_Quoted* s)
+  Value* Eval::operator()(String_Quoted* s)
   {
     String_Quoted* str = SASS_MEMORY_NEW(String_Quoted, s->pstate(), "");
     str->value(s->value());
@@ -1433,46 +1422,162 @@ namespace Sass {
     return str;
   }
 
-  Expression* Eval::operator()(Supports_Operator* c)
+  /// Evaluates [expression] and calls `toCssString()` and wraps a
+/// [SassScriptException] to associate it with [span].
+  std::string Eval::_evaluateToCss(Expression* expression, bool quote)
+  {
+    Value* evaled = Cast<Value>(expression->perform(this));
+    return _serialize(evaled, quote);
+  }
+
+  /// Calls `value.toCssString()` and wraps a [SassScriptException] to associate
+/// it with [nodeWithSpan]'s source span.
+///
+/// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
+/// [AstNode.span] if the span isn't required, since some nodes need to do
+/// real work to manufacture a source span.
+  std::string Eval::_serialize(Value* value, bool quote)
+  {
+    // _addExceptionSpan(nodeWithSpan, () = > value.toCssString(quote: quote));
+    return value->to_css();
+  }
+
+
+  /// Evlauates [condition] and converts it to a plain CSS string, with
+/// parentheses if necessary.
+///
+/// If [operator] is passed, it's the operator for the surrounding
+/// [SupportsOperation], and is used to determine whether parentheses are
+/// necessary if [condition] is also a [SupportsOperation].
+  std::string Eval::_parenthesize(SupportsCondition* condition, SupportsOperation::Operand* operand) {
+    SupportsNegation* negation = Cast<SupportsNegation>(condition);
+    SupportsOperation* operation = Cast<SupportsOperation>(condition);
+    if (negation ||
+      (operation &&
+      (operand == nullptr || *operand != operation->operand()))) {
+      return "(" + _visitSupportsCondition(condition) + ")";
+    }
+    else {
+      return _visitSupportsCondition(condition);
+    }
+  }
+
+  std::string Eval::_visitSupportsCondition(SupportsCondition* condition)
+  {
+    if (auto operation = Cast<SupportsOperation>(condition)) {
+      std::stringstream strm;
+      SupportsOperation::Operand operand = operation->operand();
+      strm << _parenthesize(operation->left(), &operand);
+      strm << " " << (operand == SupportsOperation::AND ? "and " : "or ");
+      strm << _parenthesize(operation->right(), &operand);
+      return strm.str();
+    }
+    else if (auto negation = Cast<SupportsNegation>(condition)) {
+      std::stringstream strm;
+      strm << "not ";
+      strm << _parenthesize(negation->condition(), nullptr);
+      return strm.str();
+    }
+    else if (auto interpolation = Cast<SupportsInterpolation>(condition)) {
+      return _evaluateToCss(interpolation->value(), false);
+    }
+    else if (auto declaration = Cast<SupportsDeclaration>(condition)) {
+      std::stringstream strm;
+      strm << "(" << _evaluateToCss(declaration->feature()) << ":";
+      strm << " " << _evaluateToCss(declaration->value()) << ")";
+      return strm.str();
+    }
+    else {
+      return "";
+    }
+
+  }
+
+  Value* Eval::operator()(SupportsRule* c)
+  {
+
+    // if (_declarationName != null) {
+    //   throw _exception(
+    //     "Supports rules may not be used within nested declarations.",
+    //     node.span);
+    // }
+
+    operator()(c->condition());
+
+    return nullptr;
+
+  }
+
+  String* Eval::operator()(SupportsCondition* condition)
+  {
+
+    return SASS_MEMORY_NEW(String_Constant,
+      condition->pstate(), _visitSupportsCondition(condition));
+    /*
+        if (condition is SupportsOperation) {
+      return "${_parenthesize(condition.left, condition.operator)} "
+          "${condition.operator} "
+          "${_parenthesize(condition.right, condition.operator)}";
+    } else if (condition is SupportsNegation) {
+      return "not ${_parenthesize(condition.condition)}";
+    } else if (condition is SupportsInterpolation) {
+      return _evaluateToCss(condition.expression, quote: false);
+    } else if (condition is SupportsDeclaration) {
+      return "(${_evaluateToCss(condition.name)}: "
+          "${_evaluateToCss(condition.value)})";
+    } else {
+      return null;
+    }
+
+    */
+
+
+  }
+
+  // needs SupportsRule?
+  /*
+  Expression* Eval::operator()(SupportsOperation* c)
   {
     Expression* left = c->left()->perform(this);
     Expression* right = c->right()->perform(this);
-    Supports_Operator* cc = SASS_MEMORY_NEW(Supports_Operator,
+    SupportsOperation* cc = SASS_MEMORY_NEW(SupportsOperation,
                                  c->pstate(),
-                                 Cast<Supports_Condition>(left),
-                                 Cast<Supports_Condition>(right),
+                                 Cast<SupportsCondition>(left),
+                                 Cast<SupportsCondition>(right),
                                  c->operand());
     return cc;
+    // return SASS_MEMORY_NEW(String_Constant, cc->pstate(), cc->to_css());
   }
 
-  Expression* Eval::operator()(Supports_Negation* c)
+  Expression* Eval::operator()(SupportsNegation* c)
   {
     Expression* condition = c->condition()->perform(this);
-    Supports_Negation* cc = SASS_MEMORY_NEW(Supports_Negation,
+    SupportsNegation* cc = SASS_MEMORY_NEW(SupportsNegation,
                                  c->pstate(),
-                                 Cast<Supports_Condition>(condition));
+                                 Cast<SupportsCondition>(condition));
     return cc;
   }
-
-  Expression* Eval::operator()(Supports_Declaration* c)
+  
+  Expression* Eval::operator()(SupportsDeclaration* c)
   {
     Expression* feature = c->feature()->perform(this);
     Expression* value = c->value()->perform(this);
-    Supports_Declaration* cc = SASS_MEMORY_NEW(Supports_Declaration,
+    SupportsDeclaration* cc = SASS_MEMORY_NEW(SupportsDeclaration,
                               c->pstate(),
                               feature,
                               value);
     return cc;
   }
 
-  Expression* Eval::operator()(Supports_Interpolation* c)
+  Expression* Eval::operator()(SupportsInterpolation* c)
   {
     Expression* value = c->value()->perform(this);
-    Supports_Interpolation* cc = SASS_MEMORY_NEW(Supports_Interpolation,
+    SupportsInterpolation* cc = SASS_MEMORY_NEW(SupportsInterpolation,
                             c->pstate(),
                             value);
     return cc;
   }
+  */
 
   Expression* Eval::operator()(At_Root_Query* e)
   {
@@ -1487,7 +1592,7 @@ namespace Sass {
     return ee;
   }
 
-  Expression* Eval::operator()(Null* n)
+  Value* Eval::operator()(Null* n)
   {
     return n;
   }
@@ -1504,11 +1609,10 @@ namespace Sass {
         is_keyword_argument = true;
       }
       else if(val->concrete_type() != Expression::LIST) {
-        List_Obj wrapper = SASS_MEMORY_NEW(List,
+        SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
                                         val->pstate(),
-                                        0,
-                                        SASS_COMMA,
-                                        true);
+                                        // 0,
+                                        SASS_COMMA);
         wrapper->append(val);
         val = wrapper;
       }
@@ -1526,6 +1630,7 @@ namespace Sass {
     Arguments_Obj aa = SASS_MEMORY_NEW(Arguments, a->pstate());
     if (a->length() == 0) return aa.detach();
     for (size_t i = 0, L = a->length(); i < L; ++i) {
+      // std::cerr << "eval argument " << i << "\n";
       Expression_Obj rv = (*a)[i]->perform(this);
       Argument* arg = Cast<Argument>(rv);
       if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
@@ -1539,15 +1644,21 @@ namespace Sass {
 
       Sass_Separator separator = SASS_COMMA;
       List* ls = Cast<List>(splat);
+      SassList* lsl = Cast<SassList>(splat);
       Map* ms = Cast<Map>(splat);
 
       List_Obj arglist = SASS_MEMORY_NEW(List,
                                       splat->pstate(),
                                       0,
-                                      ls ? ls->separator() : separator,
+                                      ls ? ls->separator() : lsl ? lsl->separator() : separator,
                                       true);
 
-      if (ls && ls->is_arglist()) {
+      if (lsl) {
+        for (size_t i = 0; i < lsl->length(); i++) {
+          arglist->append(lsl->get(i));
+        }
+      }
+      else if (ls && ls->is_arglist()) {
         arglist->concat(ls);
       } else if (ms) {
         aa->append(SASS_MEMORY_NEW(Argument, splat->pstate(), ms, "", false, true));
@@ -1565,23 +1676,23 @@ namespace Sass {
       Expression_Obj rv = a->get_keyword_argument()->perform(this);
       Argument* rvarg = Cast<Argument>(rv);
       Expression_Obj kwarg = rvarg->value()->perform(this);
-
       aa->append(SASS_MEMORY_NEW(Argument, kwarg->pstate(), kwarg, "", false, true));
     }
+    // debug_ast(aa, "AAA: ");
     return aa.detach();
   }
 
-  Expression* Eval::operator()(LoudComment* c)
+  Value* Eval::operator()(LoudComment* c)
   {
-    return 0;
+    return nullptr;
   }
 
-  Expression* Eval::operator()(SilentComment* c)
+  Value* Eval::operator()(SilentComment* c)
   {
-    return 0;
+    return nullptr;
   }
 
-  Expression* Eval::operator()(Parent_Reference* p)
+  Value* Eval::operator()(Parent_Reference* p)
   {
     if (SelectorListObj parents = exp.original()) {
       return Listize::listize(parents);

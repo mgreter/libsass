@@ -30,18 +30,13 @@ namespace Sass {
     Value* operator()(String_Quoted*);
     Value* operator()(Interpolation*);
     Value* operator()(StringLiteral*);
-    // Value* operator()(Interpolation*);
     Value* operator()(Custom_Warning*);
     Value* operator()(Custom_Error*);
     Value* operator()(List*);
+    Value* operator()(SassList*);
     Value* operator()(Map*);
     Value* operator()(Null*);
     Value* operator()(Function*);
-
-    // convert to string via `To_String`
-    Value* operator()(SelectorList*);
-    Value* operator()(Binary_Expression*);
-    Value* operator()(ParenthesizedExpression*);
 
   };
 

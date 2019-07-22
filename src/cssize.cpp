@@ -76,7 +76,8 @@ namespace Sass {
       return dd.detach();
     }
 
-    return 0;
+    std::cerr << "return nully4\n";
+    return nullptr;
   }
 
   Statement* Cssize::operator()(AtRule* r)
@@ -102,6 +103,7 @@ namespace Sass {
       Statement_Obj s = r->block()->at(i);
       if (s->statement_type() != Statement::BUBBLE) directive_exists = true;
       else {
+        // not hit via specs, seems legit!?
         Bubble_Obj s_obj = Cast<Bubble>(s);
         s = s_obj->node();
         if (s->statement_type() != Statement::DIRECTIVE) directive_exists = false;
@@ -200,10 +202,13 @@ namespace Sass {
     return rules;
   }
 
+  /* Not used anymore? Why do we not get nulls here?
+  // they seem to be already catched earlier
   Statement* Cssize::operator()(Null* m)
   {
-    return 0;
+    return nullptr;
   }
+  */
 
   Statement* Cssize::operator()(CssMediaRule* m)
   {
@@ -229,20 +234,52 @@ namespace Sass {
     return debubble(mm->block(), mm);
   }
 
-  Statement* Cssize::operator()(Supports_Block* m)
+  Statement* Cssize::operator()(SupportsRule* m)
   {
     if (!m->block()->length())
-    { return m; }
+    {
+      return m;
+    }
 
     if (parent()->statement_type() == Statement::RULESET)
-    { return bubble(m); }
+    {
+      return bubble(m);
+    }
 
     p_stack.push_back(m);
 
-    Supports_Block_Obj mm = SASS_MEMORY_NEW(Supports_Block,
-                                       m->pstate(),
-                                       m->condition(),
-                                       operator()(m->block()));
+    SupportsRule_Obj mm = SASS_MEMORY_NEW(SupportsRule,
+      m->pstate(),
+      m->condition(),
+      operator()(m->block()));
+    mm->tabs(m->tabs());
+
+    p_stack.pop_back();
+
+    return debubble(mm->block(), mm);
+  }
+
+  Statement* Cssize::operator()(CssSupportsRule* m)
+  {
+    if (!m->block()) {
+      return m;
+    }
+    if (!m->block()->length())
+    {
+      return m;
+    }
+
+    if (parent()->statement_type() == Statement::RULESET)
+    {
+      return bubble(m);
+    }
+
+    p_stack.push_back(m);
+
+    CssSupportsRuleObj mm = SASS_MEMORY_NEW(CssSupportsRule,
+      m->pstate(),
+      m->condition());
+    mm->block(operator()(m->block()));
     mm->tabs(m->tabs());
 
     p_stack.pop_back();
@@ -289,12 +326,6 @@ namespace Sass {
       new_rule->block()->concat(m->block());
       wrapper_block->append(new_rule);
     }
-    else if (Has_Block * new_rule = Cast<Has_Block>(cp)) {
-      new_rule->block(bb);
-      new_rule->tabs(this->parent()->tabs());
-      new_rule->block()->concat(m->block());
-      wrapper_block->append(new_rule);
-    }
 
     AtRuleObj mm = SASS_MEMORY_NEW(AtRule,
                                   m->pstate(),
@@ -318,6 +349,12 @@ namespace Sass {
       new_rule->block()->concat(m->block());
       wrapper_block->append(new_rule);
     }
+    if (CssSupportsRule * new_rule = Cast<CssSupportsRule>(cp)) {
+      new_rule->block(bb);
+      new_rule->tabs(this->parent()->tabs());
+      new_rule->block()->concat(m->block());
+      wrapper_block->append(new_rule);
+    }
     if (Has_Block * new_rule = Cast<Has_Block>(cp)) {
       new_rule->block(bb);
       new_rule->tabs(this->parent()->tabs());
@@ -333,7 +370,7 @@ namespace Sass {
     return bubble;
   }
 
-  Statement* Cssize::bubble(Supports_Block* m)
+  Statement* Cssize::bubble(SupportsRule* m)
   {
     if (CssStyleRuleObj parent = Cast<CssStyleRule>(SASS_MEMORY_COPY(this->parent()))) {
 
@@ -348,7 +385,7 @@ namespace Sass {
 
       Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
       wrapper_block->append(new_rule);
-      Supports_Block* mm = SASS_MEMORY_NEW(Supports_Block,
+      SupportsRule* mm = SASS_MEMORY_NEW(SupportsRule,
         m->pstate(),
         m->condition(),
         wrapper_block);
@@ -360,11 +397,42 @@ namespace Sass {
 
     }
 
-
+    std::cerr << "return nully\n";
     return nullptr;
 
   }
 
+  Statement* Cssize::bubble(CssSupportsRule* m)
+  {
+    if (CssStyleRuleObj parent = Cast<CssStyleRule>(SASS_MEMORY_COPY(this->parent()))) {
+
+      Block* bb = SASS_MEMORY_NEW(Block, parent->block()->pstate());
+      CssStyleRule* new_rule = SASS_MEMORY_NEW(CssStyleRule,
+        parent->pstate(),
+        parent->selector());
+      new_rule->block(bb);
+      new_rule->tabs(parent->tabs());
+      new_rule->block()->concat(m->block());
+      new_rule->concat(m->block()->elements());
+
+      Block* wrapper_block = SASS_MEMORY_NEW(Block, m->block()->pstate());
+      wrapper_block->append(new_rule);
+      CssSupportsRule* mm = SASS_MEMORY_NEW(CssSupportsRule,
+        m->pstate(),
+        m->condition());
+      mm->block(wrapper_block);
+      mm->tabs(m->tabs());
+
+      Bubble* bubble = SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
+      return bubble;
+
+    }
+
+
+    std::cerr << "return nully2\n";
+    return nullptr;
+
+  }
   Statement* Cssize::bubble(CssMediaRule* m)
   {
     if (CssStyleRuleObj parent = Cast<CssStyleRule>(SASS_MEMORY_COPY(this->parent()))) {
@@ -391,12 +459,13 @@ namespace Sass {
 
     }
 
+    std::cerr << "return nully3\n";
     return nullptr;
   }
 
   bool Cssize::bubblable(Statement* s)
   {
-    return Cast<CssStyleRule>(s) || s->bubbles();
+    return Cast<CssStyleRule>(s) || Cast<CssSupportsRule>(s) || s->bubbles();
   }
 
   Block* Cssize::flatten(const Block* b)
@@ -464,6 +533,14 @@ namespace Sass {
           prev->tabs(parent->tabs());
           result->append(prev);
         }
+        else if (CssSupportsRuleObj prev = Cast<CssSupportsRule>(parent)) {
+          previousBlock = slice;
+          prev = SASS_MEMORY_COPY(prev);
+          prev->block(slice);
+          prev->tabs(parent->tabs());
+          result->append(prev);
+        }
+        /* we dont see any style rule objects here yet
         else if (CssStyleRuleObj prev = Cast<CssStyleRule>(parent)) {
           previousBlock = slice;
           prev = SASS_MEMORY_COPY(prev);
@@ -471,6 +548,7 @@ namespace Sass {
           prev->tabs(parent->tabs());
           result->append(prev);
         }
+        */
         continue;
       }
 

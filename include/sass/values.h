@@ -30,9 +30,6 @@ enum Sass_Tag {
 enum Sass_Separator {
   SASS_COMMA,
   SASS_SPACE,
-  // only used internally to represent a hash map before evaluation
-  // otherwise we would be too early to check for duplicate keys
-  SASS_HASH,
   // A separator that hasn't yet been determined.
   // Singleton lists and empty lists don't have separators defiend. This means
   // that list functions will prefer other lists' separators if possible.

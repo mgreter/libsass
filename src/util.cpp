@@ -4,7 +4,6 @@
 #include "util.hpp"
 #include "util_string.hpp"
 #include "lexer.hpp"
-#include "prelexer.hpp"
 #include "constants.hpp"
 #include "utf8/checked.h"
 

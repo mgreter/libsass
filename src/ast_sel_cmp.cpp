@@ -24,7 +24,10 @@ namespace Sass {
     return true;
   }
 
-
+  bool ExtendRule::operator== (const ExtendRule& rhs) const
+  {
+    return false;
+  }
 
   /*#########################################################################*/
   // Compare SelectorList against all other selector types

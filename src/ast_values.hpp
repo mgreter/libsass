@@ -7,25 +7,19 @@
 #include "ast.hpp"
 
 #include "environment.hpp"
+#include "ordered_map.hpp"
 
 namespace Sass {
 
   //////////////////////////////////////////////////////////////////////
-  // Still just an expression, but with a to_string method
-  //////////////////////////////////////////////////////////////////////
-  class PreValue : public Expression {
-  public:
-    PreValue(ParserState pstate, bool d = false, bool e = false, bool i = false, Type ct = NONE);
-    ATTACH_VIRTUAL_COPY_OPERATIONS(PreValue);
-    virtual ~PreValue() { }
-  };
-
-  //////////////////////////////////////////////////////////////////////
   // base class for values that support operations
   //////////////////////////////////////////////////////////////////////
-  class Value : public PreValue {
+  class Value : public Expression {
   public:
     Value(ParserState pstate, bool d = false, bool e = false, bool i = false, Type ct = NONE);
+
+    // Whether the value will be represented in CSS as the empty string.
+    virtual bool isBlank() const { return false; }
 
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
@@ -66,12 +60,10 @@ namespace Sass {
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
   class List : public Value, public Vectorized<Expression_Obj> {
-    void adjust_after_pushing(Expression_Obj e) override { }
   private:
     ADD_PROPERTY(enum Sass_Separator, separator)
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, is_bracketed)
-    ADD_PROPERTY(bool, from_selector)
   public:
     List(ParserState pstate, size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false, bool bracket = false);
     std::string type() const override { return is_arglist_ ? "arglist" : "list"; }
@@ -87,12 +79,54 @@ namespace Sass {
     virtual size_t hash() const override;
     virtual size_t size() const;
 
-    environment_map(ExpressionObj) getNormalizedArgMap();
+    NormalizedMap<ExpressionObj> getNormalizedArgMap();
 
     virtual bool operator== (const Value& rhs) const override;
 
     ATTACH_COPY_OPERATIONS(List)
     ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class SassList : public Value,
+    public Vectorized<ValueObj> {
+    virtual bool is_arglist() const { return false; }
+  private:
+    ADD_PROPERTY(enum Sass_Separator, separator);
+    ADD_PROPERTY(bool, hasBrackets);
+  public:
+
+    SassList(ParserState pstate,
+      enum Sass_Separator seperator = SASS_SPACE,
+      bool hasBrackets = false);
+
+    bool isBlank() const override final;
+
+    std::string type() const override { return "list"; }
+    static std::string type_name() { return "list"; }
+
+    bool is_invisible() const override
+    { return isBlank() && !hasBrackets(); }
+
+    virtual size_t hash() const override;
+
+    ATTACH_EQ_OPERATIONS(Value);
+    ATTACH_COPY_OPERATIONS(SassList);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  typedef ordered_map<std::string, ValueObj> keywordMap;
+  class SassArgumentList : public SassList {
+    ADD_PROPERTY(keywordMap, keywords);
+  public:
+    bool is_arglist() const override final {
+      return true;
+    }
+    SassArgumentList(ParserState pstate,
+      Sass_Separator sep = SASS_SPACE,
+      keywordMap keywords = {});
+    ATTACH_EQ_OPERATIONS(Value);
+    ATTACH_COPY_OPERATIONS(SassArgumentList);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -104,7 +138,7 @@ namespace Sass {
     std::string type() const override { return "map"; }
     static std::string type_name() { return "map"; }
     bool is_invisible() const override { return empty(); }
-    List_Obj to_list(ParserState& pstate);
+    SassListObj to_list(ParserState& pstate);
 
     virtual size_t hash() const override;
 
@@ -120,7 +154,7 @@ namespace Sass {
   // operations. Templatized to avoid large switch statements and repetitive
   // subclassing.
   //////////////////////////////////////////////////////////////////////////
-  class Binary_Expression : public PreValue {
+  class Binary_Expression : public Expression {
   private:
     HASH_PROPERTY(Operand, op)
     HASH_PROPERTY(Expression_Obj, left)
@@ -135,11 +169,9 @@ namespace Sass {
 
     virtual void set_delayed(bool delayed) override;
 
-    virtual bool operator==(const Expression& rhs) const override;
-
     virtual size_t hash() const override;
     enum Sass_OP optype() const { return op_.operand; }
-    ATTACH_COPY_OPERATIONS(Binary_Expression)
+    // ATTACH_COPY_OPERATIONS(Binary_Expression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -161,14 +193,14 @@ namespace Sass {
 
     bool operator== (const Value& rhs) const override;
 
-    ATTACH_COPY_OPERATIONS(Function)
+    // ATTACH_COPY_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   //////////////////
   // Function calls.
   //////////////////
-  class FunctionExpression final : public PreValue {
+  class FunctionExpression final : public Expression {
     HASH_CONSTREF(InterpolationObj, sname)
     HASH_PROPERTY(Arguments_Obj, arguments)
     HASH_PROPERTY(Function_Obj, func)
@@ -184,27 +216,21 @@ namespace Sass {
     std::string name() const;
     bool is_css();
 
-    bool operator==(const Expression& rhs) const override;
-    bool operator!=(const Expression& rhs) const {
-      return !(*this == rhs);
-    }
-
     size_t hash() const override;
 
-    ATTACH_COPY_OPERATIONS(FunctionExpression)
+    // ATTACH_COPY_OPERATIONS(FunctionExpression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   ///////////////////////
   // Variable references.
   ///////////////////////
-  class Variable final : public PreValue {
+  class Variable final : public Expression {
     ADD_CONSTREF(std::string, name)
   public:
     Variable(ParserState pstate, std::string n);
-    virtual bool operator==(const Expression& rhs) const override;
     virtual size_t hash() const override;
-    ATTACH_COPY_OPERATIONS(Variable)
+    // ATTACH_COPY_OPERATIONS(Variable)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -347,7 +373,7 @@ namespace Sass {
   public:
     Custom_Error(ParserState pstate, std::string msg);
     bool operator== (const Value& rhs) const override;
-    ATTACH_COPY_OPERATIONS(Custom_Error)
+    // ATTACH_COPY_OPERATIONS(Custom_Error)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -359,7 +385,7 @@ namespace Sass {
   public:
     Custom_Warning(ParserState pstate, std::string msg);
     bool operator== (const Value& rhs) const override;
-    ATTACH_COPY_OPERATIONS(Custom_Warning)
+    // ATTACH_COPY_OPERATIONS(Custom_Warning)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -423,21 +449,21 @@ namespace Sass {
     }
 
     Interpolation(ParserState pstate, Expression* ex = nullptr);
-    ATTACH_COPY_OPERATIONS(Interpolation)
-    ATTACH_CRTP_PERFORM_METHODS()
+    // ATTACH_COPY_OPERATIONS(Interpolation)
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
-  class StringExpression2 final : public String {
+  class StringExpression final : public String {
     ADD_PROPERTY(InterpolationObj, text)
     ADD_PROPERTY(bool, hasQuotes)
   public:
     uint8_t findBestQuote();
-    static StringExpression2* plain(ParserState pstate, std::string text, bool quotes = false);
+    static StringExpression* plain(ParserState pstate, std::string text, bool quotes = false);
     InterpolationObj getAsInterpolation(bool escape = false, uint8_t quote = 0);
-    StringExpression2(ParserState pstate, InterpolationObj text, bool quote = false);
-    ATTACH_COPY_OPERATIONS(StringExpression2)
+    StringExpression(ParserState pstate, InterpolationObj text, bool quote = false);
+    ATTACH_COPY_OPERATIONS(StringExpression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -448,8 +474,10 @@ namespace Sass {
     ADD_PROPERTY(std::string, text)
   public:
     StringLiteral(ParserState pstate, std::string text);
-    ATTACH_COPY_OPERATIONS(StringLiteral)
-    ATTACH_CRTP_PERFORM_METHODS()
+    bool isBlank() const override final;
+    ATTACH_COPY_OPERATIONS(StringLiteral);
+    ATTACH_CRTP_PERFORM_METHODS();
+    ATTACH_EQ_OPERATIONS(Value);
   };
 
   ////////////////////////////////////////////////////////
@@ -497,6 +525,7 @@ namespace Sass {
   class Null final : public Value {
   public:
     Null(ParserState pstate);
+    bool isBlank() const override final { return true; }
     std::string type() const override { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const override { return true; }
@@ -507,7 +536,7 @@ namespace Sass {
 
     bool operator== (const Value& rhs) const override;
 
-    ATTACH_COPY_OPERATIONS(Null)
+    // ATTACH_COPY_OPERATIONS(Null)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -522,7 +551,7 @@ namespace Sass {
     bool operator==(const Value& rhs) const override {
       return true; // they are always equal
     };
-    ATTACH_COPY_OPERATIONS(Parent_Reference)
+    // ATTACH_COPY_OPERATIONS(Parent_Reference)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
