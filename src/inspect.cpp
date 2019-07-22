@@ -931,28 +931,28 @@ namespace Sass {
     append_string("&");
   }
 
-  void Inspect::operator()(Placeholder_Selector* s)
+  void Inspect::operator()(PlaceholderSelector* s)
   {
     append_token(s->name(), s);
 
   }
 
-  void Inspect::operator()(Type_Selector* s)
+  void Inspect::operator()(TypeSelector* s)
   {
     append_token(s->ns_name(), s);
   }
 
-  void Inspect::operator()(Class_Selector* s)
+  void Inspect::operator()(ClassSelector* s)
   {
     append_token(s->ns_name(), s);
   }
 
-  void Inspect::operator()(Id_Selector* s)
+  void Inspect::operator()(IDSelector* s)
   {
     append_token(s->ns_name(), s);
   }
 
-  void Inspect::operator()(Attribute_Selector* s)
+  void Inspect::operator()(AttributeSelector* s)
   {
     append_string("[");
     add_open_mapping(s);
@@ -971,7 +971,7 @@ namespace Sass {
     append_string("]");
   }
 
-  void Inspect::operator()(Pseudo_Selector* s)
+  void Inspect::operator()(PseudoSelector* s)
   {
 
     if (s->name() != "") {

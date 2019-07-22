@@ -174,31 +174,31 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Placeholder_Selector::Placeholder_Selector(ParserState pstate, std::string n)
+  PlaceholderSelector::PlaceholderSelector(ParserState pstate, std::string n)
   : SimpleSelector(pstate, n)
   { simple_type(PLACEHOLDER_SEL); }
-  Placeholder_Selector::Placeholder_Selector(const Placeholder_Selector* ptr)
+  PlaceholderSelector::PlaceholderSelector(const PlaceholderSelector* ptr)
   : SimpleSelector(ptr)
   { simple_type(PLACEHOLDER_SEL); }
-  unsigned long Placeholder_Selector::specificity() const
+  unsigned long PlaceholderSelector::specificity() const
   {
     return Constants::Specificity_Base;
   }
-  bool Placeholder_Selector::has_placeholder() {
+  bool PlaceholderSelector::has_placeholder() {
     return true;
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Type_Selector::Type_Selector(ParserState pstate, std::string n)
+  TypeSelector::TypeSelector(ParserState pstate, std::string n)
   : SimpleSelector(pstate, n)
   { simple_type(TYPE_SEL); }
-  Type_Selector::Type_Selector(const Type_Selector* ptr)
+  TypeSelector::TypeSelector(const TypeSelector* ptr)
   : SimpleSelector(ptr)
   { simple_type(TYPE_SEL); }
 
-  unsigned long Type_Selector::specificity() const
+  unsigned long TypeSelector::specificity() const
   {
     if (name() == "*") return 0;
     else return Constants::Specificity_Element;
@@ -207,14 +207,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Class_Selector::Class_Selector(ParserState pstate, std::string n)
+  ClassSelector::ClassSelector(ParserState pstate, std::string n)
   : SimpleSelector(pstate, n)
   { simple_type(CLASS_SEL); }
-  Class_Selector::Class_Selector(const Class_Selector* ptr)
+  ClassSelector::ClassSelector(const ClassSelector* ptr)
   : SimpleSelector(ptr)
   { simple_type(CLASS_SEL); }
 
-  unsigned long Class_Selector::specificity() const
+  unsigned long ClassSelector::specificity() const
   {
     return Constants::Specificity_Class;
   }
@@ -222,14 +222,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Id_Selector::Id_Selector(ParserState pstate, std::string n)
+  IDSelector::IDSelector(ParserState pstate, std::string n)
   : SimpleSelector(pstate, n)
   { simple_type(ID_SEL); }
-  Id_Selector::Id_Selector(const Id_Selector* ptr)
+  IDSelector::IDSelector(const IDSelector* ptr)
   : SimpleSelector(ptr)
   { simple_type(ID_SEL); }
 
-  unsigned long Id_Selector::specificity() const
+  unsigned long IDSelector::specificity() const
   {
     return Constants::Specificity_ID;
   }
@@ -237,17 +237,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Attribute_Selector::Attribute_Selector(ParserState pstate, std::string n, std::string m, String_Obj v, char o)
+  AttributeSelector::AttributeSelector(ParserState pstate, std::string n, std::string m, String_Obj v, char o)
   : SimpleSelector(pstate, n), matcher_(m), value_(v), modifier_(o)
   { simple_type(ATTRIBUTE_SEL); }
-  Attribute_Selector::Attribute_Selector(const Attribute_Selector* ptr)
+  AttributeSelector::AttributeSelector(const AttributeSelector* ptr)
   : SimpleSelector(ptr),
     matcher_(ptr->matcher_),
     value_(ptr->value_),
     modifier_(ptr->modifier_)
   { simple_type(ATTRIBUTE_SEL); }
 
-  size_t Attribute_Selector::hash() const
+  size_t AttributeSelector::hash() const
   {
     if (hash_ == 0) {
       hash_combine(hash_, SimpleSelector::hash());
@@ -257,7 +257,7 @@ namespace Sass {
     return hash_;
   }
 
-  unsigned long Attribute_Selector::specificity() const
+  unsigned long AttributeSelector::specificity() const
   {
     return Constants::Specificity_Attr;
   }
@@ -265,7 +265,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Pseudo_Selector::Pseudo_Selector(ParserState pstate, std::string name, bool element)
+  PseudoSelector::PseudoSelector(ParserState pstate, std::string name, bool element)
   : SimpleSelector(pstate, name),
     normalized_(Util::unvendor(name)),
     argument_({}),
@@ -273,7 +273,7 @@ namespace Sass {
     isSyntacticClass_(!element),
     isClass_(!element && !isFakePseudoElement(normalized_))
   { simple_type(PSEUDO_SEL); }
-  Pseudo_Selector::Pseudo_Selector(const Pseudo_Selector* ptr)
+  PseudoSelector::PseudoSelector(const PseudoSelector* ptr)
   : SimpleSelector(ptr),
     normalized_(ptr->normalized()),
     argument_(ptr->argument()),
@@ -290,12 +290,12 @@ namespace Sass {
   // in CSS levels 1 and 2 (namely, :first-line, :first-letter, :before and
   // :after). This compatibility is not allowed for the new pseudo-elements
   // introduced in this specification.
-  bool Pseudo_Selector::is_pseudo_element() const
+  bool PseudoSelector::is_pseudo_element() const
   {
     return isElement();
   }
 
-  size_t Pseudo_Selector::hash() const
+  size_t PseudoSelector::hash() const
   {
     if (hash_ == 0) {
       hash_combine(hash_, SimpleSelector::hash());
@@ -305,34 +305,34 @@ namespace Sass {
     return hash_;
   }
 
-  unsigned long Pseudo_Selector::specificity() const
+  unsigned long PseudoSelector::specificity() const
   {
     if (is_pseudo_element())
       return Constants::Specificity_Element;
     return Constants::Specificity_Pseudo;
   }
 
-  Pseudo_Selector_Obj Pseudo_Selector::withSelector(SelectorListObj selector)
+  PseudoSelectorObj PseudoSelector::withSelector(SelectorListObj selector)
   {
-    Pseudo_Selector_Obj pseudo = SASS_MEMORY_COPY(this);
+    PseudoSelectorObj pseudo = SASS_MEMORY_COPY(this);
     pseudo->selector(selector);
     return pseudo;
   }
 
-  bool Pseudo_Selector::empty() const
+  bool PseudoSelector::empty() const
   {
     // Only considered empty if selector is
     // available but has no items in it.
     return selector() && selector()->empty();
   }
 
-  void Pseudo_Selector::cloneChildren()
+  void PseudoSelector::cloneChildren()
   {
     if (selector().isNull()) selector({});
     else selector(SASS_MEMORY_CLONE(selector()));
   }
 
-  bool Pseudo_Selector::has_real_parent_ref() const {
+  bool PseudoSelector::has_real_parent_ref() const {
     if (!selector()) return false;
     return selector()->has_real_parent_ref();
   }
@@ -548,7 +548,7 @@ namespace Sass {
   {
     if (hasRealParent()) return true;
     // ToDo: dart sass has another check?
-    // if (Cast<Type_Selector>(front)) {
+    // if (Cast<TypeSelector>(front)) {
     //  if (front->ns() != "") return false;
     // }
     for (const SimpleSelector* s : elements()) {
@@ -857,7 +857,7 @@ namespace Sass {
     std::vector<ComplexSelectorObj> rv;
 
     for (SimpleSelectorObj simple : elements()) {
-      if (Pseudo_Selector * pseudo = Cast<Pseudo_Selector>(simple)) {
+      if (PseudoSelector * pseudo = Cast<PseudoSelector>(simple)) {
         if (SelectorList* sel = Cast<SelectorList>(pseudo->selector())) {
           if (parent) {
             pseudo->selector(sel->resolve_parent_refs(
@@ -886,7 +886,7 @@ namespace Sass {
               SimpleSelectorObj back = tail->last();
               SimpleSelectorObj front = first();
               auto simple_back = Cast<SimpleSelector>(back);
-              auto simple_front = Cast<Type_Selector>(front);
+              auto simple_front = Cast<TypeSelector>(front);
               if (simple_front && simple_back) {
                 simple_back = SASS_MEMORY_COPY(simple_back);
                 auto name = simple_back->name();
@@ -1018,12 +1018,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   IMPLEMENT_AST_OPERATORS(Selector_Schema);
-  IMPLEMENT_AST_OPERATORS(Placeholder_Selector);
-  IMPLEMENT_AST_OPERATORS(Attribute_Selector);
-  IMPLEMENT_AST_OPERATORS(Type_Selector);
-  IMPLEMENT_AST_OPERATORS(Class_Selector);
-  IMPLEMENT_AST_OPERATORS(Id_Selector);
-  IMPLEMENT_AST_OPERATORS(Pseudo_Selector);
+  IMPLEMENT_AST_OPERATORS(PlaceholderSelector);
+  IMPLEMENT_AST_OPERATORS(AttributeSelector);
+  IMPLEMENT_AST_OPERATORS(TypeSelector);
+  IMPLEMENT_AST_OPERATORS(ClassSelector);
+  IMPLEMENT_AST_OPERATORS(IDSelector);
+  IMPLEMENT_AST_OPERATORS(PseudoSelector);
   IMPLEMENT_AST_OPERATORS(SelectorCombinator);
   IMPLEMENT_AST_OPERATORS(CompoundSelector);
   IMPLEMENT_AST_OPERATORS(ComplexSelector);

@@ -120,13 +120,13 @@ namespace Sass {
   // ##########################################################################
   // This is implemented in `selector/type.dart` as `PseudoSelector::unify`
   // ##########################################################################
-  CompoundSelector* Type_Selector::unifyWith(CompoundSelector* rhs)
+  CompoundSelector* TypeSelector::unifyWith(CompoundSelector* rhs)
   {
     if (rhs->empty()) {
       rhs->append(this);
       return rhs;
     }
-    Type_Selector* type = Cast<Type_Selector>(rhs->at(0));
+    TypeSelector* type = Cast<TypeSelector>(rhs->at(0));
     if (type != nullptr) {
       SimpleSelector* unified = unifyWith(type);
       if (unified == nullptr) {
@@ -143,10 +143,10 @@ namespace Sass {
   // ##########################################################################
   // This is implemented in `selector/id.dart` as `PseudoSelector::unify`
   // ##########################################################################
-  CompoundSelector* Id_Selector::unifyWith(CompoundSelector* rhs)
+  CompoundSelector* IDSelector::unifyWith(CompoundSelector* rhs)
   {
     for (const SimpleSelector* sel : rhs->elements()) {
-      if (const Id_Selector* id_sel = Cast<Id_Selector>(sel)) {
+      if (const IDSelector* id_sel = Cast<IDSelector>(sel)) {
         if (id_sel->name() != name()) return nullptr;
       }
     }
@@ -156,7 +156,7 @@ namespace Sass {
   // ##########################################################################
   // This is implemented in `selector/pseudo.dart` as `PseudoSelector::unify`
   // ##########################################################################
-  CompoundSelector* Pseudo_Selector::unifyWith(CompoundSelector* compound)
+  CompoundSelector* PseudoSelector::unifyWith(CompoundSelector* compound)
   {
 
     if (compound->length() == 1 && compound->first()->is_universal()) {
@@ -174,7 +174,7 @@ namespace Sass {
     bool addedThis = false;
     for (auto simple : compound->elements()) {
       // Make sure pseudo selectors always come last.
-      if (Pseudo_Selector_Obj pseudo = simple->getPseudoSelector()) {
+      if (PseudoSelectorObj pseudo = simple->getPseudoSelector()) {
         if (pseudo->isElement()) {
           // A given compound selector may only contain one pseudo element. If
           // [compound] has a different one than [this], unification fails.
@@ -197,7 +197,7 @@ namespace Sass {
     return result.detach();
 
   }
-  // EO Pseudo_Selector::unifyWith(CompoundSelector*
+  // EO PseudoSelector::unifyWith(CompoundSelector*
 
   // ##########################################################################
   // This is implemented in `extend/functions.dart` as `unifyUniversalAndElement`
@@ -206,7 +206,7 @@ namespace Sass {
   // or [TypeSelector]s. If no such selector can be produced, returns `null`.
   // Note: libsass handles universal selector directly within the type selector
   // ##########################################################################
-  SimpleSelector* Type_Selector::unifyWith(const SimpleSelector* rhs)
+  SimpleSelector* TypeSelector::unifyWith(const SimpleSelector* rhs)
   {
     bool rhs_ns = false;
     if (!(is_ns_eq(*rhs) || rhs->is_universal_ns())) {
@@ -229,7 +229,7 @@ namespace Sass {
     if (rhs_name) name(rhs->name());
     return this;
   }
-  // EO Type_Selector::unifyWith(const SimpleSelector*)
+  // EO TypeSelector::unifyWith(const SimpleSelector*)
 
   // ##########################################################################
   // Unify two complex selectors. Internally calls `unifyComplex`
