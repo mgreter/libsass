@@ -4,6 +4,7 @@
 
 #include "ast.hpp"
 #include "debugger.hpp"
+#include "parser_scss.hpp"
 
 namespace Sass {
 
@@ -568,14 +569,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Mixin_Call::Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params, Block_Obj b)
+  Mixin_Call::Mixin_Call(ParserState pstate, std::string n, ArgumentInvocation* args, Parameters_Obj b_params, Block_Obj b)
   : Has_Block(pstate, b), name_(n), arguments_(args), block_parameters_(b_params)
   { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Content::Content(ParserState pstate, Arguments_Obj args)
+  Content::Content(ParserState pstate, ArgumentInvocation* args)
   : Statement(pstate),
     arguments_(args)
   { statement_type(CONTENT); }
@@ -584,14 +585,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Expression::Expression(ParserState pstate, bool d, bool e, bool i, Type ct)
-  : AST_Node(pstate),
+  : SassNode(pstate),
     concrete_type_(ct)
   { }
 
   Expression::Expression(const Expression* ptr)
-  : AST_Node(ptr),
+  : SassNode(ptr),
     concrete_type_(ptr->concrete_type_)
   { }
+
+  SassNode::SassNode(const SassNode* ptr) :
+    AST_Node(ptr)
+  {};
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -842,7 +847,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   SassList* list_to_sass_list(List* list) {
-    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), list->separator());
+    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), {}, list->separator());
     rv->hasBrackets(list->is_bracketed());
     for (auto item : list->elements()) {
       rv->append(item);
@@ -859,4 +864,280 @@ namespace Sass {
     return rv;
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ArgumentInvocation::ArgumentInvocation(ParserState pstate,
+    std::vector<ExpressionObj> positional,
+    KeywordMap<ExpressionObj> named,
+    Expression* restArg,
+    Expression* kwdRest) :
+    SassNode(pstate),
+    positional_(positional),
+    named_(named),
+    restArg_(restArg),
+    kwdRest_(kwdRest)
+  {
+  }
+
+  // Returns whether this invocation passes no arguments.
+  bool ArgumentInvocation::isEmpty() const
+  {
+    return positional_.empty()
+      && named_.empty()
+      && restArg_.isNull();
+  }
+
+  std::string ArgumentInvocation::toString() const
+  {
+    std::stringstream strm;
+    strm << "(";
+    bool addComma = false;
+    for (Expression* named : positional_) {
+      if (addComma) strm << ", ";
+      strm << named->to_string();
+      addComma = true;
+    }
+    for (std::string named : named_) {
+      if (addComma) strm << ", ";
+      strm << named << ": ";
+//      strm << named_->get(named)->to_string();
+      addComma = true;
+    }
+    if (!restArg_.isNull()) {
+      if (addComma) strm << ", ";
+      strm << restArg_->to_string() << "...";
+      addComma = true;
+    }
+    if (!kwdRest_.isNull()) {
+      if (addComma) strm << ", ";
+      strm << kwdRest_->to_string() << "...";
+      addComma = true;
+    }
+    return strm.str();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ArgumentResults::ArgumentResults(
+    ParserState pstate,
+    std::vector<ValueObj> positional,
+    KeywordMap<ValueObj> named,
+    Sass_Separator separator) :
+    SassNode(pstate),
+    positional_(positional),
+    named_(named),
+    separator_(separator)
+  {
+  }
+
+  ArgumentDeclaration::ArgumentDeclaration(
+    ParserState pstate,
+    std::vector<ArgumentObj> arguments,
+    std::string restArg) :
+    SassNode(pstate),
+    arguments_(arguments),
+    restArg_(restArg)
+  {
+  }
+
+  ArgumentDeclaration* ArgumentDeclaration::parse(
+    Context& context, std::string contents)
+  {
+    std::string text = "(" + contents + ")";
+    char* cstr = sass_copy_c_string(text.c_str());
+    context.strings.push_back(cstr); // clean up later
+    ScssParser parser(context, cstr, "sass://builtin", -1);
+    return parser.parseArgumentDeclaration2();
+  }
+
+  /// Throws a [SassScriptException] if [positional] and [names] aren't valid
+  /// for this argument declaration.
+  void ArgumentDeclaration::verify(size_t positional, KeywordMap<ValueObj>& names, Backtraces traces)
+  {
+
+    size_t namedUsed = 0;
+    for (size_t i = 0; i < arguments_.size(); i++) {
+      Argument* argument = arguments_[i];
+      if (i < positional) {
+        if (names.count(argument->name()) == 1) {
+          throw Exception::InvalidSyntax(argument->pstate(), traces,
+            "Argument " + argument->name() + " name was passed both by position and by "
+            "name.");
+        }
+      }
+      else if (names.count(argument->name()) == 1) {
+        namedUsed++;
+      }
+      else if (argument->value() == nullptr) {
+        throw Exception::InvalidSyntax(argument->pstate(), traces,
+          "Missing argument " + argument->name() + ".");
+      }
+    }
+
+    if (!restArg_.empty()) return;
+
+    if (positional > arguments_.size()) {
+      std::stringstream strm;
+      strm << "Only " << arguments_.size() << " "; //  " positional ";
+      strm << pluralize("argument", arguments_.size());
+      strm << " allowed, but " << positional << " ";
+      strm << pluralize("was", positional, "were");
+      strm << " passed.";
+      throw Exception::InvalidSyntax(
+        "[pstate]", traces, strm.str());
+    }
+
+    if (namedUsed < names.size()) {
+      KeywordMap<ValueObj> unknownNames(names);
+      for (Argument* arg : arguments_) {
+        unknownNames.erase(arg->name());
+      }
+      std::stringstream strm;
+      strm << "No " << pluralize("argument", unknownNames.size());
+      strm << " named " << toSentence(unknownNames, "or");
+      throw Exception::InvalidSyntax("[pstate]", traces,
+        "No argument named " + toSentence(unknownNames, "or") + ".");
+    }
+
+  }
+
+  // Returns whether [positional] and [names] are valid for this argument declaration.
+  bool ArgumentDeclaration::matches(size_t positional, KeywordMap<ValueObj>& names)
+  {
+    size_t namedUsed = 0;
+    for (size_t i = 0; i < arguments_.size(); i++) {
+      Argument* argument = arguments_[i];
+      if (i < positional) {
+        if (names.count(argument->name()) == 1) {
+          return false;
+        }
+      }
+      else if (names.count(argument->name()) == 1) {
+        namedUsed++;
+      }
+      else if (argument->value() == nullptr) {
+        return false;
+      }
+    }
+    if (!restArg_.empty()) return true;
+    if (positional > arguments_.size()) return false;
+    if (namedUsed < names.size()) return false;
+    return true;
+  }
+
+  std::string ArgumentDeclaration::toString2() const
+  {
+    std::vector<std::string> results;
+    for (Argument* argument : arguments_) {
+      results.push_back(argument->name());
+    }
+    return Util::join_strings(results, ", ");
+  }
+
+  CallableDeclaration::CallableDeclaration(
+    ParserState pstate,
+    std::string name,
+    ArgumentDeclaration* arguments,
+    SilentComment* comment,
+    Block* block) :
+    Has_Block(pstate, block),
+    name_(name),
+    comment_(comment),
+    arguments_(arguments)
+  {
+    if (arguments_ == nullptr) {
+      std::cerr << "Callable without arg decl\n";
+    }
+  }
+
+  FunctionRule::FunctionRule(
+    ParserState pstate,
+    std::string name,
+    ArgumentDeclaration* arguments,
+    SilentComment* comment,
+    Block* block) :
+    CallableDeclaration(pstate,
+      name, arguments, comment, block)
+  {
+  }
+
+  std::string FunctionRule::toString1() const
+  {
+    return std::string();
+  }
+
+  MixinRule::MixinRule(
+    ParserState pstate,
+    std::string name,
+    ArgumentDeclaration* arguments,
+    SilentComment* comment,
+    Block* block) :
+    CallableDeclaration(pstate,
+      name, arguments, comment, block)
+  {
+  }
+
+  std::string MixinRule::toString1() const
+  {
+    return std::string();
+  }
+
+
+
+
+  IncludeRule::IncludeRule(
+    ParserState pstate,
+    std::string name,
+    ArgumentInvocation* arguments,
+    std::string ns,
+    ContentBlock* content,
+    Block* block) :
+    InvocationStatement(pstate, arguments),
+    ns_(ns), name_(name), content_(content)
+  {
+  }
+
+
+  ContentBlock::ContentBlock(
+    ParserState pstate,
+    ArgumentDeclaration* arguments,
+    std::vector<StatementObj> children) :
+    CallableDeclaration(pstate, "", arguments)
+  {
+  }
+
+  std::string ContentBlock::toString1() const
+  {
+    return std::string();
+  }
+
+  UserDefinedCallable::UserDefinedCallable(
+    ParserState pstate,
+    CallableDeclarationObj declaration,
+    Env* environment) :
+    Callable(pstate),
+    declaration_(declaration),
+    environment_(environment)
+  {
+  }
+
+  bool UserDefinedCallable::operator==(const Callable& rhs) const
+  {
+    if (const UserDefinedCallable * user = Cast<UserDefinedCallable>(&rhs)) {
+      return this == user;
+    }
+    return false;
+  }
+
+  ValueExpression::ValueExpression(
+    ParserState pstate,
+    ValueObj value) :
+    Expression(pstate),
+    value_(value)
+  {
+  }
+
 }
+

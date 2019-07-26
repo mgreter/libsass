@@ -6,6 +6,73 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Maps {
+
+      BUILT_IN_FN(get)
+      {
+        SassMapObj map = arguments[0]->assertMap("map");
+        Value* key = arguments[1]->assertValue("key");
+        if (Value* value = map->at(key)) { return value; }
+        else { return SASS_MEMORY_NEW(Null, pstate); }
+      }
+
+      BUILT_IN_FN(merge)
+      {
+        SassMapObj map1 = arguments[0]->assertMap("map1");
+        SassMapObj map2 = arguments[1]->assertMap("map2");
+        SassMapObj map = SASS_MEMORY_NEW(Map, pstate);
+        for (auto key : map1->keys()) { map->insert(key, map1->at(key)); }
+        for (auto key : map2->keys()) { map->insert(key, map2->at(key)); }
+        // std::copy(map1->begin(), map1->end(),
+        //   std::back_inserter(map->elements()));
+        // std::copy(map2->begin(), map2->end(),
+        //   std::back_inserter(map->elements()));
+        return map.detach();
+      }
+
+      // Because the signature below has an explicit `$key` argument, it doesn't
+      // allow zero keys to be passed. We want to allow that case, so we add an
+      // explicit overload for it.
+      BUILT_IN_FN(remove_one)
+      {
+        return arguments[0]->assertMap("map");
+      }
+
+      BUILT_IN_FN(remove_many)
+      {
+        SassMapObj map = arguments[0]->assertMap("map");
+        SassMapObj copy = SASS_MEMORY_COPY(map);
+        copy->erase(arguments[1]);
+        auto values = arguments[2]->asVector();
+        for (Value* key : values) {
+          copy->erase(key);
+        }
+        return copy.detach();
+      }
+
+      BUILT_IN_FN(keys)
+      {
+        SassMapObj map = arguments[0]->assertMap("map");
+        return SASS_MEMORY_NEW(SassList,
+          pstate, map->keys(), SASS_COMMA);
+      }
+
+      BUILT_IN_FN(values)
+      {
+        SassMapObj map = arguments[0]->assertMap("map");
+        return SASS_MEMORY_NEW(SassList,
+          pstate, map->values(), SASS_COMMA);
+      }
+
+      BUILT_IN_FN(hasKey)
+      {
+        SassMapObj map = arguments[0]->assertMap("map");
+        Value* key = arguments[1]->assertValue("key");
+        return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
+      }
+
+    }
+
     /////////////////
     // MAP FUNCTIONS
     /////////////////
@@ -39,7 +106,7 @@ namespace Sass {
     BUILT_IN(map_keys)
     {
       Map_Obj m = ARGM("$map", Map);
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, SASS_COMMA);
+      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
       for ( auto key : m->keys()) {
         result->append(key);
       }
@@ -50,7 +117,7 @@ namespace Sass {
     BUILT_IN(map_values)
     {
       Map_Obj m = ARGM("$map", Map);
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, SASS_COMMA);
+      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
       for ( auto key : m->keys()) {
         result->append(m->at(key));
       }

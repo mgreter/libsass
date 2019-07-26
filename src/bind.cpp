@@ -249,7 +249,7 @@ namespace Sass {
         // debug_ast(arglist, "== ");
         if (!arglist && !arglist2) {
           if (Expression_Obj arg = Cast<Expression>(a->value())) {
-            arglist2 = SASS_MEMORY_NEW(SassList, a->pstate());
+            arglist2 = SASS_MEMORY_NEW(SassList, a->pstate(), {});
             arglist2->append(arg);
           }
         }
@@ -345,7 +345,7 @@ namespace Sass {
 
           if (!param_map.count(param)) {
             std::stringstream msg;
-            msg << "No argument named " << param << ".";
+            msg << "No argument2 named " << param << ".";
             error(msg.str(), a->pstate(), traces);
           }
           // std::cerr << "Assign4 " << p->name() << "\n";
@@ -376,7 +376,7 @@ namespace Sass {
             varargs->append(a);
           } else {
             std::stringstream msg;
-            msg << "No argument named " << a->name() << ".";
+            msg << "No argument3 named " << a->name() << ".";
             error(msg.str(), a->pstate(), traces);
           }
         }

@@ -7,6 +7,8 @@ namespace Sass {
 
   namespace Functions {
 
+    extern BuiltInCallable fn_foo;
+
     extern Signature type_of_sig;
     extern Signature variable_exists_sig;
     extern Signature global_variable_exists_sig;

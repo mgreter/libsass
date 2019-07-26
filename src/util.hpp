@@ -24,6 +24,11 @@ namespace Sass {
   }
 
   template <typename T>
+  T clamp(const T& n, const T& lower, const T& upper) {
+    return std::max(lower, std::min(n, upper));
+  }
+
+  template <typename T>
   T absmod(const T& n, const T& r) {
     T m = std::fmod(n, r);
     if (m < 0.0) m += r;

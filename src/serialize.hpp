@@ -40,7 +40,7 @@ namespace Sass {
     bool _inspect;
 
     // Whether quoted strings should be emitted with quotes.
-    bool _quote;
+    // bool _quote;
 
     // Whether we're emitting compressed output.
     bool _isCompressed; // = > _style == OutputStyle.compressed;

@@ -24,6 +24,9 @@ namespace Sass {
           std::cerr << "LEAKED " << var << "\n";
         }
       }
+      all.clear();
+      deleted.clear();
+      objCount = 0;
     }
   }
   size_t SharedObj::objCount = 0;

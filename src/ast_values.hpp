@@ -21,6 +21,161 @@ namespace Sass {
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
 
+    // Return the length of this item as a list
+    virtual long lengthAsList() const { return 1; }
+
+    virtual std::vector<ValueObj> asVector() {
+      std::vector<ValueObj> list;
+      list.push_back(this);
+      return list;
+    }
+
+    // Return the list separator
+    virtual Sass_Separator separator() const {
+      return SASS_UNDEF;
+    }
+
+    // Return the list separator
+    virtual bool hasBrackets() {
+      return false;
+    }
+
+    // Return the list separator
+    virtual bool isTruthy() const {
+      return true;
+    }
+
+    // Return the list separator
+    virtual bool isNull() const {
+      return false;
+    }
+
+    virtual Value* withoutSlash() {
+      return this;
+    }
+
+    // Return normalized index for vector from overflowable sass index
+    long sassIndexToListIndex(Value* sassIndex, double epsilon, std::string name = "");
+
+    Value* assertValue(std::string name = "");
+
+    virtual SassColor* assertColor(std::string name = "");
+    virtual Color_HSLA* assertColorHsla(std::string name = "");
+
+    virtual SassFunction* assertFunction(std::string name = "");
+
+    // SassFunction assertFunction(std::string name = "") = >
+    //   throw _exception("$this is not a function reference.", name);
+
+    virtual SassMap* assertMap(std::string name = "");
+
+    virtual SassNumber* assertNumber(std::string name = "");
+    virtual SassNumber* assertNumberOrNull(std::string name = "");
+
+    virtual SassString* assertString(std::string name = "");
+    virtual SassString* assertStringOrNull(std::string name = "");
+
+    virtual SassArgumentList* assertArgumentList(std::string name = "");
+
+    /// Converts a `selector-parse()`-style input into a string that can be
+/// parsed.
+///
+/// Returns `null` if [this] isn't a type or a structure that can be parsed as
+/// a selector.
+    bool _selectorStringOrNull(std::string& rv);
+
+
+    /// Converts a `selector-parse()`-style input into a string that can be
+    /// parsed.
+    ///
+    /// Throws a [SassScriptException] if [this] isn't a type or a structure that
+    /// can be parsed as a selector.
+    std::string _selectorString(std::string name = "") {
+      std::string str;
+      if (_selectorStringOrNull(str)) {
+        return str;
+      }
+
+      throw Exception::SassScriptException(
+        to_sass() + " is not a valid selector: it must be a string,\n"
+        "a list of strings, or a list of lists of strings.",
+        name);
+    }
+
+    /// Parses [this] as a selector list, in the same manner as the
+    /// `selector-parse()` function.
+    ///
+    /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+    /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+    /// [ParentSelector]s. Otherwise, they're considered parse errors.
+    ///
+    /// If this came from a function argument, [name] is the argument name
+    /// (without the `$`). It's used for error reporting.
+    virtual SelectorList* assertSelector(Context& ctx, std::string name = "", bool allowParent = false);
+
+
+    /// Parses [this] as a compound selector, in the same manner as the
+    /// `selector-parse()` function.
+    ///
+    /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+    /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+    /// [ParentSelector]s. Otherwise, they're considered parse errors.
+    ///
+    /// If this came from a function argument, [name] is the argument name
+    /// (without the `$`). It's used for error reporting.
+    virtual CompoundSelector* assertCompoundSelector(Context& ctx, std::string name = "", bool allowParent = false);
+
+
+    // General 
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      Sass_Separator separator,
+      bool hasBrackets);
+
+    // Pass explicit list separator
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      Sass_Separator separator) {
+      return changeListContents(values,
+        separator, hasBrackets());
+    }
+
+    // Pass explicit brackets config
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      bool hasBrackets) {
+      return changeListContents(values,
+        separator(), hasBrackets);
+    }
+
+    // Re-use current list settings
+    SassList* changeListContents(
+      std::vector<ValueObj> values) {
+      return changeListContents(values,
+        separator(), hasBrackets());
+    }
+
+    /// The SassScript `>` operation.
+    virtual SassBoolean* greaterThan(Value* other);
+
+    /// The SassScript `>=` operation.
+    virtual SassBoolean* greaterThanOrEquals(Value* other);
+
+    /// The SassScript `<` operation.
+    virtual SassBoolean* lessThan(Value* other);
+
+    /// The SassScript `<=` operation.
+    virtual SassBoolean* lessThanOrEquals(Value* other);
+
+
+    /// The SassScript `*` operation.
+    virtual Value* times(Value* other);
+
+    /// The SassScript `%` operation.
+    virtual Value* modulo(Value* other);
+
+
+
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
     virtual bool operator== (const Value& rhs) const {
@@ -61,13 +216,19 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class List : public Value, public Vectorized<Expression_Obj> {
   private:
-    ADD_PROPERTY(enum Sass_Separator, separator)
+    enum Sass_Separator separator_;
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, is_bracketed)
   public:
     List(ParserState pstate, size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false, bool bracket = false);
     std::string type() const override { return is_arglist_ ? "arglist" : "list"; }
     static std::string type_name() { return "list"; }
+    Sass_Separator separator() const override final {
+      return separator_;
+    }
+    void separator(Sass_Separator separator) {
+      separator_ = separator;
+    }
     const char* sep_string(bool compressed = false) const {
       return separator() == SASS_SPACE ?
         " " : (compressed ? "," : ", ");
@@ -79,7 +240,11 @@ namespace Sass {
     virtual size_t hash() const override;
     virtual size_t size() const;
 
-    NormalizedMap<ExpressionObj> getNormalizedArgMap();
+    SassMap* assertMap(std::string name = "") override final;
+
+    KeywordMap<ExpressionObj> getKeywordArgMap();
+
+
 
     virtual bool operator== (const Value& rhs) const override;
 
@@ -91,13 +256,38 @@ namespace Sass {
     public Vectorized<ValueObj> {
     virtual bool is_arglist() const { return false; }
   private:
-    ADD_PROPERTY(enum Sass_Separator, separator);
+    enum Sass_Separator separator_;
     ADD_PROPERTY(bool, hasBrackets);
   public:
 
     SassList(ParserState pstate,
+      std::vector<ValueObj> values = {},
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
+
+    Sass_Separator separator() const override {
+      return separator_;
+    }
+
+    void separator(Sass_Separator separator) {
+      separator_ = separator;
+    }
+
+    std::vector<ValueObj> asVector() override {
+      return elements();
+    }
+
+    bool hasBrackets() override {
+      return hasBrackets_;
+    }
+
+    SassMap* assertMap(std::string name = "") override final;
+
+
+    // Return the length of this item as a list
+    long lengthAsList() const override {
+      return length();
+    }
 
     bool isBlank() const override final;
 
@@ -114,16 +304,33 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  typedef ordered_map<std::string, ValueObj> keywordMap;
   class SassArgumentList : public SassList {
-    ADD_PROPERTY(keywordMap, keywords);
+    KeywordMap<ValueObj> _keywords;
+    bool _wereKeywordsAccessed;
   public:
     bool is_arglist() const override final {
       return true;
     }
+    SassArgumentList* assertArgumentList(std::string name = "") override final {
+      return this;
+    }
+
+    KeywordMap<ValueObj> keywords() {
+      _wereKeywordsAccessed = true;
+      return _keywords;
+    }
+
+    bool wereKeywordsAccessed() const {
+      return _wereKeywordsAccessed;
+    }
+
+    SassMap* keywordsAsSassMap() const;
+
     SassArgumentList(ParserState pstate,
+      std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,
-      keywordMap keywords = {});
+      KeywordMap<ValueObj> keywords = {});
+
     ATTACH_EQ_OPERATIONS(Value);
     ATTACH_COPY_OPERATIONS(SassArgumentList);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -132,13 +339,36 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
-  class Map : public Value, public Hashed<Expression_Obj, Expression_Obj, Map_Obj> {
+  class Map : public Value, public Hashed<ValueObj, ValueObj, Map_Obj> {
   public:
     Map(ParserState pstate, size_t size = 0);
     std::string type() const override { return "map"; }
     static std::string type_name() { return "map"; }
     bool is_invisible() const override { return empty(); }
     SassListObj to_list(ParserState& pstate);
+
+    SassMap* assertMap(std::string name = "") override { return this; }
+
+    // Return the list separator
+    Sass_Separator separator() const override final {
+      return empty() ? SASS_UNDEF : SASS_COMMA;
+    }
+
+    // Return the length of this item as a list
+    long lengthAsList() const override {
+      return length();
+    }
+
+    std::vector<ValueObj> asVector() override final {
+      std::vector<ValueObj> list;
+      for (size_t i = 0; i < length(); i++) {
+        list.push_back(SASS_MEMORY_NEW(
+          SassList, getKey(i)->pstate(),
+          { getKey(i), getValue(i) },
+          SASS_SPACE));
+      }
+      return list;
+    }
 
     virtual size_t hash() const override;
 
@@ -165,8 +395,6 @@ namespace Sass {
     Binary_Expression(ParserState pstate,
                       Operand op, Expression_Obj lhs, Expression_Obj rhs);
 
-    const std::string separator();
-
     virtual void set_delayed(bool delayed) override;
 
     virtual size_t hash() const override;
@@ -192,6 +420,26 @@ namespace Sass {
     std::string name();
 
     bool operator== (const Value& rhs) const override;
+
+    // ATTACH_COPY_OPERATIONS(Function)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class SassFunction final : public Value {
+  public:
+    ADD_PROPERTY(CallableObj, callable);
+  public:
+    SassFunction(
+      ParserState pstate,
+      CallableObj callable);
+
+    std::string type() const override { return "function"; }
+    static std::string type_name() { return "function"; }
+    bool is_invisible() const override { return true; }
+
+    bool operator== (const Value& rhs) const override;
+
+    SassFunction* assertFunction(std::string name = "") override final { return this; }
 
     // ATTACH_COPY_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -238,8 +486,9 @@ namespace Sass {
   // Numbers, percentages, dimensions, and colors.
   ////////////////////////////////////////////////
   class Number final : public Value, public Units {
-    HASH_PROPERTY(double, value)
-    ADD_PROPERTY(bool, zero)
+    HASH_PROPERTY(double, value);
+    // ADD_PROPERTY(double, epsilon);
+    ADD_PROPERTY(bool, zero);
 
     // The representation of this number as two
     // slash-separated numbers, if it has one.
@@ -251,6 +500,62 @@ namespace Sass {
     mutable size_t hash_;
   public:
     Number(ParserState pstate, double val, std::string u = "", bool zero = true);
+    Number(ParserState pstate, double val, Units units, bool zero = true);
+
+    long assertInt(double epsilon, std::string name = "") {
+      if (fuzzyIsInt(value_, epsilon)) {
+        return fuzzyAsInt(value_, epsilon);
+      }
+      throw Exception::SassScriptException(
+        inspect() + " is not an int.", name);
+    }
+
+    Number* assertNoUnits(std::string name = "") {
+      if (!hasUnits()) return this;
+      throw Exception::SassScriptException(
+        "Expected " + inspect() + " to have no units.",
+        name);
+    }
+
+    bool hasUnit(std::string unit) {
+      return numerators.size() == 1 &&
+        denominators.empty() &&
+        numerators.front() == unit;
+    }
+
+    Value* withoutSlash() override final {
+      if (!hasAsSlash()) return this;
+      SassNumber* copy = SASS_MEMORY_COPY(this);
+      copy->lhsAsSlash({});
+      copy->rhsAsSlash({});
+      return copy;
+    }
+
+
+    Number* assertUnit(std::string unit, std::string name = "") {
+      if (hasUnit(unit)) return this;
+      throw Exception::SassScriptException(
+        "Expected " + inspect() + " to have unit \"" + unit + "\".",
+        name);
+    }
+
+
+    Number* assertNumber(std::string name = "") override {
+      return this;
+    }
+
+    double valueInRange(double min, double max, double epsilon, std::string name = "") const {
+      double result = value_;
+      if (!fuzzyCheckRange(value_, min, max, epsilon, result)) {
+        std::stringstream msg;
+        msg << "Expected " << inspect() << " to be within ";
+        msg << min << unit() << " and " << max << unit() << ".";
+        throw Exception::SassScriptException(msg.str(), name);
+      }
+      return result;
+    }
+
+
 
     bool zero() { return zero_; }
 
@@ -318,7 +623,7 @@ namespace Sass {
     HASH_PROPERTY(double, g)
     HASH_PROPERTY(double, b)
   public:
-    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1, const std::string disp = "");
+    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1.0, const std::string disp = "");
 
     std::string type() const override { return "color"; }
     static std::string type_name() { return "color"; }
@@ -330,6 +635,14 @@ namespace Sass {
 
     Color_HSLA* copyAsHSLA() const override;
     Color_HSLA* toHSLA() override { return copyAsHSLA(); }
+
+    SassColor* assertColor(std::string name = "") override {
+      return this;
+    }
+
+    Color_HSLA* assertColorHsla(std::string name = "") override {
+      return toHSLA();
+    }
 
     bool operator== (const Value& rhs) const override;
 
@@ -350,6 +663,14 @@ namespace Sass {
 
     std::string type() const override { return "color"; }
     static std::string type_name() { return "color"; }
+
+    SassColor* assertColor(std::string name = "") override {
+      return toRGBA();
+    }
+
+    Color_HSLA* assertColorHsla(std::string name = "") override {
+      return this;
+    }
 
     size_t hash() const override;
 
@@ -398,6 +719,11 @@ namespace Sass {
   public:
     Boolean(ParserState pstate, bool val);
     operator bool() override { return value_; }
+
+    // Return the list separator
+    bool isTruthy() const override final {
+      return value_;
+    }
 
     std::string type() const override { return "bool"; }
     static std::string type_name() { return "bool"; }
@@ -500,6 +826,12 @@ namespace Sass {
     bool operator== (const Value& rhs) const override;
     // quotes are forced on inspection
     virtual std::string inspect() const override;
+    bool hasQuotes() const {
+      return quote_mark_ == '\0';
+    }
+    SassString* assertString(std::string name = "") override final {
+      return this;
+    }
     ATTACH_COPY_OPERATIONS(String_Constant)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -525,7 +857,6 @@ namespace Sass {
   class Null final : public Value {
   public:
     Null(ParserState pstate);
-    bool isBlank() const override final { return true; }
     std::string type() const override { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const override { return true; }
@@ -533,6 +864,18 @@ namespace Sass {
     bool is_false() override { return true; }
 
     size_t hash() const override;
+
+    bool isTruthy() const override final {
+      return false;
+    }
+
+    bool isBlank() const override final {
+      return true;
+    }
+
+    bool isNull() const override final {
+      return true;
+    }
 
     bool operator== (const Value& rhs) const override;
 

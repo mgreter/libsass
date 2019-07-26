@@ -6,11 +6,238 @@
 #include "ast.hpp"
 #include "fn_utils.hpp"
 #include "fn_strings.hpp"
+#include "fn_utils.hpp"
+#include "fn_numbers.hpp"
 #include "util_string.hpp"
+#include "debugger.hpp"
+
+#include "utf8.h"
+#include <random>
+#include <iomanip>
+#include <algorithm>
+
+#ifdef __MINGW32__
+#include "windows.h"
+#include "wincrypt.h"
+#endif
 
 namespace Sass {
 
   namespace Functions {
+
+    namespace Strings {
+
+#ifdef __MINGW32__
+      uint64_t GetSeed()
+      {
+        HCRYPTPROV hp = 0;
+        BYTE rb[8];
+        CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+        CryptGenRandom(hp, sizeof(rb), rb);
+        CryptReleaseContext(hp, 0);
+
+        uint64_t seed;
+        memcpy(&seed, &rb[0], sizeof(seed));
+
+        return seed;
+      }
+#else
+      uint64_t GetSeed()
+      {
+        std::random_device rd;
+        return rd();
+      }
+#endif
+
+      // note: the performance of many implementations of
+      // random_device degrades sharply once the entropy pool
+      // is exhausted. For practical use, random_device is
+      // generally only used to seed a PRNG such as mt19937.
+      static std::mt19937 rand(static_cast<unsigned int>(GetSeed()));
+
+      long _codepointForIndex(long index, long lengthInCodepoints, bool allowNegative = false) {
+        if (index == 0) return 0;
+        if (index > 0) return std::min(index - 1, lengthInCodepoints);
+        long result = lengthInCodepoints + index;
+        if (result < 0 && !allowNegative) return 0;
+        return result;
+      }
+
+      BUILT_IN_FN(unquote)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        if (String_Quoted * string_quoted = Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(String_Constant, pstate, string_quoted->value());
+        }
+        return string;
+      }
+
+      BUILT_IN_FN(quote)
+      {
+        SassString* s = arguments[0]->assertString("string");
+        String_Quoted* result = SASS_MEMORY_NEW(
+          String_Quoted, pstate, s->value(),
+          /*q=*/'\0', /*keep_utf8_escapes=*/false, /*skip_unquoting=*/true);
+        result->quote_mark('*');
+        return result;
+
+      }
+
+      BUILT_IN_FN(toUpperCase)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        if (Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(String_Quoted, pstate,
+            Util::ascii_str_toupper(string->value()),
+            string->quote_mark(), true, true);
+        }
+        else {
+          return SASS_MEMORY_NEW(SassString, pstate,
+            Util::ascii_str_toupper(string->value()),
+            true);
+        }
+      }
+
+      BUILT_IN_FN(toLowerCase)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        if (Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(String_Quoted, pstate,
+            Util::ascii_str_tolower(string->value()),
+            string->quote_mark(), true, true);
+        }
+        else {
+          return SASS_MEMORY_NEW(SassString, pstate,
+            Util::ascii_str_tolower(string->value()),
+            true);
+        }
+      }
+
+      BUILT_IN_FN(length)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        size_t len = UTF_8::code_point_count(string->value());
+        return SASS_MEMORY_NEW(Number, pstate, (double)len);
+      }
+
+      BUILT_IN_FN(insert)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        SassString* insert = arguments[1]->assertString("insert");
+        size_t len = UTF_8::code_point_count(string->value());
+        long index = arguments[2]->assertNumber("index")
+          ->assertNoUnits("index")->assertInt(epsilon, "index");
+
+        // str-insert has unusual behavior for negative inputs. It guarantees that
+        // the `$insert` string is at `$index` in the result, which means that we
+        // want to insert before `$index` if it's positive and after if it's
+        // negative.
+        if (index < 0) {
+          // +1 because negative indexes start counting from -1 rather than 0, and
+          // another +1 because we want to insert *after* that index.
+          index = len + index + 2;
+        }
+
+        index = _codepointForIndex(index, len);
+
+        std::string str(string->value());
+        // std::cerr << "Insert at " << index << "\n";
+        str.insert(UTF_8::offset_at_position(
+          str, index), insert->value());
+
+        if (String_Quoted * sq = Cast<String_Quoted>(string)) {
+          if (sq->quote_mark()) str = Sass::quote(str);
+        }
+        return SASS_MEMORY_NEW(String_Constant, pstate, str);
+      }
+
+      BUILT_IN_FN(index)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        SassString* substring = arguments[1]->assertString("substring");
+
+        std::string str(string->value());
+        std::string substr(substring->value());
+
+        size_t c_index = str.find(substr);
+        if (c_index == std::string::npos) {
+          return SASS_MEMORY_NEW(Null, pstate);
+        }
+
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          UTF_8::code_point_count(str, 0, c_index) + 1);
+      }
+
+      BUILT_IN_FN(slice)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        SassNumber* beg = arguments[1]->assertNumber("start-at");
+        SassNumber* end = arguments[2]->assertNumber("end-at");
+
+        long len = UTF_8::code_point_count(string->value());
+        beg = beg->assertNoUnits("start");
+        end = end->assertNoUnits("end");
+
+        // No matter what the start index is, an end
+        // index of 0 will produce an empty string.
+        long endInt = end->assertNoUnits("end")->assertInt(epsilon);
+        if (endInt == 0) {
+          if (Cast<String_Quoted>(string)) {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "\"\"");
+          }
+          else {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "");
+          }
+        }
+
+        long begInt = beg->assertNoUnits("start")->assertInt(epsilon);
+        begInt = _codepointForIndex(begInt, len, false);
+        endInt = _codepointForIndex(endInt, len, true);
+
+        if (endInt == len) endInt = len - 1;
+        if (endInt < begInt) {
+          if (Cast<String_Quoted>(string)) {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "\"\"");
+          }
+          else {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "");
+          }
+        }
+
+        std::string value(string->value());
+        std::string::iterator begIt = value.begin();
+        std::string::iterator endIt = value.begin();
+        utf8::advance(begIt, begInt + 0, value.end());
+        utf8::advance(endIt, endInt + 1, value.end());
+
+        std::string sliced(begIt, endIt);
+
+        if (String_Quoted * sq = Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(
+            String_Quoted, pstate,
+            sliced, sq->quote_mark(), true, true);
+        }
+
+        return SASS_MEMORY_NEW(
+          String_Constant, pstate,
+          sliced);
+      }
+
+      BUILT_IN_FN(uniqueId)
+      {
+        std::stringstream ss;
+        std::uniform_real_distribution<> distributor(0, 4294967296); // 16^8
+        uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
+        ss << "u" << std::setfill('0') << std::setw(8) << std::hex << distributed;
+        return SASS_MEMORY_NEW(String_Quoted, pstate, ss.str());
+      }
+
+    }
+
 
     void handle_utf8_error (const ParserState& pstate, Backtraces traces)
     {

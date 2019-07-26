@@ -11,6 +11,7 @@
 #include "ast_def_macros.hpp"
 #include "util_string.hpp"
 
+#include "ordered_map.hpp"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -23,12 +24,23 @@ namespace Sass {
     Util::equalsIgnoreSeparator
   >;
 
+  template<class T>
+  using KeywordMap = ordered_map<
+    std::string, T,
+    Util::hashIgnoreSeparator,
+    Util::equalsIgnoreSeparator
+  >;
+
   using NormalizeSet = std::unordered_set<
     std::string,
     Util::hashIgnoreSeparator,
     Util::equalsIgnoreSeparator
   >;
   
+
+  std::string pluralize(std::string singular, size_t size, std::string plural = "");
+
+  std::string toSentence(KeywordMap<ValueObj>& names, std::string conjunction = "and");
 
   // this defeats the whole purpose of environment being templatable!!
   typedef NormalizedMap<AST_Node_Obj>::iterator EnvMapIter;
@@ -67,6 +79,22 @@ namespace Sass {
     // not sure what it is actually use for
     // I guess we store functions etc. there
     bool is_global() const;
+
+    // function are in place to be more
+    // dart-sass compatible, but we are
+    // not yet supporting modules/ns.
+    UserDefinedCallable* getMixin(std::string name, std::string ns = "") {
+      std::string full_name(name + "[m]");
+      if (!has(full_name)) return nullptr;
+      // We only store UserDefinedCallable as "[m]"
+      return Cast<UserDefinedCallable>(get(full_name));
+    }
+    UserDefinedCallable* getFunction(std::string name, std::string ns = "") {
+      std::string full_name(name + "[f]");
+      if (!has(full_name)) return nullptr;
+      // We only store UserDefinedCallable as "[f]"
+      return Cast<UserDefinedCallable>(get(full_name));
+    }
 
     // scope operates on the current frame
 

@@ -117,11 +117,138 @@ namespace Sass {
   };
 
   //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class SassNode : public AST_Node {
+  public:
+    SassNode(ParserState pstate) :
+      AST_Node(pstate) {};
+    ATTACH_VIRTUAL_COPY_OPERATIONS(SassNode);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class CallableInvocation {
+    // The arguments passed to the callable.
+    ADD_PROPERTY(ArgumentInvocationObj, arguments);
+  public:
+    CallableInvocation(
+      ArgumentInvocation* arguments) :
+      arguments_(arguments) {}
+  };
+
+  class ArgumentDeclaration : public SassNode {
+
+    // The arguments that are taken.
+    ADD_PROPERTY(std::vector<ArgumentObj>, arguments);
+
+    // The name of the rest argument (as in `$args...`),
+    // or `null` if none was declared.
+    ADD_PROPERTY(std::string, restArg);
+
+  public:
+
+    ArgumentDeclaration(
+      ParserState pstate,
+      std::vector<ArgumentObj> arguments,
+      std::string restArg = "");
+
+    bool isEmpty() const {
+      return arguments_.empty()
+        && restArg_.empty();
+    }
+
+    static ArgumentDeclaration* parse(
+      Context& context,
+      std::string contents);
+
+    void verify(
+      size_t positional,
+      KeywordMap<ValueObj>& names,
+      Backtraces traces);
+
+    bool matches(
+      size_t positional,
+      KeywordMap<ValueObj>& names);
+
+    std::string toString2() const;
+
+  };
+
+  class ArgumentInvocation : public SassNode {
+
+    // The arguments passed by position.
+    ADD_CONSTREF(std::vector<ExpressionObj>, positional);
+
+    // The arguments passed by name.
+    ADD_CONSTREF(KeywordMap<ExpressionObj>, named);
+
+    // The first rest argument (as in `$args...`).
+    ADD_PROPERTY(ExpressionObj, restArg);
+
+    // The second rest argument, which is expected to only contain a keyword map.
+    ADD_PROPERTY(ExpressionObj, kwdRest);
+
+  public:
+
+    ArgumentInvocation(ParserState pstate,
+      std::vector<ExpressionObj> positional,
+      KeywordMap<ExpressionObj> named,
+      Expression* restArgs = nullptr,
+      Expression* kwdRest = nullptr);
+
+    // Returns whether this invocation passes no arguments.
+    bool isEmpty() const;
+
+    std::string toString() const;
+
+    ATTACH_CRTP_PERFORM_METHODS();
+
+  };
+
+
+  /// The result of evaluating arguments to a function or mixin.
+  class ArgumentResults : public SassNode {
+
+    // Arguments passed by position.
+    ADD_PROPERTY(std::vector<ValueObj>, positional);
+
+    // The [AstNode]s that hold the spans for each [positional]
+    // argument, or `null` if source span tracking is disabled. This
+    // stores [AstNode]s rather than [FileSpan]s so it can avoid
+    // calling [AstNode.span] if the span isn't required, since
+    // some nodes need to do real work to manufacture a source span.
+    // std::vector<Ast_Node_Obj> positionalNodes;
+
+    // Arguments passed by name.
+    ADD_PROPERTY(KeywordMap<ValueObj>, named);
+
+    // The [AstNode]s that hold the spans for each [named] argument,
+    // or `null` if source span tracking is disabled. This stores
+    // [AstNode]s rather than [FileSpan]s so it can avoid calling
+    // [AstNode.span] if the span isn't required, since some nodes
+    // need to do real work to manufacture a source span.
+    // KeywordMap<Ast_Node_Obj> namedNodes;
+
+    // The separator used for the rest argument list, if any.
+    ADD_PROPERTY(Sass_Separator, separator);
+
+  public:
+
+    ArgumentResults(
+      ParserState pstate,
+      std::vector<ValueObj> positional,
+      KeywordMap<ValueObj> named,
+      Sass_Separator separator);
+
+  };
+
+
+  //////////////////////////////////////////////////////////////////////
   // Abstract base class for expressions. This side of the AST hierarchy
   // represents elements in value contexts, which exist primarily to be
   // evaluated and returned.
   //////////////////////////////////////////////////////////////////////
-  class Expression : public AST_Node {
+  class Expression : public SassNode {
   public:
     enum Type {
       NONE,
@@ -386,6 +513,34 @@ namespace Sass {
     const std::unordered_map<
       K, T, ObjHash, ObjEquality
     >& elements() { return elements_; }
+    size_t erase(K key)
+    {
+      if (elements_.erase(key) == 1) {
+        for (size_t i = 0; i < _keys.size(); i++) {
+          if (!(*_keys[i] == *key)) continue;
+          // Remove items given at position
+          _keys.erase(_keys.begin() + i);
+          _values.erase(_values.begin() + i);
+          return 1;
+        }
+        throw std::runtime_error("Ordered is out of sync!?");
+      }
+      return 0;
+    }
+
+    void insert(K key, T val)
+    {
+      reset_hash();
+      if (!has(key)) {
+        _keys.push_back(key);
+        _values.push_back(val);
+      }
+      else if (!duplicate_key_) {
+        duplicate_key_ = key;
+      }
+
+      elements_[key] = val;
+    }
     Hashed& operator<<(std::pair<K, T> p)
     {
       reset_hash();
@@ -422,8 +577,15 @@ namespace Sass {
       K, T, ObjHash, ObjEquality
     >& pairs() const { return elements_; }
 
+    K& getKey(size_t pos) { return _keys.at(pos); }
+    T& getValue(size_t pos) { return _values.at(pos); }
     const std::vector<K>& keys() const { return _keys; }
     const std::vector<T>& values() const { return _values; }
+    
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::iterator end() { return elements_.end(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::iterator begin() { return elements_.begin(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::const_iterator end() const { return elements_.end(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::const_iterator begin() const { return elements_.begin(); }
 
   };
   template <typename K, typename T, typename U>
@@ -578,6 +740,18 @@ namespace Sass {
 
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
+
+  // An expression that directly embeds a [Value]. This is never
+  // constructed by the parser. It's only used when ASTs are
+  // constructed dynamically, as for the `call()` function.
+  class ValueExpression : public Expression {
+    ADD_PROPERTY(ValueObj, value);
+  public:
+    ValueExpression(
+      ParserState pstate,
+      ValueObj value);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
 
   class ListExpression : public Expression {
     ADD_PROPERTY(std::vector<ExpressionObj>, contents);
@@ -878,17 +1052,177 @@ namespace Sass {
   // The @return directive for use inside SassScript functions.
   /////////////////////////////////////////////////////////////
   class Return final : public Statement {
-    ADD_PROPERTY(Expression_Obj, value)
+    ADD_PROPERTY(Expression_Obj, value);
   public:
     Return(ParserState pstate, Expression_Obj val);
     // ATTACH_COPY_OPERATIONS(Return)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+  class InvocationExpression :
+    public Expression,
+    public CallableInvocation {
+  public:
+    InvocationExpression(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      Expression(pstate),
+      CallableInvocation(arguments)
+    {
+    }
+  };
+
+  class InvocationStatement :
+    public Statement,
+    public CallableInvocation {
+  public:
+    InvocationStatement(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      Statement(pstate),
+      CallableInvocation(arguments)
+    {
+    }
+  };
+
+  /// A function invocation.
+  ///
+  /// This may be a plain CSS function or a Sass function.
+  class IfExpression : public InvocationExpression {
+
+  public:
+    IfExpression(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      InvocationExpression(pstate, arguments)
+    {
+    }
+
+    std::string toString() const {
+      return "if" + arguments_->toString();
+    }
+
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  /// A function invocation.
+  ///
+  /// This may be a plain CSS function or a Sass function.
+  class FunctionExpression2 : public InvocationExpression {
+
+    // The namespace of the function being invoked,
+    // or `null` if it's invoked without a namespace.
+    ADD_PROPERTY(std::string, ns);
+
+    // The name of the function being invoked. If this is
+    // interpolated, the function will be interpreted as plain
+    // CSS, even if it has the same name as a Sass function.
+    ADD_PROPERTY(InterpolationObj, name);
+
+  public:
+    FunctionExpression2(ParserState pstate,
+      Interpolation* name,
+      ArgumentInvocation* arguments,
+      std::string ns = "") :
+      InvocationExpression(pstate, arguments),
+      ns_(ns), name_(name)
+    {
+
+    }
+
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class MixinExpression : public InvocationExpression {
+
+  };
+
   /////////////////////////////////////////////////////////////////////////////
   // Definitions for both mixins and functions. The two cases are distinguished
   // by a type tag.
   /////////////////////////////////////////////////////////////////////////////
+  class CallableDeclaration : public Has_Block {
+    // The name of this callable.
+    // This may be empty for callables without names.
+    ADD_PROPERTY(std::string, name);
+    // The comment immediately preceding this declaration.
+    ADD_PROPERTY(SilentCommentObj, comment);
+    // The declared arguments this callable accepts.
+    ADD_PROPERTY(ArgumentDeclarationObj, arguments);
+  public:
+    CallableDeclaration(
+      ParserState pstate,
+      std::string name,
+      ArgumentDeclaration* arguments,
+      SilentComment* comment = nullptr,
+      Block* block = nullptr);
+
+    // Stringify declarations etc. (dart)
+    virtual std::string toString1() const = 0;
+
+    ATTACH_ABSTRACT_CRTP_PERFORM_METHODS();
+  };
+
+  class ContentBlock :
+    public CallableDeclaration {
+  public:
+    ContentBlock(
+      ParserState pstate,
+      ArgumentDeclaration* arguments = nullptr,
+      std::vector<StatementObj> children = {});
+    std::string toString1() const override final;
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class FunctionRule final :
+    public CallableDeclaration {
+  public:
+    FunctionRule(
+      ParserState pstate,
+      std::string name,
+      ArgumentDeclaration* arguments,
+      SilentComment* comment = nullptr,
+      Block* block = nullptr);
+    std::string toString1() const override final;
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class MixinRule final :
+    public CallableDeclaration {
+  public:
+    MixinRule(
+      ParserState pstate,
+      std::string name,
+      ArgumentDeclaration* arguments,
+      SilentComment* comment = nullptr,
+      Block* block = nullptr);
+    std::string toString1() const override final;
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class IncludeRule final : public InvocationStatement {
+
+    // The namespace of the mixin being invoked, or
+    // `null` if it's invoked without a namespace.
+    ADD_PROPERTY(std::string, ns);
+
+    // The name of the mixin being invoked.
+    ADD_PROPERTY(std::string, name);
+
+    // The block that will be invoked for [ContentRule]s in the mixin
+    // being invoked, or `null` if this doesn't pass a content block.
+    ADD_PROPERTY(ContentBlockObj, content);
+
+  public:
+
+    IncludeRule(
+      ParserState pstate,
+      std::string name,
+      ArgumentInvocation* arguments,
+      std::string ns = "",
+      ContentBlock* content = nullptr,
+      Block* block = nullptr);
+
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
   class Definition final : public Has_Block {
   public:
     enum Type { MIXIN, FUNCTION };
@@ -930,10 +1264,10 @@ namespace Sass {
   //////////////////////////////////////
   class Mixin_Call final : public Has_Block {
     ADD_CONSTREF(std::string, name)
-    ADD_PROPERTY(Arguments_Obj, arguments)
+    ADD_PROPERTY(ArgumentInvocationObj, arguments)
     ADD_PROPERTY(Parameters_Obj, block_parameters)
   public:
-    Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params = {}, Block_Obj b = {});
+    Mixin_Call(ParserState pstate, std::string n, ArgumentInvocation* args, Parameters_Obj b_params = {}, Block_Obj b = {});
     // ATTACH_COPY_OPERATIONS(Mixin_Call)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -942,9 +1276,9 @@ namespace Sass {
   // The @content directive for mixin content blocks.
   ///////////////////////////////////////////////////
   class Content final : public Statement {
-    ADD_PROPERTY(Arguments_Obj, arguments)
+    ADD_PROPERTY(ArgumentInvocationObj, arguments)
   public:
-    Content(ParserState pstate, Arguments_Obj args);
+    Content(ParserState pstate, ArgumentInvocation* args);
     // ATTACH_COPY_OPERATIONS(Content)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -1075,6 +1409,81 @@ namespace Sass {
     // ATTACH_COPY_OPERATIONS(Parameters)
     ATTACH_CRTP_PERFORM_METHODS()
   };
+
+  typedef Value* (*SassFnSig)(FN_PROTOTYPE2);
+  typedef std::pair<ArgumentDeclarationObj, SassFnSig> SassFnPair;
+  typedef std::vector<SassFnPair> SassFnPairs;
+
+  class Callable : public SassNode {
+  public:
+    Callable(ParserState pstate);
+    virtual bool operator== (const Callable& rhs) const = 0;
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class UserDefinedCallable : public Callable {
+    // The declaration.
+    ADD_PROPERTY(CallableDeclarationObj, declaration);
+    // The environment in which this callable was declared.
+    ADD_PROPERTY(Env*, environment);
+  public:
+    UserDefinedCallable(ParserState pstate,
+      CallableDeclarationObj declaration,
+      Env* environment);
+    bool operator== (const Callable& rhs) const override final;
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class PlainCssCallable : public Callable {
+    ADD_PROPERTY(std::string, name);
+  public:
+    PlainCssCallable(ParserState pstate, std::string name);
+    bool operator== (const Callable& rhs) const override final;
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class BuiltInCallable : public Callable {
+
+    // The function name
+    ADD_PROPERTY(std::string, name);
+
+    // The overloads declared for this callable.
+    ADD_PROPERTY(SassFnPairs, overloads);
+
+  public:
+
+    Value* execute(ArgumentInvocation* arguments) {
+      // return callback(arguments);
+      return nullptr;
+    }
+
+    // Creates a callable with a single [arguments] declaration
+    // and a single [callback]. The argument declaration is parsed
+    // from [arguments], which should not include parentheses.
+    // Throws a [SassFormatException] if parsing fails.
+    BuiltInCallable(
+      std::string name,
+      ArgumentDeclaration* parameters,
+      SassFnSig callback);
+
+    // Creates a callable with multiple implementations. Each
+    // key/value pair in [overloads] defines the argument declaration
+    // for the overload (which should not include parentheses), and
+    // the callback to execute if that argument declaration matches.
+    // Throws a [SassFormatException] if parsing fails.
+    BuiltInCallable(
+      std::string name,
+      SassFnPairs overloads);
+
+    SassFnPair callbackFor(
+      size_t positional,
+      KeywordMap<ValueObj> names);
+
+    bool operator== (const Callable& rhs) const override final;
+
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
 
 }
 

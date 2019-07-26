@@ -29,24 +29,24 @@ namespace Sass {
 
 
     // statements
-    virtual void operator()(Block*);
+    virtual void operator()(Block*) override;
     // virtual void operator()(Keyframe_Rule*);
     // virtual void operator()(Bubble*);
     // virtual void operator()(SupportsRule*);
     // virtual void operator()(At_Root_Block*);
-    virtual void operator()(AtRule*);
-    virtual void operator()(Declaration*);
+    virtual void operator()(AtRule*) override;
+    virtual void operator()(Declaration*) override;
     // virtual void operator()(Assignment*);
-    virtual void operator()(Import*);
+    virtual void operator()(Import*) override;
     // virtual void operator()(Import_Stub*);
 
-    virtual void operator()(ImportRule*);
-    virtual void operator()(StaticImport*);
+    virtual void operator()(ImportRule*) override;
+    virtual void operator()(StaticImport*) override;
     // virtual void operator()(DynamicImport*);
     // virtual void operator()(Warning*);
     // virtual void operator()(Error*);
     // virtual void operator()(Debug*);
-    virtual void operator()(CssComment*);
+    virtual void operator()(CssComment*) override;
     void _writeMapElement(Expression* value);
     // virtual void operator()(If*);
     // virtual void operator()(For*);
@@ -58,68 +58,70 @@ namespace Sass {
     // virtual void operator()(Mixin_Call*);
     // virtual void operator()(Content*);
     // expressions
-    virtual void operator()(Map*);
-    virtual void operator()(Function*);
-    virtual void operator()(List*);
-    virtual void operator()(SassList*);
+    virtual void operator()(Map*) override;
+    virtual void operator()(Function*) override;
+    virtual void operator()(SassFunction*) override;
+    virtual void operator()(Callable*) override;
+    virtual void operator()(BuiltInCallable*) override;
+    virtual void operator()(UserDefinedCallable*) override;
+    virtual void operator()(List*) override;
+    virtual void operator()(SassList*) override;
+    virtual void operator()(ValueExpression* expr) override;
+	  virtual void operator()(ParenthesizedExpression* expr) override;
     // virtual void operator()(ParenthesizedExpression*);
-    virtual void operator()(Binary_Expression*);
-    virtual void operator()(Unary_Expression*);
-    virtual void operator()(FunctionExpression*);
+    virtual void operator()(Binary_Expression*) override;
+    virtual void operator()(Unary_Expression*) override;
+    virtual void operator()(FunctionExpression*) override;
     // virtual void operator()(Custom_Warning*);
     // virtual void operator()(Custom_Error*);
-    virtual void operator()(Variable*);
-    virtual void operator()(Number*);
-    virtual void operator()(Color_RGBA*);
-    virtual void operator()(Color_HSLA*);
-    virtual void operator()(Boolean*);
-    virtual void operator()(String_Constant*);
-    virtual void operator()(String_Quoted*);
+    virtual void operator()(Variable*) override;
+    virtual void operator()(Number*) override;
+    virtual void operator()(Color_RGBA*) override;
+    virtual void operator()(Color_HSLA*) override;
+    virtual void operator()(Boolean*) override;
+    virtual void operator()(String_Constant*) override;
+    virtual void operator()(String_Quoted*) override;
 
-    virtual void operator()(StringLiteral*);
-    virtual void operator()(Interpolation*);
-    virtual void operator()(StringExpression*);
+    virtual void operator()(StringLiteral*) override;
+    virtual void operator()(Interpolation*) override;
+    virtual void operator()(StringExpression*) override;
 
-    virtual void operator()(Custom_Error*);
-    virtual void operator()(Custom_Warning*);
-    virtual void operator()(SupportsOperation*);
-    virtual void operator()(SupportsNegation*);
-    virtual void operator()(SupportsDeclaration*);
-    virtual void operator()(SupportsInterpolation*);
-    virtual void operator()(MediaRule*);
-    virtual void operator()(CssMediaRule*);
-    virtual void operator()(CssMediaQuery*);
+    virtual void operator()(Custom_Error*) override;
+    virtual void operator()(Custom_Warning*) override;
+    virtual void operator()(MediaRule*) override;
+    virtual void operator()(CssMediaRule*) override;
+    virtual void operator()(CssMediaQuery*) override;
     // virtual void operator()(At_Root_Query*);
-    virtual void operator()(Null*);
+    virtual void operator()(Null*) override;
     // virtual void operator()(Parent_Reference* p);
     // parameters and arguments
     // virtual void operator()(Parameter*);
     // virtual void operator()(Parameters*);
-    virtual void operator()(Argument*);
-    virtual void operator()(Arguments*);
+    virtual void operator()(Argument*) override;
+    virtual void operator()(Arguments*) override;
     // selectors
-    virtual void operator()(PlaceholderSelector*);
-    virtual void operator()(ClassSelector*);
+    virtual void operator()(PlaceholderSelector*) override;
+    virtual void operator()(ClassSelector*) override;
     // virtual void operator()(SelectorComponent*);
-    virtual void operator()(SelectorCombinator*);
-    virtual void operator()(CompoundSelector*);
-    virtual void operator()(SelectorList*);
+    virtual void operator()(SelectorCombinator*) override;
+    virtual void operator()(CompoundSelector*) override;
+    virtual void operator()(SelectorList*) override;
     virtual std::string lbracket(List*);
     virtual std::string rbracket(List*);
     virtual std::string lbracket(SassList*);
     virtual std::string rbracket(SassList*);
 
     // Implement those first without override
-    void visitAttributeSelector(AttributeSelector* attribute)override;
-    void visitClassSelector(ClassSelector* klass)override;
-    void visitComplexSelector(ComplexSelector* complex)override;
-    void visitCompoundSelector(CompoundSelector* compound)override;
-    void visitSelectorCombinator(SelectorCombinator* combinator)override;
-    void visitIDSelector(IDSelector* id)override;
-    void visitPlaceholderSelector(PlaceholderSelector* placeholder)override;
-    void visitPseudoSelector(PseudoSelector* pseudo)override;
-    void visitSelectorList(SelectorList* list)override;
-    void visitTypeSelector(TypeSelector* type)override;
+    void visitAttributeSelector(AttributeSelector* attribute) override;
+    void visitClassSelector(ClassSelector* klass) override;
+    void visitComplexSelector(ComplexSelector* complex) override;
+    void visitCompoundSelector(CompoundSelector* compound) override;
+    void visitSelectorCombinator(SelectorCombinator* combinator) override;
+    void visitIDSelector(IDSelector* id) override;
+    void visitPlaceholderSelector(PlaceholderSelector* placeholder) override;
+    void visitPseudoSelector(PseudoSelector* pseudo) override;
+    void visitSelectorList(SelectorList* list) override;
+    void visitTypeSelector(TypeSelector* type) override;
 
 
   };

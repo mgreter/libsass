@@ -11,6 +11,7 @@
 #include "eval.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
+#include "dart_helpers.hpp"
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "debugger.hpp"
@@ -68,7 +69,7 @@ namespace Sass {
   {
     if (env_stack.size() > 0)
       return env_stack.back();
-    return 0;
+    return nullptr;
   }
 
   SelectorStack Expand::getSelectorStack()
@@ -219,12 +220,11 @@ namespace Sass {
 
   Statement* Expand::operator()(SupportsRule* f)
   {
-    Expression_Obj condition = f->condition()->perform(&eval);
+    ValueObj condition = f->condition()->perform(&eval);
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
                                        f->pstate(),
                                        condition);
-    Block* bb = operator()(f->block());
-    ff->block(bb);
+    ff->block(operator()(f->block()));
     ff->tabs(f->tabs());
     return ff.detach();
   }
@@ -287,11 +287,25 @@ namespace Sass {
 
   }
 
+  At_Root_Query* Expand::visitAtRootQuery(At_Root_Query* e)
+  {
+    Expression_Obj feature = e->feature();
+    feature = (feature ? feature->perform(&eval) : 0);
+    Expression_Obj value = e->value();
+    value = (value ? value->perform(&eval) : 0);
+    At_Root_Query* ee = SASS_MEMORY_NEW(At_Root_Query,
+      e->pstate(),
+      Cast<String>(feature),
+      value);
+    return ee;
+  }
+  
+
   Statement* Expand::operator()(At_Root_Block* a)
   {
     Block_Obj ab = a->block();
     At_Root_Query_Obj ae = a->expression();
-    if (ae) ae = eval(ae);
+    if (ae) ae = visitAtRootQuery(ae);
     else ae = SASS_MEMORY_NEW(At_Root_Query, a->pstate());
     /*
     if (false && _inKeyframes && ae->exclude("keyframes")) {
@@ -380,7 +394,6 @@ namespace Sass {
   Statement* Expand::operator()(Declaration* d)
   {
 
-
     if (!isInStyleRule() && !_inUnknownAtRule && !_inKeyframes) {
       error(
         "Declarations may only be used within style rules.",
@@ -390,6 +403,7 @@ namespace Sass {
     Block_Obj ab = d->block();
     String_Obj old_p = d->property();
     Expression_Obj prop = old_p->perform(&eval);
+
 
     if (auto itpl = Cast<Interpolation>(old_p)) {
       auto text = interpolationToValue(itpl, true);
@@ -402,8 +416,11 @@ namespace Sass {
       std::string str(prop->to_string(ctx.c_options));
       new_p = SASS_MEMORY_NEW(StringLiteral, old_p->pstate(), str);
     }
-    Expression_Obj value = d->value();
-    if (value) value = value->perform(&eval);
+    ValueObj value;
+    ExpressionObj expression = d->value();
+    if (expression) {
+      value = expression->perform(&eval);
+    }
 
     bool is_custom_prop = false;
 
@@ -490,7 +507,7 @@ namespace Sass {
             else {
               throw std::runtime_error("Env not in sync");
             }
-            return 0;
+            return nullptr;
           }
           cur = cur->parent();
         }
@@ -514,7 +531,7 @@ namespace Sass {
     else {
       env->set_lexical(var, a->value()->perform(&eval));
     }
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Import* imp)
@@ -525,7 +542,8 @@ namespace Sass {
       std::vector<std::string> results;
       std::vector<ExpressionObj> queries = imp->queries2();
       for (auto& query : queries) {
-        results.push_back(query->perform(&eval)->to_string());
+        ExpressionObj evaled = query->perform(&eval);
+        results.push_back(evaled->to_string());
       }
       std::string reparse(joinStrings(results, ", "));
       ParserState state(imp->pstate());
@@ -569,7 +587,6 @@ namespace Sass {
       rule->media(SASS_MEMORY_NEW(Interpolation, "[pstate]"));
       rule->media()->append(SASS_MEMORY_NEW(StringLiteral, "[pstate]", str));
     }
-    if (rule->supports()) { rule->supports(rule->supports()->perform(&eval)); }
     return rule;
   }
 
@@ -608,28 +625,28 @@ namespace Sass {
     ctx.import_stack.pop_back();
     block_stack.pop_back();
     traces.pop_back();
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Warning* w)
   {
     // eval handles this too, because warnings may occur in functions
     w->perform(&eval);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Error* e)
   {
     // eval handles this too, because errors may occur in functions
     e->perform(&eval);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Debug* d)
   {
     // eval handles this too, because warnings may occur in functions
     d->perform(&eval);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(LoudComment* c)
@@ -659,7 +676,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   // For does not create a new env scope
@@ -714,7 +731,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   // Eval does not create a new env scope
@@ -729,11 +746,11 @@ namespace Sass {
       map = Cast<Map>(expr);
     }
     else if (expr->concrete_type() != Expression::LIST) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), SASS_COMMA);
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, SASS_COMMA);
       list->append(expr);
     }
     else if (SassList * slist = Cast<SassList>(expr)) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), slist->separator());
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, slist->separator());
       list->hasBrackets(slist->hasBrackets());
       for (auto item : slist->elements()) {
         list->append(item);
@@ -757,7 +774,7 @@ namespace Sass {
         Expression_Obj v = map->at(key)->perform(&eval);
 
         if (variables.size() == 1) {
-          SassList_Obj variable = SASS_MEMORY_NEW(SassList, map->pstate(), SASS_SPACE);
+          SassList_Obj variable = SASS_MEMORY_NEW(SassList, map->pstate(), {}, SASS_SPACE);
           variable->append(k);
           variable->append(v);
           env.set_local(variables[0], variable);
@@ -867,7 +884,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(While* w)
@@ -884,7 +901,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   std::string Expand::joinStrings(
@@ -1062,6 +1079,199 @@ namespace Sass {
 
   }
 
+  Statement* Expand::_runWithBlock(UserDefinedCallable* callable, Trace* trace)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->block()->elements()) {
+      Statement_Obj ith = statement->perform(this);
+      if (ith) trace->block()->append(ith);
+    }
+    return nullptr;
+  }
+
+  Statement* Expand::_runAndExpand(UserDefinedCallable* callable, Trace* trace)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->block()->elements()) {
+      Statement_Obj ith = statement->perform(this);
+      if (ith) trace->block()->append(ith);
+    }
+    return nullptr;
+  }
+
+  Statement* Expand::_runUserDefinedCallable(
+    ArgumentInvocation* arguments,
+    UserDefinedCallable* callable,
+    Statement* (Expand::* run)(UserDefinedCallable*, Trace*),
+    Trace* trace,
+    ParserState pstate)
+  {
+    // std::cerr << "_runUserDefinedCallable\n";
+    ArgumentResultsObj evaluated = eval._evaluateArguments(arguments); // , false
+
+    // std::cerr << "evaluated " << (evaluated->separator() == SASS_UNDEF ? "comma": "??") << "\n";
+
+    KeywordMap<ValueObj> named = evaluated->named();
+    std::vector<ValueObj> positional = evaluated->positional();
+    CallableDeclaration* declaration = callable->declaration();
+    ArgumentDeclaration* declaredArguments = declaration->arguments();
+    if (!declaredArguments) throw std::runtime_error("Mixin declaration has no arguments");
+    std::vector<ArgumentObj> declared = declaredArguments->arguments();
+
+    // Create a new scope from the callable, outside variables are not visible?
+    Env callenv(callable->environment()); // create new closure
+
+                                          // std::cerr << "_verifyArguments with " << declaredArguments << "\n";
+    if (declaredArguments) declaredArguments->verify(positional.size(), named, traces);
+    size_t minLength = std::min(positional.size(), declared.size());
+
+    env_stack.push_back(&callenv);
+    for (size_t i = 0; i < minLength; i++) {
+      // std::cerr << "Set local " << declared[i]->name() << "\n";
+      callenv.set_local(
+        declared[i]->name(),
+        positional[i]->withoutSlash());
+    }
+
+    for (size_t i = positional.size(); i < declared.size(); i++) {
+      ValueObj value;
+      Argument* argument = declared[i];
+      std::string name(argument->name());
+      if (named.count(name) == 1) {
+        value = named[name]->perform(&eval);
+        named.erase(name);
+      }
+      else {
+        // Use the default arguments
+        value = argument->value()->perform(&eval);
+      }
+      callenv.set_local(
+        argument->name(),
+        value->withoutSlash());
+    }
+   // callable->content()
+    SassArgumentListObj argumentList;
+    if (!declaredArguments->restArg().empty()) {
+      std::vector<ValueObj> values;
+      if (positional.size() > declared.size()) {
+        values = sublist(positional, declared.size());
+      }
+      Sass_Separator separator = evaluated->separator();
+      if (separator == SASS_UNDEF) separator = SASS_COMMA;
+      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+        pstate, values, separator, named);
+      callenv.set_local(declaredArguments->restArg(), argumentList);
+    }
+    env_stack.pop_back();
+    Env other(callenv);
+
+    if (env_stack.back()->local_frame().count("@content[m]") == 1) {
+      // std::cerr << "copy content module\n";
+      other.set_local("@content[m]",
+        env_stack.back()->get_local("@content[m]"));
+      env_stack.back()->del_local("@content[m]");
+    }
+    env_stack.push_back(&callenv);
+    env_stack.push_back(&other);
+    StatementObj result = (this->*run)(callable, trace);
+    env_stack.pop_back();
+    env_stack.pop_back();
+
+    if (named.empty()) return result.detach();
+    if (argumentList == nullptr) return result.detach();
+    if (argumentList->wereKeywordsAccessed()) return result.detach();
+
+    throw Exception::SassScriptException("Nonono");
+
+  }
+
+  Statement* Expand::operator()(IncludeRule* node)
+  {
+    Env closure(environment());
+    env_stack.push_back(&closure);
+
+    UserDefinedCallable* mixin =
+      closure.getMixin(node->name(), node->ns());
+
+    if (mixin == nullptr) {
+      throw Exception::SassRuntimeException(
+        "Undefined mixin.", node->pstate());
+    }
+
+    UserDefinedCallableObj contentCallable;
+
+    if (node->content() != nullptr) {
+
+      contentCallable = SASS_MEMORY_NEW(
+        UserDefinedCallable, node->pstate(),
+        node->content(), &closure);
+
+      // std::cerr << "setting contentCallable\n";
+      closure.local_frame()["@content[m]"] = contentCallable;
+
+      MixinRule* rule = Cast<MixinRule>(mixin->declaration());
+      if (!rule || !rule->has_content()) {
+        throw Exception::SassRuntimeException(
+          "Mixin doesn't accept a content block.",
+          node->pstate());
+      }
+    }
+
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name(), trace_block);
+
+    // callable->environment()
+    block_stack.push_back(trace_block);
+    closure.set_global("is_in_mixin", bool_true);
+    Env closure2(closure);
+    // env_stack.push_back(&closure2);
+
+    StatementObj qwe = _runUserDefinedCallable(
+      node->arguments(),
+      mixin,
+      &Expand::_runWithBlock,
+      trace,
+      node->pstate());
+
+    // env_stack.pop_back();
+    closure.del_local("@content[m]");
+    closure.del_global("is_in_mixin");
+    block_stack.pop_back();
+
+    /*
+    _inMixin = oldInMixin;
+    _content = oldContent;
+    */
+
+    // From old implementation
+    // ctx.callee_stack.pop_back();
+    // env_stack.pop_back();
+    // traces.pop_back();
+
+    env_stack.pop_back();
+    // debug_ast(trace);
+    return trace.detach();
+  }
+
+  Statement* Expand::operator()(MixinRule* rule)
+  {
+    Env* env = environment();
+    std::string name(rule->name() + "[m]");
+    env->local_frame()[name] = SASS_MEMORY_NEW(UserDefinedCallable,
+      rule->pstate(), rule, environment());
+    return nullptr;
+  }
+
+  Statement* Expand::operator()(FunctionRule* rule)
+  {
+    Env* env = environment();
+    std::string name(rule->name() + "[f]");
+    env->local_frame()[name] = SASS_MEMORY_NEW(UserDefinedCallable,
+      rule->pstate(), rule, environment());
+    return nullptr;
+  }
+
+
   Statement* Expand::operator()(Definition* d)
   {
     Env* env = environment();
@@ -1072,12 +1282,13 @@ namespace Sass {
 
     // set the static link so we can have lexical scoping
     dd->environment(env);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Mixin_Call* c)
   {
-
+    return nullptr;
+    /*
     RECURSION_GUARD(recursions, c->pstate());
 
     Env* env = environment();
@@ -1093,10 +1304,9 @@ namespace Sass {
       // error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), traces);
       error("Mixin doesn't accept a content block.", c->pstate(), traces);
     }
-    // debug_ast(c->arguments(), "IN: ");
-    Expression_Obj rv = c->arguments()->perform(&eval);
     // debug_ast(rv, "OUT: ");
-    Arguments_Obj args = Cast<Arguments>(rv);
+    Arguments_Obj args = eval.visitArguments(c->arguments());
+
     std::string msg(", in mixin `" + c->name() + "`");
     traces.push_back(Backtrace(c->pstate(), msg));
     ctx.callee_stack.push_back({
@@ -1146,22 +1356,75 @@ namespace Sass {
     traces.pop_back();
 
     return trace.detach();
+    */
   }
 
-  Statement* Expand::operator()(Content* c)
+  Statement* Expand::operator()(Content* c) // ContentRule
   {
-    Env* env = environment();
+    Env* env = env_stack.back();
     // convert @content directives into mixin calls to the underlying thunk
-    if (!env->has("@content[m]")) return 0;
-    Arguments_Obj args = c->arguments();
-    if (!args) args = SASS_MEMORY_NEW(Arguments, c->pstate());
+    if (!env->has("@content[m]")) return nullptr;
 
-    Mixin_Call_Obj call = SASS_MEMORY_NEW(Mixin_Call,
-                                       c->pstate(),
-                                       "@content",
-                                       args);
+    // std::cerr << "visitContentRule\n";
 
-    Trace_Obj trace = Cast<Trace>(call->perform(this));
+    // auto asd = env->get("@content[m]");
+
+    UserDefinedCallable* content = env->getMixin("@content");
+
+    Env* parent = env;
+
+    int count = 0;
+    while (parent) {
+      if (parent->has_local("@content[m]")) count++;
+      parent = parent->parent();
+    }
+    parent = env;
+    // std::cerr << "+++ CURRENTLY HAS " << count << "\n";
+
+    UserDefinedCallableObj before;
+    while (!before && parent) {
+      if (parent->has_local("@content[m]")) {
+        before = Cast<UserDefinedCallable>
+          (parent->get_local("@content[m]"));
+        parent->del_local("@content[m]");
+        // std::cerr << "remove content rule\n";
+        break;
+      }
+      parent = parent->parent();
+    }
+
+    if (env->has("@content[m]")) {
+      std::cerr << "ENV HAS @content[m]\n";
+    }
+
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), "@content", trace_block);
+
+    Env closure(env);
+    env_stack.push_back(&closure);
+    block_stack.push_back(trace_block);
+    // block_stack.back()->append(trace);
+
+    // debug_ast(trace);
+
+    // Appends to trace
+    _runUserDefinedCallable(
+      c->arguments(),
+      content,
+      &Expand::_runAndExpand,
+      trace,
+      c->pstate());
+
+
+    block_stack.pop_back();
+    env_stack.pop_back();
+
+   if (before) parent->set_local("@content[m]", before);
+
+
+    // _runUserDefinedCallable(node.arguments, content, node, () {
+    // return nullptr;
+    // Adds it twice?
     return trace.detach();
   }
 
@@ -1171,7 +1434,7 @@ namespace Sass {
     if (b->is_root()) call_stack.push_back(b);
     for (size_t i = 0, L = b->length(); i < L; ++i) {
       Statement* stm = b->at(i);
-      Statement_Obj ith = stm->perform(this);
+      StatementObj ith = stm->perform(this);
       if (ith) block_stack.back()->append(ith);
     }
     if (b->is_root()) call_stack.pop_back();

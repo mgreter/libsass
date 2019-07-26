@@ -53,6 +53,129 @@ namespace Sass {
     // generally only used to seed a PRNG such as mt19937.
     static std::mt19937 rand(static_cast<unsigned int>(GetSeed()));
 
+
+
+    namespace Math {
+
+      BUILT_IN_FN(round)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        return SASS_MEMORY_NEW(Number, pstate,
+          fuzzyRound(number->value(), epsilon),
+          number->unit());
+      }
+
+      BUILT_IN_FN(ceil)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        return SASS_MEMORY_NEW(Number, pstate,
+          std::ceil(number->value()),
+          number->unit());
+      }
+
+      BUILT_IN_FN(floor)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        return SASS_MEMORY_NEW(Number, pstate,
+          std::floor(number->value()),
+          number->unit());
+      }
+
+      BUILT_IN_FN(abs)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        return SASS_MEMORY_NEW(Number, pstate,
+          std::abs(number->value()),
+          number->unit());
+      }
+
+      BUILT_IN_FN(max)
+      {
+        SassNumber* max = nullptr;
+        for (Value* value : arguments[0]->asVector()) {
+          SassNumber* number = value->assertNumber();
+          if (max == nullptr || *max < *number) {
+            max = number;
+          }
+        }
+        if (max != nullptr) return max;
+        // Report invalid arguments error
+        throw Exception::SassScriptException(
+          "At least one argument must be passed.");
+      }
+
+      BUILT_IN_FN(min)
+      {
+        SassNumber* min = nullptr;
+        for (Value* value : arguments[0]->asVector()) {
+          SassNumber* number = value->assertNumber();
+          if (min == nullptr || *min > *number) {
+            min = number;
+          }
+        }
+        if (min != nullptr) return min;
+        // Report invalid arguments error
+        throw Exception::SassScriptException(
+          "At least one argument must be passed.");
+      }
+
+      BUILT_IN_FN(random)
+      {
+        if (arguments[0]->isNull()) {
+          std::uniform_real_distribution<double> distributor(0, 1);
+          return SASS_MEMORY_NEW(Number, pstate, distributor(rand));
+        }
+        Number* nr = arguments[0]->assertNumber("limit");
+        long limit = nr->assertInt(epsilon, "limit");
+        if (limit >= 1) {
+          std::uniform_real_distribution<double> distributor(1, limit + 1);
+          return SASS_MEMORY_NEW(Number, pstate, (long) distributor(rand));
+        }
+        // Report invalid arguments error
+        std::stringstream strm;
+        strm << "$limit: Must be greater than 0, was " << limit << ".";
+        throw Exception::SassScriptException(strm.str());
+      }
+
+      BUILT_IN_FN(unit)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        std::string str(quote(number->unit(), '"'));
+        return SASS_MEMORY_NEW(String_Quoted, pstate, str);
+      }
+
+      BUILT_IN_FN(isUnitless)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        return SASS_MEMORY_NEW(Boolean, pstate, !number->hasUnits());
+      }
+
+      BUILT_IN_FN(percentage)
+      {
+        Number* number = arguments[0]->assertNumber("number");
+        number->assertNoUnits("number");
+        return SASS_MEMORY_NEW(Number, pstate,
+          number->value() * 100, "%");
+      }
+
+      BUILT_IN_FN(compatible)
+      {
+        Number* n1 = arguments[0]->assertNumber("number1");
+        Number* n2 = arguments[1]->assertNumber("number2");
+        if (n1->is_unitless() || n2->is_unitless()) {
+          return SASS_MEMORY_NEW(Boolean, pstate, true);
+        }
+        // normalize into main units
+        n1->normalize(); n2->normalize();
+        Units& lhs_unit = *n1, & rhs_unit = *n2;
+        bool is_comparable = (lhs_unit == rhs_unit);
+        return SASS_MEMORY_NEW(Boolean, pstate, is_comparable);
+      }
+
+    }
+
+
+
     ///////////////////
     // NUMBER FUNCTIONS
     ///////////////////

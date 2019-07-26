@@ -156,4 +156,60 @@ namespace Sass {
 
   }
 
+  Callable::Callable(
+    ParserState pstate) :
+    SassNode(pstate) {}
+
+  PlainCssCallable::PlainCssCallable(
+    ParserState pstate, std::string name) :
+    Callable(pstate), name_(name) {}
+
+  bool PlainCssCallable::operator==(const Callable& rhs) const
+  {
+    if (const PlainCssCallable * plain = Cast<PlainCssCallable>(&rhs)) {
+      return this == plain;
+    }
+    return false;
+  }
+
+  BuiltInCallable::BuiltInCallable(
+    std::string name,
+    ArgumentDeclaration* parameters,
+    SassFnSig callback) :
+    Callable("[BUILTIN]"),
+    name_(name),
+    // Create a single entry in overloaded function
+    overloads_(1, std::make_pair(parameters, callback))
+  {
+  }
+
+  BuiltInCallable::BuiltInCallable(
+    std::string name,
+    SassFnPairs overloads) :
+    Callable("[BUILTIN]"),
+    name_(name),
+    overloads_(overloads)
+  {
+  }
+
+  SassFnPair BuiltInCallable::callbackFor(
+    size_t positional, KeywordMap<ValueObj> names)
+  {
+    for (SassFnPair& pair : overloads_) {
+      if (pair.first->matches(positional, names)) {
+        return pair;
+      }
+    }
+    return overloads_.back();
+  }
+
+  bool BuiltInCallable::operator==(const Callable& rhs) const
+  {
+    if (const BuiltInCallable* builtin = Cast<BuiltInCallable>(&rhs)) {
+      return this == builtin;
+    }
+    return false;
+  }
+
+
 }

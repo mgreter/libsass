@@ -85,10 +85,29 @@ namespace Sass {
       return false;
     }
 
+    size_t size() const {
+      return _map.size();
+    }
+
+    size_t count(const Key& key) const {
+      return _map.count(key);
+    }
+
     const std::vector<Key>& keys() const { return _keys; }
     const std::vector<T>& values() const { return _values; }
 
-    const T& get(const Key& key) {
+    map_iterator find(const Key& key) {
+      return _map.find(key);
+    }
+
+    const T& get(const Key& key) const {
+      if (hasKey(key)) {
+        return _map.find(key)->second;
+      }
+      throw std::runtime_error("Key does not exist");
+    }
+
+    T& get(const Key& key) {
       if (hasKey(key)) {
         return _map[key];
       }
@@ -118,6 +137,9 @@ namespace Sass {
     typename std::vector<Key>::const_iterator begin() const { return _keys.begin(); }
     typename std::vector<Key>::const_reverse_iterator rend() const { return _keys.rend(); }
     typename std::vector<Key>::const_reverse_iterator rbegin() const { return _keys.rbegin(); }
+
+    typename map_type::iterator mapEnd() { return _map.end(); }
+    typename map_type::iterator mapBegin() { return _map.begin(); }
 
   };
 

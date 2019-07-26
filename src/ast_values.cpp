@@ -1,11 +1,13 @@
 #include "ast_values.hpp"
 #include "ast_values.hpp"
+#include "ast_values.hpp"
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 #include "ast.hpp"
 #include "character.hpp"
 #include "interpolation.hpp"
+#include "parser_selector.hpp"
 
 namespace Sass {
 
@@ -18,9 +20,216 @@ namespace Sass {
   Value::Value(ParserState pstate, bool d, bool e, bool i, Type ct)
   : Expression(pstate, d, e, i, ct)
   { }
+
+  // Return normalized index for vector from overflowable sass index
+
+  long Value::sassIndexToListIndex(Value * sassIndex, double epsilon, std::string name)
+  {
+    long index = sassIndex->assertNumber(name)->assertInt(epsilon, name);
+    if (index == 0) throw Exception::SassScriptException("List index may not be 0.", name);
+    if (abs(index) > lengthAsList()) {
+      std::stringstream strm;
+      strm << "Invalid index " << index << " for a list ";
+      strm << "with " << lengthAsList() << " elements.";
+      throw Exception::SassScriptException(strm.str(), name);
+    }
+
+    return index < 0 ? lengthAsList() + index : index - 1;
+  }
+
+  Value* Value::assertValue(std::string name) {
+    // Noop, but usefull for breakpoints
+    return this;
+  }
+
+  SassColor* Value::assertColor(std::string name) {
+    throw Exception::SassScriptException(
+      to_string() + " is not a color.", name);
+  }
+
+  Color_HSLA* Value::assertColorHsla(std::string name) {
+    throw Exception::SassScriptException(
+      to_string() + " is not a color.", name);
+  }
+
+  SassFunction* Value::assertFunction(std::string name)
+  {
+    throw Exception::SassScriptException(
+      to_string() + " is not a function reference.", name);
+  }
+
+  SassMap* Value::assertMap(std::string name) {
+    throw Exception::SassScriptException(
+      to_string() + " is not a map.", name);
+  }
+
+  SassNumber* Value::assertNumber(std::string name) {
+    throw Exception::SassScriptException(
+      to_string() + " is not a number.", name);
+  }
+
+  SassNumber* Value::assertNumberOrNull(std::string name)
+  {
+    if (this->isNull()) return nullptr;
+    return this->assertNumber(name);
+  }
+
+  SassString* Value::assertString(std::string name) {
+    throw Exception::SassScriptException(
+      inspect() + " is not a string.", name);
+  }
+
+  SassString* Value::assertStringOrNull(std::string name) {
+    if (this->isNull()) return nullptr;
+    return this->assertString(name);
+  }
+
+  SassArgumentList* Value::assertArgumentList(std::string name) {
+    throw Exception::SassScriptException(
+      to_string() + " is not an argument list.", name);
+  }
+
+  /// Converts a `selector-parse()`-style input into a string that can be
+  /// parsed.
+  ///
+  /// Returns `null` if [this] isn't a type or a structure that can be parsed as
+  /// a selector.
+
+  bool Value::_selectorStringOrNull(std::string& rv) {
+
+	  if (SassString * str = Cast<SassString>(this)) {
+      rv = str->value();
+      return true;
+	  }
+
+    if (SassList * list = Cast<SassList>(this)) {
+
+      std::vector<ValueObj> values = list->asVector();
+
+      if (values.empty()) return false;
+
+      std::vector<std::string> result;
+      if (list->separator() == SASS_COMMA) {
+        for (auto complex : values) {
+          SassList* cplxLst = Cast<SassList>(complex);
+          SassString* cplxStr = Cast<SassString>(complex);
+          if (cplxStr) {
+            result.push_back(cplxStr->value());
+          }
+          else if (cplxLst &&
+            cplxLst->separator() == SASS_SPACE) {
+            std::string string = complex->_selectorString();
+            if (string.empty()) return false;
+            result.push_back(string);
+          }
+          else {
+            return false;
+          }
+        }
+      }
+      else {
+        for (auto compound : values) {
+          SassString* cmpdStr = Cast<SassString>(compound);
+          StringLiteral* cmpdLit = Cast<StringLiteral>(compound);
+          if (cmpdStr) {
+            result.push_back(cmpdStr->value());
+          }
+          else if (cmpdLit) {
+            result.push_back(cmpdLit->text());
+          }
+          else {
+            return false;
+          }
+        }
+      }
+      rv = Util::join_strings(result, list->separator() == SASS_COMMA ? ", " : " ");
+      return true;
+
+    }
+
+    return false;
+
+  }
+
+
+  /// Parses [this] as a selector list, in the same manner as the
+  /// `selector-parse()` function.
+  ///
+  /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+  /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+  /// [ParentSelector]s. Otherwise, they're considered parse errors.
+  ///
+  /// If this came from a function argument, [name] is the argument name
+  /// (without the `$`). It's used for error reporting.
+
+  SelectorList* Value::assertSelector(Context& ctx, std::string name, bool allowParent) {
+    std::string string = _selectorString(name);
+    char* str = sass_copy_c_string(string.c_str());
+    ctx.strings.push_back(str);
+    SelectorParser p2(ctx, str, "sass://parse-selector", -1);
+    p2._allowParent = allowParent;
+    auto sel = p2.parse();
+    return sel.detach();
+  }
+
+  CompoundSelector* Value::assertCompoundSelector(Context& ctx, std::string name, bool allowParent) {
+    std::string string = _selectorString(name);
+    char* str = sass_copy_c_string(string.c_str());
+    ctx.strings.push_back(str);
+    SelectorParser p2(ctx, str, "sass://parse-selector", -1);
+    p2._allowParent = allowParent;
+    auto sel = p2.parseCompoundSelector();
+    return sel.detach();
+  }
+
+  SassList* Value::changeListContents(
+    std::vector<ValueObj> values,
+    Sass_Separator separator,
+    bool hasBrackets)
+  {
+    return SASS_MEMORY_NEW(SassList, pstate(),
+      values, separator, hasBrackets);
+  }
+
+  Boolean* Value::greaterThan(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"" + inspect()
+      + " > " + other->inspect() + "\".");
+  }
+
+  Boolean* Value::greaterThanOrEquals(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"" + inspect()
+      + " >= " + other->inspect() + "\".");
+  }
+
+  Boolean* Value::lessThan(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"" + inspect()
+      + " < " + other->inspect() + "\".");
+  }
+
+  Boolean* Value::lessThanOrEquals(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"" + inspect()
+      + " <= " + other->inspect() + "\".");
+  }
+
+  Value* Value::times(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"" + inspect()
+      + " * " + other->inspect() + "\".");
+  }
+
+  // The SassScript `%` operation.
+  Value* Value::modulo(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"" + inspect()
+      + " % " + other->inspect() + "\".");
+  }
+
   Value::Value(const Value* ptr)
-  : Expression(ptr)
-  { }
+  : Expression(ptr) { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -63,7 +272,7 @@ namespace Sass {
         auto lv = this->at(i);
         if (!lv && rv) return false;
         else if (!rv && lv) return false;
-        else if (*lv != *rv) return false;
+        else if (!(*lv == *rv)) return false;
       }
       return true;
     }
@@ -86,9 +295,14 @@ namespace Sass {
     return length();
   }
 
-  NormalizedMap<ExpressionObj> List::getNormalizedArgMap()
+  SassMap* List::assertMap(std::string name) {
+    if (!empty()) { return Value::assertMap(name); }
+    else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
+  }
+
+  KeywordMap<ExpressionObj> List::getKeywordArgMap()
   {
-    NormalizedMap<ExpressionObj> map;
+    KeywordMap<ExpressionObj> map;
     if (is_arglist_) {
       for (Expression* item : elements()) {
         if (Argument * arg = Cast<Argument>(item)) {
@@ -153,7 +367,7 @@ namespace Sass {
         auto lv = this->at(key);
         if (!lv && rv) return false;
         else if (!rv && lv) return false;
-        else if (*lv != *rv) return false;
+        else if (!(*lv == *rv)) return false;
       }
       return true;
     }
@@ -161,10 +375,10 @@ namespace Sass {
   }
 
   SassListObj Map::to_list(ParserState& pstate) {
-    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, SASS_UNDEF);
+    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_UNDEF);
 
     for (auto key : keys()) {
-      SassListObj l = SASS_MEMORY_NEW(SassList, pstate);
+      SassListObj l = SASS_MEMORY_NEW(SassList, pstate, {});
       l->append(key);
       l->append(at(key));
       ret->append(l);
@@ -197,10 +411,10 @@ namespace Sass {
   : Expression(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
   { }
 
-  const std::string Binary_Expression::separator()
-  {
-    return sass_op_separator(optype());
-  }
+  // const std::string Binary_Expression::separator()
+  // {
+  //   return sass_op_separator(optype());
+  // }
 
   void Binary_Expression::set_delayed(bool delayed)
   {
@@ -293,6 +507,7 @@ namespace Sass {
   : Value(pstate),
     Units(),
     value_(val),
+    // epsilon_(0.00001),
     zero_(zero),
     lhsAsSlash_(),
     rhsAsSlash_(),
@@ -323,10 +538,24 @@ namespace Sass {
     concrete_type(NUMBER);
   }
 
+  Number::Number(ParserState pstate, double val, Units units, bool zero)
+    : Value(pstate),
+    Units(units),
+    value_(val),
+    // epsilon_(0.00001),
+    zero_(zero),
+    lhsAsSlash_(),
+    rhsAsSlash_(),
+    hash_(0)
+  {
+    concrete_type(NUMBER);
+  }
+
   Number::Number(const Number* ptr)
   : Value(ptr),
     Units(ptr),
     value_(ptr->value_),
+    // epsilon_(ptr->epsilon_),
     lhsAsSlash_(ptr->lhsAsSlash_),
     rhsAsSlash_(ptr->rhsAsSlash_),
     hash_(ptr->hash_)
@@ -693,7 +922,7 @@ namespace Sass {
     if (length() > 1) {
       return "";
     }
-    if (StringLiteral* str = Cast<StringLiteral>(first())) {
+    if (StringLiteral * str = Cast<StringLiteral>(first())) {
       return str->text();
     }
     else {
@@ -972,10 +1201,11 @@ namespace Sass {
 
   SassList::SassList(
     ParserState pstate,
+    std::vector<ValueObj> values,
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    Vectorized(),
+    Vectorized(values),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {
@@ -990,6 +1220,11 @@ namespace Sass {
     hasBrackets_(ptr->hasBrackets_)
   {
     concrete_type(LIST);
+  }
+
+  SassMap* SassList::assertMap(std::string name) {
+    if (!empty()) { return Value::assertMap(name); }
+    else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
   }
 
   bool SassList::isBlank() const
@@ -1063,18 +1298,33 @@ namespace Sass {
 
   SassArgumentList::SassArgumentList(
     ParserState pstate,
+    std::vector<ValueObj> values,
     Sass_Separator separator,
-    keywordMap keywords) :
-    SassList(pstate, separator, false),
-    keywords_(keywords)
+    KeywordMap<ValueObj> keywords) :
+    SassList(pstate, values, separator, false),
+    _keywords(keywords),
+    _wereKeywordsAccessed(false)
   {
   }
 
   SassArgumentList::SassArgumentList(
     const SassArgumentList* ptr) :
     SassList(ptr),
-    keywords_(ptr->keywords_)
+    _keywords(ptr->_keywords),
+    _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)
   {
+  }
+
+  // Convert native string keys to sass strings
+  SassMap* SassArgumentList::keywordsAsSassMap() const
+  {
+    SassMap* map = SASS_MEMORY_NEW(SassMap, pstate());
+    for (auto kv : _keywords) {
+      SassString* keystr = SASS_MEMORY_NEW(
+        SassString, pstate(), kv.substr(1));
+      map->insert(keystr, _keywords.get(kv));
+    }
+    return map;
   }
 
   bool SassArgumentList::operator==(const Value& rhs) const
@@ -1087,5 +1337,28 @@ namespace Sass {
     }
     return false;
   }
+
+  SassFunction::SassFunction(
+    ParserState pstate,
+    CallableObj callable) :
+    Value(pstate),
+    callable_(callable)
+  {
+  }
+
+  bool SassFunction::operator== (const Value& rhs) const
+  {
+    if (const SassFunction* fn = Cast<SassFunction>(&rhs)) {
+      return ObjEqualityFn(callable_, fn->callable());
+    }
+    return false;
+  }
+
+  // std::string Function::name() {
+  //   if (definition_) {
+  //     return definition_->name();
+  //   }
+  //   return "";
+  // }
 
 }
