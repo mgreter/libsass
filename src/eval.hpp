@@ -81,8 +81,6 @@ namespace Sass {
     Value* operator()(LoudComment*);
     Value* operator()(SilentComment*);
 
-    Value* operator()(SupportsRule*);
-
     std::string _evaluateToCss(Expression* expression, bool quote = true);
 
     std::string _serialize(Value* expression, bool quote = true);

@@ -1493,91 +1493,11 @@ namespace Sass {
 
   }
 
-  Value* Eval::operator()(SupportsRule* c)
-  {
-
-    // if (_declarationName != null) {
-    //   throw _exception(
-    //     "Supports rules may not be used within nested declarations.",
-    //     node.span);
-    // }
-
-    operator()(c->condition());
-
-    return nullptr;
-
-  }
-
   String* Eval::operator()(SupportsCondition* condition)
   {
-
     return SASS_MEMORY_NEW(String_Constant,
       condition->pstate(), _visitSupportsCondition(condition));
-    /*
-        if (condition is SupportsOperation) {
-      return "${_parenthesize(condition.left, condition.operator)} "
-          "${condition.operator} "
-          "${_parenthesize(condition.right, condition.operator)}";
-    } else if (condition is SupportsNegation) {
-      return "not ${_parenthesize(condition.condition)}";
-    } else if (condition is SupportsInterpolation) {
-      return _evaluateToCss(condition.expression, quote: false);
-    } else if (condition is SupportsDeclaration) {
-      return "(${_evaluateToCss(condition.name)}: "
-          "${_evaluateToCss(condition.value)})";
-    } else {
-      return null;
-    }
-
-    */
-
-
   }
-
-  // needs SupportsRule?
-  /*
-  Expression* Eval::operator()(SupportsOperation* c)
-  {
-    Expression* left = c->left()->perform(this);
-    Expression* right = c->right()->perform(this);
-    SupportsOperation* cc = SASS_MEMORY_NEW(SupportsOperation,
-                                 c->pstate(),
-                                 Cast<SupportsCondition>(left),
-                                 Cast<SupportsCondition>(right),
-                                 c->operand());
-    return cc;
-    // return SASS_MEMORY_NEW(String_Constant, cc->pstate(), cc->to_css());
-  }
-
-  Expression* Eval::operator()(SupportsNegation* c)
-  {
-    Expression* condition = c->condition()->perform(this);
-    SupportsNegation* cc = SASS_MEMORY_NEW(SupportsNegation,
-                                 c->pstate(),
-                                 Cast<SupportsCondition>(condition));
-    return cc;
-  }
-  
-  Expression* Eval::operator()(SupportsDeclaration* c)
-  {
-    Expression* feature = c->feature()->perform(this);
-    Expression* value = c->value()->perform(this);
-    SupportsDeclaration* cc = SASS_MEMORY_NEW(SupportsDeclaration,
-                              c->pstate(),
-                              feature,
-                              value);
-    return cc;
-  }
-
-  Expression* Eval::operator()(SupportsInterpolation* c)
-  {
-    Expression* value = c->value()->perform(this);
-    SupportsInterpolation* cc = SASS_MEMORY_NEW(SupportsInterpolation,
-                            c->pstate(),
-                            value);
-    return cc;
-  }
-  */
 
   Expression* Eval::operator()(At_Root_Query* e)
   {

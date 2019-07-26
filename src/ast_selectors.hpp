@@ -136,7 +136,7 @@ namespace Sass {
       return visitor.visitPlaceholderSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(PlaceholderSelector)
+    ATTACH_BASE_EQ_OPERATIONS(PlaceholderSelector)
     ATTACH_COPY_OPERATIONS(PlaceholderSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -159,7 +159,7 @@ namespace Sass {
       return visitor.visitTypeSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(TypeSelector)
+    ATTACH_BASE_EQ_OPERATIONS(TypeSelector)
     ATTACH_COPY_OPERATIONS(TypeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -178,7 +178,7 @@ namespace Sass {
       return visitor.visitClassSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(ClassSelector)
+    ATTACH_BASE_EQ_OPERATIONS(ClassSelector)
     ATTACH_COPY_OPERATIONS(ClassSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -200,7 +200,7 @@ namespace Sass {
       return visitor.visitIDSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(IDSelector)
+    ATTACH_BASE_EQ_OPERATIONS(IDSelector)
     ATTACH_COPY_OPERATIONS(IDSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -253,7 +253,7 @@ namespace Sass {
       return visitor.visitAttributeSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(AttributeSelector)
+    ATTACH_BASE_EQ_OPERATIONS(AttributeSelector)
     ATTACH_COPY_OPERATIONS(AttributeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -328,7 +328,7 @@ namespace Sass {
       return visitor.visitPseudoSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(PseudoSelector)
+    ATTACH_BASE_EQ_OPERATIONS(PseudoSelector)
     ATTACH_COPY_OPERATIONS(PseudoSelector)
     void cloneChildren() override;
     ATTACH_CRTP_PERFORM_METHODS()
@@ -375,7 +375,7 @@ namespace Sass {
       return visitor.visitComplexSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(ComplexSelector)
+    ATTACH_BASE_EQ_OPERATIONS(ComplexSelector)
     ATTACH_COPY_OPERATIONS(ComplexSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -475,7 +475,7 @@ namespace Sass {
       return visitor.visitSelectorCombinator(this);
     }
 
-    ATTACH_EQ_OPERATIONS(SelectorCombinator)
+    ATTACH_BASE_EQ_OPERATIONS(SelectorCombinator)
     // ATTACH_COPY_OPERATIONS(SelectorCombinator)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -524,7 +524,7 @@ namespace Sass {
       return visitor.visitCompoundSelector(this);
     }
 
-    ATTACH_EQ_OPERATIONS(CompoundSelector)
+    ATTACH_BASE_EQ_OPERATIONS(CompoundSelector)
     ATTACH_COPY_OPERATIONS(CompoundSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -566,7 +566,7 @@ namespace Sass {
       return visitor.visitSelectorList(this);
     }
 
-    ATTACH_EQ_OPERATIONS(SelectorList)
+    ATTACH_BASE_EQ_OPERATIONS(SelectorList)
     ATTACH_COPY_OPERATIONS(SelectorList)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -581,7 +581,7 @@ namespace Sass {
   public:
     ExtendRule(ParserState pstate, InterpolationObj s, bool optional = false);
     // ATTACH_COPY_OPERATIONS(ExtendRule)
-    ATTACH_EQ_OPERATIONS(ExtendRule)
+    ATTACH_BASE_EQ_OPERATIONS(ExtendRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

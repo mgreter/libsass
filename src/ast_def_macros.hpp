@@ -135,6 +135,10 @@ private:
   virtual bool operator!=(const klass& rhs) const { return !(*this == rhs); }; \
 
 #define ATTACH_EQ_OPERATIONS(klass) \
+  virtual bool operator==(const klass& rhs) const override; \
+  virtual bool operator!=(const klass& rhs) const override { return !(*this == rhs); }; \
+
+#define ATTACH_BASE_EQ_OPERATIONS(klass) \
   virtual bool operator==(const klass& rhs) const; \
   virtual bool operator!=(const klass& rhs) const { return !(*this == rhs); }; \
 
