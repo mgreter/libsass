@@ -1215,56 +1215,6 @@ namespace Sass {
     append_token(w->message(), w);
   }
 
-  void Inspect::operator()(SupportsOperation* so)
-  {
-
-    if (so->needs_parens(so->left())) append_string("(");
-    so->left()->perform(this);
-    if (so->needs_parens(so->left())) append_string(")");
-
-    if (so->operand() == SupportsOperation::AND) {
-      append_mandatory_space();
-      append_token("and", so);
-      append_mandatory_space();
-    } else if (so->operand() == SupportsOperation::OR) {
-      append_mandatory_space();
-      append_token("or", so);
-      append_mandatory_space();
-    }
-
-    if (so->needs_parens(so->right())) append_string("(");
-    so->right()->perform(this);
-    if (so->needs_parens(so->right())) append_string(")");
-  }
-
-  void Inspect::operator()(SupportsNegation* sn)
-  {
-    append_token("not", sn);
-    append_mandatory_space();
-    if (sn->needs_parens(sn->condition())) append_string("(");
-    sn->condition()->perform(this);
-    if (sn->needs_parens(sn->condition())) append_string(")");
-  }
-
-  void Inspect::operator()(SupportsDeclaration* sd)
-  {
-    append_string("(");
-    sd->feature()->perform(this);
-    append_string(": ");
-    sd->value()->perform(this);
-    append_string(")");
-  }
-
-  void Inspect::operator()(SupportsInterpolation* sd)
-  {
-    if (String_Quoted * str = Cast<String_Quoted>(sd->value())) {
-      // return _evaluateToCss(condition.expression, quote: false);
-      append_string(str->value());
-    }
-    else {
-      sd->value()->perform(this);
-    }
-  }
 
   // void Inspect::operator()(At_Root_Query* ae)
   // {
