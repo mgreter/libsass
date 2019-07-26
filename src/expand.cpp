@@ -219,12 +219,11 @@ namespace Sass {
 
   Statement* Expand::operator()(SupportsRule* f)
   {
-    Expression_Obj condition = f->condition()->perform(&eval);
+    ExpressionObj condition = f->condition()->perform(&eval);
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
                                        f->pstate(),
                                        condition);
-    Block* bb = operator()(f->block());
-    ff->block(bb);
+    ff->block(operator()(f->block()));
     ff->tabs(f->tabs());
     return ff.detach();
   }
@@ -525,7 +524,8 @@ namespace Sass {
       std::vector<std::string> results;
       std::vector<ExpressionObj> queries = imp->queries2();
       for (auto& query : queries) {
-        results.push_back(query->perform(&eval)->to_string());
+        ExpressionObj evaled = query->perform(&eval);
+        results.push_back(evaled->to_string());
       }
       std::string reparse(joinStrings(results, ", "));
       ParserState state(imp->pstate());

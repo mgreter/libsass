@@ -1426,7 +1426,7 @@ namespace Sass {
 /// [SassScriptException] to associate it with [span].
   std::string Eval::_evaluateToCss(Expression* expression, bool quote)
   {
-    Value* evaled = Cast<Value>(expression->perform(this));
+    ValueObj evaled = Cast<Value>(expression->perform(this));
     return _serialize(evaled, quote);
   }
 
