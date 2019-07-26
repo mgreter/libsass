@@ -91,15 +91,15 @@ namespace Sass {
     // parameters and arguments
     // virtual void operator()(Parameter*);
     // virtual void operator()(Parameters*);
-    virtual void operator()(Argument*);
-    virtual void operator()(Arguments*);
+    virtual void operator()(Argument*) override;
+    virtual void operator()(Arguments*) override;
     // selectors
-    virtual void operator()(PlaceholderSelector*);
-    virtual void operator()(ClassSelector*);
+    virtual void operator()(PlaceholderSelector*) override;
+    virtual void operator()(ClassSelector*) override;
     // virtual void operator()(SelectorComponent*);
-    virtual void operator()(SelectorCombinator*);
-    virtual void operator()(CompoundSelector*);
-    virtual void operator()(SelectorList*);
+    virtual void operator()(SelectorCombinator*) override;
+    virtual void operator()(CompoundSelector*) override;
+    virtual void operator()(SelectorList*) override;
     virtual std::string lbracket(List*);
     virtual std::string rbracket(List*);
     virtual std::string lbracket(SassList*);
