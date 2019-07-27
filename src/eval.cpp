@@ -979,7 +979,7 @@ namespace Sass {
     return Cast<Value>(u);
   }
 
-  Expression* Eval::operator()(FunctionExpression* c)
+  Value* Eval::operator()(FunctionExpression* c)
   {
 
     // NESTING_GUARD(_recursion)
@@ -999,7 +999,7 @@ namespace Sass {
           Argument* arg = c->arguments()->last();
           arg->is_rest_argument(false);
         }
-        Expression_Obj evaluated_args = c->arguments()->perform(this);
+        Expression_Obj evaluated_args = visitArguments(c->arguments());
         std::string str(evaluated_name);
         str += evaluated_args->to_string();
         return (SASS_MEMORY_NEW(String_Constant, c->pstate(), str));
@@ -1027,7 +1027,7 @@ namespace Sass {
           }
         }
         */
-        args = Cast<Arguments>(args->perform(this));
+        args = visitArguments(args);
         if (!args->empty()) args->last()->is_rest_argument(false);
         FunctionExpressionObj lit = SASS_MEMORY_NEW(FunctionExpression,
                                              c->pstate(),
@@ -1041,7 +1041,7 @@ namespace Sass {
         String_Quoted* str = SASS_MEMORY_NEW(String_Quoted,
                                              c->pstate(),
                                              lit->to_string(options()));
-        return str;
+        return Cast<Value>(str);
       } else {
         // call generic function
         full_name = "*[f]";
@@ -1056,7 +1056,7 @@ namespace Sass {
       }
     }
     if (full_name != "if[f]") {
-      args = Cast<Arguments>(args->perform(this));
+      args = visitArguments(args);
     }
     Definition* def = Cast<Definition>((*env)[full_name]);
 
@@ -1207,7 +1207,10 @@ namespace Sass {
 
     result = result->perform(this);
     env_stack().pop_back();
-    return result.detach();
+    if (Argument* arg = Cast<Argument>(result)) {
+      return Cast<Value>(arg->value());
+    }
+    return Cast<Value>(result.detach());
   }
 
   Value* Eval::operator()(Variable* v)
@@ -1499,25 +1502,99 @@ namespace Sass {
       condition->pstate(), _visitSupportsCondition(condition));
   }
 
-  Expression* Eval::operator()(At_Root_Query* e)
-  {
-    Expression_Obj feature = e->feature();
-    feature = (feature ? feature->perform(this) : 0);
-    Expression_Obj value = e->value();
-    value = (value ? value->perform(this) : 0);
-    Expression* ee = SASS_MEMORY_NEW(At_Root_Query,
-                                     e->pstate(),
-                                     Cast<String>(feature),
-                                     value);
-    return ee;
-  }
-
   Value* Eval::operator()(Null* n)
   {
     return n;
   }
 
-  Expression* Eval::operator()(Argument* a)
+  Arguments* Eval::visitArguments(Arguments* a)
+  {
+    // std::cerr << "HEllo\n";
+    Arguments_Obj aa = SASS_MEMORY_NEW(Arguments, a->pstate());
+    if (a->length() == 0) return aa.detach();
+    for (size_t i = 0, L = a->length(); i < L; ++i) {
+      // std::cerr << "eval argument " << i << "\n";
+      ArgumentObj arg = visitArgument(a->get(i));
+      if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
+        aa->append(arg);
+      }
+    }
+
+    if (a->hasRestArgument()) {
+      ArgumentObj rest = visitArgument(a->get_rest_argument());
+      Expression_Obj splat = rest->value()->perform(this);
+
+      Sass_Separator separator = SASS_COMMA;
+      List* ls = Cast<List>(splat);
+      SassList* lsl = Cast<SassList>(splat);
+      Map* ms = Cast<Map>(splat);
+
+      List_Obj arglist = SASS_MEMORY_NEW(List,
+        splat->pstate(),
+        0,
+        ls ? ls->separator() : lsl ? lsl->separator() : separator,
+        true);
+
+      if (lsl) {
+        for (size_t i = 0; i < lsl->length(); i++) {
+          arglist->append(lsl->get(i));
+        }
+      }
+      else if (ls && ls->is_arglist()) {
+        arglist->concat(ls);
+      }
+      else if (ms) {
+        aa->append(SASS_MEMORY_NEW(Argument, splat->pstate(), ms, "", false, true));
+      }
+      else if (ls) {
+        arglist->concat(ls);
+      }
+      else {
+        arglist->append(splat);
+      }
+      if (arglist->length()) {
+        aa->append(SASS_MEMORY_NEW(Argument, splat->pstate(), arglist, "", true));
+      }
+    }
+
+    if (a->hasKeywordArgument()) {
+      ArgumentObj rvarg = visitArgument(a->get_keyword_argument());
+      Expression_Obj kwarg = rvarg->value()->perform(this);
+      aa->append(SASS_MEMORY_NEW(Argument, kwarg->pstate(), kwarg, "", false, true));
+    }
+    // debug_ast(aa, "AAA: ");
+    return aa.detach();
+  }
+
+  Argument* Eval::visitArgument(Argument* a)
+  {
+    Expression_Obj val = a->value()->perform(this);
+    bool is_rest_argument = a->is_rest_argument();
+    bool is_keyword_argument = a->is_keyword_argument();
+
+    if (a->is_rest_argument()) {
+      if (val->concrete_type() == Expression::MAP) {
+        is_rest_argument = false;
+        is_keyword_argument = true;
+      }
+      else if (val->concrete_type() != Expression::LIST) {
+        SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
+          val->pstate(),
+          // 0,
+          SASS_COMMA);
+        wrapper->append(val);
+        val = wrapper;
+      }
+    }
+    return SASS_MEMORY_NEW(Argument,
+      a->pstate(),
+      val,
+      a->name(),
+      is_rest_argument,
+      is_keyword_argument);
+  }
+
+  Value* Eval::operator()(Argument* a)
   {
     Expression_Obj val = a->value()->perform(this);
     bool is_rest_argument = a->is_rest_argument();
@@ -1537,69 +1614,21 @@ namespace Sass {
         val = wrapper;
       }
     }
-    return SASS_MEMORY_NEW(Argument,
+    ArgumentObj rv = SASS_MEMORY_NEW(Argument,
                            a->pstate(),
                            val,
                            a->name(),
                            is_rest_argument,
                            is_keyword_argument);
+    // std::cerr << "ADASD\n";
+    return Cast<Value>(rv->value()->perform(this));
+
   }
 
-  Expression* Eval::operator()(Arguments* a)
+  Value* Eval::operator()(Arguments* a)
   {
-    Arguments_Obj aa = SASS_MEMORY_NEW(Arguments, a->pstate());
-    if (a->length() == 0) return aa.detach();
-    for (size_t i = 0, L = a->length(); i < L; ++i) {
-      // std::cerr << "eval argument " << i << "\n";
-      Expression_Obj rv = (*a)[i]->perform(this);
-      Argument* arg = Cast<Argument>(rv);
-      if (!(arg->is_rest_argument() || arg->is_keyword_argument())) {
-        aa->append(arg);
-      }
-    }
-
-    if (a->hasRestArgument()) {
-      Expression_Obj rest = a->get_rest_argument()->perform(this);
-      Expression_Obj splat = Cast<Argument>(rest)->value()->perform(this);
-
-      Sass_Separator separator = SASS_COMMA;
-      List* ls = Cast<List>(splat);
-      SassList* lsl = Cast<SassList>(splat);
-      Map* ms = Cast<Map>(splat);
-
-      List_Obj arglist = SASS_MEMORY_NEW(List,
-                                      splat->pstate(),
-                                      0,
-                                      ls ? ls->separator() : lsl ? lsl->separator() : separator,
-                                      true);
-
-      if (lsl) {
-        for (size_t i = 0; i < lsl->length(); i++) {
-          arglist->append(lsl->get(i));
-        }
-      }
-      else if (ls && ls->is_arglist()) {
-        arglist->concat(ls);
-      } else if (ms) {
-        aa->append(SASS_MEMORY_NEW(Argument, splat->pstate(), ms, "", false, true));
-      } else if (ls) {
-        arglist->concat(ls);
-      } else {
-        arglist->append(splat);
-      }
-      if (arglist->length()) {
-        aa->append(SASS_MEMORY_NEW(Argument, splat->pstate(), arglist, "", true));
-      }
-    }
-
-    if (a->hasKeywordArgument()) {
-      Expression_Obj rv = a->get_keyword_argument()->perform(this);
-      Argument* rvarg = Cast<Argument>(rv);
-      Expression_Obj kwarg = rvarg->value()->perform(this);
-      aa->append(SASS_MEMORY_NEW(Argument, kwarg->pstate(), kwarg, "", false, true));
-    }
-    // debug_ast(aa, "AAA: ");
-    return aa.detach();
+    std::cerr << "HEllo\n";
+    return nullptr;
   }
 
   Value* Eval::operator()(LoudComment* c)

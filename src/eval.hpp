@@ -16,7 +16,7 @@ namespace Sass {
   class Expand;
   class Context;
 
-  class Eval : public Operation_CRTP<Expression*, Eval> {
+  class Eval : public Operation_CRTP<Value*, Eval> {
 
    public:
     Expand& exp;
@@ -61,7 +61,7 @@ namespace Sass {
     Value* operator()(Binary_Expression*);
     Value* evalBinOp(Binary_Expression* b_in);
     Value* operator()(Unary_Expression*);
-    Expression* operator()(FunctionExpression*);
+    Value* operator()(FunctionExpression*);
     Value* operator()(Variable*);
     Value* operator()(Number*);
     Value* operator()(Color_RGBA*);
@@ -74,12 +74,14 @@ namespace Sass {
 
     Value* operator()(String_Quoted*);
     Value* operator()(String_Constant*);
-    Expression* operator()(At_Root_Query*);
     Value* operator()(Null*);
-    Expression* operator()(Argument*);
-    Expression* operator()(Arguments*);
+    Value* operator()(Argument*);
+    Value* operator()(Arguments*);
     Value* operator()(LoudComment*);
     Value* operator()(SilentComment*);
+
+    Argument* visitArgument(Argument* arg);
+    Arguments* visitArguments(Arguments* args);
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);
 
@@ -100,8 +102,8 @@ namespace Sass {
 
     // generic fallback
     template <typename U>
-    Expression* fallback(U x)
-    { return Cast<Expression>(x); }
+    Value* fallback(U x)
+    { return Cast<Value>(x); }
 
   };
 

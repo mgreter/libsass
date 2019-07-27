@@ -68,7 +68,7 @@ namespace Sass {
   {
     if (env_stack.size() > 0)
       return env_stack.back();
-    return 0;
+    return nullptr;
   }
 
   SelectorStack Expand::getSelectorStack()
@@ -286,11 +286,25 @@ namespace Sass {
 
   }
 
+  At_Root_Query* Expand::visitAtRootQuery(At_Root_Query* e)
+  {
+    Expression_Obj feature = e->feature();
+    feature = (feature ? feature->perform(&eval) : 0);
+    Expression_Obj value = e->value();
+    value = (value ? value->perform(&eval) : 0);
+    At_Root_Query* ee = SASS_MEMORY_NEW(At_Root_Query,
+      e->pstate(),
+      Cast<String>(feature),
+      value);
+    return ee;
+  }
+  
+
   Statement* Expand::operator()(At_Root_Block* a)
   {
     Block_Obj ab = a->block();
     At_Root_Query_Obj ae = a->expression();
-    if (ae) ae = eval(ae);
+    if (ae) ae = visitAtRootQuery(ae);
     else ae = SASS_MEMORY_NEW(At_Root_Query, a->pstate());
     /*
     if (false && _inKeyframes && ae->exclude("keyframes")) {
@@ -489,7 +503,7 @@ namespace Sass {
             else {
               throw std::runtime_error("Env not in sync");
             }
-            return 0;
+            return nullptr;
           }
           cur = cur->parent();
         }
@@ -513,7 +527,7 @@ namespace Sass {
     else {
       env->set_lexical(var, a->value()->perform(&eval));
     }
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Import* imp)
@@ -569,7 +583,6 @@ namespace Sass {
       rule->media(SASS_MEMORY_NEW(Interpolation, "[pstate]"));
       rule->media()->append(SASS_MEMORY_NEW(StringLiteral, "[pstate]", str));
     }
-    if (rule->supports()) { rule->supports(rule->supports()->perform(&eval)); }
     return rule;
   }
 
@@ -608,28 +621,28 @@ namespace Sass {
     ctx.import_stack.pop_back();
     block_stack.pop_back();
     traces.pop_back();
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Warning* w)
   {
     // eval handles this too, because warnings may occur in functions
     w->perform(&eval);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Error* e)
   {
     // eval handles this too, because errors may occur in functions
     e->perform(&eval);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Debug* d)
   {
     // eval handles this too, because warnings may occur in functions
     d->perform(&eval);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(LoudComment* c)
@@ -659,7 +672,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   // For does not create a new env scope
@@ -714,7 +727,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   // Eval does not create a new env scope
@@ -867,7 +880,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(While* w)
@@ -884,7 +897,7 @@ namespace Sass {
     }
     call_stack.pop_back();
     env_stack.pop_back();
-    return 0;
+    return nullptr;
   }
 
   std::string Expand::joinStrings(
@@ -1072,7 +1085,7 @@ namespace Sass {
 
     // set the static link so we can have lexical scoping
     dd->environment(env);
-    return 0;
+    return nullptr;
   }
 
   Statement* Expand::operator()(Mixin_Call* c)
@@ -1094,7 +1107,7 @@ namespace Sass {
       error("Mixin doesn't accept a content block.", c->pstate(), traces);
     }
     // debug_ast(c->arguments(), "IN: ");
-    Expression_Obj rv = c->arguments()->perform(&eval);
+    Expression_Obj rv = eval.visitArguments(c->arguments());
     // debug_ast(rv, "OUT: ");
     Arguments_Obj args = Cast<Arguments>(rv);
     std::string msg(", in mixin `" + c->name() + "`");
@@ -1152,7 +1165,7 @@ namespace Sass {
   {
     Env* env = environment();
     // convert @content directives into mixin calls to the underlying thunk
-    if (!env->has("@content[m]")) return 0;
+    if (!env->has("@content[m]")) return nullptr;
     Arguments_Obj args = c->arguments();
     if (!args) args = SASS_MEMORY_NEW(Arguments, c->pstate());
 

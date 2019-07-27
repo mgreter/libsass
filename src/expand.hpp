@@ -95,6 +95,8 @@ namespace Sass {
 
     Statement* operator()(MediaRule*);
 
+	At_Root_Query* visitAtRootQuery(At_Root_Query* e);
+
     // Css Ruleset is already static
     // Statement* operator()(CssMediaRule*);
 
