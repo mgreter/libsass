@@ -91,7 +91,8 @@ namespace Sass {
     virtual T operator()(ParenthesizedExpression* x) = 0;
     virtual T operator()(Binary_Expression* x)      = 0;
     virtual T operator()(Unary_Expression* x)       = 0;
-    virtual T operator()(FunctionExpression* x)          = 0;
+    virtual T operator()(FunctionExpression* x) = 0;
+    virtual T operator()(FunctionExpression2* x) = 0;
     virtual T operator()(Custom_Warning* x)         = 0;
     virtual T operator()(Custom_Error* x)           = 0;
     virtual T operator()(Variable* x)               = 0;
@@ -102,7 +103,7 @@ namespace Sass {
     virtual T operator()(Boolean* x)                = 0;
     virtual T operator()(String_Quoted* x)          = 0;
     virtual T operator()(String_Constant* x)        = 0;
-
+    
     virtual T operator()(StringLiteral* x) = 0;
     virtual T operator()(Interpolation* x) = 0;
     virtual T operator()(StringExpression* x) = 0;
@@ -193,7 +194,8 @@ namespace Sass {
     T operator()(ParenthesizedExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Binary_Expression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Unary_Expression* x)       { return static_cast<D*>(this)->fallback(x); }
-    T operator()(FunctionExpression* x)          { return static_cast<D*>(this)->fallback(x); }
+    T operator()(FunctionExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(FunctionExpression2* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Warning* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Error* x)           { return static_cast<D*>(this)->fallback(x); }
     T operator()(Variable* x)               { return static_cast<D*>(this)->fallback(x); }

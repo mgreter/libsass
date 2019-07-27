@@ -1090,7 +1090,8 @@ namespace Sass {
 
   Statement* Expand::operator()(Mixin_Call* c)
   {
-
+    return nullptr;
+    /*
     RECURSION_GUARD(recursions, c->pstate());
 
     Env* env = environment();
@@ -1106,10 +1107,8 @@ namespace Sass {
       // error("Mixin \"" + c->name() + "\" does not accept a content block.", c->pstate(), traces);
       error("Mixin doesn't accept a content block.", c->pstate(), traces);
     }
-    // debug_ast(c->arguments(), "IN: ");
-    Expression_Obj rv = eval.visitArguments(c->arguments());
     // debug_ast(rv, "OUT: ");
-    Arguments_Obj args = Cast<Arguments>(rv);
+    Arguments_Obj args = eval.visitArguments(c->arguments());
     std::string msg(", in mixin `" + c->name() + "`");
     traces.push_back(Backtrace(c->pstate(), msg));
     ctx.callee_stack.push_back({
@@ -1159,6 +1158,7 @@ namespace Sass {
     traces.pop_back();
 
     return trace.detach();
+    */
   }
 
   Statement* Expand::operator()(Content* c)
@@ -1166,8 +1166,8 @@ namespace Sass {
     Env* env = environment();
     // convert @content directives into mixin calls to the underlying thunk
     if (!env->has("@content[m]")) return nullptr;
-    Arguments_Obj args = c->arguments();
-    if (!args) args = SASS_MEMORY_NEW(Arguments, c->pstate());
+    ArgumentInvocation* args = c->arguments();
+    if (!args) args = SASS_MEMORY_NEW(ArgumentInvocation, c->pstate(), {}, {});
 
     Mixin_Call_Obj call = SASS_MEMORY_NEW(Mixin_Call,
                                        c->pstate(),

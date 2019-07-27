@@ -229,7 +229,7 @@ namespace Sass {
       return _argumentDeclaration();
     }
 
-    Arguments* _argumentInvocation(bool mixin = false);
+    ArgumentInvocation* _argumentInvocation(bool mixin = false);
 
     Expression* expression(bool bracketList = false, bool singleEquals = false, bool(StylesheetParser::* until)() = nullptr);
 

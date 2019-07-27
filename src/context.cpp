@@ -61,6 +61,7 @@ namespace Sass {
     import_stack(),
     callee_stack(),
     traces(),
+    builtins(),
     extender(Extender::NORMAL, traces),
     c_compiler(NULL),
 
@@ -780,6 +781,9 @@ namespace Sass {
   void register_built_in_functions(Context& ctx, Env* env)
   {
     using namespace Functions;
+
+    ctx.builtins["foo"] = &fn_foo;
+
     register_overload_stub(ctx, "rgb", env, 1);
     register_function(ctx, rgb_4_sig, rgb_4, 4, env);
     register_function(ctx, rgb_3_sig, rgb_3, 3, env);

@@ -725,12 +725,13 @@ namespace Sass {
 
     whitespace();
 
-    Arguments* args = nullptr;
+    ArgumentInvocation* args = nullptr;
     if (scanner.peekChar() == $lparen) {
       args = _argumentInvocation(true);
     }
     else {
-      args = SASS_MEMORY_NEW(Arguments, scanner.pstate());
+      args = SASS_MEMORY_NEW(ArgumentInvocation,
+        scanner.pstate(), {}, {});
     }
 
     LOCAL_FLAG(_mixinHasContent, true);
@@ -1135,7 +1136,7 @@ namespace Sass {
     }
 
     whitespace();
-    ArgumentsObj arguments;
+    ArgumentInvocationObj arguments;
     if (scanner.peekChar() == $lparen) {
       arguments = _argumentInvocation(true);
     }
@@ -1149,7 +1150,7 @@ namespace Sass {
     }
 
     // ToDo: Add checks to allow to ommit arguments fully
-    if (!arguments) arguments = SASS_MEMORY_NEW(Arguments, "[pstate]");
+    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation, "[pstate]", {}, {});
     Mixin_CallObj mixin = SASS_MEMORY_NEW(Mixin_Call,
       scanner.pstate(start), name, arguments);
 
@@ -1471,7 +1472,7 @@ relase. For details, see http://bit.ly/moz-document.
   }
   // EO _argumentDeclaration
 
-  Arguments* StylesheetParser::_argumentInvocation(bool mixin)
+  ArgumentInvocation* StylesheetParser::_argumentInvocation(bool mixin)
   {
 
     Position start(scanner);
@@ -1479,15 +1480,9 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
 
     std::vector<ExpressionObj> positional;
-
     NormalizedMap<ExpressionObj> named;
-
-    // Convert to old libsass arguments (ToDo: refactor)
-    ArgumentsObj args = SASS_MEMORY_NEW(Arguments,
-      scanner.pstate());
-
-    ExpressionObj rest;
-    ExpressionObj keywordRest;
+    ExpressionObj restArg;
+    ExpressionObj kwdRest;
     while (_lookingAtExpression()) {
       ExpressionObj expression = _expressionUntilComma(!mixin);
       whitespace();
@@ -1502,17 +1497,15 @@ relase. For details, see http://bit.ly/moz-document.
         }
         auto ex = _expressionUntilComma(!mixin);
         named[name] = ex;
-        args->append(SASS_MEMORY_NEW(Argument,
-          "[pstate]", ex, name));
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
         scanner.expectChar($dot);
-        if (rest == nullptr) {
-          rest = expression;
+        if (restArg == nullptr) {
+          restArg = expression;
         }
         else {
-          keywordRest = expression;
+          kwdRest = expression;
           whitespace();
           break;
         }
@@ -1521,8 +1514,6 @@ relase. For details, see http://bit.ly/moz-document.
         scanner.expect("...");
       }
       else {
-        args->append(SASS_MEMORY_NEW(Argument,
-          "[pstate]", expression));
         positional.push_back(expression);
       }
 
@@ -1532,17 +1523,12 @@ relase. For details, see http://bit.ly/moz-document.
     }
     scanner.expectChar($rparen);
 
-    if (rest != nullptr) {
-      args->append(SASS_MEMORY_NEW(Argument,
-        "[pstate]", rest, "", true));
-    }
+    return SASS_MEMORY_NEW(
+      ArgumentInvocation,
+      scanner.pstate(start),
+      positional, named,
+      restArg, kwdRest);
 
-    if (keywordRest != nullptr) {
-      args->append(SASS_MEMORY_NEW(Argument,
-        "[pstate]", keywordRest, "", false, true));
-    }
-
-    return args.detach();
   }
   // EO _argumentInvocation
 
@@ -2550,9 +2536,9 @@ relase. For details, see http://bit.ly/moz-document.
 
     if (!plain.empty()) {
       if (plain == "if") {
-        Arguments* args = _argumentInvocation();
-        return SASS_MEMORY_NEW(FunctionExpression,
-          "[pstate]", plain, args, "");
+        ArgumentInvocation* args = _argumentInvocation();
+        return SASS_MEMORY_NEW(FunctionExpression2,
+          "[pstate]", identifier, args, "");
 
         // ToDo: dart-sass has an if expression class for this
         // return SASS_MEMORY_NEW(If, "[pstate]", invocation, {});
@@ -2621,14 +2607,14 @@ relase. For details, see http://bit.ly/moz-document.
           scanner.pstate(start));
       }
 
-      Arguments* args = _argumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression,
+      ArgumentInvocation* args = _argumentInvocation();
+      return SASS_MEMORY_NEW(FunctionExpression2,
         scanner.pstate(start), itpl, args, ns);
 
     }
     else if (next == $lparen) {
-      Arguments* args = _argumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression,
+      ArgumentInvocation* args = _argumentInvocation();
+      return SASS_MEMORY_NEW(FunctionExpression2,
         scanner.pstate(start), identifier, args, ns);
     }
     else {
@@ -2904,8 +2890,8 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     ParserState pstate(scanner.pstate(start));
-    Arguments* args = _argumentInvocation();
-    return SASS_MEMORY_NEW(FunctionExpression,
+    ArgumentInvocation* args = _argumentInvocation();
+    return SASS_MEMORY_NEW(FunctionExpression2,
       pstate, itpl, args, "");
   }
   // dynamicUrl

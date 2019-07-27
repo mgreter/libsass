@@ -123,15 +123,16 @@ namespace Sass {
   public:
     SassNode(ParserState pstate) :
       AST_Node(pstate) {};
+    ATTACH_VIRTUAL_COPY_OPERATIONS(SassNode);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class CallableInvocation : public SassNode {
+  class CallableInvocation {
     // The arguments passed to the callable.
     ADD_PROPERTY(ArgumentInvocationObj, arguments);
   public:
-    CallableInvocation(ParserState pstate,
+    CallableInvocation(
       ArgumentInvocation* arguments) :
-      SassNode(pstate),
       arguments_(arguments) {}
   };
 
@@ -162,6 +163,8 @@ namespace Sass {
 
     std::string toString() const;
 
+    ATTACH_CRTP_PERFORM_METHODS();
+
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -169,7 +172,7 @@ namespace Sass {
   // represents elements in value contexts, which exist primarily to be
   // evaluated and returned.
   //////////////////////////////////////////////////////////////////////
-  class Expression : public AST_Node {
+  class Expression : public SassNode {
   public:
     enum Type {
       NONE,
@@ -933,12 +936,41 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+  class InvocationExpression :
+    public Expression,
+    public CallableInvocation {
+  public:
+    InvocationExpression(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      Expression(pstate),
+      CallableInvocation(arguments)
+    {
+    }
+
+  };
+
   /// A function invocation.
   ///
   /// This may be a plain CSS function or a Sass function.
-  class FunctionExpression2 :
-    public CallableInvocation,
-    public Expression {
+  class IfExpression : public InvocationExpression {
+
+  public:
+    IfExpression(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      InvocationExpression(pstate, arguments)
+    {
+    }
+
+    std::string toString() const {
+      return "if" + arguments_->toString();
+    }
+
+  };
+
+  /// A function invocation.
+  ///
+  /// This may be a plain CSS function or a Sass function.
+  class FunctionExpression2 : public InvocationExpression {
 
     // The namespace of the function being invoked,
     // or `null` if it's invoked without a namespace.
@@ -954,14 +986,13 @@ namespace Sass {
       Interpolation* name,
       ArgumentInvocation* arguments,
       std::string ns = "") :
-      CallableInvocation(pstate, arguments),
-      Expression(pstate),
-      ns_(ns),
-      name_(name)
+      InvocationExpression(pstate, arguments),
+      ns_(ns), name_(name)
     {
 
     }
 
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1009,10 +1040,10 @@ namespace Sass {
   //////////////////////////////////////
   class Mixin_Call final : public Has_Block {
     ADD_CONSTREF(std::string, name)
-    ADD_PROPERTY(Arguments_Obj, arguments)
+    ADD_PROPERTY(ArgumentInvocationObj, arguments)
     ADD_PROPERTY(Parameters_Obj, block_parameters)
   public:
-    Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params = {}, Block_Obj b = {});
+    Mixin_Call(ParserState pstate, std::string n, ArgumentInvocation* args, Parameters_Obj b_params = {}, Block_Obj b = {});
     // ATTACH_COPY_OPERATIONS(Mixin_Call)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -1021,9 +1052,9 @@ namespace Sass {
   // The @content directive for mixin content blocks.
   ///////////////////////////////////////////////////
   class Content final : public Statement {
-    ADD_PROPERTY(Arguments_Obj, arguments)
+    ADD_PROPERTY(ArgumentInvocationObj, arguments)
   public:
-    Content(ParserState pstate, Arguments_Obj args);
+    Content(ParserState pstate, ArgumentInvocation* args);
     // ATTACH_COPY_OPERATIONS(Content)
     ATTACH_CRTP_PERFORM_METHODS()
   };

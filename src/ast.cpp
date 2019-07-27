@@ -568,14 +568,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Mixin_Call::Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params, Block_Obj b)
+  Mixin_Call::Mixin_Call(ParserState pstate, std::string n, ArgumentInvocation* args, Parameters_Obj b_params, Block_Obj b)
   : Has_Block(pstate, b), name_(n), arguments_(args), block_parameters_(b_params)
   { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Content::Content(ParserState pstate, Arguments_Obj args)
+  Content::Content(ParserState pstate, ArgumentInvocation* args)
   : Statement(pstate),
     arguments_(args)
   { statement_type(CONTENT); }
@@ -584,14 +584,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Expression::Expression(ParserState pstate, bool d, bool e, bool i, Type ct)
-  : AST_Node(pstate),
+  : SassNode(pstate),
     concrete_type_(ct)
   { }
 
   Expression::Expression(const Expression* ptr)
-  : AST_Node(ptr),
+  : SassNode(ptr),
     concrete_type_(ptr->concrete_type_)
   { }
+
+  SassNode::SassNode(const SassNode* ptr) :
+    AST_Node(ptr)
+  {};
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

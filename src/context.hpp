@@ -47,6 +47,9 @@ namespace Sass {
     ImporterStack import_stack;
     std::vector<Sass_Callee> callee_stack;
     std::vector<Backtrace> traces;
+
+    NormalizedMap<BuiltInCallable*> builtins;
+
     Extender extender;
 
     struct Sass_Compiler* c_compiler;
