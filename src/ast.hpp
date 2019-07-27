@@ -117,6 +117,54 @@ namespace Sass {
   };
 
   //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class SassNode : public AST_Node {
+  public:
+    SassNode(ParserState pstate) :
+      AST_Node(pstate) {};
+  };
+
+  class CallableInvocation : public SassNode {
+    // The arguments passed to the callable.
+    ADD_PROPERTY(ArgumentInvocationObj, arguments);
+  public:
+    CallableInvocation(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      SassNode(pstate),
+      arguments_(arguments) {}
+  };
+
+  class ArgumentInvocation : public SassNode {
+
+    // The arguments passed by position.
+    ADD_PROPERTY(std::vector<ExpressionObj>, positional);
+
+    // The arguments passed by name.
+    ADD_PROPERTY(NormalizedMap<ExpressionObj>, named);
+
+    // The first rest argument (as in `$args...`).
+    ADD_PROPERTY(ExpressionObj, restArgs);
+
+    // The second rest argument, which is expected to only contain a keyword map.
+    ADD_PROPERTY(ExpressionObj, kwdRest);
+
+  public:
+
+    ArgumentInvocation(ParserState pstate,
+      std::vector<ExpressionObj> positional,
+      NormalizedMap<ExpressionObj> named,
+      Expression* restArgs = nullptr,
+      Expression* kwdRest = nullptr);
+
+    // Returns whether this invocation passes no arguments.
+    bool isEmpty() const;
+
+    std::string toString() const;
+
+  };
+
+  //////////////////////////////////////////////////////////////////////
   // Abstract base class for expressions. This side of the AST hierarchy
   // represents elements in value contexts, which exist primarily to be
   // evaluated and returned.
@@ -878,11 +926,42 @@ namespace Sass {
   // The @return directive for use inside SassScript functions.
   /////////////////////////////////////////////////////////////
   class Return final : public Statement {
-    ADD_PROPERTY(Expression_Obj, value)
+    ADD_PROPERTY(Expression_Obj, value);
   public:
     Return(ParserState pstate, Expression_Obj val);
     // ATTACH_COPY_OPERATIONS(Return)
     ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  /// A function invocation.
+  ///
+  /// This may be a plain CSS function or a Sass function.
+  class FunctionExpression2 :
+    public CallableInvocation,
+    public Expression {
+
+    // The namespace of the function being invoked,
+    // or `null` if it's invoked without a namespace.
+    ADD_PROPERTY(std::string, ns);
+
+    // The name of the function being invoked. If this is
+    // interpolated, the function will be interpreted as plain
+    // CSS, even if it has the same name as a Sass function.
+    ADD_PROPERTY(InterpolationObj, name);
+
+  public:
+    FunctionExpression2(ParserState pstate,
+      Interpolation* name,
+      ArgumentInvocation* arguments,
+      std::string ns = "") :
+      CallableInvocation(pstate, arguments),
+      Expression(pstate),
+      ns_(ns),
+      name_(name)
+    {
+
+    }
+
   };
 
   /////////////////////////////////////////////////////////////////////////////

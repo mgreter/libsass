@@ -859,4 +859,58 @@ namespace Sass {
     return rv;
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ArgumentInvocation::ArgumentInvocation(ParserState pstate,
+    std::vector<ExpressionObj> positional,
+    NormalizedMap<ExpressionObj> named,
+    Expression* restArgs,
+    Expression* kwdRest) :
+    SassNode(pstate),
+    positional_(positional),
+    named_(named),
+    restArgs_(restArgs),
+    kwdRest_(kwdRest)
+  {
+  }
+
+  // Returns whether this invocation passes no arguments.
+  bool ArgumentInvocation::isEmpty() const
+  {
+    return positional_.empty()
+      && named_.empty()
+      && restArgs_.isNull();
+  }
+
+  std::string ArgumentInvocation::toString() const
+  {
+    std::stringstream strm;
+    strm << "(";
+    bool addComma = false;
+    for (Expression* named : positional_) {
+      if (addComma) strm << ", ";
+      strm << named->to_string();
+      addComma = true;
+    }
+    for (auto named : named_) {
+      if (addComma) strm << ", ";
+      strm << named.first << ": ";
+      strm << named.second->to_string();
+      addComma = true;
+    }
+    if (!restArgs_.isNull()) {
+      if (addComma) strm << ", ";
+      strm << restArgs_->to_string() << "...";
+      addComma = true;
+    }
+    if (!kwdRest_.isNull()) {
+      if (addComma) strm << ", ";
+      strm << kwdRest_->to_string() << "...";
+      addComma = true;
+    }
+    return strm.str();
+  }
+
 }
+

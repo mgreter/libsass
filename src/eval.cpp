@@ -81,6 +81,16 @@ namespace Sass {
     return exp.env_stack;
   }
 
+  std::pair<
+    std::vector<ExpressionObj>,
+    NormalizedMap<ExpressionObj>
+  > _evaluateMacroArguments(
+    CallableInvocation& invocation
+  )
+  {
+    return {};
+  }
+
   std::vector<Sass_Callee>& Eval::callee_stack()
   {
     return ctx.callee_stack;
@@ -1452,12 +1462,21 @@ namespace Sass {
 /// If [operator] is passed, it's the operator for the surrounding
 /// [SupportsOperation], and is used to determine whether parentheses are
 /// necessary if [condition] is also a [SupportsOperation].
-  std::string Eval::_parenthesize(SupportsCondition* condition, SupportsOperation::Operand* operand) {
+  std::string Eval::_parenthesize(SupportsCondition* condition) {
     SupportsNegation* negation = Cast<SupportsNegation>(condition);
     SupportsOperation* operation = Cast<SupportsOperation>(condition);
-    if (negation ||
-      (operation &&
-      (operand == nullptr || *operand != operation->operand()))) {
+    if (negation != nullptr || operation != nullptr) {
+      return "(" + _visitSupportsCondition(condition) + ")";
+    }
+    else {
+      return _visitSupportsCondition(condition);
+    }
+  }
+
+  std::string Eval::_parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand) {
+    SupportsNegation* negation = Cast<SupportsNegation>(condition);
+    SupportsOperation* operation = Cast<SupportsOperation>(condition);
+    if (negation || operation && operand != operation->operand()) {
       return "(" + _visitSupportsCondition(condition) + ")";
     }
     else {
@@ -1470,15 +1489,15 @@ namespace Sass {
     if (auto operation = Cast<SupportsOperation>(condition)) {
       std::stringstream strm;
       SupportsOperation::Operand operand = operation->operand();
-      strm << _parenthesize(operation->left(), &operand);
+      strm << _parenthesize(operation->left(), operand);
       strm << " " << (operand == SupportsOperation::AND ? "and " : "or ");
-      strm << _parenthesize(operation->right(), &operand);
+      strm << _parenthesize(operation->right(), operand);
       return strm.str();
     }
     else if (auto negation = Cast<SupportsNegation>(condition)) {
       std::stringstream strm;
       strm << "not ";
-      strm << _parenthesize(negation->condition(), nullptr);
+      strm << _parenthesize(negation->condition());
       return strm.str();
     }
     else if (auto interpolation = Cast<SupportsInterpolation>(condition)) {

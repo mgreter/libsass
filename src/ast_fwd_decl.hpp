@@ -18,6 +18,10 @@ namespace Sass {
 
   class AST_Node;
 
+  class SassNode;
+  class CallableInvocation;
+  class ArgumentInvocation;
+
   class Has_Block;
 
   class SimpleSelector;
@@ -55,8 +59,6 @@ namespace Sass {
   class CssStyleRule;
   class CssStylesheet;
   class CssSupportsRule;
-
-
 
   class SupportsRule;
   class AtRule;
@@ -209,6 +211,9 @@ namespace Sass {
   IMPL_MEM_OBJ(LoudComment);
   IMPL_MEM_OBJ(SilentComment);
   IMPL_MEM_OBJ(Has_Block);
+  IMPL_MEM_OBJ(SassNode);
+  IMPL_MEM_OBJ(CallableInvocation);
+  IMPL_MEM_OBJ(ArgumentInvocation);
   IMPL_MEM_OBJ(If);
   IMPL_MEM_OBJ(For);
   IMPL_MEM_OBJ(Each);
@@ -306,6 +311,8 @@ namespace Sass {
   DECLARE_BASE_CAST(Expression)
   DECLARE_BASE_CAST(Statement)
   DECLARE_BASE_CAST(Has_Block)
+  DECLARE_BASE_CAST(SassNode)
+  DECLARE_BASE_CAST(CallableInvocation)
   DECLARE_BASE_CAST(Value)
   DECLARE_BASE_CAST(List)
   DECLARE_BASE_CAST(Color)

@@ -87,7 +87,8 @@ namespace Sass {
 
     std::string _serialize(Value* expression, bool quote = true);
 
-    std::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand* operand);
+    std::string _parenthesize(SupportsCondition* condition);
+    std::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand);
     std::string _visitSupportsCondition(SupportsCondition* condition);
 
     String* operator()(SupportsCondition*);
