@@ -35,6 +35,16 @@ namespace Sass {
       return SASS_UNDEF;
     }
 
+    // Return the list separator
+    virtual bool hasBrackets() {
+      return false;
+    }
+
+    // Return the list separator
+    virtual bool isTruthy() const {
+      return false;
+    }
+
     // Return normalized index for vector from overflowable sass index
     long sassIndexToListIndex(Value* sassIndex, std::string name = "");
 
@@ -48,6 +58,11 @@ namespace Sass {
     virtual Number* assertNumber(std::string name = "");
 
     virtual String* assertString(std::string name = "");
+
+    SassList* changeValues(
+      std::vector<ValueObj> values,
+      Sass_Separator separator,
+      bool sBrackets);
 
     /// The SassScript `>` operation.
     virtual Boolean* greaterThan(Value* other);
@@ -471,6 +486,11 @@ namespace Sass {
   public:
     Boolean(ParserState pstate, bool val);
     operator bool() override { return value_; }
+
+    // Return the list separator
+    bool isTruthy() const override {
+      return value_;
+    }
 
     std::string type() const override { return "bool"; }
     static std::string type_name() { return "bool"; }

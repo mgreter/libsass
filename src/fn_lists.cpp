@@ -7,6 +7,7 @@
 #include "fn_utils.hpp"
 #include "fn_lists.hpp"
 #include "debugger.hpp"
+#include "dart_helpers.hpp"
 
 namespace Sass {
 
@@ -31,12 +32,57 @@ namespace Sass {
 
       Value* setNth(const std::vector<ValueObj>& arguments)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "setNth");
+        Value* list = arguments[0];
+        Value* index = arguments[1];
+        Value* value = arguments[2];
+        std::vector<ValueObj> newList = list->asVector();
+        newList[list->sassIndexToListIndex(index, "n")] = value;
+        return arguments[0]->changeValues(newList,
+          arguments[0]->separator(),
+          arguments[0]->hasBrackets());
       }
 
       Value* join(const std::vector<ValueObj>& arguments)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "join");
+        Value* list1 = arguments[0];
+        Value* list2 = arguments[1];
+        String* separatorParam = arguments[2]->assertString("separator");
+        Value* bracketedParam = arguments[3];
+
+        Sass_Separator separator;
+        if (separatorParam->to_string() == "auto") {
+          if (list1->separator() != SASS_UNDEF) {
+            separator = list1->separator();
+          }
+          else if (list2->separator() != SASS_UNDEF) {
+            separator = list2->separator();
+          }
+          else {
+            separator = SASS_SPACE;
+          }
+        }
+        else if (separatorParam->to_string() == "space") {
+          separator = SASS_SPACE;
+        }
+        else if (separatorParam->to_string() == "comma") {
+          separator = SASS_COMMA;
+        }
+        else {
+          throw Exception::SassScriptException(
+            "$separator: Must be \"space\", \"comma\", or \"auto\".");
+        }
+
+        bool bracketed = bracketedParam->isTruthy();
+        if (String_Constant * str = Cast<String_Constant>(bracketedParam)) {
+          if (str->value() == "auto") { bracketed = list1->hasBrackets(); }
+        }
+
+        std::vector<ValueObj> values;
+        std::vector<ValueObj> l1vals = list1->asVector();
+        std::vector<ValueObj> l2vals = list2->asVector();
+        std::move(l1vals.begin(), l1vals.end(), std::back_inserter(values));
+        std::move(l2vals.begin(), l2vals.end(), std::back_inserter(values));
+        return SASS_MEMORY_NEW(SassList, "[pstate]", values, separator, bracketed);
       }
 
       Value* append(const std::vector<ValueObj>& arguments)
@@ -51,12 +97,22 @@ namespace Sass {
 
       Value* index(const std::vector<ValueObj>& arguments)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "index");
+        std::vector<ValueObj> list =
+          arguments[0]->asVector();
+        Value* value = arguments[1];
+        size_t index = indexOf(list, value);
+        if (index == std::string::npos) {
+          return SASS_MEMORY_NEW(Null,
+            arguments[0]->pstate());
+        }
+        return SASS_MEMORY_NEW(Number,
+          arguments[0]->pstate(),
+          index + 1);
       }
 
       Value* separator(const std::vector<ValueObj>& arguments)
       {
-        arguments[0]->separator() == SASS_COMMA
+        return arguments[0]->separator() == SASS_COMMA
           ? SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "comma") // SassString("comma", quotes: false)
           : SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "space"); // SassString("space", quotes: false))
       }

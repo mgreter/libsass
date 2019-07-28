@@ -36,54 +36,70 @@ namespace Sass {
 
   Color* Value::assertColor(std::string name) {
     throw Exception::SassScriptException(
-      "$this is not a color.", name);
+      inspect() + " is not a color.", name);
   }
 
   Map* Value::assertMap(std::string name) {
     throw Exception::SassScriptException(
-      "$this is not a map.", name);
+      inspect() + " is not a map.", name);
   }
 
   Number* Value::assertNumber(std::string name) {
     throw Exception::SassScriptException(
-      "$this is not a number.", name);
+      inspect() + " is not a number.", name);
   }
 
   String* Value::assertString(std::string name) {
     throw Exception::SassScriptException(
-      "$this is not a string.", name);
+      inspect() + " is not a string.", name);
+  }
+
+  SassList* Value::changeValues(
+    std::vector<ValueObj> values,
+    Sass_Separator separator,
+    bool hasBrackets)
+  {
+    this->separator();
+    this->hasBrackets();
+    return SASS_MEMORY_NEW(SassList, pstate(),
+      values, separator, hasBrackets);
   }
 
   Boolean* Value::greaterThan(Value* other) {
     throw Exception::SassScriptException(
-      "Undefined operation \"$this > $other\".");
+      "Undefined operation \"" + inspect()
+      + " > " + other->inspect() + "\".");
   }
 
   Boolean* Value::greaterThanOrEquals(Value* other) {
     throw Exception::SassScriptException(
-      "Undefined operation \"$this >= $other\".");
+      "Undefined operation \"" + inspect()
+      + " >= " + other->inspect() + "\".");
   }
 
   Boolean* Value::lessThan(Value* other) {
     throw Exception::SassScriptException(
-      "Undefined operation \"$this < $other\".");
+      "Undefined operation \"" + inspect()
+      + " < " + other->inspect() + "\".");
   }
 
   Boolean* Value::lessThanOrEquals(Value* other) {
     throw Exception::SassScriptException(
-      "Undefined operation \"$this <= $other\".");
+      "Undefined operation \"" + inspect()
+      + " <= " + other->inspect() + "\".");
   }
 
   Value* Value::times(Value* other) {
     throw Exception::SassScriptException(
-      "Undefined operation \"$this * $other\".");
+      "Undefined operation \"" + inspect()
+      + " * " + other->inspect() + "\".");
   }
 
-  /// The SassScript `%` operation.
-
+  // The SassScript `%` operation.
   Value* Value::modulo(Value* other) {
     throw Exception::SassScriptException(
-      "Undefined operation \"$this % $other\".");
+      "Undefined operation \"" + inspect()
+      + " % " + other->inspect() + "\".");
   }
 
   Value::Value(const Value* ptr)

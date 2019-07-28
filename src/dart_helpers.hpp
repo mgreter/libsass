@@ -31,6 +31,22 @@ namespace Sass {
   }
 
   // ##########################################################################
+  // ##########################################################################
+  template <class T, class V>
+  size_t indexOf(const std::vector<T>& vec, const V& item)
+  {
+    // find item in container
+    auto it = std::find(
+      vec.begin(),
+      vec.end(),
+      item);
+    // return -1 if not found
+    return it == vec.end()
+      ? std::string::npos
+      : distance(vec.begin(), it);
+  }
+
+  // ##########################################################################
   // Flatten `vector<vector<T>>` to `vector<T>`
   // ##########################################################################
   template <class T>
