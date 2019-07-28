@@ -14,6 +14,357 @@ namespace Sass {
 
   namespace Functions {
 
+    bool isVar(const Value* obj) {
+      const SassString* s = Cast<SassString>(obj);
+      if (s == nullptr) return false;
+      if (s->quote_mark() != 0) return false;
+      const std::string& str = s->value();
+      return starts_with(str, "var(");
+    }
+
+    bool isSpecialNumber(const Value* obj) {
+      const SassString* s = Cast<SassString>(obj);
+      if (s == nullptr) return false;
+      if (s->quote_mark() != 0) return false;
+      const std::string& str = s->value();
+      if (str.length() < 6) return false;
+      return starts_with(str, "calc(")
+        || starts_with(str, "var(")
+        || starts_with(str, "env(")
+        || starts_with(str, "min(")
+        || starts_with(str, "max(");
+    }
+
+    double _percentageOrUnitless2(Number* number, double max, std::string name, Backtraces traces) {
+      double value = 0.0;
+      if (!number->hasUnits()) {
+        value = number->value();
+      }
+      else if (number->hasUnit("%")) {
+        value = max * number->value() / 100;
+      }
+      else {
+        error(name + ": Expected " + number->to_css() +
+          " to have no units or \"%\".", number->pstate(), traces);
+      }
+      if (value < 0.0) return 0.0;
+      if (value > max) return max;
+      return value;
+    }
+
+    SassString* _functionString(std::string name, std::vector<ValueObj> arguments, const ParserState& pstate)
+    {
+      bool addComma = false;
+      std::stringstream fncall;
+      fncall << name << "(";
+      for (Value* arg : arguments) {
+        if (addComma) fncall << ", ";
+        fncall << arg->to_css();
+        addComma = true;
+      }
+      fncall << ")";
+      return SASS_MEMORY_NEW(SassString,
+        pstate, fncall.str());
+    }
+
+    SassString* _functionRgbString(std::string name, Color_RGBA* color, Value* alpha, const ParserState& pstate)
+    {
+      std::stringstream fncall;
+      fncall << name << "(";
+      fncall << color->r() << ", ";
+      fncall << color->g() << ", ";
+      fncall << color->b() << ", ";
+      fncall << alpha->to_css() << ")";
+      return SASS_MEMORY_NEW(SassString,
+        pstate, fncall.str());
+    }
+
+    Value* _rgbTwoArg2(std::string name, std::vector<ValueObj> arguments, const ParserState& pstate)
+    {
+      // Check if any `calc()` or `var()` are passed
+      if (isVar(arguments[0])) {
+        return _functionString(
+          name, arguments, pstate);
+      }
+      else if (isVar(arguments[1])) {
+        if (Color* first = Cast<Color>(arguments[0])) {
+          SassColorObj rgba = first->toRGBA();
+          return _functionRgbString(name,
+            rgba, arguments[1], pstate);
+        }
+        else {
+          return _functionString(
+            name, arguments, pstate);
+        }
+      }
+      else if (isSpecialNumber(arguments[1])) {
+        Color* color = arguments[0]->assertColor("color");
+        SassColorObj rgba = color->toRGBA();
+        return _functionRgbString(name,
+          rgba, arguments[1], pstate);
+      }
+
+      SassColor* color = arguments[0]->assertColor("color");
+      SassNumber* alpha = arguments[1]->assertNumber("alpha");
+      color = SASS_MEMORY_COPY(color);
+      color->a(_percentageOrUnitless2(
+        alpha, 1.0, "alpha", {}));
+      color->disp("");
+      return color;
+    }
+
+    namespace Colors {
+
+      BUILT_IN_FN(rgb_4)
+      {
+        return _rgb("rgb", arguments, rgb_4_sig, pstate, {});
+      }
+
+      BUILT_IN_FN(rgb_3)
+      {
+        return _rgb("rgb", arguments, rgb_3_sig, pstate, {});
+      }
+
+      BUILT_IN_FN(rgb_2)
+      {
+        return _rgbTwoArg2("rgb", arguments, pstate);
+      }
+
+
+      BUILT_IN_FN(rgb_1)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "rgb_1");
+      }
+
+
+      BUILT_IN_FN(rgba_4)
+      {
+        return _rgb("rgba", arguments, rgba_4_sig, pstate, {});
+      }
+
+
+      BUILT_IN_FN(rgba_3)
+      {
+        return _rgb("rgba", arguments, rgba_3_sig, pstate, {});
+      }
+
+
+      BUILT_IN_FN(rgba_2)
+      {
+        return _rgbTwoArg2("rgba", arguments, pstate);
+      }
+
+
+      BUILT_IN_FN(rgba_1)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "rgba_1");
+      }
+
+
+      BUILT_IN_FN(hsl_4)
+      {
+        return _hsl("hsl", arguments, hsl_4_sig, pstate, {});
+      }
+
+
+      BUILT_IN_FN(hsl_3)
+      {
+        return _hsl("hsl", arguments, hsl_3_sig, pstate, {});
+      }
+
+
+      BUILT_IN_FN(hsl_2)
+      {
+        // hsl(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
+        // and functions are parsed after variable substitution.
+        if (isVar(arguments[0]) || isVar(arguments[1])) {
+          return _functionString("hsl", arguments, pstate);
+        }
+        throw Exception::SassScriptException(
+          "Missing argument $lightness.");
+      }
+
+
+      BUILT_IN_FN(hsl_1)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "hsl_1");
+      }
+
+
+      BUILT_IN_FN(hsla_4)
+      {
+        return _hsl("hsla", arguments, hsla_4_sig, pstate, {});
+      }
+
+
+      BUILT_IN_FN(hsla_3)
+      {
+        return _hsl("hsla", arguments, hsla_3_sig, pstate, {});
+      }
+
+
+      BUILT_IN_FN(hsla_2)
+      {
+        // hsl(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
+        // and functions are parsed after variable substitution.
+        if (isVar(arguments[0]) || isVar(arguments[1])) {
+          return _functionString("hsla", arguments, pstate);
+        }
+        throw Exception::SassScriptException(
+          "Missing argument $lightness.");
+      }
+
+
+      BUILT_IN_FN(hsla_1)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "hsla_1");
+      }
+
+      BUILT_IN_FN(red)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "red");
+      }
+
+      BUILT_IN_FN(green)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "green");
+      }
+
+
+      BUILT_IN_FN(blue)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "blue");
+      }
+
+
+      BUILT_IN_FN(mix)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "mix");
+      }
+
+
+      BUILT_IN_FN(invert)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "invert");
+      }
+
+
+      BUILT_IN_FN(hue)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "hue");
+      }
+
+
+      BUILT_IN_FN(saturation)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "saturation");
+      }
+
+
+      BUILT_IN_FN(lightness)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "lightness");
+      }
+
+
+      BUILT_IN_FN(adjustHue)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "adjustHue");
+      }
+
+
+      BUILT_IN_FN(complement)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "complement");
+      }
+
+
+      BUILT_IN_FN(grayscale)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "grayscale");
+      }
+
+
+      BUILT_IN_FN(lighten)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "lighten");
+      }
+
+
+      BUILT_IN_FN(darken)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "darken");
+      }
+
+
+      BUILT_IN_FN(saturate_2)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "saturate_2");
+      }
+
+
+      BUILT_IN_FN(saturate_1)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "saturate_1");
+      }
+
+
+      BUILT_IN_FN(desaturate)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "desaturate");
+      }
+
+
+      BUILT_IN_FN(opacify)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "opacify");
+      }
+
+
+      BUILT_IN_FN(fadeIn)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "fadeIn");
+      }
+
+
+      BUILT_IN_FN(fadeOut)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "fadeOut");
+      }
+
+
+      BUILT_IN_FN(transparentize)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "transparentize");
+      }
+
+
+      BUILT_IN_FN(alpha_1)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "alpha_1");
+      }
+
+
+      BUILT_IN_FN(alpha_any)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "alpha_any");
+      }
+
+
+      BUILT_IN_FN(opacity)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "opacity");
+      }
+
+
+      BUILT_IN_FN(ieHexStr)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "ieHexStr");
+      }
+
+    }
+
+
     std::vector<ExpressionObj> getArguments(Env& env, std::vector<std::string> names)
     {
       std::vector<ExpressionObj> arguments;
@@ -422,10 +773,10 @@ namespace Sass {
 
     Value* _hsl(std::string name, std::vector<ValueObj> arguments, Signature sig, ParserState pstate, Backtraces traces)
     {
-      AST_Node* _h = arguments[0];
-      AST_Node* _s = arguments[1];
-      AST_Node* _l = arguments[2];
-      AST_Node* _a = nullptr;
+      Value* _h = arguments[0];
+      Value* _s = arguments[1];
+      Value* _l = arguments[2];
+      Value* _a = nullptr;
       if (arguments.size() > 3) {
         _a = arguments[3];
       }

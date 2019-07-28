@@ -116,6 +116,15 @@ namespace Sass {
       ~SassScriptException() throw() {};
     };
 
+    class SassRuntimeException : public std::runtime_error {
+      std::string msg;
+      ParserState pstate;
+    public:
+      SassRuntimeException(std::string msg, ParserState pstate);
+      virtual const char* what() const throw() { return msg.c_str(); }
+      ~SassRuntimeException() throw() {};
+    };
+
     class RecursionLimitError : public Base {
       public:
         RecursionLimitError(ParserState pstate, Backtraces traces);

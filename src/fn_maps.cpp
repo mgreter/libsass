@@ -6,6 +6,59 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Maps {
+
+      BUILT_IN_FN(get)
+      {
+        Map* map = arguments[0]->assertMap("map");
+        Value* key = arguments[1]->assertValue("key");
+        if (Value* value = map->at(key)) { return value; }
+        else { return SASS_MEMORY_NEW(Null, pstate); }
+      }
+
+      BUILT_IN_FN(merge)
+      {
+        Map* map1 = arguments[0]->assertMap("map1");
+        Map* map2 = arguments[1]->assertMap("map2");
+        Map* map = SASS_MEMORY_NEW(Map, pstate);
+        for (auto kv : map1->elements()) { *map << kv; }
+        for (auto kv : map2->elements()) { *map << kv; }
+        // std::copy(map1->begin(), map1->end(),
+        //   std::back_inserter(map->elements()));
+        // std::copy(map2->begin(), map2->end(),
+        //   std::back_inserter(map->elements()));
+        return map;
+      }
+
+      // overloaded
+      BUILT_IN_FN(remove)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "remove");
+      }
+
+      BUILT_IN_FN(keys)
+      {
+        return SASS_MEMORY_NEW(SassList, pstate,
+          arguments[0]->assertMap("map")->keys(),
+          SASS_COMMA);
+      }
+
+      BUILT_IN_FN(values)
+      {
+        return SASS_MEMORY_NEW(SassList, pstate,
+          arguments[0]->assertMap("map")->values(),
+          SASS_COMMA);
+      }
+
+      BUILT_IN_FN(hasKey)
+      {
+        Map* map = arguments[0]->assertMap("map");
+        Value* key = arguments[1]->assertValue("key");
+        return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
+      }
+
+    }
+
     /////////////////
     // MAP FUNCTIONS
     /////////////////

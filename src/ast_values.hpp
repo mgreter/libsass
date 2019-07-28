@@ -45,19 +45,26 @@ namespace Sass {
       return false;
     }
 
+    // Return the list separator
+    virtual bool isNull() const {
+      return false;
+    }
+
     // Return normalized index for vector from overflowable sass index
     long sassIndexToListIndex(Value* sassIndex, std::string name = "");
 
-    virtual Color* assertColor(std::string name = "");
+    Value* assertValue(std::string name = "");
+
+    virtual SassColor* assertColor(std::string name = "");
 
     // SassFunction assertFunction(std::string name = "") = >
     //   throw _exception("$this is not a function reference.", name);
 
-    virtual Map* assertMap(std::string name = "");
+    virtual SassMap* assertMap(std::string name = "");
 
-    virtual Number* assertNumber(std::string name = "");
+    virtual SassNumber* assertNumber(std::string name = "");
 
-    virtual String* assertString(std::string name = "");
+    virtual SassString* assertString(std::string name = "");
 
     SassList* changeValues(
       std::vector<ValueObj> values,
@@ -65,16 +72,16 @@ namespace Sass {
       bool sBrackets);
 
     /// The SassScript `>` operation.
-    virtual Boolean* greaterThan(Value* other);
+    virtual SassBoolean* greaterThan(Value* other);
 
     /// The SassScript `>=` operation.
-    virtual Boolean* greaterThanOrEquals(Value* other);
+    virtual SassBoolean* greaterThanOrEquals(Value* other);
 
     /// The SassScript `<` operation.
-    virtual Boolean* lessThan(Value* other);
+    virtual SassBoolean* lessThan(Value* other);
 
     /// The SassScript `<=` operation.
-    virtual Boolean* lessThanOrEquals(Value* other);
+    virtual SassBoolean* lessThanOrEquals(Value* other);
 
 
     /// The SassScript `*` operation.
@@ -211,7 +218,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
-  class Map : public Value, public Hashed<Expression_Obj, Expression_Obj, Map_Obj> {
+  class Map : public Value, public Hashed<ValueObj, ValueObj, Map_Obj> {
   public:
     Map(ParserState pstate, size_t size = 0);
     std::string type() const override { return "map"; }
@@ -331,14 +338,28 @@ namespace Sass {
     mutable size_t hash_;
   public:
     Number(ParserState pstate, double val, std::string u = "", bool zero = true);
+    Number(ParserState pstate, double val, Units units, bool zero = true);
 
     long assertInt(std::string name = "") {
       if (fuzzyIsInt(value_, epsilon_)) {
         return fuzzyAsInt(value_, epsilon_);
       }
       throw Exception::SassScriptException(
-        "$this is not an int.", name);
+        inspect() + " is not an int.", name);
     }
+
+    Number* assertNoUnits(std::string name = "") {
+      if (!hasUnits()) return this;
+      throw Exception::SassScriptException(
+        "Expected " + inspect() + " to have no units.",
+        name);
+    }
+
+    Number* assertNumber(std::string name = "") override {
+      return this;
+    }
+
+
 
     bool zero() { return zero_; }
 
@@ -419,6 +440,10 @@ namespace Sass {
     Color_HSLA* copyAsHSLA() const override;
     Color_HSLA* toHSLA() override { return copyAsHSLA(); }
 
+    SassColor* assertColor(std::string name = "") override {
+      return this;
+    }
+
     bool operator== (const Value& rhs) const override;
 
     ATTACH_COPY_OPERATIONS(Color_RGBA)
@@ -438,6 +463,10 @@ namespace Sass {
 
     std::string type() const override { return "color"; }
     static std::string type_name() { return "color"; }
+
+    SassColor* assertColor(std::string name = "") override {
+      return this->toRGBA();
+    }
 
     size_t hash() const override;
 
@@ -593,6 +622,9 @@ namespace Sass {
     bool operator== (const Value& rhs) const override;
     // quotes are forced on inspection
     virtual std::string inspect() const override;
+    bool hasQuotes() const {
+      return quote_mark_ == '\0';
+    }
     ATTACH_COPY_OPERATIONS(String_Constant)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -626,6 +658,10 @@ namespace Sass {
     bool is_false() override { return true; }
 
     size_t hash() const override;
+
+    bool isNull() const override {
+      return true;
+    }
 
     bool operator== (const Value& rhs) const override;
 

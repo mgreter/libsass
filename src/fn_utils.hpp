@@ -114,9 +114,16 @@ namespace Sass {
     SelectorStack selector_stack, \
     SelectorStack original_stack \
 
+  #define FN_PROTOTYPE2 \
+    const ParserState& pstate, \
+    const std::vector<ValueObj>& arguments, \
+    double epsilon \
+
   typedef const char* Signature;
   typedef Value* (*Native_Function)(FN_PROTOTYPE);
+
   #define BUILT_IN(name) Value* name(FN_PROTOTYPE)
+  #define BUILT_IN_FN(name) Value* name(FN_PROTOTYPE2)
 
   #define ARG(argname, argtype, type) get_arg<argtype>(argname, env, sig, pstate, traces, type)
   #define ARGCOL(argname) get_arg<Color>(argname, env, sig, pstate, traces, "a color")

@@ -779,7 +779,7 @@ namespace Sass {
   }
 
 
-  Value* foo(const std::vector<ValueObj>& arguments) {
+  BUILT_IN_FN(foo) {
     return SASS_MEMORY_NEW(String_Constant, "[pstate]", "ASD");
   }
 
@@ -788,6 +788,18 @@ namespace Sass {
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
     ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
   }
+
+  void register_built_in_overloads(Context& ctx, Env* env, std::string name,
+    std::vector<std::pair<std::string, SassFnSig>> overloads)
+  {
+    SassFnPairs pairs;
+    for (auto overload : overloads) {
+      ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, overload.first);
+      pairs.push_back(std::make_pair(args, overload.second));
+    }
+    ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, pairs)));
+  }
+
   void register_built_in_functions(Context& ctx, Env* env)
   {
     using namespace Functions;
@@ -888,6 +900,61 @@ namespace Sass {
     register_built_in_function(ctx, env, "separator", "$list", Functions::Lists::separator);
     register_built_in_function(ctx, env, "is-bracketed", "$list", Functions::Lists::isBracketed);
 
+    // Map Functions
+    register_built_in_function(ctx, env, "get", "$map, $key", Functions::Maps::get);
+    register_built_in_function(ctx, env, "merge", "$map1, $map2", Functions::Maps::merge);
+    // register_built_in_function(ctx, env, "remove", "$list", Functions::Maps::remove); // overloaded
+    register_built_in_function(ctx, env, "keys", "$map", Functions::Maps::keys);
+    register_built_in_function(ctx, env, "values", "$map", Functions::Maps::values);
+    register_built_in_function(ctx, env, "hasKey", "$map, $key", Functions::Maps::hasKey);
+
+    // Math Functions
+    register_built_in_function(ctx, env, "round", "$number", Functions::Math::round);
+    register_built_in_function(ctx, env, "ceil", "$number", Functions::Math::ceil);
+    register_built_in_function(ctx, env, "floor", "$number", Functions::Math::floor);
+    register_built_in_function(ctx, env, "abs", "$number", Functions::Math::abs);
+    register_built_in_function(ctx, env, "max", "$numbers...", Functions::Math::max);
+    register_built_in_function(ctx, env, "min", "$numbers...", Functions::Math::min);
+    register_built_in_function(ctx, env, "random", "$limit: null", Functions::Math::random);
+    register_built_in_function(ctx, env, "unit", "$number", Functions::Math::unit);
+
+    // String functions
+    register_built_in_function(ctx, env, "unquote", "$string", Functions::Strings::unquote);
+    register_built_in_function(ctx, env, "quote", "$string", Functions::Strings::quote);
+    register_built_in_function(ctx, env, "toUpperCase", "$string", Functions::Strings::toUpperCase);
+    register_built_in_function(ctx, env, "toLowerCase", "$string", Functions::Strings::toLowerCase);
+    register_built_in_function(ctx, env, "length", "$string", Functions::Strings::length);
+    register_built_in_function(ctx, env, "insert", "$string, $insert, $index", Functions::Strings::insert);
+    register_built_in_function(ctx, env, "index", "$string, $substring", Functions::Strings::index);
+    register_built_in_function(ctx, env, "slice", "$string, $start-at, $end-at: -1", Functions::Strings::slice);
+    register_built_in_function(ctx, env, "uniqueId", "", Functions::Strings::uniqueId);
+
+    // Color functions
+    register_built_in_overloads(ctx, env, "rgb", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::rgb_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::rgb_3),
+        std::make_pair("$color, $alpha", Functions::Colors::rgb_2),
+        std::make_pair("$channels", Functions::Colors::rgb_1),
+      });
+    register_built_in_overloads(ctx, env, "rgba", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::rgba_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::rgba_3),
+        std::make_pair("$color, $alpha", Functions::Colors::rgba_2),
+        std::make_pair("$channels", Functions::Colors::rgba_1),
+      });
+    register_built_in_overloads(ctx, env, "hsl", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::hsl_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::hsl_3),
+        std::make_pair("$color, $alpha", Functions::Colors::hsl_2),
+        std::make_pair("$channels", Functions::Colors::hsl_1),
+      });
+    register_built_in_overloads(ctx, env, "hsla", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::hsla_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::hsla_3),
+        std::make_pair("$color, $alpha", Functions::Colors::hsla_2),
+        std::make_pair("$channels", Functions::Colors::hsla_1),
+      });
+
     // register_function(ctx, length_sig, length, env);
     // register_function(ctx, nth_sig, nth, env);
     // register_function(ctx, set_nth_sig, set_nth, env);
@@ -897,6 +964,7 @@ namespace Sass {
     // register_function(ctx, zip_sig, zip, env);
     // register_function(ctx, list_separator_sig, list_separator, env);
     // register_function(ctx, is_bracketed_sig, is_bracketed, env);
+
     // // Map Functions
     // register_function(ctx, map_get_sig, map_get, env);
     // register_function(ctx, map_merge_sig, map_merge, env);
@@ -905,6 +973,7 @@ namespace Sass {
     // register_function(ctx, map_values_sig, map_values, env);
     // register_function(ctx, map_has_key_sig, map_has_key, env);
     // register_function(ctx, keywords_sig, keywords, env);
+
     // // Introspection Functions
     // register_function(ctx, type_of_sig, type_of, env);
     // register_function(ctx, unit_sig, unit, env);

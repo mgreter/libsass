@@ -7,6 +7,15 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Maps {
+      BUILT_IN_FN(get);
+      BUILT_IN_FN(merge);
+      BUILT_IN_FN(remove);
+      BUILT_IN_FN(keys);
+      BUILT_IN_FN(values);
+      BUILT_IN_FN(hasKey);
+    }
+
     #define ARGM(argname, argtype) get_arg_m(argname, env, sig, pstate, traces)
 
     extern Signature map_get_sig;

@@ -174,9 +174,30 @@ namespace Sass {
     SassFnSig callback) :
     Callable("[BUILTIN]"),
     name_(name),
-    parameters_(parameters),
-    callback_(callback)
+    // Create a single entry in overloaded function
+    overloads_(1, std::make_pair(parameters, callback))
   {
   }
+
+  BuiltInCallable::BuiltInCallable(
+    std::string name,
+    SassFnPairs overloads) :
+    Callable("[BUILTIN]"),
+    name_(name),
+    overloads_(overloads)
+  {
+  }
+
+  SassFnPair BuiltInCallable::callbackFor(
+    size_t positional, NormalizedMap<ValueObj> names)
+  {
+    for (SassFnPair& pair : overloads_) {
+      if (pair.first->matches(positional, names)) {
+        return pair;
+      }
+    }
+    return overloads_.back();
+  }
+
 
 }

@@ -34,22 +34,27 @@ namespace Sass {
     return index < 0 ? lengthAsList() + index : index - 1;
   }
 
-  Color* Value::assertColor(std::string name) {
+  Value* Value::assertValue(std::string name) {
+    // Noop, but usefull for breakpoints
+    return this;
+  }
+
+  SassColor* Value::assertColor(std::string name) {
     throw Exception::SassScriptException(
       inspect() + " is not a color.", name);
   }
 
-  Map* Value::assertMap(std::string name) {
+  SassMap* Value::assertMap(std::string name) {
     throw Exception::SassScriptException(
       inspect() + " is not a map.", name);
   }
 
-  Number* Value::assertNumber(std::string name) {
+  SassNumber* Value::assertNumber(std::string name) {
     throw Exception::SassScriptException(
       inspect() + " is not a number.", name);
   }
 
-  String* Value::assertString(std::string name) {
+  SassString* Value::assertString(std::string name) {
     throw Exception::SassScriptException(
       inspect() + " is not a string.", name);
   }
@@ -403,6 +408,18 @@ namespace Sass {
         l = r + 1;
       }
     }
+    concrete_type(NUMBER);
+  }
+
+  Number::Number(ParserState pstate, double val, Units units, bool zero)
+    : Value(pstate),
+    Units(units),
+    value_(val),
+    zero_(zero),
+    lhsAsSlash_(),
+    rhsAsSlash_(),
+    hash_(0)
+  {
     concrete_type(NUMBER);
   }
 

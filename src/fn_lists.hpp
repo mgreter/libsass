@@ -8,15 +8,15 @@ namespace Sass {
   namespace Functions {
 
     namespace Lists {
-      Value* length(const std::vector<ValueObj>& arguments);
-      Value* nth(const std::vector<ValueObj>& arguments);
-      Value* setNth(const std::vector<ValueObj>& arguments);
-      Value* join(const std::vector<ValueObj>& arguments);
-      Value* append(const std::vector<ValueObj>& arguments);
-      Value* zip(const std::vector<ValueObj>& arguments);
-      Value* index(const std::vector<ValueObj>& arguments);
-      Value* separator(const std::vector<ValueObj>& arguments);
-      Value* isBracketed(const std::vector<ValueObj>& arguments);
+      BUILT_IN_FN(length);
+      BUILT_IN_FN(nth);
+      BUILT_IN_FN(setNth);
+      BUILT_IN_FN(join);
+      BUILT_IN_FN(append);
+      BUILT_IN_FN(zip);
+      BUILT_IN_FN(index);
+      BUILT_IN_FN(separator);
+      BUILT_IN_FN(isBracketed);
     }
 
     extern Signature length_sig;

@@ -50,11 +50,13 @@ namespace Sass {
     ParserState pstate)
   {
     ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
-
-    ArgumentDeclaration* overload = callable->parameters();
-    SassFnSig callback = callable->callback();
     NormalizedMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
+    SassFnPair tuple = callable->callbackFor(positional.size(), named);
+
+    ArgumentDeclaration* overload = tuple.first;
+    SassFnSig callback = tuple.second;
+    overload->verify(positional.size(), named, traces);
     std::vector<ArgumentObj> declaredArguments = overload->arguments();
 
     overload->verify(positional.size(), named, traces);
@@ -89,7 +91,7 @@ namespace Sass {
 
     ValueObj result;
     // try {
-      result = callback(positional);
+      result = callback(pstate, positional, 0.00000000001);
       // }
 
     if (argumentList == nullptr) return result.detach();
@@ -633,7 +635,12 @@ namespace Sass {
     return map.detach(); //  ->perform(this);
   }
 
-  Value* Eval::operator()(Map* m)
+  SassMap* Eval::operator()(SassMap* m)
+  {
+    return m;
+  }
+
+  SassList* Eval::operator()(SassList* m)
   {
     return m;
   }
@@ -1084,8 +1091,28 @@ namespace Sass {
       // std::cerr << "execute built in\n";
     }
     else if (PlainCssCallable * plainCss = Cast<PlainCssCallable>(callable)) {
-      return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "PlainCssCallable");
-      std::cerr << "execute plain css\n";
+      if (!arguments->named().empty() || arguments->kwdRest() != nullptr) {
+        throw Exception::SassRuntimeException(
+          "Plain CSS functions don't support keyword arguments.",
+          pstate);
+      }
+      bool addComma = false;
+      std::stringstream strm;
+      strm << plainCss->name() << "(";
+      for (Expression* argument : arguments->positional()) {
+        if (addComma) { strm << ", "; }
+        else { addComma = true; }
+        strm << _evaluateToCss(argument);
+      }
+      if (Expression* rest = arguments->restArg()) {
+        if (addComma) { strm << ", "; }
+        else { addComma = true; }
+        strm << _serialize(rest);
+      }
+      strm << ")";
+      return SASS_MEMORY_NEW(
+        SassString, pstate,
+        strm.str());
     }
     else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
       return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "UserDefinedCallable");
@@ -1567,8 +1594,10 @@ namespace Sass {
 /// [SassScriptException] to associate it with [span].
   std::string Eval::_evaluateToCss(Expression* expression, bool quote)
   {
-    ValueObj evaled = Cast<Value>(expression->perform(this));
-    return _serialize(evaled, quote);
+    Value* evaled = expression->perform(this);
+    // std::string result(_serialize(evaled, quote));
+    std::string result(evaled->to_css());
+    return result;
   }
 
   /// Calls `value.toCssString()` and wraps a [SassScriptException] to associate
@@ -1577,7 +1606,7 @@ namespace Sass {
 /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
 /// [AstNode.span] if the span isn't required, since some nodes need to do
 /// real work to manufacture a source span.
-  std::string Eval::_serialize(Value* value, bool quote)
+  std::string Eval::_serialize(Expression* value, bool quote)
   {
     // _addExceptionSpan(nodeWithSpan, () = > value.toCssString(quote: quote));
     return value->to_css();
@@ -1729,7 +1758,7 @@ namespace Sass {
 
     std::vector<ValueObj> positional;
     positional.reserve(arguments->positional().size());
-    for (ExpressionObj& argument : arguments->positional()) {
+    for (Expression* argument : arguments->positional()) {
       positional.push_back(argument->perform(this));
     }
     NormalizedMap<ValueObj> named = normalizedMapMap(arguments->named());
@@ -1816,7 +1845,7 @@ namespace Sass {
 
   Value* Eval::operator()(Argument* a)
   {
-    Expression_Obj val = a->value()->perform(this);
+    ExpressionObj val = a->value()->perform(this);
     bool is_rest_argument = a->is_rest_argument();
     bool is_keyword_argument = a->is_keyword_argument();
 
@@ -1834,14 +1863,15 @@ namespace Sass {
         val = wrapper;
       }
     }
-    ArgumentObj rv = SASS_MEMORY_NEW(Argument,
-                           a->pstate(),
-                           val,
-                           a->name(),
-                           is_rest_argument,
-                           is_keyword_argument);
+    // ArgumentObj rv = SASS_MEMORY_NEW(Argument,
+    //                        a->pstate(),
+    //                        val,
+    //                        a->name(),
+    //                        is_rest_argument,
+    //                        is_keyword_argument);
     // std::cerr << "ADASD\n";
-    return Cast<Value>(rv->value()->perform(this));
+    val = val->perform(this);
+    return Cast<Value>(val.detach());
 
   }
 

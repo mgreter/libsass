@@ -15,14 +15,14 @@ namespace Sass {
 
     namespace Lists {
 
-      Value* length(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(length)
       {
         return SASS_MEMORY_NEW(Number,
           arguments[0]->pstate(),
           arguments[0]->lengthAsList());
       }
 
-      Value* nth(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(nth)
       {
         Value* list = arguments[0];
         Value* index = arguments[1];
@@ -30,7 +30,7 @@ namespace Sass {
         return values[list->sassIndexToListIndex(index, "n")];
       }
 
-      Value* setNth(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(setNth)
       {
         Value* list = arguments[0];
         Value* index = arguments[1];
@@ -42,7 +42,7 @@ namespace Sass {
           arguments[0]->hasBrackets());
       }
 
-      Value* join(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(join)
       {
         Value* list1 = arguments[0];
         Value* list2 = arguments[1];
@@ -85,17 +85,17 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassList, "[pstate]", values, separator, bracketed);
       }
 
-      Value* append(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(append)
       {
         return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "append");
       }
 
-      Value* zip(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(zip)
       {
         return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "zip");
       }
 
-      Value* index(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(index)
       {
         std::vector<ValueObj> list =
           arguments[0]->asVector();
@@ -110,14 +110,14 @@ namespace Sass {
           index + 1);
       }
 
-      Value* separator(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(separator)
       {
         return arguments[0]->separator() == SASS_COMMA
           ? SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "comma") // SassString("comma", quotes: false)
           : SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "space"); // SassString("space", quotes: false))
       }
 
-      Value* isBracketed(const std::vector<ValueObj>& arguments)
+      BUILT_IN_FN(isBracketed)
       {
         return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "isBracketed");
       }

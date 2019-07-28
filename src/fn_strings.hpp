@@ -7,6 +7,18 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Strings {
+      BUILT_IN_FN(unquote);
+      BUILT_IN_FN(quote);
+      BUILT_IN_FN(toUpperCase);
+      BUILT_IN_FN(toLowerCase);
+      BUILT_IN_FN(length);
+      BUILT_IN_FN(insert);
+      BUILT_IN_FN(index);
+      BUILT_IN_FN(slice);
+      BUILT_IN_FN(uniqueId);
+    }
+
     extern Signature unquote_sig;
     extern Signature quote_sig;
     extern Signature str_length_sig;

@@ -59,7 +59,8 @@ namespace Sass {
     Value* operator()(Debug*);
 
     // Expression* operator()(List*);
-    Value* operator()(Map*);
+    SassMap* operator()(SassMap*);
+    SassList* operator()(SassList*);
     Map* operator()(MapExpression*);
     SassList* operator()(ListExpression*);
     Value* operator()(ParenthesizedExpression*);
@@ -95,7 +96,7 @@ namespace Sass {
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);
 
-    std::string _serialize(Value* expression, bool quote = true);
+    std::string _serialize(Expression* expression, bool quote = true);
 
     std::string _parenthesize(SupportsCondition* condition);
     std::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand);

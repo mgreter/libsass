@@ -6,11 +6,154 @@
 #include "ast.hpp"
 #include "fn_utils.hpp"
 #include "fn_strings.hpp"
+#include "fn_utils.hpp"
+#include "fn_numbers.hpp"
 #include "util_string.hpp"
+
+#include <random>
+#include <iomanip>
+#include <algorithm>
+
+#ifdef __MINGW32__
+#include "windows.h"
+#include "wincrypt.h"
+#endif
 
 namespace Sass {
 
   namespace Functions {
+
+    namespace Strings {
+
+#ifdef __MINGW32__
+      uint64_t GetSeed()
+      {
+        HCRYPTPROV hp = 0;
+        BYTE rb[8];
+        CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+        CryptGenRandom(hp, sizeof(rb), rb);
+        CryptReleaseContext(hp, 0);
+
+        uint64_t seed;
+        memcpy(&seed, &rb[0], sizeof(seed));
+
+        return seed;
+      }
+#else
+      uint64_t GetSeed()
+      {
+        std::random_device rd;
+        return rd();
+      }
+#endif
+
+      // note: the performance of many implementations of
+      // random_device degrades sharply once the entropy pool
+      // is exhausted. For practical use, random_device is
+      // generally only used to seed a PRNG such as mt19937.
+      static std::mt19937 rand(static_cast<unsigned int>(GetSeed()));
+
+      BUILT_IN_FN(unquote)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        if (!string->hasQuotes()) return string;
+        return SASS_MEMORY_NEW(String_Quoted,
+          pstate, string->value(), '\0');
+      }
+
+      BUILT_IN_FN(quote)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        if (string->hasQuotes()) return string;
+        return SASS_MEMORY_NEW(String_Quoted,
+          pstate, string->value(), '*');
+      }
+
+      BUILT_IN_FN(toUpperCase)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        return SASS_MEMORY_NEW(SassString, pstate,
+          Util::ascii_str_toupper(string->value()));
+      }
+
+      BUILT_IN_FN(toLowerCase)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        return SASS_MEMORY_NEW(SassString, pstate,
+          Util::ascii_str_tolower(string->value()));
+      }
+
+      BUILT_IN_FN(length)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        size_t len = UTF_8::code_point_count(string->value());
+        return SASS_MEMORY_NEW(Number, pstate, (double)len);
+      }
+
+      BUILT_IN_FN(insert)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        SassString* insert = arguments[1]->assertString("insert");
+        size_t len = UTF_8::code_point_count(string->value());
+        long index = arguments[2]->assertNumber("index")
+          ->assertNoUnits("index")->assertInt("index");
+
+        // str-insert has unusual behavior for negative inputs. It guarantees that
+        // the `$insert` string is at `$index` in the result, which means that we
+        // want to insert before `$index` if it's positive and after if it's
+        // negative.
+        if (index < 0) {
+          // +1 because negative indexes start counting from -1 rather than 0, and
+          // another +1 because we want to insert *after* that index.
+          index = len + index + 2;
+        }
+
+        std::string str(string->value());
+        str.insert(UTF_8::offset_at_position(
+          str, index - 1), insert->value());
+        return SASS_MEMORY_NEW(String_Quoted, pstate,
+          str, string->hasQuotes() ? '*' : '\0');
+      }
+
+      BUILT_IN_FN(index)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        SassString* substring = arguments[1]->assertString("substring");
+
+        std::string str(string->value());
+        std::string substr(substring->value());
+
+        size_t c_index = str.find(substr);
+        if (c_index == std::string::npos) {
+          return SASS_MEMORY_NEW(Null, pstate);
+        }
+
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          UTF_8::code_point_count(str, 0, c_index) + 1);
+      }
+
+      BUILT_IN_FN(slice)
+      {
+        SassString* string = arguments[0]->assertString("string");
+        SassNumber* start = arguments[1]->assertNumber("start-at");
+        SassNumber* end = arguments[2]->assertNumber("end-at");
+        start->assertNoUnits("start");
+        end->assertNoUnits("end");
+
+        return SASS_MEMORY_NEW(String_Constant, pstate, "slice");
+      }
+
+      BUILT_IN_FN(uniqueId)
+      {
+        std::stringstream ss;
+        std::uniform_real_distribution<> distributor(0, 4294967296); // 16^8
+        uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
+        ss << "u" << std::setfill('0') << std::setw(8) << std::hex << distributed;
+        return SASS_MEMORY_NEW(String_Quoted, pstate, ss.str());
+      }
+
+    }
+
 
     void handle_utf8_error (const ParserState& pstate, Backtraces traces)
     {

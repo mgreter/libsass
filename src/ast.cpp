@@ -996,5 +996,30 @@ namespace Sass {
 
   }
 
+  // Returns whether [positional] and [names] are valid for this argument declaration.
+  bool ArgumentDeclaration::matches(size_t positional, NormalizedMap<ValueObj>& names)
+  {
+    size_t namedUsed = 0;
+    for (size_t i = 0; i < arguments_.size(); i++) {
+      Argument* argument = arguments_[i];
+      if (i < positional) {
+        if (names.count(argument->name()) == 1) {
+          return false;
+        }
+      }
+      else if (names.count(argument->name()) == 1) {
+        namedUsed++;
+      }
+      else if (argument->value() == nullptr) {
+        return false;
+      }
+    }
+    if (!restArg_.empty()) return true;
+    if (positional > arguments_.size()) return false;
+    if (namedUsed < names.size()) return false;
+    return true;
+  }
+
+
 }
 

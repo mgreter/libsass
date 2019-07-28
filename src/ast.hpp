@@ -166,15 +166,19 @@ namespace Sass {
       NormalizedMap<ValueObj>& names,
       Backtraces traces);
 
+    bool matches(
+      size_t positional,
+      NormalizedMap<ValueObj>& names);
+
   };
 
   class ArgumentInvocation : public SassNode {
 
     // The arguments passed by position.
-    ADD_PROPERTY(std::vector<ExpressionObj>, positional);
+    ADD_CONSTREF(std::vector<ExpressionObj>, positional);
 
     // The arguments passed by name.
-    ADD_PROPERTY(NormalizedMap<ExpressionObj>, named);
+    ADD_CONSTREF(NormalizedMap<ExpressionObj>, named);
 
     // The first rest argument (as in `$args...`).
     ADD_PROPERTY(ExpressionObj, restArg);
@@ -507,6 +511,19 @@ namespace Sass {
     const std::unordered_map<
       K, T, ObjHash, ObjEquality
     >& elements() { return elements_; }
+    void insert(K key, T val)
+    {
+      reset_hash();
+      if (!has(key)) {
+        _keys.push_back(key);
+        _values.push_back(val);
+      }
+      else if (!duplicate_key_) {
+        duplicate_key_ = key;
+      }
+
+      elements_[key] = val;
+    }
     Hashed& operator<<(std::pair<K, T> p)
     {
       reset_hash();
@@ -545,6 +562,11 @@ namespace Sass {
 
     const std::vector<K>& keys() const { return _keys; }
     const std::vector<T>& values() const { return _values; }
+    
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::iterator end() { return elements_.end(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::iterator begin() { return elements_.begin(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::const_iterator end() const { return elements_.end(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::const_iterator begin() const { return elements_.begin(); }
 
   };
   template <typename K, typename T, typename U>
@@ -1259,7 +1281,9 @@ namespace Sass {
 
 
 
-  typedef Value* (*SassFnSig)(const std::vector<ValueObj>&);
+  typedef Value* (*SassFnSig)(const ParserState& pstate, const std::vector<ValueObj>&, double epsilon);
+  typedef std::pair<ArgumentDeclaration*, SassFnSig> SassFnPair;
+  typedef std::vector<SassFnPair> SassFnPairs;
 
   class Callable : public SassNode {
   public:
@@ -1283,10 +1307,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, name);
 
     // The overloads declared for this callable.
-    ADD_PROPERTY(ArgumentDeclarationObj, parameters);
-
-    // Function callback
-    ADD_PROPERTY(SassFnSig, callback);
+    ADD_PROPERTY(SassFnPairs, overloads);
 
   public:
 
@@ -1295,13 +1316,27 @@ namespace Sass {
       return nullptr;
     }
 
-    // Creates a callable with a single [arguments] declaration and a single [callback].
-    // The argument declaration is parsed from [arguments], which should not include
-    // parentheses. Throws a [SassFormatException] if parsing fails.
+    // Creates a callable with a single [arguments] declaration
+    // and a single [callback]. The argument declaration is parsed
+    // from [arguments], which should not include parentheses.
+    // Throws a [SassFormatException] if parsing fails.
     BuiltInCallable(
       std::string name,
       ArgumentDeclaration* parameters,
       SassFnSig callback);
+
+    // Creates a callable with multiple implementations. Each
+    // key/value pair in [overloads] defines the argument declaration
+    // for the overload (which should not include parentheses), and
+    // the callback to execute if that argument declaration matches.
+    // Throws a [SassFormatException] if parsing fails.
+    BuiltInCallable(
+      std::string name,
+      SassFnPairs overloads);
+
+    SassFnPair callbackFor(
+      size_t positional,
+      NormalizedMap<ValueObj> names);
 
   };
 

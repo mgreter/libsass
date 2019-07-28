@@ -7,6 +7,53 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Colors {
+      BUILT_IN_FN(rgb_4);
+      BUILT_IN_FN(rgb_3);
+      BUILT_IN_FN(rgb_2);
+      BUILT_IN_FN(rgb_1);
+      BUILT_IN_FN(rgba_4);
+      BUILT_IN_FN(rgba_3);
+      BUILT_IN_FN(rgba_2);
+      BUILT_IN_FN(rgba_1);
+      BUILT_IN_FN(hsl_4);
+      BUILT_IN_FN(hsl_3);
+      BUILT_IN_FN(hsl_2);
+      BUILT_IN_FN(hsl_1);
+      BUILT_IN_FN(hsla_4);
+      BUILT_IN_FN(hsla_3);
+      BUILT_IN_FN(hsla_2);
+      BUILT_IN_FN(hsla_1);
+
+      BUILT_IN_FN(red);
+      BUILT_IN_FN(green);
+      BUILT_IN_FN(blue);
+      BUILT_IN_FN(mix);
+      BUILT_IN_FN(invert);
+      BUILT_IN_FN(hue);
+      BUILT_IN_FN(saturation);
+      BUILT_IN_FN(lightness);
+      BUILT_IN_FN(adjustHue);
+      BUILT_IN_FN(complement);
+      BUILT_IN_FN(grayscale);
+      BUILT_IN_FN(lighten);
+      BUILT_IN_FN(darken);
+      BUILT_IN_FN(saturate_2);
+      BUILT_IN_FN(saturate_1);
+      BUILT_IN_FN(desaturate);
+      BUILT_IN_FN(opacify);
+      BUILT_IN_FN(fadeIn);
+      BUILT_IN_FN(fadeOut);
+      BUILT_IN_FN(transparentize);
+      BUILT_IN_FN(alpha_1);
+      BUILT_IN_FN(alpha_any);
+      BUILT_IN_FN(opacity);
+      BUILT_IN_FN(ieHexStr);
+      
+
+    }
+
+
     // macros for common ranges (u mean unsigned or upper, r for full range)
     #define DARG_U_FACT(argname) get_arg_r(argname, env, sig, pstate, traces,   0.0, 1.0) // double
     #define DARG_R_FACT(argname) get_arg_r(argname, env, sig, pstate, traces, - 1.0, 1.0) // double
