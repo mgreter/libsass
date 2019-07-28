@@ -634,13 +634,13 @@ namespace Sass {
 
         NormalizedMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, "red");
-        SassNumber* nr_g = getKwdArg(keywords, "green");
-        SassNumber* nr_b = getKwdArg(keywords, "blue");
-        SassNumber* nr_h = getKwdArg(keywords, "hue");
-        SassNumber* nr_s = getKwdArg(keywords, "saturation");
-        SassNumber* nr_l = getKwdArg(keywords, "lightness");
-        SassNumber* nr_a = getKwdArg(keywords, "alpha");
+        SassNumber* nr_r = getKwdArg(keywords, "$red");
+        SassNumber* nr_g = getKwdArg(keywords, "$green");
+        SassNumber* nr_b = getKwdArg(keywords, "$blue");
+        SassNumber* nr_h = getKwdArg(keywords, "$hue");
+        SassNumber* nr_s = getKwdArg(keywords, "$saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "$lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "$alpha");
 
         double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, epsilon, "red") : 0.0;
         double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, epsilon, "green") : 0.0;
@@ -717,13 +717,13 @@ namespace Sass {
 
         NormalizedMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, "red");
-        SassNumber* nr_g = getKwdArg(keywords, "green");
-        SassNumber* nr_b = getKwdArg(keywords, "blue");
-        SassNumber* nr_h = getKwdArg(keywords, "hue");
-        SassNumber* nr_s = getKwdArg(keywords, "saturation");
-        SassNumber* nr_l = getKwdArg(keywords, "lightness");
-        SassNumber* nr_a = getKwdArg(keywords, "alpha");
+        SassNumber* nr_r = getKwdArg(keywords, "$red");
+        SassNumber* nr_g = getKwdArg(keywords, "$green");
+        SassNumber* nr_b = getKwdArg(keywords, "$blue");
+        SassNumber* nr_h = getKwdArg(keywords, "$hue");
+        SassNumber* nr_s = getKwdArg(keywords, "$saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "$lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "$alpha");
 
         double r = nr_r ? nr_r->valueInRange(0.0, 255.0, epsilon, "red") : 0.0;
         double g = nr_g ? nr_g->valueInRange(0.0, 255.0, epsilon, "green") : 0.0;
