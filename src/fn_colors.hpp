@@ -28,7 +28,6 @@ namespace Sass {
       BUILT_IN_FN(red);
       BUILT_IN_FN(green);
       BUILT_IN_FN(blue);
-      BUILT_IN_FN(mix);
       BUILT_IN_FN(invert);
       BUILT_IN_FN(hue);
       BUILT_IN_FN(saturation);
@@ -51,6 +50,7 @@ namespace Sass {
       BUILT_IN_FN(adjust);
       BUILT_IN_FN(change);
       BUILT_IN_FN(scale);
+      BUILT_IN_FN(mix);
 
     }
 

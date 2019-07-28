@@ -971,6 +971,7 @@ namespace Sass {
     register_built_in_function(ctx, env, "adjust-color", "$color, $kwargs...", Functions::Colors::adjust);
     register_built_in_function(ctx, env, "change-color", "$color, $kwargs...", Functions::Colors::change);
     register_built_in_function(ctx, env, "scale-color", "$color, $kwargs...", Functions::Colors::scale);
+    register_built_in_function(ctx, env, "mix", "$color1, $color2, $weight: 50%", Functions::Colors::mix);
 
     // Opacity functions
     register_built_in_function(ctx, env, "opacify", "$color, $amount", Functions::Colors::opacify);

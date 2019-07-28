@@ -14,6 +14,43 @@ namespace Sass {
 
   namespace Functions {
 
+    /// Returns [color1] and [color2], mixed together and weighted by [weight].
+    SassColor* _mixColors(SassColor* color1, SassColor* color2,
+      SassNumber* weight, ParserState pstate, double epsilon)
+    {
+
+      // This algorithm factors in both the user-provided weight (w) and the
+      // difference between the alpha values of the two colors (a) to decide how
+      // to perform the weighted average of the two RGB values.
+      // It works by first normalizing both parameters to be within [-1, 1], where
+      // 1 indicates "only use color1", -1 indicates "only use color2", and all
+      // values in between indicated a proportionately weighted average.
+      // Once we have the normalized variables w and a, we apply the formula
+      // (w + a)/(1 + w*a) to get the combined weight (in [-1, 1]) of color1. This
+      // formula has two especially nice properties:
+      //   * When either w or a are -1 or 1, the combined weight is also that
+      //     number (cases where w * a == -1 are undefined, and handled as a
+      //     special case).
+      //   * When a is 0, the combined weight is w, and vice versa.
+      // Finally, the weight of color1 is renormalized to be within [0, 1] and the
+      // weight of color2 is given by 1 minus the weight of color1.
+      double weightScale = weight->valueInRange(0.0, 100.0, epsilon, "weight") / 100.0;
+      double normalizedWeight = weightScale * 2 - 1;
+      double alphaDistance = color1->a() - color2->a();
+
+      double combinedWeight1 = normalizedWeight * alphaDistance == -1
+        ? normalizedWeight : (normalizedWeight + alphaDistance) /
+        (1.0 + normalizedWeight * alphaDistance);
+      double weight1 = (combinedWeight1 + 1) / 2;
+      double weight2 = 1 - weight1;
+
+      return SASS_MEMORY_NEW(Color_RGBA, pstate,
+        fuzzyRound(color1->r() * weight1 + color2->r() * weight2, epsilon),
+        fuzzyRound(color1->g() * weight1 + color2->g() * weight2, epsilon),
+        fuzzyRound(color1->b() * weight1 + color2->b() * weight2, epsilon),
+        color1->a() * weightScale + color2->a() * (1 - weightScale));
+    }
+
     double scaleValue(double current, double scale, double max) {
       return current + (scale > 0.0 ? max - current : current) * scale;
     }
@@ -400,14 +437,6 @@ namespace Sass {
       {
         return SASS_MEMORY_NEW(SassNumber, pstate,
           arguments[0]->assertColor("color")->b());
-      }
-
-      BUILT_IN_FN(mix)
-      {
-        Color* color1 = arguments[0]->assertColor("color1");
-        Color* color2 = arguments[1]->assertColor("color2");
-        Number* weight = arguments[2]->assertNumber("weight");
-        return SASS_MEMORY_NEW(SassString, pstate, "mix");
       }
 
       BUILT_IN_FN(invert)
@@ -864,6 +893,14 @@ namespace Sass {
           return c.detach();
         }
         return color;
+      }
+
+      BUILT_IN_FN(mix)
+      {
+        SassColor* color1 = arguments[0]->assertColor("color1");
+        SassColor* color2 = arguments[1]->assertColor("color2");
+        SassNumber* weight = arguments[2]->assertNumber("weight");
+        return _mixColors(color1, color2, weight, pstate, epsilon);
       }
 
     }

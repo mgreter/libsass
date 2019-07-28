@@ -468,7 +468,7 @@ namespace Sass {
     HASH_PROPERTY(double, g)
     HASH_PROPERTY(double, b)
   public:
-    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1, const std::string disp = "");
+    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1.0, const std::string disp = "");
 
     std::string type() const override { return "color"; }
     static std::string type_name() { return "color"; }
