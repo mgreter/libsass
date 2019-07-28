@@ -17,6 +17,9 @@ namespace Sass {
       prefix("Error"), pstate(pstate), traces(traces)
     { }
 
+    SassScriptException::SassScriptException(std::string msg, std::string name)
+      : std::runtime_error(name.empty() ? msg : name + ": " + msg) {}
+
     InvalidSass::InvalidSass(ParserState pstate, Backtraces traces, std::string msg)
     : Base(pstate, msg, traces)
     { }

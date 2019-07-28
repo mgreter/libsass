@@ -13,6 +13,56 @@
 
 namespace Sass {
 
+  // Returns whether [number1] and [number2] are equal within [epsilon].
+  bool fuzzyEquals(double number1, double number2, double epsilon);
+
+  /// `1 / epsilon`, cached since [math.pow] may not be computed at compile-time
+  /// and thus this probably won't be constant-folded.
+  // final _inverseEpsilon = 1 / epsilon;
+
+  /// Returns a hash code for [number] that matches [fuzzyEquals].
+  // int fuzzyHashCode(num number) = > (number * _inverseEpsilon).round().hashCode;
+
+  // Returns whether [number1] is less than [number2], and not [fuzzyEquals].
+  bool fuzzyLessThan(double number1, double number2, double epsilon);
+
+  // Returns whether [number1] is less than [number2], or [fuzzyEquals].
+  bool fuzzyLessThanOrEquals(double number1, double number2, double epsilon);
+
+  // Returns whether [number1] is greater than [number2], and not [fuzzyEquals].
+  bool fuzzyGreaterThan(double number1, double number2, double epsilon);
+
+  // Returns whether [number1] is greater than [number2], or [fuzzyEquals].
+  bool fuzzyGreaterThanOrEquals(double number1, double number2, double epsilon);
+
+  // Returns whether [number] is [fuzzyEquals] to an integer.
+  bool fuzzyIsInt(double number, double epsilon);
+
+
+  /// If [number] is an integer according to [fuzzyIsInt], returns it as an
+/// [int].
+///
+/// Otherwise, returns `NAN`.
+  long fuzzyAsInt(double number, double epsilon);
+
+  /// Rounds [number] to the nearest integer.
+  ///
+  /// This rounds up numbers that are [fuzzyEquals] to `X.5`.
+  long fuzzyRound(double number, double epsilon);
+
+  /// Returns [number] if it's within [min] and [max], or `NAN` if it's not.
+  ///
+  /// If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
+  /// appropriate value.
+  double fuzzyCheckRange(double number, double min, double max, double epsilon);
+
+  /// Throws a [RangeError] if [number] isn't within [min] and [max].
+  ///
+  /// If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
+  /// appropriate value. [name] is used in error reporting.
+  double fuzzyAssertRange(double number, double min, double max, double epsilon, std::string name = "");
+
+
   #define FN_PROTOTYPE \
     Env& env, \
     Env& d_env, \

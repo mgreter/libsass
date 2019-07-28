@@ -750,7 +750,7 @@ namespace Sass {
 
   void Inspect::operator()(List* list)
   {
-    SassListObj temp = SASS_MEMORY_NEW(SassList, list->pstate(), list->separator());
+    SassListObj temp = SASS_MEMORY_NEW(SassList, list->pstate(), {}, list->separator());
     temp->hasBrackets(list->is_bracketed());
     for (Expression* item : list->elements()) {
       if (Cast<Value>(item)) {

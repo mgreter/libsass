@@ -677,7 +677,7 @@ namespace Sass {
     expand.plainCss = sheet.plainCss;
     Cssize cssize(*this);
     // expand and eval the tree
-    debug_ast(root);
+    // debug_ast(root);
     root = expand(root);
     // debug_ast(root);
 
@@ -779,139 +779,152 @@ namespace Sass {
   }
 
 
+  Value* foo(const std::vector<ValueObj>& arguments) {
+    return SASS_MEMORY_NEW(String_Constant, "[pstate]", "ASD");
+  }
+
+  void register_built_in_function(Context& ctx, Env* env, std::string name, std::string prototype, SassFnSig cb)
+  {
+    ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
+  }
   void register_built_in_functions(Context& ctx, Env* env)
   {
     using namespace Functions;
 
-    ctx.builtins["foo"] = &fn_foo;
+    register_built_in_function(ctx, env, "foo", "", foo);
 
-    register_overload_stub(ctx, "rgb", env, 1);
-    register_function(ctx, rgb_4_sig, rgb_4, 4, env);
-    register_function(ctx, rgb_3_sig, rgb_3, 3, env);
-    register_function(ctx, rgb_2_sig, rgb_2, 2, env);
-    register_function(ctx, rgb_1_sig, rgb_1, 1, env);
+    // register_overload_stub(ctx, "rgb", env, 1);
+    // register_function(ctx, rgb_4_sig, rgb_4, 4, env);
+    // register_function(ctx, rgb_3_sig, rgb_3, 3, env);
+    // register_function(ctx, rgb_2_sig, rgb_2, 2, env);
+    // register_function(ctx, rgb_1_sig, rgb_1, 1, env);
+    // 
+    // register_overload_stub(ctx, "rgba", env, 1);
+    // register_function(ctx, rgba_4_sig, rgba_4, 4, env);
+    // register_function(ctx, rgba_3_sig, rgba_3, 3, env);
+    // register_function(ctx, rgba_2_sig, rgba_2, 2, env);
+    // register_function(ctx, rgba_1_sig, rgba_1, 1, env);
 
-    register_overload_stub(ctx, "rgba", env, 1);
-    register_function(ctx, rgba_4_sig, rgba_4, 4, env);
-    register_function(ctx, rgba_3_sig, rgba_3, 3, env);
-    register_function(ctx, rgba_2_sig, rgba_2, 2, env);
-    register_function(ctx, rgba_1_sig, rgba_1, 1, env);
+    // register_overload_stub(ctx, "hsl", env, 1);
+    // register_function(ctx, hsl_4_sig, hsl_4, 4, env);
+    // register_function(ctx, hsl_3_sig, hsl_3, 3, env);
+    // register_function(ctx, hsl_2_sig, hsl_2, 2, env);
+    // register_function(ctx, hsl_1_sig, hsl_1, 1, env);
+    // 
+    // register_overload_stub(ctx, "hsla", env, 1);
+    // register_function(ctx, hsla_4_sig, hsla_4, 4, env);
+    // register_function(ctx, hsla_3_sig, hsla_3, 3, env);
+    // register_function(ctx, hsla_2_sig, hsla_2, 2, env);
+    // register_function(ctx, hsla_1_sig, hsla_1, 1, env);
+    // 
+    // register_overload_stub(ctx, "saturate", env, 2);
+    // register_function(ctx, saturate_1_sig, saturate_1, 1, env);
+    // register_function(ctx, saturate_2_sig, saturate_2, 2, env);
+    // 
+    // // RGB Functions
+    // register_function(ctx, red_sig, red, env);
+    // register_function(ctx, green_sig, green, env);
+    // register_function(ctx, blue_sig, blue, env);
+    // register_function(ctx, mix_sig, mix, env);
+    // 
+    // // HSL Functions
+    // register_function(ctx, hue_sig, hue, env);
+    // register_function(ctx, saturation_sig, saturation, env);
+    // register_function(ctx, lightness_sig, lightness, env);
+    // register_function(ctx, adjust_hue_sig, adjust_hue, env);
+    // register_function(ctx, lighten_sig, lighten, env);
+    // register_function(ctx, darken_sig, darken, env);
+    // register_function(ctx, desaturate_sig, desaturate, env);
+    // register_function(ctx, grayscale_sig, grayscale, env);
+    // register_function(ctx, complement_sig, complement, env);
+    // register_function(ctx, invert_sig, invert, env);
+    // // Opacity Functions
+    // // register_overload_stub(ctx, "alpha", env);
+    // // register_function(ctx, alpha_sig, alpha, 1, env);
+    // // register_function(ctx, alpha_ie_sig, alpha_ie, std::string::npos, env);
+    // // register_overload_stub(ctx, "opacity", env);
+    // // register_function(ctx, opacity_sig, alpha, 1, env);
+    // 
+    // 
+    // register_function(ctx, alpha_sig, alpha, env);
+    // register_function(ctx, opacity_sig, alpha, env);
+    // register_function(ctx, opacify_sig, opacify, env);
+    // register_function(ctx, fade_in_sig, opacify, env);
+    // register_function(ctx, transparentize_sig, transparentize, env);
+    // register_function(ctx, fade_out_sig, transparentize, env);
+    // // Other Color Functions
+    // register_function(ctx, adjust_color_sig, adjust_color, env);
+    // register_function(ctx, scale_color_sig, scale_color, env);
+    // register_function(ctx, change_color_sig, change_color, env);
+    // register_function(ctx, ie_hex_str_sig, ie_hex_str, env);
+    // // String Functions
+    // register_function(ctx, unquote_sig, sass_unquote, env);
+    // register_function(ctx, quote_sig, sass_quote, env);
+    // register_function(ctx, str_length_sig, str_length, env);
+    // register_function(ctx, str_insert_sig, str_insert, env);
+    // register_function(ctx, str_index_sig, str_index, env);
+    // register_function(ctx, str_slice_sig, str_slice, env);
+    // register_function(ctx, to_upper_case_sig, to_upper_case, env);
+    // register_function(ctx, to_lower_case_sig, to_lower_case, env);
+    // // Number Functions
+    // register_function(ctx, percentage_sig, percentage, env);
+    // register_function(ctx, round_sig, round, env);
+    // register_function(ctx, ceil_sig, ceil, env);
+    // register_function(ctx, floor_sig, floor, env);
+    // register_function(ctx, abs_sig, abs, env);
+    // register_function(ctx, min_sig, min, env);
+    // register_function(ctx, max_sig, max, env);
+    // register_function(ctx, random_sig, random, env);
 
-    register_overload_stub(ctx, "hsl", env, 1);
-    register_function(ctx, hsl_4_sig, hsl_4, 4, env);
-    register_function(ctx, hsl_3_sig, hsl_3, 3, env);
-    register_function(ctx, hsl_2_sig, hsl_2, 2, env);
-    register_function(ctx, hsl_1_sig, hsl_1, 1, env);
-
-    register_overload_stub(ctx, "hsla", env, 1);
-    register_function(ctx, hsla_4_sig, hsla_4, 4, env);
-    register_function(ctx, hsla_3_sig, hsla_3, 3, env);
-    register_function(ctx, hsla_2_sig, hsla_2, 2, env);
-    register_function(ctx, hsla_1_sig, hsla_1, 1, env);
-
-    register_overload_stub(ctx, "saturate", env, 2);
-    register_function(ctx, saturate_1_sig, saturate_1, 1, env);
-    register_function(ctx, saturate_2_sig, saturate_2, 2, env);
-
-    // RGB Functions
-    register_function(ctx, red_sig, red, env);
-    register_function(ctx, green_sig, green, env);
-    register_function(ctx, blue_sig, blue, env);
-    register_function(ctx, mix_sig, mix, env);
-    // HSL Functions
-    register_function(ctx, hue_sig, hue, env);
-    register_function(ctx, saturation_sig, saturation, env);
-    register_function(ctx, lightness_sig, lightness, env);
-    register_function(ctx, adjust_hue_sig, adjust_hue, env);
-    register_function(ctx, lighten_sig, lighten, env);
-    register_function(ctx, darken_sig, darken, env);
-    register_function(ctx, desaturate_sig, desaturate, env);
-    register_function(ctx, grayscale_sig, grayscale, env);
-    register_function(ctx, complement_sig, complement, env);
-    register_function(ctx, invert_sig, invert, env);
-    // Opacity Functions
-    // register_overload_stub(ctx, "alpha", env);
-    // register_function(ctx, alpha_sig, alpha, 1, env);
-    // register_function(ctx, alpha_ie_sig, alpha_ie, std::string::npos, env);
-    // register_overload_stub(ctx, "opacity", env);
-    // register_function(ctx, opacity_sig, alpha, 1, env);
-
-
-    register_function(ctx, alpha_sig, alpha, env);
-    register_function(ctx, opacity_sig, alpha, env);
-    register_function(ctx, opacify_sig, opacify, env);
-    register_function(ctx, fade_in_sig, opacify, env);
-    register_function(ctx, transparentize_sig, transparentize, env);
-    register_function(ctx, fade_out_sig, transparentize, env);
-    // Other Color Functions
-    register_function(ctx, adjust_color_sig, adjust_color, env);
-    register_function(ctx, scale_color_sig, scale_color, env);
-    register_function(ctx, change_color_sig, change_color, env);
-    register_function(ctx, ie_hex_str_sig, ie_hex_str, env);
-    // String Functions
-    register_function(ctx, unquote_sig, sass_unquote, env);
-    register_function(ctx, quote_sig, sass_quote, env);
-    register_function(ctx, str_length_sig, str_length, env);
-    register_function(ctx, str_insert_sig, str_insert, env);
-    register_function(ctx, str_index_sig, str_index, env);
-    register_function(ctx, str_slice_sig, str_slice, env);
-    register_function(ctx, to_upper_case_sig, to_upper_case, env);
-    register_function(ctx, to_lower_case_sig, to_lower_case, env);
-    // Number Functions
-    register_function(ctx, percentage_sig, percentage, env);
-    register_function(ctx, round_sig, round, env);
-    register_function(ctx, ceil_sig, ceil, env);
-    register_function(ctx, floor_sig, floor, env);
-    register_function(ctx, abs_sig, abs, env);
-    register_function(ctx, min_sig, min, env);
-    register_function(ctx, max_sig, max, env);
-    register_function(ctx, random_sig, random, env);
     // List Functions
     register_function(ctx, length_sig, length, env);
-    register_function(ctx, nth_sig, nth, env);
-    register_function(ctx, set_nth_sig, set_nth, env);
-    register_function(ctx, index_sig, index, env);
-    register_function(ctx, join_sig, join, env);
-    register_function(ctx, append_sig, append, env);
-    register_function(ctx, zip_sig, zip, env);
-    register_function(ctx, list_separator_sig, list_separator, env);
-    register_function(ctx, is_bracketed_sig, is_bracketed, env);
-    // Map Functions
-    register_function(ctx, map_get_sig, map_get, env);
-    register_function(ctx, map_merge_sig, map_merge, env);
-    register_function(ctx, map_remove_sig, map_remove, env);
-    register_function(ctx, map_keys_sig, map_keys, env);
-    register_function(ctx, map_values_sig, map_values, env);
-    register_function(ctx, map_has_key_sig, map_has_key, env);
-    register_function(ctx, keywords_sig, keywords, env);
-    // Introspection Functions
-    register_function(ctx, type_of_sig, type_of, env);
-    register_function(ctx, unit_sig, unit, env);
-    register_function(ctx, unitless_sig, unitless, env);
-    register_function(ctx, comparable_sig, comparable, env);
-    register_function(ctx, variable_exists_sig, variable_exists, env);
-    register_function(ctx, global_variable_exists_sig, global_variable_exists, env);
-    register_function(ctx, function_exists_sig, function_exists, env);
-    register_function(ctx, mixin_exists_sig, mixin_exists, env);
-    register_function(ctx, feature_exists_sig, feature_exists, env);
-    register_function(ctx, call_sig, call, env);
-    register_function(ctx, content_exists_sig, content_exists, env);
-    register_function(ctx, get_function_sig, get_function, env);
-    // Boolean Functions
-    register_function(ctx, not_sig, sass_not, env);
-    register_function(ctx, if_sig, sass_if, env);
-    // Misc Functions
-    register_function(ctx, inspect_sig, inspect, env);
-    register_function(ctx, unique_id_sig, unique_id, env);
-    // Selector functions
-    register_function(ctx, selector_nest_sig, selector_nest, env);
-    register_function(ctx, selector_append_sig, selector_append, env);
-    register_function(ctx, selector_extend_sig, selector_extend, env);
-    register_function(ctx, selector_replace_sig, selector_replace, env);
-    register_function(ctx, selector_unify_sig, selector_unify, env);
-    register_function(ctx, is_superselector_sig, is_superselector, env);
-    register_function(ctx, simple_selectors_sig, simple_selectors, env);
-    register_function(ctx, selector_parse_sig, selector_parse, env);
+    register_built_in_function(ctx, env, "length", "$list", Functions::Lists::length);
+
+    // register_function(ctx, nth_sig, nth, env);
+    // register_function(ctx, set_nth_sig, set_nth, env);
+    // register_function(ctx, index_sig, index, env);
+    // register_function(ctx, join_sig, join, env);
+    // register_function(ctx, append_sig, append, env);
+    // register_function(ctx, zip_sig, zip, env);
+    // register_function(ctx, list_separator_sig, list_separator, env);
+    // register_function(ctx, is_bracketed_sig, is_bracketed, env);
+    // // Map Functions
+    // register_function(ctx, map_get_sig, map_get, env);
+    // register_function(ctx, map_merge_sig, map_merge, env);
+    // register_function(ctx, map_remove_sig, map_remove, env);
+    // register_function(ctx, map_keys_sig, map_keys, env);
+    // register_function(ctx, map_values_sig, map_values, env);
+    // register_function(ctx, map_has_key_sig, map_has_key, env);
+    // register_function(ctx, keywords_sig, keywords, env);
+    // // Introspection Functions
+    // register_function(ctx, type_of_sig, type_of, env);
+    // register_function(ctx, unit_sig, unit, env);
+    // register_function(ctx, unitless_sig, unitless, env);
+    // register_function(ctx, comparable_sig, comparable, env);
+    // register_function(ctx, variable_exists_sig, variable_exists, env);
+    // register_function(ctx, global_variable_exists_sig, global_variable_exists, env);
+    // register_function(ctx, function_exists_sig, function_exists, env);
+    // register_function(ctx, mixin_exists_sig, mixin_exists, env);
+    // register_function(ctx, feature_exists_sig, feature_exists, env);
+    // register_function(ctx, call_sig, call, env);
+    // register_function(ctx, content_exists_sig, content_exists, env);
+    // register_function(ctx, get_function_sig, get_function, env);
+    // // Boolean Functions
+    // register_function(ctx, not_sig, sass_not, env);
+    // register_function(ctx, if_sig, sass_if, env);
+    // // Misc Functions
+    // register_function(ctx, inspect_sig, inspect, env);
+    // register_function(ctx, unique_id_sig, unique_id, env);
+    // // Selector functions
+    // register_function(ctx, selector_nest_sig, selector_nest, env);
+    // register_function(ctx, selector_append_sig, selector_append, env);
+    // register_function(ctx, selector_extend_sig, selector_extend, env);
+    // register_function(ctx, selector_replace_sig, selector_replace, env);
+    // register_function(ctx, selector_unify_sig, selector_unify, env);
+    // register_function(ctx, is_superselector_sig, is_superselector, env);
+    // register_function(ctx, simple_selectors_sig, simple_selectors, env);
+    // register_function(ctx, selector_parse_sig, selector_parse, env);
   }
 
   void register_c_functions(Context& ctx, Env* env, Sass_Function_List descrs)

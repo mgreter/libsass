@@ -18,9 +18,72 @@ namespace Sass {
   Value::Value(ParserState pstate, bool d, bool e, bool i, Type ct)
   : Expression(pstate, d, e, i, ct)
   { }
+
+  // Return normalized index for vector from overflowable sass index
+
+  long Value::sassIndexToListIndex(Value * sassIndex, std::string name)
+  {
+    long index = sassIndex->assertNumber(name)->assertInt(name);
+    if (index == 0) throw Exception::SassScriptException("List index may not be 0.", name);
+    if (abs(index) > lengthAsList()) {
+      throw Exception::SassScriptException(
+        "Invalid index $sassIndex for a list with ${lengthAsList} elements.",
+        name);
+    }
+
+    return index < 0 ? lengthAsList() + index : index - 1;
+  }
+
+  Color* Value::assertColor(std::string name) {
+    throw Exception::SassScriptException("$this is not a color.", name);
+  }
+
+  Map* Value::assertMap(std::string name) {
+    throw Exception::SassScriptException("$this is not a map.", name);
+  }
+
+  Number* Value::assertNumber(std::string name) {
+    throw Exception::SassScriptException("$this is not a number.", name);
+  }
+
+  String* Value::assertString(std::string name) {
+    throw Exception::SassScriptException("$this is not a string.", name);
+  }
+
+  Boolean* Value::greaterThan(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"$this > $other\".");
+  }
+
+  Boolean* Value::greaterThanOrEquals(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"$this >= $other\".");
+  }
+
+  Boolean* Value::lessThan(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"$this < $other\".");
+  }
+
+  Boolean* Value::lessThanOrEquals(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"$this <= $other\".");
+  }
+
+  Value* Value::times(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"$this * $other\".");
+  }
+
+  /// The SassScript `%` operation.
+
+  Value* Value::modulo(Value* other) {
+    throw Exception::SassScriptException(
+      "Undefined operation \"$this % $other\".");
+  }
+
   Value::Value(const Value* ptr)
-  : Expression(ptr)
-  { }
+  : Expression(ptr) { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -161,10 +224,10 @@ namespace Sass {
   }
 
   SassListObj Map::to_list(ParserState& pstate) {
-    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, SASS_UNDEF);
+    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_UNDEF);
 
     for (auto key : keys()) {
-      SassListObj l = SASS_MEMORY_NEW(SassList, pstate);
+      SassListObj l = SASS_MEMORY_NEW(SassList, pstate, {});
       l->append(key);
       l->append(at(key));
       ret->append(l);
@@ -972,10 +1035,11 @@ namespace Sass {
 
   SassList::SassList(
     ParserState pstate,
+    std::vector<ValueObj> values,
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    Vectorized(),
+    Vectorized(values),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {
@@ -1063,9 +1127,10 @@ namespace Sass {
 
   SassArgumentList::SassArgumentList(
     ParserState pstate,
+    std::vector<ValueObj> values,
     Sass_Separator separator,
-    keywordMap keywords) :
-    SassList(pstate, separator, false),
+    NormalizedMap<ValueObj> keywords) :
+    SassList(pstate, values, separator, false),
     keywords_(keywords)
   {
   }

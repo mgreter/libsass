@@ -1470,6 +1470,54 @@ relase. For details, see http://bit.ly/moz-document.
     params->concat(parameters);
     return params;
   }
+  ArgumentDeclaration* StylesheetParser::_argumentDeclaration2()
+  {
+
+    Position start(scanner);
+    scanner.expectChar($lparen);
+    whitespace();
+    std::vector<ArgumentObj> arguments;
+    NormalizeSet named;
+    std::string restArgument;
+    while (scanner.peekChar() == $dollar) {
+      Position variableStart(scanner);
+      std::string name(variableName());
+      whitespace();
+
+      ExpressionObj defaultValue;
+      if (scanner.scanChar($colon)) {
+        whitespace();
+        defaultValue = _expressionUntilComma();
+      }
+      else if (scanner.scanChar($dot)) {
+        scanner.expectChar($dot);
+        scanner.expectChar($dot);
+        whitespace();
+        restArgument = name;
+        break;
+      }
+
+      arguments.push_back(SASS_MEMORY_NEW(Argument,
+        scanner.pstate(variableStart), defaultValue, name));
+
+      if (named.count(name) == 1) {
+        error("Duplicate argument.",
+          arguments.back()->pstate());
+      }
+      named.insert(name);
+
+      if (!scanner.scanChar($comma)) break;
+      whitespace();
+    }
+    scanner.expectChar($rparen);
+
+    return SASS_MEMORY_NEW(
+      ArgumentDeclaration,
+      scanner.pstate(),
+      arguments,
+      restArgument);
+
+  }
   // EO _argumentDeclaration
 
   ArgumentInvocation* StylesheetParser::_argumentInvocation(bool mixin)

@@ -225,8 +225,14 @@ namespace Sass {
 
     Parameters* _argumentDeclaration(); // ArgumentDeclaration
 
+    ArgumentDeclaration* _argumentDeclaration2(); // ArgumentDeclaration
+
     Parameters* parseArgumentDeclaration() {
       return _argumentDeclaration();
+    }
+
+    ArgumentDeclaration* parseArgumentDeclaration2() {
+      return _argumentDeclaration2();
     }
 
     ArgumentInvocation* _argumentInvocation(bool mixin = false);

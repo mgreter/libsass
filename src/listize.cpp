@@ -18,7 +18,7 @@ namespace Sass {
   Value* Listize::listize(SelectorList* selectors)
   {
     // ListObj list = SASS_MEMORY_NEW(List, selectors->pstate(), 0, SASS_COMMA);
-    SassListObj list = SASS_MEMORY_NEW(SassList, selectors->pstate(), SASS_COMMA);
+    SassListObj list = SASS_MEMORY_NEW(SassList, selectors->pstate(), {}, SASS_COMMA);
     for (ComplexSelector* complex : selectors->elements()) {
       list->append(listize(complex));
     }
@@ -29,7 +29,7 @@ namespace Sass {
 
   Value* Listize::listize(ComplexSelector* selector)
   {
-    SassListObj list = SASS_MEMORY_NEW(SassList, selector->pstate(), SASS_SPACE);
+    SassListObj list = SASS_MEMORY_NEW(SassList, selector->pstate(), {}, SASS_SPACE);
     // ListObj list = SASS_MEMORY_NEW(List, selector->pstate(), 0, SASS_SPACE);
     for (SelectorComponent* component : selector->elements()) {
       // std::cerr << "err [" << component->to_css() << "]\n";

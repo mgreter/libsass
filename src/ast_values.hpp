@@ -21,6 +21,44 @@ namespace Sass {
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
 
+    // Return the length of this item as a list
+    virtual long lengthAsList() const { return 1; }
+
+    // Return normalized index for vector from overflowable sass index
+    long sassIndexToListIndex(Value* sassIndex, std::string name = "");
+
+    virtual Color* assertColor(std::string name = "");
+
+    // SassFunction assertFunction(std::string name = "") = >
+    //   throw _exception("$this is not a function reference.", name);
+
+    virtual Map* assertMap(std::string name = "");
+
+    virtual Number* assertNumber(std::string name = "");
+
+    virtual String* assertString(std::string name = "");
+
+    /// The SassScript `>` operation.
+    virtual Boolean* greaterThan(Value* other);
+
+    /// The SassScript `>=` operation.
+    virtual Boolean* greaterThanOrEquals(Value* other);
+
+    /// The SassScript `<` operation.
+    virtual Boolean* lessThan(Value* other);
+
+    /// The SassScript `<=` operation.
+    virtual Boolean* lessThanOrEquals(Value* other);
+
+
+    /// The SassScript `*` operation.
+    virtual Value* times(Value* other);
+
+    /// The SassScript `%` operation.
+    virtual Value* modulo(Value* other);
+
+
+
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
     virtual bool operator== (const Value& rhs) const {
@@ -96,6 +134,7 @@ namespace Sass {
   public:
 
     SassList(ParserState pstate,
+      std::vector<ValueObj> values = {},
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
 
@@ -114,16 +153,17 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  typedef ordered_map<std::string, ValueObj> keywordMap;
+  typedef NormalizedMap<ValueObj> keywordMap;
   class SassArgumentList : public SassList {
-    ADD_PROPERTY(keywordMap, keywords);
+    ADD_PROPERTY(NormalizedMap<ValueObj>, keywords);
   public:
     bool is_arglist() const override final {
       return true;
     }
     SassArgumentList(ParserState pstate,
+      std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,
-      keywordMap keywords = {});
+      NormalizedMap<ValueObj> keywords = {});
     ATTACH_EQ_OPERATIONS(Value);
     ATTACH_COPY_OPERATIONS(SassArgumentList);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -238,8 +278,9 @@ namespace Sass {
   // Numbers, percentages, dimensions, and colors.
   ////////////////////////////////////////////////
   class Number final : public Value, public Units {
-    HASH_PROPERTY(double, value)
-    ADD_PROPERTY(bool, zero)
+    HASH_PROPERTY(double, value);
+    ADD_PROPERTY(double, epsilon);
+    ADD_PROPERTY(bool, zero);
 
     // The representation of this number as two
     // slash-separated numbers, if it has one.
@@ -251,6 +292,14 @@ namespace Sass {
     mutable size_t hash_;
   public:
     Number(ParserState pstate, double val, std::string u = "", bool zero = true);
+
+    long assertInt(std::string name = "") {
+      if (fuzzyIsInt(value_, epsilon_)) {
+        return fuzzyAsInt(value_, epsilon_);
+      }
+      throw Exception::SassScriptException(
+        "$this is not an int.", name);
+    }
 
     bool zero() { return zero_; }
 

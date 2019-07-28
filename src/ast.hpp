@@ -136,6 +136,38 @@ namespace Sass {
       arguments_(arguments) {}
   };
 
+  class ArgumentDeclaration : public SassNode {
+
+    // The arguments that are taken.
+    ADD_PROPERTY(std::vector<ArgumentObj>, arguments);
+
+    // The name of the rest argument (as in `$args...`),
+    // or `null` if none was declared.
+    ADD_PROPERTY(std::string, restArg);
+
+  public:
+
+    ArgumentDeclaration(
+      ParserState pstate,
+      std::vector<ArgumentObj> arguments,
+      std::string restArg = "");
+
+    bool isEmpty() const {
+      return arguments_.empty()
+        && restArg_.empty();
+    }
+
+    static ArgumentDeclaration* parse(
+      Context& context,
+      std::string contents);
+
+    void verify(
+      size_t positional,
+      NormalizedMap<ValueObj>& names,
+      Backtraces traces);
+
+  };
+
   class ArgumentInvocation : public SassNode {
 
     // The arguments passed by position.
@@ -145,7 +177,7 @@ namespace Sass {
     ADD_PROPERTY(NormalizedMap<ExpressionObj>, named);
 
     // The first rest argument (as in `$args...`).
-    ADD_PROPERTY(ExpressionObj, restArgs);
+    ADD_PROPERTY(ExpressionObj, restArg);
 
     // The second rest argument, which is expected to only contain a keyword map.
     ADD_PROPERTY(ExpressionObj, kwdRest);
@@ -172,7 +204,7 @@ namespace Sass {
   class ArgumentResults : public SassNode {
 
     // Arguments passed by position.
-    std::vector<ValueObj> positional;
+    ADD_PROPERTY(std::vector<ValueObj>, positional);
 
     // The [AstNode]s that hold the spans for each [positional]
     // argument, or `null` if source span tracking is disabled. This
@@ -182,7 +214,7 @@ namespace Sass {
     // std::vector<Ast_Node_Obj> positionalNodes;
 
     // Arguments passed by name.
-    NormalizedMap<ValueObj> named;
+    ADD_PROPERTY(NormalizedMap<ValueObj>, named);
 
     // The [AstNode]s that hold the spans for each [named] argument,
     // or `null` if source span tracking is disabled. This stores
@@ -192,7 +224,7 @@ namespace Sass {
     // NormalizedMap<Ast_Node_Obj> namedNodes;
 
     // The separator used for the rest argument list, if any.
-    Sass_Separator separator;
+    ADD_PROPERTY(Sass_Separator, separator);
 
   public:
 
@@ -1247,18 +1279,19 @@ namespace Sass {
   class BuiltInCallable : public Callable {
 
     // The function name
-    std::string name;
+    ADD_PROPERTY(std::string, name);
 
     // The overloads declared for this callable.
-    std::vector<std::pair<Parameters, SassFnSig>> overloads;
+    ADD_PROPERTY(ArgumentDeclarationObj, parameters);
 
     // Function callback
-    SassFnSig callback;
+    ADD_PROPERTY(SassFnSig, callback);
 
   public:
 
     Value* execute(ArgumentInvocation* arguments) {
       // return callback(arguments);
+      return nullptr;
     }
 
     // Creates a callable with a single [arguments] declaration and a single [callback].
@@ -1266,7 +1299,7 @@ namespace Sass {
     // parentheses. Throws a [SassFormatException] if parsing fails.
     BuiltInCallable(
       std::string name,
-      std::string prototype,
+      ArgumentDeclaration* parameters,
       SassFnSig callback);
 
   };

@@ -12,6 +12,29 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Lists {
+
+      Value* length(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(Number,
+          arguments[0]->pstate(),
+          arguments[0]->lengthAsList());
+      }
+
+      Value* nth(const std::vector<ValueObj>& arguments)
+      {
+        Value* list = arguments[0];
+        Value* index = arguments[1];
+        return SASS_MEMORY_NEW(Number,
+          arguments[0]->pstate(),
+          arguments[0]->lengthAsList());
+      }
+
+    }
+  }
+
+  namespace Functions {
+
     /////////////////
     // LIST FUNCTIONS
     /////////////////
@@ -19,7 +42,9 @@ namespace Sass {
     Signature keywords_sig = "keywords($args)";
     BUILT_IN(keywords)
     {
-      List_Obj arglist = SASS_MEMORY_COPY(ARG("$args", List, "an argument list")); // copy
+      auto qwe = get_arg<List>("$args", env, sig, pstate, traces, "an argument list");
+
+      List_Obj arglist = SASS_MEMORY_COPY(qwe); // copy
       Map_Obj result = SASS_MEMORY_NEW(Map, pstate, 1);
       if (!arglist->is_arglist()) {
         error("$args: " + arglist->to_string() + " is not an argument list.", pstate, traces);
@@ -138,7 +163,7 @@ namespace Sass {
         strm << sl->length() << " elements.";
         error(strm.str(), pstate, traces);
       }
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, sl->separator());
+      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, sl->separator());
       result->hasBrackets(sl->hasBrackets());
       for (size_t i = 0, L = sl->length(); i < L; ++i) {
         if (i == index) result->append(v);
@@ -254,7 +279,7 @@ namespace Sass {
       if (!bracketed_is_auto) {
         is_bracketed = !bracketed->is_false();
       }
-      SassList_Obj result = SASS_MEMORY_NEW(SassList, pstate, sep_val);
+      SassList_Obj result = SASS_MEMORY_NEW(SassList, pstate, {}, sep_val);
       result->hasBrackets(is_bracketed);
       for (auto item1 : sl1->elements()) {
         if (Argument * arg = Cast<Argument>(item1)) {
@@ -286,7 +311,7 @@ namespace Sass {
       Expression_Obj v = ARG("$val", Expression, "an expression");
       String_Constant_Obj sep = ARGSTRC("$separator");
       if (!l && !sl) {
-        sl = SASS_MEMORY_NEW(SassList, pstate);
+        sl = SASS_MEMORY_NEW(SassList, pstate, {});
         sl->append(ARG("$list", Expression, "an expression"));
       }
       if (m) {
@@ -340,7 +365,7 @@ namespace Sass {
         List_Obj sl = Cast<List>(arglist->value_at_index(i));
         SassList_Obj ith = Cast<SassList>(arglist->value_at_index(i));
         if (sl) {
-          ith = SASS_MEMORY_NEW(SassList, pstate, sl->separator());
+          ith = SASS_MEMORY_NEW(SassList, pstate, {}, sl->separator());
           ith->hasBrackets(sl->is_bracketed());
           for (auto item : sl->elements()) {
             ith->append(item);
@@ -352,7 +377,7 @@ namespace Sass {
             ith = mith->to_list(pstate);
             // ith = list_to_sass_list(sll);
           } else {
-            ith = SASS_MEMORY_NEW(SassList, pstate);
+            ith = SASS_MEMORY_NEW(SassList, pstate, {});
             ith->append(arglist->value_at_index(i));
           }
           if (arglist->is_arglist()) {
@@ -364,10 +389,10 @@ namespace Sass {
         }
         shortest = (i ? std::min(shortest, ith->length()) : ith->length());
       }
-      SassList* zippers = SASS_MEMORY_NEW(SassList, pstate, SASS_COMMA);
+      SassList* zippers = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
       size_t L = arglist->length();
       for (size_t i = 0; i < shortest; ++i) {
-        SassList* zipper = SASS_MEMORY_NEW(SassList, pstate);
+        SassList* zipper = SASS_MEMORY_NEW(SassList, pstate, {});
         for (size_t j = 0; j < L; ++j) {
           if (Cast<SassList>(arglist->value_at_index(j))) {
             zipper->append(Cast<SassList>(arglist->value_at_index(j))->at(i));

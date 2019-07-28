@@ -13,11 +13,8 @@ namespace Sass {
     // INTROSPECTION FUNCTIONS
     //////////////////////////
 
-    Value* foo(const std::vector<ValueObj>& arguments) {
-      return nullptr;
-    }
 
-    BuiltInCallable fn_foo("foo", "", foo);
+    // BuiltInCallable fn_foo("foo", "", foo);
 
     Signature type_of_sig = "type-of($value)";
     BUILT_IN(type_of)

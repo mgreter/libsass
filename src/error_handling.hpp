@@ -108,6 +108,11 @@ namespace Sass {
       virtual ~InvalidSyntax() throw() {};
     };
 
+    class SassScriptException : public std::runtime_error {
+    public:
+      SassScriptException(std::string msg, std::string name = "");
+      ~SassScriptException() throw() {};
+    };
 
     class RecursionLimitError : public Base {
       public:

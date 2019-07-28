@@ -26,6 +26,7 @@ namespace Sass {
   class SassNode;
   class CallableInvocation;
   class ArgumentInvocation;
+  class ArgumentDeclaration;
 
   class Has_Block;
 
@@ -222,6 +223,7 @@ namespace Sass {
   IMPL_MEM_OBJ(SassNode);
   IMPL_MEM_OBJ(CallableInvocation);
   IMPL_MEM_OBJ(ArgumentInvocation);
+  IMPL_MEM_OBJ(ArgumentDeclaration);
   IMPL_MEM_OBJ(If);
   IMPL_MEM_OBJ(For);
   IMPL_MEM_OBJ(Each);

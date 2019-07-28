@@ -9,6 +9,28 @@
 namespace Sass {
 
   // ##########################################################################
+  // Returns a new list containing the elements between [start] and [end].
+  // ##########################################################################
+  template <class T>
+  std::vector<T> sublist(const std::vector<T>& vec,
+    size_t start, size_t end = std::string::npos)
+  {
+    if (end == std::string::npos) { end = vec.size(); }
+    return std::vector<T>(vec.begin() + start, vec.begin() + end);
+  }
+
+  // ##########################################################################
+  // Removes the objects in the range [start] inclusive to [end] exclusive.
+  // ##########################################################################
+  template <class T>
+  void removeRange(std::vector<T>& vec,
+    size_t start, size_t end = std::string::npos)
+  {
+    if (end == std::string::npos) { end = vec.size(); }
+    vec.erase(vec.begin() + start, vec.begin() + end);
+  }
+
+  // ##########################################################################
   // Flatten `vector<vector<T>>` to `vector<T>`
   // ##########################################################################
   template <class T>

@@ -32,7 +32,7 @@ namespace Sass {
       } break;
       case SASS_LIST: {
         // sass_list_get_length(v), 
-        SassList* l = SASS_MEMORY_NEW(SassList, pstate, sass_list_get_separator(v));
+        SassList* l = SASS_MEMORY_NEW(SassList, pstate, {}, sass_list_get_separator(v));
         for (size_t i = 0, L = sass_list_get_length(v); i < L; ++i) {
           l->append(c2ast(sass_list_get_value(v, i), traces, pstate));
         }

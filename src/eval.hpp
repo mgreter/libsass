@@ -90,6 +90,7 @@ namespace Sass {
 
     Argument* visitArgument(Argument* arg);
     Arguments* visitArguments(Arguments* args);
+    NormalizedMap<ValueObj> normalizedMapMap(const NormalizedMap<ExpressionObj>& map);
     ArgumentResults* _evaluateArguments(ArgumentInvocation* arguments);
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);

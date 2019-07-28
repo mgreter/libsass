@@ -30,6 +30,7 @@
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "util_string.hpp"
+#include "dart_helpers.hpp"
 
 namespace Sass {
 
@@ -43,9 +44,63 @@ namespace Sass {
   }
   Eval::~Eval() { }
 
-  Value* Eval::_runBuiltInCallable(ArgumentInvocation* arguments, BuiltInCallable* callable, ParserState pstate)
+  Value* Eval::_runBuiltInCallable(
+    ArgumentInvocation* arguments,
+    BuiltInCallable* callable,
+    ParserState pstate)
   {
     ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
+
+    ArgumentDeclaration* overload = callable->parameters();
+    SassFnSig callback = callable->callback();
+    NormalizedMap<ValueObj> named = evaluated->named();
+    std::vector<ValueObj> positional = evaluated->positional();
+    std::vector<ArgumentObj> declaredArguments = overload->arguments();
+
+    overload->verify(positional.size(), named, traces);
+
+    for (size_t i = evaluated->positional().size();
+      i < declaredArguments.size();
+      i++) {
+      Argument* argument = declaredArguments[i];
+      std::string name(argument->name());
+      if (named.count(name)) {
+        positional.push_back(named[name]->perform(this));
+      }
+      else {
+        positional.push_back(argument->value());
+      }
+    }
+
+    SassArgumentListObj argumentList;
+    if (!overload->restArg().empty()) {
+      std::vector<ValueObj> rest;
+      if (positional.size() > declaredArguments.size()) {
+        rest = sublist(positional, declaredArguments.size());
+        removeRange(positional, declaredArguments.size(), positional.size());
+      }
+
+      Sass_Separator separator = evaluated->separator();
+      if (separator == SASS_UNDEF) separator = SASS_COMMA;
+      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+        "[pstate]", rest, separator, named);
+      positional.push_back(argumentList);
+    }
+
+    ValueObj result;
+    // try {
+      result = callback(positional);
+      // }
+
+    if (argumentList == nullptr) return result.detach();
+    if (named.empty()) return result.detach();
+    // if (argumentList.wereKeywordsAccessed) return result;
+
+    error(
+      "No ${pluralize('argument', evaluated.named.keys.length)} named ",
+      // "${toSentence(evaluated.named.keys.map((name) => \"\$$name\"), 'or')}.",
+      "[pstate]", traces);
+
     return nullptr;
   }
 
@@ -278,11 +333,11 @@ namespace Sass {
       map = Cast<Map>(expr);
     }
     else if (expr->concrete_type() != Expression::LIST) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), SASS_COMMA);
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, SASS_COMMA);
       list->append(expr);
     }
     else if (SassList * slist = Cast<SassList>(expr)) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), slist->separator());
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, slist->separator());
       list->hasBrackets(slist->hasBrackets());
       for (auto item : slist->elements()) {
         if (Argument * arg = Cast<Argument>(item)) {
@@ -309,7 +364,7 @@ namespace Sass {
 
         if (variables.size() == 1) {
           SassList* variable = SASS_MEMORY_NEW(SassList,
-            map->pstate(), SASS_SPACE);
+            map->pstate(), {}, SASS_SPACE);
           variable->append(key);
           variable->append(value);
           env.set_local(variables[0], variable);
@@ -546,7 +601,7 @@ namespace Sass {
     // regular case for unevaluated lists
     SassListObj ll = SASS_MEMORY_NEW(SassList,
       l->pstate(),
-      // l->length(),
+      {},
       l->separator() // ,
       // l->is_arglist(),
       // l->is_bracketed()
@@ -1025,7 +1080,8 @@ namespace Sass {
     ParserState pstate)
   {
     if (BuiltInCallable * builtIn = Cast<BuiltInCallable>(callable)) {
-      std::cerr << "execute built in\n";
+      return _runBuiltInCallable(arguments, builtIn, callable->pstate()); // ToDo -> without slash
+      // std::cerr << "execute built in\n";
     }
     else if (PlainCssCallable * plainCss = Cast<PlainCssCallable>(callable)) {
       std::cerr << "execute plain css\n";
@@ -1042,7 +1098,9 @@ namespace Sass {
 
     BuiltInCallable* function = _getFunction(plainName, node->ns());
 
-    _runFunctionCallable(node->arguments(), function, node->pstate());
+    Value* value = _runFunctionCallable(node->arguments(), function, node->pstate());
+
+    return value;
 
     return SASS_MEMORY_NEW(StringLiteral, "pstate", "HELLO");
   }
@@ -1644,9 +1702,77 @@ namespace Sass {
     return aa.detach();
   }
 
+  NormalizedMap<ValueObj> Eval::normalizedMapMap(
+    const NormalizedMap<ExpressionObj>& map)
+  {
+    NormalizedMap<ValueObj> result;
+    for (auto kv : result) {
+      result[kv.first] =
+        kv.second->perform(this);
+    }
+    return result;
+  }
+
   ArgumentResults* Eval::_evaluateArguments(ArgumentInvocation* arguments)
   {
+
+    std::vector<ValueObj> positional;
+    positional.reserve(arguments->positional().size());
+    for (ExpressionObj& argument : arguments->positional()) {
+      positional.push_back(argument->perform(this));
+    }
+    NormalizedMap<ValueObj> named = normalizedMapMap(arguments->named());
+
+    // var positionalNodes =
+    //   trackSpans ? arguments.positional.map(_expressionNode).toList() : null;
+    // var namedNodes = trackSpans
+    //   ? mapMap<String, Expression, String, AstNode>(arguments.named,
+    //     value: (_, expression) = > _expressionNode(expression))
+    //   : null;
+
+    if (arguments->restArg() == nullptr) {
+      return SASS_MEMORY_NEW(
+        ArgumentResults,
+        arguments->pstate(),
+        positional, named,
+        SASS_UNDEF);
+    }
+
+    ValueObj rest = arguments->restArg()->perform(this);
+    // var restNodeForSpan = trackSpans ? _expressionNode(arguments.rest) : null;
+
+    Sass_Separator separator = SASS_UNDEF;
+
+    if (Map * map = Cast<Map>(rest)) {
+
+    }
+    else if (SassList * list = Cast<SassList>(rest)) {
+
+    }
+    else {
+
+    }
+
+    if (arguments->kwdRest() == nullptr) {
+      return SASS_MEMORY_NEW(
+        ArgumentResults,
+        arguments->pstate(),
+        positional, named,
+        SASS_UNDEF);
+    }
+
+    ValueObj keywordRest = arguments->kwdRest()->perform(this);
+    // var keywordRestNodeForSpan = trackSpans ? _expressionNode(arguments.keywordRest) : null;
+
+    if (Map * map = Cast<Map>(rest)) {
+    }
+    else {
+      error("Variable keyword arguments must be a map (was $keywordRest).",
+        keywordRest->pstate(), traces);
+    }
+
     return nullptr;
+
   }
 
   Argument* Eval::visitArgument(Argument* a)
@@ -1663,7 +1789,7 @@ namespace Sass {
       else if (val->concrete_type() != Expression::LIST) {
         SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
           val->pstate(),
-          // 0,
+          {},
           SASS_COMMA);
         wrapper->append(val);
         val = wrapper;
@@ -1691,7 +1817,7 @@ namespace Sass {
       else if(val->concrete_type() != Expression::LIST) {
         SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
                                         val->pstate(),
-                                        // 0,
+                                        {},
                                         SASS_COMMA);
         wrapper->append(val);
         val = wrapper;

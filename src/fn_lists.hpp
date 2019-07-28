@@ -7,6 +7,10 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Lists {
+      Value* length(const std::vector<ValueObj>& arguments);
+    }
+
     extern Signature length_sig;
     extern Signature nth_sig;
     extern Signature index_sig;

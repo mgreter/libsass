@@ -105,7 +105,7 @@ namespace Sass {
       case SASS_LIST: {
         SassList* l = SASS_MEMORY_NEW(SassList,
                                   ParserState("[C-VALUE]"),
-                                  // sass_list_get_length(val),
+                                  {}, // sass_list_get_length(val),
                                   sass_list_get_separator(val));
         for (size_t i = 0, L = sass_list_get_length(val); i < L; ++i) {
           l->append(sass_value_to_ast_node(sass_list_get_value(val, i)));

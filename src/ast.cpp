@@ -4,6 +4,7 @@
 
 #include "ast.hpp"
 #include "debugger.hpp"
+#include "parser_scss.hpp"
 
 namespace Sass {
 
@@ -846,7 +847,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   SassList* list_to_sass_list(List* list) {
-    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), list->separator());
+    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), {}, list->separator());
     rv->hasBrackets(list->is_bracketed());
     for (auto item : list->elements()) {
       rv->append(item);
@@ -869,12 +870,12 @@ namespace Sass {
   ArgumentInvocation::ArgumentInvocation(ParserState pstate,
     std::vector<ExpressionObj> positional,
     NormalizedMap<ExpressionObj> named,
-    Expression* restArgs,
+    Expression* restArg,
     Expression* kwdRest) :
     SassNode(pstate),
     positional_(positional),
     named_(named),
-    restArgs_(restArgs),
+    restArg_(restArg),
     kwdRest_(kwdRest)
   {
   }
@@ -884,7 +885,7 @@ namespace Sass {
   {
     return positional_.empty()
       && named_.empty()
-      && restArgs_.isNull();
+      && restArg_.isNull();
   }
 
   std::string ArgumentInvocation::toString() const
@@ -903,9 +904,9 @@ namespace Sass {
       strm << named.second->to_string();
       addComma = true;
     }
-    if (!restArgs_.isNull()) {
+    if (!restArg_.isNull()) {
       if (addComma) strm << ", ";
-      strm << restArgs_->to_string() << "...";
+      strm << restArg_->to_string() << "...";
       addComma = true;
     }
     if (!kwdRest_.isNull()) {
@@ -925,10 +926,74 @@ namespace Sass {
     NormalizedMap<ValueObj> named,
     Sass_Separator separator) :
     SassNode(pstate),
-    positional(positional),
-    named(named),
-    separator(separator)
+    positional_(positional),
+    named_(named),
+    separator_(separator)
   {
+  }
+
+  ArgumentDeclaration::ArgumentDeclaration(
+    ParserState pstate,
+    std::vector<ArgumentObj> arguments,
+    std::string restArg) :
+    SassNode(pstate),
+    arguments_(arguments),
+    restArg_(restArg)
+  {
+  }
+
+  ArgumentDeclaration* ArgumentDeclaration::parse(
+    Context& context, std::string contents)
+  {
+    std::string text = "(" + contents + ")";
+    char* cstr = sass_copy_c_string(text.c_str());
+    context.strings.push_back(cstr); // clean up later
+    ScssParser parser(context, cstr, "sass://builtin", -1);
+    return parser.parseArgumentDeclaration2();
+  }
+
+  /// Throws a [SassScriptException] if [positional] and [names] aren't valid
+  /// for this argument declaration.
+  void ArgumentDeclaration::verify(size_t positional, NormalizedMap<ValueObj>& names, Backtraces traces)
+  {
+
+    size_t namedUsed = 0;
+    for (size_t i = 0; i < arguments_.size(); i++) {
+      Argument* argument = arguments_[i];
+      if (i < positional) {
+        if (names.count(argument->name()) == 1) {
+          throw Exception::InvalidSyntax(argument->pstate(), traces,
+            "Argument $${argument.name} was passed both by position and by "
+            "name.");
+        }
+      }
+      else if (names.count(argument->name()) == 1) {
+        namedUsed++;
+      }
+      else if (argument->value() == nullptr) {
+        throw Exception::InvalidSyntax(argument->pstate(), traces,
+          "Missing argument " + argument->name());
+      }
+    }
+
+    if (!restArg_.empty()) return;
+
+    if (positional > arguments_.size()) {
+      throw Exception::InvalidSyntax("[pstate]", traces,
+        "Only ${arguments.length} "
+        "${pluralize('argument', arguments.length)} allowed, but "
+        "${positional} ${pluralize('was', positional, plural: 'were')} "
+        "passed.");
+    }
+
+    if (namedUsed < names.size()) {
+      // var unknownNames = normalizedSet(names)
+      //   ..removeAll(arguments.map((argument) = > argument.name));
+      throw Exception::InvalidSyntax("[pstate]", traces,
+        "No ${pluralize('argument', unknownNames.length)} named "
+        "${toSentence(unknownNames.map((name) => \"$$name\"), 'or')}.");
+    }
+
   }
 
 }
