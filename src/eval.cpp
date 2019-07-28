@@ -1084,11 +1084,16 @@ namespace Sass {
       // std::cerr << "execute built in\n";
     }
     else if (PlainCssCallable * plainCss = Cast<PlainCssCallable>(callable)) {
+      return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "PlainCssCallable");
       std::cerr << "execute plain css\n";
     }
     else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
+      return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "UserDefinedCallable");
       std::cerr << "execute user defined\n";
     }
+
+    return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "Callable??");
+
     return nullptr;
   }
 
@@ -1096,13 +1101,19 @@ namespace Sass {
   {
     std::string plainName = node->name()->getPlainString();
 
-    BuiltInCallable* function = _getFunction(plainName, node->ns());
+    Callable* function = _getFunction(plainName, node->ns());
 
-    Value* value = _runFunctionCallable(node->arguments(), function, node->pstate());
+    if (function == nullptr) {
+      function = SASS_MEMORY_NEW(PlainCssCallable,
+        "[pstate]", performInterpolation(node->name()));
+    }
+
+    // LOCAL_FLAG(oldInFunction)
+    Value* value = _runFunctionCallable(
+      node->arguments(), function, node->pstate());
 
     return value;
 
-    return SASS_MEMORY_NEW(StringLiteral, "pstate", "HELLO");
   }
 
   Value* Eval::operator()(FunctionExpression* c)

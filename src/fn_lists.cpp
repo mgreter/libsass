@@ -25,9 +25,43 @@ namespace Sass {
       {
         Value* list = arguments[0];
         Value* index = arguments[1];
-        return SASS_MEMORY_NEW(Number,
-          arguments[0]->pstate(),
-          arguments[0]->lengthAsList());
+        std::vector<ValueObj> values = list->asVector();
+        return values[list->sassIndexToListIndex(index, "n")];
+      }
+
+      Value* setNth(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "setNth");
+      }
+
+      Value* join(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "join");
+      }
+
+      Value* append(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "append");
+      }
+
+      Value* zip(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "zip");
+      }
+
+      Value* index(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "index");
+      }
+
+      Value* separator(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "separator");
+      }
+
+      Value* isBracketed(const std::vector<ValueObj>& arguments)
+      {
+        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "isBracketed");
       }
 
     }

@@ -24,6 +24,12 @@ namespace Sass {
     // Return the length of this item as a list
     virtual long lengthAsList() const { return 1; }
 
+    virtual std::vector<ValueObj> asVector() {
+      std::vector<ValueObj> list;
+      list.push_back(this);
+      return list;
+    }
+
     // Return normalized index for vector from overflowable sass index
     long sassIndexToListIndex(Value* sassIndex, std::string name = "");
 

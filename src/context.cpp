@@ -878,9 +878,17 @@ namespace Sass {
     // register_function(ctx, random_sig, random, env);
 
     // List Functions
-    register_function(ctx, length_sig, length, env);
     register_built_in_function(ctx, env, "length", "$list", Functions::Lists::length);
+    register_built_in_function(ctx, env, "nth", "$list, $n", Functions::Lists::nth);
+    register_built_in_function(ctx, env, "set-nth", "$list, $n, $value", Functions::Lists::setNth);
+    register_built_in_function(ctx, env, "join", "$list1, $list2, $separator: auto, $bracketed: auto", Functions::Lists::join);
+    register_built_in_function(ctx, env, "append", "$list, $val, $separator: auto", Functions::Lists::append);
+    register_built_in_function(ctx, env, "zip", "$lists", Functions::Lists::zip);
+    register_built_in_function(ctx, env, "index", "$list, $value", Functions::Lists::index);
+    register_built_in_function(ctx, env, "separator", "$list", Functions::Lists::separator);
+    register_built_in_function(ctx, env, "is-bracketed", "$list", Functions::Lists::isBracketed);
 
+    // register_function(ctx, length_sig, length, env);
     // register_function(ctx, nth_sig, nth, env);
     // register_function(ctx, set_nth_sig, set_nth, env);
     // register_function(ctx, index_sig, index, env);

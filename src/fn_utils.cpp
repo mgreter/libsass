@@ -165,8 +165,8 @@ namespace Sass {
     Callable(pstate) {}
 
   PlainCssCallable::PlainCssCallable(
-    ParserState pstate) :
-    Callable(pstate) {}
+    ParserState pstate, std::string name) :
+    Callable(pstate), name_(name) {}
 
   BuiltInCallable::BuiltInCallable(
     std::string name,

@@ -18,7 +18,7 @@ namespace Sass {
     { }
 
     SassScriptException::SassScriptException(std::string msg, std::string name)
-      : std::runtime_error(name.empty() ? msg : name + ": " + msg) {}
+      : std::runtime_error(msg), msg(name.empty() ? msg : name + ": " + msg) {}
 
     InvalidSass::InvalidSass(ParserState pstate, Backtraces traces, std::string msg)
     : Base(pstate, msg, traces)

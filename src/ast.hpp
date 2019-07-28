@@ -1272,8 +1272,9 @@ namespace Sass {
   };
 
   class PlainCssCallable : public Callable {
+    ADD_PROPERTY(std::string, name);
   public:
-    PlainCssCallable(ParserState pstate);
+    PlainCssCallable(ParserState pstate, std::string name);
   };
 
   class BuiltInCallable : public Callable {

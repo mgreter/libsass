@@ -43,7 +43,7 @@ namespace Sass {
     std::string serialize(AST_Node* node);
 
     std::string joinStrings(std::vector<std::string>& strings, const char* const separator);
-    std::string performInterpolation(InterpolationObj interpolation, bool warnForColor);
+    std::string performInterpolation(InterpolationObj interpolation, bool warnForColor = false);
     std::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
 
     // for evaluating function bodies

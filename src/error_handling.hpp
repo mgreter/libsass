@@ -109,8 +109,10 @@ namespace Sass {
     };
 
     class SassScriptException : public std::runtime_error {
+      std::string msg;
     public:
       SassScriptException(std::string msg, std::string name = "");
+      virtual const char* what() const throw() { return msg.c_str(); }
       ~SassScriptException() throw() {};
     };
 

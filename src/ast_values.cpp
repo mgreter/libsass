@@ -35,19 +35,23 @@ namespace Sass {
   }
 
   Color* Value::assertColor(std::string name) {
-    throw Exception::SassScriptException("$this is not a color.", name);
+    throw Exception::SassScriptException(
+      "$this is not a color.", name);
   }
 
   Map* Value::assertMap(std::string name) {
-    throw Exception::SassScriptException("$this is not a map.", name);
+    throw Exception::SassScriptException(
+      "$this is not a map.", name);
   }
 
   Number* Value::assertNumber(std::string name) {
-    throw Exception::SassScriptException("$this is not a number.", name);
+    throw Exception::SassScriptException(
+      "$this is not a number.", name);
   }
 
   String* Value::assertString(std::string name) {
-    throw Exception::SassScriptException("$this is not a string.", name);
+    throw Exception::SassScriptException(
+      "$this is not a string.", name);
   }
 
   Boolean* Value::greaterThan(Value* other) {
