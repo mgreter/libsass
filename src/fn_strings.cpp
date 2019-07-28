@@ -154,8 +154,8 @@ namespace Sass {
         // No matter what the start index is, an end
         // index of 0 will produce an empty string.
         long endInt = end->assertNoUnits("end")->assertInt(epsilon);
-        if (endInt == 0) return SASS_MEMORY_NEW(String_Quoted,
-          pstate, "", string->quote_mark());
+        if (endInt == 0) return SASS_MEMORY_NEW(
+          String_Quoted, pstate, "\"\"");
 
         long begInt = beg->assertNoUnits("start")->assertInt(epsilon);
         begInt = _codepointForIndex(begInt, len, false);
@@ -163,8 +163,7 @@ namespace Sass {
 
         if (endInt == len) endInt = len - 1;
         if (endInt < begInt) return SASS_MEMORY_NEW(
-          String_Quoted, pstate, "",
-          string->quote_mark());
+          String_Quoted, pstate, "\"\"");
 
         std::string value(string->value());
         std::string::iterator begIt = value.begin();
@@ -176,8 +175,7 @@ namespace Sass {
 
         return SASS_MEMORY_NEW(
           String_Constant, pstate,
-          Sass::quote(sliced),
-          string->quote_mark());
+          Sass::quote(sliced));
       }
 
       BUILT_IN_FN(uniqueId)

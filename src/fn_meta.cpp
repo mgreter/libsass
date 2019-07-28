@@ -37,8 +37,15 @@ namespace Sass {
 
       BUILT_IN_FN(keywords)
       {
-        return SASS_MEMORY_NEW(SassString,
-          pstate, "keywords");
+        SassArgumentList* argumentList = arguments[0]->assertArgumentList("args");
+        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+        SassMapObj map = SASS_MEMORY_NEW(SassMap, arguments[0]->pstate());
+        for (auto kv : keywords) {
+          // Wrap string key into a sass value
+          map->insert(SASS_MEMORY_NEW(String_Constant,
+            kv.second->pstate(), kv.first), kv.second);
+        }
+        return map.detach();
       }
 
       BUILT_IN_FN(featureExists)
