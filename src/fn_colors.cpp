@@ -220,7 +220,7 @@ namespace Sass {
       SassNumber* alpha = arguments[1]->assertNumber("alpha");
       color = SASS_MEMORY_COPY(color);
       color->a(_percentageOrUnitless2(
-        alpha, 1.0, "alpha", {}));
+        alpha, 1.0, "$alpha", {}));
       color->disp("");
       return color;
     }

@@ -27,9 +27,10 @@ namespace Sass {
     long index = sassIndex->assertNumber(name)->assertInt(epsilon, name);
     if (index == 0) throw Exception::SassScriptException("List index may not be 0.", name);
     if (abs(index) > lengthAsList()) {
-      throw Exception::SassScriptException(
-        "Invalid index $sassIndex for a list with ${lengthAsList} elements.",
-        name);
+      std::stringstream strm;
+      strm << "Invalid index " << index << " for a list ";
+      strm << "with " << lengthAsList() << " elements.";
+      throw Exception::SassScriptException(strm.str(), name);
     }
 
     return index < 0 ? lengthAsList() + index : index - 1;

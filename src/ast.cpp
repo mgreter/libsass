@@ -972,7 +972,7 @@ namespace Sass {
       }
       else if (argument->value() == nullptr) {
         throw Exception::InvalidSyntax(argument->pstate(), traces,
-          "Missing argument " + argument->name());
+          "Missing argument " + argument->name() + ".");
       }
     }
 
