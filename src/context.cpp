@@ -780,10 +780,6 @@ namespace Sass {
   }
 
 
-  BUILT_IN_FN(foo) {
-    return SASS_MEMORY_NEW(String_Constant, "[pstate]", "ASD");
-  }
-
   void register_built_in_function(Context& ctx, Env* env, std::string name, std::string prototype, SassFnSig cb)
   {
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
@@ -804,8 +800,6 @@ namespace Sass {
   void register_built_in_functions(Context& ctx, Env* env)
   {
     using namespace Functions;
-
-    register_built_in_function(ctx, env, "foo", "", foo);
 
     // register_overload_stub(ctx, "rgb", env, 1);
     // register_function(ctx, rgb_4_sig, rgb_4, 4, env);

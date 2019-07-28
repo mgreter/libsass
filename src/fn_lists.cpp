@@ -114,14 +114,14 @@ namespace Sass {
 
       BUILT_IN_FN(separator)
       {
-        return arguments[0]->separator() == SASS_COMMA
-          ? SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "comma") // SassString("comma", quotes: false)
-          : SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "space"); // SassString("space", quotes: false))
+        return SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(),
+          arguments[0]->separator() == SASS_COMMA ? "comma" : "space");
       }
 
       BUILT_IN_FN(isBracketed)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "isBracketed");
+        return SASS_MEMORY_NEW(Boolean, pstate,
+          arguments[0]->hasBrackets());
       }
 
     }
