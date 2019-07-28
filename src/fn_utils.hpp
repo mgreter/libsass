@@ -14,7 +14,9 @@
 namespace Sass {
 
   // Returns whether [number1] and [number2] are equal within [epsilon].
-  bool fuzzyEquals(double number1, double number2, double epsilon);
+  inline bool fuzzyEquals(double number1, double number2, double epsilon) {
+    return abs(number1 - number2) < epsilon;
+  }
 
   /// `1 / epsilon`, cached since [math.pow] may not be computed at compile-time
   /// and thus this probably won't be constant-folded.
@@ -24,43 +26,82 @@ namespace Sass {
   // int fuzzyHashCode(num number) = > (number * _inverseEpsilon).round().hashCode;
 
   // Returns whether [number1] is less than [number2], and not [fuzzyEquals].
-  bool fuzzyLessThan(double number1, double number2, double epsilon);
+  inline bool fuzzyLessThan(double number1, double number2, double epsilon) {
+    return number1 < number2 && !fuzzyEquals(number1, number2, epsilon);
+  }
 
   // Returns whether [number1] is less than [number2], or [fuzzyEquals].
-  bool fuzzyLessThanOrEquals(double number1, double number2, double epsilon);
+  inline bool fuzzyLessThanOrEquals(double number1, double number2, double epsilon) {
+    return number1 < number2 || fuzzyEquals(number1, number2, epsilon);
+  }
 
   // Returns whether [number1] is greater than [number2], and not [fuzzyEquals].
-  bool fuzzyGreaterThan(double number1, double number2, double epsilon);
+  inline bool fuzzyGreaterThan(double number1, double number2, double epsilon) {
+    return number1 > number2 && !fuzzyEquals(number1, number2, epsilon);
+  }
 
   // Returns whether [number1] is greater than [number2], or [fuzzyEquals].
-  bool fuzzyGreaterThanOrEquals(double number1, double number2, double epsilon);
+  inline bool fuzzyGreaterThanOrEquals(double number1, double number2, double epsilon) {
+    return number1 > number2 || fuzzyEquals(number1, number2, epsilon);
+  }
 
   // Returns whether [number] is [fuzzyEquals] to an integer.
-  bool fuzzyIsInt(double number, double epsilon);
+  inline bool fuzzyIsInt(double number, double epsilon) {
+    // if (number is int) return true;
+
+    // Check against 0.5 rather than 0.0 so that we catch numbers that
+    // are both very slightly above an integer, and very slightly below.
+    return fuzzyEquals(fmod(abs(number - 0.5), 1.0), 0.5, epsilon);
+  }
 
 
   /// If [number] is an integer according to [fuzzyIsInt], returns it as an
 /// [int].
 ///
 /// Otherwise, returns `NAN`.
-  long fuzzyAsInt(double number, double epsilon);
+  inline long fuzzyAsInt(double number, double epsilon) {
+    return lround(number);
+    // return fuzzyIsInt(number, epsilon) ?
+    //   lround(number) : NAN;
+  }
 
   /// Rounds [number] to the nearest integer.
   ///
   /// This rounds up numbers that are [fuzzyEquals] to `X.5`.
-  long fuzzyRound(double number, double epsilon);
+  inline long fuzzyRound(double number, double epsilon) {
+    // If the number is within epsilon of X.5,
+    // round up (or down for negative numbers).
+    if (number > 0) {
+      return lround(fuzzyLessThan(
+        fmod(number, 1.0), 0.5, epsilon)
+          ? floor(number) : ceill(number));
+    }
+    return lround(fuzzyLessThanOrEquals(
+      fmod(number, 1.0), 0.5, epsilon)
+        ? floorl(number) : ceill(number));
+  }
 
   /// Returns [number] if it's within [min] and [max], or `NAN` if it's not.
   ///
   /// If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
   /// appropriate value.
-  double fuzzyCheckRange(double number, double min, double max, double epsilon);
+  inline double fuzzyCheckRange(double number, double min, double max, double epsilon) {
+    if (fuzzyEquals(number, min, epsilon)) return min;
+    if (fuzzyEquals(number, max, epsilon)) return max;
+    if (number > min && number < max) return number;
+    return NAN;
+  }
 
   /// Throws a [RangeError] if [number] isn't within [min] and [max].
   ///
   /// If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
   /// appropriate value. [name] is used in error reporting.
-  double fuzzyAssertRange(double number, double min, double max, double epsilon, std::string name = "");
+  inline double fuzzyAssertRange(double number, double min, double max, double epsilon, std::string name = "") {
+    double result = fuzzyCheckRange(number, min, max, epsilon);
+    if (result != NAN) return result;
+    throw std::range_error("must be between $min and $max.");
+    // throw RangeError.value(number, name, "must be between $min and $max.");
+  }
 
 
   #define FN_PROTOTYPE \
