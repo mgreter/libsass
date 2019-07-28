@@ -955,6 +955,14 @@ namespace Sass {
         std::make_pair("$channels", Functions::Colors::hsla_1),
       });
 
+    register_built_in_function(ctx, env, "red", "$color", Functions::Colors::red);
+    register_built_in_function(ctx, env, "green", "$color", Functions::Colors::green);
+    register_built_in_function(ctx, env, "blue", "$color", Functions::Colors::blue);
+
+    register_built_in_function(ctx, env, "hue", "$color", Functions::Colors::hue);
+    register_built_in_function(ctx, env, "lightness", "$color", Functions::Colors::lightness);
+    register_built_in_function(ctx, env, "saturation", "$color", Functions::Colors::saturation);
+
     // register_function(ctx, length_sig, length, env);
     // register_function(ctx, nth_sig, nth, env);
     // register_function(ctx, set_nth_sig, set_nth, env);

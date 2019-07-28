@@ -222,23 +222,29 @@ namespace Sass {
 
       BUILT_IN_FN(red)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "red");
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          arguments[0]->assertColor("color")->r());
       }
 
       BUILT_IN_FN(green)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "green");
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          arguments[0]->assertColor("color")->g());
       }
 
 
       BUILT_IN_FN(blue)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "blue");
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          arguments[0]->assertColor("color")->b());
       }
 
 
       BUILT_IN_FN(mix)
       {
+        Color* color1 = arguments[0]->assertColor("color1");
+        Color* color2 = arguments[1]->assertColor("color2");
+        Number* weight = arguments[2]->assertNumber("weight");
         return SASS_MEMORY_NEW(SassString, pstate, "mix");
       }
 
@@ -251,19 +257,22 @@ namespace Sass {
 
       BUILT_IN_FN(hue)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "hue");
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          arguments[0]->assertColorHsla("color")->h(), "deg");
       }
 
 
       BUILT_IN_FN(saturation)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "saturation");
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          arguments[0]->assertColorHsla("color")->s(), "%");
       }
 
 
       BUILT_IN_FN(lightness)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "lightness");
+        return SASS_MEMORY_NEW(SassNumber, pstate,
+          arguments[0]->assertColorHsla("color")->l(), "%");
       }
 
 

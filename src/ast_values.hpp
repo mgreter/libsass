@@ -56,6 +56,7 @@ namespace Sass {
     Value* assertValue(std::string name = "");
 
     virtual SassColor* assertColor(std::string name = "");
+    virtual Color_HSLA* assertColorHsla(std::string name = "");
 
     // SassFunction assertFunction(std::string name = "") = >
     //   throw _exception("$this is not a function reference.", name);
@@ -444,6 +445,10 @@ namespace Sass {
       return this;
     }
 
+    Color_HSLA* assertColorHsla(std::string name = "") override {
+      return toHSLA();
+    }
+
     bool operator== (const Value& rhs) const override;
 
     ATTACH_COPY_OPERATIONS(Color_RGBA)
@@ -465,7 +470,11 @@ namespace Sass {
     static std::string type_name() { return "color"; }
 
     SassColor* assertColor(std::string name = "") override {
-      return this->toRGBA();
+      return toRGBA();
+    }
+
+    Color_HSLA* assertColorHsla(std::string name = "") override {
+      return this;
     }
 
     size_t hash() const override;

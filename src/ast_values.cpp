@@ -44,6 +44,11 @@ namespace Sass {
       inspect() + " is not a color.", name);
   }
 
+  Color_HSLA* Value::assertColorHsla(std::string name) {
+    throw Exception::SassScriptException(
+      inspect() + " is not a color.", name);
+  }
+
   SassMap* Value::assertMap(std::string name) {
     throw Exception::SassScriptException(
       inspect() + " is not a map.", name);
