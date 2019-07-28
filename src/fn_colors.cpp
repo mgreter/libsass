@@ -12,14 +12,11 @@
 
 namespace Sass {
 
-  double clamp(double val, double lo, double hi)
-  {
-    if (val < lo) return lo;
-    if (val > hi) return hi;
-    return val;
-  }
-
   namespace Functions {
+
+    double scaleValue(double current, double scale, double max) {
+      return current + (scale > 0.0 ? max - current : current) * scale;
+    }
 
     bool isVar(const Value* obj) {
       const SassString* s = Cast<SassString>(obj);
@@ -399,13 +396,11 @@ namespace Sass {
           arguments[0]->assertColor("color")->g());
       }
 
-
       BUILT_IN_FN(blue)
       {
         return SASS_MEMORY_NEW(SassNumber, pstate,
           arguments[0]->assertColor("color")->b());
       }
-
 
       BUILT_IN_FN(mix)
       {
@@ -415,19 +410,16 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassString, pstate, "mix");
       }
 
-
       BUILT_IN_FN(invert)
       {
         return SASS_MEMORY_NEW(SassString, pstate, "invert");
       }
-
 
       BUILT_IN_FN(hue)
       {
         return SASS_MEMORY_NEW(SassNumber, pstate,
           arguments[0]->assertColorHsla("color")->h(), "deg");
       }
-
 
       BUILT_IN_FN(saturation)
       {
@@ -442,7 +434,6 @@ namespace Sass {
           arguments[0]->assertColorHsla("color")->l(), "%");
       }
 
-
       BUILT_IN_FN(adjustHue)
       {
         SassColor* color = arguments[0]->assertColor("color");
@@ -451,7 +442,6 @@ namespace Sass {
         copy->h(copy->h() + degrees->value());
         return copy.detach();
       }
-
 
       BUILT_IN_FN(complement)
       {
@@ -465,7 +455,6 @@ namespace Sass {
           return _functionString("grayscale",
             arguments, pstate);
         }
-        // 
         SassColor* color = arguments[0]->assertColor("color");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->s(0.0); // remove saturation
@@ -542,19 +531,48 @@ namespace Sass {
 
       BUILT_IN_FN(alpha_1)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "alpha_1");
+        Value* argument = arguments[0];
+        /*
+        if (argument is SassString &&
+          !argument.hasQuotes &&
+          argument.text.contains(_microsoftFilterStart)) {
+          // Suport the proprietary Microsoft alpha() function.
+          return _functionString("alpha", arguments);
+        }
+        */
+        SassColor* color = argument->assertColor("color");
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
       }
 
 
       BUILT_IN_FN(alpha_any)
       {
+        std::vector<ValueObj> argList
+          = arguments[0]->asVector();
+        /*
+        if (argList.isNotEmpty &&
+          argList.every((argument) = >
+            argument is SassString &&
+            !argument.hasQuotes &&
+            argument.text.contains(_microsoftFilterStart))) {
+          // Suport the proprietary Microsoft alpha() function.
+          return _functionString("alpha", arguments);
+        }
+        */
+
         return SASS_MEMORY_NEW(SassString, pstate, "alpha_any");
       }
 
 
       BUILT_IN_FN(opacity)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "opacity");
+        // Gracefully handle if number is passed
+        if (Cast<SassNumber>(arguments[0])) {
+          return _functionString("opacity",
+            arguments, pstate);
+        }
+        SassColor* color = arguments[0]->assertColor("color");
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
       }
 
 
@@ -573,6 +591,281 @@ namespace Sass {
         ss << std::hex << std::setw(2) << fuzzyRound(g, epsilon);
         ss << std::hex << std::setw(2) << fuzzyRound(b, epsilon);
         return SASS_MEMORY_NEW(SassString, pstate, ss.str());
+      }
+
+      Number* getKwdArg(NormalizedMap<ValueObj>& keywords, std::string name)
+      {
+        auto kv = keywords.find(name);
+        // Return null since args are optional
+        if (kv == keywords.end()) return nullptr;
+        // Get the number object from found keyword
+        SassNumber* num = kv->second->assertNumber(name);
+        // Only consume keyword once
+        keywords.erase(name);
+        // Return the number
+        return num;
+      }
+
+      Number* getKwdArgInRang(NormalizedMap<ValueObj>& keywords,
+        std::string name, double min, double max)
+      {
+        auto kv = keywords.find(name);
+        // Return null since args are optional
+        if (kv == keywords.end()) return nullptr;
+        // Get the number object from found keyword
+        SassNumber* rv = kv->second->assertNumber(name);
+        // Only consume keyword once
+        keywords.erase(name);
+        // Return the number
+        return rv;
+      }
+
+      BUILT_IN_FN(adjust)
+      {
+        SassColor* color = arguments[0]->assertColor("color");
+        SassArgumentList* argumentList = arguments[1]
+          ->assertArgumentList("kwargs");
+        std::vector<ValueObj> positional = argumentList->asVector();
+        if (!argumentList->asVector().empty()) {
+          throw Exception::SassRuntimeException(
+            "Only one positional argument is allowed. All "
+            "other arguments must be passed by name.", pstate);
+        }
+
+        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+
+        SassNumber* nr_r = getKwdArg(keywords, "red");
+        SassNumber* nr_g = getKwdArg(keywords, "green");
+        SassNumber* nr_b = getKwdArg(keywords, "blue");
+        SassNumber* nr_h = getKwdArg(keywords, "hue");
+        SassNumber* nr_s = getKwdArg(keywords, "saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "alpha");
+
+        double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, epsilon, "red") : 0.0;
+        double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, epsilon, "green") : 0.0;
+        double b = nr_b ? nr_b->valueInRange(-255.0, 255.0, epsilon, "blue") : 0.0;
+        double s = nr_s ? nr_s->valueInRange(-100.0, 100.0, epsilon, "saturation") : 0.0;
+        double l = nr_l ? nr_l->valueInRange(-100.0, 100.0, epsilon, "lightness") : 0.0;
+        double a = nr_a ? nr_a->valueInRange(-1.0, 1.0, epsilon, "alpha") : 0.0;
+        double h = nr_h ? nr_h->value() : 0.0; // Hue is a very special case
+
+        if (!keywords.empty()) {
+          std::vector<std::string> keys;
+          for (auto kv : keywords) {
+            keys.push_back(kv.first);
+          }
+          std::stringstream msg;
+          size_t iL = keys.size();
+          msg << "No argument" <<
+            (iL > 1 ? "s" : "") <<
+            " named ";
+          for (size_t i = 0; i < iL; i++) {
+            if (i > 0) {
+              msg << (i == iL - 1 ?
+                " and " : ", ");
+            }
+            msg << keys[i];
+          }
+          msg << ".";
+          throw Exception::SassRuntimeException(msg.str(), pstate);
+        }
+
+        bool hasRgb = r || g || b;
+        bool hasHsl = h || s || l;
+
+        if (hasRgb && hasHsl) {
+          throw Exception::SassRuntimeException(
+            "RGB parameters may not be passed along with HSL parameters.",
+            pstate);
+        }
+        else if (hasRgb) {
+          Color_RGBA_Obj c = color->copyAsRGBA();
+          if (nr_r) c->r(clamp(c->r() + r, 0.0, 255.0));
+          if (nr_g) c->g(clamp(c->g() + g, 0.0, 255.0));
+          if (nr_b) c->b(clamp(c->b() + b, 0.0, 255.0));
+          if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (hasHsl) {
+          Color_HSLA_Obj c = color->copyAsHSLA();
+          if (nr_h) c->h(absmod(c->h() + h, 360.0));
+          if (nr_s) c->s(clamp(c->s() + s, 0.0, 100.0));
+          if (nr_l) c->l(clamp(c->l() + l, 0.0, 100.0));
+          if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (a) {
+          Color_Obj c = SASS_MEMORY_COPY(color);
+          if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
+          return c.detach();
+        }
+        return color;
+      }
+
+      BUILT_IN_FN(change)
+      {
+        SassColor* color = arguments[0]->assertColor("color");
+        SassArgumentList* argumentList = arguments[1]
+          ->assertArgumentList("kwargs");
+        std::vector<ValueObj> positional = argumentList->asVector();
+        if (!argumentList->asVector().empty()) {
+          throw Exception::SassRuntimeException(
+            "Only one positional argument is allowed. All "
+            "other arguments must be passed by name.", pstate);
+        }
+
+        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+
+        SassNumber* nr_r = getKwdArg(keywords, "red");
+        SassNumber* nr_g = getKwdArg(keywords, "green");
+        SassNumber* nr_b = getKwdArg(keywords, "blue");
+        SassNumber* nr_h = getKwdArg(keywords, "hue");
+        SassNumber* nr_s = getKwdArg(keywords, "saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "alpha");
+
+        double r = nr_r ? nr_r->valueInRange(0.0, 255.0, epsilon, "red") : 0.0;
+        double g = nr_g ? nr_g->valueInRange(0.0, 255.0, epsilon, "green") : 0.0;
+        double b = nr_b ? nr_b->valueInRange(0.0, 255.0, epsilon, "blue") : 0.0;
+        double s = nr_s ? nr_s->valueInRange(0.0, 100.0, epsilon, "saturation") : 0.0;
+        double l = nr_l ? nr_l->valueInRange(0.0, 100.0, epsilon, "lightness") : 0.0;
+        double a = nr_a ? nr_a->valueInRange(0.0, 1.0, epsilon, "alpha") : 0.0;
+        double h = nr_h ? nr_h->value() : 0.0; // Hue is a very special case
+
+        if (!keywords.empty()) {
+          std::vector<std::string> keys;
+          for (auto kv : keywords) {
+            keys.push_back(kv.first);
+          }
+          std::stringstream msg;
+          size_t iL = keys.size();
+          msg << "No argument" <<
+            (iL > 1 ? "s" : "") <<
+            " named ";
+          for (size_t i = 0; i < iL; i++) {
+            if (i > 0) {
+              msg << (i == iL - 1 ?
+                " and " : ", ");
+            }
+            msg << keys[i];
+          }
+          msg << ".";
+          throw Exception::SassRuntimeException(msg.str(), pstate);
+        }
+
+        bool hasRgb = r || g || b;
+        bool hasHsl = h || s || l;
+
+        if (hasRgb && hasHsl) {
+          throw Exception::SassRuntimeException(
+            "RGB parameters may not be passed along with HSL parameters.",
+            pstate);
+        }
+        else if (hasRgb) {
+          Color_RGBA_Obj c = color->copyAsRGBA();
+          if (nr_r) c->r(clamp(r, 0.0, 255.0));
+          if (nr_g) c->g(clamp(g, 0.0, 255.0));
+          if (nr_b) c->b(clamp(b, 0.0, 255.0));
+          if (nr_a) c->a(clamp(a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (hasHsl) {
+          Color_HSLA_Obj c = color->copyAsHSLA();
+          if (nr_h) c->h(absmod(h, 360.0));
+          if (nr_s) c->s(clamp(s, 0.0, 100.0));
+          if (nr_l) c->l(clamp(l, 0.0, 100.0));
+          if (nr_a) c->a(clamp(a, 0.0, 1.0));
+          return c.detach();
+        }
+        else if (a) {
+          Color_Obj c = SASS_MEMORY_COPY(color);
+          if (nr_a) c->a(clamp(a, 0.0, 1.0));
+          return c.detach();
+        }
+        return color;
+      }
+
+      BUILT_IN_FN(scale)
+      {
+        SassColor* color = arguments[0]->assertColor("color");
+        SassArgumentList* argumentList = arguments[1]
+          ->assertArgumentList("kwargs");
+        std::vector<ValueObj> positional = argumentList->asVector();
+        if (!argumentList->asVector().empty()) {
+          throw Exception::SassRuntimeException(
+            "Only one positional argument is allowed. All "
+            "other arguments must be passed by name.", pstate);
+        }
+
+        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+
+        SassNumber* nr_r = getKwdArg(keywords, "$red");
+        SassNumber* nr_g = getKwdArg(keywords, "$green");
+        SassNumber* nr_b = getKwdArg(keywords, "$blue");
+        SassNumber* nr_h = getKwdArg(keywords, "$hue");
+        SassNumber* nr_s = getKwdArg(keywords, "$saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "$lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "$alpha");
+
+        double r = nr_r ? nr_r->assertUnit("%", "red")->valueInRange(-100.0, 100.0, epsilon, "red") / 100.0 : 0.0;
+        double g = nr_g ? nr_g->assertUnit("%", "green")->valueInRange(-100.0, 100.0, epsilon, "green") / 100.0 : 0.0;
+        double b = nr_b ? nr_b->assertUnit("%", "blue")->valueInRange(-100.0, 100.0, epsilon, "blue") / 100.0 : 0.0;
+        double h = nr_h ? nr_h->assertUnit("%", "hue")->valueInRange(-100.0, 100.0, epsilon, "hue") / 100.0 : 0.0;
+        double s = nr_s ? nr_s->assertUnit("%", "saturation")->valueInRange(-100.0, 100.0, epsilon, "saturation") / 100.0 : 0.0;
+        double l = nr_l ? nr_l->assertUnit("%", "lightness")->valueInRange(-100.0, 100.0, epsilon, "lightness") / 100.0 : 0.0;
+        double a = nr_a ? nr_a->assertUnit("%", "alpha")->valueInRange(-100.0, 100.0, epsilon, "alpha") / 100.0 : 0.0;
+
+        if (!keywords.empty()) {
+          std::vector<std::string> keys;
+          for (auto kv : keywords) {
+            keys.push_back(kv.first);
+          }
+          std::stringstream msg;
+          size_t iL = keys.size();
+          msg << "No argument" <<
+            (iL > 1 ? "s" : "") <<
+            " named ";
+          for (size_t i = 0; i < iL; i++) {
+            if (i > 0) {
+              msg << (i == iL - 1 ?
+                " and " : ", ");
+            }
+            msg << keys[i];
+          }
+          msg << ".";
+          throw Exception::SassRuntimeException(msg.str(), pstate);
+        }
+
+        bool hasRgb = r || g || b;
+        bool hasHsl = h || s || l;
+
+        if (hasRgb && hasHsl) {
+          throw Exception::SassRuntimeException(
+            "RGB parameters may not be passed along with HSL parameters.",
+            pstate);
+        }
+        else if (hasRgb) {
+          Color_RGBA_Obj c = color->copyAsRGBA();
+          if (nr_r) c->r(scaleValue(c->r(), r, 255.0));
+          if (nr_g) c->g(scaleValue(c->g(), g, 255.0));
+          if (nr_b) c->b(scaleValue(c->b(), b, 255.0));
+          if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
+          return c.detach();
+        }
+        else if (hasHsl) {
+          Color_HSLA_Obj c = color->copyAsHSLA();
+          if (nr_s) c->s(scaleValue(c->s(), s, 100.0));
+          if (nr_l) c->l(scaleValue(c->l(), l, 100.0));
+          if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
+          return c.detach();
+        }
+        else if (a) {
+          Color_Obj c = SASS_MEMORY_COPY(color);
+          if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
+          return c.detach();
+        }
+        return color;
       }
 
     }
@@ -606,10 +899,6 @@ namespace Sass {
         || starts_with(str, "env(")
         || starts_with(str, "min(")
         || starts_with(str, "max(");
-    }
-
-    double scaleValue(double current, double scale, double max) {
-      return current + (scale > 0 ? max - current : current) * scale;
     }
 
     void checkPositionalArgs(List* args, Backtraces traces)
@@ -1359,7 +1648,7 @@ namespace Sass {
       Color* col = ARGCOL("$color");
       double amount = DARG_U_PRCT("$amount");
       Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->l(clip(copy->l() + amount, 0.0, 100.0));
+      copy->l(clamp(copy->l() + amount, 0.0, 100.0));
       return copy.detach();
 
     }
@@ -1370,7 +1659,7 @@ namespace Sass {
       Color* col = ARGCOL("$color");
       double amount = DARG_U_PRCT("$amount");
       Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->l(clip(copy->l() - amount, 0.0, 100.0));
+      copy->l(clamp(copy->l() - amount, 0.0, 100.0));
       return copy.detach();
     }
 
@@ -1397,7 +1686,7 @@ namespace Sass {
       Color_HSLA_Obj copy = color->copyAsHSLA();
       valueInRange(amount->value(), 0.0, 100.0,
         "$amount", amount->pstate(), traces);
-      copy->s(clip(copy->s() + amount->value(), 0.0, 100.0));
+      copy->s(clamp(copy->s() + amount->value(), 0.0, 100.0));
       return copy.detach();
     }
 
@@ -1407,7 +1696,7 @@ namespace Sass {
       Color* col = ARGCOL("$color");
       double amount = DARG_U_PRCT("$amount");
       Color_HSLA_Obj copy = col->copyAsHSLA();
-      copy->s(clip(copy->s() - amount, 0.0, 100.0));
+      copy->s(clamp(copy->s() - amount, 0.0, 100.0));
       return copy.detach();
     }
 
@@ -1630,22 +1919,22 @@ namespace Sass {
         }
 
         Color_RGBA_Obj c = color->copyAsRGBA();
-        if (r) c->r(fuzzyRound2(scaleValue(c->r(), r->value() / 100.0, 255.0)));
-        if (g) c->g(fuzzyRound2(scaleValue(c->g(), g->value() / 100.0, 255.0)));
-        if (b) c->b(fuzzyRound2(scaleValue(c->b(), b->value() / 100.0, 255.0)));
-        if (a) c->a(scaleValue(c->a(), a->value() / 100.0, 1.0));
+        // if (r) c->r(fuzzyRound2(scaleValue(c->r(), r->value() / 100.0, 255.0)));
+        // if (g) c->g(fuzzyRound2(scaleValue(c->g(), g->value() / 100.0, 255.0)));
+        // if (b) c->b(fuzzyRound2(scaleValue(c->b(), b->value() / 100.0, 255.0)));
+        // if (a) c->a(scaleValue(c->a(), a->value() / 100.0, 1.0));
         return c.detach();
       }
       else if (hasHsl) {
         Color_HSLA_Obj c = color->copyAsHSLA();
-        if (s) c->s(scaleValue(c->s(), s->value() / 100.0, 100.0));
-        if (l) c->l(scaleValue(c->l(), l->value() / 100.0, 100.0));
-        if (a) c->a(scaleValue(c->a(), a->value() / 100.0, 1.0));
+        // if (s) c->s(scaleValue(c->s(), s->value() / 100.0, 100.0));
+        // if (l) c->l(scaleValue(c->l(), l->value() / 100.0, 100.0));
+        // if (a) c->a(scaleValue(c->a(), a->value() / 100.0, 1.0));
         return c.detach();
       }
       else if (a) {
         Color_Obj c = SASS_MEMORY_COPY(color);
-        c->a(clamp(scaleValue(c->a(), a->value() / 100.0, 1.0), 0.0, 1.0));
+        // c->a(clamp(scaleValue(c->a(), a->value() / 100.0, 1.0), 0.0, 1.0));
         c->a(clip(c->a(), 0.0, 1.0));
         return c.detach();
       }

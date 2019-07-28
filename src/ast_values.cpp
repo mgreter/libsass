@@ -76,6 +76,11 @@ namespace Sass {
     return this->assertString(name);
   }
 
+  SassArgumentList* Value::assertArgumentList(std::string name) {
+    throw Exception::SassScriptException(
+      to_string() + " is not an argument list.", name);
+  }
+
   SassList* Value::changeValues(
     std::vector<ValueObj> values,
     Sass_Separator separator,

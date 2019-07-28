@@ -73,6 +73,8 @@ namespace Sass {
     virtual SassString* assertString(std::string name = "");
     virtual SassString* assertStringOrNull(std::string name = "");
 
+    virtual SassArgumentList* assertArgumentList(std::string name = "");
+
     SassList* changeValues(
       std::vector<ValueObj> values,
       Sass_Separator separator,
@@ -216,6 +218,9 @@ namespace Sass {
   public:
     bool is_arglist() const override final {
       return true;
+    }
+    SassArgumentList* assertArgumentList(std::string name = "") {
+      return this;
     }
     SassArgumentList(ParserState pstate,
       std::vector<ValueObj> values = {},
@@ -365,6 +370,20 @@ namespace Sass {
         "Expected " + inspect() + " to have no units.",
         name);
     }
+
+    bool hasUnit(std::string unit) {
+      return numerators.size() == 1 &&
+        denominators.empty() &&
+        numerators.front() == unit;
+    }
+
+    Number* assertUnit(std::string unit, std::string name = "") {
+      if (hasUnit(unit)) return this;
+      throw Exception::SassScriptException(
+        "Expected " + inspect() + " to have unit \"" + unit + "\".",
+        name);
+    }
+
 
     Number* assertNumber(std::string name = "") override {
       return this;

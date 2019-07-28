@@ -257,5 +257,35 @@ namespace Sass {
   // compile implementation for AST_Node
   template class Environment<AST_Node_Obj>;
 
+  std::string pluralize(std::string singular, size_t size, std::string plural)
+  {
+	  if (size == 1) return singular;
+	  else if (!plural.empty()) return plural;
+	  else return singular + "s";
+  }
+
+  std::string toSentence(NormalizedMap<ValueObj>& names, std::string conjunction)
+  {
+	  std::stringstream strm;
+	  size_t L = names.size(), i = 0;
+	  auto it = names.begin();
+	  while (i < L) {
+		  // add conjugation
+		  if (i > 0) {
+			  if (i < L - 1) {
+				  strm << ", ";
+			  }
+			  else {
+				  strm << " " <<
+					  conjunction << " ";
+			  }
+		  }
+      strm << it->first;
+      it++;
+		  i++;
+	  }
+	  return strm.str();
+  }
+
 }
 

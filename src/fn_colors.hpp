@@ -48,6 +48,9 @@ namespace Sass {
       BUILT_IN_FN(opacity);
       BUILT_IN_FN(ieHexStr);
       
+      BUILT_IN_FN(adjust);
+      BUILT_IN_FN(change);
+      BUILT_IN_FN(scale);
 
     }
 

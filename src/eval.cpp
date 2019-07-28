@@ -133,6 +133,7 @@ namespace Sass {
       std::string name(argument->name());
       if (named.count(name) == 1) {
         positional.push_back(named[name]->perform(this));
+        named.erase(name); // consume arguments once
       }
       else {
         positional.push_back(argument->value()->perform(this));
@@ -162,14 +163,11 @@ namespace Sass {
 
     if (argumentList == nullptr) return result.detach();
     if (named.empty()) return result.detach();
-    // if (argumentList.wereKeywordsAccessed) return result;
-
-    error(
-      "No ${pluralize('argument', evaluated.named.keys.length)} named ",
-      // "${toSentence(evaluated.named.keys.map((name) => \"\$$name\"), 'or')}.",
-      "[pstate]", traces);
-
-    return nullptr;
+    /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
+    std::stringstream strm;
+    strm << "No " << pluralize("argument", named.size());
+    strm << " named " << toSentence(named, "or") << ".";
+    throw Exception::SassRuntimeException(strm.str(), pstate);
   }
 
   std::string Eval::serialize(AST_Node* node)

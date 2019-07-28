@@ -971,6 +971,9 @@ namespace Sass {
         std::make_pair("$amount", Functions::Colors::saturate_1),
         std::make_pair("$color, $amount", Functions::Colors::saturate_2),
       });
+    register_built_in_function(ctx, env, "adjust-color", "$color, $kwargs...", Functions::Colors::adjust);
+    register_built_in_function(ctx, env, "change-color", "$color, $kwargs...", Functions::Colors::change);
+    register_built_in_function(ctx, env, "scale-color", "$color, $kwargs...", Functions::Colors::scale);
 
     // Opacity functions
     register_built_in_function(ctx, env, "opacify", "$color, $amount", Functions::Colors::opacify);
