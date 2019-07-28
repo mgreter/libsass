@@ -898,16 +898,16 @@ namespace Sass {
     register_built_in_function(ctx, env, "append", "$list, $val, $separator: auto", Functions::Lists::append);
     register_built_in_function(ctx, env, "zip", "$lists", Functions::Lists::zip);
     register_built_in_function(ctx, env, "index", "$list, $value", Functions::Lists::index);
-    register_built_in_function(ctx, env, "separator", "$list", Functions::Lists::separator);
+    register_built_in_function(ctx, env, "list-separator", "$list", Functions::Lists::separator);
     register_built_in_function(ctx, env, "is-bracketed", "$list", Functions::Lists::isBracketed);
 
     // Map Functions
-    register_built_in_function(ctx, env, "get", "$map, $key", Functions::Maps::get);
-    register_built_in_function(ctx, env, "merge", "$map1, $map2", Functions::Maps::merge);
+    register_built_in_function(ctx, env, "map-get", "$map, $key", Functions::Maps::get);
+    register_built_in_function(ctx, env, "map-merge", "$map1, $map2", Functions::Maps::merge);
     // register_built_in_function(ctx, env, "remove", "$list", Functions::Maps::remove); // overloaded
-    register_built_in_function(ctx, env, "keys", "$map", Functions::Maps::keys);
-    register_built_in_function(ctx, env, "values", "$map", Functions::Maps::values);
-    register_built_in_function(ctx, env, "hasKey", "$map, $key", Functions::Maps::hasKey);
+    register_built_in_function(ctx, env, "map-keys", "$map", Functions::Maps::keys);
+    register_built_in_function(ctx, env, "map-values", "$map", Functions::Maps::values);
+    register_built_in_function(ctx, env, "map-has-key", "$map, $key", Functions::Maps::hasKey);
 
     // Math Functions
     register_built_in_function(ctx, env, "round", "$number", Functions::Math::round);
@@ -967,6 +967,10 @@ namespace Sass {
     register_built_in_function(ctx, env, "lighten", "$color, $amount", Functions::Colors::lighten);
     register_built_in_function(ctx, env, "darken", "$color, $amount", Functions::Colors::darken);
     register_built_in_function(ctx, env, "desaturate", "$color, $amount", Functions::Colors::desaturate);
+    register_built_in_overloads(ctx, env, "saturate", {
+        std::make_pair("$amount", Functions::Colors::saturate_1),
+        std::make_pair("$color, $amount", Functions::Colors::saturate_2),
+      });
 
     // Opacity functions
     register_built_in_function(ctx, env, "opacify", "$color, $amount", Functions::Colors::opacify);

@@ -445,7 +445,11 @@ namespace Sass {
 
       BUILT_IN_FN(adjustHue)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "adjustHue");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* degrees = arguments[1]->assertNumber("degrees");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->h(copy->h() + degrees->value());
+        return copy.detach();
       }
 
 
@@ -454,12 +458,19 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassString, pstate, "complement");
       }
 
-
       BUILT_IN_FN(grayscale)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "grayscale");
+        // Gracefully handle if number is passed
+        if (Cast<SassNumber>(arguments[0])) {
+          return _functionString("grayscale",
+            arguments, pstate);
+        }
+        // 
+        SassColor* color = arguments[0]->assertColor("color");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->s(0.0); // remove saturation
+        return copy.detach();
       }
-
 
       BUILT_IN_FN(lighten)
       {
@@ -471,7 +482,6 @@ namespace Sass {
         return copy.detach();
       }
 
-
       BUILT_IN_FN(darken)
       {
         SassColor* color = arguments[0]->assertColor("color");
@@ -482,16 +492,21 @@ namespace Sass {
         return copy.detach();
       }
 
-
       BUILT_IN_FN(saturate_2)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "saturate_2");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* amount = arguments[1]->assertNumber("amount");
+        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->s(clamp(copy->s() - nr, 0.0, 100.0));
+        return copy.detach();
       }
-
 
       BUILT_IN_FN(saturate_1)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "saturate_1");
+        SassNumber* number = arguments[0]->assertNumber("amount");
+        return SASS_MEMORY_NEW(SassString, pstate,
+          "saturate(" + number->to_css() + ")");
       }
 
       BUILT_IN_FN(desaturate)
