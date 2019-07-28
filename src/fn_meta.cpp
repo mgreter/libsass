@@ -14,8 +14,15 @@ namespace Sass {
 
       BUILT_IN_FN(typeOf)
       {
-        return SASS_MEMORY_NEW(SassString,
-          pstate, "typeOf");
+        if (Cast<SassMap>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "map");
+        if (Cast<SassList>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "list");
+        if (Cast<SassNull>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "null");
+        if (Cast<SassColor>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "color");
+        if (Cast<SassString>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "string");
+        if (Cast<SassNumber>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "number");
+        if (Cast<SassBoolean>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "bool");
+        if (Cast<SassArgumentList>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "arglist");
+        throw Exception::SassRuntimeException("Invalid type for type-of.", pstate);
       }
 
       BUILT_IN_FN(inspect)
