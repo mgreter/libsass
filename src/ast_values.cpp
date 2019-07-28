@@ -21,9 +21,9 @@ namespace Sass {
 
   // Return normalized index for vector from overflowable sass index
 
-  long Value::sassIndexToListIndex(Value * sassIndex, std::string name)
+  long Value::sassIndexToListIndex(Value * sassIndex, double epsilon, std::string name)
   {
-    long index = sassIndex->assertNumber(name)->assertInt(name);
+    long index = sassIndex->assertNumber(name)->assertInt(epsilon, name);
     if (index == 0) throw Exception::SassScriptException("List index may not be 0.", name);
     if (abs(index) > lengthAsList()) {
       throw Exception::SassScriptException(
@@ -386,6 +386,7 @@ namespace Sass {
   : Value(pstate),
     Units(),
     value_(val),
+    epsilon_(0.00001),
     zero_(zero),
     lhsAsSlash_(),
     rhsAsSlash_(),
@@ -420,6 +421,7 @@ namespace Sass {
     : Value(pstate),
     Units(units),
     value_(val),
+    epsilon_(0.00001),
     zero_(zero),
     lhsAsSlash_(),
     rhsAsSlash_(),
@@ -432,6 +434,7 @@ namespace Sass {
   : Value(ptr),
     Units(ptr),
     value_(ptr->value_),
+    epsilon_(ptr->epsilon_),
     lhsAsSlash_(ptr->lhsAsSlash_),
     rhsAsSlash_(ptr->rhsAsSlash_),
     hash_(ptr->hash_)

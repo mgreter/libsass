@@ -812,16 +812,15 @@ namespace Sass {
 
   // Consumes a function declaration.
   // [start] should point before the `@`.
-  Definition* StylesheetParser::_functionRule(Position start)
+  FunctionRule* StylesheetParser::_functionRule(Position start)
   {
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
     std::string name = identifier();
     std::string normalized(name);
     whitespace();
-    // std::cerr << "_functionRule\n"; exit(1);
 
-    Parameters_Obj params = _argumentDeclaration();
+    ArgumentDeclarationObj arguments = _argumentDeclaration2();
 
     if (_inMixin || _inContentBlock) {
       error("Mixins may not contain function declarations.",
@@ -833,19 +832,20 @@ namespace Sass {
     }
 
     std::string fname(Util::unvendor(name));
-    if (fname == "calc" || fname == "element" || fname == "expression" || fname == "url" || fname == "and" || fname == "or" || fname == "not") {
+    if (fname == "calc" || fname == "element" || fname == "expression" ||
+      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
       error("Invalid function name.",
         scanner.pstate(start));
     }
 
     whitespace();
-    Block_Obj block = SASS_MEMORY_NEW(Block, "[pstateP]");
-    Definition* def = _withChildren<Definition>(
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate());
+    FunctionRule* rule = _withChildren<FunctionRule>(
       &StylesheetParser::_functionAtRule,
-      normalized, params, block, Definition::FUNCTION);
+      name, arguments, nullptr, block);
     block->update_pstate(scanner.pstate(start));
-    def->update_pstate(scanner.pstate(start));
-    return def;
+    rule->update_pstate(scanner.pstate(start));
+    return rule;
   }
   // EO _functionRule
 

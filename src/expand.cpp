@@ -1075,6 +1075,16 @@ namespace Sass {
 
   }
 
+  Statement* Expand::operator()(FunctionRule* rule)
+  {
+    Env* env = environment();
+    std::string name(rule->name() + "[f]");
+    env->local_frame()[name] = SASS_MEMORY_NEW(UserDefinedCallable,
+      rule->pstate(), rule, environment());
+    return nullptr;
+  }
+
+
   Statement* Expand::operator()(Definition* d)
   {
     Env* env = environment();

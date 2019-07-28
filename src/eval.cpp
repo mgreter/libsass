@@ -44,6 +44,71 @@ namespace Sass {
   }
   Eval::~Eval() { }
 
+  Value* Eval::_runUserDefinedCallable(
+    ArgumentInvocation* arguments,
+    UserDefinedCallable* callable,
+    Value* (Eval::* run)(UserDefinedCallable*),
+    ParserState pstate)
+  {
+    ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
+    NormalizedMap<ValueObj> named = evaluated->named();
+    std::vector<ValueObj> positional = evaluated->positional();
+    ArgumentDeclaration* declaredArguments = callable->declaration()->arguments();
+    std::vector<ArgumentObj> declared = declaredArguments->arguments();
+
+    Env closure(callable->environment()); // create new closure
+    declaredArguments->verify(positional.size(), named, traces);
+    size_t minLength = std::min(positional.size(), declared.size());
+
+    for (size_t i = 0; i < minLength; i++) {
+      // std::cerr << "Set local " << declared[i]->name() << "\n";
+      closure.set_local(
+        declared[i]->name(),
+        positional[i]->withoutSlash());
+    }
+
+    for (size_t i = positional.size(); i < declared.size(); i++) {
+      Value* value = nullptr;
+      Argument* argument = declared[i];
+      std::string name(argument->name());
+      if (named.count(name) == 1) {
+        value = named[name]->perform(this);
+        named.erase(name);
+      }
+      else {
+        // Use the default arguments
+        value = argument->value()->perform(this);
+      }
+      closure.set_local(
+        argument->name(),
+        value->withoutSlash());
+    }
+
+    SassArgumentListObj argumentList;
+    if (!declaredArguments->restArg().empty()) {
+      std::vector<ValueObj> values;
+      if (positional.size() > declared.size()) {
+        values = sublist(positional, declared.size());
+      }
+      Sass_Separator separator = evaluated->separator();
+      if (separator == SASS_UNDEF) separator = SASS_COMMA;
+      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+        pstate, values, separator, named);
+      closure.set_local(declaredArguments->restArg(), argumentList);
+    }
+
+    exp.env_stack.push_back(&closure);
+    Value* result = (this->*run)(callable);
+    exp.env_stack.pop_back();
+
+    if (named.empty()) return result;
+    if (argumentList == nullptr) return result;
+    // if (argumentList.wereKeywordsAccessed) return result;
+
+    throw Exception::SassScriptException("Nonono");
+
+  }
+
   Value* Eval::_runBuiltInCallable(
     ArgumentInvocation* arguments,
     BuiltInCallable* callable,
@@ -66,7 +131,7 @@ namespace Sass {
       i++) {
       Argument* argument = declaredArguments[i];
       std::string name(argument->name());
-      if (named.count(name)) {
+      if (named.count(name) == 1) {
         positional.push_back(named[name]->perform(this));
       }
       else {
@@ -91,7 +156,7 @@ namespace Sass {
 
     ValueObj result;
     // try {
-      result = callback(pstate, positional, 0.00000000001);
+      result = callback(pstate, positional, 0.000001);
       // }
 
     if (argumentList == nullptr) return result.detach();
@@ -349,6 +414,9 @@ namespace Sass {
           list->append(item);
         }
       }
+    }
+    else if (SassArgumentList * slist = Cast<SassArgumentList>(expr)) {
+      std::cerr << "qeadasd\n";
     }
     else if (List * l = Cast<List>(expr)) {
       list = list_to_sass_list(l);
@@ -1059,7 +1127,7 @@ namespace Sass {
 
   /// Like `_environment.getFunction`, but also returns built-in
   /// globally-avaialble functions.
-  BuiltInCallable* Eval::_getFunction(std::string name, std::string ns) {
+  Callable* Eval::_getFunction(std::string name, std::string ns) {
 
     Env* env = environment();
     std::string full_name(name + "[f]");
@@ -1067,8 +1135,10 @@ namespace Sass {
       // look for dollar overload
     }
 
-    if (env->get(full_name)) {
-
+    if (env->has(full_name)) {
+      Callable* callable = Cast<Callable>(env->get(full_name));
+      // std::cerr << "Holla " << (void*)callable << "\n";
+      return callable;
     }
     else if (ctx.builtins.count(name) == 1) {
       BuiltInCallable* cb = ctx.builtins[name];
@@ -1089,6 +1159,18 @@ namespace Sass {
     if (BuiltInCallable * builtIn = Cast<BuiltInCallable>(callable)) {
       return _runBuiltInCallable(arguments, builtIn, callable->pstate()); // ToDo -> without slash
       // std::cerr << "execute built in\n";
+    }
+    else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
+      return _runUserDefinedCallable(arguments, userDefined, &Eval::_runAndCheck, pstate);
+
+      // CallableDeclaration* decl = userDefined->declaration();
+      // for (auto statement : decl->block()->elements()) {
+      //   auto returnValue = statement->perform(this);
+      //   if (returnValue != nullptr) return returnValue;
+      // }
+      
+      return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "UserDefinedCallable");
+      std::cerr << "execute user defined\n";
     }
     else if (PlainCssCallable * plainCss = Cast<PlainCssCallable>(callable)) {
       if (!arguments->named().empty() || arguments->kwdRest() != nullptr) {
@@ -1113,10 +1195,6 @@ namespace Sass {
       return SASS_MEMORY_NEW(
         SassString, pstate,
         strm.str());
-    }
-    else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
-      return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "UserDefinedCallable");
-      std::cerr << "execute user defined\n";
     }
 
     return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "Callable??");
@@ -1898,6 +1976,19 @@ namespace Sass {
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());
     }
+  }
+
+  Value* Eval::_runAndCheck(UserDefinedCallable* callable)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->block()->elements()) {
+      // Normal statements in functions must return nullptr
+      Value* value = statement->perform(this);
+      if (value != nullptr) return value;
+    }
+    throw Exception::SassRuntimeException(
+      "Function finished without @return.",
+      declaration->pstate());
   }
 
 }

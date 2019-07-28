@@ -50,8 +50,12 @@ namespace Sass {
       return false;
     }
 
+    virtual Value* withoutSlash() {
+      return this;
+    }
+
     // Return normalized index for vector from overflowable sass index
-    long sassIndexToListIndex(Value* sassIndex, std::string name = "");
+    long sassIndexToListIndex(Value* sassIndex, double epsilon, std::string name = "");
 
     Value* assertValue(std::string name = "");
 
@@ -345,9 +349,9 @@ namespace Sass {
     Number(ParserState pstate, double val, std::string u = "", bool zero = true);
     Number(ParserState pstate, double val, Units units, bool zero = true);
 
-    long assertInt(std::string name = "") {
-      if (fuzzyIsInt(value_, epsilon_)) {
-        return fuzzyAsInt(value_, epsilon_);
+    long assertInt(double epsilon, std::string name = "") {
+      if (fuzzyIsInt(value_, epsilon)) {
+        return fuzzyAsInt(value_, epsilon);
       }
       throw Exception::SassScriptException(
         inspect() + " is not an int.", name);
@@ -365,12 +369,14 @@ namespace Sass {
     }
 
     double valueInRange(double min, double max, double epsilon, std::string name = "") const {
-      double result = fuzzyCheckRange(value_, min, max, epsilon);
-      if (result != NAN) return result;
-      std::stringstream msg;
-      msg << "Expected " << inspect() << " to be within ";
-      msg << min << unit() << " and " << max << unit() << ".";
-      throw Exception::SassScriptException(msg.str(), name);
+      double result = value_;
+      if (!fuzzyCheckRange(value_, min, max, epsilon, result)) {
+        std::stringstream msg;
+        msg << "Expected " << inspect() << " to be within ";
+        msg << min << unit() << " and " << max << unit() << ".";
+        throw Exception::SassScriptException(msg.str(), name);
+      }
+      return result;
     }
 
 

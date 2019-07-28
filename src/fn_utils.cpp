@@ -160,10 +160,6 @@ namespace Sass {
     ParserState pstate) :
     SassNode(pstate) {}
 
-  UserDefinedCallable::UserDefinedCallable(
-    ParserState pstate) :
-    Callable(pstate) {}
-
   PlainCssCallable::PlainCssCallable(
     ParserState pstate, std::string name) :
     Callable(pstate), name_(name) {}

@@ -93,6 +93,7 @@ namespace Sass {
     Block* operator()(Block*);
     Statement* operator()(StyleRule*);
 
+    Statement* operator()(FunctionRule*);
     Statement* operator()(MediaRule*);
 
 	At_Root_Query* visitAtRootQuery(At_Root_Query* e);

@@ -1091,6 +1091,35 @@ namespace Sass {
   // Definitions for both mixins and functions. The two cases are distinguished
   // by a type tag.
   /////////////////////////////////////////////////////////////////////////////
+  class CallableDeclaration : public Has_Block {
+    // The name of this callable.
+    // This may be empty for callables without names.
+    ADD_PROPERTY(std::string, name);
+    // The comment immediately preceding this declaration.
+    ADD_PROPERTY(SilentCommentObj, comment);
+    // The declared arguments this callable accepts.
+    ADD_PROPERTY(ArgumentDeclarationObj, arguments);
+  public:
+    CallableDeclaration(
+      ParserState pstate,
+      std::string name,
+      ArgumentDeclaration* arguments,
+      SilentComment* comment = nullptr,
+      Block* block = nullptr);
+    ATTACH_ABSTRACT_CRTP_PERFORM_METHODS();
+  };
+
+  class FunctionRule final : public CallableDeclaration {
+  public:
+    FunctionRule(
+      ParserState pstate,
+      std::string name,
+      ArgumentDeclaration* arguments,
+      SilentComment* comment = nullptr,
+      Block* block = nullptr);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
   class Definition final : public Has_Block {
   public:
     enum Type { MIXIN, FUNCTION };
@@ -1291,8 +1320,14 @@ namespace Sass {
   };
 
   class UserDefinedCallable : public Callable {
+    // The declaration.
+    ADD_PROPERTY(CallableDeclarationObj, declaration);
+    // The environment in which this callable was declared.
+    ADD_PROPERTY(Env*, environment);
   public:
-    UserDefinedCallable(ParserState pstate);
+    UserDefinedCallable(ParserState pstate,
+      CallableDeclarationObj declaration,
+      Env* environment);
   };
 
   class PlainCssCallable : public Callable {

@@ -27,6 +27,10 @@ namespace Sass {
 
       BUILT_IN_FN(inspect)
       {
+        if (arguments[0] == nullptr) {
+          return SASS_MEMORY_NEW(
+            SassString, pstate, "null");
+        }
         return SASS_MEMORY_NEW(SassString,
           pstate, arguments[0]->inspect());
       }

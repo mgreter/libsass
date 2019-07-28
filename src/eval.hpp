@@ -25,6 +25,12 @@ namespace Sass {
     Eval(Expand& exp);
     ~Eval();
 
+    Value* _runUserDefinedCallable(
+      ArgumentInvocation* arguments,
+      UserDefinedCallable* callable,
+      Value* (Eval::* run)(UserDefinedCallable*),
+      ParserState pstate);
+
     Value* _runBuiltInCallable(
       ArgumentInvocation* arguments,
       BuiltInCallable* callable,
@@ -68,7 +74,7 @@ namespace Sass {
     Value* evalBinOp(Binary_Expression* b_in);
     Value* operator()(Unary_Expression*);
     Value* operator()(FunctionExpression*);
-    BuiltInCallable* _getFunction(std::string name, std::string ns);
+    Callable* _getFunction(std::string name, std::string ns);
     Value* _runFunctionCallable(ArgumentInvocation* arguments, Callable* callable, ParserState pstate);
     Value* operator()(FunctionExpression2*);
     Value* operator()(Variable*);
@@ -111,6 +117,8 @@ namespace Sass {
 
     // actual evaluated selectors
     Value* operator()(Parent_Reference*);
+
+    Value* _runAndCheck(UserDefinedCallable*);
 
     // generic fallback
     template <typename U>

@@ -15,7 +15,7 @@ namespace Sass {
 
   // Returns whether [number1] and [number2] are equal within [epsilon].
   inline bool fuzzyEquals(double number1, double number2, double epsilon) {
-    return abs(number1 - number2) < epsilon;
+    return fabs(number1 - number2) < epsilon;
   }
 
   /// `1 / epsilon`, cached since [math.pow] may not be computed at compile-time
@@ -51,7 +51,9 @@ namespace Sass {
 
     // Check against 0.5 rather than 0.0 so that we catch numbers that
     // are both very slightly above an integer, and very slightly below.
-    return fuzzyEquals(fmod(abs(number - 0.5), 1.0), 0.5, epsilon);
+    double _fabs_ = fabs(number - 0.5);
+    double _fmod_ = fmod(_fabs_, 1.0);
+    return fuzzyEquals(_fmod_, 0.5, epsilon);
   }
 
 
@@ -92,14 +94,23 @@ namespace Sass {
     return NAN;
   }
 
+  inline bool fuzzyCheckRange(double number, double min, double max, double epsilon, double& value) {
+    if (fuzzyEquals(number, min, epsilon)) { value = min; return true; }
+    if (fuzzyEquals(number, max, epsilon)) { value = max; return true; }
+    if (number > min && number < max) { value = number;  return true; }
+    return false;
+  }
+
   /// Throws a [RangeError] if [number] isn't within [min] and [max].
   ///
   /// If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
   /// appropriate value. [name] is used in error reporting.
-  inline double fuzzyAssertRange(double number, double min, double max, double epsilon, std::string name = "") {
-    double result = fuzzyCheckRange(number, min, max, epsilon);
-    if (result != NAN) return result;
-    throw std::range_error("must be between $min and $max.");
+  inline double fuzzyAssertRange(double number, double min, double max, double epsilon, double& value, std::string name = "") {
+    double result = 0.0;
+    if (!fuzzyCheckRange(number, min, max, epsilon, result)) {
+      throw std::range_error("must be between $min and $max.");
+    }
+    if (!std::isnan(result)) return result;
     // throw RangeError.value(number, name, "must be between $min and $max.");
   }
 

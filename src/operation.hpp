@@ -50,6 +50,8 @@ namespace Sass {
     virtual T operator()(ListExpression* x) = 0;
     virtual T operator()(SupportsRule* x)         = 0;
     virtual T operator()(MediaRule* x) = 0;
+    virtual T operator()(FunctionRule* x) = 0;
+    
     virtual T operator()(CssString* x) = 0;
     virtual T operator()(CssStyleRule* x) = 0;
     virtual T operator()(CssMediaRule* x) = 0;
@@ -155,6 +157,7 @@ namespace Sass {
     T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
 
     T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(FunctionRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssString* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStyleRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssMediaRule* x) { return static_cast<D*>(this)->fallback(x); }

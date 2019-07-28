@@ -184,7 +184,7 @@ namespace Sass {
 
     ExtendRule* _extendRule(Position start);
 
-    Definition* _functionRule(Position start); // FunctionRule
+    FunctionRule* _functionRule(Position start); // FunctionRule
 
     For* _forRule(Position start, Statement* (StylesheetParser::* child)()); // ForRule
 

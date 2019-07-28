@@ -126,7 +126,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Number, pstate, distributor(rand));
         }
         Number* nr = arguments[0]->assertNumber("limit");
-        long limit = nr->assertInt("limit");
+        long limit = nr->assertInt(epsilon, "limit");
         if (limit >= 1) {
           std::uniform_real_distribution<> distributor(1, limit + 1);
           return SASS_MEMORY_NEW(Number, pstate, distributor(rand));

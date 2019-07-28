@@ -1020,6 +1020,39 @@ namespace Sass {
     return true;
   }
 
+  CallableDeclaration::CallableDeclaration(
+    ParserState pstate,
+    std::string name,
+    ArgumentDeclaration* arguments,
+    SilentComment* comment,
+    Block* block) :
+    Has_Block(pstate, block),
+    name_(name),
+    arguments_(arguments),
+    comment_(comment)
+  {
+  }
+
+  FunctionRule::FunctionRule(
+    ParserState pstate,
+    std::string name,
+    ArgumentDeclaration* arguments,
+    SilentComment* comment,
+    Block* block) :
+    CallableDeclaration(pstate,
+      name, arguments, comment, block)
+  {
+  }
+
+  UserDefinedCallable::UserDefinedCallable(
+    ParserState pstate,
+    CallableDeclarationObj declaration,
+    Env* environment) :
+    Callable(pstate),
+    declaration_(declaration),
+    environment_(environment)
+  {
+  }
 
 }
 

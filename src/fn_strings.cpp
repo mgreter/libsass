@@ -10,6 +10,7 @@
 #include "fn_numbers.hpp"
 #include "util_string.hpp"
 
+#include "utf8.h"
 #include <random>
 #include <iomanip>
 #include <algorithm>
@@ -96,7 +97,7 @@ namespace Sass {
         SassString* insert = arguments[1]->assertString("insert");
         size_t len = UTF_8::code_point_count(string->value());
         long index = arguments[2]->assertNumber("index")
-          ->assertNoUnits("index")->assertInt("index");
+          ->assertNoUnits("index")->assertInt(epsilon, "index");
 
         // str-insert has unusual behavior for negative inputs. It guarantees that
         // the `$insert` string is at `$index` in the result, which means that we
@@ -132,15 +133,49 @@ namespace Sass {
           UTF_8::code_point_count(str, 0, c_index) + 1);
       }
 
+      long _codepointForIndex(long index, long lengthInCodepoints, bool allowNegative = false) {
+        if (index == 0) return 0;
+        if (index > 0) return std::min(index - 1, lengthInCodepoints);
+        long result = lengthInCodepoints + index;
+        if (result < 0 && !allowNegative) return 0;
+        return result;
+      }
+
       BUILT_IN_FN(slice)
       {
         SassString* string = arguments[0]->assertString("string");
-        SassNumber* start = arguments[1]->assertNumber("start-at");
+        SassNumber* beg = arguments[1]->assertNumber("start-at");
         SassNumber* end = arguments[2]->assertNumber("end-at");
-        start->assertNoUnits("start");
-        end->assertNoUnits("end");
 
-        return SASS_MEMORY_NEW(String_Constant, pstate, "slice");
+        long len = UTF_8::code_point_count(string->value());
+        beg = beg->assertNoUnits("start");
+        end = end->assertNoUnits("end");
+
+        // No matter what the start index is, an end
+        // index of 0 will produce an empty string.
+        long endInt = end->assertNoUnits("end")->assertInt(epsilon);
+        if (endInt == 0) return SASS_MEMORY_NEW(String_Quoted,
+          pstate, "", string->quote_mark());
+
+        long begInt = beg->assertNoUnits("start")->assertInt(epsilon);
+        begInt = _codepointForIndex(begInt, len, false);
+        endInt = _codepointForIndex(endInt, len, true);
+
+        if (endInt == len) endInt = len - 1;
+        if (endInt < begInt) return SASS_MEMORY_NEW(
+          String_Quoted, pstate,
+          "", string->quote_mark());
+
+        std::string value(string->value());
+        std::string::iterator begIt = value.begin();
+        std::string::iterator endIt = value.begin();
+        utf8::advance(begIt, begInt + 0, value.end());
+        utf8::advance(endIt, endInt + 1, value.end());
+
+        return SASS_MEMORY_NEW(
+          String_Constant, pstate,
+          std::string(begIt, endIt),
+          string->quote_mark());
       }
 
       BUILT_IN_FN(uniqueId)

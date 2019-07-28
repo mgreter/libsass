@@ -27,6 +27,8 @@ namespace Sass {
   class CallableInvocation;
   class ArgumentInvocation;
   class ArgumentDeclaration;
+  class CallableDeclaration;
+  class FunctionRule;
 
   class Has_Block;
 
@@ -203,6 +205,8 @@ namespace Sass {
   IMPL_MEM_OBJ(PlainCssCallable);
   IMPL_MEM_OBJ(BuiltInCallable);
   IMPL_MEM_OBJ(SupportsRule);
+  IMPL_MEM_OBJ(CallableDeclaration);
+  IMPL_MEM_OBJ(FunctionRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
   IMPL_MEM_OBJ(At_Root_Block);
@@ -326,9 +330,10 @@ namespace Sass {
   DECLARE_BASE_CAST(CallableInvocation)
   DECLARE_BASE_CAST(Value)
   DECLARE_BASE_CAST(List)
+  DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(Color)
   DECLARE_BASE_CAST(String)
-  DECLARE_BASE_CAST(Callable)
+  DECLARE_BASE_CAST(SassList)
   DECLARE_BASE_CAST(String_Constant)
   DECLARE_BASE_CAST(SupportsCondition)
   DECLARE_BASE_CAST(Selector)
