@@ -61,7 +61,7 @@ namespace Sass {
 
     overload->verify(positional.size(), named, traces);
 
-    for (size_t i = evaluated->positional().size();
+    for (size_t i = positional.size();
       i < declaredArguments.size();
       i++) {
       Argument* argument = declaredArguments[i];
@@ -70,7 +70,7 @@ namespace Sass {
         positional.push_back(named[name]->perform(this));
       }
       else {
-        positional.push_back(argument->value());
+        positional.push_back(argument->value()->perform(this));
       }
     }
 

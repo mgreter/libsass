@@ -922,13 +922,13 @@ namespace Sass {
     // String functions
     register_built_in_function(ctx, env, "unquote", "$string", Functions::Strings::unquote);
     register_built_in_function(ctx, env, "quote", "$string", Functions::Strings::quote);
-    register_built_in_function(ctx, env, "toUpperCase", "$string", Functions::Strings::toUpperCase);
-    register_built_in_function(ctx, env, "toLowerCase", "$string", Functions::Strings::toLowerCase);
+    register_built_in_function(ctx, env, "to-upper-case", "$string", Functions::Strings::toUpperCase);
+    register_built_in_function(ctx, env, "to-lower-case", "$string", Functions::Strings::toLowerCase);
     register_built_in_function(ctx, env, "length", "$string", Functions::Strings::length);
-    register_built_in_function(ctx, env, "insert", "$string, $insert, $index", Functions::Strings::insert);
-    register_built_in_function(ctx, env, "index", "$string, $substring", Functions::Strings::index);
-    register_built_in_function(ctx, env, "slice", "$string, $start-at, $end-at: -1", Functions::Strings::slice);
-    register_built_in_function(ctx, env, "uniqueId", "", Functions::Strings::uniqueId);
+    register_built_in_function(ctx, env, "str-insert", "$string, $insert, $index", Functions::Strings::insert);
+    register_built_in_function(ctx, env, "str-index", "$string, $substring", Functions::Strings::index);
+    register_built_in_function(ctx, env, "str-slice", "$string, $start-at, $end-at: -1", Functions::Strings::slice);
+    register_built_in_function(ctx, env, "unique-id", "", Functions::Strings::uniqueId);
 
     // Color functions
     register_built_in_overloads(ctx, env, "rgb", {

@@ -39,8 +39,18 @@ namespace Sass {
 
       BUILT_IN_FN(featureExists)
       {
-        return SASS_MEMORY_NEW(SassString,
-          pstate, "featureExists");
+        SassString* feature = arguments[0]->assertString("feature");
+        static const auto* const features =
+          new std::unordered_set<std::string>{
+          "global-variable-shadowing",
+          "extend-selector-pseudoclass",
+          "at-error",
+          "units-level-3",
+          "custom-property"
+        };
+        std::string name(feature->value());
+        return SASS_MEMORY_NEW(Boolean,
+          pstate, features->count(name) == 1);
       }
 
     }

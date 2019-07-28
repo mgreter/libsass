@@ -634,6 +634,9 @@ namespace Sass {
     bool hasQuotes() const {
       return quote_mark_ == '\0';
     }
+    virtual SassString* assertString(std::string name = "") {
+      return this;
+    }
     ATTACH_COPY_OPERATIONS(String_Constant)
     ATTACH_CRTP_PERFORM_METHODS()
   };

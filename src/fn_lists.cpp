@@ -46,7 +46,7 @@ namespace Sass {
       {
         Value* list1 = arguments[0];
         Value* list2 = arguments[1];
-        String* separatorParam = arguments[2]->assertString("separator");
+        SassString* separatorParam = arguments[2]->assertString("separator");
         Value* bracketedParam = arguments[3];
 
         Sass_Separator separator;
