@@ -18,6 +18,11 @@ namespace Sass {
 
   class AST_Node;
 
+  class Callable;
+  class UserDefinedCallable;
+  class PlainCssCallable;
+  class BuiltInCallable;
+
   class SassNode;
   class CallableInvocation;
   class ArgumentInvocation;
@@ -192,8 +197,10 @@ namespace Sass {
   IMPL_MEM_OBJ(CssStyleRule);
   IMPL_MEM_OBJ(CssStylesheet);
   IMPL_MEM_OBJ(CssSupportsRule);
-
-
+  IMPL_MEM_OBJ(Callable);
+  IMPL_MEM_OBJ(UserDefinedCallable);
+  IMPL_MEM_OBJ(PlainCssCallable);
+  IMPL_MEM_OBJ(BuiltInCallable);
   IMPL_MEM_OBJ(SupportsRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
@@ -319,6 +326,7 @@ namespace Sass {
   DECLARE_BASE_CAST(List)
   DECLARE_BASE_CAST(Color)
   DECLARE_BASE_CAST(String)
+  DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(String_Constant)
   DECLARE_BASE_CAST(SupportsCondition)
   DECLARE_BASE_CAST(Selector)

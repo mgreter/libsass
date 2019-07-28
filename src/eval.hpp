@@ -25,6 +25,11 @@ namespace Sass {
     Eval(Expand& exp);
     ~Eval();
 
+    Value* _runBuiltInCallable(
+      ArgumentInvocation* arguments,
+      BuiltInCallable* callable,
+      ParserState pstate);
+
     Boolean_Obj bool_true;
     Boolean_Obj bool_false;
 
@@ -62,6 +67,9 @@ namespace Sass {
     Value* evalBinOp(Binary_Expression* b_in);
     Value* operator()(Unary_Expression*);
     Value* operator()(FunctionExpression*);
+    BuiltInCallable* _getFunction(std::string name, std::string ns);
+    Value* _runFunctionCallable(ArgumentInvocation* arguments, Callable* callable, ParserState pstate);
+    Value* operator()(FunctionExpression2*);
     Value* operator()(Variable*);
     Value* operator()(Number*);
     Value* operator()(Color_RGBA*);
@@ -82,6 +90,7 @@ namespace Sass {
 
     Argument* visitArgument(Argument* arg);
     Arguments* visitArguments(Arguments* args);
+    ArgumentResults* _evaluateArguments(ArgumentInvocation* arguments);
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);
 

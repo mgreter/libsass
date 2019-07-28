@@ -13,28 +13,6 @@
 
 namespace Sass {
 
-  typedef Value* (*SassFnSig)(const std::vector<ValueObj>&);
-
-  class BuiltInCallable {
-
-    // The function name
-    std::string name;
-
-    // The overloads declared for this callable.
-    std::vector<std::pair<Parameters, SassFnSig>> overloads;
-
-  public:
-
-    // Creates a callable with a single [arguments] declaration and a single [callback].
-    // The argument declaration is parsed from [arguments], which should not include
-    // parentheses. Throws a [SassFormatException] if parsing fails.
-    BuiltInCallable(
-      std::string name,
-      std::string prototype,
-      SassFnSig fn);
-
-  };
-
   #define FN_PROTOTYPE \
     Env& env, \
     Env& d_env, \

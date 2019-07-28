@@ -22,6 +22,7 @@ namespace Sass {
   IMPLEMENT_BASE_CAST(Value)
   IMPLEMENT_BASE_CAST(Color)
   IMPLEMENT_BASE_CAST(List)
+  IMPLEMENT_BASE_CAST(Callable)
   IMPLEMENT_BASE_CAST(String)
   IMPLEMENT_BASE_CAST(String_Constant)
   IMPLEMENT_BASE_CAST(SupportsCondition)

@@ -677,6 +677,7 @@ namespace Sass {
     expand.plainCss = sheet.plainCss;
     Cssize cssize(*this);
     // expand and eval the tree
+    debug_ast(root);
     root = expand(root);
     // debug_ast(root);
 

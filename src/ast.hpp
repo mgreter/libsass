@@ -167,6 +167,44 @@ namespace Sass {
 
   };
 
+
+  /// The result of evaluating arguments to a function or mixin.
+  class ArgumentResults : public SassNode {
+
+    // Arguments passed by position.
+    std::vector<ValueObj> positional;
+
+    // The [AstNode]s that hold the spans for each [positional]
+    // argument, or `null` if source span tracking is disabled. This
+    // stores [AstNode]s rather than [FileSpan]s so it can avoid
+    // calling [AstNode.span] if the span isn't required, since
+    // some nodes need to do real work to manufacture a source span.
+    // std::vector<Ast_Node_Obj> positionalNodes;
+
+    // Arguments passed by name.
+    NormalizedMap<ValueObj> named;
+
+    // The [AstNode]s that hold the spans for each [named] argument,
+    // or `null` if source span tracking is disabled. This stores
+    // [AstNode]s rather than [FileSpan]s so it can avoid calling
+    // [AstNode.span] if the span isn't required, since some nodes
+    // need to do real work to manufacture a source span.
+    // NormalizedMap<Ast_Node_Obj> namedNodes;
+
+    // The separator used for the rest argument list, if any.
+    Sass_Separator separator;
+
+  public:
+
+    ArgumentResults(
+      ParserState pstate,
+      std::vector<ValueObj> positional,
+      NormalizedMap<ValueObj> named,
+      Sass_Separator separator);
+
+  };
+
+
   //////////////////////////////////////////////////////////////////////
   // Abstract base class for expressions. This side of the AST hierarchy
   // represents elements in value contexts, which exist primarily to be
@@ -1185,6 +1223,54 @@ namespace Sass {
     // ATTACH_COPY_OPERATIONS(Parameters)
     ATTACH_CRTP_PERFORM_METHODS()
   };
+
+
+
+
+  typedef Value* (*SassFnSig)(const std::vector<ValueObj>&);
+
+  class Callable : public SassNode {
+  public:
+    Callable(ParserState pstate);
+  };
+
+  class UserDefinedCallable : public Callable {
+  public:
+    UserDefinedCallable(ParserState pstate);
+  };
+
+  class PlainCssCallable : public Callable {
+  public:
+    PlainCssCallable(ParserState pstate);
+  };
+
+  class BuiltInCallable : public Callable {
+
+    // The function name
+    std::string name;
+
+    // The overloads declared for this callable.
+    std::vector<std::pair<Parameters, SassFnSig>> overloads;
+
+    // Function callback
+    SassFnSig callback;
+
+  public:
+
+    Value* execute(ArgumentInvocation* arguments) {
+      // return callback(arguments);
+    }
+
+    // Creates a callable with a single [arguments] declaration and a single [callback].
+    // The argument declaration is parsed from [arguments], which should not include
+    // parentheses. Throws a [SassFormatException] if parsing fails.
+    BuiltInCallable(
+      std::string name,
+      std::string prototype,
+      SassFnSig callback);
+
+  };
+
 
 }
 

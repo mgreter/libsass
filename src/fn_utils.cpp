@@ -156,4 +156,27 @@ namespace Sass {
 
   }
 
+  Callable::Callable(
+    ParserState pstate) :
+    SassNode(pstate) {}
+
+  UserDefinedCallable::UserDefinedCallable(
+    ParserState pstate) :
+    Callable(pstate) {}
+
+  PlainCssCallable::PlainCssCallable(
+    ParserState pstate) :
+    Callable(pstate) {}
+
+  BuiltInCallable::BuiltInCallable(
+    std::string name,
+    std::string prototype,
+    SassFnSig callback) :
+    Callable("[BUILTIN]"),
+    name(name),
+    overloads(),
+    callback(callback)
+  {
+  }
+
 }

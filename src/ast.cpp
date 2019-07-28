@@ -916,5 +916,20 @@ namespace Sass {
     return strm.str();
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ArgumentResults::ArgumentResults(
+    ParserState pstate,
+    std::vector<ValueObj> positional,
+    NormalizedMap<ValueObj> named,
+    Sass_Separator separator) :
+    SassNode(pstate),
+    positional(positional),
+    named(named),
+    separator(separator)
+  {
+  }
+
 }
 

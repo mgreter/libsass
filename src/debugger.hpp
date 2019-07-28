@@ -809,6 +809,17 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << std::endl;
     debug_ast(expression->arguments(), ind + " args: ", env);
     debug_ast(expression->func(), ind + " func: ", env);
+  }
+  else if (Cast<FunctionExpression2>(node)) {
+    FunctionExpression2* expression = Cast<FunctionExpression2>(node);
+    std::cerr << ind << "FunctionExpression2 " << expression;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    // std::cerr << " [" << expression->name() << "]";
+    // if (expression->is_css()) std::cerr << " [css]";
+    std::cerr << std::endl;
+    debug_ast(expression->name(), ind + " name: ", env);
+    debug_ast(expression->arguments(), ind + " args: ", env);
+    // debug_ast(expression->func(), ind + " func: ", env);
   } else if (Cast<Function>(node)) {
     Function* expression = Cast<Function>(node);
     std::cerr << ind << "Function " << expression;

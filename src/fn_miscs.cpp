@@ -14,7 +14,7 @@ namespace Sass {
     //////////////////////////
 
     Value* foo(const std::vector<ValueObj>& arguments) {
-
+      return nullptr;
     }
 
     BuiltInCallable fn_foo("foo", "", foo);

@@ -43,6 +43,12 @@ namespace Sass {
   }
   Eval::~Eval() { }
 
+  Value* Eval::_runBuiltInCallable(ArgumentInvocation* arguments, BuiltInCallable* callable, ParserState pstate)
+  {
+    ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
+    return nullptr;
+  }
+
   std::string Eval::serialize(AST_Node* node)
   {
     Sass_Inspect_Options serializeOpt(ctx.c_options);
@@ -989,8 +995,61 @@ namespace Sass {
     return Cast<Value>(u);
   }
 
+  /// Like `_environment.getFunction`, but also returns built-in
+  /// globally-avaialble functions.
+  BuiltInCallable* Eval::_getFunction(std::string name, std::string ns) {
+
+    Env* env = environment();
+    std::string full_name(name + "[f]");
+    if (!env->has(full_name)) {
+      // look for dollar overload
+    }
+
+    if (env->get(full_name)) {
+
+    }
+    else if (ctx.builtins.count(name) == 1) {
+      BuiltInCallable* cb = ctx.builtins[name];
+      return cb;
+    }
+
+    // var local = _environment.getFunction(name, ns);
+    // if (local != null || namespace != null) return local;
+    // return _builtInFunctions[name];
+    return nullptr;
+  }
+
+  Value* Eval::_runFunctionCallable(
+    ArgumentInvocation* arguments,
+    Callable* callable,
+    ParserState pstate)
+  {
+    if (BuiltInCallable * builtIn = Cast<BuiltInCallable>(callable)) {
+      std::cerr << "execute built in\n";
+    }
+    else if (PlainCssCallable * plainCss = Cast<PlainCssCallable>(callable)) {
+      std::cerr << "execute plain css\n";
+    }
+    else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
+      std::cerr << "execute user defined\n";
+    }
+    return nullptr;
+  }
+
+  Value* Eval::operator()(FunctionExpression2* node)
+  {
+    std::string plainName = node->name()->getPlainString();
+
+    BuiltInCallable* function = _getFunction(plainName, node->ns());
+
+    _runFunctionCallable(node->arguments(), function, node->pstate());
+
+    return SASS_MEMORY_NEW(StringLiteral, "pstate", "HELLO");
+  }
+
   Value* Eval::operator()(FunctionExpression* c)
   {
+
 
     // NESTING_GUARD(_recursion)
 
@@ -1583,6 +1642,11 @@ namespace Sass {
     }
     // debug_ast(aa, "AAA: ");
     return aa.detach();
+  }
+
+  ArgumentResults* Eval::_evaluateArguments(ArgumentInvocation* arguments)
+  {
+    return nullptr;
   }
 
   Argument* Eval::visitArgument(Argument* a)
