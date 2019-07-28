@@ -57,6 +57,87 @@ namespace Sass {
           pstate, features->count(name) == 1);
       }
 
+      BUILT_IN_FN(globalVariableExists)
+      {
+        SassString* variable = arguments[0]->assertString("name");
+        SassString* plugin = arguments[1]->assertStringOrNull("module");
+        if (plugin != nullptr) {
+          throw Exception::SassRuntimeException(
+            "Modules are not supported yet", pstate);
+        }
+        return SASS_MEMORY_NEW(SassBoolean, pstate,
+          closure.has_global(variable->value()));
+      }
+
+      BUILT_IN_FN(variableExists)
+      {
+        SassString* variable = arguments[0]->assertString("name");
+        return SASS_MEMORY_NEW(SassBoolean, pstate,
+          closure.has(variable->value()));
+      }
+
+      BUILT_IN_FN(functionExists)
+      {
+        SassString* variable = arguments[0]->assertString("name");
+        SassString* plugin = arguments[1]->assertStringOrNull("module");
+        if (plugin != nullptr) {
+          throw Exception::SassRuntimeException(
+            "Modules are not supported yet", pstate);
+        }
+        return SASS_MEMORY_NEW(SassBoolean, pstate,
+          closure.has(variable->value() + "[f]"));
+      }
+
+      BUILT_IN_FN(mixinExists)
+      {
+        SassString* variable = arguments[0]->assertString("name");
+        SassString* plugin = arguments[1]->assertStringOrNull("module");
+        if (plugin != nullptr) {
+          throw Exception::SassRuntimeException(
+            "Modules are not supported yet", pstate);
+        }
+        return SASS_MEMORY_NEW(SassBoolean, pstate,
+          closure.has(variable->value() + "[m]"));
+      }
+
+      BUILT_IN_FN(contentExists)
+      {
+        if (!closure.has_global("is_in_mixin")) {
+          throw Exception::SassRuntimeException(
+            "content-exists() may only be called within a mixin.",
+            pstate);
+        }
+        return SASS_MEMORY_NEW(Boolean, pstate,
+          closure.has_lexical("@content[m]"));
+      }
+
+      BUILT_IN_FN(moduleVariables)
+      {
+        // SassString* variable = arguments[0]->assertString("name");
+        // SassString* plugin = arguments[1]->assertStringOrNull("module");
+        throw Exception::SassRuntimeException(
+          "Modules are not supported yet", pstate);
+      }
+
+      BUILT_IN_FN(moduleFunctions)
+      {
+        // SassString* variable = arguments[0]->assertString("name");
+        // SassString* plugin = arguments[1]->assertStringOrNull("module");
+        throw Exception::SassRuntimeException(
+          "Modules are not supported yet", pstate);
+      }
+
+      BUILT_IN_FN(getFunction)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "getFunction");
+      }
+
+      BUILT_IN_FN(call)
+      {
+        return SASS_MEMORY_NEW(SassString, pstate, "call");
+      }
+
+
     }
 
   }

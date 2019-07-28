@@ -156,7 +156,8 @@ namespace Sass {
 
     ValueObj result;
     // try {
-      result = callback(pstate, positional, 0.000001);
+    Env* closure = exp.env_stack.back();
+      result = callback(pstate, positional, *closure, 0.000001);
       // }
 
     if (argumentList == nullptr) return result.detach();

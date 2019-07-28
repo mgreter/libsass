@@ -125,11 +125,6 @@ namespace Sass {
     SelectorStack selector_stack, \
     SelectorStack original_stack \
 
-  #define FN_PROTOTYPE2 \
-    const ParserState& pstate, \
-    const std::vector<ValueObj>& arguments, \
-    double epsilon \
-
   typedef const char* Signature;
   typedef Value* (*Native_Function)(FN_PROTOTYPE);
 

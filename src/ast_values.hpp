@@ -68,8 +68,10 @@ namespace Sass {
     virtual SassMap* assertMap(std::string name = "");
 
     virtual SassNumber* assertNumber(std::string name = "");
+    virtual SassNumber* assertNumberOrNull(std::string name = "");
 
     virtual SassString* assertString(std::string name = "");
+    virtual SassString* assertStringOrNull(std::string name = "");
 
     SassList* changeValues(
       std::vector<ValueObj> values,

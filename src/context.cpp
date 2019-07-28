@@ -984,6 +984,20 @@ namespace Sass {
     register_built_in_function(ctx, env, "keywords", "$args", Functions::Meta::keywords);
     register_built_in_function(ctx, env, "feature-exists", "$value", Functions::Meta::featureExists);
 
+    // ToDo: dart-sass keeps them on the local environment scope, see below:
+    // These functions are defined in the context of the evaluator because
+    // they need access to the [_environment] or other local state.
+    register_built_in_function(ctx, env, "global-variable-exists", "$name, $module: null", Functions::Meta::globalVariableExists);
+    register_built_in_function(ctx, env, "variable-exists", "$name", Functions::Meta::variableExists);
+    register_built_in_function(ctx, env, "function-exists", "$name, $module: null", Functions::Meta::functionExists);
+    register_built_in_function(ctx, env, "mixin-exists", "$name, $module: null", Functions::Meta::mixinExists);
+    register_built_in_function(ctx, env, "content-exists", "", Functions::Meta::contentExists);
+    // register_built_in_function(ctx, env, "module-variables", "$module", Functions::Meta::moduleVariables);
+    // register_built_in_function(ctx, env, "module-functions", "$module", Functions::Meta::moduleFunctions);
+    register_built_in_function(ctx, env, "get-function", "$name, $css: false, $module: null", Functions::Meta::getFunction);
+    register_built_in_function(ctx, env, "call", "$function, $args...", Functions::Meta::call);
+
+
     // register_function(ctx, length_sig, length, env);
     // register_function(ctx, nth_sig, nth, env);
     // register_function(ctx, set_nth_sig, set_nth, env);

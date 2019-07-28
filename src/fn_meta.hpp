@@ -12,6 +12,20 @@ namespace Sass {
       BUILT_IN_FN(inspect);
       BUILT_IN_FN(keywords);
       BUILT_IN_FN(featureExists);
+
+      // ToDo: dart-sass keeps them on the local environment scope, see below:
+      // These functions are defined in the context of the evaluator because
+      // they need access to the [_environment] or other local state.
+      BUILT_IN_FN(globalVariableExists);
+      BUILT_IN_FN(variableExists);
+      BUILT_IN_FN(functionExists);
+      BUILT_IN_FN(mixinExists);
+      BUILT_IN_FN(contentExists);
+      // BUILT_IN_FN(moduleVariables);
+      // BUILT_IN_FN(moduleFunctions);
+      BUILT_IN_FN(getFunction);
+      BUILT_IN_FN(call);
+
     }
 
   }

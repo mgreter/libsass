@@ -1,5 +1,6 @@
 #include "ast_values.hpp"
 #include "ast_values.hpp"
+#include "ast_values.hpp"
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
@@ -41,27 +42,38 @@ namespace Sass {
 
   SassColor* Value::assertColor(std::string name) {
     throw Exception::SassScriptException(
-      inspect() + " is not a color.", name);
+      to_string() + " is not a color.", name);
   }
 
   Color_HSLA* Value::assertColorHsla(std::string name) {
     throw Exception::SassScriptException(
-      inspect() + " is not a color.", name);
+      to_string() + " is not a color.", name);
   }
 
   SassMap* Value::assertMap(std::string name) {
     throw Exception::SassScriptException(
-      inspect() + " is not a map.", name);
+      to_string() + " is not a map.", name);
   }
 
   SassNumber* Value::assertNumber(std::string name) {
     throw Exception::SassScriptException(
-      inspect() + " is not a number.", name);
+      to_string() + " is not a number.", name);
+  }
+
+  SassNumber* Value::assertNumberOrNull(std::string name)
+  {
+    if (this->isNull()) return nullptr;
+    return this->assertNumber(name);
   }
 
   SassString* Value::assertString(std::string name) {
     throw Exception::SassScriptException(
-      inspect() + " is not a string.", name);
+      to_string() + " is not a string.", name);
+  }
+
+  SassString* Value::assertStringOrNull(std::string name) {
+    if (this->isNull()) return nullptr;
+    return this->assertString(name);
   }
 
   SassList* Value::changeValues(
