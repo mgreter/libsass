@@ -52,6 +52,114 @@ namespace Sass {
       return value;
     }
 
+    /// Returns whether [value] is an unquoted string that start with `var(` and
+    /// contains `/`.
+    bool _isVarSlash(Expression* value) {
+      if (String_Constant * string = Cast<String_Constant>(value)) {
+        return starts_with(string->value(), "var(") &&
+          string_constains(string->value(), '/');
+      }
+      if (StringLiteral * string = Cast<StringLiteral>(value)) {
+        return starts_with(string->text(), "var(") &&
+          string_constains(string->text(), '/');
+      }
+      return false;
+    }
+
+    Expression* _parseChannels2(std::string name, std::vector<std::string> argumentNames, Value* channels, ParserState pstate, Backtraces traces)
+    {
+      if (isVar(channels)) {
+        std::stringstream fncall;
+        fncall << name << "("
+          << channels->to_css() << ")";
+        return SASS_MEMORY_NEW(StringLiteral,
+          pstate, fncall.str());
+      }
+
+      SassList* list = Cast<SassList>(channels);
+
+      if (!list) {
+        list = SASS_MEMORY_NEW(SassList, pstate);
+        list->append(channels);
+      }
+
+      bool isCommaSeparated = list->separator() == SASS_COMMA;
+      bool isBracketed = list->hasBrackets();
+      if (isCommaSeparated || isBracketed) {
+        std::stringstream msg;
+        msg << "$channels must be";
+        if (isBracketed) msg << " an unbracketed";
+        if (isCommaSeparated) {
+          msg << (isBracketed ? "," : " a");
+          msg << " space-separated";
+        }
+        msg << " list.";
+        error(msg.str(), pstate, traces);
+      }
+
+      if (list->length() > 3) {
+        std::stringstream msg;
+        msg << "Only 3 elements allowed, but "
+          << list->length() << " were passed.";
+        error(msg.str(), pstate, traces);
+      }
+      else if (list->length() < 3) {
+        bool hasVar = false;
+        for (Value* item : list->elements()) {
+          if (isVar(item)) {
+            hasVar = true;
+            break;
+          }
+        }
+        if (hasVar || (!list->empty() && _isVarSlash(list->last()))) {
+          std::stringstream fncall;
+          fncall << name << "(";
+          for (size_t i = 0, iL = list->length(); i < iL; i++) {
+            if (i > 0) { fncall << " "; }
+            fncall << list->get(i)->to_css();
+          }
+          fncall << ")";
+          return SASS_MEMORY_NEW(StringLiteral,
+            pstate, fncall.str());
+        }
+        else {
+          std::string argument = argumentNames[list->length()];
+          error(
+            "Missing element " + argument + ".",
+            pstate, traces);
+        }
+      }
+
+      Number* secondNumber = Cast<Number>(list->get(2));
+      String_Constant* secondString = Cast<String_Constant>(list->get(2));
+      if (secondNumber && secondNumber->hasAsSlash()) {
+        SassList* rv = SASS_MEMORY_NEW(SassList, pstate);
+        rv->append(list->get(0));
+        rv->append(list->get(1));
+        rv->append(secondNumber->lhsAsSlash());
+        rv->append(secondNumber->rhsAsSlash());
+        return rv;
+      }
+      else if (secondString &&
+        secondString->quote_mark() == 0 &&
+        string_constains(secondString->value(), '/')) {
+        std::stringstream fncall;
+        fncall << name << "(";
+        for (size_t i = 0, iL = list->length(); i < iL; i++) {
+          if (i > 0) { fncall << " "; }
+          fncall << list->get(i)->to_css();
+
+        }
+        fncall << ")";
+        return SASS_MEMORY_NEW(StringLiteral,
+          pstate, fncall.str());
+      }
+      else {
+        return list;
+      }
+
+    }
+
     SassString* _functionString(std::string name, std::vector<ValueObj> arguments, const ParserState& pstate)
     {
       bool addComma = false;
@@ -133,7 +241,20 @@ namespace Sass {
 
       BUILT_IN_FN(rgb_1)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "rgb_1");
+        ExpressionObj parsed = _parseChannels2(
+          "rgb", { "$red", "$green", "$blue" },
+          arguments[0], pstate, {});
+        if (StringLiteral * str = Cast<StringLiteral>(parsed)) {
+          parsed.detach();
+          return str;
+        }
+        if (List * list = Cast<List>(parsed)) {
+          // return _rgb("rgb", list->elements(), rgb_1_sig, pstate, {});
+        }
+        if (SassList * list = Cast<SassList>(parsed)) {
+          return _rgb("rgb", list->elements(), rgb_1_sig, pstate, {});
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
 
 
@@ -157,7 +278,20 @@ namespace Sass {
 
       BUILT_IN_FN(rgba_1)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "rgba_1");
+        ExpressionObj parsed = _parseChannels2(
+          "rgba", { "$red", "$green", "$blue" },
+          arguments[0], pstate, {});
+        if (StringLiteral * str = Cast<StringLiteral>(parsed)) {
+          parsed.detach();
+          return str;
+        }
+        if (List * list = Cast<List>(parsed)) {
+          // return _rgb("rgba", list->elements(), rgba_1_sig, pstate, {});
+        }
+        if (SassList * list = Cast<SassList>(parsed)) {
+          return _rgb("rgba", list->elements(), rgba_1_sig, pstate, {});
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
 
 
@@ -187,7 +321,20 @@ namespace Sass {
 
       BUILT_IN_FN(hsl_1)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "hsl_1");
+        ExpressionObj parsed = _parseChannels2(
+          "hsl", { "$hue", "$saturation", "$lightness" },
+          arguments[0], pstate, {});
+        if (StringLiteral * str = Cast<StringLiteral>(parsed)) {
+          parsed.detach();
+          return str;
+        }
+        if (List * list = Cast<List>(parsed)) {
+          // return _hsl("hsl", list->elements(), hsl_1_sig, pstate, {});
+        }
+        if (SassList * list = Cast<SassList>(parsed)) {
+          return _hsl("hsl", list->elements(), hsl_1_sig, pstate, {});
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
 
 
@@ -217,7 +364,20 @@ namespace Sass {
 
       BUILT_IN_FN(hsla_1)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "hsla_1");
+        ExpressionObj parsed = _parseChannels2(
+          "hsla", { "$hue", "$saturation", "$lightness" },
+          arguments[0], pstate, {});
+        if (StringLiteral * str = Cast<StringLiteral>(parsed)) {
+          parsed.detach();
+          return str;
+        }
+        if (List * list = Cast<List>(parsed)) {
+          // return _hsl("hsla", list->elements(), hsl_1_sig, pstate, {});
+        }
+        if (SassList * list = Cast<SassList>(parsed)) {
+          return _hsl("hsla", list->elements(), hsl_1_sig, pstate, {});
+        }
+        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
 
       BUILT_IN_FN(red)
@@ -533,8 +693,8 @@ namespace Sass {
 
 
     /// Returns whether [value] is an unquoted string that start with `var(` and
-/// contains `/`.
-    bool _isVarSlash(Expression* value) {
+    /// contains `/`.
+    bool _isVarSlash2(Expression* value) {
       if (String_Constant * string = Cast<String_Constant>(value)) {
         return starts_with(string->value(), "var(") &&
           string_constains(string->value(), '/');
@@ -592,7 +752,7 @@ namespace Sass {
             break;
           }
         }
-        if (hasVar || (!list->empty() && _isVarSlash(list->last()))) {
+        if (hasVar || (!list->empty() && _isVarSlash2(list->last()))) {
           std::stringstream fncall;
           fncall << name << "(";
           for (size_t i = 0, iL = list->length(); i < iL; i++) {
