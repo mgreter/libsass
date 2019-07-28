@@ -163,8 +163,8 @@ namespace Sass {
 
         if (endInt == len) endInt = len - 1;
         if (endInt < begInt) return SASS_MEMORY_NEW(
-          String_Quoted, pstate,
-          "", string->quote_mark());
+          String_Quoted, pstate, "",
+          string->quote_mark());
 
         std::string value(string->value());
         std::string::iterator begIt = value.begin();
@@ -172,9 +172,11 @@ namespace Sass {
         utf8::advance(begIt, begInt + 0, value.end());
         utf8::advance(endIt, endInt + 1, value.end());
 
+        std::string sliced(begIt, endIt);
+
         return SASS_MEMORY_NEW(
           String_Constant, pstate,
-          std::string(begIt, endIt),
+          Sass::quote(sliced),
           string->quote_mark());
       }
 
