@@ -898,6 +898,11 @@ namespace Sass {
     // Map Functions
     register_built_in_function(ctx, env, "map-get", "$map, $key", Functions::Maps::get);
     register_built_in_function(ctx, env, "map-merge", "$map1, $map2", Functions::Maps::merge);
+    register_built_in_overloads(ctx, env, "map-remove", {
+        std::make_pair("$map", Functions::Maps::remove_one),
+        std::make_pair("$map, $key, $keys...", Functions::Maps::remove_many)
+      });
+
     // register_built_in_function(ctx, env, "remove", "$list", Functions::Maps::remove); // overloaded
     register_built_in_function(ctx, env, "map-keys", "$map", Functions::Maps::keys);
     register_built_in_function(ctx, env, "map-values", "$map", Functions::Maps::values);
@@ -921,7 +926,7 @@ namespace Sass {
     register_built_in_function(ctx, env, "quote", "$string", Functions::Strings::quote);
     register_built_in_function(ctx, env, "to-upper-case", "$string", Functions::Strings::toUpperCase);
     register_built_in_function(ctx, env, "to-lower-case", "$string", Functions::Strings::toLowerCase);
-    register_built_in_function(ctx, env, "length", "$string", Functions::Strings::length);
+    register_built_in_function(ctx, env, "str-length", "$string", Functions::Strings::length);
     register_built_in_function(ctx, env, "str-insert", "$string, $insert, $index", Functions::Strings::insert);
     register_built_in_function(ctx, env, "str-index", "$string, $substring", Functions::Strings::index);
     register_built_in_function(ctx, env, "str-slice", "$string, $start-at, $end-at: -1", Functions::Strings::slice);
@@ -961,6 +966,7 @@ namespace Sass {
     register_built_in_function(ctx, env, "saturation", "$color", Functions::Colors::saturation);
     register_built_in_function(ctx, env, "invert", "$color, $weight: 100%", Functions::Colors::invert);
     register_built_in_function(ctx, env, "grayscale", "$color", Functions::Colors::grayscale);
+    register_built_in_function(ctx, env, "complement", "$color", Functions::Colors::complement);
     register_built_in_function(ctx, env, "lighten", "$color, $amount", Functions::Colors::lighten);
     register_built_in_function(ctx, env, "darken", "$color, $amount", Functions::Colors::darken);
     register_built_in_function(ctx, env, "desaturate", "$color, $amount", Functions::Colors::desaturate);
@@ -978,6 +984,8 @@ namespace Sass {
     register_built_in_function(ctx, env, "fade-in", "$color, $amount", Functions::Colors::opacify);
     register_built_in_function(ctx, env, "fade-out", "$color, $amount", Functions::Colors::transparentize);
     register_built_in_function(ctx, env, "transparentize", "$color, $amount", Functions::Colors::transparentize);
+    register_built_in_function(ctx, env, "ie-hex-str", "$color", Functions::Colors::ieHexStr);
+    
 
     // Meta functions
     register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);

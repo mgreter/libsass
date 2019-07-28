@@ -511,6 +511,21 @@ namespace Sass {
     const std::unordered_map<
       K, T, ObjHash, ObjEquality
     >& elements() { return elements_; }
+    size_t erase(K key)
+    {
+      if (elements_.erase(key) == 1) {
+        for (size_t i = 0; i < _keys.size(); i++) {
+          if (!(*_keys[i] == *key)) continue;
+          // Remove items given at position
+          _keys.erase(_keys.begin() + i);
+          _values.erase(_values.begin() + i);
+          return 1;
+        }
+        throw std::runtime_error("Ordered is out of sync!?");
+      }
+      return 0;
+    }
+
     void insert(K key, T val)
     {
       reset_hash();

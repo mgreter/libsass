@@ -30,10 +30,23 @@ namespace Sass {
         return map;
       }
 
-      // overloaded
-      BUILT_IN_FN(remove)
+      // Because the signature below has an explicit `$key` argument, it doesn't
+      // allow zero keys to be passed. We want to allow that case, so we add an
+      // explicit overload for it.
+      BUILT_IN_FN(remove_one)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "remove");
+        return arguments[0]->assertMap("map");
+      }
+
+      BUILT_IN_FN(remove_many)
+      {
+        SassMap* map = arguments[0]->assertMap("map");
+        SassMapObj copy = SASS_MEMORY_COPY(map);
+        copy->erase(arguments[0]);
+        for (Value* key : arguments[1]->asVector()) {
+          copy->erase(key);
+        }
+        return copy.detach();
       }
 
       BUILT_IN_FN(keys)

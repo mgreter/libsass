@@ -441,7 +441,24 @@ namespace Sass {
 
       BUILT_IN_FN(invert)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "invert");
+        SassNumber* weight = arguments[1]->assertNumber("weight");
+        if (Cast<SassNumber>(arguments[0])) {
+          if (weight->value() != 100 || !weight->hasUnit("%")) {
+            throw Exception::SassRuntimeException(
+              "Only one argument may be passed "
+              "to the plain-CSS invert() function.",
+              pstate);
+          }
+          return _functionString("invert", { arguments[1] }, pstate);
+        }
+
+        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj inverse = color->copyAsRGBA();
+        inverse->r(255.0 - color->r());
+        inverse->g(255.0 - color->g());
+        inverse->b(255.0 - color->b());
+        return _mixColors(inverse, color,
+          weight, pstate, epsilon);
       }
 
       BUILT_IN_FN(hue)
@@ -468,13 +485,16 @@ namespace Sass {
         SassColor* color = arguments[0]->assertColor("color");
         SassNumber* degrees = arguments[1]->assertNumber("degrees");
         Color_HSLA_Obj copy = color->copyAsHSLA();
-        copy->h(copy->h() + degrees->value());
+        copy->h(absmod(copy->h() + degrees->value(), 360.0));
         return copy.detach();
       }
 
       BUILT_IN_FN(complement)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "complement");
+        SassColor* color = arguments[0]->assertColor("color");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->h(absmod(copy->h() + 180.0, 360.0));
+        return copy.detach();
       }
 
       BUILT_IN_FN(grayscale)

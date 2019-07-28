@@ -241,6 +241,7 @@ namespace Sass {
     static std::string type_name() { return "map"; }
     bool is_invisible() const override { return empty(); }
     SassListObj to_list(ParserState& pstate);
+    SassMap* assertMap(std::string name) override { return this; }
 
     virtual size_t hash() const override;
 
