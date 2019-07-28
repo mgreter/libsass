@@ -512,7 +512,7 @@ namespace Sass {
       {
         SassColor* color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
-        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        double nr = amount->valueInRange(0.0, 1.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->a(clamp(copy->a() + nr, 0.0, 1.0));
         return copy.detach();
@@ -522,7 +522,7 @@ namespace Sass {
       {
         SassColor* color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
-        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        double nr = amount->valueInRange(0.0, 1.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->a(clamp(copy->a() - nr, 0.0, 1.0));
         return copy.detach();
@@ -695,7 +695,7 @@ namespace Sass {
           if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
           return c.detach();
         }
-        else if (a) {
+        else if (nr_a) {
           Color_Obj c = SASS_MEMORY_COPY(color);
           if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
           return c.detach();
@@ -778,7 +778,7 @@ namespace Sass {
           if (nr_a) c->a(clamp(a, 0.0, 1.0));
           return c.detach();
         }
-        else if (a) {
+        else if (nr_a) {
           Color_Obj c = SASS_MEMORY_COPY(color);
           if (nr_a) c->a(clamp(a, 0.0, 1.0));
           return c.detach();
@@ -858,7 +858,7 @@ namespace Sass {
           if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
           return c.detach();
         }
-        else if (a) {
+        else if (nr_a) {
           Color_Obj c = SASS_MEMORY_COPY(color);
           if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
           return c.detach();
