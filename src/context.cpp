@@ -10,6 +10,7 @@
 #include "fn_numbers.hpp"
 #include "fn_colors.hpp"
 #include "fn_miscs.hpp"
+#include "fn_meta.hpp"
 #include "fn_lists.hpp"
 #include "fn_maps.hpp"
 #include "context.hpp"
@@ -962,6 +963,12 @@ namespace Sass {
     register_built_in_function(ctx, env, "hue", "$color", Functions::Colors::hue);
     register_built_in_function(ctx, env, "lightness", "$color", Functions::Colors::lightness);
     register_built_in_function(ctx, env, "saturation", "$color", Functions::Colors::saturation);
+
+    // Meta functions
+    register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);
+    register_built_in_function(ctx, env, "inspect", "$value", Functions::Meta::inspect);
+    register_built_in_function(ctx, env, "keywords", "$args", Functions::Meta::keywords);
+    register_built_in_function(ctx, env, "feature-exists", "$value", Functions::Meta::featureExists);
 
     // register_function(ctx, length_sig, length, env);
     // register_function(ctx, nth_sig, nth, env);
