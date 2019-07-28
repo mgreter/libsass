@@ -74,7 +74,9 @@ namespace Sass {
 
         bool bracketed = bracketedParam->isTruthy();
         if (String_Constant * str = Cast<String_Constant>(bracketedParam)) {
-          if (str->value() == "auto") { bracketed = list1->hasBrackets(); }
+          if (str->value() == "auto") {
+            bracketed = list1->hasBrackets();
+          }
         }
 
         std::vector<ValueObj> values;

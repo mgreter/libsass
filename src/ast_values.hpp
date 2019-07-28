@@ -180,6 +180,10 @@ namespace Sass {
       return elements();
     }
 
+    bool hasBrackets() override {
+      return hasBrackets_;
+    }
+
     // Return the length of this item as a list
     long lengthAsList() const override {
       return length();
