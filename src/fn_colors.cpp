@@ -595,13 +595,13 @@ namespace Sass {
 
       Number* getKwdArg(NormalizedMap<ValueObj>& keywords, std::string name)
       {
-        auto kv = keywords.find(name);
+        auto kv = keywords.find("$" + name);
         // Return null since args are optional
         if (kv == keywords.end()) return nullptr;
         // Get the number object from found keyword
         SassNumber* num = kv->second->assertNumber(name);
         // Only consume keyword once
-        keywords.erase(name);
+        keywords.erase("$" + name);
         // Return the number
         return num;
       }
@@ -634,13 +634,13 @@ namespace Sass {
 
         NormalizedMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, "$red");
-        SassNumber* nr_g = getKwdArg(keywords, "$green");
-        SassNumber* nr_b = getKwdArg(keywords, "$blue");
-        SassNumber* nr_h = getKwdArg(keywords, "$hue");
-        SassNumber* nr_s = getKwdArg(keywords, "$saturation");
-        SassNumber* nr_l = getKwdArg(keywords, "$lightness");
-        SassNumber* nr_a = getKwdArg(keywords, "$alpha");
+        SassNumber* nr_r = getKwdArg(keywords, "red");
+        SassNumber* nr_g = getKwdArg(keywords, "green");
+        SassNumber* nr_b = getKwdArg(keywords, "blue");
+        SassNumber* nr_h = getKwdArg(keywords, "hue");
+        SassNumber* nr_s = getKwdArg(keywords, "saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "alpha");
 
         double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, epsilon, "red") : 0.0;
         double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, epsilon, "green") : 0.0;
@@ -671,8 +671,8 @@ namespace Sass {
           throw Exception::SassRuntimeException(msg.str(), pstate);
         }
 
-        bool hasRgb = r || g || b;
-        bool hasHsl = h || s || l;
+        bool hasRgb = nr_r || nr_g || nr_b;
+        bool hasHsl = nr_h || nr_s || nr_l;
 
         if (hasRgb && hasHsl) {
           throw Exception::SassRuntimeException(
@@ -717,13 +717,13 @@ namespace Sass {
 
         NormalizedMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, "$red");
-        SassNumber* nr_g = getKwdArg(keywords, "$green");
-        SassNumber* nr_b = getKwdArg(keywords, "$blue");
-        SassNumber* nr_h = getKwdArg(keywords, "$hue");
-        SassNumber* nr_s = getKwdArg(keywords, "$saturation");
-        SassNumber* nr_l = getKwdArg(keywords, "$lightness");
-        SassNumber* nr_a = getKwdArg(keywords, "$alpha");
+        SassNumber* nr_r = getKwdArg(keywords, "red");
+        SassNumber* nr_g = getKwdArg(keywords, "green");
+        SassNumber* nr_b = getKwdArg(keywords, "blue");
+        SassNumber* nr_h = getKwdArg(keywords, "hue");
+        SassNumber* nr_s = getKwdArg(keywords, "saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "alpha");
 
         double r = nr_r ? nr_r->valueInRange(0.0, 255.0, epsilon, "red") : 0.0;
         double g = nr_g ? nr_g->valueInRange(0.0, 255.0, epsilon, "green") : 0.0;
@@ -754,8 +754,8 @@ namespace Sass {
           throw Exception::SassRuntimeException(msg.str(), pstate);
         }
 
-        bool hasRgb = r || g || b;
-        bool hasHsl = h || s || l;
+        bool hasRgb = nr_r || nr_g || nr_b;
+        bool hasHsl = nr_h || nr_s || nr_l;
 
         if (hasRgb && hasHsl) {
           throw Exception::SassRuntimeException(
@@ -800,18 +800,16 @@ namespace Sass {
 
         NormalizedMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, "$red");
-        SassNumber* nr_g = getKwdArg(keywords, "$green");
-        SassNumber* nr_b = getKwdArg(keywords, "$blue");
-        SassNumber* nr_h = getKwdArg(keywords, "$hue");
-        SassNumber* nr_s = getKwdArg(keywords, "$saturation");
-        SassNumber* nr_l = getKwdArg(keywords, "$lightness");
-        SassNumber* nr_a = getKwdArg(keywords, "$alpha");
+        SassNumber* nr_r = getKwdArg(keywords, "red");
+        SassNumber* nr_g = getKwdArg(keywords, "green");
+        SassNumber* nr_b = getKwdArg(keywords, "blue");
+        SassNumber* nr_s = getKwdArg(keywords, "saturation");
+        SassNumber* nr_l = getKwdArg(keywords, "lightness");
+        SassNumber* nr_a = getKwdArg(keywords, "alpha");
 
         double r = nr_r ? nr_r->assertUnit("%", "red")->valueInRange(-100.0, 100.0, epsilon, "red") / 100.0 : 0.0;
         double g = nr_g ? nr_g->assertUnit("%", "green")->valueInRange(-100.0, 100.0, epsilon, "green") / 100.0 : 0.0;
         double b = nr_b ? nr_b->assertUnit("%", "blue")->valueInRange(-100.0, 100.0, epsilon, "blue") / 100.0 : 0.0;
-        double h = nr_h ? nr_h->assertUnit("%", "hue")->valueInRange(-100.0, 100.0, epsilon, "hue") / 100.0 : 0.0;
         double s = nr_s ? nr_s->assertUnit("%", "saturation")->valueInRange(-100.0, 100.0, epsilon, "saturation") / 100.0 : 0.0;
         double l = nr_l ? nr_l->assertUnit("%", "lightness")->valueInRange(-100.0, 100.0, epsilon, "lightness") / 100.0 : 0.0;
         double a = nr_a ? nr_a->assertUnit("%", "alpha")->valueInRange(-100.0, 100.0, epsilon, "alpha") / 100.0 : 0.0;
@@ -837,8 +835,8 @@ namespace Sass {
           throw Exception::SassRuntimeException(msg.str(), pstate);
         }
 
-        bool hasRgb = r || g || b;
-        bool hasHsl = h || s || l;
+        bool hasRgb = nr_r || nr_g || nr_b;
+        bool hasHsl = nr_s || nr_l;
 
         if (hasRgb && hasHsl) {
           throw Exception::SassRuntimeException(
