@@ -30,6 +30,11 @@ namespace Sass {
       return list;
     }
 
+    // Return the list separator
+    virtual Sass_Separator separator() {
+      return SASS_UNDEF;
+    }
+
     // Return normalized index for vector from overflowable sass index
     long sassIndexToListIndex(Value* sassIndex, std::string name = "");
 
@@ -143,6 +148,19 @@ namespace Sass {
       std::vector<ValueObj> values = {},
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
+
+    Sass_Separator separator() override {
+      return separator_;
+    }
+
+    std::vector<ValueObj> asVector() override {
+      return elements();
+    }
+
+    // Return the length of this item as a list
+    long lengthAsList() const override {
+      return length();
+    }
 
     bool isBlank() const override final;
 

@@ -56,7 +56,9 @@ namespace Sass {
 
       Value* separator(const std::vector<ValueObj>& arguments)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "separator");
+        arguments[0]->separator() == SASS_COMMA
+          ? SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "comma") // SassString("comma", quotes: false)
+          : SASS_MEMORY_NEW(StringLiteral, arguments[0]->pstate(), "space"); // SassString("space", quotes: false))
       }
 
       Value* isBracketed(const std::vector<ValueObj>& arguments)
