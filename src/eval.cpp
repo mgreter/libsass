@@ -1746,7 +1746,7 @@ namespace Sass {
     const NormalizedMap<ExpressionObj>& map)
   {
     NormalizedMap<ValueObj> result;
-    for (auto kv : result) {
+    for (auto kv : map) {
       result[kv.first] =
         kv.second->perform(this);
     }

@@ -49,8 +49,8 @@ namespace Sass {
         SassString* separatorParam = arguments[2]->assertString("separator");
         Value* bracketedParam = arguments[3];
 
-        Sass_Separator separator;
-        if (separatorParam->to_string() == "auto") {
+        Sass_Separator separator = SASS_UNDEF;
+        if (separatorParam->value() == "auto") {
           if (list1->separator() != SASS_UNDEF) {
             separator = list1->separator();
           }
@@ -61,10 +61,10 @@ namespace Sass {
             separator = SASS_SPACE;
           }
         }
-        else if (separatorParam->to_string() == "space") {
+        else if (separatorParam->value() == "space") {
           separator = SASS_SPACE;
         }
-        else if (separatorParam->to_string() == "comma") {
+        else if (separatorParam->value() == "comma") {
           separator = SASS_COMMA;
         }
         else {
