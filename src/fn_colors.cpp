@@ -536,7 +536,7 @@ namespace Sass {
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
-        copy->s(clamp(copy->s() - nr, 0.0, 100.0));
+        copy->s(clamp(copy->s() + nr, 0.0, 100.0));
         return copy.detach();
       }
 
