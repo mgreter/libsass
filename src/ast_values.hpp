@@ -364,6 +364,15 @@ namespace Sass {
       return this;
     }
 
+    double valueInRange(double min, double max, double epsilon, std::string name = "") const {
+      double result = fuzzyCheckRange(value_, min, max, epsilon);
+      if (result != NAN) return result;
+      std::stringstream msg;
+      msg << "Expected " << inspect() << " to be within ";
+      msg << min << unit() << " and " << max << unit() << ".";
+      throw Exception::SassScriptException(msg.str(), name);
+    }
+
 
 
     bool zero() { return zero_; }

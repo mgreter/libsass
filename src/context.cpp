@@ -959,10 +959,20 @@ namespace Sass {
     register_built_in_function(ctx, env, "red", "$color", Functions::Colors::red);
     register_built_in_function(ctx, env, "green", "$color", Functions::Colors::green);
     register_built_in_function(ctx, env, "blue", "$color", Functions::Colors::blue);
-
     register_built_in_function(ctx, env, "hue", "$color", Functions::Colors::hue);
     register_built_in_function(ctx, env, "lightness", "$color", Functions::Colors::lightness);
     register_built_in_function(ctx, env, "saturation", "$color", Functions::Colors::saturation);
+    register_built_in_function(ctx, env, "invert", "$color, $weight: 100%", Functions::Colors::invert);
+    register_built_in_function(ctx, env, "grayscale", "$color", Functions::Colors::grayscale);
+    register_built_in_function(ctx, env, "lighten", "$color, $amount", Functions::Colors::lighten);
+    register_built_in_function(ctx, env, "darken", "$color, $amount", Functions::Colors::darken);
+    register_built_in_function(ctx, env, "desaturate", "$color, $amount", Functions::Colors::desaturate);
+
+    // Opacity functions
+    register_built_in_function(ctx, env, "opacify", "$color, $amount", Functions::Colors::opacify);
+    register_built_in_function(ctx, env, "fade-in", "$color, $amount", Functions::Colors::opacify);
+    register_built_in_function(ctx, env, "fade-out", "$color, $amount", Functions::Colors::transparentize);
+    register_built_in_function(ctx, env, "transparentize", "$color, $amount", Functions::Colors::transparentize);
 
     // Meta functions
     register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);

@@ -42,8 +42,6 @@ namespace Sass {
       BUILT_IN_FN(saturate_1);
       BUILT_IN_FN(desaturate);
       BUILT_IN_FN(opacify);
-      BUILT_IN_FN(fadeIn);
-      BUILT_IN_FN(fadeOut);
       BUILT_IN_FN(transparentize);
       BUILT_IN_FN(alpha_1);
       BUILT_IN_FN(alpha_any);

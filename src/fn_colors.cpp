@@ -12,6 +12,13 @@
 
 namespace Sass {
 
+  double clamp(double val, double lo, double hi)
+  {
+    if (val < lo) return lo;
+    if (val > hi) return hi;
+    return val;
+  }
+
   namespace Functions {
 
     bool isVar(const Value* obj) {
@@ -456,13 +463,23 @@ namespace Sass {
 
       BUILT_IN_FN(lighten)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "lighten");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* amount = arguments[1]->assertNumber("amount");
+        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->l(clamp(copy->l() + nr, 0.0, 100.0));
+        return copy.detach();
       }
 
 
       BUILT_IN_FN(darken)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "darken");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* amount = arguments[1]->assertNumber("amount");
+        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->l(clamp(copy->l() - nr, 0.0, 100.0));
+        return copy.detach();
       }
 
 
@@ -477,34 +494,34 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassString, pstate, "saturate_1");
       }
 
-
       BUILT_IN_FN(desaturate)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "desaturate");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* amount = arguments[1]->assertNumber("amount");
+        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->s(clamp(copy->s() - nr, 0.0, 100.0));
+        return copy.detach();
       }
-
 
       BUILT_IN_FN(opacify)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "opacify");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* amount = arguments[1]->assertNumber("amount");
+        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->a(clamp(copy->a() + nr, 0.0, 1.0));
+        return copy.detach();
       }
-
-
-      BUILT_IN_FN(fadeIn)
-      {
-        return SASS_MEMORY_NEW(SassString, pstate, "fadeIn");
-      }
-
-
-      BUILT_IN_FN(fadeOut)
-      {
-        return SASS_MEMORY_NEW(SassString, pstate, "fadeOut");
-      }
-
 
       BUILT_IN_FN(transparentize)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "transparentize");
+        SassColor* color = arguments[0]->assertColor("color");
+        SassNumber* amount = arguments[1]->assertNumber("amount");
+        double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
+        Color_HSLA_Obj copy = color->copyAsHSLA();
+        copy->a(clamp(copy->a() - nr, 0.0, 1.0));
+        return copy.detach();
       }
 
 
@@ -528,7 +545,19 @@ namespace Sass {
 
       BUILT_IN_FN(ieHexStr)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "ieHexStr");
+        SassColor* color = arguments[0]->assertColor("color");
+        // clip should not be needed here
+        double r = clip(color->r(), 0.0, 255.0);
+        double g = clip(color->g(), 0.0, 255.0);
+        double b = clip(color->b(), 0.0, 255.0);
+        double a = clip(color->a(), 0.0, 1.0) * 255.0;
+        std::stringstream ss;
+        ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
+        ss << std::hex << std::setw(2) << fuzzyRound(a, epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(r, epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(g, epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(b, epsilon);
+        return SASS_MEMORY_NEW(SassString, pstate, ss.str());
       }
 
     }
@@ -687,7 +716,7 @@ namespace Sass {
       return nullptr;
     }
 
-    double fuzzyRound(double value) {
+    double fuzzyRound2(double value) {
       return value;
     }
 
@@ -809,13 +838,6 @@ namespace Sass {
       return nullptr;
     }
 
-    double clamp(double val, double lo, double hi)
-    {
-      if (val < lo) return lo;
-      if (val > hi) return hi;
-      return val;
-    }
-
     Color* assertColor(AST_Node* node, std::string name, ParserState pstate, Backtraces traces)
     {
       if (node == nullptr) return nullptr;
@@ -865,9 +887,9 @@ namespace Sass {
       Number* a = _a ? assertNumber(_a, "$alpha", pstate, traces) : nullptr;
 
       return SASS_MEMORY_NEW(Color_RGBA, pstate,
-        fuzzyRound(_percentageOrUnitless(r, 255, "$red", traces)),
-        fuzzyRound(_percentageOrUnitless(g, 255, "$green", traces)),
-        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", traces)),
+        fuzzyRound2(_percentageOrUnitless(r, 255, "$red", traces)),
+        fuzzyRound2(_percentageOrUnitless(g, 255, "$green", traces)),
+        fuzzyRound2(_percentageOrUnitless(b, 255, "$blue", traces)),
         a ? _percentageOrUnitless(a, 1.0, "$alpha", traces) : 1.0);
 
     }
@@ -899,9 +921,9 @@ namespace Sass {
       Number* a = _a ? assertNumber(_a, "$alpha", pstate, traces) : nullptr;
 
       return SASS_MEMORY_NEW(Color_RGBA, pstate,
-        fuzzyRound(_percentageOrUnitless(r, 255, "$red", traces)),
-        fuzzyRound(_percentageOrUnitless(g, 255, "$green", traces)),
-        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", traces)),
+        fuzzyRound2(_percentageOrUnitless(r, 255, "$red", traces)),
+        fuzzyRound2(_percentageOrUnitless(g, 255, "$green", traces)),
+        fuzzyRound2(_percentageOrUnitless(b, 255, "$blue", traces)),
         a ? _percentageOrUnitless(a, 1.0, "$alpha", traces) : 1.0);
 
     }
@@ -1593,9 +1615,9 @@ namespace Sass {
         }
 
         Color_RGBA_Obj c = color->copyAsRGBA();
-        if (r) c->r(fuzzyRound(scaleValue(c->r(), r->value() / 100.0, 255.0)));
-        if (g) c->g(fuzzyRound(scaleValue(c->g(), g->value() / 100.0, 255.0)));
-        if (b) c->b(fuzzyRound(scaleValue(c->b(), b->value() / 100.0, 255.0)));
+        if (r) c->r(fuzzyRound2(scaleValue(c->r(), r->value() / 100.0, 255.0)));
+        if (g) c->g(fuzzyRound2(scaleValue(c->g(), g->value() / 100.0, 255.0)));
+        if (b) c->b(fuzzyRound2(scaleValue(c->b(), b->value() / 100.0, 255.0)));
         if (a) c->a(scaleValue(c->a(), a->value() / 100.0, 1.0));
         return c.detach();
       }
