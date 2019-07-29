@@ -77,6 +77,7 @@ namespace Sass {
     Callable* _getFunction(std::string name, std::string ns);
     Value* _runFunctionCallable(ArgumentInvocation* arguments, Callable* callable, ParserState pstate);
     Value* operator()(FunctionExpression2*);
+    Value* operator()(MixinExpression*);
     Value* operator()(Variable*);
     Value* operator()(Number*);
     Value* operator()(Color_RGBA*);

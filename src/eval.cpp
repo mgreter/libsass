@@ -1201,6 +1201,11 @@ namespace Sass {
     return nullptr;
   }
 
+  Value* Eval::operator()(MixinExpression* node)
+  {
+    return SASS_MEMORY_NEW(String_Constant, "[]", "eval mixin");
+  }
+
   Value* Eval::operator()(FunctionExpression2* node)
   {
     std::string plainName = node->name()->getPlainString();

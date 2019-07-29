@@ -1052,6 +1052,41 @@ namespace Sass {
   {
   }
 
+  MixinRule::MixinRule(
+    ParserState pstate,
+    std::string name,
+    ArgumentDeclaration* arguments,
+    SilentComment* comment,
+    Block* block) :
+    CallableDeclaration(pstate,
+      name, arguments, comment, block)
+  {
+  }
+
+
+
+
+  IncludeRule::IncludeRule(
+    ParserState pstate,
+    std::string name,
+    ArgumentInvocation* arguments,
+    std::string ns,
+    ContentBlock* content,
+    Block* block) :
+    InvocationStatement(pstate, arguments),
+    ns_(ns), name_(name), content_(content)
+  {
+  }
+
+
+  ContentBlock::ContentBlock(
+    ParserState pstate,
+    ArgumentDeclaration* arguments,
+    std::vector<StatementObj> children) :
+    CallableDeclaration(pstate, "", arguments)
+  {
+  }
+
   UserDefinedCallable::UserDefinedCallable(
     ParserState pstate,
     CallableDeclarationObj declaration,

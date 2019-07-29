@@ -1055,7 +1055,18 @@ namespace Sass {
       CallableInvocation(arguments)
     {
     }
+  };
 
+  class InvocationStatement :
+    public Statement,
+    public CallableInvocation {
+  public:
+    InvocationStatement(ParserState pstate,
+      ArgumentInvocation* arguments) :
+      Statement(pstate),
+      CallableInvocation(arguments)
+    {
+    }
   };
 
   /// A function invocation.
@@ -1104,6 +1115,10 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
+  class MixinExpression : public InvocationExpression {
+
+  };
+
   /////////////////////////////////////////////////////////////////////////////
   // Definitions for both mixins and functions. The two cases are distinguished
   // by a type tag.
@@ -1126,6 +1141,16 @@ namespace Sass {
     ATTACH_ABSTRACT_CRTP_PERFORM_METHODS();
   };
 
+  class ContentBlock :
+    public CallableDeclaration {
+  public:
+    ContentBlock(
+      ParserState pstate,
+      ArgumentDeclaration* arguments = nullptr,
+      std::vector<StatementObj> children = {});
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
   class FunctionRule final : public CallableDeclaration {
   public:
     FunctionRule(
@@ -1134,6 +1159,43 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
       Block* block = nullptr);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class MixinRule final : public CallableDeclaration {
+  public:
+    MixinRule(
+      ParserState pstate,
+      std::string name,
+      ArgumentDeclaration* arguments,
+      SilentComment* comment = nullptr,
+      Block* block = nullptr);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
+  class IncludeRule final : public InvocationStatement {
+
+    // The namespace of the mixin being invoked, or
+    // `null` if it's invoked without a namespace.
+    ADD_PROPERTY(std::string, ns);
+
+    // The name of the mixin being invoked.
+    ADD_PROPERTY(std::string, name);
+
+    // The block that will be invoked for [ContentRule]s in the mixin
+    // being invoked, or `null` if this doesn't pass a content block.
+    ADD_PROPERTY(ContentBlockObj, content);
+
+  public:
+
+    IncludeRule(
+      ParserState pstate,
+      std::string name,
+      ArgumentInvocation* arguments,
+      std::string ns = "",
+      ContentBlock* content = nullptr,
+      Block* block = nullptr);
+
     ATTACH_CRTP_PERFORM_METHODS();
   };
 

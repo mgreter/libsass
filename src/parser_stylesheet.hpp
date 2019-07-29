@@ -202,7 +202,11 @@ namespace Sass {
 
     Mixin_Call* _includeRule(Position start); // IncludeRule
 
+    IncludeRule* _includeRule2(Position start); // IncludeRule
+
     MediaRule* mediaRule(Position start);
+
+    MixinRule* _mixinRule2(Position start); // MixinRule
 
     Definition* _mixinRule(Position start); // MixinRule
 

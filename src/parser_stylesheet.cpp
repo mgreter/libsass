@@ -138,7 +138,7 @@ namespace Sass {
       _isUseAllowed = false;
       start = scanner.offset;
       scanner.readChar();
-      return _includeRule(start);
+      return _includeRule2(start);
 
     case $equal:
       if (!isIndented()) return _styleRule();
@@ -146,7 +146,7 @@ namespace Sass {
       start = scanner.offset;
       scanner.readChar();
       whitespace();
-      return _mixinRule(start);
+      return _mixinRule2(start);
 
     default:
       _isUseAllowed = false;
@@ -511,13 +511,13 @@ namespace Sass {
       return block;
     }
     else if (plain == "include") {
-      return _includeRule(start);
+      return _includeRule2(start);
     }
     else if (plain == "media") {
       return mediaRule(start);
     }
     else if (plain == "mixin") {
-      return _mixinRule(start);
+      return _mixinRule2(start);
     }
     else if (plain == "-moz-document") {
       return mozDocumentRule(start, name);
@@ -573,7 +573,7 @@ namespace Sass {
       return _ifRule(start, &StylesheetParser::_declarationChild);
     }
     else if (name == "include") {
-      return _includeRule(start);
+      return _includeRule2(start);
     }
     else if (name == "warn") {
       return _warnRule(start);
@@ -1174,8 +1174,64 @@ namespace Sass {
       namespace : ns, content : content);
       */
 
-    // std::cerr << "_includeRule\n"; exit(1);
+      // std::cerr << "_includeRule\n"; exit(1);
     return mixin.detach();
+  }
+  // EO _includeRule
+
+    // Consumes an `@include` rule.
+  // [start] should point before the `@`.
+  IncludeRule* StylesheetParser::_includeRule2(Position start)
+  {
+
+    std::string ns;
+    std::string name = identifier();
+    if (scanner.scanChar($dot)) {
+      ns = name;
+      name = _publicIdentifier();
+    }
+
+    whitespace();
+    ArgumentInvocationObj arguments;
+    if (scanner.peekChar() == $lparen) {
+      arguments = _argumentInvocation(true);
+    }
+    whitespace();
+
+    ArgumentDeclarationObj contentArguments;
+    if (scanIdentifier("using")) {
+      whitespace();
+      contentArguments = _argumentDeclaration2();
+      whitespace();
+    }
+
+    // ToDo: Add checks to allow to ommit arguments fully
+    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation, "[pstate]", {}, {});
+    IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
+      scanner.pstate(start), name, arguments);
+
+    ContentBlockObj content;
+    if (contentArguments || lookingAtChildren()) {
+      LOCAL_FLAG(_inContentBlock, true);
+      content = _withChildren<ContentBlock>(
+        &StylesheetParser::_childStatement,
+        contentArguments);
+      content->update_pstate(scanner.pstate(start));
+      rule->content(content);
+    }
+    else {
+      expectStatementSeparator();
+    }
+
+    /*
+    var span =
+      scanner.spanFrom(start, start).expand((content ? ? arguments).span);
+    return IncludeRule(name, arguments, span,
+      namespace : ns, content : content);
+      */
+
+      // std::cerr << "_includeRule\n"; exit(1);
+    return rule.detach(); // mixin.detach();
   }
   // EO _includeRule
 
@@ -1189,6 +1245,43 @@ namespace Sass {
     rule->update_pstate(scanner.pstate(start));
     return rule;
   }
+
+  // Consumes a mixin declaration.
+  // [start] should point before the `@`.
+  MixinRule* StylesheetParser::_mixinRule2(Position start)
+  {
+
+    // var precedingComment = lastSilentComment;
+    // lastSilentComment = null;
+    std::string name = identifier();
+    whitespace();
+    ArgumentDeclarationObj arguments;
+    if (scanner.peekChar() == $lparen) {
+      arguments = _argumentDeclaration2();
+    }
+
+    if (_inMixin || _inContentBlock) {
+      error("Mixins may not contain mixin declarations.",
+        scanner.pstate(start));
+    }
+    else if (_inControlDirective) {
+      error("Mixins may not be declared in control directives.",
+        scanner.pstate(start));
+    }
+
+    whitespace();
+    LOCAL_FLAG(_inMixin, true);
+    LOCAL_FLAG(_mixinHasContent, false);
+
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate());
+    MixinRule* rule = _withChildren<MixinRule>(
+      &StylesheetParser::_childStatement,
+      name, arguments, nullptr, block);
+    block->update_pstate(scanner.pstate(start));
+    rule->update_pstate(scanner.pstate(start));
+    return rule;
+  }
+  // EO _mixinRule
 
   // Consumes a mixin declaration.
   // [start] should point before the `@`.

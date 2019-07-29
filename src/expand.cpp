@@ -1075,6 +1075,39 @@ namespace Sass {
 
   }
 
+  
+  Statement* Expand::operator()(IncludeRule* node)
+  {
+    Env* env = environment();
+    UserDefinedCallable* mixin =
+      env->getMixin(node->name(), node->ns());
+
+    if (mixin == nullptr) {
+      throw Exception::SassRuntimeException(
+        "Undefined mixin.", node->pstate());
+    }
+
+    if (node->content() != nullptr) {
+      MixinRule* rule = Cast<MixinRule>(mixin->declaration());
+      if (!rule || !rule->has_content()) {
+        throw Exception::SassRuntimeException(
+          "Mixin doesn't accept a content block.",
+          node->pstate());
+      }
+    }
+
+    return nullptr;
+  }
+
+  Statement* Expand::operator()(MixinRule* rule)
+  {
+    Env* env = environment();
+    std::string name(rule->name() + "[m]");
+    env->local_frame()[name] = SASS_MEMORY_NEW(UserDefinedCallable,
+      rule->pstate(), rule, environment());
+    return nullptr;
+  }
+
   Statement* Expand::operator()(FunctionRule* rule)
   {
     Env* env = environment();

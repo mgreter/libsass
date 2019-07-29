@@ -50,8 +50,11 @@ namespace Sass {
     virtual T operator()(ListExpression* x) = 0;
     virtual T operator()(SupportsRule* x)         = 0;
     virtual T operator()(MediaRule* x) = 0;
+    virtual T operator()(MixinRule* x) = 0;
+    virtual T operator()(IncludeRule* x) = 0;
+    virtual T operator()(ContentBlock* x) = 0;
     virtual T operator()(FunctionRule* x) = 0;
-    
+
     virtual T operator()(CssString* x) = 0;
     virtual T operator()(CssStyleRule* x) = 0;
     virtual T operator()(CssMediaRule* x) = 0;
@@ -95,6 +98,7 @@ namespace Sass {
     virtual T operator()(Unary_Expression* x)       = 0;
     virtual T operator()(FunctionExpression* x) = 0;
     virtual T operator()(FunctionExpression2* x) = 0;
+    virtual T operator()(MixinExpression* x) = 0;
     virtual T operator()(Custom_Warning* x)         = 0;
     virtual T operator()(Custom_Error* x)           = 0;
     virtual T operator()(Variable* x)               = 0;
@@ -157,6 +161,9 @@ namespace Sass {
     T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
 
     T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(MixinRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ContentBlock* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(IncludeRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssString* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStyleRule* x) { return static_cast<D*>(this)->fallback(x); }
@@ -199,6 +206,7 @@ namespace Sass {
     T operator()(Unary_Expression* x)       { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionExpression2* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(MixinExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Warning* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Error* x)           { return static_cast<D*>(this)->fallback(x); }
     T operator()(Variable* x)               { return static_cast<D*>(this)->fallback(x); }

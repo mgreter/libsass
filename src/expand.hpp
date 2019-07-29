@@ -94,6 +94,8 @@ namespace Sass {
     Statement* operator()(StyleRule*);
 
     Statement* operator()(FunctionRule*);
+    Statement* operator()(IncludeRule*);
+    Statement* operator()(MixinRule*);
     Statement* operator()(MediaRule*);
 
 	At_Root_Query* visitAtRootQuery(At_Root_Query* e);

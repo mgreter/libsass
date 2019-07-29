@@ -42,7 +42,7 @@ namespace Sass {
       BUILT_IN_FN(desaturate);
       BUILT_IN_FN(opacify);
       BUILT_IN_FN(transparentize);
-      BUILT_IN_FN(alpha_1);
+      BUILT_IN_FN(alpha_one);
       BUILT_IN_FN(alpha_any);
       BUILT_IN_FN(opacity);
       BUILT_IN_FN(ieHexStr);

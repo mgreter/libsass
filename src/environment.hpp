@@ -72,6 +72,22 @@ namespace Sass {
     // I guess we store functions etc. there
     bool is_global() const;
 
+    // function are in place to be more
+    // dart-sass compatible, but we are
+    // not yet supporting modules/ns.
+    UserDefinedCallable* getMixin(std::string name, std::string ns = "") {
+      std::string full_name(name + "[m]");
+      if (!has(full_name)) return nullptr;
+      // We only store UserDefinedCallable as "[m]"
+      return Cast<UserDefinedCallable>(get(full_name));
+    }
+    UserDefinedCallable* getFunction(std::string name, std::string ns = "") {
+      std::string full_name(name + "[f]");
+      if (!has(full_name)) return nullptr;
+      // We only store UserDefinedCallable as "[f]"
+      return Cast<UserDefinedCallable>(get(full_name));
+    }
+
     // scope operates on the current frame
 
     NormalizedMap<T>& local_frame();

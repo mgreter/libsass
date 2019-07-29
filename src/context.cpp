@@ -987,7 +987,12 @@ namespace Sass {
     register_built_in_function(ctx, env, "fade-out", "$color, $amount", Functions::Colors::transparentize);
     register_built_in_function(ctx, env, "transparentize", "$color, $amount", Functions::Colors::transparentize);
     register_built_in_function(ctx, env, "ie-hex-str", "$color", Functions::Colors::ieHexStr);
-    
+    register_built_in_overloads(ctx, env, "alpha", {
+        std::make_pair("$color", Functions::Colors::alpha_one),
+        std::make_pair("$args...", Functions::Colors::alpha_any),
+      });
+    register_built_in_function(ctx, env, "opacity", "$color", Functions::Colors::opacity);
+
 
     // Meta functions
     register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);

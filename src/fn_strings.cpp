@@ -57,9 +57,10 @@ namespace Sass {
       BUILT_IN_FN(unquote)
       {
         SassString* string = arguments[0]->assertString("string");
-        // if (!string->hasQuotes()) return string;
-        return SASS_MEMORY_NEW(String_Constant,
-          pstate, string->value());
+        if (String_Quoted * string_quoted = Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(String_Constant, pstate, string_quoted->value());
+        }
+        return string;
       }
 
       BUILT_IN_FN(quote)

@@ -578,7 +578,7 @@ namespace Sass {
       }
 
 
-      BUILT_IN_FN(alpha_1)
+      BUILT_IN_FN(alpha_one)
       {
         Value* argument = arguments[0];
         /*
@@ -593,23 +593,51 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
       }
 
+      // Implements regex check against /^[a-zA-Z]+\s*=/
+      bool isMsFilterStart(const std::string& text)
+      {
+        auto it = text.begin();
+        // The filter must start with alpha
+        if (!Util::ascii_isalpha(*it)) return false;
+        while (it != text.end() && Util::ascii_isalpha(*it)) ++it;
+        while (it != text.end() && Util::ascii_isspace(*it)) ++it;
+        return it != text.end() && *it == '=';
+      }
 
       BUILT_IN_FN(alpha_any)
       {
         std::vector<ValueObj> argList
           = arguments[0]->asVector();
-        /*
-        if (argList.isNotEmpty &&
-          argList.every((argument) = >
-            argument is SassString &&
-            !argument.hasQuotes &&
-            argument.text.contains(_microsoftFilterStart))) {
-          // Suport the proprietary Microsoft alpha() function.
-          return _functionString("alpha", arguments);
+        if (!argList.empty()) {
+          bool isOnlyIeFilters = true;
+          for (Value* value : argList) {
+            if (SassString* string = Cast<SassString>(value)) {
+              if (!isMsFilterStart(string->value())) {
+                isOnlyIeFilters = false;
+                break;
+              }
+            }
+            else {
+              isOnlyIeFilters = false;
+              break;
+            }
+          }
+          if (isOnlyIeFilters) {
+            // Suport the proprietary Microsoft alpha() function.
+            return _functionString("alpha", arguments, pstate);
+          }
         }
-        */
 
-        return SASS_MEMORY_NEW(SassString, pstate, "alpha_any");
+        SASS_ASSERT(argList.size() != 1,
+          "ArgList must only have one item");
+        if (argList.empty()) {
+          throw Exception::SassRuntimeException(
+            "Missing argument $color.", pstate);
+        }
+        std::stringstream strm;
+        strm << "Only 1 argument allowed, but ";
+        strm << argList.size() << " were passed.";
+        throw Exception::SassRuntimeException(strm.str(), pstate);
       }
 
 

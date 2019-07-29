@@ -766,7 +766,51 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     debug_ast(block->arguments(), ind + " args: ", env);
     debug_ast(block->block_parameters(), ind + " block_params: ", env);
     if (block->block()) debug_ast(block->block(), ind + " ", env);
-  } else if (StyleRule * ruleset = Cast<StyleRule>(node)) {
+  }
+
+  
+  else if (IncludeRule * ruleset = Cast<IncludeRule>(node)) {
+    std::cerr << ind << "IncludeRule " << ruleset;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_root() ? " [root]" : "");
+    // std::cerr << " [" << ruleset->name() << "]";
+    std::cerr << std::endl;
+    debug_ast(ruleset->content(), ind + " @ ");
+  }
+  else if (ContentBlock * ruleset = Cast<ContentBlock>(node)) {
+    std::cerr << ind << "ContentBlock " << ruleset;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_root() ? " [root]" : "");
+    std::cerr << " [" << ruleset->name() << "]";
+    std::cerr << std::endl;
+    debug_ast(ruleset->block(), ind + " ");
+  }
+
+  else if (MixinRule * ruleset = Cast<MixinRule>(node)) {
+    std::cerr << ind << "MixinRule " << ruleset;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_root() ? " [root]" : "");
+    std::cerr << " [" << ruleset->name() << "]";
+    std::cerr << std::endl;
+    debug_ast(ruleset->block(), ind + " ");
+  }
+  else if (FunctionRule * ruleset = Cast<FunctionRule>(node)) {
+    std::cerr << ind << "FunctionRule " << ruleset;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_root() ? " [root]" : "");
+    std::cerr << " [" << ruleset->name() << "]";
+    std::cerr << std::endl;
+    debug_ast(ruleset->block(), ind + " ");
+  }
+  else if (StyleRule * ruleset = Cast<StyleRule>(node)) {
     std::cerr << ind << "StyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";

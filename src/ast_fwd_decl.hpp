@@ -29,6 +29,9 @@ namespace Sass {
   class ArgumentDeclaration;
   class CallableDeclaration;
   class FunctionRule;
+  class IncludeRule;
+  class ContentBlock;
+  class MixinRule;
 
   class Has_Block;
 
@@ -110,6 +113,7 @@ namespace Sass {
   class Unary_Expression;
   class FunctionExpression;
   class FunctionExpression2;
+  class MixinExpression;
   class Custom_Warning;
   class Custom_Error;
 
@@ -207,6 +211,9 @@ namespace Sass {
   IMPL_MEM_OBJ(SupportsRule);
   IMPL_MEM_OBJ(CallableDeclaration);
   IMPL_MEM_OBJ(FunctionRule);
+  IMPL_MEM_OBJ(IncludeRule);
+  IMPL_MEM_OBJ(ContentBlock); 
+  IMPL_MEM_OBJ(MixinRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
   IMPL_MEM_OBJ(At_Root_Block);
@@ -249,6 +256,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Unary_Expression);
   IMPL_MEM_OBJ(FunctionExpression);
   IMPL_MEM_OBJ(FunctionExpression2);
+  IMPL_MEM_OBJ(MixinExpression);
   IMPL_MEM_OBJ(Custom_Warning);
   IMPL_MEM_OBJ(Custom_Error);
   IMPL_MEM_OBJ(Variable);
