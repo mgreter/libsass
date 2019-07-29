@@ -946,14 +946,14 @@ namespace Sass {
         std::make_pair("$channels", Functions::Colors::rgba_1),
       });
     register_built_in_overloads(ctx, env, "hsl", {
-        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::hsl_4),
-        std::make_pair("$red, $green, $blue", Functions::Colors::hsl_3),
+        std::make_pair("$hue, $saturation, $lightness, $alpha", Functions::Colors::hsl_4),
+        std::make_pair("$hue, $saturation, $lightness", Functions::Colors::hsl_3),
         std::make_pair("$color, $alpha", Functions::Colors::hsl_2),
         std::make_pair("$channels", Functions::Colors::hsl_1),
       });
     register_built_in_overloads(ctx, env, "hsla", {
-        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::hsla_4),
-        std::make_pair("$red, $green, $blue", Functions::Colors::hsla_3),
+        std::make_pair("$hue, $saturation, $lightness, $alpha", Functions::Colors::hsla_4),
+        std::make_pair("$hue, $saturation, $lightness", Functions::Colors::hsla_3),
         std::make_pair("$color, $alpha", Functions::Colors::hsla_2),
         std::make_pair("$channels", Functions::Colors::hsla_1),
       });
