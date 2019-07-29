@@ -51,6 +51,12 @@ namespace Sass {
       to_string() + " is not a color.", name);
   }
 
+  SassFunction* Value::assertFunction(std::string name)
+  {
+    throw Exception::SassScriptException(
+      to_string() + " is not a function.", name);
+  }
+
   SassMap* Value::assertMap(std::string name) {
     throw Exception::SassScriptException(
       to_string() + " is not a map.", name);
@@ -1213,5 +1219,30 @@ namespace Sass {
     }
     return false;
   }
+
+  SassFunction::SassFunction(
+    ParserState pstate,
+    CallableObj callable) :
+    Value(pstate),
+    callable_(callable)
+  {
+  }
+
+  bool SassFunction::operator== (const Value& rhs) const
+  {
+    if (const SassFunction* fn = Cast<SassFunction>(&rhs)) {
+      // auto d1 = Cast<Definition>(definition());
+      // auto d2 = Cast<Definition>(r->definition());
+      // return d1 && d2 && d1 == d2 && is_css() == r->is_css();
+    }
+    return false;
+  }
+
+  // std::string Function::name() {
+  //   if (definition_) {
+  //     return definition_->name();
+  //   }
+  //   return "";
+  // }
 
 }

@@ -62,6 +62,8 @@ namespace Sass {
     virtual SassColor* assertColor(std::string name = "");
     virtual Color_HSLA* assertColorHsla(std::string name = "");
 
+    virtual SassFunction* assertFunction(std::string name = "");
+
     // SassFunction assertFunction(std::string name = "") = >
     //   throw _exception("$this is not a function reference.", name);
 
@@ -335,6 +337,26 @@ namespace Sass {
     std::string name();
 
     bool operator== (const Value& rhs) const override;
+
+    // ATTACH_COPY_OPERATIONS(Function)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class SassFunction final : public Value {
+  public:
+    ADD_PROPERTY(CallableObj, callable);
+  public:
+    SassFunction(
+      ParserState pstate,
+      CallableObj callable);
+
+    std::string type() const override { return "function"; }
+    static std::string type_name() { return "function"; }
+    bool is_invisible() const override { return true; }
+
+    bool operator== (const Value& rhs) const override;
+
+    SassFunction* assertFunction(std::string name = "") override final { return this; }
 
     // ATTACH_COPY_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()
