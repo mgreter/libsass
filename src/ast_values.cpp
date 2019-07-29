@@ -82,13 +82,11 @@ namespace Sass {
       to_string() + " is not an argument list.", name);
   }
 
-  SassList* Value::changeValues(
+  SassList* Value::changeListContents(
     std::vector<ValueObj> values,
     Sass_Separator separator,
     bool hasBrackets)
   {
-    this->separator();
-    this->hasBrackets();
     return SASS_MEMORY_NEW(SassList, pstate(),
       values, separator, hasBrackets);
   }

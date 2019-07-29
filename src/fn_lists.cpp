@@ -37,9 +37,7 @@ namespace Sass {
         Value* value = arguments[2];
         std::vector<ValueObj> newList = list->asVector();
         newList[list->sassIndexToListIndex(index, epsilon, "n")] = value;
-        return arguments[0]->changeValues(newList,
-          arguments[0]->separator(),
-          arguments[0]->hasBrackets());
+        return arguments[0]->changeListContents(newList);
       }
 
       BUILT_IN_FN(join)
@@ -89,12 +87,50 @@ namespace Sass {
 
       BUILT_IN_FN(append)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "append");
+        Value* list = arguments[0]->assertValue("list");
+        Value* value = arguments[1]->assertValue("val");
+        SassString* separatorParam = arguments[2]->assertString("separator");
+        Sass_Separator separator = SASS_UNDEF;
+        if (separatorParam->value() == "auto") {
+          separator = list->separator() == SASS_UNDEF
+            ? SASS_SPACE : list->separator();
+        }
+        else if (separatorParam->value() == "space") {
+          separator = SASS_SPACE;
+        }
+        else if (separatorParam->value() == "comma") {
+          separator = SASS_COMMA;
+        }
+        else {
+          throw Exception::SassScriptException(
+            "$separator: Must be \"space\", \"comma\", or \"auto\".");
+        }
+        std::vector<ValueObj> newList(list->asVector());
+        newList.push_back(value); // append the new value
+        return list->changeListContents(newList, separator);
       }
 
       BUILT_IN_FN(zip)
       {
-        return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "zip");
+        size_t shortest = std::string::npos;
+        std::vector<std::vector<ValueObj>> lists;
+        for (Value* arg : arguments[0]->asVector()) {
+          std::vector<ValueObj> inner = arg->asVector();
+          shortest = std::min(shortest, inner.size());
+          lists.push_back(inner);
+        }
+        SassListObj result = SASS_MEMORY_NEW(
+          SassList, pstate, {}, SASS_COMMA);
+        if (lists.empty()) { return result.detach(); }
+        for (size_t i = 0; i < shortest; i++) {
+          SassList* inner = SASS_MEMORY_NEW(
+            SassList, pstate, {}, SASS_SPACE);
+          for (std::vector<ValueObj>& arg : lists) {
+            inner->append(arg[i]);
+          }
+          result->append(inner);
+        }
+        return result.detach();
       }
 
       BUILT_IN_FN(index)

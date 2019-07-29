@@ -890,7 +890,7 @@ namespace Sass {
     register_built_in_function(ctx, env, "set-nth", "$list, $n, $value", Functions::Lists::setNth);
     register_built_in_function(ctx, env, "join", "$list1, $list2, $separator: auto, $bracketed: auto", Functions::Lists::join);
     register_built_in_function(ctx, env, "append", "$list, $val, $separator: auto", Functions::Lists::append);
-    register_built_in_function(ctx, env, "zip", "$lists", Functions::Lists::zip);
+    register_built_in_function(ctx, env, "zip", "$lists...", Functions::Lists::zip);
     register_built_in_function(ctx, env, "index", "$list, $value", Functions::Lists::index);
     register_built_in_function(ctx, env, "list-separator", "$list", Functions::Lists::separator);
     register_built_in_function(ctx, env, "is-bracketed", "$list", Functions::Lists::isBracketed);

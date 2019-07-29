@@ -75,10 +75,34 @@ namespace Sass {
 
     virtual SassArgumentList* assertArgumentList(std::string name = "");
 
-    SassList* changeValues(
+    // General 
+    SassList* changeListContents(
       std::vector<ValueObj> values,
       Sass_Separator separator,
-      bool sBrackets);
+      bool hasBrackets);
+
+    // Pass explicit list separator
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      Sass_Separator separator) {
+      return changeListContents(values,
+        separator, hasBrackets());
+    }
+
+    // Pass explicit brackets config
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      bool hasBrackets) {
+      return changeListContents(values,
+        separator(), hasBrackets);
+    }
+
+    // Re-use current list settings
+    SassList* changeListContents(
+      std::vector<ValueObj> values) {
+      return changeListContents(values,
+        separator(), hasBrackets());
+    }
 
     /// The SassScript `>` operation.
     virtual SassBoolean* greaterThan(Value* other);
