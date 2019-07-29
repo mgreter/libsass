@@ -112,8 +112,10 @@ namespace Sass {
         std::string str(string->value());
         str.insert(UTF_8::offset_at_position(
           str, index - 1), insert->value());
-        return SASS_MEMORY_NEW(String_Quoted, pstate,
-          str, string->hasQuotes() ? '*' : '\0');
+        if (String_Quoted * sq = Cast<String_Quoted>(string)) {
+          if (sq->quote_mark()) str = Sass::quote(str);
+        }
+        return SASS_MEMORY_NEW(String_Constant, pstate, str);
       }
 
       BUILT_IN_FN(index)
