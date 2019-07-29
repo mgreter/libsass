@@ -42,7 +42,7 @@ namespace Sass {
 
     // Return the list separator
     virtual bool isTruthy() const {
-      return false;
+      return true;
     }
 
     // Return the list separator
@@ -607,7 +607,7 @@ namespace Sass {
     operator bool() override { return value_; }
 
     // Return the list separator
-    bool isTruthy() const override {
+    bool isTruthy() const override final {
       return value_;
     }
 
@@ -743,7 +743,6 @@ namespace Sass {
   class Null final : public Value {
   public:
     Null(ParserState pstate);
-    bool isBlank() const override final { return true; }
     std::string type() const override { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const override { return true; }
@@ -752,7 +751,15 @@ namespace Sass {
 
     size_t hash() const override;
 
-    bool isNull() const override {
+    bool isTruthy() const override final {
+      return false;
+    }
+
+    bool isBlank() const override final {
+      return true;
+    }
+
+    bool isNull() const override final {
       return true;
     }
 

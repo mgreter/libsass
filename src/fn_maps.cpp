@@ -42,8 +42,9 @@ namespace Sass {
       {
         SassMap* map = arguments[0]->assertMap("map");
         SassMapObj copy = SASS_MEMORY_COPY(map);
-        copy->erase(arguments[0]);
-        for (Value* key : arguments[1]->asVector()) {
+        copy->erase(arguments[1]);
+        auto values = arguments[2]->asVector();
+        for (Value* key : values) {
           copy->erase(key);
         }
         return copy.detach();
