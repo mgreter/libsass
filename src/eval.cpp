@@ -53,11 +53,14 @@ namespace Sass {
     ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
     NormalizedMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
-    ArgumentDeclaration* declaredArguments = callable->declaration()->arguments();
+    CallableDeclaration* declaration = callable->declaration();
+    ArgumentDeclaration* declaredArguments = declaration->arguments();
+    if (!declaredArguments) throw std::runtime_error("Mixin declaration has no arguments");
     std::vector<ArgumentObj> declared = declaredArguments->arguments();
 
     Env closure(callable->environment()); // create new closure
-    declaredArguments->verify(positional.size(), named, traces);
+    // std::cerr << "_verifyArguments with " << declaredArguments << "\n";
+    if (declaredArguments) declaredArguments->verify(positional.size(), named, traces);
     size_t minLength = std::min(positional.size(), declared.size());
 
     for (size_t i = 0; i < minLength; i++) {
@@ -1980,6 +1983,20 @@ namespace Sass {
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());
     }
+  }
+
+  Value* Eval::_runWithBlock(UserDefinedCallable* callable)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->block()->elements()) {
+      // Normal statements in functions must return nullptr
+      Value* value = statement->perform(this);
+    }
+    // callable->declaration()
+    // for (var statement in mixin.declaration.children) {
+    //   statement.accept(this);
+    // }
+    return nullptr;
   }
 
   Value* Eval::_runAndCheck(UserDefinedCallable* callable)

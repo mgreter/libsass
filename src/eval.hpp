@@ -120,6 +120,7 @@ namespace Sass {
     Value* operator()(Parent_Reference*);
 
     Value* _runAndCheck(UserDefinedCallable*);
+    Value* _runWithBlock(UserDefinedCallable*);
 
     // generic fallback
     template <typename U>

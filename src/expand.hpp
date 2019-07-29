@@ -90,6 +90,16 @@ namespace Sass {
     Expand(Context&, Env*, SelectorStack* stack = nullptr, SelectorStack* original = nullptr);
     ~Expand() { }
 
+    Statement* _runWithBlock(UserDefinedCallable*, Trace*);
+    Statement* _runAndExpand(UserDefinedCallable*, Trace*);
+
+    Statement* _runUserDefinedCallable(
+      ArgumentInvocation* arguments,
+      UserDefinedCallable* callable,
+      Statement*(Expand::* run)(UserDefinedCallable*, Trace*),
+      Trace* trace,
+      ParserState pstate);
+
     Block* operator()(Block*);
     Statement* operator()(StyleRule*);
 

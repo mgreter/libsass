@@ -1197,7 +1197,6 @@ namespace Sass {
       arguments = _argumentInvocation(true);
     }
     whitespace();
-
     ArgumentDeclarationObj contentArguments;
     if (scanIdentifier("using")) {
       whitespace();
@@ -1213,6 +1212,11 @@ namespace Sass {
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
       LOCAL_FLAG(_inContentBlock, true);
+      if (contentArguments.isNull()) {
+        // Dart-sass creates this one too
+        contentArguments = SASS_MEMORY_NEW(
+          ArgumentDeclaration, scanner.pstate(), {});
+      }
       content = _withChildren<ContentBlock>(
         &StylesheetParser::_childStatement,
         contentArguments);
@@ -1258,6 +1262,11 @@ namespace Sass {
     ArgumentDeclarationObj arguments;
     if (scanner.peekChar() == $lparen) {
       arguments = _argumentDeclaration2();
+    }
+    else {
+      // Dart-sass creates this one too
+      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
+        scanner.pstate(), {}); // empty declaration
     }
 
     if (_inMixin || _inContentBlock) {

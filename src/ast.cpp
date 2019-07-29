@@ -1039,6 +1039,9 @@ namespace Sass {
     arguments_(arguments),
     comment_(comment)
   {
+    if (arguments_ == nullptr) {
+      std::cerr << "Callable without arg decl\n";
+    }
   }
 
   FunctionRule::FunctionRule(

@@ -11,6 +11,7 @@
 #include "eval.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
+#include "dart_helpers.hpp"
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "debugger.hpp"
@@ -1075,19 +1076,124 @@ namespace Sass {
 
   }
 
-  
+  Statement* Expand::_runWithBlock(UserDefinedCallable* callable, Trace* trace)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->block()->elements()) {
+      Statement_Obj ith = statement->perform(this);
+      if (ith) trace->block()->append(ith);
+    }
+    return nullptr;
+  }
+
+  Statement* Expand::_runAndExpand(UserDefinedCallable* callable, Trace* trace)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->block()->elements()) {
+      Statement_Obj ith = statement->perform(this);
+      if (ith) trace->block()->append(ith);
+    }
+    return nullptr;
+  }
+
+  Statement* Expand::_runUserDefinedCallable(
+    ArgumentInvocation* arguments,
+    UserDefinedCallable* callable,
+    Statement* (Expand::* run)(UserDefinedCallable*, Trace*),
+    Trace* trace,
+    ParserState pstate)
+  {
+    // std::cerr << "_runUserDefinedCallable\n";
+    ArgumentResults* evaluated = eval._evaluateArguments(arguments); // , false
+    NormalizedMap<ValueObj> named = evaluated->named();
+    std::vector<ValueObj> positional = evaluated->positional();
+    CallableDeclaration* declaration = callable->declaration();
+    ArgumentDeclaration* declaredArguments = declaration->arguments();
+    if (!declaredArguments) throw std::runtime_error("Mixin declaration has no arguments");
+    std::vector<ArgumentObj> declared = declaredArguments->arguments();
+
+    Env closure(callable->environment()); // create new closure
+    // std::cerr << "_verifyArguments with " << declaredArguments << "\n";
+    if (declaredArguments) declaredArguments->verify(positional.size(), named, traces);
+    size_t minLength = std::min(positional.size(), declared.size());
+
+    for (size_t i = 0; i < minLength; i++) {
+      // std::cerr << "Set local " << declared[i]->name() << "\n";
+      closure.set_local(
+        declared[i]->name(),
+        positional[i]->withoutSlash());
+    }
+
+    for (size_t i = positional.size(); i < declared.size(); i++) {
+      Value* value = nullptr;
+      Argument* argument = declared[i];
+      std::string name(argument->name());
+      if (named.count(name) == 1) {
+        value = named[name]->perform(&eval);
+        named.erase(name);
+      }
+      else {
+        // Use the default arguments
+        value = argument->value()->perform(&eval);
+      }
+      closure.set_local(
+        argument->name(),
+        value->withoutSlash());
+    }
+
+    SassArgumentListObj argumentList;
+    if (!declaredArguments->restArg().empty()) {
+      std::vector<ValueObj> values;
+      if (positional.size() > declared.size()) {
+        values = sublist(positional, declared.size());
+      }
+      Sass_Separator separator = evaluated->separator();
+      if (separator == SASS_UNDEF) separator = SASS_COMMA;
+      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+        pstate, values, separator, named);
+      closure.set_local(declaredArguments->restArg(), argumentList);
+    }
+
+    if (closure.local_frame().count("@content[m]") == 1) {
+      closure.local_frame()["@content[m]"] =
+        env_stack.back()->local_frame()["@content[m]"];
+    }
+    env_stack.push_back(&closure);
+    Statement* result = (this->*run)(callable, trace);
+    env_stack.pop_back();
+
+    if (named.empty()) return result;
+    if (argumentList == nullptr) return result;
+    // if (argumentList.wereKeywordsAccessed) return result;
+
+    throw Exception::SassScriptException("Nonono");
+
+  }
+
   Statement* Expand::operator()(IncludeRule* node)
   {
-    Env* env = environment();
+    Env* parent = environment();
+    Env env(parent);
+    env_stack.push_back(&env);
+
     UserDefinedCallable* mixin =
-      env->getMixin(node->name(), node->ns());
+      parent->getMixin(node->name(), node->ns());
 
     if (mixin == nullptr) {
       throw Exception::SassRuntimeException(
         "Undefined mixin.", node->pstate());
     }
 
+    UserDefinedCallableObj contentCallable;
+
     if (node->content() != nullptr) {
+
+      contentCallable = SASS_MEMORY_NEW(
+        UserDefinedCallable, node->pstate(),
+        node->content(), &env);
+
+      env.local_frame()["@content[m]"] = contentCallable;
+
       MixinRule* rule = Cast<MixinRule>(mixin->declaration());
       if (!rule || !rule->has_content()) {
         throw Exception::SassRuntimeException(
@@ -1096,7 +1202,58 @@ namespace Sass {
       }
     }
 
-    return nullptr;
+    /*
+    std::string msg(", in mixin `" + c->name() + "`");
+    traces.push_back(Backtrace(c->pstate(), msg));
+    ctx.callee_stack.push_back({
+      c->name().c_str(),
+      c->pstate().path,
+      c->pstate().line + 1,
+      c->pstate().column + 1,
+      SASS_CALLEE_MIXIN,
+      { env }
+    });
+
+    Env new_env(def->environment());
+    env_stack.push_back(&new_env);
+    */
+
+    /*
+    var oldContent = _content;
+    _content = content;
+    var oldInMixin = _inMixin;
+    _inMixin = true;
+    */
+
+    // for (var statement in mixin.declaration.children) {
+    //   statement.accept(this);
+    // }
+
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name(), trace_block);
+
+    // callable->environment()
+
+    auto qwe = _runUserDefinedCallable(
+      node->arguments(),
+      mixin,
+      &Expand::_runWithBlock,
+      trace,
+      node->pstate());
+
+    /*
+    _inMixin = oldInMixin;
+    _content = oldContent;
+    */
+
+    // From old implementation
+    // ctx.callee_stack.pop_back();
+    // env_stack.pop_back();
+    // traces.pop_back();
+
+    env_stack.pop_back();
+    // debug_ast(trace);
+    return trace.detach();
   }
 
   Statement* Expand::operator()(MixinRule* rule)
@@ -1152,6 +1309,7 @@ namespace Sass {
     }
     // debug_ast(rv, "OUT: ");
     Arguments_Obj args = eval.visitArguments(c->arguments());
+
     std::string msg(", in mixin `" + c->name() + "`");
     traces.push_back(Backtrace(c->pstate(), msg));
     ctx.callee_stack.push_back({
@@ -1204,20 +1362,34 @@ namespace Sass {
     */
   }
 
-  Statement* Expand::operator()(Content* c)
+  Statement* Expand::operator()(Content* c) // ContentRule
   {
-    Env* env = environment();
+    Env* env = env_stack.back();
     // convert @content directives into mixin calls to the underlying thunk
     if (!env->has("@content[m]")) return nullptr;
-    ArgumentInvocation* args = c->arguments();
-    if (!args) args = SASS_MEMORY_NEW(ArgumentInvocation, c->pstate(), {}, {});
 
-    Mixin_Call_Obj call = SASS_MEMORY_NEW(Mixin_Call,
-                                       c->pstate(),
-                                       "@content",
-                                       args);
+    auto asd = env->get("@content[m]");
 
-    Trace_Obj trace = Cast<Trace>(call->perform(this));
+    UserDefinedCallable* content = env->getMixin("@content");
+
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), "@content", trace_block);
+
+    // block_stack.back()->append(trace);
+    // block_stack.push_back(trace_block);
+
+    _runUserDefinedCallable(
+      c->arguments(),
+      content,
+      &Expand::_runAndExpand,
+      trace,
+      c->pstate());
+
+    // block_stack.pop_back();
+
+    // _runUserDefinedCallable(node.arguments, content, node, () {
+    // return nullptr;
+    // Adds it twice?
     return trace.detach();
   }
 
