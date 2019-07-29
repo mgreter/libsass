@@ -243,6 +243,22 @@ namespace Sass {
     SassListObj to_list(ParserState& pstate);
     SassMap* assertMap(std::string name) override { return this; }
 
+    // Return the list separator
+    Sass_Separator separator() override final {
+      return empty() ? SASS_UNDEF : SASS_COMMA;
+    }
+
+    std::vector<ValueObj> asVector() override final {
+      std::vector<ValueObj> list;
+      for (size_t i = 0; i < length(); i++) {
+        list.push_back(SASS_MEMORY_NEW(
+          SassList, getKey(i)->pstate(),
+          { getKey(i), getValue(i) },
+          SASS_SPACE));
+      }
+      return list;
+    }
+
     virtual size_t hash() const override;
 
     virtual bool operator== (const Value& rhs) const override;

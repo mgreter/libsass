@@ -575,6 +575,8 @@ namespace Sass {
       K, T, ObjHash, ObjEquality
     >& pairs() const { return elements_; }
 
+    K& getKey(size_t pos) { return _keys.at(pos); }
+    T& getValue(size_t pos) { return _values.at(pos); }
     const std::vector<K>& keys() const { return _keys; }
     const std::vector<T>& values() const { return _values; }
     
