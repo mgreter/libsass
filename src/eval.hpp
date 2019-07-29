@@ -69,6 +69,7 @@ namespace Sass {
     SassList* operator()(SassList*);
     Map* operator()(MapExpression*);
     SassList* operator()(ListExpression*);
+    Value* operator()(ValueExpression*);
     Value* operator()(ParenthesizedExpression*);
     Value* operator()(Binary_Expression*);
     Value* evalBinOp(Binary_Expression* b_in);

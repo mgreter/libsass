@@ -248,6 +248,9 @@ namespace Sass {
     SassArgumentList* assertArgumentList(std::string name = "") {
       return this;
     }
+
+    SassMap* keywordsAsSassMap() const;
+
     SassArgumentList(ParserState pstate,
       std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,

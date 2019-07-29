@@ -161,7 +161,7 @@ namespace Sass {
     ValueObj result;
     // try {
     Env* closure = exp.env_stack.back();
-      result = callback(pstate, positional, *closure, 0.000001);
+      result = callback(pstate, positional, *closure, ctx, *this, 0.000001);
       // }
 
     if (argumentList == nullptr) return result.detach();
@@ -684,6 +684,11 @@ namespace Sass {
     }
     // debug_ast(ll, "ListExp OF: ");
     return ll.detach();
+  }
+
+  Value* Eval::operator()(ValueExpression* node)
+  {
+    return node->value();
   }
 
   Map* Eval::operator()(MapExpression* m)

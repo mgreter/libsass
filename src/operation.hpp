@@ -48,6 +48,7 @@ namespace Sass {
     virtual T operator()(Trace* x)                  = 0;
     virtual T operator()(MapExpression* x) = 0;
     virtual T operator()(ListExpression* x) = 0;
+    virtual T operator()(ValueExpression* x) = 0;
     virtual T operator()(SupportsRule* x)         = 0;
     virtual T operator()(MediaRule* x) = 0;
     virtual T operator()(MixinRule* x) = 0;
@@ -157,6 +158,7 @@ namespace Sass {
     T operator()(Bubble* x)                 { return static_cast<D*>(this)->fallback(x); }
     T operator()(Trace* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ListExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ValueExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(MapExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(SupportsRule* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }

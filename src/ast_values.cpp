@@ -1209,6 +1209,18 @@ namespace Sass {
   {
   }
 
+  // Convert native string keys to sass strings
+  SassMap* SassArgumentList::keywordsAsSassMap() const
+  {
+    SassMap* map = SASS_MEMORY_NEW(SassMap, pstate());
+    for (auto kv : keywords_) {
+      SassString* key = SASS_MEMORY_NEW(
+        SassString, pstate(), kv.first);
+      map->insert(key, kv.second);
+    }
+    return map;
+  }
+
   bool SassArgumentList::operator==(const Value& rhs) const
   {
     if (const SassList * r = Cast<SassList>(&rhs)) {

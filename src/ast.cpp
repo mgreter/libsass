@@ -1100,5 +1100,13 @@ namespace Sass {
   {
   }
 
+  ValueExpression::ValueExpression(
+    ParserState pstate,
+    ValueObj value) :
+    Expression(pstate),
+    value_(value)
+  {
+  }
+
 }
 

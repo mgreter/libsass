@@ -50,6 +50,7 @@ namespace Sass {
 
   class MapExpression;
   class ListExpression;
+  class ValueExpression;
 
   class MediaRule;
 
@@ -187,6 +188,7 @@ namespace Sass {
 
   IMPL_MEM_OBJ(MapExpression);
   IMPL_MEM_OBJ(ListExpression);
+  IMPL_MEM_OBJ(ValueExpression);
 
   IMPL_MEM_OBJ(CssNode);
   IMPL_MEM_OBJ(CssString);

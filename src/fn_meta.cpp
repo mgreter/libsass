@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
+#include "eval.hpp"
 #include "fn_meta.hpp"
 #include "fn_utils.hpp"
 
@@ -134,16 +135,90 @@ namespace Sass {
           "Modules are not supported yet", pstate);
       }
 
+      /// Like `_environment.getFunction`, but also returns built-in
+      /// globally-avaialble functions.
+      Callable* _getFunction(std::string name, Env* env, Context& ctx, std::string ns = "") {
+
+        std::string full_name(name + "[f]");
+        if (!env->has(full_name)) {
+          // look for dollar overload
+        }
+
+        if (env->has(full_name)) {
+          Callable* callable = Cast<Callable>(env->get(full_name));
+          // std::cerr << "Holla " << (void*)callable << "\n";
+          return callable;
+        }
+        else if (ctx.builtins.count(name) == 1) {
+          BuiltInCallable* cb = ctx.builtins[name];
+          return cb;
+        }
+
+        // var local = _environment.getFunction(name, ns);
+        // if (local != null || namespace != null) return local;
+        // return _builtInFunctions[name];
+        return nullptr;
+      }
+
       BUILT_IN_FN(getFunction)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "getFunction");
+
+        SassString* name = arguments[0]->assertString("name");
+        bool css = arguments[1]->isTruthy(); // supports all values
+        SassString* plugin = arguments[2]->assertStringOrNull("module");
+
+        if (css && plugin != nullptr) {
+          throw "$css and $module may not both be passed at once.";
+        }
+
+        CallableObj callable = css
+          ? SASS_MEMORY_NEW(PlainCssCallable, pstate, name->value())
+          : _getFunction(name->value(), &closure, ctx);
+
+        if (callable == nullptr) throw "Function not found: $name";
+
+        return SASS_MEMORY_NEW(SassFunction, pstate, callable);
+
       }
 
       BUILT_IN_FN(call)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, "call");
-      }
 
+        Value* function = arguments[0]->assertValue("function");
+        SassArgumentList* args = arguments[1]->assertArgumentList("args");
+
+        // std::vector<ExpressionObj> positional,
+        //   NormalizedMap<ExpressionObj> named,
+        //   Expression* restArgs = nullptr,
+        //   Expression* kwdRest = nullptr);
+
+        ValueExpression* restArg = SASS_MEMORY_NEW(
+          ValueExpression, args->pstate(), args);
+
+        ValueExpression* kwdRest = nullptr;
+        if (args->keywords().empty()) {
+          SassMap* map = args->keywordsAsSassMap();
+        }
+
+        ArgumentInvocation* invocation = SASS_MEMORY_NEW(
+          ArgumentInvocation, pstate, {}, {}, restArg, kwdRest);
+
+        if (Cast<SassString>(function)) {
+          // warn(
+          //   "Passing a string to call() is deprecated and will be illegal\n"
+          //   "in Dart Sass 2.0.0. Use call(get-function($function)) instead.",
+          //   deprecation: true);
+
+          InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
+          itpl->append(function);
+          FunctionExpression2* expression = SASS_MEMORY_NEW(
+            FunctionExpression2, pstate, itpl, invocation);
+
+          return expression->perform(&eval);
+
+        }
+
+      }
 
     }
 

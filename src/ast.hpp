@@ -739,6 +739,18 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
+  // An expression that directly embeds a [Value]. This is never
+  // constructed by the parser. It's only used when ASTs are
+  // constructed dynamically, as for the `call()` function.
+  class ValueExpression : public Expression {
+    ADD_PROPERTY(ValueObj, value);
+  public:
+    ValueExpression(
+      ParserState pstate,
+      ValueObj value);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
+
   class ListExpression : public Expression {
     ADD_PROPERTY(std::vector<ExpressionObj>, contents);
     ADD_PROPERTY(Sass_Separator, separator);
@@ -1389,7 +1401,10 @@ namespace Sass {
   #define FN_PROTOTYPE2 \
     const ParserState& pstate, \
     const std::vector<ValueObj>& arguments, \
-    Env& closure, double epsilon \
+    Env& closure, \
+    Context& ctx, \
+    Eval& eval, \
+    double epsilon \
 
   typedef Value* (*SassFnSig)(FN_PROTOTYPE2);
   typedef std::pair<ArgumentDeclaration*, SassFnSig> SassFnPair;
