@@ -1164,7 +1164,7 @@ namespace Sass {
 
     if (named.empty()) return result;
     if (argumentList == nullptr) return result;
-    // if (argumentList.wereKeywordsAccessed) return result;
+    if (argumentList->wereKeywordsAccessed()) return result;
 
     throw Exception::SassScriptException("Nonono");
 

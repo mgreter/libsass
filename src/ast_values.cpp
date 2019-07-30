@@ -1198,14 +1198,16 @@ namespace Sass {
     Sass_Separator separator,
     NormalizedMap<ValueObj> keywords) :
     SassList(pstate, values, separator, false),
-    keywords_(keywords)
+    _keywords(keywords),
+    _wereKeywordsAccessed(false)
   {
   }
 
   SassArgumentList::SassArgumentList(
     const SassArgumentList* ptr) :
     SassList(ptr),
-    keywords_(ptr->keywords_)
+    _keywords(ptr->_keywords),
+    _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)
   {
   }
 
@@ -1213,7 +1215,7 @@ namespace Sass {
   SassMap* SassArgumentList::keywordsAsSassMap() const
   {
     SassMap* map = SASS_MEMORY_NEW(SassMap, pstate());
-    for (auto kv : keywords_) {
+    for (auto kv : _keywords) {
       SassString* key = SASS_MEMORY_NEW(
         SassString, pstate(), kv.first);
       map->insert(key, kv.second);

@@ -240,7 +240,8 @@ namespace Sass {
 
   typedef NormalizedMap<ValueObj> keywordMap;
   class SassArgumentList : public SassList {
-    ADD_PROPERTY(NormalizedMap<ValueObj>, keywords);
+    NormalizedMap<ValueObj> _keywords;
+    bool _wereKeywordsAccessed;
   public:
     bool is_arglist() const override final {
       return true;
@@ -249,12 +250,22 @@ namespace Sass {
       return this;
     }
 
+    NormalizedMap<ValueObj> keywords() {
+      _wereKeywordsAccessed = true;
+      return _keywords;
+    }
+
+    bool wereKeywordsAccessed() const {
+      return _wereKeywordsAccessed;
+    }
+
     SassMap* keywordsAsSassMap() const;
 
     SassArgumentList(ParserState pstate,
       std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,
       NormalizedMap<ValueObj> keywords = {});
+
     ATTACH_EQ_OPERATIONS(Value);
     ATTACH_COPY_OPERATIONS(SassArgumentList);
     ATTACH_CRTP_PERFORM_METHODS();
