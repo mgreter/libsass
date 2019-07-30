@@ -170,6 +170,8 @@ namespace Sass {
       size_t positional,
       NormalizedMap<ValueObj>& names);
 
+    std::string toString2() const;
+
   };
 
   class ArgumentInvocation : public SassNode {
@@ -1150,6 +1152,10 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
       Block* block = nullptr);
+
+    // Stringify declarations etc. (dart)
+    virtual std::string toString1() const = 0;
+
     ATTACH_ABSTRACT_CRTP_PERFORM_METHODS();
   };
 
@@ -1160,10 +1166,12 @@ namespace Sass {
       ParserState pstate,
       ArgumentDeclaration* arguments = nullptr,
       std::vector<StatementObj> children = {});
+    std::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class FunctionRule final : public CallableDeclaration {
+  class FunctionRule final :
+    public CallableDeclaration {
   public:
     FunctionRule(
       ParserState pstate,
@@ -1171,10 +1179,12 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
       Block* block = nullptr);
+    std::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class MixinRule final : public CallableDeclaration {
+  class MixinRule final :
+    public CallableDeclaration {
   public:
     MixinRule(
       ParserState pstate,
@@ -1182,6 +1192,7 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
       Block* block = nullptr);
+    std::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -1405,6 +1416,7 @@ namespace Sass {
   class Callable : public SassNode {
   public:
     Callable(ParserState pstate);
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
   class UserDefinedCallable : public Callable {
@@ -1416,12 +1428,14 @@ namespace Sass {
     UserDefinedCallable(ParserState pstate,
       CallableDeclarationObj declaration,
       Env* environment);
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
   class PlainCssCallable : public Callable {
     ADD_PROPERTY(std::string, name);
   public:
     PlainCssCallable(ParserState pstate, std::string name);
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
   class BuiltInCallable : public Callable {
@@ -1461,6 +1475,7 @@ namespace Sass {
       size_t positional,
       NormalizedMap<ValueObj> names);
 
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
 

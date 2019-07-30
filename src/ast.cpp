@@ -1028,6 +1028,15 @@ namespace Sass {
     return true;
   }
 
+  std::string ArgumentDeclaration::toString2() const
+  {
+    std::vector<std::string> results;
+    for (Argument* argument : arguments_) {
+      results.push_back(argument->name());
+    }
+    return Util::join_strings(results, ", ");
+  }
+
   CallableDeclaration::CallableDeclaration(
     ParserState pstate,
     std::string name,
@@ -1055,6 +1064,11 @@ namespace Sass {
   {
   }
 
+  std::string FunctionRule::toString1() const
+  {
+    return std::string();
+  }
+
   MixinRule::MixinRule(
     ParserState pstate,
     std::string name,
@@ -1064,6 +1078,11 @@ namespace Sass {
     CallableDeclaration(pstate,
       name, arguments, comment, block)
   {
+  }
+
+  std::string MixinRule::toString1() const
+  {
+    return std::string();
   }
 
 
@@ -1088,6 +1107,11 @@ namespace Sass {
     std::vector<StatementObj> children) :
     CallableDeclaration(pstate, "", arguments)
   {
+  }
+
+  std::string ContentBlock::toString1() const
+  {
+    return std::string();
   }
 
   UserDefinedCallable::UserDefinedCallable(

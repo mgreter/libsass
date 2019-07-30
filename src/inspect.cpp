@@ -1241,8 +1241,22 @@ namespace Sass {
   {
     append_token("get-function", f);
     append_string("(");
-    // append_string(quote(f->name()));
+    f->callable()->perform(this);
     append_string(")");
+  }
+
+  void Inspect::operator()(Callable*)
+  {
+  }
+
+  void Inspect::operator()(BuiltInCallable*)
+  {
+
+  }
+
+  void Inspect::operator()(UserDefinedCallable* c)
+  {
+    append_string(c->declaration()->name());
   }
 
   void Inspect::operator()(Null* n)

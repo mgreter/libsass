@@ -115,7 +115,9 @@ namespace Sass {
     virtual T operator()(StringLiteral* x) = 0;
     virtual T operator()(Interpolation* x) = 0;
     virtual T operator()(StringExpression* x) = 0;
-
+    virtual T operator()(Callable* x) = 0;
+    virtual T operator()(UserDefinedCallable* x) = 0;
+    virtual T operator()(BuiltInCallable* x) = 0;
 
     virtual T operator()(SupportsCondition* x)     = 0;
     // virtual T operator()(SupportsOperation* x)      = 0;
@@ -223,6 +225,10 @@ namespace Sass {
     T operator()(StringLiteral* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Interpolation* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(StringExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(UserDefinedCallable* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(BuiltInCallable* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Callable* x) { return static_cast<D*>(this)->fallback(x); }
+
 
     T operator()(String_Constant* x)        { return static_cast<D*>(this)->fallback(x); }
     T operator()(String_Quoted* x)          { return static_cast<D*>(this)->fallback(x); }
