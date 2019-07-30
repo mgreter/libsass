@@ -823,7 +823,7 @@ namespace Sass {
     if (length() > 1) {
       return "";
     }
-    if (StringLiteral* str = Cast<StringLiteral>(first())) {
+    if (StringLiteral * str = Cast<StringLiteral>(first())) {
       return str->text();
     }
     else {

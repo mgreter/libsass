@@ -203,20 +203,24 @@ namespace Sass {
         ArgumentInvocation* invocation = SASS_MEMORY_NEW(
           ArgumentInvocation, pstate, {}, {}, restArg, kwdRest);
 
-        if (Cast<SassString>(function)) {
+        if (SassString* str = Cast<SassString>(function)) {
           // warn(
           //   "Passing a string to call() is deprecated and will be illegal\n"
           //   "in Dart Sass 2.0.0. Use call(get-function($function)) instead.",
           //   deprecation: true);
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
-          itpl->append(function);
+          itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, str->value()));
           FunctionExpression2* expression = SASS_MEMORY_NEW(
             FunctionExpression2, pstate, itpl, invocation);
 
           return expression->perform(&eval);
 
         }
+
+        Callable* callable = function->assertFunction("function")->callable();
+        return eval._runFunctionCallable(invocation, callable, pstate);
+
 
       }
 

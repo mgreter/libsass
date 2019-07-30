@@ -124,7 +124,6 @@ namespace Sass {
 
     ArgumentDeclaration* overload = tuple.first;
     SassFnSig callback = tuple.second;
-    overload->verify(positional.size(), named, traces);
     std::vector<ArgumentObj> declaredArguments = overload->arguments();
 
     overload->verify(positional.size(), named, traces);
@@ -1852,6 +1851,7 @@ namespace Sass {
       positional.push_back(argument->perform(this));
     }
     NormalizedMap<ValueObj> named = normalizedMapMap(arguments->named());
+    for (auto kv : named) { kv.second = kv.second->perform(this); }
 
     // var positionalNodes =
     //   trackSpans ? arguments.positional.map(_expressionNode).toList() : null;
@@ -1873,14 +1873,23 @@ namespace Sass {
 
     Sass_Separator separator = SASS_UNDEF;
 
-    if (Map * map = Cast<Map>(rest)) {
-
+    if (SassMap * restMap = Cast<SassMap>(rest)) {
+      // _addRestMap(named, rest, arguments.rest);
+      std::cerr << "DO restMap\n";
     }
     else if (SassList * list = Cast<SassList>(rest)) {
-
+      std::vector<ValueObj> values = rest->asVector();
+      std::copy(values.begin(), values.end(),
+        std::back_inserter(positional));
+      separator = list->separator();
+      if (SassArgumentList * args = Cast<SassArgumentList>(rest)) {
+        for (auto kv : args->keywords()) {
+          named[kv.first] = kv.second;
+        }
+      }
     }
     else {
-
+      positional.push_back(rest);
     }
 
     if (arguments->kwdRest() == nullptr) {
