@@ -1398,14 +1398,6 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  #define FN_PROTOTYPE2 \
-    const ParserState& pstate, \
-    const std::vector<ValueObj>& arguments, \
-    Env& closure, \
-    Context& ctx, \
-    Eval& eval, \
-    double epsilon \
-
   typedef Value* (*SassFnSig)(FN_PROTOTYPE2);
   typedef std::pair<ArgumentDeclaration*, SassFnSig> SassFnPair;
   typedef std::vector<SassFnPair> SassFnPairs;

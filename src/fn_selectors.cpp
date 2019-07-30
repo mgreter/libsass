@@ -11,6 +11,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Selectors {
+
       BUILT_IN_FN(nest)
       {
         return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-nest");
@@ -23,32 +24,58 @@ namespace Sass {
 
       BUILT_IN_FN(extend)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-extend");
+        Backtraces traces;
+        SelectorListObj selector = arguments[0]->assertSelector(ctx, "selector");
+        SelectorListObj target = arguments[1]->assertSelector(ctx, "extendee");
+        SelectorListObj source = arguments[2]->assertSelector(ctx, "extender");
+        SelectorListObj result = Extender::extend(selector, source, target, traces);
+        return Listize::listize(result);
       }
 
       BUILT_IN_FN(replace)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-replace");
+        Backtraces traces;
+        SelectorListObj selector = arguments[0]->assertSelector(ctx, "selector");
+        SelectorListObj target = arguments[1]->assertSelector(ctx, "original");
+        SelectorListObj source = arguments[2]->assertSelector(ctx, "replacement");
+        SelectorListObj result = Extender::replace(selector, source, target, traces);
+        return Listize::listize(result);
       }
 
       BUILT_IN_FN(unify)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-unify");
+        SelectorListObj selector1 = arguments[0]->assertSelector(ctx, "selector1");
+        SelectorListObj selector2 = arguments[1]->assertSelector(ctx, "selector2");
+        SelectorListObj result = selector1->unifyWith(selector2);
+        return Listize::listize(result);
       }
 
       BUILT_IN_FN(isSuper)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-isSuper");
+        SelectorListObj sel_sup = arguments[0]->assertSelector(ctx, "super");
+        SelectorListObj sel_sub = arguments[1]->assertSelector(ctx, "sub");
+        bool result = sel_sup->isSuperselectorOf(sel_sub);
+        return SASS_MEMORY_NEW(Boolean, pstate, result);
       }
 
       BUILT_IN_FN(simple)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-simple");
+        CompoundSelectorObj selector = arguments[0]->assertCompoundSelector(ctx, "selector");
+        SassList* l = SASS_MEMORY_NEW(SassList,
+          selector->pstate(), {}, SASS_COMMA);
+        for (size_t i = 0, L = selector->length(); i < L; ++i) {
+          const SimpleSelectorObj& ss = selector->get(i);
+          std::string ss_string = ss->to_string();
+          l->append(SASS_MEMORY_NEW(String_Quoted, ss->pstate(), ss_string));
+        }
+        return l;
+
       }
 
       BUILT_IN_FN(parse)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-parse");
+        SelectorListObj selector = arguments[0]->assertSelector(ctx, "selector");
+        return Listize::listize(selector);
       }
 
     }

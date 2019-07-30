@@ -93,6 +93,26 @@ namespace Sass {
       return paths;
     }
 
+	std::string join_strings(std::vector<std::string>& strings, const char* const separator)
+	{
+		switch (strings.size())
+		{
+		case 0:
+			return "";
+		case 1:
+			return strings[0];
+		default:
+			std::ostringstream os;
+      // Copy all values beside last one to stream ...
+			std::copy(strings.begin(), strings.end() - 1,
+        // ... with special iterator that appends a separator
+				std::ostream_iterator<std::string>(os, separator));
+      // finally add the last item
+			os << *strings.rbegin();
+			return os.str();
+		}
+	}
+
 
     // ###########################################################################
     // Returns [name] without a vendor prefix.

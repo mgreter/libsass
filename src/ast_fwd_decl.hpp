@@ -366,6 +366,14 @@ namespace Sass {
   typedef Map SassMap;
   typedef MapObj SassMapObj;
 
+  #define FN_PROTOTYPE2 \
+    const ParserState& pstate, \
+    const std::vector<ValueObj>& arguments, \
+    Env& closure, \
+    Context& ctx, \
+    Eval& eval, \
+    double epsilon \
+
 }
 
 #endif

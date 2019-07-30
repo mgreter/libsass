@@ -4,6 +4,8 @@
 #include "sass.hpp"
 #include <algorithm>
 #include <vector>
+#include <iterator>
+#include <sstream>
 
 namespace Sass {
 
@@ -201,7 +203,9 @@ namespace Sass {
       bool trimSpace = false);
     // EO split_string
 
-
+    std::string join_strings(
+      std::vector<std::string>& strings,
+      const char* const separator);
 
   }  // namespace Sass
 }  // namespace Util

@@ -77,6 +77,53 @@ namespace Sass {
 
     virtual SassArgumentList* assertArgumentList(std::string name = "");
 
+    /// Converts a `selector-parse()`-style input into a string that can be
+/// parsed.
+///
+/// Returns `null` if [this] isn't a type or a structure that can be parsed as
+/// a selector.
+    std::string _selectorStringOrNull();
+
+
+    /// Converts a `selector-parse()`-style input into a string that can be
+    /// parsed.
+    ///
+    /// Throws a [SassScriptException] if [this] isn't a type or a structure that
+    /// can be parsed as a selector.
+    std::string _selectorString(std::string name = "") {
+      std::string str = _selectorStringOrNull();
+      if (!str.empty()) return str;
+
+      throw Exception::SassScriptException(
+        "$this is not a valid selector: it must be a string,\n"
+        "a list of strings, or a list of lists of strings.",
+        name);
+    }
+
+    /// Parses [this] as a selector list, in the same manner as the
+    /// `selector-parse()` function.
+    ///
+    /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+    /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+    /// [ParentSelector]s. Otherwise, they're considered parse errors.
+    ///
+    /// If this came from a function argument, [name] is the argument name
+    /// (without the `$`). It's used for error reporting.
+    virtual SelectorList* assertSelector(Context& ctx, std::string name = "", bool allowParent = false);
+
+
+    /// Parses [this] as a compound selector, in the same manner as the
+    /// `selector-parse()` function.
+    ///
+    /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+    /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+    /// [ParentSelector]s. Otherwise, they're considered parse errors.
+    ///
+    /// If this came from a function argument, [name] is the argument name
+    /// (without the `$`). It's used for error reporting.
+    virtual CompoundSelector* assertCompoundSelector(Context& ctx, std::string name = "", bool allowParent = false);
+
+
     // General 
     SassList* changeListContents(
       std::vector<ValueObj> values,

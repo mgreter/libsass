@@ -7,6 +7,7 @@
 #include "ast.hpp"
 #include "character.hpp"
 #include "interpolation.hpp"
+#include "parser_selector.hpp"
 
 namespace Sass {
 
@@ -86,6 +87,93 @@ namespace Sass {
   SassArgumentList* Value::assertArgumentList(std::string name) {
     throw Exception::SassScriptException(
       to_string() + " is not an argument list.", name);
+  }
+
+  /// Converts a `selector-parse()`-style input into a string that can be
+  /// parsed.
+  ///
+  /// Returns `null` if [this] isn't a type or a structure that can be parsed as
+  /// a selector.
+
+  std::string Value::_selectorStringOrNull() {
+
+	  if (SassString * str = Cast<SassString>(this)) {
+		  return str->value();
+	  }
+
+    if (SassList * list = Cast<SassList>(this)) {
+
+      std::vector<ValueObj> values = list->asVector();
+
+      if (values.empty()) return nullptr;
+
+      std::vector<std::string> result;
+      if (list->separator() == SASS_COMMA) {
+        for (auto complex : values) {
+          SassList* cplxLst = Cast<SassList>(complex);
+          SassString* cplxStr = Cast<SassString>(complex);
+          if (cplxStr) {
+            result.push_back(cplxStr->value());
+          }
+          else if (cplxLst &&
+            cplxLst->separator() == SASS_SPACE) {
+            std::string string = complex->_selectorString();
+            if (string.empty()) return nullptr;
+            result.push_back(string);
+          }
+          else {
+            return nullptr;
+          }
+        }
+      }
+      else {
+        for (auto compound : values) {
+          SassString* cmpdStr = Cast<SassString>(compound);
+          if (cmpdStr) {
+            result.push_back(cmpdStr->value());
+          }
+          else {
+            return nullptr;
+          }
+        }
+      }
+      Util::join_strings(result, list->separator() == SASS_COMMA ? ", " : " ");
+
+    }
+
+    return nullptr;
+
+  }
+
+
+  /// Parses [this] as a selector list, in the same manner as the
+  /// `selector-parse()` function.
+  ///
+  /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+  /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+  /// [ParentSelector]s. Otherwise, they're considered parse errors.
+  ///
+  /// If this came from a function argument, [name] is the argument name
+  /// (without the `$`). It's used for error reporting.
+
+  SelectorList* Value::assertSelector(Context& ctx, std::string name, bool allowParent) {
+    std::string string = _selectorString(name);
+    char* str = sass_copy_c_string(string.c_str());
+    ctx.strings.push_back(str);
+    SelectorParser p2(ctx, str, "sass://parse-selector", -1);
+    p2._allowParent = allowParent;
+    auto sel = p2.parse();
+    return sel.detach();
+  }
+
+  CompoundSelector* Value::assertCompoundSelector(Context& ctx, std::string name, bool allowParent) {
+    std::string string = _selectorString(name);
+    char* str = sass_copy_c_string(string.c_str());
+    ctx.strings.push_back(str);
+    SelectorParser p2(ctx, str, "sass://parse-selector", -1);
+    p2._allowParent = allowParent;
+    auto sel = p2.parseCompoundSelector();
+    return sel.detach();
   }
 
   SassList* Value::changeListContents(
