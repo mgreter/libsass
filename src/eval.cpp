@@ -1710,8 +1710,12 @@ namespace Sass {
   {
     Value* evaled = expression->perform(this);
     // std::string result(_serialize(evaled, quote));
-    std::string result(evaled->to_sass());
-    return result;
+    if (!evaled->isNull()) {
+      return evaled->to_sass();
+    }
+    else {
+      return "";
+    }
   }
 
   /// Calls `value.toCssString()` and wraps a [SassScriptException] to associate

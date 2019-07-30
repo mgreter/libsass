@@ -963,7 +963,7 @@ namespace Sass {
       if (i < positional) {
         if (names.count(argument->name()) == 1) {
           throw Exception::InvalidSyntax(argument->pstate(), traces,
-            "Argument $${argument.name} was passed both by position and by "
+            "Argument " + argument->name() + " name was passed both by position and by "
             "name.");
         }
       }
@@ -998,8 +998,7 @@ namespace Sass {
       strm << "No " << pluralize("argument", unknownNames.size());
       strm << " named " << toSentence(unknownNames, "or");
       throw Exception::InvalidSyntax("[pstate]", traces,
-        " named "
-        "${toSentence(unknownNames.map((name) => \"$$name\"), 'or')}.");
+        "No argument named " + toSentence(unknownNames, "or") + ".");
     }
 
   }
