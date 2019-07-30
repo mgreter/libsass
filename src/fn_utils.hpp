@@ -79,7 +79,7 @@ namespace Sass {
           ? floor(number) : ceill(number));
     }
     return lround(fuzzyLessThanOrEquals(
-      fmod(number, 1.0), 0.5, epsilon)
+      fmod(number, 1.0), - 0.5, epsilon)
         ? floorl(number) : ceill(number));
   }
 
