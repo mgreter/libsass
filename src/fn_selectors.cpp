@@ -10,6 +10,24 @@ namespace Sass {
 
   namespace Functions {
 
+    // Adds a [ParentSelector] to the beginning of [compound],
+    // or returns `null` if that wouldn't produce a valid selector.
+    CompoundSelector* _prependParent(CompoundSelector* compound) {
+      SimpleSelector* first = compound->first();
+      if (first->is_universal()) return nullptr;
+      if (TypeSelector * type = Cast<TypeSelector>(first)) {
+        if (!type->ns().empty()) return nullptr;
+        CompoundSelector* cp = SASS_MEMORY_COPY(compound);
+        cp->hasRealParent(true);
+        return cp;
+      }
+      else {
+        CompoundSelector* cp = SASS_MEMORY_COPY(compound);
+        cp->hasRealParent(true);
+        return cp;
+      }
+    }
+
     namespace Selectors {
 
       BUILT_IN_FN(nest)
@@ -19,7 +37,65 @@ namespace Sass {
 
       BUILT_IN_FN(append)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-append");
+
+        std::vector<ValueObj> arglist = arguments[0]->asVector();
+
+        // Not enough parameters
+        if (arglist.empty()) {
+          throw Exception::SassRuntimeException(
+            "$selectors: At least one selector must be passed.",
+            pstate);
+        }
+
+        std::vector<SelectorListObj> selectors;
+        for (ValueObj& arg : arglist) {
+          if (Cast<Null>(arg)) {
+            throw Exception::SassRuntimeException( // "$selectors: "
+              "null is not a valid selector: it must be a string,\n"
+              "a list of strings, or a list of lists of strings for 'selector-append'",
+              pstate);
+          }
+          std::string text = arg->to_css();
+          ParserState state(arg->pstate());
+          char* str = sass_copy_c_string(text.c_str());
+          ctx.strings.push_back(str);
+          SelectorParser p2(ctx, str, state.path, state.file);
+          selectors.push_back(p2.parse());
+        }
+
+        SelectorListObj reduced;
+        // Implement reduce/accumulate
+        for (SelectorList* child : selectors) {
+          // The first iteration
+          if (reduced.isNull()) {
+            reduced = child;
+            continue;
+          }
+          // Combine child with parent
+          SelectorListObj cp = SASS_MEMORY_COPY(child);
+          for (ComplexSelector* complex : child->elements()) {
+            SelectorComponent* component = complex->first();
+            if (CompoundSelector * compound = component->getCompound()) {
+              compound = _prependParent(compound);
+              if (compound == nullptr) {
+                throw Exception::SassRuntimeException(
+                  "Can't append " + child->to_css() + " to " +
+                  reduced->to_css() + ".", pstate);
+              }
+              complex->at(0) = compound;
+            }
+            else {
+              throw Exception::SassRuntimeException(
+                "Can't append " + child->to_css() + " to " +
+                reduced->to_css() + ".", pstate);
+            }
+          }
+          Backtraces traces;
+          reduced = cp->resolveParentSelectors(reduced, traces, false);
+        }
+
+        return Listize::listize(reduced);
+
       }
 
       BUILT_IN_FN(extend)
@@ -136,24 +212,6 @@ namespace Sass {
       }
 
       return Listize::listize(result);
-    }
-
-    // Adds a [ParentSelector] to the beginning of [compound],
-    // or returns `null` if that wouldn't produce a valid selector.
-    CompoundSelector* _prependParent(CompoundSelector* compound) {
-      SimpleSelector* first = compound->first();
-      if (first->is_universal()) return nullptr;
-      if (TypeSelector* type = Cast<TypeSelector>(first)) {
-        if (!type->ns().empty()) return nullptr;
-        CompoundSelector* cp = SASS_MEMORY_COPY(compound);
-        cp->hasRealParent(true);
-        return cp;
-      }
-      else {
-        CompoundSelector* cp = SASS_MEMORY_COPY(compound);
-        cp->hasRealParent(true);
-        return cp;
-      }
     }
 
     Signature selector_append_sig = "selector-append($selectors...)";
