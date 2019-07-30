@@ -160,7 +160,7 @@ namespace Sass {
     ValueObj result;
     // try {
     Env* closure = exp.env_stack.back();
-    double epsilon = std::pow(0.1, ctx.c_options.precision);
+    double epsilon = std::pow(0.1, ctx.c_options.precision + 1);
     result = callback(pstate, positional, *closure, ctx, *this, epsilon);
       // }
 
