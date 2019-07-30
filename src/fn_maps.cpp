@@ -21,8 +21,8 @@ namespace Sass {
         Map* map1 = arguments[0]->assertMap("map1");
         Map* map2 = arguments[1]->assertMap("map2");
         Map* map = SASS_MEMORY_NEW(Map, pstate);
-        for (auto kv : map1->elements()) { *map << kv; }
-        for (auto kv : map2->elements()) { *map << kv; }
+        for (auto key : map1->keys()) { map->insert(key, map1->at(key)); }
+        for (auto key : map2->keys()) { map->insert(key, map2->at(key)); }
         // std::copy(map1->begin(), map1->end(),
         //   std::back_inserter(map->elements()));
         // std::copy(map2->begin(), map2->end(),
