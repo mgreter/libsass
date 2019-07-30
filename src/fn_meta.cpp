@@ -41,12 +41,12 @@ namespace Sass {
       BUILT_IN_FN(keywords)
       {
         SassArgumentList* argumentList = arguments[0]->assertArgumentList("args");
-        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+        KeywordMap<ValueObj> keywords = argumentList->keywords();
         SassMapObj map = SASS_MEMORY_NEW(SassMap, arguments[0]->pstate());
         for (auto kv : keywords) {
           // Wrap string key into a sass value
           map->insert(SASS_MEMORY_NEW(String_Constant,
-            kv.second->pstate(), kv.first.substr(1)), kv.second);
+            keywords.get(kv)->pstate(), kv.substr(1)), keywords.get(kv));
         }
         return map.detach();
       }

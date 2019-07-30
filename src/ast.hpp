@@ -163,12 +163,12 @@ namespace Sass {
 
     void verify(
       size_t positional,
-      NormalizedMap<ValueObj>& names,
+      KeywordMap<ValueObj>& names,
       Backtraces traces);
 
     bool matches(
       size_t positional,
-      NormalizedMap<ValueObj>& names);
+      KeywordMap<ValueObj>& names);
 
     std::string toString2() const;
 
@@ -180,7 +180,7 @@ namespace Sass {
     ADD_CONSTREF(std::vector<ExpressionObj>, positional);
 
     // The arguments passed by name.
-    ADD_CONSTREF(NormalizedMap<ExpressionObj>, named);
+    ADD_CONSTREF(KeywordMap<ExpressionObj>, named);
 
     // The first rest argument (as in `$args...`).
     ADD_PROPERTY(ExpressionObj, restArg);
@@ -192,7 +192,7 @@ namespace Sass {
 
     ArgumentInvocation(ParserState pstate,
       std::vector<ExpressionObj> positional,
-      NormalizedMap<ExpressionObj> named,
+      KeywordMap<ExpressionObj> named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 
@@ -220,14 +220,14 @@ namespace Sass {
     // std::vector<Ast_Node_Obj> positionalNodes;
 
     // Arguments passed by name.
-    ADD_PROPERTY(NormalizedMap<ValueObj>, named);
+    ADD_PROPERTY(KeywordMap<ValueObj>, named);
 
     // The [AstNode]s that hold the spans for each [named] argument,
     // or `null` if source span tracking is disabled. This stores
     // [AstNode]s rather than [FileSpan]s so it can avoid calling
     // [AstNode.span] if the span isn't required, since some nodes
     // need to do real work to manufacture a source span.
-    // NormalizedMap<Ast_Node_Obj> namedNodes;
+    // KeywordMap<Ast_Node_Obj> namedNodes;
 
     // The separator used for the rest argument list, if any.
     ADD_PROPERTY(Sass_Separator, separator);
@@ -237,7 +237,7 @@ namespace Sass {
     ArgumentResults(
       ParserState pstate,
       std::vector<ValueObj> positional,
-      NormalizedMap<ValueObj> named,
+      KeywordMap<ValueObj> named,
       Sass_Separator separator);
 
   };
@@ -1476,7 +1476,7 @@ namespace Sass {
 
     SassFnPair callbackFor(
       size_t positional,
-      NormalizedMap<ValueObj> names);
+      KeywordMap<ValueObj> names);
 
     bool operator== (const Callable& rhs) const override final;
 

@@ -193,7 +193,7 @@ namespace Sass {
   }
 
   SassFnPair BuiltInCallable::callbackFor(
-    size_t positional, NormalizedMap<ValueObj> names)
+    size_t positional, KeywordMap<ValueObj> names)
   {
     for (SassFnPair& pair : overloads_) {
       if (pair.first->matches(positional, names)) {

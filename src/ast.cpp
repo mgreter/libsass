@@ -869,7 +869,7 @@ namespace Sass {
 
   ArgumentInvocation::ArgumentInvocation(ParserState pstate,
     std::vector<ExpressionObj> positional,
-    NormalizedMap<ExpressionObj> named,
+    KeywordMap<ExpressionObj> named,
     Expression* restArg,
     Expression* kwdRest) :
     SassNode(pstate),
@@ -898,10 +898,10 @@ namespace Sass {
       strm << named->to_string();
       addComma = true;
     }
-    for (auto named : named_) {
+    for (std::string named : named_) {
       if (addComma) strm << ", ";
-      strm << named.first << ": ";
-      strm << named.second->to_string();
+      strm << named << ": ";
+//      strm << named_->get(named)->to_string();
       addComma = true;
     }
     if (!restArg_.isNull()) {
@@ -923,7 +923,7 @@ namespace Sass {
   ArgumentResults::ArgumentResults(
     ParserState pstate,
     std::vector<ValueObj> positional,
-    NormalizedMap<ValueObj> named,
+    KeywordMap<ValueObj> named,
     Sass_Separator separator) :
     SassNode(pstate),
     positional_(positional),
@@ -954,7 +954,7 @@ namespace Sass {
 
   /// Throws a [SassScriptException] if [positional] and [names] aren't valid
   /// for this argument declaration.
-  void ArgumentDeclaration::verify(size_t positional, NormalizedMap<ValueObj>& names, Backtraces traces)
+  void ArgumentDeclaration::verify(size_t positional, KeywordMap<ValueObj>& names, Backtraces traces)
   {
 
     size_t namedUsed = 0;
@@ -990,7 +990,7 @@ namespace Sass {
     }
 
     if (namedUsed < names.size()) {
-      NormalizedMap<ValueObj> unknownNames(names);
+      KeywordMap<ValueObj> unknownNames(names);
       for (Argument* arg : arguments_) {
         unknownNames.erase(arg->name());
       }
@@ -1005,7 +1005,7 @@ namespace Sass {
   }
 
   // Returns whether [positional] and [names] are valid for this argument declaration.
-  bool ArgumentDeclaration::matches(size_t positional, NormalizedMap<ValueObj>& names)
+  bool ArgumentDeclaration::matches(size_t positional, KeywordMap<ValueObj>& names)
   {
     size_t namedUsed = 0;
     for (size_t i = 0; i < arguments_.size(); i++) {

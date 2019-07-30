@@ -11,6 +11,7 @@
 #include "ast_def_macros.hpp"
 #include "util_string.hpp"
 
+#include "ordered_map.hpp"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -18,6 +19,13 @@ namespace Sass {
 
   template<class T>
   using NormalizedMap = std::unordered_map<
+    std::string, T,
+    Util::hashIgnoreSeparator,
+    Util::equalsIgnoreSeparator
+  >;
+
+  template<class T>
+  using KeywordMap = ordered_map<
     std::string, T,
     Util::hashIgnoreSeparator,
     Util::equalsIgnoreSeparator
@@ -32,7 +40,7 @@ namespace Sass {
 
   std::string pluralize(std::string singular, size_t size, std::string plural = "");
 
-  std::string toSentence(NormalizedMap<ValueObj>& names, std::string conjunction = "and");
+  std::string toSentence(KeywordMap<ValueObj>& names, std::string conjunction = "and");
 
   // this defeats the whole purpose of environment being templatable!!
   typedef NormalizedMap<AST_Node_Obj>::iterator EnvMapIter;

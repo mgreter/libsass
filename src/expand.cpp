@@ -1108,7 +1108,7 @@ namespace Sass {
 
     // std::cerr << "evaluated " << (evaluated->separator() == SASS_UNDEF ? "comma": "??") << "\n";
 
-    NormalizedMap<ValueObj> named = evaluated->named();
+    KeywordMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
     CallableDeclaration* declaration = callable->declaration();
     ArgumentDeclaration* declaredArguments = declaration->arguments();

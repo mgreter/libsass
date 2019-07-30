@@ -294,9 +294,9 @@ namespace Sass {
     else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
   }
 
-  NormalizedMap<ExpressionObj> List::getNormalizedArgMap()
+  KeywordMap<ExpressionObj> List::getKeywordArgMap()
   {
-    NormalizedMap<ExpressionObj> map;
+    KeywordMap<ExpressionObj> map;
     if (is_arglist_) {
       for (Expression* item : elements()) {
         if (Argument * arg = Cast<Argument>(item)) {
@@ -1294,7 +1294,7 @@ namespace Sass {
     ParserState pstate,
     std::vector<ValueObj> values,
     Sass_Separator separator,
-    NormalizedMap<ValueObj> keywords) :
+    KeywordMap<ValueObj> keywords) :
     SassList(pstate, values, separator, false),
     _keywords(keywords),
     _wereKeywordsAccessed(false)
@@ -1314,9 +1314,9 @@ namespace Sass {
   {
     SassMap* map = SASS_MEMORY_NEW(SassMap, pstate());
     for (auto kv : _keywords) {
-      SassString* key = SASS_MEMORY_NEW(
-        SassString, pstate(), kv.first);
-      map->insert(key, kv.second);
+      SassString* keystr = SASS_MEMORY_NEW(
+        SassString, pstate(), kv);
+      map->insert(keystr, _keywords.get(kv));
     }
     return map;
   }

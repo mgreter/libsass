@@ -670,11 +670,11 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassString, pstate, ss.str());
       }
 
-      Number* getKwdArg(NormalizedMap<ValueObj>& keywords, std::string name)
+      Number* getKwdArg(KeywordMap<ValueObj>& keywords, std::string name)
       {
         auto kv = keywords.find("$" + name);
         // Return null since args are optional
-        if (kv == keywords.end()) return nullptr;
+        if (kv == keywords.mapEnd()) return nullptr;
         // Get the number object from found keyword
         SassNumber* num = kv->second->assertNumber(name);
         // Only consume keyword once
@@ -709,7 +709,7 @@ namespace Sass {
             "other arguments must be passed by name.", pstate);
         }
 
-        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+        KeywordMap<ValueObj> keywords = argumentList->keywords();
 
         SassNumber* nr_r = getKwdArg(keywords, "red");
         SassNumber* nr_g = getKwdArg(keywords, "green");
@@ -730,7 +730,7 @@ namespace Sass {
         if (!keywords.empty()) {
           std::vector<std::string> keys;
           for (auto kv : keywords) {
-            keys.push_back(kv.first);
+            keys.push_back(kv);
           }
           std::stringstream msg;
           size_t iL = keys.size();
@@ -792,7 +792,7 @@ namespace Sass {
             "other arguments must be passed by name.", pstate);
         }
 
-        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+        KeywordMap<ValueObj> keywords = argumentList->keywords();
 
         SassNumber* nr_r = getKwdArg(keywords, "red");
         SassNumber* nr_g = getKwdArg(keywords, "green");
@@ -812,8 +812,8 @@ namespace Sass {
 
         if (!keywords.empty()) {
           std::vector<std::string> keys;
-          for (auto kv : keywords) {
-            keys.push_back(kv.first);
+          for (auto key : keywords) {
+            keys.push_back(key);
           }
           std::stringstream msg;
           size_t iL = keys.size();
@@ -875,7 +875,7 @@ namespace Sass {
             "other arguments must be passed by name.", pstate);
         }
 
-        NormalizedMap<ValueObj> keywords = argumentList->keywords();
+        KeywordMap<ValueObj> keywords = argumentList->keywords();
 
         SassNumber* nr_r = getKwdArg(keywords, "red");
         SassNumber* nr_g = getKwdArg(keywords, "green");
@@ -893,8 +893,8 @@ namespace Sass {
 
         if (!keywords.empty()) {
           std::vector<std::string> keys;
-          for (auto kv : keywords) {
-            keys.push_back(kv.first);
+          for (std::string kv : keywords) {
+            keys.push_back(kv);
           }
           std::stringstream msg;
           size_t iL = keys.size();
@@ -1035,11 +1035,11 @@ namespace Sass {
       }
     }
 
-    Number* getColorScale(NormalizedMap<ExpressionObj>& keywords, const std::string& name, ParserState pstate, Backtraces traces)
+    Number* getColorScale(KeywordMap<ExpressionObj>& keywords, const std::string& name, ParserState pstate, Backtraces traces)
     {
 
       auto pos = keywords.find(name);
-      if (pos == keywords.end()) return nullptr;
+      if (pos == keywords.mapEnd()) return nullptr;
       Expression* ex = pos->second;
       if (Number * nr = Cast<Number>(ex)) {
         if (!nr->hasUnit("%")) {
@@ -1064,11 +1064,11 @@ namespace Sass {
     }
 
 
-    Number* getColorArg(NormalizedMap<ExpressionObj>& keywords, const std::string& name, ParserState pstate, Backtraces traces)
+    Number* getColorArg(KeywordMap<ExpressionObj>& keywords, const std::string& name, ParserState pstate, Backtraces traces)
     {
 
       auto pos = keywords.find(name);
-      if (pos == keywords.end()) return nullptr;
+      if (pos == keywords.mapEnd()) return nullptr;
       Expression* ex = pos->second;
       if (Number * nr = Cast<Number>(ex)) {
         keywords.erase(name);
@@ -1081,11 +1081,11 @@ namespace Sass {
       return nullptr;
     }
 
-    Number* getColorArgInRange(NormalizedMap<ExpressionObj>& keywords, const std::string& name, double lo, double hi, ParserState pstate, Backtraces traces)
+    Number* getColorArgInRange(KeywordMap<ExpressionObj>& keywords, const std::string& name, double lo, double hi, ParserState pstate, Backtraces traces)
     {
 
       auto pos = keywords.find(name);
-      if (pos == keywords.end()) return nullptr;
+      if (pos == keywords.mapEnd()) return nullptr;
       Expression* ex = pos->second;
       if (Number * nr = Cast<Number>(ex)) {
         if (!nr->hasUnit("%")) {
@@ -1889,8 +1889,8 @@ namespace Sass {
       Color* color = assertColor(arguments[0], "$color", pstate, traces);
       List* argumentList = Cast<List>(arguments[1]); // is rest...
       checkPositionalArgs(argumentList, traces);
-      NormalizedMap<ExpressionObj> keywords =
-        argumentList->getNormalizedArgMap();
+      KeywordMap<ExpressionObj> keywords =
+        argumentList->getKeywordArgMap();
 
       // ToDo _fuzzyRoundOrNull
       Number* r = getColorArgInRange(keywords, "$red", -255.0, 255.0, pstate, traces);
@@ -1905,7 +1905,7 @@ namespace Sass {
         std::vector<std::string> keys;
         for (auto kv : keywords) {
 
-          keys.push_back(kv.first);
+          keys.push_back(kv);
         }
         std::stringstream msg;
         size_t iL = keys.size();
@@ -1962,8 +1962,8 @@ namespace Sass {
       Color* color = assertColor(arguments[0], "$color", pstate, traces);
       List* argumentList = Cast<List>(arguments[1]); // is rest...
       checkPositionalArgs(argumentList, traces);
-      NormalizedMap<ExpressionObj> keywords =
-        argumentList->getNormalizedArgMap();
+      KeywordMap<ExpressionObj> keywords =
+        argumentList->getKeywordArgMap();
 
       Number* r = getColorScale(keywords, "$red", pstate, traces);
       Number* g = getColorScale(keywords, "$green", pstate, traces);
@@ -1975,7 +1975,7 @@ namespace Sass {
       if (!keywords.empty()) {
         std::vector<std::string> keys;
         for (auto kv : keywords) {
-          keys.push_back(kv.first);
+          keys.push_back(kv);
         }
         std::stringstream msg;
         size_t iL = keys.size();
@@ -2032,8 +2032,8 @@ namespace Sass {
       Color* color = assertColor(arguments[0], "$color", pstate, traces);
       List* argumentList = Cast<List>(arguments[1]); // is rest...
       checkPositionalArgs(argumentList, traces);
-      NormalizedMap<ExpressionObj> keywords =
-        argumentList->getNormalizedArgMap();
+      KeywordMap<ExpressionObj> keywords =
+        argumentList->getKeywordArgMap();
 
       // ToDo _fuzzyRoundOrNull
       Number* r = getColorArgInRange(keywords, "$red", 0.0, 255.0, pstate, traces);
@@ -2048,7 +2048,7 @@ namespace Sass {
         std::vector<std::string> keys;
         for (auto kv : keywords) {
 
-          keys.push_back(kv.first);
+          keys.push_back(kv);
         }
         std::stringstream msg;
         size_t iL = keys.size();

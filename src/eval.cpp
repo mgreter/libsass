@@ -51,7 +51,7 @@ namespace Sass {
     ParserState pstate)
   {
     ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
-    NormalizedMap<ValueObj> named = evaluated->named();
+    KeywordMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
     CallableDeclaration* declaration = callable->declaration();
     ArgumentDeclaration* declaredArguments = declaration->arguments();
@@ -118,7 +118,7 @@ namespace Sass {
     ParserState pstate)
   {
     ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
-    NormalizedMap<ValueObj> named = evaluated->named();
+    KeywordMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
     SassFnPair tuple = callable->callbackFor(positional.size(), named);
 
@@ -1832,13 +1832,13 @@ namespace Sass {
     return aa.detach();
   }
 
-  NormalizedMap<ValueObj> Eval::normalizedMapMap(
-    const NormalizedMap<ExpressionObj>& map)
+  KeywordMap<ValueObj> Eval::normalizedMapMap(
+    const KeywordMap<ExpressionObj>& map)
   {
-    NormalizedMap<ValueObj> result;
-    for (auto kv : map) {
-      result[kv.first] =
-        kv.second->perform(this);
+    KeywordMap<ValueObj> result;
+    for (std::string key : map) {
+      result[key] =
+        map.get(key)->perform(this);
     }
     return result;
   }
@@ -1854,7 +1854,7 @@ namespace Sass {
 /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
 /// [AstNode.span] if the span isn't required, since some nodes need to do
 /// real work to manufacture a source span.
-  void _addRestMap(NormalizedMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan) {
+  void _addRestMap(KeywordMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan) {
     // convert ??= (value) = > value as T;
 
     for(auto kv : map->elements()) {
@@ -1879,8 +1879,8 @@ namespace Sass {
     for (Expression* argument : arguments->positional()) {
       positional.push_back(argument->perform(this));
     }
-    NormalizedMap<ValueObj> named = normalizedMapMap(arguments->named());
-    for (auto kv : named) { kv.second = kv.second->perform(this); }
+    KeywordMap<ValueObj> named = normalizedMapMap(arguments->named());
+    for (auto kv : named) { named[kv] = named[kv]->perform(this); }
 
     // var positionalNodes =
     //   trackSpans ? arguments.positional.map(_expressionNode).toList() : null;
@@ -1911,8 +1911,9 @@ namespace Sass {
         std::back_inserter(positional));
       separator = list->separator();
       if (SassArgumentList * args = Cast<SassArgumentList>(rest)) {
-        for (auto kv : args->keywords()) {
-          named[kv.first] = kv.second;
+        auto kwds = args->keywords();
+        for (auto kv : kwds) {
+          named[kv] = kwds[kv];
         }
       }
     }

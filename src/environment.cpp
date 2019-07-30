@@ -264,7 +264,7 @@ namespace Sass {
 	  else return singular + "s";
   }
 
-  std::string toSentence(NormalizedMap<ValueObj>& names, std::string conjunction)
+  std::string toSentence(KeywordMap<ValueObj>& names, std::string conjunction)
   {
 	  std::stringstream strm;
 	  size_t L = names.size(), i = 0;
@@ -280,7 +280,7 @@ namespace Sass {
 					  conjunction << " ";
 			  }
 		  }
-      strm << it->first;
+      strm << *it;
       it++;
 		  i++;
 	  }

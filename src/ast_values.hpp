@@ -234,7 +234,7 @@ namespace Sass {
 
     SassMap* assertMap(std::string name = "") override final;
 
-    NormalizedMap<ExpressionObj> getNormalizedArgMap();
+    KeywordMap<ExpressionObj> getKeywordArgMap();
 
 
 
@@ -292,9 +292,8 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  typedef NormalizedMap<ValueObj> keywordMap;
   class SassArgumentList : public SassList {
-    NormalizedMap<ValueObj> _keywords;
+    KeywordMap<ValueObj> _keywords;
     bool _wereKeywordsAccessed;
   public:
     bool is_arglist() const override final {
@@ -304,7 +303,7 @@ namespace Sass {
       return this;
     }
 
-    NormalizedMap<ValueObj> keywords() {
+    KeywordMap<ValueObj> keywords() {
       _wereKeywordsAccessed = true;
       return _keywords;
     }
@@ -318,7 +317,7 @@ namespace Sass {
     SassArgumentList(ParserState pstate,
       std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,
-      NormalizedMap<ValueObj> keywords = {});
+      KeywordMap<ValueObj> keywords = {});
 
     ATTACH_EQ_OPERATIONS(Value);
     ATTACH_COPY_OPERATIONS(SassArgumentList);

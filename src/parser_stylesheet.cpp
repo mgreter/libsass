@@ -1630,7 +1630,7 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
 
     std::vector<ExpressionObj> positional;
-    NormalizedMap<ExpressionObj> named;
+    KeywordMap<ExpressionObj> named;
     ExpressionObj restArg;
     ExpressionObj kwdRest;
     while (_lookingAtExpression()) {
