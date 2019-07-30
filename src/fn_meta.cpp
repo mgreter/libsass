@@ -23,6 +23,7 @@ namespace Sass {
         if (Cast<SassString>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "string");
         if (Cast<SassNumber>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "number");
         if (Cast<SassBoolean>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "bool");
+        if (Cast<SassFunction>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "function");
         if (Cast<SassArgumentList>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "arglist");
         throw Exception::SassRuntimeException("Invalid type for type-of.", pstate);
       }

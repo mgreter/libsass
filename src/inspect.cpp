@@ -1237,6 +1237,14 @@ namespace Sass {
     append_string(")");
   }
 
+  void Inspect::operator()(SassFunction* f)
+  {
+    append_token("get-function", f);
+    append_string("(");
+    // append_string(quote(f->name()));
+    append_string(")");
+  }
+
   void Inspect::operator()(Null* n)
   {
     // output the final token
