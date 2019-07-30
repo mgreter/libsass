@@ -515,6 +515,15 @@ namespace Sass {
         numerators.front() == unit;
     }
 
+    Value* withoutSlash() override final {
+      if (!hasAsSlash()) return this;
+      SassNumber* copy = SASS_MEMORY_COPY(this);
+      copy->lhsAsSlash({});
+      copy->rhsAsSlash({});
+      return copy;
+    }
+
+
     Number* assertUnit(std::string unit, std::string name = "") {
       if (hasUnit(unit)) return this;
       throw Exception::SassScriptException(

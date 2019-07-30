@@ -1172,7 +1172,9 @@ namespace Sass {
     ParserState pstate)
   {
     if (BuiltInCallable * builtIn = Cast<BuiltInCallable>(callable)) {
-      return _runBuiltInCallable(arguments, builtIn, callable->pstate()); // ToDo -> without slash
+      ValueObj rv = _runBuiltInCallable(arguments, builtIn, callable->pstate()); // ToDo -> without slash
+      rv = rv->withoutSlash();
+      return rv.detach();
       // std::cerr << "execute built in\n";
     }
     else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
@@ -1961,7 +1963,10 @@ namespace Sass {
     ValueObj keywordRest = arguments->kwdRest()->perform(this);
     // var keywordRestNodeForSpan = trackSpans ? _expressionNode(arguments.keywordRest) : null;
 
-    if (Map * map = Cast<Map>(rest)) {
+    if (Map * restMap = Cast<Map>(keywordRest)) {
+      _addRestMap(named, restMap, arguments->kwdRest()->pstate());
+      return SASS_MEMORY_NEW(ArgumentResults,
+        arguments->pstate(), positional, named, separator);
     }
     else {
       error("Variable keyword arguments must be a map (was $keywordRest).",
