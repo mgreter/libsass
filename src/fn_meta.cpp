@@ -34,7 +34,7 @@ namespace Sass {
             SassString, pstate, "null");
         }
         return SASS_MEMORY_NEW(String_Quoted,
-          pstate, arguments[0]->inspect(), '*');
+          pstate, arguments[0]->to_sass(), '*');
       }
 
       BUILT_IN_FN(keywords)
