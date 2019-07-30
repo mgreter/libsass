@@ -769,6 +769,16 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
   }
 
   
+  else if (PlainCssCallable * ruleset = Cast<PlainCssCallable>(node)) {
+    std::cerr << ind << "PlainCssCallable " << ruleset;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    // std::cerr << " [indent: " << ruleset->tabs() << "]";
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_root() ? " [root]" : "");
+    // std::cerr << " [" << ruleset->name() << "]";
+    std::cerr << std::endl;
+    // debug_ast(ruleset->content(), ind + " @ ");
+  }
   else if (IncludeRule * ruleset = Cast<IncludeRule>(node)) {
     std::cerr << ind << "IncludeRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";

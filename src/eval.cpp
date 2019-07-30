@@ -1222,6 +1222,7 @@ namespace Sass {
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
         "[pstate]", performInterpolation(node->name()));
+      // debug_ast(function);
     }
 
     // LOCAL_FLAG(oldInFunction)
@@ -1685,7 +1686,7 @@ namespace Sass {
   {
     Value* evaled = expression->perform(this);
     // std::string result(_serialize(evaled, quote));
-    std::string result(evaled->to_css());
+    std::string result(evaled->to_sass());
     return result;
   }
 
@@ -1842,6 +1843,34 @@ namespace Sass {
     return result;
   }
 
+  /// Adds the values in [map] to [values].
+///
+/// Throws a [SassRuntimeException] associated with [nodeForSpan]'s source
+/// span if any [map] keys aren't strings.
+///
+/// If [convert] is passed, that's used to convert the map values to the value
+/// type for [values]. Otherwise, the [Value]s are used as-is.
+///
+/// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
+/// [AstNode.span] if the span isn't required, since some nodes need to do
+/// real work to manufacture a source span.
+  void _addRestMap(NormalizedMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan) {
+    // convert ??= (value) = > value as T;
+
+    for(auto kv : map->elements()) {
+      if (SassString * str = Cast<SassString>(kv.first)) {
+        values["$" + str->value()] = kv.second; // convert?
+      }
+      else {
+        throw Exception::SassRuntimeException(
+          "Variable keyword argument map must have string keys.\n"
+          "$key is not a string in $map.",
+          nodeForSpan);
+      }
+    }
+  }
+
+
   ArgumentResults* Eval::_evaluateArguments(ArgumentInvocation* arguments)
   {
 
@@ -1874,8 +1903,7 @@ namespace Sass {
     Sass_Separator separator = SASS_UNDEF;
 
     if (SassMap * restMap = Cast<SassMap>(rest)) {
-      // _addRestMap(named, rest, arguments.rest);
-      std::cerr << "DO restMap\n";
+      _addRestMap(named, restMap, arguments->restArg()->pstate());
     }
     else if (SassList * list = Cast<SassList>(rest)) {
       std::vector<ValueObj> values = rest->asVector();
