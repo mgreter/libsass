@@ -35,15 +35,10 @@ namespace Sass {
   template <class T, class V>
   size_t indexOf(const std::vector<T>& vec, const V& item)
   {
-    // find item in container
-    auto it = std::find(
-      vec.begin(),
-      vec.end(),
-      item);
-    // return -1 if not found
-    return it == vec.end()
-      ? std::string::npos
-      : distance(vec.begin(), it);
+    for (size_t i = 0; i < vec.size(); i += 1) {
+      if (ObjEqualityFn<T>(vec[i], item)) return i;
+    }
+    return std::string::npos;
   }
 
   // ##########################################################################
