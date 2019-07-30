@@ -1158,8 +1158,8 @@ namespace Sass {
     }
 
     if (env_stack.back()->local_frame().count("@content[m]") == 1) {
-      // closure.local_frame()["@content[m]"] =
-      //   env_stack.back()->local_frame()["@content[m]"];
+      closure.local_frame()["@content[m]"] =
+        env_stack.back()->local_frame()["@content[m]"];
     }
     env_stack.push_back(&closure);
     Statement* result = (this->*run)(callable, trace);
