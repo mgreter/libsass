@@ -41,6 +41,7 @@ namespace Sass {
 
     Env* environment();
     EnvStack& env_stack();
+	std::pair<std::vector<ExpressionObj>, KeywordMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
     const std::string cwd();
     CalleeStack& callee_stack();
     struct Sass_Inspect_Options& options();
@@ -101,7 +102,9 @@ namespace Sass {
     Argument* visitArgument(Argument* arg);
     Arguments* visitArguments(Arguments* args);
     KeywordMap<ValueObj> keywordMapMap(const KeywordMap<ExpressionObj>& map);
-    ArgumentResults* _evaluateArguments(ArgumentInvocation* arguments);
+	void _addRestMap(KeywordMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan);
+	void _addRestMap2(KeywordMap<ExpressionObj>& values, SassMap* map, ParserState nodeForSpan);
+	ArgumentResults* _evaluateArguments(ArgumentInvocation* arguments);
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);
 

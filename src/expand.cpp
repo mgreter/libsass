@@ -416,8 +416,11 @@ namespace Sass {
       std::string str(prop->to_string(ctx.c_options));
       new_p = SASS_MEMORY_NEW(StringLiteral, old_p->pstate(), str);
     }
-    Expression_Obj value = d->value();
-    if (value) value = value->perform(&eval);
+    ValueObj value;
+    ExpressionObj expression = d->value();
+    if (expression) {
+      value = expression->perform(&eval);
+    }
 
     bool is_custom_prop = false;
 

@@ -213,7 +213,7 @@ namespace Sass {
   std::pair<
     std::vector<ExpressionObj>,
     KeywordMap<ExpressionObj>
-  > _evaluateMacroArguments(
+  > Eval::_evaluateMacroArguments(
     CallableInvocation& invocation
   )
   {
@@ -223,6 +223,69 @@ namespace Sass {
         invocation.arguments()->positional(),
         invocation.arguments()->named());
     }
+
+    ArgumentInvocation* arguments = invocation.arguments();
+    // var positional = invocation.arguments.positional.toList();
+    std::vector<ExpressionObj> positional = arguments->positional();
+    // var named = normalizedMap(invocation.arguments.named);
+    KeywordMap<ExpressionObj> named = arguments->named();
+    // var rest = invocation.arguments.rest.accept(this);
+    ValueObj rest = arguments->restArg()->perform(this);
+
+    if (SassMap* restMap = Cast<SassMap>(rest)) {
+      _addRestMap2(named, restMap, arguments->restArg()->pstate());
+    }
+    else if (SassList * restList = Cast<SassList>(rest)) {
+      std::vector<ValueObj> values = restList->asVector();
+      for (Value* value : values) {
+        positional.push_back(SASS_MEMORY_NEW(
+          ValueExpression, value->pstate(), value));
+      }
+      // separator = list->separator();
+      if (SassArgumentList * args = Cast<SassArgumentList>(rest)) {
+        auto kwds = args->keywords();
+        for (auto key : kwds) {
+          named[key] = SASS_MEMORY_NEW(ValueExpression,
+            kwds[key]->pstate(), kwds[key]);
+        }
+      }
+    }
+    else {
+      positional.push_back(SASS_MEMORY_NEW(
+        ValueExpression, rest->pstate(), rest));
+    }
+
+    if (arguments->kwdRest() == nullptr) {
+      return std::make_pair(positional, named);
+    }
+
+    auto keywordRest = arguments->kwdRest()->perform(this);
+
+    if (Map * restMap = Cast<Map>(keywordRest)) {
+      _addRestMap2(named, restMap, arguments->kwdRest()->pstate());
+      return std::make_pair(positional, named);
+    }
+
+    throw Exception::SassRuntimeException(
+      "Variable keyword arguments must be a map (was $keywordRest).",
+      keywordRest->pstate());
+
+    /*
+    if (rest is SassMap) {
+      _addRestMap(named, rest, invocation, (value) = > ValueExpression(value));
+    }
+    else if (rest is SassList) {
+      positional.addAll(rest.asList.map((value) = > ValueExpression(value)));
+      if (rest is SassArgumentList) {
+        rest.keywords.forEach((key, value) {
+          named[key] = ValueExpression(value);
+        });
+      }
+    }
+    else {
+      positional.add(ValueExpression(rest));
+    }
+    */
 
     throw "not implemented yet";
 
@@ -696,7 +759,7 @@ namespace Sass {
 
   Value* Eval::operator()(ValueExpression* node)
   {
-    return node->value();
+    return node->value().detach();
   }
 
   Map* Eval::operator()(MapExpression* m)
@@ -1233,11 +1296,12 @@ namespace Sass {
     // Dart sass has static declaration for IfExpression    
     // node->declaration()->verify(positional, named);
     // We might fail if named arguments are missing or too few passed
-    auto condition = positional.size() > 0 ? positional[0] : named["$condition"];
-    auto ifTrue = positional.size() > 1 ? positional[1] : named["$if-true"];
-    auto ifFalse = positional.size() > 2 ? positional[2] : named["$if-false"];
+    ExpressionObj condition = positional.size() > 0 ? positional[0] : named["$condition"];
+    ExpressionObj ifTrue = positional.size() > 1 ? positional[1] : named["$if-true"];
+    ExpressionObj ifFalse = positional.size() > 2 ? positional[2] : named["$if-false"];
     ValueObj rv = condition ? condition->perform(this) : nullptr;
-    return (rv && rv->isTruthy() ? ifTrue : ifFalse)->perform(this);
+    ExpressionObj ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
+    return ex->perform(this);
   }
 
   Value* Eval::operator()(FunctionExpression2* node)
@@ -1875,17 +1939,17 @@ namespace Sass {
   }
 
   /// Adds the values in [map] to [values].
-///
-/// Throws a [SassRuntimeException] associated with [nodeForSpan]'s source
-/// span if any [map] keys aren't strings.
-///
-/// If [convert] is passed, that's used to convert the map values to the value
-/// type for [values]. Otherwise, the [Value]s are used as-is.
-///
-/// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
-/// [AstNode.span] if the span isn't required, since some nodes need to do
-/// real work to manufacture a source span.
-  void _addRestMap(KeywordMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan) {
+  ///
+  /// Throws a [SassRuntimeException] associated with [nodeForSpan]'s source
+  /// span if any [map] keys aren't strings.
+  ///
+  /// If [convert] is passed, that's used to convert the map values to the value
+  /// type for [values]. Otherwise, the [Value]s are used as-is.
+  ///
+  /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
+  /// [AstNode.span] if the span isn't required, since some nodes need to do
+  /// real work to manufacture a source span.
+  void Eval::_addRestMap(KeywordMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan) {
     // convert ??= (value) = > value as T;
 
     for(auto kv : map->elements()) {
@@ -1901,6 +1965,33 @@ namespace Sass {
     }
   }
 
+  /// Adds the values in [map] to [values].
+  ///
+  /// Throws a [SassRuntimeException] associated with [nodeForSpan]'s source
+  /// span if any [map] keys aren't strings.
+  ///
+  /// If [convert] is passed, that's used to convert the map values to the value
+  /// type for [values]. Otherwise, the [Value]s are used as-is.
+  ///
+  /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
+  /// [AstNode.span] if the span isn't required, since some nodes need to do
+  /// real work to manufacture a source span.
+  void Eval::_addRestMap2(KeywordMap<ExpressionObj>& values, SassMap* map, ParserState pstate) {
+    // convert ??= (value) = > value as T;
+
+    for (auto kv : map->elements()) {
+      if (SassString * str = Cast<SassString>(kv.first)) {
+        values["$" + str->value()] = SASS_MEMORY_NEW(
+          ValueExpression, pstate, kv.second);
+      }
+      else {
+        throw Exception::SassRuntimeException(
+          "Variable keyword argument map must have string keys.\n"
+          "$key is not a string in $map.",
+          pstate);
+      }
+    }
+  }
 
   ArgumentResults* Eval::_evaluateArguments(ArgumentInvocation* arguments)
   {

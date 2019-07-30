@@ -980,7 +980,7 @@ namespace Sass {
 
     if (positional > arguments_.size()) {
       std::stringstream strm;
-      strm << "Only " << arguments_.size() << " ";
+      strm << "Only " << arguments_.size() << " "; //  " positional ";
       strm << pluralize("argument", arguments_.size());
       strm << " allowed, but " << positional << " ";
       strm << pluralize("was", positional, "were");
