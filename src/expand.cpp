@@ -1123,6 +1123,7 @@ namespace Sass {
     if (declaredArguments) declaredArguments->verify(positional.size(), named, traces);
     size_t minLength = std::min(positional.size(), declared.size());
 
+    env_stack.push_back(&closure);
     for (size_t i = 0; i < minLength; i++) {
       // std::cerr << "Set local " << declared[i]->name() << "\n";
       closure.set_local(
@@ -1159,6 +1160,7 @@ namespace Sass {
         pstate, values, separator, named);
       closure.set_local(declaredArguments->restArg(), argumentList);
     }
+    env_stack.pop_back();
 
     if (env_stack.back()->local_frame().count("@content[m]") == 1) {
       closure.local_frame()["@content[m]"] =
