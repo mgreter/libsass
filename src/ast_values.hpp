@@ -82,7 +82,7 @@ namespace Sass {
 ///
 /// Returns `null` if [this] isn't a type or a structure that can be parsed as
 /// a selector.
-    std::string _selectorStringOrNull();
+    bool _selectorStringOrNull(std::string& rv);
 
 
     /// Converts a `selector-parse()`-style input into a string that can be
@@ -91,11 +91,13 @@ namespace Sass {
     /// Throws a [SassScriptException] if [this] isn't a type or a structure that
     /// can be parsed as a selector.
     std::string _selectorString(std::string name = "") {
-      std::string str = _selectorStringOrNull();
-      if (!str.empty()) return str;
+      std::string str;
+      if (_selectorStringOrNull(str)) {
+        return str;
+      }
 
       throw Exception::SassScriptException(
-        "$this is not a valid selector: it must be a string,\n"
+        to_sass() + " is not a valid selector: it must be a string,\n"
         "a list of strings, or a list of lists of strings.",
         name);
     }

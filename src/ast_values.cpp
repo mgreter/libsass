@@ -95,17 +95,18 @@ namespace Sass {
   /// Returns `null` if [this] isn't a type or a structure that can be parsed as
   /// a selector.
 
-  std::string Value::_selectorStringOrNull() {
+  bool Value::_selectorStringOrNull(std::string& rv) {
 
 	  if (SassString * str = Cast<SassString>(this)) {
-		  return str->value();
+      rv = str->value();
+      return true;
 	  }
 
     if (SassList * list = Cast<SassList>(this)) {
 
       std::vector<ValueObj> values = list->asVector();
 
-      if (values.empty()) return nullptr;
+      if (values.empty()) return false;
 
       std::vector<std::string> result;
       if (list->separator() == SASS_COMMA) {
@@ -118,11 +119,11 @@ namespace Sass {
           else if (cplxLst &&
             cplxLst->separator() == SASS_SPACE) {
             std::string string = complex->_selectorString();
-            if (string.empty()) return nullptr;
+            if (string.empty()) return false;
             result.push_back(string);
           }
           else {
-            return nullptr;
+            return false;
           }
         }
       }
@@ -133,15 +134,16 @@ namespace Sass {
             result.push_back(cmpdStr->value());
           }
           else {
-            return nullptr;
+            return false;
           }
         }
       }
-      Util::join_strings(result, list->separator() == SASS_COMMA ? ", " : " ");
+      rv = Util::join_strings(result, list->separator() == SASS_COMMA ? ", " : " ");
+      return true;
 
     }
 
-    return nullptr;
+    return false;
 
   }
 
