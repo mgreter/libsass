@@ -1034,7 +1034,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << ind << "String_Quoted " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << prettyprint(expression->value()) << "]";
-    if (expression->quote_mark()) std::cerr << " [quote_mark: " << expression->quote_mark() << "]";
+    std::cerr << " [quote_mark: " << (expression->quote_mark() ? expression->quote_mark() : '0') << "]";
     std::cerr << " <" << prettyprint(expression->pstate().token.ws_before()) << ">" << std::endl;
   } else if (Cast<String_Constant>(node)) {
     String_Constant* expression = Cast<String_Constant>(node);

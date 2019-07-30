@@ -394,7 +394,6 @@ namespace Sass {
   Statement* Expand::operator()(Declaration* d)
   {
 
-
     if (!isInStyleRule() && !_inUnknownAtRule && !_inKeyframes) {
       error(
         "Declarations may only be used within style rules.",
@@ -404,6 +403,7 @@ namespace Sass {
     Block_Obj ab = d->block();
     String_Obj old_p = d->property();
     Expression_Obj prop = old_p->perform(&eval);
+
 
     if (auto itpl = Cast<Interpolation>(old_p)) {
       auto text = interpolationToValue(itpl, true);

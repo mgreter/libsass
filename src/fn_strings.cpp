@@ -9,6 +9,7 @@
 #include "fn_utils.hpp"
 #include "fn_numbers.hpp"
 #include "util_string.hpp"
+#include "debugger.hpp"
 
 #include "utf8.h"
 #include <random>
@@ -74,8 +75,16 @@ namespace Sass {
       BUILT_IN_FN(toUpperCase)
       {
         SassString* string = arguments[0]->assertString("string");
-        return SASS_MEMORY_NEW(SassString, pstate,
-          Util::ascii_str_toupper(string->value()));
+        if (Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(String_Quoted, pstate,
+            Util::ascii_str_toupper(string->value()),
+            string->quote_mark(), true, true);
+        }
+        else {
+          return SASS_MEMORY_NEW(SassString, pstate,
+            Util::ascii_str_toupper(string->value()),
+            string->quote_mark());
+        }
       }
 
       BUILT_IN_FN(toLowerCase)
