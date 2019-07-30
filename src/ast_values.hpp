@@ -232,7 +232,11 @@ namespace Sass {
     virtual size_t hash() const override;
     virtual size_t size() const;
 
+    SassMap* assertMap(std::string name) override final;
+
     NormalizedMap<ExpressionObj> getNormalizedArgMap();
+
+
 
     virtual bool operator== (const Value& rhs) const override;
 
@@ -328,6 +332,7 @@ namespace Sass {
     static std::string type_name() { return "map"; }
     bool is_invisible() const override { return empty(); }
     SassListObj to_list(ParserState& pstate);
+
     SassMap* assertMap(std::string name) override { return this; }
 
     // Return the list separator
