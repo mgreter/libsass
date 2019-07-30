@@ -32,7 +32,61 @@ namespace Sass {
 
       BUILT_IN_FN(nest)
       {
-        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-nest");
+        std::vector<ValueObj> arglist = arguments[0]->asVector();
+
+        // Not enough parameters
+        if (arglist.size() == 0) {
+          throw Exception::SassRuntimeException(
+            "$selectors: At least one selector must be passed for `selector-nest'",
+            pstate);
+        }
+
+        // Parse args into vector of selectors
+        SelectorStack parsedSelectors;
+        for (size_t i = 0, L = arglist.size(); i < L; ++i) {
+          ValueObj exp = arglist[i];
+          if (exp->concrete_type() == Expression::NULL_VAL) {
+            throw Exception::SassRuntimeException( // "$selectors: "
+              "null is not a valid selector: it must be a string,\n"
+              "a list of strings, or a list of lists of strings for 'selector-nest'",
+              pstate);
+          }
+          if (String_Constant_Obj str = Cast<String_Constant>(exp)) {
+            str->quote_mark(0);
+          }
+          std::string exp_src = exp->to_string(ctx.c_options);
+
+          ParserState state(exp->pstate());
+          char* str = sass_copy_c_string(exp_src.c_str());
+          ctx.strings.push_back(str);
+          SelectorParser p2(ctx, str, state.path, state.file);
+          p2._allowParent = true;
+          SelectorListObj sel = p2.parse();
+          parsedSelectors.push_back(sel);
+        }
+
+        // Nothing to do
+        if (parsedSelectors.empty()) {
+          return SASS_MEMORY_NEW(Null, pstate);
+        }
+
+        // Set the first element as the `result`, keep
+        // appending to as we go down the parsedSelector vector.
+        SelectorStack::iterator itr = parsedSelectors.begin();
+        SelectorListObj& result = *itr;
+        ++itr;
+
+        for (; itr != parsedSelectors.end(); ++itr) {
+          SelectorListObj& child = *itr;
+          // original_stack.push_back(result);
+          Backtraces traces;
+          SelectorListObj rv = child->resolveParentSelectors(result, traces);
+          result->elements(rv->elements());
+          // original_stack.pop_back();
+        }
+
+        return Listize::listize(result);
+
       }
 
       BUILT_IN_FN(append)
