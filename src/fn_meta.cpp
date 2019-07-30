@@ -35,7 +35,9 @@ namespace Sass {
             SassString, pstate, "null");
         }
         return SASS_MEMORY_NEW(String_Constant,
-          pstate, arguments[0]->to_sass(), true);
+          pstate, arguments[0]->to_string({
+            TO_SASS, ctx.c_options.precision
+          }), true);
       }
 
       BUILT_IN_FN(keywords)

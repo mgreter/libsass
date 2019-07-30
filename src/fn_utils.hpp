@@ -15,7 +15,7 @@ namespace Sass {
 
   // Returns whether [number1] and [number2] are equal within [epsilon].
   inline bool fuzzyEquals(double number1, double number2, double epsilon) {
-    epsilon = std::numeric_limits<double>::epsilon();
+    // epsilon = std::numeric_limits<double>::epsilon();
     return fabs(number1 - number2) < epsilon;
   }
 
