@@ -200,9 +200,13 @@ namespace Sass {
 
         std::string sliced(begIt, endIt);
 
+        if (String_Quoted * sq = Cast<String_Quoted>(string)) {
+          if (sq->quote_mark()) sliced = Sass::quote(sliced);
+        }
+
         return SASS_MEMORY_NEW(
           String_Constant, pstate,
-          Sass::quote(sliced));
+          sliced);
       }
 
       BUILT_IN_FN(uniqueId)
