@@ -578,9 +578,27 @@ namespace Sass {
       }
 
 
+      // Implements regex check against /^[a-zA-Z]+\s*=/
+      bool isMsFilterStart(const std::string& text)
+      {
+        auto it = text.begin();
+        // The filter must start with alpha
+        if (!Util::ascii_isalpha(*it)) return false;
+        while (it != text.end() && Util::ascii_isalpha(*it)) ++it;
+        while (it != text.end() && Util::ascii_isspace(*it)) ++it;
+        return it != text.end() && *it == '=';
+      }
+
       BUILT_IN_FN(alpha_one)
       {
         Value* argument = arguments[0];
+
+        if (SassString * string = Cast<SassString>(argument)) {
+          if (isMsFilterStart(string->value())) {
+            return _functionString("alpha", arguments, pstate);
+          }
+        }
+
         /*
         if (argument is SassString &&
           !argument.hasQuotes &&
@@ -593,16 +611,6 @@ namespace Sass {
         return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
       }
 
-      // Implements regex check against /^[a-zA-Z]+\s*=/
-      bool isMsFilterStart(const std::string& text)
-      {
-        auto it = text.begin();
-        // The filter must start with alpha
-        if (!Util::ascii_isalpha(*it)) return false;
-        while (it != text.end() && Util::ascii_isalpha(*it)) ++it;
-        while (it != text.end() && Util::ascii_isspace(*it)) ++it;
-        return it != text.end() && *it == '=';
-      }
 
       BUILT_IN_FN(alpha_any)
       {
