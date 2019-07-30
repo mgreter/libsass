@@ -130,8 +130,12 @@ namespace Sass {
       else {
         for (auto compound : values) {
           SassString* cmpdStr = Cast<SassString>(compound);
+          StringLiteral* cmpdLit = Cast<StringLiteral>(compound);
           if (cmpdStr) {
             result.push_back(cmpdStr->value());
+          }
+          else if (cmpdLit) {
+            result.push_back(cmpdLit->text());
           }
           else {
             return false;
