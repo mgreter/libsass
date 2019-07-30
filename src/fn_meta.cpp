@@ -95,7 +95,8 @@ namespace Sass {
             "Modules are not supported yet", pstate);
         }
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          closure.has(variable->value() + "[f]"));
+          ctx.builtins.count(variable->value()) == 1
+            || closure.has(variable->value() + "[f]"));
       }
 
       BUILT_IN_FN(mixinExists)
