@@ -7,7 +7,18 @@ namespace Sass {
 
   namespace Functions {
 
-    #define ARGSEL(argname) get_arg_sel(argname, env, sig, pstate, traces, ctx)
+    namespace Selectors {
+      BUILT_IN_FN(nest);
+      BUILT_IN_FN(append);
+      BUILT_IN_FN(extend);
+      BUILT_IN_FN(replace);
+      BUILT_IN_FN(unify);
+      BUILT_IN_FN(isSuper);
+      BUILT_IN_FN(simple);
+      BUILT_IN_FN(parse);
+    }
+
+#define ARGSEL(argname) get_arg_sel(argname, env, sig, pstate, traces, ctx)
     #define ARGSELS(argname) get_arg_sels(argname, env, sig, pstate, traces, ctx)
 
     BUILT_IN(selector_nest);

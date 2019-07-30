@@ -10,6 +10,49 @@ namespace Sass {
 
   namespace Functions {
 
+    namespace Selectors {
+      BUILT_IN_FN(nest)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-nest");
+      }
+
+      BUILT_IN_FN(append)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-append");
+      }
+
+      BUILT_IN_FN(extend)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-extend");
+      }
+
+      BUILT_IN_FN(replace)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-replace");
+      }
+
+      BUILT_IN_FN(unify)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-unify");
+      }
+
+      BUILT_IN_FN(isSuper)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-isSuper");
+      }
+
+      BUILT_IN_FN(simple)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-simple");
+      }
+
+      BUILT_IN_FN(parse)
+      {
+        return SASS_MEMORY_NEW(String_Constant, "[pstate]", "selector-parse");
+      }
+
+    }
+
     Signature selector_nest_sig = "selector-nest($selectors...)";
     BUILT_IN(selector_nest)
     {

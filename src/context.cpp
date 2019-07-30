@@ -993,6 +993,15 @@ namespace Sass {
       });
     register_built_in_function(ctx, env, "opacity", "$color", Functions::Colors::opacity);
 
+    // Selector functions
+    register_built_in_function(ctx, env, "selector-nest", "$selectors...", Functions::Selectors::nest);
+    register_built_in_function(ctx, env, "selector-append", "$selectors...", Functions::Selectors::append);
+    register_built_in_function(ctx, env, "selector-extend", "$selector, $extendee, $extender", Functions::Selectors::extend);
+    register_built_in_function(ctx, env, "selector-replace", "$selector, $original, $replacement", Functions::Selectors::replace);
+    register_built_in_function(ctx, env, "selector-unify", "$selector1, $selector2", Functions::Selectors::unify);
+    register_built_in_function(ctx, env, "selector-is-superselector", "$super, $sub", Functions::Selectors::isSuper);
+    register_built_in_function(ctx, env, "selector-simple", "$selector", Functions::Selectors::simple);
+    register_built_in_function(ctx, env, "selector-parse", "$selector", Functions::Selectors::parse);
 
     // Meta functions
     register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);
