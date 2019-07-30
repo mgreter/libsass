@@ -2686,10 +2686,12 @@ relase. For details, see http://bit.ly/moz-document.
 
     if (!plain.empty()) {
       if (plain == "if") {
-        ArgumentInvocation* args = _argumentInvocation();
-        return SASS_MEMORY_NEW(FunctionExpression2,
-          "[pstate]", identifier, args, "");
-
+        ArgumentInvocation* invocation = _argumentInvocation();
+        return SASS_MEMORY_NEW(IfExpression,
+          "[pstate]", invocation);
+        // return SASS_MEMORY_NEW(FunctionExpression2,
+        //   "[pstate]", identifier, args, "");
+        // 
         // ToDo: dart-sass has an if expression class for this
         // return SASS_MEMORY_NEW(If, "[pstate]", invocation, {});
         // return IfExpression(invocation, spanForList([identifier, invocation]));

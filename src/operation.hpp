@@ -101,6 +101,7 @@ namespace Sass {
     virtual T operator()(FunctionExpression* x) = 0;
     virtual T operator()(FunctionExpression2* x) = 0;
     virtual T operator()(MixinExpression* x) = 0;
+    virtual T operator()(IfExpression* x) = 0;
     virtual T operator()(Custom_Warning* x)         = 0;
     virtual T operator()(Custom_Error* x)           = 0;
     virtual T operator()(Variable* x)               = 0;
@@ -213,6 +214,7 @@ namespace Sass {
     T operator()(FunctionExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionExpression2* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(MixinExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(IfExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Warning* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Error* x)           { return static_cast<D*>(this)->fallback(x); }
     T operator()(Variable* x)               { return static_cast<D*>(this)->fallback(x); }

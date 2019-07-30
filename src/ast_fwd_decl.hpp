@@ -115,6 +115,7 @@ namespace Sass {
   class Unary_Expression;
   class FunctionExpression;
   class FunctionExpression2;
+  class IfExpression;
   class MixinExpression;
   class Custom_Warning;
   class Custom_Error;
@@ -260,6 +261,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Unary_Expression);
   IMPL_MEM_OBJ(FunctionExpression);
   IMPL_MEM_OBJ(FunctionExpression2);
+  IMPL_MEM_OBJ(IfExpression);
   IMPL_MEM_OBJ(MixinExpression);
   IMPL_MEM_OBJ(Custom_Warning);
   IMPL_MEM_OBJ(Custom_Error);

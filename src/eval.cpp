@@ -212,11 +212,20 @@ namespace Sass {
 
   std::pair<
     std::vector<ExpressionObj>,
-    NormalizedMap<ExpressionObj>
+    KeywordMap<ExpressionObj>
   > _evaluateMacroArguments(
     CallableInvocation& invocation
   )
   {
+
+    if (invocation.arguments()->restArg() == nullptr) {
+      return std::make_pair(
+        invocation.arguments()->positional(),
+        invocation.arguments()->named());
+    }
+
+    throw "not implemented yet";
+
     return {};
   }
 
@@ -1211,6 +1220,21 @@ namespace Sass {
   Value* Eval::operator()(MixinExpression* node)
   {
     return SASS_MEMORY_NEW(String_Constant, "[]", "eval mixin");
+  }
+
+  Value* Eval::operator()(IfExpression* node)
+  {
+    auto pair = _evaluateMacroArguments(*node);
+    std::vector<ExpressionObj> positional = pair.first;
+    KeywordMap<ExpressionObj> named = pair.second;
+    // Dart sass has static declaration for IfExpression    
+    // node->declaration()->verify(positional, named);
+    // We might fail if named arguments are missing or too few passed
+    auto condition = positional.size() > 0 ? positional[0] : named["$condition"];
+    auto ifTrue = positional.size() > 1 ? positional[1] : named["$if-true"];
+    auto ifFalse = positional.size() > 2 ? positional[2] : named["$if-false"];
+    ValueObj rv = condition ? condition->perform(this) : nullptr;
+    return (rv && rv->isTruthy() ? ifTrue : ifFalse)->perform(this);
   }
 
   Value* Eval::operator()(FunctionExpression2* node)

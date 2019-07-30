@@ -1099,6 +1099,7 @@ namespace Sass {
       return "if" + arguments_->toString();
     }
 
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /// A function invocation.
