@@ -83,15 +83,23 @@ namespace Sass {
         else {
           return SASS_MEMORY_NEW(SassString, pstate,
             Util::ascii_str_toupper(string->value()),
-            string->quote_mark());
+            true);
         }
       }
 
       BUILT_IN_FN(toLowerCase)
       {
         SassString* string = arguments[0]->assertString("string");
-        return SASS_MEMORY_NEW(SassString, pstate,
-          Util::ascii_str_tolower(string->value()));
+        if (Cast<String_Quoted>(string)) {
+          return SASS_MEMORY_NEW(String_Quoted, pstate,
+            Util::ascii_str_tolower(string->value()),
+            string->quote_mark(), true, true);
+        }
+        else {
+          return SASS_MEMORY_NEW(SassString, pstate,
+            Util::ascii_str_tolower(string->value()),
+            true);
+        }
       }
 
       BUILT_IN_FN(length)
