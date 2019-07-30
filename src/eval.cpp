@@ -1778,7 +1778,7 @@ namespace Sass {
   {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
-      if (quote) return evaled->to_sass();
+      if (quote) return evaled->to_string();
       else return evaled->to_css();
     }
     else {
