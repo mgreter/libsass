@@ -449,14 +449,14 @@ namespace Sass {
               "to the plain-CSS invert() function.",
               pstate);
           }
-          return _functionString("invert", { arguments[1] }, pstate);
+          return _functionString("invert", { arguments[0] }, pstate);
         }
 
         SassColor* color = arguments[0]->assertColor("color");
         SassColorObj inverse = color->copyAsRGBA();
-        inverse->r(255.0 - color->r());
-        inverse->g(255.0 - color->g());
-        inverse->b(255.0 - color->b());
+        inverse->r(clamp(255.0 - color->r(), 0.0, 255.0));
+        inverse->g(clamp(255.0 - color->g(), 0.0, 255.0));
+        inverse->b(clamp(255.0 - color->b(), 0.0, 255.0));
         return _mixColors(inverse, color,
           weight, pstate, epsilon);
       }
