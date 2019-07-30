@@ -220,7 +220,7 @@ namespace Sass {
 
   Statement* Expand::operator()(SupportsRule* f)
   {
-    ExpressionObj condition = f->condition()->perform(&eval);
+    ValueObj condition = f->condition()->perform(&eval);
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
                                        f->pstate(),
                                        condition);

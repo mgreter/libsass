@@ -1775,10 +1775,10 @@ namespace Sass {
 /// [SassScriptException] to associate it with [span].
   std::string Eval::_evaluateToCss(Expression* expression, bool quote)
   {
-    Value* evaled = expression->perform(this);
-    // std::string result(_serialize(evaled, quote));
+    ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
-      return evaled->to_sass();
+      if (quote) return evaled->to_sass();
+      else return evaled->to_css();
     }
     else {
       return "";
