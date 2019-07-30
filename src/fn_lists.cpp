@@ -27,7 +27,8 @@ namespace Sass {
         Value* list = arguments[0];
         Value* index = arguments[1];
         std::vector<ValueObj> values = list->asVector();
-        return values[list->sassIndexToListIndex(index, epsilon, "n")];
+        long idx = list->sassIndexToListIndex(index, epsilon, "n");
+        return values.at(idx).detach();
       }
 
       BUILT_IN_FN(setNth)
@@ -36,7 +37,8 @@ namespace Sass {
         Value* index = arguments[1];
         Value* value = arguments[2];
         std::vector<ValueObj> newList = list->asVector();
-        newList[list->sassIndexToListIndex(index, epsilon, "n")] = value;
+        long idx = list->sassIndexToListIndex(index, epsilon, "n");
+        newList[idx] = value;
         return arguments[0]->changeListContents(newList);
       }
 

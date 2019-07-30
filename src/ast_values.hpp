@@ -335,6 +335,11 @@ namespace Sass {
       return empty() ? SASS_UNDEF : SASS_COMMA;
     }
 
+    // Return the length of this item as a list
+    long lengthAsList() const override {
+      return length();
+    }
+
     std::vector<ValueObj> asVector() override final {
       std::vector<ValueObj> list;
       for (size_t i = 0; i < length(); i++) {
