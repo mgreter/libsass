@@ -6,6 +6,7 @@
 #include "eval.hpp"
 #include "fn_meta.hpp"
 #include "fn_utils.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -44,7 +45,7 @@ namespace Sass {
         for (auto kv : keywords) {
           // Wrap string key into a sass value
           map->insert(SASS_MEMORY_NEW(String_Constant,
-            kv.second->pstate(), kv.first), kv.second);
+            kv.second->pstate(), kv.first.substr(1)), kv.second);
         }
         return map.detach();
       }
