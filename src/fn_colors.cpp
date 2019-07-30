@@ -683,12 +683,12 @@ namespace Sass {
         return num;
       }
 
-      Number* getKwdArgInRang(NormalizedMap<ValueObj>& keywords,
+      Number* getKwdArgInRang(KeywordMap<ValueObj>& keywords,
         std::string name, double min, double max)
       {
         auto kv = keywords.find(name);
         // Return null since args are optional
-        if (kv == keywords.end()) return nullptr;
+        if (kv == keywords.mapEnd()) return nullptr;
         // Get the number object from found keyword
         SassNumber* rv = kv->second->assertNumber(name);
         // Only consume keyword once

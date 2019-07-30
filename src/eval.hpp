@@ -100,7 +100,7 @@ namespace Sass {
 
     Argument* visitArgument(Argument* arg);
     Arguments* visitArguments(Arguments* args);
-    KeywordMap<ValueObj> normalizedMapMap(const KeywordMap<ExpressionObj>& map);
+    KeywordMap<ValueObj> keywordMapMap(const KeywordMap<ExpressionObj>& map);
     ArgumentResults* _evaluateArguments(ArgumentInvocation* arguments);
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);

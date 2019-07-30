@@ -1201,7 +1201,8 @@ namespace Sass {
         else { addComma = true; }
         strm << _evaluateToCss(argument);
       }
-      if (Expression* rest = arguments->restArg()) {
+      if (ExpressionObj rest = arguments->restArg()) {
+        rest = rest->perform(this);
         if (addComma) { strm << ", "; }
         else { addComma = true; }
         strm << _serialize(rest);
@@ -1860,7 +1861,7 @@ namespace Sass {
     return aa.detach();
   }
 
-  KeywordMap<ValueObj> Eval::normalizedMapMap(
+  KeywordMap<ValueObj> Eval::keywordMapMap(
     const KeywordMap<ExpressionObj>& map)
   {
     KeywordMap<ValueObj> result;
@@ -1907,7 +1908,7 @@ namespace Sass {
     for (Expression* argument : arguments->positional()) {
       positional.push_back(argument->perform(this));
     }
-    KeywordMap<ValueObj> named = normalizedMapMap(arguments->named());
+    KeywordMap<ValueObj> named = keywordMapMap(arguments->named());
     for (auto kv : named) { named[kv] = named[kv]->perform(this); }
 
     // var positionalNodes =
