@@ -122,14 +122,14 @@ namespace Sass {
       BUILT_IN_FN(random)
       {
         if (arguments[0]->isNull()) {
-          std::uniform_real_distribution<> distributor(0, 1);
+          std::uniform_real_distribution<double> distributor(0, 1);
           return SASS_MEMORY_NEW(Number, pstate, distributor(rand));
         }
         Number* nr = arguments[0]->assertNumber("limit");
         long limit = nr->assertInt(epsilon, "limit");
         if (limit >= 1) {
-          std::uniform_real_distribution<> distributor(1, limit + 1);
-          return SASS_MEMORY_NEW(Number, pstate, distributor(rand));
+          std::uniform_real_distribution<double> distributor(1, limit + 1);
+          return SASS_MEMORY_NEW(Number, pstate, (long) distributor(rand));
         }
         // Report invalid arguments error
         std::stringstream strm;
