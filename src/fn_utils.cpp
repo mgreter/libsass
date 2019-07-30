@@ -164,6 +164,14 @@ namespace Sass {
     ParserState pstate, std::string name) :
     Callable(pstate), name_(name) {}
 
+  bool PlainCssCallable::operator==(const Callable& rhs) const
+  {
+    if (const PlainCssCallable * plain = Cast<PlainCssCallable>(&rhs)) {
+      return this == plain;
+    }
+    return false;
+  }
+
   BuiltInCallable::BuiltInCallable(
     std::string name,
     ArgumentDeclaration* parameters,
@@ -193,6 +201,14 @@ namespace Sass {
       }
     }
     return overloads_.back();
+  }
+
+  bool BuiltInCallable::operator==(const Callable& rhs) const
+  {
+    if (const BuiltInCallable* builtin = Cast<BuiltInCallable>(&rhs)) {
+      return this == builtin;
+    }
+    return false;
   }
 
 

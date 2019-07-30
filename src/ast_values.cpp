@@ -1333,9 +1333,7 @@ namespace Sass {
   bool SassFunction::operator== (const Value& rhs) const
   {
     if (const SassFunction* fn = Cast<SassFunction>(&rhs)) {
-      // auto d1 = Cast<Definition>(definition());
-      // auto d2 = Cast<Definition>(r->definition());
-      // return d1 && d2 && d1 == d2 && is_css() == r->is_css();
+      return ObjEqualityFn(callable_, fn->callable());
     }
     return false;
   }

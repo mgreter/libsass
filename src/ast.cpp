@@ -1124,6 +1124,14 @@ namespace Sass {
   {
   }
 
+  bool UserDefinedCallable::operator==(const Callable& rhs) const
+  {
+    if (const UserDefinedCallable * user = Cast<UserDefinedCallable>(&rhs)) {
+      return this == user;
+    }
+    return false;
+  }
+
   ValueExpression::ValueExpression(
     ParserState pstate,
     ValueObj value) :

@@ -1416,6 +1416,7 @@ namespace Sass {
   class Callable : public SassNode {
   public:
     Callable(ParserState pstate);
+    virtual bool operator== (const Callable& rhs) const = 0;
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -1428,6 +1429,7 @@ namespace Sass {
     UserDefinedCallable(ParserState pstate,
       CallableDeclarationObj declaration,
       Env* environment);
+    bool operator== (const Callable& rhs) const override final;
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -1435,6 +1437,7 @@ namespace Sass {
     ADD_PROPERTY(std::string, name);
   public:
     PlainCssCallable(ParserState pstate, std::string name);
+    bool operator== (const Callable& rhs) const override final;
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -1474,6 +1477,8 @@ namespace Sass {
     SassFnPair callbackFor(
       size_t positional,
       NormalizedMap<ValueObj> names);
+
+    bool operator== (const Callable& rhs) const override final;
 
     ATTACH_CRTP_PERFORM_METHODS()
   };
