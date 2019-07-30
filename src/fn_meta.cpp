@@ -75,14 +75,14 @@ namespace Sass {
             "Modules are not supported yet", pstate);
         }
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          closure.has_global(variable->value()));
+          closure.has_global("$" + variable->value()));
       }
 
       BUILT_IN_FN(variableExists)
       {
         SassString* variable = arguments[0]->assertString("name");
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          closure.has(variable->value()));
+          closure.has("$" + variable->value()));
       }
 
       BUILT_IN_FN(functionExists)
