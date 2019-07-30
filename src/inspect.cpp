@@ -1249,9 +1249,9 @@ namespace Sass {
   {
   }
 
-  void Inspect::operator()(BuiltInCallable*)
+  void Inspect::operator()(BuiltInCallable* fn)
   {
-
+    append_string(quote(fn->name(), '"'));
   }
 
   void Inspect::operator()(UserDefinedCallable* c)
