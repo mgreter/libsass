@@ -479,7 +479,7 @@ namespace Sass {
   ////////////////////////////////////////////////
   class Number final : public Value, public Units {
     HASH_PROPERTY(double, value);
-    ADD_PROPERTY(double, epsilon);
+    // ADD_PROPERTY(double, epsilon);
     ADD_PROPERTY(bool, zero);
 
     // The representation of this number as two

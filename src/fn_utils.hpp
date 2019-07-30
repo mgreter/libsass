@@ -71,6 +71,7 @@ namespace Sass {
   ///
   /// This rounds up numbers that are [fuzzyEquals] to `X.5`.
   inline long fuzzyRound(double number, double epsilon) {
+    epsilon = std::numeric_limits<double>::epsilon();
     // If the number is within epsilon of X.5,
     // round up (or down for negative numbers).
     if (number > 0) {
