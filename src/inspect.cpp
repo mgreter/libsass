@@ -1256,7 +1256,7 @@ namespace Sass {
 
   void Inspect::operator()(UserDefinedCallable* c)
   {
-    append_string(c->declaration()->name());
+    append_string(quote(c->declaration()->name(), '"'));
   }
 
   void Inspect::operator()(Null* n)
