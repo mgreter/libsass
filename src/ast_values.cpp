@@ -272,7 +272,7 @@ namespace Sass {
         auto lv = this->at(i);
         if (!lv && rv) return false;
         else if (!rv && lv) return false;
-        else if (*lv != *rv) return false;
+        else if (!(*lv == *rv)) return false;
       }
       return true;
     }
@@ -367,7 +367,7 @@ namespace Sass {
         auto lv = this->at(key);
         if (!lv && rv) return false;
         else if (!rv && lv) return false;
-        else if (*lv != *rv) return false;
+        else if (!(*lv == *rv)) return false;
       }
       return true;
     }

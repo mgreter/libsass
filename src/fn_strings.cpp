@@ -197,8 +197,16 @@ namespace Sass {
         endInt = _codepointForIndex(endInt, len, true);
 
         if (endInt == len) endInt = len - 1;
-        if (endInt < begInt) return SASS_MEMORY_NEW(
-          String_Quoted, pstate, "\"\"");
+        if (endInt < begInt) {
+          if (Cast<String_Quoted>(string)) {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "\"\"");
+          }
+          else {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "");
+          }
+        }
 
         std::string value(string->value());
         std::string::iterator begIt = value.begin();
