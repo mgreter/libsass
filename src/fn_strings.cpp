@@ -181,8 +181,16 @@ namespace Sass {
         // No matter what the start index is, an end
         // index of 0 will produce an empty string.
         long endInt = end->assertNoUnits("end")->assertInt(epsilon);
-        if (endInt == 0) return SASS_MEMORY_NEW(
-          String_Quoted, pstate, "\"\"");
+        if (endInt == 0) {
+          if (Cast<String_Quoted>(string)) {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "\"\"");
+          }
+          else {
+            return SASS_MEMORY_NEW(
+              String_Quoted, pstate, "");
+          }
+        }
 
         long begInt = beg->assertNoUnits("start")->assertInt(epsilon);
         begInt = _codepointForIndex(begInt, len, false);
