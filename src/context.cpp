@@ -1004,10 +1004,10 @@ namespace Sass {
     register_built_in_function(ctx, env, "selector-parse", "$selector", Functions::Selectors::parse);
 
     // Meta functions
+    register_built_in_function(ctx, env, "feature-exists", "$feature", Functions::Meta::featureExists);
     register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);
     register_built_in_function(ctx, env, "inspect", "$value", Functions::Meta::inspect);
     register_built_in_function(ctx, env, "keywords", "$args", Functions::Meta::keywords);
-    register_built_in_function(ctx, env, "feature-exists", "$value", Functions::Meta::featureExists);
 
     // ToDo: dart-sass keeps them on the local environment scope, see below:
     // These functions are defined in the context of the evaluator because
