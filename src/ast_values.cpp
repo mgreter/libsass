@@ -55,7 +55,7 @@ namespace Sass {
   SassFunction* Value::assertFunction(std::string name)
   {
     throw Exception::SassScriptException(
-      to_string() + " is not a function.", name);
+      to_string() + " is not a function reference.", name);
   }
 
   SassMap* Value::assertMap(std::string name) {
