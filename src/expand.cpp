@@ -1237,12 +1237,16 @@ namespace Sass {
 
     // callable->environment()
 
+    env.set_global("is_in_mixin", bool_true);
+
     auto qwe = _runUserDefinedCallable(
       node->arguments(),
       mixin,
       &Expand::_runWithBlock,
       trace,
       node->pstate());
+
+    env.del_global("is_in_mixin");
 
     /*
     _inMixin = oldInMixin;
