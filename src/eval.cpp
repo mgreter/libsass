@@ -1897,7 +1897,7 @@ namespace Sass {
         ArgumentResults,
         arguments->pstate(),
         positional, named,
-        SASS_UNDEF);
+        separator);
     }
 
     ValueObj keywordRest = arguments->kwdRest()->perform(this);

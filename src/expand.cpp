@@ -1105,6 +1105,9 @@ namespace Sass {
   {
     // std::cerr << "_runUserDefinedCallable\n";
     ArgumentResults* evaluated = eval._evaluateArguments(arguments); // , false
+
+    // std::cerr << "evaluated " << (evaluated->separator() == SASS_UNDEF ? "comma": "??") << "\n";
+
     NormalizedMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
     CallableDeclaration* declaration = callable->declaration();
@@ -1154,9 +1157,9 @@ namespace Sass {
       closure.set_local(declaredArguments->restArg(), argumentList);
     }
 
-    if (closure.local_frame().count("@content[m]") == 1) {
-      closure.local_frame()["@content[m]"] =
-        env_stack.back()->local_frame()["@content[m]"];
+    if (env_stack.back()->local_frame().count("@content[m]") == 1) {
+      // closure.local_frame()["@content[m]"] =
+      //   env_stack.back()->local_frame()["@content[m]"];
     }
     env_stack.push_back(&closure);
     Statement* result = (this->*run)(callable, trace);

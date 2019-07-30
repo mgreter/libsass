@@ -176,7 +176,7 @@ namespace Sass {
           ? SASS_MEMORY_NEW(PlainCssCallable, pstate, name->value())
           : _getFunction(name->value(), &closure, ctx);
 
-        if (callable == nullptr) throw "Function not found: $name";
+        if (callable == nullptr) throw "Function not found: " + name->value();
 
         return SASS_MEMORY_NEW(SassFunction, pstate, callable);
 

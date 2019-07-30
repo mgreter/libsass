@@ -55,6 +55,14 @@ namespace Sass {
       // generally only used to seed a PRNG such as mt19937.
       static std::mt19937 rand(static_cast<unsigned int>(GetSeed()));
 
+      long _codepointForIndex(long index, long lengthInCodepoints, bool allowNegative = false) {
+        if (index == 0) return 0;
+        if (index > 0) return std::min(index - 1, lengthInCodepoints);
+        long result = lengthInCodepoints + index;
+        if (result < 0 && !allowNegative) return 0;
+        return result;
+      }
+
       BUILT_IN_FN(unquote)
       {
         SassString* string = arguments[0]->assertString("string");
@@ -127,9 +135,13 @@ namespace Sass {
           index = len + index + 2;
         }
 
+        index = _codepointForIndex(index, len);
+
         std::string str(string->value());
+        // std::cerr << "Insert at " << index << "\n";
         str.insert(UTF_8::offset_at_position(
-          str, index - 1), insert->value());
+          str, index), insert->value());
+
         if (String_Quoted * sq = Cast<String_Quoted>(string)) {
           if (sq->quote_mark()) str = Sass::quote(str);
         }
@@ -151,14 +163,6 @@ namespace Sass {
 
         return SASS_MEMORY_NEW(SassNumber, pstate,
           UTF_8::code_point_count(str, 0, c_index) + 1);
-      }
-
-      long _codepointForIndex(long index, long lengthInCodepoints, bool allowNegative = false) {
-        if (index == 0) return 0;
-        if (index > 0) return std::min(index - 1, lengthInCodepoints);
-        long result = lengthInCodepoints + index;
-        if (result < 0 && !allowNegative) return 0;
-        return result;
       }
 
       BUILT_IN_FN(slice)
