@@ -1216,6 +1216,11 @@ namespace Sass {
     concrete_type(LIST);
   }
 
+  SassMap* SassList::assertMap(std::string name) {
+    if (!empty()) { return Value::assertMap(name); }
+    else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
+  }
+
   bool SassList::isBlank() const
   {
     for (const Value* value : elements()) {

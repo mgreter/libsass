@@ -232,7 +232,7 @@ namespace Sass {
     virtual size_t hash() const override;
     virtual size_t size() const;
 
-    SassMap* assertMap(std::string name) override final;
+    SassMap* assertMap(std::string name = "") override final;
 
     NormalizedMap<ExpressionObj> getNormalizedArgMap();
 
@@ -268,6 +268,9 @@ namespace Sass {
     bool hasBrackets() override {
       return hasBrackets_;
     }
+
+    SassMap* assertMap(std::string name = "") override final;
+
 
     // Return the length of this item as a list
     long lengthAsList() const override {
@@ -333,7 +336,7 @@ namespace Sass {
     bool is_invisible() const override { return empty(); }
     SassListObj to_list(ParserState& pstate);
 
-    SassMap* assertMap(std::string name) override { return this; }
+    SassMap* assertMap(std::string name = "") override { return this; }
 
     // Return the list separator
     Sass_Separator separator() override final {
