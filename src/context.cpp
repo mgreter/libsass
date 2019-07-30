@@ -919,7 +919,7 @@ namespace Sass {
     register_built_in_function(ctx, env, "unit", "$number", Functions::Math::unit);
     register_built_in_function(ctx, env, "percentage", "$number", Functions::Math::percentage);
     register_built_in_function(ctx, env, "unitless", "$number", Functions::Math::isUnitless);
-    register_built_in_function(ctx, env, "compatible", "$number1, $number2", Functions::Math::compatible);
+    register_built_in_function(ctx, env, "comparable", "$number1, $number2", Functions::Math::compatible);
 
     // String functions
     register_built_in_function(ctx, env, "unquote", "$string", Functions::Strings::unquote);

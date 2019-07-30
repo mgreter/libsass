@@ -160,10 +160,16 @@ namespace Sass {
 
       BUILT_IN_FN(compatible)
       {
-        Number* number1 = arguments[0]->assertNumber("number1");
-        Number* number2 = arguments[1]->assertNumber("number2");
-        return SASS_MEMORY_NEW(Boolean, pstate,
-          false /* number1->isComparableTo(number2) */);
+        Number* n1 = arguments[0]->assertNumber("number1");
+        Number* n2 = arguments[1]->assertNumber("number2");
+        if (n1->is_unitless() || n2->is_unitless()) {
+          return SASS_MEMORY_NEW(Boolean, pstate, true);
+        }
+        // normalize into main units
+        n1->normalize(); n2->normalize();
+        Units& lhs_unit = *n1, & rhs_unit = *n2;
+        bool is_comparable = (lhs_unit == rhs_unit);
+        return SASS_MEMORY_NEW(Boolean, pstate, is_comparable);
       }
 
     }
