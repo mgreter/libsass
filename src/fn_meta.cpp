@@ -221,7 +221,7 @@ namespace Sass {
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, str->value()));
-          FunctionExpression2* expression = SASS_MEMORY_NEW(
+          FunctionExpression2Obj expression = SASS_MEMORY_NEW(
             FunctionExpression2, pstate, itpl, invocation);
 
           return expression->perform(&eval);
