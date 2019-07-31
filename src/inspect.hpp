@@ -66,8 +66,8 @@ namespace Sass {
     virtual void operator()(UserDefinedCallable*) override;
     virtual void operator()(List*) override;
     virtual void operator()(SassList*) override;
-	void operator()(ValueExpression* expr);
-	void operator()(ParenthesizedExpression* expr);
+    virtual void operator()(ValueExpression* expr) override;
+	  virtual void operator()(ParenthesizedExpression* expr) override;
     // virtual void operator()(ParenthesizedExpression*);
     virtual void operator()(Binary_Expression*) override;
     virtual void operator()(Unary_Expression*) override;
@@ -112,16 +112,16 @@ namespace Sass {
     virtual std::string rbracket(SassList*);
 
     // Implement those first without override
-    void visitAttributeSelector(AttributeSelector* attribute)override;
-    void visitClassSelector(ClassSelector* klass)override;
-    void visitComplexSelector(ComplexSelector* complex)override;
-    void visitCompoundSelector(CompoundSelector* compound)override;
-    void visitSelectorCombinator(SelectorCombinator* combinator)override;
-    void visitIDSelector(IDSelector* id)override;
-    void visitPlaceholderSelector(PlaceholderSelector* placeholder)override;
-    void visitPseudoSelector(PseudoSelector* pseudo)override;
-    void visitSelectorList(SelectorList* list)override;
-    void visitTypeSelector(TypeSelector* type)override;
+    void visitAttributeSelector(AttributeSelector* attribute) override;
+    void visitClassSelector(ClassSelector* klass) override;
+    void visitComplexSelector(ComplexSelector* complex) override;
+    void visitCompoundSelector(CompoundSelector* compound) override;
+    void visitSelectorCombinator(SelectorCombinator* combinator) override;
+    void visitIDSelector(IDSelector* id) override;
+    void visitPlaceholderSelector(PlaceholderSelector* placeholder) override;
+    void visitPseudoSelector(PseudoSelector* pseudo) override;
+    void visitSelectorList(SelectorList* list) override;
+    void visitTypeSelector(TypeSelector* type) override;
 
 
   };
