@@ -1244,7 +1244,7 @@ namespace Sass {
     block_stack.push_back(trace_block);
     env.set_global("is_in_mixin", bool_true);
 
-    auto qwe = _runUserDefinedCallable(
+    StatementObj qwe = _runUserDefinedCallable(
       node->arguments(),
       mixin,
       &Expand::_runWithBlock,

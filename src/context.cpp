@@ -139,7 +139,7 @@ namespace Sass {
     }
     // clear inner structures (vectors) and input source
     resources.clear(); import_stack.clear();
-    sheets.clear();
+    sheets.clear(); builtins.clear();
   }
 
   Data_Context::~Data_Context()
