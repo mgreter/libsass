@@ -1167,12 +1167,12 @@ namespace Sass {
         env_stack.back()->local_frame()["@content[m]"];
     }
     env_stack.push_back(&closure);
-    Statement* result = (this->*run)(callable, trace);
+    StatementObj result = (this->*run)(callable, trace);
     env_stack.pop_back();
 
-    if (named.empty()) return result;
-    if (argumentList == nullptr) return result;
-    if (argumentList->wereKeywordsAccessed()) return result;
+    if (named.empty()) return result.detach();
+    if (argumentList == nullptr) return result.detach();
+    if (argumentList->wereKeywordsAccessed()) return result.detach();
 
     throw Exception::SassScriptException("Nonono");
 
