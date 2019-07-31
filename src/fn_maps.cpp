@@ -10,7 +10,7 @@ namespace Sass {
 
       BUILT_IN_FN(get)
       {
-        Map* map = arguments[0]->assertMap("map");
+        SassMapObj map = arguments[0]->assertMap("map");
         Value* key = arguments[1]->assertValue("key");
         if (Value* value = map->at(key)) { return value; }
         else { return SASS_MEMORY_NEW(Null, pstate); }
@@ -18,16 +18,16 @@ namespace Sass {
 
       BUILT_IN_FN(merge)
       {
-        Map* map1 = arguments[0]->assertMap("map1");
-        Map* map2 = arguments[1]->assertMap("map2");
-        Map* map = SASS_MEMORY_NEW(Map, pstate);
+        SassMapObj map1 = arguments[0]->assertMap("map1");
+        SassMapObj map2 = arguments[1]->assertMap("map2");
+        SassMapObj map = SASS_MEMORY_NEW(Map, pstate);
         for (auto key : map1->keys()) { map->insert(key, map1->at(key)); }
         for (auto key : map2->keys()) { map->insert(key, map2->at(key)); }
         // std::copy(map1->begin(), map1->end(),
         //   std::back_inserter(map->elements()));
         // std::copy(map2->begin(), map2->end(),
         //   std::back_inserter(map->elements()));
-        return map;
+        return map.detach();
       }
 
       // Because the signature below has an explicit `$key` argument, it doesn't
@@ -40,7 +40,7 @@ namespace Sass {
 
       BUILT_IN_FN(remove_many)
       {
-        SassMap* map = arguments[0]->assertMap("map");
+        SassMapObj map = arguments[0]->assertMap("map");
         SassMapObj copy = SASS_MEMORY_COPY(map);
         copy->erase(arguments[1]);
         auto values = arguments[2]->asVector();
@@ -66,7 +66,7 @@ namespace Sass {
 
       BUILT_IN_FN(hasKey)
       {
-        Map* map = arguments[0]->assertMap("map");
+        SassMapObj map = arguments[0]->assertMap("map");
         Value* key = arguments[1]->assertValue("key");
         return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
       }
