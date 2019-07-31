@@ -1241,7 +1241,7 @@ namespace Sass {
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name(), trace_block);
 
     // callable->environment()
-
+    block_stack.push_back(trace_block);
     env.set_global("is_in_mixin", bool_true);
 
     auto qwe = _runUserDefinedCallable(
@@ -1252,6 +1252,7 @@ namespace Sass {
       node->pstate());
 
     env.del_global("is_in_mixin");
+    block_stack.pop_back();
 
     /*
     _inMixin = oldInMixin;
