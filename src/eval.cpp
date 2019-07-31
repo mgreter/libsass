@@ -1241,7 +1241,11 @@ namespace Sass {
       // std::cerr << "execute built in\n";
     }
     else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
+      Env* env = environment();
+      bool was_in_mixin = env->has_global("is_in_mixin");
+      env->del_global("is_in_mixin");
       ValueObj rv = _runUserDefinedCallable(arguments, userDefined, &Eval::_runAndCheck, pstate);
+      if (was_in_mixin) env->set_global("is_in_mixin", bool_true);
       rv = rv->withoutSlash();
       return rv.detach();
 
@@ -1317,6 +1321,8 @@ namespace Sass {
         "[pstate]", performInterpolation(node->name()));
       // debug_ast(function);
     }
+
+    Env* env = environment();
 
     // LOCAL_FLAG(oldInFunction)
     Value* value = _runFunctionCallable(
