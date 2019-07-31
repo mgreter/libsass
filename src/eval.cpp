@@ -925,13 +925,8 @@ namespace Sass {
       rhs = operator()(r_v);
     }
 
-    // Evaluate sub-expressions early on
-    while (Binary_Expression* l_b = Cast<Binary_Expression>(lhs)) {
-      lhs = operator()(l_b);
-    }
-    while (Binary_Expression* r_b = Cast<Binary_Expression>(rhs)) {
-      rhs = operator()(r_b);
-    }
+    lhs = lhs->perform(this);
+    rhs = rhs->perform(this);
 
     // specific types we know are final
     // handle them early to avoid overhead
@@ -956,6 +951,10 @@ namespace Sass {
               if (b->allowsSlash()) {
                 nr->lhsAsSlash(l_n);
                 nr->rhsAsSlash(r_n);
+              }
+              else {
+                nr->lhsAsSlash({});
+                nr->rhsAsSlash({});
               }
             }
           }

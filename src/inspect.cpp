@@ -922,14 +922,14 @@ namespace Sass {
 
   }
 
-  // void Inspect::operator()(ParenthesizedExpression* expr)
-  // {
-  //   // append_string("(");
-  //   if (expr->expression()) {
-  //     expr->expression()->perform(this);
-  //   }
-  //   // append_string(")");
-  // }
+  void Inspect::operator()(ParenthesizedExpression* expr)
+  {
+    append_string("(");
+    if (expr->expression()) {
+      expr->expression()->perform(this);
+    }
+    append_string(")");
+  }
 
   void Inspect::operator()(Binary_Expression* expr)
   {

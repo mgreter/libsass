@@ -934,6 +934,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " [ws_before: " << expression->op().ws_before << "] ";
     std::cerr << " [ws_after: " << expression->op().ws_after << "] ";
     std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << std::endl;
     debug_ast(expression->left(), ind + " left:  ", env);
     debug_ast(expression->right(), ind + " right: ", env);
   } else if (Cast<Map>(node)) {

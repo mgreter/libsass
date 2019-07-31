@@ -66,6 +66,7 @@ namespace Sass {
     virtual void operator()(UserDefinedCallable*) override;
     virtual void operator()(List*) override;
     virtual void operator()(SassList*) override;
+	void operator()(ParenthesizedExpression* expr);
     // virtual void operator()(ParenthesizedExpression*);
     virtual void operator()(Binary_Expression*) override;
     virtual void operator()(Unary_Expression*) override;
