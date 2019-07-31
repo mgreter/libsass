@@ -50,7 +50,7 @@ namespace Sass {
     Value* (Eval::* run)(UserDefinedCallable*),
     ParserState pstate)
   {
-    ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
+    ArgumentResultsObj evaluated = _evaluateArguments(arguments); // , false
     KeywordMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
     CallableDeclaration* declaration = callable->declaration();
@@ -117,7 +117,7 @@ namespace Sass {
     BuiltInCallable* callable,
     ParserState pstate)
   {
-    ArgumentResults* evaluated = _evaluateArguments(arguments); // , false
+    ArgumentResultsObj evaluated = _evaluateArguments(arguments); // , false
     KeywordMap<ValueObj> named = evaluated->named();
     std::vector<ValueObj> positional = evaluated->positional();
     SassFnPair tuple = callable->callbackFor(positional.size(), named);

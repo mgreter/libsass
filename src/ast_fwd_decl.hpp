@@ -27,6 +27,7 @@ namespace Sass {
   class CallableInvocation;
   class ArgumentInvocation;
   class ArgumentDeclaration;
+  class ArgumentResults;
   class CallableDeclaration;
   class FunctionRule;
   class IncludeRule;
@@ -239,6 +240,7 @@ namespace Sass {
   IMPL_MEM_OBJ(CallableInvocation);
   IMPL_MEM_OBJ(ArgumentInvocation);
   IMPL_MEM_OBJ(ArgumentDeclaration);
+  IMPL_MEM_OBJ(ArgumentResults);
   IMPL_MEM_OBJ(If);
   IMPL_MEM_OBJ(For);
   IMPL_MEM_OBJ(Each);
