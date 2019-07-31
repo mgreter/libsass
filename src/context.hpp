@@ -48,7 +48,7 @@ namespace Sass {
     std::vector<Sass_Callee> callee_stack;
     std::vector<Backtrace> traces;
 
-    NormalizedMap<BuiltInCallable*> builtins;
+    NormalizedMap<BuiltInCallableObj> builtins;
 
     Extender extender;
 
