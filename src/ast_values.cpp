@@ -411,10 +411,10 @@ namespace Sass {
   : Expression(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
   { }
 
-  const std::string Binary_Expression::separator()
-  {
-    return sass_op_separator(optype());
-  }
+  // const std::string Binary_Expression::separator()
+  // {
+  //   return sass_op_separator(optype());
+  // }
 
   void Binary_Expression::set_delayed(bool delayed)
   {

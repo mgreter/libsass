@@ -112,7 +112,7 @@ namespace Sass {
     if (!fuzzyCheckRange(number, min, max, epsilon, result)) {
       throw std::range_error("must be between $min and $max.");
     }
-    if (!std::isnan(result)) return result;
+    /* if (!std::isnan(result)) */ return result;
     // throw RangeError.value(number, name, "must be between $min and $max.");
   }
 

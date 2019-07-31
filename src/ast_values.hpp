@@ -31,7 +31,7 @@ namespace Sass {
     }
 
     // Return the list separator
-    virtual Sass_Separator separator() {
+    virtual Sass_Separator separator() const {
       return SASS_UNDEF;
     }
 
@@ -216,13 +216,19 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class List : public Value, public Vectorized<Expression_Obj> {
   private:
-    ADD_PROPERTY(enum Sass_Separator, separator)
+    enum Sass_Separator separator_;
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, is_bracketed)
   public:
     List(ParserState pstate, size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false, bool bracket = false);
     std::string type() const override { return is_arglist_ ? "arglist" : "list"; }
     static std::string type_name() { return "list"; }
+    Sass_Separator separator() const override final {
+      return separator_;
+    }
+    void separator(Sass_Separator separator) {
+      separator_ = separator;
+    }
     const char* sep_string(bool compressed = false) const {
       return separator() == SASS_SPACE ?
         " " : (compressed ? "," : ", ");
@@ -250,7 +256,7 @@ namespace Sass {
     public Vectorized<ValueObj> {
     virtual bool is_arglist() const { return false; }
   private:
-    ADD_PROPERTY(enum Sass_Separator, separator);
+    enum Sass_Separator separator_;
     ADD_PROPERTY(bool, hasBrackets);
   public:
 
@@ -259,8 +265,12 @@ namespace Sass {
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
 
-    Sass_Separator separator() override {
+    Sass_Separator separator() const override {
       return separator_;
+    }
+
+    void separator(Sass_Separator separator) {
+      separator_ = separator;
     }
 
     std::vector<ValueObj> asVector() override {
@@ -301,7 +311,7 @@ namespace Sass {
     bool is_arglist() const override final {
       return true;
     }
-    SassArgumentList* assertArgumentList(std::string name = "") {
+    SassArgumentList* assertArgumentList(std::string name = "") override final {
       return this;
     }
 
@@ -340,7 +350,7 @@ namespace Sass {
     SassMap* assertMap(std::string name = "") override { return this; }
 
     // Return the list separator
-    Sass_Separator separator() override final {
+    Sass_Separator separator() const override final {
       return empty() ? SASS_UNDEF : SASS_COMMA;
     }
 
@@ -384,8 +394,6 @@ namespace Sass {
   public:
     Binary_Expression(ParserState pstate,
                       Operand op, Expression_Obj lhs, Expression_Obj rhs);
-
-    const std::string separator();
 
     virtual void set_delayed(bool delayed) override;
 
