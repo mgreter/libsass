@@ -1411,7 +1411,7 @@ namespace Sass {
   };
 
   typedef Value* (*SassFnSig)(FN_PROTOTYPE2);
-  typedef std::pair<ArgumentDeclaration*, SassFnSig> SassFnPair;
+  typedef std::pair<ArgumentDeclarationObj, SassFnSig> SassFnPair;
   typedef std::vector<SassFnPair> SassFnPairs;
 
   class Callable : public SassNode {
