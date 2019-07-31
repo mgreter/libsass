@@ -1211,7 +1211,7 @@ namespace Sass {
     Env* env = environment();
     std::string full_name(name + "[f]");
     if (!env->has(full_name)) {
-      // look for dollar overload
+      // look for star overload
     }
 
     if (env->has(full_name)) {
@@ -1315,7 +1315,7 @@ namespace Sass {
   {
     std::string plainName = node->name()->getPlainString();
 
-    Callable* function = _getFunction(plainName, node->ns());
+    CallableObj function = _getFunction(plainName, node->ns());
 
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
@@ -1326,10 +1326,10 @@ namespace Sass {
     // Env* env = environment();
 
     // LOCAL_FLAG(oldInFunction)
-    Value* value = _runFunctionCallable(
+    ValueObj value = _runFunctionCallable(
       node->arguments(), function, node->pstate());
 
-    return value;
+    return value.detach();
 
   }
 
