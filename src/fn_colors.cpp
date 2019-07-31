@@ -117,7 +117,7 @@ namespace Sass {
           pstate, fncall.str());
       }
 
-      SassList* list = Cast<SassList>(channels);
+      SassListObj list = Cast<SassList>(channels);
 
       if (!list) {
         list = SASS_MEMORY_NEW(SassList, pstate);
@@ -247,19 +247,19 @@ namespace Sass {
         }
       }
       else if (isSpecialNumber(arguments[1])) {
-        ColorObj color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassColorObj rgba = color->toRGBA();
         return _functionRgbString(name,
           rgba, arguments[1], pstate);
       }
 
-      SassColor* color = arguments[0]->assertColor("color");
+      SassColorObj color = arguments[0]->assertColor("color");
       SassNumber* alpha = arguments[1]->assertNumber("alpha");
       color = SASS_MEMORY_COPY(color);
       color->a(_percentageOrUnitless2(
         alpha, 1.0, "$alpha", {}));
       color->disp("");
-      return color;
+      return color.detach();
     }
 
     namespace Colors {

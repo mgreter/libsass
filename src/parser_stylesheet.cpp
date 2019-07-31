@@ -725,7 +725,7 @@ namespace Sass {
 
     whitespace();
 
-    ArgumentInvocation* args = nullptr;
+    ArgumentInvocationObj args;
     if (scanner.peekChar() == $lparen) {
       args = _argumentInvocation(true);
     }
@@ -785,7 +785,7 @@ namespace Sass {
 
   Error* StylesheetParser::_errorRule(Position start)
   {
-    Expression* value = expression();
+    ExpressionObj value = expression();
     expectStatementSeparator("@error rule");
     return SASS_MEMORY_NEW(Error,
       scanner.pstate(start), value);
@@ -801,7 +801,7 @@ namespace Sass {
         scanner.pstate(start));
     }
 
-    Interpolation* value = almostAnyValue();
+    InterpolationObj value = almostAnyValue();
     bool optional = scanner.scanChar($exclamation);
     if (optional) expectIdentifier("optional");
     expectStatementSeparator("@extend rule");
@@ -1452,7 +1452,7 @@ relase. For details, see http://bit.ly/moz-document.
   // [start] should point before the `@`.
   Debug* StylesheetParser::_debugRule(Position start)
   {
-    Expression* value = expression();
+    ExpressionObj value = expression();
     expectStatementSeparator("@debug rule");
     return SASS_MEMORY_NEW(Debug,
       scanner.pstate(start), value);
@@ -1463,7 +1463,7 @@ relase. For details, see http://bit.ly/moz-document.
   // [start] should point before the `@`.
   Warning* StylesheetParser::_warnRule(Position start)
   {
-    Expression* value = expression();
+    ExpressionObj value = expression();
     expectStatementSeparator("@warn rule");
     return SASS_MEMORY_NEW(Warning,
       scanner.pstate(start), value);

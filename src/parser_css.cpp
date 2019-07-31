@@ -48,7 +48,7 @@ namespace Sass {
     std::string plain(name->getPlainString());
 
     if (isForbiddenAtRule(plain)) {
-      almostAnyValue();
+      InterpolationObj value = almostAnyValue();
       error("This at-rule isn't allowed in plain CSS.",
         scanner.spanFrom(start));
     }

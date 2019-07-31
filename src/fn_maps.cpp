@@ -52,16 +52,16 @@ namespace Sass {
 
       BUILT_IN_FN(keys)
       {
-        return SASS_MEMORY_NEW(SassList, pstate,
-          arguments[0]->assertMap("map")->keys(),
-          SASS_COMMA);
+        SassMapObj map = arguments[0]->assertMap("map");
+        return SASS_MEMORY_NEW(SassList,
+          pstate, map->keys(), SASS_COMMA);
       }
 
       BUILT_IN_FN(values)
       {
-        return SASS_MEMORY_NEW(SassList, pstate,
-          arguments[0]->assertMap("map")->values(),
-          SASS_COMMA);
+        SassMapObj map = arguments[0]->assertMap("map");
+        return SASS_MEMORY_NEW(SassList,
+          pstate, map->values(), SASS_COMMA);
       }
 
       BUILT_IN_FN(hasKey)
