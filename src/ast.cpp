@@ -1044,8 +1044,8 @@ namespace Sass {
     Block* block) :
     Has_Block(pstate, block),
     name_(name),
-    arguments_(arguments),
-    comment_(comment)
+    comment_(comment),
+    arguments_(arguments)
   {
     if (arguments_ == nullptr) {
       std::cerr << "Callable without arg decl\n";

@@ -1323,7 +1323,7 @@ namespace Sass {
       // debug_ast(function);
     }
 
-    Env* env = environment();
+    // Env* env = environment();
 
     // LOCAL_FLAG(oldInFunction)
     Value* value = _runFunctionCallable(
@@ -1827,7 +1827,7 @@ namespace Sass {
   std::string Eval::_parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand) {
     SupportsNegation* negation = Cast<SupportsNegation>(condition);
     SupportsOperation* operation = Cast<SupportsOperation>(condition);
-    if (negation || operation && operand != operation->operand()) {
+    if (negation || (operation && operand != operation->operand())) {
       return "(" + _visitSupportsCondition(condition) + ")";
     }
     else {
@@ -2167,7 +2167,7 @@ namespace Sass {
     CallableDeclaration* declaration = callable->declaration();
     for (Statement* statement : declaration->block()->elements()) {
       // Normal statements in functions must return nullptr
-      Value* value = statement->perform(this);
+      /* Value* value = */ statement->perform(this);
     }
     // callable->declaration()
     // for (var statement in mixin.declaration.children) {
