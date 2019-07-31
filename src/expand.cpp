@@ -1107,7 +1107,7 @@ namespace Sass {
     ParserState pstate)
   {
     // std::cerr << "_runUserDefinedCallable\n";
-    ArgumentResults* evaluated = eval._evaluateArguments(arguments); // , false
+    ArgumentResultsObj evaluated = eval._evaluateArguments(arguments); // , false
 
     // std::cerr << "evaluated " << (evaluated->separator() == SASS_UNDEF ? "comma": "??") << "\n";
 
