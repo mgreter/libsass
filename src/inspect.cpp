@@ -922,6 +922,11 @@ namespace Sass {
 
   }
 
+  void Inspect::operator()(ValueExpression* expr)
+  {
+    expr->value()->perform(this);
+  }
+
   void Inspect::operator()(ParenthesizedExpression* expr)
   {
     append_string("(");

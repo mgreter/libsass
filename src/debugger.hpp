@@ -864,6 +864,17 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     debug_ast(expression->arguments(), ind + " args: ", env);
     debug_ast(expression->func(), ind + " func: ", env);
   }
+  else if (Cast<ArgumentInvocation>(node)) {
+  ArgumentInvocation* arguments = Cast<ArgumentInvocation>(node);
+    std::cerr << ind << "ArgumentInvocation " << arguments;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << std::endl;
+    std::cerr << ind << " positional: " << debug_vec(arguments->positional()) << "\n";
+    std::cerr << ind << " named: " << arguments->named().size() << "\n";
+    // std::cerr << ind << " restArg: " << debug_vec(arguments->restArg()) << "\n";
+    // std::cerr << ind << " kwdRest: " << debug_vec(arguments->kwdRest()) << "\n";
+
+  }
   else if (Cast<FunctionExpression2>(node)) {
     FunctionExpression2* expression = Cast<FunctionExpression2>(node);
     std::cerr << ind << "FunctionExpression2 " << expression;
@@ -981,7 +992,21 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     " [bracketed: " << expression->is_bracketed() << "] " <<
     " [hash: " << expression->hash() << "] " <<
     std::endl;
-  for (const auto& i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for (const auto& i : expression->elements()) { debug_ast(i, ind + " ", env); }
+  }
+  else if (Cast<SassArgumentList>(node)) {
+
+    SassArgumentList* expression = Cast<SassArgumentList>(node);
+    std::cerr << ind << "SassArgumentList " << expression;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " (" << expression->length() << ") " <<
+      (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<
+      " [bracketed: " << expression->hasBrackets() << "] " <<
+      " [hash: " << expression->hash() << "] " <<
+      std::endl;
+    auto keywords = expression->keywords();
+    for (const auto& i : expression->elements()) { debug_ast(i, ind + " [] ", env); }
+    for (const auto& key : keywords) { debug_ast(keywords[key], ind + " " + key + " ", env); }
   }
   else if (Cast<SassList>(node)) {
   SassList* expression = Cast<SassList>(node);

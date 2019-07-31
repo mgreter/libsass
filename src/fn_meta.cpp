@@ -202,8 +202,10 @@ namespace Sass {
           ValueExpression, args->pstate(), args);
 
         ValueExpression* kwdRest = nullptr;
-        if (args->keywords().empty()) {
+        if (!args->keywords().empty()) {
           SassMap* map = args->keywordsAsSassMap();
+          kwdRest = SASS_MEMORY_NEW(
+            ValueExpression, map->pstate(), map);
         }
 
         ArgumentInvocation* invocation = SASS_MEMORY_NEW(

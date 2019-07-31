@@ -1321,7 +1321,7 @@ namespace Sass {
     SassMap* map = SASS_MEMORY_NEW(SassMap, pstate());
     for (auto kv : _keywords) {
       SassString* keystr = SASS_MEMORY_NEW(
-        SassString, pstate(), kv);
+        SassString, pstate(), kv.substr(1));
       map->insert(keystr, _keywords.get(kv));
     }
     return map;

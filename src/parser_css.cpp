@@ -235,7 +235,7 @@ namespace Sass {
 
     ArgumentInvocation* args = SASS_MEMORY_NEW(ArgumentInvocation,
       scanner.pstate(start), arguments, {});
-
+    
     return SASS_MEMORY_NEW(FunctionExpression2,
       scanner.pstate(start), name, args);
 
