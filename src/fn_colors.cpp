@@ -463,21 +463,21 @@ namespace Sass {
 
       BUILT_IN_FN(hue)
       {
-        return SASS_MEMORY_NEW(SassNumber, pstate,
-          arguments[0]->assertColorHsla("color")->h(), "deg");
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla("color");
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->h(), "deg");
       }
 
       BUILT_IN_FN(saturation)
       {
-        return SASS_MEMORY_NEW(SassNumber, pstate,
-          arguments[0]->assertColorHsla("color")->s(), "%");
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla("color");
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->s(), "%");
       }
 
 
       BUILT_IN_FN(lightness)
       {
-        return SASS_MEMORY_NEW(SassNumber, pstate,
-          arguments[0]->assertColorHsla("color")->l(), "%");
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla("color");
+        return SASS_MEMORY_NEW(SassNumber, pstate, color->l(), "%");
       }
 
       BUILT_IN_FN(adjustHue)

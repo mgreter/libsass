@@ -1132,7 +1132,7 @@ namespace Sass {
     }
 
     for (size_t i = positional.size(); i < declared.size(); i++) {
-      Value* value = nullptr;
+      ValueObj value;
       Argument* argument = declared[i];
       std::string name(argument->name());
       if (named.count(name) == 1) {
