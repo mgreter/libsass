@@ -935,7 +935,7 @@ namespace Sass {
       // lhs is number and rhs is number
       if (Number* r_n = Cast<Number>(rhs)) {
         try {
-          Value* rv = nullptr;
+          ValueObj rv;
           switch (op_type) {
             case Sass_OP::EQ: return *l_n == *r_n ? bool_true : bool_false;
             case Sass_OP::NEQ: return *l_n == *r_n ? bool_false : bool_true;
@@ -959,7 +959,7 @@ namespace Sass {
               }
             }
           }
-          return rv;
+          return rv.detach();
         }
         catch (Exception::OperationError& err)
         {

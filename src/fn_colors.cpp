@@ -247,7 +247,7 @@ namespace Sass {
         }
       }
       else if (isSpecialNumber(arguments[1])) {
-        Color* color = arguments[0]->assertColor("color");
+        ColorObj color = arguments[0]->assertColor("color");
         SassColorObj rgba = color->toRGBA();
         return _functionRgbString(name,
           rgba, arguments[1], pstate);
@@ -452,7 +452,7 @@ namespace Sass {
           return _functionString("invert", { arguments[0] }, pstate);
         }
 
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassColorObj inverse = color->copyAsRGBA();
         inverse->r(clamp(255.0 - color->r(), 0.0, 255.0));
         inverse->g(clamp(255.0 - color->g(), 0.0, 255.0));
@@ -482,7 +482,7 @@ namespace Sass {
 
       BUILT_IN_FN(adjustHue)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* degrees = arguments[1]->assertNumber("degrees");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + degrees->value(), 360.0));
@@ -491,7 +491,7 @@ namespace Sass {
 
       BUILT_IN_FN(complement)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + 180.0, 360.0));
         return copy.detach();
@@ -504,7 +504,7 @@ namespace Sass {
           return _functionString("grayscale",
             arguments, pstate);
         }
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->s(0.0); // remove saturation
         return copy.detach();
@@ -512,7 +512,7 @@ namespace Sass {
 
       BUILT_IN_FN(lighten)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -522,7 +522,7 @@ namespace Sass {
 
       BUILT_IN_FN(darken)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -532,7 +532,7 @@ namespace Sass {
 
       BUILT_IN_FN(saturate_2)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -551,7 +551,7 @@ namespace Sass {
 
       BUILT_IN_FN(desaturate)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 100.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -561,7 +561,7 @@ namespace Sass {
 
       BUILT_IN_FN(opacify)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 1.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -571,7 +571,7 @@ namespace Sass {
 
       BUILT_IN_FN(transparentize)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassNumber* amount = arguments[1]->assertNumber("amount");
         double nr = amount->valueInRange(0.0, 1.0, epsilon, "amount");
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -609,7 +609,7 @@ namespace Sass {
           return _functionString("alpha", arguments);
         }
         */
-        SassColor* color = argument->assertColor("color");
+        SassColorObj color = argument->assertColor("color");
         return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
       }
 
@@ -658,14 +658,14 @@ namespace Sass {
           return _functionString("opacity",
             arguments, pstate);
         }
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
       }
 
 
       BUILT_IN_FN(ieHexStr)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         // clip should not be needed here
         double r = clip(color->r(), 0.0, 255.0);
         double g = clip(color->g(), 0.0, 255.0);
@@ -709,7 +709,7 @@ namespace Sass {
 
       BUILT_IN_FN(adjust)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassArgumentList* argumentList = arguments[1]
           ->assertArgumentList("kwargs");
         std::vector<ValueObj> positional = argumentList->asVector();
@@ -787,12 +787,12 @@ namespace Sass {
           if (nr_a) c->a(clamp(c->a() + a, 0.0, 1.0));
           return c.detach();
         }
-        return color;
+        return color.detach();
       }
 
       BUILT_IN_FN(change)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassArgumentList* argumentList = arguments[1]
           ->assertArgumentList("kwargs");
         std::vector<ValueObj> positional = argumentList->asVector();
@@ -870,12 +870,12 @@ namespace Sass {
           if (nr_a) c->a(clamp(a, 0.0, 1.0));
           return c.detach();
         }
-        return color;
+        return color.detach();
       }
 
       BUILT_IN_FN(scale)
       {
-        SassColor* color = arguments[0]->assertColor("color");
+        SassColorObj color = arguments[0]->assertColor("color");
         SassArgumentList* argumentList = arguments[1]
           ->assertArgumentList("kwargs");
         std::vector<ValueObj> positional = argumentList->asVector();
@@ -950,13 +950,13 @@ namespace Sass {
           if (nr_a) c->a(scaleValue(c->a(), a, 1.0));
           return c.detach();
         }
-        return color;
+        return color.detach();
       }
 
       BUILT_IN_FN(mix)
       {
-        SassColor* color1 = arguments[0]->assertColor("color1");
-        SassColor* color2 = arguments[1]->assertColor("color2");
+        SassColorObj color1 = arguments[0]->assertColor("color1");
+        SassColorObj color2 = arguments[1]->assertColor("color2");
         SassNumber* weight = arguments[2]->assertNumber("weight");
         return _mixColors(color1, color2, weight, pstate, epsilon);
       }
