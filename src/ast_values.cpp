@@ -76,7 +76,7 @@ namespace Sass {
 
   SassString* Value::assertString(std::string name) {
     throw Exception::SassScriptException(
-      to_string() + " is not a string.", name);
+      inspect() + " is not a string.", name);
   }
 
   SassString* Value::assertStringOrNull(std::string name) {

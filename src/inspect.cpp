@@ -1244,6 +1244,12 @@ namespace Sass {
 
   void Inspect::operator()(SassFunction* f)
   {
+    bool inspect = output_style() == INSPECT
+      || output_style() == TO_SASS;
+
+    if (!inspect) {
+      throw Exception::InvalidValue({}, *f);
+    }
     append_token("get-function", f);
     append_string("(");
     f->callable()->perform(this);
