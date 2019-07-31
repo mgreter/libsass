@@ -488,6 +488,14 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")"
       << std::endl;
   }
+  else if (Cast<ValueExpression>(node)) {
+  ValueExpression* rule = Cast<ValueExpression>(node);
+    std::cerr << ind << "ValueExpression " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << std::endl;
+    debug_ast(rule->value(), ind + " =@ ");
+  }
+ 
   else if (Cast<MediaRule>(node)) {
     MediaRule* rule = Cast<MediaRule>(node);
     std::cerr << ind << "MediaRule " << rule;

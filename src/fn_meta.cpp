@@ -208,7 +208,7 @@ namespace Sass {
             ValueExpression, map->pstate(), map);
         }
 
-        ArgumentInvocation* invocation = SASS_MEMORY_NEW(
+        ArgumentInvocationObj invocation = SASS_MEMORY_NEW(
           ArgumentInvocation, pstate, {}, {}, restArg, kwdRest);
 
         if (SassString* str = Cast<SassString>(function)) {
