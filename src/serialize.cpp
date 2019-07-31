@@ -5,7 +5,7 @@
 namespace Sass {
 
   SerializeVisitor::SerializeVisitor(bool inspect, bool quote, bool useSpaces) :
-    _inspect(inspect), // _quote(quote) //, _useSpaces(useSpaces)
+    _inspect(inspect) //, _quote(quote) //, _useSpaces(useSpaces)
   {
   }
 
