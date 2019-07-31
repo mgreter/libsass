@@ -22,6 +22,7 @@ namespace Sass {
         if (Cast<SassNumber>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "number");
         if (Cast<SassString>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "string");
         if (Cast<SassColor>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "color");
+        if (Cast<Color_HSLA>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "color");
         if (Cast<SassNull>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "null");
         if (Cast<SassList>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "list");
         if (Cast<SassMap>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "map");

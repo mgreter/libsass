@@ -1241,7 +1241,9 @@ namespace Sass {
       // std::cerr << "execute built in\n";
     }
     else if (UserDefinedCallable * userDefined = Cast<UserDefinedCallable>(callable)) {
-      return _runUserDefinedCallable(arguments, userDefined, &Eval::_runAndCheck, pstate);
+      ValueObj rv = _runUserDefinedCallable(arguments, userDefined, &Eval::_runAndCheck, pstate);
+      rv = rv->withoutSlash();
+      return rv.detach();
 
       // CallableDeclaration* decl = userDefined->declaration();
       // for (auto statement : decl->block()->elements()) {
