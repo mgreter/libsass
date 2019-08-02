@@ -35,6 +35,21 @@ namespace Sass {
                           sig, name, params, c_func);
   }
 
+  ExternalCallable* make_c_function2(Sass_Function_Entry c_func, Context& ctx)
+  {
+    const char* sig = sass_function_get_signature(c_func);
+    ScssParser p2(ctx, sig, 0, 0);
+    std::string name;
+    if (p2.scanner.scanChar(Character::$at)) {
+      name = "@"; // allow @warn etc.
+    }
+    name += p2.identifier();
+    ArgumentDeclarationObj params = p2.parseArgumentDeclaration2();
+    return SASS_MEMORY_NEW(ExternalCallable,
+      // ParserState("[c function]"),
+      name, params, c_func);
+  }
+
   namespace Functions {
 
     std::string function_name(Signature sig)

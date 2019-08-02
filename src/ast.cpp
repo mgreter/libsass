@@ -1139,5 +1139,23 @@ namespace Sass {
   {
   }
 
-}
+  ExternalCallable::ExternalCallable(
+    std::string name,
+    ArgumentDeclaration* parameters,
+    Sass_Function_Entry function) :
+    Callable("[external]"),
+    name_(name),
+    declaration_(parameters),
+    function_(function)
+  {
+  }
 
+  bool ExternalCallable::operator==(const Callable& rhs) const
+  {
+    if (const ExternalCallable * user = Cast<ExternalCallable>(&rhs)) {
+      return this == user;
+    }
+    return false;
+  }
+
+}

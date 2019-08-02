@@ -49,6 +49,7 @@ namespace Sass {
     std::vector<Backtrace> traces;
 
     NormalizedMap<BuiltInCallableObj> builtins;
+    NormalizedMap<ExternalCallableObj> externals;
 
     Extender extender;
 

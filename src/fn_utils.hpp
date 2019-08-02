@@ -144,6 +144,8 @@ namespace Sass {
   Definition* make_native_function(Signature, Native_Function, Context& ctx);
   Definition* make_c_function(Sass_Function_Entry c_func, Context& ctx);
 
+  ExternalCallable* make_c_function2(Sass_Function_Entry c_func, Context& ctx);
+
   namespace Functions {
 
     std::string envValueToString(Env& env, const std::string& name);

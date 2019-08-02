@@ -30,9 +30,6 @@ inline void debug_env_stack(EnvStack stack) {
       if (SassNumber * nr = Cast<SassNumber>(kv.second)) {
         std::cerr << " : " << nr->to_string();
       }
-      if (UserDefinedCallable * nr = Cast<UserDefinedCallable>(kv.second)) {
-        // std::cerr << " : " << nr->name;
-      }
       std::cerr << "\n";
     }
   }

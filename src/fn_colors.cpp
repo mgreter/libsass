@@ -289,9 +289,6 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (List * list = Cast<List>(parsed)) {
-          // return _rgb("rgb", list->elements(), rgb_1_sig, pstate, {});
-        }
         if (SassList * list = Cast<SassList>(parsed)) {
           return _rgb("rgb", list->elements(), rgb_1_sig, pstate, {});
         }
@@ -325,9 +322,6 @@ namespace Sass {
         if (StringLiteral * str = Cast<StringLiteral>(parsed)) {
           parsed.detach();
           return str;
-        }
-        if (List * list = Cast<List>(parsed)) {
-          // return _rgb("rgba", list->elements(), rgba_1_sig, pstate, {});
         }
         if (SassList * list = Cast<SassList>(parsed)) {
           return _rgb("rgba", list->elements(), rgba_1_sig, pstate, {});
@@ -369,9 +363,6 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (List * list = Cast<List>(parsed)) {
-          // return _hsl("hsl", list->elements(), hsl_1_sig, pstate, {});
-        }
         if (SassList * list = Cast<SassList>(parsed)) {
           return _hsl("hsl", list->elements(), hsl_1_sig, pstate, {});
         }
@@ -412,9 +403,9 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (List * list = Cast<List>(parsed)) {
-          // return _hsl("hsla", list->elements(), hsl_1_sig, pstate, {});
-        }
+        // if (List * list = Cast<List>(parsed)) {
+        //   // return _hsl("hsla", list->elements(), hsl_1_sig, pstate, {});
+        // }
         if (SassList * list = Cast<SassList>(parsed)) {
           return _hsl("hsla", list->elements(), hsl_1_sig, pstate, {});
         }

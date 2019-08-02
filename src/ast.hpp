@@ -1484,6 +1484,27 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+  class ExternalCallable : public Callable {
+
+    // The function name
+    ADD_PROPERTY(std::string, name);
+
+    ADD_PROPERTY(ArgumentDeclarationObj, declaration);
+
+    ADD_PROPERTY(Sass_Function_Entry, function);
+
+  public:
+
+    ExternalCallable(
+      std::string name,
+      ArgumentDeclaration* parameters,
+      Sass_Function_Entry function);
+
+    bool operator== (const Callable& rhs) const override final;
+
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
 
 }
 

@@ -2,6 +2,7 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 #include "ast.hpp"
+#include "sass_values.hpp"
 
 #include "remove_placeholders.hpp"
 #include "sass_functions.hpp"
@@ -63,6 +64,7 @@ namespace Sass {
     callee_stack(),
     traces(),
     builtins(),
+    externals(),
     extender(Extender::NORMAL, traces),
     c_compiler(NULL),
 
@@ -139,7 +141,9 @@ namespace Sass {
     }
     // clear inner structures (vectors) and input source
     resources.clear(); import_stack.clear();
-    sheets.clear(); builtins.clear();
+    sheets.clear();
+    builtins.clear();
+    externals.clear();
   }
 
   Data_Context::~Data_Context()
@@ -522,6 +526,7 @@ namespace Sass {
   void register_built_in_functions(Context&, Env* env);
   void register_c_functions(Context&, Env* env, Sass_Function_List);
   void register_c_function(Context&, Env* env, Sass_Function_Entry);
+  void register_c_function2(Context&, Env* env, Sass_Function_Entry);
 
   char* Context::render(Block_Obj root)
   {
@@ -664,7 +669,7 @@ namespace Sass {
     register_built_in_functions(*this, &global);
     // register custom functions (defined via C-API)
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
-    { register_c_function(*this, &global, c_functions[i]); }
+    { register_c_function2(*this, &global, c_functions[i]); }
     // create initial backtrace entry
     // create crtp visitor objects
     // std::vector<std::vector<std::string>> in
@@ -786,6 +791,13 @@ namespace Sass {
     ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
   }
 
+  void register_external_function(Context& ctx, Env* env, std::string name, std::string prototype, Sass_Function_Entry cb)
+  {
+    // ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    // ctx.builtins.insert(std::make_pair(name, new ExternalCallable(name, args, cb)));
+  }
+
+
   void register_built_in_overloads(Context& ctx, Env* env, std::string name,
     std::vector<std::pair<std::string, SassFnSig>> overloads)
   {
@@ -797,9 +809,29 @@ namespace Sass {
     ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, pairs)));
   }
 
+  union Sass_Value* customSassFn(
+    const union Sass_Value* s_args,
+    void* cookie
+  ) {
+    return sass_clone_value(s_args);
+  }
+
+  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct Sass_Compiler* compiler)
+  {
+    // we actually abuse the void* to store an "int"
+    return sass_clone_value(v);
+  }
+
   void register_built_in_functions(Context& ctx, Env* env)
   {
     using namespace Functions;
+
+    // Sass_Function_Entry entry = sass_make_function("$list", call_fn_foo, nullptr);
+    // ArgumentDeclarationObj args = ArgumentDeclaration::parse(ctx, "$list");
+    // auto qwe = new ExternalCallable("foo", args, entry);
+    // ctx.externals.insert(std::make_pair("foo", qwe));
+
+
 
     // register_overload_stub(ctx, "rgb", env, 1);
     // register_function(ctx, rgb_4_sig, rgb_4, 4, env);
@@ -1079,11 +1111,19 @@ namespace Sass {
       ++descrs;
     }
   }
+
   void register_c_function(Context& ctx, Env* env, Sass_Function_Entry descr)
   {
     Definition* def = make_c_function(descr, ctx);
     def->environment(env);
     (*env)[def->name() + "[f]"] = def;
+  }
+
+  void register_c_function2(Context& ctx, Env* env, Sass_Function_Entry descr)
+  {
+    ExternalCallable* def = make_c_function2(descr, ctx);
+    // def->environment(env);
+    env->set_local(def->name() + "[f]", def);
   }
 
 }

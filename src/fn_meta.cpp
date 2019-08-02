@@ -102,7 +102,8 @@ namespace Sass {
         }
         return SASS_MEMORY_NEW(SassBoolean, pstate,
           ctx.builtins.count(variable->value()) == 1
-            || closure.has(variable->value() + "[f]"));
+          || ctx.externals.count(variable->value()) == 1
+          || closure.has(variable->value() + "[f]"));
       }
 
       BUILT_IN_FN(mixinExists)
@@ -157,6 +158,10 @@ namespace Sass {
           Callable* callable = Cast<Callable>(env->get(full_name));
           // std::cerr << "Holla " << (void*)callable << "\n";
           return callable;
+        }
+        else if (ctx.externals.count(name) == 1) {
+          ExternalCallable* cb = ctx.externals[name];
+          return cb;
         }
         else if (ctx.builtins.count(name) == 1) {
           BuiltInCallable* cb = ctx.builtins[name];

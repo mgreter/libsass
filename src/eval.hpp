@@ -47,6 +47,8 @@ namespace Sass {
     struct Sass_Inspect_Options& options();
     struct Sass_Compiler* compiler();
 
+    Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, ParserState pstate);
+
     std::string serialize(AST_Node* node);
 
     std::string joinStrings(std::vector<std::string>& strings, const char* const separator);
