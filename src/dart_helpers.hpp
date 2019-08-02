@@ -5,6 +5,7 @@
 #include <utility>
 #include <iterator>
 #include <functional>
+#include "ast_helpers.hpp"
 
 namespace Sass {
 
@@ -12,40 +13,40 @@ namespace Sass {
   // Returns a new list containing the elements between [start] and [end].
   // ##########################################################################
   template <class T>
-  std::vector<T> sublist(const std::vector<T>& vec,
-    size_t start, size_t end = std::string::npos)
+  sass::vector<T> sublist(const sass::vector<T>& vec,
+    size_t start, size_t end = sass::string::npos)
   {
-    if (end == std::string::npos) { end = vec.size(); }
-    return std::vector<T>(vec.begin() + start, vec.begin() + end);
+    if (end == sass::string::npos) { end = vec.size(); }
+    return sass::vector<T>(vec.begin() + start, vec.begin() + end);
   }
 
   // ##########################################################################
   // Removes the objects in the range [start] inclusive to [end] exclusive.
   // ##########################################################################
   template <class T>
-  void removeRange(std::vector<T>& vec,
-    size_t start, size_t end = std::string::npos)
+  void removeRange(sass::vector<T>& vec,
+    size_t start, size_t end = sass::string::npos)
   {
-    if (end == std::string::npos) { end = vec.size(); }
+    if (end == sass::string::npos) { end = vec.size(); }
     vec.erase(vec.begin() + start, vec.begin() + end);
   }
 
   // ##########################################################################
   // ##########################################################################
   template <class T, class V>
-  size_t indexOf(const std::vector<T>& vec, const V& item)
+  size_t indexOf(const sass::vector<T>& vec, const V& item)
   {
     for (size_t i = 0; i < vec.size(); i += 1) {
       if (ObjEqualityFn<T>(vec[i], item)) return i;
     }
-    return std::string::npos;
+    return sass::string::npos;
   }
 
   // ##########################################################################
   // Flatten `vector<vector<T>>` to `vector<T>`
   // ##########################################################################
   template <class T>
-  T flatten(const std::vector<T>& all)
+  T flatten(const sass::vector<T>& all)
   {
     T flattened;
     for (const auto& sub : all) {
@@ -75,7 +76,7 @@ namespace Sass {
   // ##########################################################################
   // ##########################################################################
   template <class T>
-  T flattenInner(const std::vector<T>& vec)
+  T flattenInner(const sass::vector<T>& vec)
   {
     T outer;
     for (const auto& sub : vec) {
@@ -89,9 +90,9 @@ namespace Sass {
   // ##########################################################################
   // ##########################################################################
   template <typename T>
-  std::vector<T> flattenVertically(std::vector<std::vector<T>> lists)
+  sass::vector<T> flattenVertically(sass::vector<sass::vector<T>> lists)
   {
-    std::vector<T> result;
+    sass::vector<T> result;
     // Loop until all arrays are exhausted
     size_t lvl = 0; bool consumed = false; do {
       // aborts when nothing more can be consumed
@@ -101,7 +102,7 @@ namespace Sass {
         // check for items to consume at 2nd level
         if (lists[i].size() > lvl) {
           // consume item at 2nd level depth
-          result.push_back(lists[i][lvl]);
+          result.emplace_back(lists[i][lvl]);
           // maybe we have some more
           consumed = true;
         }
@@ -166,8 +167,8 @@ namespace Sass {
   // Longest common subsequence with predicate
   // ##########################################################################
   template <class T>
-  std::vector<T> lcs(
-    const std::vector<T>& X, const std::vector<T>& Y,
+  sass::vector<T> lcs(
+    const sass::vector<T>& X, const sass::vector<T>& Y,
     bool(*select)(const T&, const T&, T&) = lcsIdentityCmp<T>)
   {
 
@@ -206,7 +207,7 @@ namespace Sass {
     }
 
     // Following code is used to print LCS
-    std::vector<T> lcs;
+    sass::vector<T> lcs;
     std::size_t index = LEN(m, n);
     lcs.reserve(index);
 
@@ -223,7 +224,7 @@ namespace Sass {
         // Note: we push instead of unshift
         // Note: reverse the vector later
         // ToDo: is deque more performant?
-        lcs.push_back(RES(i - 1, j - 1));
+        lcs.emplace_back(RES(i - 1, j - 1));
         // reduce values of i, j and index
         i -= 1; j -= 1; index -= 1;
       }
@@ -239,7 +240,7 @@ namespace Sass {
 
     }
 
-    // reverse now as we used push_back
+    // reverse now as we used emplace_back
     std::reverse(lcs.begin(), lcs.end());
 
     // Delete temp memory on heap

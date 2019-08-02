@@ -20,8 +20,8 @@ namespace Sass {
     virtual ~Output();
 
   protected:
-    std::string charset;
-    std::vector<AST_Node*> top_nodes;
+    sass::string charset;
+    sass::vector<AST_Node*> top_nodes;
 
   public:
     OutputBuffer get_buffer(void);
@@ -40,7 +40,6 @@ namespace Sass {
     virtual void operator()(Number*);
 
     virtual void operator()(StringLiteral*);
-    virtual void operator()(String_Quoted*);
     virtual void operator()(String_Constant*);
 
     void fallback_impl(AST_Node* n);

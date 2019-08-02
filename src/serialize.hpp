@@ -17,7 +17,7 @@ namespace Sass {
   // unambiguous representation of the source structure. Note however that, although
   // this will be valid SCSS, it may not be valid CSS. If [inspect] is `false` and
   // [selector] can't be represented in plain CSS, throws a [SassScriptException].
-  std::string serializeSelector(Selector* selector, bool inspect = false);
+  sass::string serializeSelector(Selector* selector, bool inspect = false);
 
 
   class SerializeVisitor :
@@ -46,12 +46,12 @@ namespace Sass {
     bool _isCompressed; // = > _style == OutputStyle.compressed;
 
     // The number of spaces or tabs to be used for indentation.
-    // std::string _indenter;
+    // sass::string _indenter;
 
     uint8_t _indentCharacter;
 
     // The characters to use for a line feed.
-    std::string _lineFeed;
+    sass::string _lineFeed;
 
     size_t _indentWidth;
 
@@ -62,7 +62,7 @@ namespace Sass {
       bool quote = true,
       bool useSpaces = true);
 
-    std::string getString()
+    sass::string getString()
     {
       return _buffer.toString();
     }
@@ -71,8 +71,8 @@ namespace Sass {
 
     template <typename T>
     void _writeBetween(
-      std::vector<T> iterable,
-      std::string joiner,
+      sass::vector<T> iterable,
+      sass::string joiner,
       void(*cb)(T& value))
     {
       bool first = true;
@@ -122,13 +122,16 @@ namespace Sass {
     bool _canUseShortHex(Color* color);
     void visitColor(Color* value) override;
 
-    void visitList(List* value) override;
     void visitMap(Map* value) override;
     void visitNull(Null* value) override;
     void visitNumber(Number* value) override;
 
     // void visitCssImport(CssImport* node) override;
    // void visitCssMediaRule(CssMediaRule* node) override;
+
+
+    void visitCssMediaRule(CssMediaRule* node) override;
+    void visitCssKeyframeBlock(CssKeyframeBlock* node) override;
 
     void visitAttributeSelector(AttributeSelector* attribute) override;
     void visitClassSelector(ClassSelector* klass) override;

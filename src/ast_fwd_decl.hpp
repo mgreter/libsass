@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include "sass/values.h"
 #include "sass/functions.h"
 #include "memory/SharedPtr.hpp"
 
@@ -16,26 +18,31 @@
 /////////////////////////////////////////////
 namespace Sass {
 
+  class SourceData;
+  class SourceFile;
+  class SyntheticFile;
+
   class AST_Node;
 
   class Callable;
   class UserDefinedCallable;
   class PlainCssCallable;
   class ExternalCallable;
+  class BuiltInCallables;
   class BuiltInCallable;
 
   class SassNode;
   class CallableInvocation;
   class ArgumentInvocation;
   class ArgumentDeclaration;
-  class ArgumentResults;
   class CallableDeclaration;
   class FunctionRule;
   class IncludeRule;
   class ContentBlock;
   class MixinRule;
 
-  class Has_Block;
+  class ParentStatement;
+  class CssParentNode;
 
   class SimpleSelector;
 
@@ -58,6 +65,7 @@ namespace Sass {
 
   class CssNode;
   class CssString;
+  class CssStrings;
   class CssValue;
   // class CssSelectors;
   class CssMediaRule;
@@ -67,7 +75,6 @@ namespace Sass {
   class CssDeclaration;
   class CssImport;
   class CssKeyframeBlock;
-  class CssString;
   class CssMediaQuery;
   class CssMediaRule;
   class CssStyleRule;
@@ -78,47 +85,42 @@ namespace Sass {
   class AtRule;
 
   class Keyframe_Rule;
-  class At_Root_Block;
+  class CssAtRootRule;
+  class AtRootRule;
   class Assignment;
 
   class Import;
   class Import_Stub;
-  class Warning;
+  class WarnRule;
 
   class ImportRule;
   class ImportBase;
   class StaticImport;
   class DynamicImport;
 
-  class Error;
-  class Debug;
+  class ErrorRule;
+  class DebugRule;
   class LoudComment;
   class SilentComment;
 
   class If;
   class For;
   class Each;
-  class While;
+  class WhileRule;
   class Return;
-  class Content;
+  class ContentRule;
   class ExtendRule;
-  class Definition;
 
-  class List;
   class SassList;
   class SassArgumentList;
   class Map;
-  class Function;
   class SassFunction;
 
-  class Mixin_Call;
   class ParenthesizedExpression;
   class Binary_Expression;
   class Unary_Expression;
   class FunctionExpression;
-  class FunctionExpression2;
   class IfExpression;
-  class MixinExpression;
   class Custom_Warning;
   class Custom_Error;
 
@@ -128,7 +130,6 @@ namespace Sass {
   class Color_RGBA;
   class Color_HSLA;
   class Boolean;
-  class String;
   class Null;
 
   class Interpolation;
@@ -136,7 +137,6 @@ namespace Sass {
   class StringExpression;
 
   class String_Constant;
-  class String_Quoted;
 
   class SupportsCondition;
   class SupportsOperation;
@@ -144,11 +144,8 @@ namespace Sass {
   class SupportsDeclaration;
   class SupportsInterpolation;
   
-  class At_Root_Query;
-  class Parameter;
-  class Parameters;
+  class AtRootQuery;
   class Argument;
-  class Arguments;
   class Selector;
 
 
@@ -181,6 +178,10 @@ namespace Sass {
     typedef SharedImpl<type> type##Obj; \
     typedef SharedImpl<type> type##_Obj; \
 
+  IMPL_MEM_OBJ(SourceData);
+  IMPL_MEM_OBJ(SourceFile);
+  IMPL_MEM_OBJ(SyntheticFile);
+
   IMPL_MEM_OBJ(AST_Node);
   IMPL_MEM_OBJ(Statement);
   IMPL_MEM_OBJ(Block);
@@ -194,6 +195,7 @@ namespace Sass {
   IMPL_MEM_OBJ(ValueExpression);
 
   IMPL_MEM_OBJ(CssNode);
+  IMPL_MEM_OBJ(CssStrings);
   IMPL_MEM_OBJ(CssString);
   IMPL_MEM_OBJ(CssValue);
   // IMPL_MEM_OBJ(CssSelectors);
@@ -215,6 +217,7 @@ namespace Sass {
   IMPL_MEM_OBJ(PlainCssCallable);
   IMPL_MEM_OBJ(ExternalCallable);
   IMPL_MEM_OBJ(BuiltInCallable);
+  IMPL_MEM_OBJ(BuiltInCallables);
   IMPL_MEM_OBJ(SupportsRule);
   IMPL_MEM_OBJ(CallableDeclaration);
   IMPL_MEM_OBJ(FunctionRule);
@@ -223,7 +226,8 @@ namespace Sass {
   IMPL_MEM_OBJ(MixinRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
-  IMPL_MEM_OBJ(At_Root_Block);
+  IMPL_MEM_OBJ(CssAtRootRule);
+  IMPL_MEM_OBJ(AtRootRule);
   IMPL_MEM_OBJ(Declaration);
   IMPL_MEM_OBJ(Assignment);
   IMPL_MEM_OBJ(Import);
@@ -232,41 +236,35 @@ namespace Sass {
   IMPL_MEM_OBJ(ImportBase);
   IMPL_MEM_OBJ(StaticImport);
   IMPL_MEM_OBJ(DynamicImport);
-  IMPL_MEM_OBJ(Warning);
-  IMPL_MEM_OBJ(Error);
-  IMPL_MEM_OBJ(Debug);
+  IMPL_MEM_OBJ(WarnRule);
+  IMPL_MEM_OBJ(ErrorRule);
+  IMPL_MEM_OBJ(DebugRule);
   IMPL_MEM_OBJ(LoudComment);
   IMPL_MEM_OBJ(SilentComment);
-  IMPL_MEM_OBJ(Has_Block);
+  IMPL_MEM_OBJ(ParentStatement);
+  IMPL_MEM_OBJ(CssParentNode);
   IMPL_MEM_OBJ(SassNode);
   IMPL_MEM_OBJ(CallableInvocation);
   IMPL_MEM_OBJ(ArgumentInvocation);
   IMPL_MEM_OBJ(ArgumentDeclaration);
-  IMPL_MEM_OBJ(ArgumentResults);
   IMPL_MEM_OBJ(If);
   IMPL_MEM_OBJ(For);
   IMPL_MEM_OBJ(Each);
-  IMPL_MEM_OBJ(While);
+  IMPL_MEM_OBJ(WhileRule);
   IMPL_MEM_OBJ(Return);
-  IMPL_MEM_OBJ(Content);
+  IMPL_MEM_OBJ(ContentRule);
   IMPL_MEM_OBJ(ExtendRule);
-  IMPL_MEM_OBJ(Definition);
-  IMPL_MEM_OBJ(Mixin_Call);
   IMPL_MEM_OBJ(Value);
   IMPL_MEM_OBJ(Expression);
-  IMPL_MEM_OBJ(List);
   IMPL_MEM_OBJ(SassList);
   IMPL_MEM_OBJ(SassArgumentList);
   IMPL_MEM_OBJ(Map);
-  IMPL_MEM_OBJ(Function);
   IMPL_MEM_OBJ(SassFunction);
   IMPL_MEM_OBJ(ParenthesizedExpression);
   IMPL_MEM_OBJ(Binary_Expression);
   IMPL_MEM_OBJ(Unary_Expression);
   IMPL_MEM_OBJ(FunctionExpression);
-  IMPL_MEM_OBJ(FunctionExpression2);
   IMPL_MEM_OBJ(IfExpression);
-  IMPL_MEM_OBJ(MixinExpression);
   IMPL_MEM_OBJ(Custom_Warning);
   IMPL_MEM_OBJ(Custom_Error);
   IMPL_MEM_OBJ(Variable);
@@ -275,9 +273,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Color_RGBA);
   IMPL_MEM_OBJ(Color_HSLA);
   IMPL_MEM_OBJ(Boolean);
-  IMPL_MEM_OBJ(String);
   IMPL_MEM_OBJ(String_Constant);
-  IMPL_MEM_OBJ(String_Quoted);
   IMPL_MEM_OBJ(Interpolation);
   IMPL_MEM_OBJ(StringLiteral);
   IMPL_MEM_OBJ(StringExpression);
@@ -286,13 +282,10 @@ namespace Sass {
   IMPL_MEM_OBJ(SupportsNegation);
   IMPL_MEM_OBJ(SupportsDeclaration);
   IMPL_MEM_OBJ(SupportsInterpolation);
-  IMPL_MEM_OBJ(At_Root_Query);
+  IMPL_MEM_OBJ(AtRootQuery);
   IMPL_MEM_OBJ(Null);
   IMPL_MEM_OBJ(Parent_Reference);
-  IMPL_MEM_OBJ(Parameter);
-  IMPL_MEM_OBJ(Parameters);
   IMPL_MEM_OBJ(Argument);
-  IMPL_MEM_OBJ(Arguments);
   IMPL_MEM_OBJ(Selector);
   IMPL_MEM_OBJ(SimpleSelector);
   IMPL_MEM_OBJ(PlaceholderSelector);
@@ -312,12 +305,13 @@ namespace Sass {
   // some often used typedefs
   // ###########################################################################
 
-  typedef std::vector<Block*> BlockStack;
-  typedef std::vector<Sass_Callee> CalleeStack;
-  typedef std::vector<AST_Node_Obj> CallStack;
-  typedef std::vector<CssMediaRuleObj> MediaStack;
-  typedef std::vector<SelectorListObj> SelectorStack;
-  typedef std::vector<Sass_Import_Entry> ImporterStack;
+  typedef sass::vector<Block*> BlockStack;
+  typedef sass::vector<Sass_Callee> CalleeStack;
+  typedef sass::vector<CssMediaRuleObj> MediaStack;
+  typedef sass::vector<SelectorListObj> SelectorStack;
+  typedef sass::vector<Sass_Import_Entry> ImporterStack;
+
+  typedef std::unordered_set<sass::string> StringSet;
 
   // ###########################################################################
   // explicit type conversion functions
@@ -343,14 +337,13 @@ namespace Sass {
   DECLARE_BASE_CAST(AST_Node)
   DECLARE_BASE_CAST(Expression)
   DECLARE_BASE_CAST(Statement)
-  DECLARE_BASE_CAST(Has_Block)
+  DECLARE_BASE_CAST(ParentStatement)
+  DECLARE_BASE_CAST(CssParentNode)
   DECLARE_BASE_CAST(SassNode)
   DECLARE_BASE_CAST(CallableInvocation)
   DECLARE_BASE_CAST(Value)
-  DECLARE_BASE_CAST(List)
   DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(Color)
-  DECLARE_BASE_CAST(String)
   DECLARE_BASE_CAST(SassList)
   DECLARE_BASE_CAST(String_Constant)
   DECLARE_BASE_CAST(SupportsCondition)
@@ -361,8 +354,6 @@ namespace Sass {
 
   typedef Number SassNumber;
   typedef NumberObj SassNumberObj;
-  typedef String_Constant SassString;
-  typedef String_ConstantObj SassStringObj;
   typedef Null SassNull;
   typedef NullObj SassNullObj;
   typedef Color_RGBA SassColor;
@@ -373,12 +364,23 @@ namespace Sass {
   typedef MapObj SassMapObj;
 
   #define FN_PROTOTYPE2 \
-    const ParserState& pstate, \
-    const std::vector<ValueObj>& arguments, \
-    Env& closure, \
+    const SourceSpan& pstate, \
+    const sass::vector<ValueObj>& arguments, \
     Context& ctx, \
-    Eval& eval, \
-    double epsilon \
+    Eval& eval
+
+  // ToDo: where does this fit best?
+  // We don't share this with C-API?
+  class Operand {
+  public:
+    Operand(Sass_OP operand, bool ws_before = false, bool ws_after = false)
+      : operand(operand), ws_before(ws_before), ws_after(ws_after)
+    { }
+  public:
+    enum Sass_OP operand;
+    bool ws_before;
+    bool ws_after;
+  };
 
 }
 

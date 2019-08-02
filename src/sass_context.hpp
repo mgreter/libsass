@@ -4,6 +4,7 @@
 #include "sass/base.h"
 #include "sass/context.h"
 #include "ast_fwd_decl.hpp"
+#include "backtrace.hpp"
 
 // sass config options structure
 struct Sass_Options : Sass_Output_Options {
@@ -128,5 +129,12 @@ struct Sass_Compiler {
   // Sass::Block
   Sass::Block_Obj root;
 };
+
+namespace Sass {
+
+  sass::string traces_to_string(Backtraces traces, sass::string indent = "  ", size_t showTraces = sass::string::npos);
+
+}
+
 
 #endif

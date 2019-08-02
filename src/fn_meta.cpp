@@ -16,180 +16,175 @@ namespace Sass {
 
       BUILT_IN_FN(typeOf)
       {
-        if (Cast<SassArgumentList>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "arglist");
-        if (Cast<SassFunction>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "function");
-        if (Cast<SassBoolean>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "bool");
-        if (Cast<SassNumber>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "number");
-        if (Cast<SassString>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "string");
-        if (Cast<SassColor>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "color");
-        if (Cast<Color_HSLA>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "color");
-        if (Cast<SassNull>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "null");
-        if (Cast<SassList>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "list");
-        if (Cast<SassMap>(arguments[0])) return SASS_MEMORY_NEW(SassString, pstate, "map");
-        throw Exception::SassRuntimeException("Invalid type for type-of.", pstate);
+        return SASS_MEMORY_NEW(String_Constant, pstate, arguments[0]->type());
+        // Sorted by probability of occurence (arglist must come before list)
+        // if (Cast<String_Constant>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "string");
+        // if (Cast<SassColor>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "color");
+        // if (Cast<SassArgumentList>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "arglist");
+        // if (Cast<SassList>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "list");
+        // if (Cast<SassNumber>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "number");
+        // if (Cast<SassBoolean>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "bool");
+        // if (Cast<SassMap>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "map");
+        // if (Cast<SassFunction>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "function");
+        // if (Cast<SassNull>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "null");
+        // if (Cast<Color_HSLA>(arguments[0])) return SASS_MEMORY_NEW(String_Constant, pstate, "color");
+        // throw Exception::SassRuntimeException2("Invalid type for type-of.", *ctx.logger, pstate);
       }
 
       BUILT_IN_FN(inspect)
       {
         if (arguments[0] == nullptr) {
           return SASS_MEMORY_NEW(
-            SassString, pstate, "null");
+            String_Constant, pstate, "null");
         }
         return SASS_MEMORY_NEW(String_Constant,
           pstate, arguments[0]->to_string({
             TO_SASS, ctx.c_options.precision
-          }), true);
+          }));
       }
 
       BUILT_IN_FN(keywords)
       {
-        SassArgumentList* argumentList = arguments[0]->assertArgumentList("args");
-        KeywordMap<ValueObj> keywords = argumentList->keywords();
+        SassArgumentList* argumentList = arguments[0]->assertArgumentList(*ctx.logger, "args");
+        const KeywordMap<ValueObj>& keywords = argumentList->keywords();
         SassMapObj map = SASS_MEMORY_NEW(SassMap, arguments[0]->pstate());
         for (auto kv : keywords) {
-          std::string key = kv.substr(1);
-          Util::ascii_normalize_underscore(key);
+          sass::string key = kv.first.norm().substr(1);
+          // Util::ascii_normalize_underscore(key);
           // Wrap string key into a sass value
           map->insert(SASS_MEMORY_NEW(String_Constant,
-            keywords.get(kv)->pstate(),
-            key), keywords.get(kv));
+            kv.second->pstate(), key), kv.second);
         }
         return map.detach();
       }
 
       BUILT_IN_FN(featureExists)
       {
-        SassString* feature = arguments[0]->assertString("feature");
+        String_Constant* feature = arguments[0]->assertString(*ctx.logger, pstate, "feature");
         static const auto* const features =
-          new std::unordered_set<std::string>{
+          new std::unordered_set<sass::string>{
           "global-variable-shadowing",
           "extend-selector-pseudoclass",
           "at-error",
           "units-level-3",
           "custom-property"
         };
-        std::string name(feature->value());
+        sass::string name(feature->value());
         return SASS_MEMORY_NEW(Boolean,
           pstate, features->count(name) == 1);
       }
 
       BUILT_IN_FN(globalVariableExists)
       {
-        SassString* variable = arguments[0]->assertString("name");
-        SassString* plugin = arguments[1]->assertStringOrNull("module");
+        String_Constant* variable = arguments[0]->assertString(*ctx.logger, pstate, "name");
+        String_Constant* plugin = arguments[1]->assertStringOrNull(*ctx.logger, pstate, "module");
         if (plugin != nullptr) {
-          throw Exception::SassRuntimeException(
-            "Modules are not supported yet", pstate);
+          throw Exception::SassRuntimeException2(
+            "Modules are not supported yet",
+            *ctx.logger, pstate);
         }
+
+        // return SASS_MEMORY_NEW(SassBoolean, pstate,
+        //   closure.has_global("$" + variable->value()));
+
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          closure.has_global("$" + variable->value()));
+          ctx.varRoot.hasGlobalVariable33("$" + variable->value()));
+
       }
 
       BUILT_IN_FN(variableExists)
       {
-        SassString* variable = arguments[0]->assertString("name");
+        String_Constant* variable = arguments[0]->assertString(*ctx.logger, pstate, "name");
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          closure.has("$" + variable->value()));
+        //  closure.has("$" + variable->value()));
+        ctx.varRoot.hasLexicalVariable33("$" + variable->value()));
       }
 
       BUILT_IN_FN(functionExists)
       {
-        SassString* variable = arguments[0]->assertString("name");
-        SassString* plugin = arguments[1]->assertStringOrNull("module");
+        String_Constant* variable = arguments[0]->assertString(*ctx.logger, pstate, "name");
+        String_Constant* plugin = arguments[1]->assertStringOrNull(*ctx.logger, pstate, "module");
         if (plugin != nullptr) {
-          throw Exception::SassRuntimeException(
-            "Modules are not supported yet", pstate);
+          throw Exception::SassRuntimeException2(
+            "Modules are not supported yet",
+            *ctx.logger, pstate);
         }
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          ctx.builtins.count(variable->value()) == 1
-          || ctx.externals.count(variable->value()) == 1
-          || closure.has(variable->value() + "[f]"));
+          ctx.functions.count(variable->value()) == 1
+          || ctx.varRoot.hasLexicalFunction33(variable->value()));
       }
 
       BUILT_IN_FN(mixinExists)
       {
-        SassString* variable = arguments[0]->assertString("name");
-        SassString* plugin = arguments[1]->assertStringOrNull("module");
+        String_Constant* variable = arguments[0]->assertString(*ctx.logger, pstate, "name");
+        String_Constant* plugin = arguments[1]->assertStringOrNull(*ctx.logger, pstate, "module");
         if (plugin != nullptr) {
-          throw Exception::SassRuntimeException(
-            "Modules are not supported yet", pstate);
+          throw Exception::SassRuntimeException2(
+            "Modules are not supported yet",
+            *ctx.logger, pstate);
         }
         return SASS_MEMORY_NEW(SassBoolean, pstate,
-          closure.has(variable->value() + "[m]"));
+          ctx.varRoot.hasLexicalMixin33(variable->value()));
       }
 
       BUILT_IN_FN(contentExists)
       {
-        if (!closure.has_global("is_in_mixin")) {
-          throw Exception::SassRuntimeException(
+        if (!eval.inMixin) {
+          throw Exception::SassRuntimeException2(
             "content-exists() may only be called within a mixin.",
-            pstate);
+            *ctx.logger, pstate);
         }
         return SASS_MEMORY_NEW(Boolean, pstate,
-          closure.has_lexical("@content[m]"));
+          ctx.varRoot.contentExists);
       }
 
       BUILT_IN_FN(moduleVariables)
       {
-        // SassString* variable = arguments[0]->assertString("name");
-        // SassString* plugin = arguments[1]->assertStringOrNull("module");
-        throw Exception::SassRuntimeException(
-          "Modules are not supported yet", pstate);
+        // String_Constant* variable = arguments[0]->assertString("name");
+        // String_Constant* plugin = arguments[1]->assertStringOrNull("module");
+        throw Exception::SassRuntimeException2(
+          "Modules are not supported yet",
+          *ctx.logger, pstate);
       }
 
       BUILT_IN_FN(moduleFunctions)
       {
-        // SassString* variable = arguments[0]->assertString("name");
-        // SassString* plugin = arguments[1]->assertStringOrNull("module");
-        throw Exception::SassRuntimeException(
-          "Modules are not supported yet", pstate);
+        // String_Constant* variable = arguments[0]->assertString("name");
+        // String_Constant* plugin = arguments[1]->assertStringOrNull("module");
+        throw Exception::SassRuntimeException2(
+          "Modules are not supported yet",
+          *ctx.logger, pstate);
       }
 
       /// Like `_environment.getFunction`, but also returns built-in
       /// globally-avaialble functions.
-      Callable* _getFunction(std::string name, Env* env, Context& ctx, std::string ns = "") {
-
-        std::string full_name(name + "[f]");
-        if (!env->has(full_name)) {
-          // look for dollar overload
-        }
-
-        if (env->has(full_name)) {
-          Callable* callable = Cast<Callable>(env->get(full_name));
-          // std::cerr << "Holla " << (void*)callable << "\n";
-          return callable;
-        }
-        else if (ctx.externals.count(name) == 1) {
-          ExternalCallable* cb = ctx.externals[name];
-          return cb;
-        }
-        else if (ctx.builtins.count(name) == 1) {
-          BuiltInCallable* cb = ctx.builtins[name];
-          return cb;
-        }
-
-        // var local = _environment.getFunction(name, ns);
-        // if (local != null || namespace != null) return local;
-        // return _builtInFunctions[name];
+      Callable* _getFunction(const EnvString& name, Context& ctx, const sass::string& ns = "") {
+        IdxRef fidx = ctx.varRoot.getLexicalFunction33(name);
+        if (fidx.isValid()) return ctx.varRoot.getFunction(fidx);
         return nullptr;
       }
 
       BUILT_IN_FN(getFunction)
       {
 
-        SassString* name = arguments[0]->assertString("name");
+        String_Constant* name = arguments[0]->assertString(*ctx.logger, pstate, "name");
         bool css = arguments[1]->isTruthy(); // supports all values
-        SassString* plugin = arguments[2]->assertStringOrNull("module");
+        String_Constant* plugin = arguments[2]->assertStringOrNull(*ctx.logger, pstate, "module");
 
         if (css && plugin != nullptr) {
-          throw "$css and $module may not both be passed at once.";
+          Exception::SassRuntimeException2(
+            "$css and $module may not both be passed at once.",
+            *ctx.logger, pstate);
         }
 
         CallableObj callable = css
           ? SASS_MEMORY_NEW(PlainCssCallable, pstate, name->value())
-          : _getFunction(name->value(), &closure, ctx);
+          : _getFunction(name->value(), ctx);
 
-        if (callable == nullptr) throw "Function not found: " + name->value();
+        if (callable == nullptr) throw
+          Exception::SassRuntimeException2(
+            "Function not found: " + name->value(),
+            *ctx.logger, pstate);
 
         return SASS_MEMORY_NEW(SassFunction, pstate, callable);
 
@@ -198,10 +193,10 @@ namespace Sass {
       BUILT_IN_FN(call)
       {
 
-        Value* function = arguments[0]->assertValue("function");
-        SassArgumentList* args = arguments[1]->assertArgumentList("args");
+        Value* function = arguments[0]->assertValue(*ctx.logger, "function");
+        SassArgumentList* args = arguments[1]->assertArgumentList(*ctx.logger, "args");
 
-        // std::vector<ExpressionObj> positional,
+        // sass::vector<ExpressionObj> positional,
         //   NormalizedMap<ExpressionObj> named,
         //   Expression* restArgs = nullptr,
         //   Expression* kwdRest = nullptr);
@@ -217,26 +212,30 @@ namespace Sass {
         }
 
         ArgumentInvocationObj invocation = SASS_MEMORY_NEW(
-          ArgumentInvocation, pstate, {}, {}, restArg, kwdRest);
+          ArgumentInvocation, pstate, sass::vector<ExpressionObj>{}, KeywordMap<ExpressionObj>{}, restArg, kwdRest);
 
-        if (SassString* str = Cast<SassString>(function)) {
-
-          std::string name = unquote(str->value());
-          std::cerr << "DEPRECATION WARNING: ";
-          std::cerr << "Passing a string to call() is deprecated and will be illegal" << std::endl;
-          std::cerr << "in Sass 4.0. Use call(get-function(" + quote(name) + ")) instead." << std::endl;
-          std::cerr << std::endl;
+        if (String_Constant * str = Cast<String_Constant>(function)) {
+          sass::string name = unquote(str->value());
+          // callStackFrame frame(*ctx.logger, Backtrace(str->pstate()));
+          deprecatedDart(
+            "Passing a string to call() is deprecated and will be illegal\n"
+            "in Dart Sass 2.0.0. Use call(get-function(" + str->to_css(true) + ")) instead.",
+            sass::string::npos, *ctx.logger, pstate);
+          // std::cerr << "DEPRECATION WARNING: ";
+          // std::cerr << "Passing a string to call() is deprecated and will be illegal" << std::endl;
+          // std::cerr << "in Sass 4.0. Use call(get-function(" + quote(name) + ")) instead." << std::endl;
+          // std::cerr << std::endl;
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, str->value()));
-          FunctionExpression2Obj expression = SASS_MEMORY_NEW(
-            FunctionExpression2, pstate, itpl, invocation);
+          FunctionExpressionObj expression = SASS_MEMORY_NEW(
+            FunctionExpression, pstate, itpl, invocation);
 
           return expression->perform(&eval);
 
         }
 
-        Callable* callable = function->assertFunction("function")->callable();
+        Callable* callable = function->assertFunction(*ctx.logger, "function")->callable();
         return eval._runFunctionCallable(invocation, callable, pstate);
 
 

@@ -36,10 +36,10 @@ inline static std::string wstring_to_string(const std::wstring& wstr)
     return wchar_converter.to_bytes(wstr);
 }
 # else // mingw(/gcc) does not support C++11's codecvt yet.
-inline static std::string wstring_to_string(const std::wstring &wstr)
+inline static Sass::sass::string wstring_to_string(const std::wstring &wstr)
 {
     int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo(size_needed, 0);
+    Sass::sass::string strTo(size_needed, 0);
     WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
     return strTo;
 }
@@ -52,7 +52,7 @@ namespace Sass {
     // return the current directory
     // always with forward slashes
     // always with trailing slash
-    std::string get_cwd()
+    sass::string get_cwd()
     {
       const size_t wd_len = 4096;
       #ifndef _WIN32
@@ -61,12 +61,12 @@ namespace Sass {
         // we should check error for more detailed info (e.g. ENOENT)
         // http://man7.org/linux/man-pages/man2/getcwd.2.html#ERRORS
         if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
-        std::string cwd = pwd;
+        sass::string cwd = pwd;
       #else
         wchar_t wd[wd_len];
         wchar_t* pwd = _wgetcwd(wd, wd_len);
         if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
-        std::string cwd = wstring_to_string(pwd);
+        sass::string cwd = wstring_to_string(pwd).c_str();
         //convert backslashes to forward slashes
         replace(cwd.begin(), cwd.end(), '\\', '/');
       #endif
@@ -74,34 +74,55 @@ namespace Sass {
       return cwd;
     }
 
+
+    static thread_local std::unordered_map<
+      sass::string, bool> cached;
+
     // test if path exists and is a file
-    bool file_exists(const std::string& path)
+    // ToDo: Move the cache to context for thread safety
+    bool file_exists(const sass::string& path, const sass::string& CWD)
     {
+      auto it = cached.find(path);
+      if (it != cached.end()) {
+        // std::cerr << "cached reg " << path << "\n";
+        return it->second;
+      }
       #ifdef _WIN32
         wchar_t resolved[32768];
         // windows unicode filepaths are encoded in utf16
-        std::string abspath(join_paths(get_cwd(), path));
+        sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
+        // it = cached.find(abspath);
+        // if (it != cached.end()) {
+        //   std::cerr << "cached abs " << abspath << "\n";
+        //   return it->second;
+        // }
         std::wstring wpath(UTF_8::convert_to_utf16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
+        // This call is pretty expensive (3%) -> cache in umap?
         DWORD dwAttrib = GetFileAttributesW(resolved);
-        return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-               (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
+        bool result = (dwAttrib != INVALID_FILE_ATTRIBUTES
+          && (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
+        // cached[abspath] = result;
+        cached[path] = result;
+        return result;
       #else
         struct stat st_buf;
-        return (stat (path.c_str(), &st_buf) == 0) &&
-               (!S_ISDIR (st_buf.st_mode));
-      #endif
+        bool result = (stat (path.c_str(), &st_buf) == 0)
+          && (!S_ISDIR (st_buf.st_mode));
+        cached[path] = result;
+        return result;
+#endif
     }
 
     // return if given path is absolute
     // works with *nix and windows paths
-    bool is_absolute_path(const std::string& path)
+    bool is_absolute_path(const sass::string& path)
     {
       #ifdef _WIN32
         if (path.length() >= 3 && Util::ascii_isalpha(path[0]) && path[1] == ':') return true;
@@ -117,19 +138,19 @@ namespace Sass {
     }
 
     // helper function to find the last directory seperator
-    inline size_t find_last_folder_separator(const std::string& path, size_t limit = std::string::npos)
+    inline size_t find_last_folder_separator(const sass::string& path, size_t limit = sass::string::npos)
     {
       size_t pos;
       size_t pos_p = path.find_last_of('/', limit);
       #ifdef _WIN32
         size_t pos_w = path.find_last_of('\\', limit);
       #else
-        size_t pos_w = std::string::npos;
+        size_t pos_w = sass::string::npos;
       #endif
-      if (pos_p != std::string::npos && pos_w != std::string::npos) {
+      if (pos_p != sass::string::npos && pos_w != sass::string::npos) {
         pos = std::max(pos_p, pos_w);
       }
-      else if (pos_p != std::string::npos) {
+      else if (pos_p != sass::string::npos) {
         pos = pos_p;
       }
       else {
@@ -139,24 +160,24 @@ namespace Sass {
     }
 
     // return only the directory part of path
-    std::string dir_name(const std::string& path)
+    sass::string dir_name(const sass::string& path)
     {
       size_t pos = find_last_folder_separator(path);
-      if (pos == std::string::npos) return "";
+      if (pos == sass::string::npos) return "";
       else return path.substr(0, pos+1);
     }
 
     // return only the filename part of path
-    std::string base_name(const std::string& path)
+    sass::string base_name(const sass::string& path)
     {
       size_t pos = find_last_folder_separator(path);
-      if (pos == std::string::npos) return path;
+      if (pos == sass::string::npos) return path;
       else return path.substr(pos+1);
     }
 
     // do a logical clean up of the path
     // no physical check on the filesystem
-    std::string make_canonical_path (std::string path)
+    sass::string make_canonical_path (sass::string path)
     {
 
       // declarations
@@ -168,7 +189,7 @@ namespace Sass {
       #endif
 
       pos = 0; // remove all self references inside the path string
-      while((pos = path.find("/./", pos)) != std::string::npos) path.erase(pos, 2);
+      while((pos = path.find("/./", pos)) != sass::string::npos) path.erase(pos, 2);
 
       // remove all leading and trailing self references
       while(path.size() >= 2 && path[0] == '.' && path[1] == '/') path.erase(0, 2);
@@ -188,7 +209,7 @@ namespace Sass {
       while (path[proto++] == '/') {}
 
       pos = proto; // collapse multiple delimiters into a single one
-      while((pos = path.find("//", pos)) != std::string::npos) path.erase(pos, 1);
+      while((pos = path.find("//", pos)) != sass::string::npos) path.erase(pos, 1);
 
       return path;
 
@@ -196,7 +217,9 @@ namespace Sass {
 
     // join two path segments cleanly together
     // but only if right side is not absolute yet
-    std::string join_paths(std::string l, std::string r)
+    // Can we avoid the two string copies?
+    // OK, one copy is needed anyway
+    sass::string join_paths(sass::string l, sass::string r)
     {
 
       #ifdef _WIN32
@@ -223,14 +246,14 @@ namespace Sass {
         bool is_slash = pos + 2 == L && (l[pos+1] == '/' || l[pos+1] == '\\');
         bool is_self = pos + 3 == L && (l[pos+1] == '.');
         if (!is_self && !is_slash) r = r.substr(3);
-        else if (pos == std::string::npos) break;
-        l = l.substr(0, pos == std::string::npos ? pos : pos + 1);
+        else if (pos == sass::string::npos) break;
+        l = l.substr(0, pos == sass::string::npos ? pos : pos + 1);
       }
 
       return l + r;
     }
 
-    std::string path_for_console(const std::string& rel_path, const std::string& abs_path, const std::string& orig_path)
+    sass::string path_for_console(const sass::string& rel_path, const sass::string& abs_path, const sass::string& orig_path)
     {
       // magic algorith goes here!!
 
@@ -247,18 +270,18 @@ namespace Sass {
     }
 
     // create an absolute path by resolving relative paths with cwd
-    std::string rel2abs(const std::string& path, const std::string& base, const std::string& cwd)
+    sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
-      return make_canonical_path(join_paths(join_paths(cwd + "/", base + "/"), path));
+      return make_canonical_path(join_paths(join_paths(CWD + "/", base + "/"), path));
     }
 
     // create a path that is relative to the given base directory
     // path and base will first be resolved against cwd to make them absolute
-    std::string abs2rel(const std::string& path, const std::string& base, const std::string& cwd)
+    sass::string abs2rel(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
 
-      std::string abs_path = rel2abs(path, cwd);
-      std::string abs_base = rel2abs(base, cwd);
+      sass::string abs_path = rel2abs(path, CWD, CWD);
+      sass::string abs_base = rel2abs(base, CWD, CWD);
 
       size_t proto = 0;
       // check if we have a protocol
@@ -279,8 +302,8 @@ namespace Sass {
         if (abs_base[0] != abs_path[0]) return abs_path;
       #endif
 
-      std::string stripped_uri = "";
-      std::string stripped_base = "";
+      sass::string stripped_uri = "";
+      sass::string stripped_base = "";
 
       size_t index = 0;
       size_t minSize = std::min(abs_path.size(), abs_base.size());
@@ -319,7 +342,7 @@ namespace Sass {
         }
       }
 
-      std::string result = "";
+      sass::string result = "";
       for (size_t i = 0; i < directories; ++i) {
         result += "../";
       }
@@ -335,32 +358,32 @@ namespace Sass {
     // (4) given + extension
     // (5) given + _index.scss
     // (6) given + _index.sass
-    std::vector<Include> resolve_includes(const std::string& root, const std::string& file, const std::vector<std::string>& exts)
+    sass::vector<Include> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD, const std::vector<sass::string>& exts)
     {
-      std::string filename = join_paths(root, file);
+      sass::string filename = join_paths(root, file);
       // split the filename
-      std::string base(dir_name(file));
-      std::string name(base_name(file));
-      std::vector<Include> includes;
+      sass::string base(dir_name(file));
+      sass::string name(base_name(file));
+      sass::vector<Include> includes;
       // create full path (maybe relative)
-      std::string rel_path(join_paths(base, name));
-      std::string abs_path(join_paths(root, rel_path));
-      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+      sass::string rel_path(join_paths(base, name));
+      sass::string abs_path(join_paths(root, rel_path));
+      if (file_exists(abs_path, CWD)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       // next test variation with underscore
       rel_path = join_paths(base, "_" + name);
       abs_path = join_paths(root, rel_path);
-      if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+      if (file_exists(abs_path, CWD)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       // next test exts plus underscore
       for(auto ext : exts) {
         rel_path = join_paths(base, "_" + name + ext);
         abs_path = join_paths(root, rel_path);
-        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+        if (file_exists(abs_path, CWD)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       }
       // next test plain name with exts
       for(auto ext : exts) {
         rel_path = join_paths(base, name + ext);
         abs_path = join_paths(root, rel_path);
-        if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+        if (file_exists(abs_path, CWD)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
       }
       // index files
       if (includes.size() == 0) {
@@ -372,76 +395,76 @@ namespace Sass {
         for(auto ext : exts) {
           rel_path = join_paths(base, join_paths(name, "_index" + ext));
           abs_path = join_paths(root, rel_path);
-          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+          if (file_exists(abs_path, CWD)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
         }
         // next test plain index exts
         for(auto ext : exts) {
           rel_path = join_paths(base, join_paths(name, "index" + ext));
           abs_path = join_paths(root, rel_path);
-          if (file_exists(abs_path)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
+          if (file_exists(abs_path, CWD)) includes.push_back({{ rel_path, root }, abs_path, SASS_IMPORT_AUTO });
         }
       }
       // nothing found
       return includes;
     }
 
-    std::vector<std::string> find_files(const std::string& file, const std::vector<std::string> paths)
+    sass::vector<sass::string> find_files(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths)
     {
-      std::vector<std::string> includes;
-      for (std::string path : paths) {
-        std::string abs_path(join_paths(path, file));
-        if (file_exists(abs_path)) includes.push_back(abs_path);
+      sass::vector<sass::string> includes;
+      for (sass::string path : paths) {
+        sass::string abs_path(join_paths(path, file));
+        if (file_exists(abs_path, CWD)) includes.emplace_back(abs_path);
       }
       return includes;
     }
 
-    std::vector<std::string> find_files(const std::string& file, struct Sass_Compiler* compiler)
+    sass::vector<sass::string> find_files(const sass::string& file, const sass::string& CWD, struct Sass_Compiler* compiler)
     {
       // get the last import entry to get current base directory
       // struct Sass_Options* options = sass_compiler_get_options(compiler);
       Sass_Import_Entry import = sass_compiler_get_last_import(compiler);
-      const std::vector<std::string>& incs = compiler->cpp_ctx->include_paths;
+      const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
       // create the vector with paths to lookup
-      std::vector<std::string> paths(1 + incs.size());
-      paths.push_back(dir_name(import->abs_path));
+      sass::vector<sass::string> paths(1 + incs.size());
+      paths.emplace_back(dir_name(import->abs_path));
       paths.insert(paths.end(), incs.begin(), incs.end());
       // dispatch to find files in paths
-      return find_files(file, paths);
+      return find_files(file, CWD, paths);
     }
 
     // helper function to search one file in all include paths
     // this is normally not used internally by libsass (C-API sugar)
-    std::string find_file(const std::string& file, const std::vector<std::string> paths)
+    sass::string find_file(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths)
     {
       if (file.empty()) return file;
-      auto res = find_files(file, paths);
+      auto res = find_files(file, CWD, paths);
       return res.empty() ? "" : res.front();
     }
 
     // helper function to resolve a filename
-    std::string find_include(const std::string& file, const std::vector<std::string> paths)
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths)
     {
       // search in every include path for a match
       for (size_t i = 0, S = paths.size(); i < S; ++i)
       {
-        std::vector<Include> resolved(resolve_includes(paths[i], file));
+        sass::vector<Include> resolved(resolve_includes(paths[i], file, CWD));
         if (resolved.size()) return resolved[0].abs_path;
       }
       // nothing found
-      return std::string("");
+      return sass::string("");
     }
 
     // try to load the given filename
     // returned memory must be freed
     // will auto convert .sass files
-    char* read_file(const std::string& path)
+    char* read_file(const sass::string& path, const sass::string& CWD)
     {
       #ifdef _WIN32
         BYTE* pBuffer;
         DWORD dwBytes;
         wchar_t resolved[32768];
         // windows unicode filepaths are encoded in utf16
-        std::string abspath(join_paths(get_cwd(), path));
+        sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
@@ -491,7 +514,7 @@ namespace Sass {
     }
 
     // split a path string delimited by semicolons or colons (OS dependent)
-    // std::vector<std::string> split_path_list(std::string str)
+    // sass::vector<sass::string> split_path_list(sass::string str)
     // {
     //   return Util::split_string(str, PATH_SEP);
     // }

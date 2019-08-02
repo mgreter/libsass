@@ -1,7 +1,7 @@
 #ifndef SASS_VALUES_H
 #define SASS_VALUES_H
 
-#include "ast.hpp"
+#include "ast_fwd_decl.hpp"
 
 namespace Sass {
 

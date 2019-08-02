@@ -9,6 +9,7 @@
 #include "fn_utils.hpp"
 #include "fn_numbers.hpp"
 #include "util_string.hpp"
+#include "randomize.hpp"
 #include "debugger.hpp"
 
 #include "utf8.h"
@@ -65,68 +66,51 @@ namespace Sass {
 
       BUILT_IN_FN(unquote)
       {
-        SassString* string = arguments[0]->assertString("string");
-        if (String_Quoted * string_quoted = Cast<String_Quoted>(string)) {
-          return SASS_MEMORY_NEW(String_Constant, pstate, string_quoted->value());
-        }
-        return string;
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        if (!string->hasQuotes()) return string;
+        return SASS_MEMORY_NEW(String_Constant,
+          string->pstate(), string->value(), false);
       }
 
       BUILT_IN_FN(quote)
       {
-        SassString* s = arguments[0]->assertString("string");
-        String_Quoted* result = SASS_MEMORY_NEW(
-          String_Quoted, pstate, s->value(),
-          /*q=*/'\0', /*keep_utf8_escapes=*/false, /*skip_unquoting=*/true);
-        result->quote_mark('*');
-        return result;
-
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        if (string->hasQuotes()) return string;
+        return SASS_MEMORY_NEW(String_Constant,
+          string->pstate(), string->value(), true);
       }
 
       BUILT_IN_FN(toUpperCase)
       {
-        SassString* string = arguments[0]->assertString("string");
-        if (Cast<String_Quoted>(string)) {
-          return SASS_MEMORY_NEW(String_Quoted, pstate,
-            Util::ascii_str_toupper(string->value()),
-            string->quote_mark(), true, true);
-        }
-        else {
-          return SASS_MEMORY_NEW(SassString, pstate,
-            Util::ascii_str_toupper(string->value()),
-            true);
-        }
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        return SASS_MEMORY_NEW(String_Constant, pstate,
+          Util::ascii_str_toupper(string->value()),
+          string->hasQuotes());
       }
 
       BUILT_IN_FN(toLowerCase)
       {
-        SassString* string = arguments[0]->assertString("string");
-        if (Cast<String_Quoted>(string)) {
-          return SASS_MEMORY_NEW(String_Quoted, pstate,
-            Util::ascii_str_tolower(string->value()),
-            string->quote_mark(), true, true);
-        }
-        else {
-          return SASS_MEMORY_NEW(SassString, pstate,
-            Util::ascii_str_tolower(string->value()),
-            true);
-        }
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        return SASS_MEMORY_NEW(String_Constant, pstate,
+          Util::ascii_str_tolower(string->value()),
+          string->hasQuotes());
       }
 
       BUILT_IN_FN(length)
       {
-        SassString* string = arguments[0]->assertString("string");
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
         size_t len = UTF_8::code_point_count(string->value());
         return SASS_MEMORY_NEW(Number, pstate, (double)len);
       }
 
       BUILT_IN_FN(insert)
       {
-        SassString* string = arguments[0]->assertString("string");
-        SassString* insert = arguments[1]->assertString("insert");
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        String_Constant* insert = arguments[1]->assertString(*ctx.logger, pstate, "insert");
         size_t len = UTF_8::code_point_count(string->value());
-        long index = arguments[2]->assertNumber("index")
-          ->assertNoUnits("index")->assertInt(epsilon, "index");
+        long index = arguments[2]->assertNumber(*ctx.logger, "index")
+          ->assertNoUnits(*ctx.logger, pstate, "index")
+          ->assertInt(*ctx.logger, pstate, "index");
 
         // str-insert has unusual behavior for negative inputs. It guarantees that
         // the `$insert` string is at `$index` in the result, which means that we
@@ -135,330 +119,111 @@ namespace Sass {
         if (index < 0) {
           // +1 because negative indexes start counting from -1 rather than 0, and
           // another +1 because we want to insert *after* that index.
-          index = len + index + 2;
+          index = (long)len + index + 2;
         }
 
-        index = _codepointForIndex(index, len);
+        index = (long) _codepointForIndex(index, (long)len);
 
-        std::string str(string->value());
+        sass::string str(string->value());
         // std::cerr << "Insert at " << index << "\n";
         str.insert(UTF_8::offset_at_position(
           str, index), insert->value());
 
-        if (String_Quoted * sq = Cast<String_Quoted>(string)) {
-          if (sq->quote_mark()) str = Sass::quote(str);
-        }
-        return SASS_MEMORY_NEW(String_Constant, pstate, str);
+        return SASS_MEMORY_NEW(String_Constant,
+          pstate, str, string->hasQuotes());
       }
 
       BUILT_IN_FN(index)
       {
-        SassString* string = arguments[0]->assertString("string");
-        SassString* substring = arguments[1]->assertString("substring");
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        String_Constant* substring = arguments[1]->assertString(*ctx.logger, pstate, "substring");
 
-        std::string str(string->value());
-        std::string substr(substring->value());
+        sass::string str(string->value());
+        sass::string substr(substring->value());
 
         size_t c_index = str.find(substr);
-        if (c_index == std::string::npos) {
+        if (c_index == sass::string::npos) {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
         return SASS_MEMORY_NEW(SassNumber, pstate,
-          UTF_8::code_point_count(str, 0, c_index) + 1);
+          (double) UTF_8::code_point_count(str, 0, c_index) + 1);
       }
 
       BUILT_IN_FN(slice)
       {
-        SassString* string = arguments[0]->assertString("string");
-        SassNumber* beg = arguments[1]->assertNumber("start-at");
-        SassNumber* end = arguments[2]->assertNumber("end-at");
+        String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        SassNumber* beg = arguments[1]->assertNumber(*ctx.logger, "start-at");
+        SassNumber* end = arguments[2]->assertNumber(*ctx.logger, "end-at");
 
-        long len = UTF_8::code_point_count(string->value());
-        beg = beg->assertNoUnits("start");
-        end = end->assertNoUnits("end");
+        size_t len = UTF_8::code_point_count(string->value());
+        beg = beg->assertNoUnits(*ctx.logger, pstate, "start");
+        end = end->assertNoUnits(*ctx.logger, pstate, "end");
 
         // No matter what the start index is, an end
         // index of 0 will produce an empty string.
-        long endInt = end->assertNoUnits("end")->assertInt(epsilon);
+        long endInt = end->assertNoUnits(*ctx.logger, pstate, "end")
+          ->assertInt(*ctx.logger, pstate);
         if (endInt == 0) {
-          if (Cast<String_Quoted>(string)) {
-            return SASS_MEMORY_NEW(
-              String_Quoted, pstate, "\"\"");
-          }
-          else {
-            return SASS_MEMORY_NEW(
-              String_Quoted, pstate, "");
-          }
+          return SASS_MEMORY_NEW(String_Constant,
+            pstate, "", string->hasQuotes());
         }
 
-        long begInt = beg->assertNoUnits("start")->assertInt(epsilon);
-        begInt = _codepointForIndex(begInt, len, false);
-        endInt = _codepointForIndex(endInt, len, true);
+        long begInt = beg->assertNoUnits(*ctx.logger, pstate, "start")
+          ->assertInt(*ctx.logger, pstate);
+        begInt = (long)_codepointForIndex(begInt, (long)len, false);
+        endInt = (long)_codepointForIndex(endInt, (long)len, true);
 
-        if (endInt == len) endInt = len - 1;
+        if (endInt == (long)len) endInt = (long)len - 1;
         if (endInt < begInt) {
-          if (Cast<String_Quoted>(string)) {
-            return SASS_MEMORY_NEW(
-              String_Quoted, pstate, "\"\"");
-          }
-          else {
-            return SASS_MEMORY_NEW(
-              String_Quoted, pstate, "");
-          }
+          return SASS_MEMORY_NEW(String_Constant,
+            pstate, "", string->hasQuotes());
         }
 
-        std::string value(string->value());
-        std::string::iterator begIt = value.begin();
-        std::string::iterator endIt = value.begin();
+        sass::string value(string->value());
+        sass::string::iterator begIt = value.begin();
+        sass::string::iterator endIt = value.begin();
         utf8::advance(begIt, begInt + 0, value.end());
         utf8::advance(endIt, endInt + 1, value.end());
 
-        std::string sliced(begIt, endIt);
-
-        if (String_Quoted * sq = Cast<String_Quoted>(string)) {
-          return SASS_MEMORY_NEW(
-            String_Quoted, pstate,
-            sliced, sq->quote_mark(), true, true);
-        }
+        sass::string sliced(begIt, endIt);
 
         return SASS_MEMORY_NEW(
           String_Constant, pstate,
-          sliced);
+          sliced, string->hasQuotes());
+
       }
 
       BUILT_IN_FN(uniqueId)
       {
-        std::stringstream ss;
-        std::uniform_real_distribution<> distributor(0, 4294967296); // 16^8
-        uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
-        ss << "u" << std::setfill('0') << std::setw(8) << std::hex << distributed;
-        return SASS_MEMORY_NEW(String_Quoted, pstate, ss.str());
+        sass::sstream ss; ss << "u"
+          << std::setfill('0') << std::setw(8)
+          << std::hex << getRandomUint32();
+        return SASS_MEMORY_NEW(String_Constant,
+          pstate, ss.str(), true);
       }
 
     }
 
 
-    void handle_utf8_error (const ParserState& pstate, Backtraces traces)
+    void handle_utf8_error (const SourceSpan& pstate, Backtraces traces)
     {
       try {
        throw;
       }
       catch (utf8::invalid_code_point&) {
-        std::string msg("utf8::invalid_code_point");
+        sass::string msg("utf8::invalid_code_point");
         error(msg, pstate, traces);
       }
       catch (utf8::not_enough_room&) {
-        std::string msg("utf8::not_enough_room");
+        sass::string msg("utf8::not_enough_room");
         error(msg, pstate, traces);
       }
       catch (utf8::invalid_utf8&) {
-        std::string msg("utf8::invalid_utf8");
+        sass::string msg("utf8::invalid_utf8");
         error(msg, pstate, traces);
       }
       catch (...) { throw; }
-    }
-
-    ///////////////////
-    // STRING FUNCTIONS
-    ///////////////////
-
-    Signature unquote_sig = "unquote($string)";
-    BUILT_IN(sass_unquote)
-    {
-      AST_Node_Obj arg = env["$string"];
-      if (String_Quoted* string_quoted = Cast<String_Quoted>(arg)) {
-        return SASS_MEMORY_NEW(String_Constant, pstate, string_quoted->value());
-      }
-      else if (String_Constant* str = Cast<String_Constant>(arg)) {
-        return str;
-      }
-      std::stringstream msg;
-      msg << "$string: ";
-      msg << arg->to_string();
-      msg << " is not a string.";
-      error(msg.str(), arg->pstate(), traces);
-      return nullptr;
-    }
-
-    Signature quote_sig = "quote($string)";
-    BUILT_IN(sass_quote)
-    {
-      const String_Constant* s = ARGSTRC("$string");
-      String_Quoted *result = SASS_MEMORY_NEW(
-          String_Quoted, pstate, s->value(),
-          /*q=*/'\0', /*keep_utf8_escapes=*/false, /*skip_unquoting=*/true);
-      result->quote_mark('*');
-      return result;
-    }
-
-    Signature str_length_sig = "str-length($string)";
-    BUILT_IN(str_length)
-    {
-      size_t len = std::string::npos;
-      try {
-        String_Constant* s = ARGSTRC("$string");
-        len = UTF_8::code_point_count(s->value(), 0, s->value().size());
-
-      }
-      // handle any invalid utf8 errors
-      // other errors will be re-thrown
-      catch (...) { handle_utf8_error(pstate, traces); }
-      // return something even if we had an error (-1)
-      return SASS_MEMORY_NEW(Number, pstate, (double)len);
-    }
-
-    Signature str_insert_sig = "str-insert($string, $insert, $index)";
-    BUILT_IN(str_insert)
-    {
-      std::string str;
-      try {
-        String_Constant* s = ARGSTRC("$string");
-        str = s->value();
-        String_Constant* i = ARGSTRC("$insert");
-        std::string ins = i->value();
-        double index = ARGVAL("$index");
-        assertInt("$index", index, pstate, traces);
-        size_t len = UTF_8::code_point_count(str, 0, str.size());
-
-        if (index > 0 && index <= len) {
-          // positive and within string length
-          str.insert(UTF_8::offset_at_position(str, static_cast<size_t>(index) - 1), ins);
-        }
-        else if (index > len) {
-          // positive and past string length
-          str += ins;
-        }
-        else if (index == 0) {
-          str = ins + str;
-        }
-        else if (std::abs(index) <= len) {
-          // negative and within string length
-          index += len + 1;
-          str.insert(UTF_8::offset_at_position(str, static_cast<size_t>(index)), ins);
-        }
-        else {
-          // negative and past string length
-          str = ins + str;
-        }
-
-        if (String_Quoted* ss = Cast<String_Quoted>(s)) {
-          if (ss->quote_mark()) str = quote(str);
-        }
-      }
-      // handle any invalid utf8 errors
-      // other errors will be re-thrown
-      catch (...) { handle_utf8_error(pstate, traces); }
-      return SASS_MEMORY_NEW(String_Quoted, pstate, str);
-    }
-
-    Signature str_index_sig = "str-index($string, $substring)";
-    BUILT_IN(str_index)
-    {
-      size_t index = std::string::npos;
-      try {
-        String_Constant* s = ARGSTRC("$string");
-        String_Constant* t = ARGSTRC("$substring");
-        std::string str = s->value();
-        std::string substr = t->value();
-
-        size_t c_index = str.find(substr);
-        if(c_index == std::string::npos) {
-          return SASS_MEMORY_NEW(Null, pstate);
-        }
-        index = UTF_8::code_point_count(str, 0, c_index) + 1;
-      }
-      // handle any invalid utf8 errors
-      // other errors will be re-thrown
-      catch (...) { handle_utf8_error(pstate, traces); }
-      // return something even if we had an error (-1)
-      return SASS_MEMORY_NEW(Number, pstate, (double)index);
-    }
-
-    Signature str_slice_sig = "str-slice($string, $start-at, $end-at: -1)";
-    BUILT_IN(str_slice)
-    {
-      std::string newstr;
-      try {
-        String_Constant* s = ARGSTRC("$string");
-        double start_at = ARGVAL("$start-at");
-        double end_at = ARGVAL("$end-at");
-        assertInt("", start_at, pstate, traces);
-        assertInt("", end_at, pstate, traces);
-        String_Quoted* ss = Cast<String_Quoted>(s);
-
-        std::string str(s->value());
-
-        size_t size = utf8::distance(str.begin(), str.end());
-
-        if (!Cast<Number>(env["$end-at"])) {
-          end_at = -1;
-        }
-
-        if (end_at == 0 || (end_at + size) < 0) {
-          if (ss && ss->quote_mark()) newstr = quote("");
-          return SASS_MEMORY_NEW(String_Quoted, pstate, newstr);
-        }
-
-        if (end_at < 0) {
-          end_at += size + 1;
-          if (end_at == 0) end_at = 1;
-        }
-        if (end_at > size) { end_at = (double)size; }
-        if (start_at < 0) {
-          start_at += size + 1;
-          if (start_at <= 0) start_at = 1;
-        }
-        else if (start_at == 0) { ++ start_at; }
-
-        if (start_at <= end_at)
-        {
-          std::string::iterator start = str.begin();
-          utf8::advance(start, start_at - 1, str.end());
-          std::string::iterator end = start;
-          utf8::advance(end, end_at - start_at + 1, str.end());
-          newstr = std::string(start, end);
-        }
-        if (ss) {
-          if(ss->quote_mark()) newstr = quote(newstr);
-        }
-      }
-      // handle any invalid utf8 errors
-      // other errors will be re-thrown
-      catch (...) { handle_utf8_error(pstate, traces); }
-      return SASS_MEMORY_NEW(String_Quoted, pstate, newstr);
-    }
-
-    Signature to_upper_case_sig = "to-upper-case($string)";
-    BUILT_IN(to_upper_case)
-    {
-      String_Constant* s = ARGSTRC("$string");
-      std::string str = s->value();
-      Util::ascii_str_toupper(&str);
-
-      if (String_Quoted* ss = Cast<String_Quoted>(s)) {
-        String_Quoted* cpy = SASS_MEMORY_COPY(ss);
-        cpy->value(str);
-        return cpy;
-      } else {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, str);
-      }
-    }
-
-    Signature to_lower_case_sig = "to-lower-case($string)";
-    BUILT_IN(to_lower_case)
-    {
-      String_Constant* s = ARGSTRC("$string");
-      std::string str = s->value();
-      Util::ascii_str_tolower(&str);
-
-      if (String_Quoted* ss = Cast<String_Quoted>(s)) {
-        String_Quoted* cpy = SASS_MEMORY_COPY(ss);
-        cpy->value(str);
-        return cpy;
-      } else {
-        return SASS_MEMORY_NEW(String_Quoted, pstate, str);
-      }
     }
 
   }

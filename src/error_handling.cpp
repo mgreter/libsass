@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
+#include "debugger.hpp"
 #include "backtrace.hpp"
 #include "error_handling.hpp"
 
@@ -12,21 +13,20 @@ namespace Sass {
 
   namespace Exception {
 
-    Base::Base(ParserState pstate, std::string msg, Backtraces traces)
-    : std::runtime_error(msg), msg(msg),
+    Base::Base(SourceSpan pstate, sass::string msg, Backtraces traces)
+    : std::runtime_error(msg.c_str()), msg(msg),
       prefix("Error"), pstate(pstate), traces(traces)
     { }
 
-    SassScriptException::SassScriptException(std::string msg, std::string name)
-      : std::runtime_error(msg), msg(name.empty() ? msg : "$" + name + ": " + msg) {}
+    SassScriptException::SassScriptException(sass::string msg, sass::string name)
+      : std::runtime_error(msg.c_str()), msg(name.empty() ? msg : "$" + name + ": " + msg) {}
 
-    SassRuntimeException::SassRuntimeException(std::string msg, ParserState pstate)
-      : std::runtime_error(msg), msg(msg), pstate(pstate) {}
+    SassRuntimeException::SassRuntimeException(sass::string msg, SourceSpan pstate)
+      : std::runtime_error(msg.c_str()), msg(msg), pstate(pstate) {}
 
-    InvalidSass::InvalidSass(ParserState pstate, Backtraces traces, std::string msg)
-    : Base(pstate, msg, traces)
-    { }
-
+    SassRuntimeException2::SassRuntimeException2(sass::string msg,
+      Logger& logger, SourceSpan pstate)
+      : Base(pstate, msg, logger) {}
 
     InvalidParent::InvalidParent(Selector* parent, Backtraces traces, Selector* selector)
     : Base(selector->pstate(), def_msg, traces), parent(parent), selector(selector)
@@ -37,32 +37,11 @@ namespace Sass {
         " is incompatible with this selector.";
     }
 
-    InvalidVarKwdType::InvalidVarKwdType(ParserState pstate, Backtraces traces, std::string name, const Argument* arg)
-    : Base(pstate, def_msg, traces), name(name), arg(arg)
-    {
-      msg = "Variable keyword argument map must have string keys.\n" +
-        name + " is not a string in " + arg->to_string() + ".";
-    }
-
-    InvalidArgumentType::InvalidArgumentType(ParserState pstate, Backtraces traces, std::string fn, std::string arg, std::string type, const Value* value)
-    : Base(pstate, def_msg, traces), fn(fn), arg(arg), type(type), value(value)
-    {
-      msg = arg + ": ";
-      if (value) msg += value->to_string(Sass_Inspect_Options());
-      msg += " is not a " + type + ".";
-    }
-
-    MissingArgument::MissingArgument(ParserState pstate, Backtraces traces, std::string fn, std::string arg, std::string fntype)
-    : Base(pstate, def_msg, traces), fn(fn), arg(arg), fntype(fntype)
-    {
-      msg = "Missing argument " + arg + ".";
-    }
-
-    InvalidSyntax::InvalidSyntax(ParserState pstate, Backtraces traces, std::string msg)
+    InvalidSyntax::InvalidSyntax(SourceSpan pstate, Backtraces traces, sass::string msg)
       : Base(pstate, msg, traces)
     { }
 
-    RecursionLimitError::RecursionLimitError(ParserState pstate, Backtraces traces)
+    RecursionLimitError::RecursionLimitError(SourceSpan pstate, Backtraces traces)
       : Base(pstate, msg_recursion_limit, traces) {}
 
     DuplicateKeyError::DuplicateKeyError(Backtraces traces, const Map& dup, const Expression& org)
@@ -72,7 +51,7 @@ namespace Sass {
       msg = "Duplicate key."; // dart-sass keeps it simple ...
     }
 
-    TypeMismatch::TypeMismatch(Backtraces traces, const Expression& var, const std::string type)
+    TypeMismatch::TypeMismatch(Backtraces traces, const Expression& var, const sass::string type)
     : Base(var.pstate(), def_msg, traces), var(var), type(type)
     {
       msg = var.to_string() + " is not " + type + ".";
@@ -91,7 +70,7 @@ namespace Sass {
 
     IncompatibleUnits::IncompatibleUnits(const UnitType lhs, const UnitType rhs)
     {
-      msg = std::string("Incompatible units ") + unit_to_string(rhs) + " and " + unit_to_string(lhs) + ".";
+      msg = sass::string("Incompatible units ") + unit_to_string(rhs) + " and " + unit_to_string(lhs) + ".";
     }
 
     AlphaChannelsNotEqual::AlphaChannelsNotEqual(const Expression* lhs, const Expression* rhs, enum Sass_OP op)
@@ -125,61 +104,67 @@ namespace Sass {
       msg = def_op_null_msg + ": \"" + lhs->inspect() + " " + sass_op_to_name(op) + " " + rhs->inspect() + "\".";
     }
 
-    SassValueError::SassValueError(Backtraces traces, ParserState pstate, OperationError& err)
+    SassValueError::SassValueError(Backtraces traces, SourceSpan pstate, OperationError& err)
     : Base(pstate, err.what(), traces)
     {
       msg = err.what();
       prefix = err.errtype();
     }
 
-    TopLevelParent::TopLevelParent(Backtraces traces, ParserState pstate)
+    TopLevelParent::TopLevelParent(Backtraces traces, SourceSpan pstate)
       : Base(pstate, "Top-level selectors may not contain the parent selector \"&\".", traces)
     {
 
     }
-
+      
     UnsatisfiedExtend::UnsatisfiedExtend(Backtraces traces, Extension extension)
-      : Base(extension.target->pstate(), "The target selector was not found.\n"
-        "Use \"@extend " + extension.target->to_string() + " !optional\" to avoid this error.", traces)
+      : Base(extension.target->pstate(), sass::string("The target selector was not found.\n")
+        + "Use \"@extend " + extension.target->inspect() + " !optional\" to avoid this error.", traces)
     {
-
     }
 
     ExtendAcrossMedia::ExtendAcrossMedia(Backtraces traces, Extension extension)
-      : Base(extension.target->pstate(), "You may not @extend selectors across media queries.\n"
-        "Use \"@extend " + extension.target->to_string() + " !optional\" to avoid this error.", traces)
+      : Base(extension.target->pstate(), "You may not @extend selectors across media queries.", traces)
     {
 
     }
     
 
-    InvalidUnicode::InvalidUnicode(ParserState pstate, Backtraces traces)
+    InvalidUnicode::InvalidUnicode(SourceSpan pstate, Backtraces traces)
       : Base(pstate, "Invalid UTF-8.", traces)
     {
     }
 
-  }
+    SassScriptException2::SassScriptException2(sass::string msg,
+      Backtraces traces, SourceSpan pstate, sass::string name) :
+      Base(pstate, name.empty() ? msg : "$" + name + ": " + msg, traces)
+    {}
 
-  void warning(std::string msg, ParserState pstate)
+}
+
+  void warning(sass::string msg, Logger& logger, SourceSpan pstate)
   {
-    std::string cwd(Sass::File::get_cwd());
-    std::string abs_path(Sass::File::rel2abs(pstate.path, cwd, cwd));
-    std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
-    std::string output_path(Sass::File::path_for_console(rel_path, abs_path, pstate.path));
+    sass::string cwd(Sass::File::get_cwd());
+    sass::string abs_path(Sass::File::rel2abs(pstate.getPath(), cwd, cwd));
+    sass::string rel_path(Sass::File::abs2rel(pstate.getPath(), cwd, cwd));
+    sass::string output_path(Sass::File::path_for_console(rel_path, abs_path, pstate.getPath()));
 
-    std::cerr << "WARNING on line " << pstate.line+1 << ", column " << pstate.column+1 << " of " << output_path << ":" << std::endl;
+    callStackFrame frame(logger, Backtrace(pstate));
+    std::cerr << "WARNING on line " << pstate.getLine() << ", column " <<
+      pstate.getColumn() << " of " << output_path << ":" << std::endl;
     std::cerr << msg << std::endl << std::endl;
+    std::cerr << traces_to_string(logger, "    ", true);
   }
 
-  void deprecated(std::string msg, std::string msg2, bool with_column, ParserState pstate)
+  void deprecated(sass::string msg, sass::string msg2, bool with_column, SourceSpan pstate)
   {
-    std::string cwd(Sass::File::get_cwd());
-    std::string abs_path(Sass::File::rel2abs(pstate.path, cwd, cwd));
-    std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
-    std::string output_path(Sass::File::path_for_console(rel_path, pstate.path, pstate.path));
+    sass::string cwd(Sass::File::get_cwd());
+    sass::string abs_path(Sass::File::rel2abs(pstate.getPath(), cwd, cwd));
+    sass::string rel_path(Sass::File::abs2rel(pstate.getPath(), cwd, cwd));
+    sass::string output_path(Sass::File::path_for_console(rel_path, pstate.getPath(), pstate.getPath()));
 
-    std::cerr << "DEPRECATION WARNING on line " << pstate.line + 1;
-    if (with_column) std::cerr << ", column " << pstate.column + 1;
+    std::cerr << "DEPRECATION WARNING on line " << pstate.getLine();
+    if (with_column) std::cerr << ", column " << pstate.getColumn();
     if (output_path.length()) std::cerr << " of " << output_path;
     std::cerr << ":" << std::endl;
     std::cerr << msg << std::endl;
@@ -187,34 +172,27 @@ namespace Sass {
     std::cerr << std::endl;
   }
 
-  void deprecatedDart(std::string msg, bool with_column, ParserState pstate)
+  void deprecatedDart(sass::string msg, size_t showTraces, Logger& logger, SourceSpan pstate)
   {
-    std::string cwd(Sass::File::get_cwd());
-    std::string abs_path(Sass::File::rel2abs(pstate.path, cwd, cwd));
-    std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
-    std::string output_path(Sass::File::path_for_console(rel_path, pstate.path, pstate.path));
+    sass::string cwd(Sass::File::get_cwd());
+    sass::string abs_path(Sass::File::rel2abs(pstate.getPath(), cwd, cwd));
+    sass::string rel_path(Sass::File::abs2rel(pstate.getPath(), cwd, cwd));
+    sass::string output_path(Sass::File::path_for_console(rel_path, pstate.getPath(), pstate.getPath()));
 
     std::cerr << "DEPRECATION WARNING: ";
     std::cerr << msg << std::endl;
+    std::cerr << std::endl;
+
+    // callStackFrame frame(logger,
+    //   Backtrace(pstate));
+    std::cerr << traces_to_string(logger, "    ", showTraces);
     std::cerr << std::endl;
 
     // ToDo: add source indicator
 
   }
 
-  void deprecated_bind(std::string msg, ParserState pstate)
-  {
-    std::string cwd(Sass::File::get_cwd());
-    std::string abs_path(Sass::File::rel2abs(pstate.path, cwd, cwd));
-    std::string rel_path(Sass::File::abs2rel(pstate.path, cwd, cwd));
-    std::string output_path(Sass::File::path_for_console(rel_path, abs_path, pstate.path));
-
-    std::cerr << "WARNING: " << msg << std::endl;
-    std::cerr << "        on line " << pstate.line+1 << " of " << output_path << std::endl;
-    std::cerr << "This will be an error in future versions of Sass." << std::endl;
-  }
-
-  void error(std::string msg, ParserState pstate, Backtraces& traces)
+  void error(const sass::string& msg, SourceSpan pstate, Backtraces& traces)
   {
     traces.push_back(Backtrace(pstate));
     throw Exception::InvalidSyntax(pstate, traces, msg);

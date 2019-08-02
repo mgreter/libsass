@@ -15,8 +15,8 @@ namespace Sass {
     // T visitCssComment(CssComment node);
     // T visitCssDeclaration(CssDeclaration node);
     // T visitCssImport(CssImport* node);
-    // T visitCssKeyframeBlock(CssKeyframeBlock node);
-    // virtual T visitCssMediaRule(CssMediaRule* node);
+    virtual T visitCssKeyframeBlock(CssKeyframeBlock* node) = 0;
+    virtual T visitCssMediaRule(CssMediaRule* node) = 0;
     // T visitCssStyleRule(CssStyleRule node);
     // T visitCssStylesheet(CssStylesheet node);
     // T visitCssSupportsRule(CssSupportsRule* node);

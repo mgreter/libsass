@@ -2,6 +2,7 @@
 #define SASS_BASE64VLQ_H
 
 #include <string>
+#include "allocator.hpp"
 
 namespace Sass {
 
@@ -9,7 +10,7 @@ namespace Sass {
 
   public:
 
-    std::string encode(const int number) const;
+    sass::string encode(const int number) const;
 
   private:
 

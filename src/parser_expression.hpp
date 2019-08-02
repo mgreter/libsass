@@ -10,23 +10,24 @@ namespace Sass {
   class ExpressionParser {
 
   public:
-    const char* start;
 
-    std::vector<ExpressionObj> commaExpressions;
+    LineScannerState2 start;
+
+    sass::vector<ExpressionObj> commaExpressions;
 
     ExpressionObj singleEqualsOperand;
 
-    std::vector<ExpressionObj> spaceExpressions;
+    sass::vector<ExpressionObj> spaceExpressions;
 
     // Operators whose right-hand operands are not fully parsed yet, in order of
     // appearance in the document. Because a low-precedence operator will cause
     // parsing to finish for all preceding higher-precedence operators, this is
     // naturally ordered from lowest to highest precedence.
-    std::vector<enum Sass_OP> operators;
+    sass::vector<enum Sass_OP> operators;
 
     // The left-hand sides of [operators]. `operands[n]` is the left-hand side
     // of `operators[n]`.
-    std::vector<ExpressionObj> operands;
+    sass::vector<ExpressionObj> operands;
 
     /// Whether the single expression parsed so far may be interpreted as
     /// slash-separated numbers.
@@ -49,7 +50,7 @@ namespace Sass {
 
     void addSingleExpression(ExpressionObj expression, bool number = false);
 
-    void addOperator(Sass_OP op);
+    void addOperator(Sass_OP op, Position& start);
 
     void resolveSpaceExpressions();
 

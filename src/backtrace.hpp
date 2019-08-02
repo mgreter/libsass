@@ -4,25 +4,26 @@
 #include <vector>
 #include <sstream>
 #include "file.hpp"
-#include "position.hpp"
+#include "allocator.hpp"
+#include "source_span.hpp"
 
 namespace Sass {
 
   struct Backtrace {
 
-    ParserState pstate;
-    std::string caller;
+    SourceSpan pstate;
+    sass::string name;
+    bool fn;
 
-    Backtrace(ParserState pstate, std::string c = "")
-    : pstate(pstate),
-      caller(c)
-    { }
+    Backtrace(SourceSpan pstate, sass::string name = "", bool fn = false) :
+      pstate(std::move(pstate)), name(std::move(name)), fn(fn) {}
+
+    Backtrace(SourceSpan&& pstate, sass::string&& name, bool fn = false) :
+      pstate(std::move(pstate)), name(std::move(name)), fn(fn) {}
 
   };
 
-  typedef std::vector<Backtrace> Backtraces;
-
-  const std::string traces_to_string(Backtraces traces, std::string indent = "\t");
+  typedef sass::vector<Backtrace> Backtraces;
 
 }
 

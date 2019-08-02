@@ -1,7 +1,9 @@
 #ifndef SASS_PATHS_H
 #define SASS_PATHS_H
 
+#include <cstddef>
 #include <vector>
+#include "allocator.hpp"
 
 namespace Sass {
 
@@ -22,14 +24,14 @@ namespace Sass {
   // 
   // Note: called `paths` in dart-sass
   template <class T>
-  std::vector<std::vector<T>> permutate(
-    const std::vector<std::vector<T>>& in)
+  sass::vector<sass::vector<T>> permutate(
+    const sass::vector<sass::vector<T>>& in)
   {
 
     size_t L = in.size();
     size_t n = 0;
     size_t* state = new size_t[L + 1];
-    std::vector<std::vector<T>> out;
+    sass::vector<sass::vector<T>> out;
 
     // First initialize all states for every permutation group
     for (size_t i = 0; i < L; i += 1) {
@@ -37,10 +39,10 @@ namespace Sass {
       state[i] = in[i].size() - 1;
     }
     while (true) {
-      std::vector<T> perm;
+      sass::vector<T> perm;
       // Create one permutation for state
       for (size_t i = 0; i < L; i += 1) {
-        perm.push_back(in.at(i).at(in[i].size() - state[i] - 1));
+        perm.emplace_back(in.at(i).at(in[i].size() - state[i] - 1));
       }
       // Current group finished
       if (state[n] == 0) {
@@ -48,7 +50,7 @@ namespace Sass {
         while (n < L && state[++n] == 0) {}
 
         if (n == L) {
-          out.push_back(perm);
+          out.emplace_back(perm);
           break;
         }
 
@@ -65,7 +67,7 @@ namespace Sass {
       else {
         state[n] -= 1;
       }
-      out.push_back(perm);
+      out.emplace_back(perm);
     }
 
     delete[] state;
@@ -90,13 +92,13 @@ namespace Sass {
   // ```
   // 
   template <class T>
-  std::vector<std::vector<T>> permutateAlt(
-    const std::vector<std::vector<T>>& in) {
+  sass::vector<sass::vector<T>> permutateAlt(
+    const sass::vector<sass::vector<T>>& in) {
 
     size_t L = in.size();
     size_t n = in.size() - 1;
     size_t* state = new size_t[L];
-    std::vector< std::vector<T>> out;
+    sass::vector<sass::vector<T>> out;
 
     // First initialize all states for every permutation group
     for (size_t i = 0; i < L; i += 1) {
@@ -111,10 +113,10 @@ namespace Sass {
       { // std::cerr << state[p] << " "; }
       // std::cerr << "\n";
       */
-      std::vector<T> perm;
+      sass::vector<T> perm;
       // Create one permutation for state
       for (size_t i = 0; i < L; i += 1) {
-        perm.push_back(in.at(i).at(in[i].size() - state[i] - 1));
+        perm.emplace_back(in.at(i).at(in[i].size() - state[i] - 1));
       }
       // Current group finished
       if (state[n] == 0) {
@@ -135,14 +137,14 @@ namespace Sass {
           n = L - 1;
         }
         else {
-          out.push_back(perm);
+          out.emplace_back(perm);
           break;
         }
       }
       else {
         state[n] -= 1;
       }
-      out.push_back(perm);
+      out.emplace_back(perm);
     }
 
     delete[] state;

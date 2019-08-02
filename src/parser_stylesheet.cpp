@@ -11,6 +11,7 @@
 #include "util_string.hpp"
 #include "color_maps.hpp"
 #include "debugger.hpp"
+#include "strings.hpp"
 
 namespace Sass {
 
@@ -18,7 +19,7 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  std::vector<StatementObj> StylesheetParser::parse()
+  sass::vector<StatementObj> StylesheetParser::parse()
   {
     // wrapSpanFormatException
 
@@ -29,15 +30,15 @@ namespace Sass {
     scanner.scan("\xEF\xBB\xBF");
     // utf_8_bom[] = { 0xEF, 0xBB, 0xBF };
 
-    std::vector<StatementObj> statements;
+    sass::vector<StatementObj> statements;
 
-    ParserState pstate(scanner.pstate());
+    SourceSpan pstate(scanner.pstate9());
     Block_Obj root = SASS_MEMORY_NEW(Block, pstate, 0, true);
 
     // check seems a bit esoteric but works
     if (context.resources.size() == 1) {
       // apply headers only on very first include
-      context.apply_custom_headers(root, pstate.path, pstate);
+      context.apply_custom_headers(root, pstate.getPath(), pstate);
     }
 
     root->concat(this->statements(&StylesheetParser::_rootStatement));
@@ -65,8 +66,8 @@ namespace Sass {
     // lastSilentComment = null;
     Position start(scanner);
 
-    std::string ns;
-    std::string name = variableName();
+    sass::string ns;
+    sass::string name = variableName();
     if (scanner.scanChar($dot)) {
       ns = name;
       name = _publicIdentifier();
@@ -74,7 +75,7 @@ namespace Sass {
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
-        scanner.pstate(start));
+        *context.logger, scanner.pstate9(start));
     }
 
     whitespace();
@@ -86,22 +87,22 @@ namespace Sass {
     bool guarded = false;
     bool global = false;
 
-    Position flagStart(scanner);
+    Offset flagStart(scanner.offset);
     while (scanner.scanChar($exclamation)) {
-       std::string flag = identifier();
+       sass::string flag = identifier();
        if (flag == "default") {
          guarded = true;
        }
        else if (flag == "global") {
          if (!ns.empty()) {
            error("!global isn't allowed for variables in other modules.",
-             scanner.pstate(flagStart));
+             scanner.pstate9(flagStart));
          }
          global = true;
        }
        else {
          error("Invalid flag name.",
-           scanner.pstate(flagStart));
+           scanner.pstate9(flagStart));
        }
 
        whitespace();
@@ -109,8 +110,11 @@ namespace Sass {
     }
 
     expectStatementSeparator("variable declaration");
+
+    IdxRef vidx = context.varStack.back()->hoistVariable(name, global, guarded); //  || guarded
+   // std::cerr << "Hoisted variable at " << vidx.frame << ":" << vidx.offset << "\n";
     Assignment* declaration = SASS_MEMORY_NEW(Assignment,
-      scanner.pstate(start), name, value, guarded, global);
+      scanner.pstate9(start), name, vidx, value, guarded, global);
 
     // if (global) _globalVariables.putIfAbsent(name, () = > declaration);
 
@@ -136,14 +140,14 @@ namespace Sass {
         return _styleRule();
       }
       _isUseAllowed = false;
-      start = scanner.offset;
+      start = scanner;
       scanner.readChar();
       return _includeRule2(start);
 
     case $equal:
       if (!isIndented()) return _styleRule();
       _isUseAllowed = false;
-      start = scanner.offset;
+      start = scanner;
       scanner.readChar();
       whitespace();
       return _mixinRule2(start);
@@ -172,9 +176,16 @@ namespace Sass {
     if (isIndented()) scanner.scanChar($backslash);
 
     InterpolationObj styleRule = styleRuleSelector();
-    return _withChildren<StyleRule>(
+
+    EnvFrame local(context.varStack.back(), true);
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+
+    auto qwe = _withChildren<StyleRule>(
       &StylesheetParser::_childStatement,
       styleRule.ptr());
+    qwe->idxs(local.getIdxs());
+    return qwe;
   }
 
   // Consumes a [Declaration] or a [StyleRule].
@@ -217,8 +228,8 @@ namespace Sass {
       return _styleRule();
     }
 
-    InterpolationBuffer buffer;
     Position start(scanner);
+    InterpolationBuffer buffer(scanner);
     Declaration* declaration = _declarationOrBuffer(buffer);
 
     if (declaration != nullptr) {
@@ -226,17 +237,26 @@ namespace Sass {
     }
 
     buffer.addInterpolation(styleRuleSelector());
-    ParserState selectorPstate = scanner.pstate(start);
+    SourceSpan selectorPstate = scanner.pstate9(start);
 
     LOCAL_FLAG(_inStyleRule, true);
 
-    if (buffer.empty()) scanner.error("expected \"}\".");
+    if (buffer.empty()) {
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("expected \"}\".",
+        *context.logger, scanner.pstate9());
+    }
 
-    InterpolationObj itpl = buffer.getInterpolation(scanner.pstate(start));
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+
+    InterpolationObj itpl = buffer.getInterpolation(scanner.pstate9(start));
     StyleRuleObj rule = _withChildren<StyleRule>(
       &StylesheetParser::_childStatement,
       itpl.ptr());
-
+    rule->idxs(local.getIdxs());
     if (isIndented() && rule->empty()) {
       warn("This selector doesn't have any properties and won't be rendered.",
         selectorPstate);
@@ -260,12 +280,12 @@ namespace Sass {
     // Allow the "*prop: val", ":prop: val",
     // "#prop: val", and ".prop: val" hacks.
     uint8_t first = scanner.peekChar();
-    if (first == $colon ||
-        first == $asterisk ||
-        first == $dot ||
+    if (first == $colon || first == $asterisk || first == $dot ||
         (first == $hash && scanner.peekChar(1) != $lbrace)) {
-      nameBuffer.write(scanner.readChar());
-      nameBuffer.write(rawText(&StylesheetParser::whitespace));
+      sass::sstream strm;
+      strm << scanner.readChar();
+      strm << rawText(&StylesheetParser::whitespace);
+      nameBuffer.write(strm.str(), scanner.pstate9(start));
     }
 
     if (!_lookingAtInterpolatedIdentifier()) {
@@ -277,7 +297,7 @@ namespace Sass {
 
     StringBuffer midBuffer;
     midBuffer.write(rawText(&StylesheetParser::whitespace));
-    ParserState beforeColon(scanner.pstate(start));
+    SourceSpan beforeColon(scanner.pstate9(start));
     if (!scanner.scanChar($colon)) {
       if (!midBuffer.empty()) {
         nameBuffer.write($space);
@@ -288,12 +308,11 @@ namespace Sass {
 
     // Parse custom properties as declarations no matter what.
     InterpolationObj name = nameBuffer.getInterpolation(beforeColon);
-    StringLiteralObj plain = name->getInitialPlain();
-    if (Util::equalsLiteral("--", plain->text())) {
-      StringObj value = _interpolatedDeclarationValue();
+    if (Util::equalsLiteral("--", name->getInitialPlain())) {
+      StringExpressionObj value = _interpolatedDeclarationValue();
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
-        scanner.pstate(start),
+        scanner.pstate9(start),
         name, value, true);
     }
 
@@ -309,7 +328,7 @@ namespace Sass {
       return nullptr;
     }
 
-    std::string postColonWhitespace = rawText(&StylesheetParser::whitespace);
+    sass::string postColonWhitespace = rawText(&StylesheetParser::whitespace);
     if (lookingAtChildren()) {
       return _withChildren<Declaration>(&StylesheetParser::_declarationChild, name);
     }
@@ -324,7 +343,7 @@ namespace Sass {
     try {
 
       if (lookingAtChildren()) {
-        ParserState pstate = scanner.pstate(scanner);
+        SourceSpan pstate = scanner.pstate9(scanner.offset);
         Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, pstate);
         value = SASS_MEMORY_NEW(StringExpression, pstate, itpl, true);
       }
@@ -370,7 +389,7 @@ namespace Sass {
     else {
       expectStatementSeparator();
       return SASS_MEMORY_NEW(Declaration,
-        scanner.pstate(start), name, value);
+        scanner.pstate9(start), name, value);
     }
 
   }
@@ -392,11 +411,11 @@ namespace Sass {
         first == $asterisk ||
         first == $dot ||
         (first == $hash && scanner.peekChar(1) != $lbrace)) {
-      InterpolationBuffer nameBuffer;
+      InterpolationBuffer nameBuffer(scanner);
       nameBuffer.write(scanner.readChar());
       nameBuffer.write(rawText(&StylesheetParser::whitespace));
       nameBuffer.addInterpolation(interpolatedIdentifier());
-      name = nameBuffer.getInterpolation(scanner.pstate(start));
+      name = nameBuffer.getInterpolation(scanner.pstate9(start));
     }
     else {
       name = interpolatedIdentifier();
@@ -408,7 +427,10 @@ namespace Sass {
 
     if (lookingAtChildren()) {
       if (plainCss()) {
-        scanner.error("Nested declarations aren't allowed in plain CSS.");
+        callStackFrame frame(*context.logger,
+          Backtrace(scanner.pstate()));
+        scanner.error("Nested declarations aren't allowed in plain CSS.",
+          *context.logger, scanner.pstate());
       }
       return _withChildren<Declaration>(&StylesheetParser::_declarationChild, name);
     }
@@ -416,7 +438,10 @@ namespace Sass {
     ExpressionObj value = expression();
     if (lookingAtChildren()) {
       if (plainCss()) {
-        scanner.error("Nested declarations aren't allowed in plain CSS.");
+        callStackFrame frame(*context.logger,
+          Backtrace(scanner.pstate()));
+        scanner.error("Nested declarations aren't allowed in plain CSS.",
+          *context.logger, scanner.pstate());
       }
       return _withChildren<Declaration>(
         &StylesheetParser::_declarationChild,
@@ -425,7 +450,7 @@ namespace Sass {
     else {
       expectStatementSeparator();
       return SASS_MEMORY_NEW(Declaration,
-        scanner.pstate(start), name, value);
+        scanner.pstate9(start), name, value);
     }
 
   }
@@ -462,7 +487,7 @@ namespace Sass {
     bool wasUseAllowed = _isUseAllowed;
     LOCAL_FLAG(_isUseAllowed, false);
 
-    std::string plain(name->getPlainString());
+    sass::string plain(name->getPlainString());
     if (plain == "at-root") {
       return _atRootRule(start);
     }
@@ -503,9 +528,9 @@ namespace Sass {
     else if (plain == "import") {
       Import* imp = _importRule(start);
       return imp;
-      auto block = SASS_MEMORY_NEW(Block, "[pstateF]");
+      auto block = SASS_MEMORY_NEW(Block, SourceSpan::fake("[pstateF]"));
       for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-        block->append(SASS_MEMORY_NEW(Import_Stub, "[pstateG]", imp->incs()[i]));
+        block->append(SASS_MEMORY_NEW(Import_Stub, SourceSpan::fake("[pstateG]"), imp->incs()[i]));
       }
       block->append(imp);
       return block;
@@ -549,7 +574,7 @@ namespace Sass {
   Statement* StylesheetParser::_declarationAtRule()
   {
     Position start(scanner);
-    std::string name = _plainAtRuleName();
+    sass::string name = _plainAtRuleName();
     
     if (name == "content") {
       return _contentRule(start);
@@ -601,13 +626,13 @@ namespace Sass {
 
       bool isStyleRule = Cast<StyleRule>(statement) != nullptr;
       error(
-        std::string("@function rules may not contain ")
+        sass::string("@function rules may not contain ")
         + (isStyleRule ? "style rules." : "declarations."),
         statement->pstate());
     }
 
     Position start(scanner);
-    std::string name(_plainAtRuleName());
+    sass::string name(_plainAtRuleName());
     if (name == "debug") {
       return _debugRule(start);
     }
@@ -640,87 +665,86 @@ namespace Sass {
     }
   }
 
-  std::string StylesheetParser::_plainAtRuleName()
+  sass::string StylesheetParser::_plainAtRuleName()
   {
     scanner.expectChar($at, "@-rule");
-    std::string name = identifier();
+    sass::string name = identifier();
     whitespace();
     return name;
   }
 
   // Consumes an `@at-root` rule.
   // [start] should point before the `@`.
-  At_Root_Block* StylesheetParser::_atRootRule(Position start)
+  AtRootRule* StylesheetParser::_atRootRule(Position start)
   {
+
+    EnvFrame local(context.varStack.back(), true);
+    ScopedStackFrame<EnvStack>
+      scoped2(context.varStack, &local);
+
     if (scanner.peekChar() == $lparen) {
-      auto query = _atRootQuery();
+      InterpolationObj query = _atRootQuery();
       whitespace();
-      return _withChildren<At_Root_Block>(
+      auto qwe = _withChildren<AtRootRule>(
         &StylesheetParser::_childStatement,
         query);
+      qwe->idxs(local.getIdxs());
+      return qwe;
     }
     else if (lookingAtChildren()) {
-      return _withChildren<At_Root_Block>(
+      auto qwe = _withChildren<AtRootRule>(
         &StylesheetParser::_childStatement);
+      qwe->idxs(local.getIdxs());
+      return qwe;
     }
-    else {
-      StyleRule* child = _styleRule();
-      ParserState pstate(scanner.pstate(start));
-      Block* block = SASS_MEMORY_NEW(Block, pstate, { child });
-      return SASS_MEMORY_NEW(At_Root_Block, pstate, {}, block);
-    }
-
-    return nullptr;
+    StyleRule* child = _styleRule();
+    SourceSpan pstate(scanner.pstate9(start));
+    Block* block = SASS_MEMORY_NEW(Block, pstate, sass::vector<StatementObj>({ child }));
+    auto qwe = SASS_MEMORY_NEW(AtRootRule, pstate, InterpolationObj(), block);
+    qwe->idxs(local.getIdxs());
+    return qwe;
   }
   // EO _atRootRule
 
-  At_Root_Query* StylesheetParser::_atRootQuery()
+  Interpolation* StylesheetParser::_atRootQuery()
   {
     if (scanner.peekChar() == $hash) {
       Expression* interpolation = singleInterpolation();
-      Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, "[pstateJ]");
+      Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, SourceSpan::fake("[pstateJ]"));
       itpl->append(interpolation);
-      return SASS_MEMORY_NEW(At_Root_Query, "[pstateK]", itpl);
+      return itpl;
     }
 
-//    const char* start = scanner.position;
-    InterpolationBuffer buffer;
-    InterpolationBuffer buffer2;
-    Expression* ex1 = nullptr;
-    Expression* ex2 = nullptr;
+    Position start(scanner);
+    InterpolationBuffer buffer(scanner);
     scanner.expectChar($lparen);
-    // buffer.write($lparen);
+    buffer.writeCharCode($lparen);
     whitespace();
 
-    buffer.add(ex1 = expression());
+    buffer.add(expression());
     if (scanner.scanChar($colon)) {
       whitespace();
-      // buffer.write($colon);
-      // buffer.write($space);
-      buffer2.add(ex2 = expression());
+      buffer.writeCharCode($colon);
+      buffer.writeCharCode($space);
+      buffer.add(expression());
     }
 
     scanner.expectChar($rparen);
     whitespace();
-    // buffer.write($rparen);
-    // ex2 = buffer2.toSchema();
+    buffer.writeCharCode($rparen);
 
-    ListExpression* lst = Cast<ListExpression>(ex2);
-    if (lst == nullptr) {
-      lst = SASS_MEMORY_NEW(ListExpression, "[pstate]");
-      lst->append(ex2);
-    }
+    return buffer.getInterpolation(
+      scanner.pstate9(start));
 
-    return SASS_MEMORY_NEW(At_Root_Query, "[pstateL]", ex1, lst); // buffer.interpolation(scanner.spanFrom(start));
   }
 
   // Consumes a `@content` rule.
   // [start] should point before the `@`.
-  Content* StylesheetParser::_contentRule(Position start)
+  ContentRule* StylesheetParser::_contentRule(Position start)
   {
     if (!_inMixin) {
       error("@content is only allowed within mixin declarations.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
 
     whitespace();
@@ -731,14 +755,14 @@ namespace Sass {
     }
     else {
       args = SASS_MEMORY_NEW(ArgumentInvocation,
-        scanner.pstate(), {}, {});
+        scanner.pstate9(), sass::vector<ExpressionObj>(), KeywordMap<ExpressionObj>());
     }
 
     LOCAL_FLAG(_mixinHasContent, true);
     expectStatementSeparator("@content rule");
     // ToDo: ContentRule
-    return SASS_MEMORY_NEW(Content,
-      scanner.pstate(start), args);
+    return SASS_MEMORY_NEW(ContentRule,
+      scanner.pstate9(start), args);
 
   }
   // EO _contentRule
@@ -762,13 +786,17 @@ namespace Sass {
   Each* StylesheetParser::_eachRule(Position start, Statement* (StylesheetParser::* child)())
   {
     LOCAL_FLAG(_inControlDirective, true);
-
-    std::vector<std::string> variables;
-    variables.push_back(variableName());
+    sass::vector<EnvString> variables;
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped2(context.varStack, &local);
+    variables.emplace_back(variableName());
+    local.createVariable(variables.back());
     whitespace();
     while (scanner.scanChar($comma)) {
       whitespace();
-      variables.push_back(variableName());
+      variables.emplace_back(variableName());
+      local.createVariable(variables.back());
       whitespace();
     }
 
@@ -778,17 +806,18 @@ namespace Sass {
     ExpressionObj list = expression();
     Each* loop = _withChildren<Each>(
       child, variables, list);
-    loop->update_pstate(scanner.pstate(start));
+    loop->pstate(scanner.pstate9(start));
+    loop->idxs(local.getIdxs());
     return loop;
 
   }
 
-  Error* StylesheetParser::_errorRule(Position start)
+  ErrorRule* StylesheetParser::_errorRule(Position start)
   {
     ExpressionObj value = expression();
     expectStatementSeparator("@error rule");
-    return SASS_MEMORY_NEW(Error,
-      scanner.pstate(start), value);
+    return SASS_MEMORY_NEW(ErrorRule,
+      scanner.pstate9(start), value);
   }
   // EO _errorRule
 
@@ -798,7 +827,7 @@ namespace Sass {
   {
     if (!_inStyleRule && !_inMixin && !_inContentBlock) {
       error("@extend may only be used within style rules.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
 
     InterpolationObj value = almostAnyValue();
@@ -806,7 +835,7 @@ namespace Sass {
     if (optional) expectIdentifier("optional");
     expectStatementSeparator("@extend rule");
     return SASS_MEMORY_NEW(ExtendRule,
-      scanner.pstate(start), value, optional);
+      scanner.pstate9(start), value, optional);
   }
   // EO _extendRule
 
@@ -814,37 +843,47 @@ namespace Sass {
   // [start] should point before the `@`.
   FunctionRule* StylesheetParser::_functionRule(Position start)
   {
+    // Variables should not be hoisted through
+    EnvStack* parent = context.varStack.back();
+    EnvFrame local(context.varStack.back(), true);
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
-    std::string name = identifier();
-    std::string normalized(name);
+    sass::string name = identifier();
+    sass::string normalized(name);
     whitespace();
 
     ArgumentDeclarationObj arguments = _argumentDeclaration2();
 
     if (_inMixin || _inContentBlock) {
       error("Mixins may not contain function declarations.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
     else if (_inControlDirective) {
       error("Functions may not be declared in control directives.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
 
-    std::string fname(Util::unvendor(name));
+    sass::string fname(Util::unvendor(name));
     if (fname == "calc" || fname == "element" || fname == "expression" ||
       fname == "url" || fname == "and" || fname == "or" || fname == "not") {
       error("Invalid function name.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
 
     whitespace();
-    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate());
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate9());
     FunctionRule* rule = _withChildren<FunctionRule>(
       &StylesheetParser::_functionAtRule,
       name, arguments, nullptr, block);
-    block->update_pstate(scanner.pstate(start));
-    rule->update_pstate(scanner.pstate(start));
+    IdxRef fidx = parent->hoistFunction(name);
+    // std::cerr << "created fn " << fidx.frame << ":" << fidx.offset << "\n";
+    block->pstate(scanner.pstate9(start));
+    rule->pstate(scanner.pstate9(start));
+    rule->idxs(local.getIdxs());
+    rule->fidx(fidx);
     return rule;
   }
   // EO _functionRule
@@ -852,7 +891,16 @@ namespace Sass {
   For* StylesheetParser::_forRule(Position start, Statement* (StylesheetParser::* child)())
   {
     LOCAL_FLAG(_inControlDirective, true);
-    std::string variable = variableName();
+    LOCAL_FLAG(disableEnvOptimization, true);
+
+    // Create new variable frame from parent
+    // EnvStack* parent = context.varStack.back();
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+
+    sass::string variable = variableName();
+    local.createVariable(variable);
     whitespace();
 
     expectIdentifier("from");
@@ -863,14 +911,18 @@ namespace Sass {
       &StylesheetParser::_forRuleUntil);
 
     if (exclusive == 0) {
-      scanner.error("Expected \"to\" or \"through\".");
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected \"to\" or \"through\".",
+        *context.logger, scanner.pstate9());
     }
 
     whitespace();
     ExpressionObj to = expression();
     For* loop = _withChildren<For>(
       child, variable, from, to, exclusive == 1);
-    loop->update_pstate(scanner.pstate(start));
+    loop->pstate(scanner.pstate9(start));
+    loop->idxs(local.getIdxs());
     return loop;
 
       /*
@@ -896,34 +948,59 @@ namespace Sass {
     size_t ifIndentation = 0;
     LOCAL_FLAG(_inControlDirective, true);
     ExpressionObj condition = expression();
-    std::vector<StatementObj> children
+
+    IfObj root;
+    IfObj cur;
+
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped2(context.varStack, &local);
+
+    sass::vector<StatementObj> children
       = this->children(child);
     whitespaceWithoutComments();
 
-    std::vector<StatementObj> clauses;
-    Block* block = SASS_MEMORY_NEW(Block, "[pstateQ]");
+    sass::vector<StatementObj> clauses;
+    Block* block = SASS_MEMORY_NEW(Block, SourceSpan::fake("[pstateQ]"));
     block->concat(children);
-    IfObj root = SASS_MEMORY_NEW(If, "[pstateR]", condition, block);
-    IfObj cur = root;
+    root = SASS_MEMORY_NEW(If, SourceSpan::fake("[pstateR]"), condition, block);
+    cur = root;
+
+    std::vector<If*> ifs;
+    ifs.push_back(root);
 
     while (scanElse(ifIndentation)) {
       whitespace();
+
+      // EnvFrame local(context.varStack.back());
+      // ScopedStackFrame<EnvStack>
+      //   scoped2(context.varStack, &local);
+
       if (scanIdentifier("if")) {
         whitespace();
+
         ExpressionObj condition = expression();
-        std::vector<StatementObj> children = this->children(child);
-        Block* block = SASS_MEMORY_NEW(Block, "[pstateS]", children);
-        If* alternative = SASS_MEMORY_NEW(If, "[pstateT]", condition, block);
-        cur->alternative(SASS_MEMORY_NEW(Block, "[pstateU]", { alternative }));
+
+        sass::vector<StatementObj> children = this->children(child);
+        Block* block = SASS_MEMORY_NEW(Block, SourceSpan::fake("[pstateS]"), children);
+        If* alternative = SASS_MEMORY_NEW(If, SourceSpan::fake("[pstateT]"), condition, block);
+        cur->alternative(SASS_MEMORY_NEW(Block, SourceSpan::fake("[pstateU]"), sass::vector<StatementObj> ({ alternative })));
         cur = alternative;
+        ifs.push_back(cur);
       }
       else {
-        std::vector<StatementObj> children = this->children(child);
-        cur->alternative(SASS_MEMORY_NEW(Block, "[pstate]", children));
+
+
+        sass::vector<StatementObj> children = this->children(child);
+        cur->alternative(SASS_MEMORY_NEW(Block, SourceSpan::fake("[pstateD]"), children));
 
 
         break;
       }
+    }
+
+    for (auto iffy : ifs) {
+      iffy->idxs(local.getIdxs());
     }
 
     whitespaceWithoutComments();
@@ -935,31 +1012,35 @@ namespace Sass {
   Import* StylesheetParser::_importRule(Position start)
   {
 
-    ImportObj imp = SASS_MEMORY_NEW(Import, "[pstate]");
-    // ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, "[pstate]");
+    ImportObj imp = SASS_MEMORY_NEW(
+      Import, scanner.pstate9(start));
+
+    // ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, "[pstateF]");
 
     do {
       whitespace();
+      Position start2(scanner);
       ImportBaseObj argument = importArgument();
       // redebug_ast(argument);
       if (auto dyn = Cast<DynamicImport>(argument)) {
         if (_inControlDirective || _inMixin) {
           _disallowedAtRule(start);
         }
+        imp->pstate(scanner.pstate9(start2));
         context.import_url(imp, dyn->url(), scanner.sourceUrl);
       }
       else if (auto stat = Cast<StaticImport>(argument)) {
-        imp->urls().push_back(stat->url());
+        imp->urls().emplace_back(stat->url());
         // if (!imp->import_queries()) {
-          // imp->import_queries(SASS_MEMORY_NEW(List, "[pstate]"));
+          // imp->import_queries(SASS_MEMORY_NEW(List, "[pstateG]"));
         // }
         if (stat->media()) {
-          imp->queries2().push_back(stat->media());
+          imp->queries2().emplace_back(stat->media());
         }
       }
       else if (auto imp2 = Cast<Import>(argument)) {
         for (auto inc : imp2->incs()) {
-          imp->incs().push_back(inc);
+          imp->incs().emplace_back(inc);
         }
       }
       // rule->append(argument);
@@ -985,8 +1066,9 @@ namespace Sass {
       // debug_ast(queries.second);
       if (Interpolation * sc = Cast<Interpolation>(url)) {
         // std::cerr << "STATIC IMPORT 2\n";
-        auto asd = SASS_MEMORY_NEW(StaticImport, "[pstate]",
-          sc, queries.first, queries.second);
+        auto asd = SASS_MEMORY_NEW(StaticImport,
+          scanner.pstate9(start), sc,
+          queries.first, queries.second);
         // std::cerr << "got " << sc->length() << "\n";
         // debug_ast(queries.second);
 //         debug_ast(asd);
@@ -994,11 +1076,11 @@ namespace Sass {
       }
       else {
         // std::cerr << "STATIC IMPORT 3\n";
-        Interpolation* sc2 = SASS_MEMORY_NEW(Interpolation, "[pstate]");
+        Interpolation* sc2 = SASS_MEMORY_NEW(Interpolation, SourceSpan::fake("[pstateI]"));
         // std::cerr << "STATIC IMPORT 4\n";
         sc2->append(url);
         // std::cerr << "static schema wrap\n";
-        return SASS_MEMORY_NEW(StaticImport, "[pstate]",
+        return SASS_MEMORY_NEW(StaticImport, SourceSpan::fake("[pstateJ]"),
           sc2, queries.first, queries.second);
       }
       debug_ast(url);
@@ -1007,26 +1089,25 @@ namespace Sass {
       // return asd;
     }
 
-    std::string url = string();
-    std::string url2(startpos, scanner.position);
-    ParserState pstate = scanner.pstate(start);
+    sass::string url = string();
+    sass::string url2(startpos, scanner.position);
+    SourceSpan pstate = scanner.pstate9(start);
     // var urlSpan = scanner.spanFrom(start);
     whitespace();
     auto queries = tryImportQueries();
     if (_isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
-      InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, "[pstate]");
-      itpl->append(SASS_MEMORY_NEW(StringLiteral, "[pstate]", url2));
-      // std::cerr << "TO ITPL [" << itpl->to_string() << "]\n";
-      // std::cerr << "STATIC IMPORT 2\n";
-      return SASS_MEMORY_NEW(StaticImport, "[pstate]",
+      InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, SourceSpan::fake("[pstateK]"));
+      itpl->append(SASS_MEMORY_NEW(StringLiteral, SourceSpan::fake("[pstateL]"), url2));
+      return SASS_MEMORY_NEW(StaticImport, SourceSpan::fake("[pstateM]"),
         itpl, queries.first, queries.second);
     }
     else {
       try {
         Import_Obj imp = SASS_MEMORY_NEW(Import, pstate);
-        if (!context.call_importers(unquote(url), pstate.path, pstate, imp)) {
+        if (!context.call_importers(unquote(url), pstate.getPath(), pstate, imp)) {
           // std::cerr << "RET Dynamic Import\n";
-          return SASS_MEMORY_NEW(DynamicImport, "[pstate]", url);
+          return SASS_MEMORY_NEW(DynamicImport,
+            scanner.pstate9(start), url);
           // context.import_url(imp, url, pstate.path);
         }
         else {
@@ -1046,7 +1127,7 @@ namespace Sass {
   }
 
   /*
-  std::string StylesheetParser::parseImportUrl(std::string url)
+  sass::string StylesheetParser::parseImportUrl(sass::string url)
   {
 
     // Backwards-compatibility for implementations that
@@ -1070,7 +1151,7 @@ namespace Sass {
   }
   */
 
-  bool StylesheetParser::_isPlainImportUrl(const std::string& url) const
+  bool StylesheetParser::_isPlainImportUrl(const sass::string& url) const
   {
     if (url.length() < 5) return false;
 
@@ -1095,7 +1176,7 @@ namespace Sass {
         whitespace();
         SupportsCondition* condition = _supportsConditionInParens();
         supports = SASS_MEMORY_NEW(SupportsNegation,
-          scanner.pstate(start), condition);
+          scanner.pstate9(start), condition);
       }
       else if (scanner.peekChar() == $lparen) {
         supports = _supportsCondition();
@@ -1106,7 +1187,7 @@ namespace Sass {
         whitespace();
         Expression* value = expression();
         supports = SASS_MEMORY_NEW(SupportsDeclaration,
-          scanner.pstate(start), name, value);
+          scanner.pstate9(start), name, value);
       }
       scanner.expectChar($rparen);
       whitespace();
@@ -1125,67 +1206,11 @@ namespace Sass {
 
   // Consumes an `@include` rule.
   // [start] should point before the `@`.
-  Mixin_Call* StylesheetParser::_includeRule(Position start)
-  {
-
-    std::string ns;
-    std::string name = identifier();
-    if (scanner.scanChar($dot)) {
-      ns = name;
-      name = _publicIdentifier();
-    }
-
-    whitespace();
-    ArgumentInvocationObj arguments;
-    if (scanner.peekChar() == $lparen) {
-      arguments = _argumentInvocation(true);
-    }
-    whitespace();
-
-    ParametersObj contentArguments;
-    if (scanIdentifier("using")) {
-      whitespace();
-      contentArguments = _argumentDeclaration();
-      whitespace();
-    }
-
-    // ToDo: Add checks to allow to ommit arguments fully
-    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation, "[pstate]", {}, {});
-    Mixin_CallObj mixin = SASS_MEMORY_NEW(Mixin_Call,
-      scanner.pstate(start), name, arguments);
-
-    if (contentArguments || lookingAtChildren()) {
-      LOCAL_FLAG(_inContentBlock, true);
-      auto block = _withChildren<Block>(
-        &StylesheetParser::_childStatement);
-
-      mixin->block_parameters(contentArguments);
-      block->update_pstate(scanner.pstate(start));
-      mixin->block(block);
-    }
-    else {
-      expectStatementSeparator();
-    }
-
-    /*
-    var span =
-      scanner.spanFrom(start, start).expand((content ? ? arguments).span);
-    return IncludeRule(name, arguments, span,
-      namespace : ns, content : content);
-      */
-
-      // std::cerr << "_includeRule\n"; exit(1);
-    return mixin.detach();
-  }
-  // EO _includeRule
-
-    // Consumes an `@include` rule.
-  // [start] should point before the `@`.
   IncludeRule* StylesheetParser::_includeRule2(Position start)
   {
 
-    std::string ns;
-    std::string name = identifier();
+    sass::string ns;
+    sass::string name = identifier();
     if (scanner.scanChar($dot)) {
       ns = name;
       name = _publicIdentifier();
@@ -1197,6 +1222,11 @@ namespace Sass {
       arguments = _argumentInvocation(true);
     }
     whitespace();
+
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped2(context.varStack, &local);
+
     ArgumentDeclarationObj contentArguments;
     if (scanIdentifier("using")) {
       whitespace();
@@ -1205,22 +1235,35 @@ namespace Sass {
     }
 
     // ToDo: Add checks to allow to ommit arguments fully
-    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation, "[pstate]", {}, {});
+    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation,
+      SourceSpan::fake("[pstateO]"), sass::vector<ExpressionObj>(), KeywordMap<ExpressionObj>());
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
-      scanner.pstate(start), name, arguments);
+      scanner.pstate9(start), name, arguments);
+
+    if (!name.empty()) {
+      // Get the function through the whole stack
+      auto midx = context.varStack.back()->getMixinIdx2(name);
+      rule->midx(midx);
+    }
+
 
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
       LOCAL_FLAG(_inContentBlock, true);
+      // auto cidx = local.createMixin(Keys::kwdContentRule, false);
+      // EnvFrame inner(context.varStack.back());
+      // ScopedStackFrame<EnvStack>
+      //   scope(context.varStack, &inner);
       if (contentArguments.isNull()) {
         // Dart-sass creates this one too
         contentArguments = SASS_MEMORY_NEW(
-          ArgumentDeclaration, scanner.pstate(), {});
+          ArgumentDeclaration, scanner.pstate9(), sass::vector<ArgumentObj>());
       }
       content = _withChildren<ContentBlock>(
         &StylesheetParser::_childStatement,
         contentArguments);
-      content->update_pstate(scanner.pstate(start));
+      content->pstate(scanner.pstate9(start));
+      content->idxs(local.getIdxs());
       rule->content(content);
     }
     else {
@@ -1246,7 +1289,7 @@ namespace Sass {
     InterpolationObj query = _mediaQueryList();
     MediaRule* rule = _withChildren<MediaRule>(
       &StylesheetParser::_childStatement, query);
-    rule->update_pstate(scanner.pstate(start));
+    rule->pstate(scanner.pstate9(start));
     return rule;
   }
 
@@ -1255,10 +1298,19 @@ namespace Sass {
   MixinRule* StylesheetParser::_mixinRule2(Position start)
   {
 
+    EnvStack* parent = context.varStack.back();
+    EnvFrame local(context.varStack.back(), true);
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+    // Create space for optional content callables
+    // ToDo: check if this can be conditionaly done?
+    auto cidx = local.createMixin(Keys::contentRule);
+
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
-    std::string name = identifier();
+    sass::string name = identifier();
     whitespace();
+
     ArgumentDeclarationObj arguments;
     if (scanner.peekChar() == $lparen) {
       arguments = _argumentDeclaration2();
@@ -1266,65 +1318,33 @@ namespace Sass {
     else {
       // Dart-sass creates this one too
       arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
-        scanner.pstate(), {}); // empty declaration
+        scanner.pstate9(), sass::vector<ArgumentObj>()); // empty declaration
     }
 
     if (_inMixin || _inContentBlock) {
       error("Mixins may not contain mixin declarations.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
     else if (_inControlDirective) {
       error("Mixins may not be declared in control directives.",
-        scanner.pstate(start));
+        scanner.pstate9(start));
     }
 
     whitespace();
     LOCAL_FLAG(_inMixin, true);
     LOCAL_FLAG(_mixinHasContent, false);
 
-    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate());
+    IdxRef fidx = parent->hoistMixin(name);
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate9());
     MixinRule* rule = _withChildren<MixinRule>(
       &StylesheetParser::_childStatement,
       name, arguments, nullptr, block);
-    block->update_pstate(scanner.pstate(start));
-    rule->update_pstate(scanner.pstate(start));
+    block->pstate(scanner.pstate9(start));
+    rule->pstate(scanner.pstate9(start));
+    rule->idxs(local.getIdxs());
+    rule->fidx(fidx); // to parent
+    rule->cidx(cidx);
     return rule;
-  }
-  // EO _mixinRule
-
-  // Consumes a mixin declaration.
-  // [start] should point before the `@`.
-  Definition* StylesheetParser::_mixinRule(Position start)
-  {
-
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    std::string name = identifier();
-    whitespace();
-    ParametersObj params = {};
-    if (scanner.peekChar() == $lparen) {
-      params = _argumentDeclaration();
-    }
-
-    if (_inMixin || _inContentBlock) {
-      error("Mixins may not contain mixin declarations.",
-        scanner.pstate(start));
-    }
-    else if (_inControlDirective) {
-      error("Mixins may not be declared in control directives.",
-        scanner.pstate(start));
-    }
-
-    whitespace();
-    LOCAL_FLAG(_inMixin, true);
-    LOCAL_FLAG(_mixinHasContent, false);
-    // bool hadContent = _mixinHasContent;
-    Block_Obj block = SASS_MEMORY_NEW(Block, "[pstate]");
-    Definition* def = _withChildren<Definition>(
-      &StylesheetParser::_childStatement,
-      name, params, block, Definition::MIXIN);
-    def->update_pstate(scanner.pstate(start));
-    return def;
   }
   // EO _mixinRule
 
@@ -1336,7 +1356,7 @@ namespace Sass {
   {
 
     Position valueStart(scanner);
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     // bool needsDeprecationWarning = false;
 
     while (true) {
@@ -1349,7 +1369,7 @@ namespace Sass {
 
 
         LineScannerState2 identifierStart = scanner.state();
-        std::string identifier = this->identifier();
+        sass::string identifier = this->identifier();
         if (identifier == "url" || identifier == "url-prefix" || identifier == "domain") {
           Interpolation* contents = _tryUrlContents(identifierStart, /* name: */ identifier);
           if (contents != nullptr) {
@@ -1369,7 +1389,7 @@ namespace Sass {
 
           // A url-prefix with no argument, or with an empty string as an
           // argument, is not (yet) deprecated.
-          std::string trailing = buffer.trailingString();
+          sass::string trailing = buffer.trailingString();
           if (!Util::ascii_str_ends_with_insensitive(trailing, "url-prefix()") &&
             !Util::ascii_str_ends_with_insensitive(trailing, "url-prefix('')") &&
             !Util::ascii_str_ends_with_insensitive(trailing, "url-prefix(\"\")")) {
@@ -1387,7 +1407,7 @@ namespace Sass {
         }
         else {
           error("Invalid function name.",
-            scanner.pstate(identifierStart));
+            scanner.pstate9(identifierStart.offset));
         }
       }
 
@@ -1402,9 +1422,8 @@ namespace Sass {
     InterpolationObj value = buffer.getInterpolation(scanner.spanFrom(valueStart));
 
     AtRule* directive = _withChildren<AtRule>(
-      &StylesheetParser::_childStatement, name);
-    directive->update_pstate(scanner.pstate(start));
-    directive->value(value);
+      &StylesheetParser::_childStatement, name, value);
+    directive->pstate(scanner.pstate9(start));
     return directive;
 
 /*
@@ -1431,7 +1450,7 @@ relase. For details, see http://bit.ly/moz-document.
     ExpressionObj value = expression();
     expectStatementSeparator("@return rule");
     return SASS_MEMORY_NEW(Return,
-      scanner.pstate(start), value);
+      scanner.pstate9(start), value);
   }
   // EO _returnRule
 
@@ -1441,42 +1460,55 @@ relase. For details, see http://bit.ly/moz-document.
   {
     auto condition = _supportsCondition();
     whitespace();
-    return _withChildren<SupportsRule>(
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+    auto asd = _withChildren<SupportsRule>(
       &StylesheetParser::_childStatement,
       condition);
+    asd->idxs(local.getIdxs());
+    return asd;
   }
   // EO supportsRule
 
 
   // Consumes a `@debug` rule.
   // [start] should point before the `@`.
-  Debug* StylesheetParser::_debugRule(Position start)
+  DebugRule* StylesheetParser::_debugRule(Position start)
   {
     ExpressionObj value = expression();
     expectStatementSeparator("@debug rule");
-    return SASS_MEMORY_NEW(Debug,
-      scanner.pstate(start), value);
+    return SASS_MEMORY_NEW(DebugRule,
+      scanner.pstate9(start), value);
   }
   // EO _debugRule
 
   // Consumes a `@warn` rule.
   // [start] should point before the `@`.
-  Warning* StylesheetParser::_warnRule(Position start)
+  WarnRule* StylesheetParser::_warnRule(Position start)
   {
     ExpressionObj value = expression();
     expectStatementSeparator("@warn rule");
-    return SASS_MEMORY_NEW(Warning,
-      scanner.pstate(start), value);
+    return SASS_MEMORY_NEW(WarnRule,
+      scanner.pstate9(start), value);
   }
   // EO _warnRule
 
   // Consumes a `@while` rule. [start] should  point before the `@`. [child] is called 
   // to consume any children that are specifically allowed in the caller's context.
-  While* StylesheetParser::_whileRule(Position start, Statement* (StylesheetParser::* child)())
+  WhileRule* StylesheetParser::_whileRule(Position start, Statement* (StylesheetParser::* child)())
   {
     LOCAL_FLAG(_inControlDirective, true);
+    LOCAL_FLAG(disableEnvOptimization, true);
+    EnvFrame local(context.varStack.back());
+    ScopedStackFrame<EnvStack>
+      scoped(context.varStack, &local);
+    // Ideally copy over vars used inside
     ExpressionObj condition = expression();
-    return _withChildren<While>(child, condition.ptr());
+    auto qwe = _withChildren<WhileRule>(child,
+      condition.ptr());
+    qwe->idxs(local.getIdxs());
+    return qwe;
   }
   // EO _whileRule
 
@@ -1496,16 +1528,13 @@ relase. For details, see http://bit.ly/moz-document.
     if (lookingAtChildren()) {
       rule = _withChildren<AtRule>(
         &StylesheetParser::_childStatement,
-        name);
-      rule->name2(name);
-      rule->value2(value);
+        name, value);
     }
     else {
       expectStatementSeparator();
-      rule = SASS_MEMORY_NEW(AtRule, "[pstate]", name);
-      rule->name2(name);
-      rule->value2(value);
-      // rule = AtRule(name, scanner.spanFrom(start), value: value);
+      rule = SASS_MEMORY_NEW(AtRule,
+        SourceSpan::fake("[pstateP]"),
+        name, value);
     }
 
     return rule.detach();
@@ -1516,97 +1545,55 @@ relase. For details, see http://bit.ly/moz-document.
   {
     InterpolationObj value = almostAnyValue();
     error("This at-rule is not allowed here.",
-      scanner.spanFrom(start));
+      *context.logger, scanner.pstate9(start));
     return nullptr;
   }
 
-  Parameters* StylesheetParser::_argumentDeclaration()
-  {
-    const char* start = scanner.position;
-    scanner.expectChar($lparen);
-    whitespace();
-    std::vector<ParameterObj> parameters;
-    NormalizeSet named;
-    std::string restArgument;
-    while (scanner.peekChar() == $dollar) {
-      Position variableStart(scanner);
-      std::string name(variableName());
-      whitespace();
-
-      ExpressionObj defaultValue;
-      if (scanner.scanChar($colon)) {
-        whitespace();
-        defaultValue = _expressionUntilComma();
-      }
-      else if (scanner.scanChar($dot)) {
-        scanner.expectChar($dot);
-        scanner.expectChar($dot);
-        whitespace();
-        restArgument = name;
-        break;
-      }
-
-     
-      parameters.push_back(SASS_MEMORY_NEW(Parameter,
-        scanner.pstate(variableStart), name, defaultValue));
-
-      if (named.count(name) == 1) {
-        error("Duplicate argument.",
-          parameters.back()->pstate());
-      }
-      named.insert(name);
-
-      if (!scanner.scanChar($comma)) break;
-      whitespace();
-    }
-    scanner.expectChar($rparen);
-    Parameters* params = SASS_MEMORY_NEW(Parameters,
-      scanner.pstate());
-    if (!restArgument.empty()) {
-      params->has_rest_parameter(true);
-      parameters.push_back(SASS_MEMORY_NEW(Parameter,
-        "[pstate]", restArgument, {}, true));
-      // ToDo: pstate rest argument
-    }
-    params->pstate(scanner.pstate(start));
-    params->concat(parameters);
-    return params;
-  }
+  // Argument declaration is tricky in terms of scoping.
+  // The variable before the colon is defined on the new frame.
+  // But the right side is evaluated in the parent scope.
   ArgumentDeclaration* StylesheetParser::_argumentDeclaration2()
   {
 
     Position start(scanner);
     scanner.expectChar($lparen);
     whitespace();
-    std::vector<ArgumentObj> arguments;
+    sass::vector<ArgumentObj> arguments;
     NormalizeSet named;
-    std::string restArgument;
+    sass::string restArgument;
     while (scanner.peekChar() == $dollar) {
       Position variableStart(scanner);
-      std::string name(variableName());
+      sass::string name(variableName());
+      EnvString norm(name);
+      context.varStack.back()->createVariable(norm);
       whitespace();
 
       ExpressionObj defaultValue;
       if (scanner.scanChar($colon)) {
         whitespace();
+        auto old = context.varStack.back();
+        context.varStack.pop_back();
         defaultValue = _expressionUntilComma();
+        context.varStack.push_back(old);
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
         scanner.expectChar($dot);
         whitespace();
+        // context.varStack.back()->createVariable(name);
         restArgument = name;
         break;
       }
 
-      arguments.push_back(SASS_MEMORY_NEW(Argument,
-        scanner.pstate(variableStart), defaultValue, name));
+      arguments.emplace_back(SASS_MEMORY_NEW(Argument,
+        scanner.pstate9(variableStart), defaultValue, name));
 
-      if (named.count(name) == 1) {
+      if (named.count(norm) == 1) {
         error("Duplicate argument.",
+          *context.logger,
           arguments.back()->pstate());
       }
-      named.insert(name);
+      named.insert(norm);
 
       if (!scanner.scanChar($comma)) break;
       whitespace();
@@ -1615,7 +1602,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     return SASS_MEMORY_NEW(
       ArgumentDeclaration,
-      scanner.pstate(),
+      scanner.pstate9(start),
       arguments,
       restArgument);
 
@@ -1629,7 +1616,7 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.expectChar($lparen);
     whitespace();
 
-    std::vector<ExpressionObj> positional;
+    sass::vector<ExpressionObj> positional;
     KeywordMap<ExpressionObj> named;
     ExpressionObj restArg;
     ExpressionObj kwdRest;
@@ -1639,14 +1626,14 @@ relase. For details, see http://bit.ly/moz-document.
 
       Variable* var = Cast<Variable>(expression);
       if (var && scanner.scanChar($colon)) {
-        std::string name(var->name());
         whitespace();
-        if (named.count(name) == 1) {
+        if (named.count(var->name()) == 1) {
           error("Duplicate argument.",
+            *context.logger,
             expression->pstate());
         }
         auto ex = _expressionUntilComma(!mixin);
-        named[name] = ex;
+        named[var->name()] = ex;
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
@@ -1664,7 +1651,7 @@ relase. For details, see http://bit.ly/moz-document.
         scanner.expect("...");
       }
       else {
-        positional.push_back(expression);
+        positional.emplace_back(expression);
       }
 
       whitespace();
@@ -1675,7 +1662,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     return SASS_MEMORY_NEW(
       ArgumentInvocation,
-      scanner.pstate(start),
+      scanner.pstate9(start),
       positional, named,
       restArg, kwdRest);
 
@@ -1693,7 +1680,10 @@ relase. For details, see http://bit.ly/moz-document.
     NESTING_GUARD(_recursion);
 
     if (until != nullptr && (this->*until)()) {
-      scanner.error("Expected expression.");
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate()));
+      scanner.error("Expected expression.",
+        *context.logger, scanner.pstate());
     }
 
     // LineScannerState beforeBracket;
@@ -1705,7 +1695,7 @@ relase. For details, see http://bit.ly/moz-document.
 
       if (scanner.scanChar($rbracket)) {
         ListExpression* list = SASS_MEMORY_NEW(ListExpression,
-          scanner.pstate(start), SASS_UNDEF);
+          scanner.pstate9(start.offset), SASS_UNDEF);
         list->hasBrackets(true);
         return list;
       }
@@ -1721,6 +1711,7 @@ relase. For details, see http://bit.ly/moz-document.
       if (until != nullptr && (this->*until)()) break;
 
       uint8_t next, first = scanner.peekChar();
+      Position beforeToken(scanner);
 
       switch (first) {
       case $lparen:
@@ -1758,7 +1749,7 @@ relase. For details, see http://bit.ly/moz-document.
         }
         else {
           scanner.expectChar($equal);
-          ep.addOperator(Sass_OP::EQ);
+          ep.addOperator(Sass_OP::EQ, beforeToken);
         }
         break;
 
@@ -1767,7 +1758,7 @@ relase. For details, see http://bit.ly/moz-document.
         if (next == $equal) {
           scanner.readChar();
           scanner.readChar();
-          ep.addOperator(Sass_OP::NEQ);
+          ep.addOperator(Sass_OP::NEQ, beforeToken);
         }
         else if (next == $nul ||
             equalsLetterIgnoreCase($i, next) ||
@@ -1783,18 +1774,18 @@ relase. For details, see http://bit.ly/moz-document.
       case $langle:
         scanner.readChar();
         ep.addOperator(scanner.scanChar($equal)
-          ? Sass_OP::LTE : Sass_OP::LT);
+          ? Sass_OP::LTE : Sass_OP::LT, beforeToken);
         break;
 
       case $rangle:
         scanner.readChar();
         ep.addOperator(scanner.scanChar($equal)
-          ? Sass_OP::GTE : Sass_OP::GT);
+          ? Sass_OP::GTE : Sass_OP::GT, beforeToken);
         break;
 
       case $asterisk:
         scanner.readChar();
-        ep.addOperator(Sass_OP::MUL);
+        ep.addOperator(Sass_OP::MUL, beforeToken);
         break;
 
       case $plus:
@@ -1803,7 +1794,7 @@ relase. For details, see http://bit.ly/moz-document.
         }
         else {
           scanner.readChar();
-          ep.addOperator(Sass_OP::ADD);
+          ep.addOperator(Sass_OP::ADD, beforeToken);
         }
         break;
 
@@ -1823,7 +1814,7 @@ relase. For details, see http://bit.ly/moz-document.
         }
         else {
           scanner.readChar();
-          ep.addOperator(Sass_OP::SUB);
+          ep.addOperator(Sass_OP::SUB, beforeToken);
         }
         break;
 
@@ -1833,13 +1824,13 @@ relase. For details, see http://bit.ly/moz-document.
         }
         else {
           scanner.readChar();
-          ep.addOperator(Sass_OP::DIV);
+          ep.addOperator(Sass_OP::DIV, beforeToken);
         }
         break;
 
       case $percent:
         scanner.readChar();
-        ep.addOperator(Sass_OP::MOD);
+        ep.addOperator(Sass_OP::MOD, beforeToken);
         break;
 
       case $0:
@@ -1862,7 +1853,7 @@ relase. For details, see http://bit.ly/moz-document.
 
       case $a:
         if (!plainCss() && scanIdentifier("and")) {
-          ep.addOperator(Sass_OP::AND);
+          ep.addOperator(Sass_OP::AND, beforeToken);
         }
         else {
           ep.addSingleExpression(identifierLike());
@@ -1871,7 +1862,7 @@ relase. For details, see http://bit.ly/moz-document.
 
       case $o:
         if (!plainCss() && scanIdentifier("or")) {
-          ep.addOperator(Sass_OP::OR);
+          ep.addOperator(Sass_OP::OR, beforeToken);
         }
         else {
           ep.addSingleExpression(identifierLike());
@@ -1955,11 +1946,14 @@ relase. For details, see http://bit.ly/moz-document.
         }
 
         if (ep.singleExpression == nullptr) {
-          scanner.error("Expected expression.");
+          callStackFrame frame(*context.logger,
+            Backtrace(scanner.pstate()));
+          scanner.error("Expected expression.",
+            *context.logger, scanner.pstate());
         }
 
         ep.resolveSpaceExpressions();
-        ep.commaExpressions.push_back(ep.singleExpression);
+        ep.commaExpressions.emplace_back(ep.singleExpression);
         scanner.readChar();
         ep.allowSlash = true;
         ep.singleExpression = {};
@@ -1983,10 +1977,10 @@ relase. For details, see http://bit.ly/moz-document.
       ep.resolveSpaceExpressions();
       _inParentheses = wasInParentheses;
       if (ep.singleExpression != nullptr) {
-        ep.commaExpressions.push_back(ep.singleExpression);
+        ep.commaExpressions.emplace_back(ep.singleExpression);
       }
       ListExpression* list = SASS_MEMORY_NEW(ListExpression,
-        scanner.pstate(start), SASS_COMMA);
+        scanner.pstate9(start.offset), SASS_COMMA);
       list->concat(ep.commaExpressions);
       list->hasBrackets(bracketList);
       return list;
@@ -1996,8 +1990,8 @@ relase. For details, see http://bit.ly/moz-document.
         ep.singleEqualsOperand == nullptr) {
       ep.resolveOperations();
       ListExpression* list = SASS_MEMORY_NEW(ListExpression,
-        scanner.pstate(start), SASS_SPACE);
-      ep.spaceExpressions.push_back(ep.singleExpression);
+        scanner.pstate9(start.offset), SASS_SPACE);
+      ep.spaceExpressions.emplace_back(ep.singleExpression);
       list->concat(ep.spaceExpressions);
       list->hasBrackets(true);
       return list;
@@ -2006,7 +2000,7 @@ relase. For details, see http://bit.ly/moz-document.
       ep.resolveSpaceExpressions();
       if (bracketList) {
         ListExpression* list = SASS_MEMORY_NEW(ListExpression,
-          scanner.pstate(start), SASS_UNDEF);
+          scanner.pstate9(start.offset), SASS_UNDEF);
         list->append(ep.singleExpression);
         list->hasBrackets(true);
         return list;
@@ -2032,6 +2026,7 @@ relase. For details, see http://bit.ly/moz-document.
   // Consumes an expression that doesn't contain any top-level whitespace.
   Expression* StylesheetParser::_singleExpression()
   {
+    Position start(scanner);
     NESTING_GUARD(_recursion);
     uint8_t first = scanner.peekChar();
     switch (first) {
@@ -2148,7 +2143,12 @@ relase. For details, see http://bit.ly/moz-document.
       if (first != $nul && first >= 0x80) {
         return identifierLike();
       }
-      scanner.error("Expected expression.");
+      // callStackFrame frame(*context.logger,
+      //   Backtrace(scanner.pstate9()));
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected expression.",
+        *context.logger, scanner.pstate9());
       return nullptr;
     }
   }
@@ -2158,8 +2158,10 @@ relase. For details, see http://bit.ly/moz-document.
   Expression* StylesheetParser::_parentheses()
   {
     if (plainCss()) {
-      scanner.error("Parentheses aren't allowed in plain CSS."
-      /* , length: 1 */);
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate()));
+      scanner.error("Parentheses aren't allowed in plain CSS.",
+        *context.logger, scanner.pstate());
     }
 
     LOCAL_FLAG(_inParentheses, true);
@@ -2171,7 +2173,7 @@ relase. For details, see http://bit.ly/moz-document.
       scanner.expectChar($rparen);
       // ToDo: ListExpression
       return SASS_MEMORY_NEW(ListExpression,
-        scanner.pstate(start),
+        scanner.pstate9(start),
         SASS_UNDEF);
     }
 
@@ -2184,25 +2186,25 @@ relase. For details, see http://bit.ly/moz-document.
     if (!scanner.scanChar($comma)) {
       scanner.expectChar($rparen);
       return SASS_MEMORY_NEW(ParenthesizedExpression,
-        scanner.pstate(start), first);
+        scanner.pstate9(start), first);
     }
     whitespace();
 
-    std::vector<ExpressionObj>
+    sass::vector<ExpressionObj>
       expressions = { first };
 
     // We did parse a comma above
 // This one fails
     ListExpressionObj list = SASS_MEMORY_NEW(
       ListExpression,
-      scanner.pstate(start),
+      scanner.pstate9(start),
       SASS_COMMA);
 
     while (true) {
       if (!_lookingAtExpression()) {
         break;
       }
-      expressions.push_back(_expressionUntilComma());
+      expressions.emplace_back(_expressionUntilComma());
       if (!scanner.scanChar($comma)) {
         break;
       }
@@ -2213,7 +2215,7 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.expectChar($rparen);
     // ToDo: ListExpression
     list->concat(expressions);
-    list->update_pstate(scanner.pstate(start));
+    list->pstate(scanner.pstate9(start));
     return list.detach();
   }
   // EO _parentheses
@@ -2223,11 +2225,9 @@ relase. For details, see http://bit.ly/moz-document.
   // the colon and [start] the point before the opening parenthesis.
   Expression* StylesheetParser::_map(Expression* first, Position start)
   {
-    // ListObj map = SASS_MEMORY_NEW(List,
-    //   scanner.pstate(start),
-    //   0, SASS_HASH);
+
     MapExpressionObj map = SASS_MEMORY_NEW(
-      MapExpression, scanner.pstate(start));
+      MapExpression, scanner.pstate9(start));
 
     map->append(first);
     map->append(_expressionUntilComma());
@@ -2243,7 +2243,7 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     scanner.expectChar($rparen);
-    map->pstate(scanner.pstate(start));
+    map->pstate(scanner.pstate9(start));
     return map.detach();
   }
   // EO _map
@@ -2256,33 +2256,43 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     Position start(scanner);
+    LineScannerState2 state(scanner.state());
     scanner.expectChar($hash);
 
     uint8_t first = scanner.peekChar();
     if (first != $nul && isDigit(first)) {
       // ColorExpression
-      return _hexColorContents(start);
+      return _hexColorContents(state);
     }
 
-    const char* afterHash = scanner.position;
+    LineScannerState2 afterHash = scanner.state();
+    //  std::cerr << debug_pstate(scanner.pstate9(start)) << "\n";
     InterpolationObj identifier = interpolatedIdentifier();
     if (_isHexColor(identifier)) {
-      scanner.position = afterHash;
+      // std::cerr << debug_pstate(scanner.pstate9(start)) << "\n";
+      // std::cerr << "AFTER: " << afterHash.offset.column << "\n";
+      // std::cerr << "SCANNER: " << scanner.offset.column << "\n";
+      scanner.resetState(afterHash);
+      // std::cerr << "SCANNER: " << scanner.offset.column << "\n";
+      // std::cerr << debug_pstate(scanner.pstate9(start)) << "\n";
+      // std::cerr << "ADSADASD\n";
       // ColorExpression
-      return _hexColorContents(start);
+      return _hexColorContents(state);
     }
 
 
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     buffer.write($hash);
     buffer.addInterpolation(identifier);
-    ParserState pstate(scanner.pstate(start));
+    SourceSpan pstate(scanner.pstate9(start));
     return SASS_MEMORY_NEW(StringExpression,
       pstate, buffer.getInterpolation(pstate));
   }
 
-  Color* StylesheetParser::_hexColorContents(Position start)
+  Color* StylesheetParser::_hexColorContents(LineScannerState2 state)
   {
+
+    // std::cerr << debug_pstate(scanner.pstate9(start)) << "\n";
 
     uint8_t digit1 = _hexDigit();
     uint8_t digit2 = _hexDigit();
@@ -2292,6 +2302,7 @@ relase. For details, see http://bit.ly/moz-document.
     uint8_t green;
     uint8_t blue;
     double alpha = 1.0;
+
     if (!isHex(scanner.peekChar())) {
       // #abc
       red = (digit1 << 4) + digit1;
@@ -2318,10 +2329,10 @@ relase. For details, see http://bit.ly/moz-document.
       }
     }
 
-    ParserState pstate(scanner.pstate(start));
-    pstate.position = scanner.position;
+    SourceSpan pstate(scanner.pstate9(state.offset));
+    // pstate.position = scanner.position;
 
-    std::string original(start.position, pstate.position);
+    sass::string original(state.position, scanner.position);
 
     return SASS_MEMORY_NEW(Color_RGBA,
       pstate, red, green, blue, alpha, original);
@@ -2331,7 +2342,7 @@ relase. For details, see http://bit.ly/moz-document.
   // string that can be parsed as a hex color.
   bool StylesheetParser::_isHexColor(Interpolation* interpolation) const
   {
-    std::string plain = interpolation->getPlainString();
+    sass::string plain = interpolation->getPlainString();
     if (plain.empty()) return false;
     if (plain.length() != 3 &&
       plain.length() != 4 &&
@@ -2353,7 +2364,10 @@ relase. For details, see http://bit.ly/moz-document.
   {
     uint8_t chr = scanner.peekChar();
     if (chr == $nul || !isHex(chr)) {
-      scanner.error("Expected hex digit.");
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected hex digit.",
+        *context.logger, scanner.pstate9());
     }
     return asHex(scanner.readChar());
   }
@@ -2396,7 +2410,7 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
     expectIdentifier("important");
     return StringExpression::plain(
-      scanner.pstate(start), "!important");
+      scanner.pstate9(start), "!important");
   }
   // EO _importantExpression
 
@@ -2405,38 +2419,40 @@ relase. For details, see http://bit.ly/moz-document.
   {
     // const char* start = scanner.position;
     Unary_Expression::Type op =
-      _unaryOperatorFor(scanner.readChar());
-    if (op == Unary_Expression::Type::END) {
-      scanner.error("Expected unary operator." /* , position: scanner.position - 1 */);
+      Unary_Expression::Type::PLUS;
+    switch (scanner.readChar()) {
+    case $plus:
+      op = Unary_Expression::Type::PLUS;
+      break;
+    case $minus:
+      op = Unary_Expression::Type::MINUS;
+      break;
+    case $slash:
+      op = Unary_Expression::Type::SLASH;
+      break;
+    default:
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected unary operator.",
+        *context.logger, scanner.pstate9());
+      /* , position: scanner.position - 1 */
     }
-    else if (plainCss() && op != Unary_Expression::Type::SLASH) {
-      scanner.error("Operators aren't allowed in plain CSS." /* ,
-        position: scanner.position - 1, length : 1 */);
+
+    if (plainCss() && op != Unary_Expression::Type::SLASH) {
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate()));
+      scanner.error("Operators aren't allowed in plain CSS.",
+        *context.logger, scanner.pstate());
+      /* position: scanner.position - 1, length : 1 */
     }
 
     whitespace();
     Expression* operand = _singleExpression();
     return SASS_MEMORY_NEW(Unary_Expression,
-      "[pstate]", op, operand);
+      SourceSpan::fake("[pstateQ]"),
+      op, operand);
   }
   // EO _unaryOperation
-
-  // Returns the unsary operator corresponding to [character],
-  // or `null` if the character is not a unary operator.
-  Unary_Expression::Type StylesheetParser::_unaryOperatorFor(uint8_t character)
-  {
-    switch (character) {
-    case $plus:
-      return Unary_Expression::Type::PLUS;
-    case $minus:
-      return Unary_Expression::Type::MINUS;
-    case $slash:
-      return Unary_Expression::Type::SLASH;
-    default:
-      return Unary_Expression::Type::END;
-    }
-  }
-  // EO _unaryOperatorFor
 
   // Consumes a number expression.
   NumberObj StylesheetParser::_number()
@@ -2455,7 +2471,7 @@ relase. For details, see http://bit.ly/moz-document.
     number += _tryDecimal(scanner.position != start.position);
     number *= _tryExponent();
 
-    std::string unit;
+    sass::string unit;
     if (scanner.scanChar($percent)) {
       unit = "%";
     }
@@ -2466,7 +2482,7 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     return SASS_MEMORY_NEW(Number,
-      scanner.pstate(start.offset),
+      scanner.pstate9(start.offset),
       sign * number, unit);
   }
 
@@ -2477,12 +2493,16 @@ relase. For details, see http://bit.ly/moz-document.
   double StylesheetParser::_tryDecimal(bool allowTrailingDot)
   {
     Position start(scanner);
+    LineScannerState2 state(scanner.state());
     if (scanner.peekChar() != $dot) return 0.0;
 
     if (!isDigit(scanner.peekChar(1))) {
       if (allowTrailingDot) return 0.0;
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
       scanner.error("Expected digit.",
-        scanner.pstate(start));
+        *context.logger,
+        scanner.pstate9(start));
     }
 
     scanner.readChar();
@@ -2492,7 +2512,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     // Use built-in double parsing so that we don't accumulate
     // floating-point errors for numbers with lots of digits.
-    std::string nr(scanner.substring(start));
+    sass::string nr(scanner.substring(state.position));
     return sass_strtod(nr.c_str());
   }
   // EO _tryDecimal
@@ -2510,7 +2530,14 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.readChar();
     double exponentSign = next == $minus ? -1.0 : 1.0;
     if (next == $plus || next == $minus) scanner.readChar();
-    if (!isDigit(scanner.peekChar())) scanner.error("Expected digit.");
+    if (!isDigit(scanner.peekChar())) {
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error(
+        "Expected digit.",
+        *context.logger,
+        scanner.pstate9());
+    }
 
     double exponent = 0.0;
     while (isDigit(scanner.peekChar())) {
@@ -2544,33 +2571,48 @@ relase. For details, see http://bit.ly/moz-document.
         scanner.substring(state.position)
       );
     }
-    if (i == 0) scanner.error("Expected hex digit or \"?\".");
+    if (i == 0) {
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected hex digit or \"?\".",
+        *context.logger, scanner.pstate9());
+    }
 
     if (scanner.scanChar($minus)) {
       size_t j = 0;
       for (; j < 6; j++) {
         if (!scanCharIf(isHex)) break;
       }
-      if (j == 0) scanner.error("Expected hex digit.");
+      if (j == 0) {
+        callStackFrame frame(*context.logger,
+          Backtrace(scanner.pstate9()));
+        scanner.error("Expected hex digit.",
+          *context.logger, scanner.pstate9());
+      }
     }
 
     if (_lookingAtInterpolatedIdentifierBody()) {
-      scanner.error("Expected end of identifier.");
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected end of identifier.",
+        *context.logger, scanner.pstate9());
     }
 
     return StringExpression::plain(
-      scanner.pstate(state.offset),
+      scanner.pstate9(state.offset),
       scanner.substring(state.position)
     );
   }
   // EO _unicodeRange
 
   // Consumes a variable expression.
-  Variable* StylesheetParser::_variable()
+  Variable* StylesheetParser::_variable(bool hoist)
   {
     Position start(scanner);
 
-    std::string ns, name = variableName();
+    sass::string ns, name = variableName();
+    // Check if variable already exists, otherwise error!
+    // context.varStack.back()->hoistVariable(name);
     if (scanner.peekChar() == $dot && scanner.peekChar(1) != $dot) {
       scanner.readChar();
       ns = name;
@@ -2579,12 +2621,44 @@ relase. For details, see http://bit.ly/moz-document.
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
-        scanner.pstate(start));
+        *context.logger, scanner.pstate9(start));
+    }
+
+    IdxRef vidx;
+    IdxRef pidx;
+
+    // Completely static code, no loops
+    // Therefore variables are fully static
+    // Access before intialization points to parent
+    // Access after point to the local scoped variable
+    if (!disableEnvOptimization) {
+      // If the variable does not exist yet, it means it will
+      // access parent scope until the variable is also created
+      // in the local scope, then it will access this variable.
+      // auto vidx3 = context.varStack.back()->getVariableIdx(name);
+      // pidx = context.varStack.back()->getVariableIdx(name);
+      vidx = context.varStack.back()->getVariableIdx2(name);
+      if (vidx.offset == std::string::npos) {
+        // Postpone this check into runtime
+        // error("Accessing uninitialized variable.",
+        //   *context.logger, scanner.pstate9(start));
+      }
+    }
+    else {
+
+      vidx = context.varStack.back()->getVariableIdx(name);
+      pidx = context.varStack.back()->getVariableIdx2(name);
+      // if (pidx.offset == std::string::npos) {
+      //   // Postpone this check into runtime
+      //   error("Accessing uninitialized variable.",
+      //     *context.logger, scanner.pstate9(start));
+      // }
+
     }
 
     return SASS_MEMORY_NEW(Variable,
-      scanner.pstate(start),
-      name /*, ns */);
+      scanner.pstate9(start),
+      name, vidx, pidx /*, ns */);
 
   }
   // _variable
@@ -2593,8 +2667,11 @@ relase. For details, see http://bit.ly/moz-document.
   Parent_Reference* StylesheetParser::_selector()
   {
     if (plainCss()) {
-      scanner.error("The parent selector isn't allowed in plain CSS." /* ,
-        length: 1 */);
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate()));
+      scanner.error("The parent selector isn't allowed in plain CSS.",
+        *context.logger, scanner.pstate());
+      /* ,length: 1 */
     }
 
     LineScannerState2 start(scanner.state());
@@ -2604,13 +2681,13 @@ relase. For details, see http://bit.ly/moz-document.
       warn(
         "In Sass, \"&&\" means two copies of the parent selector. You "
         "probably want to use \"and\" instead.",
-        scanner.pstate(start.offset));
+        scanner.pstate9(start.offset));
       scanner.offset.column -= 1;
       scanner.position -= 1;
     }
 
     return SASS_MEMORY_NEW(Parent_Reference,
-      scanner.pstate(start.offset));
+      scanner.pstate9(start.offset));
   }
   // _selector
 
@@ -2626,11 +2703,14 @@ relase. For details, see http://bit.ly/moz-document.
 
     if (quote != $single_quote && quote != $double_quote) {
       // ToDo: dart-sass passes the start position!?
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
       scanner.error("Expected string.",
-        /*position:*/ scanner.pstate(start));
+        *context.logger,
+        /*position:*/ scanner.pstate9(start));
     }
 
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     while (true) {
       if (!scanner.peekChar(next)) {
         break;
@@ -2640,9 +2720,13 @@ relase. For details, see http://bit.ly/moz-document.
         break;
       }
       else if (next == $nul || isNewline(next)) {
-        std::stringstream strm;
+        sass::sstream strm;
         strm << "Expected " << quote << ".";
-        scanner.error(strm.str());
+        callStackFrame frame(*context.logger,
+          Backtrace(scanner.pstate9()));
+        scanner.error(strm.str(),
+          *context.logger,
+          scanner.pstate9());
       }
       else if (next == $backslash) {
         if (!scanner.peekChar(second, 1)) {
@@ -2670,7 +2754,8 @@ relase. For details, see http://bit.ly/moz-document.
       }
     }
 
-    InterpolationObj itpl = buffer.getInterpolation();
+    InterpolationObj itpl = buffer.getInterpolation(
+      scanner.pstate9(start));
     return SASS_MEMORY_NEW(StringExpression,
       itpl->pstate(), itpl, true);
 
@@ -2682,43 +2767,43 @@ relase. For details, see http://bit.ly/moz-document.
   {
     LineScannerState2 start = scanner.state();
     InterpolationObj identifier = interpolatedIdentifier();
-    std::string plain(identifier->getPlainString());
+    sass::string plain(identifier->getPlainString());
 
     if (!plain.empty()) {
       if (plain == "if") {
         ArgumentInvocation* invocation = _argumentInvocation();
         return SASS_MEMORY_NEW(IfExpression,
-          "[pstate]", invocation);
-        // return SASS_MEMORY_NEW(FunctionExpression2,
-        //   "[pstate]", identifier, args, "");
+          SourceSpan::fake("[pstateA]"), invocation);
+        // return SASS_MEMORY_NEW(FunctionExpression,
+        //   "[pstateB]", identifier, args, "");
         // 
         // ToDo: dart-sass has an if expression class for this
-        // return SASS_MEMORY_NEW(If, "[pstate]", invocation, {});
+        // return SASS_MEMORY_NEW(If, "[pstateC]", invocation, {});
         // return IfExpression(invocation, spanForList([identifier, invocation]));
       }
       else if (plain == "not") {
         whitespace();
         Expression* expression = _singleExpression();
         return SASS_MEMORY_NEW(Unary_Expression,
-          scanner.pstate(start),
+          scanner.pstate9(start.offset),
           Unary_Expression::NOT,
           expression);
       }
 
-      std::string lower(plain);
+      sass::string lower(plain);
       Util::ascii_str_tolower(&lower);
       if (scanner.peekChar() != $lparen) {
         if (plain == "false") {
           return SASS_MEMORY_NEW(Boolean,
-            scanner.pstate(start), false);
+            scanner.pstate9(start.offset), false);
         }
         else if (plain == "true") {
           return SASS_MEMORY_NEW(Boolean,
-            scanner.pstate(start), true);
+            scanner.pstate9(start.offset), true);
         }
         else if (plain == "null") {
           return SASS_MEMORY_NEW(Null,
-            scanner.pstate(start));
+            scanner.pstate9(start.offset));
         }
 
         // ToDo: dart-sass has ColorExpression(color);
@@ -2736,38 +2821,45 @@ relase. For details, see http://bit.ly/moz-document.
       }
     }
 
-    std::string ns;
+    sass::string ns;
     Position beforeName(scanner);
     uint8_t next = scanner.peekChar();
     if (next == $dot) {
 
       if (scanner.peekChar(1) == $dot) {
         return SASS_MEMORY_NEW(StringExpression,
-          scanner.pstate(beforeName), identifier);
+          scanner.pstate9(beforeName), identifier);
       }
 
       ns = identifier->getPlainString();
       scanner.readChar();
-      beforeName = scanner.offset;
+      beforeName = scanner;
 
       StringLiteralObj ident = _publicIdentifier2();
       InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
-        ident->pstate(), ident);
+        ident->pstate());
 
       if (ns.empty()) {
         error("Interpolation isn't allowed in namespaces.",
-          scanner.pstate(start));
+          scanner.pstate9(start.offset));
       }
 
       ArgumentInvocation* args = _argumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression2,
-        scanner.pstate(start), itpl, args, ns);
+      return SASS_MEMORY_NEW(FunctionExpression,
+        scanner.pstate9(start.offset), itpl, args, ns);
 
     }
     else if (next == $lparen) {
       ArgumentInvocation* args = _argumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression2,
-        scanner.pstate(start), identifier, args, ns);
+      FunctionExpression* fn = SASS_MEMORY_NEW(FunctionExpression,
+        scanner.pstate9(start.offset), identifier, args, ns);
+      sass::string name(identifier->getPlainString());
+      if (!name.empty()) {
+        // Get the function through the whole stack
+        auto fidx = context.varStack.back()->getFunctionIdx2(name);
+        fn->fidx(fidx);
+      }
+      return fn;
     }
     else {
       return SASS_MEMORY_NEW(StringExpression,
@@ -2779,11 +2871,11 @@ relase. For details, see http://bit.ly/moz-document.
 
   // If [name] is the name of a function with special syntax, consumes it.
   // Otherwise, returns `null`. [start] is the location before the beginning of [name].
-  StringExpression* StylesheetParser::trySpecialFunction(std::string name, LineScannerState2 start)
+  StringExpression* StylesheetParser::trySpecialFunction(sass::string name, LineScannerState2 start)
   {
     uint8_t next = 0;
-    InterpolationBuffer buffer;
-    std::string normalized(Util::unvendor(name));
+    InterpolationBuffer buffer(scanner);
+    sass::string normalized(Util::unvendor(name));
 
     if (normalized == "calc" || normalized == "element" || normalized == "expression") {
       if (!scanner.scanChar($lparen)) return nullptr;
@@ -2805,8 +2897,9 @@ relase. For details, see http://bit.ly/moz-document.
         return nullptr;
       }
 
+      SourceSpan pstate(scanner.pstate9(start.offset));
       return SASS_MEMORY_NEW(StringExpression,
-        scanner.pstate(start), buffer.getInterpolation());
+        pstate, buffer.getInterpolation(pstate));
     }
     else if (normalized == "progid") {
       if (!scanner.scanChar($colon)) return nullptr;
@@ -2823,7 +2916,7 @@ relase. For details, see http://bit.ly/moz-document.
       InterpolationObj contents = _tryUrlContents(start);
       if (contents == nullptr) return nullptr;
       return SASS_MEMORY_NEW(StringExpression,
-        scanner.pstate(start), contents);
+        scanner.pstate9(start.offset), contents);
     }
     else {
       return nullptr;
@@ -2834,8 +2927,9 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.expectChar($rparen);
     buffer.write($rparen);
 
+    SourceSpan pstate(scanner.pstate9(start.offset));
     return SASS_MEMORY_NEW(StringExpression,
-      scanner.pstate(start), buffer.getInterpolation());
+      pstate, buffer.getInterpolation(pstate));
   }
   // trySpecialFunction
 
@@ -2954,7 +3048,7 @@ relase. For details, see http://bit.ly/moz-document.
   // Consumes a function named [name] containing an
   // `InterpolatedDeclarationValue` if possible, and adds its text to [buffer].
   // Returns whether such a function could be consumed.
-  bool StylesheetParser::_tryMinMaxFunction(InterpolationBuffer& buffer, std::string name)
+  bool StylesheetParser::_tryMinMaxFunction(InterpolationBuffer& buffer, sass::string name)
   {
     if (!scanIdentifier(name)) return false;
     if (!scanner.scanChar($lparen)) return false;
@@ -2971,7 +3065,7 @@ relase. For details, see http://bit.ly/moz-document.
   // Like [_urlContents], but returns `null` if the URL fails to parse.
   // [start] is the position before the beginning of the name.
   // [name] is the function's name; it defaults to `"url"`.
-  Interpolation* StylesheetParser::_tryUrlContents(LineScannerState2 start, std::string name)
+  Interpolation* StylesheetParser::_tryUrlContents(LineScannerState2 start, sass::string name)
   {
     // NOTE: this logic is largely duplicated in Parser.tryUrl.
     // Most changes here should be mirrored there.
@@ -2981,7 +3075,7 @@ relase. For details, see http://bit.ly/moz-document.
 
     // Match Ruby Sass's behavior: parse a raw URL() if possible, and if not
     // backtrack and re-parse as a function expression.
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     buffer.write(name.empty() ? "url" : name);
     buffer.write($lparen);
     while (true) {
@@ -3013,7 +3107,7 @@ relase. For details, see http://bit.ly/moz-document.
       }
       else if (next == $rparen) {
         buffer.write(scanner.readChar());
-        return buffer.getInterpolation(scanner.pstate(start));
+        return buffer.getInterpolation(scanner.pstate9(start.offset));
       }
       else {
         break;
@@ -3032,18 +3126,18 @@ relase. For details, see http://bit.ly/moz-document.
     LineScannerState2 start = scanner.state();
     expectIdentifier("url");
     StringLiteral* fnName = SASS_MEMORY_NEW(StringLiteral,
-      scanner.pstate(start), "url");
+      scanner.pstate9(start.offset), "url");
     InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
-      scanner.pstate(start), fnName);
+      scanner.pstate9(start.offset), fnName);
     InterpolationObj contents = _tryUrlContents(start);
     if (contents != nullptr) {
       return SASS_MEMORY_NEW(StringExpression,
-        scanner.pstate(start), contents);
+        scanner.pstate9(start.offset), contents);
     }
 
-    ParserState pstate(scanner.pstate(start));
+    SourceSpan pstate(scanner.pstate9(start.offset));
     ArgumentInvocation* args = _argumentInvocation();
-    return SASS_MEMORY_NEW(FunctionExpression2,
+    return SASS_MEMORY_NEW(FunctionExpression,
       pstate, itpl, args, "");
   }
   // dynamicUrl
@@ -3060,10 +3154,11 @@ relase. For details, see http://bit.ly/moz-document.
   Interpolation* StylesheetParser::almostAnyValue()
   {
     // const char* start = scanner.position;
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     const char* commentStart;
     StringExpressionObj strex;
     LineScannerState2 start = scanner.state();
+    StringLiteralObj lit;
     Interpolation* contents;
     uint8_t next = 0;
 
@@ -3137,7 +3232,8 @@ relase. For details, see http://bit.ly/moz-document.
 
       default:
         if (lookingAtIdentifier()) {
-          buffer.write(identifier());
+          lit = identifierLiteral();
+          buffer.write(lit.ptr());
         }
         else {
           buffer.write(scanner.readChar());
@@ -3147,8 +3243,10 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
   endOfLoop:
-
-    return buffer.getInterpolation(scanner.pstate(start));
+    // scanner.lastRelevant
+    // scanner.resetState(scanner.lastRelevant);
+    // whitespaceWithoutComments(); // consume trailing white-space
+    return buffer.getInterpolation(scanner.pstate9(start.offset), true);
 
   }
   // almostAnyValue
@@ -3163,9 +3261,9 @@ relase. For details, see http://bit.ly/moz-document.
     LineScannerState2 beforeUrl = scanner.state();
     Interpolation* contents;
 
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     Position start(scanner);
-    std::vector<uint8_t> brackets;
+    sass::vector<uint8_t> brackets;
     bool wroteNewline = false;
     uint8_t next = 0;
 
@@ -3227,7 +3325,9 @@ relase. For details, see http://bit.ly/moz-document.
       case $cr:
       case $ff:
         if (isIndented()) goto endOfLoop;
-        if (!isNewline(scanner.peekChar(-1))) buffer.writeln();
+        if (!isNewline(scanner.peekChar(-1))) {
+          buffer.write("\n");
+        }
         scanner.readChar();
         wroteNewline = true;
         break;
@@ -3236,7 +3336,7 @@ relase. For details, see http://bit.ly/moz-document.
       case $lbrace:
       case $lbracket:
         buffer.write(next);
-        brackets.push_back(opposite(scanner.readChar()));
+        brackets.emplace_back(opposite(scanner.readChar()));
         wroteNewline = false;
         break;
 
@@ -3293,11 +3393,15 @@ relase. For details, see http://bit.ly/moz-document.
 
     if (!brackets.empty()) scanner.expectChar(brackets.back());
     if (!allowEmpty && buffer.empty()) {
-      scanner.error("Expected token.");
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected token.",
+        *context.logger,
+        scanner.pstate9());
     }
-    itpl = buffer.getInterpolation();
+    SourceSpan pstate(scanner.spanFrom(start));
     return SASS_MEMORY_NEW(StringExpression,
-      scanner.spanFrom(start), itpl);
+      pstate, buffer.getInterpolation(pstate));
 
   }
   // _interpolatedDeclarationValue
@@ -3305,7 +3409,7 @@ relase. For details, see http://bit.ly/moz-document.
   // Consumes an identifier that may contain interpolation.
   Interpolation* StylesheetParser::interpolatedIdentifier()
   {
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     Position start(scanner);
 
     while (scanner.scanChar($dash)) {
@@ -3314,8 +3418,11 @@ relase. For details, see http://bit.ly/moz-document.
 
     uint8_t first = 0, next = 0;
     if (!scanner.peekChar(first)) {
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
       scanner.error("Expected identifier.",
-        scanner.pstate(start));
+        *context.logger,
+        scanner.pstate9(start));
     }
     else if (isNameStart(first)) {
       buffer.write(scanner.readChar());
@@ -3328,7 +3435,10 @@ relase. For details, see http://bit.ly/moz-document.
       buffer.add(ex);
     }
     else {
-      scanner.error("Expected identifier.");
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate9()));
+      scanner.error("Expected identifier.",
+        *context.logger, scanner.pstate9());
     }
 
     while (true) {
@@ -3352,7 +3462,7 @@ relase. For details, see http://bit.ly/moz-document.
       }
     }
 
-    return buffer.getInterpolation(scanner.pstate(start));
+    return buffer.getInterpolation(scanner.pstate9(start));
   }
   // interpolatedIdentifier
 
@@ -3368,7 +3478,7 @@ relase. For details, see http://bit.ly/moz-document.
     if (plainCss()) {
       error(
         "Interpolation isn't allowed in plain CSS.",
-        scanner.spanFrom(start));
+        *context.logger, scanner.spanFrom(start));
     }
 
     return contents.detach();
@@ -3379,7 +3489,7 @@ relase. For details, see http://bit.ly/moz-document.
   Interpolation* StylesheetParser::_mediaQueryList()
   {
     Position start(scanner);
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     while (true) {
       whitespace();
       _mediaQuery(buffer);
@@ -3387,7 +3497,7 @@ relase. For details, see http://bit.ly/moz-document.
       buffer.write($comma);
       buffer.write($space);
     }
-    return buffer.getInterpolation(scanner.pstate(start));
+    return buffer.getInterpolation(scanner.pstate9(start));
   }
   // _mediaQueryList
 
@@ -3452,7 +3562,7 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     Position start(scanner);
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     scanner.expectChar($lparen);
     buffer.write($lparen);
     whitespace();
@@ -3496,7 +3606,7 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
     buffer.write($rparen);
 
-    return buffer.getInterpolation(scanner.pstate(start));
+    return buffer.getInterpolation(scanner.pstate9(start));
 
   }
   // _mediaFeature
@@ -3527,7 +3637,7 @@ relase. For details, see http://bit.ly/moz-document.
       expectIdentifier("not");
       whitespace();
       return SASS_MEMORY_NEW(SupportsNegation,
-        scanner.pstate(start), _supportsConditionInParens());
+        scanner.pstate9(start), _supportsConditionInParens());
     }
 
     SupportsCondition_Obj condition =
@@ -3548,7 +3658,7 @@ relase. For details, see http://bit.ly/moz-document.
         _supportsConditionInParens();
       
       condition = SASS_MEMORY_NEW(SupportsOperation,
-        scanner.pstate(start), condition, right, op);
+        scanner.pstate9(start), condition, right, op);
       whitespace();
     }
 
@@ -3562,7 +3672,7 @@ relase. For details, see http://bit.ly/moz-document.
     Position start(scanner);
     if (scanner.peekChar() == $hash) {
       return SASS_MEMORY_NEW(SupportsInterpolation,
-        scanner.pstate(start), singleInterpolation());
+        scanner.pstate9(start), singleInterpolation());
     }
 
     scanner.expectChar($lparen);
@@ -3592,7 +3702,7 @@ relase. For details, see http://bit.ly/moz-document.
     scanner.expectChar($rparen);
 
     return SASS_MEMORY_NEW(SupportsDeclaration,
-      scanner.pstate(start), name, value);
+      scanner.pstate9(start), name, value);
   }
   // EO _supportsConditionInParens
 
@@ -3614,7 +3724,7 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
 
     return SASS_MEMORY_NEW(SupportsNegation,
-      scanner.pstate(start),
+      scanner.pstate9(start.offset),
       _supportsConditionInParens());
 
   }
@@ -3695,7 +3805,7 @@ relase. For details, see http://bit.ly/moz-document.
   // EO _lookingAtExpression
 
   // Like [identifier], but rejects identifiers that begin with `_` or `-`.
-  std::string StylesheetParser::_publicIdentifier()
+  sass::string StylesheetParser::_publicIdentifier()
   {
     Position start(scanner);
     auto result = identifier();
@@ -3712,9 +3822,9 @@ relase. For details, see http://bit.ly/moz-document.
 
   StringLiteral* StylesheetParser::_publicIdentifier2()
   {
-    Position start = scanner.offset;
-    std::string ident(_publicIdentifier());
-    return SASS_MEMORY_NEW(StringLiteral, scanner.pstate(start), ident);
+    Position start(scanner);
+    sass::string ident(_publicIdentifier());
+    return SASS_MEMORY_NEW(StringLiteral, scanner.pstate9(start), ident);
   }
 
 }

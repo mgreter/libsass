@@ -11,9 +11,8 @@ namespace Sass {
   public:
 
     SpanScanner(
-      const char* content,
-      const char* path,
-      size_t srcid);
+      Logger& logger,
+      SourceDataObj source);
 
   };
 

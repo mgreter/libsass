@@ -7,6 +7,7 @@
 #include "ast.hpp"
 
 #include "visitor_selector.hpp"
+#include "strings.hpp"
 
 namespace Sass {
 
@@ -17,25 +18,26 @@ namespace Sass {
   bool compoundIsSuperselector(
     const CompoundSelectorObj& compound1,
     const CompoundSelectorObj& compound2,
-    const std::vector<SelectorComponentObj>& parents);
+    const sass::vector<SelectorComponentObj>& parents);
 
   bool complexIsParentSuperselector(
-    const std::vector<SelectorComponentObj>& complex1,
-    const std::vector<SelectorComponentObj>& complex2);
+    const sass::vector<SelectorComponentObj>& complex1,
+    const sass::vector<SelectorComponentObj>& complex2);
 
-    std::vector<std::vector<SelectorComponentObj>> weave(
-    const std::vector<std::vector<SelectorComponentObj>>& complexes);
+  sass::vector<sass::vector<SelectorComponentObj>> weave(
+    const sass::vector<sass::vector<SelectorComponentObj>>& complexes);
 
-  std::vector<std::vector<SelectorComponentObj>> weaveParents(
-    std::vector<SelectorComponentObj> parents1,
-    std::vector<SelectorComponentObj> parents2);
+  // ToDo: What happens if we modify our parent?
+  sass::vector<sass::vector<SelectorComponentObj>> weaveParents(
+    sass::vector<SelectorComponentObj> parents1,
+      sass::vector<SelectorComponentObj> parents2);
 
-  std::vector<SimpleSelectorObj> unifyCompound(
-    const std::vector<SimpleSelectorObj>& compound1,
-    const std::vector<SimpleSelectorObj>& compound2);
+  sass::vector<SimpleSelectorObj> unifyCompound(
+    const sass::vector<SimpleSelectorObj>& compound1,
+    const sass::vector<SimpleSelectorObj>& compound2);
 
-  std::vector<std::vector<SelectorComponentObj>> unifyComplex(
-    const std::vector<std::vector<SelectorComponentObj>>& complexes);
+  sass::vector<sass::vector<SelectorComponentObj>> unifyComplex(
+    const sass::vector<sass::vector<SelectorComponentObj>>& complexes);
 
   /////////////////////////////////////////
   // Abstract base class for CSS selectors.
@@ -44,7 +46,7 @@ namespace Sass {
   protected:
     mutable size_t hash_;
   public:
-    Selector(ParserState pstate);
+    Selector(const SourceSpan& pstate);
     virtual ~Selector() = 0;
     size_t hash() const override = 0;
     virtual bool has_real_parent_ref() const;
@@ -75,13 +77,13 @@ namespace Sass {
       PLACEHOLDER_SEL,
     };
   public:
-    HASH_CONSTREF(std::string, ns)
-      HASH_CONSTREF(std::string, name)
-      ADD_PROPERTY(Simple_Type, simple_type)
-      HASH_PROPERTY(bool, has_ns)
+    HASH_CONSTREF(sass::string, ns);
+    HASH_CONSTREF(sass::string, name);
+    ADD_PROPERTY(Simple_Type, simple_type);
+    HASH_PROPERTY(bool, has_ns);
   public:
-    SimpleSelector(ParserState pstate, std::string n = "");
-    virtual std::string ns_name() const;
+    SimpleSelector(const SourceSpan& pstate, const sass::string& n = Strings::empty);
+    virtual sass::string ns_name() const;
     size_t hash() const override;
     virtual bool empty() const;
     // namespace compare functions
@@ -107,7 +109,7 @@ namespace Sass {
     // virtual bool is_pseudo_element() const;
     virtual bool has_real_parent_ref() const override;
 
-    ATTACH_VIRTUAL_EQ_OPERATIONS(SimpleSelector);
+    ABSTRACT_EQ_OPERATIONS(SimpleSelector);
     ATTACH_VIRTUAL_COPY_OPERATIONS(SimpleSelector);
     ATTACH_CRTP_PERFORM_METHODS();
 
@@ -121,7 +123,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   class PlaceholderSelector final : public SimpleSelector {
   public:
-    PlaceholderSelector(ParserState pstate, std::string n);
+    PlaceholderSelector(const SourceSpan& pstate, const sass::string& n);
     bool isInvisible() const override { return true; }
     virtual unsigned long specificity() const override;
     virtual bool has_placeholder() override;
@@ -136,7 +138,7 @@ namespace Sass {
       return visitor.visitPlaceholderSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(PlaceholderSelector)
+    VIRTUAL_EQ_OPERATIONS(PlaceholderSelector)
     ATTACH_COPY_OPERATIONS(PlaceholderSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -147,7 +149,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////
   class TypeSelector final : public SimpleSelector {
   public:
-    TypeSelector(ParserState pstate, std::string n);
+    TypeSelector(const SourceSpan& pstate, const sass::string& n);
     virtual unsigned long specificity() const override;
     SimpleSelector* unifyWith(const SimpleSelector*);
     CompoundSelector* unifyWith(CompoundSelector*) override;
@@ -159,7 +161,7 @@ namespace Sass {
       return visitor.visitTypeSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(TypeSelector)
+    VIRTUAL_EQ_OPERATIONS(TypeSelector)
     ATTACH_COPY_OPERATIONS(TypeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -169,7 +171,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////
   class ClassSelector final : public SimpleSelector {
   public:
-    ClassSelector(ParserState pstate, std::string name);
+    ClassSelector(const SourceSpan& pstate, const sass::string& name);
     virtual unsigned long specificity() const override;
     bool operator==(const SimpleSelector& rhs) const final override;
 
@@ -178,7 +180,7 @@ namespace Sass {
       return visitor.visitClassSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(ClassSelector)
+    VIRTUAL_EQ_OPERATIONS(ClassSelector)
     ATTACH_COPY_OPERATIONS(ClassSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -189,7 +191,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////
   class IDSelector final : public SimpleSelector {
   public:
-    IDSelector(ParserState pstate, std::string name);
+    IDSelector(const SourceSpan& pstate, const sass::string& name);
     virtual unsigned long specificity() const override;
     CompoundSelector* unifyWith(CompoundSelector*) override;
     IDSelector* getIdSelector() final override { return this; }
@@ -200,7 +202,7 @@ namespace Sass {
       return visitor.visitIDSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(IDSelector)
+    VIRTUAL_EQ_OPERATIONS(IDSelector)
     ATTACH_COPY_OPERATIONS(IDSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -215,13 +217,13 @@ namespace Sass {
     // The operator that defines the semantics of [value].
     // If this is empty, this matches any element with the given property,
     // regardless of this value. It's empty if and only if [value] is empty.
-    ADD_CONSTREF(std::string, op);
+    ADD_CONSTREF(sass::string, op);
 
     // An assertion about the value of [name].
     // The precise semantics of this string are defined by [op].
     // If this is `null`, this matches any element with the given property,
     // regardless of this value. It's `null` if and only if [op] is `null`.
-    ADD_PROPERTY(std::string, value);
+    ADD_CONSTREF(sass::string, value);
 
       // The modifier which indicates how the attribute selector should be
     // processed. See for example [case-sensitivity][] modifiers.
@@ -238,10 +240,10 @@ namespace Sass {
 
     // By value constructor
     AttributeSelector(
-      ParserState pstate,
-      std::string name,
-      std::string op,
-      std::string value,
+      const SourceSpan& pstate,
+      const sass::string& name,
+      const sass::string& op,
+      const sass::string& value,
       char modifier = 0);
 
     virtual unsigned long specificity() const override;
@@ -253,7 +255,7 @@ namespace Sass {
       return visitor.visitAttributeSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(AttributeSelector)
+    VIRTUAL_EQ_OPERATIONS(AttributeSelector)
     ATTACH_COPY_OPERATIONS(AttributeSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -269,12 +271,12 @@ namespace Sass {
   class PseudoSelector final : public SimpleSelector {
 
     // Like [name], but without any vendor prefixes.
-    ADD_PROPERTY(std::string, normalized);
+    ADD_CONSTREF(sass::string, normalized);
 
     // The non-selector argument passed to this selector. This is
     // `null` if there's no argument. If [argument] and [selector]
     // are both non-`null`, the selector follows the argument.
-    ADD_PROPERTY(std::string, argument);
+    ADD_CONSTREF(sass::string, argument);
 
     // The selector argument passed to this selector. This is `null`
     // if there's no selector. If [argument] and [selector] are
@@ -296,8 +298,8 @@ namespace Sass {
 
     // By value constructor
     PseudoSelector(
-      ParserState pstate,
-      std::string name,
+      const SourceSpan& pstate,
+      const sass::string& name,
       bool element = false);
 
     size_t hash() const override;
@@ -328,9 +330,8 @@ namespace Sass {
       return visitor.visitPseudoSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(PseudoSelector)
+    VIRTUAL_EQ_OPERATIONS(PseudoSelector)
     ATTACH_COPY_OPERATIONS(PseudoSelector)
-    void cloneChildren() override;
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -346,7 +347,7 @@ namespace Sass {
     // line break before list separator
     ADD_PROPERTY(bool, hasPreLineFeed)
   public:
-    ComplexSelector(ParserState pstate);
+    ComplexSelector(const SourceSpan& pstate);
 
     // Returns true if the first components
     // is a compound selector and fullfills
@@ -358,7 +359,7 @@ namespace Sass {
     bool has_placeholder() const;
     bool has_real_parent_ref() const override;
 
-    std::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
+    sass::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
     virtual unsigned long specificity() const override;
 
     SelectorList* unifyWith(ComplexSelector* rhs);
@@ -375,7 +376,7 @@ namespace Sass {
       return visitor.visitComplexSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(ComplexSelector)
+    VIRTUAL_EQ_OPERATIONS(ComplexSelector)
     ATTACH_COPY_OPERATIONS(ComplexSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -387,7 +388,7 @@ namespace Sass {
     // line break after list separator
     ADD_PROPERTY(bool, hasPostLineBreak)
   public:
-    SelectorComponent(ParserState pstate, bool postLineBreak = false);
+    SelectorComponent(const SourceSpan& pstate, bool postLineBreak = false);
     size_t hash() const override = 0;
     void cloneChildren() override;
 
@@ -412,7 +413,7 @@ namespace Sass {
     virtual const SelectorCombinator* getCombinator() const { return NULL; }
 
     virtual unsigned long specificity() const override;
-    ATTACH_VIRTUAL_EQ_OPERATIONS(SelectorComponent);
+    ABSTRACT_EQ_OPERATIONS(SelectorComponent);
     ATTACH_VIRTUAL_COPY_OPERATIONS(SelectorComponent);
   };
 
@@ -432,7 +433,7 @@ namespace Sass {
     HASH_CONSTREF(Combinator, combinator)
 
   public:
-    SelectorCombinator(ParserState pstate, Combinator combinator, bool postLineBreak = false);
+    SelectorCombinator(const SourceSpan& pstate, Combinator combinator, bool postLineBreak = false);
 
     bool has_real_parent_ref() const override { return false; }
     bool has_placeholder() const override { return false; }
@@ -475,8 +476,7 @@ namespace Sass {
       return visitor.visitSelectorCombinator(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(SelectorCombinator)
-    // ATTACH_COPY_OPERATIONS(SelectorCombinator)
+    VIRTUAL_EQ_OPERATIONS(SelectorCombinator)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -487,7 +487,7 @@ namespace Sass {
     ADD_PROPERTY(bool, hasRealParent)
     ADD_PROPERTY(bool, extended)
   public:
-    CompoundSelector(ParserState pstate, bool postLineBreak = false);
+    CompoundSelector(const SourceSpan& pstate, bool postLineBreak = false);
 
     // Returns true if this compound selector
     // fullfills various criterias.
@@ -504,12 +504,12 @@ namespace Sass {
     CompoundSelector* getCompound() final override { return this; }
     const CompoundSelector* getCompound() const final override { return this; }
 
-    bool isSuperselectorOf(const CompoundSelector* sub, std::string wrapped = "") const;
+    bool isSuperselectorOf(const CompoundSelector* sub, sass::string wrapped = "") const;
 
     void cloneChildren() override;
     bool has_real_parent_ref() const override;
     bool has_placeholder() const override;
-    std::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
+    sass::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent = true);
 
     virtual bool isCompound() const override { return true; };
     virtual unsigned long specificity() const override;
@@ -524,7 +524,7 @@ namespace Sass {
       return visitor.visitCompoundSelector(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(CompoundSelector)
+    VIRTUAL_EQ_OPERATIONS(CompoundSelector)
     ATTACH_COPY_OPERATIONS(CompoundSelector)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -534,9 +534,9 @@ namespace Sass {
   ///////////////////////////////////
   class SelectorList final : public Selector, public Vectorized<ComplexSelectorObj> {
   public:
-    SelectorList(ParserState pstate, size_t s = 0);
-    SelectorList(ParserState pstate, const std::vector<ComplexSelectorObj>&);
-    // std::string type() const override { return "list"; }
+    SelectorList(const SourceSpan& pstate, size_t s = 0);
+    SelectorList(const SourceSpan& pstate, const sass::vector<ComplexSelectorObj>&);
+    // sass::string type() const override { return "list"; }
     size_t hash() const override;
 
     SelectorList* unifyWith(SelectorList*);
@@ -566,7 +566,7 @@ namespace Sass {
       return visitor.visitSelectorList(this);
     }
 
-    ATTACH_BASE_EQ_OPERATIONS(SelectorList)
+    VIRTUAL_EQ_OPERATIONS(SelectorList)
     ATTACH_COPY_OPERATIONS(SelectorList)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -579,9 +579,8 @@ namespace Sass {
     // This should be a simple selector only!
     ADD_PROPERTY(InterpolationObj, selector)
   public:
-    ExtendRule(ParserState pstate, InterpolationObj s, bool optional = false);
-    // ATTACH_COPY_OPERATIONS(ExtendRule)
-    ATTACH_BASE_EQ_OPERATIONS(ExtendRule)
+    ExtendRule(const SourceSpan& pstate, InterpolationObj s, bool optional = false);
+    VIRTUAL_EQ_OPERATIONS(ExtendRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

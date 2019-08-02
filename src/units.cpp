@@ -5,6 +5,8 @@
 #include "units.hpp"
 #include "ordered_map.hpp"
 #include "error_handling.hpp"
+#include "environment.hpp" // For the hasher
+#include "../../ordered-map/include/tsl/ordered_map.h"
 
 namespace Sass {
 
@@ -79,7 +81,7 @@ namespace Sass {
     }
   };
 
-  UnitType string_to_unit(const std::string& s)
+  UnitType string_to_unit(const sass::string& s)
   {
     // size units
     if      (s == "px")   return UnitType::PX;
@@ -138,7 +140,7 @@ namespace Sass {
   }
 
   // throws incompatibleUnits exceptions
-  double conversion_factor(const std::string& s1, const std::string& s2)
+  double conversion_factor(const sass::string& s1, const sass::string& s2)
   {
     // assert for same units
     if (s1 == s2) return 1;
@@ -180,7 +182,7 @@ namespace Sass {
     return 0;
   }
 
-  double convert_units(const std::string& lhs, const std::string& rhs, int& lhsexp, int& rhsexp)
+  double convert_units(const sass::string& lhs, const sass::string& rhs, int& lhsexp, int& rhsexp)
   {
     double f = 0;
     // do not convert same ones
@@ -240,7 +242,7 @@ namespace Sass {
     double factor = 1;
 
     for (size_t i = 0; i < iL; i++) {
-      std::string &lhs = numerators[i];
+      sass::string &lhs = numerators[i];
       UnitType ulhs = string_to_unit(lhs);
       if (ulhs == UNKNOWN) continue;
       UnitClass clhs = get_unit_type(ulhs);
@@ -253,7 +255,7 @@ namespace Sass {
     }
 
     for (size_t n = 0; n < nL; n++) {
-      std::string &rhs = denominators[n];
+      sass::string &rhs = denominators[n];
       UnitType urhs = string_to_unit(rhs);
       if (urhs == UNKNOWN) continue;
       UnitClass crhs = get_unit_type(urhs);
@@ -286,7 +288,11 @@ namespace Sass {
     // it seems that a map table will fit nicely to do this
     // we basically construct exponents for each unit
     // has the advantage that they will be pre-sorted
-    ordered_map<std::string, int> exponents;
+    tsl::ordered_map<sass::string, int,
+      SassIgnoreDashPair,
+      SassAllocator<std::pair<sass::string, int>>,
+      sass::vector<std::pair<sass::string, int>>
+    > exponents;
 
     // initialize by summing up occurences in unit vectors
     // this will already cancel out equivalent units (e.q. px/px)
@@ -299,7 +305,7 @@ namespace Sass {
     // convert between compatible units
     for (size_t i = 0; i < iL; i++) {
       for (size_t n = 0; n < nL; n++) {
-        std::string &lhs = numerators[i], &rhs = denominators[n];
+        sass::string &lhs = numerators[i], &rhs = denominators[n];
         int &lhsexp = exponents[lhs], &rhsexp = exponents[rhs];
         double f(convert_units(lhs, rhs, lhsexp, rhsexp));
         if (f == 0) continue;
@@ -312,12 +318,12 @@ namespace Sass {
     denominators.clear();
 
     // recreate sorted units vectors
-    for (auto key : exponents) {
-      int &exponent = exponents[key];
+    for (auto kv : exponents) {
+      int &exponent = kv.second;
       while (exponent > 0 && exponent --)
-        numerators.push_back(key);
+        numerators.emplace_back(kv.first);
       while (exponent < 0 && exponent ++)
-        denominators.push_back(key);
+        denominators.emplace_back(kv.first);
     }
 
     // return for conversion
@@ -325,9 +331,9 @@ namespace Sass {
 
   }
 
-  std::string Units::unit() const
+  sass::string Units::unit() const
   {
-    std::string u;
+    sass::string u;
     size_t iL = numerators.size();
     size_t nL = denominators.size();
     for (size_t i = 0; i < iL; i += 1) {
@@ -353,7 +359,7 @@ namespace Sass {
     return u;
   }
 
-  bool Units::hasUnit(std::string unit)
+  bool Units::hasUnit(sass::string unit)
   {
     return numerators.size() == 1 &&
       denominators.empty() &&
@@ -376,11 +382,11 @@ namespace Sass {
   double Units::convert_factor(const Units& r) const
   {
 
-    std::vector<std::string> miss_nums(0);
-    std::vector<std::string> miss_dens(0);
+    sass::vector<sass::string> miss_nums(0);
+    sass::vector<sass::string> miss_dens(0);
     // create copy since we need these for state keeping
-    std::vector<std::string> r_nums(r.numerators);
-    std::vector<std::string> r_dens(r.denominators);
+    sass::vector<sass::string> r_nums(r.numerators);
+    sass::vector<sass::string> r_dens(r.denominators);
 
     auto l_num_it = numerators.begin();
     auto l_num_end = numerators.end();
@@ -395,7 +401,7 @@ namespace Sass {
     while (l_num_it != l_num_end)
     {
       // get and increment afterwards
-      const std::string l_num = *(l_num_it ++);
+      const sass::string l_num = *(l_num_it ++);
 
       auto r_num_it = r_nums.begin(), r_num_end = r_nums.end();
 
@@ -404,7 +410,7 @@ namespace Sass {
       while (r_num_it != r_num_end)
       {
         // get and increment afterwards
-        const std::string r_num = *(r_num_it);
+        const sass::string r_num = *(r_num_it);
         // get possible conversion factor for units
         double conversion = conversion_factor(l_num, r_num);
         // skip incompatible numerator
@@ -422,7 +428,7 @@ namespace Sass {
       }
       // maybe we did not find any
       // left numerator is leftover
-      if (!found) miss_nums.push_back(l_num);
+      if (!found) miss_nums.emplace_back(l_num);
     }
 
     auto l_den_it = denominators.begin();
@@ -432,7 +438,7 @@ namespace Sass {
     while (l_den_it != l_den_end)
     {
       // get and increment afterwards
-      const std::string l_den = *(l_den_it ++);
+      const sass::string l_den = *(l_den_it ++);
 
       auto r_den_it = r_dens.begin();
       auto r_den_end = r_dens.end();
@@ -442,7 +448,7 @@ namespace Sass {
       while (r_den_it != r_den_end)
       {
         // get and increment afterwards
-        const std::string r_den = *(r_den_it);
+        const sass::string r_den = *(r_den_it);
         // get possible converstion factor for units
         double conversion = conversion_factor(l_den, r_den);
         // skip incompatible denominator
@@ -460,7 +466,7 @@ namespace Sass {
       }
       // maybe we did not find any
       // left denominator is leftover
-      if (!found) miss_dens.push_back(l_den);
+      if (!found) miss_dens.emplace_back(l_den);
     }
 
     // check left-overs (ToDo: might cancel out?)

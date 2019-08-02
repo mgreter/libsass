@@ -49,9 +49,8 @@ namespace Sass {
       isOptional(true),
       isOriginal(false),
       isSatisfied(false),
-      mediaContext({}) {
-
-    }
+      mediaContext({})
+    {}
 
     // Copy constructor
     Extension(const Extension& extension) :
@@ -61,9 +60,8 @@ namespace Sass {
       isOptional(extension.isOptional),
       isOriginal(extension.isOriginal),
       isSatisfied(extension.isSatisfied),
-      mediaContext(extension.mediaContext) {
-
-    }
+      mediaContext(extension.mediaContext)
+    {}
 
     // Default constructor
     Extension() :
@@ -73,8 +71,8 @@ namespace Sass {
       isOptional(false),
       isOriginal(false),
       isSatisfied(false),
-      mediaContext({}) {
-    }
+      mediaContext({})
+    {}
 
     // Asserts that the [mediaContext] for a selector is 
     // compatible with the query context for this extender.

@@ -29,7 +29,7 @@ namespace Sass {
   { }
 
   // return buffer as string
-  std::string Emitter::get_buffer(void)
+  sass::string Emitter::get_buffer(void)
   {
     return wbuf.buffer;
   }
@@ -44,10 +44,10 @@ namespace Sass {
   void Emitter::add_source_index(size_t idx)
   { wbuf.smap.source_index.push_back(idx); }
 
-  std::string Emitter::render_srcmap(Context &ctx)
+  sass::string Emitter::render_srcmap(Context &ctx)
   { return wbuf.smap.render_srcmap(ctx); }
 
-  void Emitter::set_filename(const std::string& str)
+  void Emitter::set_filename(const sass::string& str)
   { wbuf.smap.file = str; }
 
   void Emitter::schedule_mapping(const AST_Node* node)
@@ -56,7 +56,7 @@ namespace Sass {
   { wbuf.smap.add_open_mapping(node); }
   void Emitter::add_close_mapping(const AST_Node* node)
   { wbuf.smap.add_close_mapping(node); }
-  ParserState Emitter::remap(const ParserState& pstate)
+  SourceSpan Emitter::remap(const SourceSpan& pstate)
   { return wbuf.smap.remap(pstate); }
 
   // MAIN BUFFER MANIPULATION
@@ -77,7 +77,7 @@ namespace Sass {
   {
     // check the schedule
     if (scheduled_linefeed) {
-      std::string linefeeds = "";
+      sass::string linefeeds = "";
 
       for (size_t i = 0; i < scheduled_linefeed; i++)
         linefeeds += opt.linefeed;
@@ -86,7 +86,7 @@ namespace Sass {
       append_string(linefeeds);
 
     } else if (scheduled_space) {
-      std::string spaces(scheduled_space, ' ');
+      sass::string spaces(scheduled_space, ' ');
       scheduled_space = 0;
       append_string(spaces);
     }
@@ -104,7 +104,7 @@ namespace Sass {
   }
 
   // prepend some text or token to the buffer
-  void Emitter::prepend_string(const std::string& text)
+  void Emitter::prepend_string(const sass::string& text)
   {
     // do not adjust mappings for utf8 bom
     // seems they are not counted in any UA
@@ -125,25 +125,35 @@ namespace Sass {
     // write space/lf
     flush_schedules();
     // add to buffer
-    wbuf.buffer+= (unsigned char) chr;
+    wbuf.buffer.push_back((unsigned char) chr);
     // account for data in source-maps
     wbuf.smap.append(Offset(chr));
   }
 
   // append some text or token to the buffer
-  void Emitter::append_string(const std::string& text)
+  void Emitter::append_string(const sass::string& text)
   {
     // write space/lf
     flush_schedules();
     // add to buffer
-    wbuf.buffer += text;
+    wbuf.buffer.append(text);
     // account for data in source-maps
     wbuf.smap.append(Offset(text));
   }
 
+  void Emitter::append_string(sass::string&& text)
+  {
+    // write space/lf
+    flush_schedules();
+    // account for data in source-maps
+    wbuf.smap.append(Offset(text));
+    // add to buffer
+    wbuf.buffer.append(std::move(text));
+  }
+
   // append some text or token to the buffer
   // this adds source-mappings for node start and end
-  void Emitter::append_token(const std::string& text, const AST_Node* node)
+  void Emitter::append_token(const sass::string& text, const AST_Node* node)
   {
     flush_schedules();
     add_open_mapping(node);
@@ -157,93 +167,6 @@ namespace Sass {
     add_close_mapping(node);
   }
 
-  // append some text or token to the buffer
-  // this adds source-mappings for node start and end
-  void Emitter::append_css(const std::string& text, const AST_Node* node, bool to_css)
-  {
-    //std::cerr << "append css " << text << "\n";
-    flush_schedules();
-    add_open_mapping(node);
-    // hotfix for browser issues
-    // this is pretty ugly indeed
-    if (scheduled_crutch) {
-      add_open_mapping(scheduled_crutch);
-      scheduled_crutch = 0;
-    }
-
-    bool afterNewline = false;
-    for (size_t i = 0, iL = text.length(); i < iL; i += 1) {
-      uint8_t chr = text[i];
-
-      if (to_css) {
-        if (chr == $lf) {
-          append_char($space);
-          afterNewline = true;
-        }
-        else if (chr == $lf) {
-          if (!afterNewline) {
-            append_char($space);
-          }
-        }
-        else {
-          append_char(chr);
-          afterNewline = false;
-        }
-      }
-      else {
-        switch (chr) {
-          // Write newline characters and unprintable ASCII characters as escapes.
-        case $nul:
-        case $soh:
-        case $stx:
-        case $etx:
-        case $eot:
-        case $enq:
-        case $ack:
-        case $bel:
-        case $bs:
-        case $lf:
-        case $vt:
-        case $ff:
-        case $cr:
-        case $so:
-        case $si:
-        case $dle:
-        case $dc1:
-        case $dc2:
-        case $dc3:
-        case $dc4:
-        case $nak:
-        case $syn:
-        case $etb:
-        case $can:
-        case $em:
-        case $sub:
-        case $esc:
-        case $fs:
-        case $gs:
-        case $rs:
-        case $us:
-          append_char($backslash);
-          if (chr > 0xF) append_char(hexCharFor(chr >> 4));
-          append_char(hexCharFor(chr & 0xF));
-          if (iL == i + 1) break;
-          if (isHex(text[i + 1]) || text[i + 1] == $space || text[i + 1] == $tab) {
-            append_char($space);
-          }
-          break;
-        default:
-          append_char(chr);
-          break;
-        }
-      }
-    }
-
-    // append_string(text);
-
-    add_close_mapping(node);
-  }
-
   // HELPER METHODS
 
   void Emitter::append_indentation()
@@ -253,10 +176,8 @@ namespace Sass {
     if (in_declaration && in_comma_array) return;
     if (scheduled_linefeed && indentation)
       scheduled_linefeed = 1;
-    std::string indent = "";
     for (size_t i = 0; i < indentation; i++)
-      indent += opt.indent;
-    append_string(indent);
+      append_string(opt.indent);
   }
 
   void Emitter::append_delimiter()

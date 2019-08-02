@@ -10,8 +10,8 @@ namespace Sass {
   class BaseParser : public Parser {
 
   public:
-    BaseParser(Context& context, const char* content, const char* path, size_t srcid) :
-      Parser(context, content, path, srcid)
+    BaseParser(Context& context, SourceDataObj source) :
+      Parser(context, source)
     {}
 
   };

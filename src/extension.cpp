@@ -26,13 +26,17 @@ namespace Sass {
   // ##########################################################################
   void Extension::assertCompatibleMediaContext(CssMediaRuleObj mediaQueryContext, Backtraces& traces) const
   {
+    // callStackFrame inner2(traces, Backtrace(target->pstate()));
 
     if (this->mediaContext.isNull()) return;
 
-    if (mediaQueryContext && mediaContext->block() == mediaQueryContext->block()) return;
+    if (mediaQueryContext && mediaContext == mediaQueryContext) return;
 
     if (ObjEqualityFn<CssMediaRuleObj>(mediaQueryContext, mediaContext)) return;
 
+    // callStackFrame frame(traces, Backtrace(mediaContext->pstate()));
+    // callStackFrame outer(traces, Backtrace(extender->pstate()));
+    // callStackFrame inner(traces, Backtrace(target->pstate()));
     throw Exception::ExtendAcrossMedia(traces, *this);
 
   }

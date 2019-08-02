@@ -5,6 +5,7 @@
 
 #include "error_handling.hpp"
 #include "util_string.hpp"
+#include "context.hpp"
 
 namespace Sass {
 
@@ -13,18 +14,18 @@ namespace Sass {
   using namespace Character;
   
   // create utf8 encoded string from charcodes
-  std::string StringFromCharCode(uint32_t character)
+  sass::string StringFromCharCode(uint32_t character)
   {
-    std::string result;
+    sass::string result;
     utf8::append(character,
       std::back_inserter(result));
     return result;
   }
 
   // create utf8 encoded string from charcodes
-  std::string StringFromCharCodes(std::vector<uint32_t> characters)
+  sass::string StringFromCharCodes(sass::vector<uint32_t> characters)
   {
-    std::string result;
+    sass::string result;
     for (uint32_t code : characters) {
       // std::cerr << "add code " << code << "\n";
       utf8::append(code, std::back_inserter(result));
@@ -33,13 +34,23 @@ namespace Sass {
     return result;
   }
 
+  Parser::Parser(
+    Context& context,
+    SourceDataObj source) :
+    context(context),
+    disableEnvOptimization(false),
+    scanner(*context.logger, source)
+  {
+    // context.varStack.push_back(&context.varRoot);
+  }
 
-
-  bool Parser::isIdentifier(std::string text)
+  bool Parser::isIdentifier(sass::string text)
   {
     try {
-      Parser p2(context, text.c_str(), 0, 0);
-      auto resultasd = p2.identifier();
+      auto qwe = SASS_MEMORY_NEW(SourceFile,
+        "asd", text.c_str(), -1);
+      Parser p2(context, qwe);
+      p2.identifier(); // try to parse
       return p2.scanner.isDone();
     }
     catch (Exception::InvalidSyntax&) {
@@ -48,12 +59,12 @@ namespace Sass {
   }
 
   // Consumes whitespace, including any comments.
-  void Parser::whitespace()
-  {
-    do {
-      whitespaceWithoutComments();
-    } while (scanComment());
-  }
+  // void Parser::whitespace()
+  // {
+  //   do {
+  //     whitespaceWithoutComments();
+  //   } while (scanComment());
+  // }
 
   // Like [whitespace], but returns whether any was consumed.
   // bool Parser::scanWhitespace()
@@ -64,20 +75,20 @@ namespace Sass {
   // }
 
   // Consumes whitespace, but not comments.
-  void Parser::whitespaceWithoutComments()
-  {
-    while (!scanner.isDone() && isWhitespace(scanner.peekChar())) {
-      scanner.readChar();
-    }
-  }
+  // void Parser::whitespaceWithoutComments()
+  // {
+  //   while (!scanner.isDone() && isWhitespace(scanner.peekChar())) {
+  //     scanner.readChar();
+  //   }
+  // }
 
   // Consumes spaces and tabs.
-  void Parser::spaces()
-  {
-    while (!scanner.isDone() && isSpaceOrTab(scanner.peekChar())) {
-      scanner.readChar();
-    }
-  }
+  // void Parser::spaces()
+  // {
+  //   while (!scanner.isDone() && isSpaceOrTab(scanner.peekChar())) {
+  //     scanner.readChar();
+  //   }
+  // }
 
   // Consumes and ignores a comment if possible.
   // Returns whether the comment was consumed.
@@ -126,7 +137,7 @@ namespace Sass {
   // Consumes a plain CSS identifier. If [unit] is `true`, this 
   // doesn't parse a `-` followed by a digit. This ensures that 
   // `1px-2px` parses as subtraction rather than the unit `px-2px`.
-  std::string Parser::identifier(bool unit)
+  sass::string Parser::identifier(bool unit)
   {
 
     // NOTE: this logic is largely duplicated in StylesheetParser._interpolatedIdentifier
@@ -143,7 +154,7 @@ namespace Sass {
     // std::cerr << "GOT CHAR [" << (char)first << "]\n";
     if (first == $nul) {
       scanner.error("Expected identifier.",
-        scanner.pstate(start));
+        *context.logger, scanner.pstate(start));
     }
     else if (isNameStart(first)) {
      // std::cerr << "we start with name\n";
@@ -154,7 +165,7 @@ namespace Sass {
     }
     else {
       scanner.error("Expected identifier.",
-        scanner.pstate(start));
+        *context.logger, scanner.pstate(start));
     }
 
     _identifierBody(text, unit);
@@ -165,13 +176,58 @@ namespace Sass {
 
   }
 
+  // Consumes a plain CSS identifier. If [unit] is `true`, this 
+  // doesn't parse a `-` followed by a digit. This ensures that 
+  // `1px-2px` parses as subtraction rather than the unit `px-2px`.
+  StringLiteral* Parser::identifierLiteral(bool unit)
+  {
+
+    // NOTE: this logic is largely duplicated in StylesheetParser._interpolatedIdentifier
+    // and isIdentifier in utils.dart. Most changes here should be mirrored there.
+
+    Position start(scanner);
+    // std::cerr << scanner.position << "\n";
+    StringBuffer text;
+    while (scanner.scanChar($dash)) {
+      text.write($dash);
+    }
+
+    auto first = scanner.peekChar();
+    // std::cerr << "GOT CHAR [" << (char)first << "]\n";
+    if (first == $nul) {
+      scanner.error("Expected identifier.",
+        *context.logger, scanner.pstate(start));
+    }
+    else if (isNameStart(first)) {
+      // std::cerr << "we start with name\n";
+      text.write(scanner.readChar());
+    }
+    else if (first == $backslash) {
+      text.write(escape(true)); // identifierStart: 
+    }
+    else {
+      scanner.error("Expected identifier.",
+        *context.logger, scanner.pstate(start));
+    }
+
+    _identifierBody(text, unit);
+
+    // std::cerr << "rv identifier [" << text.toString() << "]\n";
+
+    return SASS_MEMORY_NEW(StringLiteral,
+      scanner.pstate9(start), text.toString());
+
+  }
+
   // Consumes a chunk of a plain CSS identifier after the name start.
-  std::string Parser::identifierBody()
+  sass::string Parser::identifierBody()
   {
     StringBuffer text;
     _identifierBody(text);
     if (text.empty()) {
-      scanner.error("Expected identifier body.");
+      scanner.error(
+        "Expected identifier body.",
+        *context.logger, scanner.pstate());
     }
     return text.toString();
   }
@@ -204,15 +260,17 @@ namespace Sass {
 
   // Consumes a plain CSS string. This returns the parsed contents of the 
   // string—that is, it doesn't include quotes and its escapes are resolved.
-  std::string Parser::string()
+  sass::string Parser::string()
   {
     // NOTE: this logic is largely duplicated in ScssParser._interpolatedString.
         // Most changes here should be mirrored there.
 
     uint8_t quote = scanner.readChar();
     if (quote != $single_quote && quote != $double_quote) {
-      scanner.error("Expected string."/*,
-        position: quote == null ? scanner.position : scanner.position - 1*/);
+      scanner.error("Expected string.",
+        *context.logger, scanner.pstate());
+        /*,
+        position: quote == null ? scanner.position : scanner.position - 1*/
     }
 
     StringBuffer buffer;
@@ -223,9 +281,11 @@ namespace Sass {
         break;
       }
       else if (next == $nul || isNewline(next)) {
-        std::stringstream strm;
+        sass::sstream strm;
         strm << "Expected " << quote << ".";
-        scanner.error(strm.str());
+        scanner.error(strm.str(),
+          *context.logger,
+          scanner.pstate());
       }
       else if (next == $backslash) {
         if (isNewline(scanner.peekChar(1))) {
@@ -251,7 +311,7 @@ namespace Sass {
   {
     if (!isDigit(scanner.peekChar())) {
       scanner.error("Expected digit.",
-        scanner.pstate());
+        *context.logger, scanner.pstate());
     }
     uint8_t first = scanner.readChar();
     double number = asDecimal(first);
@@ -266,16 +326,16 @@ namespace Sass {
   // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`,
   // or `"}"` and returns their contents as a string. If [allowEmpty]
   // is `false` (the default), this requires at least one token.
-  std::string Parser::declarationValue(bool allowEmpty)
+  sass::string Parser::declarationValue(bool allowEmpty)
   {
     // NOTE: this logic is largely duplicated in
     // StylesheetParser._interpolatedDeclarationValue.
     // Most changes here should be mirrored there.
 
-    std::string url;
+    sass::string url;
     StringBuffer buffer;
     bool wroteNewline = false;
-    std::vector<uint8_t> brackets;
+    sass::vector<uint8_t> brackets;
 
     while (true) {
       uint8_t next = scanner.peekChar();
@@ -312,7 +372,9 @@ namespace Sass {
       case $lf:
       case $cr:
       case $ff:
-        if (!isNewline(scanner.peekChar(-1))) buffer.writeln();
+        if (!isNewline(scanner.peekChar(-1))) {
+          buffer.write("\n");
+        }
         scanner.readChar();
         wroteNewline = true;
         break;
@@ -321,7 +383,7 @@ namespace Sass {
       case $lbrace:
       case $lbracket:
         buffer.write(next);
-        brackets.push_back(opposite(scanner.readChar()));
+        brackets.emplace_back(opposite(scanner.readChar()));
         wroteNewline = false;
         break;
 
@@ -369,14 +431,15 @@ namespace Sass {
   outOfLoop:
 
     if (!brackets.empty()) scanner.expectChar(brackets.back());
-    if (!allowEmpty && buffer.empty()) scanner.error("Expected token.");
+    if (!allowEmpty && buffer.empty()) scanner.error(
+      "Expected token.", *context.logger, scanner.pstate());
     return buffer.toString();
 
   }
   // EO declarationValue
 
   // Consumes a `url()` token if possible, and returns `null` otherwise.
-  std::string Parser::tryUrl()
+  sass::string Parser::tryUrl()
   {
 
     // NOTE: this logic is largely duplicated in ScssParser._tryUrlContents.
@@ -429,19 +492,24 @@ namespace Sass {
   }
   // EO tryUrl
 
+  using StackVariable = sass::string;
+
   // Consumes a Sass variable name, and returns
   // its name without the dollar sign.
-  std::string Parser::variableName()
+  StackVariable Parser::variableName()
   {
     scanner.expectChar($dollar);
+    sass::string name("$" + identifier());
+    // this is also called for parameters
+    // context.varRoot.hoistVariable(name);
     // dart sass removes the dollar
-    return "$" + identifier();
+    return name;
   }
 
   // Consumes an escape sequence and returns the text that defines it.
   // If [identifierStart] is true, this normalizes the escape sequence
   // as though it were at the beginning of an identifier.
-  std::string Parser::escape(bool identifierStart)
+  sass::string Parser::escape(bool identifierStart)
   {
     scanner.expectChar($backslash);
     uint32_t value = 0;
@@ -450,7 +518,8 @@ namespace Sass {
       return "";
     }
     else if (isNewline(first)) {
-      scanner.error("Expected escape sequence.");
+      scanner.error("Expected escape sequence.",
+        *context.logger, scanner.pstate());
       return "";
     }
     else if (isHex(first)) {
@@ -497,7 +566,8 @@ namespace Sass {
       return 0xFFFD;
     }
     else if (isNewline(first)) {
-      scanner.error("Expected escape sequence.");
+      scanner.error("Expected escape sequence.",
+        *context.logger, scanner.pstate());
       return 0;
     }
     else if (isHex(first)) {
@@ -547,12 +617,14 @@ namespace Sass {
   // it's equal to [letter], ignoring ASCII case.
   void Parser::expectCharIgnoreCase(uint32_t letter)
   {
+    SourceSpan span = scanner.pstate();
     uint8_t actual = scanner.readChar();
     if (equalsLetterIgnoreCase(letter, actual)) return;
 
-    std::string msg = "Expected \"";
+    sass::string msg = "Expected \"";
     utf8::append(letter, std::back_inserter(msg));
-    scanner.error(msg + "\".");
+    scanner.error(msg + "\".",
+      *context.logger, span);
 
       // position: actual == null ? scanner.position : scanner.position - 1*/);
   }
@@ -615,7 +687,7 @@ namespace Sass {
   // EO lookingAtIdentifierBody
 
   // Consumes an identifier if its name exactly matches [text].
-  bool Parser::scanIdentifier(std::string text)
+  bool Parser::scanIdentifier(sass::string text)
   {
     if (!lookingAtIdentifier()) return false;
 
@@ -634,17 +706,36 @@ namespace Sass {
   // EO scanIdentifier
 
   // Consumes an identifier and asserts that its name exactly matches [text].
-  void Parser::expectIdentifier(std::string text, std::string name)
+  void Parser::expectIdentifier(sass::string text, sass::string name)
   {
-    ParserState start(scanner.pstate());
+    SourceSpan start(scanner.pstate());
     if (name.empty()) name = "\"" + text + "\"";
     for (size_t i = 0; i < text.size(); i++) {
       uint8_t next = text[i]; // cast needed
       if (scanCharIgnoreCase(next)) continue;
-      scanner.error("Expected " + name + ".", start);
+      scanner.error("Expected " + name + ".",
+        *context.logger, scanner.pstate(start.position));
     }
     if (!lookingAtIdentifierBody()) return;
-    scanner.error("Expected " + name + ".", start);
+    scanner.error("Expected " + name + ".",
+      *context.logger, scanner.pstate(start.position));
+  }
+
+  // Prints a warning to standard error, associated with [span].
+
+  void Parser::warn(sass::string message, SourceSpan pstate) {
+    warning(message, *context.logger, pstate);
+  }
+
+  // Throws an error associated with [span].
+
+  void Parser::error(sass::string message, SourceSpan pstate) {
+    callStackFrame frame(*context.logger, Backtrace(pstate));
+    throw Exception::InvalidSyntax(pstate, *context.logger, message);
+  }
+  void Parser::error(sass::string message, Backtraces& traces, SourceSpan pstate) {
+    callStackFrame frame(traces, Backtrace(pstate));
+    throw Exception::InvalidSyntax(pstate, traces, message);
   }
   // EO expectIdentifier
 

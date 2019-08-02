@@ -12,12 +12,12 @@ namespace Sass {
   using namespace Character;
 
   // Consume multiple media queries delimited by commas.
-  std::vector<CssMediaQueryObj> MediaQueryParser::parse()
+  sass::vector<CssMediaQueryObj> MediaQueryParser::parse()
   {
-    std::vector<CssMediaQueryObj> queries;
+    sass::vector<CssMediaQueryObj> queries;
     do {
       whitespace();
-      queries.push_back(_mediaQuery());
+      queries.emplace_back(_mediaQuery());
     } while (scanner.scanChar($comma));
     scanner.expectDone();
     return queries;
@@ -27,11 +27,11 @@ namespace Sass {
   CssMediaQuery* MediaQueryParser::_mediaQuery()
   {
     // This is somewhat duplicated in StylesheetParser._mediaQuery.
-    std::string type;
-    std::string modifier;
+    sass::string type;
+    sass::string modifier;
     Position start(scanner);
     if (scanner.peekChar() != $lparen) {
-      std::string identifier1 = identifier();
+      sass::string identifier1 = identifier();
       whitespace();
 
       if (!lookingAtIdentifier()) {
@@ -42,7 +42,7 @@ namespace Sass {
         return query;
       }
 
-      std::string identifier2 = identifier();
+      sass::string identifier2 = identifier();
       whitespace();
 
       if (equalsIgnoreCase(identifier2, "and")) {
@@ -71,12 +71,12 @@ namespace Sass {
     // We've consumed either `IDENTIFIER "and"`, `IDENTIFIER IDENTIFIER "and"`,
     // or no text.
 
-    std::vector<std::string> features;
+    sass::vector<sass::string> features;
     do {
       whitespace();
       scanner.expectChar($lparen);
       auto decl = declarationValue();
-      features.push_back("(" + decl + ")");
+      features.emplace_back("(" + decl + ")");
       scanner.expectChar($rparen);
       whitespace();
     } while (scanIdentifier("and"));

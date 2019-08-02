@@ -22,7 +22,7 @@ namespace Sass {
     return almostAnyValue();
   }
 
-  void ScssParser::expectStatementSeparator(std::string name)
+  void ScssParser::expectStatementSeparator(sass::string name)
   {
     whitespaceWithoutComments();
     if (scanner.isDone()) return;
@@ -69,32 +69,32 @@ namespace Sass {
     return false;
   }
 
-  std::vector<StatementObj> ScssParser::children(
+  sass::vector<StatementObj> ScssParser::children(
     Statement* (StylesheetParser::*child)())
   {
     SilentCommentObj comment;
     scanner.expectChar($lbrace);
     whitespaceWithoutComments();
-    std::vector<StatementObj> children;
+    sass::vector<StatementObj> children;
     while (true) {
       switch (scanner.peekChar()) {
       case $dollar:
-        children.push_back(variableDeclaration());
+        children.emplace_back(variableDeclaration());
         break;
 
       case $slash:
         switch (scanner.peekChar(1)) {
         case $slash:
-          // children.push_back(_silentComment());
+          // children.emplace_back(_silentComment());
           comment = _silentComment(); // parse and forget
           whitespaceWithoutComments();
           break;
         case $asterisk:
-          children.push_back(_loudComment());
+          children.emplace_back(_loudComment());
           whitespaceWithoutComments();
           break;
         default:
-          children.push_back((this->*child)());
+          children.emplace_back((this->*child)());
           break;
         }
         break;
@@ -109,38 +109,38 @@ namespace Sass {
         return children;
 
       default:
-        children.push_back((this->*child)());
+        children.emplace_back((this->*child)());
         break;
       }
     }
   }
 
-  std::vector<StatementObj> ScssParser::statements(
+  sass::vector<StatementObj> ScssParser::statements(
     Statement* (StylesheetParser::* statement)())
   {
     whitespaceWithoutComments();
-    std::vector<StatementObj> statements;
+    sass::vector<StatementObj> statements;
     SilentCommentObj lastComment;
     while (!scanner.isDone()) {
       switch (scanner.peekChar()) {
       case $dollar:
-        statements.push_back(variableDeclaration());
+        statements.emplace_back(variableDeclaration());
         break;
 
       case $slash:
         switch (scanner.peekChar(1)) {
         case $slash:
-          // statements.push_back(_silentComment());
+          // statements.emplace_back(_silentComment());
           lastComment = _silentComment();
           whitespaceWithoutComments();
           break;
         case $asterisk:
-          statements.push_back(_loudComment());
+          statements.emplace_back(_loudComment());
           whitespaceWithoutComments();
           break;
         default:
           StatementObj child = (this->*statement)();
-          if (child != nullptr) statements.push_back(child);
+          if (child != nullptr) statements.emplace_back(child);
           break;
         }
         break;
@@ -152,7 +152,7 @@ namespace Sass {
 
       default:
         StatementObj child = (this->*statement)();
-        if (child != nullptr) statements.push_back(child);
+        if (child != nullptr) statements.emplace_back(child);
         break;
       }
     }
@@ -174,7 +174,7 @@ namespace Sass {
 
     if (plainCss()) {
       error("Silent comments aren't allowed in plain CSS.",
-        scanner.pstate(start.offset));
+        *context.logger, scanner.pstate9(start.offset));
     }
 
     return SASS_MEMORY_NEW(SilentComment, scanner.pstate(start.offset),
@@ -183,7 +183,7 @@ namespace Sass {
 
   LoudComment* ScssParser::_loudComment()
   {
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     Position start(scanner);
     scanner.expect("/*");
     buffer.write("/*");

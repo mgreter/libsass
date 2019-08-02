@@ -21,21 +21,18 @@ namespace Sass {
     text.writeCharCode(character);
   }
 
-  Interpolation* InterpolationBuffer::getInterpolation()
+  void InterpolationBuffer::write(const StringLiteral* str)
   {
-    Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, "[pstate]");
-    for (ValueObj item : contents) {
-      // Appends an Expression
-      itpl->append(item);
-    }
-    if (!text.empty()) {
-      // Appends a StringLiteral from the remaining text in the string buffer
-      itpl->append(SASS_MEMORY_NEW(StringLiteral, "[pstate]", text.toString()));
-    }
-    return itpl;
+    text.write(str->text(), str->pstate());
   }
 
-  Interpolation* InterpolationBuffer::getInterpolation(ParserState pstate)
+
+  void StringBuffer::write(const StringLiteral* string)
+  {
+    buffer += string->text();
+  }
+
+  Interpolation* InterpolationBuffer::getInterpolation(const SourceSpan& pstate, bool rtrim)
   {
     InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
     for (ValueObj item : contents) {
@@ -44,7 +41,7 @@ namespace Sass {
     }
     if (!text.empty()) {
       // Appends a StringLiteral from the remaining text in the string buffer
-      itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, text.toString()));
+      itpl->append(SASS_MEMORY_NEW(StringLiteral, pstate, text.toString(rtrim)));
     }
     return itpl.detach();
   }
@@ -54,8 +51,10 @@ namespace Sass {
   {
     // Do nothing if text is empty
     if (text.empty()) return;
+    auto qwe = text.toString();
+    
       // Create a string constant and do not touch the input that we feed it
-    contents.push_back(SASS_MEMORY_NEW(StringLiteral, "[itpl]", text.toString()));
+    contents.emplace_back(SASS_MEMORY_NEW(StringLiteral, pstate, qwe));
     // Clear buffer now
     text.clear();
   }
@@ -68,8 +67,8 @@ namespace Sass {
     auto addStart = elements.begin();
     auto addEnd = elements.end();
 
-    if (auto str = Cast<StringLiteral>(elements[0])) {
-      text.write(str->text());
+    if (StringLiteral* str = Cast<StringLiteral>(elements[0])) {
+      text.write(str);
       addStart += 1;
     }
 
@@ -93,12 +92,16 @@ namespace Sass {
       contents.insert(contents.end(),
         addStart, addEnd);
       if (str) {
-        text.write(str->text());
+        text.write(
+          str->text(),
+          str->pstate());
       }
     }
 
     if (auto str = Cast<StringLiteral>(contents.back())) {
-      text.write(str->text());
+      text.write(
+        str->text(),
+        str->pstate());
       contents.pop_back();
     }
   }

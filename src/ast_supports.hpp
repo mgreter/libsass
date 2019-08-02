@@ -39,13 +39,12 @@ namespace Sass {
   ////////////////////
   // `@supports` rule.
   ////////////////////
-  class SupportsRule : public Has_Block {
-    ADD_PROPERTY(SupportsCondition_Obj, condition)
+  class SupportsRule : public ParentStatement {
+    ADD_PROPERTY(SupportsCondition_Obj, condition);
+    ADD_POINTER(IDXS*, idxs);
   public:
-    SupportsRule(ParserState pstate, SupportsCondition_Obj condition, Block_Obj block = {});
-    bool is_invisible() const override;
-    bool bubbles() override;
-    ATTACH_COPY_OPERATIONS(SupportsRule)
+    SupportsRule(SourceSpan pstate, SupportsCondition_Obj condition, Block_Obj block = {});
+    ATTACH_CLONE_OPERATIONS(SupportsRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -54,9 +53,8 @@ namespace Sass {
   //////////////////////////////////////////////////////
   class SupportsCondition : public Expression {
   public:
-    SupportsCondition(ParserState pstate);
-    virtual bool needs_parens(SupportsCondition_Obj cond) const { return false; }
-    // ATTACH_COPY_OPERATIONS(SupportsCondition)
+    SupportsCondition(SourceSpan pstate);
+    // ATTACH_CLONE_OPERATIONS(SupportsCondition)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -71,9 +69,8 @@ namespace Sass {
     ADD_PROPERTY(SupportsCondition_Obj, right);
     ADD_PROPERTY(Operand, operand);
   public:
-    SupportsOperation(ParserState pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o);
-    virtual bool needs_parens(SupportsCondition_Obj cond) const override;
-    // ATTACH_COPY_OPERATIONS(SupportsOperation)
+    SupportsOperation(SourceSpan pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o);
+    // ATTACH_CLONE_OPERATIONS(SupportsOperation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -84,9 +81,8 @@ namespace Sass {
   private:
     ADD_PROPERTY(SupportsCondition_Obj, condition);
   public:
-    SupportsNegation(ParserState pstate, SupportsCondition_Obj c);
-    virtual bool needs_parens(SupportsCondition_Obj cond) const override;
-    // ATTACH_COPY_OPERATIONS(SupportsNegation)
+    SupportsNegation(SourceSpan pstate, SupportsCondition_Obj c);
+    // ATTACH_CLONE_OPERATIONS(SupportsNegation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -98,9 +94,8 @@ namespace Sass {
     ADD_PROPERTY(Expression_Obj, feature);
     ADD_PROPERTY(Expression_Obj, value);
   public:
-    SupportsDeclaration(ParserState pstate, Expression_Obj f, Expression_Obj v);
-    virtual bool needs_parens(SupportsCondition_Obj cond) const override;
-    // ATTACH_COPY_OPERATIONS(SupportsDeclaration)
+    SupportsDeclaration(SourceSpan pstate, Expression_Obj f, Expression_Obj v);
+    // ATTACH_CLONE_OPERATIONS(SupportsDeclaration)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -111,9 +106,8 @@ namespace Sass {
   private:
     ADD_PROPERTY(Expression_Obj, value);
   public:
-    SupportsInterpolation(ParserState pstate, Expression_Obj v);
-    virtual bool needs_parens(SupportsCondition_Obj cond) const override;
-    // ATTACH_COPY_OPERATIONS(SupportsInterpolation)
+    SupportsInterpolation(SourceSpan pstate, Expression_Obj v);
+    // ATTACH_CLONE_OPERATIONS(SupportsInterpolation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

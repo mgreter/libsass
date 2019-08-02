@@ -3,9 +3,11 @@
 #include "sass.hpp"
 #include "charcode.hpp"
 #include "character.hpp"
+#include "util_string.hpp"
 #include "scanner_string.hpp"
 #include "error_handling.hpp"
 #include "utf8/checked.h"
+#include "logger.hpp"
 
 namespace Sass {
 
@@ -14,23 +16,33 @@ namespace Sass {
   using namespace Character;
 
   StringScanner::StringScanner(
-    const char* content,
-    const char* path,
-    size_t srcid) :
-    startpos(content),
-    endpos(content + strlen(content)),
-    position(content),
-    sourceUrl(path),
-    srcid(srcid),
-    offset(srcid, 0, 0)
+    Logger& logger,
+    SourceDataObj source) :
+    source(source),
+    nextMap(sass::string::npos),
+    startpos(source->begin()),
+    endpos(source->end()),
+    position(source->begin()),
+    sourceUrl(source->getPath()),
+    srcid(source->getSrcId()),
+    offset(),
+    lastRelevant(),
+    logger(logger)
   {
     // consume BOM?
 
-    auto invalid = utf8::find_invalid(content, endpos);
+    // Check if we have source mappings
+    // ToDo: Can we make this API better?
+    if (source->hasMapping(0)) {
+      nextMap = 0;
+    }
+
+    auto invalid = utf8::find_invalid(startpos, endpos);
     if (invalid != endpos) {
-      ParserState pstate(path, content, srcid);
-      Offset start = Offset::init(content, invalid);
-      pstate.line = start.line; pstate.column = start.column;
+      SourceSpan pstate(source);
+      Offset start(startpos, invalid);
+      pstate.position.line = start.line;
+      pstate.position.column = start.column;
       throw Exception::InvalidUnicode(pstate, {});
     }
   }
@@ -41,18 +53,6 @@ namespace Sass {
     return position >= endpos;
   }
 
-  // Called whenever a character is consumed.
-  // Used to update scanner line/column position.
-  void StringScanner::consumedChar(uint8_t character)
-  {
-    if (character == $lf) {
-      offset.line += 1;
-      offset.column = 0;
-    }
-    else if (character < 128) {
-      offset.column += 1;
-    }
-  }
 
   // Consumes a single character and returns its character
   // code. This throws a [FormatException] if the string has
@@ -114,7 +114,7 @@ namespace Sass {
   // describing the position of the failure. [name] is used in this
   // error as the expected name of the character being matched; if
   // it's `null`, the character itself is used instead.
-  void StringScanner::expectChar(uint8_t character, std::string name)
+  void StringScanner::expectChar(uint8_t character, const sass::string& name)
   {
     if (scanChar(character)) return;
 
@@ -126,7 +126,7 @@ namespace Sass {
         _fail("\"\\\"\"");
       }
       else {
-        std::string msg("\"");
+        sass::string msg("\"");
         msg += character;
         _fail(msg + "\"");
       }
@@ -137,7 +137,7 @@ namespace Sass {
 
   // If [pattern] matches at the current position of the string, scans forward
   // until the end of the match. Returns whether or not [pattern] matched.
-  bool StringScanner::scan(std::string pattern)
+  bool StringScanner::scan(const sass::string& pattern)
   {
     const char* cur = position;
     for (uint8_t code : pattern) {
@@ -151,7 +151,7 @@ namespace Sass {
     return true;
   }
 
-  void StringScanner::expect(std::string pattern, std::string name)
+  void StringScanner::expect(const sass::string& pattern, const sass::string& name)
   {
     if (scan(pattern)) return;
 
@@ -179,7 +179,7 @@ namespace Sass {
     exit(1);
   }
 
-  bool StringScanner::matches(std::string pattern)
+  bool StringScanner::matches(const sass::string& pattern)
   {
     const char* cur = position;
     for (char chr : pattern) {
@@ -192,42 +192,50 @@ namespace Sass {
     return true;
   }
 
-  std::string StringScanner::substring(const char* start, const char* end)
+  sass::string StringScanner::substring(const char* start, const char* end)
   {
     if (end == 0) end = position;
-    return std::string(start, end);
-  }
-
-  std::string StringScanner::substring(Position start, const char* end)
-  {
-    if (end == 0) end = position;
-    return substring(start.position, end);
+    return sass::string(start, end);
   }
 
   // Throws a [FormatException] describing that [name] is
-// expected at the current position in the string.
-  void StringScanner::_fail(std::string name) const
+  // expected at the current position in the string.
+  void StringScanner::_fail(
+    const sass::string& name) const
   {
-    std::string msg("expected " + name + ".");
-    throw Exception::InvalidSyntax("[pstate]", {}, msg);
+    callStackFrame frame(logger, pstate());
+    sass::string msg("expected " + name + ".");
+    throw Exception::InvalidSyntax(
+      pstate(), logger, msg);
     std::cerr << "fail " << msg << "\n"; exit(1);
   }
-
-  void StringScanner::error(std::string msg) const
+  /*
+  void StringScanner::error(sass::string msg) const
   {
-    // traces.push_back(Backtrace(pstate));
-    throw Exception::InvalidSyntax("[pstate]", {}, msg);
+    // traces.emplace_back(Backtrace(pstate));
+    throw Exception::InvalidSyntax("[pstateD2]", {}, msg);
     // std::cerr << "error " << name << "\n"; exit(1);
   }
 
-  void StringScanner::error(std::string msg, ParserState pstate) const
+  void StringScanner::error(sass::string msg, SourceSpan pstate) const
   {
-    // traces.push_back(Backtrace(pstate));
+    // traces.emplace_back(Backtrace(pstate));
     throw Exception::InvalidSyntax(pstate, {}, msg);
     // std::cerr << "error " << name << "\n"; exit(1);
   }
+  */
 
-  bool StringScanner::hasLineBreak(const char* before) const
+  void StringScanner::error(
+    const sass::string& message,
+    const Backtraces& traces,
+    const SourceSpan& pstate) const
+  {
+    throw Exception::InvalidSyntax(
+      pstate, traces, message);
+  }
+
+  bool StringScanner::hasLineBreak(
+    const char* before) const
   {
     const char* cur = before;
     while (cur < endpos) {
@@ -236,6 +244,16 @@ namespace Sass {
       cur += 1;
     }
     return false;
+  }
+
+  SourceState StringScanner::srcState() const
+  {
+    return SourceState(source, offset);
+  }
+
+  SourceSpan StringScanner::srcSpan(const Offset& start) const
+  {
+    return SourceSpan(source, start, offset);
   }
 
 }

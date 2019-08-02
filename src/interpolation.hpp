@@ -2,22 +2,17 @@
 #define SASS_INTERPOLATION_H
 
 #include "ast_fwd_decl.hpp"
+#include "scanner_string.hpp"
 #include "util_string.hpp"
 #include "position.hpp"
 
 namespace Sass {
 
-  struct SourceSpan {
-    char* start;
-    char* end;
-  };
-
-
   class StringBuffer {
 
   private:
 
-    std::string buffer;
+    sass::string buffer;
 
   public:
     StringBuffer() :
@@ -38,20 +33,38 @@ namespace Sass {
       buffer.push_back(character);
     }
 
-    void write(const std::string& text)
+    void write(const sass::string& text)
     {
-      buffer += text;
+      buffer.append(text);
     }
 
-    void writeln(const std::string& text = "")
+    void write(const sass::string& text, const SourceSpan& pstate)
     {
-      buffer += text;
-      buffer += "\n";
+      buffer.append(text);
     }
 
-    const std::string& toString() const
+    void write(sass::string&& text)
     {
-      return buffer;
+      buffer.append(std::move(text));
+    }
+
+    void write(sass::string&& text, const SourceSpan& pstate)
+    {
+      buffer.append(std::move(text));
+    }
+
+    void write(const StringLiteral* string);
+
+    // Once you call this function, buffer is emptied
+    const sass::string& toString(bool rtrim = false)
+    {
+      if (rtrim) {
+        Util::ascii_str_rtrim(buffer);
+        return buffer;
+      }
+      else {
+        return buffer;
+      }
     }
 
     bool empty() const {
@@ -61,11 +74,6 @@ namespace Sass {
     void clear() {
       buffer.clear();
     }
-    /*
-    StringLiteral* toString() {
-      return nullptr;
-    }
-    */
 
   };
 
@@ -73,18 +81,23 @@ namespace Sass {
 
   private:
 
+    SourceSpan pstate;
+
     StringBuffer text;
 
-    std::vector<ValueObj> contents;
+    sass::vector<ExpressionObj> contents;
 
   public:
-    InterpolationBuffer() :
-      text()
+
+    InterpolationBuffer(const SourceSpan& pstate) :
+      pstate(pstate), text()
     {}
 
+    InterpolationBuffer(const StringScanner& scanner) :
+      pstate(scanner.pstate()), text()
+    {}
 
-    Interpolation* getInterpolation();
-    Interpolation* getInterpolation(ParserState pstate);
+    Interpolation* getInterpolation(const SourceSpan& pstate, bool rtrim = false);
 
     bool empty() const {
       return contents.empty() && text.empty();
@@ -113,36 +126,49 @@ namespace Sass {
 
     void write(const char str[])
     {
-      text.write(std::string(str));
+      text.write(sass::string(str));
     }
 
-    void write(const std::string& str)
+    void write(const sass::string& str)
     {
       text.write(str);
     }
 
-    void writeln(const std::string& str = "")
+    void write(const sass::string& str, SourceSpan pstate)
     {
-      text.writeln(str);
+      text.write(str, pstate);
     }
 
-    void write(const ValueObj& expression) {
+    void write(sass::string&& str)
+    {
+      text.write(std::move(str));
+    }
+
+    void write(sass::string&& str, SourceSpan pstate)
+    {
+      text.write(std::move(str), pstate);
+    }
+
+    void write(const StringLiteral* str);
+
+    void write(const ExpressionObj& expression) {
       flushText();
-      contents.push_back(expression);
+      contents.emplace_back(expression);
     }
 
-    void add(const ValueObj& expression) {
+    void add(const ExpressionObj& expression) {
       flushText();
-      contents.push_back(expression);
+      contents.emplace_back(expression);
     }
 
-    std::string trailingString() {
+    sass::string trailingString() {
       return text.toString();
     }
 
-    bool trailingStringEndsWith(std::string cmp) {
-      std::string tail(text.toString());
+    bool trailingStringEndsWith(const sass::string& cmp) {
+      sass::string tail(text.toString());
       Util::ascii_str_rtrim(tail);
+      // could optimize the check to account trim
       return Util::ascii_str_ends_with(tail, cmp);
     }
 

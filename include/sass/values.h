@@ -41,7 +41,7 @@ enum Sass_OP {
   AND, OR,                   // logical connectives
   EQ, NEQ, GT, GTE, LT, LTE, // arithmetic relations
   ADD, SUB, MUL, DIV, MOD,   // arithmetic functions
-  IESEQ, NUM_OPS             // so we know how big to make the op table
+  IESEQ                      // special IE single equal
 };
 
 // Creator functions for all value types

@@ -285,7 +285,7 @@ extern "C" {
   {
     Value_Obj val = sass_value_to_ast_node(v);
     Sass_Inspect_Options options(compressed ? COMPRESSED : NESTED, precision);
-    std::string str(val->to_string(options));
+    sass::string str(val->to_string(options));
     return sass_make_qstring(str.c_str());
   }
 
@@ -316,7 +316,7 @@ extern "C" {
       if (sass_value_is_number(a) && sass_value_is_number(b)) {
         const Number* l_n = Cast<Number>(lhs);
         const Number* r_n = Cast<Number>(rhs);
-        rv = Operators::op_numbers(op, *l_n, *r_n, options, l_n->pstate());
+        rv = Operators::op_numbers(op, *l_n, *r_n, l_n->pstate());
       }
       else if (sass_value_is_number(a) && sass_value_is_color(a)) {
         const Number* l_n = Cast<Number>(lhs);
@@ -337,7 +337,7 @@ extern "C" {
         // All color maths will be deprecated anyway
         Color_RGBA_Obj l_c = Cast<Color>(lhs)->toRGBA();
         Color_RGBA_Obj r_c = Cast<Color>(rhs)->toRGBA();
-        rv = Operators::op_colors(op, *l_c, *r_c, options, l_c->pstate());
+        rv = Operators::op_colors(op, *l_c, *r_c, l_c->pstate());
       }
       else /* convert other stuff to string and apply operation */ {
         Value* l_v = Cast<Value>(lhs);
@@ -353,10 +353,10 @@ extern "C" {
     }
 
     // simply pass the error message back to the caller for now
-    catch (Exception::InvalidSass& e) { return sass_make_error(e.what()); }
+    // catch (Exception::InvalidSass& e) { return sass_make_error(e.what()); }
     catch (std::bad_alloc&) { return sass_make_error("memory exhausted"); }
     catch (std::exception& e) { return sass_make_error(e.what()); }
-    catch (std::string& e) { return sass_make_error(e.c_str()); }
+    catch (sass::string& e) { return sass_make_error(e.c_str()); }
     catch (const char* e) { return sass_make_error(e); }
     catch (...) { return sass_make_error("unknown"); }
   }

@@ -27,8 +27,8 @@ namespace Sass {
 
   public:
 
-    StylesheetParser(Context& context, const char* content, const char* path, size_t srcid) :
-      BaseParser(context, content, path, srcid),
+    StylesheetParser(Context& context, SourceDataObj source) :
+      BaseParser(context, source),
       _recursion(0),
       _isUseAllowed(true),
       _inMixin(false),
@@ -93,7 +93,7 @@ namespace Sass {
     // the end of a list of statements.
     // If the [name] of the parent rule is passed, it's used for error reporting.
     // This consumes whitespace, but nothing else, including comments.
-    virtual void expectStatementSeparator(std::string name = "") = 0;
+    virtual void expectStatementSeparator(sass::string name = "") = 0;
 
     // Whether the scanner is positioned at the end of a statement.
     virtual bool atEndOfStatement() = 0;
@@ -108,9 +108,9 @@ namespace Sass {
     // from before the corresponding `@if` was parsed.
     virtual bool scanElse(size_t ifIndentation) = 0;
 
-    virtual std::vector<StatementObj> children(Statement* (StylesheetParser::* child)()) = 0;
+    virtual sass::vector<StatementObj> children(Statement* (StylesheetParser::* child)()) = 0;
 
-    virtual std::vector<StatementObj> statements(Statement* (StylesheetParser::* statement)()) = 0;
+    virtual sass::vector<StatementObj> statements(Statement* (StylesheetParser::* statement)()) = 0;
 
 
     /// A map from all variable names that are assigned with `!global` in the
@@ -122,20 +122,12 @@ namespace Sass {
     /// the same set of variable names no matter how it's evaluated.
     // final _globalVariables = normalizedMap<VariableDeclaration>();
 
-    std::vector<StatementObj> parse();
-
-    /*
-
-    ArgumentDeclaration* parseArgumentDeclaration();
-
-    Expression* parseExpression();
-
-*/
+    sass::vector<StatementObj> parse();
 
     // VariableDeclaration
     virtual Statement* variableDeclaration();
 
-    // std::pair<std::string, ArgumentDeclaration*> parseSignature();
+    // std::pair<sass::string, ArgumentDeclaration*> parseSignature();
 
     Statement* _statement(bool root = false);
 
@@ -163,16 +155,16 @@ namespace Sass {
 
     Statement* _functionAtRule();
 
-    std::string _plainAtRuleName();
+    sass::string _plainAtRuleName();
 
-    At_Root_Block* _atRootRule(Position start); // AtRootRule
+    AtRootRule* _atRootRule(Position start); // CssAtRootRule
 
     // Consumes a query expression of the form `(foo: bar)`.
-    At_Root_Query* _atRootQuery();
+    Interpolation* _atRootQuery();
 
-    Content* _contentRule(Position start); // ContentRule
+    ContentRule* _contentRule(Position start); // ContentRule
 
-    Debug* _debugRule(Position start); // DebugRule
+    DebugRule* _debugRule(Position start); // DebugRule
 
     uint8_t exclusive;
 
@@ -180,7 +172,7 @@ namespace Sass {
 
     Each* _eachRule(Position start, Statement* (StylesheetParser::* child)()); // EachRule
     
-    Error* _errorRule(Position start); // ErrorRule
+    ErrorRule* _errorRule(Position start); // ErrorRule
 
     ExtendRule* _extendRule(Position start);
 
@@ -194,21 +186,17 @@ namespace Sass {
 
     virtual ImportBase* importArgument();
 
-    // std::string parseImportUrl(std::string url);
+    // sass::string parseImportUrl(sass::string url);
 
-    bool _isPlainImportUrl(const std::string& url) const;
+    bool _isPlainImportUrl(const sass::string& url) const;
 
     std::pair<SupportsCondition_Obj, InterpolationObj> tryImportQueries();
-
-    Mixin_Call* _includeRule(Position start); // IncludeRule
 
     IncludeRule* _includeRule2(Position start); // IncludeRule
 
     MediaRule* mediaRule(Position start);
 
     MixinRule* _mixinRule2(Position start); // MixinRule
-
-    Definition* _mixinRule(Position start); // MixinRule
 
     AtRule* mozDocumentRule(Position start, Interpolation* name);
 
@@ -219,21 +207,15 @@ namespace Sass {
 
     // UseRule _useRule(LineScannerState start);
 
-    Warning* _warnRule(Position start); // WarnRule
+    WarnRule* _warnRule(Position start); // WarnRule
 
-    While* _whileRule(Position start, Statement* (StylesheetParser::* child)()); // WhileRule
+    WhileRule* _whileRule(Position start, Statement* (StylesheetParser::* child)()); // WhileRule
 
     AtRule* unknownAtRule(Position start, Interpolation* name);
 
     Statement* _disallowedAtRule(Position start);
 
-    Parameters* _argumentDeclaration(); // ArgumentDeclaration
-
     ArgumentDeclaration* _argumentDeclaration2(); // ArgumentDeclaration
-
-    Parameters* parseArgumentDeclaration() {
-      return _argumentDeclaration();
-    }
 
     ArgumentDeclaration* parseArgumentDeclaration2() {
       return _argumentDeclaration2();
@@ -256,7 +238,7 @@ namespace Sass {
 
     Expression* _hashExpression();
 
-    Color* _hexColorContents(Position start); // ColorExpression
+    Color* _hexColorContents(LineScannerState2 start); // ColorExpression
 
     bool _isHexColor(Interpolation* interpolation) const;
 
@@ -270,8 +252,6 @@ namespace Sass {
 
     Unary_Expression* _unaryOperation();
 
-    Unary_Expression::Type _unaryOperatorFor(uint8_t character);
-
     NumberObj _number();
 
     double _tryDecimal(bool allowTrailingDot = false);
@@ -280,7 +260,7 @@ namespace Sass {
 
     StringExpression* _unicodeRange();
 
-    Variable* _variable();
+    Variable* _variable(bool hoist = true);
 
     Parent_Reference* _selector(); // SelectorExpression
 
@@ -288,13 +268,13 @@ namespace Sass {
 
     virtual Expression* identifierLike();
 
-    StringExpression* trySpecialFunction(std::string name, LineScannerState2 start);
+    StringExpression* trySpecialFunction(sass::string name, LineScannerState2 start);
 
     bool _tryMinMaxContents(InterpolationBuffer& buffer, bool allowComma = true);
 
-    bool _tryMinMaxFunction(InterpolationBuffer& buffer, std::string name = "");
+    bool _tryMinMaxFunction(InterpolationBuffer& buffer, sass::string name = "");
 
-    Interpolation* _tryUrlContents(LineScannerState2 start, std::string name = "");
+    Interpolation* _tryUrlContents(LineScannerState2 start, sass::string name = "");
 
     Expression* dynamicUrl();
 
@@ -337,7 +317,7 @@ namespace Sass {
     bool _lookingAtExpression() const;
 
     // Like [identifier], but rejects identifiers that begin with `_` or `-`.
-    std::string _publicIdentifier();
+    sass::string _publicIdentifier();
     StringLiteral* _publicIdentifier2();
 
 
@@ -346,10 +326,14 @@ namespace Sass {
     template <typename T, typename ...Args>
     T* _withChildren(Statement* (StylesheetParser::*child)(), Args... args)
     {
-      std::vector<StatementObj> elements = children(child);
-      T* result = SASS_MEMORY_NEW(T, "[pstate]", args...);
+      Position start(scanner);
+      // Too many copies here!
+      sass::vector<StatementObj>
+        elements(children(child));
+      T* result = SASS_MEMORY_NEW(T,
+        scanner.pstate9(start), args...);
       whitespaceWithoutComments();
-      result->concat(elements);
+      result->concat(std::move(elements));
       return result;
     }
 

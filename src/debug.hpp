@@ -2,6 +2,7 @@
 #define SASS_DEBUG_H
 
 #include <stdint.h>
+#include "allocator.hpp"
 
 #ifndef UINT32_MAX
   #define UINT32_MAX 0xffffffffU

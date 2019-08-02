@@ -12,13 +12,11 @@ namespace Sass {
 
     MediaQueryParser(
       Context& context,
-      const char* contents,
-      const char* path,
-      size_t srcid) :
-      Parser(context, contents, path, srcid)
+      SourceDataObj source) :
+      Parser(context, source)
     {}
 
-    std::vector<CssMediaQueryObj> parse();
+    sass::vector<CssMediaQueryObj> parse();
 
   private:
 

@@ -15,7 +15,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Selector::Selector(ParserState pstate)
+  Selector::Selector(const SourceSpan& pstate)
   : AST_Node(pstate),
     hash_(0)
   {}
@@ -34,12 +34,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SimpleSelector::SimpleSelector(ParserState pstate, std::string n)
+  SimpleSelector::SimpleSelector(const SourceSpan& pstate, const sass::string& n)
   : Selector(pstate), ns_(""), name_(n), has_ns_(false)
   {
     size_t pos = n.find('|');
     // found some namespace
-    if (pos != std::string::npos) {
+    if (pos != sass::string::npos) {
       has_ns_ = true;
       ns_ = n.substr(0, pos);
       name_ = n.substr(pos + 1);
@@ -52,7 +52,7 @@ namespace Sass {
     has_ns_(ptr->has_ns_)
   { }
 
-  std::string SimpleSelector::ns_name() const
+  sass::string SimpleSelector::ns_name() const
   {
     if (!has_ns_) return name_;
     else return ns_ + "|" + name_;
@@ -118,7 +118,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  PlaceholderSelector::PlaceholderSelector(ParserState pstate, std::string n)
+  PlaceholderSelector::PlaceholderSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { simple_type(PLACEHOLDER_SEL); }
   PlaceholderSelector::PlaceholderSelector(const PlaceholderSelector* ptr)
@@ -144,7 +144,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  TypeSelector::TypeSelector(ParserState pstate, std::string n)
+  TypeSelector::TypeSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { simple_type(TYPE_SEL); }
   TypeSelector::TypeSelector(const TypeSelector* ptr)
@@ -160,7 +160,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ClassSelector::ClassSelector(ParserState pstate, std::string n)
+  ClassSelector::ClassSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { simple_type(CLASS_SEL); }
   ClassSelector::ClassSelector(const ClassSelector* ptr)
@@ -175,7 +175,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  IDSelector::IDSelector(ParserState pstate, std::string n)
+  IDSelector::IDSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { simple_type(ID_SEL); }
   IDSelector::IDSelector(const IDSelector* ptr)
@@ -190,7 +190,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  AttributeSelector::AttributeSelector(ParserState pstate, std::string n, std::string op, std::string v, char o)
+  AttributeSelector::AttributeSelector(const SourceSpan& pstate, const sass::string& n, const sass::string& op, const sass::string& v, char o)
   : SimpleSelector(pstate, n), op_(op), value_(v), modifier_(o), isIdentifier_(false)
   { simple_type(ATTRIBUTE_SEL); }
   AttributeSelector::AttributeSelector(const AttributeSelector* ptr)
@@ -209,7 +209,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  PseudoSelector::PseudoSelector(ParserState pstate, std::string name, bool element)
+  PseudoSelector::PseudoSelector(const SourceSpan& pstate, const sass::string& name, bool element)
   : SimpleSelector(pstate, name),
     normalized_(Util::unvendor(name)),
     argument_(),
@@ -276,12 +276,6 @@ namespace Sass {
       (selector() && selector()->empty());
   }
 
-  void PseudoSelector::cloneChildren()
-  {
-    if (selector().isNull()) selector({});
-    else selector(SASS_MEMORY_CLONE(selector()));
-  }
-
   bool PseudoSelector::has_real_parent_ref() const {
     if (!selector()) return false;
     return selector()->has_real_parent_ref();
@@ -290,11 +284,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SelectorList::SelectorList(ParserState pstate, size_t s)
+  SelectorList::SelectorList(const SourceSpan& pstate, size_t s)
   : Selector(pstate),
     Vectorized<ComplexSelectorObj>(s)
   { }
-  SelectorList::SelectorList(ParserState pstate, const std::vector<ComplexSelectorObj>& complexes)
+  SelectorList::SelectorList(const SourceSpan& pstate, const sass::vector<ComplexSelectorObj>& complexes)
     : Selector(pstate),
     Vectorized<ComplexSelectorObj>(complexes)
   { }
@@ -342,7 +336,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ComplexSelector::ComplexSelector(ParserState pstate)
+  ComplexSelector::ComplexSelector(const SourceSpan& pstate)
   : Selector(pstate),
     Vectorized<SelectorComponentObj>(),
     chroots_(false),
@@ -420,7 +414,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SelectorComponent::SelectorComponent(ParserState pstate, bool postLineBreak)
+  SelectorComponent::SelectorComponent(const SourceSpan& pstate, bool postLineBreak)
   : Selector(pstate),
     hasPostLineBreak_(postLineBreak)
   {
@@ -451,7 +445,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SelectorCombinator::SelectorCombinator(ParserState pstate, SelectorCombinator::Combinator combinator, bool postLineBreak)
+  SelectorCombinator::SelectorCombinator(const SourceSpan& pstate, SelectorCombinator::Combinator combinator, bool postLineBreak)
     : SelectorComponent(pstate, postLineBreak),
     combinator_(combinator)
   {
@@ -465,7 +459,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  CompoundSelector::CompoundSelector(ParserState pstate, bool postLineBreak)
+  CompoundSelector::CompoundSelector(const SourceSpan& pstate, bool postLineBreak)
     : SelectorComponent(pstate, postLineBreak),
       Vectorized<SimpleSelectorObj>(),
       hasRealParent_(false),
@@ -533,7 +527,7 @@ namespace Sass {
     return true;
   }
 
-  bool CompoundSelector::isSuperselectorOf(const CompoundSelector* sub, std::string wrapped) const
+  bool CompoundSelector::isSuperselectorOf(const CompoundSelector* sub, sass::string wrapped) const
   {
     CompoundSelector* rhs2 = const_cast<CompoundSelector*>(sub);
     CompoundSelector* lhs2 = const_cast<CompoundSelector*>(this);
@@ -543,11 +537,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  MediaRule::MediaRule(ParserState pstate, InterpolationObj list, Block_Obj block) :
-    Has_Block(pstate, block), query_(list)
-  {
-    statement_type(MEDIA);
-  }
+  MediaRule::MediaRule(const SourceSpan& pstate, InterpolationObj list, Block_Obj block) :
+    ParentStatement(pstate, block), query_(list)
+  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -616,11 +608,11 @@ namespace Sass {
   // ToDo: this might be done easier with new selector format
   /////////////////////////////////////////////////////////////////////////
 
-  std::vector<ComplexSelectorObj>
+  sass::vector<ComplexSelectorObj>
     CompoundSelector::resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent)
   {
 
-    std::vector<ComplexSelectorObj> rv;
+    sass::vector<ComplexSelectorObj> rv;
 
     for (SimpleSelectorObj simple : elements()) {
       if (PseudoSelector * pseudo = Cast<PseudoSelector>(simple)) {
@@ -675,7 +667,7 @@ namespace Sass {
           // the combination of parent plus ourself
           complex->elements().back() = tail;
           // Append to results
-          rv.push_back(complex);
+          rv.emplace_back(complex);
         }
         // SelectorCombinator
         else {
@@ -683,7 +675,7 @@ namespace Sass {
           // where the parent selector is followed by something
           if (length() > 0) { throw Exception::InvalidParent(parent, traces, this); }
           // Just append ourself to results
-          rv.push_back(wrapInComplex());
+          rv.emplace_back(wrapInComplex());
         }
       }
 
@@ -691,38 +683,40 @@ namespace Sass {
     // No parent
     else {
       // Wrap and append compound selector
-      rv.push_back(wrapInComplex());
+      rv.emplace_back(wrapInComplex());
     }
 
-    return rv;
+    return std::move(rv);
 
   }
   // EO CompoundSelector::resolveParentSelectors
 
-  std::vector<ComplexSelectorObj> ComplexSelector::resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent)
+  sass::vector<ComplexSelectorObj> ComplexSelector::resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent)
   {
 
     if (has_real_parent_ref() && !parent) {
-      throw Exception::TopLevelParent(traces, pstate());
+      SourceSpan span(pstate());
+      callStackFrame frame(traces, Backtrace(span));
+      throw Exception::TopLevelParent(traces, span);
     }
 
-    std::vector<std::vector<ComplexSelectorObj>> selectors;
+    sass::vector<sass::vector<ComplexSelectorObj>> selectors;
 
     // Check if selector should implicit get a parent
     if (!chroots() && !has_real_parent_ref()) {
       // Check if we should never connect to parent
       if (!implicit_parent) { return { this }; }
       // Otherwise add parent selectors at the begining
-      if (parent) { selectors.push_back(parent->elements()); }
+      if (parent) { selectors.emplace_back(parent->elements()); }
     }
 
     // Loop all items from the complex selector
     for (SelectorComponent* component : this->elements()) {
       if (CompoundSelector* compound = component->getCompound()) {
-        std::vector<ComplexSelectorObj> complexes =
+        sass::vector<ComplexSelectorObj> complexes =
           compound->resolveParentSelectors(parent, traces, implicit_parent);
         // for (auto sel : complexes) { sel->hasPreLineFeed(hasPreLineFeed()); }
-        if (complexes.size() > 0) selectors.push_back(complexes);
+        if (complexes.size() > 0) selectors.emplace_back(complexes);
       }
       else {
         // component->hasPreLineFeed(hasPreLineFeed());
@@ -734,8 +728,8 @@ namespace Sass {
     selectors = permutateAlt(selectors);
 
     // Create final selectors from path permutations
-    std::vector<ComplexSelectorObj> resolved;
-    for (std::vector<ComplexSelectorObj>& items : selectors) {
+    sass::vector<ComplexSelectorObj> resolved;
+    for (sass::vector<ComplexSelectorObj>& items : selectors) {
       if (items.empty()) continue;
       ComplexSelectorObj first = SASS_MEMORY_COPY(items[0]);
       if (hasPreLineFeed() && !has_real_parent_ref()) {
@@ -752,18 +746,18 @@ namespace Sass {
         }
         first->concat(items[i]);
       }
-      resolved.push_back(first);
+      resolved.emplace_back(first);
     }
 
-    return resolved;
+    return std::move(resolved);
   }
   // EO ComplexSelector::resolveParentSelectors
 
   SelectorList* SelectorList::resolveParentSelectors(SelectorList* parent, Backtraces& traces, bool implicit_parent)
   {
-    std::vector<std::vector<ComplexSelectorObj>> lists;
+    sass::vector<sass::vector<ComplexSelectorObj>> lists;
     for (ComplexSelector* sel : elements()) {
-      lists.push_back(sel->resolveParentSelectors
+      lists.emplace_back(sel->resolveParentSelectors
         (parent, traces, implicit_parent));
     }
     return SASS_MEMORY_NEW(SelectorList, pstate(),
@@ -776,15 +770,15 @@ namespace Sass {
 
   // ToDo: IMO only containers should need copy operations
   // All other selectors should be quite static after eval
-  IMPLEMENT_AST_OPERATORS(PlaceholderSelector);
-  IMPLEMENT_AST_OPERATORS(AttributeSelector);
-  IMPLEMENT_AST_OPERATORS(TypeSelector);
-  IMPLEMENT_AST_OPERATORS(ClassSelector);
-  IMPLEMENT_AST_OPERATORS(IDSelector);
-  IMPLEMENT_AST_OPERATORS(PseudoSelector);
-  // IMPLEMENT_AST_OPERATORS(SelectorCombinator);
-  IMPLEMENT_AST_OPERATORS(CompoundSelector);
-  IMPLEMENT_AST_OPERATORS(ComplexSelector);
-  IMPLEMENT_AST_OPERATORS(SelectorList);
+  IMPLEMENT_COPY_OPERATORS(PlaceholderSelector);
+  IMPLEMENT_COPY_OPERATORS(AttributeSelector);
+  IMPLEMENT_COPY_OPERATORS(TypeSelector);
+  IMPLEMENT_COPY_OPERATORS(ClassSelector);
+  IMPLEMENT_COPY_OPERATORS(IDSelector);
+  IMPLEMENT_COPY_OPERATORS(PseudoSelector);
+  // IMPLEMENT_COPY_OPERATORS(SelectorCombinator);
+  IMPLEMENT_COPY_OPERATORS(CompoundSelector);
+  IMPLEMENT_COPY_OPERATORS(ComplexSelector);
+  IMPLEMENT_COPY_OPERATORS(SelectorList);
 
 }

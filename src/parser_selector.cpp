@@ -20,11 +20,13 @@ namespace Sass {
   {
     // std::cerr << "parsing [" << scanner.startpos << "]\n";
     // return wrapSpanFormatException(() {
-    Position start = scanner.offset;
+    // Offset start = scanner.offset;
     auto selector = _selectorList();
       if (!scanner.isDone()) {
+        callStackFrame frame(*context.logger,
+          Backtrace(scanner.pstate()));
         scanner.error("expected selector.",
-          scanner.pstate(start));
+          *context.logger, scanner.pstate());
       }
       // debug_ast(selector);
       return selector;
@@ -35,7 +37,12 @@ namespace Sass {
   {
     // return wrapSpanFormatException(() {
       auto compound = _compoundSelector();
-      if (!scanner.isDone()) scanner.error("expected selector.");
+      if (!scanner.isDone()) {
+        callStackFrame frame(*context.logger,
+          Backtrace(scanner.pstate()));
+        scanner.error("expected selector.",
+          *context.logger, scanner.pstate());
+      }
       return compound;
     // });
   }
@@ -44,16 +51,18 @@ namespace Sass {
   {
     // return wrapSpanFormatException(() {
     auto simple = _simpleSelector(_allowParent);
-    if (!scanner.isDone()) scanner.error("unexpected token.");
+    if (!scanner.isDone()) scanner.error("unexpected token.",
+      *context.logger, scanner.pstate());
     return simple;
     // });
   }
 
   SelectorListObj SelectorParser::_selectorList()
   {
+    Position start(scanner);
     const char* previousLine = scanner.position;
-    SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, "[pstate]");
-    slist->append(_complexSelector());
+    sass::vector<ComplexSelectorObj> items;
+    items.emplace_back(_complexSelector());
 
     whitespace();
     while (scanner.scanChar($comma)) {
@@ -65,10 +74,11 @@ namespace Sass {
       bool lineBreak = scanner.hasLineBreak(previousLine); // ToDo
       // var lineBreak = scanner.line != previousLine;
       // if (lineBreak) previousLine = scanner.line;
-      slist->append(_complexSelector(lineBreak));
+      items.emplace_back(_complexSelector(lineBreak));
     }
 
-    return slist;
+    return SASS_MEMORY_NEW(SelectorList,
+      scanner.pstate9(start), items);
   }
 
   ComplexSelectorObj SelectorParser::_complexSelector(bool lineBreak)
@@ -116,8 +126,11 @@ namespace Sass {
       case $pipe:
         complex->append(_compoundSelector());
         if (scanner.peekChar() == $ampersand) {
+          callStackFrame frame(*context.logger,
+            Backtrace(scanner.pstate()));
           scanner.error(
-            "\"&\" may only used at the beginning of a compound selector.");
+            "\"&\" may only used at the beginning of a compound selector.",
+            *context.logger, scanner.pstate());
         }
         break;
 
@@ -125,8 +138,11 @@ namespace Sass {
         if (!lookingAtIdentifier()) goto endOfLoop;
         complex->append(_compoundSelector());
         if (scanner.peekChar() == $ampersand) {
+          callStackFrame frame(*context.logger,
+            Backtrace(scanner.pstate()));
           scanner.error(
-            "\"&\" may only used at the beginning of a compound selector.");
+            "\"&\" may only used at the beginning of a compound selector.",
+            *context.logger, scanner.pstate());
         }
         break;
       }
@@ -134,7 +150,12 @@ namespace Sass {
 
   endOfLoop:
 
-    if (complex->empty()) scanner.error("expected selector.");
+    if (complex->empty()) {
+      callStackFrame frame(*context.logger,
+        Backtrace(scanner.pstate()));
+      scanner.error("expected selector.",
+        *context.logger, scanner.pstate());
+    }
     complex->pstate(scanner.pstate(start));
     return complex;
 
@@ -155,13 +176,13 @@ namespace Sass {
       if (!_allowParent) {
         error(
           "Parent selectors aren't allowed here.",
-          scanner.pstate(start)); // ToDo: this fails spec?
+          *context.logger, scanner.pstate(start)); // ToDo: this fails spec?
       }
 
       compound->hasRealParent(true);
       if (lookingAtIdentifierBody()) {
         Position before(scanner);
-        std::string body(identifierBody());
+        sass::string body(identifierBody());
         SimpleSelectorObj simple = SASS_MEMORY_NEW(TypeSelector,
           scanner.pstate(before), body);
         if (!simple.isNull()) compound->append(simple);
@@ -202,7 +223,7 @@ namespace Sass {
       auto selector = _placeholderSelector();
       if (!_allowPlaceholder) {
         error("Placeholder selectors aren't allowed here.",
-          scanner.pstate(start));
+          *context.logger, scanner.pstate(start));
       }
       return selector;
     }
@@ -215,7 +236,7 @@ namespace Sass {
       if (!allowParent) {
         error(
           "Parent selectors aren't allowed here.",
-          scanner.pstate(start));
+          *context.logger, scanner.pstate(start));
       }
       return {};
     }
@@ -232,7 +253,7 @@ namespace Sass {
 
     whitespace();
     AttributeSelectorObj attr = SASS_MEMORY_NEW(
-      AttributeSelector, "[pstate]", _attributeName(), "", {});
+      AttributeSelector, SourceSpan::fake("[pstateR2]"), _attributeName(), "", "");
     whitespace();
 
     if (scanner.scanChar($rbracket)) {
@@ -250,7 +271,7 @@ namespace Sass {
       attr->value(identifier());
     }
     else {
-      std::string unquoted(string());
+      sass::string unquoted(string());
       attr->isIdentifier(isIdentifier(unquoted));
       attr->value(unquoted);
     }
@@ -266,18 +287,18 @@ namespace Sass {
 
   }
 
-  std::string SelectorParser::_attributeName()
+  sass::string SelectorParser::_attributeName()
   {
 
     if (scanner.scanChar($asterisk)) {
       scanner.expectChar($pipe);
-      std::string name("*|");
+      sass::string name("*|");
       name += identifier();
       return name;
       // return QualifiedName(identifier(), namespace : "*");
     }
 
-    std::string nameOrNamespace = identifier();
+    sass::string nameOrNamespace = identifier();
     if (scanner.peekChar() != $pipe || scanner.peekChar(1) == $equal) {
       return nameOrNamespace;
     }
@@ -287,7 +308,7 @@ namespace Sass {
 
   }
 
-  std::string SelectorParser::_attributeOperator()
+  sass::string SelectorParser::_attributeOperator()
   {
     Position start(scanner);
     switch (scanner.readChar()) {
@@ -316,6 +337,7 @@ namespace Sass {
 
     default:
       scanner.error("Expected \"]\".",
+        *context.logger,
         scanner.pstate(start));
       throw "Unreachable";
     }
@@ -325,7 +347,7 @@ namespace Sass {
   {
     Position start(scanner);
     scanner.expectChar($dot);
-    std::string name = identifier();
+    sass::string name = identifier();
     return SASS_MEMORY_NEW(ClassSelector,
       scanner.pstate(start), "." + name);
   }
@@ -335,7 +357,7 @@ namespace Sass {
   {
     Position start(scanner);
     scanner.expectChar($hash);
-    std::string name = identifier();
+    sass::string name = identifier();
     return SASS_MEMORY_NEW(IDSelector,
       scanner.pstate(start), "#" + name);
   }
@@ -345,7 +367,7 @@ namespace Sass {
   {
     Position start(scanner);
     scanner.expectChar($percent);
-    std::string name = identifier();
+    sass::string name = identifier();
     return SASS_MEMORY_NEW(PlaceholderSelector,
       scanner.pstate(start), "%" + name);
   }
@@ -356,7 +378,7 @@ namespace Sass {
     Position start(scanner);
     scanner.expectChar($colon);
     bool element = scanner.scanChar($colon);
-    std::string name = identifier();
+    sass::string name = identifier();
 
     if (!scanner.scanChar($lparen)) {
       return SASS_MEMORY_NEW(PseudoSelector,
@@ -364,10 +386,10 @@ namespace Sass {
     }
     whitespace();
 
-    std::string unvendored(name);
+    sass::string unvendored(name);
     unvendored = Util::unvendor(unvendored);
 
-    std::string argument;
+    sass::string argument;
     // Position beforeArgument(scanner);
     SelectorListObj selector = SASS_MEMORY_NEW(SelectorList, scanner.pstate());
     if (element) {
@@ -408,14 +430,12 @@ namespace Sass {
       scanner.pstate(start), name, element != 0);
     if (!selector->empty()) pseudo->selector(selector);
     pseudo->argument(argument);
-    // if (!argument.empty()) pseudo->argument(SASS_MEMORY_NEW(StringLiteral,
-    //   scanner.pstate(beforeArgument), argument));
     return pseudo;
 
   }
   // EO _placeholderSelector
 
-  std::string SelectorParser::_aNPlusB()
+  sass::string SelectorParser::_aNPlusB()
   {
 
     StringBuffer buffer;
@@ -456,7 +476,8 @@ namespace Sass {
     whitespace();
 
     if (!scanner.peekChar(last) || !isDigit(last)) {
-      scanner.error("Expected a number.");
+      scanner.error("Expected a number.",
+        *context.logger, scanner.pstate());
     }
     while (isDigit(scanner.peekChar())) {
       buffer.write(scanner.readChar());
@@ -503,7 +524,7 @@ namespace Sass {
       }
     }
 
-    std::string nameOrNamespace = identifier();
+    sass::string nameOrNamespace = identifier();
     if (!scanner.scanChar($pipe)) {
       return SASS_MEMORY_NEW(TypeSelector,
         scanner.pstate(start), nameOrNamespace);

@@ -11,6 +11,10 @@
 
 namespace Sass {
 
+   // ToDo: How to protect these? Init order?
+  std::vector<void*>* memLakes = nullptr;
+  size_t memPtr = std::string::npos;
+
   #ifdef DEBUG_SHARED_PTR
   void SharedObj::dumpMemLeaks() {
     if (!all.empty()) {
@@ -30,8 +34,9 @@ namespace Sass {
     }
   }
   size_t SharedObj::objCount = 0;
-  std::vector<SharedObj*> SharedObj::all;
+  sass::vector<SharedObj*> SharedObj::all;
   std::unordered_set<size_t> SharedObj::deleted;
+  size_t SharedObj::maxRefCount = 0;
 #endif
 
   bool SharedObj::taint = false;

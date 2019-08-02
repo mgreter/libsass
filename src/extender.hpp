@@ -12,6 +12,8 @@
 #include "backtrace.hpp"
 #include "ordered_map.hpp"
 
+#include "../../ordered-map/include/tsl/ordered_map.h"
+
 namespace Sass {
 
   // ##########################################################################
@@ -28,43 +30,49 @@ namespace Sass {
   typedef std::unordered_set<
     SimpleSelectorObj,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    SassAllocator<SimpleSelectorObj>
   > ExtSmplSelSet;
 
   typedef std::unordered_set<
     SelectorListObj,
     ObjPtrHash,
-    ObjPtrEquality
+    ObjPtrEquality,
+    SassAllocator<SelectorListObj>
   > ExtListSelSet;
 
   typedef std::unordered_map<
     SimpleSelectorObj,
     ExtListSelSet,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    SassAllocator<std::pair<SimpleSelectorObj, ExtListSelSet>>
   > ExtSelMap;
 
-  typedef ordered_map<
+  typedef tsl::ordered_map<
     ComplexSelectorObj,
     Extension,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    SassAllocator<std::pair<ComplexSelectorObj, Extension>>
   > ExtSelExtMapEntry;
 
   typedef std::unordered_map<
     SimpleSelectorObj,
     ExtSelExtMapEntry,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    SassAllocator<std::pair<SimpleSelectorObj, ExtSelExtMapEntry>>
   > ExtSelExtMap;
 
   typedef std::unordered_map <
     SimpleSelectorObj,
-    std::vector<
+    sass::vector<
       Extension
     >,
     ObjHash,
-    ObjEquality
+    ObjEquality,
+    SassAllocator<std::pair<SimpleSelectorObj, sass::vector<Extension>>>
   > ExtByExtMap;
 
   class Extender : public Operation_CRTP<void, Extender> {
@@ -109,11 +117,15 @@ namespace Sass {
     // This tracks the contexts in which each style rule is defined.
     // If a rule is defined at the top level, it doesn't have an entry.
     // ##########################################################################
-    ordered_map<
+    tsl::ordered_map<
       SelectorListObj,
       CssMediaRuleObj,
       ObjPtrHash,
-      ObjPtrEquality
+      ObjPtrEquality,
+      SassAllocator<std::pair<
+        SelectorListObj,
+        CssMediaRuleObj
+      >>
     > mediaContexts;
     
     // ##########################################################################
@@ -127,7 +139,11 @@ namespace Sass {
       SimpleSelectorObj,
       size_t,
       ObjHash,
-      ObjEquality
+      ObjEquality,
+      SassAllocator<std::pair<
+      SimpleSelectorObj,
+      size_t
+      >>
     > sourceSpecificity;
 
     // ##########################################################################
@@ -139,10 +155,6 @@ namespace Sass {
     ExtCplxSelSet originals;
 
   public:
-
-    // Constructor without default [mode].
-    // [traces] are needed to throw errors.
-    Extender(Backtraces& traces);
 
     // ##########################################################################
     // Constructor with specific [mode].
@@ -267,7 +279,7 @@ namespace Sass {
     // ##########################################################################
     ExtSelExtMap extendExistingExtensions(
       // Taking in a reference here makes MSVC debug stuck!?
-      const std::vector<Extension>& extensions,
+      const sass::vector<Extension>& extensions,
       const ExtSelExtMap& newExtensions);
 
     // ##########################################################################
@@ -282,7 +294,7 @@ namespace Sass {
     // Extends [complex] using [extensions], and
     // returns the contents of a [SelectorList].
     // ##########################################################################
-    std::vector<ComplexSelectorObj> extendComplex(
+    sass::vector<ComplexSelectorObj> extendComplex(
       // Taking in a reference here makes MSVC debug stuck!?
       const ComplexSelectorObj& list,
       const ExtSelExtMap& extensions,
@@ -301,7 +313,7 @@ namespace Sass {
     // ##########################################################################
     Extension extensionForCompound(
       // Taking in a reference here makes MSVC debug stuck!?
-      const std::vector<SimpleSelectorObj>& simples) const;
+      const sass::vector<SimpleSelectorObj>& simples) const;
 
     // ##########################################################################
     // Extends [compound] using [extensions], and returns the
@@ -309,7 +321,7 @@ namespace Sass {
     // indicates whether this is in an original complex selector,
     // meaning that [compound] should not be trimmed out.
     // ##########################################################################
-    std::vector<ComplexSelectorObj> extendCompound(
+    sass::vector<ComplexSelectorObj> extendCompound(
       const CompoundSelectorObj& compound,
       const ExtSelExtMap& extensions,
       const CssMediaRuleObj& mediaQueryContext,
@@ -319,7 +331,7 @@ namespace Sass {
     // Extends [simple] without extending the
     // contents of any selector pseudos it contains.
     // ##########################################################################
-    std::vector<Extension> extendWithoutPseudo(
+    sass::vector<Extension> extendWithoutPseudo(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
       ExtSmplSelSet* targetsUsed) const;
@@ -328,7 +340,7 @@ namespace Sass {
     // Extends [simple] and also extending the
     // contents of any selector pseudos it contains.
     // ##########################################################################
-    std::vector<std::vector<Extension>> extendSimple(
+    sass::vector<sass::vector<Extension>> extendSimple(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
       const CssMediaRuleObj& mediaQueryContext,
@@ -337,7 +349,7 @@ namespace Sass {
     // ##########################################################################
     // Inner loop helper for [extendPseudo] function
     // ##########################################################################
-    static std::vector<ComplexSelectorObj> extendPseudoComplex(
+    static sass::vector<ComplexSelectorObj> extendPseudoComplex(
       const ComplexSelectorObj& complex,
       const PseudoSelectorObj& pseudo,
       const CssMediaRuleObj& mediaQueryContext);
@@ -346,7 +358,7 @@ namespace Sass {
     // Extends [pseudo] using [extensions], and returns
     // a list of resulting pseudo selectors.
     // ##########################################################################
-    std::vector<PseudoSelectorObj> extendPseudo(
+    sass::vector<PseudoSelectorObj> extendPseudo(
       const PseudoSelectorObj& pseudo,
       const ExtSelExtMap& extensions,
       const CssMediaRuleObj& mediaQueryContext);
@@ -356,7 +368,7 @@ namespace Sass {
     // one index higher, looping the final element back to [start].
     // ##########################################################################
     static void rotateSlice(
-      std::vector<ComplexSelectorObj>& list,
+      sass::vector<ComplexSelectorObj>& list,
       size_t start, size_t end);
 
     // ##########################################################################
@@ -364,8 +376,8 @@ namespace Sass {
     // elements. The [isOriginal] callback indicates which selectors are
     // original to the document, and thus should never be trimmed.
     // ##########################################################################
-    std::vector<ComplexSelectorObj> trim(
-      const std::vector<ComplexSelectorObj>& selectors,
+    sass::vector<ComplexSelectorObj> trim(
+      const sass::vector<ComplexSelectorObj>& selectors,
       const ExtCplxSelSet& set) const;
 
     // ##########################################################################

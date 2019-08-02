@@ -1,32 +1,45 @@
 #include "ast_css.hpp"
+#include "util.hpp"
 #include "ast.hpp"
 
 namespace Sass {
 
-  CssNode::CssNode(ParserState pstate) :
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssNode::CssNode(
+    const SourceSpan& pstate) :
     Statement(pstate),
     isGroupEnd_(false)
   {}
+
   CssNode::CssNode(const CssNode* ptr) :
     Statement(ptr),
     isGroupEnd_(ptr->isGroupEnd_)
   {}
 
-  CssParentNode::CssParentNode(ParserState pstate) :
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssParentNode::CssParentNode(
+    const SourceSpan& pstate,
+    const sass::vector<StatementObj>& children) :
     CssNode(pstate),
-    Vectorized(),
-    isChildless_(false),
-    block_()
+    Vectorized(children),
+    isChildless_(false)
   {}
 
-  CssParentNode::CssParentNode(const CssParentNode* ptr) :
+  CssParentNode::CssParentNode(
+    const CssParentNode* ptr) :
     CssNode(ptr),
     Vectorized(ptr),
-    isChildless_(ptr->isChildless_),
-    block_(ptr->block_)
+    isChildless_(ptr->isChildless_)
   {}
 
-  CssString::CssString(ParserState pstate, std::string text) :
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssString::CssString(const SourceSpan& pstate, const sass::string& text) :
     AST_Node(pstate),
     text_(text)
   {}
@@ -36,105 +49,201 @@ namespace Sass {
     text_(ptr->text_)
   {}
 
-  CssValue::CssValue(ParserState pstate, Value* value) :
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssStrings::CssStrings(
+    const SourceSpan& pstate,
+    const sass::vector<sass::string>& texts) :
+    AST_Node(pstate),
+    texts_(texts)
+  {}
+
+  CssStrings::CssStrings(const CssStrings* ptr) :
+    AST_Node(ptr),
+    texts_(ptr->texts_)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssValue::CssValue(const SourceSpan& pstate, Value* value) :
     CssNode(pstate),
     value_(value)
   {}
+
   CssValue::CssValue(const CssValue* ptr) :
     CssNode(ptr),
     value_(ptr->value_)
   {}
 
-  CssAtRule::CssAtRule(ParserState pstate) :
-    CssNode(pstate)
-  {}
-  CssAtRule::CssAtRule(const CssAtRule* ptr) :
-    CssNode(ptr)
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssAtRule::CssAtRule(
+    const SourceSpan& pstate,
+    CssString* name,
+    CssString* value,
+    const sass::vector<StatementObj>& children)
+    :
+    CssParentNode(pstate, children),
+    name_(name),
+    value_(value)
   {}
 
-  CssComment::CssComment(ParserState pstate, std::string text, bool preserve) :
+  CssAtRule::CssAtRule(
+    const CssAtRule* ptr) :
+    CssParentNode(ptr),
+    name_(ptr->name_),
+    value_(ptr->value_)
+  {}
+
+  bool CssAtRule::bubbles() const
+  {
+    return is_keyframes() || is_media();
+  }
+
+  bool CssAtRule::is_media() const
+  {
+    return Util::unvendor(name_->text()) == "media";
+  }
+
+  bool CssAtRule::is_keyframes() const
+  {
+    return Util::unvendor(name_->text()) == "keyframes";
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssComment::CssComment(
+    const SourceSpan& pstate,
+    const sass::string& text,
+    bool preserve) :
     CssNode(pstate),
     text_(text),
     isPreserved_(preserve)
   {}
-  CssComment::CssComment(const CssComment* ptr) :
+  CssComment::CssComment(
+    const CssComment* ptr) :
     CssNode(ptr),
     text_(ptr->text_),
     isPreserved_(ptr->isPreserved_)
   {}
 
-  CssDeclaration::CssDeclaration(ParserState pstate, CssString* name, CssValue* value) :
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssDeclaration::CssDeclaration(
+    const SourceSpan& pstate,
+    CssString* name,
+    CssValue* value,
+    bool is_custom_property) :
     CssNode(pstate),
     name_(name),
-    value_(value)
+    value_(value),
+    is_custom_property_(is_custom_property)
   {}
-  CssDeclaration::CssDeclaration(const CssDeclaration* ptr) :
+  CssDeclaration::CssDeclaration(
+    const CssDeclaration* ptr) :
     CssNode(ptr),
     name_(ptr->name_),
-    value_(ptr->value_)
+    value_(ptr->value_),
+    is_custom_property_(ptr->is_custom_property_)
   {}
 
-  CssImport::CssImport(ParserState pstate) :
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  // Value constructor
+  CssImport::CssImport(
+    const SourceSpan& pstate) :
     CssNode(pstate)
   {}
-  CssImport::CssImport(const CssImport* ptr) :
+
+  CssImport::CssImport(
+    const CssImport* ptr) :
     CssNode(ptr)
   {}
 
-  CssKeyframeBlock::CssKeyframeBlock(ParserState pstate) :
-    CssNode(pstate)
-  {}
-  CssKeyframeBlock::CssKeyframeBlock(const CssKeyframeBlock* ptr) :
-    CssNode(ptr)
-  {}
+  /////////////////////////////////////////////////////////////////////////////
+  // A block within a `@keyframes` rule.
+  // For example, `10% {opacity: 0.5}`.
+  /////////////////////////////////////////////////////////////////////////////
 
-  // CssMediaQuery::CssMediaQuery(ParserState pstate) :
-  //   CssNode(pstate)
-  // {}
-  // CssMediaQuery::CssMediaQuery(const CssMediaQuery* ptr) :
-  //   CssNode(ptr)
-  // {}
-
-  // CssMediaRule::CssMediaRule(ParserState pstate) :
-  //   CssNode(pstate)
-  // {}
-  // CssMediaRule::CssMediaRule(const CssMediaRule* ptr) :
-  //   CssNode(ptr)
-  // {}
-
-  CssStyleRule::CssStyleRule(ParserState pstate, SelectorList* selector) :
-    CssParentNode(pstate),
+  // Value constructor
+  CssKeyframeBlock::CssKeyframeBlock(
+    const SourceSpan& pstate,
+    CssStrings* selector,
+    const sass::vector<Statement_Obj>& children) :
+    CssParentNode(pstate, children),
     selector_(selector)
-  {
-    statement_type(Statement::RULESET);
-  }
-  CssStyleRule::CssStyleRule(const CssStyleRule* ptr) :
+  {}
+
+  // Copy constructor
+  CssKeyframeBlock::CssKeyframeBlock(
+    const CssKeyframeBlock* ptr) :
     CssParentNode(ptr),
     selector_(ptr->selector_)
-  {
-    statement_type(Statement::RULESET);
+  {}
+
+  // Return a copy with empty children
+  CssKeyframeBlock* CssKeyframeBlock::copyWithoutChildren() {
+    CssKeyframeBlock* cpy = SASS_MEMORY_COPY(this);
+    cpy->clear(); // return with empty children
+    return cpy;
   }
+  // EO copyWithoutChildren
 
-  CssStylesheet::CssStylesheet(ParserState pstate) :
-    CssNode(pstate)
-  {}
-  CssStylesheet::CssStylesheet(const CssStylesheet* ptr) :
-    CssNode(ptr)
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssStyleRule::CssStyleRule(
+    const SourceSpan& pstate,
+    SelectorList* selector,
+    const sass::vector<StatementObj>& children) :
+    CssParentNode(pstate, children),
+    selector_(selector)
   {}
 
-  CssSupportsRule::CssSupportsRule(ParserState pstate, ExpressionObj condition) :
-    CssParentNode(pstate),
+  CssStyleRule::CssStyleRule(
+    const CssStyleRule* ptr) :
+    CssParentNode(ptr),
+    selector_(ptr->selector_)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssStylesheet::CssStylesheet(
+    const SourceSpan& pstate) :
+    CssParentNode(pstate, {})
+  {}
+  CssStylesheet::CssStylesheet(
+    const CssStylesheet* ptr) :
+    CssParentNode(ptr)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  CssSupportsRule::CssSupportsRule(
+    const SourceSpan& pstate,
+    ExpressionObj condition,
+    const sass::vector<StatementObj>& children) :
+    CssParentNode(pstate, children),
     condition_(condition)
-  {
-    statement_type(Statement::SUPPORTS);
-  }
+  {}
 
   bool CssSupportsRule::is_invisible() const
   {
-    return block_ == nullptr || block_->isInvisible();
+    for (auto stmt : elements()) {
+      if (!stmt->is_invisible()) return false;
+    }
+    return true;
   }
 
-  bool CssSupportsRule::bubbles()
+  bool CssSupportsRule::bubbles() const
   {
     return true;
   }
@@ -142,31 +251,47 @@ namespace Sass {
   CssSupportsRule::CssSupportsRule(const CssSupportsRule* ptr) :
     CssParentNode(ptr),
     condition_(ptr->condition_)
-  {
-    statement_type(Statement::SUPPORTS);
-  }
+  {}
 
   /////////////////////////////////////////////////////////////////////////
+  // A plain CSS `@media` rule after it has been evaluated.
   /////////////////////////////////////////////////////////////////////////
 
-  CssMediaRule::CssMediaRule(ParserState pstate, Block_Obj block) :
-    Has_Block(pstate, block),
-    Vectorized()
-  {
-    statement_type(MEDIA);
-  }
+  // Value constructor
+  CssMediaRule::CssMediaRule(
+    const SourceSpan& pstate,
+    const sass::vector<CssMediaQueryObj>& queries,
+    const sass::vector<StatementObj>& children) :
+    CssParentNode(pstate, children),
+    queries_(queries)
+  {}
 
+  // Copy constructor for rule of three
   CssMediaRule::CssMediaRule(const CssMediaRule* ptr) :
-    Has_Block(ptr),
-    Vectorized(*ptr)
-  {
-    statement_type(MEDIA);
-  }
+    CssParentNode(ptr),
+    queries_(ptr->queries_)
+  {}
 
-  CssMediaQuery::CssMediaQuery(ParserState pstate) :
+  // Equality comparator for rule of three
+  bool CssMediaRule::operator== (const CssMediaRule& rhs) const {
+    return queries_ == rhs.queries_;
+  }
+  // EO operator==
+
+  // Append additional media queries
+  void CssMediaRule::concat(const sass::vector<CssMediaQueryObj>& queries)
+  {
+    queries_.concat(queries);
+  }
+  // EO concat(List<CssMediaQuery>)
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  CssMediaQuery::CssMediaQuery(const SourceSpan& pstate) :
     AST_Node(pstate),
-    modifier_(""),
-    type_(""),
+    modifier_(StrEmpty),
+    type_(StrEmpty),
     features_()
   {
   }
@@ -185,26 +310,26 @@ namespace Sass {
   CssMediaQueryObj CssMediaQuery::merge(CssMediaQueryObj& other)
   {
 
-    std::string ourType = this->type();
+    sass::string ourType = this->type();
     Util::ascii_str_tolower(&ourType);
 
-    std::string theirType = other->type();
+    sass::string theirType = other->type();
     Util::ascii_str_tolower(&theirType);
 
-    std::string ourModifier = this->modifier();
+    sass::string ourModifier = this->modifier();
     Util::ascii_str_tolower(&ourModifier);
 
-    std::string theirModifier = other->modifier();
+    sass::string theirModifier = other->modifier();
     Util::ascii_str_tolower(&theirModifier);
 
-    std::string type;
-    std::string modifier;
-    std::vector<std::string> features;
+    sass::string type;
+    sass::string modifier;
+    sass::vector<sass::string> features;
 
     if (ourType.empty() && theirType.empty()) {
       CssMediaQueryObj query = SASS_MEMORY_NEW(CssMediaQuery, pstate());
-      std::vector<std::string> f1(this->features());
-      std::vector<std::string> f2(other->features());
+      sass::vector<sass::string> f1(this->features());
+      sass::vector<sass::string> f2(other->features());
       features.insert(features.end(), f1.begin(), f1.end());
       features.insert(features.end(), f2.begin(), f2.end());
       query->features(features);
@@ -213,9 +338,9 @@ namespace Sass {
 
     if ((ourModifier == "not") != (theirModifier == "not")) {
       if (ourType == theirType) {
-        std::vector<std::string> negativeFeatures =
+        sass::vector<sass::string> negativeFeatures =
           ourModifier == "not" ? this->features() : other->features();
-        std::vector<std::string> positiveFeatures =
+        sass::vector<sass::string> positiveFeatures =
           ourModifier == "not" ? other->features() : this->features();
 
         // If the negative features are a subset of the positive features, the
@@ -278,16 +403,16 @@ namespace Sass {
       // Omit the type if either input query did, since that indicates that they
       // aren't targeting a browser that requires "all and".
       type = (other->matchesAllTypes() && ourType.empty()) ? "" : theirType;
-      const std::vector<std::string>& f1 = this->features();
-      const std::vector<std::string>& f2 = other->features();
+      const sass::vector<sass::string>& f1 = this->features();
+      const sass::vector<sass::string>& f2 = other->features();
       std::copy(f1.begin(), f1.end(), std::back_inserter(features));
       std::copy(f2.begin(), f2.end(), std::back_inserter(features));
     }
     else if (other->matchesAllTypes()) {
       type = ourType;
       modifier = ourModifier;
-      const std::vector<std::string>& f1 = this->features();
-      const std::vector<std::string>& f2 = other->features();
+      const sass::vector<sass::string>& f1 = this->features();
+      const sass::vector<sass::string>& f2 = other->features();
       std::copy(f1.begin(), f1.end(), std::back_inserter(features));
       std::copy(f2.begin(), f2.end(), std::back_inserter(features));
     }
@@ -297,8 +422,8 @@ namespace Sass {
     else {
       type = ourType;
       modifier = ourModifier.empty() ? theirModifier : ourModifier;
-      const std::vector<std::string>& f1 = this->features();
-      const std::vector<std::string>& f2 = other->features();
+      const sass::vector<sass::string>& f1 = this->features();
+      const sass::vector<sass::string>& f2 = other->features();
       std::copy(f1.begin(), f1.end(), std::back_inserter(features));
       std::copy(f2.begin(), f2.end(), std::back_inserter(features));
     }
@@ -318,10 +443,38 @@ namespace Sass {
   {
   } 
 
+  /////////////////////////////////////////////////////////////////////////////
+  // An `@at-root` rule. Moves it contents "up" the tree through parent nodes.
+  // Note: This does not exist in dart-sass, as it moves stuff on eval stage.
+  /////////////////////////////////////////////////////////////////////////////
+
+  // Value constructor
+  CssAtRootRule::CssAtRootRule(
+    const SourceSpan& pstate,
+    AtRootQueryObj query,
+    const sass::vector<StatementObj>& children) :
+    CssParentNode(pstate, children),
+    query_(query)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  Keyframe_Rule::Keyframe_Rule(
+    const SourceSpan& pstate,
+    const sass::vector<StatementObj>& children)
+    : CssParentNode(pstate, children), name2_()
+  {}
+  Keyframe_Rule::Keyframe_Rule(const Keyframe_Rule* ptr)
+    : CssParentNode(ptr), name2_(ptr->name2_)
+  {}
+
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   // IMPLEMENT_AST_OPERATORS(CssNode);
+  IMPLEMENT_AST_OPERATORS(CssStrings);
   IMPLEMENT_AST_OPERATORS(CssString);
   IMPLEMENT_AST_OPERATORS(CssValue);
   IMPLEMENT_AST_OPERATORS(CssAtRule);
@@ -334,5 +487,6 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(CssStyleRule);
   IMPLEMENT_AST_OPERATORS(CssStylesheet);
   IMPLEMENT_AST_OPERATORS(CssSupportsRule);
+  IMPLEMENT_AST_OPERATORS(Keyframe_Rule);
 
 }

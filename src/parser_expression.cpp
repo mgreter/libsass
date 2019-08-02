@@ -9,11 +9,15 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  void ExpressionParser::addOperator(Sass_OP op) {
+  void ExpressionParser::addOperator(Sass_OP op, Position& start) {
 	  if (parser.plainCss() && op != Sass_OP::DIV) {
-		  parser.scanner.error("Operators aren't allowed in plain CSS." /* ,
+      callStackFrame frame(*parser.context.logger,
+        Backtrace(parser.scanner.pstate9(start)));
+      parser.scanner.error("Operators aren't allowed in plain CSS.",
+        *parser.context.logger, parser.scanner.pstate9(start));
+        /* ,
 																		position: scanner.position - operator.operator.length,
-																		length : operator.operator.length */);
+																		length : operator.operator.length */
 	  }
 
 	  allowSlash = allowSlash && op == Sass_OP::DIV;
@@ -21,12 +25,15 @@ namespace Sass {
 		  (sass_op_to_precedence(operators.back())
 		  >= sass_op_to_precedence(op))) {
 
-		  resolveOneOperation();
-	  }
-	  operators.push_back(op);
+      // std::cerr << "Resolve ops\n";
+      resolveOneOperation();
+      // std::cerr << "Resolved ops\n";
+    }
+	  operators.emplace_back(op);
 
 	  // assert(singleExpression != null);
-	  operands.push_back(singleExpression);
+
+    operands.emplace_back(singleExpression);
 	  parser.whitespace();
 	  allowSlash = allowSlash && parser.lookingAtNumber();
 	  singleExpression = parser._singleExpression();
@@ -35,7 +42,7 @@ namespace Sass {
   }
 
   ExpressionParser::ExpressionParser(StylesheetParser& parser) :
-    start(parser.scanner.position),
+    start(parser.scanner.state()),
     commaExpressions(),
     singleEqualsOperand(),
     spaceExpressions(),
@@ -55,7 +62,7 @@ namespace Sass {
     spaceExpressions.clear();
     operators.clear();
     operands.clear();
-    parser.scanner.position = start;
+    parser.scanner.resetState(start);
     allowSlash = parser.lookingAtNumber();
     singleExpression = parser._singleExpression();
   }
@@ -68,18 +75,25 @@ namespace Sass {
     if (allowSlash && !parser._inParentheses) {
       // in dart sass this sets allowSlash to true!
       Binary_Expression* binex = SASS_MEMORY_NEW(Binary_Expression,
-        "[pstate]", Sass_OP::DIV, operands.back(), singleExpression);
+        SourceSpan::fake("[pstateS3]"), Sass_OP::DIV, operands.back(), singleExpression);
       singleExpression = binex; // down cast
       binex->allowsSlash(true);
       operands.pop_back();
     }
     else {
       // in dart sass this sets allowSlash to false!
+      Expression* lhs = operands.back();
+      SourceSpan pstate = SourceSpan::delta(
+        lhs->pstate(), singleExpression->pstate());
+
+        parser.scanner.pstate9(start.offset);
       Binary_Expression* binex = SASS_MEMORY_NEW(Binary_Expression,
-        "[pstate]", op, operands.back(), singleExpression);
+        pstate, op, lhs, singleExpression);
       singleExpression = binex; // down cast
       binex->allowsSlash(false);
       operands.pop_back();
+      // debug_ast(binex);
+      // exit(1);
     }
   }
 
@@ -107,7 +121,7 @@ namespace Sass {
 		  }
 
 		  resolveOperations();
-		  spaceExpressions.push_back(singleExpression);
+		  spaceExpressions.emplace_back(singleExpression);
 		  allowSlash = number;
 	  }
 	  else if (!number) {
@@ -122,16 +136,20 @@ namespace Sass {
     resolveOperations();
 
 	  if (!spaceExpressions.empty()) {
-		  spaceExpressions.push_back(singleExpression);
-		  ListExpression* list = SASS_MEMORY_NEW(ListExpression,
-			  "[pstate]", SASS_SPACE);
+		  spaceExpressions.emplace_back(singleExpression);
+      SourceSpan span = SourceSpan::delta(
+        spaceExpressions.front()->pstate(),
+        spaceExpressions.back()->pstate());
+      ListExpression* list = SASS_MEMORY_NEW(
+        ListExpression, span, SASS_SPACE);
 		  list->concat(spaceExpressions);
 		  singleExpression = list;
 		  spaceExpressions.clear();
 	  }
 
     if (singleEqualsOperand) {
-      singleExpression = SASS_MEMORY_NEW(Binary_Expression, "[pstate]",
+      singleExpression = SASS_MEMORY_NEW(Binary_Expression,
+        SourceSpan::delta(singleEqualsOperand->pstate(), singleExpression->pstate()),
         Sass_OP::IESEQ, singleEqualsOperand, singleExpression);
       singleEqualsOperand = {};
 
@@ -139,7 +157,7 @@ namespace Sass {
       /*
 	  // Seem to be for ms stuff
 	  singleExpression = SASS_MEMORY_NEW(Binary_Expression,
-	  "[pstate]", )
+	  "[pstateS2]", )
 
 	  BinaryOperationExpression(
 	  BinaryOperator.singleEquals, singleEqualsOperand, singleExpression);

@@ -45,7 +45,7 @@ namespace Sass {
       throw Exception::InvalidValue({}, *n);
     }
     // use values to_string facility
-    std::string res = n->to_string(opt);
+    sass::string res = n->to_string(opt);
     // output the final token
     append_token(res, n);
   }
@@ -53,14 +53,14 @@ namespace Sass {
   void Output::operator()(Import* imp)
   {
     if (imp->urls().size()) {
-      top_nodes.push_back(imp);
+      top_nodes.emplace_back(imp);
     }
   }
 
   void Output::operator()(StaticImport* imp)
   {
     if (imp->outOfOrder()) {
-      top_nodes.push_back(imp);
+      top_nodes.emplace_back(imp);
     }
     else {
       Inspect::operator()(imp);
@@ -104,7 +104,7 @@ namespace Sass {
       // declare the charset
       if (output_style() != COMPRESSED)
         charset = "@charset \"UTF-8\";"
-        + std::string(opt.linefeed);
+        + sass::string(opt.linefeed);
       else charset = "\xEF\xBB\xBF";
       // abort search
       break;
@@ -124,7 +124,7 @@ namespace Sass {
     }
     if (output_style() != COMPRESSED || important) {
       if (buffer().size() == 0) {
-        top_nodes.push_back(c);
+        top_nodes.emplace_back(c);
       }
       else {
         append_indentation();
@@ -149,95 +149,22 @@ namespace Sass {
 
   void Output::operator()(CssStyleRule* r)
   {
-    SelectorListObj s = r->selector();
-
-    if (!s || s->empty()) return;
-
-    if (output_style() == NESTED) {
-      indentation += r->tabs();
-    }
-
-    if (opt.source_comments) {
-      std::stringstream ss;
-      append_indentation();
-      std::string path(File::abs2rel(r->pstate().path));
-      ss << "/* line " << r->pstate().line + 1 << ", " << path << " */";
-      append_string(ss.str());
-      append_optional_linefeed();
-    }
-
-    scheduled_crutch = s;
-    if (s) s->perform(this);
-    append_scope_opener(r);
-
-    for (size_t i = 0, L = r->block()->length(); i < L; ++i) {
-      Statement_Obj stm = r->block()->get(i);
-      bool bPrintExpression = true;
-      // Check print conditions
-      if (Declaration * dec = Cast<Declaration>(stm)) {
-        if (const String_Constant * valConst = Cast<String_Constant>(dec->value())) {
-          const std::string& val = valConst->value();
-          if (const String_Quoted * qstr = Cast<const String_Quoted>(valConst)) {
-            if (!qstr->quote_mark() && val.empty()) {
-              bPrintExpression = false;
-            }
-          }
-        }
-        else if (const StringLiteral * valConst = Cast<StringLiteral>(dec->value())) {
-          const std::string& val = valConst->text();
-          if (const String_Quoted * qstr = Cast<const String_Quoted>(valConst)) {
-            if (!qstr->quote_mark() && val.empty()) {
-              bPrintExpression = false;
-            }
-          }
-        }
-        else if (List * list = Cast<List>(dec->value())) {
-          bool all_invisible = true;
-          for (size_t list_i = 0, list_L = list->length(); list_i < list_L; ++list_i) {
-            Expression* item = list->get(list_i);
-            if (!item->is_invisible()) all_invisible = false;
-          }
-          if (all_invisible && !list->is_bracketed()) bPrintExpression = false;
-        }
-      }
-      // Print if OK
-      if (bPrintExpression) {
-        stm->perform(this);
-      }
-    }
-
-    if (output_style() == NESTED) {
-      indentation -= r->tabs();
-    }
-    append_scope_closer(r);
+    Inspect::visitCssStyleRule(r);
   }
 
   void Output::operator()(Keyframe_Rule* r)
   {
-    Block_Obj b = r->block();
-    Selector_Obj v = r->name();
+    // Block_Obj b = r->block();
     StringLiteralObj v2 = r->name2();
-
-
-    // Disabled, never seen in specs
-    // if (!v.isNull()) {
-    //   v->perform(this);
-    // }
 
     if (!v2.isNull()) {
       append_indentation();
       v2->perform(this);
     }
 
-    // Disabled, never seen in specs
-    // if (!b) {
-    //   append_colon_separator();
-    //   return;
-    // }
-
     append_scope_opener();
-    for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Obj stm = b->get(i);
+    for (size_t i = 0, L = r->length(); i < L; ++i) {
+      Statement_Obj stm = r->get(i);
       stm->perform(this);
       if (i < L - 1) append_special_linefeed();
     }
@@ -257,10 +184,10 @@ namespace Sass {
     rule->condition()->perform(this);
     append_scope_opener();
 
-    Block* b = rule->block();
-    size_t L = b ? b->length() : 0;
+    // Block* b = rule->block();
+    size_t L = rule->length();
     for (size_t i = 0; i < L; ++i) {
-      b->get(i)->perform(this);
+      rule->get(i)->perform(this);
       if (i < L - 1) append_special_linefeed();
     }
 
@@ -274,28 +201,6 @@ namespace Sass {
 
   void Output::operator()(SupportsRule* f)
   {
-    if (f->is_invisible()) return;
-
-    SupportsCondition_Obj c = f->condition();
-    Block_Obj b = f->block();
-
-    if (output_style() == NESTED) indentation += f->tabs();
-    append_indentation();
-    append_token("@supports", f);
-    append_mandatory_space();
-    c->perform(this);
-    append_scope_opener();
-
-    for (size_t i = 0, L = b->length(); i < L; ++i) {
-      Statement_Obj stm = b->get(i);
-      stm->perform(this);
-      if (i < L - 1) append_special_linefeed();
-    }
-
-    if (output_style() == NESTED) indentation -= f->tabs();
-
-    append_scope_closer();
-
   }
 
   void Output::operator()(CssMediaRule* rule)
@@ -305,27 +210,24 @@ namespace Sass {
     // Skip empty/invisible rule
     if (rule->isInvisible()) return;
     // Avoid null pointer exception
-    if (rule->block() == nullptr) return;
+    // if (rule->block() == nullptr) return;
     // Skip empty/invisible rule
-    if (rule->block()->isInvisible()) return;
+    bool invisible = true;
+    for (auto& item : rule->elements()) {
+      if (!item->is_invisible()) {
+        invisible = false;
+        break;
+      }
+    }
+    if (invisible) return;
     // Skip if block is empty/invisible
     if (!rule->isInvisible()) {
       // Let inspect do its magic
-      Inspect::operator()(rule);
+      Inspect::visitCssMediaRule(rule);
     }
   }
 
-  void Output::operator()(String_Quoted* s)
-  {
-    if (s->quote_mark()) {
-      append_css(quote(s->value(), s->quote_mark()), s);
-    }
-    else {
-      append_token(string_to_output(s->value()), s);
-    }
-  }
-
-  std::string string_trim_trailing_lines(std::string text)
+  sass::string string_trim_trailing_lines(sass::string text)
   {
     auto start = text.begin();
     auto lastlf = text.end();
@@ -343,7 +245,7 @@ namespace Sass {
       }
     }
     if (lastlf != text.end()) {
-      auto qwe = std::string(start, lastlf) + " ";
+      auto qwe = sass::string(start, lastlf) + " ";
       // std::cerr << "CHECKING [" << qwe << "]\n";
       return qwe;
     }
@@ -352,9 +254,14 @@ namespace Sass {
 
   void Output::operator()(String_Constant* s)
   {
-    std::string value(s->value());
+    sass::string value(s->value());
     if (!in_custom_property) {
-      append_token(string_to_output(value), s);
+      if (s->hasQuotes()) {
+        visitQuotedString(s->value());
+      }
+      else {
+        append_token(string_to_output(value), s);
+      }
     }
     else {
       append_token(string_trim_trailing_lines(value), s);

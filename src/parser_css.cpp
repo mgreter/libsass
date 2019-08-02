@@ -13,10 +13,10 @@ namespace Sass {
     Position start(scanner);
     ScssParser::silentComment();
     error("Silent comments aren't allowed in plain CSS.",
-      scanner.pstate(start));
+      *context.logger, scanner.pstate9(start));
   }
 
-  bool isForbiddenAtRule(const std::string& name)
+  bool isForbiddenAtRule(const sass::string& name)
   {
     return name == "at-root"
       || name == "content"
@@ -45,24 +45,24 @@ namespace Sass {
     InterpolationObj name = interpolatedIdentifier();
     whitespace();
 
-    std::string plain(name->getPlainString());
+    sass::string plain(name->getPlainString());
 
     if (isForbiddenAtRule(plain)) {
       InterpolationObj value = almostAnyValue();
       error("This at-rule isn't allowed in plain CSS.",
-        scanner.spanFrom(start));
+        *context.logger, scanner.pstate9(start));
     }
     else if (plain == "charset") {
-      std::string charset(string());
+      sass::string charset(string());
       if (!root) {
         error("This at-rule is not allowed here.",
-          scanner.spanFrom(start));
+          *context.logger, scanner.pstate9(start));
       }
     }
     else if (plain == "import") {
       return _cssImportRule(start);
     }
-    else if (plain == "import" || plain == "media") {
+    else if (plain == "media") {
       return mediaRule(start);
     }
     else if (plain == "-moz-document") {
@@ -94,30 +94,23 @@ namespace Sass {
       // StringExpression(itpl.asInterpolation(static: true));
     }
 
-    // ParserState urlSpan(scanner.pstate(urlStart));
-
     whitespace();
+    Position beforeQuery(scanner);
     auto queries = tryImportQueries();
     expectStatementSeparator("@import rule");
-    ImportRuleObj imp = SASS_MEMORY_NEW(ImportRule, "[pstate]");
-    InterpolationObj urlItpl = SASS_MEMORY_NEW(Interpolation, "[pstate]", url);
-    StaticImportObj entry = SASS_MEMORY_NEW(StaticImport, "[pstae]", urlItpl);
+    ImportRuleObj imp = SASS_MEMORY_NEW(ImportRule,
+      SourceSpan::fake("[pstateX2]"));
+    InterpolationObj urlItpl = SASS_MEMORY_NEW(Interpolation,
+      scanner.pstate9(beforeQuery), url);
+    StaticImportObj entry = SASS_MEMORY_NEW(StaticImport,
+      SourceSpan::fake("[pstaeX3]"), urlItpl);
     entry->outOfOrder(false);
     imp->append(entry);
     return imp.detach();
 
-    // return ImportRule([
-    //   StaticImport(Interpolation([url], urlSpan), scanner.spanFrom(urlStart),
-    //     supports: queries ? .item1, media : queries ? .item2)
-    // ], scanner.spanFrom(start));
-
-
-    std::cerr << "to be implemented CssParser::_cssImportRule\n";
-    // return SASS_MEMORY_NEW(StringLiteral, "[pstate]", "asdads");
-    return nullptr;
   }
 
-  bool isDisallowedFunction(std::string name)
+  bool isDisallowedFunction(sass::string name)
   {
     return name == "red"
       || name == "green"
@@ -195,7 +188,7 @@ namespace Sass {
     Position start(scanner);
     LineScannerState2 pos = scanner.state();
     InterpolationObj identifier = interpolatedIdentifier();
-    std::string plain(identifier->getPlainString());
+    sass::string plain(identifier->getPlainString());
 
     StringExpressionObj specialFunction = trySpecialFunction(
       Util::ascii_str_tolower(plain), pos);
@@ -209,34 +202,34 @@ namespace Sass {
         scanner.pstate(start), identifier);
     }
 
-    std::vector<ExpressionObj> arguments;
+    sass::vector<ExpressionObj> arguments;
 
     if (!scanner.scanChar($rparen)) {
       do {
         whitespace();
         Expression* argument = expression(false, true);
-        arguments.push_back(SASS_MEMORY_NEW(Argument,
-          argument->pstate(), argument));
+        arguments.emplace_back(SASS_MEMORY_NEW(Argument,
+          argument->pstate(), argument, EnvString()));
         whitespace();
       } while (scanner.scanChar($comma));
       scanner.expectChar($rparen);
     }
 
-    // arguments->update_pstate(scanner.pstate(start));
+    // arguments->pstate(scanner.pstate9(start));
 
     if (isDisallowedFunction(plain)) {
       error(
         "This function isn't allowed in plain CSS.",
-        scanner.spanFrom(start));
+        *context.logger, scanner.pstate9(start));
     }
 
     Interpolation* name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());
     name->append(SASS_MEMORY_NEW(StringExpression, identifier->pstate(), identifier));
 
     ArgumentInvocation* args = SASS_MEMORY_NEW(ArgumentInvocation,
-      scanner.pstate(start), arguments, {});
+      scanner.pstate(start), arguments, KeywordMap<ExpressionObj>{});
     
-    return SASS_MEMORY_NEW(FunctionExpression2,
+    return SASS_MEMORY_NEW(FunctionExpression,
       scanner.pstate(start), name, args);
 
   }

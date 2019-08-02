@@ -8,8 +8,8 @@ namespace Sass {
   class ScssParser : public StylesheetParser {
 
   public:
-    ScssParser(Context& context, const char* content, const char* path, size_t srcid) :
-      StylesheetParser(context, content, path, srcid)
+    ScssParser(Context& context, SourceDataObj source) :
+      StylesheetParser(context, source)
     {}
 
     virtual bool plainCss() const override;
@@ -18,7 +18,7 @@ namespace Sass {
 
     Interpolation* styleRuleSelector() override;
 
-    void expectStatementSeparator(std::string name) override;
+    void expectStatementSeparator(sass::string name) override;
     
     bool atEndOfStatement() override;
 
@@ -26,9 +26,9 @@ namespace Sass {
 
     bool scanElse(size_t ifIndentation) override;
 
-    std::vector<StatementObj> children(Statement* (StylesheetParser::* child)()) override;
+    sass::vector<StatementObj> children(Statement* (StylesheetParser::* child)()) override;
 
-    std::vector<StatementObj> statements(Statement* (StylesheetParser::* statement)()) override;
+    sass::vector<StatementObj> statements(Statement* (StylesheetParser::* statement)()) override;
 
     virtual SilentComment* _silentComment();
 

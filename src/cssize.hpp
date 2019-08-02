@@ -12,9 +12,9 @@ namespace Sass {
 
   class Cssize : public Operation_CRTP<Statement*, Cssize> {
 
-    Backtraces&                 traces;
-    BlockStack      block_stack;
-    std::vector<Statement*>  p_stack;
+    Backtraces& callStack;
+    BlockStack block_stack;
+    sass::vector<Statement*>  p_stack;
 
   public:
     Cssize(Context&);
@@ -24,42 +24,40 @@ namespace Sass {
     Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);
     Statement* operator()(CssMediaRule*);
-    Statement* operator()(SupportsRule*);
     Statement* operator()(CssSupportsRule*);
-    Statement* operator()(At_Root_Block*);
-    Statement* operator()(AtRule*);
+    Statement* operator()(CssAtRootRule*);
+    Statement* operator()(CssAtRule*);
     Statement* operator()(Keyframe_Rule*);
     Statement* operator()(Trace*);
-    Statement* operator()(Declaration*);
     // Statement* operator()(Assignment*);
     // Statement* operator()(Import*);
     // Statement* operator()(Import_Stub*);
-    // Statement* operator()(Warning*);
-    // Statement* operator()(Error*);
+    // Statement* operator()(WarnRule*);
+    // Statement* operator()(ErrorRule*);
     // Statement* operator()(If*);
     // Statement* operator()(For*);
     // Statement* operator()(Each*);
-    // Statement* operator()(While*);
+    // Statement* operator()(WhileRule*);
     // Statement* operator()(Return*);
     // Statement* operator()(ExtendRule*);
-    // Statement* operator()(Definition*);
-    // Statement* operator()(Mixin_Call*);
-    // Statement* operator()(Content*);
+    // Statement* operator()(ContentRule*);
     // Not used anymore? Why do we not get nulls here?
     // they seem to be already catched earlier
     // Statement* operator()(Null*);
 
     Statement* parent();
-    std::vector<std::pair<bool, Block_Obj>> slice_by_bubble(Block*);
-    Statement* bubble(AtRule*);
-    Statement* bubble(At_Root_Block*);
+    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
+    void slice_by_bubble(Block*, std::vector<std::pair<bool, Block_Obj>>&);
+    Statement* bubble(CssAtRule*);
+    Statement* bubble(CssAtRootRule*);
     Statement* bubble(CssMediaRule*);
-    Statement* bubble(SupportsRule*);
     Statement* bubble(CssSupportsRule*);
 
     Block* debubble(Block* children, Statement* parent = 0);
     Block* flatten(const Block*);
-    bool bubblable(Statement*);
+    bool bubblable(Statement*) const;
+
+    sass::vector<StatementObj> flatten2(Statement* s);
 
     // generic fallback
     template <typename U>

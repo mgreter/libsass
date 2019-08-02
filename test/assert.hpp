@@ -1,5 +1,8 @@
 #ifndef ASSERT_HPP
 
+#include <string>
+#include <vector>
+
 std::string escape_string(const std::string& str) {
   std::string out;
   out.reserve(str.size());
@@ -49,7 +52,7 @@ std::string escape_string(const std::string& str) {
   } \
 
 #define ASSERT_STR_EQ(a, b) \
-  if (a != b) { \
+  if (std::string(b) != a) { \
     std::cerr << \
       "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
       "\n  LHS: [" << escape_string(a) << "]" \

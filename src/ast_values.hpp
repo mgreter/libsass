@@ -6,27 +6,53 @@
 #include "sass.hpp"
 #include "ast.hpp"
 
+#include "logger.hpp"
+#include "operators.hpp"
 #include "environment.hpp"
-#include "ordered_map.hpp"
 
 namespace Sass {
+
+  extern sass::string empty_string;
+
+  const sass::string StrEmpty("");
+
+  const sass::string StrTypeMap = "map";
+  const sass::string StrTypeList = "list";
+  const sass::string StrTypeNull = "null";
+  const sass::string StrTypeBool = "bool";
+  const sass::string StrTypeColor = "color";
+  const sass::string StrTypeString = "string";
+  const sass::string StrTypeNumber = "number";
+  const sass::string StrTypeArgList = "arglist";
+  const sass::string StrTypeFunction = "function";
 
   //////////////////////////////////////////////////////////////////////
   // base class for values that support operations
   //////////////////////////////////////////////////////////////////////
   class Value : public Expression {
+    sass::vector<ValueObj> list;
   public:
-    Value(ParserState pstate, bool d = false, bool e = false, bool i = false, Type ct = NONE);
+    // We expect our implementors to hand over the parser state
+    Value(SourceSpan&& pstate, bool d = false, bool e = false, bool i = false, Type ct = NONE);
+    Value(const SourceSpan& pstate, bool d = false, bool e = false, bool i = false, Type ct = NONE);
 
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
 
     // Return the length of this item as a list
-    virtual long lengthAsList() const { return 1; }
+    virtual size_t lengthAsList() const { return 1; }
 
-    virtual std::vector<ValueObj> asVector() {
-      std::vector<ValueObj> list;
-      list.push_back(this);
+    virtual SassNumber* isNumber() { return nullptr; }
+    virtual SassColor* isColor() { return nullptr; }
+    virtual String_Constant* isString() { return nullptr; }
+    virtual const SassNumber* isNumber() const { return nullptr; }
+    virtual const SassColor* isColor() const { return nullptr; }
+    virtual const String_Constant* isString() const { return nullptr; }
+
+    virtual const sass::vector<ValueObj>& asVector() {
+      if (list.empty()) {
+        list.emplace_back(this);
+      }
       return list;
     }
 
@@ -50,39 +76,96 @@ namespace Sass {
       return false;
     }
 
-    virtual Value* withoutSlash() {
+    virtual Value* withoutSlash() override {
+      return this;
+    }
+
+    virtual Value* removeSlash() override {
       return this;
     }
 
     // Return normalized index for vector from overflowable sass index
-    long sassIndexToListIndex(Value* sassIndex, double epsilon, std::string name = "");
+    size_t sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name = StrEmpty);
 
-    Value* assertValue(std::string name = "");
+    Value* assertValue(Logger& logger, const sass::string& name = StrEmpty) {
+      return this;
+    }
 
-    virtual SassColor* assertColor(std::string name = "");
-    virtual Color_HSLA* assertColorHsla(std::string name = "");
+    virtual Color_RGBA* assertColor(Logger& logger, const sass::string& name = StrEmpty) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        to_string() + " is not a color.",
+        logger, pstate(), name);
+    }
 
-    virtual SassFunction* assertFunction(std::string name = "");
+    virtual Color_HSLA* assertColorHsla(Logger& logger, const sass::string& name = StrEmpty) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        to_string() + " is not a color.",
+        logger, pstate(), name);
+    }
 
-    // SassFunction assertFunction(std::string name = "") = >
+    virtual SassFunction* assertFunction(Logger& logger, const sass::string& name = StrEmpty) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        to_string() + " is not a function reference.",
+        logger, pstate(), name);
+    }
+
+    // SassFunction assertFunction(sass::string name = "") = >
     //   throw _exception("$this is not a function reference.", name);
 
-    virtual SassMap* assertMap(std::string name = "");
+    virtual Map* assertMap(Logger& logger, const sass::string& name = StrEmpty) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        to_string() + " is not a map.",
+        logger, pstate(), name);
+    }
 
-    virtual SassNumber* assertNumber(std::string name = "");
-    virtual SassNumber* assertNumberOrNull(std::string name = "");
+    virtual Number* assertNumber(Logger& logger, const sass::string& name = StrEmpty) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        to_string() + " is not a number.",
+        logger, pstate(), name);
+    }
 
-    virtual SassString* assertString(std::string name = "");
-    virtual SassString* assertStringOrNull(std::string name = "");
+    virtual Number* assertNumberOrNull(Logger& logger, const sass::string& name = StrEmpty) {
+      if (this->isNull()) return nullptr;
+      return this->assertNumber(logger, name);
+    }
 
-    virtual SassArgumentList* assertArgumentList(std::string name = "");
+    virtual String_Constant* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        inspect() + " is not a string.",
+        logger, pstate(), name);
+    }
+
+    virtual String_Constant* assertStringOrNull(Logger& logger, const SourceSpan& parent, const sass::string& name) {
+      if (this->isNull()) return nullptr;
+      return this->assertString(logger, parent, name);
+    }
+
+    virtual SassArgumentList* assertArgumentList(Logger& logger, const sass::string& name = StrEmpty) {
+      callStackFrame frame(logger,
+        Backtrace(pstate()));
+      throw Exception::SassScriptException2(
+        to_string() + " is not an argument list.",
+        logger, pstate(), name);
+    }
 
     /// Converts a `selector-parse()`-style input into a string that can be
-/// parsed.
-///
-/// Returns `null` if [this] isn't a type or a structure that can be parsed as
-/// a selector.
-    bool _selectorStringOrNull(std::string& rv);
+    /// parsed.
+    ///
+    /// Returns `null` if [this] isn't a type or a structure that can be parsed as
+    /// a selector.
+    bool _selectorStringOrNull(Logger& logger, sass::string& rv);
 
 
     /// Converts a `selector-parse()`-style input into a string that can be
@@ -90,16 +173,16 @@ namespace Sass {
     ///
     /// Throws a [SassScriptException] if [this] isn't a type or a structure that
     /// can be parsed as a selector.
-    std::string _selectorString(std::string name = "") {
-      std::string str;
-      if (_selectorStringOrNull(str)) {
+    sass::string _selectorString(Logger& logger, const SourceSpan& pstate, const sass::string& name = StrEmpty) {
+      sass::string str;
+      if (_selectorStringOrNull(logger, str)) {
         return str;
       }
 
-      throw Exception::SassScriptException(
+      throw Exception::SassScriptException2(
         to_sass() + " is not a valid selector: it must be a string,\n"
         "a list of strings, or a list of lists of strings.",
-        name);
+        logger, pstate_, name);
     }
 
     /// Parses [this] as a selector list, in the same manner as the
@@ -111,7 +194,7 @@ namespace Sass {
     ///
     /// If this came from a function argument, [name] is the argument name
     /// (without the `$`). It's used for error reporting.
-    virtual SelectorList* assertSelector(Context& ctx, std::string name = "", bool allowParent = false);
+    SelectorList* assertSelector(Context& ctx, const sass::string& name = StrEmpty, bool allowParent = false);
 
 
     /// Parses [this] as a compound selector, in the same manner as the
@@ -123,18 +206,17 @@ namespace Sass {
     ///
     /// If this came from a function argument, [name] is the argument name
     /// (without the `$`). It's used for error reporting.
-    virtual CompoundSelector* assertCompoundSelector(Context& ctx, std::string name = "", bool allowParent = false);
-
+    CompoundSelector* assertCompoundSelector(Context& ctx, const sass::string& name = StrEmpty, bool allowParent = false);
 
     // General 
     SassList* changeListContents(
-      std::vector<ValueObj> values,
+      sass::vector<ValueObj> values,
       Sass_Separator separator,
       bool hasBrackets);
 
     // Pass explicit list separator
     SassList* changeListContents(
-      std::vector<ValueObj> values,
+      sass::vector<ValueObj> values,
       Sass_Separator separator) {
       return changeListContents(values,
         separator, hasBrackets());
@@ -142,7 +224,7 @@ namespace Sass {
 
     // Pass explicit brackets config
     SassList* changeListContents(
-      std::vector<ValueObj> values,
+      sass::vector<ValueObj> values,
       bool hasBrackets) {
       return changeListContents(values,
         separator(), hasBrackets);
@@ -150,31 +232,91 @@ namespace Sass {
 
     // Re-use current list settings
     SassList* changeListContents(
-      std::vector<ValueObj> values) {
+      sass::vector<ValueObj> values) {
       return changeListContents(values,
         separator(), hasBrackets());
     }
 
     /// The SassScript `>` operation.
-    virtual SassBoolean* greaterThan(Value* other);
+    virtual bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const {
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " > " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
     /// The SassScript `>=` operation.
-    virtual SassBoolean* greaterThanOrEquals(Value* other);
+    virtual bool greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const {
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " >= " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
     /// The SassScript `<` operation.
-    virtual SassBoolean* lessThan(Value* other);
+    virtual bool lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const {
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " < " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
     /// The SassScript `<=` operation.
-    virtual SassBoolean* lessThanOrEquals(Value* other);
-
+    virtual bool lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const {
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " <= " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
     /// The SassScript `*` operation.
-    virtual Value* times(Value* other);
+    virtual Value* times(Value* other, Logger& logger, const SourceSpan& pstate) const {
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " * " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
     /// The SassScript `%` operation.
-    virtual Value* modulo(Value* other);
+    virtual Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const {
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " % " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
+    /// Returns a valid CSS representation of [this].
+    ///
+    /// Throws a [SassScriptException] if [this] can't be represented in plain
+    /// CSS. Use [toString] instead to get a string representation even if this
+    /// isn't valid CSS.
+    ///
+    /// If [quote] is `false`, quoted strings are emitted without quotes.
+    sass::string toCssString(bool quote = true) const;
 
+    /// The SassScript `=` operation.
+    virtual Value* singleEquals(Value* other, Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript `+` operation.
+    virtual Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript `-` operation.
+    virtual Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript `/` operation.
+    virtual Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript unary `+` operation.
+    virtual Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript unary `-` operation.
+    virtual Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript unary `/` operation.
+    virtual Value* unaryDivide(Logger& logger, const SourceSpan& pstate) const;
+
+    /// The SassScript unary `not` operation.
+    virtual Value* unaryNot(Logger& logger, const SourceSpan& pstate) const;
 
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
@@ -214,44 +356,6 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class List : public Value, public Vectorized<Expression_Obj> {
-  private:
-    enum Sass_Separator separator_;
-    ADD_PROPERTY(bool, is_arglist)
-    ADD_PROPERTY(bool, is_bracketed)
-  public:
-    List(ParserState pstate, size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false, bool bracket = false);
-    std::string type() const override { return is_arglist_ ? "arglist" : "list"; }
-    static std::string type_name() { return "list"; }
-    Sass_Separator separator() const override final {
-      return separator_;
-    }
-    void separator(Sass_Separator separator) {
-      separator_ = separator;
-    }
-    const char* sep_string(bool compressed = false) const {
-      return separator() == SASS_SPACE ?
-        " " : (compressed ? "," : ", ");
-    }
-    bool is_invisible() const override { return empty() && !is_bracketed(); }
-    Expression_Obj value_at_index(size_t i);
-    std::vector<Expression_Obj> values();
-
-    virtual size_t hash() const override;
-    virtual size_t size() const;
-
-    SassMap* assertMap(std::string name = "") override final;
-
-    KeywordMap<ExpressionObj> getKeywordArgMap();
-
-
-
-    virtual bool operator== (const Value& rhs) const override;
-
-    ATTACH_COPY_OPERATIONS(List)
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
   class SassList : public Value,
     public Vectorized<ValueObj> {
     virtual bool is_arglist() const { return false; }
@@ -260,8 +364,13 @@ namespace Sass {
     ADD_PROPERTY(bool, hasBrackets);
   public:
 
-    SassList(ParserState pstate,
-      std::vector<ValueObj> values = {},
+    SassList(SourceSpan&& pstate,
+      const sass::vector<ValueObj>& values = {},
+      enum Sass_Separator seperator = SASS_SPACE,
+      bool hasBrackets = false);
+
+    SassList(SourceSpan&& pstate,
+      sass::vector<ValueObj>&& values,
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
 
@@ -273,34 +382,32 @@ namespace Sass {
       separator_ = separator;
     }
 
-    std::vector<ValueObj> asVector() override {
-      return elements();
+    const sass::vector<ValueObj>& asVector() override {
+      return elements(); // create a copy!
     }
 
     bool hasBrackets() override {
       return hasBrackets_;
     }
 
-    SassMap* assertMap(std::string name = "") override final;
-
+    Map* assertMap(Logger& logger, const sass::string& name = StrEmpty) override final;
 
     // Return the length of this item as a list
-    long lengthAsList() const override {
+    size_t lengthAsList() const override {
       return length();
     }
 
     bool isBlank() const override final;
 
-    std::string type() const override { return "list"; }
-    static std::string type_name() { return "list"; }
+    virtual const sass::string& type() const override { return StrTypeList; }
 
     bool is_invisible() const override
     { return isBlank() && !hasBrackets(); }
 
     virtual size_t hash() const override;
 
-    ATTACH_EQ_OPERATIONS(Value);
-    ATTACH_COPY_OPERATIONS(SassList);
+    OVERRIDE_EQ_OPERATIONS(Value);
+    ATTACH_CLONE_OPERATIONS(SassList);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -308,14 +415,17 @@ namespace Sass {
     KeywordMap<ValueObj> _keywords;
     bool _wereKeywordsAccessed;
   public:
+    const sass::string& type() const override final{
+      return StrTypeArgList;
+    }
     bool is_arglist() const override final {
       return true;
     }
-    SassArgumentList* assertArgumentList(std::string name = "") override final {
+    SassArgumentList* assertArgumentList(Logger& logger, const sass::string& name = StrEmpty) override final {
       return this;
     }
 
-    KeywordMap<ValueObj> keywords() {
+    KeywordMap<ValueObj>& keywords() {
       _wereKeywordsAccessed = true;
       return _keywords;
     }
@@ -324,30 +434,36 @@ namespace Sass {
       return _wereKeywordsAccessed;
     }
 
-    SassMap* keywordsAsSassMap() const;
+    Map* keywordsAsSassMap() const;
 
-    SassArgumentList(ParserState pstate,
-      std::vector<ValueObj> values = {},
+    SassArgumentList(SourceSpan&& pstate,
+      sass::vector<ValueObj>&& values = {},
       Sass_Separator sep = SASS_SPACE,
-      KeywordMap<ValueObj> keywords = {});
+      KeywordMap<ValueObj>&& keywords = {});
 
-    ATTACH_EQ_OPERATIONS(Value);
-    ATTACH_COPY_OPERATIONS(SassArgumentList);
+    SassArgumentList(SourceSpan&& pstate,
+      const sass::vector<ValueObj>& values = {},
+      Sass_Separator sep = SASS_SPACE,
+      const KeywordMap<ValueObj>& keywords = {});
+
+    OVERRIDE_EQ_OPERATIONS(Value);
+    ATTACH_CLONE_OPERATIONS(SassArgumentList);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
-  class Map : public Value, public Hashed<ValueObj, ValueObj, Map_Obj> {
+  class Map : public Value, public Hashed<ValueObj, ValueObj> {
+    sass::vector<ValueObj> list;
   public:
-    Map(ParserState pstate, size_t size = 0);
-    std::string type() const override { return "map"; }
-    static std::string type_name() { return "map"; }
+    Map(SourceSpan&& pstate);
+    Map(SourceSpan&& pstate, const Hashed<ValueObj, ValueObj>& copy);
+    Map(SourceSpan&& pstate, Hashed<ValueObj, ValueObj>&& move);
+    const sass::string& type() const override final { return StrTypeMap; }
     bool is_invisible() const override { return empty(); }
-    SassListObj to_list(ParserState& pstate);
 
-    SassMap* assertMap(std::string name = "") override { return this; }
+    Map* assertMap(Logger& logger, const sass::string& name = StrEmpty) override { return this; }
 
     // Return the list separator
     Sass_Separator separator() const override final {
@@ -355,17 +471,18 @@ namespace Sass {
     }
 
     // Return the length of this item as a list
-    long lengthAsList() const override {
-      return length();
+    size_t lengthAsList() const override {
+      return size();
     }
 
-    std::vector<ValueObj> asVector() override final {
-      std::vector<ValueObj> list;
-      for (size_t i = 0; i < length(); i++) {
-        list.push_back(SASS_MEMORY_NEW(
-          SassList, getKey(i)->pstate(),
-          { getKey(i), getValue(i) },
+    const sass::vector<ValueObj>& asVector() override final {
+      if (list.empty()) {
+      for (auto kv : elements_) {
+        list.emplace_back(SASS_MEMORY_NEW(
+          SassList, kv.first->pstate(),
+            sass::vector<ValueObj>{ kv.first, kv.second },
           SASS_SPACE));
+      }
       }
       return list;
     }
@@ -374,7 +491,7 @@ namespace Sass {
 
     virtual bool operator== (const Value& rhs) const override;
 
-    ATTACH_COPY_OPERATIONS(Map)
+    ATTACH_CLONE_OPERATIONS(Map)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -392,81 +509,34 @@ namespace Sass {
     HASH_PROPERTY(bool, allowsSlash)
     mutable size_t hash_;
   public:
-    Binary_Expression(ParserState pstate,
+    Binary_Expression(const SourceSpan& pstate,
                       Operand op, Expression_Obj lhs, Expression_Obj rhs);
-
-    virtual void set_delayed(bool delayed) override;
 
     virtual size_t hash() const override;
     enum Sass_OP optype() const { return op_.operand; }
-    // ATTACH_COPY_OPERATIONS(Binary_Expression)
+    // ATTACH_CLONE_OPERATIONS(Binary_Expression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   ////////////////////////////////////////////////////
   // Function reference.
   ////////////////////////////////////////////////////
-  class Function final : public Value {
-  public:
-    ADD_PROPERTY(Definition_Obj, definition)
-    ADD_PROPERTY(bool, is_css)
-  public:
-    Function(ParserState pstate, Definition_Obj def, bool css);
-
-    std::string type() const override { return "function"; }
-    static std::string type_name() { return "function"; }
-    bool is_invisible() const override { return true; }
-
-    std::string name();
-
-    bool operator== (const Value& rhs) const override;
-
-    // ATTACH_COPY_OPERATIONS(Function)
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
   class SassFunction final : public Value {
   public:
     ADD_PROPERTY(CallableObj, callable);
   public:
     SassFunction(
-      ParserState pstate,
+      SourceSpan&& pstate,
       CallableObj callable);
 
-    std::string type() const override { return "function"; }
-    static std::string type_name() { return "function"; }
+    const sass::string& type() const override final { return StrTypeFunction; }
     bool is_invisible() const override { return true; }
 
     bool operator== (const Value& rhs) const override;
 
-    SassFunction* assertFunction(std::string name = "") override final { return this; }
+    SassFunction* assertFunction(Logger& logger, const sass::string& name = StrEmpty) override final { return this; }
 
-    // ATTACH_COPY_OPERATIONS(Function)
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
-  //////////////////
-  // Function calls.
-  //////////////////
-  class FunctionExpression final : public Expression {
-    HASH_CONSTREF(InterpolationObj, sname)
-    HASH_PROPERTY(Arguments_Obj, arguments)
-    HASH_PROPERTY(Function_Obj, func)
-    ADD_PROPERTY(std::string, ns)
-    ADD_PROPERTY(bool, via_call)
-    ADD_PROPERTY(void*, cookie)
-    mutable size_t hash_;
-  public:
-    FunctionExpression(ParserState pstate, std::string n, Arguments_Obj args, std::string ns);
-
-    FunctionExpression(ParserState pstate, InterpolationObj n, ArgumentsObj args, std::string ns);
-
-    std::string name() const;
-    bool is_css();
-
-    size_t hash() const override;
-
-    // ATTACH_COPY_OPERATIONS(FunctionExpression)
+    // ATTACH_CLONE_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -474,11 +544,15 @@ namespace Sass {
   // Variable references.
   ///////////////////////
   class Variable final : public Expression {
-    ADD_CONSTREF(std::string, name)
+    ADD_CONSTREF(EnvString, name);
+    ADD_PROPERTY(IdxRef, vidx);
+    ADD_PROPERTY(IdxRef, pidx);
   public:
-    Variable(ParserState pstate, std::string n);
+    Variable(const SourceSpan& pstate,
+      const EnvString& name,
+      IdxRef vidx, IdxRef pidx);
     virtual size_t hash() const override;
-    // ATTACH_COPY_OPERATIONS(Variable)
+    // ATTACH_CLONE_OPERATIONS(Variable)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -492,65 +566,317 @@ namespace Sass {
 
     // The representation of this number as two
     // slash-separated numbers, if it has one.
-    ADD_PROPERTY(NumberObj, lhsAsSlash)
-    ADD_PROPERTY(NumberObj, rhsAsSlash)
+    ADD_CONSTREF(NumberObj, lhsAsSlash);
+    ADD_CONSTREF(NumberObj, rhsAsSlash);
 
 
 
     mutable size_t hash_;
   public:
-    Number(ParserState pstate, double val, std::string u = "", bool zero = true);
-    Number(ParserState pstate, double val, Units units, bool zero = true);
+    Number(SourceSpan&& pstate, double val, const sass::string& u = StrEmpty, bool zero = true);
+    Number(SourceSpan&& pstate, double val, Units&& units, bool zero = true);
 
-    long assertInt(double epsilon, std::string name = "") {
-      if (fuzzyIsInt(value_, epsilon)) {
-        return fuzzyAsInt(value_, epsilon);
+    virtual SassNumber* isNumber() { return this; }
+    virtual const SassNumber* isNumber() const { return this; }
+
+    bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (SassNumber* rhs = other->isNumber()) {
+        // unitless or only having one unit are equivalent (3.4)
+        // therefore we need to reduce the units beforehand
+        size_t lhs_units = numerators.size() + denominators.size();
+        size_t rhs_units = rhs->numerators.size() + rhs->denominators.size();
+        if (!lhs_units || !rhs_units) {
+          return value() > rhs->value();
+        }
+        Number l(*this), r(rhs); l.reduce(); r.reduce();
+        // ensure both have same units
+        l.normalize(); r.normalize();
+        Units& lhs_unit = l, & rhs_unit = r;
+        if (!(lhs_unit == rhs_unit)) {
+          /* ToDo: do we always get usefull backtraces? */
+          throw Exception::SassScriptException2(
+            "Incompatible units " + lhs_unit.unit()
+            + " and " + rhs_unit.unit() + ".",
+            logger, pstate);
+        }
+        if (lhs_unit == rhs_unit) {
+          return l.value() > r.value();
+        }
+        else {
+          // ToDo: implement directly?
+          return lhs_unit > rhs_unit;
+        }
       }
-      throw Exception::SassScriptException(
-        inspect() + " is not an int.", name);
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " > " + other->to_css() + "\".",
+        logger, pstate);
     }
 
-    Number* assertNoUnits(std::string name = "") {
+    bool greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (SassNumber * rhs = other->isNumber()) {
+        // unitless or only having one unit are equivalent (3.4)
+        // therefore we need to reduce the units beforehand
+        size_t lhs_units = numerators.size() + denominators.size();
+        size_t rhs_units = rhs->numerators.size() + rhs->denominators.size();
+        if (!lhs_units || !rhs_units) {
+          return value() >= rhs->value();
+        }
+        Number l(*this), r(rhs); l.reduce(); r.reduce();
+        // ensure both have same units
+        l.normalize(); r.normalize();
+        Units& lhs_unit = l, & rhs_unit = r;
+        if (!(lhs_unit == rhs_unit)) {
+          /* ToDo: do we always get usefull backtraces? */
+          throw Exception::SassScriptException2(
+            "Incompatible units " + lhs_unit.unit()
+            + " and " + rhs_unit.unit() + ".",
+            logger, pstate);
+        }
+        if (lhs_unit == rhs_unit) {
+          return l.value() >= r.value();
+        }
+        else {
+          // ToDo: implement directly?
+          return lhs_unit >= rhs_unit;
+        }
+      }
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " >= " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    bool lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (SassNumber * rhs = other->isNumber()) {
+        // unitless or only having one unit are equivalent (3.4)
+        // therefore we need to reduce the units beforehand
+        size_t lhs_units = numerators.size() + denominators.size();
+        size_t rhs_units = rhs->numerators.size() + rhs->denominators.size();
+        if (!lhs_units || !rhs_units) {
+          return value() < rhs->value();
+        }
+        Number l(*this), r(rhs); l.reduce(); r.reduce();
+        // ensure both have same units
+        l.normalize(); r.normalize();
+        Units& lhs_unit = l, & rhs_unit = r;
+        if (!(lhs_unit == rhs_unit)) {
+          /* ToDo: do we always get usefull backtraces? */
+          throw Exception::SassScriptException2(
+            "Incompatible units " + lhs_unit.unit()
+            + " and " + rhs_unit.unit() + ".",
+            logger, pstate);
+        }
+        if (lhs_unit == rhs_unit) {
+          return l.value() < r.value();
+        }
+        else {
+          return lhs_unit < rhs_unit;
+        }
+      }
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " < " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    bool lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (SassNumber * rhs = other->isNumber()) {
+        // unitless or only having one unit are equivalent (3.4)
+        // therefore we need to reduce the units beforehand
+        size_t lhs_units = numerators.size() + denominators.size();
+        size_t rhs_units = rhs->numerators.size() + rhs->denominators.size();
+        if (!lhs_units || !rhs_units) {
+          return value() <= rhs->value();
+        }
+        Number l(*this), r(rhs); l.reduce(); r.reduce();
+        // ensure both have same units
+        l.normalize(); r.normalize();
+        Units& lhs_unit = l, & rhs_unit = r;
+        if (!(lhs_unit == rhs_unit)) {
+          /* ToDo: do we always get usefull backtraces? */
+          throw Exception::SassScriptException2(
+            "Incompatible units " + lhs_unit.unit()
+            + " and " + rhs_unit.unit() + ".",
+            logger, pstate);
+        }
+        if (lhs_unit == rhs_unit) {
+          return l.value() <= r.value();
+        }
+        else {
+          return lhs_unit <= rhs_unit;
+        }
+      }
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " <= " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (const SassNumber * nr = other->isNumber()) {
+        try { return Operators::op_numbers(Sass_OP::MOD, *this, *nr, pstate); }
+        catch (Exception::IncompatibleUnits& e) {
+          callStackFrame frame(logger, Backtrace(pstate));
+          throw Exception::SassScriptException2(
+            e.what(), logger, pstate);
+        }
+      }
+      if (!other->isColor()) return Value::plus(other, logger, pstate);
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " % " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (const SassNumber * nr = other->isNumber()) {
+        try { return Operators::op_numbers(Sass_OP::ADD, *this, *nr, pstate); }
+        catch (Exception::IncompatibleUnits& e) {
+          callStackFrame frame(logger, Backtrace(pstate));
+          throw Exception::SassScriptException2(
+            e.what(), logger, pstate);
+        }
+      }
+      if (!other->isColor()) return Value::plus(other, logger, pstate);
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " + " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (const SassNumber * nr = other->isNumber()) {
+        try { return Operators::op_numbers(Sass_OP::SUB, *this, *nr, pstate); }
+        catch (Exception::IncompatibleUnits& e) {
+          callStackFrame frame(logger, Backtrace(pstate));
+          throw Exception::SassScriptException2(
+            e.what(), logger, pstate);
+        }
+      }
+      if (!other->isColor()) return Value::minus(other, logger, pstate);
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " - " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    Value* times(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (const SassNumber * nr = other->isNumber()) {
+        try { return Operators::op_numbers(Sass_OP::MUL, *this, *nr, pstate); }
+        catch (Exception::IncompatibleUnits& e) {
+          callStackFrame frame(logger, Backtrace(pstate));
+          throw Exception::SassScriptException2(
+            e.what(), logger, pstate);
+        }
+      }
+      if (!other->isColor()) return Value::times(other, logger, pstate);
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " * " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (const SassNumber * nr = other->isNumber()) {
+        try { return Operators::op_numbers(Sass_OP::DIV, *this, *nr, pstate); }
+        catch (Exception::IncompatibleUnits& e) {
+          callStackFrame frame(logger, Backtrace(pstate));
+          throw Exception::SassScriptException2(
+            e.what(), logger, pstate);
+        }
+      }
+      if (!other->isColor()) return Value::dividedBy(other, logger, pstate);
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " / " + other->to_css() + "\".",
+        logger, pstate);
+    }
+
+    Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const override final {
+      return SASS_MEMORY_COPY(this);
+    }
+
+    Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final {
+      SassNumber* cpy = SASS_MEMORY_COPY(this);
+      cpy->value(cpy->value() * -1.0);
+      return cpy;
+    }
+
+    long assertInt(Logger& logger, const SourceSpan& pstate, const sass::string& name = StrEmpty) {
+      if (fuzzyIsInt(value_, logger.epsilon)) {
+        return fuzzyAsInt(value_, logger.epsilon);
+      }
+      callStackFrame frame(logger, Backtrace(this->pstate()));
+      throw Exception::SassScriptException2(
+        inspect() + " is not an int.",
+        logger, pstate, name);
+    }
+
+    Number* assertNoUnits(Logger& logger, const SourceSpan& pstate, const sass::string& name = StrEmpty) {
       if (!hasUnits()) return this;
-      throw Exception::SassScriptException(
+      callStackFrame frame(logger, Backtrace(this->pstate()));
+      throw Exception::SassScriptException2(
         "Expected " + inspect() + " to have no units.",
-        name);
+        logger, pstate, name);
     }
 
-    bool hasUnit(std::string unit) {
+    bool hasUnit(const sass::string& unit) {
       return numerators.size() == 1 &&
         denominators.empty() &&
         numerators.front() == unit;
     }
 
-    Value* withoutSlash() override final {
+    Value* withoutSlash() override final
+    {
       if (!hasAsSlash()) return this;
-      SassNumber* copy = SASS_MEMORY_COPY(this);
-      copy->lhsAsSlash({});
-      copy->rhsAsSlash({});
+      // we are the only holder of this item
+      // therefore should be safe to alter it
+      if (this->refcount == 1) {
+        lhsAsSlash_.clear();
+        rhsAsSlash_.clear();
+        return this;
+      }
+      // Otherwise we need to make a copy first
+      Number* copy = SASS_MEMORY_COPY(this);
+      copy->lhsAsSlash_.clear();
+      copy->rhsAsSlash_.clear();
       return copy;
     }
 
 
-    Number* assertUnit(std::string unit, std::string name = "") {
+    Number* assertUnit(Logger& logger, const SourceSpan& pstate, const sass::string& unit, const sass::string& name = StrEmpty) {
       if (hasUnit(unit)) return this;
-      throw Exception::SassScriptException(
+      callStackFrame frame(logger, Backtrace(this->pstate()));
+      throw Exception::SassScriptException2(
         "Expected " + inspect() + " to have unit \"" + unit + "\".",
-        name);
+        logger, pstate, name);
     }
 
 
-    Number* assertNumber(std::string name = "") override {
+    Number* assertNumber(Logger& logger, const sass::string& name = StrEmpty) override {
       return this;
     }
 
-    double valueInRange(double min, double max, double epsilon, std::string name = "") const {
+    double valueInRange(double min, double max,
+      Logger& logger, const SourceSpan& pstate, const sass::string& name = StrEmpty) const {
       double result = value_;
-      if (!fuzzyCheckRange(value_, min, max, epsilon, result)) {
-        std::stringstream msg;
+      if (!fuzzyCheckRange(value_, min, max, logger.epsilon, result)) {
+        sass::sstream msg;
         msg << "Expected " << inspect() << " to be within ";
         msg << min << unit() << " and " << max << unit() << ".";
-        throw Exception::SassScriptException(msg.str(), name);
+        callStackFrame frame(logger, Backtrace(this->pstate()));
+        throw Exception::SassScriptException2(
+          msg.str(), logger, pstate, name);
       }
       return result;
     }
@@ -559,8 +885,7 @@ namespace Sass {
 
     bool zero() { return zero_; }
 
-    std::string type() const override { return "number"; }
-    static std::string type_name() { return "number"; }
+    const sass::string& type() const override final { return StrTypeNumber; }
 
     bool hasAsSlash() {
       return !lhsAsSlash_.isNull()
@@ -579,12 +904,14 @@ namespace Sass {
 
     bool operator< (const Number& rhs) const;
     bool operator> (const Number& rhs) const;
+    bool operator<= (const Number& rhs) const;
+    bool operator>= (const Number& rhs) const;
     bool operator== (const Number& rhs) const;
 
 
     bool operator== (const Value& rhs) const override;
     // COMPLEMENT_OPERATORS(Number)
-    ATTACH_COPY_OPERATIONS(Number)
+    ATTACH_CLONE_OPERATIONS(Number)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -592,15 +919,15 @@ namespace Sass {
   // Colors.
   //////////
   class Color : public Value {
-    ADD_CONSTREF(std::string, disp)
+    ADD_CONSTREF(sass::string, disp)
     HASH_PROPERTY(double, a)
   protected:
     mutable size_t hash_;
   public:
-    Color(ParserState pstate, double a = 1, const std::string disp = "");
+    Color(const SourceSpan& pstate, double a = 1, const sass::string& disp = StrEmpty);
+    Color(SourceSpan&& pstate, double a = 1, const sass::string& disp = StrEmpty);
 
-    std::string type() const override { return "color"; }
-    static std::string type_name() { return "color"; }
+    const sass::string& type() const override final { return StrTypeColor; }
 
     virtual size_t hash() const override = 0;
 
@@ -611,6 +938,47 @@ namespace Sass {
 
     virtual Color_HSLA* copyAsHSLA() const = 0;
     virtual Color_HSLA* toHSLA() = 0;
+
+    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (other->isNumber() || other->isColor()) {
+        callStackFrame frame(logger, Backtrace(pstate));
+        throw Exception::SassScriptException2(
+          "Undefined operation \"" + to_css()
+          + " + " + other->to_css() + "\".",
+          logger, pstate);
+      }
+      return Value::plus(other, logger, pstate);
+    }
+
+    Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (other->isNumber() || other->isColor()) {
+        callStackFrame frame(logger, Backtrace(pstate));
+        throw Exception::SassScriptException2(
+          "Undefined operation \"" + to_css()
+          + " - " + other->to_css() + "\".",
+          logger, pstate);
+      }
+      return Value::minus(other, logger, pstate);
+    }
+
+    Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (other->isNumber() || other->isColor()) {
+        callStackFrame frame(logger, Backtrace(pstate));
+        throw Exception::SassScriptException2(
+          "Undefined operation \"" + to_css()
+          + " / " + other->to_css() + "\".",
+          logger, pstate);
+      }
+      return Value::dividedBy(other, logger, pstate);
+    }
+
+    Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      callStackFrame frame(logger, Backtrace(pstate));
+      throw Exception::SassScriptException2(
+        "Undefined operation \"" + to_css()
+        + " % " + other->to_css() + "\".",
+        logger, pstate);
+    }
 
     ATTACH_VIRTUAL_COPY_OPERATIONS(Color)
   };
@@ -623,10 +991,11 @@ namespace Sass {
     HASH_PROPERTY(double, g)
     HASH_PROPERTY(double, b)
   public:
-    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1.0, const std::string disp = "");
+    Color_RGBA(const SourceSpan& pstate, double r, double g, double b, double a = 1.0, const sass::string& disp = StrEmpty);
+    Color_RGBA(SourceSpan&& pstate, double r, double g, double b, double a = 1.0, const sass::string& disp = StrEmpty);
 
-    std::string type() const override { return "color"; }
-    static std::string type_name() { return "color"; }
+    virtual Color_RGBA* isColor() { return this; }
+    virtual const Color_RGBA* isColor() const { return this; }
 
     size_t hash() const override;
 
@@ -636,17 +1005,17 @@ namespace Sass {
     Color_HSLA* copyAsHSLA() const override;
     Color_HSLA* toHSLA() override { return copyAsHSLA(); }
 
-    SassColor* assertColor(std::string name = "") override {
+    Color_RGBA* assertColor(Logger& logger, const sass::string& name = StrEmpty) override {
       return this;
     }
 
-    Color_HSLA* assertColorHsla(std::string name = "") override {
+    Color_HSLA* assertColorHsla(Logger& logger, const sass::string& name = StrEmpty) override {
       return toHSLA();
     }
 
     bool operator== (const Value& rhs) const override;
 
-    ATTACH_COPY_OPERATIONS(Color_RGBA)
+    ATTACH_CLONE_OPERATIONS(Color_RGBA)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -659,16 +1028,13 @@ namespace Sass {
     HASH_PROPERTY(double, s)
     HASH_PROPERTY(double, l)
   public:
-    Color_HSLA(ParserState pstate, double h, double s, double l, double a = 1, const std::string disp = "");
+    Color_HSLA(SourceSpan&& pstate, double h, double s, double l, double a = 1, const sass::string& disp = StrEmpty);
 
-    std::string type() const override { return "color"; }
-    static std::string type_name() { return "color"; }
-
-    SassColor* assertColor(std::string name = "") override {
+    Color_RGBA* assertColor(Logger& logger, const sass::string& name = StrEmpty) override {
       return toRGBA();
     }
 
-    Color_HSLA* assertColorHsla(std::string name = "") override {
+    Color_HSLA* assertColorHsla(Logger& logger, const sass::string& name = StrEmpty) override {
       return this;
     }
 
@@ -682,7 +1048,7 @@ namespace Sass {
 
     bool operator== (const Value& rhs) const override;
 
-    ATTACH_COPY_OPERATIONS(Color_HSLA)
+    ATTACH_CLONE_OPERATIONS(Color_HSLA)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -690,11 +1056,11 @@ namespace Sass {
   // Errors from Sass_Values.
   //////////////////////////////
   class Custom_Error final : public Value {
-    ADD_CONSTREF(std::string, message)
+    ADD_CONSTREF(sass::string, message)
   public:
-    Custom_Error(ParserState pstate, std::string msg);
+    Custom_Error(SourceSpan&& pstate, const sass::string& msg);
     bool operator== (const Value& rhs) const override;
-    // ATTACH_COPY_OPERATIONS(Custom_Error)
+    // ATTACH_CLONE_OPERATIONS(Custom_Error)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -702,11 +1068,11 @@ namespace Sass {
   // Warnings from Sass_Values.
   //////////////////////////////
   class Custom_Warning final : public Value {
-    ADD_CONSTREF(std::string, message)
+    ADD_CONSTREF(sass::string, message)
   public:
-    Custom_Warning(ParserState pstate, std::string msg);
+    Custom_Warning(SourceSpan&& pstate, const sass::string& msg);
     bool operator== (const Value& rhs) const override;
-    // ATTACH_COPY_OPERATIONS(Custom_Warning)
+    // ATTACH_CLONE_OPERATIONS(Custom_Warning)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -717,7 +1083,7 @@ namespace Sass {
     HASH_PROPERTY(bool, value)
     mutable size_t hash_;
   public:
-    Boolean(ParserState pstate, bool val);
+    Boolean(SourceSpan&& pstate, bool val);
     operator bool() override { return value_; }
 
     // Return the list separator
@@ -725,8 +1091,13 @@ namespace Sass {
       return value_;
     }
 
-    std::string type() const override { return "bool"; }
-    static std::string type_name() { return "bool"; }
+    Value* unaryNot(Logger& logger, const SourceSpan& pstate) const override final
+    {
+      return SASS_MEMORY_NEW(Boolean,
+        pstate, !value_);
+    }
+
+    const sass::string& type() const override final { return StrTypeBool; }
 
     size_t hash() const override;
 
@@ -734,120 +1105,95 @@ namespace Sass {
 
     bool operator== (const Value& rhs) const override;
 
-    ATTACH_COPY_OPERATIONS(Boolean)
+    ATTACH_CLONE_OPERATIONS(Boolean)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  ////////////////////////////////////////////////////////////////////////
-  // Abstract base class for Sass string values. Includes interpolated and
-  // "flat" strings.
-  ////////////////////////////////////////////////////////////////////////
-  class String : public Value {
-  public:
-    String(ParserState pstate, bool delayed = false);
-    static std::string type_name() { return "string"; }
-    virtual ~String() = 0;
-    virtual bool operator==(const Value& rhs) const override {
-      return this->to_string() == rhs.to_string();
-    };
-    ATTACH_VIRTUAL_COPY_OPERATIONS(String);
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-  inline String::~String() { };
-
-
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
-  class Interpolation final : public String,
+  class Interpolation final : public Expression,
     public Vectorized<ExpressionObj> {
 
   public:
-    std::string getPlainString();
-    StringLiteral* getInitialPlain();
+    const sass::string& getPlainString() const;
+    const sass::string& getInitialPlain() const;
 
     virtual bool operator==(const Interpolation& rhs) const {
-      return String::operator==(rhs)
-        && Vectorized::operator==(rhs);
+      return Vectorized::operator==(rhs);
     }
     virtual bool operator!=(const Interpolation& rhs) const {
-      return String::operator!=(rhs)
-        || Vectorized::operator!=(rhs);
+      return Vectorized::operator!=(rhs);
     }
 
-    Interpolation(ParserState pstate, Expression* ex = nullptr);
-    // ATTACH_COPY_OPERATIONS(Interpolation)
+    Interpolation(const SourceSpan& pstate, Expression* ex = nullptr);
+    // ATTACH_CLONE_OPERATIONS(Interpolation)
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
-  class StringExpression final : public String {
+  class StringExpression final : public Expression {
     ADD_PROPERTY(InterpolationObj, text)
     ADD_PROPERTY(bool, hasQuotes)
   public:
     uint8_t findBestQuote();
-    static StringExpression* plain(ParserState pstate, std::string text, bool quotes = false);
+    static StringExpression* plain(const SourceSpan& pstate, const sass::string& text, bool quotes = false);
     InterpolationObj getAsInterpolation(bool escape = false, uint8_t quote = 0);
-    StringExpression(ParserState pstate, InterpolationObj text, bool quote = false);
-    ATTACH_COPY_OPERATIONS(StringExpression)
+    StringExpression(SourceSpan&& pstate, InterpolationObj text, bool quote = false);
+    ATTACH_CLONE_OPERATIONS(StringExpression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
   ///////////////////////////////////////////////////////////////////////
   // A native string wrapped as an expression
   ///////////////////////////////////////////////////////////////////////
-  class StringLiteral final : public String {
-    ADD_PROPERTY(std::string, text)
+  class StringLiteral final : public Value {
+    ADD_CONSTREF(sass::string, text)
   public:
-    StringLiteral(ParserState pstate, std::string text);
-    bool isBlank() const override final;
-    ATTACH_COPY_OPERATIONS(StringLiteral);
+    StringLiteral(SourceSpan&& pstate, const sass::string& text);
+    StringLiteral(SourceSpan&& pstate, sass::string&& text);
+    ATTACH_CLONE_OPERATIONS(StringLiteral);
     ATTACH_CRTP_PERFORM_METHODS();
-    ATTACH_EQ_OPERATIONS(Value);
   };
 
   ////////////////////////////////////////////////////////
   // Flat strings -- the lowest level of raw textual data.
   ////////////////////////////////////////////////////////
-  class String_Constant : public String {
-    ADD_PROPERTY(char, quote_mark)
-    HASH_CONSTREF(std::string, value)
+  class String_Constant : public Value {
+    HASH_CONSTREF(sass::string, value);
+    ADD_PROPERTY(bool, hasQuotes);
   protected:
     mutable size_t hash_;
   public:
-    String_Constant(ParserState pstate, std::string val, bool css = true);
-    String_Constant(ParserState pstate, const char* beg, bool css = true);
-    String_Constant(ParserState pstate, const char* beg, const char* end, bool css = true);
-    String_Constant(ParserState pstate, const Token& tok, bool css = true);
-    std::string type() const override { return "string"; }
-    static std::string type_name() { return "string"; }
+    virtual String_Constant* isString() { return this; }
+    virtual const String_Constant* isString() const { return this; }
+
+    String_Constant(SourceSpan&& pstate, const char* beg, bool hasQuotes = false);
+    String_Constant(SourceSpan&& pstate, const sass::string& val, bool hasQuotes = false);
+    String_Constant(SourceSpan&& pstate, sass::string&& val, bool hasQuotes = false);
+    const sass::string& type() const override { return StrTypeString; }
     bool is_invisible() const override;
     size_t hash() const override;
     bool operator== (const Value& rhs) const override;
     // quotes are forced on inspection
-    virtual std::string inspect() const override;
-    bool hasQuotes() const {
-      return quote_mark_ == '\0';
-    }
-    SassString* assertString(std::string name = "") override final {
+    virtual sass::string inspect() const override;
+    virtual bool isBlank() const override;
+    String_Constant* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name = StrEmpty) override final {
       return this;
     }
-    ATTACH_COPY_OPERATIONS(String_Constant)
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
 
-  ////////////////////////////////////////////////////////
-  // Possibly quoted string (unquote on instantiation)
-  ////////////////////////////////////////////////////////
-  class String_Quoted final : public String_Constant {
-  public:
-    String_Quoted(ParserState pstate, std::string val, char q = 0,
-      bool keep_utf8_escapes = false, bool skip_unquoting = false,
-      bool strict_unquoting = true, bool css = true);
-    bool operator== (const Value& rhs) const override;
-    // quotes are forced on inspection
-    std::string inspect() const override;
-    ATTACH_COPY_OPERATIONS(String_Quoted)
+    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
+      if (const String_Constant * str = other->isString()) {
+        sass::string text(value() + str->value());
+        return SASS_MEMORY_NEW(String_Constant,
+          pstate, std::move(text), hasQuotes());
+      }
+      sass::string text(value() + other->toCssString());
+      return SASS_MEMORY_NEW(String_Constant,
+        pstate, std::move(text), hasQuotes());
+    }
+
+    ATTACH_CLONE_OPERATIONS(String_Constant)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -856,9 +1202,8 @@ namespace Sass {
   //////////////////
   class Null final : public Value {
   public:
-    Null(ParserState pstate);
-    std::string type() const override { return "null"; }
-    static std::string type_name() { return "null"; }
+    Null(SourceSpan&& pstate);
+    const sass::string& type() const override final { return StrTypeNull; }
     bool is_invisible() const override { return true; }
     operator bool() override { return false; }
     bool is_false() override { return true; }
@@ -877,9 +1222,15 @@ namespace Sass {
       return true;
     }
 
+    Value* unaryNot(Logger& logger, const SourceSpan& pstate) const override final
+    {
+      return SASS_MEMORY_NEW(Boolean,
+        pstate, true);
+    }
+
     bool operator== (const Value& rhs) const override;
 
-    // ATTACH_COPY_OPERATIONS(Null)
+    // ATTACH_CLONE_OPERATIONS(Null)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -888,13 +1239,12 @@ namespace Sass {
   //////////////////////////////////
   class Parent_Reference final : public Value {
   public:
-    Parent_Reference(ParserState pstate);
-    std::string type() const override { return "parent"; }
-    static std::string type_name() { return "parent"; }
+    Parent_Reference(SourceSpan&& pstate);
+    // const sass::string& type() const override final { return "parent"; }
     bool operator==(const Value& rhs) const override {
       return true; // they are always equal
     };
-    // ATTACH_COPY_OPERATIONS(Parent_Reference)
+    // ATTACH_CLONE_OPERATIONS(Parent_Reference)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

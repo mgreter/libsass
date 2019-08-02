@@ -1,6 +1,8 @@
 #include "operators.hpp"
 #include "fn_utils.hpp"
 #include "fn_maps.hpp"
+#include "ast.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -10,23 +12,28 @@ namespace Sass {
 
       BUILT_IN_FN(get)
       {
-        SassMapObj map = arguments[0]->assertMap("map");
-        Value* key = arguments[1]->assertValue("key");
+        SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
+        Value* key = arguments[1]->assertValue(*ctx.logger, "key");
         if (Value* value = map->at(key)) { return value; }
         else { return SASS_MEMORY_NEW(Null, pstate); }
       }
 
       BUILT_IN_FN(merge)
       {
-        SassMapObj map1 = arguments[0]->assertMap("map1");
-        SassMapObj map2 = arguments[1]->assertMap("map2");
-        SassMapObj map = SASS_MEMORY_NEW(Map, pstate);
-        for (auto key : map1->keys()) { map->insert(key, map1->at(key)); }
-        for (auto key : map2->keys()) { map->insert(key, map2->at(key)); }
-        // std::copy(map1->begin(), map1->end(),
-        //   std::back_inserter(map->elements()));
-        // std::copy(map2->begin(), map2->end(),
-        //   std::back_inserter(map->elements()));
+        // debug_ast(arguments[0]);
+        SassMapObj map1 = arguments[0]->assertMap(*ctx.logger, "map1");
+        SassMapObj map2 = arguments[1]->assertMap(*ctx.logger, "map2");
+        // We assign to ourself, so we can optimize this
+        if (ctx.assigningTo.isValid()) {
+          ExpressionObj& value = ctx.varRoot.getVariable(ctx.assigningTo);
+          if (value.ptr() == map1.ptr()) {
+            for (auto kv : map2->elements()) { map1->set(kv); }
+            return map1.detach();
+          }
+        }
+        SassMapObj map = SASS_MEMORY_NEW(Map, pstate, map1);
+        // map->reserve(map->size() + map2->size());
+        for (auto kv : map2->elements()) { map->set(kv); }
         return map.detach();
       }
 
@@ -35,15 +42,27 @@ namespace Sass {
       // explicit overload for it.
       BUILT_IN_FN(remove_one)
       {
-        return arguments[0]->assertMap("map");
+        return arguments[0]->assertMap(*ctx.logger, "map");
       }
 
       BUILT_IN_FN(remove_many)
       {
-        SassMapObj map = arguments[0]->assertMap("map");
+        SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
+        // if (ctx.assigningTo.isValid()) {
+        //   ExpressionObj& value = ctx.varRoot.getVariable(ctx.assigningTo);
+        //   if (value.ptr() && value.ptr() == map.ptr()) {
+        //     auto& values = arguments[2]->asVector();
+        //     map->erase(arguments[1]);
+        //     for (auto key : values) {
+        //       map->erase(key);
+        //     }
+        //     return map.detach();
+        //   }
+        // }
+
         SassMapObj copy = SASS_MEMORY_COPY(map);
+        auto& values = arguments[2]->asVector();
         copy->erase(arguments[1]);
-        auto values = arguments[2]->asVector();
         for (Value* key : values) {
           copy->erase(key);
         }
@@ -52,107 +71,25 @@ namespace Sass {
 
       BUILT_IN_FN(keys)
       {
-        SassMapObj map = arguments[0]->assertMap("map");
+        SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
         return SASS_MEMORY_NEW(SassList,
-          pstate, map->keys(), SASS_COMMA);
+          pstate, std::move(map->keys()), SASS_COMMA);
       }
 
       BUILT_IN_FN(values)
       {
-        SassMapObj map = arguments[0]->assertMap("map");
+        SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
         return SASS_MEMORY_NEW(SassList,
-          pstate, map->values(), SASS_COMMA);
+          pstate, std::move(map->values()), SASS_COMMA);
       }
 
       BUILT_IN_FN(hasKey)
       {
-        SassMapObj map = arguments[0]->assertMap("map");
-        Value* key = arguments[1]->assertValue("key");
+        SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
+        Value* key = arguments[1]->assertValue(*ctx.logger, "key");
         return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
       }
 
-    }
-
-    /////////////////
-    // MAP FUNCTIONS
-    /////////////////
-
-    Signature map_get_sig = "map-get($map, $key)";
-    BUILT_IN(map_get)
-    {
-      // leaks for "map-get((), foo)" if not Obj
-      // investigate why this is (unexpected)
-      Map_Obj m = ARGM("$map", Map);
-      Expression_Obj v = ARG("$key", Expression, "an expression");
-      try {
-        Value_Obj val = m->at(v);
-        if (!val) return SASS_MEMORY_NEW(Null, pstate);
-        return val.detach();
-      } catch (const std::out_of_range&) {
-        return SASS_MEMORY_NEW(Null, pstate);
-      }
-      catch (...) { throw; }
-    }
-
-    Signature map_has_key_sig = "map-has-key($map, $key)";
-    BUILT_IN(map_has_key)
-    {
-      Map_Obj m = ARGM("$map", Map);
-      Expression_Obj v = ARG("$key", Expression, "an expression");
-      return SASS_MEMORY_NEW(Boolean, pstate, m->has(v));
-    }
-
-    Signature map_keys_sig = "map-keys($map)";
-    BUILT_IN(map_keys)
-    {
-      Map_Obj m = ARGM("$map", Map);
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
-      for ( auto key : m->keys()) {
-        result->append(key);
-      }
-      return result;
-    }
-
-    Signature map_values_sig = "map-values($map)";
-    BUILT_IN(map_values)
-    {
-      Map_Obj m = ARGM("$map", Map);
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
-      for ( auto key : m->keys()) {
-        result->append(m->at(key));
-      }
-      return result;
-    }
-
-    Signature map_merge_sig = "map-merge($map1, $map2)";
-    BUILT_IN(map_merge)
-    {
-      Map_Obj m1 = ARGM("$map1", Map);
-      Map_Obj m2 = ARGM("$map2", Map);
-
-      size_t len = m1->length() + m2->length();
-      Map* result = SASS_MEMORY_NEW(Map, pstate, len);
-      // concat not implemented for maps
-      *result += m1;
-      *result += m2;
-      return result;
-    }
-
-    Signature map_remove_sig = "map-remove($map, $keys...)";
-    BUILT_IN(map_remove)
-    {
-      bool remove;
-      Map_Obj m = ARGM("$map", Map);
-      List_Obj arglist = ARGLIST("$keys");
-      Map* result = SASS_MEMORY_NEW(Map, pstate, 1);
-      for (auto key : m->keys()) {
-        remove = false;
-        for (size_t j = 0, K = arglist->length(); j < K && !remove; ++j) {
-          remove = Operators::eq(key, arglist->value_at_index(j));
-        }
-        if (!remove) *result << std::make_pair(key, m->at(key));
-      }
-      return result;
     }
 
   }

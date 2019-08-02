@@ -175,6 +175,7 @@ endif
 include Makefile.conf
 OBJECTS = $(addprefix src/,$(SOURCES:.cpp=.o))
 COBJECTS = $(addprefix src/,$(CSOURCES:.c=.o))
+HEADOBJS = $(addprefix src/,$(HPPFILES:.hpp=.hpp.gch))
 RCOBJECTS = $(RESOURCES:.rc=.o)
 
 DEBUG_LVL ?= NONE
@@ -183,6 +184,7 @@ CLEANUPS ?=
 CLEANUPS += $(RCOBJECTS)
 CLEANUPS += $(COBJECTS)
 CLEANUPS += $(OBJECTS)
+CLEANUPS += $(HEADOBJS)
 CLEANUPS += $(LIBSASS_LIB)
 
 all: $(BUILD)
@@ -216,14 +218,17 @@ lib/libsass.dll: $(COBJECTS) $(OBJECTS) $(RCOBJECTS) | lib
 	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) \
 	-s -Wl,--subsystem,windows,--out-implib,lib/libsass.a
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-%.o: %.rc
+$(RCOBJECTS): %.o: %.rc
 	$(WINDRES) -i $< -o $@
 
-%.o: %.cpp
+$(OBJECTS): %.o: %.cpp $(HEADOBJS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(COBJECTS): %.o: %.c $(HEADOBJS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(HEADOBJS): %.hpp.gch: %.hpp
+	$(CXX) $(CXXFLAGS) -x c++-header -c -o $@ $<
 
 %: %.o static
 	$(CXX) $(CXXFLAGS) -o $@ $+ $(LDFLAGS) $(LDLIBS)

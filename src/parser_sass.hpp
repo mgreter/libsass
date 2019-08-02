@@ -13,11 +13,11 @@ namespace Sass {
       AUTO, TABS, SPACES,
     };
 
-    SassParser(Context& context, const char* content, const char* path, size_t srcid) :
-      StylesheetParser(context, content, path, srcid),
+    SassParser(Context& context, SourceDataObj source) :
+      StylesheetParser(context, source),
       _currentIndentation(0),
-      _nextIndentation(std::string::npos),
-      _nextIndentationEnd({ content, { srcid, 0, 0 } }),
+      _nextIndentation(sass::string::npos),
+      _nextIndentationEnd({ source->begin(), Offset() }),
       _spaces(Sass_Indent_Type::AUTO)
 
     {}
@@ -59,7 +59,7 @@ namespace Sass {
 
     Interpolation* styleRuleSelector() override final;
 
-    void expectStatementSeparator(std::string name) override final;
+    void expectStatementSeparator(sass::string name) override final;
 
     bool atEndOfStatement() override final;
 
@@ -69,9 +69,9 @@ namespace Sass {
 
     bool scanElse(size_t ifIndentation) override final;
 
-    std::vector<StatementObj> children(Statement* (StylesheetParser::* statement)()) override final;
+    sass::vector<StatementObj> children(Statement* (StylesheetParser::* statement)()) override final;
 
-    std::vector<StatementObj> statements(Statement* (StylesheetParser::* statement)()) override final;
+    sass::vector<StatementObj> statements(Statement* (StylesheetParser::* statement)()) override final;
 
     Statement* _child(Statement* (StylesheetParser::* statement)());
 
@@ -85,7 +85,7 @@ namespace Sass {
 
     bool _lookingAtDoubleNewline();
 
-    void _whileIndentedLower(Statement* (StylesheetParser::* child)(), std::vector<StatementObj>& children);
+    void _whileIndentedLower(Statement* (StylesheetParser::* child)(), sass::vector<StatementObj>& children);
 
     size_t _readIndentation();
 

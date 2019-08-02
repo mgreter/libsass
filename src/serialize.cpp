@@ -87,69 +87,6 @@ namespace Sass {
 
   }
 
-  void SerializeVisitor::visitList(List* value)
-  {
-
-    /*
-    if (value->is_bracketed()) {
-      _buffer.writeCharCode($lbracket);
-    }
-    else if (value->empty()) {
-      if (!_inspect) {
-        // throw SassScriptException("() isn't a valid CSS value");
-      }
-      _buffer.write("()");
-      return;
-    }
-
-    bool singleton = _inspect &&
-      value->length() == 1 &&
-      value->separator() == SASS_COMMA;
-
-    if (singleton && !value->is_bracketed()) {
-      _buffer.writeCharCode($lparen);
-    }
-
-    // addSrcMapOpener(list);
-
-    std::string joiner =
-      value->separator() == SASS_SPACE
-        ? " " : ", ";  // _commaSeparator;
-
-    std::vector<ValueObj> values = value->elements();
-    */
-    /*
-    _writeBetween<Value>(
-      _inspect
-      ? value.asList
-      : value.asList.where((element) = > !element.isBlank),
-      value.separator == ListSeparator.space ? " " : _commaSeparator,
-      _inspect
-      ? (element) {
-      var needsParens = _elementNeedsParens(value.separator, element);
-      if (needsParens) _buffer.writeCharCode($lparen);
-      element.accept(this);
-      if (needsParens) _buffer.writeCharCode($rparen);
-    }
-    : (element) {
-      element.accept(this);
-    });
-
-    // addSrcMapCloser(list);
-
-    if (singleton) {
-      _buffer.writeCharCode($comma);
-      if (!value.hasBrackets) _buffer.writeCharCode($rparen);
-    }
-
-    */
-
-    // if (value->is_bracketed()) {
-    //   _buffer.writeCharCode($rbracket);
-    // }
-
-  }
-
   void SerializeVisitor::visitMap(Map* value)
   {
   }
@@ -194,7 +131,7 @@ namespace Sass {
   // void SerializeVisitor::_writeNumber(double number) {
   // }
 
-  void visitString(String* string)
+  void visitString(String_Constant* string)
   {
     /*
     if (_quote && string.hasQuotes) {
@@ -228,6 +165,14 @@ namespace Sass {
     // _visitChildren(node.children);
 
 //  }
+
+  void SerializeVisitor::visitCssMediaRule(CssMediaRule* node)
+  {
+  }
+
+  void SerializeVisitor::visitCssKeyframeBlock(CssKeyframeBlock* node)
+  {
+  }
 
   void SerializeVisitor::visitAttributeSelector(AttributeSelector* attribute)
   {
@@ -376,7 +321,7 @@ namespace Sass {
   // unambiguous representation of the source structure. Note however that, although
   // this will be valid SCSS, it may not be valid CSS. If [inspect] is `false` and
   // [selector] can't be represented in plain CSS, throws a [SassScriptException].
-  std::string serializeSelector(Selector* selector, bool inspect) {
+  sass::string serializeSelector(Selector* selector, bool inspect) {
 	  SerializeVisitor visitor(inspect, true, true);
 	  selector->accept(visitor);
 	  return visitor.getString();

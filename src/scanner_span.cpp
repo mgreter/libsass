@@ -8,8 +8,10 @@
 
 namespace Sass {
 
-  SpanScanner::SpanScanner(const char* content, const char* path, size_t srcid) :
-    LineScanner(content, path, srcid)
+  SpanScanner::SpanScanner(
+    Logger& logger,
+    SourceDataObj source) :
+    LineScanner(logger, source)
   {
   }
 

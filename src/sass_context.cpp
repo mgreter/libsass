@@ -4,23 +4,28 @@
 #include "ast.hpp"
 
 #include "sass_functions.hpp"
+#include "sass_context.hpp"
+#include "backtrace.hpp"
+#include "source.hpp"
 #include "json.hpp"
+#include <iomanip>
 
 #define LFEED "\n"
 
 // C++ helper
 namespace Sass {
-  // see sass_copy_c_string(std::string str)
-  static inline JsonNode* json_mkstream(const std::stringstream& stream)
+
+  // see sass_copy_c_string(sass::string str)
+  static inline JsonNode* json_mkstream(const sass::sstream& stream)
   {
     // hold on to string on stack!
-    std::string str(stream.str());
+    sass::string str(stream.str());
     return json_mkstring(str.c_str());
   }
 
-  static void handle_string_error(Sass_Context* c_ctx, const std::string& msg, int severety)
+  static void handle_string_error(Sass_Context* c_ctx, const sass::string& msg, int severety)
   {
-    std::stringstream msg_stream;
+    sass::sstream msg_stream;
     JsonNode* json_err = json_mkobject();
     msg_stream << "Error: " << msg << std::endl;
     json_append_member(json_err, "status", json_mknumber(severety));
@@ -36,53 +41,76 @@ namespace Sass {
     json_delete(json_err);
   }
 
-  static int handle_error(Sass_Context* c_ctx) {
-    try {
-      throw;
-    }
-    catch (Exception::Base& e) {
-      std::stringstream msg_stream;
-      std::string cwd(Sass::File::get_cwd());
-      std::string msg_prefix(e.errtype());
-      bool got_newline = false;
-      msg_stream << msg_prefix << ": ";
-      const char* msg = e.what();
-      while (msg && *msg) {
-        if (*msg == '\r') {
-          got_newline = true;
-        }
-        else if (*msg == '\n') {
-          got_newline = true;
-        }
-        else if (got_newline) {
-          msg_stream << std::string(msg_prefix.size() + 2, ' ');
-          got_newline = false;
-        }
-        msg_stream << *msg;
-        ++msg;
-      }
-      if (!got_newline) msg_stream << "\n";
+  static void format_pstate(sass::sstream& msg_stream, SourceSpan pstate)
+  {
+    // now create the code trace (ToDo: maybe have util functions?)
+    if (pstate.position.line != sass::string::npos &&
+      pstate.position.column != sass::string::npos &&
+      pstate.source->begin() != nullptr) {
+      // size_t lines = pstate.position.line;
 
-      if (e.traces.empty()) {
-        // we normally should have some traces, still here as a fallback
-        std::string rel_path(Sass::File::abs2rel(e.pstate.path, cwd, cwd));
-        msg_stream << std::string(msg_prefix.size() + 2, ' ');
-        msg_stream << " on line " << e.pstate.line + 1 << " of " << rel_path << "\n";
+      if (false && pstate.source) {
+
+        SourceData* source = pstate.source;
+        sass::vector<sass::string> lines;
+
+        // Fetch all lines we need to print the state
+        for (size_t i = 0; i != std::string::npos; i++) {
+          lines.emplace_back(source->getLine(pstate.position.line + i));
+        }
+
+        msg_stream << lines[0] << "\n";
+
       }
       else {
-        std::string rel_path(Sass::File::abs2rel(e.pstate.path, cwd, cwd));
-        msg_stream << traces_to_string(e.traces, "        ");
-      }
 
-      // now create the code trace (ToDo: maybe have util functions?)
-      if (e.pstate.line != std::string::npos &&
-          e.pstate.column != std::string::npos &&
-          e.pstate.src != nullptr) {
-        size_t lines = e.pstate.line;
+
         // scan through src until target line
         // move line_beg pointer to line start
+
+        // Implement source->getLine
+
+        sass::string line = pstate.source->getLine(pstate.position.line);
+
+        size_t line_len = line.size();
+        size_t move_in = 0; size_t shorten = 0;
+        size_t left_chars = 42; size_t max_chars = 76;
+
+        if (pstate.position.column > line_len) left_chars = pstate.position.column;
+        if (pstate.position.column > left_chars) move_in = pstate.position.column - left_chars;
+        if (line_len > max_chars + move_in) shorten = line_len - move_in - max_chars;
+
+        auto line_beg = line.begin();
+        auto line_end = line.end();
+
+        utf8::advance(line_beg, move_in, line_end);
+        utf8::retreat(line_end, shorten, line_beg);
+
+        sass::string sanitized; sass::string marker(pstate.position.column - move_in, ' ');
+        utf8::replace_invalid(line_beg, line_end, std::back_inserter(sanitized));
+
+        Offset beg = pstate.position;
+        Offset end = beg + pstate.length;
+
+        sass::string filler;
+        size_t len = pstate.position.column - move_in;
+        for (size_t i = 0; i < len; i += 1) {
+          if (sanitized[i] == '\t') {
+            filler += "    ";
+          }
+          else {
+            filler += " ";
+          }
+        }
+        for (size_t i = sanitized.length(); i != std::string::npos; i -= 1) {
+          if (sanitized[i] == '\t') {
+            sanitized.replace(i, 1, "    ");
+          }
+        }
+
+        /*
         const char* line_beg;
-        for (line_beg = e.pstate.src; *line_beg != '\0'; ++line_beg) {
+        for (line_beg = pstate.source->begin(); *line_beg != '\0'; ++line_beg) {
           if (lines == 0) break;
           if (*line_beg == '\n') --lines;
         }
@@ -96,22 +124,202 @@ namespace Sass {
         size_t move_in = 0; size_t shorten = 0;
         size_t left_chars = 42; size_t max_chars = 76;
         // reported excerpt should not exceed `max_chars` chars
-        if (e.pstate.column > line_len) left_chars = e.pstate.column;
-        if (e.pstate.column > left_chars) move_in = e.pstate.column - left_chars;
+        if (pstate.position.column > line_len) left_chars = pstate.position.column;
+        if (pstate.position.column > left_chars) move_in = pstate.position.column - left_chars;
         if (line_len > max_chars + move_in) shorten = line_len - move_in - max_chars;
         utf8::advance(line_beg, move_in, line_end);
         utf8::retreat(line_end, shorten, line_beg);
-        std::string sanitized; std::string marker(e.pstate.column - move_in, '-');
+        sass::string sanitized; sass::string marker(pstate.position.column - move_in, ' ');
         utf8::replace_invalid(line_beg, line_end, std::back_inserter(sanitized));
-        msg_stream << ">> " << sanitized << "\n";
-        msg_stream << "   " << marker << "^\n";
+
+        // Make sure we dont print any newliness
+        size_t found = sanitized.find_first_of("\r\n");
+        if (found != sass::string::npos) {
+          sanitized = sanitized.substr(0, found);
+        }
+
+        Offset beg = pstate.position;
+        Offset end = beg + pstate.length;
+
+        */
+
+        size_t highlighter = 1;
+        if (beg.line == end.line) {
+          highlighter = end.column - beg.column;
+          if (highlighter <= 0) highlighter = 1;
+        }
+
+        // Print them as utf8 encoded sequences
+        sass::string /* `╷` */ upper("\xE2\x95\xB7");
+        sass::string /* `│` */ middle("\xE2\x94\x82");
+        sass::string /* `╵` */ lower("\xE2\x95\xB5");
+
+        // Use ascii versions
+        if (true) {
+          upper = ",";
+          middle = "|";
+          lower = "'";
+        }
+        // sass::string upper("┬");  sass::string middle("│"); sass::string lower("┘");
+
+        // Dart-sass claims this might fail due to float errors
+        size_t leftPadding = (size_t)floor(log10(end.line + 1)) + 3;
+
+        // Write the leading line
+        msg_stream << std::right << std::setfill(' ')
+          << std::setw(leftPadding) << upper << "\n";
+
+        // Write the line number and the code
+        msg_stream << (end.line + 1) << " " << middle;
+        msg_stream << " " << (move_in > 0 ? "... " : "")
+          << sanitized << (shorten > 0 ? " ..." : "") << "\n";
+
+        // Write the prefix for the highlighter
+        msg_stream << std::right << std::setfill(' ')
+          << std::setw(leftPadding) << middle;
+
+        // Append the repeated hightligher
+        msg_stream << " " << (move_in > 0 ? "    " : "")
+          // << sass::string(pstate.position.column - move_in, ' ')
+          << filler
+          << sass::string(highlighter, '^') << "\n";
+
+        // Write the trailing line
+        msg_stream << std::right << std::setfill(' ')
+          << std::setw(leftPadding) << lower << "\n";
+
+      }
+    }
+
+  }
+
+  sass::string traces_to_string(Backtraces traces, sass::string indent, size_t showTraces) {
+
+    sass::sstream ss;
+    sass::sstream strm;
+    sass::string cwd(File::get_cwd());
+
+    bool first = true;
+    size_t max = 0;
+    size_t i_beg = traces.size() - 1;
+    size_t i_end = sass::string::npos;
+
+    std::vector<std::pair<sass::string, sass::string>> traced;
+    for (size_t i = i_beg; i != i_end; i--) {
+
+      // Skip entry if parent is a call invocation
+      // if (i > 0 && traces[i - 1].caller == "call") continue;
+
+      const Backtrace& trace = traces[i];
+
+
+      // make path relative to the current directory
+      sass::string rel_path(File::abs2rel(trace.pstate.getPath(), cwd, cwd));
+
+      strm.str(sass::string());
+      strm << rel_path << " ";
+      strm << trace.pstate.getLine();
+      strm << ":" << trace.pstate.getColumn();
+
+      sass::string str(strm.str());
+      max = std::max(max, str.length());
+
+      if (i == 0) {
+        traced.emplace_back(std::make_pair(
+          str, "root stylesheet"));
+      }
+      else if (!traces[i - 1].name.empty()) {
+        sass::string name(traces[i - 1].name);
+        if (traces[i - 1].fn) name += "()";
+        traced.emplace_back(std::make_pair(str, name));
+      }
+      else {
+        traced.emplace_back(std::make_pair(
+          str, "#{}"));
+      }
+
+    }
+
+    first = true;
+    i_beg = traces.size() - 1;
+    i_end = sass::string::npos;
+    for (size_t i = i_beg, n = 0; i != i_end; i--, n++) {
+
+      // Skip entry if parent is a call invocation
+      // if (i > 0 && traces[i - 1].caller == "call") continue;
+
+      const Backtrace& trace = traces[i];
+
+      // make path relative to the current directory
+      sass::string rel_path(File::abs2rel(trace.pstate.getPath(), cwd, cwd));
+
+      // skip functions on error cases (unsure why ruby sass does this)
+      // if (trace.caller.substr(0, 6) == ", in f") continue;
+
+      if (showTraces == sass::string::npos || showTraces > 0) {
+        format_pstate(ss, trace.pstate);
+        if (showTraces > 0) --showTraces;
+      }
+
+      ss << indent;
+      ss << std::left << std::setfill(' ')
+        << std::setw(max + 2) << traced[n].first;
+      ss << traced[n].second;
+      ss << std::endl << std::endl;
+
+    }
+
+    return ss.str();
+
+  }
+
+
+
+
+  static int handle_error(Sass_Context* c_ctx) {
+    try {
+      throw;
+    }
+    catch (Exception::Base& e) {
+
+      sass::sstream msg_stream;
+      sass::string cwd(Sass::File::get_cwd());
+      sass::string msg_prefix(e.errtype());
+      bool got_newline = false;
+      msg_stream << msg_prefix << ": ";
+      const char* msg = e.what();
+      while (msg && *msg) {
+        if (*msg == '\r') {
+          got_newline = true;
+        }
+        else if (*msg == '\n') {
+          got_newline = true;
+        }
+        else if (got_newline) {
+          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
+          got_newline = false;
+        }
+        msg_stream << *msg;
+        ++msg;
+      }
+      if (!got_newline) msg_stream << "\n";
+
+      if (e.traces.empty()) {
+        Backtraces traces = e.traces;
+        traces.emplace_back(e.pstate);
+        sass::string rel_path(Sass::File::abs2rel(e.pstate.getPath(), cwd, cwd));
+        msg_stream << traces_to_string(traces, "  ");
+      }
+      else {
+        sass::string rel_path(Sass::File::abs2rel(e.pstate.getPath(), cwd, cwd));
+        msg_stream << traces_to_string(e.traces, "  ");
       }
 
       JsonNode* json_err = json_mkobject();
       json_append_member(json_err, "status", json_mknumber(1));
-      json_append_member(json_err, "file", json_mkstring(e.pstate.path));
-      json_append_member(json_err, "line", json_mknumber((double)(e.pstate.line + 1)));
-      json_append_member(json_err, "column", json_mknumber((double)(e.pstate.column + 1)));
+      json_append_member(json_err, "file", json_mkstring(e.pstate.getPath()));
+      json_append_member(json_err, "line", json_mknumber((double)(e.pstate.getLine())));
+      json_append_member(json_err, "column", json_mknumber((double)(e.pstate.getColumn())));
       json_append_member(json_err, "message", json_mkstring(e.what()));
       json_append_member(json_err, "formatted", json_mkstream(msg_stream));
       try { c_ctx->error_json = json_stringify(json_err, "  "); }
@@ -119,23 +327,23 @@ namespace Sass {
       c_ctx->error_message = sass_copy_string(msg_stream.str());
       c_ctx->error_text = sass_copy_c_string(e.what());
       c_ctx->error_status = 1;
-      c_ctx->error_file = sass_copy_c_string(e.pstate.path);
-      c_ctx->error_line = e.pstate.line + 1;
-      c_ctx->error_column = e.pstate.column + 1;
-      c_ctx->error_src = e.pstate.src;
+      c_ctx->error_file = sass_copy_c_string(e.pstate.getPath());
+      c_ctx->error_line = e.pstate.getLine();
+      c_ctx->error_column = e.pstate.getColumn();
+      c_ctx->error_src = e.pstate.getRawData();
       c_ctx->output_string = 0;
       c_ctx->source_map_string = 0;
       json_delete(json_err);
     }
     catch (std::bad_alloc& ba) {
-      std::stringstream msg_stream;
+      sass::sstream msg_stream;
       msg_stream << "Unable to allocate memory: " << ba.what();
       handle_string_error(c_ctx, msg_stream.str(), 2);
     }
     catch (std::exception& e) {
       handle_string_error(c_ctx, e.what(), 3);
     }
-    catch (std::string& e) {
+    catch (sass::string& e) {
       handle_string_error(c_ctx, e, 4);
     }
     catch (const char* e) {
@@ -169,8 +377,8 @@ namespace Sass {
     try {
 
       // get input/output path from options
-      std::string input_path = safe_str(c_ctx->input_path);
-      std::string output_path = safe_str(c_ctx->output_path);
+      sass::string input_path = safe_str(c_ctx->input_path);
+      sass::string output_path = safe_str(c_ctx->output_path);
 
       // maybe skip some entries of included files
       // we do not include stdin for data contexts
@@ -279,8 +487,8 @@ extern "C" {
       // reset error position
       c_ctx->error_src = 0;
       c_ctx->error_file = 0;
-      c_ctx->error_line = std::string::npos;
-      c_ctx->error_column = std::string::npos;
+      c_ctx->error_line = sass::string::npos;
+      c_ctx->error_column = sass::string::npos;
 
       // allocate a new compiler instance
       void* ctxmem = calloc(1, sizeof(struct Sass_Compiler));
@@ -314,7 +522,9 @@ extern "C" {
 
     try {
       // call each compiler step
+      // This is parse and execute now
       sass_compiler_parse(compiler);
+      // This is only emitting stuff
       sass_compiler_execute(compiler);
     }
     // pass errors to generic error handler
@@ -554,6 +764,7 @@ extern "C" {
     // debug leaked memory
     #ifdef DEBUG_SHARED_PTR
       SharedObj::dumpMemLeaks();
+      SharedObj::reportRefCounts();
     #endif
     // now clear the options
     sass_clear_options(ctx);

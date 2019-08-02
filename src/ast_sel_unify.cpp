@@ -14,14 +14,15 @@ namespace Sass {
   // ##########################################################################
   // ToDo: fine-tune API to avoid unecessary wrapper allocations
   // ##########################################################################
-  std::vector<std::vector<SelectorComponentObj>> unifyComplex(
-    const std::vector<std::vector<SelectorComponentObj>>& complexes)
+  sass::vector<sass::vector<SelectorComponentObj>> unifyComplex(
+    const sass::vector<sass::vector<SelectorComponentObj>>& complexes)
   {
 
     SASS_ASSERT(!complexes.empty(), "Can't unify empty list");
     if (complexes.size() == 1) return complexes;
 
-    CompoundSelectorObj unifiedBase = SASS_MEMORY_NEW(CompoundSelector, ParserState("[phony]"));
+    CompoundSelectorObj unifiedBase = SASS_MEMORY_NEW(CompoundSelector,
+      SourceSpan::fake("[phony]"));
     for (auto complex : complexes) {
       SelectorComponentObj base = complex.back();
       if (CompoundSelector * comp = base->getCompound()) {
@@ -40,16 +41,16 @@ namespace Sass {
       }
     }
 
-    std::vector<std::vector<SelectorComponentObj>> complexesWithoutBases;
+    sass::vector<sass::vector<SelectorComponentObj>> complexesWithoutBases;
     for (size_t i = 0; i < complexes.size(); i += 1) {
-      std::vector<SelectorComponentObj> sel = complexes[i];
+      sass::vector<SelectorComponentObj> sel = complexes[i];
       sel.pop_back(); // remove last item (base) from the list
-      complexesWithoutBases.push_back(std::move(sel));
+      complexesWithoutBases.emplace_back(std::move(sel));
     }
 
-    complexesWithoutBases.back().push_back(unifiedBase);
+    complexesWithoutBases.back().emplace_back(unifiedBase);
 
-    return weave(complexesWithoutBases);
+    return std::move(weave(complexesWithoutBases));
 
   }
   // EO unifyComplex
@@ -239,9 +240,9 @@ namespace Sass {
   SelectorList* ComplexSelector::unifyWith(ComplexSelector* rhs)
   {
     SelectorListObj list = SASS_MEMORY_NEW(SelectorList, pstate());
-    std::vector<std::vector<SelectorComponentObj>> rv =
+    sass::vector<sass::vector<SelectorComponentObj>> rv =
        unifyComplex({ elements(), rhs->elements() });
-    for (std::vector<SelectorComponentObj> items : rv) {
+    for (sass::vector<SelectorComponentObj> items : rv) {
       ComplexSelectorObj sel = SASS_MEMORY_NEW(ComplexSelector, pstate());
       sel->elements() = std::move(items);
       list->append(sel);

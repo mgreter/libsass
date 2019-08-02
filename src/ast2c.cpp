@@ -30,23 +30,11 @@ namespace Sass {
 
   union Sass_Value* AST2C::operator()(String_Constant* s)
   {
-    if (s->quote_mark()) {
+    if (s->hasQuotes()) {
       return sass_make_qstring(s->value().c_str());
     } else {
       return sass_make_string(s->value().c_str());
     }
-  }
-
-  union Sass_Value* AST2C::operator()(String_Quoted* s)
-  { return sass_make_qstring(s->value().c_str()); }
-
-  union Sass_Value* AST2C::operator()(List* l)
-  {
-    union Sass_Value* v = sass_make_list(l->length(), l->separator(), l->is_bracketed());
-    for (size_t i = 0, L = l->length(); i < L; ++i) {
-      sass_list_set_value(v, i, (*l)[i]->perform(this));
-    }
-    return v;
   }
 
   union Sass_Value* AST2C::operator()(SassList* l)
@@ -60,27 +48,15 @@ namespace Sass {
 
   union Sass_Value* AST2C::operator()(Map* m)
   {
-    union Sass_Value* v = sass_make_map(m->length());
+    union Sass_Value* v = sass_make_map(m->size());
     int i = 0;
-    for (auto key : m->keys()) {
-      sass_map_set_key(v, i, key->perform(this));
-      sass_map_set_value(v, i, m->at(key)->perform(this));
+    for (auto kv : m->elements()) {
+      sass_map_set_key(v, i, kv.first->perform(this));
+      sass_map_set_value(v, i, kv.second->perform(this));
       i++;
     }
     return v;
   }
-
-  union Sass_Value* AST2C::operator()(Arguments* a)
-  {
-    union Sass_Value* v = sass_make_list(a->length(), SASS_COMMA, false);
-    for (size_t i = 0, L = a->length(); i < L; ++i) {
-      sass_list_set_value(v, i, (*a)[i]->perform(this));
-    }
-    return v;
-  }
-
-  union Sass_Value* AST2C::operator()(Argument* a)
-  { return a->value()->perform(this); }
 
   // not strictly necessary because of the fallback
   union Sass_Value* AST2C::operator()(Null* n)

@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include "allocator.hpp"
 #include "ast_def_macros.hpp"
 
 namespace Sass {
@@ -56,21 +57,34 @@ namespace Sass {
 
   class Units {
   public:
-    std::vector<std::string> numerators;
-    std::vector<std::string> denominators;
+    sass::vector<sass::string> numerators;
+    sass::vector<sass::string> denominators;
   public:
     // default constructor
     Units() :
       numerators(),
       denominators()
     { }
+
     // copy constructor
     Units(const Units* ptr) :
       numerators(ptr->numerators),
       denominators(ptr->denominators)
     { }
+
+    Units(const Units& ptr) :
+      numerators(ptr.numerators),
+      denominators(ptr.denominators)
+    { }
+
+    // move constructor
+    Units(Units&& other) :
+      numerators(std::move(other.numerators)),
+      denominators(std::move(other.denominators))
+    { }
+
     // convert to string
-    std::string unit() const;
+    sass::string unit() const;
     // get if units are empty
     bool is_unitless() const;
 
@@ -86,12 +100,12 @@ namespace Sass {
     // returns conversion factor
     double normalize();
     // compare operations
-    ATTACH_BASE_EQ_OPERATIONS(Units);
-    ATTACH_CMP_OPERATIONS(Units);
+    VIRTUAL_EQ_OPERATIONS(Units);
+    VIRTUAL_CMP_OPERATIONS(Units);
     // factor to convert into given units
     double convert_factor(const Units&) const;
     // 
-    bool hasUnit(std::string numerator);
+    bool hasUnit(sass::string numerator);
   };
 
   extern const double size_conversion_factors[6][6];
@@ -101,13 +115,13 @@ namespace Sass {
   extern const double resolution_conversion_factors[3][3];
 
   UnitType get_main_unit(const UnitClass unit);
-  enum Sass::UnitType string_to_unit(const std::string&);
+  enum Sass::UnitType string_to_unit(const sass::string&);
   const char* unit_to_string(Sass::UnitType unit);
   enum Sass::UnitClass get_unit_type(Sass::UnitType unit);
   // throws incompatibleUnits exceptions
-  double conversion_factor(const std::string&, const std::string&);
+  double conversion_factor(const sass::string&, const sass::string&);
   double conversion_factor(UnitType, UnitType, UnitClass, UnitClass);
-  double convert_units(const std::string&, const std::string&, int&, int&);
+  double convert_units(const sass::string&, const sass::string&, int&, int&);
 
 }
 

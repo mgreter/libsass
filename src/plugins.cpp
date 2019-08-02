@@ -44,18 +44,18 @@ namespace Sass {
     if (!strcmp(our_version, "[na]")) return false;
 
     // find the position of the second dot
-    size_t pos = std::string(our_version).find('.', 0);
-    if (pos != std::string::npos) pos = std::string(our_version).find('.', pos + 1);
+    size_t pos = sass::string(our_version).find('.', 0);
+    if (pos != sass::string::npos) pos = sass::string(our_version).find('.', pos + 1);
 
     // if we do not have two dots we fallback to compare complete string
-    if (pos == std::string::npos) { return strcmp(their_version, our_version) ? 0 : 1; }
+    if (pos == sass::string::npos) { return strcmp(their_version, our_version) ? 0 : 1; }
     // otherwise only compare up to the second dot (major versions)
     else { return strncmp(their_version, our_version, pos) ? 0 : 1; }
 
   }
 
   // load one specific plugin
-  bool Plugins::load_plugin (const std::string& path)
+  bool Plugins::load_plugin (const sass::string& path)
   {
 
     typedef const char* (*__plugin_version__)(void);
@@ -73,21 +73,21 @@ namespace Sass {
         if (LOAD_LIB_FN(__plugin_load_fns__, plugin_load_functions, "libsass_load_functions"))
         {
           Sass_Function_List fns = plugin_load_functions(), _p = fns;
-          while (fns && *fns) { functions.push_back(*fns); ++ fns; }
+          while (fns && *fns) { functions.emplace_back(*fns); ++ fns; }
           sass_free_memory(_p); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_importers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))
         {
           Sass_Importer_List imps = plugin_load_importers(), _p = imps;
-          while (imps && *imps) { importers.push_back(*imps); ++ imps; }
+          while (imps && *imps) { importers.emplace_back(*imps); ++ imps; }
           sass_free_memory(_p); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_headers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_headers, "libsass_load_headers"))
         {
           Sass_Importer_List imps = plugin_load_headers(), _p = imps;
-          while (imps && *imps) { headers.push_back(*imps); ++ imps; }
+          while (imps && *imps) { headers.emplace_back(*imps); ++ imps; }
           sass_free_memory(_p); // only delete the container, items not yet
         }
         // success
@@ -112,7 +112,7 @@ namespace Sass {
 
   }
 
-  size_t Plugins::load_plugins(const std::string& path)
+  size_t Plugins::load_plugins(const sass::string& path)
   {
 
     // count plugins
@@ -126,7 +126,7 @@ namespace Sass {
         // use wchar (utf16)
         WIN32_FIND_DATAW data;
         // trailing slash is guaranteed
-        std::string globsrch(path + "*.dll");
+        sass::string globsrch(path + "*.dll");
         // convert to wide chars (utf16) for system call
         std::wstring wglobsrch(UTF_8::convert_to_utf16(globsrch));
         HANDLE hFile = FindFirstFileW(wglobsrch.c_str(), &data);
@@ -140,7 +140,7 @@ namespace Sass {
           try
           {
             // the system will report the filenames with wide chars (utf16)
-            std::string entry = UTF_8::convert_from_utf16(data.cFileName);
+            sass::string entry = UTF_8::convert_from_utf16(data.cFileName);
             // check if file ending matches exactly
             if (!ends_with(entry, ".dll")) continue;
             // load the plugin and increase counter

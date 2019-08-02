@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ast_fwd_decl.hpp"
+#include "source_span.hpp"
 #include "base64vlq.hpp"
 #include "position.hpp"
 #include "mapping.hpp"
@@ -20,9 +21,9 @@ namespace Sass {
   class SourceMap {
 
   public:
-    std::vector<size_t> source_index;
+    sass::vector<size_t> source_index;
     SourceMap();
-    SourceMap(const std::string& file);
+    SourceMap(const sass::string& file);
 
     void append(const Offset& offset);
     void prepend(const Offset& offset);
@@ -31,17 +32,18 @@ namespace Sass {
     void add_open_mapping(const AST_Node* node);
     void add_close_mapping(const AST_Node* node);
 
-    std::string render_srcmap(Context &ctx);
-    ParserState remap(const ParserState& pstate);
+    sass::string render_srcmap(Context &ctx);
+    SourceSpan remap(const SourceSpan& pstate);
 
   private:
 
-    std::string serialize_mappings();
-
-    std::vector<Mapping> mappings;
-    Position current_position;
+    sass::string serialize_mappings();
+  public:
+    sass::vector<Mapping> mappings;
+  private:
+    Offset current_position;
 public:
-    std::string file;
+    sass::string file;
 private:
     Base64VLQ base64vlq;
   };
@@ -54,7 +56,7 @@ private:
       { }
     public:
       // ToDo: should be ostringstream
-      std::string buffer;
+      sass::string buffer;
       SourceMap smap;
   };
 

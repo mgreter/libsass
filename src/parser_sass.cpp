@@ -13,7 +13,7 @@ namespace Sass {
   Interpolation* SassParser::styleRuleSelector()
   {
     Position start(scanner);
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     do {
       buffer.addInterpolation(almostAnyValue());
       buffer.writeCharCode($lf);
@@ -23,16 +23,23 @@ namespace Sass {
     return buffer.getInterpolation(scanner.pstate(start));
   }
 
-  void SassParser::expectStatementSeparator(std::string name) {
+  void SassParser::expectStatementSeparator(sass::string name) {
     if (!atEndOfStatement()) _expectNewline();
     if (_peekIndentation() <= _currentIndentation) return;
-    std::stringstream strm;
+    sass::sstream strm;
     strm << "Nothing may be indented ";
     if (name.empty()) { strm << "here."; }
     else { strm << "beneath a " + name + "."; }
+    whitespaceWithoutComments();
+    callStackFrame frame(*context.logger,
+      Backtrace(scanner.pstate43()));
     scanner.error(
-      strm.str()/*,
-      position: _nextIndentationEnd.position*/);
+      strm.str(),
+      *context.logger,
+      scanner.pstate43());
+
+      /*,
+      position: _nextIndentationEnd.position*/
   }
 
   bool SassParser::atEndOfStatement()
@@ -76,6 +83,7 @@ namespace Sass {
     }
 
     Position start(scanner);
+    LineScannerState2 state2(scanner.state());
     while (scanner.peekChar(next) &&
       next != $comma &&
       next != $semicolon &&
@@ -84,8 +92,22 @@ namespace Sass {
       next = scanner.peekChar();
     }
 
-    std::string url = scanner.substring(start);
-    return SASS_MEMORY_NEW(DynamicImport, "[pstate]", url);
+    sass::string url = scanner.substring(state2.position);
+
+    if (_isPlainImportUrl(url)) {
+      InterpolationObj itpl = SASS_MEMORY_NEW(
+        Interpolation, scanner.pstate9(start));
+      auto str = SASS_MEMORY_NEW(String_Constant,
+        scanner.pstate9(start), url, true);
+      // Must be an easier way to get quotes?
+      str->value(str->to_string());
+      itpl->append(str);
+      return SASS_MEMORY_NEW(StaticImport,
+        scanner.pstate9(start), itpl);
+    }
+
+    return SASS_MEMORY_NEW(DynamicImport,
+      SourceSpan::fake("[pstateT1]"), url);
 
   }
 
@@ -108,29 +130,30 @@ namespace Sass {
     return false;
   }
 
-  std::vector<StatementObj> SassParser::children(Statement* (StylesheetParser::* child)())
+  sass::vector<StatementObj> SassParser::children(Statement* (StylesheetParser::* child)())
   {
     // std::cerr << "SassParser::children\n";
-    std::vector<StatementObj> children;
+    sass::vector<StatementObj> children;
     _whileIndentedLower(child, children);
     return children;
   }
 
-  std::vector<StatementObj> SassParser::statements(Statement* (StylesheetParser::* statement)())
+  sass::vector<StatementObj> SassParser::statements(Statement* (StylesheetParser::* statement)())
   {
     // std::cerr << "SassParser::statements\n";
     uint8_t first = scanner.peekChar();
     if (first == $tab || first == $space) {
-      scanner.error("Indenting at the beginning of the document is illegal."/*,
-        position: 0, length : scanner.position*/);
+      scanner.error("Indenting at the beginning of the document is illegal.",
+        *context.logger, scanner.pstate());
+        /*position: 0, length : scanner.position*/
     }
 
-    std::vector<StatementObj> statements;
+    sass::vector<StatementObj> statements;
     while (!scanner.isDone()) {
       // std::cerr << "SassParser::statements loop\n";
       Statement* child = _child(statement);
       // std::cerr << "SassParser::statements loop out\n";
-      if (child != nullptr) statements.push_back(child);
+      if (child != nullptr) statements.emplace_back(child);
       size_t indentation = _readIndentation();
       SASS_ASSERT(indentation == 0, "indentation must be zero");
     }
@@ -180,7 +203,7 @@ namespace Sass {
     size_t parentIndentation = _currentIndentation;
 
     do {
-      std::string commentPrefix = scanner.scanChar($slash) ? "///" : "//";
+      sass::string commentPrefix = scanner.scanChar($slash) ? "///" : "//";
 
       while (true) {
         buffer.write(commentPrefix);
@@ -196,7 +219,7 @@ namespace Sass {
         while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
           buffer.writeCharCode(scanner.readChar());
         }
-        buffer.writeln();
+        buffer.write("\n");
 
         if (_peekIndentation() < parentIndentation) goto endOfLoop;
 
@@ -225,13 +248,13 @@ namespace Sass {
     scanner.expect("/*");
 
     bool first = true;
-    InterpolationBuffer buffer;
+    InterpolationBuffer buffer(scanner);
     buffer.write("/*");
     size_t parentIndentation = _currentIndentation;
     while (true) {
       if (first) {
         // If the first line is empty, ignore it.
-        Position beginningOfComment(scanner);
+        const char* beginningOfComment = scanner.position;
         spaces();
         if (isNewline(scanner.peekChar())) {
           _readIndentation();
@@ -242,7 +265,7 @@ namespace Sass {
         }
       }
       else {
-        buffer.writeln();
+        buffer.write("\n");
         buffer.write(" * ");
       }
       first = false;
@@ -281,7 +304,7 @@ namespace Sass {
       // Preserve empty lines.
       while (_lookingAtDoubleNewline()) {
         _expectNewline();
-        buffer.writeln();
+        buffer.write("\n");
         buffer.write(" *");
       }
 
@@ -315,7 +338,8 @@ namespace Sass {
   {
     switch (scanner.peekChar()) {
     case $semicolon:
-      scanner.error("semicolons aren't allowed in the indented syntax.");
+      scanner.error("semicolons aren't allowed in the indented syntax.",
+        *context.logger, scanner.pstate());
       return;
     case $cr:
       scanner.readChar();
@@ -326,7 +350,8 @@ namespace Sass {
       scanner.readChar();
       return;
     default:
-      scanner.error("expected newline.");
+      scanner.error("expected newline.",
+        *context.logger, scanner.pstate());
     }
   }
 
@@ -346,24 +371,28 @@ namespace Sass {
     }
   }
 
-  void SassParser::_whileIndentedLower(Statement* (StylesheetParser::* child)(), std::vector<StatementObj>& children)
+  void SassParser::_whileIndentedLower(Statement* (StylesheetParser::* child)(), sass::vector<StatementObj>& children)
   {
     size_t parentIndentation = _currentIndentation;
-    size_t childIndentation = std::string::npos;
+    size_t childIndentation = sass::string::npos;
     while (_peekIndentation() > parentIndentation) {
       size_t indentation = _readIndentation();
-      if (childIndentation == std::string::npos) {
+      if (childIndentation == sass::string::npos) {
         childIndentation = indentation;
       }
       if (childIndentation != indentation) {
-        std::stringstream msg;
+        sass::sstream msg;
         msg << "Inconsistent indentation, expected "
           << childIndentation << " spaces.";
-        scanner.error(msg.str()/*,
+        scanner.error(msg.str(),
+          *context.logger,
+          scanner.pstate());
+
+          /*,
           position: scanner.position - scanner.column,
-          length : scanner.column*/);
+          length : scanner.column*/
       }
-      children.push_back(_child(child));
+      children.emplace_back(_child(child));
     }
 
   }
@@ -371,13 +400,13 @@ namespace Sass {
   size_t SassParser::_readIndentation()
   {
     // std::cerr << "_readIndentation " << _nextIndentation << "\n";
-    if (_nextIndentation == std::string::npos) {
+    if (_nextIndentation == sass::string::npos) {
       _peekIndentation();
     }
     _currentIndentation = _nextIndentation;
     // std::cerr << "reset state 1\n";
     scanner.resetState(_nextIndentationEnd);
-    _nextIndentation = std::string::npos;
+    _nextIndentation = sass::string::npos;
     // What does this mean, where is it used?
     // _nextIndentationEnd = null; ToDo
     return _currentIndentation;
@@ -387,7 +416,7 @@ namespace Sass {
   size_t SassParser::_peekIndentation()
   {
     // std::cerr << "_peekIndentation\n";
-    if (_nextIndentation != std::string::npos) {
+    if (_nextIndentation != sass::string::npos) {
       return _nextIndentation;
     }
 
@@ -399,8 +428,9 @@ namespace Sass {
 
     LineScannerState2 start = scanner.state();
     if (!scanCharIf(isNewline)) {
-      scanner.error("Expected newline."/*,
-        position: scanner.position*/);
+      scanner.error("Expected newline.",
+        *context.logger, scanner.pstate());
+        /* position: scanner.position*/
     }
 
     bool containsTab;
@@ -453,19 +483,22 @@ namespace Sass {
   {
     if (containsTab) {
       if (containsSpace) {
-        scanner.error("Tabs and spaces may not be mixed."/*,
-          position: scanner.position - scanner.column,
-          length : scanner.column*/);
+        scanner.error("Tabs and spaces may not be mixed.",
+          *context.logger, scanner.pstate());
+          /* position: scanner.position - scanner.column,
+          length : scanner.column*/
       }
       else if (indentWithSpaces()) {
-        scanner.error("Expected spaces, was tabs."/*,
-          position: scanner.position - scanner.column,
-          length : scanner.column*/);
+        scanner.error("Expected spaces, was tabs.",
+          *context.logger, scanner.pstate());
+          /* position: scanner.position - scanner.column,
+          length : scanner.column*/
       }
     }
     else if (containsSpace && indentWithTabs()) {
-      scanner.error("Expected tabs, was spaces."/*,
-        position: scanner.position - scanner.column, length : scanner.column*/);
+      scanner.error("Expected tabs, was spaces.",
+        *context.logger, scanner.pstate());
+        /* position: scanner.position - scanner.column, length : scanner.column*/
     }
   }
 

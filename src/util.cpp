@@ -3,7 +3,6 @@
 #include "ast.hpp"
 #include "util.hpp"
 #include "util_string.hpp"
-#include "lexer.hpp"
 #include "constants.hpp"
 #include "utf8/checked.h"
 
@@ -75,7 +74,7 @@ namespace Sass {
     free(arr);
   }
 
-  char **copy_strings(const std::vector<std::string>& strings, char*** array, int skip) {
+  char **copy_strings(const sass::vector<sass::string>& strings, char*** array, int skip) {
     int num = static_cast<int>(strings.size()) - skip;
     char** arr = (char**) calloc(num + 1, sizeof(char*));
     if (arr == 0)
@@ -95,45 +94,18 @@ namespace Sass {
     return *array = arr;
   }
 
-  // read css string (handle multiline DELIM)
-  std::string read_css_string(const std::string& str, bool css)
-  {
-    if (!css) return str;
-    std::string out("");
-    bool esc = false;
-    for (auto i : str) {
-      if (i == '\\') {
-        esc = ! esc;
-      } else if (esc && i == '\r') {
-        continue;
-      } else if (esc && i == '\n') {
-        out.resize (out.size () - 1);
-        esc = false;
-        continue;
-      } else {
-        esc = false;
-      }
-      out.push_back(i);
-    }
-    // happens when parsing does not correctly skip
-    // over escaped sequences for ie. interpolations
-    // one example: foo\#{interpolate}
-    // if (esc) out += '\\';
-    return out;
-  }
-
   // 1. Removes whitespace after newlines.
   // 2. Replaces newlines with spaces.
   //
   // This method only considers LF and CRLF as newlines.
-  std::string string_to_output(const std::string& str)
+  sass::string string_to_output(const sass::string& str)
   {
-    std::string result;
+    sass::string result;
     result.reserve(str.size());
     std::size_t pos = 0;
     while (true) {
       const std::size_t newline = str.find_first_of("\n\r", pos);
-      if (newline == std::string::npos) break;
+      if (newline == sass::string::npos) break;
       result.append(str, pos, newline - pos);
       if (str[newline] == '\r') {
         if (str[newline + 1] == '\n') {
@@ -149,11 +121,11 @@ namespace Sass {
       }
       result += ' ';
       const std::size_t non_space = str.find_first_not_of(" \f\n\r\t\v", pos);
-      if (non_space != std::string::npos) {
+      if (non_space != sass::string::npos) {
         pos = non_space;
       }
     }
-    result.append(str, pos, std::string::npos);
+    result.append(str, pos, sass::string::npos);
     return result;
   }
 
@@ -178,7 +150,7 @@ namespace Sass {
   }
 
 
-  std::string unquote(const std::string& s, char* qd, bool keep_utf8_sequences, bool strict)
+  sass::string unquote(const sass::string& s, char* qd, bool keep_utf8_sequences, bool strict)
   {
 
     // not enough room for quotes
@@ -194,7 +166,7 @@ namespace Sass {
     else if (*s.begin() == '\'' && *s.rbegin() == '\'') q = '\'';
     else                                                return s;
 
-    std::string unq;
+    sass::string unq;
     unq.reserve(s.length()-2);
 
     for (size_t i = 1, L = s.length() - 1; i < L; ++i) {
@@ -253,7 +225,7 @@ namespace Sass {
       //   // don't be that strict
       //   return s;
       //   // this basically always means an internal error and not users fault
-      //   error("Unescaped delimiter in string to unquote found. [" + s + "]", ParserState("[UNQUOTE]"));
+      //   error("Unescaped delimiter in string to unquote found. [" + s + "]", SourceSpan("[UNQUOTE]"));
       // }
       else {
         if (strict && !skipped) {
@@ -270,16 +242,16 @@ namespace Sass {
 
   }
 
-  std::string quote(const std::string& s, char q)
+  sass::string quote(const sass::string& s, char q)
   {
 
     // autodetect with fallback to given quote
     q = detect_best_quotemark(s.c_str(), q);
 
     // return an empty quoted string
-    if (s.empty()) return std::string(2, q ? q : '"');
+    if (s.empty()) return sass::string(2, q ? q : '"');
 
-    std::string quoted;
+    sass::string quoted;
     quoted.reserve(s.length()+2);
     quoted.push_back(q);
 

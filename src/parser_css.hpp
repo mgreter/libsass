@@ -9,8 +9,8 @@ namespace Sass {
   class CssParser : public ScssParser {
 
   public:
-    CssParser(Context& context, const char* content, const char* path, size_t srcid) :
-      ScssParser(context, content, path, srcid)
+    CssParser(Context& context, SourceDataObj source) :
+      ScssParser(context, source)
     {}
 
     // Whether this is a plain CSS stylesheet.

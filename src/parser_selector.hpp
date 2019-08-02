@@ -24,12 +24,10 @@ namespace Sass {
 
     SelectorParser(
       Context& context,
-      const char* contents,
-      const char* path,
-      size_t srcid,
+      SourceDataObj source,
       bool allowParent = true,
       bool allowPlaceholder = true) :
-      Parser(context, contents, path, srcid),
+      Parser(context, source),
       _allowParent(allowParent),
       _allowPlaceholder(allowPlaceholder)
     {}
@@ -51,10 +49,10 @@ namespace Sass {
     AttributeSelectorObj _attributeSelector();
 
     // QualifiedName _attributeName();
-    std::string _attributeName();
+    sass::string _attributeName();
 
     // AttributeOperator _attributeOperator();
-    std::string _attributeOperator();
+    sass::string _attributeOperator();
 
     ClassSelectorObj _classSelector();
 
@@ -66,7 +64,7 @@ namespace Sass {
 
     PseudoSelectorObj _pseudoSelector();
 
-    std::string _aNPlusB();
+    sass::string _aNPlusB();
 
     SimpleSelectorObj _typeOrUniversalSelector();
 

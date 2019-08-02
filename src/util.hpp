@@ -13,8 +13,7 @@
 #include <vector>
 #include <string>
 #include <assert.h>
-
-#define SASS_ASSERT(cond, msg) assert(cond && msg)
+#include <cassert>
 
 namespace Sass {
 
@@ -39,12 +38,11 @@ namespace Sass {
   double sass_strtod(const char* str);
   const char* safe_str(const char *, const char* = "");
   void free_string_array(char **);
-  char **copy_strings(const std::vector<std::string>&, char ***, int = 0);
-  std::string read_css_string(const std::string& str, bool css = true);
-  std::string string_to_output(const std::string& str);
+  char **copy_strings(const sass::vector<sass::string>&, char ***, int = 0);
+  sass::string string_to_output(const sass::string& str);
 
-  std::string quote(const std::string&, char q = 0);
-  std::string unquote(const std::string&, char* q = 0, bool keep_utf8_sequences = false, bool strict = true);
+  sass::string quote(const sass::string&, char q = 0);
+  sass::string unquote(const sass::string&, char* q = 0, bool keep_utf8_sequences = false, bool strict = true);
   char detect_best_quotemark(const char* s, char qm = '"');
 
   bool is_hex_doublet(double n);
@@ -59,27 +57,27 @@ namespace Sass {
     return true;
   }
 
-  inline bool string_constains(const std::string& str, const char chr) {
-    return str.find(chr) != std::string::npos;
+  inline bool string_constains(const sass::string& str, const char chr) {
+    return str.find(chr) != sass::string::npos;
   }
 
   // C++20 `starts_with` equivalent.
   // See https://en.cppreference.com/w/cpp/string/basic_string/starts_with
-  inline bool starts_with(const std::string& str, const char* prefix, size_t prefix_len) {
+  inline bool starts_with(const sass::string& str, const char* prefix, size_t prefix_len) {
     return str.compare(0, prefix_len, prefix) == 0;
   }
 
-  inline bool starts_with(const std::string& str, const char* prefix) {
+  inline bool starts_with(const sass::string& str, const char* prefix) {
     return starts_with(str, prefix, std::strlen(prefix));
   }
 
   // C++20 `ends_with` equivalent.
   // See https://en.cppreference.com/w/cpp/string/basic_string/ends_with
-  inline bool ends_with(const std::string& str, const std::string& suffix) {
+  inline bool ends_with(const sass::string& str, const sass::string& suffix) {
     return suffix.size() <= str.size() && std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
   }
 
-  inline bool ends_with(const std::string& str, const char* suffix, size_t suffix_len) {
+  inline bool ends_with(const sass::string& str, const char* suffix, size_t suffix_len) {
     if (suffix_len > str.size()) return false;
     const char* suffix_it = suffix + suffix_len;
     const char* str_it = str.c_str() + str.size();
@@ -87,7 +85,7 @@ namespace Sass {
     return true;
   }
 
-  inline bool ends_with(const std::string& str, const char* suffix) {
+  inline bool ends_with(const sass::string& str, const char* suffix) {
     return ends_with(str, suffix, std::strlen(suffix));
   }
 

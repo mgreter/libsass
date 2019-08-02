@@ -9,161 +9,194 @@
 #include <string>
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
-#include "util_string.hpp"
-
 #include "ordered_map.hpp"
 #include <unordered_map>
 #include <unordered_set>
+#include "allocator.hpp"
+
+/* OPTIMIZATIONS */
+
+// Each scope that opens a new env should have already an env populated
+// Basically it should consist of all hoisted variables
+// We want to pre-compile assignments and variable access
+// This should probably be fully possible in parse step
+
+
+// #include "../../parallel-hashmap/parallel_hashmap/phmap.h"
+
+// #include "../../hopscotch-map/include/tsl/hopscotch_map.h"
+// #include "../../hopscotch-map/include/tsl/hopscotch_set.h"
+#include "../../ordered-map/include/tsl/ordered_map.h"
+// #include "../../ordered-map/include/tsl/ordered_set.h"
+// #include "robin_hood.hpp"
+
+namespace std {
+  template <>
+  class hash<Sass::EnvString> {
+  public:
+    inline size_t operator()(const Sass::EnvString& name) const
+    {
+      return name.hash();
+    }
+  };
+};
 
 namespace Sass {
 
+  // tsl::hopscotch_map
+
   template<class T>
+  // An unordered map seems faster than hopscotch
   using NormalizedMap = std::unordered_map<
-    std::string, T,
-    Util::hashIgnoreSeparator,
-    Util::equalsIgnoreSeparator
+    EnvString, T,
+    SassIgnoreDashPair,
+    SassAllocator<std::pair<const EnvString, T>>
   >;
 
   template<class T>
-  using KeywordMap = ordered_map<
-    std::string, T,
-    Util::hashIgnoreSeparator,
-    Util::equalsIgnoreSeparator
+  using NormalizedOMap = tsl::ordered_map<
+    EnvString, T,
+    SassIgnoreDashPair,
+    SassAllocator<std::pair<EnvString, T>>
+  >;
+
+  template<class T>
+  using KeywordMapOlder = tsl::ordered_map<
+    EnvString, T,
+    SassIgnoreDashPair,
+    SassAllocator<std::pair<EnvString, T>>,
+    sass::vector<std::pair<EnvString, T>>
   >;
 
   using NormalizeSet = std::unordered_set<
-    std::string,
-    Util::hashIgnoreSeparator,
-    Util::equalsIgnoreSeparator
+    EnvString,
+    SassIgnoreDashPair,
+    SassAllocator<EnvString>
   >;
-  
 
-  std::string pluralize(std::string singular, size_t size, std::string plural = "");
+  template <typename T>
+  class KeywordMapFast {
 
-  std::string toSentence(KeywordMap<ValueObj>& names, std::string conjunction = "and");
+    using TYPE = sass::vector<std::pair<EnvString, T>>;
 
-  // this defeats the whole purpose of environment being templatable!!
-  typedef NormalizedMap<AST_Node_Obj>::iterator EnvMapIter;
+    sass::vector<std::pair<EnvString, T>> items;
 
-  class EnvResult {
-    public:
-      EnvMapIter it;
-      bool found;
-    public:
-      EnvResult(EnvMapIter it, bool found)
-      : it(it), found(found) {}
+  public:
+
+    using iterator = typename TYPE::iterator;
+    using const_iterator = typename TYPE::const_iterator;
+    using reverse_iterator = typename TYPE::reverse_iterator;
+    using const_reverse_iterator = typename TYPE::const_reverse_iterator;
+
+    size_t size() const { return items.size(); }
+
+    void clear() {
+      items.clear();
+    }
+
+    size_t count(const EnvString& key) const {
+      const_iterator cur = items.begin();
+      const_iterator end = items.end();
+      while (cur != end) {
+        if (cur->first.norm() == key.norm()) {
+          return true;
+        }
+        cur++;
+      }
+      return false;
+    }
+
+    void erase(const EnvString& key) {
+      const_iterator cur = items.begin();
+      const_iterator end = items.end();
+      while (cur != end) {
+        if (cur->first.norm() == key.norm()) {
+          items.erase(cur);
+          return;
+        }
+        cur++;
+      }
+    }
+
+    bool empty() const {
+      return items.empty();
+    }
+
+    void erase(iterator it) {
+      items.erase(it);
+    }
+
+    const_iterator find(const EnvString& key) const {
+      const_iterator cur = items.begin();
+      const_iterator end = items.end();
+      while (cur != end) {
+        if (cur->first.norm() == key.norm()) {
+          return cur;
+        }
+        cur++;
+      }
+      return end;
+    }
+
+    T& operator[](const EnvString& key)
+    {
+      iterator cur = items.begin();
+      iterator end = items.end();
+      while (cur != end) {
+        if (cur->first.norm() == key.norm()) {
+          return cur->second;
+        }
+        cur++;
+      }
+      // Append empty object
+      items.push_back(
+        std::make_pair(
+          key, T{}));
+      // Return newly added
+      return items.back().second;
+    }
+
+    void reserve(size_t size) {
+      items.reserve(size);
+    }
+
+    const T& at(const EnvString& key) const
+    {
+      const_iterator cur = items.begin();
+      const_iterator end = items.end();
+      while (cur != end) {
+        if (cur->first.norm() == key.norm()) {
+          return cur->second;
+        }
+        cur++;
+      }
+      // return newly added
+      throw std::runtime_error("not found");
+    }
+
+    iterator find(const EnvString& key) {
+      iterator cur = items.begin();
+      iterator end = items.end();
+      while (cur != end) {
+        if (cur->first.norm() == key.norm()) {
+          return cur;
+        }
+        cur++;
+      }
+      return end;
+    }
+
+    const_iterator end() const { return items.end(); }
+    const_iterator begin() const { return items.begin(); }
+
   };
 
   template <typename T>
-  class Environment {
-    // TODO: test with map
-    NormalizedMap<T> local_frame_;
-    ADD_PROPERTY(Environment*, parent)
-    ADD_PROPERTY(bool, is_shadow)
+  using KeywordMap = KeywordMapFast<T>;
 
-  public:
-    Environment(bool is_shadow = false);
-    Environment(Environment* env, bool is_shadow = false);
-    Environment(Environment& env, bool is_shadow = false);
+  sass::string pluralize(sass::string singular, size_t size, sass::string plural = "");
 
-    // link parent to create a stack
-    void link(Environment& env);
-    void link(Environment* env);
-
-    // this is used to find the global frame
-    // which is the second last on the stack
-    bool is_lexical() const;
-
-    // only match the real root scope
-    // there is still a parent around
-    // not sure what it is actually use for
-    // I guess we store functions etc. there
-    bool is_global() const;
-
-    // function are in place to be more
-    // dart-sass compatible, but we are
-    // not yet supporting modules/ns.
-    UserDefinedCallable* getMixin(std::string name, std::string ns = "") {
-      std::string full_name(name + "[m]");
-      if (!has(full_name)) return nullptr;
-      // We only store UserDefinedCallable as "[m]"
-      return Cast<UserDefinedCallable>(get(full_name));
-    }
-    UserDefinedCallable* getFunction(std::string name, std::string ns = "") {
-      std::string full_name(name + "[f]");
-      if (!has(full_name)) return nullptr;
-      // We only store UserDefinedCallable as "[f]"
-      return Cast<UserDefinedCallable>(get(full_name));
-    }
-
-    // scope operates on the current frame
-
-    NormalizedMap<T>& local_frame();
-
-    bool has_local(const std::string& key) const;
-
-    EnvResult find_local(const std::string& key);
-
-    T& get_local(const std::string& key);
-
-    // set variable on the current frame
-    void set_local(const std::string& key, const T& val);
-    void set_local(const std::string& key, T&& val);
-
-    void del_local(const std::string& key);
-
-    // global operates on the global frame
-    // which is the second last on the stack
-    Environment* global_env();
-    // get the env where the variable already exists
-    // if it does not yet exist, we return current env
-    Environment* lexical_env(const std::string& key);
-
-    bool has_global(const std::string& key);
-
-    T& get_global(const std::string& key);
-
-    // set a variable on the global frame
-    void set_global(const std::string& key, const T& val);
-    void set_global(const std::string& key, T&& val);
-
-    void del_global(const std::string& key);
-
-    // see if we have a lexical variable
-    // move down the stack but stop before we
-    // reach the global frame (is not included)
-    bool has_lexical(const std::string& key) const;
-
-    // see if we have a lexical we could update
-    // either update already existing lexical value
-    // or we create a new one on the current frame
-    void set_lexical(const std::string& key, T&& val);
-    void set_lexical(const std::string& key, const T& val);
-
-    // look on the full stack for key
-    // include all scopes available
-    bool has(const std::string& key) const;
-
-    // look on the full stack for key
-    // include all scopes available
-    T& get(const std::string& key);
-
-    // look on the full stack for key
-    // include all scopes available
-    EnvResult find(const std::string& key);
-
-    // use array access for getter and setter functions
-    T& operator[](const std::string& key);
-
-    #ifdef DEBUG
-    size_t print(std::string prefix = "");
-    #endif
-
-  };
-
-  // define typedef for our use case
-  typedef Environment<AST_Node_Obj> Env;
-  typedef std::vector<Env*> EnvStack;
+  sass::string toSentence(KeywordMap<ValueObj>& names, const sass::string& conjunction = "and");
 
 }
 

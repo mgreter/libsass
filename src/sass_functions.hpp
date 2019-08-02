@@ -4,6 +4,7 @@
 #include "sass.h"
 #include "environment.hpp"
 #include "fn_utils.hpp"
+#include "backtrace.hpp"
 
 // Struct to hold custom function callback
 struct Sass_Function {
@@ -29,7 +30,6 @@ struct Sass_Import {
 // External environments
 struct Sass_Env {
   // links to parent frames
-  Sass::Env* frame;
 };
 
 // External call entry

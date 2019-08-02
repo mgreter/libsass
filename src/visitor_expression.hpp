@@ -16,13 +16,13 @@ namespace Sass {
     T* visitColorExpression(Color* node);
     // T* visitFunctionExpression(FunctionExpression* node);
     T* visitIfExpression(If* node);
-    T* visitListExpression(List* node);
+    // T* visitListExpression(List* node);
     T* visitMapExpression(Map* node);
     T* visitNullExpression(Null* node);
     T* visitNumberExpression(Number* node);
     T* visitParenthesizedExpression(ParenthesizedExpression* node);
     // T* visitSelectorExpression(SelectorExpression* node);
-    T* visitStringExpression(String* node);
+    T* visitStringExpression(String_Constant* node);
     T* visitUnaryOperationExpression(Unary_Expression* node);
     T* visitValueExpression(Value* node);
     T* visitVariableExpression(Variable* node);
