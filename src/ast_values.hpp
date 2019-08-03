@@ -54,6 +54,9 @@ namespace Sass {
       return this;
     }
 
+    // Return normalized index for vector from overflowable sass index
+    long sassIndexToListIndex(Value* sassIndex, double epsilon, std::string name = "");
+
     Value* assertValue(std::string name = "") {
       return this;
     }
@@ -271,6 +274,8 @@ namespace Sass {
     bool hasBrackets() override {
       return hasBrackets_;
     }
+
+    Map* assertMap(std::string name = "") override final;
 
     // Return the length of this item as a list
     long lengthAsList() const override {

@@ -19,6 +19,21 @@ namespace Sass {
   : Expression(pstate, d, e, i, ct)
   { }
 
+  // Return normalized index for vector from overflowable sass index
+  long Value::sassIndexToListIndex(Value * sassIndex, double epsilon, std::string name)
+  {
+    long index = sassIndex->assertNumber(name)->assertInt(epsilon, name);
+    if (index == 0) throw Exception::SassScriptException("List index may not be 0.", name);
+    if (abs(index) > lengthAsList()) {
+      std::stringstream strm;
+      strm << "Invalid index " << index << " for a list ";
+      strm << "with " << lengthAsList() << " elements.";
+      throw Exception::SassScriptException(strm.str(), name);
+    }
+
+    return index < 0 ? lengthAsList() + index : index - 1;
+  }
+
   SassList* Value::changeListContents(
     std::vector<ValueObj> values,
     Sass_Separator separator,
@@ -1015,6 +1030,11 @@ namespace Sass {
     hasBrackets_(ptr->hasBrackets_)
   {
     concrete_type(LIST);
+  }
+
+  Map* SassList::assertMap(std::string name) {
+    if (!empty()) { return Value::assertMap(name); }
+    else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
   }
 
   bool SassList::isBlank() const
