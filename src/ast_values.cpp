@@ -96,6 +96,37 @@ namespace Sass {
 
   }
 
+
+  /// Parses [this] as a selector list, in the same manner as the
+  /// `selector-parse()` function.
+  ///
+  /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+  /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+  /// [ParentSelector]s. Otherwise, they're considered parse errors.
+  ///
+  /// If this came from a function argument, [name] is the argument name
+  /// (without the `$`). It's used for error reporting.
+
+  SelectorList* Value::assertSelector(Context& ctx, std::string name, bool allowParent) {
+    std::string string = _selectorString(name);
+    char* str = sass_copy_c_string(string.c_str());
+    ctx.strings.push_back(str);
+    SelectorParser p2(ctx, str, "sass://parse-selector", -1);
+    p2._allowParent = allowParent;
+    auto sel = p2.parse();
+    return sel.detach();
+  }
+
+  CompoundSelector* Value::assertCompoundSelector(Context& ctx, std::string name, bool allowParent) {
+    std::string string = _selectorString(name);
+    char* str = sass_copy_c_string(string.c_str());
+    ctx.strings.push_back(str);
+    SelectorParser p2(ctx, str, "sass://parse-selector", -1);
+    p2._allowParent = allowParent;
+    auto sel = p2.parseCompoundSelector();
+    return sel.detach();
+  }
+
   SassList* Value::changeListContents(
     std::vector<ValueObj> values,
     Sass_Separator separator,

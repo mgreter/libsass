@@ -134,6 +134,29 @@ namespace Sass {
         name);
     }
 
+    /// Parses [this] as a selector list, in the same manner as the
+    /// `selector-parse()` function.
+    ///
+    /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+    /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+    /// [ParentSelector]s. Otherwise, they're considered parse errors.
+    ///
+    /// If this came from a function argument, [name] is the argument name
+    /// (without the `$`). It's used for error reporting.
+    SelectorList* assertSelector(Context& ctx, std::string name = "", bool allowParent = false);
+
+
+    /// Parses [this] as a compound selector, in the same manner as the
+    /// `selector-parse()` function.
+    ///
+    /// Throws a [SassScriptException] if this isn't a type that can be parsed as a
+    /// selector, or if parsing fails. If [allowParent] is `true`, this allows
+    /// [ParentSelector]s. Otherwise, they're considered parse errors.
+    ///
+    /// If this came from a function argument, [name] is the argument name
+    /// (without the `$`). It's used for error reporting.
+    CompoundSelector* assertCompoundSelector(Context& ctx, std::string name = "", bool allowParent = false);
+
     // General 
     SassList* changeListContents(
       std::vector<ValueObj> values,
