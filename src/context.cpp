@@ -61,6 +61,8 @@ namespace Sass {
     import_stack(),
     callee_stack(),
     traces(),
+    builtins(),
+    externals(),
     extender(Extender::NORMAL, traces),
     c_compiler(NULL),
 
@@ -138,6 +140,8 @@ namespace Sass {
     // clear inner structures (vectors) and input source
     resources.clear(); import_stack.clear();
     sheets.clear();
+    builtins.clear();
+    externals.clear();
   }
 
   Data_Context::~Data_Context()

@@ -585,12 +585,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Expression::Expression(ParserState pstate, bool d, bool e, bool i, Type ct)
-  : AST_Node(pstate),
+  : SassNode(pstate),
     concrete_type_(ct)
   { }
 
   Expression::Expression(const Expression* ptr)
-  : AST_Node(ptr),
+  : SassNode(ptr),
     concrete_type_(ptr->concrete_type_)
   { }
 

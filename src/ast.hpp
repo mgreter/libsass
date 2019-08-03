@@ -248,7 +248,7 @@ namespace Sass {
   // represents elements in value contexts, which exist primarily to be
   // evaluated and returned.
   //////////////////////////////////////////////////////////////////////
-  class Expression : public AST_Node {
+  class Expression : public SassNode {
   public:
     enum Type {
       NONE,
