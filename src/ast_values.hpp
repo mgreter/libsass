@@ -21,6 +21,39 @@ namespace Sass {
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
 
+    // Return the length of this item as a list
+    virtual long lengthAsList() const { return 1; }
+
+    virtual std::vector<ValueObj> asVector() {
+      std::vector<ValueObj> list;
+      list.push_back(this);
+      return list;
+    }
+
+    // Return the list separator
+    virtual Sass_Separator separator() const {
+      return SASS_UNDEF;
+    }
+
+    // Return the list separator
+    virtual bool hasBrackets() {
+      return false;
+    }
+
+    // Return the list separator
+    virtual bool isTruthy() const {
+      return true;
+    }
+
+    // Return the list separator
+    virtual bool isNull() const {
+      return false;
+    }
+
+    virtual Value* withoutSlash() {
+      return this;
+    }
+
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
     virtual bool operator== (const Value& rhs) const {
