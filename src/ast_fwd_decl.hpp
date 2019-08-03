@@ -18,6 +18,23 @@ namespace Sass {
 
   class AST_Node;
 
+  class Callable;
+  class UserDefinedCallable;
+  class PlainCssCallable;
+  class ExternalCallable;
+  class BuiltInCallable;
+
+  class SassNode;
+  class CallableInvocation;
+  class ArgumentInvocation;
+  class ArgumentDeclaration;
+  class ArgumentResults;
+  class CallableDeclaration;
+  class FunctionRule;
+  class IncludeRule;
+  class ContentBlock;
+  class MixinRule;
+
   class Has_Block;
 
   class SimpleSelector;
@@ -35,6 +52,7 @@ namespace Sass {
 
   class MapExpression;
   class ListExpression;
+  class ValueExpression;
 
   class MediaRule;
 
@@ -91,12 +109,16 @@ namespace Sass {
   class SassArgumentList;
   class Map;
   class Function;
+  class SassFunction;
 
   class Mixin_Call;
   class ParenthesizedExpression;
   class Binary_Expression;
   class Unary_Expression;
   class FunctionExpression;
+  class FunctionExpression2;
+  class IfExpression;
+  class MixinExpression;
   class Custom_Warning;
   class Custom_Error;
 
@@ -169,6 +191,7 @@ namespace Sass {
 
   IMPL_MEM_OBJ(MapExpression);
   IMPL_MEM_OBJ(ListExpression);
+  IMPL_MEM_OBJ(ValueExpression);
 
   IMPL_MEM_OBJ(CssNode);
   IMPL_MEM_OBJ(CssString);
@@ -187,9 +210,17 @@ namespace Sass {
   IMPL_MEM_OBJ(CssStyleRule);
   IMPL_MEM_OBJ(CssStylesheet);
   IMPL_MEM_OBJ(CssSupportsRule);
-
-
+  IMPL_MEM_OBJ(Callable);
+  IMPL_MEM_OBJ(UserDefinedCallable);
+  IMPL_MEM_OBJ(PlainCssCallable);
+  IMPL_MEM_OBJ(ExternalCallable);
+  IMPL_MEM_OBJ(BuiltInCallable);
   IMPL_MEM_OBJ(SupportsRule);
+  IMPL_MEM_OBJ(CallableDeclaration);
+  IMPL_MEM_OBJ(FunctionRule);
+  IMPL_MEM_OBJ(IncludeRule);
+  IMPL_MEM_OBJ(ContentBlock); 
+  IMPL_MEM_OBJ(MixinRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(Keyframe_Rule);
   IMPL_MEM_OBJ(At_Root_Block);
@@ -207,6 +238,11 @@ namespace Sass {
   IMPL_MEM_OBJ(LoudComment);
   IMPL_MEM_OBJ(SilentComment);
   IMPL_MEM_OBJ(Has_Block);
+  IMPL_MEM_OBJ(SassNode);
+  IMPL_MEM_OBJ(CallableInvocation);
+  IMPL_MEM_OBJ(ArgumentInvocation);
+  IMPL_MEM_OBJ(ArgumentDeclaration);
+  IMPL_MEM_OBJ(ArgumentResults);
   IMPL_MEM_OBJ(If);
   IMPL_MEM_OBJ(For);
   IMPL_MEM_OBJ(Each);
@@ -223,10 +259,14 @@ namespace Sass {
   IMPL_MEM_OBJ(SassArgumentList);
   IMPL_MEM_OBJ(Map);
   IMPL_MEM_OBJ(Function);
+  IMPL_MEM_OBJ(SassFunction);
   IMPL_MEM_OBJ(ParenthesizedExpression);
   IMPL_MEM_OBJ(Binary_Expression);
   IMPL_MEM_OBJ(Unary_Expression);
   IMPL_MEM_OBJ(FunctionExpression);
+  IMPL_MEM_OBJ(FunctionExpression2);
+  IMPL_MEM_OBJ(IfExpression);
+  IMPL_MEM_OBJ(MixinExpression);
   IMPL_MEM_OBJ(Custom_Warning);
   IMPL_MEM_OBJ(Custom_Error);
   IMPL_MEM_OBJ(Variable);
@@ -304,16 +344,29 @@ namespace Sass {
   DECLARE_BASE_CAST(Expression)
   DECLARE_BASE_CAST(Statement)
   DECLARE_BASE_CAST(Has_Block)
+  DECLARE_BASE_CAST(SassNode)
+  DECLARE_BASE_CAST(CallableInvocation)
   DECLARE_BASE_CAST(Value)
   DECLARE_BASE_CAST(List)
+  DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(Color)
   DECLARE_BASE_CAST(String)
+  DECLARE_BASE_CAST(SassList)
   DECLARE_BASE_CAST(String_Constant)
   DECLARE_BASE_CAST(SupportsCondition)
   DECLARE_BASE_CAST(Selector)
   DECLARE_BASE_CAST(SimpleSelector)
   DECLARE_BASE_CAST(SelectorComponent)
   DECLARE_BASE_CAST(ImportBase);
+
+
+  #define FN_PROTOTYPE2 \
+    const ParserState& pstate, \
+    const std::vector<ValueObj>& arguments, \
+    Env& closure, \
+    Context& ctx, \
+    Eval& eval, \
+    double epsilon \
 
 }
 

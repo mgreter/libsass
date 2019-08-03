@@ -156,4 +156,8 @@ namespace Sass {
 
   }
 
+  Callable::Callable(
+    ParserState pstate) :
+    SassNode(pstate) {}
+
 }
