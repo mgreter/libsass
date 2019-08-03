@@ -16,7 +16,7 @@ namespace Sass {
   class Expand;
   class Context;
 
-  class Eval : public Operation_CRTP<Expression*, Eval> {
+  class Eval : public Operation_CRTP<Value*, Eval> {
 
    public:
     Expand& exp;
@@ -25,20 +25,34 @@ namespace Sass {
     Eval(Expand& exp);
     ~Eval();
 
+    Value* _runUserDefinedCallable(
+      ArgumentInvocation* arguments,
+      UserDefinedCallable* callable,
+      Value* (Eval::* run)(UserDefinedCallable*),
+      ParserState pstate);
+
+    Value* _runBuiltInCallable(
+      ArgumentInvocation* arguments,
+      BuiltInCallable* callable,
+      ParserState pstate);
+
     Boolean_Obj bool_true;
     Boolean_Obj bool_false;
 
     Env* environment();
     EnvStack& env_stack();
+	std::pair<std::vector<ExpressionObj>, KeywordMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
     const std::string cwd();
     CalleeStack& callee_stack();
     struct Sass_Inspect_Options& options();
     struct Sass_Compiler* compiler();
 
+    Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, ParserState pstate);
+
     std::string serialize(AST_Node* node);
 
     std::string joinStrings(std::vector<std::string>& strings, const char* const separator);
-    std::string performInterpolation(InterpolationObj interpolation, bool warnForColor);
+    std::string performInterpolation(InterpolationObj interpolation, bool warnForColor = false);
     std::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
 
     // for evaluating function bodies
@@ -54,14 +68,21 @@ namespace Sass {
     Value* operator()(Debug*);
 
     // Expression* operator()(List*);
-    Value* operator()(Map*);
+    SassMap* operator()(SassMap*);
+    SassList* operator()(SassList*);
     Map* operator()(MapExpression*);
     SassList* operator()(ListExpression*);
+    Value* operator()(ValueExpression*);
     Value* operator()(ParenthesizedExpression*);
     Value* operator()(Binary_Expression*);
     Value* evalBinOp(Binary_Expression* b_in);
     Value* operator()(Unary_Expression*);
-    Expression* operator()(FunctionExpression*);
+    Value* operator()(FunctionExpression*);
+    Callable* _getFunction(std::string name, std::string ns);
+    Value* _runFunctionCallable(ArgumentInvocation* arguments, Callable* callable, ParserState pstate);
+    Value* operator()(FunctionExpression2*);
+    Value* operator()(MixinExpression*);
+    Value* operator()(IfExpression*);
     Value* operator()(Variable*);
     Value* operator()(Number*);
     Value* operator()(Color_RGBA*);
@@ -74,20 +95,25 @@ namespace Sass {
 
     Value* operator()(String_Quoted*);
     Value* operator()(String_Constant*);
-    Expression* operator()(At_Root_Query*);
     Value* operator()(Null*);
-    Expression* operator()(Argument*);
-    Expression* operator()(Arguments*);
+    Value* operator()(Argument*);
+    Value* operator()(Arguments*);
     Value* operator()(LoudComment*);
     Value* operator()(SilentComment*);
 
-    Value* operator()(SupportsRule*);
+    Argument* visitArgument(Argument* arg);
+    Arguments* visitArguments(Arguments* args);
+    KeywordMap<ValueObj> keywordMapMap(const KeywordMap<ExpressionObj>& map);
+	void _addRestMap(KeywordMap<ValueObj>& values, SassMap* map, ParserState nodeForSpan);
+	void _addRestMap2(KeywordMap<ExpressionObj>& values, SassMap* map, ParserState nodeForSpan);
+	ArgumentResults* _evaluateArguments(ArgumentInvocation* arguments);
 
     std::string _evaluateToCss(Expression* expression, bool quote = true);
 
-    std::string _serialize(Value* expression, bool quote = true);
+    std::string _serialize(Expression* expression, bool quote = true);
 
-    std::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand* operand);
+    std::string _parenthesize(SupportsCondition* condition);
+    std::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand);
     std::string _visitSupportsCondition(SupportsCondition* condition);
 
     String* operator()(SupportsCondition*);
@@ -100,10 +126,13 @@ namespace Sass {
     // actual evaluated selectors
     Value* operator()(Parent_Reference*);
 
+    Value* _runAndCheck(UserDefinedCallable*);
+    Value* _runWithBlock(UserDefinedCallable*);
+
     // generic fallback
     template <typename U>
-    Expression* fallback(U x)
-    { return Cast<Expression>(x); }
+    Value* fallback(U x)
+    { return Cast<Value>(x); }
 
   };
 

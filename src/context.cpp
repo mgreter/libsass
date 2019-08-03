@@ -2,6 +2,7 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 #include "ast.hpp"
+#include "sass_values.hpp"
 
 #include "remove_placeholders.hpp"
 #include "sass_functions.hpp"
@@ -10,6 +11,7 @@
 #include "fn_numbers.hpp"
 #include "fn_colors.hpp"
 #include "fn_miscs.hpp"
+#include "fn_meta.hpp"
 #include "fn_lists.hpp"
 #include "fn_maps.hpp"
 #include "context.hpp"
@@ -524,6 +526,7 @@ namespace Sass {
   void register_built_in_functions(Context&, Env* env);
   void register_c_functions(Context&, Env* env, Sass_Function_List);
   void register_c_function(Context&, Env* env, Sass_Function_Entry);
+  void register_c_function2(Context&, Env* env, Sass_Function_Entry);
 
   char* Context::render(Block_Obj root)
   {
@@ -666,7 +669,7 @@ namespace Sass {
     register_built_in_functions(*this, &global);
     // register custom functions (defined via C-API)
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
-    { register_c_function(*this, &global, c_functions[i]); }
+    { register_c_function2(*this, &global, c_functions[i]); }
     // create initial backtrace entry
     // create crtp visitor objects
     // std::vector<std::vector<std::string>> in
@@ -782,136 +785,323 @@ namespace Sass {
   }
 
 
+  void register_built_in_function(Context& ctx, Env* env, std::string name, std::string prototype, SassFnSig cb)
+  {
+    ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
+  }
+
+  void register_external_function(Context& ctx, Env* env, std::string name, std::string prototype, Sass_Function_Entry cb)
+  {
+    // ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    // ctx.builtins.insert(std::make_pair(name, new ExternalCallable(name, args, cb)));
+  }
+
+
+  void register_built_in_overloads(Context& ctx, Env* env, std::string name,
+    std::vector<std::pair<std::string, SassFnSig>> overloads)
+  {
+    SassFnPairs pairs;
+    for (auto overload : overloads) {
+      ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, overload.first);
+      pairs.push_back(std::make_pair(args, overload.second));
+    }
+    ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, pairs)));
+  }
+
+  union Sass_Value* customSassFn(
+    const union Sass_Value* s_args,
+    void* cookie
+  ) {
+    return sass_clone_value(s_args);
+  }
+
+  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct Sass_Compiler* compiler)
+  {
+    // we actually abuse the void* to store an "int"
+    return sass_clone_value(v);
+  }
+
   void register_built_in_functions(Context& ctx, Env* env)
   {
     using namespace Functions;
-    register_overload_stub(ctx, "rgb", env, 1);
-    register_function(ctx, rgb_4_sig, rgb_4, 4, env);
-    register_function(ctx, rgb_3_sig, rgb_3, 3, env);
-    register_function(ctx, rgb_2_sig, rgb_2, 2, env);
-    register_function(ctx, rgb_1_sig, rgb_1, 1, env);
 
-    register_overload_stub(ctx, "rgba", env, 1);
-    register_function(ctx, rgba_4_sig, rgba_4, 4, env);
-    register_function(ctx, rgba_3_sig, rgba_3, 3, env);
-    register_function(ctx, rgba_2_sig, rgba_2, 2, env);
-    register_function(ctx, rgba_1_sig, rgba_1, 1, env);
-
-    register_overload_stub(ctx, "hsl", env, 1);
-    register_function(ctx, hsl_4_sig, hsl_4, 4, env);
-    register_function(ctx, hsl_3_sig, hsl_3, 3, env);
-    register_function(ctx, hsl_2_sig, hsl_2, 2, env);
-    register_function(ctx, hsl_1_sig, hsl_1, 1, env);
-
-    register_overload_stub(ctx, "hsla", env, 1);
-    register_function(ctx, hsla_4_sig, hsla_4, 4, env);
-    register_function(ctx, hsla_3_sig, hsla_3, 3, env);
-    register_function(ctx, hsla_2_sig, hsla_2, 2, env);
-    register_function(ctx, hsla_1_sig, hsla_1, 1, env);
-
-    register_overload_stub(ctx, "saturate", env, 2);
-    register_function(ctx, saturate_1_sig, saturate_1, 1, env);
-    register_function(ctx, saturate_2_sig, saturate_2, 2, env);
-
-    // RGB Functions
-    register_function(ctx, red_sig, red, env);
-    register_function(ctx, green_sig, green, env);
-    register_function(ctx, blue_sig, blue, env);
-    register_function(ctx, mix_sig, mix, env);
-    // HSL Functions
-    register_function(ctx, hue_sig, hue, env);
-    register_function(ctx, saturation_sig, saturation, env);
-    register_function(ctx, lightness_sig, lightness, env);
-    register_function(ctx, adjust_hue_sig, adjust_hue, env);
-    register_function(ctx, lighten_sig, lighten, env);
-    register_function(ctx, darken_sig, darken, env);
-    register_function(ctx, desaturate_sig, desaturate, env);
-    register_function(ctx, grayscale_sig, grayscale, env);
-    register_function(ctx, complement_sig, complement, env);
-    register_function(ctx, invert_sig, invert, env);
-    // Opacity Functions
-    // register_overload_stub(ctx, "alpha", env);
-    // register_function(ctx, alpha_sig, alpha, 1, env);
-    // register_function(ctx, alpha_ie_sig, alpha_ie, std::string::npos, env);
-    // register_overload_stub(ctx, "opacity", env);
-    // register_function(ctx, opacity_sig, alpha, 1, env);
+    // Sass_Function_Entry entry = sass_make_function("$list", call_fn_foo, nullptr);
+    // ArgumentDeclarationObj args = ArgumentDeclaration::parse(ctx, "$list");
+    // auto qwe = new ExternalCallable("foo", args, entry);
+    // ctx.externals.insert(std::make_pair("foo", qwe));
 
 
-    register_function(ctx, alpha_sig, alpha, env);
-    register_function(ctx, opacity_sig, alpha, env);
-    register_function(ctx, opacify_sig, opacify, env);
-    register_function(ctx, fade_in_sig, opacify, env);
-    register_function(ctx, transparentize_sig, transparentize, env);
-    register_function(ctx, fade_out_sig, transparentize, env);
-    // Other Color Functions
-    register_function(ctx, adjust_color_sig, adjust_color, env);
-    register_function(ctx, scale_color_sig, scale_color, env);
-    register_function(ctx, change_color_sig, change_color, env);
-    register_function(ctx, ie_hex_str_sig, ie_hex_str, env);
-    // String Functions
-    register_function(ctx, unquote_sig, sass_unquote, env);
-    register_function(ctx, quote_sig, sass_quote, env);
-    register_function(ctx, str_length_sig, str_length, env);
-    register_function(ctx, str_insert_sig, str_insert, env);
-    register_function(ctx, str_index_sig, str_index, env);
-    register_function(ctx, str_slice_sig, str_slice, env);
-    register_function(ctx, to_upper_case_sig, to_upper_case, env);
-    register_function(ctx, to_lower_case_sig, to_lower_case, env);
-    // Number Functions
-    register_function(ctx, percentage_sig, percentage, env);
-    register_function(ctx, round_sig, round, env);
-    register_function(ctx, ceil_sig, ceil, env);
-    register_function(ctx, floor_sig, floor, env);
-    register_function(ctx, abs_sig, abs, env);
-    register_function(ctx, min_sig, min, env);
-    register_function(ctx, max_sig, max, env);
-    register_function(ctx, random_sig, random, env);
+
+    // register_overload_stub(ctx, "rgb", env, 1);
+    // register_function(ctx, rgb_4_sig, rgb_4, 4, env);
+    // register_function(ctx, rgb_3_sig, rgb_3, 3, env);
+    // register_function(ctx, rgb_2_sig, rgb_2, 2, env);
+    // register_function(ctx, rgb_1_sig, rgb_1, 1, env);
+    // 
+    // register_overload_stub(ctx, "rgba", env, 1);
+    // register_function(ctx, rgba_4_sig, rgba_4, 4, env);
+    // register_function(ctx, rgba_3_sig, rgba_3, 3, env);
+    // register_function(ctx, rgba_2_sig, rgba_2, 2, env);
+    // register_function(ctx, rgba_1_sig, rgba_1, 1, env);
+
+    // register_overload_stub(ctx, "hsl", env, 1);
+    // register_function(ctx, hsl_4_sig, hsl_4, 4, env);
+    // register_function(ctx, hsl_3_sig, hsl_3, 3, env);
+    // register_function(ctx, hsl_2_sig, hsl_2, 2, env);
+    // register_function(ctx, hsl_1_sig, hsl_1, 1, env);
+    // 
+    // register_overload_stub(ctx, "hsla", env, 1);
+    // register_function(ctx, hsla_4_sig, hsla_4, 4, env);
+    // register_function(ctx, hsla_3_sig, hsla_3, 3, env);
+    // register_function(ctx, hsla_2_sig, hsla_2, 2, env);
+    // register_function(ctx, hsla_1_sig, hsla_1, 1, env);
+    // 
+    // register_overload_stub(ctx, "saturate", env, 2);
+    // register_function(ctx, saturate_1_sig, saturate_1, 1, env);
+    // register_function(ctx, saturate_2_sig, saturate_2, 2, env);
+    // 
+    // // RGB Functions
+    // register_function(ctx, red_sig, red, env);
+    // register_function(ctx, green_sig, green, env);
+    // register_function(ctx, blue_sig, blue, env);
+    // register_function(ctx, mix_sig, mix, env);
+    // 
+    // // HSL Functions
+    // register_function(ctx, hue_sig, hue, env);
+    // register_function(ctx, saturation_sig, saturation, env);
+    // register_function(ctx, lightness_sig, lightness, env);
+    // register_function(ctx, adjust_hue_sig, adjust_hue, env);
+    // register_function(ctx, lighten_sig, lighten, env);
+    // register_function(ctx, darken_sig, darken, env);
+    // register_function(ctx, desaturate_sig, desaturate, env);
+    // register_function(ctx, grayscale_sig, grayscale, env);
+    // register_function(ctx, complement_sig, complement, env);
+    // register_function(ctx, invert_sig, invert, env);
+    // // Opacity Functions
+    // // register_overload_stub(ctx, "alpha", env);
+    // // register_function(ctx, alpha_sig, alpha, 1, env);
+    // // register_function(ctx, alpha_ie_sig, alpha_ie, std::string::npos, env);
+    // // register_overload_stub(ctx, "opacity", env);
+    // // register_function(ctx, opacity_sig, alpha, 1, env);
+    // 
+    // 
+    // register_function(ctx, alpha_sig, alpha, env);
+    // register_function(ctx, opacity_sig, alpha, env);
+    // register_function(ctx, opacify_sig, opacify, env);
+    // register_function(ctx, fade_in_sig, opacify, env);
+    // register_function(ctx, transparentize_sig, transparentize, env);
+    // register_function(ctx, fade_out_sig, transparentize, env);
+    // // Other Color Functions
+    // register_function(ctx, adjust_color_sig, adjust_color, env);
+    // register_function(ctx, scale_color_sig, scale_color, env);
+    // register_function(ctx, change_color_sig, change_color, env);
+    // register_function(ctx, ie_hex_str_sig, ie_hex_str, env);
+    // // String Functions
+    // register_function(ctx, unquote_sig, sass_unquote, env);
+    // register_function(ctx, quote_sig, sass_quote, env);
+    // register_function(ctx, str_length_sig, str_length, env);
+    // register_function(ctx, str_insert_sig, str_insert, env);
+    // register_function(ctx, str_index_sig, str_index, env);
+    // register_function(ctx, str_slice_sig, str_slice, env);
+    // register_function(ctx, to_upper_case_sig, to_upper_case, env);
+    // register_function(ctx, to_lower_case_sig, to_lower_case, env);
+    // // Number Functions
+    // register_function(ctx, percentage_sig, percentage, env);
+    // register_function(ctx, round_sig, round, env);
+    // register_function(ctx, ceil_sig, ceil, env);
+    // register_function(ctx, floor_sig, floor, env);
+    // register_function(ctx, abs_sig, abs, env);
+    // register_function(ctx, min_sig, min, env);
+    // register_function(ctx, max_sig, max, env);
+    // register_function(ctx, random_sig, random, env);
+
     // List Functions
-    register_function(ctx, length_sig, length, env);
-    register_function(ctx, nth_sig, nth, env);
-    register_function(ctx, set_nth_sig, set_nth, env);
-    register_function(ctx, index_sig, index, env);
-    register_function(ctx, join_sig, join, env);
-    register_function(ctx, append_sig, append, env);
-    register_function(ctx, zip_sig, zip, env);
-    register_function(ctx, list_separator_sig, list_separator, env);
-    register_function(ctx, is_bracketed_sig, is_bracketed, env);
+    register_built_in_function(ctx, env, "length", "$list", Functions::Lists::length);
+    register_built_in_function(ctx, env, "nth", "$list, $n", Functions::Lists::nth);
+    register_built_in_function(ctx, env, "set-nth", "$list, $n, $value", Functions::Lists::setNth);
+    register_built_in_function(ctx, env, "join", "$list1, $list2, $separator: auto, $bracketed: auto", Functions::Lists::join);
+    register_built_in_function(ctx, env, "append", "$list, $val, $separator: auto", Functions::Lists::append);
+    register_built_in_function(ctx, env, "zip", "$lists...", Functions::Lists::zip);
+    register_built_in_function(ctx, env, "index", "$list, $value", Functions::Lists::index);
+    register_built_in_function(ctx, env, "list-separator", "$list", Functions::Lists::separator);
+    register_built_in_function(ctx, env, "is-bracketed", "$list", Functions::Lists::isBracketed);
+
     // Map Functions
-    register_function(ctx, map_get_sig, map_get, env);
-    register_function(ctx, map_merge_sig, map_merge, env);
-    register_function(ctx, map_remove_sig, map_remove, env);
-    register_function(ctx, map_keys_sig, map_keys, env);
-    register_function(ctx, map_values_sig, map_values, env);
-    register_function(ctx, map_has_key_sig, map_has_key, env);
-    register_function(ctx, keywords_sig, keywords, env);
-    // Introspection Functions
-    register_function(ctx, type_of_sig, type_of, env);
-    register_function(ctx, unit_sig, unit, env);
-    register_function(ctx, unitless_sig, unitless, env);
-    register_function(ctx, comparable_sig, comparable, env);
-    register_function(ctx, variable_exists_sig, variable_exists, env);
-    register_function(ctx, global_variable_exists_sig, global_variable_exists, env);
-    register_function(ctx, function_exists_sig, function_exists, env);
-    register_function(ctx, mixin_exists_sig, mixin_exists, env);
-    register_function(ctx, feature_exists_sig, feature_exists, env);
-    register_function(ctx, call_sig, call, env);
-    register_function(ctx, content_exists_sig, content_exists, env);
-    register_function(ctx, get_function_sig, get_function, env);
-    // Boolean Functions
-    register_function(ctx, not_sig, sass_not, env);
-    register_function(ctx, if_sig, sass_if, env);
-    // Misc Functions
-    register_function(ctx, inspect_sig, inspect, env);
-    register_function(ctx, unique_id_sig, unique_id, env);
+    register_built_in_function(ctx, env, "map-get", "$map, $key", Functions::Maps::get);
+    register_built_in_function(ctx, env, "map-merge", "$map1, $map2", Functions::Maps::merge);
+    register_built_in_overloads(ctx, env, "map-remove", {
+        std::make_pair("$map", Functions::Maps::remove_one),
+        std::make_pair("$map, $key, $keys...", Functions::Maps::remove_many)
+      });
+
+    // register_built_in_function(ctx, env, "remove", "$list", Functions::Maps::remove); // overloaded
+    register_built_in_function(ctx, env, "map-keys", "$map", Functions::Maps::keys);
+    register_built_in_function(ctx, env, "map-values", "$map", Functions::Maps::values);
+    register_built_in_function(ctx, env, "map-has-key", "$map, $key", Functions::Maps::hasKey);
+
+    // Math Functions
+    register_built_in_function(ctx, env, "round", "$number", Functions::Math::round);
+    register_built_in_function(ctx, env, "ceil", "$number", Functions::Math::ceil);
+    register_built_in_function(ctx, env, "floor", "$number", Functions::Math::floor);
+    register_built_in_function(ctx, env, "abs", "$number", Functions::Math::abs);
+    register_built_in_function(ctx, env, "max", "$numbers...", Functions::Math::max);
+    register_built_in_function(ctx, env, "min", "$numbers...", Functions::Math::min);
+    register_built_in_function(ctx, env, "random", "$limit: null", Functions::Math::random);
+    register_built_in_function(ctx, env, "unit", "$number", Functions::Math::unit);
+    register_built_in_function(ctx, env, "percentage", "$number", Functions::Math::percentage);
+    register_built_in_function(ctx, env, "unitless", "$number", Functions::Math::isUnitless);
+    register_built_in_function(ctx, env, "comparable", "$number1, $number2", Functions::Math::compatible);
+
+    // String functions
+    register_built_in_function(ctx, env, "unquote", "$string", Functions::Strings::unquote);
+    register_built_in_function(ctx, env, "quote", "$string", Functions::Strings::quote);
+    register_built_in_function(ctx, env, "to-upper-case", "$string", Functions::Strings::toUpperCase);
+    register_built_in_function(ctx, env, "to-lower-case", "$string", Functions::Strings::toLowerCase);
+    register_built_in_function(ctx, env, "str-length", "$string", Functions::Strings::length);
+    register_built_in_function(ctx, env, "str-insert", "$string, $insert, $index", Functions::Strings::insert);
+    register_built_in_function(ctx, env, "str-index", "$string, $substring", Functions::Strings::index);
+    register_built_in_function(ctx, env, "str-slice", "$string, $start-at, $end-at: -1", Functions::Strings::slice);
+    register_built_in_function(ctx, env, "unique-id", "", Functions::Strings::uniqueId);
+
+    // Color functions
+    register_built_in_overloads(ctx, env, "rgb", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::rgb_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::rgb_3),
+        std::make_pair("$color, $alpha", Functions::Colors::rgb_2),
+        std::make_pair("$channels", Functions::Colors::rgb_1),
+      });
+    register_built_in_overloads(ctx, env, "rgba", {
+        std::make_pair("$red, $green, $blue, $alpha", Functions::Colors::rgba_4),
+        std::make_pair("$red, $green, $blue", Functions::Colors::rgba_3),
+        std::make_pair("$color, $alpha", Functions::Colors::rgba_2),
+        std::make_pair("$channels", Functions::Colors::rgba_1),
+      });
+    register_built_in_overloads(ctx, env, "hsl", {
+        std::make_pair("$hue, $saturation, $lightness, $alpha", Functions::Colors::hsl_4),
+        std::make_pair("$hue, $saturation, $lightness", Functions::Colors::hsl_3),
+        std::make_pair("$color, $alpha", Functions::Colors::hsl_2),
+        std::make_pair("$channels", Functions::Colors::hsl_1),
+      });
+    register_built_in_overloads(ctx, env, "hsla", {
+        std::make_pair("$hue, $saturation, $lightness, $alpha", Functions::Colors::hsla_4),
+        std::make_pair("$hue, $saturation, $lightness", Functions::Colors::hsla_3),
+        std::make_pair("$color, $alpha", Functions::Colors::hsla_2),
+        std::make_pair("$channels", Functions::Colors::hsla_1),
+      });
+
+    register_built_in_function(ctx, env, "red", "$color", Functions::Colors::red);
+    register_built_in_function(ctx, env, "green", "$color", Functions::Colors::green);
+    register_built_in_function(ctx, env, "blue", "$color", Functions::Colors::blue);
+    register_built_in_function(ctx, env, "hue", "$color", Functions::Colors::hue);
+    register_built_in_function(ctx, env, "lightness", "$color", Functions::Colors::lightness);
+    register_built_in_function(ctx, env, "saturation", "$color", Functions::Colors::saturation);
+    register_built_in_function(ctx, env, "invert", "$color, $weight: 100%", Functions::Colors::invert);
+    register_built_in_function(ctx, env, "grayscale", "$color", Functions::Colors::grayscale);
+    register_built_in_function(ctx, env, "complement", "$color", Functions::Colors::complement);
+    register_built_in_function(ctx, env, "lighten", "$color, $amount", Functions::Colors::lighten);
+    register_built_in_function(ctx, env, "darken", "$color, $amount", Functions::Colors::darken);
+    register_built_in_function(ctx, env, "desaturate", "$color, $amount", Functions::Colors::desaturate);
+    register_built_in_overloads(ctx, env, "saturate", {
+        std::make_pair("$amount", Functions::Colors::saturate_1),
+        std::make_pair("$color, $amount", Functions::Colors::saturate_2),
+      });
+    
+    register_built_in_function(ctx, env, "adjust-hue", "$color, $degrees", Functions::Colors::adjustHue);
+    register_built_in_function(ctx, env, "adjust-color", "$color, $kwargs...", Functions::Colors::adjust);
+    register_built_in_function(ctx, env, "change-color", "$color, $kwargs...", Functions::Colors::change);
+    register_built_in_function(ctx, env, "scale-color", "$color, $kwargs...", Functions::Colors::scale);
+    register_built_in_function(ctx, env, "mix", "$color1, $color2, $weight: 50%", Functions::Colors::mix);
+
+    // Opacity functions
+    register_built_in_function(ctx, env, "opacify", "$color, $amount", Functions::Colors::opacify);
+    register_built_in_function(ctx, env, "fade-in", "$color, $amount", Functions::Colors::opacify);
+    register_built_in_function(ctx, env, "fade-out", "$color, $amount", Functions::Colors::transparentize);
+    register_built_in_function(ctx, env, "transparentize", "$color, $amount", Functions::Colors::transparentize);
+    register_built_in_function(ctx, env, "ie-hex-str", "$color", Functions::Colors::ieHexStr);
+    register_built_in_overloads(ctx, env, "alpha", {
+        std::make_pair("$color", Functions::Colors::alpha_one),
+        std::make_pair("$args...", Functions::Colors::alpha_any),
+      });
+    register_built_in_function(ctx, env, "opacity", "$color", Functions::Colors::opacity);
+
     // Selector functions
-    register_function(ctx, selector_nest_sig, selector_nest, env);
-    register_function(ctx, selector_append_sig, selector_append, env);
-    register_function(ctx, selector_extend_sig, selector_extend, env);
-    register_function(ctx, selector_replace_sig, selector_replace, env);
-    register_function(ctx, selector_unify_sig, selector_unify, env);
-    register_function(ctx, is_superselector_sig, is_superselector, env);
-    register_function(ctx, simple_selectors_sig, simple_selectors, env);
-    register_function(ctx, selector_parse_sig, selector_parse, env);
+    register_built_in_function(ctx, env, "selector-nest", "$selectors...", Functions::Selectors::nest);
+    register_built_in_function(ctx, env, "selector-append", "$selectors...", Functions::Selectors::append);
+    register_built_in_function(ctx, env, "selector-extend", "$selector, $extendee, $extender", Functions::Selectors::extend);
+    register_built_in_function(ctx, env, "selector-replace", "$selector, $original, $replacement", Functions::Selectors::replace);
+    register_built_in_function(ctx, env, "selector-unify", "$selector1, $selector2", Functions::Selectors::unify);
+    register_built_in_function(ctx, env, "is-superselector", "$super, $sub", Functions::Selectors::isSuper);
+    register_built_in_function(ctx, env, "simple-selectors", "$selector", Functions::Selectors::simple);
+    register_built_in_function(ctx, env, "selector-parse", "$selector", Functions::Selectors::parse);
+
+    // Meta functions
+    register_built_in_function(ctx, env, "feature-exists", "$feature", Functions::Meta::featureExists);
+    register_built_in_function(ctx, env, "type-of", "$value", Functions::Meta::typeOf);
+    register_built_in_function(ctx, env, "inspect", "$value", Functions::Meta::inspect);
+    register_built_in_function(ctx, env, "keywords", "$args", Functions::Meta::keywords);
+
+    // ToDo: dart-sass keeps them on the local environment scope, see below:
+    // These functions are defined in the context of the evaluator because
+    // they need access to the [_environment] or other local state.
+    register_built_in_function(ctx, env, "global-variable-exists", "$name, $module: null", Functions::Meta::globalVariableExists);
+    register_built_in_function(ctx, env, "variable-exists", "$name", Functions::Meta::variableExists);
+    register_built_in_function(ctx, env, "function-exists", "$name, $module: null", Functions::Meta::functionExists);
+    register_built_in_function(ctx, env, "mixin-exists", "$name, $module: null", Functions::Meta::mixinExists);
+    register_built_in_function(ctx, env, "content-exists", "", Functions::Meta::contentExists);
+    // register_built_in_function(ctx, env, "module-variables", "$module", Functions::Meta::moduleVariables);
+    // register_built_in_function(ctx, env, "module-functions", "$module", Functions::Meta::moduleFunctions);
+    register_built_in_function(ctx, env, "get-function", "$name, $css: false, $module: null", Functions::Meta::getFunction);
+    register_built_in_function(ctx, env, "call", "$function, $args...", Functions::Meta::call);
+
+
+    // register_function(ctx, length_sig, length, env);
+    // register_function(ctx, nth_sig, nth, env);
+    // register_function(ctx, set_nth_sig, set_nth, env);
+    // register_function(ctx, index_sig, index, env);
+    // register_function(ctx, join_sig, join, env);
+    // register_function(ctx, append_sig, append, env);
+    // register_function(ctx, zip_sig, zip, env);
+    // register_function(ctx, list_separator_sig, list_separator, env);
+    // register_function(ctx, is_bracketed_sig, is_bracketed, env);
+
+    // // Map Functions
+    // register_function(ctx, map_get_sig, map_get, env);
+    // register_function(ctx, map_merge_sig, map_merge, env);
+    // register_function(ctx, map_remove_sig, map_remove, env);
+    // register_function(ctx, map_keys_sig, map_keys, env);
+    // register_function(ctx, map_values_sig, map_values, env);
+    // register_function(ctx, map_has_key_sig, map_has_key, env);
+    // register_function(ctx, keywords_sig, keywords, env);
+
+    // // Introspection Functions
+    // register_function(ctx, type_of_sig, type_of, env);
+    // register_function(ctx, unit_sig, unit, env);
+    // register_function(ctx, unitless_sig, unitless, env);
+    // register_function(ctx, comparable_sig, comparable, env);
+    // register_function(ctx, variable_exists_sig, variable_exists, env);
+    // register_function(ctx, global_variable_exists_sig, global_variable_exists, env);
+    // register_function(ctx, function_exists_sig, function_exists, env);
+    // register_function(ctx, mixin_exists_sig, mixin_exists, env);
+    // register_function(ctx, feature_exists_sig, feature_exists, env);
+    // register_function(ctx, call_sig, call, env);
+    // register_function(ctx, content_exists_sig, content_exists, env);
+    // register_function(ctx, get_function_sig, get_function, env);
+    // // Boolean Functions
+    // register_function(ctx, not_sig, sass_not, env);
+    // register_function(ctx, if_sig, sass_if, env);
+    // // Misc Functions
+    // register_function(ctx, inspect_sig, inspect, env);
+    // register_function(ctx, unique_id_sig, unique_id, env);
+    // // Selector functions
+    // register_function(ctx, selector_nest_sig, selector_nest, env);
+    // register_function(ctx, selector_append_sig, selector_append, env);
+    // register_function(ctx, selector_extend_sig, selector_extend, env);
+    // register_function(ctx, selector_replace_sig, selector_replace, env);
+    // register_function(ctx, selector_unify_sig, selector_unify, env);
+    // register_function(ctx, is_superselector_sig, is_superselector, env);
+    // register_function(ctx, simple_selectors_sig, simple_selectors, env);
+    // register_function(ctx, selector_parse_sig, selector_parse, env);
   }
 
   void register_c_functions(Context& ctx, Env* env, Sass_Function_List descrs)
@@ -927,6 +1117,13 @@ namespace Sass {
     Definition* def = make_c_function(descr, ctx);
     def->environment(env);
     (*env)[def->name() + "[f]"] = def;
+  }
+
+  void register_c_function2(Context& ctx, Env* env, Sass_Function_Entry descr)
+  {
+    ExternalCallable* def = make_c_function2(descr, ctx);
+    // def->environment(env);
+    env->set_local(def->name() + "[f]", def);
   }
 
 }

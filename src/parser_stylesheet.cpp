@@ -138,7 +138,7 @@ namespace Sass {
       _isUseAllowed = false;
       start = scanner.offset;
       scanner.readChar();
-      return _includeRule(start);
+      return _includeRule2(start);
 
     case $equal:
       if (!isIndented()) return _styleRule();
@@ -146,7 +146,7 @@ namespace Sass {
       start = scanner.offset;
       scanner.readChar();
       whitespace();
-      return _mixinRule(start);
+      return _mixinRule2(start);
 
     default:
       _isUseAllowed = false;
@@ -511,13 +511,13 @@ namespace Sass {
       return block;
     }
     else if (plain == "include") {
-      return _includeRule(start);
+      return _includeRule2(start);
     }
     else if (plain == "media") {
       return mediaRule(start);
     }
     else if (plain == "mixin") {
-      return _mixinRule(start);
+      return _mixinRule2(start);
     }
     else if (plain == "-moz-document") {
       return mozDocumentRule(start, name);
@@ -573,7 +573,7 @@ namespace Sass {
       return _ifRule(start, &StylesheetParser::_declarationChild);
     }
     else if (name == "include") {
-      return _includeRule(start);
+      return _includeRule2(start);
     }
     else if (name == "warn") {
       return _warnRule(start);
@@ -725,12 +725,13 @@ namespace Sass {
 
     whitespace();
 
-    Arguments* args = nullptr;
+    ArgumentInvocationObj args;
     if (scanner.peekChar() == $lparen) {
       args = _argumentInvocation(true);
     }
     else {
-      args = SASS_MEMORY_NEW(Arguments, scanner.pstate());
+      args = SASS_MEMORY_NEW(ArgumentInvocation,
+        scanner.pstate(), {}, {});
     }
 
     LOCAL_FLAG(_mixinHasContent, true);
@@ -811,16 +812,15 @@ namespace Sass {
 
   // Consumes a function declaration.
   // [start] should point before the `@`.
-  Definition* StylesheetParser::_functionRule(Position start)
+  FunctionRule* StylesheetParser::_functionRule(Position start)
   {
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
     std::string name = identifier();
     std::string normalized(name);
     whitespace();
-    // std::cerr << "_functionRule\n"; exit(1);
 
-    Parameters_Obj params = _argumentDeclaration();
+    ArgumentDeclarationObj arguments = _argumentDeclaration2();
 
     if (_inMixin || _inContentBlock) {
       error("Mixins may not contain function declarations.",
@@ -832,16 +832,17 @@ namespace Sass {
     }
 
     std::string fname(Util::unvendor(name));
-    if (fname == "calc" || fname == "element" || fname == "expression" || fname == "url" || fname == "and" || fname == "or" || fname == "not") {
+    if (fname == "calc" || fname == "element" || fname == "expression" ||
+      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
       error("Invalid function name.",
         scanner.pstate(start));
     }
 
     whitespace();
-    Block_Obj block = SASS_MEMORY_NEW(Block, "[pstateP]");
-    Definition* rule = _withChildren<Definition>(
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate());
+    FunctionRule* rule = _withChildren<FunctionRule>(
       &StylesheetParser::_functionAtRule,
-      normalized, params, block, Definition::FUNCTION);
+      name, arguments, nullptr, block);
     block->update_pstate(scanner.pstate(start));
     rule->update_pstate(scanner.pstate(start));
     return rule;
@@ -1135,7 +1136,7 @@ namespace Sass {
     }
 
     whitespace();
-    ArgumentsObj arguments;
+    ArgumentInvocationObj arguments;
     if (scanner.peekChar() == $lparen) {
       arguments = _argumentInvocation(true);
     }
@@ -1149,7 +1150,7 @@ namespace Sass {
     }
 
     // ToDo: Add checks to allow to ommit arguments fully
-    if (!arguments) arguments = SASS_MEMORY_NEW(Arguments, "[pstate]");
+    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation, "[pstate]", {}, {});
     Mixin_CallObj mixin = SASS_MEMORY_NEW(Mixin_Call,
       scanner.pstate(start), name, arguments);
 
@@ -1173,8 +1174,68 @@ namespace Sass {
       namespace : ns, content : content);
       */
 
-    // std::cerr << "_includeRule\n"; exit(1);
+      // std::cerr << "_includeRule\n"; exit(1);
     return mixin.detach();
+  }
+  // EO _includeRule
+
+    // Consumes an `@include` rule.
+  // [start] should point before the `@`.
+  IncludeRule* StylesheetParser::_includeRule2(Position start)
+  {
+
+    std::string ns;
+    std::string name = identifier();
+    if (scanner.scanChar($dot)) {
+      ns = name;
+      name = _publicIdentifier();
+    }
+
+    whitespace();
+    ArgumentInvocationObj arguments;
+    if (scanner.peekChar() == $lparen) {
+      arguments = _argumentInvocation(true);
+    }
+    whitespace();
+    ArgumentDeclarationObj contentArguments;
+    if (scanIdentifier("using")) {
+      whitespace();
+      contentArguments = _argumentDeclaration2();
+      whitespace();
+    }
+
+    // ToDo: Add checks to allow to ommit arguments fully
+    if (!arguments) arguments = SASS_MEMORY_NEW(ArgumentInvocation, "[pstate]", {}, {});
+    IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
+      scanner.pstate(start), name, arguments);
+
+    ContentBlockObj content;
+    if (contentArguments || lookingAtChildren()) {
+      LOCAL_FLAG(_inContentBlock, true);
+      if (contentArguments.isNull()) {
+        // Dart-sass creates this one too
+        contentArguments = SASS_MEMORY_NEW(
+          ArgumentDeclaration, scanner.pstate(), {});
+      }
+      content = _withChildren<ContentBlock>(
+        &StylesheetParser::_childStatement,
+        contentArguments);
+      content->update_pstate(scanner.pstate(start));
+      rule->content(content);
+    }
+    else {
+      expectStatementSeparator();
+    }
+
+    /*
+    var span =
+      scanner.spanFrom(start, start).expand((content ? ? arguments).span);
+    return IncludeRule(name, arguments, span,
+      namespace : ns, content : content);
+      */
+
+      // std::cerr << "_includeRule\n"; exit(1);
+    return rule.detach(); // mixin.detach();
   }
   // EO _includeRule
 
@@ -1188,6 +1249,48 @@ namespace Sass {
     rule->update_pstate(scanner.pstate(start));
     return rule;
   }
+
+  // Consumes a mixin declaration.
+  // [start] should point before the `@`.
+  MixinRule* StylesheetParser::_mixinRule2(Position start)
+  {
+
+    // var precedingComment = lastSilentComment;
+    // lastSilentComment = null;
+    std::string name = identifier();
+    whitespace();
+    ArgumentDeclarationObj arguments;
+    if (scanner.peekChar() == $lparen) {
+      arguments = _argumentDeclaration2();
+    }
+    else {
+      // Dart-sass creates this one too
+      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
+        scanner.pstate(), {}); // empty declaration
+    }
+
+    if (_inMixin || _inContentBlock) {
+      error("Mixins may not contain mixin declarations.",
+        scanner.pstate(start));
+    }
+    else if (_inControlDirective) {
+      error("Mixins may not be declared in control directives.",
+        scanner.pstate(start));
+    }
+
+    whitespace();
+    LOCAL_FLAG(_inMixin, true);
+    LOCAL_FLAG(_mixinHasContent, false);
+
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.pstate());
+    MixinRule* rule = _withChildren<MixinRule>(
+      &StylesheetParser::_childStatement,
+      name, arguments, nullptr, block);
+    block->update_pstate(scanner.pstate(start));
+    rule->update_pstate(scanner.pstate(start));
+    return rule;
+  }
+  // EO _mixinRule
 
   // Consumes a mixin declaration.
   // [start] should point before the `@`.
@@ -1469,8 +1572,6 @@ relase. For details, see http://bit.ly/moz-document.
     params->concat(parameters);
     return params;
   }
-  // EO _argumentDeclaration
-
   ArgumentDeclaration* StylesheetParser::_argumentDeclaration2()
   {
 
@@ -1519,8 +1620,9 @@ relase. For details, see http://bit.ly/moz-document.
       restArgument);
 
   }
+  // EO _argumentDeclaration
 
-  Arguments* StylesheetParser::_argumentInvocation(bool mixin)
+  ArgumentInvocation* StylesheetParser::_argumentInvocation(bool mixin)
   {
 
     Position start(scanner);
@@ -1528,13 +1630,7 @@ relase. For details, see http://bit.ly/moz-document.
     whitespace();
 
     std::vector<ExpressionObj> positional;
-
-    NormalizedMap<ExpressionObj> named;
-
-    // Convert to old libsass arguments (ToDo: refactor)
-    ArgumentsObj args = SASS_MEMORY_NEW(Arguments,
-      scanner.pstate());
-
+    KeywordMap<ExpressionObj> named;
     ExpressionObj restArg;
     ExpressionObj kwdRest;
     while (_lookingAtExpression()) {
@@ -1551,8 +1647,6 @@ relase. For details, see http://bit.ly/moz-document.
         }
         auto ex = _expressionUntilComma(!mixin);
         named[name] = ex;
-        args->append(SASS_MEMORY_NEW(Argument,
-          "[pstate]", ex, name));
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
@@ -1570,8 +1664,6 @@ relase. For details, see http://bit.ly/moz-document.
         scanner.expect("...");
       }
       else {
-        args->append(SASS_MEMORY_NEW(Argument,
-          "[pstate]", expression));
         positional.push_back(expression);
       }
 
@@ -1581,17 +1673,12 @@ relase. For details, see http://bit.ly/moz-document.
     }
     scanner.expectChar($rparen);
 
-    if (restArg != nullptr) {
-      args->append(SASS_MEMORY_NEW(Argument,
-        "[pstate]", restArg, "", true));
-    }
+    return SASS_MEMORY_NEW(
+      ArgumentInvocation,
+      scanner.pstate(start),
+      positional, named,
+      restArg, kwdRest);
 
-    if (kwdRest != nullptr) {
-      args->append(SASS_MEMORY_NEW(Argument,
-        "[pstate]", kwdRest, "", false, true));
-    }
-
-    return args.detach();
   }
   // EO _argumentInvocation
 
@@ -2599,10 +2686,12 @@ relase. For details, see http://bit.ly/moz-document.
 
     if (!plain.empty()) {
       if (plain == "if") {
-        Arguments* args = _argumentInvocation();
-        return SASS_MEMORY_NEW(FunctionExpression,
-          "[pstate]", plain, args, "");
-
+        ArgumentInvocation* invocation = _argumentInvocation();
+        return SASS_MEMORY_NEW(IfExpression,
+          "[pstate]", invocation);
+        // return SASS_MEMORY_NEW(FunctionExpression2,
+        //   "[pstate]", identifier, args, "");
+        // 
         // ToDo: dart-sass has an if expression class for this
         // return SASS_MEMORY_NEW(If, "[pstate]", invocation, {});
         // return IfExpression(invocation, spanForList([identifier, invocation]));
@@ -2670,14 +2759,14 @@ relase. For details, see http://bit.ly/moz-document.
           scanner.pstate(start));
       }
 
-      Arguments* args = _argumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression,
+      ArgumentInvocation* args = _argumentInvocation();
+      return SASS_MEMORY_NEW(FunctionExpression2,
         scanner.pstate(start), itpl, args, ns);
 
     }
     else if (next == $lparen) {
-      Arguments* args = _argumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression,
+      ArgumentInvocation* args = _argumentInvocation();
+      return SASS_MEMORY_NEW(FunctionExpression2,
         scanner.pstate(start), identifier, args, ns);
     }
     else {
@@ -2953,8 +3042,8 @@ relase. For details, see http://bit.ly/moz-document.
     }
 
     ParserState pstate(scanner.pstate(start));
-    Arguments* args = _argumentInvocation();
-    return SASS_MEMORY_NEW(FunctionExpression,
+    ArgumentInvocation* args = _argumentInvocation();
+    return SASS_MEMORY_NEW(FunctionExpression2,
       pstate, itpl, args, "");
   }
   // dynamicUrl

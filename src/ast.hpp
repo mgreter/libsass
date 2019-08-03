@@ -1264,10 +1264,10 @@ namespace Sass {
   //////////////////////////////////////
   class Mixin_Call final : public Has_Block {
     ADD_CONSTREF(std::string, name)
-    ADD_PROPERTY(Arguments_Obj, arguments)
+    ADD_PROPERTY(ArgumentInvocationObj, arguments)
     ADD_PROPERTY(Parameters_Obj, block_parameters)
   public:
-    Mixin_Call(ParserState pstate, std::string n, Arguments_Obj args, Parameters_Obj b_params = {}, Block_Obj b = {});
+    Mixin_Call(ParserState pstate, std::string n, ArgumentInvocation* args, Parameters_Obj b_params = {}, Block_Obj b = {});
     // ATTACH_COPY_OPERATIONS(Mixin_Call)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -1276,9 +1276,9 @@ namespace Sass {
   // The @content directive for mixin content blocks.
   ///////////////////////////////////////////////////
   class Content final : public Statement {
-    ADD_PROPERTY(Arguments_Obj, arguments)
+    ADD_PROPERTY(ArgumentInvocationObj, arguments)
   public:
-    Content(ParserState pstate, Arguments_Obj args);
+    Content(ParserState pstate, ArgumentInvocation* args);
     // ATTACH_COPY_OPERATIONS(Content)
     ATTACH_CRTP_PERFORM_METHODS()
   };

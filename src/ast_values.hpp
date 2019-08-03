@@ -294,7 +294,7 @@ namespace Sass {
 
     Map* assertMap(std::string name = "") override final;
 
-    NormalizedMap<ExpressionObj> getNormalizedArgMap();
+    KeywordMap<ExpressionObj> getKeywordArgMap();
 
     virtual bool operator== (const Value& rhs) const override;
 
@@ -388,7 +388,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // Key value paris.
   ///////////////////////////////////////////////////////////////////////
-  class Map : public Value, public Hashed<Expression_Obj, Expression_Obj, Map_Obj> {
+  class Map : public Value, public Hashed<ValueObj, ValueObj, Map_Obj> {
   public:
     Map(ParserState pstate, size_t size = 0);
     std::string type() const override { return "map"; }

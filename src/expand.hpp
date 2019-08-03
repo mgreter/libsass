@@ -90,10 +90,25 @@ namespace Sass {
     Expand(Context&, Env*, SelectorStack* stack = nullptr, SelectorStack* original = nullptr);
     ~Expand() { }
 
+    Statement* _runWithBlock(UserDefinedCallable*, Trace*);
+    Statement* _runAndExpand(UserDefinedCallable*, Trace*);
+
+    Statement* _runUserDefinedCallable(
+      ArgumentInvocation* arguments,
+      UserDefinedCallable* callable,
+      Statement*(Expand::* run)(UserDefinedCallable*, Trace*),
+      Trace* trace,
+      ParserState pstate);
+
     Block* operator()(Block*);
     Statement* operator()(StyleRule*);
 
+    Statement* operator()(FunctionRule*);
+    Statement* operator()(IncludeRule*);
+    Statement* operator()(MixinRule*);
     Statement* operator()(MediaRule*);
+
+	At_Root_Query* visitAtRootQuery(At_Root_Query* e);
 
     // Css Ruleset is already static
     // Statement* operator()(CssMediaRule*);

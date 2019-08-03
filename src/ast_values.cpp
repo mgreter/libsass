@@ -208,9 +208,9 @@ namespace Sass {
     else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
   }
 
-  NormalizedMap<ExpressionObj> List::getNormalizedArgMap()
+  KeywordMap<ExpressionObj> List::getKeywordArgMap()
   {
-    NormalizedMap<ExpressionObj> map;
+    KeywordMap<ExpressionObj> map;
     if (is_arglist_) {
       for (Expression* item : elements()) {
         if (Argument * arg = Cast<Argument>(item)) {

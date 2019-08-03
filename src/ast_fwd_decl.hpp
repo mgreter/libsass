@@ -359,6 +359,18 @@ namespace Sass {
   DECLARE_BASE_CAST(SelectorComponent)
   DECLARE_BASE_CAST(ImportBase);
 
+  typedef Number SassNumber;
+  typedef NumberObj SassNumberObj;
+  typedef String_Constant SassString;
+  typedef String_ConstantObj SassStringObj;
+  typedef Null SassNull;
+  typedef NullObj SassNullObj;
+  typedef Color_RGBA SassColor;
+  typedef Color_RGBA_Obj SassColorObj;
+  typedef Boolean SassBoolean;
+  typedef BooleanObj SassBooleanObj;
+  typedef Map SassMap;
+  typedef MapObj SassMapObj;
 
   #define FN_PROTOTYPE2 \
     const ParserState& pstate, \

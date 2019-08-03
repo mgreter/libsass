@@ -184,7 +184,7 @@ namespace Sass {
 
     ExtendRule* _extendRule(Position start);
 
-    Definition* _functionRule(Position start); // FunctionRule
+    FunctionRule* _functionRule(Position start); // FunctionRule
 
     For* _forRule(Position start, Statement* (StylesheetParser::* child)()); // ForRule
 
@@ -202,7 +202,11 @@ namespace Sass {
 
     Mixin_Call* _includeRule(Position start); // IncludeRule
 
+    IncludeRule* _includeRule2(Position start); // IncludeRule
+
     MediaRule* mediaRule(Position start);
+
+    MixinRule* _mixinRule2(Position start); // MixinRule
 
     Definition* _mixinRule(Position start); // MixinRule
 
@@ -235,7 +239,7 @@ namespace Sass {
       return _argumentDeclaration2();
     }
 
-    Arguments* _argumentInvocation(bool mixin = false);
+    ArgumentInvocation* _argumentInvocation(bool mixin = false);
 
     Expression* expression(bool bracketList = false, bool singleEquals = false, bool(StylesheetParser::* until)() = nullptr);
 

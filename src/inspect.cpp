@@ -1241,7 +1241,7 @@ namespace Sass {
     append_string(quote(f->name()));
     append_string(")");
   }
-/*
+
   void Inspect::operator()(SassFunction* f)
   {
     bool inspect = output_style() == INSPECT
@@ -1255,7 +1255,7 @@ namespace Sass {
     f->callable()->perform(this);
     append_string(")");
   }
-*/
+
   void Inspect::operator()(Callable*)
   {
   }

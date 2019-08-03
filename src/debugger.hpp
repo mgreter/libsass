@@ -27,7 +27,7 @@ inline void debug_env_stack(EnvStack stack) {
     std::cerr << "Stack " << i << "\n";
     for (auto kv : env->local_frame()) {
       std::cerr << " - " << kv.first;
-      if (Number * nr = Cast<Number>(kv.second)) {
+      if (SassNumber * nr = Cast<SassNumber>(kv.second)) {
         std::cerr << " : " << nr->to_string();
       }
       std::cerr << "\n";
@@ -1031,7 +1031,7 @@ inline void debug_ast(AST_Node* node, std::string ind, Env* env)
     " [bracketed: " << expression->is_bracketed() << "] " <<
     " [hash: " << expression->hash() << "] " <<
     std::endl;
-  for (const auto& i : expression->elements()) { debug_ast(i, ind + " ", env); }
+    for (const auto& i : expression->elements()) { debug_ast(i, ind + " ", env); }
   }
   else if (Cast<SassArgumentList>(node)) {
 

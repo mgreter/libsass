@@ -13,6 +13,9 @@ namespace Sass {
     // INTROSPECTION FUNCTIONS
     //////////////////////////
 
+
+    // BuiltInCallable fn_foo("foo", "", foo);
+
     Signature type_of_sig = "type-of($value)";
     BUILT_IN(type_of)
     {
@@ -81,7 +84,6 @@ namespace Sass {
     BUILT_IN(feature_exists)
     {
       std::string s = unquote(ARGSTRC("$feature")->value());
-
       static const auto *const features = new std::unordered_set<std::string> {
         "global-variable-shadowing",
         "extend-selector-pseudoclass",

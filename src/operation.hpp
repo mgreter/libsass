@@ -93,12 +93,12 @@ namespace Sass {
     virtual T operator()(List* x) = 0;
     virtual T operator()(SassList* x) = 0;
     virtual T operator()(Map* x)                    = 0;
-    virtual T operator()(Function* x)               = 0;
-    // virtual T operator()(SassFunction* x) = 0;
+    virtual T operator()(Function* x) = 0;
+    virtual T operator()(SassFunction* x) = 0;
     virtual T operator()(ParenthesizedExpression* x) = 0;
     virtual T operator()(Binary_Expression* x)      = 0;
     virtual T operator()(Unary_Expression* x)       = 0;
-    virtual T operator()(FunctionExpression* x)          = 0;
+    virtual T operator()(FunctionExpression* x) = 0;
     virtual T operator()(FunctionExpression2* x) = 0;
     virtual T operator()(MixinExpression* x) = 0;
     virtual T operator()(IfExpression* x) = 0;
@@ -206,12 +206,12 @@ namespace Sass {
     T operator()(List* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(SassList* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Map* x)                    { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Function* x)               { return static_cast<D*>(this)->fallback(x); }
-    // T operator()(SassFunction* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Function* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(SassFunction* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ParenthesizedExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Binary_Expression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Unary_Expression* x)       { return static_cast<D*>(this)->fallback(x); }
-    T operator()(FunctionExpression* x)          { return static_cast<D*>(this)->fallback(x); }
+    T operator()(FunctionExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionExpression2* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(MixinExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(IfExpression* x) { return static_cast<D*>(this)->fallback(x); }

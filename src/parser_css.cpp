@@ -209,21 +209,20 @@ namespace Sass {
         scanner.pstate(start), identifier);
     }
 
-    ArgumentsObj args = SASS_MEMORY_NEW(Arguments,
-      scanner.spanFrom(beforeArguments));
+    std::vector<ExpressionObj> arguments;
 
     if (!scanner.scanChar($rparen)) {
       do {
         whitespace();
         Expression* argument = expression(false, true);
-        args->append(SASS_MEMORY_NEW(Argument,
+        arguments.push_back(SASS_MEMORY_NEW(Argument,
           argument->pstate(), argument));
         whitespace();
       } while (scanner.scanChar($comma));
       scanner.expectChar($rparen);
     }
 
-    args->update_pstate(scanner.pstate(start));
+    // arguments->update_pstate(scanner.pstate(start));
 
     if (isDisallowedFunction(plain)) {
       error(
@@ -233,7 +232,12 @@ namespace Sass {
 
     Interpolation* name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());
     name->append(SASS_MEMORY_NEW(StringExpression, identifier->pstate(), identifier));
-    return SASS_MEMORY_NEW(FunctionExpression, identifier->pstate(), name, args, "");
+
+    ArgumentInvocation* args = SASS_MEMORY_NEW(ArgumentInvocation,
+      scanner.pstate(start), arguments, {});
+    
+    return SASS_MEMORY_NEW(FunctionExpression2,
+      scanner.pstate(start), name, args);
 
   }
 
