@@ -922,14 +922,19 @@ namespace Sass {
 
   }
 
-  // void Inspect::operator()(ParenthesizedExpression* expr)
-  // {
-  //   // append_string("(");
-  //   if (expr->expression()) {
-  //     expr->expression()->perform(this);
-  //   }
-  //   // append_string(")");
-  // }
+  void Inspect::operator()(ValueExpression* expr)
+  {
+    expr->value()->perform(this);
+  }
+
+  void Inspect::operator()(ParenthesizedExpression* expr)
+  {
+    append_string("(");
+    if (expr->expression()) {
+      expr->expression()->perform(this);
+    }
+    append_string(")");
+  }
 
   void Inspect::operator()(Binary_Expression* expr)
   {
@@ -1215,56 +1220,6 @@ namespace Sass {
     append_token(w->message(), w);
   }
 
-  void Inspect::operator()(SupportsOperation* so)
-  {
-
-    if (so->needs_parens(so->left())) append_string("(");
-    so->left()->perform(this);
-    if (so->needs_parens(so->left())) append_string(")");
-
-    if (so->operand() == SupportsOperation::AND) {
-      append_mandatory_space();
-      append_token("and", so);
-      append_mandatory_space();
-    } else if (so->operand() == SupportsOperation::OR) {
-      append_mandatory_space();
-      append_token("or", so);
-      append_mandatory_space();
-    }
-
-    if (so->needs_parens(so->right())) append_string("(");
-    so->right()->perform(this);
-    if (so->needs_parens(so->right())) append_string(")");
-  }
-
-  void Inspect::operator()(SupportsNegation* sn)
-  {
-    append_token("not", sn);
-    append_mandatory_space();
-    if (sn->needs_parens(sn->condition())) append_string("(");
-    sn->condition()->perform(this);
-    if (sn->needs_parens(sn->condition())) append_string(")");
-  }
-
-  void Inspect::operator()(SupportsDeclaration* sd)
-  {
-    append_string("(");
-    sd->feature()->perform(this);
-    append_string(": ");
-    sd->value()->perform(this);
-    append_string(")");
-  }
-
-  void Inspect::operator()(SupportsInterpolation* sd)
-  {
-    if (String_Quoted * str = Cast<String_Quoted>(sd->value())) {
-      // return _evaluateToCss(condition.expression, quote: false);
-      append_string(str->value());
-    }
-    else {
-      sd->value()->perform(this);
-    }
-  }
 
   // void Inspect::operator()(At_Root_Query* ae)
   // {
@@ -1285,6 +1240,34 @@ namespace Sass {
     append_string("(");
     append_string(quote(f->name()));
     append_string(")");
+  }
+/*
+  void Inspect::operator()(SassFunction* f)
+  {
+    bool inspect = output_style() == INSPECT
+      || output_style() == TO_SASS;
+
+    if (!inspect) {
+      throw Exception::InvalidValue({}, *f);
+    }
+    append_token("get-function", f);
+    append_string("(");
+    f->callable()->perform(this);
+    append_string(")");
+  }
+*/
+  void Inspect::operator()(Callable*)
+  {
+  }
+
+  void Inspect::operator()(BuiltInCallable* fn)
+  {
+    append_string(quote(fn->name(), '"'));
+  }
+
+  void Inspect::operator()(UserDefinedCallable* c)
+  {
+    append_string(quote(c->declaration()->name(), '"'));
   }
 
   void Inspect::operator()(Null* n)

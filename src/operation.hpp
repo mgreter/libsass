@@ -48,8 +48,14 @@ namespace Sass {
     virtual T operator()(Trace* x)                  = 0;
     virtual T operator()(MapExpression* x) = 0;
     virtual T operator()(ListExpression* x) = 0;
+    virtual T operator()(ValueExpression* x) = 0;
     virtual T operator()(SupportsRule* x)         = 0;
     virtual T operator()(MediaRule* x) = 0;
+    virtual T operator()(MixinRule* x) = 0;
+    virtual T operator()(IncludeRule* x) = 0;
+    virtual T operator()(ContentBlock* x) = 0;
+    virtual T operator()(FunctionRule* x) = 0;
+
     virtual T operator()(CssString* x) = 0;
     virtual T operator()(CssStyleRule* x) = 0;
     virtual T operator()(CssMediaRule* x) = 0;
@@ -88,10 +94,14 @@ namespace Sass {
     virtual T operator()(SassList* x) = 0;
     virtual T operator()(Map* x)                    = 0;
     virtual T operator()(Function* x)               = 0;
+    // virtual T operator()(SassFunction* x) = 0;
     virtual T operator()(ParenthesizedExpression* x) = 0;
     virtual T operator()(Binary_Expression* x)      = 0;
     virtual T operator()(Unary_Expression* x)       = 0;
     virtual T operator()(FunctionExpression* x)          = 0;
+    virtual T operator()(FunctionExpression2* x) = 0;
+    virtual T operator()(MixinExpression* x) = 0;
+    virtual T operator()(IfExpression* x) = 0;
     virtual T operator()(Custom_Warning* x)         = 0;
     virtual T operator()(Custom_Error* x)           = 0;
     virtual T operator()(Variable* x)               = 0;
@@ -102,11 +112,13 @@ namespace Sass {
     virtual T operator()(Boolean* x)                = 0;
     virtual T operator()(String_Quoted* x)          = 0;
     virtual T operator()(String_Constant* x)        = 0;
-
+    
     virtual T operator()(StringLiteral* x) = 0;
     virtual T operator()(Interpolation* x) = 0;
     virtual T operator()(StringExpression* x) = 0;
-
+    virtual T operator()(Callable* x) = 0;
+    virtual T operator()(UserDefinedCallable* x) = 0;
+    virtual T operator()(BuiltInCallable* x) = 0;
 
     virtual T operator()(SupportsCondition* x)     = 0;
     // virtual T operator()(SupportsOperation* x)      = 0;
@@ -149,11 +161,16 @@ namespace Sass {
     T operator()(Bubble* x)                 { return static_cast<D*>(this)->fallback(x); }
     T operator()(Trace* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ListExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ValueExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(MapExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(SupportsRule* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
 
     T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(MixinRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ContentBlock* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(IncludeRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(FunctionRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssString* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStyleRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssMediaRule* x) { return static_cast<D*>(this)->fallback(x); }
@@ -190,10 +207,14 @@ namespace Sass {
     T operator()(SassList* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Map* x)                    { return static_cast<D*>(this)->fallback(x); }
     T operator()(Function* x)               { return static_cast<D*>(this)->fallback(x); }
+    // T operator()(SassFunction* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ParenthesizedExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Binary_Expression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Unary_Expression* x)       { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionExpression* x)          { return static_cast<D*>(this)->fallback(x); }
+    T operator()(FunctionExpression2* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(MixinExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(IfExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Warning* x)         { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Error* x)           { return static_cast<D*>(this)->fallback(x); }
     T operator()(Variable* x)               { return static_cast<D*>(this)->fallback(x); }
@@ -206,6 +227,10 @@ namespace Sass {
     T operator()(StringLiteral* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Interpolation* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(StringExpression* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(UserDefinedCallable* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(BuiltInCallable* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Callable* x) { return static_cast<D*>(this)->fallback(x); }
+
 
     T operator()(String_Constant* x)        { return static_cast<D*>(this)->fallback(x); }
     T operator()(String_Quoted* x)          { return static_cast<D*>(this)->fallback(x); }
