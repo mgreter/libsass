@@ -203,6 +203,11 @@ namespace Sass {
     return length();
   }
 
+  Map* List::assertMap(std::string name) {
+    if (!empty()) { return Value::assertMap(name); }
+    else { return SASS_MEMORY_NEW(Map, pstate(), 0); }
+  }
+
   NormalizedMap<ExpressionObj> List::getNormalizedArgMap()
   {
     NormalizedMap<ExpressionObj> map;

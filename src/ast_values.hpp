@@ -292,6 +292,8 @@ namespace Sass {
     virtual size_t hash() const override;
     virtual size_t size() const;
 
+    Map* assertMap(std::string name = "") override final;
+
     NormalizedMap<ExpressionObj> getNormalizedArgMap();
 
     virtual bool operator== (const Value& rhs) const override;
