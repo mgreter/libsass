@@ -108,6 +108,22 @@ namespace Sass {
       virtual ~InvalidSyntax() throw() {};
     };
 
+    class SassScriptException : public std::runtime_error {
+      std::string msg;
+    public:
+      SassScriptException(std::string msg, std::string name = "");
+      virtual const char* what() const throw() { return msg.c_str(); }
+      ~SassScriptException() throw() {};
+    };
+
+    class SassRuntimeException : public std::runtime_error {
+      std::string msg;
+      ParserState pstate;
+    public:
+      SassRuntimeException(std::string msg, ParserState pstate);
+      virtual const char* what() const throw() { return msg.c_str(); }
+      ~SassRuntimeException() throw() {};
+    };
 
     class RecursionLimitError : public Base {
       public:

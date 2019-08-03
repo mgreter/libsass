@@ -17,6 +17,12 @@ namespace Sass {
       prefix("Error"), pstate(pstate), traces(traces)
     { }
 
+    SassScriptException::SassScriptException(std::string msg, std::string name)
+      : std::runtime_error(msg), msg(name.empty() ? msg : "$" + name + ": " + msg) {}
+
+    SassRuntimeException::SassRuntimeException(std::string msg, ParserState pstate)
+      : std::runtime_error(msg), msg(msg), pstate(pstate) {}
+
     InvalidSass::InvalidSass(ParserState pstate, Backtraces traces, std::string msg)
     : Base(pstate, msg, traces)
     { }
@@ -152,7 +158,7 @@ namespace Sass {
     {
     }
 
-}
+  }
 
   void warning(std::string msg, ParserState pstate)
   {
