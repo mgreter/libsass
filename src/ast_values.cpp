@@ -1,11 +1,11 @@
 #include "ast_values.hpp"
-#include "ast_values.hpp"
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 #include "ast.hpp"
 #include "character.hpp"
 #include "interpolation.hpp"
+#include "parser_selector.hpp"
 
 namespace Sass {
 
@@ -32,6 +32,68 @@ namespace Sass {
     }
 
     return index < 0 ? lengthAsList() + index : index - 1;
+  }
+
+  /// Converts a `selector-parse()`-style input into a string that can be
+  /// parsed.
+  ///
+  /// Returns `null` if [this] isn't a type or a structure that can be parsed as
+  /// a selector.
+
+  bool Value::_selectorStringOrNull(std::string& rv) {
+
+	  if (String_Constant* str = Cast<String_Constant>(this)) {
+      rv = str->value();
+      return true;
+	  }
+
+    if (SassList * list = Cast<SassList>(this)) {
+
+      std::vector<ValueObj> values = list->asVector();
+
+      if (values.empty()) return false;
+
+      std::vector<std::string> result;
+      if (list->separator() == SASS_COMMA) {
+        for (auto complex : values) {
+          SassList* cplxLst = Cast<SassList>(complex);
+          String_Constant* cplxStr = Cast<String_Constant>(complex);
+          if (cplxStr) {
+            result.push_back(cplxStr->value());
+          }
+          else if (cplxLst &&
+            cplxLst->separator() == SASS_SPACE) {
+            std::string string = complex->_selectorString();
+            if (string.empty()) return false;
+            result.push_back(string);
+          }
+          else {
+            return false;
+          }
+        }
+      }
+      else {
+        for (auto compound : values) {
+          String_Constant* cmpdStr = Cast<String_Constant>(compound);
+          StringLiteral* cmpdLit = Cast<StringLiteral>(compound);
+          if (cmpdStr) {
+            result.push_back(cmpdStr->value());
+          }
+          else if (cmpdLit) {
+            result.push_back(cmpdLit->text());
+          }
+          else {
+            return false;
+          }
+        }
+      }
+      rv = Util::join_strings(result, list->separator() == SASS_COMMA ? ", " : " ");
+      return true;
+
+    }
+
+    return false;
+
   }
 
   SassList* Value::changeListContents(

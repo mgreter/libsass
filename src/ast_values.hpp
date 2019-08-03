@@ -109,6 +109,31 @@ namespace Sass {
         to_string() + " is not an argument list.", name);
     }
 
+    /// Converts a `selector-parse()`-style input into a string that can be
+    /// parsed.
+    ///
+    /// Returns `null` if [this] isn't a type or a structure that can be parsed as
+    /// a selector.
+    bool _selectorStringOrNull(std::string& rv);
+
+
+    /// Converts a `selector-parse()`-style input into a string that can be
+    /// parsed.
+    ///
+    /// Throws a [SassScriptException] if [this] isn't a type or a structure that
+    /// can be parsed as a selector.
+    std::string _selectorString(std::string name = "") {
+      std::string str;
+      if (_selectorStringOrNull(str)) {
+        return str;
+      }
+
+      throw Exception::SassScriptException(
+        to_sass() + " is not a valid selector: it must be a string,\n"
+        "a list of strings, or a list of lists of strings.",
+        name);
+    }
+
     // General 
     SassList* changeListContents(
       std::vector<ValueObj> values,
@@ -220,13 +245,19 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   class List : public Value, public Vectorized<Expression_Obj> {
   private:
-    ADD_PROPERTY(enum Sass_Separator, separator)
+    enum Sass_Separator separator_;
     ADD_PROPERTY(bool, is_arglist)
     ADD_PROPERTY(bool, is_bracketed)
   public:
     List(ParserState pstate, size_t size = 0, enum Sass_Separator sep = SASS_SPACE, bool argl = false, bool bracket = false);
     std::string type() const override { return is_arglist_ ? "arglist" : "list"; }
     static std::string type_name() { return "list"; }
+    Sass_Separator separator() const override final {
+      return separator_;
+    }
+    void separator(Sass_Separator separator) {
+      separator_ = separator;
+    }
     const char* sep_string(bool compressed = false) const {
       return separator() == SASS_SPACE ?
         " " : (compressed ? "," : ", ");
