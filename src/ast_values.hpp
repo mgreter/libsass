@@ -54,6 +54,9 @@ namespace Sass {
       return this;
     }
 
+    virtual Map* assertMap(std::string name = "");
+    virtual Number* assertNumber(std::string name = "");
+
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
     virtual bool operator== (const Value& rhs) const {
