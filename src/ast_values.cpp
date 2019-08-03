@@ -18,19 +18,6 @@ namespace Sass {
   Value::Value(ParserState pstate, bool d, bool e, bool i, Type ct)
   : Expression(pstate, d, e, i, ct)
   { }
-
-  Map* Value::assertMap(std::string name) {
-    // throw Exception::SassScriptException(
-    //   to_string() + " is not a map.", name);
-    return nullptr;
-  }
-
-  Number* Value::assertNumber(std::string name) {
-    // throw Exception::SassScriptException(
-    //   to_string() + " is not a number.", name);
-    return nullptr;
-  }
-
   Value::Value(const Value* ptr)
   : Expression(ptr)
   { }

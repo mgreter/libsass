@@ -54,8 +54,14 @@ namespace Sass {
       return this;
     }
 
-    virtual Map* assertMap(std::string name = "");
-    virtual Number* assertNumber(std::string name = "");
+    virtual Map* assertMap(std::string name = "") {
+      throw Exception::SassScriptException(
+        to_string() + " is not a map.", name);
+    }
+    virtual Number* assertNumber(std::string name = "") {
+      throw Exception::SassScriptException(
+        to_string() + " is not a number.", name);
+    }
 
     // Some obects are not meant to be compared
     // ToDo: maybe fallback to pointer comparison?
