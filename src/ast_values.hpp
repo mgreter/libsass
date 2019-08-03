@@ -54,6 +54,28 @@ namespace Sass {
       return this;
     }
 
+    Value* assertValue(std::string name = "") {
+      return this;
+    }
+
+    virtual Color* assertColor(std::string name = "") {
+      throw Exception::SassScriptException(
+        to_string() + " is not a color.", name);
+    }
+
+    virtual Color_HSLA* assertColorHsla(std::string name = "") {
+      throw Exception::SassScriptException(
+        to_string() + " is not a color.", name);
+    }
+
+    virtual SassFunction* assertFunction(std::string name = "") {
+      throw Exception::SassScriptException(
+        to_string() + " is not a function reference.", name);
+    }
+
+    // SassFunction assertFunction(std::string name = "") = >
+    //   throw _exception("$this is not a function reference.", name);
+
     virtual Map* assertMap(std::string name = "") {
       throw Exception::SassScriptException(
         to_string() + " is not a map.", name);
@@ -61,6 +83,21 @@ namespace Sass {
     virtual Number* assertNumber(std::string name = "") {
       throw Exception::SassScriptException(
         to_string() + " is not a number.", name);
+    }
+
+    virtual Number* assertNumberOrNull(std::string name = "") {
+      if (this->isNull()) return nullptr;
+      return this->assertNumber(name);
+    }
+
+    virtual String_Constant* assertString(std::string name = "") {
+      throw Exception::SassScriptException(
+        inspect() + " is not a string.", name);
+    }
+
+    virtual String_Constant* assertStringOrNull(std::string name = "") {
+      if (this->isNull()) return nullptr;
+      return this->assertString(name);
     }
 
     // Some obects are not meant to be compared
