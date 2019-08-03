@@ -106,6 +106,35 @@ namespace Sass {
         to_string() + " is not an argument list.", name);
     }
 
+    // General 
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      Sass_Separator separator,
+      bool hasBrackets);
+
+    // Pass explicit list separator
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      Sass_Separator separator) {
+      return changeListContents(values,
+        separator, hasBrackets());
+    }
+
+    // Pass explicit brackets config
+    SassList* changeListContents(
+      std::vector<ValueObj> values,
+      bool hasBrackets) {
+      return changeListContents(values,
+        separator(), hasBrackets);
+    }
+
+    // Re-use current list settings
+    SassList* changeListContents(
+      std::vector<ValueObj> values) {
+      return changeListContents(values,
+        separator(), hasBrackets());
+    }
+
     /// The SassScript `>` operation.
     virtual Boolean* greaterThan(Value* other) {
       throw Exception::SassScriptException(
@@ -290,6 +319,29 @@ namespace Sass {
     bool is_invisible() const override { return empty(); }
     SassListObj to_list(ParserState& pstate);
 
+    Map* assertMap(std::string name = "") override { return this; }
+
+    // Return the list separator
+    Sass_Separator separator() const override final {
+      return empty() ? SASS_UNDEF : SASS_COMMA;
+    }
+
+    // Return the length of this item as a list
+    long lengthAsList() const override {
+      return length();
+    }
+
+    std::vector<ValueObj> asVector() override final {
+      std::vector<ValueObj> list;
+      for (size_t i = 0; i < length(); i++) {
+        list.push_back(SASS_MEMORY_NEW(
+          SassList, getKey(i)->pstate(),
+          { getKey(i), getValue(i) },
+          SASS_SPACE));
+      }
+      return list;
+    }
+
     virtual size_t hash() const override;
 
     virtual bool operator== (const Value& rhs) const override;
@@ -386,8 +438,9 @@ namespace Sass {
   // Numbers, percentages, dimensions, and colors.
   ////////////////////////////////////////////////
   class Number final : public Value, public Units {
-    HASH_PROPERTY(double, value)
-    ADD_PROPERTY(bool, zero)
+    HASH_PROPERTY(double, value);
+    // ADD_PROPERTY(double, epsilon);
+    ADD_PROPERTY(bool, zero);
 
     // The representation of this number as two
     // slash-separated numbers, if it has one.
@@ -400,6 +453,61 @@ namespace Sass {
   public:
     Number(ParserState pstate, double val, std::string u = "", bool zero = true);
     Number(ParserState pstate, double val, Units units, bool zero = true);
+
+    long assertInt(double epsilon, std::string name = "") {
+      if (fuzzyIsInt(value_, epsilon)) {
+        return fuzzyAsInt(value_, epsilon);
+      }
+      throw Exception::SassScriptException(
+        inspect() + " is not an int.", name);
+    }
+
+    Number* assertNoUnits(std::string name = "") {
+      if (!hasUnits()) return this;
+      throw Exception::SassScriptException(
+        "Expected " + inspect() + " to have no units.",
+        name);
+    }
+
+    bool hasUnit(std::string unit) {
+      return numerators.size() == 1 &&
+        denominators.empty() &&
+        numerators.front() == unit;
+    }
+
+    Value* withoutSlash() override final {
+      if (!hasAsSlash()) return this;
+      Number* copy = SASS_MEMORY_COPY(this);
+      copy->lhsAsSlash({});
+      copy->rhsAsSlash({});
+      return copy;
+    }
+
+
+    Number* assertUnit(std::string unit, std::string name = "") {
+      if (hasUnit(unit)) return this;
+      throw Exception::SassScriptException(
+        "Expected " + inspect() + " to have unit \"" + unit + "\".",
+        name);
+    }
+
+
+    Number* assertNumber(std::string name = "") override {
+      return this;
+    }
+
+    double valueInRange(double min, double max, double epsilon, std::string name = "") const {
+      double result = value_;
+      if (!fuzzyCheckRange(value_, min, max, epsilon, result)) {
+        std::stringstream msg;
+        msg << "Expected " << inspect() << " to be within ";
+        msg << min << unit() << " and " << max << unit() << ".";
+        throw Exception::SassScriptException(msg.str(), name);
+      }
+      return result;
+    }
+
+
 
     bool zero() { return zero_; }
 
@@ -670,6 +778,12 @@ namespace Sass {
     bool operator== (const Value& rhs) const override;
     // quotes are forced on inspection
     virtual std::string inspect() const override;
+    bool hasQuotes() const {
+      return quote_mark_ == '\0';
+    }
+    String_Constant* assertString(std::string name = "") override final {
+      return this;
+    }
     ATTACH_COPY_OPERATIONS(String_Constant)
     ATTACH_CRTP_PERFORM_METHODS()
   };

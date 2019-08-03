@@ -18,9 +18,18 @@ namespace Sass {
   Value::Value(ParserState pstate, bool d, bool e, bool i, Type ct)
   : Expression(pstate, d, e, i, ct)
   { }
+
+  SassList* Value::changeListContents(
+    std::vector<ValueObj> values,
+    Sass_Separator separator,
+    bool hasBrackets)
+  {
+    return SASS_MEMORY_NEW(SassList, pstate(),
+      values, separator, hasBrackets);
+  }
+
   Value::Value(const Value* ptr)
-  : Expression(ptr)
-  { }
+  : Expression(ptr) { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
