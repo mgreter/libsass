@@ -56,8 +56,6 @@ namespace Sass {
   class CssStylesheet;
   class CssSupportsRule;
 
-
-
   class SupportsRule;
   class AtRule;
 

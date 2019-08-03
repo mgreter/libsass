@@ -4,6 +4,7 @@
 
 #include "ast.hpp"
 #include "debugger.hpp"
+#include "parser_scss.hpp"
 
 namespace Sass {
 

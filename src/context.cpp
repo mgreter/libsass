@@ -916,6 +916,7 @@ namespace Sass {
       ++descrs;
     }
   }
+
   void register_c_function(Context& ctx, Env* env, Sass_Function_Entry descr)
   {
     Definition* def = make_c_function(descr, ctx);

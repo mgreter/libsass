@@ -86,7 +86,7 @@ namespace Sass {
     // returns conversion factor
     double normalize();
     // compare operations
-    ATTACH_EQ_OPERATIONS(Units);
+    ATTACH_BASE_EQ_OPERATIONS(Units);
     ATTACH_CMP_OPERATIONS(Units);
     // factor to convert into given units
     double convert_factor(const Units&) const;
