@@ -30,6 +30,7 @@
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "util_string.hpp"
+#include "dart_helpers.hpp"
 
 namespace Sass {
 

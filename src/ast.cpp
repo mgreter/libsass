@@ -981,9 +981,9 @@ namespace Sass {
     if (positional > arguments_.size()) {
       std::stringstream strm;
       strm << "Only " << arguments_.size() << " "; //  " positional ";
-      // strm << pluralize("argument", arguments_.size());
+      strm << pluralize("argument", arguments_.size());
       strm << " allowed, but " << positional << " ";
-      // strm << pluralize("was", positional, "were");
+      strm << pluralize("was", positional, "were");
       strm << " passed.";
       throw Exception::InvalidSyntax(
         "[pstate]", traces, strm.str());
@@ -995,10 +995,10 @@ namespace Sass {
         unknownNames.erase(arg->name());
       }
       std::stringstream strm;
-      // strm << "No " << pluralize("argument", unknownNames.size());
-      // strm << " named " << toSentence(unknownNames, "or");
+      strm << "No " << pluralize("argument", unknownNames.size());
+      strm << " named " << toSentence(unknownNames, "or");
       throw Exception::InvalidSyntax("[pstate]", traces,
-        "No argument named " /* + toSentence(unknownNames, "or") + "."*/);
+        "No argument named " + toSentence(unknownNames, "or") + ".");
     }
 
   }

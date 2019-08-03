@@ -249,7 +249,7 @@ namespace Sass {
         // debug_ast(arglist, "== ");
         if (!arglist && !arglist2) {
           if (Expression_Obj arg = Cast<Expression>(a->value())) {
-            arglist2 = SASS_MEMORY_NEW(SassList, a->pstate());
+            arglist2 = SASS_MEMORY_NEW(SassList, a->pstate(), {});
             arglist2->append(arg);
           }
         }

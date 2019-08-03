@@ -80,6 +80,7 @@ namespace Sass {
       throw Exception::SassScriptException(
         to_string() + " is not a map.", name);
     }
+
     virtual Number* assertNumber(std::string name = "") {
       throw Exception::SassScriptException(
         to_string() + " is not a number.", name);
@@ -98,6 +99,53 @@ namespace Sass {
     virtual String_Constant* assertStringOrNull(std::string name = "") {
       if (this->isNull()) return nullptr;
       return this->assertString(name);
+    }
+
+    virtual SassArgumentList* assertArgumentList(std::string name = "") {
+      throw Exception::SassScriptException(
+        to_string() + " is not an argument list.", name);
+    }
+
+    /// The SassScript `>` operation.
+    virtual Boolean* greaterThan(Value* other) {
+      throw Exception::SassScriptException(
+        "Undefined operation \"" + inspect()
+        + " > " + other->inspect() + "\".");
+    }
+
+    /// The SassScript `>=` operation.
+    virtual Boolean* greaterThanOrEquals(Value* other) {
+      throw Exception::SassScriptException(
+        "Undefined operation \"" + inspect()
+        + " >= " + other->inspect() + "\".");
+    }
+
+    /// The SassScript `<` operation.
+    virtual Boolean* lessThan(Value* other) {
+      throw Exception::SassScriptException(
+        "Undefined operation \"" + inspect()
+        + " < " + other->inspect() + "\".");
+    }
+
+    /// The SassScript `<=` operation.
+    virtual Boolean* lessThanOrEquals(Value* other) {
+      throw Exception::SassScriptException(
+        "Undefined operation \"" + inspect()
+        + " <= " + other->inspect() + "\".");
+    }
+
+    /// The SassScript `*` operation.
+    virtual Value* times(Value* other) {
+      throw Exception::SassScriptException(
+        "Undefined operation \"" + inspect()
+        + " * " + other->inspect() + "\".");
+    }
+
+    /// The SassScript `%` operation.
+    virtual Value* modulo(Value* other) {
+      throw Exception::SassScriptException(
+        "Undefined operation \"" + inspect()
+        + " % " + other->inspect() + "\".");
     }
 
     // Some obects are not meant to be compared
@@ -170,7 +218,7 @@ namespace Sass {
     public Vectorized<ValueObj> {
     virtual bool is_arglist() const { return false; }
   private:
-    ADD_PROPERTY(enum Sass_Separator, separator);
+    enum Sass_Separator separator_;
     ADD_PROPERTY(bool, hasBrackets);
   public:
 
@@ -178,6 +226,27 @@ namespace Sass {
       std::vector<ValueObj> values = {},
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
+
+    Sass_Separator separator() const override {
+      return separator_;
+    }
+
+    void separator(Sass_Separator separator) {
+      separator_ = separator;
+    }
+
+    std::vector<ValueObj> asVector() override {
+      return elements();
+    }
+
+    bool hasBrackets() override {
+      return hasBrackets_;
+    }
+
+    // Return the length of this item as a list
+    long lengthAsList() const override {
+      return length();
+    }
 
     bool isBlank() const override final;
 
@@ -398,7 +467,7 @@ namespace Sass {
     HASH_PROPERTY(double, g)
     HASH_PROPERTY(double, b)
   public:
-    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1, const std::string disp = "");
+    Color_RGBA(ParserState pstate, double r, double g, double b, double a = 1.0, const std::string disp = "");
 
     std::string type() const override { return "color"; }
     static std::string type_name() { return "color"; }
@@ -410,6 +479,14 @@ namespace Sass {
 
     Color_HSLA* copyAsHSLA() const override;
     Color_HSLA* toHSLA() override { return copyAsHSLA(); }
+
+    Color* assertColor(std::string name = "") override {
+      return this;
+    }
+
+    Color_HSLA* assertColorHsla(std::string name = "") override {
+      return toHSLA();
+    }
 
     bool operator== (const Value& rhs) const override;
 
@@ -430,6 +507,14 @@ namespace Sass {
 
     std::string type() const override { return "color"; }
     static std::string type_name() { return "color"; }
+
+    Color* assertColor(std::string name = "") override {
+      return toRGBA();
+    }
+
+    Color_HSLA* assertColorHsla(std::string name = "") override {
+      return this;
+    }
 
     size_t hash() const override;
 
@@ -478,6 +563,11 @@ namespace Sass {
   public:
     Boolean(ParserState pstate, bool val);
     operator bool() override { return value_; }
+
+    // Return the list separator
+    bool isTruthy() const override final {
+      return value_;
+    }
 
     std::string type() const override { return "bool"; }
     static std::string type_name() { return "bool"; }
@@ -605,7 +695,6 @@ namespace Sass {
   class Null final : public Value {
   public:
     Null(ParserState pstate);
-    bool isBlank() const override final { return true; }
     std::string type() const override { return "null"; }
     static std::string type_name() { return "null"; }
     bool is_invisible() const override { return true; }
@@ -613,6 +702,18 @@ namespace Sass {
     bool is_false() override { return true; }
 
     size_t hash() const override;
+
+    bool isTruthy() const override final {
+      return false;
+    }
+
+    bool isBlank() const override final {
+      return true;
+    }
+
+    bool isNull() const override final {
+      return true;
+    }
 
     bool operator== (const Value& rhs) const override;
 
