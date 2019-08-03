@@ -1172,17 +1172,31 @@ namespace Sass {
     ParserState pstate,
     std::vector<ValueObj> values,
     Sass_Separator separator,
-    keywordMap keywords) :
+    KeywordMap<ValueObj> keywords) :
     SassList(pstate, values, separator, false),
-    keywords_(keywords)
+    _keywords(keywords),
+    _wereKeywordsAccessed(false)
   {
   }
 
   SassArgumentList::SassArgumentList(
     const SassArgumentList* ptr) :
     SassList(ptr),
-    keywords_(ptr->keywords_)
+    _keywords(ptr->_keywords),
+    _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)
   {
+  }
+
+  // Convert native string keys to sass strings
+  Map* SassArgumentList::keywordsAsSassMap() const
+  {
+    Map* map = SASS_MEMORY_NEW(Map, pstate());
+    for (auto kv : _keywords) {
+      String_Constant* keystr = SASS_MEMORY_NEW(
+        String_Constant, pstate(), kv.substr(1));
+      map->insert(keystr, _keywords.get(kv));
+    }
+    return map;
   }
 
   bool SassArgumentList::operator==(const Value& rhs) const
@@ -1195,5 +1209,28 @@ namespace Sass {
     }
     return false;
   }
+
+  SassFunction::SassFunction(
+    ParserState pstate,
+    CallableObj callable) :
+    Value(pstate),
+    callable_(callable)
+  {
+  }
+
+  bool SassFunction::operator== (const Value& rhs) const
+  {
+    if (const SassFunction* fn = Cast<SassFunction>(&rhs)) {
+      return ObjEqualityFn(callable_, fn->callable());
+    }
+    return false;
+  }
+
+  // std::string Function::name() {
+  //   if (definition_) {
+  //     return definition_->name();
+  //   }
+  //   return "";
+  // }
 
 }

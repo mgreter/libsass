@@ -328,17 +328,33 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  typedef ordered_map<std::string, ValueObj> keywordMap;
   class SassArgumentList : public SassList {
-    ADD_PROPERTY(keywordMap, keywords);
+    KeywordMap<ValueObj> _keywords;
+    bool _wereKeywordsAccessed;
   public:
     bool is_arglist() const override final {
       return true;
     }
+    SassArgumentList* assertArgumentList(std::string name = "") override final {
+      return this;
+    }
+
+    KeywordMap<ValueObj> keywords() {
+      _wereKeywordsAccessed = true;
+      return _keywords;
+    }
+
+    bool wereKeywordsAccessed() const {
+      return _wereKeywordsAccessed;
+    }
+
+    Map* keywordsAsSassMap() const;
+
     SassArgumentList(ParserState pstate,
       std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,
-      keywordMap keywords = {});
+      KeywordMap<ValueObj> keywords = {});
+
     ATTACH_EQ_OPERATIONS(Value);
     ATTACH_COPY_OPERATIONS(SassArgumentList);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -428,6 +444,26 @@ namespace Sass {
     std::string name();
 
     bool operator== (const Value& rhs) const override;
+
+    // ATTACH_COPY_OPERATIONS(Function)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
+  class SassFunction final : public Value {
+  public:
+    ADD_PROPERTY(CallableObj, callable);
+  public:
+    SassFunction(
+      ParserState pstate,
+      CallableObj callable);
+
+    std::string type() const override { return "function"; }
+    static std::string type_name() { return "function"; }
+    bool is_invisible() const override { return true; }
+
+    bool operator== (const Value& rhs) const override;
+
+    SassFunction* assertFunction(std::string name = "") override final { return this; }
 
     // ATTACH_COPY_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()
