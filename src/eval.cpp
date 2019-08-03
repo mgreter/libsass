@@ -671,7 +671,7 @@ namespace Sass {
       std::string str("");
       str += v_l->to_string(options());
       if (b_in->op().ws_before) str += " ";
-      str += b_in->separator();
+      str += "="; //  b_in->separator();
       if (b_in->op().ws_after) str += " ";
       str += v_r->to_string(options());
       String_Constant* val = SASS_MEMORY_NEW(String_Constant, b_in->pstate(), str);

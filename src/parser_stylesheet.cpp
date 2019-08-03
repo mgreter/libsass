@@ -839,12 +839,12 @@ namespace Sass {
 
     whitespace();
     Block_Obj block = SASS_MEMORY_NEW(Block, "[pstateP]");
-    Definition* def = _withChildren<Definition>(
+    Definition* rule = _withChildren<Definition>(
       &StylesheetParser::_functionAtRule,
       normalized, params, block, Definition::FUNCTION);
     block->update_pstate(scanner.pstate(start));
-    def->update_pstate(scanner.pstate(start));
-    return def;
+    rule->update_pstate(scanner.pstate(start));
+    return rule;
   }
   // EO _functionRule
 
@@ -1535,8 +1535,8 @@ relase. For details, see http://bit.ly/moz-document.
     ArgumentsObj args = SASS_MEMORY_NEW(Arguments,
       scanner.pstate());
 
-    ExpressionObj rest;
-    ExpressionObj keywordRest;
+    ExpressionObj restArg;
+    ExpressionObj kwdRest;
     while (_lookingAtExpression()) {
       ExpressionObj expression = _expressionUntilComma(!mixin);
       whitespace();
@@ -1557,11 +1557,11 @@ relase. For details, see http://bit.ly/moz-document.
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
         scanner.expectChar($dot);
-        if (rest == nullptr) {
-          rest = expression;
+        if (restArg == nullptr) {
+          restArg = expression;
         }
         else {
-          keywordRest = expression;
+          kwdRest = expression;
           whitespace();
           break;
         }
@@ -1581,14 +1581,14 @@ relase. For details, see http://bit.ly/moz-document.
     }
     scanner.expectChar($rparen);
 
-    if (rest != nullptr) {
+    if (restArg != nullptr) {
       args->append(SASS_MEMORY_NEW(Argument,
-        "[pstate]", rest, "", true));
+        "[pstate]", restArg, "", true));
     }
 
-    if (keywordRest != nullptr) {
+    if (kwdRest != nullptr) {
       args->append(SASS_MEMORY_NEW(Argument,
-        "[pstate]", keywordRest, "", false, true));
+        "[pstate]", kwdRest, "", false, true));
     }
 
     return args.detach();

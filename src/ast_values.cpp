@@ -63,7 +63,7 @@ namespace Sass {
         auto lv = this->at(i);
         if (!lv && rv) return false;
         else if (!rv && lv) return false;
-        else if (*lv != *rv) return false;
+        else if (!(*lv == *rv)) return false;
       }
       return true;
     }
@@ -197,10 +197,10 @@ namespace Sass {
   : Expression(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
   { }
 
-  const std::string Binary_Expression::separator()
-  {
-    return sass_op_separator(optype());
-  }
+  // const std::string Binary_Expression::separator()
+  // {
+  //   return sass_op_separator(optype());
+  // }
 
   void Binary_Expression::set_delayed(bool delayed)
   {
@@ -293,6 +293,7 @@ namespace Sass {
   : Value(pstate),
     Units(),
     value_(val),
+    // epsilon_(0.00001),
     zero_(zero),
     lhsAsSlash_(),
     rhsAsSlash_(),
@@ -323,10 +324,24 @@ namespace Sass {
     concrete_type(NUMBER);
   }
 
+  Number::Number(ParserState pstate, double val, Units units, bool zero)
+    : Value(pstate),
+    Units(units),
+    value_(val),
+    // epsilon_(0.00001),
+    zero_(zero),
+    lhsAsSlash_(),
+    rhsAsSlash_(),
+    hash_(0)
+  {
+    concrete_type(NUMBER);
+  }
+
   Number::Number(const Number* ptr)
   : Value(ptr),
     Units(ptr),
     value_(ptr->value_),
+    // epsilon_(ptr->epsilon_),
     lhsAsSlash_(ptr->lhsAsSlash_),
     rhsAsSlash_(ptr->rhsAsSlash_),
     hash_(ptr->hash_)

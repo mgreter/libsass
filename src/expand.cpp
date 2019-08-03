@@ -11,6 +11,7 @@
 #include "eval.hpp"
 #include "backtrace.hpp"
 #include "context.hpp"
+#include "dart_helpers.hpp"
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "debugger.hpp"
@@ -219,12 +220,11 @@ namespace Sass {
 
   Statement* Expand::operator()(SupportsRule* f)
   {
-    Expression_Obj condition = f->condition()->perform(&eval);
+    ValueObj condition = f->condition()->perform(&eval);
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
                                        f->pstate(),
                                        condition);
-    Block* bb = operator()(f->block());
-    ff->block(bb);
+    ff->block(operator()(f->block()));
     ff->tabs(f->tabs());
     return ff.detach();
   }

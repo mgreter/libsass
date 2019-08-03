@@ -167,8 +167,6 @@ namespace Sass {
     Binary_Expression(ParserState pstate,
                       Operand op, Expression_Obj lhs, Expression_Obj rhs);
 
-    const std::string separator();
-
     virtual void set_delayed(bool delayed) override;
 
     virtual size_t hash() const override;
@@ -253,6 +251,7 @@ namespace Sass {
     mutable size_t hash_;
   public:
     Number(ParserState pstate, double val, std::string u = "", bool zero = true);
+    Number(ParserState pstate, double val, Units units, bool zero = true);
 
     bool zero() { return zero_; }
 
