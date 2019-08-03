@@ -262,11 +262,11 @@ namespace Sass {
       map = Cast<Map>(expr);
     }
     else if (expr->concrete_type() != Expression::LIST) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), SASS_COMMA);
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, SASS_COMMA);
       list->append(expr);
     }
     else if (SassList * slist = Cast<SassList>(expr)) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), slist->separator());
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, slist->separator());
       list->hasBrackets(slist->hasBrackets());
       for (auto item : slist->elements()) {
         if (Argument * arg = Cast<Argument>(item)) {
@@ -293,7 +293,7 @@ namespace Sass {
 
         if (variables.size() == 1) {
           SassList* variable = SASS_MEMORY_NEW(SassList,
-            map->pstate(), SASS_SPACE);
+            map->pstate(), {}, SASS_SPACE);
           variable->append(key);
           variable->append(value);
           env.set_local(variables[0], variable);
@@ -530,7 +530,7 @@ namespace Sass {
     // regular case for unevaluated lists
     SassListObj ll = SASS_MEMORY_NEW(SassList,
       l->pstate(),
-      // l->length(),
+      {},
       l->separator() // ,
       // l->is_arglist(),
       // l->is_bracketed()
@@ -1611,7 +1611,7 @@ namespace Sass {
       else if(val->concrete_type() != Expression::LIST) {
         SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
                                         val->pstate(),
-                                        // 0,
+          {},
                                         SASS_COMMA);
         wrapper->append(val);
         val = wrapper;

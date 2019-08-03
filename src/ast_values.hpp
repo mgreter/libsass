@@ -96,6 +96,7 @@ namespace Sass {
   public:
 
     SassList(ParserState pstate,
+      std::vector<ValueObj> values = {},
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
 
@@ -122,6 +123,7 @@ namespace Sass {
       return true;
     }
     SassArgumentList(ParserState pstate,
+      std::vector<ValueObj> values = {},
       Sass_Separator sep = SASS_SPACE,
       keywordMap keywords = {});
     ATTACH_EQ_OPERATIONS(Value);

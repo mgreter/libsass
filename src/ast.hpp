@@ -513,6 +513,34 @@ namespace Sass {
     const std::unordered_map<
       K, T, ObjHash, ObjEquality
     >& elements() { return elements_; }
+    size_t erase(K key)
+    {
+      if (elements_.erase(key) == 1) {
+        for (size_t i = 0; i < _keys.size(); i++) {
+          if (!(*_keys[i] == *key)) continue;
+          // Remove items given at position
+          _keys.erase(_keys.begin() + i);
+          _values.erase(_values.begin() + i);
+          return 1;
+        }
+        throw std::runtime_error("Ordered is out of sync!?");
+      }
+      return 0;
+    }
+
+    void insert(K key, T val)
+    {
+      reset_hash();
+      if (!has(key)) {
+        _keys.push_back(key);
+        _values.push_back(val);
+      }
+      else if (!duplicate_key_) {
+        duplicate_key_ = key;
+      }
+
+      elements_[key] = val;
+    }
     Hashed& operator<<(std::pair<K, T> p)
     {
       reset_hash();
@@ -549,8 +577,15 @@ namespace Sass {
       K, T, ObjHash, ObjEquality
     >& pairs() const { return elements_; }
 
+    K& getKey(size_t pos) { return _keys.at(pos); }
+    T& getValue(size_t pos) { return _values.at(pos); }
     const std::vector<K>& keys() const { return _keys; }
     const std::vector<T>& values() const { return _values; }
+    
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::iterator end() { return elements_.end(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::iterator begin() { return elements_.begin(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::const_iterator end() const { return elements_.end(); }
+    typename std::unordered_map<K, T, ObjHash, ObjEquality>::const_iterator begin() const { return elements_.begin(); }
 
   };
   template <typename K, typename T, typename U>
@@ -1017,7 +1052,7 @@ namespace Sass {
   // The @return directive for use inside SassScript functions.
   /////////////////////////////////////////////////////////////
   class Return final : public Statement {
-    ADD_PROPERTY(Expression_Obj, value)
+    ADD_PROPERTY(Expression_Obj, value);
   public:
     Return(ParserState pstate, Expression_Obj val);
     // ATTACH_COPY_OPERATIONS(Return)

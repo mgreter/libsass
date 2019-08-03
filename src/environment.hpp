@@ -38,6 +38,10 @@ namespace Sass {
   >;
   
 
+  std::string pluralize(std::string singular, size_t size, std::string plural = "");
+
+  std::string toSentence(KeywordMap<ValueObj>& names, std::string conjunction = "and");
+
   // this defeats the whole purpose of environment being templatable!!
   typedef NormalizedMap<AST_Node_Obj>::iterator EnvMapIter;
 

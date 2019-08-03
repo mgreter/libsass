@@ -39,7 +39,7 @@ namespace Sass {
     BUILT_IN(map_keys)
     {
       Map_Obj m = ARGM("$map", Map);
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, SASS_COMMA);
+      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
       for ( auto key : m->keys()) {
         result->append(key);
       }
@@ -50,7 +50,7 @@ namespace Sass {
     BUILT_IN(map_values)
     {
       Map_Obj m = ARGM("$map", Map);
-      SassList* result = SASS_MEMORY_NEW(SassList, pstate, SASS_COMMA);
+      SassList* result = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_COMMA);
       for ( auto key : m->keys()) {
         result->append(m->at(key));
       }

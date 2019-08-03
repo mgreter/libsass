@@ -729,11 +729,11 @@ namespace Sass {
       map = Cast<Map>(expr);
     }
     else if (expr->concrete_type() != Expression::LIST) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), SASS_COMMA);
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, SASS_COMMA);
       list->append(expr);
     }
     else if (SassList * slist = Cast<SassList>(expr)) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(), slist->separator());
+      list = SASS_MEMORY_NEW(SassList, expr->pstate(), {}, slist->separator());
       list->hasBrackets(slist->hasBrackets());
       for (auto item : slist->elements()) {
         list->append(item);
@@ -757,7 +757,7 @@ namespace Sass {
         Expression_Obj v = map->at(key)->perform(&eval);
 
         if (variables.size() == 1) {
-          SassList_Obj variable = SASS_MEMORY_NEW(SassList, map->pstate(), SASS_SPACE);
+          SassList_Obj variable = SASS_MEMORY_NEW(SassList, map->pstate(), {}, SASS_SPACE);
           variable->append(k);
           variable->append(v);
           env.set_local(variables[0], variable);

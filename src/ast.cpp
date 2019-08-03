@@ -847,7 +847,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   SassList* list_to_sass_list(List* list) {
-    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), list->separator());
+    SassList* rv = SASS_MEMORY_NEW(SassList, list->pstate(), {}, list->separator());
     rv->hasBrackets(list->is_bracketed());
     for (auto item : list->elements()) {
       rv->append(item);

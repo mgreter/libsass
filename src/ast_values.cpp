@@ -153,7 +153,7 @@ namespace Sass {
         auto lv = this->at(key);
         if (!lv && rv) return false;
         else if (!rv && lv) return false;
-        else if (*lv != *rv) return false;
+        else if (!(*lv == *rv)) return false;
       }
       return true;
     }
@@ -161,10 +161,10 @@ namespace Sass {
   }
 
   SassListObj Map::to_list(ParserState& pstate) {
-    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, SASS_UNDEF);
+    SassListObj ret = SASS_MEMORY_NEW(SassList, pstate, {}, SASS_UNDEF);
 
     for (auto key : keys()) {
-      SassListObj l = SASS_MEMORY_NEW(SassList, pstate);
+      SassListObj l = SASS_MEMORY_NEW(SassList, pstate, {});
       l->append(key);
       l->append(at(key));
       ret->append(l);
@@ -972,10 +972,11 @@ namespace Sass {
 
   SassList::SassList(
     ParserState pstate,
+    std::vector<ValueObj> values,
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    Vectorized(),
+    Vectorized(values),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {
@@ -1063,9 +1064,10 @@ namespace Sass {
 
   SassArgumentList::SassArgumentList(
     ParserState pstate,
+    std::vector<ValueObj> values,
     Sass_Separator separator,
     keywordMap keywords) :
-    SassList(pstate, separator, false),
+    SassList(pstate, values, separator, false),
     keywords_(keywords)
   {
   }
