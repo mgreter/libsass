@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-std::string escape_string(const std::string& str) {
-  std::string out;
+Sass::sass::string escape_string(const Sass::sass::string& str) {
+  Sass::sass::string out;
   out.reserve(str.size());
   for (char c : str) {
     switch (c) {
@@ -52,7 +52,7 @@ std::string escape_string(const std::string& str) {
   } \
 
 #define ASSERT_STR_EQ(a, b) \
-  if (std::string(b) != a) { \
+  if (Sass::sass::string(b) != a) { \
     std::cerr << \
       "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
       "\n  LHS: [" << escape_string(a) << "]" \
@@ -62,8 +62,8 @@ std::string escape_string(const std::string& str) {
   } \
 
 #define INIT_TEST_RESULTS \
-  std::vector<std::string> passed; \
-  std::vector<std::string> failed; \
+  Sass::sass::vector<Sass::sass::string> passed; \
+  Sass::sass::vector<Sass::sass::string> failed; \
 
 #define TEST(fn) \
   if (fn()) { \

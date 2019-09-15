@@ -10,8 +10,8 @@ class TestObj : public Sass::SharedObj {
  public:
   TestObj(bool *destroyed) : destroyed_(destroyed) {}
   ~TestObj() { *destroyed_ = true; }
-  std::string to_string() const {
-    std::ostringstream result;
+  Sass::sass::string to_string() const {
+    Sass::sass::sstream result;
     result << "refcount=" << refcount << " destroyed=" << *destroyed_;
     return result.str();
   }
@@ -132,7 +132,7 @@ bool TestDetachNull() {
 
 class EmptyTestObj : public Sass::SharedObj {
   public:
-    std::string to_string() const { return ""; }
+    Sass::sass::string to_string() const { return ""; }
 };
 
 bool TestComparisonWithSharedPtr() {
