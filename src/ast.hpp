@@ -24,7 +24,7 @@
 #include "memory_pool.hpp"
 #include "var_stack.hpp"
 
-#include "../../ordered-map/include/tsl/ordered_map.h"
+#include "ordered-map/ordered_map.h"
 
 namespace Sass {
 

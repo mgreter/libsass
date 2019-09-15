@@ -6,7 +6,7 @@
 #include "ordered_map.hpp"
 #include "error_handling.hpp"
 #include "environment.hpp" // For the hasher
-#include "../../ordered-map/include/tsl/ordered_map.h"
+#include "ordered-map/ordered_map.h"
 
 namespace Sass {
 
@@ -288,6 +288,7 @@ namespace Sass {
     // it seems that a map table will fit nicely to do this
     // we basically construct exponents for each unit
     // has the advantage that they will be pre-sorted
+    // ToDo: use fast map implementation?
     tsl::ordered_map<sass::string, int,
       SassIgnoreDashPair,
       SassAllocator<std::pair<sass::string, int>>,

@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include "allocator.hpp"
 
-#include "../../hopscotch-map/include/tsl/hopscotch_map.h"
-#include "../../hopscotch-map/include/tsl/hopscotch_set.h"
+// #include "../../hopscotch-map/include/tsl/hopscotch_map.h"
+// #include "../../hopscotch-map/include/tsl/hopscotch_set.h"
 
 namespace Sass {
 
@@ -33,7 +33,7 @@ namespace Sass {
   >
   class ordered_map {
 
-    using map_type = typename tsl::hopscotch_pg_map <
+    using map_type = typename std::unordered_map <
       TKey, size_t, Hash, KeyEqual, MapAllocator >;
     using pair_type = typename std::pair<TKey, TVal>;
     using list_type = typename std::vector<pair_type, ListAllocator>;

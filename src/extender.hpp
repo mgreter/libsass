@@ -12,7 +12,7 @@
 #include "backtrace.hpp"
 #include "ordered_map.hpp"
 
-#include "../../ordered-map/include/tsl/ordered_map.h"
+#include "ordered-map/ordered_map.h"
 
 namespace Sass {
 
