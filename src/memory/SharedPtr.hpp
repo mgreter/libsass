@@ -141,8 +141,8 @@ namespace Sass {
 
   private:
 
-    static const uint32_t SET_DETACHED_BITMASK = (1UL << (sizeof(uint32_t) * 8 - 1));
-    static const uint32_t UNSET_DETACHED_BITMASK = ~(1UL << (sizeof(uint32_t) * 8 - 1));
+    static const uint32_t SET_DETACHED_BITMASK = (uint32_t(1) << (sizeof(uint32_t) * 8 - 1));
+    static const uint32_t UNSET_DETACHED_BITMASK = ~(uint32_t(1) << (sizeof(uint32_t) * 8 - 1));
 
   public:
     SharedPtr() : node(nullptr) {}
