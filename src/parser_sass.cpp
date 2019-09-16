@@ -154,7 +154,7 @@ namespace Sass {
       Statement* child = _child(statement);
       // std::cerr << "SassParser::statements loop out\n";
       if (child != nullptr) statements.emplace_back(child);
-//      size_t indentation = _readIndentation();
+      size_t indentation = _readIndentation();
       SASS_ASSERT(indentation == 0, "indentation must be zero");
     }
     return statements;

@@ -2098,8 +2098,8 @@ namespace Sass {
     // auto text = interpolationToValue(itpl, true, false);
     // char* cstr = sass_copy_c_string(text.c_str());
     // ctx.strings.emplace_back(cstr);
-    auto around = SASS_MEMORY_NEW(SourceFile, pstate.source, Mappings());
-    auto synthetic = SASS_MEMORY_NEW(SyntheticFile, text.c_str(), mappings, around, pstate);
+    // auto around = SASS_MEMORY_NEW(SourceFile, pstate.source, Mappings());
+    auto synthetic = SASS_MEMORY_NEW(SyntheticFile, text.c_str(), mappings, pstate.source, pstate);
 
     // std::cerr << qwe2->getLine(0) << "\n";
     // std::cerr << qwe2->getLine(1) << "\n";
