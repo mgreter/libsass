@@ -142,14 +142,15 @@ namespace Sass {
 
 // Make sure hash
 #ifdef SASS_CUSTOM_ALLOCATOR
+
+template <class T, class U>
+bool operator==(const SassAllocator<T>&, const SassAllocator<U>&) { return true; }
+template <class T, class U>
+bool operator!=(const SassAllocator<T>&, const SassAllocator<U>&) { return false; }
+
 namespace std {
 
-  template <class T, class U>
-  bool operator==(const SassAllocator<T>&, const SassAllocator<U>&) { return true; }
-  template <class T, class U>
-  bool operator!=(const SassAllocator<T>&, const SassAllocator<U>&) { return false; }
-
-  
+ 
   // GCC seems to need this specialization
   template <> class hash<Sass::sass::string> {
   public:
