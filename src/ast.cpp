@@ -634,10 +634,10 @@ namespace Sass {
 
   AtRootQuery* AtRootQuery::parse(const sass::string& contents, Context& ctx) {
 
-    char* str = sass_copy_c_string(contents.c_str());
-    ctx.strings.emplace_back(str);
+    // char* str = sass_copy_c_string(contents.c_str());
+    // ctx.strings.emplace_back(str);
     auto qwe = SASS_MEMORY_NEW(SourceFile,
-      "sass://parse-at-root-query", str, -1);
+      "sass://parse-at-root-query", contents.c_str(), -1);
     AtRootQueryParser p2(ctx, qwe);
     return p2.parse();
   }
@@ -826,10 +826,10 @@ namespace Sass {
     Context& context, const sass::string& contents)
   {
     sass::string text = "(" + contents + ")";
-    char* cstr = sass_copy_c_string(text.c_str());
-    context.strings.emplace_back(cstr); // clean up later
+    // char* cstr = sass_copy_c_string(text.c_str());
+    // context.strings.emplace_back(cstr); // clean up later
     auto qwe = SASS_MEMORY_NEW(SourceFile,
-      "sass://builtin", cstr, -1);
+      "sass://builtin", text.c_str(), -1);
     ScssParser parser(context, qwe);
     // We added
     EnvRoot root;

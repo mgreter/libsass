@@ -59,7 +59,7 @@ namespace Sass {
     // callStack(),
     logger(Logger::create(c_ctx)),
     assigningTo(),
-    strings(),
+    strings2(),
     resources(),
     sheets(),
     import_stack(),
@@ -133,7 +133,7 @@ namespace Sass {
       free(resources[i].srcmap);
     }
     // free all strings we kept alive during compiler execution
-    for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
+    // for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
     // everything that gets put into sources will be freed by us
     // this shouldn't have anything in it anyway!?
     for (size_t m = 0; m < import_stack.size(); ++m) {
@@ -276,10 +276,10 @@ namespace Sass {
     const char* contents = resources[idx].contents;
     // keep a copy of the path around (for parserstates)
     // ToDo: we clean it, but still not very elegant!?
-    strings.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
+    strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
     // create the initial parser state from resource
     // SourceSpan pstate(strings.back(), contents, idx);
-    SourceSpan pstate(SourceSpan::fake(strings.back()));
+    SourceSpan pstate(SourceSpan::fake(strings2.back()));
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -310,7 +310,7 @@ namespace Sass {
     if (import->type == SASS_IMPORT_CSS) {
 
       auto qwe = SASS_MEMORY_NEW(SourceFile,
-        strings.back(), contents, idx);
+        strings2.back(), contents, idx);
       CssParser p2(*this, qwe);
       // do not yet dispose these buffers
       sass_import_take_source(import);
@@ -326,7 +326,7 @@ namespace Sass {
     else if (import->type == SASS_IMPORT_SASS) {
 
       auto qwe = SASS_MEMORY_NEW(SourceFile,
-        strings.back(), contents, idx);
+        strings2.back(), contents, idx);
       SassParser p2(*this, qwe);
       // do not yet dispose these buffers
       sass_import_take_source(import);
@@ -341,7 +341,7 @@ namespace Sass {
     else {
 
       SourceFileObj qwe = SASS_MEMORY_NEW(SourceFile,
-        strings.back(), contents, idx);
+        strings2.back(), contents, idx);
       // std::cerr << "[" << qwe->getLine(3) << "]\n";
       // exit(1);
       // create a parser instance from the given c_str buffer
@@ -653,7 +653,7 @@ namespace Sass {
     // ToDo: this may be resolved via custom importers
     sass::string abs_path(rel2abs(entry_path, ".", CWD));
     char* abs_path_c_str = sass_copy_c_string(abs_path.c_str());
-    strings.emplace_back(abs_path_c_str);
+    strings2.emplace_back(abs_path_c_str);
 
     // create entry only for the import stack
     Sass_Import_Entry import = sass_make_import(

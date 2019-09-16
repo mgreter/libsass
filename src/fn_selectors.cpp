@@ -58,10 +58,10 @@ namespace Sass {
           sass::string exp_src = exp->to_string(ctx.c_options);
 
           SourceSpan state(exp->pstate());
-          char* str = sass_copy_c_string(exp_src.c_str());
-          ctx.strings.emplace_back(str);
+          // char* str = sass_copy_c_string(exp_src.c_str());
+          // ctx.strings.emplace_back(str);
           auto qwe = SASS_MEMORY_NEW(SourceFile,
-            state.getPath(), str, state.getSrcId());
+            state.getPath(), exp_src.c_str(), state.getSrcId());
           SelectorParser p2(ctx, qwe);
           p2._allowParent = true;
           SelectorListObj sel = p2.parse();
@@ -115,10 +115,10 @@ namespace Sass {
           }
           sass::string text = arg->to_css();
           SourceSpan state(arg->pstate());
-          char* str = sass_copy_c_string(text.c_str());
-          ctx.strings.emplace_back(str);
+          // char* str = sass_copy_c_string(text.c_str());
+          // ctx.strings.emplace_back(str);
           auto qwe = SASS_MEMORY_NEW(SourceFile,
-            state.getPath(), str, state.getSrcId());
+            state.getPath(), text.c_str(), state.getSrcId());
           SelectorParser p2(ctx, qwe);
           selectors.emplace_back(p2.parse());
         }

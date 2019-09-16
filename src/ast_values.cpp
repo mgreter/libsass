@@ -115,10 +115,10 @@ namespace Sass {
     callStackFrame frame(*ctx.logger, Backtrace(pstate()));
 #endif
     sass::string string = _selectorString(*ctx.logger, pstate(), name);
-    char* str = sass_copy_c_string(string.c_str());
+    // char* str = sass_copy_c_string(string.c_str());
     // ctx.strings.emplace_back(str);
     // auto qwe = SASS_MEMORY_NEW(SourceFile, "sass://parse-selector", str, -1);
-    auto qwe = SASS_MEMORY_NEW(SyntheticFile, str, pstate_.source, pstate_);
+    auto qwe = SASS_MEMORY_NEW(SyntheticFile, string.c_str(), pstate_.source, pstate_);
     SelectorParser p2(ctx, qwe);
     p2._allowParent = allowParent;
     auto sel = p2.parse();
@@ -130,10 +130,10 @@ namespace Sass {
     callStackFrame frame(*ctx.logger, Backtrace(pstate()));
 #endif
     sass::string string = _selectorString(*ctx.logger, pstate(), name);
-    char* str = sass_copy_c_string(string.c_str());
-    ctx.strings.emplace_back(str);
+    // char* str = sass_copy_c_string(string.c_str());
+    // ctx.strings.emplace_back(str);
     // auto qwe = SASS_MEMORY_NEW(SourceFile, "sass://parse-selector", str, -1);
-    auto qwe = SASS_MEMORY_NEW(SyntheticFile, str, pstate_.source, pstate_);
+    auto qwe = SASS_MEMORY_NEW(SyntheticFile, string.c_str(), pstate_.source, pstate_);
     SelectorParser p2(ctx, qwe);
     p2._allowParent = allowParent;
     auto sel = p2.parseCompoundSelector();

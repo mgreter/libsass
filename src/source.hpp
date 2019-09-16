@@ -33,8 +33,8 @@ namespace Sass {
     public SourceData {
   protected:
     Mappings srcmap;
-    const char* path;
-    const char* data;
+    char* path;
+    char* data;
     size_t length;
     size_t srcid;
   protected:
@@ -55,6 +55,11 @@ namespace Sass {
       const char* data,
       Mappings srcmap,
       size_t srcid);
+
+    ~SourceFile() {
+      sass_free_memory(path);
+      sass_free_memory(data);
+    }
 
     const char* end() const override final;
     const char* begin() const override final;

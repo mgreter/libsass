@@ -22,8 +22,8 @@ namespace Sass {
     SourceData(),
     srcmap(std::move(srcmap)),
     // Make a copy, delete when destroyed
-    path(source->getPath()),
-    data(source->begin()),
+    path(sass_copy_c_string(source->getPath())),
+    data(sass_copy_c_string(source->begin())),
     length(source->size()),
     srcid(srcid),
     lfs()
@@ -37,8 +37,8 @@ namespace Sass {
     SourceData(),
     srcmap(),
     // Make a copy, delete when destroyed
-    path(/*sass_copy_c_string*/(path)),
-    data(data),
+    path(sass_copy_c_string(path)),
+    data(sass_copy_c_string(data)),
     length(0),
     srcid(srcid),
     lfs()
@@ -54,8 +54,8 @@ namespace Sass {
     SourceData(),
     srcmap(std::move(srcmap)),
     // Make a copy, delete when destroyed
-    path(/*sass_copy_c_string*/(path)),
-    data(data),
+    path(sass_copy_c_string(path)),
+    data(sass_copy_c_string(data)),
     length(0),
     srcid(srcid),
     lfs()

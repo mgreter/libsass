@@ -59,7 +59,7 @@ namespace Sass {
 
     // resources add under our control
     // these are guaranteed to be freed
-    sass::vector<char*> strings;
+    sass::vector<char*> strings2;
     sass::vector<Resource> resources;
     std::map<const sass::string, StyleSheet> sheets;
     ImporterStack import_stack;

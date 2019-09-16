@@ -1558,10 +1558,10 @@ namespace Sass {
       state = node->query()->pstate();
       str_mq = performInterpolation(node->query(), false);
     }
-    char* str = sass_copy_c_string(str_mq.c_str());
-    ctx.strings.emplace_back(str);
+    // char* str = sass_copy_c_string(str_mq.c_str());
+    // ctx.strings.emplace_back(str);
     auto qwe = SASS_MEMORY_NEW(SourceFile,
-      state.getPath(), str, state.getSrcId());
+      state.getPath(), str_mq.c_str(), state.getSrcId());
     MediaQueryParser p2(ctx, qwe);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
@@ -2008,12 +2008,12 @@ namespace Sass {
       blockStack.pop_back();
 
       auto text = interpolationToValue(itpl, true, false);
-      char* cstr = sass_copy_c_string(text.c_str());
-      ctx.strings.emplace_back(cstr);
+      // char* cstr = sass_copy_c_string(text.c_str());
+      // ctx.strings.emplace_back(cstr);
       // auto qwe = SASS_MEMORY_NEW(SourceFile,
       //   itpl->pstate().getPath(), cstr, itpl->pstate().getSrcId());
 
-      auto qwe = SASS_MEMORY_NEW(SyntheticFile, cstr, itpl->pstate().source, itpl->pstate());
+      auto qwe = SASS_MEMORY_NEW(SyntheticFile, text.c_str(), itpl->pstate().source, itpl->pstate());
 
       KeyframeSelectorParser parser(ctx, qwe);
       sass::vector<sass::string> selector(parser.parse());
@@ -2093,11 +2093,10 @@ namespace Sass {
 
 
     // auto text = interpolationToValue(itpl, true, false);
-    char* cstr = sass_copy_c_string(text.c_str());
-
-    ctx.strings.emplace_back(cstr);
+    // char* cstr = sass_copy_c_string(text.c_str());
+    // ctx.strings.emplace_back(cstr);
     auto around = SASS_MEMORY_NEW(SourceFile, pstate.source, Mappings());
-    auto synthetic = SASS_MEMORY_NEW(SyntheticFile, cstr, mappings, around, pstate);
+    auto synthetic = SASS_MEMORY_NEW(SyntheticFile, text.c_str(), mappings, around, pstate);
 
     // std::cerr << qwe2->getLine(0) << "\n";
     // std::cerr << qwe2->getLine(1) << "\n";
@@ -2500,10 +2499,10 @@ namespace Sass {
       }
       sass::string reparse(Util::join_strings(results, ", "));
       SourceSpan state(imp->pstate());
-      char* str = sass_copy_c_string(reparse.c_str());
-      ctx.strings.emplace_back(str);
+      // char* str = sass_copy_c_string(reparse.c_str());
+      // ctx.strings.emplace_back(str);
       auto qwe = SASS_MEMORY_NEW(SourceFile,
-        state.getPath(), str, state.getSrcId());
+        state.getPath(), reparse.c_str(), state.getSrcId());
       MediaQueryParser p2(ctx, qwe);
       auto queries2 = p2.parse();
       result->queries(queries2);
