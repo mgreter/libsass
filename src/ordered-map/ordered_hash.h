@@ -128,8 +128,8 @@ static T numeric_cast(U value, const char* error_message = "numeric_cast() faile
  * to represent a std::size_t on 32 and 64 bits platforms, and must be the same size on both platforms.
  */
 using slz_size_type = std::uint64_t;
-static_assert(std::numeric_limits<slz_size_type>::max() >= std::numeric_limits<std::size_t>::max(),
-              "slz_size_type must be >= std::size_t");
+// static_assert(std::numeric_limits<slz_size_type>::max() >= std::numeric_limits<std::size_t>::max(),
+//               "slz_size_type must be >= std::size_t");
 
 template<class T, class Deserializer>
 static T deserialize_value(Deserializer& deserializer) {

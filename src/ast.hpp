@@ -567,7 +567,7 @@ namespace Sass {
     bool empty() const { return elements_.empty(); }
 
     bool has(K k) const          {
-      return elements_.count(k);
+      return elements_.count(k) == 1;
     }
 
     void reserve(size_t size)

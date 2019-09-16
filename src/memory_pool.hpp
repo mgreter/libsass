@@ -10,7 +10,7 @@
 namespace Sass {
 
   // Move this to somewhere else, should be global
-  constexpr size_t SASS_MEM_ALIGN = sizeof(unsigned int);
+	#define SASS_MEM_ALIGN sizeof(unsigned int)
 
   inline static size_t align2(size_t n) {
     return (n + SASS_MEM_ALIGN - 1) & ~(SASS_MEM_ALIGN - 1);
@@ -54,25 +54,25 @@ namespace Sass {
 
 
   // The size of the memory pool arenas in bytes.
-  constexpr static size_t SassAllocatorArenaSize = 1024 * 256;
+  #define SassAllocatorArenaSize (1024 * 256)
 
   // How many buckets should we have for the freelist
   // Determines when allocations go directly to malloc/free
   // For maximum size of managed items multiply by alignment
-  constexpr static size_t SassAllocatorBuckets = 512;
+#define SassAllocatorBuckets 512
 
   // The alignment for the memory fragments. Must be a multiple
   // of `SASS_MEM_ALIGN` and should not be too big (maybe 1 or 2)
-  constexpr static size_t SassAllocatorAlignment = SASS_MEM_ALIGN * 2;
+#define SassAllocatorAlignment (SASS_MEM_ALIGN * 2)
 
   // The number of bytes we use for our book-keeping before every
   // memory fragment. Needed to know to which bucket we belongs on
   // deallocations, or if it should go directly to the `free` call.
-  constexpr size_t SassAllocatorBookSize = sizeof(unsigned int);
+#define SassAllocatorBookSize sizeof(unsigned int)
 
   // Bytes reserve for book-keeping on the arenas
   // Currently unused and for later optimization
-  constexpr size_t SassAllocatorArenaHeadSize = 0;
+#define SassAllocatorArenaHeadSize 0
 
   class MemoryPool {
 

@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include <sys/stat.h>
 #include "file.hpp"
 #include "context.hpp"
