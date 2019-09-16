@@ -1,7 +1,7 @@
 CXX ?= c++
 CXXFLAGS := -I ../include/ -std=c++11 -fno-omit-frame-pointer
 
-test: test_ordered_map test_util_string test_source_data test_offset
+test: test_ordered_map test_util_string test_offset
 
 test_shared_ptr: build/test_shared_ptr
 	build/test_shared_ptr

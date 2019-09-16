@@ -199,7 +199,7 @@ namespace Sass {
     sass::sstream strm;
     sass::string cwd(File::get_cwd());
 
-    bool first = true;
+    // bool first = true;
     size_t max = 0;
     size_t i_beg = traces.size() - 1;
     size_t i_end = sass::string::npos;

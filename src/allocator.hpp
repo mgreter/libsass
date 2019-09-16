@@ -152,7 +152,7 @@ namespace std {
 
  
   // GCC seems to need this specialization
-  template <> class hash<Sass::sass::string> {
+  template <> struct hash<Sass::sass::string> {
   public:
     inline size_t operator()(
       const Sass::sass::string& name) const
