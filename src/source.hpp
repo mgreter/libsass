@@ -56,11 +56,7 @@ namespace Sass {
       Mappings srcmap,
       size_t srcid);
 
-    ~SourceFile() {
-      // ToDo: use sass_free_memory
-      free(path);
-      free(data);
-    }
+    ~SourceFile();;
 
     const char* end() const override final;
     const char* begin() const override final;

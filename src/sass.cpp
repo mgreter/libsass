@@ -49,12 +49,14 @@ extern "C" {
     size_t len = strlen(str) + 1;
     char* cpy = (char*) sass_alloc_memory(len);
     std::memcpy(cpy, str, len);
+    std::cerr << "COPY " << (void*)cpy << "\n";
     return cpy;
   }
 
   // Deallocate libsass heap memory
   void ADDCALL sass_free_memory(void* ptr)
   {
+    std::cerr << "FREE " << (void*)ptr << "\n";
     if (ptr) free (ptr);
   }
 

@@ -240,7 +240,6 @@ namespace Sass {
 
     }
 
-    first = true;
     i_beg = traces.size() - 1;
     i_end = sass::string::npos;
     for (size_t i = i_beg, n = 0; i != i_end; i--, n++) {

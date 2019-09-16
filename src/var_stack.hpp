@@ -401,6 +401,14 @@ namespace Sass {
 
     EnvRoot();
 
+    // We are in care of the idxs pointers
+    ~EnvRoot() {
+      for (IDXS* idxs : root.idxs) {
+        delete idxs;
+      }
+      root.idxs.clear();
+    }
+
     ExpressionObj& getVariable(const IdxRef& ref) {
       // std::cerr << "get variable " << ref.frameOffset << ":" << ref.varOffset << "\n";
       // size_t stackBase = varFrames[ref.frame];

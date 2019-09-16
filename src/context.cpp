@@ -276,10 +276,10 @@ namespace Sass {
     const char* contents = resources[idx].contents;
     // keep a copy of the path around (for parserstates)
     // ToDo: we clean it, but still not very elegant!?
-    strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
+    // strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
     // create the initial parser state from resource
     // SourceSpan pstate(strings.back(), contents, idx);
-    SourceSpan pstate(SourceSpan::fake(strings2.back()));
+    SourceSpan pstate(SourceSpan::fake(inc.abs_path.c_str()));
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -310,7 +310,7 @@ namespace Sass {
     if (import->type == SASS_IMPORT_CSS) {
 
       auto qwe = SASS_MEMORY_NEW(SourceFile,
-        strings2.back(), contents, idx);
+        inc.abs_path.c_str(), contents, idx);
       CssParser p2(*this, qwe);
       // do not yet dispose these buffers
       sass_import_take_source(import);
@@ -326,7 +326,7 @@ namespace Sass {
     else if (import->type == SASS_IMPORT_SASS) {
 
       auto qwe = SASS_MEMORY_NEW(SourceFile,
-        strings2.back(), contents, idx);
+        inc.abs_path.c_str(), contents, idx);
       SassParser p2(*this, qwe);
       // do not yet dispose these buffers
       sass_import_take_source(import);
@@ -341,7 +341,7 @@ namespace Sass {
     else {
 
       SourceFileObj qwe = SASS_MEMORY_NEW(SourceFile,
-        strings2.back(), contents, idx);
+        inc.abs_path.c_str(), contents, idx);
       // std::cerr << "[" << qwe->getLine(3) << "]\n";
       // exit(1);
       // create a parser instance from the given c_str buffer
@@ -652,13 +652,13 @@ namespace Sass {
 
     // ToDo: this may be resolved via custom importers
     sass::string abs_path(rel2abs(entry_path, ".", CWD));
-    char* abs_path_c_str = sass_copy_c_string(abs_path.c_str());
-    strings2.emplace_back(abs_path_c_str);
+    // char* abs_path_c_str = sass_copy_c_string(abs_path.c_str());
+    // strings2.emplace_back(abs_path_c_str);
 
     // create entry only for the import stack
     Sass_Import_Entry import = sass_make_import(
       entry_path.c_str(),
-      abs_path_c_str,
+      abs_path.c_str(),
       source_c_str,
       srcmap_c_str
     );
