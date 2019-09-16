@@ -576,8 +576,8 @@ namespace Sass {
     Number(SourceSpan&& pstate, double val, const sass::string& u = StrEmpty, bool zero = true);
     Number(SourceSpan&& pstate, double val, Units&& units, bool zero = true);
 
-    virtual SassNumber* isNumber() { return this; }
-    virtual const SassNumber* isNumber() const { return this; }
+    virtual SassNumber* isNumber() override final { return this; }
+    virtual const SassNumber* isNumber() const override final { return this; }
 
     bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
       if (SassNumber* rhs = other->isNumber()) {
@@ -994,8 +994,8 @@ namespace Sass {
     Color_RGBA(const SourceSpan& pstate, double r, double g, double b, double a = 1.0, const sass::string& disp = StrEmpty);
     Color_RGBA(SourceSpan&& pstate, double r, double g, double b, double a = 1.0, const sass::string& disp = StrEmpty);
 
-    virtual Color_RGBA* isColor() { return this; }
-    virtual const Color_RGBA* isColor() const { return this; }
+    virtual Color_RGBA* isColor() override final { return this; }
+    virtual const Color_RGBA* isColor() const override final { return this; }
 
     size_t hash() const override;
 
@@ -1165,8 +1165,8 @@ namespace Sass {
   protected:
     mutable size_t hash_;
   public:
-    virtual String_Constant* isString() { return this; }
-    virtual const String_Constant* isString() const { return this; }
+    virtual String_Constant* isString() override final { return this; }
+    virtual const String_Constant* isString() const override final { return this; }
 
     String_Constant(SourceSpan&& pstate, const char* beg, bool hasQuotes = false);
     String_Constant(SourceSpan&& pstate, const sass::string& val, bool hasQuotes = false);

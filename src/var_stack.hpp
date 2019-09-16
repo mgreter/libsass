@@ -4,6 +4,7 @@
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
+#include "allocator.hpp"
 #include "ast_fwd_decl.hpp"
 #include "environment.hpp"
 
