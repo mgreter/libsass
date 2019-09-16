@@ -57,8 +57,9 @@ namespace Sass {
       size_t srcid);
 
     ~SourceFile() {
-      sass_free_memory(path);
-      sass_free_memory(data);
+      // ToDo: use sass_free_memory
+      free(path);
+      free(data);
     }
 
     const char* end() const override final;
