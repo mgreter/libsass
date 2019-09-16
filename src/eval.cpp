@@ -1032,7 +1032,7 @@ namespace Sass {
     const sass::string& plainName(node->name()->getPlainString());
 
     // Function Expression might be simple and static, or dynamic css call
-    Callable* function = _getFunction(node->fidx(), plainName, node->ns());
+    CallableObj function = _getFunction(node->fidx(), plainName, node->ns());
 
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
@@ -1044,7 +1044,10 @@ namespace Sass {
     LOCAL_FLAG(_inFunction, true);
     ValueObj value = _runFunctionCallable(
       node->arguments(), function, node->pstate());
-
+    // std::cerr << "FN " << (void*)function << "\n";
+    // std::cerr << "VAL " << (void*)value << "\n";
+    // function->setDbg(true);
+    // value->setDbg(true);
     return value.detach();
 
   }

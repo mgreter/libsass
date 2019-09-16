@@ -342,6 +342,7 @@ namespace Sass {
 
       SourceFileObj qwe = SASS_MEMORY_NEW(SourceFile,
         inc.abs_path.c_str(), contents, idx);
+      // qwe->setDbg(true);
       // std::cerr << "[" << qwe->getLine(3) << "]\n";
       // exit(1);
       // create a parser instance from the given c_str buffer

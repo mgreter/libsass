@@ -65,8 +65,8 @@ namespace Sass {
 
   SourceFile::~SourceFile() {
     // ToDo: use sass_free_memory
-    // sass_free_memory(path);
-    // sass_free_memory(data);
+    sass_free_memory(path);
+    sass_free_memory(data);
   }
 
   const char* SourceFile::end() const

@@ -56,7 +56,7 @@ namespace Sass {
       Mappings srcmap,
       size_t srcid);
 
-    ~SourceFile();;
+    ~SourceFile();
 
     const char* end() const override final;
     const char* begin() const override final;

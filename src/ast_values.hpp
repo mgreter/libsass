@@ -49,9 +49,15 @@ namespace Sass {
     virtual const SassColor* isColor() const { return nullptr; }
     virtual const String_Constant* isString() const { return nullptr; }
 
+    virtual bool isVectorEmpty() const {
+      return list.empty();
+    }
+
+    // ToDo: this creates a circular reference
     virtual const sass::vector<ValueObj>& asVector() {
       if (list.empty()) {
         list.emplace_back(this);
+        list.back().makeWeak();
       }
       return list;
     }
@@ -382,8 +388,12 @@ namespace Sass {
       separator_ = separator;
     }
 
+    bool isVectorEmpty() const override {
+      return empty();
+    }
+
     const sass::vector<ValueObj>& asVector() override {
-      return elements(); // create a copy!
+      return elements(); // return reference
     }
 
     bool hasBrackets() override {
@@ -475,14 +485,18 @@ namespace Sass {
       return size();
     }
 
+    bool isVectorEmpty() const override final {
+      return elements_.empty();
+    }
+
     const sass::vector<ValueObj>& asVector() override final {
       if (list.empty()) {
-      for (auto kv : elements_) {
-        list.emplace_back(SASS_MEMORY_NEW(
-          SassList, kv.first->pstate(),
-            sass::vector<ValueObj>{ kv.first, kv.second },
-          SASS_SPACE));
-      }
+        for (auto kv : elements_) {
+          list.emplace_back(SASS_MEMORY_NEW(
+            SassList, kv.first->pstate(),
+              sass::vector<ValueObj>{ kv.first, kv.second },
+            SASS_SPACE));
+        }
       }
       return list;
     }

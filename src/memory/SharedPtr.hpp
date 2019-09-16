@@ -30,10 +30,16 @@ namespace Sass {
   // has been proven to be flaky under certain compilers (see comment below).
   ///////////////////////////////////////////////////////////////////////////////
 
-  #ifdef DEBUG_SHARED_PTR
+  template<typename T, typename... Args>
+  inline T* SASS_MEMORY_NEW3(Args ...args) {
+    void* buffer = Sass::allocateMem(sizeof(T));
+    return new (buffer) T(std::forward<Args>(args)...);
+  }
+
+#ifdef DEBUG_SHARED_PTR
 
     #define SASS_MEMORY_NEW(Class, ...) \
-      ((Class*)(new Class(__VA_ARGS__))->trace(__FILE__, __LINE__)) \
+      ((Class*)(SASS_MEMORY_NEW3<Class>(__VA_ARGS__))->trace(__FILE__, __LINE__)) \
 
     #define SASS_MEMORY_COPY(obj) \
       ((obj)->copy(__FILE__, __LINE__)) \
@@ -42,12 +48,6 @@ namespace Sass {
       ((obj)->clone(__FILE__, __LINE__)) \
 
   #else
-
-  template<typename T, typename... Args>
-  inline T* SASS_MEMORY_NEW3(Args ...args) {
-    void* buffer = Sass::allocateMem(sizeof(T));
-    return new (buffer) T(std::forward<Args>(args)...);
-  }
 
     #define SASS_MEMORY_NEW(Class, ...) \
       SASS_MEMORY_NEW3<Class>(__VA_ARGS__) \
@@ -170,6 +170,11 @@ namespace Sass {
       return *this = obj.node;
     }
 
+    void makeWeak() {
+      // detach();
+      decRefCount();
+    }
+
     // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
     SharedObj* detach() {
       if (node != nullptr) {
@@ -218,20 +223,23 @@ namespace Sass {
       if (node == nullptr) return;
       --node->refcount;
       #ifdef DEBUG_SHARED_PTR
-      if (node->dbg) std::cerr << "- " << node << " X " << node->refcount << " (" << this << ") " << "\n";
+      if (node->dbg) {
+        std::cerr << "- " << node << " X " << ((node->refcount & SET_DETACHED_BITMASK) ? "detached " : "")
+          << (node->refcount - (node->refcount  & SET_DETACHED_BITMASK)) << " (" << this << ") " << "\n";
+      }
       #endif
       if (node->refcount == 0) {
         #ifdef DEBUG_SHARED_PTR
           if (node->dbg) {
             std::cerr << "DELETE NODE " << node << "\n";
           }
-          node->deleted.insert(node->objId);
+          // node->deleted.insert(node->objId);
         #endif
           node->~SharedObj();
           Sass::deallocateMem((void*)node, 1);
       }
       #ifdef DEBUG_SHARED_PTR
-      else if (node->refcount == 0) {
+      else if (node->refcount & SET_DETACHED_BITMASK) {
         if (node->dbg) {
           std::cerr << "NODE EVAEDED DELETE " << node << "\n";
         }
@@ -245,11 +253,10 @@ namespace Sass {
       #ifdef DEBUG_SHARED_PTR
       if (SharedObj::maxRefCount < node->refcount) {
         SharedObj::maxRefCount = node->refcount;
-        if (node->refcount > 40000) {
-          // std::cerr << "whoa\n";
-        }
       }
-      if (node->dbg) std::cerr << "+ " << node << " X " << node->refcount << " (" << this << ") " << "\n";
+      if (node->dbg) {
+        std::cerr << "+ " << node << " X " << node->refcount << " (" << this << ") " << "\n";
+      }
       #endif
     }
   };
@@ -295,6 +302,7 @@ namespace Sass {
     T* detach() { return static_cast<T*>(SharedPtr::detach()); }
     void clear() { return SharedPtr::clear(); }
     bool isShared() { return SharedPtr::isShared(); }
+    void makeWeak() { return SharedPtr::makeWeak(); }
   };
 
   // Comparison operators, based on:

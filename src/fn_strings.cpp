@@ -165,8 +165,10 @@ namespace Sass {
         long endInt = end->assertNoUnits(*ctx.logger, pstate, "end")
           ->assertInt(*ctx.logger, pstate);
         if (endInt == 0) {
-          return SASS_MEMORY_NEW(String_Constant,
+          auto qwe = SASS_MEMORY_NEW(String_Constant,
             pstate, "", string->hasQuotes());
+          // qwe->setDbg(true);
+          return qwe;
         }
 
         long begInt = beg->assertNoUnits(*ctx.logger, pstate, "start")
