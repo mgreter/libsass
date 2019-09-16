@@ -29,7 +29,7 @@ namespace Sass {
     long index = sassIndex->assertNumber(logger, name)->assertInt(logger, sassIndex->pstate(), name);
     if (index == 0) throw Exception::SassScriptException2(
       "List index may not be 0.", logger, sassIndex->pstate(), name);
-    if ((size_t)abs(index) > lengthAsList()) {
+    if ((size_t)std::abs(index) > lengthAsList()) {
       sass::sstream strm;
       strm << "Invalid index " << index << " for a list ";
       strm << "with " << lengthAsList() << " elements.";

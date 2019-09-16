@@ -32,7 +32,7 @@
 
 namespace std {
   template <>
-  class hash<Sass::EnvString> {
+  struct hash<Sass::EnvString> {
   public:
     inline size_t operator()(const Sass::EnvString& name) const
     {
