@@ -45,16 +45,16 @@ namespace Sass {
     SimpleSelectorObj,
     ExtListSelSet,
     ObjHash,
-    ObjEquality,
-    SassAllocator<std::pair<SimpleSelectorObj, ExtListSelSet>>
+    ObjEquality //,
+    // SassAllocator<std::pair<SimpleSelectorObj, ExtListSelSet>>
   > ExtSelMap;
 
   typedef tsl::ordered_map<
     ComplexSelectorObj,
     Extension,
     ObjHash,
-    ObjEquality,
-    SassAllocator<std::pair<ComplexSelectorObj, Extension>>
+    ObjEquality //,
+    // SassAllocator<std::pair<const ComplexSelectorObj, Extension>>
   > ExtSelExtMapEntry;
 
   typedef std::unordered_map<
@@ -62,7 +62,7 @@ namespace Sass {
     ExtSelExtMapEntry,
     ObjHash,
     ObjEquality,
-    SassAllocator<std::pair<SimpleSelectorObj, ExtSelExtMapEntry>>
+    SassAllocator<std::pair<const SimpleSelectorObj, ExtSelExtMapEntry>>
   > ExtSelExtMap;
 
   typedef std::unordered_map <
@@ -72,7 +72,7 @@ namespace Sass {
     >,
     ObjHash,
     ObjEquality,
-    SassAllocator<std::pair<SimpleSelectorObj, sass::vector<Extension>>>
+    SassAllocator<std::pair<const SimpleSelectorObj, sass::vector<Extension>>>
   > ExtByExtMap;
 
   class Extender : public Operation_CRTP<void, Extender> {
@@ -141,7 +141,7 @@ namespace Sass {
       ObjHash,
       ObjEquality,
       SassAllocator<std::pair<
-      SimpleSelectorObj,
+      const SimpleSelectorObj,
       size_t
       >>
     > sourceSpecificity;

@@ -686,7 +686,7 @@ namespace Sass {
       rv.emplace_back(wrapInComplex());
     }
 
-    return std::move(rv);
+    return rv;
 
   }
   // EO CompoundSelector::resolveParentSelectors
@@ -749,7 +749,7 @@ namespace Sass {
       resolved.emplace_back(first);
     }
 
-    return std::move(resolved);
+    return resolved;
   }
   // EO ComplexSelector::resolveParentSelectors
 

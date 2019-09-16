@@ -25,7 +25,7 @@ namespace Sass {
     path(sass_copy_c_string(source->getPath())),
     data(sass_copy_c_string(source->begin())),
     length(source->size()),
-    srcid(srcid),
+    srcid(0), // srcid),
     lfs()
   {
   }

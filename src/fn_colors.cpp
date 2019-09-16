@@ -117,7 +117,7 @@ namespace Sass {
         fncall << name << "("
           << channels->to_css() << ")";
         return SASS_MEMORY_NEW(String_Constant,
-          pstate, std::move(fncall.str()));
+          pstate, fncall.str());
       }
 
       SassListObj list = Cast<SassList>(channels);
@@ -164,7 +164,7 @@ namespace Sass {
           }
           fncall << ")";
           return SASS_MEMORY_NEW(String_Constant,
-            pstate, std::move(fncall.str()));
+            pstate, fncall.str());
         }
         else {
           sass::string argument = argumentNames[list->length()];
@@ -196,7 +196,7 @@ namespace Sass {
         }
         fncall << ")";
         return SASS_MEMORY_NEW(String_Constant,
-          pstate, std::move(fncall.str()));
+          pstate, fncall.str());
       }
       else {
         return list;
@@ -216,7 +216,7 @@ namespace Sass {
       }
       fncall << ")";
       return SASS_MEMORY_NEW(String_Constant,
-        pstate, std::move(fncall.str()));
+        pstate, fncall.str());
     }
 
     String_Constant* _functionRgbString(sass::string name, Color_RGBA* color, Value* alpha, const SourceSpan& pstate)
@@ -228,7 +228,7 @@ namespace Sass {
       fncall << color->b() << ", ";
       fncall << alpha->to_css() << ")";
       return SASS_MEMORY_NEW(String_Constant,
-        pstate, std::move(fncall.str()));
+        pstate, fncall.str());
     }
 
     Value* _rgbTwoArg2(sass::string name, sass::vector<ValueObj> arguments, const SourceSpan& pstate, Logger& logger)
@@ -297,7 +297,7 @@ namespace Sass {
         if (SassList * list = Cast<SassList>(parsed)) {
           return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger);
         }
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(arguments[0]->to_css()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, arguments[0]->to_css());
       }
 
 
@@ -331,7 +331,7 @@ namespace Sass {
         if (SassList * list = Cast<SassList>(parsed)) {
           return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger);
         }
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(arguments[0]->to_css()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, arguments[0]->to_css());
       }
 
 
@@ -372,7 +372,7 @@ namespace Sass {
         if (SassList * list = Cast<SassList>(parsed)) {
           return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger);
         }
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(arguments[0]->to_css()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, arguments[0]->to_css());
       }
 
 
@@ -413,7 +413,7 @@ namespace Sass {
         if (SassList * list = Cast<SassList>(parsed)) {
           return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger);
         }
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(arguments[0]->to_css()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, arguments[0]->to_css());
       }
 
       BUILT_IN_FN(red)
@@ -541,7 +541,7 @@ namespace Sass {
       {
         SassNumber* number = arguments[0]->assertNumber(*ctx.logger, Strings::amount);
         return SASS_MEMORY_NEW(String_Constant, pstate,
-          std::move("saturate(" + number->to_css() + ")"));
+          "saturate(" + number->to_css() + ")");
       }
 
       BUILT_IN_FN(desaturate)
@@ -674,7 +674,7 @@ namespace Sass {
         ss << std::hex << std::setw(2) << fuzzyRound(r, ctx.logger->epsilon);
         ss << std::hex << std::setw(2) << fuzzyRound(g, ctx.logger->epsilon);
         ss << std::hex << std::setw(2) << fuzzyRound(b, ctx.logger->epsilon);
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(ss.str()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, ss.str());
       }
 
       Number* getKwdArg(KeywordMap<ValueObj>& keywords, const EnvString& name, Logger& logger)
@@ -1014,7 +1014,7 @@ namespace Sass {
         fncall << _b->to_css();
         if (_a) { fncall << ", " << _a->to_css(); }
         fncall << ")";
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(fncall.str()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, fncall.str());
       }
 
       Number* r = _r->assertNumber(logger, Strings::red);
@@ -1048,7 +1048,7 @@ namespace Sass {
         fncall << _l->to_css();
         if (_a) { fncall << ", " << _a->to_css(); }
         fncall << ")";
-        return SASS_MEMORY_NEW(String_Constant, pstate, std::move(fncall.str()));
+        return SASS_MEMORY_NEW(String_Constant, pstate, fncall.str());
       }
 
       Number* h = _h->assertNumber(logger, "hue");

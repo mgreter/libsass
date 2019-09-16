@@ -50,7 +50,7 @@ namespace Sass {
 
     complexesWithoutBases.back().emplace_back(unifiedBase);
 
-    return std::move(weave(complexesWithoutBases));
+    return weave(complexesWithoutBases);
 
   }
   // EO unifyComplex

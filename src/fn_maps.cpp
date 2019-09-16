@@ -73,14 +73,14 @@ namespace Sass {
       {
         SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
         return SASS_MEMORY_NEW(SassList,
-          pstate, std::move(map->keys()), SASS_COMMA);
+          pstate, map->keys(), SASS_COMMA);
       }
 
       BUILT_IN_FN(values)
       {
         SassMapObj map = arguments[0]->assertMap(*ctx.logger, "map");
         return SASS_MEMORY_NEW(SassList,
-          pstate, std::move(map->values()), SASS_COMMA);
+          pstate, map->values(), SASS_COMMA);
       }
 
       BUILT_IN_FN(hasKey)

@@ -240,7 +240,7 @@ namespace Sass {
 
     ValueObj result;
     // try {
-    double epsilon = ctx.logger->epsilon;
+//    double epsilon = ctx.logger->epsilon;
     // This one
     // sass::sstream invocation;
     // ArgumentInvocationObj args =
@@ -310,7 +310,7 @@ namespace Sass {
 
     ValueObj result;
     // try {
-    double epsilon = ctx.logger->epsilon;
+//    double epsilon = ctx.logger->epsilon;
     // This one
     // sass::sstream invocation;
     // ArgumentInvocationObj args =
@@ -436,7 +436,7 @@ namespace Sass {
     serialize.in_declaration = true;
     serialize.quotes = false;
     node->perform(&serialize);
-    return std::move(serialize.get_buffer());
+    return serialize.get_buffer();
   }
 
   const sass::string Eval::cwd()

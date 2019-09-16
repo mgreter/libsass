@@ -223,8 +223,8 @@ namespace Sass {
   private:
 
     // Variable counts
-    size_t start;
-    size_t length;
+    // size_t start;
+    // size_t length;
 
     // Reference to parent
     EnvStack& parent;
