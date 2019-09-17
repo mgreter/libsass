@@ -987,7 +987,13 @@ namespace Sass {
 
   void register_c_function2(Context& ctx, Sass_Function_Entry descr)
   {
-    /* ExternalCallable* def = */ make_c_function2(descr, ctx);
+    ExternalCallable* callable = make_c_function2(descr, ctx);
+
+    ctx.functions.insert(std::make_pair(callable->name(), callable));
+    ctx.varRoot.hoistFunction(callable->name());
+    ctx.fnCache.push_back(callable);
+
+    // IdxRef fidx = ctx.varRoot.createFunction(def->name());
     // def->environment(env);
     // env->setFunction(def->name(), def);
   }
