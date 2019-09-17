@@ -835,7 +835,7 @@ namespace Sass {
     EnvRoot root;
     ScopedStackFrame<EnvStack>
       scoped(context.varStack, &root);
-    context.varStack.push_back(&root);
+    // context.varStack.push_back(&root);
     return parser.parseArgumentDeclaration2();
   }
 

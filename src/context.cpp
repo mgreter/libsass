@@ -681,13 +681,16 @@ namespace Sass {
 
     // register built-in functions on env
     register_built_in_functions(*this);
+
+    varStack.push_back(&varRoot);
+
     // register custom functions (defined via C-API)
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
     {
+      ScopedStackFrame<EnvStack> scoped(varStack, &varRoot);
       register_c_function2(*this, c_functions[i]);
     }
 
-    varStack.push_back(&varRoot);
 
   }
 
