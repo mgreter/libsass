@@ -166,28 +166,59 @@ extern "C" {
   size_t ADDCALL sass_callee_get_line(Sass_Callee_Entry entry) { return entry->line; }
   size_t ADDCALL sass_callee_get_column(Sass_Callee_Entry entry) { return entry->column; }
   enum Sass_Callee_Type ADDCALL sass_callee_get_type(Sass_Callee_Entry entry) { return entry->type; }
-  Sass_Env_Frame ADDCALL sass_callee_get_env (Sass_Callee_Entry entry) { return &entry->env; }
-
+  
   // Getters and Setters for environments (lexical, local and global)
-  union Sass_Value* ADDCALL sass_env_get_lexical (Sass_Env_Frame env, const char* name) {
-    Expression* ex = nullptr; // = Cast<Expression>(env->frame->get(EnvString(name)));
+  union Sass_Value* ADDCALL sass_env_get_lexical (struct Sass_Compiler* compiler, const char* name) {
+    Sass::EnvString key(name);
+    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
+    IdxRef fidx = env->getVariableIdx(key);
+    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
+    Expression* ex = compiler->cpp_ctx->varRoot.getVariable(fidx);
     return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
   }
-  void ADDCALL sass_env_set_lexical (Sass_Env_Frame env, const char* name, union Sass_Value* val) {
+
+  void ADDCALL sass_env_set_lexical (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+    Sass::EnvString key(name);
+    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
+    IdxRef fidx = env->getVariableIdx(key);
+    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
+    compiler->cpp_ctx->varRoot.setVariable(fidx, sass_value_to_ast_node(val));
     // env->frame->set_lexical(EnvString(name), sass_value_to_ast_node(val));
   }
-  union Sass_Value* ADDCALL sass_env_get_local (Sass_Env_Frame env, const char* name) {
-    Expression* ex = nullptr; // = Cast<Expression>(env->frame->get_local(EnvString(name)));
+
+  union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler* compiler, const char* name) {
+    Sass::EnvString key(name);
+    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
+    IdxRef fidx = env->getVariableIdx(key);
+    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
+    Expression* ex = compiler->cpp_ctx->varRoot.getVariable(fidx);
     return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
   }
-  void ADDCALL sass_env_set_local (Sass_Env_Frame env, const char* name, union Sass_Value* val) {
+
+  void ADDCALL sass_env_set_local (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+    Sass::EnvString key(name);
+    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
+    IdxRef fidx = env->getVariableIdx(key);
+    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
+    compiler->cpp_ctx->varRoot.setVariable(fidx, sass_value_to_ast_node(val));
+
     // env->frame->set_local(EnvString(name), sass_value_to_ast_node(val));
   }
-  union Sass_Value* ADDCALL sass_env_get_global (Sass_Env_Frame env, const char* name) {
-    Expression* ex = nullptr; // = Cast<Expression>(env->frame->get_global(EnvString(name)));
+
+  union Sass_Value* ADDCALL sass_env_get_global (struct Sass_Compiler* compiler, const char* name) {
+    Sass::EnvString key(name);
+    IdxRef fidx = compiler->cpp_ctx->varRoot.getGlobalVariable33(key);
+    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
+    Expression* ex = compiler->cpp_ctx->varRoot.getVariable(fidx);
     return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
   }
-  void ADDCALL sass_env_set_global (Sass_Env_Frame env, const char* name, union Sass_Value* val) {
+
+  void ADDCALL sass_env_set_global (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+    Sass::EnvString key(name);
+    IdxRef fidx = compiler->cpp_ctx->varRoot.getGlobalVariable33(key);
+    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
+    compiler->cpp_ctx->varRoot.setVariable(fidx, sass_value_to_ast_node(val));
+    // return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
     // env->frame->set_global(EnvString(name), sass_value_to_ast_node(val));
   }
 

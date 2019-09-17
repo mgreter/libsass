@@ -27,11 +27,6 @@ struct Sass_Import {
   Sass_Import_Type type;
 };
 
-// External environments
-struct Sass_Env {
-  // links to parent frames
-};
-
 // External call entry
 struct Sass_Callee {
   const char* name;
@@ -39,7 +34,6 @@ struct Sass_Callee {
   size_t line;
   size_t column;
   enum Sass_Callee_Type type;
-  struct Sass_Env env;
 };
 
 // Struct to hold importer callback

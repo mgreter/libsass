@@ -37,7 +37,7 @@ if [ ! -d plugins/libsass-${PLUGIN} ] ; then
   if [ "$PLUGIN" == "math" ]; then
     git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN} --branch feature/libsass-3.7
   elif [ "$PLUGIN" == "tests" ]; then
-    git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN} --branch feature/libsass-3.8
+    git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN} --branch feature/libsass-4.0
   else
     git clone https://github.com/mgreter/libsass-${PLUGIN} plugins/libsass-${PLUGIN}
   fi
