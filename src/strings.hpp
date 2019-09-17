@@ -28,6 +28,9 @@ namespace Sass {
     const sass::string lightness("lightness");
     const sass::string saturation("saturation");
 
+    const sass::string warnRule("@warn");
+    const sass::string errorRule("@error");
+    const sass::string debugRule("@debug");
     const sass::string contentRule("@content");
 
   }
@@ -41,6 +44,10 @@ namespace Sass {
     const EnvString alpha(Strings::alpha);
     const EnvString lightness(Strings::lightness);
     const EnvString saturation(Strings::saturation);
+
+    const EnvString warnRule(Strings::warnRule);
+    const EnvString errorRule(Strings::errorRule);
+    const EnvString debugRule(Strings::debugRule);
     const EnvString contentRule(Strings::contentRule);
 
     const EnvString $condition("$condition");

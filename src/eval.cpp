@@ -551,6 +551,25 @@ namespace Sass {
     options().output_style = NESTED;
     Expression_Obj message = node->expression()->perform(this);
 
+
+    if (ctx.varRoot.hasGlobalFunction33(Keys::warnRule)) {
+
+      IdxRef fidx = ctx.varRoot.getFunctionIdx2(Keys::warnRule);
+      ExternalCallable* def = Cast<ExternalCallable>(ctx.varRoot.getFunction(fidx));
+      Sass_Function_Entry c_function = def->function();
+      Sass_Function_Fn c_func = sass_function_get_function(c_function);
+
+      AST2C ast2c;
+      union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
+      sass_list_set_value(c_args, 0, message->perform(&ast2c));
+      union Sass_Value* c_val = c_func(c_args, c_function, compiler());
+      options().output_style = outstyle;
+      // callee_stack().pop_back();
+      sass_delete_value(c_args);
+      sass_delete_value(c_val);
+
+    }
+
     // try to use generic function
     /*if (env->has(kwdWarnFn)) {
 
@@ -578,7 +597,8 @@ namespace Sass {
       sass_delete_value(c_val);
 
     }
-    else {*/
+    */
+    else {
 
       sass::string result(unquote(message->to_sass()));
       std::cerr << "WARNING: " << result << std::endl;
@@ -588,7 +608,7 @@ namespace Sass {
       options().output_style = outstyle;
       traces.pop_back();
 
-    // }
+    }
 
   }
 
@@ -603,6 +623,24 @@ namespace Sass {
     Sass_Output_Style outstyle = options().output_style;
     options().output_style = NESTED;
     Expression_Obj message = node->expression()->perform(this);
+
+    if (ctx.varRoot.hasGlobalFunction33(Keys::errorRule)) {
+
+      IdxRef fidx = ctx.varRoot.getFunctionIdx2(Keys::errorRule);
+      ExternalCallable* def = Cast<ExternalCallable>(ctx.varRoot.getFunction(fidx));
+      Sass_Function_Entry c_function = def->function();
+      Sass_Function_Fn c_func = sass_function_get_function(c_function);
+
+      AST2C ast2c;
+      union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
+      sass_list_set_value(c_args, 0, message->perform(&ast2c));
+      union Sass_Value* c_val = c_func(c_args, c_function, compiler());
+      options().output_style = outstyle;
+      // callee_stack().pop_back();
+      sass_delete_value(c_args);
+      sass_delete_value(c_val);
+
+    }
 
     // try to use generic function
     /* if (env->has(kwdErrorFn)) {
@@ -631,13 +669,14 @@ namespace Sass {
       sass_delete_value(c_val);
 
     }
-    else { */
+    */
+    else { 
 
       sass::string result(message->to_sass());
       options().output_style = outstyle;
       error(result, node->pstate(), traces);
 
-    // }
+    }
 
   }
 
@@ -652,6 +691,24 @@ namespace Sass {
     Sass_Output_Style outstyle = options().output_style;
     options().output_style = NESTED;
     Expression_Obj message = node->expression()->perform(this);
+
+    if (ctx.varRoot.hasGlobalFunction33(Keys::debugRule)) {
+
+      IdxRef fidx = ctx.varRoot.getFunctionIdx2(Keys::debugRule);
+      ExternalCallable* def = Cast<ExternalCallable>(ctx.varRoot.getFunction(fidx));
+      Sass_Function_Entry c_function = def->function();
+      Sass_Function_Fn c_func = sass_function_get_function(c_function);
+
+      AST2C ast2c;
+      union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
+      sass_list_set_value(c_args, 0, message->perform(&ast2c));
+      union Sass_Value* c_val = c_func(c_args, c_function, compiler());
+      options().output_style = outstyle;
+      // callee_stack().pop_back();
+      sass_delete_value(c_args);
+      sass_delete_value(c_val);
+
+    }
 
     // try to use generic function
     /* if (env->has(kwdDebugFn)) {
@@ -682,7 +739,8 @@ namespace Sass {
       sass_delete_value(c_val);
 
     }
-    else { */
+     */
+    else {
 
       sass::string result(unquote(message->to_sass()));
       sass::string abs_path(Sass::File::rel2abs(node->pstate().getPath(), cwd(), cwd()));
@@ -693,7 +751,7 @@ namespace Sass {
       std::cerr << output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
       std::cerr << std::endl;
 
-    // }
+    }
 
   }
 
