@@ -169,14 +169,13 @@ extern "C" {
   
   // Getters and Setters for environments (lexical, local and global)
   union Sass_Value* ADDCALL sass_env_get_lexical (struct Sass_Compiler* compiler, const char* name) {
-    IdxRef vidx = compiler->cpp_ctx->varStack.back()->getVariableIdx(Sass::EnvString(name));
-    ExpressionObj ex = vidx.isValid() ? compiler->cpp_ctx->varRoot.getVariable(vidx) : ExpressionObj{};
+    ExpressionObj ex = compiler->cpp_ctx->varRoot.getLexicalVariable44(Sass::EnvString(name));
     return ex == nullptr ? nullptr : ast_node_to_sass_value(ex);
   }
 
   void ADDCALL sass_env_set_lexical (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
-    IdxRef vidx = compiler->cpp_ctx->varStack.back()->getVariableIdx(Sass::EnvString(name));
-    if (vidx.isValid()) compiler->cpp_ctx->varRoot.setVariable(vidx, sass_value_to_ast_node(val));
+    // Set local or move back one set
+    compiler->cpp_ctx->varRoot.setLexicalVariable55(Sass::EnvString(name), sass_value_to_ast_node(val));
   }
 
   union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler* compiler, const char* name) {

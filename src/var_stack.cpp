@@ -172,6 +172,15 @@ namespace Sass {
     functions[fnFrames[ref.frame] + ref.offset] = obj;
   }
 
+  void EnvRoot::setVariable(const IdxRef& vidx, ExpressionObj obj) {
+	  // std::cerr << "set variable " << vidx.frame << ":" << vidx.offset << " = " << obj->to_string() << "\n";
+	  size_t stackBase = varFrames[vidx.frame];
+	  // if (stackBase == std::string::npos) {
+	  //   std::cerr << "invalid state6\n";
+	  // }
+	  variables[stackBase + vidx.offset] = obj;
+  }
+
   void EnvRoot::setMixin(const IdxRef& ref, UserDefinedCallableObj obj) {
     //  std::cerr << "set variable " << ref.frameOffset << ":" << ref.offset << "\n";
     // size_t stackBase = mixFrames[ref.frame];

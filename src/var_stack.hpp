@@ -451,6 +451,49 @@ namespace Sass {
       return {};
     }
 
+    void setLexicalVariable44(const EnvString& name, ExpressionObj val) {
+      if (stack.empty()) return;
+      const IDXS* current = stack.back();
+      while (current) {
+        auto it = current->varIdxs.find(name);
+        if (it != current->varIdxs.end()) {
+          ExpressionObj& value = root.getVariable({
+            current->frame, it->second });
+          if (value.isNull()) continue;
+          value = val;
+          break;
+        }
+        if (current->parent == std::string::npos) break;
+        current = root.idxs[current->parent];
+      }
+    }
+
+    void setLexicalVariable55(const EnvString& name, ExpressionObj val) {
+      if (stack.empty()) return;
+      const IDXS* current = stack.back();
+      auto it = current->varIdxs.find(name);
+      if (it != current->varIdxs.end()) {
+        ExpressionObj& value = root.getVariable({
+          current->frame, it->second });
+        value = val;
+      }
+
+      current = stack[stack.size()-2];
+      while (current) {
+        auto it = current->varIdxs.find(name);
+        if (it != current->varIdxs.end()) {
+          ExpressionObj& value = root.getVariable({
+            current->frame, it->second });
+          if (value.isNull()) continue;
+          value = val;
+          break;
+        }
+        if (current->parent == std::string::npos) break;
+        current = root.idxs[current->parent];
+      }
+
+    }
+
     UserDefinedCallableObj getLexicalMixin44(const EnvString& name) {
       if (stack.empty()) return {};
       const IDXS* current = stack.back();
@@ -511,14 +554,7 @@ namespace Sass {
       variables[stackBase + offset] = obj;
     }
 
-    void setVariable(const IdxRef& vidx, ExpressionObj obj) {
-      // std::cerr << "set variable " << frame << ":" << offset << "\n";
-      size_t stackBase = varFrames[vidx.frame];
-      // if (stackBase == std::string::npos) {
-      //   std::cerr << "invalid state6\n";
-      // }
-      variables[stackBase + vidx.offset] = obj;
-    }
+    void setVariable(const IdxRef& vidx, ExpressionObj obj);
 
     void setMixin(const IdxRef& ref, UserDefinedCallableObj obj);
     void setFunction(const IdxRef& ref, CallableObj obj);
