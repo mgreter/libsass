@@ -467,9 +467,10 @@ namespace Sass {
         if (it != current->varIdxs.end()) {
           ExpressionObj& value = root.getVariable({
             current->frame, it->second });
-          if (value.isNull()) continue;
-          value = val;
-          return;
+          if (!value.isNull()) {
+            value = val;
+            return;
+          }
         }
         if (current->transparent) {
           idx = idx - 1;
@@ -500,9 +501,10 @@ namespace Sass {
         if (it != current->varIdxs.end()) {
           ExpressionObj& value = root.getVariable({
             current->frame, it->second });
-          if (value.isNull()) continue;
-          value = val;
-          return;
+          if (!value.isNull()) {
+            value = val;
+            return;
+          }
         }
         if (current->parent == std::string::npos) return;
         current = root.idxs[current->parent];
