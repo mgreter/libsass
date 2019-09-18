@@ -1,4 +1,6 @@
+#include "sass.hpp"
 #include <random>
+#include "randomize.hpp"
 
 #if defined (_MSC_VER) // Visual studio
 #define thread_local __declspec( thread )
@@ -9,14 +11,27 @@
 namespace Sass {
 
   // ToDo: this seems not thread safe!!
+  uint32_t readHashSeed()
+  {
+    // Load optional fixed seed from environment
+    // Mainly used to pass the seed to plugins
+    const char* seed = GET_ENV("SASS_HASH_SEED");
+    if (seed != nullptr) {
+      return atol(seed);
+    }
+    else {
+      // This is expensive!
+      std::random_device rd;
+      return rd();
+    }
+  }
 
   // Just a static wrapped around random device
   // Creates one true random number to seed us
   uint32_t getHashSeed()
   {
     // Lets hope this is indeed thread safe
-    static std::random_device rd;
-    static uint32_t seed = rd();
+    static uint32_t seed = readHashSeed();
     return seed; // static seed per thread
   }
 

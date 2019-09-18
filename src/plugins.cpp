@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include <iostream>
+#include <sstream>
 #include "output.hpp"
 #include "plugins.hpp"
 #include "util.hpp"
@@ -61,6 +62,9 @@ namespace Sass {
     typedef const char* (*__plugin_version__)(void);
     typedef Sass_Function_List (*__plugin_load_fns__)(void);
     typedef Sass_Importer_List (*__plugin_load_imps__)(void);
+
+    sass::sstream strm; strm << getHashSeed();
+    SET_ENV("SASS_HASH_SEED", strm.str().c_str());
 
     if (LOAD_LIB(plugin, path))
     {

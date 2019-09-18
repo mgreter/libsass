@@ -174,8 +174,9 @@ extern "C" {
   }
 
   void ADDCALL sass_env_set_lexical (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
-    // Set local or move back one set
-    compiler->cpp_ctx->varRoot.setLexicalVariable55(Sass::EnvString(name), sass_value_to_ast_node(val));
+    // External function calls are parsed in root context, but their
+    // actual parent is dynamic, according to invocation site
+    compiler->cpp_ctx->varRoot.setLexicalVariable44(Sass::EnvString(name), sass_value_to_ast_node(val));
   }
 
   union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler* compiler, const char* name) {

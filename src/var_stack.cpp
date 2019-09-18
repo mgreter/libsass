@@ -85,7 +85,7 @@ namespace Sass {
   {
   }
 
-  IDXS* EnvStack::getIdxs() {
+  IDXS* EnvStack::getIdxs(bool transparent) {
 
     if (root.idxs[frameOffset] != nullptr) {
       return root.idxs[frameOffset];
@@ -94,8 +94,8 @@ namespace Sass {
     size_t parent = std::string::npos;
     if (p) parent = p->frameOffset;
     IDXS* idxs = new IDXS(frameOffset, parent);
+    idxs->transparent = transparent;
     root.idxs[frameOffset] = idxs;
-
     if (!varIdxs.empty()) {
       idxs->vidxs.frame = varFrameOffset;
       idxs->vidxs.size = varIdxs.size();

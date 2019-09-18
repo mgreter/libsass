@@ -5,6 +5,18 @@
 #include <cstdint>
 #include <limits>
 
+#ifdef _WIN32
+
+#define GET_ENV(key) getenv(key)
+#define SET_ENV(key, val) _putenv_s(key, val)
+
+#else
+
+#define GET_ENV(key) getenv(key)
+#define SET_ENV(key, val) setenv(key, val, 0)
+
+#endif
+
 namespace Sass {
 
   // Just a static wrapped around random device

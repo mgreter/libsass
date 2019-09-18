@@ -993,7 +993,7 @@ namespace Sass {
     EnvFrame local(&ctx.varRoot, true);
     ScopedStackFrame<EnvStack> scoped(ctx.varStack, &local);
     ExternalCallable* callable = make_c_function2(descr, ctx);
-    callable->idxs(local.getIdxs());
+    callable->idxs(local.getIdxs(true));
       ctx.functions.insert(std::make_pair(callable->name(), callable));
     ctx.varRoot.hoistFunction(callable->name());
     ctx.fnCache.push_back(callable);

@@ -98,7 +98,10 @@ namespace Sass {
     size_t mixFrame;
     size_t fnFrame;
     size_t frame;
+
     size_t parent;
+    bool transparent;
+
     // Also remember mappings
     NormalizedMap<size_t> varIdxs;
     NormalizedMap<size_t> mixIdxs;
@@ -109,7 +112,8 @@ namespace Sass {
       mixFrame(std::string::npos),
       fnFrame(std::string::npos),
       frame(frame),
-      parent(parent)
+      parent(parent),
+      transparent(false)
     {}
 
   };
@@ -162,7 +166,7 @@ namespace Sass {
 
     // EnvStack& operator=(const EnvStack& other);
 
-    IDXS* getIdxs();
+    IDXS* getIdxs(bool transparent = false);
 
     EnvStack(EnvStack& other) :
       root(other.root),
@@ -437,7 +441,8 @@ namespace Sass {
 
     ExpressionObj getLexicalVariable44(const EnvString& name) {
       if (stack.empty()) return {};
-      const IDXS* current = stack.back();
+      size_t idx = stack.size() - 1;
+      const IDXS* current = stack[idx];
       while (current) {
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
@@ -445,15 +450,18 @@ namespace Sass {
             current->frame, it->second });
           if (value) return value;
         }
-        if (current->parent == std::string::npos) break;
-        current = root.idxs[current->parent];
+        if (current->transparent) idx = idx - 1;
+        else if (current->parent == std::string::npos) break;
+        else idx = current->parent;
+        current = root.idxs[idx];
       }
       return {};
     }
 
     void setLexicalVariable44(const EnvString& name, ExpressionObj val) {
       if (stack.empty()) return;
-      const IDXS* current = stack.back();
+      size_t idx = stack.size() - 1;
+      const IDXS* current = stack[idx];
       while (current) {
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
@@ -461,10 +469,17 @@ namespace Sass {
             current->frame, it->second });
           if (value.isNull()) continue;
           value = val;
-          break;
+          return;
         }
-        if (current->parent == std::string::npos) break;
-        current = root.idxs[current->parent];
+        if (current->transparent) {
+          idx = idx - 1;
+          current = stack[idx];
+        }
+        else if (current->parent == std::string::npos) return;
+        else {
+          idx = current->parent;
+          current = root.idxs[idx];
+        }
       }
     }
 
@@ -476,6 +491,7 @@ namespace Sass {
         ExpressionObj& value = root.getVariable({
           current->frame, it->second });
         value = val;
+        return;
       }
 
       current = stack[stack.size()-2];
@@ -486,9 +502,9 @@ namespace Sass {
             current->frame, it->second });
           if (value.isNull()) continue;
           value = val;
-          break;
+          return;
         }
-        if (current->parent == std::string::npos) break;
+        if (current->parent == std::string::npos) return;
         current = root.idxs[current->parent];
       }
 
