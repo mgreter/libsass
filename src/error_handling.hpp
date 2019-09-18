@@ -21,10 +21,10 @@ namespace Sass {
 
   namespace Exception {
 
-    const sass::string def_msg = "Invalid sass detected";
-    const sass::string def_op_msg = "Undefined operation";
-    const sass::string def_op_null_msg = "Invalid null operation";
-    const sass::string def_nesting_limit = "Code too deeply neested";
+    extern sass::string def_msg;
+    extern sass::string def_op_msg;
+    extern sass::string def_op_null_msg;
+    extern sass::string def_nesting_limit;
 
     const sass::string msg_recursion_limit =
       "Too deep recursion detected. This can be caused by too deep level nesting.\n"

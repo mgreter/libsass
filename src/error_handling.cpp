@@ -13,6 +13,11 @@ namespace Sass {
 
   namespace Exception {
 
+    sass::string def_msg("Invalid sass detected");
+    sass::string def_op_msg("Undefined operation");
+    sass::string def_op_null_msg("Invalid null operation");
+    sass::string def_nesting_limit("Code too deeply neested");
+
     Base::Base(SourceSpan pstate, sass::string msg, Backtraces traces)
     : std::runtime_error(msg.c_str()), msg(msg),
       prefix("Error"), pstate(pstate), traces(traces)
