@@ -18,6 +18,10 @@ namespace Sass {
     sass::string def_op_null_msg("Invalid null operation");
     sass::string def_nesting_limit("Code too deeply neested");
 
+    sass::string msg_recursion_limit =
+      "Too deep recursion detected. This can be caused by too deep level nesting.\n"
+      "LibSass will abort here in order to avoid a possible stack overflow.\n";
+
     Base::Base(SourceSpan pstate, sass::string msg, Backtraces traces)
     : std::runtime_error(msg.c_str()), msg(msg),
       prefix("Error"), pstate(pstate), traces(traces)

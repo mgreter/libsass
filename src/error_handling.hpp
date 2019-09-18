@@ -26,9 +26,7 @@ namespace Sass {
     extern sass::string def_op_null_msg;
     extern sass::string def_nesting_limit;
 
-    const sass::string msg_recursion_limit =
-      "Too deep recursion detected. This can be caused by too deep level nesting.\n"
-      "LibSass will abort here in order to avoid a possible stack overflow.\n";
+    extern sass::string msg_recursion_limit;
 
     class Base : public std::runtime_error {
       protected:
