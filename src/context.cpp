@@ -990,11 +990,14 @@ namespace Sass {
 
   void register_c_function2(Context& ctx, Sass_Function_Entry descr)
   {
+    EnvFrame local(&ctx.varRoot, true);
+    ScopedStackFrame<EnvStack> scoped(ctx.varStack, &local);
     ExternalCallable* callable = make_c_function2(descr, ctx);
-
-    ctx.functions.insert(std::make_pair(callable->name(), callable));
+    callable->idxs(local.getIdxs());
+      ctx.functions.insert(std::make_pair(callable->name(), callable));
     ctx.varRoot.hoistFunction(callable->name());
     ctx.fnCache.push_back(callable);
+
 
     // IdxRef fidx = ctx.varRoot.createFunction(def->name());
     // def->environment(env);

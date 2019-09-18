@@ -169,57 +169,36 @@ extern "C" {
   
   // Getters and Setters for environments (lexical, local and global)
   union Sass_Value* ADDCALL sass_env_get_lexical (struct Sass_Compiler* compiler, const char* name) {
-    Sass::EnvString key(name + 1);
-    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
-    IdxRef fidx = env->getVariableIdx(key);
-    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
-    Expression* ex = compiler->cpp_ctx->varRoot.getVariable(fidx);
-    return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
+    IdxRef vidx = compiler->cpp_ctx->varStack.back()->getVariableIdx(Sass::EnvString(name));
+    ExpressionObj ex = vidx.isValid() ? compiler->cpp_ctx->varRoot.getVariable(vidx) : ExpressionObj{};
+    return ex == nullptr ? nullptr : ast_node_to_sass_value(ex);
   }
 
   void ADDCALL sass_env_set_lexical (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
-    Sass::EnvString key(name + 1);
-    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
-    IdxRef fidx = env->getVariableIdx(key);
-    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
-    compiler->cpp_ctx->varRoot.setVariable(fidx, sass_value_to_ast_node(val));
-    // env->frame->set_lexical(EnvString(name), sass_value_to_ast_node(val));
+    IdxRef vidx = compiler->cpp_ctx->varStack.back()->getVariableIdx(Sass::EnvString(name));
+    if (vidx.isValid()) compiler->cpp_ctx->varRoot.setVariable(vidx, sass_value_to_ast_node(val));
   }
 
   union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler* compiler, const char* name) {
-    Sass::EnvString key(name + 1);
-    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
-    IdxRef fidx = env->getVariableIdx(key);
-    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
-    Expression* ex = compiler->cpp_ctx->varRoot.getVariable(fidx);
-    return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
+    IdxRef vidx = compiler->cpp_ctx->varStack.back()->getVariableIdx(Sass::EnvString(name));
+    ExpressionObj ex = vidx.isValid() ? compiler->cpp_ctx->varRoot.getVariable(vidx) : ExpressionObj{};
+    return ex == nullptr ? nullptr : ast_node_to_sass_value(ex);
   }
 
   void ADDCALL sass_env_set_local (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
-    Sass::EnvString key(name + 1);
-    Sass::EnvStack* env = compiler->cpp_ctx->varStack.back();
-    IdxRef fidx = env->getVariableIdx(key);
-    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
-    compiler->cpp_ctx->varRoot.setVariable(fidx, sass_value_to_ast_node(val));
-
-    // env->frame->set_local(EnvString(name), sass_value_to_ast_node(val));
+    IdxRef vidx = compiler->cpp_ctx->varStack.back()->getVariableIdx(Sass::EnvString(name));
+    if (vidx.isValid()) compiler->cpp_ctx->varRoot.setVariable(vidx, sass_value_to_ast_node(val));
   }
 
   union Sass_Value* ADDCALL sass_env_get_global (struct Sass_Compiler* compiler, const char* name) {
-    Sass::EnvString key(name + 1);
-    IdxRef fidx = compiler->cpp_ctx->varRoot.getGlobalVariable33(key);
-    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
-    Expression* ex = compiler->cpp_ctx->varRoot.getVariable(fidx);
-    return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
+    IdxRef vidx = compiler->cpp_ctx->varRoot.getGlobalVariable33(Sass::EnvString(name));
+    ExpressionObj ex = vidx.isValid() ? compiler->cpp_ctx->varRoot.getVariable(vidx) : ExpressionObj{};
+    return ex == nullptr ? nullptr : ast_node_to_sass_value(ex);
   }
 
   void ADDCALL sass_env_set_global (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
-    Sass::EnvString key(name + 1);
-    IdxRef fidx = compiler->cpp_ctx->varRoot.getGlobalVariable33(key);
-    if (!fidx.isValid()) { std::cerr << "Variable is missing\n"; }
-    compiler->cpp_ctx->varRoot.setVariable(fidx, sass_value_to_ast_node(val));
-    // return ex != NULL ? ast_node_to_sass_value(ex) : NULL;
-    // env->frame->set_global(EnvString(name), sass_value_to_ast_node(val));
+    IdxRef vidx = compiler->cpp_ctx->varRoot.getGlobalVariable33(Sass::EnvString(name));
+    if (vidx.isValid()) compiler->cpp_ctx->varRoot.setVariable(vidx, sass_value_to_ast_node(val));
   }
 
   // Getter for import entry

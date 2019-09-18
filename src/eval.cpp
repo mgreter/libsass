@@ -558,6 +558,7 @@ namespace Sass {
       ExternalCallable* def = Cast<ExternalCallable>(ctx.varRoot.getFunction(fidx));
       Sass_Function_Entry c_function = def->function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
+      EnvScope scoped(ctx.varRoot, def->idxs());
 
       AST2C ast2c;
       union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
@@ -630,6 +631,7 @@ namespace Sass {
       ExternalCallable* def = Cast<ExternalCallable>(ctx.varRoot.getFunction(fidx));
       Sass_Function_Entry c_function = def->function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
+      EnvScope scoped(ctx.varRoot, def->idxs());
 
       AST2C ast2c;
       union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
@@ -698,6 +700,7 @@ namespace Sass {
       ExternalCallable* def = Cast<ExternalCallable>(ctx.varRoot.getFunction(fidx));
       Sass_Function_Entry c_function = def->function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
+      EnvScope scoped(ctx.varRoot, def->idxs());
 
       AST2C ast2c;
       union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);

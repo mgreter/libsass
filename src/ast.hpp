@@ -1526,6 +1526,8 @@ namespace Sass {
 
     ADD_PROPERTY(Sass_Function_Entry, function);
 
+    ADD_POINTER(IDXS*, idxs);
+
   public:
 
     ExternalCallable(
