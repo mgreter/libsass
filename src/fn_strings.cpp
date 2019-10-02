@@ -74,6 +74,12 @@ namespace Sass {
 
       BUILT_IN_FN(quote)
       {
+        if (auto col = Cast<Color_RGBA>(arguments[0])) {
+          if (!col->disp().empty()) {
+            return SASS_MEMORY_NEW(String_Constant,
+              arguments[0]->pstate(), col->disp(), true);
+          }
+        }
         String_Constant* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
         if (string->hasQuotes()) return string;
         return SASS_MEMORY_NEW(String_Constant,

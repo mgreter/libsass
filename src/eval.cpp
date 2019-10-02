@@ -2425,13 +2425,13 @@ namespace Sass {
       }
       // std::cerr << "setuop cidx bind " << rule << "\n";
 
-      if (!rule || !rule->has_content()) {
-        callStackFrame frame(*ctx.logger,
-          Backtrace(node->content()->pstate()));
-        throw Exception::SassRuntimeException2(
-          "Mixin doesn't accept a content block.",
-          *ctx.logger, node->pstate());
-      }
+      // if (!rule || !rule->has_content()) {
+      //   callStackFrame frame(*ctx.logger,
+      //     Backtrace(node->content()->pstate()));
+      //   throw Exception::SassRuntimeException2(
+      //     "Mixin doesn't accept a content block.",
+      //     *ctx.logger, node->pstate());
+      // }
     }
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
