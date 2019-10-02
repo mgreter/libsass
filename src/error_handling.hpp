@@ -21,12 +21,13 @@ namespace Sass {
 
   namespace Exception {
 
-    extern sass::string def_msg;
-    extern sass::string def_op_msg;
-    extern sass::string def_op_null_msg;
-    extern sass::string def_nesting_limit;
+    const sass::string def_msg("Invalid sass detected");
+    const sass::string def_op_null_msg("Invalid null operation");
+    const sass::string def_nesting_limit("Code too deeply neested");
 
-    extern sass::string msg_recursion_limit;
+    const sass::string msg_recursion_limit =
+      "Too deep recursion detected. This can be caused by too deep level nesting.\n"
+      "LibSass will abort here in order to avoid a possible stack overflow.\n";
 
     class Base : public std::runtime_error {
       protected:
@@ -137,7 +138,7 @@ namespace Sass {
       protected:
         sass::string msg;
       public:
-        OperationError(sass::string msg = def_op_msg)
+        OperationError(sass::string msg = sass::string("Undefined operation"))
         : std::runtime_error(msg.c_str()), msg(msg)
         {};
       public:

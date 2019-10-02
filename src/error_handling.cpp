@@ -8,19 +8,11 @@
 #include "error_handling.hpp"
 
 #include <iostream>
+#include <string.h>
 
 namespace Sass {
 
   namespace Exception {
-
-    sass::string def_msg("Invalid sass detected");
-    sass::string def_op_msg("Undefined operation");
-    sass::string def_op_null_msg("Invalid null operation");
-    sass::string def_nesting_limit("Code too deeply neested");
-
-    sass::string msg_recursion_limit =
-      "Too deep recursion detected. This can be caused by too deep level nesting.\n"
-      "LibSass will abort here in order to avoid a possible stack overflow.\n";
 
     Base::Base(SourceSpan pstate, sass::string msg, Backtraces traces)
     : std::runtime_error(msg.c_str()), msg(msg),
@@ -100,7 +92,7 @@ namespace Sass {
     UndefinedOperation::UndefinedOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op)
     : OperationError(), lhs(lhs), rhs(rhs), op(op)
     {
-      msg = def_op_msg + " \"" +
+      msg = "Undefined operation \"" +
         lhs->to_string({ NESTED, 5 }) +
         " " + sass_op_separator(op) + " " +
         rhs->to_string({ TO_SASS, 5 }) +

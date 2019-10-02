@@ -2,6 +2,12 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#if defined (_MSC_VER) // Visual studio
+#define thread_local __declspec( thread )
+#elif defined (__GCC__) // GCC
+#define thread_local __thread
+#endif
+
 #ifdef _WIN32
 # ifdef __MINGW32__
 #  ifndef off64_t

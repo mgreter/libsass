@@ -112,7 +112,7 @@ namespace Sass {
     ~MemoryPool() {
       // The memory will not be used anymore
       // If you kill the pool to early go figure
-      // std::cerr << "MEMORY POOL DESTRUCTOR\n";
+      // std::cerr << "MEMORY POOL DESTROYED\n";
       // Cant just throw them out, some might still want
       // to be destructed. Those will fail greatly.
       for (auto arena : arenas) {

@@ -17,7 +17,16 @@ namespace Sass {
 
   void deallocateMem(void* ptr, size_t size)
   {
+
+    // It seems thread_local variable might be discharged!?
+    // But the destructors of e.g. static strings is still
+    // called, although their memory was discharged too.
+    // Fine with me as long as address sanitizer is happy.
+    if (pool == nullptr) { return; }
+    if (allocations == 0) { return; }
+
     pool->deallocate(ptr);
+    // ToDo: change to empty()
     if (--allocations == 0) {
       delete pool;
       pool = nullptr;
@@ -27,9 +36,10 @@ namespace Sass {
 
   void* allocateMem(size_t size)
   {
-    if (allocations++ == 0) {
+    if (pool == nullptr) {
       pool = new MemoryPool();
     }
+    allocations++;
     return pool->allocate(size);
   }
 
