@@ -2028,10 +2028,18 @@ namespace Sass {
 
           if (compound->length() != 1) {
 
-            std::cerr <<
-              "compound selectors may no longer be extended.\n"
-              "Consider `@extend ${compound.components.join(', ')}` instead.\n"
-              "See http://bit.ly/ExtendCompound for details.\n";
+            sass::sstream sels; bool addComma = false;
+            sels << "Compound selectors may no longer be extended.\n";
+            sels << "Consider `@extend ";
+            for (auto sel : compound->elements()) {
+              if (addComma) sels << ", ";
+              sels << sel->to_sass();
+              addComma = true;
+            }
+            sels << "` instead.\n";
+            sels << "See http://bit.ly/ExtendCompound for details.";
+
+            warning(sels.str(), *ctx.logger, compound->pstate());
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
@@ -2122,7 +2130,7 @@ namespace Sass {
     // The copy is needed for parent reference evaluation
     // dart-sass stores it as `originalSelector` member
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
-    ctx.extender.addSelector(evaled, mediaStack.back());
+      ctx.extender.addSelector(evaled, mediaStack.back());
 
     BlockObj blk = SASS_MEMORY_NEW(Block, SourceSpan::fake(""));
     blk->is_root(blockStack.back()->is_root());
@@ -2425,13 +2433,14 @@ namespace Sass {
       }
       // std::cerr << "setuop cidx bind " << rule << "\n";
 
-      // if (!rule || !rule->has_content()) {
-      //   callStackFrame frame(*ctx.logger,
-      //     Backtrace(node->content()->pstate()));
-      //   throw Exception::SassRuntimeException2(
-      //     "Mixin doesn't accept a content block.",
-      //     *ctx.logger, node->pstate());
-      // }
+      if (!rule || !rule->has_content()) {
+        debug_ast(rule);
+        callStackFrame frame(*ctx.logger,
+          Backtrace(node->content()->pstate()));
+        throw Exception::SassRuntimeException2(
+          "Mixin doesn't accept a content block.",
+          *ctx.logger, node->pstate());
+      }
     }
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, node->pstate());

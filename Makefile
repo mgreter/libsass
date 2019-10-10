@@ -16,13 +16,23 @@ CFLAGS   ?= -Wall
 CXXFLAGS ?= -Wall
 LDFLAGS  ?= -Wall
 ifndef COVERAGE
-  CFLAGS   += -O2
-  CXXFLAGS += -O2
-  LDFLAGS  += -O2
+  CFLAGS   += -O3 -pipe -DNDEBUG -fomit-frame-pointer
+  CXXFLAGS += -O3 -pipe -DNDEBUG -fomit-frame-pointer
+  LDFLAGS  += -O3 -pipe -DNDEBUG -fomit-frame-pointer
 else
   CFLAGS   += -O1 -fno-omit-frame-pointer
   CXXFLAGS += -O1 -fno-omit-frame-pointer
   LDFLAGS  += -O1 -fno-omit-frame-pointer
+endif
+ifeq "$(LIBSASS_GPO)" "generate"
+  CFLAGS   += -fprofile-instr-generate
+  CXXFLAGS += -fprofile-instr-generate
+  LDFLAGS  += -fprofile-instr-generate -Wl,-fprofile-instr-generate
+endif
+ifeq "$(LIBSASS_GPO)" "use"
+  CFLAGS   += -fprofile-use
+  CXXFLAGS += -fprofile-use
+  LDFLAGS  += -fprofile-use -Wl,-fprofile-instr-use
 endif
 CAT ?= $(if $(filter $(OS),Windows_NT),type,cat)
 

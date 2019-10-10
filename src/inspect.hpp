@@ -98,27 +98,33 @@ namespace Sass {
     // parameters and arguments
     // virtual void operator()(Argument*) override;
     // selectors
-    virtual void operator()(PlaceholderSelector*) override;
-    virtual void operator()(ClassSelector*) override;
     // virtual void operator()(SelectorComponent*);
     virtual void operator()(SelectorCombinator*) override;
     virtual void operator()(CompoundSelector*) override;
+    virtual void operator()(ComplexSelector*) override;
     virtual void operator()(SelectorList*) override;
 
     virtual void operator()(Trace*) override;
 
+    virtual void operator()(PlaceholderSelector*) override;
+    virtual void operator()(AttributeSelector*) override;
+    virtual void operator()(PseudoSelector*) override;
+    virtual void operator()(ClassSelector*) override;
+    virtual void operator()(TypeSelector*) override;
+    virtual void operator()(IDSelector*) override;
 
     // Implement those first without override
+    void visitPlaceholderSelector(PlaceholderSelector* placeholder) override;
     void visitAttributeSelector(AttributeSelector* attribute) override;
+    void visitPseudoSelector(PseudoSelector* pseudo) override;
     void visitClassSelector(ClassSelector* klass) override;
+    void visitTypeSelector(TypeSelector* type) override;
+    void visitIDSelector(IDSelector* id) override;
+
     void visitComplexSelector(ComplexSelector* complex) override;
     void visitCompoundSelector(CompoundSelector* compound) override;
     void visitSelectorCombinator(SelectorCombinator* combinator) override;
-    void visitIDSelector(IDSelector* id) override;
-    void visitPlaceholderSelector(PlaceholderSelector* placeholder) override;
-    void visitPseudoSelector(PseudoSelector* pseudo) override;
     void visitSelectorList(SelectorList* list) override;
-    void visitTypeSelector(TypeSelector* type) override;
 
 
 

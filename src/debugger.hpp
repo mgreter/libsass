@@ -69,6 +69,15 @@ inline std::string debug_vec(Extension& ext) {
   return out.str();
 }
 
+inline std::string debug_vec(sass::vector<ComplexSelectorObj> vec) {
+  std::stringstream out;
+  out << "[";
+  SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, SourceSpan::fake("asd"), vec);
+  out << slist->to_css();
+  out << "]";
+  return out.str();
+}
+
 template <class T>
 inline std::string debug_vec(sass::vector<T> vec) {
   std::stringstream out;

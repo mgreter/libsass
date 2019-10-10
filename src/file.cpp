@@ -82,6 +82,7 @@ namespace Sass {
     }
 
 
+    /* This might not compile on older clang */
     static thread_local std::unordered_map<
       sass::string, bool> cached;
 

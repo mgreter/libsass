@@ -996,6 +996,10 @@ namespace Sass {
   {
   }
 
+  bool IncludeRule::has_content() {
+    return !content_.isNull();
+  }
+
   ContentBlock::ContentBlock(
     const SourceSpan& pstate,
     ArgumentDeclaration* arguments,

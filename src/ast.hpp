@@ -1258,6 +1258,8 @@ namespace Sass {
       ContentBlock* content = nullptr,
       Block* block = nullptr);
 
+    bool has_content() override final;
+
     ATTACH_CRTP_PERFORM_METHODS();
   };
 

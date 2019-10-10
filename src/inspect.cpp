@@ -1013,11 +1013,6 @@ namespace Sass {
     append_token("null", n);
   }
 
-  void Inspect::operator()(ClassSelector* s)
-  {
-    s->accept(*this);
-  }
-
   void Inspect::operator()(PlaceholderSelector* node)
   {
     if (output_style() == INSPECT) {
@@ -1036,10 +1031,40 @@ namespace Sass {
     visitCompoundSelector(sel);
   }
 
+  void Inspect::operator()(ComplexSelector* sel)
+  {
+    visitComplexSelector(sel);
+  }
+
   void Inspect::operator()(SelectorCombinator* sel)
   {
     // entry point is listize
     visitSelectorCombinator(sel);
+  }
+
+  void Inspect::operator()(AttributeSelector* sel)
+  {
+    visitAttributeSelector(sel);
+  }
+
+  void Inspect::operator()(PseudoSelector* sel)
+  {
+    visitPseudoSelector(sel);
+  }
+
+  void Inspect::operator()(ClassSelector* sel)
+  {
+    visitClassSelector(sel);
+  }
+
+  void Inspect::operator()(TypeSelector* sel)
+  {
+    visitTypeSelector(sel);
+  }
+
+  void Inspect::operator()(IDSelector* sel)
+  {
+    visitIDSelector(sel);
   }
 
 }
