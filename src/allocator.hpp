@@ -131,6 +131,7 @@ namespace Sass {
     typedef std::basic_string<char, std::char_traits<char>, SassAllocator<char>> string;
     typedef std::basic_stringstream<char, std::char_traits<char>, SassAllocator<char>> sstream;
 #else
+    template <typename T> using vector = std::vector<T>;
     typedef std::string string;
     typedef std::stringstream sstream;
 #endif

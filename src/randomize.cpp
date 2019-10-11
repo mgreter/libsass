@@ -30,9 +30,14 @@ namespace Sass {
   // Creates one true random number to seed us
   uint32_t getHashSeed()
   {
-    // Lets hope this is indeed thread safe
-    static uint32_t seed = readHashSeed();
-    return seed; // static seed per thread
+    #ifdef EMSCRIPTEN
+      // Using std::random_device rd did not work on windows
+      return 0xdeadbeef;
+    #else
+      // Lets hope this is indeed thread safe
+      static uint32_t seed = readHashSeed();
+      return seed; // static seed per thread
+    #endif
   }
 
   std::mt19937& getRng()

@@ -344,6 +344,56 @@ lib-opts-static:
 lib-opts-shared:
 	@echo -L"$(SASS_LIBSASS_PATH)/lib -lsass"
 
+js: static
+	emcc lib/libsass.a -o lib/libsass.js \
+		-O3 \
+		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s WASM=0 \
+		-s ENVIRONMENT=node \
+		-s NODERAWFS=1 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		--memory-init-file 0
+
+wasm: static
+	emcc lib/libsass.a -o lib/libsass.wasm \
+		-O3 \
+		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s EXTRA_EXPORTED_RUNTIME_METHODS=@exported_runtime_methods.json \
+		-s WASM=1 \
+		-s ENVIRONMENT=node \
+		-s NODERAWFS=1 \
+		-s ASSERTIONS=1 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s EMTERPRETIFY=1 \
+		-s EMTERPRETIFY_ASYNC=1 \
+		-s EMTERPRETIFY_WHITELIST=@emterpreter_whitelist.json \
+		--memory-init-file 0
+
+js-debug: static
+	emcc lib/libsass.a -o lib/libsass.js \
+		-O0 \
+		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s EXTRA_EXPORTED_RUNTIME_METHODS=@exported_runtime_methods.json \
+		-s WASM=0 \
+		-s ENVIRONMENT=node \
+		-s NODERAWFS=1 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s LEGACY_VM_SUPPORT=1 \
+		-s EMTERPRETIFY=1 \
+		-s EMTERPRETIFY_ASYNC=1 \
+		-s EMTERPRETIFY_WHITELIST=@emterpreter_whitelist.json \
+		-s ASSERTIONS=1 \
+		-s SAFE_HEAP=1 \
+		-s DEMANGLE_SUPPORT=1 \
+		--profiling-funcs \
+		--minify 0 \
+		--memory-init-file 0
+
 .PHONY: all static shared sassc \
         version install-headers \
         clean clean-all clean-objects \

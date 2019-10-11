@@ -83,7 +83,7 @@ namespace Sass {
 
 
     /* This might not compile on older clang */
-    static thread_local std::unordered_map<
+    static std::unordered_map<
       sass::string, bool> cached;
 
     // test if path exists and is a file
@@ -230,7 +230,7 @@ namespace Sass {
     sass::string join_paths(sass::string l, sass::string r)
     {
 
-      #ifdef _WIN32
+      #if defined _WIN32 || defined EMSCRIPTEN
         // convert Windows backslashes to URL forward slashes
         replace(l.begin(), l.end(), '\\', '/');
         replace(r.begin(), r.end(), '\\', '/');

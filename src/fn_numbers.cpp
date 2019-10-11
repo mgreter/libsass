@@ -26,36 +26,6 @@ namespace Sass {
 
   namespace Functions {
 
-    #ifdef __MINGW32__
-      uint64_t GetSeed()
-      {
-        HCRYPTPROV hp = 0;
-        BYTE rb[8];
-        CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-        CryptGenRandom(hp, sizeof(rb), rb);
-        CryptReleaseContext(hp, 0);
-
-        uint64_t seed;
-        memcpy(&seed, &rb[0], sizeof(seed));
-
-        return seed;
-      }
-    #else
-      uint64_t GetSeed()
-      {
-        std::random_device rd;
-        return rd();
-      }
-    #endif
-
-    // note: the performance of many implementations of
-    // random_device degrades sharply once the entropy pool
-    // is exhausted. For practical use, random_device is
-    // generally only used to seed a PRNG such as mt19937.
-    static std::mt19937 rand(static_cast<unsigned int>(GetSeed()));
-
-
-
     namespace Math {
 
       BUILT_IN_FN(round)
