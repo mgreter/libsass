@@ -23,7 +23,7 @@
 #include "c2ast.hpp"
 #include "context.hpp"
 #include "backtrace.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "sass_context.hpp"
 #include "color_maps.hpp"
 #include "sass_functions.hpp"
@@ -2434,7 +2434,7 @@ namespace Sass {
       // std::cerr << "setuop cidx bind " << rule << "\n";
 
       if (!rule || !rule->has_content()) {
-        debug_ast(rule);
+        // debug_ast(rule);
         callStackFrame frame(*ctx.logger,
           Backtrace(node->content()->pstate()));
         throw Exception::SassRuntimeException2(

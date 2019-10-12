@@ -22,7 +22,7 @@
 #include "parser_css.hpp"
 
 #include "permutate.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "logger.hpp"
 
 namespace Sass {

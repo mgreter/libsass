@@ -2,7 +2,7 @@
 #include "fn_utils.hpp"
 #include "fn_maps.hpp"
 #include "ast.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 
 namespace Sass {
 

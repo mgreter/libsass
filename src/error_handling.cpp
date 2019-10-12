@@ -3,7 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "backtrace.hpp"
 #include "error_handling.hpp"
 

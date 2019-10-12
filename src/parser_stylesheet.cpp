@@ -10,7 +10,7 @@
 #include "character.hpp"
 #include "util_string.hpp"
 #include "color_maps.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "strings.hpp"
 
 namespace Sass {
@@ -1083,7 +1083,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(StaticImport, SourceSpan::fake("[pstateJ]"),
           sc2, queries.first, queries.second);
       }
-      debug_ast(url);
+      // debug_ast(url);
       std::cerr << "no schema?"; exit(1);
       // std::cerr << "static " << url->length() << "\n";
       // return asd;

@@ -6,7 +6,7 @@
 #include "character.hpp"
 #include "permutate.hpp"
 #include "util_string.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "ast_selectors.hpp"
 #include "dart_helpers.hpp"
 

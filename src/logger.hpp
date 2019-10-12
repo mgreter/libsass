@@ -53,7 +53,7 @@ namespace Sass {
     void debug(sass::string message) const override final;
     void error(sass::string message) const override final;
 
-    ~StdLogger() override final {};
+    ~StdLogger() override {};
 
   };
 
@@ -66,7 +66,7 @@ namespace Sass {
     void debug(sass::string message) const override final {};
     void error(sass::string message) const override final {};
 
-    ~NullLogger() override final {};
+    ~NullLogger() override {};
 
   };
 

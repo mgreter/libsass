@@ -8,7 +8,7 @@
 #include "character.hpp"
 #include "util_string.hpp"
 #include "color_maps.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 
 namespace Sass {
 

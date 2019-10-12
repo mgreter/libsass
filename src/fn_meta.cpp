@@ -6,7 +6,7 @@
 #include "eval.hpp"
 #include "fn_meta.hpp"
 #include "fn_utils.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 
 namespace Sass {
 

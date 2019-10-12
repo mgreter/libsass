@@ -8,7 +8,7 @@
 
 #include "cssize.hpp"
 #include "context.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 
 namespace Sass {
 

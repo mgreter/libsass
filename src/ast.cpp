@@ -3,7 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "parser_scss.hpp"
 #include "parser_at_root_query.hpp"
 #include "strings.hpp"
@@ -613,7 +613,7 @@ namespace Sass {
     if (!Cast<CssMediaRule>(node)) {
       if (!Cast<CssParentNode>(node)) {
         std::cerr << "has non CssParentNode\n";
-        debug_ast(node);
+        // debug_ast(node);
       }
     }
     if (rule() && Cast<CssStyleRule>(node)) return !include();

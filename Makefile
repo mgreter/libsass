@@ -3,6 +3,7 @@ CC       ?= cc
 CXX      ?= c++
 RM       ?= rm -f
 CP       ?= cp -a
+CHDIR    ?= cd
 MKDIR    ?= mkdir
 RMDIR    ?= rmdir
 WINDRES  ?= windres
@@ -214,6 +215,15 @@ debug-shared: shared
 lib:
 	$(MKDIR) lib
 
+lib/wasm: lib
+	$(CHDIR) lib && $(CHDIR) wasm || $(MKDIR) wasm
+
+lib/asmjs: lib
+	$(CHDIR) lib && $(CHDIR) asmjs || $(MKDIR) asmjs
+
+lib/wasmjs: lib
+	$(CHDIR) lib && $(CHDIR) wasmjs || $(MKDIR) wasmjs
+
 lib/libsass.a: $(COBJECTS) $(OBJECTS) | lib
 	$(AR) rcvs $@ $(COBJECTS) $(OBJECTS)
 
@@ -344,34 +354,59 @@ lib-opts-static:
 lib-opts-shared:
 	@echo -L"$(SASS_LIBSASS_PATH)/lib -lsass"
 
-js: static
-	emcc lib/libsass.a -o lib/libsass.js \
-		-O3 \
+# Build WebAssembly with JS glue
+wasmjs: static lib/wasmjs
+	emcc lib/libsass.a -o lib/wasmjs/libsass.js \
+		-O3 --llvm-lto 1 --js-opts 1 --closure 0 \
+		-s MODULARIZE=1 \
+		-s EXPORT_NAME=libsass \
 		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
-		-s WASM=0 \
 		-s ENVIRONMENT=node \
 		-s NODERAWFS=1 \
-		-s NODEJS_CATCH_EXIT=0 \
-		-s DISABLE_EXCEPTION_CATCHING=0 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		--memory-init-file 0
-
-wasm: static
-	emcc lib/libsass.a -o lib/libsass.wasm \
-		-O3 \
-		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
-		-s EXTRA_EXPORTED_RUNTIME_METHODS=@exported_runtime_methods.json \
 		-s WASM=1 \
+		-s STANDALONE_WASM=0 \
+		-s WASM_OBJECT_FILES=0 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s WASM_ASYNC_COMPILATION=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s MALLOC=dlmalloc
+
+# Build asm.js version (most compatible)
+asmjs: static lib/asmjs
+	emcc lib/libsass.a -o lib/asmjs/libsass.js \
+		-O3 --llvm-lto 1 --js-opts 1 --closure 0 \
+		-Wno-almost-asm \
+		-s MODULARIZE=1 \
+		-s EXPORT_NAME=libsass \
+		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
 		-s ENVIRONMENT=node \
 		-s NODERAWFS=1 \
-		-s ASSERTIONS=1 \
-		-s NODEJS_CATCH_EXIT=0 \
+		-s WASM=0 \
+		-s STANDALONE_WASM=0 \
+		-s WASM_OBJECT_FILES=0 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s WASM_ASYNC_COMPILATION=1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
-		-s EMTERPRETIFY=1 \
-		-s EMTERPRETIFY_ASYNC=1 \
-		-s EMTERPRETIFY_WHITELIST=@emterpreter_whitelist.json \
-		--memory-init-file 0
+		-s MALLOC=dlmalloc
+
+# Build standalone WebAssembly
+# Probably needs emsdk-upstream
+wasm: static lib/wasm
+	emcc lib/libsass.a -o lib/wasm/libsass.js \
+		-O3 --llvm-lto 1 --js-opts 1 --closure 0 \
+		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s ENVIRONMENT=node \
+		-s NODERAWFS=1 \
+		-s WASM=1 \
+		-s STANDALONE_WASM=1 \
+		-s WASM_OBJECT_FILES=1 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s WASM_ASYNC_COMPILATION=0
+
+web: wasmjs asmjs
 
 js-debug: static
 	emcc lib/libsass.a -o lib/libsass.js \
@@ -394,7 +429,7 @@ js-debug: static
 		--minify 0 \
 		--memory-init-file 0
 
-.PHONY: all static shared sassc \
+.PHONY: all web static shared sassc \
         version install-headers \
         clean clean-all clean-objects \
         debug debug-static debug-shared \

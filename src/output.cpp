@@ -5,7 +5,7 @@
 #include "ast.hpp"
 #include "output.hpp"
 #include "util.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 #include "charcode.hpp"
 #include "character.hpp"
 

@@ -8,7 +8,7 @@
 #include "stylesheet.hpp"
 #include "interpolation.hpp"
 #include "context.hpp"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 
 namespace Sass {
 

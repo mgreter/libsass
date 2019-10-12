@@ -18,7 +18,7 @@
 #include "listize.hpp"
 #include "color_maps.hpp"
 #include "utf8/checked.h"
-#include "debugger.hpp"
+// #include "debugger.hpp"
 
 namespace Sass {
 
