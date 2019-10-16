@@ -9,7 +9,7 @@ extern "C" {
 #include "sass.h"
 
 void sass_compile_emscripten(
-  const char *input
+  char *input
 );
 
 struct Sass_Import** sass_importer_emscripten(

@@ -37,6 +37,14 @@ ifeq "$(LIBSASS_GPO)" "use"
 endif
 CAT ?= $(if $(filter $(OS),Windows_NT),type,cat)
 
+ifdef WASM
+  CFLAGS   += -D_WASM
+  CXXFLAGS += -D_WASM
+endif
+
+ifdef WASM
+	UNAME := WebAssembly
+else
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 	UNAME := Cygwin
 else
@@ -50,6 +58,7 @@ ifneq (,$(findstring MINGW32,$(shell uname -s)))
 	UNAME := Windows
 else
 	UNAME := $(shell uname -s)
+endif
 endif
 endif
 endif
@@ -68,8 +77,13 @@ ifdef LIBSASS_VERSION
 	CXXFLAGS += -DLIBSASS_VERSION="\"$(LIBSASS_VERSION)\""
 endif
 
-CXXFLAGS += -std=c++11
-LDFLAGS  += -std=c++11
+ifdef EMSCRIPTEN
+  CXXFLAGS += -std=c++17
+  LDFLAGS  += -std=c++17
+else
+  CXXFLAGS += -std=c++11
+  LDFLAGS  += -std=c++11
+endif
 
 ifeq (Windows,$(UNAME))
 	ifneq ($(BUILD),shared)
@@ -100,11 +114,6 @@ CXXFLAGS += $(EXTRA_CXXFLAGS)
 LDFLAGS  += $(EXTRA_LDFLAGS)
 
 LDLIBS = -lm
-ifneq ($(BUILD),shared)
-	ifneq ($(STATIC_LIBSTDCPP),1)
-		LDLIBS += -lstdc++
-	endif
-endif
 
 # link statically into lib
 # makes it a lot more portable
@@ -128,8 +137,10 @@ endif
 ifneq (Windows,$(UNAME))
 	ifneq (FreeBSD,$(UNAME))
 		ifneq (OpenBSD,$(UNAME))
-			LDFLAGS += -ldl
-			LDLIBS += -ldl
+			ifndef WASM
+				LDFLAGS += -ldl
+				LDLIBS += -ldl
+			endif
 		endif
 	endif
 endif
@@ -176,10 +187,16 @@ ifeq (Windows,$(UNAME))
 		LIB_SHARED  = $(SASS_LIBSASS_PATH)/lib/libsass.dll
 	endif
 else
+ifdef WASM
+	SASSC_BIN = $(SASS_SASSC_PATH)/bin/sassc.wasm
+	SHAREDLIB  = lib/libsass.wasm
+	LIB_SHARED  = $(SASS_LIBSASS_PATH)/lib/libsass.wasm
+else
 ifneq (Cygwin,$(UNAME))
 	CFLAGS   += -fPIC
 	CXXFLAGS += -fPIC
 	LDFLAGS  += -fPIC
+endif
 endif
 endif
 
@@ -188,6 +205,10 @@ OBJECTS = $(addprefix src/,$(SOURCES:.cpp=.o))
 COBJECTS = $(addprefix src/,$(CSOURCES:.c=.o))
 HEADOBJS = $(addprefix src/,$(HPPFILES:.hpp=.hpp.gch))
 RCOBJECTS = $(RESOURCES:.rc=.o)
+
+ifdef WASM
+WASMOBJECTS = src/wasm/libcxxabi_stubs.o
+endif
 
 DEBUG_LVL ?= NONE
 
@@ -224,8 +245,11 @@ lib/asmjs: lib
 lib/wasmjs: lib
 	$(CHDIR) lib && $(CHDIR) wasmjs || $(MKDIR) wasmjs
 
-lib/libsass.a: $(COBJECTS) $(OBJECTS) | lib
-	$(AR) rcvs $@ $(COBJECTS) $(OBJECTS)
+nodejs/dist: 
+	$(CHDIR) nodejs && $(CHDIR) dist || $(MKDIR) dist
+
+lib/libsass.a: $(COBJECTS) $(OBJECTS) $(WASMOBJECTS) | lib
+	$(AR) rcvs $@ $(COBJECTS) $(OBJECTS) $(WASMOBJECTS)
 
 lib/libsass.so: $(COBJECTS) $(OBJECTS) | lib
 	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(LDLIBS)
@@ -237,6 +261,9 @@ lib/libsass.dylib: $(COBJECTS) $(OBJECTS) | lib
 lib/libsass.dll: $(COBJECTS) $(OBJECTS) $(RCOBJECTS) | lib
 	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) \
 	-s -Wl,--subsystem,windows,--out-implib,lib/libsass.a
+
+lib/libsass.wasm: $(COBJECTS) $(OBJECTS) $(WASMOBJECTS) | lib
+	$(CXX) $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(WASMOBJECTS) $(LDLIBS)
 
 $(RCOBJECTS): %.o: %.rc
 	$(WINDRES) -i $< -o $@
@@ -306,10 +333,12 @@ $(SASSC_BIN): $(BUILD)
 	$(MAKE) -C $(SASS_SASSC_PATH) build-$(BUILD)
 
 sassc: $(SASSC_BIN)
+ifndef WASM
 	$(SASSC_BIN) -v
 
 version: $(SASSC_BIN)
 	$(SASSC_BIN) -v
+endif
 
 test: test_build
 
@@ -334,7 +363,7 @@ test_interactive: $(SASSC_BIN)
 	--interactive $(LOG_FLAGS) $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)
 
 clean-objects: | lib
-	-$(RM) lib/*.a lib/*.so lib/*.dll lib/*.dylib lib/*.la
+	-$(RM) lib/*.a lib/*.so lib/*.dll lib/*.dylib lib/*.la lib/*.wasm
 	-$(RMDIR) lib
 clean: clean-objects
 	$(RM) $(CLEANUPS)
@@ -361,9 +390,11 @@ wasmjs: static lib/wasmjs
 		-s MODULARIZE=1 \
 		-s EXPORT_NAME=libsass \
 		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'stringToUTF8']" \
 		-s ENVIRONMENT=node \
 		-s NODERAWFS=1 \
 		-s WASM=1 \
+		-s ASSERTIONS=0 \
 		-s STANDALONE_WASM=0 \
 		-s WASM_OBJECT_FILES=0 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
@@ -380,8 +411,10 @@ asmjs: static lib/asmjs
 		-s MODULARIZE=1 \
 		-s EXPORT_NAME=libsass \
 		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'stringToUTF8']" \
 		-s ENVIRONMENT=node \
 		-s NODERAWFS=1 \
+		-s ASSERTIONS=0 \
 		-s WASM=0 \
 		-s STANDALONE_WASM=0 \
 		-s WASM_OBJECT_FILES=0 \
@@ -397,6 +430,7 @@ wasm: static lib/wasm
 	emcc lib/libsass.a -o lib/wasm/libsass.js \
 		-O3 --llvm-lto 1 --js-opts 1 --closure 0 \
 		-s EXPORTED_FUNCTIONS="['_sass_compile_emscripten']" \
+		-s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'stringToUTF8']" \
 		-s ENVIRONMENT=node \
 		-s NODERAWFS=1 \
 		-s WASM=1 \
@@ -407,6 +441,58 @@ wasm: static lib/wasm
 		-s WASM_ASYNC_COMPILATION=0
 
 web: wasmjs asmjs
+
+nodejs/src/entrypoint.o: %.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+nodejs/src/functions.o: %.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+nodejs/src/importers.o: %.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+# asmjs wasmjs
+nodejs: nodejs/dist/libsass.js nodejs/dist/libsass.asm.js
+
+nodejs/dist/libsass.js: lib/libsass.a nodejs/src/entrypoint.o nodejs/src/functions.o nodejs/src/importers.o
+	em++ nodejs/src/entrypoint.o nodejs/src/functions.o nodejs/src/importers.o lib/libsass.a -o nodejs/dist/libsass.js \
+		-O3 --llvm-lto 1 --js-opts 1 --closure 0 \
+		--llvm-lto 1 \
+		--js-opts 2 \
+		-Wno-almost-asm \
+		-s WASM=1 \
+		-s ENVIRONMENT=node \
+		-s NODERAWFS=1 \
+		-s ASSERTIONS=0 \
+		-s STANDALONE_WASM=0 \
+		-s WASM_OBJECT_FILES=0 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s WASM_ASYNC_COMPILATION=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s MALLOC=dlmalloc \
+		--bind \
+		--js-library nodejs/src/workaround8806.js
+		
+nodejs/dist/libsass.asm.js: lib/libsass.a nodejs/src/entrypoint.o nodejs/src/functions.o nodejs/src/importers.o
+	em++ nodejs/src/entrypoint.o nodejs/src/functions.o nodejs/src/importers.o lib/libsass.a -o nodejs/dist/libsass.asm.js \
+		-O3 --llvm-lto 1 --js-opts 1 --closure 0 \
+		--llvm-lto 1 \
+		--js-opts 2 \
+		-Wno-almost-asm \
+		-s WASM=0 \
+		-s ENVIRONMENT=node \
+		-s NODERAWFS=1 \
+		-s ASSERTIONS=0 \
+		-s STANDALONE_WASM=0 \
+		-s WASM_OBJECT_FILES=0 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+		-s NODEJS_CATCH_EXIT=0 \
+		-s WASM_ASYNC_COMPILATION=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s MALLOC=dlmalloc \
+		--bind \
+		--js-library nodejs/src/workaround8806.js
 
 js-debug: static
 	emcc lib/libsass.a -o lib/libsass.js \

@@ -7,6 +7,8 @@
 #include "utf8_string.hpp"
 #include "sass/functions.h"
 
+#ifndef DISABLE_PLUGINS
+
 #ifdef _WIN32
 
   #define LOAD_LIB(var, path) HMODULE var = LoadLibraryW(UTF_8::convert_to_utf16(path).c_str())
@@ -23,6 +25,8 @@
   #define LOAD_LIB(var, path) void* var = dlopen(path.c_str(), RTLD_LAZY)
   #define LOAD_LIB_FN(type, var, name) type var = (type) dlsym(plugin, name)
   #define CLOSE_LIB(var) dlclose(var)
+
+#endif
 
 #endif
 
@@ -54,5 +58,6 @@ namespace Sass {
   };
 
 }
+
 
 #endif

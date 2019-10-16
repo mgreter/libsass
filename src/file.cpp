@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <vector>
 #include <algorithm>
+#include <stdlib.h>
 #include <unordered_map>
 #include <sys/stat.h>
 #include "file.hpp"
@@ -53,6 +54,15 @@ inline static Sass::sass::string wstring_to_string(const std::wstring &wstr)
 # endif
 #endif
 
+#ifdef _WASM
+inline static Sass::sass::string get_cwd_from_env()
+{
+  char* value = getenv("PWD");
+    if (!value) return "/";
+  return value;
+}
+#endif
+
 namespace Sass {
   namespace File {
 
@@ -62,7 +72,12 @@ namespace Sass {
     sass::string get_cwd()
     {
       const size_t wd_len = 4096;
-      #ifndef _WIN32
+#ifdef _WASM
+      // the WASI does not implement getcwd() yet --
+      // check the environment variables or default to "/".
+      sass::string cwd(get_cwd_from_env());
+#else
+#ifndef _WIN32
         char wd[wd_len];
         char* pwd = getcwd(wd, wd_len);
         // we should check error for more detailed info (e.g. ENOENT)
@@ -76,8 +91,9 @@ namespace Sass {
         sass::string cwd = wstring_to_string(pwd).c_str();
         //convert backslashes to forward slashes
         replace(cwd.begin(), cwd.end(), '\\', '/');
-      #endif
-      if (cwd[cwd.length() - 1] != '/') cwd += '/';
+#endif
+#endif
+        if (cwd[cwd.length() - 1] != '/') cwd += '/';
       return cwd;
     }
 

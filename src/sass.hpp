@@ -40,6 +40,11 @@
 # endif
 #endif
 
+// disable plugins for wasm builds
+#ifdef _WASM
+# define DISABLE_PLUGINS
+#endif
+
 // path separation char
 #ifndef PATH_SEP
 # ifdef _WIN32

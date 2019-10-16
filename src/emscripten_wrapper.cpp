@@ -7,10 +7,12 @@
 #include <emscripten.h>
 
 void sass_compile_emscripten(
-  const char *input2
+  char *input
 ) {
 
-  const char* input = "bolt-bench/bolt-bench.scss";
+  std::cerr << "Compiling [" << input << "]\n";
+
+  // const char* input = "bolt-bench/bolt-bench.scss";
 
   // create the file context and get all related structs
   struct Sass_File_Context* file_ctx = sass_make_file_context(input);
