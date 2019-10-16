@@ -12,6 +12,7 @@ if [ "x$CONTINUOUS_INTEGRATION" == "x" ]; then export CONTINUOUS_INTEGRATION=tru
 if [ "x$TRAVIS_BUILD_DIR" == "x" ]; then export TRAVIS_BUILD_DIR=$(pwd); fi
 if [ "x$SASS_SASSC_PATH" == "x" ]; then export SASS_SASSC_PATH=$(pwd)/sassc; fi
 if [ "x$SASS_SPEC_PATH" == "x" ]; then export SASS_SPEC_PATH=$(pwd)/sass-spec; fi
+if [ "x$LIBSASS_SPEC_PATH" == "x" ]; then export LIBSASS_SPEC_PATH=$(pwd)/sass-spec/libsass-spec; fi
 
 # try to get the os name from uname (and filter via perl - probably not the most portable way?)
 if [ "x$TRAVIS_OS_NAME" == "x" ]; then export TRAVIS_OS_NAME=`uname -s | perl -ne 'print lc \$1 if\(/^([a-zA-Z]+)/'\)`; fi
@@ -69,6 +70,7 @@ echo SASS_LIBSASS_PATH: $SASS_LIBSASS_PATH
 echo TRAVIS_BUILD_DIR: $TRAVIS_BUILD_DIR
 echo SASS_SASSC_PATH: $SASS_SASSC_PATH
 echo SASS_SPEC_PATH: $SASS_SPEC_PATH
+echo LIBSASS_SPEC_PATH: $LIBSASS_SPEC_PATH
 echo INSTALL_LOCATION: $PREFIX
 
 if [ "x$AUTOTOOLS" == "xyes" ]; then
