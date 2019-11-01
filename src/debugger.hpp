@@ -685,8 +685,8 @@ inline void debug_ast(AST_Node* node, sass::string ind, Env* env)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     if (block->block()) for(const Statement_Obj& i : block->block()->elements()) { debug_ast(i, ind + " ", env); }
-  } else if (Cast<While>(node)) {
-    While* block = Cast<While>(node);
+  } else if (Cast<WhileRule>(node)) {
+    WhileRule* block = Cast<WhileRule>(node);
     std::cerr << ind << "While " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
