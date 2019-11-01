@@ -139,7 +139,7 @@ namespace Sass {
       {
         // parent selector only allowed at start
         // upcoming Sass may allow also trailing
-        ParserState state(pstate);
+        SourceSpan state(pstate);
         SimpleSelectorObj prev = (*seq)[seq->length()-1];
         sass::string sel(prev->to_string({ NESTED, 5 }));
         sass::string found("&");
