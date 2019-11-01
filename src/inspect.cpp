@@ -971,7 +971,7 @@ namespace Sass {
     append_string("]");
   }
 
-  void Inspect::operator()(Pseudo_Selector* s)
+  void Inspect::operator()(PseudoSelector* s)
   {
 
     if (s->name() != "") {
