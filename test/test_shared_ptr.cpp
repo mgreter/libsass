@@ -15,7 +15,7 @@ class TestObj : public Sass::SharedObj {
  public:
   TestObj(bool *destroyed) : destroyed_(destroyed) {}
   ~TestObj() { *destroyed_ = true; }
-  std::string to_string() const {
+  sass::string to_string() const {
     std::ostringstream result;
     result << "refcount=" << refcount << " destroyed=" << *destroyed_;
     return result.str();
@@ -137,7 +137,7 @@ bool TestDetachNull() {
 
 class EmptyTestObj : public Sass::SharedObj {
   public:
-    std::string to_string() const { return ""; }
+    sass::string to_string() const { return ""; }
 };
 
 bool TestComparisonWithSharedPtr() {
@@ -170,8 +170,8 @@ bool TestComparisonWithNullptr() {
   } \
 
 int main(int argc, char **argv) {
-  std::vector<std::string> passed;
-  std::vector<std::string> failed;
+  sass::vector<sass::string> passed;
+  sass::vector<sass::string> failed;
   TEST(TestOneSharedPtr);
   TEST(TestTwoSharedPtrs);
   TEST(TestSelfAssignment);

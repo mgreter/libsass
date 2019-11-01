@@ -141,9 +141,9 @@ namespace Sass {
         // upcoming Sass may allow also trailing
         ParserState state(pstate);
         SimpleSelectorObj prev = (*seq)[seq->length()-1];
-        std::string sel(prev->to_string({ NESTED, 5 }));
-        std::string found("&");
-        if (lex < identifier >()) { found += std::string(lexed); }
+        sass::string sel(prev->to_string({ NESTED, 5 }));
+        sass::string found("&");
+        if (lex < identifier >()) { found += sass::string(lexed); }
         // ToDo: parser should throw parser exceptions
         error("Invalid CSS after \"" + sel + "\": expected \"{\", was \"" + found + "\"\n\n"
           "\"" + found + "\" may only be used at the beginning of a compound selector.", state);
