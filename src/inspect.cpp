@@ -931,7 +931,7 @@ namespace Sass {
     append_string("&");
   }
 
-  void Inspect::operator()(Placeholder_Selector* s)
+  void Inspect::operator()(PlaceholderSelector* s)
   {
     append_token(s->name(), s);
 
