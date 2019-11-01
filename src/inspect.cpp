@@ -245,7 +245,7 @@ namespace Sass {
     append_delimiter();
   }
 
-  void Inspect::operator()(Warning* warning)
+  void Inspect::operator()(WarningRule* warning)
   {
     append_indentation();
     append_token("@warn", warning);
