@@ -1,13 +1,13 @@
-#include "ast_values.hpp"
 // sass.hpp must go before all system headers to get the
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
-
 #include "character.hpp"
 
-namespace Sass {
+namespace Sass
+{
 
-  namespace Character {
+  namespace Character
+  {
 
     const std::bitset<256> tblNewline(
       "00000000000000000000000000000000" // 255 - 224
@@ -86,5 +86,5 @@ namespace Sass {
       "00000000000000000000000000000000" // 31 - 0
     );
 
-  }
-}
+	} // namespace Character
+} // namespace Sass

@@ -60,7 +60,11 @@ namespace Sass {
 
   public:
 
-    sass::string traces_to_string(StackTraces traces, sass::string indent = "  ", bool showPos = true, size_t showTraces = sass::string::npos);
+    void writeStackTraces(sass::ostream& os,
+													StackTraces traces,
+													sass::string indent = "  ",
+													bool showPos = true,
+													size_t showTraces = sass::string::npos);
 
 
 
@@ -68,7 +72,7 @@ namespace Sass {
 
     Logger(size_t precision, enum Sass_Logger_Style style = SASS_LOGGER_AUTO);
 
-    void format_pstate(sass::sstream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle);
+    void format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle);
 
     static Logger* create(Sass_Context& options);
     /*

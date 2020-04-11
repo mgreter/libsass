@@ -49,6 +49,7 @@ namespace Sass {
   // manages copies of the temporary string references.
   StackTraces convertBackTraces(BackTraces traces)
   {
+    // They convert implicitly, so simply assign them
     return StackTraces(traces.begin(), traces.end());
   }
 
@@ -82,7 +83,7 @@ namespace Sass {
 
     wrap(message, 80, errors);
     StackTraces stack(callStack.begin(), callStack.end());
-    errors << traces_to_string(stack, "    ", true, 0);
+		writeStackTraces(errors, stack, "    ", true, 0);
   }
 
 
@@ -98,14 +99,14 @@ namespace Sass {
     errors << " of " << pstate.getDebugPath() << ':' << STRMLF;
 
     // Might be expensive to call?
-    size_t cols = Terminal::getWidth();
-    size_t width = std::min<size_t>(cols, 80);
+    // size_t cols = Terminal::getWidth();
+    // size_t width = std::min<size_t>(cols, 80);
     wrap(message, 80, errors);
 
     errors << STRMLF;
 
     StackTraces stack(callStack.begin(), callStack.end());
-    errors << traces_to_string(stack, "    ", true);
+		writeStackTraces(errors, stack, "    ", true);
 
   }
   /*
@@ -132,7 +133,7 @@ namespace Sass {
 
 
 
-  void Logger::format_pstate(sass::sstream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle)
+  void Logger::format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle)
   {
 
     // ASCII reporting
@@ -316,7 +317,7 @@ namespace Sass {
           Character::isUtf8Continuation), line.end());
       }
 
-      size_t lhs_len, mid_len, rhs_len;
+      size_t lhs_len, mid_len; //, rhs_len;
       // Get the sizes (characters) for each part
       mid_len = pstate.span.column;
       lhs_len = pstate.position.column;
@@ -341,7 +342,7 @@ namespace Sass {
       // Get character length of each part
       lhs_len = utf8::distance(lhs.begin(), lhs.end());
       mid_len = utf8::distance(mid.begin(), mid.end());
-      rhs_len = utf8::distance(rhs.begin(), rhs.end());
+      // rhs_len = utf8::distance(rhs.begin(), rhs.end());
 
       // Report the trace
       msg_stream
@@ -518,10 +519,11 @@ namespace Sass {
   }
   // EO splitLine
 
+  // Print `amount` of `traces` to output stream `os`.
+  void Logger::writeStackTraces(sass::ostream& os, StackTraces traces,
+    sass::string indent, bool showPos, size_t amount)
+	{
 
-  sass::string Logger::traces_to_string(StackTraces traces, sass::string indent, bool showPos, size_t showTraces) {
-
-    sass::sstream ss;
     sass::sstream strm;
     sass::string cwd(File::get_cwd());
 
@@ -575,25 +577,22 @@ namespace Sass {
       // skip functions on error cases (unsure why ruby sass does this)
       // if (trace.caller.substr(0, 6) == ", in f") continue;
 
-      if (showTraces == sass::string::npos || showTraces > 0) {
-        format_pstate(ss, trace.pstate, style);
-        if (showTraces > 0) --showTraces;
+      if (amount == sass::string::npos || amount > 0) {
+        format_pstate(os, trace.pstate, style);
+        if (amount > 0) --amount;
       }
 
       if (showPos) {
-        ss << indent;
-        ss << std::left << std::setfill(' ')
-          << std::setw(max + 2) << traced[i].first;
-        ss << traced[i].second;
-        ss << STRMLF;
+				os << indent;
+				os << std::left << std::setfill(' ')
+           << std::setw(max + 2) << traced[i].first;
+				os << traced[i].second;
+				os << STRMLF;
       }
-
 
     }
 
-    ss << STRMLF;
-
-    return ss.str();
+    os << STRMLF;
 
   }
 

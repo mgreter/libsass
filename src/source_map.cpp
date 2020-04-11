@@ -142,7 +142,10 @@ namespace Sass {
     // adjust the buffer offset
     prepend(Offset(out.buffer));
     // now add the new mappings
-    VECTOR_UNSHIFT(mappings, out.smap.mappings);
+		mappings.insert(mappings.begin(),
+      out.smap.mappings.begin(),
+      out.smap.mappings.end());
+
   }
 
   void SourceMap::append(const OutputBuffer& out)

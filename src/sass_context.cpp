@@ -86,7 +86,7 @@ namespace Sass {
       }
 
       sass::string rel_path(Sass::File::abs2rel(pstate.getPath(), cwd, cwd));
-      logger.errors << logger.traces_to_string(e.traces, "  ");
+			logger.writeStackTraces(logger.errors, e.traces, "  ");
       JsonNode* json_err = json_mkobject();
       json_append_member(json_err, "status", json_mknumber(1));
       json_append_member(json_err, "file", json_mkstring(pstate.getPath()));

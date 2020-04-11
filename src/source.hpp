@@ -65,7 +65,9 @@ namespace Sass {
       return length;
     }
 
-    virtual const char* getPath() const override {
+    // Return the attached source path
+		virtual const char* getPath() const override
+		{
       return path;
     }
 
