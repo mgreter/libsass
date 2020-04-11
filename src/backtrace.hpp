@@ -2,10 +2,9 @@
 #define SASS_BACKTRACE_H
 
 #include <vector>
-#include <sstream>
 #include "file.hpp"
-#include "strings.hpp"
 #include "memory.hpp"
+#include "strings.hpp"
 #include "source_span.hpp"
 
 // During runtime we need stack traces in order to produce meaningful

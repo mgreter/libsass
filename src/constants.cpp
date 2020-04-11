@@ -9,8 +9,6 @@ namespace Sass {
 
   namespace Constants {
 
-    extern const unsigned long MaxCallStack = 1024;
-
     // https://github.com/sass/libsass/issues/592
     // https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
     // https://github.com/sass/sass/issues/1495#issuecomment-61189114
@@ -32,8 +30,7 @@ namespace Sass {
     extern const int UnificationOrder_PseudoElement = 6;
     extern const int UnificationOrder_Placeholder = 7;
 
-    // byte order marks
-    // (taken from http://en.wikipedia.org/wiki/Byte_order_mark)
+    // http://en.wikipedia.org/wiki/Byte_order_mark
     extern const unsigned char utf_8_bom[]      = { 0xEF, 0xBB, 0xBF };
     extern const unsigned char utf_16_bom_be[]  = { 0xFE, 0xFF };
     extern const unsigned char utf_16_bom_le[]  = { 0xFF, 0xFE };

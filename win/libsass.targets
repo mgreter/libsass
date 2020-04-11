@@ -53,7 +53,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\kwd_arg_macros.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\randomize.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\listize.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\logger.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ascii.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\character.hpp" />
@@ -78,7 +77,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\parser_keyframe_selector.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\paths.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\plugins.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\position.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\offset.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\remove_placeholders.hpp" />
@@ -163,10 +161,8 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_at_root_query.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_keyframe_selector.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\plugins.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\source.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\position.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\offset.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\backtrace.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\operators.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\remove_placeholders.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass.cpp" />

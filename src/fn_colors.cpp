@@ -38,14 +38,14 @@ namespace Sass {
       // weight of color2 is given by 1 minus the weight of color1.
       double weightScale = weight->valueInRange(0.0, 100.0,
         logger, pstate, "weight") / 100.0;
-      double normalizedWeight = weightScale * 2 - 1;
+      double normalizedWeight = weightScale * 2.0 - 1.0;
       double alphaDistance = color1->a() - color2->a();
 
       double combinedWeight1 = normalizedWeight * alphaDistance == -1
         ? normalizedWeight : (normalizedWeight + alphaDistance) /
         (1.0 + normalizedWeight * alphaDistance);
-      double weight1 = (combinedWeight1 + 1) / 2;
-      double weight2 = 1 - weight1;
+      double weight1 = (combinedWeight1 + 1.0) / 2.0;
+      double weight2 = 1.0 - weight1;
 
       return SASS_MEMORY_NEW(Color_RGBA, pstate,
         fuzzyRound(color1->r() * weight1 + color2->r() * weight2, logger.epsilon),
@@ -81,7 +81,15 @@ namespace Sass {
         || starts_with(str, "max(");
     }
 
-    double _percentageOrUnitless2(Logger& logger, Number* number, double max, sass::string name, BackTraces traces) {
+    /// Asserts that [number] is a percentage or has no units, and normalizes the
+    /// value.
+    ///
+    /// If [number] has no units, its value is clamped to be greater than `0` or
+    /// less than [max] and returned. If [number] is a percentage, it's scaled to be
+    /// within `0` and [max]. Otherwise, this throws a [SassScriptException].
+    ///
+    /// [name] is used to identify the argument in the error message.
+    double _percentageOrUnitless(Number* number, double max, sass::string name, Logger& traces) {
       double value = 0.0;
       if (!number->hasUnits()) {
         value = number->value();
@@ -90,9 +98,9 @@ namespace Sass {
         value = max * number->value() / 100;
       }
       else {
-        // callStackFrame frame(logger, BackTrace(number->pstate()));
+        // callStackFrame frame(traces, BackTrace(number->pstate()));
         error(name + ": Expected " + number->to_css() +
-          " to have no units or \"%\".", number->pstate(), logger);
+          " to have no units or \"%\".", number->pstate(), traces);
       }
       if (value < 0.0) return 0.0;
       if (value > max) return max;
@@ -109,7 +117,7 @@ namespace Sass {
       return false;
     }
 
-    Value* _parseChannels2(sass::string name, sass::vector<sass::string> argumentNames, Value* channels, const SourceSpan& pstate, BackTraces traces)
+    Value* _parseChannels(sass::string name, sass::vector<sass::string> argumentNames, Value* channels, const SourceSpan& pstate, BackTraces traces)
     {
       if (isVar(channels)) {
         sass::sstream fncall;
@@ -260,8 +268,8 @@ namespace Sass {
       // callStackFrame frame(logger,
       //   BackTrace(pstate, name));
       color = SASS_MEMORY_COPY(color);
-      color->a(_percentageOrUnitless2(
-        logger, alpha, 1.0, "$alpha", {}));
+      color->a(_percentageOrUnitless(
+        alpha, 1.0, "$alpha", logger));
       color->disp("");
       return color.detach();
     }
@@ -286,7 +294,7 @@ namespace Sass {
 
       BUILT_IN_FN(rgb_1)
       {
-        ValueObj parsed = _parseChannels2(
+        ValueObj parsed = _parseChannels(
           Strings::rgb, { "$red", "$green", "$blue" },
           arguments[0], pstate, {});
         if (SassString * str = parsed->isString()) {
@@ -320,7 +328,7 @@ namespace Sass {
 
       BUILT_IN_FN(rgba_1)
       {
-        ValueObj parsed = _parseChannels2(
+        ValueObj parsed = _parseChannels(
           Strings::rgba, { "$red", "$green", "$blue" },
           arguments[0], pstate, {});
         if (SassString* str = parsed->isString()) {
@@ -361,7 +369,7 @@ namespace Sass {
 
       BUILT_IN_FN(hsl_1)
       {
-        ValueObj parsed = _parseChannels2(
+        ValueObj parsed = _parseChannels(
           Strings::hsl, { "$hue", "$saturation", "$lightness" },
           arguments[0], pstate, {});
         if (SassString* str = parsed->isString()) { // Ex
@@ -402,7 +410,7 @@ namespace Sass {
 
       BUILT_IN_FN(hsla_1)
       {
-        ValueObj parsed = _parseChannels2(
+        ValueObj parsed = _parseChannels(
           Strings::hsla, { "$hue", "$saturation", "$lightness" },
           arguments[0], pstate, {});
         if (SassString* str = parsed->isString()) { // Ex
@@ -955,31 +963,6 @@ namespace Sass {
 
     }
 
-    /// Asserts that [number] is a percentage or has no units, and normalizes the
-    /// value.
-    ///
-    /// If [number] has no units, its value is clamped to be greater than `0` or
-    /// less than [max] and returned. If [number] is a percentage, it's scaled to be
-    /// within `0` and [max]. Otherwise, this throws a [SassScriptException].
-    ///
-    /// [name] is used to identify the argument in the error message.
-    double _percentageOrUnitless(Number* number, double max, sass::string name, Logger& traces) {
-      double value = 0.0;
-      if (!number->hasUnits()) {
-        value = number->value();
-      }
-      else if (number->hasUnit(Strings::percent)) {
-        value = max * number->value() / 100;
-      }
-      else {
-        // callStackFrame frame(traces, BackTrace(number->pstate()));
-        error(name + ": Expected " + number->to_css() +
-          " to have no units or \"%\".", number->pstate(), traces);
-      }
-      if (value < 0.0) return 0.0;
-      if (value > max) return max;
-      return value;
-    }
 
     // Who calls me, shouldn't we go from value? Why ast node?
     Number* assertNumber(AST_Node* node, sass::string name, const SourceSpan& pstate, BackTraces traces)

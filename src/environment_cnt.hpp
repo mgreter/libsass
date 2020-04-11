@@ -26,7 +26,6 @@ namespace Sass {
   // Note: only due to our very specific usage patterns!
   using EnvKeyFlatMap = FlatMap<EnvKey, T>;
 
-
 };
 
 #endif

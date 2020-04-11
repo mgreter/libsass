@@ -5,9 +5,6 @@ namespace Sass {
 
   namespace Constants {
 
-    // The maximum call stack that can be created
-    extern const unsigned long MaxCallStack;
-
     // https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
     // The following list of selectors is by increasing specificity:
     extern const unsigned long Specificity_Star;
@@ -29,8 +26,7 @@ namespace Sass {
     extern const int UnificationOrder_PseudoElement;
     extern const int UnificationOrder_Placeholder;
 
-    // byte order marks
-    // (taken from http://en.wikipedia.org/wiki/Byte_order_mark)
+    // http://en.wikipedia.org/wiki/Byte_order_mark
     extern const unsigned char utf_8_bom[];
     extern const unsigned char utf_16_bom_be[];
     extern const unsigned char utf_16_bom_le[];

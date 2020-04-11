@@ -61,7 +61,7 @@ namespace Sass {
   // Calls a function on every element and ads all results to flat array
   // ##########################################################################
   // Equivalent to dart `cnt.any`
-  // Pass additional closure variables to `fn`
+  // Passes additional closure variables to `fn`
   template <class T, class U, typename ...Args>
   T expand(const T& cnt, U fn, Args... args) {
     T flattened;
@@ -119,7 +119,7 @@ namespace Sass {
 
   // ##########################################################################
   // Equivalent to dart `cnt.any`
-  // Pass additional closure variables to `fn`
+  // Passes additional closure variables to `fn`
   // ##########################################################################
   template <class T, class U, typename ...Args>
   bool hasAny(const T& cnt, U fn, Args... args) {
@@ -134,7 +134,7 @@ namespace Sass {
 
   // ##########################################################################
   // Equivalent to dart `cnt.take(len).any`
-  // Pass additional closure variables to `fn`
+  // Passes additional closure variables to `fn`
   // ##########################################################################
   template <class T, class U, typename ...Args>
   bool hasSubAny(const T& cnt, size_t len, U fn, Args... args) {

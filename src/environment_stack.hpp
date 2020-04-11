@@ -10,7 +10,7 @@
 
 #include <exception>
 
-// functions now global flag, while mixins/functions don't
+// functions know global flag, while mixins/functions don't
 
 // Variable Stacks are created during parser phase.
 // We don't need to reset stacks 
