@@ -9,6 +9,7 @@
 #include "charcode.hpp"
 #include "character.hpp"
 #include "util_string.hpp"
+#include "string_utils.hpp"
 #include "color_maps.hpp"
 #include "debugger.hpp"
 #include "strings.hpp"
@@ -322,7 +323,7 @@ namespace Sass {
 
     // Parse custom properties as declarations no matter what.
     InterpolationObj name = nameBuffer.getInterpolation(beforeColon);
-    if (Util::equalsLiteral("--", name->getInitialPlain())) {
+    if (StringUtils::startsWith(name->getInitialPlain(), "--")) {
       StringExpressionObj value = _interpolatedDeclarationValue();
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
@@ -1144,13 +1145,13 @@ namespace Sass {
   {
     if (url.length() < 5) return false;
 
-    if (Util::ascii_str_ends_with_insensitive(url, ".css")) return true;
+    if (StringUtils::endsWithIgnoreCase(url, ".css", 4)) return true;
 
     uint8_t first = url[0];
     if (first == $slash) return url[1] == $slash;
     if (first != $h) return false;
-    return Util::ascii_str_starts_with_insensitive(url, "http://")
-      || Util::ascii_str_starts_with_insensitive(url, "https://");
+    return StringUtils::startsWithIgnoreCase(url, "http://", 7)
+      || StringUtils::startsWithIgnoreCase(url, "https://", 6);
   }
 
   // Consumes a supports condition and/or a media query after an `@import`.
@@ -1383,9 +1384,9 @@ namespace Sass {
           // A url-prefix with no argument, or with an empty string as an
           // argument, is not (yet) deprecated.
           sass::string trailing = buffer.trailingString();
-          if (!Util::ascii_str_ends_with_insensitive(trailing, "url-prefix()") &&
-            !Util::ascii_str_ends_with_insensitive(trailing, "url-prefix('')") &&
-            !Util::ascii_str_ends_with_insensitive(trailing, "url-prefix(\"\")")) {
+          if (!StringUtils::endsWithIgnoreCase(trailing, "url-prefix()", 12) &&
+            !StringUtils::endsWithIgnoreCase(trailing, "url-prefix('')", 14) &&
+            !StringUtils::endsWithIgnoreCase(trailing, "url-prefix(\"\")", 14)) {
             needsDeprecationWarning = true;
           }
         }
@@ -2756,8 +2757,6 @@ namespace Sass {
           expression);
       }
 
-      sass::string lower(plain);
-      Util::ascii_str_tolower(&lower);
       if (scanner.peekChar() != $lparen) {
         if (plain == "false") {
           return SASS_MEMORY_NEW(Boolean,
@@ -2773,7 +2772,7 @@ namespace Sass {
         }
 
         // ToDo: dart-sass has ColorExpression(color);
-        if (const Color_RGBA* color = name_to_color(lower)) {
+        if (const Color_RGBA* color = name_to_color(plain)) {
           Color_RGBA* copy = SASS_MEMORY_COPY(color);
           copy->pstate(identifier->pstate());
           copy->disp(plain);
@@ -2781,7 +2780,7 @@ namespace Sass {
         }
       }
 
-      auto specialFunction = trySpecialFunction(lower, start);
+      auto specialFunction = trySpecialFunction(plain, start);
       if (specialFunction != nullptr) {
         return specialFunction;
       }
@@ -2840,6 +2839,7 @@ namespace Sass {
   StringExpression* StylesheetParser::trySpecialFunction(sass::string name, const Offset& start)
   {
     uint8_t next = 0;
+    StringUtils::makeLowerCase(name);
     InterpolationBuffer buffer(scanner);
     sass::string normalized(Util::unvendor(name));
 

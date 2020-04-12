@@ -2,17 +2,17 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
-#include "utf8.h"
+#include "unicode.hpp"
 #include "ast.hpp"
 #include "fn_utils.hpp"
 #include "fn_strings.hpp"
 #include "fn_utils.hpp"
 #include "fn_numbers.hpp"
 #include "util_string.hpp"
+#include "string_utils.hpp"
 #include "randomize.hpp"
 #include "debugger.hpp"
 
-#include "utf8.h"
 #include <random>
 #include <iomanip>
 #include <algorithm>
@@ -90,7 +90,7 @@ namespace Sass {
       {
         SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
         return SASS_MEMORY_NEW(SassString, pstate,
-          Util::ascii_str_toupper(string->value()),
+          StringUtils::toUpperCase(string->value()),
           string->hasQuotes());
       }
 
@@ -98,14 +98,14 @@ namespace Sass {
       {
         SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
         return SASS_MEMORY_NEW(SassString, pstate,
-          Util::ascii_str_tolower(string->value()),
+          StringUtils::toLowerCase(string->value()),
           string->hasQuotes());
       }
 
       BUILT_IN_FN(length)
       {
         SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
-        size_t len = UTF_8::code_point_count(string->value());
+        size_t len = Unicode::codePointCount(string->value());
         return SASS_MEMORY_NEW(Number, pstate, (double)len);
       }
 
@@ -113,7 +113,7 @@ namespace Sass {
       {
         SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
         SassString* insert = arguments[1]->assertString(*ctx.logger, pstate, "insert");
-        size_t len = UTF_8::code_point_count(string->value());
+        size_t len = Unicode::codePointCount(string->value());
         long index = arguments[2]->assertNumber(*ctx.logger, "index")
           ->assertNoUnits(*ctx.logger, pstate, "index")
           ->assertInt(*ctx.logger, pstate, "index");
@@ -131,7 +131,7 @@ namespace Sass {
         index = (long) _codepointForIndex(index, (long)len);
 
         sass::string str(string->value());
-        str.insert(UTF_8::offset_at_position(
+        str.insert(Unicode::byteOffsetAtPosition(
           str, index), insert->value());
 
         return SASS_MEMORY_NEW(SassString,
@@ -152,7 +152,7 @@ namespace Sass {
         }
 
         return SASS_MEMORY_NEW(SassNumber, pstate,
-          (double) UTF_8::code_point_count(str, 0, c_index) + 1);
+          (double)Unicode::codePointCount(str, c_index) + 1);
       }
 
       BUILT_IN_FN(slice)
@@ -161,7 +161,7 @@ namespace Sass {
         SassNumber* beg = arguments[1]->assertNumber(*ctx.logger, "start-at");
         SassNumber* end = arguments[2]->assertNumber(*ctx.logger, "end-at");
 
-        size_t len = UTF_8::code_point_count(string->value());
+        size_t len = Unicode::codePointCount(string->value());
         beg = beg->assertNoUnits(*ctx.logger, pstate, "start");
         end = end->assertNoUnits(*ctx.logger, pstate, "end");
 

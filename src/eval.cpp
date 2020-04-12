@@ -1096,7 +1096,7 @@ namespace Sass {
 
     }
 
-    return Util::join_strings(results, "");
+    return StringUtils::join(results, "");
 
   }
 
@@ -1110,7 +1110,7 @@ namespace Sass {
     bool trim, bool warnForColor)
   {
     sass::string result = performInterpolation(interpolation, warnForColor);
-    if (trim) { Util::ascii_str_trim(result); }
+    if (trim) { StringUtils::makeTrimmed(result); }
     return result;
     // return CssValue(trim ? trimAscii(result, excludeEscape: true) : result,
     //   interpolation.span);
@@ -1155,7 +1155,7 @@ namespace Sass {
       }
     }
 
-    sass::string joined(Util::join_strings(strings, ""));
+    sass::string joined(StringUtils::join(strings, ""));
 
     return SASS_MEMORY_NEW(SassString, node->pstate(),
       std::move(joined), node->hasQuotes());
@@ -1552,7 +1552,7 @@ namespace Sass {
   {
     if (interpolation.isNull()) return nullptr;
     sass::string result = performInterpolation(interpolation, warnForColor);
-    if (trim) { Util::ascii_str_trim(result); } // ToDo: excludeEscape: true
+    if (trim) { StringUtils::makeTrimmed(result); } // ToDo: excludeEscape: true
     return SASS_MEMORY_NEW(CssString, interpolation->pstate(), result);
     // return CssValue(trim ? trimAscii(result, excludeEscape: true) : result,
     //   interpolation.span);
@@ -1986,7 +1986,7 @@ namespace Sass {
     mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
     InterpolationObj evaled = evalInterpolation(itpl, false);
     sass::string css(evaled->to_css(mappings));
-    Util::ascii_str_trim(css);
+    StringUtils::makeTrimmed(css);
     auto text = css;
 
 
@@ -2403,7 +2403,7 @@ namespace Sass {
         ValueObj evaled = query->perform(this);
         results.emplace_back(evaled->to_string());
       }
-      sass::string reparse(Util::join_strings(results, ", "));
+      sass::string reparse(StringUtils::join(results, ", "));
       SourceSpan state(imp->pstate());
       auto source = SASS_MEMORY_NEW(SourceFile,
         state.getPath(), reparse.c_str(), state.getSrcId());

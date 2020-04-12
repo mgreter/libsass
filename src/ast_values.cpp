@@ -88,7 +88,7 @@ namespace Sass {
           }
         }
       }
-      rv = Util::join_strings(result, list->separator() == SASS_COMMA ? ", " : " ");
+      rv = StringUtils::join(result, list->separator() == SASS_COMMA ? ", " : " ");
       return true;
 
     }

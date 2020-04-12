@@ -6,6 +6,7 @@
 
 #include "remove_placeholders.hpp"
 #include "sass_functions.hpp"
+#include "string_utils.hpp"
 #include "fn_selectors.hpp"
 #include "fn_strings.hpp"
 #include "fn_numbers.hpp"
@@ -167,7 +168,7 @@ namespace Sass {
   {
     if (paths_str == nullptr) return;
     sass::vector<sass::string> paths =
-      Util::split_string(paths_str);
+      StringUtils::split(paths_str, PATH_SEP, true);
     for (sass::string path : paths) {
       if (*path.rbegin() != '/') path += '/';
       include_paths.emplace_back(path);
@@ -187,7 +188,7 @@ namespace Sass {
   {
     if (paths_str == nullptr) return;
     sass::vector<sass::string> paths =
-      Util::split_string(paths_str);
+      StringUtils::split(paths_str, PATH_SEP, true);
     for (sass::string path : paths) {
       if (*path.rbegin() != '/') path += '/';
       plugin_paths.emplace_back(path);
@@ -258,10 +259,10 @@ namespace Sass {
       res.srcmap
     );
 
-    if (Util::ascii_str_ends_with_insensitive(inc.abs_path, ".css")) {
+    if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
       import->type = SASS_IMPORT_CSS;
     }
-    else if (Util::ascii_str_ends_with_insensitive(inc.abs_path, ".sass")) {
+    else if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".sass", 5)) {
       import->type = SASS_IMPORT_SASS;
     }
     else {

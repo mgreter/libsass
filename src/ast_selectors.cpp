@@ -177,7 +177,7 @@ namespace Sass {
   { }
   unsigned long PlaceholderSelector::specificity() const
   {
-    return Constants::Specificity_Base;
+		return Constants::Specificity::Base;
   }
 
   bool PlaceholderSelector::has_placeholder() {
@@ -205,7 +205,7 @@ namespace Sass {
   unsigned long TypeSelector::specificity() const
   {
     if (name() == "*") return 0;
-    else return Constants::Specificity_Element;
+    else return Constants::Specificity::Element;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -220,7 +220,7 @@ namespace Sass {
 
   unsigned long ClassSelector::specificity() const
   {
-    return Constants::Specificity_Class;
+    return Constants::Specificity::Class;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -235,7 +235,7 @@ namespace Sass {
 
   unsigned long IDSelector::specificity() const
   {
-    return Constants::Specificity_ID;
+		return Constants::Specificity::ID;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -254,7 +254,7 @@ namespace Sass {
 
   unsigned long AttributeSelector::specificity() const
   {
-    return Constants::Specificity_Attr;
+		return Constants::Specificity::Attr;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -315,8 +315,8 @@ namespace Sass {
   unsigned long PseudoSelector::specificity() const
   {
     if (is_pseudo_element())
-      return Constants::Specificity_Element;
-    return Constants::Specificity_Pseudo;
+			return Constants::Specificity::Element;
+		return Constants::Specificity::Pseudo;
   }
 
   PseudoSelector* PseudoSelector::withSelector(SelectorList* selector)

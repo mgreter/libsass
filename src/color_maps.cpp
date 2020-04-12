@@ -5,6 +5,7 @@
 #include "ast.hpp"
 #include "color_maps.hpp"
 #include "util_string.hpp"
+#include "string_utils.hpp"
 
 namespace Sass
 {
@@ -618,7 +619,7 @@ namespace Sass
 	{
 		// case insensitive lookup. See #2462
 		sass::string lcKey = key;
-		Util::ascii_str_tolower(&lcKey);
+    StringUtils::makeLowerCase(lcKey);
 
 		auto p = names_to_colors->find(lcKey);
 		if(p != names_to_colors->end())

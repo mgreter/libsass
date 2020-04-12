@@ -7,7 +7,7 @@
 
 namespace Sass {
 
-  template<class T>
+  template<typename T>
   using EnvKeyMap = UnorderedMap<
     const EnvKey, T, hashEnvKey, equalsEnvKey,
     Sass::Allocator<std::pair<const EnvKey, T>>

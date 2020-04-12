@@ -32,7 +32,7 @@
 #include "file.hpp"
 #include "context.hpp"
 #include "character.hpp"
-#include "utf8_string.hpp"
+#include "unicode.hpp"
 #include "sass_functions.hpp"
 #include "error_handling.hpp"
 #include "util.hpp"
@@ -103,7 +103,7 @@ namespace Sass {
         if (it != cache.end()) {
           return it->second;
         }
-        std::wstring wpath(UTF_8::convert_to_utf16(abspath));
+        sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");
@@ -313,8 +313,7 @@ namespace Sass {
         #else
           // compare the characters in a case insensitive manner
           // windows FS is only case insensitive in ASCII ranges
-          if (Util::ascii_tolower(static_cast<unsigned char>(abs_path[i])) !=
-              Util::ascii_tolower(static_cast<unsigned char>(abs_base[i]))) break;
+          if (!Character::characterEqualsIgnoreCase(abs_path[i], abs_base[i])) break;
         #endif
         if (abs_path[i] == '/') index = i + 1;
       }
@@ -463,7 +462,7 @@ namespace Sass {
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
-        std::wstring wpath(UTF_8::convert_to_utf16(abspath));
+        sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");

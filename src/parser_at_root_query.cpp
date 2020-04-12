@@ -23,7 +23,8 @@ namespace Sass {
     StringSet atRules;
     do {
       sass::string ident(identifier());
-      atRules.insert(Util::ascii_str_tolower(ident));
+      StringUtils::makeLowerCase(ident);
+      atRules.insert(ident);
       whitespace();
     } while (lookingAtIdentifier());
     scanner.expectChar($rparen);

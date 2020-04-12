@@ -118,7 +118,6 @@ namespace Sass {
       varFrame(0xFFFFFFFF),
       mixFrame(0xFFFFFFFF),
       fnFrame(0xFFFFFFFF),
-      // frame(frame),
       parent(parent)
     {}
 
@@ -132,7 +131,6 @@ namespace Sass {
       varFrame(varFrame),
       mixFrame(mixFrame),
       fnFrame(fnFrame),
-      // frame(frame),
       parent(parent),
       varIdxs(std::move(varIdxs)),
       mixIdxs(std::move(mixIdxs)),
@@ -185,7 +183,7 @@ namespace Sass {
 
     EnvRoot& getRoot() {
       return root;
-    };
+    }
 
     EnvFrame* getParent() {
       if (isRoot())
@@ -195,7 +193,7 @@ namespace Sass {
 
     // ToDo: we should find uninitialized var access
     // Called whenever we find a variable declaration.
-    // Indicates that the locale frame uses this variable.
+    // Indicates that the local frame uses this variable.
     // Will check if it already exists on the lexical scope.
 
     IdxRef createMixin(const EnvKey& name);
@@ -454,14 +452,15 @@ namespace Sass {
       callStack(callStack),
       frame(frame)
     {
-      // Push pointer to stack
+      // Push frame-ptr to stack
       callStack.push_back(frame);
     }
 
     // Remove frame from stack on destruction
     ~ScopedStackFrame()
     {
-      // Just remove ourself
+      // Just remove the last item
+      // We assume this is ourself
       callStack.pop_back();
     }
 

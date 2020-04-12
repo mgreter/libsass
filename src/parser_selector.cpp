@@ -420,7 +420,7 @@ namespace Sass {
     }
     else {
       argument = declarationValue(true); //  .trimRight();
-      Util::ascii_str_rtrim(argument);
+      StringUtils::makeRightTrimmed(argument);
     }
     scanner.expectChar($rparen);
 

@@ -1,5 +1,4 @@
 #include "source_span.hpp"
-#include "util_string.hpp"
 #include "source.hpp"
 #include "ast.hpp"
 

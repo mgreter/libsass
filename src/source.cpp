@@ -5,6 +5,7 @@
 #include "utf8/checked.h"
 #include "charcode.hpp"
 #include "character.hpp"
+#include "unicode.hpp"
 
 namespace Sass {
 
@@ -77,35 +78,6 @@ namespace Sass {
   const char* SourceFile::begin() const
   {
     return data;
-  }
-
-  sass::vector<sass::string> SourceFile::getLines(size_t start, size_t length) const
-  {
-    const char* pos = data;
-    const char* end = this->end();
-    sass::vector<sass::string> result;
-    while (start > 0 && pos < end) {
-      if (*pos == $lf) start -= 1;
-      pos += 1;
-    }
-    const char* beg = pos;
-    while (length > 0 && pos < end) {
-      // found the end of the line
-      if (*pos == $lf) {
-        result.emplace_back(sass::string(beg,
-          pos[-1] == $cr ? pos - 1 : pos));
-        length -= 1; beg = pos + 1;
-      }
-      // at the end of the content
-      if (pos == end - 1) {
-        result.emplace_back(sass::string(beg,
-          pos[0] == $cr ? pos : end));
-        length -= 1; beg = pos + 1;
-        break;
-      }
-      pos += 1;
-    }
-    return result;
   }
 
   size_t SourceFile::countLines()
@@ -196,26 +168,6 @@ namespace Sass {
       + SourceFile::countLines();
   }
 
-  sass::string utf8Substr(
-    sass::string& text,
-    size_t start,
-    size_t len)
-  {
-    auto first = text.begin();
-    utf8::advance(first,
-      start, text.end());
-    auto last = first;
-    if (len != sass::string::npos) {
-      utf8::advance(last,
-        len, text.end());
-    }
-    else {
-      last = text.end();
-    }
-    return sass::string(
-      first, last);
-  }
-
   sass::string utf8Replace(
     sass::string& text,
     size_t start, size_t len,
@@ -271,7 +223,7 @@ namespace Sass {
             pstate.position.column,
             sass::string::npos,
             SourceFile::getLine(0))
-            + utf8Substr(after,
+            + Unicode::utf8substr(after,
               pstate.span.column,
               sass::string::npos);
         }
@@ -285,8 +237,8 @@ namespace Sass {
       }
       else {
         // Otherwise we append to substring
-        return utf8Substr(before, 0,
-          pstate.position.column)
+        return Unicode::utf8substr(before,
+          0, pstate.position.column)
           + SourceFile::getLine(0);
       }
     }
@@ -312,28 +264,14 @@ namespace Sass {
       // Append to last line to insert
       return SourceFile::getLine(
         line - pstate.position.line) +
-        utf8Substr(after, col,
-          sass::string::npos);
+        Unicode::utf8substr(after,
+          col, sass::string::npos);
     }
     else {
       return around->getLine(
         line - lineDelta);
     }
     return sass::string();
-  }
-
-  sass::vector<sass::string>
-    ItplFile::getLines(
-      size_t start, size_t length) const
-  {
-    sass::vector<sass::string> result;
-    // Fetch parts before insert
-    if (start < pstate.position.line) {
-
-    }
-
-    result.emplace_back("asd");
-    return result;
   }
 
 }

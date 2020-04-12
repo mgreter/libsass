@@ -30,7 +30,7 @@
 
 // include utf8 library used by libsass
 // ToDo: replace internal json utf8 code
-#include "utf8.h"
+#include "unicode.hpp"
 
 #include <assert.h>
 #include <stdint.h>

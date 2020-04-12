@@ -607,7 +607,7 @@ namespace Sass {
     if (Cast<CssMediaRule>(node)) return "media";
     if (Cast<CssSupportsRule>(node)) return "supports";
     if (CssAtRule* at = Cast<CssAtRule>(node)) {
-      return Util::ascii_str_tolower(at->name()->text());
+      return StringUtils::toLowerCase(at->name()->text());
     }
     return "";
   }

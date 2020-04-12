@@ -283,7 +283,7 @@ namespace Sass {
 
     // Whether this media query matches all media types.
     bool matchesAllTypes() const {
-      return type_.empty() || Util::equalsLiteral("all", type_);
+      return type_.empty() || StringUtils::equalsIgnoreCase(type_, "all", 3);
     }
 
     // Merges this with [other] and adds a query that matches the intersection

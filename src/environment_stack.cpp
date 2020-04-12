@@ -4,9 +4,9 @@
 namespace Sass {
 
   // ##########################################################################
-  // ##########################################################################
+	// Each parsed scope gets its own environment frame
+	// ##########################################################################
 
-  // Each parsed scope gets its own environment stack
   EnvFrame::EnvFrame(EnvRoot& root) :
     root(root),
     parent(root),
@@ -305,7 +305,6 @@ namespace Sass {
     return IdxRef{};
   }
 
-
   IdxRef EnvFrame::getFunctionIdx(const EnvKey& name)
   {
     EnvFrame* current = this;
@@ -387,8 +386,8 @@ namespace Sass {
       return root.idxs[frameOffset];
     }
 
-    EnvFrame* parent = getParent();
     uint32_t offset = 0xFFFFFFFF;
+		EnvFrame* parent = getParent();
     if (parent) offset = parent->frameOffset;
 
     IDXS* idxs = new IDXS(

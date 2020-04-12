@@ -3,12 +3,12 @@
 
 #include <string>
 #include <vector>
-#include "utf8_string.hpp"
+#include "unicode.hpp"
 #include "sass/functions.h"
 
 #ifdef _WIN32
 
-  #define LOAD_LIB(var, path) HMODULE var = LoadLibraryW(UTF_8::convert_to_utf16(path).c_str())
+  #define LOAD_LIB(var, path) HMODULE var = LoadLibraryW(Unicode::utf8to16(path).c_str())
   #define LOAD_LIB_WCHR(var, path_wide_str) HMODULE var = LoadLibraryW(path_wide_str.c_str())
   #define LOAD_LIB_FN(type, var, name) type var = (type) GetProcAddress(plugin, name)
   #define CLOSE_LIB(var) FreeLibrary(var)

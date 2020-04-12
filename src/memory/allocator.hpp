@@ -109,6 +109,7 @@ namespace Sass {
   namespace sass {
     template <typename T> using vector = std::vector<T, Sass::Allocator<T>>;
     using string = std::basic_string<char, std::char_traits<char>, Sass::Allocator<char>>;
+    using wstring = std::basic_string<wchar_t, std::char_traits<wchar_t>, Sass::Allocator<wchar_t>>;
     using sstream = std::basic_stringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
     using ostream = std::basic_ostringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
     using istream = std::basic_istringstream<char, std::char_traits<char>, Sass::Allocator<char>>;

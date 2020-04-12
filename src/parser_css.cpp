@@ -189,8 +189,7 @@ namespace Sass {
     InterpolationObj identifier = interpolatedIdentifier();
     sass::string plain(identifier->getPlainString());
 
-    StringExpressionObj specialFunction = trySpecialFunction(
-      Util::ascii_str_tolower(plain), start);
+    StringExpressionObj specialFunction = trySpecialFunction(plain, start);
     if (specialFunction != nullptr) {
       return specialFunction;
     }

@@ -21,8 +21,11 @@
 #include "logger.hpp"
 #include "terminal.hpp"
 #include "character.hpp"
+#include "string_utils.hpp"
 
 namespace Sass {
+
+  using namespace Constants;
 
   Logger::Logger(size_t precision, enum Sass_Logger_Style style) :
     epsilon(std::pow(0.1, precision + 1)),
@@ -188,7 +191,7 @@ namespace Sass {
       for (size_t i = 0; i < lines.size(); i++) {
 
         // Right trim the line to report
-        Util::ascii_str_rtrim(lines[i]);
+        StringUtils::makeRightTrimmed(lines[i]);
 
         // Write the line number and the code
         msg_stream
@@ -438,7 +441,7 @@ namespace Sass {
     mid.append(lhs_end, rhs_beg);
 
     // Trim trailing spaces
-    Util::ascii_str_rtrim(rhs);
+    StringUtils::makeRightTrimmed(rhs);
 
     // Re-count characters after trimming is done
     lhs_len = utf8::distance(lhs.begin(), lhs.end());
@@ -502,7 +505,7 @@ namespace Sass {
       auto beg = lhs.begin(), end = lhs.end();
       utf8::advance(beg, lhs_len - min_left, end);
       lhs = sass::string(beg, end);
-      Util::ascii_str_ltrim(lhs);
+      StringUtils::makeLeftTrimmed(lhs);
       lhs = ellipsis + lhs;
     }
 
@@ -512,7 +515,7 @@ namespace Sass {
       auto beg = rhs.begin(), end = rhs.begin();
       utf8::advance(end, min_right, rhs.end());
       rhs = sass::string(beg, end);
-      Util::ascii_str_rtrim(rhs);
+      StringUtils::makeRightTrimmed(rhs);
       rhs = rhs + ellipsis;
     }
 

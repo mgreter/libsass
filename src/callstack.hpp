@@ -8,7 +8,7 @@
 namespace Sass {
 
   // Utility class to add a frame onto a call-stack (RAII).
-  // Cleaned up automatically when object goes out of scope.
+  // Cleans up automatically when object goes out of scope.
   // We assume this happens in well defined order, as
   // we do not check if we actually remove ourself!
   // ToDo: rename to callTrace
@@ -16,7 +16,7 @@ namespace Sass {
 
   private:
 
-    // The managed callStack
+    // The shared callStack
     BackTraces& backTraces;
 
     // The current stack frame

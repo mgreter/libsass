@@ -1,6 +1,8 @@
 #ifndef SASS_STRINGS_H
 #define SASS_STRINGS_H
 
+// sass.hpp must go before all system headers to get the
+// __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
 // Include normalized keys
@@ -8,83 +10,77 @@
 
 namespace Sass {
 
-  namespace Constants {
-
-    extern const char empty[];
-
-  }
-
   namespace Strings {
 
-    const sass::string empty("");
+    extern const sass::string empty;
 
-    const sass::string plus("+");
-    const sass::string minus("-");
-    const sass::string percent("%");
+    extern const sass::string plus;
+    extern const sass::string minus;
+    extern const sass::string percent;
 
-    const sass::string rgb("rgb");
-    const sass::string hsl("hsl");
-    const sass::string rgba("rgba");
-    const sass::string hsla("hsla");
+    extern const sass::string rgb;
+    extern const sass::string hsl;
+    extern const sass::string rgba;
+    extern const sass::string hsla;
 
-    const sass::string red("red");
-    const sass::string hue("hue");
-    const sass::string blue("blue");
-    const sass::string green("green");
-    const sass::string alpha("alpha");
-    const sass::string color("color");
-    const sass::string amount("amount");
-    const sass::string lightness("lightness");
-    const sass::string saturation("saturation");
+    extern const sass::string red;
+    extern const sass::string hue;
+    extern const sass::string blue;
+    extern const sass::string green;
+    extern const sass::string alpha;
+    extern const sass::string color;
+    extern const sass::string amount;
+    extern const sass::string lightness;
+    extern const sass::string saturation;
 
-    const sass::string key("key");
-    const sass::string map("map");
-    const sass::string map1("map1");
-    const sass::string map2("map2");
-    const sass::string args("args");
-    const sass::string name("name");
-    const sass::string media("media");
-    const sass::string module("module");
-    const sass::string keyframes("keyframes");
+    extern const sass::string key;
+    extern const sass::string map;
+    extern const sass::string map1;
+    extern const sass::string map2;
+    extern const sass::string args;
+    extern const sass::string name;
+    extern const sass::string media;
+    extern const sass::string module;
+    extern const sass::string keyframes;
 
-    const sass::string forRule("@for");
-    const sass::string warnRule("@warn");
-    const sass::string errorRule("@error");
-    const sass::string debugRule("@debug");
-    const sass::string extendRule("@extend");
-    const sass::string importRule("@import");
-    const sass::string contentRule("@content");
+    extern const sass::string forRule;
+    extern const sass::string warnRule;
+    extern const sass::string errorRule;
+    extern const sass::string debugRule;
+    extern const sass::string extendRule;
+    extern const sass::string importRule;
+    extern const sass::string contentRule;
 
-    const sass::string scaleColor("scale-color");
-    const sass::string colorAdjust("color-adjust");
-    const sass::string colorChange("color-change");
+    extern const sass::string scaleColor;
+    extern const sass::string colorAdjust;
+    extern const sass::string colorChange;
 
-    const sass::string $condition("$condition");
-    const sass::string $ifFalse("$if-false");
-    const sass::string $ifTrue("$if-true");
+    extern const sass::string $condition;
+    extern const sass::string $ifFalse;
+    extern const sass::string $ifTrue;
 
-    const sass::string utf8bom("\xEF\xBB\xBF");
+    extern const sass::string utf8bom;
 
   }
 
   namespace Keys {
 
-    const EnvKey red(Strings::red);
-    const EnvKey hue(Strings::hue);
-    const EnvKey blue(Strings::blue);
-    const EnvKey green(Strings::green);
-    const EnvKey alpha(Strings::alpha);
-    const EnvKey lightness(Strings::lightness);
-    const EnvKey saturation(Strings::saturation);
+    extern const EnvKey red;
+    extern const EnvKey hue;
+    extern const EnvKey blue;
+    extern const EnvKey green;
+    extern const EnvKey alpha;
+    extern const EnvKey lightness;
+    extern const EnvKey saturation;
 
-    const EnvKey warnRule(Strings::warnRule);
-    const EnvKey errorRule(Strings::errorRule);
-    const EnvKey debugRule(Strings::debugRule);
-    const EnvKey contentRule(Strings::contentRule);
+    extern const EnvKey warnRule;
+    extern const EnvKey errorRule;
+    extern const EnvKey debugRule;
+    extern const EnvKey contentRule;
 
-    const EnvKey $condition(Strings::$condition);
-    const EnvKey $ifFalse(Strings::$ifFalse);
-    const EnvKey $ifTrue(Strings::$ifTrue);
+    extern const EnvKey $condition;
+    extern const EnvKey $ifFalse;
+    extern const EnvKey $ifTrue;
 
   }
 

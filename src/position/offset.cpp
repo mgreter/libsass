@@ -98,7 +98,6 @@ namespace Sass {
     offset.column = column;
     return offset;
   }
-  // EO Offset::init
 
   // Calculate the distance between start and end
   Offset Offset::distance(const Offset& start, const Offset& end)
@@ -116,29 +115,26 @@ namespace Sass {
       rv.line -= start.line;
       // Columns don't need to be changed
       // Since we land on another line, we
-      // will reach the same end column
+      // need to reach the same end column
     }
     return rv;
   }
-  // EO Offset::distance
 
   // Implement comparison operators
-  bool Offset::operator< (const Offset& rhs) const
+  bool Offset::operator<(const Offset& rhs) const
   {
     if (line == rhs.line) {
       return column < rhs.column;
     }
     return line < rhs.line;
   }
-  // EO Offset::operator<
 
   // Implement equality operators
-  bool Offset::operator== (const Offset& rhs) const
+  bool Offset::operator==(const Offset& rhs) const
   {
     return line == rhs.line
       && column == rhs.column;
   }
-  // EO Offset::operator==
 
   // Implement assign and addition operator
   void Offset::operator+= (const Offset& rhs)
@@ -153,18 +149,16 @@ namespace Sass {
       column = rhs.column;
     }
   }
-  // EO Offset::operator+=
 
-  // Implement addition operator (returns new Offset)
+  // Implement addition operator
   Offset Offset::operator+ (const Offset& rhs) const
   {
     Offset rv(*this);
     rv += rhs;
     return rv;
   }
-  // EO Offset::operator+
 
-  // Implement multiply operator (returns new Offset)
+  // Implement multiply operator
   Offset Offset::operator* (uint32_t mul) const
   {
     Offset rv(*this);
@@ -176,7 +170,6 @@ namespace Sass {
     }
     return rv;
   }
-  // EO Offset::operator*
 
   // Move/increment char star `text` by `offset`
   const char* Offset::move(const char* text, Offset offset)

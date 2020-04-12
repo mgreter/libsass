@@ -6,6 +6,7 @@
 #include "sass.hpp"
 
 #include "strings.hpp"
+#include "constants.hpp"
 #include "backtrace.hpp"
 #include "callstack.hpp"
 
@@ -51,7 +52,7 @@ namespace Sass {
       if (style & SASS_LOGGER_COLOR) {
         return color;
       }
-      return Constants::empty;
+      return Constants::String::empty;
     }
 
     // Write warning header to error stream

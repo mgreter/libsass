@@ -1,50 +1,86 @@
 #ifndef SASS_CONSTANTS_H
 #define SASS_CONSTANTS_H
 
-namespace Sass {
+namespace Sass
+{
 
-  namespace Constants {
+	namespace Constants
+	{
 
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
-    // The following list of selectors is by increasing specificity:
-    extern const unsigned long Specificity_Star;
-    extern const unsigned long Specificity_Universal;
-    extern const unsigned long Specificity_Element;
-    extern const unsigned long Specificity_Base;
-    extern const unsigned long Specificity_Class;
-    extern const unsigned long Specificity_Attr;
-    extern const unsigned long Specificity_Pseudo;
-    extern const unsigned long Specificity_ID;
+		// https://github.com/sass/libsass/issues/592
+		// https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
+		// https://github.com/sass/sass/issues/1495#issuecomment-61189114
+		namespace Specificity
+		{
 
-    // Selector unification order;
-    extern const int UnificationOrder_Element;
-    extern const int UnificationOrder_Id;
-    extern const int UnificationOrder_Class;
-    extern const int UnificationOrder_Attribute;
-    extern const int UnificationOrder_PseudoClass;
-    extern const int UnificationOrder_Wrapped;
-    extern const int UnificationOrder_PseudoElement;
-    extern const int UnificationOrder_Placeholder;
+			extern const unsigned long Star;
+			extern const unsigned long Universal;
+			extern const unsigned long Element;
+			extern const unsigned long Base;
+			extern const unsigned long Class;
+			extern const unsigned long Attr;
+			extern const unsigned long Pseudo;
+			extern const unsigned long ID;
 
-    // http://en.wikipedia.org/wiki/Byte_order_mark
-    extern const unsigned char utf_8_bom[];
-    extern const unsigned char utf_16_bom_be[];
-    extern const unsigned char utf_16_bom_le[];
-    extern const unsigned char utf_32_bom_be[];
-    extern const unsigned char utf_32_bom_le[];
-    extern const unsigned char utf_7_bom_1[];
-    extern const unsigned char utf_7_bom_2[];
-    extern const unsigned char utf_7_bom_3[];
-    extern const unsigned char utf_7_bom_4[];
-    extern const unsigned char utf_7_bom_5[];
-    extern const unsigned char utf_1_bom[];
-    extern const unsigned char utf_ebcdic_bom[];
-    extern const unsigned char scsu_bom[];
-    extern const unsigned char bocu_1_bom[];
-    extern const unsigned char gb_18030_bom[];
+    } // namespace Specificity
 
-  }
+		// http://en.wikipedia.org/wiki/Byte_order_mark
+		namespace BOM
+		{
 
-}
+      extern const unsigned char utf_8[];
+			extern const unsigned char utf_16_be[];
+			extern const unsigned char utf_16_le[];
+			extern const unsigned char utf_32_be[];
+			extern const unsigned char utf_32_le[];
+			extern const unsigned char utf_7_1[];
+			extern const unsigned char utf_7_2[];
+			extern const unsigned char utf_7_3[];
+			extern const unsigned char utf_7_4[];
+			extern const unsigned char utf_7_5[];
+			extern const unsigned char utf_1[];
+			extern const unsigned char utf_ebcdic[];
+			extern const unsigned char scsu[];
+			extern const unsigned char bocu_1[];
+			extern const unsigned char gb_18030[];
+
+    } // namespace BOM
+
+		namespace Terminal
+		{
+
+			extern const char reset[];
+			extern const char bold[];
+			extern const char red[];
+			extern const char green[];
+			extern const char yellow[];
+			extern const char blue[];
+			extern const char magenta[];
+			extern const char cyan[];
+			extern const char bold_red[];
+			extern const char bold_green[];
+			extern const char bold_yellow[];
+			extern const char bold_blue[];
+			extern const char bold_magenta[];
+			extern const char bold_cyan[];
+			extern const char bg_red[];
+			extern const char bg_green[];
+			extern const char bg_yellow[];
+			extern const char bg_blue[];
+			extern const char bg_magenta[];
+			extern const char bg_cyan[];
+
+		} // namespace Terminal
+
+		namespace String
+		{
+
+			extern const char empty[];
+
+		} // namespace String
+
+	} // namespace Constants
+
+} // namespace Sass
 
 #endif

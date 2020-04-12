@@ -17,6 +17,7 @@
 #include "context.hpp"
 #include "listize.hpp"
 #include "color_maps.hpp"
+#include "string_utils.hpp"
 #include "utf8/checked.h"
 #include "debugger.hpp"
 
@@ -528,7 +529,7 @@ namespace Sass {
     visitNameSpaceSelector(attribute);
     if (!attribute->op().empty()) {
       append_string(attribute->op());
-      if (attribute->isIdentifier() && !starts_with(attribute->value(), "--")) {
+      if (attribute->isIdentifier() && !StringUtils::startsWith(attribute->value(), "--", 2)) {
         append_string(attribute->value());
         if (attribute->modifier() != 0) {
           append_optional_space();

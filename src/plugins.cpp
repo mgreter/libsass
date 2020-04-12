@@ -7,6 +7,7 @@
 #include "output.hpp"
 #include "plugins.hpp"
 #include "util.hpp"
+#include "unicode.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -132,7 +133,7 @@ namespace Sass {
         // trailing slash is guaranteed
         sass::string globsrch(path + "*.dll");
         // convert to wide chars (utf16) for system call
-        std::wstring wglobsrch(UTF_8::convert_to_utf16(globsrch));
+        sass::wstring wglobsrch(Unicode::utf8to16(globsrch));
         HANDLE hFile = FindFirstFileW(wglobsrch.c_str(), &data);
         // check if system called returned a result
         // ToDo: maybe we should print a debug message
@@ -144,7 +145,7 @@ namespace Sass {
           try
           {
             // the system will report the filenames with wide chars (utf16)
-            sass::string entry = UTF_8::convert_from_utf16(data.cFileName);
+            sass::string entry = Unicode::utf16to8(data.cFileName);
             // check if file ending matches exactly
             if (!ends_with(entry, ".dll")) continue;
             // load the plugin and increase counter

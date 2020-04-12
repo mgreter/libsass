@@ -1,3 +1,4 @@
+#include "string_utils.hpp"
 #include "ast_css.hpp"
 #include "strings.hpp"
 #include "util.hpp"
@@ -353,17 +354,17 @@ namespace Sass {
   CssMediaQueryObj CssMediaQuery::merge(CssMediaQueryObj& other)
   {
 
-    sass::string ourType = this->type();
-    Util::ascii_str_tolower(&ourType);
+    sass::string ourType(this->type());
+    StringUtils::makeLowerCase(ourType);
 
-    sass::string theirType = other->type();
-    Util::ascii_str_tolower(&theirType);
+    sass::string theirType(other->type());
+    StringUtils::makeLowerCase(theirType);
 
-    sass::string ourModifier = this->modifier();
-    Util::ascii_str_tolower(&ourModifier);
+    sass::string ourModifier(this->modifier());
+    StringUtils::makeLowerCase(ourModifier);
 
-    sass::string theirModifier = other->modifier();
-    Util::ascii_str_tolower(&theirModifier);
+    sass::string theirModifier(other->modifier());
+    StringUtils::makeLowerCase(theirModifier);
 
     sass::string type;
     sass::string modifier;
@@ -379,12 +380,15 @@ namespace Sass {
       return query;
     }
 
-    if ((ourModifier == "not") != (theirModifier == "not")) {
+    bool ourModifierIsNot = StringUtils::equalsIgnoreCase(ourModifier, "not", 3);
+    bool theirModifierIsNot = StringUtils::equalsIgnoreCase(theirModifier, "not", 3);
+
+    if (ourModifierIsNot != theirModifierIsNot) {
       if (ourType == theirType) {
         sass::vector<sass::string> negativeFeatures =
-          ourModifier == "not" ? this->features() : other->features();
+          ourModifierIsNot ? this->features() : other->features();
         sass::vector<sass::string> positiveFeatures =
-          ourModifier == "not" ? other->features() : this->features();
+          ourModifierIsNot ? other->features() : this->features();
 
         // If the negative features are a subset of the positive features, the
         // query is empty. For example, `not screen and (color)` has no
@@ -403,7 +407,7 @@ namespace Sass {
         return CssMediaQueryObj();
       }
 
-      if (ourModifier == "not") {
+      if (ourModifierIsNot) {
         type = theirType;
         modifier = theirModifier;
         features = other->features();
@@ -414,8 +418,9 @@ namespace Sass {
         features = this->features();
       }
     }
-    else if (ourModifier == "not") {
-      SASS_ASSERT(theirModifier == "not", "modifiers not is sync");
+    else if (ourModifierIsNot) {
+
+      SASS_ASSERT(theirModifierIsNot, "modifiers not is sync");
 
       // CSS has no way of representing "neither screen nor print".
       if (ourType != theirType) return CssMediaQueryObj();

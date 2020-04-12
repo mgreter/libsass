@@ -9,6 +9,10 @@
 #include <wincon.h>
 #endif
 
+#include "constants.hpp"
+
+// Minimal terminal abstraction for cross compatibility.
+// Its main purpose is to let us print stuff with colors.
 namespace Terminal {
 
 #ifdef _WIN32
@@ -129,27 +133,6 @@ namespace Terminal {
   }
 
 #endif
-
-  extern const char reset[];
-  extern const char bold[];
-  extern const char red[];
-  extern const char green[];
-  extern const char yellow[];
-  extern const char blue[];
-  extern const char magenta[];
-  extern const char cyan[];
-  extern const char bold_red[];
-  extern const char bold_green[];
-  extern const char bold_yellow[];
-  extern const char bold_blue[];
-  extern const char bold_magenta[];
-  extern const char bold_cyan[];
-  extern const char bg_red[];
-  extern const char bg_green[];
-  extern const char bg_yellow[];
-  extern const char bg_blue[];
-  extern const char bg_magenta[];
-  extern const char bg_cyan[];
 
 }
 

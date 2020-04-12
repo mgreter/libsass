@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include "util_string.hpp"
+#include "string_utils.hpp"
 
 namespace Sass {
 
@@ -238,10 +239,10 @@ namespace Sass {
   // ##########################################################################
   inline bool isFakePseudoElement(const sass::string& name)
   {
-    return Util::equalsLiteral("after", name)
-      || Util::equalsLiteral("before", name)
-      || Util::equalsLiteral("first-line", name)
-      || Util::equalsLiteral("first-letter", name);
+    return StringUtils::equalsIgnoreCase(name, "after", 5)
+      || StringUtils::equalsIgnoreCase(name, "before", 6)
+      || StringUtils::equalsIgnoreCase(name, "first-line", 10)
+      || StringUtils::equalsIgnoreCase(name, "first-letter", 12);
   }
 
   // ##########################################################################
@@ -251,10 +252,10 @@ namespace Sass {
   // ##########################################################################
   inline bool isSubselectorPseudo(const sass::string& norm)
   {
-    return Util::equalsLiteral("any", norm)
-      || Util::equalsLiteral("matches", norm)
-      || Util::equalsLiteral("nth-child", norm)
-      || Util::equalsLiteral("nth-last-child", norm);
+    return StringUtils::equalsIgnoreCase(norm, "any", 3)
+      || StringUtils::equalsIgnoreCase(norm, "matches", 7)
+      || StringUtils::equalsIgnoreCase(norm, "nth-child", 9)
+      || StringUtils::equalsIgnoreCase(norm, "nth-last-child", 14);
   }
   // EO isSubselectorPseudo
 
@@ -263,13 +264,13 @@ namespace Sass {
   // ###########################################################################
   inline bool isSelectorPseudoClass(const sass::string& test)
   {
-    return Util::equalsLiteral("not", test)
-      || Util::equalsLiteral("matches", test)
-      || Util::equalsLiteral("current", test)
-      || Util::equalsLiteral("any", test)
-      || Util::equalsLiteral("has", test)
-      || Util::equalsLiteral("host", test)
-      || Util::equalsLiteral("host-context", test);
+    return StringUtils::equalsIgnoreCase(test, "not", 3)
+      || StringUtils::equalsIgnoreCase(test, "matches", 7)
+      || StringUtils::equalsIgnoreCase(test, "current", 7)
+      || StringUtils::equalsIgnoreCase(test, "any", 3)
+      || StringUtils::equalsIgnoreCase(test, "has", 3)
+      || StringUtils::equalsIgnoreCase(test, "host", 4)
+      || StringUtils::equalsIgnoreCase(test, "host-context", 12);
   }
   // EO isSelectorPseudoClass
 
@@ -278,7 +279,7 @@ namespace Sass {
   // ###########################################################################
   inline bool isSelectorPseudoElement(const sass::string& test)
   {
-    return Util::equalsLiteral("slotted", test);
+    return StringUtils::equalsIgnoreCase(test, "slotted", 7);
   }
   // EO isSelectorPseudoElement
 
@@ -287,8 +288,8 @@ namespace Sass {
   // ###########################################################################
   inline bool isSelectorPseudoBinominal(const sass::string& test)
   {
-    return Util::equalsLiteral("nth-child", test)
-      || Util::equalsLiteral("nth-last-child", test);
+    return StringUtils::equalsIgnoreCase(test, "nth-child", 11)
+      || StringUtils::equalsIgnoreCase(test, "nth-last-child", 14);
   }
   // EO isSelectorPseudoBinominal
 

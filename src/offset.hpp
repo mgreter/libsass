@@ -9,8 +9,6 @@
 
 namespace Sass {
 
-  class LineScanner;
-
   class Offset {
 
   public:
@@ -55,10 +53,10 @@ namespace Sass {
     // Assign and increment operator
     void operator+= (const Offset& pos);
 
-    // Plus operator
+    // Plus operator (returns new Offset)
     Offset operator+ (const Offset& off) const;
 
-    // Multiply operator
+    // Multiply operator (returns new Offset)
     Offset operator* (uint32_t mul) const;
 
     // Implement equal and derive unequal

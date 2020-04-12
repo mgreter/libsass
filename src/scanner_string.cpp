@@ -74,7 +74,7 @@ namespace Sass {
     default:
       // skip over 10xxxxxx and 01xxxxxx
       // count ASCII and first utf8 bytes
-      if (Util::is_character(character)) {
+      if (Character::isCharacter(character)) {
         // 64 => first utf8 byte
         // 128 => regular ASCII char
         offset.column += 1;

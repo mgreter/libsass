@@ -20,7 +20,7 @@ namespace Sass
 		// Offset size
 		Offset span;
 
-		// Create span between `lhs.start` and `rhs.end`
+		// Create span between `lhs.start` and `rhs.end` (must be same source)
 		static SourceSpan delta(const SourceSpan& lhs, const SourceSpan& rhs);
 
 		static SourceSpan delta(AST_Node* lhs, AST_Node* rhs);

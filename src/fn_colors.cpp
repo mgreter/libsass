@@ -8,6 +8,7 @@
 #include "fn_colors.hpp"
 #include "util.hpp"
 #include "util_string.hpp"
+#include "string_utils.hpp"
 #include "character.hpp"
 #include "listize.hpp"
 #include "logger.hpp"
@@ -64,7 +65,7 @@ namespace Sass {
       if (s == nullptr) return false;
       if (s->hasQuotes()) return false;
       const sass::string& str = s->value();
-      return starts_with(str, "var(");
+      return StringUtils::startsWith(str, "var(");
     }
 
     bool isSpecialNumber(const Value* obj) {
@@ -74,11 +75,11 @@ namespace Sass {
       if (s->hasQuotes()) return false;
       const sass::string& str = s->value();
       if (str.length() < 6) return false;
-      return starts_with(str, "calc(")
-        || starts_with(str, "var(")
-        || starts_with(str, "env(")
-        || starts_with(str, "min(")
-        || starts_with(str, "max(");
+			return StringUtils::startsWith(str, "calc(", 5)
+        || StringUtils::startsWith(str, "var(", 4)
+        || StringUtils::startsWith(str, "env(", 4)
+        || StringUtils::startsWith(str, "min(", 4)
+        || StringUtils::startsWith(str, "max(", 4);
     }
 
     /// Asserts that [number] is a percentage or has no units, and normalizes the
@@ -111,7 +112,7 @@ namespace Sass {
     /// contains `/`.
     bool _isVarSlash(Value* value) {
       if (SassString * string = value->isString()) {
-        return starts_with(string->value(), "var(") &&
+				return StringUtils::startsWith(string->value(), "var(", 4) &&
           string_constains(string->value(), '/');
       }
       return false;

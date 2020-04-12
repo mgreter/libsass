@@ -7,30 +7,56 @@
 
 namespace Sass {
 
+
+  // SourceData is the base class to hold loaded sass content.
   class SourceData :
     public SharedObj {
-  public:
-    SourceData();
-    virtual sass::vector<sass::string>
-      getLines(size_t start, size_t length = 1) const = 0;
-    virtual sass::string getLine(size_t line) = 0;
+
+    friend class ItplFile;
+    friend class SourceData;
+
+  protected:
+
+    // Returns the number of lines. On the first call it will
+    // calculate the linefeed lookup table.
     virtual size_t countLines() = 0;
-    virtual const char* end() const = 0;
-    virtual const char* begin() const = 0;
+
+  public:
+
+    // Constructor
+    SourceData();
+
+    // The source id is uniquely assigned
+    virtual size_t getSrcId() const = 0;
+
+    // Return path as it was given for import
     virtual const char* getPath() const = 0;
+
+    // Returns the requested line. Will take interpolations into
+    // account to show more accurate debug messages. Calling this
+    // can be rather expensive, so only use it for debugging.
+    virtual sass::string getLine(size_t line) = 0;
+
+    // Get raw iterator for actual source
+    virtual const char* end() const = 0;
+
+    // Get raw iterator for actual source
+    virtual const char* begin() const = 0;
+
+    // Return raw sizes in bytes
     virtual size_t size() const = 0;
 
+    // Deprecated, obsolete?
     virtual bool hasMapping(size_t srcMapPos) const = 0;
-    virtual const Mapping& getMapping(size_t srcMapPos) const = 0;
 
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const = 0;
 
-    virtual size_t getSrcId() const = 0;
     ~SourceData() {}
   };
 
   class SourceFile :
     public SourceData {
+    friend class ItplFile;
   protected:
     Mappings srcmap;
     char* path;
@@ -38,7 +64,15 @@ namespace Sass {
     size_t length;
     size_t srcid;
   protected:
+
+    // Store byte offset for every line.
+    // Lazy calculated within `countLines`.
+    // Columns per line can be derived from it.
     sass::vector<size_t> lfs;
+
+    // Returns the number of lines.
+    virtual size_t countLines() override;
+
   public:
 
     SourceFile(
@@ -78,20 +112,12 @@ namespace Sass {
     virtual bool hasMapping(size_t srcMapPos) const override {
       return srcMapPos < srcmap.size();
     }
-    virtual const Mapping& getMapping(size_t srcMapPos) const override {
-      return srcmap[srcMapPos];
-    }
 
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const override {
       return pstate;
     }
 
 
-    virtual sass::vector<sass::string> getLines(
-      size_t start, size_t length = 1)
-        const override;
-
-    virtual size_t countLines() override;
     virtual sass::string getLine(size_t line) override;
 
     sass::string to_string() const override final {
@@ -101,6 +127,10 @@ namespace Sass {
 
   class ItplFile :
     public SourceFile {
+  protected:
+
+    size_t countLines() override final;
+
   private:
     SourceFileObj around;
     SourceSpan pstate;
@@ -117,13 +147,8 @@ namespace Sass {
 
     SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
 
-    size_t countLines() override final;
-
     sass::string getLine(size_t line) override final;
 
-    sass::vector<sass::string> getLines(
-      size_t start, size_t length = 1)
-        const override final;
   };
 
 }

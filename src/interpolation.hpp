@@ -3,7 +3,7 @@
 
 #include "ast_fwd_decl.hpp"
 #include "scanner_string.hpp"
-#include "util_string.hpp"
+#include "string_utils.hpp"
 #include "position.hpp"
 
 namespace Sass {
@@ -60,7 +60,7 @@ namespace Sass {
     const sass::string& toString(bool rtrim = false)
     {
       if (rtrim) {
-        Util::ascii_str_rtrim(buffer);
+        StringUtils::makeRightTrimmed(buffer);
         return buffer;
       }
       else {
@@ -167,10 +167,10 @@ namespace Sass {
     }
 
     bool trailingStringEndsWith(const sass::string& cmp) {
-      sass::string tail(text.toString());
-      Util::ascii_str_rtrim(tail);
+      sass::string tail(text.toString(true));
+      StringUtils::makeRightTrimmed(tail); // needed??
       // could optimize the check to account trim
-      return Util::ascii_str_ends_with(tail, cmp);
+      return StringUtils::endsWith(tail, cmp);
     }
 
   };
