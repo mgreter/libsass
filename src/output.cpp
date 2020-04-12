@@ -52,9 +52,9 @@ namespace Sass {
 
   void Output::operator()(Import* imp)
   {
-    if (imp->urls().size()) {
+    //if (imp->urls().size()) {
       // top_nodes.emplace_back(imp);
-    }
+    //}
   }
 
   void Output::operator()(StaticImport* imp)

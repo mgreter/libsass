@@ -359,6 +359,9 @@ namespace Sass {
     url_(url)
   {}
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   IncludeImport::IncludeImport(
     DynamicImportObj import2,
     Include include) :
@@ -372,7 +375,7 @@ namespace Sass {
 
   ImportRule::ImportRule(
     const SourceSpan& pstate) :
-    Statement(pstate),
+    ImportBase(pstate),
     VectorizedBase()
   {}
 
@@ -381,22 +384,20 @@ namespace Sass {
 
   Import::Import(const SourceSpan& pstate)
   : ImportBase(pstate),
-    urls_(),
-    incs_(),
+    incs_()
     // imports_(),
-    import_queries_(),
-    queries_()
+    // import_queries_()
   {}
 
   sass::vector<Include>& Import::incs() { return incs_; }
-  sass::vector<ExpressionObj>& Import::urls() { return urls_; }
+  // sass::vector<ExpressionObj>& Import::urls() { return urls_; }
   // sass::vector<ImportBaseObj>& Import::imports() { return imports_; }
-  sass::vector<ExpressionObj>& Import::queries2() { return import_queries_; }
+  //sass::vector<ExpressionObj>& Import::queries2() { return import_queries_; }
 
-  bool Import::is_invisible() const
-  {
-    return incs_.empty() && urls_.empty();
-  }
+  //bool Import::is_invisible() const
+  //{
+  //  return incs_.empty(); // && urls_.empty();
+  //}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

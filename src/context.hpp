@@ -23,14 +23,25 @@ namespace Sass {
 
   class Context {
   public:
-    void import_url (Import* imp, sass::string load_path, const sass::string& ctx_path);
+    void importAbsPath(Import* imp, sass::string load_path, const sass::string& ctx_path);
+    void importAbsPath2(ImportRule* imp, sass::string load_path, const sass::string& ctx_path);
     bool call_headers(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp)
     { return call_loader(load_path, ctx_path, pstate, imp, c_headers, false); };
     bool call_importers(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp)
     { return call_loader(load_path, ctx_path, pstate, imp, c_importers, true); };
 
+    bool call_headers2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* imp)
+    {
+      return call_loader2(load_path, ctx_path, pstate, imp, c_headers, false);
+    };
+    bool call_importers2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* imp)
+    {
+      return call_loader2(load_path, ctx_path, pstate, imp, c_importers, true);
+    };
+
   private:
     bool call_loader(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp, sass::vector<Sass_Importer_Entry> importers, bool only_one = true);
+    bool call_loader2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* rule, sass::vector<Sass_Importer_Entry> importers, bool only_one = true);
 
   protected:
     void prepareEnvironment();

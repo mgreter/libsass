@@ -392,9 +392,9 @@ namespace Sass {
   {
     visitCssImport(import);
   }
-
   void Inspect::operator()(Import* import)
   {
+    /*
     if (!import->urls().empty()) {
       append_token("@import", import);
       append_mandatory_space();
@@ -421,6 +421,7 @@ namespace Sass {
         append_delimiter();
       }
     }
+    */
   }
 
   void Inspect::operator()(ImportRule* rule)

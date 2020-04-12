@@ -408,13 +408,18 @@ namespace Sass {
 
   }
 
-  void Context::import_url (Import* imp, sass::string load_path, const sass::string& ctx_path) {
+  void Context::importAbsPath(Import* imp, sass::string load_path, const sass::string& ctx_path) {
 
     SourceSpan pstate(imp->pstate());
     sass::string imp_path(unquote(load_path));
     sass::string protocol("file");
     const Importer importer(imp_path, ctx_path);
+
+    ImportRule* rule = SASS_MEMORY_NEW(ImportRule, pstate);
     Include include(load_import(importer, pstate));
+    auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, imp_path);
+    rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
+    
     if (include.abs_path.empty()) {
       error("Can't find stylesheet to import.",
         imp->pstate(), *logger);
@@ -422,6 +427,23 @@ namespace Sass {
     imp->incs().emplace_back(include);
   }
 
+  void Context::importAbsPath2(ImportRule* rule, sass::string load_path, const sass::string& ctx_path) {
+
+    SourceSpan pstate(rule->pstate());
+    sass::string imp_path(unquote(load_path));
+    sass::string protocol("file");
+    const Importer importer(imp_path, ctx_path);
+
+    Include include(load_import(importer, pstate));
+    auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, imp_path);
+    rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
+
+    if (include.abs_path.empty()) {
+      error("Can't find stylesheet to import.",
+        rule->pstate(), *logger);
+    }
+
+  }
 
   // call custom importers on the given (unquoted) load_path and eventually parse the resulting style_sheet
   bool Context::call_loader(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp, sass::vector<Sass_Importer_Entry> importers, bool only_one)
@@ -490,7 +512,7 @@ namespace Sass {
             // or resolves the file on the file-system
             // added and resolved via `add_file`
             // finally stores everything on `imp`
-            import_url(imp, abs_path, ctx_path);
+            importAbsPath(imp, abs_path, ctx_path);
           }
           // move to next
           ++it_includes;
@@ -507,6 +529,96 @@ namespace Sass {
     return has_import;
   }
 
+
+  // call custom importers on the given (unquoted) load_path and eventually parse the resulting style_sheet
+  bool Context::call_loader2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* rule, sass::vector<Sass_Importer_Entry> importers, bool only_one)
+  {
+    // unique counter
+    size_t count = 0;
+    // need one correct import
+    bool has_import = false;
+    // process all custom importers (or custom headers)
+    for (Sass_Importer_Entry& importer_ent : importers) {
+      // int priority = sass_importer_get_priority(importer);
+      Sass_Importer_Fn fn = sass_importer_get_function(importer_ent);
+      // skip importer if it returns NULL
+      if (Sass_Import_List includes =
+        fn(load_path.c_str(), importer_ent, c_compiler)
+        ) {
+        // get c pointer copy to iterate over
+        Sass_Import_List it_includes = includes;
+        while (*it_includes) {
+          ++count;
+          // create unique path to use as key
+          sass::string uniq_path = load_path;
+          if (!only_one && count) {
+            sass::sstream path_strm;
+            path_strm << uniq_path << ":" << count;
+            uniq_path = path_strm.str();
+          }
+          // create the importer struct
+          Importer importer(uniq_path, ctx_path);
+          // query data from the current include
+          Sass_Import_Entry include_ent = *it_includes;
+          char* source = sass_import_take_source(include_ent);
+          char* srcmap = sass_import_take_srcmap(include_ent);
+          size_t line = sass_import_get_error_line(include_ent);
+          size_t column = sass_import_get_error_column(include_ent);
+          const char* abs_path = sass_import_get_abs_path(include_ent);
+          // handle error message passed back from custom importer
+          // it may (or may not) override the line and column info
+          if (const char* err_message = sass_import_get_error_message(include_ent)) {
+            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, { source, srcmap }, pstate);
+            if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
+            // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
+            else {
+              std::cerr << "re implement this\n";
+              exit(1);
+            }
+          }
+          // content for import was set
+          else if (source) {
+            // resolved abs_path should be set by custom importer
+            // use the created uniq_path as fall-back (maybe enforce)
+            sass::string path_key(abs_path ? abs_path : uniq_path);
+            // create the importer struct
+            Include include(importer, path_key, include_ent->type);
+            // attach information to AST node
+
+            auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, load_path);
+            rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
+
+            // imp->incs().emplace_back(include);
+
+            // register the resource buffers
+            register_resource(include, { source, srcmap }, pstate);
+          }
+          // only a path was returned
+          // try to load it like normal
+          else if (abs_path) {
+            // checks some urls to preserve
+            // `http://`, `https://` and `//`
+            // or dispatches to `import_file`
+            // which will check for a `.css` extension
+            // or resolves the file on the file-system
+            // added and resolved via `add_file`
+            // finally stores everything on `imp`
+            importAbsPath2(rule, abs_path, ctx_path);
+          }
+          // move to next
+          ++it_includes;
+        }
+        // deallocate the returned memory
+        sass_delete_import_list(includes);
+        // set success flag
+        has_import = true;
+        // break out of loop
+        if (only_one) break;
+      }
+    }
+    // return result
+    return has_import;
+  }
   void register_built_in_functions(Context&);
   void register_c_function2(Context&, Sass_Function_Entry);
 
@@ -548,7 +660,7 @@ namespace Sass {
     // increase head count to skip later
     head_imports += resources.size() - 1;
     // add the statement if we have urls
-    if (!imp->urls().empty()) statements.emplace_back(imp);
+    // if (!imp->urls().empty()) statements.emplace_back(imp);
     // process all other resources (add Import_Stub nodes)
     for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
       statements.emplace_back(SASS_MEMORY_NEW(Import_Stub, pstate, imp->incs()[i]));

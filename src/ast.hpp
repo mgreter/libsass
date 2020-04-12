@@ -622,7 +622,7 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class ImportRule final : public Statement, public VectorizedBase<ImportBase> {
+  class ImportRule final : public ImportBase, public VectorizedBase<ImportBase> {
   public:
     ImportRule(const SourceSpan& pstate);
     // ATTACH_CLONE_OPERATIONS(ImportRule);
@@ -634,19 +634,10 @@ namespace Sass {
   // necessary to store a list of each in an Import node.
   ////////////////////////////////////////////////////////////////////////////
   class Import final : public ImportBase {
-    sass::vector<ExpressionObj> urls_;
     sass::vector<Include> incs_;
-    // sass::vector<ImportBaseObj> imports_;
-    ADD_CONSTREF(sass::vector<ExpressionObj>, import_queries);
-    ADD_CONSTREF(sass::vector<CssMediaQueryObj>, queries);
   public:
     Import(const SourceSpan& pstate);
     sass::vector<Include>& incs();
-    sass::vector<ExpressionObj>& urls();
-    // sass::vector<ImportBaseObj>& imports();
-    sass::vector<ExpressionObj>& queries2();
-    bool is_invisible() const override;
-    // ATTACH_CLONE_OPERATIONS(Import)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

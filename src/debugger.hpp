@@ -744,7 +744,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " [" << block->imp_path() << "] ";
     // std::cerr << " " << block->tabs();
     std::cerr << std::endl;
-    for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
+    // for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
   }
   else if (Cast<Import_Stub>(node)) {
     Import_Stub* block = Cast<Import_Stub>(node);
@@ -758,15 +758,15 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     // std::vector<std::string>         files_;
-    for (auto url : block->urls()) debug_ast(url, ind + "@: ");
+    // for (auto url : block->urls()) debug_ast(url, ind + "@: ");
   //  for (auto imp : block->imports()) debug_ast(imp, ind + ":: ");
     for (auto inc : block->incs()) std::cerr << ind << "=" << inc.abs_path << "\n";
-    for (auto item : block->queries()) {
-      debug_ast(item, ind + "#@ ");
-    }
-    for (auto item : block->queries2()) {
-      debug_ast(item, ind + "@@ ");
-    }
+    //for (auto item : block->queries()) {
+    //  debug_ast(item, ind + "#@ ");
+    //}
+    //for (auto item : block->queries2()) {
+    //  debug_ast(item, ind + "@@ ");
+    //}
   } else if (Cast<Assignment>(node)) {
     Assignment* block = Cast<Assignment>(node);
     std::cerr << ind << "Assignment " << block;
