@@ -716,12 +716,26 @@ inline void debug_ast(AST_Node* node, std::string ind)
   debug_ast(block->media(), "media: ");
   }
   else if (Cast<DynamicImport>(node)) {
-  DynamicImport* block = Cast<DynamicImport>(node);
-  std::cerr << ind << "DynamicImport " << block;
-  std::cerr << " (" << pstate_source_position(node) << ")";
-  // std::cerr << " [" << block->imp_path() << "] ";
-  // std::cerr << " " << block->tabs();
-  std::cerr << std::endl;
+    DynamicImport* block = Cast<DynamicImport>(node);
+    std::cerr << ind << "DynamicImport " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    // std::cerr << " [" << block->imp_path() << "] ";
+    // std::cerr << " " << block->tabs();
+    std::cerr << std::endl;
+  }
+  else if (Cast<CssImport>(node)) {
+    CssImport* block = Cast<CssImport>(node);
+    std::cerr << ind << "CssImport " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [" << block->url()->text() << "] ";
+    std::cerr << std::endl;
+  }
+  else if (Cast<IncludeImport>(node)) {
+    IncludeImport* block = Cast<IncludeImport>(node);
+    std::cerr << ind << "IncludeImport " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [" << block->include().abs_path << "] ";
+    std::cerr << std::endl;
   }
   else if (Cast<ImportRule>(node)) {
     ImportRule* block = Cast<ImportRule>(node);

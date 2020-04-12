@@ -181,7 +181,6 @@ namespace Sass {
 
     If* _ifRule(Offset start, Statement* (StylesheetParser::* child)()); // IfRule
 
-    Import* _importRule(Offset start); // ImportRule
     ImportRule* _importRule2(Offset start); // ImportRule
 
     virtual ImportBase* importArgument();

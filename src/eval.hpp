@@ -122,7 +122,6 @@ namespace Sass {
     Value* operator()(Declaration* node) { return visitDeclaration(node); }
     Value* operator()(Assignment* node) { return visitVariableDeclaration(node); }
     Value* operator()(MapMerge* node) { return visitMapMerge(node); }
-    Value* operator()(Import* node) { return visitImport99(node); }
     Value* operator()(ImportRule* node) { return visitImportRule99(node); }
     Value* operator()(StaticImport* node) { return visitStaticImport99(node); }
     Value* operator()(DynamicImport* node) { return visitDynamicImport99(node); }
@@ -260,8 +259,6 @@ namespace Sass {
     Value* visitStaticImport99(StaticImport* rule);
 
     Value* visitImportRule99(ImportRule* rule);
-
-    Value* visitImport99(Import* imp);
 
     void append_block(Block* block);
 

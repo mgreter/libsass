@@ -176,13 +176,18 @@ namespace Sass {
     CssNode(pstate),
     url_(url),
     supports_(supports),
-    media_(media)
+    media_(media),
+    outOfOrder_(false)
   {
   }
 
   CssImport::CssImport(
     const CssImport* ptr) :
-    CssNode(ptr)
+    CssNode(ptr),
+    url_(ptr->url_),
+    supports_(ptr->supports_),
+    media_(ptr->media_),
+    outOfOrder_(ptr->outOfOrder_)
   {}
 
   /////////////////////////////////////////////////////////////////////////////

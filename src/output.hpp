@@ -21,7 +21,7 @@ namespace Sass {
 
   protected:
     sass::string charset;
-    sass::vector<AST_Node*> top_nodes;
+    sass::vector<CssNodeObj> top_nodes;
 
   public:
     OutputBuffer& get_buffer(void);
@@ -34,6 +34,7 @@ namespace Sass {
     virtual void operator()(Keyframe_Rule*);
     virtual void operator()(Import*);
     virtual void operator()(StaticImport*);
+    virtual void operator()(CssImport*);
     virtual void operator()(CssComment*);
     virtual void operator()(LoudComment*);
     virtual void operator()(SilentComment*);

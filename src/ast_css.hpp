@@ -146,6 +146,9 @@ namespace Sass {
     // The media query attached to this import.
     ADD_PROPERTY(sass::vector<CssMediaQueryObj>, media);
 
+    // Flag to hoist import to the top.
+    ADD_PROPERTY(bool, outOfOrder);
+
   public:
 
     // Standard value constructor

@@ -1038,67 +1038,6 @@ namespace Sass {
 
   }
 
-  Import* StylesheetParser::_importRule(Offset start)
-  {
-
-    ImportRuleObj rule = SASS_MEMORY_NEW(
-      ImportRule, scanner.relevantSpanFrom(start));
-
-    ImportObj imp = SASS_MEMORY_NEW(
-      Import, scanner.relevantSpanFrom(start));
-
-    do {
-      whitespace();
-      Offset start2(scanner.offset);
-      ImportBaseObj argument = importArgument();
-      // redebug_ast(argument);
-      if (auto dyn = Cast<DynamicImport>(argument)) {
-        if (_inControlDirective || _inMixin) {
-          _disallowedAtRule(start);
-        }
-        imp->pstate(scanner.relevantSpanFrom(start2));
-        SourceSpan pstate(imp->pstate());
-        sass::string imp_path(unquote(dyn->url()));
-        sass::string protocol("file");
-        const Importer importer(imp_path, scanner.sourceUrl);
-        Include include(context.load_import(importer, pstate));
-        if (include.abs_path.empty()) {
-          BackTraces& traces = *context.logger;
-          traces.push_back(BackTrace(pstate));
-          throw Exception::InvalidSyntax(traces,
-            "Can't find stylesheet to import.");
-        }
-        imp->incs().emplace_back(include);
-
-        rule->append(argument);
-
-      }
-      else if (auto stat = Cast<StaticImport>(argument)) {
-        imp->urls().emplace_back(stat->url());
-        // if (!imp->import_queries()) {
-          // imp->import_queries(SASS_MEMORY_NEW(List, "[pstateG]"));
-        // }
-        if (stat->media()) {
-          imp->queries2().emplace_back(stat->media());
-        }
-        rule->append(argument);
-      }
-      else if (auto imp2 = Cast<Import>(argument)) {
-        // Used by plugin I guess
-        std::cerr << "Facks\n";
-        for (auto inc : imp2->incs()) {
-          imp->incs().emplace_back(inc);
-        }
-      }
-      // rule->append(argument);
-      whitespace();
-    }
-    while (scanner.scanChar($comma));
-    expectStatementSeparator("@import rule");
-    return imp.detach();
-
-  }
-
   ImportRule* StylesheetParser::_importRule2(Offset start)
   {
 
@@ -1137,14 +1076,7 @@ namespace Sass {
         rule->append(SASS_MEMORY_NEW(IncludeImport, argument, include));
 
       }
-      else if (auto stat = Cast<StaticImport>(argument)) {
-        // imp->urls().emplace_back(stat->url());
-        // if (!imp->import_queries()) {
-          // imp->import_queries(SASS_MEMORY_NEW(List, "[pstateG]"));
-        // }
-        // if (stat->media()) {
-        //   imp->queries2().emplace_back(stat->media());
-        // }
+      else if (Cast<StaticImport>(argument)) {
         rule->append(argument);
       }
       else if (auto imp2 = Cast<Import>(argument)) {

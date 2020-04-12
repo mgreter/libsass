@@ -2290,7 +2290,7 @@ namespace Sass {
 
   Value* Eval::visitImportStub99(Import_Stub* i)
   {
-    std::cerr << "Whacky";
+    std::cerr << "Import_Stub is now IncludeImport\n";
     // Add a stack frame for this import rule
     callStackFrame frame(traces,
       BackTrace(i->pstate(), Strings::importRule));
@@ -2343,6 +2343,9 @@ namespace Sass {
     // Add C-API to stack to expose it
     ctx.import_stack.emplace_back(import);
 
+    callStackFrame frame(traces,
+      BackTrace(rule->pstate(), Strings::importRule));
+
     // Evaluate the included sheet
     append_block(sheet.root);
 
@@ -2376,11 +2379,10 @@ namespace Sass {
 
   Value* Eval::visitStaticImport99(StaticImport* rule)
   {
-    return nullptr;
-    std::cerr << "Yes we do\n";
     // Create new CssImport object 
     CssImportObj import = SASS_MEMORY_NEW(CssImport, rule->pstate(),
       interpolationToCssString(rule->url(), false, false));
+    import->outOfOrder(rule->outOfOrder());
 
     if (rule->supports()) {
       if (auto supports = Cast<SupportsDeclaration>(rule->supports())) {
@@ -2416,51 +2418,6 @@ namespace Sass {
       if (import) { auto imp = import->perform(this); }
     }
     return nullptr;
-  }
-
-  Value* Eval::visitImport99(Import* imp)
-  {
-
-    // ToDo: Should this be a CssImportObj?
-    ImportObj result = SASS_MEMORY_NEW(Import, imp->pstate());
-
-    CssImportObj css = SASS_MEMORY_NEW(CssImport, imp->pstate());
-
-    // Re-parse queries if any have been given
-    if (!imp->queries2().empty()) {
-      SourceSpan state(imp->pstate());
-      sass::vector<CssMediaQueryObj> queries;
-      for (auto& query : imp->queries2()) {
-        ValueObj evaled = query->perform(this);
-        sass::string reparse = evaled->to_string();
-        SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
-          state.getPath(), reparse.c_str(), state.getSrcId());
-        MediaQueryParser parser(ctx, source);
-        queries.emplace_back(parser.parse2());
-      }
-      result->queries(queries);
-      css->media(queries);
-      // result->import_queries({});
-    }
-
-    // Now perform evaluation of urls to import
-    // These will result as css import rules
-    for (size_t i = 0, S = imp->urls().size(); i < S; ++i) {
-      result->urls().emplace_back(imp->urls()[i]->perform(this));
-    }
-    // all resources have been dropped for Input_Stubs
-
-    for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-      Include inc = imp->incs()[i];
-      Import_StubObj stub = SASS_MEMORY_NEW(Import_Stub,
-        imp->pstate(), inc);
-      stub->perform(this);
-    }
-
-    blockStack.back()->append(result);
-    //blockStack.back()->append(css);
-    return nullptr;
-
   }
 
   // process and add to last block on stack

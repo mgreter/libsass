@@ -53,11 +53,21 @@ namespace Sass {
   void Output::operator()(Import* imp)
   {
     if (imp->urls().size()) {
-      top_nodes.emplace_back(imp);
+      // top_nodes.emplace_back(imp);
     }
   }
 
   void Output::operator()(StaticImport* imp)
+  {
+    if (imp->outOfOrder()) {
+      // top_nodes.emplace_back(imp);
+    }
+    else {
+      Inspect::operator()(imp);
+    }
+  }
+
+  void Output::operator()(CssImport* imp)
   {
     if (imp->outOfOrder()) {
       top_nodes.emplace_back(imp);

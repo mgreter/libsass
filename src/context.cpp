@@ -471,7 +471,7 @@ namespace Sass {
           // content for import was set
           else if (source) {
             // resolved abs_path should be set by custom importer
-            // use the created uniq_path as fallback (maybe enforce)
+            // use the created uniq_path as fall-back (maybe enforce)
             sass::string path_key(abs_path ? abs_path : uniq_path);
             // create the importer struct
             Include include(importer, path_key, include_ent->type);
@@ -480,14 +480,14 @@ namespace Sass {
             // register the resource buffers
             register_resource(include, { source, srcmap }, pstate);
           }
-          // only a path was retuned
+          // only a path was returned
           // try to load it like normal
           else if(abs_path) {
             // checks some urls to preserve
             // `http://`, `https://` and `//`
-            // or dispatchs to `import_file`
+            // or dispatches to `import_file`
             // which will check for a `.css` extension
-            // or resolves the file on the filesystem
+            // or resolves the file on the file-system
             // added and resolved via `add_file`
             // finally stores everything on `imp`
             import_url(imp, abs_path, ctx_path);
@@ -671,7 +671,7 @@ namespace Sass {
     // abort on invalid root
     if (root.isNull()) return {};
 
-    debug_ast(root);
+    //debug_ast(root);
 
     Eval eval(*this);
     eval.plainCss = sheet.plainCss;
@@ -680,6 +680,7 @@ namespace Sass {
       varRoot.functions[i] = fnCache[i];
     }
     root = eval.visitRootBlock99(root); // 50%
+    //debug_ast(root);
 
     Extension unsatisfied;
     // check that all extends were used
