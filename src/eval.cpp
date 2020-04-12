@@ -2288,40 +2288,6 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Eval::visitImportStub99(Import_Stub* i)
-  {
-    std::cerr << "Import_Stub is now IncludeImport\n";
-    // Add a stack frame for this import rule
-    callStackFrame frame(traces,
-      BackTrace(i->pstate(), Strings::importRule));
-
-
-    Block_Obj trace_block = SASS_MEMORY_NEW(Block, i->pstate());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, i->pstate(), i->imp_path(), trace_block, 'i');
-    blockStack.back()->append(trace);
-    blockStack.emplace_back(trace_block);
-
-    const sass::string& abs_path(i->resource().abs_path);
-    StyleSheet sheet = ctx.sheets.at(abs_path);
-
-    // we don't seem to need that actually after all
-    Sass_Import_Entry import = sass_make_import(
-      i->imp_path().c_str(),
-      i->abs_path().c_str(),
-      0, 0
-    );
-    import->type = sheet.syntax;
-    ctx.import_stack.emplace_back(import);
-    append_block(sheet.root);
-
-
-
-    sass_delete_import(ctx.import_stack.back());
-    ctx.import_stack.pop_back();
-    blockStack.pop_back();
-    return nullptr;
-  }
-
   Value* Eval::visitIncludeImport99(IncludeImport* rule)
   {
 

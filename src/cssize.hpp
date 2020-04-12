@@ -32,7 +32,6 @@ namespace Sass {
     Statement* operator()(Trace*);
     // Statement* operator()(Assignment*);
     // Statement* operator()(Import*);
-    // Statement* operator()(Import_Stub*);
     // Statement* operator()(WarnRule*);
     // Statement* operator()(ErrorRule*);
     // Statement* operator()(If*);

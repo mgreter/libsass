@@ -23,12 +23,6 @@ namespace Sass {
 
   class Context {
   public:
-    void importAbsPath(Import* imp, sass::string load_path, const sass::string& ctx_path);
-    void importAbsPath2(ImportRule* imp, sass::string load_path, const sass::string& ctx_path);
-    bool call_headers(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp)
-    { return call_loader(load_path, ctx_path, pstate, imp, c_headers, false); };
-    bool call_importers(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp)
-    { return call_loader(load_path, ctx_path, pstate, imp, c_importers, true); };
 
     bool call_headers2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* imp)
     {
@@ -40,7 +34,6 @@ namespace Sass {
     };
 
   private:
-    bool call_loader(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, Import* imp, sass::vector<Sass_Importer_Entry> importers, bool only_one = true);
     bool call_loader2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* rule, sass::vector<Sass_Importer_Entry> importers, bool only_one = true);
 
   protected:
@@ -96,7 +89,7 @@ namespace Sass {
     sass::vector<sass::string> plugin_paths; // relative paths to load plugins
     sass::vector<sass::string> include_paths; // lookup paths for includes
 
-    void apply_custom_headers(sass::vector<StatementObj>& root, SourceSpan pstate);
+    void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
     sass::vector<Sass_Importer_Entry> c_headers;
     sass::vector<Sass_Importer_Entry> c_importers;

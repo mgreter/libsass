@@ -89,7 +89,6 @@ namespace Sass {
   class MapMerge;
 
   class Import;
-  class Import_Stub;
   class WarnRule;
 
   class ImportRule;
@@ -229,7 +228,6 @@ namespace Sass {
   IMPL_MEM_OBJ(Assignment);
   IMPL_MEM_OBJ(MapMerge);
   IMPL_MEM_OBJ(Import);
-  IMPL_MEM_OBJ(Import_Stub);
   IMPL_MEM_OBJ(ImportRule);
   IMPL_MEM_OBJ(ImportBase);
   IMPL_MEM_OBJ(StaticImport);

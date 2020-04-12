@@ -49,7 +49,6 @@ namespace Sass {
     // virtual void operator()(Declaration*) override;
     // virtual void operator()(Assignment*);
     virtual void operator()(Import*) override;
-    // virtual void operator()(Import_Stub*);
 
     virtual void operator()(ImportRule*) override;
     // virtual void operator()(StaticImport*) override;

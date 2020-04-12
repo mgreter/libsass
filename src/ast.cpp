@@ -363,7 +363,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   IncludeImport::IncludeImport(
-    DynamicImportObj import2,
+    DynamicImport* import2,
     Include include) :
     DynamicImport(import2->pstate(), import2->url()),
     include_(include)
@@ -398,17 +398,6 @@ namespace Sass {
   //{
   //  return incs_.empty(); // && urls_.empty();
   //}
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  Import_Stub::Import_Stub(const SourceSpan& pstate, Include res/*, Sass_Import_Entry imp*/)
-  : ImportBase(pstate), resource_(res)//, import_(imp)
-  {}
-  Include Import_Stub::resource() { return resource_; };
-  // Sass_Import_Entry Import_Stub::import() { return import_; };
-  sass::string Import_Stub::imp_path() { return resource_.imp_path; };
-  sass::string Import_Stub::abs_path() { return resource_.abs_path; };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -707,7 +696,6 @@ namespace Sass {
   // IMPLEMENT_AST_OPERATORS(StyleRule);
   // IMPLEMENT_AST_OPERATORS(MediaRule);
   // IMPLEMENT_AST_OPERATORS(Import);
-  // IMPLEMENT_AST_OPERATORS(Import_Stub);
   // IMPLEMENT_AST_OPERATORS(ImportRule);
   // IMPLEMENT_AST_OPERATORS(StaticImport);
   // IMPLEMENT_AST_OPERATORS(DynamicImport);

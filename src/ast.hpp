@@ -617,7 +617,7 @@ namespace Sass {
   class IncludeImport final : public DynamicImport {
     ADD_CONSTREF(Include, include);
   public:
-    IncludeImport(DynamicImportObj import, Include include);
+    IncludeImport(DynamicImport* import, Include include);
     // ATTACH_CLONE_OPERATIONS(DynamicImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -638,22 +638,6 @@ namespace Sass {
   public:
     Import(const SourceSpan& pstate);
     sass::vector<Include>& incs();
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
-  // not yet resolved single import
-  // so far we only know requested name
-  class Import_Stub final : public ImportBase {
-    Include resource_;
-    // Sass_Import_Entry import_;
-  public:
-    Import_Stub(const SourceSpan& pstate, Include res/*,
-      Sass_Import_Entry import*/);
-    Include resource();
-    // Sass_Import_Entry import();
-    sass::string imp_path();
-    sass::string abs_path();
-    // ATTACH_CLONE_OPERATIONS(Import_Stub)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

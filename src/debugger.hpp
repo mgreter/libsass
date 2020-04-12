@@ -745,13 +745,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " " << block->tabs();
     std::cerr << std::endl;
     // for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
-  }
-  else if (Cast<Import_Stub>(node)) {
-    Import_Stub* block = Cast<Import_Stub>(node);
-    std::cerr << ind << "Import_Stub " << block;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [" << block->imp_path() << "] ";
-    std::cerr << " " << block->tabs() << std::endl;
   } else if (Cast<Import>(node)) {
     Import* block = Cast<Import>(node);
     std::cerr << ind << "Import " << block;
