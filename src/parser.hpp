@@ -45,7 +45,7 @@ namespace Sass {
 
     Parser(
       Context& context,
-      SourceDataObj source);
+      SourceFileObj source);
 
   public: // protected
 

@@ -8,7 +8,7 @@ namespace Sass {
   class ScssParser : public StylesheetParser {
 
   public:
-    ScssParser(Context& context, SourceDataObj source) :
+    ScssParser(Context& context, SourceFileObj source) :
       StylesheetParser(context, source)
     {}
 

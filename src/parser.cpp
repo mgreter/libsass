@@ -34,7 +34,7 @@ namespace Sass {
 
   Parser::Parser(
     Context& context,
-    SourceDataObj source) :
+    SourceFileObj source) :
     context(context),
     scanner(*context.logger, source)
   {

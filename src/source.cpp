@@ -13,30 +13,14 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  SourceData::SourceData()
-    : SharedObj()
-  {
-  }
-
-  SourceFile::SourceFile(SourceData* source,
-    Mappings srcmap) :
-    SourceData(),
-    srcmap(std::move(srcmap)),
-    // Make a copy, delete when destroyed
-    path(sass_copy_c_string(source->getPath())),
-    data(sass_copy_c_string(source->begin())),
-    length(source->size()),
-    srcid(0), // srcid),
-    lfs()
-  {
-  }
+  /*#########################################################################*/
+  /*#########################################################################*/
 
   SourceFile::SourceFile(
     const char* path,
     const char* data,
     size_t srcid) :
-    SourceData(),
-    srcmap(),
+    SharedObj(),
     // Make a copy, delete when destroyed
     path(sass_copy_c_string(path)),
     data(sass_copy_c_string(data)),
@@ -45,39 +29,6 @@ namespace Sass {
     lfs()
   {
     length = strlen(data);
-  }
-
-  SourceFile::SourceFile(
-    const char* path,
-    const char* data,
-    Mappings srcmap,
-    size_t srcid) :
-    SourceData(),
-    srcmap(std::move(srcmap)),
-    // Make a copy, delete when destroyed
-    path(sass_copy_c_string(path)),
-    data(sass_copy_c_string(data)),
-    length(0),
-    srcid(srcid),
-    lfs()
-  {
-    length = strlen(data);
-  }
-
-  SourceFile::~SourceFile() {
-    // ToDo: use sass_free_memory
-    sass_free_memory(path);
-    sass_free_memory(data);
-  }
-
-  const char* SourceFile::end() const
-  {
-    return data + length;
-  }
-
-  const char* SourceFile::begin() const
-  {
-    return data;
   }
 
   size_t SourceFile::countLines()
@@ -115,6 +66,9 @@ namespace Sass {
     return sass::string(beg, end);
   }
 
+  /*#########################################################################*/
+  /*#########################################################################*/
+
   ItplFile::ItplFile(
     const char* data,
     SourceFileObj around,
@@ -128,34 +82,11 @@ namespace Sass {
   {
   }
 
-  ItplFile::ItplFile(
-    const char* data,
-    Mappings srcmap,
-    SourceFileObj around,
-    SourceSpan pstate) :
-    SourceFile(
-      pstate.getPath(),
-      data, srcmap,
-      pstate.getSrcId()),
-    around(around),
-    pstate(pstate)
-  {
-  }
-
   SourceSpan ItplFile::adjustSourceSpan(SourceSpan& pstate) const
   {
     pstate.position =
       this->pstate.position
       + pstate.position;
-    return pstate;
-    return SourceSpan(
-      pstate.getSource(),
-      this->pstate.position + pstate.position,
-      pstate.span);
-    size_t pos = 0;
-    while (pos < srcmap.size()) {
-      pos += 1;
-    }
     return pstate;
   }
 
@@ -166,27 +97,6 @@ namespace Sass {
       - pstate.span.line - 1
       // Plus lines from insert
       + SourceFile::countLines();
-  }
-
-  sass::string utf8Replace(
-    sass::string& text,
-    size_t start, size_t len,
-    const sass::string& replace)
-  {
-    auto first = text.begin();
-    utf8::advance(first,
-      start, text.end());
-    auto last = first;
-    if (len != sass::string::npos) {
-      utf8::advance(last,
-        len, text.end());
-    }
-    else {
-      last = text.end();
-    }
-    return text.replace(
-      first, last,
-      replace);
   }
 
   sass::string ItplFile::getLine(size_t line)
@@ -219,17 +129,17 @@ namespace Sass {
         if (pstate.span.line > 0) {
           sass::string after(around->getLine(
             line + pstate.span.line));
-          return utf8Replace(before,
+          return Unicode::replace(before,
             pstate.position.column,
             sass::string::npos,
             SourceFile::getLine(0))
-            + Unicode::utf8substr(after,
+            + Unicode::substr(after,
               pstate.span.column,
               sass::string::npos);
         }
         else {
           // Replace in the middle
-          return utf8Replace(before,
+          return Unicode::replace(before,
             pstate.position.column,
             pstate.span.column,
             SourceFile::getLine(0));
@@ -237,7 +147,7 @@ namespace Sass {
       }
       else {
         // Otherwise we append to substring
-        return Unicode::utf8substr(before,
+        return Unicode::substr(before,
           0, pstate.position.column)
           + SourceFile::getLine(0);
       }
@@ -257,14 +167,13 @@ namespace Sass {
           line - lineDelta));
       // Calculate column to cut appending line
       size_t col = pstate.span.line == 0
-        // Since we insert 
         ? pstate.position.column + pstate.span.column
         : pstate.span.column;
 
       // Append to last line to insert
       return SourceFile::getLine(
         line - pstate.position.line) +
-        Unicode::utf8substr(after,
+        Unicode::substr(after,
           col, sass::string::npos);
     }
     else {

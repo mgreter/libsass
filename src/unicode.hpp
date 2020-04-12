@@ -13,17 +13,23 @@ namespace Sass {
     // bytes: raw byte offset (0 based)
     // position: code point offset (0 based)
 
-    // function that will count the number of code points (utf-8 characters) from the beginning to the given end
+    // Return number of code points in utf8 string up to bytes offset.
     size_t codePointCount(const sass::string& utf8, size_t bytes);
+
+    // Return number of code points in utf8 string
     size_t codePointCount(const sass::string& utf8);
 
     // function that will return the byte offset of a code point in a
     size_t byteOffsetAtPosition(const sass::string& utf8, size_t position);
 
-    sass::string utf8substr(sass::string& utf8, size_t start, size_t len);
-    sass::string utf8replace(sass::string& utf8, size_t start, size_t len, const sass::string& insert);
+    // Returns utf8 aware substring.
+    // Parameters are in code points.
+    sass::string substr(sass::string& utf8, size_t start, size_t len);
 
-
+    // Utf8 aware string replacement.
+    // Parameters are in code points.
+    // Inserted text must be valid utf8.
+    sass::string replace(sass::string& utf8, size_t start, size_t len, const sass::string& insert);
 
     #ifdef _WIN32
     // functions to handle unicode paths on windows

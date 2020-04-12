@@ -25,7 +25,7 @@ namespace Sass {
 
   public:
 
-    StylesheetParser(Context& context, SourceDataObj source) :
+    StylesheetParser(Context& context, SourceFileObj source) :
       BaseParser(context, source),
       _recursion(0),
       _isUseAllowed(true),
@@ -121,6 +121,7 @@ namespace Sass {
     // final _globalVariables = normalizedMap<VariableDeclaration>();
 
     sass::vector<StatementObj> parse();
+    BlockObj parse7();
 
     // VariableDeclaration
     virtual Statement* variableDeclaration();

@@ -13,29 +13,32 @@ namespace Sass {
   namespace Unicode {
 
     // naming conventions:
-    // offset: raw byte offset (0 based)
+    // bytes: raw byte offset (0 based)
     // position: code point offset (0 based)
-    // index: code point offset (1 based or negative)
 
-    // function that will count the number of code points (utf-8 characters) from the given beginning to the given end
-    size_t codePointCount(const sass::string& str, size_t bytes) {
-      return utf8::distance(str.begin(), str.begin() + bytes);
+    // Return number of code points in utf8 string
+    size_t codePointCount(const sass::string& utf8) {
+      return utf8::distance(utf8.begin(), utf8.end());
     }
+    // EO codePointCount
 
-    size_t codePointCount(const sass::string& str) {
-      return utf8::distance(str.begin(), str.end());
+    // Return number of code points in utf8 string up to bytes offset.
+    size_t codePointCount(const sass::string& utf8, size_t bytes) {
+      return utf8::distance(utf8.begin(), utf8.begin() + bytes);
     }
+    // EO codePointCount
 
-    // function that will return the byte offset at a code point position
-    size_t byteOffsetAtPosition(const sass::string& str, size_t position) {
-      sass::string::const_iterator it = str.begin();
-      utf8::advance(it, position, str.end());
-      return std::distance(str.begin(), it);
+    // Return the byte offset at a code point position
+    size_t byteOffsetAtPosition(const sass::string& utf8, size_t position) {
+      sass::string::const_iterator it = utf8.begin();
+      utf8::advance(it, position, utf8.end());
+      return std::distance(utf8.begin(), it);
     }
+    // EO byteOffsetAtPosition
 
     // Returns utf8 aware substring.
     // Parameters are in code points.
-    sass::string utf8substr(
+    sass::string substr(
       sass::string& utf8,
       size_t start,
       size_t len)
@@ -59,7 +62,7 @@ namespace Sass {
     // Utf8 aware string replacement.
     // Parameters are in code points.
     // Inserted text must be valid utf8.
-    sass::string utf8replace(
+    sass::string replace(
       sass::string& text,
       size_t start, size_t len,
       const sass::string& insert)
@@ -80,7 +83,6 @@ namespace Sass {
         insert);
     }
     // EO replace
-
 
     #ifdef _WIN32
 

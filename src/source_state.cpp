@@ -5,7 +5,7 @@
 namespace Sass
 {
 
-	SourceState::SourceState(SourceDataObj source, Offset position)
+	SourceState::SourceState(SourceFileObj source, Offset position)
 		: source(source)
 		, position(position)
 	{}
@@ -13,7 +13,7 @@ namespace Sass
 	/**
   * asdasd
   */
-	SourceData* SourceState::getSource() const
+  SourceFile* SourceState::getSource() const
 	{
 		return source.ptr();
 	}

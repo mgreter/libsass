@@ -1,153 +1,133 @@
 #ifndef SASS_SOURCE_H
 #define SASS_SOURCE_H
 
+// sass.hpp must go before all system headers to get the
+// __EXTENSIONS__ fix on Solaris.
+#include "sass.hpp"
+
 #include "ast_fwd_decl.hpp"
 #include "source_span.hpp"
-#include "mapping.hpp"
 
 namespace Sass {
 
-
-  // SourceData is the base class to hold loaded sass content.
-  class SourceData :
-    public SharedObj {
-
-    friend class ItplFile;
-    friend class SourceData;
-
-  protected:
-
-    // Returns the number of lines. On the first call it will
-    // calculate the linefeed lookup table.
-    virtual size_t countLines() = 0;
-
-  public:
-
-    // Constructor
-    SourceData();
-
-    // The source id is uniquely assigned
-    virtual size_t getSrcId() const = 0;
-
-    // Return path as it was given for import
-    virtual const char* getPath() const = 0;
-
-    // Returns the requested line. Will take interpolations into
-    // account to show more accurate debug messages. Calling this
-    // can be rather expensive, so only use it for debugging.
-    virtual sass::string getLine(size_t line) = 0;
-
-    // Get raw iterator for actual source
-    virtual const char* end() const = 0;
-
-    // Get raw iterator for actual source
-    virtual const char* begin() const = 0;
-
-    // Return raw sizes in bytes
-    virtual size_t size() const = 0;
-
-    // Deprecated, obsolete?
-    virtual bool hasMapping(size_t srcMapPos) const = 0;
-
-    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const = 0;
-
-    ~SourceData() {}
-  };
-
   class SourceFile :
-    public SourceData {
+    public SharedObj {
     friend class ItplFile;
+
   protected:
-    Mappings srcmap;
+
+    // Import path
     char* path;
+
+    // Raw source data
     char* data;
+
+    // Raw length in bytes
     size_t length;
+
+    // Unique source id
     size_t srcid;
-  protected:
 
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
     // Columns per line can be derived from it.
     sass::vector<size_t> lfs;
 
-    // Returns the number of lines.
-    virtual size_t countLines() override;
+    // Returns the number of lines. On first call
+    // it will calculate the linefeed lookup table.
+    virtual size_t countLines();
 
   public:
 
-    SourceFile(
-      SourceData* source,
-      Mappings srcmap);
-
+    // Constructor will copy `path` and `data`.
+    // Will be destroyed when we go out of scope.
     SourceFile(
       const char* path,
       const char* data,
       size_t srcid);
 
-    SourceFile(
-      const char* path,
-      const char* data,
-      Mappings srcmap,
-      size_t srcid);
+    // Destructor
+    ~SourceFile() {
+      sass_free_memory(path);
+      sass_free_memory(data);
+    }
 
-    ~SourceFile();
+    // Returns the requested line. Will take interpolations into
+    // account to show more accurate debug messages. Calling this
+    // can be rather expensive, so only use it for debugging.
+    virtual sass::string getLine(size_t line);
 
-    const char* end() const override final;
-    const char* begin() const override final;
+    // Returns adjusted source span regarding interpolation.
+    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
+      return pstate;
+    }
 
-    size_t size() const override final {
+    // Return raw sizes in bytes
+    size_t size() const {
       return length;
     }
 
-    // Return the attached source path
-		virtual const char* getPath() const override
+    // Get raw iterator for actual source
+    const char* end() const {
+      return data + length;
+    }
+
+    // Get raw iterator for actual source
+    const char* begin() const {
+      return data;
+    }
+
+    // Return path as it was given for import
+    const char* getPath() const
 		{
       return path;
     }
 
-    virtual size_t getSrcId() const override {
+    // The source id is uniquely assigned
+    size_t getSrcId() const {
       return srcid;
     }
 
-    virtual bool hasMapping(size_t srcMapPos) const override {
-      return srcMapPos < srcmap.size();
-    }
-
-    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const override {
-      return pstate;
-    }
-
-
-    virtual sass::string getLine(size_t line) override;
-
-    sass::string to_string() const override final {
+    // Needed to satisfy SharedObj
+    sass::string to_string() const {
       return data;
     }
+
   };
 
   class ItplFile :
     public SourceFile {
+
   protected:
 
+    // Account additional lines if needed.
     size_t countLines() override final;
 
   private:
+
+    // The original source where the interpolation occurred.
     SourceFileObj around;
+
+    // The position where the interpolation occurred.
     SourceSpan pstate;
+
   public:
 
+    // Create an synthetic interpolated source. The `data` is the
+    // evaluated interpolation, while `around` is the original source
+    // where the actual interpolation was given at `pstate` position.
     ItplFile(const char* data,
       SourceFileObj around,
       SourceSpan pstate);
 
-    ItplFile(const char* data,
-      Mappings srcmap,
-      SourceFileObj around,
-      SourceSpan pstate);
-
-    SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
-
+    // Returns source with interpolation inserted.
     sass::string getLine(size_t line) override final;
+
+    // Returns adjusted source span with interpolation in mind.
+    // The input `pstate` is relative to the interpolation, will
+    // return a source span with absolute position in regard of
+    // the original document with the interpolation inserted.
+    SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
 
   };
 

@@ -9,7 +9,7 @@ namespace Sass {
   class AtRootQueryParser : public Parser {
 
   public:
-    AtRootQueryParser(Context& context, SourceDataObj source) :
+    AtRootQueryParser(Context& context, SourceFileObj source) :
       Parser(context, source)
     {}
 

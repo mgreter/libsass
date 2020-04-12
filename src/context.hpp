@@ -85,7 +85,7 @@ namespace Sass {
     sass::vector<sass::string> plugin_paths; // relative paths to load plugins
     sass::vector<sass::string> include_paths; // lookup paths for includes
 
-    void apply_custom_headers(Block_Obj root, const char* path, SourceSpan pstate);
+    void apply_custom_headers(sass::vector<StatementObj>& root, SourceSpan pstate);
 
     sass::vector<Sass_Importer_Entry> c_headers;
     sass::vector<Sass_Importer_Entry> c_importers;

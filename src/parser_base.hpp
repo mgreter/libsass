@@ -10,7 +10,7 @@ namespace Sass {
   class BaseParser : public Parser {
 
   public:
-    BaseParser(Context& context, SourceDataObj source) :
+    BaseParser(Context& context, SourceFileObj source) :
       Parser(context, source)
     {}
 

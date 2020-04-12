@@ -18,7 +18,7 @@ namespace Sass {
 
   StringScanner::StringScanner(
     Logger& logger,
-    SourceDataObj source) :
+    SourceFileObj source) :
     source(source),
     nextMap(sass::string::npos),
     startpos(source->begin()),
@@ -34,9 +34,9 @@ namespace Sass {
 
     // Check if we have source mappings
     // ToDo: Can we make this API better?
-    if (source->hasMapping(0)) {
-      nextMap = 0;
-    }
+    //if (source->hasMapping(0)) {
+    //  nextMap = 0;
+    //}
 
     // This can use up to 3% runtime (mostly under 1%)
     auto invalid = utf8::find_invalid(startpos, endpos);

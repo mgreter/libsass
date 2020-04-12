@@ -248,7 +248,7 @@ namespace Sass {
 
     // add a relative link to the working directory
     included_files.emplace_back(inc.abs_path);
-    // add a relative link  to the source map output file
+    // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
 
     // get pointer to the loaded content
@@ -279,7 +279,7 @@ namespace Sass {
     // strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
     // create the initial parser state from resource
     // SourceSpan pstate(strings.back(), contents, idx);
-    SourceSpan pstate(SourceSpan(inc.abs_path.c_str()));
+    // SourceSpan pstate(SourceSpan(inc.abs_path.c_str()));
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -309,45 +309,40 @@ namespace Sass {
 
     if (import->type == SASS_IMPORT_CSS) {
 
-      auto qwe = SASS_MEMORY_NEW(SourceFile,
+      auto source = SASS_MEMORY_NEW(SourceFile,
         inc.abs_path.c_str(), contents, idx);
-      CssParser p2(*this, qwe);
-      // do not yet dispose these buffers
+      CssParser parser(*this, source);
+      // take control of these buffers
       sass_import_take_source(import);
       sass_import_take_srcmap(import);
-      // p2._allow
-      root = SASS_MEMORY_NEW(Block, SourceSpan("[blk]"), 0, true);
-      root->elements26(p2.parse());
-      root->is_root(true);
+      // then parse the root block
+      root = parser.parse7();
+      // mark as pure css
       isPlainCss = true;
 
     }
     else if (import->type == SASS_IMPORT_SASS) {
 
-      auto qwe = SASS_MEMORY_NEW(SourceFile,
+      auto source = SASS_MEMORY_NEW(SourceFile,
         inc.abs_path.c_str(), contents, idx);
-      SassParser p2(*this, qwe);
-      // do not yet dispose these buffers
-      sass_import_take_source(import);
-      sass_import_take_srcmap(import);
-      // p2._allow
-      root = SASS_MEMORY_NEW(Block, SourceSpan("[blk]"), 0, true);
-      root->elements26(p2.parse());
-      root->is_root(true);
-
-    }
-    else {
-
-      SourceFileObj qwe = SASS_MEMORY_NEW(SourceFile,
-        inc.abs_path.c_str(), contents, idx);
-      // create a parser instance from the given c_str buffer
-      ScssParser p2(*this, qwe);
+      SassParser parser(*this, source);
       // do not yet dispose these buffers
       sass_import_take_source(import);
       sass_import_take_srcmap(import);
       // then parse the root block
-      root = SASS_MEMORY_NEW(Block, SourceSpan("[blk]"), p2.parse(), true);
-      // debug_ast(root);
+      root = parser.parse7();
+    }
+    else {
+
+      auto source = SASS_MEMORY_NEW(SourceFile,
+        inc.abs_path.c_str(), contents, idx);
+      // create a parser instance from the given c_str buffer
+      ScssParser parser(*this, source);
+      // do not yet dispose these buffers
+      sass_import_take_source(import);
+      sass_import_take_srcmap(import);
+      // then parse the root block
+      root = parser.parse7();
     }
 
     StyleSheet stylesheet(res, root);
@@ -543,20 +538,20 @@ namespace Sass {
     return sass_copy_c_string(emitted.buffer.c_str());
   }
 
-  void Context::apply_custom_headers(Block_Obj root, const char* ctx_path, SourceSpan pstate)
+  void Context::apply_custom_headers(sass::vector<StatementObj>& statements, SourceSpan pstate)
   {
     // create a custom import to resolve headers
     ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
-    call_headers(entry_path, ctx_path, pstate, imp);
+    call_headers(entry_path, pstate.getPath(), pstate, imp);
     // increase head count to skip later
     head_imports += resources.size() - 1;
     // add the statement if we have urls
-    if (!imp->urls().empty()) root->append(imp);
+    if (!imp->urls().empty()) statements.emplace_back(imp);
     // process all other resources (add Import_Stub nodes)
     for (size_t i = 0, S = imp->incs().size(); i < S; ++i) {
-      root->append(SASS_MEMORY_NEW(Import_Stub, pstate, imp->incs()[i]));
+      statements.emplace_back(SASS_MEMORY_NEW(Import_Stub, pstate, imp->incs()[i]));
     }
   }
 

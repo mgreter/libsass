@@ -5,7 +5,7 @@
 namespace Sass {
 
   SourceSpan::SourceSpan(
-    SourceDataObj source,
+    SourceFileObj source,
     const Offset& position,
     const Offset& span) :
     SourceState(source, position),

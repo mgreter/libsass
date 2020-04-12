@@ -171,7 +171,7 @@ namespace Sass {
     if (pstate.span.line > 0 && pstate.source) {
 
       sass::vector<sass::string> lines;
-      SourceData* source = pstate.source;
+      SourceFile* source = pstate.source;
 
       // Fetch all lines we need to print the state
       for (size_t i = 0; i < pstate.span.line + 1; i++) {

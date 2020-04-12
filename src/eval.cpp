@@ -60,8 +60,8 @@ namespace Sass {
     selectorStack.push_back({});
     originalStack.push_back({});
 
-    bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan("[NA]"), true);
-    bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan("[NA]"), false);
+    bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan("[TRUE]"), true);
+    bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan("[FALSE]"), false);
   }
   Eval::~Eval() { }
 
@@ -1994,7 +1994,7 @@ namespace Sass {
     // char* cstr = sass_copy_c_string(text.c_str());
     // ctx.strings.emplace_back(cstr);
     // auto around = SASS_MEMORY_NEW(SourceFile, pstate.source, Mappings());
-    auto synthetic = SASS_MEMORY_NEW(ItplFile, text.c_str(), mappings, pstate.source, pstate);
+    auto synthetic = SASS_MEMORY_NEW(ItplFile, text.c_str(), /*mappings, */pstate.source, pstate);
 
     // std::cerr << qwe2->getLine(0) << "\n";
     // std::cerr << qwe2->getLine(1) << "\n";

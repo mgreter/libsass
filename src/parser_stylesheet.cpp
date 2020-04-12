@@ -20,6 +20,35 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
+  BlockObj StylesheetParser::parse7()
+  {
+
+    // skip over optional utf8 bom
+    // ToDo: check influence on count
+    scanner.scan(Strings::utf8bom);
+
+    Offset start(scanner.offset);
+    sass::vector<StatementObj> statements;
+
+    SourceSpan pstate(scanner.relevantSpanFrom(start));
+
+    // check seems a bit esoteric but works
+    if (context.resources.size() == 1) {
+      // apply headers only on very first include
+      context.apply_custom_headers(statements, pstate);
+    }
+
+    // parse all root statements and append to statements
+    sass::vector<StatementObj> parsed(this->statements(&StylesheetParser::_rootStatement));
+    std::move(parsed.begin(), parsed.end(), std::back_inserter(statements));
+
+    // make sure everything is parsed
+    scanner.expectDone();
+
+    return SASS_MEMORY_NEW(Block, scanner.relevantSpanFrom(start), statements, true);
+
+  }
+
   sass::vector<StatementObj> StylesheetParser::parse()
   {
     // wrapSpanFormatException
@@ -38,7 +67,7 @@ namespace Sass {
     // check seems a bit esoteric but works
     if (context.resources.size() == 1) {
       // apply headers only on very first include
-      context.apply_custom_headers(root, pstate.getPath(), pstate);
+      context.apply_custom_headers(statements, pstate);
     }
 
     root->concat(this->statements(&StylesheetParser::_rootStatement));

@@ -12,7 +12,7 @@ namespace Sass {
   public:
     KeyframeSelectorParser(
       Context& context,
-      SourceDataObj source) :
+      SourceFileObj source) :
       Parser(context, source)
     {}
 
