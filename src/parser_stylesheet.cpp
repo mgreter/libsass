@@ -565,7 +565,8 @@ namespace Sass {
       return _ifRule(start, child);
     }
     else if (plain == "import") {
-      return _importRule(start);
+      // return _importRule(start);
+      return _importRule2(start);
     }
     else if (plain == "include") {
       return _includeRule2(start);
@@ -1040,6 +1041,9 @@ namespace Sass {
   Import* StylesheetParser::_importRule(Offset start)
   {
 
+    ImportRuleObj rule = SASS_MEMORY_NEW(
+      ImportRule, scanner.relevantSpanFrom(start));
+
     ImportObj imp = SASS_MEMORY_NEW(
       Import, scanner.relevantSpanFrom(start));
 
@@ -1065,6 +1069,9 @@ namespace Sass {
             "Can't find stylesheet to import.");
         }
         imp->incs().emplace_back(include);
+
+        rule->append(argument);
+
       }
       else if (auto stat = Cast<StaticImport>(argument)) {
         imp->urls().emplace_back(stat->url());
@@ -1074,8 +1081,11 @@ namespace Sass {
         if (stat->media()) {
           imp->queries2().emplace_back(stat->media());
         }
+        rule->append(argument);
       }
       else if (auto imp2 = Cast<Import>(argument)) {
+        // Used by plugin I guess
+        std::cerr << "Facks\n";
         for (auto inc : imp2->incs()) {
           imp->incs().emplace_back(inc);
         }
@@ -1086,6 +1096,70 @@ namespace Sass {
     while (scanner.scanChar($comma));
     expectStatementSeparator("@import rule");
     return imp.detach();
+
+  }
+
+  ImportRule* StylesheetParser::_importRule2(Offset start)
+  {
+
+    ImportRuleObj rule = SASS_MEMORY_NEW(
+      ImportRule, scanner.relevantSpanFrom(start));
+
+    ImportObj imp = SASS_MEMORY_NEW(
+      Import, scanner.relevantSpanFrom(start));
+
+    do {
+      whitespace();
+      Offset start2(scanner.offset);
+      ImportBaseObj argument = importArgument();
+      // redebug_ast(argument);
+      if (auto dyn = Cast<DynamicImport>(argument)) {
+        if (_inControlDirective || _inMixin) {
+          _disallowedAtRule(start);
+        }
+        imp->pstate(scanner.relevantSpanFrom(start2));
+
+        SourceSpan pstate(imp->pstate());
+        // ToDo: always unquote on ctor?
+        sass::string path(unquote(dyn->url()));
+        const Importer importer(path, scanner.sourceUrl);
+        // Parse the sass source (stored on context.sheets)
+        Include include(context.load_import(importer, pstate));
+
+        // Error out in case nothing was found
+        if (include.abs_path.empty()) {
+          BackTraces& traces = *context.logger;
+          traces.push_back(BackTrace(pstate));
+          throw Exception::InvalidSyntax(traces,
+            "Can't find stylesheet to import.");
+        }
+
+        rule->append(SASS_MEMORY_NEW(IncludeImport, argument, include));
+
+      }
+      else if (auto stat = Cast<StaticImport>(argument)) {
+        // imp->urls().emplace_back(stat->url());
+        // if (!imp->import_queries()) {
+          // imp->import_queries(SASS_MEMORY_NEW(List, "[pstateG]"));
+        // }
+        // if (stat->media()) {
+        //   imp->queries2().emplace_back(stat->media());
+        // }
+        rule->append(argument);
+      }
+      else if (auto imp2 = Cast<Import>(argument)) {
+        // Used by plugin I guess
+        std::cerr << "Facks\n";
+        for (auto inc : imp2->incs()) {
+          imp->incs().emplace_back(inc);
+        }
+      }
+      // rule->append(argument);
+      whitespace();
+    } while (scanner.scanChar($comma));
+    // Check for expected finalization token
+    expectStatementSeparator("@import rule");
+    return rule.detach();
 
   }
 

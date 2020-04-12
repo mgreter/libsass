@@ -96,6 +96,7 @@ namespace Sass {
   class ImportBase;
   class StaticImport;
   class DynamicImport;
+  class IncludeImport;
 
   class ErrorRule;
   class DebugRule;
@@ -233,6 +234,7 @@ namespace Sass {
   IMPL_MEM_OBJ(ImportBase);
   IMPL_MEM_OBJ(StaticImport);
   IMPL_MEM_OBJ(DynamicImport);
+  IMPL_MEM_OBJ(IncludeImport);
   IMPL_MEM_OBJ(WarnRule);
   IMPL_MEM_OBJ(ErrorRule);
   IMPL_MEM_OBJ(DebugRule);

@@ -583,6 +583,8 @@ namespace Sass {
     // or `null` if no condition is attached.
     ADD_PROPERTY(InterpolationObj, media);
 
+    ADD_CONSTREF(sass::vector<ExpressionObj>, queries44);
+
     // Flag to hoist import to the top.
     ADD_PROPERTY(bool, outOfOrder);
 
@@ -600,7 +602,10 @@ namespace Sass {
   };
   // EO class StaticImport
 
-  class DynamicImport final : public ImportBase {
+  // Dynamic import beside its name must have a static url
+  // We do not support to load sass partials programmatic
+  // They also don't allow any supports or media queries.
+  class DynamicImport : public ImportBase {
     ADD_CONSTREF(sass::string, url);
   public:
     DynamicImport(const SourceSpan& pstate, const sass::string& url);
@@ -608,6 +613,14 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
+  // After DynamicImport is loaded
+  class IncludeImport final : public DynamicImport {
+    ADD_CONSTREF(Include, include);
+  public:
+    IncludeImport(DynamicImportObj import, Include include);
+    // ATTACH_CLONE_OPERATIONS(DynamicImport);
+    ATTACH_CRTP_PERFORM_METHODS();
+  };
 
   class ImportRule final : public Statement, public VectorizedBase<ImportBase> {
   public:

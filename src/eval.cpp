@@ -2290,17 +2290,11 @@ namespace Sass {
 
   Value* Eval::visitImportStub99(Import_Stub* i)
   {
-
+    std::cerr << "Whacky";
     // Add a stack frame for this import rule
     callStackFrame frame(traces,
       BackTrace(i->pstate(), Strings::importRule));
 
-    // we don't seem to need that actually after all
-    Sass_Import_Entry import = sass_make_import(
-      i->imp_path().c_str(),
-      i->abs_path().c_str(),
-      0, 0
-    );
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, i->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, i->pstate(), i->imp_path(), trace_block, 'i');
@@ -2309,6 +2303,13 @@ namespace Sass {
 
     const sass::string& abs_path(i->resource().abs_path);
     StyleSheet sheet = ctx.sheets.at(abs_path);
+
+    // we don't seem to need that actually after all
+    Sass_Import_Entry import = sass_make_import(
+      i->imp_path().c_str(),
+      i->abs_path().c_str(),
+      0, 0
+    );
     import->type = sheet.syntax;
     ctx.import_stack.emplace_back(import);
     append_block(sheet.root);
@@ -2321,10 +2322,45 @@ namespace Sass {
     return nullptr;
   }
 
+  Value* Eval::visitIncludeImport99(IncludeImport* rule)
+  {
+
+    // Get the include loaded by parser
+    const Include& include(rule->include());
+
+    // This will error if the path was not loaded before
+    // ToDo: Why don't we attach the sheet to include itself?
+    const StyleSheet& sheet = ctx.sheets.at(include.abs_path);
+
+    // Create C-API exposed object to query
+    Sass_Import_Entry import = sass_make_import(
+      include.imp_path.c_str(),
+      include.abs_path.c_str(),
+      sheet.contents, sheet.srcmap
+    );
+    import->type = sheet.syntax;
+
+    // Add C-API to stack to expose it
+    ctx.import_stack.emplace_back(import);
+
+    // Evaluate the included sheet
+    append_block(sheet.root);
+
+    // These data object have just been borrowed
+    sass_import_take_source(ctx.import_stack.back());
+    sass_import_take_srcmap(ctx.import_stack.back());
+    // Cleanup the import entry we added
+    sass_delete_import(ctx.import_stack.back());
+    // Finally remove if from the stack
+    ctx.import_stack.pop_back();
+
+    return nullptr;
+  }
+
   Value* Eval::visitDynamicImport99(DynamicImport* rule)
   {
-    std::cerr << "visit dynamicImport" << "\n";
-    blockStack.back()->append(rule);
+    // This should not be called
+    // Should be IncludeImport now
     return nullptr;
   }
 
@@ -2340,7 +2376,8 @@ namespace Sass {
 
   Value* Eval::visitStaticImport99(StaticImport* rule)
   {
-
+    return nullptr;
+    std::cerr << "Yes we do\n";
     // Create new CssImport object 
     CssImportObj import = SASS_MEMORY_NEW(CssImport, rule->pstate(),
       interpolationToCssString(rule->url(), false, false));

@@ -359,6 +359,14 @@ namespace Sass {
     url_(url)
   {}
 
+  IncludeImport::IncludeImport(
+    DynamicImportObj import2,
+    Include include) :
+    DynamicImport(import2->pstate(), import2->url()),
+    include_(include)
+  {
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

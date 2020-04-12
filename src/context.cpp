@@ -671,6 +671,8 @@ namespace Sass {
     // abort on invalid root
     if (root.isNull()) return {};
 
+    debug_ast(root);
+
     Eval eval(*this);
     eval.plainCss = sheet.plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());

@@ -126,6 +126,7 @@ namespace Sass {
     Value* operator()(ImportRule* node) { return visitImportRule99(node); }
     Value* operator()(StaticImport* node) { return visitStaticImport99(node); }
     Value* operator()(DynamicImport* node) { return visitDynamicImport99(node); }
+    Value* operator()(IncludeImport* node) { return visitIncludeImport99(node); }
     Value* operator()(Import_Stub* node) { return visitImportStub99(node); }
     Value* operator()(SilentComment* node) { return visitSilentComment(node); }
     Value* operator()(LoudComment* node) { return visitLoudComment(node); }
@@ -252,6 +253,7 @@ namespace Sass {
     Value* visitImportStub99(Import_Stub* i);
 
     Value* visitDynamicImport99(DynamicImport* rule);
+    Value* visitIncludeImport99(IncludeImport* rule);
 
     sass::vector<CssMediaQueryObj> evalMediaQueries(Interpolation* itpl);
 
