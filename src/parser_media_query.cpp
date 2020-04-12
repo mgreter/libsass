@@ -23,6 +23,15 @@ namespace Sass {
     return queries;
   }
 
+  // Consume multiple media queries delimited by commas.
+  CssMediaQueryObj MediaQueryParser::parse2()
+  {
+    whitespace();
+    CssMediaQueryObj query = _mediaQuery();
+    scanner.expectDone();
+    return query;
+  }
+
   // Consumes a single media query.
   CssMediaQuery* MediaQueryParser::_mediaQuery()
   {

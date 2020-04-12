@@ -383,7 +383,7 @@ namespace Sass {
   sass::vector<Include>& Import::incs() { return incs_; }
   sass::vector<ExpressionObj>& Import::urls() { return urls_; }
   // sass::vector<ImportBaseObj>& Import::imports() { return imports_; }
-  sass::vector<ExpressionObj>& Import::queries2() { return import_queries_; }
+  sass::vector<ExpressionObj>& Import::queries() { return import_queries_; }
 
   bool Import::is_invisible() const
   {

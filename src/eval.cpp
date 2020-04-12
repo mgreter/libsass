@@ -2372,45 +2372,39 @@ namespace Sass {
     return nullptr;
   }
 
+  // Consume all imports in this rule
   Value* Eval::visitImportRule99(ImportRule* rule)
   {
-    for (ImportBaseObj import : rule->elements()) {
-      if (auto a = Cast<DynamicImport>(import)) {
-
-      }
-      else if (auto b = Cast<StaticImport>(import)) {
-
-      }
-      else {
-        std::cerr << "Really have these\n";
-      }
-      if (import) {
-        auto imp = import->perform(this);
-        // blockStack.back()->append(imp);
-      }
+    for (ImportBase* import : rule->elements()) {
+      if (import) { auto imp = import->perform(this); }
     }
-    // blockStack.back()->append(rule);
     return nullptr;
   }
 
   Value* Eval::visitImport99(Import* imp)
   {
+
+    // ToDo: Should this be a CssImportObj?
     ImportObj result = SASS_MEMORY_NEW(Import, imp->pstate());
-    if (!imp->queries2().empty()) {
-      sass::vector<sass::string> results;
-      sass::vector<ExpressionObj> queries = imp->queries2();
-      for (auto& query : queries) {
-        ValueObj evaled = query->perform(this);
-        results.emplace_back(evaled->to_string());
-      }
-      sass::string reparse(StringUtils::join(results, ", "));
+
+    // Re-parse queries if any have been given
+    if (!imp->queries().empty()) {
       SourceSpan state(imp->pstate());
-      auto source = SASS_MEMORY_NEW(SourceFile,
-        state.getPath(), reparse.c_str(), state.getSrcId());
-      MediaQueryParser parser(ctx, source);
-      result->queries(parser.parse());
-      result->import_queries({});
+      sass::vector<CssMediaQueryObj> queries;
+      for (auto& query : imp->queries()) {
+        ValueObj evaled = query->perform(this);
+        sass::string reparse = evaled->to_string();
+        SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
+          state.getPath(), reparse.c_str(), state.getSrcId());
+        MediaQueryParser parser(ctx, source);
+        queries.emplace_back(parser.parse2());
+      }
+      result->queries(queries);
+      // result->import_queries({});
     }
+
+    // Now perform evaluation of urls to import
+    // These will result as css import rules
     for (size_t i = 0, S = imp->urls().size(); i < S; ++i) {
       result->urls().emplace_back(imp->urls()[i]->perform(this));
     }

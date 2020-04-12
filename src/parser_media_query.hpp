@@ -17,6 +17,7 @@ namespace Sass {
     {}
 
     sass::vector<CssMediaQueryObj> parse();
+    CssMediaQueryObj parse2();
 
   private:
 
