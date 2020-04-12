@@ -750,7 +750,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (auto item : block->queries()) {
       debug_ast(item, ind + "#@ ");
     }
-    for (auto item : block->queries()) {
+    for (auto item : block->queries2()) {
       debug_ast(item, ind + "@@ ");
     }
   } else if (Cast<Assignment>(node)) {

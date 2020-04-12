@@ -1072,7 +1072,7 @@ namespace Sass {
           // imp->import_queries(SASS_MEMORY_NEW(List, "[pstateG]"));
         // }
         if (stat->media()) {
-          imp->queries().emplace_back(stat->media());
+          imp->queries2().emplace_back(stat->media());
         }
       }
       else if (auto imp2 = Cast<Import>(argument)) {

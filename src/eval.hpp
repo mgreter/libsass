@@ -126,7 +126,7 @@ namespace Sass {
     Value* operator()(ImportRule* node) { return visitImportRule99(node); }
     Value* operator()(StaticImport* node) { return visitStaticImport99(node); }
     Value* operator()(DynamicImport* node) { return visitDynamicImport99(node); }
-    Value* operator()(Import_Stub* node) { /*return visitImportStub99(node);*/ }
+    Value* operator()(Import_Stub* node) { return visitImportStub99(node); }
     Value* operator()(SilentComment* node) { return visitSilentComment(node); }
     Value* operator()(LoudComment* node) { return visitLoudComment(node); }
     Value* operator()(If* node) { return visitIfRule(node); }

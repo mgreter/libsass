@@ -631,7 +631,7 @@ namespace Sass {
     sass::vector<Include>& incs();
     sass::vector<ExpressionObj>& urls();
     // sass::vector<ImportBaseObj>& imports();
-    sass::vector<ExpressionObj>& queries();
+    sass::vector<ExpressionObj>& queries2();
     bool is_invisible() const override;
     // ATTACH_CLONE_OPERATIONS(Import)
     ATTACH_CRTP_PERFORM_METHODS()

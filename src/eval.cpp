@@ -2387,11 +2387,13 @@ namespace Sass {
     // ToDo: Should this be a CssImportObj?
     ImportObj result = SASS_MEMORY_NEW(Import, imp->pstate());
 
+    CssImportObj css = SASS_MEMORY_NEW(CssImport, imp->pstate());
+
     // Re-parse queries if any have been given
-    if (!imp->queries().empty()) {
+    if (!imp->queries2().empty()) {
       SourceSpan state(imp->pstate());
       sass::vector<CssMediaQueryObj> queries;
-      for (auto& query : imp->queries()) {
+      for (auto& query : imp->queries2()) {
         ValueObj evaled = query->perform(this);
         sass::string reparse = evaled->to_string();
         SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
@@ -2400,6 +2402,7 @@ namespace Sass {
         queries.emplace_back(parser.parse2());
       }
       result->queries(queries);
+      css->media(queries);
       // result->import_queries({});
     }
 
@@ -2418,6 +2421,7 @@ namespace Sass {
     }
 
     blockStack.back()->append(result);
+    //blockStack.back()->append(css);
     return nullptr;
 
   }

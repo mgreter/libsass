@@ -585,8 +585,8 @@ namespace Sass {
 
     // create entry only for import stack
     Sass_Import_Entry import = sass_make_import(
-      input_path.c_str(), // import path
-      entry_path.c_str(), // absolute path
+      input_path.c_str(),
+      entry_path.c_str(),
       contents,
       0
     );
