@@ -1044,9 +1044,6 @@ namespace Sass {
     ImportRuleObj rule = SASS_MEMORY_NEW(
       ImportRule, scanner.relevantSpanFrom(start));
 
-    ImportObj imp = SASS_MEMORY_NEW(
-      Import, scanner.relevantSpanFrom(start));
-
     do {
       whitespace();
       Offset start2(scanner.offset);
@@ -1059,13 +1056,13 @@ namespace Sass {
       else if (Cast<StaticImport>(argument)) {
         rule->append(argument);
       }
-      else if (auto imp2 = Cast<Import>(argument)) {
+      /*else if (auto imp2 = Cast<Import>(argument)) {
         // Used by plugin I guess
         std::cerr << "Facks\n";
         for (auto inc : imp2->incs()) {
           imp->incs().emplace_back(inc);
         }
-      }
+      }*/
       // rule->append(argument);
       whitespace();
     } while (scanner.scanChar($comma));
@@ -1117,14 +1114,14 @@ namespace Sass {
       }
 
       // Create an import statement to be resolved
-      ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
+      // ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
       // Call custom importers and check if any of them handled the import
       if (context.call_importers2(unquote(url), pstate.getPath(), pstate, rule)) {
         return nullptr;
       }
-      imp->pstate(scanner.relevantSpanFrom(start));
+      // imp->pstate(scanner.relevantSpanFrom(start));
 
-      SourceSpan pstate(imp->pstate());
+      // SourceSpan pstate(imp->pstate());
       // ToDo: always unquote on ctor?
       sass::string path(unquote(url));
       const Importer importer(path, scanner.sourceUrl);

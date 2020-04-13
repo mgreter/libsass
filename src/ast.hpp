@@ -629,18 +629,6 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  ////////////////////////////////////////////////////////////////////////////
-  // Import directives. CSS and Sass import lists can be intermingled, so it's
-  // necessary to store a list of each in an Import node.
-  ////////////////////////////////////////////////////////////////////////////
-  class Import final : public ImportBase {
-    sass::vector<Include> incs_;
-  public:
-    Import(const SourceSpan& pstate);
-    sass::vector<Include>& incs();
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
   //////////////////////////////
   // The Sass `@warn` directive.
   //////////////////////////////

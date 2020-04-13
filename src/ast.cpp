@@ -382,26 +382,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Import::Import(const SourceSpan& pstate)
-  : ImportBase(pstate),
-    incs_()
-    // imports_(),
-    // import_queries_()
-  {}
-
-  sass::vector<Include>& Import::incs() { return incs_; }
-  // sass::vector<ExpressionObj>& Import::urls() { return urls_; }
-  // sass::vector<ImportBaseObj>& Import::imports() { return imports_; }
-  //sass::vector<ExpressionObj>& Import::queries2() { return import_queries_; }
-
-  //bool Import::is_invisible() const
-  //{
-  //  return incs_.empty(); // && urls_.empty();
-  //}
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   WarnRule::WarnRule(const SourceSpan& pstate, ExpressionObj expression)
   : Statement(pstate), expression_(expression)
   {}

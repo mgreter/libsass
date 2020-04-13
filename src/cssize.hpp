@@ -31,7 +31,6 @@ namespace Sass {
     Statement* operator()(Keyframe_Rule*);
     Statement* operator()(Trace*);
     // Statement* operator()(Assignment*);
-    // Statement* operator()(Import*);
     // Statement* operator()(WarnRule*);
     // Statement* operator()(ErrorRule*);
     // Statement* operator()(If*);

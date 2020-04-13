@@ -392,37 +392,6 @@ namespace Sass {
   {
     visitCssImport(import);
   }
-  void Inspect::operator()(Import* import)
-  {
-    /*
-    if (!import->urls().empty()) {
-      append_token("@import", import);
-      append_mandatory_space();
-      import->urls().front()->perform(this);
-      if (import->urls().size() == 1) {
-        for (auto query : import->queries()) {
-          append_mandatory_space();
-          query->perform(this);
-        }
-      }
-      append_delimiter();
-      for (size_t i = 1, S = import->urls().size(); i < S; ++i) {
-        append_mandatory_linefeed();
-        append_token("@import", import);
-        append_mandatory_space();
-
-        import->urls()[i]->perform(this);
-        if (import->urls().size() - 1 == i) {
-          for (auto query : import->queries()) {
-            append_mandatory_space();
-            query->perform(this);
-          }
-        }
-        append_delimiter();
-      }
-    }
-    */
-  }
 
   void Inspect::operator()(ImportRule* rule)
   {
