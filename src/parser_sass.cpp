@@ -65,7 +65,8 @@ namespace Sass {
       if (scanIdentifier("url")) {
         if (scanner.scanChar($lparen)) {
           scanner.resetState(state);
-          return StylesheetParser::importArgument(rule);
+          StylesheetParser::importArgument(rule);
+          return nullptr;
         }
         else {
           scanner.resetState(state);
@@ -75,7 +76,8 @@ namespace Sass {
 
     case $single_quote:
     case $double_quote:
-      return StylesheetParser::importArgument(rule);
+      StylesheetParser::importArgument(rule);
+      return nullptr;
     }
 
     Offset start(scanner.offset);
@@ -98,12 +100,17 @@ namespace Sass {
       // Must be an easier way to get quotes?
       str->value(str->to_string());
       itpl->append(str);
-      return SASS_MEMORY_NEW(StaticImport,
-        scanner.relevantSpanFrom(start), itpl);
+      rule->append(SASS_MEMORY_NEW(StaticImport,
+        scanner.relevantSpanFrom(start), itpl));
+    }
+    else {
+
+      resolveDynamicImport(rule, start, url);
+
     }
 
-    return SASS_MEMORY_NEW(DynamicImport,
-      SourceSpan("[pstateT1]"), url);
+
+    return nullptr;
 
   }
 

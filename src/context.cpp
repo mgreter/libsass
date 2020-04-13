@@ -281,6 +281,7 @@ namespace Sass {
     // SourceSpan pstate(strings.back(), contents, idx);
     // SourceSpan pstate(SourceSpan(inc.abs_path.c_str()));
 
+
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
       Sass_Import_Entry parent = import_stack[i];
@@ -675,8 +676,8 @@ namespace Sass {
     // abort on invalid root
     if (root.isNull()) return {};
 
-    //debug_ast(root);
-
+    // debug_ast(root);
+    
     Eval eval(*this);
     eval.plainCss = sheet.plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());

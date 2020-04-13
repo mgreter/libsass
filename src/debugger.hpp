@@ -719,7 +719,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     DynamicImport* block = Cast<DynamicImport>(node);
     std::cerr << ind << "DynamicImport " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    // std::cerr << " [" << block->imp_path() << "] ";
+    std::cerr << " [" << block->url() << "] ";
     // std::cerr << " " << block->tabs();
     std::cerr << std::endl;
   }
@@ -744,7 +744,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " [" << block->imp_path() << "] ";
     // std::cerr << " " << block->tabs();
     std::cerr << std::endl;
-    // for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
+    for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
   } else if (Cast<Assignment>(node)) {
     Assignment* block = Cast<Assignment>(node);
     std::cerr << ind << "Assignment " << block;

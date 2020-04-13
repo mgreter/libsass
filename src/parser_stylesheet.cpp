@@ -1046,7 +1046,6 @@ namespace Sass {
 
     do {
       whitespace();
-      Offset start2(scanner.offset);
       ImportBase* argument = importArgument(rule);
       // redebug_ast(argument);
       if (argument == nullptr) {
@@ -1106,11 +1105,11 @@ namespace Sass {
             sass::string(startpos, rawUrlPos))),
          queries.first, queries.second);
     }
-    try {
+    // try {
       // Otherwise return a dynamic import
       // Will resolve during the eval stage
       if (_inControlDirective || _inMixin) {
-        _disallowedAtRule(start);
+        _disallowedAtRule(rule->pstate().position);
       }
 
       // Create an import statement to be resolved
@@ -1123,33 +1122,36 @@ namespace Sass {
 
       // SourceSpan pstate(imp->pstate());
       // ToDo: always unquote on ctor?
-      sass::string path(unquote(url));
-      const Importer importer(path, scanner.sourceUrl);
-      // Parse the sass source (stored on context.sheets)
-      Include include(context.load_import(importer, pstate));
-
-      // Error out in case nothing was found
-      if (include.abs_path.empty()) {
-        BackTraces& traces = *context.logger;
-        traces.push_back(BackTrace(pstate));
-        throw Exception::InvalidSyntax(traces,
-          "Can't find stylesheet to import.");
-      }
-
-      DynamicImport* dyn = SASS_MEMORY_NEW(DynamicImport, scanner.relevantSpanFrom(start), url);
-      rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
+      resolveDynamicImport(rule, start, url);
 
       return nullptr;
+  
+  }
+
+  void StylesheetParser::resolveDynamicImport(ImportRule* rule, Offset start, const sass::string& url)
+  {
+
+    sass::string path(unquote(url));
+
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+
+    const Importer importer(path, scanner.sourceUrl);
+    // Parse the sass source (stored on context.sheets)
+    Include include(context.load_import(importer, pstate));
+
+    // Error out in case nothing was found
+    if (include.abs_path.empty()) {
+      BackTraces& traces = *context.logger;
+      traces.push_back(BackTrace(pstate));
+      throw Exception::InvalidSyntax(traces,
+        "Can't find stylesheet to import.");
     }
-    catch (Exception::InvalidSyntax&) {
-      // ToDo: refactor to return and throw here
-      error("Invalid URL: ${innerError.message}",
-        "[pstate]"); // Needs real implementation
-    }
-    // Never gets here!
-    return nullptr;
+
+    DynamicImport* dyn = SASS_MEMORY_NEW(DynamicImport, scanner.relevantSpanFrom(start), url);
+    rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
 
   }
+
 
   /*
   sass::string StylesheetParser::parseImportUrl(sass::string url)
