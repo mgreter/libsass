@@ -676,7 +676,7 @@ namespace Sass {
     // abort on invalid root
     if (root.isNull()) return {};
 
-    // debug_ast(root);
+    //    debug_ast(root);
     
     Eval eval(*this);
     eval.plainCss = sheet.plainCss;
@@ -685,7 +685,7 @@ namespace Sass {
       varRoot.functions[i] = fnCache[i];
     }
     root = eval.visitRootBlock99(root); // 50%
-    //debug_ast(root);
+//    debug_ast(root);
 
     Extension unsatisfied;
     // check that all extends were used

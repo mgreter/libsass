@@ -65,7 +65,7 @@ namespace Sass {
 
     bool lookingAtChildren() override final;
 
-    ImportBase* importArgument(ImportRule* rule) override final;
+    void importArgument(ImportRule* rule) override final;
 
     bool scanElse(size_t ifIndentation) override final;
 

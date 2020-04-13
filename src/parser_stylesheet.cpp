@@ -1046,23 +1046,7 @@ namespace Sass {
 
     do {
       whitespace();
-      ImportBase* argument = importArgument(rule);
-      // redebug_ast(argument);
-      if (argument == nullptr) {
-
-
-      }
-      else if (Cast<StaticImport>(argument)) {
-        rule->append(argument);
-      }
-      /*else if (auto imp2 = Cast<Import>(argument)) {
-        // Used by plugin I guess
-        std::cerr << "Facks\n";
-        for (auto inc : imp2->incs()) {
-          imp->incs().emplace_back(inc);
-        }
-      }*/
-      // rule->append(argument);
+      importArgument(rule);
       whitespace();
     } while (scanner.scanChar($comma));
     // Check for expected finalization token
@@ -1071,7 +1055,7 @@ namespace Sass {
 
   }
 
-  ImportBase* StylesheetParser::importArgument(ImportRule* rule)
+  void StylesheetParser::importArgument(ImportRule* rule)
   {
     const char* startpos = scanner.position;
     Offset start(scanner.offset);
@@ -1080,13 +1064,14 @@ namespace Sass {
       Expression* url = dynamicUrl();
       whitespace();
       auto queries = tryImportQueries();
-      return SASS_MEMORY_NEW(StaticImport,
+      rule->append(SASS_MEMORY_NEW(StaticImport,
         scanner.relevantSpanFrom(start),
         // Not needed for StringExpression
         // Use its interpolation instead
         SASS_MEMORY_NEW(Interpolation,
            url->pstate(), url),
-        queries.first, queries.second);
+        queries.first, queries.second));
+      return;
     }
 
     sass::string url = string();
@@ -1098,33 +1083,28 @@ namespace Sass {
     if (_isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
       // Create static import that is never
       // resolved by libsass (output as is)
-      return SASS_MEMORY_NEW(StaticImport,
+      rule->append(SASS_MEMORY_NEW(StaticImport,
         scanner.relevantSpanFrom(start),
         SASS_MEMORY_NEW(Interpolation, pstate,
           SASS_MEMORY_NEW(SassString, pstate,
             sass::string(startpos, rawUrlPos))),
-         queries.first, queries.second);
+         queries.first, queries.second));
+      return;
     }
-    // try {
-      // Otherwise return a dynamic import
-      // Will resolve during the eval stage
-      if (_inControlDirective || _inMixin) {
-        _disallowedAtRule(rule->pstate().position);
-      }
 
-      // Create an import statement to be resolved
-      // ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
-      // Call custom importers and check if any of them handled the import
-      if (context.call_importers2(unquote(url), pstate.getPath(), pstate, rule)) {
-        return nullptr;
-      }
-      // imp->pstate(scanner.relevantSpanFrom(start));
+    // Otherwise return a dynamic import
+    // Will resolve during the eval stage
+    if (_inControlDirective || _inMixin) {
+      _disallowedAtRule(rule->pstate().position);
+    }
 
-      // SourceSpan pstate(imp->pstate());
-      // ToDo: always unquote on ctor?
+    // Create an import statement to be resolved
+    // ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
+    // Call custom importers and check if any of them handled the import
+    if (!context.call_importers2(unquote(url), pstate.getPath(), pstate, rule)) {
       resolveDynamicImport(rule, start, url);
-
-      return nullptr;
+    }
+    // imp->pstate(scanner.relevantSpanFrom(start));
   
   }
 

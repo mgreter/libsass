@@ -185,7 +185,7 @@ namespace Sass {
 
     void resolveDynamicImport(ImportRule* rule, Offset start, const sass::string& path);
 
-    virtual ImportBase* importArgument(ImportRule* rule);
+    virtual void importArgument(ImportRule* rule);
 
     // sass::string parseImportUrl(sass::string url);
 

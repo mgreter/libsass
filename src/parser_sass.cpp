@@ -55,7 +55,7 @@ namespace Sass {
       _peekIndentation() > _currentIndentation;
   }
 
-  ImportBase* SassParser::importArgument(ImportRule* rule)
+  void SassParser::importArgument(ImportRule* rule)
   {
     uint8_t next = scanner.peekChar();
     StringScannerState state(scanner.state());
@@ -66,7 +66,7 @@ namespace Sass {
         if (scanner.scanChar($lparen)) {
           scanner.resetState(state);
           StylesheetParser::importArgument(rule);
-          return nullptr;
+          return;
         }
         else {
           scanner.resetState(state);
@@ -77,7 +77,7 @@ namespace Sass {
     case $single_quote:
     case $double_quote:
       StylesheetParser::importArgument(rule);
-      return nullptr;
+      return;
     }
 
     Offset start(scanner.offset);
@@ -108,9 +108,6 @@ namespace Sass {
       resolveDynamicImport(rule, start, url);
 
     }
-
-
-    return nullptr;
 
   }
 
