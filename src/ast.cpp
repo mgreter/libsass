@@ -615,15 +615,15 @@ namespace Sass {
     return (all() || rule()) != include();
   }
 
-  AtRootQuery* AtRootQuery::parse(const sass::string& contents, Context& ctx)
-  {
-    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
-      "sass://parse-at-root-query", contents.c_str(), -1);
-    AtRootQueryParser parser(ctx, source);
-    return parser.parse();
-  }
+  //AtRootQuery* AtRootQuery::parse(const sass::string& contents, Context& ctx)
+  //{
+  //  SourceFileObj source = SASS_MEMORY_NEW(SourceData,
+  //    "sass://parse-at-root-query", contents.c_str(), -1);
+  //  AtRootQueryParser parser(ctx, source);
+  //  return parser.parse();
+  //}
 
-  AtRootQuery* AtRootQuery::parse(SourceFile* source, Context& ctx)
+  AtRootQuery* AtRootQuery::parse(SourceData* source, Context& ctx)
   {
     AtRootQueryParser parser(ctx, source);
     return parser.parse();
@@ -831,14 +831,9 @@ namespace Sass {
   }
 
   ArgumentDeclaration* ArgumentDeclaration::parse(
-    Context& context, const sass::string& contents)
+    Context& context, SourceData* source)
   {
-    sass::string text = "(" + contents + ")";
-    // char* cstr = sass_copy_c_string(text.c_str());
-    // context.strings.emplace_back(cstr); // clean up later
-    auto qwe = SASS_MEMORY_NEW(SourceFile,
-      "sass://builtin", text.c_str(), -1);
-    ScssParser parser(context, qwe);
+    ScssParser parser(context, source);
     // We added
     EnvRoot root;
     ScopedStackFrame<EnvFrame>

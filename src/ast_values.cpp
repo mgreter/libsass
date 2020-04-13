@@ -109,26 +109,22 @@ namespace Sass {
   // If this came from a function argument, [name] is the argument name
   // (without the `$`). It's used for error reporting.
 
-  SelectorList* Value::assertSelector(Context& ctx, const sass::string& name, bool allowParent) {
-    SourceSpan span(pstate());
-    callStackFrame frame(*ctx.logger, span);
-    sass::string string = _selectorString(*ctx.logger, span, name);
-    auto qwe = SASS_MEMORY_NEW(ItplFile, string.c_str(), pstate_.source, pstate_);
-    SelectorParser p2(ctx, qwe);
-    p2._allowParent = allowParent;
-    auto sel = p2.parse();
-    return sel.detach();
+  SelectorList* Value::assertSelector(Context& ctx, const sass::string& name, bool allowParent)
+  {
+    callStackFrame frame(*ctx.logger, pstate_);
+    sass::string text(_selectorString(*ctx.logger, pstate_, name));
+    SourceDataObj source = SASS_MEMORY_NEW(ItplFile2, std::move(text), pstate_);
+    SelectorParser parser(ctx, source, allowParent);
+    return parser.parse().detach();
   }
 
-  CompoundSelector* Value::assertCompoundSelector(Context& ctx, const sass::string& name, bool allowParent) {
-    SourceSpan span(pstate());
-    callStackFrame frame(*ctx.logger, span);
-    sass::string string = _selectorString(*ctx.logger, span, name);
-    auto qwe = SASS_MEMORY_NEW(ItplFile, string.c_str(), pstate_.source, pstate_);
-    SelectorParser p2(ctx, qwe);
-    p2._allowParent = allowParent;
-    auto sel = p2.parseCompoundSelector();
-    return sel.detach();
+  CompoundSelector* Value::assertCompoundSelector(Context& ctx, const sass::string& name, bool allowParent)
+  {
+    callStackFrame frame(*ctx.logger, pstate_);
+    sass::string text(_selectorString(*ctx.logger, pstate_, name));
+    SourceDataObj source = SASS_MEMORY_NEW(ItplFile2, text, pstate_);
+    SelectorParser parser(ctx, source, allowParent);
+    return parser.parseCompoundSelector().detach();
   }
 
   // Returns a valid CSS representation of [this].

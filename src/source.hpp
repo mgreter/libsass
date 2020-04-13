@@ -11,13 +11,60 @@
 
 namespace Sass {
 
-  class SourceFile :
+
+  // SourceData is the base class to hold loaded sass content.
+  class SourceData :
     public SharedObj {
+
     friend class ItplFile;
+    friend class ItplFile2;
+    friend class SourceData;
+
+  protected:
+
+    // Returns the number of lines. On the first call it will
+    // calculate the linefeed lookup table.
+    virtual size_t countLines() = 0;
+
+  public:
+
+    // Constructor
+    SourceData();
+
+    // The source id is uniquely assigned
+    virtual size_t getSrcId() const = 0;
+
+    // Return path as it was given for import
+    virtual const char* getPath() const = 0;
+
+    // Returns the requested line. Will take interpolations into
+    // account to show more accurate debug messages. Calling this
+    // can be rather expensive, so only use it for debugging.
+    virtual sass::string getLine(size_t line) = 0;
+
+    // Get raw iterator for actual source
+    virtual const char* end() const = 0;
+
+    // Get raw iterator for actual source
+    virtual const char* begin() const = 0;
+
+    // Return raw sizes in bytes
+    virtual size_t size() const = 0;
+
+    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const = 0;
+
+    ~SourceData() {}
+  };
+
+  class SourceFile :
+    public SourceData {
+    friend class ItplFile;
+    friend class ItplFile2;
 
   protected:
 
     // Import path
+    // should probably use std::string anyway?
     char* path;
 
     // Raw source data
@@ -48,8 +95,28 @@ namespace Sass {
       size_t srcid);
 
     SourceFile(
+      const char* path,
+      const sass::string& data,
+      size_t srcid);
+
+    SourceFile(
+      const char* path,
+      sass::string&& data,
+      size_t srcid);
+
+    SourceFile(
       const Include& include,
       const char* data,
+      size_t srcid);
+
+    SourceFile(
+      const Include& include,
+      const sass::string& data,
+      size_t srcid);
+
+    SourceFile(
+      const Include& include,
+      sass::string&& data,
       size_t srcid);
 
     // Destructor
@@ -137,6 +204,45 @@ namespace Sass {
 
   };
 
+
+  class ItplFile2 :
+    public SourceFile {
+
+  protected:
+
+    // Account additional lines if needed.
+    size_t countLines() override final;
+
+  private:
+
+    // The position where the interpolation occurred.
+    // We also get the parent source from this state.
+    SourceSpan pstate;
+
+  public:
+
+    // Create a synthetic interpolated source. The `data` is the
+    // evaluated interpolation, while `around` is the original source
+    // where the actual interpolation was given at `pstate` position.
+    ItplFile2(const char* data,
+      SourceSpan pstate);
+
+    ItplFile2(const sass::string& data,
+      SourceSpan pstate);
+
+    ItplFile2(sass::string&& data,
+      SourceSpan pstate);
+
+    // Returns source with interpolation inserted.
+    sass::string getLine(size_t line) override final;
+
+    // Returns adjusted source span with interpolation in mind.
+    // The input `pstate` is relative to the interpolation, will
+    // return a source span with absolute position in regard of
+    // the original document with the interpolation inserted.
+    SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
+
+  };
 
 }
 

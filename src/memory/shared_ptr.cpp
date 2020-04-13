@@ -23,7 +23,7 @@ namespace Sass {
         if (AST_Node* ast = dynamic_cast<AST_Node*>(var)) {
           debug_ast(ast);
         }
-        else if (SourceFile* ast = dynamic_cast<SourceFile*>(var)) {
+        else if (SourceData* ast = dynamic_cast<SourceData*>(var)) {
           std::cerr << "LEAKED SOURCE " << var->getDbgFile() << ":" << var->getDbgLine() << "\n";
         }
         else {

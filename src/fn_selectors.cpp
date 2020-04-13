@@ -57,11 +57,13 @@ namespace Sass {
           SourceSpan state(exp->pstate());
           // char* str = sass_copy_c_string(exp_src.c_str());
           // ctx.strings.emplace_back(str);
-          auto qwe = SASS_MEMORY_NEW(SourceFile,
-            state.getPath(), exp_src.c_str(), state.getSrcId());
-          SelectorParser p2(ctx, qwe);
-          p2._allowParent = true;
-          SelectorListObj sel = p2.parse();
+          //auto source = SASS_MEMORY_NEW(SourceFile,
+          //  state.getPath(), exp_src.c_str(), state.getSrcId());
+          auto source = SASS_MEMORY_NEW(ItplFile2,
+            std::move(exp_src), state);
+          SelectorParser parser(ctx, source);
+          parser._allowParent = true;
+          SelectorListObj sel = parser.parse();
           parsedSelectors.emplace_back(sel);
         }
 
@@ -109,10 +111,10 @@ namespace Sass {
           }
           sass::string text(arg->to_css());
           SourceSpan state(arg->pstate());
-          auto qwe = SASS_MEMORY_NEW(SourceFile,
-            state.getPath(), text.c_str(), state.getSrcId());
-          SelectorParser p2(ctx, qwe, false);
-          selectors.emplace_back(p2.parse());
+          auto source = SASS_MEMORY_NEW(ItplFile2,
+            std::move(text), state);
+          SelectorParser parser(ctx, source, false);
+          selectors.emplace_back(parser.parse());
         }
 
         SelectorListObj reduced;

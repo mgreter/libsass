@@ -273,7 +273,10 @@ namespace Sass {
     import_stack.emplace_back(import);
 
     // get pointer to the loaded content
+
+  // This should already be File(Re)Sources
     const char* contents = resources[idx].contents;
+
     // keep a copy of the path around (for parserstates)
     // ToDo: we clean it, but still not very elegant!?
     // strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
@@ -308,10 +311,11 @@ namespace Sass {
     // callStackFrame frame(*logger,
     //   BackTrace("[import]", "@import"));
 
-    if (import->type == SASS_IMPORT_CSS) {
+    auto source = SASS_MEMORY_NEW(SourceFile,
+      inc, contents, idx);
 
-      auto source = SASS_MEMORY_NEW(SourceFile,
-        inc, contents, idx);
+    if (import->type == SASS_IMPORT_CSS)
+    {
       CssParser parser(*this, source);
       // take control of these buffers
       sass_import_take_source(import);
@@ -320,14 +324,9 @@ namespace Sass {
       root = parser.parse7();
       // mark as pure css
       isPlainCss = true;
-
     }
-    else if (import->type == SASS_IMPORT_SASS) {
-
-
-
-      auto source = SASS_MEMORY_NEW(SourceFile,
-        inc, contents, idx);
+    else if (import->type == SASS_IMPORT_SASS)
+    {
       SassParser parser(*this, source);
       // do not yet dispose these buffers
       sass_import_take_source(import);
@@ -336,9 +335,6 @@ namespace Sass {
       root = parser.parse7();
     }
     else {
-
-      auto source = SASS_MEMORY_NEW(SourceFile,
-        inc, contents, idx);
       // create a parser instance from the given c_str buffer
       ScssParser parser(*this, source);
       // do not yet dispose these buffers
@@ -757,7 +753,11 @@ namespace Sass {
 
   void register_built_in_function(Context& ctx, sass::string name, sass::string prototype, SassFnSig cb)
   {
-    ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
+    prototype = "(" + prototype + ")";
+    auto source = SASS_MEMORY_NEW(SourceFile,
+      "sass://built-in", prototype.c_str(), -1);
+
+    ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
     BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     // ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
     ctx.functions.insert(std::make_pair(name, callable));
@@ -778,7 +778,10 @@ namespace Sass {
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
-      ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, overload.first);
+      overload.first = "(" + overload.first + ")";
+      auto source = SASS_MEMORY_NEW(SourceFile,
+        "sass://built-in", overload.first.c_str(), -1);
+      ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
     // ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, pairs)));

@@ -1105,18 +1105,15 @@ namespace Sass {
   ///
   /// If [warnForColor] is `true`, this will emit a warning for any named color
   /// values passed into the interpolation.
-  SourceFile* Eval::performInterpolationToSource(InterpolationObj interpolation, bool warnForColor)
+  SourceData* Eval::performInterpolationToSource(InterpolationObj interpolation, bool warnForColor)
   {
     sass::vector<Mapping> mappings;
     SourceSpan pstate(interpolation->pstate());
     mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
-    sass::string css(interpolation->to_css(mappings));
-
-    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
-      "sass://parse-at-root-query", css.c_str(), -1);
-    
-    return source.detach();
+    return SASS_MEMORY_NEW(ItplFile2,
+      interpolation->to_css(mappings),
+      interpolation->pstate());
 
   }
 
@@ -1489,13 +1486,13 @@ namespace Sass {
     }
     // char* str = sass_copy_c_string(str_mq.c_str());
     // ctx.strings.emplace_back(str);
-    auto qwe = SASS_MEMORY_NEW(SourceFile,
-      state.getPath(), str_mq.c_str(), state.getSrcId());
-    MediaQueryParser p2(ctx, qwe);
+    SourceDataObj source = SASS_MEMORY_NEW(ItplFile2,
+      std::move(str_mq), state);
+    MediaQueryParser parser(ctx, source);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), sass::vector<CssMediaQueryObj>(), node->block()->elements());
-    sass::vector<CssMediaQueryObj> parsed = p2.parse();
+    sass::vector<CssMediaQueryObj> parsed = parser.parse();
     if (mediaStack.size() && mediaStack.back()) {
       auto parent = mediaStack.back()->queries();
       css->concat(mergeMediaQueries(parent, parsed));
@@ -1899,7 +1896,8 @@ namespace Sass {
 
       auto text = interpolationToValue(itpl, true, false);
       
-      auto qwe = SASS_MEMORY_NEW(ItplFile, text.c_str(), itpl->pstate().source, itpl->pstate());
+      auto qwe = SASS_MEMORY_NEW(ItplFile2,
+        std::move(text), itpl->pstate());
 
       KeyframeSelectorParser parser(ctx, qwe);
       sass::vector<sass::string> selector(parser.parse());
@@ -1977,7 +1975,8 @@ namespace Sass {
     StringUtils::makeTrimmed(css);
     auto text = css;
 
-    auto synthetic = SASS_MEMORY_NEW(ItplFile, text.c_str(), /*mappings, */pstate.source, pstate);
+    auto synthetic = SASS_MEMORY_NEW(ItplFile2,
+      std::move(text), pstate);
 
     try {
       // Everything parsed, will be parsed from perspective of local content
@@ -2308,12 +2307,9 @@ namespace Sass {
     return nullptr;
   }
 
-  sass::vector<CssMediaQueryObj> Eval::evalMediaQueries(Interpolation* itpl) {
-    auto text = performInterpolation(itpl, true);
-    const Sass::SourceSpan& span(itpl->pstate());
-    auto synthetic = SASS_MEMORY_NEW(ItplFile,
-      text.c_str(), span.source, span);
-    // CssMediaQuery::parseList(resolved, ctx.logger)
+  sass::vector<CssMediaQueryObj> Eval::evalMediaQueries(Interpolation* itpl)
+  {
+    SourceDataObj synthetic = performInterpolationToSource(itpl, true);
     MediaQueryParser parser(ctx, synthetic);
     return parser.parse();
   }

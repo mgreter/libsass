@@ -41,6 +41,7 @@ namespace Sass {
     // context.varStack.push_back(&context.varRoot);
   }
 
+  // ToDo: should work without the try clause
   bool Parser::isIdentifier(sass::string text)
   {
     try {

@@ -16,7 +16,7 @@ namespace Sass
 
 	public:
 		/** The source code reference **/
-    SourceFileObj source;
+    SourceDataObj source;
 
 		/** The position within the source **/
 		Offset position;
@@ -31,7 +31,7 @@ namespace Sass
 		const char* getPath() const;
 
 		// Return the attached source
-    SourceFile* getSource() const;
+    SourceData* getSource() const;
 
 		// Return `char star` for source data
 		const char* getRawData() const;

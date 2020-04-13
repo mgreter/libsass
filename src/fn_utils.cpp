@@ -13,9 +13,9 @@ namespace Sass {
   ExternalCallable* make_c_function2(Sass_Function_Entry c_func, Context& ctx)
   {
     const char* sig = sass_function_get_signature(c_func);
-    auto qwe = SASS_MEMORY_NEW(SourceFile,
+    auto source = SASS_MEMORY_NEW(SourceFile,
       "sass://signature", sig, -1);
-    ScssParser p2(ctx, qwe);
+    ScssParser p2(ctx, source);
     sass::string name;
     if (p2.scanner.scanChar(Character::$at)) {
       name = "@"; // allow @warn etc.

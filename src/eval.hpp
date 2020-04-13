@@ -106,7 +106,7 @@ namespace Sass {
     Interpolation* evalInterpolation(InterpolationObj interpolation, bool warnForColor);
     sass::string performInterpolation(InterpolationObj interpolation, bool warnForColor);
     sass::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
-    SourceFile* performInterpolationToSource(InterpolationObj interpolation, bool warnForColor);
+    SourceData* performInterpolationToSource(InterpolationObj interpolation, bool warnForColor);
 
     ArgumentInvocation* visitArgumentInvocation(ArgumentInvocation* args);
 

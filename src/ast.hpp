@@ -23,6 +23,7 @@
 #include "environment.hpp"
 #include "fn_utils.hpp"
 #include "environment_stack.hpp"
+#include "source.hpp"
 
 #include "ast_base.hpp"
 #include "ast_containers.hpp"
@@ -161,7 +162,7 @@ namespace Sass {
 
     static ArgumentDeclaration* parse(
       Context& context,
-      const sass::string& contents);
+      SourceData* source);
 
     void verify(
       size_t positional,
@@ -1027,10 +1028,10 @@ namespace Sass {
     // Parses an at-root query from [contents]. If passed, [url]
     // is the name of the file from which [contents] comes.
     // Throws a [SassFormatException] if parsing fails.
+    //static AtRootQuery* parse(
+    //  const sass::string& contents, Context& ctx);
     static AtRootQuery* parse(
-      const sass::string& contents, Context& ctx);
-    static AtRootQuery* parse(
-      SourceFile* contents, Context& ctx);
+      SourceData* contents, Context& ctx);
 
     // The default at-root query, which excludes only style rules.
     // ToDo: check out how to make this static

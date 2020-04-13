@@ -13,7 +13,7 @@ namespace Sass
 	/**
   * asdasd
   */
-  SourceFile* SourceState::getSource() const
+  SourceData* SourceState::getSource() const
 	{
 		return source.ptr();
 	}
