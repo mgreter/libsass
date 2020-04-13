@@ -1101,6 +1101,25 @@ namespace Sass {
   }
 
 
+  /// Evaluates [interpolation].
+  ///
+  /// If [warnForColor] is `true`, this will emit a warning for any named color
+  /// values passed into the interpolation.
+  SourceFile* Eval::performInterpolationToSource(InterpolationObj interpolation, bool warnForColor)
+  {
+    sass::vector<Mapping> mappings;
+    SourceSpan pstate(interpolation->pstate());
+    mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
+    interpolation = evalInterpolation(interpolation, warnForColor);
+    sass::string css(interpolation->to_css(mappings));
+
+    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
+      "sass://parse-at-root-query", css.c_str(), -1);
+    
+    return source.detach();
+
+  }
+
   /// Evaluates [interpolation] and wraps the result in a [CssValue].
   ///
   /// If [trim] is `true`, removes whitespace around the result. If
@@ -1516,7 +1535,7 @@ namespace Sass {
 
     if (node->query()) {
       query = AtRootQuery::parse(
-        performInterpolation(
+        performInterpolationToSource(
           node->query(), true),
         ctx);
     }
@@ -1817,33 +1836,6 @@ namespace Sass {
     SelectorListObj slist = itplToSelector(itpl,
       plainCss, allowParent);
 
-    /*
-    var list = _adjustParseError(
-      targetText,
-      () = > SelectorList.parse(
-        trimAscii(targetText.value, excludeEscape: true),
-        logger: _logger,
-        allowParent : false));
-        */
-
-        // Sass_Import_Entry parent = ctx.import_stack.back();
-    /*
-    char* cstr = sass_copy_c_string(text.c_str());
-    ctx.strings.emplace_back(cstr);
-    auto qwe = SASS_MEMORY_NEW(SourceFile,
-      "foobar", cstr, -1);
-    SelectorParser p2(ctx, qwe);
-    // p2.scanner.offset = itpl->pstate();
-    p2.scanner.srcid = itpl->pstate().getSrcId();
-    p2.scanner.sourceUrl = itpl->pstate().getPath();
-    if (blockStack.size() > 2) {
-      Block* b = blockStack.at(blockStack.size() - 2);
-      if (b->is_root()) p2._allowParent = false;
-    }
-
-    SelectorListObj slist = p2.parse();
-    */
-
     if (slist) {
 
       for (auto complex : slist->elements()) {
@@ -1906,11 +1898,7 @@ namespace Sass {
       blockStack.pop_back();
 
       auto text = interpolationToValue(itpl, true, false);
-      // char* cstr = sass_copy_c_string(text.c_str());
-      // ctx.strings.emplace_back(cstr);
-      // auto qwe = SASS_MEMORY_NEW(SourceFile,
-      //   itpl->pstate().getPath(), cstr, itpl->pstate().getSrcId());
-
+      
       auto qwe = SASS_MEMORY_NEW(ItplFile, text.c_str(), itpl->pstate().source, itpl->pstate());
 
       KeyframeSelectorParser parser(ctx, qwe);
@@ -1989,18 +1977,7 @@ namespace Sass {
     StringUtils::makeTrimmed(css);
     auto text = css;
 
-
-    // auto text = interpolationToValue(itpl, true, false);
-    // char* cstr = sass_copy_c_string(text.c_str());
-    // ctx.strings.emplace_back(cstr);
-    // auto around = SASS_MEMORY_NEW(SourceFile, pstate.source, Mappings());
     auto synthetic = SASS_MEMORY_NEW(ItplFile, text.c_str(), /*mappings, */pstate.source, pstate);
-
-    // std::cerr << qwe2->getLine(0) << "\n";
-    // std::cerr << qwe2->getLine(1) << "\n";
-    // std::cerr << qwe2->getLine(2) << "\n";
-    // std::cerr << qwe2->getLine(3) << "\n";
-    // exit(1);
 
     try {
       // Everything parsed, will be parsed from perspective of local content
@@ -2018,8 +1995,6 @@ namespace Sass {
       return p2.parse();
     }
     catch (Exception::Base& err) {
-      // err.pstate.src = itpl->pstate().src;
-      // err.pstate += itpl->pstate() + itpl->pstate().offset;
       throw err;
     }
   }

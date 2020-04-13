@@ -1029,6 +1029,8 @@ namespace Sass {
     // Throws a [SassFormatException] if parsing fails.
     static AtRootQuery* parse(
       const sass::string& contents, Context& ctx);
+    static AtRootQuery* parse(
+      SourceFile* contents, Context& ctx);
 
     // The default at-root query, which excludes only style rules.
     // ToDo: check out how to make this static

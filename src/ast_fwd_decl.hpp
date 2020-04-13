@@ -19,6 +19,7 @@
 namespace Sass {
 
   class SourceFile;
+  class ItplSource;
   class ItplFile;
 
   class AST_Node;
@@ -177,6 +178,7 @@ namespace Sass {
     typedef SharedImpl<type> type##_Obj; \
 
   IMPL_MEM_OBJ(SourceFile);
+  IMPL_MEM_OBJ(ItplSource);
   IMPL_MEM_OBJ(ItplFile);
 
   IMPL_MEM_OBJ(AST_Node);

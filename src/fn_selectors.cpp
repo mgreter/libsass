@@ -107,10 +107,8 @@ namespace Sass {
               "a list of strings, or a list of lists of strings.",
               *ctx.logger, arg->pstate());
           }
-          sass::string text = arg->to_css();
+          sass::string text(arg->to_css());
           SourceSpan state(arg->pstate());
-          // char* str = sass_copy_c_string(text.c_str());
-          // ctx.strings.emplace_back(str);
           auto qwe = SASS_MEMORY_NEW(SourceFile,
             state.getPath(), text.c_str(), state.getSrcId());
           SelectorParser p2(ctx, qwe, false);

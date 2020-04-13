@@ -311,7 +311,7 @@ namespace Sass {
     if (import->type == SASS_IMPORT_CSS) {
 
       auto source = SASS_MEMORY_NEW(SourceFile,
-        inc.abs_path.c_str(), contents, idx);
+        inc, contents, idx);
       CssParser parser(*this, source);
       // take control of these buffers
       sass_import_take_source(import);
@@ -324,8 +324,10 @@ namespace Sass {
     }
     else if (import->type == SASS_IMPORT_SASS) {
 
+
+
       auto source = SASS_MEMORY_NEW(SourceFile,
-        inc.abs_path.c_str(), contents, idx);
+        inc, contents, idx);
       SassParser parser(*this, source);
       // do not yet dispose these buffers
       sass_import_take_source(import);
@@ -336,7 +338,7 @@ namespace Sass {
     else {
 
       auto source = SASS_MEMORY_NEW(SourceFile,
-        inc.abs_path.c_str(), contents, idx);
+        inc, contents, idx);
       // create a parser instance from the given c_str buffer
       ScssParser parser(*this, source);
       // do not yet dispose these buffers

@@ -615,15 +615,20 @@ namespace Sass {
     return (all() || rule()) != include();
   }
 
-  AtRootQuery* AtRootQuery::parse(const sass::string& contents, Context& ctx) {
-
-    // char* str = sass_copy_c_string(contents.c_str());
-    // ctx.strings.emplace_back(str);
-    auto qwe = SASS_MEMORY_NEW(SourceFile,
+  AtRootQuery* AtRootQuery::parse(const sass::string& contents, Context& ctx)
+  {
+    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
       "sass://parse-at-root-query", contents.c_str(), -1);
-    AtRootQueryParser p2(ctx, qwe);
-    return p2.parse();
+    AtRootQueryParser parser(ctx, source);
+    return parser.parse();
   }
+
+  AtRootQuery* AtRootQuery::parse(SourceFile* source, Context& ctx)
+  {
+    AtRootQueryParser parser(ctx, source);
+    return parser.parse();
+  }
+
 
   AtRootQuery* AtRootQuery::defaultQuery(const SourceSpan& pstate)
   {
@@ -675,7 +680,6 @@ namespace Sass {
 
   // IMPLEMENT_AST_OPERATORS(StyleRule);
   // IMPLEMENT_AST_OPERATORS(MediaRule);
-  // IMPLEMENT_AST_OPERATORS(Import);
   // IMPLEMENT_AST_OPERATORS(ImportRule);
   // IMPLEMENT_AST_OPERATORS(StaticImport);
   // IMPLEMENT_AST_OPERATORS(DynamicImport);

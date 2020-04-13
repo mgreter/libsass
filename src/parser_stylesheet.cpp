@@ -1066,8 +1066,6 @@ namespace Sass {
       auto queries = tryImportQueries();
       rule->append(SASS_MEMORY_NEW(StaticImport,
         scanner.relevantSpanFrom(start),
-        // Not needed for StringExpression
-        // Use its interpolation instead
         SASS_MEMORY_NEW(Interpolation,
            url->pstate(), url),
         queries.first, queries.second));
@@ -1077,7 +1075,6 @@ namespace Sass {
     sass::string url = string();
     const char* rawUrlPos = scanner.position;
     SourceSpan pstate = scanner.relevantSpanFrom(start);
-    // var urlSpan = scanner.rawSpanFrom(start);
     whitespace();
     auto queries = tryImportQueries();
     if (_isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
@@ -1089,22 +1086,20 @@ namespace Sass {
           SASS_MEMORY_NEW(SassString, pstate,
             sass::string(startpos, rawUrlPos))),
          queries.first, queries.second));
-      return;
     }
-
     // Otherwise return a dynamic import
     // Will resolve during the eval stage
-    if (_inControlDirective || _inMixin) {
-      _disallowedAtRule(rule->pstate().position);
+    else {
+      // Check for valid dynamic import
+      if (_inControlDirective || _inMixin) {
+        _disallowedAtRule(rule->pstate().position);
+      }
+      // Call custom importers and check if any of them handled the import
+      if (!context.call_importers2(unquote(url), pstate.getPath(), pstate, rule)) {
+        // Try to load url into context.sheets
+        resolveDynamicImport(rule, start, url);
+      }
     }
-
-    // Create an import statement to be resolved
-    // ImportObj imp = SASS_MEMORY_NEW(Import, pstate);
-    // Call custom importers and check if any of them handled the import
-    if (!context.call_importers2(unquote(url), pstate.getPath(), pstate, rule)) {
-      resolveDynamicImport(rule, start, url);
-    }
-    // imp->pstate(scanner.relevantSpanFrom(start));
   
   }
 
@@ -1115,8 +1110,8 @@ namespace Sass {
 
     SourceSpan pstate = scanner.relevantSpanFrom(start);
 
-    const Importer importer(path, scanner.sourceUrl);
     // Parse the sass source (stored on context.sheets)
+    const Importer importer(path, scanner.sourceUrl);
     Include include(context.load_import(importer, pstate));
 
     // Error out in case nothing was found
@@ -1127,8 +1122,11 @@ namespace Sass {
         "Can't find stylesheet to import.");
     }
 
-    DynamicImport* dyn = SASS_MEMORY_NEW(DynamicImport, scanner.relevantSpanFrom(start), url);
-    rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
+    // 
+    rule->append(SASS_MEMORY_NEW(IncludeImport,
+      SASS_MEMORY_NEW(DynamicImport,
+        scanner.relevantSpanFrom(start), url),
+      include));
 
   }
 

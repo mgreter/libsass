@@ -31,6 +31,21 @@ namespace Sass {
     length = strlen(data);
   }
 
+  SourceFile::SourceFile(
+    const Include& include,
+    const char* data,
+    size_t srcid) :
+    SharedObj(),
+    // Make a copy, delete when destroyed
+    path(sass_copy_c_string(include.abs_path.c_str())),
+    data(sass_copy_c_string(data)),
+    length(0),
+    srcid(srcid),
+    lfs()
+  {
+    length = strlen(data);
+  }
+
   size_t SourceFile::countLines()
   {
     if (lfs.empty()) {

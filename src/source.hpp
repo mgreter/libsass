@@ -5,6 +5,7 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#include "file.hpp"
 #include "ast_fwd_decl.hpp"
 #include "source_span.hpp"
 
@@ -43,6 +44,11 @@ namespace Sass {
     // Will be destroyed when we go out of scope.
     SourceFile(
       const char* path,
+      const char* data,
+      size_t srcid);
+
+    SourceFile(
+      const Include& include,
       const char* data,
       size_t srcid);
 
@@ -113,7 +119,7 @@ namespace Sass {
 
   public:
 
-    // Create an synthetic interpolated source. The `data` is the
+    // Create a synthetic interpolated source. The `data` is the
     // evaluated interpolation, while `around` is the original source
     // where the actual interpolation was given at `pstate` position.
     ItplFile(const char* data,
@@ -130,6 +136,7 @@ namespace Sass {
     SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
 
   };
+
 
 }
 
