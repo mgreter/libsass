@@ -106,7 +106,7 @@ extern "C" {
   {
     Sass_Import* v = (Sass_Import*) calloc(1, sizeof(Sass_Import));
     if (v == 0) return 0;
-    v->type = SASS_IMPORT_AUTO;
+    // v->type = SASS_IMPORT_AUTO;
     v->imp_path = imp_path ? sass_copy_c_string(imp_path) : 0;
     // v->abs_path = abs_path ? sass_copy_c_string(abs_path) : 0;
     // v->source = source;
@@ -201,6 +201,9 @@ extern "C" {
   const char* ADDCALL sass_import_get_abs_path(Sass_Import_Entry entry) { return entry->srcdata->getAbsPath(); }
   const char* ADDCALL sass_import_get_source(Sass_Import_Entry entry) { return entry->srcdata->begin(); }
   const char* ADDCALL sass_import_get_srcmap(Sass_Import_Entry entry) { return entry->srcmap; }
+
+  enum Sass_Import_Type ADDCALL sass_import_get_type(Sass_Import_Entry entry) { return entry->srcdata->getType();  }
+  void ADDCALL sass_import_set_type(Sass_Import_Entry entry, enum Sass_Import_Type type) { entry->srcdata->setType(type); }
 
   // Getter for import error entry
   size_t ADDCALL sass_import_get_error_line(Sass_Import_Entry entry) { return entry->line; }

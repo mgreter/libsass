@@ -1927,7 +1927,7 @@ namespace Sass {
     if (r->interpolation()) {
       // SourceData* source = ctx.importStack.back();
       Sass_Import_Entry imp = ctx.import_stack.back();
-      bool plainCss = imp->type == SASS_IMPORT_CSS;
+      bool plainCss = imp->srcdata->getType() == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);
     }
 
@@ -2278,7 +2278,7 @@ namespace Sass {
       include.abs_path.c_str(),
       0, 0
     );
-    import->type = sheet.syntax;
+    sass_import_set_type(import, sheet.syntax);
 
     // Add C-API to stack to expose it
     ctx.import_stack.emplace_back(import);

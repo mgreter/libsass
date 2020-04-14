@@ -62,6 +62,8 @@ namespace Sass {
       return SASS_IMPORT_AUTO;
     }
 
+    virtual void setType(Sass_Import_Type type) = 0;
+
     ~SourceData() {}
   };
 
@@ -105,6 +107,10 @@ namespace Sass {
 
     Sass_Import_Type getType() const override final {
       return type;
+    }
+
+    void setType(Sass_Import_Type type) override final {
+      this->type = type;
     }
 
     // Constructor will copy `path` and `data`.

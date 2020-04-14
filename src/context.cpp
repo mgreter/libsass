@@ -438,7 +438,7 @@ namespace Sass {
           // handle error message passed back from custom importer
           // it may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, source, srcmap, pstate);
+            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->srcdata->getType() }, source, srcmap, pstate);
             if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
             // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
             else {
@@ -452,7 +452,7 @@ namespace Sass {
             // use the created uniq_path as fall-back (maybe enforce)
             sass::string path_key(abs_path ? abs_path : uniq_path);
             // create the importer struct
-            Include include(importer, path_key, include_ent->type);
+            Include include(importer, path_key, include_ent->srcdata->getType());
             // attach information to AST node
 
             auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, load_path);
