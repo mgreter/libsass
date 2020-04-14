@@ -27,10 +27,10 @@ namespace Sass {
 
     StringScanner(
       Logger& logger,
-      SourceFileObj source);
+      SourceDataObj source);
 
     // The source associated with this scanner
-    SourceFileObj source;
+    SourceDataObj source;
 
     // Next source mapping
     size_t nextMap;

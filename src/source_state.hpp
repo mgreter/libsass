@@ -22,7 +22,7 @@ namespace Sass
 		Offset position;
 
 		/** Regular value constructor **/
-		SourceState(SourceFileObj source, Offset position = Offset());
+		SourceState(SourceDataObj source, Offset position = Offset());
 
 		/** Return the attach source id **/
 		size_t getSrcId() const;

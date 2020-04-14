@@ -13,7 +13,7 @@ namespace Sass
 	public:
 		// SourceSpan(const char* path);
 
-		SourceSpan(SourceFileObj source,
+		SourceSpan(SourceDataObj source,
 							 const Offset& position = Offset(),
 							 const Offset& span = Offset());
 

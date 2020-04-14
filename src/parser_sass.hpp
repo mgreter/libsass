@@ -13,7 +13,7 @@ namespace Sass {
       AUTO, TABS, SPACES,
     };
 
-    SassParser(Context& context, SourceFileObj source) :
+    SassParser(Context& context, SourceDataObj source) :
       StylesheetParser(context, source),
       _currentIndentation(0),
       _nextIndentation(sass::string::npos),

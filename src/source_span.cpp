@@ -5,7 +5,7 @@
 namespace Sass {
 
   SourceSpan::SourceSpan(
-    SourceFileObj source,
+    SourceDataObj source,
     const Offset& position,
     const Offset& span) :
     SourceState(source, position),
@@ -15,7 +15,7 @@ namespace Sass {
   SourceSpan SourceSpan::tmp(const char* label)
   {
     return SourceSpan(SASS_MEMORY_NEW(
-      SourceFile, true, label, "", sass::string::npos),
+      SourceString, true, label, "", sass::string::npos),
     {},
     {}
     );

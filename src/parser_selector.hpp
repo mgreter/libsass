@@ -24,7 +24,7 @@ namespace Sass {
 
     SelectorParser(
       Context& context,
-      SourceFileObj source,
+      SourceDataObj source,
       bool allowParent = true,
       bool allowPlaceholder = true) :
       Parser(context, source),

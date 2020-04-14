@@ -12,7 +12,7 @@ namespace Sass {
 
     MediaQueryParser(
       Context& context,
-      SourceFileObj source) :
+      SourceDataObj source) :
       Parser(context, source)
     {}
 

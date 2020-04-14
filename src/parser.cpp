@@ -34,7 +34,7 @@ namespace Sass {
 
   Parser::Parser(
     Context& context,
-    SourceFileObj source) :
+    SourceDataObj source) :
     context(context),
     scanner(*context.logger, source)
   {
@@ -46,7 +46,7 @@ namespace Sass {
   bool Parser::isIdentifier(sass::string text)
   {
     try {
-      auto src = SASS_MEMORY_NEW(SourceFile, true,
+      auto src = SASS_MEMORY_NEW(SourceString, true,
         "sass:://identifier", std::move(text), -1);
       Parser parser(context, src);
       sass::string id(parser.identifier());

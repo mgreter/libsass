@@ -5,7 +5,7 @@
 namespace Sass
 {
 
-	SourceState::SourceState(SourceFileObj source, Offset position)
+	SourceState::SourceState(SourceDataObj source, Offset position)
 		: source(source)
 		, position(position)
 	{}

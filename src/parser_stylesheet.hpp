@@ -25,7 +25,7 @@ namespace Sass {
 
   public:
 
-    StylesheetParser(Context& context, SourceFileObj source) :
+    StylesheetParser(Context& context, SourceDataObj source) :
       BaseParser(context, source),
       _recursion(0),
       _isUseAllowed(true),

@@ -241,7 +241,7 @@ namespace Sass {
     );
 
 
-    SourceFileObj source = import->srcdata;
+    SourceDataObj source = import->srcdata;
     source->setSrcId(idx);
 
     // Append to the resources
@@ -258,13 +258,13 @@ namespace Sass {
     srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
 
     if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
-      source->type = SASS_IMPORT_CSS;
+      source->setType(SASS_IMPORT_CSS);
     }
     else if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".sass", 5)) {
-      source->type = SASS_IMPORT_SASS;
+      source->setType(SASS_IMPORT_SASS);
     }
     else {
-      source->type = SASS_IMPORT_SCSS;
+      source->setType(SASS_IMPORT_SCSS);
     }
 
     // add the entry to the stack
@@ -751,7 +751,7 @@ namespace Sass {
 
   void register_built_in_function(Context& ctx, sass::string name, const sass::string& signature, SassFnSig cb)
   {
-    auto source = SASS_MEMORY_NEW(SourceFile, true,
+    auto source = SASS_MEMORY_NEW(SourceString, true,
       "sass://signature", "(" + signature + ")", -1);
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
     BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
@@ -765,7 +765,7 @@ namespace Sass {
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
-      SourceDataObj source = SASS_MEMORY_NEW(SourceFile, true,
+      SourceDataObj source = SASS_MEMORY_NEW(SourceString, true,
         "sass://signature", "(" + overload.first + ")", -1);
       ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
       pairs.emplace_back(std::make_pair(args, overload.second));

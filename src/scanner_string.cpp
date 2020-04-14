@@ -18,7 +18,7 @@ namespace Sass {
 
   StringScanner::StringScanner(
     Logger& logger,
-    SourceFileObj source) :
+    SourceDataObj source) :
     source(source),
     nextMap(sass::string::npos),
     startpos(source->begin()),
