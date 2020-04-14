@@ -88,6 +88,11 @@ namespace Sass {
     // Unique source id
     size_t srcid;
 
+    // Store byte offset for every line.
+    // Lazy calculated within `countLines`.
+    // Columns per line can be derived from it.
+    sass::vector<size_t> lfs;
+
   public:
 
     SourceWithPath(
@@ -95,6 +100,17 @@ namespace Sass {
       sass::string&& abs_path,
       Sass_Import_Type type = SASS_IMPORT_AUTO,
       size_t idx = sass::string::npos);
+
+    SourceWithPath(
+      const sass::string& imp_path,
+      const sass::string& abs_path,
+      Sass_Import_Type type = SASS_IMPORT_AUTO,
+      size_t idx = sass::string::npos);
+
+    // Returns the requested line. Will take interpolations into
+    // account to show more accurate debug messages. Calling this
+    // can be rather expensive, so only use it for debugging.
+    virtual sass::string getLine(size_t line);
 
     // Return path as it was given for import
     const char* getImpPath() const
@@ -147,11 +163,6 @@ namespace Sass {
     // Raw length in bytes
     size_t length;
 
-    // Store byte offset for every line.
-    // Lazy calculated within `countLines`.
-    // Columns per line can be derived from it.
-    sass::vector<size_t> lfs;
-
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
     virtual size_t countLines();
@@ -170,11 +181,6 @@ namespace Sass {
 
     // Destructor
     ~SourceFile();
-
-    // Returns the requested line. Will take interpolations into
-    // account to show more accurate debug messages. Calling this
-    // can be rather expensive, so only use it for debugging.
-    virtual sass::string getLine(size_t line);
 
     // Returns adjusted source span regarding interpolation.
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
@@ -219,17 +225,11 @@ namespace Sass {
 
 
   class SourceString :
-    public SourceData {
+    public SourceWithPath {
     friend class ItplFile;
     friend class ItplFile2;
 
   protected:
-
-    // Import path
-    sass::string imp_path;
-
-    // Resolved path
-    sass::string abs_path;
 
     // Raw source data
     sass::string data;
@@ -240,32 +240,11 @@ namespace Sass {
     // Raw length in bytes
     size_t length;
 
-    // Unique source id
-    size_t srcid;
-
-    // Also store srcmap
-
-    // Store byte offset for every line.
-    // Lazy calculated within `countLines`.
-    // Columns per line can be derived from it.
-    sass::vector<size_t> lfs;
-
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
     virtual size_t countLines();
 
   public:
-
-    // the import type
-    Sass_Import_Type type;
-
-    Sass_Import_Type getType() const override final {
-      return type;
-    }
-
-    void setType(Sass_Import_Type type) override final {
-      this->type = type;
-    }
 
     // Constructor will copy `path` and `data`.
     // Will be destroyed when we go out of scope.
@@ -276,7 +255,6 @@ namespace Sass {
       sass::string&& data,
       sass::string&& srcmap,
       size_t srcid);
-
 
     SourceString(
       bool foo,
@@ -291,11 +269,6 @@ namespace Sass {
 
     // Destructor
     ~SourceString() {}
-
-    // Returns the requested line. Will take interpolations into
-    // account to show more accurate debug messages. Calling this
-    // can be rather expensive, so only use it for debugging.
-    virtual sass::string getLine(size_t line);
 
     // Returns adjusted source span regarding interpolation.
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
@@ -320,28 +293,6 @@ namespace Sass {
     // Get raw iterator for actual source
     const char* srcmap() const {
       return mapdata33.c_str();
-    }
-
-    // Return path as it was given for import
-    const char* getImpPath() const
-    {
-      return imp_path.c_str();
-    }
-
-    // Return path after it was resolved
-    const char* getAbsPath() const
-    {
-      return abs_path.c_str();
-    }
-
-    // The source id is uniquely assigned
-    void setSrcId(size_t idx) {
-      srcid = idx;
-    }
-
-    // The source id is uniquely assigned
-    size_t getSrcId() const {
-      return srcid;
     }
 
     // Needed to satisfy SharedObj
