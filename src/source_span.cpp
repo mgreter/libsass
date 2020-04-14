@@ -14,7 +14,7 @@ namespace Sass {
 
   SourceSpan::SourceSpan(const char* label) :
     SourceState(SASS_MEMORY_NEW(
-      SourceFile, label, "", sass::string::npos))
+      SourceFile, true, label, "", sass::string::npos))
   {
   }
 

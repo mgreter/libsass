@@ -46,7 +46,7 @@ namespace Sass {
   {
     try {
       auto src = SASS_MEMORY_NEW(SourceFile,
-        nullptr, text.c_str(), -1);
+        true, "sass:://identifier", text.c_str(), -1);
       Parser parser(context, src);
       sass::string id(parser.identifier());
       return parser.scanner.isDone();
