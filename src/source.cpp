@@ -289,5 +289,17 @@ namespace Sass {
     sass_free_memory(mapdata33);
   }
 
+  SourceWithPath::SourceWithPath(
+    sass::string&& imp_path,
+    sass::string&& abs_path,
+    Sass_Import_Type type,
+    size_t idx) :
+    imp_path(std::move(imp_path)),
+    abs_path(std::move(abs_path)),
+    srcid(idx),
+    type(type)
+  {
+  }
+
 }
 

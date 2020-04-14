@@ -70,6 +70,67 @@ namespace Sass {
     ~SourceData() {}
   };
 
+  class SourceWithPath :
+    public SourceData {
+    friend class SourceString;
+    friend class SourceFile;
+    friend class ItplFile;
+    friend class ItplFile2;
+
+  protected:
+
+    // Import path
+    sass::string imp_path;
+
+    // Resolved path
+    sass::string abs_path;
+
+    // Unique source id
+    size_t srcid;
+
+  public:
+
+    SourceWithPath(
+      sass::string&& imp_path,
+      sass::string&& abs_path,
+      Sass_Import_Type type = SASS_IMPORT_AUTO,
+      size_t idx = sass::string::npos);
+
+    // Return path as it was given for import
+    const char* getImpPath() const
+    {
+      return imp_path.c_str();
+    }
+
+    // Return path after it was resolved
+    const char* getAbsPath() const
+    {
+      return abs_path.c_str();
+    }
+
+    // The source id is uniquely assigned
+    void setSrcId(size_t idx) {
+      srcid = idx;
+    }
+
+    // The source id is uniquely assigned
+    size_t getSrcId() const {
+      return srcid;
+    }
+
+    // the import type
+    Sass_Import_Type type;
+
+    Sass_Import_Type getType() const override final {
+      return type;
+    }
+
+    void setType(Sass_Import_Type type) override final {
+      this->type = type;
+    }
+
+  };
+
   class SourceFile :
     public SourceData {
     friend class ItplFile;

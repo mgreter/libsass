@@ -21,6 +21,7 @@ namespace Sass {
   class SourceData;
   class SourceFile;
   class SourceString;
+  class SourceWithPath;
   class ItplFile2;
 
   class AST_Node;
@@ -181,6 +182,7 @@ namespace Sass {
   IMPL_MEM_OBJ(SourceData);
   IMPL_MEM_OBJ(SourceFile);
   IMPL_MEM_OBJ(SourceString);
+  IMPL_MEM_OBJ(SourceWithPath);
   IMPL_MEM_OBJ(ItplFile2);
 
   IMPL_MEM_OBJ(AST_Node);
