@@ -17,7 +17,7 @@ namespace Sass {
       StylesheetParser(context, source),
       _currentIndentation(0),
       _nextIndentation(sass::string::npos),
-      _nextIndentationEnd({ source->begin(), Offset() }),
+      _nextIndentationEnd({ source->content(), Offset() }),
       _spaces(Sass_Indent_Type::AUTO)
 
     {}

@@ -26,18 +26,23 @@ namespace Sass {
   SourceFile::SourceFile(
     const char* imp_path,
     const char* abs_path,
-    char* src,
-    char* map,
+    char* content,
+    char* srcmaps,
     size_t srcid) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
       SASS_IMPORT_AUTO, srcid
     ),
-    data(src),
-    mapdata33(map)
+    _content(content),
+    _srcmaps(srcmaps)
   {
-    length = src ? strlen(src) : 0;
+    if (_content != nullptr) {
+      len_content = strlen(_content);
+    }
+    if (_srcmaps != nullptr) {
+      len_srcmaps = strlen(_srcmaps);
+    }
   }
 
   size_t SourceFile::countLines()
@@ -46,34 +51,17 @@ namespace Sass {
       size_t len = 0;
       lfs.emplace_back(len);
       // ToDo: do only on demand
-      while (data[len] != 0) {
-        if (data[len] == $lf) {
+      while (_content[len] != 0) {
+        if (_content[len] == $lf) {
           lfs.emplace_back(len + 1);
         }
         ++len;
       }
       lfs.emplace_back(len);
-      length = len;
     }
-
     return lfs.size() - 1;
   }
 
-  sass::string SourceWithPath::getLine(size_t line)
-  {
-    countLines();
-    if (line > lfs.size()) {
-      return sass::string();
-    }
-    size_t first = lfs[line];
-    size_t last = lfs[line + 1];
-    if (first == last) return sass::string();
-    const char* beg = begin() + first;
-    const char* end = begin() + last;
-    if (end[-1] == $lf) end -= 1;
-    if (end[-1] == $cr) end -= 1;
-    return sass::string(beg, end);
-  }
 
 
 
@@ -96,42 +84,45 @@ namespace Sass {
       abspath ? abspath : "",
       SASS_IMPORT_AUTO, srcid
     ),
-    data(std::move(src)),
-    mapdata33()
+    _content(std::move(src)),
+    _srcmaps()
   {
-    length = data.length();
+    len_content = _content.length();
+    len_srcmaps = _srcmaps.length();
   }
 
   SourceString::SourceString(
     const char* imp_path,
     const char* abs_path,
-    sass::string&& src,
-    sass::string&& map,
+    sass::string&& content,
+    sass::string&& srcmaps,
     size_t srcid) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
       SASS_IMPORT_AUTO, srcid
     ),
-    data(std::move(src)),
-    mapdata33(std::move(map))
+    _content(std::move(content)),
+    _srcmaps(std::move(srcmaps))
   {
-    length = data.length();
+    len_content = _content.length();
+    len_srcmaps = _srcmaps.length();
   }
 
   SourceString::SourceString(
     const Include& include,
-    sass::string&& src,
+    sass::string&& content,
     size_t srcid) :
     SourceWithPath(
       include.imp_path,
       include.abs_path,
       SASS_IMPORT_AUTO, srcid
     ),
-    data(std::move(src)),
-    mapdata33()
+    _content(std::move(content)),
+    _srcmaps()
   {
-    length = data.length();
+    len_content = _content.length();
+    len_srcmaps = _srcmaps.length();
   }
 
   size_t SourceString::countLines()
@@ -140,14 +131,13 @@ namespace Sass {
       size_t len = 0;
       lfs.emplace_back(len);
       // ToDo: do only on demand
-      while (data[len] != 0) {
-        if (data[len] == $lf) {
+      while (_content[len] != 0) {
+        if (_content[len] == $lf) {
           lfs.emplace_back(len + 1);
         }
         ++len;
       }
       lfs.emplace_back(len);
-      length = len;
     }
 
     return lfs.size() - 1;
@@ -269,8 +259,8 @@ namespace Sass {
   }
 
   SourceFile::~SourceFile() {
-    sass_free_memory(data);
-    sass_free_memory(mapdata33);
+    sass_free_memory(_content);
+    sass_free_memory(_srcmaps);
   }
 
   SourceWithPath::SourceWithPath(
@@ -297,5 +287,23 @@ namespace Sass {
     type(type)
   {
   }
+
+
+  sass::string SourceWithPath::getLine(size_t line)
+  {
+    countLines();
+    if (line > lfs.size()) {
+      return sass::string();
+    }
+    size_t first = lfs[line];
+    size_t last = lfs[line + 1];
+    if (first == last) return sass::string();
+    const char* beg = content() + first;
+    const char* end = content() + last;
+    if (end[-1] == $lf) end -= 1;
+    if (end[-1] == $cr) end -= 1;
+    return sass::string(beg, end);
+  }
+
 }
 

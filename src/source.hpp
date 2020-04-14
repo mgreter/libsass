@@ -48,18 +48,28 @@ namespace Sass {
     virtual sass::string getLine(size_t line) = 0;
 
     // Get raw iterator for raw source
-    virtual const char* end() const = 0;
+    virtual const char* content() const = 0;
+    virtual const char* srcmaps() const = 0;
 
     // Get raw iterator for raw source
-    virtual const char* begin() const = 0;
-
-    // Get raw iterator for raw source
-    virtual const char* srcmap() const = 0;
+    const char* contentStart() const { return content(); };
+    const char* srcmapsStart() const { return srcmaps(); };
+    const char* contentEnd() const { return content() + contentSize(); };
+    const char* srcmapsEnd() const { return srcmaps() + srcmapsSize(); };
 
     // Return raw size in bytes
-    virtual size_t size() const = 0;
+    virtual size_t contentSize() const = 0;
+    virtual size_t srcmapsSize() const = 0;
 
-    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const = 0;
+    // Needed to satisfy SharedObj
+    sass::string to_string() const {
+      return content();
+    }
+
+    // Returns adjusted source span regarding interpolation.
+    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
+      return pstate;
+    }
 
     virtual Sass_Import_Type getType() const {
       return SASS_IMPORT_AUTO;
@@ -89,7 +99,8 @@ namespace Sass {
     size_t srcid;
 
     // Raw length in bytes
-    size_t length;
+    size_t len_content;
+    size_t len_srcmaps;
 
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
@@ -148,14 +159,11 @@ namespace Sass {
       this->type = type;
     }
 
-    // Return raw sizes in bytes
-    size_t size() const {
-      return length;
+    size_t contentSize() const override final {
+      return len_content;
     }
-
-    // Get raw iterator for actual source
-    const char* end() const {
-      return begin() + size();
+    size_t srcmapsSize() const override final {
+      return len_srcmaps;
     }
 
   };
@@ -168,10 +176,10 @@ namespace Sass {
   protected:
 
     // Raw source data
-    char* data;
+    char* _content;
 
     // Raw source data
-    char* mapdata33;
+    char* _srcmaps;
 
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
@@ -179,50 +187,27 @@ namespace Sass {
 
   public:
 
-    // Constructor will copy `path` and `data`.
-    // Will be destroyed when we go out of scope.
-
     SourceFile(
       const char* imp_path,
       const char* abs_path,
-      char* data,
-      char* srcmap,
+      char* content,
+      char* srcmaps,
       size_t srcid);
 
     // Destructor
     ~SourceFile();
 
-    // Returns adjusted source span regarding interpolation.
-    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
-      return pstate;
+    // Get raw iterator for actual source
+    const char* content() const override final {
+      return _content;
     }
 
     // Get raw iterator for actual source
-    const char* begin() const {
-      return data;
-    }
-
-    // Get raw iterator for actual source
-    const char* srcmap() const {
-      return mapdata33;
-    }
-
-    // Needed to satisfy SharedObj
-    sass::string to_string() const {
-      return data;
+    const char* srcmaps() const override final {
+      return _srcmaps;
     }
 
   };
-
-
-
-
-
-
-
-
-
-
 
   class SourceString :
     public SourceWithPath {
@@ -232,10 +217,10 @@ namespace Sass {
   protected:
 
     // Raw source data
-    sass::string data;
+    sass::string _content;
 
     // Raw source data
-    sass::string mapdata33;
+    sass::string _srcmaps;
 
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
@@ -267,24 +252,14 @@ namespace Sass {
     // Destructor
     ~SourceString() {}
 
-    // Returns adjusted source span regarding interpolation.
-    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
-      return pstate;
+    // Get raw iterator for actual source
+    const char* content() const override final {
+      return _content.c_str();
     }
 
     // Get raw iterator for actual source
-    const char* begin() const {
-      return data.c_str();
-    }
-
-    // Get raw iterator for actual source
-    const char* srcmap() const {
-      return mapdata33.c_str();
-    }
-
-    // Needed to satisfy SharedObj
-    sass::string to_string() const {
-      return data;
+    const char* srcmaps() const override final {
+      return _srcmaps.c_str();
     }
 
   };

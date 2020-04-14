@@ -21,9 +21,9 @@ namespace Sass {
     SourceDataObj source) :
     source(source),
     nextMap(sass::string::npos),
-    startpos(source->begin()),
-    endpos(source->end()),
-    position(source->begin()),
+    startpos(source->contentStart()),
+    endpos(source->contentEnd()),
+    position(source->contentStart()),
     sourceUrl(source->getAbsPath()),
     srcid(source->getSrcId()),
     offset(),

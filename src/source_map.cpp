@@ -61,7 +61,7 @@ namespace Sass {
       JsonNode *json_contents = json_mkarray();
       for (size_t i = 0; i < source_index.size(); ++i) {
         const SourceDataObj& resource(sources[source_index[i]]);
-        JsonNode *json_content = json_mkstring(resource->begin());
+        JsonNode *json_content = json_mkstring(resource->content());
         json_append_element(json_contents, json_content);
       }
       json_append_member(json_srcmap, "sourcesContent", json_contents);

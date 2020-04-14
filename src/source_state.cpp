@@ -37,7 +37,7 @@ namespace Sass
 
   const char* SourceState::getRawData() const
 	{
-		return source->begin();
+		return source->content();
 	}
 
 	sass::string SourceState::getDebugPath() const
