@@ -257,15 +257,12 @@ namespace Sass {
     );
 
     if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
-      import->type = SASS_IMPORT_CSS;
       source->type = SASS_IMPORT_CSS;
     }
     else if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".sass", 5)) {
-      import->type = SASS_IMPORT_SASS;
       source->type = SASS_IMPORT_SASS;
     }
     else {
-      import->type = SASS_IMPORT_SCSS;
       source->type = SASS_IMPORT_SCSS;
     }
 
@@ -307,7 +304,7 @@ namespace Sass {
     // auto source = SASS_MEMORY_NEW(SourceFile,
     //   inc, contents, idx);
 
-    if (import->type == SASS_IMPORT_CSS)
+    if (import->srcdata->getType() == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, source);
       // take control of these buffers
@@ -318,7 +315,7 @@ namespace Sass {
       // mark as pure css
       isPlainCss = true;
     }
-    else if (import->type == SASS_IMPORT_SASS)
+    else if (import->srcdata->getType() == SASS_IMPORT_SASS)
     {
       SassParser parser(*this, source);
       // do not yet dispose these buffers
@@ -339,7 +336,7 @@ namespace Sass {
 
     StyleSheet stylesheet(source, root);
     stylesheet.plainCss = isPlainCss;
-    stylesheet.syntax = import->type;
+    stylesheet.syntax = import->srcdata->getType();
 
     // delete memory of current stack frame
     sass_delete_import(import);
@@ -440,7 +437,7 @@ namespace Sass {
           // handle error message passed back from custom importer
           // it may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, source, srcmap, pstate);
+            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->srcdata->getType() }, source, srcmap, pstate);
             if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
             // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
             else {
@@ -454,7 +451,7 @@ namespace Sass {
             // use the created uniq_path as fall-back (maybe enforce)
             sass::string path_key(abs_path ? abs_path : uniq_path);
             // create the importer struct
-            Include include(importer, path_key, include_ent->type);
+            Include include(importer, path_key, include_ent->srcdata->getType());
             // attach information to AST node
 
             auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, load_path);

@@ -55,6 +55,10 @@ namespace Sass {
 
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const = 0;
 
+    virtual Sass_Import_Type getType() const {
+      return SASS_IMPORT_AUTO;
+    }
+
     ~SourceData() {}
   };
 
@@ -96,8 +100,20 @@ namespace Sass {
     // the import type
     Sass_Import_Type type;
 
+    Sass_Import_Type getType() const override final {
+      return type;
+    }
+
     // Constructor will copy `path` and `data`.
     // Will be destroyed when we go out of scope.
+
+    SourceFile(
+      const char* imp_path,
+      const char* abs_path,
+      sass::string&& data,
+      sass::string&& srcmap,
+      size_t srcid);
+
 
     SourceFile(
       bool foo,

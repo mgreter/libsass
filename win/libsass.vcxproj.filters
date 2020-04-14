@@ -189,9 +189,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\parser.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\paths.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\plugins.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -243,7 +240,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\utf8\unchecked.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\utf8_string.hpp">
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\unicode.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\util.hpp">
@@ -428,13 +425,16 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\units.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\utf8_string.cpp">
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\unicode.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\util.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\util_string.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\string_utils.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\values.cpp">

@@ -106,7 +106,6 @@ extern "C" {
   {
     Sass_Import* v = (Sass_Import*) calloc(1, sizeof(Sass_Import));
     if (v == 0) return 0;
-    v->type = SASS_IMPORT_AUTO;
     v->imp_path = imp_path ? sass_copy_c_string(imp_path) : 0;
     // v->abs_path = abs_path ? sass_copy_c_string(abs_path) : 0;
     // v->source = source;

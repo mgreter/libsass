@@ -27,7 +27,7 @@ struct Sass_Import {
   size_t line;
   size_t column;
   // the import type
-  Sass_Import_Type type;
+  // Sass_Import_Type type;
   Sass::SourceDataObj srcdata;
 };
 
