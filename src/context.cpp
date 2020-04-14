@@ -133,7 +133,7 @@ namespace Sass {
     for (size_t m = 0; m < import_stack.size(); ++m) {
       // sass_import_take_source(import_stack[m]);
       // sass_import_take_srcmap(import_stack[m]);
-      sass_delete_import(import_stack[m]);
+//      sass_delete_import(import_stack[m]);
     }
     // clear inner structures (vectors) and input source
     import_stack.clear();
@@ -214,9 +214,10 @@ namespace Sass {
     return vec;
   }
 
-  void Context::register_import(const Include& inc, Sass_Import_Entry& import)
+  void Context::register_import(Sass_Import_Entry& import)
   {
 
+    const sass::string& abs_path(import->srcdata->getAbsPath());
     // get index for this resource
     SourceDataObj source = import->srcdata;
     size_t idx = sources.size();
@@ -226,19 +227,19 @@ namespace Sass {
     sources.emplace_back(source);
 
     // add a relative link to the working directory
-    included_files.emplace_back(inc.abs_path);
+    included_files.emplace_back(abs_path);
 
     // tell emitter about new resource
     emitter.add_source_index(idx);
 
 
     // add a relative link to the source map output file
-    srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
+    srcmap_links.emplace_back(abs2rel(abs_path, source_map_file, CWD));
 
-    if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
+    if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
       source->setType(SASS_IMPORT_CSS);
     }
-    else if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".sass", 5)) {
+    else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
       source->setType(SASS_IMPORT_SASS);
     }
     else {
@@ -321,7 +322,7 @@ namespace Sass {
 
     // create key/value pair for ast node
     std::pair<const sass::string, StyleSheet>
-      ast_pair(inc.abs_path, stylesheet);
+      ast_pair(abs_path, stylesheet);
     // register resulting resource
     sheets.insert(ast_pair);
 
@@ -340,7 +341,7 @@ namespace Sass {
       srcmap
     );
 
-    register_import(inc, import);
+    register_import(import);
 
     // delete memory of current stack frame
     sass_delete_import(import);
@@ -582,38 +583,17 @@ namespace Sass {
       0
     );
     import->srcdata->setType(type);
+
     // add the entry to the stack
     import_stack.emplace_back(import);
 
     // Prepare environment
     prepareEnvironment();
 
-    Importer imp{ input_path, "." };
-    Include inc{ imp, abs_path, type };
-
-    // create the source entry for file entry
-    // register_resource(inc, contents, 0);
-    // register_import({ { input_path, "." }, abs_path, type }, import);
-
-
-        // get pointer to the loaded content
-    Sass_Import_Entry import2 = sass_make_import(
-      inc.imp_path.c_str(),
-      inc.abs_path.c_str(),
-      contents,
-      0
-    );
-
-    register_import(inc, import2);
-
-    // delete memory of current stack frame
-    sass_delete_import(import2);
-
+    register_import(import);
 
     importStack.emplace_back(sources.back());
 
-
-    // create root ast tree node
     return compile();
 
   }
@@ -635,11 +615,12 @@ namespace Sass {
 
     // create entry only for the import stack
     Sass_Import_Entry import = sass_make_import(
-      entry_path.c_str(),
-      abs_path.c_str(),
+      input_path.c_str(),
+      input_path.c_str(),
       source_c_str,
       srcmap_c_str
     );
+    import->srcdata->setType(type);
     // add the entry to the stack
     import_stack.emplace_back(import);
     // importStack2.emplace_back(source);
@@ -648,7 +629,7 @@ namespace Sass {
     prepareEnvironment();
 
     // register a synthetic resource (path does not really exist, skip in includes)
-    register_resource({{ input_path, "." }, input_path, type }, source_c_str, srcmap_c_str);
+    register_import(import);
 
     importStack.emplace_back(sources.back());
 
