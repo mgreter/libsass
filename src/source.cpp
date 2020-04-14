@@ -2,6 +2,7 @@
 #include <string.h>
 #include "source.hpp"
 #include "source_span.hpp"
+#include "string_utils.hpp"
 #include "utf8/checked.h"
 #include "charcode.hpp"
 #include "character.hpp"
@@ -24,6 +25,19 @@ namespace Sass {
   /*#########################################################################*/
   /*#########################################################################*/
 
+  void SourceWithPath::detectType()
+  {
+    if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
+      type = SASS_IMPORT_CSS;
+    }
+    else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
+      type = SASS_IMPORT_SASS;
+    }
+    else {
+      type = SASS_IMPORT_SCSS;
+    }
+  }
+
   SourceWithPath::SourceWithPath(
     sass::string&& imp_path,
     sass::string&& abs_path,
@@ -36,7 +50,9 @@ namespace Sass {
     srcid(idx),
     type(type),
     lfs()
-  {}
+  {
+    detectType();
+  }
 
   SourceWithPath::SourceWithPath(
     const sass::string& imp_path,
@@ -50,7 +66,9 @@ namespace Sass {
     srcid(idx),
     type(type),
     lfs()
-  {}
+  {
+    detectType();
+  }
 
   // Standard implementation for raw char API
   size_t SourceWithPath::countLines()

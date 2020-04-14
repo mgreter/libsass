@@ -104,6 +104,9 @@ namespace Sass {
     // Columns per line can be derived from it.
     sass::vector<size_t> lfs;
 
+    // the import type
+    Sass_Import_Type type;
+
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
     virtual size_t countLines();
@@ -149,8 +152,7 @@ namespace Sass {
       return srcid;
     }
 
-    // the import type
-    Sass_Import_Type type;
+    void detectType();
 
     Sass_Import_Type getType() const override final {
       return type;

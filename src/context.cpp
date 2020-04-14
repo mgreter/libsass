@@ -236,16 +236,6 @@ namespace Sass {
     // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(abs_path, source_map_file, CWD));
 
-    if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
-      source->setType(SASS_IMPORT_CSS);
-    }
-    else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
-      source->setType(SASS_IMPORT_SASS);
-    }
-    else {
-      source->setType(SASS_IMPORT_SCSS);
-    }
-
     // add the entry to the stack
     import_stack.emplace_back(import);
     importStack.emplace_back(sources.back());
@@ -576,13 +566,12 @@ namespace Sass {
     entry_path = abs_path;
 
     // create entry only for import stack
-    Sass_Import_Entry import = sass_make_import(
+    Sass_Import_Entry import = sass_make_import2(
       input_path.c_str(),
       abs_path.c_str(),
       contents,
-      0
+      0, type
     );
-    import->srcdata->setType(type);
 
     // add the entry to the stack
     import_stack.emplace_back(import);
@@ -611,13 +600,13 @@ namespace Sass {
     sass::string abs_path(rel2abs(entry_path, ".", CWD));
 
     // create entry only for the import stack
-    Sass_Import_Entry import = sass_make_import(
+    Sass_Import_Entry import = sass_make_import2(
       input_path.c_str(),
       input_path.c_str(),
       source_c_str,
-      srcmap_c_str
+      srcmap_c_str,
+      type
     );
-    import->srcdata->setType(type);
     // add the entry to the stack
     import_stack.emplace_back(import);
     // importStack2.emplace_back(source);
