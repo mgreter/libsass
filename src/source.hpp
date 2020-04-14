@@ -207,8 +207,8 @@ namespace Sass {
     // Create a synthetic interpolated source. The `data` is the
     // evaluated interpolation, while `around` is the original source
     // where the actual interpolation was given at `pstate` position.
-    ItplFile2(const char* data,
-      SourceSpan pstate);
+    //ItplFile2(const char* data,
+    //  SourceSpan pstate);
 
     ItplFile2(sass::string&& data,
       SourceSpan pstate);

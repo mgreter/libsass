@@ -26,32 +26,28 @@ namespace Sass {
 
   SourceFile::SourceFile(
     const char* path,
-    sass::string&& data,
+    sass::string&& src,
     size_t srcid) :
     SourceData(),
-    // Make a copy, delete when destroyed
     path(path ? path : ""),
-    data(data),
-    length(0),
+    data(std::move(src)),
+    length(data.length()),
     srcid(srcid),
     lfs()
   {
-    length = strlen(data.c_str());
   }
 
   SourceFile::SourceFile(
     const Include& include,
-    sass::string&& data,
+    sass::string&& src,
     size_t srcid) :
     SourceData(),
-    // Make a copy, delete when destroyed
     path(include.abs_path),
-    data(data),
-    length(0),
+    data(std::move(src)),
+    length(data.length()),
     srcid(srcid),
     lfs()
   {
-    length = strlen(data.c_str());
   }
 
   size_t SourceFile::countLines()
@@ -91,7 +87,7 @@ namespace Sass {
 
   /*#########################################################################*/
   /*#########################################################################*/
-
+  /*
   ItplFile2::ItplFile2(
     const char* data,
     SourceSpan pstate) :
@@ -102,7 +98,7 @@ namespace Sass {
     pstate(pstate)
   {
   }
-
+  */
   ItplFile2::ItplFile2(sass::string&& data,
     SourceSpan pstate) :
     SourceFile(

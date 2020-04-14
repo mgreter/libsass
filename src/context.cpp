@@ -739,17 +739,13 @@ namespace Sass {
 
   void register_built_in_function(Context& ctx, sass::string name, sass::string prototype, SassFnSig cb)
   {
-    prototype = "(" + prototype + ")";
     auto source = SASS_MEMORY_NEW(SourceFile,
-      "sass://built-in", prototype.c_str(), -1);
-
+      "sass://built-in", "(" + prototype + ")", -1);
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
     BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
-    // ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, args, cb)));
     ctx.functions.insert(std::make_pair(name, callable));
     ctx.varRoot.createFunction(name);
     ctx.fnCache.push_back(callable);
-    // ctx.varRoot.functions.push_back(callable);
   }
 
   void register_external_function(Context& ctx, sass::string name, sass::string prototype, Sass_Function_Entry cb)
@@ -764,18 +760,15 @@ namespace Sass {
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
-      overload.first = "(" + overload.first + ")";
-      auto source = SASS_MEMORY_NEW(SourceFile,
-        "sass://built-in", overload.first.c_str(), -1);
+      SourceDataObj source = SASS_MEMORY_NEW(SourceFile,
+        "sass://built-in", "(" + overload.first + ")", sass::string::npos);
       ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
-    // ctx.builtins.insert(std::make_pair(name, new BuiltInCallable(name, pairs)));
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
     ctx.functions.insert(std::make_pair(name, callable));
     ctx.varRoot.createFunction(name);
     ctx.fnCache.push_back(callable);
-
   }
 
   union Sass_Value* customSassFn(
