@@ -284,5 +284,10 @@ namespace Sass {
     return sass::string();
   }
 
+  SourceFile::~SourceFile() {
+    sass_free_memory(data);
+    sass_free_memory(mapdata33);
+  }
+
 }
 

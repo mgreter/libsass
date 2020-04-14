@@ -130,7 +130,7 @@ namespace Sass {
       size_t srcid);
 
     // Destructor
-    ~SourceFile() {}
+    ~SourceFile();
 
     // Returns the requested line. Will take interpolations into
     // account to show more accurate debug messages. Calling this

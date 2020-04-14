@@ -604,9 +604,6 @@ namespace Sass {
     // check if source string is given
     if (!source_c_str) return {};
 
-    // convert indented sass syntax
-    // c_options.is_indented_syntax_src
-
     // remember entry path (defaults to stdin for string)
     entry_path = input_path.empty() ? "stdin" : input_path;
 
@@ -628,7 +625,7 @@ namespace Sass {
     // Prepare environment
     prepareEnvironment();
 
-    // register a synthetic resource (path does not really exist, skip in includes)
+    // load and register import
     register_import(import);
 
     importStack.emplace_back(sources.back());

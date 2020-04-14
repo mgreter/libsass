@@ -21,9 +21,6 @@ struct Sass_Options : Sass_Output_Options {
   // Disable sourceMappingUrl in css output
   bool omit_source_map_url;
 
-  // Treat source_string as sass (as opposed to SCSS)
-  bool is_indented_syntax_src;
-
   // The input path is used for source map
   // generation. It can be used to define
   // something with string compilation or to
