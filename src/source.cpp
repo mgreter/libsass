@@ -55,22 +55,6 @@ namespace Sass {
     length = strlen(data.c_str());
   }
 
-
-  SourceFile::SourceFile(
-    const char* path,
-    const sass::string& data,
-    size_t srcid) :
-    SourceData(),
-    // Make a copy, delete when destroyed
-    path(sass_copy_c_string(path)),
-    data(sass_copy_c_string(data.c_str())),
-    length(0),
-    srcid(srcid),
-    lfs()
-  {
-    length = strlen(data.c_str());
-  }
-
   SourceFile::SourceFile(
     const Include& include,
     const char* data,
@@ -89,21 +73,6 @@ namespace Sass {
   SourceFile::SourceFile(
     const Include& include,
     sass::string&& data,
-    size_t srcid) :
-    SourceData(),
-    // Make a copy, delete when destroyed
-    path(sass_copy_c_string(include.abs_path.c_str())),
-    data(sass_copy_c_string(data.c_str())),
-    length(0),
-    srcid(srcid),
-    lfs()
-  {
-    length = strlen(data.c_str());
-  }
-
-  SourceFile::SourceFile(
-    const Include& include,
-    const sass::string& data,
     size_t srcid) :
     SourceData(),
     // Make a copy, delete when destroyed
@@ -165,21 +134,11 @@ namespace Sass {
   {
   }
 
-  ItplFile2::ItplFile2(const sass::string& data,
-    SourceSpan pstate) :
-    SourceFile(
-      pstate.getAbsPath(),
-      data,
-      pstate.getSrcId()),
-    pstate(pstate)
-  {
-  }
-
   ItplFile2::ItplFile2(sass::string&& data,
     SourceSpan pstate) :
     SourceFile(
       pstate.getAbsPath(),
-      data,
+      std::move(data),
       pstate.getSrcId()),
     pstate(pstate)
   {

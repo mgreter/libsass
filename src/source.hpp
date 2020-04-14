@@ -95,12 +95,12 @@ namespace Sass {
       const char* path,
       const char* data,
       size_t srcid);
-
+/*
     SourceFile(
       const char* path,
       const sass::string& data,
       size_t srcid);
-
+      */
     SourceFile(
       const char* path,
       sass::string&& data,
@@ -110,12 +110,12 @@ namespace Sass {
       const Include& include,
       const char* data,
       size_t srcid);
-
+    /*
     SourceFile(
       const Include& include,
       const sass::string& data,
       size_t srcid);
-
+      */
     SourceFile(
       const Include& include,
       sass::string&& data,
@@ -227,9 +227,6 @@ namespace Sass {
     // evaluated interpolation, while `around` is the original source
     // where the actual interpolation was given at `pstate` position.
     ItplFile2(const char* data,
-      SourceSpan pstate);
-
-    ItplFile2(const sass::string& data,
       SourceSpan pstate);
 
     ItplFile2(sass::string&& data,
