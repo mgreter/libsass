@@ -70,7 +70,7 @@ namespace Sass {
     if (allowSlash && !parser._inParentheses) {
       // in dart sass this sets allowSlash to true!
       Binary_Expression* binex = SASS_MEMORY_NEW(Binary_Expression,
-        SourceSpan("[pstateS3]"), Sass_OP::DIV, operands.back(), singleExpression);
+        SourceSpan::tmp("[pstateS3]"), Sass_OP::DIV, operands.back(), singleExpression);
       singleExpression = binex; // down cast
       binex->allowsSlash(true);
       operands.pop_back();

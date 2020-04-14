@@ -1031,7 +1031,7 @@ namespace Sass {
     const sass::string& name,
     ArgumentDeclaration* parameters,
     Sass_Function_Entry function) :
-    Callable(SourceSpan("[external]")),
+    Callable(SourceSpan::tmp("[external]")),
     name_(name),
     declaration_(parameters),
     function_(function)

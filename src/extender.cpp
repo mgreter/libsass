@@ -616,7 +616,7 @@ namespace Sass {
       for (sass::vector<SelectorComponentObj>& components : weaved) {
 
         ComplexSelectorObj cplx = SASS_MEMORY_NEW(ComplexSelector,
-          SourceSpan("[phony]"));
+          SourceSpan::tmp("[phony]"));
         cplx->hasPreLineFeed(complex->hasPreLineFeed());
         for (auto& pp : path) {
           if (pp->hasPreLineFeed()) {
@@ -666,7 +666,7 @@ namespace Sass {
     const sass::vector<SimpleSelectorObj>& simples) const
   {
     CompoundSelectorObj compound = SASS_MEMORY_NEW(CompoundSelector,
-      SourceSpan("[ext]"));
+      SourceSpan::tmp("[ext]"));
     compound->concat(simples);
     Extension extension(compound->wrapInComplex());
     // extension.specificity = sourceSpecificity[simple];
@@ -794,7 +794,7 @@ namespace Sass {
         first = false;
         CompoundSelectorObj mergedSelector =
           SASS_MEMORY_NEW(CompoundSelector,
-            SourceSpan("[ext]"));
+            SourceSpan::tmp("[ext]"));
         for (size_t n = 0; n < path.size(); n += 1) {
           const ComplexSelectorObj& sel = path[n].extender;
           if (CompoundSelector* compound = sel->last()->getCompound()) {
@@ -821,7 +821,7 @@ namespace Sass {
         if (!originals.empty()) {
           CompoundSelectorObj merged =
             SASS_MEMORY_NEW(CompoundSelector,
-              SourceSpan("[phony]"));
+              SourceSpan::tmp("[phony]"));
           merged->concat(originals);
           toUnify.insert(toUnify.begin(), { merged });
         }
@@ -847,7 +847,7 @@ namespace Sass {
 
       for (sass::vector<SelectorComponentObj>& components : complexes) {
         auto sel = SASS_MEMORY_NEW(ComplexSelector,
-          SourceSpan("[ext]"));
+          SourceSpan::tmp ("[ext]"));
         sel->hasPreLineFeed(lineBreak);
         sel->elements(std::move(components));
         unifiedPaths.emplace_back(sel);
@@ -1031,7 +1031,7 @@ namespace Sass {
     }
 
     SelectorListObj list = SASS_MEMORY_NEW(SelectorList,
-      SourceSpan("[phony]"));
+      SourceSpan::tmp("[phony]"));
     list->concat(complexes);
     return { pseudo->withSelector(list) };
 

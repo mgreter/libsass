@@ -787,7 +787,7 @@ namespace Sass {
     }
     else {
       args = SASS_MEMORY_NEW(ArgumentInvocation,
-        scanner.relevantSpan(), sass::vector<ExpressionObj>(), EnvKeyFlatMap2{ "null", {} });
+        scanner.relevantSpan(), sass::vector<ExpressionObj>(), EnvKeyFlatMap2{ SourceSpan::tmp("null"), {} });
     }
 
     LOCAL_FLAG(_mixinHasContent, true);

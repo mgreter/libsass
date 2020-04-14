@@ -22,7 +22,7 @@ namespace Sass {
     if (complexes.size() == 1) return complexes;
 
     CompoundSelectorObj unifiedBase = SASS_MEMORY_NEW(CompoundSelector,
-      SourceSpan("[phony]"));
+      SourceSpan::tmp("[phony]"));
     for (auto complex : complexes) {
       SelectorComponentObj base = complex.back();
       if (CompoundSelector * comp = base->getCompound()) {

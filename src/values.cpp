@@ -68,17 +68,17 @@ namespace Sass {
     switch (sass_value_get_tag(val)) {
       case SASS_NUMBER:
         return SASS_MEMORY_NEW(Number,
-                               SourceSpan("[C-VALUE]"),
+                               SourceSpan::tmp("[C-VALUE]"),
                                sass_number_get_value(val),
                                sass_number_get_unit(val));
       case SASS_BOOLEAN:
         return SASS_MEMORY_NEW(Boolean,
-                               SourceSpan("[C-VALUE]"),
+                               SourceSpan::tmp("[C-VALUE]"),
                                sass_boolean_get_value(val));
       case SASS_COLOR:
         // ToDo: allow to also use HSLA colors!!
         return SASS_MEMORY_NEW(Color_RGBA,
-                               SourceSpan("[C-VALUE]"),
+                               SourceSpan::tmp("[C-VALUE]"),
                                sass_color_get_r(val),
                                sass_color_get_g(val),
                                sass_color_get_b(val),
@@ -86,17 +86,17 @@ namespace Sass {
       case SASS_STRING:
         if (sass_string_is_quoted(val)) {
           return SASS_MEMORY_NEW(SassString,
-                                 SourceSpan("[C-VALUE]"),
+                                 SourceSpan::tmp("[C-VALUE]"),
                                  sass_string_get_value(val),
                                  true);
         }
         return SASS_MEMORY_NEW(SassString,
-                                 SourceSpan("[C-VALUE]"),
+                                 SourceSpan::tmp("[C-VALUE]"),
                                  sass_string_get_value(val),
                                  false);
       case SASS_LIST: {
         SassList* l = SASS_MEMORY_NEW(SassList,
-                                  SourceSpan("[C-VALUE]"),
+                                  SourceSpan::tmp("[C-VALUE]"),
           sass::vector<ValueObj>(), // sass_list_get_length(val),
                                   sass_list_get_separator(val));
         for (size_t i = 0, L = sass_list_get_length(val); i < L; ++i) {
@@ -106,7 +106,7 @@ namespace Sass {
         return l;
       }
       case SASS_MAP: {
-        Map* m = SASS_MEMORY_NEW(Map, SourceSpan("[C-VALUE]"));
+        Map* m = SASS_MEMORY_NEW(Map, SourceSpan::tmp("[C-VALUE]"));
         for (size_t i = 0, L = sass_map_get_length(val); i < L; ++i) {
           m->insert(
             sass_value_to_ast_node(sass_map_get_key(val, i)),
@@ -115,14 +115,14 @@ namespace Sass {
         return m;
       }
       case SASS_NULL:
-        return SASS_MEMORY_NEW(Null, SourceSpan("[C-VALUE]"));
+        return SASS_MEMORY_NEW(Null, SourceSpan::tmp("[C-VALUE]"));
       case SASS_ERROR:
         return SASS_MEMORY_NEW(Custom_Error,
-                               SourceSpan("[C-VALUE]"),
+                               SourceSpan::tmp("[C-VALUE]"),
                                sass_error_get_message(val));
       case SASS_WARNING:
         return SASS_MEMORY_NEW(Custom_Warning,
-                               SourceSpan("[C-VALUE]"),
+                               SourceSpan::tmp("[C-VALUE]"),
                                sass_warning_get_message(val));
       default: break;
     }

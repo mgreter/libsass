@@ -77,7 +77,7 @@ namespace Sass {
       }
       if (!got_newline) msg_stream << "\n";
 
-      SourceSpan pstate("[NOPE]");
+      auto pstate = SourceSpan::tmp("[NOPE]");
       if (e.traces.empty()) {
         std::cerr << "THIS IS OLD AND NOT YET\n";
       }

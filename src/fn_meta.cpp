@@ -196,7 +196,7 @@ namespace Sass {
         }
 
         ArgumentInvocationObj invocation = SASS_MEMORY_NEW(
-          ArgumentInvocation, pstate, sass::vector<ExpressionObj>{}, EnvKeyFlatMap2{ "null", {} }, restArg, kwdRest);
+          ArgumentInvocation, pstate, sass::vector<ExpressionObj>{}, EnvKeyFlatMap2{ SourceSpan::tmp("null"), {} }, restArg, kwdRest);
 
         if (SassString * str = function->isString()) {
           sass::string name = unquote(str->value());

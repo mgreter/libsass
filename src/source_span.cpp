@@ -12,10 +12,14 @@ namespace Sass {
     span(span)
   {}
 
-  SourceSpan::SourceSpan(const char* label) :
-    SourceState(SASS_MEMORY_NEW(
-      SourceFile, true, label, "", sass::string::npos))
+  SourceSpan SourceSpan::tmp(const char* label)
   {
+    return SourceSpan(SASS_MEMORY_NEW(
+      SourceFile, true, label, "", sass::string::npos),
+    {},
+    {}
+    );
+
   }
 
   const char* SourceSpan::end() const {

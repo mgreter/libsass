@@ -477,7 +477,7 @@ namespace Sass {
     sass::vector<SelectorComponentObj> cplx1(complex1);
     sass::vector<SelectorComponentObj> cplx2(complex2);
     CompoundSelectorObj base = SASS_MEMORY_NEW(CompoundSelector,
-      SourceSpan("[tmp]"));
+      SourceSpan::tmp("[tmp]"));
     cplx1.emplace_back(base); cplx2.emplace_back(base);
     return complexIsSuperselector(cplx1, cplx2);
   }
