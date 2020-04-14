@@ -68,7 +68,7 @@ namespace Sass {
     sass::string path;
 
     // Raw source data
-    char* data;
+    sass::string data;
 
     // Raw length in bytes
     size_t length;
@@ -105,7 +105,7 @@ namespace Sass {
     // Destructor
     ~SourceFile() {
       // sass_free_memory(path);
-      sass_free_memory(data);
+      // sass_free_memory(data);
     }
 
     // Returns the requested line. Will take interpolations into
@@ -125,12 +125,12 @@ namespace Sass {
 
     // Get raw iterator for actual source
     const char* end() const {
-      return data + length;
+      return begin() + length;
     }
 
     // Get raw iterator for actual source
     const char* begin() const {
-      return data;
+      return data.c_str();
     }
 
     // Return path as it was given for import

@@ -31,7 +31,7 @@ namespace Sass {
     SourceData(),
     // Make a copy, delete when destroyed
     path(path ? path : ""),
-    data(sass_copy_c_string(data.c_str())),
+    data(data),
     length(0),
     srcid(srcid),
     lfs()
@@ -46,7 +46,7 @@ namespace Sass {
     SourceData(),
     // Make a copy, delete when destroyed
     path(include.abs_path),
-    data(sass_copy_c_string(data.c_str())),
+    data(data),
     length(0),
     srcid(srcid),
     lfs()
@@ -82,8 +82,8 @@ namespace Sass {
     size_t first = lfs[line];
     size_t last = lfs[line + 1];
     if (first == last) return sass::string();
-    const char* beg = data + first;
-    const char* end = data + last;
+    const char* beg = begin() + first;
+    const char* end = begin() + last;
     if (end[-1] == $lf) end -= 1;
     if (end[-1] == $cr) end -= 1;
     return sass::string(beg, end);
