@@ -20,6 +20,74 @@ namespace Sass {
     : SharedObj()
   {}
 
+
+  /*#########################################################################*/
+  /*#########################################################################*/
+
+  SourceWithPath::SourceWithPath(
+    sass::string&& imp_path,
+    sass::string&& abs_path,
+    Sass_Import_Type type,
+    size_t idx) :
+    imp_path(std::move(imp_path)),
+    abs_path(std::move(abs_path)),
+    len_content(0),
+    len_srcmaps(0),
+    srcid(idx),
+    type(type),
+    lfs()
+  {}
+
+  SourceWithPath::SourceWithPath(
+    const sass::string& imp_path,
+    const sass::string& abs_path,
+    Sass_Import_Type type,
+    size_t idx) :
+    imp_path(imp_path),
+    abs_path(abs_path),
+    len_content(0),
+    len_srcmaps(0),
+    srcid(idx),
+    type(type),
+    lfs()
+  {}
+
+  // Standard implementation for raw char API
+  size_t SourceWithPath::countLines()
+  {
+    if (lfs.empty()) {
+      size_t len = 0;
+      lfs.emplace_back(len);
+      const char* data = content();
+      while (data[len] != 0) {
+        if (data[len] == $lf) {
+          lfs.emplace_back(len + 1);
+        }
+        ++len;
+      }
+      lfs.emplace_back(len);
+    }
+
+    return lfs.size() - 1;
+  }
+
+  // Standard implementation for raw char API
+  sass::string SourceWithPath::getLine(size_t line)
+  {
+    countLines();
+    if (line > lfs.size()) {
+      return sass::string();
+    }
+    size_t first = lfs[line];
+    size_t last = lfs[line + 1];
+    if (first == last) return sass::string();
+    const char* beg = content() + first;
+    const char* end = content() + last;
+    if (end[-1] == $lf) end -= 1;
+    if (end[-1] == $cr) end -= 1;
+    return sass::string(beg, end);
+  }
+
   /*#########################################################################*/
   /*#########################################################################*/
 
@@ -45,16 +113,23 @@ namespace Sass {
     }
   }
 
+  // Only one that has to clean-up
+  SourceFile::~SourceFile() {
+    sass_free_memory(_content);
+    sass_free_memory(_srcmaps);
+  }
 
-
+  /*#########################################################################*/
+  /*#########################################################################*/
 
   SourceString::SourceString(
     const char* abs_path,
-    sass::string&& content) :
+    sass::string&& content,
+    Sass_Import_Type type) :
     SourceWithPath(
       abs_path ? abs_path : "",
       abs_path ? abs_path : "",
-      SASS_IMPORT_AUTO, -1
+      type, sass::string::npos
     ),
     _content(std::move(content))
   {
@@ -66,35 +141,18 @@ namespace Sass {
     const char* abs_path,
     sass::string&& content,
     sass::string&& srcmaps,
+    Sass_Import_Type type,
     size_t srcid) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
-      SASS_IMPORT_AUTO, srcid
+      type, srcid
     ),
     _content(std::move(content)),
     _srcmaps(std::move(srcmaps))
   {
     len_content = _content.length();
     len_srcmaps = _srcmaps.length();
-  }
-
-  size_t SourceWithPath::countLines()
-  {
-    if (lfs.empty()) {
-      size_t len = 0;
-      lfs.emplace_back(len);
-      const char* data = content();
-      while (data[len] != 0) {
-        if (data[len] == $lf) {
-          lfs.emplace_back(len + 1);
-        }
-        ++len;
-      }
-      lfs.emplace_back(len);
-    }
-
-    return lfs.size() - 1;
   }
 
   /*#########################################################################*/
@@ -106,7 +164,8 @@ namespace Sass {
       pstate.getImpPath(),
       pstate.getAbsPath(),
       std::move(data), "",
-      pstate.getSrcId()),
+      pstate.getSourceType(),
+      pstate.getSrcIdx()),
     pstate(pstate)
   {
   }
@@ -210,53 +269,6 @@ namespace Sass {
         line - lineDelta);
     }
     return sass::string();
-  }
-
-  SourceFile::~SourceFile() {
-    sass_free_memory(_content);
-    sass_free_memory(_srcmaps);
-  }
-
-  SourceWithPath::SourceWithPath(
-    sass::string&& imp_path,
-    sass::string&& abs_path,
-    Sass_Import_Type type,
-    size_t idx) :
-    imp_path(std::move(imp_path)),
-    abs_path(std::move(abs_path)),
-    srcid(idx),
-    type(type)
-  {
-  }
-
-
-  SourceWithPath::SourceWithPath(
-    const sass::string& imp_path,
-    const sass::string& abs_path,
-    Sass_Import_Type type,
-    size_t idx) :
-    imp_path(std::move(imp_path)),
-    abs_path(std::move(abs_path)),
-    srcid(idx),
-    type(type)
-  {
-  }
-
-
-  sass::string SourceWithPath::getLine(size_t line)
-  {
-    countLines();
-    if (line > lfs.size()) {
-      return sass::string();
-    }
-    size_t first = lfs[line];
-    size_t last = lfs[line + 1];
-    if (first == last) return sass::string();
-    const char* beg = content() + first;
-    const char* end = content() + last;
-    if (end[-1] == $lf) end -= 1;
-    if (end[-1] == $cr) end -= 1;
-    return sass::string(beg, end);
   }
 
 }

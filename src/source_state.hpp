@@ -25,7 +25,7 @@ namespace Sass
 		SourceState(SourceDataObj source, Offset position = Offset());
 
 		/** Return the attach source id **/
-		size_t getSrcId() const;
+		size_t getSrcIdx() const;
 
     // Return the attached source path
     const char* getImpPath() const;
@@ -36,7 +36,10 @@ namespace Sass
 		// Return the attached source
 		SourceData* getSource() const;
 
-		// Return `char star` for source data
+    // Return the attached source type
+    Sass_Import_Type getSourceType() const;
+
+    // Return `char star` for source data
 		const char* getRawData() const;
 
 		// Return line as human readable

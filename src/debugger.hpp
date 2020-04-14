@@ -321,7 +321,7 @@ inline std::string pstate_source_position(AST_Node* node)
 {
   std::stringstream str;
   SourceSpan pstate(node->pstate());
-  str << (pstate.getSrcId() == std::string::npos ? 9999999 : pstate.getSrcId())
+  str << (pstate.getSrcIdx() == std::string::npos ? 9999999 : pstate.getSrcIdx())
     << "@[" << (pstate.position.line) << ":" << (pstate.position.column) << "]"
     << "+[" << (pstate.span.line) << ":" << (pstate.span.column) << "]";
 #ifdef DEBUG_SHARED_PTR

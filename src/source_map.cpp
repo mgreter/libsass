@@ -180,7 +180,7 @@ namespace Sass {
   {
     const SourceSpan& pstate = node->pstate();
     mappings.emplace_back(Mapping{
-      pstate.getSrcId(),
+      pstate.getSrcIdx(),
       pstate.position,
       current_position
     });
@@ -190,7 +190,7 @@ namespace Sass {
   {
     const SourceSpan& pstate = node->pstate();
     mappings.emplace_back(Mapping{
-      pstate.getSrcId(),
+      pstate.getSrcIdx(),
       pstate.position + pstate.span,
       current_position
     });

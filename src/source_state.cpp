@@ -18,9 +18,14 @@ namespace Sass
 		return source.ptr();
 	}
 
-	size_t SourceState::getSrcId() const
+  // Return the attached source type
+  Sass_Import_Type SourceState::getSourceType() const {
+    return source->getType();
+  }
+
+  size_t SourceState::getSrcIdx() const
 	{
-		return source->getSrcId();
+		return source->getSrcIdx();
 	}
 
   /// Return the attached source path

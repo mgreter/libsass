@@ -221,7 +221,7 @@ namespace Sass {
     // get index for this resource
     SourceDataObj source = import->srcdata;
     size_t idx = sources.size();
-    source->setSrcId(idx);
+    source->setSrcIdx(idx);
 
     // Append to the resources
     sources.emplace_back(source);

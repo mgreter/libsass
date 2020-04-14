@@ -1060,7 +1060,7 @@ namespace Sass {
   {
     sass::vector<Mapping> mappings;
     SourceSpan pstate(interpolation->pstate());
-    mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
+    mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
     sass::string css(interpolation->to_css(mappings));
     return css;
@@ -1109,7 +1109,7 @@ namespace Sass {
   {
     sass::vector<Mapping> mappings;
     SourceSpan pstate(interpolation->pstate());
-    mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
+    mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
     return SASS_MEMORY_NEW(SourceItpl,
       interpolation->to_css(mappings),
@@ -1969,7 +1969,7 @@ namespace Sass {
 
     sass::vector<Mapping> mappings;
     SourceSpan pstate(itpl->pstate());
-    mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
+    mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     InterpolationObj evaled = evalInterpolation(itpl, false);
     sass::string css(evaled->to_css(mappings));
     StringUtils::makeTrimmed(css);

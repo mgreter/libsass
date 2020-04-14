@@ -28,10 +28,10 @@ namespace Sass {
     SourceData();
 
     // The source id is uniquely assigned
-    virtual size_t getSrcId() const = 0;
+    virtual size_t getSrcIdx() const = 0;
 
     // The source id is uniquely assigned
-    virtual void setSrcId(size_t idx) = 0;
+    virtual void setSrcIdx(size_t idx) = 0;
 
     // Return path as it was given for import
     virtual const char* getImpPath() const = 0;
@@ -77,6 +77,10 @@ namespace Sass {
     ~SourceData() {}
   };
 
+  /*#########################################################################*/
+  // Base class for our two main implementations.
+  // The main API is `const char*` based.
+  /*#########################################################################*/
   class SourceWithPath :
     public SourceData {
 
@@ -88,12 +92,12 @@ namespace Sass {
     // Resolved path
     sass::string abs_path;
 
-    // Unique source id
-    size_t srcid;
-
     // Raw length in bytes
     size_t len_content;
     size_t len_srcmaps;
+
+    // Unique source id
+    size_t srcid;
 
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
@@ -136,12 +140,12 @@ namespace Sass {
     }
 
     // The source id is uniquely assigned
-    void setSrcId(size_t idx) {
+    void setSrcIdx(size_t idx) {
       srcid = idx;
     }
 
     // The source id is uniquely assigned
-    size_t getSrcId() const {
+    size_t getSrcIdx() const {
       return srcid;
     }
 
@@ -165,9 +169,14 @@ namespace Sass {
 
   };
 
+  /*#########################################################################*/
+  // A SourceFile is meant to be used for externally loaded resource.
+  // The resources passed in will be taken over and disposed at the end.
+  // Resources must have been allocated via `sass_alloc_memory`.
+  /*#########################################################################*/
   class SourceFile :
     public SourceWithPath {
-
+    
   protected:
 
     // Raw source data
@@ -179,10 +188,10 @@ namespace Sass {
   public:
 
     SourceFile(
-      const char* imp_path,
-      const char* abs_path,
-      char* content,
-      char* srcmaps,
+      const char* imp_path, // copy
+      const char* abs_path, // copy
+      char* content, // take ownership
+      char* srcmaps, // take ownership
       size_t srcid);
 
     // Destructor
@@ -200,6 +209,10 @@ namespace Sass {
 
   };
 
+  /*#########################################################################*/
+  // A SourceString is meant to be used internally when we need to
+  // re-parse evaluated interpolations or static function signatures.
+  /*#########################################################################*/
   class SourceString :
     public SourceWithPath {
 
@@ -216,14 +229,18 @@ namespace Sass {
     // For built-ins
     SourceString(
       const char* path,
-      sass::string&& data);
+      sass::string&& data,
+      Sass_Import_Type type = SASS_IMPORT_AUTO);
 
+    // This is for interpolations
+    // Take details from its parent
     SourceString(
       const char* imp_path,
       const char* abs_path,
       sass::string&& data,
       sass::string&& srcmap,
-      size_t srcid);
+      Sass_Import_Type type = SASS_IMPORT_AUTO,
+      size_t srcid = sass::string::npos);
 
     // Get raw iterator for actual source
     const char* content() const override final {
@@ -237,6 +254,16 @@ namespace Sass {
 
   };
 
+  /*#########################################################################*/
+  // This class helps to report more meaningful errors when interpolations
+  // are involved. We basically replace the original interpolation with the
+  // result after evaluation. We can also adjust your parser state, since we
+  // often only re-parse the partial interpolated object (e.g. selector in
+  // the middle of a document). The error will be relative to this snippet.
+  // E.g. on line 1, after adjusting it should be in sync with wathever the
+  // `getLine` API returns. We do all this only on demand, since this is quite
+  // expensive, so this is only intended to be used in error/debug cases!!
+  /*#########################################################################*/
   class SourceItpl :
     public SourceString {
 
@@ -249,6 +276,7 @@ namespace Sass {
 
     // The position where the interpolation occurred.
     // We also get the parent source from this state.
+    // Plus the parent `SourceString` we have it all.
     SourceSpan pstate;
 
   public:
@@ -256,10 +284,9 @@ namespace Sass {
     // Create a synthetic interpolated source. The `data` is the
     // evaluated interpolation, while `around` is the original source
     // where the actual interpolation was given at `pstate` position.
-    SourceItpl(sass::string&& data,
-      SourceSpan pstate);
+    SourceItpl(sass::string&& data, SourceSpan pstate);
 
-    // Returns source with interpolation inserted.
+    // Returns source with this interpolation inserted.
     sass::string getLine(size_t line) override final;
 
     // Returns adjusted source span with interpolation in mind.
@@ -269,6 +296,9 @@ namespace Sass {
     SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
 
   };
+
+  /*#########################################################################*/
+  /*#########################################################################*/
 
 }
 
