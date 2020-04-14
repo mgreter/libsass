@@ -214,23 +214,8 @@ namespace Sass {
     return vec;
   }
 
-  void Context::register_import(const Include&, Sass_Import_Entry& entry)
+  void Context::register_import(const Include& inc, Sass_Import_Entry& import)
   {
-
-  }
-
-  // register include with resolved path and its content
-  // memory of the resources will be freed by us on exit
-  void Context::register_resource(const Include& inc, char* contents, char* srcmap)
-  {
-
-    // get pointer to the loaded content
-    Sass_Import_Entry import = sass_make_import(
-      inc.imp_path.c_str(),
-      inc.abs_path.c_str(),
-      contents,
-      srcmap
-    );
 
     // get index for this resource
     SourceDataObj source = import->srcdata;
@@ -277,7 +262,7 @@ namespace Sass {
         sass::string stack("An @import loop has been found:");
         for (size_t n = 1; n < i + 2; ++n) {
           stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->srcdata->getAbsPath(), CWD, CWD)) +
-            " imports " + sass::string(File::abs2rel(import_stack[n+1]->srcdata->getAbsPath(), CWD, CWD));
+            " imports " + sass::string(File::abs2rel(import_stack[n + 1]->srcdata->getAbsPath(), CWD, CWD));
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
@@ -286,8 +271,6 @@ namespace Sass {
       }
     }
 
-    sass::string text(contents);
-    
     Block_Obj root;
 
     bool isPlainCss = false;
@@ -343,6 +326,24 @@ namespace Sass {
       ast_pair(inc.abs_path, stylesheet);
     // register resulting resource
     sheets.insert(ast_pair);
+
+  }
+
+  // register include with resolved path and its content
+  // memory of the resources will be freed by us on exit
+  void Context::register_resource(const Include& inc, char* contents, char* srcmap)
+  {
+
+    // get pointer to the loaded content
+    Sass_Import_Entry import = sass_make_import(
+      inc.imp_path.c_str(),
+      inc.abs_path.c_str(),
+      contents,
+      srcmap
+    );
+
+    register_import(inc, import);
+
   }
 
   // register include with resolved path and its content
