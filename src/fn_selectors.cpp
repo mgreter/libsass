@@ -55,10 +55,6 @@ namespace Sass {
           sass::string exp_src = exp->to_string(ctx.c_options);
 
           SourceSpan state(exp->pstate());
-          // char* str = sass_copy_c_string(exp_src.c_str());
-          // ctx.strings.emplace_back(str);
-          //auto source = SASS_MEMORY_NEW(SourceFile,
-          //  state.getPath(), exp_src.c_str(), state.getSrcId());
           auto source = SASS_MEMORY_NEW(ItplFile2,
             std::move(exp_src), state);
           SelectorParser parser(ctx, source);

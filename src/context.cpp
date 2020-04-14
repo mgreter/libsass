@@ -57,22 +57,21 @@ namespace Sass {
     plugins(),
     emitter(c_options),
     varRoot(),
-    // callStack(),
     logger(new Logger(sass_option_get_precision(&c_ctx), c_ctx.logstyle)),
     sources(),
     sheets(),
     import_stack(),
     callee_stack(),
     functions(),
-    // builtins(),
-    // externals(),
     extender(Extender::NORMAL, logger->callStack),
     c_compiler(NULL),
 
+    // Initialize C-API arrays for custom functionality
     c_headers               (sass::vector<Sass_Importer_Entry>()),
     c_importers             (sass::vector<Sass_Importer_Entry>()),
     c_functions             (sass::vector<Sass_Function_Entry>()),
 
+    // Get some common options with and few default
     indent                  (safe_str(c_options.indent, "  ")),
     linefeed                (safe_str(c_options.linefeed, "\n")),
 
@@ -85,7 +84,7 @@ namespace Sass {
 
     // Sass 3.4: The current working directory will no longer be placed onto the Sass load path by default.
     // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.
-    // include_paths.emplace_back(CWD);
+    // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
 
     // collect more paths from different options
     collect_include_paths(c_options.include_path);
@@ -235,11 +234,12 @@ namespace Sass {
     sources.emplace_back(SASS_MEMORY_NEW(SourceFile,
       inc, contents, idx));
 
+    // add a relative link to the working directory
+    included_files.emplace_back(inc.abs_path);
+
     // tell emitter about new resource
     emitter.add_source_index(idx);
 
-    // add a relative link to the working directory
-    included_files.emplace_back(inc.abs_path);
 
     // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
@@ -739,8 +739,8 @@ namespace Sass {
 
   void register_built_in_function(Context& ctx, sass::string name, const sass::string& signature, SassFnSig cb)
   {
-    auto source = SASS_MEMORY_NEW(SourceFile,
-      true, "sass://signature", "(" + signature + ")", -1);
+    auto source = SASS_MEMORY_NEW(SourceFile, true,
+      "sass://signature", "(" + signature + ")", -1);
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
     BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     ctx.functions.insert(std::make_pair(name, callable));
@@ -753,8 +753,8 @@ namespace Sass {
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
-      SourceDataObj source = SASS_MEMORY_NEW(SourceFile,
-        true, "sass://signature", "(" + overload.first + ")", -1);
+      SourceDataObj source = SASS_MEMORY_NEW(SourceFile, true,
+        "sass://signature", "(" + overload.first + ")", -1);
       ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }

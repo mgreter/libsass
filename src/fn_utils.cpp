@@ -13,8 +13,8 @@ namespace Sass {
   ExternalCallable* make_c_function2(Sass_Function_Entry c_func, Context& ctx)
   {
     sass::string sig(sass_function_get_signature(c_func));
-    auto source = SASS_MEMORY_NEW(SourceFile,
-      true, "sass://signature", std::move(sig), -1);
+    auto source = SASS_MEMORY_NEW(SourceFile, true,
+      "sass://signature", std::move(sig), -1);
     ScssParser parser(ctx, source);
     sass::string name;
     if (parser.scanner.scanChar(Character::$at)) {

@@ -41,12 +41,13 @@ namespace Sass {
     // context.varStack.push_back(&context.varRoot);
   }
 
-  // ToDo: should work without the try clause
+  // ToDo: implement without the try clause
+  // ToDo: measure if this brings any speed?
   bool Parser::isIdentifier(sass::string text)
   {
     try {
-      auto src = SASS_MEMORY_NEW(SourceFile,
-        true, "sass:://identifier", text.c_str(), -1);
+      auto src = SASS_MEMORY_NEW(SourceFile, true,
+        "sass:://identifier", std::move(text), -1);
       Parser parser(context, src);
       sass::string id(parser.identifier());
       return parser.scanner.isDone();

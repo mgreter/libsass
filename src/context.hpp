@@ -40,38 +40,51 @@ namespace Sass {
     void prepareEnvironment();
 
   public:
+
+    // Keep a copy of the current working directory.
+    // We must not change it during runtime, but there
+    // might be a chance our embedder does so after we
+    // got initialized. We will not pick up this change!
+    // In our defense, it is considered rude to do so!
     const sass::string CWD;
+
+    // The attached options passed from C-API
     struct Sass_Options& c_options;
+
     sass::string entry_path;
+
     size_t head_imports;
     Plugins plugins;
     Output emitter;
 
+    // Global available functions
     std::vector<CallableObj> fnCache;
+
+    // Stacks of all parsed functions 
     sass::vector<EnvFrame*> varStack;
+
+    // Checking if a file exists can be quite extensive
+    // Keep an internal map to avoid multiple check calls
     std::unordered_map<sass::string, bool> fileExistsCache;
 
+    // Runtime variables
     EnvRoot varRoot;
 
+    // Current content block
     UserDefinedCallable* content;
-
-    // Main call stack for error reporting
-    // sass::vector<BackTrace> callStack;
 
     // The logger is created on context instantiation.
     // It assigns a specific logger according to options.
     Logger* logger;
 
-    IdxRef assigningTo;
-
-    // resources add under our control
-    // these are guaranteed to be freed
+    // resources under our control
     sass::vector<SourceDataObj> sources;
 
     // Sheets are filled after resources are parsed
     std::map<const sass::string, StyleSheet> sheets;
 
-    ImporterStack import_stack;
+    sass::vector<Sass_Import_Entry> import_stack;
+
     sass::vector<Sass_Callee> callee_stack;
 
     EnvKeyMap<CallableObj> functions;
