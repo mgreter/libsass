@@ -84,10 +84,10 @@ namespace Sass {
     sass::string abs_path;
 
     // Raw source data
-    sass::string data;
+    char* data;
 
     // Raw source data
-    sass::string mapdata33;
+    char* mapdata33;
 
     // Raw length in bytes
     size_t length;
@@ -125,13 +125,8 @@ namespace Sass {
     SourceFile(
       const char* imp_path,
       const char* abs_path,
-      sass::string&& data,
-      sass::string&& srcmap,
-      size_t srcid);
-
-    SourceFile(
-      const Include& include,
-      sass::string&& data,
+      char* data,
+      char* srcmap,
       size_t srcid);
 
     // Destructor
@@ -159,12 +154,12 @@ namespace Sass {
 
     // Get raw iterator for actual source
     const char* begin() const {
-      return data.c_str();
+      return data;
     }
 
     // Get raw iterator for actual source
     const char* srcmap() const {
-      return mapdata33.c_str();
+      return mapdata33;
     }
 
     // Return path as it was given for import

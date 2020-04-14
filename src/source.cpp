@@ -26,30 +26,15 @@ namespace Sass {
   SourceFile::SourceFile(
     const char* imp_path,
     const char* abs_path,
-    sass::string&& src,
-    sass::string&& map,
+    char* src,
+    char* map,
     size_t srcid) :
     SourceData(),
     imp_path(imp_path ? imp_path : ""),
     abs_path(abs_path ? abs_path : ""),
-    data(std::move(src)),
-    mapdata33(std::move(map)),
-    length(data.length()),
-    srcid(srcid),
-    lfs()
-  {
-  }
-
-  SourceFile::SourceFile(
-    const Include& include,
-    sass::string&& src,
-    size_t srcid) :
-    SourceData(),
-    imp_path(include.imp_path),
-    abs_path(include.abs_path),
-    data(std::move(src)),
-    mapdata33(),
-    length(data.length()),
+    data(src),
+    mapdata33(map),
+    length(src ? strlen(src) : 0),
     srcid(srcid),
     lfs()
   {
