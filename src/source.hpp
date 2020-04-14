@@ -132,17 +132,11 @@ namespace Sass {
   };
 
   class SourceFile :
-    public SourceData {
+    public SourceWithPath {
     friend class ItplFile;
     friend class ItplFile2;
 
   protected:
-
-    // Import path
-    sass::string imp_path;
-
-    // Resolved path
-    sass::string abs_path;
 
     // Raw source data
     char* data;
@@ -152,11 +146,6 @@ namespace Sass {
 
     // Raw length in bytes
     size_t length;
-
-    // Unique source id
-    size_t srcid;
-
-    // Also store srcmap
 
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
@@ -168,17 +157,6 @@ namespace Sass {
     virtual size_t countLines();
 
   public:
-
-    // the import type
-    Sass_Import_Type type;
-
-    Sass_Import_Type getType() const override final {
-      return type;
-    }
-
-    void setType(Sass_Import_Type type) override final {
-      this->type = type;
-    }
 
     // Constructor will copy `path` and `data`.
     // Will be destroyed when we go out of scope.
@@ -221,28 +199,6 @@ namespace Sass {
     // Get raw iterator for actual source
     const char* srcmap() const {
       return mapdata33;
-    }
-
-    // Return path as it was given for import
-    const char* getImpPath() const
-    {
-      return imp_path.c_str();
-    }
-
-    // Return path after it was resolved
-    const char* getAbsPath() const
-    {
-      return abs_path.c_str();
-    }
-
-    // The source id is uniquely assigned
-    void setSrcId(size_t idx) {
-      srcid = idx;
-    }
-
-    // The source id is uniquely assigned
-    size_t getSrcId() const {
-      return srcid;
     }
 
     // Needed to satisfy SharedObj

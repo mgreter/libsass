@@ -29,13 +29,14 @@ namespace Sass {
     char* src,
     char* map,
     size_t srcid) :
-    SourceData(),
-    imp_path(imp_path ? imp_path : ""),
-    abs_path(abs_path ? abs_path : ""),
+    SourceWithPath(
+      imp_path ? imp_path : "",
+      abs_path ? abs_path : "",
+      SASS_IMPORT_AUTO, srcid
+    ),
     data(src),
     mapdata33(map),
     length(src ? strlen(src) : 0),
-    srcid(srcid),
     lfs()
   {
   }
