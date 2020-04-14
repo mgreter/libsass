@@ -315,8 +315,6 @@ namespace Sass {
     stylesheet.plainCss = isPlainCss;
     stylesheet.syntax = import->srcdata->getType();
 
-    // delete memory of current stack frame
-    sass_delete_import(import);
     // remove current stack frame
     import_stack.pop_back();
     importStack.pop_back();
@@ -343,6 +341,9 @@ namespace Sass {
     );
 
     register_import(inc, import);
+
+    // delete memory of current stack frame
+    sass_delete_import(import);
 
   }
 
@@ -576,18 +577,38 @@ namespace Sass {
     // create entry only for import stack
     Sass_Import_Entry import = sass_make_import(
       input_path.c_str(),
-      entry_path.c_str(),
+      abs_path.c_str(),
       contents,
       0
     );
+    import->srcdata->setType(type);
     // add the entry to the stack
     import_stack.emplace_back(import);
 
     // Prepare environment
     prepareEnvironment();
 
+    Importer imp{ input_path, "." };
+    Include inc{ imp, abs_path, type };
+
     // create the source entry for file entry
-    register_resource({{ input_path, "." }, abs_path, type }, contents, 0);
+    // register_resource(inc, contents, 0);
+    // register_import({ { input_path, "." }, abs_path, type }, import);
+
+
+        // get pointer to the loaded content
+    Sass_Import_Entry import2 = sass_make_import(
+      inc.imp_path.c_str(),
+      inc.abs_path.c_str(),
+      contents,
+      0
+    );
+
+    register_import(inc, import2);
+
+    // delete memory of current stack frame
+    sass_delete_import(import2);
+
 
     importStack.emplace_back(sources.back());
 
