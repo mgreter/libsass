@@ -390,7 +390,7 @@ namespace Sass {
       Sass_Separator separator = evaluated.separator();
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
       argumentList = SASS_MEMORY_NEW(SassArgumentList,
-        SourceSpan::tmp("[pstate5]"),
+        overload->pstate(),
         std::move(rest), separator, std::move(named));
       positional.emplace_back(argumentList);
     }
@@ -1441,7 +1441,7 @@ namespace Sass {
     ValueObj condition = node->condition()->perform(this);
     EnvScope scoped(ctx.varRoot, node->idxs());
 
-    BlockObj bb = SASS_MEMORY_NEW(Block, SourceSpan::tmp(""));
+    BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
     bb->is_root(blockStack.back()->is_root());
     blockStack.emplace_back(bb);
     visitBlock(node->block());
@@ -1502,12 +1502,11 @@ namespace Sass {
     }
     mediaStack.emplace_back(css);
 
-    BlockObj blk = SASS_MEMORY_NEW(Block, SourceSpan::tmp(""));
+    BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
     blk->is_root(blockStack.back()->is_root());
     blockStack.emplace_back(blk);
     node->block()->perform(this);
     blockStack.pop_back();
-    // css->block(blk);
     css->elements26(std::move(blk->elements()));
     mediaStack.pop_back();
 
@@ -1545,7 +1544,7 @@ namespace Sass {
     LOCAL_FLAG(at_root_without_rule,
       query && query->excludesStyleRules());
 
-    BlockObj bb = SASS_MEMORY_NEW(Block, SourceSpan::tmp(""));
+    BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
     bb->is_root(blockStack.back()->is_root());
     blockStack.emplace_back(bb);
     visitBlock(node->block());
@@ -1589,7 +1588,7 @@ namespace Sass {
 
     if (node->block()) {
 
-      BlockObj blk = SASS_MEMORY_NEW(Block, SourceSpan::tmp(""));
+      BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
       blk->is_root(blockStack.back()->is_root());
       blockStack.emplace_back(blk);
       node->block()->perform(this);
@@ -1888,7 +1887,7 @@ namespace Sass {
 
     if (_inKeyframes) {
 
-      BlockObj bb = SASS_MEMORY_NEW(Block, SourceSpan::tmp(""));
+      BlockObj bb = SASS_MEMORY_NEW(Block, r->pstate());
       bb->is_root(blockStack.back()->is_root());
       blockStack.emplace_back(bb);
       r->block()->perform(this);
@@ -1913,7 +1912,7 @@ namespace Sass {
       if (r->interpolation()) {
         selectorStack.push_back({});
         auto val = interpolationToValue(r->interpolation(), true, false);
-        k->name2(SASS_MEMORY_NEW(SassString, SourceSpan::tmp("[relevantSpan]"), val));
+        k->name2(SASS_MEMORY_NEW(SassString, r->interpolation()->pstate(), val));
         selectorStack.pop_back();
       }
 
@@ -1944,7 +1943,7 @@ namespace Sass {
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
       ctx.extender.addSelector(evaled, mediaStack.back());
 
-    BlockObj blk = SASS_MEMORY_NEW(Block, SourceSpan::tmp(""));
+    BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
     blk->is_root(blockStack.back()->is_root());
     blockStack.emplace_back(blk);
     r->block()->perform(this);
