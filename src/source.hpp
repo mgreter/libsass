@@ -88,6 +88,9 @@ namespace Sass {
     // Unique source id
     size_t srcid;
 
+    // Raw length in bytes
+    size_t length;
+
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
     // Columns per line can be derived from it.
@@ -145,6 +148,16 @@ namespace Sass {
       this->type = type;
     }
 
+    // Return raw sizes in bytes
+    size_t size() const {
+      return length;
+    }
+
+    // Get raw iterator for actual source
+    const char* end() const {
+      return begin() + size();
+    }
+
   };
 
   class SourceFile :
@@ -159,9 +172,6 @@ namespace Sass {
 
     // Raw source data
     char* mapdata33;
-
-    // Raw length in bytes
-    size_t length;
 
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
@@ -185,16 +195,6 @@ namespace Sass {
     // Returns adjusted source span regarding interpolation.
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
       return pstate;
-    }
-
-    // Return raw sizes in bytes
-    size_t size() const {
-      return length;
-    }
-
-    // Get raw iterator for actual source
-    const char* end() const {
-      return begin() + length;
     }
 
     // Get raw iterator for actual source
@@ -237,9 +237,6 @@ namespace Sass {
     // Raw source data
     sass::string mapdata33;
 
-    // Raw length in bytes
-    size_t length;
-
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
     virtual size_t countLines();
@@ -273,16 +270,6 @@ namespace Sass {
     // Returns adjusted source span regarding interpolation.
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
       return pstate;
-    }
-
-    // Return raw sizes in bytes
-    size_t size() const {
-      return length;
-    }
-
-    // Get raw iterator for actual source
-    const char* end() const {
-      return begin() + length;
     }
 
     // Get raw iterator for actual source

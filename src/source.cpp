@@ -35,9 +35,9 @@ namespace Sass {
       SASS_IMPORT_AUTO, srcid
     ),
     data(src),
-    mapdata33(map),
-    length(src ? strlen(src) : 0)
+    mapdata33(map)
   {
+    length = src ? strlen(src) : 0;
   }
 
   size_t SourceFile::countLines()
@@ -97,9 +97,9 @@ namespace Sass {
       SASS_IMPORT_AUTO, srcid
     ),
     data(std::move(src)),
-    mapdata33(),
-    length(data.length())
+    mapdata33()
   {
+    length = data.length();
   }
 
   SourceString::SourceString(
@@ -114,9 +114,9 @@ namespace Sass {
       SASS_IMPORT_AUTO, srcid
     ),
     data(std::move(src)),
-    mapdata33(std::move(map)),
-    length(data.length())
+    mapdata33(std::move(map))
   {
+    length = data.length();
   }
 
   SourceString::SourceString(
@@ -129,9 +129,9 @@ namespace Sass {
       SASS_IMPORT_AUTO, srcid
     ),
     data(std::move(src)),
-    mapdata33(),
-    length(data.length())
+    mapdata33()
   {
+    length = data.length();
   }
 
   size_t SourceString::countLines()
