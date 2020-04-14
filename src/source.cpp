@@ -45,50 +45,20 @@ namespace Sass {
     }
   }
 
-  size_t SourceFile::countLines()
-  {
-    if (lfs.empty()) {
-      size_t len = 0;
-      lfs.emplace_back(len);
-      // ToDo: do only on demand
-      while (_content[len] != 0) {
-        if (_content[len] == $lf) {
-          lfs.emplace_back(len + 1);
-        }
-        ++len;
-      }
-      lfs.emplace_back(len);
-    }
-    return lfs.size() - 1;
-  }
-
-
-
-
-
-
-
-
-
-
 
 
 
   SourceString::SourceString(
-    bool foo,
-    const char* abspath,
-    sass::string&& src,
-    size_t srcid) :
+    const char* abs_path,
+    sass::string&& content) :
     SourceWithPath(
-      abspath ? abspath : "",
-      abspath ? abspath : "",
-      SASS_IMPORT_AUTO, srcid
+      abs_path ? abs_path : "",
+      abs_path ? abs_path : "",
+      SASS_IMPORT_AUTO, -1
     ),
-    _content(std::move(src)),
-    _srcmaps()
+    _content(std::move(content))
   {
     len_content = _content.length();
-    len_srcmaps = _srcmaps.length();
   }
 
   SourceString::SourceString(
@@ -109,30 +79,14 @@ namespace Sass {
     len_srcmaps = _srcmaps.length();
   }
 
-  SourceString::SourceString(
-    const Include& include,
-    sass::string&& content,
-    size_t srcid) :
-    SourceWithPath(
-      include.imp_path,
-      include.abs_path,
-      SASS_IMPORT_AUTO, srcid
-    ),
-    _content(std::move(content)),
-    _srcmaps()
-  {
-    len_content = _content.length();
-    len_srcmaps = _srcmaps.length();
-  }
-
-  size_t SourceString::countLines()
+  size_t SourceWithPath::countLines()
   {
     if (lfs.empty()) {
       size_t len = 0;
       lfs.emplace_back(len);
-      // ToDo: do only on demand
-      while (_content[len] != 0) {
-        if (_content[len] == $lf) {
+      const char* data = content();
+      while (data[len] != 0) {
+        if (data[len] == $lf) {
           lfs.emplace_back(len + 1);
         }
         ++len;
@@ -146,7 +100,7 @@ namespace Sass {
   /*#########################################################################*/
   /*#########################################################################*/
 
-  ItplFile2::ItplFile2(sass::string&& data,
+  SourceItpl::SourceItpl(sass::string&& data,
     SourceSpan pstate) :
     SourceString(
       pstate.getImpPath(),
@@ -157,7 +111,7 @@ namespace Sass {
   {
   }
 
-  SourceSpan ItplFile2::adjustSourceSpan(SourceSpan& pstate) const
+  SourceSpan SourceItpl::adjustSourceSpan(SourceSpan& pstate) const
   {
     pstate.position =
       this->pstate.position
@@ -165,7 +119,7 @@ namespace Sass {
     return pstate;
   }
 
-  size_t ItplFile2::countLines()
+  size_t SourceItpl::countLines()
   {
     return pstate.source->countLines()
       // Minus lines to replace
@@ -174,7 +128,7 @@ namespace Sass {
       + SourceString::countLines();
   }
 
-  sass::string ItplFile2::getLine(size_t line)
+  sass::string SourceItpl::getLine(size_t line)
   {
     // Calculate last line of insert
     size_t lastLine = pstate.position.line - 1

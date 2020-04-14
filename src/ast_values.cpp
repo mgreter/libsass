@@ -113,7 +113,7 @@ namespace Sass {
   {
     callStackFrame frame(*ctx.logger, pstate_);
     sass::string text(_selectorString(*ctx.logger, pstate_, name));
-    SourceDataObj source = SASS_MEMORY_NEW(ItplFile2, std::move(text), pstate_);
+    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate_);
     SelectorParser parser(ctx, source, allowParent);
     return parser.parse().detach();
   }
@@ -122,7 +122,7 @@ namespace Sass {
   {
     callStackFrame frame(*ctx.logger, pstate_);
     sass::string text(_selectorString(*ctx.logger, pstate_, name));
-    SourceDataObj source = SASS_MEMORY_NEW(ItplFile2, std::move(text), pstate_);
+    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate_);
     SelectorParser parser(ctx, source, allowParent);
     return parser.parseCompoundSelector().detach();
   }

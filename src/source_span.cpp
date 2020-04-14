@@ -15,7 +15,7 @@ namespace Sass {
   SourceSpan SourceSpan::tmp(const char* label)
   {
     return SourceSpan(SASS_MEMORY_NEW(
-      SourceString, true, label, "", sass::string::npos),
+      SourceString, "sass://phony", label),
     {},
     {}
     );

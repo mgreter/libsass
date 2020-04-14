@@ -16,10 +16,7 @@ namespace Sass {
   class SourceData :
     public SharedObj {
 
-    friend class ItplFile;
-    friend class ItplFile2;
-
-  protected:
+  protected: friend class SourceItpl;
 
     // Returns the number of lines. On the first call it will
     // calculate the linefeed lookup table.
@@ -82,13 +79,9 @@ namespace Sass {
 
   class SourceWithPath :
     public SourceData {
-    friend class SourceString;
-    friend class SourceFile;
-    friend class ItplFile;
-    friend class ItplFile2;
 
   protected:
-
+    
     // Import path
     sass::string imp_path;
 
@@ -106,6 +99,10 @@ namespace Sass {
     // Lazy calculated within `countLines`.
     // Columns per line can be derived from it.
     sass::vector<size_t> lfs;
+
+    // Returns the number of lines. On first call
+    // it will calculate the linefeed lookup table.
+    virtual size_t countLines();
 
   public:
 
@@ -170,8 +167,6 @@ namespace Sass {
 
   class SourceFile :
     public SourceWithPath {
-    friend class ItplFile;
-    friend class ItplFile2;
 
   protected:
 
@@ -180,10 +175,6 @@ namespace Sass {
 
     // Raw source data
     char* _srcmaps;
-
-    // Returns the number of lines. On first call
-    // it will calculate the linefeed lookup table.
-    virtual size_t countLines();
 
   public:
 
@@ -211,8 +202,6 @@ namespace Sass {
 
   class SourceString :
     public SourceWithPath {
-    friend class ItplFile;
-    friend class ItplFile2;
 
   protected:
 
@@ -222,14 +211,12 @@ namespace Sass {
     // Raw source data
     sass::string _srcmaps;
 
-    // Returns the number of lines. On first call
-    // it will calculate the linefeed lookup table.
-    virtual size_t countLines();
-
   public:
 
-    // Constructor will copy `path` and `data`.
-    // Will be destroyed when we go out of scope.
+    // For built-ins
+    SourceString(
+      const char* path,
+      sass::string&& data);
 
     SourceString(
       const char* imp_path,
@@ -237,20 +224,6 @@ namespace Sass {
       sass::string&& data,
       sass::string&& srcmap,
       size_t srcid);
-
-    SourceString(
-      bool foo,
-      const char* path,
-      sass::string&& data,
-      size_t srcid);
-
-    SourceString(
-      const Include& include,
-      sass::string&& data,
-      size_t srcid);
-
-    // Destructor
-    ~SourceString() {}
 
     // Get raw iterator for actual source
     const char* content() const override final {
@@ -264,34 +237,7 @@ namespace Sass {
 
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class ItplFile2 :
+  class SourceItpl :
     public SourceString {
 
   protected:
@@ -310,7 +256,7 @@ namespace Sass {
     // Create a synthetic interpolated source. The `data` is the
     // evaluated interpolation, while `around` is the original source
     // where the actual interpolation was given at `pstate` position.
-    ItplFile2(sass::string&& data,
+    SourceItpl(sass::string&& data,
       SourceSpan pstate);
 
     // Returns source with interpolation inserted.

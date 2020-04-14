@@ -1111,7 +1111,7 @@ namespace Sass {
     SourceSpan pstate(interpolation->pstate());
     mappings.emplace_back(Mapping(pstate.getSrcId(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
-    return SASS_MEMORY_NEW(ItplFile2,
+    return SASS_MEMORY_NEW(SourceItpl,
       interpolation->to_css(mappings),
       interpolation->pstate());
 
@@ -1486,7 +1486,7 @@ namespace Sass {
     }
     // char* str = sass_copy_c_string(str_mq.c_str());
     // ctx.strings.emplace_back(str);
-    SourceDataObj source = SASS_MEMORY_NEW(ItplFile2,
+    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl,
       std::move(str_mq), state);
     MediaQueryParser parser(ctx, source);
     // Create a new CSS only representation of the media rule
@@ -1895,7 +1895,7 @@ namespace Sass {
 
       auto text = interpolationToValue(itpl, true, false);
       
-      auto qwe = SASS_MEMORY_NEW(ItplFile2,
+      auto qwe = SASS_MEMORY_NEW(SourceItpl,
         std::move(text), itpl->pstate());
 
       KeyframeSelectorParser parser(ctx, qwe);
@@ -1975,7 +1975,7 @@ namespace Sass {
     StringUtils::makeTrimmed(css);
     auto text = css;
 
-    auto synthetic = SASS_MEMORY_NEW(ItplFile2,
+    auto synthetic = SASS_MEMORY_NEW(SourceItpl,
       std::move(text), pstate);
 
     try {

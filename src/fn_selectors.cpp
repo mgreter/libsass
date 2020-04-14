@@ -55,7 +55,7 @@ namespace Sass {
           sass::string exp_src = exp->to_string(ctx.c_options);
 
           SourceSpan state(exp->pstate());
-          auto source = SASS_MEMORY_NEW(ItplFile2,
+          auto source = SASS_MEMORY_NEW(SourceItpl,
             std::move(exp_src), state);
           SelectorParser parser(ctx, source);
           parser._allowParent = true;
@@ -107,7 +107,7 @@ namespace Sass {
           }
           sass::string text(arg->to_css());
           SourceSpan state(arg->pstate());
-          auto source = SASS_MEMORY_NEW(ItplFile2,
+          auto source = SASS_MEMORY_NEW(SourceItpl,
             std::move(text), state);
           SelectorParser parser(ctx, source, false);
           selectors.emplace_back(parser.parse());
