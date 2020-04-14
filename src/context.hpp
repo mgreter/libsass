@@ -130,6 +130,7 @@ namespace Sass {
     virtual char* render_srcmap();
     virtual char* render_stderr();
 
+    void register_import(const Include&, Sass_Import_Entry& entry);
     void register_resource(const Include&, char* contents, char* srcmap);
     void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 

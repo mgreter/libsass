@@ -112,8 +112,8 @@ extern "C" {
     // Stuff was shifted to internal C++ API
     v->srcdata = SASS_MEMORY_NEW(SourceFile,
       imp_path, abs_path,
-      source ? source : "",
-      srcmap ? srcmap : "",
+      source ? source : 0,
+      srcmap ? srcmap : 0,
       -1);
     return v;
   }

@@ -214,23 +214,15 @@ namespace Sass {
     return vec;
   }
 
+  void Context::register_import(const Include&, Sass_Import_Entry& entry)
+  {
+
+  }
+
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
   void Context::register_resource(const Include& inc, char* contents, char* srcmap)
   {
-
-
-
-    // do not parse same resource twice
-    // maybe raise an error in this case
-    // if (sheets.count(inc.abs_path)) {
-    //   free(res.contents); free(res.srcmap);
-    //   throw std::runtime_error("duplicate resource registered");
-    //   return;
-    // }
-
-    // get index for this resource
-    size_t idx = sources.size();
 
     // get pointer to the loaded content
     Sass_Import_Entry import = sass_make_import(
@@ -240,8 +232,9 @@ namespace Sass {
       srcmap
     );
 
-
+    // get index for this resource
     SourceDataObj source = import->srcdata;
+    size_t idx = sources.size();
     source->setSrcId(idx);
 
     // Append to the resources
