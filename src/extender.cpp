@@ -1031,7 +1031,7 @@ namespace Sass {
     }
 
     SelectorListObj list = SASS_MEMORY_NEW(SelectorList,
-      SourceSpan::tmp("[phony]"));
+      pseudo->pstate());
     list->concat(complexes);
     return { pseudo->withSelector(list) };
 
