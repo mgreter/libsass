@@ -35,20 +35,20 @@ namespace Sass {
     virtual size_t getSrcId() const = 0;
 
     // Return path as it was given for import
-    virtual const char* getPath() const = 0;
+    virtual const char* getAbsPath() const = 0;
 
     // Returns the requested line. Will take interpolations into
     // account to show more accurate debug messages. Calling this
     // can be rather expensive, so only use it for debugging.
     virtual sass::string getLine(size_t line) = 0;
 
-    // Get raw iterator for actual source
+    // Get raw iterator for raw source
     virtual const char* end() const = 0;
 
-    // Get raw iterator for actual source
+    // Get raw iterator for raw source
     virtual const char* begin() const = 0;
 
-    // Return raw sizes in bytes
+    // Return raw size in bytes
     virtual size_t size() const = 0;
 
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const = 0;
@@ -153,7 +153,7 @@ namespace Sass {
     }
 
     // Return path as it was given for import
-    const char* getPath() const
+    const char* getAbsPath() const
 		{
       return path;
     }

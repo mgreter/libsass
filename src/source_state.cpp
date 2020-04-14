@@ -24,9 +24,9 @@ namespace Sass
 	}
 
   /// Return the attached source path
-	const char* SourceState::getPath() const
+	const char* SourceState::getAbsPath() const
 	{
-		return source->getPath();
+		return source->getAbsPath();
 	}
 
 	const char* SourceState::getRawData() const
@@ -36,7 +36,7 @@ namespace Sass
 
 	sass::string SourceState::getDebugPath() const
 	{
-		const char* path = getPath();
+		const char* path = getAbsPath();
 		sass::string cwd(Sass::File::get_cwd());
 		sass::string rel_path(Sass::File::abs2rel(path, cwd, cwd));
 		return Sass::File::rel2dbg(rel_path, path);

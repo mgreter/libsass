@@ -85,11 +85,11 @@ namespace Sass {
         pstate = e.traces.back().pstate;
       }
 
-      sass::string rel_path(Sass::File::abs2rel(pstate.getPath(), cwd, cwd));
+      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), cwd, cwd));
 			logger.writeStackTraces(logger.errors, e.traces, "  ");
       JsonNode* json_err = json_mkobject();
       json_append_member(json_err, "status", json_mknumber(1));
-      json_append_member(json_err, "file", json_mkstring(pstate.getPath()));
+      json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
       json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
       json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
       json_append_member(json_err, "message", json_mkstring(e.what()));
@@ -99,7 +99,7 @@ namespace Sass {
       c_ctx->error_message = sass_copy_string(msg_stream.str());
       c_ctx->error_text = sass_copy_c_string(e.what());
       c_ctx->error_status = 1;
-      c_ctx->error_file = sass_copy_c_string(pstate.getPath());
+      c_ctx->error_file = sass_copy_c_string(pstate.getAbsPath());
       c_ctx->error_line = pstate.getLine();
       c_ctx->error_column = pstate.getColumn();
       c_ctx->error_src = sass_copy_c_string(pstate.getRawData());

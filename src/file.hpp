@@ -102,19 +102,6 @@ namespace Sass {
       { }
   };
 
-  // a loaded resource
-  class Resource {
-    public:
-      // the file contents
-      char* contents;
-      // connected sourcemap
-      char* srcmap;
-    public:
-      Resource(char* contents, char* srcmap)
-      : contents(contents), srcmap(srcmap)
-      { }
-  };
-
   namespace File {
 
     // static std::vector<sass::string> defaultExtensions = { ".scss", ".sass", ".css" };

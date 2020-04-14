@@ -24,7 +24,7 @@ namespace Sass {
     startpos(source->begin()),
     endpos(source->end()),
     position(source->begin()),
-    sourceUrl(source->getPath()),
+    sourceUrl(source->getAbsPath()),
     srcid(source->getSrcId()),
     offset(),
     relevant(),

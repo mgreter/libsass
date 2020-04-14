@@ -542,7 +542,7 @@ namespace Sass {
       const StackTrace& trace = traces[i];
 
       // make path relative to the current directory
-      sass::string rel_path(File::abs2rel(trace.pstate.getPath(), cwd, cwd));
+      sass::string rel_path(File::abs2rel(trace.pstate.getAbsPath(), cwd, cwd));
 
       strm.str(sass::string());
       strm << rel_path << ' ';
@@ -575,7 +575,7 @@ namespace Sass {
       const StackTrace& trace = traces[i];
 
       // make path relative to the current directory
-      sass::string rel_path(File::abs2rel(trace.pstate.getPath(), cwd, cwd));
+      sass::string rel_path(File::abs2rel(trace.pstate.getAbsPath(), cwd, cwd));
 
       // skip functions on error cases (unsure why ruby sass does this)
       // if (trace.caller.substr(0, 6) == ", in f") continue;

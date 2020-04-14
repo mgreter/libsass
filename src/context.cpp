@@ -535,7 +535,7 @@ namespace Sass {
     ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
-    call_headers2(entry_path, pstate.getPath(), pstate, rule);
+    call_headers2(entry_path, pstate.getAbsPath(), pstate, rule);
     // increase head count to skip later
     head_imports += sources.size() - 1;
     // add the statement if we have urls

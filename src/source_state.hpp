@@ -28,10 +28,10 @@ namespace Sass
 		size_t getSrcId() const;
 
 		// Return the attached source path
-		const char* getPath() const;
+		const char* getAbsPath() const;
 
 		// Return the attached source
-    SourceData* getSource() const;
+		SourceData* getSource() const;
 
 		// Return `char star` for source data
 		const char* getRawData() const;

@@ -1095,7 +1095,7 @@ namespace Sass {
         _disallowedAtRule(rule->pstate().position);
       }
       // Call custom importers and check if any of them handled the import
-      if (!context.call_importers2(unquote(url), pstate.getPath(), pstate, rule)) {
+      if (!context.call_importers2(unquote(url), pstate.getAbsPath(), pstate, rule)) {
         // Try to load url into context.sheets
         resolveDynamicImport(rule, start, url);
       }
