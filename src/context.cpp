@@ -61,6 +61,7 @@ namespace Sass {
     sources(),
     sheets(),
     import_stack(),
+    importStack(),
     callee_stack(),
     functions(),
     extender(Extender::NORMAL, logger->callStack),
@@ -136,6 +137,7 @@ namespace Sass {
     }
     // clear inner structures (vectors) and input source
     import_stack.clear();
+    importStack.clear();
     sources.clear();
     sheets.clear();
     functions.clear();
@@ -230,9 +232,11 @@ namespace Sass {
     // get index for this resource
     size_t idx = sources.size();
 
+    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
+      inc, contents, idx);
+
     // Append to the resources
-    sources.emplace_back(SASS_MEMORY_NEW(SourceFile,
-      inc, contents, idx));
+    sources.emplace_back(source);
 
     // add a relative link to the working directory
     included_files.emplace_back(inc.abs_path);
@@ -254,16 +258,20 @@ namespace Sass {
 
     if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
       import->type = SASS_IMPORT_CSS;
+      source->type = SASS_IMPORT_CSS;
     }
     else if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".sass", 5)) {
       import->type = SASS_IMPORT_SASS;
+      source->type = SASS_IMPORT_SASS;
     }
     else {
       import->type = SASS_IMPORT_SCSS;
+      source->type = SASS_IMPORT_SCSS;
     }
 
     // add the entry to the stack
     import_stack.emplace_back(import);
+    importStack.emplace_back(sources.back());
 
     // get pointer to the loaded content
 
@@ -295,8 +303,6 @@ namespace Sass {
 
     // callStackFrame frame(*logger,
     //   BackTrace("[import]", "@import"));
-
-    auto source = sources.back();
 
     // auto source = SASS_MEMORY_NEW(SourceFile,
     //   inc, contents, idx);
@@ -339,6 +345,7 @@ namespace Sass {
     sass_delete_import(import);
     // remove current stack frame
     import_stack.pop_back();
+    importStack.pop_back();
 
     // create key/value pair for ast node
     std::pair<const sass::string, StyleSheet>
@@ -590,6 +597,9 @@ namespace Sass {
     // create the source entry for file entry
     register_resource({{ input_path, "." }, abs_path, type }, contents, 0);
 
+    importStack.emplace_back(sources.back());
+
+
     // create root ast tree node
     return compile();
 
@@ -619,12 +629,15 @@ namespace Sass {
     );
     // add the entry to the stack
     import_stack.emplace_back(import);
+    // importStack2.emplace_back(source);
 
     // Prepare environment
     prepareEnvironment();
 
     // register a synthetic resource (path does not really exist, skip in includes)
     register_resource({{ input_path, "." }, input_path, type }, source_c_str, srcmap_c_str);
+
+    importStack.emplace_back(sources.back());
 
     // create root ast tree node
     return compile();
@@ -736,6 +749,7 @@ namespace Sass {
     std::sort(includes.begin() + (skip ? 0 : 1), includes.end());
     return includes;
   }
+
 
   void register_built_in_function(Context& ctx, sass::string name, const sass::string& signature, SassFnSig cb)
   {

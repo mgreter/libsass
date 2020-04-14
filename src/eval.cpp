@@ -1925,6 +1925,7 @@ namespace Sass {
 
     SelectorListObj slist;
     if (r->interpolation()) {
+      // SourceData* source = ctx.importStack.back();
       Sass_Import_Entry imp = ctx.import_stack.back();
       bool plainCss = imp->type == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);
@@ -2281,6 +2282,7 @@ namespace Sass {
 
     // Add C-API to stack to expose it
     ctx.import_stack.emplace_back(import);
+    // ctx.import_stack2.emplace_back(source);
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));

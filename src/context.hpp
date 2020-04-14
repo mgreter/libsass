@@ -84,6 +84,7 @@ namespace Sass {
     std::map<const sass::string, StyleSheet> sheets;
 
     sass::vector<Sass_Import_Entry> import_stack;
+    sass::vector<SourceDataObj> importStack;
 
     sass::vector<Sass_Callee> callee_stack;
 

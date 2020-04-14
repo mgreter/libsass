@@ -93,6 +93,9 @@ namespace Sass {
 
   public:
 
+    // the import type
+    Sass_Import_Type type;
+
     // Constructor will copy `path` and `data`.
     // Will be destroyed when we go out of scope.
 
