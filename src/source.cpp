@@ -30,7 +30,7 @@ namespace Sass {
     size_t srcid) :
     SourceData(),
     // Make a copy, delete when destroyed
-    path(sass_copy_c_string(path)),
+    path(path ? path : ""),
     data(sass_copy_c_string(data.c_str())),
     length(0),
     srcid(srcid),
@@ -45,7 +45,7 @@ namespace Sass {
     size_t srcid) :
     SourceData(),
     // Make a copy, delete when destroyed
-    path(sass_copy_c_string(include.abs_path.c_str())),
+    path(include.abs_path),
     data(sass_copy_c_string(data.c_str())),
     length(0),
     srcid(srcid),

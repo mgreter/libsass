@@ -65,7 +65,7 @@ namespace Sass {
 
     // Import path
     // should probably use std::string anyway?
-    char* path;
+    sass::string path;
 
     // Raw source data
     char* data;
@@ -104,7 +104,7 @@ namespace Sass {
 
     // Destructor
     ~SourceFile() {
-      sass_free_memory(path);
+      // sass_free_memory(path);
       sass_free_memory(data);
     }
 
@@ -136,7 +136,7 @@ namespace Sass {
     // Return path as it was given for import
     const char* getAbsPath() const
 		{
-      return path;
+      return path.c_str();
     }
 
     // The source id is uniquely assigned
