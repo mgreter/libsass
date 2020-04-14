@@ -24,6 +24,23 @@ namespace Sass {
   /*#########################################################################*/
 
   SourceFile::SourceFile(
+    const char* imp_path,
+    const char* abs_path,
+    sass::string&& src,
+    sass::string&& srcmap,
+    size_t srcid) :
+    SourceData(),
+    imp_path(imp_path ? imp_path : ""),
+    abs_path(abs_path ? abs_path : ""),
+    data(std::move(src)),
+    mapdata(std::move(srcmap)),
+    length(data.length()),
+    srcid(srcid),
+    lfs()
+  {}
+
+
+  SourceFile::SourceFile(
     bool foo,
     const char* abspath,
     sass::string&& src,

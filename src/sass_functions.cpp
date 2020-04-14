@@ -115,7 +115,7 @@ extern "C" {
     v->line = -1;
     v->column = -1;
 
-    v->srcdata = SASS_MEMORY_NEW(SourceFile, true, abs_path, source ? source : "", -1);
+    v->srcdata = SASS_MEMORY_NEW(SourceFile, imp_path, abs_path, source ? source : "", srcmap ? srcmap : "", -1);
 
     return v;
   }

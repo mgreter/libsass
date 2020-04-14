@@ -83,6 +83,9 @@ namespace Sass {
     // Raw source data
     sass::string data;
 
+    // Raw source data
+    sass::string mapdata;
+
     // Raw length in bytes
     size_t length;
 
