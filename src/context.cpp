@@ -131,7 +131,7 @@ namespace Sass {
     // everything that gets put into sources will be freed by us
     // this shouldn't have anything in it anyway!?
     for (size_t m = 0; m < import_stack.size(); ++m) {
-      sass_import_take_source(import_stack[m]);
+      // sass_import_take_source(import_stack[m]);
       sass_import_take_srcmap(import_stack[m]);
       sass_delete_import(import_stack[m]);
     }
@@ -281,12 +281,12 @@ namespace Sass {
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
       Sass_Import_Entry parent = import_stack[i];
-      if (std::strcmp(parent->abs_path, import->abs_path) == 0) {
+      if (std::strcmp(parent->srcdata->getAbsPath(), import->srcdata->getAbsPath()) == 0) {
         // make path relative to the current directory
         sass::string stack("An @import loop has been found:");
         for (size_t n = 1; n < i + 2; ++n) {
-          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->abs_path, CWD, CWD)) +
-            " imports " + sass::string(File::abs2rel(import_stack[n+1]->abs_path, CWD, CWD));
+          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->srcdata->getAbsPath(), CWD, CWD)) +
+            " imports " + sass::string(File::abs2rel(import_stack[n+1]->srcdata->getAbsPath(), CWD, CWD));
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
@@ -311,7 +311,7 @@ namespace Sass {
     {
       CssParser parser(*this, source);
       // take control of these buffers
-      sass_import_take_source(import);
+      // sass_import_take_source(import);
       sass_import_take_srcmap(import);
       // then parse the root block
       root = parser.parse7();
@@ -322,7 +322,7 @@ namespace Sass {
     {
       SassParser parser(*this, source);
       // do not yet dispose these buffers
-      sass_import_take_source(import);
+      // sass_import_take_source(import);
       sass_import_take_srcmap(import);
       // then parse the root block
       root = parser.parse7();
@@ -331,7 +331,7 @@ namespace Sass {
       // create a parser instance from the given c_str buffer
       ScssParser parser(*this, source);
       // do not yet dispose these buffers
-      sass_import_take_source(import);
+      // sass_import_take_source(import);
       sass_import_take_srcmap(import);
       // then parse the root block
       root = parser.parse7();
@@ -432,7 +432,7 @@ namespace Sass {
           Importer importer(uniq_path, ctx_path);
           // query data from the current include
           Sass_Import_Entry include_ent = *it_includes;
-          char* source = sass_import_take_source(include_ent);
+          char* source = sass_copy_c_string(sass_import_get_source(include_ent));
           char* srcmap = sass_import_take_srcmap(include_ent);
           size_t line = sass_import_get_error_line(include_ent);
           size_t column = sass_import_get_error_column(include_ent);

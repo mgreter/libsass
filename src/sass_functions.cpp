@@ -108,12 +108,15 @@ extern "C" {
     if (v == 0) return 0;
     v->type = SASS_IMPORT_AUTO;
     v->imp_path = imp_path ? sass_copy_c_string(imp_path) : 0;
-    v->abs_path = abs_path ? sass_copy_c_string(abs_path) : 0;
-    v->source = source;
+    // v->abs_path = abs_path ? sass_copy_c_string(abs_path) : 0;
+    // v->source = source;
     v->srcmap = srcmap;
     v->error = 0;
     v->line = -1;
     v->column = -1;
+
+    v->srcdata = SASS_MEMORY_NEW(SourceFile, true, abs_path, source ? source : "", -1);
+
     return v;
   }
 
@@ -154,8 +157,8 @@ extern "C" {
   void ADDCALL sass_delete_import(Sass_Import_Entry import)
   {
     free(import->imp_path);
-    free(import->abs_path);
-    free(import->source);
+    // free(import->abs_path);
+    // free(import->source);
     free(import->srcmap);
     free(import->error);
     free(import);
@@ -195,8 +198,8 @@ extern "C" {
 
   // Getter for import entry
   const char* ADDCALL sass_import_get_imp_path(Sass_Import_Entry entry) { return entry->imp_path; }
-  const char* ADDCALL sass_import_get_abs_path(Sass_Import_Entry entry) { return entry->abs_path; }
-  const char* ADDCALL sass_import_get_source(Sass_Import_Entry entry) { return entry->source; }
+  const char* ADDCALL sass_import_get_abs_path(Sass_Import_Entry entry) { return entry->srcdata->getAbsPath(); }
+  const char* ADDCALL sass_import_get_source(Sass_Import_Entry entry) { return entry->srcdata->begin(); }
   const char* ADDCALL sass_import_get_srcmap(Sass_Import_Entry entry) { return entry->srcmap; }
 
   // Getter for import error entry
@@ -206,7 +209,7 @@ extern "C" {
 
   // Explicit functions to take ownership of the memory
   // Resets our own property since we do not know if it is still alive
-  char* ADDCALL sass_import_take_source(Sass_Import_Entry entry) { char* ptr = entry->source; entry->source = 0; return ptr; }
+  // char* ADDCALL sass_import_take_source(Sass_Import_Entry entry) { char* ptr = entry->source; entry->source = 0; return ptr; }
   char* ADDCALL sass_import_take_srcmap(Sass_Import_Entry entry) { char* ptr = entry->srcmap; entry->srcmap = 0; return ptr; }
 
 }

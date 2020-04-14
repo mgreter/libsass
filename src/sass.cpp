@@ -80,7 +80,7 @@ extern "C" {
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
-    paths.emplace_back(File::dir_name(import->abs_path));
+    paths.emplace_back(File::dir_name(import->srcdata->getAbsPath()));
     paths.insert( paths.end(), incs.begin(), incs.end() );
     // now resolve the file path relative to lookup paths
     sass::string resolved(File::find_include(file,
@@ -95,7 +95,7 @@ extern "C" {
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
-    paths.emplace_back(File::dir_name(import->abs_path));
+    paths.emplace_back(File::dir_name(import->srcdata->getAbsPath()));
     paths.insert( paths.end(), incs.begin(), incs.end() );
     // now resolve the file path relative to lookup paths
     sass::string resolved(File::find_file(file, compiler->cpp_ctx->CWD, paths, compiler->cpp_ctx->fileExistsCache));

@@ -5,6 +5,7 @@
 #include "environment.hpp"
 #include "fn_utils.hpp"
 #include "backtrace.hpp"
+#include "source.hpp"
 
 // Struct to hold custom function callback
 struct Sass_Function {
@@ -13,11 +14,13 @@ struct Sass_Function {
   void*            cookie;
 };
 
+class SourceDataObj;
+
 // External import entry
 struct Sass_Import {
   char* imp_path; // path as found in the import statement
-  char *abs_path; // path after importer has resolved it
-  char* source;
+  // char *abs_path; // path after importer has resolved it
+  // char* source;
   char* srcmap;
   // error handling
   char* error;
@@ -25,6 +28,7 @@ struct Sass_Import {
   size_t column;
   // the import type
   Sass_Import_Type type;
+  Sass::SourceDataObj srcdata;
 };
 
 // External call entry
