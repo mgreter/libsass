@@ -104,13 +104,13 @@ extern "C" {
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
   Sass_Import_Entry ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap)
   {
-    Sass_Import* v = (Sass_Import*) calloc(1, sizeof(Sass_Import));
+    Sass_Import* v = new Sass_Import();
     if (v == 0) return 0;
     // v->type = SASS_IMPORT_AUTO;
-    v->imp_path = imp_path ? sass_copy_c_string(imp_path) : 0;
+    // v->imp_path = imp_path ? sass_copy_c_string(imp_path) : 0;
     // v->abs_path = abs_path ? sass_copy_c_string(abs_path) : 0;
     // v->source = source;
-    v->srcmap = srcmap;
+    // v->srcmap = srcmap;
     v->error = 0;
     v->line = -1;
     v->column = -1;
@@ -156,12 +156,12 @@ extern "C" {
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(Sass_Import_Entry import)
   {
-    free(import->imp_path);
+    // free(import->imp_path);
     // free(import->abs_path);
     // free(import->source);
-    free(import->srcmap);
-    free(import->error);
-    free(import);
+    // free(import->srcmap);
+    // free(import->error);
+    delete import;
   }
 
   // Getter for callee entry
@@ -197,10 +197,10 @@ extern "C" {
   }
 
   // Getter for import entry
-  const char* ADDCALL sass_import_get_imp_path(Sass_Import_Entry entry) { return entry->imp_path; }
+  const char* ADDCALL sass_import_get_imp_path(Sass_Import_Entry entry) { return entry->srcdata->getImpPath(); }
   const char* ADDCALL sass_import_get_abs_path(Sass_Import_Entry entry) { return entry->srcdata->getAbsPath(); }
   const char* ADDCALL sass_import_get_source(Sass_Import_Entry entry) { return entry->srcdata->begin(); }
-  const char* ADDCALL sass_import_get_srcmap(Sass_Import_Entry entry) { return entry->srcmap; }
+  const char* ADDCALL sass_import_get_srcmap(Sass_Import_Entry entry) { return entry->srcdata->srcmap(); }
 
   enum Sass_Import_Type ADDCALL sass_import_get_type(Sass_Import_Entry entry) { return entry->srcdata->getType();  }
   void ADDCALL sass_import_set_type(Sass_Import_Entry entry, enum Sass_Import_Type type) { entry->srcdata->setType(type); }
@@ -213,6 +213,6 @@ extern "C" {
   // Explicit functions to take ownership of the memory
   // Resets our own property since we do not know if it is still alive
   // char* ADDCALL sass_import_take_source(Sass_Import_Entry entry) { char* ptr = entry->source; entry->source = 0; return ptr; }
-  char* ADDCALL sass_import_take_srcmap(Sass_Import_Entry entry) { char* ptr = entry->srcmap; entry->srcmap = 0; return ptr; }
+  // char* ADDCALL sass_import_take_srcmap(Sass_Import_Entry entry) { char* ptr = entry->srcmap; entry->srcmap = 0; return ptr; }
 
 }

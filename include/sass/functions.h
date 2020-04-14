@@ -110,8 +110,8 @@ ADDAPI void ADDCALL sass_import_set_type(Sass_Import_Entry, enum Sass_Import_Typ
 
 // Explicit functions to take ownership of these items
 // The property on our struct will be reset to NULL
-ADDAPI char* ADDCALL sass_import_take_source (Sass_Import_Entry);
-ADDAPI char* ADDCALL sass_import_take_srcmap (Sass_Import_Entry);
+//ADDAPI char* ADDCALL sass_import_take_source (Sass_Import_Entry);
+//ADDAPI char* ADDCALL sass_import_take_srcmap (Sass_Import_Entry);
 // Getters from import error entry
 ADDAPI size_t ADDCALL sass_import_get_error_line (Sass_Import_Entry);
 ADDAPI size_t ADDCALL sass_import_get_error_column (Sass_Import_Entry);

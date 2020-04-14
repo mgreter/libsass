@@ -53,6 +53,9 @@ namespace Sass {
     // Get raw iterator for raw source
     virtual const char* begin() const = 0;
 
+    // Get raw iterator for raw source
+    virtual const char* srcmap() const = 0;
+
     // Return raw size in bytes
     virtual size_t size() const = 0;
 
@@ -84,7 +87,7 @@ namespace Sass {
     sass::string data;
 
     // Raw source data
-    sass::string mapdata;
+    sass::string mapdata33;
 
     // Raw length in bytes
     size_t length;
@@ -164,6 +167,11 @@ namespace Sass {
     // Get raw iterator for actual source
     const char* begin() const {
       return data.c_str();
+    }
+
+    // Get raw iterator for actual source
+    const char* srcmap() const {
+      return mapdata33.c_str();
     }
 
     // Return path as it was given for import

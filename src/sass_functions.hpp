@@ -18,10 +18,10 @@ class SourceDataObj;
 
 // External import entry
 struct Sass_Import {
-  char* imp_path; // path as found in the import statement
+  //char* imp_path; // path as found in the import statement
   // char *abs_path; // path after importer has resolved it
   // char* source;
-  char* srcmap;
+  //char* srcmap;
   // error handling
   char* error;
   size_t line;

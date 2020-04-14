@@ -2292,7 +2292,7 @@ namespace Sass {
 
     // These data object have just been borrowed
     // sass_import_take_source(ctx.import_stack.back());
-    sass_import_take_srcmap(ctx.import_stack.back());
+    // sass_import_take_srcmap(ctx.import_stack.back());
     // Cleanup the import entry we added
     sass_delete_import(ctx.import_stack.back());
     // Finally remove if from the stack

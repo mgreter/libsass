@@ -132,7 +132,7 @@ namespace Sass {
     // this shouldn't have anything in it anyway!?
     for (size_t m = 0; m < import_stack.size(); ++m) {
       // sass_import_take_source(import_stack[m]);
-      sass_import_take_srcmap(import_stack[m]);
+      // sass_import_take_srcmap(import_stack[m]);
       sass_delete_import(import_stack[m]);
     }
     // clear inner structures (vectors) and input source
@@ -310,7 +310,7 @@ namespace Sass {
       CssParser parser(*this, source);
       // take control of these buffers
       // sass_import_take_source(import);
-      sass_import_take_srcmap(import);
+      // sass_import_take_srcmap(import);
       // then parse the root block
       root = parser.parse7();
       // mark as pure css
@@ -321,7 +321,7 @@ namespace Sass {
       SassParser parser(*this, source);
       // do not yet dispose these buffers
       // sass_import_take_source(import);
-      sass_import_take_srcmap(import);
+      // sass_import_take_srcmap(import);
       // then parse the root block
       root = parser.parse7();
     }
@@ -330,7 +330,7 @@ namespace Sass {
       ScssParser parser(*this, source);
       // do not yet dispose these buffers
       // sass_import_take_source(import);
-      sass_import_take_srcmap(import);
+      // sass_import_take_srcmap(import);
       // then parse the root block
       root = parser.parse7();
     }
@@ -431,7 +431,7 @@ namespace Sass {
           // query data from the current include
           Sass_Import_Entry include_ent = *it_includes;
           char* source = sass_copy_c_string(sass_import_get_source(include_ent));
-          char* srcmap = sass_import_take_srcmap(include_ent);
+          char* srcmap = sass_copy_c_string(sass_import_get_srcmap(include_ent));
           size_t line = sass_import_get_error_line(include_ent);
           size_t column = sass_import_get_error_column(include_ent);
           const char* abs_path = sass_import_get_abs_path(include_ent);

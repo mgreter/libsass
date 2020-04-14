@@ -24,23 +24,6 @@ namespace Sass {
   /*#########################################################################*/
 
   SourceFile::SourceFile(
-    const char* imp_path,
-    const char* abs_path,
-    sass::string&& src,
-    sass::string&& srcmap,
-    size_t srcid) :
-    SourceData(),
-    imp_path(imp_path ? imp_path : ""),
-    abs_path(abs_path ? abs_path : ""),
-    data(std::move(src)),
-    mapdata(std::move(srcmap)),
-    length(data.length()),
-    srcid(srcid),
-    lfs()
-  {}
-
-
-  SourceFile::SourceFile(
     bool foo,
     const char* abspath,
     sass::string&& src,
@@ -49,6 +32,24 @@ namespace Sass {
     imp_path(abspath ? abspath : ""),
     abs_path(abspath ? abspath : ""),
     data(std::move(src)),
+    mapdata33(),
+    length(data.length()),
+    srcid(srcid),
+    lfs()
+  {
+  }
+
+  SourceFile::SourceFile(
+    const char* imp_path,
+    const char* abs_path,
+    sass::string&& src,
+    sass::string&& map,
+    size_t srcid) :
+    SourceData(),
+    imp_path(imp_path ? imp_path : ""),
+    abs_path(abs_path ? abs_path : ""),
+    data(std::move(src)),
+    mapdata33(std::move(map)),
     length(data.length()),
     srcid(srcid),
     lfs()
@@ -63,6 +64,7 @@ namespace Sass {
     imp_path(include.imp_path),
     abs_path(include.abs_path),
     data(std::move(src)),
+    mapdata33(),
     length(data.length()),
     srcid(srcid),
     lfs()
