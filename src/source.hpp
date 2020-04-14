@@ -129,13 +129,6 @@ namespace Sass {
       sass::string&& srcmap,
       size_t srcid);
 
-
-    SourceFile(
-      bool foo,
-      const char* path,
-      sass::string&& data,
-      size_t srcid);
-
     SourceFile(
       const Include& include,
       sass::string&& data,
@@ -374,7 +367,7 @@ namespace Sass {
 
 
   class ItplFile2 :
-    public SourceFile {
+    public SourceString {
 
   protected:
 

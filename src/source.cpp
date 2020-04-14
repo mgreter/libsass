@@ -24,22 +24,6 @@ namespace Sass {
   /*#########################################################################*/
 
   SourceFile::SourceFile(
-    bool foo,
-    const char* abspath,
-    sass::string&& src,
-    size_t srcid) :
-    SourceData(),
-    imp_path(abspath ? abspath : ""),
-    abs_path(abspath ? abspath : ""),
-    data(std::move(src)),
-    mapdata33(),
-    length(data.length()),
-    srcid(srcid),
-    lfs()
-  {
-  }
-
-  SourceFile::SourceFile(
     const char* imp_path,
     const char* abs_path,
     sass::string&& src,
@@ -205,10 +189,10 @@ namespace Sass {
 
   ItplFile2::ItplFile2(sass::string&& data,
     SourceSpan pstate) :
-    SourceFile(
+    SourceString(
+      pstate.getImpPath(),
       pstate.getAbsPath(),
-      pstate.getAbsPath(),
-      std::move(data),
+      std::move(data), "",
       pstate.getSrcId()),
     pstate(pstate)
   {
@@ -228,19 +212,19 @@ namespace Sass {
       // Minus lines to replace
       - pstate.span.line - 1
       // Plus lines from insert
-      + SourceFile::countLines();
+      + SourceString::countLines();
   }
 
   sass::string ItplFile2::getLine(size_t line)
   {
     // Calculate last line of insert
     size_t lastLine = pstate.position.line - 1
-      + SourceFile::countLines();
+      + SourceString::countLines();
 
     // Calculate line difference
     size_t lineDelta = 0
       // Plus lines from insert
-      + SourceFile::countLines()
+      + SourceString::countLines()
       // Minus lines to replace
       - pstate.span.line - 1;
 
@@ -264,7 +248,7 @@ namespace Sass {
           return Unicode::replace(before,
             pstate.position.column,
             sass::string::npos,
-            SourceFile::getLine(0))
+            SourceString::getLine(0))
             + Unicode::substr(after,
               pstate.span.column,
               sass::string::npos);
@@ -274,21 +258,21 @@ namespace Sass {
           return Unicode::replace(before,
             pstate.position.column,
             pstate.span.column,
-            SourceFile::getLine(0));
+            SourceString::getLine(0));
         }
       }
       else {
         // Otherwise we append to substring
         return Unicode::substr(before,
           0, pstate.position.column)
-          + SourceFile::getLine(0);
+          + SourceString::getLine(0);
       }
     }
     // Now we must be in the inserting part
     // Only happens if we have a full line
     else if (line < lastLine) {
       // Get full line of insert
-      return SourceFile::getLine(
+      return SourceString::getLine(
         line - pstate.position.line);
     }
     // Fetch last line of insert
@@ -303,7 +287,7 @@ namespace Sass {
         : pstate.span.column;
 
       // Append to last line to insert
-      return SourceFile::getLine(
+      return SourceString::getLine(
         line - pstate.position.line) +
         Unicode::substr(after,
           col, sass::string::npos);
