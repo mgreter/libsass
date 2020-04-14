@@ -106,6 +106,100 @@ namespace Sass {
     return sass::string(beg, end);
   }
 
+
+
+
+
+
+
+
+
+
+
+
+  SourceString::SourceString(
+    bool foo,
+    const char* abspath,
+    sass::string&& src,
+    size_t srcid) :
+    SourceData(),
+    imp_path(abspath ? abspath : ""),
+    abs_path(abspath ? abspath : ""),
+    data(std::move(src)),
+    mapdata33(),
+    length(data.length()),
+    srcid(srcid),
+    lfs()
+  {
+  }
+
+  SourceString::SourceString(
+    const char* imp_path,
+    const char* abs_path,
+    sass::string&& src,
+    sass::string&& map,
+    size_t srcid) :
+    SourceData(),
+    imp_path(imp_path ? imp_path : ""),
+    abs_path(abs_path ? abs_path : ""),
+    data(std::move(src)),
+    mapdata33(std::move(map)),
+    length(data.length()),
+    srcid(srcid),
+    lfs()
+  {
+  }
+
+  SourceString::SourceString(
+    const Include& include,
+    sass::string&& src,
+    size_t srcid) :
+    SourceData(),
+    imp_path(include.imp_path),
+    abs_path(include.abs_path),
+    data(std::move(src)),
+    mapdata33(),
+    length(data.length()),
+    srcid(srcid),
+    lfs()
+  {
+  }
+
+  size_t SourceString::countLines()
+  {
+    if (lfs.empty()) {
+      size_t len = 0;
+      lfs.emplace_back(len);
+      // ToDo: do only on demand
+      while (data[len] != 0) {
+        if (data[len] == $lf) {
+          lfs.emplace_back(len + 1);
+        }
+        ++len;
+      }
+      lfs.emplace_back(len);
+      length = len;
+    }
+
+    return lfs.size() - 1;
+  }
+
+  sass::string SourceString::getLine(size_t line)
+  {
+    countLines();
+    if (line > lfs.size()) {
+      return sass::string();
+    }
+    size_t first = lfs[line];
+    size_t last = lfs[line + 1];
+    if (first == last) return sass::string();
+    const char* beg = begin() + first;
+    const char* end = begin() + last;
+    if (end[-1] == $lf) end -= 1;
+    if (end[-1] == $cr) end -= 1;
+    return sass::string(beg, end);
+  }
+
   /*#########################################################################*/
   /*#########################################################################*/
 

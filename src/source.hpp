@@ -203,6 +203,176 @@ namespace Sass {
 
   };
 
+
+
+
+
+
+
+
+
+
+
+  class SourceString :
+    public SourceData {
+    friend class ItplFile;
+    friend class ItplFile2;
+
+  protected:
+
+    // Import path
+    sass::string imp_path;
+
+    // Resolved path
+    sass::string abs_path;
+
+    // Raw source data
+    sass::string data;
+
+    // Raw source data
+    sass::string mapdata33;
+
+    // Raw length in bytes
+    size_t length;
+
+    // Unique source id
+    size_t srcid;
+
+    // Also store srcmap
+
+    // Store byte offset for every line.
+    // Lazy calculated within `countLines`.
+    // Columns per line can be derived from it.
+    sass::vector<size_t> lfs;
+
+    // Returns the number of lines. On first call
+    // it will calculate the linefeed lookup table.
+    virtual size_t countLines();
+
+  public:
+
+    // the import type
+    Sass_Import_Type type;
+
+    Sass_Import_Type getType() const override final {
+      return type;
+    }
+
+    void setType(Sass_Import_Type type) override final {
+      this->type = type;
+    }
+
+    // Constructor will copy `path` and `data`.
+    // Will be destroyed when we go out of scope.
+
+    SourceString(
+      const char* imp_path,
+      const char* abs_path,
+      sass::string&& data,
+      sass::string&& srcmap,
+      size_t srcid);
+
+
+    SourceString(
+      bool foo,
+      const char* path,
+      sass::string&& data,
+      size_t srcid);
+
+    SourceString(
+      const Include& include,
+      sass::string&& data,
+      size_t srcid);
+
+    // Destructor
+    ~SourceString() {}
+
+    // Returns the requested line. Will take interpolations into
+    // account to show more accurate debug messages. Calling this
+    // can be rather expensive, so only use it for debugging.
+    virtual sass::string getLine(size_t line);
+
+    // Returns adjusted source span regarding interpolation.
+    virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
+      return pstate;
+    }
+
+    // Return raw sizes in bytes
+    size_t size() const {
+      return length;
+    }
+
+    // Get raw iterator for actual source
+    const char* end() const {
+      return begin() + length;
+    }
+
+    // Get raw iterator for actual source
+    const char* begin() const {
+      return data.c_str();
+    }
+
+    // Get raw iterator for actual source
+    const char* srcmap() const {
+      return mapdata33.c_str();
+    }
+
+    // Return path as it was given for import
+    const char* getImpPath() const
+    {
+      return imp_path.c_str();
+    }
+
+    // Return path after it was resolved
+    const char* getAbsPath() const
+    {
+      return abs_path.c_str();
+    }
+
+    // The source id is uniquely assigned
+    void setSrcId(size_t idx) {
+      srcid = idx;
+    }
+
+    // The source id is uniquely assigned
+    size_t getSrcId() const {
+      return srcid;
+    }
+
+    // Needed to satisfy SharedObj
+    sass::string to_string() const {
+      return data;
+    }
+
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   class ItplFile2 :
     public SourceFile {
 

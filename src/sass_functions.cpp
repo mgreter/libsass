@@ -106,17 +106,15 @@ extern "C" {
   {
     Sass_Import* v = new Sass_Import();
     if (v == 0) return 0;
-    // v->type = SASS_IMPORT_AUTO;
-    // v->imp_path = imp_path ? sass_copy_c_string(imp_path) : 0;
-    // v->abs_path = abs_path ? sass_copy_c_string(abs_path) : 0;
-    // v->source = source;
-    // v->srcmap = srcmap;
     v->error = 0;
     v->line = -1;
     v->column = -1;
-
-    v->srcdata = SASS_MEMORY_NEW(SourceFile, imp_path, abs_path, source ? source : "", srcmap ? srcmap : "", -1);
-
+    // Stuff was shifted to internal C++ API
+    v->srcdata = SASS_MEMORY_NEW(SourceFile,
+      imp_path, abs_path,
+      source ? source : "",
+      srcmap ? srcmap : "",
+      -1);
     return v;
   }
 
@@ -156,11 +154,7 @@ extern "C" {
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(Sass_Import_Entry import)
   {
-    // free(import->imp_path);
-    // free(import->abs_path);
-    // free(import->source);
-    // free(import->srcmap);
-    // free(import->error);
+    free(import->error);
     delete import;
   }
 
