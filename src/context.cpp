@@ -232,8 +232,17 @@ namespace Sass {
     // get index for this resource
     size_t idx = sources.size();
 
-    SourceFileObj source = SASS_MEMORY_NEW(SourceFile,
-      inc, contents, idx);
+    // get pointer to the loaded content
+    Sass_Import_Entry import = sass_make_import(
+      inc.imp_path.c_str(),
+      inc.abs_path.c_str(),
+      contents,
+      srcmap
+    );
+
+
+    SourceFileObj source = import->srcdata;
+    source->setSrcId(idx);
 
     // Append to the resources
     sources.emplace_back(source);
@@ -247,14 +256,6 @@ namespace Sass {
 
     // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
-
-    // get pointer to the loaded content
-    Sass_Import_Entry import = sass_make_import(
-      inc.imp_path.c_str(),
-      inc.abs_path.c_str(),
-      contents,
-      srcmap
-    );
 
     if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
       source->type = SASS_IMPORT_CSS;
@@ -437,7 +438,7 @@ namespace Sass {
           // handle error message passed back from custom importer
           // it may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->srcdata->getType() }, source, srcmap, pstate);
+            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, source, srcmap, pstate);
             if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
             // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
             else {
@@ -451,7 +452,7 @@ namespace Sass {
             // use the created uniq_path as fall-back (maybe enforce)
             sass::string path_key(abs_path ? abs_path : uniq_path);
             // create the importer struct
-            Include include(importer, path_key, include_ent->srcdata->getType());
+            Include include(importer, path_key, include_ent->type);
             // attach information to AST node
 
             auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, load_path);

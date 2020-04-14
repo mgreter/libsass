@@ -33,6 +33,9 @@ namespace Sass {
     // The source id is uniquely assigned
     virtual size_t getSrcId() const = 0;
 
+    // The source id is uniquely assigned
+    virtual void setSrcId(size_t idx) = 0;
+
     // Return path as it was given for import
     virtual const char* getImpPath() const = 0;
 
@@ -164,6 +167,11 @@ namespace Sass {
     const char* getAbsPath() const
     {
       return abs_path.c_str();
+    }
+
+    // The source id is uniquely assigned
+    void setSrcId(size_t idx) {
+      srcid = idx;
     }
 
     // The source id is uniquely assigned
