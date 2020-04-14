@@ -96,11 +96,12 @@ namespace Sass {
     const char* abs_path,
     char* content,
     char* srcmaps,
-    size_t srcid) :
+    Sass_Import_Type type,
+    size_t srcidx) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
-      SASS_IMPORT_AUTO, srcid
+      type, srcidx
     ),
     _content(content),
     _srcmaps(srcmaps)

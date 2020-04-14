@@ -192,7 +192,8 @@ namespace Sass {
       const char* abs_path, // copy
       char* content, // take ownership
       char* srcmaps, // take ownership
-      size_t srcid);
+      Sass_Import_Type type = SASS_IMPORT_AUTO,
+      size_t srcidx = sass::string::npos);
 
     // Destructor
     ~SourceFile();

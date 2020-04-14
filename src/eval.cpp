@@ -2273,12 +2273,11 @@ namespace Sass {
     const StyleSheet& sheet = ctx.sheets.at(include.abs_path);
 
     // Create C-API exposed object to query
-    Sass_Import_Entry import = sass_make_import(
+    Sass_Import_Entry import = sass_make_import2(
       include.imp_path.c_str(),
       include.abs_path.c_str(),
-      0, 0
+      0, 0, sheet.syntax
     );
-    sass_import_set_type(import, sheet.syntax);
 
     // Add C-API to stack to expose it
     ctx.import_stack.emplace_back(import);

@@ -114,7 +114,25 @@ extern "C" {
       imp_path, abs_path,
       source ? source : 0,
       srcmap ? srcmap : 0,
-      -1);
+      SASS_IMPORT_AUTO, -1);
+    return v;
+  }
+
+  // Creator for a single import entry returned by the custom importer inside the list
+  // We take ownership of the memory for source and srcmap (freed when context is destroyed)
+  Sass_Import_Entry ADDCALL sass_make_import2(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
+  {
+    Sass_Import* v = new Sass_Import();
+    if (v == 0) return 0;
+    v->error = 0;
+    v->line = -1;
+    v->column = -1;
+    // Stuff was shifted to internal C++ API
+    v->srcdata = SASS_MEMORY_NEW(SourceFile,
+      imp_path, abs_path,
+      source ? source : 0,
+      srcmap ? srcmap : 0,
+      type, -1);
     return v;
   }
 
