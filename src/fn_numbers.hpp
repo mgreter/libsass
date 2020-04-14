@@ -8,6 +8,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Math {
+
       BUILT_IN_FN(round);
       BUILT_IN_FN(ceil);
       BUILT_IN_FN(floor);
@@ -18,7 +19,10 @@ namespace Sass {
       BUILT_IN_FN(unit);
       BUILT_IN_FN(isUnitless);
       BUILT_IN_FN(percentage);
-      BUILT_IN_FN(compatible);   
+      BUILT_IN_FN(compatible);
+
+      void registerFunctions(Context& ctx);
+
     }
 
   }

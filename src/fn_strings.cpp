@@ -210,6 +210,21 @@ namespace Sass {
           pstate, ss.str(), true);
       }
 
+	    void registerFunctions(Context& ctx)
+	    {
+
+		    ctx.registerBuiltInFunction("unquote", "$string", unquote);
+		    ctx.registerBuiltInFunction("quote", "$string", quote);
+		    ctx.registerBuiltInFunction("to-upper-case", "$string", toUpperCase);
+		    ctx.registerBuiltInFunction("to-lower-case", "$string", toLowerCase);
+		    ctx.registerBuiltInFunction("str-length", "$string", length);
+		    ctx.registerBuiltInFunction("str-insert", "$string, $insert, $index", insert);
+		    ctx.registerBuiltInFunction("str-index", "$string, $substring", index);
+		    ctx.registerBuiltInFunction("str-slice", "$string, $start-at, $end-at: -1", slice);
+		    ctx.registerBuiltInFunction("unique-id", "", uniqueId);
+
+	    }
+
     }
 
 

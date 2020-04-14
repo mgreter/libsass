@@ -38,7 +38,7 @@ namespace Sass
 		SourceData* getSource() const;
 
     // Return the attached source
-    const char* getSourceContent() const;
+    const char* getContent() const;
 
     // Return the attached source type
     Sass_Import_Type getSourceType() const;

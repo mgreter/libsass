@@ -41,6 +41,15 @@ namespace Sass {
 
   public:
 
+    void registerBuiltInFunction(const sass::string& name,
+      const sass::string& signature, SassFnSig cb);
+
+    void registerBuiltInOverloadFns(const sass::string& name,
+      const std::vector<std::pair<sass::string, SassFnSig>>& overloads);
+
+    void register_built_in_functions();
+
+
     // Keep a copy of the current working directory.
     // We must not change it during runtime, but there
     // might be a chance our embedder does so after we

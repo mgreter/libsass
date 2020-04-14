@@ -216,6 +216,21 @@ namespace Sass {
           arguments[0]->hasBrackets());
       }
 
+	    void registerFunctions(Context& ctx)
+	    {
+
+		    ctx.registerBuiltInFunction("length", "$list", length);
+		    ctx.registerBuiltInFunction("nth", "$list, $n", nth);
+		    ctx.registerBuiltInFunction("set-nth", "$list, $n, $value", setNth);
+		    ctx.registerBuiltInFunction("join", "$list1, $list2, $separator: auto, $bracketed: auto", join);
+		    ctx.registerBuiltInFunction("append", "$list, $val, $separator: auto", append);
+		    ctx.registerBuiltInFunction("zip", "$lists...", zip);
+		    ctx.registerBuiltInFunction("index", "$list, $value", index);
+		    ctx.registerBuiltInFunction("list-separator", "$list", separator);
+		    ctx.registerBuiltInFunction("is-bracketed", "$list", isBracketed);
+
+	    }
+
     }
   }
 

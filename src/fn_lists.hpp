@@ -8,6 +8,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Lists {
+
       BUILT_IN_FN(length);
       BUILT_IN_FN(nth);
       BUILT_IN_FN(setNth);
@@ -17,6 +18,9 @@ namespace Sass {
       BUILT_IN_FN(index);
       BUILT_IN_FN(separator);
       BUILT_IN_FN(isBracketed);
+
+      void registerFunctions(Context& ctx);
+
     }
 
   }

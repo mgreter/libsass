@@ -8,6 +8,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Selectors {
+
       BUILT_IN_FN(nest);
       BUILT_IN_FN(append);
       BUILT_IN_FN(extend);
@@ -16,6 +17,9 @@ namespace Sass {
       BUILT_IN_FN(isSuper);
       BUILT_IN_FN(simple);
       BUILT_IN_FN(parse);
+
+      void registerFunctions(Context& ctx);
+
     }
 
   }

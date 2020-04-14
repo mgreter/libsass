@@ -962,6 +962,70 @@ namespace Sass {
         return _mixColors(color1, color2, weight, pstate, *ctx.logger);
       }
 
+      void registerFunctions(Context& ctx)
+      {
+
+        ctx.registerBuiltInOverloadFns("rgb", {
+          std::make_pair("$red, $green, $blue, $alpha", rgb_4),
+          std::make_pair("$red, $green, $blue", rgb_3),
+          std::make_pair("$color, $alpha", rgb_2),
+          std::make_pair("$channels", rgb_1),
+          });
+        ctx.registerBuiltInOverloadFns("rgba", {
+          std::make_pair("$red, $green, $blue, $alpha", rgba_4),
+          std::make_pair("$red, $green, $blue", rgba_3),
+          std::make_pair("$color, $alpha", rgba_2),
+          std::make_pair("$channels", rgba_1),
+          });
+        ctx.registerBuiltInOverloadFns("hsl", {
+          std::make_pair("$hue, $saturation, $lightness, $alpha", hsl_4),
+          std::make_pair("$hue, $saturation, $lightness", hsl_3),
+          std::make_pair("$color, $alpha", hsl_2),
+          std::make_pair("$channels", hsl_1),
+          });
+        ctx.registerBuiltInOverloadFns("hsla", {
+          std::make_pair("$hue, $saturation, $lightness, $alpha", hsla_4),
+          std::make_pair("$hue, $saturation, $lightness", hsla_3),
+          std::make_pair("$color, $alpha", hsla_2),
+          std::make_pair("$channels", hsla_1),
+          });
+
+        ctx.registerBuiltInFunction("red", "$color", red);
+        ctx.registerBuiltInFunction("green", "$color", green);
+        ctx.registerBuiltInFunction("blue", "$color", blue);
+        ctx.registerBuiltInFunction("hue", "$color", hue);
+        ctx.registerBuiltInFunction("lightness", "$color", lightness);
+        ctx.registerBuiltInFunction("saturation", "$color", saturation);
+        ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert);
+        ctx.registerBuiltInFunction("grayscale", "$color", grayscale);
+        ctx.registerBuiltInFunction("complement", "$color", complement);
+        ctx.registerBuiltInFunction("lighten", "$color, $amount", lighten);
+        ctx.registerBuiltInFunction("darken", "$color, $amount", darken);
+        ctx.registerBuiltInFunction("desaturate", "$color, $amount", desaturate);
+        ctx.registerBuiltInOverloadFns("saturate", {
+          std::make_pair("$amount", saturate_1),
+          std::make_pair("$color, $amount", saturate_2),
+          });
+
+        ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue);
+        ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust);
+        ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change);
+        ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale);
+        ctx.registerBuiltInFunction("mix", "$color1, $color2, $weight: 50%", mix);
+
+        ctx.registerBuiltInFunction("opacify", "$color, $amount", opacify);
+        ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify);
+        ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize);
+        ctx.registerBuiltInFunction("transparentize", "$color, $amount", transparentize);
+        ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr);
+        ctx.registerBuiltInOverloadFns("alpha", {
+          std::make_pair("$color", alpha_one),
+          std::make_pair("$args...", alpha_any),
+          });
+        ctx.registerBuiltInFunction("opacity", "$color", opacity);
+
+      }
+
     }
 
 

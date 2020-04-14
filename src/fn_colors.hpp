@@ -8,6 +8,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Colors {
+
       BUILT_IN_FN(rgb_4);
       BUILT_IN_FN(rgb_3);
       BUILT_IN_FN(rgb_2);
@@ -24,7 +25,6 @@ namespace Sass {
       BUILT_IN_FN(hsla_3);
       BUILT_IN_FN(hsla_2);
       BUILT_IN_FN(hsla_1);
-
       BUILT_IN_FN(red);
       BUILT_IN_FN(green);
       BUILT_IN_FN(blue);
@@ -46,11 +46,12 @@ namespace Sass {
       BUILT_IN_FN(alpha_any);
       BUILT_IN_FN(opacity);
       BUILT_IN_FN(ieHexStr);
-      
       BUILT_IN_FN(adjust);
       BUILT_IN_FN(change);
       BUILT_IN_FN(scale);
       BUILT_IN_FN(mix);
+
+      void registerFunctions(Context& ctx);
 
     }
 

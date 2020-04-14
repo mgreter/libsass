@@ -8,6 +8,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Strings {
+
       BUILT_IN_FN(unquote);
       BUILT_IN_FN(quote);
       BUILT_IN_FN(toUpperCase);
@@ -17,6 +18,9 @@ namespace Sass {
       BUILT_IN_FN(index);
       BUILT_IN_FN(slice);
       BUILT_IN_FN(uniqueId);
+
+      void registerFunctions(Context& ctx);
+
     }
 
   }

@@ -30,7 +30,7 @@ namespace Sass
     return source->getAbsPath();
   }
 
-  const char* SourceState::getSourceContent() const
+  const char* SourceState::getContent() const
   {
     return source->content();
   }

@@ -158,7 +158,7 @@ namespace Sass {
     }
 
     // now create the code trace (ToDo: maybe have utility functions?)
-    if (pstate.getSourceContent() == nullptr) return;
+    if (pstate.getContent() == nullptr) return;
 
     // Calculate offset positions
     Offset beg = pstate.position;

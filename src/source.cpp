@@ -49,7 +49,7 @@ namespace Sass {
     abs_path(std::move(abs_path)),
     len_content(0),
     len_srcmaps(0),
-    srcid(idx),
+    srcidx(idx),
     type(type),
     lfs()
   {
@@ -65,7 +65,7 @@ namespace Sass {
     abs_path(abs_path),
     len_content(0),
     len_srcmaps(0),
-    srcid(idx),
+    srcidx(idx),
     type(type),
     lfs()
   {
@@ -163,11 +163,11 @@ namespace Sass {
     sass::string&& content,
     sass::string&& srcmaps,
     Sass_Import_Type type,
-    size_t srcid) :
+    size_t srcidx) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
-      type, srcid
+      type, srcidx
     ),
     _content(std::move(content)),
     _srcmaps(std::move(srcmaps))

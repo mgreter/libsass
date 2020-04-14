@@ -23,7 +23,7 @@ namespace Sass {
   }
 
   const char* SourceSpan::end() const {
-    return Offset::move(getSourceContent(), position + span);
+    return Offset::move(getContent(), position + span);
   }
 
   SourceSpan SourceSpan::delta(const SourceSpan& lhs, const SourceSpan& rhs)

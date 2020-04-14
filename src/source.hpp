@@ -100,15 +100,15 @@ namespace Sass {
     size_t len_srcmaps;
 
     // Unique source id
-    size_t srcid;
+    size_t srcidx;
+
+    // the import type
+    Sass_Import_Type type;
 
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
     // Columns per line can be derived from it.
     sass::vector<size_t> lfs;
-
-    // the import type
-    Sass_Import_Type type;
 
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
@@ -147,12 +147,12 @@ namespace Sass {
 
     // The source id is uniquely assigned
     void setSrcIdx(size_t idx) {
-      srcid = idx;
+      srcidx = idx;
     }
 
     // The source id is uniquely assigned
     size_t getSrcIdx() const {
-      return srcid;
+      return srcidx;
     }
 
     size_t contentSize() const override final {
@@ -241,7 +241,7 @@ namespace Sass {
       sass::string&& data,
       sass::string&& srcmap,
       Sass_Import_Type type = SASS_IMPORT_AUTO,
-      size_t srcid = sass::string::npos);
+      size_t srcidx = sass::string::npos);
 
     // Get raw iterator for actual source
     const char* content() const override final {

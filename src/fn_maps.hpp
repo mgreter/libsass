@@ -8,6 +8,7 @@ namespace Sass {
   namespace Functions {
 
     namespace Maps {
+
       BUILT_IN_FN(get);
       BUILT_IN_FN(merge);
       BUILT_IN_FN(remove_one);
@@ -15,6 +16,9 @@ namespace Sass {
       BUILT_IN_FN(keys);
       BUILT_IN_FN(values);
       BUILT_IN_FN(hasKey);
+
+      void registerFunctions(Context& ctx);
+
     }
 
   }

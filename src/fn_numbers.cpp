@@ -174,6 +174,23 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate, is_comparable);
       }
 
+	    void registerFunctions(Context& ctx)
+	    {
+
+		    ctx.registerBuiltInFunction("round", "$number", round);
+		    ctx.registerBuiltInFunction("ceil", "$number", ceil);
+		    ctx.registerBuiltInFunction("floor", "$number", floor);
+		    ctx.registerBuiltInFunction("abs", "$number", abs);
+		    ctx.registerBuiltInFunction("max", "$numbers...", max);
+		    ctx.registerBuiltInFunction("min", "$numbers...", min);
+		    ctx.registerBuiltInFunction("random", "$limit: null", random);
+		    ctx.registerBuiltInFunction("unit", "$number", unit);
+		    ctx.registerBuiltInFunction("percentage", "$number", percentage);
+		    ctx.registerBuiltInFunction("unitless", "$number", isUnitless);
+		    ctx.registerBuiltInFunction("comparable", "$number1, $number2", compatible);
+
+	    }
+
     }
 
   }

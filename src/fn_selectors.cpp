@@ -207,6 +207,20 @@ namespace Sass {
         return Listize::listize(selector);
       }
 
+	    void registerFunctions(Context& ctx)
+	    {
+
+		    ctx.registerBuiltInFunction("selector-nest", "$selectors...", nest);
+		    ctx.registerBuiltInFunction("selector-append", "$selectors...", append);
+		    ctx.registerBuiltInFunction("selector-extend", "$selector, $extendee, $extender", extend);
+		    ctx.registerBuiltInFunction("selector-replace", "$selector, $original, $replacement", replace);
+		    ctx.registerBuiltInFunction("selector-unify", "$selector1, $selector2", unify);
+		    ctx.registerBuiltInFunction("is-superselector", "$super, $sub", isSuper);
+		    ctx.registerBuiltInFunction("simple-selectors", "$selector", simple);
+		    ctx.registerBuiltInFunction("selector-parse", "$selector", parse);
+
+	    }
+
     }
 
   }

@@ -84,6 +84,22 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
       }
 
+	    void registerFunctions(Context& ctx)
+	    {
+
+		    ctx.registerBuiltInFunction("map-get", "$map, $key", get);
+		    ctx.registerBuiltInFunction("map-merge", "$map1, $map2", merge);
+		    ctx.registerBuiltInOverloadFns("map-remove", {
+			    std::make_pair("$map", remove_one),
+			    std::make_pair("$map, $key, $keys...", remove_many)
+			    });
+
+		    ctx.registerBuiltInFunction("map-keys", "$map", keys);
+		    ctx.registerBuiltInFunction("map-values", "$map", values);
+		    ctx.registerBuiltInFunction("map-has-key", "$map, $key", hasKey);
+
+	    }
+
     }
 
   }
