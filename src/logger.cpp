@@ -158,7 +158,7 @@ namespace Sass {
     }
 
     // now create the code trace (ToDo: maybe have utility functions?)
-    if (pstate.source->content() == nullptr) return;
+    if (pstate.getSourceContent() == nullptr) return;
 
     // Calculate offset positions
     Offset beg = pstate.position;
@@ -168,13 +168,13 @@ namespace Sass {
     size_t padding = (size_t)floor(log10(end.line + 1)) + 1;
 
     // Do multi-line reporting
-    if (pstate.span.line > 0 && pstate.source) {
+    SourceData* source = pstate.getSource();
+    if (pstate.span.line > 0 && source != nullptr) {
 
       sass::vector<sass::string> lines;
-      SourceData* source = pstate.source;
 
-      // Fetch all lines we need to print the state
-      for (size_t i = 0; i < pstate.span.line + 1; i++) {
+      // Fetch all lines we need to print the state //XOXOXO
+      for (size_t i = 0; i <= pstate.span.line; i++) {
         sass::string line(source->getLine(pstate.position.line + i));
         lines.emplace_back(line);
       }
@@ -308,7 +308,7 @@ namespace Sass {
     // Single line reporting
     else {
 
-      sass::string raw = pstate.source->getLine(pstate.position.line);
+      sass::string raw = pstate.getSource()->getLine(pstate.position.line);
       sass::string line; utf8::replace_invalid(raw.begin(), raw.end(),
         std::back_inserter(line), logstyle & SASS_LOGGER_UNICODE ? 0xfffd : '?');
 
@@ -526,7 +526,6 @@ namespace Sass {
   void Logger::writeStackTraces(sass::ostream& os, StackTraces traces,
     sass::string indent, bool showPos, size_t amount)
 	{
-
     sass::sstream strm;
     sass::string cwd(File::get_cwd());
 

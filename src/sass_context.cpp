@@ -102,7 +102,7 @@ namespace Sass {
       c_ctx->error_file = sass_copy_c_string(pstate.getAbsPath());
       c_ctx->error_line = pstate.getLine();
       c_ctx->error_column = pstate.getColumn();
-      c_ctx->error_src = sass_copy_c_string(pstate.getRawData());
+      c_ctx->error_src = sass_copy_c_string(pstate.getSourceContent());
       c_ctx->output_string = 0;
       c_ctx->stderr_string = 0;
       c_ctx->source_map_string = 0;

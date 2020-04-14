@@ -218,6 +218,7 @@ namespace Sass {
   {
 
     const sass::string& abs_path(import->srcdata->getAbsPath());
+
     // get index for this resource
     SourceDataObj source = import->srcdata;
     size_t idx = sources.size();
@@ -231,7 +232,6 @@ namespace Sass {
 
     // tell emitter about new resource
     emitter.add_source_index(idx);
-
 
     // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(abs_path, source_map_file, CWD));

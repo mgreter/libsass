@@ -72,8 +72,6 @@ namespace Sass {
       return SASS_IMPORT_AUTO;
     }
 
-    virtual void setType(Sass_Import_Type type) = 0;
-
     ~SourceData() {}
   };
 
@@ -83,6 +81,11 @@ namespace Sass {
   /*#########################################################################*/
   class SourceWithPath :
     public SourceData {
+
+  private:
+
+    // Detect type from path
+    void detectType();
 
   protected:
     
@@ -152,21 +155,16 @@ namespace Sass {
       return srcid;
     }
 
-    void detectType();
-
-    Sass_Import_Type getType() const override final {
-      return type;
-    }
-
-    void setType(Sass_Import_Type type) override final {
-      this->type = type;
-    }
-
     size_t contentSize() const override final {
       return len_content;
     }
+
     size_t srcmapsSize() const override final {
       return len_srcmaps;
+    }
+
+    Sass_Import_Type getType() const override final {
+      return type;
     }
 
   };

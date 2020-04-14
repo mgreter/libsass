@@ -14,9 +14,10 @@ namespace Sass
 	class SourceState
 	{
 
-	public:
-		/** The source code reference **/
+    /** The source code reference **/
     SourceDataObj source;
+
+  public:
 
 		/** The position within the source **/
 		Offset position;
@@ -36,11 +37,11 @@ namespace Sass
 		// Return the attached source
 		SourceData* getSource() const;
 
+    // Return the attached source
+    const char* getSourceContent() const;
+
     // Return the attached source type
     Sass_Import_Type getSourceType() const;
-
-    // Return `char star` for source data
-		const char* getRawData() const;
 
 		// Return line as human readable
 		// Starting from one instead of zero

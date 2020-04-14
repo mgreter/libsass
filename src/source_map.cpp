@@ -204,7 +204,7 @@ namespace Sass {
     //     mappings[i].generated_position.column == pstate.position.column
     //   ) return SourceSpan(pstate.path, pstate.src, mappings[i].original_position, pstate.offset);
     // }
-    return SourceSpan(pstate.source);
+    return SourceSpan(pstate.getSource());
   }
 
 }

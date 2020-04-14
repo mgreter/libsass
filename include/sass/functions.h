@@ -105,9 +105,7 @@ ADDAPI const char* ADDCALL sass_import_get_imp_path (Sass_Import_Entry);
 ADDAPI const char* ADDCALL sass_import_get_abs_path (Sass_Import_Entry);
 ADDAPI const char* ADDCALL sass_import_get_source (Sass_Import_Entry);
 ADDAPI const char* ADDCALL sass_import_get_srcmap (Sass_Import_Entry);
-
 ADDAPI enum Sass_Import_Type ADDCALL sass_import_get_type(Sass_Import_Entry);
-ADDAPI void ADDCALL sass_import_set_type(Sass_Import_Entry, enum Sass_Import_Type);
 
 // Explicit functions to take ownership of these items
 // The property on our struct will be reset to NULL

@@ -27,14 +27,16 @@ namespace Sass {
 
   void SourceWithPath::detectType()
   {
-    if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
-      type = SASS_IMPORT_CSS;
-    }
-    else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
-      type = SASS_IMPORT_SASS;
-    }
-    else {
-      type = SASS_IMPORT_SCSS;
+    if (type == SASS_IMPORT_AUTO) {
+      if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
+        type = SASS_IMPORT_CSS;
+      }
+      else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
+        type = SASS_IMPORT_SASS;
+      }
+      else {
+        type = SASS_IMPORT_SCSS;
+      }
     }
   }
 
@@ -199,7 +201,7 @@ namespace Sass {
 
   size_t SourceItpl::countLines()
   {
-    return pstate.source->countLines()
+    return pstate.getSource()->countLines()
       // Minus lines to replace
       - pstate.span.line - 1
       // Plus lines from insert
@@ -208,6 +210,7 @@ namespace Sass {
 
   sass::string SourceItpl::getLine(size_t line)
   {
+    SourceData* source(pstate.getSource());
     // Calculate last line of insert
     size_t lastLine = pstate.position.line - 1
       + SourceString::countLines();
@@ -221,12 +224,12 @@ namespace Sass {
 
     // Get full line before insert
     if (line < pstate.position.line) {
-      return pstate.source->getLine(line);
+      return source->getLine(line);
     }
     // Fetch first line of insert
     else if (line == pstate.position.line) {
       // Get the line of around to get before part
-      sass::string before(pstate.source->getLine(line));
+      sass::string before(source->getLine(line));
       // Check if pstate offset only spans one line
       // Therefore we need to insert into the line
       // Size of `2` means we have only `start` and `end`
@@ -234,7 +237,7 @@ namespace Sass {
         // We remove some lines, need to doctor
         // those together to one single line
         if (pstate.span.line > 0) {
-          sass::string after(pstate.source->getLine(
+          sass::string after(source->getLine(
             line + pstate.span.line));
           return Unicode::replace(before,
             pstate.position.column,
@@ -270,7 +273,7 @@ namespace Sass {
     else if (line == lastLine) {
       // Get line to append
       sass::string after(
-        pstate.source->getLine(
+        source->getLine(
           line - lineDelta));
       // Calculate column to cut appending line
       size_t col = pstate.span.line == 0
@@ -284,7 +287,7 @@ namespace Sass {
           col, sass::string::npos);
     }
     else {
-      return pstate.source->getLine(
+      return source->getLine(
         line - lineDelta);
     }
     return sass::string();
