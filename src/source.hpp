@@ -76,6 +76,8 @@ namespace Sass {
     // Unique source id
     size_t srcid;
 
+    // Also store srcmap
+
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
     // Columns per line can be derived from it.

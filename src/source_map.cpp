@@ -21,7 +21,7 @@ namespace Sass {
 
     const bool include_sources = ctx.c_options.source_map_contents;
     const sass::vector<sass::string> links = ctx.srcmap_links;
-    const sass::vector<Resource>& sources(ctx.resources);
+    const sass::vector<SourceDataObj>& sources(ctx.sources);
 
     JsonNode* json_srcmap = json_mkobject();
 
@@ -60,8 +60,8 @@ namespace Sass {
     if (include_sources && source_index.size()) {
       JsonNode *json_contents = json_mkarray();
       for (size_t i = 0; i < source_index.size(); ++i) {
-        const Resource& resource(sources[source_index[i]]);
-        JsonNode *json_content = json_mkstring(resource.contents);
+        const SourceDataObj& resource(sources[source_index[i]]);
+        JsonNode *json_content = json_mkstring(resource->begin());
         json_append_element(json_contents, json_content);
       }
       json_append_member(json_srcmap, "sourcesContent", json_contents);

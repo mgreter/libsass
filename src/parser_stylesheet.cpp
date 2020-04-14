@@ -33,7 +33,7 @@ namespace Sass {
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
     // check seems a bit esoteric but works
-    if (context.resources.size() == 1) {
+    if (context.sources.size() == 1) {
       // apply headers only on very first include
       context.apply_custom_headers2(statements, pstate);
     }
@@ -65,7 +65,7 @@ namespace Sass {
     Block_Obj root = SASS_MEMORY_NEW(Block, pstate, 0, true);
 
     // check seems a bit esoteric but works
-    if (context.resources.size() == 1) {
+    if (context.sources.size() == 1) {
       // apply headers only on very first include
       context.apply_custom_headers2(statements, pstate);
     }

@@ -2276,7 +2276,7 @@ namespace Sass {
     Sass_Import_Entry import = sass_make_import(
       include.imp_path.c_str(),
       include.abs_path.c_str(),
-      sheet.contents, sheet.srcmap
+      0, 0
     );
     import->type = sheet.syntax;
 

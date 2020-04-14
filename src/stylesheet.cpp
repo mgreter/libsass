@@ -7,20 +7,11 @@
 namespace Sass {
 
   // Constructor
-  Sass::StyleSheet::StyleSheet(const Resource& res, Block_Obj root) :
-    Resource(res),
+  Sass::StyleSheet::StyleSheet(SourceData* source, Block_Obj root) :
+    source(source),
     plainCss(false),
     syntax(SASS_IMPORT_AUTO),
     root(root)
-  {
-  }
-
-  StyleSheet::StyleSheet(const StyleSheet& sheet) :
-    Resource(sheet),
-    plainCss(sheet.plainCss),
-    syntax(sheet.syntax),
-    root(sheet.root)
-  {
-  }
+  {}
 
 }

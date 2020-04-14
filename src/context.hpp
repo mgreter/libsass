@@ -66,14 +66,16 @@ namespace Sass {
 
     // resources add under our control
     // these are guaranteed to be freed
-    sass::vector<char*> strings2;
-    sass::vector<Resource> resources;
+    sass::vector<SourceDataObj> sources;
+
+    // Sheets are filled after resources are parsed
     std::map<const sass::string, StyleSheet> sheets;
+
     ImporterStack import_stack;
     sass::vector<Sass_Callee> callee_stack;
 
     EnvKeyMap<CallableObj> functions;
-    // EnvKeyMap<BuiltInCallableObj> builtins;
+    // EnvKeyMap<BuiltInCallableObj> built-ins;
     // EnvKeyMap<ExternalCallableObj> externals;
 
     Extender extender;
@@ -114,8 +116,8 @@ namespace Sass {
     virtual char* render_srcmap();
     virtual char* render_stderr();
 
-    void register_resource(const Include&, const Resource&);
-    void register_resource(const Include&, const Resource&, SourceSpan&);
+    void register_resource(const Include&, char* contents, char* srcmap);
+    void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 
     // search for valid imports (e.g. partials) on the file-system
     // returns multiple valid result for ambiguous import path

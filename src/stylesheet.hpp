@@ -8,17 +8,20 @@
 #include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
 #include "extender.hpp"
+#include "source.hpp"
 #include "file.hpp"
 
 namespace Sass {
 
   // parsed stylesheet from loaded resource
   // this should be a `Module` for sass 4.0
-  class StyleSheet : public Resource {
+  class StyleSheet {
     public:
 
       // Whether this was parsed from a plain CSS stylesheet.
       bool plainCss;
+
+      SourceDataObj source;
 
       // The canonical URL for this module's source file. This may be `null`
       // if the module was loaded from a string without a URL provided.
@@ -51,10 +54,7 @@ namespace Sass {
     public:
 
       // default argument constructor
-      StyleSheet(const Resource& res, Block_Obj root);
-
-      // Copy constructor
-      StyleSheet(const StyleSheet& res);
+      StyleSheet(SourceData* source, Block_Obj root);
 
   };
 

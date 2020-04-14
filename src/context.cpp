@@ -59,8 +59,7 @@ namespace Sass {
     varRoot(),
     // callStack(),
     logger(new Logger(sass_option_get_precision(&c_ctx), c_ctx.logstyle)),
-    strings2(),
-    resources(),
+    sources(),
     sheets(),
     import_stack(),
     callee_stack(),
@@ -127,11 +126,6 @@ namespace Sass {
 
   Context::~Context()
   {
-    // resources were allocated by malloc
-    for (size_t i = 0; i < resources.size(); ++i) {
-      free(resources[i].contents);
-      free(resources[i].srcmap);
-    }
     // free all strings we kept alive during compiler execution
     // for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
     // everything that gets put into sources will be freed by us
@@ -142,7 +136,8 @@ namespace Sass {
       sass_delete_import(import_stack[m]);
     }
     // clear inner structures (vectors) and input source
-    resources.clear(); import_stack.clear();
+    import_stack.clear();
+    sources.clear();
     sheets.clear();
     functions.clear();
     // builtins.clear();
@@ -153,11 +148,6 @@ namespace Sass {
 
   Data_Context::~Data_Context()
   {
-    // --> this will be freed by resources
-    // make sure we free the source even if not processed!
-    // if (resources.size() == 0 && source_c_str) free(source_c_str);
-    // if (resources.size() == 0 && srcmap_c_str) free(srcmap_c_str);
-    // source_c_str = 0; srcmap_c_str = 0;
   }
 
   File_Context::~File_Context()
@@ -225,8 +215,10 @@ namespace Sass {
 
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
-  void Context::register_resource(const Include& inc, const Resource& res)
+  void Context::register_resource(const Include& inc, char* contents, char* srcmap)
   {
+
+
 
     // do not parse same resource twice
     // maybe raise an error in this case
@@ -237,17 +229,18 @@ namespace Sass {
     // }
 
     // get index for this resource
-    size_t idx = resources.size();
+    size_t idx = sources.size();
+
+    // Append to the resources
+    sources.emplace_back(SASS_MEMORY_NEW(SourceFile,
+      inc.abs_path.c_str(), contents, idx));
 
     // tell emitter about new resource
     emitter.add_source_index(idx);
 
-    // put resources under our control
-    // the memory will be freed later
-    resources.emplace_back(res);
-
     // add a relative link to the working directory
     included_files.emplace_back(inc.abs_path);
+
     // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(inc.abs_path, source_map_file, CWD));
 
@@ -255,8 +248,8 @@ namespace Sass {
     Sass_Import_Entry import = sass_make_import(
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
-      res.contents,
-      res.srcmap
+      contents,
+      srcmap
     );
 
     if (StringUtils::endsWithIgnoreCase(inc.abs_path, ".css", 4)) {
@@ -275,15 +268,7 @@ namespace Sass {
     // get pointer to the loaded content
 
   // This should already be File(Re)Sources
-    const char* contents = resources[idx].contents;
-
-    // keep a copy of the path around (for parserstates)
-    // ToDo: we clean it, but still not very elegant!?
-    // strings2.emplace_back(sass_copy_c_string(inc.abs_path.c_str()));
-    // create the initial parser state from resource
-    // SourceSpan pstate(strings.back(), contents, idx);
-    // SourceSpan pstate(SourceSpan(inc.abs_path.c_str()));
-
+    // const char* contents = sources[idx]->begin();
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -311,8 +296,10 @@ namespace Sass {
     // callStackFrame frame(*logger,
     //   BackTrace("[import]", "@import"));
 
-    auto source = SASS_MEMORY_NEW(SourceFile,
-      inc, contents, idx);
+    auto source = sources.back();
+
+    // auto source = SASS_MEMORY_NEW(SourceFile,
+    //   inc, contents, idx);
 
     if (import->type == SASS_IMPORT_CSS)
     {
@@ -344,7 +331,7 @@ namespace Sass {
       root = parser.parse7();
     }
 
-    StyleSheet stylesheet(res, root);
+    StyleSheet stylesheet(source, root);
     stylesheet.plainCss = isPlainCss;
     stylesheet.syntax = import->type;
 
@@ -362,12 +349,12 @@ namespace Sass {
 
   // register include with resolved path and its content
   // memory of the resources will be freed by us on exit
-  void Context::register_resource(const Include& inc, const Resource& res, SourceSpan& prstate)
+  void Context::register_resource(const Include& inc, char* contents, char* srcmap, SourceSpan& prstate)
   {
     // Add a call stack frame
     callStackFrame frame(*logger,
       BackTrace(prstate, Strings::importRule));
-    register_resource(inc, res);
+    register_resource(inc, contents, srcmap);
   }
 
   // Add a new import to the context (called from `import_url`)
@@ -395,8 +382,9 @@ namespace Sass {
       // try to read the content of the resolved file entry
       // the memory buffer returned must be freed by us!
       if (char* contents = slurp_file(resolved[0].abs_path, CWD)) {
+
         // register the newly resolved file resource
-        register_resource(resolved[0], { contents, 0 }, pstate);
+        register_resource(resolved[0], contents, 0, pstate);
         // return resolved entry
         return resolved[0];
       }
@@ -445,7 +433,7 @@ namespace Sass {
           // handle error message passed back from custom importer
           // it may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, { source, srcmap }, pstate);
+            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->type }, source, srcmap, pstate);
             if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
             // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
             else {
@@ -468,7 +456,7 @@ namespace Sass {
             // imp->incs().emplace_back(include);
 
             // register the resource buffers
-            register_resource(include, { source, srcmap }, pstate);
+            register_resource(include, source, srcmap, pstate);
           }
           // only a path was returned
           // try to load it like normal
@@ -549,7 +537,7 @@ namespace Sass {
     // custom headers are added to the import instance
     call_headers2(entry_path, pstate.getPath(), pstate, rule);
     // increase head count to skip later
-    head_imports += resources.size() - 1;
+    head_imports += sources.size() - 1;
     // add the statement if we have urls
     // if (!imp->urls().empty()) statements.emplace_back(imp);
     // process all other resources (add Import_Stub nodes)
@@ -600,7 +588,7 @@ namespace Sass {
     prepareEnvironment();
 
     // create the source entry for file entry
-    register_resource({{ input_path, "." }, abs_path, type }, { contents, 0 });
+    register_resource({{ input_path, "." }, abs_path, type }, contents, 0);
 
     // create root ast tree node
     return compile();
@@ -621,8 +609,6 @@ namespace Sass {
 
     // ToDo: this may be resolved via custom importers
     sass::string abs_path(rel2abs(entry_path, ".", CWD));
-    // char* abs_path_c_str = sass_copy_c_string(abs_path.c_str());
-    // strings2.emplace_back(abs_path_c_str);
 
     // create entry only for the import stack
     Sass_Import_Entry import = sass_make_import(
@@ -638,7 +624,7 @@ namespace Sass {
     prepareEnvironment();
 
     // register a synthetic resource (path does not really exist, skip in includes)
-    register_resource({{ input_path, "." }, input_path, type }, { source_c_str, srcmap_c_str });
+    register_resource({{ input_path, "." }, input_path, type }, source_c_str, srcmap_c_str);
 
     // create root ast tree node
     return compile();
@@ -667,7 +653,7 @@ namespace Sass {
   {
 
     // abort if there is no data
-    if (resources.size() == 0) return {};
+    if (sources.size() == 0) return {};
     // get root block from the first style sheet
     StyleSheet sheet = sheets.at(entry_path);
     Block_Obj root = sheet.root;
