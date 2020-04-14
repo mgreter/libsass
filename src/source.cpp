@@ -26,22 +26,6 @@ namespace Sass {
 
   SourceFile::SourceFile(
     const char* path,
-    const char* data,
-    size_t srcid) :
-    SourceData(),
-    // Make a copy, delete when destroyed
-    path(sass_copy_c_string(path)),
-    data(sass_copy_c_string(data)),
-    length(0),
-    srcid(srcid),
-    lfs()
-  {
-    length = strlen(data);
-  }
-
-
-  SourceFile::SourceFile(
-    const char* path,
     sass::string&& data,
     size_t srcid) :
     SourceData(),
@@ -53,21 +37,6 @@ namespace Sass {
     lfs()
   {
     length = strlen(data.c_str());
-  }
-
-  SourceFile::SourceFile(
-    const Include& include,
-    const char* data,
-    size_t srcid) :
-    SourceData(),
-    // Make a copy, delete when destroyed
-    path(sass_copy_c_string(include.abs_path.c_str())),
-    data(sass_copy_c_string(data)),
-    length(0),
-    srcid(srcid),
-    lfs()
-  {
-    length = strlen(data);
   }
 
   SourceFile::SourceFile(

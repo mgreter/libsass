@@ -91,31 +91,12 @@ namespace Sass {
 
     // Constructor will copy `path` and `data`.
     // Will be destroyed when we go out of scope.
-    SourceFile(
-      const char* path,
-      const char* data,
-      size_t srcid);
-/*
-    SourceFile(
-      const char* path,
-      const sass::string& data,
-      size_t srcid);
-      */
+
     SourceFile(
       const char* path,
       sass::string&& data,
       size_t srcid);
 
-    SourceFile(
-      const Include& include,
-      const char* data,
-      size_t srcid);
-    /*
-    SourceFile(
-      const Include& include,
-      const sass::string& data,
-      size_t srcid);
-      */
     SourceFile(
       const Include& include,
       sass::string&& data,
