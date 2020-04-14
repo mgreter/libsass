@@ -12,19 +12,17 @@ namespace Sass {
 
   ExternalCallable* make_c_function2(Sass_Function_Entry c_func, Context& ctx)
   {
-    const char* sig = sass_function_get_signature(c_func);
+    sass::string sig(sass_function_get_signature(c_func));
     auto source = SASS_MEMORY_NEW(SourceFile,
-      "sass://signature", sig, -1);
-    ScssParser p2(ctx, source);
+      "sass://signature", std::move(sig), -1);
+    ScssParser parser(ctx, source);
     sass::string name;
-    if (p2.scanner.scanChar(Character::$at)) {
+    if (parser.scanner.scanChar(Character::$at)) {
       name = "@"; // allow @warn etc.
     }
-    name += p2.identifier();
-    ArgumentDeclarationObj params = p2.parseArgumentDeclaration2();
-    return SASS_MEMORY_NEW(ExternalCallable,
-      // SourceSpan("[c function]"),
-      name, params, c_func);
+    name += parser.identifier();
+    ArgumentDeclarationObj params = parser.parseArgumentDeclaration2();
+    return SASS_MEMORY_NEW(ExternalCallable, name, params, c_func);
   }
 
   Callable::Callable(

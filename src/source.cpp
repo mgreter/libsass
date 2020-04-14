@@ -18,18 +18,18 @@ namespace Sass {
 
   SourceData::SourceData()
     : SharedObj()
-  {
-  }
+  {}
 
   /*#########################################################################*/
   /*#########################################################################*/
 
   SourceFile::SourceFile(
-    const char* path,
+    const char* abspath,
     sass::string&& src,
     size_t srcid) :
     SourceData(),
-    path(path ? path : ""),
+    imp_path(abspath ? abspath : ""),
+    abs_path(abspath ? abspath : ""),
     data(std::move(src)),
     length(data.length()),
     srcid(srcid),
@@ -42,7 +42,8 @@ namespace Sass {
     sass::string&& src,
     size_t srcid) :
     SourceData(),
-    path(include.abs_path),
+    imp_path(include.imp_path),
+    abs_path(include.abs_path),
     data(std::move(src)),
     length(data.length()),
     srcid(srcid),
@@ -87,18 +88,7 @@ namespace Sass {
 
   /*#########################################################################*/
   /*#########################################################################*/
-  /*
-  ItplFile2::ItplFile2(
-    const char* data,
-    SourceSpan pstate) :
-    SourceFile(
-      pstate.getAbsPath(),
-      data,
-      pstate.getSrcId()),
-    pstate(pstate)
-  {
-  }
-  */
+
   ItplFile2::ItplFile2(sass::string&& data,
     SourceSpan pstate) :
     SourceFile(
@@ -108,7 +98,6 @@ namespace Sass {
     pstate(pstate)
   {
   }
-
 
   SourceSpan ItplFile2::adjustSourceSpan(SourceSpan& pstate) const
   {

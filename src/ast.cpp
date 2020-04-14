@@ -615,14 +615,6 @@ namespace Sass {
     return (all() || rule()) != include();
   }
 
-  //AtRootQuery* AtRootQuery::parse(const sass::string& contents, Context& ctx)
-  //{
-  //  SourceFileObj source = SASS_MEMORY_NEW(SourceData,
-  //    "sass://parse-at-root-query", contents.c_str(), -1);
-  //  AtRootQueryParser parser(ctx, source);
-  //  return parser.parse();
-  //}
-
   AtRootQuery* AtRootQuery::parse(SourceData* source, Context& ctx)
   {
     AtRootQueryParser parser(ctx, source);

@@ -18,7 +18,6 @@ namespace Sass {
 
     friend class ItplFile;
     friend class ItplFile2;
-    friend class SourceData;
 
   protected:
 
@@ -64,8 +63,10 @@ namespace Sass {
   protected:
 
     // Import path
-    // should probably use std::string anyway?
-    sass::string path;
+    sass::string imp_path;
+
+    // Resolved path
+    sass::string abs_path;
 
     // Raw source data
     sass::string data;
@@ -103,10 +104,7 @@ namespace Sass {
       size_t srcid);
 
     // Destructor
-    ~SourceFile() {
-      // sass_free_memory(path);
-      // sass_free_memory(data);
-    }
+    ~SourceFile() {}
 
     // Returns the requested line. Will take interpolations into
     // account to show more accurate debug messages. Calling this
@@ -136,7 +134,7 @@ namespace Sass {
     // Return path as it was given for import
     const char* getAbsPath() const
 		{
-      return path.c_str();
+      return abs_path.c_str();
     }
 
     // The source id is uniquely assigned
@@ -150,43 +148,6 @@ namespace Sass {
     }
 
   };
-
-  class ItplFile :
-    public SourceFile {
-
-  protected:
-
-    // Account additional lines if needed.
-    size_t countLines() override final;
-
-  private:
-
-    // The original source where the interpolation occurred.
-    SourceFileObj around;
-
-    // The position where the interpolation occurred.
-    SourceSpan pstate;
-
-  public:
-
-    // Create a synthetic interpolated source. The `data` is the
-    // evaluated interpolation, while `around` is the original source
-    // where the actual interpolation was given at `pstate` position.
-    ItplFile(const char* data,
-      SourceFileObj around,
-      SourceSpan pstate);
-
-    // Returns source with interpolation inserted.
-    sass::string getLine(size_t line) override final;
-
-    // Returns adjusted source span with interpolation in mind.
-    // The input `pstate` is relative to the interpolation, will
-    // return a source span with absolute position in regard of
-    // the original document with the interpolation inserted.
-    SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
-
-  };
-
 
   class ItplFile2 :
     public SourceFile {
@@ -207,9 +168,6 @@ namespace Sass {
     // Create a synthetic interpolated source. The `data` is the
     // evaluated interpolation, while `around` is the original source
     // where the actual interpolation was given at `pstate` position.
-    //ItplFile2(const char* data,
-    //  SourceSpan pstate);
-
     ItplFile2(sass::string&& data,
       SourceSpan pstate);
 

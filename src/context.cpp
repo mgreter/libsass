@@ -737,10 +737,10 @@ namespace Sass {
       return includes;
   }
 
-  void register_built_in_function(Context& ctx, sass::string name, sass::string prototype, SassFnSig cb)
+  void register_built_in_function(Context& ctx, sass::string name, const sass::string& signature, SassFnSig cb)
   {
     auto source = SASS_MEMORY_NEW(SourceFile,
-      "sass://built-in", "(" + prototype + ")", -1);
+      "sass://signature", "(" + signature + ")", -1);
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
     BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     ctx.functions.insert(std::make_pair(name, callable));
@@ -761,7 +761,7 @@ namespace Sass {
     SassFnPairs pairs;
     for (auto overload : overloads) {
       SourceDataObj source = SASS_MEMORY_NEW(SourceFile,
-        "sass://built-in", "(" + overload.first + ")", sass::string::npos);
+        "sass://signature", "(" + overload.first + ")", -1);
       ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
