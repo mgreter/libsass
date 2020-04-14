@@ -27,8 +27,11 @@ namespace Sass
 		/** Return the attach source id **/
 		size_t getSrcId() const;
 
-		// Return the attached source path
-		const char* getAbsPath() const;
+    // Return the attached source path
+    const char* getImpPath() const;
+
+    // Return the attached source path
+    const char* getAbsPath() const;
 
 		// Return the attached source
 		SourceData* getSource() const;

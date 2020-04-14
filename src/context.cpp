@@ -233,7 +233,7 @@ namespace Sass {
 
     // Append to the resources
     sources.emplace_back(SASS_MEMORY_NEW(SourceFile,
-      inc.abs_path.c_str(), contents, idx));
+      inc, contents, idx));
 
     // tell emitter about new resource
     emitter.add_source_index(idx);
@@ -727,20 +727,20 @@ namespace Sass {
   // we probably always want to skip the header includes?
   sass::vector<sass::string> Context::get_included_files(bool skip, size_t headers)
   {
-      // create a copy of the vector for manipulations
-      sass::vector<sass::string> includes = included_files;
-      if (includes.size() == 0) return includes;
-      if (skip) { includes.erase( includes.begin(), includes.begin() + 1 + headers); }
-      else { includes.erase( includes.begin() + 1, includes.begin() + 1 + headers); }
-      includes.erase( std::unique( includes.begin(), includes.end() ), includes.end() );
-      std::sort( includes.begin() + (skip ? 0 : 1), includes.end() );
-      return includes;
+    // create a copy of the vector for manipulations
+    sass::vector<sass::string> includes = included_files;
+    if (includes.size() == 0) return includes;
+    if (skip) { includes.erase(includes.begin(), includes.begin() + 1 + headers); }
+    else { includes.erase(includes.begin() + 1, includes.begin() + 1 + headers); }
+    includes.erase(std::unique(includes.begin(), includes.end()), includes.end());
+    std::sort(includes.begin() + (skip ? 0 : 1), includes.end());
+    return includes;
   }
 
   void register_built_in_function(Context& ctx, sass::string name, const sass::string& signature, SassFnSig cb)
   {
     auto source = SASS_MEMORY_NEW(SourceFile,
-      "sass://signature", "(" + signature + ")", -1);
+      true, "sass://signature", "(" + signature + ")", -1);
     ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
     BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     ctx.functions.insert(std::make_pair(name, callable));
@@ -748,20 +748,13 @@ namespace Sass {
     ctx.fnCache.push_back(callable);
   }
 
-  void register_external_function(Context& ctx, sass::string name, sass::string prototype, Sass_Function_Entry cb)
-  {
-    // ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, prototype);
-    // ctx.builtins.insert(std::make_pair(name, new ExternalCallable(name, args, cb)));
-  }
-
-
   void register_built_in_overloads(Context& ctx, sass::string name,
     std::vector<std::pair<sass::string, SassFnSig>> overloads)
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
       SourceDataObj source = SASS_MEMORY_NEW(SourceFile,
-        "sass://signature", "(" + overload.first + ")", -1);
+        true, "sass://signature", "(" + overload.first + ")", -1);
       ArgumentDeclaration* args = ArgumentDeclaration::parse(ctx, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }

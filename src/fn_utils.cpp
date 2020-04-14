@@ -14,7 +14,7 @@ namespace Sass {
   {
     sass::string sig(sass_function_get_signature(c_func));
     auto source = SASS_MEMORY_NEW(SourceFile,
-      "sass://signature", std::move(sig), -1);
+      true, "sass://signature", std::move(sig), -1);
     ScssParser parser(ctx, source);
     sass::string name;
     if (parser.scanner.scanChar(Character::$at)) {

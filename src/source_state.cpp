@@ -24,12 +24,18 @@ namespace Sass
 	}
 
   /// Return the attached source path
-	const char* SourceState::getAbsPath() const
+	const char* SourceState::getImpPath() const
 	{
-		return source->getAbsPath();
+		return source->getImpPath();
 	}
 
-	const char* SourceState::getRawData() const
+  /// Return the attached source path
+  const char* SourceState::getAbsPath() const
+  {
+    return source->getAbsPath();
+  }
+
+  const char* SourceState::getRawData() const
 	{
 		return source->begin();
 	}

@@ -34,6 +34,9 @@ namespace Sass {
     virtual size_t getSrcId() const = 0;
 
     // Return path as it was given for import
+    virtual const char* getImpPath() const = 0;
+
+    // Return path as it was given for import
     virtual const char* getAbsPath() const = 0;
 
     // Returns the requested line. Will take interpolations into
@@ -94,6 +97,7 @@ namespace Sass {
     // Will be destroyed when we go out of scope.
 
     SourceFile(
+      bool foo,
       const char* path,
       sass::string&& data,
       size_t srcid);
@@ -132,8 +136,14 @@ namespace Sass {
     }
 
     // Return path as it was given for import
+    const char* getImpPath() const
+    {
+      return imp_path.c_str();
+    }
+
+    // Return path after it was resolved
     const char* getAbsPath() const
-		{
+    {
       return abs_path.c_str();
     }
 

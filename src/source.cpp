@@ -24,6 +24,7 @@ namespace Sass {
   /*#########################################################################*/
 
   SourceFile::SourceFile(
+    bool foo,
     const char* abspath,
     sass::string&& src,
     size_t srcid) :
@@ -92,6 +93,7 @@ namespace Sass {
   ItplFile2::ItplFile2(sass::string&& data,
     SourceSpan pstate) :
     SourceFile(
+      pstate.getAbsPath(),
       pstate.getAbsPath(),
       std::move(data),
       pstate.getSrcId()),
