@@ -120,8 +120,7 @@ namespace Sass {
     /// the same set of variable names no matter how it's evaluated.
     // final _globalVariables = normalizedMap<VariableDeclaration>();
 
-    sass::vector<StatementObj> parse();
-    BlockObj parse7();
+    BlockObj parse();
 
     // VariableDeclaration
     virtual Statement* variableDeclaration();

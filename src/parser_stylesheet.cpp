@@ -20,7 +20,7 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  BlockObj StylesheetParser::parse7()
+  BlockObj StylesheetParser::parse()
   {
 
     // skip over optional utf8 bom
@@ -46,45 +46,6 @@ namespace Sass {
     scanner.expectDone();
 
     return SASS_MEMORY_NEW(Block, scanner.relevantSpanFrom(start), statements, true);
-
-  }
-
-  sass::vector<StatementObj> StylesheetParser::parse()
-  {
-    // wrapSpanFormatException
-
-    // const char* start = scanner.position;
-    // Allow a byte-order mark at the beginning of the document.
-    // scanner.scanChar(0xFEFF);
-
-    scanner.scan(Strings::utf8bom);
-
-    sass::vector<StatementObj> statements;
-
-    SourceSpan pstate(scanner.relevantSpan());
-    Block_Obj root = SASS_MEMORY_NEW(Block, pstate, 0, true);
-
-    // check seems a bit esoteric but works
-    if (context.sources.size() == 1) {
-      // apply headers only on very first include
-      context.apply_custom_headers2(statements, pstate);
-    }
-
-    root->concat(this->statements(&StylesheetParser::_rootStatement));
-
-    scanner.expectDone();
-
-    /// Ensure that all gloal variable assignments produce a variable in this
-    /// stylesheet, even if they aren't evaluated. See sass/language#50.
-    /*statements.addAll(_globalVariables.values.map((declaration) = >
-      VariableDeclaration(declaration.name,
-        NullExpression(declaration.expression.span), declaration.span,
-        guarded: true)));*/
-
-    // return Stylesheet(statements, scanner.rawSpanFrom(start),
-    //   plainCss: plainCss);
-
-    return root->elements();
 
   }
 

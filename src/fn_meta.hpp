@@ -26,29 +26,7 @@ namespace Sass {
       BUILT_IN_FN(getFunction);
       BUILT_IN_FN(call);
 
-      void registerFunctions(Context& ctx)
-      {
-
-        // Meta functions
-        ctx.registerBuiltInFunction("feature-exists", "$feature", featureExists);
-        ctx.registerBuiltInFunction("type-of", "$value", typeOf);
-        ctx.registerBuiltInFunction("inspect", "$value", inspect);
-        ctx.registerBuiltInFunction("keywords", "$args", keywords);
-
-        // ToDo: dart-sass keeps them on the local environment scope, see below:
-        // These functions are defined in the context of the evaluator because
-        // they need access to the [_environment] or other local state.
-        ctx.registerBuiltInFunction("global-variable-exists", "$name, $module: null", globalVariableExists);
-        ctx.registerBuiltInFunction("variable-exists", "$name", variableExists);
-        ctx.registerBuiltInFunction("function-exists", "$name, $module: null", functionExists);
-        ctx.registerBuiltInFunction("mixin-exists", "$name, $module: null", mixinExists);
-        ctx.registerBuiltInFunction("content-exists", "", contentExists);
-        // ctx.registerBuiltInFunction("module-variables", "$module", moduleVariables);
-        // ctx.registerBuiltInFunction("module-functions", "$module", moduleFunctions);
-        ctx.registerBuiltInFunction("get-function", "$name, $css: false, $module: null", getFunction);
-        ctx.registerBuiltInFunction("call", "$function, $args...", call);
-
-      }
+      void registerFunctions(Context& ctx);
 
     }
 

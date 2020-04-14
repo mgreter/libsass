@@ -217,21 +217,19 @@ namespace Sass {
   void Context::register_import(Sass_Import_Entry& import)
   {
 
-    const sass::string& abs_path(import->srcdata->getAbsPath());
-
-    // get index for this resource
-    SourceDataObj source = import->srcdata;
+    SourceData* source = import->srcdata;
+    const sass::string& abs_path(source->getAbsPath());
     size_t idx = sources.size();
     source->setSrcIdx(idx);
 
     // Append to the resources
     sources.emplace_back(source);
 
-    // add a relative link to the working directory
-    included_files.emplace_back(abs_path);
-
     // tell emitter about new resource
     emitter.add_source_index(idx);
+
+    // add a relative link to the working directory
+    included_files.emplace_back(abs_path);
 
     // add a relative link to the source map output file
     srcmap_links.emplace_back(abs2rel(abs_path, source_map_file, CWD));
@@ -239,11 +237,6 @@ namespace Sass {
     // add the entry to the stack
     import_stack.emplace_back(import);
     importStack.emplace_back(sources.back());
-
-    // get pointer to the loaded content
-
-  // This should already be File(Re)Sources
-    // const char* contents = sources[idx]->begin();
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -258,53 +251,35 @@ namespace Sass {
         // implement error throw directly until we
         // decided how to handle full stack traces
         throw Exception::InvalidSyntax(*logger, stack);
-        // error(stack, prstate ? *prstate : pstate, import_stack);
       }
     }
 
     Block_Obj root;
-
     bool isPlainCss = false;
 
     // callStackFrame frame(*logger,
     //   BackTrace("[import]", "@import"));
 
-    // auto source = SASS_MEMORY_NEW(SourceFile,
-    //   inc, contents, idx);
-
-    if (import->srcdata->getType() == SASS_IMPORT_CSS)
+    if (source->getType() == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, source);
-      // take control of these buffers
-      // sass_import_take_source(import);
-      // sass_import_take_srcmap(import);
-      // then parse the root block
-      root = parser.parse7();
-      // mark as pure css
+      root = parser.parse();
       isPlainCss = true;
     }
-    else if (import->srcdata->getType() == SASS_IMPORT_SASS)
+    else if (source->getType() == SASS_IMPORT_SASS)
     {
       SassParser parser(*this, source);
-      // do not yet dispose these buffers
-      // sass_import_take_source(import);
-      // sass_import_take_srcmap(import);
-      // then parse the root block
-      root = parser.parse7();
+      root = parser.parse();
     }
     else {
       // create a parser instance from the given c_str buffer
       ScssParser parser(*this, source);
-      // do not yet dispose these buffers
-      // sass_import_take_source(import);
-      // sass_import_take_srcmap(import);
-      // then parse the root block
-      root = parser.parse7();
+      root = parser.parse();
     }
 
     StyleSheet stylesheet(source, root);
+    stylesheet.syntax = source->getType();
     stylesheet.plainCss = isPlainCss;
-    stylesheet.syntax = import->srcdata->getType();
 
     // remove current stack frame
     import_stack.pop_back();
@@ -313,7 +288,8 @@ namespace Sass {
     // create key/value pair for ast node
     std::pair<const sass::string, StyleSheet>
       ast_pair(abs_path, stylesheet);
-    // register resulting resource
+
+    // register the result
     sheets.insert(ast_pair);
 
   }
@@ -324,11 +300,11 @@ namespace Sass {
   {
 
     // get pointer to the loaded content
-    Sass_Import_Entry import = sass_make_import(
+    Sass_Import_Entry import = sass_make_import2(
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
-      contents,
-      srcmap
+      contents, srcmap,
+      inc.type
     );
 
     register_import(import);
@@ -490,7 +466,6 @@ namespace Sass {
     return has_import;
   }
 
-  void register_built_in_functions(Context&);
   void register_c_function2(Context&, Sass_Function_Entry);
 
   char* Context::render(Block_Obj root)
@@ -627,8 +602,7 @@ namespace Sass {
   void Context::prepareEnvironment()
   {
 
-    // register built-in functions on env
-    register_built_in_functions();
+    loadBuiltInFunctions();
 
     varStack.push_back(&varRoot);
 
@@ -732,6 +706,38 @@ namespace Sass {
   }
 
 
+
+  /*
+  union Sass_Value* customSassFn(
+    const union Sass_Value* s_args,
+    void* cookie
+  ) {
+    return sass_clone_value(s_args);
+  }
+
+  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct Sass_Compiler* compiler)
+  {
+    // we actually abuse the void* to store an "int"
+    return sass_clone_value(v);
+  }
+  */
+
+
+  void register_c_function2(Context& ctx, Sass_Function_Entry descr)
+  {
+    EnvFrame local(&ctx.varRoot, true);
+    ScopedStackFrame<EnvFrame> scoped(ctx.varStack, &local);
+    ExternalCallable* callable = make_c_function2(descr, ctx);
+    callable->idxs(local.getIdxs());
+    ctx.functions.insert(std::make_pair(callable->name(), callable));
+    ctx.varRoot.createFunction(callable->name());
+    ctx.fnCache.push_back(callable);
+  }
+
+  /*#########################################################################*/
+  // Interface for built in functions
+  /*#########################################################################*/
+
   void Context::registerBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
@@ -760,35 +766,8 @@ namespace Sass {
     fnCache.push_back(callable);
   }
 
-  /*
-  union Sass_Value* customSassFn(
-    const union Sass_Value* s_args,
-    void* cookie
-  ) {
-    return sass_clone_value(s_args);
-  }
-
-  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct Sass_Compiler* compiler)
+  void Context::loadBuiltInFunctions()
   {
-    // we actually abuse the void* to store an "int"
-    return sass_clone_value(v);
-  }
-  */
-
-  void Context::register_built_in_functions()
-  {
-    using namespace Functions;
-
-    // EnvFrame local(&ctx.varRoot, true);
-    // ScopedStackFrame<EnvFrame>
-    //   scoped(ctx.varStack.root, &local);
-
-    // List Functions
-
-    // Map Functions
-
-    // Math Functions
-
     Functions::Lists::registerFunctions(*this);
     Functions::Maps::registerFunctions(*this);
     Functions::Math::registerFunctions(*this);
@@ -796,18 +775,9 @@ namespace Sass {
     Functions::Colors::registerFunctions(*this);
     Functions::Selectors::registerFunctions(*this);
     Functions::Meta::registerFunctions(*this);
-
   }
 
-  void register_c_function2(Context& ctx, Sass_Function_Entry descr)
-  {
-    EnvFrame local(&ctx.varRoot, true);
-    ScopedStackFrame<EnvFrame> scoped(ctx.varStack, &local);
-    ExternalCallable* callable = make_c_function2(descr, ctx);
-    callable->idxs(local.getIdxs());
-    ctx.functions.insert(std::make_pair(callable->name(), callable));
-    ctx.varRoot.createFunction(callable->name());
-    ctx.fnCache.push_back(callable);
-  }
+  /*#########################################################################*/
+  /*#########################################################################*/
 
 }

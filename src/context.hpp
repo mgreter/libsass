@@ -47,7 +47,7 @@ namespace Sass {
     void registerBuiltInOverloadFns(const sass::string& name,
       const std::vector<std::pair<sass::string, SassFnSig>>& overloads);
 
-    void register_built_in_functions();
+    void loadBuiltInFunctions();
 
 
     // Keep a copy of the current working directory.
