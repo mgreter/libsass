@@ -86,16 +86,20 @@ namespace Sass {
         // try to get import address for "libsass_load_importers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))
         {
-          Sass_Importer_List imps = plugin_load_importers(), _p = imps;
-          while (imps && *imps) { importers.emplace_back(*imps); ++ imps; }
-          sass_free_memory(_p); // only delete the container, items not yet
+          Sass_Importer_List imps = plugin_load_importers();
+          while (sass_importer_list_size(imps) > 0) {
+            importers.emplace_back(sass_importer_list_shift(imps));
+          }
+          sass_delete_importer_list(imps); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_headers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_headers, "libsass_load_headers"))
         {
-          Sass_Importer_List imps = plugin_load_headers(), _p = imps;
-          while (imps && *imps) { headers.emplace_back(*imps); ++ imps; }
-          sass_free_memory(_p); // only delete the container, items not yet
+          Sass_Importer_List imps = plugin_load_headers();
+          while (sass_importer_list_size(imps) > 0) {
+            headers.emplace_back(sass_importer_list_shift(imps));
+          }
+          sass_delete_importer_list(imps); // only delete the container, items not yet
         }
         // success
         return true;

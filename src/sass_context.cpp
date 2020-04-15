@@ -266,24 +266,8 @@ extern "C" {
     try {
       // register our custom functions
       cpp_ctx->add_c_functions(c_ctx->c_functions);
-
-      // register our custom headers
-      if (c_ctx->c_headers) {
-        auto this_head_data = c_ctx->c_headers;
-        while (this_head_data && *this_head_data) {
-          cpp_ctx->add_c_header(*this_head_data);
-          ++this_head_data;
-        }
-      }
-
-      // register our custom importers
-      if (c_ctx->c_importers) {
-        auto this_imp_data = c_ctx->c_importers;
-        while (this_imp_data && *this_imp_data) {
-          cpp_ctx->add_c_importer(*this_imp_data);
-          ++this_imp_data;
-        }
-      }
+      cpp_ctx->add_c_headers(c_ctx->c_headers);
+      cpp_ctx->add_c_importers(c_ctx->c_importers);
 
       // reset error status
       c_ctx->error_status = 0;

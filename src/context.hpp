@@ -172,7 +172,10 @@ namespace Sass {
     sass::vector<Sass_Function_Entry> c_functions;
 
     void add_c_header(Sass_Importer_Entry header);
+    void add_c_headers(Sass_Importer_List headers);
+
     void add_c_importer(Sass_Importer_Entry importer);
+    void add_c_importers(Sass_Importer_List importers);
 
     void add_c_function(Sass_Function_Entry function);
     void add_c_functions(Sass_Function_List functions);

@@ -18,6 +18,10 @@ struct Sass_Function_List2 : Sass::sass::vector<Sass_Function*> {
 
 };
 
+struct Sass_Importer_List2 : Sass::sass::vector<Sass_Importer_Entry> {
+
+};
+
 class SourceDataObj;
 
 // External import entry

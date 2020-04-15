@@ -31,6 +31,28 @@ extern "C" {
     return ptr;
   }
 
+  size_t ADDCALL sass_importer_list_size(Sass_Importer_List list)
+  {
+    return list == nullptr ? 0 : list->size();
+  }
+
+  Sass_Importer_Entry ADDCALL sass_importer_list_shift(Sass_Importer_List list)
+  {
+    if (list == nullptr) return nullptr;
+    if (list->empty()) return nullptr;
+    auto ptr = list->front();
+    list->erase(list->begin());
+    return ptr;
+  }
+
+  void ADDCALL sass_importer_list_push(Sass_Importer_List list, Sass_Importer_Entry importer)
+  {
+    if (list != nullptr) {
+      list->push_back(importer);
+    }
+  }
+
+
   void ADDCALL sass_function_list_push(Sass_Function_List list, Sass_Function_Entry fn)
   {
     if (list != nullptr) {
@@ -71,14 +93,14 @@ extern "C" {
   Sass_Function_Fn ADDCALL sass_function_get_function(Sass_Function_Entry cb) { return cb->function; }
   void* ADDCALL sass_function_get_cookie(Sass_Function_Entry cb) { return cb->cookie; }
 
-  Sass_Importer_Entry ADDCALL sass_make_importer(Sass_Importer_Fn importer, double priority, void* cookie)
+  Sass_Importer_Entry ADDCALL sass_make_importer(Sass_Importer_Fn fn, double priority, void* cookie)
   {
-    Sass_Importer_Entry cb = (Sass_Importer_Entry) calloc(1, sizeof(Sass_Importer));
-    if (cb == 0) return 0;
-    cb->importer = importer;
-    cb->priority = priority;
-    cb->cookie = cookie;
-    return cb;
+    Sass_Importer_Entry importer = new Sass_Importer{};
+    if (importer == 0) return 0;
+    importer->importer = fn;
+    importer->priority = priority;
+    importer->cookie = cookie;
+    return importer;
   }
 
   Sass_Importer_Fn ADDCALL sass_importer_get_function(Sass_Importer_Entry cb) { return cb->importer; }
@@ -86,31 +108,29 @@ extern "C" {
   void* ADDCALL sass_importer_get_cookie(Sass_Importer_Entry cb) { return cb->cookie; }
 
   // Just in case we have some stray import structs
-  void ADDCALL sass_delete_importer (Sass_Importer_Entry cb)
+  void ADDCALL sass_delete_importer (Sass_Importer_Entry importer)
   {
-    free(cb);
+    delete importer;
   }
 
   // Creator for sass custom importer function list
-  Sass_Importer_List ADDCALL sass_make_importer_list(uint32_t length)
+  Sass_Importer_List ADDCALL sass_make_importer_list()
   {
-    return (Sass_Importer_List) calloc(length + 1, sizeof(Sass_Importer_Entry));
+    return new Sass_Importer_List2{};
   }
 
   // Deallocator for the allocated memory
   void ADDCALL sass_delete_importer_list(Sass_Importer_List list)
   {
-    Sass_Importer_List it = list;
-    if (list == 0) return;
-    while(*list) {
-      sass_delete_importer(*list);
-      ++list;
+    if (list == nullptr) return;
+    for (auto importer : *list) {
+      sass_delete_importer(importer);
     }
-    free(it);
+    delete list;
   }
 
-  Sass_Importer_Entry ADDCALL sass_importer_get_list_entry(Sass_Importer_List list, uint32_t idx) { return list[idx]; }
-  void ADDCALL sass_importer_set_list_entry(Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry cb) { list[idx] = cb; }
+  // Sass_Importer_Entry ADDCALL sass_importer_get_list_entry(Sass_Importer_List list, uint32_t idx) { return list[idx]; }
+  // void ADDCALL sass_importer_set_list_entry(Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry cb) { list[idx] = cb; }
 
   // Creator for sass custom importer return argument list
   Sass_Import_List ADDCALL sass_make_import_list(uint32_t length)

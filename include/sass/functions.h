@@ -23,7 +23,7 @@ typedef struct Sass_Import (*Sass_Import_Entry);
 typedef struct Sass_Import* (*Sass_Import_List);
 // Typedef helpers for custom importer lists
 typedef struct Sass_Importer (*Sass_Importer_Entry);
-typedef struct Sass_Importer* (*Sass_Importer_List);
+typedef struct Sass_Importer_List2 (*Sass_Importer_List);
 // Typedef defining importer signature and return type
 typedef Sass_Import_List (*Sass_Importer_Fn)
   (const char* url, Sass_Importer_Entry cb, struct Sass_Compiler* compiler);
@@ -52,10 +52,16 @@ enum Sass_Callee_Type {
 };
 
 // Creator for sass custom importer return argument list
-ADDAPI Sass_Importer_List ADDCALL sass_make_importer_list (uint32_t length);
-ADDAPI Sass_Importer_Entry ADDCALL sass_importer_get_list_entry (Sass_Importer_List list, uint32_t idx);
-ADDAPI void ADDCALL sass_importer_set_list_entry (Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry entry);
-ADDAPI void ADDCALL sass_delete_importer_list (Sass_Importer_List list);
+ADDAPI Sass_Importer_List ADDCALL sass_make_importer_list ();
+ADDAPI void ADDCALL sass_delete_importer_list(Sass_Importer_List list);
+ADDAPI size_t ADDCALL sass_importer_list_size(Sass_Importer_List list);
+ADDAPI Sass_Importer_Entry ADDCALL sass_importer_list_shift(Sass_Importer_List list);
+ADDAPI void ADDCALL sass_importer_list_push(Sass_Importer_List list, Sass_Importer_Entry);
+
+// ADDAPI Sass_Importer_Entry ADDCALL sass_importer_get_list_entry (Sass_Importer_List list, uint32_t idx);
+// ADDAPI void ADDCALL sass_importer_set_list_entry (Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry entry);
+
+
 
 
 // Creators for custom importer callback (with some additional pointer)
@@ -134,8 +140,8 @@ ADDAPI void ADDCALL sass_delete_function_list (Sass_Function_List list);
 
 
 // Setters and getters for callbacks on function lists
-ADDAPI Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos);
-ADDAPI void ADDCALL sass_function_set_list_entry(Sass_Function_List list, uint32_t pos, Sass_Function_Entry cb);
+// ADDAPI Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos);
+// ADDAPI void ADDCALL sass_function_set_list_entry(Sass_Function_List list, uint32_t pos, Sass_Function_Entry cb);
 
 // Getters for custom function descriptors
 ADDAPI const char* ADDCALL sass_function_get_signature (Sass_Function_Entry cb);

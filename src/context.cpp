@@ -115,6 +115,26 @@ namespace Sass {
     }
   }
 
+  void Context::add_c_headers(Sass_Importer_List headers)
+  {
+    if (headers == nullptr) return;
+    for (auto header : *headers) {
+      c_headers.emplace_back(header);
+    }
+    // need to sort the array afterwards (no big deal)
+    sort(c_importers.begin(), c_importers.end(), sort_importers);
+  }
+
+  void Context::add_c_importers(Sass_Importer_List importers)
+  {
+    if (importers == nullptr) return;
+    for (auto importer : *importers) {
+      c_importers.emplace_back(importer);
+    }
+    // need to sort the array afterwards (no big deal)
+    sort(c_importers.begin(), c_importers.end(), sort_importers);
+  }
+
   void Context::add_c_function(Sass_Function_Entry function)
   {
     c_functions.emplace_back(function);
@@ -126,6 +146,7 @@ namespace Sass {
     // need to sort the array afterwards (no big deal)
     sort (c_headers.begin(), c_headers.end(), sort_importers);
   }
+
   void Context::add_c_importer(Sass_Importer_Entry importer)
   {
     c_importers.emplace_back(importer);
