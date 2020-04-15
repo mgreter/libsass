@@ -392,7 +392,7 @@ namespace Sass {
 
   ComplexSelector::ComplexSelector(const SourceSpan& pstate)
     : Selector(pstate),
-    VectorizedBase(),
+    VectorizedNopsi(),
     chroots_(false),
     hasPreLineFeed_(false)
   {
@@ -401,7 +401,7 @@ namespace Sass {
   ComplexSelector::ComplexSelector(const SourceSpan& pstate,
     sass::vector<SelectorComponentObj>&& components) :
     Selector(pstate),
-    VectorizedBase(std::move(components)),
+    VectorizedNopsi(std::move(components)),
     chroots_(false),
     hasPreLineFeed_(false)
   {
@@ -411,7 +411,7 @@ namespace Sass {
 
   ComplexSelector::ComplexSelector(const ComplexSelector* ptr)
   : Selector(ptr),
-    VectorizedBase(ptr),
+    VectorizedNopsi(ptr),
     chroots_(ptr->chroots()),
     hasPreLineFeed_(ptr->hasPreLineFeed())
   {
@@ -528,7 +528,7 @@ namespace Sass {
 
   CompoundSelector::CompoundSelector(const SourceSpan& pstate, bool postLineBreak)
     : SelectorComponent(pstate, postLineBreak),
-      VectorizedBase(),
+      VectorizedNopsi(),
       hasRealParent_(false),
       extended_(false)
   {
@@ -539,7 +539,7 @@ namespace Sass {
     sass::vector<SimpleSelectorObj>&& selectors,
     bool postLineBreak) :
     SelectorComponent(pstate, postLineBreak),
-    VectorizedBase(std::move(selectors)),
+    VectorizedNopsi(std::move(selectors)),
     hasRealParent_(false),
     extended_(false)
   {
@@ -547,7 +547,7 @@ namespace Sass {
 
   CompoundSelector::CompoundSelector(const CompoundSelector* ptr)
     : SelectorComponent(ptr),
-      VectorizedBase(*ptr),
+    VectorizedNopsi(*ptr),
       hasRealParent_(ptr->hasRealParent()),
       extended_(ptr->extended())
   { }

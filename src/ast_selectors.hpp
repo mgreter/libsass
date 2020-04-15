@@ -367,7 +367,7 @@ namespace Sass {
   // Complex Selectors are itself a list of Compounds and Combinators
   // Between each item there is an implicit ancestor of combinator
   ////////////////////////////////////////////////////////////////////////////
-  class ComplexSelector final : public Selector, public VectorizedBase<SelectorComponent> {
+  class ComplexSelector final : public Selector, public VectorizedNopsi<SelectorComponent> {
     ADD_PROPERTY(bool, chroots)
     // line break before list separator
     ADD_PROPERTY(bool, hasPreLineFeed)
@@ -515,7 +515,7 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////////
   // A compound selector consists of multiple simple selectors
   ////////////////////////////////////////////////////////////////////////////
-  class CompoundSelector final : public SelectorComponent, public VectorizedBase<SimpleSelector> {
+  class CompoundSelector final : public SelectorComponent, public VectorizedNopsi<SimpleSelector> {
     ADD_PROPERTY(bool, hasRealParent)
     ADD_PROPERTY(bool, extended)
   public:
@@ -532,7 +532,7 @@ namespace Sass {
     bool isImpossible() const override final;
 
     bool empty() const override {
-      return VectorizedBase::empty();
+      return VectorizedNopsi::empty();
     }
 
     size_t hash() const override final;
