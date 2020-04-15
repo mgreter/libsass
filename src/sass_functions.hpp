@@ -14,6 +14,10 @@ struct Sass_Function {
   void* cookie;
 };
 
+struct Sass_Function_List2 : Sass::sass::vector<Sass_Function*> {
+
+};
+
 class SourceDataObj;
 
 // External import entry

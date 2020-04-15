@@ -30,7 +30,8 @@ typedef Sass_Import_List (*Sass_Importer_Fn)
 
 // Typedef helpers for custom functions lists
 typedef struct Sass_Function (*Sass_Function_Entry);
-typedef struct Sass_Function* (*Sass_Function_List);
+
+typedef struct Sass_Function_List2 (*Sass_Function_List);
 // Typedef defining function signature and return type
 typedef union Sass_Value* (*Sass_Function_Fn)
   (const union Sass_Value*, Sass_Function_Entry cb, struct Sass_Compiler* compiler);
@@ -122,10 +123,15 @@ ADDAPI void ADDCALL sass_delete_import (Sass_Import_Entry);
 
 
 // Creators for sass function list and function descriptors
-ADDAPI Sass_Function_List ADDCALL sass_make_function_list (uint32_t length);
+ADDAPI Sass_Function_List ADDCALL sass_make_function_list();
+ADDAPI size_t ADDCALL sass_function_list_size(Sass_Function_List list);
+ADDAPI Sass_Function_Entry ADDCALL sass_function_list_shift(Sass_Function_List list);
+ADDAPI void ADDCALL sass_function_list_push(Sass_Function_List list, Sass_Function_Entry);
+
 ADDAPI Sass_Function_Entry ADDCALL sass_make_function (const char* signature, Sass_Function_Fn cb, void* cookie);
 ADDAPI void ADDCALL sass_delete_function (Sass_Function_Entry entry);
 ADDAPI void ADDCALL sass_delete_function_list (Sass_Function_List list);
+
 
 // Setters and getters for callbacks on function lists
 ADDAPI Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos);

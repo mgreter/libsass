@@ -173,7 +173,9 @@ namespace Sass {
 
     void add_c_header(Sass_Importer_Entry header);
     void add_c_importer(Sass_Importer_Entry importer);
+
     void add_c_function(Sass_Function_Entry function);
+    void add_c_functions(Sass_Function_List functions);
 
     const sass::string indent; // String to be used for indentation
     const sass::string linefeed; // String to be used for line feeds

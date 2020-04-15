@@ -77,9 +77,11 @@ namespace Sass {
         // try to get import address for "libsass_load_functions"
         if (LOAD_LIB_FN(__plugin_load_fns__, plugin_load_functions, "libsass_load_functions"))
         {
-          Sass_Function_List fns = plugin_load_functions(), _p = fns;
-          while (fns && *fns) { functions.emplace_back(*fns); ++ fns; }
-          sass_free_memory(_p); // only delete the container, items not yet
+          Sass_Function_List fns = plugin_load_functions();
+          while (sass_function_list_size(fns) > 0) {
+            functions.emplace_back(sass_function_list_shift(fns));
+          }
+          sass_delete_function_list(fns); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_importers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))

@@ -107,10 +107,19 @@ namespace Sass {
 
   }
 
+  void Context::add_c_functions(Sass_Function_List functions)
+  {
+    if (functions == nullptr) return;
+    for (auto function : *functions) {
+      c_functions.emplace_back(function);
+    }
+  }
+
   void Context::add_c_function(Sass_Function_Entry function)
   {
     c_functions.emplace_back(function);
   }
+
   void Context::add_c_header(Sass_Importer_Entry header)
   {
     c_headers.emplace_back(header);

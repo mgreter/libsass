@@ -265,13 +265,7 @@ extern "C" {
   {
     try {
       // register our custom functions
-      if (c_ctx->c_functions) {
-        auto this_func_data = c_ctx->c_functions;
-        while (this_func_data && *this_func_data) {
-          cpp_ctx->add_c_function(*this_func_data);
-          ++this_func_data;
-        }
-      }
+      cpp_ctx->add_c_functions(c_ctx->c_functions);
 
       // register our custom headers
       if (c_ctx->c_headers) {
