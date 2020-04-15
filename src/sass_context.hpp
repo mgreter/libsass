@@ -81,24 +81,24 @@ struct Sass_Context : Sass_Options
   enum Sass_Logger_Style logstyle;
 
   // generated output data
-  Sass::sass::string output_string;
+  char* output_string;
 
   // generated stderr data
-  Sass::sass::string stderr_string;
+  char* stderr_string;
 
   // generated source map json
-  Sass::sass::string source_map_string;
+  char* source_map_string;
 
   // error status
   int error_status;
-  Sass::sass::string error_json;
+  char* error_json;
   Sass::sass::string error_text;
   Sass::sass::string error_message;
   // error position
   Sass::sass::string error_file;
   size_t error_line;
   size_t error_column;
-  Sass::sass::string error_src;
+  char* error_src;
 
   // report imported files
   char** included_files;

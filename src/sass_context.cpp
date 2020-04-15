@@ -35,8 +35,11 @@ namespace Sass {
     try { c_ctx->error_json = json_stringify(json_err, "  "); }
     catch (...) {}
     c_ctx->error_message = msg_stream.str();
-    c_ctx->error_text = msg.c_str();
+    c_ctx->error_text = msg;
     c_ctx->error_status = severety;
+    c_ctx->output_string = 0;
+    c_ctx->stderr_string = 0;
+    c_ctx->source_map_string = 0;
     json_delete(json_err);
   }
 
@@ -99,7 +102,10 @@ namespace Sass {
       c_ctx->error_file = pstate.getAbsPath();
       c_ctx->error_line = pstate.getLine();
       c_ctx->error_column = pstate.getColumn();
-      c_ctx->error_src = pstate.getContent();
+      c_ctx->error_src = sass_copy_c_string(pstate.getContent());
+      c_ctx->output_string = 0;
+      c_ctx->stderr_string = 0;
+      c_ctx->source_map_string = 0;
       json_delete(json_err);
     }
     catch (std::bad_alloc& ba) {
@@ -287,8 +293,11 @@ extern "C" {
         }
       }
 
+      // reset error status
+      c_ctx->error_json = 0;
       c_ctx->error_status = 0;
       // reset error position
+      c_ctx->error_src = 0;
       c_ctx->error_line = sass::string::npos;
       c_ctx->error_column = sass::string::npos;
 
@@ -536,8 +545,18 @@ extern "C" {
   {
     if (ctx == 0) return;
     // release the allocated memory (mostly via sass_copy_c_string)
+    if (ctx->output_string)     free(ctx->output_string);
+    if (ctx->stderr_string)     free(ctx->stderr_string);
+    if (ctx->source_map_string) free(ctx->source_map_string);
+    if (ctx->error_json)        free(ctx->error_json);
+    if (ctx->error_src)         free(ctx->error_src);
     free_string_array(ctx->included_files);
     // play safe and reset properties
+    ctx->output_string = 0;
+    ctx->stderr_string = 0;
+    ctx->source_map_string = 0;
+    ctx->error_json = 0;
+    ctx->error_src = 0;
     ctx->included_files = 0;
     // debug leaked memory
     #ifdef DEBUG_SHARED_PTR
@@ -632,27 +651,27 @@ extern "C" {
 
   // Create getter and setters for context
   IMPLEMENT_SASS_CONTEXT_GETTER(int, error_status);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_json);
+  IMPLEMENT_SASS_CONTEXT_GETTER(const char*, error_json);
   IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_message);
   IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_text);
   IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_file);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_src);
+  IMPLEMENT_SASS_CONTEXT_GETTER(const char*, error_src);
   IMPLEMENT_SASS_CONTEXT_GETTER(size_t, error_line);
   IMPLEMENT_SASS_CONTEXT_GETTER(size_t, error_column);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(output_string);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(stderr_string);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(source_map_string);
+  IMPLEMENT_SASS_CONTEXT_GETTER(const char*, output_string);
+  IMPLEMENT_SASS_CONTEXT_GETTER(const char*, stderr_string);
+  IMPLEMENT_SASS_CONTEXT_GETTER(const char*, source_map_string);
   IMPLEMENT_SASS_CONTEXT_GETTER(char**, included_files);
 
   // Take ownership of memory (value on context is set to 0)
-  // IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_json);
+  IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_json);
   // IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_message);
   // IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_text);
   // IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_file);
-  // IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_src);
-  // IMPLEMENT_SASS_CONTEXT_TAKER(char*, output_string);
-  // IMPLEMENT_SASS_CONTEXT_TAKER(char*, stderr_string);
-  // IMPLEMENT_SASS_CONTEXT_TAKER(char*, source_map_string);
+  IMPLEMENT_SASS_CONTEXT_TAKER(char*, error_src);
+  IMPLEMENT_SASS_CONTEXT_TAKER(char*, output_string);
+  IMPLEMENT_SASS_CONTEXT_TAKER(char*, stderr_string);
+  IMPLEMENT_SASS_CONTEXT_TAKER(char*, source_map_string);
   IMPLEMENT_SASS_CONTEXT_TAKER(char**, included_files);
 
   // Push function for include paths (no manipulation support for now)
