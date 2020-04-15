@@ -14,7 +14,7 @@ struct SassFunctionCpp {
   void* cookie;
 };
 
-struct Sass_Function_List2 : Sass::sass::vector<SassFunctionCpp*> {
+struct SassFunctionListCpp : Sass::sass::vector<SassFunctionCpp*> {
 
 };
 

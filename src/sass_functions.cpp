@@ -48,7 +48,7 @@ extern "C" {
 
   SassFunctionListPtr ADDCALL sass_make_function_list()
   {
-    return new Sass_Function_List2{};
+    return new SassFunctionListCpp{};
   }
 
   size_t ADDCALL sass_function_list_size(SassFunctionListPtr list)

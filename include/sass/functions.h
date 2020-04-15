@@ -32,7 +32,7 @@ typedef SassImportListPtr (*SassImporterFnCpp)
 // Typedef helpers for custom functions lists
 typedef struct SassFunctionCpp (*SassFunctionPtr);
 
-typedef struct Sass_Function_List2 (*SassFunctionListPtr);
+typedef struct SassFunctionListCpp (*SassFunctionListPtr);
 // Typedef defining function signature and return type
 typedef union Sass_Value* (*Sass_Function_Fn)
   (const union Sass_Value*, SassFunctionPtr cb, struct SassCompilerCpp* compiler);
