@@ -369,20 +369,26 @@ namespace Sass {
     size_t count = 0;
     // need one correct import
     bool has_import = false;
-    // process all custom importers (or custom headers)
-    for (Sass_Importer_Entry& importer_ent : importers) {
-      // int priority = sass_importer_get_priority(importer);
+
+    // Process custom importers and headers.
+    // They must be presorted by priorities.
+    for (Sass_Importer* importer_ent : importers) {
+      // Get the external importer function
       Sass_Importer_Fn fn = sass_importer_get_function(importer_ent);
-      // skip importer if it returns NULL
-      if (Sass_Import_List includes =
-        fn(load_path.c_str(), importer_ent, c_compiler)
-        ) {
-        // get c pointer copy to iterate over
+      // Call the external function, then check what it returned
+      Sass_Import_List includes = fn(load_path.c_str(), importer_ent, c_compiler);
+      // External provider want to handle this
+      if (includes != nullptr) {
+        // Get the list of possible includes
+        // A list with zero items does nothing
         Sass_Import_List it_includes = includes;
         while (*it_includes) {
+          // Increment counter
           ++count;
-          // create unique path to use as key
+          // Create a unique path to use as key
           sass::string uniq_path = load_path;
+          // Append counter to the path
+          // Note: only for headers!
           if (!only_one && count) {
             sass::sstream path_strm;
             path_strm << uniq_path << ":" << count;
