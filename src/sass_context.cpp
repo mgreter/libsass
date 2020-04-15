@@ -426,7 +426,7 @@ extern "C" {
     if (data_ctx->error_status)
       return data_ctx->error_status;
     try {
-      if (data_ctx->source_string == 0) { throw(std::runtime_error("Data context has no source string")); }
+      // if (data_ctx->source_string.empty()) { throw(std::runtime_error("Data context has empty source string")); }
       // empty source string is a valid case, even if not really useful (different than with file context)
       // if (*data_ctx->source_string == 0) { throw(std::runtime_error("Data context has empty source string")); }
     }
@@ -559,6 +559,7 @@ extern "C" {
     free(compiler);
   }
 
+  // Deallocate all associated memory with options
   void ADDCALL sass_delete_options (struct Sass_Options* options)
   {
     sass_clear_options(options); delete options;
@@ -573,9 +574,6 @@ extern "C" {
   // Deallocate all associated memory with data context
   void ADDCALL sass_delete_data_context (struct Sass_Data_Context* ctx)
   {
-    // clean the source string if it was not passed
-    // we reset this member once we start parsing
-    if (ctx->source_string) free(ctx->source_string);
     // clear the context and free it
     sass_clear_context(ctx); delete ctx;
   }

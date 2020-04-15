@@ -119,8 +119,8 @@ struct Sass_File_Context : Sass_Context {
 struct Sass_Data_Context : Sass_Context {
 
   // provided source string
-  char* source_string;
-  char* srcmap_string;
+  Sass::sass::string source_string;
+  Sass::sass::string srcmap_string;
 
 };
 

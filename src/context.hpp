@@ -224,16 +224,13 @@ namespace Sass {
 
   class Data_Context : public Context {
   public:
-    char* source_c_str;
-    char* srcmap_c_str;
+    sass::string& source_c_str;
+    sass::string& srcmap_c_str;
     Data_Context(struct Sass_Data_Context& ctx)
-    : Context(ctx)
-    {
-      source_c_str       = ctx.source_string;
-      srcmap_c_str       = ctx.srcmap_string;
-      ctx.source_string = 0; // passed away
-      ctx.srcmap_string = 0; // passed away
-    }
+    : Context(ctx),
+      source_c_str(ctx.source_string),
+      srcmap_c_str(ctx.srcmap_string)
+    {}
     virtual ~Data_Context();
     virtual Block_Obj parse(Sass_Import_Type type);
   };

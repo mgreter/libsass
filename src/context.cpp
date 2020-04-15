@@ -562,7 +562,7 @@ namespace Sass {
   {
 
     // check if source string is given
-    if (!source_c_str) return {};
+    if (source_c_str.empty()) return {};
 
     // remember entry path (defaults to stdin for string)
     entry_path = input_path.empty() ? "stdin" : input_path;
@@ -574,8 +574,8 @@ namespace Sass {
     Sass_Import_Entry import = sass_make_import2(
       input_path.c_str(),
       input_path.c_str(),
-      source_c_str,
-      srcmap_c_str,
+      sass_copy_string(source_c_str),
+      sass_copy_string(srcmap_c_str),
       type
     );
     // add the entry to the stack
