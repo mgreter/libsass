@@ -146,7 +146,7 @@ namespace Sass {
     sass::vector<Sass_Import_Entry> import_stack;
     sass::vector<SourceDataObj> importStack;
 
-    sass::vector<Sass_Callee> callee_stack;
+    sass::vector<SassCalleeCpp> callee_stack;
 
     EnvKeyMap<CallableObj> functions;
     // EnvKeyMap<BuiltInCallableObj> built-ins;

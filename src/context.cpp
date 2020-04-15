@@ -407,7 +407,7 @@ namespace Sass {
 
     // Process custom importers and headers.
     // They must be presorted by priorities.
-    for (Sass_Importer* importer : importers) {
+    for (Sass_Importer_Entry importer : importers) {
       // Get the external importer function
       Sass_Importer_Fn fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned

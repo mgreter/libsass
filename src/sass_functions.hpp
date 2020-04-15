@@ -29,7 +29,7 @@ struct Sass_Import_List2 : Sass::sass::vector<Sass_Import_Entry> {
 class SourceDataObj;
 
 // External import entry
-struct Sass_Import {
+struct SassImportCpp {
   //char* imp_path; // path as found in the import statement
   // char *abs_path; // path after importer has resolved it
   // char* source;
@@ -44,7 +44,7 @@ struct Sass_Import {
 };
 
 // External call entry
-struct Sass_Callee {
+struct SassCalleeCpp {
   const char* name;
   const char* path;
   uint32_t line;
@@ -53,7 +53,7 @@ struct Sass_Callee {
 };
 
 // Struct to hold importer callback
-struct Sass_Importer {
+struct SassImporterCpp {
   Sass_Importer_Fn importer;
   double           priority;
   void*            cookie;

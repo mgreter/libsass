@@ -9,22 +9,22 @@ extern "C" {
 
 
 // Forward declaration
-struct Sass_Callee;
-struct Sass_Import;
+struct SassCalleeCpp;
+struct SassImportCpp;
 struct Sass_Options;
 struct Sass_Compiler;
-struct Sass_Importer;
+struct SassImporterCpp;
 struct Sass_Function;
 
 // Typedef helpers for callee lists
-typedef struct Sass_Callee (*Sass_Callee_Entry);
+typedef struct SassCalleeCpp* (Sass_Callee_Entry);
 // Typedef helpers for import lists
-typedef struct Sass_Import (*Sass_Import_Entry);
-//typedef struct Sass_Import* (*Sass_Import_List);
+typedef struct SassImportCpp* (Sass_Import_Entry);
+//typedef struct SassImportCpp* (*Sass_Import_List);
 // Typedef helpers for custom importer lists
-typedef struct Sass_Importer (*Sass_Importer_Entry);
-typedef struct Sass_Importer_List2 (*Sass_Importer_List);
-typedef struct Sass_Import_List2 (*Sass_Import_List);
+typedef struct SassImporterCpp* (Sass_Importer_Entry);
+typedef struct Sass_Importer_List2* (Sass_Importer_List);
+typedef struct Sass_Import_List2* (Sass_Import_List);
 // Typedef defining importer signature and return type
 typedef Sass_Import_List (*Sass_Importer_Fn)
   (const char* url, Sass_Importer_Entry cb, struct Sass_Compiler* compiler);

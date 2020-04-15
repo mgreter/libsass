@@ -523,7 +523,7 @@ namespace Sass {
 
   }
 
-  sass::vector<Sass_Callee>& Eval::callee_stack()
+  sass::vector<SassCalleeCpp>& Eval::callee_stack()
   {
     return ctx.callee_stack;
   }
@@ -2371,7 +2371,7 @@ namespace Sass {
 
   bool Eval::isInMixin()
   {
-    for (Sass_Callee& callee : ctx.callee_stack) {
+    for (SassCalleeCpp& callee : ctx.callee_stack) {
       if (callee.type == SASS_CALLEE_MIXIN) return true;
     }
     return false;

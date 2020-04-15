@@ -129,7 +129,7 @@ extern "C" {
 
   Sass_Importer_Entry ADDCALL sass_make_importer(Sass_Importer_Fn fn, double priority, void* cookie)
   {
-    Sass_Importer_Entry importer = new Sass_Importer{};
+    Sass_Importer_Entry importer = new SassImporterCpp{};
     if (importer == 0) return 0;
     importer->importer = fn;
     importer->priority = priority;
@@ -170,7 +170,7 @@ extern "C" {
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
   Sass_Import_Entry ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap)
   {
-    Sass_Import* v = new Sass_Import();
+    SassImportCpp* v = new SassImportCpp();
     if (v == 0) return 0;
     v->line = -1;
     v->column = -1;
@@ -187,7 +187,7 @@ extern "C" {
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
   Sass_Import_Entry ADDCALL sass_make_import2(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
   {
-    Sass_Import* v = new Sass_Import();
+    SassImportCpp* v = new SassImportCpp();
     if (v == 0) return 0;
     v->line = -1;
     v->column = -1;
