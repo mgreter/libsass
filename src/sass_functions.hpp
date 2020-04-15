@@ -22,7 +22,7 @@ struct Sass_Importer_List2 : Sass::sass::vector<Sass_Importer_Entry> {
 
 };
 
-struct Sass_Import_List2 : Sass::sass::vector<Sass_Import_Entry> {
+struct Sass_Import_List2 : Sass::sass::vector<SassImportPtr> {
 
 };
 

@@ -8,7 +8,7 @@
 #include "sass.hpp"
 
 // sass config options structure
-struct Sass_Options : Sass_Output_Options {
+struct SassOptionsCpp : Sass_Output_Options {
 
   // embed sourceMappingUrl as data URI
   bool source_map_embed;
@@ -68,7 +68,7 @@ struct Sass_Options : Sass_Output_Options {
 
 
 // base for all contexts
-struct Sass_Context : Sass_Options
+struct Sass_Context : SassOptionsCpp
 {
 
   // store context type info
@@ -108,7 +108,7 @@ struct Sass_Context : Sass_Options
 };
 
 // struct for file compilation
-struct Sass_File_Context : Sass_Context {
+struct SassFileContextCpp : Sass_Context {
 
   // no additional fields required
   // input_path is already on options
@@ -116,7 +116,7 @@ struct Sass_File_Context : Sass_Context {
 };
 
 // struct for data compilation
-struct Sass_Data_Context : Sass_Context {
+struct SassDataContextCpp : Sass_Context {
 
   // provided source string
   Sass::sass::string source_string;

@@ -311,7 +311,7 @@ namespace Sass {
   typedef sass::vector<SassCalleeCpp> CalleeStack;
   typedef sass::vector<CssMediaRuleObj> MediaStack;
   typedef sass::vector<SelectorListObj> SelectorStack;
-  typedef sass::vector<Sass_Import_Entry> ImporterStack;
+  typedef sass::vector<SassImportPtr> ImporterStack;
 
   typedef std::unordered_set<sass::string> StringSet;
 

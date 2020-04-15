@@ -240,7 +240,7 @@ namespace Sass {
     return vec;
   }
 
-  void Context::register_import(Sass_Import_Entry& import)
+  void Context::register_import(SassImportPtr& import)
   {
 
     SourceData* source = import->srcdata;
@@ -266,7 +266,7 @@ namespace Sass {
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
-      Sass_Import_Entry parent = import_stack[i];
+      SassImportPtr parent = import_stack[i];
       if (std::strcmp(parent->srcdata->getAbsPath(), import->srcdata->getAbsPath()) == 0) {
         // make path relative to the current directory
         sass::string stack("An @import loop has been found:");
@@ -326,7 +326,7 @@ namespace Sass {
   {
 
     // get pointer to the loaded content
-    Sass_Import_Entry import = sass_make_import2(
+    SassImportPtr import = sass_make_import2(
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
       contents, srcmap,
@@ -568,7 +568,7 @@ namespace Sass {
     entry_path = abs_path;
 
     // create entry only for import stack
-    Sass_Import_Entry import = sass_make_import2(
+    SassImportPtr import = sass_make_import2(
       input_path.c_str(),
       abs_path.c_str(),
       contents,
@@ -602,7 +602,7 @@ namespace Sass {
     sass::string abs_path(rel2abs(entry_path, ".", CWD));
 
     // create entry only for the import stack
-    Sass_Import_Entry import = sass_make_import2(
+    SassImportPtr import = sass_make_import2(
       input_path.c_str(),
       input_path.c_str(),
       sass_copy_string(source_c_str),

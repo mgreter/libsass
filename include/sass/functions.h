@@ -11,7 +11,7 @@ extern "C" {
 // Forward declaration
 struct SassCalleeCpp;
 struct SassImportCpp;
-struct Sass_Options;
+struct SassOptionsCpp;
 struct Sass_Compiler;
 struct SassImporterCpp;
 struct Sass_Function;
@@ -19,7 +19,7 @@ struct Sass_Function;
 // Typedef helpers for callee lists
 typedef struct SassCalleeCpp* (Sass_Callee_Entry);
 // Typedef helpers for import lists
-typedef struct SassImportCpp* (Sass_Import_Entry);
+typedef struct SassImportCpp* (SassImportPtr);
 //typedef struct SassImportCpp* (*Sass_Import_List);
 // Typedef helpers for custom importer lists
 typedef struct SassImporterCpp* (Sass_Importer_Entry);
@@ -81,21 +81,21 @@ ADDAPI void ADDCALL sass_delete_importer (Sass_Importer_Entry cb);
 ADDAPI Sass_Import_List ADDCALL sass_make_import_list();
 ADDAPI void ADDCALL sass_delete_import_list(Sass_Import_List list);
 ADDAPI size_t ADDCALL sass_import_list_size(Sass_Import_List list);
-ADDAPI Sass_Import_Entry ADDCALL sass_import_list_shift(Sass_Import_List list);
-ADDAPI void ADDCALL sass_import_list_push(Sass_Import_List list, Sass_Import_Entry);
+ADDAPI SassImportPtr ADDCALL sass_import_list_shift(Sass_Import_List list);
+ADDAPI void ADDCALL sass_import_list_push(Sass_Import_List list, SassImportPtr);
 
 
 // Creator for a single import entry returned by the custom importer inside the list
-ADDAPI Sass_Import_Entry ADDCALL sass_make_import_entry (const char* path, char* source, char* srcmap);
-ADDAPI Sass_Import_Entry ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap);
-ADDAPI Sass_Import_Entry ADDCALL sass_make_import2(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum Sass_Import_Type type);
+ADDAPI SassImportPtr ADDCALL sass_make_import_entry (const char* path, char* source, char* srcmap);
+ADDAPI SassImportPtr ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap);
+ADDAPI SassImportPtr ADDCALL sass_make_import2(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum Sass_Import_Type type);
 // set error message to abort import and to print out a message (path from existing object is used in output)
-ADDAPI Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import, const char* message, uint32_t line, uint32_t col);
+ADDAPI SassImportPtr ADDCALL sass_import_set_error(SassImportPtr import, const char* message, uint32_t line, uint32_t col);
 
 // Setters to insert an entry into the import list (you may also use [] access directly)
 // Since we are dealing with pointers they should have a guaranteed and fixed size
-// ADDAPI void ADDCALL sass_import_set_list_entry (Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry);
-// ADDAPI Sass_Import_Entry ADDCALL sass_import_get_list_entry (Sass_Import_List list, uint32_t idx);
+// ADDAPI void ADDCALL sass_import_set_list_entry (Sass_Import_List list, uint32_t idx, SassImportPtr entry);
+// ADDAPI SassImportPtr ADDCALL sass_import_get_list_entry (Sass_Import_List list, uint32_t idx);
 
 // Getters for callee entry
 ADDAPI const char* ADDCALL sass_callee_get_name (Sass_Callee_Entry);
@@ -113,25 +113,25 @@ ADDAPI union Sass_Value* ADDCALL sass_env_get_global (struct Sass_Compiler*, con
 ADDAPI void ADDCALL sass_env_set_global (struct Sass_Compiler*, const char*, union Sass_Value*);
 
 // Getters for import entry
-ADDAPI const char* ADDCALL sass_import_get_imp_path (Sass_Import_Entry);
-ADDAPI const char* ADDCALL sass_import_get_abs_path (Sass_Import_Entry);
-ADDAPI const char* ADDCALL sass_import_get_source (Sass_Import_Entry);
-ADDAPI const char* ADDCALL sass_import_get_srcmap (Sass_Import_Entry);
-ADDAPI enum Sass_Import_Type ADDCALL sass_import_get_type(Sass_Import_Entry);
+ADDAPI const char* ADDCALL sass_import_get_imp_path (SassImportPtr);
+ADDAPI const char* ADDCALL sass_import_get_abs_path (SassImportPtr);
+ADDAPI const char* ADDCALL sass_import_get_source (SassImportPtr);
+ADDAPI const char* ADDCALL sass_import_get_srcmap (SassImportPtr);
+ADDAPI enum Sass_Import_Type ADDCALL sass_import_get_type(SassImportPtr);
 
 // Explicit functions to take ownership of these items
 // The property on our struct will be reset to NULL
-//ADDAPI char* ADDCALL sass_import_take_source (Sass_Import_Entry);
-//ADDAPI char* ADDCALL sass_import_take_srcmap (Sass_Import_Entry);
+//ADDAPI char* ADDCALL sass_import_take_source (SassImportPtr);
+//ADDAPI char* ADDCALL sass_import_take_srcmap (SassImportPtr);
 // Getters from import error entry
-ADDAPI uint32_t ADDCALL sass_import_get_error_line (Sass_Import_Entry);
-ADDAPI uint32_t ADDCALL sass_import_get_error_column (Sass_Import_Entry);
-ADDAPI const char* ADDCALL sass_import_get_error_message (Sass_Import_Entry);
+ADDAPI uint32_t ADDCALL sass_import_get_error_line (SassImportPtr);
+ADDAPI uint32_t ADDCALL sass_import_get_error_column (SassImportPtr);
+ADDAPI const char* ADDCALL sass_import_get_error_message (SassImportPtr);
 
 // Deallocator for associated memory (incl. entries)
 // ADDAPI void ADDCALL sass_delete_import_list (Sass_Import_List);
 // Just in case we have some stray import structs
-ADDAPI void ADDCALL sass_delete_import (Sass_Import_Entry);
+ADDAPI void ADDCALL sass_delete_import (SassImportPtr);
 
 
 

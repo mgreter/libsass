@@ -109,7 +109,7 @@ namespace Sass {
     const sass::string CWD;
 
     // The attached options passed from C-API
-    struct Sass_Options& c_options;
+    struct SassOptionsCpp& c_options;
 
     sass::string entry_path;
 
@@ -143,7 +143,7 @@ namespace Sass {
     // Sheets are filled after resources are parsed
     std::map<const sass::string, StyleSheet> sheets;
 
-    sass::vector<Sass_Import_Entry> import_stack;
+    sass::vector<SassImportPtr> import_stack;
     sass::vector<SourceDataObj> importStack;
 
     sass::vector<SassCalleeCpp> callee_stack;
@@ -195,7 +195,7 @@ namespace Sass {
     virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 
-    void register_import(Sass_Import_Entry& entry);
+    void register_import(SassImportPtr& entry);
     void register_resource(const Include&, char* contents, char* srcmap);
     void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 
@@ -220,7 +220,7 @@ namespace Sass {
 
   class File_Context : public Context {
   public:
-    File_Context(struct Sass_File_Context& ctx)
+    File_Context(struct SassFileContextCpp& ctx)
     : Context(ctx)
     { }
     virtual ~File_Context();
@@ -231,7 +231,7 @@ namespace Sass {
   public:
     sass::string& source_c_str;
     sass::string& srcmap_c_str;
-    Data_Context(struct Sass_Data_Context& ctx)
+    Data_Context(struct SassDataContextCpp& ctx)
     : Context(ctx),
       source_c_str(ctx.source_string),
       srcmap_c_str(ctx.srcmap_string)

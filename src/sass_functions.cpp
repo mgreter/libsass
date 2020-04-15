@@ -29,7 +29,7 @@ extern "C" {
     return list == nullptr ? 0 : list->size();
   }
 
-  Sass_Import_Entry ADDCALL sass_import_list_shift(Sass_Import_List list)
+  SassImportPtr ADDCALL sass_import_list_shift(Sass_Import_List list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -38,7 +38,7 @@ extern "C" {
     return ptr;
   }
 
-  void ADDCALL sass_import_list_push(Sass_Import_List list, Sass_Import_Entry import)
+  void ADDCALL sass_import_list_push(Sass_Import_List list, SassImportPtr import)
   {
     if (list != nullptr) {
       list->push_back(import);
@@ -168,9 +168,9 @@ extern "C" {
 
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
-  Sass_Import_Entry ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap)
+  SassImportPtr ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap)
   {
-    SassImportCpp* v = new SassImportCpp();
+    SassImportPtr v = new SassImportCpp();
     if (v == 0) return 0;
     v->line = -1;
     v->column = -1;
@@ -185,9 +185,9 @@ extern "C" {
 
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
-  Sass_Import_Entry ADDCALL sass_make_import2(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
+  SassImportPtr ADDCALL sass_make_import2(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
   {
-    SassImportCpp* v = new SassImportCpp();
+    SassImportPtr v = new SassImportCpp();
     if (v == 0) return 0;
     v->line = -1;
     v->column = -1;
@@ -201,13 +201,13 @@ extern "C" {
   }
 
   // Older style, but somehow still valid - keep around or deprecate?
-  Sass_Import_Entry ADDCALL sass_make_import_entry(const char* path, char* source, char* srcmap)
+  SassImportPtr ADDCALL sass_make_import_entry(const char* path, char* source, char* srcmap)
   {
     return sass_make_import(path, path, source, srcmap);
   }
 
   // Upgrade a normal import entry to throw an error (original path can be re-used by error reporting)
-  Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import, const char* error, uint32_t line, uint32_t col)
+  SassImportPtr ADDCALL sass_import_set_error(SassImportPtr import, const char* error, uint32_t line, uint32_t col)
   {
     if (import == 0) return 0;
     import->error = error ? error : "";
@@ -217,11 +217,11 @@ extern "C" {
   }
 
   // Setters and getters for entries on the import list
-  // void ADDCALL sass_import_set_list_entry(Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry) { list[idx] = entry; }
-  // Sass_Import_Entry ADDCALL sass_import_get_list_entry(Sass_Import_List list, uint32_t idx) { return list[idx]; }
+  // void ADDCALL sass_import_set_list_entry(Sass_Import_List list, uint32_t idx, SassImportPtr entry) { list[idx] = entry; }
+  // SassImportPtr ADDCALL sass_import_get_list_entry(Sass_Import_List list, uint32_t idx) { return list[idx]; }
 
   // Just in case we have some stray import structs
-  void ADDCALL sass_delete_import(Sass_Import_Entry import)
+  void ADDCALL sass_delete_import(SassImportPtr import)
   {
     delete import;
   }
@@ -259,20 +259,20 @@ extern "C" {
   }
 
   // Getter for import entry
-  const char* ADDCALL sass_import_get_imp_path(Sass_Import_Entry entry) { return entry->srcdata->getImpPath(); }
-  const char* ADDCALL sass_import_get_abs_path(Sass_Import_Entry entry) { return entry->srcdata->getAbsPath(); }
-  const char* ADDCALL sass_import_get_source(Sass_Import_Entry entry) { return entry->srcdata->content(); }
-  const char* ADDCALL sass_import_get_srcmap(Sass_Import_Entry entry) { return entry->srcdata->srcmaps(); }
-  enum Sass_Import_Type ADDCALL sass_import_get_type(Sass_Import_Entry entry) { return entry->srcdata->getType();  }
+  const char* ADDCALL sass_import_get_imp_path(SassImportPtr entry) { return entry->srcdata->getImpPath(); }
+  const char* ADDCALL sass_import_get_abs_path(SassImportPtr entry) { return entry->srcdata->getAbsPath(); }
+  const char* ADDCALL sass_import_get_source(SassImportPtr entry) { return entry->srcdata->content(); }
+  const char* ADDCALL sass_import_get_srcmap(SassImportPtr entry) { return entry->srcdata->srcmaps(); }
+  enum Sass_Import_Type ADDCALL sass_import_get_type(SassImportPtr entry) { return entry->srcdata->getType();  }
 
   // Getter for import error entry
-  uint32_t ADDCALL sass_import_get_error_line(Sass_Import_Entry entry) { return entry->line; }
-  uint32_t ADDCALL sass_import_get_error_column(Sass_Import_Entry entry) { return entry->column; }
-  const char* ADDCALL sass_import_get_error_message(Sass_Import_Entry entry) { return entry->error.empty() ? 0 : entry->error.c_str(); }
+  uint32_t ADDCALL sass_import_get_error_line(SassImportPtr entry) { return entry->line; }
+  uint32_t ADDCALL sass_import_get_error_column(SassImportPtr entry) { return entry->column; }
+  const char* ADDCALL sass_import_get_error_message(SassImportPtr entry) { return entry->error.empty() ? 0 : entry->error.c_str(); }
 
   // Explicit functions to take ownership of the memory
   // Resets our own property since we do not know if it is still alive
-  // char* ADDCALL sass_import_take_source(Sass_Import_Entry entry) { char* ptr = entry->source; entry->source = 0; return ptr; }
-  // char* ADDCALL sass_import_take_srcmap(Sass_Import_Entry entry) { char* ptr = entry->srcmap; entry->srcmap = 0; return ptr; }
+  // char* ADDCALL sass_import_take_source(SassImportPtr entry) { char* ptr = entry->source; entry->source = 0; return ptr; }
+  // char* ADDCALL sass_import_take_srcmap(SassImportPtr entry) { char* ptr = entry->srcmap; entry->srcmap = 0; return ptr; }
 
 }

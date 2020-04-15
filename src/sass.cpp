@@ -76,7 +76,7 @@ extern "C" {
   char* ADDCALL sass_compiler_find_include (const char* file, struct Sass_Compiler* compiler)
   {
     // get the last import entry to get current base directory
-    Sass_Import_Entry import = sass_compiler_get_last_import(compiler);
+    SassImportPtr import = sass_compiler_get_last_import(compiler);
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
@@ -91,7 +91,7 @@ extern "C" {
   char* ADDCALL sass_compiler_find_file (const char* file, struct Sass_Compiler* compiler)
   {
     // get the last import entry to get current base directory
-    Sass_Import_Entry import = sass_compiler_get_last_import(compiler);
+    SassImportPtr import = sass_compiler_get_last_import(compiler);
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
@@ -105,7 +105,7 @@ extern "C" {
   // Make sure to free the returned value!
   // Incs array has to be null terminated!
   // this has the original resolve logic for sass include
-  char* ADDCALL sass_find_include (const char* file, struct Sass_Options* opt)
+  char* ADDCALL sass_find_include (const char* file, struct SassOptionsCpp* opt)
   {
     std::unordered_map<sass::string, bool> cache;
     sass::string resolved(File::find_include(file,
@@ -115,7 +115,7 @@ extern "C" {
 
   // Make sure to free the returned value!
   // Incs array has to be null terminated!
-  char* ADDCALL sass_find_file (const char* file, struct Sass_Options* opt)
+  char* ADDCALL sass_find_file (const char* file, struct SassOptionsCpp* opt)
   {
     std::unordered_map<sass::string, bool> cache;
     sass::string resolved(File::find_file(file,
