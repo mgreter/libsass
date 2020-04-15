@@ -320,7 +320,7 @@ namespace Sass {
   ////////////////////////
   // Blocks of statements.
   ////////////////////////
-  class Block final : public Statement, public VectorizedBase<Statement> {
+  class Block final : public Statement, public VectorizedNopsi<Statement> {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(bool, is_root);
     // needed for properly formatted CSS emission

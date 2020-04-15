@@ -167,19 +167,19 @@ namespace Sass {
 
   Block::Block(const SourceSpan& pstate, size_t s, bool r)
   : Statement(pstate),
-    VectorizedBase<Statement>(s),
+    VectorizedNopsi<Statement>(s),
     idxs_(0), is_root_(r)
   { }
 
   Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec, bool r) :
     Statement(pstate),
-    VectorizedBase<Statement>(vec),
+    VectorizedNopsi<Statement>(vec),
     idxs_(0), is_root_(r)
   { }
 
   Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec, bool r) :
     Statement(pstate),
-    VectorizedBase<Statement>(std::move(vec)),
+    VectorizedNopsi<Statement>(std::move(vec)),
     idxs_(0), is_root_(r)
   { }
 
