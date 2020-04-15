@@ -208,7 +208,7 @@ namespace Sass {
     sass::vector<StatementObj> children;
     if (auto rule = Cast<CssStyleRule>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
-      rule->elements(m->elements());
+      rule->elementsC(m->elements());
       children.emplace_back(rule);
     }
     CssAtRuleObj mm = SASS_MEMORY_NEW(CssAtRule, m->pstate(),
@@ -224,7 +224,7 @@ namespace Sass {
     sass::vector<StatementObj> children;
     if (auto rule = Cast<CssParentNode>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
-      rule->elements(m->elements());
+      rule->elementsC(m->elements());
       children.emplace_back(rule);
     }
     CssAtRootRule* mm = SASS_MEMORY_NEW(CssAtRootRule,
@@ -240,7 +240,7 @@ namespace Sass {
     sass::vector<StatementObj> children;
     if (auto rule = Cast<CssStyleRule>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
-      rule->elements(m->elements());
+      rule->elementsC(m->elements());
       children.emplace_back(rule);
     }
     CssSupportsRule* mm = SASS_MEMORY_NEW(CssSupportsRule,
@@ -256,7 +256,7 @@ namespace Sass {
     sass::vector<StatementObj> children;
     if (auto rule = Cast<CssStyleRule>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
-      rule->elements(m->elements());
+      rule->elementsC(m->elements());
       children.emplace_back(rule);
     }
     CssMediaRuleObj mm = SASS_MEMORY_NEW(CssMediaRule,
@@ -308,7 +308,7 @@ namespace Sass {
         }
         else if (CssParentNode* prev = Cast<CssParentNode>(parent)) {
           prev = SASS_MEMORY_COPY(prev);
-          prev->elements(std::move(slice));
+          prev->elementsM(std::move(slice));
           previousBlock = &prev->elements();
           items.push_back(prev);
         }

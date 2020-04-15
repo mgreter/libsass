@@ -194,14 +194,21 @@ namespace Sass {
     }
 
     // This might be better implemented as `operator=`?
-    void elements(const sass::vector<T>& e)
+    void elementsC(const sass::vector<T>& e)
     {
       reset_hash();
       elements_ = e;
     }
 
     // This might be better implemented as `operator=`?
-    void elements26(sass::vector<T>&& e)
+    void elementsM(const sass::vector<T>& e)
+    {
+      reset_hash();
+      elements_ = e;
+    }
+
+    // This might be better implemented as `operator=`?
+    void elementsM(sass::vector<T>&& e)
     {
       reset_hash();
       elements_ = std::move(e);

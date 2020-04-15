@@ -79,7 +79,7 @@ namespace Sass {
           // original_stack.emplace_back(result);
           BackTraces& traces = *ctx.logger;
           SelectorListObj rv = child->resolveParentSelectors(result, traces);
-          result->elements(std::move(rv->elements()));
+          result->elementsM(std::move(rv->elements()));
           // original_stack.pop_back();
         }
 
