@@ -91,8 +91,8 @@ namespace Sass {
     /*#########################################################################*/
     void collectIncludePaths(const char* paths_str);
 
-    void collect_plugin_paths(string_list* paths_array);
-    void collect_include_paths(string_list* paths_array);
+    void collectPluginPaths(const sass::vector<sass::string>& paths);
+    void collectIncludePaths(const sass::vector<sass::string>& paths);
 
 
   protected:

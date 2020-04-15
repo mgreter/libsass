@@ -107,10 +107,9 @@ extern "C" {
   // this has the original resolve logic for sass include
   char* ADDCALL sass_find_include (const char* file, struct Sass_Options* opt)
   {
-    sass::vector<sass::string> vec(list2vec(opt->include_paths));
     std::unordered_map<sass::string, bool> cache;
     sass::string resolved(File::find_include(file,
-      File::get_cwd(), vec, cache));
+      File::get_cwd(), opt->include_paths, cache));
     return sass_copy_c_string(resolved.c_str());
   }
 
@@ -118,10 +117,9 @@ extern "C" {
   // Incs array has to be null terminated!
   char* ADDCALL sass_find_file (const char* file, struct Sass_Options* opt)
   {
-    sass::vector<sass::string> vec(list2vec(opt->include_paths));
     std::unordered_map<sass::string, bool> cache;
     sass::string resolved(File::find_file(file,
-      File::get_cwd(), vec, cache));
+      File::get_cwd(), opt->include_paths, cache));
     return sass_copy_c_string(resolved.c_str());
   }
 

@@ -150,8 +150,8 @@ namespace Sass {
     try {
 
       // get input/output path from options
-      sass::string input_path = safe_str(c_ctx->input_path);
-      sass::string output_path = safe_str(c_ctx->output_path);
+      sass::string input_path = c_ctx->input_path;
+      sass::string output_path = c_ctx->output_path;
 
       // maybe skip some entries of included files
       // we do not include stdin for data contexts
@@ -214,7 +214,17 @@ extern "C" {
     IMPLEMENT_SASS_OPTION_STRING_GETTER(type, option, def) \
     IMPLEMENT_SASS_OPTION_STRING_SETTER(type, option, def)
 
-  #define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
+
+#define IMPLEMENT_SASS_OPTION_STRING2_GETTER(type, option, def) \
+    type ADDCALL sass_option_get_##option (struct Sass_Options* options) { return options->option.empty() ? def : options->option.c_str(); }
+#define IMPLEMENT_SASS_OPTION_STRING2_SETTER(type, option, def) \
+    void ADDCALL sass_option_set_##option (struct Sass_Options* options, type option) \
+    { options->option = option; }
+#define IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(type, option, def) \
+    IMPLEMENT_SASS_OPTION_STRING2_GETTER(type, option, def) \
+    IMPLEMENT_SASS_OPTION_STRING2_SETTER(type, option, def)
+
+#define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
     type ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option; }
   #define IMPLEMENT_SASS_CONTEXT_TAKER(type, option) \
     type sass_context_take_##option (struct Sass_Context* ctx) \
@@ -344,7 +354,7 @@ extern "C" {
 
   Sass_Options* ADDCALL sass_make_options (void)
   {
-    struct Sass_Options* options = (struct Sass_Options*) calloc(1, sizeof(struct Sass_Options));
+    struct Sass_Options* options = new Sass_Options{};
     if (options == 0) { std::cerr << "Error allocating memory for options" << STRMLF; return 0; }
     init_options(options);
     return options;
@@ -355,7 +365,7 @@ extern "C" {
     #ifdef DEBUG_SHARED_PTR
     SharedObj::setTaint(true);
     #endif
-    struct Sass_File_Context* ctx = (struct Sass_File_Context*) calloc(1, sizeof(struct Sass_File_Context));
+    struct Sass_File_Context* ctx = new Sass_File_Context{};
     if (ctx == 0) { std::cerr << "Error allocating memory for file context" << STRMLF; return 0; }
     ctx->logstyle = IsConsoleRedirected() ? SASS_LOGGER_ASCII_MONO : SASS_LOGGER_UNICODE_COLOR;
     ctx->type = SASS_CONTEXT_FILE;
@@ -375,7 +385,7 @@ extern "C" {
     #ifdef DEBUG_SHARED_PTR
     SharedObj::setTaint(true);
     #endif
-    struct Sass_Data_Context* ctx = (struct Sass_Data_Context*) calloc(1, sizeof(struct Sass_Data_Context));
+    struct Sass_Data_Context* ctx = new Sass_Data_Context{};
     if (ctx == 0) { std::cerr << "Error allocating memory for data context" << STRMLF; return 0; }
     ctx->logstyle = IsConsoleRedirected() ? SASS_LOGGER_ASCII_MONO : SASS_LOGGER_UNICODE_COLOR;
     ctx->type = SASS_CONTEXT_DATA;
@@ -436,8 +446,7 @@ extern "C" {
     if (file_ctx->error_status)
       return file_ctx->error_status;
     try {
-      if (file_ctx->input_path == 0) { throw(std::runtime_error("File context has no input path")); }
-      if (*file_ctx->input_path == 0) { throw(std::runtime_error("File context has empty input path")); }
+      if (file_ctx->input_path.empty()) { throw(std::runtime_error("File context has no input path")); }
     }
     catch (...) { return handle_errors(file_ctx) | 1; }
     Context* cpp_ctx = new File_Context(*file_ctx);
@@ -496,8 +505,6 @@ extern "C" {
   {
     // free pointer before
     // or copy/move them
-    options->input_path = 0;
-    options->output_path = 0;
     options->plugin_path = 0;
     options->include_path = 0;
     options->source_map_file = 0;
@@ -505,8 +512,6 @@ extern "C" {
     options->c_functions = 0;
     options->c_importers = 0;
     options->c_headers = 0;
-    options->plugin_paths = 0;
-    options->include_paths = 0;
   }
 
   // helper function, not exported, only accessible locally
@@ -517,40 +522,12 @@ extern "C" {
     sass_delete_function_list(options->c_functions);
     sass_delete_importer_list(options->c_importers);
     sass_delete_importer_list(options->c_headers);
-    // Deallocate inc paths
-    if (options->plugin_paths) {
-      struct string_list* cur;
-      struct string_list* next;
-      cur = options->plugin_paths;
-      while (cur) {
-        next = cur->next;
-        free(cur->string);
-        free(cur);
-        cur = next;
-      }
-    }
-    // Deallocate inc paths
-    if (options->include_paths) {
-      struct string_list* cur;
-      struct string_list* next;
-      cur = options->include_paths;
-      while (cur) {
-        next = cur->next;
-        free(cur->string);
-        free(cur);
-        cur = next;
-      }
-    }
     // Free options strings
-    free(options->input_path);
-    free(options->output_path);
     free(options->plugin_path);
     free(options->include_path);
     free(options->source_map_file);
     free(options->source_map_root);
     // Reset our pointers
-    options->input_path = 0;
-    options->output_path = 0;
     options->plugin_path = 0;
     options->include_path = 0;
     options->source_map_file = 0;
@@ -558,8 +535,6 @@ extern "C" {
     options->c_functions = 0;
     options->c_importers = 0;
     options->c_headers = 0;
-    options->plugin_paths = 0;
-    options->include_paths = 0;
   }
 
   // helper function, not exported, only accessible locally
@@ -611,14 +586,14 @@ extern "C" {
 
   void ADDCALL sass_delete_options (struct Sass_Options* options)
   {
-    sass_clear_options(options); free(options);
+    sass_clear_options(options); delete options;
   }
 
   // Deallocate all associated memory with file context
   void ADDCALL sass_delete_file_context (struct Sass_File_Context* ctx)
   {
     // clear the context and free it
-    sass_clear_context(ctx); free(ctx);
+    sass_clear_context(ctx); delete ctx;
   }
   // Deallocate all associated memory with data context
   void ADDCALL sass_delete_data_context (struct Sass_Data_Context* ctx)
@@ -627,7 +602,7 @@ extern "C" {
     // we reset this member once we start parsing
     if (ctx->source_string) free(ctx->source_string);
     // clear the context and free it
-    sass_clear_context(ctx); free(ctx);
+    sass_clear_context(ctx); delete ctx;
   }
 
   // Getters for sass context from specific implementations
@@ -673,8 +648,8 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, linefeed);
   IMPLEMENT_SASS_OPTION_STRING_SETTER(const char*, plugin_path, 0);
   IMPLEMENT_SASS_OPTION_STRING_SETTER(const char*, include_path, 0);
-  IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, input_path, 0);
-  IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, output_path, 0);
+  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(const char*, input_path, 0);
+  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(const char*, output_path, 0);
   IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, source_map_file, 0);
   IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, source_map_root, 0);
 
@@ -706,54 +681,25 @@ extern "C" {
   // Push function for include paths (no manipulation support for now)
   void ADDCALL sass_option_push_include_path(struct Sass_Options* options, const char* path)
   {
-
-    struct string_list* include_path = (struct string_list*) calloc(1, sizeof(struct string_list));
-    if (include_path == 0) return;
-    include_path->string = path ? sass_copy_c_string(path) : 0;
-    struct string_list* last = options->include_paths;
-    if (!options->include_paths) {
-      options->include_paths = include_path;
-    } else {
-      while (last->next)
-        last = last->next;
-      last->next = include_path;
-    }
-
+    options->include_paths.push_back(path);
   }
 
   // Push function for include paths (no manipulation support for now)
   size_t ADDCALL sass_option_get_include_path_size(struct Sass_Options* options)
   {
-    size_t len = 0;
-    struct string_list* cur = options->include_paths;
-    while (cur) { len ++; cur = cur->next; }
-    return len;
+    return options->include_paths.size();
   }
 
   // Push function for include paths (no manipulation support for now)
   const char* ADDCALL sass_option_get_include_path(struct Sass_Options* options, size_t i)
   {
-    struct string_list* cur = options->include_paths;
-    while (i) { i--; cur = cur->next; }
-    return cur->string;
+    return options->include_paths.at(i).c_str();
   }
 
   // Push function for plugin paths (no manipulation support for now)
   void ADDCALL sass_option_push_plugin_path(struct Sass_Options* options, const char* path)
   {
-
-    struct string_list* plugin_path = (struct string_list*) calloc(1, sizeof(struct string_list));
-    if (plugin_path == 0) return;
-    plugin_path->string = path ? sass_copy_c_string(path) : 0;
-    struct string_list* last = options->plugin_paths;
-    if (!options->plugin_paths) {
-      options->plugin_paths = plugin_path;
-    } else {
-      while (last->next)
-        last = last->next;
-      last->next = plugin_path;
-    }
-
+    options->plugin_paths.push_back(path);
   }
 
 }

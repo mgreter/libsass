@@ -76,8 +76,8 @@ namespace Sass {
     indent                  (safe_str(c_options.indent, "  ")),
     linefeed                (safe_str(c_options.linefeed, "\n")),
 
-    input_path              (make_canonical_path(safe_input(c_options.input_path))),
-    output_path             (make_canonical_path(safe_output(c_options.output_path, input_path))),
+    input_path              (make_canonical_path(safe_input(c_options.input_path.c_str()))),
+    output_path             (make_canonical_path(safe_output(c_options.output_path.c_str(), input_path))),
     source_map_file         (make_canonical_path(safe_str(c_options.source_map_file, ""))),
     source_map_root         (make_canonical_path(safe_str(c_options.source_map_root, "")))
 
@@ -89,9 +89,9 @@ namespace Sass {
 
     // collect more paths from different options
     collectIncludePaths(c_options.include_path);
-    collect_include_paths(c_options.include_paths);
+    collectIncludePaths(c_options.include_paths);
     collectPluginPaths(c_options.plugin_path);
-    collect_plugin_paths(c_options.plugin_paths);
+    collectPluginPaths(c_options.plugin_paths);
 
     // load plugins and register custom behaviors
     for(auto plug : plugin_paths) plugins.load_plugins(plug);
@@ -177,22 +177,17 @@ namespace Sass {
     }
   }
 
-  void Context::collect_include_paths(string_list* paths_array)
+  void Context::collectPluginPaths(const sass::vector<sass::string>& paths)
   {
-    while (paths_array)
-    {
-      collectIncludePaths(paths_array->string);
-      paths_array = paths_array->next;
+    for (const sass::string& path : paths) {
+      collectPluginPaths(path.c_str());
     }
   }
 
-
-  void Context::collect_plugin_paths(string_list* paths_array)
+  void Context::collectIncludePaths(const sass::vector<sass::string>& paths)
   {
-    while (paths_array)
-    {
-      collectPluginPaths(paths_array->string);
-      paths_array = paths_array->next;
+    for (const sass::string& path : paths) {
+      collectIncludePaths(path.c_str());
     }
   }
 

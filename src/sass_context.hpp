@@ -5,6 +5,7 @@
 #include "sass/context.h"
 #include "ast_fwd_decl.hpp"
 #include "backtrace.hpp"
+#include "sass.hpp"
 
 // sass config options structure
 struct Sass_Options : Sass_Output_Options {
@@ -27,13 +28,13 @@ struct Sass_Options : Sass_Output_Options {
   // overload the input file path. It is
   // set to "stdin" for data contexts and
   // to the input file on file contexts.
-  char* input_path;
+  Sass::sass::string input_path;
 
   // The output path is used for source map
   // generation. LibSass will not write to
   // this file, it is just used to create
   // information in source-maps etc.
-  char* output_path;
+  Sass::sass::string output_path;
 
   // Colon-separated list of paths
   // Semicolon-separated on Windows
@@ -42,9 +43,9 @@ struct Sass_Options : Sass_Output_Options {
   char* plugin_path;
 
   // Include paths (linked string list)
-  struct string_list* include_paths;
+  Sass::sass::vector<Sass::sass::string> include_paths;
   // Plug-in paths (linked string list)
-  struct string_list* plugin_paths;
+  Sass::sass::vector<Sass::sass::string> plugin_paths;
 
   // Path to source map file
   // Enables source map generation
