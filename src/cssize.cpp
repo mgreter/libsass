@@ -308,7 +308,7 @@ namespace Sass {
         }
         else if (CssParentNode* prev = Cast<CssParentNode>(parent)) {
           prev = SASS_MEMORY_COPY(prev);
-          prev->elements26(std::move(slice));
+          prev->elements(std::move(slice));
           previousBlock = &prev->elements();
           items.push_back(prev);
         }

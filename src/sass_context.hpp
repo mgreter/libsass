@@ -10,6 +10,9 @@
 // sass config options structure
 struct SassOptionsCpp : SassOutputOptionsCpp {
 
+  typedef Sass::sass::string string;
+  typedef Sass::sass::vector<string> strings;
+
   // embed sourceMappingUrl as data URI
   bool source_map_embed;
 
@@ -28,32 +31,32 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   // overload the input file path. It is
   // set to "stdin" for data contexts and
   // to the input file on file contexts.
-  Sass::sass::string input_path;
+  string input_path;
 
   // The output path is used for source map
   // generation. LibSass will not write to
   // this file, it is just used to create
   // information in source-maps etc.
-  Sass::sass::string output_path;
+  string output_path;
 
   // Colon-separated list of paths
   // Semicolon-separated on Windows
   // Maybe use array interface instead?
-  Sass::sass::string include_path;
-  Sass::sass::string plugin_path;
+  string include_path;
+  string plugin_path;
 
   // Include paths (linked string list)
-  Sass::sass::vector<Sass::sass::string> include_paths;
+  strings include_paths;
   // Plug-in paths (linked string list)
-  Sass::sass::vector<Sass::sass::string> plugin_paths;
+  strings plugin_paths;
 
   // Path to source map file
   // Enables source map generation
   // Used to create sourceMappingUrl
-  Sass::sass::string source_map_file;
+  string source_map_file;
 
   // Directly inserted in source maps
-  Sass::sass::string source_map_root;
+  string source_map_root;
 
   // Custom functions that can be called from SCSS code
   SassFunctionListPtr c_functions;
@@ -81,29 +84,29 @@ struct SassContextCpp : SassOptionsCpp
   enum Sass_Logger_Style logstyle;
 
   // generated output data
-  Sass::sass::string output_string;
+  string output_string;
 
   // generated stderr data
-  Sass::sass::string stderr_string;
+  string stderr_string;
 
   // generated source map json
-  Sass::sass::string source_map_string;
+  string source_map_string;
 
   // error status
   int error_status;
-  Sass::sass::string error_json;
-  Sass::sass::string error_text;
-  Sass::sass::string error_message;
+  string error_json;
+  string error_text;
+  string error_message;
   // error position
-  Sass::sass::string error_file;
+  string error_file;
   size_t error_line;
   size_t error_column;
 
   // Should be real SourceData?
-  Sass::sass::string error_src;
+  string error_src;
 
   // report imported files
-  Sass::sass::vector<Sass::sass::string> included_files;
+  strings included_files;
 
 };
 
@@ -119,8 +122,8 @@ struct SassFileContextCpp : SassContextCpp {
 struct SassDataContextCpp : SassContextCpp {
 
   // provided source string
-  Sass::sass::string source_string;
-  Sass::sass::string srcmap_string;
+  string source_string;
+  string srcmap_string;
 
 };
 

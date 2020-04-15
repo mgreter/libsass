@@ -1048,7 +1048,7 @@ namespace Sass {
         results.emplace_back(result);
       }
     }
-    rv->elements26(std::move(results));
+    rv->elements(std::move(results));
     return rv.detach();
   }
 
@@ -1507,7 +1507,7 @@ namespace Sass {
     blockStack.emplace_back(blk);
     node->block()->perform(this);
     blockStack.pop_back();
-    css->elements26(std::move(blk->elements()));
+    css->elements(std::move(blk->elements()));
     mediaStack.pop_back();
 
     // The parent to add declarations too

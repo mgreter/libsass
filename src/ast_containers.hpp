@@ -7,10 +7,10 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////////
-  // Base class/container for AST nodes that should behave like vectors.
-  /////////////////////////////////////////////////////////////////////////////
+// Base class/container for AST nodes that should behave like vectors.
+/////////////////////////////////////////////////////////////////////////////
   template <typename V>
-  class Vectorized {
+  class VectorizedBase {
 
   protected:
 
@@ -20,39 +20,35 @@ namespace Sass {
 
   protected:
 
-    // Hash is only calculated once
-    mutable size_t hash_;
     // Reset it once container is mutated
     // Therefore don't allow outside mutation
-    void reset_hash() { hash_ = 0; }
+    // I hope all calls to this get optimized out
+    virtual void reset_hash() {};
 
   public:
 
-    Vectorized(size_t s = 0) : hash_(0)
+    VectorizedBase(size_t s = 0)
     {
       elements_.reserve(s);
     }
 
     // Copy constructor from other Vectorized
-    Vectorized(const Vectorized<V>* vec) :
-      elements_(vec->elements_),
-      hash_(0)
+    VectorizedBase(const VectorizedBase<V>* vec) :
+      elements_(vec->elements_)
     {}
 
     // Copy constructor from other base vector
-    Vectorized(const sass::vector<T>& vec) :
-      elements_(vec),
-      hash_(0)
+    VectorizedBase(const sass::vector<T>& vec) :
+      elements_(vec)
     {}
 
     // Move constructor from other base vector
-    Vectorized(sass::vector<T>&& vec) :
-      elements_(std::move(vec)),
-      hash_(0)
+    VectorizedBase(sass::vector<T>&& vec) :
+      elements_(std::move(vec))
     {}
 
     // Allow destructor overloading
-    virtual ~Vectorized() {};
+    virtual ~VectorizedBase() {};
 
     // Some simple method delegations
     T& last() { return elements_.back(); }
@@ -66,7 +62,7 @@ namespace Sass {
     // Check underlying containers for equality
     // Note: maybe we could gain some speed by checking
     // the computed hash first, before doing full test?
-    bool operator== (const Vectorized<V>& rhs) const
+    bool operator== (const VectorizedBase<V>& rhs) const
     {
       // Abort early if sizes do not match
       if (length() != rhs.length()) return false;
@@ -75,7 +71,7 @@ namespace Sass {
     }
 
     // Derive unequal operator from equality check
-    bool operator!= (const Vectorized<V>& rhs) const
+    bool operator!= (const VectorizedBase<V>& rhs) const
     {
       return !(*this == rhs);
     }
@@ -119,7 +115,7 @@ namespace Sass {
     }
 
     // Syntactic sugar for pointers
-    void concat(const Vectorized<V>* v)
+    void concat(const VectorizedBase<V>* v)
     {
       if (v != nullptr) {
         return concat(*v);
@@ -210,17 +206,6 @@ namespace Sass {
       elements_ = std::move(e);
     }
 
-    // Calculate the hash
-    virtual size_t hash() const
-    {
-      if (hash_ == 0) {
-        for (const T& el : elements_) {
-          hash_combine(hash_, el->hash());
-        }
-      }
-      return hash_;
-    }
-
     template <typename P>
     typename sass::vector<T>::iterator insert(P position, const T& val) {
       reset_hash();
@@ -244,178 +229,59 @@ namespace Sass {
 
 
   /////////////////////////////////////////////////////////////////////////////
-  // Base class/container for AST nodes that should behave like vectors.
+  // Class/container for SassList, which needs the hash value
   /////////////////////////////////////////////////////////////////////////////
   template <typename V>
-  class VectorizedBase {
-
-  private:
+  class Vectorized :
+    public VectorizedBase<V> {
 
     typedef SharedImpl<V> T;
-    sass::vector<T> elements_;
+
+  protected:
+
+    // Hash is only calculated once
+    mutable size_t hash_;
+    // Reset it once container is mutated
+    // Therefore don't allow outside mutation
+    void reset_hash() override final { hash_ = 0; }
 
   public:
-    VectorizedBase(size_t s = 0)
-    {
-      elements_.reserve(s);
-    }
-    VectorizedBase(const VectorizedBase<V>* vec) :
-      elements_(vec->elements_)
+
+    Vectorized(size_t s = 0) :
+      VectorizedBase<V>(0),
+      hash_(0)
     {}
-    VectorizedBase(sass::vector<T> vec) :
-      elements_(std::move(vec))
+
+    // Copy constructor from other Vectorized
+    Vectorized(const Vectorized<V>* vec) :
+      VectorizedBase<V>(vec),
+      hash_(0)
     {}
-    virtual ~VectorizedBase() {};
-    size_t length() const { return elements_.size(); }
-    bool empty() const { return elements_.empty(); }
-    void clear() { return elements_.clear(); }
 
+    // Copy constructor from other base vector
+    Vectorized(const sass::vector<T>& vec) :
+      VectorizedBase<V>(vec),
+      hash_(0)
+    {}
 
-    T& last() { return elements_.back(); }
-    T& first() { return elements_.front(); }
-    const T& last() const { return elements_.back(); }
-    const T& first() const { return elements_.front(); }
+    // Move constructor from other base vector
+    Vectorized(sass::vector<T>&& vec) :
+      VectorizedBase<V>(std::move(vec)),
+      hash_(0)
+    {}
 
-    bool operator== (const VectorizedBase<V>& rhs) const
+    // Calculate the hash
+    virtual size_t hash() const
     {
-      // Abort early if sizes do not match
-      if (length() != rhs.length()) return false;
-      // Otherwise test each node for object equality in order
-      return std::equal(begin(), end(), rhs.begin(), ObjEqualityFn<T>);
-    }
-
-    bool operator!= (const VectorizedBase<V>& rhs) const {
-      return !(*this == rhs);
-    }
-
-    T& at(size_t i) { return elements_.at(i); }
-    T& operator[](size_t i) { return elements_[i]; }
-    const T& at(size_t i) const { return elements_.at(i); }
-    const T& get(size_t i) const { return elements_[i]; }
-    // ToDo: might insert am item (update ordered list)
-    const T& operator[](size_t i) const { return elements_[i]; }
-
-    // Implicitly get the sass::vector from our object
-    // Makes the Vector directly assignable to sass::vector
-    // You are responsible to make a copy if needed
-    // Note: since this returns the real object, we can't
-    // Note: guarantee that the hash will not get out of sync
-    operator sass::vector<T>& () { return elements_; }
-    operator const sass::vector<T>& () const { return elements_; }
-
-    // Explicitly request all elements as a real sass::vector
-    // You are responsible to make a copy if needed
-    // Note: since this returns the real object, we can't
-    // Note: guarantee that the hash will not get out of sync
-    sass::vector<T>& elements() { return elements_; }
-    const sass::vector<T>& elements() const { return elements_; }
-
-    // Insert all items from compatible vector
-    void concat(const sass::vector<T>& v)
-    {
-      elements().insert(end(), v.begin(), v.end());
-    }
-
-    // Insert all items from compatible vector
-    void concat(sass::vector<T>&& v)
-    {
-      std::move(v.begin(), v.end(),
-        std::back_inserter(elements_));
-      // elements().insert(end(), v.begin(), v.end());
-    }
-
-
-    // Synthetic sugar for pointers
-    void concat(const VectorizedBase<V>* v)
-    {
-      if (v != nullptr) {
-        return concat(*v);
-      }
-    }
-
-    // Insert one item on the front
-    void unshift(const T& element)
-    {
-      elements_.insert(begin(), element);
-    }
-
-    void unshift(T&& element)
-    {
-      elements_.insert(begin(), std::move(element));
-    }
-
-    // Remove and return item on the front
-    // ToDo: handle empty vectors
-    // T shift() {
-    //   T first = get(0);
-    //   elements_.erase(begin());
-    //   return first;
-    // }
-
-    // Insert one item on the back
-    // ToDo: rename this to push
-    void append(const T& element)
-    {
-      elements_.emplace_back(element);
-    }
-    void append(T&& element)
-    {
-      elements_.emplace_back(std::move(element));
-    }
-
-    // Check if an item already exists
-    // Uses underlying object `operator==`
-    // E.g. compares the actual objects
-    bool contains(const T& el) const {
-      for (const T& rhs : elements_) {
-        // Test the underlying objects for equality
-        // A std::find checks for pointer equality
-        if (ObjEqualityFn(el, rhs)) {
-          return true;
+      if (hash_ == 0) {
+        for (const T& el : this->elements()) {
+          hash_combine(hash_, el->hash());
         }
       }
-      return false;
+      return hash_;
     }
-
-    bool contains(const V* el) const {
-      for (const T& rhs : elements_) {
-        // Test the underlying objects for equality
-        // A std::find checks for pointer equality
-        if (PtrObjEqualityFn(el, rhs.ptr())) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    // This might be better implemented as `operator=`?
-    void elements(const sass::vector<T>& e) {
-      elements_ = e;
-    }
-
-    void elements26(sass::vector<T>&& e) {
-      elements_ = std::move(e);
-    }
-
-    template <typename P>
-    typename sass::vector<T>::iterator insert(P position, const T& val) {
-      return elements_.insert(position, val);
-    }
-
-    template <typename P>
-    typename sass::vector<T>::iterator insert(P position, T&& val) {
-      return elements_.insert(position, std::move(val));
-    }
-
-    typename sass::vector<T>::iterator end() { return elements_.end(); }
-    typename sass::vector<T>::iterator begin() { return elements_.begin(); }
-    typename sass::vector<T>::const_iterator end() const { return elements_.end(); }
-    typename sass::vector<T>::const_iterator begin() const { return elements_.begin(); }
-    typename sass::vector<T>::iterator erase(typename sass::vector<T>::iterator el) { return elements_.erase(el); }
-    typename sass::vector<T>::const_iterator erase(typename sass::vector<T>::const_iterator el) { return elements_.erase(el); }
 
   };
-
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
