@@ -326,7 +326,7 @@ namespace Sass {
   {
 
     // get pointer to the loaded content
-    SassImportPtr import = sass_make_import2(
+    SassImportPtr import = sass_make_import(
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
       contents, srcmap,
@@ -568,7 +568,7 @@ namespace Sass {
     entry_path = abs_path;
 
     // create entry only for import stack
-    SassImportPtr import = sass_make_import2(
+    SassImportPtr import = sass_make_import(
       input_path.c_str(),
       abs_path.c_str(),
       contents,
@@ -602,7 +602,7 @@ namespace Sass {
     sass::string abs_path(rel2abs(entry_path, ".", CWD));
 
     // create entry only for the import stack
-    SassImportPtr import = sass_make_import2(
+    SassImportPtr import = sass_make_import(
       input_path.c_str(),
       input_path.c_str(),
       sass_copy_string(source_c_str),

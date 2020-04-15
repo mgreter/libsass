@@ -34,9 +34,7 @@ ADDAPI void* ADDCALL sass_importer_get_cookie (SassImporterPtr cb);
 ADDAPI void ADDCALL sass_delete_importer (SassImporterPtr cb); 
 
 // Creator for a single import entry returned by the custom importer inside the list
-ADDAPI SassImportPtr ADDCALL sass_make_import_entry (const char* path, char* source, char* srcmap);
-ADDAPI SassImportPtr ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap);
-ADDAPI SassImportPtr ADDCALL sass_make_import2(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum Sass_Import_Type type);
+ADDAPI SassImportPtr ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum Sass_Import_Type type);
 // set error message to abort import and to print out a message (path from existing object is used in output)
 ADDAPI SassImportPtr ADDCALL sass_import_set_error(SassImportPtr import, const char* message, uint32_t line, uint32_t col);
 

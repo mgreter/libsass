@@ -2273,7 +2273,7 @@ namespace Sass {
     const StyleSheet& sheet = ctx.sheets.at(include.abs_path);
 
     // Create C-API exposed object to query
-    SassImportPtr import = sass_make_import2(
+    SassImportPtr import = sass_make_import(
       include.imp_path.c_str(),
       include.abs_path.c_str(),
       0, 0, sheet.syntax

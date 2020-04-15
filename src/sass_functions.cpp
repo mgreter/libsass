@@ -163,29 +163,9 @@ extern "C" {
     delete list;
   }
 
-  // SassImporterPtr ADDCALL sass_importer_get_list_entry(SassImporterListPtr list, uint32_t idx) { return list[idx]; }
-  // void ADDCALL sass_importer_set_list_entry(SassImporterListPtr list, uint32_t idx, SassImporterPtr cb) { list[idx] = cb; }
-
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
-  SassImportPtr ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap)
-  {
-    SassImportPtr v = new SassImportCpp();
-    if (v == 0) return 0;
-    v->line = -1;
-    v->column = -1;
-    // Stuff was shifted to internal C++ API
-    v->srcdata = SASS_MEMORY_NEW(SourceFile,
-      imp_path, abs_path,
-      source ? source : 0,
-      srcmap ? srcmap : 0,
-      SASS_IMPORT_AUTO, -1);
-    return v;
-  }
-
-  // Creator for a single import entry returned by the custom importer inside the list
-  // We take ownership of the memory for source and srcmap (freed when context is destroyed)
-  SassImportPtr ADDCALL sass_make_import2(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
+  SassImportPtr ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
   {
     SassImportPtr v = new SassImportCpp();
     if (v == 0) return 0;
@@ -198,12 +178,6 @@ extern "C" {
       srcmap ? srcmap : 0,
       type, -1);
     return v;
-  }
-
-  // Older style, but somehow still valid - keep around or deprecate?
-  SassImportPtr ADDCALL sass_make_import_entry(const char* path, char* source, char* srcmap)
-  {
-    return sass_make_import(path, path, source, srcmap);
   }
 
   // Upgrade a normal import entry to throw an error (original path can be re-used by error reporting)
