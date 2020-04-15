@@ -12,7 +12,7 @@
 extern "C" {
   using namespace Sass;
 
-  Sass_Function_List ADDCALL sass_make_function_list(size_t length)
+  Sass_Function_List ADDCALL sass_make_function_list(uint32_t length)
   {
     return (Sass_Function_List) calloc(length + 1, sizeof(Sass_Function_Entry));
   }
@@ -46,8 +46,8 @@ extern "C" {
   }
 
   // Setters and getters for callbacks on function lists
-  Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, size_t pos) { return list[pos]; }
-  void sass_function_set_list_entry(Sass_Function_List list, size_t pos, Sass_Function_Entry cb) { list[pos] = cb; }
+  Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos) { return list[pos]; }
+  void sass_function_set_list_entry(Sass_Function_List list, uint32_t pos, Sass_Function_Entry cb) { list[pos] = cb; }
 
   const char* ADDCALL sass_function_get_signature(Sass_Function_Entry cb) { return cb->signature; }
   Sass_Function_Fn ADDCALL sass_function_get_function(Sass_Function_Entry cb) { return cb->function; }
@@ -74,7 +74,7 @@ extern "C" {
   }
 
   // Creator for sass custom importer function list
-  Sass_Importer_List ADDCALL sass_make_importer_list(size_t length)
+  Sass_Importer_List ADDCALL sass_make_importer_list(uint32_t length)
   {
     return (Sass_Importer_List) calloc(length + 1, sizeof(Sass_Importer_Entry));
   }
@@ -91,11 +91,11 @@ extern "C" {
     free(it);
   }
 
-  Sass_Importer_Entry ADDCALL sass_importer_get_list_entry(Sass_Importer_List list, size_t idx) { return list[idx]; }
-  void ADDCALL sass_importer_set_list_entry(Sass_Importer_List list, size_t idx, Sass_Importer_Entry cb) { list[idx] = cb; }
+  Sass_Importer_Entry ADDCALL sass_importer_get_list_entry(Sass_Importer_List list, uint32_t idx) { return list[idx]; }
+  void ADDCALL sass_importer_set_list_entry(Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry cb) { list[idx] = cb; }
 
   // Creator for sass custom importer return argument list
-  Sass_Import_List ADDCALL sass_make_import_list(size_t length)
+  Sass_Import_List ADDCALL sass_make_import_list(uint32_t length)
   {
     return (Sass_Import**) calloc(length + 1, sizeof(Sass_Import*));
   }
@@ -143,7 +143,7 @@ extern "C" {
   }
 
   // Upgrade a normal import entry to throw an error (original path can be re-used by error reporting)
-  Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import, const char* error, size_t line, size_t col)
+  Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import, const char* error, uint32_t line, uint32_t col)
   {
     if (import == 0) return 0;
     if (import->error) free(import->error);
@@ -154,8 +154,8 @@ extern "C" {
   }
 
   // Setters and getters for entries on the import list
-  void ADDCALL sass_import_set_list_entry(Sass_Import_List list, size_t idx, Sass_Import_Entry entry) { list[idx] = entry; }
-  Sass_Import_Entry ADDCALL sass_import_get_list_entry(Sass_Import_List list, size_t idx) { return list[idx]; }
+  void ADDCALL sass_import_set_list_entry(Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry) { list[idx] = entry; }
+  Sass_Import_Entry ADDCALL sass_import_get_list_entry(Sass_Import_List list, uint32_t idx) { return list[idx]; }
 
   // Deallocator for the allocated memory
   void ADDCALL sass_delete_import_list(Sass_Import_List list)
@@ -179,8 +179,8 @@ extern "C" {
   // Getter for callee entry
   const char* ADDCALL sass_callee_get_name(Sass_Callee_Entry entry) { return entry->name; }
   const char* ADDCALL sass_callee_get_path(Sass_Callee_Entry entry) { return entry->path; }
-  size_t ADDCALL sass_callee_get_line(Sass_Callee_Entry entry) { return entry->line; }
-  size_t ADDCALL sass_callee_get_column(Sass_Callee_Entry entry) { return entry->column; }
+  uint32_t ADDCALL sass_callee_get_line(Sass_Callee_Entry entry) { return entry->line; }
+  uint32_t ADDCALL sass_callee_get_column(Sass_Callee_Entry entry) { return entry->column; }
   enum Sass_Callee_Type ADDCALL sass_callee_get_type(Sass_Callee_Entry entry) { return entry->type; }
   
   // Getters and Setters for environments (lexical, local and global)
@@ -216,8 +216,8 @@ extern "C" {
   enum Sass_Import_Type ADDCALL sass_import_get_type(Sass_Import_Entry entry) { return entry->srcdata->getType();  }
 
   // Getter for import error entry
-  size_t ADDCALL sass_import_get_error_line(Sass_Import_Entry entry) { return entry->line; }
-  size_t ADDCALL sass_import_get_error_column(Sass_Import_Entry entry) { return entry->column; }
+  uint32_t ADDCALL sass_import_get_error_line(Sass_Import_Entry entry) { return entry->line; }
+  uint32_t ADDCALL sass_import_get_error_column(Sass_Import_Entry entry) { return entry->column; }
   const char* ADDCALL sass_import_get_error_message(Sass_Import_Entry entry) { return entry->error; }
 
   // Explicit functions to take ownership of the memory

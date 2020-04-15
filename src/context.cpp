@@ -398,38 +398,33 @@ namespace Sass {
           Importer importer(uniq_path, ctx_path);
           // query data from the current include
           Sass_Import_Entry include_ent = *it_includes;
-          char* source = sass_copy_c_string(sass_import_get_source(include_ent));
-          char* srcmap = sass_copy_c_string(sass_import_get_srcmap(include_ent));
-          size_t line = sass_import_get_error_line(include_ent);
-          size_t column = sass_import_get_error_column(include_ent);
+          // const char* content = sass_import_get_source(include_ent);
+          // const char* srcmap = sass_import_get_srcmap(include_ent);
           const char* abs_path = sass_import_get_abs_path(include_ent);
-          // handle error message passed back from custom importer
-          // it may (or may not) override the line and column info
+
+          // Handle error message passed back from custom importer
+          // It may (or may not) override the line and column info
           if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            if (source || srcmap) register_resource({ importer, uniq_path, include_ent->srcdata->getType() }, source, srcmap, pstate);
-            if (line == sass::string::npos && column == sass::string::npos) error(err_message, pstate, *logger);
-            // else error(err_message, SourceSpan(ctx_path, source, Position(line, column)), *logger);
-            else {
-              std::cerr << "re implement this\n";
-              exit(1);
-            }
+            uint32_t line = sass_import_get_error_line(include_ent);
+            uint32_t column = sass_import_get_error_column(include_ent);
+            if (line == sass::string::npos) error(err_message, pstate, *logger);
+            else if (column == sass::string::npos) error(err_message, pstate, *logger);
+            else error(err_message, { include_ent->srcdata, Offset::init(line, column) }, *logger);
           }
-          // content for import was set
-          else if (source) {
-            // resolved abs_path should be set by custom importer
-            // use the created uniq_path as fall-back (maybe enforce)
+          // Content for import was set.
+          // No need to load it ourself.
+          else if (sass_import_get_source(include_ent)) {
+            // Resolved abs_path should be set by custom importer
+            // Use the created uniq_path as fall-back (enforce?)
             sass::string path_key(abs_path ? abs_path : uniq_path);
+
             // create the importer struct
             Include include(importer, path_key, include_ent->srcdata->getType());
-            // attach information to AST node
-
             auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, load_path);
             rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
 
-            // imp->incs().emplace_back(include);
-
             // register the resource buffers
-            register_resource(include, source, srcmap, pstate);
+            register_import(include_ent);
           }
           // only a path was returned
           // try to load it like normal
