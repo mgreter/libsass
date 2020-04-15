@@ -1262,17 +1262,17 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
   class Interpolation final : public Expression,
-    public VectorizedBase<Interpolant> {
+    public VectorizedNopsi<Interpolant> {
 
   public:
     const sass::string& getPlainString() const;
     const sass::string& getInitialPlain() const;
 
     virtual bool operator==(const Interpolation& rhs) const {
-      return VectorizedBase::operator==(rhs);
+      return VectorizedNopsi::operator==(rhs);
     }
     virtual bool operator!=(const Interpolation& rhs) const {
-      return VectorizedBase::operator!=(rhs);
+      return VectorizedNopsi::operator!=(rhs);
     }
 
     Interpolation(const SourceSpan& pstate, Interpolant* ex = nullptr);

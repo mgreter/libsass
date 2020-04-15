@@ -767,7 +767,7 @@ namespace Sass {
   }
 
   Interpolation::Interpolation(const SourceSpan& pstate, Interpolant* ex) :
-    Expression(pstate), VectorizedBase()
+    Expression(pstate), VectorizedNopsi()
   {
     if (ex != nullptr) append(ex);
   }
@@ -776,7 +776,7 @@ namespace Sass {
     const SourceSpan& pstate,
     sass::vector<InterpolantObj> items) :
     Expression(pstate),
-    VectorizedBase(std::move(items))
+    VectorizedNopsi(std::move(items))
   {
   }
 
