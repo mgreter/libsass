@@ -22,7 +22,6 @@
 namespace Sass {
 
   class Context {
-
   public:
 
     /*#########################################################################*/
@@ -117,6 +116,9 @@ namespace Sass {
     size_t head_imports;
     Plugins plugins;
     Output emitter;
+
+    // Global available functions
+    std::vector<CallableObj> fnCache;
 
     // Stacks of all parsed functions 
     sass::vector<EnvFrame*> varStack;

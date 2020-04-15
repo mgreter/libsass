@@ -88,10 +88,9 @@ namespace Sass {
     // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
 
     // collect more paths from different options
-    collectPluginPaths(c_options.plugin_path);
     collectIncludePaths(c_options.include_path);
-
     collect_include_paths(c_options.include_paths);
+    collectPluginPaths(c_options.plugin_path);
     collect_plugin_paths(c_options.plugin_paths);
 
     // load plugins and register custom behaviors
@@ -634,12 +633,9 @@ namespace Sass {
     Eval eval(*this);
     eval.plainCss = sheet.plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());
-
-    size_t count = 0;
-    for (auto item : functions) {
-      varRoot.functions[count++] = item.second;
+    for (size_t i = 0; i < fnCache.size(); i++) {
+      varRoot.functions[i] = fnCache[i];
     }
-
     root = eval.visitRootBlock99(root); // 50%
 //    debug_ast(root);
 
@@ -735,6 +731,7 @@ namespace Sass {
     callable->idxs(local.getIdxs());
     ctx.functions.insert(std::make_pair(callable->name(), callable));
     ctx.varRoot.createFunction(callable->name());
+    ctx.fnCache.push_back(callable);
   }
 
   /*#########################################################################*/
@@ -750,6 +747,7 @@ namespace Sass {
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     functions.insert(std::make_pair(name, callable));
     varRoot.createFunction(name);
+    fnCache.push_back(callable);
   }
 
   void Context::registerBuiltInOverloadFns(const sass::string& name,
@@ -765,6 +763,7 @@ namespace Sass {
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
     functions.insert(std::make_pair(name, callable));
     varRoot.createFunction(name);
+    fnCache.push_back(callable);
   }
 
   void Context::loadBuiltInFunctions()
