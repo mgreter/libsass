@@ -376,7 +376,7 @@ namespace Sass {
   ImportRule::ImportRule(
     const SourceSpan& pstate) :
     ImportBase(pstate),
-    VectorizedBase()
+    VectorizedNopsi()
   {}
 
   /////////////////////////////////////////////////////////////////////////

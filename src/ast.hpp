@@ -623,7 +623,7 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class ImportRule final : public ImportBase, public VectorizedBase<ImportBase> {
+  class ImportRule final : public ImportBase, public VectorizedNopsi<ImportBase> {
   public:
     ImportRule(const SourceSpan& pstate);
     // ATTACH_CLONE_OPERATIONS(ImportRule);
