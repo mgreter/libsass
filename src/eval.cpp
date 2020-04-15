@@ -563,7 +563,7 @@ namespace Sass {
       SASS_ASSERT(Cast<ExternalCallable*>, "External warn override");
       ExternalCallable* def = static_cast<ExternalCallable*>(fn);
       SassFunctionPtr c_function = def->function();
-      Sass_Function_Fn c_func = sass_function_get_function(c_function);
+      SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
@@ -603,7 +603,7 @@ namespace Sass {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
       SassFunctionPtr c_function = def->function();
-      Sass_Function_Fn c_func = sass_function_get_function(c_function);
+      SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
@@ -641,7 +641,7 @@ namespace Sass {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
       SassFunctionPtr c_function = def->function();
-      Sass_Function_Fn c_func = sass_function_get_function(c_function);
+      SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);

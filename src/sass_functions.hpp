@@ -10,7 +10,7 @@
 // Struct to hold custom function callback
 struct SassFunctionCpp {
   Sass::sass::string signature;
-  Sass_Function_Fn function;
+  SassFunctionLambdaCpp function;
   void* cookie;
 };
 
@@ -18,11 +18,11 @@ struct SassFunctionListCpp : Sass::sass::vector<SassFunctionCpp*> {
 
 };
 
-struct Sass_Importer_List2 : Sass::sass::vector<SassImporterPtr> {
+struct SassImporterListCpp : Sass::sass::vector<SassImporterPtr> {
 
 };
 
-struct Sass_Import_List2 : Sass::sass::vector<SassImportPtr> {
+struct SassImportListCpp : Sass::sass::vector<SassImportPtr> {
 
 };
 
@@ -54,7 +54,7 @@ struct SassCalleeCpp {
 
 // Struct to hold importer callback
 struct SassImporterCpp {
-  SassImporterFnCpp importer;
+  SassImporterLambdaCpp importer;
   double           priority;
   void*            cookie;
 };

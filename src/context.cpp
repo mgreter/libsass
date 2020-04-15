@@ -409,7 +409,7 @@ namespace Sass {
     // They must be presorted by priorities.
     for (SassImporterPtr importer : importers) {
       // Get the external importer function
-      SassImporterFnCpp fn = sass_importer_get_function(importer);
+      SassImporterLambdaCpp fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
       SassImportListPtr includes = fn(imp_path.c_str(), importer, c_compiler);
       // External provider want to handle this

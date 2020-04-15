@@ -17,7 +17,7 @@ extern "C" {
   // Creator for sass custom importer return argument list
   SassImportListPtr ADDCALL sass_make_import_list()
   {
-    return new Sass_Import_List2{};
+    return new SassImportListCpp{};
   }
 
   void ADDCALL sass_delete_import_list(SassImportListPtr list)
@@ -94,7 +94,7 @@ extern "C" {
     }
   }
 
-  SassFunctionPtr ADDCALL sass_make_function(const char* signature, Sass_Function_Fn function, void* cookie)
+  SassFunctionPtr ADDCALL sass_make_function(const char* signature, SassFunctionLambdaCpp function, void* cookie)
   {
     SassFunctionPtr cb = new SassFunctionCpp{};
     if (cb == 0) return 0;
@@ -124,10 +124,10 @@ extern "C" {
   // void sass_function_set_list_entry(SassFunctionListPtr list, uint32_t pos, SassFunctionPtr cb) { list[pos] = cb; }
 
   const char* ADDCALL sass_function_get_signature(SassFunctionPtr cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
-  Sass_Function_Fn ADDCALL sass_function_get_function(SassFunctionPtr cb) { return cb->function; }
+  SassFunctionLambdaCpp ADDCALL sass_function_get_function(SassFunctionPtr cb) { return cb->function; }
   void* ADDCALL sass_function_get_cookie(SassFunctionPtr cb) { return cb->cookie; }
 
-  SassImporterPtr ADDCALL sass_make_importer(SassImporterFnCpp fn, double priority, void* cookie)
+  SassImporterPtr ADDCALL sass_make_importer(SassImporterLambdaCpp fn, double priority, void* cookie)
   {
     SassImporterPtr importer = new SassImporterCpp{};
     if (importer == 0) return 0;
@@ -137,7 +137,7 @@ extern "C" {
     return importer;
   }
 
-  SassImporterFnCpp ADDCALL sass_importer_get_function(SassImporterPtr cb) { return cb->importer; }
+  SassImporterLambdaCpp ADDCALL sass_importer_get_function(SassImporterPtr cb) { return cb->importer; }
   double ADDCALL sass_importer_get_priority (SassImporterPtr cb) { return cb->priority; }
   void* ADDCALL sass_importer_get_cookie(SassImporterPtr cb) { return cb->cookie; }
 
@@ -150,7 +150,7 @@ extern "C" {
   // Creator for sass custom importer function list
   SassImporterListPtr ADDCALL sass_make_importer_list()
   {
-    return new Sass_Importer_List2{};
+    return new SassImporterListCpp{};
   }
 
   // Deallocator for the allocated memory
