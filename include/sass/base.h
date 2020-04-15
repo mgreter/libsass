@@ -82,7 +82,7 @@ ADDAPI const char* ADDCALL sass2scss_version(void);
 ADDAPI const char* ADDCALL libsass_language_version(void);
 
 // Include forward declarations
-#include <sass/fwddecl.h>
+#include <sass/fwdecl.h>
 
 // Include enumerations
 #include <sass/enums.h>

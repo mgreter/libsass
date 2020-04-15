@@ -2,6 +2,7 @@
 #define SASS_SASS_VALUES_H
 
 #include "sass.h"
+#include "strings.hpp"
 
 struct Sass_Unknown {
   enum Sass_Tag tag;

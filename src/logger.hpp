@@ -5,6 +5,7 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#include <sstream>
 #include "strings.hpp"
 #include "constants.hpp"
 #include "backtrace.hpp"
