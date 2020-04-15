@@ -346,11 +346,11 @@ namespace Sass {
     const SourceSpan& pstate,
     sass::vector<ComplexSelectorObj>&& complexes) :
     Selector(pstate),
-    VectorizedBase(std::move(complexes))
+    VectorizedNopsi(std::move(complexes))
   { }
   SelectorList::SelectorList(const SelectorList* ptr)
     : Selector(ptr),
-    VectorizedBase(*ptr)
+    VectorizedNopsi(*ptr)
   { }
 
   size_t SelectorList::hash() const

@@ -570,7 +570,7 @@ namespace Sass {
   ///////////////////////////////////
   // Comma-separated selector groups.
   ///////////////////////////////////
-  class SelectorList final : public Selector, public VectorizedBase<ComplexSelector> {
+  class SelectorList final : public Selector, public VectorizedNopsi<ComplexSelector> {
   public:
     SelectorList(const SourceSpan& pstate, sass::vector<ComplexSelectorObj>&& = {});
 
