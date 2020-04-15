@@ -24,7 +24,7 @@ namespace Sass {
     return json_mkstring(str.c_str());
   }
 
-  static void handle_string_error(Sass_Context* c_ctx, const sass::string& msg, int severety)
+  static void handle_string_error(SassContextCpp* c_ctx, const sass::string& msg, int severety)
   {
     sass::ostream msg_stream;
     JsonNode* json_err = json_mkobject();
@@ -44,7 +44,7 @@ namespace Sass {
 
 
 
-  static int handle_error(Sass_Context* c_ctx) {
+  static int handle_error(SassContextCpp* c_ctx) {
     try {
       throw;
     }
@@ -124,19 +124,19 @@ namespace Sass {
 
   // allow one error handler to throw another error
   // this can happen with invalid utf8 and json lib
-  static int handle_errors(Sass_Context* c_ctx) {
+  static int handle_errors(SassContextCpp* c_ctx) {
     try { return handle_error(c_ctx); }
     catch (...) { return handle_error(c_ctx); }
   }
 
-  static Block_Obj sass_parse_block(Sass_Compiler* compiler) throw()
+  static Block_Obj sass_parse_block(SassCompilerCpp* compiler) throw()
   {
 
     // assert valid pointer
     if (compiler == 0) return {};
     // The CPP context must be set by now
     Context* cpp_ctx = compiler->cpp_ctx;
-    Sass_Context* c_ctx = compiler->c_ctx;
+    SassContextCpp* c_ctx = compiler->c_ctx;
     // We will take care to wire up the rest
     compiler->cpp_ctx->c_compiler = compiler;
     compiler->state = SASS_COMPILER_PARSED;
@@ -223,14 +223,14 @@ extern "C" {
 
   // TODO: return empty string too?
 #define IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(option) \
-    const char* ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option.empty() ? 0 : ctx->option.c_str(); }
+    const char* ADDCALL sass_context_get_##option (struct SassContextCpp* ctx) { return ctx->option.empty() ? 0 : ctx->option.c_str(); }
 
 
 #define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
-    type ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option; }
+    type ADDCALL sass_context_get_##option (struct SassContextCpp* ctx) { return ctx->option; }
 
 #define IMPLEMENT_SASS_CONTEXT_TAKER(type, option) \
-    type sass_context_take_##option (struct Sass_Context* ctx) \
+    type sass_context_take_##option (struct SassContextCpp* ctx) \
     { type foo = ctx->option; ctx->option = 0; return foo; }
 
 
@@ -261,7 +261,7 @@ extern "C" {
   }
 
   // generic compilation function (not exported, use file/data compile instead)
-  static Sass_Compiler* sass_prepare_context (Sass_Context* c_ctx, Context* cpp_ctx) throw()
+  static SassCompilerCpp* sass_prepare_context (SassContextCpp* c_ctx, Context* cpp_ctx) throw()
   {
     try {
       // register our custom functions
@@ -276,9 +276,9 @@ extern "C" {
       c_ctx->error_column = sass::string::npos;
 
       // allocate a new compiler instance
-      void* ctxmem = new Sass_Compiler{};
+      void* ctxmem = new SassCompilerCpp{};
       if (ctxmem == 0) { std::cerr << "Error allocating memory for context" << STRMLF; return 0; }
-      Sass_Compiler* compiler = (struct Sass_Compiler*) ctxmem;
+      SassCompilerCpp* compiler = (struct SassCompilerCpp*) ctxmem;
       compiler->state = SASS_COMPILER_CREATED;
 
       // store in sass compiler
@@ -300,11 +300,11 @@ extern "C" {
   }
 
   // generic compilation function (not exported, use file/data compile instead)
-  static int sass_compile_context (Sass_Context* c_ctx, Context* cpp_ctx)
+  static int sass_compile_context (SassContextCpp* c_ctx, Context* cpp_ctx)
   {
 
     // prepare sass compiler with context and options
-    Sass_Compiler* compiler = sass_prepare_context(c_ctx, cpp_ctx);
+    SassCompilerCpp* compiler = sass_prepare_context(c_ctx, cpp_ctx);
 
     try {
       // call each compiler step
@@ -376,7 +376,7 @@ extern "C" {
     return ctx;
   }
 
-  void ADDCALL sass_context_print_stderr(struct Sass_Context* ctx)
+  void ADDCALL sass_context_print_stderr(struct SassContextCpp* ctx)
   {
     const char* message = sass_context_get_stderr_string(ctx);
     if (message != nullptr) Terminal::print(message, true);
@@ -387,14 +387,14 @@ extern "C" {
     Terminal::print(message, true);
   }
 
-  struct Sass_Compiler* ADDCALL sass_make_data_compiler (struct SassDataContextCpp* data_ctx)
+  struct SassCompilerCpp* ADDCALL sass_make_data_compiler (struct SassDataContextCpp* data_ctx)
   {
     if (data_ctx == 0) return 0;
     Context* cpp_ctx = new Data_Context(*data_ctx);
     return sass_prepare_context(data_ctx, cpp_ctx);
   }
 
-  struct Sass_Compiler* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx)
+  struct SassCompilerCpp* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx)
   {
     if (file_ctx == 0) return 0;
     Context* cpp_ctx = new File_Context(*file_ctx);
@@ -429,7 +429,7 @@ extern "C" {
     return sass_compile_context(file_ctx, cpp_ctx);
   }
 
-  int ADDCALL sass_compiler_parse(struct Sass_Compiler* compiler)
+  int ADDCALL sass_compiler_parse(struct SassCompilerCpp* compiler)
   {
     if (compiler == 0) return 1;
     if (compiler->state == SASS_COMPILER_PARSED) return 0;
@@ -444,7 +444,7 @@ extern "C" {
     return 0;
   }
 
-  int ADDCALL sass_compiler_execute(struct Sass_Compiler* compiler)
+  int ADDCALL sass_compiler_execute(struct SassCompilerCpp* compiler)
   {
     if (compiler == 0) return 1;
     if (compiler->state == SASS_COMPILER_EXECUTED) return 0;
@@ -502,7 +502,7 @@ extern "C" {
 
   // helper function, not exported, only accessible locally
   // sass_free_context is also defined in old sass_interface
-  static void sass_clear_context (struct Sass_Context* ctx)
+  static void sass_clear_context (struct SassContextCpp* ctx)
   {
     if (ctx == 0) return;
     // debug leaked memory
@@ -514,7 +514,7 @@ extern "C" {
     sass_clear_options(ctx);
   }
 
-  void ADDCALL sass_delete_compiler (struct Sass_Compiler* compiler)
+  void ADDCALL sass_delete_compiler (struct SassCompilerCpp* compiler)
   {
     if (compiler == 0) {
       return;
@@ -547,32 +547,32 @@ extern "C" {
   }
 
   // Getters for sass context from specific implementations
-  struct Sass_Context* ADDCALL sass_file_context_get_context(struct SassFileContextCpp* ctx) { return ctx; }
-  struct Sass_Context* ADDCALL sass_data_context_get_context(struct SassDataContextCpp* ctx) { return ctx; }
+  struct SassContextCpp* ADDCALL sass_file_context_get_context(struct SassFileContextCpp* ctx) { return ctx; }
+  struct SassContextCpp* ADDCALL sass_data_context_get_context(struct SassDataContextCpp* ctx) { return ctx; }
 
-  // Getters for context options from Sass_Context
-  struct SassOptionsCpp* ADDCALL sass_context_get_options(struct Sass_Context* ctx) { return ctx; }
+  // Getters for context options from SassContextCpp
+  struct SassOptionsCpp* ADDCALL sass_context_get_options(struct SassContextCpp* ctx) { return ctx; }
   struct SassOptionsCpp* ADDCALL sass_file_context_get_options(struct SassFileContextCpp* ctx) { return ctx; }
   struct SassOptionsCpp* ADDCALL sass_data_context_get_options(struct SassDataContextCpp* ctx) { return ctx; }
   void ADDCALL sass_file_context_set_options (struct SassFileContextCpp* ctx, struct SassOptionsCpp* opt) { copy_options(ctx, opt); }
   void ADDCALL sass_data_context_set_options (struct SassDataContextCpp* ctx, struct SassOptionsCpp* opt) { copy_options(ctx, opt); }
 
-  // Getters for Sass_Compiler options (get connected sass context)
-  enum Sass_Compiler_State ADDCALL sass_compiler_get_state(struct Sass_Compiler* compiler) { return compiler->state; }
-  struct Sass_Context* ADDCALL sass_compiler_get_context(struct Sass_Compiler* compiler) { return compiler->c_ctx; }
-  struct SassOptionsCpp* ADDCALL sass_compiler_get_options(struct Sass_Compiler* compiler) { return compiler->c_ctx; }
-  // Getters for Sass_Compiler options (query import stack)
-  size_t ADDCALL sass_compiler_get_import_stack_size(struct Sass_Compiler* compiler) { return compiler->cpp_ctx->import_stack.size(); }
-  SassImportPtr ADDCALL sass_compiler_get_last_import(struct Sass_Compiler* compiler) { return compiler->cpp_ctx->import_stack.back(); }
-  SassImportPtr ADDCALL sass_compiler_get_import_entry(struct Sass_Compiler* compiler, size_t idx) { return compiler->cpp_ctx->import_stack[idx]; }
-  // Getters for Sass_Compiler options (query function stack)
-  size_t ADDCALL sass_compiler_get_callee_stack_size(struct Sass_Compiler* compiler) { return compiler->cpp_ctx->callee_stack.size(); }
-  Sass_Callee_Entry ADDCALL sass_compiler_get_last_callee(struct Sass_Compiler* compiler) { return &compiler->cpp_ctx->callee_stack.back(); }
-  Sass_Callee_Entry ADDCALL sass_compiler_get_callee_entry(struct Sass_Compiler* compiler, size_t idx) { return &compiler->cpp_ctx->callee_stack[idx]; }
+  // Getters for SassCompilerCpp options (get connected sass context)
+  enum Sass_Compiler_State ADDCALL sass_compiler_get_state(struct SassCompilerCpp* compiler) { return compiler->state; }
+  struct SassContextCpp* ADDCALL sass_compiler_get_context(struct SassCompilerCpp* compiler) { return compiler->c_ctx; }
+  struct SassOptionsCpp* ADDCALL sass_compiler_get_options(struct SassCompilerCpp* compiler) { return compiler->c_ctx; }
+  // Getters for SassCompilerCpp options (query import stack)
+  size_t ADDCALL sass_compiler_get_import_stack_size(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->import_stack.size(); }
+  SassImportPtr ADDCALL sass_compiler_get_last_import(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->import_stack.back(); }
+  SassImportPtr ADDCALL sass_compiler_get_import_entry(struct SassCompilerCpp* compiler, size_t idx) { return compiler->cpp_ctx->import_stack[idx]; }
+  // Getters for SassCompilerCpp options (query function stack)
+  size_t ADDCALL sass_compiler_get_callee_stack_size(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->callee_stack.size(); }
+  Sass_Callee_Entry ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler) { return &compiler->cpp_ctx->callee_stack.back(); }
+  Sass_Callee_Entry ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx) { return &compiler->cpp_ctx->callee_stack[idx]; }
 
   // Calculate the size of the stored null terminated array
-  size_t ADDCALL sass_context_get_included_files(struct Sass_Context* ctx) { return ctx->included_files.size(); }
-  const char* ADDCALL sass_context_get_included_file(struct Sass_Context* ctx, size_t i) { return ctx->included_files.at(i).c_str(); }
+  size_t ADDCALL sass_context_get_included_files(struct SassContextCpp* ctx) { return ctx->included_files.size(); }
+  const char* ADDCALL sass_context_get_included_file(struct SassContextCpp* ctx, size_t i) { return ctx->included_files.at(i).c_str(); }
 
   // Create getter and setters for options
   IMPLEMENT_SASS_OPTION_ACCESSOR(int, precision);

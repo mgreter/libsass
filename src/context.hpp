@@ -154,7 +154,7 @@ namespace Sass {
 
     Extender extender;
 
-    struct Sass_Compiler* c_compiler;
+    struct SassCompilerCpp* c_compiler;
 
     // absolute paths to includes
     sass::vector<sass::string> included_files;
@@ -188,7 +188,7 @@ namespace Sass {
     const sass::string source_map_root; // path for sourceRoot property (pass-through)
 
     virtual ~Context();
-    Context(struct Sass_Context&);
+    Context(struct SassContextCpp&);
     virtual Block_Obj parse(Sass_Import_Type type) = 0;
     virtual Block_Obj compile();
     virtual sass::string render(Block_Obj root);

@@ -56,7 +56,7 @@ extern "C" {
     return list == nullptr ? 0 : list->size();
   }
 
-  Sass_Function* ADDCALL sass_function_list_shift(Sass_Function_List list)
+  SassFunctionCpp* ADDCALL sass_function_list_shift(Sass_Function_List list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -96,7 +96,7 @@ extern "C" {
 
   Sass_Function_Entry ADDCALL sass_make_function(const char* signature, Sass_Function_Fn function, void* cookie)
   {
-    Sass_Function_Entry cb = new Sass_Function{};
+    Sass_Function_Entry cb = new SassFunctionCpp{};
     if (cb == 0) return 0;
     cb->signature = signature;
     cb->function = function;
@@ -234,27 +234,27 @@ extern "C" {
   enum Sass_Callee_Type ADDCALL sass_callee_get_type(Sass_Callee_Entry entry) { return entry->type; }
   
   // Getters and Setters for environments (lexical, local and global)
-  union Sass_Value* ADDCALL sass_env_get_lexical (struct Sass_Compiler* compiler, const char* name) {
+  union Sass_Value* ADDCALL sass_env_get_lexical (struct SassCompilerCpp* compiler, const char* name) {
     return ast_node_to_sass_value(compiler->cpp_ctx->varRoot.getLexicalVariable(Sass::EnvKey(name)));
   }
 
-  void ADDCALL sass_env_set_lexical (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+  void ADDCALL sass_env_set_lexical (struct SassCompilerCpp* compiler, const char* name, union Sass_Value* val) {
     compiler->cpp_ctx->varRoot.setLexicalVariable(Sass::EnvKey(name), sass_value_to_ast_node(val));
   }
 
-  union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler* compiler, const char* name) {
+  union Sass_Value* ADDCALL sass_env_get_local (struct SassCompilerCpp* compiler, const char* name) {
     return ast_node_to_sass_value(compiler->cpp_ctx->varRoot.getLocalVariable(Sass::EnvKey(name)));
   }
 
-  void ADDCALL sass_env_set_local (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+  void ADDCALL sass_env_set_local (struct SassCompilerCpp* compiler, const char* name, union Sass_Value* val) {
     compiler->cpp_ctx->varRoot.setLocalVariable(Sass::EnvKey(name), sass_value_to_ast_node(val));
   }
 
-  union Sass_Value* ADDCALL sass_env_get_global (struct Sass_Compiler* compiler, const char* name) {
+  union Sass_Value* ADDCALL sass_env_get_global (struct SassCompilerCpp* compiler, const char* name) {
     return ast_node_to_sass_value(compiler->cpp_ctx->varRoot.getGlobalVariable(Sass::EnvKey(name)));
   }
 
-  void ADDCALL sass_env_set_global (struct Sass_Compiler* compiler, const char* name, union Sass_Value* val) {
+  void ADDCALL sass_env_set_global (struct SassCompilerCpp* compiler, const char* name, union Sass_Value* val) {
     compiler->cpp_ctx->varRoot.setGlobalVariable(Sass::EnvKey(name), sass_value_to_ast_node(val));
   }
 

@@ -13,13 +13,13 @@ extern "C" {
 
 
 // Forward declaration
-struct Sass_Compiler;
+struct SassCompilerCpp;
 
 // Forward declaration
 struct SassOptionsCpp; // base struct
-struct Sass_Context; // : SassOptionsCpp
-struct SassFileContextCpp; // : Sass_Context
-struct SassDataContextCpp; // : Sass_Context
+struct SassContextCpp; // : SassOptionsCpp
+struct SassFileContextCpp; // : SassContextCpp
+struct SassDataContextCpp; // : SassContextCpp
 
 // Compiler states
 enum Sass_Compiler_State {
@@ -39,17 +39,17 @@ ADDAPI int ADDCALL sass_compile_file_context (struct SassFileContextCpp* ctx);
 ADDAPI int ADDCALL sass_compile_data_context (struct SassDataContextCpp* ctx);
 
 // Create a sass compiler instance for more control
-ADDAPI struct Sass_Compiler* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx);
-ADDAPI struct Sass_Compiler* ADDCALL sass_make_data_compiler (struct SassDataContextCpp* data_ctx);
+ADDAPI struct SassCompilerCpp* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx);
+ADDAPI struct SassCompilerCpp* ADDCALL sass_make_data_compiler (struct SassDataContextCpp* data_ctx);
 
 // Execute the different compilation steps individually
 // Useful if you only want to query the included files
-ADDAPI int ADDCALL sass_compiler_parse(struct Sass_Compiler* compiler);
-ADDAPI int ADDCALL sass_compiler_execute(struct Sass_Compiler* compiler);
+ADDAPI int ADDCALL sass_compiler_parse(struct SassCompilerCpp* compiler);
+ADDAPI int ADDCALL sass_compiler_execute(struct SassCompilerCpp* compiler);
 
 // Release all memory allocated with the compiler
 // This does _not_ include any contexts or options
-ADDAPI void ADDCALL sass_delete_compiler(struct Sass_Compiler* compiler);
+ADDAPI void ADDCALL sass_delete_compiler(struct SassCompilerCpp* compiler);
 ADDAPI void ADDCALL sass_delete_options(struct SassOptionsCpp* options);
 
 // Release all memory allocated and also ourself
@@ -57,11 +57,11 @@ ADDAPI void ADDCALL sass_delete_file_context (struct SassFileContextCpp* ctx);
 ADDAPI void ADDCALL sass_delete_data_context (struct SassDataContextCpp* ctx);
 
 // Getters for context from specific implementation
-ADDAPI struct Sass_Context* ADDCALL sass_file_context_get_context (struct SassFileContextCpp* file_ctx);
-ADDAPI struct Sass_Context* ADDCALL sass_data_context_get_context (struct SassDataContextCpp* data_ctx);
+ADDAPI struct SassContextCpp* ADDCALL sass_file_context_get_context (struct SassFileContextCpp* file_ctx);
+ADDAPI struct SassContextCpp* ADDCALL sass_data_context_get_context (struct SassDataContextCpp* data_ctx);
 
-// Getters for Context_Options from Sass_Context
-ADDAPI struct SassOptionsCpp* ADDCALL sass_context_get_options (struct Sass_Context* ctx);
+// Getters for Context_Options from SassContextCpp
+ADDAPI struct SassOptionsCpp* ADDCALL sass_context_get_options (struct SassContextCpp* ctx);
 ADDAPI struct SassOptionsCpp* ADDCALL sass_file_context_get_options (struct SassFileContextCpp* file_ctx);
 ADDAPI struct SassOptionsCpp* ADDCALL sass_data_context_get_options (struct SassDataContextCpp* data_ctx);
 ADDAPI void ADDCALL sass_file_context_set_options (struct SassFileContextCpp* file_ctx, struct SassOptionsCpp* opt);
@@ -69,7 +69,7 @@ ADDAPI void ADDCALL sass_data_context_set_options (struct SassDataContextCpp* da
 
 // Prints message to stderr with color for windows
 ADDAPI void ADDCALL sass_print_stderr(const char* message);
-ADDAPI void ADDCALL sass_context_print_stderr(struct Sass_Context* ctx);
+ADDAPI void ADDCALL sass_context_print_stderr(struct SassContextCpp* ctx);
 
 // Getters for Context_Option values
 ADDAPI int ADDCALL sass_option_get_precision (struct SassOptionsCpp* options);
@@ -111,46 +111,46 @@ ADDAPI void ADDCALL sass_option_set_c_importers (struct SassOptionsCpp* options,
 ADDAPI void ADDCALL sass_option_set_c_functions (struct SassOptionsCpp* options, Sass_Function_List c_functions);
 
 
-// Getters for Sass_Context values
-ADDAPI const char* ADDCALL sass_context_get_output_string (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_stderr_string(struct Sass_Context* ctx);
-ADDAPI int ADDCALL sass_context_get_error_status (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_error_json (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_error_text (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_error_message (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_error_file (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_error_src (struct Sass_Context* ctx);
-ADDAPI size_t ADDCALL sass_context_get_error_line (struct Sass_Context* ctx);
-ADDAPI size_t ADDCALL sass_context_get_error_column (struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_source_map_string (struct Sass_Context* ctx);
+// Getters for SassContextCpp values
+ADDAPI const char* ADDCALL sass_context_get_output_string (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_stderr_string(struct SassContextCpp* ctx);
+ADDAPI int ADDCALL sass_context_get_error_status (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_error_json (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_error_text (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_error_message (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_error_file (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_error_src (struct SassContextCpp* ctx);
+ADDAPI size_t ADDCALL sass_context_get_error_line (struct SassContextCpp* ctx);
+ADDAPI size_t ADDCALL sass_context_get_error_column (struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_source_map_string (struct SassContextCpp* ctx);
 
 // Getters for options include path array
 ADDAPI size_t ADDCALL sass_option_get_include_path_size(struct SassOptionsCpp* options);
 ADDAPI const char* ADDCALL sass_option_get_include_path(struct SassOptionsCpp* options, size_t i);
 
 // Calculate the size of the stored null terminated array
-ADDAPI size_t ADDCALL sass_context_get_included_files(struct Sass_Context* ctx);
-ADDAPI const char* ADDCALL sass_context_get_included_file(struct Sass_Context* ctx, size_t i);
+ADDAPI size_t ADDCALL sass_context_get_included_files(struct SassContextCpp* ctx);
+ADDAPI const char* ADDCALL sass_context_get_included_file(struct SassContextCpp* ctx, size_t i);
 
 // Take ownership of memory (value on context is set to 0)
-// ADDAPI char* ADDCALL sass_context_take_error_json (struct Sass_Context* ctx);
-// ADDAPI char* ADDCALL sass_context_take_error_text (struct Sass_Context* ctx);
-// ADDAPI char* ADDCALL sass_context_take_error_message (struct Sass_Context* ctx);
-// ADDAPI char* ADDCALL sass_context_take_error_file (struct Sass_Context* ctx);
-// ADDAPI char* ADDCALL sass_context_take_error_src (struct Sass_Context* ctx);
-// ADDAPI char* ADDCALL sass_context_take_output_string (struct Sass_Context* ctx);
-// ADDAPI char* ADDCALL sass_context_take_source_map_string (struct Sass_Context* ctx);
+// ADDAPI char* ADDCALL sass_context_take_error_json (struct SassContextCpp* ctx);
+// ADDAPI char* ADDCALL sass_context_take_error_text (struct SassContextCpp* ctx);
+// ADDAPI char* ADDCALL sass_context_take_error_message (struct SassContextCpp* ctx);
+// ADDAPI char* ADDCALL sass_context_take_error_file (struct SassContextCpp* ctx);
+// ADDAPI char* ADDCALL sass_context_take_error_src (struct SassContextCpp* ctx);
+// ADDAPI char* ADDCALL sass_context_take_output_string (struct SassContextCpp* ctx);
+// ADDAPI char* ADDCALL sass_context_take_source_map_string (struct SassContextCpp* ctx);
 
-// Getters for Sass_Compiler options
-ADDAPI enum Sass_Compiler_State ADDCALL sass_compiler_get_state(struct Sass_Compiler* compiler);
-ADDAPI struct Sass_Context* ADDCALL sass_compiler_get_context(struct Sass_Compiler* compiler);
-ADDAPI struct SassOptionsCpp* ADDCALL sass_compiler_get_options(struct Sass_Compiler* compiler);
-ADDAPI size_t ADDCALL sass_compiler_get_import_stack_size(struct Sass_Compiler* compiler);
-ADDAPI SassImportPtr ADDCALL sass_compiler_get_last_import(struct Sass_Compiler* compiler);
-ADDAPI SassImportPtr ADDCALL sass_compiler_get_import_entry(struct Sass_Compiler* compiler, size_t idx);
-ADDAPI size_t ADDCALL sass_compiler_get_callee_stack_size(struct Sass_Compiler* compiler);
-ADDAPI Sass_Callee_Entry ADDCALL sass_compiler_get_last_callee(struct Sass_Compiler* compiler);
-ADDAPI Sass_Callee_Entry ADDCALL sass_compiler_get_callee_entry(struct Sass_Compiler* compiler, size_t idx);
+// Getters for SassCompilerCpp options
+ADDAPI enum Sass_Compiler_State ADDCALL sass_compiler_get_state(struct SassCompilerCpp* compiler);
+ADDAPI struct SassContextCpp* ADDCALL sass_compiler_get_context(struct SassCompilerCpp* compiler);
+ADDAPI struct SassOptionsCpp* ADDCALL sass_compiler_get_options(struct SassCompilerCpp* compiler);
+ADDAPI size_t ADDCALL sass_compiler_get_import_stack_size(struct SassCompilerCpp* compiler);
+ADDAPI SassImportPtr ADDCALL sass_compiler_get_last_import(struct SassCompilerCpp* compiler);
+ADDAPI SassImportPtr ADDCALL sass_compiler_get_import_entry(struct SassCompilerCpp* compiler, size_t idx);
+ADDAPI size_t ADDCALL sass_compiler_get_callee_stack_size(struct SassCompilerCpp* compiler);
+ADDAPI Sass_Callee_Entry ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler);
+ADDAPI Sass_Callee_Entry ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx);
 
 // Push function for paths (no manipulation support for now)
 ADDAPI void ADDCALL sass_option_push_plugin_path (struct SassOptionsCpp* options, const char* path);
@@ -163,8 +163,8 @@ ADDAPI char* ADDCALL sass_find_include (const char* path, struct SassOptionsCpp*
 
 // Resolve a file relative to last import or include paths in the sass option struct
 // find_file looks for the exact file name while find_include does a regular sass include
-ADDAPI char* ADDCALL sass_compiler_find_file (const char* path, struct Sass_Compiler* compiler);
-ADDAPI char* ADDCALL sass_compiler_find_include (const char* path, struct Sass_Compiler* compiler);
+ADDAPI char* ADDCALL sass_compiler_find_file (const char* path, struct SassCompilerCpp* compiler);
+ADDAPI char* ADDCALL sass_compiler_find_include (const char* path, struct SassCompilerCpp* compiler);
 
 #ifdef __cplusplus
 } // __cplusplus defined.

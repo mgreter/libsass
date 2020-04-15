@@ -12,9 +12,9 @@ extern "C" {
 struct SassCalleeCpp;
 struct SassImportCpp;
 struct SassOptionsCpp;
-struct Sass_Compiler;
+struct SassCompilerCpp;
 struct SassImporterCpp;
-struct Sass_Function;
+struct SassFunctionCpp;
 
 // Typedef helpers for callee lists
 typedef struct SassCalleeCpp* (Sass_Callee_Entry);
@@ -27,15 +27,15 @@ typedef struct Sass_Importer_List2* (Sass_Importer_List);
 typedef struct Sass_Import_List2* (Sass_Import_List);
 // Typedef defining importer signature and return type
 typedef Sass_Import_List (*Sass_Importer_Fn)
-  (const char* url, Sass_Importer_Entry cb, struct Sass_Compiler* compiler);
+  (const char* url, Sass_Importer_Entry cb, struct SassCompilerCpp* compiler);
 
 // Typedef helpers for custom functions lists
-typedef struct Sass_Function (*Sass_Function_Entry);
+typedef struct SassFunctionCpp (*Sass_Function_Entry);
 
 typedef struct Sass_Function_List2 (*Sass_Function_List);
 // Typedef defining function signature and return type
 typedef union Sass_Value* (*Sass_Function_Fn)
-  (const union Sass_Value*, Sass_Function_Entry cb, struct Sass_Compiler* compiler);
+  (const union Sass_Value*, Sass_Function_Entry cb, struct SassCompilerCpp* compiler);
 
 // Type of parser to use
 enum Sass_Import_Type {
@@ -105,12 +105,12 @@ ADDAPI uint32_t ADDCALL sass_callee_get_column (Sass_Callee_Entry);
 ADDAPI enum Sass_Callee_Type ADDCALL sass_callee_get_type (Sass_Callee_Entry);
 
 // Getters and Setters for environments (lexical, local and global)
-ADDAPI union Sass_Value* ADDCALL sass_env_get_lexical (struct Sass_Compiler*, const char*);
-ADDAPI void ADDCALL sass_env_set_lexical (struct Sass_Compiler*, const char*, union Sass_Value*);
-ADDAPI union Sass_Value* ADDCALL sass_env_get_local (struct Sass_Compiler*, const char*);
-ADDAPI void ADDCALL sass_env_set_local (struct Sass_Compiler*, const char*, union Sass_Value*);
-ADDAPI union Sass_Value* ADDCALL sass_env_get_global (struct Sass_Compiler*, const char*);
-ADDAPI void ADDCALL sass_env_set_global (struct Sass_Compiler*, const char*, union Sass_Value*);
+ADDAPI union Sass_Value* ADDCALL sass_env_get_lexical (struct SassCompilerCpp*, const char*);
+ADDAPI void ADDCALL sass_env_set_lexical (struct SassCompilerCpp*, const char*, union Sass_Value*);
+ADDAPI union Sass_Value* ADDCALL sass_env_get_local (struct SassCompilerCpp*, const char*);
+ADDAPI void ADDCALL sass_env_set_local (struct SassCompilerCpp*, const char*, union Sass_Value*);
+ADDAPI union Sass_Value* ADDCALL sass_env_get_global (struct SassCompilerCpp*, const char*);
+ADDAPI void ADDCALL sass_env_set_global (struct SassCompilerCpp*, const char*, union Sass_Value*);
 
 // Getters for import entry
 ADDAPI const char* ADDCALL sass_import_get_imp_path (SassImportPtr);

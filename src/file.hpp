@@ -55,7 +55,7 @@ namespace Sass {
 
     // helper function to resolve a filename
     // searching without variations in all paths
-    // sass::string find_file(const sass::string& file, const sass::string& CWD, struct Sass_Compiler* options);
+    // sass::string find_file(const sass::string& file, const sass::string& CWD, struct SassCompilerCpp* options);
     sass::string find_file(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths, std::unordered_map<sass::string, bool>& cache);
 
     // helper function to resolve a include filename

@@ -49,7 +49,7 @@ namespace Sass {
     return out_path;
   }
 
-  Context::Context(struct Sass_Context& c_ctx)
+  Context::Context(struct SassContextCpp& c_ctx)
   : CWD(File::get_cwd()),
     c_options(c_ctx),
     entry_path(""),
@@ -739,7 +739,7 @@ namespace Sass {
     return sass_clone_value(s_args);
   }
 
-  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct Sass_Compiler* compiler)
+  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct SassCompilerCpp* compiler)
   {
     // we actually abuse the void* to store an "int"
     return sass_clone_value(v);

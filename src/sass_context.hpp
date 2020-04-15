@@ -68,7 +68,7 @@ struct SassOptionsCpp : Sass_Output_Options {
 
 
 // base for all contexts
-struct Sass_Context : SassOptionsCpp
+struct SassContextCpp : SassOptionsCpp
 {
 
   // store context type info
@@ -108,7 +108,7 @@ struct Sass_Context : SassOptionsCpp
 };
 
 // struct for file compilation
-struct SassFileContextCpp : Sass_Context {
+struct SassFileContextCpp : SassContextCpp {
 
   // no additional fields required
   // input_path is already on options
@@ -116,7 +116,7 @@ struct SassFileContextCpp : Sass_Context {
 };
 
 // struct for data compilation
-struct SassDataContextCpp : Sass_Context {
+struct SassDataContextCpp : SassContextCpp {
 
   // provided source string
   Sass::sass::string source_string;
@@ -125,11 +125,11 @@ struct SassDataContextCpp : Sass_Context {
 };
 
 // link C and CPP context
-struct Sass_Compiler {
+struct SassCompilerCpp {
   // progress status
   Sass_Compiler_State state;
   // original c context
-  Sass_Context* c_ctx;
+  SassContextCpp* c_ctx;
   // Sass::Context
   Sass::Context* cpp_ctx;
   // Sass::Block

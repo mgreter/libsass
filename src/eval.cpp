@@ -455,7 +455,7 @@ namespace Sass {
     return ctx.c_options;
   }
 
-  struct Sass_Compiler* Eval::compiler()
+  struct SassCompilerCpp* Eval::compiler()
   {
     return ctx.c_compiler;
   }

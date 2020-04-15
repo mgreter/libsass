@@ -73,7 +73,7 @@ extern "C" {
     return sass_copy_c_string(unquoted.c_str());
   }
 
-  char* ADDCALL sass_compiler_find_include (const char* file, struct Sass_Compiler* compiler)
+  char* ADDCALL sass_compiler_find_include (const char* file, struct SassCompilerCpp* compiler)
   {
     // get the last import entry to get current base directory
     SassImportPtr import = sass_compiler_get_last_import(compiler);
@@ -88,7 +88,7 @@ extern "C" {
     return sass_copy_c_string(resolved.c_str());
   }
 
-  char* ADDCALL sass_compiler_find_file (const char* file, struct Sass_Compiler* compiler)
+  char* ADDCALL sass_compiler_find_file (const char* file, struct SassCompilerCpp* compiler)
   {
     // get the last import entry to get current base directory
     SassImportPtr import = sass_compiler_get_last_import(compiler);

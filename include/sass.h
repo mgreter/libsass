@@ -3,6 +3,9 @@
 
 // #define DEBUG 1
 
+// Note: we can't forward declare with inheritance
+// https://stackoverflow.com/a/10145303/1550314
+
 // include API headers
 #include <sass/base.h>
 #include <sass/version.h>

@@ -8,13 +8,13 @@
 #include "source.hpp"
 
 // Struct to hold custom function callback
-struct Sass_Function {
+struct SassFunctionCpp {
   Sass::sass::string signature;
   Sass_Function_Fn function;
   void* cookie;
 };
 
-struct Sass_Function_List2 : Sass::sass::vector<Sass_Function*> {
+struct Sass_Function_List2 : Sass::sass::vector<SassFunctionCpp*> {
 
 };
 
