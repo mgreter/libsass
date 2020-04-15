@@ -12,7 +12,7 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Emitter::Emitter(struct Sass_Output_Options& opt)
+  Emitter::Emitter(struct SassOutputOptionsCpp& opt)
   : wbuf(),
     opt(opt),
     indentation(0),

@@ -41,13 +41,13 @@ namespace Sass {
       size_t load_plugins(const sass::string& path);
 
     public: // public accessors
-      const sass::vector<Sass_Importer_Entry> get_headers(void) { return headers; }
-      const sass::vector<Sass_Importer_Entry> get_importers(void) { return importers; }
+      const sass::vector<SassImporterPtr> get_headers(void) { return headers; }
+      const sass::vector<SassImporterPtr> get_importers(void) { return importers; }
       const sass::vector<Sass_Function_Entry> get_functions(void) { return functions; }
 
     private: // private vars
-      sass::vector<Sass_Importer_Entry> headers;
-      sass::vector<Sass_Importer_Entry> importers;
+      sass::vector<SassImporterPtr> headers;
+      sass::vector<SassImporterPtr> importers;
       sass::vector<Sass_Function_Entry> functions;
 
   };

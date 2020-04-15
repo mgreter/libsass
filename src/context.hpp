@@ -54,7 +54,7 @@ namespace Sass {
     // @param singleton Whether to use all importers or only first successful
     /*#########################################################################*/
     bool callCustomLoader(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule,
-      const sass::vector<Sass_Importer_Entry>& importers, bool singletone = true);
+      const sass::vector<SassImporterPtr>& importers, bool singletone = true);
 
   public:
 
@@ -167,15 +167,15 @@ namespace Sass {
 
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
-    sass::vector<Sass_Importer_Entry> c_headers;
-    sass::vector<Sass_Importer_Entry> c_importers;
+    sass::vector<SassImporterPtr> c_headers;
+    sass::vector<SassImporterPtr> c_importers;
     sass::vector<Sass_Function_Entry> c_functions;
 
-    void add_c_header(Sass_Importer_Entry header);
-    void add_c_headers(Sass_Importer_List headers);
+    void add_c_header(SassImporterPtr header);
+    void add_c_headers(SassImporterListPtr headers);
 
-    void add_c_importer(Sass_Importer_Entry importer);
-    void add_c_importers(Sass_Importer_List importers);
+    void add_c_importer(SassImporterPtr importer);
+    void add_c_importers(SassImporterListPtr importers);
 
     void add_c_function(Sass_Function_Entry function);
     void add_c_functions(Sass_Function_List functions);

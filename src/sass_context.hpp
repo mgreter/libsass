@@ -8,7 +8,7 @@
 #include "sass.hpp"
 
 // sass config options structure
-struct SassOptionsCpp : Sass_Output_Options {
+struct SassOptionsCpp : SassOutputOptionsCpp {
 
   // embed sourceMappingUrl as data URI
   bool source_map_embed;
@@ -59,10 +59,10 @@ struct SassOptionsCpp : Sass_Output_Options {
   Sass_Function_List c_functions;
 
   // List of custom importers
-  Sass_Importer_List c_importers;
+  SassImporterListPtr c_importers;
 
   // List of custom headers
-  Sass_Importer_List c_headers;
+  SassImporterListPtr c_headers;
 
 };
 

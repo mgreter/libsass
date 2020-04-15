@@ -31,7 +31,7 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
-  inline bool sort_importers (const Sass_Importer_Entry& i, const Sass_Importer_Entry& j)
+  inline bool sort_importers (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
   static sass::string safe_input(const char* in_path)
@@ -68,8 +68,8 @@ namespace Sass {
     c_compiler(NULL),
 
     // Initialize C-API arrays for custom functionality
-    c_headers               (sass::vector<Sass_Importer_Entry>()),
-    c_importers             (sass::vector<Sass_Importer_Entry>()),
+    c_headers               (sass::vector<SassImporterPtr>()),
+    c_importers             (sass::vector<SassImporterPtr>()),
     c_functions             (sass::vector<Sass_Function_Entry>()),
 
     // Get some common options with and few default
@@ -115,7 +115,7 @@ namespace Sass {
     }
   }
 
-  void Context::add_c_headers(Sass_Importer_List headers)
+  void Context::add_c_headers(SassImporterListPtr headers)
   {
     if (headers == nullptr) return;
     for (auto header : *headers) {
@@ -125,7 +125,7 @@ namespace Sass {
     sort(c_importers.begin(), c_importers.end(), sort_importers);
   }
 
-  void Context::add_c_importers(Sass_Importer_List importers)
+  void Context::add_c_importers(SassImporterListPtr importers)
   {
     if (importers == nullptr) return;
     for (auto importer : *importers) {
@@ -140,14 +140,14 @@ namespace Sass {
     c_functions.emplace_back(function);
   }
 
-  void Context::add_c_header(Sass_Importer_Entry header)
+  void Context::add_c_header(SassImporterPtr header)
   {
     c_headers.emplace_back(header);
     // need to sort the array afterwards (no big deal)
     sort (c_headers.begin(), c_headers.end(), sort_importers);
   }
 
-  void Context::add_c_importer(Sass_Importer_Entry importer)
+  void Context::add_c_importer(SassImporterPtr importer)
   {
     c_importers.emplace_back(importer);
     // need to sort the array afterwards (no big deal)
@@ -396,7 +396,7 @@ namespace Sass {
   // @param singleton Whether to use all importers or only first successful
   /*#########################################################################*/
   bool Context::callCustomLoader(const sass::string& imp_path, SourceSpan& pstate,
-    ImportRule* rule, const sass::vector<Sass_Importer_Entry>& importers, bool singleton)
+    ImportRule* rule, const sass::vector<SassImporterPtr>& importers, bool singleton)
   {
     // unique counter
     size_t count = 0;
@@ -407,11 +407,11 @@ namespace Sass {
 
     // Process custom importers and headers.
     // They must be presorted by priorities.
-    for (Sass_Importer_Entry importer : importers) {
+    for (SassImporterPtr importer : importers) {
       // Get the external importer function
-      Sass_Importer_Fn fn = sass_importer_get_function(importer);
+      SassImporterFnCpp fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
-      Sass_Import_List includes = fn(imp_path.c_str(), importer, c_compiler);
+      SassImportListPtr includes = fn(imp_path.c_str(), importer, c_compiler);
       // External provider want to handle this
       if (includes != nullptr) {
         // Get the list of possible includes

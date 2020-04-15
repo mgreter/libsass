@@ -82,7 +82,7 @@ namespace Sass {
 
   sass::string AST_Node::to_string(Sass_Inspect_Options opt) const
   {
-    Sass_Output_Options out(opt);
+    SassOutputOptionsCpp out(opt);
     Inspect i(Emitter{ out });
     i.in_declaration = true;
     // ToDo: inspect should be const
@@ -93,7 +93,7 @@ namespace Sass {
   sass::string AST_Node::to_css(Sass_Inspect_Options opt, bool quotes) const
   {
     opt.output_style = TO_CSS;
-    Sass_Output_Options out(opt);
+    SassOutputOptionsCpp out(opt);
     Inspect i(Emitter{ out });
     i.quotes = quotes;
     i.in_declaration = true;
@@ -105,7 +105,7 @@ namespace Sass {
   sass::string AST_Node::to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes) const
   {
     opt.output_style = TO_CSS;
-    Sass_Output_Options out(opt);
+    SassOutputOptionsCpp out(opt);
     Inspect i(Emitter{ out });
     i.quotes = quotes;
     i.in_declaration = true;

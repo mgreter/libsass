@@ -158,7 +158,7 @@ struct Sass_Inspect_Options {
 };
 
 // sass config options structure
-struct Sass_Output_Options : Sass_Inspect_Options {
+struct SassOutputOptionsCpp : Sass_Inspect_Options {
 
   // String to be used for indentation
   const char* indent;
@@ -170,7 +170,7 @@ struct Sass_Output_Options : Sass_Inspect_Options {
   bool source_comments;
 
   // initialization list (constructor with defaults)
-  Sass_Output_Options(struct Sass_Inspect_Options& opt,
+  SassOutputOptionsCpp(struct Sass_Inspect_Options& opt,
                       const char* indent = "  ",
                       const char* linefeed = "\n",
                       bool source_comments = false)
@@ -180,7 +180,7 @@ struct Sass_Output_Options : Sass_Inspect_Options {
   { }
 
   // initialization list (constructor with defaults)
-  Sass_Output_Options(Sass_Output_Style style = Sass::NESTED,
+  SassOutputOptionsCpp(Sass_Output_Style style = Sass::NESTED,
                       int precision = 10,
                       const char* indent = "  ",
                       const char* linefeed = "\n",

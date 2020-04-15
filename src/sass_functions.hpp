@@ -18,7 +18,7 @@ struct Sass_Function_List2 : Sass::sass::vector<SassFunctionCpp*> {
 
 };
 
-struct Sass_Importer_List2 : Sass::sass::vector<Sass_Importer_Entry> {
+struct Sass_Importer_List2 : Sass::sass::vector<SassImporterPtr> {
 
 };
 
@@ -54,7 +54,7 @@ struct SassCalleeCpp {
 
 // Struct to hold importer callback
 struct SassImporterCpp {
-  Sass_Importer_Fn importer;
+  SassImporterFnCpp importer;
   double           priority;
   void*            cookie;
 };

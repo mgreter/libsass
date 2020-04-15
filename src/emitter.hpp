@@ -16,7 +16,7 @@ namespace Sass {
   class Emitter {
 
     public:
-      Emitter(struct Sass_Output_Options& opt);
+      Emitter(struct SassOutputOptionsCpp& opt);
       virtual ~Emitter() { }
 
     protected:
@@ -35,7 +35,7 @@ namespace Sass {
       SourceSpan remap(const SourceSpan& pstate);
 
     public:
-      struct Sass_Output_Options& opt;
+      struct SassOutputOptionsCpp& opt;
       size_t indentation;
       size_t scheduled_space;
       size_t scheduled_linefeed;

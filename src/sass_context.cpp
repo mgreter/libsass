@@ -567,8 +567,8 @@ extern "C" {
   SassImportPtr ADDCALL sass_compiler_get_import_entry(struct SassCompilerCpp* compiler, size_t idx) { return compiler->cpp_ctx->import_stack[idx]; }
   // Getters for SassCompilerCpp options (query function stack)
   size_t ADDCALL sass_compiler_get_callee_stack_size(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->callee_stack.size(); }
-  Sass_Callee_Entry ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler) { return &compiler->cpp_ctx->callee_stack.back(); }
-  Sass_Callee_Entry ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx) { return &compiler->cpp_ctx->callee_stack[idx]; }
+  SassCalleePtr ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler) { return &compiler->cpp_ctx->callee_stack.back(); }
+  SassCalleePtr ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx) { return &compiler->cpp_ctx->callee_stack[idx]; }
 
   // Calculate the size of the stored null terminated array
   size_t ADDCALL sass_context_get_included_files(struct SassContextCpp* ctx) { return ctx->included_files.size(); }
@@ -583,8 +583,8 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_file_urls);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, omit_source_map_url);
   IMPLEMENT_SASS_OPTION_ACCESSOR(Sass_Function_List, c_functions);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(Sass_Importer_List, c_importers);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(Sass_Importer_List, c_headers);
+  IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_importers);
+  IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_headers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, indent);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, linefeed);
   IMPLEMENT_SASS_OPTION_STRING2_SETTER(plugin_path);

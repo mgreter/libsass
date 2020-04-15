@@ -16,7 +16,7 @@ namespace Sass {
     using Inspect::operator();
 
   public:
-    Output(Sass_Output_Options& opt);
+    Output(SassOutputOptionsCpp& opt);
     virtual ~Output();
 
   protected:

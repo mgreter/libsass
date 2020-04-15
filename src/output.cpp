@@ -15,7 +15,7 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Output::Output(Sass_Output_Options& opt)
+  Output::Output(SassOutputOptionsCpp& opt)
     : Inspect(Emitter(opt)),
     charset(""),
     top_nodes(0)

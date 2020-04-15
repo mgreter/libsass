@@ -86,8 +86,8 @@ ADDAPI const char* ADDCALL sass_option_get_input_path (struct SassOptionsCpp* op
 ADDAPI const char* ADDCALL sass_option_get_output_path (struct SassOptionsCpp* options);
 ADDAPI const char* ADDCALL sass_option_get_source_map_file (struct SassOptionsCpp* options);
 ADDAPI const char* ADDCALL sass_option_get_source_map_root (struct SassOptionsCpp* options);
-ADDAPI Sass_Importer_List ADDCALL sass_option_get_c_headers (struct SassOptionsCpp* options);
-ADDAPI Sass_Importer_List ADDCALL sass_option_get_c_importers (struct SassOptionsCpp* options);
+ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_headers (struct SassOptionsCpp* options);
+ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_importers (struct SassOptionsCpp* options);
 ADDAPI Sass_Function_List ADDCALL sass_option_get_c_functions (struct SassOptionsCpp* options);
 
 // Setters for Context_Option values
@@ -106,8 +106,8 @@ ADDAPI void ADDCALL sass_option_set_plugin_path (struct SassOptionsCpp* options,
 ADDAPI void ADDCALL sass_option_set_include_path (struct SassOptionsCpp* options, const char* include_path);
 ADDAPI void ADDCALL sass_option_set_source_map_file (struct SassOptionsCpp* options, const char* source_map_file);
 ADDAPI void ADDCALL sass_option_set_source_map_root (struct SassOptionsCpp* options, const char* source_map_root);
-ADDAPI void ADDCALL sass_option_set_c_headers (struct SassOptionsCpp* options, Sass_Importer_List c_headers);
-ADDAPI void ADDCALL sass_option_set_c_importers (struct SassOptionsCpp* options, Sass_Importer_List c_importers);
+ADDAPI void ADDCALL sass_option_set_c_headers (struct SassOptionsCpp* options, SassImporterListPtr c_headers);
+ADDAPI void ADDCALL sass_option_set_c_importers (struct SassOptionsCpp* options, SassImporterListPtr c_importers);
 ADDAPI void ADDCALL sass_option_set_c_functions (struct SassOptionsCpp* options, Sass_Function_List c_functions);
 
 
@@ -149,8 +149,8 @@ ADDAPI size_t ADDCALL sass_compiler_get_import_stack_size(struct SassCompilerCpp
 ADDAPI SassImportPtr ADDCALL sass_compiler_get_last_import(struct SassCompilerCpp* compiler);
 ADDAPI SassImportPtr ADDCALL sass_compiler_get_import_entry(struct SassCompilerCpp* compiler, size_t idx);
 ADDAPI size_t ADDCALL sass_compiler_get_callee_stack_size(struct SassCompilerCpp* compiler);
-ADDAPI Sass_Callee_Entry ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler);
-ADDAPI Sass_Callee_Entry ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx);
+ADDAPI SassCalleePtr ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler);
+ADDAPI SassCalleePtr ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx);
 
 // Push function for paths (no manipulation support for now)
 ADDAPI void ADDCALL sass_option_push_plugin_path (struct SassOptionsCpp* options, const char* path);

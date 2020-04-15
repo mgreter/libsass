@@ -15,21 +15,21 @@ extern "C" {
 
 
   // Creator for sass custom importer return argument list
-  Sass_Import_List ADDCALL sass_make_import_list()
+  SassImportListPtr ADDCALL sass_make_import_list()
   {
     return new Sass_Import_List2{};
   }
 
-  void ADDCALL sass_delete_import_list(Sass_Import_List list)
+  void ADDCALL sass_delete_import_list(SassImportListPtr list)
   {
     delete list;
   }
-  size_t ADDCALL sass_import_list_size(Sass_Import_List list)
+  size_t ADDCALL sass_import_list_size(SassImportListPtr list)
   {
     return list == nullptr ? 0 : list->size();
   }
 
-  SassImportPtr ADDCALL sass_import_list_shift(Sass_Import_List list)
+  SassImportPtr ADDCALL sass_import_list_shift(SassImportListPtr list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -38,7 +38,7 @@ extern "C" {
     return ptr;
   }
 
-  void ADDCALL sass_import_list_push(Sass_Import_List list, SassImportPtr import)
+  void ADDCALL sass_import_list_push(SassImportListPtr list, SassImportPtr import)
   {
     if (list != nullptr) {
       list->push_back(import);
@@ -65,12 +65,12 @@ extern "C" {
     return ptr;
   }
 
-  size_t ADDCALL sass_importer_list_size(Sass_Importer_List list)
+  size_t ADDCALL sass_importer_list_size(SassImporterListPtr list)
   {
     return list == nullptr ? 0 : list->size();
   }
 
-  Sass_Importer_Entry ADDCALL sass_importer_list_shift(Sass_Importer_List list)
+  SassImporterPtr ADDCALL sass_importer_list_shift(SassImporterListPtr list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -79,7 +79,7 @@ extern "C" {
     return ptr;
   }
 
-  void ADDCALL sass_importer_list_push(Sass_Importer_List list, Sass_Importer_Entry importer)
+  void ADDCALL sass_importer_list_push(SassImporterListPtr list, SassImporterPtr importer)
   {
     if (list != nullptr) {
       list->push_back(importer);
@@ -127,9 +127,9 @@ extern "C" {
   Sass_Function_Fn ADDCALL sass_function_get_function(Sass_Function_Entry cb) { return cb->function; }
   void* ADDCALL sass_function_get_cookie(Sass_Function_Entry cb) { return cb->cookie; }
 
-  Sass_Importer_Entry ADDCALL sass_make_importer(Sass_Importer_Fn fn, double priority, void* cookie)
+  SassImporterPtr ADDCALL sass_make_importer(SassImporterFnCpp fn, double priority, void* cookie)
   {
-    Sass_Importer_Entry importer = new SassImporterCpp{};
+    SassImporterPtr importer = new SassImporterCpp{};
     if (importer == 0) return 0;
     importer->importer = fn;
     importer->priority = priority;
@@ -137,24 +137,24 @@ extern "C" {
     return importer;
   }
 
-  Sass_Importer_Fn ADDCALL sass_importer_get_function(Sass_Importer_Entry cb) { return cb->importer; }
-  double ADDCALL sass_importer_get_priority (Sass_Importer_Entry cb) { return cb->priority; }
-  void* ADDCALL sass_importer_get_cookie(Sass_Importer_Entry cb) { return cb->cookie; }
+  SassImporterFnCpp ADDCALL sass_importer_get_function(SassImporterPtr cb) { return cb->importer; }
+  double ADDCALL sass_importer_get_priority (SassImporterPtr cb) { return cb->priority; }
+  void* ADDCALL sass_importer_get_cookie(SassImporterPtr cb) { return cb->cookie; }
 
   // Just in case we have some stray import structs
-  void ADDCALL sass_delete_importer (Sass_Importer_Entry importer)
+  void ADDCALL sass_delete_importer (SassImporterPtr importer)
   {
     delete importer;
   }
 
   // Creator for sass custom importer function list
-  Sass_Importer_List ADDCALL sass_make_importer_list()
+  SassImporterListPtr ADDCALL sass_make_importer_list()
   {
     return new Sass_Importer_List2{};
   }
 
   // Deallocator for the allocated memory
-  void ADDCALL sass_delete_importer_list(Sass_Importer_List list)
+  void ADDCALL sass_delete_importer_list(SassImporterListPtr list)
   {
     if (list == nullptr) return;
     for (auto importer : *list) {
@@ -163,8 +163,8 @@ extern "C" {
     delete list;
   }
 
-  // Sass_Importer_Entry ADDCALL sass_importer_get_list_entry(Sass_Importer_List list, uint32_t idx) { return list[idx]; }
-  // void ADDCALL sass_importer_set_list_entry(Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry cb) { list[idx] = cb; }
+  // SassImporterPtr ADDCALL sass_importer_get_list_entry(SassImporterListPtr list, uint32_t idx) { return list[idx]; }
+  // void ADDCALL sass_importer_set_list_entry(SassImporterListPtr list, uint32_t idx, SassImporterPtr cb) { list[idx] = cb; }
 
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
@@ -217,8 +217,8 @@ extern "C" {
   }
 
   // Setters and getters for entries on the import list
-  // void ADDCALL sass_import_set_list_entry(Sass_Import_List list, uint32_t idx, SassImportPtr entry) { list[idx] = entry; }
-  // SassImportPtr ADDCALL sass_import_get_list_entry(Sass_Import_List list, uint32_t idx) { return list[idx]; }
+  // void ADDCALL sass_import_set_list_entry(SassImportListPtr list, uint32_t idx, SassImportPtr entry) { list[idx] = entry; }
+  // SassImportPtr ADDCALL sass_import_get_list_entry(SassImportListPtr list, uint32_t idx) { return list[idx]; }
 
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(SassImportPtr import)
@@ -227,11 +227,11 @@ extern "C" {
   }
 
   // Getter for callee entry
-  const char* ADDCALL sass_callee_get_name(Sass_Callee_Entry entry) { return entry->name; }
-  const char* ADDCALL sass_callee_get_path(Sass_Callee_Entry entry) { return entry->path; }
-  uint32_t ADDCALL sass_callee_get_line(Sass_Callee_Entry entry) { return entry->line; }
-  uint32_t ADDCALL sass_callee_get_column(Sass_Callee_Entry entry) { return entry->column; }
-  enum Sass_Callee_Type ADDCALL sass_callee_get_type(Sass_Callee_Entry entry) { return entry->type; }
+  const char* ADDCALL sass_callee_get_name(SassCalleePtr entry) { return entry->name; }
+  const char* ADDCALL sass_callee_get_path(SassCalleePtr entry) { return entry->path; }
+  uint32_t ADDCALL sass_callee_get_line(SassCalleePtr entry) { return entry->line; }
+  uint32_t ADDCALL sass_callee_get_column(SassCalleePtr entry) { return entry->column; }
+  enum Sass_Callee_Type ADDCALL sass_callee_get_type(SassCalleePtr entry) { return entry->type; }
   
   // Getters and Setters for environments (lexical, local and global)
   union Sass_Value* ADDCALL sass_env_get_lexical (struct SassCompilerCpp* compiler, const char* name) {

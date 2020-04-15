@@ -62,7 +62,7 @@ namespace Sass {
 
     typedef const char* (*__plugin_version__)(void);
     typedef Sass_Function_List (*__plugin_load_fns__)(void);
-    typedef Sass_Importer_List (*__plugin_load_imps__)(void);
+    typedef SassImporterListPtr (*__plugin_load_imps__)(void);
 
     sass::sstream strm; strm << getHashSeed();
     SET_ENV("SASS_HASH_SEED", strm.str().c_str());
@@ -86,7 +86,7 @@ namespace Sass {
         // try to get import address for "libsass_load_importers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))
         {
-          Sass_Importer_List imps = plugin_load_importers();
+          SassImporterListPtr imps = plugin_load_importers();
           while (sass_importer_list_size(imps) > 0) {
             importers.emplace_back(sass_importer_list_shift(imps));
           }
@@ -95,7 +95,7 @@ namespace Sass {
         // try to get import address for "libsass_load_headers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_headers, "libsass_load_headers"))
         {
-          Sass_Importer_List imps = plugin_load_headers();
+          SassImporterListPtr imps = plugin_load_headers();
           while (sass_importer_list_size(imps) > 0) {
             headers.emplace_back(sass_importer_list_shift(imps));
           }
