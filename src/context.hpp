@@ -83,13 +83,13 @@ namespace Sass {
     // Split path-separated string and add them to plugin paths.
     // On windows the path separator is `;`, most others are `:`.
     /*#########################################################################*/
-    void collectPluginPaths(const char* paths_str);
+    void collectPluginPaths(const sass::string& paths);
 
     /*#########################################################################*/
     // Split path-separated string and add them to plugin paths.
     // On windows the path separator is `;`, most others are `:`.
     /*#########################################################################*/
-    void collectIncludePaths(const char* paths_str);
+    void collectIncludePaths(const sass::string& paths);
 
     void collectPluginPaths(const sass::vector<sass::string>& paths);
     void collectIncludePaths(const sass::vector<sass::string>& paths);

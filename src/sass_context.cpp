@@ -209,14 +209,17 @@ extern "C" {
     IMPLEMENT_SASS_OPTION_STRING_SETTER(type, option, def)
 
 
-#define IMPLEMENT_SASS_OPTION_STRING2_GETTER(type, option, def) \
-    type ADDCALL sass_option_get_##option (struct Sass_Options* options) { return options->option.empty() ? def : options->option.c_str(); }
-#define IMPLEMENT_SASS_OPTION_STRING2_SETTER(type, option, def) \
-    void ADDCALL sass_option_set_##option (struct Sass_Options* options, type option) \
-    { options->option = option; }
-#define IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(type, option, def) \
-    IMPLEMENT_SASS_OPTION_STRING2_GETTER(type, option, def) \
-    IMPLEMENT_SASS_OPTION_STRING2_SETTER(type, option, def)
+#define IMPLEMENT_SASS_OPTION_STRING2_GETTER(option) \
+    const char* ADDCALL sass_option_get_##option (struct Sass_Options* options) \
+    { return options->option.empty() ? 0 : options->option.c_str(); }
+
+#define IMPLEMENT_SASS_OPTION_STRING2_SETTER(option) \
+    void ADDCALL sass_option_set_##option (struct Sass_Options* options, const char* value) \
+    { options->option = value; }
+
+#define IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(option) \
+    IMPLEMENT_SASS_OPTION_STRING2_GETTER(option) \
+    IMPLEMENT_SASS_OPTION_STRING2_SETTER(option)
 
   // TODO: return empty string too?
 #define IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(option) \
@@ -500,8 +503,6 @@ extern "C" {
   {
     // free pointer before
     // or copy/move them
-    options->plugin_path = 0;
-    options->include_path = 0;
     options->source_map_file = 0;
     options->source_map_root = 0;
     options->c_functions = 0;
@@ -518,13 +519,9 @@ extern "C" {
     sass_delete_importer_list(options->c_importers);
     sass_delete_importer_list(options->c_headers);
     // Free options strings
-    free(options->plugin_path);
-    free(options->include_path);
     free(options->source_map_file);
     free(options->source_map_root);
     // Reset our pointers
-    options->plugin_path = 0;
-    options->include_path = 0;
     options->source_map_file = 0;
     options->source_map_root = 0;
     options->c_functions = 0;
@@ -619,10 +616,10 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_ACCESSOR(Sass_Importer_List, c_headers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, indent);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, linefeed);
-  IMPLEMENT_SASS_OPTION_STRING_SETTER(const char*, plugin_path, 0);
-  IMPLEMENT_SASS_OPTION_STRING_SETTER(const char*, include_path, 0);
-  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(const char*, input_path, 0);
-  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(const char*, output_path, 0);
+  IMPLEMENT_SASS_OPTION_STRING2_SETTER(plugin_path);
+  IMPLEMENT_SASS_OPTION_STRING2_SETTER(include_path);
+  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(input_path);
+  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(output_path);
   IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, source_map_file, 0);
   IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, source_map_root, 0);
 

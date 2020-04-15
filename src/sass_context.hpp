@@ -39,8 +39,8 @@ struct Sass_Options : Sass_Output_Options {
   // Colon-separated list of paths
   // Semicolon-separated on Windows
   // Maybe use array interface instead?
-  char* include_path;
-  char* plugin_path;
+  Sass::sass::string include_path;
+  Sass::sass::string plugin_path;
 
   // Include paths (linked string list)
   Sass::sass::vector<Sass::sass::string> include_paths;

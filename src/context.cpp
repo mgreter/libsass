@@ -155,9 +155,9 @@ namespace Sass {
   {
   }
 
-  void Context::collectPluginPaths(const char* paths)
+  void Context::collectPluginPaths(const sass::string& paths)
   {
-    if (paths == nullptr) return;
+    if (paths.empty()) return;
     sass::vector<sass::string> split =
       StringUtils::split(paths, PATH_SEP, true);
     for (sass::string& path : split) {
@@ -166,9 +166,9 @@ namespace Sass {
     }
   }
 
-  void Context::collectIncludePaths(const char* paths)
+  void Context::collectIncludePaths(const sass::string& paths)
   {
-    if (paths == nullptr) return;
+    if (paths.empty()) return;
     sass::vector<sass::string> split =
       StringUtils::split(paths, PATH_SEP, true);
     for (sass::string& path : split) {
