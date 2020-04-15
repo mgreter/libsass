@@ -171,7 +171,7 @@ namespace Sass {
 
       SelectorListObj res = extendList(selector, extensions, mediaContext);
 
-      selector->elementsC(std::move(res->elements()));
+      selector->elementsM(res->elements());
 
     }
 
