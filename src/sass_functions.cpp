@@ -21,7 +21,7 @@ extern "C" {
   {
     Sass_Function_Entry cb = (Sass_Function_Entry) calloc(1, sizeof(Sass_Function));
     if (cb == 0) return 0;
-    cb->signature = sass_copy_c_string(signature);
+    cb->signature = signature;
     cb->function = function;
     cb->cookie = cookie;
     return cb;
@@ -29,7 +29,6 @@ extern "C" {
 
   void ADDCALL sass_delete_function(Sass_Function_Entry entry)
   {
-    free(entry->signature);
     free(entry);
   }
 
@@ -49,7 +48,7 @@ extern "C" {
   Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos) { return list[pos]; }
   void sass_function_set_list_entry(Sass_Function_List list, uint32_t pos, Sass_Function_Entry cb) { list[pos] = cb; }
 
-  const char* ADDCALL sass_function_get_signature(Sass_Function_Entry cb) { return cb->signature; }
+  const char* ADDCALL sass_function_get_signature(Sass_Function_Entry cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
   Sass_Function_Fn ADDCALL sass_function_get_function(Sass_Function_Entry cb) { return cb->function; }
   void* ADDCALL sass_function_get_cookie(Sass_Function_Entry cb) { return cb->cookie; }
 
@@ -106,7 +105,6 @@ extern "C" {
   {
     Sass_Import* v = new Sass_Import();
     if (v == 0) return 0;
-    v->error = 0;
     v->line = -1;
     v->column = -1;
     // Stuff was shifted to internal C++ API
@@ -124,7 +122,6 @@ extern "C" {
   {
     Sass_Import* v = new Sass_Import();
     if (v == 0) return 0;
-    v->error = 0;
     v->line = -1;
     v->column = -1;
     // Stuff was shifted to internal C++ API
@@ -146,8 +143,7 @@ extern "C" {
   Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import, const char* error, uint32_t line, uint32_t col)
   {
     if (import == 0) return 0;
-    if (import->error) free(import->error);
-    import->error = error ? sass_copy_c_string(error) : 0;
+    import->error = error ? error : "";
     import->line = line ? line : -1;
     import->column = col ? col : -1;
     return import;
@@ -172,7 +168,6 @@ extern "C" {
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(Sass_Import_Entry import)
   {
-    free(import->error);
     delete import;
   }
 
@@ -218,7 +213,7 @@ extern "C" {
   // Getter for import error entry
   uint32_t ADDCALL sass_import_get_error_line(Sass_Import_Entry entry) { return entry->line; }
   uint32_t ADDCALL sass_import_get_error_column(Sass_Import_Entry entry) { return entry->column; }
-  const char* ADDCALL sass_import_get_error_message(Sass_Import_Entry entry) { return entry->error; }
+  const char* ADDCALL sass_import_get_error_message(Sass_Import_Entry entry) { return entry->error.empty() ? 0 : entry->error.c_str(); }
 
   // Explicit functions to take ownership of the memory
   // Resets our own property since we do not know if it is still alive

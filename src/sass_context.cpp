@@ -503,8 +503,6 @@ extern "C" {
   {
     // free pointer before
     // or copy/move them
-    options->source_map_file = 0;
-    options->source_map_root = 0;
     options->c_functions = 0;
     options->c_importers = 0;
     options->c_headers = 0;
@@ -518,12 +516,7 @@ extern "C" {
     sass_delete_function_list(options->c_functions);
     sass_delete_importer_list(options->c_importers);
     sass_delete_importer_list(options->c_headers);
-    // Free options strings
-    free(options->source_map_file);
-    free(options->source_map_root);
     // Reset our pointers
-    options->source_map_file = 0;
-    options->source_map_root = 0;
     options->c_functions = 0;
     options->c_importers = 0;
     options->c_headers = 0;
@@ -620,8 +613,8 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_STRING2_SETTER(include_path);
   IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(input_path);
   IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(output_path);
-  IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, source_map_file, 0);
-  IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(const char*, source_map_root, 0);
+  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(source_map_file);
+  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(source_map_root);
 
   // Create getter and setters for context
   IMPLEMENT_SASS_CONTEXT_GETTER(int, error_status);

@@ -78,8 +78,8 @@ namespace Sass {
 
     input_path              (make_canonical_path(safe_input(c_options.input_path.c_str()))),
     output_path             (make_canonical_path(safe_output(c_options.output_path.c_str(), input_path))),
-    source_map_file         (make_canonical_path(safe_str(c_options.source_map_file, ""))),
-    source_map_root         (make_canonical_path(safe_str(c_options.source_map_root, "")))
+    source_map_file         (make_canonical_path(c_options.source_map_file)),
+    source_map_root         (make_canonical_path(c_options.source_map_root))
 
   {
 
@@ -481,7 +481,7 @@ namespace Sass {
         emitted.buffer += format_embedded_source_map();
       }
       // or just link the generated one
-      else if (source_map_file != "") {
+      else if (!source_map_file.empty()) {
         emitted.buffer += linefeed;
         emitted.buffer += format_source_mapping_url(source_map_file);
       }
@@ -675,7 +675,7 @@ namespace Sass {
 
   sass::string Context::render_srcmap()
   {
-    if (source_map_file == "") return "";
+    if (source_map_file.empty()) return "";
     return emitter.render_srcmap(*this);
   }
 

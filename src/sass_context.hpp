@@ -50,10 +50,10 @@ struct Sass_Options : Sass_Output_Options {
   // Path to source map file
   // Enables source map generation
   // Used to create sourceMappingUrl
-  char* source_map_file;
+  Sass::sass::string source_map_file;
 
   // Directly inserted in source maps
-  char* source_map_root;
+  Sass::sass::string source_map_root;
 
   // Custom functions that can be called from SCSS code
   Sass_Function_List c_functions;

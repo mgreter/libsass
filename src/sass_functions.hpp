@@ -9,9 +9,9 @@
 
 // Struct to hold custom function callback
 struct Sass_Function {
-  char*            signature;
+  Sass::sass::string signature;
   Sass_Function_Fn function;
-  void*            cookie;
+  void* cookie;
 };
 
 class SourceDataObj;
@@ -23,7 +23,7 @@ struct Sass_Import {
   // char* source;
   //char* srcmap;
   // error handling
-  char* error;
+  Sass::sass::string error;
   uint32_t line;
   uint32_t column;
   // the import type
