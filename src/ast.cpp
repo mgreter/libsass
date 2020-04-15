@@ -1030,7 +1030,7 @@ namespace Sass {
   ExternalCallable::ExternalCallable(
     const sass::string& name,
     ArgumentDeclaration* parameters,
-    Sass_Function_Entry function) :
+    SassFunctionPtr function) :
     Callable(SourceSpan::tmp("[external]")),
     name_(name),
     declaration_(parameters),

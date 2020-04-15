@@ -169,7 +169,7 @@ namespace Sass {
 
     sass::vector<SassImporterPtr> c_headers;
     sass::vector<SassImporterPtr> c_importers;
-    sass::vector<Sass_Function_Entry> c_functions;
+    sass::vector<SassFunctionPtr> c_functions;
 
     void add_c_header(SassImporterPtr header);
     void add_c_headers(SassImporterListPtr headers);
@@ -177,8 +177,8 @@ namespace Sass {
     void add_c_importer(SassImporterPtr importer);
     void add_c_importers(SassImporterListPtr importers);
 
-    void add_c_function(Sass_Function_Entry function);
-    void add_c_functions(Sass_Function_List functions);
+    void add_c_function(SassFunctionPtr function);
+    void add_c_functions(SassFunctionListPtr functions);
 
     const sass::string indent; // String to be used for indentation
     const sass::string linefeed; // String to be used for line feeds

@@ -1195,7 +1195,7 @@ namespace Sass {
 
     ADD_PROPERTY(ArgumentDeclarationObj, declaration);
 
-    ADD_PROPERTY(Sass_Function_Entry, function);
+    ADD_PROPERTY(SassFunctionPtr, function);
 
     ADD_POINTER(IDXS*, idxs);
 
@@ -1204,7 +1204,7 @@ namespace Sass {
     ExternalCallable(
       const sass::string& name,
       ArgumentDeclaration* parameters,
-      Sass_Function_Entry function);
+      SassFunctionPtr function);
     Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
     bool operator== (const Callable& rhs) const override final;
 

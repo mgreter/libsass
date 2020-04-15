@@ -21,6 +21,12 @@ struct SassContextCpp; // : SassOptionsCpp
 struct SassFileContextCpp; // : SassContextCpp
 struct SassDataContextCpp; // : SassContextCpp
 
+typedef struct SassCompilerCpp* (SassCompilerPtr);
+typedef struct SassOptionsCpp* (SassOptionsPtr);
+typedef struct SassContextCpp* (SassContextPtr);
+typedef struct SassFileContextCpp* (SassFileContextPtr);
+typedef struct SassDataContextCpp* (SassDataContextPtr);
+
 // Compiler states
 enum Sass_Compiler_State {
   SASS_COMPILER_CREATED,
@@ -88,7 +94,7 @@ ADDAPI const char* ADDCALL sass_option_get_source_map_file (struct SassOptionsCp
 ADDAPI const char* ADDCALL sass_option_get_source_map_root (struct SassOptionsCpp* options);
 ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_headers (struct SassOptionsCpp* options);
 ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_importers (struct SassOptionsCpp* options);
-ADDAPI Sass_Function_List ADDCALL sass_option_get_c_functions (struct SassOptionsCpp* options);
+ADDAPI SassFunctionListPtr ADDCALL sass_option_get_c_functions (struct SassOptionsCpp* options);
 
 // Setters for Context_Option values
 ADDAPI void ADDCALL sass_option_set_precision (struct SassOptionsCpp* options, int precision);
@@ -108,7 +114,7 @@ ADDAPI void ADDCALL sass_option_set_source_map_file (struct SassOptionsCpp* opti
 ADDAPI void ADDCALL sass_option_set_source_map_root (struct SassOptionsCpp* options, const char* source_map_root);
 ADDAPI void ADDCALL sass_option_set_c_headers (struct SassOptionsCpp* options, SassImporterListPtr c_headers);
 ADDAPI void ADDCALL sass_option_set_c_importers (struct SassOptionsCpp* options, SassImporterListPtr c_importers);
-ADDAPI void ADDCALL sass_option_set_c_functions (struct SassOptionsCpp* options, Sass_Function_List c_functions);
+ADDAPI void ADDCALL sass_option_set_c_functions (struct SassOptionsCpp* options, SassFunctionListPtr c_functions);
 
 
 // Getters for SassContextCpp values

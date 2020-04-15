@@ -56,7 +56,7 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   Sass::sass::string source_map_root;
 
   // Custom functions that can be called from SCSS code
-  Sass_Function_List c_functions;
+  SassFunctionListPtr c_functions;
 
   // List of custom importers
   SassImporterListPtr c_importers;

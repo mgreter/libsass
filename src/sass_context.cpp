@@ -582,7 +582,7 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_contents);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_file_urls);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, omit_source_map_url);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(Sass_Function_List, c_functions);
+  IMPLEMENT_SASS_OPTION_ACCESSOR(SassFunctionListPtr, c_functions);
   IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_importers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_headers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, indent);

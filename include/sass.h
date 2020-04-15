@@ -13,5 +13,18 @@
 #include <sass/functions.h>
 #include <sass/context.h>
 
-#endif
+typedef SassImportPtr Sass_Import_Entry;
+typedef SassImporterPtr Sass_Importer_Entry;
+typedef SassFunctionPtr Sass_Function_Entry;
 
+typedef SassImportListPtr Sass_Import_List;
+typedef SassImporterListPtr Sass_Importer_List;
+typedef SassFunctionListPtr Sass_Function_List;
+
+struct SassOptionsCpp;
+struct SassCompilerCpp;
+
+#define Sass_Options SassOptionsCpp
+#define Sass_Compiler SassCompilerCpp
+
+#endif

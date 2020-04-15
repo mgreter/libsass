@@ -46,17 +46,17 @@ extern "C" {
   }
 
 
-  Sass_Function_List ADDCALL sass_make_function_list()
+  SassFunctionListPtr ADDCALL sass_make_function_list()
   {
     return new Sass_Function_List2{};
   }
 
-  size_t ADDCALL sass_function_list_size(Sass_Function_List list)
+  size_t ADDCALL sass_function_list_size(SassFunctionListPtr list)
   {
     return list == nullptr ? 0 : list->size();
   }
 
-  SassFunctionCpp* ADDCALL sass_function_list_shift(Sass_Function_List list)
+  SassFunctionCpp* ADDCALL sass_function_list_shift(SassFunctionListPtr list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -87,16 +87,16 @@ extern "C" {
   }
 
 
-  void ADDCALL sass_function_list_push(Sass_Function_List list, Sass_Function_Entry fn)
+  void ADDCALL sass_function_list_push(SassFunctionListPtr list, SassFunctionPtr fn)
   {
     if (list != nullptr) {
       list->push_back(fn);
     }
   }
 
-  Sass_Function_Entry ADDCALL sass_make_function(const char* signature, Sass_Function_Fn function, void* cookie)
+  SassFunctionPtr ADDCALL sass_make_function(const char* signature, Sass_Function_Fn function, void* cookie)
   {
-    Sass_Function_Entry cb = new SassFunctionCpp{};
+    SassFunctionPtr cb = new SassFunctionCpp{};
     if (cb == 0) return 0;
     cb->signature = signature;
     cb->function = function;
@@ -104,13 +104,13 @@ extern "C" {
     return cb;
   }
 
-  void ADDCALL sass_delete_function(Sass_Function_Entry entry)
+  void ADDCALL sass_delete_function(SassFunctionPtr entry)
   {
     delete entry;
   }
 
   // Deallocator for the allocated memory
-  void ADDCALL sass_delete_function_list(Sass_Function_List list)
+  void ADDCALL sass_delete_function_list(SassFunctionListPtr list)
   {
     if (list == nullptr) return;
     for (auto function : *list) {
@@ -120,12 +120,12 @@ extern "C" {
   }
 
   // Setters and getters for callbacks on function lists
-  // Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos) { return list[pos]; }
-  // void sass_function_set_list_entry(Sass_Function_List list, uint32_t pos, Sass_Function_Entry cb) { list[pos] = cb; }
+  // SassFunctionPtr ADDCALL sass_function_get_list_entry(SassFunctionListPtr list, uint32_t pos) { return list[pos]; }
+  // void sass_function_set_list_entry(SassFunctionListPtr list, uint32_t pos, SassFunctionPtr cb) { list[pos] = cb; }
 
-  const char* ADDCALL sass_function_get_signature(Sass_Function_Entry cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
-  Sass_Function_Fn ADDCALL sass_function_get_function(Sass_Function_Entry cb) { return cb->function; }
-  void* ADDCALL sass_function_get_cookie(Sass_Function_Entry cb) { return cb->cookie; }
+  const char* ADDCALL sass_function_get_signature(SassFunctionPtr cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
+  Sass_Function_Fn ADDCALL sass_function_get_function(SassFunctionPtr cb) { return cb->function; }
+  void* ADDCALL sass_function_get_cookie(SassFunctionPtr cb) { return cb->cookie; }
 
   SassImporterPtr ADDCALL sass_make_importer(SassImporterFnCpp fn, double priority, void* cookie)
   {

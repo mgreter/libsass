@@ -30,12 +30,12 @@ typedef SassImportListPtr (*SassImporterFnCpp)
   (const char* url, SassImporterPtr cb, struct SassCompilerCpp* compiler);
 
 // Typedef helpers for custom functions lists
-typedef struct SassFunctionCpp (*Sass_Function_Entry);
+typedef struct SassFunctionCpp (*SassFunctionPtr);
 
-typedef struct Sass_Function_List2 (*Sass_Function_List);
+typedef struct Sass_Function_List2 (*SassFunctionListPtr);
 // Typedef defining function signature and return type
 typedef union Sass_Value* (*Sass_Function_Fn)
-  (const union Sass_Value*, Sass_Function_Entry cb, struct SassCompilerCpp* compiler);
+  (const union Sass_Value*, SassFunctionPtr cb, struct SassCompilerCpp* compiler);
 
 // Type of parser to use
 enum Sass_Import_Type {
@@ -136,24 +136,24 @@ ADDAPI void ADDCALL sass_delete_import (SassImportPtr);
 
 
 // Creators for sass function list and function descriptors
-ADDAPI Sass_Function_List ADDCALL sass_make_function_list();
-ADDAPI size_t ADDCALL sass_function_list_size(Sass_Function_List list);
-ADDAPI Sass_Function_Entry ADDCALL sass_function_list_shift(Sass_Function_List list);
-ADDAPI void ADDCALL sass_function_list_push(Sass_Function_List list, Sass_Function_Entry);
+ADDAPI SassFunctionListPtr ADDCALL sass_make_function_list();
+ADDAPI size_t ADDCALL sass_function_list_size(SassFunctionListPtr list);
+ADDAPI SassFunctionPtr ADDCALL sass_function_list_shift(SassFunctionListPtr list);
+ADDAPI void ADDCALL sass_function_list_push(SassFunctionListPtr list, SassFunctionPtr);
 
-ADDAPI Sass_Function_Entry ADDCALL sass_make_function (const char* signature, Sass_Function_Fn cb, void* cookie);
-ADDAPI void ADDCALL sass_delete_function (Sass_Function_Entry entry);
-ADDAPI void ADDCALL sass_delete_function_list (Sass_Function_List list);
+ADDAPI SassFunctionPtr ADDCALL sass_make_function (const char* signature, Sass_Function_Fn cb, void* cookie);
+ADDAPI void ADDCALL sass_delete_function (SassFunctionPtr entry);
+ADDAPI void ADDCALL sass_delete_function_list (SassFunctionListPtr list);
 
 
 // Setters and getters for callbacks on function lists
-// ADDAPI Sass_Function_Entry ADDCALL sass_function_get_list_entry(Sass_Function_List list, uint32_t pos);
-// ADDAPI void ADDCALL sass_function_set_list_entry(Sass_Function_List list, uint32_t pos, Sass_Function_Entry cb);
+// ADDAPI SassFunctionPtr ADDCALL sass_function_get_list_entry(SassFunctionListPtr list, uint32_t pos);
+// ADDAPI void ADDCALL sass_function_set_list_entry(SassFunctionListPtr list, uint32_t pos, SassFunctionPtr cb);
 
 // Getters for custom function descriptors
-ADDAPI const char* ADDCALL sass_function_get_signature (Sass_Function_Entry cb);
-ADDAPI Sass_Function_Fn ADDCALL sass_function_get_function (Sass_Function_Entry cb);
-ADDAPI void* ADDCALL sass_function_get_cookie (Sass_Function_Entry cb);
+ADDAPI const char* ADDCALL sass_function_get_signature (SassFunctionPtr cb);
+ADDAPI Sass_Function_Fn ADDCALL sass_function_get_function (SassFunctionPtr cb);
+ADDAPI void* ADDCALL sass_function_get_cookie (SassFunctionPtr cb);
 
 
 #ifdef __cplusplus

@@ -43,12 +43,12 @@ namespace Sass {
     public: // public accessors
       const sass::vector<SassImporterPtr> get_headers(void) { return headers; }
       const sass::vector<SassImporterPtr> get_importers(void) { return importers; }
-      const sass::vector<Sass_Function_Entry> get_functions(void) { return functions; }
+      const sass::vector<SassFunctionPtr> get_functions(void) { return functions; }
 
     private: // private vars
       sass::vector<SassImporterPtr> headers;
       sass::vector<SassImporterPtr> importers;
-      sass::vector<Sass_Function_Entry> functions;
+      sass::vector<SassFunctionPtr> functions;
 
   };
 

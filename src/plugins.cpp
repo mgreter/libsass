@@ -61,7 +61,7 @@ namespace Sass {
   {
 
     typedef const char* (*__plugin_version__)(void);
-    typedef Sass_Function_List (*__plugin_load_fns__)(void);
+    typedef SassFunctionListPtr (*__plugin_load_fns__)(void);
     typedef SassImporterListPtr (*__plugin_load_imps__)(void);
 
     sass::sstream strm; strm << getHashSeed();
@@ -77,7 +77,7 @@ namespace Sass {
         // try to get import address for "libsass_load_functions"
         if (LOAD_LIB_FN(__plugin_load_fns__, plugin_load_functions, "libsass_load_functions"))
         {
-          Sass_Function_List fns = plugin_load_functions();
+          SassFunctionListPtr fns = plugin_load_functions();
           while (sass_function_list_size(fns) > 0) {
             functions.emplace_back(sass_function_list_shift(fns));
           }

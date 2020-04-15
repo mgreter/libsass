@@ -70,7 +70,7 @@ namespace Sass {
     // Initialize C-API arrays for custom functionality
     c_headers               (sass::vector<SassImporterPtr>()),
     c_importers             (sass::vector<SassImporterPtr>()),
-    c_functions             (sass::vector<Sass_Function_Entry>()),
+    c_functions             (sass::vector<SassFunctionPtr>()),
 
     // Get some common options with and few default
     indent                  (safe_str(c_options.indent, "  ")),
@@ -107,7 +107,7 @@ namespace Sass {
 
   }
 
-  void Context::add_c_functions(Sass_Function_List functions)
+  void Context::add_c_functions(SassFunctionListPtr functions)
   {
     if (functions == nullptr) return;
     for (auto function : *functions) {
@@ -135,7 +135,7 @@ namespace Sass {
     sort(c_importers.begin(), c_importers.end(), sort_importers);
   }
 
-  void Context::add_c_function(Sass_Function_Entry function)
+  void Context::add_c_function(SassFunctionPtr function)
   {
     c_functions.emplace_back(function);
   }
@@ -492,7 +492,7 @@ namespace Sass {
   }
   // EO callCustomLoader
 
-  void register_c_function2(Context&, Sass_Function_Entry);
+  void register_c_function2(Context&, SassFunctionPtr);
 
   sass::string Context::render(Block_Obj root)
   {
@@ -739,7 +739,7 @@ namespace Sass {
     return sass_clone_value(s_args);
   }
 
-  union Sass_Value* call_fn_foo(const union Sass_Value* v, Sass_Function_Entry cb, struct SassCompilerCpp* compiler)
+  union Sass_Value* call_fn_foo(const union Sass_Value* v, SassFunctionPtr cb, struct SassCompilerCpp* compiler)
   {
     // we actually abuse the void* to store an "int"
     return sass_clone_value(v);
@@ -747,7 +747,7 @@ namespace Sass {
   */
 
 
-  void register_c_function2(Context& ctx, Sass_Function_Entry descr)
+  void register_c_function2(Context& ctx, SassFunctionPtr descr)
   {
     EnvFrame local(&ctx.varRoot, true);
     ScopedStackFrame<EnvFrame> scoped(ctx.varStack, &local);

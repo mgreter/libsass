@@ -399,7 +399,7 @@ namespace Sass {
     // try {
     // double epsilon = std::pow(0.1, ctx.c_options.precision + 1);
 
-    Sass_Function_Entry entry = callable->function();
+    SassFunctionPtr entry = callable->function();
 
     union Sass_Value* c_args = sass_make_list(positional.size(), SASS_COMMA, false);
     for (size_t i = 0; i < positional.size(); i++) {
@@ -562,7 +562,7 @@ namespace Sass {
       // We know that warn override function can only be external
       SASS_ASSERT(Cast<ExternalCallable*>, "External warn override");
       ExternalCallable* def = static_cast<ExternalCallable*>(fn);
-      Sass_Function_Entry c_function = def->function();
+      SassFunctionPtr c_function = def->function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
@@ -602,7 +602,7 @@ namespace Sass {
     if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::errorRule)) {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
-      Sass_Function_Entry c_function = def->function();
+      SassFunctionPtr c_function = def->function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
@@ -640,7 +640,7 @@ namespace Sass {
     if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::debugRule)) {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
-      Sass_Function_Entry c_function = def->function();
+      SassFunctionPtr c_function = def->function();
       Sass_Function_Fn c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
