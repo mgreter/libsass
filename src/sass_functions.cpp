@@ -34,7 +34,7 @@ extern "C" {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
     auto ptr = list->front();
-    list->erase(list->begin());
+    list->pop_front();
     return ptr;
   }
 
@@ -61,7 +61,7 @@ extern "C" {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
     auto ptr = list->front();
-    list->erase(list->begin());
+    list->pop_front();
     return ptr;
   }
 
@@ -75,7 +75,7 @@ extern "C" {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
     auto ptr = list->front();
-    list->erase(list->begin());
+    list->pop_front();
     return ptr;
   }
 

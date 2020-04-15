@@ -7,23 +7,18 @@
 #include "backtrace.hpp"
 #include "source.hpp"
 
+// Some structures are simple c++ vectors.
+// There might be a more efficient way to achieve this?
+// Although compiler optimization should see this case easily!
+struct SassImportListCpp : std::deque<SassImportPtr> {};
+struct SassImporterListCpp : std::deque<SassImporterPtr> {};
+struct SassFunctionListCpp : std::deque<SassFunctionCpp*> {};
+
 // Struct to hold custom function callback
 struct SassFunctionCpp {
   Sass::sass::string signature;
   SassFunctionLambdaCpp function;
   void* cookie;
-};
-
-struct SassFunctionListCpp : Sass::sass::vector<SassFunctionCpp*> {
-
-};
-
-struct SassImporterListCpp : Sass::sass::vector<SassImporterPtr> {
-
-};
-
-struct SassImportListCpp : Sass::sass::vector<SassImportPtr> {
-
 };
 
 class SourceDataObj;
