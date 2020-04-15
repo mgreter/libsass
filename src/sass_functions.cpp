@@ -31,7 +31,7 @@ extern "C" {
     return ptr;
   }
 
-  void ADDCALL sass_function_list_push(Sass_Function_List list, Sass_Function* fn)
+  void ADDCALL sass_function_list_push(Sass_Function_List list, Sass_Function_Entry fn)
   {
     if (list != nullptr) {
       list->push_back(fn);
