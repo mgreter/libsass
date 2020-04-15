@@ -11,22 +11,6 @@
 extern "C" {
 #endif
 
-
-// Forward declaration
-struct SassCompilerCpp;
-
-// Forward declaration
-struct SassOptionsCpp; // base struct
-struct SassContextCpp; // : SassOptionsCpp
-struct SassFileContextCpp; // : SassContextCpp
-struct SassDataContextCpp; // : SassContextCpp
-
-typedef struct SassCompilerCpp* (SassCompilerPtr);
-typedef struct SassOptionsCpp* (SassOptionsPtr);
-typedef struct SassContextCpp* (SassContextPtr);
-typedef struct SassFileContextCpp* (SassFileContextPtr);
-typedef struct SassDataContextCpp* (SassDataContextPtr);
-
 // Compiler states
 enum Sass_Compiler_State {
   SASS_COMPILER_CREATED,

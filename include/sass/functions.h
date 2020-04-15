@@ -7,51 +7,6 @@
 extern "C" {
 #endif
 
-
-// Forward declaration
-struct SassCalleeCpp;
-struct SassImportCpp;
-struct SassOptionsCpp;
-struct SassCompilerCpp;
-struct SassImporterCpp;
-struct SassFunctionCpp;
-
-// Typedef helpers for callee lists
-typedef struct SassCalleeCpp* (SassCalleePtr);
-// Typedef helpers for import lists
-typedef struct SassImportCpp* (SassImportPtr);
-//typedef struct SassImportCpp* (*SassImportListPtr);
-// Typedef helpers for custom importer lists
-typedef struct SassImporterCpp* (SassImporterPtr);
-typedef struct Sass_Importer_List2* (SassImporterListPtr);
-typedef struct Sass_Import_List2* (SassImportListPtr);
-// Typedef defining importer signature and return type
-typedef SassImportListPtr (*SassImporterFnCpp)
-  (const char* url, SassImporterPtr cb, struct SassCompilerCpp* compiler);
-
-// Typedef helpers for custom functions lists
-typedef struct SassFunctionCpp (*SassFunctionPtr);
-
-typedef struct SassFunctionListCpp (*SassFunctionListPtr);
-// Typedef defining function signature and return type
-typedef union Sass_Value* (*Sass_Function_Fn)
-  (const union Sass_Value*, SassFunctionPtr cb, struct SassCompilerCpp* compiler);
-
-// Type of parser to use
-enum Sass_Import_Type {
-  SASS_IMPORT_AUTO,
-  SASS_IMPORT_SCSS,
-  SASS_IMPORT_SASS,
-  SASS_IMPORT_CSS,
-};
-
-// Type of function calls
-enum Sass_Callee_Type {
-  SASS_CALLEE_MIXIN,
-  SASS_CALLEE_FUNCTION,
-  SASS_CALLEE_C_FUNCTION,
-};
-
 // Creator for sass custom importer return argument list
 ADDAPI SassImporterListPtr ADDCALL sass_make_importer_list ();
 ADDAPI void ADDCALL sass_delete_importer_list(SassImporterListPtr list);
@@ -67,10 +22,10 @@ ADDAPI void ADDCALL sass_importer_list_push(SassImporterListPtr list, SassImport
 
 // Creators for custom importer callback (with some additional pointer)
 // The pointer is mostly used to store the callback into the actual binding
-ADDAPI SassImporterPtr ADDCALL sass_make_importer (SassImporterFnCpp importer, double priority, void* cookie);
+ADDAPI SassImporterPtr ADDCALL sass_make_importer (SassImporterLambdaCpp importer, double priority, void* cookie);
 
 // Getters for import function descriptors
-ADDAPI SassImporterFnCpp ADDCALL sass_importer_get_function (SassImporterPtr cb);
+ADDAPI SassImporterLambdaCpp ADDCALL sass_importer_get_function (SassImporterPtr cb);
 ADDAPI double ADDCALL sass_importer_get_priority (SassImporterPtr cb);
 ADDAPI void* ADDCALL sass_importer_get_cookie (SassImporterPtr cb);
 
@@ -141,7 +96,7 @@ ADDAPI size_t ADDCALL sass_function_list_size(SassFunctionListPtr list);
 ADDAPI SassFunctionPtr ADDCALL sass_function_list_shift(SassFunctionListPtr list);
 ADDAPI void ADDCALL sass_function_list_push(SassFunctionListPtr list, SassFunctionPtr);
 
-ADDAPI SassFunctionPtr ADDCALL sass_make_function (const char* signature, Sass_Function_Fn cb, void* cookie);
+ADDAPI SassFunctionPtr ADDCALL sass_make_function (const char* signature, SassFunctionLambdaCpp cb, void* cookie);
 ADDAPI void ADDCALL sass_delete_function (SassFunctionPtr entry);
 ADDAPI void ADDCALL sass_delete_function_list (SassFunctionListPtr list);
 
@@ -152,7 +107,7 @@ ADDAPI void ADDCALL sass_delete_function_list (SassFunctionListPtr list);
 
 // Getters for custom function descriptors
 ADDAPI const char* ADDCALL sass_function_get_signature (SassFunctionPtr cb);
-ADDAPI Sass_Function_Fn ADDCALL sass_function_get_function (SassFunctionPtr cb);
+ADDAPI SassFunctionLambdaCpp ADDCALL sass_function_get_function (SassFunctionPtr cb);
 ADDAPI void* ADDCALL sass_function_get_cookie (SassFunctionPtr cb);
 
 

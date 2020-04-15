@@ -60,18 +60,6 @@
 extern "C" {
 #endif
 
-
-// Different render styles
-enum Sass_Output_Style {
-  SASS_STYLE_NESTED,
-  SASS_STYLE_EXPANDED,
-  SASS_STYLE_COMPACT,
-  SASS_STYLE_COMPRESSED,
-  // only used internaly
-  SASS_STYLE_INSPECT,
-  SASS_STYLE_TO_CSS
-};
-
 // to allocate buffer to be filled
 ADDAPI void* ADDCALL sass_alloc_memory(size_t size);
 // to allocate a buffer from existing string
@@ -92,6 +80,12 @@ ADDAPI const char* ADDCALL sass2scss_version(void);
 
 // Get compiled libsass language
 ADDAPI const char* ADDCALL libsass_language_version(void);
+
+// Include forward declarations
+#include <sass/fwddecl.h>
+
+// Include enumerations
+#include <sass/enums.h>
 
 #ifdef __cplusplus
 } // __cplusplus defined.
