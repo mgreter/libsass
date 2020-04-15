@@ -15,7 +15,7 @@ struct Sass_Boolean {
 struct Sass_Number {
   enum Sass_Tag tag;
   double        value;
-  char*         unit;
+  Sass::sass::string unit;
 };
 
 struct Sass_Color {
@@ -29,7 +29,7 @@ struct Sass_Color {
 struct Sass_String {
   enum Sass_Tag tag;
   bool          quoted;
-  char*         value;
+  Sass::sass::string value;
 };
 
 struct Sass_List {
@@ -38,7 +38,7 @@ struct Sass_List {
   bool                is_bracketed;
   size_t              length;
   // null terminated "array"
-  union Sass_Value**  values;
+  Sass::sass::vector<Sass_Value*> values;
 };
 
 struct Sass_Map {
@@ -53,15 +53,19 @@ struct Sass_Null {
 
 struct Sass_Error {
   enum Sass_Tag tag;
-  char*         message;
+  Sass::sass::string         message;
 };
 
 struct Sass_Warning {
   enum Sass_Tag tag;
-  char*         message;
+  Sass::sass::string         message;
 };
 
 union Sass_Value {
+
+  Sass_Value() {}
+  ~Sass_Value();
+
   struct Sass_Unknown unknown;
   struct Sass_Boolean boolean;
   struct Sass_Number  number;

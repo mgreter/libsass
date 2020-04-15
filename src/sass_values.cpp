@@ -30,11 +30,11 @@ extern "C" {
   // Getters and setters for Sass_Number
   double ADDCALL sass_number_get_value(const union Sass_Value* v) { return v->number.value; }
   void ADDCALL sass_number_set_value(union Sass_Value* v, double value) { v->number.value = value; }
-  const char* ADDCALL sass_number_get_unit(const union Sass_Value* v) { return v->number.unit; }
+  const char* ADDCALL sass_number_get_unit(const union Sass_Value* v) { return v->number.unit.empty() ? 0 : v->number.unit.c_str(); }
   void ADDCALL sass_number_set_unit(union Sass_Value* v, char* unit) { v->number.unit = unit; }
 
   // Getters and setters for Sass_String
-  const char* ADDCALL sass_string_get_value(const union Sass_Value* v) { return v->string.value; }
+  const char* ADDCALL sass_string_get_value(const union Sass_Value* v) { return v->string.value.empty() ? 0 : v->string.value.c_str(); }
   void ADDCALL sass_string_set_value(union Sass_Value* v, char* value) { v->string.value = value; }
   bool ADDCALL sass_string_is_quoted(const union Sass_Value* v) { return v->string.quoted; }
   void ADDCALL sass_string_set_quoted(union Sass_Value* v, bool quoted) { v->string.quoted = quoted; }
@@ -72,12 +72,12 @@ extern "C" {
   void ADDCALL sass_map_set_value(union Sass_Value* v, size_t i, union Sass_Value* val) { v->map.pairs[i].value = val; }
 
   // Getters and setters for Sass_Error
-  char* ADDCALL sass_error_get_message(const union Sass_Value* v) { return v->error.message; };
-  void ADDCALL sass_error_set_message(union Sass_Value* v, char* msg) { v->error.message = msg; };
+  const char* ADDCALL sass_error_get_message(const union Sass_Value* v) { return v->error.message.empty() ? 0 : v->error.message.c_str(); };
+  void ADDCALL sass_error_set_message(union Sass_Value* v, const char* msg) { v->error.message = msg; };
 
   // Getters and setters for Sass_Warning
-  char* ADDCALL sass_warning_get_message(const union Sass_Value* v) { return v->warning.message; };
-  void ADDCALL sass_warning_set_message(union Sass_Value* v, char* msg) { v->warning.message = msg; };
+  const char* ADDCALL sass_warning_get_message(const union Sass_Value* v) { return v->warning.message.empty() ? 0 : v->warning.message.c_str(); };
+  void ADDCALL sass_warning_set_message(union Sass_Value* v, const char* msg) { v->warning.message = msg; };
 
   // Creator functions for all value types
 
@@ -96,8 +96,7 @@ extern "C" {
     if (v == 0) return 0;
     v->number.tag = SASS_NUMBER;
     v->number.value = val;
-    v->number.unit = unit ? sass_copy_c_string(unit) : 0;
-    if (v->number.unit == 0) { free(v); return 0; }
+    v->number.unit = unit ? unit : "";
     return v;
   }
 
@@ -119,19 +118,17 @@ extern "C" {
     if (v == 0) return 0;
     v->string.quoted = false;
     v->string.tag = SASS_STRING;
-    v->string.value = val ? sass_copy_c_string(val) : 0;
-    if (v->string.value == 0) { free(v); return 0; }
+    v->string.value = val ? val : "";
     return v;
   }
 
   union Sass_Value* ADDCALL sass_make_qstring(const char* val)
   {
-    union Sass_Value* v = new Sass_Value{};
+    union Sass_Value* v = new Sass_Value{ };
     if (v == 0) return 0;
     v->string.quoted = true;
     v->string.tag = SASS_STRING;
-    v->string.value = val ? sass_copy_c_string(val) : 0;
-    if (v->string.value == 0) { free(v); return 0; }
+    v->string.value = val ? val : "";
     return v;
   }
 
@@ -143,8 +140,6 @@ extern "C" {
     v->list.length = len;
     v->list.separator = sep;
     v->list.is_bracketed = is_bracketed;
-    v->list.values = (union Sass_Value**) calloc(len, sizeof(union Sass_Value*));
-    if (v->list.values == 0) { free(v); return 0; }
     return v;
   }
 
@@ -154,8 +149,8 @@ extern "C" {
     if (v == 0) return 0;
     v->map.tag = SASS_MAP;
     v->map.length = len;
-    v->map.pairs = (struct Sass_MapPair*) calloc(len, sizeof(struct Sass_MapPair));
-    if (v->map.pairs == 0) { free(v); return 0; }
+    // v->map.pairs = new Sass_MapPair{};
+    // if (v->map.pairs == 0) { delete v; return 0; }
     return v;
   }
 
@@ -172,8 +167,7 @@ extern "C" {
     union Sass_Value* v = new Sass_Value{};
     if (v == 0) return 0;
     v->error.tag = SASS_ERROR;
-    v->error.message = msg ? sass_copy_c_string(msg) : 0;
-    if (v->error.message == 0) { free(v); return 0; }
+    v->error.message = msg ? msg : "";
     return v;
   }
 
@@ -182,14 +176,12 @@ extern "C" {
     union Sass_Value* v = new Sass_Value{};
     if (v == 0) return 0;
     v->warning.tag = SASS_WARNING;
-    v->warning.message = msg ? sass_copy_c_string(msg) : 0;
-    if (v->warning.message == 0) { free(v); return 0; }
+    v->warning.message = msg ? msg : 0;
     return v;
   }
 
-  // will free all associated sass values
-  void ADDCALL sass_delete_value(union Sass_Value* val) {
-
+  Sass_Value::~Sass_Value() {
+    /*
     size_t i;
     if (val == 0) return;
     switch(val->unknown.tag) {
@@ -198,37 +190,41 @@ extern "C" {
         case SASS_BOOLEAN: {
         }   break;
         case SASS_NUMBER: {
-                free(val->number.unit);
+                // free(val->number.unit);
         }   break;
         case SASS_COLOR: {
         }   break;
         case SASS_STRING: {
-                free(val->string.value);
+                // free(val->string.value);
         }   break;
         case SASS_LIST: {
                 for (i=0; i<val->list.length; i++) {
-                    sass_delete_value(val->list.values[i]);
+                    // sass_delete_value(val->list.values[i]);
                 }
-                free(val->list.values);
+                // free(val->list.values);
         }   break;
         case SASS_MAP: {
                 for (i=0; i<val->map.length; i++) {
-                    sass_delete_value(val->map.pairs[i].key);
-                    sass_delete_value(val->map.pairs[i].value);
+                    // sass_delete_value(val->map.pairs[i].key);
+                    // sass_delete_value(val->map.pairs[i].value);
                 }
-                free(val->map.pairs);
+                // free(val->map.pairs);
         }   break;
         case SASS_ERROR: {
-                free(val->error.message);
+                // free(val->error.message);
         }   break;
         case SASS_WARNING: {
-                free(val->error.message);
+                // free(val->error.message);
         }   break;
         default: break;
     }
+    */
+  }
 
+  // will free all associated sass values
+  void ADDCALL sass_delete_value(union Sass_Value* val)
+  {
     delete val;
-
   }
 
   // Make a deep cloned copy of the given sass value
@@ -245,13 +241,15 @@ extern "C" {
                 return sass_make_boolean(val->boolean.value);
         }
         case SASS_NUMBER: {
-                return sass_make_number(val->number.value, val->number.unit);
+                return sass_make_number(val->number.value, sass_number_get_unit(val));
         }
         case SASS_COLOR: {
                 return sass_make_color(val->color.r, val->color.g, val->color.b, val->color.a);
         }
         case SASS_STRING: {
-                return sass_string_is_quoted(val) ? sass_make_qstring(val->string.value) : sass_make_string(val->string.value);
+                return sass_string_is_quoted(val) ?
+                  sass_make_qstring(sass_string_get_value(val)) :
+                  sass_make_string(sass_string_get_value(val));
         }
         case SASS_LIST: {
                 union Sass_Value* list = sass_make_list(val->list.length, val->list.separator, val->list.is_bracketed);
@@ -269,10 +267,10 @@ extern "C" {
                 return map;
         }
         case SASS_ERROR: {
-                return sass_make_error(val->error.message);
+                return sass_make_error(sass_error_get_message(val));
         }
         case SASS_WARNING: {
-                return sass_make_warning(val->warning.message);
+                return sass_make_warning(sass_warning_get_message(val));
         }
         default: break;
     }

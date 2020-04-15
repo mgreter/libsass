@@ -276,7 +276,7 @@ extern "C" {
       c_ctx->error_column = sass::string::npos;
 
       // allocate a new compiler instance
-      void* ctxmem = calloc(1, sizeof(struct Sass_Compiler));
+      void* ctxmem = new Sass_Compiler{};
       if (ctxmem == 0) { std::cerr << "Error allocating memory for context" << STRMLF; return 0; }
       Sass_Compiler* compiler = (struct Sass_Compiler*) ctxmem;
       compiler->state = SASS_COMPILER_CREATED;
@@ -524,7 +524,7 @@ extern "C" {
     compiler->cpp_ctx = NULL;
     compiler->c_ctx = NULL;
     compiler->root = {};
-    free(compiler);
+    delete compiler;
   }
 
   // Deallocate all associated memory with options

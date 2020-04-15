@@ -20,10 +20,11 @@ struct Sass_Function;
 typedef struct Sass_Callee (*Sass_Callee_Entry);
 // Typedef helpers for import lists
 typedef struct Sass_Import (*Sass_Import_Entry);
-typedef struct Sass_Import* (*Sass_Import_List);
+//typedef struct Sass_Import* (*Sass_Import_List);
 // Typedef helpers for custom importer lists
 typedef struct Sass_Importer (*Sass_Importer_Entry);
 typedef struct Sass_Importer_List2 (*Sass_Importer_List);
+typedef struct Sass_Import_List2 (*Sass_Import_List);
 // Typedef defining importer signature and return type
 typedef Sass_Import_List (*Sass_Importer_Fn)
   (const char* url, Sass_Importer_Entry cb, struct Sass_Compiler* compiler);
@@ -74,10 +75,16 @@ ADDAPI double ADDCALL sass_importer_get_priority (Sass_Importer_Entry cb);
 ADDAPI void* ADDCALL sass_importer_get_cookie (Sass_Importer_Entry cb);
 
 // Deallocator for associated memory
-ADDAPI void ADDCALL sass_delete_importer (Sass_Importer_Entry cb);
+ADDAPI void ADDCALL sass_delete_importer (Sass_Importer_Entry cb); 
 
 // Creator for sass custom importer return argument list
-ADDAPI Sass_Import_List ADDCALL sass_make_import_list (uint32_t length);
+ADDAPI Sass_Import_List ADDCALL sass_make_import_list();
+ADDAPI void ADDCALL sass_delete_import_list(Sass_Import_List list);
+ADDAPI size_t ADDCALL sass_import_list_size(Sass_Import_List list);
+ADDAPI Sass_Import_Entry ADDCALL sass_import_list_shift(Sass_Import_List list);
+ADDAPI void ADDCALL sass_import_list_push(Sass_Import_List list, Sass_Import_Entry);
+
+
 // Creator for a single import entry returned by the custom importer inside the list
 ADDAPI Sass_Import_Entry ADDCALL sass_make_import_entry (const char* path, char* source, char* srcmap);
 ADDAPI Sass_Import_Entry ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap);
@@ -87,8 +94,8 @@ ADDAPI Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import,
 
 // Setters to insert an entry into the import list (you may also use [] access directly)
 // Since we are dealing with pointers they should have a guaranteed and fixed size
-ADDAPI void ADDCALL sass_import_set_list_entry (Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry);
-ADDAPI Sass_Import_Entry ADDCALL sass_import_get_list_entry (Sass_Import_List list, uint32_t idx);
+// ADDAPI void ADDCALL sass_import_set_list_entry (Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry);
+// ADDAPI Sass_Import_Entry ADDCALL sass_import_get_list_entry (Sass_Import_List list, uint32_t idx);
 
 // Getters for callee entry
 ADDAPI const char* ADDCALL sass_callee_get_name (Sass_Callee_Entry);
@@ -122,7 +129,7 @@ ADDAPI uint32_t ADDCALL sass_import_get_error_column (Sass_Import_Entry);
 ADDAPI const char* ADDCALL sass_import_get_error_message (Sass_Import_Entry);
 
 // Deallocator for associated memory (incl. entries)
-ADDAPI void ADDCALL sass_delete_import_list (Sass_Import_List);
+// ADDAPI void ADDCALL sass_delete_import_list (Sass_Import_List);
 // Just in case we have some stray import structs
 ADDAPI void ADDCALL sass_delete_import (Sass_Import_Entry);
 

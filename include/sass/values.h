@@ -132,12 +132,12 @@ ADDAPI union Sass_Value* ADDCALL sass_map_get_value (const union Sass_Value* v, 
 ADDAPI void ADDCALL sass_map_set_value (union Sass_Value* v, size_t i, union Sass_Value*);
 
 // Getters and setters for Sass_Error
-ADDAPI char* ADDCALL sass_error_get_message (const union Sass_Value* v);
-ADDAPI void ADDCALL sass_error_set_message (union Sass_Value* v, char* msg);
+ADDAPI const char* ADDCALL sass_error_get_message (const union Sass_Value* v);
+ADDAPI void ADDCALL sass_error_set_message (union Sass_Value* v, const char* msg);
 
 // Getters and setters for Sass_Warning
-ADDAPI char* ADDCALL sass_warning_get_message (const union Sass_Value* v);
-ADDAPI void ADDCALL sass_warning_set_message (union Sass_Value* v, char* msg);
+ADDAPI const char* ADDCALL sass_warning_get_message (const union Sass_Value* v);
+ADDAPI void ADDCALL sass_warning_set_message (union Sass_Value* v, const char* msg);
 
 #ifdef __cplusplus
 } // __cplusplus defined.

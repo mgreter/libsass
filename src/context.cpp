@@ -416,10 +416,11 @@ namespace Sass {
       if (includes != nullptr) {
         // Get the list of possible includes
         // A list with zero items does nothing
-        Sass_Import_List it_includes = includes;
-        while (*it_includes) {
+        while (sass_import_list_size(includes) > 0) {
           // Increment counter
           ++count;
+
+          auto import = sass_import_list_shift(includes);
           // Create a unique path to use as key
           sass::string uniq_path = imp_path;
           // Append counter to the path
@@ -432,7 +433,6 @@ namespace Sass {
           // create the importer struct
           Importer importer(uniq_path, ctx_path);
           // query data from the current include
-          Sass_Import_Entry import = *it_includes;
           SourceDataObj source = import->srcdata;
           // const char* content = sass_import_get_source(import);
           // const char* srcmap = sass_import_get_srcmap(import);
@@ -443,6 +443,7 @@ namespace Sass {
           if (const char* err_message = sass_import_get_error_message(import)) {
             size_t line = sass_import_get_error_line(import);
             size_t column = sass_import_get_error_column(import);
+            // sass_delete_import(import); // will error afterwards
             if (line == sass::string::npos) error(err_message, pstate, *logger);
             else if (column == sass::string::npos) error(err_message, pstate, *logger);
             else error(err_message, { source, Offset::init(line, column) }, *logger);
@@ -471,12 +472,12 @@ namespace Sass {
             rule->append(SASS_MEMORY_NEW(IncludeImport, statement, include));
             // Check if loading was successful
             if (include.abs_path.empty()) {
+              sass_delete_import(import);
               error("Can't find stylesheet to import.",
                 rule->pstate(), *logger);
             }
           }
-          // Move to next
-          ++it_includes;
+          sass_delete_import(import);
         }
         // Deallocate the returned memory
         sass_delete_import_list(includes);

@@ -62,19 +62,6 @@ namespace Sass {
     return str == NULL ? alt : str;
   }
 
-  void free_string_array(char ** arr) {
-    if(!arr)
-        return;
-
-    char **it = arr;
-    while (it && (*it)) {
-      free(*it);
-      ++it;
-    }
-
-    free(arr);
-  }
-
   // 1. Removes whitespace after newlines.
   // 2. Replaces newlines with spaces.
   //

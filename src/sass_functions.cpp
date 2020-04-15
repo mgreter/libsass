@@ -12,6 +12,40 @@
 extern "C" {
   using namespace Sass;
 
+
+
+  // Creator for sass custom importer return argument list
+  Sass_Import_List ADDCALL sass_make_import_list()
+  {
+    return new Sass_Import_List2{};
+  }
+
+  void ADDCALL sass_delete_import_list(Sass_Import_List list)
+  {
+    delete list;
+  }
+  size_t ADDCALL sass_import_list_size(Sass_Import_List list)
+  {
+    return list == nullptr ? 0 : list->size();
+  }
+
+  Sass_Import_Entry ADDCALL sass_import_list_shift(Sass_Import_List list)
+  {
+    if (list == nullptr) return nullptr;
+    if (list->empty()) return nullptr;
+    auto ptr = list->front();
+    list->erase(list->begin());
+    return ptr;
+  }
+
+  void ADDCALL sass_import_list_push(Sass_Import_List list, Sass_Import_Entry import)
+  {
+    if (list != nullptr) {
+      list->push_back(import);
+    }
+  }
+
+
   Sass_Function_List ADDCALL sass_make_function_list()
   {
     return new Sass_Function_List2{};
@@ -132,12 +166,6 @@ extern "C" {
   // Sass_Importer_Entry ADDCALL sass_importer_get_list_entry(Sass_Importer_List list, uint32_t idx) { return list[idx]; }
   // void ADDCALL sass_importer_set_list_entry(Sass_Importer_List list, uint32_t idx, Sass_Importer_Entry cb) { list[idx] = cb; }
 
-  // Creator for sass custom importer return argument list
-  Sass_Import_List ADDCALL sass_make_import_list(uint32_t length)
-  {
-    return (Sass_Import**) calloc(length + 1, sizeof(Sass_Import*));
-  }
-
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
   Sass_Import_Entry ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap)
@@ -189,20 +217,8 @@ extern "C" {
   }
 
   // Setters and getters for entries on the import list
-  void ADDCALL sass_import_set_list_entry(Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry) { list[idx] = entry; }
-  Sass_Import_Entry ADDCALL sass_import_get_list_entry(Sass_Import_List list, uint32_t idx) { return list[idx]; }
-
-  // Deallocator for the allocated memory
-  void ADDCALL sass_delete_import_list(Sass_Import_List list)
-  {
-    Sass_Import_List it = list;
-    if (list == 0) return;
-    while(*list) {
-      sass_delete_import(*list);
-      ++list;
-    }
-    free(it);
-  }
+  // void ADDCALL sass_import_set_list_entry(Sass_Import_List list, uint32_t idx, Sass_Import_Entry entry) { list[idx] = entry; }
+  // Sass_Import_Entry ADDCALL sass_import_get_list_entry(Sass_Import_List list, uint32_t idx) { return list[idx]; }
 
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(Sass_Import_Entry import)
