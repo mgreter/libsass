@@ -673,17 +673,15 @@ namespace Sass {
     return "/*# sourceMappingURL=" + url + " */";
   }
 
-  char* Context::render_srcmap()
+  sass::string Context::render_srcmap()
   {
-    if (source_map_file == "") return 0;
-    sass::string map = emitter.render_srcmap(*this);
-    return sass_copy_c_string(map.c_str());
+    if (source_map_file == "") return "";
+    return emitter.render_srcmap(*this);
   }
 
-  char* Context::render_stderr()
+  sass::string Context::render_stderr()
   {
-    sass::string err = logger->errors.str();
-    return sass_copy_c_string(err.c_str());
+    return logger->errors.str();
   }
 
   // for data context we want to start after "stdin"

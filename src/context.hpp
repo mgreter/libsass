@@ -187,8 +187,8 @@ namespace Sass {
     virtual Block_Obj parse(Sass_Import_Type type) = 0;
     virtual Block_Obj compile();
     virtual char* render(Block_Obj root);
-    virtual char* render_srcmap();
-    virtual char* render_stderr();
+    virtual sass::string render_srcmap();
+    virtual sass::string render_stderr();
 
     void register_import(Sass_Import_Entry& entry);
     void register_resource(const Include&, char* contents, char* srcmap);
