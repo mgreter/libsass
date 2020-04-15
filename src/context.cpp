@@ -463,7 +463,7 @@ namespace Sass {
 
   void register_c_function2(Context&, Sass_Function_Entry);
 
-  char* Context::render(Block_Obj root)
+  sass::string Context::render(Block_Obj root)
   {
     // check for valid block
     if (!root) return 0;
@@ -488,7 +488,7 @@ namespace Sass {
     }
     // create a copy of the resulting buffer string
     // this must be freed or taken over by implementor
-    return sass_copy_c_string(emitted.buffer.c_str());
+    return emitted.buffer;
   }
 
   void Context::apply_custom_headers2(sass::vector<StatementObj>& statements, SourceSpan pstate)

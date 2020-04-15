@@ -186,7 +186,7 @@ namespace Sass {
     Context(struct Sass_Context&);
     virtual Block_Obj parse(Sass_Import_Type type) = 0;
     virtual Block_Obj compile();
-    virtual char* render(Block_Obj root);
+    virtual sass::string render(Block_Obj root);
     virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 

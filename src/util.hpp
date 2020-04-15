@@ -38,7 +38,6 @@ namespace Sass {
   double sass_strtod(const char* str);
   const char* safe_str(const char *, const char* = "");
   void free_string_array(char **);
-  char **copy_strings(const sass::vector<sass::string>&, char ***, int = 0);
   sass::string string_to_output(const sass::string& str);
 
   sass::string quote(const sass::string&, char q = 0);

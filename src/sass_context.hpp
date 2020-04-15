@@ -81,7 +81,7 @@ struct Sass_Context : Sass_Options
   enum Sass_Logger_Style logstyle;
 
   // generated output data
-  char* output_string;
+  Sass::sass::string output_string;
 
   // generated stderr data
   Sass::sass::string stderr_string;
