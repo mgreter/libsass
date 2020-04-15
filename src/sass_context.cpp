@@ -224,8 +224,9 @@ extern "C" {
     IMPLEMENT_SASS_OPTION_STRING2_GETTER(type, option, def) \
     IMPLEMENT_SASS_OPTION_STRING2_SETTER(type, option, def)
 
+  // TODO: return empty string too?
 #define IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(option) \
-    const char* ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option.c_str(); }
+    const char* ADDCALL sass_context_get_##option (struct Sass_Context* ctx) { return ctx->option.empty() ? 0 : ctx->option.c_str(); }
 
 
 #define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
