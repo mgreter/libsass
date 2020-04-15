@@ -41,7 +41,7 @@ namespace Sass {
 
     // Create offset with given `line` and `column`
     // Needs static constructor to avoid ambiguity
-    static Offset init(uint32_t line, uint32_t column);
+    static Offset init(size_t line, size_t column);
 
     // Return the `distance` between `start` and `end`
     // Gives the solution to the equation `end = start + x`

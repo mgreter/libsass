@@ -88,9 +88,10 @@ namespace Sass {
     // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
 
     // collect more paths from different options
-    collect_include_paths(c_options.include_path);
+    collectPluginPaths(c_options.plugin_path);
+    collectIncludePaths(c_options.include_path);
+
     collect_include_paths(c_options.include_paths);
-    collect_plugin_paths(c_options.plugin_path);
     collect_plugin_paths(c_options.plugin_paths);
 
     // load plugins and register custom behaviors
@@ -155,12 +156,23 @@ namespace Sass {
   {
   }
 
-  void Context::collect_include_paths(const char* paths_str)
+  void Context::collectPluginPaths(const char* paths)
   {
-    if (paths_str == nullptr) return;
-    sass::vector<sass::string> paths =
-      StringUtils::split(paths_str, PATH_SEP, true);
-    for (sass::string path : paths) {
+    if (paths == nullptr) return;
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
+      if (*path.rbegin() != '/') path += '/';
+      plugin_paths.emplace_back(path);
+    }
+  }
+
+  void Context::collectIncludePaths(const char* paths)
+  {
+    if (paths == nullptr) return;
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
       if (*path.rbegin() != '/') path += '/';
       include_paths.emplace_back(path);
     }
@@ -170,27 +182,17 @@ namespace Sass {
   {
     while (paths_array)
     {
-      collect_include_paths(paths_array->string);
+      collectIncludePaths(paths_array->string);
       paths_array = paths_array->next;
     }
   }
 
-  void Context::collect_plugin_paths(const char* paths_str)
-  {
-    if (paths_str == nullptr) return;
-    sass::vector<sass::string> paths =
-      StringUtils::split(paths_str, PATH_SEP, true);
-    for (sass::string path : paths) {
-      if (*path.rbegin() != '/') path += '/';
-      plugin_paths.emplace_back(path);
-    }
-  }
 
   void Context::collect_plugin_paths(string_list* paths_array)
   {
     while (paths_array)
     {
-      collect_plugin_paths(paths_array->string);
+      collectPluginPaths(paths_array->string);
       paths_array = paths_array->next;
     }
   }
@@ -362,21 +364,30 @@ namespace Sass {
 
   }
 
-  // call custom importers on the given (unquoted) load_path and eventually parse the resulting style_sheet
-  bool Context::call_loader2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* rule, sass::vector<Sass_Importer_Entry> importers, bool only_one)
+  /*#########################################################################*/
+  // @param imp_path The relative or custom path for be imported
+  // @param pstate SourceSpan where import occurred (parent context)
+  // @param rule The backing ImportRule that is added to the document
+  // @param importers Array of custom importers/headers to go through
+  // @param singleton Whether to use all importers or only first successful
+  /*#########################################################################*/
+  bool Context::callCustomLoader(const sass::string& imp_path, SourceSpan& pstate,
+    ImportRule* rule, const sass::vector<Sass_Importer_Entry>& importers, bool singleton)
   {
     // unique counter
     size_t count = 0;
     // need one correct import
     bool has_import = false;
 
+    const char* ctx_path = pstate.getAbsPath();
+
     // Process custom importers and headers.
     // They must be presorted by priorities.
-    for (Sass_Importer* importer_ent : importers) {
+    for (Sass_Importer* importer : importers) {
       // Get the external importer function
-      Sass_Importer_Fn fn = sass_importer_get_function(importer_ent);
+      Sass_Importer_Fn fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
-      Sass_Import_List includes = fn(load_path.c_str(), importer_ent, c_compiler);
+      Sass_Import_List includes = fn(imp_path.c_str(), importer, c_compiler);
       // External provider want to handle this
       if (includes != nullptr) {
         // Get the list of possible includes
@@ -386,10 +397,10 @@ namespace Sass {
           // Increment counter
           ++count;
           // Create a unique path to use as key
-          sass::string uniq_path = load_path;
+          sass::string uniq_path = imp_path;
           // Append counter to the path
           // Note: only for headers!
-          if (!only_one && count) {
+          if (!singleton && count) {
             sass::sstream path_strm;
             path_strm << uniq_path << ":" << count;
             uniq_path = path_strm.str();
@@ -397,75 +408,64 @@ namespace Sass {
           // create the importer struct
           Importer importer(uniq_path, ctx_path);
           // query data from the current include
-          Sass_Import_Entry include_ent = *it_includes;
-          // const char* content = sass_import_get_source(include_ent);
-          // const char* srcmap = sass_import_get_srcmap(include_ent);
-          const char* abs_path = sass_import_get_abs_path(include_ent);
+          Sass_Import_Entry import = *it_includes;
+          SourceDataObj source = import->srcdata;
+          // const char* content = sass_import_get_source(import);
+          // const char* srcmap = sass_import_get_srcmap(import);
+          const char* abs_path = sass_import_get_abs_path(import);
 
           // Handle error message passed back from custom importer
           // It may (or may not) override the line and column info
-          if (const char* err_message = sass_import_get_error_message(include_ent)) {
-            uint32_t line = sass_import_get_error_line(include_ent);
-            uint32_t column = sass_import_get_error_column(include_ent);
+          if (const char* err_message = sass_import_get_error_message(import)) {
+            size_t line = sass_import_get_error_line(import);
+            size_t column = sass_import_get_error_column(import);
             if (line == sass::string::npos) error(err_message, pstate, *logger);
             else if (column == sass::string::npos) error(err_message, pstate, *logger);
-            else error(err_message, { include_ent->srcdata, Offset::init(line, column) }, *logger);
+            else error(err_message, { source, Offset::init(line, column) }, *logger);
           }
           // Content for import was set.
           // No need to load it ourself.
-          else if (sass_import_get_source(include_ent)) {
+          else if (sass_import_get_source(import)) {
             // Resolved abs_path should be set by custom importer
             // Use the created uniq_path as fall-back (enforce?)
             sass::string path_key(abs_path ? abs_path : uniq_path);
-
-            // create the importer struct
-            Include include(importer, path_key, include_ent->srcdata->getType());
-            auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, load_path);
-            rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
-
-            // register the resource buffers
-            register_import(include_ent);
+            // Create import statement in the document
+            Include include(importer, path_key, source->getType());
+            auto statement = SASS_MEMORY_NEW(DynamicImport, pstate, path_key);
+            rule->append(SASS_MEMORY_NEW(IncludeImport, statement, include));
+            // Parse to stylesheet
+            register_import(import);
           }
-          // only a path was returned
-          // try to load it like normal
+          // Only a path was returned
+          // Try to load it like normal
           else if (abs_path) {
-            // checks some urls to preserve
-            // `http://`, `https://` and `//`
-            // or dispatches to `import_file`
-            // which will check for a `.css` extension
-            // or resolves the file on the file-system
-            // added and resolved via `add_file`
-            // finally stores everything on `imp`
-
-            SourceSpan pstate(rule->pstate());
-            sass::string imp_path(unquote(load_path));
-            sass::string protocol("file");
+            // Create a new internal file importer
             const Importer importer(imp_path, ctx_path);
-
+            // Create import statement in the document
             Include include(load_import(importer, pstate));
-            auto dyn = SASS_MEMORY_NEW(DynamicImport, pstate, imp_path);
-            rule->append(SASS_MEMORY_NEW(IncludeImport, dyn, include));
-
+            auto statement = SASS_MEMORY_NEW(DynamicImport, pstate, imp_path);
+            rule->append(SASS_MEMORY_NEW(IncludeImport, statement, include));
+            // Check if loading was successful
             if (include.abs_path.empty()) {
               error("Can't find stylesheet to import.",
                 rule->pstate(), *logger);
             }
-
           }
-          // move to next
+          // Move to next
           ++it_includes;
         }
-        // deallocate the returned memory
+        // Deallocate the returned memory
         sass_delete_import_list(includes);
-        // set success flag
+        // Set success flag
         has_import = true;
-        // break out of loop
-        if (only_one) break;
+        // Break out of loop
+        if (singleton) break;
       }
     }
-    // return result
+    // Return result
     return has_import;
   }
+  // EO callCustomLoader
 
   void register_c_function2(Context&, Sass_Function_Entry);
 
@@ -503,7 +503,7 @@ namespace Sass {
     ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
-    call_headers2(entry_path, pstate.getAbsPath(), pstate, rule);
+    callCustomHeaders(entry_path, pstate, rule);
     // increase head count to skip later
     head_imports += sources.size() - 1;
     // add the statement if we have urls
@@ -634,9 +634,12 @@ namespace Sass {
     Eval eval(*this);
     eval.plainCss = sheet.plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());
-    for (size_t i = 0; i < fnCache.size(); i++) {
-      varRoot.functions[i] = fnCache[i];
+
+    size_t count = 0;
+    for (auto item : functions) {
+      varRoot.functions[count++] = item.second;
     }
+
     root = eval.visitRootBlock99(root); // 50%
 //    debug_ast(root);
 
@@ -732,7 +735,6 @@ namespace Sass {
     callable->idxs(local.getIdxs());
     ctx.functions.insert(std::make_pair(callable->name(), callable));
     ctx.varRoot.createFunction(callable->name());
-    ctx.fnCache.push_back(callable);
   }
 
   /*#########################################################################*/
@@ -748,7 +750,6 @@ namespace Sass {
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     functions.insert(std::make_pair(name, callable));
     varRoot.createFunction(name);
-    fnCache.push_back(callable);
   }
 
   void Context::registerBuiltInOverloadFns(const sass::string& name,
@@ -764,7 +765,6 @@ namespace Sass {
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
     functions.insert(std::make_pair(name, callable));
     varRoot.createFunction(name);
-    fnCache.push_back(callable);
   }
 
   void Context::loadBuiltInFunctions()

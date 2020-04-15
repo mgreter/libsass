@@ -91,11 +91,11 @@ namespace Sass {
 
   // Create offset with given `line` and `column`
   // Needs static constructor to avoid ambiguity
-  Offset Offset::init(uint32_t line, uint32_t column)
+  Offset Offset::init(size_t line, size_t column)
   {
     Offset offset;
-    offset.line = line;
-    offset.column = column;
+    offset.line = line == sass::string::npos ? -1 : (uint32_t) line;
+    offset.column = column == sass::string::npos ? -1 : (uint32_t) column;;
     return offset;
   }
   // EO Offset::init

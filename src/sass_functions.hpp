@@ -24,8 +24,8 @@ struct Sass_Import {
   //char* srcmap;
   // error handling
   char* error;
-  uint32_t line;
-  uint32_t column;
+  size_t line;
+  size_t column;
   // the import type
   // Sass_Import_Type type;
   Sass::SourceDataObj srcdata;
@@ -35,8 +35,8 @@ struct Sass_Import {
 struct Sass_Callee {
   const char* name;
   const char* path;
-  uint32_t line;
-  uint32_t column;
+  size_t line;
+  size_t column;
   enum Sass_Callee_Type type;
 };
 

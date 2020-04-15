@@ -22,33 +22,85 @@
 namespace Sass {
 
   class Context {
+
   public:
 
-    bool call_headers2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* imp)
+    /*#########################################################################*/
+    // @param imp_path The relative or custom path for be imported
+    // @param pstate SourceSpan where import occurred (parent context)
+    // @param rule The backing ImportRule that is added to the document
+    /*#########################################################################*/
+    bool callCustomHeaders(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule)
     {
-      return call_loader2(load_path, ctx_path, pstate, imp, c_headers, false);
+      return callCustomLoader(imp_path, pstate, rule, c_headers, false);
     };
-    bool call_importers2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* imp)
+
+    /*#########################################################################*/
+    // @param imp_path The relative or custom path for be imported
+    // @param pstate SourceSpan where import occurred (parent context)
+    // @param rule The backing ImportRule that is added to the document
+    /*#########################################################################*/
+    bool callCustomImporters(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule)
     {
-      return call_loader2(load_path, ctx_path, pstate, imp, c_importers, true);
+      return callCustomLoader(imp_path, pstate, rule, c_importers, true);
     };
 
   private:
-    bool call_loader2(const sass::string& load_path, const char* ctx_path, SourceSpan& pstate, ImportRule* rule, sass::vector<Sass_Importer_Entry> importers, bool only_one = true);
 
-  protected:
-    void prepareEnvironment();
+    /*#########################################################################*/
+    // @param imp_path The relative or custom path for be imported
+    // @param pstate SourceSpan where import occurred (parent context)
+    // @param rule The backing ImportRule that is added to the document
+    // @param importers Array of custom importers/headers to go through
+    // @param singleton Whether to use all importers or only first successful
+    /*#########################################################################*/
+    bool callCustomLoader(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule,
+      const sass::vector<Sass_Importer_Entry>& importers, bool singletone = true);
 
   public:
 
+    /*#########################################################################*/
+    // Register built-in function with only one parameter list.
+    /*#########################################################################*/
     void registerBuiltInFunction(const sass::string& name,
       const sass::string& signature, SassFnSig cb);
 
+    /*#########################################################################*/
+    // Register built-in functions that can take different
+    // functional arguments (best suited will be chosen).
+    /*#########################################################################*/
     void registerBuiltInOverloadFns(const sass::string& name,
       const std::vector<std::pair<sass::string, SassFnSig>>& overloads);
 
+  private:
+
+    /*#########################################################################*/
+    // Called once to register all built-in functions.
+    // This will invoke parsing for parameter lists.
+    /*#########################################################################*/
     void loadBuiltInFunctions();
 
+    /*#########################################################################*/
+    // Split path-separated string and add them to plugin paths.
+    // On windows the path separator is `;`, most others are `:`.
+    /*#########################################################################*/
+    void collectPluginPaths(const char* paths_str);
+
+    /*#########################################################################*/
+    // Split path-separated string and add them to plugin paths.
+    // On windows the path separator is `;`, most others are `:`.
+    /*#########################################################################*/
+    void collectIncludePaths(const char* paths_str);
+
+    void collect_plugin_paths(string_list* paths_array);
+    void collect_include_paths(string_list* paths_array);
+
+
+  protected:
+
+    void prepareEnvironment();
+
+  public:
 
     // Keep a copy of the current working directory.
     // We must not change it during runtime, but there
@@ -65,9 +117,6 @@ namespace Sass {
     size_t head_imports;
     Plugins plugins;
     Output emitter;
-
-    // Global available functions
-    std::vector<CallableObj> fnCache;
 
     // Stacks of all parsed functions 
     sass::vector<EnvFrame*> varStack;
@@ -155,10 +204,6 @@ namespace Sass {
     sass::vector<sass::string> get_included_files(bool skip = false, size_t headers = 0);
 
   private:
-    void collect_plugin_paths(const char* paths_str);
-    void collect_plugin_paths(string_list* paths_array);
-    void collect_include_paths(const char* paths_str);
-    void collect_include_paths(string_list* paths_array);
     sass::string format_embedded_source_map();
     sass::string format_source_mapping_url(const sass::string& out_path);
 
