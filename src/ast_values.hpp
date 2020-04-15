@@ -464,7 +464,7 @@ namespace Sass {
       bool hasBrackets = false);
 
     size_t indexOf(Value* value) override final {
-      return Sass::indexOf(elements_, value);
+      return Sass::indexOf(elements(), value);
     }
 
     Sass_Separator separator() const override {

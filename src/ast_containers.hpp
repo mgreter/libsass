@@ -14,37 +14,58 @@ namespace Sass {
 
   protected:
 
-
+    // The main underlying container
     typedef SharedImpl<V> T;
     sass::vector<T> elements_;
 
   protected:
+
+    // Hash is only calculated once
     mutable size_t hash_;
+    // Reset it once container is mutated
+    // Therefore don't allow outside mutation
     void reset_hash() { hash_ = 0; }
+
   public:
+
     Vectorized(size_t s = 0) : hash_(0)
     {
       elements_.reserve(s);
     }
+
+    // Copy constructor from other Vectorized
     Vectorized(const Vectorized<V>* vec) :
       elements_(vec->elements_),
       hash_(0)
     {}
-    Vectorized(sass::vector<T> vec) :
+
+    // Copy constructor from other base vector
+    Vectorized(const sass::vector<T>& vec) :
+      elements_(vec),
+      hash_(0)
+    {}
+
+    // Move constructor from other base vector
+    Vectorized(sass::vector<T>&& vec) :
       elements_(std::move(vec)),
       hash_(0)
     {}
+
+    // Allow destructor overloading
     virtual ~Vectorized() {};
-    size_t length() const { return elements_.size(); }
-    bool empty() const { return elements_.empty(); }
-    void clear() { return elements_.clear(); }
 
-
+    // Some simple method delegations
     T& last() { return elements_.back(); }
     T& first() { return elements_.front(); }
     const T& last() const { return elements_.back(); }
     const T& first() const { return elements_.front(); }
+    bool empty() const { return elements_.empty(); }
+    void clear() { return elements_.clear(); }
+    size_t length() const { return elements_.size(); }
 
+    // Check underlying containers for equality
+    // Note: maybe we could gain some speed by checking
+    // the computed hash first, before doing full test?
     bool operator== (const Vectorized<V>& rhs) const
     {
       // Abort early if sizes do not match
@@ -53,7 +74,9 @@ namespace Sass {
       return std::equal(begin(), end(), rhs.begin(), ObjEqualityFn<T>);
     }
 
-    bool operator!= (const Vectorized<V>& rhs) const {
+    // Derive unequal operator from equality check
+    bool operator!= (const Vectorized<V>& rhs) const
+    {
       return !(*this == rhs);
     }
 
@@ -61,7 +84,8 @@ namespace Sass {
     virtual const T& at(size_t i) const { return elements_.at(i); }
     virtual T& at(size_t i) { return elements_.at(i); }
     const T& get(size_t i) const { return elements_[i]; }
-    // ToDo: might insert am item (update ordered list)
+
+    // ToDo: might insert am item? (update ordered list)
     const T& operator[](size_t i) const { return elements_[i]; }
 
     // Implicitly get the sass::vector from our object
@@ -89,14 +113,12 @@ namespace Sass {
     // Insert all items from compatible vector
     void concat(sass::vector<T>&& v)
     {
-      if (!v.empty()) reset_hash();
-      std::move(v.begin(), v.end(),
-        std::back_inserter(elements_));
-      // elements().insert(end(), v.begin(), v.end());
+      if (v.empty()) return;
+      elements().insert(end(),
+        v.begin(), v.end());
     }
 
-
-    // Synthetic sugar for pointers
+    // Syntactic sugar for pointers
     void concat(const Vectorized<V>* v)
     {
       if (v != nullptr) {
@@ -108,27 +130,28 @@ namespace Sass {
     void unshift(const T& element)
     {
       reset_hash();
-      elements_.insert(begin(), element);
+      elements_.insert(begin(),
+        std::copy(element));
     }
 
     // Insert one item on the front
     void unshift(T&& element)
     {
       reset_hash();
-      elements_.insert(begin(), std::move(element));
+      elements_.insert(begin(),
+        std::move(element));
     }
 
     // Remove and return item on the front
-    // ToDo: handle empty vectors
     T shift() {
       reset_hash();
-      T first = get(0);
+      T first = at(0);
       elements_.erase(begin());
       return first;
     }
 
     // Insert one item on the back
-    // ToDo: rename this to push
+    // ToDo: rename this to push?
     void append(const T& element)
     {
       reset_hash();
@@ -136,7 +159,7 @@ namespace Sass {
     }
 
     // Insert one item on the back
-    // ToDo: rename this to push
+    // ToDo: rename this to push?
     void append(T&& element)
     {
       reset_hash();
@@ -146,7 +169,8 @@ namespace Sass {
     // Check if an item already exists
     // Uses underlying object `operator==`
     // E.g. compares the actual objects
-    bool contains(const T& el) const {
+    bool contains(const T& el) const
+    {
       for (const T& rhs : elements_) {
         // Test the underlying objects for equality
         // A std::find checks for pointer equality
@@ -157,7 +181,11 @@ namespace Sass {
       return false;
     }
 
-    bool contains(const V* el) const {
+    // Check if an item already exists
+    // Uses underlying object `operator==`
+    // E.g. compares the actual objects
+    bool contains(const V* el) const
+    {
       for (const T& rhs : elements_) {
         // Test the underlying objects for equality
         // A std::find checks for pointer equality
@@ -169,17 +197,20 @@ namespace Sass {
     }
 
     // This might be better implemented as `operator=`?
-    void elements(const sass::vector<T>& e) {
+    void elements(const sass::vector<T>& e)
+    {
       reset_hash();
       elements_ = e;
     }
 
     // This might be better implemented as `operator=`?
-    void elements(sass::vector<T>&& e) {
+    void elements(sass::vector<T>&& e)
+    {
       reset_hash();
       elements_ = std::move(e);
     }
 
+    // Calculate the hash
     virtual size_t hash() const
     {
       if (hash_ == 0) {
@@ -219,7 +250,6 @@ namespace Sass {
   class VectorizedBase {
 
   private:
-
 
     typedef SharedImpl<V> T;
     sass::vector<T> elements_;
@@ -387,109 +417,6 @@ namespace Sass {
   };
 
 
-
-  /////////////////////////////////////////////////////////////////////////////
-// Base class/container for AST nodes that should behave like vectors.
-/////////////////////////////////////////////////////////////////////////////
-  template <typename V>
-  class Vectorized2 {
-
-  private:
-
-
-    typedef SharedImpl<V> T;
-    sass::vector<T> elements_;
-
-  protected:
-    mutable size_t hash_;
-    void reset_hash() { hash_ = 0; }
-  public:
-    Vectorized2(const Vectorized2<V>* vec) :
-      elements_(vec->elements_),
-      hash_(0)
-    {}
-    Vectorized2(sass::vector<T> vec) :
-      elements_(std::move(vec)),
-      hash_(0)
-    {}
-
-    virtual ~Vectorized2() {};
-    size_t length() const { return elements_.size(); }
-    bool empty() const { return elements_.empty(); }
-
-
-    const T& last() const { return elements_.back(); }
-    const T& first() const { return elements_.front(); }
-
-    bool operator== (const Vectorized2<V>& rhs) const
-    {
-      // Abort early if sizes do not match
-      if (length() != rhs.length()) return false;
-      // Otherwise test each node for object equality in order
-      return std::equal(begin(), end(), rhs.begin(), ObjEqualityFn<T>);
-    }
-
-    bool operator!= (const Vectorized2<V>& rhs) const {
-      return !(*this == rhs);
-    }
-
-    const T& get(size_t i) const { return elements_[i]; }
-    const T& at(size_t i) const { return elements_.at(i); }
-    // ToDo: might insert am item (update ordered list)
-    const T& operator[](size_t i) const { return elements_[i]; }
-
-    // Implicitly get the sass::vector from our object
-    // Makes the Vector directly assignable to sass::vector
-    // You are responsible to make a copy if needed
-    // Note: since this returns the real object, we can't
-    // Note: guarantee that the hash will not get out of sync
-    operator const sass::vector<T>& () const { return elements_; }
-
-    // Explicitly request all elements as a real sass::vector
-    // You are responsible to make a copy if needed
-    // Note: since this returns the real object, we can't
-    // Note: guarantee that the hash will not get out of sync
-    const sass::vector<T>& elements() const { return elements_; }
-
-    // Check if an item already exists
-    // Uses underlying object `operator==`
-    // E.g. compares the actual objects
-    bool contains(const T& el) const {
-      for (const T& rhs : elements_) {
-        // Test the underlying objects for equality
-        // A std::find checks for pointer equality
-        if (ObjEqualityFn(el, rhs)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    bool contains(const V* el) const {
-      for (const T& rhs : elements_) {
-        // Test the underlying objects for equality
-        // A std::find checks for pointer equality
-        if (PtrObjEqualityFn(el, rhs.ptr())) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    virtual size_t hash() const
-    {
-      if (hash_ == 0) {
-        for (const T& el : elements_) {
-          hash_combine(hash_, el->hash());
-        }
-      }
-      return hash_;
-    }
-
-    typename sass::vector<T>::const_iterator end() const { return elements_.end(); }
-    typename sass::vector<T>::const_iterator begin() const { return elements_.begin(); }
-
-  };
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an
   // extra <std::vector> internally to maintain insertion order for iteration.
