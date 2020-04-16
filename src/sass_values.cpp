@@ -13,273 +13,223 @@
 extern "C" {
   using namespace Sass;
 
+  Map* getMap(struct SassValue* value) { return reinterpret_cast<Map*>(value); }
+  Value* getValue(struct SassValue* value) { return reinterpret_cast<Value*>(value); }
+  Number* getNumber(struct SassValue* value) { return reinterpret_cast<Number*>(value); }
+  SassString* getString(struct SassValue* value) { return reinterpret_cast<SassString*>(value); }
+  Boolean* getBoolean(struct SassValue* value) { return reinterpret_cast<Boolean*>(value); }
+  Color_RGBA* getColor(struct SassValue* value) { return reinterpret_cast<Color_RGBA*>(value); }
+  SassList* getList(struct SassValue* value) { return reinterpret_cast<SassList*>(value); }
+  Custom_Error* getError(struct SassValue* value) { return reinterpret_cast<Custom_Error*>(value); }
+  Custom_Warning* getWarning(struct SassValue* value) { return reinterpret_cast<Custom_Warning*>(value); }
+
+  struct SassValue* newSassValue(Value* value) { value->refcount += 1; return reinterpret_cast<struct SassValue*>(value); }
+
+
+  // this works!??
+  struct SassyNumber;
+
   // Return the sass tag for a generic sass value
-  enum Sass_Tag ADDCALL sass_value_get_tag(const union Sass_Value* v) { return v->unknown.tag; }
+  enum Sass_Tag ADDCALL sass_value_get_tag(struct SassValue* v) { return getValue(v)->getTag(); }
 
   // Check value for specified type
-  bool ADDCALL sass_value_is_null(const union Sass_Value* v) { return v->unknown.tag == SASS_NULL; }
-  bool ADDCALL sass_value_is_number(const union Sass_Value* v) { return v->unknown.tag == SASS_NUMBER; }
-  bool ADDCALL sass_value_is_string(const union Sass_Value* v) { return v->unknown.tag == SASS_STRING; }
-  bool ADDCALL sass_value_is_boolean(const union Sass_Value* v) { return v->unknown.tag == SASS_BOOLEAN; }
-  bool ADDCALL sass_value_is_color(const union Sass_Value* v) { return v->unknown.tag == SASS_COLOR; }
-  bool ADDCALL sass_value_is_list(const union Sass_Value* v) { return v->unknown.tag == SASS_LIST; }
-  bool ADDCALL sass_value_is_map(const union Sass_Value* v) { return v->unknown.tag == SASS_MAP; }
-  bool ADDCALL sass_value_is_error(const union Sass_Value* v) { return v->unknown.tag == SASS_ERROR; }
-  bool ADDCALL sass_value_is_warning(const union Sass_Value* v) { return v->unknown.tag == SASS_WARNING; }
+  bool ADDCALL sass_value_is_null(struct SassValue* val) { return getValue(val)->isNull(); }
+  bool ADDCALL sass_value_is_number(struct SassValue* val) { return getValue(val)->isNumber(); }
+  bool ADDCALL sass_value_is_string(struct SassValue* val) { return getValue(val)->isString(); }
+  bool ADDCALL sass_value_is_boolean(struct SassValue* val) { return getValue(val)->isBoolean(); }
+  bool ADDCALL sass_value_is_color(struct SassValue* val) { return getValue(val)->isColor(); }
+  bool ADDCALL sass_value_is_list(struct SassValue* val) { return getValue(val)->isList(); }
+  bool ADDCALL sass_value_is_map(struct SassValue* val) { return getValue(val)->isMap(); }
+  bool ADDCALL sass_value_is_error(struct SassValue* val) { return getValue(val)->isError(); }
+  bool ADDCALL sass_value_is_warning(struct SassValue* val) { return getValue(val)->isWarning(); }
 
   // Getters and setters for Sass_Number
-  double ADDCALL sass_number_get_value(const union Sass_Value* v) { return v->number.value; }
-  void ADDCALL sass_number_set_value(union Sass_Value* v, double value) { v->number.value = value; }
-  const char* ADDCALL sass_number_get_unit(const union Sass_Value* v) { return v->number.unit.empty() ? 0 : v->number.unit.c_str(); }
-  void ADDCALL sass_number_set_unit(union Sass_Value* v, char* unit) { v->number.unit = unit; }
+  double ADDCALL sass_number_get_value(struct SassValue* number) { return getNumber(number)->value(); }
+  void ADDCALL sass_number_set_value(struct SassValue* number, double value) { getNumber(number)->value(value); }
+  const char* ADDCALL sass_number_get_unit(struct SassValue* number) { return getNumber(number)->unit().c_str(); }
+  void ADDCALL sass_number_set_unit(struct SassValue* number, const char* unit) { getNumber(number)->unit(unit); }
+  void ADDCALL sass_number_normalize(struct SassValue* number) { getNumber(number)->normalize(); }
+  void ADDCALL sass_number_reduce(struct SassValue* number) { getNumber(number)->reduce(); }
+
 
   // Getters and setters for Sass_String
-  const char* ADDCALL sass_string_get_value(const union Sass_Value* v) { return v->string.value.empty() ? 0 : v->string.value.c_str(); }
-  void ADDCALL sass_string_set_value(union Sass_Value* v, char* value) { v->string.value = value; }
-  bool ADDCALL sass_string_is_quoted(const union Sass_Value* v) { return v->string.quoted; }
-  void ADDCALL sass_string_set_quoted(union Sass_Value* v, bool quoted) { v->string.quoted = quoted; }
+  const char* ADDCALL sass_string_get_value(struct SassValue* string) { return getString(string)->value().c_str(); }
+  void ADDCALL sass_string_set_value(struct SassValue* string, char* value) { getString(string)->value(value); }
+  bool ADDCALL sass_string_is_quoted(struct SassValue* string) { return getString(string)->hasQuotes(); }
+  void ADDCALL sass_string_set_quoted(struct SassValue* string, bool quoted) { getString(string)->hasQuotes(quoted); }
 
   // Getters and setters for Sass_Boolean
-  bool ADDCALL sass_boolean_get_value(const union Sass_Value* v) { return v->boolean.value; }
-  void ADDCALL sass_boolean_set_value(union Sass_Value* v, bool value) { v->boolean.value = value; }
+  bool ADDCALL sass_boolean_get_value(struct SassValue* boolean) { return getBoolean(boolean)->value(); }
+  void ADDCALL sass_boolean_set_value(struct SassValue* boolean, bool value) { getBoolean(boolean)->value(value); }
 
   // Getters and setters for Sass_Color
-  double ADDCALL sass_color_get_r(const union Sass_Value* v) { return v->color.r; }
-  void ADDCALL sass_color_set_r(union Sass_Value* v, double r) { v->color.r = r; }
-  double ADDCALL sass_color_get_g(const union Sass_Value* v) { return v->color.g; }
-  void ADDCALL sass_color_set_g(union Sass_Value* v, double g) { v->color.g = g; }
-  double ADDCALL sass_color_get_b(const union Sass_Value* v) { return v->color.b; }
-  void ADDCALL sass_color_set_b(union Sass_Value* v, double b) { v->color.b = b; }
-  double ADDCALL sass_color_get_a(const union Sass_Value* v) { return v->color.a; }
-  void ADDCALL sass_color_set_a(union Sass_Value* v, double a) { v->color.a = a; }
+  double ADDCALL sass_color_get_r(struct SassValue* color) { return getColor(color)->r(); }
+  void ADDCALL sass_color_set_r(struct SassValue* color, double r) { getColor(color)->r(r); }
+  double ADDCALL sass_color_get_g(struct SassValue* color) { return getColor(color)->g(); }
+  void ADDCALL sass_color_set_g(struct SassValue* color, double g) { getColor(color)->g(g); }
+  double ADDCALL sass_color_get_b(struct SassValue* color) { return getColor(color)->b(); }
+  void ADDCALL sass_color_set_b(struct SassValue* color, double b) { getColor(color)->b(b); }
+  double ADDCALL sass_color_get_a(struct SassValue* color) { return getColor(color)->a(); }
+  void ADDCALL sass_color_set_a(struct SassValue* color, double a) { getColor(color)->a(a); }
+
+  struct SassValue* ADDCALL sass_map_get(struct SassValue* map, struct SassValue* key)
+  {
+    return getMap(map)->at(getValue(key))->toSassValue();
+  }
+
+  struct SassMapIterator {
+    Hashed<ValueObj, ValueObj>::ordered_map_type::iterator pos;
+    Hashed<ValueObj, ValueObj>::ordered_map_type::iterator end;
+  };
+
+  struct SassMapIterator* ADDCALL sass_map_make_iterator(struct SassValue* map)
+  {
+    return new SassMapIterator{ getMap(map)->begin(), getMap(map)->end() };
+  }
+
+  void ADDCALL sass_map_delete_iterator(struct SassMapIterator* it)
+  {
+    delete it;
+  }
+
+  struct SassValue* ADDCALL sass_map_iterator_get_key(struct SassMapIterator* it)
+  {
+    return it->pos->first->toSassValue();
+  }
+
+  struct SassValue* ADDCALL sass_map_iterator_get_value(struct SassMapIterator* it)
+  {
+    return it->pos->second->toSassValue();
+  }
+
+
+  bool ADDCALL sass_map_iterator_exhausted(struct SassMapIterator* it)
+  {
+    return it->pos == it->end;
+  }
+
+  void ADDCALL sass_map_iterator_next(struct SassMapIterator* it)
+  {
+    it->pos += 1;
+  }
+
+
+  void ADDCALL sass_map_set(struct SassValue* map, struct SassValue* key, struct SassValue* value)
+  {
+    getMap(map)->insert(getValue(key), getValue(value));
+  }
 
   // Getters and setters for Sass_List
-  size_t ADDCALL sass_list_get_length(const union Sass_Value* v) { return v->list.length; }
-  enum Sass_Separator ADDCALL sass_list_get_separator(const union Sass_Value* v) { return v->list.separator; }
-  void ADDCALL sass_list_set_separator(union Sass_Value* v, enum Sass_Separator separator) { v->list.separator = separator; }
-  bool ADDCALL sass_list_get_is_bracketed(const union Sass_Value* v) { return v->list.is_bracketed; }
-  void ADDCALL sass_list_set_is_bracketed(union Sass_Value* v, bool is_bracketed) { v->list.is_bracketed = is_bracketed; }
-  // Getters and setters for Sass_List values
-  union Sass_Value* ADDCALL sass_list_get_value(const union Sass_Value* v, size_t i) { return v->list.values[i]; }
-  void ADDCALL sass_list_set_value(union Sass_Value* v, size_t i, union Sass_Value* value) { v->list.values[i] = value; }
+  size_t ADDCALL sass_list_get_length(struct SassValue* v) { return getList(v)->length(); }
 
-  // Getters and setters for Sass_Map
-  size_t ADDCALL sass_map_get_length(const union Sass_Value* v) { return v->map.length; }
-  // Getters and setters for Sass_List keys and values
-  union Sass_Value* ADDCALL sass_map_get_key(const union Sass_Value* v, size_t i) { return v->map.pairs[i].key; }
-  union Sass_Value* ADDCALL sass_map_get_value(const union Sass_Value* v, size_t i) { return v->map.pairs[i].value; }
-  void ADDCALL sass_map_set_key(union Sass_Value* v, size_t i, union Sass_Value* key) { v->map.pairs[i].key = key; }
-  void ADDCALL sass_map_set_value(union Sass_Value* v, size_t i, union Sass_Value* val) { v->map.pairs[i].value = val; }
+  enum Sass_Separator ADDCALL sass_list_get_separator(struct SassValue* v) { return getList(v)->separator(); }
+  void ADDCALL sass_list_set_separator(struct SassValue* v, enum Sass_Separator separator) { getList(v)->separator(separator); }
+  bool ADDCALL sass_list_get_is_bracketed(struct SassValue* v) { return getList(v)->hasBrackets(); }
+  void ADDCALL sass_list_set_is_bracketed(struct SassValue* v, bool is_bracketed) { getList(v)->hasBrackets(is_bracketed); }
+  // Getters and setters for Sass_List values
+  struct SassValue* ADDCALL sass_list_get_value(struct SassValue* v, size_t i) { return getList(v)->at(i)->toSassValue(); }
+  void ADDCALL sass_list_set_value(struct SassValue* v, size_t i, struct SassValue* value) { getList(v)->at(i) = getValue(value); }
 
   // Getters and setters for Sass_Error
-  const char* ADDCALL sass_error_get_message(const union Sass_Value* v) { return v->error.message.empty() ? 0 : v->error.message.c_str(); };
-  void ADDCALL sass_error_set_message(union Sass_Value* v, const char* msg) { v->error.message = msg; };
+  const char* ADDCALL sass_error_get_message(struct SassValue* v) { return getError(v)->message().c_str(); };
+  void ADDCALL sass_error_set_message(struct SassValue* v, const char* msg) { getError(v)->message(msg); };
 
   // Getters and setters for Sass_Warning
-  const char* ADDCALL sass_warning_get_message(const union Sass_Value* v) { return v->warning.message.empty() ? 0 : v->warning.message.c_str(); };
-  void ADDCALL sass_warning_set_message(union Sass_Value* v, const char* msg) { v->warning.message = msg; };
+  const char* ADDCALL sass_warning_get_message(struct SassValue* v) { return getWarning(v)->message().c_str(); };
+  void ADDCALL sass_warning_set_message(struct SassValue* v, const char* msg) { getWarning(v)->message(msg); };
 
   // Creator functions for all value types
 
-  union Sass_Value* ADDCALL sass_make_boolean(bool val)
+  struct SassValue* ADDCALL sass_make_boolean(bool state)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->boolean.tag = SASS_BOOLEAN;
-    v->boolean.value = val;
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      Boolean, SourceSpan::tmp("[BOOLEAN]"), state));
   }
 
-  union Sass_Value* ADDCALL sass_make_number(double val, const char* unit)
+  struct SassValue* ADDCALL sass_make_number(double val, const char* unit)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->number.tag = SASS_NUMBER;
-    v->number.value = val;
-    v->number.unit = unit ? unit : "";
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      Number, SourceSpan::tmp("[NUMBER]"), val, unit ? unit : ""));
   }
 
-  union Sass_Value* ADDCALL sass_make_color(double r, double g, double b, double a)
+  struct SassValue* ADDCALL sass_make_color(double r, double g, double b, double a)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->color.tag = SASS_COLOR;
-    v->color.r = r;
-    v->color.g = g;
-    v->color.b = b;
-    v->color.a = a;
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      Color_RGBA, SourceSpan::tmp("[COLOR]"), r, g, b, a));
   }
 
-  union Sass_Value* ADDCALL sass_make_string(const char* val)
+  struct SassValue* ADDCALL sass_make_string(const char* val)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->string.quoted = false;
-    v->string.tag = SASS_STRING;
-    v->string.value = val ? val : "";
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      SassString, SourceSpan::tmp("[STRING]"), val, false));
   }
 
-  union Sass_Value* ADDCALL sass_make_qstring(const char* val)
+  struct SassValue* ADDCALL sass_make_qstring(const char* val)
   {
-    union Sass_Value* v = new Sass_Value{ };
-    if (v == 0) return 0;
-    v->string.quoted = true;
-    v->string.tag = SASS_STRING;
-    v->string.value = val ? val : "";
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      SassString, SourceSpan::tmp("[STRING]"), val, true));
   }
 
-  union Sass_Value* ADDCALL sass_make_list(size_t len, enum Sass_Separator sep, bool is_bracketed)
+  struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->list.tag = SASS_LIST;
-    v->list.length = len;
-    v->list.separator = sep;
-    v->list.is_bracketed = is_bracketed;
-    return v;
+    return getList(list)->at(i)->toSassValue();
   }
 
-  union Sass_Value* ADDCALL sass_make_map(size_t len)
+  void ADDCALL sass_list_push(struct SassValue* list, struct SassValue* value)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->map.tag = SASS_MAP;
-    v->map.length = len;
-    // v->map.pairs = new Sass_MapPair{};
-    // if (v->map.pairs == 0) { delete v; return 0; }
-    return v;
+    getList(list)->append(getValue(value));
   }
 
-  union Sass_Value* ADDCALL sass_make_null(void)
+  struct SassValue* ADDCALL sass_make_list(enum Sass_Separator sep, bool is_bracketed)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->null.tag = SASS_NULL;
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      SassList, SourceSpan::tmp("[LIST]"), {}, sep, is_bracketed));
   }
 
-  union Sass_Value* ADDCALL sass_make_error(const char* msg)
+  struct SassValue* ADDCALL sass_make_map()
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->error.tag = SASS_ERROR;
-    v->error.message = msg ? msg : "";
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      Map, SourceSpan::tmp("[MAP]")));
   }
 
-  union Sass_Value* ADDCALL sass_make_warning(const char* msg)
+  struct SassValue* ADDCALL sass_make_null(void)
   {
-    union Sass_Value* v = new Sass_Value{};
-    if (v == 0) return 0;
-    v->warning.tag = SASS_WARNING;
-    v->warning.message = msg ? msg : 0;
-    return v;
+    return newSassValue(SASS_MEMORY_NEW(
+      Null, SourceSpan::tmp("[NULL]")));
   }
 
-  Sass_Value::~Sass_Value() {
-    /*
-    size_t i;
-    if (val == 0) return;
-    switch(val->unknown.tag) {
-        case SASS_NULL: {
-        }   break;
-        case SASS_BOOLEAN: {
-        }   break;
-        case SASS_NUMBER: {
-                // free(val->number.unit);
-        }   break;
-        case SASS_COLOR: {
-        }   break;
-        case SASS_STRING: {
-                // free(val->string.value);
-        }   break;
-        case SASS_LIST: {
-                for (i=0; i<val->list.length; i++) {
-                    // sass_delete_value(val->list.values[i]);
-                }
-                // free(val->list.values);
-        }   break;
-        case SASS_MAP: {
-                for (i=0; i<val->map.length; i++) {
-                    // sass_delete_value(val->map.pairs[i].key);
-                    // sass_delete_value(val->map.pairs[i].value);
-                }
-                // free(val->map.pairs);
-        }   break;
-        case SASS_ERROR: {
-                // free(val->error.message);
-        }   break;
-        case SASS_WARNING: {
-                // free(val->error.message);
-        }   break;
-        default: break;
-    }
-    */
+  struct SassValue* ADDCALL sass_make_error(const char* msg)
+  {
+    return newSassValue(SASS_MEMORY_NEW(
+      Custom_Error, SourceSpan::tmp("[ERROR]"), msg));
   }
+
+  struct SassValue* ADDCALL sass_make_warning(const char* msg)
+  {
+    return newSassValue(SASS_MEMORY_NEW(
+      Custom_Warning, SourceSpan::tmp("[WARNING]"), msg));
+  }
+
 
   // will free all associated sass values
-  void ADDCALL sass_delete_value(union Sass_Value* val)
+  void ADDCALL sass_delete_value(struct SassValue* val)
   {
-    delete val;
+    Value* value = getValue(val);
+    if (value) {
+      value->refcount -= 1;
+      if (value->refcount == 0) {
+        delete value;
+      }
+    }
   }
 
   // Make a deep cloned copy of the given sass value
-  union Sass_Value* ADDCALL sass_clone_value (const union Sass_Value* val)
+  struct SassValue* ADDCALL sass_clone_value (struct SassValue* val)
   {
-
-    size_t i;
-    if (val == 0) return 0;
-    switch(val->unknown.tag) {
-        case SASS_NULL: {
-                return sass_make_null();
-        }
-        case SASS_BOOLEAN: {
-                return sass_make_boolean(val->boolean.value);
-        }
-        case SASS_NUMBER: {
-                return sass_make_number(val->number.value, sass_number_get_unit(val));
-        }
-        case SASS_COLOR: {
-                return sass_make_color(val->color.r, val->color.g, val->color.b, val->color.a);
-        }
-        case SASS_STRING: {
-                return sass_string_is_quoted(val) ?
-                  sass_make_qstring(sass_string_get_value(val)) :
-                  sass_make_string(sass_string_get_value(val));
-        }
-        case SASS_LIST: {
-                union Sass_Value* list = sass_make_list(val->list.length, val->list.separator, val->list.is_bracketed);
-                for (i = 0; i < list->list.length; i++) {
-                    list->list.values[i] = sass_clone_value(val->list.values[i]);
-                }
-                return list;
-        }
-        case SASS_MAP: {
-                union Sass_Value* map = sass_make_map(val->map.length);
-                for (i = 0; i < val->map.length; i++) {
-                    map->map.pairs[i].key = sass_clone_value(val->map.pairs[i].key);
-                    map->map.pairs[i].value = sass_clone_value(val->map.pairs[i].value);
-                }
-                return map;
-        }
-        case SASS_ERROR: {
-                return sass_make_error(sass_error_get_message(val));
-        }
-        case SASS_WARNING: {
-                return sass_make_warning(sass_warning_get_message(val));
-        }
-        default: break;
-    }
-
-    return 0;
-
+    return newSassValue(getValue(val)->clone());
   }
 
-  union Sass_Value* ADDCALL sass_value_stringify (const union Sass_Value* v, bool compressed, int precision)
+  struct SassValue* ADDCALL sass_value_stringify (struct SassValue* v, bool compressed, int precision)
   {
     ValueObj val = sass_value_to_ast_node(v);
     Sass_Inspect_Options options(compressed ? COMPRESSED : NESTED, precision);
@@ -287,7 +237,7 @@ extern "C" {
     return sass_make_qstring(str.c_str());
   }
 
-  union Sass_Value* ADDCALL sass_value_op (enum Sass_OP op, const union Sass_Value* a, const union Sass_Value* b)
+  struct SassValue* ADDCALL sass_value_op (enum Sass_OP op, struct SassValue* a, struct SassValue* b)
   {
 
     Sass::ValueObj rv;

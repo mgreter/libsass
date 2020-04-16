@@ -33,7 +33,7 @@ typedef struct SassDataContextCpp* (SassDataContextPtr);
 
 // Typedef defining importer/function callback signature and return type
 typedef SassImportListPtr(*SassImporterLambdaCpp)(const char* url, SassImporterPtr cb, SassCompilerPtr compiler);
-typedef union Sass_Value* (*SassFunctionLambdaCpp)(const union Sass_Value*, SassFunctionPtr cb, SassCompilerPtr compiler);
+typedef struct SassValue* (*SassFunctionLambdaCpp)(struct SassValue*, SassFunctionPtr cb, SassCompilerPtr compiler);
 
 #ifdef __cplusplus
 } // __cplusplus defined.

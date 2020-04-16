@@ -92,9 +92,9 @@ namespace Sass {
 
       BUILT_IN_FN(max)
       {
-        SassNumber* max = nullptr;
+        Number* max = nullptr;
         for (Value* value : arguments[0]->iterator()) {
-          SassNumber* number = value->assertNumber(*ctx.logger);
+          Number* number = value->assertNumber(*ctx.logger);
           if (max == nullptr || max->lessThan(number, *ctx.logger, pstate)) {
             max = number;
           }
@@ -108,9 +108,9 @@ namespace Sass {
 
       BUILT_IN_FN(min)
       {
-        SassNumber* min = nullptr;
+        Number* min = nullptr;
         for (Value* value : arguments[0]->iterator()) {
-          SassNumber* number = value->assertNumber(*ctx.logger);
+          Number* number = value->assertNumber(*ctx.logger);
           if (min == nullptr || min->greaterThan(number, *ctx.logger, pstate)) {
             min = number;
           }

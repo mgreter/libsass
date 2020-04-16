@@ -989,10 +989,10 @@ inline void debug_ast(AST_Node* node, std::string ind)
       debug_ast(expression->get(i), ind + " ");
     }
   }
-  else if (Cast<SassArgumentList>(node)) {
+  else if (Cast<ArgumentList>(node)) {
 
-    SassArgumentList* expression = Cast<SassArgumentList>(node);
-    std::cerr << ind << "SassArgumentList " << expression;
+    ArgumentList* expression = Cast<ArgumentList>(node);
+    std::cerr << ind << "ArgumentList " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " (" << expression->length() << ") " <<
       (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<

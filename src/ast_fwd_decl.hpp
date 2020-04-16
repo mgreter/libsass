@@ -113,7 +113,7 @@ namespace Sass {
   class ExtendRule;
 
   class SassList;
-  class SassArgumentList;
+  class ArgumentList;
   class Map;
   class SassFunction;
 
@@ -258,7 +258,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Interpolant);
   IMPL_MEM_OBJ(Expression);
   IMPL_MEM_OBJ(SassList);
-  IMPL_MEM_OBJ(SassArgumentList);
+  IMPL_MEM_OBJ(ArgumentList);
   IMPL_MEM_OBJ(Map);
   IMPL_MEM_OBJ(SassFunction);
   IMPL_MEM_OBJ(ParenthesizedExpression);
@@ -354,16 +354,16 @@ namespace Sass {
   DECLARE_BASE_CAST(SelectorComponent)
   DECLARE_BASE_CAST(ImportBase);
 
-  typedef Number SassNumber;
-  typedef NumberObj SassNumberObj;
-  typedef Null SassNull;
-  typedef NullObj SassNullObj;
-  typedef Color_RGBA SassColor;
+  // typedef Number Number;
+  // typedef NumberObj SassNumberObj;
+  // typedef Null SassNull;
+  // typedef NullObj SassNullObj;
+  typedef Color_RGBA ColorRbga;
   typedef Color_RGBA_Obj SassColorObj;
-  typedef Boolean SassBoolean;
-  typedef BooleanObj SassBooleanObj;
-  typedef Map SassMap;
-  typedef MapObj SassMapObj;
+  // typedef Boolean Boolean;
+  // typedef BooleanObj SassBooleanObj;
+  // typedef Map Map;
+  // typedef MapObj MapObj;
 
   #define FN_PROTOTYPE2 \
     const SourceSpan& pstate, \

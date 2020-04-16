@@ -11,18 +11,18 @@ namespace Sass {
   template <typename T>
   class ValueVisitor {
 
-    // T visitBoolean(SassBoolean value);
+    // T visitBoolean(Boolean value);
     virtual T visitBoolean(Boolean* value) = 0;
     // T visitColor(SassColor value);
     virtual T visitColor(Color* value) = 0;
     // T visitFunction(SassFunction value);
     // T visitList(SassList value);
     // virtual T visitList(List* value) = 0;
-    // T visitMap(SassMap value);
+    // T visitMap(Map value);
     virtual T visitMap(Map* value) = 0;
     // T visitNull(SassNull value);
     virtual T visitNull(Null* value) = 0;
-    // T visitNumber(SassNumber value);
+    // T visitNumber(Number value);
     virtual T visitNumber(Number* value) = 0;
     // T visitString(SassString value);
 

@@ -23,7 +23,7 @@ namespace Sass {
     virtual sass::string perform(Operation<sass::string>* op) = 0; \
     virtual Statement* perform(Operation<Statement*>* op) = 0; \
     virtual Expression* perform(Operation<Expression*>* op) = 0; \
-    virtual union Sass_Value* perform(Operation<union Sass_Value*>* op) = 0; \
+    virtual struct SassValue* perform(Operation<struct SassValue*>* op) = 0; \
 
   // you must add operators to every class
   // ensures `this` of actual instance type
@@ -35,7 +35,7 @@ namespace Sass {
     virtual sass::string perform(Operation<sass::string>* op) override { return (*op)(this); } \
     virtual Statement* perform(Operation<Statement*>* op) override { return (*op)(this); } \
     virtual Expression* perform(Operation<Expression*>* op) override { return (*op)(this); } \
-    virtual union Sass_Value* perform(Operation<union Sass_Value*>* op) override { return (*op)(this); } \
+    virtual struct SassValue* perform(Operation<struct SassValue*>* op) override { return (*op)(this); } \
 
   template<typename T>
   class Operation {

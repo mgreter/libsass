@@ -5,8 +5,8 @@
 
 namespace Sass {
 
-  union Sass_Value* ast_node_to_sass_value (const Value* val);
-  Value* sass_value_to_ast_node (const union Sass_Value* val);
+  struct SassValue* ast_node_to_sass_value (Value* val);
+  Value* sass_value_to_ast_node (struct SassValue* val);
 
 }
 #endif

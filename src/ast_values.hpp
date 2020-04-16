@@ -128,27 +128,34 @@ namespace Sass {
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
 
-    virtual union Sass_Value* toSassValue() const = 0;
+    // Convert to C-API pointer without implementation
+
+    inline struct SassValue* toSassValue()
+    {
+      return reinterpret_cast<struct SassValue*>(this);
+    }
 
     // Return the length of this item as a list
     virtual size_t lengthAsList() const { return 1; }
 
     virtual size_t hash() const = 0;
 
+    virtual enum Sass_Tag getTag() const = 0;
+
     // We often need to downcast values to its special type
     // Virtual methods are faster than dynamic casting
-    IMPLEMENT_BASE_DOWNCAST(SassMap, isMap);
+    IMPLEMENT_BASE_DOWNCAST(Map, isMap);
     IMPLEMENT_BASE_DOWNCAST(SassList, isList);
-    IMPLEMENT_BASE_DOWNCAST(SassNumber, isNumber);
-    IMPLEMENT_BASE_DOWNCAST(SassColor, isColor);
+    IMPLEMENT_BASE_DOWNCAST(Number, isNumber);
+    IMPLEMENT_BASE_DOWNCAST(ColorRbga, isColor);
     IMPLEMENT_BASE_DOWNCAST(Color_RGBA, isColorRGBA);
     IMPLEMENT_BASE_DOWNCAST(Color_HSLA, isColorHSLA);
-    IMPLEMENT_BASE_DOWNCAST(SassBoolean, isBoolean);
+    IMPLEMENT_BASE_DOWNCAST(Boolean, isBoolean);
     IMPLEMENT_BASE_DOWNCAST(SassFunction, isFunction);
     IMPLEMENT_BASE_DOWNCAST(SassString, isString);
     IMPLEMENT_BASE_DOWNCAST(Custom_Error, isError);
     IMPLEMENT_BASE_DOWNCAST(Custom_Warning, isWarning);
-    IMPLEMENT_BASE_DOWNCAST(SassArgumentList, isArgList);
+    IMPLEMENT_BASE_DOWNCAST(ArgumentList, isArgList);
 
     // Only used for nth sass function
     // Single values act like lists with 1 item
@@ -260,7 +267,7 @@ namespace Sass {
       return this->assertString(logger, parent, name);
     }
 
-    virtual SassArgumentList* assertArgumentList(Logger& logger, const sass::string& name = StrEmpty) {
+    virtual ArgumentList* assertArgumentList(Logger& logger, const sass::string& name = StrEmpty) {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
@@ -453,6 +460,8 @@ namespace Sass {
     ADD_PROPERTY(bool, hasBrackets);
   public:
 
+    enum Sass_Tag getTag() const override final { return SASS_LIST; }
+
     SassList(const SourceSpan& pstate,
       const sass::vector<ValueObj>& values = {},
       enum Sass_Separator seperator = SASS_SPACE,
@@ -503,14 +512,12 @@ namespace Sass {
 
     virtual size_t hash() const override final;
 
-    union Sass_Value* toSassValue() const override final;
-
     OVERRIDE_EQ_OPERATIONS(Value);
     ATTACH_CLONE_OPERATIONS(SassList);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class SassArgumentList : public SassList {
+  class ArgumentList : public SassList {
     EnvKeyFlatMap<ValueObj> _keywords;
     bool _wereKeywordsAccessed;
   public:
@@ -520,9 +527,9 @@ namespace Sass {
     bool is_arglist() const override final {
       return true;
     }
-    SassArgumentList* isArgList() override final { return this; }
-    const SassArgumentList* isArgList() const override final { return this; }
-    SassArgumentList* assertArgumentList(Logger& logger, const sass::string& name = StrEmpty) override final {
+    ArgumentList* isArgList() override final { return this; }
+    const ArgumentList* isArgList() const override final { return this; }
+    ArgumentList* assertArgumentList(Logger& logger, const sass::string& name = StrEmpty) override final {
       return this;
     }
 
@@ -537,18 +544,18 @@ namespace Sass {
 
     Map* keywordsAsSassMap() const;
 
-    SassArgumentList(const SourceSpan& pstate,
+    ArgumentList(const SourceSpan& pstate,
       sass::vector<ValueObj>&& values = {},
       Sass_Separator sep = SASS_SPACE,
       EnvKeyFlatMap<ValueObj>&& keywords = {});
 
-    SassArgumentList(const SourceSpan& pstate,
+    ArgumentList(const SourceSpan& pstate,
       const sass::vector<ValueObj>& values = {},
       Sass_Separator sep = SASS_SPACE,
       const EnvKeyFlatMap<ValueObj>& keywords = {});
 
     OVERRIDE_EQ_OPERATIONS(Value);
-    ATTACH_CLONE_OPERATIONS(SassArgumentList);
+    ATTACH_CLONE_OPERATIONS(ArgumentList);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -558,6 +565,9 @@ namespace Sass {
   class Map : public Value, public Hashed<ValueObj, ValueObj> {
     ValueObj pair;
   public:
+
+    enum Sass_Tag getTag() const override final { return SASS_MAP; }
+
     Map(const SourceSpan& pstate);
     Map(const SourceSpan& pstate, const Hashed<ValueObj, ValueObj>& copy);
     Map(const SourceSpan& pstate, Hashed<ValueObj, ValueObj>&& move);
@@ -567,8 +577,8 @@ namespace Sass {
     const sass::string& type() const override final { return StrTypeMap; }
     bool is_invisible() const override { return empty(); }
 
-    SassMap* isMap() override final { return this; }
-    const SassMap* isMap() const override final { return this; }
+    Map* isMap() override final { return this; }
+    const Map* isMap() const override final { return this; }
 
     Map* assertMap(Logger& logger, const sass::string& name = StrEmpty) override { return this; }
 
@@ -612,8 +622,6 @@ namespace Sass {
 
     size_t hash() const override final;
 
-    union Sass_Value* toSassValue() const override final;
-
     bool operator== (const Value& rhs) const override final;
 
     ATTACH_CLONE_OPERATIONS(Map)
@@ -649,6 +657,9 @@ namespace Sass {
   public:
     ADD_PROPERTY(CallableObj, callable);
   public:
+
+    enum Sass_Tag getTag() const override final { return SASS_FUNCTION; }
+
     SassFunction(
       const SourceSpan& pstate,
       CallableObj callable);
@@ -661,8 +672,6 @@ namespace Sass {
     const SassFunction* isFunction() const override final { return this; }
 
     bool operator== (const Value& rhs) const override;
-
-    union Sass_Value* toSassValue() const override final;
 
     SassFunction* assertFunction(Logger& logger, const sass::string& name = StrEmpty) override final { return this; }
 
@@ -687,7 +696,7 @@ namespace Sass {
   ////////////////////////////////////////////////
   // Numbers, percentages, dimensions, and colors.
   ////////////////////////////////////////////////
-  class Number final : public Value, public Units {
+  class Number : public Value, public Units {
     HASH_PROPERTY(double, value);
     // ADD_PROPERTY(double, epsilon);
     ADD_PROPERTY(bool, zero);
@@ -701,16 +710,15 @@ namespace Sass {
 
     mutable size_t hash_;
   public:
+    enum Sass_Tag getTag() const override final { return SASS_NUMBER; }
     Number(const SourceSpan& pstate, double val, const sass::string& u = StrEmpty, bool zero = true);
     Number(const SourceSpan& pstate, double val, Units&& units, bool zero = true);
 
-    union Sass_Value* toSassValue() const override final;
-
-    virtual SassNumber* isNumber() override final { return this; }
-    virtual const SassNumber* isNumber() const override final { return this; }
+    virtual Number* isNumber() override final { return this; }
+    virtual const Number* isNumber() const override final { return this; }
 
     bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (SassNumber* rhs = other->isNumber()) {
+      if (Number* rhs = other->isNumber()) {
         // unitless or only having one unit are equivalent (3.4)
         // therefore we need to reduce the units beforehand
         size_t lhs_units = numerators.size() + denominators.size();
@@ -745,7 +753,7 @@ namespace Sass {
     }
 
     bool greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (SassNumber * rhs = other->isNumber()) {
+      if (Number * rhs = other->isNumber()) {
         // unitless or only having one unit are equivalent (3.4)
         // therefore we need to reduce the units beforehand
         size_t lhs_units = numerators.size() + denominators.size();
@@ -780,7 +788,7 @@ namespace Sass {
     }
 
     bool lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (SassNumber * rhs = other->isNumber()) {
+      if (Number * rhs = other->isNumber()) {
         // unitless or only having one unit are equivalent (3.4)
         // therefore we need to reduce the units beforehand
         size_t lhs_units = numerators.size() + denominators.size();
@@ -814,7 +822,7 @@ namespace Sass {
     }
 
     bool lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (SassNumber * rhs = other->isNumber()) {
+      if (Number * rhs = other->isNumber()) {
         // unitless or only having one unit are equivalent (3.4)
         // therefore we need to reduce the units beforehand
         size_t lhs_units = numerators.size() + denominators.size();
@@ -848,7 +856,7 @@ namespace Sass {
     }
 
     Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (const SassNumber * nr = other->isNumber()) {
+      if (const Number * nr = other->isNumber()) {
         try { return Operators::op_numbers(Sass_OP::MOD, *this, *nr, pstate); }
         catch (Exception::IncompatibleUnits& e) {
           callStackFrame frame(logger, pstate);
@@ -865,7 +873,7 @@ namespace Sass {
     }
 
     Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (const SassNumber * nr = other->isNumber()) {
+      if (const Number * nr = other->isNumber()) {
         try { return Operators::op_numbers(Sass_OP::ADD, *this, *nr, pstate); }
         catch (Exception::IncompatibleUnits& e) {
           callStackFrame frame(logger, pstate);
@@ -882,7 +890,7 @@ namespace Sass {
     }
 
     Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (const SassNumber * nr = other->isNumber()) {
+      if (const Number * nr = other->isNumber()) {
         try { return Operators::op_numbers(Sass_OP::SUB, *this, *nr, pstate); }
         catch (Exception::IncompatibleUnits& e) {
           callStackFrame frame(logger, pstate);
@@ -899,7 +907,7 @@ namespace Sass {
     }
 
     Value* times(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (const SassNumber * nr = other->isNumber()) {
+      if (const Number * nr = other->isNumber()) {
         try { return Operators::op_numbers(Sass_OP::MUL, *this, *nr, pstate); }
         catch (Exception::IncompatibleUnits& e) {
           callStackFrame frame(logger, pstate);
@@ -916,7 +924,7 @@ namespace Sass {
     }
 
     Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (const SassNumber * nr = other->isNumber()) {
+      if (const Number * nr = other->isNumber()) {
         try { return Operators::op_numbers(Sass_OP::DIV, *this, *nr, pstate); }
         catch (Exception::IncompatibleUnits& e) {
           callStackFrame frame(logger, pstate);
@@ -937,7 +945,7 @@ namespace Sass {
     }
 
     Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final {
-      SassNumber* cpy = SASS_MEMORY_COPY(this);
+      Number* cpy = SASS_MEMORY_COPY(this);
       cpy->value(cpy->value() * -1.0);
       return cpy;
     }
@@ -1058,6 +1066,7 @@ namespace Sass {
   protected:
     mutable size_t hash_;
   public:
+    enum Sass_Tag getTag() const override final { return SASS_COLOR; }
     Color(const SourceSpan& pstate, double a = 1, const sass::string& disp = StrEmpty);
 
     const sass::string& type() const override final { return StrTypeColor; }
@@ -1128,7 +1137,6 @@ namespace Sass {
 
     virtual Color_RGBA* isColor() override final { return this; }
     virtual const Color_RGBA* isColor() const override final { return this; }
-    union Sass_Value* toSassValue() const override final;
 
     Color_RGBA* isColorRGBA() override final { return this; }
     const Color_RGBA* isColorRGBA() const override final { return this; }
@@ -1165,8 +1173,7 @@ namespace Sass {
     HASH_PROPERTY(double, l)
   public:
     Color_HSLA(const SourceSpan& pstate, double h, double s, double l, double a = 1, const sass::string& disp = StrEmpty);
-    union Sass_Value* toSassValue() const override final;
-
+    
     Color_HSLA* isColorHSLA() override final { return this; }
     const Color_HSLA* isColorHSLA() const override final { return this; }
 
@@ -1198,11 +1205,11 @@ namespace Sass {
   class Custom_Error final : public Value {
     ADD_CONSTREF(sass::string, message)
   public:
+    enum Sass_Tag getTag() const override final { return SASS_ERROR; }
     size_t hash() const override final { return 0; }
     Custom_Error(const SourceSpan& pstate, const sass::string& msg);
     Custom_Error* isError() override final { return this; }
     const Custom_Error* isError() const override final { return this; }
-    union Sass_Value* toSassValue() const override final;
     bool operator== (const Value& rhs) const override;
     // ATTACH_CLONE_OPERATIONS(Custom_Error)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -1214,11 +1221,11 @@ namespace Sass {
   class Custom_Warning final : public Value {
     ADD_CONSTREF(sass::string, message)
   public:
+    enum Sass_Tag getTag() const override final { return SASS_WARNING; }
     size_t hash() const override final { return 0; }
     Custom_Warning(const SourceSpan& pstate, const sass::string& msg);
     Custom_Warning* isWarning() override final { return this; }
     const Custom_Warning* isWarning() const override final { return this; }
-    union Sass_Value* toSassValue() const override final;
     bool operator== (const Value& rhs) const override;
     // ATTACH_CLONE_OPERATIONS(Custom_Warning)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -1231,17 +1238,16 @@ namespace Sass {
     HASH_PROPERTY(bool, value)
     mutable size_t hash_;
   public:
+    enum Sass_Tag getTag() const override final { return SASS_BOOLEAN; }
     Boolean(const SourceSpan& pstate, bool val);
 
-    SassBoolean* isBoolean() override final { return this; }
-    const SassBoolean* isBoolean() const override final { return this; }
+    Boolean* isBoolean() override final { return this; }
+    const Boolean* isBoolean() const override final { return this; }
 
     // Return the list separator
     bool isTruthy() const override final {
       return value_;
     }
-
-    union Sass_Value* toSassValue() const override final;
 
     Value* unaryNot(Logger& logger, const SourceSpan& pstate) const override final
     {
@@ -1309,10 +1315,10 @@ namespace Sass {
   protected:
     mutable size_t hash_;
   public:
+    enum Sass_Tag getTag() const override final { return SASS_STRING; }
     virtual SassString* isString() override final { return this; }
     virtual const SassString* isString() const override final { return this; }
     const sass::string& getText() const override final { return value_; }
-    union Sass_Value* toSassValue() const override final;
 
     SassString(const SourceSpan& pstate, const char* beg, bool hasQuotes = false);
     SassString(const SourceSpan& pstate, const sass::string& val, bool hasQuotes = false);
@@ -1350,6 +1356,7 @@ namespace Sass {
   class Null final : public Value {
   public:
     Null(const SourceSpan& pstate);
+    enum Sass_Tag getTag() const override final { return SASS_NULL; }
     const sass::string& type() const override final { return StrTypeNull; }
     bool is_invisible() const override { return true; }
 
@@ -1375,8 +1382,6 @@ namespace Sass {
 
     bool operator== (const Value& rhs) const override final;
 
-    union Sass_Value* toSassValue() const override final;
-
     // ATTACH_CLONE_OPERATIONS(Null)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -1387,16 +1392,25 @@ namespace Sass {
   class Parent_Reference final : public Value {
   public:
     size_t hash() const override final { return 0; }
+    enum Sass_Tag getTag() const override final { return SASS_PARENT; }
     Parent_Reference(const SourceSpan& pstate);
     // const sass::string& type() const override final { return "parent"; }
     bool operator==(const Value& rhs) const override {
       return true; // they are always equal
     };
-    union Sass_Value* toSassValue() const override final;
     // ATTACH_CLONE_OPERATIONS(Parent_Reference)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
 }
+
+class QWE {
+
+};
+
+// Not sure if there is a better way?
+// typedef Sass::Number SassyNumber;
+// struct SassyNumber : Sass::Number {};
+// struct Boolean : Sass::Boolean {};
 
 #endif

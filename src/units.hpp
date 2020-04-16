@@ -56,15 +56,29 @@ namespace Sass {
   };
 
   class Units {
+
+  private:
+
+    mutable sass::string stringified;
+
   public:
+
     sass::vector<sass::string> numerators;
     sass::vector<sass::string> denominators;
-  public:
+
     // default constructor
     Units() :
       numerators(),
       denominators()
     { }
+
+    Units(const sass::string& u) :
+      numerators(),
+      denominators()
+    {
+      unit(u);
+    }
+
 
     // copy constructor
     Units(const Units* ptr) :
@@ -84,7 +98,8 @@ namespace Sass {
     { }
 
     // convert to string
-    sass::string unit() const;
+    const sass::string& unit() const;
+    void unit(const sass::string& unit);
     // get if units are empty
     bool is_unitless() const;
 

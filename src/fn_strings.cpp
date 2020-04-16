@@ -151,15 +151,15 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
-        return SASS_MEMORY_NEW(SassNumber, pstate,
+        return SASS_MEMORY_NEW(Number, pstate,
           (double)Unicode::codePointCount(str, c_index) + 1);
       }
 
       BUILT_IN_FN(slice)
       {
         SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
-        SassNumber* beg = arguments[1]->assertNumber(*ctx.logger, "start-at");
-        SassNumber* end = arguments[2]->assertNumber(*ctx.logger, "end-at");
+        Number* beg = arguments[1]->assertNumber(*ctx.logger, "start-at");
+        Number* end = arguments[2]->assertNumber(*ctx.logger, "end-at");
 
         size_t len = Unicode::codePointCount(string->value());
         beg = beg->assertNoUnits(*ctx.logger, pstate, "start");

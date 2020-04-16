@@ -295,6 +295,7 @@ namespace Sass {
   class Hashed {
 
   public:
+
     using ordered_map_type = typename OrderedMap<
       K, T, ObjHash, ObjEquality,
       Sass::Allocator<std::pair<K, T>>,

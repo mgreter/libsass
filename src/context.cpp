@@ -732,14 +732,14 @@ namespace Sass {
 
 
   /*
-  union Sass_Value* customSassFn(
-    const union Sass_Value* s_args,
+  struct SassValue* customSassFn(
+    const struct SassValue* s_args,
     void* cookie
   ) {
     return sass_clone_value(s_args);
   }
 
-  union Sass_Value* call_fn_foo(const union Sass_Value* v, SassFunctionPtr cb, struct SassCompilerCpp* compiler)
+  struct SassValue* call_fn_foo(const struct SassValue* v, SassFunctionPtr cb, struct SassCompilerCpp* compiler)
   {
     // we actually abuse the void* to store an "int"
     return sass_clone_value(v);

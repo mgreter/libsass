@@ -18,8 +18,8 @@ namespace Sass {
   namespace Functions {
 
     /// Returns [color1] and [color2], mixed together and weighted by [weight].
-    SassColor* _mixColors(SassColor* color1, SassColor* color2,
-      SassNumber* weight, const SourceSpan& pstate, Logger& logger)
+    ColorRbga* _mixColors(ColorRbga* color1, ColorRbga* color2,
+      Number* weight, const SourceSpan& pstate, Logger& logger)
     {
 
       // This algorithm factors in both the user-provided weight (w) and the
@@ -265,7 +265,7 @@ namespace Sass {
       }
 
       SassColorObj color = arguments[0]->assertColor(logger, Strings::color);
-      SassNumber* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
+      Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
       // callStackFrame frame(logger,
       //   BackTrace(pstate, name));
       color = SASS_MEMORY_COPY(color);
@@ -426,25 +426,25 @@ namespace Sass {
 
       BUILT_IN_FN(red)
       {
-        return SASS_MEMORY_NEW(SassNumber, pstate,
+        return SASS_MEMORY_NEW(Number, pstate,
           round(arguments[0]->assertColor(*ctx.logger, Strings::color)->r()));
       }
 
       BUILT_IN_FN(green)
       {
-        return SASS_MEMORY_NEW(SassNumber, pstate,
+        return SASS_MEMORY_NEW(Number, pstate,
           round(arguments[0]->assertColor(*ctx.logger, Strings::color)->g()));
       }
 
       BUILT_IN_FN(blue)
       {
-        return SASS_MEMORY_NEW(SassNumber, pstate,
+        return SASS_MEMORY_NEW(Number, pstate,
           round(arguments[0]->assertColor(*ctx.logger, Strings::color)->b()));
       }
 
       BUILT_IN_FN(invert)
       {
-        SassNumber* weight = arguments[1]->assertNumber(*ctx.logger, "weight");
+        Number* weight = arguments[1]->assertNumber(*ctx.logger, "weight");
         if (arguments[0]->isNumber()) {
           if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
             throw Exception::SassRuntimeException2(
@@ -467,26 +467,26 @@ namespace Sass {
       BUILT_IN_FN(hue)
       {
         Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
-        return SASS_MEMORY_NEW(SassNumber, pstate, color->h(), "deg");
+        return SASS_MEMORY_NEW(Number, pstate, color->h(), "deg");
       }
 
       BUILT_IN_FN(saturation)
       {
         Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
-        return SASS_MEMORY_NEW(SassNumber, pstate, color->s(), Strings::percent);
+        return SASS_MEMORY_NEW(Number, pstate, color->s(), Strings::percent);
       }
 
 
       BUILT_IN_FN(lightness)
       {
         Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
-        return SASS_MEMORY_NEW(SassNumber, pstate, color->l(), Strings::percent);
+        return SASS_MEMORY_NEW(Number, pstate, color->l(), Strings::percent);
       }
 
       BUILT_IN_FN(adjustHue)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* degrees = arguments[1]->assertNumber(*ctx.logger, "degrees");
+        Number* degrees = arguments[1]->assertNumber(*ctx.logger, "degrees");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + degrees->value(), 360.0));
         return copy.detach();
@@ -516,7 +516,7 @@ namespace Sass {
       BUILT_IN_FN(lighten)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->l(clamp(copy->l() + nr, 0.0, 100.0));
@@ -526,7 +526,7 @@ namespace Sass {
       BUILT_IN_FN(darken)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->l(clamp(copy->l() - nr, 0.0, 100.0));
@@ -536,7 +536,7 @@ namespace Sass {
       BUILT_IN_FN(saturate_2)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         // ToDo: this was working without before?
@@ -547,7 +547,7 @@ namespace Sass {
 
       BUILT_IN_FN(saturate_1)
       {
-        SassNumber* number = arguments[0]->assertNumber(*ctx.logger, Strings::amount);
+        Number* number = arguments[0]->assertNumber(*ctx.logger, Strings::amount);
         return SASS_MEMORY_NEW(SassString, pstate,
           "saturate(" + number->to_css() + ")");
       }
@@ -555,7 +555,7 @@ namespace Sass {
       BUILT_IN_FN(desaturate)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->s(clamp(copy->s() - nr, 0.0, 100.0));
@@ -565,7 +565,7 @@ namespace Sass {
       BUILT_IN_FN(opacify)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->a(clamp(copy->a() + nr, 0.0, 1.0));
@@ -575,7 +575,7 @@ namespace Sass {
       BUILT_IN_FN(transparentize)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassNumber* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
+        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->a(clamp(copy->a() - nr, 0.0, 1.0));
@@ -613,7 +613,7 @@ namespace Sass {
         }
         */
         SassColorObj color = argument->assertColor(*ctx.logger, Strings::color);
-        return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
+        return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
 
@@ -661,7 +661,7 @@ namespace Sass {
             arguments, pstate);
         }
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        return SASS_MEMORY_NEW(SassNumber, pstate, color->a());
+        return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
 
@@ -689,7 +689,7 @@ namespace Sass {
         // Return null since args are optional
         if (kv == keywords.end()) return nullptr;
         // Get the number object from found keyword
-        SassNumber* num = kv->second->assertNumber(logger, name.orig());
+        Number* num = kv->second->assertNumber(logger, name.orig());
         // Only consume keyword once
         keywords.erase(kv);
         // Return the number
@@ -699,7 +699,7 @@ namespace Sass {
       BUILT_IN_FN(adjust)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassArgumentList* argumentList = arguments[1]
+        ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(*ctx.logger, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
@@ -714,13 +714,13 @@ namespace Sass {
         // ToDo: solve without erase ...
         EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
-        SassNumber* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
-        SassNumber* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
-        SassNumber* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
-        SassNumber* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
-        SassNumber* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
-        SassNumber* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+        Number* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
+        Number* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
+        Number* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
+        Number* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
+        Number* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
+        Number* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
+        Number* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
 
         double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::red) : 0.0;
         double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::green) : 0.0;
@@ -786,7 +786,7 @@ namespace Sass {
       BUILT_IN_FN(change)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassArgumentList* argumentList = arguments[1]
+        ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(*ctx.logger, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
@@ -801,13 +801,13 @@ namespace Sass {
         // ToDo: solve without erase ...
         EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
-        SassNumber* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
-        SassNumber* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
-        SassNumber* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
-        SassNumber* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
-        SassNumber* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
-        SassNumber* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+        Number* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
+        Number* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
+        Number* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
+        Number* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
+        Number* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
+        Number* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
+        Number* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
 
         double r = nr_r ? nr_r->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::red) : 0.0;
         double g = nr_g ? nr_g->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::green) : 0.0;
@@ -873,7 +873,7 @@ namespace Sass {
       BUILT_IN_FN(scale)
       {
         SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassArgumentList* argumentList = arguments[1]
+        ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(*ctx.logger, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
@@ -888,12 +888,12 @@ namespace Sass {
         // ToDo: solve without erase ...
         EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
 
-        SassNumber* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
-        SassNumber* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
-        SassNumber* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
-        SassNumber* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
-        SassNumber* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
-        SassNumber* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+        Number* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
+        Number* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
+        Number* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
+        Number* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
+        Number* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
+        Number* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
 
         double r = nr_r ? nr_r->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::red)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::red) / 100.0 : 0.0;
         double g = nr_g ? nr_g->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::green)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::green) / 100.0 : 0.0;
@@ -958,7 +958,7 @@ namespace Sass {
       {
         SassColorObj color1 = arguments[0]->assertColor(*ctx.logger, "color1");
         SassColorObj color2 = arguments[1]->assertColor(*ctx.logger, "color2");
-        SassNumber* weight = arguments[2]->assertNumber(*ctx.logger, "weight");
+        Number* weight = arguments[2]->assertNumber(*ctx.logger, "weight");
         return _mixColors(color1, color2, weight, pstate, *ctx.logger);
       }
 

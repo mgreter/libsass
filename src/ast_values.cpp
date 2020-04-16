@@ -301,7 +301,7 @@ namespace Sass {
 
   Number::Number(const SourceSpan& pstate, double val, const sass::string& u, bool zero)
   : Value(pstate),
-    Units(),
+    Units(u),
     value_(val),
     // epsilon_(0.00001),
     zero_(zero),
@@ -309,28 +309,6 @@ namespace Sass {
     rhsAsSlash_(),
     hash_(0)
   {
-    size_t l = 0;
-    size_t r;
-    if (!u.empty()) {
-      bool nominator = true;
-      while (true) {
-        r = u.find_first_of("*/", l);
-        sass::string unit(u.substr(l, r == sass::string::npos ? r : r - l));
-        if (!unit.empty()) {
-          if (nominator) numerators.emplace_back(unit);
-          else denominators.emplace_back(unit);
-        }
-        if (r == sass::string::npos) break;
-        // ToDo: should error for multiple slashes
-        // if (!nominator && u[r] == '/') error(...)
-        if (u[r] == '/')
-          nominator = false;
-        // strange math parsing?
-        // else if (u[r] == '*')
-        //  nominator = true;
-        l = r + 1;
-      }
-    }
   }
 
   Number::Number(const SourceSpan& pstate, double val, Units&& units, bool zero)
@@ -1067,7 +1045,7 @@ namespace Sass {
 
   IMPLEMENT_AST_OPERATORS(Map);
   IMPLEMENT_AST_OPERATORS(SassList);
-  IMPLEMENT_AST_OPERATORS(SassArgumentList);
+  IMPLEMENT_AST_OPERATORS(ArgumentList);
   // IMPLEMENT_AST_OPERATORS(Binary_Expression);
   // IMPLEMENT_AST_OPERATORS(Variable);
   IMPLEMENT_AST_OPERATORS(Number);
@@ -1087,7 +1065,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SassArgumentList::SassArgumentList(
+  ArgumentList::ArgumentList(
     const SourceSpan& pstate,
     const sass::vector<ValueObj>& values,
     Sass_Separator separator,
@@ -1098,7 +1076,7 @@ namespace Sass {
   {
   }
 
-  SassArgumentList::SassArgumentList(
+  ArgumentList::ArgumentList(
     const SourceSpan& pstate,
     sass::vector<ValueObj>&& values,
     Sass_Separator separator,
@@ -1109,8 +1087,8 @@ namespace Sass {
   {
   }
 
-  SassArgumentList::SassArgumentList(
-    const SassArgumentList* ptr) :
+  ArgumentList::ArgumentList(
+    const ArgumentList* ptr) :
     SassList(ptr),
     _keywords(ptr->_keywords),
     _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)
@@ -1118,7 +1096,7 @@ namespace Sass {
   }
 
   // Convert native string keys to sass strings
-  Map* SassArgumentList::keywordsAsSassMap() const
+  Map* ArgumentList::keywordsAsSassMap() const
   {
     Map* map = SASS_MEMORY_NEW(Map, pstate());
     for (auto kv : _keywords) {
@@ -1129,7 +1107,7 @@ namespace Sass {
     return map;
   }
 
-  bool SassArgumentList::operator==(const Value& rhs) const
+  bool ArgumentList::operator==(const Value& rhs) const
   {
     if (const SassList * r = rhs.isList()) {
       return SassList::operator==(*r);
@@ -1162,7 +1140,7 @@ namespace Sass {
     if (val == nullptr) {
       type = NullPtrIterator;
     }
-    else if (SassMap* map = val->isMap()) {
+    else if (Map* map = val->isMap()) {
       type = MapIterator;
       last = map->size();
     }
@@ -1198,7 +1176,7 @@ namespace Sass {
   Value* Values::iterator::operator*() {
     switch (type) {
     case MapIterator:
-      return static_cast<SassMap*>(val)->get2(cur);
+      return static_cast<Map*>(val)->get2(cur);
     case ListIterator:
       return static_cast<SassList*>(val)->get(cur);
     case SingleIterator:

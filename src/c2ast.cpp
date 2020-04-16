@@ -4,15 +4,23 @@
 #include "backtrace.hpp"
 #include "sass/values.h"
 #include "ast_fwd_decl.hpp"
+#include "sass_values.hpp"
 #include "error_handling.hpp"
 
 namespace Sass {
 
-  Value* c2ast(union Sass_Value* v, BackTraces traces, SourceSpan pstate)
+  Value* c2ast(struct SassValue* v, BackTraces traces, SourceSpan pstate)
   {
     using std::strlen;
     using std::strcpy;
     Value* e = NULL;
+
+    // const Value* vv = v->value;
+
+    // if (Cast<Boolean>(vv)) {
+
+//     }
+    /*
     switch (sass_value_get_tag(v)) {
       case SASS_BOOLEAN: {
         e = SASS_MEMORY_NEW(Boolean, pstate, !!sass_boolean_get_value(v));
@@ -45,11 +53,11 @@ namespace Sass {
       } break;
       case SASS_MAP: {
         Map* m = SASS_MEMORY_NEW(Map, pstate);
-        for (size_t i = 0, L = sass_map_get_length(v); i < L; ++i) {
-          m->insert(
-            c2ast(sass_map_get_key(v, i), traces, pstate),
-            c2ast(sass_map_get_value(v, i), traces, pstate));
-        }
+        // for (size_t i = 0, L = sass_map_get_length(v); i < L; ++i) {
+        //   m->insert(
+        //     c2ast(sass_map_get_key(v, i), traces, pstate),
+        //     c2ast(sass_map_get_value(v, i), traces, pstate));
+        // }
         e = m;
       } break;
       case SASS_NULL: {
@@ -63,6 +71,7 @@ namespace Sass {
       } break;
       default: break;
     }
+    */
     return e;
   }
 

@@ -152,7 +152,7 @@ namespace Sass {
     }
 
     bool isNamedEmpty = named.empty();
-    SassArgumentListObj argumentList;
+    ArgumentListObj argumentList;
     if (!declaredArguments->restArg().empty()) {
       sass::vector<ValueObj> values;
       if (positional.size() > declared.size()) {
@@ -160,7 +160,7 @@ namespace Sass {
       }
       Sass_Separator separator = evaluated.separator();
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+      argumentList = SASS_MEMORY_NEW(ArgumentList,
         pstate, std::move(values), separator, std::move(named));
       auto size = declared.size();
       ctx.varRoot.setVariable(idxs->varFrame, (uint32_t)size, argumentList);
@@ -224,7 +224,7 @@ namespace Sass {
     }
 
     bool isNamedEmpty = named.empty();
-    SassArgumentListObj argumentList;
+    ArgumentListObj argumentList;
     if (!overload->restArg().empty()) {
       sass::vector<ValueObj> rest;
       if (positional.size() > declaredArguments.size()) {
@@ -234,7 +234,7 @@ namespace Sass {
 
       Sass_Separator separator = evaluated.separator();
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+      argumentList = SASS_MEMORY_NEW(ArgumentList,
         pstate, std::move(rest), separator, std::move(named));
       positional.emplace_back(argumentList);
     }
@@ -296,7 +296,7 @@ namespace Sass {
     }
 
     bool isNamedEmpty = named.empty();
-    SassArgumentListObj argumentList;
+    ArgumentListObj argumentList;
     if (!overload->restArg().empty()) {
       sass::vector<ValueObj> rest;
       if (positional.size() > declaredArguments.size()) {
@@ -306,7 +306,7 @@ namespace Sass {
 
       Sass_Separator separator = evaluated.separator();
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+      argumentList = SASS_MEMORY_NEW(ArgumentList,
         pstate, std::move(rest), separator, std::move(named));
       positional.emplace_back(argumentList);
     }
@@ -379,7 +379,7 @@ namespace Sass {
     }
 
     bool isNamedEmpty = named.empty();
-    SassArgumentListObj argumentList;
+    ArgumentListObj argumentList;
     if (!overload->restArg().empty()) {
       sass::vector<ValueObj> rest;
       if (positional.size() > declaredArguments.size()) {
@@ -389,7 +389,7 @@ namespace Sass {
 
       Sass_Separator separator = evaluated.separator();
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(SassArgumentList,
+      argumentList = SASS_MEMORY_NEW(ArgumentList,
         overload->pstate(),
         std::move(rest), separator, std::move(named));
       positional.emplace_back(argumentList);
@@ -401,22 +401,22 @@ namespace Sass {
 
     SassFunctionPtr entry = callable->function();
 
-    union Sass_Value* c_args = sass_make_list(positional.size(), SASS_COMMA, false);
+    struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
     for (size_t i = 0; i < positional.size(); i++) {
       sass_list_set_value(c_args, i, positional[i]->toSassValue());
     }
 
-    union Sass_Value* c_val =
+    struct SassValue* c_val =
       entry->function(c_args, entry, ctx.c_compiler);
 
     if (sass_value_get_tag(c_val) == SASS_ERROR) {
-      sass::string message("error in C function " + name + ": " + sass_error_get_message(c_val));
+      sass::string message("error in C function " + name + ": ");// +sass_error_get_message(c_val));
       sass_delete_value(c_val);
       sass_delete_value(c_args);
       error(message, pstate, traces);
     }
     else if (sass_value_get_tag(c_val) == SASS_WARNING) {
-      sass::string message("warning in C function " + name + ": " + sass_warning_get_message(c_val));
+      sass::string message("warning in C function " + name + ": ");// +sass_warning_get_message(c_val));
       sass_delete_value(c_val);
       sass_delete_value(c_args);
       error(message, pstate, traces);
@@ -483,7 +483,7 @@ namespace Sass {
     // var rest = invocation.arguments.rest.accept(this);
     ValueObj rest = arguments->restArg()->perform(this);
 
-    if (SassMap* restMap = rest->isMap()) {
+    if (Map* restMap = rest->isMap()) {
       _addRestMap2(named, restMap, arguments->restArg()->pstate());
     }
     else if (SassList * restList = rest->isList()) {
@@ -492,7 +492,7 @@ namespace Sass {
           ValueExpression, value->pstate(), value));
       }
       // separator = list->separator();
-      if (SassArgumentList * args = rest->isArgList()) {
+      if (ArgumentList * args = rest->isArgList()) {
         for (auto kv : args->keywords()) {
           named[kv.first] = SASS_MEMORY_NEW(ValueExpression,
             kv.second->pstate(), kv.second);
@@ -566,9 +566,9 @@ namespace Sass {
       SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
-      union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
+      struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_set_value(c_args, 0, message->toSassValue());
-      union Sass_Value* c_val = c_func(c_args, c_function, compiler());
+      struct SassValue* c_val = c_func(c_args, c_function, compiler());
       sass_delete_value(c_args);
       sass_delete_value(c_val);
 
@@ -606,9 +606,9 @@ namespace Sass {
       SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
-      union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
+      struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_set_value(c_args, 0, message->toSassValue());
-      union Sass_Value* c_val = c_func(c_args, c_function, compiler());
+      struct SassValue* c_val = c_func(c_args, c_function, compiler());
       options().output_style = outstyle;
       // callee_stack().pop_back();
       sass_delete_value(c_args);
@@ -644,9 +644,9 @@ namespace Sass {
       SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
-      union Sass_Value* c_args = sass_make_list(1, SASS_COMMA, false);
+      struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_set_value(c_args, 0, message->toSassValue());
-      union Sass_Value* c_val = c_func(c_args, c_function, compiler());
+      struct SassValue* c_val = c_func(c_args, c_function, compiler());
       options().output_style = outstyle;
       // callee_stack().pop_back();
       sass_delete_value(c_args);
@@ -714,7 +714,7 @@ namespace Sass {
     return map.detach();
   }
 
-  SassMap* Eval::operator()(SassMap* m)
+  Map* Eval::operator()(Map* m)
   {
     return m;
   }
@@ -737,9 +737,9 @@ namespace Sass {
     bool allowSlash, Logger& logger, SourceSpan pstate)
   {
     ValueObj result = left->dividedBy(right, logger, pstate);
-    SassNumber* rv = result->isNumber();
-    SassNumber* lnr = left->isNumber();
-    SassNumber* rnr = right->isNumber();
+    Number* rv = result->isNumber();
+    Number* lnr = left->isNumber();
+    Number* rnr = right->isNumber();
     if (rv) {
       if (allowSlash && left && right) {
         rv->lhsAsSlash(lnr);
@@ -1288,7 +1288,7 @@ namespace Sass {
   /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
   /// [AstNode.span] if the span isn't required, since some nodes need to do
   /// real work to manufacture a source span.
-  void Eval::_addRestMap(EnvKeyFlatMap<ValueObj>& values, SassMap* map, const SourceSpan& pstate) {
+  void Eval::_addRestMap(EnvKeyFlatMap<ValueObj>& values, Map* map, const SourceSpan& pstate) {
     // convert ??= (value) = > value as T;
 
     for(auto kv : map->elements()) {
@@ -1316,7 +1316,7 @@ namespace Sass {
   /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
   /// [AstNode.span] if the span isn't required, since some nodes need to do
   /// real work to manufacture a source span.
-  void Eval::_addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, SassMap* map, const SourceSpan& pstate) {
+  void Eval::_addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& pstate) {
     // convert ??= (value) = > value as T;
 
     for (auto kv : map->elements()) {
@@ -1358,14 +1358,14 @@ namespace Sass {
 
     Sass_Separator separator = SASS_UNDEF;
 
-    if (SassMap * restMap = rest->isMap()) {
+    if (Map * restMap = rest->isMap()) {
       _addRestMap(named, restMap, arguments->restArg()->pstate());
     }
     else if (SassList * list = rest->isList()) {
       std::copy(list->begin(), list->end(),
         std::back_inserter(positional));
       separator = list->separator();
-      if (SassArgumentList * args = rest->isArgList()) {
+      if (ArgumentList * args = rest->isArgList()) {
         auto kwds = args->keywords();
         for (auto kv : kwds) {
           named[kv.first] = kv.second;
@@ -1403,7 +1403,7 @@ namespace Sass {
     ValueObj val = a->value()->perform(this);
     if (a->is_rest_argument()) {
       if(!Cast<SassList>(val)) {
-        if (!Cast<SassMap>(val)) {
+        if (!Cast<Map>(val)) {
           SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
             val->pstate(), sass::vector<ValueObj> {}, SASS_COMMA);
           wrapper->append(val);

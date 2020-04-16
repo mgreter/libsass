@@ -9,7 +9,7 @@
 
 namespace Sass {
 
-  /* the conversion matrix can be readed the following way */
+  /* the conversion matrix can be read the following way */
   /* if you go down, the factor is for the numerator (multiply) */
   /* if you go right, the factor is for the denominator (divide) */
   /* and yes, we actually use both, not sure why, but why not!? */
@@ -177,7 +177,7 @@ namespace Sass {
       case INCOMMENSURABLE:
         return 0;
     }
-    // fallback
+    // fall-back
     return 0;
   }
 
@@ -204,7 +204,7 @@ namespace Sass {
     if (rhsexp < 0 && lhsexp > 0 && - rhsexp > lhsexp) {
       // get the conversion factor for units
       f = conversion_factor(urhs, ulhs, clhs, crhs);
-      // left hand side has been consumned
+      // left hand side has been consumed
       f = std::pow(f, lhsexp);
       rhsexp += lhsexp;
       lhsexp = 0;
@@ -212,7 +212,7 @@ namespace Sass {
     else {
       // get the conversion factor for units
       f = conversion_factor(ulhs, urhs, clhs, crhs);
-      // right hand side has been consumned
+      // right hand side has been consumed
       f = std::pow(f, rhsexp);
       lhsexp += rhsexp;
       rhsexp = 0;
@@ -234,6 +234,7 @@ namespace Sass {
   double Units::normalize()
   {
 
+    stringified.clear();
     size_t iL = numerators.size();
     size_t nL = denominators.size();
 
@@ -277,6 +278,7 @@ namespace Sass {
   double Units::reduce()
   {
 
+    stringified.clear();
     size_t iL = numerators.size();
     size_t nL = denominators.size();
 
@@ -286,7 +288,7 @@ namespace Sass {
     // first make sure same units cancel each other out
     // it seems that a map table will fit nicely to do this
     // we basically construct exponents for each unit
-    // has the advantage that they will be pre-sorted
+    // has the advantage that they will be presorted
     // ToDo: use fast map implementation?
     FlatMap<sass::string, int> exponents;
 
@@ -327,32 +329,63 @@ namespace Sass {
 
   }
 
-  sass::string Units::unit() const
+  // Reset unit without conversion factor
+  void Units::unit(const sass::string& u)
   {
-    sass::string u;
-    size_t iL = numerators.size();
-    size_t nL = denominators.size();
-    for (size_t i = 0; i < iL; i += 1) {
-      if (i) u += '*';
-      u += numerators[i];
-    }
-    if (iL == 0) {
-      if (nL > 1) u += '(';
-      for (size_t n = 0; n < nL; n += 1) {
-        if (n) u += '*';
-        u += denominators[n];
+    size_t l = 0;
+    size_t r;
+    stringified.clear();
+    numerators.clear();
+    denominators.clear();
+    if (!u.empty()) {
+      bool nominator = true;
+      while (true) {
+        r = u.find_first_of("*/", l);
+        sass::string unit(u.substr(l, r == sass::string::npos ? r : r - l));
+        if (!unit.empty()) {
+          if (nominator) numerators.emplace_back(unit);
+          else denominators.emplace_back(unit);
+        }
+        if (r == sass::string::npos) break;
+        // ToDo: should error for multiple slashes
+        // if (!nominator && u[r] == '/') error(...)
+        if (u[r] == '/')
+          nominator = false;
+        // strange math parsing?
+        // else if (u[r] == '*')
+        //  nominator = true;
+        l = r + 1;
       }
-      if (nL > 1) u += ')';
-      if (nL != 0) u += "^-1";
     }
-    else {
-      if (nL != 0) u += '/';
-      for (size_t n = 0; n < nL; n += 1) {
-        if (n) u += '*';
-        u += denominators[n];
+  }
+
+  const sass::string& Units::unit() const
+  {
+    if (stringified.empty()) {
+      size_t iL = numerators.size();
+      size_t nL = denominators.size();
+      for (size_t i = 0; i < iL; i += 1) {
+        if (i) stringified += '*';
+        stringified += numerators[i];
+      }
+      if (iL == 0) {
+        if (nL > 1) stringified += '(';
+        for (size_t n = 0; n < nL; n += 1) {
+          if (n) stringified += '*';
+          stringified += denominators[n];
+        }
+        if (nL > 1) stringified += ')';
+        if (nL != 0) stringified += "^-1";
+      }
+      else {
+        if (nL != 0) stringified += '/';
+        for (size_t n = 0; n < nL; n += 1) {
+          if (n) stringified += '*';
+          stringified += denominators[n];
+        }
       }
     }
-    return u;
+    return stringified;
   }
 
   bool Units::hasUnit(sass::string unit)

@@ -33,9 +33,9 @@ namespace Sass {
 
       BUILT_IN_FN(keywords)
       {
-        SassArgumentList* argumentList = arguments[0]->assertArgumentList(*ctx.logger, Sass::Strings::args);
+        ArgumentList* argumentList = arguments[0]->assertArgumentList(*ctx.logger, Sass::Strings::args);
         const EnvKeyFlatMap<ValueObj>& keywords = argumentList->keywords();
-        SassMapObj map = SASS_MEMORY_NEW(SassMap, arguments[0]->pstate());
+        MapObj map = SASS_MEMORY_NEW(Map, arguments[0]->pstate());
         for (auto kv : keywords) {
           sass::string key = kv.first.norm().substr(1);
           // Util::ascii_normalize_underscore(key);
@@ -72,10 +72,10 @@ namespace Sass {
             *ctx.logger);
         }
 
-        // return SASS_MEMORY_NEW(SassBoolean, pstate,
+        // return SASS_MEMORY_NEW(Boolean, pstate,
         //   closure.has_global("$" + variable->value()));
 
-        return SASS_MEMORY_NEW(SassBoolean, pstate,
+        return SASS_MEMORY_NEW(Boolean, pstate,
           ctx.varRoot.getGlobalVariable("$" + variable->value()));
 
       }
@@ -84,7 +84,7 @@ namespace Sass {
       {
         SassString* variable = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
         ExpressionObj ex = ctx.varRoot.getLexicalVariable("$" + variable->value());
-        return SASS_MEMORY_NEW(SassBoolean, pstate, !ex.isNull());
+        return SASS_MEMORY_NEW(Boolean, pstate, !ex.isNull());
       }
 
       BUILT_IN_FN(functionExists)
@@ -97,7 +97,7 @@ namespace Sass {
             *ctx.logger);
         }
         CallableObj fn = ctx.varRoot.getLexicalFunction(variable->value());
-        return SASS_MEMORY_NEW(SassBoolean, pstate, !fn.isNull());
+        return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
       BUILT_IN_FN(mixinExists)
@@ -110,7 +110,7 @@ namespace Sass {
             *ctx.logger);
         }
         CallableObj fn = ctx.varRoot.getLexicalMixin(variable->value());
-        return SASS_MEMORY_NEW(SassBoolean, pstate, !fn.isNull());
+        return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
       BUILT_IN_FN(contentExists)
@@ -178,7 +178,7 @@ namespace Sass {
       {
 
         Value* function = arguments[0]->assertValue(*ctx.logger, "function");
-        SassArgumentList* args = arguments[1]->assertArgumentList(*ctx.logger, Sass::Strings::args);
+        ArgumentList* args = arguments[1]->assertArgumentList(*ctx.logger, Sass::Strings::args);
 
         // sass::vector<ExpressionObj> positional,
         //   EnvKeyMap<ExpressionObj> named,
@@ -190,7 +190,7 @@ namespace Sass {
 
         ValueExpression* kwdRest = nullptr;
         if (!args->keywords().empty()) {
-          SassMap* map = args->keywordsAsSassMap();
+          Map* map = args->keywordsAsSassMap();
           kwdRest = SASS_MEMORY_NEW(
             ValueExpression, map->pstate(), map);
         }

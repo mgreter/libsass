@@ -13,7 +13,7 @@ namespace Sass {
 
       BUILT_IN_FN(get)
       {
-        SassMapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
+        MapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
         Value* key = arguments[1]->assertValue(*ctx.logger, Sass::Strings::key);
         if (Value* value = map->at(key)) { return value; }
         else { return SASS_MEMORY_NEW(Null, pstate); }
@@ -21,8 +21,8 @@ namespace Sass {
 
       BUILT_IN_FN(merge)
       {
-        SassMapObj map1 = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map1);
-        SassMapObj map2 = arguments[1]->assertMap(*ctx.logger, Sass::Strings::map2);
+        MapObj map1 = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map1);
+        MapObj map2 = arguments[1]->assertMap(*ctx.logger, Sass::Strings::map2);
         // We assign to ourself, so we can optimize this
         // This can shave off a few percent of run-time
         if (selfAssign && map1->refcount < AssignableRefCount + 1) {
@@ -45,7 +45,7 @@ namespace Sass {
 
       BUILT_IN_FN(remove_many)
       {
-        SassMapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
+        MapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
         if (selfAssign && map->refcount < AssignableRefCount + 1) {
 
           map->erase(arguments[1]);
@@ -55,7 +55,7 @@ namespace Sass {
           return map.detach();
         }
 
-        SassMapObj copy = SASS_MEMORY_COPY(map);
+        MapObj copy = SASS_MEMORY_COPY(map);
         copy->erase(arguments[1]);
         for (Value* key : arguments[2]->iterator()) {
           copy->erase(key);
@@ -65,21 +65,21 @@ namespace Sass {
 
       BUILT_IN_FN(keys)
       {
-        SassMapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
+        MapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
         return SASS_MEMORY_NEW(SassList,
           pstate, map->keys(), SASS_COMMA);
       }
 
       BUILT_IN_FN(values)
       {
-        SassMapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
+        MapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
         return SASS_MEMORY_NEW(SassList,
           pstate, map->values(), SASS_COMMA);
       }
 
       BUILT_IN_FN(hasKey)
       {
-        SassMapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
+        MapObj map = arguments[0]->assertMap(*ctx.logger, Sass::Strings::map);
         Value* key = arguments[1]->assertValue(*ctx.logger, Sass::Strings::key);
         return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
       }

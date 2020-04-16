@@ -127,7 +127,7 @@ namespace Sass {
   }
 
   // Writes [number] without exponent notation and with at most
-  // [SassNumber.precision] digits after the decimal point.
+  // [Number.precision] digits after the decimal point.
   // void SerializeVisitor::_writeNumber(double number) {
   // }
 

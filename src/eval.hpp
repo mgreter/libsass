@@ -148,7 +148,7 @@ namespace Sass {
     Value* operator()(DebugRule*);
     void visitDebugRule(DebugRule* node);
 
-    SassMap* operator()(SassMap*);
+    Map* operator()(Map*);
     SassList* operator()(SassList*);
     Map* operator()(MapExpression*);
     SassList* operator()(ListExpression*);
@@ -186,8 +186,8 @@ namespace Sass {
       }
     }
 
-    void _addRestMap(EnvKeyFlatMap<ValueObj>& values, SassMap* map, const SourceSpan& nodeForSpan);
-    void _addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, SassMap* map, const SourceSpan& nodeForSpan);
+    void _addRestMap(EnvKeyFlatMap<ValueObj>& values, Map* map, const SourceSpan& nodeForSpan);
+    void _addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& nodeForSpan);
 	  void _evaluateArguments(ArgumentInvocation* arguments, ArgumentResults& evaluated);
 
     sass::string _evaluateToCss(Expression* expression, bool quote = true);
