@@ -194,8 +194,8 @@ namespace Sass {
     sass::vector<SassImporterPtr> c_importers88;
     sass::vector<struct SassFunctionCpp*> c_functions88;
 
-    const sass::string indent88; // String to be used for indentation
-    const sass::string linefeed88; // String to be used for line feeds
+    // const sass::string indent88; // String to be used for indentation
+    // const sass::string linefeed88; // String to be used for line feeds
     const sass::string input_path88; // for relative paths in src-map
     const sass::string output_path88; // for relative paths to the output
     const sass::string source_map_file88; // path to source map file (enables feature)

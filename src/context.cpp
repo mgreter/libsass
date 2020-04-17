@@ -122,8 +122,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     c_functions88(sass::vector<struct SassFunctionCpp*>()),
 
     // Get some common options with and few default
-    indent88(safe_str(c_options.indent, "  ")),
-    linefeed88(safe_str(c_options.linefeed, "\n")),
+    // indent88(safe_str(c_options.indent, "  ")),
+    // linefeed88(safe_str(c_options.linefeed, "\n")),
 
     input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
     output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88))),
@@ -634,12 +634,12 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (!c_options.omit_source_map_url) {
       // generate an embedded source map
       if (c_options.source_map_embed) {
-        emitted.buffer += linefeed88;
+        emitted.buffer += linefeed;
         emitted.buffer += format_embedded_source_map();
       }
       // or just link the generated one
       else if (!source_map_file88.empty()) {
-        emitted.buffer += linefeed88;
+        emitted.buffer += linefeed;
         emitted.buffer += format_source_mapping_url(source_map_file88);
       }
     }
