@@ -121,7 +121,7 @@ namespace Sass {
             *ctx.logger);
         }
         return SASS_MEMORY_NEW(Boolean, pstate,
-          ctx.content != nullptr);
+          ctx.content88 != nullptr);
       }
 
       BUILT_IN_FN(moduleVariables)
