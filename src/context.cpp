@@ -98,7 +98,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // IMPLEMENT_1_ARG_FN(sin)
 
   Context::Context(struct SassContextCpp& c_ctx)
-  : // SassContextCpp(),
+  : SassContextCpp(),
     CWD(File::get_cwd()),
     c_options(c_ctx),
     entry_path88(""),

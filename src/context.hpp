@@ -21,7 +21,7 @@
 
 namespace Sass {
 
-  class Context { // : public SassContextCpp {
+  class Context : public SassContextCpp {
   public:
 
     /*#########################################################################*/
