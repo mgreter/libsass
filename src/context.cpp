@@ -121,9 +121,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     c_importers88(sass::vector<SassImporterPtr>()),
     c_functions88(sass::vector<struct SassFunctionCpp*>()),
 
-    // Get some common options with and few default
-    // indent88(safe_str(c_options.indent, "  ")),
-    // linefeed88(safe_str(c_options.linefeed, "\n")),
 
     input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
     output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88))),
@@ -265,10 +262,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Obsolete when c_ctx and cpp_ctx are merged.
   /*#########################################################################*/
 
-  void Context::addCustomFunctions(SassFunctionListPtr functions)
+  void Context::addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions)
   {
-    if (functions == nullptr) return;
-    for (auto function : *functions) {
+    for (auto function : functions) {
       if (function == nullptr) continue;
       c_functions88.emplace_back(function);
     }

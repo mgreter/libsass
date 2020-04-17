@@ -487,7 +487,6 @@ extern "C" {
   {
     // free pointer before
     // or copy/move them
-    options->c_functions = 0;
     options->c_importers = 0;
     options->c_headers = 0;
   }
@@ -497,11 +496,9 @@ extern "C" {
   {
     if (options == 0) return;
     // Deallocate custom functions, headers and imports
-    sass_delete_function_list(options->c_functions);
     sass_delete_importer_list(options->c_importers);
     sass_delete_importer_list(options->c_headers);
     // Reset our pointers
-    options->c_functions = 0;
     options->c_importers = 0;
     options->c_headers = 0;
   }
@@ -588,7 +585,7 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_contents);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_file_urls);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, omit_source_map_url);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(SassFunctionListPtr, c_functions);
+//   IMPLEMENT_SASS_OPTION_ACCESSOR(SassFunctionListPtr, c_functions);
   IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_importers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_headers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, indent);

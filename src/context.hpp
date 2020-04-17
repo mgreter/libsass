@@ -75,7 +75,7 @@ namespace Sass {
     // Helpers for `sass_prepare_context`
     /*#########################################################################*/
     void addCustomHeaders(SassImporterListPtr headers);
-    void addCustomFunctions(SassFunctionListPtr functions);
+    void addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions);
     void addCustomImporters(SassImporterListPtr importers);
 
   private:
