@@ -82,7 +82,9 @@ extern "C" {
   void ADDCALL sass_importer_list_push(SassImporterListPtr list, SassImporterPtr importer)
   {
     if (list != nullptr) {
-      list->push_back(importer);
+      if (importer != nullptr) {
+        list->emplace_back(importer);
+      }
     }
   }
 
@@ -90,7 +92,9 @@ extern "C" {
   void ADDCALL sass_function_list_push(SassFunctionListPtr list, SassFunctionPtr fn)
   {
     if (list != nullptr) {
-      list->push_back(fn);
+      if (fn != nullptr) {
+        list->emplace_back(fn);
+      }
     }
   }
 

@@ -71,7 +71,33 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   return sass_make_number(fn(inp_nr), inp_unit); \
 }
 
-  IMPLEMENT_1_ARG_FN(sin)
+  std::string crc16s(const std::string& text, struct Sass_Compiler* comp)
+  {
+    return "CRC16";
+  }
+
+  // most functions are very simple
+#define IMPLEMENT_STR_FN(fn) \
+struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct Sass_Compiler* comp) \
+{ \
+  if (!sass_value_is_list(s_args)) { \
+    return sass_make_error("Invalid arguments for " #fn); \
+  } \
+  if (sass_list_get_length(s_args) != 1) { \
+    return sass_make_error("Exactly one arguments expected for " #fn); \
+  } \
+  struct SassValue* inp = sass_list_get_value(s_args, 0); \
+  if (!sass_value_is_string(inp)) { \
+    return sass_make_error("You must pass a string into " #fn); \
+  } \
+  const char* inp_str = sass_string_get_value(inp); \
+  std::string rv = fn(inp_str, comp); \
+  return sass_make_string(rv.c_str()); \
+} \
+
+  IMPLEMENT_STR_FN(crc16s)
+
+  // IMPLEMENT_1_ARG_FN(sin)
 
   Context::Context(struct SassContextCpp& c_ctx)
   : CWD(File::get_cwd()),
@@ -128,6 +154,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sort (c_importers.begin(), c_importers.end(), sort_importers);
 
     // register_c_function2(*this, sass_make_function("sin($x)", fn_sin, 0));
+    // register_c_function2(*this, sass_make_function("crc16($x)", fn_crc16s, 0));
 
     emitter.set_filename(abs2rel(output_path, source_map_file, CWD));
 
