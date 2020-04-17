@@ -21,7 +21,7 @@
 
 namespace Sass {
 
-  class Context {
+  class Context { // : public SassContextCpp {
   public:
 
     /*#########################################################################*/
@@ -31,7 +31,7 @@ namespace Sass {
     /*#########################################################################*/
     bool callCustomHeaders(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule)
     {
-      return callCustomLoader(imp_path, pstate, rule, c_headers, false);
+      return callCustomLoader(imp_path, pstate, rule, c_headers88, false);
     };
 
     /*#########################################################################*/
@@ -41,7 +41,7 @@ namespace Sass {
     /*#########################################################################*/
     bool callCustomImporters(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule)
     {
-      return callCustomLoader(imp_path, pstate, rule, c_importers, true);
+      return callCustomLoader(imp_path, pstate, rule, c_importers88, true);
     };
 
   private:
@@ -71,6 +71,13 @@ namespace Sass {
     void registerBuiltInOverloadFns(const sass::string& name,
       const std::vector<std::pair<sass::string, SassFnSig>>& overloads);
 
+    /*#########################################################################*/
+    // Helpers for `sass_prepare_context`
+    /*#########################################################################*/
+    void addCustomHeaders(SassImporterListPtr headers);
+    void addCustomFunctions(SassFunctionListPtr functions);
+    void addCustomImporters(SassImporterListPtr importers);
+
   private:
 
     /*#########################################################################*/
@@ -93,19 +100,22 @@ namespace Sass {
     void loadBuiltInFunctions();
 
     /*#########################################################################*/
+    // Split path-separated string and add them to include paths.
+    // On windows the path separator is `;`, most others are `:`.
+    /*#########################################################################*/
+    void collectIncludePaths(const sass::string& paths);
+
+    /*#########################################################################*/
     // Split path-separated string and add them to plugin paths.
     // On windows the path separator is `;`, most others are `:`.
     /*#########################################################################*/
     void collectPluginPaths(const sass::string& paths);
 
     /*#########################################################################*/
-    // Split path-separated string and add them to plugin paths.
-    // On windows the path separator is `;`, most others are `:`.
+    // Call collect for every item inside the vector.
     /*#########################################################################*/
-    void collectIncludePaths(const sass::string& paths);
-
-    void collectPluginPaths(const sass::vector<sass::string>& paths);
     void collectIncludePaths(const sass::vector<sass::string>& paths);
+    void collectPluginPaths(const sass::vector<sass::string>& paths);
 
 
   protected:
@@ -122,9 +132,9 @@ namespace Sass {
     const sass::string CWD;
 
     // The attached options passed from C-API
-    struct SassOptionsCpp& c_options;
+    struct SassContextCpp& c_options;
 
-    sass::string entry_path;
+    sass::string entry_path88;
 
     size_t head_imports;
     Plugins plugins;
@@ -144,7 +154,7 @@ namespace Sass {
     EnvRoot varRoot;
 
     // Current content block
-    UserDefinedCallable* content;
+    UserDefinedCallable* content88;
 
     // The logger is created on context instantiation.
     // It assigns a specific logger according to options.
@@ -170,35 +180,26 @@ namespace Sass {
     struct SassCompilerCpp* c_compiler;
 
     // absolute paths to includes
-    sass::vector<sass::string> included_files;
+    sass::vector<sass::string> included_files88;
     // relative includes for sourcemap
-    sass::vector<sass::string> srcmap_links;
+    sass::vector<sass::string> srcmap_links88;
     // vectors above have same size
 
-    sass::vector<sass::string> plugin_paths; // relative paths to load plugins
-    sass::vector<sass::string> include_paths; // lookup paths for includes
+    sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
+    sass::vector<sass::string> include_paths88; // lookup paths for includes
 
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
-    sass::vector<SassImporterPtr> c_headers;
-    sass::vector<SassImporterPtr> c_importers;
-    sass::vector<struct SassFunctionCpp*> c_functions;
+    sass::vector<SassImporterPtr> c_headers88;
+    sass::vector<SassImporterPtr> c_importers88;
+    sass::vector<struct SassFunctionCpp*> c_functions88;
 
-    void add_c_header(SassImporterPtr header);
-    void add_c_headers(SassImporterListPtr headers);
-
-    void add_c_importer(SassImporterPtr importer);
-    void add_c_importers(SassImporterListPtr importers);
-
-    void add_c_function(struct SassFunctionCpp* function);
-    void add_c_functions(SassFunctionListPtr functions);
-
-    const sass::string indent; // String to be used for indentation
-    const sass::string linefeed; // String to be used for line feeds
-    const sass::string input_path; // for relative paths in src-map
-    const sass::string output_path; // for relative paths to the output
-    const sass::string source_map_file; // path to source map file (enables feature)
-    const sass::string source_map_root; // path for sourceRoot property (pass-through)
+    const sass::string indent88; // String to be used for indentation
+    const sass::string linefeed88; // String to be used for line feeds
+    const sass::string input_path88; // for relative paths in src-map
+    const sass::string output_path88; // for relative paths to the output
+    const sass::string source_map_file88; // path to source map file (enables feature)
+    const sass::string source_map_root88; // path for sourceRoot property (pass-through)
 
     virtual ~Context();
     Context(struct SassContextCpp&);
@@ -236,7 +237,6 @@ namespace Sass {
     File_Context(struct SassFileContextCpp& ctx)
     : Context(ctx)
     { }
-    virtual ~File_Context();
     virtual Block_Obj parse(Sass_Import_Type type);
   };
 
@@ -249,7 +249,6 @@ namespace Sass {
       source_c_str(ctx.source_string),
       srcmap_c_str(ctx.srcmap_string)
     {}
-    virtual ~Data_Context();
     virtual Block_Obj parse(Sass_Import_Type type);
   };
 

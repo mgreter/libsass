@@ -2102,8 +2102,8 @@ namespace Sass {
 
   Value* Eval::visitContentRule(ContentRule* c)
   {
-    if (!ctx.content) return nullptr;
-    UserDefinedCallable* content = ctx.content;
+    if (!ctx.content88) return nullptr;
+    UserDefinedCallable* content = ctx.content88;
     if (content == nullptr) return nullptr;
     LOCAL_FLAG(inMixin, false);
 
@@ -2121,7 +2121,7 @@ namespace Sass {
     // EnvSnapshotView view(ctx.varRoot, content->snapshot());
     EnvScope scoped(ctx.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
-    LocalOption<UserDefinedCallable*> asdqwe(ctx.content, content->content());
+    LocalOption<UserDefinedCallable*> asdqwe(ctx.content88, content->content());
 
     // Appends to trace
     ArgumentResults& evaluated(c->arguments()->evaluated);
@@ -2197,7 +2197,7 @@ namespace Sass {
       contentCallable = SASS_MEMORY_NEW(
         UserDefinedCallable, 
         node->pstate(), node->name(),
-        node->content(), ctx.content);
+        node->content(), ctx.content88);
 
       MixinRule* rule = Cast<MixinRule>(mixin->declaration());
       node->content()->cidx(rule->cidx());
@@ -2220,7 +2220,7 @@ namespace Sass {
     callStackFrame frame(*ctx.logger,
       BackTrace(node->pstate(), mixin->name().orig(), true));
 
-    LocalOption<UserDefinedCallable*> asdqwe2(ctx.content, contentCallable);
+    LocalOption<UserDefinedCallable*> asdqwe2(ctx.content88, contentCallable);
 
     ArgumentResults& evaluated(node->arguments()->evaluated);
     _evaluateArguments(node->arguments(), evaluated);

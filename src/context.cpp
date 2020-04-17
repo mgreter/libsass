@@ -31,7 +31,7 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
-  inline bool sort_importers (const SassImporterPtr& i, const SassImporterPtr& j)
+  inline bool cmpImporterPrio (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
   static sass::string safe_input(const char* in_path)
@@ -98,9 +98,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // IMPLEMENT_1_ARG_FN(sin)
 
   Context::Context(struct SassContextCpp& c_ctx)
-  : CWD(File::get_cwd()),
+  : // SassContextCpp(),
+    CWD(File::get_cwd()),
     c_options(c_ctx),
-    entry_path(""),
+    entry_path88(""),
     head_imports(0),
     plugins(),
     emitter(c_options),
@@ -116,18 +117,18 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     c_compiler(NULL),
 
     // Initialize C-API arrays for custom functionality
-    c_headers               (sass::vector<SassImporterPtr>()),
-    c_importers             (sass::vector<SassImporterPtr>()),
-    c_functions             (sass::vector<struct SassFunctionCpp*>()),
+    c_headers88(sass::vector<SassImporterPtr>()),
+    c_importers88(sass::vector<SassImporterPtr>()),
+    c_functions88(sass::vector<struct SassFunctionCpp*>()),
 
     // Get some common options with and few default
-    indent                  (safe_str(c_options.indent, "  ")),
-    linefeed                (safe_str(c_options.linefeed, "\n")),
+    indent88(safe_str(c_options.indent, "  ")),
+    linefeed88(safe_str(c_options.linefeed, "\n")),
 
-    input_path              (make_canonical_path(safe_input(c_options.input_path.c_str()))),
-    output_path             (make_canonical_path(safe_output(c_options.output_path.c_str(), input_path))),
-    source_map_file         (make_canonical_path(c_options.source_map_file)),
-    source_map_root         (make_canonical_path(c_options.source_map_root))
+    input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
+    output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88))),
+    source_map_file88(make_canonical_path(c_options.source_map_file)),
+    source_map_root88(make_canonical_path(c_options.source_map_root))
 
   {
 
@@ -142,20 +143,20 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     collectPluginPaths(c_options.plugin_paths);
 
     // load plugins and register custom behaviors
-    for(auto plug : plugin_paths) plugins.load_plugins(plug);
-    for(auto fn : plugins.get_headers()) c_headers.emplace_back(fn);
-    for(auto fn : plugins.get_importers()) c_importers.emplace_back(fn);
-    for(auto fn : plugins.get_functions()) c_functions.emplace_back(fn);
+    for(auto plug : plugin_paths88) plugins.load_plugins(plug);
+    for(auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
+    for(auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
+    for(auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
 
     // sort the items by priority (lowest first)
-    sort (c_headers.begin(), c_headers.end(), sort_importers);
-    sort (c_importers.begin(), c_importers.end(), sort_importers);
+    sort (c_headers88.begin(), c_headers88.end(), cmpImporterPrio);
+    sort (c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
 
     // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
     registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
     registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
 
-    emitter.set_filename(abs2rel(output_path, source_map_file, CWD));
+    emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
 
   }
   // Object destructor
@@ -260,78 +261,47 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // EO registerCustomFunction
 
   /*#########################################################################*/
-  // Interface for external custom functions
+  // Helpers for `sass_prepare_context`
+  // Obsolete when c_ctx and cpp_ctx are merged.
   /*#########################################################################*/
 
-  void Context::add_c_functions(SassFunctionListPtr functions)
+  void Context::addCustomFunctions(SassFunctionListPtr functions)
   {
     if (functions == nullptr) return;
     for (auto function : *functions) {
       if (function == nullptr) continue;
-      c_functions.emplace_back(function);
+      c_functions88.emplace_back(function);
     }
   }
 
-  void Context::add_c_headers(SassImporterListPtr headers)
+  void Context::addCustomHeaders(SassImporterListPtr headers)
   {
     if (headers == nullptr) return;
     for (auto header : *headers) {
       if (header == nullptr) continue;
-      c_headers.emplace_back(header);
+      c_headers88.emplace_back(header);
     }
     // need to sort the array afterwards (no big deal)
-    sort(c_importers.begin(), c_importers.end(), sort_importers);
+    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
-  void Context::add_c_importers(SassImporterListPtr importers)
+  void Context::addCustomImporters(SassImporterListPtr importers)
   {
     if (importers == nullptr) return;
     for (auto importer : *importers) {
       if (importer == nullptr) continue;
-      c_importers.emplace_back(importer);
+      c_importers88.emplace_back(importer);
     }
     // need to sort the array afterwards (no big deal)
-    sort(c_importers.begin(), c_importers.end(), sort_importers);
+    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
-  void Context::add_c_function(struct SassFunctionCpp* function)
-  {
-    c_functions.emplace_back(function);
-  }
+  /*#########################################################################*/
+  // Helpers for search path handling
+  /*#########################################################################*/
 
-  void Context::add_c_header(SassImporterPtr header)
-  {
-    c_headers.emplace_back(header);
-    // need to sort the array afterwards (no big deal)
-    sort (c_headers.begin(), c_headers.end(), sort_importers);
-  }
-
-  void Context::add_c_importer(SassImporterPtr importer)
-  {
-    c_importers.emplace_back(importer);
-    // need to sort the array afterwards (no big deal)
-    sort (c_importers.begin(), c_importers.end(), sort_importers);
-  }
-
-  Data_Context::~Data_Context()
-  {
-  }
-
-  File_Context::~File_Context()
-  {
-  }
-
-  void Context::collectPluginPaths(const sass::string& paths)
-  {
-    if (paths.empty()) return;
-    sass::vector<sass::string> split =
-      StringUtils::split(paths, PATH_SEP, true);
-    for (sass::string& path : split) {
-      if (*path.rbegin() != '/') path += '/';
-      plugin_paths.emplace_back(path);
-    }
-  }
-
+  // Split path-separated string and add them to include paths.
+  // On windows the path separator is `;`, most others are `:`.
   void Context::collectIncludePaths(const sass::string& paths)
   {
     if (paths.empty()) return;
@@ -339,23 +309,45 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       StringUtils::split(paths, PATH_SEP, true);
     for (sass::string& path : split) {
       if (*path.rbegin() != '/') path += '/';
-      include_paths.emplace_back(path);
+      include_paths88.emplace_back(path);
     }
   }
+  // EO collectIncludePaths
 
-  void Context::collectPluginPaths(const sass::vector<sass::string>& paths)
+  // Split path-separated string and add them to plugin paths.
+  // On windows the path separator is `;`, most others are `:`.
+  void Context::collectPluginPaths(const sass::string& paths)
   {
-    for (const sass::string& path : paths) {
-      collectPluginPaths(path.c_str());
+    if (paths.empty()) return;
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
+      if (*path.rbegin() != '/') path += '/';
+      plugin_paths88.emplace_back(path);
     }
   }
+  // EO collectPluginPaths
 
+  // Call collect for every item inside the vector.
   void Context::collectIncludePaths(const sass::vector<sass::string>& paths)
   {
     for (const sass::string& path : paths) {
       collectIncludePaths(path.c_str());
     }
   }
+  // EO collectIncludePaths
+
+  // Call collect for every item inside the vector.
+  void Context::collectPluginPaths(const sass::vector<sass::string>& paths)
+  {
+    for (const sass::string& path : paths) {
+      collectPluginPaths(path.c_str());
+    }
+  }
+  // EO collectPluginPaths
+
+  /*#########################################################################*/
+  /*#########################################################################*/
 
   // resolve the imp_path in base_path or include_paths
   // looks for alternatives and returns a list from one directory
@@ -366,10 +358,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // first try to resolve the load path relative to the base path
     sass::vector<Include> vec(resolve_includes(base_path, import.imp_path, CWD, fileExistsCache));
     // then search in every include path (but only if nothing found yet)
-    for (size_t i = 0, S = include_paths.size(); vec.size() == 0 && i < S; ++i)
+    for (size_t i = 0, S = include_paths88.size(); vec.size() == 0 && i < S; ++i)
     {
       // call resolve_includes and individual base path and append all results
-      sass::vector<Include> resolved(resolve_includes(include_paths[i], import.imp_path, CWD, fileExistsCache));
+      sass::vector<Include> resolved(resolve_includes(include_paths88[i], import.imp_path, CWD, fileExistsCache));
       if (resolved.size()) vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
     // return vector
@@ -391,10 +383,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     emitter.add_source_index(idx);
 
     // add a relative link to the working directory
-    included_files.emplace_back(abs_path);
+    included_files88.emplace_back(abs_path);
 
     // add a relative link to the source map output file
-    srcmap_links.emplace_back(abs2rel(abs_path, source_map_file, CWD));
+    srcmap_links88.emplace_back(abs2rel(abs_path, source_map_file88, CWD));
 
     // add the entry to the stack
     import_stack.emplace_back(import);
@@ -505,7 +497,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // process the resolved entry
     else if (resolved.size() == 1) {
-      bool use_cache = c_importers.size() == 0;
+      bool use_cache = c_importers88.size() == 0;
       // use cache for the resource loading
       if (use_cache && sheets.count(resolved[0].abs_path)) return resolved[0];
       // try to read the content of the resolved file entry
@@ -642,13 +634,13 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (!c_options.omit_source_map_url) {
       // generate an embedded source map
       if (c_options.source_map_embed) {
-        emitted.buffer += linefeed;
+        emitted.buffer += linefeed88;
         emitted.buffer += format_embedded_source_map();
       }
       // or just link the generated one
-      else if (!source_map_file.empty()) {
-        emitted.buffer += linefeed;
-        emitted.buffer += format_source_mapping_url(source_map_file);
+      else if (!source_map_file88.empty()) {
+        emitted.buffer += linefeed88;
+        emitted.buffer += format_source_mapping_url(source_map_file88);
       }
     }
     // create a copy of the resulting buffer string
@@ -662,7 +654,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, pstate);
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
-    callCustomHeaders(entry_path, pstate, rule);
+    callCustomHeaders(entry_path88, pstate, rule);
     // increase head count to skip later
     head_imports += sources.size() - 1;
     // add the statement if we have urls
@@ -677,33 +669,33 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   {
 
     // check if entry file is given
-    if (input_path.empty()) return {};
+    if (input_path88.empty()) return {};
 
     // create absolute path from input filename
     // ToDo: this should be resolved via custom importers
-    sass::string abs_path(rel2abs(input_path, CWD, CWD));
+    sass::string abs_path(rel2abs(input_path88, CWD, CWD));
 
     // try to load the entry file
     char* contents = slurp_file(abs_path, CWD);
 
     // alternatively also look inside each include path folder
     // I think this differs from ruby sass (IMO too late to remove)
-    for (size_t i = 0, S = include_paths.size(); contents == 0 && i < S; ++i) {
+    for (size_t i = 0, S = include_paths88.size(); contents == 0 && i < S; ++i) {
       // build absolute path for this include path entry
-      abs_path = rel2abs(input_path, include_paths[i], CWD);
+      abs_path = rel2abs(input_path88, include_paths88[i], CWD);
       // try to load the resulting path
       contents = slurp_file(abs_path, CWD);
     }
 
     // abort early if no content could be loaded (various reasons)
-    if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path.c_str()));
+    if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path88.c_str()));
 
     // store entry path
-    entry_path = abs_path;
+    entry_path88 = abs_path;
 
     // create entry only for import stack
     SassImportPtr import = sass_make_import(
-      input_path.c_str(),
+      input_path88.c_str(),
       abs_path.c_str(),
       contents,
       0, type
@@ -730,15 +722,15 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (source_c_str.empty()) return {};
 
     // remember entry path (defaults to stdin for string)
-    entry_path = input_path.empty() ? "stdin" : input_path;
+    entry_path88 = input_path88.empty() ? "stdin" : input_path88;
 
     // ToDo: this may be resolved via custom importers
-    sass::string abs_path(rel2abs(entry_path, ".", CWD));
+    sass::string abs_path(rel2abs(entry_path88, ".", CWD));
 
     // create entry only for the import stack
     SassImportPtr import = sass_make_import(
-      input_path.c_str(),
-      input_path.c_str(),
+      input_path88.c_str(),
+      input_path88.c_str(),
       sass_copy_string(source_c_str),
       sass_copy_string(srcmap_c_str),
       type
@@ -767,10 +759,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     varStack.push_back(&varRoot);
 
     // register custom functions (defined via C-API)
-    for (size_t i = 0, S = c_functions.size(); i < S; ++i)
+    for (size_t i = 0, S = c_functions88.size(); i < S; ++i)
     {
       ScopedStackFrame<EnvFrame> scoped(varStack, &varRoot);
-      registerCustomFunction(c_functions[i]);
+      registerCustomFunction(c_functions88[i]);
     }
 
 
@@ -783,7 +775,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // abort if there is no data
     if (sources.size() == 0) return {};
     // get root block from the first style sheet
-    StyleSheet sheet = sheets.at(entry_path);
+    StyleSheet sheet = sheets.at(entry_path88);
     Block_Obj root = sheet.root;
     // abort on invalid root
     if (root.isNull()) return {};
@@ -834,13 +826,13 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   sass::string Context::format_source_mapping_url(const sass::string& file)
   {
-    sass::string url = abs2rel(file, output_path, CWD);
+    sass::string url = abs2rel(file, output_path88, CWD);
     return "/*# sourceMappingURL=" + url + " */";
   }
 
   sass::string Context::render_srcmap()
   {
-    if (source_map_file.empty()) return "";
+    if (source_map_file88.empty()) return "";
     return emitter.render_srcmap(*this);
   }
 
@@ -854,7 +846,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   sass::vector<sass::string> Context::get_included_files(bool skip, size_t headers)
   {
     // create a copy of the vector for manipulations
-    sass::vector<sass::string> includes = included_files;
+    sass::vector<sass::string> includes = included_files88;
     if (includes.size() == 0) return includes;
     if (skip) { includes.erase(includes.begin(), includes.begin() + 1 + headers); }
     else { includes.erase(includes.begin() + 1, includes.begin() + 1 + headers); }

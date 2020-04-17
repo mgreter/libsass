@@ -20,7 +20,7 @@ namespace Sass {
   sass::string SourceMap::render_srcmap(Context &ctx) {
 
     const bool include_sources = ctx.c_options.source_map_contents;
-    const sass::vector<sass::string> links = ctx.srcmap_links;
+    const sass::vector<sass::string> links = ctx.srcmap_links88;
     const sass::vector<SourceDataObj>& sources(ctx.sources);
 
     JsonNode* json_srcmap = json_mkobject();
@@ -32,8 +32,8 @@ namespace Sass {
     json_append_member(json_srcmap, "file", json_file_name);
 
     // pass-through sourceRoot option
-    if (!ctx.source_map_root.empty()) {
-      JsonNode* root = json_mkstring(ctx.source_map_root.c_str());
+    if (!ctx.source_map_root88.empty()) {
+      JsonNode* root = json_mkstring(ctx.source_map_root88.c_str());
       json_append_member(json_srcmap, "sourceRoot", root);
     }
 

@@ -261,13 +261,17 @@ extern "C" {
   }
 
   // generic compilation function (not exported, use file/data compile instead)
-  static SassCompilerCpp* sass_prepare_context (SassContextCpp* c_ctx, Context* cpp_ctx) throw()
+  static SassCompilerCpp* sass_prepare_context (Context* cpp_ctx) throw()
   {
+
+    SassContextCpp* c_ctx = &cpp_ctx->c_options;
+
     try {
-      // register our custom functions
-      cpp_ctx->add_c_functions(c_ctx->c_functions);
-      cpp_ctx->add_c_headers(c_ctx->c_headers);
-      cpp_ctx->add_c_importers(c_ctx->c_importers);
+
+      // register our custom handlers
+      cpp_ctx->addCustomHeaders(c_ctx->c_headers);
+      cpp_ctx->addCustomFunctions(c_ctx->c_functions);
+      cpp_ctx->addCustomImporters(c_ctx->c_importers);
 
       // reset error status
       c_ctx->error_status = 0;
@@ -300,11 +304,13 @@ extern "C" {
   }
 
   // generic compilation function (not exported, use file/data compile instead)
-  static int sass_compile_context (SassContextCpp* c_ctx, Context* cpp_ctx)
+  static int sass_compile_context (Context* cpp_ctx)
   {
 
+    SassContextCpp* c_ctx = &cpp_ctx->c_options;
+
     // prepare sass compiler with context and options
-    SassCompilerCpp* compiler = sass_prepare_context(c_ctx, cpp_ctx);
+    SassCompilerCpp* compiler = sass_prepare_context(cpp_ctx);
 
     try {
       // call each compiler step
@@ -391,14 +397,14 @@ extern "C" {
   {
     if (data_ctx == 0) return 0;
     Context* cpp_ctx = new Data_Context(*data_ctx);
-    return sass_prepare_context(data_ctx, cpp_ctx);
+    return sass_prepare_context(cpp_ctx);
   }
 
   struct SassCompilerCpp* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx)
   {
     if (file_ctx == 0) return 0;
     Context* cpp_ctx = new File_Context(*file_ctx);
-    return sass_prepare_context(file_ctx, cpp_ctx);
+    return sass_prepare_context(cpp_ctx);
   }
 
   int ADDCALL sass_compile_data_context(SassDataContextCpp* data_ctx)
@@ -413,7 +419,7 @@ extern "C" {
     }
     catch (...) { return handle_errors(data_ctx) | 1; }
     Context* cpp_ctx = new Data_Context(*data_ctx);
-    return sass_compile_context(data_ctx, cpp_ctx);
+    return sass_compile_context(cpp_ctx);
   }
 
   int ADDCALL sass_compile_file_context(SassFileContextCpp* file_ctx)
@@ -426,7 +432,7 @@ extern "C" {
     }
     catch (...) { return handle_errors(file_ctx) | 1; }
     Context* cpp_ctx = new File_Context(*file_ctx);
-    return sass_compile_context(file_ctx, cpp_ctx);
+    return sass_compile_context(cpp_ctx);
   }
 
   int ADDCALL sass_compiler_parse(struct SassCompilerCpp* compiler)
