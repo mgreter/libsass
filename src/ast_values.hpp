@@ -147,7 +147,7 @@ namespace Sass {
     IMPLEMENT_BASE_DOWNCAST(Map, isMap);
     IMPLEMENT_BASE_DOWNCAST(SassList, isList);
     IMPLEMENT_BASE_DOWNCAST(Number, isNumber);
-    IMPLEMENT_BASE_DOWNCAST(ColorRbga, isColor);
+    IMPLEMENT_BASE_DOWNCAST(Color_RGBA, isColor);
     IMPLEMENT_BASE_DOWNCAST(Color_RGBA, isColorRGBA);
     IMPLEMENT_BASE_DOWNCAST(Color_HSLA, isColorHSLA);
     IMPLEMENT_BASE_DOWNCAST(Boolean, isBoolean);

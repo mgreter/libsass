@@ -18,7 +18,7 @@ namespace Sass {
   namespace Functions {
 
     /// Returns [color1] and [color2], mixed together and weighted by [weight].
-    ColorRbga* _mixColors(ColorRbga* color1, ColorRbga* color2,
+    Color_RGBA* _mixColors(Color_RGBA* color1, Color_RGBA* color2,
       Number* weight, const SourceSpan& pstate, Logger& logger)
     {
 
@@ -248,7 +248,7 @@ namespace Sass {
       }
       else if (isVar(arguments[1])) {
         if (Color* first = arguments[0]->isColor()) {
-          SassColorObj rgba = first->toRGBA();
+          Color_RGBA_Obj rgba = first->toRGBA();
           return _functionRgbString(name,
             rgba, arguments[1], pstate);
         }
@@ -258,13 +258,13 @@ namespace Sass {
         }
       }
       else if (isSpecialNumber(arguments[1])) {
-        SassColorObj color = arguments[0]->assertColor(logger, Strings::color);
-        SassColorObj rgba = color->toRGBA();
+        Color_RGBA_Obj color = arguments[0]->assertColor(logger, Strings::color);
+        Color_RGBA_Obj rgba = color->toRGBA();
         return _functionRgbString(name,
           rgba, arguments[1], pstate);
       }
 
-      SassColorObj color = arguments[0]->assertColor(logger, Strings::color);
+      Color_RGBA_Obj color = arguments[0]->assertColor(logger, Strings::color);
       Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
       // callStackFrame frame(logger,
       //   BackTrace(pstate, name));
@@ -455,8 +455,8 @@ namespace Sass {
           return _functionString("invert", { arguments[0] }, pstate);
         }
 
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        SassColorObj inverse = color->copyAsRGBA();
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj inverse = color->copyAsRGBA();
         inverse->r(clamp(255.0 - color->r(), 0.0, 255.0));
         inverse->g(clamp(255.0 - color->g(), 0.0, 255.0));
         inverse->b(clamp(255.0 - color->b(), 0.0, 255.0));
@@ -485,7 +485,7 @@ namespace Sass {
 
       BUILT_IN_FN(adjustHue)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* degrees = arguments[1]->assertNumber(*ctx.logger, "degrees");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + degrees->value(), 360.0));
@@ -494,7 +494,7 @@ namespace Sass {
 
       BUILT_IN_FN(complement)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + 180.0, 360.0));
         return copy.detach();
@@ -507,7 +507,7 @@ namespace Sass {
           return _functionString("grayscale",
             arguments, pstate);
         }
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->s(0.0); // remove saturation
         return copy.detach();
@@ -515,7 +515,7 @@ namespace Sass {
 
       BUILT_IN_FN(lighten)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -525,7 +525,7 @@ namespace Sass {
 
       BUILT_IN_FN(darken)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -535,7 +535,7 @@ namespace Sass {
 
       BUILT_IN_FN(saturate_2)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -554,7 +554,7 @@ namespace Sass {
 
       BUILT_IN_FN(desaturate)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -564,7 +564,7 @@ namespace Sass {
 
       BUILT_IN_FN(opacify)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -574,7 +574,7 @@ namespace Sass {
 
       BUILT_IN_FN(transparentize)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
         double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
@@ -612,7 +612,7 @@ namespace Sass {
           return _functionString(Strings::alpha, arguments);
         }
         */
-        SassColorObj color = argument->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = argument->assertColor(*ctx.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
@@ -660,14 +660,14 @@ namespace Sass {
           return _functionString("opacity",
             arguments, pstate);
         }
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
 
       BUILT_IN_FN(ieHexStr)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         // clip should not be needed here
         double r = clip(color->r(), 0.0, 255.0);
         double g = clip(color->g(), 0.0, 255.0);
@@ -698,7 +698,7 @@ namespace Sass {
 
       BUILT_IN_FN(adjust)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(*ctx.logger, "kwargs");
         if (!argumentList->empty()) {
@@ -785,7 +785,7 @@ namespace Sass {
 
       BUILT_IN_FN(change)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(*ctx.logger, "kwargs");
         if (!argumentList->empty()) {
@@ -872,7 +872,7 @@ namespace Sass {
 
       BUILT_IN_FN(scale)
       {
-        SassColorObj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(*ctx.logger, "kwargs");
         if (!argumentList->empty()) {
@@ -956,8 +956,8 @@ namespace Sass {
 
       BUILT_IN_FN(mix)
       {
-        SassColorObj color1 = arguments[0]->assertColor(*ctx.logger, "color1");
-        SassColorObj color2 = arguments[1]->assertColor(*ctx.logger, "color2");
+        Color_RGBA_Obj color1 = arguments[0]->assertColor(*ctx.logger, "color1");
+        Color_RGBA_Obj color2 = arguments[1]->assertColor(*ctx.logger, "color2");
         Number* weight = arguments[2]->assertNumber(*ctx.logger, "weight");
         return _mixColors(color1, color2, weight, pstate, *ctx.logger);
       }

@@ -354,17 +354,6 @@ namespace Sass {
   DECLARE_BASE_CAST(SelectorComponent)
   DECLARE_BASE_CAST(ImportBase);
 
-  // typedef Number Number;
-  // typedef NumberObj SassNumberObj;
-  // typedef Null SassNull;
-  // typedef NullObj SassNullObj;
-  typedef Color_RGBA ColorRbga;
-  typedef Color_RGBA_Obj SassColorObj;
-  // typedef Boolean Boolean;
-  // typedef BooleanObj SassBooleanObj;
-  // typedef Map Map;
-  // typedef MapObj MapObj;
-
   #define FN_PROTOTYPE2 \
     const SourceSpan& pstate, \
     const sass::vector<ValueObj>& arguments, \
