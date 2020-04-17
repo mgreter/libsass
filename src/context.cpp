@@ -31,8 +31,6 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
-  void register_c_function2(Context&, SassFunctionPtr);
-
   inline bool sort_importers (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
@@ -120,7 +118,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Initialize C-API arrays for custom functionality
     c_headers               (sass::vector<SassImporterPtr>()),
     c_importers             (sass::vector<SassImporterPtr>()),
-    c_functions             (sass::vector<SassFunctionPtr>()),
+    c_functions             (sass::vector<struct SassFunctionCpp*>()),
 
     // Get some common options with and few default
     indent                  (safe_str(c_options.indent, "  ")),
@@ -153,17 +151,123 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sort (c_headers.begin(), c_headers.end(), sort_importers);
     sort (c_importers.begin(), c_importers.end(), sort_importers);
 
-    // register_c_function2(*this, sass_make_function("sin($x)", fn_sin, 0));
-    // register_c_function2(*this, sass_make_function("crc16($x)", fn_crc16s, 0));
+    // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
+    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
+    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
 
     emitter.set_filename(abs2rel(output_path, source_map_file, CWD));
 
   }
+  // Object destructor
+  Context::~Context()
+  {
+    // release logger
+    delete logger;
+  }
+
+  /*#########################################################################*/
+  // Interface for built in functions
+  /*#########################################################################*/
+
+  // Register built-in function with only one parameter list.
+  void Context::registerBuiltInFunction(const sass::string& name,
+    const sass::string& signature, SassFnSig cb)
+  {
+    auto source = SASS_MEMORY_NEW(SourceString,
+      "sass://signature", "(" + signature + ")");
+    auto args = ArgumentDeclaration::parse(*this, source);
+    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    functions.insert(std::make_pair(name, callable));
+    varRoot.createFunction(name);
+    fnCache.push_back(callable);
+  }
+  // EO registerBuiltInFunction
+
+  // Register built-in functions that can take different
+  // functional arguments (best suited will be chosen).
+  void Context::registerBuiltInOverloadFns(const sass::string& name,
+    const std::vector<std::pair<sass::string, SassFnSig>>& overloads)
+  {
+    SassFnPairs pairs;
+    for (auto overload : overloads) {
+      SourceDataObj source = SASS_MEMORY_NEW(SourceString,
+        "sass://signature", "(" + overload.first + ")");
+      auto args = ArgumentDeclaration::parse(*this, source);
+      pairs.emplace_back(std::make_pair(args, overload.second));
+    }
+    auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
+    functions.insert(std::make_pair(name, callable));
+    varRoot.createFunction(name);
+    fnCache.push_back(callable);
+  }
+  // EO registerBuiltInOverloadFns
+
+  // Called once to register all built-in functions.
+  // This will invoke parsing for parameter lists.
+  void Context::loadBuiltInFunctions()
+  {
+    Functions::Meta::registerFunctions(*this);
+    Functions::Math::registerFunctions(*this);
+    Functions::Maps::registerFunctions(*this);
+    Functions::Lists::registerFunctions(*this);
+    Functions::Colors::registerFunctions(*this);
+    Functions::Strings::registerFunctions(*this);
+    Functions::Selectors::registerFunctions(*this);
+  }
+  // EO loadBuiltInFunctions
+
+  /*#########################################################################*/
+  // Interface for external custom functions
+  /*#########################################################################*/
+
+  // Create a new external callable from the sass function. Parses
+  // function signature into function name and argument declaration.
+  ExternalCallable* Context::makeExternalCallable(struct SassFunctionCpp* function)
+  {
+    // Create temporary source object for signature
+    SourceStringObj source = SASS_MEMORY_NEW(SourceString,
+      "sass://signature", sass_function_get_signature(function));
+    // Create a new scss parser instance
+    ScssParser parser(*this, source);
+    // LibSass specials functions start with an `@`
+    bool hasAt = parser.scanner.scanChar(Character::$at);
+    sass::string name((hasAt ? "@" : "") + parser.identifier());
+    // Return new external callable object
+    return SASS_MEMORY_NEW(ExternalCallable, name,
+      parser.parseArgumentDeclaration2(), function);
+  }
+  // EO makeExternalCallable
+
+  // Register an external custom sass function on the global scope.
+  // Main entry point for custom functions passed through the C-API.
+  void Context::registerCustomFunction(struct SassFunctionCpp* function)
+  {
+    // Create the local environment
+    EnvFrame local(&varRoot, true);
+    // Put it on the stack where variables are created
+    ScopedStackFrame<EnvFrame> scoped(varStack, &local);
+    // Create a new external callable from the sass function
+    ExternalCallable* callable = makeExternalCallable(function);
+    // Get newly declared environment items
+    callable->idxs(local.getIdxs());
+    // Currently external functions are treated globally
+    if (functions.count(callable->name()) == 0) {
+      functions.insert(std::make_pair(callable->name(), callable));
+      varRoot.createFunction(callable->name());
+      fnCache.push_back(callable);
+    }
+  }
+  // EO registerCustomFunction
+
+  /*#########################################################################*/
+  // Interface for external custom functions
+  /*#########################################################################*/
 
   void Context::add_c_functions(SassFunctionListPtr functions)
   {
     if (functions == nullptr) return;
     for (auto function : *functions) {
+      if (function == nullptr) continue;
       c_functions.emplace_back(function);
     }
   }
@@ -172,6 +276,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   {
     if (headers == nullptr) return;
     for (auto header : *headers) {
+      if (header == nullptr) continue;
       c_headers.emplace_back(header);
     }
     // need to sort the array afterwards (no big deal)
@@ -182,13 +287,14 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   {
     if (importers == nullptr) return;
     for (auto importer : *importers) {
+      if (importer == nullptr) continue;
       c_importers.emplace_back(importer);
     }
     // need to sort the array afterwards (no big deal)
     sort(c_importers.begin(), c_importers.end(), sort_importers);
   }
 
-  void Context::add_c_function(SassFunctionPtr function)
+  void Context::add_c_function(struct SassFunctionCpp* function)
   {
     c_functions.emplace_back(function);
   }
@@ -205,29 +311,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     c_importers.emplace_back(importer);
     // need to sort the array afterwards (no big deal)
     sort (c_importers.begin(), c_importers.end(), sort_importers);
-  }
-
-  Context::~Context()
-  {
-    // free all strings we kept alive during compiler execution
-    // for (size_t n = 0; n < strings.size(); ++n) free(strings[n]);
-    // everything that gets put into sources will be freed by us
-    // this shouldn't have anything in it anyway!?
-    for (size_t m = 0; m < import_stack.size(); ++m) {
-      // sass_import_take_source(import_stack[m]);
-      // sass_import_take_srcmap(import_stack[m]);
-//      sass_delete_import(import_stack[m]);
-    }
-    // clear inner structures (vectors) and input source
-    import_stack.clear();
-    importStack.clear();
-    sources.clear();
-    sheets.clear();
-    functions.clear();
-    // builtins.clear();
-    // externals.clear();
-    // release logger
-    delete logger;
   }
 
   Data_Context::~Data_Context()
@@ -687,7 +770,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     for (size_t i = 0, S = c_functions.size(); i < S; ++i)
     {
       ScopedStackFrame<EnvFrame> scoped(varStack, &varRoot);
-      register_c_function2(*this, c_functions[i]);
+      registerCustomFunction(c_functions[i]);
     }
 
 
@@ -782,77 +865,5 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
 
 
-  /*
-  struct SassValue* customSassFn(
-    const struct SassValue* s_args,
-    void* cookie
-  ) {
-    return sass_clone_value(s_args);
-  }
-
-  struct SassValue* call_fn_foo(const struct SassValue* v, SassFunctionPtr cb, struct SassCompilerCpp* compiler)
-  {
-    // we actually abuse the void* to store an "int"
-    return sass_clone_value(v);
-  }
-  */
-
-
-  void register_c_function2(Context& ctx, SassFunctionPtr descr)
-  {
-    EnvFrame local(&ctx.varRoot, true);
-    ScopedStackFrame<EnvFrame> scoped(ctx.varStack, &local);
-    ExternalCallable* callable = make_c_function2(descr, ctx);
-    callable->idxs(local.getIdxs());
-    ctx.functions.insert(std::make_pair(callable->name(), callable));
-    ctx.varRoot.createFunction(callable->name());
-    ctx.fnCache.push_back(callable);
-  }
-
-  /*#########################################################################*/
-  // Interface for built in functions
-  /*#########################################################################*/
-
-  void Context::registerBuiltInFunction(const sass::string& name,
-    const sass::string& signature, SassFnSig cb)
-  {
-    auto source = SASS_MEMORY_NEW(SourceString,
-      "sass://signature", "(" + signature + ")");
-    auto args = ArgumentDeclaration::parse(*this, source);
-    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
-    functions.insert(std::make_pair(name, callable));
-    varRoot.createFunction(name);
-    fnCache.push_back(callable);
-  }
-
-  void Context::registerBuiltInOverloadFns(const sass::string& name,
-    const std::vector<std::pair<sass::string, SassFnSig>>& overloads)
-  {
-    SassFnPairs pairs;
-    for (auto overload : overloads) {
-      SourceDataObj source = SASS_MEMORY_NEW(SourceString,
-        "sass://signature", "(" + overload.first + ")");
-      auto args = ArgumentDeclaration::parse(*this, source);
-      pairs.emplace_back(std::make_pair(args, overload.second));
-    }
-    auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
-    functions.insert(std::make_pair(name, callable));
-    varRoot.createFunction(name);
-    fnCache.push_back(callable);
-  }
-
-  void Context::loadBuiltInFunctions()
-  {
-    Functions::Lists::registerFunctions(*this);
-    Functions::Maps::registerFunctions(*this);
-    Functions::Math::registerFunctions(*this);
-    Functions::Strings::registerFunctions(*this);
-    Functions::Colors::registerFunctions(*this);
-    Functions::Selectors::registerFunctions(*this);
-    Functions::Meta::registerFunctions(*this);
-  }
-
-  /*#########################################################################*/
-  /*#########################################################################*/
 
 }

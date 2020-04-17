@@ -11,7 +11,6 @@
   </ItemGroup>
   <ItemGroup Label="LibSass Headers">
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast2c.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_css.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_base.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_def_macros.hpp" />
@@ -23,7 +22,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_values.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\backtrace.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\base64vlq.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\c2ast.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\character.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\charcode.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\color_maps.hpp" />
@@ -174,8 +172,6 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_context.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_functions.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\operators.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast2c.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\c2ast.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\character.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\environment_stack.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source_map.cpp" />

@@ -74,6 +74,19 @@ namespace Sass {
   private:
 
     /*#########################################################################*/
+    // Create a new external callable from the sass function. Parses
+    // function signature into function name and argument declaration.
+    /*#########################################################################*/
+    ExternalCallable* makeExternalCallable(struct SassFunctionCpp* function);
+
+    /*#########################################################################*/
+    // Register an external custom sass function on the global scope.
+    // Main entry point for custom functions passed through the C-API.
+    /*#########################################################################*/
+    void registerCustomFunction(struct SassFunctionCpp* function);
+
+
+    /*#########################################################################*/
     // Called once to register all built-in functions.
     // This will invoke parsing for parameter lists.
     /*#########################################################################*/
@@ -169,7 +182,7 @@ namespace Sass {
 
     sass::vector<SassImporterPtr> c_headers;
     sass::vector<SassImporterPtr> c_importers;
-    sass::vector<SassFunctionPtr> c_functions;
+    sass::vector<struct SassFunctionCpp*> c_functions;
 
     void add_c_header(SassImporterPtr header);
     void add_c_headers(SassImporterListPtr headers);
@@ -177,7 +190,7 @@ namespace Sass {
     void add_c_importer(SassImporterPtr importer);
     void add_c_importers(SassImporterListPtr importers);
 
-    void add_c_function(SassFunctionPtr function);
+    void add_c_function(struct SassFunctionCpp* function);
     void add_c_functions(SassFunctionListPtr functions);
 
     const sass::string indent; // String to be used for indentation
