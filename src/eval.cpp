@@ -19,7 +19,6 @@
 #include "ast_def_macros.hpp"
 #include "position.hpp"
 #include "sass/values.h"
-#include "c2ast.hpp"
 #include "context.hpp"
 #include "backtrace.hpp"
 #include "debugger.hpp"
@@ -394,8 +393,6 @@ namespace Sass {
         std::move(rest), separator, std::move(named));
       positional.emplace_back(argumentList);
     }
-
-    ValueObj result;
     // try {
     // double epsilon = std::pow(0.1, ctx.c_options.precision + 1);
 
@@ -403,7 +400,7 @@ namespace Sass {
 
     struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
     for (size_t i = 0; i < positional.size(); i++) {
-      sass_list_set_value(c_args, i, positional[i]->toSassValue());
+      sass_list_push(c_args, positional[i]->toSassValue());
     }
 
     struct SassValue* c_val =
@@ -421,7 +418,7 @@ namespace Sass {
       sass_delete_value(c_args);
       error(message, pstate, traces);
     }
-    result = c2ast(c_val, traces, pstate);
+    ValueObj result(reinterpret_cast<Value*>(c_val));
     sass_delete_value(c_val);
     sass_delete_value(c_args);
     if (argumentList == nullptr) return result.detach();
@@ -567,7 +564,7 @@ namespace Sass {
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
-      sass_list_set_value(c_args, 0, message->toSassValue());
+      sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, compiler());
       sass_delete_value(c_args);
       sass_delete_value(c_val);
@@ -607,7 +604,7 @@ namespace Sass {
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
-      sass_list_set_value(c_args, 0, message->toSassValue());
+      sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, compiler());
       options().output_style = outstyle;
       // callee_stack().pop_back();
@@ -645,7 +642,7 @@ namespace Sass {
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
-      sass_list_set_value(c_args, 0, message->toSassValue());
+      sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, compiler());
       options().output_style = outstyle;
       // callee_stack().pop_back();

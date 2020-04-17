@@ -31,6 +31,8 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
+  void register_c_function2(Context&, SassFunctionPtr);
+
   inline bool sort_importers (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
@@ -48,6 +50,28 @@ namespace Sass {
     }
     return out_path;
   }
+
+
+  // most functions are very simple
+#define IMPLEMENT_1_ARG_FN(fn) \
+struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct Sass_Compiler* comp) \
+{ \
+  if (!sass_value_is_list(s_args)) { \
+    return sass_make_error("Invalid arguments for " #fn); \
+  } \
+  if (sass_list_get_length(s_args) != 1) { \
+    return sass_make_error("Exactly one arguments expected for " #fn); \
+  } \
+  struct SassValue* inp = sass_list_get_value(s_args, 0); \
+  if (!sass_value_is_number(inp)) { \
+    return sass_make_error("You must pass a number into " #fn); \
+  } \
+  double inp_nr = sass_number_get_value(inp); \
+  const char* inp_unit = sass_number_get_unit(inp); \
+  return sass_make_number(fn(inp_nr), inp_unit); \
+}
+
+  IMPLEMENT_1_ARG_FN(sin)
 
   Context::Context(struct SassContextCpp& c_ctx)
   : CWD(File::get_cwd()),
@@ -102,6 +126,8 @@ namespace Sass {
     // sort the items by priority (lowest first)
     sort (c_headers.begin(), c_headers.end(), sort_importers);
     sort (c_importers.begin(), c_importers.end(), sort_importers);
+
+    // register_c_function2(*this, sass_make_function("sin($x)", fn_sin, 0));
 
     emitter.set_filename(abs2rel(output_path, source_map_file, CWD));
 
@@ -465,7 +491,7 @@ namespace Sass {
           // Try to load it like normal
           else if (abs_path) {
             // Create a new internal file importer
-            const Importer importer(imp_path, ctx_path);
+            const Importer importer(abs_path, ctx_path);
             // Create import statement in the document
             Include include(load_import(importer, pstate));
             auto statement = SASS_MEMORY_NEW(DynamicImport, pstate, imp_path);
@@ -491,8 +517,6 @@ namespace Sass {
     return has_import;
   }
   // EO callCustomLoader
-
-  void register_c_function2(Context&, SassFunctionPtr);
 
   sass::string Context::render(Block_Obj root)
   {
