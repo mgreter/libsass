@@ -1404,13 +1404,4 @@ namespace Sass {
 
 }
 
-class QWE {
-
-};
-
-// Not sure if there is a better way?
-// typedef Sass::Number SassyNumber;
-// struct SassyNumber : Sass::Number {};
-// struct Boolean : Sass::Boolean {};
-
 #endif

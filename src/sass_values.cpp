@@ -23,11 +23,10 @@ extern "C" {
   Custom_Error* getError(struct SassValue* value) { return reinterpret_cast<Custom_Error*>(value); }
   Custom_Warning* getWarning(struct SassValue* value) { return reinterpret_cast<Custom_Warning*>(value); }
 
-  struct SassValue* newSassValue(Value* value) { value->refcount += 1; return reinterpret_cast<struct SassValue*>(value); }
-
-
-  // this works!??
-  struct SassyNumber;
+  // Helper function to return a newly created value that must be deleted when done.
+  // Since we return a reference counted object, we must act accordingly when delete is called.
+  // Calling delete is not optional, since it will decrease the reference counter for later disposal.
+  struct SassValue* newSassValue(Value* value) { value->refcount += 1; return value->toSassValue(); }
 
   // Return the sass tag for a generic sass value
   enum Sass_Tag ADDCALL sass_value_get_tag(struct SassValue* v) { return getValue(v)->getTag(); }
@@ -231,7 +230,7 @@ extern "C" {
 
   struct SassValue* ADDCALL sass_value_stringify (struct SassValue* v, bool compressed, int precision)
   {
-    ValueObj val = sass_value_to_ast_node(v);
+    Value* val = getValue(v);
     Sass_Inspect_Options options(compressed ? COMPRESSED : NESTED, precision);
     sass::string str(val->to_string(options));
     return sass_make_qstring(str.c_str());
@@ -244,8 +243,8 @@ extern "C" {
 
     try {
 
-      ValueObj lhs = sass_value_to_ast_node(a);
-      ValueObj rhs = sass_value_to_ast_node(b);
+      Value* lhs = getValue(a);
+      Value* rhs = getValue(b);
       struct Sass_Inspect_Options options(NESTED, 5);
 
       // see if it's a relational expression
@@ -256,8 +255,8 @@ extern "C" {
         case Sass_OP::GTE: return sass_make_boolean(Operators::gte(lhs, rhs));
         case Sass_OP::LT:  return sass_make_boolean(Operators::lt(lhs, rhs));
         case Sass_OP::LTE: return sass_make_boolean(Operators::lte(lhs, rhs));
-        case Sass_OP::AND: return ast_node_to_sass_value(lhs->isTruthy() ? rhs : lhs);
-        case Sass_OP::OR:  return ast_node_to_sass_value(lhs->isTruthy() ? lhs : rhs);
+        case Sass_OP::AND: return (lhs->isTruthy() ? rhs : lhs)->toSassValue();
+        case Sass_OP::OR:  return (lhs->isTruthy() ? lhs : rhs)->toSassValue();
         default: break;
       }
 
@@ -295,7 +294,7 @@ extern "C" {
       if (!rv) return sass_make_error("invalid return value");
 
       // convert result back to AST node
-      return ast_node_to_sass_value(rv.ptr());
+      return rv->toSassValue();
     }
 
     // simply pass the error message back to the caller for now
