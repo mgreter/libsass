@@ -17,9 +17,9 @@ namespace Sass {
   SourceMap::SourceMap() : current_position(), file("stdin") { }
   SourceMap::SourceMap(const sass::string& file) : current_position(), file(file) { }
 
-  sass::string SourceMap::render_srcmap(Context &ctx) {
+  sass::string SourceMap::render_srcmap(Context &ctx, bool include_sources, bool source_map_file_urls) {
 
-    const bool include_sources = ctx.c_options.source_map_contents;
+    // const bool include_sources = ctx.c_options.source_map_contents;
     const sass::vector<sass::string> links = ctx.srcmap_links88;
     const sass::vector<SourceDataObj>& sources(ctx.sources);
 
@@ -40,7 +40,7 @@ namespace Sass {
     JsonNode *json_sources = json_mkarray();
     for (size_t i = 0; i < source_index.size(); ++i) {
       sass::string source(links[source_index[i]]);
-      if (ctx.c_options.source_map_file_urls) {
+      if (source_map_file_urls) {
         source = File::rel2abs(source, ".", CWD);
         // check for windows abs path
         if (source[0] == '/') {

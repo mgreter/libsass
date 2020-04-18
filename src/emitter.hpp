@@ -31,7 +31,7 @@ namespace Sass {
       void add_open_mapping(const AST_Node* node);
       void add_close_mapping(const AST_Node* node);
       void schedule_mapping(const AST_Node* node);
-      sass::string render_srcmap(Context &ctx);
+      sass::string render_srcmap(Context &ctx, bool include_sources, bool source_map_file_urls);
       SourceSpan remap(const SourceSpan& pstate);
 
     public:

@@ -423,45 +423,45 @@ extern "C" {
     return reinterpret_cast<Sass::Context*>(context)->source_comments;
   }
 
-  bool ADDCALL sass_context_get_source_map_embed(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->source_map_embed;
-  }
-  bool ADDCALL sass_context_get_source_map_contents(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->source_map_contents;
-  }
+  // bool ADDCALL sass_context_get_source_map_embed(struct SassContext* context)
+  // {
+  //   return reinterpret_cast<Sass::Context*>(context)->source_map_embed;
+  // }
+  // bool ADDCALL sass_context_get_source_map_contents(struct SassContext* context)
+  // {
+  //   return reinterpret_cast<Sass::Context*>(context)->source_map_contents;
+  // }
 
-  bool ADDCALL sass_context_get_source_map_file_urls(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->source_comments;
-  }
+  // bool ADDCALL sass_context_get_source_map_file_urls(struct SassContext* context)
+  // {
+  //   return reinterpret_cast<Sass::Context*>(context)->source_map_file_urls;
+  // }
 
-  bool ADDCALL sass_context_get_omit_source_map_url(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->omit_source_map_url;
-  }
+  // bool ADDCALL sass_context_get_omit_source_map_url(struct SassContext* context)
+  // {
+  //   return reinterpret_cast<Sass::Context*>(context)->omit_source_map_url;
+  // }
 
   void ADDCALL sass_context_set_source_comments(struct SassContext* context, bool source_comments)
   {
     reinterpret_cast<Sass::Context*>(context)->source_comments = source_comments;
   }
-  void ADDCALL sass_context_set_source_map_embed(struct SassContext* context, bool source_map_embed)
-  {
-    reinterpret_cast<Sass::Context*>(context)->source_map_embed = source_map_embed;
-  }
-  void ADDCALL sass_context_set_source_map_contents(struct SassContext* context, bool source_map_contents)
-  {
-    reinterpret_cast<Sass::Context*>(context)->source_map_contents = source_map_contents;
-  }
-  void ADDCALL sass_context_set_source_map_file_urls(struct SassContext* context, bool source_map_file_urls)
-  {
-    reinterpret_cast<Sass::Context*>(context)->source_map_file_urls = source_map_file_urls;
-  }
-  void ADDCALL sass_context_set_omit_source_map_url(struct SassContext* context, bool omit_source_map_url)
-  {
-    reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
-  }
+  // void ADDCALL sass_context_set_source_map_embed(struct SassContext* context, bool source_map_embed)
+  // {
+  //   reinterpret_cast<Sass::Context*>(context)->source_map_embed = source_map_embed;
+  // }
+  // void ADDCALL sass_context_set_source_map_contents(struct SassContext* context, bool source_map_contents)
+  // {
+  //   reinterpret_cast<Sass::Context*>(context)->source_map_contents = source_map_contents;
+  // }
+  // void ADDCALL sass_context_set_source_map_file_urls(struct SassContext* context, bool source_map_file_urls)
+  // {
+  //   reinterpret_cast<Sass::Context*>(context)->source_map_file_urls = source_map_file_urls;
+  // }
+  // void ADDCALL sass_context_set_omit_source_map_url(struct SassContext* context, bool omit_source_map_url)
+  // {
+  //   reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
+  // }
 
   const char* ADDCALL sass_context_get_input_path(struct SassContext* context)
   {
@@ -500,7 +500,7 @@ extern "C" {
 
   void ADDCALL sass_context_set_source_map_file(struct SassContext* context, const char* source_map_file)
   {
-    reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
+    // reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
     reinterpret_cast<Sass::Context*>(context)->source_map_file88 = source_map_file;
   }
   void ADDCALL sass_context_set_source_map_root(struct SassContext* context, const char* source_map_root)

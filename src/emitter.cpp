@@ -44,8 +44,8 @@ namespace Sass {
   void Emitter::add_source_index(size_t idx)
   { wbuf.smap.source_index.push_back(idx); }
 
-  sass::string Emitter::render_srcmap(Context &ctx)
-  { return wbuf.smap.render_srcmap(ctx); }
+  sass::string Emitter::render_srcmap(Context &ctx, bool include_sources, bool source_map_file_urls)
+  { return wbuf.smap.render_srcmap(ctx, include_sources, source_map_file_urls); }
 
   void Emitter::set_filename(const sass::string& str)
   { wbuf.smap.file = str; }

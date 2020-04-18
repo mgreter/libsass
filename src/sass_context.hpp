@@ -48,6 +48,23 @@ struct SassCompiler : SassOutputOptionsCpp {
   size_t error_column;
   Sass::SourceDataObj error_src;
 
+  // embed sourceMappingUrl as data URI
+  bool source_map_embed;
+
+  // embed include contents in maps
+  bool source_map_contents;
+
+  // create file URLs for sources
+  bool source_map_file_urls;
+
+  // Disable sourceMappingUrl in css output
+  bool omit_source_map_url;
+
+  // Path to source map file
+  // Enables source map generation
+  // Used to create sourceMappingUrl
+  string source_map_file;
+
   SassCompiler(struct SassContext* context,
     struct SassImportCpp* entry);
 
@@ -67,16 +84,16 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   typedef Sass::sass::vector<string> strings;
 
   // embed sourceMappingUrl as data URI
-  bool source_map_embed;
+  // bool source_map_embed;
 
   // embed include contents in maps
-  bool source_map_contents;
+  // bool source_map_contents;
 
   // create file URLs for sources
-  bool source_map_file_urls;
+  // bool source_map_file_urls;
 
   // Disable sourceMappingUrl in css output
-  bool omit_source_map_url;
+  // bool omit_source_map_url;
 
   // The input path is used for source map
   // generation. It can be used to define
@@ -105,7 +122,7 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   // Path to source map file
   // Enables source map generation
   // Used to create sourceMappingUrl
-  string source_map_file;
+  // string source_map_file;
 
   // Directly inserted in source maps
   string source_map_root;

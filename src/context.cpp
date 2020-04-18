@@ -750,7 +750,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   sass::string Context::format_embedded_source_map()
   {
-    sass::string map = emitter.render_srcmap(*this);
+    bool include_sources = false; // ToDo
+    bool source_map_file_urls = false;
+    sass::string map = emitter.render_srcmap(*this, include_sources, source_map_file_urls);
     std::istringstream is( map.c_str() );
     std::ostringstream buffer;
     base64::encoder E;
