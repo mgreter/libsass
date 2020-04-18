@@ -173,6 +173,7 @@ namespace Sass {
 
     Extender extender;
 
+    // Needed for eval, so add to eval
     struct SassCompiler* c_compiler;
 
     // Absolute paths to all includes we have seen so far.
@@ -228,7 +229,6 @@ namespace Sass {
     // Add a new import to the context (called from `import_url`)
     Include load_import(const Importer&, SourceSpan pstate);
 
-    Sass_Output_Style output_style() { return c_options.output_style; };
     sass::vector<sass::string> get_included_files(bool skip = false, size_t headers = 0);
 
   private:
