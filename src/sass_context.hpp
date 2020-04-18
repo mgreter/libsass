@@ -73,7 +73,6 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
 
   // Vectors with paths
   strings include_paths;
-  strings plugin_paths;
 
 };
 

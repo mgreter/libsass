@@ -121,7 +121,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // collectIncludePaths(c_options.include_path);
     collectIncludePaths(c_options.include_paths);
     // collectPluginPaths(c_options.plugin_path);
-    collectPluginPaths(c_options.plugin_paths);
+
+    // ToDo: call explodePluginPaths!
+    collectPluginPaths(plugin_paths);
 
     // load plugins and register custom behaviors
     for (auto plug : plugin_paths88) plugins.load_plugins(plug);
@@ -652,7 +654,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
 
   // parse root block from includes
-  Block_Obj Context::compile(BlockObj root, bool plainCss)
+  Block_Obj Context::compile(BlockObj root, bool plainCss, struct SassCompiler& compiler)
   {
 
     // abort if there is no data
@@ -662,7 +664,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     //    debug_ast(root);
     
-    Eval eval(*this);
+    Eval eval(*this, compiler);
     eval.plainCss = plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());
     for (size_t i = 0; i < fnCache.size(); i++) {

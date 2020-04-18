@@ -119,85 +119,12 @@ extern "C" {
     // TODO: Not even a stdout so this is not even a console?
     return false;
   }
-  /*
-  // generic compilation function (not exported, use file/data compile instead)
-  static SassCompilerCpp* sass_prepare_context (Context* cpp_ctx) throw()
-  {
 
-    SassOptionsCpp* c_ctx = &cpp_ctx->c_options;
-
-    try {
-
-      // register our custom handlers
-      cpp_ctx->addCustomHeaders(c_ctx->c_headers);
-      cpp_ctx->addCustomFunctions(c_ctx->c_functions);
-      cpp_ctx->addCustomImporters(c_ctx->c_importers);
-
-      // reset error status
-      c_ctx->error_status = 0;
-      // reset error position
-      c_ctx->error_line = sass::string::npos;
-      c_ctx->error_column = sass::string::npos;
-
-      // allocate a new compiler instance
-      void* ctxmem = new SassCompilerCpp{};
-      if (ctxmem == 0) { std::cerr << "Error allocating memory for context" << STRMLF; return 0; }
-      SassCompilerCpp* compiler = (struct SassCompilerCpp*) ctxmem;
-      compiler->state = SASS_COMPILER_CREATED;
-
-      // store in sass compiler
-      compiler->c_ctx = c_ctx;
-      compiler->cpp_ctx = cpp_ctx;
-      cpp_ctx->c_compiler = compiler;
-      cpp_ctx->logger->style = c_ctx->logstyle;
-
-      // use to parse block
-      return compiler;
-
-    }
-    // pass errors to generic error handler
-    catch (...) { handle_errors(c_ctx); }
-
-    // error
-    return 0;
-
-  }
-  */
   
   struct SassCompiler* ADDCALL sass_make_compiler(struct SassContext* context, struct SassImportCpp* entry)
   {
     return new SassCompiler(context, entry);
   }
-
-  /*
-  sass::string Context::render(BlockObj root)
-  {
-    // check for valid block
-    if (!root) return 0;
-    // start the render process
-    root->perform(&emitter);
-    // finish emitter stream
-    emitter.finalize();
-    // get the resulting buffer from stream
-    OutputBuffer& emitted = emitter.get_buffer();
-    // should we append a source map url?
-    if (!c_options.omit_source_map_url) {
-      // generate an embedded source map
-      if (c_options.source_map_embed) {
-        emitted.buffer += linefeed;
-        emitted.buffer += format_embedded_source_map();
-      }
-      // or just link the generated one
-      else if (!source_map_file88.empty()) {
-        emitted.buffer += linefeed;
-        emitted.buffer += format_source_mapping_url(source_map_file88);
-      }
-    }
-    // create a copy of the resulting buffer string
-    // this must be freed or taken over by implementor
-    return emitted.buffer;
-  }
-  */
 
   static int handle_error(struct SassCompiler* compiler)
   {
@@ -384,40 +311,6 @@ extern "C" {
 
 
 
-  /*
-  int ADDCALL sass_compiler_execute(struct SassCompilerCpp* compiler)
-  {
-    if (compiler == 0) return 1;
-    if (compiler->state == SASS_COMPILER_EXECUTED) return 0;
-    if (compiler->state != SASS_COMPILER_PARSED) return -1;
-    if (compiler->c_ctx == NULL) return 1;
-    if (compiler->cpp_ctx == NULL) return 1;
-    Context* cpp_ctx = compiler->cpp_ctx;
-    if (compiler->root.isNull()) {
-      compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
-      return 1;
-    }
-    if (compiler->c_ctx->error_status) {
-      compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
-      return compiler->c_ctx->error_status;
-    }
-    compiler->state = SASS_COMPILER_EXECUTED;
-    Block_Obj root = compiler->root;
-    // compile the parsed root block
-    try { compiler->c_ctx->output_string = cpp_ctx->render(root); }
-    // pass caught errors to generic error handler
-    catch (...) {
-      compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
-      return handle_errors(compiler->c_ctx) | 1;
-    }
-    // generate source map json and store on context
-    compiler->c_ctx->source_map_string = cpp_ctx->render_srcmap();
-    compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
-    // success
-    return 0;
-  }
-  */
-
   void ADDCALL sass_delete_compiler(struct SassCompiler* context)
   {
     // delete context;
@@ -450,18 +343,10 @@ extern "C" {
   {
     reinterpret_cast<Sass::Context*>(context)->precision = precision;
   }
-  void ADDCALL sass_context_set_output_style(struct SassContext* context, enum Sass_Output_Style output_style)
-  {
-    reinterpret_cast<Sass::Context*>(context)->c_options.output_style = output_style;
-  }
 
   int ADDCALL sass_context_get_precision(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->precision;
-  }
-  enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->c_options.output_style;
   }
 
   bool ADDCALL sass_context_get_source_comments(struct SassContext* context)
@@ -469,91 +354,11 @@ extern "C" {
     return reinterpret_cast<Sass::Context*>(context)->source_comments;
   }
 
-  // bool ADDCALL sass_context_get_source_map_embed(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->source_map_embed;
-  // }
-  // bool ADDCALL sass_context_get_source_map_contents(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->source_map_contents;
-  // }
-
-  // bool ADDCALL sass_context_get_source_map_file_urls(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->source_map_file_urls;
-  // }
-
-  // bool ADDCALL sass_context_get_omit_source_map_url(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->omit_source_map_url;
-  // }
-
   void ADDCALL sass_context_set_source_comments(struct SassContext* context, bool source_comments)
   {
     reinterpret_cast<Sass::Context*>(context)->source_comments = source_comments;
   }
-  // void ADDCALL sass_context_set_source_map_embed(struct SassContext* context, bool source_map_embed)
-  // {
-  //   reinterpret_cast<Sass::Context*>(context)->source_map_embed = source_map_embed;
-  // }
-  // void ADDCALL sass_context_set_source_map_contents(struct SassContext* context, bool source_map_contents)
-  // {
-  //   reinterpret_cast<Sass::Context*>(context)->source_map_contents = source_map_contents;
-  // }
-  // void ADDCALL sass_context_set_source_map_file_urls(struct SassContext* context, bool source_map_file_urls)
-  // {
-  //   reinterpret_cast<Sass::Context*>(context)->source_map_file_urls = source_map_file_urls;
-  // }
-  // void ADDCALL sass_context_set_omit_source_map_url(struct SassContext* context, bool omit_source_map_url)
-  // {
-  //   reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
-  // }
 
-  // const char* ADDCALL sass_context_get_input_path(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->input_path.c_str();
-  // }
-
-//  const char* ADDCALL sass_context_get_output_path(struct SassContext* context)
-//  {
-//    return reinterpret_cast<Sass::Context*>(context)->output_path.c_str();
-//  }
-
-  // const char* ADDCALL sass_context_get_source_map_file(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->source_map_file88.c_str();
-  // }
-  // const char* ADDCALL sass_context_get_source_map_root(struct SassContext* context)
-  // {
-  //   return reinterpret_cast<Sass::Context*>(context)->source_map_root.c_str();
-  // }
-
-  void ADDCALL sass_context_set_entry_point(struct SassContext* context, struct SassImportCpp* entry)
-  {
-    reinterpret_cast<Sass::Context*>(context)->entry = entry;
-  }
-
-  // void ADDCALL sass_context_set_input_path(struct SassContext* context, const char* input_path)
-  // {
-  //   // reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
-  //   // reinterpret_cast<Sass::Context*>(context)->input_path88 = input_path;
-  // }
-  //void ADDCALL sass_context_set_output_path(struct SassContext* context, const char* output_path)
-  //{
-  //  // reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
-  //  reinterpret_cast<Sass::Context*>(context)->output_path88 = output_path;
-  //}
-
-  // void ADDCALL sass_context_set_source_map_file(struct SassContext* context, const char* source_map_file)
-  // {
-  //   // reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
-  //   // reinterpret_cast<Sass::Context*>(context)->source_map_file88 = source_map_file;
-  // }
-  // void ADDCALL sass_context_set_source_map_root(struct SassContext* context, const char* source_map_root)
-  // {
-  //   // reinterpret_cast<Sass::Context*>(context)->source_map_root = source_map_root;
-  //   // reinterpret_cast<Sass::Context*>(context)->source_map_root88 = source_map_root;
-  // }
 
 
 }

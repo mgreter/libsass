@@ -131,7 +131,7 @@ namespace Sass {
     // The attached options passed from C-API
     struct SassOptionsCpp& c_options;
 
-    struct SassImportCpp* entry; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    strings plugin_paths;
 
     size_t head_imports;
     Plugins plugins;
@@ -183,6 +183,9 @@ namespace Sass {
     sass::vector<SourceDataObj> included_sources;
 
     sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
+
+    // mainly used in context::find_includes
+    // which is in turn called by Context::load_import
     sass::vector<sass::string> include_paths88; // lookup paths for includes
 
     sass::vector<SassImporterPtr> c_headers88;
@@ -211,7 +214,9 @@ namespace Sass {
       // return compileImport(import);
     }
 
-    virtual BlockObj compile(BlockObj root, bool plainCss);
+    // ToDO, maybe belongs to compiler?
+    virtual BlockObj compile(BlockObj root, bool plainCss, struct SassCompiler& compiler);
+
     // ToDo: return const string& ?
     // virtual sass::string render(Block_Obj root);
     // virtual sass::string render_srcmap();

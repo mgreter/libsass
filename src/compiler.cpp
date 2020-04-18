@@ -43,7 +43,7 @@ void SassCompiler::parse()
 
 void SassCompiler::compile()
 {
-  compiled = reinterpret_cast<Sass::Context*>(context)->compile(parsed, false);
+  compiled = reinterpret_cast<Sass::Context*>(context)->compile(parsed, false, *this);
   // update the compiler state
   state = SassCompilerState::COMPILED;
 }

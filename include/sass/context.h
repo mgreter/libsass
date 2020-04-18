@@ -86,7 +86,6 @@ ADDAPI bool ADDCALL sass_context_get_source_comments(struct SassContext* context
 // 
 // Setters for context option values
 ADDAPI void ADDCALL sass_context_set_precision(struct SassContext* context, int precision);
-ADDAPI void ADDCALL sass_context_set_output_style(struct SassContext* context, enum Sass_Output_Style output_style);
 
 ADDAPI void ADDCALL sass_context_set_source_comments(struct SassContext* context, bool source_comments);
 // ADDAPI void ADDCALL sass_compiler_set_source_map_embed(struct SassCompiler* compiler, bool source_map_embed);

@@ -36,7 +36,7 @@
 namespace Sass {
 
 
-  Eval::Eval(Context& ctx) :
+  Eval::Eval(Context& ctx, struct SassCompiler& asd) :
     inMixin(false),
     blockStack(),
     mediaStack(),
@@ -51,6 +51,7 @@ namespace Sass {
     plainCss(false),
     at_root_without_rule(false),
     ctx(ctx),
+    compiler(asd),
     traces(*ctx.logger)
   {
 
@@ -247,7 +248,7 @@ namespace Sass {
     //   visitArgumentInvocation(arguments);
     // invocation << callable->name();
     // invocation << args->toString();
-    result = callback(pstate, positional, ctx, *this, selfAssign); // 7%
+    result = callback(pstate, positional, ctx, compiler, *this, selfAssign); // 7%
       // }
 
     if (argumentList == nullptr) return result.detach();
@@ -319,7 +320,7 @@ namespace Sass {
     //   visitArgumentInvocation(arguments);
     // invocation << callable->name();
     // invocation << args->toString();
-    result = callback(pstate, positional, ctx, *this, selfAssign); // 13%
+    result = callback(pstate, positional, ctx, compiler, *this, selfAssign); // 13%
       // }
 
     // Collect the items
@@ -447,11 +448,6 @@ namespace Sass {
     return ctx.c_options;
   }
 
-  struct SassCompiler* Eval::compiler()
-  {
-    return ctx.c_compiler;
-  }
-
   std::pair<
     sass::vector<ExpressionObj>,
     EnvKeyFlatMap<ExpressionObj>
@@ -560,7 +556,7 @@ namespace Sass {
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
-      struct SassValue* c_val = c_func(c_args, c_function, compiler());
+      struct SassValue* c_val = c_func(c_args, c_function, &compiler);
       sass_delete_value(c_args);
       sass_delete_value(c_val);
 
@@ -600,7 +596,7 @@ namespace Sass {
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
-      struct SassValue* c_val = c_func(c_args, c_function, compiler());
+      struct SassValue* c_val = c_func(c_args, c_function, &compiler);
       options().output_style = outstyle;
       // callee_stack().pop_back();
       sass_delete_value(c_args);
@@ -638,7 +634,7 @@ namespace Sass {
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
-      struct SassValue* c_val = c_func(c_args, c_function, compiler());
+      struct SassValue* c_val = c_func(c_args, c_function, &compiler);
       options().output_style = outstyle;
       // callee_stack().pop_back();
       sass_delete_value(c_args);

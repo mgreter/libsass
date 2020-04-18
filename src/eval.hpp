@@ -8,6 +8,7 @@
 
 #include "context.hpp"
 #include "listize.hpp"
+#include "compiler.hpp"
 #include "operation.hpp"
 #include "environment.hpp"
 
@@ -55,8 +56,9 @@ namespace Sass {
 
 
     Context& ctx;
+    struct SassCompiler& compiler;
     BackTraces& traces;
-    Eval(Context& ctx);
+    Eval(Context& ctx, struct SassCompiler& compiler);
     ~Eval();
 
     Value* _runUserDefinedCallable(
@@ -97,7 +99,7 @@ namespace Sass {
     const sass::string cwd();
     CalleeStack& callee_stack();
     struct Sass_Inspect_Options& options();
-    struct SassCompiler* compiler();
+    // struct SassCompiler* compiler();
 
     Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, const SourceSpan& pstate);
 
