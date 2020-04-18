@@ -25,7 +25,7 @@ namespace Sass {
 
       // The canonical URL for this module's source file. This may be `null`
       // if the module was loaded from a string without a URL provided.
-      // SassImportPtr import;
+      // struct SassImportCpp* import;
 
       // the import type
       Sass_Import_Type syntax;

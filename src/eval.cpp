@@ -1909,7 +1909,7 @@ namespace Sass {
     SelectorListObj slist;
     if (r->interpolation()) {
       // SourceData* source = ctx.importStack.back();
-      SassImportPtr imp = ctx.import_stack.back();
+      struct SassImportCpp* imp = ctx.import_stack.back();
       bool plainCss = imp->srcdata->getType() == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);
     }
@@ -2256,7 +2256,7 @@ namespace Sass {
     const StyleSheet& sheet = ctx.sheets.at(include.abs_path);
 
     // Create C-API exposed object to query
-    SassImportPtr import = sass_make_import(
+    struct SassImportCpp* import = sass_make_import(
       include.imp_path.c_str(),
       include.abs_path.c_str(),
       0, 0, sheet.syntax

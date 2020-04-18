@@ -8,18 +8,18 @@ extern "C" {
 #endif
 
 // Creator for sass custom importer return argument list
-ADDAPI SassImportListPtr ADDCALL sass_make_import_list();
-ADDAPI void ADDCALL sass_delete_import_list(SassImportListPtr list);
-ADDAPI size_t ADDCALL sass_import_list_size(SassImportListPtr list);
-ADDAPI struct SassImportCpp* ADDCALL sass_import_list_shift(SassImportListPtr list);
-ADDAPI void ADDCALL sass_import_list_push(SassImportListPtr list, struct SassImportCpp*);
+ADDAPI struct SassImportListCpp* ADDCALL sass_make_import_list();
+ADDAPI void ADDCALL sass_delete_import_list(struct SassImportListCpp* list);
+ADDAPI size_t ADDCALL sass_import_list_size(struct SassImportListCpp* list);
+ADDAPI struct SassImportCpp* ADDCALL sass_import_list_shift(struct SassImportListCpp* list);
+ADDAPI void ADDCALL sass_import_list_push(struct SassImportListCpp* list, struct SassImportCpp*);
 
 // Creator for sass custom importer return argument list
-ADDAPI SassImporterListPtr ADDCALL sass_make_importer_list ();
-ADDAPI void ADDCALL sass_delete_importer_list(SassImporterListPtr list);
-ADDAPI size_t ADDCALL sass_importer_list_size(SassImporterListPtr list);
-ADDAPI struct SassImporterCpp* ADDCALL sass_importer_list_shift(SassImporterListPtr list);
-ADDAPI void ADDCALL sass_importer_list_push(SassImporterListPtr list, struct SassImporterCpp*);
+ADDAPI struct SassImporterListCpp* ADDCALL sass_make_importer_list ();
+ADDAPI void ADDCALL sass_delete_importer_list(struct SassImporterListCpp* list);
+ADDAPI size_t ADDCALL sass_importer_list_size(struct SassImporterListCpp* list);
+ADDAPI struct SassImporterCpp* ADDCALL sass_importer_list_shift(struct SassImporterListCpp* list);
+ADDAPI void ADDCALL sass_importer_list_push(struct SassImporterListCpp* list, struct SassImporterCpp*);
 
 // Creators for custom importer callback (with some additional pointer)
 // The pointer is mostly used to store the callback into the actual binding
@@ -69,14 +69,14 @@ ADDAPI const char* ADDCALL sass_import_get_error_message (struct SassImportCpp*)
 ADDAPI void ADDCALL sass_delete_import (struct SassImportCpp*);
 
 // Creators for sass function list and function descriptors
-ADDAPI SassFunctionListPtr ADDCALL sass_make_function_list();
-ADDAPI size_t ADDCALL sass_function_list_size(SassFunctionListPtr list);
-ADDAPI struct SassFunctionCpp* ADDCALL sass_function_list_shift(SassFunctionListPtr list);
-ADDAPI void ADDCALL sass_function_list_push(SassFunctionListPtr list, struct SassFunctionCpp*);
+ADDAPI struct SassFunctionListCpp* ADDCALL sass_make_function_list();
+ADDAPI size_t ADDCALL sass_function_list_size(struct SassFunctionListCpp* list);
+ADDAPI struct SassFunctionCpp* ADDCALL sass_function_list_shift(struct SassFunctionListCpp* list);
+ADDAPI void ADDCALL sass_function_list_push(struct SassFunctionListCpp* list, struct SassFunctionCpp*);
 
 ADDAPI struct SassFunctionCpp* ADDCALL sass_make_function (const char* signature, SassFunctionLambdaCpp cb, void* cookie);
 ADDAPI void ADDCALL sass_delete_function (struct SassFunctionCpp* entry);
-ADDAPI void ADDCALL sass_delete_function_list (SassFunctionListPtr list);
+ADDAPI void ADDCALL sass_delete_function_list (struct SassFunctionListCpp* list);
 
 // Getters for custom function descriptors
 ADDAPI const char* ADDCALL sass_function_get_signature (struct SassFunctionCpp* cb);

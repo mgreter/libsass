@@ -13,11 +13,11 @@
 #include <sass/functions.h>
 #include <sass/context.h>
 
-// typedef SassImportPtr Sass_Import_Entry;
+// typedef struct SassImportCpp* Sass_Import_Entry;
 // typedef struct SassImporterCpp* Sass_Importer_Entry;
 // typedef SassFunctionPtr Sass_Function_Entry;
 // 
-// typedef SassImportListPtr Sass_Import_List;
+// typedef struct SassImportListCpp* Sass_Import_List;
 // typedef SassImporterListPtr Sass_Importer_List;
 // typedef SassFunctionListPtr Sass_Function_List;
 // 

@@ -122,7 +122,7 @@ namespace Sass {
 
   protected:
 
-    BlockObj parseImport(SassImportPtr import);
+    BlockObj parseImport(struct SassImportCpp* import);
 
     void prepareEnvironment();
 
@@ -165,7 +165,7 @@ namespace Sass {
     // Sheets are filled after resources are parsed
     std::map<const sass::string, StyleSheet> sheets;
 
-    sass::vector<SassImportPtr> import_stack;
+    sass::vector<struct SassImportCpp*> import_stack;
     sass::vector<SourceDataObj> importStack;
 
     sass::vector<SassCalleeCpp> callee_stack;
@@ -227,7 +227,7 @@ namespace Sass {
     // virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 
-    BlockObj register_import(SassImportPtr& entry);
+    BlockObj register_import(struct SassImportCpp* entry);
     void register_resource(const Include&, char* contents, char* srcmap);
     void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 

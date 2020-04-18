@@ -367,7 +367,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     return vec;
   }
 
-  BlockObj Context::register_import(SassImportPtr& import)
+  BlockObj Context::register_import(struct SassImportCpp* import)
   {
 
     SourceData* source = import->srcdata;
@@ -387,7 +387,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
-      SassImportPtr parent = import_stack[i];
+      struct SassImportCpp* parent = import_stack[i];
       if (std::strcmp(parent->srcdata->getAbsPath(), import->srcdata->getAbsPath()) == 0) {
         // make path relative to the current directory
         sass::string stack("An @import loop has been found:");
@@ -449,7 +449,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   {
 
     // get pointer to the loaded content
-    SassImportPtr import = sass_make_import(
+    struct SassImportCpp* import = sass_make_import(
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
       contents, srcmap,
@@ -534,7 +534,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       // Get the external importer function
       SassImporterLambdaCpp fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
-      SassImportListPtr includes = fn(imp_path.c_str(), importer, c_compiler);
+      struct SassImportListCpp* includes = fn(imp_path.c_str(), importer, c_compiler);
       // External provider want to handle this
       if (includes != nullptr) {
         // Get the list of possible includes
@@ -635,7 +635,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     */
   }
 
-  BlockObj Context::parseImport(SassImportPtr import)
+  BlockObj Context::parseImport(struct SassImportCpp* import)
   {
     // add the entry to the stack
     import_stack.emplace_back(import);
