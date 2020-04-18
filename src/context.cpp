@@ -26,16 +26,16 @@
 #include "debugger.hpp"
 #include "logger.hpp"
 
+SassCompiler322::SassCompiler322(struct SassImportCpp* entry) :
+  entry(entry),
+  emitter(SassOutputOptionsCpp{}),
+  logger(5, SASS_LOGGER_AUTO)
+  {}
+
 namespace Sass {
   using namespace Constants;
   using namespace File;
   using namespace Sass;
-
-  Compiler::Compiler(struct SassImportCpp* entry) :
-    entry(entry),
-    emitter(SassOutputOptionsCpp{}),
-    logger(5, SASS_LOGGER_AUTO)
-  {}
 
   inline bool cmpImporterPrio (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }

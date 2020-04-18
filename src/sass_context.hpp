@@ -5,7 +5,31 @@
 #include "sass/context.h"
 #include "ast_fwd_decl.hpp"
 #include "backtrace.hpp"
+#include "logger.hpp"
+#include "output.hpp"
 #include "sass.hpp"
+
+
+struct SassCompiler322 {
+
+  // main entry point for compilation
+  struct SassImportCpp* entry;
+
+  // absolute paths to includes
+  Sass::sass::vector<Sass::sass::string> included_files;
+  // relative includes for sourcemap
+  Sass::sass::vector<Sass::sass::string> srcmap_links;
+
+  // Emitter helper
+  Sass::Output emitter;
+  // Logging helper
+  Sass::Logger logger;
+
+  SassCompiler322(struct SassImportCpp* entry);
+
+  // vectors above have same size
+  // sass::string entry_path88;
+};
 
 // sass config options structure
 struct SassOptionsCpp : SassOutputOptionsCpp {

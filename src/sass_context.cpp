@@ -480,6 +480,11 @@ extern "C" {
     options->linefeed = LFEED;
   }
 
+  struct SassCompiler322* ADDCALL sass_make_compiler3(struct SassImportCpp* entry)
+  {
+    return new SassCompiler322(entry);
+  }
+
   SassOptionsCpp* ADDCALL sass_make_options (void)
   {
     struct SassOptionsCpp* options = new SassOptionsCpp{};

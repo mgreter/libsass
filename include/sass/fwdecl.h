@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+struct SassCompiler322;
 struct SassContextReal;
 
 // Forward declare structs

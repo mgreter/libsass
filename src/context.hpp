@@ -19,30 +19,8 @@
 #include "logger.hpp"
 #include "output.hpp"
 
+
 namespace Sass {
-
-  class Compiler {
-
-    // main entry point for compilation
-    struct SassImportCpp* entry;
-
-    // absolute paths to includes
-    sass::vector<sass::string> included_files;
-    // relative includes for sourcemap
-    sass::vector<sass::string> srcmap_links;
-
-    // Emitter helper
-    Output emitter;
-    // Logging helper
-    Logger logger;
-
-    Compiler(struct SassImportCpp* entry);
-
-    // vectors above have same size
-    // sass::string entry_path88;
-
-
-  };
 
   class Context : public SassContextCpp {
   public:
