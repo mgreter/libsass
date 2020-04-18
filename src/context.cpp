@@ -156,6 +156,68 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
 
   }
+
+
+  Context::Context()
+    : SassContextCpp(),
+    CWD(File::get_cwd()),
+    c_options(*this),
+    entry_path88(""),
+    head_imports(0),
+    plugins(),
+    emitter(c_options),
+    varRoot(),
+    logger(new Logger(5, SASS_LOGGER_ASCII_MONO)),
+    sources(),
+    sheets(),
+    import_stack(),
+    importStack(),
+    callee_stack(),
+    functions(),
+    extender(Extender::NORMAL, logger->callStack),
+    c_compiler(NULL),
+
+    // Initialize C-API arrays for custom functionality
+    c_headers88(sass::vector<SassImporterPtr>()),
+    c_importers88(sass::vector<SassImporterPtr>()),
+    c_functions88(sass::vector<struct SassFunctionCpp*>()),
+
+
+    input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
+    output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88))),
+    source_map_file88(make_canonical_path(c_options.source_map_file)),
+    source_map_root88(make_canonical_path(c_options.source_map_root))
+
+  {
+
+    // Sass 3.4: The current working directory will no longer be placed onto the Sass load path by default.
+    // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.
+    // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
+
+    // collect more paths from different options
+    collectIncludePaths(c_options.include_path);
+    collectIncludePaths(c_options.include_paths);
+    collectPluginPaths(c_options.plugin_path);
+    collectPluginPaths(c_options.plugin_paths);
+
+    // load plugins and register custom behaviors
+    for (auto plug : plugin_paths88) plugins.load_plugins(plug);
+    for (auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
+    for (auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
+    for (auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
+
+    // sort the items by priority (lowest first)
+    sort(c_headers88.begin(), c_headers88.end(), cmpImporterPrio);
+    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
+
+    // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
+    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
+    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
+
+    emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
+
+  }
+
   // Object destructor
   Context::~Context()
   {
@@ -262,18 +324,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Obsolete when c_ctx and cpp_ctx are merged.
   /*#########################################################################*/
 
-  void Context::addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions)
+  void Context::addCustomHeaders(sass::vector<struct SassImporterCpp*>& headers)
   {
-    for (auto function : functions) {
-      if (function == nullptr) continue;
-      c_functions88.emplace_back(function);
-    }
-  }
-
-  void Context::addCustomHeaders(SassImporterListPtr headers)
-  {
-    if (headers == nullptr) return;
-    for (auto header : *headers) {
+    for (auto header : headers) {
       if (header == nullptr) continue;
       c_headers88.emplace_back(header);
     }
@@ -281,15 +334,22 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
-  void Context::addCustomImporters(SassImporterListPtr importers)
+  void Context::addCustomImporters(sass::vector<struct SassImporterCpp*>& importers)
   {
-    if (importers == nullptr) return;
-    for (auto importer : *importers) {
+    for (auto importer : importers) {
       if (importer == nullptr) continue;
       c_importers88.emplace_back(importer);
     }
     // need to sort the array afterwards (no big deal)
     sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
+  }
+
+  void Context::addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions)
+  {
+    for (auto function : functions) {
+      if (function == nullptr) continue;
+      c_functions88.emplace_back(function);
+    }
   }
 
   /*#########################################################################*/
@@ -689,26 +749,54 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // store entry path
     entry_path88 = abs_path;
 
-    // create entry only for import stack
-    SassImportPtr import = sass_make_import(
+    return compileImport(sass_make_import(
       input_path88.c_str(),
       abs_path.c_str(),
       contents,
       0, type
+    ));
+
+  }
+
+  SassImportPtr ADDCALL sass_make_file_import(const char* input_path88)
+  {
+    // check if entry file is given
+    if (input_path88 == nullptr) return {};
+
+    // create absolute path from input filename
+    // ToDo: this should be resolved via custom importers
+    sass::string abs_path(rel2abs(input_path88, ".", "."));
+
+    // try to load the entry file
+    char* contents = slurp_file(abs_path, ".");
+/*
+    // alternatively also look inside each include path folder
+    // I think this differs from ruby sass (IMO too late to remove)
+    for (size_t i = 0, S = include_paths88.size(); contents == 0 && i < S; ++i) {
+      // build absolute path for this include path entry
+      abs_path = rel2abs(input_path88, include_paths88[i], CWD);
+      // try to load the resulting path
+      contents = slurp_file(abs_path, CWD);
+    }
+    */
+    // abort early if no content could be loaded (various reasons)
+    if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path88));
+
+    // store entry path
+    // entry_path88 = abs_path;
+
+    return sass_make_import(
+      input_path88,
+      abs_path.c_str(),
+      contents,
+      0, SASS_IMPORT_AUTO
     );
 
-    // add the entry to the stack
-    import_stack.emplace_back(import);
+  }
 
-    // Prepare environment
-    prepareEnvironment();
-
-    register_import(import);
-
-    importStack.emplace_back(sources.back());
-
-    return compile();
-
+  SassImportPtr ADDCALL sass_make_data_import(char* source_string)
+  {
+    return nullptr;
   }
 
   Block_Obj Data_Context::parse(Sass_Import_Type type)
@@ -723,14 +811,18 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // ToDo: this may be resolved via custom importers
     sass::string abs_path(rel2abs(entry_path88, ".", CWD));
 
-    // create entry only for the import stack
-    SassImportPtr import = sass_make_import(
+    return compileImport(sass_make_import(
       input_path88.c_str(),
       input_path88.c_str(),
       sass_copy_string(source_c_str),
       sass_copy_string(srcmap_c_str),
       type
-    );
+    ));
+
+  }
+
+  Block_Obj Context::compileImport(SassImportPtr import)
+  {
     // add the entry to the stack
     import_stack.emplace_back(import);
     // importStack2.emplace_back(source);
@@ -745,6 +837,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // create root ast tree node
     return compile();
+
   }
 
   void Context::prepareEnvironment()
@@ -854,4 +947,111 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
 
 
+}
+
+
+struct SassContextReal* ADDCALL sass_make_context()
+{
+  return reinterpret_cast<SassContextReal*>(new Sass::Context());
+}
+
+void ADDCALL sass_context_set_precision(struct SassContextReal* context, int precision)
+{
+  reinterpret_cast<Sass::Context*>(context)->precision = precision;
+}
+void ADDCALL sass_context_set_output_style(struct SassContextReal* context, enum Sass_Output_Style output_style)
+{
+  reinterpret_cast<Sass::Context*>(context)->c_options.output_style = output_style;
+}
+
+int ADDCALL sass_context_get_precision(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->precision;
+}
+enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->c_options.output_style;
+}
+
+bool ADDCALL sass_context_get_source_comments(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_comments;
+}
+
+bool ADDCALL sass_context_get_source_map_embed(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_map_embed;
+}
+bool ADDCALL sass_context_get_source_map_contents(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_map_contents;
+}
+
+bool ADDCALL sass_context_get_source_map_file_urls(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_comments;
+}
+
+bool ADDCALL sass_context_get_omit_source_map_url(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->omit_source_map_url;
+}
+
+void ADDCALL sass_context_set_source_comments(struct SassContextReal* context, bool source_comments)
+{
+  reinterpret_cast<Sass::Context*>(context)->source_comments = source_comments;
+}
+void ADDCALL sass_context_set_source_map_embed(struct SassContextReal* context, bool source_map_embed)
+{
+  reinterpret_cast<Sass::Context*>(context)->source_map_embed = source_map_embed;
+}
+void ADDCALL sass_context_set_source_map_contents(struct SassContextReal* context, bool source_map_contents)
+{
+  reinterpret_cast<Sass::Context*>(context)->source_map_contents = source_map_contents;
+}
+void ADDCALL sass_context_set_source_map_file_urls(struct SassContextReal* context, bool source_map_file_urls)
+{
+  reinterpret_cast<Sass::Context*>(context)->source_map_file_urls = source_map_file_urls;
+}
+void ADDCALL sass_context_set_omit_source_map_url(struct SassContextReal* context, bool omit_source_map_url)
+{
+  reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
+}
+
+const char* ADDCALL sass_context_get_input_path(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->input_path.c_str();
+}
+
+const char* ADDCALL sass_context_get_output_path(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->output_path.c_str();
+}
+
+const char* ADDCALL sass_context_get_source_map_file(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_map_file.c_str();
+}
+const char* ADDCALL sass_context_get_source_map_root(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_map_root.c_str();
+}
+
+
+void ADDCALL sass_context_set_input_path(struct SassContextReal* context, const char* input_path)
+{
+  reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
+}
+void ADDCALL sass_context_set_output_path(struct SassContextReal* context, const char* output_path)
+{
+  reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
+}
+
+void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file)
+{
+  reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
+}
+void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, const char* source_map_root)
+{
+  reinterpret_cast<Sass::Context*>(context)->source_map_root = source_map_root;
 }

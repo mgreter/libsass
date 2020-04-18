@@ -485,22 +485,11 @@ extern "C" {
   // helper function, not exported, only accessible locally
   static void sass_reset_options (struct SassOptionsCpp* options)
   {
-    // free pointer before
-    // or copy/move them
-    options->c_importers = 0;
-    options->c_headers = 0;
   }
 
   // helper function, not exported, only accessible locally
   static void sass_clear_options (struct SassOptionsCpp* options)
   {
-    if (options == 0) return;
-    // Deallocate custom functions, headers and imports
-    sass_delete_importer_list(options->c_importers);
-    sass_delete_importer_list(options->c_headers);
-    // Reset our pointers
-    options->c_importers = 0;
-    options->c_headers = 0;
   }
 
   // helper function, not exported, only accessible locally
@@ -534,6 +523,11 @@ extern "C" {
   void ADDCALL sass_delete_options (struct SassOptionsCpp* options)
   {
     sass_clear_options(options); delete options;
+  }
+
+  void ADDCALL sass_delete_context(SassContextReal* context)
+  {
+    delete reinterpret_cast<Context*>(context);
   }
 
   // Deallocate all associated memory with file context
@@ -585,9 +579,26 @@ extern "C" {
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_contents);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_file_urls);
   IMPLEMENT_SASS_OPTION_ACCESSOR(bool, omit_source_map_url);
+
+
+  void ADDCALL sass_option_add_c_function(struct SassOptionsCpp* options, SassFunctionPtr function)
+  {
+    options->c_functions.push_back(function);
+  }
+
+  void ADDCALL sass_option_add_c_importer(struct SassOptionsCpp* options, SassImporterPtr importer)
+  {
+    options->c_importers.push_back(importer);
+  }
+
+  void ADDCALL sass_option_add_c_header(struct SassOptionsCpp* options, SassImporterPtr header)
+  {
+    options->c_headers.push_back(header);
+  }
+
 //   IMPLEMENT_SASS_OPTION_ACCESSOR(SassFunctionListPtr, c_functions);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_importers);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_headers);
+  // IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_importers);
+  // IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_headers);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, indent);
   IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, linefeed);
   IMPLEMENT_SASS_OPTION_STRING2_SETTER(plugin_path);

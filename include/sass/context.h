@@ -20,9 +20,15 @@ enum Sass_Compiler_State {
 
 // Create and initialize an option struct
 ADDAPI struct SassOptionsCpp* ADDCALL sass_make_options (void);
+
+ADDAPI struct SassContextReal* ADDCALL sass_make_context();
+
 // Create and initialize a specific context
 ADDAPI struct SassFileContextCpp* ADDCALL sass_make_file_context (const char* input_path);
 ADDAPI struct SassDataContextCpp* ADDCALL sass_make_data_context (char* source_string);
+
+ADDAPI SassImportPtr ADDCALL sass_make_file_import(const char* input_path);
+ADDAPI SassImportPtr ADDCALL sass_make_data_import(char* source_string);
 
 // Call the compilation step for the specific context
 ADDAPI int ADDCALL sass_compile_file_context (struct SassFileContextCpp* ctx);
@@ -41,6 +47,7 @@ ADDAPI int ADDCALL sass_compiler_execute(struct SassCompilerCpp* compiler);
 // This does _not_ include any contexts or options
 ADDAPI void ADDCALL sass_delete_compiler(struct SassCompilerCpp* compiler);
 ADDAPI void ADDCALL sass_delete_options(struct SassOptionsCpp* options);
+ADDAPI void ADDCALL sass_delete_context(struct SassContextReal* context);
 
 // Release all memory allocated and also ourself
 ADDAPI void ADDCALL sass_delete_file_context (struct SassFileContextCpp* ctx);
@@ -76,9 +83,40 @@ ADDAPI const char* ADDCALL sass_option_get_input_path (struct SassOptionsCpp* op
 ADDAPI const char* ADDCALL sass_option_get_output_path (struct SassOptionsCpp* options);
 ADDAPI const char* ADDCALL sass_option_get_source_map_file (struct SassOptionsCpp* options);
 ADDAPI const char* ADDCALL sass_option_get_source_map_root (struct SassOptionsCpp* options);
-ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_headers (struct SassOptionsCpp* options);
-ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_importers (struct SassOptionsCpp* options);
-ADDAPI SassFunctionListPtr ADDCALL sass_option_get_c_functions (struct SassOptionsCpp* options);
+// ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_headers (struct SassOptionsCpp* options);
+// ADDAPI SassImporterListPtr ADDCALL sass_option_get_c_importers (struct SassOptionsCpp* options);
+// ADDAPI SassFunctionListPtr ADDCALL sass_option_get_c_functions (struct SassOptionsCpp* options);
+
+
+// Getters for context option values
+ADDAPI int ADDCALL sass_context_get_precision(struct SassContextReal* options);
+ADDAPI enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContextReal* options);
+
+ADDAPI bool ADDCALL sass_context_get_source_comments(struct SassContextReal* context);
+ADDAPI bool ADDCALL sass_context_get_source_map_embed(struct SassContextReal* context);
+ADDAPI bool ADDCALL sass_context_get_source_map_contents(struct SassContextReal* context);
+ADDAPI bool ADDCALL sass_context_get_source_map_file_urls(struct SassContextReal* context);
+ADDAPI bool ADDCALL sass_context_get_omit_source_map_url(struct SassContextReal* context);
+
+ADDAPI const char* ADDCALL sass_context_get_input_path(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_output_path(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_source_map_file(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_source_map_root(struct SassContextReal* context);
+
+// Setters for context option values
+ADDAPI void ADDCALL sass_context_set_precision(struct SassContextReal* context, int precision);
+ADDAPI void ADDCALL sass_context_set_output_style(struct SassContextReal* context, enum Sass_Output_Style output_style);
+
+ADDAPI void ADDCALL sass_context_set_source_comments(struct SassContextReal* context, bool source_comments);
+ADDAPI void ADDCALL sass_context_set_source_map_embed(struct SassContextReal* context, bool source_map_embed);
+ADDAPI void ADDCALL sass_context_set_source_map_contents(struct SassContextReal* context, bool source_map_contents);
+ADDAPI void ADDCALL sass_context_set_source_map_file_urls(struct SassContextReal* context, bool source_map_file_urls);
+ADDAPI void ADDCALL sass_context_set_omit_source_map_url(struct SassContextReal* context, bool omit_source_map_url);
+
+ADDAPI void ADDCALL sass_context_set_input_path(struct SassContextReal* context, const char* input_path);
+ADDAPI void ADDCALL sass_context_set_output_path(struct SassContextReal* context, const char* output_path);
+ADDAPI void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file);
+ADDAPI void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, const char* source_map_root);
 
 // Setters for Context_Option values
 ADDAPI void ADDCALL sass_option_set_precision (struct SassOptionsCpp* options, int precision);
@@ -96,9 +134,9 @@ ADDAPI void ADDCALL sass_option_set_plugin_path (struct SassOptionsCpp* options,
 ADDAPI void ADDCALL sass_option_set_include_path (struct SassOptionsCpp* options, const char* include_path);
 ADDAPI void ADDCALL sass_option_set_source_map_file (struct SassOptionsCpp* options, const char* source_map_file);
 ADDAPI void ADDCALL sass_option_set_source_map_root (struct SassOptionsCpp* options, const char* source_map_root);
-ADDAPI void ADDCALL sass_option_set_c_headers (struct SassOptionsCpp* options, SassImporterListPtr c_headers);
-ADDAPI void ADDCALL sass_option_set_c_importers (struct SassOptionsCpp* options, SassImporterListPtr c_importers);
-ADDAPI void ADDCALL sass_option_set_c_functions (struct SassOptionsCpp* options, SassFunctionListPtr c_functions);
+// ADDAPI void ADDCALL sass_option_set_c_headers (struct SassOptionsCpp* options, SassImporterListPtr c_headers);
+// ADDAPI void ADDCALL sass_option_set_c_importers (struct SassOptionsCpp* options, SassImporterListPtr c_importers);
+// ADDAPI void ADDCALL sass_option_set_c_functions (struct SassOptionsCpp* options, SassFunctionListPtr c_functions);
 
 
 // Getters for SassContextCpp values
@@ -121,6 +159,9 @@ ADDAPI const char* ADDCALL sass_option_get_include_path(struct SassOptionsCpp* o
 // Calculate the size of the stored null terminated array
 ADDAPI size_t ADDCALL sass_context_get_included_files(struct SassContextCpp* ctx);
 ADDAPI const char* ADDCALL sass_context_get_included_file(struct SassContextCpp* ctx, size_t i);
+
+ADDAPI void ADDCALL sass_option_add_c_function(struct SassOptionsCpp* options, SassFunctionPtr function);
+ADDAPI void ADDCALL sass_option_add_c_header(struct SassOptionsCpp* options, SassImporterPtr header);
 
 // Take ownership of memory (value on context is set to 0)
 // ADDAPI char* ADDCALL sass_context_take_error_json (struct SassContextCpp* ctx);

@@ -74,9 +74,9 @@ namespace Sass {
     /*#########################################################################*/
     // Helpers for `sass_prepare_context`
     /*#########################################################################*/
-    void addCustomHeaders(SassImporterListPtr headers);
+    void addCustomHeaders(sass::vector<struct SassImporterCpp*>& headers);
+    void addCustomImporters(sass::vector<struct SassImporterCpp*>& importers);
     void addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions);
-    void addCustomImporters(SassImporterListPtr importers);
 
   private:
 
@@ -119,6 +119,8 @@ namespace Sass {
 
 
   protected:
+
+    Block_Obj compileImport(SassImportPtr import);
 
     void prepareEnvironment();
 
@@ -202,8 +204,12 @@ namespace Sass {
     const sass::string source_map_root88; // path for sourceRoot property (pass-through)
 
     virtual ~Context();
+    Context();
     Context(struct SassContextCpp&);
-    virtual Block_Obj parse(Sass_Import_Type type) = 0;
+    virtual Block_Obj parse(Sass_Import_Type type) {
+      std::cerr << "Untangle me\n";
+      return {};
+    }
     virtual Block_Obj compile();
     virtual sass::string render(Block_Obj root);
     virtual sass::string render_srcmap();
@@ -231,6 +237,10 @@ namespace Sass {
   public:
     const sass::string& cwd() { return CWD; };
   };
+
+  // Maybe I should create a source instead?
+  // sass_make_file_source
+  // sass_context_set_source
 
   class File_Context : public Context {
   public:

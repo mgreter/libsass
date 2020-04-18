@@ -62,10 +62,10 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   Sass::sass::vector<struct SassFunctionCpp*> c_functions;
 
   // List of custom importers
-  SassImporterListPtr c_importers;
+  Sass::sass::vector<struct SassImporterCpp*> c_importers;
 
   // List of custom headers
-  SassImporterListPtr c_headers;
+  Sass::sass::vector<struct SassImporterCpp*> c_headers;
 
 };
 
