@@ -24,7 +24,8 @@ namespace Sass {
     return json_mkstring(str.c_str());
   }
 
-  static void handle_string_error(SassContextCpp* c_ctx, const sass::string& msg, int severety)
+  /*
+    static void handle_string_error(SassContextCpp* c_ctx, const sass::string& msg, int severety)
   {
     sass::ostream msg_stream;
     JsonNode* json_err = json_mkobject();
@@ -32,193 +33,14 @@ namespace Sass {
     json_append_member(json_err, "status", json_mknumber(severety));
     json_append_member(json_err, "message", json_mkstring(msg.c_str()));
     json_append_member(json_err, "formatted", json_mkstream(msg_stream));
-    try { c_ctx->error_json = json_stringify(json_err, "  "); }
-    catch (...) {}
-    c_ctx->error_message = msg_stream.str();
-    c_ctx->error_text = msg;
-    c_ctx->error_status = severety;
+    // try { c_ctx->error_json = json_stringify(json_err, "  "); }
+    // catch (...) {}
+    // c_ctx->error_message = msg_stream.str();
+    // c_ctx->error_text = msg;
+    // c_ctx->error_status = severety;
     json_delete(json_err);
   }
 
-
-
-
-
-  static int handle_error(SassContextCpp* c_ctx) {
-    try {
-      throw;
-    }
-    catch (Exception::Base& e) {
-
-      Logger logger(10, c_ctx->logstyle);
-
-      sass::ostream& msg_stream = logger.errors;
-      sass::string cwd(Sass::File::get_cwd());
-      sass::string msg_prefix("Error");
-      bool got_newline = false;
-      msg_stream << msg_prefix << ": ";
-      const char* msg = e.what();
-      while (msg && *msg) {
-        if (*msg == '\r') {
-          got_newline = true;
-        }
-        else if (*msg == '\n') {
-          got_newline = true;
-        }
-        else if (got_newline) {
-          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
-          got_newline = false;
-        }
-        msg_stream << *msg;
-        ++msg;
-      }
-      if (!got_newline) msg_stream << "\n";
-
-      auto pstate = SourceSpan::tmp("[NOPE]");
-      if (e.traces.empty()) {
-        std::cerr << "THIS IS OLD AND NOT YET\n";
-      }
-      else {
-        pstate = e.traces.back().pstate;
-      }
-
-      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), cwd, cwd));
-			logger.writeStackTraces(logger.errors, e.traces, "  ");
-      JsonNode* json_err = json_mkobject();
-      json_append_member(json_err, "status", json_mknumber(1));
-      json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
-      json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
-      json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
-      json_append_member(json_err, "message", json_mkstring(e.what()));
-      json_append_member(json_err, "formatted", json_mkstream(msg_stream));
-      try { c_ctx->error_json = json_stringify(json_err, "  "); }
-      catch (...) {} // silently ignore this error?
-      c_ctx->error_message = msg_stream.str();
-      c_ctx->error_text = e.what();
-      c_ctx->error_status = 1;
-      c_ctx->error_file = pstate.getAbsPath();
-      c_ctx->error_line = pstate.getLine();
-      c_ctx->error_column = pstate.getColumn();
-      c_ctx->error_src = pstate.getContent();
-      json_delete(json_err);
-    }
-    catch (std::bad_alloc& ba) {
-      sass::sstream msg_stream;
-      msg_stream << "Unable to allocate memory: " << ba.what();
-      handle_string_error(c_ctx, msg_stream.str(), 2);
-    }
-    catch (std::exception& e) {
-      handle_string_error(c_ctx, e.what(), 3);
-    }
-    catch (sass::string& e) {
-      handle_string_error(c_ctx, e, 4);
-    }
-    catch (const char* e) {
-      handle_string_error(c_ctx, e, 4);
-    }
-    catch (...) {
-      handle_string_error(c_ctx, "unknown", 5);
-    }
-    return c_ctx->error_status;
-  }
-
-
-
-  static int handle_error(SassContextReal* a_ctx) {
-
-    Context* c_ctx = reinterpret_cast<Context*>(a_ctx);
-
-    try {
-      throw;
-    }
-    catch (Exception::Base & e) {
-
-      Logger logger(10, c_ctx->logstyle);
-
-      sass::ostream& msg_stream = logger.errors;
-      sass::string cwd(Sass::File::get_cwd());
-      sass::string msg_prefix("Error");
-      bool got_newline = false;
-      msg_stream << msg_prefix << ": ";
-      const char* msg = e.what();
-      while (msg && *msg) {
-        if (*msg == '\r') {
-          got_newline = true;
-        }
-        else if (*msg == '\n') {
-          got_newline = true;
-        }
-        else if (got_newline) {
-          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
-          got_newline = false;
-        }
-        msg_stream << *msg;
-        ++msg;
-      }
-      if (!got_newline) msg_stream << "\n";
-
-      auto pstate = SourceSpan::tmp("[NOPE]");
-      if (e.traces.empty()) {
-        std::cerr << "THIS IS OLD AND NOT YET\n";
-      }
-      else {
-        pstate = e.traces.back().pstate;
-      }
-
-      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), cwd, cwd));
-      logger.writeStackTraces(logger.errors, e.traces, "  ");
-      JsonNode* json_err = json_mkobject();
-      json_append_member(json_err, "status", json_mknumber(1));
-      json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
-      json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
-      json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
-      json_append_member(json_err, "message", json_mkstring(e.what()));
-      json_append_member(json_err, "formatted", json_mkstream(msg_stream));
-      try { c_ctx->error_json = json_stringify(json_err, "  "); }
-      catch (...) {} // silently ignore this error?
-      c_ctx->error_message = msg_stream.str();
-      c_ctx->error_text = e.what();
-      c_ctx->error_status = 1;
-      c_ctx->error_file = pstate.getAbsPath();
-      c_ctx->error_line = pstate.getLine();
-      c_ctx->error_column = pstate.getColumn();
-      c_ctx->error_src = pstate.getContent();
-      json_delete(json_err);
-    }
-    catch (std::bad_alloc & ba) {
-      sass::sstream msg_stream;
-      msg_stream << "Unable to allocate memory: " << ba.what();
-      handle_string_error(c_ctx, msg_stream.str(), 2);
-    }
-    catch (std::exception & e) {
-      handle_string_error(c_ctx, e.what(), 3);
-    }
-    catch (sass::string & e) {
-      handle_string_error(c_ctx, e, 4);
-    }
-    catch (const char* e) {
-      handle_string_error(c_ctx, e, 4);
-    }
-    catch (...) {
-      handle_string_error(c_ctx, "unknown", 5);
-    }
-    return c_ctx->error_status;
-  }
-
-  // allow one error handler to throw another error
-  // this can happen with invalid utf8 and json lib
-  static int handle_errors(SassContextCpp* c_ctx) {
-    try { return handle_error(c_ctx); }
-    catch (...) { return handle_error(c_ctx); }
-  }
-
-  // allow one error handler to throw another error
-  // this can happen with invalid utf8 and json lib
-  static int handle_errors(SassContextReal* c_ctx) {
-    try { return handle_error(c_ctx); }
-    catch (...) { return handle_error(c_ctx); }
-  }
-  /*
   static Block_Obj sass_parse_block(struct SassCompiler* compiler) throw()
   {
 
@@ -370,21 +192,49 @@ extern "C" {
   }
   */
   
-  inline void init_options (struct SassOptionsCpp* options)
-  {
-    options->precision = 10;
-    options->indent = "  ";
-    options->linefeed = LFEED;
-  }
-
   struct SassCompiler* ADDCALL sass_make_compiler(struct SassContextReal* context, struct SassImportCpp* entry)
   {
     return new SassCompiler(context, entry);
   }
 
+
+  static int handle_error(struct SassCompiler* compiler)
+  {
+    try {
+      throw;
+    }
+    catch (Exception::Base & e) {
+      std::cerr << "Exception::Base\n";
+    }
+    catch (std::bad_alloc & ba) {
+      std::cerr << "Error std::bad_alloc\n";
+    }
+    catch (std::exception & e) {
+      std::cerr << "Error std::exception\n";
+    }
+    catch (sass::string & e) {
+      std::cerr << "Error sass::string\n";
+    }
+    catch (const char* e) {
+      std::cerr << "Error const char*\n";
+    }
+    catch (...) {
+      std::cerr << "Error any else\n";
+    }
+  }
+
+  // allow one error handler to throw another error
+  // this can happen with invalid utf8 and json lib
+  static int handle_errors(struct SassCompiler* compiler) {
+    try { return handle_error(compiler); }
+    catch (...) { return handle_error(compiler); }
+  }
+
   void ADDCALL sass_compiler_parse(struct SassCompiler* compiler)
   {
-    compiler->parse();
+    try { compiler->parse(); }
+    catch (...) { handle_errors(compiler); }
+
   }
 
   void ADDCALL sass_compiler_compile(struct SassCompiler* compiler)
@@ -398,6 +248,7 @@ extern "C" {
     compiler->output = output.buffer;
   }
 
+
   ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler* compiler)
   {
     return compiler->output.c_str();
@@ -410,8 +261,8 @@ extern "C" {
 
   void ADDCALL sass_context_print_stderr2(struct SassContextReal* context)
   {
-    const char* message = sass_context_get_stderr_string2(context);
-    if (message != nullptr) Terminal::print(message, true);
+    // const char* message = sass_context_get_stderr_string2(context);
+    // if (message != nullptr) Terminal::print(message, true);
   }
    
 

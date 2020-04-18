@@ -110,15 +110,6 @@ namespace Sass {
 
 }
 
-// input behaviors
-enum Sass_Input_Style {
-  SASS_CONTEXT_NULL,
-  SASS_CONTEXT_FILE,
-  SASS_CONTEXT_DATA,
-  SASS_CONTEXT_FOLDER
-};
-
-
 #define SASS_LOGGER_MONO 1
 #define SASS_LOGGER_COLOR 2
 #define SASS_LOGGER_ASCII 4
@@ -159,6 +150,9 @@ struct Sass_Inspect_Options {
 
 // sass config options structure
 struct SassOutputOptionsCpp : Sass_Inspect_Options {
+
+  typedef Sass::sass::string string;
+  typedef Sass::sass::vector<string> strings;
 
   // String to be used for indentation
   const char* indent;

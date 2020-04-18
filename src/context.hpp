@@ -121,7 +121,6 @@ namespace Sass {
 
   protected:
 
-    Block_Obj compileImport(SassImportPtr import);
     BlockObj parseImport(SassImportPtr import);
 
     void prepareEnvironment();
@@ -138,9 +137,8 @@ namespace Sass {
     // The attached options passed from C-API
     struct SassContextCpp& c_options;
 
-    sass::string entry_path88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     struct SassImportCpp* entry; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    BlockObj root;
+
     size_t head_imports;
     Plugins plugins;
     Output emitter; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -184,11 +182,14 @@ namespace Sass {
 
     struct SassCompiler* c_compiler;
 
-    // absolute paths to includes
-    sass::vector<sass::string> included_files88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    // Absolute paths to all includes we have seen so far.
+    // Consumers are encouraged to clear this vector after they
+    // have copied/moved the items after parsing the entry point.
+    // They should ideally be known for every stylesheet.
+    sass::vector<sass::string> included_files88;
+
     // relative includes for sourcemap
-    sass::vector<sass::string> srcmap_links88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    // vectors above have same size
+    sass::vector<sass::string> srcmap_links88;
 
     sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
     sass::vector<sass::string> include_paths88; // lookup paths for includes
@@ -209,19 +210,9 @@ namespace Sass {
     virtual ~Context();
     Context();
 
-    void parse2() {
-
-      entry_path88 = entry->srcdata->getAbsPath();
-      root = compileImport(entry);
-
-      // Now we must decide what to do!
-      // std::cerr << "Untangle me 22\n";
-      // return compileImport(import);
-    }
 
     BlockObj parse2(struct SassImportCpp* entry) {
 
-      entry_path88 = entry->srcdata->getAbsPath();
       return parseImport(entry);
 
       // Now we must decide what to do!
@@ -229,13 +220,6 @@ namespace Sass {
       // return compileImport(import);
     }
 
-    virtual Block_Obj parse(Sass_Import_Type type) {
-
-      // Now we must decide what to do!
-      std::cerr << "Untangle me\n";
-      return {};
-    }
-    virtual Block_Obj compile();
     virtual BlockObj compile(BlockObj root, bool plainCss);
     // ToDo: return const string& ?
     virtual sass::string render(Block_Obj root);

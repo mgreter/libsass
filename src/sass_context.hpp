@@ -36,6 +36,16 @@ struct SassCompiler : SassOutputOptionsCpp {
   Sass::sass::string output;
   Sass::sass::string srcmap;
 
+  // error status
+  int error_status;
+  string error_json;
+  string error_text;
+  string error_message;
+  // error position
+  size_t error_line;
+  size_t error_column;
+  Sass::SourceDataObj error_source;
+
   SassCompiler(struct SassContextReal* context,
     struct SassImportCpp* entry);
 
@@ -115,9 +125,6 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
 struct SassContextCpp : SassOptionsCpp
 {
 
-  // store context type info
-  enum Sass_Input_Style type;
-
   // store parser type info
   enum Sass_Import_Type parser;
 
@@ -128,26 +135,26 @@ struct SassContextCpp : SassOptionsCpp
   string output_string;
 
   // generated stderr data
-  string stderr_string;
+  // string stderr_string;
 
   // generated source map json
-  string source_map_string;
+  // string source_map_string;
 
   // error status
-  int error_status;
-  string error_json;
-  string error_text;
-  string error_message;
+  // int error_status;
+  // string error_json;
+  // string error_text;
+  // string error_message;
   // error position
-  string error_file;
-  size_t error_line;
-  size_t error_column;
+  // string error_file;
+  // size_t error_line;
+  // size_t error_column;
 
   // Should be real SourceData?
-  string error_src;
+  // string error_src;
 
   // report imported files
-  strings included_files;
+  // strings included_files;
 
 };
 

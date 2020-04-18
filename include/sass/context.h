@@ -87,21 +87,6 @@ ADDAPI void ADDCALL sass_context_set_output_path(struct SassContextReal* context
 ADDAPI void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file);
 ADDAPI void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, const char* source_map_root);
 
-
-
-
-ADDAPI const char* ADDCALL sass_context_get_output_string2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_stderr_string2(struct SassContextReal* context);
-ADDAPI int ADDCALL sass_context_get_error_status2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_error_json2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_error_text2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_error_message2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_error_file2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_error_src2(struct SassContextReal* context);
-ADDAPI size_t ADDCALL sass_context_get_error_line2(struct SassContextReal* context);
-ADDAPI size_t ADDCALL sass_context_get_error_column2(struct SassContextReal* context);
-ADDAPI const char* ADDCALL sass_context_get_source_map_string2(struct SassContextReal* context);
-
 // Getters for SassCompilerCpp options
 
 // Push function for paths (no manipulation support for now)

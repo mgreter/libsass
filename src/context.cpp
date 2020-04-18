@@ -37,7 +37,14 @@ SassCompiler::SassCompiler(struct SassContextReal* context, struct SassImportCpp
 
 void SassCompiler::parse()
 {
-  parsed = reinterpret_cast<Sass::Context*>(context)->parse2(entry);
+  Context* ctx = reinterpret_cast<Sass::Context*>(context);
+  parsed = ctx->parse2(entry);
+
+  // Move over the includes from the main context
+  // This effectively clears the original vector
+  // Not the cleanest API but was easy to implement
+  included_files = std::move(ctx->included_files88);
+
   // update the compiler state
   state = SassCompilerState::PARSED;
 }
@@ -142,7 +149,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     : SassContextCpp(),
     CWD(File::get_cwd()),
     c_options(*this),
-    entry_path88(""),
     head_imports(0),
     plugins(),
     emitter(c_options),
@@ -422,7 +428,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     included_files88.emplace_back(abs_path);
 
     // add a relative link to the source map output file
-    srcmap_links88.emplace_back(abs2rel(abs_path, source_map_file88, CWD));
+    // srcmap_links88.emplace_back(abs2rel(abs_path, source_map_file88, CWD));
 
     // add the entry to the stack
     import_stack.emplace_back(import);
@@ -688,6 +694,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   void Context::apply_custom_headers2(sass::vector<StatementObj>& statements, SourceSpan pstate)
   {
+    std::cerr << "Where is apply custom gone\n";
+    /*
     // create a custom import to resolve headers
     ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, pstate);
     // dispatch headers which will add custom functions
@@ -701,6 +709,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     for (ImportBase* inc : rule->elements()) {
       statements.emplace_back(inc);
     }
+    */
   }
 
   BlockObj Context::parseImport(SassImportPtr import)
@@ -722,26 +731,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   }
   
-
-  Block_Obj Context::compileImport(SassImportPtr import)
-  {
-    // add the entry to the stack
-    import_stack.emplace_back(import);
-    // importStack2.emplace_back(source);
-
-    // Prepare environment
-    prepareEnvironment();
-
-    // load and register import
-    register_import(import);
-
-    importStack.emplace_back(sources.back());
-
-    // create root ast tree node
-    return compile();
-
-  }
-
   void Context::prepareEnvironment()
   {
 
@@ -757,13 +746,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     }
 
 
-  }
-  // parse root block from includes
-  Block_Obj Context::compile()
-  {
-    // get root block from the first style sheet
-    StyleSheet sheet = sheets.at(entry_path88);
-    return compile(sheet.root, sheet.plainCss);
   }
 
   // parse root block from includes
@@ -971,51 +953,6 @@ void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, c
   reinterpret_cast<Sass::Context*>(context)->source_map_root88 = source_map_root;
 }
 
-
-const char* ADDCALL sass_context_get_output_string2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->output_string.c_str();
-}
-const char* ADDCALL sass_context_get_stderr_string2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->stderr_string.c_str();
-}
-int ADDCALL sass_context_get_error_status2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_status;
-}
-const char* ADDCALL sass_context_get_error_json2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_json.c_str();
-}
-const char* ADDCALL sass_context_get_error_text2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_text.c_str();
-}
-const char* ADDCALL sass_context_get_error_message2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_message.c_str();
-}
-const char* ADDCALL sass_context_get_error_file2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_file.c_str();
-}
-const char* ADDCALL sass_context_get_error_src2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_src.c_str();
-}
-size_t ADDCALL sass_context_get_error_line2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_line;
-}
-size_t ADDCALL sass_context_get_error_column2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->error_column;
-}
-const char* ADDCALL sass_context_get_source_map_string2(struct SassContextReal* context)
-{
-  return reinterpret_cast<Sass::Context*>(context)->source_map_string.c_str();
-}
 
 struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
 {
