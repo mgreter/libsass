@@ -115,7 +115,7 @@ extern "C" {
   {
     std::unordered_map<sass::string, bool> cache;
     sass::string resolved(File::find_include(file,
-      File::get_cwd(), opt->include_paths, cache));
+      CWD, opt->include_paths, cache));
     return sass_copy_c_string(resolved.c_str());
   }
 
@@ -125,7 +125,7 @@ extern "C" {
   {
     std::unordered_map<sass::string, bool> cache;
     sass::string resolved(File::find_file(file,
-      File::get_cwd(), opt->include_paths, cache));
+      CWD, opt->include_paths, cache));
     return sass_copy_c_string(resolved.c_str());
   }
 

@@ -98,9 +98,8 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   string include_path;
   string plugin_path;
 
-  // Include paths (linked string list)
+  // Vectors with paths
   strings include_paths;
-  // Plug-in paths (linked string list)
   strings plugin_paths;
 
   // Path to source map file
@@ -119,44 +118,6 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
 
   // List of custom headers
   Sass::sass::vector<struct SassImporterCpp*> c_headers;
-
-};
-
-
-// base for all contexts
-struct SassContextCpp : SassOptionsCpp
-{
-
-  // store parser type info
-  enum Sass_Import_Type parser;
-
-  // logger style (color/unicode)
-  enum Sass_Logger_Style logstyle;
-
-  // generated output data
-  string output_string;
-
-  // generated stderr data
-  // string stderr_string;
-
-  // generated source map json
-  // string source_map_string;
-
-  // error status
-  // int error_status;
-  // string error_json;
-  // string error_text;
-  // string error_message;
-  // error position
-  // string error_file;
-  // size_t error_line;
-  // size_t error_column;
-
-  // Should be real SourceData?
-  // string error_src;
-
-  // report imported files
-  // strings included_files;
 
 };
 

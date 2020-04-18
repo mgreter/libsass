@@ -43,9 +43,8 @@ namespace Sass
   sass::string SourceState::getDebugPath() const
 	{
 		const char* path = getAbsPath();
-		sass::string cwd(Sass::File::get_cwd());
-		sass::string rel_path(Sass::File::abs2rel(path, cwd, cwd));
-		return Sass::File::rel2dbg(rel_path, path);
+		sass::string rel_path(File::abs2rel(path, CWD, CWD));
+		return File::rel2dbg(rel_path, path);
 	}
 
 } // namespace Sass

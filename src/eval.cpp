@@ -442,11 +442,6 @@ namespace Sass {
     return serialize.get_buffer();
   }
 
-  const sass::string Eval::cwd()
-  {
-    return ctx.cwd();
-  }
-
   struct Sass_Inspect_Options& Eval::options()
   {
     return ctx.c_options;

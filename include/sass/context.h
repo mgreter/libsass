@@ -23,11 +23,14 @@ enum SassCompilerState {
 // Create and initialize the main libsass context
 ADDAPI struct SassContext* ADDCALL sass_make_context();
 
-// Create an import entry for the passed data from `stdin`
-ADDAPI struct SassImportCpp* ADDCALL sass_make_data_import(char* source_string);
+// Create an import entry by reading from `stdin`
+ADDAPI struct SassImportCpp* ADDCALL sass_make_stdin_import();
+
+// Crate an import entry for the passed data content
+ADDAPI struct SassImportCpp* ADDCALL sass_make_data_import(char* content);
 
 // Crate an import entry for the passed input path
-ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path);
+ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* imp_path);
 
 // Create a new compiler from the libsass context and the given entry point
 ADDAPI struct SassCompiler* ADDCALL sass_make_compiler(struct SassContext* context, struct SassImportCpp* entry);
@@ -42,7 +45,6 @@ ADDAPI void ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 // Getter for sass compiler results
 ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
-
 ADDAPI int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler);
@@ -52,10 +54,8 @@ ADDAPI const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* comp
 ADDAPI size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler);
 ADDAPI size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler);
 
-// Release all memory allocated with the compiler
-// This does _not_ include any contexts or options
+// Release all memory allocated with the structures
 ADDAPI void ADDCALL sass_delete_context(struct SassContext* context);
-
 ADDAPI void ADDCALL sass_delete_compiler(struct SassCompiler* context);
 
 
@@ -70,10 +70,10 @@ ADDAPI int ADDCALL sass_context_get_precision(struct SassContext* options);
 ADDAPI enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContext* options);
 
 ADDAPI bool ADDCALL sass_context_get_source_comments(struct SassContext* context);
-ADDAPI bool ADDCALL sass_context_get_source_map_embed(struct SassContext* context);
-ADDAPI bool ADDCALL sass_context_get_source_map_contents(struct SassContext* context);
-ADDAPI bool ADDCALL sass_context_get_source_map_file_urls(struct SassContext* context);
-ADDAPI bool ADDCALL sass_context_get_omit_source_map_url(struct SassContext* context);
+ADDAPI bool ADDCALL sass_compiler_get_source_map_embed(struct SassCompiler* compiler);
+ADDAPI bool ADDCALL sass_compiler_get_source_map_contents(struct SassCompiler* compiler);
+ADDAPI bool ADDCALL sass_compiler_get_source_map_file_urls(struct SassCompiler* compiler);
+ADDAPI bool ADDCALL sass_compiler_get_omit_source_map_url(struct SassCompiler* compiler);
 
 ADDAPI const char* ADDCALL sass_context_get_input_path(struct SassContext* context);
 ADDAPI const char* ADDCALL sass_context_get_output_path(struct SassContext* context);
@@ -85,10 +85,10 @@ ADDAPI void ADDCALL sass_context_set_precision(struct SassContext* context, int 
 ADDAPI void ADDCALL sass_context_set_output_style(struct SassContext* context, enum Sass_Output_Style output_style);
 
 ADDAPI void ADDCALL sass_context_set_source_comments(struct SassContext* context, bool source_comments);
-ADDAPI void ADDCALL sass_context_set_source_map_embed(struct SassContext* context, bool source_map_embed);
-ADDAPI void ADDCALL sass_context_set_source_map_contents(struct SassContext* context, bool source_map_contents);
-ADDAPI void ADDCALL sass_context_set_source_map_file_urls(struct SassContext* context, bool source_map_file_urls);
-ADDAPI void ADDCALL sass_context_set_omit_source_map_url(struct SassContext* context, bool omit_source_map_url);
+ADDAPI void ADDCALL sass_compiler_set_source_map_embed(struct SassCompiler* compiler, bool source_map_embed);
+ADDAPI void ADDCALL sass_compiler_set_source_map_contents(struct SassCompiler* compiler, bool source_map_contents);
+ADDAPI void ADDCALL sass_compiler_set_source_map_file_urls(struct SassCompiler* compiler, bool source_map_file_urls);
+ADDAPI void ADDCALL sass_compiler_set_omit_source_map_url(struct SassCompiler* compiler, bool omit_source_map_url);
 
 ADDAPI void ADDCALL sass_context_set_entry_point(struct SassContext* context, struct SassImportCpp* entry);
 ADDAPI void ADDCALL sass_context_set_input_path(struct SassContext* context, const char* input_path);

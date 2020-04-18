@@ -18,11 +18,12 @@
 #include "plugins.hpp"
 #include "logger.hpp"
 #include "output.hpp"
+#include "file.hpp"
 
 
 namespace Sass {
 
-  class Context : public SassContextCpp {
+  class Context : public SassOptionsCpp {
   public:
 
     /*#########################################################################*/
@@ -127,15 +128,8 @@ namespace Sass {
 
   public:
 
-    // Keep a copy of the current working directory.
-    // We must not change it during runtime, but there
-    // might be a chance our embedder does so after we
-    // got initialized. We will not pick up this change!
-    // In our defense, it is considered rude to do so!
-    const sass::string CWD;
-
     // The attached options passed from C-API
-    struct SassContextCpp& c_options;
+    struct SassOptionsCpp& c_options;
 
     struct SassImportCpp* entry; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -222,8 +216,8 @@ namespace Sass {
 
     virtual BlockObj compile(BlockObj root, bool plainCss);
     // ToDo: return const string& ?
-    virtual sass::string render(Block_Obj root);
-    virtual sass::string render_srcmap();
+    // virtual sass::string render(Block_Obj root);
+    // virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 
     BlockObj register_import(SassImportPtr& entry);
@@ -245,8 +239,6 @@ namespace Sass {
     sass::string format_embedded_source_map();
     sass::string format_source_mapping_url(const sass::string& out_path);
 
-  public:
-    const sass::string& cwd() { return CWD; };
   };
 
 }

@@ -25,7 +25,7 @@ namespace Sass {
   }
 
   /*
-    static void handle_string_error(SassContextCpp* c_ctx, const sass::string& msg, int severety)
+    static void handle_string_error(SassOptionsCpp* c_ctx, const sass::string& msg, int severety)
   {
     sass::ostream msg_stream;
     JsonNode* json_err = json_mkobject();
@@ -48,7 +48,7 @@ namespace Sass {
     if (compiler == 0) return {};
     // The CPP context must be set by now
     Context* cpp_ctx = compiler->cpp_ctx;
-    SassContextCpp* c_ctx = compiler->c_ctx;
+    SassOptionsCpp* c_ctx = compiler->c_ctx;
     // We will take care to wire up the rest
     compiler->cpp_ctx->c_compiler = compiler;
     compiler->state = SASS_COMPILER_PARSED;
@@ -95,34 +95,6 @@ namespace Sass {
 extern "C" {
   using namespace Sass;
 
-  static void sass_clear_options (struct SassOptionsCpp* options);
-  static void sass_reset_options (struct SassOptionsCpp* options);
-  static void copy_options(struct SassOptionsCpp* to, struct SassOptionsCpp* from) {
-    // do not overwrite ourself
-    if (to == from) return;
-    // free assigned memory
-    sass_clear_options(to);
-    // move memory
-    *to = *from;
-    // Reset pointers on source
-    sass_reset_options(from);
-  }
-
-  #define IMPLEMENT_SASS_OPTION_ACCESSOR(type, option) \
-    type ADDCALL sass_option_get_##option (struct SassOptionsCpp* options) { return options->option; } \
-    void ADDCALL sass_option_set_##option (struct SassOptionsCpp* options, type option) { options->option = option; }
-  #define IMPLEMENT_SASS_OPTION_STRING_GETTER(type, option, def) \
-    type ADDCALL sass_option_get_##option (struct SassOptionsCpp* options) { return safe_str(options->option, def); }
-  #define IMPLEMENT_SASS_OPTION_STRING_SETTER(type, option, def) \
-    void ADDCALL sass_option_set_##option (struct SassOptionsCpp* options, type option) \
-    { free(options->option); options->option = option || def ? sass_copy_c_string(option ? option : def) : 0; }
-  #define IMPLEMENT_SASS_OPTION_STRING_ACCESSOR(type, option, def) \
-    IMPLEMENT_SASS_OPTION_STRING_GETTER(type, option, def) \
-    IMPLEMENT_SASS_OPTION_STRING_SETTER(type, option, def)
-
-
-
-
   bool IsConsoleRedirected() {
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
     if (handle != INVALID_HANDLE_VALUE) {
@@ -152,7 +124,7 @@ extern "C" {
   static SassCompilerCpp* sass_prepare_context (Context* cpp_ctx) throw()
   {
 
-    SassContextCpp* c_ctx = &cpp_ctx->c_options;
+    SassOptionsCpp* c_ctx = &cpp_ctx->c_options;
 
     try {
 
@@ -197,6 +169,35 @@ extern "C" {
     return new SassCompiler(context, entry);
   }
 
+  /*
+  sass::string Context::render(BlockObj root)
+  {
+    // check for valid block
+    if (!root) return 0;
+    // start the render process
+    root->perform(&emitter);
+    // finish emitter stream
+    emitter.finalize();
+    // get the resulting buffer from stream
+    OutputBuffer& emitted = emitter.get_buffer();
+    // should we append a source map url?
+    if (!c_options.omit_source_map_url) {
+      // generate an embedded source map
+      if (c_options.source_map_embed) {
+        emitted.buffer += linefeed;
+        emitted.buffer += format_embedded_source_map();
+      }
+      // or just link the generated one
+      else if (!source_map_file88.empty()) {
+        emitted.buffer += linefeed;
+        emitted.buffer += format_source_mapping_url(source_map_file88);
+      }
+    }
+    // create a copy of the resulting buffer string
+    // this must be freed or taken over by implementor
+    return emitted.buffer;
+  }
+  */
 
   static int handle_error(struct SassCompiler* compiler)
   {
@@ -208,7 +209,6 @@ extern "C" {
       Logger& logger(compiler->logger);
 
       sass::ostream& msg_stream = logger.errors;
-      sass::string cwd(Sass::File::get_cwd());
       sass::string msg_prefix("Error");
       bool got_newline = false;
       msg_stream << msg_prefix << ": ";
@@ -237,8 +237,9 @@ extern "C" {
         pstate = e.traces.back().pstate;
       }
 
-      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), cwd, cwd));
+      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), CWD, CWD));
       logger.writeStackTraces(logger.errors, e.traces, "  ");
+
       JsonNode* json_err = json_mkobject();
       json_append_member(json_err, "status", json_mknumber(1));
       json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
@@ -247,7 +248,9 @@ extern "C" {
       json_append_member(json_err, "message", json_mkstring(e.what()));
       json_append_member(json_err, "formatted", json_mkstream(msg_stream));
       try { compiler->error_json = json_stringify(json_err, "  "); }
-      catch (...) {} // silently ignore this error?
+      catch (...) { compiler->error_json = sass_copy_c_string("{\"status\":99}"); }
+      json_delete(json_err);
+
       compiler->error_message = msg_stream.str();
       compiler->error_text = e.what();
       compiler->error_status = 1;
@@ -255,7 +258,6 @@ extern "C" {
       compiler->error_line = pstate.getLine();
       compiler->error_column = pstate.getColumn();
       compiler->error_src = pstate.getSource();
-      json_delete(json_err);
 
     }
     catch (std::bad_alloc & ba) {
@@ -370,16 +372,6 @@ extern "C" {
   }
   */
 
-  // helper function, not exported, only accessible locally
-  static void sass_reset_options (struct SassOptionsCpp* options)
-  {
-  }
-
-  // helper function, not exported, only accessible locally
-  static void sass_clear_options (struct SassOptionsCpp* options)
-  {
-  }
-
   void ADDCALL sass_delete_compiler(struct SassCompiler* context)
   {
     // delete context;
@@ -483,7 +475,7 @@ extern "C" {
 
   const char* ADDCALL sass_context_get_source_map_file(struct SassContext* context)
   {
-    return reinterpret_cast<Sass::Context*>(context)->source_map_file.c_str();
+    return reinterpret_cast<Sass::Context*>(context)->source_map_file88.c_str();
   }
   const char* ADDCALL sass_context_get_source_map_root(struct SassContext* context)
   {

@@ -41,7 +41,7 @@ namespace Sass {
     for (size_t i = 0; i < source_index.size(); ++i) {
       sass::string source(links[source_index[i]]);
       if (ctx.c_options.source_map_file_urls) {
-        source = File::rel2abs(source, ".", ctx.CWD);
+        source = File::rel2abs(source, ".", CWD);
         // check for windows abs path
         if (source[0] == '/') {
           // ends up with three slashes

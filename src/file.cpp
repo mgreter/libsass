@@ -65,7 +65,7 @@ namespace Sass {
     // return the current directory
     // always with forward slashes
     // always with trailing slash
-    sass::string get_cwd()
+    extern sass::string get_cwd()
     {
       const size_t wd_len = 4096;
       #ifndef _WIN32

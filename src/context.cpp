@@ -78,6 +78,8 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
+  static const sass::string CWD(File::get_cwd());
+
   inline bool cmpImporterPrio (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
@@ -147,33 +149,18 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
 
   Context::Context()
-    : SassContextCpp(),
-    CWD(File::get_cwd()),
+    : SassOptionsCpp(),
     c_options(*this),
     head_imports(0),
-    plugins(),
     emitter(c_options),
-    varRoot(),
     logger(new Logger(5, SASS_LOGGER_ASCII_MONO)),
-    sources(),
-    sheets(),
-    import_stack(),
-    importStack(),
-    callee_stack(),
-    functions(),
     extender(Extender::NORMAL, logger->callStack),
     c_compiler(NULL),
 
-    // Initialize C-API arrays for custom functionality
-    c_headers88(sass::vector<SassImporterPtr>()),
-    c_importers88(sass::vector<SassImporterPtr>()),
-    c_functions88(sass::vector<struct SassFunctionCpp*>()),
-
-
     input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
-    output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88))),
-    source_map_file88(make_canonical_path(c_options.source_map_file)),
-    source_map_root88(make_canonical_path(c_options.source_map_root))
+    output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88)))
+    // source_map_file88(make_canonical_path(c_options.source_map_file)),
+    // source_map_root88(make_canonical_path(c_options.source_map_root))
 
   {
 
@@ -665,34 +652,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
   // EO callCustomLoader
 
-  sass::string Context::render(BlockObj root)
-  {
-    // check for valid block
-    if (!root) return 0;
-    // start the render process
-    root->perform(&emitter);
-    // finish emitter stream
-    emitter.finalize();
-    // get the resulting buffer from stream
-    OutputBuffer& emitted = emitter.get_buffer();
-    // should we append a source map url?
-    if (!c_options.omit_source_map_url) {
-      // generate an embedded source map
-      if (c_options.source_map_embed) {
-        emitted.buffer += linefeed;
-        emitted.buffer += format_embedded_source_map();
-      }
-      // or just link the generated one
-      else if (!source_map_file88.empty()) {
-        emitted.buffer += linefeed;
-        emitted.buffer += format_source_mapping_url(source_map_file88);
-      }
-    }
-    // create a copy of the resulting buffer string
-    // this must be freed or taken over by implementor
-    return emitted.buffer;
-  }
-
   void Context::apply_custom_headers2(sass::vector<StatementObj>& statements, SourceSpan pstate)
   {
     std::cerr << "Where is apply custom gone\n";
@@ -807,12 +766,13 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sass::string url = abs2rel(file, output_path88, CWD);
     return "/*# sourceMappingURL=" + url + " */";
   }
-
+  /*
   sass::string Context::render_srcmap()
   {
     if (source_map_file88.empty()) return "";
     return emitter.render_srcmap(*this);
   }
+  */
 
   sass::string Context::render_stderr()
   {
@@ -847,8 +807,6 @@ struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
   // create absolute path from input filename
   // ToDo: this should be resolved via custom importers
 
-  auto CWD = File::get_cwd();
-
   sass::string abs_path(rel2abs(input_path88, CWD, CWD));
 
   // try to load the entry file
@@ -872,13 +830,19 @@ struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
   return sass_make_import(
     input_path88,
     abs_path.c_str(),
-    contents, // ToDo: pass zero and let context do the work
-    0, SASS_IMPORT_AUTO
+    contents, 0,
+    SASS_IMPORT_AUTO
   );
 
 }
 
-struct SassImportCpp* ADDCALL sass_make_data_import(char* source_string)
+struct SassImportCpp* ADDCALL sass_make_stdin_import()
 {
-  return nullptr;
+  std::istreambuf_iterator<char> begin(std::cin), end;
+  sass::string text(begin, end);
+  return sass_make_import(
+    "stdin", "stdin",
+    sass_copy_string(text), 0,
+    SASS_IMPORT_AUTO
+  );
 }

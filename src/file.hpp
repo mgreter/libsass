@@ -14,11 +14,13 @@
 
 namespace Sass {
 
+  extern const sass::string CWD;
+
   namespace File {
 
     // return the current directory
     // always with forward slashes
-    sass::string get_cwd();
+    extern sass::string get_cwd();
 
     // test if path exists and is a file
     bool file_exists(const sass::string& file, const sass::string& CWD,
