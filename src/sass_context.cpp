@@ -387,12 +387,12 @@ extern "C" {
     compiler->parse();
   }
 
-  void ADDCALL sass_compiler_compile322(struct SassCompiler* compiler)
+  void ADDCALL sass_compiler_compile(struct SassCompiler* compiler)
   {
     compiler->compile();
   }
 
-  void ADDCALL sass_compiler_render322(struct SassCompiler* compiler)
+  void ADDCALL sass_compiler_render(struct SassCompiler* compiler)
   {
     OutputBuffer output(compiler->render23());
     compiler->output = output.buffer;
@@ -403,6 +403,10 @@ extern "C" {
     return compiler->output.c_str();
   }
 
+  ADDAPI const char* ADDCALL sass_compiler_get_srcmap(struct SassCompiler* compiler)
+  {
+    return compiler->srcmap.c_str();
+  }
 
   void ADDCALL sass_context_print_stderr2(struct SassContextReal* context)
   {

@@ -23,20 +23,27 @@ enum SassCompilerState {
 // Create and initialize the main libsass context
 ADDAPI struct SassContextReal* ADDCALL sass_make_context();
 
+// Create an import entry for the passed data from `stdin`
+ADDAPI struct SassImportCpp* ADDCALL sass_make_data_import(char* source_string);
+
+// Crate an import entry for the passed input path
+ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path);
+
 // Create a new compiler from the libsass context and the given entry point
 ADDAPI struct SassCompiler* ADDCALL sass_make_compiler(struct SassContextReal* context, struct SassImportCpp* entry);
 
 // Parse the entry point and potentially all imports within
 ADDAPI void ADDCALL sass_compiler_parse(struct SassCompiler* compiler);
-ADDAPI void ADDCALL sass_compiler_compile322(struct SassCompiler* compiler);
-ADDAPI void ADDCALL sass_compiler_render322(struct SassCompiler* compiler);
+// Evaluate the parsed entry point and store resulting ast-tree
+ADDAPI void ADDCALL sass_compiler_compile(struct SassCompiler* compiler);
+// Render the evaluated ast-tree to get the final output string
+ADDAPI void ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 
+// Return the rendered output content
 ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler* compiler);
+
+// Return the rendered source map content
 ADDAPI const char* ADDCALL sass_compiler_get_srcmap(struct SassCompiler* compiler);
-
-
-ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path);
-ADDAPI struct SassImportCpp* ADDCALL sass_make_data_import(char* source_string);
 
 // Release all memory allocated with the compiler
 // This does _not_ include any contexts or options
