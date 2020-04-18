@@ -39,15 +39,24 @@ ADDAPI void ADDCALL sass_compiler_compile(struct SassCompiler* compiler);
 // Render the evaluated ast-tree to get the final output string
 ADDAPI void ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 
-// Return the rendered output content
-ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler* compiler);
+// Getter for sass compiler results
+ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
-// Return the rendered source map content
-ADDAPI const char* ADDCALL sass_compiler_get_srcmap(struct SassCompiler* compiler);
+ADDAPI int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_error_message(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_error_file(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* compiler);
+ADDAPI size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler);
+ADDAPI size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler);
 
 // Release all memory allocated with the compiler
 // This does _not_ include any contexts or options
 ADDAPI void ADDCALL sass_delete_context(struct SassContextReal* context);
+
+ADDAPI void ADDCALL sass_delete_compiler(struct SassCompiler* context);
 
 
 
@@ -90,8 +99,8 @@ ADDAPI void ADDCALL sass_context_set_source_map_root(struct SassContextReal* con
 // Getters for SassCompilerCpp options
 
 // Push function for paths (no manipulation support for now)
-ADDAPI void ADDCALL sass_option_push_plugin_path (struct SassOptionsCpp* options, const char* path);
-ADDAPI void ADDCALL sass_option_push_include_path (struct SassOptionsCpp* options, const char* path);
+ADDAPI void ADDCALL sass_context_push_plugin_path (struct SassContextReal* context, const char* path);
+ADDAPI void ADDCALL sass_context_push_include_path (struct SassContextReal* context, const char* path);
 
 // Resolve a file via the given include paths in the sass option struct
 // find_file looks for the exact file name while find_include does a regular sass include

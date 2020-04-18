@@ -204,7 +204,59 @@ extern "C" {
       throw;
     }
     catch (Exception::Base & e) {
-      std::cerr << "Exception::Base\n";
+
+      Logger& logger(compiler->logger);
+
+      sass::ostream& msg_stream = logger.errors;
+      sass::string cwd(Sass::File::get_cwd());
+      sass::string msg_prefix("Error");
+      bool got_newline = false;
+      msg_stream << msg_prefix << ": ";
+      const char* msg = e.what();
+      while (msg && *msg) {
+        if (*msg == '\r') {
+          got_newline = true;
+        }
+        else if (*msg == '\n') {
+          got_newline = true;
+        }
+        else if (got_newline) {
+          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
+          got_newline = false;
+        }
+        msg_stream << *msg;
+        ++msg;
+      }
+      if (!got_newline) msg_stream << "\n";
+
+      auto pstate = SourceSpan::tmp("[NOPE]");
+      if (e.traces.empty()) {
+        std::cerr << "THIS IS OLD AND NOT YET\n";
+      }
+      else {
+        pstate = e.traces.back().pstate;
+      }
+
+      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), cwd, cwd));
+      logger.writeStackTraces(logger.errors, e.traces, "  ");
+      JsonNode* json_err = json_mkobject();
+      json_append_member(json_err, "status", json_mknumber(1));
+      json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
+      json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
+      json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
+      json_append_member(json_err, "message", json_mkstring(e.what()));
+      json_append_member(json_err, "formatted", json_mkstream(msg_stream));
+      try { compiler->error_json = json_stringify(json_err, "  "); }
+      catch (...) {} // silently ignore this error?
+      compiler->error_message = msg_stream.str();
+      compiler->error_text = e.what();
+      compiler->error_status = 1;
+      compiler->error_file = pstate.getAbsPath();
+      compiler->error_line = pstate.getLine();
+      compiler->error_column = pstate.getColumn();
+      compiler->error_src = pstate.getSource();
+      json_delete(json_err);
+
     }
     catch (std::bad_alloc & ba) {
       std::cerr << "Error std::bad_alloc\n";
@@ -249,15 +301,25 @@ extern "C" {
   }
 
 
-  ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler* compiler)
+  ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler)
   {
     return compiler->output.c_str();
   }
 
-  ADDAPI const char* ADDCALL sass_compiler_get_srcmap(struct SassCompiler* compiler)
+  ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler)
   {
     return compiler->srcmap.c_str();
   }
+
+  int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler) { return compiler->error_status; }
+  const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler) { return compiler->error_json.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler) { return compiler->error_text.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_message(struct SassCompiler* compiler) { return compiler->error_message.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_file(struct SassCompiler* compiler) { return compiler->error_file.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* compiler) { return compiler->error_src->content(); }
+  size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler) { return compiler->error_line; }
+  size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler) { return compiler->error_column; }
+
 
   void ADDCALL sass_context_print_stderr2(struct SassContextReal* context)
   {
@@ -317,6 +379,11 @@ extern "C" {
   {
   }
 
+  void ADDCALL sass_delete_compiler(struct SassCompiler* context)
+  {
+    // delete context;
+  }
+
   void ADDCALL sass_delete_context(SassContextReal* context)
   {
     // delete reinterpret_cast<Context*>(context);
@@ -324,15 +391,130 @@ extern "C" {
 
 
   // Push function for include paths (no manipulation support for now)
-  void ADDCALL sass_option_push_include_path(struct SassOptionsCpp* options, const char* path)
+  void ADDCALL sass_context_push_include_path(struct SassContextReal* context, const char* path)
   {
-    options->include_paths.push_back(path);
+    reinterpret_cast<Context*>(context)->include_paths.push_back(path);
   }
 
   // Push function for plugin paths (no manipulation support for now)
-  void ADDCALL sass_option_push_plugin_path(struct SassOptionsCpp* options, const char* path)
+  void ADDCALL sass_context_push_plugin_path(struct SassContextReal* context, const char* path)
   {
-    options->plugin_paths.push_back(path);
+    reinterpret_cast<Context*>(context)->plugin_paths.push_back(path);
   }
+
+  struct SassContextReal* ADDCALL sass_make_context()
+  {
+    return reinterpret_cast<SassContextReal*>(new Sass::Context());
+  }
+
+  void ADDCALL sass_context_set_precision(struct SassContextReal* context, int precision)
+  {
+    reinterpret_cast<Sass::Context*>(context)->precision = precision;
+  }
+  void ADDCALL sass_context_set_output_style(struct SassContextReal* context, enum Sass_Output_Style output_style)
+  {
+    reinterpret_cast<Sass::Context*>(context)->c_options.output_style = output_style;
+  }
+
+  int ADDCALL sass_context_get_precision(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->precision;
+  }
+  enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->c_options.output_style;
+  }
+
+  bool ADDCALL sass_context_get_source_comments(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->source_comments;
+  }
+
+  bool ADDCALL sass_context_get_source_map_embed(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->source_map_embed;
+  }
+  bool ADDCALL sass_context_get_source_map_contents(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->source_map_contents;
+  }
+
+  bool ADDCALL sass_context_get_source_map_file_urls(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->source_comments;
+  }
+
+  bool ADDCALL sass_context_get_omit_source_map_url(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->omit_source_map_url;
+  }
+
+  void ADDCALL sass_context_set_source_comments(struct SassContextReal* context, bool source_comments)
+  {
+    reinterpret_cast<Sass::Context*>(context)->source_comments = source_comments;
+  }
+  void ADDCALL sass_context_set_source_map_embed(struct SassContextReal* context, bool source_map_embed)
+  {
+    reinterpret_cast<Sass::Context*>(context)->source_map_embed = source_map_embed;
+  }
+  void ADDCALL sass_context_set_source_map_contents(struct SassContextReal* context, bool source_map_contents)
+  {
+    reinterpret_cast<Sass::Context*>(context)->source_map_contents = source_map_contents;
+  }
+  void ADDCALL sass_context_set_source_map_file_urls(struct SassContextReal* context, bool source_map_file_urls)
+  {
+    reinterpret_cast<Sass::Context*>(context)->source_map_file_urls = source_map_file_urls;
+  }
+  void ADDCALL sass_context_set_omit_source_map_url(struct SassContextReal* context, bool omit_source_map_url)
+  {
+    reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
+  }
+
+  const char* ADDCALL sass_context_get_input_path(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->input_path.c_str();
+  }
+
+  const char* ADDCALL sass_context_get_output_path(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->output_path.c_str();
+  }
+
+  const char* ADDCALL sass_context_get_source_map_file(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->source_map_file.c_str();
+  }
+  const char* ADDCALL sass_context_get_source_map_root(struct SassContextReal* context)
+  {
+    return reinterpret_cast<Sass::Context*>(context)->source_map_root.c_str();
+  }
+
+  void ADDCALL sass_context_set_entry_point(struct SassContextReal* context, struct SassImportCpp* entry)
+  {
+    reinterpret_cast<Sass::Context*>(context)->entry = entry;
+  }
+
+  void ADDCALL sass_context_set_input_path(struct SassContextReal* context, const char* input_path)
+  {
+    reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
+    reinterpret_cast<Sass::Context*>(context)->input_path88 = input_path;
+  }
+  void ADDCALL sass_context_set_output_path(struct SassContextReal* context, const char* output_path)
+  {
+    reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
+    reinterpret_cast<Sass::Context*>(context)->output_path88 = output_path;
+  }
+
+  void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file)
+  {
+    reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
+    reinterpret_cast<Sass::Context*>(context)->source_map_file88 = source_map_file;
+  }
+  void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, const char* source_map_root)
+  {
+    reinterpret_cast<Sass::Context*>(context)->source_map_root = source_map_root;
+    reinterpret_cast<Sass::Context*>(context)->source_map_root88 = source_map_root;
+  }
+
 
 }

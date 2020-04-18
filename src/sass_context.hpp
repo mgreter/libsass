@@ -42,9 +42,11 @@ struct SassCompiler : SassOutputOptionsCpp {
   string error_text;
   string error_message;
   // error position
+  // Why not pstate?
+  string error_file;
   size_t error_line;
   size_t error_column;
-  Sass::SourceDataObj error_source;
+  Sass::SourceDataObj error_src;
 
   SassCompiler(struct SassContextReal* context,
     struct SassImportCpp* entry);
