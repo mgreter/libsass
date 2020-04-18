@@ -59,21 +59,4 @@ struct SassSrcMapOptions {
 
 };
 
-// sass config options structure
-struct SassOptionsCpp : SassOutputOptionsCpp {
-
-  typedef Sass::sass::string string;
-  typedef Sass::sass::vector<string> strings;
-
-  // Colon-separated list of paths
-  // Semicolon-separated on Windows
-  // Maybe use array interface instead?
-  // string include_path;
-  // string plugin_path;
-
-  // Vectors with paths
-  strings include_paths;
-
-};
-
 #endif

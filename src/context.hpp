@@ -23,7 +23,7 @@
 
 namespace Sass {
 
-  class Context : public SassOptionsCpp {
+  class Context : public SassOutputOptionsCpp {
   public:
 
     /*#########################################################################*/
@@ -128,8 +128,8 @@ namespace Sass {
 
   public:
 
-    // The attached options passed from C-API
-    struct SassOptionsCpp& c_options;
+    // Vectors with paths
+    strings include_paths;
 
     strings plugin_paths;
 

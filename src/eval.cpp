@@ -433,7 +433,7 @@ namespace Sass {
 
   sass::string Eval::serialize(AST_Node* node)
   {
-    Sass_Inspect_Options serializeOpt(ctx.c_options);
+    Sass_Inspect_Options serializeOpt(ctx);
     serializeOpt.output_style = TO_CSS;
     SassOutputOptionsCpp out(serializeOpt);
     Inspect serialize(Emitter{ out });
@@ -441,11 +441,6 @@ namespace Sass {
     serialize.quotes = false;
     node->perform(&serialize);
     return serialize.get_buffer();
-  }
-
-  struct Sass_Inspect_Options& Eval::options()
-  {
-    return ctx.c_options;
   }
 
   std::pair<
@@ -540,8 +535,8 @@ namespace Sass {
 
   void Eval::visitWarnRule(WarnRule* node)
   {
-    Sass_Output_Style outstyle = options().output_style;
-    options().output_style = NESTED;
+    // Sass_Output_Style outstyle = options().output_style;
+    // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
 
@@ -571,7 +566,7 @@ namespace Sass {
       ctx.logger->addWarn43(result, false);
 
     }
-    options().output_style = outstyle;
+    // options().output_style = outstyle;
 
   }
 
@@ -583,8 +578,8 @@ namespace Sass {
 
   void Eval::visitErrorRule(ErrorRule* node)
   {
-    Sass_Output_Style outstyle = options().output_style;
-    options().output_style = NESTED;
+    // Sass_Output_Style outstyle = options().output_style;
+    // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
     if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::errorRule)) {
@@ -597,7 +592,7 @@ namespace Sass {
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, &compiler);
-      options().output_style = outstyle;
+      // options().output_style = outstyle;
       // callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
@@ -606,7 +601,7 @@ namespace Sass {
     else { 
 
       sass::string result(message->to_string());
-      options().output_style = outstyle;
+      // options().output_style = outstyle;
       error(result, node->pstate(), traces);
 
     }
@@ -621,8 +616,8 @@ namespace Sass {
 
   void Eval::visitDebugRule(DebugRule* node)
   {
-    Sass_Output_Style outstyle = options().output_style;
-    options().output_style = NESTED;
+    // Sass_Output_Style outstyle = options().output_style;
+    // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
     if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::debugRule)) {
@@ -635,7 +630,7 @@ namespace Sass {
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, &compiler);
-      options().output_style = outstyle;
+      // options().output_style = outstyle;
       // callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
@@ -645,7 +640,7 @@ namespace Sass {
 
       sass::string result(unquote(message->inspect()));
       sass::string output_path(node->pstate().getDebugPath());
-      options().output_style = outstyle;
+      // options().output_style = outstyle;
 
       std::cerr << output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
       std::cerr << STRMLF;

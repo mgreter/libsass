@@ -27,7 +27,7 @@ namespace Sass {
         }
         return SASS_MEMORY_NEW(SassString,
           pstate, arguments[0]->to_string({
-            INSPECT, ctx.c_options.precision
+            INSPECT, ctx.precision
           }));
       }
 

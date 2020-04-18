@@ -103,8 +103,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
 
   Context::Context()
-    : SassOptionsCpp(),
-    c_options(*this),
+    : SassOutputOptionsCpp(),
     head_imports(0),
     // emitter(c_options),
     logger(new Logger(5, SASS_LOGGER_ASCII_MONO)),
@@ -119,7 +118,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // collect more paths from different options
     // collectIncludePaths(c_options.include_path);
-    collectIncludePaths(c_options.include_paths);
+    collectIncludePaths(include_paths);
     // collectPluginPaths(c_options.plugin_path);
 
     // ToDo: call explodePluginPaths!

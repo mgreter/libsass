@@ -52,7 +52,7 @@ namespace Sass {
           if (SassStringObj str = exp->isString()) {
             str->hasQuotes(false);
           }
-          sass::string exp_src = exp->to_string(ctx.c_options);
+          sass::string exp_src = exp->to_string(ctx);
 
           SourceSpan state(exp->pstate());
           auto source = SASS_MEMORY_NEW(SourceItpl,

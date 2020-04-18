@@ -111,24 +111,24 @@ extern "C" {
   // Make sure to free the returned value!
   // Incs array has to be null terminated!
   // this has the original resolve logic for sass include
-  char* ADDCALL sass_find_include (const char* file, struct SassOptionsCpp* opt)
-  {
-    std::unordered_map<sass::string, bool> cache;
-    sass::string resolved(File::find_include(file,
-      CWD, opt->include_paths, cache));
-    return sass_copy_c_string(resolved.c_str());
-  }
-
-  // Make sure to free the returned value!
-  // Incs array has to be null terminated!
-  char* ADDCALL sass_find_file (const char* file, struct SassOptionsCpp* opt)
-  {
-    std::unordered_map<sass::string, bool> cache;
-    sass::string resolved(File::find_file(file,
-      CWD, opt->include_paths, cache));
-    return sass_copy_c_string(resolved.c_str());
-  }
-
+  // char* ADDCALL sass_find_include (const char* file, struct SassOptionsCpp* opt)
+  // {
+  //   std::unordered_map<sass::string, bool> cache;
+  //   sass::string resolved(File::find_include(file,
+  //     CWD, opt->include_paths, cache));
+  //   return sass_copy_c_string(resolved.c_str());
+  // }
+  // 
+  // // Make sure to free the returned value!
+  // // Incs array has to be null terminated!
+  // char* ADDCALL sass_find_file (const char* file, struct SassOptionsCpp* opt)
+  // {
+  //   std::unordered_map<sass::string, bool> cache;
+  //   sass::string resolved(File::find_file(file,
+  //     CWD, opt->include_paths, cache));
+  //   return sass_copy_c_string(resolved.c_str());
+  // }
+  // 
   // Get compiled libsass version
   const char* ADDCALL libsass_version(void)
   {
