@@ -106,15 +106,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     : SassOptionsCpp(),
     c_options(*this),
     head_imports(0),
-    emitter(c_options),
+    // emitter(c_options),
     logger(new Logger(5, SASS_LOGGER_ASCII_MONO)),
     extender(Extender::NORMAL, logger->callStack),
-    c_compiler(NULL),
-
-    input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
-    output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88)))
-    // source_map_file88(make_canonical_path(c_options.source_map_file)),
-    // source_map_root88(make_canonical_path(c_options.source_map_root))
+    c_compiler(NULL)
 
   {
 
@@ -123,9 +118,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
 
     // collect more paths from different options
-    collectIncludePaths(c_options.include_path);
+    // collectIncludePaths(c_options.include_path);
     collectIncludePaths(c_options.include_paths);
-    collectPluginPaths(c_options.plugin_path);
+    // collectPluginPaths(c_options.plugin_path);
     collectPluginPaths(c_options.plugin_paths);
 
     // load plugins and register custom behaviors
@@ -363,15 +358,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Append to the resources
     sources.emplace_back(source);
 
-    // tell emitter about new resource
-    emitter.add_source_index(idx);
-
-    // add a relative link to the working directory
-    included_files88.emplace_back(abs_path);
+    // ToDo
     included_sources.emplace_back(source);
-
-    // add a relative link to the source map output file
-    // srcmap_links88.emplace_back(abs2rel(abs_path, source_map_file88, CWD));
 
     // add the entry to the stack
     import_stack.emplace_back(import);
@@ -736,20 +724,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   sass::string Context::render_stderr()
   {
     return logger->errors.str();
-  }
-
-  // for data context we want to start after "stdin"
-  // we probably always want to skip the header includes?
-  sass::vector<sass::string> Context::get_included_files(bool skip, size_t headers)
-  {
-    // create a copy of the vector for manipulations
-    sass::vector<sass::string> includes = included_files88;
-    if (includes.size() == 0) return includes;
-    if (skip) { includes.erase(includes.begin(), includes.begin() + 1 + headers); }
-    else { includes.erase(includes.begin() + 1, includes.begin() + 1 + headers); }
-    includes.erase(std::unique(includes.begin(), includes.end()), includes.end());
-    std::sort(includes.begin() + (skip ? 0 : 1), includes.end());
-    return includes;
   }
 
 

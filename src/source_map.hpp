@@ -35,13 +35,11 @@ namespace Sass {
     void add_open_mapping(const AST_Node* node);
     void add_close_mapping(const AST_Node* node);
 
-    sass::string renderSrcMapJson(Context &ctx, bool include, bool source_map_file_urls, const char* source_map_root);
     SourceSpan remap(const SourceSpan& pstate);
 
   private:
 
   public:
-    sass::string serialize_mappings();
     sass::string render(const std::unordered_map<size_t, size_t>& remap_srcidx) const;
     
     sass::vector<Mapping> mappings;

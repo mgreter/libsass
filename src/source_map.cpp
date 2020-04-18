@@ -17,72 +17,6 @@ namespace Sass {
   SourceMap::SourceMap() : current_position(), file("stdin") { }
   SourceMap::SourceMap(const sass::string& file) : current_position(), file(file) { }
 
-  sass::string SourceMap::renderSrcMapJson(Context &ctx, bool include_sources, bool source_map_file_urls, const char* source_map_root) {
-
-    // const bool include_sources = ctx.c_options.source_map_contents;
-    const sass::vector<sass::string> links = ctx.srcmap_links88;
-    const sass::vector<SourceDataObj>& sources(ctx.sources);
-
-    JsonNode* json_srcmap = json_mkobject();
-
-    json_append_member(json_srcmap, "version", json_mknumber(3));
-
-    const char *file_name = file.c_str();
-    JsonNode *json_file_name = json_mkstring(file_name);
-    json_append_member(json_srcmap, "file", json_file_name);
-
-    // pass-through sourceRoot option
-    if (source_map_root != nullptr) {
-      JsonNode* root = json_mkstring(source_map_root);
-      json_append_member(json_srcmap, "sourceRoot", root);
-    }
-
-    JsonNode *json_sources = json_mkarray();
-    for (size_t i = 0; i < source_index.size(); ++i) {
-      sass::string source(links[source_index[i]]);
-      if (source_map_file_urls) {
-        source = File::rel2abs(source, ".", CWD);
-        // check for windows abs path
-        if (source[0] == '/') {
-          // ends up with three slashes
-          source = "file://" + source;
-        } else {
-          // needs an additional slash
-          source = "file:///" + source;
-        }
-      }
-      const char* source_name = source.c_str();
-      JsonNode *json_source_name = json_mkstring(source_name);
-      json_append_element(json_sources, json_source_name);
-    }
-    json_append_member(json_srcmap, "sources", json_sources);
-
-    if (include_sources && source_index.size()) {
-      JsonNode *json_contents = json_mkarray();
-      for (size_t i = 0; i < source_index.size(); ++i) {
-        const SourceDataObj& resource(sources[source_index[i]]);
-        JsonNode *json_content = json_mkstring(resource->content());
-        json_append_element(json_contents, json_content);
-      }
-      json_append_member(json_srcmap, "sourcesContent", json_contents);
-    }
-
-    JsonNode *json_names = json_mkarray();
-    // so far we have no implementation for names
-    // no problem as we do not alter any identifiers
-    json_append_member(json_srcmap, "names", json_names);
-
-    sass::string mappings = serialize_mappings();
-    JsonNode *json_mappings = json_mkstring(mappings.c_str());
-    json_append_member(json_srcmap, "mappings", json_mappings);
-
-    char *str = json_stringify(json_srcmap, "\t");
-    sass::string result = sass::string(str);
-    free(str);
-    json_delete(json_srcmap);
-    return result;
-  }
-  ;
 
   sass::string SourceMap::render(const std::unordered_map<size_t, size_t>& idxremap) const
   {
@@ -99,49 +33,6 @@ namespace Sass {
       const size_t original_line = mappings[i].origin.line;
       const size_t original_column = mappings[i].origin.column;
       const size_t original_file = idxremap.at(mappings[i].srcidx);
-
-      if (generated_line != previous_generated_line) {
-        previous_generated_column = 0;
-        if (generated_line > previous_generated_line) {
-          result += sass::string(generated_line - previous_generated_line, ';');
-          previous_generated_line = generated_line;
-        }
-      }
-      else if (i > 0) {
-        result += ",";
-      }
-
-      // generated column
-      result += base64vlq.encode(static_cast<int>(generated_column) - static_cast<int>(previous_generated_column));
-      previous_generated_column = generated_column;
-      // file
-      result += base64vlq.encode(static_cast<int>(original_file) - static_cast<int>(previous_original_file));
-      previous_original_file = original_file;
-      // source line
-      result += base64vlq.encode(static_cast<int>(original_line) - static_cast<int>(previous_original_line));
-      previous_original_line = original_line;
-      // source column
-      result += base64vlq.encode(static_cast<int>(original_column) - static_cast<int>(previous_original_column));
-      previous_original_column = original_column;
-    }
-
-    return result;
-  }
-
-  sass::string SourceMap::serialize_mappings() {
-    sass::string result = "";
-
-    size_t previous_generated_line = 0;
-    size_t previous_generated_column = 0;
-    size_t previous_original_line = 0;
-    size_t previous_original_column = 0;
-    size_t previous_original_file = 0;
-    for (size_t i = 0; i < mappings.size(); ++i) {
-      const size_t generated_line = mappings[i].target.line;
-      const size_t generated_column = mappings[i].target.column;
-      const size_t original_line = mappings[i].origin.line;
-      const size_t original_column = mappings[i].origin.column;
-      const size_t original_file = mappings[i].srcidx;
 
       if (generated_line != previous_generated_line) {
         previous_generated_column = 0;

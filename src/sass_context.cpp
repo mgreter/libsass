@@ -313,7 +313,9 @@ extern "C" {
     const char* source_map_root = 0;
 
     struct SassSrcMapOptions options;
-    options.source_map_mode = SASS_SRCMAP_EMBED_LINK;
+    options.source_map_mode = SASS_SRCMAP_EMBED_JSON;
+    options.source_map_path = compiler->output_path + ".map";
+
     options.source_map_origin = compiler->entry->srcdata->getAbsPath();
 
     switch (options.source_map_mode) {
@@ -351,6 +353,11 @@ extern "C" {
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler)
   {
     return compiler->srcmap;
+  }
+
+  void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
+  {
+    compiler->output_path = output_path ? output_path : "";
   }
 
   int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler) { return compiler->error_status; }
@@ -502,15 +509,15 @@ extern "C" {
   //   reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
   // }
 
-  const char* ADDCALL sass_context_get_input_path(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->input_path.c_str();
-  }
+  // const char* ADDCALL sass_context_get_input_path(struct SassContext* context)
+  // {
+  //   return reinterpret_cast<Sass::Context*>(context)->input_path.c_str();
+  // }
 
-  const char* ADDCALL sass_context_get_output_path(struct SassContext* context)
-  {
-    return reinterpret_cast<Sass::Context*>(context)->output_path.c_str();
-  }
+//  const char* ADDCALL sass_context_get_output_path(struct SassContext* context)
+//  {
+//    return reinterpret_cast<Sass::Context*>(context)->output_path.c_str();
+//  }
 
   // const char* ADDCALL sass_context_get_source_map_file(struct SassContext* context)
   // {
@@ -526,16 +533,16 @@ extern "C" {
     reinterpret_cast<Sass::Context*>(context)->entry = entry;
   }
 
-  void ADDCALL sass_context_set_input_path(struct SassContext* context, const char* input_path)
-  {
-    reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
-    reinterpret_cast<Sass::Context*>(context)->input_path88 = input_path;
-  }
-  void ADDCALL sass_context_set_output_path(struct SassContext* context, const char* output_path)
-  {
-    reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
-    reinterpret_cast<Sass::Context*>(context)->output_path88 = output_path;
-  }
+  // void ADDCALL sass_context_set_input_path(struct SassContext* context, const char* input_path)
+  // {
+  //   // reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
+  //   // reinterpret_cast<Sass::Context*>(context)->input_path88 = input_path;
+  // }
+  //void ADDCALL sass_context_set_output_path(struct SassContext* context, const char* output_path)
+  //{
+  //  // reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
+  //  reinterpret_cast<Sass::Context*>(context)->output_path88 = output_path;
+  //}
 
   // void ADDCALL sass_context_set_source_map_file(struct SassContext* context, const char* source_map_file)
   // {

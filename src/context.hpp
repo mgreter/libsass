@@ -135,7 +135,6 @@ namespace Sass {
 
     size_t head_imports;
     Plugins plugins;
-    Output emitter; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     // Global available functions
     std::vector<CallableObj> fnCache;
@@ -180,11 +179,7 @@ namespace Sass {
     // Consumers are encouraged to clear this vector after they
     // have copied/moved the items after parsing the entry point.
     // They should ideally be known for every stylesheet.
-    sass::vector<sass::string> included_files88;
     sass::vector<SourceDataObj> included_sources;
-
-    // relative includes for sourcemap
-    sass::vector<sass::string> srcmap_links88;
 
     sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
     sass::vector<sass::string> include_paths88; // lookup paths for includes
@@ -195,8 +190,8 @@ namespace Sass {
 
     // const sass::string indent88; // String to be used for indentation
     // const sass::string linefeed88; // String to be used for line feeds
-    sass::string input_path88; // for relative paths in src-map
-    sass::string output_path88; // for relative paths to the output
+    // sass::string input_path88; // for relative paths in src-map
+    // sass::string output_path88; // for relative paths to the output
     // sass::string source_map_file88; // path to source map file (enables feature)
     // sass::string source_map_root88; // path for sourceRoot property (pass-through)
 

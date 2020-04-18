@@ -44,9 +44,6 @@ namespace Sass {
   void Emitter::add_source_index(size_t idx)
   { wbuf.smap.source_index.push_back(idx); }
 
-  sass::string Emitter::renderSrcMapJson(Context &ctx, bool include_sources, bool source_map_file_urls, const char* source_map_root)
-  { return wbuf.smap.renderSrcMapJson(ctx, include_sources, source_map_file_urls, source_map_root); }
-
   void Emitter::set_filename(const sass::string& str)
   { wbuf.smap.file = str; }
 
