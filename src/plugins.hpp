@@ -31,8 +31,8 @@ namespace Sass {
   class Plugins {
 
     public: // c-tor
-      Plugins(void);
-      ~Plugins(void);
+      Plugins();
+      ~Plugins();
 
     public: // methods
       // load one specific plugin
@@ -41,14 +41,14 @@ namespace Sass {
       size_t load_plugins(const sass::string& path);
 
     public: // public accessors
-      const sass::vector<SassImporterPtr> get_headers(void) { return headers; }
-      const sass::vector<SassImporterPtr> get_importers(void) { return importers; }
-      const sass::vector<SassFunctionPtr> get_functions(void) { return functions; }
+      const sass::vector<struct SassImporterCpp*> get_headers(void) { return headers; }
+      const sass::vector<struct SassImporterCpp*> get_importers(void) { return importers; }
+      const sass::vector<struct SassFunctionCpp*> get_functions(void) { return functions; }
 
     private: // private vars
-      sass::vector<SassImporterPtr> headers;
-      sass::vector<SassImporterPtr> importers;
-      sass::vector<SassFunctionPtr> functions;
+      sass::vector<struct SassImporterCpp*> headers;
+      sass::vector<struct SassImporterCpp*> importers;
+      sass::vector<struct SassFunctionCpp*> functions;
 
   };
 

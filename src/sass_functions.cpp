@@ -70,7 +70,7 @@ extern "C" {
     return list == nullptr ? 0 : list->size();
   }
 
-  SassImporterPtr ADDCALL sass_importer_list_shift(SassImporterListPtr list)
+  struct SassImporterCpp* ADDCALL sass_importer_list_shift(SassImporterListPtr list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -79,7 +79,7 @@ extern "C" {
     return ptr;
   }
 
-  void ADDCALL sass_importer_list_push(SassImporterListPtr list, SassImporterPtr importer)
+  void ADDCALL sass_importer_list_push(SassImporterListPtr list, struct SassImporterCpp* importer)
   {
     if (list != nullptr) {
       if (importer != nullptr) {
@@ -89,7 +89,7 @@ extern "C" {
   }
 
 
-  void ADDCALL sass_function_list_push(SassFunctionListPtr list, SassFunctionPtr fn)
+  void ADDCALL sass_function_list_push(SassFunctionListPtr list, struct SassFunctionCpp* fn)
   {
     if (list != nullptr) {
       if (fn != nullptr) {
@@ -98,9 +98,9 @@ extern "C" {
     }
   }
 
-  SassFunctionPtr ADDCALL sass_make_function(const char* signature, SassFunctionLambdaCpp function, void* cookie)
+  struct SassFunctionCpp* ADDCALL sass_make_function(const char* signature, SassFunctionLambdaCpp function, void* cookie)
   {
-    SassFunctionPtr cb = new SassFunctionCpp{};
+    struct SassFunctionCpp* cb = new SassFunctionCpp{};
     if (cb == 0) return 0;
     cb->signature = signature;
     cb->function = function;
@@ -108,7 +108,7 @@ extern "C" {
     return cb;
   }
 
-  void ADDCALL sass_delete_function(SassFunctionPtr entry)
+  void ADDCALL sass_delete_function(struct SassFunctionCpp* entry)
   {
     delete entry;
   }
@@ -124,16 +124,16 @@ extern "C" {
   }
 
   // Setters and getters for callbacks on function lists
-  // SassFunctionPtr ADDCALL sass_function_get_list_entry(SassFunctionListPtr list, uint32_t pos) { return list[pos]; }
-  // void sass_function_set_list_entry(SassFunctionListPtr list, uint32_t pos, SassFunctionPtr cb) { list[pos] = cb; }
+  // struct SassFunctionCpp* ADDCALL sass_function_get_list_entry(SassFunctionListPtr list, uint32_t pos) { return list[pos]; }
+  // void sass_function_set_list_entry(SassFunctionListPtr list, uint32_t pos, struct SassFunctionCpp* cb) { list[pos] = cb; }
 
-  const char* ADDCALL sass_function_get_signature(SassFunctionPtr cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
-  SassFunctionLambdaCpp ADDCALL sass_function_get_function(SassFunctionPtr cb) { return cb->function; }
-  void* ADDCALL sass_function_get_cookie(SassFunctionPtr cb) { return cb->cookie; }
+  const char* ADDCALL sass_function_get_signature(struct SassFunctionCpp* cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
+  SassFunctionLambdaCpp ADDCALL sass_function_get_function(struct SassFunctionCpp* cb) { return cb->function; }
+  void* ADDCALL sass_function_get_cookie(struct SassFunctionCpp* cb) { return cb->cookie; }
 
-  SassImporterPtr ADDCALL sass_make_importer(SassImporterLambdaCpp fn, double priority, void* cookie)
+  struct SassImporterCpp* ADDCALL sass_make_importer(SassImporterLambdaCpp fn, double priority, void* cookie)
   {
-    SassImporterPtr importer = new SassImporterCpp{};
+    struct SassImporterCpp* importer = new SassImporterCpp{};
     if (importer == 0) return 0;
     importer->importer = fn;
     importer->priority = priority;
@@ -141,12 +141,12 @@ extern "C" {
     return importer;
   }
 
-  SassImporterLambdaCpp ADDCALL sass_importer_get_function(SassImporterPtr cb) { return cb->importer; }
-  double ADDCALL sass_importer_get_priority (SassImporterPtr cb) { return cb->priority; }
-  void* ADDCALL sass_importer_get_cookie(SassImporterPtr cb) { return cb->cookie; }
+  SassImporterLambdaCpp ADDCALL sass_importer_get_function(struct SassImporterCpp* cb) { return cb->importer; }
+  double ADDCALL sass_importer_get_priority (struct SassImporterCpp* cb) { return cb->priority; }
+  void* ADDCALL sass_importer_get_cookie(struct SassImporterCpp* cb) { return cb->cookie; }
 
   // Just in case we have some stray import structs
-  void ADDCALL sass_delete_importer (SassImporterPtr importer)
+  void ADDCALL sass_delete_importer (struct SassImporterCpp* importer)
   {
     delete importer;
   }
@@ -205,11 +205,11 @@ extern "C" {
   }
 
   // Getter for callee entry
-  const char* ADDCALL sass_callee_get_name(SassCalleePtr entry) { return entry->name; }
-  const char* ADDCALL sass_callee_get_path(SassCalleePtr entry) { return entry->path; }
-  uint32_t ADDCALL sass_callee_get_line(SassCalleePtr entry) { return entry->line; }
-  uint32_t ADDCALL sass_callee_get_column(SassCalleePtr entry) { return entry->column; }
-  enum Sass_Callee_Type ADDCALL sass_callee_get_type(SassCalleePtr entry) { return entry->type; }
+  const char* ADDCALL sass_callee_get_name(struct SassCalleeCpp* entry) { return entry->name; }
+  const char* ADDCALL sass_callee_get_path(struct SassCalleeCpp* entry) { return entry->path; }
+  uint32_t ADDCALL sass_callee_get_line(struct SassCalleeCpp* entry) { return entry->line; }
+  uint32_t ADDCALL sass_callee_get_column(struct SassCalleeCpp* entry) { return entry->column; }
+  enum Sass_Callee_Type ADDCALL sass_callee_get_type(struct SassCalleeCpp* entry) { return entry->type; }
   
   // Getters and Setters for environments (lexical, local and global)
   struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompiler* compiler, const char* name) {

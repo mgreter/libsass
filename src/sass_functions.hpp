@@ -11,7 +11,7 @@
 // There might be a more efficient way to achieve this?
 // Although compiler optimization should see this case easily!
 struct SassImportListCpp : std::deque<SassImportPtr> {};
-struct SassImporterListCpp : std::deque<SassImporterPtr> {};
+struct SassImporterListCpp : std::deque<struct SassImporterCpp*> {};
 struct SassFunctionListCpp : std::deque<SassFunctionCpp*> {};
 
 // Struct to hold custom function callback

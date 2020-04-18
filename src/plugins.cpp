@@ -49,7 +49,7 @@ namespace Sass {
     size_t pos = sass::string(our_version).find('.', 0);
     if (pos != sass::string::npos) pos = sass::string(our_version).find('.', pos + 1);
 
-    // if we do not have two dots we fallback to compare complete string
+    // if we do not have two dots we fall back to compare complete string
     if (pos == sass::string::npos) { return strcmp(their_version, our_version) ? 0 : 1; }
     // otherwise only compare up to the second dot (major versions)
     else { return strncmp(their_version, our_version, pos) ? 0 : 1; }
@@ -69,7 +69,7 @@ namespace Sass {
 
     if (LOAD_LIB(plugin, path))
     {
-      // try to load initial function to query libsass version suppor
+      // try to load initial function to query libsass version support
       if (LOAD_LIB_FN(__plugin_version__, plugin_version, "libsass_get_version"))
       {
         // get the libsass version of the plugin

@@ -329,9 +329,9 @@ extern "C" {
   }
 
   // Push function for plugin paths (no manipulation support for now)
-  void ADDCALL sass_context_push_plugin_path(struct SassContext* context, const char* path)
+  void ADDCALL sass_context_load_plugins(struct SassContext* context, const char* path)
   {
-    reinterpret_cast<Context*>(context)->plugin_paths.push_back(path);
+    reinterpret_cast<Context*>(context)->loadPlugins(path);
   }
 
   struct SassContext* ADDCALL sass_make_context()

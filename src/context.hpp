@@ -56,7 +56,7 @@ namespace Sass {
     // @param singleton Whether to use all importers or only first successful
     /*#########################################################################*/
     bool callCustomLoader(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule,
-      const sass::vector<SassImporterPtr>& importers, bool singletone = true);
+      const sass::vector<struct SassImporterCpp*>& importers, bool singletone = true);
 
   public:
 
@@ -111,13 +111,13 @@ namespace Sass {
     // Split path-separated string and add them to plugin paths.
     // On windows the path separator is `;`, most others are `:`.
     /*#########################################################################*/
-    void collectPluginPaths(const sass::string& paths);
+    // void collectPluginPaths(const sass::string& paths);
 
     /*#########################################################################*/
     // Call collect for every item inside the vector.
     /*#########################################################################*/
     void collectIncludePaths(const sass::vector<sass::string>& paths);
-    void collectPluginPaths(const sass::vector<sass::string>& paths);
+    // void collectPluginPaths(const sass::vector<sass::string>& paths);
 
 
   protected:
@@ -128,13 +128,16 @@ namespace Sass {
 
   public:
 
-    // Vectors with paths
+    // Helper for plugins
+    // Plugins plugins;
+
+    // Plugins are loaded when the 
+    // strings plugin_paths;
+
+    // Include paths are local to context since we need to know
+    // it for lookups during parsing. You may reset this for
+    // another compilation when reusing the context.
     strings include_paths;
-
-    strings plugin_paths;
-
-    size_t head_imports;
-    Plugins plugins;
 
     // Global available functions
     std::vector<CallableObj> fnCache;
@@ -182,14 +185,14 @@ namespace Sass {
     // They should ideally be known for every stylesheet.
     sass::vector<SourceDataObj> included_sources;
 
-    sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
+    // sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
 
     // mainly used in context::find_includes
     // which is in turn called by Context::load_import
     sass::vector<sass::string> include_paths88; // lookup paths for includes
 
-    sass::vector<SassImporterPtr> c_headers88;
-    sass::vector<SassImporterPtr> c_importers88;
+    sass::vector<struct SassImporterCpp*> c_headers88;
+    sass::vector<struct SassImporterCpp*> c_importers88;
     sass::vector<struct SassFunctionCpp*> c_functions88;
 
     // const sass::string indent88; // String to be used for indentation
@@ -203,6 +206,8 @@ namespace Sass {
 
     virtual ~Context();
     Context();
+
+    void loadPlugins(const sass::string& path);
 
 
     BlockObj parse2(struct SassImportCpp* entry) {

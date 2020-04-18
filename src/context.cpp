@@ -34,7 +34,7 @@ namespace Sass {
 
   static const sass::string CWD(File::get_cwd());
 
-  inline bool cmpImporterPrio (const SassImporterPtr& i, const SassImporterPtr& j)
+  inline bool cmpImporterPrio (struct SassImporterCpp* i, struct SassImporterCpp* j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
   static sass::string safe_input(const char* in_path)
@@ -79,7 +79,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   // most functions are very simple
 #define IMPLEMENT_STR_FN(fn) \
-struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct SassCompiler* comp) \
+struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, struct SassCompiler* comp) \
 { \
   if (!sass_value_is_list(s_args)) { \
     return sass_make_error("Invalid arguments for " #fn); \
@@ -104,7 +104,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   Context::Context()
     : SassOutputOptionsCpp(),
-    head_imports(0),
     // emitter(c_options),
     logger(new Logger(5, SASS_LOGGER_ASCII_MONO)),
     extender(Extender::NORMAL, logger->callStack),
@@ -122,17 +121,15 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // collectPluginPaths(c_options.plugin_path);
 
     // ToDo: call explodePluginPaths!
-    collectPluginPaths(plugin_paths);
+    // collectPluginPaths(plugin_paths);
 
     // load plugins and register custom behaviors
-    for (auto plug : plugin_paths88) plugins.load_plugins(plug);
-    for (auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
-    for (auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
-    for (auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
+    // for (auto plug : plugin_paths88) plugins.load_plugins(plug);
+    // for (auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
+    // for (auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
+    // for (auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
 
     // sort the items by priority (lowest first)
-    sort(c_headers88.begin(), c_headers88.end(), cmpImporterPrio);
-    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
 
     // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
     registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
@@ -140,6 +137,28 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
 
+  }
+
+  // Load plugins from path, which can be path separated
+  void Context::loadPlugins(const sass::string& paths)
+  {
+    Plugins plugins;
+    // Check if we have anything to do
+    if (paths.empty()) return;
+    // Load plugins from all paths
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
+      if (*path.rbegin() != '/') path += '/';
+      plugins.load_plugins(path);
+    }
+    // Register all items for next compilation request
+    for (auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
+    for (auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
+    for (auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
+    // Sort the resulting array by priorities
+    sort(c_headers88.begin(), c_headers88.end(), cmpImporterPrio);
+    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
   // Object destructor
@@ -296,16 +315,16 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   // Split path-separated string and add them to plugin paths.
   // On windows the path separator is `;`, most others are `:`.
-  void Context::collectPluginPaths(const sass::string& paths)
-  {
-    if (paths.empty()) return;
-    sass::vector<sass::string> split =
-      StringUtils::split(paths, PATH_SEP, true);
-    for (sass::string& path : split) {
-      if (*path.rbegin() != '/') path += '/';
-      plugin_paths88.emplace_back(path);
-    }
-  }
+  // void Context::collectPluginPaths(const sass::string& paths)
+  // {
+  //   if (paths.empty()) return;
+  //   sass::vector<sass::string> split =
+  //     StringUtils::split(paths, PATH_SEP, true);
+  //   for (sass::string& path : split) {
+  //     if (*path.rbegin() != '/') path += '/';
+  //     plugin_paths88.emplace_back(path);
+  //   }
+  // }
   // EO collectPluginPaths
 
   // Call collect for every item inside the vector.
@@ -318,12 +337,12 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // EO collectIncludePaths
 
   // Call collect for every item inside the vector.
-  void Context::collectPluginPaths(const sass::vector<sass::string>& paths)
-  {
-    for (const sass::string& path : paths) {
-      collectPluginPaths(path.c_str());
-    }
-  }
+  // void Context::collectPluginPaths(const sass::vector<sass::string>& paths)
+  // {
+  //   for (const sass::string& path : paths) {
+  //     collectPluginPaths(path.c_str());
+  //   }
+  // }
   // EO collectPluginPaths
 
   /*#########################################################################*/
@@ -500,7 +519,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // @param singleton Whether to use all importers or only first successful
   /*#########################################################################*/
   bool Context::callCustomLoader(const sass::string& imp_path, SourceSpan& pstate,
-    ImportRule* rule, const sass::vector<SassImporterPtr>& importers, bool singleton)
+    ImportRule* rule, const sass::vector<struct SassImporterCpp*>& importers, bool singleton)
   {
     // unique counter
     size_t count = 0;
@@ -511,7 +530,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // Process custom importers and headers.
     // They must be presorted by priorities.
-    for (SassImporterPtr importer : importers) {
+    for (struct SassImporterCpp* importer : importers) {
       // Get the external importer function
       SassImporterLambdaCpp fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned

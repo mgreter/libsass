@@ -111,7 +111,7 @@ namespace Sass {
 
   #define BUILT_IN_FN(name) Value* name(FN_PROTOTYPE2)
 
-  // ExternalCallable* make_c_function2(SassFunctionPtr c_func, Context& ctx);
+  // ExternalCallable* make_c_function2(struct SassFunctionCpp* c_func, Context& ctx);
 
 }
 

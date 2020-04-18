@@ -102,7 +102,7 @@ ADDAPI void ADDCALL sass_context_set_entry_point(struct SassContext* context, st
 // Getters for SassCompilerCpp options
 
 // Push function for paths (no manipulation support for now)
-ADDAPI void ADDCALL sass_context_push_plugin_path (struct SassContext* context, const char* path);
+ADDAPI void ADDCALL sass_context_load_plugins (struct SassContext* context, const char* path);
 ADDAPI void ADDCALL sass_context_push_include_path (struct SassContext* context, const char* path);
 
 // Resolve a file via the given include paths in the sass option struct
