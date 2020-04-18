@@ -6,75 +6,57 @@
 #include "source_map.hpp"
 #include "ast_fwd_decl.hpp"
 #include "backtrace.hpp"
+#include "compiler.hpp"
 #include "logger.hpp"
 #include "output.hpp"
 #include "sass.hpp"
 
+// Case 1: create no source-maps
+// Case 2: create source-maps, but no reference in css
+// Case 3: create source-maps, reference to file in css
+// Case 4: create source-maps, embed the json in the css
+// Note: Writing source-maps to disk depends on implementor
 
-struct SassCompiler : SassOutputOptionsCpp {
+enum SassSrcMapMode {
+  SASS_SRCMAP_NONE,
+  SASS_SRCMAP_CREATE,
+  SASS_SRCMAP_EMBED_LINK,
+  SASS_SRCMAP_EMBED_JSON,
 
-  SassCompilerState state;
+};
 
-  struct SassContext* context;
+struct SassSrcMapOptions {
 
-  // main entry point for compilation
-  struct SassImportCpp* entry;
+  // Use string implementation from sass
+  typedef Sass::sass::string string;
 
-  // absolute paths to includes
-  Sass::sass::vector<Sass::sass::string> included_files;
-  // relative includes for sourcemap
-  Sass::sass::vector<Sass::sass::string> srcmap_links;
+  enum SassSrcMapMode source_map_mode;
 
-  // Logging helper
-  Sass::Logger logger;
-
-  // Parsed ast-tree
-  Sass::BlockObj parsed;
-  // Evaluated ast-tree
-  Sass::BlockObj compiled;
-
-  Sass::sass::string output;
-  Sass::sass::string srcmap;
-
-  // error status
-  int error_status;
-  string error_json;
-  string error_text;
-  string error_message;
-  // error position
-  // Why not pstate?
-  string error_file;
-  size_t error_line;
-  size_t error_column;
-  Sass::SourceDataObj error_src;
-
-  // embed sourceMappingUrl as data URI
-  bool source_map_embed;
-
-  // embed include contents in maps
-  bool source_map_contents;
+  // Flag to embed full sources
+  // Ignored for SASS_SRCMAP_NONE
+  bool source_map_embed_contents;
 
   // create file URLs for sources
   bool source_map_file_urls;
 
-  // Disable sourceMappingUrl in css output
-  bool omit_source_map_url;
-
   // Path to source map file
   // Enables source map generation
   // Used to create sourceMappingUrl
-  string source_map_file;
+  string source_map_origin;
 
-  SassCompiler(struct SassContext* context,
-    struct SassImportCpp* entry);
+  // Directly inserted in source maps
+  string source_map_root;
 
-  void parse();
-  void compile();
+  // Path where source map is saved
+  string source_map_path;
 
-  Sass::OutputBuffer render23();
+  // Init everything to false
+  SassSrcMapOptions() :
+    source_map_mode(SASS_SRCMAP_CREATE),
+    source_map_embed_contents(true),
+    source_map_file_urls(false)
+  {}
 
-  // vectors above have same size
-  // sass::string entry_path88;
 };
 
 // sass config options structure
@@ -125,7 +107,7 @@ struct SassOptionsCpp : SassOutputOptionsCpp {
   // string source_map_file;
 
   // Directly inserted in source maps
-  string source_map_root;
+  // string source_map_root;
 
   // Custom functions that can be called from SCSS code
   Sass::sass::vector<struct SassFunctionCpp*> c_functions;

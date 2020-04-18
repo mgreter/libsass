@@ -27,52 +27,6 @@
 #include "debugger.hpp"
 #include "logger.hpp"
 
-SassCompiler::SassCompiler(struct SassContext* context, struct SassImportCpp* entry) :
-  SassOutputOptionsCpp(),
-  state(SassCompilerState::CREATED),
-  context(context),
-  entry(entry),
-  logger(5, SASS_LOGGER_AUTO),
-  error_status(0)
-  {}
-
-void SassCompiler::parse()
-{
-  Context* ctx = reinterpret_cast<Sass::Context*>(context);
-  parsed = ctx->parse2(entry);
-
-  // Move over the includes from the main context
-  // This effectively clears the original vector
-  // Not the cleanest API but was easy to implement
-  included_files = std::move(ctx->included_files88);
-
-  // update the compiler state
-  state = SassCompilerState::PARSED;
-}
-
-void SassCompiler::compile()
-{
-  compiled = reinterpret_cast<Sass::Context*>(context)->compile(parsed, false);
-  // update the compiler state
-  state = SassCompilerState::COMPILED;
-}
-
-OutputBuffer SassCompiler::render23()
-{
-  debug_ast(compiled);
-  // Create the emitter object
-  Sass::Output emitter(*this);
-  // start the render process
-  compiled->perform(&emitter);
-  // finish emitter stream
-  emitter.finalize();
-  // update the compiler state
-  state = SassCompilerState::RENDERED;
-  // get the resulting buffer from stream
-  return std::move(emitter.get_buffer());
-
-}
-
 namespace Sass {
   using namespace Constants;
   using namespace File;
@@ -188,7 +142,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
     registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
 
-    emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
+    // emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
 
   }
 
@@ -414,6 +368,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // add a relative link to the working directory
     included_files88.emplace_back(abs_path);
+    included_sources.emplace_back(source);
 
     // add a relative link to the source map output file
     // srcmap_links88.emplace_back(abs2rel(abs_path, source_map_file88, CWD));
@@ -747,12 +702,13 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     return compiled;
   }
   // EO compile
-
+  /*
   sass::string Context::format_embedded_source_map()
   {
     bool include_sources = false; // ToDo
     bool source_map_file_urls = false;
-    sass::string map = emitter.render_srcmap(*this, include_sources, source_map_file_urls);
+    const char* source_map_root = nullptr;
+    sass::string map = emitter.renderSrcMapJson(*this, include_sources, source_map_file_urls, source_map_root);
     std::istringstream is( map.c_str() );
     std::ostringstream buffer;
     base64::encoder E;
@@ -760,14 +716,15 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sass::string url = "data:application/json;base64,";
     url += buffer.str().c_str();
     url.erase(url.size() - 1);
-    return "/*# sourceMappingURL=" + url + " */";
+    return "/*# sourceMappingURL=" + url + " *\/";
   }
-
   sass::string Context::format_source_mapping_url(const sass::string& file)
   {
     sass::string url = abs2rel(file, output_path88, CWD);
-    return "/*# sourceMappingURL=" + url + " */";
+    return "/*# sourceMappingURL=" + url + " *\/";
   }
+  */
+
   /*
   sass::string Context::render_srcmap()
   {

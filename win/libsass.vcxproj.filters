@@ -146,6 +146,9 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\file.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\compiler.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_colors.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
@@ -356,6 +359,9 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\constants.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\compiler.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_utils.cpp">

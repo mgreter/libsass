@@ -181,6 +181,7 @@ namespace Sass {
     // have copied/moved the items after parsing the entry point.
     // They should ideally be known for every stylesheet.
     sass::vector<sass::string> included_files88;
+    sass::vector<SourceDataObj> included_sources;
 
     // relative includes for sourcemap
     sass::vector<sass::string> srcmap_links88;
@@ -196,8 +197,8 @@ namespace Sass {
     // const sass::string linefeed88; // String to be used for line feeds
     sass::string input_path88; // for relative paths in src-map
     sass::string output_path88; // for relative paths to the output
-    sass::string source_map_file88; // path to source map file (enables feature)
-    sass::string source_map_root88; // path for sourceRoot property (pass-through)
+    // sass::string source_map_file88; // path to source map file (enables feature)
+    // sass::string source_map_root88; // path for sourceRoot property (pass-through)
 
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
@@ -236,8 +237,8 @@ namespace Sass {
     sass::vector<sass::string> get_included_files(bool skip = false, size_t headers = 0);
 
   private:
-    sass::string format_embedded_source_map();
-    sass::string format_source_mapping_url(const sass::string& out_path);
+    // sass::string format_embedded_source_map();
+    // sass::string format_source_mapping_url(const sass::string& out_path);
 
   };
 

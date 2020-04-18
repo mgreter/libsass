@@ -44,7 +44,9 @@ ADDAPI void ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 
 // Getter for sass compiler results
 ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler);
+ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
+
 ADDAPI int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler);

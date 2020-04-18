@@ -8,12 +8,18 @@
 namespace Sass {
 
   class Mapping {
+
   public:
-    size_t file;
-    Offset original_position;
-    Offset generated_position;
-    Mapping(size_t file, const Offset& original_position, const Offset& generated_position)
-    : file(file), original_position(original_position), generated_position(generated_position) { }
+    // Source Index for the origin
+    size_t srcidx; // uint32_t
+    // Position of original occurrence
+    Offset origin;
+    // Position where it was rendered.
+    Offset target;
+
+    // Base copy constructor
+    Mapping(size_t srcidx, const Offset& origin, const Offset& target)
+    : srcidx(srcidx), origin(origin), target(target) { }
 
   };
 

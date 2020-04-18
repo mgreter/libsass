@@ -35,14 +35,17 @@ namespace Sass {
     void add_open_mapping(const AST_Node* node);
     void add_close_mapping(const AST_Node* node);
 
-    sass::string render_srcmap(Context &ctx, bool include, bool source_map_file_urls);
+    sass::string renderSrcMapJson(Context &ctx, bool include, bool source_map_file_urls, const char* source_map_root);
     SourceSpan remap(const SourceSpan& pstate);
 
   private:
 
-    sass::string serialize_mappings();
   public:
+    sass::string serialize_mappings();
+    sass::string render(const std::unordered_map<size_t, size_t>& remap_srcidx) const;
+    
     sass::vector<Mapping> mappings;
+
   private:
     Offset current_position;
 public:
@@ -52,12 +55,6 @@ private:
   };
 
   class OutputBuffer {
-    public:
-      OutputBuffer(void)
-      : buffer(),
-        smap()
-      {
-      }
     public:
       sass::string buffer;
       SourceMap smap;
