@@ -27,12 +27,15 @@ ADDAPI struct SassContextReal* ADDCALL sass_make_context();
 ADDAPI struct SassFileContextCpp* ADDCALL sass_make_file_context (const char* input_path);
 ADDAPI struct SassDataContextCpp* ADDCALL sass_make_data_context (char* source_string);
 
-ADDAPI SassImportPtr ADDCALL sass_make_file_import(const char* input_path);
-ADDAPI SassImportPtr ADDCALL sass_make_data_import(char* source_string);
+ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path);
+ADDAPI struct SassImportCpp* ADDCALL sass_make_data_import(char* source_string);
 
 // Call the compilation step for the specific context
 ADDAPI int ADDCALL sass_compile_file_context (struct SassFileContextCpp* ctx);
 ADDAPI int ADDCALL sass_compile_data_context (struct SassDataContextCpp* ctx);
+
+ADDAPI int ADDCALL sass_compile_file_context2(struct SassContextReal* ctx, const char* input_path);
+ADDAPI int ADDCALL sass_compile_data_context2(struct SassContextReal* ctx, char* source_string);
 
 // Create a sass compiler instance for more control
 ADDAPI struct SassCompilerCpp* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx);
@@ -67,6 +70,7 @@ ADDAPI void ADDCALL sass_data_context_set_options (struct SassDataContextCpp* da
 // Prints message to stderr with color for windows
 ADDAPI void ADDCALL sass_print_stderr(const char* message);
 ADDAPI void ADDCALL sass_context_print_stderr(struct SassContextCpp* ctx);
+ADDAPI void ADDCALL sass_context_print_stderr2(struct SassContextReal* context);
 
 // Getters for Context_Option values
 ADDAPI int ADDCALL sass_option_get_precision (struct SassOptionsCpp* options);
@@ -113,6 +117,7 @@ ADDAPI void ADDCALL sass_context_set_source_map_contents(struct SassContextReal*
 ADDAPI void ADDCALL sass_context_set_source_map_file_urls(struct SassContextReal* context, bool source_map_file_urls);
 ADDAPI void ADDCALL sass_context_set_omit_source_map_url(struct SassContextReal* context, bool omit_source_map_url);
 
+ADDAPI void ADDCALL sass_context_set_entry_point(struct SassContextReal* context, struct SassImportCpp* entry);
 ADDAPI void ADDCALL sass_context_set_input_path(struct SassContextReal* context, const char* input_path);
 ADDAPI void ADDCALL sass_context_set_output_path(struct SassContextReal* context, const char* output_path);
 ADDAPI void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file);
@@ -151,6 +156,21 @@ ADDAPI const char* ADDCALL sass_context_get_error_src (struct SassContextCpp* ct
 ADDAPI size_t ADDCALL sass_context_get_error_line (struct SassContextCpp* ctx);
 ADDAPI size_t ADDCALL sass_context_get_error_column (struct SassContextCpp* ctx);
 ADDAPI const char* ADDCALL sass_context_get_source_map_string (struct SassContextCpp* ctx);
+
+
+ADDAPI const char* ADDCALL sass_context_get_output_string2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_stderr_string2(struct SassContextReal* context);
+ADDAPI int ADDCALL sass_context_get_error_status2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_error_json2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_error_text2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_error_message2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_error_file2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_error_src2(struct SassContextReal* context);
+ADDAPI size_t ADDCALL sass_context_get_error_line2(struct SassContextReal* context);
+ADDAPI size_t ADDCALL sass_context_get_error_column2(struct SassContextReal* context);
+ADDAPI const char* ADDCALL sass_context_get_source_map_string2(struct SassContextReal* context);
+
+
 
 // Getters for options include path array
 ADDAPI size_t ADDCALL sass_option_get_include_path_size(struct SassOptionsCpp* options);

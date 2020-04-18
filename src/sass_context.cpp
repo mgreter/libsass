@@ -122,9 +122,99 @@ namespace Sass {
     return c_ctx->error_status;
   }
 
+
+
+  static int handle_error(SassContextReal* a_ctx) {
+
+    Context* c_ctx = reinterpret_cast<Context*>(a_ctx);
+
+    try {
+      throw;
+    }
+    catch (Exception::Base & e) {
+
+      Logger logger(10, c_ctx->logstyle);
+
+      sass::ostream& msg_stream = logger.errors;
+      sass::string cwd(Sass::File::get_cwd());
+      sass::string msg_prefix("Error");
+      bool got_newline = false;
+      msg_stream << msg_prefix << ": ";
+      const char* msg = e.what();
+      while (msg && *msg) {
+        if (*msg == '\r') {
+          got_newline = true;
+        }
+        else if (*msg == '\n') {
+          got_newline = true;
+        }
+        else if (got_newline) {
+          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
+          got_newline = false;
+        }
+        msg_stream << *msg;
+        ++msg;
+      }
+      if (!got_newline) msg_stream << "\n";
+
+      auto pstate = SourceSpan::tmp("[NOPE]");
+      if (e.traces.empty()) {
+        std::cerr << "THIS IS OLD AND NOT YET\n";
+      }
+      else {
+        pstate = e.traces.back().pstate;
+      }
+
+      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), cwd, cwd));
+      logger.writeStackTraces(logger.errors, e.traces, "  ");
+      JsonNode* json_err = json_mkobject();
+      json_append_member(json_err, "status", json_mknumber(1));
+      json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
+      json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
+      json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
+      json_append_member(json_err, "message", json_mkstring(e.what()));
+      json_append_member(json_err, "formatted", json_mkstream(msg_stream));
+      try { c_ctx->error_json = json_stringify(json_err, "  "); }
+      catch (...) {} // silently ignore this error?
+      c_ctx->error_message = msg_stream.str();
+      c_ctx->error_text = e.what();
+      c_ctx->error_status = 1;
+      c_ctx->error_file = pstate.getAbsPath();
+      c_ctx->error_line = pstate.getLine();
+      c_ctx->error_column = pstate.getColumn();
+      c_ctx->error_src = pstate.getContent();
+      json_delete(json_err);
+    }
+    catch (std::bad_alloc & ba) {
+      sass::sstream msg_stream;
+      msg_stream << "Unable to allocate memory: " << ba.what();
+      handle_string_error(c_ctx, msg_stream.str(), 2);
+    }
+    catch (std::exception & e) {
+      handle_string_error(c_ctx, e.what(), 3);
+    }
+    catch (sass::string & e) {
+      handle_string_error(c_ctx, e, 4);
+    }
+    catch (const char* e) {
+      handle_string_error(c_ctx, e, 4);
+    }
+    catch (...) {
+      handle_string_error(c_ctx, "unknown", 5);
+    }
+    return c_ctx->error_status;
+  }
+
   // allow one error handler to throw another error
   // this can happen with invalid utf8 and json lib
   static int handle_errors(SassContextCpp* c_ctx) {
+    try { return handle_error(c_ctx); }
+    catch (...) { return handle_error(c_ctx); }
+  }
+
+  // allow one error handler to throw another error
+  // this can happen with invalid utf8 and json lib
+  static int handle_errors(SassContextReal* c_ctx) {
     try { return handle_error(c_ctx); }
     catch (...) { return handle_error(c_ctx); }
   }
@@ -303,6 +393,62 @@ extern "C" {
 
   }
 
+
+  // generic compilation function (not exported, use file/data compile instead)
+  static int sass_compile_import(struct SassContextReal* context, struct SassImportCpp* import)
+  {
+    Context* cpp_ctx = reinterpret_cast<Context*>(context);
+
+    SassContextCpp* c_ctx = &cpp_ctx->c_options;
+    sass_context_set_entry_point(context, import);
+
+    try {
+
+      cpp_ctx->parse2();
+
+      auto foo = cpp_ctx->render(cpp_ctx->root);
+
+      cpp_ctx->output_string = sass_copy_string(foo);
+
+    }
+    // pass errors to generic error handler
+    catch (...) {
+      std::cerr << "re-implement error\n";
+      // handle_errors(cpp_ctx);
+    }
+
+    // try { compiler->c_ctx->output_string = cpp_ctx->render(root); }
+    // // pass caught errors to generic error handler
+    // catch (...) {
+    //   compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
+    //   return handle_errors(compiler->c_ctx) | 1;
+    // }
+    // // generate source map json and store on context
+    // compiler->c_ctx->source_map_string = cpp_ctx->render_srcmap();
+    // compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
+
+
+    return c_ctx->error_status;
+
+
+    // prepare sass compiler with context and options
+    SassCompilerCpp* compiler = sass_prepare_context(cpp_ctx);
+
+    try {
+      // call each compiler step
+      // This is parse and execute now
+      sass_compiler_parse(compiler);
+      // This is only emitting stuff
+      sass_compiler_execute(compiler);
+    }
+    // pass errors to generic error handler
+    catch (...) { handle_errors(c_ctx); }
+
+    sass_delete_compiler(compiler);
+
+    return c_ctx->error_status;
+  }
+
   // generic compilation function (not exported, use file/data compile instead)
   static int sass_compile_context (Context* cpp_ctx)
   {
@@ -382,6 +528,12 @@ extern "C" {
     return ctx;
   }
 
+  void ADDCALL sass_context_print_stderr2(struct SassContextReal* context)
+  {
+    const char* message = sass_context_get_stderr_string2(context);
+    if (message != nullptr) Terminal::print(message, true);
+  }
+
   void ADDCALL sass_context_print_stderr(struct SassContextCpp* ctx)
   {
     const char* message = sass_context_get_stderr_string(ctx);
@@ -434,6 +586,37 @@ extern "C" {
     Context* cpp_ctx = new File_Context(*file_ctx);
     return sass_compile_context(cpp_ctx);
   }
+
+  
+  int ADDCALL sass_compile_data_context2(struct SassContextReal* data_ctx, char* source_string)
+  {
+    if (data_ctx == 0) return 1;
+    try {
+      // if (data_ctx->source_string.empty()) { throw(std::runtime_error("Data context has empty source string")); }
+      // empty source string is a valid case, even if not really useful (different than with file context)
+      // if (*data_ctx->source_string == 0) { throw(std::runtime_error("Data context has empty source string")); }
+    }
+    catch (...) { return handle_errors(data_ctx) | 1; }
+
+    struct SassImportCpp* import = sass_make_data_import(source_string);
+
+    return sass_compile_import(data_ctx, import);
+  }
+
+
+  int ADDCALL sass_compile_file_context2(struct SassContextReal* file_ctx, const char* input_path)
+  {
+    if (file_ctx == 0) return 1;
+    try {
+      if (input_path == nullptr) { throw(std::runtime_error("File context has no input path")); }
+      if (input_path == "\0") { throw(std::runtime_error("File context has empty input path")); }
+    }
+    catch (...) { return handle_errors(file_ctx) | 1; }
+    struct SassImportCpp* import = sass_make_file_import(input_path);
+
+    return sass_compile_import(file_ctx, import);
+  }
+
 
   int ADDCALL sass_compiler_parse(struct SassCompilerCpp* compiler)
   {
@@ -527,7 +710,7 @@ extern "C" {
 
   void ADDCALL sass_delete_context(SassContextReal* context)
   {
-    delete reinterpret_cast<Context*>(context);
+    // delete reinterpret_cast<Context*>(context);
   }
 
   // Deallocate all associated memory with file context

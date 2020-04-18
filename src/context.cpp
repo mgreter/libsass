@@ -31,6 +31,12 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
+  Compiler::Compiler(struct SassImportCpp* entry) :
+    entry(entry),
+    emitter(SassOutputOptionsCpp{}),
+    logger(5, SASS_LOGGER_AUTO)
+  {}
+
   inline bool cmpImporterPrio (const SassImporterPtr& i, const SassImporterPtr& j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
@@ -222,7 +228,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   Context::~Context()
   {
     // release logger
-    delete logger;
+    // delete logger;
   }
 
   /*#########################################################################*/
@@ -758,47 +764,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   }
 
-  SassImportPtr ADDCALL sass_make_file_import(const char* input_path88)
-  {
-    // check if entry file is given
-    if (input_path88 == nullptr) return {};
-
-    // create absolute path from input filename
-    // ToDo: this should be resolved via custom importers
-    sass::string abs_path(rel2abs(input_path88, ".", "."));
-
-    // try to load the entry file
-    char* contents = slurp_file(abs_path, ".");
-/*
-    // alternatively also look inside each include path folder
-    // I think this differs from ruby sass (IMO too late to remove)
-    for (size_t i = 0, S = include_paths88.size(); contents == 0 && i < S; ++i) {
-      // build absolute path for this include path entry
-      abs_path = rel2abs(input_path88, include_paths88[i], CWD);
-      // try to load the resulting path
-      contents = slurp_file(abs_path, CWD);
-    }
-    */
-    // abort early if no content could be loaded (various reasons)
-    if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path88));
-
-    // store entry path
-    // entry_path88 = abs_path;
-
-    return sass_make_import(
-      input_path88,
-      abs_path.c_str(),
-      contents,
-      0, SASS_IMPORT_AUTO
-    );
-
-  }
-
-  SassImportPtr ADDCALL sass_make_data_import(char* source_string)
-  {
-    return nullptr;
-  }
-
   Block_Obj Data_Context::parse(Sass_Import_Type type)
   {
 
@@ -1037,21 +1002,120 @@ const char* ADDCALL sass_context_get_source_map_root(struct SassContextReal* con
   return reinterpret_cast<Sass::Context*>(context)->source_map_root.c_str();
 }
 
+void ADDCALL sass_context_set_entry_point(struct SassContextReal* context, struct SassImportCpp* entry)
+{
+  reinterpret_cast<Sass::Context*>(context)->entry = entry;
+}
+
 
 void ADDCALL sass_context_set_input_path(struct SassContextReal* context, const char* input_path)
 {
   reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
+  reinterpret_cast<Sass::Context*>(context)->input_path88 = input_path;
 }
 void ADDCALL sass_context_set_output_path(struct SassContextReal* context, const char* output_path)
 {
   reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
+  reinterpret_cast<Sass::Context*>(context)->output_path88 = output_path;
 }
 
 void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file)
 {
   reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
+  reinterpret_cast<Sass::Context*>(context)->source_map_file88 = source_map_file;
 }
 void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, const char* source_map_root)
 {
   reinterpret_cast<Sass::Context*>(context)->source_map_root = source_map_root;
+  reinterpret_cast<Sass::Context*>(context)->source_map_root88 = source_map_root;
+}
+
+
+const char* ADDCALL sass_context_get_output_string2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->output_string.c_str();
+}
+const char* ADDCALL sass_context_get_stderr_string2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->stderr_string.c_str();
+}
+int ADDCALL sass_context_get_error_status2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_status;
+}
+const char* ADDCALL sass_context_get_error_json2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_json.c_str();
+}
+const char* ADDCALL sass_context_get_error_text2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_text.c_str();
+}
+const char* ADDCALL sass_context_get_error_message2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_message.c_str();
+}
+const char* ADDCALL sass_context_get_error_file2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_file.c_str();
+}
+const char* ADDCALL sass_context_get_error_src2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_src.c_str();
+}
+size_t ADDCALL sass_context_get_error_line2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_line;
+}
+size_t ADDCALL sass_context_get_error_column2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->error_column;
+}
+const char* ADDCALL sass_context_get_source_map_string2(struct SassContextReal* context)
+{
+  return reinterpret_cast<Sass::Context*>(context)->source_map_string.c_str();
+}
+
+struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
+{
+  // check if entry file is given
+  if (input_path88 == nullptr) return {};
+
+  // create absolute path from input filename
+  // ToDo: this should be resolved via custom importers
+
+  auto CWD = File::get_cwd();
+
+  sass::string abs_path(rel2abs(input_path88, CWD, CWD));
+
+  // try to load the entry file
+  char* contents = slurp_file(abs_path, CWD);
+  /*
+      // alternatively also look inside each include path folder
+      // I think this differs from ruby sass (IMO too late to remove)
+      for (size_t i = 0, S = include_paths88.size(); contents == 0 && i < S; ++i) {
+        // build absolute path for this include path entry
+        abs_path = rel2abs(input_path88, include_paths88[i], CWD);
+        // try to load the resulting path
+        contents = slurp_file(abs_path, CWD);
+      }
+      */
+      // abort early if no content could be loaded (various reasons)
+  // if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path88));
+
+  // store entry path
+  // entry_path88 = abs_path;
+
+  return sass_make_import(
+    input_path88,
+    abs_path.c_str(),
+    contents,
+    0, SASS_IMPORT_AUTO
+  );
+
+}
+
+struct SassImportCpp* ADDCALL sass_make_data_import(char* source_string)
+{
+  return nullptr;
 }

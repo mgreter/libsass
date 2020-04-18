@@ -21,6 +21,29 @@
 
 namespace Sass {
 
+  class Compiler {
+
+    // main entry point for compilation
+    struct SassImportCpp* entry;
+
+    // absolute paths to includes
+    sass::vector<sass::string> included_files;
+    // relative includes for sourcemap
+    sass::vector<sass::string> srcmap_links;
+
+    // Emitter helper
+    Output emitter;
+    // Logging helper
+    Logger logger;
+
+    Compiler(struct SassImportCpp* entry);
+
+    // vectors above have same size
+    // sass::string entry_path88;
+
+
+  };
+
   class Context : public SassContextCpp {
   public:
 
@@ -136,11 +159,12 @@ namespace Sass {
     // The attached options passed from C-API
     struct SassContextCpp& c_options;
 
-    sass::string entry_path88;
-
+    sass::string entry_path88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    struct SassImportCpp* entry; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    BlockObj root;
     size_t head_imports;
     Plugins plugins;
-    Output emitter;
+    Output emitter; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     // Global available functions
     std::vector<CallableObj> fnCache;
@@ -160,7 +184,7 @@ namespace Sass {
 
     // The logger is created on context instantiation.
     // It assigns a specific logger according to options.
-    Logger* logger;
+    Logger* logger; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     // resources under our control
     sass::vector<SourceDataObj> sources;
@@ -182,15 +206,13 @@ namespace Sass {
     struct SassCompilerCpp* c_compiler;
 
     // absolute paths to includes
-    sass::vector<sass::string> included_files88;
+    sass::vector<sass::string> included_files88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     // relative includes for sourcemap
-    sass::vector<sass::string> srcmap_links88;
+    sass::vector<sass::string> srcmap_links88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     // vectors above have same size
 
     sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
     sass::vector<sass::string> include_paths88; // lookup paths for includes
-
-    void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
     sass::vector<SassImporterPtr> c_headers88;
     sass::vector<SassImporterPtr> c_importers88;
@@ -198,19 +220,35 @@ namespace Sass {
 
     // const sass::string indent88; // String to be used for indentation
     // const sass::string linefeed88; // String to be used for line feeds
-    const sass::string input_path88; // for relative paths in src-map
-    const sass::string output_path88; // for relative paths to the output
-    const sass::string source_map_file88; // path to source map file (enables feature)
-    const sass::string source_map_root88; // path for sourceRoot property (pass-through)
+    sass::string input_path88; // for relative paths in src-map
+    sass::string output_path88; // for relative paths to the output
+    sass::string source_map_file88; // path to source map file (enables feature)
+    sass::string source_map_root88; // path for sourceRoot property (pass-through)
+
+    void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
     virtual ~Context();
     Context();
     Context(struct SassContextCpp&);
+
+    void parse2() {
+
+      entry_path88 = entry->srcdata->getAbsPath();
+      root = compileImport(entry);
+
+      // Now we must decide what to do!
+      // std::cerr << "Untangle me 22\n";
+      // return compileImport(import);
+    }
+
     virtual Block_Obj parse(Sass_Import_Type type) {
+
+      // Now we must decide what to do!
       std::cerr << "Untangle me\n";
       return {};
     }
     virtual Block_Obj compile();
+    // ToDo: return const string& ?
     virtual sass::string render(Block_Obj root);
     virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
@@ -247,6 +285,9 @@ namespace Sass {
     File_Context(struct SassFileContextCpp& ctx)
     : Context(ctx)
     { }
+    File_Context(const Context* ctx)
+      : Context(*ctx)
+    { }
     virtual Block_Obj parse(Sass_Import_Type type);
   };
 
@@ -254,6 +295,14 @@ namespace Sass {
   public:
     sass::string& source_c_str;
     sass::string& srcmap_c_str;
+    /*
+    Data_Context(const Context* ctx)
+      : Context(*ctx),
+      source_c_str(ctx->source_string),
+      srcmap_c_str(ctx->srcmap_string)
+    {}
+    */
+
     Data_Context(struct SassDataContextCpp& ctx)
     : Context(ctx),
       source_c_str(ctx.source_string),
