@@ -11,7 +11,9 @@
 #include "sass.hpp"
 
 
-struct SassCompiler322 : SassOutputOptionsCpp {
+struct SassCompiler : SassOutputOptionsCpp {
+
+  SassCompilerState state;
 
   struct SassContextReal* context;
 
@@ -23,8 +25,6 @@ struct SassCompiler322 : SassOutputOptionsCpp {
   // relative includes for sourcemap
   Sass::sass::vector<Sass::sass::string> srcmap_links;
 
-  // Emitter helper
-  Sass::Output emitter;
   // Logging helper
   Sass::Logger logger;
 
@@ -36,7 +36,7 @@ struct SassCompiler322 : SassOutputOptionsCpp {
   Sass::sass::string output;
   Sass::sass::string srcmap;
 
-  SassCompiler322(struct SassContextReal* context,
+  SassCompiler(struct SassContextReal* context,
     struct SassImportCpp* entry);
 
   void parse();
@@ -149,35 +149,6 @@ struct SassContextCpp : SassOptionsCpp
   // report imported files
   strings included_files;
 
-};
-
-// struct for file compilation
-struct SassFileContextCpp : SassContextCpp {
-
-  // no additional fields required
-  // input_path is already on options
-
-};
-
-// struct for data compilation
-struct SassDataContextCpp : SassContextCpp {
-
-  // provided source string
-  string source_string;
-  string srcmap_string;
-
-};
-
-// link C and CPP context
-struct SassCompilerCpp {
-  // progress status
-  Sass_Compiler_State state;
-  // original c context
-  SassContextCpp* c_ctx;
-  // Sass::Context
-  Sass::Context* cpp_ctx;
-  // Sass::Block
-  Sass::Block_Obj root;
 };
 
 #endif

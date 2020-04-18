@@ -27,25 +27,29 @@
 #include "debugger.hpp"
 #include "logger.hpp"
 
-SassCompiler322::SassCompiler322(struct SassContextReal* context, struct SassImportCpp* entry) :
+SassCompiler::SassCompiler(struct SassContextReal* context, struct SassImportCpp* entry) :
   SassOutputOptionsCpp(),
+  state(SassCompilerState::CREATED),
   context(context),
   entry(entry),
-  emitter(*this),
   logger(5, SASS_LOGGER_AUTO)
   {}
 
-void SassCompiler322::parse()
+void SassCompiler::parse()
 {
   parsed = reinterpret_cast<Sass::Context*>(context)->parse2(entry);
+  // update the compiler state
+  state = SassCompilerState::PARSED;
 }
 
-void SassCompiler322::compile()
+void SassCompiler::compile()
 {
   compiled = reinterpret_cast<Sass::Context*>(context)->compile(parsed, false);
+  // update the compiler state
+  state = SassCompilerState::COMPILED;
 }
 
-OutputBuffer SassCompiler322::render23()
+OutputBuffer SassCompiler::render23()
 {
   debug_ast(compiled);
   // Create the emitter object
@@ -54,6 +58,8 @@ OutputBuffer SassCompiler322::render23()
   compiled->perform(&emitter);
   // finish emitter stream
   emitter.finalize();
+  // update the compiler state
+  state = SassCompilerState::RENDERED;
   // get the resulting buffer from stream
   return std::move(emitter.get_buffer());
 
@@ -85,7 +91,7 @@ namespace Sass {
 
   // most functions are very simple
 #define IMPLEMENT_1_ARG_FN(fn) \
-struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct Sass_Compiler* comp) \
+struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct SassCompiler* comp) \
 { \
   if (!sass_value_is_list(s_args)) { \
     return sass_make_error("Invalid arguments for " #fn); \
@@ -102,14 +108,14 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   return sass_make_number(fn(inp_nr), inp_unit); \
 }
 
-  std::string crc16s(const std::string& text, struct Sass_Compiler* comp)
+  std::string crc16s(const std::string& text, struct SassCompiler* comp)
   {
     return "CRC16";
   }
 
   // most functions are very simple
 #define IMPLEMENT_STR_FN(fn) \
-struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct Sass_Compiler* comp) \
+struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct SassCompiler* comp) \
 { \
   if (!sass_value_is_list(s_args)) { \
     return sass_make_error("Invalid arguments for " #fn); \
@@ -130,65 +136,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   // IMPLEMENT_1_ARG_FN(sin)
 
-  Context::Context(struct SassContextCpp& c_ctx)
-  : SassContextCpp(),
-    CWD(File::get_cwd()),
-    c_options(c_ctx),
-    entry_path88(""),
-    head_imports(0),
-    plugins(),
-    emitter(c_options),
-    varRoot(),
-    logger(new Logger(sass_option_get_precision(&c_ctx), c_ctx.logstyle)),
-    sources(),
-    sheets(),
-    import_stack(),
-    importStack(),
-    callee_stack(),
-    functions(),
-    extender(Extender::NORMAL, logger->callStack),
-    c_compiler(NULL),
-
-    // Initialize C-API arrays for custom functionality
-    c_headers88(sass::vector<SassImporterPtr>()),
-    c_importers88(sass::vector<SassImporterPtr>()),
-    c_functions88(sass::vector<struct SassFunctionCpp*>()),
-
-
-    input_path88(make_canonical_path(safe_input(c_options.input_path.c_str()))),
-    output_path88(make_canonical_path(safe_output(c_options.output_path.c_str(), input_path88))),
-    source_map_file88(make_canonical_path(c_options.source_map_file)),
-    source_map_root88(make_canonical_path(c_options.source_map_root))
-
-  {
-
-    // Sass 3.4: The current working directory will no longer be placed onto the Sass load path by default.
-    // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.
-    // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
-
-    // collect more paths from different options
-    collectIncludePaths(c_options.include_path);
-    collectIncludePaths(c_options.include_paths);
-    collectPluginPaths(c_options.plugin_path);
-    collectPluginPaths(c_options.plugin_paths);
-
-    // load plugins and register custom behaviors
-    for(auto plug : plugin_paths88) plugins.load_plugins(plug);
-    for(auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
-    for(auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
-    for(auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
-
-    // sort the items by priority (lowest first)
-    sort (c_headers88.begin(), c_headers88.end(), cmpImporterPrio);
-    sort (c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
-
-    // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
-    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
-    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
-
-    emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
-
-  }
 
 
   Context::Context()
@@ -756,64 +703,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     }
   }
 
-  Block_Obj File_Context::parse(Sass_Import_Type type)
-  {
-
-    // check if entry file is given
-    if (input_path88.empty()) return {};
-
-    // create absolute path from input filename
-    // ToDo: this should be resolved via custom importers
-    sass::string abs_path(rel2abs(input_path88, CWD, CWD));
-
-    // try to load the entry file
-    char* contents = slurp_file(abs_path, CWD);
-
-    // alternatively also look inside each include path folder
-    // I think this differs from ruby sass (IMO too late to remove)
-    for (size_t i = 0, S = include_paths88.size(); contents == 0 && i < S; ++i) {
-      // build absolute path for this include path entry
-      abs_path = rel2abs(input_path88, include_paths88[i], CWD);
-      // try to load the resulting path
-      contents = slurp_file(abs_path, CWD);
-    }
-
-    // abort early if no content could be loaded (various reasons)
-    if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path88.c_str()));
-
-    // store entry path
-    entry_path88 = abs_path;
-
-    return compileImport(sass_make_import(
-      input_path88.c_str(),
-      abs_path.c_str(),
-      contents,
-      0, type
-    ));
-
-  }
-
-  Block_Obj Data_Context::parse(Sass_Import_Type type)
-  {
-
-    // check if source string is given
-    if (source_c_str.empty()) return {};
-
-    // remember entry path (defaults to stdin for string)
-    entry_path88 = input_path88.empty() ? "stdin" : input_path88;
-
-    // ToDo: this may be resolved via custom importers
-    sass::string abs_path(rel2abs(entry_path88, ".", CWD));
-
-    return compileImport(sass_make_import(
-      input_path88.c_str(),
-      input_path88.c_str(),
-      sass_copy_string(source_c_str),
-      sass_copy_string(srcmap_c_str),
-      type
-    ));
-
-  }
   BlockObj Context::parseImport(SassImportPtr import)
   {
     // add the entry to the stack

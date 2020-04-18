@@ -212,28 +212,28 @@ extern "C" {
   enum Sass_Callee_Type ADDCALL sass_callee_get_type(SassCalleePtr entry) { return entry->type; }
   
   // Getters and Setters for environments (lexical, local and global)
-  struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompilerCpp* compiler, const char* name) {
-    return compiler->cpp_ctx->varRoot.getLexicalVariable(Sass::EnvKey(name))->toSassValue();
+  struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompiler* compiler, const char* name) {
+    return 0; // compiler->cpp_ctx->varRoot.getLexicalVariable(Sass::EnvKey(name))->toSassValue();
   }
 
-  void ADDCALL sass_env_set_lexical (struct SassCompilerCpp* compiler, const char* name, struct SassValue* val) {
-    compiler->cpp_ctx->varRoot.setLexicalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
+  void ADDCALL sass_env_set_lexical (struct SassCompiler* compiler, const char* name, struct SassValue* val) {
+    // compiler->cpp_ctx->varRoot.setLexicalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
   }
 
-  struct SassValue* ADDCALL sass_env_get_local (struct SassCompilerCpp* compiler, const char* name) {
-    return compiler->cpp_ctx->varRoot.getLocalVariable(Sass::EnvKey(name))->toSassValue();
+  struct SassValue* ADDCALL sass_env_get_local (struct SassCompiler* compiler, const char* name) {
+    return 0; // compiler->cpp_ctx->varRoot.getLocalVariable(Sass::EnvKey(name))->toSassValue();
   }
 
-  void ADDCALL sass_env_set_local (struct SassCompilerCpp* compiler, const char* name, struct SassValue* val) {
-    compiler->cpp_ctx->varRoot.setLocalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
+  void ADDCALL sass_env_set_local (struct SassCompiler* compiler, const char* name, struct SassValue* val) {
+    // compiler->cpp_ctx->varRoot.setLocalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
   }
 
-  struct SassValue* ADDCALL sass_env_get_global (struct SassCompilerCpp* compiler, const char* name) {
-    return compiler->cpp_ctx->varRoot.getGlobalVariable(Sass::EnvKey(name))->toSassValue();
+  struct SassValue* ADDCALL sass_env_get_global (struct SassCompiler* compiler, const char* name) {
+    return 0; // compiler->cpp_ctx->varRoot.getGlobalVariable(Sass::EnvKey(name))->toSassValue();
   }
 
-  void ADDCALL sass_env_set_global (struct SassCompilerCpp* compiler, const char* name, struct SassValue* val) {
-    compiler->cpp_ctx->varRoot.setGlobalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
+  void ADDCALL sass_env_set_global (struct SassCompiler* compiler, const char* name, struct SassValue* val) {
+    // compiler->cpp_ctx->varRoot.setGlobalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
   }
 
   // Getter for import entry

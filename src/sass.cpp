@@ -73,8 +73,9 @@ extern "C" {
     return sass_copy_c_string(unquoted.c_str());
   }
 
-  char* ADDCALL sass_compiler_find_include (const char* file, struct SassCompilerCpp* compiler)
+  char* ADDCALL sass_compiler_find_include (const char* file, struct SassCompiler* compiler)
   {
+    /*
     // get the last import entry to get current base directory
     SassImportPtr import = sass_compiler_get_last_import(compiler);
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths88;
@@ -86,10 +87,13 @@ extern "C" {
     sass::string resolved(File::find_include(file,
       compiler->cpp_ctx->CWD, paths, compiler->cpp_ctx->fileExistsCache));
     return sass_copy_c_string(resolved.c_str());
+    */
+    return 0;
   }
 
-  char* ADDCALL sass_compiler_find_file (const char* file, struct SassCompilerCpp* compiler)
+  char* ADDCALL sass_compiler_find_file (const char* file, struct SassCompiler* compiler)
   {
+    /*
     // get the last import entry to get current base directory
     SassImportPtr import = sass_compiler_get_last_import(compiler);
     const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths88;
@@ -100,6 +104,8 @@ extern "C" {
     // now resolve the file path relative to lookup paths
     sass::string resolved(File::find_file(file, compiler->cpp_ctx->CWD, paths, compiler->cpp_ctx->fileExistsCache));
     return sass_copy_c_string(resolved.c_str());
+    */
+    return 0;
   }
 
   // Make sure to free the returned value!

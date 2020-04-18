@@ -22,9 +22,9 @@ typedef SassImporterListPtr Sass_Importer_List;
 typedef SassFunctionListPtr Sass_Function_List;
 
 struct SassOptionsCpp;
-struct SassCompilerCpp;
+// struct SassCompilerCpp;
 
 #define Sass_Options SassOptionsCpp
-#define Sass_Compiler SassCompilerCpp
+#define Sass_Compiler SassCompiler
 
 #endif

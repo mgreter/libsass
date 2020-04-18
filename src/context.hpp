@@ -182,7 +182,7 @@ namespace Sass {
 
     Extender extender;
 
-    struct SassCompilerCpp* c_compiler;
+    struct SassCompiler* c_compiler;
 
     // absolute paths to includes
     sass::vector<sass::string> included_files88; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -208,7 +208,6 @@ namespace Sass {
 
     virtual ~Context();
     Context();
-    Context(struct SassContextCpp&);
 
     void parse2() {
 
@@ -264,41 +263,6 @@ namespace Sass {
 
   public:
     const sass::string& cwd() { return CWD; };
-  };
-
-  // Maybe I should create a source instead?
-  // sass_make_file_source
-  // sass_context_set_source
-
-  class File_Context : public Context {
-  public:
-    File_Context(struct SassFileContextCpp& ctx)
-    : Context(ctx)
-    { }
-    File_Context(const Context* ctx)
-      : Context(*ctx)
-    { }
-    virtual Block_Obj parse(Sass_Import_Type type);
-  };
-
-  class Data_Context : public Context {
-  public:
-    sass::string& source_c_str;
-    sass::string& srcmap_c_str;
-    /*
-    Data_Context(const Context* ctx)
-      : Context(*ctx),
-      source_c_str(ctx->source_string),
-      srcmap_c_str(ctx->srcmap_string)
-    {}
-    */
-
-    Data_Context(struct SassDataContextCpp& ctx)
-    : Context(ctx),
-      source_c_str(ctx.source_string),
-      srcmap_c_str(ctx.srcmap_string)
-    {}
-    virtual Block_Obj parse(Sass_Import_Type type);
   };
 
 }

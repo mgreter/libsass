@@ -218,8 +218,8 @@ namespace Sass {
     try { return handle_error(c_ctx); }
     catch (...) { return handle_error(c_ctx); }
   }
-
-  static Block_Obj sass_parse_block(SassCompilerCpp* compiler) throw()
+  /*
+  static Block_Obj sass_parse_block(struct SassCompiler* compiler) throw()
   {
 
     // assert valid pointer
@@ -267,7 +267,7 @@ namespace Sass {
     return {};
 
   }
-
+  */
 }
 
 extern "C" {
@@ -299,30 +299,6 @@ extern "C" {
     IMPLEMENT_SASS_OPTION_STRING_SETTER(type, option, def)
 
 
-#define IMPLEMENT_SASS_OPTION_STRING2_GETTER(option) \
-    const char* ADDCALL sass_option_get_##option (struct SassOptionsCpp* options) \
-    { return options->option.empty() ? 0 : options->option.c_str(); }
-
-#define IMPLEMENT_SASS_OPTION_STRING2_SETTER(option) \
-    void ADDCALL sass_option_set_##option (struct SassOptionsCpp* options, const char* value) \
-    { options->option = value; }
-
-#define IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(option) \
-    IMPLEMENT_SASS_OPTION_STRING2_GETTER(option) \
-    IMPLEMENT_SASS_OPTION_STRING2_SETTER(option)
-
-  // TODO: return empty string too?
-#define IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(option) \
-    const char* ADDCALL sass_context_get_##option (struct SassContextCpp* ctx) { return ctx->option.empty() ? 0 : ctx->option.c_str(); }
-
-
-#define IMPLEMENT_SASS_CONTEXT_GETTER(type, option) \
-    type ADDCALL sass_context_get_##option (struct SassContextCpp* ctx) { return ctx->option; }
-
-#define IMPLEMENT_SASS_CONTEXT_TAKER(type, option) \
-    type sass_context_take_##option (struct SassContextCpp* ctx) \
-    { type foo = ctx->option; ctx->option = 0; return foo; }
-
 
 
   bool IsConsoleRedirected() {
@@ -349,7 +325,7 @@ extern "C" {
     // TODO: Not even a stdout so this is not even a console?
     return false;
   }
-
+  /*
   // generic compilation function (not exported, use file/data compile instead)
   static SassCompilerCpp* sass_prepare_context (Context* cpp_ctx) throw()
   {
@@ -392,87 +368,8 @@ extern "C" {
     return 0;
 
   }
-
-
-  // generic compilation function (not exported, use file/data compile instead)
-  static int sass_compile_import(struct SassContextReal* context, struct SassImportCpp* import)
-  {
-    Context* cpp_ctx = reinterpret_cast<Context*>(context);
-
-    SassContextCpp* c_ctx = &cpp_ctx->c_options;
-    sass_context_set_entry_point(context, import);
-
-    try {
-
-      cpp_ctx->parse2();
-
-      auto foo = cpp_ctx->render(cpp_ctx->root);
-
-      cpp_ctx->output_string = sass_copy_string(foo);
-
-    }
-    // pass errors to generic error handler
-    catch (...) {
-      std::cerr << "re-implement error\n";
-      // handle_errors(cpp_ctx);
-    }
-
-    // try { compiler->c_ctx->output_string = cpp_ctx->render(root); }
-    // // pass caught errors to generic error handler
-    // catch (...) {
-    //   compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
-    //   return handle_errors(compiler->c_ctx) | 1;
-    // }
-    // // generate source map json and store on context
-    // compiler->c_ctx->source_map_string = cpp_ctx->render_srcmap();
-    // compiler->c_ctx->stderr_string = cpp_ctx->render_stderr();
-
-
-    return c_ctx->error_status;
-
-
-    // prepare sass compiler with context and options
-    SassCompilerCpp* compiler = sass_prepare_context(cpp_ctx);
-
-    try {
-      // call each compiler step
-      // This is parse and execute now
-      sass_compiler_parse(compiler);
-      // This is only emitting stuff
-      sass_compiler_execute(compiler);
-    }
-    // pass errors to generic error handler
-    catch (...) { handle_errors(c_ctx); }
-
-    sass_delete_compiler(compiler);
-
-    return c_ctx->error_status;
-  }
-
-  // generic compilation function (not exported, use file/data compile instead)
-  static int sass_compile_context (Context* cpp_ctx)
-  {
-
-    SassContextCpp* c_ctx = &cpp_ctx->c_options;
-
-    // prepare sass compiler with context and options
-    SassCompilerCpp* compiler = sass_prepare_context(cpp_ctx);
-
-    try {
-      // call each compiler step
-      // This is parse and execute now
-      sass_compiler_parse(compiler);
-      // This is only emitting stuff
-      sass_compiler_execute(compiler);
-    }
-    // pass errors to generic error handler
-    catch (...) { handle_errors(c_ctx); }
-
-    sass_delete_compiler(compiler);
-
-    return c_ctx->error_status;
-  }
-
+  */
+  
   inline void init_options (struct SassOptionsCpp* options)
   {
     options->precision = 10;
@@ -480,185 +377,48 @@ extern "C" {
     options->linefeed = LFEED;
   }
 
-  struct SassCompiler322* ADDCALL sass_make_compiler3(struct SassContextReal* context, struct SassImportCpp* entry)
+  struct SassCompiler* ADDCALL sass_make_compiler(struct SassContextReal* context, struct SassImportCpp* entry)
   {
-    return new SassCompiler322(context, entry);
+    return new SassCompiler(context, entry);
   }
 
-  void ADDCALL sass_compiler_parse322(struct SassCompiler322* compiler)
+  void ADDCALL sass_compiler_parse(struct SassCompiler* compiler)
   {
     compiler->parse();
   }
 
-  void ADDCALL sass_compiler_compile322(struct SassCompiler322* compiler)
+  void ADDCALL sass_compiler_compile322(struct SassCompiler* compiler)
   {
     compiler->compile();
   }
 
-  void ADDCALL sass_compiler_render322(struct SassCompiler322* compiler)
+  void ADDCALL sass_compiler_render322(struct SassCompiler* compiler)
   {
     OutputBuffer output(compiler->render23());
     compiler->output = output.buffer;
   }
 
-  ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler322* compiler)
+  ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler* compiler)
   {
     return compiler->output.c_str();
   }
 
-  SassOptionsCpp* ADDCALL sass_make_options (void)
-  {
-    struct SassOptionsCpp* options = new SassOptionsCpp{};
-    if (options == 0) { std::cerr << "Error allocating memory for options" << STRMLF; return 0; }
-    init_options(options);
-    return options;
-  }
-
-  SassFileContextCpp* ADDCALL sass_make_file_context(const char* input_path)
-  {
-    #ifdef DEBUG_SHARED_PTR
-    SharedObj::setTaint(true);
-    #endif
-    struct SassFileContextCpp* ctx = new SassFileContextCpp{};
-    if (ctx == 0) { std::cerr << "Error allocating memory for file context" << STRMLF; return 0; }
-    ctx->logstyle = IsConsoleRedirected() ? SASS_LOGGER_ASCII_MONO : SASS_LOGGER_UNICODE_COLOR;
-    ctx->type = SASS_CONTEXT_FILE;
-    init_options(ctx);
-    try {
-      if (input_path == 0) { throw(std::runtime_error("File context created without an input path")); }
-      if (*input_path == 0) { throw(std::runtime_error("File context created with empty input path")); }
-      sass_option_set_input_path(ctx, input_path);
-    } catch (...) {
-      handle_errors(ctx);
-    }
-    return ctx;
-  }
-
-  SassDataContextCpp* ADDCALL sass_make_data_context(char* source_string)
-  {
-    #ifdef DEBUG_SHARED_PTR
-    SharedObj::setTaint(true);
-    #endif
-    struct SassDataContextCpp* ctx = new SassDataContextCpp{};
-    if (ctx == 0) { std::cerr << "Error allocating memory for data context" << STRMLF; return 0; }
-    ctx->logstyle = IsConsoleRedirected() ? SASS_LOGGER_ASCII_MONO : SASS_LOGGER_UNICODE_COLOR;
-    ctx->type = SASS_CONTEXT_DATA;
-    init_options(ctx);
-    try {
-      if (source_string == 0) { throw(std::runtime_error("Data context created without a source string")); }
-      if (*source_string == 0) { throw(std::runtime_error("Data context created with empty source string")); }
-      ctx->source_string = source_string;
-    } catch (...) {
-      handle_errors(ctx);
-    }
-    return ctx;
-  }
 
   void ADDCALL sass_context_print_stderr2(struct SassContextReal* context)
   {
     const char* message = sass_context_get_stderr_string2(context);
     if (message != nullptr) Terminal::print(message, true);
   }
-
-  void ADDCALL sass_context_print_stderr(struct SassContextCpp* ctx)
-  {
-    const char* message = sass_context_get_stderr_string(ctx);
-    if (message != nullptr) Terminal::print(message, true);
-  }
+   
 
   void ADDCALL sass_print_stderr(const char* message)
   {
     Terminal::print(message, true);
   }
 
-  struct SassCompilerCpp* ADDCALL sass_make_data_compiler (struct SassDataContextCpp* data_ctx)
-  {
-    if (data_ctx == 0) return 0;
-    Context* cpp_ctx = new Data_Context(*data_ctx);
-    return sass_prepare_context(cpp_ctx);
-  }
-
-  struct SassCompilerCpp* ADDCALL sass_make_file_compiler (struct SassFileContextCpp* file_ctx)
-  {
-    if (file_ctx == 0) return 0;
-    Context* cpp_ctx = new File_Context(*file_ctx);
-    return sass_prepare_context(cpp_ctx);
-  }
-
-  int ADDCALL sass_compile_data_context(SassDataContextCpp* data_ctx)
-  {
-    if (data_ctx == 0) return 1;
-    if (data_ctx->error_status)
-      return data_ctx->error_status;
-    try {
-      // if (data_ctx->source_string.empty()) { throw(std::runtime_error("Data context has empty source string")); }
-      // empty source string is a valid case, even if not really useful (different than with file context)
-      // if (*data_ctx->source_string == 0) { throw(std::runtime_error("Data context has empty source string")); }
-    }
-    catch (...) { return handle_errors(data_ctx) | 1; }
-    Context* cpp_ctx = new Data_Context(*data_ctx);
-    return sass_compile_context(cpp_ctx);
-  }
-
-  int ADDCALL sass_compile_file_context(SassFileContextCpp* file_ctx)
-  {
-    if (file_ctx == 0) return 1;
-    if (file_ctx->error_status)
-      return file_ctx->error_status;
-    try {
-      if (file_ctx->input_path.empty()) { throw(std::runtime_error("File context has no input path")); }
-    }
-    catch (...) { return handle_errors(file_ctx) | 1; }
-    Context* cpp_ctx = new File_Context(*file_ctx);
-    return sass_compile_context(cpp_ctx);
-  }
-
-  
-  int ADDCALL sass_compile_data_context2(struct SassContextReal* data_ctx, char* source_string)
-  {
-    if (data_ctx == 0) return 1;
-    try {
-      // if (data_ctx->source_string.empty()) { throw(std::runtime_error("Data context has empty source string")); }
-      // empty source string is a valid case, even if not really useful (different than with file context)
-      // if (*data_ctx->source_string == 0) { throw(std::runtime_error("Data context has empty source string")); }
-    }
-    catch (...) { return handle_errors(data_ctx) | 1; }
-
-    struct SassImportCpp* import = sass_make_data_import(source_string);
-
-    return sass_compile_import(data_ctx, import);
-  }
 
 
-  int ADDCALL sass_compile_file_context2(struct SassContextReal* file_ctx, const char* input_path)
-  {
-    if (file_ctx == 0) return 1;
-    try {
-      if (input_path == nullptr) { throw(std::runtime_error("File context has no input path")); }
-      if (input_path == "\0") { throw(std::runtime_error("File context has empty input path")); }
-    }
-    catch (...) { return handle_errors(file_ctx) | 1; }
-    struct SassImportCpp* import = sass_make_file_import(input_path);
-
-    return sass_compile_import(file_ctx, import);
-  }
-
-
-  int ADDCALL sass_compiler_parse(struct SassCompilerCpp* compiler)
-  {
-    if (compiler == 0) return 1;
-    if (compiler->state == SASS_COMPILER_PARSED) return 0;
-    if (compiler->state != SASS_COMPILER_CREATED) return -1;
-    if (compiler->c_ctx == NULL) return 1;
-    if (compiler->cpp_ctx == NULL) return 1;
-    if (compiler->c_ctx->error_status)
-      return compiler->c_ctx->error_status;
-    // parse the context we have set up (file or data)
-    compiler->root = sass_parse_block(compiler);
-    // success
-    return 0;
-  }
-
+  /*
   int ADDCALL sass_compiler_execute(struct SassCompilerCpp* compiler)
   {
     if (compiler == 0) return 1;
@@ -690,6 +450,7 @@ extern "C" {
     // success
     return 0;
   }
+  */
 
   // helper function, not exported, only accessible locally
   static void sass_reset_options (struct SassOptionsCpp* options)
@@ -701,151 +462,16 @@ extern "C" {
   {
   }
 
-  // helper function, not exported, only accessible locally
-  // sass_free_context is also defined in old sass_interface
-  static void sass_clear_context (struct SassContextCpp* ctx)
-  {
-    if (ctx == 0) return;
-    // debug leaked memory
-    #ifdef DEBUG_SHARED_PTR
-      SharedObj::dumpMemLeaks();
-      SharedObj::reportRefCounts();
-    #endif
-    // now clear the options
-    sass_clear_options(ctx);
-  }
-
-  void ADDCALL sass_delete_compiler (struct SassCompilerCpp* compiler)
-  {
-    if (compiler == 0) {
-      return;
-    }
-    Context* cpp_ctx = compiler->cpp_ctx;
-    if (cpp_ctx) delete(cpp_ctx);
-    compiler->cpp_ctx = NULL;
-    compiler->c_ctx = NULL;
-    compiler->root = {};
-    delete compiler;
-  }
-
-  // Deallocate all associated memory with options
-  void ADDCALL sass_delete_options (struct SassOptionsCpp* options)
-  {
-    sass_clear_options(options); delete options;
-  }
-
   void ADDCALL sass_delete_context(SassContextReal* context)
   {
     // delete reinterpret_cast<Context*>(context);
   }
 
-  // Deallocate all associated memory with file context
-  void ADDCALL sass_delete_file_context (struct SassFileContextCpp* ctx)
-  {
-    // clear the context and free it
-    sass_clear_context(ctx); delete ctx;
-  }
-  // Deallocate all associated memory with data context
-  void ADDCALL sass_delete_data_context (struct SassDataContextCpp* ctx)
-  {
-    // clear the context and free it
-    sass_clear_context(ctx); delete ctx;
-  }
-
-  // Getters for sass context from specific implementations
-  struct SassContextCpp* ADDCALL sass_file_context_get_context(struct SassFileContextCpp* ctx) { return ctx; }
-  struct SassContextCpp* ADDCALL sass_data_context_get_context(struct SassDataContextCpp* ctx) { return ctx; }
-
-  // Getters for context options from SassContextCpp
-  struct SassOptionsCpp* ADDCALL sass_context_get_options(struct SassContextCpp* ctx) { return ctx; }
-  struct SassOptionsCpp* ADDCALL sass_file_context_get_options(struct SassFileContextCpp* ctx) { return ctx; }
-  struct SassOptionsCpp* ADDCALL sass_data_context_get_options(struct SassDataContextCpp* ctx) { return ctx; }
-  void ADDCALL sass_file_context_set_options (struct SassFileContextCpp* ctx, struct SassOptionsCpp* opt) { copy_options(ctx, opt); }
-  void ADDCALL sass_data_context_set_options (struct SassDataContextCpp* ctx, struct SassOptionsCpp* opt) { copy_options(ctx, opt); }
-
-  // Getters for SassCompilerCpp options (get connected sass context)
-  enum Sass_Compiler_State ADDCALL sass_compiler_get_state(struct SassCompilerCpp* compiler) { return compiler->state; }
-  struct SassContextCpp* ADDCALL sass_compiler_get_context(struct SassCompilerCpp* compiler) { return compiler->c_ctx; }
-  struct SassOptionsCpp* ADDCALL sass_compiler_get_options(struct SassCompilerCpp* compiler) { return compiler->c_ctx; }
-  // Getters for SassCompilerCpp options (query import stack)
-  size_t ADDCALL sass_compiler_get_import_stack_size(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->import_stack.size(); }
-  SassImportPtr ADDCALL sass_compiler_get_last_import(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->import_stack.back(); }
-  SassImportPtr ADDCALL sass_compiler_get_import_entry(struct SassCompilerCpp* compiler, size_t idx) { return compiler->cpp_ctx->import_stack[idx]; }
-  // Getters for SassCompilerCpp options (query function stack)
-  size_t ADDCALL sass_compiler_get_callee_stack_size(struct SassCompilerCpp* compiler) { return compiler->cpp_ctx->callee_stack.size(); }
-  SassCalleePtr ADDCALL sass_compiler_get_last_callee(struct SassCompilerCpp* compiler) { return &compiler->cpp_ctx->callee_stack.back(); }
-  SassCalleePtr ADDCALL sass_compiler_get_callee_entry(struct SassCompilerCpp* compiler, size_t idx) { return &compiler->cpp_ctx->callee_stack[idx]; }
-
-  // Calculate the size of the stored null terminated array
-  size_t ADDCALL sass_context_get_included_files(struct SassContextCpp* ctx) { return ctx->included_files.size(); }
-  const char* ADDCALL sass_context_get_included_file(struct SassContextCpp* ctx, size_t i) { return ctx->included_files.at(i).c_str(); }
-
-  // Create getter and setters for options
-  IMPLEMENT_SASS_OPTION_ACCESSOR(int, precision);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(enum Sass_Output_Style, output_style);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_comments);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_embed);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_contents);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(bool, source_map_file_urls);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(bool, omit_source_map_url);
-
-
-  void ADDCALL sass_option_add_c_function(struct SassOptionsCpp* options, SassFunctionPtr function)
-  {
-    options->c_functions.push_back(function);
-  }
-
-  void ADDCALL sass_option_add_c_importer(struct SassOptionsCpp* options, SassImporterPtr importer)
-  {
-    options->c_importers.push_back(importer);
-  }
-
-  void ADDCALL sass_option_add_c_header(struct SassOptionsCpp* options, SassImporterPtr header)
-  {
-    options->c_headers.push_back(header);
-  }
-
-//   IMPLEMENT_SASS_OPTION_ACCESSOR(SassFunctionListPtr, c_functions);
-  // IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_importers);
-  // IMPLEMENT_SASS_OPTION_ACCESSOR(SassImporterListPtr, c_headers);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, indent);
-  IMPLEMENT_SASS_OPTION_ACCESSOR(const char*, linefeed);
-  IMPLEMENT_SASS_OPTION_STRING2_SETTER(plugin_path);
-  IMPLEMENT_SASS_OPTION_STRING2_SETTER(include_path);
-  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(input_path);
-  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(output_path);
-  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(source_map_file);
-  IMPLEMENT_SASS_OPTION_STRING2_ACCESSOR(source_map_root);
-
-  // Create getter and setters for context
-  IMPLEMENT_SASS_CONTEXT_GETTER(int, error_status);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_json);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_message);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_text);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_file);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(error_src);
-  IMPLEMENT_SASS_CONTEXT_GETTER(size_t, error_line);
-  IMPLEMENT_SASS_CONTEXT_GETTER(size_t, error_column);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(output_string);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(stderr_string);
-  IMPLEMENT_SASS_CONTEXT_STRING2_GETTER(source_map_string);
 
   // Push function for include paths (no manipulation support for now)
   void ADDCALL sass_option_push_include_path(struct SassOptionsCpp* options, const char* path)
   {
     options->include_paths.push_back(path);
-  }
-
-  // Push function for include paths (no manipulation support for now)
-  size_t ADDCALL sass_option_get_include_path_size(struct SassOptionsCpp* options)
-  {
-    return options->include_paths.size();
-  }
-
-  // Push function for include paths (no manipulation support for now)
-  const char* ADDCALL sass_option_get_include_path(struct SassOptionsCpp* options, size_t i)
-  {
-    return options->include_paths.at(i).c_str();
   }
 
   // Push function for plugin paths (no manipulation support for now)

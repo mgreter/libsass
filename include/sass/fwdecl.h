@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-struct SassCompiler322;
+struct SassCompiler;
 struct SassContextReal;
 
 // Forward declare structs
@@ -16,9 +16,6 @@ struct SassImporterCpp;
 struct SassFunctionCpp;
 struct SassCompilerCpp;
 struct SassOptionsCpp; // base struct
-struct SassContextCpp; // : SassOptionsCpp
-struct SassFileContextCpp; // : SassContextCpp
-struct SassDataContextCpp; // : SassContextCpp
 
 // Typedef helpers for pointer returns
 typedef struct SassCalleeCpp* (SassCalleePtr);
@@ -28,15 +25,10 @@ typedef struct SassFunctionCpp* (SassFunctionPtr);
 typedef struct SassImportListCpp* (SassImportListPtr);
 typedef struct SassImporterListCpp* (SassImporterListPtr);
 typedef struct SassFunctionListCpp* (SassFunctionListPtr);
-typedef struct SassCompilerCpp* (SassCompilerPtr);
-typedef struct SassOptionsCpp* (SassOptionsPtr);
-typedef struct SassContextCpp* (SassContextPtr);
-typedef struct SassFileContextCpp* (SassFileContextPtr);
-typedef struct SassDataContextCpp* (SassDataContextPtr);
 
 // Typedef defining importer/function callback signature and return type
-typedef SassImportListPtr(*SassImporterLambdaCpp)(const char* url, SassImporterPtr cb, SassCompilerPtr compiler);
-typedef struct SassValue* (*SassFunctionLambdaCpp)(struct SassValue*, SassFunctionPtr cb, SassCompilerPtr compiler);
+typedef SassImportListPtr(*SassImporterLambdaCpp)(const char* url, SassImporterPtr cb, struct SassCompiler* compiler);
+typedef struct SassValue* (*SassFunctionLambdaCpp)(struct SassValue*, SassFunctionPtr cb, struct SassCompiler* compiler);
 
 #ifdef __cplusplus
 } // __cplusplus defined.

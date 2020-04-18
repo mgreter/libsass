@@ -97,7 +97,7 @@ namespace Sass {
     const sass::string cwd();
     CalleeStack& callee_stack();
     struct Sass_Inspect_Options& options();
-    struct SassCompilerCpp* compiler();
+    struct SassCompiler* compiler();
 
     Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, const SourceSpan& pstate);
 
