@@ -27,12 +27,13 @@
 #include "debugger.hpp"
 #include "logger.hpp"
 
-SassCompiler::SassCompiler(struct SassContextReal* context, struct SassImportCpp* entry) :
+SassCompiler::SassCompiler(struct SassContext* context, struct SassImportCpp* entry) :
   SassOutputOptionsCpp(),
   state(SassCompilerState::CREATED),
   context(context),
   entry(entry),
-  logger(5, SASS_LOGGER_AUTO)
+  logger(5, SASS_LOGGER_AUTO),
+  error_status(0)
   {}
 
 void SassCompiler::parse()
@@ -871,7 +872,7 @@ struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
   return sass_make_import(
     input_path88,
     abs_path.c_str(),
-    contents,
+    contents, // ToDo: pass zero and let context do the work
     0, SASS_IMPORT_AUTO
   );
 

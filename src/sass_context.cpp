@@ -192,7 +192,7 @@ extern "C" {
   }
   */
   
-  struct SassCompiler* ADDCALL sass_make_compiler(struct SassContextReal* context, struct SassImportCpp* entry)
+  struct SassCompiler* ADDCALL sass_make_compiler(struct SassContext* context, struct SassImportCpp* entry)
   {
     return new SassCompiler(context, entry);
   }
@@ -291,7 +291,8 @@ extern "C" {
 
   void ADDCALL sass_compiler_compile(struct SassCompiler* compiler)
   {
-    compiler->compile();
+    try { compiler->compile(); }
+    catch (...) { handle_errors(compiler); }
   }
 
   void ADDCALL sass_compiler_render(struct SassCompiler* compiler)
@@ -321,7 +322,7 @@ extern "C" {
   size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler) { return compiler->error_column; }
 
 
-  void ADDCALL sass_context_print_stderr2(struct SassContextReal* context)
+  void ADDCALL sass_context_print_stderr2(struct SassContext* context)
   {
     // const char* message = sass_context_get_stderr_string2(context);
     // if (message != nullptr) Terminal::print(message, true);
@@ -384,133 +385,133 @@ extern "C" {
     // delete context;
   }
 
-  void ADDCALL sass_delete_context(SassContextReal* context)
+  void ADDCALL sass_delete_context(SassContext* context)
   {
     // delete reinterpret_cast<Context*>(context);
   }
 
 
   // Push function for include paths (no manipulation support for now)
-  void ADDCALL sass_context_push_include_path(struct SassContextReal* context, const char* path)
+  void ADDCALL sass_context_push_include_path(struct SassContext* context, const char* path)
   {
     reinterpret_cast<Context*>(context)->include_paths.push_back(path);
   }
 
   // Push function for plugin paths (no manipulation support for now)
-  void ADDCALL sass_context_push_plugin_path(struct SassContextReal* context, const char* path)
+  void ADDCALL sass_context_push_plugin_path(struct SassContext* context, const char* path)
   {
     reinterpret_cast<Context*>(context)->plugin_paths.push_back(path);
   }
 
-  struct SassContextReal* ADDCALL sass_make_context()
+  struct SassContext* ADDCALL sass_make_context()
   {
-    return reinterpret_cast<SassContextReal*>(new Sass::Context());
+    return reinterpret_cast<SassContext*>(new Sass::Context());
   }
 
-  void ADDCALL sass_context_set_precision(struct SassContextReal* context, int precision)
+  void ADDCALL sass_context_set_precision(struct SassContext* context, int precision)
   {
     reinterpret_cast<Sass::Context*>(context)->precision = precision;
   }
-  void ADDCALL sass_context_set_output_style(struct SassContextReal* context, enum Sass_Output_Style output_style)
+  void ADDCALL sass_context_set_output_style(struct SassContext* context, enum Sass_Output_Style output_style)
   {
     reinterpret_cast<Sass::Context*>(context)->c_options.output_style = output_style;
   }
 
-  int ADDCALL sass_context_get_precision(struct SassContextReal* context)
+  int ADDCALL sass_context_get_precision(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->precision;
   }
-  enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContextReal* context)
+  enum Sass_Output_Style ADDCALL sass_context_get_output_style(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->c_options.output_style;
   }
 
-  bool ADDCALL sass_context_get_source_comments(struct SassContextReal* context)
+  bool ADDCALL sass_context_get_source_comments(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->source_comments;
   }
 
-  bool ADDCALL sass_context_get_source_map_embed(struct SassContextReal* context)
+  bool ADDCALL sass_context_get_source_map_embed(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->source_map_embed;
   }
-  bool ADDCALL sass_context_get_source_map_contents(struct SassContextReal* context)
+  bool ADDCALL sass_context_get_source_map_contents(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->source_map_contents;
   }
 
-  bool ADDCALL sass_context_get_source_map_file_urls(struct SassContextReal* context)
+  bool ADDCALL sass_context_get_source_map_file_urls(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->source_comments;
   }
 
-  bool ADDCALL sass_context_get_omit_source_map_url(struct SassContextReal* context)
+  bool ADDCALL sass_context_get_omit_source_map_url(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->omit_source_map_url;
   }
 
-  void ADDCALL sass_context_set_source_comments(struct SassContextReal* context, bool source_comments)
+  void ADDCALL sass_context_set_source_comments(struct SassContext* context, bool source_comments)
   {
     reinterpret_cast<Sass::Context*>(context)->source_comments = source_comments;
   }
-  void ADDCALL sass_context_set_source_map_embed(struct SassContextReal* context, bool source_map_embed)
+  void ADDCALL sass_context_set_source_map_embed(struct SassContext* context, bool source_map_embed)
   {
     reinterpret_cast<Sass::Context*>(context)->source_map_embed = source_map_embed;
   }
-  void ADDCALL sass_context_set_source_map_contents(struct SassContextReal* context, bool source_map_contents)
+  void ADDCALL sass_context_set_source_map_contents(struct SassContext* context, bool source_map_contents)
   {
     reinterpret_cast<Sass::Context*>(context)->source_map_contents = source_map_contents;
   }
-  void ADDCALL sass_context_set_source_map_file_urls(struct SassContextReal* context, bool source_map_file_urls)
+  void ADDCALL sass_context_set_source_map_file_urls(struct SassContext* context, bool source_map_file_urls)
   {
     reinterpret_cast<Sass::Context*>(context)->source_map_file_urls = source_map_file_urls;
   }
-  void ADDCALL sass_context_set_omit_source_map_url(struct SassContextReal* context, bool omit_source_map_url)
+  void ADDCALL sass_context_set_omit_source_map_url(struct SassContext* context, bool omit_source_map_url)
   {
     reinterpret_cast<Sass::Context*>(context)->omit_source_map_url = omit_source_map_url;
   }
 
-  const char* ADDCALL sass_context_get_input_path(struct SassContextReal* context)
+  const char* ADDCALL sass_context_get_input_path(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->input_path.c_str();
   }
 
-  const char* ADDCALL sass_context_get_output_path(struct SassContextReal* context)
+  const char* ADDCALL sass_context_get_output_path(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->output_path.c_str();
   }
 
-  const char* ADDCALL sass_context_get_source_map_file(struct SassContextReal* context)
+  const char* ADDCALL sass_context_get_source_map_file(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->source_map_file.c_str();
   }
-  const char* ADDCALL sass_context_get_source_map_root(struct SassContextReal* context)
+  const char* ADDCALL sass_context_get_source_map_root(struct SassContext* context)
   {
     return reinterpret_cast<Sass::Context*>(context)->source_map_root.c_str();
   }
 
-  void ADDCALL sass_context_set_entry_point(struct SassContextReal* context, struct SassImportCpp* entry)
+  void ADDCALL sass_context_set_entry_point(struct SassContext* context, struct SassImportCpp* entry)
   {
     reinterpret_cast<Sass::Context*>(context)->entry = entry;
   }
 
-  void ADDCALL sass_context_set_input_path(struct SassContextReal* context, const char* input_path)
+  void ADDCALL sass_context_set_input_path(struct SassContext* context, const char* input_path)
   {
     reinterpret_cast<Sass::Context*>(context)->input_path = input_path;
     reinterpret_cast<Sass::Context*>(context)->input_path88 = input_path;
   }
-  void ADDCALL sass_context_set_output_path(struct SassContextReal* context, const char* output_path)
+  void ADDCALL sass_context_set_output_path(struct SassContext* context, const char* output_path)
   {
     reinterpret_cast<Sass::Context*>(context)->output_path = output_path;
     reinterpret_cast<Sass::Context*>(context)->output_path88 = output_path;
   }
 
-  void ADDCALL sass_context_set_source_map_file(struct SassContextReal* context, const char* source_map_file)
+  void ADDCALL sass_context_set_source_map_file(struct SassContext* context, const char* source_map_file)
   {
     reinterpret_cast<Sass::Context*>(context)->source_map_file = source_map_file;
     reinterpret_cast<Sass::Context*>(context)->source_map_file88 = source_map_file;
   }
-  void ADDCALL sass_context_set_source_map_root(struct SassContextReal* context, const char* source_map_root)
+  void ADDCALL sass_context_set_source_map_root(struct SassContext* context, const char* source_map_root)
   {
     reinterpret_cast<Sass::Context*>(context)->source_map_root = source_map_root;
     reinterpret_cast<Sass::Context*>(context)->source_map_root88 = source_map_root;

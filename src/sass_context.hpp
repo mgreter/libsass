@@ -15,7 +15,7 @@ struct SassCompiler : SassOutputOptionsCpp {
 
   SassCompilerState state;
 
-  struct SassContextReal* context;
+  struct SassContext* context;
 
   // main entry point for compilation
   struct SassImportCpp* entry;
@@ -48,7 +48,7 @@ struct SassCompiler : SassOutputOptionsCpp {
   size_t error_column;
   Sass::SourceDataObj error_src;
 
-  SassCompiler(struct SassContextReal* context,
+  SassCompiler(struct SassContext* context,
     struct SassImportCpp* entry);
 
   void parse();
