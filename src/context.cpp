@@ -5,6 +5,7 @@
 #include "sass_values.hpp"
 
 #include "remove_placeholders.hpp"
+#include "source_map.hpp"
 #include "sass_functions.hpp"
 #include "string_utils.hpp"
 #include "fn_selectors.hpp"
@@ -26,11 +27,37 @@
 #include "debugger.hpp"
 #include "logger.hpp"
 
-SassCompiler322::SassCompiler322(struct SassImportCpp* entry) :
+SassCompiler322::SassCompiler322(struct SassContextReal* context, struct SassImportCpp* entry) :
+  SassOutputOptionsCpp(),
+  context(context),
   entry(entry),
-  emitter(SassOutputOptionsCpp{}),
+  emitter(*this),
   logger(5, SASS_LOGGER_AUTO)
   {}
+
+void SassCompiler322::parse()
+{
+  parsed = reinterpret_cast<Sass::Context*>(context)->parse2(entry);
+}
+
+void SassCompiler322::compile()
+{
+  compiled = reinterpret_cast<Sass::Context*>(context)->compile(parsed, false);
+}
+
+OutputBuffer SassCompiler322::render23()
+{
+  debug_ast(compiled);
+  // Create the emitter object
+  Sass::Output emitter(*this);
+  // start the render process
+  compiled->perform(&emitter);
+  // finish emitter stream
+  emitter.finalize();
+  // get the resulting buffer from stream
+  return std::move(emitter.get_buffer());
+
+}
 
 namespace Sass {
   using namespace Constants;
@@ -430,7 +457,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     return vec;
   }
 
-  void Context::register_import(SassImportPtr& import)
+  BlockObj Context::register_import(SassImportPtr& import)
   {
 
     SourceData* source = import->srcdata;
@@ -507,6 +534,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // register the result
     sheets.insert(ast_pair);
+
+    return root;
 
   }
 
@@ -682,7 +711,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
   // EO callCustomLoader
 
-  sass::string Context::render(Block_Obj root)
+  sass::string Context::render(BlockObj root)
   {
     // check for valid block
     if (!root) return 0;
@@ -785,6 +814,25 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     ));
 
   }
+  BlockObj Context::parseImport(SassImportPtr import)
+  {
+    // add the entry to the stack
+    import_stack.emplace_back(import);
+    // importStack2.emplace_back(source);
+
+    // Prepare environment
+    prepareEnvironment();
+
+    // load and register import
+    BlockObj root = register_import(import);
+
+    importStack.emplace_back(sources.back());
+
+    // create root ast tree node
+    return root;
+
+  }
+  
 
   Block_Obj Context::compileImport(SassImportPtr import)
   {
@@ -821,29 +869,33 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
 
   }
-
   // parse root block from includes
   Block_Obj Context::compile()
+  {
+    // get root block from the first style sheet
+    StyleSheet sheet = sheets.at(entry_path88);
+    return compile(sheet.root, sheet.plainCss);
+  }
+
+  // parse root block from includes
+  Block_Obj Context::compile(BlockObj root, bool plainCss)
   {
 
     // abort if there is no data
     if (sources.size() == 0) return {};
-    // get root block from the first style sheet
-    StyleSheet sheet = sheets.at(entry_path88);
-    Block_Obj root = sheet.root;
     // abort on invalid root
     if (root.isNull()) return {};
 
     //    debug_ast(root);
     
     Eval eval(*this);
-    eval.plainCss = sheet.plainCss;
+    eval.plainCss = plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());
     for (size_t i = 0; i < fnCache.size(); i++) {
       varRoot.functions[i] = fnCache[i];
     }
-    root = eval.visitRootBlock99(root); // 50%
-//    debug_ast(root);
+    BlockObj compiled = eval.visitRootBlock99(root); // 50%
+    debug_ast(compiled);
 
     Extension unsatisfied;
     // check that all extends were used
@@ -853,15 +905,15 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // This can use up to 10% runtime
     Cssize cssize(*this);
-    root = cssize(root); // 5%
+    compiled = cssize(compiled); // 5%
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders;
-    root->perform(&remove_placeholders); // 3%
+    compiled->perform(&remove_placeholders); // 3%
 
     // return processed tree
-    return root;
+    return compiled;
   }
   // EO compile
 

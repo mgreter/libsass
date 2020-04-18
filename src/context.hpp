@@ -122,6 +122,7 @@ namespace Sass {
   protected:
 
     Block_Obj compileImport(SassImportPtr import);
+    BlockObj parseImport(SassImportPtr import);
 
     void prepareEnvironment();
 
@@ -219,6 +220,16 @@ namespace Sass {
       // return compileImport(import);
     }
 
+    BlockObj parse2(struct SassImportCpp* entry) {
+
+      entry_path88 = entry->srcdata->getAbsPath();
+      return parseImport(entry);
+
+      // Now we must decide what to do!
+      // std::cerr << "Untangle me 22\n";
+      // return compileImport(import);
+    }
+
     virtual Block_Obj parse(Sass_Import_Type type) {
 
       // Now we must decide what to do!
@@ -226,12 +237,13 @@ namespace Sass {
       return {};
     }
     virtual Block_Obj compile();
+    virtual BlockObj compile(BlockObj root, bool plainCss);
     // ToDo: return const string& ?
     virtual sass::string render(Block_Obj root);
     virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 
-    void register_import(SassImportPtr& entry);
+    BlockObj register_import(SassImportPtr& entry);
     void register_resource(const Include&, char* contents, char* srcmap);
     void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 

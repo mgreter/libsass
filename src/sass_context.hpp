@@ -3,6 +3,7 @@
 
 #include "sass/base.h"
 #include "sass/context.h"
+#include "source_map.hpp"
 #include "ast_fwd_decl.hpp"
 #include "backtrace.hpp"
 #include "logger.hpp"
@@ -10,7 +11,9 @@
 #include "sass.hpp"
 
 
-struct SassCompiler322 {
+struct SassCompiler322 : SassOutputOptionsCpp {
+
+  struct SassContextReal* context;
 
   // main entry point for compilation
   struct SassImportCpp* entry;
@@ -25,7 +28,21 @@ struct SassCompiler322 {
   // Logging helper
   Sass::Logger logger;
 
-  SassCompiler322(struct SassImportCpp* entry);
+  // Parsed ast-tree
+  Sass::BlockObj parsed;
+  // Evaluated ast-tree
+  Sass::BlockObj compiled;
+
+  Sass::sass::string output;
+  Sass::sass::string srcmap;
+
+  SassCompiler322(struct SassContextReal* context,
+    struct SassImportCpp* entry);
+
+  void parse();
+  void compile();
+
+  Sass::OutputBuffer render23();
 
   // vectors above have same size
   // sass::string entry_path88;

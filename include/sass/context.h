@@ -18,7 +18,13 @@ enum Sass_Compiler_State {
   SASS_COMPILER_EXECUTED
 };
 
-ADDAPI struct SassCompiler322* ADDCALL sass_make_compiler3(struct SassImportCpp* entry);
+ADDAPI struct SassCompiler322* ADDCALL sass_make_compiler3(struct SassContextReal* context, struct SassImportCpp* entry);
+
+ADDAPI void ADDCALL sass_compiler_parse322(struct SassCompiler322* compiler);
+ADDAPI void ADDCALL sass_compiler_compile322(struct SassCompiler322* compiler);
+ADDAPI void ADDCALL sass_compiler_render322(struct SassCompiler322* compiler);
+
+ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler322* compiler);
 
 // Create and initialize an option struct
 ADDAPI struct SassOptionsCpp* ADDCALL sass_make_options (void);

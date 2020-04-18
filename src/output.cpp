@@ -15,6 +15,8 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
+  // ToDo: move assignment
+
   Output::Output(SassOutputOptionsCpp& opt)
     : Inspect(Emitter(opt)),
     charset(""),

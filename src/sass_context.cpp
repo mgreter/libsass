@@ -480,9 +480,30 @@ extern "C" {
     options->linefeed = LFEED;
   }
 
-  struct SassCompiler322* ADDCALL sass_make_compiler3(struct SassImportCpp* entry)
+  struct SassCompiler322* ADDCALL sass_make_compiler3(struct SassContextReal* context, struct SassImportCpp* entry)
   {
-    return new SassCompiler322(entry);
+    return new SassCompiler322(context, entry);
+  }
+
+  void ADDCALL sass_compiler_parse322(struct SassCompiler322* compiler)
+  {
+    compiler->parse();
+  }
+
+  void ADDCALL sass_compiler_compile322(struct SassCompiler322* compiler)
+  {
+    compiler->compile();
+  }
+
+  void ADDCALL sass_compiler_render322(struct SassCompiler322* compiler)
+  {
+    OutputBuffer output(compiler->render23());
+    compiler->output = output.buffer;
+  }
+
+  ADDAPI const char* ADDCALL sass_compiler_get_output(struct SassCompiler322* compiler)
+  {
+    return compiler->output.c_str();
   }
 
   SassOptionsCpp* ADDCALL sass_make_options (void)
