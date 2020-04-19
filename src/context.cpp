@@ -571,7 +571,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
   void Context::apply_custom_headers2(sass::vector<StatementObj>& statements, SourceSpan pstate)
   {
-    std::cerr << "Where is apply custom gone\n";
+    // std::cerr << "Where is apply custom gone\n";
     /*
     // create a custom import to resolve headers
     ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, pstate);
@@ -643,7 +643,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       varRoot.functions[i] = fnCache[i];
     }
     BlockObj compiled = eval.visitRootBlock99(root); // 50%
-    debug_ast(compiled);
+   //  debug_ast(compiled);
 
     Extension unsatisfied;
     // check that all extends were used
@@ -652,7 +652,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     }
 
     // This can use up to 10% runtime
-    Cssize cssize(*this);
+    Cssize cssize(*this->logger);
     compiled = cssize(compiled); // 5%
 
     // clean up by removing empty placeholders

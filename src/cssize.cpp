@@ -12,8 +12,8 @@
 
 namespace Sass {
 
-  Cssize::Cssize(Context& ctx)
-  : callStack(*ctx.logger)
+  Cssize::Cssize(Logger& logger)
+  : callStack(logger)
   { }
 
   CssParentNode* Cssize::parent()

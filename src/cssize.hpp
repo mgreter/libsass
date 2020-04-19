@@ -18,7 +18,7 @@ namespace Sass {
     sass::vector<CssParentNodeObj>  cssStack;
 
   public:
-    Cssize(Context&);
+    Cssize(Logger&);
     ~Cssize() { }
 
     Block* operator()(Block*);
