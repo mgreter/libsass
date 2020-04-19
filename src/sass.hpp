@@ -142,9 +142,6 @@ struct Sass_Inspect_Options {
 // sass config options structure
 struct SassOutputOptionsCpp : Sass_Inspect_Options {
 
-  typedef Sass::sass::string string;
-  typedef Sass::sass::vector<string> strings;
-
   // String to be used for indentation
   const char* indent;
   // String to be used to for line feeds

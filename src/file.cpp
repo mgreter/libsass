@@ -43,16 +43,16 @@
 
 # ifdef _MSC_VER
 # include <codecvt>
-inline static Sass::sass::string wstring_to_string(const std::wstring& wstr)
+inline static sass::string wstring_to_string(const std::wstring& wstr)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wchar_converter;
     return wchar_converter.to_bytes(wstr).c_str();
 }
 # else // mingw(/gcc) does not support C++11's codecvt yet.
-inline static Sass::sass::string wstring_to_string(const std::wstring &wstr)
+inline static sass::string wstring_to_string(const std::wstring &wstr)
 {
     int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    Sass::sass::string strTo(size_needed, 0);
+    sass::string strTo(size_needed, 0);
     WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
     return strTo;
 }

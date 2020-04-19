@@ -251,7 +251,7 @@ extern "C" {
     options.source_map_mode = SASS_SRCMAP_EMBED_JSON;
     options.source_map_path = compiler->output_path + ".map";
 
-    options.source_map_origin = compiler->entry->srcdata->getAbsPath();
+    options.source_map_origin = compiler->entry_point->srcdata->getAbsPath();
 
     switch (options.source_map_mode) {
     case SASS_SRCMAP_NONE:
@@ -274,9 +274,9 @@ extern "C" {
 
   }
 
-
   ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler)
   {
+    if (reinterpret_cast<Sass::Compiler*>(compiler)->output == "stream://stdout") return nullptr;
     return reinterpret_cast<Sass::Compiler*>(compiler)->output.c_str();
   }
 
@@ -292,12 +292,12 @@ extern "C" {
 
   void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImportCpp* import)
   {
-    reinterpret_cast<Sass::Compiler*>(compiler)->entry = import;
+    reinterpret_cast<Sass::Compiler*>(compiler)->entry_point = import;
   }
 
   void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
   {
-    reinterpret_cast<Sass::Compiler*>(compiler)->output_path = output_path ? output_path : "";
+    reinterpret_cast<Sass::Compiler*>(compiler)->output_path = output_path ? output_path : "stream://stdout";
   }
 
   int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_status; }

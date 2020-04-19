@@ -184,9 +184,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       "sass://signature", "(" + signature + ")");
     auto args = ArgumentDeclaration::parse(*this, source);
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
-    functions.insert(std::make_pair(name, callable));
+    fnLookup.insert(std::make_pair(name, callable));
     varRoot.createFunction(name);
-    fnCache.push_back(callable);
+    fnList.push_back(callable);
   }
   // EO registerBuiltInFunction
 
@@ -206,9 +206,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
-    functions.insert(std::make_pair(name, callable));
+    fnLookup.insert(std::make_pair(name, callable));
     varRoot.createFunction(name);
-    fnCache.push_back(callable);
+    fnList.push_back(callable);
   }
   // EO registerBuiltInOverloadFns
 
@@ -261,10 +261,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     // Get newly declared environment items
     callable->idxs(local.getIdxs());
     // Currently external functions are treated globally
-    if (functions.count(callable->name()) == 0) {
-      functions.insert(std::make_pair(callable->name(), callable));
+    if (fnLookup.count(callable->name()) == 0) {
+      fnLookup.insert(std::make_pair(callable->name(), callable));
       varRoot.createFunction(callable->name());
-      fnCache.push_back(callable);
+      fnList.push_back(callable);
     }
   }
   // EO registerCustomFunction
@@ -642,8 +642,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     Eval eval(*this);
     eval.plainCss = plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());
-    for (size_t i = 0; i < fnCache.size(); i++) {
-      varRoot.functions[i] = fnCache[i];
+    for (size_t i = 0; i < fnList.size(); i++) {
+      varRoot.functions[i] = fnList[i];
     }
     BlockObj compiled = eval.visitRootBlock99(root); // 50%
    //  debug_ast(compiled);

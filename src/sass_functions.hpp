@@ -16,7 +16,7 @@ struct SassFunctionListCpp : std::deque<struct SassFunctionCpp*> {};
 
 // Struct to hold custom function callback
 struct SassFunctionCpp {
-  Sass::sass::string signature;
+  sass::string signature;
   SassFunctionLambdaCpp function;
   void* cookie;
 };
@@ -30,7 +30,7 @@ struct SassImportCpp {
   // char* source;
   //char* srcmap;
   // error handling
-  Sass::sass::string error;
+  sass::string error;
   uint32_t line;
   uint32_t column;
   // the import type

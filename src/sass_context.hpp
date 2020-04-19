@@ -27,9 +27,6 @@ enum SassSrcMapMode {
 
 struct SassSrcMapOptions {
 
-  // Use string implementation from sass
-  typedef Sass::sass::string string;
-
   enum SassSrcMapMode source_map_mode;
 
   // Flag to embed full sources
@@ -42,13 +39,13 @@ struct SassSrcMapOptions {
   // Path to source map file
   // Enables source map generation
   // Used to create sourceMappingUrl
-  string source_map_origin;
+  sass::string source_map_origin;
 
   // Directly inserted in source maps
-  string source_map_root;
+  sass::string source_map_root;
 
   // Path where source map is saved
-  string source_map_path;
+  sass::string source_map_path;
 
   // Init everything to false
   SassSrcMapOptions() :

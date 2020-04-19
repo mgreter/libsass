@@ -20,34 +20,25 @@ namespace Sass {
     // The current state the compiler is in.
     enum SassCompilerState state;
 
+    // main entry point for compilation
+    struct SassImportCpp* entry_point;
+
     // Where we want to store the output.
     // Source-map path is deducted from it.
-    // Empty means we output to `stdout`.
+    // Defaults to `stream://stdout`.
     sass::string output_path;
-
-    // main entry point for compilation
-    struct SassImportCpp* entry;
-
-    // We need a lookup table to map between internal source indexes.
-    // and what we actually render. Our main source indexes are related
-    // to the context, which can be used for multiple compilations. The
-    // files used for the actual result may only be a subset of all loaded
-    // sheets. Therefore we need to re-map the indexes for source-maps to
-    // make sure the items in resulting arrays are all consecutive.
-    std::unordered_map<size_t, size_t> idxremap;
-
-    // relative includes for sourcemap
-    sass::vector<sass::string> srcmap_links;
 
     // Parsed ast-tree
     BlockObj parsed;
     // Evaluated ast-tree
     BlockObj compiled;
 
+    // The rendered css content.
     sass::string output;
 
     // The rendered output footer. This includes the
     // rendered css comment footer for the source-map.
+    // Append after output for the full output document.
     char* footer;
 
     // The rendered source map. This is what an implementor
@@ -59,6 +50,7 @@ namespace Sass {
     sass::string error_json;
     sass::string error_text;
     sass::string error_message;
+
     // error position
     // Why not pstate?
     sass::string error_file;
@@ -66,6 +58,7 @@ namespace Sass {
     size_t error_column;
     SourceDataObj error_src;
 
+    // Constructor
     Compiler();
 
     void parse();

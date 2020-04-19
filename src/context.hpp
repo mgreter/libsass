@@ -135,7 +135,8 @@ namespace Sass {
   private:
 
     // Global available functions
-    std::vector<CallableObj> fnCache;
+    std::vector<CallableObj> fnList;
+    EnvKeyMap<CallableObj> fnLookup;
 
     // Checking if a file exists can be quite extensive
     // Keep an internal map to avoid multiple check calls
@@ -156,7 +157,7 @@ namespace Sass {
     // Include paths are local to context since we need to know
     // it for lookups during parsing. You may reset this for
     // another compilation when reusing the context.
-    strings include_paths;
+    sass::vector<sass::string> include_paths;
 
     // The logger is created on context instantiation.
     // It assigns a specific logger according to options.
@@ -174,8 +175,6 @@ namespace Sass {
 
     // Only used for is in mixin clause!?
     sass::vector<SassCalleeCpp> callee_stack;
-
-    EnvKeyMap<CallableObj> functions;
 
     // Absolute paths to all includes we have seen so far.
     // Consumers are encouraged to clear this vector after they
