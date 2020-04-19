@@ -53,7 +53,7 @@ namespace Sass {
     ctx(ctx),
     extender(Extender::NORMAL, ctx.logger->callStack),
     compiler(asd),
-    traces(*ctx.logger)
+    traces(compiler.logger)
   {
 
     mediaStack.push_back({});
@@ -173,7 +173,7 @@ namespace Sass {
     //   visitArgumentInvocation(arguments);
     // invocation << callable->name();
     // invocation << args->toString();
-    // callStackFrame frame(*ctx.logger,
+    // callStackFrame frame(compiler.logger,
     //   BackTrace(pstate, callable->name()));
 
     ValueObj result = (this->*run)(callable, trace);
@@ -208,7 +208,7 @@ namespace Sass {
     const SassFnSig& callback = tuple.second;
     const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
 
-    overload->verify(positional.size(), named, pstate, *ctx.logger); // 0.66%
+    overload->verify(positional.size(), named, pstate, compiler.logger); // 0.66%
 
     for (size_t i = positional.size();
       i < declaredArguments.size();
@@ -259,7 +259,7 @@ namespace Sass {
     strm << "No " << pluralize("argument", named.size());
     strm << " named " << toSentence(named, "or") << ".";
     throw Exception::SassRuntimeException2(
-      strm.str(), *ctx.logger);
+      strm.str(), compiler.logger);
   }
 
 
@@ -280,7 +280,7 @@ namespace Sass {
     const SassFnSig& callback = tuple.second;
     const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
 
-    overload->verify(positional.size(), named, pstate, *ctx.logger); // 7.5%
+    overload->verify(positional.size(), named, pstate, compiler.logger); // 7.5%
 
     for (size_t i = positional.size();
       i < declaredArguments.size();
@@ -335,7 +335,7 @@ namespace Sass {
     strm << "No " << pluralize("argument", named.size());
     strm << " named " << toSentence(named, "or") << ".";
     throw Exception::SassRuntimeException2(
-      strm.str(), *ctx.logger);
+      strm.str(), compiler.logger);
   }
 
 
@@ -503,7 +503,7 @@ namespace Sass {
 
     throw Exception::SassRuntimeException2(
       "Variable keyword arguments must be a map (was $keywordRest).",
-      *ctx.logger);
+      compiler.logger);
 
   }
 
@@ -563,7 +563,7 @@ namespace Sass {
 
 
       BackTrace trace(node->pstate());
-      callStackFrame frame(*ctx.logger, trace);
+      callStackFrame frame(compiler.logger, trace);
       ctx.logger->addWarn43(result, false);
 
     }
@@ -747,7 +747,7 @@ namespace Sass {
     case Sass_OP::IESEQ:
       right = rhs->perform(this);
       return left->singleEquals(
-        right, *ctx.logger, node->pstate());
+        right, compiler.logger, node->pstate());
     case Sass_OP::OR:
       if (left->isTruthy()) {
         return left.detach();
@@ -768,36 +768,36 @@ namespace Sass {
         ? bool_false : bool_true;
     case Sass_OP::GT:
       right = rhs->perform(this);
-      return left->greaterThan(right, *ctx.logger, node->pstate())
+      return left->greaterThan(right, compiler.logger, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::GTE:
       right = rhs->perform(this);
-      return left->greaterThanOrEquals(right, *ctx.logger, node->pstate())
+      return left->greaterThanOrEquals(right, compiler.logger, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::LT:
       right = rhs->perform(this);
-      return left->lessThan(right, *ctx.logger, node->pstate())
+      return left->lessThan(right, compiler.logger, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::LTE:
       right = rhs->perform(this);
-      return left->lessThanOrEquals(right, *ctx.logger, node->pstate())
+      return left->lessThanOrEquals(right, compiler.logger, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::ADD:
       right = rhs->perform(this);
-      return left->plus(right, *ctx.logger, node->pstate());
+      return left->plus(right, compiler.logger, node->pstate());
     case Sass_OP::SUB:
       right = rhs->perform(this);
-      return left->minus(right, *ctx.logger, node->pstate());
+      return left->minus(right, compiler.logger, node->pstate());
     case Sass_OP::MUL:
       right = rhs->perform(this);
-      return left->times(right, *ctx.logger, node->pstate());
+      return left->times(right, compiler.logger, node->pstate());
     case Sass_OP::DIV:
       right = rhs->perform(this);
       return doDivision(left, right,
-        node->allowsSlash(), *ctx.logger, node->pstate());
+        node->allowsSlash(), compiler.logger, node->pstate());
     case Sass_OP::MOD:
       right = rhs->perform(this);
-      return left->modulo(right, *ctx.logger, node->pstate());
+      return left->modulo(right, compiler.logger, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -808,13 +808,13 @@ namespace Sass {
     ValueObj operand = node->operand()->perform(this);
     switch (node->optype()) {
     case Unary_Expression::Type::PLUS:
-      return operand->unaryPlus(*ctx.logger, node->pstate());
+      return operand->unaryPlus(compiler.logger, node->pstate());
     case Unary_Expression::Type::MINUS:
-      return operand->unaryMinus(*ctx.logger, node->pstate());
+      return operand->unaryMinus(compiler.logger, node->pstate());
     case Unary_Expression::Type::NOT:
-      return operand->unaryNot(*ctx.logger, node->pstate());
+      return operand->unaryNot(compiler.logger, node->pstate());
     case Unary_Expression::Type::SLASH:
-      return operand->unaryDivide(*ctx.logger, node->pstate());
+      return operand->unaryDivide(compiler.logger, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -1280,11 +1280,11 @@ namespace Sass {
         values["$" + str->value()] = kv.second; // convert?
       }
       else {
-        callStackFrame frame(*ctx.logger, pstate);
+        callStackFrame frame(compiler.logger, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspect() + " is not a string in " + map->inspect() + ".",
-          *ctx.logger);
+          compiler.logger);
       }
     }
   }
@@ -1309,11 +1309,11 @@ namespace Sass {
           ValueExpression, pstate, kv.second);
       }
       else {
-        callStackFrame frame(*ctx.logger, pstate);
+        callStackFrame frame(compiler.logger, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspect() + " is not a string in " + map->inspect() + ".",
-          *ctx.logger);
+          compiler.logger);
       }
     }
   }
@@ -1417,7 +1417,7 @@ namespace Sass {
     }
     throw Exception::SassRuntimeException2(
       "Function finished without @return.",
-      *ctx.logger);
+      compiler.logger);
   }
 
   Value* Eval::visitSupportsRule(SupportsRule* node)
@@ -1638,10 +1638,10 @@ namespace Sass {
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
-      callStackFrame frame(*ctx.logger, node->value()->pstate());
+      callStackFrame frame(compiler.logger, node->value()->pstate());
       throw Exception::SassRuntimeException2(
         "Custom property values may not be empty.",
-        *ctx.logger
+        compiler.logger
       );
     }
 
@@ -1756,8 +1756,8 @@ namespace Sass {
     // const EnvKey& variable(f->variable());
     ValueObj low = f->lower_bound()->perform(this);
     ValueObj high = f->upper_bound()->perform(this);
-    NumberObj sass_start = low->assertNumber(*ctx.logger);
-    NumberObj sass_end = high->assertNumber(*ctx.logger);
+    NumberObj sass_start = low->assertNumber(compiler.logger);
+    NumberObj sass_end = high->assertNumber(compiler.logger);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
       sass::sstream msg; msg << "Incompatible units "
@@ -2102,7 +2102,7 @@ namespace Sass {
 
     blockStack.emplace_back(trace_block);
 
-    callStackFrame frame(*ctx.logger,
+    callStackFrame frame(compiler.logger,
       BackTrace(c->pstate(), Strings::contentRule));
 
     // EnvSnapshotView view(ctx.varRoot, content->snapshot());
@@ -2174,7 +2174,7 @@ namespace Sass {
     if (mixin == nullptr) {
       throw Exception::SassRuntimeException2(
         "Undefined mixin.",
-        *ctx.logger);
+        compiler.logger);
     }
 
     UserDefinedCallableObj contentCallable;
@@ -2191,10 +2191,10 @@ namespace Sass {
 
       if (!rule || !rule->has_content()) {
         SourceSpan span(node->content()->pstate());
-        callStackFrame frame(*ctx.logger, span);
+        callStackFrame frame(compiler.logger, span);
         throw Exception::SassRuntimeException2(
           "Mixin doesn't accept a content block.",
-          *ctx.logger);
+          compiler.logger);
       }
     }
 
@@ -2204,7 +2204,7 @@ namespace Sass {
     blockStack.emplace_back(trace_block);
     LOCAL_FLAG(inMixin, true);
 
-    callStackFrame frame(*ctx.logger,
+    callStackFrame frame(compiler.logger,
       BackTrace(node->pstate(), mixin->name().orig(), true));
 
     LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
