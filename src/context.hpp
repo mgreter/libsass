@@ -101,24 +101,19 @@ namespace Sass {
     /*#########################################################################*/
     void loadBuiltInFunctions();
 
-    /*#########################################################################*/
-    // Split path-separated string and add them to include paths.
-    // On windows the path separator is `;`, most others are `:`.
-    /*#########################################################################*/
-    void collectIncludePaths(const sass::string& paths);
+  public:
 
     /*#########################################################################*/
-    // Split path-separated string and add them to plugin paths.
-    // On windows the path separator is `;`, most others are `:`.
+    // Some simple delegations to variable root for runtime queries
     /*#########################################################################*/
-    // void collectPluginPaths(const sass::string& paths);
-
-    /*#########################################################################*/
-    // Call collect for every item inside the vector.
-    /*#########################################################################*/
-    void collectIncludePaths(const sass::vector<sass::string>& paths);
-    // void collectPluginPaths(const sass::vector<sass::string>& paths);
-
+    CallableObj getLexicalMixin(const EnvKey& name) { return varRoot.getLexicalMixin(name); }
+    CallableObj getLexicalFunction(const EnvKey& name) { return varRoot.getLexicalFunction(name); }
+    ValueObj getLocalVariable(const EnvKey& name) { return varRoot.getLocalVariable(name); }
+    ValueObj getGlobalVariable(const EnvKey& name) { return varRoot.getGlobalVariable(name); }
+    ValueObj getLexicalVariable(const EnvKey& name) { return varRoot.getLexicalVariable(name); }
+    void setLocalVariable(const EnvKey& name, ValueObj val) { return varRoot.setLocalVariable(name, val); }
+    void setGlobalVariable(const EnvKey& name, ValueObj val) { return varRoot.setGlobalVariable(name, val); }
+    void setLexicalVariable(const EnvKey& name, ValueObj val) { return varRoot.setLexicalVariable(name, val); }
 
   protected:
 
@@ -126,34 +121,31 @@ namespace Sass {
 
     void prepareEnvironment();
 
-  public:
-
-    // Helper for plugins
-    // Plugins plugins;
-
-    // Plugins are loaded when the 
-    // strings plugin_paths;
-
-    // Include paths are local to context since we need to know
-    // it for lookups during parsing. You may reset this for
-    // another compilation when reusing the context.
-    strings include_paths;
+  private:
 
     // Global available functions
     std::vector<CallableObj> fnCache;
-
-    // Stacks of all parsed functions 
-    sass::vector<EnvFrame*> varStack;
 
     // Checking if a file exists can be quite extensive
     // Keep an internal map to avoid multiple check calls
     std::unordered_map<sass::string, bool> fileExistsCache;
 
+  protected:
+
     // Runtime variables
+    friend class Eval;
     EnvRoot varRoot;
 
-    // Current content block
-    UserDefinedCallable* content88;
+    // Stacks of all parsed functions
+    friend class StylesheetParser;
+    sass::vector<EnvFrame*> varStack;
+
+  public:
+
+    // Include paths are local to context since we need to know
+    // it for lookups during parsing. You may reset this for
+    // another compilation when reusing the context.
+    strings include_paths;
 
     // The logger is created on context instantiation.
     // It assigns a specific logger according to options.
@@ -168,24 +160,16 @@ namespace Sass {
     sass::vector<struct SassImportCpp*> import_stack;
     sass::vector<SourceDataObj> importStack;
 
+    // Only used for is in mixin clause!?
     sass::vector<SassCalleeCpp> callee_stack;
 
     EnvKeyMap<CallableObj> functions;
-    // EnvKeyMap<BuiltInCallableObj> built-ins;
-    // EnvKeyMap<ExternalCallableObj> externals;
-
-    Extender extender;
-
-    // Needed for eval, so add to eval
-    struct SassCompiler* c_compiler;
 
     // Absolute paths to all includes we have seen so far.
     // Consumers are encouraged to clear this vector after they
     // have copied/moved the items after parsing the entry point.
     // They should ideally be known for every stylesheet.
     sass::vector<SourceDataObj> included_sources;
-
-    // sass::vector<sass::string> plugin_paths88; // relative paths to load plugins
 
     // mainly used in context::find_includes
     // which is in turn called by Context::load_import
@@ -195,12 +179,6 @@ namespace Sass {
     sass::vector<struct SassImporterCpp*> c_importers88;
     sass::vector<struct SassFunctionCpp*> c_functions88;
 
-    // const sass::string indent88; // String to be used for indentation
-    // const sass::string linefeed88; // String to be used for line feeds
-    // sass::string input_path88; // for relative paths in src-map
-    // sass::string output_path88; // for relative paths to the output
-    // sass::string source_map_file88; // path to source map file (enables feature)
-    // sass::string source_map_root88; // path for sourceRoot property (pass-through)
 
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 

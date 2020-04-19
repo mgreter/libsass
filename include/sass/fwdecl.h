@@ -27,7 +27,7 @@ struct SassOptionsCpp; // base struct
 // typedef struct SassFunctionListCpp* (SassFunctionListPtr);
 
 // Typedef defining importer/function callback signature and return type
-typedef struct SassImportListCpp* (*SassImporterLambdaCpp)(const char* url, struct SassImporterCpp* cb, struct SassCompiler* compiler);
+typedef struct SassImportListCpp* (*SassImporterLambdaCpp)(const char* url, struct SassImporterCpp* cb);
 typedef struct SassValue* (*SassFunctionLambdaCpp)(struct SassValue*, struct SassFunctionCpp* cb, struct SassCompiler* compiler);
 
 #ifdef __cplusplus

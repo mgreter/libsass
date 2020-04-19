@@ -32,7 +32,7 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
-  static const sass::string CWD(File::get_cwd());
+  const sass::string CWD(File::get_cwd());
 
   inline bool cmpImporterPrio (struct SassImporterCpp* i, struct SassImporterCpp* j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
@@ -105,9 +105,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   Context::Context()
     : SassOutputOptionsCpp(),
     // emitter(c_options),
-    logger(new Logger(5, SASS_LOGGER_ASCII_MONO)),
-    extender(Extender::NORMAL, logger->callStack),
-    c_compiler(NULL)
+    logger(new Logger(5, SASS_LOGGER_ASCII_MONO))
 
   {
 
@@ -115,21 +113,20 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.
     // Or add it explicitly in your implementation, e.g. include_paths.emplace_back(CWD or '.');
 
-    // collect more paths from different options
-    // collectIncludePaths(c_options.include_path);
-    collectIncludePaths(include_paths);
-    // collectPluginPaths(c_options.plugin_path);
+    // Explode separated include paths
+    if (!include_paths.empty()) {
+      sass::vector<sass::string> exploded;
+      for (auto& paths : include_paths) {
+        sass::vector<sass::string> splitted =
+          StringUtils::split(paths, PATH_SEP, true);
+        for (sass::string& path : splitted) {
+          if (*path.rbegin() != '/') path += '/';
+          exploded.emplace_back(path);
+        }
+      }
+      include_paths = std::move(exploded);
+    }
 
-    // ToDo: call explodePluginPaths!
-    // collectPluginPaths(plugin_paths);
-
-    // load plugins and register custom behaviors
-    // for (auto plug : plugin_paths88) plugins.load_plugins(plug);
-    // for (auto fn : plugins.get_headers()) c_headers88.emplace_back(fn);
-    // for (auto fn : plugins.get_importers()) c_importers88.emplace_back(fn);
-    // for (auto fn : plugins.get_functions()) c_functions88.emplace_back(fn);
-
-    // sort the items by priority (lowest first)
 
     // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
     registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
@@ -176,6 +173,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   void Context::registerBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
+    EnvRoot root;
+    ScopedStackFrame<EnvFrame>
+      scoped(varStack, &root);
+    // context.varStack.push_back(&root);
     auto source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
     auto args = ArgumentDeclaration::parse(*this, source);
@@ -191,7 +192,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   void Context::registerBuiltInOverloadFns(const sass::string& name,
     const std::vector<std::pair<sass::string, SassFnSig>>& overloads)
   {
+    EnvRoot root;
     SassFnPairs pairs;
+    ScopedStackFrame<EnvFrame>
+      scoped(varStack, &root);
     for (auto overload : overloads) {
       SourceDataObj source = SASS_MEMORY_NEW(SourceString,
         "sass://signature", "(" + overload.first + ")");
@@ -294,56 +298,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       c_functions88.emplace_back(function);
     }
   }
-
-  /*#########################################################################*/
-  // Helpers for search path handling
-  /*#########################################################################*/
-
-  // Split path-separated string and add them to include paths.
-  // On windows the path separator is `;`, most others are `:`.
-  void Context::collectIncludePaths(const sass::string& paths)
-  {
-    if (paths.empty()) return;
-    sass::vector<sass::string> split =
-      StringUtils::split(paths, PATH_SEP, true);
-    for (sass::string& path : split) {
-      if (*path.rbegin() != '/') path += '/';
-      include_paths88.emplace_back(path);
-    }
-  }
-  // EO collectIncludePaths
-
-  // Split path-separated string and add them to plugin paths.
-  // On windows the path separator is `;`, most others are `:`.
-  // void Context::collectPluginPaths(const sass::string& paths)
-  // {
-  //   if (paths.empty()) return;
-  //   sass::vector<sass::string> split =
-  //     StringUtils::split(paths, PATH_SEP, true);
-  //   for (sass::string& path : split) {
-  //     if (*path.rbegin() != '/') path += '/';
-  //     plugin_paths88.emplace_back(path);
-  //   }
-  // }
-  // EO collectPluginPaths
-
-  // Call collect for every item inside the vector.
-  void Context::collectIncludePaths(const sass::vector<sass::string>& paths)
-  {
-    for (const sass::string& path : paths) {
-      collectIncludePaths(path.c_str());
-    }
-  }
-  // EO collectIncludePaths
-
-  // Call collect for every item inside the vector.
-  // void Context::collectPluginPaths(const sass::vector<sass::string>& paths)
-  // {
-  //   for (const sass::string& path : paths) {
-  //     collectPluginPaths(path.c_str());
-  //   }
-  // }
-  // EO collectPluginPaths
 
   /*#########################################################################*/
   /*#########################################################################*/
@@ -534,7 +488,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       // Get the external importer function
       SassImporterLambdaCpp fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
-      struct SassImportListCpp* includes = fn(imp_path.c_str(), importer, c_compiler);
+      struct SassImportListCpp* includes = fn(imp_path.c_str(), importer);
       // External provider want to handle this
       if (includes != nullptr) {
         // Get the list of possible includes
@@ -693,7 +647,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     Extension unsatisfied;
     // check that all extends were used
-    if (extender.checkForUnsatisfiedExtends(unsatisfied)) {
+    if (eval.extender.checkForUnsatisfiedExtends(unsatisfied)) {
       throw Exception::UnsatisfiedExtend(*logger, unsatisfied);
     }
 

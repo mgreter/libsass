@@ -51,6 +51,7 @@ namespace Sass {
     plainCss(false),
     at_root_without_rule(false),
     ctx(ctx),
+    extender(Extender::NORMAL, ctx.logger->callStack),
     compiler(asd),
     traces(*ctx.logger)
   {
@@ -405,7 +406,7 @@ namespace Sass {
     }
 
     struct SassValue* c_val =
-      entry->function(c_args, entry, ctx.c_compiler);
+      entry->function(c_args, entry, &compiler);
 
     if (sass_value_get_tag(c_val) == SASS_ERROR) {
       sass::string message("error in C function " + name + ": ");// +sass_error_get_message(c_val));
@@ -1841,13 +1842,13 @@ namespace Sass {
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
               // Pass every selector we ever see to extender (to make them findable for extend)
-              ctx.extender.addExtension(selector(), simple, mediaStack.back(), e->isOptional());
+              extender.addExtension(selector(), simple, mediaStack.back(), e->isOptional());
             }
 
           }
           else {
             // Pass every selector we ever see to extender (to make them findable for extend)
-            ctx.extender.addExtension(selector(), compound->first(), mediaStack.back(), e->isOptional());
+            extender.addExtension(selector(), compound->first(), mediaStack.back(), e->isOptional());
           }
 
         }
@@ -1925,7 +1926,7 @@ namespace Sass {
     // The copy is needed for parent reference evaluation
     // dart-sass stores it as `originalSelector` member
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
-      ctx.extender.addSelector(evaled, mediaStack.back());
+      extender.addSelector(evaled, mediaStack.back());
 
     BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
     blk->is_root(blockStack.back()->is_root());
@@ -2088,8 +2089,8 @@ namespace Sass {
 
   Value* Eval::visitContentRule(ContentRule* c)
   {
-    if (!ctx.content88) return nullptr;
-    UserDefinedCallable* content = ctx.content88;
+    if (!content88) return nullptr;
+    UserDefinedCallable* content = content88;
     if (content == nullptr) return nullptr;
     LOCAL_FLAG(inMixin, false);
 
@@ -2107,7 +2108,7 @@ namespace Sass {
     // EnvSnapshotView view(ctx.varRoot, content->snapshot());
     EnvScope scoped(ctx.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
-    LocalOption<UserDefinedCallable*> asdqwe(ctx.content88, content->content());
+    LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
 
     // Appends to trace
     ArgumentResults& evaluated(c->arguments()->evaluated);
@@ -2183,7 +2184,7 @@ namespace Sass {
       contentCallable = SASS_MEMORY_NEW(
         UserDefinedCallable, 
         node->pstate(), node->name(),
-        node->content(), ctx.content88);
+        node->content(), content88);
 
       MixinRule* rule = Cast<MixinRule>(mixin->declaration());
       node->content()->cidx(rule->cidx());
@@ -2206,7 +2207,7 @@ namespace Sass {
     callStackFrame frame(*ctx.logger,
       BackTrace(node->pstate(), mixin->name().orig(), true));
 
-    LocalOption<UserDefinedCallable*> asdqwe2(ctx.content88, contentCallable);
+    LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
 
     ArgumentResults& evaluated(node->arguments()->evaluated);
     _evaluateArguments(node->arguments(), evaluated);

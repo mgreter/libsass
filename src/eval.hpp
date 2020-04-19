@@ -29,6 +29,9 @@ namespace Sass {
      SelectorStack originalStack;
      SelectorStack selectorStack;
 
+     // Current content block
+     UserDefinedCallable* content88;
+
      // The style rule that defines the current parent selector, if any.
      StyleRuleObj _styleRule;
 
@@ -56,6 +59,8 @@ namespace Sass {
 
 
     Context& ctx;
+    Extender extender;
+
     struct SassCompiler& compiler;
     BackTraces& traces;
     Eval(Context& ctx, struct SassCompiler& compiler);

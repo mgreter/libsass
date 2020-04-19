@@ -826,11 +826,6 @@ namespace Sass {
     Context& context, SourceData* source)
   {
     ScssParser parser(context, source);
-    // We added
-    EnvRoot root;
-    ScopedStackFrame<EnvFrame>
-      scoped(context.varStack, &root);
-    // context.varStack.push_back(&root);
     return parser.parseArgumentDeclaration2();
   }
 

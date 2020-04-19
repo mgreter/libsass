@@ -76,14 +76,14 @@ namespace Sass {
         //   closure.has_global("$" + variable->value()));
 
         return SASS_MEMORY_NEW(Boolean, pstate,
-          ctx.varRoot.getGlobalVariable("$" + variable->value()));
+          ctx.getGlobalVariable("$" + variable->value()));
 
       }
 
       BUILT_IN_FN(variableExists)
       {
         SassString* variable = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
-        ExpressionObj ex = ctx.varRoot.getLexicalVariable("$" + variable->value());
+        ExpressionObj ex = ctx.getLexicalVariable("$" + variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !ex.isNull());
       }
 
@@ -96,7 +96,7 @@ namespace Sass {
             "Modules are not supported yet",
             *ctx.logger);
         }
-        CallableObj fn = ctx.varRoot.getLexicalFunction(variable->value());
+        CallableObj fn = ctx.getLexicalFunction(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
@@ -109,7 +109,7 @@ namespace Sass {
             "Modules are not supported yet",
             *ctx.logger);
         }
-        CallableObj fn = ctx.varRoot.getLexicalMixin(variable->value());
+        CallableObj fn = ctx.getLexicalMixin(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
@@ -121,7 +121,7 @@ namespace Sass {
             *ctx.logger);
         }
         return SASS_MEMORY_NEW(Boolean, pstate,
-          ctx.content88 != nullptr);
+          eval.content88 != nullptr);
       }
 
       BUILT_IN_FN(moduleVariables)
@@ -145,7 +145,7 @@ namespace Sass {
       /// Like `_environment.getFunction`, but also returns built-in
       /// globally-available functions.
       Callable* _getFunction(const EnvKey& name, Context& ctx, const sass::string& ns = "") {
-        return ctx.varRoot.getLexicalFunction(name);
+        return ctx.getLexicalFunction(name);
       }
 
       BUILT_IN_FN(getFunction)
