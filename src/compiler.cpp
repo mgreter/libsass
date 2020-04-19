@@ -13,9 +13,15 @@
 namespace Sass {
 
 
-  Compiler::Compiler(enum Sass_Logger_Style logstyle) :
-    Context(logstyle),
-    error_status(0)
+  Compiler::Compiler() :
+    Context(),
+    state(SASS_COMPILER_CREATED),
+    entry(nullptr),
+    footer(nullptr),
+    srcmap(nullptr),
+    error_status(0),
+    error_line(string::npos),
+    error_column(string::npos)
   {}
 
 

@@ -10,11 +10,15 @@
 
 namespace Sass {
 
+  // The split between Context and Compiler is technically not really needed.
+  // But it helps a little to organize the different aspects of the compilation.
+  // The Context mainly stores all the read-only values (e.g. settings).
   class Compiler : public Context {
 
   public:
 
-    SassCompilerState state;
+    // The current state the compiler is in.
+    enum SassCompilerState state;
 
     // Where we want to store the output.
     // Source-map path is deducted from it.
@@ -62,7 +66,7 @@ namespace Sass {
     size_t error_column;
     SourceDataObj error_src;
 
-    Compiler(enum Sass_Logger_Style logstyle);
+    Compiler();
 
     void parse();
     void compile();

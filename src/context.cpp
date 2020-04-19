@@ -105,10 +105,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
 
 
-  Context::Context(enum Sass_Logger_Style logstyle)
+  Context::Context()
     : SassOutputOptionsCpp(),
     // emitter(c_options),
-    logger123(new Logger(5, logstyle))
+    logger123(new Logger(5, SASS_LOGGER_AUTO))
 
   {
 

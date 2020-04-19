@@ -122,11 +122,9 @@ extern "C" {
   }
 
   
-  struct SassCompiler* ADDCALL sass_make_compiler(struct SassImportCpp* entry)
+  struct SassCompiler* ADDCALL sass_make_compiler()
   {
-    Sass::Compiler* compiler = new Sass::Compiler(SASS_LOGGER_AUTO);
-    Sass::Compiler foobar(SASS_LOGGER_AUTO);
-    compiler->entry = entry; // ToDo
+    Sass::Compiler* compiler = new Sass::Compiler();
     return reinterpret_cast<struct SassCompiler*>(compiler); //
   }
 
@@ -292,6 +290,11 @@ extern "C" {
     return reinterpret_cast<Sass::Compiler*>(compiler)->srcmap;
   }
 
+  void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImportCpp* import)
+  {
+    reinterpret_cast<Sass::Compiler*>(compiler)->entry = import;
+  }
+
   void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
   {
     reinterpret_cast<Sass::Compiler*>(compiler)->output_path = output_path ? output_path : "";
@@ -333,40 +336,35 @@ extern "C" {
 
 
   // Push function for include paths (no manipulation support for now)
-  void ADDCALL sass_context_push_include_path(struct SassContext* context, const char* path)
+  void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* path)
   {
-    reinterpret_cast<Context*>(context)->include_paths.push_back(path);
+    reinterpret_cast<Sass::Compiler*>(compiler)->include_paths.push_back(path); // method addIncludePath
   }
 
   // Push function for plugin paths (no manipulation support for now)
-  void ADDCALL sass_context_load_plugins(struct SassContext* context, const char* path)
+  void ADDCALL sass_compiler_push_include_path(struct SassCompiler* compiler, const char* path)
   {
-    reinterpret_cast<Context*>(context)->loadPlugins(path);
+    reinterpret_cast<Sass::Compiler*>(compiler)->loadPlugins(path);
   }
 
-  struct SassContext* ADDCALL sass_make_context(enum Sass_Logger_Style logstyle)
+  void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision)
   {
-    return reinterpret_cast<SassContext*>(new Sass::Context(logstyle));
+    reinterpret_cast<Sass::Compiler*>(compiler)->precision = precision;
   }
 
-  void ADDCALL sass_context_set_precision(struct SassContext* context, int precision)
+  int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler)
   {
-    reinterpret_cast<Sass::Context*>(context)->precision = precision;
+    return reinterpret_cast<Sass::Compiler*>(compiler)->precision;
   }
 
-  int ADDCALL sass_context_get_precision(struct SassContext* context)
+  bool ADDCALL sass_compiler_get_source_comments(struct SassCompiler* compiler)
   {
-    return reinterpret_cast<Sass::Context*>(context)->precision;
+    return reinterpret_cast<Sass::Compiler*>(compiler)->source_comments;
   }
 
-  bool ADDCALL sass_context_get_source_comments(struct SassContext* context)
+  void ADDCALL sass_compiler_set_source_comments(struct SassCompiler* compiler, bool source_comments)
   {
-    return reinterpret_cast<Sass::Context*>(context)->source_comments;
-  }
-
-  void ADDCALL sass_context_set_source_comments(struct SassContext* context, bool source_comments)
-  {
-    reinterpret_cast<Sass::Context*>(context)->source_comments = source_comments;
+    reinterpret_cast<Sass::Compiler*>(compiler)->source_comments = source_comments;
   }
 
 

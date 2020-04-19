@@ -195,7 +195,7 @@ namespace Sass {
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
     virtual ~Context();
-    Context(enum Sass_Logger_Style logstyle);
+    Context();
 
     void loadPlugins(const sass::string& path);
 
