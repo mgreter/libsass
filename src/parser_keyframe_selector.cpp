@@ -44,7 +44,7 @@ namespace Sass {
     uint8_t second = scanner.peekChar();
     if (!isDigit(second) && second != $dot) {
       scanner.error("Expected number.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
 
     while (isDigit(scanner.peekChar())) {
@@ -65,7 +65,7 @@ namespace Sass {
       if (next == $plus || next == $minus) buffer.write(scanner.readChar());
       if (!isDigit(scanner.peekChar())) {
         scanner.error("Expected digit.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
       }
 
       while (isDigit(scanner.peekChar())) {

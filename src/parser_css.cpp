@@ -13,7 +13,7 @@ namespace Sass {
     Offset start(scanner.offset);
     ScssParser::silentComment();
     error("Silent comments aren't allowed in plain CSS.",
-      *context.logger, scanner.relevantSpanFrom(start));
+      *context.logger123, scanner.relevantSpanFrom(start));
   }
 
   bool isForbiddenAtRule(const sass::string& name)
@@ -50,13 +50,13 @@ namespace Sass {
     if (isForbiddenAtRule(plain)) {
       InterpolationObj value = almostAnyValue();
       error("This at-rule isn't allowed in plain CSS.",
-        *context.logger, scanner.relevantSpanFrom(start));
+        *context.logger123, scanner.relevantSpanFrom(start));
     }
     else if (plain == "charset") {
       sass::string charset(string());
       if (!root) {
         error("This at-rule is not allowed here.",
-          *context.logger, scanner.relevantSpanFrom(start));
+          *context.logger123, scanner.relevantSpanFrom(start));
       }
     }
     else if (plain == "import") {
@@ -218,7 +218,7 @@ namespace Sass {
     if (isDisallowedFunction(plain)) {
       error(
         "This function isn't allowed in plain CSS.",
-        *context.logger, scanner.relevantSpanFrom(start));
+        *context.logger123, scanner.relevantSpanFrom(start));
     }
 
     Interpolation* name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());

@@ -65,7 +65,7 @@ namespace Sass {
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
-        *context.logger, scanner.relevantSpanFrom(start));
+        *context.logger123, scanner.relevantSpanFrom(start));
     }
 
     whitespace();
@@ -249,7 +249,7 @@ namespace Sass {
 
     if (buffer.empty()) {
       scanner.error("expected \"}\".",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     EnvFrame local(context.varStack.back());
@@ -262,7 +262,7 @@ namespace Sass {
       itpl.ptr());
     rule->idxs(local.getIdxs());
     if (isIndented() && rule->empty()) {
-      context.logger->addWarn33(
+      context.logger123->addWarn33(
         "This selector doesn't have any properties and won't be rendered.",
         selectorPstate);
     }
@@ -432,7 +432,7 @@ namespace Sass {
     if (lookingAtChildren()) {
       if (plainCss()) {
         scanner.error("Nested declarations aren't allowed in plain CSS.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
       }
       return _withChildren<Declaration>(&StylesheetParser::_declarationChild, name);
     }
@@ -441,7 +441,7 @@ namespace Sass {
     if (lookingAtChildren()) {
       if (plainCss()) {
         scanner.error("Nested declarations aren't allowed in plain CSS.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
       }
       // only without children;
       return _withChildren<Declaration>(
@@ -903,7 +903,7 @@ namespace Sass {
 
     if (exclusive == 0) {
       scanner.error("Expected \"to\" or \"through\".",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     whitespace();
@@ -1077,7 +1077,7 @@ namespace Sass {
 
     // Error out in case nothing was found
     if (include.abs_path.empty()) {
-      BackTraces& traces = *context.logger;
+      BackTraces& traces = *context.logger123;
       traces.push_back(BackTrace(pstate));
       throw Exception::InvalidSyntax(traces,
         "Can't find stylesheet to import.");
@@ -1398,7 +1398,7 @@ namespace Sass {
 
     if (needsDeprecationWarning) {
 
-      context.logger->addWarn33(
+      context.logger123->addWarn33(
         "@-moz-document is deprecated and support will be removed from Sass "
         "in a future release. For details, see http://bit.ly/moz-document.",
         atRule->pstate(), true);
@@ -1509,7 +1509,7 @@ namespace Sass {
   {
     InterpolationObj value = almostAnyValue();
     error("This at-rule is not allowed here.",
-      *context.logger, scanner.relevantSpanFrom(start));
+      *context.logger123, scanner.relevantSpanFrom(start));
     return nullptr;
   }
 
@@ -1554,7 +1554,7 @@ namespace Sass {
 
       if (named.count(norm) == 1) {
         error("Duplicate argument.",
-          *context.logger,
+          *context.logger123,
           arguments.back()->pstate());
       }
       named.insert(std::move(norm));
@@ -1594,7 +1594,7 @@ namespace Sass {
         whitespace();
         if (named.count(var->name()) == 1) {
           error("Duplicate argument.",
-            *context.logger,
+            *context.logger123,
             expression->pstate());
         }
         auto ex = _expressionUntilComma(!mixin);
@@ -1650,10 +1650,10 @@ namespace Sass {
 
     if (until != nullptr && (this->*until)()) {
       SourceSpan span(scanner.rawSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected expression.",
-        *context.logger, span);
+        *context.logger123, span);
     }
 
     // StringScannerState beforeBracket;
@@ -1917,10 +1917,10 @@ namespace Sass {
 
         if (ep.singleExpression == nullptr) {
           SourceSpan span(scanner.rawSpan());
-          // callStackFrame frame(*context.logger,
+          // callStackFrame frame(*context.logger123,
           //   BackTrace(span));
           scanner.error("Expected expression.",
-            *context.logger, span);
+            *context.logger123, span);
         }
 
         ep.resolveSpaceExpressions();
@@ -2114,13 +2114,13 @@ namespace Sass {
       if (first != $nul && first >= 0x80) {
         return identifierLike();
       }
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(scanner.relevantSpan()));
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected expression.",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
       return nullptr;
     }
   }
@@ -2132,7 +2132,7 @@ namespace Sass {
     if (plainCss()) {
       // This one is needed ...
       scanner.error("Parentheses aren't allowed in plain CSS.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
 
     LOCAL_FLAG(_inParentheses, true);
@@ -2326,10 +2326,10 @@ namespace Sass {
     uint8_t chr = scanner.peekChar();
     if (chr == $nul || !isHex(chr)) {
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected hex digit.",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
     return asHex(scanner.readChar());
   }
@@ -2394,12 +2394,12 @@ namespace Sass {
       break;
     default:
       scanner.error("Expected unary operator.",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     if (plainCss() && op != Unary_Expression::Type::SLASH) {
       scanner.error("Operators aren't allowed in plain CSS.",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     whitespace();
@@ -2455,10 +2455,10 @@ namespace Sass {
     if (!isDigit(scanner.peekChar(1))) {
       if (allowTrailingDot) return 0.0;
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected digit.",
-        *context.logger,
+        *context.logger123,
         scanner.relevantSpanFrom(start));
     }
 
@@ -2489,11 +2489,11 @@ namespace Sass {
     if (next == $plus || next == $minus) scanner.readChar();
     if (!isDigit(scanner.peekChar())) {
       SourceSpan span(scanner.relevantSpan());
-      callStackFrame frame(*context.logger,
+      callStackFrame frame(*context.logger123,
         BackTrace(span));
       scanner.error(
         "Expected digit.",
-        *context.logger,
+        *context.logger123,
         scanner.relevantSpan());
     }
 
@@ -2531,10 +2531,10 @@ namespace Sass {
     }
     if (i == 0) {
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected hex digit or \"?\".",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     if (scanner.scanChar($minus)) {
@@ -2544,19 +2544,19 @@ namespace Sass {
       }
       if (j == 0) {
         // SourceSpan span(scanner.relevantSpan());
-        // callStackFrame frame(*context.logger,
+        // callStackFrame frame(*context.logger123,
         //   BackTrace(span));
         scanner.error("Expected hex digit.",
-          *context.logger, scanner.relevantSpan());
+          *context.logger123, scanner.relevantSpan());
       }
     }
 
     if (_lookingAtInterpolatedIdentifierBody()) {
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected end of identifier.",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     return StringExpression::plain(
@@ -2582,7 +2582,7 @@ namespace Sass {
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
-        *context.logger, scanner.relevantSpanFrom(start));
+        *context.logger123, scanner.relevantSpanFrom(start));
     }
 
     IdxRef vidx;
@@ -2601,7 +2601,7 @@ namespace Sass {
     if (!vidx.isValid()) {
       // Postpone this check into runtime
       error("Accessing uninitialized variable.",
-        *context.logger, scanner.relevantSpanFrom(start));
+        *context.logger123, scanner.relevantSpanFrom(start));
     }
     */
 
@@ -2617,7 +2617,7 @@ namespace Sass {
   {
     if (plainCss()) {
       scanner.error("The parent selector isn't allowed in plain CSS.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
       /* ,length: 1 */
     }
 
@@ -2625,7 +2625,7 @@ namespace Sass {
     scanner.expectChar($ampersand);
 
     if (scanner.scanChar($ampersand)) {
-      context.logger->addWarn33(
+      context.logger123->addWarn33(
         "In Sass, \"&&\" means two copies of the parent selector. You "
         "probably want to use \"and\" instead.",
         scanner.relevantSpanFrom(start));
@@ -2651,10 +2651,10 @@ namespace Sass {
     if (quote != $single_quote && quote != $double_quote) {
       // ToDo: dart-sass passes the start position!?
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected string.",
-        *context.logger,
+        *context.logger123,
         /*position:*/ scanner.relevantSpanFrom(start));
     }
 
@@ -2671,10 +2671,10 @@ namespace Sass {
         sass::sstream strm;
         strm << "Expected " << quote << ".";
         // SourceSpan span(scanner.relevantSpan());
-        // callStackFrame frame(*context.logger,
+        // callStackFrame frame(*context.logger123,
         //   BackTrace(span));
         scanner.error(strm.str(),
-          *context.logger,
+          *context.logger123,
           scanner.relevantSpan());
       }
       else if (next == $backslash) {
@@ -3335,10 +3335,10 @@ namespace Sass {
     if (!brackets.empty()) scanner.expectChar(brackets.back());
     if (!allowEmpty && buffer.empty()) {
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected token.",
-        *context.logger,
+        *context.logger123,
         scanner.relevantSpan());
     }
     SourceSpan pstate(scanner.rawSpanFrom(start));
@@ -3366,10 +3366,10 @@ namespace Sass {
     uint8_t first = 0; // , next = 0;
     if (!scanner.peekChar(first)) {
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected identifier.",
-        *context.logger,
+        *context.logger123,
         scanner.relevantSpanFrom(start));
     }
     else if (isNameStart(first)) {
@@ -3384,10 +3384,10 @@ namespace Sass {
     }
     else {
       // SourceSpan span(scanner.relevantSpan());
-      // callStackFrame frame(*context.logger,
+      // callStackFrame frame(*context.logger123,
       //   BackTrace(span));
       scanner.error("Expected identifier.",
-        *context.logger, scanner.relevantSpan());
+        *context.logger123, scanner.relevantSpan());
     }
 
     interpolatedIdentifierBody(buffer);
@@ -3435,7 +3435,7 @@ namespace Sass {
     if (plainCss()) {
       error(
         "Interpolation isn't allowed in plain CSS.",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
 
     return contents.detach();

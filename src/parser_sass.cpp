@@ -33,7 +33,7 @@ namespace Sass {
     whitespaceWithoutComments();
     scanner.error(
       strm.str(),
-      *context.logger,
+      *context.logger123,
       scanner.rawSpan());
 
       /*,
@@ -141,7 +141,7 @@ namespace Sass {
     uint8_t first = scanner.peekChar();
     if (first == $tab || first == $space) {
       scanner.error("Indenting at the beginning of the document is illegal.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
         /*position: 0, length : scanner.position*/
     }
 
@@ -332,7 +332,7 @@ namespace Sass {
     switch (scanner.peekChar()) {
     case $semicolon:
       scanner.error("semicolons aren't allowed in the indented syntax.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
       return;
     case $cr:
       scanner.readChar();
@@ -344,7 +344,7 @@ namespace Sass {
       return;
     default:
       scanner.error("expected newline.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
   }
 
@@ -378,7 +378,7 @@ namespace Sass {
         msg << "Inconsistent indentation, expected "
           << childIndentation << " spaces.";
         scanner.error(msg.str(),
-          *context.logger,
+          *context.logger123,
           scanner.rawSpan());
 
           /*,
@@ -419,7 +419,7 @@ namespace Sass {
     StringScannerState start = scanner.state();
     if (!scanCharIf(isNewline)) {
       scanner.error("Expected newline.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
         /* position: scanner.position*/
     }
 
@@ -472,20 +472,20 @@ namespace Sass {
     if (containsTab) {
       if (containsSpace) {
         scanner.error("Tabs and spaces may not be mixed.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
           /* position: scanner.position - scanner.column,
           length : scanner.column*/
       }
       else if (indentWithSpaces()) {
         scanner.error("Expected spaces, was tabs.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
           /* position: scanner.position - scanner.column,
           length : scanner.column*/
       }
     }
     else if (containsSpace && indentWithTabs()) {
       scanner.error("Expected tabs, was spaces.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
         /* position: scanner.position - scanner.column, length : scanner.column*/
     }
   }

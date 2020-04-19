@@ -36,7 +36,7 @@ namespace Sass {
     Context& context,
     SourceDataObj source) :
     context(context),
-    scanner(*context.logger, source)
+    scanner(*context.logger123, source)
   {
     // context.varStack.push_back(&context.varRoot);
   }
@@ -156,7 +156,7 @@ namespace Sass {
     auto first = scanner.peekChar();
     if (first == $nul) {
       scanner.error("Expected identifier.",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
     else if (isNameStart(first)) {
       text.write(scanner.readChar());
@@ -166,7 +166,7 @@ namespace Sass {
     }
     else {
       scanner.error("Expected identifier.",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
 
     _identifierBody(text, unit);
@@ -198,7 +198,7 @@ namespace Sass {
     auto first = scanner.peekChar();
     if (first == $nul) {
       scanner.error("Expected identifier.",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
     else if (isNameStart(first)) {
       text.write(scanner.readChar());
@@ -208,7 +208,7 @@ namespace Sass {
     }
     else {
       scanner.error("Expected identifier.",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
 
     _identifierBody(text, unit);
@@ -224,7 +224,7 @@ namespace Sass {
     if (text.empty()) {
       scanner.error(
         "Expected identifier body.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
     return text.toString();
   }
@@ -265,7 +265,7 @@ namespace Sass {
     uint8_t quote = scanner.readChar();
     if (quote != $single_quote && quote != $double_quote) {
       scanner.error("Expected string.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
         /*,
         position: quote == null ? scanner.position : scanner.position - 1*/
     }
@@ -281,7 +281,7 @@ namespace Sass {
         sass::sstream strm;
         strm << "Expected " << quote << ".";
         scanner.error(strm.str(),
-          *context.logger,
+          *context.logger123,
           scanner.rawSpan());
       }
       else if (next == $backslash) {
@@ -308,7 +308,7 @@ namespace Sass {
   {
     if (!isDigit(scanner.peekChar())) {
       scanner.error("Expected digit.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
     uint8_t first = scanner.readChar();
     double number = asDecimal(first);
@@ -429,7 +429,7 @@ namespace Sass {
 
     if (!brackets.empty()) scanner.expectChar(brackets.back());
     if (!allowEmpty && buffer.empty()) scanner.error(
-      "Expected token.", *context.logger, scanner.rawSpan());
+      "Expected token.", *context.logger123, scanner.rawSpan());
     return buffer.toString();
 
   }
@@ -513,7 +513,7 @@ namespace Sass {
     }
     else if (isNewline(first)) {
       scanner.error("Expected escape sequence.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
       return "";
     }
     else if (isHex(first)) {
@@ -561,7 +561,7 @@ namespace Sass {
     }
     else if (isNewline(first)) {
       scanner.error("Expected escape sequence.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
       return 0;
     }
     else if (isHex(first)) {
@@ -618,7 +618,7 @@ namespace Sass {
       msg += letter; msg += "\".";
       scanner.offset = start;
       scanner.error(msg,
-        *context.logger,
+        *context.logger123,
         scanner.rawSpan());
     }
   }
@@ -724,12 +724,12 @@ namespace Sass {
       if (scanCharIgnoreCase(text[i])) continue;
       if (name.empty()) name = quote(text);
       scanner.error("Expected " + name + ".",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
     if (!lookingAtIdentifierBody()) return;
     if (name.empty()) name = quote(text);
     scanner.error("Expected " + name + ".",
-      *context.logger, scanner.rawSpanFrom(start));
+      *context.logger123, scanner.rawSpanFrom(start));
   }
 
   // Consumes an identifier and asserts that its name exactly matches [text].
@@ -741,18 +741,18 @@ namespace Sass {
       if (scanCharIgnoreCase(text[i])) continue;
       if (name.empty()) name = quote(text);
       scanner.error("Expected " + name + ".",
-        *context.logger, scanner.rawSpanFrom(start));
+        *context.logger123, scanner.rawSpanFrom(start));
     }
     if (!lookingAtIdentifierBody()) return;
     if (name.empty()) name = quote(text);
     scanner.error("Expected " + name + ".",
-      *context.logger, scanner.rawSpanFrom(start));
+      *context.logger123, scanner.rawSpanFrom(start));
   }
 
   // Throws an error associated with [span].
   void Parser::error(sass::string message, SourceSpan pstate) {
-    callStackFrame frame(*context.logger, BackTrace(pstate));
-    throw Exception::InvalidSyntax(*context.logger, message);
+    callStackFrame frame(*context.logger123, BackTrace(pstate));
+    throw Exception::InvalidSyntax(*context.logger123, message);
   }
   void Parser::error(sass::string message, BackTraces& traces, SourceSpan pstate) {
     callStackFrame frame(traces, BackTrace(pstate));

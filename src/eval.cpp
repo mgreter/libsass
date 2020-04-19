@@ -51,7 +51,7 @@ namespace Sass {
     plainCss(false),
     at_root_without_rule(false),
     ctx(ctx),
-    extender(Extender::NORMAL, ctx.logger->callStack),
+    extender(Extender::NORMAL, asd.logger.callStack),
     compiler(asd),
     traces(compiler.logger)
   {
@@ -564,7 +564,7 @@ namespace Sass {
 
       BackTrace trace(node->pstate());
       callStackFrame frame(compiler.logger, trace);
-      ctx.logger->addWarn43(result, false);
+      compiler.logger.addWarn43(result, false);
 
     }
     // options().output_style = outstyle;
@@ -858,7 +858,7 @@ namespace Sass {
   Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.ctx.logger, trace);
+    callStackFrame frame(eval.compiler.logger, trace);
     ValueObj rv = eval._runBuiltInCallable(
       arguments, this, pstate, selfAssign);
     rv = rv->withoutSlash();
@@ -868,7 +868,7 @@ namespace Sass {
   Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.ctx.logger, trace);
+    callStackFrame frame(eval.compiler.logger, trace);
     ValueObj rv = eval._runBuiltInCallables(
       arguments, this, pstate, selfAssign);
     rv = rv->withoutSlash();
@@ -879,7 +879,7 @@ namespace Sass {
   {
     LocalOption<bool> inMixin(eval.inMixin, false);
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.ctx.logger, trace);
+    callStackFrame frame(eval.compiler.logger, trace);
     ArgumentResults& evaluated(arguments->evaluated);
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable(evaluated,
@@ -891,7 +891,7 @@ namespace Sass {
   Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
     BackTrace trace(pstate, name(), true);
-    callStackFrame frame(*eval.ctx.logger, trace);
+    callStackFrame frame(eval.compiler.logger, trace);
     ValueObj rv = eval._runExternalCallable(
       arguments, this, pstate);
     rv = rv->withoutSlash();
@@ -905,14 +905,14 @@ namespace Sass {
         arguments->named().pstate());
       throw Exception::SassRuntimeException2(
         "Plain CSS functions don't support keyword arguments.",
-        *eval.ctx.logger);
+        eval.compiler.logger);
     }
     if (arguments->kwdRest() != nullptr) {
       callStackFrame frame(eval.traces,
         arguments->kwdRest()->pstate());
       throw Exception::SassRuntimeException2(
         "Plain CSS functions don't support keyword arguments.",
-        *eval.ctx.logger);
+        eval.compiler.logger);
     }
     bool addComma = false;
     sass::string strm;
@@ -1671,7 +1671,7 @@ namespace Sass {
       // Check if we are at the global scope
       if (ctx.varRoot.isGlobal()) {
         if (!ctx.varRoot.getGlobalVariable(name)) {
-          ctx.logger->addWarn33(
+          compiler.logger.addWarn33(
             "As of LibSass 4.1, !global assignments won't be able to declare new"
             " variables. Since this assignment is at the root of the stylesheet,"
             " the !global flag is unnecessary and can safely be removed.",
@@ -1680,7 +1680,7 @@ namespace Sass {
       }
       else {
         if (!ctx.varRoot.getGlobalVariable(name)) {
-          ctx.logger->addWarn33(
+          compiler.logger.addWarn33(
             "As of LibSass 4.1, !global assignments won't be able to declare new variables."
             " Consider adding `" + name.orig() + ": null` at the root of the stylesheet.",
             a->pstate(), true);
@@ -1837,7 +1837,7 @@ namespace Sass {
             }
             sels << "` instead. See http://bit.ly/ExtendCompound for details.";
 
-            ctx.logger->addWarn33(sels.str(), compound->pstate());
+            compiler.logger.addWarn33(sels.str(), compound->pstate());
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {

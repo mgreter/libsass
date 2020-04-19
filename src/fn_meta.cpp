@@ -33,7 +33,7 @@ namespace Sass {
 
       BUILT_IN_FN(keywords)
       {
-        ArgumentList* argumentList = arguments[0]->assertArgumentList(*ctx.logger, Sass::Strings::args);
+        ArgumentList* argumentList = arguments[0]->assertArgumentList(compiler.logger, Sass::Strings::args);
         const EnvKeyFlatMap<ValueObj>& keywords = argumentList->keywords();
         MapObj map = SASS_MEMORY_NEW(Map, arguments[0]->pstate());
         for (auto kv : keywords) {
@@ -48,7 +48,7 @@ namespace Sass {
 
       BUILT_IN_FN(featureExists)
       {
-        SassString* feature = arguments[0]->assertString(*ctx.logger, pstate, "feature");
+        SassString* feature = arguments[0]->assertString(compiler.logger, pstate, "feature");
         static const auto* const features =
           new std::unordered_set<sass::string>{
           "global-variable-shadowing",
@@ -64,12 +64,12 @@ namespace Sass {
 
       BUILT_IN_FN(globalVariableExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
-        SassString* plugin = arguments[1]->assertStringOrNull(*ctx.logger, pstate, Sass::Strings::module);
+        SassString* variable = arguments[0]->assertString(compiler.logger, pstate, Sass::Strings::name);
+        SassString* plugin = arguments[1]->assertStringOrNull(compiler.logger, pstate, Sass::Strings::module);
         if (plugin != nullptr) {
           throw Exception::SassRuntimeException2(
             "Modules are not supported yet",
-            *ctx.logger);
+            compiler.logger);
         }
 
         // return SASS_MEMORY_NEW(Boolean, pstate,
@@ -82,19 +82,19 @@ namespace Sass {
 
       BUILT_IN_FN(variableExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
+        SassString* variable = arguments[0]->assertString(compiler.logger, pstate, Sass::Strings::name);
         ExpressionObj ex = ctx.getLexicalVariable("$" + variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !ex.isNull());
       }
 
       BUILT_IN_FN(functionExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
-        SassString* plugin = arguments[1]->assertStringOrNull(*ctx.logger, pstate, Sass::Strings::module);
+        SassString* variable = arguments[0]->assertString(compiler.logger, pstate, Sass::Strings::name);
+        SassString* plugin = arguments[1]->assertStringOrNull(compiler.logger, pstate, Sass::Strings::module);
         if (plugin != nullptr) {
           throw Exception::SassRuntimeException2(
             "Modules are not supported yet",
-            *ctx.logger);
+            compiler.logger);
         }
         CallableObj fn = ctx.getLexicalFunction(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
@@ -102,12 +102,12 @@ namespace Sass {
 
       BUILT_IN_FN(mixinExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
-        SassString* plugin = arguments[1]->assertStringOrNull(*ctx.logger, pstate, Sass::Strings::module);
+        SassString* variable = arguments[0]->assertString(compiler.logger, pstate, Sass::Strings::name);
+        SassString* plugin = arguments[1]->assertStringOrNull(compiler.logger, pstate, Sass::Strings::module);
         if (plugin != nullptr) {
           throw Exception::SassRuntimeException2(
             "Modules are not supported yet",
-            *ctx.logger);
+            compiler.logger);
         }
         CallableObj fn = ctx.getLexicalMixin(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
@@ -118,7 +118,7 @@ namespace Sass {
         if (!eval.inMixin) {
           throw Exception::SassRuntimeException2(
             "content-exists() may only be called within a mixin.",
-            *ctx.logger);
+            compiler.logger);
         }
         return SASS_MEMORY_NEW(Boolean, pstate,
           eval.content88 != nullptr);
@@ -130,7 +130,7 @@ namespace Sass {
         // SassString* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
         throw Exception::SassRuntimeException2(
           "Modules are not supported yet",
-          *ctx.logger);
+          compiler.logger);
       }
 
       BUILT_IN_FN(moduleFunctions)
@@ -139,7 +139,7 @@ namespace Sass {
         // SassString* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
         throw Exception::SassRuntimeException2(
           "Modules are not supported yet",
-          *ctx.logger);
+          compiler.logger);
       }
 
       /// Like `_environment.getFunction`, but also returns built-in
@@ -151,14 +151,14 @@ namespace Sass {
       BUILT_IN_FN(getFunction)
       {
 
-        SassString* name = arguments[0]->assertString(*ctx.logger, pstate, Sass::Strings::name);
+        SassString* name = arguments[0]->assertString(compiler.logger, pstate, Sass::Strings::name);
         bool css = arguments[1]->isTruthy(); // supports all values
-        SassString* plugin = arguments[2]->assertStringOrNull(*ctx.logger, pstate, Sass::Strings::module);
+        SassString* plugin = arguments[2]->assertStringOrNull(compiler.logger, pstate, Sass::Strings::module);
 
         if (css && plugin != nullptr) {
           Exception::SassRuntimeException2(
             "$css and $module may not both be passed at once.",
-            *ctx.logger);
+            compiler.logger);
         }
 
         CallableObj callable = css
@@ -168,7 +168,7 @@ namespace Sass {
         if (callable == nullptr) throw
           Exception::SassRuntimeException2(
             "Function not found: " + name->value(),
-            *ctx.logger);
+            compiler.logger);
 
         return SASS_MEMORY_NEW(SassFunction, pstate, callable);
 
@@ -177,8 +177,8 @@ namespace Sass {
       BUILT_IN_FN(call)
       {
 
-        Value* function = arguments[0]->assertValue(*ctx.logger, "function");
-        ArgumentList* args = arguments[1]->assertArgumentList(*ctx.logger, Sass::Strings::args);
+        Value* function = arguments[0]->assertValue(compiler.logger, "function");
+        ArgumentList* args = arguments[1]->assertArgumentList(compiler.logger, Sass::Strings::args);
 
         // sass::vector<ExpressionObj> positional,
         //   EnvKeyMap<ExpressionObj> named,
@@ -200,7 +200,7 @@ namespace Sass {
 
         if (SassString * str = function->isString()) {
           sass::string name = unquote(str->value());
-          ctx.logger->addWarn33(
+          compiler.logger.addWarn33(
             "Passing a string to call() is deprecated and will be illegal in LibSass "
             "4.1.0. Use call(get-function(" + str->to_css(true) + ")) instead.",
             str->pstate(), true);
@@ -214,7 +214,7 @@ namespace Sass {
 
         }
 
-        Callable* callable = function->assertFunction(*ctx.logger, "function")->callable();
+        Callable* callable = function->assertFunction(compiler.logger, "function")->callable();
         return eval._runFunctionCallable(invocation, callable, pstate, false);
 
 

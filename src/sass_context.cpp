@@ -334,9 +334,9 @@ extern "C" {
     reinterpret_cast<Context*>(context)->loadPlugins(path);
   }
 
-  struct SassContext* ADDCALL sass_make_context()
+  struct SassContext* ADDCALL sass_make_context(enum Sass_Logger_Style logstyle)
   {
-    return reinterpret_cast<SassContext*>(new Sass::Context());
+    return reinterpret_cast<SassContext*>(new Sass::Context(logstyle));
   }
 
   void ADDCALL sass_context_set_precision(struct SassContext* context, int precision)

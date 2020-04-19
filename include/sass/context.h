@@ -21,7 +21,7 @@ enum SassCompilerState {
 };
 
 // Create and initialize the main libsass context
-ADDAPI struct SassContext* ADDCALL sass_make_context();
+ADDAPI struct SassContext* ADDCALL sass_make_context(enum Sass_Logger_Style logstyle);
 
 // Create an import entry by reading from `stdin`
 ADDAPI struct SassImportCpp* ADDCALL sass_make_stdin_import();

@@ -54,7 +54,7 @@ namespace Sass {
       if (scanIdentifier("else")) return true;
       if (scanIdentifier("elseif")) {
         /*
-        logger.warn(
+        logger123.warn(
           "@elseif is deprecated and will not be supported in future Sass versions.\n"
           "Use "@else if" instead.",
           span: scanner.spanFrom(beforeAt),
@@ -174,7 +174,7 @@ namespace Sass {
 
     if (plainCss()) {
       error("Silent comments aren't allowed in plain CSS.",
-        *context.logger, scanner.relevantSpanFrom(start.offset));
+        *context.logger123, scanner.relevantSpanFrom(start.offset));
     }
 
     return SASS_MEMORY_NEW(SilentComment, scanner.rawSpanFrom(start.offset),

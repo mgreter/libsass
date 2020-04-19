@@ -149,7 +149,7 @@ namespace Sass {
 
     // The logger is created on context instantiation.
     // It assigns a specific logger according to options.
-    Logger* logger; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    Logger* logger123; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     // resources under our control
     sass::vector<SourceDataObj> sources;
@@ -183,7 +183,7 @@ namespace Sass {
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);
 
     virtual ~Context();
-    Context();
+    Context(enum Sass_Logger_Style logstyle);
 
     void loadPlugins(const sass::string& path);
 

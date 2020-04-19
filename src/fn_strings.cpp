@@ -66,7 +66,7 @@ namespace Sass {
 
       BUILT_IN_FN(unquote)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
         if (!string->hasQuotes()) return string;
         return SASS_MEMORY_NEW(SassString,
           string->pstate(), string->value(), false);
@@ -80,7 +80,7 @@ namespace Sass {
               arguments[0]->pstate(), col->disp(), true);
           }
         }
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
         if (string->hasQuotes()) return string;
         return SASS_MEMORY_NEW(SassString,
           string->pstate(), string->value(), true);
@@ -88,7 +88,7 @@ namespace Sass {
 
       BUILT_IN_FN(toUpperCase)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
         return SASS_MEMORY_NEW(SassString, pstate,
           StringUtils::toUpperCase(string->value()),
           string->hasQuotes());
@@ -96,7 +96,7 @@ namespace Sass {
 
       BUILT_IN_FN(toLowerCase)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
         return SASS_MEMORY_NEW(SassString, pstate,
           StringUtils::toLowerCase(string->value()),
           string->hasQuotes());
@@ -104,19 +104,19 @@ namespace Sass {
 
       BUILT_IN_FN(length)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
         size_t len = Unicode::codePointCount(string->value());
         return SASS_MEMORY_NEW(Number, pstate, (double)len);
       }
 
       BUILT_IN_FN(insert)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
-        SassString* insert = arguments[1]->assertString(*ctx.logger, pstate, "insert");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
+        SassString* insert = arguments[1]->assertString(compiler.logger, pstate, "insert");
         size_t len = Unicode::codePointCount(string->value());
-        long index = arguments[2]->assertNumber(*ctx.logger, "index")
-          ->assertNoUnits(*ctx.logger, pstate, "index")
-          ->assertInt(*ctx.logger, pstate, "index");
+        long index = arguments[2]->assertNumber(compiler.logger, "index")
+          ->assertNoUnits(compiler.logger, pstate, "index")
+          ->assertInt(compiler.logger, pstate, "index");
 
         // str-insert has unusual behavior for negative inputs. It guarantees that
         // the `$insert` string is at `$index` in the result, which means that we
@@ -140,8 +140,8 @@ namespace Sass {
 
       BUILT_IN_FN(index)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
-        SassString* substring = arguments[1]->assertString(*ctx.logger, pstate, "substring");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
+        SassString* substring = arguments[1]->assertString(compiler.logger, pstate, "substring");
 
         sass::string str(string->value());
         sass::string substr(substring->value());
@@ -157,18 +157,18 @@ namespace Sass {
 
       BUILT_IN_FN(slice)
       {
-        SassString* string = arguments[0]->assertString(*ctx.logger, pstate, "string");
-        Number* beg = arguments[1]->assertNumber(*ctx.logger, "start-at");
-        Number* end = arguments[2]->assertNumber(*ctx.logger, "end-at");
+        SassString* string = arguments[0]->assertString(compiler.logger, pstate, "string");
+        Number* beg = arguments[1]->assertNumber(compiler.logger, "start-at");
+        Number* end = arguments[2]->assertNumber(compiler.logger, "end-at");
 
         size_t len = Unicode::codePointCount(string->value());
-        beg = beg->assertNoUnits(*ctx.logger, pstate, "start");
-        end = end->assertNoUnits(*ctx.logger, pstate, "end");
+        beg = beg->assertNoUnits(compiler.logger, pstate, "start");
+        end = end->assertNoUnits(compiler.logger, pstate, "end");
 
         // No matter what the start index is, an end
         // index of 0 will produce an empty string.
-        long endInt = end->assertNoUnits(*ctx.logger, pstate, "end")
-          ->assertInt(*ctx.logger, pstate);
+        long endInt = end->assertNoUnits(compiler.logger, pstate, "end")
+          ->assertInt(compiler.logger, pstate);
         if (endInt == 0) {
           auto qwe = SASS_MEMORY_NEW(SassString,
             pstate, "", string->hasQuotes());
@@ -176,8 +176,8 @@ namespace Sass {
           return qwe;
         }
 
-        long begInt = beg->assertNoUnits(*ctx.logger, pstate, "start")
-          ->assertInt(*ctx.logger, pstate);
+        long begInt = beg->assertNoUnits(compiler.logger, pstate, "start")
+          ->assertInt(compiler.logger, pstate);
         begInt = (long)_codepointForIndex(begInt, (long)len, false);
         endInt = (long)_codepointForIndex(endInt, (long)len, true);
 

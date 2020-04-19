@@ -111,8 +111,8 @@ namespace Sass {
 
   SelectorList* Value::assertSelector(Context& ctx, const sass::string& name, bool allowParent)
   {
-    callStackFrame frame(*ctx.logger, pstate_);
-    sass::string text(_selectorString(*ctx.logger, pstate_, name));
+    callStackFrame frame(*ctx.logger123, pstate_);
+    sass::string text(_selectorString(*ctx.logger123, pstate_, name));
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate_);
     SelectorParser parser(ctx, source, allowParent);
     return parser.parse().detach();
@@ -120,8 +120,8 @@ namespace Sass {
 
   CompoundSelector* Value::assertCompoundSelector(Context& ctx, const sass::string& name, bool allowParent)
   {
-    callStackFrame frame(*ctx.logger, pstate_);
-    sass::string text(_selectorString(*ctx.logger, pstate_, name));
+    callStackFrame frame(*ctx.logger123, pstate_);
+    sass::string text(_selectorString(*ctx.logger123, pstate_, name));
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate_);
     SelectorParser parser(ctx, source, allowParent);
     return parser.parseCompoundSelector().detach();

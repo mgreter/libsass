@@ -37,7 +37,7 @@ namespace Sass {
         if (arguments[0]->lengthAsList() == 0) {
           throw Exception::SassRuntimeException2(
             "$selectors: At least one selector must be passed for `selector-nest'",
-            *ctx.logger);
+            compiler.logger);
         }
 
         // Parse args into vector of selectors
@@ -47,7 +47,7 @@ namespace Sass {
             throw Exception::SassRuntimeException2( // "$selectors: "
               "null is not a valid selector: it must be a string,\n"
               "a list of strings, or a list of lists of strings.",
-              *ctx.logger, exp->pstate());
+              compiler.logger, exp->pstate());
           }
           if (SassStringObj str = exp->isString()) {
             str->hasQuotes(false);
@@ -77,7 +77,7 @@ namespace Sass {
         for (; itr != parsedSelectors.end(); ++itr) {
           SelectorListObj& child = *itr;
           // original_stack.emplace_back(result);
-          BackTraces& traces = *ctx.logger;
+          BackTraces& traces = compiler.logger;
           SelectorListObj rv = child->resolveParentSelectors(result, traces);
           result->elementsM(std::move(rv->elements()));
           // original_stack.pop_back();
@@ -94,7 +94,7 @@ namespace Sass {
         if (arguments[0]->lengthAsList() == 0) {
           throw Exception::SassRuntimeException2(
             "$selectors: At least one selector must be passed.",
-            *ctx.logger);
+            compiler.logger);
         }
 
         sass::vector<SelectorListObj> selectors;
@@ -103,7 +103,7 @@ namespace Sass {
             throw Exception::SassRuntimeException2( // "$selectors: "
               "null is not a valid selector: it must be a string,\n"
               "a list of strings, or a list of lists of strings.",
-              *ctx.logger, arg->pstate());
+              compiler.logger, arg->pstate());
           }
           sass::string text(arg->to_css());
           SourceSpan state(arg->pstate());
@@ -131,7 +131,7 @@ namespace Sass {
                 throw Exception::SassRuntimeException2(
                   "Can't append " + child->to_css() + " to " +
                   reduced->to_css() + ".",
-                  *ctx.logger);
+                  compiler.logger);
               }
               complex->at(0) = compound;
             }
@@ -139,10 +139,10 @@ namespace Sass {
               throw Exception::SassRuntimeException2(
                 "Can't append " + child->to_css() + " to " +
                 reduced->to_css() + ".",
-                *ctx.logger);
+                compiler.logger);
             }
           }
-          BackTraces& traces = *ctx.logger;
+          BackTraces& traces = compiler.logger;
           reduced = cp->resolveParentSelectors(reduced, traces, false);
         }
 
@@ -152,7 +152,7 @@ namespace Sass {
 
       BUILT_IN_FN(extend)
       {
-        BackTraces& traces = *ctx.logger;
+        BackTraces& traces = compiler.logger;
         // callStackFrame frame(traces, BackTrace(pstate, "selector-extend"));
         SelectorListObj selector = arguments[0]->assertSelector(ctx, "selector");
         SelectorListObj target = arguments[1]->assertSelector(ctx, "extendee");
@@ -163,7 +163,7 @@ namespace Sass {
 
       BUILT_IN_FN(replace)
       {
-        BackTraces& traces = *ctx.logger;
+        BackTraces& traces = compiler.logger;
         SelectorListObj selector = arguments[0]->assertSelector(ctx, "selector");
         SelectorListObj target = arguments[1]->assertSelector(ctx, "original");
         SelectorListObj source = arguments[2]->assertSelector(ctx, "replacement");

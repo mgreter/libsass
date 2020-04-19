@@ -13,6 +13,7 @@
 
 namespace Sass {
 
+  // The logger belongs to context
   class Logger {
 
   public:
@@ -22,11 +23,12 @@ namespace Sass {
 
     // output buffers
     sass::ostream errors;
-    sass::ostream output;
+    // sass::ostream output;
 
     // The current callstack
     BackTraces callStack;
 
+    // Flag for unicode and/or color
     enum Sass_Logger_Style style;
 
   private:

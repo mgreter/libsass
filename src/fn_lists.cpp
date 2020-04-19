@@ -26,7 +26,7 @@ namespace Sass {
       {
         Value* list = arguments[0];
         Value* index = arguments[1];
-        return list->getValueAt(index, *ctx.logger);
+        return list->getValueAt(index, compiler.logger);
       }
 
       BUILT_IN_FN(setNth)
@@ -36,7 +36,7 @@ namespace Sass {
 
         if (selfAssign && input->refcount < AssignableRefCount) {
           if (SassList* lst = Cast<SassList>(input)) {
-            size_t idx = input->sassIndexToListIndex(index, *ctx.logger, "n");
+            size_t idx = input->sassIndexToListIndex(index, compiler.logger, "n");
             lst->at(idx) = arguments[2];
             return lst;
           }
@@ -48,7 +48,7 @@ namespace Sass {
         values.reserve(input->lengthAsList());
         std::copy(it.begin(), it.end(),
           std::back_inserter(values));
-        size_t idx = input->sassIndexToListIndex(index, *ctx.logger, "n");
+        size_t idx = input->sassIndexToListIndex(index, compiler.logger, "n");
         values[idx] = arguments[2];
         return SASS_MEMORY_NEW(SassList,
           input->pstate(), std::move(values),
@@ -59,7 +59,7 @@ namespace Sass {
       {
         Value* list1 = arguments[0];
         Value* list2 = arguments[1];
-        SassString* separatorParam = arguments[2]->assertString(*ctx.logger, pstate, "separator");
+        SassString* separatorParam = arguments[2]->assertString(compiler.logger, pstate, "separator");
         Value* bracketedParam = arguments[3];
 
         Sass_Separator separator = SASS_UNDEF;
@@ -83,7 +83,7 @@ namespace Sass {
         else {
           throw Exception::SassScriptException2(
             "$separator: Must be \"space\", \"comma\", or \"auto\".",
-            *ctx.logger, pstate);
+            compiler.logger, pstate);
         }
 
         bool bracketed = bracketedParam->isTruthy();
@@ -120,9 +120,9 @@ namespace Sass {
 
       BUILT_IN_FN(append)
       {
-        Value* list = arguments[0]->assertValue(*ctx.logger, "list");
-        Value* value = arguments[1]->assertValue(*ctx.logger, "val");
-        SassString* separatorParam = arguments[2]->assertString(*ctx.logger, pstate, "separator");
+        Value* list = arguments[0]->assertValue(compiler.logger, "list");
+        Value* value = arguments[1]->assertValue(compiler.logger, "val");
+        SassString* separatorParam = arguments[2]->assertString(compiler.logger, pstate, "separator");
         Sass_Separator separator = SASS_UNDEF;
         if (separatorParam->value() == "auto") {
           separator = list->separator() == SASS_UNDEF
@@ -137,7 +137,7 @@ namespace Sass {
         else {
           throw Exception::SassScriptException2(
             "$separator: Must be \"space\", \"comma\", or \"auto\".",
-            *ctx.logger, pstate);
+            compiler.logger, pstate);
         }
 
         if (selfAssign && list->refcount < AssignableRefCount) {

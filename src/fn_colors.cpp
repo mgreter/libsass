@@ -279,17 +279,17 @@ namespace Sass {
 
       BUILT_IN_FN(rgb_4)
       {
-        return _rgb(Strings::rgb, arguments, "", pstate, *ctx.logger);
+        return _rgb(Strings::rgb, arguments, "", pstate, compiler.logger);
       }
 
       BUILT_IN_FN(rgb_3)
       {
-        return _rgb(Strings::rgb, arguments, "", pstate, *ctx.logger);
+        return _rgb(Strings::rgb, arguments, "", pstate, compiler.logger);
       }
 
       BUILT_IN_FN(rgb_2)
       {
-        return _rgbTwoArg2(Strings::rgb, arguments, pstate, *ctx.logger);
+        return _rgbTwoArg2(Strings::rgb, arguments, pstate, compiler.logger);
       }
 
 
@@ -303,7 +303,7 @@ namespace Sass {
           return str;
         }
         if (SassList * list = parsed->isList()) { // Ex
-          return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger);
+          return _rgb(Strings::rgb, list->elements(), "", pstate, compiler.logger);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
@@ -311,19 +311,19 @@ namespace Sass {
 
       BUILT_IN_FN(rgba_4)
       {
-        return _rgb("rgba", arguments, "", pstate, *ctx.logger);
+        return _rgb("rgba", arguments, "", pstate, compiler.logger);
       }
 
 
       BUILT_IN_FN(rgba_3)
       {
-        return _rgb(Strings::rgba, arguments, "", pstate, *ctx.logger);
+        return _rgb(Strings::rgba, arguments, "", pstate, compiler.logger);
       }
 
 
       BUILT_IN_FN(rgba_2)
       {
-        return _rgbTwoArg2(Strings::rgba, arguments, pstate, *ctx.logger);
+        return _rgbTwoArg2(Strings::rgba, arguments, pstate, compiler.logger);
       }
 
 
@@ -337,7 +337,7 @@ namespace Sass {
           return str;
         }
         if (SassList * list = parsed->isList()) { // Ex
-          return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger);
+          return _rgb(Strings::rgba, list->elements(), "", pstate, compiler.logger);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
@@ -345,13 +345,13 @@ namespace Sass {
 
       BUILT_IN_FN(hsl_4)
       {
-        return _hsl(Strings::hsl, arguments, "", pstate, *ctx.logger);
+        return _hsl(Strings::hsl, arguments, "", pstate, compiler.logger);
       }
 
 
       BUILT_IN_FN(hsl_3)
       {
-        return _hsl(Strings::hsl, arguments, "", pstate, *ctx.logger);
+        return _hsl(Strings::hsl, arguments, "", pstate, compiler.logger);
       }
 
 
@@ -364,7 +364,7 @@ namespace Sass {
         }
         throw Exception::SassScriptException2(
           "Missing argument $lightness.",
-          *ctx.logger, pstate);
+          compiler.logger, pstate);
       }
 
 
@@ -378,7 +378,7 @@ namespace Sass {
           return str;
         }
         if (SassList * list = parsed->isList()) { // Ex
-          return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger);
+          return _hsl(Strings::hsl, list->elements(), "", pstate, compiler.logger);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
@@ -386,13 +386,13 @@ namespace Sass {
 
       BUILT_IN_FN(hsla_4)
       {
-        return _hsl("hsla", arguments, "", pstate, *ctx.logger);
+        return _hsl("hsla", arguments, "", pstate, compiler.logger);
       }
 
 
       BUILT_IN_FN(hsla_3)
       {
-        return _hsl(Strings::hsla, arguments, "", pstate, *ctx.logger);
+        return _hsl(Strings::hsla, arguments, "", pstate, compiler.logger);
       }
 
 
@@ -405,7 +405,7 @@ namespace Sass {
         }
         throw Exception::SassScriptException2(
           "Missing argument $lightness.",
-          *ctx.logger, pstate);
+          compiler.logger, pstate);
       }
 
 
@@ -419,7 +419,7 @@ namespace Sass {
           return str;
         }
         if (SassList * list = parsed->isList()) { // Ex
-          return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger);
+          return _hsl(Strings::hsla, list->elements(), "", pstate, compiler.logger);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
       }
@@ -427,66 +427,66 @@ namespace Sass {
       BUILT_IN_FN(red)
       {
         return SASS_MEMORY_NEW(Number, pstate,
-          round(arguments[0]->assertColor(*ctx.logger, Strings::color)->r()));
+          round(arguments[0]->assertColor(compiler.logger, Strings::color)->r()));
       }
 
       BUILT_IN_FN(green)
       {
         return SASS_MEMORY_NEW(Number, pstate,
-          round(arguments[0]->assertColor(*ctx.logger, Strings::color)->g()));
+          round(arguments[0]->assertColor(compiler.logger, Strings::color)->g()));
       }
 
       BUILT_IN_FN(blue)
       {
         return SASS_MEMORY_NEW(Number, pstate,
-          round(arguments[0]->assertColor(*ctx.logger, Strings::color)->b()));
+          round(arguments[0]->assertColor(compiler.logger, Strings::color)->b()));
       }
 
       BUILT_IN_FN(invert)
       {
-        Number* weight = arguments[1]->assertNumber(*ctx.logger, "weight");
+        Number* weight = arguments[1]->assertNumber(compiler.logger, "weight");
         if (arguments[0]->isNumber()) {
           if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
             throw Exception::SassRuntimeException2(
               "Only one argument may be passed "
               "to the plain-CSS invert() function.",
-              *ctx.logger);
+              compiler.logger);
           }
           return _functionString("invert", { arguments[0] }, pstate);
         }
 
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         Color_RGBA_Obj inverse = color->copyAsRGBA();
         inverse->r(clamp(255.0 - color->r(), 0.0, 255.0));
         inverse->g(clamp(255.0 - color->g(), 0.0, 255.0));
         inverse->b(clamp(255.0 - color->b(), 0.0, 255.0));
         return _mixColors(inverse, color,
-          weight, pstate, *ctx.logger);
+          weight, pstate, compiler.logger);
       }
 
       BUILT_IN_FN(hue)
       {
-        Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla(compiler.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->h(), "deg");
       }
 
       BUILT_IN_FN(saturation)
       {
-        Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla(compiler.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->s(), Strings::percent);
       }
 
 
       BUILT_IN_FN(lightness)
       {
-        Color_HSLA_Obj color = arguments[0]->assertColorHsla(*ctx.logger, Strings::color);
+        Color_HSLA_Obj color = arguments[0]->assertColorHsla(compiler.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->l(), Strings::percent);
       }
 
       BUILT_IN_FN(adjustHue)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* degrees = arguments[1]->assertNumber(*ctx.logger, "degrees");
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* degrees = arguments[1]->assertNumber(compiler.logger, "degrees");
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + degrees->value(), 360.0));
         return copy.detach();
@@ -494,7 +494,7 @@ namespace Sass {
 
       BUILT_IN_FN(complement)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->h(absmod(copy->h() + 180.0, 360.0));
         return copy.detach();
@@ -507,7 +507,7 @@ namespace Sass {
           return _functionString("grayscale",
             arguments, pstate);
         }
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->s(0.0); // remove saturation
         return copy.detach();
@@ -515,9 +515,9 @@ namespace Sass {
 
       BUILT_IN_FN(lighten)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
-        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* amount = arguments[1]->assertNumber(compiler.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, compiler.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->l(clamp(copy->l() + nr, 0.0, 100.0));
         return copy.detach();
@@ -525,9 +525,9 @@ namespace Sass {
 
       BUILT_IN_FN(darken)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
-        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* amount = arguments[1]->assertNumber(compiler.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, compiler.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->l(clamp(copy->l() - nr, 0.0, 100.0));
         return copy.detach();
@@ -535,9 +535,9 @@ namespace Sass {
 
       BUILT_IN_FN(saturate_2)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
-        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* amount = arguments[1]->assertNumber(compiler.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, compiler.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         // ToDo: this was working without before?
         if (copy->h() == 0 && nr > 0.0) copy->h(100.0);
@@ -547,16 +547,16 @@ namespace Sass {
 
       BUILT_IN_FN(saturate_1)
       {
-        Number* number = arguments[0]->assertNumber(*ctx.logger, Strings::amount);
+        Number* number = arguments[0]->assertNumber(compiler.logger, Strings::amount);
         return SASS_MEMORY_NEW(SassString, pstate,
           "saturate(" + number->to_css() + ")");
       }
 
       BUILT_IN_FN(desaturate)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
-        double nr = amount->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::amount);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* amount = arguments[1]->assertNumber(compiler.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 100.0, compiler.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->s(clamp(copy->s() - nr, 0.0, 100.0));
         return copy.detach();
@@ -564,9 +564,9 @@ namespace Sass {
 
       BUILT_IN_FN(opacify)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
-        double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* amount = arguments[1]->assertNumber(compiler.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 1.0, compiler.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->a(clamp(copy->a() + nr, 0.0, 1.0));
         return copy.detach();
@@ -574,9 +574,9 @@ namespace Sass {
 
       BUILT_IN_FN(transparentize)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
-        Number* amount = arguments[1]->assertNumber(*ctx.logger, Strings::amount);
-        double nr = amount->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::amount);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
+        Number* amount = arguments[1]->assertNumber(compiler.logger, Strings::amount);
+        double nr = amount->valueInRange(0.0, 1.0, compiler.logger, pstate, Strings::amount);
         Color_HSLA_Obj copy = color->copyAsHSLA();
         copy->a(clamp(copy->a() - nr, 0.0, 1.0));
         return copy.detach();
@@ -612,7 +612,7 @@ namespace Sass {
           return _functionString(Strings::alpha, arguments);
         }
         */
-        Color_RGBA_Obj color = argument->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = argument->assertColor(compiler.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
@@ -624,7 +624,7 @@ namespace Sass {
         if (size == 0) {
           throw Exception::SassRuntimeException2(
             "Missing argument $color.",
-            *ctx.logger);
+            compiler.logger);
         }
 
         bool isOnlyIeFilters = true;
@@ -649,7 +649,7 @@ namespace Sass {
         strm << "Only 1 argument allowed, but ";
         strm << size << " were passed.";
         throw Exception::SassRuntimeException2(
-          strm.str(), *ctx.logger);
+          strm.str(), compiler.logger);
       }
 
 
@@ -660,14 +660,14 @@ namespace Sass {
           return _functionString("opacity",
             arguments, pstate);
         }
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
 
       BUILT_IN_FN(ieHexStr)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         // clip should not be needed here
         double r = clip(color->r(), 0.0, 255.0);
         double g = clip(color->g(), 0.0, 255.0);
@@ -675,10 +675,10 @@ namespace Sass {
         double a = clip(color->a(), 0.0, 1.0) * 255.0;
         sass::sstream ss;
         ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
-        ss << std::hex << std::setw(2) << fuzzyRound(a, ctx.logger->epsilon);
-        ss << std::hex << std::setw(2) << fuzzyRound(r, ctx.logger->epsilon);
-        ss << std::hex << std::setw(2) << fuzzyRound(g, ctx.logger->epsilon);
-        ss << std::hex << std::setw(2) << fuzzyRound(b, ctx.logger->epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(a, compiler.logger.epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(r, compiler.logger.epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(g, compiler.logger.epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(b, compiler.logger.epsilon);
         return SASS_MEMORY_NEW(SassString, pstate, ss.str());
       }
 
@@ -698,36 +698,36 @@ namespace Sass {
 
       BUILT_IN_FN(adjust)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         ArgumentList* argumentList = arguments[1]
-          ->assertArgumentList(*ctx.logger, "kwargs");
+          ->assertArgumentList(compiler.logger, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
-          callStackFrame frame(*ctx.logger, BackTrace(
+          callStackFrame frame(compiler.logger, BackTrace(
             span, Strings::colorAdjust));
           throw Exception::SassRuntimeException2(
             "Only one positional argument is allowed. All "
             "other arguments must be passed by name.",
-            *ctx.logger);
+            compiler.logger);
         }
 
         // ToDo: solve without erase ...
         EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
 
-        Number* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
-        Number* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
-        Number* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
-        Number* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
-        Number* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
-        Number* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
-        Number* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+        Number* nr_r = getKwdArg(keywords, Keys::red, compiler.logger);
+        Number* nr_g = getKwdArg(keywords, Keys::green, compiler.logger);
+        Number* nr_b = getKwdArg(keywords, Keys::blue, compiler.logger);
+        Number* nr_h = getKwdArg(keywords, Keys::hue, compiler.logger);
+        Number* nr_s = getKwdArg(keywords, Keys::saturation, compiler.logger);
+        Number* nr_l = getKwdArg(keywords, Keys::lightness, compiler.logger);
+        Number* nr_a = getKwdArg(keywords, Keys::alpha, compiler.logger);
 
-        double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::red) : 0.0;
-        double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::green) : 0.0;
-        double b = nr_b ? nr_b->valueInRange(-255.0, 255.0, *ctx.logger, pstate, Strings::blue) : 0.0;
-        double s = nr_s ? nr_s->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::saturation) : 0.0;
-        double l = nr_l ? nr_l->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::lightness) : 0.0;
-        double a = nr_a ? nr_a->valueInRange(-1.0, 1.0, *ctx.logger, pstate, Strings::alpha) : 0.0;
+        double r = nr_r ? nr_r->valueInRange(-255.0, 255.0, compiler.logger, pstate, Strings::red) : 0.0;
+        double g = nr_g ? nr_g->valueInRange(-255.0, 255.0, compiler.logger, pstate, Strings::green) : 0.0;
+        double b = nr_b ? nr_b->valueInRange(-255.0, 255.0, compiler.logger, pstate, Strings::blue) : 0.0;
+        double s = nr_s ? nr_s->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::saturation) : 0.0;
+        double l = nr_l ? nr_l->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::lightness) : 0.0;
+        double a = nr_a ? nr_a->valueInRange(-1.0, 1.0, compiler.logger, pstate, Strings::alpha) : 0.0;
         double h = nr_h ? nr_h->value() : 0.0; // Hue is a very special case
 
         if (!keywords.empty()) {
@@ -749,14 +749,14 @@ namespace Sass {
           }
           msg << ".";
           throw Exception::SassRuntimeException2(
-            msg.str(), *ctx.logger);
+            msg.str(), compiler.logger);
         }
 
         bool hasRgb = nr_r || nr_g || nr_b;
         bool hasHsl = nr_h || nr_s || nr_l;
 
         if (hasRgb && hasHsl) {
-          throw Exception::InvalidSyntax(*ctx.logger,
+          throw Exception::InvalidSyntax(compiler.logger,
             "RGB parameters may not be passed along with HSL parameters.");
         }
         else if (hasRgb) {
@@ -785,36 +785,36 @@ namespace Sass {
 
       BUILT_IN_FN(change)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         ArgumentList* argumentList = arguments[1]
-          ->assertArgumentList(*ctx.logger, "kwargs");
+          ->assertArgumentList(compiler.logger, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
-          callStackFrame frame(*ctx.logger, BackTrace(
+          callStackFrame frame(compiler.logger, BackTrace(
             span, Strings::colorChange));
           throw Exception::SassRuntimeException2(
             "Only one positional argument is allowed. All "
             "other arguments must be passed by name.",
-            *ctx.logger);
+            compiler.logger);
         }
 
         // ToDo: solve without erase ...
         EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
 
-        Number* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
-        Number* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
-        Number* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
-        Number* nr_h = getKwdArg(keywords, Keys::hue, *ctx.logger);
-        Number* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
-        Number* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
-        Number* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+        Number* nr_r = getKwdArg(keywords, Keys::red, compiler.logger);
+        Number* nr_g = getKwdArg(keywords, Keys::green, compiler.logger);
+        Number* nr_b = getKwdArg(keywords, Keys::blue, compiler.logger);
+        Number* nr_h = getKwdArg(keywords, Keys::hue, compiler.logger);
+        Number* nr_s = getKwdArg(keywords, Keys::saturation, compiler.logger);
+        Number* nr_l = getKwdArg(keywords, Keys::lightness, compiler.logger);
+        Number* nr_a = getKwdArg(keywords, Keys::alpha, compiler.logger);
 
-        double r = nr_r ? nr_r->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::red) : 0.0;
-        double g = nr_g ? nr_g->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::green) : 0.0;
-        double b = nr_b ? nr_b->valueInRange(0.0, 255.0, *ctx.logger, pstate, Strings::blue) : 0.0;
-        double s = nr_s ? nr_s->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::saturation) : 0.0;
-        double l = nr_l ? nr_l->valueInRange(0.0, 100.0, *ctx.logger, pstate, Strings::lightness) : 0.0;
-        double a = nr_a ? nr_a->valueInRange(0.0, 1.0, *ctx.logger, pstate, Strings::alpha) : 0.0;
+        double r = nr_r ? nr_r->valueInRange(0.0, 255.0, compiler.logger, pstate, Strings::red) : 0.0;
+        double g = nr_g ? nr_g->valueInRange(0.0, 255.0, compiler.logger, pstate, Strings::green) : 0.0;
+        double b = nr_b ? nr_b->valueInRange(0.0, 255.0, compiler.logger, pstate, Strings::blue) : 0.0;
+        double s = nr_s ? nr_s->valueInRange(0.0, 100.0, compiler.logger, pstate, Strings::saturation) : 0.0;
+        double l = nr_l ? nr_l->valueInRange(0.0, 100.0, compiler.logger, pstate, Strings::lightness) : 0.0;
+        double a = nr_a ? nr_a->valueInRange(0.0, 1.0, compiler.logger, pstate, Strings::alpha) : 0.0;
         double h = nr_h ? nr_h->value() : 0.0; // Hue is a very special case
 
         if (!keywords.empty()) {
@@ -836,14 +836,14 @@ namespace Sass {
           }
           msg << ".";
           throw Exception::SassRuntimeException2(
-            msg.str(), *ctx.logger);
+            msg.str(), compiler.logger);
         }
 
         bool hasRgb = nr_r || nr_g || nr_b;
         bool hasHsl = nr_h || nr_s || nr_l;
 
         if (hasRgb && hasHsl) {
-          throw Exception::InvalidSyntax(*ctx.logger,
+          throw Exception::InvalidSyntax(compiler.logger,
             "RGB parameters may not be passed along with HSL parameters.");
         }
         else if (hasRgb) {
@@ -872,35 +872,35 @@ namespace Sass {
 
       BUILT_IN_FN(scale)
       {
-        Color_RGBA_Obj color = arguments[0]->assertColor(*ctx.logger, Strings::color);
+        Color_RGBA_Obj color = arguments[0]->assertColor(compiler.logger, Strings::color);
         ArgumentList* argumentList = arguments[1]
-          ->assertArgumentList(*ctx.logger, "kwargs");
+          ->assertArgumentList(compiler.logger, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
-          callStackFrame frame(*ctx.logger, BackTrace(
+          callStackFrame frame(compiler.logger, BackTrace(
             span, Strings::scaleColor));
           throw Exception::SassRuntimeException2(
             "Only one positional argument is allowed. All "
             "other arguments must be passed by name.",
-            *ctx.logger);
+            compiler.logger);
         }
 
         // ToDo: solve without erase ...
         EnvKeyFlatMap<ValueObj> keywords = argumentList->keywords();
 
-        Number* nr_r = getKwdArg(keywords, Keys::red, *ctx.logger);
-        Number* nr_g = getKwdArg(keywords, Keys::green, *ctx.logger);
-        Number* nr_b = getKwdArg(keywords, Keys::blue, *ctx.logger);
-        Number* nr_s = getKwdArg(keywords, Keys::saturation, *ctx.logger);
-        Number* nr_l = getKwdArg(keywords, Keys::lightness, *ctx.logger);
-        Number* nr_a = getKwdArg(keywords, Keys::alpha, *ctx.logger);
+        Number* nr_r = getKwdArg(keywords, Keys::red, compiler.logger);
+        Number* nr_g = getKwdArg(keywords, Keys::green, compiler.logger);
+        Number* nr_b = getKwdArg(keywords, Keys::blue, compiler.logger);
+        Number* nr_s = getKwdArg(keywords, Keys::saturation, compiler.logger);
+        Number* nr_l = getKwdArg(keywords, Keys::lightness, compiler.logger);
+        Number* nr_a = getKwdArg(keywords, Keys::alpha, compiler.logger);
 
-        double r = nr_r ? nr_r->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::red)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::red) / 100.0 : 0.0;
-        double g = nr_g ? nr_g->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::green)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::green) / 100.0 : 0.0;
-        double b = nr_b ? nr_b->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::blue)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::blue) / 100.0 : 0.0;
-        double s = nr_s ? nr_s->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::saturation)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::saturation) / 100.0 : 0.0;
-        double l = nr_l ? nr_l->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::lightness)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::lightness) / 100.0 : 0.0;
-        double a = nr_a ? nr_a->assertUnit(*ctx.logger, pstate, Strings::percent, Strings::alpha)->valueInRange(-100.0, 100.0, *ctx.logger, pstate, Strings::alpha) / 100.0 : 0.0;
+        double r = nr_r ? nr_r->assertUnit(compiler.logger, pstate, Strings::percent, Strings::red)->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::red) / 100.0 : 0.0;
+        double g = nr_g ? nr_g->assertUnit(compiler.logger, pstate, Strings::percent, Strings::green)->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::green) / 100.0 : 0.0;
+        double b = nr_b ? nr_b->assertUnit(compiler.logger, pstate, Strings::percent, Strings::blue)->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::blue) / 100.0 : 0.0;
+        double s = nr_s ? nr_s->assertUnit(compiler.logger, pstate, Strings::percent, Strings::saturation)->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::saturation) / 100.0 : 0.0;
+        double l = nr_l ? nr_l->assertUnit(compiler.logger, pstate, Strings::percent, Strings::lightness)->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::lightness) / 100.0 : 0.0;
+        double a = nr_a ? nr_a->assertUnit(compiler.logger, pstate, Strings::percent, Strings::alpha)->valueInRange(-100.0, 100.0, compiler.logger, pstate, Strings::alpha) / 100.0 : 0.0;
 
         if (!keywords.empty()) {
           sass::vector<sass::string> keys;
@@ -921,14 +921,14 @@ namespace Sass {
           }
           msg << ".";
           throw Exception::SassRuntimeException2(
-            msg.str(), *ctx.logger);
+            msg.str(), compiler.logger);
         }
 
         bool hasRgb = nr_r || nr_g || nr_b;
         bool hasHsl = nr_s || nr_l;
 
         if (hasRgb && hasHsl) {
-          throw Exception::InvalidSyntax(*ctx.logger,
+          throw Exception::InvalidSyntax(compiler.logger,
             "RGB parameters may not be passed along with HSL parameters.");
         }
         else if (hasRgb) {
@@ -956,10 +956,10 @@ namespace Sass {
 
       BUILT_IN_FN(mix)
       {
-        Color_RGBA_Obj color1 = arguments[0]->assertColor(*ctx.logger, "color1");
-        Color_RGBA_Obj color2 = arguments[1]->assertColor(*ctx.logger, "color2");
-        Number* weight = arguments[2]->assertNumber(*ctx.logger, "weight");
-        return _mixColors(color1, color2, weight, pstate, *ctx.logger);
+        Color_RGBA_Obj color1 = arguments[0]->assertColor(compiler.logger, "color1");
+        Color_RGBA_Obj color2 = arguments[1]->assertColor(compiler.logger, "color2");
+        Number* weight = arguments[2]->assertNumber(compiler.logger, "weight");
+        return _mixColors(color1, color2, weight, pstate, compiler.logger);
       }
 
       void registerFunctions(Context& ctx)

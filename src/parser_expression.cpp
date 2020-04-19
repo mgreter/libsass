@@ -12,7 +12,7 @@ namespace Sass {
   void ExpressionParser::addOperator(Sass_OP op, Offset& start) {
 	  if (parser.plainCss() && op != Sass_OP::DIV) {
       parser.scanner.error("Operators aren't allowed in plain CSS.",
-        *parser.context.logger, parser.scanner.relevantSpanFrom(start));
+        *parser.context.logger123, parser.scanner.relevantSpanFrom(start));
         /* ,
 																		position: scanner.position - operator.operator.length,
 																		length : operator.operator.length */

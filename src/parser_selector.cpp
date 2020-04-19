@@ -23,7 +23,7 @@ namespace Sass {
     auto selector = _selectorList();
       if (!scanner.isDone()) {
         scanner.error("expected selector.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
       }
       return selector;
     // });
@@ -35,7 +35,7 @@ namespace Sass {
       auto compound = _compoundSelector();
       if (!scanner.isDone()) {
         scanner.error("expected selector.",
-          *context.logger, scanner.rawSpan());
+          *context.logger123, scanner.rawSpan());
       }
       return compound;
     // });
@@ -46,7 +46,7 @@ namespace Sass {
     // return wrapSpanFormatException(() {
     auto simple = _simpleSelector(_allowParent);
     if (!scanner.isDone()) scanner.error("unexpected token.",
-      *context.logger, scanner.relevantSpan());
+      *context.logger123, scanner.relevantSpan());
     return simple;
     // });
   }
@@ -120,7 +120,7 @@ namespace Sass {
         if (scanner.peekChar() == $ampersand) {
           scanner.error(
             "\"&\" may only used at the beginning of a compound selector.",
-            *context.logger, scanner.rawSpan());
+            *context.logger123, scanner.rawSpan());
         }
         break;
 
@@ -130,7 +130,7 @@ namespace Sass {
         if (scanner.peekChar() == $ampersand) {
           scanner.error(
             "\"&\" may only used at the beginning of a compound selector.",
-            *context.logger, scanner.rawSpan());
+            *context.logger123, scanner.rawSpan());
         }
         break;
       }
@@ -140,7 +140,7 @@ namespace Sass {
 
     if (complex.empty()) {
       scanner.error("expected selector.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
 
     ComplexSelector* selector = SASS_MEMORY_NEW(ComplexSelector,
@@ -165,7 +165,7 @@ namespace Sass {
       if (!_allowParent) {
         error(
           "Parent selectors aren't allowed here.",
-          *context.logger, scanner.rawSpanFrom(start)); // ToDo: this fails spec?
+          *context.logger123, scanner.rawSpanFrom(start)); // ToDo: this fails spec?
       }
 
       compound->hasRealParent(true);
@@ -212,7 +212,7 @@ namespace Sass {
       auto selector = _placeholderSelector();
       if (!_allowPlaceholder) {
         error("Placeholder selectors aren't allowed here.",
-          *context.logger, scanner.rawSpanFrom(start));
+          *context.logger123, scanner.rawSpanFrom(start));
       }
       return selector;
     }
@@ -225,7 +225,7 @@ namespace Sass {
       if (!allowParent) {
         error(
           "Parent selectors aren't allowed here.",
-          *context.logger, scanner.rawSpanFrom(start));
+          *context.logger123, scanner.rawSpanFrom(start));
       }
       return {};
     }
@@ -335,7 +335,7 @@ namespace Sass {
 
     default:
       scanner.error("Expected \"]\".",
-        *context.logger,
+        *context.logger123,
         scanner.rawSpanFrom(start));
       throw "Unreachable";
     }
@@ -475,7 +475,7 @@ namespace Sass {
 
     if (!scanner.peekChar(last) || !isDigit(last)) {
       scanner.error("Expected a number.",
-        *context.logger, scanner.rawSpan());
+        *context.logger123, scanner.rawSpan());
     }
     while (isDigit(scanner.peekChar())) {
       buffer.write(scanner.readChar());

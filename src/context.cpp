@@ -102,10 +102,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
 
 
-  Context::Context()
+  Context::Context(enum Sass_Logger_Style logstyle)
     : SassOutputOptionsCpp(),
     // emitter(c_options),
-    logger(new Logger(5, SASS_LOGGER_ASCII_MONO))
+    logger123(new Logger(5, logstyle))
 
   {
 
@@ -351,7 +351,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
-        throw Exception::InvalidSyntax(*logger, stack);
+        throw Exception::InvalidSyntax(*logger123, stack);
       }
     }
 
@@ -422,7 +422,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   void Context::register_resource(const Include& inc, char* contents, char* srcmap, SourceSpan& prstate)
   {
     // Add a call stack frame
-    callStackFrame frame(*logger,
+    callStackFrame frame(*logger123,
       BackTrace(prstate, Strings::importRule));
     register_resource(inc, contents, srcmap);
   }
@@ -441,7 +441,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       msg_stream << "It's not clear which file to import. Found:\n";
       for (size_t i = 0, L = resolved.size(); i < L; ++i)
       { msg_stream << "  " << resolved[i].imp_path << "\n"; }
-      error(msg_stream.str(), pstate, *logger);
+      error(msg_stream.str(), pstate, *logger123);
     }
 
     // process the resolved entry
@@ -521,9 +521,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
             size_t line = sass_import_get_error_line(import);
             size_t column = sass_import_get_error_column(import);
             // sass_delete_import(import); // will error afterwards
-            if (line == sass::string::npos) error(err_message, pstate, *logger);
-            else if (column == sass::string::npos) error(err_message, pstate, *logger);
-            else error(err_message, { source, Offset::init(line, column) }, *logger);
+            if (line == sass::string::npos) error(err_message, pstate, *logger123);
+            else if (column == sass::string::npos) error(err_message, pstate, *logger123);
+            else error(err_message, { source, Offset::init(line, column) }, *logger123);
           }
           // Content for import was set.
           // No need to load it ourself.
@@ -551,7 +551,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
             if (include.abs_path.empty()) {
               sass_delete_import(import);
               error("Can't find stylesheet to import.",
-                rule->pstate(), *logger);
+                rule->pstate(), *logger123);
             }
           }
           sass_delete_import(import);
@@ -648,11 +648,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     Extension unsatisfied;
     // check that all extends were used
     if (eval.extender.checkForUnsatisfiedExtends(unsatisfied)) {
-      throw Exception::UnsatisfiedExtend(*logger, unsatisfied);
+      throw Exception::UnsatisfiedExtend(*logger123, unsatisfied);
     }
 
     // This can use up to 10% runtime
-    Cssize cssize(*this->logger);
+    Cssize cssize(*this->logger123);
     compiled = cssize(compiled); // 5%
 
     // clean up by removing empty placeholders
@@ -697,7 +697,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
   sass::string Context::render_stderr()
   {
-    return logger->errors.str();
+    return logger123->errors.str();
   }
 
 
