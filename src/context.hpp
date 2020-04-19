@@ -23,6 +23,18 @@
 
 namespace Sass {
 
+  // The engine shares stuff across contexts
+  class Engine {
+    // could share parsed stylesheets
+    // could share parsed function args
+  };
+
+  // API SHOULD BE
+  // entry = sass_make_file_import(path)
+  // sass_import_set_type(IMPORT_CSS)
+  // sass_make_compiler(entry, 5, LOGGER_AUTO)
+
+  // Compiler is stateful, while Context is more low-level
   class Context : public SassOutputOptionsCpp {
   public:
 
@@ -155,6 +167,7 @@ namespace Sass {
     sass::vector<SourceDataObj> sources;
 
     // Sheets are filled after resources are parsed
+    // This can be shared, should go to engine!?
     std::map<const sass::string, StyleSheet> sheets;
 
     sass::vector<struct SassImportCpp*> import_stack;
