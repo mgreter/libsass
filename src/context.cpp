@@ -25,7 +25,10 @@
 
 #include "permutate.hpp"
 #include "debugger.hpp"
+#include "plugins.hpp"
 #include "logger.hpp"
+
+#include "json.hpp"
 
 namespace Sass {
   using namespace Constants;
@@ -626,7 +629,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   }
 
   // parse root block from includes
-  Block_Obj Context::compile(BlockObj root, bool plainCss, struct SassCompiler& compiler)
+  Block_Obj Context::compile(BlockObj root, bool plainCss)
   {
 
     // abort if there is no data
@@ -636,7 +639,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     //    debug_ast(root);
     
-    Eval eval(*this, compiler);
+    Eval eval(*this);
     eval.plainCss = plainCss;
     EnvScope scoped(varRoot, varRoot.getIdxs());
     for (size_t i = 0; i < fnCache.size(); i++) {

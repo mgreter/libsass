@@ -6,6 +6,7 @@
 #include "sass_functions.hpp"
 #include "sass_context.hpp"
 #include "backtrace.hpp"
+#include "compiler.hpp"
 #include "terminal.hpp"
 #include "source.hpp"
 #include "json.hpp"
@@ -121,19 +122,25 @@ extern "C" {
   }
 
   
-  struct SassCompiler* ADDCALL sass_make_compiler(struct SassContext* context, struct SassImportCpp* entry)
+  struct SassCompiler* ADDCALL sass_make_compiler(struct SassImportCpp* entry)
   {
-    return new SassCompiler(context, entry);
+    Sass::Compiler* compiler = new Sass::Compiler(SASS_LOGGER_AUTO);
+    Sass::Compiler foobar(SASS_LOGGER_AUTO);
+    compiler->entry = entry; // ToDo
+    return reinterpret_cast<struct SassCompiler*>(compiler); //
   }
 
-  static int handle_error(struct SassCompiler* compiler)
+  static int handle_error(struct SassCompiler* compiler2)
   {
+
+    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
+
     try {
       throw;
     }
     catch (Exception::Base & e) {
 
-      Logger& logger(compiler->logger);
+      Logger& logger(*compiler->logger123);
 
       sass::ostream& msg_stream = logger.errors;
       sass::string msg_prefix("Error");
@@ -213,21 +220,24 @@ extern "C" {
     catch (...) { return handle_error(compiler); }
   }
 
-  void ADDCALL sass_compiler_parse(struct SassCompiler* compiler)
+  void ADDCALL sass_compiler_parse(struct SassCompiler* compiler2)
   {
+    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
     try { compiler->parse(); }
-    catch (...) { handle_errors(compiler); }
+    catch (...) { handle_errors(compiler2); }
 
   }
 
-  void ADDCALL sass_compiler_compile(struct SassCompiler* compiler)
+  void ADDCALL sass_compiler_compile(struct SassCompiler* compiler2)
   {
+    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
     try { compiler->compile(); }
-    catch (...) { handle_errors(compiler); }
+    catch (...) { handle_errors(compiler2); }
   }
 
-  void ADDCALL sass_compiler_render(struct SassCompiler* compiler)
+  void ADDCALL sass_compiler_render(struct SassCompiler* compiler2)
   {
+    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
     // Render the output css
     // Render the source map json
     // Embed the source map after output
@@ -269,32 +279,32 @@ extern "C" {
 
   ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler)
   {
-    return compiler->output.c_str();
+    return reinterpret_cast<Sass::Compiler*>(compiler)->output.c_str();
   }
 
   ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* compiler)
   {
-    return compiler->footer;
+    return reinterpret_cast<Sass::Compiler*>(compiler)->footer;
   }
 
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler)
   {
-    return compiler->srcmap;
+    return reinterpret_cast<Sass::Compiler*>(compiler)->srcmap;
   }
 
   void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
   {
-    compiler->output_path = output_path ? output_path : "";
+    reinterpret_cast<Sass::Compiler*>(compiler)->output_path = output_path ? output_path : "";
   }
 
-  int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler) { return compiler->error_status; }
-  const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler) { return compiler->error_json.c_str(); }
-  const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler) { return compiler->error_text.c_str(); }
-  const char* ADDCALL sass_compiler_get_error_message(struct SassCompiler* compiler) { return compiler->error_message.c_str(); }
-  const char* ADDCALL sass_compiler_get_error_file(struct SassCompiler* compiler) { return compiler->error_file.c_str(); }
-  const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* compiler) { return compiler->error_src->content(); }
-  size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler) { return compiler->error_line; }
-  size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler) { return compiler->error_column; }
+  int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_status; }
+  const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_json.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_text.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_message(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_message.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_file(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_file.c_str(); }
+  const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_src->content(); }
+  size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_line; }
+  size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_column; }
 
 
   void ADDCALL sass_context_print_stderr2(struct SassContext* context)

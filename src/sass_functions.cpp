@@ -213,27 +213,27 @@ extern "C" {
   
   // Getters and Setters for environments (lexical, local and global)
   struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompiler* compiler, const char* name) {
-    return reinterpret_cast<Sass::Context*>(compiler->context)->getLexicalVariable(Sass::EnvKey(name))->toSassValue();
+    return 0; // reinterpret_cast<Sass::Context*>(compiler->context)->getLexicalVariable(Sass::EnvKey(name))->toSassValue();
   }
 
   void ADDCALL sass_env_set_lexical (struct SassCompiler* compiler, const char* name, struct SassValue* val) {
-    reinterpret_cast<Sass::Context*>(compiler->context)->setLexicalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
+    // reinterpret_cast<Sass::Context*>(compiler->context)->setLexicalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
   }
 
   struct SassValue* ADDCALL sass_env_get_local (struct SassCompiler* compiler, const char* name) {
-    return reinterpret_cast<Sass::Context*>(compiler->context)->getLocalVariable(Sass::EnvKey(name))->toSassValue();
+    return 0; // return reinterpret_cast<Sass::Context*>(compiler->context)->getLocalVariable(Sass::EnvKey(name))->toSassValue();
   }
 
   void ADDCALL sass_env_set_local (struct SassCompiler* compiler, const char* name, struct SassValue* val) {
-    reinterpret_cast<Sass::Context*>(compiler->context)->setLocalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
+    // reinterpret_cast<Sass::Context*>(compiler->context)->setLocalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
   }
 
   struct SassValue* ADDCALL sass_env_get_global (struct SassCompiler* compiler, const char* name) {
-    return 0; reinterpret_cast<Sass::Context*>(compiler->context)->getGlobalVariable(Sass::EnvKey(name))->toSassValue();
+    return 0; // return 0; reinterpret_cast<Sass::Context*>(compiler->context)->getGlobalVariable(Sass::EnvKey(name))->toSassValue();
   }
 
   void ADDCALL sass_env_set_global (struct SassCompiler* compiler, const char* name, struct SassValue* val) {
-    reinterpret_cast<Sass::Context*>(compiler->context)->setGlobalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
+    // reinterpret_cast<Sass::Context*>(compiler->context)->setGlobalVariable(Sass::EnvKey(name), reinterpret_cast<Value*>(val));
   }
 
   // Getter for import entry

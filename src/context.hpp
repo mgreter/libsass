@@ -6,20 +6,19 @@
 #include "sass.hpp"
 #include "ast.hpp"
 
-
 #define BUFFERSIZE 255
 #include "b64/encode.h"
 
 #include "memory.hpp"
-#include "sass_functions.hpp"
+
+// #include "sass_functions.hpp"
 #include "sass_context.hpp"
 #include "stylesheet.hpp"
-#include "environment_stack.hpp"
-#include "plugins.hpp"
-#include "logger.hpp"
+// #include "environment_stack.hpp"
+// #include "plugins.hpp"
+// #include "logger.hpp"
 #include "output.hpp"
-#include "file.hpp"
-
+// #include "file.hpp"
 
 namespace Sass {
 
@@ -211,7 +210,7 @@ namespace Sass {
     }
 
     // ToDO, maybe belongs to compiler?
-    virtual BlockObj compile(BlockObj root, bool plainCss, struct SassCompiler& compiler);
+    virtual BlockObj compile(BlockObj root, bool plainCss);
 
     // ToDo: return const string& ?
     // virtual sass::string render(Block_Obj root);

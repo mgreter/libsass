@@ -33,7 +33,7 @@ ADDAPI struct SassImportCpp* ADDCALL sass_make_data_import(char* content);
 ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* imp_path);
 
 // Create a new compiler from the libsass context and the given entry point
-ADDAPI struct SassCompiler* ADDCALL sass_make_compiler(struct SassContext* context, struct SassImportCpp* entry);
+ADDAPI struct SassCompiler* ADDCALL sass_make_compiler(struct SassImportCpp* entry);
 
 // Parse the entry point and potentially all imports within
 ADDAPI void ADDCALL sass_compiler_parse(struct SassCompiler* compiler);

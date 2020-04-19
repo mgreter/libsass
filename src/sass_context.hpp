@@ -1,15 +1,15 @@
 #ifndef SASS_SASS_CONTEXT_H
 #define SASS_SASS_CONTEXT_H
 
+#include "sass.hpp"
 #include "sass/base.h"
 #include "sass/context.h"
 #include "source_map.hpp"
-#include "ast_fwd_decl.hpp"
-#include "backtrace.hpp"
-#include "compiler.hpp"
-#include "logger.hpp"
-#include "output.hpp"
-#include "sass.hpp"
+// #include "ast_fwd_decl.hpp"
+// #include "backtrace.hpp"
+// #include "compiler.hpp"
+// #include "logger.hpp"
+// #include "output.hpp"
 
 // Case 1: create no source-maps
 // Case 2: create source-maps, but no reference in css

@@ -358,7 +358,7 @@ namespace Sass {
     const SourceSpan& pstate, \
     const sass::vector<ValueObj>& arguments, \
     Context& ctx, \
-    struct SassCompiler& compiler, \
+    Sass::Logger& logger642, \
     Eval& eval, \
     bool selfAssign \
 

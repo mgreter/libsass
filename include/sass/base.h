@@ -1,5 +1,5 @@
-#ifndef SASS_BASE_H
-#define SASS_BASE_H
+#ifndef SASS_C_BASE_H
+#define SASS_C_BASE_H
 
 // #define DEBUG
 // #define DEBUG_SHARED_PTR

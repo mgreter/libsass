@@ -61,9 +61,8 @@ namespace Sass {
     Context& ctx;
     Extender extender;
 
-    struct SassCompiler& compiler;
     BackTraces& traces;
-    Eval(Context& ctx, struct SassCompiler& compiler);
+    Eval(Context& ctx);
     ~Eval();
 
     Value* _runUserDefinedCallable(
