@@ -78,7 +78,7 @@ namespace Sass {
     void parse();
     void compile();
 
-    OutputBuffer&& renderCss();
+    OutputBuffer renderCss();
 
     sass::string getInputPath() const;
     sass::string getOutputPath() const;

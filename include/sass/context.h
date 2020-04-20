@@ -2,7 +2,6 @@
 #define SASS_C_CONTEXT_H
 
 #include <sass/base.h>
-#include <sass/fwdecl.h>
 
 #ifdef __cplusplus
 extern "C" {

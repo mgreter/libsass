@@ -1,9 +1,6 @@
 #ifndef SASS_C_BASE_H
 #define SASS_C_BASE_H
 
-// #define DEBUG
-// #define DEBUG_SHARED_PTR
-
 #ifdef _MSC_VER
   #pragma warning(disable : 4503)
   #ifndef _SCL_SECURE_NO_WARNINGS
@@ -55,7 +52,6 @@
 
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -75,16 +71,16 @@ extern "C" {
 
   // Resolve a file relative to last import or include paths in the sass option struct
   // find_file looks for the exact file name while find_include does a regular sass include
-  ADDAPI char* ADDCALL sass_compiler_find_file(const char* path, struct SassCompiler* compiler);
-  ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
+  // ADDAPI char* ADDCALL sass_compiler_find_file(const char* path, struct SassCompiler* compiler);
+  // ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
 
-  // to allocate buffer to be filled
+  // Allocate and release generic buffer memory
   ADDAPI void* ADDCALL sass_alloc_memory(size_t size);
-  // to allocate a buffer from existing string
-  ADDAPI char* ADDCALL sass_copy_c_string(const char* str);
-  // to free overtaken memory when done
-  ADDAPI void ADDCALL sass_free_c_string(char* ptr);
   ADDAPI void ADDCALL sass_free_memory(void* ptr);
+
+  // Allocate and release buffer of strings
+  ADDAPI char* ADDCALL sass_copy_c_string(const char* str);
+  ADDAPI void ADDCALL sass_free_c_string(char* ptr);
 
   // Some convenient string helper function
   ADDAPI char* ADDCALL sass_string_quote(const char* str, const char quote_mark);

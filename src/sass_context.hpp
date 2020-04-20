@@ -28,16 +28,14 @@ struct SassSrcMapOptions {
   // create file URLs for sources
   bool file_urls;
 
-  // Path to source map file
-  // Enables source map generation
-  // Used to create sourceMappingUrl
-  sass::string origin;
-
   // Directly inserted in source maps
   sass::string root;
 
   // Path where source map is saved
   sass::string path;
+
+  // Path to file that loads us
+  sass::string origin;
 
   // Init everything to false
   SassSrcMapOptions() :

@@ -523,6 +523,9 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_base.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_error.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>

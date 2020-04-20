@@ -71,7 +71,7 @@ namespace Sass {
     state = SASS_COMPILER_COMPILED;
   }
 
-  OutputBuffer&& Compiler::renderCss()
+  OutputBuffer Compiler::renderCss()
   {
     // Create the emitter object
     Output emitter(*this);
@@ -84,7 +84,7 @@ namespace Sass {
     // Update the compiler state
     state = SASS_COMPILER_RENDERED;
     // Move the resulting buffer from stream
-    return std::move(emitter.get_buffer());
+    return emitter.get_buffer();
   }
   // EO renderCss
 
@@ -95,21 +95,15 @@ namespace Sass {
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
-
-    // Check if we output to stdout
-    if (output_path.empty()) {
-      // We can't generate a link without any reference
+    // Check if we output to stdout (any link would be useless)
+    if (output_path.empty() || output_path == "stream://stdout") {
+      // Instead always embed the source-map on stdout
       return renderEmbeddedSrcMap(options, source_map);
     }
+    // Create resulting footer and return a copy
+    return sass_copy_string("\n/*# sourceMappingURL=" +
+      File::abs2rel(options.path, options.origin) + " */");
 
-    // Create the relative include url
-    const sass::string& path(options.path);
-    const char* base(entry_point->srcdata->getAbsPath());
-    sass::string url(File::abs2rel(path, base));
-
-    // Create resulting footer and return a lasting copy
-    sass::string result("\n/*# sourceMappingURL=" + url + " */");
-    return sass_copy_string(result);
   }
   // EO renderSrcMapLink
 

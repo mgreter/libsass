@@ -14,7 +14,7 @@ extern "C" {
   ADDAPI struct SassImport* ADDCALL sass_make_data_import(char* content);
 
   // Crate an import entry for the passed input path
-  ADDAPI struct SassImport* ADDCALL sass_make_file_import(const char* imp_path);
+  ADDAPI struct SassImport* ADDCALL sass_make_file_import(struct SassCompiler* compiler, const char* imp_path);
 
   // Set specific import format for the given import
   ADDAPI void ADDCALL sass_import_set_format(struct SassImport* import, enum SassImportFormat format);

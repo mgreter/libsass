@@ -2,7 +2,6 @@
 #define SASS_C_COMPILER_H
 
 #include <sass/base.h>
-#include <sass/fwdecl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,8 +48,11 @@ extern "C" {
   ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* compiler);
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
+  ADDAPI void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path);
   ADDAPI void ADDCALL sass_compiler_set_srcmap_root(struct SassCompiler* compiler, const char* root);
   ADDAPI void ADDCALL sass_compiler_set_srcmap_mode(struct SassCompiler* compiler, enum SassSrcMapMode mode);
+  ADDAPI void ADDCALL sass_compiler_set_srcmap_file_urls(struct SassCompiler* compiler, bool enable);
+  ADDAPI void ADDCALL sass_compiler_set_srcmap_embed_contents(struct SassCompiler* compiler, bool enable);
 
 #ifdef __cplusplus
 } // __cplusplus defined.

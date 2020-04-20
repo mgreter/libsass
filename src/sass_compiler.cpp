@@ -116,8 +116,12 @@ namespace Sass {
         struct SassSrcMapOptions options(compiler.srcmap_options);
         // Deduct some options always from original values.
         // ToDo: is there really any need to customize this?
-        options.path = compiler.getOutputPath() + ".map";
-        options.origin = compiler.getInputPath();
+        if (options.origin.empty() || options.origin == "stream://stdout") {
+          options.origin = compiler.getOutputPath();
+        }
+        if (options.path.empty() || options.path == "stream://stdout") {
+          options.path = options.origin + ".map";
+        }
 
         switch (options.mode) {
         case SASS_SRCMAP_NONE:
@@ -283,21 +287,36 @@ namespace Sass {
       Compiler::unwrap(compiler).srcmap_options.root = root;
     }
 
+    void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path)
+    {
+      Compiler::unwrap(compiler).srcmap_options.path = path;
+    }
+
+    void ADDCALL sass_compiler_set_srcmap_file_urls(struct SassCompiler* compiler, bool enable)
+    {
+      Compiler::unwrap(compiler).srcmap_options.file_urls = enable;
+    }
+
+    void ADDCALL sass_compiler_set_srcmap_embed_contents(struct SassCompiler* compiler, bool enable)
+    {
+      Compiler::unwrap(compiler).srcmap_options.embed_contents = enable;
+    }
+
     void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
     {
-      reinterpret_cast<Compiler*>(compiler)->output_path = output_path ? output_path : "stream://stdout";
+      Compiler::unwrap(compiler).output_path = output_path ? output_path : "stream://stdout";
     }
 
     void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style)
     {
-      reinterpret_cast<Compiler*>(compiler)->output_style = output_style;
+      Compiler::unwrap(compiler).output_style = output_style;
     }
 
     // Returns pointer to error object associated with compiler.
     // Will be valid until the associated compiler is destroyed.
-    struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* sass_compiler)
+    struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* compiler)
     {
-      return &reinterpret_cast<Compiler*>(sass_compiler)->error;
+      return &Compiler::unwrap(compiler).error;
     }
 
   }
