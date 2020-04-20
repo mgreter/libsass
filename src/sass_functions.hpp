@@ -2,6 +2,9 @@
 #define SASS_SASS_FUNCTIONS_H
 
 #include "sass.h"
+#include <sass/base.h>
+#include <sass/fwdecl.h>
+
 #include "environment.hpp"
 #include "fn_utils.hpp"
 #include "backtrace.hpp"

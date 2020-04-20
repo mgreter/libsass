@@ -2,6 +2,9 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#include <sass/base.h>
+#include <sass/fwdecl.h>
+
 #include <cstring>
 #include "util.hpp"
 #include "context.hpp"

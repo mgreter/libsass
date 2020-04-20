@@ -133,8 +133,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
 
 
     // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
-    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
-    registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
+    // registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
+    // registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
 
     // emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
 
@@ -737,51 +737,3 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
 
 }
 
-
-struct SassImport* ADDCALL sass_make_file_import(const char* input_path88)
-{
-  // check if entry file is given
-  if (input_path88 == nullptr) return {};
-
-  // create absolute path from input filename
-  // ToDo: this should be resolved via custom importers
-
-  sass::string abs_path(rel2abs(input_path88, CWD, CWD));
-
-  // try to load the entry file
-  char* contents = slurp_file(abs_path, CWD);
-  /*
-      // alternatively also look inside each include path folder
-      // I think this differs from ruby sass (IMO too late to remove)
-      for (size_t i = 0, S = include_paths.size(); contents == 0 && i < S; ++i) {
-        // build absolute path for this include path entry
-        abs_path = rel2abs(input_path88, include_paths[i], CWD);
-        // try to load the resulting path
-        contents = slurp_file(abs_path, CWD);
-      }
-      */
-      // abort early if no content could be loaded (various reasons)
-  // if (!contents) throw std::runtime_error("File to read not found or unreadable: " + std::string(input_path88));
-
-  // store entry path
-  // entry_path88 = abs_path;
-
-  return sass_make_import(
-    input_path88,
-    abs_path.c_str(),
-    contents, 0,
-    SASS_IMPORT_AUTO
-  );
-
-}
-
-struct SassImport* ADDCALL sass_make_stdin_import()
-{
-  std::istreambuf_iterator<char> begin(std::cin), end;
-  sass::string text(begin, end);
-  return sass_make_import(
-    "stdin", "stdin",
-    sass_copy_string(text), 0,
-    SASS_IMPORT_AUTO
-  );
-}

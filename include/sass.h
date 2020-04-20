@@ -8,20 +8,23 @@
 
 // include API headers
 #include <sass/base.h>
+#include <sass/fwdecl.h>
 #include <sass/version.h>
 #include <sass/values.h>
+#include <sass/error.h>
+#include <sass/import.h>
 #include <sass/functions.h>
 #include <sass/context.h>
 #include <sass/compiler.h>
 
+
+
 typedef struct SassImport* Sass_Import_Entry;
 typedef struct SassImporter* Sass_Importer_Entry;
 typedef struct SassFunction* Sass_Function_Entry;
-// 
+
 typedef struct SassImportList* Sass_Import_List;
 typedef struct SassImporterList* Sass_Importer_List;
 typedef struct SassFunctionList* Sass_Function_List;
-
-#define Sass_Compiler SassCompiler
 
 #endif

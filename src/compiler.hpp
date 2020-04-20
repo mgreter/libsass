@@ -4,6 +4,7 @@
 #include "sass.hpp"
 
 #include "sass/base.h"
+#include "sass/error.h"
 #include "sass/context.h"
 #include "ast_def_macros.hpp"
 #include "sass_error.hpp"

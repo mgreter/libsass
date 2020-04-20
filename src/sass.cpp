@@ -29,8 +29,8 @@ namespace Sass {
 
 }
 
+namespace Sass {
 extern "C" {
-  using namespace Sass;
 
   // Allocate libsass heap memory
   // Don't forget string termination!
@@ -153,6 +153,7 @@ extern "C" {
     return LIBSASS_LANGUAGE_VERSION;
   }
 
+}
 }
 
 namespace Sass {
