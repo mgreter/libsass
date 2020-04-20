@@ -76,6 +76,35 @@ namespace Sass {
     char* renderEmbeddedSrcMap(struct SassSrcMapOptions options,
       const SourceMap& source_map);
 
+    // Wrap the pointer for C-API
+    struct SassCompiler* wrap()
+    {
+      // This is a compile time cast and doesn't cost anything
+      return reinterpret_cast<struct SassCompiler*>(this);
+    };
+
+    // Wrap the pointer for C-API
+    static struct SassCompiler* wrap(Compiler* compiler)
+    {
+      // Ensure we at least catch the most obvious stuff
+      if (compiler == nullptr) throw std::runtime_error(
+        "Null-Pointer passed to Sass::Compiler::unwrap");
+      // Just delegate to wrap
+      return compiler->wrap();
+    };
+
+    // Unwrap the pointer for C-API (potentially unsafe).
+    // You must pass in a pointer you've got via wrap API.
+    // Passing anything else will result in undefined behavior!
+    static Compiler& unwrap(struct SassCompiler* sass_compiler)
+    {
+      // Ensure we at least catch the most obvious stuff
+      if (sass_compiler == nullptr) throw std::runtime_error(
+        "Null-Pointer passed to Sass::Compiler::unwrap");
+      // This is a compile time cast and doesn't cost anything
+      return *reinterpret_cast<Sass::Compiler*>(sass_compiler);
+    };
+
   };
 
 }

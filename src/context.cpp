@@ -355,7 +355,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // add the entry to the stack
     import_stack.emplace_back(import);
-    importStack.emplace_back(source);
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -402,7 +401,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // remove current stack frame
     import_stack.pop_back();
-    importStack.pop_back();
 
     // create key/value pair for ast node
     std::pair<const sass::string, StyleSheet>
@@ -614,7 +612,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // add the entry to the stack
     import_stack.emplace_back(import);
-    // importStack2.emplace_back(source);
 
     loadBuiltInFunctions();
 
@@ -629,8 +626,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // load and register import
     BlockObj root = register_import(import);
-    
-    importStack.emplace_back(import->srcdata);
 
     // create root ast tree node
     return root;
@@ -638,9 +633,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   }
 
   // parse root block from includes
-  Block_Obj Context::compile(BlockObj root, bool plainCss)
+  BlockObj Context::compile(BlockObj root, bool plainCss)
   {
-    if (root == nullptr) throw std::runtime_error("No root block given");
+    if (root == nullptr) return {};
 
 
     // abort if there is no data

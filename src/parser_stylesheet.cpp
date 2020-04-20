@@ -222,7 +222,6 @@ namespace Sass {
   //   beneath it.
   Statement* StylesheetParser::_declarationOrStyleRule()
   {
-
     if (plainCss() && _inStyleRule && !_inUnknownAtRule) {
       return _declaration();
     }

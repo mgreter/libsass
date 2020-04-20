@@ -17,6 +17,34 @@ namespace Terminal {
 
 #ifdef _WIN32
 
+  /*
+  static bool IsConsoleRedirected()
+  {
+    HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
+    if (handle != INVALID_HANDLE_VALUE) {
+      DWORD filetype = GetFileType(handle);
+      if (!((filetype == FILE_TYPE_UNKNOWN) && (GetLastError() != ERROR_SUCCESS))) {
+        DWORD mode;
+        filetype &= ~(FILE_TYPE_REMOTE);
+        if (filetype == FILE_TYPE_CHAR) {
+          bool retval = GetConsoleMode(handle, &mode);
+          if ((retval == false) && (GetLastError() == ERROR_INVALID_HANDLE)) {
+            return true;
+          }
+          else {
+            return false;
+          }
+        }
+        else {
+          return true;
+        }
+      }
+    }
+    // TODO: Not even a stdout so this is not even a console?
+    return false;
+  }
+  */
+
   static size_t getWidth(bool error = false)
   {
     DWORD fd = error

@@ -163,8 +163,6 @@ namespace Sass {
     // It assigns a specific logger according to options.
     Logger* logger123; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    operator Logger& () { return *logger123; }
-
     // Absolute paths to all includes we have seen so far.
     // Consumers are encouraged to clear this vector after they
     // have copied/moved the items after parsing the entry point.
@@ -176,7 +174,6 @@ namespace Sass {
     std::map<const sass::string, StyleSheet> sheets;
 
     sass::vector<struct SassImportCpp*> import_stack;
-    sass::vector<SourceDataObj> importStack;
 
     // Only used for is in mixin clause!?
     sass::vector<SassCalleeCpp> callee_stack;

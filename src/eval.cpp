@@ -1910,7 +1910,6 @@ namespace Sass {
 
     SelectorListObj slist;
     if (r->interpolation()) {
-      // SourceData* source = ctx.importStack.back();
       struct SassImportCpp* imp = ctx.import_stack.back();
       bool plainCss = imp->srcdata->getType() == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);

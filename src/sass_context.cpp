@@ -12,246 +12,146 @@
 #include "json.hpp"
 #include <iomanip>
 
-#define LFEED "\n"
+using namespace Sass;
 
-// C++ helper
-namespace Sass {
+// Local helper to add streams to json objects
+static inline JsonNode* json_mkstream(const sass::ostream& stream)
+{
+  // hold on to string on stack!
+  sass::string str(stream.str());
+  return json_mkstring(str.c_str());
+}
+// EO json_mkstream
 
-  // see sass_copy_c_string(sass::string str)
-  static inline JsonNode* json_mkstream(const sass::ostream& stream)
-  {
-    // hold on to string on stack!
-    sass::string str(stream.str());
-    return json_mkstring(str.c_str());
-  }
+static int handle_error(Sass::Compiler& compiler, StackTraces* traces, const char* msg, int severety)
+{
 
-  static void handle_string_error(Sass::Compiler* compiler, const sass::string& msg, int severety)
-  {
-    sass::ostream msg_stream;
-    JsonNode* json_err = json_mkobject();
-    msg_stream << "Error: " << msg << STRMLF;
-    json_append_member(json_err, "status", json_mknumber(severety));
-    json_append_member(json_err, "message", json_mkstring(msg.c_str()));
-    json_append_member(json_err, "formatted", json_mkstream(msg_stream));
-    // try { c_ctx->error_json = json_stringify(json_err, "  "); }
-    // catch (...) {}
-    // c_ctx->error_message = msg_stream.str();
-    // c_ctx->error_text = msg;
-    // c_ctx->error_status = severety;
-    json_delete(json_err);
-  }
-  /*
-  static Block_Obj sass_parse_block(struct SassCompiler* compiler) throw()
-  {
+  Logger& logger(*compiler.logger123);
 
-    // assert valid pointer
-    if (compiler == 0) return {};
-    // The CPP context must be set by now
-    Context* cpp_ctx = compiler->cpp_ctx;
-    SassOptionsCpp* c_ctx = compiler->c_ctx;
-    // We will take care to wire up the rest
-    compiler->cpp_ctx->c_compiler = compiler;
-    compiler->state = SASS_COMPILER_PARSED;
-
-    try {
-
-      // get input/output path from options
-      sass::string input_path = c_ctx->input_path;
-      sass::string output_path = c_ctx->output_path;
-
-      // maybe skip some entries of included files
-      // we do not include stdin for data contexts
-      bool skip = c_ctx->type == SASS_CONTEXT_DATA;
-
-      // dispatch parse call
-      Block_Obj root(cpp_ctx->parse(SASS_IMPORT_AUTO));
-      // abort on errors
-      if (!root) return {};
-
-      // skip all prefixed files? (ToDo: check srcmap)
-      // IMO source-maps should point to headers already
-      // therefore don't skip it for now. re-enable or
-      // remove completely once this is tested
-      size_t headers = cpp_ctx->head_imports;
-
-      // copy the included files on to the context (don't forget to free later)
-      const sass::vector<sass::string>& add(cpp_ctx->get_included_files(skip, headers));
-      c_ctx->included_files.insert(c_ctx->included_files.end(), add.begin(), add.end());
-
-      // return parsed block
-      return root;
-
+  bool has_final_lf = false;
+  logger.errors << "Error: ";
+  // Add message and ensure it is
+  // added with a final line-feed.
+  if (msg != nullptr) {
+    logger.errors << msg;
+    while (*msg) {
+      has_final_lf =
+        *msg == '\r' ||
+        *msg == '\n';
+      ++msg;
     }
-    // pass errors to generic error handler
-    catch (...) { handle_errors(c_ctx); }
-
-    // error
-    return {};
-
+    if (!has_final_lf) {
+      logger.errors << STRMLF;
+    }
   }
-  */
+
+  JsonNode* json_err = json_mkobject();
+
+  // Some stuff is only logged if we have some traces
+  // Otherwise we don't know where the error comes from
+  if (traces && traces->size() > 0) {
+    SourceSpan& pstate = traces->back().pstate;
+    sass::string rel_path(File::abs2rel(pstate.getAbsPath(), CWD));
+    logger.writeStackTraces(logger.errors, *traces, "  ");
+    json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
+    json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
+    json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
+    compiler.error_src = pstate.getSource();
+    compiler.error_file = pstate.getAbsPath();
+    compiler.error_line = pstate.getLine();
+    compiler.error_column = pstate.getColumn();
+  }
+
+  // Attach the generic error reporting items
+  json_append_member(json_err, "status", json_mknumber(1));
+  json_append_member(json_err, "message", json_mkstring(msg));
+  json_append_member(json_err, "warnings", json_mkstream(logger.warnings));
+  json_append_member(json_err, "formatted", json_mkstream(logger.errors));
+
+  // The stringification may fail for whatever reason
+  try { compiler.error_json = json_stringify(json_err, "  "); }
+  // If it fails at least return a valid json with special status 9999
+  catch (...) { compiler.error_json = sass_copy_c_string("{\"status\":9999}"); }
+
+  // Delete json tree
+  json_delete(json_err);
+
+  compiler.warning_message = logger.warnings.str();
+  compiler.error_message = logger.errors.str();
+  compiler.error_status = severety;
+  compiler.error_text = msg;
+
+  return severety;
+
+}
+
+// 
+static int handle_error(Sass::Compiler& compiler)
+{
+  // Re-throw last error
+  try { throw; }
+  // Catch LibSass specific error cases
+  catch (Exception::Base & e) { handle_error(compiler, &e.traces, e.what(), 1); }
+  // Bad allocations can always happen, maybe we should exit in this case?
+  catch (std::bad_alloc & e) { handle_error(compiler, nullptr, e.what(), 2); }
+  // Other errors should not really happen and indicate more severe issues!
+  catch (std::exception & e) { handle_error(compiler, nullptr, e.what(), 3); }
+  catch (sass::string & e) { handle_error(compiler, nullptr, e.c_str(), 4); }
+  catch (const char* e) { handle_error(compiler, nullptr, e, 4); }
+  catch (...) { handle_error(compiler, nullptr, "unknown", 5); }
+  // Return the error state
+  return compiler.error_status;
+}
+
+// allow one error handler to throw another error
+// this can happen with invalid utf8 and json lib
+// Note: this might be obsolete but doesn't hurt!?
+static int handle_errors(Sass::Compiler& compiler)
+{
+  try { return handle_error(compiler); }
+  catch (...) { return handle_error(compiler); }
 }
 
 extern "C" {
-  using namespace Sass;
 
-  bool IsConsoleRedirected() {
-    HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
-    if (handle != INVALID_HANDLE_VALUE) {
-      DWORD filetype = GetFileType(handle);
-      if (!((filetype == FILE_TYPE_UNKNOWN) && (GetLastError() != ERROR_SUCCESS))) {
-        DWORD mode;
-        filetype &= ~(FILE_TYPE_REMOTE);
-        if (filetype == FILE_TYPE_CHAR) {
-          bool retval = GetConsoleMode(handle, &mode);
-          if ((retval == false) && (GetLastError() == ERROR_INVALID_HANDLE)) {
-            return true;
-          }
-          else {
-            return false;
-          }
-        }
-        else {
-          return true;
-        }
-      }
-    }
-    // TODO: Not even a stdout so this is not even a console?
-    return false;
-  }
-
-  
+ 
   struct SassCompiler* ADDCALL sass_make_compiler()
   {
-    Sass::Compiler* compiler = new Sass::Compiler();
-    return reinterpret_cast<struct SassCompiler*>(compiler); //
+    return Compiler::wrap(new Sass::Compiler());
   }
 
-  static int handle_error(struct SassCompiler* compiler2)
+  bool ADDCALL sass_compiler_parse(struct SassCompiler* sass_compiler)
   {
-
-    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
-
-    try {
-      throw;
-    }
-    catch (Exception::Base & e) {
-
-      Logger& logger(*compiler->logger123);
-
-      sass::ostream& msg_stream = logger.errors;
-      sass::string msg_prefix("Error");
-      bool got_newline = false;
-      msg_stream << msg_prefix << ": ";
-      const char* msg = e.what();
-      while (msg && *msg) {
-        if (*msg == '\r') {
-          got_newline = true;
-        }
-        else if (*msg == '\n') {
-          got_newline = true;
-        }
-        else if (got_newline) {
-          // msg_stream << sass::string(msg_prefix.size() + 2, ' ');
-          got_newline = false;
-        }
-        msg_stream << *msg;
-        ++msg;
-      }
-      if (!got_newline) msg_stream << "\n";
-
-      auto pstate = SourceSpan::tmp("[NOPE]");
-      if (e.traces.empty()) {
-        std::cerr << "THIS IS OLD AND NOT YET\n";
-      }
-      else {
-        pstate = e.traces.back().pstate;
-      }
-
-      sass::string rel_path(Sass::File::abs2rel(pstate.getAbsPath(), CWD, CWD));
-      logger.writeStackTraces(logger.errors, e.traces, "  ");
-
-      JsonNode* json_err = json_mkobject();
-      json_append_member(json_err, "status", json_mknumber(1));
-      json_append_member(json_err, "file", json_mkstring(pstate.getAbsPath()));
-      json_append_member(json_err, "line", json_mknumber((double)(pstate.getLine())));
-      json_append_member(json_err, "column", json_mknumber((double)(pstate.getColumn())));
-      json_append_member(json_err, "message", json_mkstring(e.what()));
-      json_append_member(json_err, "formatted", json_mkstream(msg_stream));
-      try { compiler->error_json = json_stringify(json_err, "  "); }
-      catch (...) { compiler->error_json = sass_copy_c_string("{\"status\":99}"); }
-      json_delete(json_err);
-
-      // compiler->error_message = compiler->logger123->errors.str();
-      compiler->warning_message = compiler->logger123->warnings.str();
-
-      compiler->error_message = msg_stream.str();
-      compiler->error_text = e.what();
-      compiler->error_status = 1;
-      compiler->error_file = pstate.getAbsPath();
-      compiler->error_line = pstate.getLine();
-      compiler->error_column = pstate.getColumn();
-      compiler->error_src = pstate.getSource();
-
-    }
-    catch (std::bad_alloc &ba) {
-      sass::ostream msg_stream;
-      msg_stream << "Unable to allocate memory: " << ba.what();
-      handle_string_error(compiler, msg_stream.str(), 2);
-    }
-    catch (std::exception &e) {
-      handle_string_error(compiler, e.what(), 3);
-    }
-    catch (sass::string &e) {
-      handle_string_error(compiler, e, 4);
-    }
-    catch (const char* e) {
-      handle_string_error(compiler, e, 4);
-    }
-    catch (...) {
-      handle_string_error(compiler, "unknown", 5);
-    }
-
-    return compiler->error_status;
-  }
-
-  // allow one error handler to throw another error
-  // this can happen with invalid utf8 and json lib
-  static int handle_errors(struct SassCompiler* compiler) {
-    try { return handle_error(compiler); }
-    catch (...) { return handle_error(compiler); }
-  }
-
-  bool ADDCALL sass_compiler_parse(struct SassCompiler* compiler2)
-  {
-    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
-    try { compiler->parse(); return false; }
-    catch (...) { handle_errors(compiler2); }
+    Compiler& compiler(Compiler::unwrap(sass_compiler));
+    try { compiler.parse(); return false; }
+    catch (...) { handle_errors(compiler); }
     return true;
   }
 
-  bool ADDCALL sass_compiler_compile(struct SassCompiler* compiler2)
+  bool ADDCALL sass_compiler_compile(struct SassCompiler* sass_compiler)
   {
-    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
-    try { compiler->compile(); return false; }
-    catch (...) { handle_errors(compiler2); }
+    Compiler& compiler(Compiler::unwrap(sass_compiler));
+    try { compiler.compile(); return false; }
+    catch (...) { handle_errors(compiler); }
     return true;
   }
 
-  bool ADDCALL sass_compiler_render(struct SassCompiler* compiler2)
+  bool ADDCALL sass_compiler_render(struct SassCompiler* sass_compiler)
   {
+   
+    Sass::Compiler& compiler(Compiler::unwrap(sass_compiler));
+
     try {
 
-      Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
+      // We can always consume the logger streams
+      compiler.error_message = compiler.logger123->errors.str();
+      compiler.warning_message = compiler.logger123->warnings.str();
 
-      if (compiler->compiled == nullptr) return true;
-//      compiler->error_message
-      // Render the output css
-    // Render the source map json
-    // Embed the source map after output
-      OutputBuffer output(compiler->renderCss());
+      if (compiler.compiled == nullptr) return true;
 
-      compiler->output = output.buffer;
+      OutputBuffer output(compiler.renderCss());
+
+      compiler.output = output.buffer;
 
       // bool source_map_include = false;
       // bool source_map_file_urls = false;
@@ -259,33 +159,30 @@ extern "C" {
 
       struct SassSrcMapOptions options;
       options.source_map_mode = SASS_SRCMAP_EMBED_JSON;
-      options.source_map_path = compiler->output_path + ".map";
-      options.source_map_origin = compiler->entry_point->srcdata->getAbsPath();
-
-      compiler->error_message = compiler->logger123->errors.str();
-      compiler->warning_message = compiler->logger123->warnings.str();
+      options.source_map_path = compiler.output_path + ".map";
+      options.source_map_origin = compiler.entry_point->srcdata->getAbsPath();
 
       switch (options.source_map_mode) {
       case SASS_SRCMAP_NONE:
-        compiler->srcmap = 0;
-        compiler->footer = 0;
+        compiler.srcmap = 0;
+        compiler.footer = 0;
         break;
       case SASS_SRCMAP_CREATE:
-        compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
-        compiler->footer = 0; // Don't add any reference, just create it
+        compiler.srcmap = compiler.renderSrcMapJson(options, output.smap);
+        compiler.footer = 0; // Don't add any reference, just create it
         break;
       case SASS_SRCMAP_EMBED_LINK:
-        compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
-        compiler->footer = compiler->renderSrcMapLink(options, output.smap);
+        compiler.srcmap = compiler.renderSrcMapJson(options, output.smap);
+        compiler.footer = compiler.renderSrcMapLink(options, output.smap);
         break;
       case SASS_SRCMAP_EMBED_JSON:
-        compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
-        compiler->footer = compiler->renderEmbeddedSrcMap(options, output.smap);
+        compiler.srcmap = compiler.renderSrcMapJson(options, output.smap);
+        compiler.footer = compiler.renderEmbeddedSrcMap(options, output.smap);
         break;
       }
       return false;
     }
-    catch (...) { handle_errors(compiler2); }
+    catch (...) { handle_errors(compiler); }
     return true;
 
   }
