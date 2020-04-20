@@ -307,10 +307,10 @@ namespace Sass {
   // ###########################################################################
 
   typedef sass::vector<Block*> BlockStack;
-  typedef sass::vector<SassCalleeCpp> CalleeStack;
+  typedef sass::vector<SassCallee> CalleeStack;
   typedef sass::vector<CssMediaRuleObj> MediaStack;
   typedef sass::vector<SelectorListObj> SelectorStack;
-  typedef sass::vector<struct SassImportCpp*> ImporterStack;
+  typedef sass::vector<struct SassImport*> ImporterStack;
 
   typedef std::unordered_set<sass::string> StringSet;
 

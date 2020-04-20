@@ -80,7 +80,6 @@ namespace Sass {
 
     void format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle);
 
-    // static Logger* create(SassOptionsCpp& options);
     /*
     virtual void warn(sass::string message) const = 0;
     virtual void debug(sass::string message) const = 0;

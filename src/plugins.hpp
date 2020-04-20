@@ -41,13 +41,13 @@ namespace Sass {
       size_t load_plugins(const sass::string& path);
 
     public: // public accessors
-      const sass::vector<struct SassImporterCpp*> get_headers(void) { return headers; }
-      const sass::vector<struct SassImporterCpp*> get_importers(void) { return importers; }
+      const sass::vector<struct SassImporter*> get_headers(void) { return headers; }
+      const sass::vector<struct SassImporter*> get_importers(void) { return importers; }
       const sass::vector<struct SassFunctionCpp*> get_functions(void) { return functions; }
 
     private: // private vars
-      sass::vector<struct SassImporterCpp*> headers;
-      sass::vector<struct SassImporterCpp*> importers;
+      sass::vector<struct SassImporter*> headers;
+      sass::vector<struct SassImporter*> importers;
       sass::vector<struct SassFunctionCpp*> functions;
 
   };

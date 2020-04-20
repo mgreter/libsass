@@ -506,7 +506,7 @@ namespace Sass {
 
   }
 
-  sass::vector<SassCalleeCpp>& Eval::callee_stack()
+  sass::vector<SassCallee>& Eval::callee_stack()
   {
     return ctx.callee_stack;
   }
@@ -546,7 +546,7 @@ namespace Sass {
       SASS_ASSERT(Cast<ExternalCallable*>, "External warn override");
       ExternalCallable* def = static_cast<ExternalCallable*>(fn);
       struct SassFunctionCpp* c_function = def->function();
-      SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
+      SassFunctionLambda c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
@@ -586,7 +586,7 @@ namespace Sass {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
       struct SassFunctionCpp* c_function = def->function();
-      SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
+      SassFunctionLambda c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
@@ -624,7 +624,7 @@ namespace Sass {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
       struct SassFunctionCpp* c_function = def->function();
-      SassFunctionLambdaCpp c_func = sass_function_get_function(c_function);
+      SassFunctionLambda c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
@@ -1910,7 +1910,7 @@ namespace Sass {
 
     SelectorListObj slist;
     if (r->interpolation()) {
-      struct SassImportCpp* imp = ctx.import_stack.back();
+      struct SassImport* imp = ctx.import_stack.back();
       bool plainCss = imp->srcdata->getType() == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);
     }
@@ -2257,7 +2257,7 @@ namespace Sass {
     const StyleSheet& sheet = ctx.sheets.at(include.abs_path);
 
     // Create C-API exposed object to query
-    struct SassImportCpp* import = sass_make_import(
+    struct SassImport* import = sass_make_import(
       include.imp_path.c_str(),
       include.abs_path.c_str(),
       0, 0, sheet.syntax
@@ -2355,7 +2355,7 @@ namespace Sass {
 
   bool Eval::isInMixin()
   {
-    for (SassCalleeCpp& callee : ctx.callee_stack) {
+    for (SassCallee& callee : ctx.callee_stack) {
       if (callee.type == SASS_CALLEE_MIXIN) return true;
     }
     return false;

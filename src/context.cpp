@@ -37,7 +37,7 @@ namespace Sass {
 
   sass::string CWD(File::get_cwd());
 
-  inline bool cmpImporterPrio (struct SassImporterCpp* i, struct SassImporterCpp* j)
+  inline bool cmpImporterPrio (struct SassImporter* i, struct SassImporter* j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
   static sass::string safe_input(const char* in_path)
@@ -289,7 +289,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   // Obsolete when c_ctx and cpp_ctx are merged.
   /*#########################################################################*/
 
-  void Context::addCustomHeaders(sass::vector<struct SassImporterCpp*>& headers)
+  void Context::addCustomHeaders(sass::vector<struct SassImporter*>& headers)
   {
     for (auto header : headers) {
       if (header == nullptr) continue;
@@ -299,7 +299,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
-  void Context::addCustomImporters(sass::vector<struct SassImporterCpp*>& importers)
+  void Context::addCustomImporters(sass::vector<struct SassImporter*>& importers)
   {
     for (auto importer : importers) {
       if (importer == nullptr) continue;
@@ -339,7 +339,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     return vec;
   }
 
-  BlockObj Context::register_import(struct SassImportCpp* import)
+  BlockObj Context::register_import(struct SassImport* import)
   {
 
     SourceData* source = import->srcdata;
@@ -358,7 +358,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
-      struct SassImportCpp* parent = import_stack[i];
+      struct SassImport* parent = import_stack[i];
       if (std::strcmp(parent->srcdata->getAbsPath(), import->srcdata->getAbsPath()) == 0) {
         // make path relative to the current directory
         sass::string stack("An @import loop has been found:");
@@ -419,7 +419,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   {
 
     // get pointer to the loaded content
-    struct SassImportCpp* import = sass_make_import(
+    struct SassImport* import = sass_make_import(
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
       contents, srcmap,
@@ -489,7 +489,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
   // @param singleton Whether to use all importers or only first successful
   /*#########################################################################*/
   bool Context::callCustomLoader(const sass::string& imp_path, SourceSpan& pstate,
-    ImportRule* rule, const sass::vector<struct SassImporterCpp*>& importers, bool singleton)
+    ImportRule* rule, const sass::vector<struct SassImporter*>& importers, bool singleton)
   {
     // unique counter
     size_t count = 0;
@@ -500,9 +500,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // Process custom importers and headers.
     // They must be presorted by priorities.
-    for (struct SassImporterCpp* importer : importers) {
+    for (struct SassImporter* importer : importers) {
       // Get the external importer function
-      SassImporterLambdaCpp fn = sass_importer_get_function(importer);
+      SassImporterLambda fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
       struct SassImportList* includes = fn(imp_path.c_str(), importer);
       // External provider want to handle this
@@ -605,7 +605,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     */
   }
 
-  BlockObj Context::parseImport(struct SassImportCpp* import)
+  BlockObj Context::parseImport(struct SassImport* import)
   {
 
     if (import == nullptr) throw std::runtime_error("No entry point given");
@@ -715,7 +715,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 }
 
 
-struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
+struct SassImport* ADDCALL sass_make_file_import(const char* input_path88)
 {
   // check if entry file is given
   if (input_path88 == nullptr) return {};
@@ -752,7 +752,7 @@ struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
 
 }
 
-struct SassImportCpp* ADDCALL sass_make_stdin_import()
+struct SassImport* ADDCALL sass_make_stdin_import()
 {
   std::istreambuf_iterator<char> begin(std::cin), end;
   sass::string text(begin, end);

@@ -21,7 +21,7 @@ namespace Sass {
     enum SassCompilerState state;
 
     // main entry point for compilation
-    struct SassImportCpp* entry_point;
+    struct SassImport* entry_point;
 
     // Where we want to store the output.
     // Source-map path is deducted from it.

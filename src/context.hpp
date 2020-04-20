@@ -67,7 +67,7 @@ namespace Sass {
     // @param singleton Whether to use all importers or only first successful
     /*#########################################################################*/
     bool callCustomLoader(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule,
-      const sass::vector<struct SassImporterCpp*>& importers, bool singletone = true);
+      const sass::vector<struct SassImporter*>& importers, bool singletone = true);
 
   public:
 
@@ -87,8 +87,8 @@ namespace Sass {
     /*#########################################################################*/
     // Helpers for `sass_prepare_context`
     /*#########################################################################*/
-    void addCustomHeaders(sass::vector<struct SassImporterCpp*>& headers);
-    void addCustomImporters(sass::vector<struct SassImporterCpp*>& importers);
+    void addCustomHeaders(sass::vector<struct SassImporter*>& headers);
+    void addCustomImporters(sass::vector<struct SassImporter*>& importers);
     void addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions);
 
   private:
@@ -128,7 +128,7 @@ namespace Sass {
 
   protected:
 
-    BlockObj parseImport(struct SassImportCpp* import);
+    BlockObj parseImport(struct SassImport* import);
 
   private:
 
@@ -173,15 +173,15 @@ namespace Sass {
     // This can be shared, should go to engine!?
     std::map<const sass::string, StyleSheet> sheets;
 
-    sass::vector<struct SassImportCpp*> import_stack;
+    sass::vector<struct SassImport*> import_stack;
 
     // Only used for is in mixin clause!?
-    sass::vector<SassCalleeCpp> callee_stack;
+    sass::vector<SassCallee> callee_stack;
 
 
 
-    sass::vector<struct SassImporterCpp*> c_headers88;
-    sass::vector<struct SassImporterCpp*> c_importers88;
+    sass::vector<struct SassImporter*> c_headers88;
+    sass::vector<struct SassImporter*> c_importers88;
     sass::vector<struct SassFunctionCpp*> c_functions88;
 
 
@@ -201,7 +201,7 @@ namespace Sass {
     // virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 
-    BlockObj register_import(struct SassImportCpp* entry);
+    BlockObj register_import(struct SassImport* entry);
     void register_resource(const Include&, char* contents, char* srcmap);
     void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 

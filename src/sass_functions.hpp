@@ -10,21 +10,21 @@
 // Some structures are simple c++ vectors.
 // There might be a more efficient way to achieve this?
 // Although compiler optimization should see this case easily!
-struct SassImportList : std::deque<struct SassImportCpp*> {};
-struct SassImporterList : std::deque<struct SassImporterCpp*> {};
+struct SassImportList : std::deque<struct SassImport*> {};
+struct SassImporterList : std::deque<struct SassImporter*> {};
 struct SassFunctionList : std::deque<struct SassFunctionCpp*> {};
 
 // Struct to hold custom function callback
 struct SassFunctionCpp {
   sass::string signature;
-  SassFunctionLambdaCpp function;
+  SassFunctionLambda function;
   void* cookie;
 };
 
 class SourceDataObj;
 
 // External import entry
-struct SassImportCpp {
+struct SassImport {
   //char* imp_path; // path as found in the import statement
   // char *abs_path; // path after importer has resolved it
   // char* source;
@@ -39,7 +39,7 @@ struct SassImportCpp {
 };
 
 // External call entry
-struct SassCalleeCpp {
+struct SassCallee {
   const char* name;
   const char* path;
   uint32_t line;
@@ -48,8 +48,8 @@ struct SassCalleeCpp {
 };
 
 // Struct to hold importer callback
-struct SassImporterCpp {
-  SassImporterLambdaCpp importer;
+struct SassImporter {
+  SassImporterLambda importer;
   double           priority;
   void*            cookie;
 };

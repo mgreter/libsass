@@ -203,7 +203,7 @@ extern "C" {
     return reinterpret_cast<Sass::Compiler*>(compiler)->srcmap;
   }
 
-  void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImportCpp* import)
+  void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImport* import)
   {
     reinterpret_cast<Sass::Compiler*>(compiler)->entry_point = import;
   }
@@ -300,7 +300,7 @@ extern "C" {
     reinterpret_cast<Sass::Compiler*>(compiler)->source_comments = source_comments;
   }
 
-  struct SassImportCpp* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler)
+  struct SassImport* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler)
   {
 
     return reinterpret_cast<Sass::Compiler*>(compiler)->import_stack.back();
