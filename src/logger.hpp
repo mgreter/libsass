@@ -23,7 +23,9 @@ namespace Sass {
 
     // output buffers
     sass::ostream errors;
-    // sass::ostream output;
+
+    // warning buffers
+    sass::ostream warnings;
 
     // The current callstack
     BackTraces callStack;

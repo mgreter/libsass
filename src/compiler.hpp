@@ -50,6 +50,7 @@ namespace Sass {
     sass::string error_json;
     sass::string error_text;
     sass::string error_message;
+    sass::string warning_message;
 
     // error position
     // Why not pstate?

@@ -758,6 +758,22 @@ namespace Sass {
     callStackFrame frame(traces, BackTrace(pstate));
     throw Exception::InvalidSyntax(traces, message);
   }
+
+  // Prints a source span highlight of the current location being scanned.
+  // If [message] is passed, prints that as well. This is
+  // intended for use when debugging parser failures.
+
+  void Parser::debug(sass::string message) {
+	  // How to access otherwise?
+	  context.logger123->warnings
+		  << "DEBUG: " << message << "\n";
+	  if (message.empty()) {
+		  // print(scanner.emptySpan.highlight(color: true));
+	  }
+	  else {
+		  // print(scanner.emptySpan.message(message.toString(), color: true));
+	  }
+  }
   // EO expectIdentifier
 
   // If [position] is separated from the previous non-whitespace character

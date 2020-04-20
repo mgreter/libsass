@@ -642,8 +642,10 @@ namespace Sass {
       sass::string output_path(node->pstate().getDebugPath());
       // options().output_style = outstyle;
 
-      std::cerr << output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
-      std::cerr << STRMLF;
+      // How to access otherwise?
+      ctx.logger123->warnings <<
+        output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
+      ctx.logger123->warnings << STRMLF;
 
     }
 

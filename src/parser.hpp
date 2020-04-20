@@ -208,15 +208,7 @@ namespace Sass {
     // Prints a source span highlight of the current location being scanned.
     // If [message] is passed, prints that as well. This is
     // intended for use when debugging parser failures.
-    void debug(sass::string message) {
-      std::cerr << "DEBUG: " << message << "\n";
-      if (message.empty()) {
-        // print(scanner.emptySpan.highlight(color: true));
-      }
-      else {
-        // print(scanner.emptySpan.message(message.toString(), color: true));
-      }
-    }
+    void debug(sass::string message);
 
     // If [position] is separated from the previous non-whitespace character
     // in `scanner.string` by one or more newlines, returns the offset of the

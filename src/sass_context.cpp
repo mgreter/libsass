@@ -182,6 +182,9 @@ extern "C" {
       catch (...) { compiler->error_json = sass_copy_c_string("{\"status\":99}"); }
       json_delete(json_err);
 
+      // compiler->error_message = compiler->logger123->errors.str();
+      compiler->warning_message = compiler->logger123->warnings.str();
+
       compiler->error_message = msg_stream.str();
       compiler->error_text = e.what();
       compiler->error_status = 1;
@@ -260,6 +263,7 @@ extern "C" {
       options.source_map_origin = compiler->entry_point->srcdata->getAbsPath();
 
       compiler->error_message = compiler->logger123->errors.str();
+      compiler->warning_message = compiler->logger123->warnings.str();
 
       switch (options.source_map_mode) {
       case SASS_SRCMAP_NONE:
@@ -321,6 +325,8 @@ extern "C" {
   const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_json.c_str(); }
   const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_text.c_str(); }
   const char* ADDCALL sass_compiler_get_error_message(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_message.c_str(); }
+  const char* ADDCALL sass_compiler_get_warning_message(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->warning_message.c_str(); }
+  
   const char* ADDCALL sass_compiler_get_error_file(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_file.c_str(); }
   const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_src->content(); }
   size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_line; }

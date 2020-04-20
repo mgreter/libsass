@@ -45,14 +45,14 @@ namespace Sass {
   void Logger::writeWarnHead(bool deprecation)
   {
     if (style & SASS_LOGGER_COLOR) {
-      errors << getColor(Terminal::yellow);
-      if (!deprecation) errors << "Warning";
-      else errors << "Deprecation Warning";
-      errors << getColor(Terminal::reset);
+      warnings << getColor(Terminal::yellow);
+      if (!deprecation) warnings << "Warning";
+      else warnings << "Deprecation Warning";
+      warnings << getColor(Terminal::reset);
     }
     else {
-      if (!deprecation) errors << "WARNING";
-      else errors << "DEPRECATION WARNING";
+      if (!deprecation) warnings << "WARNING";
+      else warnings << "DEPRECATION WARNING";
     }
   }
 
@@ -91,11 +91,11 @@ namespace Sass {
   void Logger::addWarn43(const sass::string& message, bool deprecation)
   {
     writeWarnHead(deprecation);
-    errors << ": ";
+    warnings << ": ";
 
-    wrap(message, 80, errors);
+    wrap(message, 80, warnings);
     StackTraces stack(callStack.begin(), callStack.end());
-		writeStackTraces(errors, stack, "    ", true, 0);
+		writeStackTraces(warnings, stack, "    ", true, 0);
   }
 
 
@@ -106,19 +106,19 @@ namespace Sass {
     callStackFrame frame(*this, pstate);
 
     writeWarnHead(deprecation);
-    errors << " on line " << pstate.getLine();
-    errors << ", column " << pstate.getColumn();
-    errors << " of " << pstate.getDebugPath() << ':' << STRMLF;
+    warnings << " on line " << pstate.getLine();
+    warnings << ", column " << pstate.getColumn();
+    warnings << " of " << pstate.getDebugPath() << ':' << STRMLF;
 
     // Might be expensive to call?
     // size_t cols = Terminal::getWidth();
     // size_t width = std::min<size_t>(cols, 80);
-    wrap(message, 80, errors);
+    wrap(message, 80, warnings);
 
-    errors << STRMLF;
+    warnings << STRMLF;
 
     StackTraces stack(callStack.begin(), callStack.end());
-		writeStackTraces(errors, stack, "    ", true);
+		writeStackTraces(warnings, stack, "    ", true);
 
   }
   /*

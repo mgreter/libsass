@@ -62,6 +62,9 @@ ADDAPI const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* com
 ADDAPI const char* ADDCALL sass_compiler_get_error_message(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_file(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* compiler);
+
+ADDAPI const char* ADDCALL sass_compiler_get_warning_message(struct SassCompiler* compiler);
+
 ADDAPI size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler);
 ADDAPI size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler);
 
