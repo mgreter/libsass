@@ -132,13 +132,15 @@ namespace Sass {
     // Return path as it was given for import
     const char* getImpPath() const
     {
-      return imp_path.c_str();
+      return imp_path.empty() ?
+        nullptr : imp_path.c_str();
     }
 
     // Return path after it was resolved
     const char* getAbsPath() const
     {
-      return abs_path.c_str();
+      return abs_path.empty() ?
+        nullptr : abs_path.c_str();
     }
 
     // The source id is uniquely assigned

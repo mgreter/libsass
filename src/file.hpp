@@ -48,19 +48,12 @@ namespace Sass {
     // to show the absolute path in console messages
     sass::string rel2dbg(const sass::string& rel_path, const sass::string& orig_path);
 
-    // create a path that is relative to the given base directory
-    // path and base will first be resolved against cwd to make them absolute
-    sass::string abs2rel(const sass::string& path, const sass::string& base);
-
     // create an absolute path by resolving relative paths with cwd
-    sass::string rel2abs(const sass::string& path, const sass::string& base);
-
-    // create an absolute path by resolving relative paths with cwd
-    sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD);
+    sass::string rel2abs(const sass::string& path, const sass::string& base = Sass::CWD, const sass::string& CWD = Sass::CWD);
 
     // create a path that is relative to the given base directory
     // path and base will first be resolved against cwd to make them absolute
-    sass::string abs2rel(const sass::string& path, const sass::string& base, const sass::string& CWD);
+    sass::string abs2rel(const sass::string& path, const sass::string& base = Sass::CWD, const sass::string& CWD = Sass::CWD);
 
     // helper function to resolve a filename
     // searching without variations in all paths

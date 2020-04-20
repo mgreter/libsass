@@ -78,7 +78,10 @@ namespace Sass {
     void parse();
     void compile();
 
-    OutputBuffer renderCss();
+    OutputBuffer&& renderCss();
+
+    sass::string getInputPath() const;
+    sass::string getOutputPath() const;
 
     char* renderSrcMapJson(struct SassSrcMapOptions options,
       const SourceMap& source_map);

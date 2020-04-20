@@ -23,35 +23,67 @@ namespace Sass {
     error()
   {}
 
+  sass::string Compiler::getInputPath() const
+  {
+    if (entry_point->srcdata->getAbsPath()) {
+      return entry_point->srcdata->getAbsPath();
+    }
+    return "";
+  }
+
+  sass::string Compiler::getOutputPath() const
+  {
+    if (!output_path.empty()) {
+      return output_path;
+    }
+    sass::string path(getInputPath());
+    size_t dotpos = path.find_last_of('.');
+    if (dotpos != sass::string::npos) {
+      path.erase(dotpos);
+    }
+    path += ".css";
+    return path;
+  }
 
   void Compiler::parse()
   {
-
+    // Check if anything was actually loaded
+    // This should only happen with SourceFile
+    // SourceString will always return empty string
+    if (entry_point->srcdata->content() == nullptr) {
+      throw std::runtime_error(
+        "File to read not found or unreadable: " +
+        std::string(entry_point->srcdata->getImpPath()));
+    }
+    // Now parse the entry point into ast-tree
     parsed = Context::parseImport(entry_point);
-    // update the compiler state
+    // Update the compiler state
     state = SASS_COMPILER_PARSED;
   }
 
   void Compiler::compile()
   {
-    compiled = Context::compile(parsed, false);
-    // update the compiler state
+    // Evaluate parsed ast-tree to new ast-tree
+    if (parsed != nullptr) {
+      compiled = Context::compile(parsed, false);
+    }
+    // Update the compiler state
     state = SASS_COMPILER_COMPILED;
   }
 
-  OutputBuffer Compiler::renderCss()
+  OutputBuffer&& Compiler::renderCss()
   {
     // Create the emitter object
     Output emitter(*this);
-    // start the render process
+    // Start the render process
     if (compiled != nullptr) {
       compiled->perform(&emitter);
     }
-    // finish emitter stream
+    // Finish emitter stream
     emitter.finalize();
-    // update the compiler state
+    // Update the compiler state
     state = SASS_COMPILER_RENDERED;
-    // get the resulting buffer from stream
+    // Move the resulting buffer from stream
     return std::move(emitter.get_buffer());
   }
   // EO renderCss

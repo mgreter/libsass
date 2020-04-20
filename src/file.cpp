@@ -269,27 +269,11 @@ namespace Sass {
     // EO rel2dbg
 
     // create an absolute path by resolving relative paths with cwd
-    sass::string rel2abs(const sass::string& path, const sass::string& base)
-    {
-      return rel2abs(path, base, Sass::CWD);
-    }
-    // EO rel2abs
-
-    // create an absolute path by resolving relative paths with cwd
     sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
       return make_canonical_path(join_paths(join_paths(CWD + "/", base + "/"), path));
     }
     // EO rel2abs
-
-
-    // create a path that is relative to the given base directory
-    // path and base will first be resolved against cwd to make them absolute
-    sass::string abs2rel(const sass::string& path, const sass::string& base)
-    {
-      return abs2rel(path, base, Sass::CWD);
-    }
-    // EO abs2rel
 
     // create a path that is relative to the given base directory
     // path and base will first be resolved against cwd to make them absolute
