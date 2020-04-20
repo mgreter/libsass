@@ -2,17 +2,19 @@
 #define SASS_C_FWDECL_H
 
 #ifdef __cplusplus
+// namespace Sass {
 extern "C" {
 #endif
 
 
 // Forward declare structs
+struct SassError;
 struct SassCallee;
 struct SassCompiler;
+struct SassFunction;
 
 struct SassImport;
 struct SassImporter;
-struct SassFunction;
 
 struct SassImportList;
 struct SassImporterList;
@@ -25,6 +27,7 @@ typedef struct SassValue* (*SassFunctionLambda)(struct SassValue*, struct SassFu
 
 #ifdef __cplusplus
 } // __cplusplus defined.
+// } // EO namespace Sass
 #endif
 
 #endif

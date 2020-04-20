@@ -1,8 +1,6 @@
 #ifndef SASS_C_VALUES_H
 #define SASS_C_VALUES_H
 
-#include <stddef.h>
-#include <stdbool.h>
 #include <sass/base.h>
 
 // Implementation Notes: While I was refactoring for LibSass 4.0, I figured we should get
