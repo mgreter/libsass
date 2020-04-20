@@ -25,51 +25,51 @@ namespace Sass {
   /*#########################################################################*/
   /*#########################################################################*/
 
-  void SourceWithPath::detectType()
-  {
-    if (type == SASS_IMPORT_AUTO) {
-      if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
-        type = SASS_IMPORT_CSS;
-      }
-      else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
-        type = SASS_IMPORT_SASS;
-      }
-      else {
-        type = SASS_IMPORT_SCSS;
-      }
-    }
-  }
+  // void SourceWithPath::detectType()
+  // {
+  //   if (type == SASS_IMPORT_AUTO) {
+  //     if (StringUtils::endsWithIgnoreCase(abs_path, ".css", 4)) {
+  //       type = SASS_IMPORT_CSS;
+  //     }
+  //     else if (StringUtils::endsWithIgnoreCase(abs_path, ".sass", 5)) {
+  //       type = SASS_IMPORT_SASS;
+  //     }
+  //     else {
+  //       type = SASS_IMPORT_SCSS;
+  //     }
+  //   }
+  // }
 
   SourceWithPath::SourceWithPath(
     sass::string&& imp_path,
     sass::string&& abs_path,
-    Sass_Import_Type type,
+    // Sass_Import_Type type,
     size_t idx) :
     imp_path(std::move(imp_path)),
     abs_path(std::move(abs_path)),
     len_content(0),
     len_srcmaps(0),
     srcidx(idx),
-    type(type),
+    // type(type),
     lfs()
   {
-    detectType();
+    // detectType();
   }
 
   SourceWithPath::SourceWithPath(
     const sass::string& imp_path,
     const sass::string& abs_path,
-    Sass_Import_Type type,
+    // Sass_Import_Type type,
     size_t idx) :
     imp_path(imp_path),
     abs_path(abs_path),
     len_content(0),
     len_srcmaps(0),
     srcidx(idx),
-    type(type),
+    // type(type),
     lfs()
   {
-    detectType();
+    // detectType();
   }
 
   // Standard implementation for raw char API
@@ -116,12 +116,11 @@ namespace Sass {
     const char* abs_path,
     char* content,
     char* srcmaps,
-    Sass_Import_Type type,
     size_t srcidx) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
-      type, srcidx
+      srcidx
     ),
     _content(content),
     _srcmaps(srcmaps)
@@ -145,12 +144,11 @@ namespace Sass {
 
   SourceString::SourceString(
     const char* abs_path,
-    sass::string&& content,
-    Sass_Import_Type type) :
+    sass::string&& content) :
     SourceWithPath(
       abs_path ? abs_path : "",
       abs_path ? abs_path : "",
-      type, sass::string::npos
+      sass::string::npos
     ),
     _content(std::move(content))
   {
@@ -162,12 +160,11 @@ namespace Sass {
     const char* abs_path,
     sass::string&& content,
     sass::string&& srcmaps,
-    Sass_Import_Type type,
     size_t srcidx) :
     SourceWithPath(
       imp_path ? imp_path : "",
       abs_path ? abs_path : "",
-      type, srcidx
+      srcidx
     ),
     _content(std::move(content)),
     _srcmaps(std::move(srcmaps))
@@ -185,7 +182,6 @@ namespace Sass {
       pstate.getImpPath(),
       pstate.getAbsPath(),
       std::move(data), "",
-      pstate.getSourceType(),
       pstate.getSrcIdx()),
     pstate(pstate)
   {

@@ -43,12 +43,12 @@ namespace Sass {
     public: // public accessors
       const sass::vector<struct SassImporter*> get_headers(void) { return headers; }
       const sass::vector<struct SassImporter*> get_importers(void) { return importers; }
-      const sass::vector<struct SassFunctionCpp*> get_functions(void) { return functions; }
+      const sass::vector<struct SassFunction*> get_functions(void) { return functions; }
 
     private: // private vars
       sass::vector<struct SassImporter*> headers;
       sass::vector<struct SassImporter*> importers;
-      sass::vector<struct SassFunctionCpp*> functions;
+      sass::vector<struct SassFunction*> functions;
 
   };
 

@@ -89,7 +89,7 @@ namespace Sass {
     /*#########################################################################*/
     void addCustomHeaders(sass::vector<struct SassImporter*>& headers);
     void addCustomImporters(sass::vector<struct SassImporter*>& importers);
-    void addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions);
+    void addCustomFunctions(sass::vector<struct SassFunction*>& functions);
 
   private:
 
@@ -97,13 +97,13 @@ namespace Sass {
     // Create a new external callable from the sass function. Parses
     // function signature into function name and argument declaration.
     /*#########################################################################*/
-    ExternalCallable* makeExternalCallable(struct SassFunctionCpp* function);
+    ExternalCallable* makeExternalCallable(struct SassFunction* function);
 
     /*#########################################################################*/
     // Register an external custom sass function on the global scope.
     // Main entry point for custom functions passed through the C-API.
     /*#########################################################################*/
-    void registerCustomFunction(struct SassFunctionCpp* function);
+    void registerCustomFunction(struct SassFunction* function);
 
 
     /*#########################################################################*/
@@ -182,7 +182,7 @@ namespace Sass {
 
     sass::vector<struct SassImporter*> c_headers88;
     sass::vector<struct SassImporter*> c_importers88;
-    sass::vector<struct SassFunctionCpp*> c_functions88;
+    sass::vector<struct SassFunction*> c_functions88;
 
 
     void apply_custom_headers2(sass::vector<StatementObj>& root, SourceSpan pstate);

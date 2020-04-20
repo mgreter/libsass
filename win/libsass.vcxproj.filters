@@ -266,7 +266,13 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass_error.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass_context.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass_compiler.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass_functions.hpp">
@@ -517,10 +523,16 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_error.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_values.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_context.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_compiler.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_functions.cpp">

@@ -12,19 +12,16 @@
 #include <sass/values.h>
 #include <sass/functions.h>
 #include <sass/context.h>
+#include <sass/compiler.h>
 
-typedef struct SassImportCpp* Sass_Import_Entry;
-typedef struct SassImporterCpp* Sass_Importer_Entry;
-typedef struct SassFunctionCpp* Sass_Function_Entry;
+typedef struct SassImport* Sass_Import_Entry;
+typedef struct SassImporter* Sass_Importer_Entry;
+typedef struct SassFunction* Sass_Function_Entry;
 // 
-typedef struct SassImportListCpp* Sass_Import_List;
-typedef struct SassImporterListCpp* Sass_Importer_List;
-typedef struct SassFunctionListCpp* Sass_Function_List;
-// 
-// struct SassOptionsCpp;
-// // struct SassCompilerCpp;
+typedef struct SassImportList* Sass_Import_List;
+typedef struct SassImporterList* Sass_Importer_List;
+typedef struct SassFunctionList* Sass_Function_List;
 
-#define Sass_Options SassOptionsCpp
 #define Sass_Compiler SassCompiler
 
 #endif

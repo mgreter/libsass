@@ -12,10 +12,10 @@
 // Although compiler optimization should see this case easily!
 struct SassImportList : std::deque<struct SassImport*> {};
 struct SassImporterList : std::deque<struct SassImporter*> {};
-struct SassFunctionList : std::deque<struct SassFunctionCpp*> {};
+struct SassFunctionList : std::deque<struct SassFunction*> {};
 
 // Struct to hold custom function callback
-struct SassFunctionCpp {
+struct SassFunction {
   sass::string signature;
   SassFunctionLambda function;
   void* cookie;
@@ -33,6 +33,7 @@ struct SassImport {
   sass::string error;
   uint32_t line;
   uint32_t column;
+  enum SassImportFormat format;
   // the import type
   // Sass_Import_Type type;
   Sass::SourceDataObj srcdata;

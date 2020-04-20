@@ -39,7 +39,7 @@ namespace Sass {
 
     virtual ~AST_Node() {};
 
-    virtual sass::string inspect() const { return to_string({ INSPECT, SassDefaultPrecision }); }
+    virtual sass::string inspect() const { return to_string({ SASS_STYLE_INSPECT, SassDefaultPrecision }); }
 
     virtual sass::string to_string(Sass_Inspect_Options opt) const;
     virtual sass::string to_css(Sass_Inspect_Options opt, bool quotes = false) const;

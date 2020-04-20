@@ -115,7 +115,7 @@ namespace Sass {
   class SassList;
   class ArgumentList;
   class Map;
-  class SassFunction;
+  class Function;
 
   class ParenthesizedExpression;
   class Binary_Expression;
@@ -259,7 +259,7 @@ namespace Sass {
   IMPL_MEM_OBJ(SassList);
   IMPL_MEM_OBJ(ArgumentList);
   IMPL_MEM_OBJ(Map);
-  IMPL_MEM_OBJ(SassFunction);
+  IMPL_MEM_OBJ(Function);
   IMPL_MEM_OBJ(ParenthesizedExpression);
   IMPL_MEM_OBJ(Binary_Expression);
   IMPL_MEM_OBJ(Unary_Expression);

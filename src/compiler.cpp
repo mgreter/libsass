@@ -20,7 +20,7 @@ namespace Sass {
     entry_point(nullptr),
     footer(nullptr),
     srcmap(nullptr),
-    error_status(0)
+    error()
   {}
 
 
@@ -29,20 +29,20 @@ namespace Sass {
 
     parsed = Context::parseImport(entry_point);
     // update the compiler state
-    state = SassCompilerState::PARSED;
+    state = SASS_COMPILER_PARSED;
   }
 
   void Compiler::compile()
   {
     compiled = Context::compile(parsed, false);
     // update the compiler state
-    state = SassCompilerState::COMPILED;
+    state = SASS_COMPILER_COMPILED;
   }
 
-  Sass::OutputBuffer Compiler::renderCss()
+  OutputBuffer Compiler::renderCss()
   {
     // Create the emitter object
-    Sass::Output emitter(*this);
+    Output emitter(*this);
     // start the render process
     if (compiled != nullptr) {
       compiled->perform(&emitter);
@@ -50,7 +50,7 @@ namespace Sass {
     // finish emitter stream
     emitter.finalize();
     // update the compiler state
-    state = SassCompilerState::RENDERED;
+    state = SASS_COMPILER_RENDERED;
     // get the resulting buffer from stream
     return std::move(emitter.get_buffer());
   }
@@ -59,7 +59,7 @@ namespace Sass {
   // Case 1) output to stdout, source map must be fully inline
   // Case 2) output to path, source map output is deducted from it
   char* Compiler::renderSrcMapLink(struct SassSrcMapOptions options,
-    const Sass::SourceMap& source_map)
+    const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -71,9 +71,9 @@ namespace Sass {
     }
 
     // Create the relative include url
-    const sass::string& path(options.source_map_path);
+    const sass::string& path(options.path);
     const char* base(entry_point->srcdata->getAbsPath());
-    sass::string url(Sass::File::abs2rel(path, base));
+    sass::string url(File::abs2rel(path, base));
 
     // Create resulting footer and return a lasting copy
     sass::string result("\n/*# sourceMappingURL=" + url + " */");
@@ -82,7 +82,7 @@ namespace Sass {
   // EO renderSrcMapLink
 
   char* Compiler::renderEmbeddedSrcMap(struct SassSrcMapOptions options,
-    const Sass::SourceMap& source_map)
+    const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -99,7 +99,7 @@ namespace Sass {
   // EO renderEmbeddedSrcMap
 
   char* Compiler::renderSrcMapJson(struct SassSrcMapOptions options,
-    const Sass::SourceMap& source_map)
+    const SourceMap& source_map)
   {
     // Create the emitter object
     // Sass::OutputBuffer buffer;
@@ -117,17 +117,17 @@ namespace Sass {
     /**********************************************/
     // Create file reference to whom our mappings apply
     /**********************************************/
-    sass::string origin(options.source_map_origin);
-    origin = Sass::File::abs2rel(origin, Sass::CWD);
+    sass::string origin(options.origin);
+    origin = File::abs2rel(origin, CWD);
     JsonNode* json_file_name = json_mkstring(origin.c_str());
     json_append_member(json_srcmap, "file", json_file_name);
 
     /**********************************************/
     // pass-through source_map_root option
     /**********************************************/
-    if (!options.source_map_root.empty()) {
+    if (!options.root.empty()) {
       json_append_member(json_srcmap, "sourceRoot",
-        json_mkstring(options.source_map_root.c_str()));
+        json_mkstring(options.root.c_str()));
     }
 
     /**********************************************/
@@ -135,11 +135,11 @@ namespace Sass {
     /**********************************************/
     JsonNode* json_sources = json_mkarray();
     for (size_t i = 0; i < included_sources.size(); ++i) {
-      const Sass::SourceData* source(included_sources[i]);
+      const SourceData* source(included_sources[i]);
       sass::string path(source->getAbsPath());
-      path = Sass::File::rel2abs(path, ".", Sass::CWD);
+      path = File::rel2abs(path, ".", CWD);
       // Optionally convert to file urls
-      if (options.source_map_file_urls) {
+      if (options.file_urls) {
         if (path[0] == '/') {
           // ends up with three slashes
           path = "file://" + path;
@@ -153,7 +153,7 @@ namespace Sass {
           json_mkstring(path.c_str()));
       }
       else {
-        path = Sass::File::abs2rel(path, ".", Sass::CWD);
+        path = File::abs2rel(path, ".", CWD);
         // Append item to json array
         json_append_element(json_sources,
           json_mkstring(path.c_str()));
@@ -162,15 +162,15 @@ namespace Sass {
     json_append_member(json_srcmap, "sources", json_sources);
 
     // add a relative link to the source map output file
-    // srcmap_links88.emplace_back(abs2rel(abs_path, source_map_file88, CWD));
+    // srcmap_links88.emplace_back(abs2rel(abs_path, file88, CWD));
 
     /**********************************************/
     // Check if we have any includes to render
     /**********************************************/
-    if (options.source_map_embed_contents) {
+    if (options.embed_contents) {
       JsonNode* json_contents = json_mkarray();
       for (size_t i = 0; i < included_sources.size(); ++i) {
-        const Sass::SourceData* source = included_sources[i];
+        const SourceData* source = included_sources[i];
         JsonNode* json_content = json_mkstring(source->content());
         json_append_element(json_contents, json_content);
       }

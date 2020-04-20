@@ -104,10 +104,10 @@ namespace Sass {
       // resolved absolute path
       sass::string abs_path;
       // which importer to use
-      Sass_Import_Type type;
+      SassImportFormat syntax;
     public:
-      Include(const Importer& imp, sass::string abs_path, Sass_Import_Type type)
-      : Importer(imp), abs_path(abs_path), type(type)
+      Include(const Importer& imp, sass::string abs_path, SassImportFormat syntax)
+      : Importer(imp), abs_path(abs_path), syntax(syntax)
       { }
   };
 

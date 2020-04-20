@@ -17,41 +17,33 @@
 // Case 4: create source-maps, embed the json in the css
 // Note: Writing source-maps to disk depends on implementor
 
-enum SassSrcMapMode {
-  SASS_SRCMAP_NONE,
-  SASS_SRCMAP_CREATE,
-  SASS_SRCMAP_EMBED_LINK,
-  SASS_SRCMAP_EMBED_JSON,
-
-};
-
 struct SassSrcMapOptions {
 
-  enum SassSrcMapMode source_map_mode;
+  enum SassSrcMapMode mode;
 
   // Flag to embed full sources
   // Ignored for SASS_SRCMAP_NONE
-  bool source_map_embed_contents;
+  bool embed_contents;
 
   // create file URLs for sources
-  bool source_map_file_urls;
+  bool file_urls;
 
   // Path to source map file
   // Enables source map generation
   // Used to create sourceMappingUrl
-  sass::string source_map_origin;
+  sass::string origin;
 
   // Directly inserted in source maps
-  sass::string source_map_root;
+  sass::string root;
 
   // Path where source map is saved
-  sass::string source_map_path;
+  sass::string path;
 
   // Init everything to false
   SassSrcMapOptions() :
-    source_map_mode(SASS_SRCMAP_CREATE),
-    source_map_embed_contents(true),
-    source_map_file_urls(false)
+    mode(SASS_SRCMAP_CREATE),
+    embed_contents(true),
+    file_urls(false)
   {}
 
 };

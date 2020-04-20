@@ -92,7 +92,7 @@ namespace Sass {
 
   sass::string AST_Node::to_css(Sass_Inspect_Options opt, bool quotes) const
   {
-    opt.output_style = TO_CSS;
+    opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
     Inspect i(Emitter{ out });
     i.quotes = quotes;
@@ -104,7 +104,7 @@ namespace Sass {
 
   sass::string AST_Node::to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes) const
   {
-    opt.output_style = TO_CSS;
+    opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
     Inspect i(Emitter{ out });
     i.quotes = quotes;
@@ -120,17 +120,17 @@ namespace Sass {
 
   sass::string AST_Node::to_string() const
   {
-    return to_string({ NESTED, SassDefaultPrecision });
+    return to_string({ SASS_STYLE_NESTED, SassDefaultPrecision });
   }
 
   sass::string AST_Node::to_css(sass::vector<Mapping>& mappings, bool quotes) const
   {
-    return to_css({ NESTED, SassDefaultPrecision }, mappings, quotes);
+    return to_css({ SASS_STYLE_NESTED, SassDefaultPrecision }, mappings, quotes);
   }
 
   sass::string AST_Node::to_css(bool quotes) const
   {
-    return to_css({ NESTED, SassDefaultPrecision }, quotes);
+    return to_css({ SASS_STYLE_NESTED, SassDefaultPrecision }, quotes);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -1025,7 +1025,7 @@ namespace Sass {
   ExternalCallable::ExternalCallable(
     const sass::string& name,
     ArgumentDeclaration* parameters,
-    struct SassFunctionCpp* function) :
+    struct SassFunction* function) :
     Callable(SourceSpan::tmp("[external]")),
     name_(name),
     declaration_(parameters),

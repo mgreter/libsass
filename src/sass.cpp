@@ -54,6 +54,12 @@ extern "C" {
   }
 
   // Deallocate libsass heap memory
+  void ADDCALL sass_free_c_string(char* ptr)
+  {
+    if (ptr) free(ptr);
+  }
+
+  // Deallocate libsass heap memory
   void ADDCALL sass_free_memory(void* ptr)
   {
     if (ptr) free (ptr);

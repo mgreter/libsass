@@ -35,11 +35,6 @@ namespace Sass
     return source->content();
   }
 
-  Sass_Import_Type SourceState::getSourceType() const
-  {
-    return source->getType();
-  }
-
   sass::string SourceState::getDebugPath() const
 	{
 		const char* path = getAbsPath();

@@ -65,7 +65,7 @@ namespace Sass {
     // virtual void operator()(ContentRule*);
     // expressions
     virtual void operator()(Map*) override;
-    virtual void operator()(SassFunction*) override;
+    virtual void operator()(Function*) override;
     // virtual void operator()(Callable*) override;
     virtual void operator()(BuiltInCallable*) override;
     virtual void operator()(BuiltInCallables*) override;

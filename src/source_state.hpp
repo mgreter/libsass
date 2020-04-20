@@ -23,7 +23,7 @@ namespace Sass
 		Offset position;
 
 		/** Regular value constructor **/
-		SourceState(SourceDataObj source, Offset position = Offset());
+    SourceState(SourceDataObj source = {}, Offset position = Offset());
 
 		/** Return the attach source id **/
 		size_t getSrcIdx() const;
@@ -39,9 +39,6 @@ namespace Sass
 
     // Return the attached source
     const char* getContent() const;
-
-    // Return the attached source type
-    Sass_Import_Type getSourceType() const;
 
 		// Return line as human readable
 		// Starting from one instead of zero

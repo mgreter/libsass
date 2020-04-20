@@ -197,7 +197,7 @@ namespace Sass {
 
     if (!s || s->empty()) return;
 
-    if (output_style() == NESTED) {
+    if (output_style() == SASS_STYLE_NESTED) {
       indentation += node->tabs();
     }
 
@@ -218,7 +218,7 @@ namespace Sass {
       node->get(i)->perform(this);
     }
 
-    if (output_style() == NESTED) {
+    if (output_style() == SASS_STYLE_NESTED) {
       indentation -= node->tabs();
     }
     append_scope_closer(node);
@@ -258,7 +258,7 @@ namespace Sass {
     LOCAL_FLAG(in_declaration, true);
     LOCAL_FLAG(in_custom_property,
       node->is_custom_property());
-    if (output_style() == NESTED)
+    if (output_style() == SASS_STYLE_NESTED)
       indentation += node->tabs();
     append_indentation();
     if (node->name()) {
@@ -269,7 +269,7 @@ namespace Sass {
       node->value()->perform(this);
     }
     append_delimiter();
-    if (output_style() == NESTED)
+    if (output_style() == SASS_STYLE_NESTED)
       indentation -= node->tabs();
   }
   // EO visitCssDeclaration
@@ -281,11 +281,11 @@ namespace Sass {
       add_open_mapping(block);
       append_scope_opener();
     }
-    if (output_style() == NESTED) indentation += block->tabs();
+    if (output_style() == SASS_STYLE_NESTED) indentation += block->tabs();
     for (size_t i = 0, L = block->length(); i < L; ++i) {
       (*block)[i]->perform(this);
     }
-    if (output_style() == NESTED) indentation -= block->tabs();
+    if (output_style() == SASS_STYLE_NESTED) indentation -= block->tabs();
     if (!block->is_root()) {
       append_scope_closer();
       add_close_mapping(block);
@@ -457,12 +457,12 @@ namespace Sass {
 
   void Inspect::operator()(Map* map)
   {
-    if (output_style() == TO_CSS) {
+    if (output_style() == SASS_STYLE_TO_CSS) {
       // should be handle in check_expression
       throw Exception::InvalidValue({}, *map);
     }
 
-    if (output_style() == INSPECT && map->empty()) {
+    if (output_style() == SASS_STYLE_INSPECT && map->empty()) {
       append_string("()");
       return;
     }
@@ -575,7 +575,7 @@ namespace Sass {
     // Add the post line break (from ruby sass)
     // Dart sass uses another logic for newlines
     if (compound->hasPostLineBreak()) {
-      if (output_style() != COMPACT) {
+      if (output_style() != SASS_STYLE_COMPACT) {
         append_optional_linefeed();
       }
     }
@@ -649,7 +649,7 @@ namespace Sass {
   void Inspect::visitSelectorList(SelectorList* list)
   {
     if (list->empty()) {
-      if (output_style() == INSPECT) {
+      if (output_style() == SASS_STYLE_INSPECT) {
         append_token("()", list);
       }
       return;
@@ -704,7 +704,7 @@ namespace Sass {
 
   void Inspect::operator()(SassList* list)
   {
-    bool inspect = output_style() == INSPECT;
+    bool inspect = output_style() == SASS_STYLE_INSPECT;
 
     if (list->hasBrackets()) {
       append_char($lbracket);
@@ -734,7 +734,7 @@ namespace Sass {
     bool first = true;
     sass::string joiner =
       list->separator() == SASS_SPACE ? " " :
-      output_style() == COMPRESSED ? "," : ", ";
+      output_style() == SASS_STYLE_COMPRESSED ? "," : ", ";
     for (Value* value : values) {
       // Only print `null` when inspecting
       if (!inspect && value->isBlank()) continue;
@@ -839,7 +839,7 @@ namespace Sass {
     // add unit now
     res += n->unit();
 
-    if (opt.output_style == TO_CSS && !n->is_valid_css_unit()) {
+    if (opt.output_style == SASS_STYLE_TO_CSS && !n->is_valid_css_unit()) {
       // traces.push_back(BackTrace(nr->pstate()));
       throw Exception::InvalidValue({}, *n);
     }
@@ -892,7 +892,7 @@ namespace Sass {
     // dart sass compressed all colors in regular css always
     // ruby sass and libsass does it only when not delayed
     // since color math is going to be removed, this can go too
-    bool compressed = opt.output_style == COMPRESSED;
+    bool compressed = opt.output_style == SASS_STYLE_COMPRESSED;
     hexlet << '#' << std::setw(1) << std::setfill('0');
     // create a short color hexlet if there is any need for it
     if (compressed && is_color_doublet(r, g, b) && a >= 1.0) {
@@ -966,7 +966,7 @@ namespace Sass {
 
   void Inspect::operator()(Interpolation* node)
   {
-    bool inspect = output_style() == INSPECT;
+    bool inspect = output_style() == SASS_STYLE_INSPECT;
     if (inspect) append_string("#{");
     for (Interpolant* value : node->elements()) {
       if (ItplString* str = value->getItplString()) {
@@ -989,9 +989,9 @@ namespace Sass {
     append_token(w->message(), w);
   }
 
-  void Inspect::operator()(SassFunction* f)
+  void Inspect::operator()(Function* f)
   {
-    bool inspect = output_style() == INSPECT;
+    bool inspect = output_style() == SASS_STYLE_INSPECT;
 
     if (!inspect) {
       throw Exception::InvalidValue({}, *f);
@@ -1019,14 +1019,14 @@ namespace Sass {
 
   void Inspect::operator()(Null* n)
   {
-    if (output_style() == TO_CSS) return;
+    if (output_style() == SASS_STYLE_TO_CSS) return;
     // output the final token
     append_token("null", n);
   }
 
   void Inspect::operator()(PlaceholderSelector* node)
   {
-    if (output_style() == INSPECT) {
+    if (output_style() == SASS_STYLE_INSPECT) {
       append_token(node->name(), node);
     }
   }

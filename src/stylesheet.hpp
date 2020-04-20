@@ -28,7 +28,7 @@ namespace Sass {
       // struct SassImport* import;
 
       // the import type
-      Sass_Import_Type syntax;
+      SassImportFormat syntax;
 
       // Modules that this module uses.
       // List<Module> get upstream;

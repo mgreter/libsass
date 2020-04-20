@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 // Different render styles
-enum Sass_Output_Style {
+enum SassOutputStyle {
   SASS_STYLE_NESTED,
   SASS_STYLE_EXPANDED,
   SASS_STYLE_COMPACT,
@@ -17,11 +17,27 @@ enum Sass_Output_Style {
 };
 
 // Type of parser to use
-enum Sass_Import_Type {
+enum SassImportFormat {
   SASS_IMPORT_AUTO,
   SASS_IMPORT_SCSS,
   SASS_IMPORT_SASS,
   SASS_IMPORT_CSS,
+};
+
+
+enum SassCompilerState {
+  SASS_COMPILER_CREATED,
+  SASS_COMPILER_PARSED,
+  SASS_COMPILER_COMPILED,
+  SASS_COMPILER_RENDERED,
+  SASS_COMPILER_DESTROYED
+};
+
+enum SassSrcMapMode {
+  SASS_SRCMAP_NONE,
+  SASS_SRCMAP_CREATE,
+  SASS_SRCMAP_EMBED_LINK,
+  SASS_SRCMAP_EMBED_JSON,
 };
 
 // Type of function calls

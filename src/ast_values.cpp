@@ -1118,7 +1118,7 @@ namespace Sass {
     return false;
   }
 
-  SassFunction::SassFunction(
+  Function::Function(
     const SourceSpan& pstate,
     CallableObj callable) :
     Value(pstate),
@@ -1126,9 +1126,9 @@ namespace Sass {
   {
   }
 
-  bool SassFunction::operator== (const Value& rhs) const
+  bool Function::operator== (const Value& rhs) const
   {
-    if (const SassFunction* fn = rhs.isFunction()) {
+    if (const Function* fn = rhs.isFunction()) {
       return ObjEqualityFn(callable_, fn->callable());
     }
     return false;

@@ -95,25 +95,12 @@
 // output behaviors
 namespace Sass {
 
-  // create some C++ aliases for the most used options
-  const static Sass_Output_Style NESTED = SASS_STYLE_NESTED;
-  const static Sass_Output_Style COMPACT = SASS_STYLE_COMPACT;
-  const static Sass_Output_Style EXPANDED = SASS_STYLE_EXPANDED;
-  const static Sass_Output_Style COMPRESSED = SASS_STYLE_COMPRESSED;
-  // only used internal to trigger ruby inspect behavior
-  const static Sass_Output_Style INSPECT = SASS_STYLE_INSPECT;
-  const static Sass_Output_Style TO_CSS = SASS_STYLE_TO_CSS;
-
   // helper to aid dreaded MSVC debug mode
   // see implementation for more details
   char* sass_copy_string(sass::string str);
 
 }
 
-#define SASS_LOGGER_MONO 1
-#define SASS_LOGGER_COLOR 2
-#define SASS_LOGGER_ASCII 4
-#define SASS_LOGGER_UNICODE 8
 
 // simple linked list
 struct string_list {
@@ -126,13 +113,13 @@ struct Sass_Inspect_Options {
 
   // Output style for the generated CSS code
   // A value from above SASS_STYLE_* constants
-  enum Sass_Output_Style output_style;
+  enum SassOutputStyle output_style;
 
   // Precision for fractional numbers
   int precision;
 
   // initialization list (constructor with defaults)
-  Sass_Inspect_Options(Sass_Output_Style style = Sass::NESTED,
+  Sass_Inspect_Options(SassOutputStyle style = SASS_STYLE_NESTED,
                        int precision = 10)
   : output_style(style), precision(precision)
   { }
@@ -162,7 +149,7 @@ struct SassOutputOptionsCpp : Sass_Inspect_Options {
   { }
 
   // initialization list (constructor with defaults)
-  SassOutputOptionsCpp(Sass_Output_Style style = Sass::NESTED,
+  SassOutputOptionsCpp(SassOutputStyle style = SASS_STYLE_NESTED,
                       int precision = 10,
                       const char* indent = "  ",
                       const char* linefeed = "\n",

@@ -397,7 +397,7 @@ namespace Sass {
     // try {
     // double epsilon = std::pow(0.1, ctx.c_options.precision + 1);
 
-    struct SassFunctionCpp* entry = callable->function();
+    struct SassFunction* entry = callable->function();
 
     struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
     for (size_t i = 0; i < positional.size(); i++) {
@@ -434,7 +434,7 @@ namespace Sass {
   sass::string Eval::serialize(AST_Node* node)
   {
     Sass_Inspect_Options serializeOpt(ctx);
-    serializeOpt.output_style = TO_CSS;
+    serializeOpt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(serializeOpt);
     Inspect serialize(Emitter{ out });
     serialize.in_declaration = true;
@@ -535,7 +535,7 @@ namespace Sass {
 
   void Eval::visitWarnRule(WarnRule* node)
   {
-    // Sass_Output_Style outstyle = options().output_style;
+    // SassOutputStyle outstyle = options().output_style;
     // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
@@ -545,7 +545,7 @@ namespace Sass {
       // We know that warn override function can only be external
       SASS_ASSERT(Cast<ExternalCallable*>, "External warn override");
       ExternalCallable* def = static_cast<ExternalCallable*>(fn);
-      struct SassFunctionCpp* c_function = def->function();
+      struct SassFunction* c_function = def->function();
       SassFunctionLambda c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
@@ -578,14 +578,14 @@ namespace Sass {
 
   void Eval::visitErrorRule(ErrorRule* node)
   {
-    // Sass_Output_Style outstyle = options().output_style;
+    // SassOutputStyle outstyle = options().output_style;
     // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
     if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::errorRule)) {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
-      struct SassFunctionCpp* c_function = def->function();
+      struct SassFunction* c_function = def->function();
       SassFunctionLambda c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
@@ -616,14 +616,14 @@ namespace Sass {
 
   void Eval::visitDebugRule(DebugRule* node)
   {
-    // Sass_Output_Style outstyle = options().output_style;
+    // SassOutputStyle outstyle = options().output_style;
     // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
     if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::debugRule)) {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
-      struct SassFunctionCpp* c_function = def->function();
+      struct SassFunction* c_function = def->function();
       SassFunctionLambda c_func = sass_function_get_function(c_function);
       // EnvScope scoped(ctx.varRoot, def->idxs());
 
@@ -1911,7 +1911,7 @@ namespace Sass {
     SelectorListObj slist;
     if (r->interpolation()) {
       struct SassImport* imp = ctx.import_stack.back();
-      bool plainCss = imp->srcdata->getType() == SASS_IMPORT_CSS;
+      bool plainCss = imp->format == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);
     }
 

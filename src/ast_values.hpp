@@ -151,7 +151,7 @@ namespace Sass {
     IMPLEMENT_BASE_DOWNCAST(Color_RGBA, isColorRGBA);
     IMPLEMENT_BASE_DOWNCAST(Color_HSLA, isColorHSLA);
     IMPLEMENT_BASE_DOWNCAST(Boolean, isBoolean);
-    IMPLEMENT_BASE_DOWNCAST(SassFunction, isFunction);
+    IMPLEMENT_BASE_DOWNCAST(Function, isFunction);
     IMPLEMENT_BASE_DOWNCAST(SassString, isString);
     IMPLEMENT_BASE_DOWNCAST(Custom_Error, isError);
     IMPLEMENT_BASE_DOWNCAST(Custom_Warning, isWarning);
@@ -222,7 +222,7 @@ namespace Sass {
         logger, pstate(), name);
     }
 
-    virtual SassFunction* assertFunction(Logger& logger, const sass::string& name = StrEmpty) {
+    virtual Function* assertFunction(Logger& logger, const sass::string& name = StrEmpty) {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
@@ -230,7 +230,7 @@ namespace Sass {
         logger, pstate(), name);
     }
 
-    // SassFunction assertFunction(sass::string name = "") = >
+    // Function assertFunction(sass::string name = "") = >
     //   throw _exception("$this is not a function reference.", name);
 
     virtual Map* assertMap(Logger& logger, const sass::string& name = StrEmpty) {
@@ -653,14 +653,14 @@ namespace Sass {
   ////////////////////////////////////////////////////
   // Function reference.
   ////////////////////////////////////////////////////
-  class SassFunction final : public Value {
+  class Function final : public Value {
   public:
     ADD_PROPERTY(CallableObj, callable);
   public:
 
     enum Sass_Tag getTag() const override final { return SASS_FUNCTION; }
 
-    SassFunction(
+    Function(
       const SourceSpan& pstate,
       CallableObj callable);
 
@@ -668,12 +668,12 @@ namespace Sass {
     const sass::string& type() const override final { return StrTypeFunction; }
     bool is_invisible() const override { return true; }
 
-    SassFunction* isFunction() override final { return this; }
-    const SassFunction* isFunction() const override final { return this; }
+    Function* isFunction() override final { return this; }
+    const Function* isFunction() const override final { return this; }
 
     bool operator== (const Value& rhs) const override;
 
-    SassFunction* assertFunction(Logger& logger, const sass::string& name = StrEmpty) override final { return this; }
+    Function* assertFunction(Logger& logger, const sass::string& name = StrEmpty) override final { return this; }
 
     // ATTACH_CLONE_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()

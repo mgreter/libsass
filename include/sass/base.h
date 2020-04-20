@@ -65,6 +65,7 @@ ADDAPI void* ADDCALL sass_alloc_memory(size_t size);
 // to allocate a buffer from existing string
 ADDAPI char* ADDCALL sass_copy_c_string(const char* str);
 // to free overtaken memory when done
+ADDAPI void ADDCALL sass_free_c_string(char* ptr);
 ADDAPI void ADDCALL sass_free_memory(void* ptr);
 
 // Some convenient string helper function

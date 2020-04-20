@@ -68,10 +68,6 @@ namespace Sass {
       return pstate;
     }
 
-    virtual Sass_Import_Type getType() const {
-      return SASS_IMPORT_AUTO;
-    }
-
     ~SourceData() {}
   };
 
@@ -85,7 +81,7 @@ namespace Sass {
   private:
 
     // Detect type from path
-    void detectType();
+    // void detectType();
 
   protected:
     
@@ -103,7 +99,7 @@ namespace Sass {
     size_t srcidx;
 
     // the import type
-    Sass_Import_Type type;
+    // Sass_Import_Type type;
 
     // Store byte offset for every line.
     // Lazy calculated within `countLines`.
@@ -119,13 +115,13 @@ namespace Sass {
     SourceWithPath(
       sass::string&& imp_path,
       sass::string&& abs_path,
-      Sass_Import_Type type = SASS_IMPORT_AUTO,
+      // Sass_Import_Type type = SASS_IMPORT_AUTO,
       size_t idx = sass::string::npos);
 
     SourceWithPath(
       const sass::string& imp_path,
       const sass::string& abs_path,
-      Sass_Import_Type type = SASS_IMPORT_AUTO,
+      // Sass_Import_Type type = SASS_IMPORT_AUTO,
       size_t idx = sass::string::npos);
 
     // Returns the requested line. Will take interpolations into
@@ -163,9 +159,9 @@ namespace Sass {
       return len_srcmaps;
     }
 
-    Sass_Import_Type getType() const override final {
-      return type;
-    }
+    // Sass_Import_Type getType() const override final {
+    //   return type;
+    // }
 
   };
 
@@ -192,7 +188,6 @@ namespace Sass {
       const char* abs_path, // copy
       char* content, // take ownership
       char* srcmaps, // take ownership
-      Sass_Import_Type type = SASS_IMPORT_AUTO,
       size_t srcidx = sass::string::npos);
 
     // Destructor
@@ -230,8 +225,7 @@ namespace Sass {
     // For built-ins
     SourceString(
       const char* path,
-      sass::string&& data,
-      Sass_Import_Type type = SASS_IMPORT_AUTO);
+      sass::string&& data);
 
     // This is for interpolations
     // Take details from its parent
@@ -240,7 +234,6 @@ namespace Sass {
       const char* abs_path,
       sass::string&& data,
       sass::string&& srcmap,
-      Sass_Import_Type type = SASS_IMPORT_AUTO,
       size_t srcidx = sass::string::npos);
 
     // Get raw iterator for actual source

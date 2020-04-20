@@ -34,7 +34,7 @@ namespace Sass {
     return wbuf.buffer;
   }
 
-  Sass_Output_Style Emitter::output_style(void) const
+  enum SassOutputStyle Emitter::output_style(void) const
   {
     return opt.output_style;
   }
@@ -221,8 +221,8 @@ namespace Sass {
 
   void Emitter::append_indentation()
   {
-    if (output_style() == COMPRESSED) return;
-    if (output_style() == COMPACT) return;
+    if (output_style() == SASS_STYLE_COMPRESSED) return;
+    if (output_style() == SASS_STYLE_COMPACT) return;
     if (in_declaration && in_comma_array) return;
     if (scheduled_linefeed && indentation)
       scheduled_linefeed = 1;
@@ -232,13 +232,13 @@ namespace Sass {
   void Emitter::append_delimiter()
   {
     scheduled_delimiter = true;
-    if (output_style() == COMPACT) {
+    if (output_style() == SASS_STYLE_COMPACT) {
       if (indentation == 0) {
         append_mandatory_linefeed();
       } else {
         append_mandatory_space();
       }
-    } else if (output_style() != COMPRESSED) {
+    } else if (output_style() != SASS_STYLE_COMPRESSED) {
       append_optional_linefeed();
     }
   }
@@ -264,7 +264,7 @@ namespace Sass {
 
   void Emitter::append_optional_space()
   {
-    if ((output_style() != COMPRESSED) && wbuf.buffer.size()) {
+    if ((output_style() != SASS_STYLE_COMPRESSED) && wbuf.buffer.size()) {
       unsigned char lst = buffer().at(buffer().length() - 1);
       if (!isspace(lst) || scheduled_delimiter) {
         if (last_char() != '(') {
@@ -276,7 +276,7 @@ namespace Sass {
 
   void Emitter::append_special_linefeed()
   {
-    if (output_style() == COMPACT) {
+    if (output_style() == SASS_STYLE_COMPACT) {
       append_mandatory_linefeed();
       for (size_t p = 0; p < indentation; p++)
         append_string(opt.indent);
@@ -286,7 +286,7 @@ namespace Sass {
   void Emitter::append_optional_linefeed()
   {
     if (in_declaration && in_comma_array) return;
-    if (output_style() == COMPACT) {
+    if (output_style() == SASS_STYLE_COMPACT) {
       append_mandatory_space();
     } else {
       append_mandatory_linefeed();
@@ -295,7 +295,7 @@ namespace Sass {
 
   void Emitter::append_mandatory_linefeed()
   {
-    if (output_style() != COMPRESSED) {
+    if (output_style() != SASS_STYLE_COMPRESSED) {
       scheduled_linefeed = 1;
       scheduled_space = 0;
       // flush_schedules();
@@ -317,9 +317,9 @@ namespace Sass {
   {
     -- indentation;
     scheduled_linefeed = 0;
-    if (output_style() == COMPRESSED)
+    if (output_style() == SASS_STYLE_COMPRESSED)
       scheduled_delimiter = false;
-    if (output_style() == EXPANDED) {
+    if (output_style() == SASS_STYLE_EXPANDED) {
       append_optional_linefeed();
       append_indentation();
     } else {
@@ -329,7 +329,7 @@ namespace Sass {
     if (node) add_close_mapping(node);
     append_optional_linefeed();
     if (indentation != 0) return;
-    if (output_style() != COMPRESSED)
+    if (output_style() != SASS_STYLE_COMPRESSED)
       scheduled_linefeed = 2;
   }
 

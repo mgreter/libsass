@@ -256,6 +256,36 @@ private:
   bool operator<=(const klass& rhs) const { return !(rhs < *this); }; \
   bool operator>=(const klass& rhs) const { return !(*this < rhs); }; \
 
+
+#define DECLARE_CAPI_WRAPPER(klass, strukt) \
+  /* Wrap the pointer for C-API */ \
+  struct strukt* wrap() \
+  { \
+    /* This is a compile time cast and doesn't cost anything */ \
+    return reinterpret_cast<struct strukt*>(this); \
+  }; \
+  /* Wrap the pointer for C-API */ \
+  static struct strukt* wrap(klass* unwrapped) \
+  { \
+    /* Ensure we at least catch the most obvious stuff */ \
+    if (unwrapped == nullptr) throw std::runtime_error( \
+      "Null-Pointer passed to " #klass "::unwrap"); \
+    /* Just delegate to wrap */ \
+    return unwrapped->wrap(); \
+  }; \
+  /* Unwrap the pointer for C-API (potentially unsafe). */ \
+  /* You must pass in a pointer you've got via wrap API. */ \
+  /* Passing anything else will result in undefined behavior! */ \
+  static klass& unwrap(struct strukt* wrapped) \
+  { \
+    /* Ensure we at least catch the most obvious stuff */ \
+    if (wrapped == nullptr) throw std::runtime_error( \
+      "Null-Pointer passed to " #klass "::unwrap"); \
+    /* This is a compile time cast and doesn't cost anything */ \
+    return *reinterpret_cast<klass*>(wrapped); \
+  }; \
+
+
 #ifdef DEBUG_SHARED_PTR
 
   #define IMPLEMENT_COPY_OPERATORS(klass) \

@@ -5,6 +5,8 @@
 
 #include "sass/base.h"
 #include "sass/context.h"
+#include "ast_def_macros.hpp"
+#include "sass_error.hpp"
 
 #include "context.hpp"
 
@@ -20,6 +22,8 @@ namespace Sass {
     // The current state the compiler is in.
     enum SassCompilerState state;
 
+    struct SassSrcMapOptions srcmap_options;
+
     // main entry point for compilation
     struct SassImport* entry_point;
 
@@ -34,7 +38,7 @@ namespace Sass {
     BlockObj compiled;
 
     // The rendered css content.
-    sass::string output;
+    sass::string content;
 
     // The rendered output footer. This includes the
     // rendered css comment footer for the source-map.
@@ -45,20 +49,28 @@ namespace Sass {
     // would normally write out to the `output.css.map` file
     char* srcmap;
 
+    // Runtime error
+    SassError error;
+    /*
     // error status
     int error_status;
-    sass::string error_json;
+
+    // Detail position of error
+    SourceSpan error_pstate;
+
+    // Traces leading up to error
+    StackTraces error_traces;
+
+    // Specific error message
     sass::string error_text;
+
+    // This is the formatted output
     sass::string error_message;
     sass::string warning_message;
 
-    // error position
-    // Why not pstate?
-    sass::string error_file;
-    size_t error_line;
-    size_t error_column;
-    SourceDataObj error_src;
-
+    // All details in a json object
+    sass::string error_json;
+    */
     // Constructor
     Compiler();
 
@@ -76,34 +88,7 @@ namespace Sass {
     char* renderEmbeddedSrcMap(struct SassSrcMapOptions options,
       const SourceMap& source_map);
 
-    // Wrap the pointer for C-API
-    struct SassCompiler* wrap()
-    {
-      // This is a compile time cast and doesn't cost anything
-      return reinterpret_cast<struct SassCompiler*>(this);
-    };
-
-    // Wrap the pointer for C-API
-    static struct SassCompiler* wrap(Compiler* compiler)
-    {
-      // Ensure we at least catch the most obvious stuff
-      if (compiler == nullptr) throw std::runtime_error(
-        "Null-Pointer passed to Sass::Compiler::unwrap");
-      // Just delegate to wrap
-      return compiler->wrap();
-    };
-
-    // Unwrap the pointer for C-API (potentially unsafe).
-    // You must pass in a pointer you've got via wrap API.
-    // Passing anything else will result in undefined behavior!
-    static Compiler& unwrap(struct SassCompiler* sass_compiler)
-    {
-      // Ensure we at least catch the most obvious stuff
-      if (sass_compiler == nullptr) throw std::runtime_error(
-        "Null-Pointer passed to Sass::Compiler::unwrap");
-      // This is a compile time cast and doesn't cost anything
-      return *reinterpret_cast<Sass::Compiler*>(sass_compiler);
-    };
+    DECLARE_CAPI_WRAPPER(Compiler, SassCompiler);
 
   };
 

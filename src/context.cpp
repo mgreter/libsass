@@ -82,7 +82,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   // most functions are very simple
 #define IMPLEMENT_STR_FN(fn) \
-struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, struct SassCompiler* comp) \
+struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, struct SassCompiler* comp) \
 { \
   if (!sass_value_is_list(s_args)) { \
     return sass_make_error("Invalid arguments for " #fn); \
@@ -247,7 +247,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
   // Create a new external callable from the sass function. Parses
   // function signature into function name and argument declaration.
-  ExternalCallable* Context::makeExternalCallable(struct SassFunctionCpp* function)
+  ExternalCallable* Context::makeExternalCallable(struct SassFunction* function)
   {
     // Create temporary source object for signature
     SourceStringObj source = SASS_MEMORY_NEW(SourceString,
@@ -265,7 +265,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
   // Register an external custom sass function on the global scope.
   // Main entry point for custom functions passed through the C-API.
-  void Context::registerCustomFunction(struct SassFunctionCpp* function)
+  void Context::registerCustomFunction(struct SassFunction* function)
   {
     // Create the local environment
     EnvFrame local(&varRoot, true);
@@ -309,7 +309,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
-  void Context::addCustomFunctions(sass::vector<struct SassFunctionCpp*>& functions)
+  void Context::addCustomFunctions(sass::vector<struct SassFunction*>& functions)
   {
     for (auto function : functions) {
       if (function == nullptr) continue;
@@ -378,31 +378,54 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     // callStackFrame frame(*logger,
     //   BackTrace("[import]", "@import"));
 
-    if (source->getType() == SASS_IMPORT_CSS)
+    // Auto detect input file format
+    if (import->format == SASS_IMPORT_AUTO) {
+      using namespace StringUtils;
+      if (endsWithIgnoreCase(abs_path, ".css", 4)) {
+        import->format = SASS_IMPORT_CSS;
+      }
+      else if (endsWithIgnoreCase(abs_path, ".sass", 5)) {
+        import->format = SASS_IMPORT_SASS;
+      }
+      else if (endsWithIgnoreCase(abs_path, ".scss", 5)) {
+        import->format = SASS_IMPORT_SCSS;
+      }
+      else {
+        // Throw a basic error to report issue
+        throw "Unrecognized file format for "
+          + File::base_name(abs_path) + ".\n";
+      }
+    }
+
+    // Use specific parser instance accordingly
+    if (import->format == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, source);
       root = parser.parse();
       isPlainCss = true;
     }
-    else if (source->getType() == SASS_IMPORT_SASS)
+    else if (import->format == SASS_IMPORT_SASS)
     {
       SassParser parser(*this, source);
       root = parser.parse();
+      isPlainCss = false;
     }
     else {
-      // create a parser instance from the given c_str buffer
       ScssParser parser(*this, source);
       root = parser.parse();
+      isPlainCss = false;
     }
 
     StyleSheet stylesheet(source, root);
-    stylesheet.syntax = source->getType();
+    stylesheet.syntax = import->format;
     stylesheet.plainCss = isPlainCss;
 
     // remove current stack frame
     import_stack.pop_back();
 
-    // create key/value pair for ast node
+    // Create key/value pair for loaded stylesheet
+    // Note that we have a small chance of collisions!
+    // Same path might be parsed with different syntax?
     std::pair<const sass::string, StyleSheet>
       ast_pair(abs_path, stylesheet);
 
@@ -423,7 +446,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       inc.imp_path.c_str(),
       inc.abs_path.c_str(),
       contents, srcmap,
-      inc.type
+      inc.syntax
     );
 
     register_import(import);
@@ -477,7 +500,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     }
 
     // nothing found
-    return { imp, "", SASS_IMPORT_AUTO };
+    return Include{ imp, "", SASS_IMPORT_AUTO };
 
   }
 
@@ -548,7 +571,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
             // Use the created uniq_path as fall-back (enforce?)
             sass::string path_key(abs_path ? abs_path : uniq_path);
             // Create import statement in the document
-            Include include(importer, path_key, source->getType());
+            Include include(importer, path_key, import->format);
             auto statement = SASS_MEMORY_NEW(DynamicImport, pstate, path_key);
             rule->append(SASS_MEMORY_NEW(IncludeImport, statement, include));
             // Parse to stylesheet

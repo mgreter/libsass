@@ -85,7 +85,9 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\offset.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\remove_placeholders.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_error.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_context.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_compiler.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_functions.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_values.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\scanner_string.hpp" />
@@ -170,8 +172,10 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\scanner_string.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\remove_placeholders.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_error.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_values.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_context.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_compiler.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_functions.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\operators.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\character.cpp" />

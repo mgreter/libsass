@@ -231,7 +231,7 @@ extern "C" {
   struct SassValue* ADDCALL sass_value_stringify (struct SassValue* v, bool compressed, int precision)
   {
     Value* val = getValue(v);
-    Sass_Inspect_Options options(compressed ? COMPRESSED : NESTED, precision);
+    Sass_Inspect_Options options(compressed ? SASS_STYLE_COMPRESSED : SASS_STYLE_NESTED, precision);
     sass::string str(val->to_string(options));
     return sass_make_qstring(str.c_str());
   }
@@ -245,7 +245,7 @@ extern "C" {
 
       Value* lhs = getValue(a);
       Value* rhs = getValue(b);
-      struct Sass_Inspect_Options options(NESTED, 5);
+      struct Sass_Inspect_Options options(SASS_STYLE_NESTED, 5);
 
       // see if it's a relational expression
       switch(op) {

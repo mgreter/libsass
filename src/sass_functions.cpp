@@ -56,7 +56,7 @@ extern "C" {
     return list == nullptr ? 0 : list->size();
   }
 
-  SassFunctionCpp* ADDCALL sass_function_list_shift(struct SassFunctionList* list)
+  SassFunction* ADDCALL sass_function_list_shift(struct SassFunctionList* list)
   {
     if (list == nullptr) return nullptr;
     if (list->empty()) return nullptr;
@@ -89,7 +89,7 @@ extern "C" {
   }
 
 
-  void ADDCALL sass_function_list_push(struct SassFunctionList* list, struct SassFunctionCpp* fn)
+  void ADDCALL sass_function_list_push(struct SassFunctionList* list, struct SassFunction* fn)
   {
     if (list != nullptr) {
       if (fn != nullptr) {
@@ -98,9 +98,9 @@ extern "C" {
     }
   }
 
-  struct SassFunctionCpp* ADDCALL sass_make_function(const char* signature, SassFunctionLambda function, void* cookie)
+  struct SassFunction* ADDCALL sass_make_function(const char* signature, SassFunctionLambda function, void* cookie)
   {
-    struct SassFunctionCpp* cb = new SassFunctionCpp{};
+    struct SassFunction* cb = new SassFunction{};
     if (cb == 0) return 0;
     cb->signature = signature;
     cb->function = function;
@@ -108,7 +108,7 @@ extern "C" {
     return cb;
   }
 
-  void ADDCALL sass_delete_function(struct SassFunctionCpp* entry)
+  void ADDCALL sass_delete_function(struct SassFunction* entry)
   {
     delete entry;
   }
@@ -124,12 +124,12 @@ extern "C" {
   }
 
   // Setters and getters for callbacks on function lists
-  // struct SassFunctionCpp* ADDCALL sass_function_get_list_entry(struct SassFunctionList* list, uint32_t pos) { return list[pos]; }
-  // void sass_function_set_list_entry(struct SassFunctionList* list, uint32_t pos, struct SassFunctionCpp* cb) { list[pos] = cb; }
+  // struct SassFunction* ADDCALL sass_function_get_list_entry(struct SassFunctionList* list, uint32_t pos) { return list[pos]; }
+  // void sass_function_set_list_entry(struct SassFunctionList* list, uint32_t pos, struct SassFunction* cb) { list[pos] = cb; }
 
-  const char* ADDCALL sass_function_get_signature(struct SassFunctionCpp* cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
-  SassFunctionLambda ADDCALL sass_function_get_function(struct SassFunctionCpp* cb) { return cb->function; }
-  void* ADDCALL sass_function_get_cookie(struct SassFunctionCpp* cb) { return cb->cookie; }
+  const char* ADDCALL sass_function_get_signature(struct SassFunction* cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
+  SassFunctionLambda ADDCALL sass_function_get_function(struct SassFunction* cb) { return cb->function; }
+  void* ADDCALL sass_function_get_cookie(struct SassFunction* cb) { return cb->cookie; }
 
   struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda fn, double priority, void* cookie)
   {
@@ -169,7 +169,7 @@ extern "C" {
 
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
-  struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum Sass_Import_Type type)
+  struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum SassImportFormat type)
   {
     struct SassImport* v = new SassImport();
     if (v == 0) return 0;
@@ -179,8 +179,7 @@ extern "C" {
     v->srcdata = SASS_MEMORY_NEW(SourceFile,
       imp_path, abs_path,
       source ? source : 0,
-      srcmap ? srcmap : 0,
-      type, -1);
+      srcmap ? srcmap : 0);
     return v;
   }
 
@@ -241,7 +240,7 @@ extern "C" {
   const char* ADDCALL sass_import_get_abs_path(struct SassImport* entry) { return entry->srcdata->getAbsPath(); }
   const char* ADDCALL sass_import_get_source(struct SassImport* entry) { return entry->srcdata->content(); }
   const char* ADDCALL sass_import_get_srcmap(struct SassImport* entry) { return entry->srcdata->srcmaps(); }
-  enum Sass_Import_Type ADDCALL sass_import_get_type(struct SassImport* entry) { return entry->srcdata->getType();  }
+  enum SassImportFormat ADDCALL sass_import_get_type(struct SassImport* entry) { return entry->format;  }
 
   // Getter for import error entry
   uint32_t ADDCALL sass_import_get_error_line(struct SassImport* entry) { return entry->line; }

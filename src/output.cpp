@@ -106,7 +106,7 @@ namespace Sass {
       // static cast to unsigned to handle `char` being signed / unsigned
       if (static_cast<unsigned>(chr) < 128) continue;
       // declare the charset
-      if (output_style() != COMPRESSED)
+      if (output_style() != SASS_STYLE_COMPRESSED)
         charset = "@charset \"UTF-8\";"
         + sass::string(opt.linefeed);
       else charset = "\xEF\xBB\xBF";
@@ -123,10 +123,10 @@ namespace Sass {
   void Output::operator()(CssComment* c)
   {
     bool important = c->isPreserved();
-    if (output_style() == COMPRESSED || output_style() == COMPACT) {
+    if (output_style() == SASS_STYLE_COMPRESSED || output_style() == SASS_STYLE_COMPACT) {
       if (!important) return;
     }
-    if (output_style() != COMPRESSED || important) {
+    if (output_style() != SASS_STYLE_COMPRESSED || important) {
       if (wbuf.buffer.size() == 0) {
         top_nodes.emplace_back(c);
       }
@@ -178,7 +178,7 @@ namespace Sass {
   void Output::operator()(CssSupportsRule* rule)
   {
 
-    if (output_style() == NESTED) {
+    if (output_style() == SASS_STYLE_NESTED) {
       indentation += rule->tabs();
     }
 
@@ -195,7 +195,7 @@ namespace Sass {
       if (i < L - 1) append_special_linefeed();
     }
 
-    if (output_style() == NESTED) {
+    if (output_style() == SASS_STYLE_NESTED) {
       indentation -= rule->tabs();
     }
 

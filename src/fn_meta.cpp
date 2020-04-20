@@ -27,7 +27,7 @@ namespace Sass {
         }
         return SASS_MEMORY_NEW(SassString,
           pstate, arguments[0]->to_string({
-            INSPECT, ctx.precision
+            SASS_STYLE_INSPECT, ctx.precision
           }));
       }
 
@@ -170,7 +170,7 @@ namespace Sass {
             "Function not found: " + name->value(),
             *ctx.logger123);
 
-        return SASS_MEMORY_NEW(SassFunction, pstate, callable);
+        return SASS_MEMORY_NEW(Function, pstate, callable);
 
       }
 
