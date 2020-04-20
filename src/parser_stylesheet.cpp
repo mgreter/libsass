@@ -33,7 +33,7 @@ namespace Sass {
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
     // check seems a bit esoteric but works
-    if (context.sources.size() == 1) {
+    if (context.included_sources.size() == 1) {
       // apply headers only on very first include
       context.apply_custom_headers2(statements, pstate);
     }

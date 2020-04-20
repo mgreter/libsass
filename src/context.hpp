@@ -130,29 +130,29 @@ namespace Sass {
 
     BlockObj parseImport(struct SassImportCpp* import);
 
-    void prepareEnvironment();
-
   private:
 
-    // Global available functions
+    // Functions in order of appearance
+    // Same order needed for function stack
     std::vector<CallableObj> fnList;
+
+    // Lookup functions by function name
+    // Due to EnvKayMap case insensitive.
     EnvKeyMap<CallableObj> fnLookup;
 
     // Checking if a file exists can be quite extensive
     // Keep an internal map to avoid multiple check calls
     std::unordered_map<sass::string, bool> fileExistsCache;
 
-  protected:
+  public:
 
-    // Runtime variables
-    friend class Eval;
+    // The root environment where parsed root variables
+    // and (custom) functions and mixins are registered.
     EnvRoot varRoot;
 
-    // Stacks of all parsed functions
-    friend class StylesheetParser;
+    // Stack of environment frames. New frames are appended
+    // when parser encounters a new environment scoping.
     sass::vector<EnvFrame*> varStack;
-
-  public:
 
     // Include paths are local to context since we need to know
     // it for lookups during parsing. You may reset this for
@@ -163,8 +163,13 @@ namespace Sass {
     // It assigns a specific logger according to options.
     Logger* logger123; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    // resources under our control
-    sass::vector<SourceDataObj> sources;
+    operator Logger& () { return *logger123; }
+
+    // Absolute paths to all includes we have seen so far.
+    // Consumers are encouraged to clear this vector after they
+    // have copied/moved the items after parsing the entry point.
+    // They should ideally be known for every stylesheet.
+    sass::vector<SourceDataObj> included_sources;
 
     // Sheets are filled after resources are parsed
     // This can be shared, should go to engine!?
@@ -176,15 +181,7 @@ namespace Sass {
     // Only used for is in mixin clause!?
     sass::vector<SassCalleeCpp> callee_stack;
 
-    // Absolute paths to all includes we have seen so far.
-    // Consumers are encouraged to clear this vector after they
-    // have copied/moved the items after parsing the entry point.
-    // They should ideally be known for every stylesheet.
-    sass::vector<SourceDataObj> included_sources;
 
-    // mainly used in context::find_includes
-    // which is in turn called by Context::load_import
-    sass::vector<sass::string> include_paths88; // lookup paths for includes
 
     sass::vector<struct SassImporterCpp*> c_headers88;
     sass::vector<struct SassImporterCpp*> c_importers88;
@@ -197,16 +194,7 @@ namespace Sass {
     Context();
 
     void loadPlugins(const sass::string& path);
-
-
-    BlockObj parse2(struct SassImportCpp* entry) {
-
-      return parseImport(entry);
-
-      // Now we must decide what to do!
-      // std::cerr << "Untangle me 22\n";
-      // return compileImport(import);
-    }
+    void addIncludePaths(const sass::string& path);
 
     // ToDO, maybe belongs to compiler?
     virtual BlockObj compile(BlockObj root, bool plainCss);

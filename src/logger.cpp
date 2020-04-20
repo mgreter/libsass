@@ -30,7 +30,16 @@ namespace Sass {
   Logger::Logger(size_t precision, enum Sass_Logger_Style style) :
     epsilon(std::pow(0.1, precision + 1)),
     style(style)
-  {}
+  {
+    if (this->style == SASS_LOGGER_AUTO) {
+      this->style = SASS_LOGGER_ASCII_MONO;
+    }
+  }
+
+  void Logger::setPrecision(size_t precision)
+  {
+    epsilon = std::pow(0.1, precision + 1);
+  }
 
   // Write warning header to error stream
   void Logger::writeWarnHead(bool deprecation)

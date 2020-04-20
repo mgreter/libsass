@@ -35,7 +35,7 @@ namespace Sass {
   using namespace File;
   using namespace Sass;
 
-  const sass::string CWD(File::get_cwd());
+  sass::string CWD(File::get_cwd());
 
   inline bool cmpImporterPrio (struct SassImporterCpp* i, struct SassImporterCpp* j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
@@ -111,6 +111,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     logger123(new Logger(5, SASS_LOGGER_AUTO))
 
   {
+    // Sass::CWD = File::get_cwd();
 
     // Sass 3.4: The current working directory will no longer be placed onto the Sass load path by default.
     // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.
@@ -137,6 +138,20 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     // emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
 
+  }
+
+  // Load plugins from path, which can be path separated
+  void Context::addIncludePaths(const sass::string& paths)
+  {
+    // Check if we have anything to do
+    if (paths.empty()) return;
+    // Load plugins from all paths
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
+      if (*path.rbegin() != '/') path += '/';
+      include_paths.emplace_back(path);
+    }
   }
 
   // Load plugins from path, which can be path separated
@@ -314,10 +329,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     // first try to resolve the load path relative to the base path
     sass::vector<Include> vec(resolve_includes(base_path, import.imp_path, CWD, fileExistsCache));
     // then search in every include path (but only if nothing found yet)
-    for (size_t i = 0, S = include_paths88.size(); vec.size() == 0 && i < S; ++i)
+    for (size_t i = 0, S = include_paths.size(); vec.size() == 0 && i < S; ++i)
     {
       // call resolve_includes and individual base path and append all results
-      sass::vector<Include> resolved(resolve_includes(include_paths88[i], import.imp_path, CWD, fileExistsCache));
+      sass::vector<Include> resolved(resolve_includes(include_paths[i], import.imp_path, CWD, fileExistsCache));
       if (resolved.size()) vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
     // return vector
@@ -329,18 +344,18 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
     SourceData* source = import->srcdata;
     const sass::string& abs_path(source->getAbsPath());
-    size_t idx = sources.size();
+    size_t idx = included_sources.size();
     source->setSrcIdx(idx);
 
     // Append to the resources
-    sources.emplace_back(source);
+    // sources97.emplace_back(source);
 
     // ToDo
     included_sources.emplace_back(source);
 
     // add the entry to the stack
     import_stack.emplace_back(import);
-    importStack.emplace_back(sources.back());
+    importStack.emplace_back(source);
 
     // check existing import stack for possible recursion
     for (size_t i = 0; i < import_stack.size() - 2; ++i) {
@@ -594,46 +609,42 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
 
   BlockObj Context::parseImport(struct SassImportCpp* import)
   {
+
+    if (import == nullptr) throw std::runtime_error("No entry point given");
+
     // add the entry to the stack
     import_stack.emplace_back(import);
     // importStack2.emplace_back(source);
 
-    // Prepare environment
-    prepareEnvironment();
-
-    // load and register import
-    BlockObj root = register_import(import);
-
-    importStack.emplace_back(sources.back());
-
-    // create root ast tree node
-    return root;
-
-  }
-  
-  void Context::prepareEnvironment()
-  {
-
     loadBuiltInFunctions();
 
-    varStack.push_back(&varRoot);
+    ScopedStackFrame<EnvFrame> scoped(varStack, &varRoot);
 
     // register custom functions (defined via C-API)
     for (size_t i = 0, S = c_functions88.size(); i < S; ++i)
     {
-      ScopedStackFrame<EnvFrame> scoped(varStack, &varRoot);
       registerCustomFunction(c_functions88[i]);
     }
 
+
+    // load and register import
+    BlockObj root = register_import(import);
+    
+    importStack.emplace_back(import->srcdata);
+
+    // create root ast tree node
+    return root;
 
   }
 
   // parse root block from includes
   Block_Obj Context::compile(BlockObj root, bool plainCss)
   {
+    if (root == nullptr) throw std::runtime_error("No root block given");
+
 
     // abort if there is no data
-    if (sources.size() == 0) return {};
+    if (included_sources.size() == 0) return {};
     // abort on invalid root
     if (root.isNull()) return {};
 
@@ -645,9 +656,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
     for (size_t i = 0; i < fnList.size(); i++) {
       varRoot.functions[i] = fnList[i];
     }
-    BlockObj compiled = eval.visitRootBlock99(root); // 50%
-   //  debug_ast(compiled);
 
+    BlockObj compiled = eval.visitRootBlock99(root); // 50%
+   
     Extension unsatisfied;
     // check that all extends were used
     if (eval.extender.checkForUnsatisfiedExtends(unsatisfied)) {
@@ -724,9 +735,9 @@ struct SassImportCpp* ADDCALL sass_make_file_import(const char* input_path88)
   /*
       // alternatively also look inside each include path folder
       // I think this differs from ruby sass (IMO too late to remove)
-      for (size_t i = 0, S = include_paths88.size(); contents == 0 && i < S; ++i) {
+      for (size_t i = 0, S = include_paths.size(); contents == 0 && i < S; ++i) {
         // build absolute path for this include path entry
-        abs_path = rel2abs(input_path88, include_paths88[i], CWD);
+        abs_path = rel2abs(input_path88, include_paths[i], CWD);
         // try to load the resulting path
         contents = slurp_file(abs_path, CWD);
       }

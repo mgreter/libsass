@@ -78,7 +78,7 @@ extern "C" {
     /*
     // get the last import entry to get current base directory
     SassImportPtr import = sass_compiler_get_last_import(compiler);
-    const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths88;
+    const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
     paths.emplace_back(File::dir_name(import->srcdata->getAbsPath()));
@@ -96,7 +96,7 @@ extern "C" {
     /*
     // get the last import entry to get current base directory
     SassImportPtr import = sass_compiler_get_last_import(compiler);
-    const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths88;
+    const sass::vector<sass::string>& incs = compiler->cpp_ctx->include_paths;
     // create the vector with paths to lookup
     sass::vector<sass::string> paths(1 + incs.size());
     paths.emplace_back(File::dir_name(import->srcdata->getAbsPath()));

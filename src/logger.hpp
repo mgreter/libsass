@@ -90,6 +90,8 @@ namespace Sass {
     void addWarn43(const sass::string& message, bool deprecation = false);
     void addWarn33(const sass::string& message, const SourceSpan& pstate, bool deprecation = false);
 
+    void setPrecision(size_t precision);
+
   public:
 
     operator BackTraces&() {

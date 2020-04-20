@@ -166,7 +166,6 @@ namespace Sass {
 
   // common classes
   class Context;
-  class Expand;
   class Eval;
 
   class Extension;

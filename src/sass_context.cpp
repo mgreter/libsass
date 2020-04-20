@@ -25,8 +25,7 @@ namespace Sass {
     return json_mkstring(str.c_str());
   }
 
-  /*
-    static void handle_string_error(SassOptionsCpp* c_ctx, const sass::string& msg, int severety)
+  static void handle_string_error(Sass::Compiler* compiler, const sass::string& msg, int severety)
   {
     sass::ostream msg_stream;
     JsonNode* json_err = json_mkobject();
@@ -41,7 +40,7 @@ namespace Sass {
     // c_ctx->error_status = severety;
     json_delete(json_err);
   }
-
+  /*
   static Block_Obj sass_parse_block(struct SassCompiler* compiler) throw()
   {
 
@@ -192,23 +191,25 @@ extern "C" {
       compiler->error_src = pstate.getSource();
 
     }
-    catch (std::bad_alloc &) {
-      std::cerr << "Error std::bad_alloc\n";
+    catch (std::bad_alloc &ba) {
+      sass::ostream msg_stream;
+      msg_stream << "Unable to allocate memory: " << ba.what();
+      handle_string_error(compiler, msg_stream.str(), 2);
     }
-    catch (std::exception &) {
-      std::cerr << "Error std::exception\n";
+    catch (std::exception &e) {
+      handle_string_error(compiler, e.what(), 3);
     }
-    catch (sass::string &) {
-      std::cerr << "Error sass::string\n";
+    catch (sass::string &e) {
+      handle_string_error(compiler, e, 4);
     }
-    catch (const char*) {
-      std::cerr << "Error const char*\n";
+    catch (const char* e) {
+      handle_string_error(compiler, e, 4);
     }
     catch (...) {
-      std::cerr << "Error any else\n";
+      handle_string_error(compiler, "unknown", 5);
     }
 
-    return 0;
+    return compiler->error_status;
   }
 
   // allow one error handler to throw another error
@@ -218,59 +219,70 @@ extern "C" {
     catch (...) { return handle_error(compiler); }
   }
 
-  void ADDCALL sass_compiler_parse(struct SassCompiler* compiler2)
+  bool ADDCALL sass_compiler_parse(struct SassCompiler* compiler2)
   {
     Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
-    try { compiler->parse(); }
+    try { compiler->parse(); return false; }
     catch (...) { handle_errors(compiler2); }
-
+    return true;
   }
 
-  void ADDCALL sass_compiler_compile(struct SassCompiler* compiler2)
+  bool ADDCALL sass_compiler_compile(struct SassCompiler* compiler2)
   {
     Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
-    try { compiler->compile(); }
+    try { compiler->compile(); return false; }
     catch (...) { handle_errors(compiler2); }
+    return true;
   }
 
-  void ADDCALL sass_compiler_render(struct SassCompiler* compiler2)
+  bool ADDCALL sass_compiler_render(struct SassCompiler* compiler2)
   {
-    Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
-    // Render the output css
+    try {
+
+      Sass::Compiler* compiler = reinterpret_cast<Sass::Compiler*>(compiler2);
+
+      if (compiler->compiled == nullptr) return true;
+//      compiler->error_message
+      // Render the output css
     // Render the source map json
     // Embed the source map after output
-    OutputBuffer output(compiler->renderCss());
+      OutputBuffer output(compiler->renderCss());
 
-    compiler->output = output.buffer;
+      compiler->output = output.buffer;
 
-    bool source_map_include = false;
-    bool source_map_file_urls = false;
-    const char* source_map_root = 0;
+      // bool source_map_include = false;
+      // bool source_map_file_urls = false;
+      // const char* source_map_root = 0;
 
-    struct SassSrcMapOptions options;
-    options.source_map_mode = SASS_SRCMAP_EMBED_JSON;
-    options.source_map_path = compiler->output_path + ".map";
+      struct SassSrcMapOptions options;
+      options.source_map_mode = SASS_SRCMAP_EMBED_JSON;
+      options.source_map_path = compiler->output_path + ".map";
+      options.source_map_origin = compiler->entry_point->srcdata->getAbsPath();
 
-    options.source_map_origin = compiler->entry_point->srcdata->getAbsPath();
+      compiler->error_message = compiler->logger123->errors.str();
 
-    switch (options.source_map_mode) {
-    case SASS_SRCMAP_NONE:
-      compiler->srcmap = 0;
-      compiler->footer = 0;
-      break;
-    case SASS_SRCMAP_CREATE:
-      compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
-      compiler->footer = 0; // Don't add any reference, just create it
-      break;
-    case SASS_SRCMAP_EMBED_LINK:
-      compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
-      compiler->footer = compiler->renderSrcMapLink(options, output.smap);
-      break;
-    case SASS_SRCMAP_EMBED_JSON:
-      compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
-      compiler->footer = compiler->renderEmbeddedSrcMap(options, output.smap);
-      break;
+      switch (options.source_map_mode) {
+      case SASS_SRCMAP_NONE:
+        compiler->srcmap = 0;
+        compiler->footer = 0;
+        break;
+      case SASS_SRCMAP_CREATE:
+        compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
+        compiler->footer = 0; // Don't add any reference, just create it
+        break;
+      case SASS_SRCMAP_EMBED_LINK:
+        compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
+        compiler->footer = compiler->renderSrcMapLink(options, output.smap);
+        break;
+      case SASS_SRCMAP_EMBED_JSON:
+        compiler->srcmap = compiler->renderSrcMapJson(options, output.smap);
+        compiler->footer = compiler->renderEmbeddedSrcMap(options, output.smap);
+        break;
+      }
+      return false;
     }
+    catch (...) { handle_errors(compiler2); }
+    return true;
 
   }
 
@@ -300,6 +312,11 @@ extern "C" {
     reinterpret_cast<Sass::Compiler*>(compiler)->output_path = output_path ? output_path : "stream://stdout";
   }
 
+  void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum Sass_Output_Style output_style)
+  {
+    reinterpret_cast<Sass::Compiler*>(compiler)->output_style = output_style;
+  }
+
   int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_status; }
   const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_json.c_str(); }
   const char* ADDCALL sass_compiler_get_error_text(struct SassCompiler* compiler) { return reinterpret_cast<Sass::Compiler*>(compiler)->error_text.c_str(); }
@@ -316,10 +333,21 @@ extern "C" {
     // if (message != nullptr) Terminal::print(message, true);
   }
    
+  void ADDCALL sass_chdir(const char* path)
+  {
+    if (path != nullptr) {
+      CWD = File::rel2abs(path, CWD) + "/";
+    }
+  }
 
   void ADDCALL sass_print_stderr(const char* message)
   {
     Terminal::print(message, true);
+  }
+
+  void ADDCALL sass_print_stdout(const char* message)
+  {
+    Terminal::print(message, false);
   }
 
 
@@ -336,20 +364,22 @@ extern "C" {
 
 
   // Push function for include paths (no manipulation support for now)
-  void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* path)
+  void ADDCALL sass_compiler_add_include_paths(struct SassCompiler* compiler, const char* paths)
   {
-    reinterpret_cast<Sass::Compiler*>(compiler)->include_paths.push_back(path); // method addIncludePath
+    reinterpret_cast<Sass::Compiler*>(compiler)->addIncludePaths(paths);
   }
 
   // Push function for plugin paths (no manipulation support for now)
-  void ADDCALL sass_compiler_push_include_path(struct SassCompiler* compiler, const char* path)
+  void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* paths)
   {
-    reinterpret_cast<Sass::Compiler*>(compiler)->loadPlugins(path);
+    reinterpret_cast<Sass::Compiler*>(compiler)->loadPlugins(paths);
   }
 
   void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision)
   {
     reinterpret_cast<Sass::Compiler*>(compiler)->precision = precision;
+    reinterpret_cast<Sass::Compiler*>(compiler)->logger123->setPrecision(precision);
+    
   }
 
   int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler)
@@ -365,6 +395,19 @@ extern "C" {
   void ADDCALL sass_compiler_set_source_comments(struct SassCompiler* compiler, bool source_comments)
   {
     reinterpret_cast<Sass::Compiler*>(compiler)->source_comments = source_comments;
+  }
+
+  struct SassImportCpp* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler)
+  {
+
+    return reinterpret_cast<Sass::Compiler*>(compiler)->import_stack.back();
+
+  }
+
+  void ADDCALL sass_compiler_set_logger_style(struct SassCompiler* compiler, enum Sass_Logger_Style log_style)
+  {
+    if (log_style == SASS_LOGGER_AUTO) log_style = SASS_LOGGER_ASCII_MONO;
+    reinterpret_cast<Sass::Compiler*>(compiler)->logger123->style = log_style;
   }
 
 

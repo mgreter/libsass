@@ -39,11 +39,11 @@ ADDAPI struct SassImportCpp* ADDCALL sass_make_file_import(const char* imp_path)
 ADDAPI struct SassCompiler* ADDCALL sass_make_compiler();
 
 // Parse the entry point and potentially all imports within
-ADDAPI void ADDCALL sass_compiler_parse(struct SassCompiler* compiler);
+ADDAPI bool ADDCALL sass_compiler_parse(struct SassCompiler* compiler);
 // Evaluate the parsed entry point and store resulting ast-tree
-ADDAPI void ADDCALL sass_compiler_compile(struct SassCompiler* compiler);
+ADDAPI bool ADDCALL sass_compiler_compile(struct SassCompiler* compiler);
 // Render the evaluated ast-tree to get the final output string
-ADDAPI void ADDCALL sass_compiler_render(struct SassCompiler* compiler);
+ADDAPI bool ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 
 // Getter for sass compiler results
 ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler);
@@ -51,8 +51,10 @@ ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* 
 ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
 ADDAPI void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path);
+ADDAPI void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum Sass_Output_Style output_style);
 
 ADDAPI void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImportCpp* import);
+ADDAPI void ADDCALL sass_compiler_set_logger_style(struct SassCompiler* compiler, enum Sass_Logger_Style log_style);
 
 ADDAPI int ADDCALL sass_compiler_get_error_status(struct SassCompiler* compiler);
 ADDAPI const char* ADDCALL sass_compiler_get_error_json(struct SassCompiler* compiler);
@@ -63,13 +65,20 @@ ADDAPI const char* ADDCALL sass_compiler_get_error_src(struct SassCompiler* comp
 ADDAPI size_t ADDCALL sass_compiler_get_error_line(struct SassCompiler* compiler);
 ADDAPI size_t ADDCALL sass_compiler_get_error_column(struct SassCompiler* compiler);
 
+ADDAPI struct SassImportCpp* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler);
+
 // Release all memory allocated with the structures
 ADDAPI void ADDCALL sass_delete_compiler(struct SassCompiler* compiler);
 
 
 
+// Change the virtual current working directory
+ADDAPI void ADDCALL sass_chdir(const char* path);
+
 // Prints message to stderr with color for windows
+ADDAPI void ADDCALL sass_print_stdout(const char* message);
 ADDAPI void ADDCALL sass_print_stderr(const char* message);
+
 ADDAPI void ADDCALL sass_context_print_stderr2(struct SassContext* context);
 
 
@@ -106,8 +115,8 @@ ADDAPI void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler,
 // Getters for SassCompilerCpp options
 
 // Push function for paths (no manipulation support for now)
-ADDAPI void ADDCALL sass_compiler_load_plugins (struct SassCompiler* compiler, const char* path);
-ADDAPI void ADDCALL sass_compiler_push_include_path (struct SassCompiler* compiler, const char* path);
+ADDAPI void ADDCALL sass_compiler_load_plugins (struct SassCompiler* compiler, const char* paths);
+ADDAPI void ADDCALL sass_compiler_add_include_paths (struct SassCompiler* compiler, const char* paths);
 
 // Resolve a file via the given include paths in the sass option struct
 // find_file looks for the exact file name while find_include does a regular sass include

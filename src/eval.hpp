@@ -14,7 +14,6 @@
 
 namespace Sass {
 
-  class Expand;
   class Context;
 
   class Eval : public Operation_CRTP<Value*, Eval> {

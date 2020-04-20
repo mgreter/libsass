@@ -27,7 +27,7 @@ namespace Sass {
   void Compiler::parse()
   {
 
-    parsed = Context::parse2(entry_point);
+    parsed = Context::parseImport(entry_point);
     // update the compiler state
     state = SassCompilerState::PARSED;
   }
@@ -44,7 +44,9 @@ namespace Sass {
     // Create the emitter object
     Sass::Output emitter(*this);
     // start the render process
-    compiled->perform(&emitter);
+    if (compiled != nullptr) {
+      compiled->perform(&emitter);
+    }
     // finish emitter stream
     emitter.finalize();
     // update the compiler state

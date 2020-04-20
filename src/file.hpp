@@ -14,7 +14,7 @@
 
 namespace Sass {
 
-  extern const sass::string CWD;
+  extern sass::string CWD;
 
   namespace File {
 
