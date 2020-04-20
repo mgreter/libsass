@@ -48,12 +48,6 @@ ADDAPI const char* ADDCALL sass_error_get_formatted(struct SassError* error);
 
 
 
-ADDAPI struct SassImport* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler);
-
-// Release all memory allocated with the structures
-ADDAPI void ADDCALL sass_delete_compiler(struct SassCompiler* compiler);
-
-
 
 // Change the virtual current working directory
 ADDAPI void ADDCALL sass_chdir(const char* path);

@@ -23,23 +23,6 @@ extern "C" {
     import->format = format;
   }
 
-  void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
-  {
-    reinterpret_cast<Compiler*>(compiler)->output_path = output_path ? output_path : "stream://stdout";
-  }
-
-  void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style)
-  {
-    reinterpret_cast<Compiler*>(compiler)->output_style = output_style;
-  }
-
-  // Returns pointer to error object associated with compiler.
-  // Will be valid until the associated compiler is destroyed.
-  struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* sass_compiler)
-  {
-    return &reinterpret_cast<Compiler*>(sass_compiler)->error;
-  }
-
   int ADDCALL sass_error_get_status(struct SassError* error) { return error->status; }
   char* ADDCALL sass_error_get_json(struct SassError* error) { return error->getJson(true); }
   const char* ADDCALL sass_error_get_what(struct SassError* error) { return error->what.c_str(); }

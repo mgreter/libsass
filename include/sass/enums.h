@@ -53,7 +53,7 @@ enum Sass_Callee_Type {
 #define SASS_LOGGER_UNICODE 8
 
 // Logging style
-enum Sass_Logger_Style {
+enum SassLoggerStyle {
   SASS_LOGGER_AUTO = 0,
   SASS_LOGGER_ASCII_MONO = SASS_LOGGER_ASCII | SASS_LOGGER_MONO,
   SASS_LOGGER_ASCII_COLOR = SASS_LOGGER_ASCII | SASS_LOGGER_COLOR,

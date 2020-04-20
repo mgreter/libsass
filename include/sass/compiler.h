@@ -16,10 +16,15 @@ extern "C" {
   // Create a new compiler from the libsass context and the given entry point
   ADDAPI struct SassCompiler* ADDCALL sass_make_compiler();
 
+  // Release all memory allocated with the structures
+  ADDAPI void ADDCALL sass_delete_compiler(struct SassCompiler* compiler);
+
   // Parse the entry point and potentially all imports within
   ADDAPI bool ADDCALL sass_compiler_parse(struct SassCompiler* compiler);
+
   // Evaluate the parsed entry point and store resulting ast-tree
   ADDAPI bool ADDCALL sass_compiler_compile(struct SassCompiler* compiler);
+
   // Render the evaluated ast-tree to get the final output string
   ADDAPI bool ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 
@@ -44,6 +49,9 @@ extern "C" {
   ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* compiler);
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
+  ADDAPI int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler);
+  
+
   ADDAPI void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path);
   ADDAPI void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style);
 
@@ -51,7 +59,7 @@ extern "C" {
 
 
   ADDAPI void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImport* import);
-  ADDAPI void ADDCALL sass_compiler_set_logger_style(struct SassCompiler* compiler, enum Sass_Logger_Style log_style);
+  ADDAPI void ADDCALL sass_compiler_set_logger_style(struct SassCompiler* compiler, enum SassLoggerStyle log_style);
 
   ADDAPI void ADDCALL sass_compiler_set_srcmap_mode(struct SassCompiler* compiler, enum SassSrcMapMode mode);
   ADDAPI void ADDCALL sass_compiler_set_srcmap_root(struct SassCompiler* compiler, const char* root);

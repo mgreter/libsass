@@ -34,7 +34,7 @@ namespace Sass {
     BackTraces callStack;
 
     // Flag for unicode and/or color
-    enum Sass_Logger_Style style;
+    enum SassLoggerStyle style;
 
   private:
 
@@ -79,9 +79,9 @@ namespace Sass {
 
   public:
 
-    Logger(size_t precision, enum Sass_Logger_Style style = SASS_LOGGER_AUTO);
+    Logger(size_t precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
 
-    void format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle);
+    void format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum SassLoggerStyle logstyle);
 
     /*
     virtual void warn(sass::string message) const = 0;
@@ -114,7 +114,7 @@ namespace Sass {
 
   public:
 
-    StdLogger(size_t precision, enum Sass_Logger_Style style = SASS_LOGGER_AUTO);
+    StdLogger(size_t precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
 
     void warn(sass::string message) const override final;
     void debug(sass::string message) const override final;

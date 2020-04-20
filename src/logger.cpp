@@ -27,7 +27,7 @@ namespace Sass {
 
   using namespace Constants;
 
-  Logger::Logger(size_t precision, enum Sass_Logger_Style style) :
+  Logger::Logger(size_t precision, enum SassLoggerStyle style) :
     epsilon(std::pow(0.1, precision + 1)),
     style(style)
   {
@@ -122,7 +122,7 @@ namespace Sass {
 
   }
   /*
-  StdLogger::StdLogger(size_t precision, enum Sass_Logger_Style style) :
+  StdLogger::StdLogger(size_t precision, enum SassLoggerStyle style) :
     Logger(precision, style)
   {
   }
@@ -145,7 +145,7 @@ namespace Sass {
 
 
 
-  void Logger::format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum Sass_Logger_Style logstyle)
+  void Logger::format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum SassLoggerStyle logstyle)
   {
 
     // ASCII reporting
