@@ -10,9 +10,9 @@
 // Some structures are simple c++ vectors.
 // There might be a more efficient way to achieve this?
 // Although compiler optimization should see this case easily!
-struct SassImportListCpp : std::deque<struct SassImportCpp*> {};
-struct SassImporterListCpp : std::deque<struct SassImporterCpp*> {};
-struct SassFunctionListCpp : std::deque<struct SassFunctionCpp*> {};
+struct SassImportList : std::deque<struct SassImportCpp*> {};
+struct SassImporterList : std::deque<struct SassImporterCpp*> {};
+struct SassFunctionList : std::deque<struct SassFunctionCpp*> {};
 
 // Struct to hold custom function callback
 struct SassFunctionCpp {

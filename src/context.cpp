@@ -504,7 +504,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunctionCpp* cb, 
       // Get the external importer function
       SassImporterLambdaCpp fn = sass_importer_get_function(importer);
       // Call the external function, then check what it returned
-      struct SassImportListCpp* includes = fn(imp_path.c_str(), importer);
+      struct SassImportList* includes = fn(imp_path.c_str(), importer);
       // External provider want to handle this
       if (includes != nullptr) {
         // Get the list of possible includes
