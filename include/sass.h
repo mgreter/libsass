@@ -13,6 +13,7 @@
 #include <sass/values.h>
 #include <sass/error.h>
 #include <sass/import.h>
+#include <sass/traces.h>
 #include <sass/functions.h>
 #include <sass/context.h>
 #include <sass/compiler.h>

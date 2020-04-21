@@ -10,6 +10,8 @@
 #include "source_span.hpp"
 #include "sass_functions.hpp"
 
+struct SassTraces;
+
 struct SassError {
 
 public:
@@ -36,7 +38,7 @@ public:
 
   char* getJson(bool include_sources);
 
-  int SassError::set(Sass::Logger& logger, Sass::StackTraces* traces, const char* msg, int status);
+  int set(Sass::Logger& logger, Sass::StackTraces* traces, const char* msg, int status);
 
 };
 

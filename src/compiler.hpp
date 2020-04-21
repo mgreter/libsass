@@ -25,13 +25,13 @@ namespace Sass {
 
     struct SassSrcMapOptions srcmap_options;
 
-    // main entry point for compilation
-    struct SassImport* entry_point;
-
     // Where we want to store the output.
     // Source-map path is deducted from it.
     // Defaults to `stream://stdout`.
     sass::string output_path;
+
+    // main entry point for compilation
+    struct SassImport* entry_point;
 
     // Parsed ast-tree
     BlockObj parsed;
@@ -58,6 +58,7 @@ namespace Sass {
 
     // Detail position of error
     SourceSpan error_pstate;
+
 
     // Traces leading up to error
     StackTraces error_traces;

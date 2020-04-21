@@ -12,7 +12,6 @@
 
 namespace Sass {
 
-
   Compiler::Compiler() :
     Context(),
     state(SASS_COMPILER_CREATED),
@@ -23,27 +22,45 @@ namespace Sass {
     error()
   {}
 
+  // Get path of compilation entry point
+  // Returns the resolved/absolute path
   sass::string Compiler::getInputPath() const
   {
-    if (entry_point->srcdata->getAbsPath()) {
-      return entry_point->srcdata->getAbsPath();
+    // Simply return absolute path of entry point
+    if (entry_point && entry_point->srcdata) {
+      if (entry_point->srcdata->getAbsPath()) {
+        return entry_point->srcdata->getAbsPath();
+      }
     }
-    return "";
+    // Fall back to stdin
+    return "stream://stdin";
   }
+  // EO getInputPath
 
+  // Get the output path for this compilation
+  // Can be explicit or deducted from input path
   sass::string Compiler::getOutputPath() const
   {
+    // Specific output path was provided
     if (!output_path.empty()) {
       return output_path;
     }
+    // Otherwise deduct it from input path
     sass::string path(getInputPath());
+    // Check if input is comming from stdin
+    if (path == "stream://stdin") {
+      return "stream://stdout";
+    }
+    // Otherwise remove the file extension
     size_t dotpos = path.find_last_of('.');
     if (dotpos != sass::string::npos) {
       path.erase(dotpos);
     }
+    // Use css extension
     path += ".css";
     return path;
   }
+  // EO getOutputPath
 
   void Compiler::parse()
   {
@@ -90,8 +107,7 @@ namespace Sass {
 
   // Case 1) output to stdout, source map must be fully inline
   // Case 2) output to path, source map output is deducted from it
-  char* Compiler::renderSrcMapLink(struct SassSrcMapOptions options,
-    const SourceMap& source_map)
+  char* Compiler::renderSrcMapLink(struct SassSrcMapOptions options, const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -107,8 +123,7 @@ namespace Sass {
   }
   // EO renderSrcMapLink
 
-  char* Compiler::renderEmbeddedSrcMap(struct SassSrcMapOptions options,
-    const SourceMap& source_map)
+  char* Compiler::renderEmbeddedSrcMap(struct SassSrcMapOptions options, const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -124,8 +139,7 @@ namespace Sass {
   }
   // EO renderEmbeddedSrcMap
 
-  char* Compiler::renderSrcMapJson(struct SassSrcMapOptions options,
-    const SourceMap& source_map)
+  char* Compiler::renderSrcMapJson(struct SassSrcMapOptions options, const SourceMap& source_map)
   {
     // Create the emitter object
     // Sass::OutputBuffer buffer;
@@ -241,4 +255,3 @@ namespace Sass {
   // EO renderSrcMapJson
 
 }
-
