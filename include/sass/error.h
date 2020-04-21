@@ -15,6 +15,14 @@ extern "C" {
   ADDAPI const char* ADDCALL sass_error_get_warnings(struct SassError* error);
   ADDAPI const char* ADDCALL sass_error_get_formatted(struct SassError* error);
 
+  // These are here for convenience, could get them also indirectly
+  ADDAPI const char* ADDCALL sass_error_get_path(struct SassError* error);
+  ADDAPI size_t ADDCALL sass_error_get_line(struct SassError* error);
+  ADDAPI size_t ADDCALL sass_error_get_column(struct SassError* error);
+
+  ADDAPI struct SassTraces* ADDCALL sass_error_get_traces(struct SassError* error);
+
+
 #ifdef __cplusplus
 } // __cplusplus defined.
 #endif

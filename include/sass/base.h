@@ -20,6 +20,7 @@
 #define noexcept throw( )
 #endif
 
+// Load some POD types
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -74,11 +75,11 @@ extern "C" {
   // ADDAPI char* ADDCALL sass_compiler_find_file(const char* path, struct SassCompiler* compiler);
   // ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
 
-  // Allocate and release generic buffer memory
+  // Allocate and release generic memory buffers
   ADDAPI void* ADDCALL sass_alloc_memory(size_t size);
   ADDAPI void ADDCALL sass_free_memory(void* ptr);
 
-  // Allocate and release buffer of strings
+  // Allocate and release string (byte) buffer
   ADDAPI char* ADDCALL sass_copy_c_string(const char* str);
   ADDAPI void ADDCALL sass_free_c_string(char* ptr);
 
@@ -86,11 +87,11 @@ extern "C" {
   ADDAPI char* ADDCALL sass_string_quote(const char* str, const char quote_mark);
   ADDAPI char* ADDCALL sass_string_unquote(const char* str);
 
-  // Implemented sass language version
-  // Hard-coded version 3.4 for time being
+  // Return implemented sass language version
   ADDAPI const char* ADDCALL libsass_version(void);
 
-  // Get compiled libsass language
+  // Return the compiled libsass language (hard-coded)
+  // This is hard-coded with the library on compilation!
   ADDAPI const char* ADDCALL libsass_language_version(void);
 
 #ifdef __cplusplus

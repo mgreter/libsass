@@ -7,13 +7,6 @@
 extern "C" {
 #endif
 
-  // Change the virtual current working directory
-  // You should probably not really use this function!
-  ADDAPI void ADDCALL sass_chdir(const char* path);
-
-  // Prints message to stderr with color for windows
-  ADDAPI void ADDCALL sass_print_stdout(const char* message);
-  ADDAPI void ADDCALL sass_print_stderr(const char* message);
 
 // Resolve a file via the given include paths in the sass option struct
 // find_file looks for the exact file name while find_include does a regular sass include
