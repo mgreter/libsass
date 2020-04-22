@@ -213,9 +213,10 @@ namespace Sass {
     : Statement(pstate), block_(SASS_MEMORY_NEW(Block, pstate, els)), idxs_(0)
   { }
   
-  ParentStatement::ParentStatement(SourceSpan&& pstate, BlockObj b)
-    : Statement(std::move(pstate)), block_(b), idxs_(0)
-  { }
+  // ParentStatement::ParentStatement(SourceSpan&& pstate, BlockObj b)
+  //   : Statement(std::move(pstate)), block_(b), idxs_(0)
+  // { }
+
   ParentStatement::ParentStatement(const ParentStatement* ptr)
   : Statement(ptr), block_(ptr->block_), idxs_(ptr->idxs_)
   { }

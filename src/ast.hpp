@@ -372,7 +372,7 @@ namespace Sass {
       block_->concat(std::move(vec));
     }
     operator Block* () { return block_.ptr(); }
-    ParentStatement(SourceSpan&& pstate, BlockObj b);
+    // ParentStatement(SourceSpan&& pstate, BlockObj b);
     ParentStatement(const SourceSpan& pstate, BlockObj b);
     ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els);
     ParentStatement(const ParentStatement* ptr); // copy constructor
