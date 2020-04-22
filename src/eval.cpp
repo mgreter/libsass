@@ -1425,7 +1425,7 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, node->idxs());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    blockStack.emplace_back(bb);
+    blockStack.emplace_back(&bb->elements());
     node->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
@@ -1436,7 +1436,7 @@ namespace Sass {
 
     // ff->block(bb);
     // ff->tabs(f->tabs());
-    blockStack.back()->append(ff);
+    blockStack.back()->push_back(ff);
 
     return nullptr;
   }
@@ -1485,15 +1485,14 @@ namespace Sass {
     mediaStack.emplace_back(css);
 
     BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-    blockStack.emplace_back(blk);
+    blockStack.emplace_back(&blk->elements());
     node->blocksy()->Block::perform(this);
     blockStack.pop_back();
     css->elementsM(std::move(blk->elements()));
     mediaStack.pop_back();
 
     // The parent to add declarations too
-    Block* parent = blockStack.back();
-    parent->append(css);
+    blockStack.back()->push_back(css);
     // return css.detach();
     return nullptr;
   }
@@ -1526,11 +1525,11 @@ namespace Sass {
       query && query->excludesStyleRules());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    blockStack.emplace_back(bb);
+    blockStack.emplace_back(&bb->elements());
     node->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
-    blockStack.back()->append(
+    blockStack.back()->push_back(
       SASS_MEMORY_NEW(CssAtRootRule,
         node->pstate(), query, bb->elements()));
 
@@ -1556,7 +1555,7 @@ namespace Sass {
   Value* Eval::visitAtRule(AtRule* node)
   {
     // The parent to add stuff too
-    Block* parent = blockStack.back();
+    auto parent = blockStack.back();
 
     CssStringObj name = interpolationToCssString(node->name(), false, false);
     CssStringObj value = interpolationToCssString(node->value(), true, true);
@@ -1570,7 +1569,7 @@ namespace Sass {
 
       BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
       // blk->is_root3(isRoot());
-      blockStack.emplace_back(blk);
+      blockStack.emplace_back(&blk->elements());
       node->blocksy()->Block::perform(this);
       blockStack.pop_back();
 
@@ -1580,7 +1579,7 @@ namespace Sass {
         value,
         blk->elements());
       //result->block(blk);
-      parent->append(result);
+      parent->push_back(result);
 
     }
     else {
@@ -1591,7 +1590,7 @@ namespace Sass {
         value,
         sass::vector<StatementObj>());
       result->isChildless(true);
-      parent->append(result);
+      parent->push_back(result);
 
     }
 
@@ -1624,13 +1623,12 @@ namespace Sass {
     }
 
     // The parent to add declarations too
-    Block* parent = blockStack.back();
 
     // If the value is an empty list, preserve it, because converting it to CSS
     // will throw an error that we want the user to see.
     if (cssValue != nullptr && (!cssValue->value()->isBlank()
       || cssValue->value()->lengthAsList() == 0)) {
-      parent->append(SASS_MEMORY_NEW(CssDeclaration,
+      blockStack.back()->push_back(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
@@ -1719,7 +1717,7 @@ namespace Sass {
     if (_inFunction) return nullptr;
     sass::string text(performInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    blockStack.back()->append(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
+    blockStack.back()->push_back(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
     return nullptr;
   }
 
@@ -1866,7 +1864,7 @@ namespace Sass {
 
       BlockObj bb = SASS_MEMORY_NEW(Block, r->pstate());
       // bb->is_root3(isRoot());
-      blockStack.emplace_back(bb);
+      blockStack.emplace_back(&bb->elements());
       r->blocksy()->Block::perform(this);
       blockStack.pop_back();
 
@@ -1893,8 +1891,8 @@ namespace Sass {
         selectorStack.pop_back();
       }
 
-      // blockStack.back()->append(k);
-      blockStack.back()->append(block);
+      // blockStack.back()->push_back(k);
+      blockStack.back()->push_back(block);
 
       return nullptr;
       // return k.detach();
@@ -1921,7 +1919,7 @@ namespace Sass {
       extender.addSelector(evaled, mediaStack.back());
 
     BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
-    blockStack.emplace_back(blk);
+    blockStack.emplace_back(&blk->elements());
     r->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
@@ -1934,7 +1932,7 @@ namespace Sass {
       blk->elements());
 
     rr->tabs(r->tabs());
-    blockStack.back()->append(rr);
+    blockStack.back()->push_back(rr);
     return nullptr;
 
   }
@@ -2087,7 +2085,7 @@ namespace Sass {
     BlockObj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule, trace_block);
 
-    blockStack.emplace_back(trace_block);
+    blockStack.emplace_back(&trace_block->elements());
 
     callStackFrame frame(*compiler.logger123,
       BackTrace(c->pstate(), Strings::contentRule));
@@ -2114,7 +2112,7 @@ namespace Sass {
     // _runUserDefinedCallable(node.arguments, content, node, () {
     // return nullptr;
     // Adds it twice?
-    blockStack.back()->append(trace);
+    blockStack.back()->push_back(trace);
     return nullptr;
 
   }
@@ -2188,7 +2186,7 @@ namespace Sass {
     BlockObj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), trace_block);
 
-    blockStack.emplace_back(trace_block);
+    blockStack.emplace_back(&trace_block->elements());
     LOCAL_FLAG(inMixin, true);
 
     callStackFrame frame(*compiler.logger123,
@@ -2221,7 +2219,7 @@ namespace Sass {
     // traces.pop_back();
 
     // debug_ast(trace);
-    blockStack.back()->append(trace);
+    blockStack.back()->push_back(trace);
     return nullptr;
 
   }
@@ -2229,7 +2227,7 @@ namespace Sass {
 
   Value* Eval::visitSilentComment(SilentComment* c)
   {
-    blockStack.back()->append(c);
+    blockStack.back()->push_back(c);
     return nullptr;
   }
 
@@ -2314,7 +2312,7 @@ namespace Sass {
       import->media(evalMediaQueries(rule->media()));
     }
     // append new css import to result
-    blockStack.back()->append(import);
+    blockStack.back()->push_back(import);
     // import has been consumed
     return nullptr;
   }
@@ -2360,7 +2358,7 @@ namespace Sass {
       b->length());
 
     // setup block and env stack
-    blockStack.emplace_back(bb);
+    blockStack.emplace_back(&bb->elements());
 
     for (Statement* item : b->elements()) {
       ValueObj child = item->perform(this);

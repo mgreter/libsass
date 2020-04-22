@@ -308,7 +308,7 @@ namespace Sass {
   // some often used typedefs
   // ###########################################################################
 
-  typedef sass::vector<Block*> BlockStack;
+  typedef sass::vector<sass::vector<StatementObj>*> BlockStack;
   typedef sass::vector<SassCallee> CalleeStack;
   typedef sass::vector<CssMediaRuleObj> MediaStack;
   typedef sass::vector<SelectorListObj> SelectorStack;
