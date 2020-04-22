@@ -1976,10 +1976,6 @@ namespace Sass {
       // need an intermediate format for them?
       SelectorParser p2(compiler, synthetic);
       p2._allowPlaceholder = plainCss == false;
-      if (blockStack.size() > 2) {
-        Block* b = blockStack.at(blockStack.size() - 2);
-        /*if (b->is_root3())*/ p2._allowParent = false;
-      }
       p2._allowParent = allowParent && plainCss == false;
       return p2.parse();
     }
