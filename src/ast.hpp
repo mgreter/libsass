@@ -389,7 +389,7 @@ namespace Sass {
     // The selector to which the declaration will be applied.
     // This is only parsed after the interpolation has been resolved.
     ADD_PROPERTY(InterpolationObj, interpolation);
-    ADD_POINTER(IDXS*, idxs);
+    ADD_POINTER(IDXS*, idxs); // ParentScopedStatement
   public:
     StyleRule(SourceSpan&& pstate, Interpolation* s, Block_Obj b = {});
     bool empty() const { return block().isNull() || block()->empty(); }
@@ -978,7 +978,7 @@ namespace Sass {
   public:
     // The query that determines on which platforms the styles will be in effect.
     // This is only parsed after the interpolation has been resolved.
-    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, Block_Obj block = {});
+    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, const sass::vector<StatementObj>& els = {});
 
     bool bubbles() const override final { return true; };
     bool is_invisible() const override { return false; };
