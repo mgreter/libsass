@@ -66,6 +66,8 @@ namespace Sass {
     virtual T operator()(CssKeyframeBlock* x) = 0;
     virtual T operator()(CssSupportsRule* x) = 0;
     virtual T operator()(CssParentNode* x) = 0;
+    virtual T operator()(ParentStatement* x) = 0;
+    
     
     virtual T operator()(CssAtRule* x) = 0;
     virtual T operator()(CssImport* x) = 0;
@@ -170,6 +172,8 @@ namespace Sass {
     //T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssSupportsRule* x) { return operator()(reinterpret_cast<CssParentNode*>(x)); }
     T operator()(CssParentNode* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(ParentStatement* x) { return static_cast<D*>(this)->fallback(x); }
+    
     
 
     T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }

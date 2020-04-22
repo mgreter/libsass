@@ -51,7 +51,7 @@ namespace Sass {
   }
 
 
-  Block* Cssize::operator()(Block* b)
+  Block* Cssize::operator()(ParentStatement* b)
   {
     sass::vector<StatementObj> children;
     visitBlockStatements(b->elements(), children);
@@ -64,7 +64,7 @@ namespace Sass {
     SourceSpan span(trace->pstate());
     callStackFrame frame(callStack,
       BackTrace(span));
-    return trace->Block::perform(this);
+    return trace->ParentStatement::perform(this);
   }
 
   Statement* Cssize::operator()(CssAtRule* r)

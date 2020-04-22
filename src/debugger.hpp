@@ -332,7 +332,7 @@ inline std::string pstate_source_position(AST_Node* node)
 #endif
   return str.str();
 }
-inline void debug_block(Block* node, std::string ind)
+inline void debug_block(ParentStatement* node, std::string ind)
 {
   for (auto item : node->elements()) {
     debug_ast(item, ind);

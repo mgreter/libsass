@@ -355,13 +355,14 @@ namespace Sass {
   // [ ] Stylesheet
   // [X] SupportsRule
   // [X] WhileRule
-  class ParentStatement : public Block {
+  class ParentStatement : public Statement, public VectorizedNopsi<Statement> {
     ADD_POINTER(IDXS*, idxs);
   public:
     ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;
+    ATTACH_CRTP_PERFORM_METHODS()
   };
   inline ParentStatement::~ParentStatement() { }
 

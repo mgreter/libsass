@@ -196,12 +196,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
-    : Block(pstate, els), idxs_(0)
+    : Statement(pstate), VectorizedNopsi<Statement>(els), idxs_(0)
   {
   }
 
   ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Block(ptr), idxs_(ptr->idxs_)
+  : Statement(ptr), VectorizedNopsi<Statement>(ptr), idxs_(ptr->idxs_)
   { }
 
   bool ParentStatement::has_content()

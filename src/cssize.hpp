@@ -23,7 +23,7 @@ namespace Sass {
 
     Root* doit(RootObj);
 
-    Block* operator()(Block*);
+    Block* operator()(ParentStatement*);
     Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);
     Statement* operator()(CssMediaRule*);
