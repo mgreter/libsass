@@ -187,7 +187,7 @@ inline std::string debug_values(tsl::ordered_map<T, U, O, V> vec) {
   out << "}";
   return out.str();
 }
- 
+
 template <class T, class U, class O, class V>
 inline std::string debug_vec(tsl::ordered_map<T, U, O, V> vec) {
   std::stringstream out;
@@ -296,10 +296,10 @@ inline void debug_ast(const AST_Node* node, std::string ind = "") {
 inline sass::string str_replace(sass::string str, const sass::string& oldStr, const sass::string& newStr)
 {
   size_t pos = 0;
-  while((pos = str.find(oldStr, pos)) != std::string::npos)
+  while ((pos = str.find(oldStr, pos)) != std::string::npos)
   {
-     str.replace(pos, oldStr.length(), newStr);
-     pos += newStr.length();
+    str.replace(pos, oldStr.length(), newStr);
+    pos += newStr.length();
   }
   return str;
 }
@@ -325,12 +325,18 @@ inline std::string pstate_source_position(AST_Node* node)
     << "@[" << (pstate.position.line) << ":" << (pstate.position.column) << "]"
     << "+[" << (pstate.span.line) << ":" << (pstate.span.column) << "]";
 #ifdef DEBUG_SHARED_PTR
-      str << "x" << node->getRefCount() << ""
-        << " {#" << node->objId << "}"
-        << " " << node->getDbgFile()
-        << "@" << node->getDbgLine();
+  str << "x" << node->getRefCount() << ""
+    << " {#" << node->objId << "}"
+    << " " << node->getDbgFile()
+    << "@" << node->getDbgLine();
 #endif
   return str.str();
+}
+inline void debug_block(Block* node, std::string ind)
+{
+  for (auto item : node->elements()) {
+    debug_ast(item, ind);
+  }
 }
 
 inline void debug_ast(AST_Node* node, std::string ind)
@@ -344,13 +350,14 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << bubble->tabs();
     std::cerr << std::endl;
     debug_ast(bubble->node(), ind + " ");
-  } else if (Cast<Trace>(node)) {
+  }
+  else if (Cast<Trace>(node)) {
     Trace* trace = Cast<Trace>(node);
     std::cerr << ind << "Trace " << trace;
     std::cerr << " (" << pstate_source_position(node) << ")"
-    << " [name:" << trace->name() << ", type: " << trace->type() << "]"
-    << std::endl;
-    debug_ast(trace->block(), ind + " ");
+      << " [name:" << trace->name() << ", type: " << trace->type() << "]"
+      << std::endl;
+    debug_block(trace->block(), ind + " ");
   }
   else if (Cast<AtRootRule>(node)) {
     AtRootRule* root_block = Cast<AtRootRule>(node);
@@ -359,7 +366,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << root_block->tabs();
     std::cerr << std::endl;
     debug_ast(root_block->query(), ind + ":");
-    debug_ast(root_block->block(), ind + " ");
+    debug_block(root_block->block(), ind + " ");
   }
   else if (Cast<AtRootQuery>(node)) {
     AtRootQuery* query = Cast<AtRootQuery>(node);
@@ -367,7 +374,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <" << query->toString() << ">";
     std::cerr << std::endl;
-  } else if (Cast<CssAtRootRule>(node)) {
+  }
+  else if (Cast<CssAtRootRule>(node)) {
     CssAtRootRule* root_block = Cast<CssAtRootRule>(node);
     std::cerr << ind << "CssAtRootRule " << root_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -375,18 +383,20 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(root_block->query(), ind + ":");
     // debug_ast(root_block->block(), ind + " ");
-  } else if (Cast<SelectorList>(node)) {
+  }
+  else if (Cast<SelectorList>(node)) {
     SelectorList* selector = Cast<SelectorList>(node);
     std::cerr << ind << "SelectorList " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
-    std::cerr << (selector->has_real_parent_ref() ? " [real-parent]": " -");
+    std::cerr << (selector->has_real_parent_ref() ? " [real-parent]" : " -");
     std::cerr << std::endl;
 
-    for(const ComplexSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
+    for (const ComplexSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
 
-  } else if (Cast<ComplexSelector>(node)) {
+  }
+  else if (Cast<ComplexSelector>(node)) {
     ComplexSelector* selector = Cast<ComplexSelector>(node);
     std::cerr << ind << "ComplexSelector " << selector
       << " (" << pstate_source_position(node) << ")"
@@ -400,31 +410,33 @@ inline void debug_ast(AST_Node* node, std::string ind)
       // << (selector->is_invisible() ? " [INVISIBLE]": " -")
       // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
       // << (selector->is_optional() ? " [is_optional]": " -")
-      << (selector->has_real_parent_ref() ? " [real parent]": " -")
+      << (selector->has_real_parent_ref() ? " [real parent]" : " -")
       // << (selector->has_line_feed() ? " [line-feed]": " -")
       // << (selector->has_line_break() ? " [line-break]": " -")
       << " -- \n";
 
-    for(const SelectorComponentObj& i : selector->elements()) { debug_ast(i, ind + " "); }
+    for (const SelectorComponentObj& i : selector->elements()) { debug_ast(i, ind + " "); }
 
-  } else if (Cast<SelectorCombinator>(node)) {
+  }
+  else if (Cast<SelectorCombinator>(node)) {
     SelectorCombinator* selector = Cast<SelectorCombinator>(node);
     std::cerr << ind << "SelectorCombinator " << selector
       << " (" << pstate_source_position(node) << ")"
       << " [weight:" << longToHex(selector->specificity()) << "]"
-      << (selector->has_real_parent_ref() ? " [real parent]": " -")
+      << (selector->has_real_parent_ref() ? " [real parent]" : " -")
       << " -- ";
 
-      std::string del;
-      switch (selector->combinator()) {
-        case SelectorCombinator::CHILD:    del = ">"; break;
-        case SelectorCombinator::GENERAL:  del = "~"; break;
-        case SelectorCombinator::ADJACENT: del = "+"; break;
-      }
+    std::string del;
+    switch (selector->combinator()) {
+    case SelectorCombinator::CHILD:    del = ">"; break;
+    case SelectorCombinator::GENERAL:  del = "~"; break;
+    case SelectorCombinator::ADJACENT: del = "+"; break;
+    }
 
-      std::cerr << "[" << del << "]" << "\n";
+    std::cerr << "[" << del << "]" << "\n";
 
-  } else if (Cast<CompoundSelector>(node)) {
+  }
+  else if (Cast<CompoundSelector>(node)) {
     CompoundSelector* selector = Cast<CompoundSelector>(node);
     std::cerr << ind << "CompoundSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -434,9 +446,10 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     std::cerr << "\n";
-    for(const SimpleSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
+    for (const SimpleSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
 
-  } else if (Cast<Parent_Reference>(node)) {
+  }
+  else if (Cast<Parent_Reference>(node)) {
     Parent_Reference* selector = Cast<Parent_Reference>(node);
     std::cerr << ind << "Parent_Reference " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -444,20 +457,22 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">" << std::endl;
     std::cerr << std::endl;
 
-  } else if (Cast<PseudoSelector>(node)) {
+  }
+  else if (Cast<PseudoSelector>(node)) {
     PseudoSelector* selector = Cast<PseudoSelector>(node);
     std::cerr << ind << "PseudoSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << selector->name() << ">>";
-    std::cerr << (selector->isClass() ? " [isClass]": " -");
+    std::cerr << (selector->isClass() ? " [isClass]" : " -");
     std::cerr << (selector->isElement() ? " [isElement]" : " -");
-    std::cerr << (selector->isSyntacticClass() ? " [isSyntacticClass]": " -");
+    std::cerr << (selector->isSyntacticClass() ? " [isSyntacticClass]" : " -");
     std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     std::cerr << std::endl;
     std::cerr << ind << " <= " << selector->argument() << std::endl;
     debug_ast(selector->selector(), ind + " || ");
-  } else if (Cast<AttributeSelector>(node)) {
+  }
+  else if (Cast<AttributeSelector>(node)) {
     AttributeSelector* selector = Cast<AttributeSelector>(node);
     std::cerr << ind << "AttributeSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -465,34 +480,39 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     std::cerr << ind << "[" << selector->op() << "] ";
     std::cerr << selector->value() << std::endl;
-  } else if (Cast<ClassSelector>(node)) {
+  }
+  else if (Cast<ClassSelector>(node)) {
     ClassSelector* selector = Cast<ClassSelector>(node);
     std::cerr << ind << "ClassSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << selector->name() << ">>";
     std::cerr << std::endl;
-  } else if (Cast<IDSelector>(node)) {
+  }
+  else if (Cast<IDSelector>(node)) {
     IDSelector* selector = Cast<IDSelector>(node);
     std::cerr << ind << "IDSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << selector->name() << ">>";
     std::cerr << std::endl;
-  } else if (Cast<TypeSelector>(node)) {
+  }
+  else if (Cast<TypeSelector>(node)) {
     TypeSelector* selector = Cast<TypeSelector>(node);
     std::cerr << ind << "TypeSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << selector->ns_name() << ">>";
     // std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">";
     std::cerr << std::endl;
-  } else if (Cast<PlaceholderSelector>(node)) {
+  }
+  else if (Cast<PlaceholderSelector>(node)) {
 
     PlaceholderSelector* selector = Cast<PlaceholderSelector>(node);
     std::cerr << ind << "PlaceholderSelector [" << selector->name() << "] " << selector;
     std::cerr << " (" << pstate_source_position(selector) << ")"
       << (selector->isInvisible() ? " [isInvisible]" : " -")
-    << std::endl;
+      << std::endl;
 
-  } else if (Cast<SimpleSelector>(node)) {
+  }
+  else if (Cast<SimpleSelector>(node)) {
     SimpleSelector* selector = Cast<SimpleSelector>(node);
     std::cerr << ind << "SimpleSelector " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -517,7 +537,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(rule) << ")";
     std::cerr << std::endl;
     debug_ast(rule->declaration(), ind + " =@ ");
-  }  
+  }
   else if (Cast<ValueExpression>(node)) {
     ValueExpression* rule = Cast<ValueExpression>(node);
     std::cerr << ind << "ValueExpression " << rule;
@@ -525,14 +545,14 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(rule->value(), ind + " =@ ");
   }
- 
+
   else if (Cast<MediaRule>(node)) {
     MediaRule* rule = Cast<MediaRule>(node);
     std::cerr << ind << "MediaRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
     std::cerr << " " << rule->tabs() << std::endl;
     debug_ast(rule->query(), ind + " =@ ");
-    debug_ast(rule->block(), ind + " ");
+    debug_block(rule->block(), ind + " ");
   }
   else if (Cast<CssMediaRule>(node)) {
     CssMediaRule* rule = Cast<CssMediaRule>(node);
@@ -582,14 +602,15 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [" << (query->type()) << "] ";
     std::cerr << " " << debug_vec(query->features());
     std::cerr << std::endl;
-  } else if (Cast<SupportsRule>(node)) {
+  }
+  else if (Cast<SupportsRule>(node)) {
     SupportsRule* block = Cast<SupportsRule>(node);
     std::cerr << ind << "SupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     if (block->is_invisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
-    debug_ast(block->block(), ind + " <>");
+    debug_block(block->block(), ind + " <>");
     std::cerr << std::endl;
   }
   else if (Cast<CssSupportsRule>(node))
@@ -603,26 +624,29 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (auto stmt : block->elements()) {
       debug_ast(stmt, ind + " <>");
     }
-  } else if (Cast<SupportsRule>(node)) {
+  }
+  else if (Cast<SupportsRule>(node)) {
     SupportsRule* block = Cast<SupportsRule>(node);
     std::cerr << ind << "SupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     if (block->is_invisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
-    debug_ast(block->block(), ind + " <>");
-  } else if (Cast<SupportsOperation>(node)) {
+    debug_block(block->block(), ind + " <>");
+  }
+  else if (Cast<SupportsOperation>(node)) {
     SupportsOperation* block = Cast<SupportsOperation>(node);
     std::cerr << ind << "SupportsOperation " << block;
     std::cerr << " (" << pstate_source_position(node) << ")"
-    << std::endl;
+      << std::endl;
     debug_ast(block->left(), ind + " left) ");
     debug_ast(block->right(), ind + " right) ");
-  } else if (Cast<SupportsNegation>(node)) {
+  }
+  else if (Cast<SupportsNegation>(node)) {
     SupportsNegation* block = Cast<SupportsNegation>(node);
     std::cerr << ind << "SupportsNegation " << block;
     std::cerr << " (" << pstate_source_position(node) << ")"
-    << std::endl;
+      << std::endl;
     debug_ast(block->condition(), ind + " condition) ");
   }
   else if (Cast<SupportsDeclaration>(node)) {
@@ -632,39 +656,45 @@ inline void debug_ast(AST_Node* node, std::string ind)
       << std::endl;
     debug_ast(block->feature(), ind + " feature) ");
     debug_ast(block->value(), ind + " value) ");
-  } else if (Cast< SupportsCondition>(node)) {
+  }
+  else if (Cast< SupportsCondition>(node)) {
     SupportsCondition* block = Cast<SupportsCondition>(node);
     std::cerr << ind << "SupportsDeclaration " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
 
-  } else if (Cast<Block>(node)) {
+  }
+  else if (Cast<Block>(node)) {
     Block* root_block = Cast<Block>(node);
     std::cerr << ind << "Block " << root_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     if (root_block->is_root()) std::cerr << " [root]";
     if (root_block->isInvisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << root_block->tabs() << std::endl;
-    for(const Statement_Obj& i : root_block->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<WarnRule>(node)) {
+    for (const Statement_Obj& i : root_block->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<WarnRule>(node)) {
     WarnRule* block = Cast<WarnRule>(node);
     std::cerr << ind << "WarnRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->expression(), ind + " : ");
-  } else if (Cast<ErrorRule>(node)) {
+  }
+  else if (Cast<ErrorRule>(node)) {
     ErrorRule* block = Cast<ErrorRule>(node);
     std::cerr << ind << "ErrorRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->expression(), ind + " ");
-  } else if (Cast<DebugRule>(node)) {
+  }
+  else if (Cast<DebugRule>(node)) {
     DebugRule* block = Cast<DebugRule>(node);
     std::cerr << ind << "DebugRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->expression(), ind + " ");
-  } else if (Cast<LoudComment>(node)) {
+  }
+  else if (Cast<LoudComment>(node)) {
     LoudComment* block = Cast<LoudComment>(node);
     std::cerr << ind << "LoudComment " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -672,32 +702,36 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(block->text(), ind + "// ");
   }
   else if (Cast<SilentComment>(node)) {
-  SilentComment* block = Cast<SilentComment>(node);
+    SilentComment* block = Cast<SilentComment>(node);
     std::cerr << ind << "SilentComment " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << " [" << block->text() << "]" << std::endl;
     // debug_ast(block->text(), ind + "// ");
-  } else if (Cast<If>(node)) {
+  }
+  else if (Cast<If>(node)) {
     If* block = Cast<If>(node);
     std::cerr << ind << "If " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->predicate(), ind + " = ");
-    debug_ast(block->block(), ind + " <>");
+    debug_block(block->block(), ind + " <>");
     debug_ast(block->alternative(), ind + " ><");
-  } else if (Cast<Return>(node)) {
+  }
+  else if (Cast<Return>(node)) {
     Return* block = Cast<Return>(node);
     std::cerr << ind << "Return " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs();
     std::cerr << " [" << block->value()->to_string() << "]" << std::endl;
-  } else if (Cast<ExtendRule>(node)) {
+  }
+  else if (Cast<ExtendRule>(node)) {
     ExtendRule* block = Cast<ExtendRule>(node);
     std::cerr << ind << "ExtendRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->selector(), ind + "-> ");
-  } else if (Cast<ContentRule>(node)) {
+  }
+  else if (Cast<ContentRule>(node)) {
     ContentRule* block = Cast<ContentRule>(node);
     std::cerr << ind << "ContentRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -705,15 +739,15 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(block->arguments(), ind + " args: ");
   }
   else if (Cast<StaticImport>(node)) {
-  StaticImport* block = Cast<StaticImport>(node);
-  std::cerr << ind << "StaticImport " << block;
-  std::cerr << " (" << pstate_source_position(node) << ")";
-  // std::cerr << " [" << block->imp_path() << "] ";
-  // std::cerr << " " << block->tabs();
-  std::cerr << std::endl;
-  debug_ast(block->url(), "url: ");
-  debug_ast(block->supports(), "supports: ");
-  debug_ast(block->media(), "media: ");
+    StaticImport* block = Cast<StaticImport>(node);
+    std::cerr << ind << "StaticImport " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    // std::cerr << " [" << block->imp_path() << "] ";
+    // std::cerr << " " << block->tabs();
+    std::cerr << std::endl;
+    debug_ast(block->url(), "url: ");
+    debug_ast(block->supports(), "supports: ");
+    debug_ast(block->media(), "media: ");
   }
   else if (Cast<DynamicImport>(node)) {
     DynamicImport* block = Cast<DynamicImport>(node);
@@ -745,13 +779,15 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " " << block->tabs();
     std::cerr << std::endl;
     for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
-  } else if (Cast<Assignment>(node)) {
+  }
+  else if (Cast<Assignment>(node)) {
     Assignment* block = Cast<Assignment>(node);
     std::cerr << ind << "Assignment " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << block->variable().orig() << ">> " << block->tabs() << std::endl;
     debug_ast(block->value(), ind + "=");
-  } else if (Cast<Declaration>(node)) {
+  }
+  else if (Cast<Declaration>(node)) {
     Declaration* block = Cast<Declaration>(node);
     std::cerr << ind << "Declaration " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -759,16 +795,18 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->name(), ind + " name: ");
     debug_ast(block->value(), ind + " value: ");
-    debug_ast(block->block(), ind + " ");
-  } else if (Cast<Keyframe_Rule>(node)) {
+    debug_block(block->block(), ind + " ");
+  }
+  else if (Cast<Keyframe_Rule>(node)) {
     Keyframe_Rule* has_block = Cast<Keyframe_Rule>(node);
     std::cerr << ind << "Keyframe_Rule " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
-    if (has_block->name2()) debug_ast(has_block->name2(), ind + "@"); 
+    if (has_block->name2()) debug_ast(has_block->name2(), ind + "@");
     // else if (has_block->name()) debug_ast(has_block->name(), ind + "@");
-    // if (has_block->block()) for(const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<AtRule>(node)) {
+    // if (has_block->block()) for(const Statement_Obj& i : has_block->block()->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<AtRule>(node)) {
     AtRule* block = Cast<AtRule>(node);
     std::cerr << ind << "AtRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -780,29 +818,32 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(block->name(), ind + "#");
     debug_ast(block->value(), ind + "=");
 
-    if (block->block()) for(const Statement_Obj& i : block->block()->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<Each>(node)) {
+    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<Each>(node)) {
     Each* block = Cast<Each>(node);
     std::cerr << ind << "Each [" << debug_vec(block->variables()) << "]" << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<For>(node)) {
+    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<For>(node)) {
     For* block = Cast<For>(node);
     std::cerr << ind << "For " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<WhileRule>(node)) {
+    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<WhileRule>(node)) {
     WhileRule* block = Cast<WhileRule>(node);
     std::cerr << ind << "WhileRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
 
-  
-  else if (PlainCssCallable * ruleset = Cast<PlainCssCallable>(node)) {
+
+  else if (PlainCssCallable* ruleset = Cast<PlainCssCallable>(node)) {
     std::cerr << ind << "PlainCssCallable " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -812,7 +853,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     // debug_ast(ruleset->content(), ind + " @ ");
   }
-  else if (IncludeRule * ruleset = Cast<IncludeRule>(node)) {
+  else if (IncludeRule* ruleset = Cast<IncludeRule>(node)) {
     std::cerr << ind << "IncludeRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -822,7 +863,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(ruleset->content(), ind + " @ ");
   }
-  else if (ContentBlock * ruleset = Cast<ContentBlock>(node)) {
+  else if (ContentBlock* ruleset = Cast<ContentBlock>(node)) {
     std::cerr << ind << "ContentBlock " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -830,10 +871,10 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
-    debug_ast(ruleset->block(), ind + " ");
+    debug_block(ruleset->block(), ind + " ");
   }
 
-  else if (MixinRule * ruleset = Cast<MixinRule>(node)) {
+  else if (MixinRule* ruleset = Cast<MixinRule>(node)) {
     std::cerr << ind << "MixinRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -842,9 +883,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->arguments(), ind + "$");
-    debug_ast(ruleset->block(), ind + " ");
+    debug_block(ruleset->block(), ind + " ");
   }
-  else if (ArgumentDeclaration * args = Cast<ArgumentDeclaration>(node)) {
+  else if (ArgumentDeclaration* args = Cast<ArgumentDeclaration>(node)) {
     std::cerr << ind << "MixinRArgumentDeclarationule " << args;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -855,8 +896,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // debug_ast(ruleset->arguments(), ind + "$");
     // debug_ast(ruleset->block(), ind + " ");
   }
-  
-  else if (FunctionRule * ruleset = Cast<FunctionRule>(node)) {
+
+  else if (FunctionRule* ruleset = Cast<FunctionRule>(node)) {
     std::cerr << ind << "FunctionRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -864,9 +905,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
-    debug_ast(ruleset->block(), ind + " ");
+    debug_block(ruleset->block(), ind + " ");
   }
-  else if (StyleRule * ruleset = Cast<StyleRule>(node)) {
+  else if (StyleRule* ruleset = Cast<StyleRule>(node)) {
     std::cerr << ind << "StyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -874,29 +915,31 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->interpolation(), ind + "#");
-    debug_ast(ruleset->block(), ind + " ");
+    debug_block(ruleset->block(), ind + " ");
   }
-  else if (CssStyleRule * ruleset = Cast<CssStyleRule>(node)) {
-  std::cerr << ind << "CssStyleRule " << ruleset;
-  std::cerr << " (" << pstate_source_position(node) << ")";
-  std::cerr << " [indent: " << ruleset->tabs() << "]";
-  std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-  // std::cerr << (ruleset->is_root() ? " [root]" : "");
-  std::cerr << std::endl;
-  debug_ast(ruleset->selector(), ind + ">");
-  // debug_ast(ruleset->interpolation(), ind + "#");
-  for (auto stmt : ruleset->elements()) {
-    debug_ast(stmt, ind + " !! ");
+  else if (CssStyleRule* ruleset = Cast<CssStyleRule>(node)) {
+    std::cerr << ind << "CssStyleRule " << ruleset;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_root() ? " [root]" : "");
+    std::cerr << std::endl;
+    debug_ast(ruleset->selector(), ind + ">");
+    // debug_ast(ruleset->interpolation(), ind + "#");
+    for (auto stmt : ruleset->elements()) {
+      debug_ast(stmt, ind + " !! ");
+    }
+    // debug_ast(ruleset->block(), ind + " :: ");
   }
-  // debug_ast(ruleset->block(), ind + " :: ");
-  } else if (Cast<Block>(node)) {
+  else if (Cast<Block>(node)) {
     Block* block = Cast<Block>(node);
     std::cerr << ind << "Block " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << (block->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << " [indent: " << block->tabs() << "]" << std::endl;
-    for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<Variable>(node)) {
+    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<Variable>(node)) {
     Variable* expression = Cast<Variable>(node);
     std::cerr << ind << "Variable " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -905,7 +948,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // if (env && env->has(name)) debug_ast(Cast<Expression>((*env)[name]), ind + " -> ");
   }
   else if (Cast<ArgumentInvocation>(node)) {
-  ArgumentInvocation* arguments = Cast<ArgumentInvocation>(node);
+    ArgumentInvocation* arguments = Cast<ArgumentInvocation>(node);
     std::cerr << ind << "ArgumentInvocation " << arguments;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
@@ -916,7 +959,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
 
   }
   else if (Cast<FunctionExpression>(node)) {
-  FunctionExpression* expression = Cast<FunctionExpression>(node);
+    FunctionExpression* expression = Cast<FunctionExpression>(node);
     std::cerr << ind << "FunctionExpression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [selfAssign: " << expression->selfAssign() << "]";
@@ -925,7 +968,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(expression->name(), ind + " name: ");
     debug_ast(expression->arguments(), ind + " args: ");
     // debug_ast(expression->func(), ind + " func: ");
-  } else if (Cast<Argument>(node)) {
+  }
+  else if (Cast<Argument>(node)) {
     Argument* expression = Cast<Argument>(node);
     std::cerr << ind << "Argument " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -934,7 +978,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [rest: " << expression->is_rest_argument() << "] ";
     std::cerr << " [keyword: " << expression->is_keyword_argument() << "] " << std::endl;
     debug_ast(expression->value(), ind + " value: ");
-  } else if (Cast<Unary_Expression>(node)) {
+  }
+  else if (Cast<Unary_Expression>(node)) {
     Unary_Expression* expression = Cast<Unary_Expression>(node);
     std::cerr << ind << "Unary_Expression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -942,13 +987,14 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(expression->operand(), ind + " operand: ");
   }
   else if (Cast<ParenthesizedExpression>(node)) {
-  ParenthesizedExpression* expression = Cast<ParenthesizedExpression>(node);
+    ParenthesizedExpression* expression = Cast<ParenthesizedExpression>(node);
     std::cerr << ind << "ParenthesizedExpression " << expression;
     std::cerr << " (" << pstate_source_position(expression) << ")";
     std::cerr << std::endl;
     debug_ast(expression->expression(), ind + "() ");
 
-  } else if (Cast<Binary_Expression>(node)) {
+  }
+  else if (Cast<Binary_Expression>(node)) {
     Binary_Expression* expression = Cast<Binary_Expression>(node);
     std::cerr << ind << "Binary_Expression " << expression;
     std::cerr << " [ws_before: " << expression->op().ws_before << "] ";
@@ -957,7 +1003,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(expression->left(), ind + " left:  ");
     debug_ast(expression->right(), ind + " right: ");
-  } else if (Cast<Map>(node)) {
+  }
+  else if (Cast<Map>(node)) {
     Map* expression = Cast<Map>(node);
     std::cerr << ind << "Map " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -968,23 +1015,23 @@ inline void debug_ast(AST_Node* node, std::string ind)
     }
   }
   else if (Cast<ListExpression>(node)) {
-  ListExpression* expression = Cast<ListExpression>(node);
-  std::cerr << ind << "ListExpression " << expression;
-  std::cerr << " (" << pstate_source_position(node) << ")";
-  std::cerr << " (" << expression->size() << ") " <<
-    (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<
-    " [bracketed: " << expression->hasBrackets() << "] " <<
-    std::endl;
+    ListExpression* expression = Cast<ListExpression>(node);
+    std::cerr << ind << "ListExpression " << expression;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " (" << expression->size() << ") " <<
+      (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<
+      " [bracketed: " << expression->hasBrackets() << "] " <<
+      std::endl;
     for (size_t i = 0; i < expression->size(); i++) {
       debug_ast(expression->get(i), ind + " ");
     }
   }
   else if (Cast<MapExpression>(node)) {
-  MapExpression* expression = Cast<MapExpression>(node);
-  std::cerr << ind << "MapExpression " << expression;
-  std::cerr << " (" << pstate_source_position(node) << ")";
-  std::cerr << " (" << expression->size() << ") " <<
-    std::endl;
+    MapExpression* expression = Cast<MapExpression>(node);
+    std::cerr << ind << "MapExpression " << expression;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " (" << expression->size() << ") " <<
+      std::endl;
     for (size_t i = 0; i < expression->size(); i++) {
       debug_ast(expression->get(i), ind + " ");
     }
@@ -1004,33 +1051,37 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (const auto& kv : keywords) { debug_ast(kv.second, ind + " " + kv.first.orig().c_str() + " "); }
   }
   else if (Cast<SassList>(node)) {
-  SassList* expression = Cast<SassList>(node);
-  std::cerr << ind << "SassList " << expression;
-  std::cerr << " (" << pstate_source_position(node) << ")";
-  std::cerr << " (" << expression->length() << ") " <<
-    (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<
-    " [bracketed: " << expression->hasBrackets() << "] " <<
-    " [hash: " << expression->hash() << "] " <<
-    std::endl;
-  for (const auto& i : expression->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<Boolean>(node)) {
+    SassList* expression = Cast<SassList>(node);
+    std::cerr << ind << "SassList " << expression;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    std::cerr << " (" << expression->length() << ") " <<
+      (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<
+      " [bracketed: " << expression->hasBrackets() << "] " <<
+      " [hash: " << expression->hash() << "] " <<
+      std::endl;
+    for (const auto& i : expression->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<Boolean>(node)) {
     Boolean* expression = Cast<Boolean>(node);
     std::cerr << ind << "Boolean " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->value() << "]" << std::endl;
-  } else if (Cast<Color_RGBA>(node)) {
+  }
+  else if (Cast<Color_RGBA>(node)) {
     Color_RGBA* expression = Cast<Color_RGBA>(node);
     std::cerr << ind << "Color " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [name: " << expression->disp() << "] ";
-    std::cerr << " rgba[" << expression->r() << ":"  << expression->g() << ":" << expression->b() << "@" << expression->a() << "]" << std::endl;
-  } else if (Cast<Color_HSLA>(node)) {
+    std::cerr << " rgba[" << expression->r() << ":" << expression->g() << ":" << expression->b() << "@" << expression->a() << "]" << std::endl;
+  }
+  else if (Cast<Color_HSLA>(node)) {
     Color_HSLA* expression = Cast<Color_HSLA>(node);
     std::cerr << ind << "Color " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [name: " << expression->disp() << "] ";
-    std::cerr << " hsla[" << expression->h() << ":"  << expression->s() << ":" << expression->l() << "@" << expression->a() << "]" << std::endl;
-  } else if (Cast<Number>(node)) {
+    std::cerr << " hsla[" << expression->h() << ":" << expression->s() << ":" << expression->l() << "@" << expression->a() << "]" << std::endl;
+  }
+  else if (Cast<Number>(node)) {
     Number* expression = Cast<Number>(node);
     std::cerr << ind << "Number " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
@@ -1039,7 +1090,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
       std::endl;
     debug_ast(expression->lhsAsSlash(), ind + "[lhs] ");
     debug_ast(expression->rhsAsSlash(), ind + "[rhs] ");
-  } else if (Cast<Null>(node)) {
+  }
+  else if (Cast<Null>(node)) {
     Null* expression = Cast<Null>(node);
     std::cerr << ind << "Null " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")"
@@ -1061,13 +1113,15 @@ inline void debug_ast(AST_Node* node, std::string ind)
     if (expression->hasQuotes()) std::cerr << " {quoted}";
     std::cerr << std::endl;
     debug_ast(expression->text(), ind + "  ");
-  } else if (Cast<ItplString>(node)) {
+  }
+  else if (Cast<ItplString>(node)) {
     ItplString* expression = Cast<ItplString>(node);
     std::cerr << ind << "ItplString " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << prettyprint(expression->text()) << "]";
     std::cerr << std::endl;
-  } else if (Cast<SassString>(node)) {
+  }
+  else if (Cast<SassString>(node)) {
     SassString* expression = Cast<SassString>(node);
     std::cerr << ind << "SassString ";
     if (expression->hasQuotes()) {
@@ -1079,7 +1133,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [" << prettyprint(expression->value()) << "]";
     // std::cerr << " <" << prettyprint(expression->pstate().token.ws_before()) << ">"
     std::cerr << std::endl;
-  } else if (Cast<Interpolation>(node)) {
+  }
+  else if (Cast<Interpolation>(node)) {
     Interpolation* expression = Cast<Interpolation>(node);
     std::cerr << ind << "Interpolation";
     std::cerr << " (" << pstate_source_position(expression) << ")";
@@ -1089,19 +1144,22 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
     for (const auto& i : expression->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<Expression>(node)) {
+  }
+  else if (Cast<Expression>(node)) {
     Expression* expression = Cast<Expression>(node);
     std::cerr << ind << "Expression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->type() << "]";
     std::cerr << std::endl;
-  } else if (Cast<ParentStatement>(node)) {
+  }
+  else if (Cast<ParentStatement>(node)) {
     ParentStatement* has_block = Cast<ParentStatement>(node);
     std::cerr << ind << "Has_Block " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
-    if (has_block->block()) for(const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
-  } else if (Cast<Statement>(node)) {
+    for (const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
+  }
+  else if (Cast<Statement>(node)) {
     Statement* statement = Cast<Statement>(node);
     std::cerr << ind << "Statement " << statement;
     std::cerr << " (" << pstate_source_position(node) << ")";

@@ -183,6 +183,13 @@ namespace Sass {
     idxs_(0), is_root_(r)
   { }
 
+  Block::Block(const Block* ptr) :
+    Statement(ptr),
+    VectorizedNopsi<Statement>(ptr),
+    idxs_(ptr->idxs_),
+    is_root_(ptr->is_root_)
+  {}
+
   bool Block::isInvisible() const
   {
     for (auto& item : this->elements()) {

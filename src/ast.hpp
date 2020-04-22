@@ -320,7 +320,7 @@ namespace Sass {
   ////////////////////////
   // Blocks of statements.
   ////////////////////////
-  class Block final : public Statement, public VectorizedNopsi<Statement> {
+  class Block : public Statement, public VectorizedNopsi<Statement> {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(bool, is_root);
     // needed for properly formatted CSS emission
@@ -328,6 +328,7 @@ namespace Sass {
     Block(const SourceSpan& pstate, size_t s = 0, bool r = false);
     Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec, bool r = false);
     Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec, bool r = false);
+    Block(const Block* ptr);
     bool isInvisible() const;
     bool is_invisible() const override {
       return isInvisible();

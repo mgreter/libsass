@@ -1490,7 +1490,7 @@ namespace Sass {
     BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
     blk->is_root(blockStack.back()->is_root());
     blockStack.emplace_back(blk);
-    node->block()->perform(this);
+    node->block()->Block::perform(this);
     blockStack.pop_back();
     css->elementsM(std::move(blk->elements()));
     mediaStack.pop_back();
@@ -1576,7 +1576,7 @@ namespace Sass {
       BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
       blk->is_root(blockStack.back()->is_root());
       blockStack.emplace_back(blk);
-      node->block()->perform(this);
+      node->block()->Block::perform(this);
       blockStack.pop_back();
 
       CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
@@ -1736,11 +1736,11 @@ namespace Sass {
 
     ValueObj condition = i->predicate()->perform(this);
     if (condition->isTruthy()) {
-      rv = i->block()->perform(this);
+      rv = i->block()->Block::perform(this);
     }
     else {
       Block* alt = i->alternative();
-      if (alt) rv = alt->perform(this);
+      if (alt) rv = alt->Block::perform(this);
     }
     return rv.detach();
 
@@ -1777,7 +1777,7 @@ namespace Sass {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
         compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
-        val = body->perform(this);
+        val = body->Block::perform(this);
         if (val) break;
       }
     }
@@ -1787,7 +1787,7 @@ namespace Sass {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
         compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
-        val = body->perform(this);
+        val = body->Block::perform(this);
         if (val) break;
       }
     }
@@ -1876,7 +1876,7 @@ namespace Sass {
       BlockObj bb = SASS_MEMORY_NEW(Block, r->pstate());
       bb->is_root(blockStack.back()->is_root());
       blockStack.emplace_back(bb);
-      r->block()->perform(this);
+      r->block()->Block::perform(this);
       blockStack.pop_back();
 
       auto text = interpolationToValue(itpl, true, false);
@@ -1932,7 +1932,7 @@ namespace Sass {
     BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
     blk->is_root(blockStack.back()->is_root());
     blockStack.emplace_back(blk);
-    r->block()->perform(this);
+    r->block()->Block::perform(this);
     blockStack.pop_back();
 
     originalStack.pop_back();
@@ -2054,7 +2054,7 @@ namespace Sass {
           }
         }
       }
-      ValueObj val = body->perform(this);
+      ValueObj val = body->Block::perform(this);
       if (val) return val.detach();
     }
 
@@ -2074,7 +2074,7 @@ namespace Sass {
     if (result->isTruthy()) {
 
       while (true) {
-        result = body->perform(this);
+        result = body->Block::perform(this);
         if (result) {
           return result.detach();
         }
