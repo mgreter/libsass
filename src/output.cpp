@@ -188,7 +188,6 @@ namespace Sass {
     rule->condition()->perform(this);
     append_scope_opener();
 
-    // Block* b = rule->block();
     size_t L = rule->length();
     for (size_t i = 0; i < L; ++i) {
       rule->get(i)->perform(this);
