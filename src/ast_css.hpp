@@ -50,7 +50,8 @@ namespace Sass {
       sass::vector<StatementObj>&& children);
 
     // bool get isChildless;
-    ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode)
+    ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
+    ATTACH_CRTP_PERFORM_METHODS()
   };
 
   /////////////////////////////////////////////////////////////////////////////

@@ -65,6 +65,8 @@ namespace Sass {
     virtual T operator()(CssMediaQuery* x) = 0;
     virtual T operator()(CssKeyframeBlock* x) = 0;
     virtual T operator()(CssSupportsRule* x) = 0;
+    virtual T operator()(CssParentNode* x) = 0;
+    
     virtual T operator()(CssAtRule* x) = 0;
     virtual T operator()(CssImport* x) = 0;
 
@@ -165,7 +167,10 @@ namespace Sass {
     T operator()(ValueExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(MapExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(SupportsRule* x)         { return static_cast<D*>(this)->fallback(x); }
-    T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
+    //T operator()(CssSupportsRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CssSupportsRule* x) { return operator()(reinterpret_cast<CssParentNode*>(x)); }
+    T operator()(CssParentNode* x) { return static_cast<D*>(this)->fallback(x); }
+    
 
     T operator()(MediaRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(MixinRule* x) { return static_cast<D*>(this)->fallback(x); }
@@ -176,7 +181,7 @@ namespace Sass {
     T operator()(CssString* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStrings* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStyleRule* x) { return static_cast<D*>(this)->fallback(x); }
-    T operator()(CssMediaRule* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CssMediaRule* x) { return operator()(reinterpret_cast<CssParentNode*>(x)); }
     T operator()(CssMediaQuery* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssKeyframeBlock* x) { return static_cast<D*>(this)->fallback(x); }
 

@@ -14,30 +14,6 @@ namespace Sass {
       return stmt->is_invisible();
     }
 
-    void Remove_Placeholders::operator()(Root* b) {
-
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        if (b->get(i)) b->get(i)->perform(this);
-      }
-
-      auto& foo = b->elements();
-
-      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
-
-    }
-
-    void Remove_Placeholders::operator()(Block* b) {
-
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        if (b->get(i)) b->get(i)->perform(this);
-      }
-
-      auto& foo = b->elements();
-
-      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
-
-    }
-
     void Remove_Placeholders::remove_placeholders(SimpleSelector* simple)
     {
       if (PseudoSelector * pseudo = simple->getPseudoSelector()) {
@@ -81,11 +57,16 @@ namespace Sass {
       return sl;
     }
 
-    void Remove_Placeholders::operator()(CssMediaRule* rule)
-    {
-      for (auto stmt : rule->elements()) {
-        stmt->perform(this);
+    void Remove_Placeholders::operator()(Root* b) {
+
+      for (size_t i = 0, L = b->length(); i < L; ++i) {
+        if (b->get(i)) b->get(i)->perform(this);
       }
+
+      auto& foo = b->elements();
+
+      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
+
     }
 
     void Remove_Placeholders::operator()(CssStyleRule* r)
@@ -94,26 +75,15 @@ namespace Sass {
         // Set the new placeholder selector list
         r->selector((remove_placeholders(sl)));
       }
-      // Iterate into child blocks
-      for (size_t i = 0, L = r->length(); i < L; ++i) {
-        if (r->get(i)) { r->get(i)->perform(this); }
-      }
+      // Clean up all our children
+      r->CssParentNode::perform(this);
     }
 
-    void Remove_Placeholders::operator()(SupportsRule* m)
-    {
-      if (m) m->Block::perform(this);
-    }
-
-    void Remove_Placeholders::operator()(CssSupportsRule* m)
+    void Remove_Placeholders::operator()(CssParentNode* m)
     {
       for (auto stmt : m->elements()) {
         stmt->perform(this);
       }
-    }
-
-    void Remove_Placeholders::operator()(AtRule* a)
-    {
     }
 
 }
