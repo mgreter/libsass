@@ -865,7 +865,7 @@ namespace Sass {
     }
 
     whitespace();
-    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
+    BlockObj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
     FunctionRule* rule = _withChildren<FunctionRule>(
       &StylesheetParser::_functionAtRule,
       name, arguments, nullptr, block);
@@ -950,7 +950,7 @@ namespace Sass {
     sass::vector<StatementObj> clauses;
     SourceSpan pstate(scanner.relevantSpanFrom(start));
     Block* block = SASS_MEMORY_NEW(Block, pstate, children);
-    cur = root = SASS_MEMORY_NEW(If, pstate, condition, block);
+    cur = root = SASS_MEMORY_NEW(If, pstate, condition, block->elements());
 
     std::vector<If*> ifs;
     ifs.push_back(root);
@@ -972,7 +972,7 @@ namespace Sass {
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
         Block* block = SASS_MEMORY_NEW(Block, pstate, std::move(children));
-        If* alternative = SASS_MEMORY_NEW(If, pstate, condition, block);
+        If* alternative = SASS_MEMORY_NEW(If, pstate, condition, block->elements());
         cur->alternative(SASS_MEMORY_NEW(Block, pstate, { alternative }));
         cur = alternative;
         ifs.push_back(cur);
@@ -1303,7 +1303,7 @@ namespace Sass {
     LOCAL_FLAG(_mixinHasContent, false);
 
     IdxRef fidx = parent->createMixin(name);
-    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
+    BlockObj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
     MixinRule* rule = _withChildren<MixinRule>(
       &StylesheetParser::_childStatement,
       name, arguments, nullptr, block);

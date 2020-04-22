@@ -31,7 +31,7 @@ namespace Sass {
   {
     for (size_t i = 0, L = children.size(); i < L; ++i) {
       StatementObj ith = children.at(i)->perform(this);
-      if (Block_Obj bb = Cast<Block>(ith)) {
+      if (BlockObj bb = Cast<Block>(ith)) {
         // Not sure if move is safe here!?
         std::move(bb->begin(), bb->end(),
           std::back_inserter(results));
