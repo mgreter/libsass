@@ -139,8 +139,6 @@ namespace Sass {
     Value* operator()(Each* node) { return visitEachRule(node); }
     Value* operator()(WhileRule* node) { return visitWhileRule(node); }
 
-    Value* visitBlock80(Block* node);
-
     // for evaluating function bodies
     Value* operator()(Block*);
     Value* operator()(Return*);
@@ -268,10 +266,7 @@ namespace Sass {
 
     bool isInMixin();
 
-    Block* visitRootBlock99(Block* b);
-
     Root* visitRoot32(Root* b);
-    Block* visitBlock32(Block* b);
 
     // generic fallback
     template <typename U>

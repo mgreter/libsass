@@ -516,13 +516,6 @@ namespace Sass {
     return compiler.callee_stack;
   }
 
-  Value* Eval::visitBlock80(Block* node)
-  {
-    BlockObj bb = visitRootBlock99(node);
-    blockStack.back()->append(bb);
-    return nullptr;
-  }
-
   Value* Eval::operator()(Block* b)
   {
     ValueObj val;
@@ -2382,48 +2375,6 @@ namespace Sass {
 
     // return copy
     return bb2.detach();
-  }
-
-  Block* Eval::visitBlock32(Block* b)
-  {
-    // copy the block object (add items later)
-    BlockObj bb = SASS_MEMORY_NEW(Block,
-      b->pstate(),
-      b->length());
-    // setup block and env stack
-    blockStack.emplace_back(bb);
-
-    for (Statement* item : b->elements()) {
-      ValueObj child = item->perform(this);
-    }
-
-    // revert block and env stack
-    blockStack.pop_back();
-
-    // return copy
-    return bb.detach();
-  }
-
-
-  Block* Eval::visitRootBlock99(Block* b)
-  {
-
-    // copy the block object (add items later)
-    BlockObj bb = SASS_MEMORY_NEW(Block,
-      b->pstate(),
-      b->length());
-    // setup block and env stack
-    blockStack.emplace_back(bb);
-
-    for (Statement* item : b->elements()) {
-      ValueObj child = item->perform(this);
-    }
-
-    // revert block and env stack
-    blockStack.pop_back();
-
-    // return copy
-    return bb.detach();
   }
 
   SelectorListObj& Eval::selector()
