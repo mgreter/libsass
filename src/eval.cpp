@@ -1432,7 +1432,7 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, node->idxs());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    bb->is_root3(isRoot());
+    // bb->is_root3(isRoot());
     blockStack.emplace_back(bb);
     visitBlock(node->block());
     blockStack.pop_back();
@@ -1493,7 +1493,7 @@ namespace Sass {
     mediaStack.emplace_back(css);
 
     BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-    blk->is_root3(isRoot());
+    // blk->is_root3(isRoot());
     blockStack.emplace_back(blk);
     node->block()->Block::perform(this);
     blockStack.pop_back();
@@ -1535,7 +1535,7 @@ namespace Sass {
       query && query->excludesStyleRules());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    bb->is_root3(isRoot());
+    // bb->is_root3(isRoot());
     blockStack.emplace_back(bb);
     visitBlock(node->block());
     blockStack.pop_back();
@@ -1579,7 +1579,7 @@ namespace Sass {
     if (node->block()) {
 
       BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-      blk->is_root3(isRoot());
+      // blk->is_root3(isRoot());
       blockStack.emplace_back(blk);
       node->block()->Block::perform(this);
       blockStack.pop_back();
@@ -1879,7 +1879,7 @@ namespace Sass {
     if (_inKeyframes) {
 
       BlockObj bb = SASS_MEMORY_NEW(Block, r->pstate());
-      bb->is_root3(isRoot());
+      // bb->is_root3(isRoot());
       blockStack.emplace_back(bb);
       r->block()->Block::perform(this);
       blockStack.pop_back();
@@ -1935,7 +1935,7 @@ namespace Sass {
       extender.addSelector(evaled, mediaStack.back());
 
     BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
-    blk->is_root3(isRoot());
+    // blk->is_root3(isRoot());
     blockStack.emplace_back(blk);
     r->block()->Block::perform(this);
     blockStack.pop_back();
