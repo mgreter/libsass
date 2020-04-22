@@ -537,7 +537,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, value);
     ADD_PROPERTY(bool, is_custom_property);
   public:
-    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, BlockObj b = {});
+    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, const sass::vector<StatementObj>& b = {});
     bool is_invisible() const override;
     // ATTACH_CLONE_OPERATIONS(Declaration)
     ATTACH_CRTP_PERFORM_METHODS()

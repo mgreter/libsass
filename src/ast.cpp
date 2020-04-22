@@ -312,7 +312,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, BlockObj b)
+  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, const sass::vector<StatementObj>& b)
   : ParentStatement(pstate, b), name_(name), value_(value), is_custom_property_(c)
   {}
 
