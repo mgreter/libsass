@@ -2183,10 +2183,11 @@ namespace Sass {
       }
     }
 
-    BlockObj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), trace_block);
+    sass::vector<StatementObj> children;
+    // BlockObj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), children);
 
-    blockStack.emplace_back(&trace_block->elements());
+    blockStack.emplace_back(&trace->elements());
     LOCAL_FLAG(inMixin, true);
 
     callStackFrame frame(*compiler.logger123,

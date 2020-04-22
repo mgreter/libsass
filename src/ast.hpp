@@ -443,6 +443,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, name)
   public:
     Trace(const SourceSpan& pstate, const sass::string& name, BlockObj b = {}, char type = 'm');
+    Trace(const SourceSpan& pstate, const sass::string& name, const sass::vector<StatementObj>& b = {}, char type = 'm');
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

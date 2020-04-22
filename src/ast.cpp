@@ -285,6 +285,12 @@ namespace Sass {
     if (b && blocksy_) blocksy_->pstate(b->pstate());
   }
 
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, const sass::vector<StatementObj>& b, char type)
+    : ParentStatement(pstate, b), type_(type), name_(n)
+  {
+    blocksy_ = SASS_MEMORY_NEW(Block, pstate, b);
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

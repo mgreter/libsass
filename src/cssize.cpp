@@ -64,6 +64,7 @@ namespace Sass {
     SourceSpan span(trace->pstate());
     callStackFrame frame(callStack,
       BackTrace(span));
+    // if (!trace->blocksy()) return nullptr;
     return trace->blocksy()->perform(this);
   }
 
