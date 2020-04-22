@@ -2081,11 +2081,8 @@ namespace Sass {
 
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
-
-    BlockObj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule, trace_block);
-
-    blockStack.emplace_back(&trace_block->elements());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule);
+    blockStack.emplace_back(&trace->elements());
 
     callStackFrame frame(*compiler.logger123,
       BackTrace(c->pstate(), Strings::contentRule));
@@ -2183,10 +2180,7 @@ namespace Sass {
       }
     }
 
-    sass::vector<StatementObj> children;
-    // BlockObj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), children);
-
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig());
     blockStack.emplace_back(&trace->elements());
     LOCAL_FLAG(inMixin, true);
 

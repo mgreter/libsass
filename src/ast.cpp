@@ -277,14 +277,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
-    : ParentStatement(pstate, sass::vector<StatementObj>{}), type_(type), name_(n)
-  {
-    blocksy_ = b; // there is some equality check somewhere!!!!
-    if (b && blocksy_) blocksy_->elementsC(b->elements());
-    if (b && blocksy_) blocksy_->pstate(b->pstate());
-  }
-
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, const sass::vector<StatementObj>& b, char type)
     : ParentStatement(pstate, b), type_(type), name_(n)
   {
