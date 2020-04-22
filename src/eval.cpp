@@ -1813,11 +1813,7 @@ namespace Sass {
 
     sass::string text = interpolationToValue(itpl, true, false);
 
-    bool allowParent = true;
-    if (blockStack.size() > 2) {
-      Block* b = blockStack.at(blockStack.size() - 2);
-      /* if (isRoot()) */ allowParent = false;
-    }
+    bool allowParent = blockStack.size() <= 2;
 
     SelectorListObj slist = itplToSelector(itpl,
       plainCss, allowParent);
@@ -2344,25 +2340,17 @@ namespace Sass {
   // process and add to last block on stack
   void Eval::append_block(Root* block)
   {
-    // Block* parent = blockStack.back();
-    // if (b->is_root()) call_stack.emplace_back(b);
     for (Statement* item : block->elements()) {
       item->perform(this);
-      // if (parent && child) parent->append(child);
     }
-    // if (b->is_root3()) call_stack.pop_back();
   }
 
   // process and add to last block on stack
   void Eval::append_block(Block* block)
   {
-    // Block* parent = blockStack.back();
-    // if (b->is_root()) call_stack.emplace_back(b);
     for (Statement* item : block->elements()) {
       item->perform(this);
-      // if (parent && child) parent->append(child);
     }
-    // if (b->is_root3()) call_stack.pop_back();
   }
 
   bool Eval::isInMixin()
