@@ -20,6 +20,7 @@ namespace Sass {
     Remove_Placeholders();
     ~Remove_Placeholders() { }
 
+    void operator()(Root*);
     void operator()(Block*);
     void operator()(CssStyleRule*);
     void operator()(CssMediaRule*);

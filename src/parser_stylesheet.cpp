@@ -865,12 +865,10 @@ namespace Sass {
     }
 
     whitespace();
-    BlockObj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
     FunctionRule* rule = _withChildren<FunctionRule>(
       &StylesheetParser::_functionAtRule,
       name, arguments, nullptr);
     IdxRef fidx = parent->createFunction(name);
-    block->pstate(scanner.relevantSpanFrom(start));
     rule->pstate(scanner.relevantSpanFrom(start));
     rule->idxs(local.getIdxs());
     rule->fidx(fidx);
@@ -1302,11 +1300,9 @@ namespace Sass {
     LOCAL_FLAG(_mixinHasContent, false);
 
     IdxRef fidx = parent->createMixin(name);
-    BlockObj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
     MixinRule* rule = _withChildren<MixinRule>(
       &StylesheetParser::_childStatement,
       name, arguments, nullptr);
-    block->pstate(scanner.relevantSpanFrom(start));
     rule->pstate(scanner.relevantSpanFrom(start));
     rule->idxs(local.getIdxs());
     rule->fidx(fidx); // to parent

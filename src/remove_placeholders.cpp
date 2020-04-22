@@ -14,6 +14,18 @@ namespace Sass {
       return stmt->is_invisible();
     }
 
+    void Remove_Placeholders::operator()(Root* b) {
+
+      for (size_t i = 0, L = b->length(); i < L; ++i) {
+        if (b->get(i)) b->get(i)->perform(this);
+      }
+
+      auto& foo = b->elements();
+
+      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
+
+    }
+
     void Remove_Placeholders::operator()(Block* b) {
 
       for (size_t i = 0, L = b->length(); i < L; ++i) {
