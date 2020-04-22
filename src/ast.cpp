@@ -167,26 +167,22 @@ namespace Sass {
 
   Block::Block(const SourceSpan& pstate, size_t s)
   : Statement(pstate),
-    VectorizedNopsi<Statement>(s),
-    idxs_(0)
+    VectorizedNopsi<Statement>(s)
   { }
 
   Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec) :
     Statement(pstate),
-    VectorizedNopsi<Statement>(vec),
-    idxs_(0)
+    VectorizedNopsi<Statement>(vec)
   { }
 
   Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec) :
     Statement(pstate),
-    VectorizedNopsi<Statement>(std::move(vec)),
-    idxs_(0)
+    VectorizedNopsi<Statement>(std::move(vec))
   { }
 
   Block::Block(const Block* ptr) :
     Statement(ptr),
-    VectorizedNopsi<Statement>(ptr),
-    idxs_(ptr->idxs_)
+    VectorizedNopsi<Statement>(ptr)
   {}
 
 //  bool Block::isInvisible() const
@@ -210,13 +206,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, Block_Obj b)
-    : Statement(pstate), block_(b)
+    : Statement(pstate), block_(b), idxs_(0)
   { }
   ParentStatement::ParentStatement(SourceSpan&& pstate, Block_Obj b)
-    : Statement(std::move(pstate)), block_(b)
+    : Statement(std::move(pstate)), block_(b), idxs_(0)
   { }
   ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Statement(ptr), block_(ptr->block_)
+  : Statement(ptr), block_(ptr->block_), idxs_(ptr->idxs_)
   { }
 
   bool ParentStatement::has_content()

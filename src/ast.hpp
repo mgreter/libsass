@@ -321,7 +321,6 @@ namespace Sass {
   // Blocks of statements.
   ////////////////////////
   class Block : public Statement, public VectorizedNopsi<Statement> {
-    ADD_POINTER(IDXS*, idxs);
     // needed for properly formatted CSS emission
   public:
     Block(const SourceSpan& pstate, size_t s = 0);
@@ -356,6 +355,7 @@ namespace Sass {
   // [X] WhileRule
   class ParentStatement : public Statement {
     ADD_PROPERTY(Block_Obj, block);
+    ADD_POINTER(IDXS*, idxs);
   public:
     const sass::vector<StatementObj>& elements() const { return block_->elements(); }
     sass::vector<StatementObj>& elements() { return block_->elements(); }
