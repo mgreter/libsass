@@ -208,6 +208,11 @@ namespace Sass {
   ParentStatement::ParentStatement(const SourceSpan& pstate, BlockObj b)
     : Statement(pstate), block_(b), idxs_(0)
   { }
+
+  ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
+    : Statement(pstate), block_(SASS_MEMORY_NEW(Block, pstate, els)), idxs_(0)
+  { }
+  
   ParentStatement::ParentStatement(SourceSpan&& pstate, BlockObj b)
     : Statement(std::move(pstate)), block_(b), idxs_(0)
   { }
@@ -443,16 +448,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   For::For(const SourceSpan& pstate,
-    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, BlockObj b)
-  : ParentStatement(pstate, b),
+    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, const sass::vector<StatementObj>& els)
+  : ParentStatement(pstate, els),
     variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
   {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, BlockObj b)
-  : ParentStatement(pstate, b), variables_(vars), idxs_(0), list_(lst)
+  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, const sass::vector<StatementObj>& els)
+  : ParentStatement(pstate, els), variables_(vars), idxs_(0), list_(lst)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -662,8 +667,8 @@ namespace Sass {
   AtRootRule::AtRootRule(
     const SourceSpan& pstate,
     InterpolationObj query,
-    BlockObj block)
-    : ParentStatement(pstate, block),
+    const sass::vector<StatementObj>& els)
+    : ParentStatement(pstate, els),
     query_(query),
     idxs_(0)
   {}
@@ -671,8 +676,8 @@ namespace Sass {
   AtRootRule::AtRootRule(
     SourceSpan&& pstate,
     InterpolationObj query,
-    BlockObj block)
-    : ParentStatement(std::move(pstate), block),
+    const sass::vector<StatementObj>& els)
+    : ParentStatement(std::move(pstate), els),
     query_(query),
     idxs_(0)
   {}

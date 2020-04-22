@@ -692,8 +692,7 @@ namespace Sass {
     }
     StyleRule* child = _styleRule();
     SourceSpan pstate(scanner.relevantSpanFrom(start));
-    Block* block = SASS_MEMORY_NEW(Block, pstate, { child });
-    auto atRoot = SASS_MEMORY_NEW(AtRootRule, pstate, {}, block);
+    auto atRoot = SASS_MEMORY_NEW(AtRootRule, pstate, {}, { child });
     atRoot->idxs(local.getIdxs());
     return atRoot;
   }
@@ -866,7 +865,7 @@ namespace Sass {
     }
 
     whitespace();
-    BlockObj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
     FunctionRule* rule = _withChildren<FunctionRule>(
       &StylesheetParser::_functionAtRule,
       name, arguments, nullptr, block);
@@ -1304,7 +1303,7 @@ namespace Sass {
     LOCAL_FLAG(_mixinHasContent, false);
 
     IdxRef fidx = parent->createMixin(name);
-    BlockObj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
+    Block_Obj block = SASS_MEMORY_NEW(Block, scanner.relevantSpan());
     MixinRule* rule = _withChildren<MixinRule>(
       &StylesheetParser::_childStatement,
       name, arguments, nullptr, block);

@@ -1990,7 +1990,7 @@ namespace Sass {
     const sass::vector<EnvKey>& variables(e->variables());
     EnvScope scoped(compiler.varRoot, e->idxs());
     ValueObj expr = e->list()->perform(this);
-    BlockObj body = e->block();
+    Block_Obj body = e->block();
     if (MapObj map = expr->isMap()) {
       Map::ordered_map_type els = map->elements(); // Copy ...
       for (auto kv : els) {
@@ -2099,7 +2099,7 @@ namespace Sass {
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
 
-    BlockObj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule, trace_block);
 
     blockStack.emplace_back(trace_block);
@@ -2200,7 +2200,7 @@ namespace Sass {
       }
     }
 
-    BlockObj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
+    Block_Obj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), trace_block);
 
     blockStack.emplace_back(trace_block);
@@ -2368,7 +2368,7 @@ namespace Sass {
 
 
     // copy the block object (add items later)
-    BlockObj bb = SASS_MEMORY_NEW(Block,
+    Block_Obj bb = SASS_MEMORY_NEW(Block,
       b->pstate(),
       b->length());
     // setup block and env stack
