@@ -402,11 +402,12 @@ namespace Sass {
   class AtRule final : public ParentStatement {
     ADD_PROPERTY(InterpolationObj, name);
     ADD_PROPERTY(InterpolationObj, value);
+    ADD_PROPERTY(bool, is_childless);
   public:
     AtRule(const SourceSpan& pstate,
       InterpolationObj name,
-      ExpressionObj value/*,
-      sass::vector<StatementObj> b = {}*/);
+      ExpressionObj value,
+      bool is_childless = true);
     ATTACH_CLONE_OPERATIONS(AtRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };

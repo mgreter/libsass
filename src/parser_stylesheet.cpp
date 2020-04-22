@@ -1384,7 +1384,7 @@ namespace Sass {
 
 
     AtRule* atRule = _withChildren<AtRule>(
-      &StylesheetParser::_childStatement, name, value);
+      &StylesheetParser::_childStatement, name, value, false);
     atRule->pstate(scanner.relevantSpanFrom(start));
 
     if (needsDeprecationWarning) {
@@ -1483,13 +1483,13 @@ namespace Sass {
     if (lookingAtChildren()) {
       rule = _withChildren<AtRule>(
         &StylesheetParser::_childStatement,
-        name, value);
+        name, value, false);
     }
     else {
       expectStatementSeparator();
       rule = SASS_MEMORY_NEW(AtRule,
         scanner.relevantSpanFrom(start),
-        name, value);
+        name, value, true);
     }
 
     return rule.detach();

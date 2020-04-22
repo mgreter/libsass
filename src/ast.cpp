@@ -300,17 +300,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value/*, sass::vector<StatementObj> els*/) :
+  AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool is_childless) :
     ParentStatement(pstate, sass::vector<StatementObj>{}),
     name_(name),
-    value_(value)
+    value_(value),
+    is_childless_(is_childless)
   {
   }
 
   AtRule::AtRule(const AtRule* ptr)
   : ParentStatement(ptr),
     name_(ptr->name_),
-    value_(ptr->value_)
+    value_(ptr->value_),
+    is_childless_(ptr->is_childless_)
   {}
 
   /////////////////////////////////////////////////////////////////////////

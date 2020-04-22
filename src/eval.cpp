@@ -1578,6 +1578,9 @@ namespace Sass {
         name,
         value,
         blk->elements());
+
+      result->isChildless(node->is_childless());
+
       //result->block(blk);
       parent->push_back(result);
 

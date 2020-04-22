@@ -277,6 +277,7 @@ namespace Sass {
   // statements
   void Inspect::operator()(Block* block)
   {
+    // if (block->empty()) return;
     bool was_root = is_root;
     LOCAL_FLAG(is_root, false);
     if (!was_root) {
