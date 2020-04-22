@@ -466,7 +466,7 @@ namespace Sass {
   WhileRule::WhileRule(
     const SourceSpan& pstate,
     ExpressionObj condition,
-    BlockObj b) :
+    const sass::vector<StatementObj>& b) :
     ParentStatement(pstate, b),
     condition_(condition),
     idxs_(0)

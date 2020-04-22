@@ -746,7 +746,7 @@ namespace Sass {
   public:
     WhileRule(const SourceSpan& pstate,
       ExpressionObj condition,
-      BlockObj b = {});
+      const sass::vector<StatementObj>& b = {});
     // String toString() = > "@while $condition {${children.join(" ")}}";
     ATTACH_CRTP_PERFORM_METHODS()
   };
