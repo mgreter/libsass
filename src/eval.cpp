@@ -2100,7 +2100,7 @@ namespace Sass {
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule, trace_block);
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule, trace_block->elements());
 
     blockStack.emplace_back(trace_block);
 
@@ -2201,7 +2201,7 @@ namespace Sass {
     }
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, node->pstate());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), trace_block);
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig(), trace_block->elements());
 
     blockStack.emplace_back(trace_block);
     LOCAL_FLAG(inMixin, true);

@@ -233,8 +233,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, BlockObj b)
-    : ParentStatement(std::move(pstate), b), interpolation_(s), idxs_(0)
+  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, const sass::vector<StatementObj>& els)
+    : ParentStatement(std::move(pstate), els), interpolation_(s), idxs_(0)
   {}
 
   bool CssStyleRule::is_invisible() const {
@@ -273,8 +273,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
-  : ParentStatement(pstate, b), type_(type), name_(n)
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, const sass::vector<StatementObj>& els, char type)
+  : ParentStatement(pstate, els), type_(type), name_(n)
   { }
 
   /////////////////////////////////////////////////////////////////////////
