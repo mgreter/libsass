@@ -516,7 +516,7 @@ namespace Sass {
     return compiler.callee_stack;
   }
 
-  Value* Eval::visitBlock(Block* node)
+  Value* Eval::visitBlock80(Block* node)
   {
     BlockObj bb = visitRootBlock99(node);
     blockStack.back()->append(bb);
@@ -1433,7 +1433,7 @@ namespace Sass {
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
     blockStack.emplace_back(bb);
-    visitBlock(node->blocksy());
+    node->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
@@ -1534,7 +1534,7 @@ namespace Sass {
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
     blockStack.emplace_back(bb);
-    visitBlock(node->blocksy());
+    node->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
     blockStack.back()->append(

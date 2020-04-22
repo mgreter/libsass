@@ -139,7 +139,7 @@ namespace Sass {
     Value* operator()(Each* node) { return visitEachRule(node); }
     Value* operator()(WhileRule* node) { return visitWhileRule(node); }
 
-    Value* visitBlock(Block* node);
+    Value* visitBlock80(Block* node);
 
     // for evaluating function bodies
     Value* operator()(Block*);
