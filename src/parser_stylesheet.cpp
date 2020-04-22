@@ -45,7 +45,7 @@ namespace Sass {
     // make sure everything is parsed
     scanner.expectDone();
 
-    return SASS_MEMORY_NEW(Block, scanner.relevantSpanFrom(start), statements, true);
+    return SASS_MEMORY_NEW(Block, scanner.relevantSpanFrom(start), statements);
 
   }
 

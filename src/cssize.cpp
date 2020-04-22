@@ -47,7 +47,7 @@ namespace Sass {
     sass::vector<StatementObj> children;
     visitBlockStatements(b->elements(), children);
     return SASS_MEMORY_NEW(Block, b->pstate(),
-      std::move(children), b->is_root3());
+      std::move(children));
   }
 
   Statement* Cssize::operator()(Trace* trace)

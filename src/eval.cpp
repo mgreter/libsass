@@ -2370,8 +2370,7 @@ namespace Sass {
     // copy the block object (add items later)
     Block_Obj bb = SASS_MEMORY_NEW(Block,
       b->pstate(),
-      b->length(),
-      isRoot());
+      b->length());
     // setup block and env stack
     blockStack.emplace_back(bb);
     // operate on block

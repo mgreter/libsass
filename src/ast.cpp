@@ -165,29 +165,28 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Block::Block(const SourceSpan& pstate, size_t s, bool r)
+  Block::Block(const SourceSpan& pstate, size_t s)
   : Statement(pstate),
     VectorizedNopsi<Statement>(s),
-    idxs_(0), is_root3_(r)
+    idxs_(0)
   { }
 
-  Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec, bool r) :
+  Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec) :
     Statement(pstate),
     VectorizedNopsi<Statement>(vec),
-    idxs_(0), is_root3_(r)
+    idxs_(0)
   { }
 
-  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec, bool r) :
+  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec) :
     Statement(pstate),
     VectorizedNopsi<Statement>(std::move(vec)),
-    idxs_(0), is_root3_(r)
+    idxs_(0)
   { }
 
   Block::Block(const Block* ptr) :
     Statement(ptr),
     VectorizedNopsi<Statement>(ptr),
-    idxs_(ptr->idxs_),
-    is_root3_(ptr->is_root3_)
+    idxs_(ptr->idxs_)
   {}
 
 //  bool Block::isInvisible() const
@@ -210,14 +209,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ParentStatement::ParentStatement(const SourceSpan& pstate, Block_Obj b, bool is_root)
-    : Statement(pstate), block_(b), is_root2_(b.isNull() ? false : b->is_root3())
+  ParentStatement::ParentStatement(const SourceSpan& pstate, Block_Obj b)
+    : Statement(pstate), block_(b)
   { }
-  ParentStatement::ParentStatement(SourceSpan&& pstate, Block_Obj b, bool is_root)
-    : Statement(std::move(pstate)), block_(b), is_root2_(b.isNull() ? false : b->is_root3())
+  ParentStatement::ParentStatement(SourceSpan&& pstate, Block_Obj b)
+    : Statement(std::move(pstate)), block_(b)
   { }
   ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Statement(ptr), block_(ptr->block_), is_root2_(ptr->is_root2_)
+  : Statement(ptr), block_(ptr->block_)
   { }
 
   bool ParentStatement::has_content()
@@ -234,7 +233,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, Block_Obj b)
-    : ParentStatement(std::move(pstate), b, false), interpolation_(s), idxs_(0)
+    : ParentStatement(std::move(pstate), b), interpolation_(s), idxs_(0)
   {}
 
   bool CssStyleRule::is_invisible() const {
@@ -274,7 +273,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, Block_Obj b, char type)
-  : ParentStatement(pstate, b, false), type_(type), name_(n)
+  : ParentStatement(pstate, b), type_(type), name_(n)
   { }
 
   /////////////////////////////////////////////////////////////////////////
@@ -298,7 +297,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, Block_Obj block) :
-    ParentStatement(pstate, block, false),
+    ParentStatement(pstate, block),
     name_(name),
     value_(value)
   {}
@@ -313,7 +312,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, Block_Obj b)
-  : ParentStatement(pstate, b, false), name_(name), value_(value), is_custom_property_(c)
+  : ParentStatement(pstate, b), name_(name), value_(value), is_custom_property_(c)
   {}
 
   bool Declaration::is_invisible() const
@@ -431,7 +430,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   If::If(const SourceSpan& pstate, ExpressionObj pred, Block_Obj con, Block_Obj alt)
-  : ParentStatement(pstate, con, false), idxs_(0), predicate_(pred), alternative_(alt)
+  : ParentStatement(pstate, con), idxs_(0), predicate_(pred), alternative_(alt)
   {}
 
   bool If::has_content()
@@ -449,7 +448,7 @@ namespace Sass {
 
   For::For(const SourceSpan& pstate,
     const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, Block_Obj b)
-  : ParentStatement(pstate, b, false),
+  : ParentStatement(pstate, b),
     variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
   {}
 
@@ -457,7 +456,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, Block_Obj b)
-  : ParentStatement(pstate, b, false), variables_(vars), idxs_(0), list_(lst)
+  : ParentStatement(pstate, b), variables_(vars), idxs_(0), list_(lst)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -467,7 +466,7 @@ namespace Sass {
     const SourceSpan& pstate,
     ExpressionObj condition,
     Block_Obj b) :
-    ParentStatement(pstate, b, false),
+    ParentStatement(pstate, b),
     condition_(condition),
     idxs_(0)
   {}
@@ -668,7 +667,7 @@ namespace Sass {
     const SourceSpan& pstate,
     InterpolationObj query,
     Block_Obj block)
-    : ParentStatement(pstate, block, false),
+    : ParentStatement(pstate, block),
     query_(query),
     idxs_(0)
   {}
@@ -677,7 +676,7 @@ namespace Sass {
     SourceSpan&& pstate,
     InterpolationObj query,
     Block_Obj block)
-    : ParentStatement(std::move(pstate), block, false),
+    : ParentStatement(std::move(pstate), block),
     query_(query),
     idxs_(0)
   {}
@@ -937,7 +936,7 @@ namespace Sass {
     ArgumentDeclaration* arguments,
     SilentComment* comment,
     Block* block) :
-    ParentStatement(pstate, block, false),
+    ParentStatement(pstate, block),
     name_(name),
     idxs_(0),
     comment_(comment),

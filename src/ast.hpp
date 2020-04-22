@@ -322,12 +322,11 @@ namespace Sass {
   ////////////////////////
   class Block : public Statement, public VectorizedNopsi<Statement> {
     ADD_POINTER(IDXS*, idxs);
-    ADD_PROPERTY(bool, is_root3);
     // needed for properly formatted CSS emission
   public:
-    Block(const SourceSpan& pstate, size_t s = 0, bool r = false);
-    Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec, bool r = false);
-    Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec, bool r = false);
+    Block(const SourceSpan& pstate, size_t s = 0);
+    Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
+    Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
     Block(const Block* ptr);
 
     bool is_invisible() const override {
@@ -357,7 +356,6 @@ namespace Sass {
   // [X] WhileRule
   class ParentStatement : public Statement {
     ADD_PROPERTY(Block_Obj, block);
-    ADD_PROPERTY(bool, is_root2);
   public:
     const sass::vector<StatementObj>& elements() const { return block_->elements(); }
     sass::vector<StatementObj>& elements() { return block_->elements(); }
@@ -374,8 +372,8 @@ namespace Sass {
       block_->concat(std::move(vec));
     }
     operator Block* () { return block_.ptr(); }
-    ParentStatement(SourceSpan&& pstate, Block_Obj b, bool is_root);
-    ParentStatement(const SourceSpan& pstate, Block_Obj b, bool is_root);
+    ParentStatement(SourceSpan&& pstate, Block_Obj b);
+    ParentStatement(const SourceSpan& pstate, Block_Obj b);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;
