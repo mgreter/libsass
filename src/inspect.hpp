@@ -40,6 +40,7 @@ namespace Sass {
     virtual void operator()(CssImport*) override;
 
     // statements
+    virtual void operator()(Root*) override;
     virtual void operator()(Block*) override;
     virtual void operator()(CssKeyframeBlock*) override;
 

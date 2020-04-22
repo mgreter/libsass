@@ -42,7 +42,8 @@ namespace Sass {
   public:
     virtual T operator()(AST_Node* x)               = 0;
     // statements
-    virtual T operator()(Block* x)                  = 0;
+    virtual T operator()(Root* x) = 0;
+    virtual T operator()(Block* x) = 0;
     virtual T operator()(StyleRule* x)                = 0;
     virtual T operator()(Bubble* x)                 = 0;
     virtual T operator()(Trace* x)                  = 0;
@@ -155,7 +156,8 @@ namespace Sass {
   public:
     T operator()(AST_Node* x)               { return static_cast<D*>(this)->fallback(x); }
     // statements
-    T operator()(Block* x)                  { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Root* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(Block* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(StyleRule* x)                { return static_cast<D*>(this)->fallback(x); }
     T operator()(Bubble* x)                 { return static_cast<D*>(this)->fallback(x); }
     T operator()(Trace* x) { return static_cast<D*>(this)->fallback(x); }

@@ -42,6 +42,15 @@ namespace Sass {
     }
   }
 
+  Root* Cssize::doit(RootObj b)
+  {
+    sass::vector<StatementObj> children;
+    visitBlockStatements(b->elements(), children);
+    return SASS_MEMORY_NEW(Root, b->pstate(),
+      std::move(children));
+  }
+
+
   Block* Cssize::operator()(Block* b)
   {
     sass::vector<StatementObj> children;

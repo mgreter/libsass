@@ -2274,7 +2274,7 @@ namespace Sass {
       BackTrace(rule->pstate(), Strings::importRule));
 
     // Evaluate the included sheet
-    append_block(sheet.root);
+    append_block(sheet.root2);
 
     // These data object have just been borrowed
     // sass_import_take_source(compiler.import_stack.back());
@@ -2345,6 +2345,18 @@ namespace Sass {
   }
 
   // process and add to last block on stack
+  void Eval::append_block(Root* block)
+  {
+    // Block* parent = blockStack.back();
+    // if (b->is_root()) call_stack.emplace_back(b);
+    for (Statement* item : block->elements()) {
+      item->perform(this);
+      // if (parent && child) parent->append(child);
+    }
+    // if (b->is_root3()) call_stack.pop_back();
+  }
+
+  // process and add to last block on stack
   void Eval::append_block(Block* block)
   {
     // Block* parent = blockStack.back();
@@ -2364,9 +2376,63 @@ namespace Sass {
     return false;
   }
 
+  Root* Eval::visitRoot32(Root* b)
+  {
+    // copy the block object (add items later)
+    BlockObj bb = SASS_MEMORY_NEW(Block,
+      b->pstate(),
+      b->length());
+    // setup block and env stack
+    blockStack.emplace_back(bb);
+    // operate on block
+    // this may throw up!
+
+    // Block* parent = blockStack.back();
+    // if (b->is_root3()) call_stack.emplace_back(b);
+    for (Statement* item : b->elements()) {
+      ValueObj child = item->perform(this);
+      // if (parent && child) parent->append(child);
+    }
+
+    // revert block and env stack
+    blockStack.pop_back();
+
+    RootObj bb2 = SASS_MEMORY_NEW(Root,
+      bb->pstate(),
+      bb->elements());
+
+    // return copy
+    return bb2.detach();
+  }
+
+  Block* Eval::visitBlock32(Block* b)
+  {
+    // copy the block object (add items later)
+    BlockObj bb = SASS_MEMORY_NEW(Block,
+      b->pstate(),
+      b->length());
+    // setup block and env stack
+    blockStack.emplace_back(bb);
+    // operate on block
+    // this may throw up!
+
+    // Block* parent = blockStack.back();
+    // if (b->is_root3()) call_stack.emplace_back(b);
+    for (Statement* item : b->elements()) {
+      ValueObj child = item->perform(this);
+      // if (parent && child) parent->append(child);
+    }
+
+    // revert block and env stack
+    blockStack.pop_back();
+
+    // return copy
+    return bb.detach();
+  }
+
+
   Block* Eval::visitRootBlock99(Block* b)
   {
-
 
     // copy the block object (add items later)
     BlockObj bb = SASS_MEMORY_NEW(Block,

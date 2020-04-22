@@ -21,6 +21,8 @@ namespace Sass {
     Cssize(Logger&);
     ~Cssize() { }
 
+    Root* doit(RootObj);
+
     Block* operator()(Block*);
     Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);

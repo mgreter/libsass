@@ -136,7 +136,7 @@ namespace Sass {
 
   protected:
 
-    BlockObj parseImport(struct SassImport* import);
+    RootObj parseImport(struct SassImport* import);
 
   protected:
 
@@ -206,7 +206,7 @@ namespace Sass {
     // virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 
-    BlockObj register_import(struct SassImport* entry);
+    RootObj register_import(struct SassImport* entry);
     void register_resource(const Include&, char* contents, char* srcmap);
     void register_resource(const Include&, char* contents, char* srcmap, SourceSpan&);
 

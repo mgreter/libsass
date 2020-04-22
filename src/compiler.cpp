@@ -82,7 +82,7 @@ namespace Sass {
   }
 
   // parse root block from includes (Move to compiler)
-  BlockObj Compiler::compile2(BlockObj root, bool plainCss)
+  RootObj Compiler::compile2(RootObj root, bool plainCss)
   {
     if (root == nullptr) return {};
 
@@ -101,7 +101,7 @@ namespace Sass {
       varRoot.functions[i] = fnList[i];
     }
 
-    BlockObj compiled = eval.visitRootBlock99(root); // 50%
+    RootObj compiled = eval.visitRoot32(root); // 50%
 
     Extension unsatisfied;
     // check that all extends were used
@@ -111,7 +111,7 @@ namespace Sass {
 
     // This can use up to 10% runtime
     Cssize cssize(*this->logger123);
-    compiled = cssize(compiled); // 5%
+    compiled = cssize.doit(compiled); // 5%
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?

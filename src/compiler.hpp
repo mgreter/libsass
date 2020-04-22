@@ -34,9 +34,9 @@ namespace Sass {
     struct SassImport* entry_point;
 
     // Parsed ast-tree
-    BlockObj parsed;
+    RootObj parsed;
     // Evaluated ast-tree
-    BlockObj compiled;
+    RootObj compiled;
 
     // The rendered css content.
     sass::string content;
@@ -85,7 +85,7 @@ namespace Sass {
     sass::string getOutputPath() const;
 
     // ToDO, maybe belongs to compiler?
-    BlockObj compile2(BlockObj root, bool plainCss);
+    RootObj compile2(RootObj root, bool plainCss);
 
     char* renderSrcMapJson(struct SassSrcMapOptions options,
       const SourceMap& source_map);

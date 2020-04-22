@@ -264,10 +264,14 @@ namespace Sass {
     Value* visitImportRule99(ImportRule* rule);
 
     void append_block(Block* block);
+    void append_block(Root* root);
 
     bool isInMixin();
 
     Block* visitRootBlock99(Block* b);
+
+    Root* visitRoot32(Root* b);
+    Block* visitBlock32(Block* b);
 
     // generic fallback
     template <typename U>

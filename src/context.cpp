@@ -373,7 +373,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
     return vec;
   }
 
-  BlockObj Context::register_import(struct SassImport* import)
+  RootObj Context::register_import(struct SassImport* import)
   {
 
     SourceData* source = import->srcdata;
@@ -406,7 +406,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
       }
     }
 
-    BlockObj root;
+    RootObj root;
     bool isPlainCss = false;
 
     // callStackFrame frame(*logger,
@@ -662,7 +662,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
     */
   }
 
-  BlockObj Context::parseImport(struct SassImport* import)
+  RootObj Context::parseImport(struct SassImport* import)
   {
 
     if (import == nullptr) throw std::runtime_error("No entry point given");
@@ -682,7 +682,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
 
 
     // load and register import
-    BlockObj root = register_import(import);
+    RootObj root = register_import(import);
 
     // create root ast tree node
     return root;
