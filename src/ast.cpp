@@ -430,11 +430,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  If::If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, BlockObj alt)
-    : ParentStatement(pstate, els), idxs_(0), predicate_(pred), alternatives_()
-  {
-    if (alt) alternatives_ = alt->elements();
-  }
+  If::If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, const sass::vector<StatementObj>& alt)
+    : ParentStatement(pstate, els), idxs_(0), predicate_(pred), alternatives_(alt)
+  {}
 
   bool If::has_content()
   {

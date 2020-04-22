@@ -703,7 +703,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, predicate);
     ADD_REF(sass::vector<StatementObj>, alternatives);
   public:
-    If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, BlockObj alt = {});
+    If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, const sass::vector<StatementObj>& alt = {});
     virtual bool has_content() override;
     // ATTACH_CLONE_OPERATIONS(If)
     ATTACH_CRTP_PERFORM_METHODS()
