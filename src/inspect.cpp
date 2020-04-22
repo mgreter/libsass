@@ -28,7 +28,7 @@ namespace Sass {
   using namespace Character;
 
   Inspect::Inspect(Emitter&& emi)
-  : Emitter(std::move(emi)), quotes(true)
+  : Emitter(std::move(emi)), quotes(true), is_root(true)
   { }
   Inspect::~Inspect() { }
 
@@ -277,7 +277,9 @@ namespace Sass {
   // statements
   void Inspect::operator()(Block* block)
   {
-    if (!block->is_root3()) {
+    bool was_root = is_root;
+    LOCAL_FLAG(is_root, false);
+    if (!was_root) {
       add_open_mapping(block);
       append_scope_opener();
     }
@@ -286,7 +288,7 @@ namespace Sass {
       (*block)[i]->perform(this);
     }
     if (output_style() == SASS_STYLE_NESTED) indentation -= block->tabs();
-    if (!block->is_root3()) {
+    if (!was_root) {
       append_scope_closer();
       add_close_mapping(block);
     }

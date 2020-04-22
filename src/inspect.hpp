@@ -22,6 +22,8 @@ namespace Sass {
     // Whether quoted strings should be emitted with quotes.
     bool quotes;
 
+    bool is_root;
+
     Inspect(Emitter&& emi);
     virtual ~Inspect();
 
