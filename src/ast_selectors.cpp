@@ -621,7 +621,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   MediaRule::MediaRule(const SourceSpan& pstate, InterpolationObj list, Block_Obj block) :
-    ParentStatement(pstate, block), query_(list)
+    ParentStatement(pstate, block, false), query_(list)
   {}
 
   /////////////////////////////////////////////////////////////////////////

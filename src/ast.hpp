@@ -374,8 +374,8 @@ namespace Sass {
       block_->concat(std::move(vec));
     }
     operator Block* () { return block_.ptr(); }
-    ParentStatement(SourceSpan&& pstate, Block_Obj b, bool is_root = false);
-    ParentStatement(const SourceSpan& pstate, Block_Obj b, bool is_root = false);
+    ParentStatement(SourceSpan&& pstate, Block_Obj b, bool is_root);
+    ParentStatement(const SourceSpan& pstate, Block_Obj b, bool is_root);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;
