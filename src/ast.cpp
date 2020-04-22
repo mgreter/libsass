@@ -205,21 +205,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ParentStatement::ParentStatement(const SourceSpan& pstate, BlockObj b, bool useless)
-    : Statement(pstate), block_(), idxs_(0)
-  {
-    if (b) block_ = SASS_MEMORY_NEW(Block, {}, b->elements());
-  }
-
   ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
     : Statement(pstate), block_(), idxs_(0)
   {
     if (els.size()) block_ = SASS_MEMORY_NEW(Block, pstate, els);
   }
-  
-  // ParentStatement::ParentStatement(SourceSpan&& pstate, BlockObj b)
-  //   : Statement(std::move(pstate)), block_(b), idxs_(0)
-  // { }
 
   ParentStatement::ParentStatement(const ParentStatement* ptr)
   : Statement(ptr), block_(ptr->block_), idxs_(ptr->idxs_)
@@ -282,8 +272,8 @@ namespace Sass {
     : ParentStatement(pstate, sass::vector<StatementObj>{}), type_(type), name_(n)
   {
     block_ = b; // there is some equality check somewhere!!!!
-    if (b) block_->elementsC(b->elements());
-    if (b) block_->pstate(b->pstate());
+    if (b && block_) block_->elementsC(b->elements());
+    if (b && block_) block_->pstate(b->pstate());
   }
 
   /////////////////////////////////////////////////////////////////////////
