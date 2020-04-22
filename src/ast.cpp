@@ -999,7 +999,7 @@ namespace Sass {
     ArgumentInvocation* arguments,
     const sass::string& ns,
     ContentBlock* content,
-    Block* block) :
+    const sass::vector<StatementObj>& block) :
     InvocationStatement(pstate, arguments),
     ns_(ns), name_(name), content_(content)
   {

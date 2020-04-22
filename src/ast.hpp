@@ -937,7 +937,7 @@ namespace Sass {
       ArgumentInvocation* arguments,
       const sass::string& ns = "",
       ContentBlock* content = nullptr,
-      Block* block = nullptr);
+      const sass::vector<StatementObj>& block = {});
 
     bool has_content() override final;
 
