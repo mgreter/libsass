@@ -1935,7 +1935,6 @@ namespace Sass {
       extender.addSelector(evaled, mediaStack.back());
 
     BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
-    // blk->is_root3(isRoot());
     blockStack.emplace_back(blk);
     r->block()->Block::perform(this);
     blockStack.pop_back();
