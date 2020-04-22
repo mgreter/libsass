@@ -1798,6 +1798,7 @@ namespace Sass {
   Value* Eval::visitExtendRule(ExtendRule* e)
   {
 
+    // Once we have blocks as parent classes we can use blockStack!
     if (!isInStyleRule() && !isInMixin() && !isInContentBlock()) {
       error(
         "@extend may only be used within style rules.",
