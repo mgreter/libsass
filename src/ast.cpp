@@ -215,19 +215,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
-    : Statement(pstate), blocksy_(), idxs_(0)
+    : Block(pstate, els), idxs_(0)
   {
-    if (els.size()) blocksy_ = SASS_MEMORY_NEW(Block, pstate, els);
   }
 
   ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Statement(ptr), blocksy_(ptr->blocksy_), idxs_(ptr->idxs_)
+  : Block(ptr), idxs_(ptr->idxs_)
   { }
 
   bool ParentStatement::has_content()
   {
     if (Statement::has_content()) return true;
-    if (blocksy_ == nullptr) return false;
     for (size_t i = 0, L = elements().size(); i < L; ++i) {
       if (elements()[i]->has_content()) return true;
     }
@@ -280,7 +278,6 @@ namespace Sass {
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, const sass::vector<StatementObj>& b, char type)
     : ParentStatement(pstate, b), type_(type), name_(n)
   {
-    blocksy_ = SASS_MEMORY_NEW(Block, pstate, b);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -308,7 +305,6 @@ namespace Sass {
     name_(name),
     value_(value)
   {
-    auto asd = blocksy_;
   }
 
   AtRule::AtRule(const AtRule* ptr)

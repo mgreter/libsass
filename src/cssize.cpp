@@ -65,7 +65,7 @@ namespace Sass {
     callStackFrame frame(callStack,
       BackTrace(span));
     // if (!trace->blocksy()) return nullptr;
-    return trace->blocksy()->perform(this);
+    return trace->blocksy()->Block::perform(this);
   }
 
   Statement* Cssize::operator()(CssAtRule* r)
