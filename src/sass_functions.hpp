@@ -9,13 +9,7 @@
 #include "fn_utils.hpp"
 #include "backtrace.hpp"
 #include "source.hpp"
-
-// Some structures are simple c++ vectors.
-// There might be a more efficient way to achieve this?
-// Although compiler optimization should see this case easily!
-struct SassImportList : std::deque<struct SassImport*> {};
-struct SassImporterList : std::deque<struct SassImporter*> {};
-struct SassFunctionList : std::deque<struct SassFunction*> {};
+#include "sass_lists.hpp"
 
 // Struct to hold custom function callback
 struct SassFunction {

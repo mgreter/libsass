@@ -57,11 +57,11 @@ namespace Sass {
      bool              at_root_without_rule;
 
 
-    Context& ctx;
+    Compiler& compiler;
     Extender extender;
 
     BackTraces& traces;
-    Eval(Context& ctx);
+    Eval(Compiler& compiler);
     ~Eval();
 
     Value* _runUserDefinedCallable(

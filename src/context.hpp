@@ -20,7 +20,10 @@
 #include "output.hpp"
 // #include "file.hpp"
 
+
 namespace Sass {
+
+  class Compiler;
 
   // The engine shares stuff across contexts
   class Engine {
@@ -91,6 +94,11 @@ namespace Sass {
     void addCustomImporters(sass::vector<struct SassImporter*>& importers);
     void addCustomFunctions(sass::vector<struct SassFunction*>& functions);
 
+    // C-API
+    void addCustomHeader(struct SassImporter* header);
+    void addCustomImporter(struct SassImporter* importer);
+    void addCustomFunction(struct SassFunction* function);
+
   private:
 
     /*#########################################################################*/
@@ -130,7 +138,7 @@ namespace Sass {
 
     BlockObj parseImport(struct SassImport* import);
 
-  private:
+  protected:
 
     // Functions in order of appearance
     // Same order needed for function stack
@@ -192,9 +200,6 @@ namespace Sass {
 
     void loadPlugins(const sass::string& path);
     void addIncludePaths(const sass::string& path);
-
-    // ToDO, maybe belongs to compiler?
-    virtual BlockObj compile(BlockObj root, bool plainCss);
 
     // ToDo: return const string& ?
     // virtual sass::string render(Block_Obj root);

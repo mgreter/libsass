@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <sass/lists.h>
 #include "output.hpp"
 #include "plugins.hpp"
 #include "util.hpp"

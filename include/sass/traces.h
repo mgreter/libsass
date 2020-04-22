@@ -12,11 +12,18 @@ struct SassSource;
 extern "C" {
 #endif
 
-  ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
-  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_last(struct SassTraces* traces);
-  ADDAPI struct SassTrace* ADDCALL sass_traces_get_trace(struct SassTraces* traces, size_t i);
+  // Traces must be got directly from the underlying object.
+  // We expose traces during eval (BackTraces) and on when handling
+  // error (StackTraces). We can't convert a vector<StackTrace> to
+  // vector<Traced>, because they are not covariant. Easiest to add
+  // two implementation to fetch a trace and make the cast there.
 
-  ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
+  // ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
+  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_last(struct SassTraces* traces);
+  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_trace(struct SassTraces* traces, size_t i);
+
+  // ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
+
   ADDAPI const char* ADDCALL sass_trace_get_name(struct SassTrace* trace);
   ADDAPI bool ADDCALL sass_trace_get_was_fncall(struct SassTrace* trace);
   ADDAPI struct SassSrcSpan* ADDCALL sass_trace_get_srcspan(struct SassTrace* trace);

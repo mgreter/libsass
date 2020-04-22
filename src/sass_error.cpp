@@ -5,37 +5,60 @@
 #include "json.hpp"
 #include "sass_error.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace Sass {
 
-  int ADDCALL sass_error_get_status(struct SassError* error) { return error->status; }
-  char* ADDCALL sass_error_get_json(struct SassError* error) { return error->getJson(true); }
-  const char* ADDCALL sass_error_get_what(struct SassError* error) { return error->what.c_str(); }
-  const char* ADDCALL sass_error_get_messages(struct SassError* error) { return error->messages.c_str(); }
-  const char* ADDCALL sass_error_get_warnings(struct SassError* error) { return error->warnings.c_str(); }
-  const char* ADDCALL sass_error_get_formatted(struct SassError* error) { return error->formatted.c_str(); }
+  extern "C" {
 
-  const char* ADDCALL sass_error_get_path(struct SassError* error)
-  {
-    if (error->traces.empty()) return nullptr;
-    return error->traces.back().pstate.getAbsPath();
+    int ADDCALL sass_error_get_status(struct SassError* error) { return error->status; }
+    char* ADDCALL sass_error_get_json(struct SassError* error) { return error->getJson(true); }
+    const char* ADDCALL sass_error_get_what(struct SassError* error) { return error->what.c_str(); }
+    const char* ADDCALL sass_error_get_messages(struct SassError* error) { return error->messages.c_str(); }
+    const char* ADDCALL sass_error_get_warnings(struct SassError* error) { return error->warnings.c_str(); }
+    const char* ADDCALL sass_error_get_formatted(struct SassError* error) { return error->formatted.c_str(); }
+
+    const char* ADDCALL sass_error_get_path(struct SassError* error)
+    {
+      if (error->traces.empty()) return nullptr;
+      return error->traces.back().pstate.getAbsPath();
+    }
+
+    size_t ADDCALL sass_error_get_line(struct SassError* error)
+    {
+      if (error->traces.empty()) return 0;
+      return error->traces.back().pstate.getLine();
+    }
+    size_t ADDCALL sass_error_get_column(struct SassError* error)
+    {
+      if (error->traces.empty()) return 0;
+      return error->traces.back().pstate.getColumn();
+    }
+    const char* ADDCALL sass_error_get_content(struct SassError* error)
+    {
+      if (error->traces.empty()) return 0;
+      return error->traces.back().pstate.getContent();
+    }
+
+    size_t ADDCALL sass_error_count_traces(struct SassError* error)
+    {
+      return error->traces.size();
+    }
+
+    struct SassTrace* ADDCALL sass_error_last_trace(struct SassError* error)
+    {
+      return reinterpret_cast<struct SassTrace*>
+        (&(Traced&)error->traces.back());
+    }
+
+    struct SassTrace* ADDCALL sass_error_get_trace(struct SassError* error, size_t i)
+    {
+      return reinterpret_cast<struct SassTrace*>
+        (&(Traced&)error->traces.at(i));
+    }
+
   }
 
-  size_t ADDCALL sass_error_get_line(struct SassError* error)
-  {
-    if (error->traces.empty()) return 0;
-    return error->traces.back().pstate.getLine();
-  }
-  size_t ADDCALL sass_error_get_column(struct SassError* error)
-  {
-    if (error->traces.empty()) return 0;
-    return error->traces.back().pstate.getColumn();
-  }
+}
 
-#ifdef __cplusplus
-} // __cplusplus defined.
-#endif
 
 // Create error formatted as serialized json.
 // You must free the data returned from here.

@@ -84,6 +84,9 @@ namespace Sass {
     sass::string getInputPath() const;
     sass::string getOutputPath() const;
 
+    // ToDO, maybe belongs to compiler?
+    BlockObj compile2(BlockObj root, bool plainCss);
+
     char* renderSrcMapJson(struct SassSrcMapOptions options,
       const SourceMap& source_map);
 

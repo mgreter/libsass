@@ -18,8 +18,14 @@
 
 namespace Sass {
 
+  struct Traced {
+    virtual const SourceSpan& getPstate() const = 0;
+    virtual const sass::string& getName() const = 0;
+    virtual bool isFn() const = 0;
+  };
+
   // Holding actual copies
-  struct StackTrace {
+  struct StackTrace : Traced {
 
     SourceSpan pstate;
     sass::string name;
@@ -34,10 +40,22 @@ namespace Sass {
       fn(fn)
     {}
 
+    const SourceSpan& getPstate() const {
+      return pstate;
+    }
+
+    const sass::string& getName() const {
+      return name;
+    }
+
+    bool isFn() const {
+      return fn;
+    }
+
   };
 
   // Holding only references
-  struct BackTrace {
+  struct BackTrace : Traced {
 
     const SourceSpan& pstate;
     const sass::string& name;
@@ -52,6 +70,18 @@ namespace Sass {
       fn(fn)
     {}
 
+    const SourceSpan& getPstate() const {
+      return pstate;
+    }
+
+    const sass::string& getName() const {
+      return name;
+    }
+
+    bool isFn() const {
+      return fn;
+    }
+
     // Create copies on convert
     operator StackTrace()
     {
@@ -62,6 +92,7 @@ namespace Sass {
   };
 
   // Some related and often used aliases
+  typedef sass::vector<Traced> Traces;
   typedef sass::vector<BackTrace> BackTraces;
   typedef sass::vector<StackTrace> StackTraces;
 

@@ -29,6 +29,9 @@ extern "C" {
   // Push function for paths (no manipulation support for now)
   ADDAPI void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* paths);
   ADDAPI void ADDCALL sass_compiler_add_include_paths(struct SassCompiler* compiler, const char* paths);
+  ADDAPI void ADDCALL sass_compiler_add_custom_header(struct SassCompiler* compiler, struct SassImporter* header);
+  ADDAPI void ADDCALL sass_compiler_add_custom_importer(struct SassCompiler* compiler, struct SassImporter* importer);
+  ADDAPI void ADDCALL sass_compiler_add_custom_function(struct SassCompiler* compiler, struct SassFunction* function);
 
   // Setters for compiler option values
   ADDAPI void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision);

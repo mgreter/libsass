@@ -105,6 +105,18 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
 
 
 
+// we are called by libsass to dispatch to registered functions
+struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFunction* cb, struct SassCompiler* compiler)
+  {
+
+    puts("WHOA");
+    struct SassTrace* trace = sass_compiler_last_trace(compiler);
+    puts(sass_trace_get_name(trace));
+    puts("WHOA");
+
+    return sass_clone_value(s_args);
+  }
+
   Context::Context()
     : SassOutputOptionsCpp(),
     // emitter(c_options),
@@ -133,7 +145,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
 
 
     // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
-    // registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
+    // registerCustomFunction(sass_make_function("crcew($x)", call_sass_function, 0));
     // registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
 
     // emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));
@@ -299,6 +311,14 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
     sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
+  void Context::addCustomHeader(struct SassImporter* header)
+  {
+    if (header == nullptr) return;
+    c_headers88.emplace_back(header);
+    // need to sort the array afterwards (no big deal)
+    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
+  }
+
   void Context::addCustomImporters(sass::vector<struct SassImporter*>& importers)
   {
     for (auto importer : importers) {
@@ -309,12 +329,26 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
     sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
   }
 
+  void Context::addCustomImporter(struct SassImporter* importer)
+  {
+    if (importer == nullptr) return;
+    c_importers88.emplace_back(importer);
+    // need to sort the array afterwards (no big deal)
+    sort(c_importers88.begin(), c_importers88.end(), cmpImporterPrio);
+  }
+
   void Context::addCustomFunctions(sass::vector<struct SassFunction*>& functions)
   {
     for (auto function : functions) {
       if (function == nullptr) continue;
       c_functions88.emplace_back(function);
     }
+  }
+
+  void Context::addCustomFunction(struct SassFunction* function)
+  {
+    if (function == nullptr) return;
+    c_functions88.emplace_back(function);
   }
 
   /*#########################################################################*/
@@ -525,7 +559,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
     // They must be presorted by priorities.
     for (struct SassImporter* importer : importers) {
       // Get the external importer function
-      SassImporterLambda fn = sass_importer_get_function(importer);
+      SassImporterLambda fn = sass_importer_get_callback(importer);
       // Call the external function, then check what it returned
       struct SassImportList* includes = fn(imp_path.c_str(), importer);
       // External provider want to handle this
@@ -655,46 +689,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
 
   }
 
-  // parse root block from includes
-  BlockObj Context::compile(BlockObj root, bool plainCss)
-  {
-    if (root == nullptr) return {};
 
-
-    // abort if there is no data
-    if (included_sources.size() == 0) return {};
-    // abort on invalid root
-    if (root.isNull()) return {};
-
-    //    debug_ast(root);
-    
-    Eval eval(*this);
-    eval.plainCss = plainCss;
-    EnvScope scoped(varRoot, varRoot.getIdxs());
-    for (size_t i = 0; i < fnList.size(); i++) {
-      varRoot.functions[i] = fnList[i];
-    }
-
-    BlockObj compiled = eval.visitRootBlock99(root); // 50%
-   
-    Extension unsatisfied;
-    // check that all extends were used
-    if (eval.extender.checkForUnsatisfiedExtends(unsatisfied)) {
-      throw Exception::UnsatisfiedExtend(*logger123, unsatisfied);
-    }
-
-    // This can use up to 10% runtime
-    Cssize cssize(*this->logger123);
-    compiled = cssize(compiled); // 5%
-
-    // clean up by removing empty placeholders
-    // ToDo: maybe we can do this somewhere else?
-    Remove_Placeholders remove_placeholders;
-    compiled->perform(&remove_placeholders); // 3%
-
-    // return processed tree
-    return compiled;
-  }
   // EO compile
   /*
   sass::string Context::format_embedded_source_map()

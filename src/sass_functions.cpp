@@ -17,136 +17,53 @@ extern "C" {
 
 
 
-  // Creator for sass custom importer return argument list
-  struct SassImportList* ADDCALL sass_make_import_list()
-  {
-    return new SassImportList{};
-  }
-
-  void ADDCALL sass_delete_import_list(struct SassImportList* list)
-  {
-    delete list;
-  }
-  size_t ADDCALL sass_import_list_size(struct SassImportList* list)
-  {
-    return list == nullptr ? 0 : list->size();
-  }
-
-  struct SassImport* ADDCALL sass_import_list_shift(struct SassImportList* list)
-  {
-    if (list == nullptr) return nullptr;
-    if (list->empty()) return nullptr;
-    auto ptr = list->front();
-    list->pop_front();
-    return ptr;
-  }
-
-  void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import)
-  {
-    if (list != nullptr) {
-      list->push_back(import);
-    }
-  }
-
-
-  struct SassFunctionList* ADDCALL sass_make_function_list()
-  {
-    return new SassFunctionList{};
-  }
-
-  size_t ADDCALL sass_function_list_size(struct SassFunctionList* list)
-  {
-    return list == nullptr ? 0 : list->size();
-  }
-
-  SassFunction* ADDCALL sass_function_list_shift(struct SassFunctionList* list)
-  {
-    if (list == nullptr) return nullptr;
-    if (list->empty()) return nullptr;
-    auto ptr = list->front();
-    list->pop_front();
-    return ptr;
-  }
-
-  size_t ADDCALL sass_importer_list_size(struct SassImporterList* list)
-  {
-    return list == nullptr ? 0 : list->size();
-  }
-
-  struct SassImporter* ADDCALL sass_importer_list_shift(struct SassImporterList* list)
-  {
-    if (list == nullptr) return nullptr;
-    if (list->empty()) return nullptr;
-    auto ptr = list->front();
-    list->pop_front();
-    return ptr;
-  }
-
-  void ADDCALL sass_importer_list_push(struct SassImporterList* list, struct SassImporter* importer)
-  {
-    if (list != nullptr) {
-      if (importer != nullptr) {
-        list->emplace_back(importer);
-      }
-    }
-  }
-
-
-  void ADDCALL sass_function_list_push(struct SassFunctionList* list, struct SassFunction* fn)
-  {
-    if (list != nullptr) {
-      if (fn != nullptr) {
-        list->emplace_back(fn);
-      }
-    }
-  }
-
-  struct SassFunction* ADDCALL sass_make_function(const char* signature, SassFunctionLambda function, void* cookie)
+  struct SassFunction* ADDCALL sass_make_function(const char* signature, SassFunctionLambda callback, void* cookie)
   {
     struct SassFunction* cb = new SassFunction{};
     if (cb == 0) return 0;
     cb->signature = signature;
-    cb->function = function;
+    cb->function = callback;
     cb->cookie = cookie;
     return cb;
   }
 
-  void ADDCALL sass_delete_function(struct SassFunction* entry)
+  void ADDCALL sass_delete_function(struct SassFunction* function)
   {
-    delete entry;
-  }
-
-  // Deallocator for the allocated memory
-  void ADDCALL sass_delete_function_list(struct SassFunctionList* list)
-  {
-    if (list == nullptr) return;
-    for (auto function : *list) {
-      sass_delete_function(function);
-    }
-    delete list;
+    delete function;
   }
 
   // Setters and getters for callbacks on function lists
   // struct SassFunction* ADDCALL sass_function_get_list_entry(struct SassFunctionList* list, uint32_t pos) { return list[pos]; }
   // void sass_function_set_list_entry(struct SassFunctionList* list, uint32_t pos, struct SassFunction* cb) { list[pos] = cb; }
 
-  const char* ADDCALL sass_function_get_signature(struct SassFunction* cb) { return cb->signature.empty() ? 0 : cb->signature.c_str(); }
-  SassFunctionLambda ADDCALL sass_function_get_function(struct SassFunction* cb) { return cb->function; }
-  void* ADDCALL sass_function_get_cookie(struct SassFunction* cb) { return cb->cookie; }
+  const char* ADDCALL sass_function_get_signature(struct SassFunction* function)
+  {
+    return function->signature.empty() ? 0 : function->signature.c_str();
+  }
 
-  struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda fn, double priority, void* cookie)
+  SassFunctionLambda ADDCALL sass_function_get_function(struct SassFunction* function)
+  {
+    return function->function;
+  }
+
+  void* ADDCALL sass_function_get_cookie(struct SassFunction* function)
+  {
+    return function->cookie;
+  }
+
+  struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda callback, double priority, void* cookie)
   {
     struct SassImporter* importer = new SassImporter{};
     if (importer == 0) return 0;
-    importer->importer = fn;
+    importer->importer = callback;
     importer->priority = priority;
     importer->cookie = cookie;
     return importer;
   }
 
-  SassImporterLambda ADDCALL sass_importer_get_function(struct SassImporter* cb) { return cb->importer; }
-  double ADDCALL sass_importer_get_priority (struct SassImporter* cb) { return cb->priority; }
-  void* ADDCALL sass_importer_get_cookie(struct SassImporter* cb) { return cb->cookie; }
+  SassImporterLambda ADDCALL sass_importer_get_callback(struct SassImporter* importer) { return importer->importer; }
+  double ADDCALL sass_importer_get_priority (struct SassImporter* importer) { return importer->priority; }
+  void* ADDCALL sass_importer_get_cookie(struct SassImporter* importer) { return importer->cookie; }
 
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_importer (struct SassImporter* importer)
@@ -154,30 +71,15 @@ extern "C" {
     delete importer;
   }
 
-  // Creator for sass custom importer function list
-  struct SassImporterList* ADDCALL sass_make_importer_list()
-  {
-    return new SassImporterList{};
-  }
-
-  // Deallocator for the allocated memory
-  void ADDCALL sass_delete_importer_list(struct SassImporterList* list)
-  {
-    if (list == nullptr) return;
-    for (auto importer : *list) {
-      sass_delete_importer(importer);
-    }
-    delete list;
-  }
-
   // Creator for a single import entry returned by the custom importer inside the list
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
-  struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum SassImportFormat type)
+  struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum SassImportFormat format)
   {
     struct SassImport* v = new SassImport();
     if (v == 0) return 0;
     v->line = -1;
     v->column = -1;
+    v->format = format;
     // Stuff was shifted to internal C++ API
     v->srcdata = SASS_MEMORY_NEW(SourceFile,
       imp_path, abs_path,

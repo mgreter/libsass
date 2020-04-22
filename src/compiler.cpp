@@ -9,6 +9,9 @@
 #include "source_map.hpp"
 #include "sass_functions.hpp"
 
+#include "eval.hpp"
+#include "cssize.hpp"
+#include "remove_placeholders.hpp"
 
 namespace Sass {
 
@@ -78,11 +81,52 @@ namespace Sass {
     state = SASS_COMPILER_PARSED;
   }
 
+  // parse root block from includes (Move to compiler)
+  BlockObj Compiler::compile2(BlockObj root, bool plainCss)
+  {
+    if (root == nullptr) return {};
+
+
+    // abort if there is no data
+    if (included_sources.size() == 0) return {};
+    // abort on invalid root
+    if (root.isNull()) return {};
+
+    //    debug_ast(root);
+
+    Eval eval(*this);
+    eval.plainCss = plainCss;
+    EnvScope scoped(varRoot, varRoot.getIdxs());
+    for (size_t i = 0; i < fnList.size(); i++) {
+      varRoot.functions[i] = fnList[i];
+    }
+
+    BlockObj compiled = eval.visitRootBlock99(root); // 50%
+
+    Extension unsatisfied;
+    // check that all extends were used
+    if (eval.extender.checkForUnsatisfiedExtends(unsatisfied)) {
+      throw Exception::UnsatisfiedExtend(*logger123, unsatisfied);
+    }
+
+    // This can use up to 10% runtime
+    Cssize cssize(*this->logger123);
+    compiled = cssize(compiled); // 5%
+
+    // clean up by removing empty placeholders
+    // ToDo: maybe we can do this somewhere else?
+    Remove_Placeholders remove_placeholders;
+    compiled->perform(&remove_placeholders); // 3%
+
+    // return processed tree
+    return compiled;
+  }
+
   void Compiler::compile()
   {
     // Evaluate parsed ast-tree to new ast-tree
     if (parsed != nullptr) {
-      compiled = Context::compile(parsed, false);
+      compiled = compile2(parsed, false);
     }
     // Update the compiler state
     state = SASS_COMPILER_COMPILED;

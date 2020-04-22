@@ -10,6 +10,7 @@
 #include <sass/base.h>
 #include <sass/fwdecl.h>
 #include <sass/version.h>
+#include <sass/lists.h>
 #include <sass/values.h>
 #include <sass/error.h>
 #include <sass/import.h>

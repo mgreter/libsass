@@ -36,7 +36,7 @@
 namespace Sass {
 
 
-  Eval::Eval(Context& ctx) :
+  Eval::Eval(Compiler& compiler) :
     inMixin(false),
     blockStack(),
     mediaStack(),
@@ -50,9 +50,9 @@ namespace Sass {
     _inKeyframes(false),
     plainCss(false),
     at_root_without_rule(false),
-    ctx(ctx),
-    extender(Extender::NORMAL, ctx.logger123->callStack),
-    traces(*ctx.logger123)
+    compiler(compiler),
+    extender(Extender::NORMAL, compiler.logger123->callStack),
+    traces(*compiler.logger123)
   {
 
     mediaStack.push_back({});
@@ -102,12 +102,12 @@ namespace Sass {
     // ArgumentResults& evaluated = _evaluateArguments(arguments); // , false
 
     auto idxs = callable->declaration()->idxs();
-    EnvScope scoped(ctx.varRoot, idxs);
+    EnvScope scoped(compiler.varRoot, idxs);
 
     if (content) {
       auto cidx = content->declaration()->cidx();
       if (cidx.isValid()) {
-        ctx.varRoot.setMixin(cidx, content);
+        compiler.varRoot.setMixin(cidx, content);
       }
       else {
         std::cerr << "Invalid cidx1 on " << content << "\n";
@@ -126,7 +126,7 @@ namespace Sass {
     size_t minLength = std::min(positional.size(), declared.size());
 
     for (size_t i = 0; i < minLength; i++) {
-      ctx.varRoot.setVariable(idxs->varFrame, (uint32_t)i,
+      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i,
         positional[i]->withoutSlash());
     }
 
@@ -144,7 +144,7 @@ namespace Sass {
         value = argument->value()->perform(this);
       }
       auto result = value->withoutSlash();
-      ctx.varRoot.setVariable(idxs->varFrame, (uint32_t)i, result);
+      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i, result);
 
       // callenv.set_local(
       //   argument->name(),
@@ -163,7 +163,7 @@ namespace Sass {
       argumentList = SASS_MEMORY_NEW(ArgumentList,
         pstate, std::move(values), separator, std::move(named));
       auto size = declared.size();
-      ctx.varRoot.setVariable(idxs->varFrame, (uint32_t)size, argumentList);
+      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)size, argumentList);
       // callenv.set_local(declaredArguments->restArg(), argumentList);
     }
 
@@ -172,12 +172,12 @@ namespace Sass {
     //   visitArgumentInvocation(arguments);
     // invocation << callable->name();
     // invocation << args->toString();
-    // callStackFrame frame(*ctx.logger123,
+    // callStackFrame frame(*compiler.logger123,
     //   BackTrace(pstate, callable->name()));
 
     ValueObj result = (this->*run)(callable, trace);
 
-    // ctx.content = asd;
+    // compiler.content = asd;
 
     // if (isNamedEmpty) return result.detach();
     // if (argumentList == nullptr) return result.detach();
@@ -207,7 +207,7 @@ namespace Sass {
     const SassFnSig& callback = tuple.second;
     const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
 
-    overload->verify(positional.size(), named, pstate, *ctx.logger123); // 0.66%
+    overload->verify(positional.size(), named, pstate, *compiler.logger123); // 0.66%
 
     for (size_t i = positional.size();
       i < declaredArguments.size();
@@ -241,14 +241,14 @@ namespace Sass {
 
     ValueObj result;
     // try {
-//    double epsilon = ctx.logger->epsilon;
+//    double epsilon = compiler.logger->epsilon;
     // This one
     // sass::sstream invocation;
     // ArgumentInvocationObj args =
     //   visitArgumentInvocation(arguments);
     // invocation << callable->name();
     // invocation << args->toString();
-    result = callback(pstate, positional, ctx, *ctx.logger123, *this, selfAssign); // 7%
+    result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
       // }
 
     if (argumentList == nullptr) return result.detach();
@@ -258,7 +258,7 @@ namespace Sass {
     strm << "No " << pluralize("argument", named.size());
     strm << " named " << toSentence(named, "or") << ".";
     throw Exception::SassRuntimeException2(
-      strm.str(), *ctx.logger123);
+      strm.str(), *compiler.logger123);
   }
 
 
@@ -279,7 +279,7 @@ namespace Sass {
     const SassFnSig& callback = tuple.second;
     const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
 
-    overload->verify(positional.size(), named, pstate, *ctx.logger123); // 7.5%
+    overload->verify(positional.size(), named, pstate, *compiler.logger123); // 7.5%
 
     for (size_t i = positional.size();
       i < declaredArguments.size();
@@ -313,14 +313,14 @@ namespace Sass {
 
     ValueObj result;
     // try {
-//    double epsilon = ctx.logger->epsilon;
+//    double epsilon = compiler.logger->epsilon;
     // This one
     // sass::sstream invocation;
     // ArgumentInvocationObj args =
     //   visitArgumentInvocation(arguments);
     // invocation << callable->name();
     // invocation << args->toString();
-    result = callback(pstate, positional, ctx, *ctx.logger123, *this, selfAssign); // 13%
+    result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
       // }
 
     // Collect the items
@@ -334,7 +334,7 @@ namespace Sass {
     strm << "No " << pluralize("argument", named.size());
     strm << " named " << toSentence(named, "or") << ".";
     throw Exception::SassRuntimeException2(
-      strm.str(), *ctx.logger123);
+      strm.str(), *compiler.logger123);
   }
 
 
@@ -395,7 +395,7 @@ namespace Sass {
       positional.emplace_back(argumentList);
     }
     // try {
-    // double epsilon = std::pow(0.1, ctx.c_options.precision + 1);
+    // double epsilon = std::pow(0.1, compiler.c_options.precision + 1);
 
     struct SassFunction* entry = callable->function();
 
@@ -405,7 +405,7 @@ namespace Sass {
     }
 
     struct SassValue* c_val =
-      entry->function(c_args, entry, nullptr);
+      entry->function(c_args, entry, compiler.wrap());
 
     if (sass_value_get_tag(c_val) == SASS_ERROR) {
       sass::string message("error in C function " + name + ": ");// +sass_error_get_message(c_val));
@@ -433,7 +433,7 @@ namespace Sass {
 
   sass::string Eval::serialize(AST_Node* node)
   {
-    Sass_Inspect_Options serializeOpt(ctx);
+    Sass_Inspect_Options serializeOpt(compiler);
     serializeOpt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(serializeOpt);
     Inspect serialize(Emitter{ out });
@@ -502,13 +502,13 @@ namespace Sass {
 
     throw Exception::SassRuntimeException2(
       "Variable keyword arguments must be a map (was $keywordRest).",
-      *ctx.logger123);
+      *compiler.logger123);
 
   }
 
   sass::vector<SassCallee>& Eval::callee_stack()
   {
-    return ctx.callee_stack;
+    return compiler.callee_stack;
   }
 
   Value* Eval::visitBlock(Block* node)
@@ -540,14 +540,14 @@ namespace Sass {
     ValueObj message = node->expression()->perform(this);
 
 
-    if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::warnRule)) {
+    if (Callable* fn = compiler.varRoot.getLexicalFunction(Keys::warnRule)) {
 
       // We know that warn override function can only be external
       SASS_ASSERT(Cast<ExternalCallable*>, "External warn override");
       ExternalCallable* def = static_cast<ExternalCallable*>(fn);
       struct SassFunction* c_function = def->function();
       SassFunctionLambda c_func = sass_function_get_function(c_function);
-      // EnvScope scoped(ctx.varRoot, def->idxs());
+      // EnvScope scoped(compiler.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
@@ -562,8 +562,8 @@ namespace Sass {
 
 
       BackTrace trace(node->pstate());
-      callStackFrame frame(*ctx.logger123, trace);
-      ctx.logger123->addWarn43(result, false);
+      callStackFrame frame(*compiler.logger123, trace);
+      compiler.logger123->addWarn43(result, false);
 
     }
     // options().output_style = outstyle;
@@ -582,12 +582,12 @@ namespace Sass {
     // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
-    if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::errorRule)) {
+    if (Callable* fn = compiler.varRoot.getLexicalFunction(Keys::errorRule)) {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
       struct SassFunction* c_function = def->function();
       SassFunctionLambda c_func = sass_function_get_function(c_function);
-      // EnvScope scoped(ctx.varRoot, def->idxs());
+      // EnvScope scoped(compiler.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
@@ -620,12 +620,12 @@ namespace Sass {
     // options().output_style = NESTED;
     ValueObj message = node->expression()->perform(this);
 
-    if (Callable* fn = ctx.varRoot.getLexicalFunction(Keys::debugRule)) {
+    if (Callable* fn = compiler.varRoot.getLexicalFunction(Keys::debugRule)) {
 
       ExternalCallable* def = Cast<ExternalCallable>(fn);
       struct SassFunction* c_function = def->function();
       SassFunctionLambda c_func = sass_function_get_function(c_function);
-      // EnvScope scoped(ctx.varRoot, def->idxs());
+      // EnvScope scoped(compiler.varRoot, def->idxs());
 
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
@@ -643,9 +643,9 @@ namespace Sass {
       // options().output_style = outstyle;
 
       // How to access otherwise?
-      ctx.logger123->warnings <<
+      compiler.logger123->warnings <<
         output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
-      ctx.logger123->warnings << STRMLF;
+      compiler.logger123->warnings << STRMLF;
 
     }
 
@@ -748,7 +748,7 @@ namespace Sass {
     case Sass_OP::IESEQ:
       right = rhs->perform(this);
       return left->singleEquals(
-        right, *ctx.logger123, node->pstate());
+        right, *compiler.logger123, node->pstate());
     case Sass_OP::OR:
       if (left->isTruthy()) {
         return left.detach();
@@ -769,36 +769,36 @@ namespace Sass {
         ? bool_false : bool_true;
     case Sass_OP::GT:
       right = rhs->perform(this);
-      return left->greaterThan(right, *ctx.logger123, node->pstate())
+      return left->greaterThan(right, *compiler.logger123, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::GTE:
       right = rhs->perform(this);
-      return left->greaterThanOrEquals(right, *ctx.logger123, node->pstate())
+      return left->greaterThanOrEquals(right, *compiler.logger123, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::LT:
       right = rhs->perform(this);
-      return left->lessThan(right, *ctx.logger123, node->pstate())
+      return left->lessThan(right, *compiler.logger123, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::LTE:
       right = rhs->perform(this);
-      return left->lessThanOrEquals(right, *ctx.logger123, node->pstate())
+      return left->lessThanOrEquals(right, *compiler.logger123, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::ADD:
       right = rhs->perform(this);
-      return left->plus(right, *ctx.logger123, node->pstate());
+      return left->plus(right, *compiler.logger123, node->pstate());
     case Sass_OP::SUB:
       right = rhs->perform(this);
-      return left->minus(right, *ctx.logger123, node->pstate());
+      return left->minus(right, *compiler.logger123, node->pstate());
     case Sass_OP::MUL:
       right = rhs->perform(this);
-      return left->times(right, *ctx.logger123, node->pstate());
+      return left->times(right, *compiler.logger123, node->pstate());
     case Sass_OP::DIV:
       right = rhs->perform(this);
       return doDivision(left, right,
-        node->allowsSlash(), *ctx.logger123, node->pstate());
+        node->allowsSlash(), *compiler.logger123, node->pstate());
     case Sass_OP::MOD:
       right = rhs->perform(this);
-      return left->modulo(right, *ctx.logger123, node->pstate());
+      return left->modulo(right, *compiler.logger123, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -809,13 +809,13 @@ namespace Sass {
     ValueObj operand = node->operand()->perform(this);
     switch (node->optype()) {
     case Unary_Expression::Type::PLUS:
-      return operand->unaryPlus(*ctx.logger123, node->pstate());
+      return operand->unaryPlus(*compiler.logger123, node->pstate());
     case Unary_Expression::Type::MINUS:
-      return operand->unaryMinus(*ctx.logger123, node->pstate());
+      return operand->unaryMinus(*compiler.logger123, node->pstate());
     case Unary_Expression::Type::NOT:
-      return operand->unaryNot(*ctx.logger123, node->pstate());
+      return operand->unaryNot(*compiler.logger123, node->pstate());
     case Unary_Expression::Type::SLASH:
-      return operand->unaryDivide(*ctx.logger123, node->pstate());
+      return operand->unaryDivide(*compiler.logger123, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -829,8 +829,8 @@ namespace Sass {
     const sass::string& ns)
   {
     return fidx.isValid() ?
-      ctx.varRoot.getFunction(fidx) :
-      ctx.varRoot.getLexicalFunction(name);
+      compiler.varRoot.getFunction(fidx) :
+      compiler.varRoot.getLexicalFunction(name);
   }
 
   /// Like `_environment.getMixin`, but also returns built-in
@@ -841,8 +841,8 @@ namespace Sass {
     const sass::string& ns)
   {
     return midx.isValid() ?
-      ctx.varRoot.getMixin(midx) :
-      ctx.varRoot.getLexicalMixin(name);
+      compiler.varRoot.getMixin(midx) :
+      compiler.varRoot.getLexicalMixin(name);
   }
 
   Value* Eval::_runWithBlock(UserDefinedCallable* callable, Trace* trace)
@@ -859,7 +859,7 @@ namespace Sass {
   Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.ctx.logger123, trace);
+    callStackFrame frame(*eval.compiler.logger123, trace);
     ValueObj rv = eval._runBuiltInCallable(
       arguments, this, pstate, selfAssign);
     rv = rv->withoutSlash();
@@ -869,7 +869,7 @@ namespace Sass {
   Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.ctx.logger123, trace);
+    callStackFrame frame(*eval.compiler.logger123, trace);
     ValueObj rv = eval._runBuiltInCallables(
       arguments, this, pstate, selfAssign);
     rv = rv->withoutSlash();
@@ -880,7 +880,7 @@ namespace Sass {
   {
     LocalOption<bool> inMixin(eval.inMixin, false);
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.ctx.logger123, trace);
+    callStackFrame frame(*eval.compiler.logger123, trace);
     ArgumentResults& evaluated(arguments->evaluated);
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable(evaluated,
@@ -892,7 +892,7 @@ namespace Sass {
   Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
     BackTrace trace(pstate, name(), true);
-    callStackFrame frame(*eval.ctx.logger123, trace);
+    callStackFrame frame(*eval.compiler.logger123, trace);
     ValueObj rv = eval._runExternalCallable(
       arguments, this, pstate);
     rv = rv->withoutSlash();
@@ -906,14 +906,14 @@ namespace Sass {
         arguments->named().pstate());
       throw Exception::SassRuntimeException2(
         "Plain CSS functions don't support keyword arguments.",
-        *eval.ctx.logger123);
+        *eval.compiler.logger123);
     }
     if (arguments->kwdRest() != nullptr) {
       callStackFrame frame(eval.traces,
         arguments->kwdRest()->pstate());
       throw Exception::SassRuntimeException2(
         "Plain CSS functions don't support keyword arguments.",
-        *eval.ctx.logger123);
+        *eval.compiler.logger123);
     }
     bool addComma = false;
     sass::string strm;
@@ -963,8 +963,8 @@ namespace Sass {
     // Function Expression might be simple and static, or dynamic CSS call
     const sass::string& plainName(node->name()->getPlainString());
     CallableObj function = node->fidx().isValid()
-      ? ctx.varRoot.getFunction(node->fidx())
-      : ctx.varRoot.getLexicalFunction(plainName);
+      ? compiler.varRoot.getFunction(node->fidx())
+      : compiler.varRoot.getLexicalFunction(plainName);
 
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
@@ -980,11 +980,11 @@ namespace Sass {
   {
     IdxRef vidx = v->vidx();
     if (vidx.isValid()) {
-      Expression* ex = ctx.varRoot.getVariable(vidx);
+      Expression* ex = compiler.varRoot.getVariable(vidx);
       return ex->perform(this)->withoutSlash();
     }
 
-    ValueObj ex = ctx.varRoot
+    ValueObj ex = compiler.varRoot
       .getLexicalVariable(v->name());
 
     if (ex.isNull()) {
@@ -1281,11 +1281,11 @@ namespace Sass {
         values["$" + str->value()] = kv.second; // convert?
       }
       else {
-        callStackFrame frame(*ctx.logger123, pstate);
+        callStackFrame frame(*compiler.logger123, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspect() + " is not a string in " + map->inspect() + ".",
-          *ctx.logger123);
+          *compiler.logger123);
       }
     }
   }
@@ -1310,11 +1310,11 @@ namespace Sass {
           ValueExpression, pstate, kv.second);
       }
       else {
-        callStackFrame frame(*ctx.logger123, pstate);
+        callStackFrame frame(*compiler.logger123, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspect() + " is not a string in " + map->inspect() + ".",
-          *ctx.logger123);
+          *compiler.logger123);
       }
     }
   }
@@ -1418,13 +1418,13 @@ namespace Sass {
     }
     throw Exception::SassRuntimeException2(
       "Function finished without @return.",
-      *ctx.logger123);
+      *compiler.logger123);
   }
 
   Value* Eval::visitSupportsRule(SupportsRule* node)
   {
     ValueObj condition = node->condition()->perform(this);
-    EnvScope scoped(ctx.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
     bb->is_root(blockStack.back()->is_root());
@@ -1470,10 +1470,10 @@ namespace Sass {
       str_mq = performInterpolation(node->query(), false);
     }
     // char* str = sass_copy_c_string(str_mq.c_str());
-    // ctx.strings.emplace_back(str);
+    // compiler.strings.emplace_back(str);
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl,
       std::move(str_mq), state);
-    MediaQueryParser parser(ctx, source);
+    MediaQueryParser parser(compiler, source);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), sass::vector<CssMediaQueryObj>(), node->block()->elements());
@@ -1505,7 +1505,7 @@ namespace Sass {
   Value* Eval::visitAtRootRule(AtRootRule* node)
   {
 
-    EnvScope scoped(ctx.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs());
 
 
     // std::cerr << "visitAtRootRule\n";
@@ -1518,7 +1518,7 @@ namespace Sass {
       query = AtRootQuery::parse(
         performInterpolationToSource(
           node->query(), true),
-        ctx);
+        compiler);
     }
     else {
       query = AtRootQuery::defaultQuery(node->pstate());
@@ -1639,10 +1639,10 @@ namespace Sass {
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
-      callStackFrame frame(*ctx.logger123, node->value()->pstate());
+      callStackFrame frame(*compiler.logger123, node->value()->pstate());
       throw Exception::SassRuntimeException2(
         "Custom property values may not be empty.",
-        *ctx.logger123
+        *compiler.logger123
       );
     }
 
@@ -1670,9 +1670,9 @@ namespace Sass {
     if (a->is_global()) {
 
       // Check if we are at the global scope
-      if (ctx.varRoot.isGlobal()) {
-        if (!ctx.varRoot.getGlobalVariable(name)) {
-          ctx.logger123->addWarn33(
+      if (compiler.varRoot.isGlobal()) {
+        if (!compiler.varRoot.getGlobalVariable(name)) {
+          compiler.logger123->addWarn33(
             "As of LibSass 4.1, !global assignments won't be able to declare new"
             " variables. Since this assignment is at the root of the stylesheet,"
             " the !global flag is unnecessary and can safely be removed.",
@@ -1680,8 +1680,8 @@ namespace Sass {
         }
       }
       else {
-        if (!ctx.varRoot.getGlobalVariable(name)) {
-          ctx.logger123->addWarn33(
+        if (!compiler.varRoot.getGlobalVariable(name)) {
+          compiler.logger123->addWarn33(
             "As of LibSass 4.1, !global assignments won't be able to declare new variables."
             " Consider adding `" + name.orig() + ": null` at the root of the stylesheet.",
             a->pstate(), true);
@@ -1690,29 +1690,29 @@ namespace Sass {
 
       // has global and default?
       if (a->is_default()) {
-        ValueObj& value = ctx.varRoot.getVariable(vidx);
+        ValueObj& value = compiler.varRoot.getVariable(vidx);
         if (value.isNull() || Cast<Null>(value)) {
-          ctx.varRoot.setVariable(vidx,
+          compiler.varRoot.setVariable(vidx,
             a->value()->perform(this));
         }
       }
       else {
-        ctx.varRoot.setVariable(vidx,
+        compiler.varRoot.setVariable(vidx,
           a->value()->perform(this));
       }
 
     }
     // has only default flag?
     else if (a->is_default()) {
-      ValueObj& value = ctx.varRoot.getVariable(vidx);
+      ValueObj& value = compiler.varRoot.getVariable(vidx);
       if (value.isNull() || Cast<Null>(value)) {
-        ctx.varRoot.setVariable(vidx,
+        compiler.varRoot.setVariable(vidx,
           a->value()->perform(this));
       }
     }
     // no global nor default
     else {
-      ctx.varRoot.setVariable(vidx,
+      compiler.varRoot.setVariable(vidx,
         a->value()->perform(this));
     }
 
@@ -1732,7 +1732,7 @@ namespace Sass {
   {
     ValueObj rv;
 
-    EnvScope scoped(ctx.varRoot, i->idxs());
+    EnvScope scoped(compiler.varRoot, i->idxs());
 
     ValueObj condition = i->predicate()->perform(this);
     if (condition->isTruthy()) {
@@ -1752,13 +1752,13 @@ namespace Sass {
   {
     BackTrace trace(f->pstate(), Strings::forRule);
     callStackFrame(traces, trace);
-    EnvScope scoped(ctx.varRoot, f->idxs());
+    EnvScope scoped(compiler.varRoot, f->idxs());
 
     // const EnvKey& variable(f->variable());
     ValueObj low = f->lower_bound()->perform(this);
     ValueObj high = f->upper_bound()->perform(this);
-    NumberObj sass_start = low->assertNumber(*ctx.logger123);
-    NumberObj sass_end = high->assertNumber(*ctx.logger123);
+    NumberObj sass_start = low->assertNumber(*compiler.logger123);
+    NumberObj sass_end = high->assertNumber(*compiler.logger123);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
       sass::sstream msg; msg << "Incompatible units "
@@ -1775,7 +1775,7 @@ namespace Sass {
       if (f->is_inclusive()) ++end;
       for (double i = start; i < end; ++i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        ctx.varRoot.setVariable(f->idxs()->varFrame, 0, it);
+        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
         val = body->perform(this);
         if (val) break;
@@ -1785,7 +1785,7 @@ namespace Sass {
       if (f->is_inclusive()) --end;
       for (double i = start; i > end; --i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        ctx.varRoot.setVariable(f->idxs()->varFrame, 0, it);
+        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
         val = body->perform(this);
         if (val) break;
@@ -1838,7 +1838,7 @@ namespace Sass {
             }
             sels << "` instead. See http://bit.ly/ExtendCompound for details.";
 
-            ctx.logger123->addWarn33(sels.str(), compound->pstate());
+            compiler.logger123->addWarn33(sels.str(), compound->pstate());
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
@@ -1865,7 +1865,7 @@ namespace Sass {
   Value* Eval::visitStyleRule(StyleRule* r)
   {
 
-    EnvScope scope(ctx.varRoot, r->idxs());
+    EnvScope scope(compiler.varRoot, r->idxs());
 
     Interpolation* itpl = r->interpolation();
     LocalOption<StyleRuleObj> oldStyleRule(_styleRule, r);
@@ -1883,7 +1883,7 @@ namespace Sass {
       auto qwe = SASS_MEMORY_NEW(SourceItpl,
         std::move(text), itpl->pstate());
 
-      KeyframeSelectorParser parser(ctx, qwe);
+      KeyframeSelectorParser parser(compiler, qwe);
       sass::vector<sass::string> selector(parser.parse());
 
       CssStrings* strings =
@@ -1910,7 +1910,7 @@ namespace Sass {
 
     SelectorListObj slist;
     if (r->interpolation()) {
-      struct SassImport* imp = ctx.import_stack.back();
+      struct SassImport* imp = compiler.import_stack.back();
       bool plainCss = imp->format == SASS_IMPORT_CSS;
       slist = itplToSelector(r->interpolation(), plainCss);
     }
@@ -1968,7 +1968,7 @@ namespace Sass {
       // update the positions according to previous source-positions
       // Is a parser state solely represented by a source map or do we
       // need an intermediate format for them?
-      SelectorParser p2(ctx, synthetic);
+      SelectorParser p2(compiler, synthetic);
       p2._allowPlaceholder = plainCss == false;
       if (blockStack.size() > 2) {
         Block* b = blockStack.at(blockStack.size() - 2);
@@ -1986,7 +1986,7 @@ namespace Sass {
   {
     const IDXS* vidx(e->idxs());
     const sass::vector<EnvKey>& variables(e->variables());
-    EnvScope scoped(ctx.varRoot, e->idxs());
+    EnvScope scoped(compiler.varRoot, e->idxs());
     ValueObj expr = e->list()->perform(this);
     Block_Obj body = e->block();
     if (MapObj map = expr->isMap()) {
@@ -1997,12 +1997,12 @@ namespace Sass {
         if (variables.size() == 1) {
           SassList* variable = SASS_MEMORY_NEW(SassList,
             map->pstate(), { key, value }, SASS_SPACE);
-          ctx.varRoot.setVariable(vidx->varFrame, 0, variable);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, variable);
           // env.set_local(variables[0], variable);
         }
         else {
-          ctx.varRoot.setVariable(vidx->varFrame, 0, key);
-          ctx.varRoot.setVariable(vidx->varFrame, 1, value);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, key);
+          compiler.varRoot.setVariable(vidx->varFrame, 1, value);
           // env.set_local(variables[0], key);
           // env.set_local(variables[1], value);
         }
@@ -2029,7 +2029,7 @@ namespace Sass {
       // check if we got passed a list of args (investigate)
       if (SassList* scalars = item->isList()) { // Ex
         if (variables.size() == 1) {
-          ctx.varRoot.setVariable(vidx->varFrame, 0, scalars);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, scalars);
           // env.set_local(variables[0], scalars);
         }
         else {
@@ -2037,7 +2037,7 @@ namespace Sass {
             Value* res = j >= scalars->length()
               ? SASS_MEMORY_NEW(Null, expr->pstate())
               : scalars->get(j)->perform(this);
-            ctx.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res);
+            compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res);
             // env.set_local(variables[j], res);
           }
         }
@@ -2045,10 +2045,10 @@ namespace Sass {
       else {
         if (variables.size() > 0) {
           // env.set_local(variables.at(0), item);
-          ctx.varRoot.setVariable(vidx->varFrame, 0, item);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, item);
           for (size_t j = 1, K = variables.size(); j < K; ++j) {
             Value* res = SASS_MEMORY_NEW(Null, expr->pstate());
-            ctx.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res);
+            compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res);
             // env.set_local(variables[j], res);
           }
         }
@@ -2066,7 +2066,7 @@ namespace Sass {
     Expression* condition = node->condition();
     ValueObj result = condition->perform(this);
 
-    EnvScope scoped(ctx.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs());
 
     // Evaluate the first run in outer scope
     // All successive runs are from innter scope
@@ -2095,18 +2095,18 @@ namespace Sass {
     LOCAL_FLAG(inMixin, false);
 
 
-    // EnvScope scoped(ctx.varRoot, before->declaration()->idxs());
+    // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
 
     Block_Obj trace_block = SASS_MEMORY_NEW(Block, c->pstate());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule, trace_block);
 
     blockStack.emplace_back(trace_block);
 
-    callStackFrame frame(*ctx.logger123,
+    callStackFrame frame(*compiler.logger123,
       BackTrace(c->pstate(), Strings::contentRule));
 
-    // EnvSnapshotView view(ctx.varRoot, content->snapshot());
-    EnvScope scoped(ctx.varRoot, content->declaration()->idxs()); // Not needed, but useful?
+    // EnvSnapshotView view(compiler.varRoot, content->snapshot());
+    EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
     LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
 
@@ -2140,7 +2140,7 @@ namespace Sass {
         rule->pstate(), rule->name(), rule, nullptr);
 
     if (rule->fidx().isValid()) {
-      ctx.varRoot.setMixin(rule->fidx(), cb);
+      compiler.varRoot.setMixin(rule->fidx(), cb);
     }
     else {
       std::cerr << "why not set?";
@@ -2158,7 +2158,7 @@ namespace Sass {
       rule->pstate(), rule->name(), rule, nullptr);
 
     if (rule->fidx().isValid()) {
-      ctx.varRoot.setFunction(rule->fidx(), cb);
+      compiler.varRoot.setFunction(rule->fidx(), cb);
       // return nullptr;
     }
 
@@ -2168,13 +2168,13 @@ namespace Sass {
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {
     UserDefinedCallableObj mixin = node->midx().isValid() ?
-      ctx.varRoot.getMixin(node->midx()) :
-      ctx.varRoot.getLexicalMixin(node->name());
+      compiler.varRoot.getMixin(node->midx()) :
+      compiler.varRoot.getLexicalMixin(node->name());
 
     if (mixin == nullptr) {
       throw Exception::SassRuntimeException2(
         "Undefined mixin.",
-        *ctx.logger123);
+        *compiler.logger123);
     }
 
     UserDefinedCallableObj contentCallable;
@@ -2191,10 +2191,10 @@ namespace Sass {
 
       if (!rule || !rule->has_content()) {
         SourceSpan span(node->content()->pstate());
-        callStackFrame frame(*ctx.logger123, span);
+        callStackFrame frame(*compiler.logger123, span);
         throw Exception::SassRuntimeException2(
           "Mixin doesn't accept a content block.",
-          *ctx.logger123);
+          *compiler.logger123);
       }
     }
 
@@ -2204,7 +2204,7 @@ namespace Sass {
     blockStack.emplace_back(trace_block);
     LOCAL_FLAG(inMixin, true);
 
-    callStackFrame frame(*ctx.logger123,
+    callStackFrame frame(*compiler.logger123,
       BackTrace(node->pstate(), mixin->name().orig(), true));
 
     LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
@@ -2229,7 +2229,7 @@ namespace Sass {
     */
 
     // From old implementation
-    // ctx.callee_stack.pop_back();
+    // compiler.callee_stack.pop_back();
     // env_stack.pop_back();
     // traces.pop_back();
 
@@ -2254,7 +2254,7 @@ namespace Sass {
 
     // This will error if the path was not loaded before
     // ToDo: Why don't we attach the sheet to include itself?
-    const StyleSheet& sheet = ctx.sheets.at(include.abs_path);
+    const StyleSheet& sheet = compiler.sheets.at(include.abs_path);
 
     // Create C-API exposed object to query
     struct SassImport* import = sass_make_import(
@@ -2264,8 +2264,8 @@ namespace Sass {
     );
 
     // Add C-API to stack to expose it
-    ctx.import_stack.emplace_back(import);
-    // ctx.import_stack2.emplace_back(source);
+    compiler.import_stack.emplace_back(import);
+    // compiler.import_stack2.emplace_back(source);
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
@@ -2274,12 +2274,12 @@ namespace Sass {
     append_block(sheet.root);
 
     // These data object have just been borrowed
-    // sass_import_take_source(ctx.import_stack.back());
-    // sass_import_take_srcmap(ctx.import_stack.back());
+    // sass_import_take_source(compiler.import_stack.back());
+    // sass_import_take_srcmap(compiler.import_stack.back());
     // Cleanup the import entry we added
-    sass_delete_import(ctx.import_stack.back());
+    sass_delete_import(compiler.import_stack.back());
     // Finally remove if from the stack
-    ctx.import_stack.pop_back();
+    compiler.import_stack.pop_back();
 
     return nullptr;
   }
@@ -2294,7 +2294,7 @@ namespace Sass {
   sass::vector<CssMediaQueryObj> Eval::evalMediaQueries(Interpolation* itpl)
   {
     SourceDataObj synthetic = performInterpolationToSource(itpl, true);
-    MediaQueryParser parser(ctx, synthetic);
+    MediaQueryParser parser(compiler, synthetic);
     return parser.parse();
   }
 
@@ -2355,7 +2355,7 @@ namespace Sass {
 
   bool Eval::isInMixin()
   {
-    for (SassCallee& callee : ctx.callee_stack) {
+    for (SassCallee& callee : compiler.callee_stack) {
       if (callee.type == SASS_CALLEE_MIXIN) return true;
     }
     return false;

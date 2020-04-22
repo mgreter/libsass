@@ -173,6 +173,7 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\remove_placeholders.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_base.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_lists.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_error.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_values.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\sass_context.cpp" />

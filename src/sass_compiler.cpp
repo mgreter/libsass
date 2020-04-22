@@ -112,6 +112,11 @@ namespace Sass {
 
         compiler.content = output.buffer;
 
+        compiler.error.status = 0;
+        compiler.error.messages = compiler.logger123->errors.str();
+        compiler.error.warnings = compiler.logger123->warnings.str();
+        compiler.error.formatted = compiler.logger123->formatted.str();
+
         // Create options to render source map and footer.
         struct SassSrcMapOptions options(compiler.srcmap_options);
         // Deduct some options always from original values.
@@ -236,6 +241,20 @@ namespace Sass {
       Compiler::unwrap(compiler).addIncludePaths(paths);
     }
 
+    void ADDCALL sass_compiler_add_custom_header(struct SassCompiler* compiler, struct SassImporter* header)
+    {
+      Compiler::unwrap(compiler).addCustomHeader(header);
+    }
+    void ADDCALL sass_compiler_add_custom_importer(struct SassCompiler* compiler, struct SassImporter* importer)
+    {
+      Compiler::unwrap(compiler).addCustomImporter(importer);
+    }
+
+    void ADDCALL sass_compiler_add_custom_function(struct SassCompiler* compiler, struct SassFunction* function)
+    {
+      Compiler::unwrap(compiler).addCustomFunction(function);
+    }
+
     // Push function for plugin paths (no manipulation support for now)
     void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* paths)
     {
@@ -317,6 +336,23 @@ namespace Sass {
     struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* compiler)
     {
       return &Compiler::unwrap(compiler).error;
+    }
+
+    size_t ADDCALL sass_compiler_count_traces(struct SassCompiler* compiler)
+    {
+      return Compiler::unwrap(compiler).logger123->callStack.size();
+    }
+
+    struct SassTrace* ADDCALL sass_compiler_last_trace(struct SassCompiler* compiler)
+    {
+      return reinterpret_cast<struct SassTrace*>
+        (&(Traced&)Compiler::unwrap(compiler).logger123->callStack.back());
+    }
+
+    struct SassTrace* ADDCALL sass_compiler_get_trace(struct SassCompiler* compiler, size_t i)
+    {
+      return reinterpret_cast<struct SassTrace*>
+        (&(Traced&)Compiler::unwrap(compiler).logger123->callStack.at(i));
     }
 
   }

@@ -26,7 +26,7 @@ ADDAPI void ADDCALL sass_importer_list_push(struct SassImporterList* list, struc
 ADDAPI struct SassImporter* ADDCALL sass_make_importer (SassImporterLambda importer, double priority, void* cookie);
 
 // Getters for import function descriptors
-ADDAPI SassImporterLambda ADDCALL sass_importer_get_function (struct SassImporter* cb);
+ADDAPI SassImporterLambda ADDCALL sass_importer_get_callback(struct SassImporter* cb);
 ADDAPI double ADDCALL sass_importer_get_priority (struct SassImporter* cb);
 ADDAPI void* ADDCALL sass_importer_get_cookie (struct SassImporter* cb);
 
@@ -68,15 +68,8 @@ ADDAPI const char* ADDCALL sass_import_get_error_message (struct SassImport*);
 // Just in case we have some stray import structs
 ADDAPI void ADDCALL sass_delete_import (struct SassImport*);
 
-// Creators for sass function list and function descriptors
-ADDAPI struct SassFunctionList* ADDCALL sass_make_function_list();
-ADDAPI size_t ADDCALL sass_function_list_size(struct SassFunctionList* list);
-ADDAPI struct SassFunction* ADDCALL sass_function_list_shift(struct SassFunctionList* list);
-ADDAPI void ADDCALL sass_function_list_push(struct SassFunctionList* list, struct SassFunction*);
-
 ADDAPI struct SassFunction* ADDCALL sass_make_function (const char* signature, SassFunctionLambda cb, void* cookie);
 ADDAPI void ADDCALL sass_delete_function (struct SassFunction* entry);
-ADDAPI void ADDCALL sass_delete_function_list (struct SassFunctionList* list);
 
 // Getters for custom function descriptors
 ADDAPI const char* ADDCALL sass_function_get_signature (struct SassFunction* cb);

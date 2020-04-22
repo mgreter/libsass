@@ -36,29 +36,29 @@ extern "C" {
 
   size_t ADDCALL sass_traces_get_size(struct SassTraces* traces)
   {
-    return reinterpret_cast<Sass::StackTraces*>(traces)->size();
+    return reinterpret_cast<StackTraces*>(traces)->size();
   }
 
   const char* ADDCALL sass_trace_get_name(struct SassTrace* trace)
   {
-    return reinterpret_cast<struct StackTrace*>(trace)->name.c_str();
+    return reinterpret_cast<struct Traced*>(trace)->getName().c_str();
   }
 
   bool ADDCALL sass_trace_get_was_fncall(struct SassTrace* trace)
   {
-    return reinterpret_cast<struct StackTrace*>(trace)->fn;
+    return reinterpret_cast<struct Traced*>(trace)->isFn();
   }
 
-  struct SassSrcSpan* ADDCALL sass_trace_get_srcspan(struct SassTrace* trace)
+  const struct SassSrcSpan* ADDCALL sass_trace_get_srcspan(struct SassTrace* trace)
   {
-    return reinterpret_cast<struct SassSrcSpan*>
-      (&reinterpret_cast<struct StackTrace*>(trace)->pstate);
+    return reinterpret_cast<const struct SassSrcSpan*>
+      (&reinterpret_cast<struct Traced*>(trace)->getPstate());
   }
 
   struct SassTrace* ADDCALL sass_traces_get_trace(struct SassTraces* traces, size_t i)
   {
     return reinterpret_cast<struct SassTrace*>
-      (&reinterpret_cast<StackTraces*>(traces)->at(i));
+      (&(struct Traced&)reinterpret_cast<StackTraces*>(traces)->at(i));
   }
 
 
