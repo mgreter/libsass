@@ -1424,15 +1424,15 @@ namespace Sass {
     ValueObj condition = node->condition()->perform(this);
     EnvScope scoped(compiler.varRoot, node->idxs());
 
-    BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    blockStack.emplace_back(&bb->elements());
+    sass::vector<StatementObj> children;
+    blockStack.emplace_back(&children);
     node->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(),
       condition,
-      bb->elements());
+      children);
 
     // ff->block(bb);
     // ff->tabs(f->tabs());
@@ -1484,11 +1484,11 @@ namespace Sass {
     }
     mediaStack.emplace_back(css);
 
-    BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-    blockStack.emplace_back(&blk->elements());
+    sass::vector<StatementObj> children;
+    blockStack.emplace_back(&children);
     node->blocksy()->Block::perform(this);
     blockStack.pop_back();
-    css->elementsM(std::move(blk->elements()));
+    css->elementsM(std::move(children));
     mediaStack.pop_back();
 
     // The parent to add declarations too
@@ -1524,14 +1524,14 @@ namespace Sass {
     LOCAL_FLAG(at_root_without_rule,
       query && query->excludesStyleRules());
 
-    BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    blockStack.emplace_back(&bb->elements());
+    sass::vector<StatementObj> children;
+    blockStack.emplace_back(&children);
     node->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
     blockStack.back()->push_back(
       SASS_MEMORY_NEW(CssAtRootRule,
-        node->pstate(), query, bb->elements()));
+        node->pstate(), query, children));
 
     return nullptr;
   }
@@ -1567,9 +1567,8 @@ namespace Sass {
 
     if (node->blocksy()) {
 
-      BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-      // blk->is_root3(isRoot());
-      blockStack.emplace_back(&blk->elements());
+      sass::vector<StatementObj> children;
+      blockStack.emplace_back(&children);
       node->blocksy()->Block::perform(this);
       blockStack.pop_back();
 
@@ -1577,7 +1576,7 @@ namespace Sass {
         node->pstate(),
         name,
         value,
-        blk->elements());
+        children);
 
       result->isChildless(node->is_childless());
 
@@ -1865,9 +1864,8 @@ namespace Sass {
 
     if (_inKeyframes) {
 
-      BlockObj bb = SASS_MEMORY_NEW(Block, r->pstate());
-      // bb->is_root3(isRoot());
-      blockStack.emplace_back(&bb->elements());
+      sass::vector<StatementObj> children;
+      blockStack.emplace_back(&children);
       r->blocksy()->Block::perform(this);
       blockStack.pop_back();
 
@@ -1884,9 +1882,9 @@ namespace Sass {
         itpl->pstate(), selector);
 
       auto block = SASS_MEMORY_NEW(CssKeyframeBlock,
-        itpl->pstate(), strings, bb->elements());
+        itpl->pstate(), strings, children);
 
-      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), bb->elements());
+      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), children);
       if (r->interpolation()) {
         selectorStack.push_back({});
         auto val = interpolationToValue(r->interpolation(), true, false);
@@ -1921,8 +1919,8 @@ namespace Sass {
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
       extender.addSelector(evaled, mediaStack.back());
 
-    BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
-    blockStack.emplace_back(&blk->elements());
+    sass::vector<StatementObj> children;
+    blockStack.emplace_back(&children);
     r->blocksy()->Block::perform(this);
     blockStack.pop_back();
 
@@ -1932,7 +1930,7 @@ namespace Sass {
     CssStyleRule* rr = SASS_MEMORY_NEW(CssStyleRule,
       r->pstate(),
       evaled,
-      blk->elements());
+      children);
 
     rr->tabs(r->tabs());
     blockStack.back()->push_back(rr);
@@ -1976,7 +1974,6 @@ namespace Sass {
     const sass::vector<EnvKey>& variables(e->variables());
     EnvScope scoped(compiler.varRoot, e->idxs());
     ValueObj expr = e->list()->perform(this);
-    BlockObj body = e->blocksy();
     if (MapObj map = expr->isMap()) {
       Map::ordered_map_type els = map->elements(); // Copy ...
       for (auto kv : els) {
@@ -1994,7 +1991,7 @@ namespace Sass {
           // env.set_local(variables[0], key);
           // env.set_local(variables[1], value);
         }
-        ValueObj val = body->Block::perform(this);
+        ValueObj val = e->Block::perform(this);
         if (val) return val.detach();
       }
       return nullptr;
@@ -2041,7 +2038,7 @@ namespace Sass {
           }
         }
       }
-      ValueObj val = body->Block::perform(this);
+      ValueObj val = e->Block::perform(this);
       if (val) return val.detach();
     }
 
