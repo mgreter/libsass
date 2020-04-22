@@ -1421,21 +1421,17 @@ namespace Sass {
 
   Value* Eval::visitSupportsRule(SupportsRule* node)
   {
-    ValueObj condition = node->condition()->perform(this);
+
+    ValueObj condition(node->condition()->perform(this));
     EnvScope scoped(compiler.varRoot, node->idxs());
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->blocksy()->Block::perform(this);
+    node->Block::perform(this);
     blockStack.pop_back();
 
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
-      node->pstate(),
-      condition,
-      children);
-
-    // ff->block(bb);
-    // ff->tabs(f->tabs());
+      node->pstate(), condition, std::move(children));
     blockStack.back()->push_back(ff);
 
     return nullptr;
@@ -1486,7 +1482,7 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->blocksy()->Block::perform(this);
+    node->Block::perform(this);
     blockStack.pop_back();
     css->elementsM(std::move(children));
     mediaStack.pop_back();
@@ -1526,12 +1522,11 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->blocksy()->Block::perform(this);
+    node->Block::perform(this);
     blockStack.pop_back();
 
-    blockStack.back()->push_back(
-      SASS_MEMORY_NEW(CssAtRootRule,
-        node->pstate(), query, children));
+    blockStack.back()->push_back(SASS_MEMORY_NEW(CssAtRootRule,
+        node->pstate(), query, std::move(children)));
 
     return nullptr;
   }
@@ -1565,36 +1560,15 @@ namespace Sass {
     LOCAL_FLAG(_inUnknownAtRule, !isKeyframe);
     LOCAL_FLAG(_inKeyframes, isKeyframe);
 
-    if (node->blocksy()) {
+    sass::vector<StatementObj> children;
+    blockStack.emplace_back(&children);
+    node->Block::perform(this);
+    blockStack.pop_back();
 
-      sass::vector<StatementObj> children;
-      blockStack.emplace_back(&children);
-      node->blocksy()->Block::perform(this);
-      blockStack.pop_back();
-
-      CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
-        node->pstate(),
-        name,
-        value,
-        children);
-
-      result->isChildless(node->is_childless());
-
-      //result->block(blk);
-      parent->push_back(result);
-
-    }
-    else {
-
-      CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
-        node->pstate(),
-        name,
-        value,
-        sass::vector<StatementObj>());
-      result->isChildless(true);
-      parent->push_back(result);
-
-    }
+    CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
+      node->pstate(), name, value, std::move(children));
+    result->isChildless(node->is_childless());
+    parent->push_back(result);
 
     return nullptr;
 
@@ -1641,11 +1615,10 @@ namespace Sass {
       );
     }
 
-    if (node->blocksy()) {
+    if (!node->empty()) {
       LocalOption<sass::string> ll1(_declarationName, name->text());
       for (Statement* child : node->elements()) {
         ValueObj result = child->perform(this);
-        // if (result) parent->append(result);
       }
     }
     return nullptr;
@@ -1731,7 +1704,7 @@ namespace Sass {
 
     ValueObj condition = i->predicate()->perform(this);
     if (condition->isTruthy()) {
-      if (i->blocksy()) rv = i->blocksy()->Block::perform(this);
+      rv = i->Block::perform(this);
     }
     else {
       for (auto alternative : i->alternatives()) {
@@ -1766,7 +1739,6 @@ namespace Sass {
     double start = sass_start->value();
     double end = sass_end->value();
     // only create iterator once in this environment
-    Block* body = f->blocksy();
     ValueObj val;
     if (start < end) {
       if (f->is_inclusive()) ++end;
@@ -1774,7 +1746,7 @@ namespace Sass {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
         compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
-        val = body->Block::perform(this);
+        val = f->Block::perform(this);
         if (val) break;
       }
     }
@@ -1784,7 +1756,7 @@ namespace Sass {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
         compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
-        val = body->Block::perform(this);
+        val = f->Block::perform(this);
         if (val) break;
       }
     }
@@ -1866,7 +1838,7 @@ namespace Sass {
 
       sass::vector<StatementObj> children;
       blockStack.emplace_back(&children);
-      r->blocksy()->Block::perform(this);
+      r->Block::perform(this);
       blockStack.pop_back();
 
       auto text = interpolationToValue(itpl, true, false);
@@ -1921,16 +1893,14 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    r->blocksy()->Block::perform(this);
+    r->Block::perform(this);
     blockStack.pop_back();
 
     originalStack.pop_back();
     selectorStack.pop_back();
 
     CssStyleRule* rr = SASS_MEMORY_NEW(CssStyleRule,
-      r->pstate(),
-      evaled,
-      children);
+      r->pstate(), evaled, std::move(children));
 
     rr->tabs(r->tabs());
     blockStack.back()->push_back(rr);
@@ -2047,7 +2017,7 @@ namespace Sass {
 
   Value* Eval::visitWhileRule(WhileRule* node)
   {
-    Block* body = node->blocksy();
+
     Expression* condition = node->condition();
     ValueObj result = condition->perform(this);
 
@@ -2058,7 +2028,7 @@ namespace Sass {
     if (result->isTruthy()) {
 
       while (true) {
-        result = body->Block::perform(this);
+        result = node->Block::perform(this);
         if (result) {
           return result.detach();
         }

@@ -5,6 +5,7 @@
 // __EXTENSIONS__ fix on Solaris.
 #include "sass.hpp"
 
+#include <stack>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -308,7 +309,8 @@ namespace Sass {
   // some often used typedefs
   // ###########################################################################
 
-  typedef sass::vector<sass::vector<StatementObj>*> BlockStack;
+  typedef sass::vector<StatementObj> Statements;
+  typedef sass::vector<Statements*> BlockStack;
   typedef sass::vector<SassCallee> CalleeStack;
   typedef sass::vector<CssMediaRuleObj> MediaStack;
   typedef sass::vector<SelectorListObj> SelectorStack;
