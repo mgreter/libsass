@@ -190,13 +190,13 @@ namespace Sass {
     is_root_(ptr->is_root_)
   {}
 
-  bool Block::isInvisible() const
-  {
-    for (auto& item : this->elements()) {
-      if (!item->is_invisible()) return false;
-    }
-    return true;
-  }
+//  bool Block::isInvisible() const
+//  {
+//    for (auto& item : this->elements()) {
+//      if (!item->is_invisible()) return false;
+//    }
+//    return true;
+//  }
 
   // bool Block::has_content()
   // {
