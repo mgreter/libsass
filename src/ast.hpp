@@ -333,7 +333,7 @@ namespace Sass {
     bool is_invisible() const override {
       return isInvisible();
     }
-    // bool has_content() override;
+    bool has_content() override;
     // ATTACH_CLONE_OPERATIONS(Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -375,7 +375,7 @@ namespace Sass {
     ParentStatement(const SourceSpan& pstate, Block_Obj b);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
-    virtual bool has_content() override;
+    // virtual bool has_content() override = 0;
   };
   inline ParentStatement::~ParentStatement() { }
 

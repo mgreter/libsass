@@ -198,6 +198,15 @@ namespace Sass {
     return true;
   }
 
+//  bool Block::has_content()
+//  {
+//    std::cerr << "FOOBARS " << pstate_.getAbsPath() << "\n";
+//    for (size_t i = 0, L = elements().size(); i < L; ++i) {
+//      if (elements()[i]->has_content()) return true;
+//    }
+//    return Statement::has_content();
+//  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +223,7 @@ namespace Sass {
   bool ParentStatement::has_content()
   {
     if (Statement::has_content()) return true;
+    if (block_ == nullptr) return false;
     for (size_t i = 0, L = elements().size(); i < L; ++i) {
       if (elements()[i]->has_content()) return true;
     }
@@ -426,7 +436,12 @@ namespace Sass {
 
   bool If::has_content()
   {
-    return ParentStatement::has_content() || (alternative_ && alternative_->has_content());
+    if (ParentStatement::has_content()) return true;
+    if (alternative_ == nullptr) return false;
+    for (size_t i = 0, L = alternative_->elements().size(); i < L; ++i) {
+      if (alternative_->at(i)->has_content()) return true;
+    }
+    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////
