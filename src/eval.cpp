@@ -516,14 +516,14 @@ namespace Sass {
     return compiler.callee_stack;
   }
 
-  Value* Eval::operator()(Block* b)
+  // Invoked via Block::perform
+  Value* Eval::visitChildren(const sass::vector<StatementObj>& children)
   {
-    ValueObj val;
-    for (const auto& item : b->elements()) {
-      val = item->perform(this);
+    for (const auto& child : children) {
+      ValueObj val = child->perform(this);
       if (val) return val.detach();
     }
-    return val.detach();
+    return nullptr;
   }
 
   Value* Eval::operator()(Return* r)
@@ -1427,7 +1427,7 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->Block::perform(this);
+    visitChildren(node->elements());
     blockStack.pop_back();
 
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
@@ -1482,7 +1482,7 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->Block::perform(this);
+    visitChildren(node->elements());
     blockStack.pop_back();
     css->elementsM(std::move(children));
     mediaStack.pop_back();
@@ -1522,7 +1522,7 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->Block::perform(this);
+    visitChildren(node->elements());
     blockStack.pop_back();
 
     blockStack.back()->push_back(SASS_MEMORY_NEW(CssAtRootRule,
@@ -1562,7 +1562,7 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    node->Block::perform(this);
+    visitChildren(node->elements());
     blockStack.pop_back();
 
     CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
@@ -1704,7 +1704,7 @@ namespace Sass {
 
     ValueObj condition = i->predicate()->perform(this);
     if (condition->isTruthy()) {
-      rv = i->Block::perform(this);
+      rv = visitChildren(i->elements());
     }
     else {
       for (auto alternative : i->alternatives()) {
@@ -1746,7 +1746,7 @@ namespace Sass {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
         compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
-        val = f->Block::perform(this);
+        val = visitChildren(f->elements());
         if (val) break;
       }
     }
@@ -1756,7 +1756,7 @@ namespace Sass {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
         compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
         // env.set_local(variable, it);
-        val = f->Block::perform(this);
+        val = visitChildren(f->elements());
         if (val) break;
       }
     }
@@ -1838,7 +1838,7 @@ namespace Sass {
 
       sass::vector<StatementObj> children;
       blockStack.emplace_back(&children);
-      r->Block::perform(this);
+      visitChildren(r->elements());
       blockStack.pop_back();
 
       auto text = interpolationToValue(itpl, true, false);
@@ -1893,7 +1893,7 @@ namespace Sass {
 
     sass::vector<StatementObj> children;
     blockStack.emplace_back(&children);
-    r->Block::perform(this);
+    visitChildren(r->elements());
     blockStack.pop_back();
 
     originalStack.pop_back();
@@ -1961,7 +1961,7 @@ namespace Sass {
           // env.set_local(variables[0], key);
           // env.set_local(variables[1], value);
         }
-        ValueObj val = e->Block::perform(this);
+        ValueObj val = visitChildren(e->elements());
         if (val) return val.detach();
       }
       return nullptr;
@@ -2008,7 +2008,7 @@ namespace Sass {
           }
         }
       }
-      ValueObj val = e->Block::perform(this);
+      ValueObj val = visitChildren(e->elements());
       if (val) return val.detach();
     }
 
@@ -2028,7 +2028,7 @@ namespace Sass {
     if (result->isTruthy()) {
 
       while (true) {
-        result = node->Block::perform(this);
+        result = visitChildren(node->elements());
         if (result) {
           return result.detach();
         }
@@ -2300,14 +2300,6 @@ namespace Sass {
     }
   }
 
-  // process and add to last block on stack
-  void Eval::append_block(Block* block)
-  {
-    for (Statement* item : block->elements()) {
-      item->perform(this);
-    }
-  }
-
   bool Eval::isInMixin()
   {
     for (SassCallee& callee : compiler.callee_stack) {
@@ -2319,12 +2311,10 @@ namespace Sass {
   Root* Eval::visitRoot32(Root* b)
   {
     // copy the block object (add items later)
-    BlockObj bb = SASS_MEMORY_NEW(Block,
-      b->pstate(),
-      b->length());
+    sass::vector<StatementObj> children;
 
     // setup block and env stack
-    blockStack.emplace_back(&bb->elements());
+    blockStack.emplace_back(&children);
 
     for (Statement* item : b->elements()) {
       ValueObj child = item->perform(this);
@@ -2333,12 +2323,9 @@ namespace Sass {
     // revert block and env stack
     blockStack.pop_back();
 
-    RootObj bb2 = SASS_MEMORY_NEW(Root,
-      bb->pstate(),
-      bb->elements());
+    return SASS_MEMORY_NEW(Root,
+      b->pstate(), std::move(children));
 
-    // return copy
-    return bb2.detach();
   }
 
   SelectorListObj& Eval::selector()

@@ -140,7 +140,8 @@ namespace Sass {
     Value* operator()(WhileRule* node) { return visitWhileRule(node); }
 
     // for evaluating function bodies
-    Value* operator()(Block*);
+    Value* visitChildren(const sass::vector<StatementObj>& children);
+
     Value* operator()(Return*);
     Value* operator()(WarnRule*);
     void visitWarnRule(WarnRule* node);
@@ -261,7 +262,6 @@ namespace Sass {
 
     Value* visitImportRule99(ImportRule* rule);
 
-    void append_block(Block* block);
     void append_block(Root* root);
 
     bool isInMixin();

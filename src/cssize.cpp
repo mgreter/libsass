@@ -53,6 +53,7 @@ namespace Sass {
 
   Block* Cssize::operator()(Block* b)
   {
+    // std::cerr << "YEP, in use\n";
     sass::vector<StatementObj> children;
     visitBlockStatements(b->elements(), children);
     return SASS_MEMORY_NEW(Block, b->pstate(),
@@ -84,7 +85,6 @@ namespace Sass {
 
     if (children.empty())
     {
-      // if (r->isChildless()) return nullptr;
       CssAtRuleObj rr = SASS_MEMORY_NEW(CssAtRule,
         r->pstate(), r->name(), r->value());
       rr->isChildless(r->isChildless());
