@@ -338,6 +338,17 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+  class Root : public AST_Node, public VectorizedNopsi<Statement> {
+    // needed for properly formatted CSS emission
+  public:
+    Root(const SourceSpan& pstate, size_t s = 0);
+    Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
+    Root(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
+
+    // ATTACH_CLONE_OPERATIONS(Block)
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
   ////////////////////////////////////////////////////////////////////////
   // Abstract base class for statements that contain blocks of statements.
   ////////////////////////////////////////////////////////////////////////

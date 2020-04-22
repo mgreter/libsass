@@ -185,6 +185,15 @@ namespace Sass {
     VectorizedNopsi<Statement>(ptr)
   {}
 
+  Root::Root(const SourceSpan& pstate, size_t s)
+    : AST_Node(pstate), VectorizedNopsi<Statement>(s) {}
+  Root::Root(const SourceSpan& pstate, const sass::vector<StatementObj>& vec)
+    : AST_Node(pstate), VectorizedNopsi<Statement>(vec) {}
+  Root::Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec)
+    : AST_Node(pstate), VectorizedNopsi<Statement>(std::move(vec)) {}
+
+
+
 //  bool Block::isInvisible() const
 //  {
 //    for (auto& item : this->elements()) {

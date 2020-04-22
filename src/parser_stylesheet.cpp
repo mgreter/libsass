@@ -20,7 +20,7 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  BlockObj StylesheetParser::parse()
+  RootObj StylesheetParser::parse()
   {
 
     // skip over optional utf8 bom
@@ -45,7 +45,7 @@ namespace Sass {
     // make sure everything is parsed
     scanner.expectDone();
 
-    return SASS_MEMORY_NEW(Block, scanner.relevantSpanFrom(start), statements);
+    return SASS_MEMORY_NEW(Root, scanner.relevantSpanFrom(start), statements);
 
   }
 

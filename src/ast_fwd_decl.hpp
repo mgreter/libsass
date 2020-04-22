@@ -25,6 +25,7 @@ namespace Sass {
   class SourceItpl;
 
   class AST_Node;
+  class Root;
 
   class Callable;
   class UserDefinedCallable;
@@ -187,6 +188,7 @@ namespace Sass {
   IMPL_MEM_OBJ(AST_Node);
   IMPL_MEM_OBJ(Statement);
   IMPL_MEM_OBJ(Block);
+  IMPL_MEM_OBJ(Root);
   IMPL_MEM_OBJ(StyleRule);
   IMPL_MEM_OBJ(Bubble);
   IMPL_MEM_OBJ(Trace);
