@@ -408,8 +408,8 @@ namespace Sass {
   public:
     AtRule(const SourceSpan& pstate,
       InterpolationObj name,
-      ExpressionObj value,
-      BlockObj b = {});
+      ExpressionObj value/*,
+      sass::vector<StatementObj> b = {}*/);
     ATTACH_CLONE_OPERATIONS(AtRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
