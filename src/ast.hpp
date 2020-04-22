@@ -329,6 +329,7 @@ namespace Sass {
     Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec, bool r = false);
     Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec, bool r = false);
     Block(const Block* ptr);
+
     bool is_invisible() const override {
       throw std::runtime_error("Block::has_content");
     }
