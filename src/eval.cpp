@@ -1813,10 +1813,8 @@ namespace Sass {
 
     sass::string text = interpolationToValue(itpl, true, false);
 
-    bool allowParent = blockStack.size() <= 2;
-
     SelectorListObj slist = itplToSelector(itpl,
-      plainCss, allowParent);
+      plainCss, blockStack.size() <= 2);
 
     if (slist) {
 
@@ -2367,16 +2365,12 @@ namespace Sass {
     BlockObj bb = SASS_MEMORY_NEW(Block,
       b->pstate(),
       b->length());
+
     // setup block and env stack
     blockStack.emplace_back(bb);
-    // operate on block
-    // this may throw up!
 
-    // Block* parent = blockStack.back();
-    // if (b->is_root3()) call_stack.emplace_back(b);
     for (Statement* item : b->elements()) {
       ValueObj child = item->perform(this);
-      // if (parent && child) parent->append(child);
     }
 
     // revert block and env stack
@@ -2398,14 +2392,9 @@ namespace Sass {
       b->length());
     // setup block and env stack
     blockStack.emplace_back(bb);
-    // operate on block
-    // this may throw up!
 
-    // Block* parent = blockStack.back();
-    // if (b->is_root3()) call_stack.emplace_back(b);
     for (Statement* item : b->elements()) {
       ValueObj child = item->perform(this);
-      // if (parent && child) parent->append(child);
     }
 
     // revert block and env stack
@@ -2425,14 +2414,9 @@ namespace Sass {
       b->length());
     // setup block and env stack
     blockStack.emplace_back(bb);
-    // operate on block
-    // this may throw up!
 
-    // Block* parent = blockStack.back();
-    // if (b->is_root3()) call_stack.emplace_back(b);
     for (Statement* item : b->elements()) {
       ValueObj child = item->perform(this);
-      // if (parent && child) parent->append(child);
     }
 
     // revert block and env stack
