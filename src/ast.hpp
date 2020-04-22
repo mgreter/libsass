@@ -365,12 +365,8 @@ namespace Sass {
   // [X] SupportsRule
   // [X] WhileRule
   class ParentStatement : public Block {
-    // ADD_PROPERTY(BlockObj, blocksy);
     ADD_POINTER(IDXS*, idxs);
   public:
-    Block* blocksy() { return this; }
-    const Block* blocksy() const { return this; }
-
     ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
@@ -389,7 +385,6 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs); // ParentScopedStatement
   public:
     StyleRule(SourceSpan&& pstate, Interpolation* s, const sass::vector<StatementObj>& els = {});
-    // bool empty() const { return blocksy().isNull() || blocksy()->empty(); }
     // ATTACH_CLONE_OPERATIONS(StyleRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };

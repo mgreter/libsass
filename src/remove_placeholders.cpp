@@ -102,7 +102,7 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(SupportsRule* m)
     {
-      if (m->blocksy()) operator()(m->blocksy());
+      if (m) m->Block::perform(this);
     }
 
     void Remove_Placeholders::operator()(CssSupportsRule* m)
