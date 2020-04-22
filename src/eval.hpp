@@ -64,6 +64,8 @@ namespace Sass {
     Eval(Compiler& compiler);
     ~Eval();
 
+    bool isRoot() const;
+
     Value* _runUserDefinedCallable(
       ArgumentResults& arguments,
       UserDefinedCallable* callable,

@@ -979,7 +979,7 @@ namespace Sass {
   public:
     // The query that determines on which platforms the styles will be in effect.
     // This is only parsed after the interpolation has been resolved.
-    MediaRule(const SourceSpan& pstate, InterpolationObj query, Block_Obj block = {});
+    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, Block_Obj block = {});
 
     bool bubbles() const override final { return true; };
     bool is_invisible() const override { return false; };

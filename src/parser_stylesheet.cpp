@@ -1258,7 +1258,7 @@ namespace Sass {
   {
     InterpolationObj query = _mediaQueryList();
     MediaRule* rule = _withChildren<MediaRule>(
-      &StylesheetParser::_childStatement, query);
+      &StylesheetParser::_childStatement, query, false);
     rule->pstate(scanner.relevantSpanFrom(start));
     return rule;
   }
