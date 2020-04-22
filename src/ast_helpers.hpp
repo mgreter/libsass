@@ -211,7 +211,7 @@ namespace Sass {
   // Return if Vector is empty
   template <class T>
   bool listIsInvisible(T* cnt) {
-    return cnt && (cnt->empty() || cnt->is_invisible() && !cnt->isImpossible());
+    return cnt && (cnt->empty() || (cnt->is_invisible() && !cnt->isImpossible()));
   }
 
   // Erase items from vector that match predicate

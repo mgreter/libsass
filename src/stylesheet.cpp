@@ -8,8 +8,8 @@ namespace Sass {
 
   // Constructor
   Sass::StyleSheet::StyleSheet(SourceData* source, RootObj root) :
-    source(source),
     plainCss(false),
+    source(source),
     syntax(SASS_IMPORT_AUTO),
     root2(root)
   {

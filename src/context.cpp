@@ -40,20 +40,20 @@ namespace Sass {
   inline bool cmpImporterPrio (struct SassImporter* i, struct SassImporter* j)
   { return sass_importer_get_priority(i) > sass_importer_get_priority(j); }
 
-  static sass::string safe_input(const char* in_path)
-  {
-    if (in_path == nullptr || in_path[0] == '\0') return "stdin";
-    return in_path;
-  }
+  // static sass::string safe_input(const char* in_path)
+  // {
+  //   if (in_path == nullptr || in_path[0] == '\0') return "stdin";
+  //   return in_path;
+  // }
 
-  static sass::string safe_output(const char* out_path, sass::string input_path)
-  {
-    if (out_path == nullptr || out_path[0] == '\0') {
-      if (input_path.empty()) return "stdout";
-      return input_path.substr(0, input_path.find_last_of(".")) + ".css";
-    }
-    return out_path;
-  }
+  // static sass::string safe_output(const char* out_path, sass::string input_path)
+  // {
+  //   if (out_path == nullptr || out_path[0] == '\0') {
+  //     if (input_path.empty()) return "stdout";
+  //     return input_path.substr(0, input_path.find_last_of(".")) + ".css";
+  //   }
+  //   return out_path;
+  // }
 
 
   // most functions are very simple
@@ -688,39 +688,6 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
     return root;
 
   }
-
-
-  // EO compile
-  /*
-  sass::string Context::format_embedded_source_map()
-  {
-    bool include_sources = false; // ToDo
-    bool source_map_file_urls = false;
-    const char* source_map_root = nullptr;
-    sass::string map = emitter.renderSrcMapJson(*this, include_sources, source_map_file_urls, source_map_root);
-    std::istringstream is( map.c_str() );
-    std::ostringstream buffer;
-    base64::encoder E;
-    E.encode(is, buffer);
-    sass::string url = "data:application/json;base64,";
-    url += buffer.str().c_str();
-    url.erase(url.size() - 1);
-    return "/*# sourceMappingURL=" + url + " *\/";
-  }
-  sass::string Context::format_source_mapping_url(const sass::string& file)
-  {
-    sass::string url = abs2rel(file, output_path88, CWD);
-    return "/*# sourceMappingURL=" + url + " *\/";
-  }
-  */
-
-  /*
-  sass::string Context::render_srcmap()
-  {
-    if (source_map_file88.empty()) return "";
-    return emitter.render_srcmap(*this);
-  }
-  */
 
   sass::string Context::render_stderr()
   {

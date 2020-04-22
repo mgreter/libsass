@@ -156,7 +156,7 @@ namespace Sass {
       //   result);
     }
 
-    bool isNamedEmpty = named.empty();
+    // bool isNamedEmpty = named.empty();
     ArgumentListObj argumentList;
     if (!declaredArguments->restArg().empty()) {
       sass::vector<ValueObj> values;
@@ -2320,10 +2320,11 @@ namespace Sass {
   // Consume all imports in this rule
   Value* Eval::visitImportRule99(ImportRule* rule)
   {
+    ValueObj rv; // ensure to collect memory
     for (ImportBase* import : rule->elements()) {
-      if (import) { auto imp = import->perform(this); }
+      if (import) { rv = import->perform(this); }
     }
-    return nullptr;
+    return rv.detach();
   }
 
   // process and add to last block on stack
