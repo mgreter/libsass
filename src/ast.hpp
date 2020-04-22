@@ -355,6 +355,8 @@ namespace Sass {
   class ParentStatement : public Statement {
     ADD_PROPERTY(Block_Obj, block)
   public:
+    const sass::vector<StatementObj>& elements() const { return block_->elements(); }
+    sass::vector<StatementObj>& elements() { return block_->elements(); }
     void concat(const sass::vector<StatementObj>& vec) {
       if (block_.ptr() == nullptr) {
         block_ = SASS_MEMORY_NEW(Block, pstate_);
@@ -367,6 +369,7 @@ namespace Sass {
       }
       block_->concat(std::move(vec));
     }
+    operator Block* () { return block_.ptr(); }
     ParentStatement(SourceSpan&& pstate, Block_Obj b);
     ParentStatement(const SourceSpan& pstate, Block_Obj b);
     ParentStatement(const ParentStatement* ptr); // copy constructor

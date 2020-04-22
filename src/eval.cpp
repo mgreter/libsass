@@ -849,7 +849,7 @@ namespace Sass {
   {
     ValueObj result; // declare outside for loop to re-use
     CallableDeclaration* declaration = callable->declaration();
-    for (Statement* statement : declaration->block()->elements()) {
+    for (Statement* statement : declaration->elements()) {
       // Makes sure results get cleaned up
       result = statement->perform(this);
     }
@@ -1411,7 +1411,7 @@ namespace Sass {
   Value* Eval::_runAndCheck(UserDefinedCallable* callable, Trace* trace)
   {
     CallableDeclaration* declaration = callable->declaration();
-    for (Statement* statement : declaration->block()->elements()) {
+    for (Statement* statement : declaration->elements()) {
       // Normal statements in functions must return nullptr
       Value* value = statement->perform(this);
       if (value != nullptr) return value;
@@ -1476,7 +1476,7 @@ namespace Sass {
     MediaQueryParser parser(compiler, source);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), sass::vector<CssMediaQueryObj>(), node->block()->elements());
+      node->pstate(), sass::vector<CssMediaQueryObj>(), node->elements());
     sass::vector<CssMediaQueryObj> parsed = parser.parse();
     if (mediaStack.size() && mediaStack.back()) {
       auto parent = mediaStack.back()->queries();
@@ -1648,7 +1648,7 @@ namespace Sass {
 
     if (node->block()) {
       LocalOption<sass::string> ll1(_declarationName, name->text());
-      for (Statement* child : node->block()->elements()) {
+      for (Statement* child : node->elements()) {
         ValueObj result = child->perform(this);
         // if (result) parent->append(result);
       }
@@ -2007,7 +2007,7 @@ namespace Sass {
           // env.set_local(variables[0], key);
           // env.set_local(variables[1], value);
         }
-        ValueObj val = body->perform(this);
+        ValueObj val = body->Block::perform(this);
         if (val) return val.detach();
       }
       return nullptr;

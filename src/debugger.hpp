@@ -767,7 +767,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << has_block->tabs() << std::endl;
     if (has_block->name2()) debug_ast(has_block->name2(), ind + "@"); 
     // else if (has_block->name()) debug_ast(has_block->name(), ind + "@");
-    // if (has_block->block()) for(const Statement_Obj& i : has_block->block()->elements()) { debug_ast(i, ind + " "); }
+    // if (has_block->block()) for(const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
   } else if (Cast<AtRule>(node)) {
     AtRule* block = Cast<AtRule>(node);
     std::cerr << ind << "AtRule " << block;
@@ -786,19 +786,19 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "Each [" << debug_vec(block->variables()) << "]" << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(const Statement_Obj& i : block->block()->elements()) { debug_ast(i, ind + " "); }
+    if (block->block()) for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
   } else if (Cast<For>(node)) {
     For* block = Cast<For>(node);
     std::cerr << ind << "For " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(const Statement_Obj& i : block->block()->elements()) { debug_ast(i, ind + " "); }
+    if (block->block()) for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
   } else if (Cast<WhileRule>(node)) {
     WhileRule* block = Cast<WhileRule>(node);
     std::cerr << ind << "WhileRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    if (block->block()) for(const Statement_Obj& i : block->block()->elements()) { debug_ast(i, ind + " "); }
+    if (block->block()) for(const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
 
   
@@ -1100,7 +1100,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "Has_Block " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
-    if (has_block->block()) for(const Statement_Obj& i : has_block->block()->elements()) { debug_ast(i, ind + " "); }
+    if (has_block->block()) for(const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
   } else if (Cast<Statement>(node)) {
     Statement* statement = Cast<Statement>(node);
     std::cerr << ind << "Statement " << statement;
