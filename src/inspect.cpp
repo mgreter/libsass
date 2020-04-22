@@ -277,7 +277,7 @@ namespace Sass {
   // statements
   void Inspect::operator()(Block* block)
   {
-    if (!block->is_root()) {
+    if (!block->is_root3()) {
       add_open_mapping(block);
       append_scope_opener();
     }
@@ -286,7 +286,7 @@ namespace Sass {
       (*block)[i]->perform(this);
     }
     if (output_style() == SASS_STYLE_NESTED) indentation -= block->tabs();
-    if (!block->is_root()) {
+    if (!block->is_root3()) {
       append_scope_closer();
       add_close_mapping(block);
     }

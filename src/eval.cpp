@@ -1427,7 +1427,7 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, node->idxs());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    bb->is_root(blockStack.back()->is_root());
+    bb->is_root3(blockStack.back()->is_root3());
     blockStack.emplace_back(bb);
     visitBlock(node->block());
     blockStack.pop_back();
@@ -1488,7 +1488,7 @@ namespace Sass {
     mediaStack.emplace_back(css);
 
     BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-    blk->is_root(blockStack.back()->is_root());
+    blk->is_root3(blockStack.back()->is_root3());
     blockStack.emplace_back(blk);
     node->block()->Block::perform(this);
     blockStack.pop_back();
@@ -1530,7 +1530,7 @@ namespace Sass {
       query && query->excludesStyleRules());
 
     BlockObj bb = SASS_MEMORY_NEW(Block, node->pstate());
-    bb->is_root(blockStack.back()->is_root());
+    bb->is_root3(blockStack.back()->is_root3());
     blockStack.emplace_back(bb);
     visitBlock(node->block());
     blockStack.pop_back();
@@ -1574,7 +1574,7 @@ namespace Sass {
     if (node->block()) {
 
       BlockObj blk = SASS_MEMORY_NEW(Block, node->pstate());
-      blk->is_root(blockStack.back()->is_root());
+      blk->is_root3(blockStack.back()->is_root3());
       blockStack.emplace_back(blk);
       node->block()->Block::perform(this);
       blockStack.pop_back();
@@ -1812,7 +1812,7 @@ namespace Sass {
     bool allowParent = true;
     if (blockStack.size() > 2) {
       Block* b = blockStack.at(blockStack.size() - 2);
-      if (b->is_root()) allowParent = false;
+      if (b->is_root3()) allowParent = false;
     }
 
     SelectorListObj slist = itplToSelector(itpl,
@@ -1874,7 +1874,7 @@ namespace Sass {
     if (_inKeyframes) {
 
       BlockObj bb = SASS_MEMORY_NEW(Block, r->pstate());
-      bb->is_root(blockStack.back()->is_root());
+      bb->is_root3(blockStack.back()->is_root3());
       blockStack.emplace_back(bb);
       r->block()->Block::perform(this);
       blockStack.pop_back();
@@ -1930,7 +1930,7 @@ namespace Sass {
       extender.addSelector(evaled, mediaStack.back());
 
     BlockObj blk = SASS_MEMORY_NEW(Block, r->pstate());
-    blk->is_root(blockStack.back()->is_root());
+    blk->is_root3(blockStack.back()->is_root3());
     blockStack.emplace_back(blk);
     r->block()->Block::perform(this);
     blockStack.pop_back();
@@ -1973,7 +1973,7 @@ namespace Sass {
       p2._allowPlaceholder = plainCss == false;
       if (blockStack.size() > 2) {
         Block* b = blockStack.at(blockStack.size() - 2);
-        if (b->is_root()) p2._allowParent = false;
+        if (b->is_root3()) p2._allowParent = false;
       }
       p2._allowParent = allowParent && plainCss == false;
       return p2.parse();
@@ -2351,7 +2351,7 @@ namespace Sass {
       item->perform(this);
       // if (parent && child) parent->append(child);
     }
-    // if (b->is_root()) call_stack.pop_back();
+    // if (b->is_root3()) call_stack.pop_back();
   }
 
   bool Eval::isInMixin()
@@ -2370,14 +2370,14 @@ namespace Sass {
     Block_Obj bb = SASS_MEMORY_NEW(Block,
       b->pstate(),
       b->length(),
-      b->is_root());
+      b->is_root3());
     // setup block and env stack
     blockStack.emplace_back(bb);
     // operate on block
     // this may throw up!
 
     // Block* parent = blockStack.back();
-    // if (b->is_root()) call_stack.emplace_back(b);
+    // if (b->is_root3()) call_stack.emplace_back(b);
     for (Statement* item : b->elements()) {
       ValueObj child = item->perform(this);
       // if (parent && child) parent->append(child);

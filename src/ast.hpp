@@ -322,7 +322,7 @@ namespace Sass {
   ////////////////////////
   class Block : public Statement, public VectorizedNopsi<Statement> {
     ADD_POINTER(IDXS*, idxs);
-    ADD_PROPERTY(bool, is_root);
+    ADD_PROPERTY(bool, is_root3);
     // needed for properly formatted CSS emission
   public:
     Block(const SourceSpan& pstate, size_t s = 0, bool r = false);
@@ -356,7 +356,8 @@ namespace Sass {
   // [X] SupportsRule
   // [X] WhileRule
   class ParentStatement : public Statement {
-    ADD_PROPERTY(Block_Obj, block)
+    ADD_PROPERTY(Block_Obj, block);
+    ADD_PROPERTY(bool, is_root2);
   public:
     const sass::vector<StatementObj>& elements() const { return block_->elements(); }
     sass::vector<StatementObj>& elements() { return block_->elements(); }
@@ -373,8 +374,8 @@ namespace Sass {
       block_->concat(std::move(vec));
     }
     operator Block* () { return block_.ptr(); }
-    ParentStatement(SourceSpan&& pstate, Block_Obj b);
-    ParentStatement(const SourceSpan& pstate, Block_Obj b);
+    ParentStatement(SourceSpan&& pstate, Block_Obj b, bool is_root = false);
+    ParentStatement(const SourceSpan& pstate, Block_Obj b, bool is_root = false);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;

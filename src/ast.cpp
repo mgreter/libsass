@@ -168,26 +168,26 @@ namespace Sass {
   Block::Block(const SourceSpan& pstate, size_t s, bool r)
   : Statement(pstate),
     VectorizedNopsi<Statement>(s),
-    idxs_(0), is_root_(r)
+    idxs_(0), is_root3_(r)
   { }
 
   Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec, bool r) :
     Statement(pstate),
     VectorizedNopsi<Statement>(vec),
-    idxs_(0), is_root_(r)
+    idxs_(0), is_root3_(r)
   { }
 
   Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec, bool r) :
     Statement(pstate),
     VectorizedNopsi<Statement>(std::move(vec)),
-    idxs_(0), is_root_(r)
+    idxs_(0), is_root3_(r)
   { }
 
   Block::Block(const Block* ptr) :
     Statement(ptr),
     VectorizedNopsi<Statement>(ptr),
     idxs_(ptr->idxs_),
-    is_root_(ptr->is_root_)
+    is_root3_(ptr->is_root3_)
   {}
 
 //  bool Block::isInvisible() const
@@ -210,14 +210,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ParentStatement::ParentStatement(const SourceSpan& pstate, Block_Obj b)
-    : Statement(pstate), block_(b)
+  ParentStatement::ParentStatement(const SourceSpan& pstate, Block_Obj b, bool is_root)
+    : Statement(pstate), block_(b), is_root2_(b.isNull() ? false : b->is_root3())
   { }
-  ParentStatement::ParentStatement(SourceSpan&& pstate, Block_Obj b)
-    : Statement(std::move(pstate)), block_(b)
+  ParentStatement::ParentStatement(SourceSpan&& pstate, Block_Obj b, bool is_root)
+    : Statement(std::move(pstate)), block_(b), is_root2_(b.isNull() ? false : b->is_root3())
   { }
   ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Statement(ptr), block_(ptr->block_)
+  : Statement(ptr), block_(ptr->block_), is_root2_(ptr->is_root2_)
   { }
 
   bool ParentStatement::has_content()

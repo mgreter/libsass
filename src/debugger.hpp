@@ -668,7 +668,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     Block* root_block = Cast<Block>(node);
     std::cerr << ind << "Block " << root_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    if (root_block->is_root()) std::cerr << " [root]";
+    // if (node->is_root2()) std::cerr << " [root]";
     // if (root_block->isInvisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << root_block->tabs() << std::endl;
     for (const Statement_Obj& i : root_block->elements()) { debug_ast(i, ind + " "); }
