@@ -43,7 +43,7 @@ namespace Sass {
     ADD_PROPERTY(SupportsCondition_Obj, condition);
     ADD_POINTER(IDXS*, idxs);
   public:
-    SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, BlockObj block = {});
+    SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, const sass::vector<StatementObj>& els = {});
     ATTACH_CLONE_OPERATIONS(SupportsRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
