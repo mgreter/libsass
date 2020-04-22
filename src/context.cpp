@@ -406,7 +406,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
       }
     }
 
-    Block_Obj root;
+    BlockObj root;
     bool isPlainCss = false;
 
     // callStackFrame frame(*logger,

@@ -205,10 +205,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ParentStatement::ParentStatement(const SourceSpan& pstate, Block_Obj b)
+  ParentStatement::ParentStatement(const SourceSpan& pstate, BlockObj b)
     : Statement(pstate), block_(b), idxs_(0)
   { }
-  ParentStatement::ParentStatement(SourceSpan&& pstate, Block_Obj b)
+  ParentStatement::ParentStatement(SourceSpan&& pstate, BlockObj b)
     : Statement(std::move(pstate)), block_(b), idxs_(0)
   { }
   ParentStatement::ParentStatement(const ParentStatement* ptr)
@@ -228,7 +228,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, Block_Obj b)
+  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, BlockObj b)
     : ParentStatement(std::move(pstate), b), interpolation_(s), idxs_(0)
   {}
 
@@ -268,7 +268,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, Block_Obj b, char type)
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
   : ParentStatement(pstate, b), type_(type), name_(n)
   { }
 
@@ -292,7 +292,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, Block_Obj block) :
+  AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, BlockObj block) :
     ParentStatement(pstate, block),
     name_(name),
     value_(value)
@@ -307,7 +307,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, Block_Obj b)
+  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, BlockObj b)
   : ParentStatement(pstate, b), name_(name), value_(value), is_custom_property_(c)
   {}
 
@@ -425,7 +425,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  If::If(const SourceSpan& pstate, ExpressionObj pred, Block_Obj con, Block_Obj alt)
+  If::If(const SourceSpan& pstate, ExpressionObj pred, BlockObj con, BlockObj alt)
   : ParentStatement(pstate, con), idxs_(0), predicate_(pred), alternative_(alt)
   {}
 
@@ -443,7 +443,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   For::For(const SourceSpan& pstate,
-    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, Block_Obj b)
+    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, BlockObj b)
   : ParentStatement(pstate, b),
     variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
   {}
@@ -451,7 +451,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, Block_Obj b)
+  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, BlockObj b)
   : ParentStatement(pstate, b), variables_(vars), idxs_(0), list_(lst)
   {}
 
@@ -461,7 +461,7 @@ namespace Sass {
   WhileRule::WhileRule(
     const SourceSpan& pstate,
     ExpressionObj condition,
-    Block_Obj b) :
+    BlockObj b) :
     ParentStatement(pstate, b),
     condition_(condition),
     idxs_(0)
@@ -662,7 +662,7 @@ namespace Sass {
   AtRootRule::AtRootRule(
     const SourceSpan& pstate,
     InterpolationObj query,
-    Block_Obj block)
+    BlockObj block)
     : ParentStatement(pstate, block),
     query_(query),
     idxs_(0)
@@ -671,7 +671,7 @@ namespace Sass {
   AtRootRule::AtRootRule(
     SourceSpan&& pstate,
     InterpolationObj query,
-    Block_Obj block)
+    BlockObj block)
     : ParentStatement(std::move(pstate), block),
     query_(query),
     idxs_(0)

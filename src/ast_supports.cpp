@@ -9,7 +9,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, Block_Obj block)
+  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, BlockObj block)
   : ParentStatement(pstate, block), condition_(condition), idxs_(0)
   {}
   SupportsRule::SupportsRule(const SupportsRule* ptr)

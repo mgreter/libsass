@@ -83,7 +83,7 @@ namespace Sass {
         r->selector((remove_placeholders(sl)));
       }
       // Iterate into child blocks
-      // Block_Obj b = r->block();
+      // BlockObj b = r->block();
       for (size_t i = 0, L = r->length(); i < L; ++i) {
         if (r->get(i)) { r->get(i)->perform(this); }
       }

@@ -354,7 +354,7 @@ namespace Sass {
   // [X] SupportsRule
   // [X] WhileRule
   class ParentStatement : public Statement {
-    ADD_PROPERTY(Block_Obj, block);
+    ADD_PROPERTY(BlockObj, block);
     ADD_POINTER(IDXS*, idxs);
   public:
     const sass::vector<StatementObj>& elements() const { return block_->elements(); }
@@ -372,8 +372,8 @@ namespace Sass {
       block_->concat(std::move(vec));
     }
     operator Block* () { return block_.ptr(); }
-    ParentStatement(SourceSpan&& pstate, Block_Obj b);
-    ParentStatement(const SourceSpan& pstate, Block_Obj b);
+    ParentStatement(SourceSpan&& pstate, BlockObj b);
+    ParentStatement(const SourceSpan& pstate, BlockObj b);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;
@@ -390,7 +390,7 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, interpolation);
     ADD_POINTER(IDXS*, idxs);
   public:
-    StyleRule(SourceSpan&& pstate, Interpolation* s, Block_Obj b = {});
+    StyleRule(SourceSpan&& pstate, Interpolation* s, BlockObj b = {});
     bool empty() const { return block().isNull() || block()->empty(); }
     // ATTACH_CLONE_OPERATIONS(StyleRule)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -408,7 +408,7 @@ namespace Sass {
     AtRule(const SourceSpan& pstate,
       InterpolationObj name,
       ExpressionObj value,
-      Block_Obj b = {});
+      BlockObj b = {});
     ATTACH_CLONE_OPERATIONS(AtRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -432,7 +432,7 @@ namespace Sass {
     ADD_CONSTREF(char, type)
     ADD_CONSTREF(sass::string, name)
   public:
-    Trace(const SourceSpan& pstate, const sass::string& name, Block_Obj b = {}, char type = 'm');
+    Trace(const SourceSpan& pstate, const sass::string& name, BlockObj b = {}, char type = 'm');
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -536,7 +536,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, value);
     ADD_PROPERTY(bool, is_custom_property);
   public:
-    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, Block_Obj b = {});
+    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, BlockObj b = {});
     bool is_invisible() const override;
     // ATTACH_CLONE_OPERATIONS(Declaration)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -700,9 +700,9 @@ namespace Sass {
   class If final : public ParentStatement {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(ExpressionObj, predicate);
-    ADD_PROPERTY(Block_Obj, alternative);
+    ADD_PROPERTY(BlockObj, alternative);
   public:
-    If(const SourceSpan& pstate, ExpressionObj pred, Block_Obj con, Block_Obj alt = {});
+    If(const SourceSpan& pstate, ExpressionObj pred, BlockObj con, BlockObj alt = {});
     virtual bool has_content() override;
     // ATTACH_CLONE_OPERATIONS(If)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -718,7 +718,7 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(bool, is_inclusive);
   public:
-    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false, Block_Obj b = {});
+    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false, BlockObj b = {});
     // ATTACH_CLONE_OPERATIONS(For)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -731,7 +731,7 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(ExpressionObj, list);
   public:
-    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, Block_Obj b = {});
+    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, BlockObj b = {});
     // ATTACH_CLONE_OPERATIONS(Each)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -745,7 +745,7 @@ namespace Sass {
   public:
     WhileRule(const SourceSpan& pstate,
       ExpressionObj condition,
-      Block_Obj b = {});
+      BlockObj b = {});
     // String toString() = > "@while $condition {${children.join(" ")}}";
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -977,7 +977,7 @@ namespace Sass {
   public:
     // The query that determines on which platforms the styles will be in effect.
     // This is only parsed after the interpolation has been resolved.
-    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, Block_Obj block = {});
+    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, BlockObj block = {});
 
     bool bubbles() const override final { return true; };
     bool is_invisible() const override { return false; };
@@ -1055,8 +1055,8 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, query);
     ADD_POINTER(IDXS*, idxs);
   public:
-    AtRootRule(const SourceSpan& pstate, InterpolationObj query = {}, Block_Obj b = {});
-    AtRootRule(SourceSpan&& pstate, InterpolationObj query = {}, Block_Obj b = {});
+    AtRootRule(const SourceSpan& pstate, InterpolationObj query = {}, BlockObj b = {});
+    AtRootRule(SourceSpan&& pstate, InterpolationObj query = {}, BlockObj b = {});
     // ATTACH_CLONE_OPERATIONS(CssAtRootRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };

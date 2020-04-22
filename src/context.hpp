@@ -202,7 +202,7 @@ namespace Sass {
     void addIncludePaths(const sass::string& path);
 
     // ToDo: return const string& ?
-    // virtual sass::string render(Block_Obj root);
+    // virtual sass::string render(BlockObj root);
     // virtual sass::string render_srcmap();
     virtual sass::string render_stderr();
 

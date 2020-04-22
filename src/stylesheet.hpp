@@ -49,12 +49,12 @@ namespace Sass {
       // Extender extender;
 
       // The module's CSS tree.
-      Block_Obj root;
+      BlockObj root;
 
     public:
 
       // default argument constructor
-      StyleSheet(SourceData* source, Block_Obj root);
+      StyleSheet(SourceData* source, BlockObj root);
 
   };
 

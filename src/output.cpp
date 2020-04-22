@@ -158,7 +158,7 @@ namespace Sass {
 
   void Output::operator()(Keyframe_Rule* r)
   {
-    // Block_Obj b = r->block();
+    // BlockObj b = r->block();
     SassStringObj v2 = r->name2();
 
     if (!v2.isNull()) {

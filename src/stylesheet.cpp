@@ -7,7 +7,7 @@
 namespace Sass {
 
   // Constructor
-  Sass::StyleSheet::StyleSheet(SourceData* source, Block_Obj root) :
+  Sass::StyleSheet::StyleSheet(SourceData* source, BlockObj root) :
     source(source),
     plainCss(false),
     syntax(SASS_IMPORT_AUTO),
