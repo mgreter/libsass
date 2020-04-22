@@ -192,25 +192,6 @@ namespace Sass {
   Root::Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec)
     : AST_Node(pstate), VectorizedNopsi<Statement>(std::move(vec)) {}
 
-
-
-//  bool Block::isInvisible() const
-//  {
-//    for (auto& item : this->elements()) {
-//      if (!item->is_invisible()) return false;
-//    }
-//    return true;
-//  }
-
-  // bool Block::has_content()
-  // {
-  //   std::cerr << "FOOBARS " << pstate_.getAbsPath() << "\n";
-  //   for (size_t i = 0, L = elements().size(); i < L; ++i) {
-  //     if (elements()[i]->has_content()) return true;
-  //   }
-  //   return Statement::has_content();
-  // }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

@@ -15,7 +15,7 @@ namespace Sass {
     // Share callStack with outside
     BackTraces& callStack;
 
-    sass::vector<CssParentNodeObj>  cssStack;
+    sass::vector<CssParentNodeObj> cssStack;
 
   public:
     Cssize(Logger&);

@@ -31,7 +31,7 @@ namespace Sass {
   {
     for (size_t i = 0, L = children.size(); i < L; ++i) {
       StatementObj ith = children.at(i)->perform(this);
-      if (BlockObj bb = Cast<Block>(ith)) {
+      if (Block* bb = Cast<Block>(ith)) {
         // Not sure if move is safe here!?
         std::move(bb->begin(), bb->end(),
           std::back_inserter(results));
@@ -53,7 +53,6 @@ namespace Sass {
 
   Block* Cssize::operator()(Block* b)
   {
-    // std::cerr << "YEP, in use\n";
     sass::vector<StatementObj> children;
     visitBlockStatements(b->elements(), children);
     return SASS_MEMORY_NEW(Block, b->pstate(),
