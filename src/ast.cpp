@@ -198,14 +198,6 @@ namespace Sass {
     return true;
   }
 
-  bool Block::has_content()
-  {
-    for (size_t i = 0, L = elements().size(); i < L; ++i) {
-      if (elements()[i]->has_content()) return true;
-    }
-    return Statement::has_content();
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -221,7 +213,11 @@ namespace Sass {
 
   bool ParentStatement::has_content()
   {
-    return (block_ && block_->has_content()) || Statement::has_content();
+    if (Statement::has_content()) return true;
+    for (size_t i = 0, L = elements().size(); i < L; ++i) {
+      if (elements()[i]->has_content()) return true;
+    }
+    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////

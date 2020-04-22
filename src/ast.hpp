@@ -333,7 +333,7 @@ namespace Sass {
     bool is_invisible() const override {
       return isInvisible();
     }
-    bool has_content() override;
+    // bool has_content() override;
     // ATTACH_CLONE_OPERATIONS(Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
