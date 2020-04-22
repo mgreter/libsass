@@ -859,7 +859,7 @@ namespace Sass {
       const EnvKey& name,
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
-      Block* block = nullptr);
+      const sass::vector<StatementObj>& els = {});
 
     // Stringify declarations etc. (dart)
     virtual sass::string toString1() const = 0;
@@ -886,7 +886,7 @@ namespace Sass {
       const EnvKey& name,
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
-      Block* block = nullptr);
+      const sass::vector<StatementObj>& els = {});
     sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -900,7 +900,7 @@ namespace Sass {
       const sass::string& name,
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
-      Block* block = nullptr);
+      const sass::vector<StatementObj>& els = {});
     sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };

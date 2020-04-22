@@ -206,8 +206,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, BlockObj b, bool useless)
-    : Statement(pstate), block_(b), idxs_(0)
-  { }
+    : Statement(pstate), block_(), idxs_(0)
+  {
+    if (b) block_ = SASS_MEMORY_NEW(Block, {}, b->elements());
+  }
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
     : Statement(pstate), block_(), idxs_(0)
@@ -277,7 +279,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
-    : ParentStatement(pstate, BlockObj{}, false), type_(type), name_(n)
+    : ParentStatement(pstate, sass::vector<StatementObj>{}), type_(type), name_(n)
   {
     block_ = b; // there is some equality check somewhere!!!!
     if (b) block_->elementsC(b->elements());
@@ -309,14 +311,7 @@ namespace Sass {
     name_(name),
     value_(value)
   {
-
     auto asd = block_;
-
-    // block_ = block;
-
-    // block_->elementsC(els);
-
-
   }
 
   AtRule::AtRule(const AtRule* ptr)
@@ -952,8 +947,8 @@ namespace Sass {
     const EnvKey& name,
     ArgumentDeclaration* arguments,
     SilentComment* comment,
-    Block* block) :
-    ParentStatement(pstate, block, false),
+    const sass::vector<StatementObj>& els) :
+    ParentStatement(pstate, els),
     name_(name),
     idxs_(0),
     comment_(comment),
@@ -969,9 +964,9 @@ namespace Sass {
     const EnvKey& name,
     ArgumentDeclaration* arguments,
     SilentComment* comment,
-    Block* block) :
+    const sass::vector<StatementObj>& els) :
     CallableDeclaration(pstate,
-      name, arguments, comment, block)
+      name, arguments, comment, els)
   {
   }
 
@@ -985,9 +980,9 @@ namespace Sass {
     const sass::string& name,
     ArgumentDeclaration* arguments,
     SilentComment* comment,
-    Block* block) :
+    const sass::vector<StatementObj>& els) :
     CallableDeclaration(pstate,
-      name, arguments, comment, block)
+      name, arguments, comment, els)
   {
   }
 
