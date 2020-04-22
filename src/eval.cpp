@@ -1744,8 +1744,10 @@ namespace Sass {
       rv = i->block()->Block::perform(this);
     }
     else {
-      Block* alt = i->alternative();
-      if (alt) rv = alt->Block::perform(this);
+      for (auto alternative : i->alternatives()) {
+        // Returns nullptr anyway?
+        rv = alternative->perform(this);
+      }
     }
     return rv.detach();
 

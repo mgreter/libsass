@@ -701,7 +701,7 @@ namespace Sass {
   class If final : public ParentStatement {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(ExpressionObj, predicate);
-    ADD_PROPERTY(BlockObj, alternative);
+    ADD_REF(sass::vector<StatementObj>, alternatives);
   public:
     If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, BlockObj alt = {});
     virtual bool has_content() override;

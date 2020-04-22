@@ -715,7 +715,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->predicate(), ind + " = ");
     debug_block(block->block(), ind + " <>");
-    debug_ast(block->alternative(), ind + " ><");
+    // debug_ast(block->alternatives(), ind + " ><");
   }
   else if (Cast<Return>(node)) {
     Return* block = Cast<Return>(node);

@@ -973,7 +973,7 @@ namespace Sass {
         SourceSpan pstate(scanner.relevantSpanFrom(start));
         Block* block = SASS_MEMORY_NEW(Block, pstate, std::move(children));
         If* alternative = SASS_MEMORY_NEW(If, pstate, condition, block->elements());
-        cur->alternative(SASS_MEMORY_NEW(Block, pstate, { alternative }));
+        cur->alternatives().push_back(alternative);
         cur = alternative;
         ifs.push_back(cur);
       }
@@ -981,8 +981,7 @@ namespace Sass {
         start = scanner.offset;
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
-        cur->alternative(SASS_MEMORY_NEW(Block,
-          std::move(pstate), std::move(children)));
+        cur->alternatives(std::move(children));
         break;
       }
     }

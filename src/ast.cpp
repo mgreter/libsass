@@ -431,15 +431,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   If::If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, BlockObj alt)
-  : ParentStatement(pstate, els), idxs_(0), predicate_(pred), alternative_(alt)
-  {}
+    : ParentStatement(pstate, els), idxs_(0), predicate_(pred), alternatives_()
+  {
+    if (alt) alternatives_ = alt->elements();
+  }
 
   bool If::has_content()
   {
     if (ParentStatement::has_content()) return true;
-    if (alternative_ == nullptr) return false;
-    for (size_t i = 0, L = alternative_->elements().size(); i < L; ++i) {
-      if (alternative_->at(i)->has_content()) return true;
+    if (alternatives_.empty()) return false;
+    for (size_t i = 0, L = alternatives_.size(); i < L; ++i) {
+      if (alternatives_[i]->has_content()) return true;
     }
     return false;
   }
