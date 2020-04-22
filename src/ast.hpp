@@ -365,24 +365,24 @@ namespace Sass {
   // [X] SupportsRule
   // [X] WhileRule
   class ParentStatement : public Statement {
-    ADD_PROPERTY(BlockObj, block);
+    ADD_PROPERTY(BlockObj, blocksy);
     ADD_POINTER(IDXS*, idxs);
   public:
-    const sass::vector<StatementObj>& elements() const { return block_->elements(); }
-    sass::vector<StatementObj>& elements() { return block_->elements(); }
+    const sass::vector<StatementObj>& elements() const { return blocksy_->elements(); }
+    sass::vector<StatementObj>& elements() { return blocksy_->elements(); }
     void concat(const sass::vector<StatementObj>& vec) {
-      if (block_.ptr() == nullptr) {
-        block_ = SASS_MEMORY_NEW(Block, pstate_);
+      if (blocksy_.ptr() == nullptr) {
+        blocksy_ = SASS_MEMORY_NEW(Block, pstate_);
       }
-      block_->concat(vec);
+      blocksy_->concat(vec);
     }
     void concat(sass::vector<StatementObj>&& vec) {
-      if (block_.ptr() == nullptr) {
-        block_ = SASS_MEMORY_NEW(Block, pstate_);
+      if (blocksy_.ptr() == nullptr) {
+        blocksy_ = SASS_MEMORY_NEW(Block, pstate_);
       }
-      block_->concat(std::move(vec));
+      blocksy_->concat(std::move(vec));
     }
-    operator Block* () { return block_.ptr(); }
+    operator Block* () { return blocksy_.ptr(); }
     ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
@@ -401,7 +401,7 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs); // ParentScopedStatement
   public:
     StyleRule(SourceSpan&& pstate, Interpolation* s, const sass::vector<StatementObj>& els = {});
-    bool empty() const { return block().isNull() || block()->empty(); }
+    bool empty() const { return blocksy().isNull() || blocksy()->empty(); }
     // ATTACH_CLONE_OPERATIONS(StyleRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };

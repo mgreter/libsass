@@ -472,8 +472,7 @@ namespace Sass {
 
   void Inspect::operator()(Trace* trace)
   {
-    Block* block = trace->block();
-    for (Statement* stmt : block->elements()) {
+    for (Statement* stmt : trace->elements()) {
       stmt->perform(this);
     }
   }

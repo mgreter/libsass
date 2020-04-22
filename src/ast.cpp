@@ -215,19 +215,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
-    : Statement(pstate), block_(), idxs_(0)
+    : Statement(pstate), blocksy_(), idxs_(0)
   {
-    if (els.size()) block_ = SASS_MEMORY_NEW(Block, pstate, els);
+    if (els.size()) blocksy_ = SASS_MEMORY_NEW(Block, pstate, els);
   }
 
   ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Statement(ptr), block_(ptr->block_), idxs_(ptr->idxs_)
+  : Statement(ptr), blocksy_(ptr->blocksy_), idxs_(ptr->idxs_)
   { }
 
   bool ParentStatement::has_content()
   {
     if (Statement::has_content()) return true;
-    if (block_ == nullptr) return false;
+    if (blocksy_ == nullptr) return false;
     for (size_t i = 0, L = elements().size(); i < L; ++i) {
       if (elements()[i]->has_content()) return true;
     }
@@ -280,9 +280,9 @@ namespace Sass {
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
     : ParentStatement(pstate, sass::vector<StatementObj>{}), type_(type), name_(n)
   {
-    block_ = b; // there is some equality check somewhere!!!!
-    if (b && block_) block_->elementsC(b->elements());
-    if (b && block_) block_->pstate(b->pstate());
+    blocksy_ = b; // there is some equality check somewhere!!!!
+    if (b && blocksy_) blocksy_->elementsC(b->elements());
+    if (b && blocksy_) blocksy_->pstate(b->pstate());
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -310,7 +310,7 @@ namespace Sass {
     name_(name),
     value_(value)
   {
-    auto asd = block_;
+    auto asd = blocksy_;
   }
 
   AtRule::AtRule(const AtRule* ptr)

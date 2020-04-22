@@ -102,7 +102,7 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(SupportsRule* m)
     {
-      if (m->block()) operator()(m->block());
+      if (m->blocksy()) operator()(m->blocksy());
     }
 
     void Remove_Placeholders::operator()(CssSupportsRule* m)
@@ -110,12 +110,10 @@ namespace Sass {
       for (auto stmt : m->elements()) {
         stmt->perform(this);
       }
-      // if (m->block()) operator()(m->block());
     }
 
     void Remove_Placeholders::operator()(AtRule* a)
     {
-      // if (a->block()) a->block()->perform(this);
     }
 
 }

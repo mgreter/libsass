@@ -357,7 +357,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")"
       << " [name:" << trace->name() << ", type: " << trace->type() << "]"
       << std::endl;
-    debug_block(trace->block(), ind + " ");
+    debug_block(trace->blocksy(), ind + " ");
   }
   else if (Cast<AtRootRule>(node)) {
     AtRootRule* root_block = Cast<AtRootRule>(node);
@@ -366,7 +366,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << root_block->tabs();
     std::cerr << std::endl;
     debug_ast(root_block->query(), ind + ":");
-    debug_block(root_block->block(), ind + " ");
+    debug_block(root_block->blocksy(), ind + " ");
   }
   else if (Cast<AtRootQuery>(node)) {
     AtRootQuery* query = Cast<AtRootQuery>(node);
@@ -382,7 +382,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << root_block->tabs();
     std::cerr << std::endl;
     debug_ast(root_block->query(), ind + ":");
-    // debug_ast(root_block->block(), ind + " ");
+    // debug_ast(root_block->blocksy(), ind + " ");
   }
   else if (Cast<SelectorList>(node)) {
     SelectorList* selector = Cast<SelectorList>(node);
@@ -552,7 +552,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(rule) << ")";
     std::cerr << " " << rule->tabs() << std::endl;
     debug_ast(rule->query(), ind + " =@ ");
-    debug_block(rule->block(), ind + " ");
+    debug_block(rule->blocksy(), ind + " ");
   }
   else if (Cast<CssMediaRule>(node)) {
     CssMediaRule* rule = Cast<CssMediaRule>(node);
@@ -565,7 +565,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (auto item : rule->elements()) {
       debug_ast(item, ind + " !! ");
     }
-    // debug_ast(rule->block(), ind + " :: ");
+    // debug_ast(rule->blocksy(), ind + " :: ");
   }
   else if (Cast<CssDeclaration>(node)) {
     CssDeclaration* rule = Cast<CssDeclaration>(node);
@@ -610,7 +610,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     if (block->is_invisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
-    debug_block(block->block(), ind + " <>");
+    debug_block(block->blocksy(), ind + " <>");
     std::cerr << std::endl;
   }
   else if (Cast<CssSupportsRule>(node))
@@ -632,7 +632,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     if (block->is_invisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
-    debug_block(block->block(), ind + " <>");
+    debug_block(block->blocksy(), ind + " <>");
   }
   else if (Cast<SupportsOperation>(node)) {
     SupportsOperation* block = Cast<SupportsOperation>(node);
@@ -714,7 +714,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->predicate(), ind + " = ");
-    debug_block(block->block(), ind + " <>");
+    debug_block(block->blocksy(), ind + " <>");
     // debug_ast(block->alternatives(), ind + " ><");
   }
   else if (Cast<Return>(node)) {
@@ -795,7 +795,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->name(), ind + " name: ");
     debug_ast(block->value(), ind + " value: ");
-    debug_block(block->block(), ind + " ");
+    debug_block(block->blocksy(), ind + " ");
   }
   else if (Cast<Keyframe_Rule>(node)) {
     Keyframe_Rule* has_block = Cast<Keyframe_Rule>(node);
@@ -804,7 +804,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << has_block->tabs() << std::endl;
     if (has_block->name2()) debug_ast(has_block->name2(), ind + "@");
     // else if (has_block->name()) debug_ast(has_block->name(), ind + "@");
-    // if (has_block->block()) for(const Statement_Obj& i : has_block->block()->elements()) { debug_ast(i, ind + " "); }
+    // if (has_block->blocksy()) for(const Statement_Obj& i : has_block->blocksy()->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<AtRule>(node)) {
     AtRule* block = Cast<AtRule>(node);
@@ -871,7 +871,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
-    debug_block(ruleset->block(), ind + " ");
+    debug_block(ruleset->blocksy(), ind + " ");
   }
 
   else if (MixinRule* ruleset = Cast<MixinRule>(node)) {
@@ -883,7 +883,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->arguments(), ind + "$");
-    debug_block(ruleset->block(), ind + " ");
+    debug_block(ruleset->blocksy(), ind + " ");
   }
   else if (ArgumentDeclaration* args = Cast<ArgumentDeclaration>(node)) {
     std::cerr << ind << "MixinRArgumentDeclarationule " << args;
@@ -894,7 +894,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     // debug_ast(ruleset->arguments(), ind + "$");
-    // debug_ast(ruleset->block(), ind + " ");
+    // debug_ast(ruleset->blocksy(), ind + " ");
   }
 
   else if (FunctionRule* ruleset = Cast<FunctionRule>(node)) {
@@ -905,7 +905,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
-    debug_block(ruleset->block(), ind + " ");
+    debug_block(ruleset->blocksy(), ind + " ");
   }
   else if (StyleRule* ruleset = Cast<StyleRule>(node)) {
     std::cerr << ind << "StyleRule " << ruleset;
@@ -915,7 +915,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->interpolation(), ind + "#");
-    debug_block(ruleset->block(), ind + " ");
+    debug_block(ruleset->blocksy(), ind + " ");
   }
   else if (CssStyleRule* ruleset = Cast<CssStyleRule>(node)) {
     std::cerr << ind << "CssStyleRule " << ruleset;
@@ -929,7 +929,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (auto stmt : ruleset->elements()) {
       debug_ast(stmt, ind + " !! ");
     }
-    // debug_ast(ruleset->block(), ind + " :: ");
+    // debug_ast(ruleset->blocksy(), ind + " :: ");
   }
   else if (Cast<Block>(node)) {
     Block* block = Cast<Block>(node);
