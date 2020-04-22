@@ -273,8 +273,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, const sass::vector<StatementObj>& els, char type)
-  : ParentStatement(pstate, els), type_(type), name_(n)
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
+  : ParentStatement(pstate, b), type_(type), name_(n)
   { }
 
   /////////////////////////////////////////////////////////////////////////
