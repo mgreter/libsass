@@ -516,7 +516,6 @@ namespace Sass {
     return compiler.callee_stack;
   }
 
-  // Invoked via Block::perform
   Value* Eval::visitChildren(const sass::vector<StatementObj>& children)
   {
     for (const auto& child : children) {

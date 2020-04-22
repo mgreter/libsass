@@ -328,13 +328,6 @@ namespace Sass {
     Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
     Block(const Block* ptr);
 
-    bool is_invisible() const override {
-      throw std::runtime_error("Block::has_content");
-    }
-    bool has_content() override {
-      throw std::runtime_error("Block::has_content");
-    }
-    // ATTACH_CLONE_OPERATIONS(Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -344,8 +337,6 @@ namespace Sass {
     Root(const SourceSpan& pstate, size_t s = 0);
     Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
     Root(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
-
-    // ATTACH_CLONE_OPERATIONS(Block)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
