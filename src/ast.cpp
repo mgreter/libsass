@@ -205,13 +205,15 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ParentStatement::ParentStatement(const SourceSpan& pstate, BlockObj b)
+  ParentStatement::ParentStatement(const SourceSpan& pstate, BlockObj b, bool useless)
     : Statement(pstate), block_(b), idxs_(0)
   { }
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
-    : Statement(pstate), block_(SASS_MEMORY_NEW(Block, pstate, els)), idxs_(0)
-  { }
+    : Statement(pstate), block_(), idxs_(0)
+  {
+    if (els.size()) block_ = SASS_MEMORY_NEW(Block, pstate, els);
+  }
   
   // ParentStatement::ParentStatement(SourceSpan&& pstate, BlockObj b)
   //   : Statement(std::move(pstate)), block_(b), idxs_(0)
@@ -275,7 +277,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, BlockObj b, char type)
-    : ParentStatement(pstate, BlockObj{}), type_(type), name_(n)
+    : ParentStatement(pstate, BlockObj{}, false), type_(type), name_(n)
   {
     block_ = b; // there is some equality check somewhere!!!!
     if (b) block_->elementsC(b->elements());
@@ -303,10 +305,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value/*, sass::vector<StatementObj> els*/) :
-    ParentStatement(pstate, BlockObj{}),
+    ParentStatement(pstate, sass::vector<StatementObj>{}),
     name_(name),
     value_(value)
   {
+
+    auto asd = block_;
+
     // block_ = block;
 
     // block_->elementsC(els);
@@ -948,7 +953,7 @@ namespace Sass {
     ArgumentDeclaration* arguments,
     SilentComment* comment,
     Block* block) :
-    ParentStatement(pstate, block),
+    ParentStatement(pstate, block, false),
     name_(name),
     idxs_(0),
     comment_(comment),

@@ -373,7 +373,7 @@ namespace Sass {
     }
     operator Block* () { return block_.ptr(); }
     // ParentStatement(SourceSpan&& pstate, BlockObj b);
-    ParentStatement(const SourceSpan& pstate, BlockObj b);
+    ParentStatement(const SourceSpan& pstate, BlockObj b, bool useless);
     ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els);
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor

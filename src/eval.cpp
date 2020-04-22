@@ -1741,7 +1741,7 @@ namespace Sass {
 
     ValueObj condition = i->predicate()->perform(this);
     if (condition->isTruthy()) {
-      rv = i->block()->Block::perform(this);
+      if (i->block()) rv = i->block()->Block::perform(this);
     }
     else {
       for (auto alternative : i->alternatives()) {
