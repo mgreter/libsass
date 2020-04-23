@@ -45,7 +45,7 @@ namespace Sass {
     // make sure everything is parsed
     scanner.expectDone();
 
-    return SASS_MEMORY_NEW(Root, scanner.relevantSpanFrom(start), statements);
+    return SASS_MEMORY_NEW(Root, scanner.relevantSpanFrom(start), std::move(statements));
 
   }
 

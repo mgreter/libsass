@@ -22,8 +22,6 @@ namespace Sass {
     // Whether quoted strings should be emitted with quotes.
     bool quotes;
 
-    bool is_root;
-
     Inspect(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
     virtual ~Inspect();
 

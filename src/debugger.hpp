@@ -839,7 +839,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
     // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     // debug_ast(ruleset->content(), ind + " @ ");
@@ -849,7 +848,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->content(), ind + " @ ");
@@ -859,7 +857,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_block(ruleset, ind + " ");
@@ -870,7 +867,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->arguments(), ind + "$");
@@ -881,7 +877,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
     // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     // debug_ast(ruleset->arguments(), ind + "$");
@@ -893,7 +888,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_block(ruleset, ind + " ");
@@ -903,7 +897,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->interpolation(), ind + "#");
     debug_block(ruleset, ind + " ");
@@ -913,7 +906,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
-    // std::cerr << (ruleset->is_root() ? " [root]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->selector(), ind + ">");
     // debug_ast(ruleset->interpolation(), ind + "#");

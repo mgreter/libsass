@@ -167,8 +167,6 @@ namespace Sass {
 
   Root::Root(const SourceSpan& pstate, size_t s)
     : AST_Node(pstate), VectorizedNopsi<Statement>(s) {}
-  Root::Root(const SourceSpan& pstate, const sass::vector<StatementObj>& vec)
-    : AST_Node(pstate), VectorizedNopsi<Statement>(vec) {}
   Root::Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec)
     : AST_Node(pstate), VectorizedNopsi<Statement>(std::move(vec)) {}
 
@@ -793,16 +791,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ArgumentResults::ArgumentResults(
-    const sass::vector<ValueObj>& positional,
-    const EnvKeyFlatMap<ValueObj>& named,
-    Sass_Separator separator) :
-    positional_(positional),
-    named_(named),
-    separator_(separator)
-  {
-  }
-
-  ArgumentResults::ArgumentResults(
     sass::vector<ValueObj>&& positional,
     EnvKeyFlatMap<ValueObj>&& named,
     Sass_Separator separator) :
@@ -941,8 +929,8 @@ namespace Sass {
     const EnvKey& name,
     ArgumentDeclaration* arguments,
     SilentComment* comment,
-    const sass::vector<StatementObj>& els) :
-    ParentStatement(pstate, els),
+    sass::vector<StatementObj>&& els) :
+    ParentStatement(pstate, std::move(els)),
     name_(name),
     idxs_(0),
     comment_(comment),
@@ -958,9 +946,9 @@ namespace Sass {
     const EnvKey& name,
     ArgumentDeclaration* arguments,
     SilentComment* comment,
-    const sass::vector<StatementObj>& els) :
+    sass::vector<StatementObj>&& els) :
     CallableDeclaration(pstate,
-      name, arguments, comment, els)
+      name, arguments, comment, std::move(els))
   {
   }
 
@@ -974,9 +962,9 @@ namespace Sass {
     const sass::string& name,
     ArgumentDeclaration* arguments,
     SilentComment* comment,
-    const sass::vector<StatementObj>& els) :
+    sass::vector<StatementObj>&& els) :
     CallableDeclaration(pstate,
-      name, arguments, comment, els)
+      name, arguments, comment, std::move(els))
   {
   }
 
@@ -993,8 +981,7 @@ namespace Sass {
     const EnvKey& name,
     ArgumentInvocation* arguments,
     const sass::string& ns,
-    ContentBlock* content,
-    const sass::vector<StatementObj>& block) :
+    ContentBlock* content) :
     InvocationStatement(pstate, arguments),
     ns_(ns), name_(name), content_(content)
   {
@@ -1006,8 +993,7 @@ namespace Sass {
 
   ContentBlock::ContentBlock(
     const SourceSpan& pstate,
-    ArgumentDeclaration* arguments,
-    const sass::vector<StatementObj>& children) :
+    ArgumentDeclaration* arguments) :
     CallableDeclaration(pstate, Keys::contentRule, arguments)
   {
   }

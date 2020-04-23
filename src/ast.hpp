@@ -117,15 +117,6 @@ namespace Sass {
     ATTACH_VIRTUAL_COPY_OPERATIONS(Expression);
   };
 
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Hash method specializations for std::unordered_map to work with Sass::Expression
-/////////////////////////////////////////////////////////////////////////////////////
-
-namespace Sass {
-
-
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
@@ -224,11 +215,6 @@ namespace Sass {
       ArgumentResults&& other) noexcept;
 
     ArgumentResults(
-      const sass::vector<ValueObj>& positional,
-      const EnvKeyFlatMap<ValueObj>& named,
-      Sass_Separator separator);
-
-    ArgumentResults(
       sass::vector<ValueObj>&& positional,
       EnvKeyFlatMap<ValueObj>&& named,
       Sass_Separator separator);
@@ -323,7 +309,6 @@ namespace Sass {
   public:
     Root(const SourceSpan& pstate, size_t s = 0);
     Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
-    Root(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -346,11 +331,7 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs);
   public:
 
-    ParentStatement(const SourceSpan& pstate) : Statement(pstate), VectorizedNopsi<Statement>(), idxs_(0) {}
-
-   ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els) : Statement(pstate), VectorizedNopsi<Statement>(els), idxs_(0) {}
-
-    ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els);
+    ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els = {});
 
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
@@ -438,8 +419,14 @@ namespace Sass {
     ADD_PROPERTY(bool, hasBrackets);
   public:
     ListExpression(const SourceSpan& pstate, Sass_Separator separator = SASS_UNDEF);
-    void concat(sass::vector<ExpressionObj>& expressions) {
+    void concat(const sass::vector<ExpressionObj>& expressions) {
       std::copy(
+        expressions.begin(), expressions.end(),
+        std::back_inserter(contents_)
+      );
+    }
+    void concat(sass::vector<ExpressionObj>&& expressions) {
+      std::move(
         expressions.begin(), expressions.end(),
         std::back_inserter(contents_)
       );
@@ -841,7 +828,7 @@ namespace Sass {
       const EnvKey& name,
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
-      const sass::vector<StatementObj>& els = {});
+      sass::vector<StatementObj>&& els = {});
 
     // Stringify declarations etc. (dart)
     virtual sass::string toString1() const = 0;
@@ -854,8 +841,7 @@ namespace Sass {
   public:
     ContentBlock(
       const SourceSpan& pstate,
-      ArgumentDeclaration* arguments = nullptr,
-      const sass::vector<StatementObj>& children = {});
+      ArgumentDeclaration* arguments = nullptr);
     sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -868,7 +854,7 @@ namespace Sass {
       const EnvKey& name,
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
-      const sass::vector<StatementObj>& els = {});
+      sass::vector<StatementObj>&& els = {});
     sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -882,7 +868,7 @@ namespace Sass {
       const sass::string& name,
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
-      const sass::vector<StatementObj>& els = {});
+      sass::vector<StatementObj>&& els = {});
     sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -909,8 +895,7 @@ namespace Sass {
       const EnvKey& name,
       ArgumentInvocation* arguments,
       const sass::string& ns = "",
-      ContentBlock* content = nullptr,
-      const sass::vector<StatementObj>& block = {});
+      ContentBlock* content = nullptr);
 
     bool has_content() override final;
 
