@@ -14,8 +14,8 @@
 #include "source_map.hpp"
 
 namespace Sass {
-  SourceMap::SourceMap() : current_position(), file("stdin") { }
-  SourceMap::SourceMap(const sass::string& file) : current_position(), file(file) { }
+  SourceMap::SourceMap(bool enabled) : enabled(enabled), current_position(), file("stdin") { }
+  // SourceMap::SourceMap(const sass::string& file) : current_position(), file(file) { }
 
 
   sass::string SourceMap::render(const std::unordered_map<size_t, size_t>& idxremap) const

@@ -12,8 +12,8 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Emitter::Emitter(struct SassOutputOptionsCpp& opt)
-  : wbuf(),
+  Emitter::Emitter(struct SassOutputOptionsCpp& opt, bool srcmap_enabled)
+  : wbuf(srcmap_enabled),
     opt(opt),
     indentation(0),
     scheduled_space(0),
@@ -40,7 +40,7 @@ namespace Sass {
   }
 
   // PROXY METHODS FOR SOURCE MAPS
-
+  
   void Emitter::add_source_index(size_t idx)
   { wbuf.smap.source_index.push_back(idx); }
 

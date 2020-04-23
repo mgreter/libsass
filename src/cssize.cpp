@@ -302,7 +302,7 @@ namespace Sass {
 
 
 
-  sass::vector<StatementObj>&& Cssize::debubble(const sass::vector<StatementObj>& children, Statement* parent)
+  sass::vector<StatementObj> Cssize::debubble(const sass::vector<StatementObj>& children, Statement* parent)
   {
     sass::vector<StatementObj>* previousBlock = nullptr;
     std::vector<std::pair<bool, sass::vector<StatementObj>>> baz;
@@ -353,7 +353,7 @@ namespace Sass {
 
     }
 
-    return std::move(items);
+    return items;
   }
 
 }

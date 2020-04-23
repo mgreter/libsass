@@ -5,6 +5,7 @@
 #include "../settings.hpp"
 #include "../MurmurHash2.hpp"
 
+#include <deque>
 #include <vector>
 #include <limits>
 #include <iostream>
@@ -111,6 +112,7 @@ namespace Sass {
 // Make them available on the global scope
 // Easier for global structs needed for C linkage
 namespace sass {
+  template <typename T> using deque = std::deque<T, Sass::Allocator<T>>;
   template <typename T> using vector = std::vector<T, Sass::Allocator<T>>;
   using string = std::basic_string<char, std::char_traits<char>, Sass::Allocator<char>>;
   using wstring = std::basic_string<wchar_t, std::char_traits<wchar_t>, Sass::Allocator<wchar_t>>;

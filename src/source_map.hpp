@@ -25,8 +25,9 @@ namespace Sass {
 
   public:
     sass::vector<size_t> source_index;
-    SourceMap();
-    SourceMap(const sass::string& file);
+    bool enabled;
+    SourceMap(bool enabled);
+    // SourceMap(const sass::string& file);
 
     void append(const Offset& offset);
     void prepend(const Offset& offset);
@@ -41,7 +42,8 @@ namespace Sass {
 
   public:
     sass::string render(const std::unordered_map<size_t, size_t>& remap_srcidx) const;
-    
+
+    // Deque is not faster, I checked
     sass::vector<Mapping> mappings;
 
   private:
@@ -56,6 +58,8 @@ private:
     public:
       sass::string buffer;
       SourceMap smap;
+      OutputBuffer(bool enabled)
+        : smap(enabled) {}
   };
 
 }

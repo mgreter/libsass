@@ -16,7 +16,7 @@ namespace Sass {
   class Emitter {
 
     public:
-      Emitter(struct SassOutputOptionsCpp& opt);
+      Emitter(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
       virtual ~Emitter() { }
 
     protected:

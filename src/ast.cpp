@@ -83,7 +83,7 @@ namespace Sass {
   sass::string AST_Node::to_string(Sass_Inspect_Options opt) const
   {
     SassOutputOptionsCpp out(opt);
-    Inspect i(Emitter{ out });
+    Inspect i(Emitter{ out, false });
     i.in_declaration = true;
     // ToDo: inspect should be const
     const_cast<AST_Node*>(this)->perform(&i);
@@ -94,7 +94,7 @@ namespace Sass {
   {
     opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
-    Inspect i(Emitter{ out });
+    Inspect i(Emitter{ out, false });
     i.quotes = quotes;
     i.in_declaration = true;
     // ToDo: inspect should be const
@@ -106,7 +106,7 @@ namespace Sass {
   {
     opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
-    Inspect i(Emitter{ out });
+    Inspect i(Emitter{ out, false });
     i.quotes = quotes;
     i.in_declaration = true;
     // ToDo: inspect should be const

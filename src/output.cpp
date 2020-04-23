@@ -17,8 +17,8 @@ namespace Sass {
 
   // ToDo: move assignment
 
-  Output::Output(SassOutputOptionsCpp& opt)
-    : Inspect(Emitter(opt)),
+  Output::Output(SassOutputOptionsCpp& opt, bool srcmap_enabled)
+    : Inspect(Emitter{ opt, srcmap_enabled }),
     charset(""),
     top_nodes(0)
   {}
@@ -81,7 +81,9 @@ namespace Sass {
   OutputBuffer& Output::get_buffer(void)
   {
 
-    Inspect inspect(Emitter{ opt });
+
+
+    Inspect inspect(Emitter{ opt, wbuf.smap.enabled });
 
     size_t size_nodes = top_nodes.size();
     for (size_t i = 0; i < size_nodes; i++) {

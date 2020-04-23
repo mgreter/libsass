@@ -441,7 +441,7 @@ namespace Sass {
     Sass_Inspect_Options serializeOpt(compiler);
     serializeOpt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(serializeOpt);
-    Inspect serialize(Emitter{ out });
+    Inspect serialize(Emitter{ out, false });
     serialize.in_declaration = true;
     serialize.quotes = false;
     node->perform(&serialize);

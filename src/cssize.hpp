@@ -62,7 +62,7 @@ namespace Sass {
     Statement* bubble(CssMediaRule*);
     Statement* bubble(CssSupportsRule*);
 
-    sass::vector<StatementObj>&& debubble(
+    sass::vector<StatementObj> debubble(
       const sass::vector<StatementObj>&,
       Statement* parent = nullptr);
 

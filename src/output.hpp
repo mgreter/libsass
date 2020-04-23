@@ -16,7 +16,7 @@ namespace Sass {
     using Inspect::operator();
 
   public:
-    Output(SassOutputOptionsCpp& opt);
+    Output(SassOutputOptionsCpp& opt, bool srcmap_enabled);
     virtual ~Output();
 
   protected:

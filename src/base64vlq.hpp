@@ -8,13 +8,13 @@ namespace Sass {
 
   class Base64VLQ {
 
-    const char* Base64VLQ::CHARACTERS =
+    const char* CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    const int Base64VLQ::VLQ_BASE_SHIFT = 5;
-    const int Base64VLQ::VLQ_BASE = 1 << VLQ_BASE_SHIFT;
-    const int Base64VLQ::VLQ_BASE_MASK = VLQ_BASE - 1;
-    const int Base64VLQ::VLQ_CONTINUATION_BIT = VLQ_BASE;
+    const int VLQ_BASE_SHIFT = 5;
+    const int VLQ_BASE = 1 << VLQ_BASE_SHIFT;
+    const int VLQ_BASE_MASK = VLQ_BASE - 1;
+    const int VLQ_CONTINUATION_BIT = VLQ_BASE;
 
   public:
 
