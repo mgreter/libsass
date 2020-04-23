@@ -543,7 +543,7 @@ namespace Sass {
     size_t i_end = sass::string::npos;
 
     sass::string last("root stylesheet");
-    std::vector<std::pair<sass::string, sass::string>> traced;
+    sass::vector<std::pair<sass::string, sass::string>> traced;
     for (size_t i = 0; i < traces.size(); i++) {
 
       const StackTrace& trace = traces[i];

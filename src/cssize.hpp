@@ -66,7 +66,7 @@ namespace Sass {
       const sass::vector<StatementObj>&,
       Statement* parent = nullptr);
 
-    void slice_by_bubble(const sass::vector<StatementObj>& children, std::vector<std::pair<bool, sass::vector<StatementObj>>>&);
+    void slice_by_bubble(const sass::vector<StatementObj>& children, sass::vector<std::pair<bool, sass::vector<StatementObj>>>&);
 
     // generic fall-back
     template <typename U>

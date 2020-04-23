@@ -227,7 +227,7 @@ namespace Sass {
     if (in_declaration && in_comma_array) return;
     if (scheduled_linefeed && indentation)
       scheduled_linefeed = 1;
-    append_string(opt.indent, indentation); // 1.5%
+    append_string(opt.indent, indentation); // 1.5% (realloc)
   }
 
   void Emitter::append_delimiter()

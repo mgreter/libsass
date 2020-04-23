@@ -949,7 +949,7 @@ namespace Sass {
     SourceSpan pstate(scanner.relevantSpanFrom(start));
     cur = root = SASS_MEMORY_NEW(If, pstate, condition, children);
 
-    std::vector<If*> ifs;
+    sass::vector<If*> ifs;
     ifs.push_back(root);
 
     while (scanElse(ifIndentation)) {

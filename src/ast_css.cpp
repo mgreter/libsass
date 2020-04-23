@@ -24,6 +24,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
 
   CssParentNode::CssParentNode(
+    const SourceSpan& pstate) :
+    CssNode(pstate),
+    VectorizedNopsi(),
+    isChildless_(false)
+  {}
+
+  CssParentNode::CssParentNode(
     const SourceSpan& pstate,
     const sass::vector<StatementObj>& children) :
     CssNode(pstate),
@@ -93,10 +100,9 @@ namespace Sass {
   CssAtRule::CssAtRule(
     const SourceSpan& pstate,
     CssString* name,
-    CssString* value,
-    const sass::vector<StatementObj>& children)
+    CssString* value)
     :
-    CssParentNode(pstate, children),
+    CssParentNode(pstate),
     name_(name),
     value_(value)
   {}
@@ -198,9 +204,17 @@ namespace Sass {
   // Value constructor
   CssKeyframeBlock::CssKeyframeBlock(
     const SourceSpan& pstate,
+    CssStrings* selector) :
+    CssParentNode(pstate),
+    selector_(selector)
+  {}
+
+  // Value constructor
+  CssKeyframeBlock::CssKeyframeBlock(
+    const SourceSpan& pstate,
     CssStrings* selector,
-    const sass::vector<Statement_Obj>& children) :
-    CssParentNode(pstate, children),
+    sass::vector<Statement_Obj>&& children) :
+    CssParentNode(pstate, std::move(children)),
     selector_(selector)
   {}
 
@@ -224,9 +238,8 @@ namespace Sass {
 
   CssStyleRule::CssStyleRule(
     const SourceSpan& pstate,
-    SelectorList* selector,
-    const sass::vector<StatementObj>& children) :
-    CssParentNode(pstate, children),
+    SelectorList* selector) :
+    CssParentNode(pstate),
     selector_(selector)
   {}
 
@@ -261,9 +274,8 @@ namespace Sass {
 
   CssSupportsRule::CssSupportsRule(
     const SourceSpan& pstate,
-    ExpressionObj condition,
-    const sass::vector<StatementObj>& children) :
-    CssParentNode(pstate, children),
+    ExpressionObj condition) :
+    CssParentNode(pstate),
     condition_(condition)
   {}
 
@@ -300,9 +312,8 @@ namespace Sass {
   // Value constructor
   CssMediaRule::CssMediaRule(
     const SourceSpan& pstate,
-    const sass::vector<CssMediaQueryObj>& queries,
-    const sass::vector<StatementObj>& children) :
-    CssParentNode(pstate, children),
+    const sass::vector<CssMediaQueryObj>& queries) :
+    CssParentNode(pstate),
     queries_(queries)
   {}
 
@@ -504,9 +515,8 @@ namespace Sass {
   // Value constructor
   CssAtRootRule::CssAtRootRule(
     const SourceSpan& pstate,
-    AtRootQueryObj query,
-    const sass::vector<StatementObj>& children) :
-    CssParentNode(pstate, children),
+    AtRootQueryObj query) :
+    CssParentNode(pstate),
     query_(query)
   {}
 

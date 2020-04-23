@@ -43,6 +43,8 @@ namespace Sass {
     /// The child statements of this node.
     // List<CssNode> get children;
 
+    CssParentNode(const SourceSpan& pstate);
+
     CssParentNode(const SourceSpan& pstate,
       const sass::vector<StatementObj>& children);
 
@@ -102,13 +104,12 @@ namespace Sass {
   public:
     CssAtRule(const SourceSpan& pstate,
       CssString* name,
-      CssString* value,
-      const sass::vector<StatementObj>& children);
+      CssString* value);
 
     CssAtRule(const SourceSpan& pstate,
       CssString* name,
       CssString* value,
-      sass::vector<StatementObj>&& children = {});
+      sass::vector<StatementObj>&& children);
 
     bool bubbles() const override final;
     ATTACH_CLONE_OPERATIONS(CssAtRule)
@@ -188,8 +189,13 @@ namespace Sass {
     // Value constructor
     CssKeyframeBlock(
       const SourceSpan& pstate,
+      CssStrings* selector);
+
+    // Value constructor
+    CssKeyframeBlock(
+      const SourceSpan& pstate,
       CssStrings* selector,
-      const sass::vector<StatementObj>& children);
+      sass::vector<StatementObj>&& children);
 
     // Dispatch to visitor
     template <typename T>
@@ -216,8 +222,7 @@ namespace Sass {
 
     CssStyleRule(
       const SourceSpan& pstate,
-      SelectorList* selector,
-      const sass::vector<StatementObj>& children);
+      SelectorList* selector);
 
     CssStyleRule(
       const SourceSpan& pstate,
@@ -247,7 +252,7 @@ namespace Sass {
   class CssSupportsRule : public CssParentNode {
     ADD_PROPERTY(ExpressionObj, condition);
   public:
-    CssSupportsRule(const SourceSpan& pstate, ExpressionObj condition, const sass::vector<StatementObj>& children);
+    CssSupportsRule(const SourceSpan& pstate, ExpressionObj condition);
 
     CssSupportsRule(
       const SourceSpan& pstate,
@@ -339,8 +344,7 @@ namespace Sass {
     // Value constructor
     CssAtRootRule(
       const SourceSpan& pstate,
-      AtRootQueryObj query,
-      const sass::vector<StatementObj>& children);
+      AtRootQueryObj query);
 
     // Value constructor
     CssAtRootRule(
@@ -370,8 +374,7 @@ namespace Sass {
 
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,
-      const sass::vector<CssMediaQueryObj>& queries,
-      const sass::vector<StatementObj>& children);
+      const sass::vector<CssMediaQueryObj>& queries);
 
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,

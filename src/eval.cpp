@@ -1468,7 +1468,8 @@ namespace Sass {
     MediaQueryParser parser(compiler, source);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), sass::vector<CssMediaQueryObj>(), node->elements());
+      node->pstate(), sass::vector<CssMediaQueryObj>());
+    css->CssParentNode::concat(node->elements());
     sass::vector<CssMediaQueryObj> parsed = parser.parse();
     if (mediaStack.size() && mediaStack.back()) {
       auto parent = mediaStack.back()->queries();
@@ -1852,10 +1853,7 @@ namespace Sass {
       SASS_MEMORY_NEW(CssStrings,
         itpl->pstate(), selector);
 
-      auto block = SASS_MEMORY_NEW(CssKeyframeBlock,
-        itpl->pstate(), strings, children);
-
-      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), children);
+      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), std::move(children));
       if (r->interpolation()) {
         selectorStack.push_back({});
         auto val = interpolationToValue(r->interpolation(), true, false);
@@ -1864,7 +1862,7 @@ namespace Sass {
       }
 
       // blockStack.back()->push_back(k);
-      blockStack.back()->push_back(block);
+      blockStack.back()->push_back(k);
 
       return nullptr;
       // return k.detach();

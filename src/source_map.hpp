@@ -45,6 +45,11 @@ namespace Sass {
     // Deque is not faster, I checked
     sass::vector<Mapping> mappings;
 
+    void reserve(size_t size) {
+      source_index.reserve(size);
+      mappings.reserve(size);
+    }
+
   private:
     Offset current_position;
 public:

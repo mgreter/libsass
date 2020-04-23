@@ -136,6 +136,8 @@ namespace Sass {
   {
     // Create the emitter object
     Output emitter(*this, srcmap_options.mode != SASS_SRCMAP_NONE);
+    emitter.reserve(1024 * 1024); // 1MB
+
     // Start the render process
     if (compiled != nullptr) {
       compiled->perform(&emitter);

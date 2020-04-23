@@ -22,6 +22,10 @@ namespace Sass {
     protected:
       OutputBuffer wbuf;
     public:
+      void reserve(size_t bytes) {
+        wbuf.buffer.reserve(bytes);
+        if (wbuf.smap) wbuf.smap->reserve(bytes / 20);
+      }
       const sass::string& buffer(void) { return wbuf.buffer; }
       const OutputBuffer& output(void) { return wbuf; }
       // proxy methods for source maps
