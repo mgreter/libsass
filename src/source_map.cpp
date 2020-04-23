@@ -20,19 +20,25 @@ namespace Sass {
 
   sass::string SourceMap::render(const std::unordered_map<size_t, size_t>& idxremap) const
   {
-    sass::string result = "";
 
-    size_t previous_generated_line = 0;
-    size_t previous_generated_column = 0;
-    size_t previous_original_line = 0;
-    size_t previous_original_column = 0;
-    size_t previous_original_file = 0;
+    sass::string result;
+
+    // We can make an educated guess here
+    // 3249594 mappings = 17669768 bytes
+    result.reserve(mappings.size() * 5);
+
+    int previous_generated_line = 0;
+    int previous_generated_column = 0;
+    int previous_original_line = 0;
+    int previous_original_column = 0;
+    int previous_original_file = 0;
+
     for (size_t i = 0; i < mappings.size(); ++i) {
-      const size_t generated_line = mappings[i].target.line;
-      const size_t generated_column = mappings[i].target.column;
-      const size_t original_line = mappings[i].origin.line;
-      const size_t original_column = mappings[i].origin.column;
-      const size_t original_file = idxremap.at(mappings[i].srcidx);
+      int generated_line = static_cast<int>(mappings[i].target.line);
+      int generated_column = static_cast<int>(mappings[i].target.column);
+      int original_line = static_cast<int>(mappings[i].origin.line);
+      int original_column = static_cast<int>(mappings[i].origin.column);
+      int original_file = static_cast<int>(idxremap.at(mappings[i].srcidx));
 
       if (generated_line != previous_generated_line) {
         previous_generated_column = 0;
@@ -42,22 +48,22 @@ namespace Sass {
         }
       }
       else if (i > 0) {
-        result += ",";
+        result += ',';
       }
 
-      // generated column
-      result += base64vlq.encode(static_cast<int>(generated_column) - static_cast<int>(previous_generated_column));
+      // maybe we can optimize this a bit in the future?
+      base64vlq.encode(result, generated_column - previous_generated_column);
+      base64vlq.encode(result, original_file - previous_original_file);
+      base64vlq.encode(result, original_line - previous_original_line);
+      base64vlq.encode(result, original_column - previous_original_column);
+
       previous_generated_column = generated_column;
-      // file
-      result += base64vlq.encode(static_cast<int>(original_file) - static_cast<int>(previous_original_file));
-      previous_original_file = original_file;
-      // source line
-      result += base64vlq.encode(static_cast<int>(original_line) - static_cast<int>(previous_original_line));
-      previous_original_line = original_line;
-      // source column
-      result += base64vlq.encode(static_cast<int>(original_column) - static_cast<int>(previous_original_column));
       previous_original_column = original_column;
+      previous_original_line = original_line;
+      previous_original_file = original_file;
     }
+
+    // std::cerr << "RESULT " << result.size() << " from " << mappings.size() << "\n";
 
     return result;
   }

@@ -18,21 +18,8 @@ namespace Sass {
   // Blocks of statements.
   ////////////////////////
 
-  Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec) :
-    Statement(pstate),
-    VectorizedNopsi<Statement>(vec)
-  { }
-
-  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec) :
-    Statement(pstate),
-    VectorizedNopsi<Statement>(std::move(vec))
-  { }
-
-  Block::Block(const Block* ptr) :
-    Statement(ptr),
-    VectorizedNopsi<Statement>(ptr)
-  {}
-
+  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec)
+    : Statement(pstate), VectorizedNopsi<Statement>(std::move(vec)) {}
 
   Cssize::Cssize(Logger& logger)
   : callStack(logger)
@@ -113,7 +100,7 @@ namespace Sass {
     }
 
     return SASS_MEMORY_NEW(Block, r->pstate(),
-      debubble(children, r));
+      std::move(debubble(children, r)));
   }
 
   Statement* Cssize::operator()(Keyframe_Rule* r)
@@ -123,7 +110,7 @@ namespace Sass {
     sass::vector<StatementObj> children;
     visitBlockStatements(r->elements(), children);
     return SASS_MEMORY_NEW(Block, r->pstate(),
-      debubble(children, r));
+      std::move(debubble(children, r)));
   }
 
   Statement* Cssize::operator()(CssStyleRule* r)
@@ -157,7 +144,7 @@ namespace Sass {
     }
 
     return SASS_MEMORY_NEW(Block,
-      r->pstate(), debubble(bubblers));
+      r->pstate(), std::move(debubble(bubblers)));
   }
 
   Statement* Cssize::operator()(CssMediaRule* m)
@@ -178,7 +165,7 @@ namespace Sass {
     cssStack.pop_back();
 
     return SASS_MEMORY_NEW(Block, m->pstate(),
-      debubble(children, m));
+      std::move(debubble(children, m)));
   }
 
   Statement* Cssize::operator()(CssSupportsRule* m)
@@ -197,7 +184,7 @@ namespace Sass {
     cssStack.pop_back();
 
     return SASS_MEMORY_NEW(Block, m->pstate(),
-      debubble(children, m));
+      std::move(debubble(children, m)));
 
   }
 
@@ -315,7 +302,7 @@ namespace Sass {
 
 
 
-  sass::vector<StatementObj> Cssize::debubble(const sass::vector<StatementObj>& children, Statement* parent)
+  sass::vector<StatementObj>&& Cssize::debubble(const sass::vector<StatementObj>& children, Statement* parent)
   {
     sass::vector<StatementObj>* previousBlock = nullptr;
     std::vector<std::pair<bool, sass::vector<StatementObj>>> baz;
@@ -366,7 +353,7 @@ namespace Sass {
 
     }
 
-    return items;
+    return std::move(items);
   }
 
 }

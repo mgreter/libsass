@@ -13,9 +13,7 @@ namespace Sass {
   class Block : public Statement, public VectorizedNopsi<Statement> {
     // needed for properly formatted CSS emission
   public:
-    Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
     Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
-    Block(const Block* ptr);
 
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -64,7 +62,7 @@ namespace Sass {
     Statement* bubble(CssMediaRule*);
     Statement* bubble(CssSupportsRule*);
 
-    sass::vector<StatementObj> debubble(
+    sass::vector<StatementObj>&& debubble(
       const sass::vector<StatementObj>&,
       Statement* parent = nullptr);
 

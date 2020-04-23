@@ -39,7 +39,7 @@ struct SassSrcMapOptions {
 
   // Init everything to false
   SassSrcMapOptions() :
-    mode(SASS_SRCMAP_CREATE),
+    mode(SASS_SRCMAP_NONE),
     embed_contents(true),
     file_urls(false)
   {}
