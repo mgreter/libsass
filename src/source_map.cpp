@@ -14,7 +14,7 @@
 #include "source_map.hpp"
 
 namespace Sass {
-  SourceMap::SourceMap(bool enabled) : enabled(enabled), current_position(), file("stdin") { }
+  SourceMap::SourceMap() : current_position(), file("stdin") { }
   // SourceMap::SourceMap(const sass::string& file) : current_position(), file(file) { }
 
 

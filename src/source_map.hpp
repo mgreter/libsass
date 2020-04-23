@@ -25,8 +25,7 @@ namespace Sass {
 
   public:
     sass::vector<size_t> source_index;
-    bool enabled;
-    SourceMap(bool enabled);
+    SourceMap();
     // SourceMap(const sass::string& file);
 
     void append(const Offset& offset);
@@ -56,16 +55,27 @@ private:
 
   class OutputBuffer {
   private:
-    OutputBuffer(const OutputBuffer&);
-    OutputBuffer& operator=(const OutputBuffer&);
+    // Make sure we don't allow any copies
+    OutputBuffer(const OutputBuffer&) = delete;
+    OutputBuffer& operator=(const OutputBuffer&) = delete;
   public:
+
+    // Allow to move the buffer
     OutputBuffer(OutputBuffer&&);
-    OutputBuffer& operator=(OutputBuffer&&);
+    // The main buffer string
     sass::string buffer;
+    // The optional source map
     SourceMap* smap;
-    OutputBuffer(bool enabled)
-      : smap(new SourceMap(enabled))
-    {}
+
+    OutputBuffer(bool srcmap_enabled)
+    {
+      if (srcmap_enabled) {
+        smap = new SourceMap();
+      }
+    }
+    ~OutputBuffer() {
+      delete smap;
+    }
   };
 
 }

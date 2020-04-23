@@ -23,7 +23,7 @@ namespace Sass {
       OutputBuffer wbuf;
     public:
       const sass::string& buffer(void) { return wbuf.buffer; }
-      const SourceMap smap(void) { return wbuf.smap; }
+      const SourceMap* smap(void) const { return wbuf.smap; }
       const OutputBuffer& output(void) { return wbuf; }
       // proxy methods for source maps
       void add_source_index(size_t idx);
