@@ -18,11 +18,6 @@ namespace Sass {
   // Blocks of statements.
   ////////////////////////
 
-  Block::Block(const SourceSpan& pstate, size_t s)
-    : Statement(pstate),
-    VectorizedNopsi<Statement>(s)
-  { }
-
   Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec) :
     Statement(pstate),
     VectorizedNopsi<Statement>(vec)

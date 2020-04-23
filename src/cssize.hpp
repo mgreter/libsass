@@ -13,7 +13,6 @@ namespace Sass {
   class Block : public Statement, public VectorizedNopsi<Statement> {
     // needed for properly formatted CSS emission
   public:
-    Block(const SourceSpan& pstate, size_t s = 0);
     Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
     Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
     Block(const Block* ptr);
