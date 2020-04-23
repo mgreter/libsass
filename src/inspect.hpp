@@ -44,7 +44,7 @@ namespace Sass {
     // virtual void operator()(Keyframe_Rule*);
     // virtual void operator()(Bubble*);
     // virtual void operator()(SupportsRule*);
-    virtual void operator()(CssAtRootRule*) override;
+    // virtual void operator()(CssAtRootRule*) override;
     // virtual void operator()(AtRule*) override;
     // virtual void operator()(Declaration*) override;
     // virtual void operator()(Assignment*);
