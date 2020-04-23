@@ -24,7 +24,7 @@ namespace Sass {
 
     bool is_root;
 
-    Inspect(Emitter&& emi);
+    Inspect(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
     virtual ~Inspect();
 
     void visitBlockStatements(sass::vector<StatementObj> children);

@@ -27,9 +27,11 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Inspect::Inspect(Emitter&& emi)
-  : Emitter(std::move(emi)), quotes(true), is_root(true)
-  { }
+  Inspect::Inspect(SassOutputOptionsCpp& opt, bool srcmap_enabled)
+    : Emitter(opt, srcmap_enabled), quotes(true), is_root(true)
+  {
+  }
+
   Inspect::~Inspect() { }
 
   void Inspect::visitBlockStatements(sass::vector<StatementObj> children)
