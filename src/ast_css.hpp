@@ -46,9 +46,6 @@ namespace Sass {
     CssParentNode(const SourceSpan& pstate);
 
     CssParentNode(const SourceSpan& pstate,
-      const sass::vector<StatementObj>& children);
-
-    CssParentNode(const SourceSpan& pstate,
       sass::vector<StatementObj>&& children);
 
     // bool get isChildless;
@@ -417,8 +414,10 @@ namespace Sass {
     ADD_PROPERTY(SassStringObj, name2)
 
   public:
+    Keyframe_Rule(const SourceSpan& pstate);
     Keyframe_Rule(const SourceSpan& pstate,
-      const sass::vector<StatementObj>& children);
+      sass::vector<StatementObj>&& children);
+
     ATTACH_CLONE_OPERATIONS(Keyframe_Rule)
       ATTACH_CRTP_PERFORM_METHODS()
   };

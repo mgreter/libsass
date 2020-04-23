@@ -32,14 +32,6 @@ namespace Sass {
 
   CssParentNode::CssParentNode(
     const SourceSpan& pstate,
-    const sass::vector<StatementObj>& children) :
-    CssNode(pstate),
-    VectorizedNopsi(children),
-    isChildless_(false)
-  {}
-
-  CssParentNode::CssParentNode(
-    const SourceSpan& pstate,
     sass::vector<StatementObj>&& children) :
     CssNode(pstate),
     VectorizedNopsi(std::move(children)),
@@ -540,9 +532,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Keyframe_Rule::Keyframe_Rule(
+    const SourceSpan& pstate)
+    : CssParentNode(pstate), name2_()
+  {}
+  Keyframe_Rule::Keyframe_Rule(
     const SourceSpan& pstate,
-    const sass::vector<StatementObj>& children)
-    : CssParentNode(pstate, children), name2_()
+    sass::vector<StatementObj>&& children)
+    : CssParentNode(pstate, std::move(children)), name2_()
   {}
   Keyframe_Rule::Keyframe_Rule(const Keyframe_Rule* ptr)
     : CssParentNode(ptr), name2_(ptr->name2_)
