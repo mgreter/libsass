@@ -57,9 +57,10 @@ private:
   class OutputBuffer {
     public:
       sass::string buffer;
-      SourceMap smap;
+      SourceMap* smap;
       OutputBuffer(bool enabled)
-        : smap(enabled) {}
+        : smap(new SourceMap(enabled)) {
+      }
   };
 
 }

@@ -145,7 +145,7 @@ namespace Sass {
     // Update the compiler state
     state = SASS_COMPILER_RENDERED;
     // Move the resulting buffer from stream
-    return emitter.get_buffer();
+    return std::move(emitter.get_buffer());
   }
   // EO renderCss
 

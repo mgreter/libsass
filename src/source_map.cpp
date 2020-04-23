@@ -70,23 +70,25 @@ namespace Sass {
 
   void SourceMap::prepend(const OutputBuffer& out)
   {
-    Offset size(out.smap.current_position);
-    for (Mapping mapping : out.smap.mappings) {
-      if (mapping.target.line > size.line) {
-        throw(std::runtime_error("prepend sourcemap has illegal line"));
-      }
-      if (mapping.target.line == size.line) {
-        if (mapping.target.column > size.column) {
-          throw(std::runtime_error("prepend sourcemap has illegal column"));
+    if (out.smap) {
+      Offset size(out.smap->current_position);
+      for (Mapping mapping : out.smap->mappings) {
+        if (mapping.target.line > size.line) {
+          throw(std::runtime_error("prepend sourcemap has illegal line"));
+        }
+        if (mapping.target.line == size.line) {
+          if (mapping.target.column > size.column) {
+            throw(std::runtime_error("prepend sourcemap has illegal column"));
+          }
         }
       }
+      // adjust the buffer offset
+      prepend(Offset(out.buffer));
+      // now add the new mappings
+      mappings.insert(mappings.begin(),
+        out.smap->mappings.begin(),
+        out.smap->mappings.end());
     }
-    // adjust the buffer offset
-    prepend(Offset(out.buffer));
-    // now add the new mappings
-		mappings.insert(mappings.begin(),
-      out.smap.mappings.begin(),
-      out.smap.mappings.end());
 
   }
 
