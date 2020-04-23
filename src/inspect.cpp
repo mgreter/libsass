@@ -275,28 +275,6 @@ namespace Sass {
   // EO visitCssDeclaration
 
   // statements
-  void Inspect::operator()(Block* block)
-  {
-    // if (block->empty()) return;
-    bool was_root = is_root;
-    LOCAL_FLAG(is_root, false);
-    if (!was_root) {
-      add_open_mapping(block);
-      append_scope_opener();
-    }
-    if (output_style() == SASS_STYLE_NESTED) indentation += block->tabs();
-    for (size_t i = 0, L = block->length(); i < L; ++i) {
-      (*block)[i]->perform(this);
-    }
-    if (output_style() == SASS_STYLE_NESTED) indentation -= block->tabs();
-    if (!was_root) {
-      append_scope_closer();
-      add_close_mapping(block);
-    }
-
-  }
-
-  // statements
   void Inspect::operator()(Root* block)
   {
     bool was_root = is_root;

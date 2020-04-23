@@ -10,6 +10,17 @@ namespace Sass {
 
   struct BackTrace;
 
+  class Block : public Statement, public VectorizedNopsi<Statement> {
+    // needed for properly formatted CSS emission
+  public:
+    Block(const SourceSpan& pstate, size_t s = 0);
+    Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
+    Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
+    Block(const Block* ptr);
+
+    ATTACH_CRTP_PERFORM_METHODS()
+  };
+
   class Cssize : public Operation_CRTP<Statement*, Cssize> {
 
     // Share callStack with outside
@@ -23,7 +34,7 @@ namespace Sass {
 
     Root* doit(RootObj);
 
-    Block* operator()(ParentStatement*);
+    Statement* operator()(ParentStatement*);
     Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);
     Statement* operator()(CssMediaRule*);

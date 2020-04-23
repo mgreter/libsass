@@ -317,19 +317,6 @@ namespace Sass {
   };
   inline Statement::~Statement() { }
 
-  ////////////////////////
-  // Blocks of statements.
-  ////////////////////////
-  class Block : public Statement, public VectorizedNopsi<Statement> {
-    // needed for properly formatted CSS emission
-  public:
-    Block(const SourceSpan& pstate, size_t s = 0);
-    Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec);
-    Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
-    Block(const Block* ptr);
-
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
 
   class Root : public AST_Node, public VectorizedNopsi<Statement> {
     // needed for properly formatted CSS emission

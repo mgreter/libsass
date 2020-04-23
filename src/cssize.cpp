@@ -12,6 +12,33 @@
 
 namespace Sass {
 
+
+
+  ////////////////////////
+  // Blocks of statements.
+  ////////////////////////
+
+  Block::Block(const SourceSpan& pstate, size_t s)
+    : Statement(pstate),
+    VectorizedNopsi<Statement>(s)
+  { }
+
+  Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec) :
+    Statement(pstate),
+    VectorizedNopsi<Statement>(vec)
+  { }
+
+  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec) :
+    Statement(pstate),
+    VectorizedNopsi<Statement>(std::move(vec))
+  { }
+
+  Block::Block(const Block* ptr) :
+    Statement(ptr),
+    VectorizedNopsi<Statement>(ptr)
+  {}
+
+
   Cssize::Cssize(Logger& logger)
   : callStack(logger)
   { }
@@ -51,7 +78,7 @@ namespace Sass {
   }
 
 
-  Block* Cssize::operator()(ParentStatement* b)
+  Statement* Cssize::operator()(ParentStatement* b)
   {
     sass::vector<StatementObj> children;
     visitBlockStatements(b->elements(), children);

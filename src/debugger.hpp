@@ -664,15 +664,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
 
   }
-  else if (Cast<Block>(node)) {
-    Block* root_block = Cast<Block>(node);
-    std::cerr << ind << "Block " << root_block;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    // if (node->is_root2()) std::cerr << " [root]";
-    // if (root_block->isInvisible()) std::cerr << " [isInvisible]";
-    std::cerr << " " << root_block->tabs() << std::endl;
-    for (const Statement_Obj& i : root_block->elements()) { debug_ast(i, ind + " "); }
-  }
   else if (Cast<WarnRule>(node)) {
     WarnRule* block = Cast<WarnRule>(node);
     std::cerr << ind << "WarnRule " << block;
@@ -930,14 +921,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
       debug_ast(stmt, ind + " !! ");
     }
     // debug_ast(ruleset, ind + " :: ");
-  }
-  else if (Cast<Block>(node)) {
-    Block* block = Cast<Block>(node);
-    std::cerr << ind << "Block " << block;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << (block->is_invisible() ? " [INVISIBLE]" : "");
-    std::cerr << " [indent: " << block->tabs() << "]" << std::endl;
-    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<Variable>(node)) {
     Variable* expression = Cast<Variable>(node);

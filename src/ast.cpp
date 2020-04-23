@@ -165,26 +165,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Block::Block(const SourceSpan& pstate, size_t s)
-  : Statement(pstate),
-    VectorizedNopsi<Statement>(s)
-  { }
-
-  Block::Block(const SourceSpan& pstate, const sass::vector<StatementObj>& vec) :
-    Statement(pstate),
-    VectorizedNopsi<Statement>(vec)
-  { }
-
-  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec) :
-    Statement(pstate),
-    VectorizedNopsi<Statement>(std::move(vec))
-  { }
-
-  Block::Block(const Block* ptr) :
-    Statement(ptr),
-    VectorizedNopsi<Statement>(ptr)
-  {}
-
   Root::Root(const SourceSpan& pstate, size_t s)
     : AST_Node(pstate), VectorizedNopsi<Statement>(s) {}
   Root::Root(const SourceSpan& pstate, const sass::vector<StatementObj>& vec)
