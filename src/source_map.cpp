@@ -156,4 +156,10 @@ namespace Sass {
     return SourceSpan(pstate.getSource());
   }
 
+  OutputBuffer::OutputBuffer(OutputBuffer&& old) :
+    buffer(std::move(old.buffer)),
+    smap(std::move(old.smap))
+  {
+  }
+
 }

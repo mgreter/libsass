@@ -55,12 +55,17 @@ private:
   };
 
   class OutputBuffer {
-    public:
-      sass::string buffer;
-      SourceMap* smap;
-      OutputBuffer(bool enabled)
-        : smap(new SourceMap(enabled)) {
-      }
+  private:
+    OutputBuffer(const OutputBuffer&);
+    OutputBuffer& operator=(const OutputBuffer&);
+  public:
+    OutputBuffer(OutputBuffer&&);
+    OutputBuffer& operator=(OutputBuffer&&);
+    sass::string buffer;
+    SourceMap* smap;
+    OutputBuffer(bool enabled)
+      : smap(new SourceMap(enabled))
+    {}
   };
 
 }

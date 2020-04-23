@@ -24,7 +24,7 @@ namespace Sass {
     sass::vector<CssNodeObj> top_nodes;
 
   public:
-    const OutputBuffer& get_buffer(void);
+    OutputBuffer get_buffer(void);
 
     virtual void operator()(Map*);
     virtual void operator()(CssStyleRule*);

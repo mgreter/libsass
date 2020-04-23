@@ -78,10 +78,10 @@ namespace Sass {
     throw Exception::InvalidValue({}, *m);
   }
 
-  const OutputBuffer& Output::get_buffer(void)
+  OutputBuffer Output::get_buffer(void)
   {
     // This needs saving
-    Inspect inspect(opt, wbuf.smap->enabled);
+    Inspect inspect(opt, wbuf.smap ? wbuf.smap->enabled : false);
 
     size_t size_nodes = top_nodes.size();
     for (size_t i = 0; i < size_nodes; i++) {
@@ -117,7 +117,7 @@ namespace Sass {
     // add charset as first line, before comments and imports
     if (!charset.empty()) prepend_string(charset);
 
-    return wbuf;
+    return std::move(wbuf);
 
   }
   void Output::operator()(CssComment* c)
