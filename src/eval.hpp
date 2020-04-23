@@ -103,7 +103,6 @@ namespace Sass {
     std::pair<sass::vector<ExpressionObj>, EnvKeyFlatMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
 
     const sass::string cwd();
-    CalleeStack& callee_stack();
 
     Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, const SourceSpan& pstate);
 

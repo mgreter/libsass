@@ -109,11 +109,11 @@ extern "C" {
   }
 
   // Getter for callee entry
-  const char* ADDCALL sass_callee_get_name(struct SassCallee* entry) { return entry->name; }
-  const char* ADDCALL sass_callee_get_path(struct SassCallee* entry) { return entry->path; }
-  uint32_t ADDCALL sass_callee_get_line(struct SassCallee* entry) { return entry->line; }
-  uint32_t ADDCALL sass_callee_get_column(struct SassCallee* entry) { return entry->column; }
-  enum Sass_Callee_Type ADDCALL sass_callee_get_type(struct SassCallee* entry) { return entry->type; }
+  // const char* ADDCALL sass_callee_get_name(struct SassCallee* entry) { return entry->name; }
+  // const char* ADDCALL sass_callee_get_path(struct SassCallee* entry) { return entry->path; }
+  // uint32_t ADDCALL sass_callee_get_line(struct SassCallee* entry) { return entry->line; }
+  // uint32_t ADDCALL sass_callee_get_column(struct SassCallee* entry) { return entry->column; }
+  // enum Sass_Callee_Type ADDCALL sass_callee_get_type(struct SassCallee* entry) { return entry->type; }
   
   // Getters and Setters for environments (lexical, local and global)
   struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompiler* compiler, const char* name) {

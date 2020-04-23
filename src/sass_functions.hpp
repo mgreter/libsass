@@ -36,14 +36,14 @@ struct SassImport {
   Sass::SourceDataObj srcdata;
 };
 
-// External call entry
-struct SassCallee {
-  const char* name;
-  const char* path;
-  uint32_t line;
-  uint32_t column;
-  enum Sass_Callee_Type type;
-};
+// // External call entry
+// struct SassCallee {
+//   const char* name;
+//   const char* path;
+//   uint32_t line;
+//   uint32_t column;
+//   enum Sass_Callee_Type type;
+// };
 
 // Struct to hold importer callback
 struct SassImporter {

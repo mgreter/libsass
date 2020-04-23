@@ -183,10 +183,6 @@ namespace Sass {
 
     sass::vector<struct SassImport*> import_stack;
 
-    // Only used for is in mixin clause!?
-    sass::vector<SassCallee> callee_stack;
-
-
 
     sass::vector<struct SassImporter*> c_headers88;
     sass::vector<struct SassImporter*> c_importers88;

@@ -511,11 +511,6 @@ namespace Sass {
 
   }
 
-  sass::vector<SassCallee>& Eval::callee_stack()
-  {
-    return compiler.callee_stack;
-  }
-
   Value* Eval::visitChildren(const sass::vector<StatementObj>& children)
   {
     for (const auto& child : children) {
@@ -575,8 +570,7 @@ namespace Sass {
 
   void Eval::visitErrorRule(ErrorRule* node)
   {
-    // SassOutputStyle outstyle = options().output_style;
-    // options().output_style = NESTED;
+
     ValueObj message = node->expression()->perform(this);
 
     if (Callable* fn = compiler.varRoot.getLexicalFunction(Keys::errorRule)) {
@@ -589,8 +583,6 @@ namespace Sass {
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, nullptr); // &compiler
-      // options().output_style = outstyle;
-      // callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
 
@@ -613,8 +605,7 @@ namespace Sass {
 
   void Eval::visitDebugRule(DebugRule* node)
   {
-    // SassOutputStyle outstyle = options().output_style;
-    // options().output_style = NESTED;
+
     ValueObj message = node->expression()->perform(this);
 
     if (Callable* fn = compiler.varRoot.getLexicalFunction(Keys::debugRule)) {
@@ -627,8 +618,6 @@ namespace Sass {
       struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
       sass_list_push(c_args, message->toSassValue());
       struct SassValue* c_val = c_func(c_args, c_function, nullptr); // &compiler
-      // options().output_style = outstyle;
-      // callee_stack().pop_back();
       sass_delete_value(c_args);
       sass_delete_value(c_val);
 
@@ -1849,10 +1838,6 @@ namespace Sass {
       KeyframeSelectorParser parser(compiler, qwe);
       sass::vector<sass::string> selector(parser.parse());
 
-      CssStrings* strings =
-      SASS_MEMORY_NEW(CssStrings,
-        itpl->pstate(), selector);
-
       Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), std::move(children));
       if (r->interpolation()) {
         selectorStack.push_back({});
@@ -2170,16 +2155,6 @@ namespace Sass {
     // env_stack.pop_back();
     blockStack.pop_back();
 
-    /*
-    _inMixin = oldInMixin;
-    _content = oldContent;
-    */
-
-    // From old implementation
-    // compiler.callee_stack.pop_back();
-    // env_stack.pop_back();
-    // traces.pop_back();
-
     // debug_ast(trace);
     blockStack.back()->push_back(trace);
     return nullptr;
@@ -2299,10 +2274,11 @@ namespace Sass {
 
   bool Eval::isInMixin()
   {
-    for (SassCallee& callee : compiler.callee_stack) {
-      if (callee.type == SASS_CALLEE_MIXIN) return true;
-    }
-    return false;
+    return inMixin;
+    // for (SassCallee& callee : compiler.callee_stack) {
+    //   if (callee.type == SASS_CALLEE_MIXIN) return true;
+    // }
+    // return false;
   }
 
   Root* Eval::visitRoot32(Root* b)
