@@ -114,6 +114,11 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
     puts(sass_trace_get_name(trace));
     puts("WHOA");
 
+    if (struct SassValue* qwe = sass_compiler_get_lexical_variable(compiler, "$qwe")) {
+      struct SassValue* str = sass_value_stringify(qwe, false, 5);
+      std::cerr << "IS : " << sass_string_get_value(str) << "\n";
+    }
+
     return sass_clone_value(s_args);
   }
 
@@ -145,7 +150,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
 
 
     // registerExternalCallable(sass_make_function("sin($x)", fn_sin, 0));
-    // registerCustomFunction(sass_make_function("crcew($x)", call_sass_function, 0));
+    registerCustomFunction(sass_make_function("crcew($x)", call_sass_function, 0));
     // registerCustomFunction(sass_make_function("crc16($x)", fn_crc16s, 0));
 
     // emitter.set_filename(abs2rel(output_path88, source_map_file88, CWD));

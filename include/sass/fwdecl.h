@@ -7,7 +7,6 @@ extern "C" {
 
 // Forward declare structs
 struct SassError;
-struct SassCallee;
 struct SassCompiler;
 struct SassFunction;
 

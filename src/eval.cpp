@@ -2334,7 +2334,7 @@ namespace Sass {
 
   // Whether we'   currently building the output of a style rule.
 
-  bool Eval::isInStyleRule() {
+  bool Eval::isInStyleRule() const {
     return !at_root_without_rule &&
       selectorStack.size() > 1;
     // return !_styleRule.isNull() &&

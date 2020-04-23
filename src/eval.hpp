@@ -97,12 +97,10 @@ namespace Sass {
     bool isInContentBlock() const;
 
     // Whether we're currently building the output of a style rule.
-    bool isInStyleRule();
+    bool isInStyleRule() const;
 
 
     std::pair<sass::vector<ExpressionObj>, EnvKeyFlatMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
-
-    const sass::string cwd();
 
     Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, const SourceSpan& pstate);
 

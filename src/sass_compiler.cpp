@@ -355,6 +355,21 @@ namespace Sass {
         (&(Traced&)Compiler::unwrap(compiler).logger123->callStack.at(i));
     }
 
+    struct SassValue* ADDCALL sass_compiler_get_lexical_variable(struct SassCompiler* compiler, const char* name)
+    {
+      return Compiler::unwrap(compiler).getLexicalVariable({ name })->toSassValue();
+    }
+
+    struct SassValue* ADDCALL sass_compiler_get_global_variable(struct SassCompiler* compiler, const char* name)
+    {
+      return Compiler::unwrap(compiler).getGlobalVariable({ name })->toSassValue();
+    }
+
+    struct SassValue* ADDCALL sass_compiler_get_local_variable(struct SassCompiler* compiler, const char* name)
+    {
+      return Compiler::unwrap(compiler).getLocalVariable({ name })->toSassValue();
+    }
+
   }
 
 }

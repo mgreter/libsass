@@ -39,19 +39,19 @@ ADDAPI struct SassImport* ADDCALL sass_make_import(const char* imp_path, const c
 ADDAPI struct SassImport* ADDCALL sass_import_set_error(struct SassImport* import, const char* message, uint32_t line, uint32_t col);
 
 // Getters for callee entry
-ADDAPI const char* ADDCALL sass_callee_get_name (struct SassCallee*);
-ADDAPI const char* ADDCALL sass_callee_get_path (struct SassCallee*);
-ADDAPI uint32_t ADDCALL sass_callee_get_line (struct SassCallee*);
-ADDAPI uint32_t ADDCALL sass_callee_get_column (struct SassCallee*);
-ADDAPI enum Sass_Callee_Type ADDCALL sass_callee_get_type (struct SassCallee*);
+// ADDAPI const char* ADDCALL sass_callee_get_name (struct SassCallee*);
+// ADDAPI const char* ADDCALL sass_callee_get_path (struct SassCallee*);
+// ADDAPI uint32_t ADDCALL sass_callee_get_line (struct SassCallee*);
+// ADDAPI uint32_t ADDCALL sass_callee_get_column (struct SassCallee*);
+// ADDAPI enum Sass_Callee_Type ADDCALL sass_callee_get_type (struct SassCallee*);
 
 // Getters and Setters for environments (lexical, local and global)
-ADDAPI struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompiler*, const char*);
-ADDAPI void ADDCALL sass_env_set_lexical (struct SassCompiler*, const char*, struct SassValue*);
-ADDAPI struct SassValue* ADDCALL sass_env_get_local (struct SassCompiler*, const char*);
-ADDAPI void ADDCALL sass_env_set_local (struct SassCompiler*, const char*, struct SassValue*);
-ADDAPI struct SassValue* ADDCALL sass_env_get_global (struct SassCompiler*, const char*);
-ADDAPI void ADDCALL sass_env_set_global (struct SassCompiler*, const char*, struct SassValue*);
+// ADDAPI struct SassValue* ADDCALL sass_env_get_lexical (struct SassCompiler*, const char*);
+// ADDAPI void ADDCALL sass_env_set_lexical (struct SassCompiler*, const char*, struct SassValue*);
+// ADDAPI struct SassValue* ADDCALL sass_env_get_local (struct SassCompiler*, const char*);
+// ADDAPI void ADDCALL sass_env_set_local (struct SassCompiler*, const char*, struct SassValue*);
+// ADDAPI struct SassValue* ADDCALL sass_env_get_global (struct SassCompiler*, const char*);
+// ADDAPI void ADDCALL sass_env_set_global (struct SassCompiler*, const char*, struct SassValue*);
 
 // Getters for import entry
 ADDAPI const char* ADDCALL sass_import_get_imp_path (struct SassImport*);
