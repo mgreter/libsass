@@ -620,8 +620,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  MediaRule::MediaRule(const SourceSpan& pstate, InterpolationObj list, bool add, const sass::vector<StatementObj>& els) :
-    ParentStatement(pstate, els), query_(list)
+  MediaRule::MediaRule(const SourceSpan& pstate, InterpolationObj list, bool add) :
+    ParentStatement(pstate), query_(list)
+  {}
+  MediaRule::MediaRule(const SourceSpan& pstate, InterpolationObj list, bool add, sass::vector<StatementObj>&& els) :
+    ParentStatement(pstate, std::move(els)), query_(list)
   {}
 
   /////////////////////////////////////////////////////////////////////////

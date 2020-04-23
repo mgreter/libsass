@@ -345,7 +345,13 @@ namespace Sass {
   class ParentStatement : public Statement, public VectorizedNopsi<Statement> {
     ADD_POINTER(IDXS*, idxs);
   public:
-    ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els);
+
+    ParentStatement(const SourceSpan& pstate) : Statement(pstate), VectorizedNopsi<Statement>(), idxs_(0) {}
+
+    ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els) : Statement(pstate), VectorizedNopsi<Statement>(els), idxs_(0) {}
+
+    ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els);
+
     ParentStatement(const ParentStatement* ptr); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;
@@ -363,7 +369,8 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, interpolation);
     ADD_POINTER(IDXS*, idxs); // ParentScopedStatement
   public:
-    StyleRule(SourceSpan&& pstate, Interpolation* s, const sass::vector<StatementObj>& els = {});
+    StyleRule(SourceSpan&& pstate, Interpolation* s);
+    StyleRule(SourceSpan&& pstate, Interpolation* s, sass::vector<StatementObj>&& els);
     // ATTACH_CLONE_OPERATIONS(StyleRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -405,7 +412,8 @@ namespace Sass {
     ADD_CONSTREF(char, type)
     ADD_CONSTREF(sass::string, name)
   public:
-    Trace(const SourceSpan& pstate, const sass::string& name, const sass::vector<StatementObj>& b = {}, char type = 'm');
+    Trace(const SourceSpan& pstate, const sass::string& name, char type = 'm');
+    Trace(const SourceSpan& pstate, const sass::string& name, sass::vector<StatementObj>&& b, char type = 'm');
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -509,7 +517,8 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, value);
     ADD_PROPERTY(bool, is_custom_property);
   public:
-    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, const sass::vector<StatementObj>& b = {});
+    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false);
+    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, sass::vector<StatementObj>&& b = {});
     bool is_invisible() const override;
     // ATTACH_CLONE_OPERATIONS(Declaration)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -691,7 +700,9 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(bool, is_inclusive);
   public:
+    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false);
     For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false, const sass::vector<StatementObj>& els = {});
+    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false, sass::vector<StatementObj>&& els = {});
     // ATTACH_CLONE_OPERATIONS(For)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -704,7 +715,9 @@ namespace Sass {
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(ExpressionObj, list);
   public:
+    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst); // default only needed for _withChildren
     Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, const sass::vector<StatementObj>& els = {}); // default only needed for _withChildren
+    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, sass::vector<StatementObj>&& els = {}); // default only needed for _withChildren
     // ATTACH_CLONE_OPERATIONS(Each)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -950,7 +963,8 @@ namespace Sass {
   public:
     // The query that determines on which platforms the styles will be in effect.
     // This is only parsed after the interpolation has been resolved.
-    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, const sass::vector<StatementObj>& els = {});
+    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add);
+    MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, sass::vector<StatementObj>&& els);
 
     bool bubbles() const override final { return true; };
     bool is_invisible() const override { return false; };

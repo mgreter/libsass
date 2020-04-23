@@ -175,8 +175,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ParentStatement::ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els)
-    : Statement(pstate), VectorizedNopsi<Statement>(els), idxs_(0)
+
+  ParentStatement::ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els)
+    : Statement(pstate), VectorizedNopsi<Statement>(std::move(els)), idxs_(0)
   {
   }
 
@@ -196,8 +197,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, const sass::vector<StatementObj>& els)
-    : ParentStatement(std::move(pstate), els), interpolation_(s), idxs_(0)
+  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s)
+    : ParentStatement(std::move(pstate)), interpolation_(s), idxs_(0)
+  {}
+  StyleRule::StyleRule(SourceSpan&& pstate, Interpolation* s, sass::vector<StatementObj>&& els)
+    : ParentStatement(std::move(pstate), std::move(els)), interpolation_(s), idxs_(0)
   {}
 
   bool CssStyleRule::is_invisible() const {
@@ -236,10 +240,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, const sass::vector<StatementObj>& b, char type)
-    : ParentStatement(pstate, b), type_(type), name_(n)
-  {
-  }
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, char type)
+    : ParentStatement(pstate), type_(type), name_(n)
+  {}
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, sass::vector<StatementObj>&& b, char type)
+    : ParentStatement(pstate, std::move(b)), type_(type), name_(n)
+  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -279,8 +285,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, const sass::vector<StatementObj>& b)
-  : ParentStatement(pstate, b), name_(name), value_(value), is_custom_property_(c)
+  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c)
+    : ParentStatement(pstate), name_(name), value_(value), is_custom_property_(c)
+  {}
+  Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, sass::vector<StatementObj>&& b)
+    : ParentStatement(pstate, std::move(b)), name_(name), value_(value), is_custom_property_(c)
   {}
 
   bool Declaration::is_invisible() const
@@ -420,11 +429,29 @@ namespace Sass {
     variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
   {}
 
+  For::For(const SourceSpan& pstate,
+    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc)
+    : ParentStatement(pstate),
+    variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
+  {}
+
+  For::For(const SourceSpan& pstate,
+    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, sass::vector<StatementObj>&& els)
+    : ParentStatement(pstate, std::move(els)),
+    variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
+  {}
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst)
+    : ParentStatement(pstate), variables_(vars), idxs_(0), list_(lst)
+  {}
   Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, const sass::vector<StatementObj>& els)
-  : ParentStatement(pstate, els), variables_(vars), idxs_(0), list_(lst)
+    : ParentStatement(pstate, els), variables_(vars), idxs_(0), list_(lst)
+  {}
+  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, sass::vector<StatementObj>&& els)
+    : ParentStatement(pstate, std::move(els)), variables_(vars), idxs_(0), list_(lst)
   {}
 
   /////////////////////////////////////////////////////////////////////////

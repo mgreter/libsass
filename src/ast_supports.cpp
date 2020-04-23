@@ -9,8 +9,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, const sass::vector<StatementObj>& els)
-  : ParentStatement(pstate, els), condition_(condition), idxs_(0)
+  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition)
+  : ParentStatement(pstate), condition_(condition), idxs_(0)
+  {}
+  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, sass::vector<StatementObj>&& els)
+    : ParentStatement(pstate, std::move(els)), condition_(condition), idxs_(0)
   {}
   SupportsRule::SupportsRule(const SupportsRule* ptr)
   : ParentStatement(ptr), condition_(ptr->condition_), idxs_(ptr->idxs_)
