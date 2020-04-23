@@ -66,15 +66,10 @@ private:
     sass::string buffer;
     // The optional source map
     SourceMap* smap;
-
-    OutputBuffer(bool srcmap_enabled)
+    OutputBuffer(bool enabled)
+      : smap()
     {
-      if (srcmap_enabled) {
-        smap = new SourceMap();
-      }
-    }
-    ~OutputBuffer() {
-      delete smap;
+      if (enabled) smap = new SourceMap();
     }
   };
 

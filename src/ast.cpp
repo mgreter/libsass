@@ -111,11 +111,10 @@ namespace Sass {
     i.in_declaration = true;
     // ToDo: inspect should be const
     const_cast<AST_Node*>(this)->perform(&i);
-    if (const SourceMap* map = i.smap()) {
-      std::copy(map->mappings.begin(),
-        map->mappings.end(),
-        std::back_inserter(mappings));
-    }
+    // SourceMap map = i.smap;
+    // std::copy(map.mappings.begin(),
+    //   map.mappings.end(),
+    //   std::back_inserter(mappings));
     return i.get_buffer();
   }
 
