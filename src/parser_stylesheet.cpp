@@ -947,7 +947,7 @@ namespace Sass {
 
     sass::vector<StatementObj> clauses;
     SourceSpan pstate(scanner.relevantSpanFrom(start));
-    cur = root = SASS_MEMORY_NEW(If, pstate, condition, children);
+    cur = root = SASS_MEMORY_NEW(If, pstate, std::move(condition), std::move(children));
 
     sass::vector<If*> ifs;
     ifs.push_back(root);

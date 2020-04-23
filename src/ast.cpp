@@ -406,8 +406,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  If::If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, const sass::vector<StatementObj>& alt)
-    : ParentStatement(pstate, els), idxs_(0), predicate_(pred), alternatives_(alt)
+  If::If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<StatementObj>&& alt)
+    : ParentStatement(pstate, std::move(els)), idxs_(0), predicate_(pred), alternatives_(std::move(alt))
   {}
 
   bool If::has_content()
@@ -422,12 +422,6 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
-  For::For(const SourceSpan& pstate,
-    const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, const sass::vector<StatementObj>& els)
-  : ParentStatement(pstate, els),
-    variable_(var), lower_bound_(lo), upper_bound_(hi), idxs_(0), is_inclusive_(inc)
-  {}
 
   For::For(const SourceSpan& pstate,
     const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc)
@@ -447,21 +441,24 @@ namespace Sass {
   Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst)
     : ParentStatement(pstate), variables_(vars), idxs_(0), list_(lst)
   {}
-  Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, const sass::vector<StatementObj>& els)
-    : ParentStatement(pstate, els), variables_(vars), idxs_(0), list_(lst)
-  {}
   Each::Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, sass::vector<StatementObj>&& els)
     : ParentStatement(pstate, std::move(els)), variables_(vars), idxs_(0), list_(lst)
   {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
+  WhileRule::WhileRule(
+    const SourceSpan& pstate,
+    ExpressionObj condition) :
+    ParentStatement(pstate),
+    condition_(condition),
+    idxs_(0)
+  {}
   WhileRule::WhileRule(
     const SourceSpan& pstate,
     ExpressionObj condition,
-    const sass::vector<StatementObj>& b) :
-    ParentStatement(pstate, b),
+    sass::vector<StatementObj>&& b) :
+    ParentStatement(pstate, std::move(b)),
     condition_(condition),
     idxs_(0)
   {}
@@ -660,18 +657,32 @@ namespace Sass {
 
   AtRootRule::AtRootRule(
     const SourceSpan& pstate,
+    InterpolationObj query)
+    : ParentStatement(pstate),
+    query_(query),
+    idxs_(0)
+  {}
+  AtRootRule::AtRootRule(
+    const SourceSpan& pstate,
     InterpolationObj query,
-    const sass::vector<StatementObj>& els)
-    : ParentStatement(pstate, els),
+    sass::vector<StatementObj>&& els)
+    : ParentStatement(pstate, std::move(els)),
     query_(query),
     idxs_(0)
   {}
 
   AtRootRule::AtRootRule(
     SourceSpan&& pstate,
+    InterpolationObj query)
+    : ParentStatement(std::move(pstate)),
+    query_(query),
+    idxs_(0)
+  {}
+  AtRootRule::AtRootRule(
+    SourceSpan&& pstate,
     InterpolationObj query,
-    const sass::vector<StatementObj>& els)
-    : ParentStatement(std::move(pstate), els),
+    sass::vector<StatementObj>&& els)
+    : ParentStatement(std::move(pstate), std::move(els)),
     query_(query),
     idxs_(0)
   {}

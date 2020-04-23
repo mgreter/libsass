@@ -348,7 +348,7 @@ namespace Sass {
 
     ParentStatement(const SourceSpan& pstate) : Statement(pstate), VectorizedNopsi<Statement>(), idxs_(0) {}
 
-    ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els) : Statement(pstate), VectorizedNopsi<Statement>(els), idxs_(0) {}
+   ParentStatement(const SourceSpan& pstate, const sass::vector<StatementObj>& els) : Statement(pstate), VectorizedNopsi<Statement>(els), idxs_(0) {}
 
     ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els);
 
@@ -518,7 +518,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_custom_property);
   public:
     Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false);
-    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false, sass::vector<StatementObj>&& b = {});
+    Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, sass::vector<StatementObj>&& b);
     bool is_invisible() const override;
     // ATTACH_CLONE_OPERATIONS(Declaration)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -684,7 +684,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, predicate);
     ADD_REF(sass::vector<StatementObj>, alternatives);
   public:
-    If(const SourceSpan& pstate, ExpressionObj pred, const sass::vector<StatementObj>& els, const sass::vector<StatementObj>& alt = {});
+    If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<StatementObj>&& alt = {});
     virtual bool has_content() override;
     // ATTACH_CLONE_OPERATIONS(If)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -701,8 +701,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_inclusive);
   public:
     For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false);
-    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false, const sass::vector<StatementObj>& els = {});
-    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false, sass::vector<StatementObj>&& els = {});
+    For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, sass::vector<StatementObj>&& els);
     // ATTACH_CLONE_OPERATIONS(For)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -716,8 +715,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, list);
   public:
     Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst); // default only needed for _withChildren
-    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, const sass::vector<StatementObj>& els = {}); // default only needed for _withChildren
-    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, sass::vector<StatementObj>&& els = {}); // default only needed for _withChildren
+    Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, sass::vector<StatementObj>&& els); // default only needed for _withChildren
     // ATTACH_CLONE_OPERATIONS(Each)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -729,9 +727,8 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, condition);
     ADD_POINTER(IDXS*, idxs);
   public:
-    WhileRule(const SourceSpan& pstate,
-      ExpressionObj condition,
-      const sass::vector<StatementObj>& b = {});
+    WhileRule(const SourceSpan& pstate, ExpressionObj condition);
+    WhileRule(const SourceSpan& pstate, ExpressionObj condition, sass::vector<StatementObj>&& b);
     // String toString() = > "@while $condition {${children.join(" ")}}";
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -1042,8 +1039,10 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, query);
     ADD_POINTER(IDXS*, idxs);
   public:
-    AtRootRule(const SourceSpan& pstate, InterpolationObj query = {}, const sass::vector<StatementObj>& els = {});
-    AtRootRule(SourceSpan&& pstate, InterpolationObj query = {}, const sass::vector<StatementObj>& els = {});
+    AtRootRule(const SourceSpan& pstate, InterpolationObj query = {});
+    AtRootRule(SourceSpan&& pstate, InterpolationObj query = {});
+    AtRootRule(const SourceSpan& pstate, InterpolationObj query, sass::vector<StatementObj>&& els);
+    AtRootRule(SourceSpan&& pstate, InterpolationObj query, sass::vector<StatementObj>&& els);
     // ATTACH_CLONE_OPERATIONS(CssAtRootRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
