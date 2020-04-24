@@ -959,7 +959,7 @@ namespace Sass {
     bool media() const;
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
-    sass::string _nameFor(Statement* node) const;
+    sass::string _nameFor(CssNode* node) const;
 
     // Returns whether [this] excludes a node with the given [name].
     bool excludesName(const sass::string& name) const;

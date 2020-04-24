@@ -168,7 +168,7 @@ namespace Sass {
 
     append_scope_opener();
     for (size_t i = 0, L = r->length(); i < L; ++i) {
-      Statement_Obj stm = r->get(i);
+      CssNodeObj stm = r->get(i);
       stm->perform(this);
       if (i < L - 1) append_special_linefeed();
     }

@@ -10,7 +10,7 @@ namespace Sass {
     Remove_Placeholders::Remove_Placeholders()
     { }
 
-    bool isInvisible(Statement* stmt) {
+    bool isInvisible(CssNode* stmt) {
       return stmt->is_invisible();
     }
 
@@ -55,18 +55,6 @@ namespace Sass {
       }
       listEraseItemIf(sl->elements(), listIsEmpty<ComplexSelector>);
       return sl;
-    }
-
-    void Remove_Placeholders::operator()(Root* b) {
-
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        if (b->get(i)) b->get(i)->perform(this);
-      }
-
-      auto& foo = b->elements();
-
-      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
-
     }
 
     void Remove_Placeholders::operator()(CssRoot* b) {

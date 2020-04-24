@@ -14,12 +14,18 @@
 
 namespace Sass {
 
-  class CssNode : public Statement {
+  class CssNode : public AST_Node {
     // Whether this was generated from the last node in a
     // nested Sass tree that got flattened during evaluation.
     ADD_PROPERTY(bool, isGroupEnd);
   public:
     CssNode(const SourceSpan& pstate);
+
+    virtual bool bubbles() const { return false; }
+    virtual bool is_invisible() const { return false; }
+    size_t tabs() const { return 0; }
+    void tabs(size_t tabs) const { }
+
     // Calls the appropriate visit method on [visitor].
     // virtual void serialize(CssVisitor<void>& visitor);
     ATTACH_VIRTUAL_COPY_OPERATIONS(CssNode)

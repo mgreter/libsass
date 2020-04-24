@@ -1462,8 +1462,8 @@ namespace Sass {
 
     // css->CssParentNode::concat(node->elements());
 
-    css->elements().insert(css->end(),
-      node->begin(), node->end());
+    // css->elements().insert(css->end(),
+    //   node->begin(), node->end());
 
     sass::vector<CssMediaQueryObj> parsed = parser.parse();
     if (mediaStack.size() && mediaStack.back()) {

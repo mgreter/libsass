@@ -46,7 +46,7 @@ namespace Sass {
   void Inspect::visitBlockStatements(sass::vector<CssNodeObj> children)
   {
     append_scope_opener();
-    for (Statement* stmt : children) {
+    for (CssNode* stmt : children) {
       stmt->perform(this);
     }
     append_scope_closer();
@@ -345,7 +345,7 @@ namespace Sass {
     // append_scope_closer();
     if (!node->empty()) {
       append_scope_opener();
-      for (Statement* stmt : node->elements()) {
+      for (CssNode* stmt : node->elements()) {
         stmt->perform(this);
       }
       append_scope_closer();
@@ -459,7 +459,7 @@ namespace Sass {
 
   void Inspect::operator()(Trace* trace)
   {
-    for (Statement* stmt : trace->elements()) {
+    for (CssNode* stmt : trace->elements()) {
       stmt->perform(this);
     }
   }

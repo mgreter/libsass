@@ -213,7 +213,7 @@ namespace Sass {
         }
       }
     }
-    for (Statement* item : elements()) {
+    for (CssNode* item : elements()) {
       if (!item->is_invisible()) {
         els_invisible = false;
         break;
@@ -566,7 +566,7 @@ namespace Sass {
   }
 
   // Returns the at-rule name for [node], or `null` if it's not an at-rule.
-  sass::string AtRootQuery::_nameFor(Statement* node) const {
+  sass::string AtRootQuery::_nameFor(CssNode* node) const {
     if (Cast<CssMediaRule>(node)) return "media";
     if (Cast<CssSupportsRule>(node)) return "supports";
     if (CssAtRule* at = Cast<CssAtRule>(node)) {

@@ -11,12 +11,12 @@ namespace Sass {
 
   CssNode::CssNode(
     const SourceSpan& pstate) :
-    Statement(pstate),
+    AST_Node(pstate),
     isGroupEnd_(false)
   {}
 
   CssNode::CssNode(const CssNode* ptr) :
-    Statement(ptr),
+    AST_Node(ptr),
     isGroupEnd_(ptr->isGroupEnd_)
   {}
 
