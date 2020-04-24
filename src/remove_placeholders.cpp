@@ -36,52 +36,48 @@ namespace Sass {
         complex->clear(); // remove all
       }
       else {
-        for (size_t i = 0, L = complex->length(); i < L; ++i) {
-          if (CompoundSelector * compound = complex->get(i)->getCompound()) {
+        for (SelectorComponentObj& selector : complex->elements()) {
+          if (CompoundSelector * compound = selector->getCompound()) {
             if (compound) remove_placeholders(compound);
           }
         }
         listEraseItemIf(complex->elements(), listIsEmpty<SelectorComponent>);
       }
+      // ToDo: describe what this means
       if (complex->isImpossible()) {
         complex->clear(); // remove all
       }
     }
 
-    SelectorList* Remove_Placeholders::remove_placeholders(SelectorList* sl)
+    void Remove_Placeholders::remove_placeholders(SelectorList* sl)
     {
-      for (size_t i = 0, L = sl->length(); i < L; ++i) {
-        if (sl->get(i)) remove_placeholders(sl->get(i));
+      for(const ComplexSelectorObj& complex : sl->elements()) {
+        if (complex) remove_placeholders(complex);
       }
       listEraseItemIf(sl->elements(), listIsEmpty<ComplexSelector>);
-      return sl;
     }
 
-    void Remove_Placeholders::operator()(CssRoot* b) {
-
-      for (size_t i = 0, L = b->length(); i < L; ++i) {
-        if (b->get(i)) b->get(i)->perform(this);
-      }
-
-      auto& foo = b->elements();
-
-      foo.erase(std::remove_if(foo.begin(), foo.end(), isInvisible), foo.end());
-
-    }
-
-    void Remove_Placeholders::operator()(CssStyleRule* r)
+    void Remove_Placeholders::operator()(CssRoot* b)
     {
-      if (SelectorListObj sl = r->selector()) {
-        // Set the new placeholder selector list
-        r->selector((remove_placeholders(sl)));
-      }
       // Clean up all our children
-      r->CssParentNode::perform(this);
+      b->CssParentNode::perform(this);
+      // Remove all invisible items
+      listEraseItemIf(b->elements(), isInvisible);
+    }
+
+    void Remove_Placeholders::operator()(CssStyleRule* rule)
+    {
+      // Clean up all our children
+      rule->CssParentNode::perform(this);
+
+      if (SelectorList* sl = rule->selector()) {
+        remove_placeholders(sl);
+      }
     }
 
     void Remove_Placeholders::operator()(CssParentNode* m)
     {
-      for (auto stmt : m->elements()) {
+      for (CssNodeObj& stmt : m->elements()) {
         stmt->perform(this);
       }
     }

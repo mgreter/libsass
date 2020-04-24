@@ -178,9 +178,9 @@ namespace Sass {
   void Output::operator()(CssSupportsRule* rule)
   {
 
-    if (output_style() == SASS_STYLE_NESTED) {
-      indentation += rule->tabs();
-    }
+    // if (output_style() == SASS_STYLE_NESTED) {
+    //   indentation += rule->tabs();
+    // }
 
     append_indentation();
     append_token("@supports", rule);
@@ -194,9 +194,9 @@ namespace Sass {
       if (i < L - 1) append_special_linefeed();
     }
 
-    if (output_style() == SASS_STYLE_NESTED) {
-      indentation -= rule->tabs();
-    }
+    // if (output_style() == SASS_STYLE_NESTED) {
+    //   indentation -= rule->tabs();
+    // }
 
     append_scope_closer();
 

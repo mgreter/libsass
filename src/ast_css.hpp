@@ -23,8 +23,8 @@ namespace Sass {
 
     virtual bool bubbles() const { return false; }
     virtual bool is_invisible() const { return false; }
-    size_t tabs() const { return 0; }
-    void tabs(size_t tabs) const { }
+    // size_t tabs() const { return 0; }
+    // void tabs(size_t tabs) const { }
 
     // Calls the appropriate visit method on [visitor].
     // virtual void serialize(CssVisitor<void>& visitor);

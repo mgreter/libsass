@@ -361,7 +361,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     Bubble* bubble = Cast<Bubble>(node);
     std::cerr << ind << "Bubble " << bubble;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " " << bubble->tabs();
     std::cerr << std::endl;
     debug_ast(bubble->node(), ind + " ");
   }
@@ -407,7 +406,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssAtRootRule* root_block = Cast<CssAtRootRule>(node);
     std::cerr << ind << "CssAtRootRule " << root_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " " << root_block->tabs();
     std::cerr << std::endl;
     debug_ast(root_block->query(), ind + ":");
     // debug_ast(root_block, ind + " ");
@@ -586,7 +584,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssMediaRule* rule = Cast<CssMediaRule>(node);
     std::cerr << ind << "CssMediaRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " " << rule->tabs() << std::endl;
     for (auto item : rule->queries()) {
       debug_ast(item, ind + "() ");
     }
@@ -599,7 +596,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssDeclaration* rule = Cast<CssDeclaration>(node);
     std::cerr << ind << "CssDeclaration " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " " << rule->tabs() << std::endl;
     debug_ast(rule->name(), ind + " name: ");
     debug_ast(rule->value(), ind + " prop: ");
   }
@@ -607,7 +603,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssValue* rule = Cast<CssValue>(node);
     std::cerr << ind << "CssValue " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " " << rule->tabs() << std::endl;
     debug_ast(rule->value(), ind + " ");
   }
   else if (Cast<CssString>(node)) {
@@ -620,7 +615,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssNode* rule = Cast<CssNode>(node);
     std::cerr << ind << "CssNode " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " " << rule->tabs() << std::endl;
   }
   else if (Cast<CssMediaQuery>(node)) {
     CssMediaQuery* query = Cast<CssMediaQuery>(node);
@@ -647,7 +641,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "CssSupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     if (block->is_invisible()) std::cerr << " [isInvisible]";
-    std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
     for (auto stmt : block->elements()) {
       debug_ast(stmt, ind + " <>");
@@ -820,7 +813,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     Keyframe_Rule* has_block = Cast<Keyframe_Rule>(node);
     std::cerr << ind << "Keyframe_Rule " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " " << has_block->tabs() << std::endl;
     if (has_block->name2()) debug_ast(has_block->name2(), ind + "@");
     // else if (has_block->name()) debug_ast(has_block->name(), ind + "@");
     // if (has_block) for(const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
@@ -932,7 +924,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
   else if (CssStyleRule* ruleset = Cast<CssStyleRule>(node)) {
     std::cerr << ind << "CssStyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->selector(), ind + ">");
@@ -1105,7 +1096,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssParentNode* rule = Cast<CssParentNode>(node);
     std::cerr << ind << "CssParentNode " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " " << rule->tabs() << std::endl;
   }
   else if (Cast<StringExpression>(node)) {
     StringExpression* expression = Cast<StringExpression>(node);

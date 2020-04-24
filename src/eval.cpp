@@ -1897,7 +1897,7 @@ namespace Sass {
     CssStyleRule* rr = SASS_MEMORY_NEW(CssStyleRule,
       r->pstate(), evaled, std::move(children));
 
-    rr->tabs(r->tabs());
+    // rr->tabs(r->tabs());
     parent33->push_back(rr);
     return nullptr;
 

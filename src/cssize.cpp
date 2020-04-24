@@ -140,9 +140,9 @@ namespace Sass {
     }
 
     if (!statemts.empty()) {
-      for (CssNode* stmt : bubblers) {
-        stmt->tabs(stmt->tabs() + 1);
-      }
+      // for (CssNode* stmt : bubblers) {
+      //   stmt->tabs(stmt->tabs() + 1);
+      // }
       bubblers.insert(bubblers.begin(),
         SASS_MEMORY_NEW(CssStyleRule, r->pstate(),
           r->selector(), std::move(statemts)));
@@ -212,7 +212,7 @@ namespace Sass {
       visitBlockStatements(m->elements(), children);
       for (CssNodeObj& stm : children) {
         if (!stm->bubbles()) continue;
-        stm->tabs(stm->tabs() + m->tabs());
+        // stm->tabs(stm->tabs() + m->tabs());
       }
       return SASS_MEMORY_NEW(Block,
         m->pstate(), std::move(children));
@@ -273,7 +273,7 @@ namespace Sass {
     }
     CssSupportsRule* mm = SASS_MEMORY_NEW(CssSupportsRule,
       m->pstate(), m->condition(), std::move(children));
-    mm->tabs(m->tabs());
+    // mm->tabs(m->tabs());
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 
@@ -290,7 +290,7 @@ namespace Sass {
     }
     CssMediaRuleObj mm = SASS_MEMORY_NEW(CssMediaRule,
       m->pstate(), m->queries(), std::move(children));
-    mm->tabs(m->tabs());
+    // mm->tabs(m->tabs());
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 

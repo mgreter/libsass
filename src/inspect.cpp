@@ -208,9 +208,9 @@ namespace Sass {
 
     if (!s || s->empty()) return;
 
-    if (output_style() == SASS_STYLE_NESTED) {
-      indentation += node->tabs();
-    }
+    // if (output_style() == SASS_STYLE_NESTED) {
+    //   indentation += node->tabs();
+    // }
 
     if (opt.source_comments) {
       sass::sstream ss;
@@ -229,9 +229,9 @@ namespace Sass {
       node->get(i)->perform(this);
     }
 
-    if (output_style() == SASS_STYLE_NESTED) {
-      indentation -= node->tabs();
-    }
+    // if (output_style() == SASS_STYLE_NESTED) {
+    //   indentation -= node->tabs();
+    // }
     append_scope_closer(node);
   }
   // EO visitCssStyleRule
@@ -269,8 +269,8 @@ namespace Sass {
     LOCAL_FLAG(in_declaration, true);
     LOCAL_FLAG(in_custom_property,
       node->is_custom_property());
-    if (output_style() == SASS_STYLE_NESTED)
-      indentation += node->tabs();
+    // if (output_style() == SASS_STYLE_NESTED)
+    //   indentation += node->tabs();
     append_indentation();
     if (node->name()) {
       node->name()->perform(this);
@@ -280,8 +280,8 @@ namespace Sass {
       node->value()->perform(this);
     }
     append_delimiter();
-    if (output_style() == SASS_STYLE_NESTED)
-      indentation -= node->tabs();
+    // if (output_style() == SASS_STYLE_NESTED)
+    //   indentation -= node->tabs();
   }
   // EO visitCssDeclaration
 
