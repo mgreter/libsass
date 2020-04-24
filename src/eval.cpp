@@ -200,8 +200,15 @@ namespace Sass {
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
     extender.addSelector(evaled, mediaStack.back());
 
+    auto pu = parent65;
+    //while (Cast<CssStyleRule>(pu)) {
+      // pu = pu->parent_;
+    //}
+
     CssStyleRule* css = SASS_MEMORY_NEW(CssStyleRule,
       r->pstate(), parent65, evaled);
+
+
     parent65->append(css);
     // css->tabs(r->tabs());
 
@@ -329,7 +336,6 @@ namespace Sass {
 
   Eval::Eval(Compiler& compiler) :
     inMixin(false),
-    parent65(nullptr),
     mediaStack(),
     originalStack(),
     selectorStack(),

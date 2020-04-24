@@ -109,7 +109,7 @@ namespace Sass {
     if (eval.extender.checkForUnsatisfiedExtends(unsatisfied)) {
       throw Exception::UnsatisfiedExtend(*logger123, unsatisfied);
     }
-
+    // debug_ast(compiled);
     // This can use up to 10% runtime
     Cssize cssize(*this->logger123);
     compiled = cssize.doit(compiled); // 5%

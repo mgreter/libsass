@@ -44,7 +44,7 @@ namespace Sass {
     // but the reverse is not true—for a rule like `@foo {}`,
     // [children] is empty but [isChildless] is `false`.
     ADD_PROPERTY(bool, isChildless);
-
+  public:
     CssParentNode* parent_;
 
   public:

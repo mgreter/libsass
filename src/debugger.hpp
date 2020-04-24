@@ -408,7 +408,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
     debug_ast(root_block->query(), ind + ":");
-    // debug_ast(root_block, ind + " ");
+    debug_block(root_block, ind + " ");
   }
   else if (Cast<SelectorList>(node)) {
     SelectorList* selector = Cast<SelectorList>(node);
@@ -609,12 +609,8 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssString* rule = Cast<CssString>(node);
     std::cerr << ind << "CssString " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " <" << rule->text() << ">" << std::endl;
-  }
-  else if (Cast<CssNode>(node)) {
-    CssNode* rule = Cast<CssNode>(node);
-    std::cerr << ind << "CssNode " << rule;
-    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << " <" << rule->text() << ">";
+    std::cerr << std::endl;
   }
   else if (Cast<CssMediaQuery>(node)) {
     CssMediaQuery* query = Cast<CssMediaQuery>(node);
@@ -1157,6 +1153,15 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "Statement " << statement;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << statement->tabs() << std::endl;
+  }
+  else if (Cast<CssNode>(node)) {
+    CssNode* rule = Cast<CssNode>(node);
+    std::cerr << ind << "CssNode " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << std::endl;
+  }
+  else {
+  std::cerr << ind << "Undetected" << std::endl;
   }
 
   if (ind == "") std::cerr << "####################################################################\n";
