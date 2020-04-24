@@ -311,6 +311,7 @@ namespace Sass {
 
   typedef sass::vector<StatementObj> Statements;
   typedef sass::vector<Statements*> BlockStack;
+  typedef sass::vector<CssParentNodeObj> CssParentStack;
   typedef sass::vector<CssMediaRuleObj> MediaStack;
   typedef sass::vector<SelectorListObj> SelectorStack;
   typedef sass::vector<struct SassImport*> ImporterStack;

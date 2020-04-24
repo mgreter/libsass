@@ -38,7 +38,7 @@ namespace Sass {
 
   Eval::Eval(Compiler& compiler) :
     inMixin(false),
-    blockStack(),
+    parent33(nullptr),
     mediaStack(),
     originalStack(),
     selectorStack(),
@@ -56,7 +56,6 @@ namespace Sass {
   {
 
     mediaStack.push_back({});
-    blockStack.emplace_back(nullptr);
     selectorStack.push_back({});
     originalStack.push_back({});
 
@@ -67,7 +66,7 @@ namespace Sass {
 
   bool Eval::isRoot() const
   {
-    return blockStack.size() < 2;
+    return parent33 == nullptr;
   }
 
   void debug_call(
@@ -1413,14 +1412,16 @@ namespace Sass {
     ValueObj condition(node->condition()->perform(this));
     EnvScope scoped(compiler.varRoot, node->idxs());
 
+
     sass::vector<StatementObj> children;
-    blockStack.emplace_back(&children);
-    visitChildren(node->elements());
-    blockStack.pop_back();
+    {
+      LOCAL_PTR(Statements, parent33, &children);
+      visitChildren(node->elements());
+    }
 
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(), condition, std::move(children));
-    blockStack.back()->push_back(ff);
+    parent33->push_back(ff);
 
     return nullptr;
   }
@@ -1470,14 +1471,16 @@ namespace Sass {
     mediaStack.emplace_back(css);
 
     sass::vector<StatementObj> children;
-    blockStack.emplace_back(&children);
-    visitChildren(node->elements());
-    blockStack.pop_back();
+
+    {
+      LOCAL_PTR(Statements, parent33, &children);
+      visitChildren(node->elements());
+    }
     css->elementsM(std::move(children));
     mediaStack.pop_back();
 
     // The parent to add declarations too
-    blockStack.back()->push_back(css);
+    parent33->push_back(css);
     // return css.detach();
     return nullptr;
   }
@@ -1510,11 +1513,13 @@ namespace Sass {
       query && query->excludesStyleRules());
 
     sass::vector<StatementObj> children;
-    blockStack.emplace_back(&children);
-    visitChildren(node->elements());
-    blockStack.pop_back();
 
-    blockStack.back()->push_back(SASS_MEMORY_NEW(CssAtRootRule,
+    {
+      LOCAL_PTR(Statements, parent33, &children);
+      visitChildren(node->elements());
+    }
+
+    parent33->push_back(SASS_MEMORY_NEW(CssAtRootRule,
         node->pstate(), query, std::move(children)));
 
     return nullptr;
@@ -1539,7 +1544,7 @@ namespace Sass {
   Value* Eval::visitAtRule(AtRule* node)
   {
     // The parent to add stuff too
-    auto parent = blockStack.back();
+    auto parent = parent33;
 
     CssStringObj name = interpolationToCssString(node->name(), false, false);
     CssStringObj value = interpolationToCssString(node->value(), true, true);
@@ -1550,9 +1555,10 @@ namespace Sass {
     LOCAL_FLAG(_inKeyframes, isKeyframe);
 
     sass::vector<StatementObj> children;
-    blockStack.emplace_back(&children);
-    visitChildren(node->elements());
-    blockStack.pop_back();
+    {
+      LOCAL_PTR(Statements, parent33, &children);
+      visitChildren(node->elements());
+    }
 
     CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
       node->pstate(), name, value, std::move(children));
@@ -1593,7 +1599,7 @@ namespace Sass {
     // will throw an error that we want the user to see.
     if (cssValue != nullptr && (!cssValue->value()->isBlank()
       || cssValue->value()->lengthAsList() == 0)) {
-      blockStack.back()->push_back(SASS_MEMORY_NEW(CssDeclaration,
+      parent33->push_back(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
@@ -1681,7 +1687,7 @@ namespace Sass {
     if (_inFunction) return nullptr;
     sass::string text(performInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    blockStack.back()->push_back(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
+    parent33->push_back(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
     return nullptr;
   }
 
@@ -1768,7 +1774,7 @@ namespace Sass {
     sass::string text = interpolationToValue(itpl, true, false);
 
     SelectorListObj slist = itplToSelector(itpl,
-      plainCss, blockStack.size() <= 2);
+      plainCss, isRoot());
 
     if (slist) {
 
@@ -1826,9 +1832,10 @@ namespace Sass {
     if (_inKeyframes) {
 
       sass::vector<StatementObj> children;
-      blockStack.emplace_back(&children);
-      visitChildren(r->elements());
-      blockStack.pop_back();
+      {
+        LOCAL_PTR(Statements, parent33, &children);
+        visitChildren(r->elements());
+      }
 
       auto text = interpolationToValue(itpl, true, false);
       
@@ -1846,8 +1853,7 @@ namespace Sass {
         selectorStack.pop_back();
       }
 
-      // blockStack.back()->push_back(k);
-      blockStack.back()->push_back(k);
+      parent33->push_back(k);
 
       return nullptr;
       // return k.detach();
@@ -1874,9 +1880,11 @@ namespace Sass {
       extender.addSelector(evaled, mediaStack.back());
 
     sass::vector<StatementObj> children;
-    blockStack.emplace_back(&children);
-    visitChildren(r->elements());
-    blockStack.pop_back();
+
+    {
+      LOCAL_PTR(Statements, parent33, &children);
+      visitChildren(r->elements());
+    }
 
     originalStack.pop_back();
     selectorStack.pop_back();
@@ -1885,7 +1893,7 @@ namespace Sass {
       r->pstate(), evaled, std::move(children));
 
     rr->tabs(r->tabs());
-    blockStack.back()->push_back(rr);
+    parent33->push_back(rr);
     return nullptr;
 
   }
@@ -2034,34 +2042,35 @@ namespace Sass {
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule);
-    blockStack.emplace_back(&trace->elements());
+    {
+      LOCAL_PTR(Statements, parent33, &trace->elements());
 
-    callStackFrame frame(*compiler.logger123,
-      BackTrace(c->pstate(), Strings::contentRule));
+      callStackFrame frame(*compiler.logger123,
+        BackTrace(c->pstate(), Strings::contentRule));
 
-    // EnvSnapshotView view(compiler.varRoot, content->snapshot());
-    EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
+      // EnvSnapshotView view(compiler.varRoot, content->snapshot());
+      EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
-    LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
+      LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
 
-    // Appends to trace
-    ArgumentResults& evaluated(c->arguments()->evaluated);
-    _evaluateArguments(c->arguments(), evaluated);
-    ValueObj qwe = _runUserDefinedCallable(
-      evaluated,
-      content,
-      nullptr,
-      false,
-      &Eval::_runWithBlock,
-      trace,
-      c->pstate());
+      // Appends to trace
+      ArgumentResults& evaluated(c->arguments()->evaluated);
+      _evaluateArguments(c->arguments(), evaluated);
+      ValueObj qwe = _runUserDefinedCallable(
+        evaluated,
+        content,
+        nullptr,
+        false,
+        &Eval::_runWithBlock,
+        trace,
+        c->pstate());
 
-    blockStack.pop_back();
+    }
 
     // _runUserDefinedCallable(node.arguments, content, node, () {
     // return nullptr;
     // Adds it twice?
-    blockStack.back()->push_back(trace);
+    parent33->push_back(trace);
     return nullptr;
 
   }
@@ -2133,30 +2142,32 @@ namespace Sass {
     }
 
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig());
-    blockStack.emplace_back(&trace->elements());
-    LOCAL_FLAG(inMixin, true);
 
-    callStackFrame frame(*compiler.logger123,
-      BackTrace(node->pstate(), mixin->name().orig(), true));
+    {
 
-    LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
+      LOCAL_PTR(Statements, parent33, &trace->elements());
+      LOCAL_FLAG(inMixin, true);
 
-    ArgumentResults& evaluated(node->arguments()->evaluated);
-    _evaluateArguments(node->arguments(), evaluated);
-    ValueObj qwe = _runUserDefinedCallable(
-      evaluated,
-      mixin,
-      nullptr,
-      true,
-      &Eval::_runWithBlock,
-      trace,
-      node->pstate());
+      callStackFrame frame(*compiler.logger123,
+        BackTrace(node->pstate(), mixin->name().orig(), true));
 
-    // env_stack.pop_back();
-    blockStack.pop_back();
+      LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
+
+      ArgumentResults& evaluated(node->arguments()->evaluated);
+      _evaluateArguments(node->arguments(), evaluated);
+      ValueObj qwe = _runUserDefinedCallable(
+        evaluated,
+        mixin,
+        nullptr,
+        true,
+        &Eval::_runWithBlock,
+        trace,
+        node->pstate());
+
+    }
 
     // debug_ast(trace);
-    blockStack.back()->push_back(trace);
+    parent33->push_back(trace);
     return nullptr;
 
   }
@@ -2164,7 +2175,7 @@ namespace Sass {
 
   Value* Eval::visitSilentComment(SilentComment* c)
   {
-    blockStack.back()->push_back(c);
+    parent33->push_back(c);
     return nullptr;
   }
 
@@ -2249,7 +2260,7 @@ namespace Sass {
       import->media(evalMediaQueries(rule->media()));
     }
     // append new css import to result
-    blockStack.back()->push_back(import);
+    parent33->push_back(import);
     // import has been consumed
     return nullptr;
   }
@@ -2286,15 +2297,13 @@ namespace Sass {
     // copy the block object (add items later)
     sass::vector<StatementObj> children;
 
-    // setup block and env stack
-    blockStack.emplace_back(&children);
+    {
+      LOCAL_PTR(Statements, parent33, &children);
 
-    for (Statement* item : b->elements()) {
-      ValueObj child = item->perform(this);
+      for (Statement* item : b->elements()) {
+        ValueObj child = item->perform(this);
+      }
     }
-
-    // revert block and env stack
-    blockStack.pop_back();
 
     return SASS_MEMORY_NEW(Root,
       b->pstate(), std::move(children));
