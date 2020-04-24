@@ -19,7 +19,7 @@ namespace Sass {
   ////////////////////////
 
   Block::Block(const SourceSpan& pstate, sass::vector<CssNodeObj>&& vec)
-    : CssParentNode(pstate, std::move(vec)) {}
+    : CssParentNode(pstate, nullptr, std::move(vec)) {}
 
   Cssize::Cssize(Logger& logger)
   : callStack(logger)
@@ -56,7 +56,7 @@ namespace Sass {
     sass::vector<CssNodeObj> children;
     children.reserve(b->length());
     visitBlockStatements(b->elements(), children);
-    return SASS_MEMORY_NEW(CssRoot, b->pstate(),
+    return SASS_MEMORY_NEW(CssRoot, b->pstate(), nullptr,
       std::move(children));
   }
 
@@ -97,7 +97,7 @@ namespace Sass {
     if (children.empty())
     {
       CssAtRuleObj rr = SASS_MEMORY_NEW(CssAtRule,
-        r->pstate(), r->name(), r->value());
+        r->pstate(), nullptr, r->name(), r->value());
       rr->isChildless(r->isChildless());
       return rr.detach();
     }
@@ -145,7 +145,7 @@ namespace Sass {
       // }
       bubblers.insert(bubblers.begin(),
         SASS_MEMORY_NEW(CssStyleRule, r->pstate(),
-          r->selector(), std::move(statemts)));
+          nullptr, r->selector(), std::move(statemts)));
     }
 
     return SASS_MEMORY_NEW(Block,
@@ -237,7 +237,7 @@ namespace Sass {
       rule->elementsC(m->elements());
       children.emplace_back(rule);
     }
-    CssAtRuleObj mm = SASS_MEMORY_NEW(CssAtRule, m->pstate(),
+    CssAtRuleObj mm = SASS_MEMORY_NEW(CssAtRule, m->pstate(), nullptr,
       m->name(), m->value(), std::move(children));
     // mm->tabs(m->tabs());
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
@@ -255,7 +255,7 @@ namespace Sass {
       children.emplace_back(rule);
     }
     CssAtRootRule* mm = SASS_MEMORY_NEW(CssAtRootRule,
-      m->pstate(), m->query(), std::move(children));
+      m->pstate(), nullptr, m->query(), std::move(children));
     // mm->tabs(m->tabs());
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
@@ -272,7 +272,7 @@ namespace Sass {
       children.emplace_back(rule);
     }
     CssSupportsRule* mm = SASS_MEMORY_NEW(CssSupportsRule,
-      m->pstate(), m->condition(), std::move(children));
+      m->pstate(), nullptr, m->condition(), std::move(children));
     // mm->tabs(m->tabs());
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
@@ -289,7 +289,7 @@ namespace Sass {
       children.emplace_back(rule);
     }
     CssMediaRuleObj mm = SASS_MEMORY_NEW(CssMediaRule,
-      m->pstate(), m->queries(), std::move(children));
+      m->pstate(), nullptr, m->queries(), std::move(children));
     // mm->tabs(m->tabs());
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }

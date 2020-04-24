@@ -1420,7 +1420,8 @@ namespace Sass {
     }
 
     CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
-      node->pstate(), condition, std::move(children));
+      node->pstate(), parent65, condition, std::move(children));
+
     parent33->push_back(ff);
 
     return nullptr;
@@ -1458,7 +1459,7 @@ namespace Sass {
     MediaQueryParser parser(compiler, source);
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), sass::vector<CssMediaQueryObj>());
+      node->pstate(), parent65, sass::vector<CssMediaQueryObj>());
 
     // css->CssParentNode::concat(node->elements());
 
@@ -1525,7 +1526,7 @@ namespace Sass {
     }
 
     parent33->push_back(SASS_MEMORY_NEW(CssAtRootRule,
-        node->pstate(), query, std::move(children)));
+        node->pstate(), parent65, query, std::move(children)));
 
     return nullptr;
   }
@@ -1566,7 +1567,7 @@ namespace Sass {
     }
 
     CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
-      node->pstate(), name, value, std::move(children));
+      node->pstate(), parent65, name, value, std::move(children));
     result->isChildless(node->is_childless());
     parent->push_back(result);
 
@@ -1850,7 +1851,7 @@ namespace Sass {
       KeyframeSelectorParser parser(compiler, qwe);
       sass::vector<sass::string> selector(parser.parse());
 
-      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), std::move(children));
+      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65, std::move(children));
       if (r->interpolation()) {
         selectorStack.push_back({});
         auto val = interpolationToValue(r->interpolation(), true, false);
@@ -1895,7 +1896,7 @@ namespace Sass {
     selectorStack.pop_back();
 
     CssStyleRule* rr = SASS_MEMORY_NEW(CssStyleRule,
-      r->pstate(), evaled, std::move(children));
+      r->pstate(), parent65, evaled, std::move(children));
 
     // rr->tabs(r->tabs());
     parent33->push_back(rr);
@@ -2046,7 +2047,7 @@ namespace Sass {
 
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule);
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), parent65, Strings::contentRule);
     {
       LOCAL_PTR(CssNodes, parent33, &trace->elements());
 
@@ -2146,7 +2147,7 @@ namespace Sass {
       }
     }
 
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), node->name().orig());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), parent65, node->name().orig());
 
     {
 
@@ -2311,7 +2312,7 @@ namespace Sass {
     }
 
     return SASS_MEMORY_NEW(CssRoot,
-      b->pstate(), std::move(children));
+      b->pstate(), parent65, std::move(children));
 
   }
 

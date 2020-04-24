@@ -45,13 +45,17 @@ namespace Sass {
     // [children] is empty but [isChildless] is `false`.
     ADD_PROPERTY(bool, isChildless);
 
+    CssParentNode* parent_;
+
   public:
     /// The child statements of this node.
     // List<CssNode> get children;
 
-    CssParentNode(const SourceSpan& pstate);
+    CssParentNode(const SourceSpan& pstate,
+      CssParentNode* parent);
 
     CssParentNode(const SourceSpan& pstate,
+      CssParentNode* parent,
       sass::vector<CssNodeObj>&& children);
 
     // bool get isChildless;
@@ -66,6 +70,7 @@ namespace Sass {
     // needed for properly formatted CSS emission
   public:
     CssRoot(const SourceSpan& pstate,
+      CssParentNode* parent,
       sass::vector<CssNodeObj>&& vec = {});
     // ATTACH_CLONE_OPERATIONS(CssRoot);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -118,10 +123,12 @@ namespace Sass {
     // ADD_PROPERTY(bool, isChildless);
   public:
     CssAtRule(const SourceSpan& pstate,
+      CssParentNode* parent,
       CssString* name,
       CssString* value);
 
     CssAtRule(const SourceSpan& pstate,
+      CssParentNode* parent,
       CssString* name,
       CssString* value,
       sass::vector<CssNodeObj>&& children);
@@ -204,11 +211,13 @@ namespace Sass {
     // Value constructor
     CssKeyframeBlock(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       CssStrings* selector);
 
     // Value constructor
     CssKeyframeBlock(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       CssStrings* selector,
       sass::vector<CssNodeObj>&& children);
 
@@ -237,10 +246,12 @@ namespace Sass {
 
     CssStyleRule(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       SelectorList* selector);
 
     CssStyleRule(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       SelectorList* selector,
       sass::vector<CssNodeObj>&& children);
 
@@ -256,7 +267,8 @@ namespace Sass {
 
   class CssStylesheet : public CssParentNode {
   public:
-    CssStylesheet(const SourceSpan& pstate);
+    CssStylesheet(const SourceSpan& pstate,
+      CssParentNode* parent);
     ATTACH_CLONE_OPERATIONS(CssStylesheet)
       ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -267,10 +279,13 @@ namespace Sass {
   class CssSupportsRule : public CssParentNode {
     ADD_PROPERTY(ExpressionObj, condition);
   public:
-    CssSupportsRule(const SourceSpan& pstate, ExpressionObj condition);
+    CssSupportsRule(const SourceSpan& pstate,
+      CssParentNode* parent,
+      ExpressionObj condition);
 
     CssSupportsRule(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       ExpressionObj condition,
       sass::vector<CssNodeObj>&& children);
 
@@ -359,11 +374,13 @@ namespace Sass {
     // Value constructor
     CssAtRootRule(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       AtRootQueryObj query);
 
     // Value constructor
     CssAtRootRule(
       const SourceSpan& pstate,
+      CssParentNode* parent,
       AtRootQueryObj query,
       sass::vector<CssNodeObj>&& children);
 
@@ -389,10 +406,12 @@ namespace Sass {
 
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,
+      CssParentNode* parent,
       const sass::vector<CssMediaQueryObj>& queries);
 
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,
+      CssParentNode* parent,
       const sass::vector<CssMediaQueryObj>& queries,
       sass::vector<CssNodeObj>&& children);
 
@@ -432,8 +451,10 @@ namespace Sass {
     ADD_PROPERTY(SassStringObj, name2)
 
   public:
-    Keyframe_Rule(const SourceSpan& pstate);
     Keyframe_Rule(const SourceSpan& pstate,
+      CssParentNode* parent);
+    Keyframe_Rule(const SourceSpan& pstate,
+      CssParentNode* parent,
       sass::vector<CssNodeObj>&& children);
 
     ATTACH_CLONE_OPERATIONS(Keyframe_Rule)
@@ -460,8 +481,12 @@ namespace Sass {
     ADD_CONSTREF(char, type)
     ADD_CONSTREF(sass::string, name)
   public:
-    Trace(const SourceSpan& pstate, const sass::string& name, char type = 'm');
-    Trace(const SourceSpan& pstate, const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
+    Trace(const SourceSpan& pstate,
+      CssParentNode* parent,
+      const sass::string& name, char type = 'm');
+    Trace(const SourceSpan& pstate,
+      CssParentNode* parent,
+      const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
     ATTACH_CRTP_PERFORM_METHODS()
   };
 }
