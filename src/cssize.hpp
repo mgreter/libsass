@@ -18,7 +18,7 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  class Cssize : public Operation_CRTP<Statement*, Cssize> {
+  class Cssize : public Operation_CRTP<CssNode*, Cssize> {
 
     // Share callStack with outside
     BackTraces& callStack;
@@ -31,17 +31,17 @@ namespace Sass {
 
     CssRoot* doit(CssRootObj);
 
-    Statement* operator()(ParentStatement*);
-    Statement* operator()(CssParentNode*);
+    // CssNode* operator()(ParentStatement*);
+    CssNode* operator()(CssParentNode*);
     
-    Statement* operator()(CssStyleRule*);
-    // Statement* operator()(Bubble*);
-    Statement* operator()(CssMediaRule*);
-    Statement* operator()(CssSupportsRule*);
-    Statement* operator()(CssAtRootRule*);
-    Statement* operator()(CssAtRule*);
-    Statement* operator()(Keyframe_Rule*);
-    Statement* operator()(Trace*);
+    CssNode* operator()(CssStyleRule*);
+    // CssNode* operator()(Bubble*);
+    CssNode* operator()(CssMediaRule*);
+    CssNode* operator()(CssSupportsRule*);
+    CssNode* operator()(CssAtRootRule*);
+    CssNode* operator()(CssAtRule*);
+    CssNode* operator()(Keyframe_Rule*);
+    CssNode* operator()(Trace*);
     // Statement* operator()(Assignment*);
     // Statement* operator()(WarnRule*);
     // Statement* operator()(ErrorRule*);
@@ -57,8 +57,8 @@ namespace Sass {
     // Statement* operator()(Null*);
 
     CssParentNode* parent();
-    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
-    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<CssNodeObj>& results);
+    // void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
+    // void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<CssNodeObj>& results);
     void visitBlockStatements(const sass::vector<CssNodeObj>& children, sass::vector<CssNodeObj>& results);
 
     Bubble* bubble(CssAtRule*);
@@ -74,8 +74,8 @@ namespace Sass {
 
     // generic fall-back
     template <typename U>
-    Statement* fallback(U x)
-    { return Cast<Statement>(x); }
+    CssNode* fallback(U x)
+    { return Cast<CssNode>(x); }
 
   };
 

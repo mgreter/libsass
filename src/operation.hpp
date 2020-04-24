@@ -21,7 +21,7 @@ namespace Sass {
     virtual void perform(Operation<void>* op) = 0; \
     virtual Value* perform(Operation<Value*>* op) = 0; \
     virtual sass::string perform(Operation<sass::string>* op) = 0; \
-    virtual Statement* perform(Operation<Statement*>* op) = 0; \
+    virtual CssNode* perform(Operation<CssNode*>* op) = 0; \
     virtual Expression* perform(Operation<Expression*>* op) = 0; \
     virtual struct SassValue* perform(Operation<struct SassValue*>* op) = 0; \
 
@@ -33,7 +33,7 @@ namespace Sass {
     virtual void perform(Operation<void>* op) override { return (*op)(this); } \
     virtual Value* perform(Operation<Value*>* op) override { return (*op)(this); } \
     virtual sass::string perform(Operation<sass::string>* op) override { return (*op)(this); } \
-    virtual Statement* perform(Operation<Statement*>* op) override { return (*op)(this); } \
+    virtual CssNode* perform(Operation<CssNode*>* op) override { return (*op)(this); } \
     virtual Expression* perform(Operation<Expression*>* op) override { return (*op)(this); } \
     virtual struct SassValue* perform(Operation<struct SassValue*>* op) override { return (*op)(this); } \
 

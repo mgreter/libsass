@@ -35,47 +35,13 @@ namespace Sass {
 
   void
     Cssize::visitBlockStatements(
-      const sass::vector<StatementObj>& children,
-      sass::vector<StatementObj>& results)
-  {
-    for (size_t i = 0, L = children.size(); i < L; ++i) {
-      StatementObj ith = children.at(i)->perform(this);
-      if (Block* bb = Cast<Block>(ith)) {
-        // Not sure if move is safe here!?
-        std::move(bb->begin(), bb->end(),
-          std::back_inserter(results));
-      }
-      else if (ith) {
-        results.push_back(ith);
-      }
-    }
-  }
-
-  void
-    Cssize::visitBlockStatements(
-      const sass::vector<StatementObj>& children,
-      sass::vector<CssNodeObj>& results)
-  {
-    for (size_t i = 0, L = children.size(); i < L; ++i) {
-      StatementObj ith = children.at(i)->perform(this);
-      if (Block* bb = Cast<Block>(ith)) {
-        // Not sure if move is safe here!?
-        std::move(bb->begin(), bb->end(),
-          std::back_inserter(results));
-      }
-      else if (ith) {
-        results.push_back(ith);
-      }
-    }
-  }
-
-  void
-    Cssize::visitBlockStatements(
       const sass::vector<CssNodeObj>& children,
       sass::vector<CssNodeObj>& results)
   {
     for (size_t i = 0, L = children.size(); i < L; ++i) {
-      StatementObj ith = children.at(i)->perform(this);
+      debug_ast(children.at(i), "IN: ");
+      CssNodeObj ith = children.at(i)->perform(this);
+      debug_ast(ith);
       if (Block* bb = Cast<Block>(ith)) {
         // Not sure if move is safe here!?
         std::move(bb->begin(), bb->end(),
@@ -97,7 +63,7 @@ namespace Sass {
   }
 
   
-  Statement* Cssize::operator()(CssParentNode* b)
+  CssNode* Cssize::operator()(CssParentNode* b)
   {
     sass::vector<CssNodeObj> children;
     children.reserve(b->length());
@@ -106,16 +72,7 @@ namespace Sass {
       std::move(children));
   }
 
-  Statement* Cssize::operator()(ParentStatement* b)
-  {
-    sass::vector<CssNodeObj> children;
-    children.reserve(b->length());
-    visitBlockStatements(b->elements(), children);
-    return SASS_MEMORY_NEW(Block, b->pstate(),
-      std::move(children));
-  }
-
-  Statement* Cssize::operator()(Trace* trace)
+  CssNode* Cssize::operator()(Trace* trace)
   {
     SourceSpan span(trace->pstate());
     callStackFrame frame(callStack,
@@ -123,7 +80,7 @@ namespace Sass {
     return trace->CssParentNode::perform(this);
   }
 
-  Statement* Cssize::operator()(CssAtRule* r)
+  CssNode* Cssize::operator()(CssAtRule* r)
   {
 
     if (r->empty()) return r;
@@ -151,7 +108,7 @@ namespace Sass {
       std::move(debubble(children, r)));
   }
 
-  Statement* Cssize::operator()(Keyframe_Rule* r)
+  CssNode* Cssize::operator()(Keyframe_Rule* r)
   {
     if (r == nullptr) return nullptr;
     if (r->empty()) return nullptr;
@@ -162,7 +119,7 @@ namespace Sass {
       std::move(debubble(children, r)));
   }
 
-  Statement* Cssize::operator()(CssStyleRule* r)
+  CssNode* Cssize::operator()(CssStyleRule* r)
   {
     cssStack.emplace_back(r);
     sass::vector<CssNodeObj> children;
@@ -175,7 +132,7 @@ namespace Sass {
     sass::vector<CssNodeObj> bubblers;
     for (size_t i = 0, L = children.size(); i < L; i++)
     {
-      Statement* s = children[i];
+      CssNode* s = children[i];
       if (s->bubbles()) {
         bubblers.push_back(s);
       }
@@ -185,7 +142,7 @@ namespace Sass {
     }
 
     if (!statemts.empty()) {
-      for (Statement* stmt : bubblers) {
+      for (CssNode* stmt : bubblers) {
         stmt->tabs(stmt->tabs() + 1);
       }
       bubblers.insert(bubblers.begin(),
@@ -197,7 +154,7 @@ namespace Sass {
       r->pstate(), std::move(debubble(bubblers)));
   }
 
-  Statement* Cssize::operator()(CssMediaRule* m)
+  CssNode* Cssize::operator()(CssMediaRule* m)
   {
     if (Cast<CssStyleRule>(parent()))
     {
@@ -219,7 +176,7 @@ namespace Sass {
       std::move(debubble(children, m)));
   }
 
-  Statement* Cssize::operator()(CssSupportsRule* m)
+  CssNode* Cssize::operator()(CssSupportsRule* m)
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
@@ -240,7 +197,7 @@ namespace Sass {
 
   }
 
-  Statement* Cssize::operator()(CssAtRootRule* m)
+  CssNode* Cssize::operator()(CssAtRootRule* m)
   {
     bool excludes = false;
     for (CssParentNode* stacked : cssStack) {
