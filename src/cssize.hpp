@@ -32,6 +32,8 @@ namespace Sass {
     CssRoot* doit(CssRootObj);
 
     Statement* operator()(ParentStatement*);
+    Statement* operator()(CssParentNode*);
+    
     Statement* operator()(CssStyleRule*);
     // Statement* operator()(Bubble*);
     Statement* operator()(CssMediaRule*);

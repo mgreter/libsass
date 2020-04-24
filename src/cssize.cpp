@@ -96,6 +96,15 @@ namespace Sass {
       std::move(children));
   }
 
+  
+  Statement* Cssize::operator()(CssParentNode* b)
+  {
+    sass::vector<CssNodeObj> children;
+    children.reserve(b->length());
+    visitBlockStatements(b->elements(), children);
+    return SASS_MEMORY_NEW(Block, b->pstate(),
+      std::move(children));
+  }
 
   Statement* Cssize::operator()(ParentStatement* b)
   {

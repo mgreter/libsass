@@ -127,9 +127,7 @@ namespace Sass {
   {
     // Evaluate parsed ast-tree to new ast-tree
     if (parsed != nullptr) {
-      debug_ast(parsed);
       compiled = compile2(parsed, false);
-      debug_ast(compiled);
     }
     // Update the compiler state
     state = SASS_COMPILER_COMPILED;
