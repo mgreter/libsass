@@ -34,7 +34,7 @@ namespace Sass {
      UserDefinedCallable* content88;
 
      // The style rule that defines the current parent selector, if any.
-     StyleRuleObj _styleRule;
+     CssStyleRuleObj _styleRule;
 
      // The name of the current declaration parent. Used for BEM-
      // declaration blocks as in `div { prefix: { suffix: val; } }`;
@@ -100,6 +100,9 @@ namespace Sass {
     // Whether we're currently building the output of a style rule.
     bool isInStyleRule() const;
 
+    void _withStyleRule(CssStyleRule* rule, ParentStatement* node, Value* (Eval::*function)(ParentStatement* parent));
+
+    Value* _acceptNodeChildren(ParentStatement* parent);
 
     std::pair<sass::vector<ExpressionObj>, EnvKeyFlatMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
 

@@ -140,13 +140,31 @@ namespace Sass {
 
   }
 
+  void Eval::_withStyleRule(CssStyleRule* rule, ParentStatement* node, Value* (Eval::*function)(ParentStatement* parent))
+  {
+    auto oldRule = _styleRule;
+    _styleRule = rule;
+    // var result = callback();
+    ValueObj rv = (this->*function)(node);
+    _styleRule = oldRule;
+    // return result;
+  }
+
+  Value* Eval::_acceptNodeChildren(ParentStatement* node)
+  {
+    return visitChildren(node->elements());
+    // for (auto child : parent->elements()) {
+    //   child->perform(this);
+    // }
+  }
+
 
   Value* Eval::visitStyleRule(StyleRule* r)
   {
 
     EnvScope scope(compiler.varRoot, r->idxs());
     Interpolation* itpl = r->interpolation();
-    LocalOption<StyleRuleObj> oldStyleRule(_styleRule, r);
+    // LocalOption<CssStyleRuleObj> oldStyleRule(_styleRule, r);
 
     if (_inKeyframes) {
 
@@ -201,19 +219,42 @@ namespace Sass {
     extender.addSelector(evaled, mediaStack.back());
 
     auto pu = parent65;
-    //while (Cast<CssStyleRule>(pu)) {
-      // pu = pu->parent_;
-    //}
+
+    // _withParent
+
+    while (Cast<CssStyleRule>(pu)) {
+    //   std::cout << "GO THR\n";
+       pu = pu->parent_;
+    }
 
     CssStyleRule* css = SASS_MEMORY_NEW(CssStyleRule,
-      r->pstate(), parent65, evaled);
+      r->pstate(), pu, evaled);
 
+    // _addChild(node, through: through);
+    // This also sets the parent
+    pu->append(css);
+
+    {
+      LOCAL_PTR(CssParentNode, parent65, css);
+      _withStyleRule(css, r, &Eval::_acceptNodeChildren);
+    }
+
+    // css->tabs(r->tabs());
+
+    /*
+
+    
+    auto pu = parent65;
 
     parent65->append(css);
     // css->tabs(r->tabs());
 
-    LOCAL_PTR(CssParentNode, parent65, css);
-    visitChildren(r->elements());
+    */
+
+    // LOCAL_PTR(CssParentNode, parent65, css);
+
+    // visitChildren(r->elements());
+    // visitChildren(r->elements());
 
     originalStack.pop_back();
     selectorStack.pop_back();
@@ -811,6 +852,8 @@ namespace Sass {
   {
     for (const auto& child : children) {
       ValueObj val = child->perform(this);
+      // Disabled, not sure if needed?
+      // Seems dart-sass doesn't have it!
       if (val) return val.detach();
     }
     return nullptr;

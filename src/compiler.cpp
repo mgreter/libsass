@@ -111,8 +111,8 @@ namespace Sass {
     }
     // debug_ast(compiled);
     // This can use up to 10% runtime
-    Cssize cssize(*this->logger123);
-    compiled = cssize.doit(compiled); // 5%
+    //Cssize cssize(*this->logger123);
+    //compiled = cssize.doit(compiled); // 5%
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
