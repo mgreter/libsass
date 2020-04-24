@@ -166,12 +166,26 @@ namespace Sass {
     Interpolation* itpl = r->interpolation();
     // LocalOption<CssStyleRuleObj> oldStyleRule(_styleRule, r);
 
+
     if (_inKeyframes) {
 
-      Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65);
-      parent65->append(css);
+      // NOTE: this logic is largely duplicated in [visitCssKeyframeBlock].
+      // Most changes here should be mirrored there.
+
+      // _withParent
+      auto pu = parent65;
+      while (Cast<CssStyleRule>(pu)) {
+        std::cout << "Go through Keyframe CssStyleRule\n";
+        pu = pu->parent_;
+      }
+
+      // ModifiableCssKeyframeBlock
+      Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), pu);
+
+      pu->append(css);
 
       {
+        // Set parent again to css, to append children
         LOCAL_PTR(CssParentNode, parent65, css);
         visitChildren(r->elements());
       }
@@ -218,12 +232,10 @@ namespace Sass {
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
     extender.addSelector(evaled, mediaStack.back());
 
-    auto pu = parent65;
-
     // _withParent
-
+    auto pu = parent65;
     while (Cast<CssStyleRule>(pu)) {
-    //   std::cout << "GO THR\n";
+       std::cout << "Go through CssStyleRule\n";
        pu = pu->parent_;
     }
 
