@@ -290,11 +290,23 @@ namespace Sass {
   {
     ValueObj condition(node->condition()->perform(this));
     EnvScope scoped(compiler.varRoot, node->idxs());
+
+
+    auto pu = parent65;
+    while (Cast<CssStyleRule>(pu)) {
+      // std::cout << "Go through SupportsRule CssStyleRule\n";
+      pu = pu->parent_;
+    }
+
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
-      node->pstate(), parent65, condition);
-    parent65->append(css);
-    LOCAL_PTR(CssParentNode, parent65, css);
-    visitChildren(node->elements());
+      node->pstate(), pu, condition);
+
+    pu->append(css);
+    {
+      LOCAL_PTR(CssParentNode, parent65, css);
+      visitChildren(node->elements());
+    }
+
     return nullptr;
   }
 
