@@ -19,7 +19,7 @@ namespace Sass {
   ////////////////////////
 
   Block::Block(const SourceSpan& pstate, sass::vector<CssNodeObj>&& vec)
-    : CssNode(pstate), VectorizedNopsi<CssNode>(std::move(vec)) {}
+    : CssParentNode(pstate, std::move(vec)) {}
 
   Cssize::Cssize(Logger& logger)
   : callStack(logger)

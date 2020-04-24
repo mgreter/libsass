@@ -10,7 +10,7 @@ namespace Sass {
 
   struct BackTrace;
 
-  class Block : public CssNode, public VectorizedNopsi<CssNode> {
+  class Block : public CssParentNode {
     // needed for properly formatted CSS emission
   public:
     Block(const SourceSpan& pstate, sass::vector<CssNodeObj>&& vec);
