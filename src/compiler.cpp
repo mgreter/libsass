@@ -102,9 +102,7 @@ namespace Sass {
       varRoot.functions[i] = fnList[i];
     }
 
-    debug_ast(root);
     CssRootObj compiled = eval.visitRoot32(root); // 50%
-    debug_ast(compiled);
 
     Extension unsatisfied;
     // check that all extends were used
@@ -115,12 +113,11 @@ namespace Sass {
     // This can use up to 10% runtime
     Cssize cssize(*this->logger123);
     compiled = cssize.doit(compiled); // 5%
-    debug_ast(compiled);
+
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     Remove_Placeholders remove_placeholders;
     compiled->perform(&remove_placeholders); // 3%
-    debug_ast(compiled);
 
     // return processed tree
     return compiled;

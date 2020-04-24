@@ -31,6 +31,7 @@ namespace Sass {
   IMPLEMENT_BASE_CAST(SelectorComponent);
   IMPLEMENT_BASE_CAST(SimpleSelector);
   IMPLEMENT_BASE_CAST(NameSpaceSelector);
-  
+  IMPLEMENT_BASE_CAST(CssNode);
+
 
 }

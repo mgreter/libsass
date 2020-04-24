@@ -359,6 +359,7 @@ namespace Sass {
   DECLARE_BASE_CAST(NameSpaceSelector);
   DECLARE_BASE_CAST(SelectorComponent)
   DECLARE_BASE_CAST(ImportBase);
+  DECLARE_BASE_CAST(CssNode);
 
   #define FN_PROTOTYPE2 \
     const SourceSpan& pstate, \
