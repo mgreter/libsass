@@ -36,6 +36,28 @@
 namespace Sass {
 
 
+  CssRoot* Eval::visitRoot32(Root* root)
+  {
+    CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
+    LOCAL_PTR(CssNodes, parent33, &css->elements());
+    for (Statement* item : root->elements()) {
+      ValueObj child = item->perform(this);
+    }
+    return css.detach();
+  }
+
+  Value* Eval::visitSupportsRule(SupportsRule* node)
+  {
+    ValueObj condition(node->condition()->perform(this));
+    EnvScope scoped(compiler.varRoot, node->idxs());
+    CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
+      node->pstate(), parent65, condition);
+    parent33->push_back(css);
+    LOCAL_PTR(CssNodes, parent33, &css->elements());
+    visitChildren(node->elements());
+    return nullptr;
+  }
+
   Eval::Eval(Compiler& compiler) :
     inMixin(false),
     parent33(nullptr),
@@ -1406,27 +1428,6 @@ namespace Sass {
       *compiler.logger123);
   }
 
-  Value* Eval::visitSupportsRule(SupportsRule* node)
-  {
-
-    ValueObj condition(node->condition()->perform(this));
-    EnvScope scoped(compiler.varRoot, node->idxs());
-
-
-    sass::vector<CssNodeObj> children;
-    {
-      LOCAL_PTR(CssNodes, parent33, &children);
-      visitChildren(node->elements());
-    }
-
-    CssSupportsRuleObj ff = SASS_MEMORY_NEW(CssSupportsRule,
-      node->pstate(), parent65, condition, std::move(children));
-
-    parent33->push_back(ff);
-
-    return nullptr;
-  }
-
   sass::vector<CssMediaQueryObj> Eval::mergeMediaQueries(
     const sass::vector<CssMediaQueryObj>& lhs,
     const sass::vector<CssMediaQueryObj>& rhs)
@@ -2296,24 +2297,6 @@ namespace Sass {
     //   if (callee.type == SASS_CALLEE_MIXIN) return true;
     // }
     // return false;
-  }
-
-  CssRoot* Eval::visitRoot32(Root* b)
-  {
-    // copy the block object (add items later)
-    sass::vector<CssNodeObj> children;
-
-    {
-      LOCAL_PTR(CssNodes, parent33, &children);
-
-      for (Statement* item : b->elements()) {
-        ValueObj child = item->perform(this);
-      }
-    }
-
-    return SASS_MEMORY_NEW(CssRoot,
-      b->pstate(), parent65, std::move(children));
-
   }
 
   SelectorListObj& Eval::selector()

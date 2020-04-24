@@ -56,7 +56,7 @@ namespace Sass {
     sass::vector<CssNodeObj> children;
     children.reserve(b->length());
     visitBlockStatements(b->elements(), children);
-    return SASS_MEMORY_NEW(CssRoot, b->pstate(), nullptr,
+    return SASS_MEMORY_NEW(CssRoot, b->pstate(),
       std::move(children));
   }
 

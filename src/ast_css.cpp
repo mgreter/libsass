@@ -54,9 +54,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
 
   CssRoot::CssRoot(const SourceSpan& pstate,
-    CssParentNode* parent,
     sass::vector<CssNodeObj>&& vec)
-    : CssParentNode(pstate, parent, std::move(vec))
+    : CssParentNode(pstate, nullptr, std::move(vec))
   {}
 
 //  CssRoot::CssRoot(const CssRoot* ptr)

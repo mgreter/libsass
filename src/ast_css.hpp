@@ -70,7 +70,6 @@ namespace Sass {
     // needed for properly formatted CSS emission
   public:
     CssRoot(const SourceSpan& pstate,
-      CssParentNode* parent,
       sass::vector<CssNodeObj>&& vec = {});
     // ATTACH_CLONE_OPERATIONS(CssRoot);
     ATTACH_CRTP_PERFORM_METHODS();
