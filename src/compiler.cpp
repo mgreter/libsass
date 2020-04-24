@@ -102,6 +102,7 @@ namespace Sass {
       varRoot.functions[i] = fnList[i];
     }
 
+    // debug_ast(root);
     CssRootObj compiled = eval.visitRoot32(root); // 50%
 
     Extension unsatisfied;
