@@ -352,12 +352,29 @@ namespace Sass {
     LOCAL_FLAG(_inUnknownAtRule, !isKeyframe);
     LOCAL_FLAG(_inKeyframes, isKeyframe);
 
+    // _withParent
+    auto pu = parent65;
+    while (Cast<CssStyleRule>(pu)) {
+      // std::cout << "Go through AtRule CssStyleRule\n";
+      pu = pu->parent_;
+    }
+
+    // ModifiableCssKeyframeBlock
     CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
       node->pstate(), parent65, name, value);
-    parent65->append(css);
-    LOCAL_PTR(CssParentNode, parent65, css);
     css->isChildless(node->is_childless());
-    visitChildren(node->elements());
+
+    pu->append(css);
+
+    {
+      // Set parent again to css, to append children
+      LOCAL_PTR(CssParentNode, parent65, css);
+      visitChildren(node->elements());
+    }
+
+
+
+
     return nullptr;
   }
 
