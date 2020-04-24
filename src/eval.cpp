@@ -72,7 +72,6 @@ namespace Sass {
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), parent65, node->name().orig());
     parent65->append(trace);
 
-    LOCAL_PTR(CssNodes, parent33, &trace->elements());
     LOCAL_PTR(CssParentNode, parent65, trace);
 
     LOCAL_FLAG(inMixin, true);
@@ -111,7 +110,6 @@ namespace Sass {
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), parent65, Strings::contentRule);
     parent65->append(trace);
 
-      LOCAL_PTR(CssNodes, parent33, &trace->elements());
       LOCAL_PTR(CssParentNode, parent65, trace);
 
       callStackFrame frame(*compiler.logger123,
@@ -156,7 +154,6 @@ namespace Sass {
       parent65->append(css);
 
       {
-        LOCAL_PTR(CssNodes, parent33, &css->elements());
         LOCAL_PTR(CssParentNode, parent65, css);
         visitChildren(r->elements());
       }
@@ -208,7 +205,6 @@ namespace Sass {
     parent65->append(css);
     // css->tabs(r->tabs());
 
-    LOCAL_PTR(CssNodes, parent33, &css->elements());
     LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(r->elements());
 
@@ -223,7 +219,6 @@ namespace Sass {
   CssRoot* Eval::visitRoot32(Root* root)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
-    LOCAL_PTR(CssNodes, parent33, &css->elements());
     LOCAL_PTR(CssParentNode, parent65, css);
     for (Statement* item : root->elements()) {
       ValueObj child = item->perform(this);
@@ -238,7 +233,6 @@ namespace Sass {
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(), parent65, condition);
     parent65->append(css);
-    LOCAL_PTR(CssNodes, parent33, &css->elements());
     LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
     return nullptr;
@@ -271,7 +265,6 @@ namespace Sass {
     CssAtRootRuleObj css = SASS_MEMORY_NEW(CssAtRootRule,
       node->pstate(), parent65, query);
     parent65->append(css);
-    LOCAL_PTR(CssNodes, parent33, &css->elements());
     LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
     return nullptr;
@@ -290,7 +283,6 @@ namespace Sass {
     CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
       node->pstate(), parent65, name, value);
     parent65->append(css);
-    LOCAL_PTR(CssNodes, parent33, &css->elements());
     LOCAL_PTR(CssParentNode, parent65, css);
     css->isChildless(node->is_childless());
     visitChildren(node->elements());
@@ -325,7 +317,6 @@ namespace Sass {
     mediaStack.emplace_back(css);
 
     parent65->append(css);
-    LOCAL_PTR(CssNodes, parent33, &css->elements());
     LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
 
@@ -338,7 +329,7 @@ namespace Sass {
 
   Eval::Eval(Compiler& compiler) :
     inMixin(false),
-    parent33(nullptr),
+    parent65(nullptr),
     mediaStack(),
     originalStack(),
     selectorStack(),
@@ -366,7 +357,7 @@ namespace Sass {
 
   bool Eval::isRoot() const
   {
-    return parent33 == nullptr;
+    return parent65 == nullptr;
   }
 
   void debug_call(

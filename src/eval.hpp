@@ -24,7 +24,6 @@ namespace Sass {
    public:
 
      bool inMixin;
-     CssNodes* parent33;
      CssParentNode* parent65;
      CssParentStack parentStack;
      MediaStack mediaStack;
