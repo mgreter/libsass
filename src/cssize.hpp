@@ -18,7 +18,7 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  class Cssize : public Operation_CRTP<Statement*, Cssize> {
+  class Cssize : public Operation_CRTP<CssNode*, Cssize> {
 
     // Share callStack with outside
     BackTraces& callStack;
@@ -58,8 +58,8 @@ namespace Sass {
     // Statement* operator()(Null*);
 
     CssParentNode* parent();
-    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
-    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<CssNodeObj>& results);
+    // void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
+    // void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<CssNodeObj>& results);
     void visitBlockStatements(const sass::vector<CssNodeObj>& children, sass::vector<CssNodeObj>& results);
 
     Bubble* bubble(CssAtRule*);
@@ -75,13 +75,8 @@ namespace Sass {
 
     // generic fall-back
     template <typename U>
-    Statement* fallback(U x)
-    { 
-      if (!Cast<CssNode>(x)) {
-        std::cerr << "yeah " << x->to_string() << "\n";
-      }
-      return Cast<Statement>(x);
-    }
+    CssNode* fallback(U x)
+    { return Cast<CssNode>(x); }
 
   };
 

@@ -35,48 +35,11 @@ namespace Sass {
 
   void
     Cssize::visitBlockStatements(
-      const sass::vector<StatementObj>& children,
-      sass::vector<StatementObj>& results)
-  {
-    for (size_t i = 0, L = children.size(); i < L; ++i) {
-      StatementObj ith = children.at(i)->perform(this);
-      if (Block* bb = Cast<Block>(ith)) {
-        // Not sure if move is safe here!?
-        std::move(bb->begin(), bb->end(),
-          std::back_inserter(results));
-      }
-      else if (ith) {
-        results.push_back(ith);
-      }
-    }
-  }
-
-  void
-    Cssize::visitBlockStatements(
-      const sass::vector<StatementObj>& children,
-      sass::vector<CssNodeObj>& results)
-  {
-    for (size_t i = 0, L = children.size(); i < L; ++i) {
-      StatementObj ith = children.at(i)->perform(this);
-      if (Block* bb = Cast<Block>(ith)) {
-        // Not sure if move is safe here!?
-        std::move(bb->begin(), bb->end(),
-          std::back_inserter(results));
-      }
-      else if (ith) {
-        results.push_back(ith);
-      }
-    }
-  }
-
-  void
-    Cssize::visitBlockStatements(
       const sass::vector<CssNodeObj>& children,
       sass::vector<CssNodeObj>& results)
   {
     for (size_t i = 0, L = children.size(); i < L; ++i) {
-      const CssNodeObj& child = children.at(i);
-      StatementObj ith = child->perform(this);
+      CssNodeObj ith = children.at(i)->perform(this);
       if (Block* bb = Cast<Block>(ith)) {
         // Not sure if move is safe here!?
         std::move(bb->begin(), bb->end(),
