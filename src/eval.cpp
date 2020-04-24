@@ -36,6 +36,185 @@
 namespace Sass {
 
 
+  Value* Eval::visitIncludeRule(IncludeRule* node)
+  {
+    UserDefinedCallableObj mixin = node->midx().isValid() ?
+      compiler.varRoot.getMixin(node->midx()) :
+      compiler.varRoot.getLexicalMixin(node->name());
+
+    if (mixin == nullptr) {
+      throw Exception::SassRuntimeException2(
+        "Undefined mixin.",
+        *compiler.logger123);
+    }
+
+    UserDefinedCallableObj contentCallable;
+
+    if (node->content() != nullptr) {
+
+      contentCallable = SASS_MEMORY_NEW(
+        UserDefinedCallable,
+        node->pstate(), node->name(),
+        node->content(), content88);
+
+      MixinRule* rule = Cast<MixinRule>(mixin->declaration());
+      node->content()->cidx(rule->cidx());
+
+      if (!rule || !rule->has_content()) {
+        SourceSpan span(node->content()->pstate());
+        callStackFrame frame(*compiler.logger123, span);
+        throw Exception::SassRuntimeException2(
+          "Mixin doesn't accept a content block.",
+          *compiler.logger123);
+      }
+    }
+
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), parent65, node->name().orig());
+    parent33->push_back(trace);
+
+      LOCAL_PTR(CssNodes, parent33, &trace->elements());
+      LOCAL_FLAG(inMixin, true);
+
+      callStackFrame frame(*compiler.logger123,
+        BackTrace(node->pstate(), mixin->name().orig(), true));
+
+      LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
+
+      ArgumentResults& evaluated(node->arguments()->evaluated);
+      _evaluateArguments(node->arguments(), evaluated);
+      ValueObj qwe = _runUserDefinedCallable(
+        evaluated,
+        mixin,
+        nullptr,
+        true,
+        &Eval::_runWithBlock,
+        trace,
+        node->pstate());
+
+
+    // debug_ast(trace);
+    return nullptr;
+
+  }
+
+  Value* Eval::visitContentRule(ContentRule* c)
+  {
+    if (!content88) return nullptr;
+    UserDefinedCallable* content = content88;
+    if (content == nullptr) return nullptr;
+    LOCAL_FLAG(inMixin, false);
+
+
+    // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
+    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), parent65, Strings::contentRule);
+    parent33->push_back(trace);
+
+      LOCAL_PTR(CssNodes, parent33, &trace->elements());
+
+      callStackFrame frame(*compiler.logger123,
+        BackTrace(c->pstate(), Strings::contentRule));
+
+      // EnvSnapshotView view(compiler.varRoot, content->snapshot());
+      EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
+
+      LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
+
+      // Appends to trace
+      ArgumentResults& evaluated(c->arguments()->evaluated);
+      _evaluateArguments(c->arguments(), evaluated);
+      ValueObj qwe = _runUserDefinedCallable(
+        evaluated,
+        content,
+        nullptr,
+        false,
+        &Eval::_runWithBlock,
+        trace,
+        c->pstate());
+
+
+    // _runUserDefinedCallable(node.arguments, content, node, () {
+    // return nullptr;
+    // Adds it twice?
+    return nullptr;
+
+  }
+
+
+  Value* Eval::visitStyleRule(StyleRule* r)
+  {
+
+    EnvScope scope(compiler.varRoot, r->idxs());
+    Interpolation* itpl = r->interpolation();
+    LocalOption<StyleRuleObj> oldStyleRule(_styleRule, r);
+
+    if (_inKeyframes) {
+
+      Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65);
+      parent33->push_back(css);
+
+      {
+        LOCAL_PTR(CssNodes, parent33, &css->elements());
+        visitChildren(r->elements());
+      }
+
+      auto text = interpolationToValue(itpl, true, false);
+
+      auto qwe = SASS_MEMORY_NEW(SourceItpl,
+        std::move(text), itpl->pstate());
+
+
+
+      KeyframeSelectorParser parser(compiler, qwe);
+      sass::vector<sass::string> selector(parser.parse());
+
+      // Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65, std::move(children));
+      if (r->interpolation()) {
+        selectorStack.push_back({});
+        auto val = interpolationToValue(r->interpolation(), true, false);
+        css->name2(SASS_MEMORY_NEW(SassString, r->interpolation()->pstate(), val));
+        selectorStack.pop_back();
+      }
+
+      return nullptr;
+      // return k.detach();
+    }
+
+    SelectorListObj slist;
+    if (r->interpolation()) {
+      struct SassImport* imp = compiler.import_stack.back();
+      bool plainCss = imp->format == SASS_IMPORT_CSS;
+      slist = itplToSelector(r->interpolation(), plainCss);
+    }
+
+    // reset when leaving scope
+    SASS_ASSERT(slist, "must have selectors");
+
+    SelectorListObj evaled = slist->resolveParentSelectors(
+      selectorStack.back(), traces, !at_root_without_rule);
+    LOCAL_FLAG(at_root_without_rule, false);
+
+    selectorStack.emplace_back(evaled);
+    // The copy is needed for parent reference evaluation
+    // dart-sass stores it as `originalSelector` member
+    originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
+    extender.addSelector(evaled, mediaStack.back());
+
+    CssStyleRule* css = SASS_MEMORY_NEW(CssStyleRule,
+      r->pstate(), parent65, evaled);
+    parent33->push_back(css);
+    // css->tabs(r->tabs());
+
+    LOCAL_PTR(CssNodes, parent33, &css->elements());
+    visitChildren(r->elements());
+
+    originalStack.pop_back();
+    selectorStack.pop_back();
+
+    return nullptr;
+
+  }
+
+
   CssRoot* Eval::visitRoot32(Root* root)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
@@ -55,6 +234,95 @@ namespace Sass {
     parent33->push_back(css);
     LOCAL_PTR(CssNodes, parent33, &css->elements());
     visitChildren(node->elements());
+    return nullptr;
+  }
+
+  Value* Eval::visitAtRootRule(AtRootRule* node)
+  {
+
+    EnvScope scoped(compiler.varRoot, node->idxs());
+
+    // std::cerr << "visitAtRootRule\n";
+    InterpolationObj itpl = node->query();
+    AtRootQueryObj query;
+
+    if (node->query()) {
+      query = AtRootQuery::parse(
+        performInterpolationToSource(
+          node->query(), true),
+        compiler);
+    }
+    else {
+      query = AtRootQuery::defaultQuery(node->pstate());
+    }
+
+    LOCAL_FLAG(_inKeyframes, false);
+    LOCAL_FLAG(_inUnknownAtRule, false);
+    LOCAL_FLAG(at_root_without_rule,
+      query && query->excludesStyleRules());
+
+    CssAtRootRuleObj css = SASS_MEMORY_NEW(CssAtRootRule,
+      node->pstate(), parent65, query);
+    parent33->push_back(css);
+    LOCAL_PTR(CssNodes, parent33, &css->elements());
+    visitChildren(node->elements());
+    return nullptr;
+  }
+
+  Value* Eval::visitAtRule(AtRule* node)
+  {
+    CssStringObj name = interpolationToCssString(node->name(), false, false);
+    CssStringObj value = interpolationToCssString(node->value(), true, true);
+
+    sass::string normalized(Util::unvendor(name->text()));
+    bool isKeyframe = normalized == "keyframes";
+    LOCAL_FLAG(_inUnknownAtRule, !isKeyframe);
+    LOCAL_FLAG(_inKeyframes, isKeyframe);
+
+    CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
+      node->pstate(), parent65, name, value);
+    parent33->push_back(css);
+    LOCAL_PTR(CssNodes, parent33, &css->elements());
+    css->isChildless(node->is_childless());
+    visitChildren(node->elements());
+    return nullptr;
+  }
+
+  Value* Eval::visitMediaRule(MediaRule* node)
+  {
+    ExpressionObj mq;
+    sass::string str_mq;
+    SourceSpan state(node->pstate());
+    if (node->query()) {
+      state = node->query()->pstate();
+      str_mq = performInterpolation(node->query(), false);
+    }
+
+    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl,
+      std::move(str_mq), state);
+    MediaQueryParser parser(compiler, source);
+    // Create a new CSS only representation of the media rule
+    CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
+      node->pstate(), parent65, sass::vector<CssMediaQueryObj>());
+
+    sass::vector<CssMediaQueryObj> parsed = parser.parse();
+    if (mediaStack.size() && mediaStack.back()) {
+      auto parent = mediaStack.back()->queries();
+      css->concat(mergeMediaQueries(parent, parsed));
+    }
+    else {
+      css->concat(parsed);
+    }
+    mediaStack.emplace_back(css);
+
+    parent33->push_back(css);
+    LOCAL_PTR(CssNodes, parent33, &css->elements());
+    visitChildren(node->elements());
+
+    mediaStack.pop_back();
+
+    // The parent to add declarations too
+    // return css.detach();
     return nullptr;
   }
 
@@ -1444,93 +1712,8 @@ namespace Sass {
     return queries;
   }
 
-  Value* Eval::visitMediaRule(MediaRule* node)
-  {
-    ExpressionObj mq;
-    sass::string str_mq;
-    SourceSpan state(node->pstate());
-    if (node->query()) {
-      state = node->query()->pstate();
-      str_mq = performInterpolation(node->query(), false);
-    }
-    // char* str = sass_copy_c_string(str_mq.c_str());
-    // compiler.strings.emplace_back(str);
-    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl,
-      std::move(str_mq), state);
-    MediaQueryParser parser(compiler, source);
-    // Create a new CSS only representation of the media rule
-    CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), parent65, sass::vector<CssMediaQueryObj>());
-
-    // css->CssParentNode::concat(node->elements());
-
-    // css->elements().insert(css->end(),
-    //   node->begin(), node->end());
-
-    sass::vector<CssMediaQueryObj> parsed = parser.parse();
-    if (mediaStack.size() && mediaStack.back()) {
-      auto parent = mediaStack.back()->queries();
-      css->concat(mergeMediaQueries(parent, parsed));
-    }
-    else {
-      css->concat(parsed);
-    }
-    mediaStack.emplace_back(css);
-
-    sass::vector<CssNodeObj> children;
-
-    {
-      LOCAL_PTR(CssNodes, parent33, &children);
-      visitChildren(node->elements());
-    }
-    css->elementsM(std::move(children));
-    mediaStack.pop_back();
-
-    // The parent to add declarations too
-    parent33->push_back(css);
-    // return css.detach();
-    return nullptr;
-  }
-
-  Value* Eval::visitAtRootRule(AtRootRule* node)
-  {
-
-    EnvScope scoped(compiler.varRoot, node->idxs());
 
 
-    // std::cerr << "visitAtRootRule\n";
-    InterpolationObj itpl = node->query();
-    AtRootQueryObj query;
-
-
-
-    if (node->query()) {
-      query = AtRootQuery::parse(
-        performInterpolationToSource(
-          node->query(), true),
-        compiler);
-    }
-    else {
-      query = AtRootQuery::defaultQuery(node->pstate());
-    }
-
-    LOCAL_FLAG(_inKeyframes, false);
-    LOCAL_FLAG(_inUnknownAtRule, false);
-    LOCAL_FLAG(at_root_without_rule,
-      query && query->excludesStyleRules());
-
-    sass::vector<CssNodeObj> children;
-
-    {
-      LOCAL_PTR(CssNodes, parent33, &children);
-      visitChildren(node->elements());
-    }
-
-    parent33->push_back(SASS_MEMORY_NEW(CssAtRootRule,
-        node->pstate(), parent65, query, std::move(children)));
-
-    return nullptr;
-  }
 
   /// Evaluates [interpolation] and wraps the result in a [CssValue].
 ///
@@ -1548,33 +1731,6 @@ namespace Sass {
     //   interpolation.span);
   }
 
-  Value* Eval::visitAtRule(AtRule* node)
-  {
-    // The parent to add stuff too
-    auto parent = parent33;
-
-    CssStringObj name = interpolationToCssString(node->name(), false, false);
-    CssStringObj value = interpolationToCssString(node->value(), true, true);
-
-    sass::string normalized(Util::unvendor(name->text()));
-    bool isKeyframe = normalized == "keyframes";
-    LOCAL_FLAG(_inUnknownAtRule, !isKeyframe);
-    LOCAL_FLAG(_inKeyframes, isKeyframe);
-
-    sass::vector<CssNodeObj> children;
-    {
-      LOCAL_PTR(CssNodes, parent33, &children);
-      visitChildren(node->elements());
-    }
-
-    CssAtRule* result = SASS_MEMORY_NEW(CssAtRule,
-      node->pstate(), parent65, name, value, std::move(children));
-    result->isChildless(node->is_childless());
-    parent->push_back(result);
-
-    return nullptr;
-
-  }
 
   Value* Eval::visitDeclaration(Declaration* node)
   {
@@ -1828,82 +1984,6 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Eval::visitStyleRule(StyleRule* r)
-  {
-
-    EnvScope scope(compiler.varRoot, r->idxs());
-
-    Interpolation* itpl = r->interpolation();
-    LocalOption<StyleRuleObj> oldStyleRule(_styleRule, r);
-
-    if (_inKeyframes) {
-
-      sass::vector<CssNodeObj> children;
-      {
-        LOCAL_PTR(CssNodes, parent33, &children);
-        visitChildren(r->elements());
-      }
-
-      auto text = interpolationToValue(itpl, true, false);
-      
-      auto qwe = SASS_MEMORY_NEW(SourceItpl,
-        std::move(text), itpl->pstate());
-
-      KeyframeSelectorParser parser(compiler, qwe);
-      sass::vector<sass::string> selector(parser.parse());
-
-      Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65, std::move(children));
-      if (r->interpolation()) {
-        selectorStack.push_back({});
-        auto val = interpolationToValue(r->interpolation(), true, false);
-        k->name2(SASS_MEMORY_NEW(SassString, r->interpolation()->pstate(), val));
-        selectorStack.pop_back();
-      }
-
-      parent33->push_back(k);
-
-      return nullptr;
-      // return k.detach();
-    }
-
-    SelectorListObj slist;
-    if (r->interpolation()) {
-      struct SassImport* imp = compiler.import_stack.back();
-      bool plainCss = imp->format == SASS_IMPORT_CSS;
-      slist = itplToSelector(r->interpolation(), plainCss);
-    }
-
-    // reset when leaving scope
-    SASS_ASSERT(slist, "must have selectors");
-
-    SelectorListObj evaled = slist->resolveParentSelectors(
-      selectorStack.back(), traces, !at_root_without_rule);
-    LOCAL_FLAG(at_root_without_rule, false);
-
-    selectorStack.emplace_back(evaled);
-    // The copy is needed for parent reference evaluation
-    // dart-sass stores it as `originalSelector` member
-    originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
-      extender.addSelector(evaled, mediaStack.back());
-
-    sass::vector<CssNodeObj> children;
-
-    {
-      LOCAL_PTR(CssNodes, parent33, &children);
-      visitChildren(r->elements());
-    }
-
-    originalStack.pop_back();
-    selectorStack.pop_back();
-
-    CssStyleRule* rr = SASS_MEMORY_NEW(CssStyleRule,
-      r->pstate(), parent65, evaled, std::move(children));
-
-    // rr->tabs(r->tabs());
-    parent33->push_back(rr);
-    return nullptr;
-
-  }
 
   SelectorListObj Eval::itplToSelector(Interpolation* itpl, bool plainCss, bool allowParent)
   {
@@ -2039,49 +2119,6 @@ namespace Sass {
 
   }
 
-  Value* Eval::visitContentRule(ContentRule* c)
-  {
-    if (!content88) return nullptr;
-    UserDefinedCallable* content = content88;
-    if (content == nullptr) return nullptr;
-    LOCAL_FLAG(inMixin, false);
-
-
-    // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), parent65, Strings::contentRule);
-    {
-      LOCAL_PTR(CssNodes, parent33, &trace->elements());
-
-      callStackFrame frame(*compiler.logger123,
-        BackTrace(c->pstate(), Strings::contentRule));
-
-      // EnvSnapshotView view(compiler.varRoot, content->snapshot());
-      EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
-
-      LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
-
-      // Appends to trace
-      ArgumentResults& evaluated(c->arguments()->evaluated);
-      _evaluateArguments(c->arguments(), evaluated);
-      ValueObj qwe = _runUserDefinedCallable(
-        evaluated,
-        content,
-        nullptr,
-        false,
-        &Eval::_runWithBlock,
-        trace,
-        c->pstate());
-
-    }
-
-    // _runUserDefinedCallable(node.arguments, content, node, () {
-    // return nullptr;
-    // Adds it twice?
-    parent33->push_back(trace);
-    return nullptr;
-
-  }
-
   Value* Eval::visitMixinRule(MixinRule* rule)
   {
 
@@ -2115,69 +2152,6 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Eval::visitIncludeRule(IncludeRule* node)
-  {
-    UserDefinedCallableObj mixin = node->midx().isValid() ?
-      compiler.varRoot.getMixin(node->midx()) :
-      compiler.varRoot.getLexicalMixin(node->name());
-
-    if (mixin == nullptr) {
-      throw Exception::SassRuntimeException2(
-        "Undefined mixin.",
-        *compiler.logger123);
-    }
-
-    UserDefinedCallableObj contentCallable;
-
-    if (node->content() != nullptr) {
-
-      contentCallable = SASS_MEMORY_NEW(
-        UserDefinedCallable, 
-        node->pstate(), node->name(),
-        node->content(), content88);
-
-      MixinRule* rule = Cast<MixinRule>(mixin->declaration());
-      node->content()->cidx(rule->cidx());
-
-      if (!rule || !rule->has_content()) {
-        SourceSpan span(node->content()->pstate());
-        callStackFrame frame(*compiler.logger123, span);
-        throw Exception::SassRuntimeException2(
-          "Mixin doesn't accept a content block.",
-          *compiler.logger123);
-      }
-    }
-
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), parent65, node->name().orig());
-
-    {
-
-      LOCAL_PTR(CssNodes, parent33, &trace->elements());
-      LOCAL_FLAG(inMixin, true);
-
-      callStackFrame frame(*compiler.logger123,
-        BackTrace(node->pstate(), mixin->name().orig(), true));
-
-      LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
-
-      ArgumentResults& evaluated(node->arguments()->evaluated);
-      _evaluateArguments(node->arguments(), evaluated);
-      ValueObj qwe = _runUserDefinedCallable(
-        evaluated,
-        mixin,
-        nullptr,
-        true,
-        &Eval::_runWithBlock,
-        trace,
-        node->pstate());
-
-    }
-
-    // debug_ast(trace);
-    parent33->push_back(trace);
-    return nullptr;
-
-  }
 
 
   Value* Eval::visitSilentComment(SilentComment* c)
