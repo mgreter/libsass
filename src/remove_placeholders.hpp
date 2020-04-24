@@ -22,11 +22,8 @@ namespace Sass {
 
     void operator()(CssRoot*);
     void operator()(CssStyleRule*);
-    // void operator()(CssMediaRule*);
-    // void operator()(CssSupportsRule*);
     void operator()(CssParentNode*);
     
-
     // ignore missed types
     template <typename U>
     void fallback(U x) {}
