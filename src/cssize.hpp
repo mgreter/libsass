@@ -56,11 +56,13 @@ namespace Sass {
 
     CssParentNode* parent();
     void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<StatementObj>& results);
+    void visitBlockStatements(const sass::vector<StatementObj>& children, sass::vector<CssNodeObj>& results);
+    void visitBlockStatements(const sass::vector<CssNodeObj>& children, sass::vector<CssNodeObj>& results);
 
-    Statement* bubble(CssAtRule*);
-    Statement* bubble(CssAtRootRule*);
-    Statement* bubble(CssMediaRule*);
-    Statement* bubble(CssSupportsRule*);
+    Bubble* bubble(CssAtRule*);
+    Bubble* bubble(CssAtRootRule*);
+    Bubble* bubble(CssMediaRule*);
+    Bubble* bubble(CssSupportsRule*);
 
     sass::vector<StatementObj> debubble(
       const sass::vector<StatementObj>&,

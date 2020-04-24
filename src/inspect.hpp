@@ -26,6 +26,8 @@ namespace Sass {
     virtual ~Inspect();
 
     void visitBlockStatements(sass::vector<StatementObj> children);
+    void visitBlockStatements(sass::vector<CssNodeObj> children);
+    
     void visitQuotedString(const sass::string& text, uint8_t quotes = 0);
     void visitUnquotedString(const sass::string& text);
 
@@ -39,6 +41,7 @@ namespace Sass {
 
     // statements
     virtual void operator()(Root*) override;
+    virtual void operator()(CssRoot*) override;
     virtual void operator()(CssKeyframeBlock*) override;
 
     // virtual void operator()(Keyframe_Rule*);

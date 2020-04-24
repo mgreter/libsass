@@ -68,6 +68,7 @@ namespace Sass {
 
   class MediaRule;
 
+  class CssRoot;
   class CssNode;
   class CssString;
   class CssStrings;
@@ -199,6 +200,7 @@ namespace Sass {
   IMPL_MEM_OBJ(ListExpression);
   IMPL_MEM_OBJ(ValueExpression);
 
+  IMPL_MEM_OBJ(CssRoot);
   IMPL_MEM_OBJ(CssNode);
   IMPL_MEM_OBJ(CssStrings);
   IMPL_MEM_OBJ(CssString);
@@ -309,6 +311,7 @@ namespace Sass {
   // some often used typedefs
   // ###########################################################################
 
+  typedef sass::vector<CssNodeObj> CssNodes;
   typedef sass::vector<StatementObj> Statements;
   typedef sass::vector<Statements*> BlockStack;
   typedef sass::vector<CssParentNodeObj> CssParentStack;

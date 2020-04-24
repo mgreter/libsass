@@ -374,30 +374,6 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  /////////////////
-  // Bubble.
-  /////////////////
-  class Bubble final : public Statement {
-    ADD_PROPERTY(Statement_Obj, node)
-  public:
-    Bubble(const SourceSpan& pstate, Statement_Obj n, Statement_Obj g = {}, size_t t = 0);
-    bool bubbles() const override final;
-    // ATTACH_CLONE_OPERATIONS(Bubble)
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
-  /////////////////
-  // Trace.
-  /////////////////
-  class Trace final : public ParentStatement {
-    ADD_CONSTREF(char, type)
-    ADD_CONSTREF(sass::string, name)
-  public:
-    Trace(const SourceSpan& pstate, const sass::string& name, char type = 'm');
-    Trace(const SourceSpan& pstate, const sass::string& name, sass::vector<StatementObj>&& b, char type = 'm');
-    ATTACH_CRTP_PERFORM_METHODS()
-  };
-
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 

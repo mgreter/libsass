@@ -51,6 +51,42 @@ namespace Sass {
     }
   }
 
+  void
+    Cssize::visitBlockStatements(
+      const sass::vector<StatementObj>& children,
+      sass::vector<CssNodeObj>& results)
+  {
+    for (size_t i = 0, L = children.size(); i < L; ++i) {
+      StatementObj ith = children.at(i)->perform(this);
+      if (Block* bb = Cast<Block>(ith)) {
+        // Not sure if move is safe here!?
+        std::move(bb->begin(), bb->end(),
+          std::back_inserter(results));
+      }
+      else if (ith) {
+        results.push_back(ith);
+      }
+    }
+  }
+
+  void
+    Cssize::visitBlockStatements(
+      const sass::vector<CssNodeObj>& children,
+      sass::vector<CssNodeObj>& results)
+  {
+    for (size_t i = 0, L = children.size(); i < L; ++i) {
+      StatementObj ith = children.at(i)->perform(this);
+      if (Block* bb = Cast<Block>(ith)) {
+        // Not sure if move is safe here!?
+        std::move(bb->begin(), bb->end(),
+          std::back_inserter(results));
+      }
+      else if (ith) {
+        results.push_back(ith);
+      }
+    }
+  }
+
   Root* Cssize::doit(RootObj b)
   {
     sass::vector<StatementObj> children;
@@ -226,7 +262,7 @@ namespace Sass {
     return bubble(m);
   }
 
-  Statement* Cssize::bubble(CssAtRule* m)
+  Bubble* Cssize::bubble(CssAtRule* m)
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
@@ -243,7 +279,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 
-  Statement* Cssize::bubble(CssAtRootRule* m)
+  Bubble* Cssize::bubble(CssAtRootRule* m)
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
@@ -260,7 +296,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 
-  Statement* Cssize::bubble(CssSupportsRule* m)
+  Bubble* Cssize::bubble(CssSupportsRule* m)
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
@@ -277,7 +313,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 
-  Statement* Cssize::bubble(CssMediaRule* m)
+  Bubble* Cssize::bubble(CssMediaRule* m)
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;

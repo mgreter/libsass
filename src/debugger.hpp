@@ -339,6 +339,13 @@ inline void debug_block(ParentStatement* node, std::string ind)
   }
 }
 
+inline void debug_block(CssParentNode* node, std::string ind)
+{
+  for (auto item : node->elements()) {
+    debug_ast(item, ind);
+  }
+}
+
 inline void debug_ast(AST_Node* node, std::string ind)
 {
   if (node == 0) return;

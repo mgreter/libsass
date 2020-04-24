@@ -21,6 +21,7 @@ namespace Sass {
     ~Remove_Placeholders() { }
 
     void operator()(Root*);
+    void operator()(CssRoot*);
     void operator()(CssStyleRule*);
     // void operator()(CssMediaRule*);
     // void operator()(CssSupportsRule*);

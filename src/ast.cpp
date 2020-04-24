@@ -226,28 +226,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Bubble::Bubble(const SourceSpan& pstate, Statement_Obj n, Statement_Obj g, size_t t)
-  : Statement(pstate, t), node_(n)
-  { }
-
-  bool Bubble::bubbles() const
-  {
-    return true;
-  }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, char type)
-    : ParentStatement(pstate), type_(type), name_(n)
-  {}
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, sass::vector<StatementObj>&& b, char type)
-    : ParentStatement(pstate, std::move(b)), type_(type), name_(n)
-  {}
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   ListExpression::ListExpression(const SourceSpan& pstate, Sass_Separator separator) :
     Expression(pstate),
     contents_(),

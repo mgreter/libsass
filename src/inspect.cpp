@@ -43,6 +43,15 @@ namespace Sass {
     append_scope_closer();
   }
 
+  void Inspect::visitBlockStatements(sass::vector<CssNodeObj> children)
+  {
+    append_scope_opener();
+    for (Statement* stmt : children) {
+      stmt->perform(this);
+    }
+    append_scope_closer();
+  }
+
   void Inspect::visitUnquotedString(const sass::string& text)
   {
     bool afterNewline = false;
@@ -278,6 +287,15 @@ namespace Sass {
 
   // statements
   void Inspect::operator()(Root* block)
+  {
+    for (size_t i = 0, L = block->length(); i < L; ++i) {
+      (*block)[i]->perform(this);
+    }
+
+  }
+
+  // statements
+  void Inspect::operator()(CssRoot* block)
   {
     for (size_t i = 0, L = block->length(); i < L; ++i) {
       (*block)[i]->perform(this);
