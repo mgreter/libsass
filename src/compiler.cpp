@@ -6,6 +6,7 @@
 #include "json.hpp"
 #include "context.hpp"
 #include "compiler.hpp"
+#include "debugger.hpp"
 #include "source_map.hpp"
 #include "sass_functions.hpp"
 
@@ -126,7 +127,9 @@ namespace Sass {
   {
     // Evaluate parsed ast-tree to new ast-tree
     if (parsed != nullptr) {
+      debug_ast(parsed);
       compiled = compile2(parsed, false);
+      debug_ast(compiled);
     }
     // Update the compiler state
     state = SASS_COMPILER_COMPILED;

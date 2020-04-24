@@ -32,7 +32,7 @@ namespace Sass {
   // [-] CssStylesheet
   // [x] CssSupportsRule
   class CssParentNode : public CssNode,
-    public VectorizedNopsi<Statement> {
+    public VectorizedNopsi<CssNode> {
     // Whether the rule has no children and should be emitted
     // without curly braces. This implies `children.isEmpty`,
     // but the reverse is not true—for a rule like `@foo {}`,
@@ -46,7 +46,7 @@ namespace Sass {
     CssParentNode(const SourceSpan& pstate);
 
     CssParentNode(const SourceSpan& pstate,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     // bool get isChildless;
     ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
@@ -60,7 +60,7 @@ namespace Sass {
     // needed for properly formatted CSS emission
   public:
     CssRoot(const SourceSpan& pstate,
-      sass::vector<StatementObj>&& vec = {});
+      sass::vector<CssNodeObj>&& vec = {});
     // ATTACH_CLONE_OPERATIONS(CssRoot);
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -118,7 +118,7 @@ namespace Sass {
     CssAtRule(const SourceSpan& pstate,
       CssString* name,
       CssString* value,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     bool bubbles() const override final;
     ATTACH_CLONE_OPERATIONS(CssAtRule)
@@ -204,7 +204,7 @@ namespace Sass {
     CssKeyframeBlock(
       const SourceSpan& pstate,
       CssStrings* selector,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     // Dispatch to visitor
     template <typename T>
@@ -236,7 +236,7 @@ namespace Sass {
     CssStyleRule(
       const SourceSpan& pstate,
       SelectorList* selector,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     bool is_invisible() const override;
     bool bubbles() const override final { return true; }
@@ -266,7 +266,7 @@ namespace Sass {
     CssSupportsRule(
       const SourceSpan& pstate,
       ExpressionObj condition,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     bool is_invisible() const override;
     bool bubbles() const override final;
@@ -359,7 +359,7 @@ namespace Sass {
     CssAtRootRule(
       const SourceSpan& pstate,
       AtRootQueryObj query,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     // Tell cssize that we can bubble up
     bool bubbles() const override final { return true; }
@@ -388,7 +388,7 @@ namespace Sass {
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,
       const sass::vector<CssMediaQueryObj>& queries,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     // Dispatch to visitor
     template <typename T>
@@ -428,7 +428,7 @@ namespace Sass {
   public:
     Keyframe_Rule(const SourceSpan& pstate);
     Keyframe_Rule(const SourceSpan& pstate,
-      sass::vector<StatementObj>&& children);
+      sass::vector<CssNodeObj>&& children);
 
     ATTACH_CLONE_OPERATIONS(Keyframe_Rule)
       ATTACH_CRTP_PERFORM_METHODS()
@@ -438,10 +438,10 @@ namespace Sass {
   /////////////////
   // Bubble.
   /////////////////
-  class Bubble final : public Statement {
-    ADD_PROPERTY(StatementObj, node)
+  class Bubble final : public CssNode {
+    ADD_PROPERTY(CssNodeObj, node)
   public:
-    Bubble(const SourceSpan& pstate, StatementObj n, StatementObj g = {});
+    Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g = {});
     bool bubbles() const override final;
     // ATTACH_CLONE_OPERATIONS(Bubble)
     ATTACH_CRTP_PERFORM_METHODS()
@@ -450,12 +450,12 @@ namespace Sass {
   /////////////////
   // Trace.
   /////////////////
-  class Trace final : public ParentStatement {
+  class Trace final : public CssParentNode {
     ADD_CONSTREF(char, type)
     ADD_CONSTREF(sass::string, name)
   public:
     Trace(const SourceSpan& pstate, const sass::string& name, char type = 'm');
-    Trace(const SourceSpan& pstate, const sass::string& name, sass::vector<StatementObj>&& b, char type = 'm');
+    Trace(const SourceSpan& pstate, const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
     ATTACH_CRTP_PERFORM_METHODS()
   };
 }

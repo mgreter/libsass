@@ -346,6 +346,13 @@ inline void debug_block(CssParentNode* node, std::string ind)
   }
 }
 
+inline void debug_block(Root* node, std::string ind)
+{
+  for (auto item : node->elements()) {
+    debug_ast(item, ind);
+  }
+}
+
 inline void debug_ast(AST_Node* node, std::string ind)
 {
   if (node == 0) return;
@@ -357,6 +364,20 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " " << bubble->tabs();
     std::cerr << std::endl;
     debug_ast(bubble->node(), ind + " ");
+  }
+  if (Cast<Root>(node)) {
+    Root* root = Cast<Root>(node);
+    std::cerr << ind << "Root " << root;
+    std::cerr << " (" << pstate_source_position(root) << ")";
+    std::cerr << std::endl;
+    debug_block(root, ind + " ");
+  }
+  else if (Cast<CssRoot>(node)) {
+    CssRoot* root = Cast<CssRoot>(node);
+    std::cerr << ind << "CssRoot " << root;
+    std::cerr << " (" << pstate_source_position(root) << ")";
+    std::cerr << std::endl;
+    debug_block(root, ind + " ");
   }
   else if (Cast<Trace>(node)) {
     Trace* trace = Cast<Trace>(node);

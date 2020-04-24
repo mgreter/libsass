@@ -18,8 +18,8 @@ namespace Sass {
   // Blocks of statements.
   ////////////////////////
 
-  Block::Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec)
-    : Statement(pstate), VectorizedNopsi<Statement>(std::move(vec)) {}
+  Block::Block(const SourceSpan& pstate, sass::vector<CssNodeObj>&& vec)
+    : CssNode(pstate), VectorizedNopsi<CssNode>(std::move(vec)) {}
 
   Cssize::Cssize(Logger& logger)
   : callStack(logger)
@@ -89,7 +89,7 @@ namespace Sass {
 
   CssRoot* Cssize::doit(CssRootObj b)
   {
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(b->length());
     visitBlockStatements(b->elements(), children);
     return SASS_MEMORY_NEW(CssRoot, b->pstate(),
@@ -99,7 +99,7 @@ namespace Sass {
 
   Statement* Cssize::operator()(ParentStatement* b)
   {
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(b->length());
     visitBlockStatements(b->elements(), children);
     return SASS_MEMORY_NEW(Block, b->pstate(),
@@ -111,7 +111,7 @@ namespace Sass {
     SourceSpan span(trace->pstate());
     callStackFrame frame(callStack,
       BackTrace(span));
-    return trace->ParentStatement::perform(this);
+    return trace->CssParentNode::perform(this);
   }
 
   Statement* Cssize::operator()(CssAtRule* r)
@@ -125,7 +125,7 @@ namespace Sass {
     }
 
     cssStack.emplace_back(r);
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(r->length());
     visitBlockStatements(r->elements(), children);
     cssStack.pop_back();
@@ -146,7 +146,7 @@ namespace Sass {
   {
     if (r == nullptr) return nullptr;
     if (r->empty()) return nullptr;
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(r->length());
     visitBlockStatements(r->elements(), children);
     return SASS_MEMORY_NEW(Block, r->pstate(),
@@ -156,14 +156,14 @@ namespace Sass {
   Statement* Cssize::operator()(CssStyleRule* r)
   {
     cssStack.emplace_back(r);
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(r->length());
     visitBlockStatements(r->elements(), children);
     cssStack.pop_back();
 
     // Split statements and bubblers
-    sass::vector<StatementObj> statemts;
-    sass::vector<StatementObj> bubblers;
+    sass::vector<CssNodeObj> statemts;
+    sass::vector<CssNodeObj> bubblers;
     for (size_t i = 0, L = children.size(); i < L; i++)
     {
       Statement* s = children[i];
@@ -201,7 +201,7 @@ namespace Sass {
     }
 
     cssStack.emplace_back(m);
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(m->length());
     visitBlockStatements(m->elements(), children);
     cssStack.pop_back();
@@ -221,7 +221,7 @@ namespace Sass {
     }
 
     cssStack.emplace_back(m);
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(m->length());
     visitBlockStatements(m->elements(), children);
     cssStack.pop_back();
@@ -243,10 +243,10 @@ namespace Sass {
 
     if (!excludes)
     {
-      sass::vector<StatementObj> children;
+      sass::vector<CssNodeObj> children;
       children.reserve(m->length());
       visitBlockStatements(m->elements(), children);
-      for (StatementObj& stm : children) {
+      for (CssNodeObj& stm : children) {
         if (!stm->bubbles()) continue;
         stm->tabs(stm->tabs() + m->tabs());
       }
@@ -266,7 +266,7 @@ namespace Sass {
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(m->length());
     if (auto rule = Cast<CssStyleRule>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
@@ -283,7 +283,7 @@ namespace Sass {
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(m->length());
     if (auto rule = Cast<CssParentNode>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
@@ -300,7 +300,7 @@ namespace Sass {
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(m->length());
     if (auto rule = Cast<CssStyleRule>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
@@ -317,7 +317,7 @@ namespace Sass {
   {
     if (m == nullptr) return nullptr;
     if (m->empty()) return nullptr;
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     children.reserve(m->length());
     if (auto rule = Cast<CssStyleRule>(parent())) {
       rule = SASS_MEMORY_COPY(rule);
@@ -330,11 +330,11 @@ namespace Sass {
     return SASS_MEMORY_NEW(Bubble, mm->pstate(), mm);
   }
 
-  void Cssize::slice_by_bubble(const sass::vector<StatementObj>& children,
-    sass::vector<std::pair<bool, sass::vector<StatementObj>>>& results)
+  void Cssize::slice_by_bubble(const sass::vector<CssNodeObj>& children,
+    sass::vector<std::pair<bool, sass::vector<CssNodeObj>>>& results)
   {
     results.reserve(results.size() + children.size());
-    for (const StatementObj& value : children) {
+    for (const CssNodeObj& value : children) {
       bool isBubble = Cast<Bubble>(value) != nullptr;
       if (!results.empty() && results.back().first == isBubble)
       {
@@ -343,23 +343,23 @@ namespace Sass {
       else
       {
         results.emplace_back(std::make_pair(isBubble,
-          sass::vector<StatementObj>{ value }));
+          sass::vector<CssNodeObj>{ value }));
       }
     }
   }
 
 
 
-  sass::vector<StatementObj> Cssize::debubble(const sass::vector<StatementObj>& children, Statement* parent)
+  sass::vector<CssNodeObj> Cssize::debubble(const sass::vector<CssNodeObj>& children, CssNode* parent)
   {
-    sass::vector<StatementObj>* previousBlock = nullptr;
-    sass::vector<std::pair<bool, sass::vector<StatementObj>>> baz;
+    sass::vector<CssNodeObj>* previousBlock = nullptr;
+    sass::vector<std::pair<bool, sass::vector<CssNodeObj>>> baz;
     slice_by_bubble(children, baz); // ToDo: make obsolete
-    sass::vector<StatementObj> items;
+    sass::vector<CssNodeObj> items;
 
     for (size_t i = 0, L = baz.size(); i < L; ++i) {
       bool is_bubble = baz[i].first;
-      sass::vector<StatementObj>& slice = baz[i].second;
+      sass::vector<CssNodeObj>& slice = baz[i].second;
 
       if (!is_bubble) {
 
@@ -384,7 +384,7 @@ namespace Sass {
         for (size_t j = 0, K = slice.size(); j < K; ++j)
         {
           Bubble* bubble = static_cast<Bubble*>(slice[j].ptr());
-          StatementObj bubbled = bubble->node()->perform(this);
+          CssNodeObj bubbled = bubble->node()->perform(this);
           if (const Block* bb = Cast<Block>(bubbled)) {
             std::move(bb->begin(), bb->end(),
               std::back_inserter(items));

@@ -10,10 +10,10 @@ namespace Sass {
 
   struct BackTrace;
 
-  class Block : public Statement, public VectorizedNopsi<Statement> {
+  class Block : public CssNode, public VectorizedNopsi<CssNode> {
     // needed for properly formatted CSS emission
   public:
-    Block(const SourceSpan& pstate, sass::vector<StatementObj>&& vec);
+    Block(const SourceSpan& pstate, sass::vector<CssNodeObj>&& vec);
 
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -64,11 +64,11 @@ namespace Sass {
     Bubble* bubble(CssMediaRule*);
     Bubble* bubble(CssSupportsRule*);
 
-    sass::vector<StatementObj> debubble(
-      const sass::vector<StatementObj>&,
-      Statement* parent = nullptr);
+    sass::vector<CssNodeObj> debubble(
+      const sass::vector<CssNodeObj>&,
+      CssNode* parent = nullptr);
 
-    void slice_by_bubble(const sass::vector<StatementObj>& children, sass::vector<std::pair<bool, sass::vector<StatementObj>>>&);
+    void slice_by_bubble(const sass::vector<CssNodeObj>& children, sass::vector<std::pair<bool, sass::vector<CssNodeObj>>>&);
 
     // generic fall-back
     template <typename U>

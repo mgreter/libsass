@@ -32,7 +32,7 @@ namespace Sass {
 
   CssParentNode::CssParentNode(
     const SourceSpan& pstate,
-    sass::vector<StatementObj>&& children) :
+    sass::vector<CssNodeObj>&& children) :
     CssNode(pstate),
     VectorizedNopsi(std::move(children)),
     isChildless_(false)
@@ -49,7 +49,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
 
   CssRoot::CssRoot(const SourceSpan& pstate,
-    sass::vector<StatementObj>&& vec)
+    sass::vector<CssNodeObj>&& vec)
     : CssParentNode(pstate, std::move(vec))
   {}
 
@@ -115,7 +115,7 @@ namespace Sass {
     const SourceSpan& pstate,
     CssString* name,
     CssString* value,
-    sass::vector<StatementObj>&& children)
+    sass::vector<CssNodeObj>&& children)
     :
     CssParentNode(pstate, std::move(children)),
     name_(name),
@@ -217,7 +217,7 @@ namespace Sass {
   CssKeyframeBlock::CssKeyframeBlock(
     const SourceSpan& pstate,
     CssStrings* selector,
-    sass::vector<StatementObj>&& children) :
+    sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, std::move(children)),
     selector_(selector)
   {}
@@ -250,7 +250,7 @@ namespace Sass {
   CssStyleRule::CssStyleRule(
     const SourceSpan& pstate,
     SelectorList* selector,
-    sass::vector<StatementObj>&& children) :
+    sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, std::move(children)),
     selector_(selector)
   {}
@@ -286,7 +286,7 @@ namespace Sass {
   CssSupportsRule::CssSupportsRule(
     const SourceSpan& pstate,
     ExpressionObj condition,
-    sass::vector<StatementObj>&& children) :
+    sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, std::move(children)),
     condition_(condition)
   {}
@@ -325,7 +325,7 @@ namespace Sass {
   CssMediaRule::CssMediaRule(
     const SourceSpan& pstate,
     const sass::vector<CssMediaQueryObj>& queries,
-    sass::vector<StatementObj>&& children) :
+    sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, std::move(children)),
     queries_(queries)
   {}
@@ -528,7 +528,7 @@ namespace Sass {
   CssAtRootRule::CssAtRootRule(
     const SourceSpan& pstate,
     AtRootQueryObj query,
-    sass::vector<StatementObj>&& children) :
+    sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, std::move(children)),
     query_(query)
   {}
@@ -549,7 +549,7 @@ namespace Sass {
   {}
   Keyframe_Rule::Keyframe_Rule(
     const SourceSpan& pstate,
-    sass::vector<StatementObj>&& children)
+    sass::vector<CssNodeObj>&& children)
     : CssParentNode(pstate, std::move(children)), name2_()
   {}
   Keyframe_Rule::Keyframe_Rule(const Keyframe_Rule* ptr)
@@ -560,8 +560,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Bubble::Bubble(const SourceSpan& pstate, StatementObj n, StatementObj g)
-  : Statement(pstate), node_(n)
+  Bubble::Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g)
+  : CssNode(pstate), node_(n)
   { }
 
   bool Bubble::bubbles() const
@@ -573,10 +573,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Trace::Trace(const SourceSpan& pstate, const sass::string& n, char type)
-    : ParentStatement(pstate), type_(type), name_(n)
+    : CssParentNode(pstate), type_(type), name_(n)
   {}
-  Trace::Trace(const SourceSpan& pstate, const sass::string& n, sass::vector<StatementObj>&& b, char type)
-    : ParentStatement(pstate, std::move(b)), type_(type), name_(n)
+  Trace::Trace(const SourceSpan& pstate, const sass::string& n, sass::vector<CssNodeObj>&& b, char type)
+    : CssParentNode(pstate, std::move(b)), type_(type), name_(n)
   {}
 
   /////////////////////////////////////////////////////////////////////////

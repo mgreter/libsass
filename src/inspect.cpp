@@ -303,10 +303,10 @@ namespace Sass {
 
   }
 
-  //void Inspect::operator()(CssAtRootRule*)
-  //{
-  //
-  //}
+  void Inspect::operator()(CssAtRootRule*)
+  {
+  
+  }
 
   void Inspect::operator()(CssKeyframeBlock* node)
   {

@@ -1413,9 +1413,9 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, node->idxs());
 
 
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     {
-      LOCAL_PTR(Statements, parent33, &children);
+      LOCAL_PTR(CssNodes, parent33, &children);
       visitChildren(node->elements());
     }
 
@@ -1459,7 +1459,12 @@ namespace Sass {
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), sass::vector<CssMediaQueryObj>());
-    css->CssParentNode::concat(node->elements());
+
+    // css->CssParentNode::concat(node->elements());
+
+    css->elements().insert(css->end(),
+      node->begin(), node->end());
+
     sass::vector<CssMediaQueryObj> parsed = parser.parse();
     if (mediaStack.size() && mediaStack.back()) {
       auto parent = mediaStack.back()->queries();
@@ -1470,10 +1475,10 @@ namespace Sass {
     }
     mediaStack.emplace_back(css);
 
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
 
     {
-      LOCAL_PTR(Statements, parent33, &children);
+      LOCAL_PTR(CssNodes, parent33, &children);
       visitChildren(node->elements());
     }
     css->elementsM(std::move(children));
@@ -1512,10 +1517,10 @@ namespace Sass {
     LOCAL_FLAG(at_root_without_rule,
       query && query->excludesStyleRules());
 
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
 
     {
-      LOCAL_PTR(Statements, parent33, &children);
+      LOCAL_PTR(CssNodes, parent33, &children);
       visitChildren(node->elements());
     }
 
@@ -1554,9 +1559,9 @@ namespace Sass {
     LOCAL_FLAG(_inUnknownAtRule, !isKeyframe);
     LOCAL_FLAG(_inKeyframes, isKeyframe);
 
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
     {
-      LOCAL_PTR(Statements, parent33, &children);
+      LOCAL_PTR(CssNodes, parent33, &children);
       visitChildren(node->elements());
     }
 
@@ -1831,9 +1836,9 @@ namespace Sass {
 
     if (_inKeyframes) {
 
-      sass::vector<StatementObj> children;
+      sass::vector<CssNodeObj> children;
       {
-        LOCAL_PTR(Statements, parent33, &children);
+        LOCAL_PTR(CssNodes, parent33, &children);
         visitChildren(r->elements());
       }
 
@@ -1879,10 +1884,10 @@ namespace Sass {
     originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
       extender.addSelector(evaled, mediaStack.back());
 
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
 
     {
-      LOCAL_PTR(Statements, parent33, &children);
+      LOCAL_PTR(CssNodes, parent33, &children);
       visitChildren(r->elements());
     }
 
@@ -2043,7 +2048,7 @@ namespace Sass {
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), Strings::contentRule);
     {
-      LOCAL_PTR(Statements, parent33, &trace->elements());
+      LOCAL_PTR(CssNodes, parent33, &trace->elements());
 
       callStackFrame frame(*compiler.logger123,
         BackTrace(c->pstate(), Strings::contentRule));
@@ -2145,7 +2150,7 @@ namespace Sass {
 
     {
 
-      LOCAL_PTR(Statements, parent33, &trace->elements());
+      LOCAL_PTR(CssNodes, parent33, &trace->elements());
       LOCAL_FLAG(inMixin, true);
 
       callStackFrame frame(*compiler.logger123,
@@ -2175,7 +2180,7 @@ namespace Sass {
 
   Value* Eval::visitSilentComment(SilentComment* c)
   {
-    parent33->push_back(c);
+    // parent33->push_back(c);
     return nullptr;
   }
 
@@ -2295,10 +2300,10 @@ namespace Sass {
   CssRoot* Eval::visitRoot32(Root* b)
   {
     // copy the block object (add items later)
-    sass::vector<StatementObj> children;
+    sass::vector<CssNodeObj> children;
 
     {
-      LOCAL_PTR(Statements, parent33, &children);
+      LOCAL_PTR(CssNodes, parent33, &children);
 
       for (Statement* item : b->elements()) {
         ValueObj child = item->perform(this);
