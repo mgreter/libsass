@@ -70,10 +70,12 @@ namespace Sass {
     }
 
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), parent65, node->name().orig());
-    parent33->push_back(trace);
+    parent65->append(trace);
 
-      LOCAL_PTR(CssNodes, parent33, &trace->elements());
-      LOCAL_FLAG(inMixin, true);
+    LOCAL_PTR(CssNodes, parent33, &trace->elements());
+    LOCAL_PTR(CssParentNode, parent65, trace);
+
+    LOCAL_FLAG(inMixin, true);
 
       callStackFrame frame(*compiler.logger123,
         BackTrace(node->pstate(), mixin->name().orig(), true));
@@ -107,9 +109,10 @@ namespace Sass {
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
     Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), parent65, Strings::contentRule);
-    parent33->push_back(trace);
+    parent65->append(trace);
 
       LOCAL_PTR(CssNodes, parent33, &trace->elements());
+      LOCAL_PTR(CssParentNode, parent65, trace);
 
       callStackFrame frame(*compiler.logger123,
         BackTrace(c->pstate(), Strings::contentRule));
@@ -150,10 +153,11 @@ namespace Sass {
     if (_inKeyframes) {
 
       Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65);
-      parent33->push_back(css);
+      parent65->append(css);
 
       {
         LOCAL_PTR(CssNodes, parent33, &css->elements());
+        LOCAL_PTR(CssParentNode, parent65, css);
         visitChildren(r->elements());
       }
 
@@ -201,10 +205,11 @@ namespace Sass {
 
     CssStyleRule* css = SASS_MEMORY_NEW(CssStyleRule,
       r->pstate(), parent65, evaled);
-    parent33->push_back(css);
+    parent65->append(css);
     // css->tabs(r->tabs());
 
     LOCAL_PTR(CssNodes, parent33, &css->elements());
+    LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(r->elements());
 
     originalStack.pop_back();
@@ -219,6 +224,7 @@ namespace Sass {
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     LOCAL_PTR(CssNodes, parent33, &css->elements());
+    LOCAL_PTR(CssParentNode, parent65, css);
     for (Statement* item : root->elements()) {
       ValueObj child = item->perform(this);
     }
@@ -231,8 +237,9 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, node->idxs());
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(), parent65, condition);
-    parent33->push_back(css);
+    parent65->append(css);
     LOCAL_PTR(CssNodes, parent33, &css->elements());
+    LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
     return nullptr;
   }
@@ -263,8 +270,9 @@ namespace Sass {
 
     CssAtRootRuleObj css = SASS_MEMORY_NEW(CssAtRootRule,
       node->pstate(), parent65, query);
-    parent33->push_back(css);
+    parent65->append(css);
     LOCAL_PTR(CssNodes, parent33, &css->elements());
+    LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
     return nullptr;
   }
@@ -281,8 +289,9 @@ namespace Sass {
 
     CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
       node->pstate(), parent65, name, value);
-    parent33->push_back(css);
+    parent65->append(css);
     LOCAL_PTR(CssNodes, parent33, &css->elements());
+    LOCAL_PTR(CssParentNode, parent65, css);
     css->isChildless(node->is_childless());
     visitChildren(node->elements());
     return nullptr;
@@ -315,8 +324,9 @@ namespace Sass {
     }
     mediaStack.emplace_back(css);
 
-    parent33->push_back(css);
+    parent65->append(css);
     LOCAL_PTR(CssNodes, parent33, &css->elements());
+    LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
 
     mediaStack.pop_back();
@@ -1762,7 +1772,7 @@ namespace Sass {
     // will throw an error that we want the user to see.
     if (cssValue != nullptr && (!cssValue->value()->isBlank()
       || cssValue->value()->lengthAsList() == 0)) {
-      parent33->push_back(SASS_MEMORY_NEW(CssDeclaration,
+      parent65->append(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
@@ -1850,7 +1860,7 @@ namespace Sass {
     if (_inFunction) return nullptr;
     sass::string text(performInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    parent33->push_back(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
+    parent65->append(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
     return nullptr;
   }
 
@@ -2156,7 +2166,7 @@ namespace Sass {
 
   Value* Eval::visitSilentComment(SilentComment* c)
   {
-    // parent33->push_back(c);
+    // parent65->append(c);
     return nullptr;
   }
 
@@ -2241,7 +2251,7 @@ namespace Sass {
       import->media(evalMediaQueries(rule->media()));
     }
     // append new css import to result
-    parent33->push_back(import);
+    parent65->append(import);
     // import has been consumed
     return nullptr;
   }
