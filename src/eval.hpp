@@ -265,7 +265,7 @@ namespace Sass {
 
     bool isInMixin();
 
-    Root* visitRoot32(Root* b);
+    CssRoot* visitRoot32(Root* b);
 
     // generic fallback
     template <typename U>

@@ -2292,7 +2292,7 @@ namespace Sass {
     // return false;
   }
 
-  Root* Eval::visitRoot32(Root* b)
+  CssRoot* Eval::visitRoot32(Root* b)
   {
     // copy the block object (add items later)
     sass::vector<StatementObj> children;
@@ -2305,7 +2305,7 @@ namespace Sass {
       }
     }
 
-    return SASS_MEMORY_NEW(Root,
+    return SASS_MEMORY_NEW(CssRoot,
       b->pstate(), std::move(children));
 
   }

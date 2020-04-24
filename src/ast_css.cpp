@@ -217,7 +217,7 @@ namespace Sass {
   CssKeyframeBlock::CssKeyframeBlock(
     const SourceSpan& pstate,
     CssStrings* selector,
-    sass::vector<Statement_Obj>&& children) :
+    sass::vector<StatementObj>&& children) :
     CssParentNode(pstate, std::move(children)),
     selector_(selector)
   {}
@@ -560,8 +560,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Bubble::Bubble(const SourceSpan& pstate, Statement_Obj n, Statement_Obj g, size_t t)
-  : Statement(pstate, t), node_(n)
+  Bubble::Bubble(const SourceSpan& pstate, StatementObj n, StatementObj g)
+  : Statement(pstate), node_(n)
   { }
 
   bool Bubble::bubbles() const

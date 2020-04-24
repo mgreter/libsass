@@ -29,7 +29,7 @@ namespace Sass {
     Cssize(Logger&);
     ~Cssize() { }
 
-    Root* doit(RootObj);
+    CssRoot* doit(CssRootObj);
 
     Statement* operator()(ParentStatement*);
     Statement* operator()(CssStyleRule*);

@@ -87,12 +87,12 @@ namespace Sass {
     }
   }
 
-  Root* Cssize::doit(RootObj b)
+  CssRoot* Cssize::doit(CssRootObj b)
   {
     sass::vector<StatementObj> children;
     children.reserve(b->length());
     visitBlockStatements(b->elements(), children);
-    return SASS_MEMORY_NEW(Root, b->pstate(),
+    return SASS_MEMORY_NEW(CssRoot, b->pstate(),
       std::move(children));
   }
 

@@ -36,7 +36,7 @@ namespace Sass {
     // Parsed ast-tree
     RootObj parsed;
     // Evaluated ast-tree
-    RootObj compiled;
+    CssRootObj compiled;
 
     // The rendered css content.
     sass::string content;
@@ -85,7 +85,7 @@ namespace Sass {
     sass::string getOutputPath() const;
 
     // ToDO, maybe belongs to compiler?
-    RootObj compile2(RootObj root, bool plainCss);
+    CssRootObj compile2(RootObj root, bool plainCss);
 
     char* renderSrcMapJson(struct SassSrcMapOptions options,
       const SourceMap& source_map);

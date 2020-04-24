@@ -82,7 +82,7 @@ namespace Sass {
   }
 
   // parse root block from includes (Move to compiler)
-  RootObj Compiler::compile2(RootObj root, bool plainCss)
+  CssRootObj Compiler::compile2(RootObj root, bool plainCss)
   {
     if (root == nullptr) return {};
 
@@ -101,7 +101,7 @@ namespace Sass {
       varRoot.functions[i] = fnList[i];
     }
 
-    RootObj compiled = eval.visitRoot32(root); // 50%
+    CssRootObj compiled = eval.visitRoot32(root); // 50%
 
     Extension unsatisfied;
     // check that all extends were used

@@ -439,9 +439,9 @@ namespace Sass {
   // Bubble.
   /////////////////
   class Bubble final : public Statement {
-    ADD_PROPERTY(Statement_Obj, node)
+    ADD_PROPERTY(StatementObj, node)
   public:
-    Bubble(const SourceSpan& pstate, Statement_Obj n, Statement_Obj g = {}, size_t t = 0);
+    Bubble(const SourceSpan& pstate, StatementObj n, StatementObj g = {});
     bool bubbles() const override final;
     // ATTACH_CLONE_OPERATIONS(Bubble)
     ATTACH_CRTP_PERFORM_METHODS()
