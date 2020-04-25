@@ -511,7 +511,7 @@ namespace Sass {
           }
         }
         for (auto& sel : result) {
-          extended.emplace_back(sel);
+          extended.emplace_back(std::move(sel));
         }
       }
     }

@@ -75,7 +75,7 @@ inline std::string debug_vec(sass::vector<ComplexSelectorObj> vec) {
 }
 
 template <class T>
-inline std::string debug_vec(sass::vector<T> vec) {
+inline std::string debug_vec(const sass::vector<T>& vec) {
   std::stringstream out;
   out << "[";
   for (size_t i = 0; i < vec.size(); i += 1) {

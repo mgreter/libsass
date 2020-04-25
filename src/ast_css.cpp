@@ -42,6 +42,7 @@ namespace Sass {
     parent_(parent)
   {}
 
+  
   CssParentNode::CssParentNode(
     const CssParentNode* ptr) :
     CssNode(ptr),
@@ -49,6 +50,28 @@ namespace Sass {
     isChildless_(ptr->isChildless_),
     parent_(ptr->parent_)
   {}
+
+  bool CssParentNode::hasVisibleSibling(CssParentNode* node)
+  {
+    if (node->parent_ == nullptr) return false;
+
+    CssParentNode* siblings = node->parent_;
+
+    auto it = std::find(siblings->begin(), siblings->end(), node);
+
+    bool hasFollowingSibling = false;
+    while (it != siblings->end()) {
+      // Special context for invisibility!
+      // dart calls this out to the parent
+      if (!it->ptr()->is_invisible()) {
+        return true;
+      }
+      it++;
+    }
+
+    return false;
+  }
+
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -128,6 +151,11 @@ namespace Sass {
     name_(name),
     value_(value)
   {}
+
+  bool CssAtRule::is_invisible() const
+  {
+    return empty() && !isChildless_;
+  }
 
   CssAtRule::CssAtRule(
     const CssAtRule* ptr) :

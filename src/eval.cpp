@@ -245,7 +245,13 @@ namespace Sass {
 
     // _addChild(node, through: through);
     // This also sets the parent
+    // std::cerr << "++ [[" << pu->length() << "]] [[" << css->selector()->to_string() << "]]\n";
+    // hasVisibleSibling;
+
+    // _addChild(pu, css);
     pu->append(css);
+    css->parent_ = pu;
+
 
     {
       LOCAL_PTR(CssParentNode, parent65, css);
@@ -276,6 +282,20 @@ namespace Sass {
 
   }
 
+  void Eval::_addChild(CssParentNode* parent, CssParentNode* node)
+  {
+    if (node->hasVisibleSibling(parent)) {
+      auto grandparent = parent->parent_;
+      parent = parent->copy();
+      parent->clear();
+      grandparent->append(parent);
+    }
+
+    parent->append(node);
+    node->parent_ = parent;
+
+  }
+
 
   CssRoot* Eval::visitRoot32(Root* root)
   {
@@ -286,6 +306,21 @@ namespace Sass {
     }
     return css.detach();
   }
+
+  /*
+
+  /// Whether this node has a visible sibling after it.
+  bool get hasFollowingSibling {
+    if (_parent == null) return false;
+    var siblings = _parent.children;
+    for (var i = _indexInParent + 1; i < siblings.length; i++) {
+      var sibling = siblings[i];
+      if (!_isInvisible(sibling)) return true;
+    }
+    return false;
+  }
+
+  */
 
   Value* Eval::visitSupportsRule(SupportsRule* node)
   {
@@ -303,10 +338,24 @@ namespace Sass {
       node->pstate(), pu, condition);
 
     pu->append(css);
-    {
-      LOCAL_PTR(CssParentNode, parent65, css);
+
+    LOCAL_PTR(CssParentNode, parent65, css);
+
+    if (!isInStyleRule()) {
       visitChildren(node->elements());
     }
+    else {
+      auto cp = _styleRule->copy();
+      cp->clear();
+
+      parent65->append(cp);
+      cp->parent_ = parent65;
+
+      LOCAL_PTR(CssParentNode, parent65, cp);
+      visitChildren(node->elements());
+
+    }
+
 
     return nullptr;
   }
@@ -327,7 +376,7 @@ namespace Sass {
     if (nodes.empty()) return _root;
 
     auto parent = parent65;
-    int innermostContiguous;
+    int innermostContiguous = -1;
     int i = 0;
     for (; i < nodes.size(); i++) {
       while (parent != nodes[i]) {
@@ -377,60 +426,23 @@ namespace Sass {
       node->pstate(), parent65, query);
 
 
-
     auto parent = parent65;
     sass::vector<CssParentNodeObj> included;
+
     while (parent && parent->parent_) { //  is!CssStylesheet
-
       // if (!query.excludes(parent)) included.add(parent);
-      if (!query->excludes2312(parent)) included.push_back(parent);
-
+      if (!query->excludes2312(parent)) {
+        included.push_back(parent);
+      }
       parent = parent->parent_;
     }
+
     auto root = _trimIncluded(included);
 
-    if (root == parent65) {
-      LOCAL_PTR(CssParentNode, parent65, parent);
-      visitChildren(node->elements());
-      return nullptr;
-    }
 
-    // LOCAL_PTR(CssParentNode, parent65, parent);
-    // visitChildren(node->elements());
-    
-    CssParentNode* innerCopy = nullptr;
-    if (!included.empty()) {
-      innerCopy = included.front()->copy();
-      innerCopy->clear();
-    }
-    CssParentNode* outerCopy = innerCopy;
-
-    for (size_t i = 1; i < included.size(); i++) {
-      auto node = included[i];
-      auto copy = node->copy(); copy->clear();
-      copy->append(outerCopy);
-      outerCopy->parent_ = copy;
-      outerCopy = copy;
-    }
-    if (query->excludesStyleRules()) {
-      // std::cerr << "flag ok\n";
-    }
-
-    auto newParent = innerCopy ? innerCopy : root;
-
-    auto oldParent = parent65;
-    parent65 = newParent;
-
-    if (outerCopy != nullptr) {
-      root->append(outerCopy);
-      outerCopy->parent_ = root;
-    }
-
+    // parent->append(css);
+    LOCAL_PTR(CssParentNode, parent65, root);
     visitChildren(node->elements());
-
-    parent65 = oldParent;
-
-      // parent->append(css);
     return nullptr;
   }
 
@@ -534,14 +546,20 @@ namespace Sass {
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), parent65, mergedQueries.empty() ? parsed : mergedQueries);
 
+
+    // std::cerr << "IN ==== [[" << debug_vec(css->queries().elements()) << "]]\n";
+
     auto chroot = parent65;
 
       while ((Cast<CssStyleRule>(chroot) || Cast<Trace>(chroot)) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
       chroot = chroot->parent_;
     }
 
-    chroot->append(css);
+
     css->parent_ = chroot;
+    chroot->append(css);
+    // _addChild(chroot, css);
+
 
     auto oldParent = parent65;
     parent65 = css;
@@ -560,17 +578,20 @@ namespace Sass {
 
       CssStyleRule* qwe = _styleRule->copy();
       qwe->clear();
-      css->append(qwe);
       qwe->parent_ = css;
+      // std::cerr << "++ [[" << css->length() << "]] [[" << qwe->selector()->to_string() << "]]\n";
+      css->append(qwe);
       parent65 = qwe;
 
       for (auto& child : node->elements()) {
         ValueObj rv = child->perform(this);
       }
+
     }
 
     _mediaQueries = oldMediaQueries;
     parent65 = oldParent;
+
     mediaStack.pop_back();
 
 /*

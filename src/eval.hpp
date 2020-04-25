@@ -21,6 +21,8 @@ namespace Sass {
 
   private:
 
+    void _addChild(CssParentNode* parent, CssParentNode* node);
+
    public:
 
      bool inMixin;

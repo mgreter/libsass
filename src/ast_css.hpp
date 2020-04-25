@@ -67,6 +67,8 @@ namespace Sass {
       return true;
     }
 
+    bool hasVisibleSibling(CssParentNode* node);
+
     // bool get isChildless;
     ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
     ATTACH_CRTP_PERFORM_METHODS()
@@ -140,6 +142,8 @@ namespace Sass {
       CssString* name,
       CssString* value,
       sass::vector<CssNodeObj>&& children);
+
+    bool is_invisible() const override final;
 
     bool bubbles() const override final;
     ATTACH_CLONE_OPERATIONS(CssAtRule)
