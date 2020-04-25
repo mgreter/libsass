@@ -337,8 +337,19 @@ namespace Sass {
 
     CssAtRootRuleObj css = SASS_MEMORY_NEW(CssAtRootRule,
       node->pstate(), parent65, query);
-    parent65->append(css);
-    LOCAL_PTR(CssParentNode, parent65, css);
+
+
+    auto parent = parent65;
+    sass::vector<CssParentNode> included;
+    while (parent && parent->parent_) { //  is!CssStylesheet
+      // if (!query.excludes(parent)) included.add(parent);
+      parent = parent->parent_;
+    }
+
+
+
+    // parent->append(css);
+    LOCAL_PTR(CssParentNode, parent65, parent);
     visitChildren(node->elements());
     return nullptr;
   }
