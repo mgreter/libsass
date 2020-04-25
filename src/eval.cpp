@@ -234,6 +234,7 @@ namespace Sass {
 
     // _withParent
     auto pu = parent65;
+   // debug_ast(parent65, "ADD TO");
     while (Cast<CssStyleRule>(pu)) {
        // std::cout << "Go through CssStyleRule\n";
        pu = pu->parent_;
@@ -353,10 +354,6 @@ namespace Sass {
     LOCAL_FLAG(_inKeyframes, isKeyframe);
 
 
-    if (!(!at_root_without_rule && _styleRule != nullptr) || _inKeyframes) {
-      /*
-
-      // _withParent
       auto pu = parent65;
       // debug_ast(parent65);
       while (Cast<CssStyleRule>(pu)) {
@@ -369,73 +366,37 @@ namespace Sass {
         node->pstate(), pu, name, value);
       css->isChildless(node->is_childless());
 
-      pu->append(css);
-
-      {
-        // Set parent again to css, to append children
-        LOCAL_PTR(CssParentNode, parent65, css);
-        visitChildren(node->elements());
-      }
-
-      // debug_ast(css);
-      */
-    }
-    else {
-
-
-    // _withParent
-      auto pu = parent65;
-      // debug_ast(parent65);
-      while (Cast<CssStyleRule>(pu)) {
-        // std::cout << "Go through AtRule CssStyleRule\n";
-        pu = pu->parent_;
-      }
-
-      // ModifiableCssKeyframeBlock
-      CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
-        node->pstate(), pu, name, value);
-      css->isChildless(node->is_childless());
-
+      // Adds new empty atRule to Root!
       pu->append(css);
 
       auto oldParent = parent65;
       parent65 = css;
 
-      // If we're in a style rule, copy it into the at-rule so that
-      // declarations immediately inside it have somewhere to go.
-      // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
-      auto qwe = _styleRule->copy();
-      qwe->clear();
+      if (!(!at_root_without_rule && _styleRule != nullptr) || _inKeyframes) {
 
-      parent65->append(qwe);
-
-      auto olderParent = parent65;
-      parent65 = qwe;
-      for (const auto& child : node->elements()) {
-        ValueObj val = child->perform(this);
-      }
-      // visitChildren(node->elements());
-
-      parent65 = olderParent;
-
-      /*
-
-      {
-
-        // Set parent again to css, to append children
-        LOCAL_PTR(CssParentNode, parent65, css);
-
-        // css->append(qwe);
-
-        parent65->append(qwe);
 
       }
+      else {
 
-      */
+        // If we're in a style rule, copy it into the at-rule so that
+        // declarations immediately inside it have somewhere to go.
+        // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
+        CssStyleRule* qwe = _styleRule->copy();
+        qwe->clear();
 
+        // CssStyleRule* qwe = _styleRule;
+        // std::cerr << "Style Rule from cache is " << qwe->selector()->to_string() << "\n";
+
+        css->append(qwe);
+        qwe->parent_ = css;
+
+        parent65 = qwe;
+        for (const auto& child : node->elements()) {
+          ValueObj val = child->perform(this);
+        }
+
+      }
       parent65 = oldParent;
-
-    }
 
 
     return nullptr;

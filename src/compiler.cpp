@@ -104,6 +104,7 @@ namespace Sass {
 
     // debug_ast(root);
     CssRootObj compiled = eval.visitRoot32(root); // 50%
+    // debug_ast(compiled);
 
     Extension unsatisfied;
     // check that all extends were used

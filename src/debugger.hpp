@@ -26,6 +26,10 @@ inline std::string debug_pstate(SourceSpan pstate) {
   return str.str();
 }
 
+inline sass::string dbgValStr(CssString* str) {
+  return str ? str->text() : "{nullptr}";
+}
+
 inline sass::string debug_vec(const AST_Node* node) {
   if (node == NULL) return "null";
   else return node->to_string();
@@ -1088,11 +1092,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
       // " [hash: " << expression->hash() << "] "
       << std::endl;
   }
-  else if (Cast<CssParentNode>(node)) {
-    CssParentNode* rule = Cast<CssParentNode>(node);
-    std::cerr << ind << "CssParentNode " << rule;
-    std::cerr << " (" << pstate_source_position(rule) << ")";
-  }
   else if (Cast<StringExpression>(node)) {
     StringExpression* expression = Cast<StringExpression>(node);
     // std::cerr << ind << "StringExpression " << expression;
@@ -1153,6 +1152,22 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "Statement " << statement;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << statement->tabs() << std::endl;
+  }
+  else if (Cast<CssAtRule>(node)) {
+  CssAtRule* rule = Cast<CssAtRule>(node);
+    std::cerr << ind << "CssAtRule " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << " [name: " << dbgValStr(rule->name()) << "] ";
+    std::cerr << " [value: " << dbgValStr(rule->value()) << "] ";
+    std::cerr << std::endl;
+    debug_block(rule, ind + " ");
+  }
+  else if (Cast<CssParentNode>(node)) {
+    CssParentNode* rule = Cast<CssParentNode>(node);
+    std::cerr << ind << "CssParentNode " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << std::endl;
+    debug_block(rule, ind + " ");
   }
   else if (Cast<CssNode>(node)) {
     CssNode* rule = Cast<CssNode>(node);
