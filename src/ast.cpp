@@ -186,8 +186,8 @@ namespace Sass {
   bool ParentStatement::has_content()
   {
     if (Statement::has_content()) return true;
-    for (size_t i = 0, L = elements().size(); i < L; ++i) {
-      if (elements()[i]->has_content()) return true;
+    for (auto child : elements_) {
+      if (child->has_content()) return true;
     }
     return false;
   }
@@ -206,8 +206,8 @@ namespace Sass {
     bool sel_invisible = true;
     bool els_invisible = true;
     if (const SelectorList * sl = selector()) {
-      for (size_t i = 0, L = sl->length(); i < L; i += 1) {
-        if (!(*sl)[i]->isInvisible()) {
+      for (auto child : sl->elements()) {
+        if (!child->isInvisible()) {
           sel_invisible = false;
           break;
         }

@@ -418,7 +418,7 @@ namespace Sass {
     sass::vector<sass::string> _find_file(const sass::string& file, const sass::string& CWD, const sass::vector<sass::string> paths, std::unordered_map<sass::string, bool>& cache)
     {
       sass::vector<sass::string> includes;
-      for (sass::string path : paths) {
+      for (const sass::string& path : paths) {
         sass::string abs_path(join_paths(path, file));
         if (file_exists(abs_path, CWD, cache)) includes.emplace_back(abs_path);
       }

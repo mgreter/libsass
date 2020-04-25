@@ -281,7 +281,7 @@ namespace Sass {
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     LOCAL_PTR(CssParentNode, parent65, css);
-    for (Statement* item : root->elements()) {
+    for (const StatementObj& item : root->elements()) {
       ValueObj child = item->perform(this);
     }
     return css.detach();
@@ -377,6 +377,7 @@ namespace Sass {
       node->pstate(), parent65, query);
 
 
+
     auto parent = parent65;
     sass::vector<CssParentNodeObj> included;
     while (parent && parent->parent_) { //  is!CssStylesheet
@@ -386,12 +387,50 @@ namespace Sass {
 
       parent = parent->parent_;
     }
+    auto root = _trimIncluded(included);
 
+    if (root == parent65) {
+      LOCAL_PTR(CssParentNode, parent65, parent);
+      visitChildren(node->elements());
+      return nullptr;
+    }
 
+    // LOCAL_PTR(CssParentNode, parent65, parent);
+    // visitChildren(node->elements());
+    
+    CssParentNode* innerCopy = nullptr;
+    if (!included.empty()) {
+      innerCopy = included.front()->copy();
+      innerCopy->clear();
+    }
+    CssParentNode* outerCopy = innerCopy;
 
-    // parent->append(css);
-    LOCAL_PTR(CssParentNode, parent65, parent);
+    for (size_t i = 1; i < included.size(); i++) {
+      auto node = included[i];
+      auto copy = node->copy(); copy->clear();
+      copy->append(outerCopy);
+      outerCopy->parent_ = copy;
+      outerCopy = copy;
+    }
+    if (query->excludesStyleRules()) {
+      // std::cerr << "flag ok\n";
+    }
+
+    auto newParent = innerCopy ? innerCopy : root;
+
+    auto oldParent = parent65;
+    parent65 = newParent;
+
+    if (outerCopy != nullptr) {
+      root->append(outerCopy);
+      outerCopy->parent_ = root;
+    }
+
     visitChildren(node->elements());
+
+    parent65 = oldParent;
+
+      // parent->append(css);
     return nullptr;
   }
 
@@ -512,7 +551,7 @@ namespace Sass {
     mediaStack.emplace_back(css);
 
     if (!isInStyleRule()) {
-      for (auto child : node->elements()) {
+      for (auto& child : node->elements()) {
         ValueObj rv = child->perform(this);
       }
     }
@@ -525,7 +564,7 @@ namespace Sass {
       qwe->parent_ = css;
       parent65 = qwe;
 
-      for (auto child : node->elements()) {
+      for (auto& child : node->elements()) {
         ValueObj rv = child->perform(this);
       }
     }
@@ -984,13 +1023,13 @@ namespace Sass {
       _addRestMap2(named, restMap, arguments->restArg()->pstate());
     }
     else if (SassList * restList = rest->isList()) {
-      for (Value* value : restList->elements()) {
+      for (const ValueObj& value : restList->elements()) {
         positional.emplace_back(SASS_MEMORY_NEW(
           ValueExpression, value->pstate(), value));
       }
       // separator = list->separator();
-      if (ArgumentList * args = rest->isArgList()) {
-        for (auto kv : args->keywords()) {
+      if (ArgumentList* args = rest->isArgList()) {
+        for (auto& kv : args->keywords()) {
           named[kv.first] = SASS_MEMORY_NEW(ValueExpression,
             kv.second->pstate(), kv.second);
         }
@@ -2472,7 +2511,7 @@ namespace Sass {
   Value* Eval::visitImportRule99(ImportRule* rule)
   {
     ValueObj rv; // ensure to collect memory
-    for (ImportBase* import : rule->elements()) {
+    for (const ImportBaseObj& import : rule->elements()) {
       if (import) { rv = import->perform(this); }
     }
     return rv.detach();
@@ -2481,7 +2520,7 @@ namespace Sass {
   // process and add to last block on stack
   void Eval::append_block(Root* block)
   {
-    for (Statement* item : block->elements()) {
+    for (const StatementObj& item : block->elements()) {
       item->perform(this);
     }
   }

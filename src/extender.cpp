@@ -196,7 +196,7 @@ namespace Sass {
     for (auto complex : list->elements()) {
       for (auto component : complex->elements()) {
         if (auto compound = component->getCompound()) {
-          for (SimpleSelector* simple : compound->elements()) {
+          for (const SimpleSelectorObj& simple : compound->elements()) {
             // Creating this structure can take up to 5%
             selectors[simple].insert(rule);
             if (auto pseudo = simple->getPseudoSelector()) {
@@ -510,7 +510,7 @@ namespace Sass {
             extended.emplace_back(list->get(n));
           }
         }
-        for (auto sel : result) {
+        for (auto& sel : result) {
           extended.emplace_back(sel);
         }
       }

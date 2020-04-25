@@ -102,7 +102,7 @@ namespace Sass {
     const SimpleSelector* simple,
     const CompoundSelector* compound)
   {
-    for (const SimpleSelector* theirSimple : compound->elements()) {
+    for (const SimpleSelectorObj& theirSimple : compound->elements()) {
       if (simpleIsSuperselector(simple, theirSimple)) {
         return true;
       }
@@ -117,7 +117,7 @@ namespace Sass {
     const TypeSelector* type,
     const CompoundSelector* compound)
   {
-    for (const SimpleSelector* simple : compound->elements()) {
+    for (const SimpleSelectorObj& simple : compound->elements()) {
       if (const TypeSelector* rhs = simple->getTypeSelector()) {
         if (*type != *rhs) return true;
       }
@@ -132,7 +132,7 @@ namespace Sass {
     const IDSelector* id,
     const CompoundSelector* compound)
   {
-    for (const SimpleSelector* simple : compound->elements()) {
+    for (const SimpleSelectorObj& simple : compound->elements()) {
       if (const IDSelector* rhs = simple->getIDSelector()) {
         if (*id != *rhs) return true;
       }
@@ -165,8 +165,8 @@ namespace Sass {
     const CompoundSelector* compound2,
     const ComplexSelectorObj& parent)
   {
-    for (const SimpleSelector* simple2 : compound2->elements()) {
-      if (const TypeSelector* type2 = simple2->getTypeSelector()) {
+    for (const SimpleSelectorObj& simple2 : compound2->elements()) {
+      if (const TypeSelectorObj& type2 = simple2->getTypeSelector()) {
         if (const CompoundSelector* compound1 = parent->last()->getCompound()) {
           if (typeIsSuperselectorOfCompound(type2, compound1)) return true;
         }
