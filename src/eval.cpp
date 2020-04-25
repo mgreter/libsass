@@ -427,28 +427,60 @@ namespace Sass {
       str_mq = performInterpolation(node->query(), false);
     }
 
+
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl,
       std::move(str_mq), state);
     MediaQueryParser parser(compiler, source);
+    sass::vector<CssMediaQueryObj> parsed = parser.parse();
+
+    sass::vector<CssMediaQueryObj> mergedQueries;
+    if (!_mediaQueries.empty()) {
+      mergedQueries = mergeMediaQueries(_mediaQueries, parsed);
+    }
+
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), parent65, sass::vector<CssMediaQueryObj>());
+      node->pstate(), parent65, std::move(mergedQueries));
+    mediaStack.emplace_back(css);
 
-    sass::vector<CssMediaQueryObj> parsed = parser.parse();
-    if (mediaStack.size() && mediaStack.back()) {
-      auto parent = mediaStack.back()->queries();
-      css->concat(mergeMediaQueries(parent, parsed));
+    auto chroot = parent65;
+    while (Cast<CssStyleRule>(chroot) || Cast<CssMediaRule>(chroot)) {
+      chroot = chroot->parent_;
+    }
+
+    chroot->append(css);
+    css->parent_ = chroot;
+
+    auto oldParent = parent65;
+    parent65 = css;
+    auto oldMediaQueries = _mediaQueries;
+    _mediaQueries = mergedQueries.empty() ? parsed : mergedQueries;
+
+    if (!isInStyleRule()) {
+      for (auto child : node->elements()) {
+        ValueObj rv = child->perform(this);
+      }
     }
     else {
-      css->concat(parsed);
+      auto hobla = _styleRule->copy();
+      parent65->append(hobla);
+      hobla->parent_ = hobla;
+      for (auto child : node->elements()) {
+        ValueObj rv = child->perform(this);
+      }
     }
-    mediaStack.emplace_back(css);
+
+    _mediaQueries = oldMediaQueries;
+    parent65 = oldParent;
+    mediaStack.pop_back();
+
+/*
 
     parent65->append(css);
     LOCAL_PTR(CssParentNode, parent65, css);
     visitChildren(node->elements());
 
-    mediaStack.pop_back();
+    */
 
     // The parent to add declarations too
     // return css.detach();

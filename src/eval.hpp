@@ -29,6 +29,8 @@ namespace Sass {
      SelectorStack originalStack;
      SelectorStack selectorStack;
 
+     sass::vector<CssMediaQueryObj> _mediaQueries;
+
      // Current content block
      UserDefinedCallable* content88;
 
