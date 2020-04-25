@@ -486,6 +486,7 @@ namespace Sass {
     Trace(const SourceSpan& pstate,
       CssParentNode* parent,
       const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
+    virtual bool is_invisible() const { return empty(); }
     ATTACH_CRTP_PERFORM_METHODS()
   };
 }
