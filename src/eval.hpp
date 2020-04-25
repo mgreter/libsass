@@ -193,6 +193,10 @@ namespace Sass {
       }
     }
 
+    CssParentNode* getRoot();
+
+    CssParentNode* _trimIncluded(sass::vector<CssParentNodeObj>& nodes);
+
     void _addRestMap(EnvKeyFlatMap<ValueObj>& values, Map* map, const SourceSpan& nodeForSpan);
     void _addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& nodeForSpan);
 	  void _evaluateArguments(ArgumentInvocation* arguments, ArgumentResults& evaluated);

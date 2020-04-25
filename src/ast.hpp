@@ -971,6 +971,8 @@ namespace Sass {
     // Note that this takes [include] into account.
     bool excludesMedia() const;
 
+    bool excludes2312(CssParentNode* node) const;
+
     // Whether this excludes style rules.
     // Note that this takes [include] into account.
     bool excludesStyleRules() const;

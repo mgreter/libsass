@@ -594,6 +594,13 @@ namespace Sass {
     return (all() || media()) != include();
   }
 
+  bool AtRootQuery::excludes2312(CssParentNode* node) const
+  {
+    if (all()) return !include_;
+    if (rule() && Cast<CssStyleRule>(node)) return !include_;
+    return excludesName(_nameFor(node));
+  }
+
   // Whether this excludes style rules.
   // Note that this takes [include] into account.
   bool AtRootQuery::excludesStyleRules() const {

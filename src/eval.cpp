@@ -311,6 +311,44 @@ namespace Sass {
     return nullptr;
   }
 
+  CssParentNode* Eval::getRoot()
+  {
+    auto pr = parent65;
+    while (pr->parent_) {
+      pr = pr->parent_;
+    }
+    return pr;
+  }
+
+  CssParentNode* Eval::_trimIncluded(sass::vector<CssParentNodeObj>& nodes)
+  {
+
+    auto _root = getRoot();
+    if (nodes.empty()) return _root;
+
+    auto parent = parent65;
+    int innermostContiguous;
+    int i = 0;
+    for (; i < nodes.size(); i++) {
+      while (parent != nodes[i]) {
+        innermostContiguous = -1;
+        parent = parent->parent_;
+      }
+      if (innermostContiguous == -1) {
+        innermostContiguous = i;
+      }
+      parent = parent->parent_;
+    }
+
+    if (parent != _root) return _root;
+    auto root = nodes[innermostContiguous];
+    // remove start to end
+    nodes.resize(innermostContiguous);
+    //nodes.removeRange(innermostContiguous, nodes.length);
+    return root;
+
+  }
+
   Value* Eval::visitAtRootRule(AtRootRule* node)
   {
 
@@ -340,9 +378,12 @@ namespace Sass {
 
 
     auto parent = parent65;
-    sass::vector<CssParentNode> included;
+    sass::vector<CssParentNodeObj> included;
     while (parent && parent->parent_) { //  is!CssStylesheet
+
       // if (!query.excludes(parent)) included.add(parent);
+      if (!query->excludes2312(parent)) included.push_back(parent);
+
       parent = parent->parent_;
     }
 
@@ -452,7 +493,7 @@ namespace Sass {
 
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), parent65, parsed);
+      node->pstate(), parent65, mergedQueries.empty() ? parsed : mergedQueries);
 
     auto chroot = parent65;
 
