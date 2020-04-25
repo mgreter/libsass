@@ -348,6 +348,15 @@ namespace Sass {
     CssStringObj name = interpolationToCssString(node->name(), false, false);
     CssStringObj value = interpolationToCssString(node->value(), true, true);
 
+    if (node->empty()) {
+      // ModifiableCssKeyframeBlock
+      CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
+        node->pstate(), parent65, name, value);
+      css->isChildless(node->is_childless());
+      parent65->append(css);
+      return nullptr;
+    }
+
     sass::string normalized(Util::unvendor(name->text()));
     bool isKeyframe = normalized == "keyframes";
     LOCAL_FLAG(_inUnknownAtRule, !isKeyframe);
@@ -374,6 +383,10 @@ namespace Sass {
 
       if (!(!at_root_without_rule && _styleRule != nullptr) || _inKeyframes) {
 
+        for (const auto& child : node->elements()) {
+          ValueObj val = child->perform(this);
+        }
+        
 
       }
       else {
@@ -387,7 +400,9 @@ namespace Sass {
         // CssStyleRule* qwe = _styleRule;
         // std::cerr << "Style Rule from cache is " << qwe->selector()->to_string() << "\n";
 
+        // Append the original
         css->append(qwe);
+
         qwe->parent_ = css;
 
         parent65 = qwe;
