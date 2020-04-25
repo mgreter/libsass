@@ -15,6 +15,7 @@
 #include "util.hpp"
 #include "inspect.hpp"
 #include "context.hpp"
+#include "debugger.hpp"
 #include "listize.hpp"
 #include "color_maps.hpp"
 #include "string_utils.hpp"
@@ -377,7 +378,7 @@ namespace Sass {
       node->value()->perform(this);
     }
     if (!node->isChildless()) {
-      if (node->empty()) {
+      if (node->empty() || node->is_invisible()) {
         append_optional_space();
         append_string("{}");
       }

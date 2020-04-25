@@ -58,6 +58,15 @@ namespace Sass {
       CssParentNode* parent,
       sass::vector<CssNodeObj>&& children);
 
+    bool empty() const
+    {
+      // Is invisible until something is visible
+      for (auto child : elements()) {
+        if (!child->is_invisible()) return false;
+      }
+      return true;
+    }
+
     // bool get isChildless;
     ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
     ATTACH_CRTP_PERFORM_METHODS()
