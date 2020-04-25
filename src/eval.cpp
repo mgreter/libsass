@@ -419,6 +419,7 @@ namespace Sass {
 
   Value* Eval::visitMediaRule(MediaRule* node)
   {
+
     ExpressionObj mq;
     sass::string str_mq;
     SourceSpan state(node->pstate());
@@ -432,19 +433,25 @@ namespace Sass {
       std::move(str_mq), state);
     MediaQueryParser parser(compiler, source);
     sass::vector<CssMediaQueryObj> parsed = parser.parse();
+    // std::cerr << "IN MEDIARULE " << source->content() << "\n";
 
     sass::vector<CssMediaQueryObj> mergedQueries;
     if (!_mediaQueries.empty()) {
       mergedQueries = mergeMediaQueries(_mediaQueries, parsed);
     }
 
+    // std::cerr << "mergedQueries " << debug_vec(mergedQueries) << "\n";
+
+    // if (!mergedQueries.empty() && mergedQueries.empty()) return null;
+
+
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), parent65, std::move(mergedQueries));
+      node->pstate(), parent65, parsed);
     mediaStack.emplace_back(css);
 
     auto chroot = parent65;
-    while (Cast<CssStyleRule>(chroot) || Cast<CssMediaRule>(chroot)) {
+    while (Cast<CssStyleRule>(chroot) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
       chroot = chroot->parent_;
     }
 
@@ -462,9 +469,11 @@ namespace Sass {
       }
     }
     else {
+      // std::cerr << "AASDASDAS\n";
       auto hobla = _styleRule->copy();
+      hobla->clear();
       parent65->append(hobla);
-      hobla->parent_ = hobla;
+      hobla->parent_ = parent65;
       for (auto child : node->elements()) {
         ValueObj rv = child->perform(this);
       }

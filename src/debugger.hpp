@@ -19,6 +19,7 @@ using namespace Sass;
 
 inline void debug_ast(AST_Node* node, std::string ind = "");
 
+
 inline std::string debug_pstate(SourceSpan pstate) {
   std::stringstream str;
   str << pstate.getLine() << ":";
