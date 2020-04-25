@@ -76,21 +76,21 @@ namespace Sass {
 
     LOCAL_FLAG(inMixin, true);
 
-      callStackFrame frame(*compiler.logger123,
-        BackTrace(node->pstate(), mixin->name().orig(), true));
+    callStackFrame frame(*compiler.logger123,
+      BackTrace(node->pstate(), mixin->name().orig(), true));
 
-      LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
+    LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
 
-      ArgumentResults& evaluated(node->arguments()->evaluated);
-      _evaluateArguments(node->arguments(), evaluated);
-      ValueObj qwe = _runUserDefinedCallable(
-        evaluated,
-        mixin,
-        nullptr,
-        true,
-        &Eval::_runWithBlock,
-        trace,
-        node->pstate());
+    ArgumentResults& evaluated(node->arguments()->evaluated);
+    _evaluateArguments(node->arguments(), evaluated);
+    ValueObj qwe = _runUserDefinedCallable(
+      evaluated,
+      mixin,
+      nullptr,
+      true,
+      &Eval::_runWithBlock,
+      trace,
+      node->pstate());
 
 
     // debug_ast(trace);
@@ -174,7 +174,7 @@ namespace Sass {
 
       // _withParent
       auto pu = parent65;
-      while (Cast<CssStyleRule>(pu)) {
+      while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
         // std::cout << "Go through Keyframe CssStyleRule\n";
         pu = pu->parent_;
       }
@@ -235,7 +235,7 @@ namespace Sass {
     // _withParent
     auto pu = parent65;
    // debug_ast(parent65, "ADD TO");
-    while (Cast<CssStyleRule>(pu)) {
+    while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
        // std::cout << "Go through CssStyleRule\n";
        pu = pu->parent_;
     }
@@ -294,7 +294,7 @@ namespace Sass {
 
 
     auto pu = parent65;
-    while (Cast<CssStyleRule>(pu)) {
+    while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
       // std::cout << "Go through SupportsRule CssStyleRule\n";
       pu = pu->parent_;
     }
@@ -376,7 +376,7 @@ namespace Sass {
 
       auto pu = parent65;
       // debug_ast(parent65);
-      while (Cast<CssStyleRule>(pu)) {
+      while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
         // std::cout << "Go through AtRule CssStyleRule\n";
         pu = pu->parent_;
       }
@@ -407,16 +407,10 @@ namespace Sass {
         // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
         CssStyleRule* qwe = _styleRule->copy();
         qwe->clear();
-
-        // CssStyleRule* qwe = _styleRule;
-        // std::cerr << "Style Rule from cache is " << qwe->selector()->to_string() << "\n";
-
-        // Append the original
         css->append(qwe);
-
         qwe->parent_ = css;
-
         parent65 = qwe;
+
         for (const auto& child : node->elements()) {
           ValueObj val = child->perform(this);
         }
@@ -459,10 +453,10 @@ namespace Sass {
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), parent65, parsed);
-    mediaStack.emplace_back(css);
 
     auto chroot = parent65;
-    while (Cast<CssStyleRule>(chroot) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
+
+      while ((Cast<CssStyleRule>(chroot) || Cast<Trace>(chroot)) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
       chroot = chroot->parent_;
     }
 
@@ -474,6 +468,8 @@ namespace Sass {
     auto oldMediaQueries = _mediaQueries;
     _mediaQueries = mergedQueries.empty() ? parsed : mergedQueries;
 
+    mediaStack.emplace_back(css);
+
     if (!isInStyleRule()) {
       for (auto child : node->elements()) {
         ValueObj rv = child->perform(this);
@@ -481,10 +477,13 @@ namespace Sass {
     }
     else {
       // std::cerr << "AASDASDAS\n";
-      auto hobla = _styleRule->copy();
-      hobla->clear();
-      parent65->append(hobla);
-      hobla->parent_ = parent65;
+
+      CssStyleRule* qwe = _styleRule->copy();
+      qwe->clear();
+      css->append(qwe);
+      qwe->parent_ = css;
+      parent65 = qwe;
+
       for (auto child : node->elements()) {
         ValueObj rv = child->perform(this);
       }
