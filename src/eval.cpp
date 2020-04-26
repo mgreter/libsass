@@ -159,11 +159,17 @@ namespace Sass {
   }
 
 
-  Value* Eval::visitStyleRule(StyleRule* r)
+  Value* Eval::visitStyleRule(StyleRule* rule)
   {
 
-    EnvScope scope(compiler.varRoot, r->idxs());
-    Interpolation* itpl = r->interpolation();
+    EnvScope scope(compiler.varRoot, rule->idxs());
+
+    Interpolation* itpl = rule->interpolation();
+
+    if (itpl == nullptr) std::cerr << "FUCK\n";
+    // auto text123 = interpolationToValue(itpl, true, false);
+
+
     // LocalOption<CssStyleRuleObj> oldStyleRule(_styleRule, r);
 
 
@@ -180,31 +186,31 @@ namespace Sass {
       }
 
       // ModifiableCssKeyframeBlock
-      Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), pu);
+      Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, rule->pstate(), pu);
 
       pu->append(css);
 
       {
         // Set parent again to css, to append children
         LOCAL_PTR(CssParentNode, parent65, css);
-        visitChildren(r->elements());
+        visitChildren(rule->elements());
       }
 
-      auto text = interpolationToValue(itpl, true, false);
+      auto text123 = interpolationToValue(itpl, true, false);
 
       auto qwe = SASS_MEMORY_NEW(SourceItpl,
-        std::move(text), itpl->pstate());
+        std::move(text123), itpl->pstate());
 
 
 
       KeyframeSelectorParser parser(compiler, qwe);
       sass::vector<sass::string> selector(parser.parse());
 
-      // Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, r->pstate(), parent65, std::move(children));
-      if (r->interpolation()) {
+      // Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, rule->pstate(), parent65, std::move(children));
+      if (rule->interpolation()) {
         selectorStack.push_back({});
-        auto val = interpolationToValue(r->interpolation(), true, false);
-        css->name2(SASS_MEMORY_NEW(SassString, r->interpolation()->pstate(), val));
+        auto val123 = interpolationToValue(itpl, true, false);
+        css->name2(SASS_MEMORY_NEW(SassString, rule->interpolation()->pstate(), val123));
         selectorStack.pop_back();
       }
 
@@ -213,18 +219,18 @@ namespace Sass {
     }
 
     SelectorListObj slist;
-    if (r->interpolation()) {
+    if (rule->interpolation()) {
       struct SassImport* imp = compiler.import_stack.back();
       bool plainCss = imp->format == SASS_IMPORT_CSS;
-      slist = itplToSelector(r->interpolation(), plainCss);
+      slist = itplToSelector(rule->interpolation(), plainCss);
     }
 
     // reset when leaving scope
     SASS_ASSERT(slist, "must have selectors");
 
     SelectorListObj evaled = slist->resolveParentSelectors(
-      selectorStack.back(), traces, !at_root_without_rule);
-    LOCAL_FLAG(at_root_without_rule, false);
+      selectorStack.back(), traces, !_atRootExcludingStyleRule);
+    LOCAL_FLAG(_atRootExcludingStyleRule, false);
 
     selectorStack.emplace_back(evaled);
     // The copy is needed for parent reference evaluation
@@ -241,7 +247,7 @@ namespace Sass {
     }
 
     CssStyleRule* css = SASS_MEMORY_NEW(CssStyleRule,
-      r->pstate(), pu, evaled);
+      rule->pstate(), pu, evaled);
 
     // _addChild(node, through: through);
     // This also sets the parent
@@ -255,7 +261,7 @@ namespace Sass {
 
     {
       LOCAL_PTR(CssParentNode, parent65, css);
-      _withStyleRule(css, r, &Eval::_acceptNodeChildren);
+      _withStyleRule(css, rule, &Eval::_acceptNodeChildren);
     }
 
     // css->tabs(r->tabs());
@@ -313,8 +319,8 @@ namespace Sass {
      if (hasFaba) {
      //std::cerr << "THE STRANGE ONE\n";
       auto grandparent = parent->parent_;
-      parent = parent->copy();
-      parent->clear();
+      parent = parent->copy(true);
+      // parent->clear();
       grandparent->append(parent);
     }
 
@@ -372,8 +378,8 @@ namespace Sass {
       visitChildren(node->elements());
     }
     else {
-      auto cp = _styleRule->copy();
-      cp->clear();
+      auto cp = _styleRule->copy(true);
+      // cp->clear();
 
       parent65->append(cp);
       cp->parent_ = parent65;
@@ -404,8 +410,7 @@ namespace Sass {
 
     auto parent = parent65;
     int innermostContiguous = -1;
-    int i = 0;
-    for (; i < nodes.size(); i++) {
+    for (int i = 0; i < nodes.size(); i++) {
       while (parent != nodes[i]) {
         innermostContiguous = -1;
         parent = parent->parent_;
@@ -418,9 +423,7 @@ namespace Sass {
 
     if (parent != _root) return _root;
     auto root = nodes[innermostContiguous];
-    // remove start to end
     nodes.resize(innermostContiguous);
-    //nodes.removeRange(innermostContiguous, nodes.length);
     return root;
 
   }
@@ -446,7 +449,7 @@ namespace Sass {
 
     LOCAL_FLAG(_inKeyframes, false);
     LOCAL_FLAG(_inUnknownAtRule, false);
-    LOCAL_FLAG(at_root_without_rule,
+    LOCAL_FLAG(_atRootExcludingStyleRule,
       query && query->excludesStyleRules());
 
     CssAtRootRuleObj css = SASS_MEMORY_NEW(CssAtRootRule,
@@ -458,14 +461,11 @@ namespace Sass {
     sass::vector<CssParentNodeObj> included;
 
     while (parent && parent->parent_) { //  is!CssStylesheet
-      // if (!query.excludes(parent)) included.add(parent);
-      if (!query->excludes2312(parent)) {
-        // std::cerr << "Pushed it\n";
-        included.push_back(parent);
+      if (!query->excludes(parent)) {
+        included.emplace_back(parent);
       }
       parent = parent->parent_;
     }
-
     auto root = _trimIncluded(included);
 
     if (root == orgParent) {
@@ -489,8 +489,8 @@ namespace Sass {
       if (it != included.end()) {
         if (++it != included.end()) {
           // std::cerr << "Try copy\n";
-          auto copy = (*it)->copy();
-          copy->clear();
+          auto copy = (*it)->copy(true);
+          // copy->clear();
           // std::cerr << "Did copy\n";
           copy->append(outerCopy);
           outerCopy->parent_ = copy;
@@ -594,7 +594,7 @@ namespace Sass {
       auto oldParent = parent65;
       parent65 = css;
 
-      if (!(!at_root_without_rule && _styleRule != nullptr) || _inKeyframes) {
+      if (!(!_atRootExcludingStyleRule && _styleRule != nullptr) || _inKeyframes) {
 
         for (const auto& child : node->elements()) {
           ValueObj val = child->perform(this);
@@ -607,8 +607,8 @@ namespace Sass {
         // If we're in a style rule, copy it into the at-rule so that
         // declarations immediately inside it have somewhere to go.
         // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
-        CssStyleRule* qwe = _styleRule->copy();
-        qwe->clear();
+        CssStyleRule* qwe = _styleRule->copy(true);
+        // qwe->clear();
         css->append(qwe);
         qwe->parent_ = css;
         parent65 = qwe;
@@ -690,8 +690,8 @@ namespace Sass {
     else {
       // std::cerr << "AASDASDAS\n";
 
-      CssStyleRule* qwe = _styleRule->copy();
-      qwe->clear();
+      CssStyleRule* qwe = _styleRule->copy(true);
+      // qwe->clear();
       qwe->parent_ = css;
       // std::cerr << "++ [[" << css->length() << "]] [[" << qwe->selector()->to_string() << "]]\n";
       css->append(qwe);
@@ -734,7 +734,6 @@ namespace Sass {
     _atRootExcludingStyleRule(false),
     _inKeyframes(false),
     plainCss(false),
-    at_root_without_rule(false),
     compiler(compiler),
     extender(Extender::NORMAL, compiler.logger123->callStack),
     traces(*compiler.logger123)
@@ -2707,7 +2706,7 @@ namespace Sass {
 
     // _styleRule != null && !_atRootExcludingStyleRule;
 
-    return !at_root_without_rule &&
+    return !_atRootExcludingStyleRule &&
       _styleRule != nullptr;
     // return !_styleRule.isNull() &&
     //  !_atRootExcludingStyleRule;

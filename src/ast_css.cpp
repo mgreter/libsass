@@ -46,10 +46,12 @@ namespace Sass {
   CssParentNode::CssParentNode(
     const CssParentNode* ptr, bool childless) :
     CssNode(ptr),
-    VectorizedNopsi(ptr),
+    VectorizedNopsi(),
     isChildless_(ptr->isChildless_),
     parent_(ptr->parent_)
-  {}
+  {
+    if (!childless) elements_ = ptr->elements_;
+  }
 
   bool CssParentNode::_isInvisible2(CssNode* asd)
   {

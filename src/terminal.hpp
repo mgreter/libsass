@@ -140,7 +140,13 @@ namespace Terminal {
 
       }
       else {
-        out << output[0];
+
+        if (error) {
+          putc(output[0], stderr);
+        }
+        else {
+          putc(output[0], stdout);
+        }
         output += 1;
       }
 

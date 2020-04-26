@@ -59,9 +59,6 @@ namespace Sass {
 
      bool plainCss = false;
 
-     // Old flags
-     bool              at_root_without_rule;
-
 
     Compiler& compiler;
     Extender extender;

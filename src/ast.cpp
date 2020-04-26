@@ -245,7 +245,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool is_childless) :
+  AtRule::AtRule(const SourceSpan& pstate, InterpolationObj name, InterpolationObj value, bool is_childless) :
     ParentStatement(pstate, sass::vector<StatementObj>{}),
     name_(name),
     value_(value),

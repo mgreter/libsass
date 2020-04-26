@@ -347,7 +347,10 @@ namespace Sass {
   class StyleRule final : public ParentStatement {
     // The selector to which the declaration will be applied.
     // This is only parsed after the interpolation has been resolved.
+
+    // Interpolation is mandatory!
     ADD_PROPERTY(InterpolationObj, interpolation);
+
     ADD_POINTER(IDXS*, idxs); // ParentScopedStatement
   public:
     StyleRule(SourceSpan&& pstate, Interpolation* s);
@@ -368,7 +371,7 @@ namespace Sass {
   public:
     AtRule(const SourceSpan& pstate,
       InterpolationObj name,
-      ExpressionObj value,
+      InterpolationObj value,
       bool is_childless = true);
     ATTACH_CLONE_OPERATIONS(AtRule);
     ATTACH_CRTP_PERFORM_METHODS();
