@@ -90,7 +90,6 @@ namespace Sass {
 
     auto it = std::find(siblings->begin(), siblings->end(), node);
 
-    bool hasFollowingSibling = false;
     while (++it != siblings->end()) {
       // Special context for invisibility!
       // dart calls this out to the parent

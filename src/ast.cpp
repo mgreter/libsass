@@ -698,7 +698,6 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Argument);
   // IMPLEMENT_AST_OPERATORS(Unary_Expression);
   // IMPLEMENT_AST_OPERATORS(ParenthesizedExpression);
-  // IMPLEMENT_AST_OPERATORS(Block);
   // IMPLEMENT_AST_OPERATORS(ContentRule);
   // IMPLEMENT_AST_OPERATORS(Trace);
   // IMPLEMENT_AST_OPERATORS(Bubble);

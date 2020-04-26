@@ -22,8 +22,6 @@ namespace Sass {
     virtual Value* perform(Operation<Value*>* op) = 0; \
     virtual sass::string perform(Operation<sass::string>* op) = 0; \
     virtual CssNode* perform(Operation<CssNode*>* op) = 0; \
-    virtual Expression* perform(Operation<Expression*>* op) = 0; \
-    virtual struct SassValue* perform(Operation<struct SassValue*>* op) = 0; \
 
   // you must add operators to every class
   // ensures `this` of actual instance type
@@ -34,8 +32,6 @@ namespace Sass {
     virtual Value* perform(Operation<Value*>* op) override { return (*op)(this); } \
     virtual sass::string perform(Operation<sass::string>* op) override { return (*op)(this); } \
     virtual CssNode* perform(Operation<CssNode*>* op) override { return (*op)(this); } \
-    virtual Expression* perform(Operation<Expression*>* op) override { return (*op)(this); } \
-    virtual struct SassValue* perform(Operation<struct SassValue*>* op) override { return (*op)(this); } \
 
   template<typename T>
   class Operation {
@@ -44,7 +40,6 @@ namespace Sass {
     // statements
     virtual T operator()(Root* x) = 0;
     virtual T operator()(CssRoot* x) = 0;
-    virtual T operator()(Block* x) = 0;
     virtual T operator()(StyleRule* x)                = 0;
     virtual T operator()(Bubble* x)                 = 0;
     virtual T operator()(Trace* x)                  = 0;
@@ -163,7 +158,6 @@ namespace Sass {
     // statements
     T operator()(Root* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssRoot* x) { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Block* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(StyleRule* x)                { return static_cast<D*>(this)->fallback(x); }
     T operator()(Bubble* x)                 { return static_cast<D*>(this)->fallback(x); }
     T operator()(Trace* x) { return static_cast<D*>(this)->fallback(x); }

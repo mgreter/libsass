@@ -759,12 +759,12 @@ namespace Sass {
     // or `null` if it's invoked without a namespace.
     ADD_CONSTREF(sass::string, ns);
 
-    ADD_PROPERTY(IdxRef, fidx);
+    ADD_CONSTREF(IdxRef, fidx);
 
     // The name of the function being invoked. If this is
     // interpolated, the function will be interpreted as plain
     // CSS, even if it has the same name as a Sass function.
-    ADD_PROPERTY(InterpolationObj, name);
+    ADD_CONSTREF(InterpolationObj, name);
 
     ADD_PROPERTY(bool, selfAssign);
 

@@ -52,7 +52,6 @@ namespace Sass {
 
   class Parent_Reference;
 
-  class Block;
   class Interpolant;
   class Expression;
   class Statement;
@@ -189,7 +188,6 @@ namespace Sass {
 
   IMPL_MEM_OBJ(AST_Node);
   IMPL_MEM_OBJ(Statement);
-  IMPL_MEM_OBJ(Block);
   IMPL_MEM_OBJ(Root);
   IMPL_MEM_OBJ(StyleRule);
   IMPL_MEM_OBJ(Bubble);

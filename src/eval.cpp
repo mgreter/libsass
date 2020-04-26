@@ -285,7 +285,32 @@ namespace Sass {
   void Eval::_addChild(CssParentNode* parent, CssParentNode* node)
   {
 
-    if (node->hasVisibleSibling(parent)) {
+    bool hasFaba = false;
+
+    if (parent->parent_ != nullptr) {
+
+      CssParentNode* siblings = parent->parent_;
+
+      auto it = siblings->begin();
+      while (it != siblings->end()) {
+        if (it->ptr() == parent) break;
+        ++it;
+      }
+
+      while (++it != siblings->end()) {
+        // Special context for invisibility!
+        // dart calls this out to the parent
+        if (!parent->_isInvisible2(*it)) {
+          hasFaba = true;
+          break;
+        }
+      }
+    }
+
+
+
+    //if (node->hasVisibleSibling(parent)) {
+     if (hasFaba) {
      //std::cerr << "THE STRANGE ONE\n";
       auto grandparent = parent->parent_;
       parent = parent->copy();
@@ -569,7 +594,7 @@ namespace Sass {
 
     auto oldParent = parent65;
     parent65 = css;
-    auto oldMediaQueries = _mediaQueries;
+    auto oldMediaQueries = std::move(_mediaQueries);
     _mediaQueries = mergedQueries.empty() ? parsed : mergedQueries;
 
     mediaStack.emplace_back(css);
@@ -595,7 +620,7 @@ namespace Sass {
 
     }
 
-    _mediaQueries = oldMediaQueries;
+    _mediaQueries = std::move(oldMediaQueries);
     parent65 = oldParent;
 
     mediaStack.pop_back();
