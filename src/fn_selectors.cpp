@@ -49,7 +49,7 @@ namespace Sass {
               "a list of strings, or a list of lists of strings.",
               logger642, exp->pstate());
           }
-          if (SassStringObj str = exp->isString()) {
+          if (StringObj str = exp->isString()) {
             str->hasQuotes(false);
           }
           sass::string exp_src = exp->to_string(ctx);
@@ -195,7 +195,7 @@ namespace Sass {
         for (size_t i = 0, L = selector->length(); i < L; ++i) {
           const SimpleSelectorObj& ss = selector->get(i);
           sass::string ss_string = ss->to_string();
-          l->append(SASS_MEMORY_NEW(SassString, ss->pstate(), ss_string));
+          l->append(SASS_MEMORY_NEW(String, ss->pstate(), ss_string));
         }
         return l;
 

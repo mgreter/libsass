@@ -974,9 +974,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [keyword: " << expression->is_keyword_argument() << "] " << std::endl;
     debug_ast(expression->value(), ind + " value: ");
   }
-  else if (Cast<Unary_Expression>(node)) {
-    Unary_Expression* expression = Cast<Unary_Expression>(node);
-    std::cerr << ind << "Unary_Expression " << expression;
+  else if (Cast<UnaryExpression>(node)) {
+    UnaryExpression* expression = Cast<UnaryExpression>(node);
+    std::cerr << ind << "UnaryExpression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->type() << "]" << std::endl;
     debug_ast(expression->operand(), ind + " operand: ");
@@ -1110,9 +1110,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " [" << prettyprint(expression->text()) << "]";
     std::cerr << std::endl;
   }
-  else if (Cast<SassString>(node)) {
-    SassString* expression = Cast<SassString>(node);
-    std::cerr << ind << "SassString ";
+  else if (Cast<String>(node)) {
+    String* expression = Cast<String>(node);
+    std::cerr << ind << "String ";
     if (expression->hasQuotes()) {
       std::cerr << "[QUOTED] ";
     }

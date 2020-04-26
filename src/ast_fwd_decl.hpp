@@ -120,7 +120,7 @@ namespace Sass {
 
   class ParenthesizedExpression;
   class Binary_Expression;
-  class Unary_Expression;
+  class UnaryExpression;
   class FunctionExpression;
   class IfExpression;
   class Custom_Warning;
@@ -138,7 +138,7 @@ namespace Sass {
   class ItplString;
   class StringExpression;
 
-  class SassString;
+  class String;
 
   class SupportsCondition;
   class SupportsOperation;
@@ -263,7 +263,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Function);
   IMPL_MEM_OBJ(ParenthesizedExpression);
   IMPL_MEM_OBJ(Binary_Expression);
-  IMPL_MEM_OBJ(Unary_Expression);
+  IMPL_MEM_OBJ(UnaryExpression);
   IMPL_MEM_OBJ(FunctionExpression);
   IMPL_MEM_OBJ(IfExpression);
   IMPL_MEM_OBJ(Custom_Warning);
@@ -274,7 +274,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Color_RGBA);
   IMPL_MEM_OBJ(Color_HSLA);
   IMPL_MEM_OBJ(Boolean);
-  IMPL_MEM_OBJ(SassString);
+  IMPL_MEM_OBJ(String);
   IMPL_MEM_OBJ(Interpolation);
   IMPL_MEM_OBJ(ItplString);
   IMPL_MEM_OBJ(StringExpression);
@@ -348,7 +348,7 @@ namespace Sass {
   DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(Color)
   DECLARE_BASE_CAST(List)
-  DECLARE_BASE_CAST(SassString)
+  DECLARE_BASE_CAST(String)
   DECLARE_BASE_CAST(SupportsCondition)
   DECLARE_BASE_CAST(Selector)
   DECLARE_BASE_CAST(SimpleSelector)

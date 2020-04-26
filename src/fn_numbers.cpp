@@ -143,7 +143,7 @@ namespace Sass {
       BUILT_IN_FN(unit)
       {
         Number* number = arguments[0]->assertNumber(logger642, "number");
-        return SASS_MEMORY_NEW(SassString, pstate, number->unit(), true);
+        return SASS_MEMORY_NEW(String, pstate, number->unit(), true);
       }
 
       BUILT_IN_FN(isUnitless)

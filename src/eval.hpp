@@ -162,7 +162,7 @@ namespace Sass {
     Value* operator()(ParenthesizedExpression*);
     Value* operator()(Binary_Expression*);
     Value* evalBinOp(Binary_Expression* b_in);
-    Value* operator()(Unary_Expression*);
+    Value* operator()(UnaryExpression*);
     Callable* _getFunction(const IdxRef& fidx, const sass::string& name, const sass::string& ns);
     Callable* _getMixin(const IdxRef& fidx, const EnvKey& name, const sass::string& ns);
     Value* _runFunctionCallable(ArgumentInvocation* arguments, Callable* callable, const SourceSpan& pstate, bool selfAssign);
@@ -174,10 +174,10 @@ namespace Sass {
     Value* operator()(Color_HSLA*);
     Value* operator()(Boolean*);
 
-    SassString* operator()(Interpolation*);
+    String* operator()(Interpolation*);
     Value* operator()(StringExpression*);
 
-    Value* operator()(SassString*);
+    Value* operator()(String*);
     // Value* operator()(ItplString*);
     Value* operator()(Null*);
     Value* operator()(Argument*);
@@ -208,7 +208,7 @@ namespace Sass {
     sass::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand);
     sass::string _visitSupportsCondition(SupportsCondition* condition);
 
-    SassString* operator()(SupportsCondition*);
+    String* operator()(SupportsCondition*);
 
     // actual evaluated selectors
     Value* operator()(Parent_Reference*);

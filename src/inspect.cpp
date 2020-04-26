@@ -790,10 +790,10 @@ namespace Sass {
 
   }
 
-  void Inspect::operator()(Unary_Expression* expr)
+  void Inspect::operator()(UnaryExpression* expr)
   {
-    if (expr->optype() == Unary_Expression::PLUS)       append_string("+");
-    else if (expr->optype() == Unary_Expression::SLASH) append_string("/");
+    if (expr->optype() == UnaryExpression::PLUS)       append_string("+");
+    else if (expr->optype() == UnaryExpression::SLASH) append_string("/");
     else                                                append_string("-");
     append_string(expr->operand()->to_string());
   }
@@ -968,7 +968,7 @@ namespace Sass {
     append_token(b->value() ? "true" : "false", b);
   }
 
-  void Inspect::operator()(SassString* s)
+  void Inspect::operator()(String* s)
   {
     if (quotes && s->hasQuotes()) {
       visitQuotedString(s->value());

@@ -22,8 +22,8 @@ namespace Sass {
     T* visitNumberExpression(Number* node);
     T* visitParenthesizedExpression(ParenthesizedExpression* node);
     // T* visitSelectorExpression(SelectorExpression* node);
-    T* visitStringExpression(SassString* node);
-    T* visitUnaryOperationExpression(Unary_Expression* node);
+    T* visitStringExpression(String* node);
+    T* visitUnaryOperationExpression(UnaryExpression* node);
     T* visitValueExpression(Value* node);
     T* visitVariableExpression(Variable* node);
 

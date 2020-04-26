@@ -505,7 +505,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Unary_Expression::Unary_Expression(const SourceSpan& pstate, Type t, ExpressionObj o)
+  UnaryExpression::UnaryExpression(const SourceSpan& pstate, Type t, ExpressionObj o)
   : Expression(pstate), optype_(t), operand_(o)
   { }
 
@@ -685,7 +685,7 @@ namespace Sass {
   // IMPLEMENT_AST_OPERATORS(LoudComment);
   // IMPLEMENT_AST_OPERATORS(SilentComment);
   // IMPLEMENT_AST_OPERATORS(Argument);
-  // IMPLEMENT_AST_OPERATORS(Unary_Expression);
+  // IMPLEMENT_AST_OPERATORS(UnaryExpression);
   // IMPLEMENT_AST_OPERATORS(ParenthesizedExpression);
   // IMPLEMENT_AST_OPERATORS(ContentRule);
   // IMPLEMENT_AST_OPERATORS(Trace);

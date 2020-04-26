@@ -25,7 +25,7 @@ namespace Sass {
   IMPLEMENT_BASE_CAST(List);
   IMPLEMENT_BASE_CAST(Callable);
   // IMPLEMENT_BASE_CAST(List);
-  IMPLEMENT_BASE_CAST(SassString);
+  IMPLEMENT_BASE_CAST(String);
   IMPLEMENT_BASE_CAST(SupportsCondition);
   IMPLEMENT_BASE_CAST(Selector);
   IMPLEMENT_BASE_CAST(SelectorComponent);

@@ -159,7 +159,7 @@ namespace Sass {
   void Output::operator()(Keyframe_Rule* r)
   {
 
-    SassStringObj v2 = r->name2();
+    StringObj v2 = r->name2();
 
     if (!v2.isNull()) {
       append_indentation();
@@ -256,7 +256,7 @@ namespace Sass {
     return text;
   }
 
-  void Output::operator()(SassString* s)
+  void Output::operator()(String* s)
   {
     if (!in_custom_property) {
       if (s->hasQuotes()) {

@@ -66,9 +66,9 @@ namespace Sass {
 
       BUILT_IN_FN(unquote)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
         if (!string->hasQuotes()) return string;
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           string->pstate(), string->value(), false);
       }
 
@@ -76,43 +76,43 @@ namespace Sass {
       {
         if (auto col = arguments[0]->isColorRGBA()) {
           if (!col->disp().empty()) {
-            return SASS_MEMORY_NEW(SassString,
+            return SASS_MEMORY_NEW(String,
               arguments[0]->pstate(), col->disp(), true);
           }
         }
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
         if (string->hasQuotes()) return string;
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           string->pstate(), string->value(), true);
       }
 
       BUILT_IN_FN(toUpperCase)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
-        return SASS_MEMORY_NEW(SassString, pstate,
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
+        return SASS_MEMORY_NEW(String, pstate,
           StringUtils::toUpperCase(string->value()),
           string->hasQuotes());
       }
 
       BUILT_IN_FN(toLowerCase)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
-        return SASS_MEMORY_NEW(SassString, pstate,
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
+        return SASS_MEMORY_NEW(String, pstate,
           StringUtils::toLowerCase(string->value()),
           string->hasQuotes());
       }
 
       BUILT_IN_FN(length)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
         size_t len = Unicode::codePointCount(string->value());
         return SASS_MEMORY_NEW(Number, pstate, (double)len);
       }
 
       BUILT_IN_FN(insert)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
-        SassString* insert = arguments[1]->assertString(logger642, pstate, "insert");
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
+        String* insert = arguments[1]->assertString(logger642, pstate, "insert");
         size_t len = Unicode::codePointCount(string->value());
         long index = arguments[2]->assertNumber(logger642, "index")
           ->assertNoUnits(logger642, pstate, "index")
@@ -134,14 +134,14 @@ namespace Sass {
         str.insert(Unicode::byteOffsetAtPosition(
           str, index), insert->value());
 
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           pstate, str, string->hasQuotes());
       }
 
       BUILT_IN_FN(index)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
-        SassString* substring = arguments[1]->assertString(logger642, pstate, "substring");
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
+        String* substring = arguments[1]->assertString(logger642, pstate, "substring");
 
         sass::string str(string->value());
         sass::string substr(substring->value());
@@ -157,7 +157,7 @@ namespace Sass {
 
       BUILT_IN_FN(slice)
       {
-        SassString* string = arguments[0]->assertString(logger642, pstate, "string");
+        String* string = arguments[0]->assertString(logger642, pstate, "string");
         Number* beg = arguments[1]->assertNumber(logger642, "start-at");
         Number* end = arguments[2]->assertNumber(logger642, "end-at");
 
@@ -170,7 +170,7 @@ namespace Sass {
         long endInt = end->assertNoUnits(logger642, pstate, "end")
           ->assertInt(logger642, pstate);
         if (endInt == 0) {
-          auto qwe = SASS_MEMORY_NEW(SassString,
+          auto qwe = SASS_MEMORY_NEW(String,
             pstate, "", string->hasQuotes());
           // qwe->setDbg(true);
           return qwe;
@@ -183,7 +183,7 @@ namespace Sass {
 
         if (endInt == (long)len) endInt = (long)len - 1;
         if (endInt < begInt) {
-          return SASS_MEMORY_NEW(SassString,
+          return SASS_MEMORY_NEW(String,
             pstate, "", string->hasQuotes());
         }
 
@@ -196,7 +196,7 @@ namespace Sass {
         sass::string sliced(begIt, endIt);
 
         return SASS_MEMORY_NEW(
-          SassString, pstate,
+          String, pstate,
           sliced, string->hasQuotes());
 
       }
@@ -206,7 +206,7 @@ namespace Sass {
         sass::sstream ss; ss << "u"
           << std::setfill('0') << std::setw(8)
           << std::hex << getRandomUint32();
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           pstate, ss.str(), true);
       }
 

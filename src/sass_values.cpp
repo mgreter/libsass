@@ -16,7 +16,7 @@ extern "C" {
   Map* getMap(struct SassValue* value) { return reinterpret_cast<Map*>(value); }
   Value* getValue(struct SassValue* value) { return reinterpret_cast<Value*>(value); }
   Number* getNumber(struct SassValue* value) { return reinterpret_cast<Number*>(value); }
-  SassString* getString(struct SassValue* value) { return reinterpret_cast<SassString*>(value); }
+  String* getString(struct SassValue* value) { return reinterpret_cast<String*>(value); }
   Boolean* getBoolean(struct SassValue* value) { return reinterpret_cast<Boolean*>(value); }
   Color_RGBA* getColor(struct SassValue* value) { return reinterpret_cast<Color_RGBA*>(value); }
   List* getList(struct SassValue* value) { return reinterpret_cast<List*>(value); }
@@ -160,13 +160,13 @@ extern "C" {
   struct SassValue* ADDCALL sass_make_string(const char* val)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      SassString, SourceSpan::tmp("[STRING]"), val, false));
+      String, SourceSpan::tmp("[STRING]"), val, false));
   }
 
   struct SassValue* ADDCALL sass_make_qstring(const char* val)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      SassString, SourceSpan::tmp("[STRING]"), val, true));
+      String, SourceSpan::tmp("[STRING]"), val, true));
   }
 
   struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i)

@@ -16,16 +16,16 @@ namespace Sass {
 
       BUILT_IN_FN(typeOf)
       {
-        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->type());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->type());
       }
 
       BUILT_IN_FN(inspect)
       {
         if (arguments[0] == nullptr) {
           return SASS_MEMORY_NEW(
-            SassString, pstate, "null");
+            String, pstate, "null");
         }
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           pstate, arguments[0]->to_string({
             SASS_STYLE_INSPECT, ctx.precision
           }));
@@ -40,7 +40,7 @@ namespace Sass {
           sass::string key = kv.first.norm().substr(1);
           // Util::ascii_normalize_underscore(key);
           // Wrap string key into a sass value
-          map->insert(SASS_MEMORY_NEW(SassString,
+          map->insert(SASS_MEMORY_NEW(String,
             kv.second->pstate(), key), kv.second);
         }
         return map.detach();
@@ -48,7 +48,7 @@ namespace Sass {
 
       BUILT_IN_FN(featureExists)
       {
-        SassString* feature = arguments[0]->assertString(*ctx.logger123, pstate, "feature");
+        String* feature = arguments[0]->assertString(*ctx.logger123, pstate, "feature");
         static const auto* const features =
           new std::unordered_set<sass::string>{
           "global-variable-shadowing",
@@ -64,8 +64,8 @@ namespace Sass {
 
       BUILT_IN_FN(globalVariableExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
-        SassString* plugin = arguments[1]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
+        String* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
+        String* plugin = arguments[1]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
         if (plugin != nullptr) {
           throw Exception::SassRuntimeException2(
             "Modules are not supported yet",
@@ -82,15 +82,15 @@ namespace Sass {
 
       BUILT_IN_FN(variableExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
+        String* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
         ExpressionObj ex = ctx.getLexicalVariable("$" + variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !ex.isNull());
       }
 
       BUILT_IN_FN(functionExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
-        SassString* plugin = arguments[1]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
+        String* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
+        String* plugin = arguments[1]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
         if (plugin != nullptr) {
           throw Exception::SassRuntimeException2(
             "Modules are not supported yet",
@@ -102,8 +102,8 @@ namespace Sass {
 
       BUILT_IN_FN(mixinExists)
       {
-        SassString* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
-        SassString* plugin = arguments[1]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
+        String* variable = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
+        String* plugin = arguments[1]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
         if (plugin != nullptr) {
           throw Exception::SassRuntimeException2(
             "Modules are not supported yet",
@@ -126,8 +126,8 @@ namespace Sass {
 
       BUILT_IN_FN(moduleVariables)
       {
-        // SassString* variable = arguments[0]->assertString(Sass::Strings::name);
-        // SassString* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
+        // String* variable = arguments[0]->assertString(Sass::Strings::name);
+        // String* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
         throw Exception::SassRuntimeException2(
           "Modules are not supported yet",
           *ctx.logger123);
@@ -135,8 +135,8 @@ namespace Sass {
 
       BUILT_IN_FN(moduleFunctions)
       {
-        // SassString* variable = arguments[0]->assertString(Sass::Strings::name);
-        // SassString* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
+        // String* variable = arguments[0]->assertString(Sass::Strings::name);
+        // String* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
         throw Exception::SassRuntimeException2(
           "Modules are not supported yet",
           *ctx.logger123);
@@ -151,9 +151,9 @@ namespace Sass {
       BUILT_IN_FN(getFunction)
       {
 
-        SassString* name = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
+        String* name = arguments[0]->assertString(*ctx.logger123, pstate, Sass::Strings::name);
         bool css = arguments[1]->isTruthy(); // supports all values
-        SassString* plugin = arguments[2]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
+        String* plugin = arguments[2]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
 
         if (css && plugin != nullptr) {
           Exception::SassRuntimeException2(
@@ -198,7 +198,7 @@ namespace Sass {
         ArgumentInvocationObj invocation = SASS_MEMORY_NEW(
           ArgumentInvocation, pstate, sass::vector<ExpressionObj>{}, EnvKeyFlatMap2{ SourceSpan::tmp("null"), {} }, restArg, kwdRest);
 
-        if (SassString * str = function->isString()) {
+        if (String * str = function->isString()) {
           sass::string name = unquote(str->value());
           ctx.logger123->addWarn33(
             "Passing a string to call() is deprecated and will be illegal in LibSass "
@@ -206,7 +206,7 @@ namespace Sass {
             str->pstate(), true);
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
-          itpl->append(SASS_MEMORY_NEW(SassString, pstate, str->value()));
+          itpl->append(SASS_MEMORY_NEW(String, pstate, str->value()));
           FunctionExpressionObj expression = SASS_MEMORY_NEW(
             FunctionExpression, pstate, itpl, invocation);
 

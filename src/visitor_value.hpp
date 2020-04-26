@@ -24,7 +24,7 @@ namespace Sass {
     virtual T visitNull(Null* value) = 0;
     // T visitNumber(Number value);
     virtual T visitNumber(Number* value) = 0;
-    // T visitString(SassString value);
+    // T visitString(String value);
 
   };
 

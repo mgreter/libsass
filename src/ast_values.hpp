@@ -152,7 +152,7 @@ namespace Sass {
     IMPLEMENT_BASE_DOWNCAST(Color_HSLA, isColorHSLA);
     IMPLEMENT_BASE_DOWNCAST(Boolean, isBoolean);
     IMPLEMENT_BASE_DOWNCAST(Function, isFunction);
-    IMPLEMENT_BASE_DOWNCAST(SassString, isString);
+    IMPLEMENT_BASE_DOWNCAST(String, isString);
     IMPLEMENT_BASE_DOWNCAST(Custom_Error, isError);
     IMPLEMENT_BASE_DOWNCAST(Custom_Warning, isWarning);
     IMPLEMENT_BASE_DOWNCAST(ArgumentList, isArgList);
@@ -254,7 +254,7 @@ namespace Sass {
       return this->assertNumber(logger, name);
     }
 
-    virtual SassString* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name) {
+    virtual String* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name) {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
@@ -262,7 +262,7 @@ namespace Sass {
         logger, pstate(), name);
     }
 
-    virtual SassString* assertStringOrNull(Logger& logger, const SourceSpan& parent, const sass::string& name) {
+    virtual String* assertStringOrNull(Logger& logger, const SourceSpan& parent, const sass::string& name) {
       if (this->isNull()) return nullptr;
       return this->assertString(logger, parent, name);
     }
@@ -1312,44 +1312,44 @@ namespace Sass {
   ////////////////////////////////////////////////////////
   // Flat strings -- the lowest level of raw textual data.
   ////////////////////////////////////////////////////////
-  class SassString : public Value {
+  class String final : public Value {
     HASH_CONSTREF(sass::string, value);
     ADD_PROPERTY(bool, hasQuotes);
   protected:
     mutable size_t hash_;
   public:
     enum Sass_Tag getTag() const override final { return SASS_STRING; }
-    virtual SassString* isString() override final { return this; }
-    virtual const SassString* isString() const override final { return this; }
+    virtual String* isString() override final { return this; }
+    virtual const String* isString() const override final { return this; }
     const sass::string& getText() const override final { return value_; }
 
-    SassString(const SourceSpan& pstate, const char* beg, bool hasQuotes = false);
-    SassString(const SourceSpan& pstate, const sass::string& val, bool hasQuotes = false);
-    SassString(const SourceSpan& pstate, sass::string&& val, bool hasQuotes = false);
+    String(const SourceSpan& pstate, const char* beg, bool hasQuotes = false);
+    String(const SourceSpan& pstate, const sass::string& val, bool hasQuotes = false);
+    String(const SourceSpan& pstate, sass::string&& val, bool hasQuotes = false);
     const sass::string& type() const override { return StrTypeString; }
     bool is_invisible() const override;
     size_t hash() const override;
     bool operator== (const Value& rhs) const override;
-    bool operator== (const SassString& rhs) const;
+    bool operator== (const String& rhs) const;
     // quotes are forced on inspection
     virtual sass::string inspect() const override;
     virtual bool isBlank() const override;
-    SassString* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name = StrEmpty) override final {
+    String* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name = StrEmpty) override final {
       return this;
     }
 
     Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
-      if (const SassString * str = other->isString()) {
+      if (const String * str = other->isString()) {
         sass::string text(value() + str->value());
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           pstate, std::move(text), hasQuotes());
       }
       sass::string text(value() + other->toCssString());
-      return SASS_MEMORY_NEW(SassString,
+      return SASS_MEMORY_NEW(String,
         pstate, std::move(text), hasQuotes());
     }
 
-    ATTACH_CLONE_OPERATIONS(SassString)
+    ATTACH_CLONE_OPERATIONS(String)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

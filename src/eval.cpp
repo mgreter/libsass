@@ -210,7 +210,7 @@ namespace Sass {
       if (rule->interpolation()) {
         selectorStack.push_back({});
         auto val123 = interpolationToValue(itpl, true, false);
-        css->name2(SASS_MEMORY_NEW(SassString, rule->interpolation()->pstate(), val123));
+        css->name2(SASS_MEMORY_NEW(String, rule->interpolation()->pstate(), val123));
         selectorStack.pop_back();
       }
 
@@ -1046,7 +1046,7 @@ namespace Sass {
 
     sass::string name(callable->name());
 
-//    return SASS_MEMORY_NEW(SassString, "[asd]", "Hossa");
+//    return SASS_MEMORY_NEW(String, "[asd]", "Hossa");
 
     overload->verify(positional.size(), named, pstate, traces);
 
@@ -1475,17 +1475,17 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Eval::operator()(Unary_Expression* node)
+  Value* Eval::operator()(UnaryExpression* node)
   {
     ValueObj operand = node->operand()->perform(this);
     switch (node->optype()) {
-    case Unary_Expression::Type::PLUS:
+    case UnaryExpression::Type::PLUS:
       return operand->unaryPlus(*compiler.logger123, node->pstate());
-    case Unary_Expression::Type::MINUS:
+    case UnaryExpression::Type::MINUS:
       return operand->unaryMinus(*compiler.logger123, node->pstate());
-    case Unary_Expression::Type::NOT:
+    case UnaryExpression::Type::NOT:
       return operand->unaryNot(*compiler.logger123, node->pstate());
-    case Unary_Expression::Type::SLASH:
+    case UnaryExpression::Type::SLASH:
       return operand->unaryDivide(*compiler.logger123, node->pstate());
     }
     // Satisfy compiler
@@ -1603,7 +1603,7 @@ namespace Sass {
     }
     strm += ")";
     return SASS_MEMORY_NEW(
-      SassString, pstate, strm);
+      String, pstate, strm);
   }
     
 
@@ -1800,9 +1800,9 @@ namespace Sass {
     return arguments.detach();
   }
 
-  SassString* Eval::operator()(Interpolation* s)
+  String* Eval::operator()(Interpolation* s)
   {
-    return SASS_MEMORY_NEW(SassString, s->pstate(),
+    return SASS_MEMORY_NEW(String, s->pstate(),
       interpolationToValue(s, false, true));
   }
 
@@ -1818,7 +1818,7 @@ namespace Sass {
       }
       else {
         ValueObj result = item->perform(this);
-        if (SassString* lit = result->isString()) {
+        if (String* lit = result->isString()) {
           strings.emplace_back(lit->value());
         }
         else if (!result->isNull()) {
@@ -1829,12 +1829,12 @@ namespace Sass {
 
     sass::string joined(StringUtils::join(strings, ""));
 
-    return SASS_MEMORY_NEW(SassString, node->pstate(),
+    return SASS_MEMORY_NEW(String, node->pstate(),
       std::move(joined), node->hasQuotes());
 
   }
 
-  Value* Eval::operator()(SassString* s)
+  Value* Eval::operator()(String* s)
   {
     return s;
   }
@@ -1922,9 +1922,9 @@ namespace Sass {
 
   }
 
-  SassString* Eval::operator()(SupportsCondition* condition)
+  String* Eval::operator()(SupportsCondition* condition)
   {
-    return SASS_MEMORY_NEW(SassString, condition->pstate(),
+    return SASS_MEMORY_NEW(String, condition->pstate(),
       _visitSupportsCondition(condition));
   }
 
@@ -1948,7 +1948,7 @@ namespace Sass {
     // convert ??= (value) = > value as T;
 
     for(auto kv : map->elements()) {
-      if (SassString* str = kv.first->isString()) {
+      if (String* str = kv.first->isString()) {
         values["$" + str->value()] = kv.second; // convert?
       }
       else {
@@ -1976,7 +1976,7 @@ namespace Sass {
     // convert ??= (value) = > value as T;
 
     for (auto kv : map->elements()) {
-      if (SassString* str = kv.first->isString()) {
+      if (String* str = kv.first->isString()) {
         values["$" + str->value()] = SASS_MEMORY_NEW(
           ValueExpression, pstate, kv.second);
       }

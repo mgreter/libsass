@@ -1037,7 +1037,7 @@ namespace Sass {
       rule->append(SASS_MEMORY_NEW(StaticImport,
         scanner.relevantSpanFrom(start),
         SASS_MEMORY_NEW(Interpolation, pstate,
-          SASS_MEMORY_NEW(SassString, pstate,
+          SASS_MEMORY_NEW(String, pstate,
             sass::string(startpos, rawUrlPos))),
          queries.first, queries.second));
     }
@@ -2368,34 +2368,34 @@ namespace Sass {
   // EO _importantExpression
 
   // Consumes a unary operation expression.
-  Unary_Expression* StylesheetParser::_unaryOperation()
+  UnaryExpression* StylesheetParser::_unaryOperation()
   {
     Offset start(scanner.offset);
-    Unary_Expression::Type op =
-      Unary_Expression::Type::PLUS;
+    UnaryExpression::Type op =
+      UnaryExpression::Type::PLUS;
     switch (scanner.readChar()) {
     case $plus:
-      op = Unary_Expression::Type::PLUS;
+      op = UnaryExpression::Type::PLUS;
       break;
     case $minus:
-      op = Unary_Expression::Type::MINUS;
+      op = UnaryExpression::Type::MINUS;
       break;
     case $slash:
-      op = Unary_Expression::Type::SLASH;
+      op = UnaryExpression::Type::SLASH;
       break;
     default:
       scanner.error("Expected unary operator.",
         *context.logger123, scanner.relevantSpan());
     }
 
-    if (plainCss() && op != Unary_Expression::Type::SLASH) {
+    if (plainCss() && op != UnaryExpression::Type::SLASH) {
       scanner.error("Operators aren't allowed in plain CSS.",
         *context.logger123, scanner.relevantSpan());
     }
 
     whitespace();
     Expression* operand = _singleExpression();
-    return SASS_MEMORY_NEW(Unary_Expression,
+    return SASS_MEMORY_NEW(UnaryExpression,
       scanner.relevantSpanFrom(start),
       op, operand);
   }
@@ -2718,9 +2718,9 @@ namespace Sass {
       else if (plain == "not") {
         whitespace();
         Expression* expression = _singleExpression();
-        return SASS_MEMORY_NEW(Unary_Expression,
+        return SASS_MEMORY_NEW(UnaryExpression,
           scanner.relevantSpanFrom(start),
-          Unary_Expression::NOT,
+          UnaryExpression::NOT,
           expression);
       }
 
@@ -2767,7 +2767,7 @@ namespace Sass {
       scanner.readChar();
       beforeName = scanner.offset;
 
-      SassStringObj ident = _publicIdentifier2();
+      StringObj ident = _publicIdentifier2();
       InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
         ident->pstate());
 
@@ -3059,7 +3059,7 @@ namespace Sass {
   {
     Offset start(scanner.offset);
     expectIdentifier("url");
-    SassString* fnName = SASS_MEMORY_NEW(SassString,
+    String* fnName = SASS_MEMORY_NEW(String,
       scanner.relevantSpanFrom(start), "url");
     InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
       scanner.relevantSpanFrom(start), fnName);
@@ -3772,11 +3772,11 @@ namespace Sass {
   }
   // EO _publicIdentifier
 
-  SassString* StylesheetParser::_publicIdentifier2()
+  String* StylesheetParser::_publicIdentifier2()
   {
     Offset start(scanner.offset);
     sass::string ident(_publicIdentifier());
-    return SASS_MEMORY_NEW(SassString, scanner.relevantSpanFrom(start), ident);
+    return SASS_MEMORY_NEW(String, scanner.relevantSpanFrom(start), ident);
   }
 
 }

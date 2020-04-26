@@ -446,7 +446,7 @@ namespace Sass {
     // according to css spec, this should be <keyframes-name>
     // <keyframes-name> = <custom-ident> | <string>
     // ADD_PROPERTY(SelectorListObj, name)
-    ADD_PROPERTY(SassStringObj, name2)
+    ADD_PROPERTY(StringObj, name2)
 
   public:
     Keyframe_Rule(const SourceSpan& pstate,

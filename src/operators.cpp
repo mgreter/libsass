@@ -76,8 +76,8 @@ namespace Sass {
     {
       enum Sass_OP op = operand.operand;
 
-      SassString* lqstr = lhs.isString();
-      SassString* rqstr = rhs.isString();
+      String* lqstr = lhs.isString();
+      String* rqstr = rhs.isString();
 
       sass::string lstr(lqstr ? lqstr->value() : lhs.to_string(opt));
       sass::string rstr(rqstr ? rqstr->value() : rhs.to_string(opt));
@@ -103,7 +103,7 @@ namespace Sass {
 
       if (op == Sass_OP::ADD) {
         // create string that might be quoted on output (but do not unquote what we pass)
-        return SASS_MEMORY_NEW(SassString, pstate, lstr + rstr);
+        return SASS_MEMORY_NEW(String, pstate, lstr + rstr);
       }
 
       // add whitespace around operator
@@ -118,7 +118,7 @@ namespace Sass {
         if (rqstr && rqstr->hasQuotes()) rstr = quote(rstr);
       }
 
-      return SASS_MEMORY_NEW(SassString, pstate, lstr + sep + rstr);
+      return SASS_MEMORY_NEW(String, pstate, lstr + sep + rstr);
     }
 
     /* ToDo: allow to operate also with hsla colors */
@@ -271,7 +271,7 @@ namespace Sass {
         case Sass_OP::DIV: {
           sass::string color(rhs.to_string(opt));
           op_color_deprecation(op, lhs.to_string(), color, pstate);
-          return SASS_MEMORY_NEW(SassString,
+          return SASS_MEMORY_NEW(String,
                                 pstate,
                                 lhs.to_string(opt)
                                 + sass_op_separator(op)

@@ -131,7 +131,7 @@ namespace Sass {
   // void SerializeVisitor::_writeNumber(double number) {
   // }
 
-  void visitString(SassString* string)
+  void visitString(String* string)
   {
     /*
     if (_quote && string.hasQuotes) {

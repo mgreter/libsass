@@ -40,7 +40,7 @@ namespace Sass {
     virtual void operator()(Number*);
 
     // virtual void operator()(ItplString*);
-    virtual void operator()(SassString*);
+    virtual void operator()(String*);
 
     void fallback_impl(AST_Node* n);
 

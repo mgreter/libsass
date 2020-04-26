@@ -250,7 +250,7 @@ namespace Sass {
 
     StringExpression* _importantExpression();
 
-    Unary_Expression* _unaryOperation();
+    UnaryExpression* _unaryOperation();
 
     NumberObj _number();
 
@@ -320,7 +320,7 @@ namespace Sass {
 
     // Like [identifier], but rejects identifiers that begin with `_` or `-`.
     sass::string _publicIdentifier();
-    SassString* _publicIdentifier2();
+    String* _publicIdentifier2();
 
 
     // Consumes a block of [child] statements and passes them, as well as the

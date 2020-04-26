@@ -48,7 +48,7 @@ namespace Sass {
   // Returns `false` if [this] isn't a type or a structure that can be parsed as a selector.
   bool Value::_selectorStringOrNull(Logger& logger, sass::string& rv) {
 
-	  if (SassString* str = isString()) {
+	  if (String* str = isString()) {
       rv = str->value();
       return true;
 	  }
@@ -61,7 +61,7 @@ namespace Sass {
       if (list->separator() == SASS_COMMA) {
         for (auto complex : list->elements()) {
           List* cplxLst = complex->isList();
-          SassString* cplxStr = complex->isString();
+          String* cplxStr = complex->isString();
           if (cplxStr) {
             result.emplace_back(cplxStr->value());
           }
@@ -79,7 +79,7 @@ namespace Sass {
       }
       else {
         for (auto compound : list->elements()) {
-          SassString* cmpdStr = compound->isString();
+          String* cmpdStr = compound->isString();
           if (cmpdStr) {
             result.emplace_back(cmpdStr->value());
           }
@@ -145,21 +145,21 @@ namespace Sass {
   {
     sass::string text(toCssString());
     text += "=" + other->toCssString();
-    return SASS_MEMORY_NEW(SassString, pstate, text);
+    return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript `+` operation.
   inline Value* Value::plus(
     Value* other, Logger& logger, const SourceSpan& pstate) const {
-    if (SassString * str = other->isString()) {
+    if (String * str = other->isString()) {
       sass::string text(toCssString() + str->value());
-      return SASS_MEMORY_NEW(SassString,
+      return SASS_MEMORY_NEW(String,
         pstate, text, str->hasQuotes());
     }
     else {
       sass::string text(toCssString());
       text += other->toCssString();
-      return SASS_MEMORY_NEW(SassString, pstate, text);
+      return SASS_MEMORY_NEW(String, pstate, text);
     }
   }
 
@@ -168,35 +168,35 @@ namespace Sass {
     Value* other, Logger& logger, const SourceSpan& pstate) const {
     sass::string text(toCssString());
     text += "-" + other->toCssString();
-    return SASS_MEMORY_NEW(SassString, pstate, text);
+    return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript `/` operation.
   inline Value* Value::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const {
     sass::string text(toCssString());
     text += "/" + other->toCssString();
-    return SASS_MEMORY_NEW(SassString, pstate, text);
+    return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `+` operation.
   inline Value* Value::unaryPlus(Logger& logger, const SourceSpan& pstate) const
   {
     sass::string text("+" + toCssString());
-    return SASS_MEMORY_NEW(SassString, pstate, text);
+    return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `-` operation.
   inline Value* Value::unaryMinus(Logger& logger, const SourceSpan& pstate) const
   {
     sass::string text("-" + toCssString());
-    return SASS_MEMORY_NEW(SassString, pstate, text);
+    return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `/` operation.
   inline Value* Value::unaryDivide(Logger& logger, const SourceSpan& pstate) const
   {
     sass::string text("/" + toCssString());
-    return SASS_MEMORY_NEW(SassString, pstate, text);
+    return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `not` operation.
@@ -766,7 +766,7 @@ namespace Sass {
     using namespace Character;
     bool containsDoubleQuote = false;
     for (auto item : text_->elements()) {
-      if (auto str = Cast<SassString>(item)) { // Ex
+      if (auto str = Cast<String>(item)) { // Ex
         auto& value = str->value();
         for (size_t i = 0; i < value.size(); i++) {
           uint8_t codeUnit = value[i];
@@ -781,7 +781,7 @@ namespace Sass {
   StringExpression* StringExpression::plain(const SourceSpan& pstate, const sass::string& text, bool quotes)
   {
     Interpolation* itpl = SASS_MEMORY_NEW(Interpolation, pstate,
-      SASS_MEMORY_NEW(SassString, pstate, text)); // Literal
+      SASS_MEMORY_NEW(String, pstate, text)); // Literal
     return SASS_MEMORY_NEW(StringExpression, pstate, itpl, quotes);
   }
 
@@ -884,30 +884,30 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SassString::SassString(const SourceSpan& pstate, const sass::string& val, bool hasQuotes)
+  String::String(const SourceSpan& pstate, const sass::string& val, bool hasQuotes)
   : Value(pstate), value_(val), hasQuotes_(hasQuotes), hash_(0)
   {}
 
-  SassString::SassString(const SourceSpan& pstate, sass::string&& val, bool hasQuotes)
+  String::String(const SourceSpan& pstate, sass::string&& val, bool hasQuotes)
     : Value(pstate), value_(std::move(val)), hasQuotes_(hasQuotes), hash_(0)
   {}
 
-  SassString::SassString(const SourceSpan& pstate, const char* beg, bool hasQuotes)
+  String::String(const SourceSpan& pstate, const char* beg, bool hasQuotes)
   : Value(pstate), value_(beg), hasQuotes_(hasQuotes), hash_(0)
   {}
 
-  SassString::SassString(const SassString* ptr, bool childless)
+  String::String(const String* ptr, bool childless)
   : Value(ptr),
     value_(ptr->value_),
     hasQuotes_(ptr->hasQuotes_),
     hash_(ptr->hash_)
   {}
 
-  bool SassString::is_invisible() const {
+  bool String::is_invisible() const {
     return !hasQuotes_ && value_.empty();
   }
 
-  bool SassString::operator== (const Value& rhs) const
+  bool String::operator== (const Value& rhs) const
   {
     if (auto cstr = rhs.isString()) {
       return value() == cstr->value();
@@ -915,22 +915,22 @@ namespace Sass {
     return false;
   }
 
-  bool SassString::operator== (const SassString& rhs) const
+  bool String::operator== (const String& rhs) const
   {
     return value() == rhs.value();
   }
 
-  sass::string SassString::inspect() const
+  sass::string String::inspect() const
   {
     return hasQuotes() ? quote(value_, '*') : value_;
   }
 
-  bool SassString::isBlank() const {
+  bool String::isBlank() const {
     if (hasQuotes_) return false;
     return value_.empty();
   }
 
-  size_t SassString::hash() const
+  size_t String::hash() const
   {
     if (hash_ == 0) {
       hash_ = stringHasher(value_);
@@ -1050,7 +1050,7 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Color_RGBA);
   IMPLEMENT_AST_OPERATORS(Color_HSLA);
   IMPLEMENT_AST_OPERATORS(Boolean);
-  IMPLEMENT_AST_OPERATORS(SassString);
+  IMPLEMENT_AST_OPERATORS(String);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -1090,8 +1090,8 @@ namespace Sass {
   {
     Map* map = SASS_MEMORY_NEW(Map, pstate());
     for (auto kv : _keywords) {
-      SassString* keystr = SASS_MEMORY_NEW( // XXXXXXXXYYYY
-        SassString, pstate(), kv.first.orig().substr(1));
+      String* keystr = SASS_MEMORY_NEW( // XXXXXXXXYYYY
+        String, pstate(), kv.first.orig().substr(1));
       map->insert(keystr, kv.second);
     }
     return map;

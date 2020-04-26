@@ -882,14 +882,14 @@ namespace Sass {
   ////////////////////////////////////////////////////////////////////////////
   // Arithmetic negation (logical negation is just an ordinary function call).
   ////////////////////////////////////////////////////////////////////////////
-  class Unary_Expression final : public Expression {
+  class UnaryExpression final : public Expression {
   public:
     enum Type { PLUS, MINUS, NOT, SLASH };
   private:
     ADD_PROPERTY(Type, optype)
     ADD_PROPERTY(ExpressionObj, operand)
   public:
-    Unary_Expression(const SourceSpan& pstate, Type t, ExpressionObj o);
+    UnaryExpression(const SourceSpan& pstate, Type t, ExpressionObj o);
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

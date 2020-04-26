@@ -95,7 +95,7 @@ namespace Sass {
     if (_isPlainImportUrl(url)) {
       InterpolationObj itpl = SASS_MEMORY_NEW(
         Interpolation, scanner.relevantSpanFrom(start));
-      auto str = SASS_MEMORY_NEW(SassString,
+      auto str = SASS_MEMORY_NEW(String,
         scanner.relevantSpanFrom(start), url, true);
       // Must be an easier way to get quotes?
       str->value(str->to_string());

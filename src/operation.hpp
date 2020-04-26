@@ -102,7 +102,7 @@ namespace Sass {
     virtual T operator()(Function* x) = 0;
     virtual T operator()(ParenthesizedExpression* x) = 0;
     virtual T operator()(Binary_Expression* x)      = 0;
-    virtual T operator()(Unary_Expression* x)       = 0;
+    virtual T operator()(UnaryExpression* x)       = 0;
     virtual T operator()(FunctionExpression* x) = 0;
     virtual T operator()(IfExpression* x) = 0;
     virtual T operator()(Custom_Warning* x)         = 0;
@@ -113,7 +113,7 @@ namespace Sass {
     virtual T operator()(Color_RGBA* x)             = 0;
     virtual T operator()(Color_HSLA* x)             = 0;
     virtual T operator()(Boolean* x)                = 0;
-    virtual T operator()(SassString* x)        = 0;
+    virtual T operator()(String* x)        = 0;
     
     // virtual T operator()(ItplString* x) = 0;
     virtual T operator()(Interpolation* x) = 0;
@@ -221,7 +221,7 @@ namespace Sass {
     T operator()(Function* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ParenthesizedExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Binary_Expression* x) { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Unary_Expression* x)       { return static_cast<D*>(this)->fallback(x); }
+    T operator()(UnaryExpression* x)       { return static_cast<D*>(this)->fallback(x); }
     T operator()(FunctionExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(IfExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Custom_Warning* x)         { return static_cast<D*>(this)->fallback(x); }
@@ -242,7 +242,7 @@ namespace Sass {
     T operator()(Callable* x) { return static_cast<D*>(this)->fallback(x); }
 
 
-    T operator()(SassString* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(String* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(SupportsCondition* x)     { return static_cast<D*>(this)->fallback(x); }
     // T operator()(SupportsOperation* x)      { return static_cast<D*>(this)->fallback(x); }
     // T operator()(SupportsNegation* x)      { return static_cast<D*>(this)->fallback(x); }

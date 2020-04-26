@@ -61,7 +61,7 @@ namespace Sass {
 
     bool isVar(const Value* obj) {
       if (obj == nullptr) return false;
-      const SassString* s = obj->isString();
+      const String* s = obj->isString();
       if (s == nullptr) return false;
       if (s->hasQuotes()) return false;
       const sass::string& str = s->value();
@@ -70,7 +70,7 @@ namespace Sass {
 
     bool isSpecialNumber(const Value* obj) {
       if (obj == nullptr) return false;
-      const SassString* s = obj->isString();
+      const String* s = obj->isString();
       if (s == nullptr) return false;
       if (s->hasQuotes()) return false;
       const sass::string& str = s->value();
@@ -111,7 +111,7 @@ namespace Sass {
     /// Returns whether [value] is an unquoted string that start with `var(` and
     /// contains `/`.
     bool _isVarSlash(Value* value) {
-      if (SassString * string = value->isString()) {
+      if (String * string = value->isString()) {
 				return StringUtils::startsWith(string->value(), "var(", 4) &&
           string_constains(string->value(), '/');
       }
@@ -124,7 +124,7 @@ namespace Sass {
         sass::sstream fncall;
         fncall << name << "("
           << channels->to_css() << ")";
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           pstate, fncall.str());
       }
 
@@ -171,7 +171,7 @@ namespace Sass {
             fncall << list->get(i)->to_css();
           }
           fncall << ")";
-          return SASS_MEMORY_NEW(SassString,
+          return SASS_MEMORY_NEW(String,
             pstate, fncall.str());
         }
         else {
@@ -183,7 +183,7 @@ namespace Sass {
       }
 
       Number* secondNumber = list->get(2)->isNumber();
-      SassString* secondString = list->get(2)->isString();
+      String* secondString = list->get(2)->isString();
       if (secondNumber && secondNumber->hasAsSlash()) {
         List* rv = SASS_MEMORY_NEW(List, pstate);
         rv->append(list->get(0));
@@ -203,7 +203,7 @@ namespace Sass {
 
         }
         fncall << ")";
-        return SASS_MEMORY_NEW(SassString,
+        return SASS_MEMORY_NEW(String,
           pstate, fncall.str());
       }
       else {
@@ -212,7 +212,7 @@ namespace Sass {
 
     }
 
-    SassString* _functionString(sass::string name, sass::vector<ValueObj> arguments, const SourceSpan& pstate)
+    String* _functionString(sass::string name, sass::vector<ValueObj> arguments, const SourceSpan& pstate)
     {
       bool addComma = false;
       sass::sstream fncall;
@@ -223,11 +223,11 @@ namespace Sass {
         addComma = true;
       }
       fncall << ")";
-      return SASS_MEMORY_NEW(SassString,
+      return SASS_MEMORY_NEW(String,
         pstate, fncall.str());
     }
 
-    SassString* _functionRgbString(sass::string name, Color_RGBA* color, Value* alpha, const SourceSpan& pstate)
+    String* _functionRgbString(sass::string name, Color_RGBA* color, Value* alpha, const SourceSpan& pstate)
     {
       sass::sstream fncall;
       fncall << name << "(";
@@ -235,7 +235,7 @@ namespace Sass {
       fncall << color->g() << ", ";
       fncall << color->b() << ", ";
       fncall << alpha->to_css() << ")";
-      return SASS_MEMORY_NEW(SassString,
+      return SASS_MEMORY_NEW(String,
         pstate, fncall.str());
     }
 
@@ -298,14 +298,14 @@ namespace Sass {
         ValueObj parsed = _parseChannels(
           Strings::rgb, { "$red", "$green", "$blue" },
           arguments[0], pstate, {});
-        if (SassString * str = parsed->isString()) {
+        if (String * str = parsed->isString()) {
           parsed.detach();
           return str;
         }
         if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
       }
 
 
@@ -332,14 +332,14 @@ namespace Sass {
         ValueObj parsed = _parseChannels(
           Strings::rgba, { "$red", "$green", "$blue" },
           arguments[0], pstate, {});
-        if (SassString* str = parsed->isString()) {
+        if (String* str = parsed->isString()) {
           parsed.detach();
           return str;
         }
         if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
       }
 
 
@@ -373,14 +373,14 @@ namespace Sass {
         ValueObj parsed = _parseChannels(
           Strings::hsl, { "$hue", "$saturation", "$lightness" },
           arguments[0], pstate, {});
-        if (SassString* str = parsed->isString()) { // Ex
+        if (String* str = parsed->isString()) { // Ex
           parsed.detach();
           return str;
         }
         if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
       }
 
 
@@ -414,14 +414,14 @@ namespace Sass {
         ValueObj parsed = _parseChannels(
           Strings::hsla, { "$hue", "$saturation", "$lightness" },
           arguments[0], pstate, {});
-        if (SassString* str = parsed->isString()) { // Ex
+        if (String* str = parsed->isString()) { // Ex
           parsed.detach();
           return str;
         }
         if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
       }
 
       BUILT_IN_FN(red)
@@ -548,7 +548,7 @@ namespace Sass {
       BUILT_IN_FN(saturate_1)
       {
         Number* number = arguments[0]->assertNumber(*ctx.logger123, Strings::amount);
-        return SASS_MEMORY_NEW(SassString, pstate,
+        return SASS_MEMORY_NEW(String, pstate,
           "saturate(" + number->to_css() + ")");
       }
 
@@ -598,14 +598,14 @@ namespace Sass {
       {
         Value* argument = arguments[0];
 
-        if (SassString * string = argument->isString()) {
+        if (String * string = argument->isString()) {
           if (isMsFilterStart(string->value())) {
             return _functionString(Strings::alpha, arguments, pstate);
           }
         }
 
         /*
-        if (argument is SassString &&
+        if (argument is String &&
           !argument.hasQuotes &&
           argument.text.contains(_microsoftFilterStart)) {
           // Support the proprietary Microsoft alpha() function.
@@ -629,7 +629,7 @@ namespace Sass {
 
         bool isOnlyIeFilters = true;
         for (Value* value : arguments[0]->iterator()) {
-          if (SassString* string = value->isString()) {
+          if (String* string = value->isString()) {
             if (!isMsFilterStart(string->value())) {
               isOnlyIeFilters = false;
               break;
@@ -679,7 +679,7 @@ namespace Sass {
         ss << std::hex << std::setw(2) << fuzzyRound(r, ctx.logger123->epsilon);
         ss << std::hex << std::setw(2) << fuzzyRound(g, ctx.logger123->epsilon);
         ss << std::hex << std::setw(2) << fuzzyRound(b, ctx.logger123->epsilon);
-        return SASS_MEMORY_NEW(SassString, pstate, ss.str());
+        return SASS_MEMORY_NEW(String, pstate, ss.str());
       }
 
       Number* getKwdArg(EnvKeyFlatMap<ValueObj>& keywords, const EnvKey& name, Logger& logger)
@@ -1059,7 +1059,7 @@ namespace Sass {
         fncall << _b->to_css();
         if (_a) { fncall << ", " << _a->to_css(); }
         fncall << ")";
-        return SASS_MEMORY_NEW(SassString, pstate, fncall.str());
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
 
       Number* r = _r->assertNumber(logger, Strings::red);
@@ -1093,7 +1093,7 @@ namespace Sass {
         fncall << _l->to_css();
         if (_a) { fncall << ", " << _a->to_css(); }
         fncall << ")";
-        return SASS_MEMORY_NEW(SassString, pstate, fncall.str());
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
 
       Number* h = _h->assertNumber(logger, "hue");

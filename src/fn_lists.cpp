@@ -59,7 +59,7 @@ namespace Sass {
       {
         Value* list1 = arguments[0];
         Value* list2 = arguments[1];
-        SassString* separatorParam = arguments[2]->assertString(*ctx.logger123, pstate, "separator");
+        String* separatorParam = arguments[2]->assertString(*ctx.logger123, pstate, "separator");
         Value* bracketedParam = arguments[3];
 
         Sass_Separator separator = SASS_UNDEF;
@@ -87,7 +87,7 @@ namespace Sass {
         }
 
         bool bracketed = bracketedParam->isTruthy();
-        if (SassString * str = bracketedParam->isString()) {
+        if (String * str = bracketedParam->isString()) {
           if (str->value() == "auto") {
             bracketed = list1->hasBrackets();
           }
@@ -122,7 +122,7 @@ namespace Sass {
       {
         Value* list = arguments[0]->assertValue(*ctx.logger123, "list");
         Value* value = arguments[1]->assertValue(*ctx.logger123, "val");
-        SassString* separatorParam = arguments[2]->assertString(*ctx.logger123, pstate, "separator");
+        String* separatorParam = arguments[2]->assertString(*ctx.logger123, pstate, "separator");
         Sass_Separator separator = SASS_UNDEF;
         if (separatorParam->value() == "auto") {
           separator = list->separator() == SASS_UNDEF
@@ -206,7 +206,7 @@ namespace Sass {
 
       BUILT_IN_FN(separator)
       {
-        return SASS_MEMORY_NEW(SassString, arguments[0]->pstate(),
+        return SASS_MEMORY_NEW(String, arguments[0]->pstate(),
           std::move(arguments[0]->separator() == SASS_COMMA ? "comma" : "space"));
       }
 

@@ -54,7 +54,7 @@ namespace Sass {
     }
 
     void write(const ItplString* string);
-    // void write(const SassString* string) = delete;
+    // void write(const String* string) = delete;
 
     // Once you call this function, buffer is emptied
     const sass::string& toString(bool rtrim = false)

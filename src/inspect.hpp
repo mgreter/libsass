@@ -78,7 +78,7 @@ namespace Sass {
 	  // virtual void operator()(ParenthesizedExpression* expr) override;
     // virtual void operator()(ParenthesizedExpression*);
     // virtual void operator()(Binary_Expression*) override;
-    virtual void operator()(Unary_Expression*) override;
+    virtual void operator()(UnaryExpression*) override;
     // virtual void operator()(Custom_Warning*);
     // virtual void operator()(Custom_Error*);
     // virtual void operator()(Variable*) override;
@@ -86,7 +86,7 @@ namespace Sass {
     virtual void operator()(Color_RGBA*) override;
     virtual void operator()(Color_HSLA*) override;
     virtual void operator()(Boolean*) override;
-    virtual void operator()(SassString*) override;
+    virtual void operator()(String*) override;
     // virtual void operator()(ItplString*) override;
     virtual void operator()(Interpolation*) override;
     // virtual void operator()(StringExpression*) override;
