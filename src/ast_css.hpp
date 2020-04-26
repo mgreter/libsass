@@ -106,8 +106,8 @@ namespace Sass {
   public:
     CssString(const SourceSpan& pstate, const sass::string& text);
     bool empty() const { return text_.empty(); }
-    ATTACH_CLONE_OPERATIONS(CssString)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_CTOR(CssString);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -119,8 +119,8 @@ namespace Sass {
   public:
     CssStrings(const SourceSpan& pstate,
       const sass::vector<sass::string>& texts);
-    ATTACH_CLONE_OPERATIONS(CssStrings)
-      ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssStrings);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -131,8 +131,8 @@ namespace Sass {
     ADD_PROPERTY(ValueObj, value);
   public:
     CssValue(const SourceSpan& pstate, Value* value);
-    ATTACH_CLONE_OPERATIONS(CssValue)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssValue);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -157,8 +157,8 @@ namespace Sass {
     bool is_invisible() const override final;
 
     bool bubbles() const override final;
-    ATTACH_CLONE_OPERATIONS(CssAtRule)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssAtRule);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -169,8 +169,8 @@ namespace Sass {
     ADD_PROPERTY(bool, isPreserved);
   public:
     CssComment(const SourceSpan& pstate, const sass::string& text, bool preserve = false);
-    ATTACH_CLONE_OPERATIONS(CssComment)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssComment);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -185,8 +185,8 @@ namespace Sass {
   public:
     CssDeclaration(const SourceSpan& pstate, CssString* name, CssValue* value,
       bool is_custom_property = false);
-    ATTACH_CLONE_OPERATIONS(CssDeclaration)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssDeclaration);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -216,7 +216,7 @@ namespace Sass {
       CssString* supports = nullptr,
       sass::vector<CssMediaQueryObj> media = {});
 
-    ATTACH_CLONE_OPERATIONS(CssImport);
+    ATTACH_COPY_OPERATIONS(CssImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -253,8 +253,8 @@ namespace Sass {
     // Return a copy with empty children
     CssKeyframeBlock* copyWithoutChildren();
 
-    ATTACH_CLONE_OPERATIONS(CssKeyframeBlock)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssKeyframeBlock);
+    ATTACH_CRTP_PERFORM_METHODS();
 
   };
   // EO CssKeyframeBlock
@@ -281,8 +281,8 @@ namespace Sass {
     bool is_invisible() const override;
     bool bubbles() const override final { return true; }
 
-    ATTACH_CLONE_OPERATIONS(CssStyleRule)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssStyleRule);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -292,8 +292,8 @@ namespace Sass {
   public:
     CssStylesheet(const SourceSpan& pstate,
       CssParentNode* parent);
-    ATTACH_CLONE_OPERATIONS(CssStylesheet)
-      ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssStylesheet);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -314,7 +314,7 @@ namespace Sass {
 
     bool is_invisible() const override;
     bool bubbles() const override final;
-    ATTACH_CLONE_OPERATIONS(CssSupportsRule);
+    ATTACH_COPY_OPERATIONS(CssSupportsRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -378,8 +378,8 @@ namespace Sass {
     sass::vector<CssMediaQueryObj> parseList(
       const sass::string& contents);
 
-    ATTACH_CLONE_OPERATIONS(CssMediaQuery)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssMediaQuery);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -410,7 +410,7 @@ namespace Sass {
     // Tell cssize that we can bubble up
     bool bubbles() const override final { return true; }
 
-    ATTACH_CLONE_OPERATIONS(CssAtRootRule);
+    ATTACH_COPY_OPERATIONS(CssAtRootRule);
     ATTACH_CRTP_PERFORM_METHODS();
 
   };
@@ -456,8 +456,8 @@ namespace Sass {
     // Check if two instances are considered equal
     bool operator== (const CssMediaRule& rhs) const;
 
-    ATTACH_CLONE_OPERATIONS(CssMediaRule)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(CssMediaRule);
+    ATTACH_CRTP_PERFORM_METHODS();
 
   };
   // EO CssMediaRule
@@ -480,8 +480,8 @@ namespace Sass {
       CssParentNode* parent,
       sass::vector<CssNodeObj>&& children);
 
-    ATTACH_CLONE_OPERATIONS(Keyframe_Rule)
-      ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_COPY_OPERATIONS(Keyframe_Rule);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
 
@@ -493,8 +493,8 @@ namespace Sass {
   public:
     Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g = {});
     bool bubbles() const override final;
-    // ATTACH_CLONE_OPERATIONS(Bubble)
-    ATTACH_CRTP_PERFORM_METHODS()
+    // ATTACH_COPY_OPERATIONS(Bubble);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////
@@ -511,7 +511,7 @@ namespace Sass {
       CssParentNode* parent,
       const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
     virtual bool is_invisible() const { return empty(); }
-    ATTACH_CLONE_OPERATIONS(Trace);
+    ATTACH_COPY_OPERATIONS(Trace);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 }

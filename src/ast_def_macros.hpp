@@ -174,21 +174,24 @@ private:
 
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \
-  virtual klass* copy(bool childless = false) const override { \
+  virtual klass* copy(bool childless = false) const { \
     throw std::runtime_error("Copy not implemented"); \
   } \
-  virtual klass* clone() const override { \
+  virtual klass* clone() const { \
     throw std::runtime_error("Clone not implemented"); \
   } \
 
+#define ATTACH_COPY_CTOR(klass) \
+  klass(const klass* ptr, bool childless = false); \
+
 #define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \
-  virtual klass* copy(bool childless = false) const override; \
+  virtual klass* copy(bool childless = false) const; \
 
 #define ATTACH_CLONE_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \
-  virtual klass* copy(bool childless = false) const override; \
-  virtual klass* clone() const override; \
+  virtual klass* copy(bool childless = false) const; \
+  virtual klass* clone() const; \
 
 
 

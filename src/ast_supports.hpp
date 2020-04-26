@@ -55,7 +55,6 @@ namespace Sass {
   class SupportsCondition : public Expression {
   public:
     SupportsCondition(const SourceSpan& pstate);
-    // ATTACH_CLONE_OPERATIONS(SupportsCondition)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -71,7 +70,6 @@ namespace Sass {
     ADD_PROPERTY(Operand, operand);
   public:
     SupportsOperation(const SourceSpan& pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o);
-    // ATTACH_CLONE_OPERATIONS(SupportsOperation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -83,7 +81,6 @@ namespace Sass {
     ADD_PROPERTY(SupportsCondition_Obj, condition);
   public:
     SupportsNegation(const SourceSpan& pstate, SupportsCondition_Obj c);
-    // ATTACH_CLONE_OPERATIONS(SupportsNegation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -96,7 +93,6 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, value);
   public:
     SupportsDeclaration(const SourceSpan& pstate, ExpressionObj f, ExpressionObj v);
-    // ATTACH_CLONE_OPERATIONS(SupportsDeclaration)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -108,7 +104,6 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, value);
   public:
     SupportsInterpolation(const SourceSpan& pstate, ExpressionObj v);
-    // ATTACH_CLONE_OPERATIONS(SupportsInterpolation)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

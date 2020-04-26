@@ -350,7 +350,6 @@ namespace Sass {
   public:
     StyleRule(SourceSpan&& pstate, Interpolation* s);
     StyleRule(SourceSpan&& pstate, Interpolation* s, sass::vector<StatementObj>&& els);
-    // ATTACH_CLONE_OPERATIONS(StyleRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -481,7 +480,6 @@ namespace Sass {
     Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false);
     Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, sass::vector<StatementObj>&& b);
     bool is_invisible() const override;
-    // ATTACH_CLONE_OPERATIONS(Declaration)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -493,8 +491,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_global);
   public:
     MapMerge(const SourceSpan& pstate, const sass::string& var, IdxRef vidx, ExpressionObj val, bool is_default = false, bool is_global = false);
-    // ATTACH_CLONE_OPERATIONS(Assignment)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////
@@ -508,8 +505,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_global);
   public:
     Assignment(const SourceSpan& pstate, const sass::string& var, IdxRef vidx, ExpressionObj val, bool is_default = false, bool is_global = false);
-    // ATTACH_CLONE_OPERATIONS(Assignment)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   class ImportBase : public Statement {
@@ -558,7 +554,6 @@ namespace Sass {
     ADD_CONSTREF(sass::string, url);
   public:
     DynamicImport(const SourceSpan& pstate, const sass::string& url);
-    // ATTACH_CLONE_OPERATIONS(DynamicImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -567,14 +562,12 @@ namespace Sass {
     ADD_CONSTREF(Include, include);
   public:
     IncludeImport(DynamicImport* import, Include include);
-    // ATTACH_CLONE_OPERATIONS(DynamicImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
   class ImportRule final : public ImportBase, public VectorizedNopsi<ImportBase> {
   public:
     ImportRule(const SourceSpan& pstate);
-    // ATTACH_CLONE_OPERATIONS(ImportRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -622,7 +615,6 @@ namespace Sass {
     ADD_PROPERTY(InterpolationObj, text)
   public:
     LoudComment(const SourceSpan& pstate, InterpolationObj itpl);
-    // ATTACH_CLONE_OPERATIONS(LoudComment)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -633,7 +625,6 @@ namespace Sass {
     SilentComment(const SourceSpan& pstate, const sass::string& text);
     // not used in dart sass beside tests!?
     // sass::string getDocComment() const;
-    // ATTACH_CLONE_OPERATIONS(SilentComment)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -647,8 +638,7 @@ namespace Sass {
   public:
     If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<StatementObj>&& alt = {});
     virtual bool has_content() override;
-    // ATTACH_CLONE_OPERATIONS(If)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////
@@ -663,8 +653,7 @@ namespace Sass {
   public:
     For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc = false);
     For(const SourceSpan& pstate, const EnvKey& var, ExpressionObj lo, ExpressionObj hi, bool inc, sass::vector<StatementObj>&& els);
-    // ATTACH_CLONE_OPERATIONS(For)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   //////////////////////////////////////
@@ -677,8 +666,7 @@ namespace Sass {
   public:
     Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst); // default only needed for _withChildren
     Each(const SourceSpan& pstate, const sass::vector<EnvKey>& vars, ExpressionObj lst, sass::vector<StatementObj>&& els); // default only needed for _withChildren
-    // ATTACH_CLONE_OPERATIONS(Each)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ///////////////////////////////////////
@@ -701,8 +689,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, value);
   public:
     Return(const SourceSpan& pstate, ExpressionObj val);
-    // ATTACH_CLONE_OPERATIONS(Return)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   class InvocationExpression :
@@ -892,7 +879,6 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, expression)
   public:
     ParenthesizedExpression(const SourceSpan& pstate, Expression* expression);
-    // ATTACH_CLONE_OPERATIONS(ParenthesizedExpression);
     ATTACH_CRTP_PERFORM_METHODS();
   };
   ////////////////////////////////////////////////////////////////////////////
@@ -908,7 +894,6 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, operand)
   public:
     Unary_Expression(const SourceSpan& pstate, Type t, ExpressionObj o);
-    // ATTACH_CLONE_OPERATIONS(Unary_Expression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -924,7 +909,6 @@ namespace Sass {
 
     bool bubbles() const override final { return true; };
     bool is_invisible() const override { return false; };
-    // ATTACH_CLONE_OPERATIONS(MediaRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -1004,7 +988,6 @@ namespace Sass {
     AtRootRule(SourceSpan&& pstate, InterpolationObj query = {});
     AtRootRule(const SourceSpan& pstate, InterpolationObj query, sass::vector<StatementObj>&& els);
     AtRootRule(SourceSpan&& pstate, InterpolationObj query, sass::vector<StatementObj>&& els);
-    // ATTACH_CLONE_OPERATIONS(CssAtRootRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
