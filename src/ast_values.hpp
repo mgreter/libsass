@@ -1119,7 +1119,7 @@ namespace Sass {
         logger, pstate);
     }
 
-    ATTACH_VIRTUAL_COPY_OPERATIONS(Color)
+    ATTACH_COPY_CTOR(Color)
   };
 
   //////////

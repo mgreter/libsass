@@ -62,7 +62,8 @@ namespace Sass {
 
     virtual const sass::string& getText() const = 0;
 
-    ATTACH_VIRTUAL_COPY_OPERATIONS(Interpolant);
+    ATTACH_COPY_CTOR(Interpolant);
+
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -113,7 +114,7 @@ namespace Sass {
     // virtual bool is_true() { return !is_false(); }
     virtual bool operator== (const Expression& rhs) const { return false; }
     inline bool operator!=(const Expression& rhs) const { return !(rhs == *this); }
-    ATTACH_VIRTUAL_COPY_OPERATIONS(Expression);
+    ATTACH_COPY_CTOR(Expression);
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -297,7 +298,7 @@ namespace Sass {
     // needed for rearranging nested rulesets during CSS emission
     virtual bool has_content();
     virtual bool is_invisible() const;
-    ATTACH_VIRTUAL_COPY_OPERATIONS(Statement)
+    ATTACH_COPY_CTOR(Statement)
   };
   inline Statement::~Statement() { }
 
@@ -508,7 +509,7 @@ namespace Sass {
   class ImportBase : public Statement {
   public:
     ImportBase(const SourceSpan& pstate);
-    ATTACH_VIRTUAL_COPY_OPERATIONS(ImportBase);
+    ATTACH_COPY_CTOR(ImportBase);
   };
 
   class StaticImport final : public ImportBase {

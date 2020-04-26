@@ -16,7 +16,6 @@
 #include "fn_lists.hpp"
 #include "fn_maps.hpp"
 #include "context.hpp"
-#include "cssize.hpp"
 #include "eval.hpp"
 
 #include "parser_scss.hpp"

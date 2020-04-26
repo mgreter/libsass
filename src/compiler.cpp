@@ -11,7 +11,6 @@
 #include "sass_functions.hpp"
 
 #include "eval.hpp"
-#include "cssize.hpp"
 #include "remove_placeholders.hpp"
 
 namespace Sass {
@@ -112,9 +111,6 @@ namespace Sass {
       throw Exception::UnsatisfiedExtend(*logger123, unsatisfied);
     }
     // debug_ast(compiled);
-    // This can use up to 10% runtime
-    //Cssize cssize(*this->logger123);
-    //compiled = cssize.doit(compiled); // 5%
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?

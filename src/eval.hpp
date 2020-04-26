@@ -6,7 +6,6 @@
 #include "sass.hpp"
 #include "ast.hpp"
 
-#include "cssize.hpp"
 #include "context.hpp"
 #include "listize.hpp"
 #include "compiler.hpp"

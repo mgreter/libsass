@@ -164,14 +164,6 @@ private:
 
 #else
 
-#define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
-  virtual klass* copy(bool childless = false) const { \
-    throw std::runtime_error("Copy not implemented"); \
-  } \
-  virtual klass* clone() const { \
-    throw std::runtime_error("Clone not implemented"); \
-  } \
-
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \
   virtual klass* copy(bool childless = false) const { \

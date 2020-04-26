@@ -258,7 +258,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
 
   class CssStyleRule : public CssParentNode {
-    // The selector for this ruleset.
     ADD_PROPERTY(SelectorListObj, selector);
   public:
 
@@ -389,8 +388,6 @@ namespace Sass {
       AtRootQueryObj query,
       sass::vector<CssNodeObj>&& children);
 
-    // Tell cssize that we can bubble up
-
     ATTACH_COPY_OPERATIONS2(CssAtRootRule);
     ATTACH_CRTP_PERFORM_METHODS();
 
@@ -424,8 +421,6 @@ namespace Sass {
     T accept(CssVisitor<T>& visitor) {
       return visitor.visitCssMediaRule(this);
     }
-
-    // Tell cssize that we can bubble up
 
     bool isInvisible() const { return queries_.empty(); }
     bool is_invisible() const override { return queries_.empty(); };
