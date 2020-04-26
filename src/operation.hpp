@@ -41,7 +41,6 @@ namespace Sass {
     virtual T operator()(Root* x) = 0;
     virtual T operator()(CssRoot* x) = 0;
     virtual T operator()(StyleRule* x)                = 0;
-    virtual T operator()(Bubble* x)                 = 0;
     virtual T operator()(CssImportTrace* x)                  = 0;
     virtual T operator()(MapExpression* x) = 0;
     virtual T operator()(ListExpression* x) = 0;
@@ -55,7 +54,7 @@ namespace Sass {
 
     virtual T operator()(CssValue* x) = 0;
     virtual T operator()(CssString* x) = 0;
-    virtual T operator()(CssStrings* x) = 0;
+    virtual T operator()(CssStringList* x) = 0;
     virtual T operator()(CssStyleRule* x) = 0;
     virtual T operator()(CssMediaRule* x) = 0;
     virtual T operator()(CssMediaQuery* x) = 0;
@@ -158,7 +157,6 @@ namespace Sass {
     T operator()(Root* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssRoot* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(StyleRule* x)                { return static_cast<D*>(this)->fallback(x); }
-    T operator()(Bubble* x)                 { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssImportTrace* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ListExpression* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ValueExpression* x) { return static_cast<D*>(this)->fallback(x); }
@@ -178,7 +176,7 @@ namespace Sass {
     T operator()(FunctionRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssValue* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssString* x) { return static_cast<D*>(this)->fallback(x); }
-    T operator()(CssStrings* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(CssStringList* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssStyleRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(CssMediaRule* x) { return operator()(reinterpret_cast<CssParentNode*>(x)); }
     T operator()(CssMediaQuery* x) { return static_cast<D*>(this)->fallback(x); }

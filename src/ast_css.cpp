@@ -132,14 +132,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  CssStrings::CssStrings(
+  CssStringList::CssStringList(
     const SourceSpan& pstate,
-    const sass::vector<sass::string>& texts) :
+    sass::vector<sass::string>&& texts) :
     AST_Node(pstate),
-    texts_(texts)
+    texts_(std::move(texts))
   {}
 
-  CssStrings::CssStrings(const CssStrings* ptr, bool childless) :
+  CssStringList::CssStringList(const CssStringList* ptr, bool childless) :
     AST_Node(ptr),
     texts_(ptr->texts_)
   {}
@@ -269,7 +269,7 @@ namespace Sass {
   CssKeyframeBlock::CssKeyframeBlock(
     const SourceSpan& pstate,
     CssParentNode* parent,
-    CssStrings* selector) :
+    CssStringList* selector) :
     CssParentNode(pstate, parent),
     selector_(selector)
   {}
@@ -278,7 +278,7 @@ namespace Sass {
   CssKeyframeBlock::CssKeyframeBlock(
     const SourceSpan& pstate,
     CssParentNode* parent,
-    CssStrings* selector,
+    CssStringList* selector,
     sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, parent, std::move(children)),
     selector_(selector)
@@ -596,14 +596,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Bubble::Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g)
-  : CssNode(pstate), node_(n)
-  { }
-
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   CssImportTrace::CssImportTrace(const SourceSpan& pstate,
     CssParentNode* parent,
     const sass::string& n, char type)
@@ -625,7 +617,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // IMPLEMENT_AST_OPERATORS(CssNode);
-  //IMPLEMENT_COPY_OPERATORS(CssStrings);
+  //IMPLEMENT_COPY_OPERATORS(CssStringList);
   // IMPLEMENT_COPY_OPERATORS(CssString);
 //  IMPLEMENT_COPY_OPERATORS(CssValue);
   //IMPLEMENT_COPY_OPERATORS(CssAtRule);

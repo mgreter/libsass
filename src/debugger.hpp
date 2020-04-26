@@ -362,13 +362,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
 {
   if (node == 0) return;
   if (ind == "") std::cerr << "####################################################################\n";
-  if (Cast<Bubble>(node)) {
-    Bubble* bubble = Cast<Bubble>(node);
-    std::cerr << ind << "Bubble " << bubble;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << std::endl;
-    debug_ast(bubble->node(), ind + " ");
-  }
   if (Cast<Root>(node)) {
     Root* root = Cast<Root>(node);
     std::cerr << ind << "Root " << root;

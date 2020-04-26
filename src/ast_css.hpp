@@ -79,6 +79,9 @@ namespace Sass {
       throw std::runtime_error("Copy not implemented");
     }
 
+    // 
+    virtual bool bubbleThroughStyleRule() const { return false; }
+
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -110,12 +113,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
 
   // A plain list of CSS string
-  class CssStrings : public AST_Node {
+  class CssStringList : public AST_Node {
     ADD_CONSTREF(sass::vector<sass::string>, texts);
   public:
-    CssStrings(const SourceSpan& pstate,
-      const sass::vector<sass::string>& texts);
-    ATTACH_COPY_CTOR(CssStrings);
+    CssStringList(const SourceSpan& pstate,
+      sass::vector<sass::string>&& texts);
+    ATTACH_COPY_CTOR(CssStringList);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -222,7 +225,7 @@ namespace Sass {
   class CssKeyframeBlock : public CssParentNode {
 
     // The selector for this block.
-    ADD_CONSTREF(CssStringsObj, selector);
+    ADD_CONSTREF(CssStringListObj, selector);
 
   public:
 
@@ -230,13 +233,13 @@ namespace Sass {
     CssKeyframeBlock(
       const SourceSpan& pstate,
       CssParentNode* parent,
-      CssStrings* selector);
+      CssStringList* selector);
 
     // Value constructor
     CssKeyframeBlock(
       const SourceSpan& pstate,
       CssParentNode* parent,
-      CssStrings* selector,
+      CssStringList* selector,
       sass::vector<CssNodeObj>&& children);
 
     // Dispatch to visitor
@@ -273,6 +276,8 @@ namespace Sass {
       sass::vector<CssNodeObj>&& children);
 
     bool is_invisible() const override;
+
+    bool bubbleThroughStyleRule() const override final { return true; }
 
     ATTACH_COPY_OPERATIONS2(CssStyleRule);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -438,16 +443,6 @@ namespace Sass {
   // EO CssMediaRule
 
   /////////////////
-  // Bubble.
-  /////////////////
-  class Bubble final : public CssNode {
-    ADD_PROPERTY(CssNodeObj, node)
-  public:
-    Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g = {});
-    ATTACH_CRTP_PERFORM_METHODS();
-  };
-
-  /////////////////
   // CssImportTrace.
   /////////////////
   class CssImportTrace final : public CssParentNode {
@@ -460,7 +455,8 @@ namespace Sass {
     CssImportTrace(const SourceSpan& pstate,
       CssParentNode* parent,
       const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
-    virtual bool is_invisible() const { return empty(); }
+    bool bubbleThroughStyleRule() const override final { return true; }
+    bool is_invisible() const override final { return empty(); }
     ATTACH_COPY_OPERATIONS2(CssImportTrace);
     ATTACH_CRTP_PERFORM_METHODS();
   };

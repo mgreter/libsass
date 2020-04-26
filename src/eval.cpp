@@ -159,12 +159,12 @@ namespace Sass {
   }
 
 
-  Value* Eval::visitStyleRule(StyleRule* rule)
+  Value* Eval::visitStyleRule(StyleRule* node)
   {
 
-    EnvScope scope(compiler.varRoot, rule->idxs());
+    EnvScope scope(compiler.varRoot, node->idxs());
 
-    Interpolation* itpl = rule->interpolation();
+    Interpolation* itpl = node->interpolation();
 
     if (itpl == nullptr) std::cerr << "FUCK\n";
     // auto text123 = interpolationToValue(itpl, true, false);
@@ -187,98 +187,70 @@ namespace Sass {
 
       // ModifiableCssKeyframeBlock
 
-      auto text123 = interpolationToValue(itpl, true, false);
-      auto qwe = SASS_MEMORY_NEW(SourceItpl,
-        std::move(text123), itpl->pstate());
-      KeyframeSelectorParser parser(compiler, qwe);
-      sass::vector<sass::string> selector(parser.parse());
-
-      CssStrings* strings = SASS_MEMORY_NEW(CssStrings, rule->pstate(), selector);
-      CssKeyframeBlockObj css2 = SASS_MEMORY_NEW(CssKeyframeBlock, rule->pstate(), pu, strings);
+      KeyframeSelectorParser parser(compiler, SASS_MEMORY_NEW(SourceItpl,
+        interpolationToValue(itpl, true, false), itpl->pstate()));
+      CssStringList* strings = SASS_MEMORY_NEW(CssStringList, node->pstate(), parser.parse());
+      CssKeyframeBlockObj css2 = SASS_MEMORY_NEW(CssKeyframeBlock, node->pstate(), pu, strings);
 
       pu->append(css2);
 
       {
         // Set parent again to css, to append children
         LOCAL_PTR(CssParentNode, parent65, css2);
-        visitChildren(rule->elements());
+        visitChildren(node->elements());
       }
-
-//
-//      if (rule->interpolation()) {
-//        selectorStack.push_back({});
-//        auto val123 = interpolationToValue(itpl, true, false);
-//        css->name2(SASS_MEMORY_NEW(String, rule->interpolation()->pstate(), val123));
-//        selectorStack.pop_back();
-//      }
-
       return nullptr;
       // return k.detach();
     }
+    else {
 
-    SelectorListObj slist;
-    if (rule->interpolation()) {
-      struct SassImport* imp = compiler.import_stack.back();
-      bool plainCss = imp->format == SASS_IMPORT_CSS;
-      slist = itplToSelector(rule->interpolation(), plainCss);
+      SelectorListObj slist;
+      if (node->interpolation()) {
+        struct SassImport* imp = compiler.import_stack.back();
+        bool plainCss = imp->format == SASS_IMPORT_CSS;
+        slist = itplToSelector(node->interpolation(), plainCss);
+      }
+
+      // reset when leaving scope
+      SASS_ASSERT(slist, "must have selectors");
+
+      SelectorListObj evaled = slist->resolveParentSelectors(
+        selectorStack.back(), traces, !_atRootExcludingStyleRule);
+
+      selectorStack.emplace_back(evaled);
+      // The copy is needed for parent reference evaluation
+      // dart-sass stores it as `originalSelector` member
+      originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
+      extender.addSelector(evaled, mediaStack.back());
+
+      // _withParent
+      auto pu = parent65;
+      // debug_ast(parent65, "ADD TO");
+      // while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
+      while (pu->bubbleThroughStyleRule()) {
+        // std::cout << "Go through CssStyleRule\n";
+        pu = pu->parent_;
+      }
+
+      CssStyleRule* rule = SASS_MEMORY_NEW(CssStyleRule,
+        node->pstate(), pu, evaled);
+
+      // _addChild(node, through: through);
+      // This also sets the parent
+
+      _addChild(pu, rule);
+
+      LOCAL_FLAG(_atRootExcludingStyleRule, false);
+      LOCAL_PTR(CssParentNode, parent65, rule); // _withParent
+      LOCAL_PTR(CssStyleRule, _styleRule, rule); // _withStyleRule
+      for (auto child : node->elements()) child->perform(this);
+
+      originalStack.pop_back();
+      selectorStack.pop_back();
+
     }
 
-    // reset when leaving scope
-    SASS_ASSERT(slist, "must have selectors");
 
-    SelectorListObj evaled = slist->resolveParentSelectors(
-      selectorStack.back(), traces, !_atRootExcludingStyleRule);
-    LOCAL_FLAG(_atRootExcludingStyleRule, false);
-
-    selectorStack.emplace_back(evaled);
-    // The copy is needed for parent reference evaluation
-    // dart-sass stores it as `originalSelector` member
-    originalStack.emplace_back(SASS_MEMORY_COPY(evaled));
-    extender.addSelector(evaled, mediaStack.back());
-
-    // _withParent
-    auto pu = parent65;
-   // debug_ast(parent65, "ADD TO");
-    while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
-       // std::cout << "Go through CssStyleRule\n";
-       pu = pu->parent_;
-    }
-
-    CssStyleRule* css = SASS_MEMORY_NEW(CssStyleRule,
-      rule->pstate(), pu, evaled);
-
-    // _addChild(node, through: through);
-    // This also sets the parent
-
-    _addChild(pu, css);
-    // pu->append(css);
-    // css->parent_ = pu;
-
-
-    {
-      LOCAL_PTR(CssParentNode, parent65, css);
-      _withStyleRule(css, rule, &Eval::_acceptNodeChildren);
-    }
-
-    // css->tabs(r->tabs());
-
-    /*
-
-    
-    auto pu = parent65;
-
-    parent65->append(css);
-    // css->tabs(r->tabs());
-
-    */
-
-    // LOCAL_PTR(CssParentNode, parent65, css);
-
-    // visitChildren(r->elements());
-    // visitChildren(r->elements());
-
-    originalStack.pop_back();
-    selectorStack.pop_back();
 
     return nullptr;
 

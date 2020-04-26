@@ -37,7 +37,7 @@ namespace Sass {
      UserDefinedCallable* content88;
 
      // The style rule that defines the current parent selector, if any.
-     CssStyleRuleObj _styleRule;
+     CssStyleRule* _styleRule;
 
      // The name of the current declaration parent. Used for BEM-
      // declaration blocks as in `div { prefix: { suffix: val; } }`;
