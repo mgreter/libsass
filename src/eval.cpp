@@ -454,11 +454,13 @@ namespace Sass {
 
 
     auto parent = parent65;
+    auto orgParent = parent65;
     sass::vector<CssParentNodeObj> included;
 
     while (parent && parent->parent_) { //  is!CssStylesheet
       // if (!query.excludes(parent)) included.add(parent);
       if (!query->excludes2312(parent)) {
+        // std::cerr << "Pushed it\n";
         included.push_back(parent);
       }
       parent = parent->parent_;
@@ -466,10 +468,89 @@ namespace Sass {
 
     auto root = _trimIncluded(included);
 
+    if (root == orgParent) {
+
+      LOCAL_PTR(CssParentNode, parent65, root);
+      visitChildren(node->elements());
+
+    }
+    else {
+
+
+      // std::cerr << "Try copy\n";
+      // debug_ast(included.front());
+      CssParentNode* innerCopy =
+        included.empty() ? nullptr : included.front()->copy();
+      CssParentNode* outerCopy = innerCopy;
+      // std::cerr << "Did copy\n";
+
+      auto it = included.begin();
+      // Included is not empty
+      if (it != included.end()) {
+        if (++it != included.end()) {
+          // std::cerr << "Try copy\n";
+          auto copy = (*it)->copy();
+          // std::cerr << "Did copy\n";
+          copy->append(outerCopy);
+          outerCopy->parent_ = copy;
+          outerCopy = copy;
+        }
+      }
+
+      if (outerCopy != nullptr) {
+        root->append(outerCopy);
+        outerCopy->parent_ = root;
+      }
+
+      // _scopeForAtRoot(node, innerCopy ? ? root, query, included)
+      auto newParent = innerCopy == nullptr ? root : innerCopy;
+
+      //std::cerr << "innerCopy: " << (innerCopy ? "has" : "null") << "\n";
+
+      //debug_ast(newParent);
+
+      LOCAL_FLAG(_inKeyframes, _inKeyframes);
+      LOCAL_FLAG(_inUnknownAtRule, _inUnknownAtRule);
+      LOCAL_FLAG(_atRootExcludingStyleRule, _atRootExcludingStyleRule);
+      auto oldQueries = _mediaQueries;
+
+      if (query->excludesStyleRules()) {
+        //std::cerr << "query.excludesStyleRules\n";
+        _atRootExcludingStyleRule = true;
+      }
+
+      if (query->excludesMedia()) {
+        //std::cerr << "query.excludesMedia\n";
+        _mediaQueries.clear();
+      }
+
+      if (_inKeyframes && query->excludesName("keyframes")) {
+        //std::cerr << "_inKeyframes && query.excludesName('keyframes')\n";
+        _inKeyframes = false;
+      }
+
+      bool hasAtRuleInIncluded = false;
+      for (auto incl : included) {
+        if (Cast<CssAtRule>(incl)) {
+          hasAtRuleInIncluded = true;
+          break;
+        }
+      }
+
+      if (_inUnknownAtRule && !hasAtRuleInIncluded) {
+        _inUnknownAtRule = false;
+      }
+
+      LOCAL_PTR(CssParentNode, parent65, newParent);
+      visitChildren(node->elements());
+
+      _mediaQueries = oldQueries;
+
+    }
+
+  //  debug_ast(root);
 
     // parent->append(css);
-    LOCAL_PTR(CssParentNode, parent65, root);
-    visitChildren(node->elements());
     return nullptr;
   }
 

@@ -178,6 +178,9 @@ namespace Sass {
   void Output::operator()(CssSupportsRule* rule)
   {
 
+    if (rule == nullptr) return;
+    if (rule->empty()) return;
+
     // if (output_style() == SASS_STYLE_NESTED) {
     //   indentation += rule->tabs();
     // }

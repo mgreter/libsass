@@ -501,7 +501,8 @@ namespace Sass {
       CssParentNode* parent,
       const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
     virtual bool is_invisible() const { return empty(); }
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CLONE_OPERATIONS(Trace);
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 }
 

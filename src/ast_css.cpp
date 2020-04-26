@@ -659,6 +659,12 @@ namespace Sass {
     const sass::string& n, sass::vector<CssNodeObj>&& b, char type)
     : CssParentNode(pstate, parent, std::move(b)), type_(type), name_(n)
   {}
+  Trace::Trace(const Trace* ptr) :
+    CssParentNode(ptr),
+    type_(ptr->type_),
+    name_(ptr->name_)
+  {}
+
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -679,5 +685,6 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(CssSupportsRule);
   IMPLEMENT_AST_OPERATORS(CssAtRootRule);
   IMPLEMENT_AST_OPERATORS(Keyframe_Rule);
+  IMPLEMENT_AST_OPERATORS(Trace);
 
 }
