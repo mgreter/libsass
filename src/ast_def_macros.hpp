@@ -165,7 +165,7 @@ private:
 #else
 
 #define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
-  virtual klass* copy() const { \
+  virtual klass* copy(bool childless = false) const { \
     throw std::runtime_error("Copy not implemented"); \
   } \
   virtual klass* clone() const { \
@@ -173,8 +173,8 @@ private:
   } \
 
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
-  klass(const klass* ptr); \
-  virtual klass* copy() const override { \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override { \
     throw std::runtime_error("Copy not implemented"); \
   } \
   virtual klass* clone() const override { \
@@ -182,12 +182,12 @@ private:
   } \
 
 #define ATTACH_COPY_OPERATIONS(klass) \
-  klass(const klass* ptr); \
-  virtual klass* copy() const override; \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override; \
 
 #define ATTACH_CLONE_OPERATIONS(klass) \
-  klass(const klass* ptr); \
-  virtual klass* copy() const override; \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override; \
   virtual klass* clone() const override; \
 
 #endif
@@ -310,13 +310,13 @@ private:
 #else
 
   #define IMPLEMENT_COPY_OPERATORS(klass) \
-    klass* klass::copy() const { \
-      return SASS_MEMORY_NEW(klass, this); \
+    klass* klass::copy(bool childless) const { \
+      return SASS_MEMORY_NEW(klass, this, childless); \
     } \
 
   #define IMPLEMENT_AST_OPERATORS(klass) \
-    klass* klass::copy() const { \
-      return SASS_MEMORY_NEW(klass, this); \
+    klass* klass::copy(bool childless) const { \
+      return SASS_MEMORY_NEW(klass, this, childless); \
     } \
     klass* klass::clone() const { \
       klass* cpy = copy(); \

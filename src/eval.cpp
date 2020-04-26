@@ -479,8 +479,8 @@ namespace Sass {
       // std::cerr << "Try copy\n";
       // debug_ast(included.front());
       CssParentNode* innerCopy =
-        included.empty() ? nullptr : included.front()->copy();
-      if (innerCopy) innerCopy->clear();
+        included.empty() ? nullptr : included.front()->copy(true);
+      // if (innerCopy) innerCopy->clear();
       CssParentNode* outerCopy = innerCopy;
       // std::cerr << "Did copy\n";
 

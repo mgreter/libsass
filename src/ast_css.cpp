@@ -15,7 +15,7 @@ namespace Sass {
     isGroupEnd_(false)
   {}
 
-  CssNode::CssNode(const CssNode* ptr) :
+  CssNode::CssNode(const CssNode* ptr, bool childless) :
     AST_Node(ptr),
     isGroupEnd_(ptr->isGroupEnd_)
   {}
@@ -44,7 +44,7 @@ namespace Sass {
 
   
   CssParentNode::CssParentNode(
-    const CssParentNode* ptr) :
+    const CssParentNode* ptr, bool childless) :
     CssNode(ptr),
     VectorizedNopsi(ptr),
     isChildless_(ptr->isChildless_),
@@ -111,7 +111,7 @@ namespace Sass {
   {}
 
 //  CssRoot::CssRoot(const CssRoot* ptr)
-//    : CssParentNode(ptr)
+//    : CssParentNode(ptr, childless)
 //  {}
 
   /////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ namespace Sass {
     text_(text)
   {}
 
-  CssString::CssString(const CssString* ptr) :
+  CssString::CssString(const CssString* ptr, bool childless) :
     AST_Node(ptr),
     text_(ptr->text_)
   {}
@@ -137,7 +137,7 @@ namespace Sass {
     texts_(texts)
   {}
 
-  CssStrings::CssStrings(const CssStrings* ptr) :
+  CssStrings::CssStrings(const CssStrings* ptr, bool childless) :
     AST_Node(ptr),
     texts_(ptr->texts_)
   {}
@@ -150,7 +150,7 @@ namespace Sass {
     value_(value)
   {}
 
-  CssValue::CssValue(const CssValue* ptr) :
+  CssValue::CssValue(const CssValue* ptr, bool childless) :
     CssNode(ptr),
     value_(ptr->value_)
   {}
@@ -187,8 +187,8 @@ namespace Sass {
   }
 
   CssAtRule::CssAtRule(
-    const CssAtRule* ptr) :
-    CssParentNode(ptr),
+    const CssAtRule* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     name_(ptr->name_),
     value_(ptr->value_)
   {}
@@ -211,7 +211,7 @@ namespace Sass {
     isPreserved_(preserve)
   {}
   CssComment::CssComment(
-    const CssComment* ptr) :
+    const CssComment* ptr, bool childless) :
     CssNode(ptr),
     text_(ptr->text_),
     isPreserved_(ptr->isPreserved_)
@@ -231,7 +231,7 @@ namespace Sass {
     is_custom_property_(is_custom_property)
   {}
   CssDeclaration::CssDeclaration(
-    const CssDeclaration* ptr) :
+    const CssDeclaration* ptr, bool childless) :
     CssNode(ptr),
     name_(ptr->name_),
     value_(ptr->value_),
@@ -256,7 +256,7 @@ namespace Sass {
   }
 
   CssImport::CssImport(
-    const CssImport* ptr) :
+    const CssImport* ptr, bool childless) :
     CssNode(ptr),
     url_(ptr->url_),
     supports_(ptr->supports_),
@@ -290,8 +290,8 @@ namespace Sass {
 
   // Copy constructor
   CssKeyframeBlock::CssKeyframeBlock(
-    const CssKeyframeBlock* ptr) :
-    CssParentNode(ptr),
+    const CssKeyframeBlock* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     selector_(ptr->selector_)
   {}
 
@@ -324,8 +324,8 @@ namespace Sass {
   {}
 
   CssStyleRule::CssStyleRule(
-    const CssStyleRule* ptr) :
-    CssParentNode(ptr),
+    const CssStyleRule* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     selector_(ptr->selector_)
   {}
 
@@ -338,8 +338,8 @@ namespace Sass {
     CssParentNode(pstate, parent)
   {}
   CssStylesheet::CssStylesheet(
-    const CssStylesheet* ptr) :
-    CssParentNode(ptr)
+    const CssStylesheet* ptr, bool childless) :
+    CssParentNode(ptr, childless)
   {}
 
   /////////////////////////////////////////////////////////////////////////////
@@ -375,8 +375,8 @@ namespace Sass {
     return true;
   }
 
-  CssSupportsRule::CssSupportsRule(const CssSupportsRule* ptr) :
-    CssParentNode(ptr),
+  CssSupportsRule::CssSupportsRule(const CssSupportsRule* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     condition_(ptr->condition_)
   {}
 
@@ -404,8 +404,8 @@ namespace Sass {
   {}
 
   // Copy constructor for rule of three
-  CssMediaRule::CssMediaRule(const CssMediaRule* ptr) :
-    CssParentNode(ptr),
+  CssMediaRule::CssMediaRule(const CssMediaRule* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     queries_(ptr->queries_)
   {}
 
@@ -576,7 +576,7 @@ namespace Sass {
     return query;
   }
 
-  CssMediaQuery::CssMediaQuery(const CssMediaQuery* ptr) :
+  CssMediaQuery::CssMediaQuery(const CssMediaQuery* ptr, bool childless) :
     AST_Node(*ptr),
     modifier_(ptr->modifier_),
     type_(ptr->type_),
@@ -610,8 +610,8 @@ namespace Sass {
 
   // Value constructor
   CssAtRootRule::CssAtRootRule(
-    const CssAtRootRule* ptr) :
-    CssParentNode(ptr),
+    const CssAtRootRule* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     query_(ptr->query_)
   {}
 
@@ -629,8 +629,8 @@ namespace Sass {
     sass::vector<CssNodeObj>&& children)
     : CssParentNode(pstate, parent, std::move(children)), name2_()
   {}
-  Keyframe_Rule::Keyframe_Rule(const Keyframe_Rule* ptr)
-    : CssParentNode(ptr), name2_(ptr->name2_)
+  Keyframe_Rule::Keyframe_Rule(const Keyframe_Rule* ptr, bool childless)
+    : CssParentNode(ptr, childless), name2_(ptr->name2_)
   {}
 
 
@@ -659,8 +659,8 @@ namespace Sass {
     const sass::string& n, sass::vector<CssNodeObj>&& b, char type)
     : CssParentNode(pstate, parent, std::move(b)), type_(type), name_(n)
   {}
-  Trace::Trace(const Trace* ptr) :
-    CssParentNode(ptr),
+  Trace::Trace(const Trace* ptr, bool childless) :
+    CssParentNode(ptr, childless),
     type_(ptr->type_),
     name_(ptr->name_)
   {}

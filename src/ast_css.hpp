@@ -71,7 +71,17 @@ namespace Sass {
     bool hasVisibleSibling(CssParentNode* node);
 
     // bool get isChildless;
-    ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
+//    ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
+
+    CssParentNode(const CssParentNode* ptr, bool childless);
+      virtual CssParentNode* copy(bool childless = false) const override {
+        throw std::runtime_error("Copy not implemented");
+    }
+      virtual CssParentNode* clone() const override {
+          throw std::runtime_error("Clone not implemented");
+      }
+
+
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

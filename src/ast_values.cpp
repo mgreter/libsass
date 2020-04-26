@@ -206,7 +206,7 @@ namespace Sass {
       pstate, false);
   }
 
-  Value::Value(const Value* ptr)
+  Value::Value(const Value* ptr, bool childless)
   : Expression(ptr) { }
 
   /////////////////////////////////////////////////////////////////////////
@@ -232,7 +232,7 @@ namespace Sass {
     Hashed(std::move(move))
   {}
 
-  Map::Map(const Map* ptr)
+  Map::Map(const Map* ptr, bool childless)
   : Value(ptr),
     Hashed(*ptr)
   {}
@@ -323,7 +323,7 @@ namespace Sass {
   {
   }
 
-  Number::Number(const Number* ptr)
+  Number::Number(const Number* ptr, bool childless)
   : Value(ptr),
     Units(ptr),
     value_(ptr->value_),
@@ -494,7 +494,7 @@ namespace Sass {
     hash_(0)
   {}
 
-  Color::Color(const Color* ptr)
+  Color::Color(const Color* ptr, bool childless)
   : Value(ptr),
     // reset on copy
     disp_(""),
@@ -510,7 +510,7 @@ namespace Sass {
     r_(r), g_(g), b_(b)
   {}
 
-  Color_RGBA::Color_RGBA(const Color_RGBA* ptr)
+  Color_RGBA::Color_RGBA(const Color_RGBA* ptr, bool childless)
   : Color(ptr),
     r_(ptr->r_),
     g_(ptr->g_),
@@ -594,7 +594,7 @@ namespace Sass {
     // hash_(0)
   {}
 
-  Color_HSLA::Color_HSLA(const Color_HSLA* ptr)
+  Color_HSLA::Color_HSLA(const Color_HSLA* ptr, bool childless)
   : Color(ptr),
     h_(ptr->h_),
     s_(ptr->s_),
@@ -700,7 +700,7 @@ namespace Sass {
     hash_(0)
   {}
 
-  Boolean::Boolean(const Boolean* ptr)
+  Boolean::Boolean(const Boolean* ptr, bool childless)
   : Value(ptr),
     value_(ptr->value_),
     hash_(ptr->hash_)
@@ -855,7 +855,7 @@ namespace Sass {
 
   }
 
-  StringExpression::StringExpression(const StringExpression* ptr) :
+  StringExpression::StringExpression(const StringExpression* ptr, bool childless) :
     Expression(ptr),
     text_(ptr->text_),
     hasQuotes_(ptr->hasQuotes_)
@@ -875,7 +875,7 @@ namespace Sass {
   {
   }
 
-  ItplString::ItplString(const ItplString* ptr) :
+  ItplString::ItplString(const ItplString* ptr, bool childless) :
     Interpolant(ptr),
     text_(ptr->text_)
   {
@@ -896,7 +896,7 @@ namespace Sass {
   : Value(pstate), value_(beg), hasQuotes_(hasQuotes), hash_(0)
   {}
 
-  SassString::SassString(const SassString* ptr)
+  SassString::SassString(const SassString* ptr, bool childless)
   : Value(ptr),
     value_(ptr->value_),
     hasQuotes_(ptr->hasQuotes_),
@@ -988,7 +988,7 @@ namespace Sass {
   {}
 
   SassList::SassList(
-    const SassList* ptr) :
+    const SassList* ptr, bool childless) :
     Value(ptr),
     Vectorized(ptr),
     separator_(ptr->separator_),
@@ -1088,7 +1088,7 @@ namespace Sass {
   }
 
   ArgumentList::ArgumentList(
-    const ArgumentList* ptr) :
+    const ArgumentList* ptr, bool childless) :
     SassList(ptr),
     _keywords(ptr->_keywords),
     _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)

@@ -333,7 +333,7 @@ namespace Sass {
 
     ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els = {});
 
-    ParentStatement(const ParentStatement* ptr); // copy constructor
+    ParentStatement(const ParentStatement* ptr, bool childless); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
     virtual bool has_content() override;
     ATTACH_CRTP_PERFORM_METHODS()

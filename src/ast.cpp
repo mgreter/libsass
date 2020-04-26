@@ -142,7 +142,7 @@ namespace Sass {
   Statement::Statement(SourceSpan&& pstate, size_t t)
     : AST_Node(std::move(pstate)), tabs_(t)
   { }
-  Statement::Statement(const Statement* ptr)
+  Statement::Statement(const Statement* ptr, bool childless)
   : AST_Node(ptr),
     tabs_(ptr->tabs_)
   { }
@@ -179,9 +179,11 @@ namespace Sass {
   {
   }
 
-  ParentStatement::ParentStatement(const ParentStatement* ptr)
-  : Statement(ptr), VectorizedNopsi<Statement>(ptr), idxs_(ptr->idxs_)
-  { }
+  ParentStatement::ParentStatement(const ParentStatement* ptr, bool childless)
+  : Statement(ptr), VectorizedNopsi<Statement>(), idxs_(ptr->idxs_)
+  {
+    if (!childless) elements_ = ptr->elements();
+  }
 
   bool ParentStatement::has_content()
   {
@@ -251,8 +253,8 @@ namespace Sass {
   {
   }
 
-  AtRule::AtRule(const AtRule* ptr)
-  : ParentStatement(ptr),
+  AtRule::AtRule(const AtRule* ptr, bool childless)
+  : ParentStatement(ptr, childless),
     name_(ptr->name_),
     value_(ptr->value_),
     is_childless_(ptr->is_childless_)
@@ -295,7 +297,7 @@ namespace Sass {
   {}
 
   ImportBase::ImportBase(
-    const ImportBase* ptr) :
+    const ImportBase* ptr, bool childless) :
     Statement(ptr)
   {}
 
@@ -484,7 +486,7 @@ namespace Sass {
     : AST_Node(std::move(pstate))
   { }
 
-  Interpolant::Interpolant(const Interpolant* ptr)
+  Interpolant::Interpolant(const Interpolant* ptr, bool childless)
     : AST_Node(ptr)
   { }
 
@@ -499,7 +501,7 @@ namespace Sass {
     : Interpolant(std::move(pstate))
   { }
 
-  Expression::Expression(const Expression* ptr)
+  Expression::Expression(const Expression* ptr, bool childless)
   : Interpolant(ptr)
   { }
 
@@ -527,7 +529,7 @@ namespace Sass {
   : Expression(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
   {
   }
-  Argument::Argument(const Argument* ptr)
+  Argument::Argument(const Argument* ptr, bool childless)
   : Expression(ptr),
     value_(ptr->value_),
     name_(ptr->name_),

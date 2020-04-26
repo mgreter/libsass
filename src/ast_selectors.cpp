@@ -20,7 +20,7 @@ namespace Sass {
     hash_(0)
   {}
 
-  Selector::Selector(const Selector* ptr)
+  Selector::Selector(const Selector* ptr, bool childless)
   : AST_Node(ptr),
     hash_(ptr->hash_)
   {}
@@ -38,7 +38,7 @@ namespace Sass {
   : Selector(pstate), name_(n)
   {
   }
-  SimpleSelector::SimpleSelector(const SimpleSelector* ptr)
+  SimpleSelector::SimpleSelector(const SimpleSelector* ptr, bool childless)
   : Selector(ptr),
     name_(ptr->name_)
   { }
@@ -84,7 +84,7 @@ namespace Sass {
 
   }
 
-  NameSpaceSelector::NameSpaceSelector(const NameSpaceSelector* ptr)
+  NameSpaceSelector::NameSpaceSelector(const NameSpaceSelector* ptr, bool childless)
     : SimpleSelector(ptr),
     has_ns_(ptr->has_ns_),
     ns_(ptr->ns_)
@@ -172,7 +172,7 @@ namespace Sass {
   PlaceholderSelector::PlaceholderSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { }
-  PlaceholderSelector::PlaceholderSelector(const PlaceholderSelector* ptr)
+  PlaceholderSelector::PlaceholderSelector(const PlaceholderSelector* ptr, bool childless)
   : SimpleSelector(ptr)
   { }
   unsigned long PlaceholderSelector::specificity() const
@@ -198,7 +198,7 @@ namespace Sass {
   TypeSelector::TypeSelector(const SourceSpan& pstate, const sass::string& n)
   : NameSpaceSelector(pstate, n)
   { }
-  TypeSelector::TypeSelector(const TypeSelector* ptr)
+  TypeSelector::TypeSelector(const TypeSelector* ptr, bool childless)
   : NameSpaceSelector(ptr)
   { }
 
@@ -214,7 +214,7 @@ namespace Sass {
   ClassSelector::ClassSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { }
-  ClassSelector::ClassSelector(const ClassSelector* ptr)
+  ClassSelector::ClassSelector(const ClassSelector* ptr, bool childless)
   : SimpleSelector(ptr)
   { }
 
@@ -229,7 +229,7 @@ namespace Sass {
   IDSelector::IDSelector(const SourceSpan& pstate, const sass::string& n)
   : SimpleSelector(pstate, n)
   { }
-  IDSelector::IDSelector(const IDSelector* ptr)
+  IDSelector::IDSelector(const IDSelector* ptr, bool childless)
   : SimpleSelector(ptr)
   { }
 
@@ -244,7 +244,7 @@ namespace Sass {
   AttributeSelector::AttributeSelector(const SourceSpan& pstate, sass::string&& n, sass::string&& op, sass::string&& v, bool isIdentifier, char o)
   : NameSpaceSelector(pstate, n), op_(std::move(op)), value_(std::move(v)), modifier_(std::move(o)), isIdentifier_(isIdentifier)
   { }
-  AttributeSelector::AttributeSelector(const AttributeSelector* ptr)
+  AttributeSelector::AttributeSelector(const AttributeSelector* ptr, bool childless)
   : NameSpaceSelector(ptr),
     op_(ptr->op_),
     value_(ptr->value_),
@@ -269,7 +269,7 @@ namespace Sass {
     isClass_(!element && !isFakePseudoElement(normalized_))
   { }
 
-  PseudoSelector::PseudoSelector(const PseudoSelector* ptr)
+  PseudoSelector::PseudoSelector(const PseudoSelector* ptr, bool childless)
   : SimpleSelector(ptr),
     normalized_(ptr->normalized()),
     argument_(ptr->argument()),
@@ -348,7 +348,7 @@ namespace Sass {
     Selector(pstate),
     VectorizedNopsi(std::move(complexes))
   { }
-  SelectorList::SelectorList(const SelectorList* ptr)
+  SelectorList::SelectorList(const SelectorList* ptr, bool childless)
     : Selector(ptr),
     VectorizedNopsi(*ptr)
   { }
@@ -409,7 +409,7 @@ namespace Sass {
 
   
 
-  ComplexSelector::ComplexSelector(const ComplexSelector* ptr)
+  ComplexSelector::ComplexSelector(const ComplexSelector* ptr, bool childless)
   : Selector(ptr),
     VectorizedNopsi(ptr),
     chroots_(ptr->chroots()),
@@ -487,7 +487,7 @@ namespace Sass {
   {
   }
 
-  SelectorComponent::SelectorComponent(const SelectorComponent* ptr)
+  SelectorComponent::SelectorComponent(const SelectorComponent* ptr, bool childless)
   : Selector(ptr),
     hasPostLineBreak_(ptr->hasPostLineBreak())
   { }
@@ -545,7 +545,7 @@ namespace Sass {
   {
   }
 
-  CompoundSelector::CompoundSelector(const CompoundSelector* ptr)
+  CompoundSelector::CompoundSelector(const CompoundSelector* ptr, bool childless)
     : SelectorComponent(ptr),
     VectorizedNopsi(*ptr),
       hasRealParent_(ptr->hasRealParent()),
