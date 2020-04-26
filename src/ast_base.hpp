@@ -41,12 +41,15 @@ namespace Sass {
 
     virtual sass::string inspect() const { return to_string({ SASS_STYLE_INSPECT, SassDefaultPrecision }); }
 
+    virtual sass::string to_string() const;
+
     virtual sass::string to_string(Sass_Inspect_Options opt) const;
+
     virtual sass::string to_css(Sass_Inspect_Options opt, bool quotes = false) const;
     virtual sass::string to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes = false) const;
-    virtual sass::string to_string() const;
     virtual sass::string to_css(sass::vector<Mapping>& mappings, bool quotes = false) const;
     virtual sass::string to_css(bool quotes = false) const;
+
     virtual void cloneChildren() {};
 
 

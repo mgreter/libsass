@@ -214,8 +214,6 @@ namespace Sass {
     //   indentation += node->tabs();
     // }
 
-    // std::cerr << "Visit " << node->selector()->to_string() << " - " << node->empty() << "\n";
-
     if (opt.source_comments) {
       sass::sstream ss;
       append_indentation();

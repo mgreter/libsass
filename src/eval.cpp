@@ -251,8 +251,6 @@ namespace Sass {
 
     // _addChild(node, through: through);
     // This also sets the parent
-    // std::cerr << "++ [[" << pu->length() << "]] [[" << css->selector()->to_string() << "]]\n";
-    // hasVisibleSibling;
 
     _addChild(pu, css);
     // pu->append(css);
@@ -691,9 +689,7 @@ namespace Sass {
       // std::cerr << "AASDASDAS\n";
 
       CssStyleRule* qwe = _styleRule->copy(true);
-      // qwe->clear();
       qwe->parent_ = css;
-      // std::cerr << "++ [[" << css->length() << "]] [[" << qwe->selector()->to_string() << "]]\n";
       css->append(qwe);
       parent65 = qwe;
 
@@ -751,29 +747,6 @@ namespace Sass {
   bool Eval::isRoot() const
   {
     return parent65 == nullptr;
-  }
-
-  void debug_call(
-    UserDefinedCallable* callable,
-    ArgumentResults& arguments) {
-
-    std::cerr << "calling <<" << callable->name().orig() << ">> with (";
-
-    bool addComma = false;
-    for (auto arg : arguments.positional()) {
-      if (addComma) std::cerr << ", ";
-      std::cerr << arg->to_string();
-      addComma = true;
-    }
-
-    for (auto arg : arguments.named()) {
-      if (addComma) std::cerr << ", ";
-      std::cerr << arg.first.orig();
-      std::cerr << ": " << arg.second->to_string();
-      addComma = true;
-    }
-
-    std::cerr << ")\n";
   }
 
   Value* Eval::_runUserDefinedCallable(
@@ -1235,7 +1208,7 @@ namespace Sass {
     }
     else {
 
-      sass::string result(unquote(message->to_string()));
+      sass::string result(unquote(message->toValString()));
 
 
       BackTrace trace(node->pstate());
@@ -1748,7 +1721,7 @@ namespace Sass {
       }
       */
 
-      results.emplace_back(result->to_css(false));
+      results.emplace_back(result->to_css(true));
 
     }
 
@@ -1845,7 +1818,7 @@ namespace Sass {
   {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
-      if (quote) return evaled->to_string();
+      if (quote) return evaled->toValString();
       else return evaled->to_css();
     }
     else {

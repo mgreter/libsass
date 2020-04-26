@@ -157,6 +157,10 @@ namespace Sass {
     IMPLEMENT_BASE_DOWNCAST(Custom_Warning, isWarning);
     IMPLEMENT_BASE_DOWNCAST(ArgumentList, isArgList);
 
+    sass::string toValString() const {
+      return to_string();
+    }
+
     // Only used for nth sass function
     // Single values act like lists with 1 item
     // Doesn't allow overflow of index (throw error)
@@ -210,7 +214,7 @@ namespace Sass {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
-        to_string() + " is not a color.",
+        toValString() + " is not a color.",
         logger, pstate(), name);
     }
 
@@ -218,7 +222,7 @@ namespace Sass {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
-        to_string() + " is not a color.",
+        toValString() + " is not a color.",
         logger, pstate(), name);
     }
 
@@ -226,7 +230,7 @@ namespace Sass {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
-        to_string() + " is not a function reference.",
+        toValString() + " is not a function reference.",
         logger, pstate(), name);
     }
 
@@ -237,7 +241,7 @@ namespace Sass {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
-        to_string() + " is not a map.",
+        toValString() + " is not a map.",
         logger, pstate(), name);
     }
 
@@ -245,7 +249,7 @@ namespace Sass {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
-        to_string() + " is not a number.",
+        toValString() + " is not a number.",
         logger, pstate(), name);
     }
 
@@ -271,7 +275,7 @@ namespace Sass {
       SourceSpan span(pstate());
       callStackFrame frame(logger, span);
       throw Exception::SassScriptException2(
-        to_string() + " is not an argument list.",
+        toValString() + " is not an argument list.",
         logger, pstate(), name);
     }
 
@@ -328,8 +332,8 @@ namespace Sass {
     virtual bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const {
       logger.callStack.push_back(pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " > " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " > " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -337,8 +341,8 @@ namespace Sass {
     virtual bool greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const {
       logger.callStack.push_back(pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " >= " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " >= " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -346,8 +350,8 @@ namespace Sass {
     virtual bool lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const {
       logger.callStack.push_back(pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " < " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " < " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -355,8 +359,8 @@ namespace Sass {
     virtual bool lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const {
       logger.callStack.push_back(pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " <= " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " <= " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -364,8 +368,8 @@ namespace Sass {
     virtual Value* times(Value* other, Logger& logger, const SourceSpan& pstate) const {
       logger.callStack.push_back(pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " * " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " * " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -373,8 +377,8 @@ namespace Sass {
     virtual Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const {
       logger.callStack.push_back(pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " % " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " % " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -753,8 +757,8 @@ namespace Sass {
       }
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " > " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " > " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -788,8 +792,8 @@ namespace Sass {
       }
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " >= " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " >= " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -822,8 +826,8 @@ namespace Sass {
       }
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " < " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " < " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -856,8 +860,8 @@ namespace Sass {
       }
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " <= " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " <= " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -873,8 +877,8 @@ namespace Sass {
       if (!other->isColor()) return Value::plus(other, logger, pstate);
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " % " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " % " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -890,8 +894,8 @@ namespace Sass {
       if (!other->isColor()) return Value::plus(other, logger, pstate);
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " + " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " + " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -907,8 +911,8 @@ namespace Sass {
       if (!other->isColor()) return Value::minus(other, logger, pstate);
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " - " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " - " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -924,8 +928,8 @@ namespace Sass {
       if (!other->isColor()) return Value::times(other, logger, pstate);
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " * " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " * " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -941,8 +945,8 @@ namespace Sass {
       if (!other->isColor()) return Value::dividedBy(other, logger, pstate);
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " / " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " / " + other->toValString() + "\".",
         logger, pstate);
     }
 
@@ -1091,8 +1095,8 @@ namespace Sass {
       if (other->isNumber() || other->isColor()) {
         callStackFrame frame(logger, pstate);
         throw Exception::SassScriptException2(
-          "Undefined operation \"" + to_css()
-          + " + " + other->to_css() + "\".",
+          "Undefined operation \"" + toValString()
+          + " + " + other->toValString() + "\".",
           logger, pstate);
       }
       return Value::plus(other, logger, pstate);
@@ -1102,8 +1106,8 @@ namespace Sass {
       if (other->isNumber() || other->isColor()) {
         callStackFrame frame(logger, pstate);
         throw Exception::SassScriptException2(
-          "Undefined operation \"" + to_css()
-          + " - " + other->to_css() + "\".",
+          "Undefined operation \"" + toValString()
+          + " - " + other->toValString() + "\".",
           logger, pstate);
       }
       return Value::minus(other, logger, pstate);
@@ -1113,8 +1117,8 @@ namespace Sass {
       if (other->isNumber() || other->isColor()) {
         callStackFrame frame(logger, pstate);
         throw Exception::SassScriptException2(
-          "Undefined operation \"" + to_css()
-          + " / " + other->to_css() + "\".",
+          "Undefined operation \"" + toValString()
+          + " / " + other->toValString() + "\".",
           logger, pstate);
       }
       return Value::dividedBy(other, logger, pstate);
@@ -1123,8 +1127,8 @@ namespace Sass {
     Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const override final {
       callStackFrame frame(logger, pstate);
       throw Exception::SassScriptException2(
-        "Undefined operation \"" + to_css()
-        + " % " + other->to_css() + "\".",
+        "Undefined operation \"" + toValString()
+        + " % " + other->toValString() + "\".",
         logger, pstate);
     }
 

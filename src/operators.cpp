@@ -79,8 +79,8 @@ namespace Sass {
       String* lqstr = lhs.isString();
       String* rqstr = rhs.isString();
 
-      sass::string lstr(lqstr ? lqstr->value() : lhs.to_string(opt));
-      sass::string rstr(rqstr ? rqstr->value() : rhs.to_string(opt));
+      sass::string lstr(lqstr ? lqstr->value() : lhs.toValString(/*opt*/));
+      sass::string rstr(rqstr ? rqstr->value() : rhs.toValString(/*opt*/));
 
       // if (lhs.isNull()) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
       // if (Cast<Null>(&rhs)) throw Exception::InvalidNullOperation(&lhs, &rhs, op);

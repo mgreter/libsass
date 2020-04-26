@@ -232,7 +232,7 @@ extern "C" {
   {
     Value* val = getValue(v);
     Sass_Inspect_Options options(compressed ? SASS_STYLE_COMPRESSED : SASS_STYLE_NESTED, precision);
-    sass::string str(val->to_string(options));
+    sass::string str(val->toValString(/*options*/));
     return sass_make_qstring(str.c_str());
   }
 

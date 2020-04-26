@@ -274,7 +274,7 @@ namespace Sass {
     // Returns whether this invocation passes no arguments.
     bool isEmpty() const;
 
-    sass::string toString() const;
+    // sass::string toString() const;
 
     ATTACH_CRTP_PERFORM_METHODS();
 
@@ -725,7 +725,7 @@ namespace Sass {
     }
 
     sass::string toString() const {
-      return "if" + arguments_->toString();
+      return "if"; // +arguments_->toString();
     }
 
     ATTACH_CRTP_PERFORM_METHODS();

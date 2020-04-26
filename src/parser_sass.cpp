@@ -98,7 +98,7 @@ namespace Sass {
       auto str = SASS_MEMORY_NEW(String,
         scanner.relevantSpanFrom(start), url, true);
       // Must be an easier way to get quotes?
-      str->value(str->to_string());
+      str->value(quote(str->getText()));
       itpl->append(str);
       rule->append(SASS_MEMORY_NEW(StaticImport,
         scanner.relevantSpanFrom(start), itpl));

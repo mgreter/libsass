@@ -729,7 +729,7 @@ namespace Sass {
       && named_.empty()
       && restArg_.isNull();
   }
-
+  /*
   sass::string ArgumentInvocation::toString() const
   {
     sass::sstream strm;
@@ -759,7 +759,7 @@ namespace Sass {
     strm << ")";
     return strm.str();
   }
-
+  */
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

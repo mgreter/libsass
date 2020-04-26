@@ -100,7 +100,7 @@ namespace Sass {
       }
       else {
         // callStackFrame frame(traces, BackTrace(number->pstate()));
-        error(name + ": Expected " + number->to_css() +
+        error(name + ": Expected " + number->toValString() +
           " to have no units or \"%\".", number->pstate(), traces);
       }
       if (value < 0.0) return 0.0;
@@ -123,7 +123,7 @@ namespace Sass {
       if (isVar(channels)) {
         sass::sstream fncall;
         fncall << name << "("
-          << channels->to_css() << ")";
+          << channels->toValString() << ")";
         return SASS_MEMORY_NEW(String,
           pstate, fncall.str());
       }
@@ -168,7 +168,7 @@ namespace Sass {
           fncall << name << "(";
           for (size_t i = 0, iL = list->length(); i < iL; i++) {
             if (i > 0) { fncall << " "; }
-            fncall << list->get(i)->to_css();
+            fncall << list->get(i)->toValString();
           }
           fncall << ")";
           return SASS_MEMORY_NEW(String,
@@ -199,7 +199,7 @@ namespace Sass {
         fncall << name << "(";
         for (size_t i = 0, iL = list->length(); i < iL; i++) {
           if (i > 0) { fncall << " "; }
-          fncall << list->get(i)->to_css();
+          fncall << list->get(i)->toValString();
 
         }
         fncall << ")";
@@ -219,7 +219,7 @@ namespace Sass {
       fncall << name << "(";
       for (Value* arg : arguments) {
         if (addComma) fncall << ", ";
-        fncall << arg->to_css();
+        fncall << arg->toValString();
         addComma = true;
       }
       fncall << ")";
@@ -234,7 +234,7 @@ namespace Sass {
       fncall << color->r() << ", ";
       fncall << color->g() << ", ";
       fncall << color->b() << ", ";
-      fncall << alpha->to_css() << ")";
+      fncall << alpha->toValString() << ")";
       return SASS_MEMORY_NEW(String,
         pstate, fncall.str());
     }
@@ -305,7 +305,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
       }
 
 
@@ -339,7 +339,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
       }
 
 
@@ -380,7 +380,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
       }
 
 
@@ -421,7 +421,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->to_css());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
       }
 
       BUILT_IN_FN(red)
@@ -549,7 +549,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(*ctx.logger123, Strings::amount);
         return SASS_MEMORY_NEW(String, pstate,
-          "saturate(" + number->to_css() + ")");
+          "saturate(" + number->toValString() + ")");
       }
 
       BUILT_IN_FN(desaturate)
@@ -1054,10 +1054,10 @@ namespace Sass {
       if (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a)) {
         sass::sstream fncall;
         fncall << name << "(";
-        fncall << _r->to_css() << ", ";
-        fncall << _g->to_css() << ", ";
-        fncall << _b->to_css();
-        if (_a) { fncall << ", " << _a->to_css(); }
+        fncall << _r->toValString() << ", ";
+        fncall << _g->toValString() << ", ";
+        fncall << _b->toValString();
+        if (_a) { fncall << ", " << _a->toValString(); }
         fncall << ")";
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
@@ -1088,10 +1088,10 @@ namespace Sass {
       if (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a)) {
         sass::sstream fncall;
         fncall << name << "(";
-        fncall << _h->to_css() << ", ";
-        fncall << _s->to_css() << ", ";
-        fncall << _l->to_css();
-        if (_a) { fncall << ", " << _a->to_css(); }
+        fncall << _h->toValString() << ", ";
+        fncall << _s->toValString() << ", ";
+        fncall << _l->toValString();
+        if (_a) { fncall << ", " << _a->toValString(); }
         fncall << ")";
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }

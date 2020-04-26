@@ -69,7 +69,7 @@ inline std::string debug_vec(sass::vector<ComplexSelectorObj> vec) {
   std::stringstream out;
   out << "[";
   SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, SourceSpan::tmp("asd"), std::move(vec));
-  out << slist->to_css();
+  out << slist->to_string();
   out << "]";
   return out.str();
 }
