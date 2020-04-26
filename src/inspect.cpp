@@ -358,7 +358,9 @@ namespace Sass {
 
   void Inspect::operator()(CssMediaRule* rule)
   {
-    visitCssMediaRule(rule);
+    if (!rule->is_invisible()) {
+      visitCssMediaRule(rule);
+    }
   }
 
   void Inspect::operator()(CssMediaQuery* query)

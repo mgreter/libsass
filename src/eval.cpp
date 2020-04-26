@@ -248,9 +248,9 @@ namespace Sass {
     // std::cerr << "++ [[" << pu->length() << "]] [[" << css->selector()->to_string() << "]]\n";
     // hasVisibleSibling;
 
-    // _addChild(pu, css);
-    pu->append(css);
-    css->parent_ = pu;
+    _addChild(pu, css);
+    // pu->append(css);
+    // css->parent_ = pu;
 
 
     {
@@ -284,7 +284,9 @@ namespace Sass {
 
   void Eval::_addChild(CssParentNode* parent, CssParentNode* node)
   {
+
     if (node->hasVisibleSibling(parent)) {
+      std::cerr << "THE STRANGE ONE\n";
       auto grandparent = parent->parent_;
       parent = parent->copy();
       parent->clear();
@@ -556,9 +558,9 @@ namespace Sass {
     }
 
 
-    css->parent_ = chroot;
-    chroot->append(css);
-    // _addChild(chroot, css);
+      // css->parent_ = chroot;
+    // chroot->append(css);
+    _addChild(chroot, css);
 
 
     auto oldParent = parent65;

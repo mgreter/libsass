@@ -437,7 +437,7 @@ namespace Sass {
     bool bubbles() const override final { return true; }
 
     bool isInvisible() const { return queries_.empty(); }
-    bool is_invisible() const override { return false; };
+    bool is_invisible() const override { return queries_.empty(); };
 
     // Append additional media queries
     void concat(const sass::vector<CssMediaQueryObj>& queries);
