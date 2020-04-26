@@ -298,11 +298,11 @@ namespace Sass {
   {}
 
   // Return a copy with empty children
-  CssKeyframeBlock* CssKeyframeBlock::copyWithoutChildren() {
-    CssKeyframeBlock* cpy = SASS_MEMORY_COPY(this);
-    cpy->clear(); // return with empty children
-    return cpy;
-  }
+  // CssKeyframeBlock* CssKeyframeBlock::copyWithoutChildren() {
+  //   CssKeyframeBlock* cpy = SASS_MEMORY_COPY(this);
+  //   cpy->clear(); // return with empty children
+  //   return cpy;
+  // }
   // EO copyWithoutChildren
 
   /////////////////////////////////////////////////////////////////////////////
@@ -672,14 +672,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // IMPLEMENT_AST_OPERATORS(CssNode);
-  IMPLEMENT_COPY_OPERATORS(CssStrings);
+  //IMPLEMENT_COPY_OPERATORS(CssStrings);
   // IMPLEMENT_COPY_OPERATORS(CssString);
-  IMPLEMENT_COPY_OPERATORS(CssValue);
-  IMPLEMENT_COPY_OPERATORS(CssAtRule);
-  IMPLEMENT_COPY_OPERATORS(CssComment);
-  IMPLEMENT_COPY_OPERATORS(CssDeclaration);
-  IMPLEMENT_COPY_OPERATORS(CssImport);
-  IMPLEMENT_COPY_OPERATORS(CssKeyframeBlock);
+//  IMPLEMENT_COPY_OPERATORS(CssValue);
+  //IMPLEMENT_COPY_OPERATORS(CssAtRule);
+  //IMPLEMENT_COPY_OPERATORS(CssComment);
+  //IMPLEMENT_COPY_OPERATORS(CssDeclaration);
+  // IMPLEMENT_COPY_OPERATORS(CssImport); 
+  // IMPLEMENT_COPY_OPERATORS(CssKeyframeBlock);
   IMPLEMENT_COPY_OPERATORS(CssMediaQuery);
   IMPLEMENT_COPY_OPERATORS(CssMediaRule);
   IMPLEMENT_COPY_OPERATORS(CssStyleRule);

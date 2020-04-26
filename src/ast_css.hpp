@@ -119,7 +119,7 @@ namespace Sass {
   public:
     CssStrings(const SourceSpan& pstate,
       const sass::vector<sass::string>& texts);
-    ATTACH_COPY_OPERATIONS(CssStrings);
+    ATTACH_COPY_CTOR(CssStrings);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -131,7 +131,7 @@ namespace Sass {
     ADD_PROPERTY(ValueObj, value);
   public:
     CssValue(const SourceSpan& pstate, Value* value);
-    ATTACH_COPY_OPERATIONS(CssValue);
+    ATTACH_COPY_CTOR(CssValue);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -157,7 +157,7 @@ namespace Sass {
     bool is_invisible() const override final;
 
     bool bubbles() const override final;
-    ATTACH_COPY_OPERATIONS(CssAtRule);
+    ATTACH_COPY_CTOR(CssAtRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -169,7 +169,7 @@ namespace Sass {
     ADD_PROPERTY(bool, isPreserved);
   public:
     CssComment(const SourceSpan& pstate, const sass::string& text, bool preserve = false);
-    ATTACH_COPY_OPERATIONS(CssComment);
+    ATTACH_COPY_CTOR(CssComment);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -185,7 +185,7 @@ namespace Sass {
   public:
     CssDeclaration(const SourceSpan& pstate, CssString* name, CssValue* value,
       bool is_custom_property = false);
-    ATTACH_COPY_OPERATIONS(CssDeclaration);
+    ATTACH_COPY_CTOR(CssDeclaration);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -216,7 +216,7 @@ namespace Sass {
       CssString* supports = nullptr,
       sass::vector<CssMediaQueryObj> media = {});
 
-    ATTACH_COPY_OPERATIONS(CssImport);
+    ATTACH_COPY_CTOR(CssImport);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -251,9 +251,9 @@ namespace Sass {
     }
 
     // Return a copy with empty children
-    CssKeyframeBlock* copyWithoutChildren();
+    // CssKeyframeBlock* copyWithoutChildren();
 
-    ATTACH_COPY_OPERATIONS(CssKeyframeBlock);
+    ATTACH_COPY_CTOR(CssKeyframeBlock);
     ATTACH_CRTP_PERFORM_METHODS();
 
   };
