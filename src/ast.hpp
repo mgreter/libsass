@@ -295,7 +295,6 @@ namespace Sass {
     Statement(const SourceSpan& pstate, size_t t = 0);
     virtual ~Statement() = 0; // virtual destructor
     // needed for rearranging nested rulesets during CSS emission
-    virtual bool bubbles() const;
     virtual bool has_content();
     virtual bool is_invisible() const;
     ATTACH_VIRTUAL_COPY_OPERATIONS(Statement)
@@ -905,7 +904,6 @@ namespace Sass {
     MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add);
     MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, sass::vector<StatementObj>&& els);
 
-    bool bubbles() const override final { return true; };
     bool is_invisible() const override { return false; };
     ATTACH_CRTP_PERFORM_METHODS()
   };

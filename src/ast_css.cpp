@@ -195,12 +195,6 @@ namespace Sass {
     value_(ptr->value_)
   {}
 
-  bool CssAtRule::bubbles() const
-  {
-    return Util::vendorMatch(Strings::media.c_str(), name_->text())
-      || Util::vendorMatch(Strings::keyframes.c_str(), name_->text());
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
@@ -356,11 +350,6 @@ namespace Sass {
     for (auto stmt : elements()) {
       if (!stmt->is_invisible()) return false;
     }
-    return true;
-  }
-
-  bool CssSupportsRule::bubbles() const
-  {
     return true;
   }
 
@@ -630,25 +619,21 @@ namespace Sass {
   : CssNode(pstate), node_(n)
   { }
 
-  bool Bubble::bubbles() const
-  {
-    return true;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Trace::Trace(const SourceSpan& pstate,
+  CssImportTrace::CssImportTrace(const SourceSpan& pstate,
     CssParentNode* parent,
     const sass::string& n, char type)
     : CssParentNode(pstate, parent), type_(type), name_(n)
   {}
-  Trace::Trace(const SourceSpan& pstate,
+  CssImportTrace::CssImportTrace(const SourceSpan& pstate,
     CssParentNode* parent,
     const sass::string& n, sass::vector<CssNodeObj>&& b, char type)
     : CssParentNode(pstate, parent, std::move(b)), type_(type), name_(n)
   {}
-  Trace::Trace(const Trace* ptr, bool childless) :
+  CssImportTrace::CssImportTrace(const CssImportTrace* ptr, bool childless) :
     CssParentNode(ptr, childless),
     type_(ptr->type_),
     name_(ptr->name_)
@@ -673,6 +658,6 @@ namespace Sass {
   IMPLEMENT_COPY_OPERATORS(CssSupportsRule);
   IMPLEMENT_COPY_OPERATORS(CssAtRootRule);
   IMPLEMENT_COPY_OPERATORS(Keyframe_Rule);
-  IMPLEMENT_COPY_OPERATORS(Trace);
+  IMPLEMENT_COPY_OPERATORS(CssImportTrace);
 
 }

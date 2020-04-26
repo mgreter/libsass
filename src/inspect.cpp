@@ -463,7 +463,7 @@ namespace Sass {
     }
   }
 
-  void Inspect::operator()(Trace* trace)
+  void Inspect::operator()(CssImportTrace* trace)
   {
     for (CssNode* stmt : trace->elements()) {
       stmt->perform(this);

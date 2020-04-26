@@ -107,7 +107,7 @@ namespace Sass {
     virtual void operator()(ComplexSelector*) override;
     virtual void operator()(SelectorList*) override;
 
-    virtual void operator()(Trace*) override;
+    virtual void operator()(CssImportTrace*) override;
 
     virtual void operator()(PlaceholderSelector*) override;
     virtual void operator()(AttributeSelector*) override;

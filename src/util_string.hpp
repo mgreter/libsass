@@ -46,17 +46,6 @@ namespace Sass {
 
   namespace Util {
 
-    // ##########################################################################
-    // Special case insensitive string matcher. We can optimize
-    // the more general compare case quite a bit by requiring
-    // consumers to obey some rules (lowercase and no space).
-    // - `literal` must only contain lower case ASCII characters
-    // there is one edge case where this could give false positives:
-    // test could contain a (NON-ASCII) char exactly 32 below literal
-    // ##########################################################################
-    // Only used in bubbles (get rid of it)
-    bool vendorMatch(const char* lit, const sass::string& test);
-
     // ###########################################################################
     // Returns [name] without a vendor prefix.
     // If [name] has no vendor prefix, it's returned as-is.

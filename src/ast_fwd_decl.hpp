@@ -59,7 +59,7 @@ namespace Sass {
   class Declaration;
   class StyleRule;
   class Bubble;
-  class Trace;
+  class CssImportTrace;
 
   class MapExpression;
   class ListExpression;
@@ -190,7 +190,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Root);
   IMPL_MEM_OBJ(StyleRule);
   IMPL_MEM_OBJ(Bubble);
-  IMPL_MEM_OBJ(Trace);
+  IMPL_MEM_OBJ(CssImportTrace);
   IMPL_MEM_OBJ(MediaRule);
 
   IMPL_MEM_OBJ(MapExpression);

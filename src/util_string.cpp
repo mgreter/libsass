@@ -8,21 +8,6 @@
 namespace Sass {
   namespace Util {
 
-
-  bool vendorMatch(const char* lit, const sass::string& test)
-  {
-    const char* str = test.c_str();
-    // Must begin with exactly one dash, otherwise compare fully
-    if (str[0] == '-' && str[1] != '-') {
-      // Search next dash to finish the vendor prefix
-      for (size_t pos = 2; str[pos] != 0; pos += 1) {
-        if (str[pos] != '-') continue; // not found yet
-        return std::strcmp(str + pos + 1, lit) == 0;
-      }
-    }
-    return std::strcmp(str, lit) == 0;
-  }
-
     // ###########################################################################
     // Returns [name] without a vendor prefix.
     // If [name] has no vendor prefix, it's returned as-is.

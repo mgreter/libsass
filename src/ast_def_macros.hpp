@@ -181,12 +181,17 @@ private:
     throw std::runtime_error("Clone not implemented"); \
   } \
 
+
 #define ATTACH_COPY_CTOR(klass) \
   klass(const klass* ptr, bool childless = false); \
 
 #define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \
   virtual klass* copy(bool childless = false) const; \
+
+#define ATTACH_COPY_OPERATIONS2(klass) \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override final; \
 
 #define ATTACH_CLONE_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \

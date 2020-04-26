@@ -383,9 +383,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     debug_block(root, ind + " ");
   }
-  else if (Cast<Trace>(node)) {
-    Trace* trace = Cast<Trace>(node);
-    std::cerr << ind << "Trace " << trace;
+  else if (Cast<CssImportTrace>(node)) {
+    CssImportTrace* trace = Cast<CssImportTrace>(node);
+    std::cerr << ind << "CssImportTrace " << trace;
     std::cerr << " (" << pstate_source_position(node) << ")"
       << " [name:" << trace->name() << ", type: " << trace->type() << "]"
       << std::endl;

@@ -74,8 +74,8 @@ namespace Sass {
       UserDefinedCallable* callable,
       UserDefinedCallable* content,
       bool isMixinCall,
-      Value* (Eval::* run)(UserDefinedCallable*, Trace*),
-      Trace* trace,
+      Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
+      CssImportTrace* trace,
       const SourceSpan& pstate);
 
     Value* _runBuiltInCallable(
@@ -214,7 +214,7 @@ namespace Sass {
     // actual evaluated selectors
     Value* operator()(Parent_Reference*);
 
-    Value* _runAndCheck(UserDefinedCallable*, Trace*);
+    Value* _runAndCheck(UserDefinedCallable*, CssImportTrace*);
 
     Value* visitSupportsRule(SupportsRule* node);
     sass::vector<CssMediaQueryObj> mergeMediaQueries(const sass::vector<CssMediaQueryObj>& lhs, const sass::vector<CssMediaQueryObj>& rhs);
@@ -254,7 +254,7 @@ namespace Sass {
 
     Value* visitFunctionRule(FunctionRule* rule);
 
-    Value* _runWithBlock(UserDefinedCallable* callable, Trace* trace);
+    Value* _runWithBlock(UserDefinedCallable* callable, CssImportTrace* trace);
 
     Value* visitIncludeRule(IncludeRule* node);
 

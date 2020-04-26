@@ -147,11 +147,6 @@ namespace Sass {
     tabs_(ptr->tabs_)
   { }
 
-  bool Statement::bubbles() const
-  {
-    return false;
-  }
-
   bool Statement::has_content()
   {
     return Cast<ContentRule>(this) != nullptr;

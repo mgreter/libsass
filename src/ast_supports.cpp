@@ -15,9 +15,6 @@ namespace Sass {
   SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, sass::vector<StatementObj>&& els)
     : ParentStatement(pstate, std::move(els)), condition_(condition), idxs_(0)
   {}
-  SupportsRule::SupportsRule(const SupportsRule* ptr, bool childless)
-  : ParentStatement(ptr, childless), condition_(ptr->condition_), idxs_(ptr->idxs_)
-  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -53,16 +50,6 @@ namespace Sass {
   SupportsInterpolation::SupportsInterpolation(const SourceSpan& pstate, ExpressionObj v)
   : SupportsCondition(pstate), value_(v)
   { }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  IMPLEMENT_AST_OPERATORS(SupportsRule);
-  // IMPLEMENT_AST_OPERATORS(SupportsCondition);
-  // IMPLEMENT_AST_OPERATORS(SupportsOperation);
-  // IMPLEMENT_AST_OPERATORS(SupportsNegation);
-  // IMPLEMENT_AST_OPERATORS(SupportsDeclaration);
-  // IMPLEMENT_AST_OPERATORS(SupportsInterpolation);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

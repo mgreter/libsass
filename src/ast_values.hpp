@@ -646,7 +646,6 @@ namespace Sass {
                       Operand op, ExpressionObj lhs, ExpressionObj rhs);
 
     enum Sass_OP optype() const { return op_.operand; }
-    // ATTACH_CLONE_OPERATIONS(Binary_Expression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -675,7 +674,6 @@ namespace Sass {
 
     Function* assertFunction(Logger& logger, const sass::string& name = StrEmpty) override final { return this; }
 
-    // ATTACH_CLONE_OPERATIONS(Function)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -689,8 +687,7 @@ namespace Sass {
     Variable(const SourceSpan& pstate,
       const EnvKey& name,
       IdxRef vidx);
-    // ATTACH_CLONE_OPERATIONS(Variable)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ////////////////////////////////////////////////
@@ -1211,8 +1208,7 @@ namespace Sass {
     Custom_Error* isError() override final { return this; }
     const Custom_Error* isError() const override final { return this; }
     bool operator== (const Value& rhs) const override;
-    // ATTACH_CLONE_OPERATIONS(Custom_Error)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   //////////////////////////////
@@ -1227,8 +1223,7 @@ namespace Sass {
     Custom_Warning* isWarning() override final { return this; }
     const Custom_Warning* isWarning() const override final { return this; }
     bool operator== (const Value& rhs) const override;
-    // ATTACH_CLONE_OPERATIONS(Custom_Warning)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   ////////////
@@ -1287,7 +1282,6 @@ namespace Sass {
       const SourceSpan& pstate,
       sass::vector<InterpolantObj> items);
 
-    // ATTACH_CLONE_OPERATIONS(Interpolation)
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -1382,8 +1376,7 @@ namespace Sass {
 
     bool operator== (const Value& rhs) const override final;
 
-    // ATTACH_CLONE_OPERATIONS(Null)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   //////////////////////////////////
@@ -1398,8 +1391,7 @@ namespace Sass {
     bool operator==(const Value& rhs) const override {
       return true; // they are always equal
     };
-    // ATTACH_CLONE_OPERATIONS(Parent_Reference)
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
 }

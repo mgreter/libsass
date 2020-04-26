@@ -45,7 +45,7 @@ namespace Sass {
   public:
     SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition);
     SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, sass::vector<StatementObj>&& els);
-    ATTACH_CLONE_OPERATIONS(SupportsRule)
+    // ATTACH_CLONE_OPERATIONS(SupportsRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

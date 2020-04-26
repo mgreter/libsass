@@ -69,7 +69,7 @@ namespace Sass {
       }
     }
 
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, node->pstate(), parent65, node->name().orig());
+    CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace, node->pstate(), parent65, node->name().orig());
     parent65->append(trace);
 
     LOCAL_PTR(CssParentNode, parent65, trace);
@@ -107,7 +107,7 @@ namespace Sass {
 
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
-    Trace_Obj trace = SASS_MEMORY_NEW(Trace, c->pstate(), parent65, Strings::contentRule);
+    CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace, c->pstate(), parent65, Strings::contentRule);
     parent65->append(trace);
 
       LOCAL_PTR(CssParentNode, parent65, trace);
@@ -180,7 +180,7 @@ namespace Sass {
 
       // _withParent
       auto pu = parent65;
-      while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
+      while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
         // std::cout << "Go through Keyframe CssStyleRule\n";
         pu = pu->parent_;
       }
@@ -241,7 +241,7 @@ namespace Sass {
     // _withParent
     auto pu = parent65;
    // debug_ast(parent65, "ADD TO");
-    while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
+    while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
        // std::cout << "Go through CssStyleRule\n";
        pu = pu->parent_;
     }
@@ -362,7 +362,7 @@ namespace Sass {
 
 
     auto pu = parent65;
-    while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
+    while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
       // std::cout << "Go through SupportsRule CssStyleRule\n";
       pu = pu->parent_;
     }
@@ -578,7 +578,7 @@ namespace Sass {
 
       auto pu = parent65;
       // debug_ast(parent65);
-      while (Cast<CssStyleRule>(pu) || Cast<Trace>(pu)) {
+      while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
         // std::cout << "Go through AtRule CssStyleRule\n";
         pu = pu->parent_;
       }
@@ -665,7 +665,7 @@ namespace Sass {
 
     auto chroot = parent65;
 
-      while ((Cast<CssStyleRule>(chroot) || Cast<Trace>(chroot)) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
+      while ((Cast<CssStyleRule>(chroot) || Cast<CssImportTrace>(chroot)) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
       chroot = chroot->parent_;
     }
 
@@ -781,8 +781,8 @@ namespace Sass {
     UserDefinedCallable* callable,
     UserDefinedCallable* content,
     bool isMixinCall,
-    Value* (Eval::* run)(UserDefinedCallable*, Trace*),
-    Trace* trace,
+    Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
+    CssImportTrace* trace,
     const SourceSpan& pstate)
   {
 
@@ -1516,7 +1516,7 @@ namespace Sass {
       compiler.varRoot.getLexicalMixin(name);
   }
 
-  Value* Eval::_runWithBlock(UserDefinedCallable* callable, Trace* trace)
+  Value* Eval::_runWithBlock(UserDefinedCallable* callable, CssImportTrace* trace)
   {
     ValueObj result; // declare outside for loop to re-use
     CallableDeclaration* declaration = callable->declaration();
@@ -2079,7 +2079,7 @@ namespace Sass {
     }
   }
 
-  Value* Eval::_runAndCheck(UserDefinedCallable* callable, Trace* trace)
+  Value* Eval::_runAndCheck(UserDefinedCallable* callable, CssImportTrace* trace)
   {
     CallableDeclaration* declaration = callable->declaration();
     for (Statement* statement : declaration->elements()) {

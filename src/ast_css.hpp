@@ -21,7 +21,6 @@ namespace Sass {
   public:
     CssNode(const SourceSpan& pstate);
 
-    virtual bool bubbles() const { return false; }
     virtual bool is_invisible() const { return false; }
     // size_t tabs() const { return 0; }
     // void tabs(size_t tabs) const { }
@@ -74,15 +73,13 @@ namespace Sass {
 //    ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
 
     CssParentNode(const CssParentNode* ptr, bool childless);
-      virtual CssParentNode* copy(bool childless = false) const override {
-        throw std::runtime_error("Copy not implemented");
+
+    // Must be implemented in derived classes
+    virtual CssParentNode* copy(bool childless = false) const {
+      throw std::runtime_error("Copy not implemented");
     }
-      virtual CssParentNode* clone() const override {
-          throw std::runtime_error("Clone not implemented");
-      }
 
-
-    ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -155,7 +152,6 @@ namespace Sass {
 
     bool is_invisible() const override final;
 
-    bool bubbles() const override final;
     ATTACH_COPY_CTOR(CssAtRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -278,9 +274,8 @@ namespace Sass {
       sass::vector<CssNodeObj>&& children);
 
     bool is_invisible() const override;
-    bool bubbles() const override final { return true; }
 
-    ATTACH_COPY_OPERATIONS(CssStyleRule);
+    ATTACH_COPY_OPERATIONS2(CssStyleRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -301,8 +296,7 @@ namespace Sass {
       sass::vector<CssNodeObj>&& children);
 
     bool is_invisible() const override;
-    bool bubbles() const override final;
-    ATTACH_COPY_OPERATIONS(CssSupportsRule);
+    ATTACH_COPY_OPERATIONS2(CssSupportsRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -396,9 +390,8 @@ namespace Sass {
       sass::vector<CssNodeObj>&& children);
 
     // Tell cssize that we can bubble up
-    bool bubbles() const override final { return true; }
 
-    ATTACH_COPY_OPERATIONS(CssAtRootRule);
+    ATTACH_COPY_OPERATIONS2(CssAtRootRule);
     ATTACH_CRTP_PERFORM_METHODS();
 
   };
@@ -433,7 +426,6 @@ namespace Sass {
     }
 
     // Tell cssize that we can bubble up
-    bool bubbles() const override final { return true; }
 
     bool isInvisible() const { return queries_.empty(); }
     bool is_invisible() const override { return queries_.empty(); };
@@ -444,7 +436,7 @@ namespace Sass {
     // Check if two instances are considered equal
     bool operator== (const CssMediaRule& rhs) const;
 
-    ATTACH_COPY_OPERATIONS(CssMediaRule);
+    ATTACH_COPY_OPERATIONS2(CssMediaRule);
     ATTACH_CRTP_PERFORM_METHODS();
 
   };
@@ -468,7 +460,7 @@ namespace Sass {
       CssParentNode* parent,
       sass::vector<CssNodeObj>&& children);
 
-    ATTACH_COPY_OPERATIONS(Keyframe_Rule);
+    ATTACH_COPY_OPERATIONS2(Keyframe_Rule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -480,26 +472,24 @@ namespace Sass {
     ADD_PROPERTY(CssNodeObj, node)
   public:
     Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g = {});
-    bool bubbles() const override final;
-    // ATTACH_COPY_OPERATIONS(Bubble);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////
-  // Trace.
+  // CssImportTrace.
   /////////////////
-  class Trace final : public CssParentNode {
+  class CssImportTrace final : public CssParentNode {
     ADD_CONSTREF(char, type)
     ADD_CONSTREF(sass::string, name)
   public:
-    Trace(const SourceSpan& pstate,
+    CssImportTrace(const SourceSpan& pstate,
       CssParentNode* parent,
       const sass::string& name, char type = 'm');
-    Trace(const SourceSpan& pstate,
+    CssImportTrace(const SourceSpan& pstate,
       CssParentNode* parent,
       const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
     virtual bool is_invisible() const { return empty(); }
-    ATTACH_COPY_OPERATIONS(Trace);
+    ATTACH_COPY_OPERATIONS2(CssImportTrace);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 }
