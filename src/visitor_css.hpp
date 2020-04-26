@@ -18,7 +18,6 @@ namespace Sass {
     virtual T visitCssKeyframeBlock(CssKeyframeBlock* node) = 0;
     virtual T visitCssMediaRule(CssMediaRule* node) = 0;
     // T visitCssStyleRule(CssStyleRule node);
-    // T visitCssStylesheet(CssStylesheet node);
     // T visitCssSupportsRule(CssSupportsRule* node);
 
   };

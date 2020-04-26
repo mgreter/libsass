@@ -81,7 +81,6 @@ namespace Sass {
   class CssImport;
   class CssKeyframeBlock;
   class CssStyleRule;
-  class CssStylesheet;
   class CssSupportsRule;
 
   class SupportsRule;
@@ -213,7 +212,6 @@ namespace Sass {
   IMPL_MEM_OBJ(CssImport);
   IMPL_MEM_OBJ(CssKeyframeBlock);
   IMPL_MEM_OBJ(CssStyleRule);
-  IMPL_MEM_OBJ(CssStylesheet);
   IMPL_MEM_OBJ(CssSupportsRule);
   IMPL_MEM_OBJ(Callable);
   IMPL_MEM_OBJ(UserDefinedCallable);

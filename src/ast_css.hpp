@@ -288,17 +288,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  class CssStylesheet : public CssParentNode {
-  public:
-    CssStylesheet(const SourceSpan& pstate,
-      CssParentNode* parent);
-    ATTACH_COPY_OPERATIONS(CssStylesheet);
-    ATTACH_CRTP_PERFORM_METHODS();
-  };
-
-  /////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////
-
   class CssSupportsRule : public CssParentNode {
     ADD_PROPERTY(ExpressionObj, condition);
   public:
@@ -378,7 +367,7 @@ namespace Sass {
     sass::vector<CssMediaQueryObj> parseList(
       const sass::string& contents);
 
-    ATTACH_COPY_OPERATIONS(CssMediaQuery);
+    ATTACH_COPY_CTOR(CssMediaQuery);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 

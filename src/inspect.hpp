@@ -140,7 +140,6 @@ namespace Sass {
     // T visitCssKeyframeBlock(CssKeyframeBlock node);
     void visitCssMediaRule(CssMediaRule* node);
     void visitCssStyleRule(CssStyleRule* node);
-    // T visitCssStylesheet(CssStylesheet node);
     // T visitCssSupportsRule(CssSupportsRule node);
 
     // Not part of css visitors (only used here)

@@ -460,7 +460,7 @@ namespace Sass {
     auto orgParent = parent65;
     sass::vector<CssParentNodeObj> included;
 
-    while (parent && parent->parent_) { //  is!CssStylesheet
+    while (parent && parent->parent_) { //  is!CssStylesheet (is!CssRootNode)
       if (!query->excludes(parent)) {
         included.emplace_back(parent);
       }

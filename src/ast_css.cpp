@@ -334,19 +334,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  CssStylesheet::CssStylesheet(
-    const SourceSpan& pstate,
-    CssParentNode* parent) :
-    CssParentNode(pstate, parent)
-  {}
-  CssStylesheet::CssStylesheet(
-    const CssStylesheet* ptr, bool childless) :
-    CssParentNode(ptr, childless)
-  {}
-
-  /////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////
-
   CssSupportsRule::CssSupportsRule(
     const SourceSpan& pstate,
     CssParentNode* parent,
@@ -680,10 +667,9 @@ namespace Sass {
   //IMPLEMENT_COPY_OPERATORS(CssDeclaration);
   // IMPLEMENT_COPY_OPERATORS(CssImport); 
   // IMPLEMENT_COPY_OPERATORS(CssKeyframeBlock);
-  IMPLEMENT_COPY_OPERATORS(CssMediaQuery);
+  // IMPLEMENT_COPY_OPERATORS(CssMediaQuery);
   IMPLEMENT_COPY_OPERATORS(CssMediaRule);
   IMPLEMENT_COPY_OPERATORS(CssStyleRule);
-  IMPLEMENT_COPY_OPERATORS(CssStylesheet);
   IMPLEMENT_COPY_OPERATORS(CssSupportsRule);
   IMPLEMENT_COPY_OPERATORS(CssAtRootRule);
   IMPLEMENT_COPY_OPERATORS(Keyframe_Rule);
