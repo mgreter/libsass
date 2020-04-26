@@ -67,11 +67,8 @@ namespace Sass {
       return true;
     }
 
-    bool isBlabla(CssParentNode* node);
+    bool _isInvisible2(CssNode* node);
     bool hasVisibleSibling(CssParentNode* node);
-
-    bool is_invisible() const override;
-
 
     // bool get isChildless;
     ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);

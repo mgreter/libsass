@@ -51,22 +51,27 @@ namespace Sass {
     parent_(ptr->parent_)
   {}
 
-  bool CssParentNode::isBlabla(CssParentNode* node)
+  bool CssParentNode::_isInvisible2(CssNode* asd)
   {
-    if (Cast<CssParentNode>(node)) {
+    if (auto node = Cast<CssParentNode>(asd)) {
       // An unknown at-rule is never invisible. Because we don't know the
       // semantics of unknown rules, we can't guarantee that (for example)
       // `@foo {}` isn't meaningful.
-      if (Cast<CssAtRule>(node)) return false;
+      if (Cast<CssAtRule>(node)) {
+        //std::cerr << "Saw atRule\n";
+        return false;
+      }
 
       auto styleRule = Cast<CssStyleRule>(node);
-      if (styleRule && styleRule->selector()->isInvisible()) return true;
+      if (styleRule && styleRule->selector()->isInvisible()) {
+        //std::cerr << "Saw invisible selector\n";
+        return true;
+      }
 
       for (auto item : node->elements()) {
-        if (auto asd = Cast<CssParentNode>(item)) {
-          if (!isBlabla(asd)) {
-            return false;
-          }
+        if (!_isInvisible2(item)) {
+          //std::cerr << "Saw visible child\n";
+          return false;
         }
       }
 
@@ -89,26 +94,12 @@ namespace Sass {
     while (++it != siblings->end()) {
       // Special context for invisibility!
       // dart calls this out to the parent
-      // std::cerr << " ---- FOUND MYSELF\n";
-      if (auto asd = Cast<CssParentNode>(node)) {
-        if (!isBlabla(asd)) {
-          return true;
-        }
-        else {
-          //     std::cerr << " ---- INVISBL\n";
-        }
+      if (!_isInvisible2(*it)) {
+        return true;
       }
     }
 
     return false;
-  }
-
-  bool CssParentNode::is_invisible() const
-  {
-    for (auto child : elements()) {
-      if (!child->is_invisible()) return false;
-    }
-    return true;
   }
 
 
