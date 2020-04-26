@@ -1517,7 +1517,7 @@ namespace Sass {
   {
     if (!arguments->named().empty()) {
       callStackFrame frame(eval.traces,
-        arguments->named().pstate());
+        arguments->pstate());
       throw Exception::SassRuntimeException2(
         "Plain CSS functions don't support keyword arguments.",
         *eval.compiler.logger123);
@@ -1730,7 +1730,7 @@ namespace Sass {
     // return CssValue(trim ? trimAscii(result, excludeEscape: true) : result,
     //   interpolation.span);
   }
-
+  /*
   ArgumentInvocation* Eval::visitArgumentInvocation(ArgumentInvocation* args)
   {
     // Create a copy of everything
@@ -1742,7 +1742,7 @@ namespace Sass {
     }
     return arguments.detach();
   }
-
+  */
   String* Eval::operator()(Interpolation* s)
   {
     return SASS_MEMORY_NEW(String, s->pstate(),

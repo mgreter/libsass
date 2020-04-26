@@ -225,7 +225,7 @@ namespace Sass {
     name->append(SASS_MEMORY_NEW(StringExpression, identifier->pstate(), identifier));
 
     ArgumentInvocation* args = SASS_MEMORY_NEW(ArgumentInvocation,
-      scanner.rawSpanFrom(start), arguments, EnvKeyFlatMap2{ SourceSpan::tmp("null"), {} });
+      scanner.rawSpanFrom(start), std::move(arguments), EnvKeyFlatMap2{ {} });
     
     return SASS_MEMORY_NEW(FunctionExpression,
       scanner.rawSpanFrom(start), name, args);

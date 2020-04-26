@@ -224,14 +224,11 @@ namespace Sass {
 
   };
 
-  class EnvKeyFlatMap2 : public AST_Node, public EnvKeyFlatMap<ExpressionObj> {
+  class EnvKeyFlatMap2 : public EnvKeyFlatMap<ExpressionObj> {
 
   public:
 
-    EnvKeyFlatMap2(const SourceSpan& pstate,
-      EnvKeyFlatMap<ExpressionObj>&& named);
-
-    ATTACH_CRTP_PERFORM_METHODS();
+    EnvKeyFlatMap2(EnvKeyFlatMap<ExpressionObj>&& named);
 
   };
 
@@ -260,8 +257,8 @@ namespace Sass {
   public:
 
     ArgumentInvocation(const SourceSpan& pstate,
-      const sass::vector<ExpressionObj>& positional,
-      const EnvKeyFlatMap2& named,
+      sass::vector<ExpressionObj>&& positional,
+      EnvKeyFlatMap2&& named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 

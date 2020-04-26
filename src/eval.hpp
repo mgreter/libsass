@@ -115,7 +115,7 @@ namespace Sass {
     sass::string interpolationToValue(InterpolationObj interpolation, bool trim, bool warnForColor);
     SourceData* performInterpolationToSource(InterpolationObj interpolation, bool warnForColor);
 
-    ArgumentInvocation* visitArgumentInvocation(ArgumentInvocation* args);
+    // ArgumentInvocation* visitArgumentInvocation(ArgumentInvocation* args);
 
     Value* operator()(ContentRule* node) { return visitContentRule(node); }
     Value* operator()(FunctionRule* node) { return visitFunctionRule(node); }
