@@ -207,7 +207,7 @@ namespace Sass {
   }
 
   Value::Value(const Value* ptr, bool childless)
-  : Expression(ptr) { }
+  : Expression(ptr->pstate()) { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -855,12 +855,12 @@ namespace Sass {
 
   }
 
-  StringExpression::StringExpression(const StringExpression* ptr, bool childless) :
-    Expression(ptr),
-    text_(ptr->text_),
-    hasQuotes_(ptr->hasQuotes_)
-  {
-  }
+  // StringExpression::StringExpression(const StringExpression* ptr, bool childless) :
+  //   Expression(ptr->pstate()),
+  //   text_(ptr->text_),
+  //   hasQuotes_(ptr->hasQuotes_)
+  // {
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -971,7 +971,7 @@ namespace Sass {
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    Vectorized(values),
+    VectorizedNopsi(values),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {}
@@ -982,7 +982,7 @@ namespace Sass {
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    Vectorized(std::move(values)),
+    VectorizedNopsi(std::move(values)),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {}
@@ -990,7 +990,7 @@ namespace Sass {
   SassList::SassList(
     const SassList* ptr, bool childless) :
     Value(ptr),
-    Vectorized(ptr),
+    VectorizedNopsi(ptr),
     separator_(ptr->separator_),
     hasBrackets_(ptr->hasBrackets_)
   {}
@@ -1013,8 +1013,8 @@ namespace Sass {
     if (hash_ == 0) {
       hash_start(hash_, sizetHasher(separator()));
       hash_combine(hash_, boolHasher(hasBrackets()));
-      for (size_t i = 0, L = length(); i < L; ++i)
-        hash_combine(hash_, elements()[i]->hash());
+      for (auto child : elements())
+        hash_combine(hash_, child->hash());
     }
     return hash_;
   }
@@ -1051,8 +1051,6 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Color_HSLA);
   IMPLEMENT_AST_OPERATORS(Boolean);
   IMPLEMENT_AST_OPERATORS(SassString);
-
-  IMPLEMENT_AST_OPERATORS(StringExpression);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ namespace Sass {
 
     // Reset it once container is mutated
     // Therefore don't allow outside mutation
-    void reset_hash() {}
+    virtual void reset_hash() {}
 
   public:
 
@@ -234,58 +234,6 @@ namespace Sass {
     typename sass::vector<T>::const_iterator erase(typename sass::vector<T>::const_iterator el) { reset_hash(); return elements_.erase(el); }
 
   };
-
-  template <typename V>
-  class Vectorized : public VectorizedNopsi<V> {
-
-    typedef SharedImpl<V> T;
-
-  protected:
-
-    // Hash is only calculated once
-    mutable size_t hash_;
-    // Reset it once container is mutated
-    // Therefore don't allow outside mutation
-    void reset_hash() { hash_ = 0; }
-
-  public:
-
-    Vectorized(size_t s = 0) :
-      VectorizedNopsi<V>(s),
-      hash_(0)
-    {}
-
-    // Copy constructor from other Vectorized
-    Vectorized(const VectorizedNopsi<V>* vec) :
-      VectorizedNopsi<V>(vec->elements()),
-      hash_(0)
-    {}
-
-    // Copy constructor from other base vector
-    Vectorized(const sass::vector<T>& vec) :
-      VectorizedNopsi<V>(vec),
-      hash_(0)
-    {}
-
-    // Move constructor from other base vector
-    Vectorized(sass::vector<T>&& vec) :
-      VectorizedNopsi<V>(std::move(vec)),
-      hash_(0)
-    {}
-
-    // Calculate the hash
-    size_t hash() const
-    {
-      if (hash_ == 0) {
-        for (const T& el : this->elements_) {
-          hash_combine(hash_, el->hash());
-        }
-      }
-      return hash_;
-    }
-
-  };
-
 
   /////////////////////////////////////////////////////////////////////////////
   // Mixin class for AST nodes that should behave like a hash table. Uses an

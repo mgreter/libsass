@@ -481,10 +481,6 @@ namespace Sass {
     : AST_Node(std::move(pstate))
   { }
 
-  Interpolant::Interpolant(const Interpolant* ptr, bool childless)
-    : AST_Node(ptr)
-  { }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -494,10 +490,6 @@ namespace Sass {
 
   Expression::Expression(SourceSpan&& pstate)
     : Interpolant(std::move(pstate))
-  { }
-
-  Expression::Expression(const Expression* ptr, bool childless)
-  : Interpolant(ptr)
   { }
 
   /////////////////////////////////////////////////////////////////////////

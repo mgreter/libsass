@@ -53,7 +53,6 @@ namespace Sass {
     Interpolant(SourceSpan&& pstate);
     Interpolant(const SourceSpan& pstate);
 
-    ATTACH_EQ_OPERATIONS(Interpolant);
 
     virtual ItplString* getItplString() { return nullptr; }
     virtual Expression* getExpression() { return nullptr; }
@@ -62,7 +61,7 @@ namespace Sass {
 
     virtual const sass::string& getText() const = 0;
 
-    ATTACH_COPY_CTOR(Interpolant);
+    ATTACH_EQ_OPERATIONS(Interpolant);
 
   };
 
@@ -114,7 +113,6 @@ namespace Sass {
     // virtual bool is_true() { return !is_false(); }
     virtual bool operator== (const Expression& rhs) const { return false; }
     inline bool operator!=(const Expression& rhs) const { return !(rhs == *this); }
-    ATTACH_COPY_CTOR(Expression);
   };
 
   //////////////////////////////////////////////////////////////////////

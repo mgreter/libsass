@@ -453,8 +453,17 @@ namespace Sass {
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
   class SassList : public Value,
-    public Vectorized<Value> {
+    public VectorizedNopsi<Value> {
     virtual bool is_arglist() const { return false; }
+
+  protected:
+
+    // Hash is only calculated once
+    mutable size_t hash_;
+    // Reset it once container is mutated
+    // Therefore don't allow outside mutation
+    void reset_hash() override final { hash_ = 0; }
+
   private:
     enum Sass_Separator separator_;
     ADD_PROPERTY(bool, hasBrackets);
@@ -510,7 +519,7 @@ namespace Sass {
     bool is_invisible() const override
     { return isBlank() && !hasBrackets(); }
 
-    virtual size_t hash() const override final;
+    size_t hash() const;
 
     OVERRIDE_EQ_OPERATIONS(Value);
     ATTACH_CLONE_OPERATIONS(SassList);
@@ -1120,6 +1129,7 @@ namespace Sass {
     }
 
     ATTACH_COPY_CTOR(Color)
+
   };
 
   //////////
@@ -1296,7 +1306,6 @@ namespace Sass {
     InterpolationObj getAsInterpolation(bool escape = false, uint8_t quote = 0);
     StringExpression(const SourceSpan& pstate, InterpolationObj text, bool quote = false);
     StringExpression(SourceSpan&& pstate, InterpolationObj text, bool quote = false);
-    ATTACH_CLONE_OPERATIONS(StringExpression)
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
