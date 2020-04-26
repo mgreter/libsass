@@ -286,7 +286,7 @@ namespace Sass {
   {
 
     if (node->hasVisibleSibling(parent)) {
-      std::cerr << "THE STRANGE ONE\n";
+     //std::cerr << "THE STRANGE ONE\n";
       auto grandparent = parent->parent_;
       parent = parent->copy();
       parent->clear();
@@ -541,7 +541,11 @@ namespace Sass {
 
     // std::cerr << "mergedQueries " << debug_vec(mergedQueries) << "\n";
 
-    // if (!mergedQueries.empty() && mergedQueries.empty()) return null;
+    if (_hasMediaQueries && mergedQueries.empty()) {
+      return nullptr;
+    }
+
+    LOCAL_FLAG(_hasMediaQueries, true);
 
 
     // Create a new CSS only representation of the media rule
@@ -614,6 +618,7 @@ namespace Sass {
     mediaStack(),
     originalStack(),
     selectorStack(),
+    _hasMediaQueries(false),
     _styleRule(),
     _declarationName(),
     _inFunction(false),

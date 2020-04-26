@@ -31,6 +31,7 @@ namespace Sass {
      SelectorStack originalStack;
      SelectorStack selectorStack;
 
+     bool _hasMediaQueries;
      sass::vector<CssMediaQueryObj> _mediaQueries;
 
      // Current content block
