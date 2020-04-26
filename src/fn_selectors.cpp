@@ -105,7 +105,7 @@ namespace Sass {
               "a list of strings, or a list of lists of strings.",
               logger642, arg->pstate());
           }
-          sass::string text(arg->to_css());
+          sass::string text(arg->to_css(false));
           SourceSpan state(arg->pstate());
           auto source = SASS_MEMORY_NEW(SourceItpl,
             std::move(text), state);
@@ -129,16 +129,16 @@ namespace Sass {
               compound = _prependParent(compound);
               if (compound == nullptr) {
                 throw Exception::SassRuntimeException2(
-                  "Can't append " + child->to_css() + " to " +
-                  reduced->to_css() + ".",
+                  "Can't append " + child->to_string() + " to " +
+                  reduced->to_string() + ".",
                   logger642);
               }
               complex->at(0) = compound;
             }
             else {
               throw Exception::SassRuntimeException2(
-                "Can't append " + child->to_css() + " to " +
-                reduced->to_css() + ".",
+                "Can't append " + child->to_string() + " to " +
+                reduced->to_string() + ".",
                 logger642);
             }
           }

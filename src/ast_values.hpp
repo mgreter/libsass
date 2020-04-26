@@ -42,7 +42,7 @@ namespace Sass {
 
   public:
 
-    // We know four value types
+    // We know four types
     enum Type {
       MapIterator,
       ListIterator,
@@ -121,6 +121,11 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
   class Value : public Expression {
   public:
+
+    /*
+      String toCssString({bool quote = true}) => serializeValue(this, quote: quote);
+      String toString() => serializeValue(this, inspect: true);
+    */
 
     // Standard value constructor
     Value(const SourceSpan& pstate);

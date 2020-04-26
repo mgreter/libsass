@@ -1721,7 +1721,7 @@ namespace Sass {
       }
       */
 
-      results.emplace_back(result->to_css(true));
+      results.emplace_back(result->toValString());
 
     }
 
@@ -1819,7 +1819,7 @@ namespace Sass {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
       if (quote) return evaled->toValString();
-      else return evaled->to_css();
+      else return evaled->to_css(false);
     }
     else {
       return "";
@@ -1835,7 +1835,7 @@ namespace Sass {
   sass::string Eval::_serialize(Expression* value, bool quote)
   {
     // _addExceptionSpan(nodeWithSpan, () = > value.toCssString(quote: quote));
-    return value->to_css();
+    return value->to_css(false);
   }
 
 

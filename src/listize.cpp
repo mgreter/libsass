@@ -30,7 +30,7 @@ namespace Sass {
     ListObj list = SASS_MEMORY_NEW(List, selector->pstate(), sass::vector<ValueObj>(), SASS_SPACE);
     for (SelectorComponent* component : selector->elements()) {
       list->append(SASS_MEMORY_NEW(String,
-        component->pstate(), component->to_css()));
+        component->pstate(), component->to_css(false)));
     }
     return list.detach();
   }

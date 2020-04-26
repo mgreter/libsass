@@ -256,7 +256,7 @@ namespace Sass {
   // result after evaluation. We can also adjust your parser state, since we
   // often only re-parse the partial interpolated object (e.g. selector in
   // the middle of a document). The error will be relative to this snippet.
-  // E.g. on line 1, after adjusting it should be in sync with wathever the
+  // E.g. on line 1, after adjusting it should be in sync with whatever the
   // `getLine` API returns. We do all this only on demand, since this is quite
   // expensive, so this is only intended to be used in error/debug cases!!
   /*#########################################################################*/
