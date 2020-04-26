@@ -145,7 +145,7 @@ namespace Sass {
     // We often need to downcast values to its special type
     // Virtual methods are faster than dynamic casting
     IMPLEMENT_BASE_DOWNCAST(Map, isMap);
-    IMPLEMENT_BASE_DOWNCAST(SassList, isList);
+    IMPLEMENT_BASE_DOWNCAST(List, isList);
     IMPLEMENT_BASE_DOWNCAST(Number, isNumber);
     IMPLEMENT_BASE_DOWNCAST(Color_RGBA, isColor);
     IMPLEMENT_BASE_DOWNCAST(Color_RGBA, isColorRGBA);
@@ -452,7 +452,7 @@ namespace Sass {
   // Lists of values, both comma- and space-separated (distinguished by a
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
-  class SassList : public Value,
+  class List : public Value,
     public Vectorized<Value> {
     virtual bool is_arglist() const { return false; }
 
@@ -471,12 +471,12 @@ namespace Sass {
 
     enum Sass_Tag getTag() const override final { return SASS_LIST; }
 
-    SassList(const SourceSpan& pstate,
+    List(const SourceSpan& pstate,
       const sass::vector<ValueObj>& values = {},
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
 
-    SassList(const SourceSpan& pstate,
+    List(const SourceSpan& pstate,
       sass::vector<ValueObj>&& values,
       enum Sass_Separator seperator = SASS_SPACE,
       bool hasBrackets = false);
@@ -502,8 +502,8 @@ namespace Sass {
     // Allows negative index but no overflow either
     Value* getValueAt(Value* index, Logger& logger) override final;
 
-    SassList* isList() override final { return this; }
-    const SassList* isList() const override final { return this; }
+    List* isList() override final { return this; }
+    const List* isList() const override final { return this; }
 
     Map* assertMap(Logger& logger, const sass::string& name = StrEmpty) override final;
 
@@ -522,11 +522,11 @@ namespace Sass {
     size_t hash() const;
 
     OVERRIDE_EQ_OPERATIONS(Value);
-    ATTACH_CLONE_OPERATIONS(SassList);
+    ATTACH_CLONE_OPERATIONS(List);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class ArgumentList : public SassList {
+  class ArgumentList : public List {
     EnvKeyFlatMap<ValueObj> _keywords;
     bool _wereKeywordsAccessed;
   public:
@@ -608,7 +608,7 @@ namespace Sass {
 
     size_t indexOf(Value* value) override final {
       // Implement without creating any copies
-      if (SassList* list = value->isList()) {
+      if (List* list = value->isList()) {
         if (list->length() == 2) {
           Value* key = list->get(0);
           Value* val = list->get(1);

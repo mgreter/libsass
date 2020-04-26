@@ -1045,9 +1045,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (const auto& i : expression->elements()) { debug_ast(i, ind + " [] "); }
     for (const auto& kv : keywords) { debug_ast(kv.second, ind + " " + kv.first.orig().c_str() + " "); }
   }
-  else if (Cast<SassList>(node)) {
-    SassList* expression = Cast<SassList>(node);
-    std::cerr << ind << "SassList " << expression;
+  else if (Cast<List>(node)) {
+    List* expression = Cast<List>(node);
+    std::cerr << ind << "List " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " (" << expression->length() << ") " <<
       (expression->separator() == SASS_COMMA ? "Comma " : expression->separator() == SASS_UNDEF ? "Unkonwn" : "Space ") <<

@@ -19,7 +19,7 @@ extern "C" {
   SassString* getString(struct SassValue* value) { return reinterpret_cast<SassString*>(value); }
   Boolean* getBoolean(struct SassValue* value) { return reinterpret_cast<Boolean*>(value); }
   Color_RGBA* getColor(struct SassValue* value) { return reinterpret_cast<Color_RGBA*>(value); }
-  SassList* getList(struct SassValue* value) { return reinterpret_cast<SassList*>(value); }
+  List* getList(struct SassValue* value) { return reinterpret_cast<List*>(value); }
   Custom_Error* getError(struct SassValue* value) { return reinterpret_cast<Custom_Error*>(value); }
   Custom_Warning* getWarning(struct SassValue* value) { return reinterpret_cast<Custom_Warning*>(value); }
 
@@ -182,7 +182,7 @@ extern "C" {
   struct SassValue* ADDCALL sass_make_list(enum Sass_Separator sep, bool is_bracketed)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      SassList, SourceSpan::tmp("[LIST]"), {}, sep, is_bracketed));
+      List, SourceSpan::tmp("[LIST]"), {}, sep, is_bracketed));
   }
 
   struct SassValue* ADDCALL sass_make_map()

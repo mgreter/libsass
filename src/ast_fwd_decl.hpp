@@ -113,7 +113,7 @@ namespace Sass {
   class ContentRule;
   class ExtendRule;
 
-  class SassList;
+  class List;
   class ArgumentList;
   class Map;
   class Function;
@@ -257,7 +257,7 @@ namespace Sass {
   IMPL_MEM_OBJ(Value);
   IMPL_MEM_OBJ(Interpolant);
   IMPL_MEM_OBJ(Expression);
-  IMPL_MEM_OBJ(SassList);
+  IMPL_MEM_OBJ(List);
   IMPL_MEM_OBJ(ArgumentList);
   IMPL_MEM_OBJ(Map);
   IMPL_MEM_OBJ(Function);
@@ -347,7 +347,7 @@ namespace Sass {
   DECLARE_BASE_CAST(Value)
   DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(Color)
-  DECLARE_BASE_CAST(SassList)
+  DECLARE_BASE_CAST(List)
   DECLARE_BASE_CAST(SassString)
   DECLARE_BASE_CAST(SupportsCondition)
   DECLARE_BASE_CAST(Selector)

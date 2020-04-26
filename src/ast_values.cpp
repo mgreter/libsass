@@ -53,14 +53,14 @@ namespace Sass {
       return true;
 	  }
 
-    if (SassList * list = isList()) {
+    if (List * list = isList()) {
 
       if (list->empty()) return false;
 
       sass::vector<sass::string> result;
       if (list->separator() == SASS_COMMA) {
         for (auto complex : list->elements()) {
-          SassList* cplxLst = complex->isList();
+          List* cplxLst = complex->isList();
           SassString* cplxStr = complex->isString();
           if (cplxStr) {
             result.emplace_back(cplxStr->value());
@@ -252,7 +252,7 @@ namespace Sass {
       }
       return true;
     }
-    if (const SassList * r = rhs.isList()) {
+    if (const List * r = rhs.isList()) {
       return r->empty() && empty();
     }
     return false;
@@ -263,7 +263,7 @@ namespace Sass {
 
     auto kv = elements_.begin() + idx;
     pair = SASS_MEMORY_NEW(
-      SassList, kv->first->pstate(),
+      List, kv->first->pstate(),
       { kv->first, kv->second },
       SASS_SPACE);
     return pair.detach();
@@ -965,7 +965,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SassList::SassList(
+  List::List(
     const SourceSpan& pstate,
     const sass::vector<ValueObj>& values,
     Sass_Separator separator,
@@ -976,7 +976,7 @@ namespace Sass {
     hasBrackets_(hasBrackets)
   {}
 
-  SassList::SassList(
+  List::List(
     const SourceSpan& pstate,
     sass::vector<ValueObj>&& values,
     Sass_Separator separator,
@@ -987,20 +987,20 @@ namespace Sass {
     hasBrackets_(hasBrackets)
   {}
 
-  SassList::SassList(
-    const SassList* ptr, bool childless) :
+  List::List(
+    const List* ptr, bool childless) :
     Value(ptr),
     Vectorized(ptr),
     separator_(ptr->separator_),
     hasBrackets_(ptr->hasBrackets_)
   {}
 
-  Map* SassList::assertMap(Logger& logger, const sass::string& name) {
+  Map* List::assertMap(Logger& logger, const sass::string& name) {
     if (!empty()) { return Value::assertMap(logger, name); }
     else { return SASS_MEMORY_NEW(Map, pstate()); }
   }
 
-  bool SassList::isBlank() const
+  bool List::isBlank() const
   {
     for (const Value* value : elements()) {
       if (!value->isBlank()) return false;
@@ -1008,7 +1008,7 @@ namespace Sass {
     return true;
   }
 
-  size_t SassList::hash() const
+  size_t List::hash() const
   {
     if (hash_ == 0) {
       hash_start(hash_, sizetHasher(separator()));
@@ -1019,9 +1019,9 @@ namespace Sass {
     return hash_;
   }
 
-  bool SassList::operator==(const Value& rhs) const
+  bool List::operator==(const Value& rhs) const
   {
-    if (const SassList* r = rhs.isList()) {
+    if (const List* r = rhs.isList()) {
       if (length() != r->length()) return false;
       if (separator() != r->separator()) return false;
       if (hasBrackets() != r->hasBrackets()) return false;
@@ -1044,7 +1044,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   IMPLEMENT_AST_OPERATORS(Map);
-  IMPLEMENT_AST_OPERATORS(SassList);
+  IMPLEMENT_AST_OPERATORS(List);
   IMPLEMENT_AST_OPERATORS(ArgumentList);
   IMPLEMENT_AST_OPERATORS(Number);
   IMPLEMENT_AST_OPERATORS(Color_RGBA);
@@ -1060,7 +1060,7 @@ namespace Sass {
     const sass::vector<ValueObj>& values,
     Sass_Separator separator,
     const EnvKeyFlatMap<ValueObj>& keywords) :
-    SassList(pstate, values, separator, false),
+    List(pstate, values, separator, false),
     _keywords(keywords),
     _wereKeywordsAccessed(false)
   {
@@ -1071,7 +1071,7 @@ namespace Sass {
     sass::vector<ValueObj>&& values,
     Sass_Separator separator,
     EnvKeyFlatMap<ValueObj>&& keywords) :
-    SassList(pstate, std::move(values), separator, false),
+    List(pstate, std::move(values), separator, false),
     _keywords(std::move(keywords)),
     _wereKeywordsAccessed(false)
   {
@@ -1079,7 +1079,7 @@ namespace Sass {
 
   ArgumentList::ArgumentList(
     const ArgumentList* ptr, bool childless) :
-    SassList(ptr),
+    List(ptr),
     _keywords(ptr->_keywords),
     _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)
   {
@@ -1099,11 +1099,11 @@ namespace Sass {
 
   bool ArgumentList::operator==(const Value& rhs) const
   {
-    if (const SassList * r = rhs.isList()) {
-      return SassList::operator==(*r);
+    if (const List * r = rhs.isList()) {
+      return List::operator==(*r);
     }
     if (const Map * r = rhs.isMap()) {
-      return SassList::operator==(*r);
+      return List::operator==(*r);
     }
     return false;
   }
@@ -1134,7 +1134,7 @@ namespace Sass {
       type = MapIterator;
       last = map->size();
     }
-    else if (SassList* list = val->isList()) {
+    else if (List* list = val->isList()) {
       type = ListIterator;
       last = list->length();
     }
@@ -1168,7 +1168,7 @@ namespace Sass {
     case MapIterator:
       return static_cast<Map*>(val)->get2(cur);
     case ListIterator:
-      return static_cast<SassList*>(val)->get(cur);
+      return static_cast<List*>(val)->get(cur);
     case SingleIterator:
       return val;
     case NullPtrIterator:
@@ -1212,7 +1212,7 @@ namespace Sass {
   // Only used for nth sass function
   // Doesn't allow overflow of index (throw error)
   // Allows negative index but no overflow either
-  Value* SassList::getValueAt(Value* index, Logger& logger)
+  Value* List::getValueAt(Value* index, Logger& logger)
   {
     size_t idx = sassIndexToListIndex(index, logger, "n");
     return get(idx);

@@ -190,7 +190,7 @@ namespace Sass {
       BUILT_IN_FN(simple)
       {
         CompoundSelectorObj selector = arguments[0]->assertCompoundSelector(ctx, "selector");
-        SassList* l = SASS_MEMORY_NEW(SassList,
+        List* l = SASS_MEMORY_NEW(List,
           selector->pstate(), sass::vector<ValueObj>(), SASS_COMMA);
         for (size_t i = 0, L = selector->length(); i < L; ++i) {
           const SimpleSelectorObj& ss = selector->get(i);

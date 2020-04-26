@@ -155,9 +155,9 @@ namespace Sass {
     void visitDebugRule(DebugRule* node);
 
     Map* operator()(Map*);
-    SassList* operator()(SassList*);
+    List* operator()(List*);
     Map* operator()(MapExpression*);
-    SassList* operator()(ListExpression*);
+    List* operator()(ListExpression*);
     Value* operator()(ValueExpression*);
     Value* operator()(ParenthesizedExpression*);
     Value* operator()(Binary_Expression*);

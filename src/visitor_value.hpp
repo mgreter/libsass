@@ -16,7 +16,7 @@ namespace Sass {
     // T visitColor(SassColor value);
     virtual T visitColor(Color* value) = 0;
     // T visitFunction(Function value);
-    // T visitList(SassList value);
+    // T visitList(List value);
     // virtual T visitList(List* value) = 0;
     // T visitMap(Map value);
     virtual T visitMap(Map* value) = 0;

@@ -66,14 +66,14 @@ namespace Sass {
       BUILT_IN_FN(keys)
       {
         MapObj map = arguments[0]->assertMap(*ctx.logger123, Sass::Strings::map);
-        return SASS_MEMORY_NEW(SassList,
+        return SASS_MEMORY_NEW(List,
           pstate, map->keys(), SASS_COMMA);
       }
 
       BUILT_IN_FN(values)
       {
         MapObj map = arguments[0]->assertMap(*ctx.logger123, Sass::Strings::map);
-        return SASS_MEMORY_NEW(SassList,
+        return SASS_MEMORY_NEW(List,
           pstate, map->values(), SASS_COMMA);
       }
 

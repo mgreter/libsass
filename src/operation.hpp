@@ -97,7 +97,7 @@ namespace Sass {
     virtual T operator()(ExtendRule* x)              = 0;
     // expressions
     virtual T operator()(Null* x)                   = 0;
-    virtual T operator()(SassList* x) = 0;
+    virtual T operator()(List* x) = 0;
     virtual T operator()(Map* x)                    = 0;
     virtual T operator()(Function* x) = 0;
     virtual T operator()(ParenthesizedExpression* x) = 0;
@@ -216,7 +216,7 @@ namespace Sass {
     T operator()(ExtendRule* x)              { return static_cast<D*>(this)->fallback(x); }
     // expressions
     T operator()(Null* x)                   { return static_cast<D*>(this)->fallback(x); }
-    T operator()(SassList* x) { return static_cast<D*>(this)->fallback(x); }
+    T operator()(List* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(Map* x)                    { return static_cast<D*>(this)->fallback(x); }
     T operator()(Function* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ParenthesizedExpression* x) { return static_cast<D*>(this)->fallback(x); }

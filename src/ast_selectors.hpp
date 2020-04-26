@@ -579,7 +579,7 @@ namespace Sass {
 
     SelectorList* unifyWith(SelectorList*);
 
-    // SassList* asSassList()
+    // List* asList()
     // {
     // }
 

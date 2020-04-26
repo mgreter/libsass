@@ -1157,7 +1157,7 @@ namespace Sass {
     if (Map* restMap = rest->isMap()) {
       _addRestMap2(named, restMap, arguments->restArg()->pstate());
     }
-    else if (SassList * restList = rest->isList()) {
+    else if (List * restList = rest->isList()) {
       for (const ValueObj& value : restList->elements()) {
         positional.emplace_back(SASS_MEMORY_NEW(
           ValueExpression, value->pstate(), value));
@@ -1328,11 +1328,11 @@ namespace Sass {
     return nullptr;
   }
 
-  SassList* Eval::operator()(ListExpression* l)
+  List* Eval::operator()(ListExpression* l)
   {
     // debug_ast(l, "ListExp IN: ");
     // regular case for unevaluated lists
-    SassListObj ll = SASS_MEMORY_NEW(SassList,
+    ListObj ll = SASS_MEMORY_NEW(List,
       l->pstate(), sass::vector<ValueObj>(), l->separator());
     ll->hasBrackets(l->hasBrackets());
     for (size_t i = 0, L = l->size(); i < L; ++i) {
@@ -1375,7 +1375,7 @@ namespace Sass {
     return m;
   }
 
-  SassList* Eval::operator()(SassList* m)
+  List* Eval::operator()(List* m)
   {
     return m;
   }
@@ -2017,7 +2017,7 @@ namespace Sass {
     if (Map * restMap = rest->isMap()) {
       _addRestMap(named, restMap, arguments->restArg()->pstate());
     }
-    else if (SassList * list = rest->isList()) {
+    else if (List * list = rest->isList()) {
       std::copy(list->begin(), list->end(),
         std::back_inserter(positional));
       separator = list->separator();
@@ -2058,9 +2058,9 @@ namespace Sass {
   {
     ValueObj val = a->value()->perform(this);
     if (a->is_rest_argument()) {
-      if(!Cast<SassList>(val)) {
+      if(!Cast<List>(val)) {
         if (!Cast<Map>(val)) {
-          SassList_Obj wrapper = SASS_MEMORY_NEW(SassList,
+          ListObj wrapper = SASS_MEMORY_NEW(List,
             val->pstate(), sass::vector<ValueObj> {}, SASS_COMMA);
           wrapper->append(val);
           return wrapper->perform(this);
@@ -2423,7 +2423,7 @@ namespace Sass {
         ValueObj key = kv.first;
         ValueObj value = kv.second;
         if (variables.size() == 1) {
-          SassList* variable = SASS_MEMORY_NEW(SassList,
+          List* variable = SASS_MEMORY_NEW(List,
             map->pstate(), { key, value }, SASS_SPACE);
           compiler.varRoot.setVariable(vidx->varFrame, 0, variable);
           // env.set_local(variables[0], variable);
@@ -2440,14 +2440,14 @@ namespace Sass {
       return nullptr;
     }
 
-    SassListObj list;
-    if (SassList* slist = expr->isList()) {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(),
+    ListObj list;
+    if (List* slist = expr->isList()) {
+      list = SASS_MEMORY_NEW(List, expr->pstate(),
         slist->elements(), slist->separator());
       list->hasBrackets(slist->hasBrackets());
     }
     else {
-      list = SASS_MEMORY_NEW(SassList, expr->pstate(),
+      list = SASS_MEMORY_NEW(List, expr->pstate(),
         { expr }, SASS_COMMA);
     }
     for (size_t i = 0, L = list->length(); i < L; ++i) {
@@ -2455,7 +2455,7 @@ namespace Sass {
       // unwrap value if the expression is an argument
       // if (Argument * arg = Cast<Argument>(item)) item = arg->value();
       // check if we got passed a list of args (investigate)
-      if (SassList* scalars = item->isList()) { // Ex
+      if (List* scalars = item->isList()) { // Ex
         if (variables.size() == 1) {
           compiler.varRoot.setVariable(vidx->varFrame, 0, scalars);
           // env.set_local(variables[0], scalars);

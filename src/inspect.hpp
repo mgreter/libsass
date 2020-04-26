@@ -73,7 +73,7 @@ namespace Sass {
     virtual void operator()(BuiltInCallable*) override;
     virtual void operator()(BuiltInCallables*) override;
     virtual void operator()(UserDefinedCallable*) override;
-    virtual void operator()(SassList*) override;
+    virtual void operator()(List*) override;
     // virtual void operator()(ValueExpression* expr) override;
 	  // virtual void operator()(ParenthesizedExpression* expr) override;
     // virtual void operator()(ParenthesizedExpression*);

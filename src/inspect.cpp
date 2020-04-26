@@ -445,7 +445,7 @@ namespace Sass {
   {
     if (Value * value = Cast<Value>(ex)) {
       bool needsParens = false;
-      if (SassList * list = value->isList()) {
+      if (List * list = value->isList()) {
         needsParens = list->separator() == SASS_COMMA;
         if (list->hasBrackets()) needsParens = false;
       }
@@ -707,7 +707,7 @@ namespace Sass {
   // Returns whether [value] needs parentheses as an
   // element in a list with the given [separator].
   bool _elementNeedsParens(Sass_Separator separator, const Value* value) {
-    if (const SassList * list = value->isList()) {
+    if (const List * list = value->isList()) {
       if (list->length() < 2) return false;
       if (list->hasBrackets()) return false;
       return separator == SASS_COMMA
@@ -717,7 +717,7 @@ namespace Sass {
     return false;
   }
 
-  void Inspect::operator()(SassList* list)
+  void Inspect::operator()(List* list)
   {
     bool inspect = output_style() == SASS_STYLE_INSPECT;
 

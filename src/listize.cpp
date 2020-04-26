@@ -14,10 +14,10 @@
 
 namespace Sass {
 
-  // Implements dart-sass SelectorList.asSassList
+  // Implements dart-sass SelectorList.asList
   Value* Listize::listize(SelectorList* selectors)
   {
-    SassListObj list = SASS_MEMORY_NEW(SassList, selectors->pstate(), sass::vector<ValueObj>(), SASS_COMMA);
+    ListObj list = SASS_MEMORY_NEW(List, selectors->pstate(), sass::vector<ValueObj>(), SASS_COMMA);
     for (ComplexSelector* complex : selectors->elements()) {
       list->append(listize(complex));
     }
@@ -27,7 +27,7 @@ namespace Sass {
 
   Value* Listize::listize(ComplexSelector* selector)
   {
-    SassListObj list = SASS_MEMORY_NEW(SassList, selector->pstate(), sass::vector<ValueObj>(), SASS_SPACE);
+    ListObj list = SASS_MEMORY_NEW(List, selector->pstate(), sass::vector<ValueObj>(), SASS_SPACE);
     for (SelectorComponent* component : selector->elements()) {
       list->append(SASS_MEMORY_NEW(SassString,
         component->pstate(), component->to_css()));

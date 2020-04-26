@@ -35,7 +35,7 @@ namespace Sass {
         Value* index = arguments[1];
 
         if (selfAssign && input->refcount < AssignableRefCount) {
-          if (SassList* lst = Cast<SassList>(input)) {
+          if (List* lst = Cast<List>(input)) {
             size_t idx = input->sassIndexToListIndex(index, *ctx.logger123, "n");
             lst->at(idx) = arguments[2];
             return lst;
@@ -50,7 +50,7 @@ namespace Sass {
           std::back_inserter(values));
         size_t idx = input->sassIndexToListIndex(index, *ctx.logger123, "n");
         values[idx] = arguments[2];
-        return SASS_MEMORY_NEW(SassList,
+        return SASS_MEMORY_NEW(List,
           input->pstate(), std::move(values),
           input->separator(), input->hasBrackets());
       }
@@ -94,7 +94,7 @@ namespace Sass {
         }
 
         if (selfAssign && list2->refcount < AssignableRefCount) {
-          if (SassList* lst = Cast<SassList>(list2)) {
+          if (List* lst = Cast<List>(list2)) {
             lst->separator(separator);
             lst->hasBrackets(bracketed);
             auto it2 = list2->iterator();
@@ -114,7 +114,7 @@ namespace Sass {
           std::back_inserter(values));
         std::copy(it2.begin(), it2.end(),
           std::back_inserter(values));
-        return SASS_MEMORY_NEW(SassList, pstate,
+        return SASS_MEMORY_NEW(List, pstate,
           std::move(values), separator, bracketed);
       }
 
@@ -141,7 +141,7 @@ namespace Sass {
         }
 
         if (selfAssign && list->refcount < AssignableRefCount) {
-          if (SassList* lst = Cast<SassList>(list)) {
+          if (List* lst = Cast<List>(list)) {
             lst->separator(separator);
             lst->append(value);
             return lst;
@@ -153,7 +153,7 @@ namespace Sass {
         std::copy(it.begin(), it.end(),
           std::back_inserter(values));
         values.emplace_back(value);
-        return SASS_MEMORY_NEW(SassList,
+        return SASS_MEMORY_NEW(List,
           list->pstate(), std::move(values),
           separator, list->hasBrackets());
       }
@@ -172,7 +172,7 @@ namespace Sass {
           lists.emplace_back(inner);
         }
         if (lists.empty()) {
-          return SASS_MEMORY_NEW(SassList,
+          return SASS_MEMORY_NEW(List,
             pstate, {}, SASS_COMMA);
         }
         sass::vector<ValueObj> result;
@@ -184,11 +184,11 @@ namespace Sass {
               inner.push_back(arg[i]);
             }
             result.emplace_back(SASS_MEMORY_NEW(
-              SassList, pstate, inner, SASS_SPACE));
+              List, pstate, inner, SASS_SPACE));
           }
         }
         return SASS_MEMORY_NEW(
-          SassList, pstate, result, SASS_COMMA);
+          List, pstate, result, SASS_COMMA);
       }
 
       BUILT_IN_FN(index)

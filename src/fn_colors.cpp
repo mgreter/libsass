@@ -128,10 +128,10 @@ namespace Sass {
           pstate, fncall.str());
       }
 
-      SassListObj list = channels->isList();
+      ListObj list = channels->isList();
 
       if (!list) {
-        list = SASS_MEMORY_NEW(SassList, pstate);
+        list = SASS_MEMORY_NEW(List, pstate);
         list->append(channels);
       }
 
@@ -185,7 +185,7 @@ namespace Sass {
       Number* secondNumber = list->get(2)->isNumber();
       SassString* secondString = list->get(2)->isString();
       if (secondNumber && secondNumber->hasAsSlash()) {
-        SassList* rv = SASS_MEMORY_NEW(SassList, pstate);
+        List* rv = SASS_MEMORY_NEW(List, pstate);
         rv->append(list->get(0));
         rv->append(list->get(1));
         rv->append(secondNumber->lhsAsSlash());
@@ -302,7 +302,7 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (SassList * list = parsed->isList()) { // Ex
+        if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger123);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
@@ -336,7 +336,7 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (SassList * list = parsed->isList()) { // Ex
+        if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger123);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
@@ -377,7 +377,7 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (SassList * list = parsed->isList()) { // Ex
+        if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger123);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
@@ -418,7 +418,7 @@ namespace Sass {
           parsed.detach();
           return str;
         }
-        if (SassList * list = parsed->isList()) { // Ex
+        if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger123);
         }
         return SASS_MEMORY_NEW(SassString, pstate, arguments[0]->to_css());
