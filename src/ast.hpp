@@ -345,12 +345,7 @@ namespace Sass {
   // that match a given selector. Formerly known as `Ruleset`.
   /////////////////////////////////////////////////////////////////////////////
   class StyleRule final : public ParentStatement {
-    // The selector to which the declaration will be applied.
-    // This is only parsed after the interpolation has been resolved.
-
-    // Interpolation is mandatory!
     ADD_PROPERTY(InterpolationObj, interpolation);
-
     ADD_POINTER(IDXS*, idxs); // ParentScopedStatement
   public:
     StyleRule(SourceSpan&& pstate, Interpolation* s);

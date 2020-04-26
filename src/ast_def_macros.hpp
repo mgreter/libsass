@@ -190,6 +190,57 @@ private:
   virtual klass* copy(bool childless = false) const override; \
   virtual klass* clone() const override; \
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#define ATTACH_ABSTRACT_COPY_OPERATIONS2(klass) \
+  virtual klass* copy(bool childless = false) const { \
+    throw std::runtime_error("Copy not implemented"); \
+  } \
+
+#define ATTACH_ABSTRACT_CLONE_OPERATIONS2(klass) \
+  virtual klass* copy(bool childless = false) const { \
+    throw std::runtime_error("Copy not implemented"); \
+  } \
+  virtual klass* clone() const { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
+
+#define ATTACH_VIRTUAL_COPY_OPERATIONS2(klass) \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override { \
+    throw std::runtime_error("Copy not implemented"); \
+  }
+
+#define ATTACH_VIRTUAL_CLONE_OPERATIONS2(klass) \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* clone() const override { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
+  virtual klass* clone() const { \
+    throw std::runtime_error("Clone not implemented"); \
+  } \
+
+#define ATTACH_COPY_OPERATIONS2(klass) \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override; \
+
+#define ATTACH_CLONE_OPERATIONS2(klass) \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless = false) const override; \
+  virtual klass* clone() const override; \
+
 #endif
 
 #define DECLARE_ABSTRACT_CMP_OPERATORS(klass) \
