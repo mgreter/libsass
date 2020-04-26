@@ -154,7 +154,7 @@ namespace Sass {
 
   bool CssAtRule::is_invisible() const
   {
-    return empty() && !isChildless_;
+    return false; //  empty() && !isChildless_;
   }
 
   CssAtRule::CssAtRule(
