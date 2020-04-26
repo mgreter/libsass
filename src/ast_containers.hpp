@@ -10,13 +10,13 @@ namespace Sass {
   // Base class/container for AST nodes that should behave like vectors.
   /////////////////////////////////////////////////////////////////////////////
   template <typename V>
-  class VectorizedNopsi {
+  class Vectorized {
 
   protected:
 
     // The main underlying container
     typedef SharedImpl<V> T;
-    typedef VectorizedNopsi Klass;
+    typedef Vectorized Klass;
     sass::vector<T> elements_;
 
     // Reset it once container is mutated
@@ -25,28 +25,28 @@ namespace Sass {
 
   public:
 
-    VectorizedNopsi(size_t s = 0)
+    Vectorized(size_t s = 0)
     {
       elements_.reserve(s);
     }
 
     // Copy constructor from other Vectorized
-    VectorizedNopsi(const VectorizedNopsi<V>* vec) :
+    Vectorized(const Vectorized<V>* vec) :
       elements_(vec->elements_)
     {}
 
     // Copy constructor from other base vector
-    VectorizedNopsi(const sass::vector<T>& vec) :
+    Vectorized(const sass::vector<T>& vec) :
       elements_(vec)
     {}
 
     // Move constructor from other base vector
-    VectorizedNopsi(sass::vector<T>&& vec) :
+    Vectorized(sass::vector<T>&& vec) :
       elements_(std::move(vec))
     {}
 
     // Allow destructor overloading
-    virtual ~VectorizedNopsi() {};
+    virtual ~Vectorized() {};
 
     // Some simple method delegations
     T& last() { return elements_.back(); }
@@ -60,7 +60,7 @@ namespace Sass {
     // Check underlying containers for equality
     // Note: maybe we could gain some speed by checking
     // the computed hash first, before doing full test?
-    bool operator== (const VectorizedNopsi<V>& rhs) const
+    bool operator== (const Vectorized<V>& rhs) const
     {
       // Abort early if sizes do not match
       if (length() != rhs.length()) return false;
@@ -69,7 +69,7 @@ namespace Sass {
     }
 
     // Derive unequal operator from equality check
-    bool operator!= (const VectorizedNopsi<V>& rhs) const
+    bool operator!= (const Vectorized<V>& rhs) const
     {
       return !(*this == rhs);
     }
@@ -116,7 +116,7 @@ namespace Sass {
     }
 
     // Syntactic sugar for pointers
-    void concat(const VectorizedNopsi<V>* v)
+    void concat(const Vectorized<V>* v)
     {
       if (v != nullptr) {
         return concat(*v);

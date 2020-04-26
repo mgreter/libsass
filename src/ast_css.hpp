@@ -37,7 +37,7 @@ namespace Sass {
   // [-] CssStylesheet
   // [x] CssSupportsRule
   class CssParentNode : public CssNode,
-    public VectorizedNopsi<CssNode> {
+    public Vectorized<CssNode> {
     // Whether the rule has no children and should be emitted
     // without curly braces. This implies `children.isEmpty`,
     // but the reverse is not true—for a rule like `@foo {}`,
@@ -401,7 +401,7 @@ namespace Sass {
     public CssParentNode {
 
     // The queries for this rule (this is never empty).
-    ADD_CONSTREF(VectorizedNopsi<CssMediaQuery>, queries);
+    ADD_CONSTREF(Vectorized<CssMediaQuery>, queries);
 
   public:
 

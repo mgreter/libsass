@@ -453,7 +453,7 @@ namespace Sass {
   // type-tag.) Also used to represent variable-length argument lists.
   ///////////////////////////////////////////////////////////////////////
   class SassList : public Value,
-    public VectorizedNopsi<Value> {
+    public Vectorized<Value> {
     virtual bool is_arglist() const { return false; }
 
   protected:
@@ -1273,17 +1273,17 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
   class Interpolation final : public AST_Node,
-    public VectorizedNopsi<Interpolant> {
+    public Vectorized<Interpolant> {
 
   public:
     const sass::string& getPlainString() const;
     const sass::string& getInitialPlain() const;
 
     virtual bool operator==(const Interpolation& rhs) const {
-      return VectorizedNopsi::operator==(rhs);
+      return Vectorized::operator==(rhs);
     }
     virtual bool operator!=(const Interpolation& rhs) const {
-      return VectorizedNopsi::operator!=(rhs);
+      return Vectorized::operator!=(rhs);
     }
 
     Interpolation(const SourceSpan& pstate, Interpolant* ex = nullptr);

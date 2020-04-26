@@ -27,7 +27,7 @@ namespace Sass {
     const SourceSpan& pstate,
     CssParentNode* parent) :
     CssNode(pstate),
-    VectorizedNopsi(),
+    Vectorized(),
     isChildless_(false),
     parent_(parent)
   {}
@@ -37,7 +37,7 @@ namespace Sass {
     CssParentNode* parent,
     sass::vector<CssNodeObj>&& children) :
     CssNode(pstate),
-    VectorizedNopsi(std::move(children)),
+    Vectorized(std::move(children)),
     isChildless_(false),
     parent_(parent)
   {}
@@ -46,7 +46,7 @@ namespace Sass {
   CssParentNode::CssParentNode(
     const CssParentNode* ptr, bool childless) :
     CssNode(ptr),
-    VectorizedNopsi(),
+    Vectorized(),
     isChildless_(ptr->isChildless_),
     parent_(ptr->parent_)
   {

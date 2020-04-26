@@ -161,21 +161,21 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Root::Root(const SourceSpan& pstate, size_t s)
-    : AST_Node(pstate), VectorizedNopsi<Statement>(s) {}
+    : AST_Node(pstate), Vectorized<Statement>(s) {}
   Root::Root(const SourceSpan& pstate, sass::vector<StatementObj>&& vec)
-    : AST_Node(pstate), VectorizedNopsi<Statement>(std::move(vec)) {}
+    : AST_Node(pstate), Vectorized<Statement>(std::move(vec)) {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
 
   ParentStatement::ParentStatement(const SourceSpan& pstate, sass::vector<StatementObj>&& els)
-    : Statement(pstate), VectorizedNopsi<Statement>(std::move(els)), idxs_(0)
+    : Statement(pstate), Vectorized<Statement>(std::move(els)), idxs_(0)
   {
   }
 
   ParentStatement::ParentStatement(const ParentStatement* ptr, bool childless)
-  : Statement(ptr), VectorizedNopsi<Statement>(), idxs_(ptr->idxs_)
+  : Statement(ptr), Vectorized<Statement>(), idxs_(ptr->idxs_)
   {
     if (!childless) elements_ = ptr->elements();
   }
@@ -338,7 +338,7 @@ namespace Sass {
   ImportRule::ImportRule(
     const SourceSpan& pstate) :
     ImportBase(pstate),
-    VectorizedNopsi()
+    Vectorized()
   {}
 
   /////////////////////////////////////////////////////////////////////////

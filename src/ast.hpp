@@ -301,7 +301,7 @@ namespace Sass {
   inline Statement::~Statement() { }
 
 
-  class Root : public AST_Node, public VectorizedNopsi<Statement> {
+  class Root : public AST_Node, public Vectorized<Statement> {
     // needed for properly formatted CSS emission
   public:
     Root(const SourceSpan& pstate, size_t s = 0);
@@ -324,7 +324,7 @@ namespace Sass {
   // [ ] Stylesheet
   // [X] SupportsRule
   // [X] WhileRule
-  class ParentStatement : public Statement, public VectorizedNopsi<Statement> {
+  class ParentStatement : public Statement, public Vectorized<Statement> {
     ADD_POINTER(IDXS*, idxs);
   public:
 
@@ -561,7 +561,7 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
-  class ImportRule final : public ImportBase, public VectorizedNopsi<ImportBase> {
+  class ImportRule final : public ImportBase, public Vectorized<ImportBase> {
   public:
     ImportRule(const SourceSpan& pstate);
     ATTACH_CRTP_PERFORM_METHODS();

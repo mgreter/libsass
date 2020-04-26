@@ -745,7 +745,7 @@ namespace Sass {
   }
 
   Interpolation::Interpolation(const SourceSpan& pstate, Interpolant* ex) :
-    AST_Node(pstate), VectorizedNopsi()
+    AST_Node(pstate), Vectorized()
   {
     if (ex != nullptr) append(ex);
   }
@@ -754,7 +754,7 @@ namespace Sass {
     const SourceSpan& pstate,
     sass::vector<InterpolantObj> items) :
     AST_Node(pstate),
-    VectorizedNopsi(std::move(items))
+    Vectorized(std::move(items))
   {
   }
 
@@ -971,7 +971,7 @@ namespace Sass {
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    VectorizedNopsi(values),
+    Vectorized(values),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {}
@@ -982,7 +982,7 @@ namespace Sass {
     Sass_Separator separator,
     bool hasBrackets) :
     Value(pstate),
-    VectorizedNopsi(std::move(values)),
+    Vectorized(std::move(values)),
     separator_(separator),
     hasBrackets_(hasBrackets)
   {}
@@ -990,7 +990,7 @@ namespace Sass {
   SassList::SassList(
     const SassList* ptr, bool childless) :
     Value(ptr),
-    VectorizedNopsi(ptr),
+    Vectorized(ptr),
     separator_(ptr->separator_),
     hasBrackets_(ptr->hasBrackets_)
   {}

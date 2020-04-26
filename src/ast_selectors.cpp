@@ -346,11 +346,11 @@ namespace Sass {
     const SourceSpan& pstate,
     sass::vector<ComplexSelectorObj>&& complexes) :
     Selector(pstate),
-    VectorizedNopsi(std::move(complexes))
+    Vectorized(std::move(complexes))
   { }
   SelectorList::SelectorList(const SelectorList* ptr, bool childless)
     : Selector(ptr),
-    VectorizedNopsi(*ptr)
+    Vectorized(*ptr)
   { }
 
   size_t SelectorList::hash() const
@@ -392,7 +392,7 @@ namespace Sass {
 
   ComplexSelector::ComplexSelector(const SourceSpan& pstate)
     : Selector(pstate),
-    VectorizedNopsi(),
+    Vectorized(),
     chroots_(false),
     hasPreLineFeed_(false)
   {
@@ -401,7 +401,7 @@ namespace Sass {
   ComplexSelector::ComplexSelector(const SourceSpan& pstate,
     sass::vector<SelectorComponentObj>&& components) :
     Selector(pstate),
-    VectorizedNopsi(std::move(components)),
+    Vectorized(std::move(components)),
     chroots_(false),
     hasPreLineFeed_(false)
   {
@@ -411,7 +411,7 @@ namespace Sass {
 
   ComplexSelector::ComplexSelector(const ComplexSelector* ptr, bool childless)
   : Selector(ptr),
-    VectorizedNopsi(ptr),
+    Vectorized(ptr),
     chroots_(ptr->chroots()),
     hasPreLineFeed_(ptr->hasPreLineFeed())
   {
@@ -528,7 +528,7 @@ namespace Sass {
 
   CompoundSelector::CompoundSelector(const SourceSpan& pstate, bool postLineBreak)
     : SelectorComponent(pstate, postLineBreak),
-      VectorizedNopsi(),
+      Vectorized(),
       hasRealParent_(false),
       extended_(false)
   {
@@ -539,7 +539,7 @@ namespace Sass {
     sass::vector<SimpleSelectorObj>&& selectors,
     bool postLineBreak) :
     SelectorComponent(pstate, postLineBreak),
-    VectorizedNopsi(std::move(selectors)),
+    Vectorized(std::move(selectors)),
     hasRealParent_(false),
     extended_(false)
   {
@@ -547,7 +547,7 @@ namespace Sass {
 
   CompoundSelector::CompoundSelector(const CompoundSelector* ptr, bool childless)
     : SelectorComponent(ptr),
-    VectorizedNopsi(*ptr),
+    Vectorized(*ptr),
       hasRealParent_(ptr->hasRealParent()),
       extended_(ptr->extended())
   { }
