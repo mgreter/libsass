@@ -224,21 +224,13 @@ namespace Sass {
 
   };
 
-  class EnvKeyFlatMap2 : public EnvKeyFlatMap<ExpressionObj> {
-
-  public:
-
-    EnvKeyFlatMap2(EnvKeyFlatMap<ExpressionObj>&& named);
-
-  };
-
   class ArgumentInvocation : public AST_Node {
 
     // The arguments passed by position.
     ADD_REF(sass::vector<ExpressionObj>, positional);
 
     // The argument expressions passed by name.
-    ADD_CONSTREF(EnvKeyFlatMap2, named);
+    ADD_CONSTREF(EnvKeyFlatMap<ExpressionObj>, named);
 
     // The first rest argument (as in `$args...`).
     ADD_PROPERTY(ExpressionObj, restArg);
@@ -258,13 +250,13 @@ namespace Sass {
 
     ArgumentInvocation(const SourceSpan& pstate,
       sass::vector<ExpressionObj>&& positional,
-      EnvKeyFlatMap2&& named,
+      EnvKeyFlatMap<ExpressionObj>&& named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 
     ArgumentInvocation(SourceSpan&& pstate,
       sass::vector<ExpressionObj>&& positional,
-      EnvKeyFlatMap2&& named,
+      EnvKeyFlatMap<ExpressionObj>&& named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 

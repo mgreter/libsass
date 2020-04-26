@@ -673,7 +673,7 @@ namespace Sass {
   // ToDO: add move ctor
   ArgumentInvocation::ArgumentInvocation(const SourceSpan& pstate,
     sass::vector<ExpressionObj>&& positional,
-    EnvKeyFlatMap2&& named,
+    EnvKeyFlatMap<ExpressionObj>&& named,
     Expression* restArg,
     Expression* kwdRest) :
     AST_Node(pstate),
@@ -686,7 +686,7 @@ namespace Sass {
 
   ArgumentInvocation::ArgumentInvocation(SourceSpan&& pstate,
     sass::vector<ExpressionObj>&& positional,
-    EnvKeyFlatMap2&& named,
+    EnvKeyFlatMap<ExpressionObj>&& named,
     Expression* restArg,
     Expression* kwdRest) :
     AST_Node(std::move(pstate)),
@@ -996,11 +996,6 @@ namespace Sass {
       return this == user;
     }
     return false;
-  }
-
-  EnvKeyFlatMap2::EnvKeyFlatMap2(EnvKeyFlatMap<ExpressionObj>&& named)
-    : EnvKeyFlatMap<ExpressionObj>(std::move(named))
-  {
   }
 
 }

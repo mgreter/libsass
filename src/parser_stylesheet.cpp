@@ -746,7 +746,7 @@ namespace Sass {
     }
     else {
       args = SASS_MEMORY_NEW(ArgumentInvocation,
-        scanner.relevantSpan(), sass::vector<ExpressionObj>(), EnvKeyFlatMap2{ {} });
+        scanner.relevantSpan(), sass::vector<ExpressionObj>(), {});
     }
 
     LOCAL_FLAG(_mixinHasContent, true);
@@ -1198,7 +1198,7 @@ namespace Sass {
       SourceSpan pstate(scanner.relevantSpanFrom(start));
       arguments = SASS_MEMORY_NEW(ArgumentInvocation,
         pstate, sass::vector<ExpressionObj>(),
-        EnvKeyFlatMap2{ {} }
+        {}
       );
     }
 
@@ -1620,9 +1620,7 @@ namespace Sass {
       ArgumentInvocation,
       scanner.relevantSpanFrom(start),
       std::move(positional),
-      EnvKeyFlatMap2(
-        std::move(named)
-      ),
+      std::move(named),
       restArg, kwdRest);
 
   }
