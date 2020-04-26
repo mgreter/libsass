@@ -186,33 +186,31 @@ namespace Sass {
       }
 
       // ModifiableCssKeyframeBlock
-      Keyframe_Rule_Obj css = SASS_MEMORY_NEW(Keyframe_Rule, rule->pstate(), pu);
-
-      pu->append(css);
-
-      {
-        // Set parent again to css, to append children
-        LOCAL_PTR(CssParentNode, parent65, css);
-        visitChildren(rule->elements());
-      }
 
       auto text123 = interpolationToValue(itpl, true, false);
-
       auto qwe = SASS_MEMORY_NEW(SourceItpl,
         std::move(text123), itpl->pstate());
-
-
-
       KeyframeSelectorParser parser(compiler, qwe);
       sass::vector<sass::string> selector(parser.parse());
 
-      // Keyframe_Rule_Obj k = SASS_MEMORY_NEW(Keyframe_Rule, rule->pstate(), parent65, std::move(children));
-      if (rule->interpolation()) {
-        selectorStack.push_back({});
-        auto val123 = interpolationToValue(itpl, true, false);
-        css->name2(SASS_MEMORY_NEW(String, rule->interpolation()->pstate(), val123));
-        selectorStack.pop_back();
+      CssStrings* strings = SASS_MEMORY_NEW(CssStrings, rule->pstate(), selector);
+      CssKeyframeBlockObj css2 = SASS_MEMORY_NEW(CssKeyframeBlock, rule->pstate(), pu, strings);
+
+      pu->append(css2);
+
+      {
+        // Set parent again to css, to append children
+        LOCAL_PTR(CssParentNode, parent65, css2);
+        visitChildren(rule->elements());
       }
+
+//
+//      if (rule->interpolation()) {
+//        selectorStack.push_back({});
+//        auto val123 = interpolationToValue(itpl, true, false);
+//        css->name2(SASS_MEMORY_NEW(String, rule->interpolation()->pstate(), val123));
+//        selectorStack.pop_back();
+//      }
 
       return nullptr;
       // return k.detach();
