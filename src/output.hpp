@@ -31,7 +31,6 @@ namespace Sass {
     virtual void operator()(SupportsRule*);
     virtual void operator()(CssSupportsRule*);
     virtual void operator()(CssMediaRule*);
-    virtual void operator()(Keyframe_Rule*);
     virtual void operator()(StaticImport*);
     virtual void operator()(CssImport*);
     virtual void operator()(CssComment*);

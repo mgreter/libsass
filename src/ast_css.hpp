@@ -437,29 +437,6 @@ namespace Sass {
   };
   // EO CssMediaRule
 
-
-
-    ///////////////////////////////////////////////////////////////////////
-  // Keyframe-rules -- the child blocks of "@keyframes" nodes.
-  ///////////////////////////////////////////////////////////////////////
-  class Keyframe_Rule final : public CssParentNode {
-    // according to css spec, this should be <keyframes-name>
-    // <keyframes-name> = <custom-ident> | <string>
-    // ADD_PROPERTY(SelectorListObj, name)
-    ADD_PROPERTY(StringObj, name2)
-
-  public:
-    Keyframe_Rule(const SourceSpan& pstate,
-      CssParentNode* parent);
-    Keyframe_Rule(const SourceSpan& pstate,
-      CssParentNode* parent,
-      sass::vector<CssNodeObj>&& children);
-
-    ATTACH_COPY_OPERATIONS2(Keyframe_Rule);
-    ATTACH_CRTP_PERFORM_METHODS();
-  };
-
-
   /////////////////
   // Bubble.
   /////////////////

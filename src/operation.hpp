@@ -72,7 +72,6 @@ namespace Sass {
     virtual T operator()(CssAtRootRule* x)          = 0;
     virtual T operator()(AtRootRule* x) = 0;
     virtual T operator()(AtRule* x)              = 0;
-    virtual T operator()(Keyframe_Rule* x)          = 0;
     virtual T operator()(Declaration* x) = 0;
     virtual T operator()(CssDeclaration* x) = 0;
     virtual T operator()(Assignment* x)             = 0;
@@ -193,7 +192,6 @@ namespace Sass {
     T operator()(CssDeclaration* x) { return static_cast<D*>(this)->fallback(x); }
     
     
-    T operator()(Keyframe_Rule* x)          { return static_cast<D*>(this)->fallback(x); }
     T operator()(Declaration* x)            { return static_cast<D*>(this)->fallback(x); }
     T operator()(Assignment* x)             { return static_cast<D*>(this)->fallback(x); }
     T operator()(MapMerge* x) { return static_cast<D*>(this)->fallback(x); }

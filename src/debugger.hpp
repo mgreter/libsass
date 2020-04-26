@@ -810,14 +810,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(block->value(), ind + " value: ");
     debug_block(block, ind + " ");
   }
-  else if (Cast<Keyframe_Rule>(node)) {
-    Keyframe_Rule* has_block = Cast<Keyframe_Rule>(node);
-    std::cerr << ind << "Keyframe_Rule " << has_block;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    if (has_block->name2()) debug_ast(has_block->name2(), ind + "@");
-    // else if (has_block->name()) debug_ast(has_block->name(), ind + "@");
-    // if (has_block) for(const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
-  }
   else if (Cast<AtRule>(node)) {
     AtRule* block = Cast<AtRule>(node);
     std::cerr << ind << "AtRule " << block;

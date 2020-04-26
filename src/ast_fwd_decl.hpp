@@ -86,7 +86,6 @@ namespace Sass {
   class SupportsRule;
   class AtRule;
 
-  class Keyframe_Rule;
   class CssAtRootRule;
   class AtRootRule;
   class Assignment;
@@ -226,7 +225,6 @@ namespace Sass {
   IMPL_MEM_OBJ(ContentBlock); 
   IMPL_MEM_OBJ(MixinRule);
   IMPL_MEM_OBJ(AtRule);
-  IMPL_MEM_OBJ(Keyframe_Rule);
   IMPL_MEM_OBJ(CssAtRootRule);
   IMPL_MEM_OBJ(AtRootRule);
   IMPL_MEM_OBJ(Declaration);

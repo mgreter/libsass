@@ -596,25 +596,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Keyframe_Rule::Keyframe_Rule(
-    const SourceSpan& pstate,
-    CssParentNode* parent)
-    : CssParentNode(pstate, parent), name2_()
-  {}
-  Keyframe_Rule::Keyframe_Rule(
-    const SourceSpan& pstate,
-    CssParentNode* parent,
-    sass::vector<CssNodeObj>&& children)
-    : CssParentNode(pstate, parent, std::move(children)), name2_()
-  {}
-  Keyframe_Rule::Keyframe_Rule(const Keyframe_Rule* ptr, bool childless)
-    : CssParentNode(ptr, childless), name2_(ptr->name2_)
-  {}
-
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   Bubble::Bubble(const SourceSpan& pstate, CssNodeObj n, CssNodeObj g)
   : CssNode(pstate), node_(n)
   { }
@@ -657,7 +638,6 @@ namespace Sass {
   IMPLEMENT_COPY_OPERATORS(CssStyleRule);
   IMPLEMENT_COPY_OPERATORS(CssSupportsRule);
   IMPLEMENT_COPY_OPERATORS(CssAtRootRule);
-  IMPLEMENT_COPY_OPERATORS(Keyframe_Rule);
   IMPLEMENT_COPY_OPERATORS(CssImportTrace);
 
 }
