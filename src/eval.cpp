@@ -476,11 +476,11 @@ namespace Sass {
     }
     else {
 
-
       // std::cerr << "Try copy\n";
       // debug_ast(included.front());
       CssParentNode* innerCopy =
         included.empty() ? nullptr : included.front()->copy();
+      if (innerCopy) innerCopy->clear();
       CssParentNode* outerCopy = innerCopy;
       // std::cerr << "Did copy\n";
 
@@ -490,12 +490,14 @@ namespace Sass {
         if (++it != included.end()) {
           // std::cerr << "Try copy\n";
           auto copy = (*it)->copy();
+          copy->clear();
           // std::cerr << "Did copy\n";
           copy->append(outerCopy);
           outerCopy->parent_ = copy;
           outerCopy = copy;
         }
       }
+
 
       if (outerCopy != nullptr) {
         root->append(outerCopy);
