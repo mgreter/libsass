@@ -253,12 +253,12 @@ namespace Sass {
   {
   }
 
-  AtRule::AtRule(const AtRule* ptr, bool childless)
-  : ParentStatement(ptr, childless),
-    name_(ptr->name_),
-    value_(ptr->value_),
-    is_childless_(ptr->is_childless_)
-  {}
+  // AtRule::AtRule(const AtRule* ptr, bool childless)
+  // : ParentStatement(ptr, childless),
+  //   name_(ptr->name_),
+  //   value_(ptr->value_),
+  //   is_childless_(ptr->is_childless_)
+  // {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -529,15 +529,15 @@ namespace Sass {
   : Expression(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
   {
   }
-  Argument::Argument(const Argument* ptr, bool childless)
-  : Expression(ptr),
-    value_(ptr->value_),
-    name_(ptr->name_),
-    is_rest_argument_(ptr->is_rest_argument_),
-    is_keyword_argument_(ptr->is_keyword_argument_),
-    hash_(ptr->hash_)
-  {
-  }
+  // Argument::Argument(const Argument* ptr, bool childless)
+  // : Expression(ptr),
+  //   value_(ptr->value_),
+  //   name_(ptr->name_),
+  //   is_rest_argument_(ptr->is_rest_argument_),
+  //   is_keyword_argument_(ptr->is_keyword_argument_),
+  //   hash_(ptr->hash_)
+  // {
+  // }
 
 
   /////////////////////////////////////////////////////////////////////////
@@ -683,7 +683,7 @@ namespace Sass {
   // IMPLEMENT_AST_OPERATORS(ImportRule);
   // IMPLEMENT_AST_OPERATORS(StaticImport);
   // IMPLEMENT_AST_OPERATORS(DynamicImport);
-  IMPLEMENT_AST_OPERATORS(AtRule);
+  // IMPLEMENT_AST_OPERATORS(AtRule);
   // IMPLEMENT_AST_OPERATORS(CssAtRootRule);
   // IMPLEMENT_AST_OPERATORS(WhileRule);
   // IMPLEMENT_AST_OPERATORS(Each);
@@ -697,7 +697,7 @@ namespace Sass {
   // IMPLEMENT_AST_OPERATORS(Return);
   // IMPLEMENT_AST_OPERATORS(LoudComment);
   // IMPLEMENT_AST_OPERATORS(SilentComment);
-  IMPLEMENT_AST_OPERATORS(Argument);
+  // IMPLEMENT_AST_OPERATORS(Argument);
   // IMPLEMENT_AST_OPERATORS(Unary_Expression);
   // IMPLEMENT_AST_OPERATORS(ParenthesizedExpression);
   // IMPLEMENT_AST_OPERATORS(ContentRule);

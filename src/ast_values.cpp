@@ -875,11 +875,11 @@ namespace Sass {
   {
   }
 
-  ItplString::ItplString(const ItplString* ptr, bool childless) :
-    Interpolant(ptr),
-    text_(ptr->text_)
-  {
-  }
+  //ItplString::ItplString(const ItplString* ptr, bool childless) :
+  //  Interpolant(ptr),
+  //  text_(ptr->text_)
+  //{
+  //}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -1046,19 +1046,11 @@ namespace Sass {
   IMPLEMENT_AST_OPERATORS(Map);
   IMPLEMENT_AST_OPERATORS(SassList);
   IMPLEMENT_AST_OPERATORS(ArgumentList);
-  // IMPLEMENT_AST_OPERATORS(Binary_Expression);
-  // IMPLEMENT_AST_OPERATORS(Variable);
   IMPLEMENT_AST_OPERATORS(Number);
   IMPLEMENT_AST_OPERATORS(Color_RGBA);
   IMPLEMENT_AST_OPERATORS(Color_HSLA);
-  // IMPLEMENT_AST_OPERATORS(Custom_Error);
-  // IMPLEMENT_AST_OPERATORS(Custom_Warning);
   IMPLEMENT_AST_OPERATORS(Boolean);
-  // IMPLEMENT_AST_OPERATORS(Interpolation);
-  IMPLEMENT_AST_OPERATORS(ItplString);
   IMPLEMENT_AST_OPERATORS(SassString);
-  // IMPLEMENT_AST_OPERATORS(Null);
-  // IMPLEMENT_AST_OPERATORS(Parent_Reference);
 
   IMPLEMENT_AST_OPERATORS(StringExpression);
 

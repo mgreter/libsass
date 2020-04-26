@@ -93,7 +93,6 @@ namespace Sass {
   public:
     CssRoot(const SourceSpan& pstate,
       sass::vector<CssNodeObj>&& vec = {});
-    // ATTACH_CLONE_OPERATIONS(CssRoot);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 

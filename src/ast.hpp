@@ -86,7 +86,6 @@ namespace Sass {
     }
 
 
-    ATTACH_CLONE_OPERATIONS(ItplString);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -367,7 +366,6 @@ namespace Sass {
       InterpolationObj name,
       InterpolationObj value,
       bool is_childless = true);
-    ATTACH_CLONE_OPERATIONS(AtRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -1003,8 +1001,7 @@ namespace Sass {
   public:
     Argument(const SourceSpan& pstate, ExpressionObj val,
       const EnvKey& n, bool rest = false, bool keyword = false);
-    ATTACH_CLONE_OPERATIONS(Argument)
-      ATTACH_CRTP_PERFORM_METHODS()
+    ATTACH_CRTP_PERFORM_METHODS();
   };
 
   /////////////////////////////////////////////////////////////////////////
