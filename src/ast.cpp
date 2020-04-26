@@ -666,30 +666,6 @@ namespace Sass {
   // undefined reference to `vtable for Sass::Class'
 
   // IMPLEMENT_AST_OPERATORS(StyleRule);
-  // IMPLEMENT_AST_OPERATORS(MediaRule);
-  // IMPLEMENT_AST_OPERATORS(ImportRule);
-  // IMPLEMENT_AST_OPERATORS(StaticImport);
-  // IMPLEMENT_AST_OPERATORS(DynamicImport);
-  // IMPLEMENT_AST_OPERATORS(AtRule);
-  // IMPLEMENT_AST_OPERATORS(CssAtRootRule);
-  // IMPLEMENT_AST_OPERATORS(WhileRule);
-  // IMPLEMENT_AST_OPERATORS(Each);
-  // IMPLEMENT_AST_OPERATORS(For);
-  // IMPLEMENT_AST_OPERATORS(If);
-  // IMPLEMENT_AST_OPERATORS(ExtendRule);
-  // IMPLEMENT_AST_OPERATORS(DebugRule);
-  // IMPLEMENT_AST_OPERATORS(ErrorRule);
-  // IMPLEMENT_AST_OPERATORS(WarnRule);
-  // IMPLEMENT_AST_OPERATORS(Assignment);
-  // IMPLEMENT_AST_OPERATORS(Return);
-  // IMPLEMENT_AST_OPERATORS(LoudComment);
-  // IMPLEMENT_AST_OPERATORS(SilentComment);
-  // IMPLEMENT_AST_OPERATORS(Argument);
-  // IMPLEMENT_AST_OPERATORS(UnaryExpression);
-  // IMPLEMENT_AST_OPERATORS(ParenthesizedExpression);
-  // IMPLEMENT_AST_OPERATORS(ContentRule);
-  // IMPLEMENT_AST_OPERATORS(Trace);
-  // IMPLEMENT_AST_OPERATORS(Declaration);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
