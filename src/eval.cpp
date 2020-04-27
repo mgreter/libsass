@@ -798,21 +798,7 @@ namespace Sass {
       // callenv.set_local(declaredArguments->restArg(), argumentList);
     }
 
-    // sass::sstream invocation;
-    // ArgumentInvocationObj args =
-    //   visitArgumentInvocation(arguments);
-    // invocation << callable->name();
-    // invocation << args->toString();
-    // callStackFrame frame(*compiler.logger123,
-    //   BackTrace(pstate, callable->name()));
-
     ValueObj result = (this->*run)(callable, trace);
-
-    // compiler.content = asd;
-
-    // if (isNamedEmpty) return result.detach();
-    // if (argumentList == nullptr) return result.detach();
-    // if (argumentList->wereKeywordsAccessed()) return result.detach();
 
     return result.detach();
 
@@ -870,17 +856,7 @@ namespace Sass {
       positional.emplace_back(argumentList);
     }
 
-    ValueObj result;
-    // try {
-//    double epsilon = compiler.logger->epsilon;
-    // This one
-    // sass::sstream invocation;
-    // ArgumentInvocationObj args =
-    //   visitArgumentInvocation(arguments);
-    // invocation << callable->name();
-    // invocation << args->toString();
-    result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-      // }
+    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
 
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
@@ -942,17 +918,7 @@ namespace Sass {
       positional.emplace_back(argumentList);
     }
 
-    ValueObj result;
-    // try {
-//    double epsilon = compiler.logger->epsilon;
-    // This one
-    // sass::sstream invocation;
-    // ArgumentInvocationObj args =
-    //   visitArgumentInvocation(arguments);
-    // invocation << callable->name();
-    // invocation << args->toString();
-    result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
-      // }
+    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
 
     // Collect the items
     evaluated.clear();

@@ -259,8 +259,6 @@ namespace Sass {
     // Returns whether this invocation passes no arguments.
     bool isEmpty() const;
 
-    // sass::string toString() const;
-
     ATTACH_CRTP_PERFORM_METHODS();
 
   };
@@ -394,17 +392,7 @@ namespace Sass {
     void append(Expression* expression) {
       contents_.emplace_back(expression);
     }
-    sass::string toString() {
-      // var buffer = StringBuffer();
-      // if (hasBrackets) buffer.writeCharCode($lbracket);
-      // buffer.write(contents
-      //   .map((element) = >
-      //     _elementNeedsParens(element) ? "($element)" : element.toString())
-      //   .join(separator == ListSeparator.comma ? ", " : " "));
-      // if (hasBrackets) buffer.writeCharCode($rbracket);
-      // return buffer.toString();
-      return "ListExpression";
-    }
+
     // Returns whether [expression], contained in [this],
     // needs parentheses when printed as Sass source.
     bool _elementNeedsParens(Expression* expression) {
@@ -560,7 +548,6 @@ namespace Sass {
   public:
     WarnRule(const SourceSpan& pstate,
       ExpressionObj expression);
-    // String toString() => "@warn $expression;";
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -572,7 +559,6 @@ namespace Sass {
   public:
     ErrorRule(const SourceSpan& pstate,
       ExpressionObj expression);
-    // String toString() => "@error $expression;";
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -584,7 +570,6 @@ namespace Sass {
   public:
     DebugRule(const SourceSpan& pstate,
       ExpressionObj expression);
-    // String toString() => "@debug $expression;";
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -659,7 +644,6 @@ namespace Sass {
   public:
     WhileRule(const SourceSpan& pstate, ExpressionObj condition);
     WhileRule(const SourceSpan& pstate, ExpressionObj condition, sass::vector<StatementObj>&& b);
-    // String toString() = > "@while $condition {${children.join(" ")}}";
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
