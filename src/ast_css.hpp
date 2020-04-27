@@ -101,7 +101,7 @@ namespace Sass {
 
   // A plain CSS string
   class CssString : public AST_Node {
-    ADD_CONSTREF(sass::string, text);
+    ADD_PROPERTY(sass::string, text);
   public:
     CssString(const SourceSpan& pstate, const sass::string& text);
     bool empty() const { return text_.empty(); }
@@ -114,7 +114,7 @@ namespace Sass {
 
   // A plain list of CSS string
   class CssStringList : public AST_Node {
-    ADD_CONSTREF(sass::vector<sass::string>, texts);
+    ADD_PROPERTY(sass::vector<sass::string>, texts);
   public:
     CssStringList(const SourceSpan& pstate,
       sass::vector<sass::string>&& texts);
@@ -163,7 +163,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
 
   class CssComment : public CssNode {
-    ADD_CONSTREF(sass::string, text);
+    ADD_PROPERTY(sass::string, text);
     ADD_PROPERTY(bool, isPreserved);
   public:
     CssComment(const SourceSpan& pstate, const sass::string& text, bool preserve = false);
@@ -225,7 +225,7 @@ namespace Sass {
   class CssKeyframeBlock : public CssParentNode {
 
     // The selector for this block.
-    ADD_CONSTREF(CssStringListObj, selector);
+    ADD_PROPERTY(CssStringListObj, selector);
 
   public:
 
@@ -329,14 +329,14 @@ namespace Sass {
 
     // The modifier, probably either "not" or "only".
     // This may be `null` if no modifier is in use.
-    ADD_CONSTREF(sass::string, modifier);
+    ADD_PROPERTY(sass::string, modifier);
 
     // The media type, for example "screen" or "print".
     // This may be `null`. If so, [features] will not be empty.
-    ADD_CONSTREF(sass::string, type);
+    ADD_PROPERTY(sass::string, type);
 
     // Feature queries, including parentheses.
-    ADD_CONSTREF(sass::vector<sass::string>, features);
+    ADD_PROPERTY(sass::vector<sass::string>, features);
 
   public:
     CssMediaQuery(const SourceSpan& pstate);
@@ -406,7 +406,7 @@ namespace Sass {
     public CssParentNode {
 
     // The queries for this rule (this is never empty).
-    ADD_CONSTREF(Vectorized<CssMediaQuery>, queries);
+    ADD_PROPERTY(Vectorized<CssMediaQuery>, queries);
 
   public:
 
@@ -446,8 +446,8 @@ namespace Sass {
   // CssImportTrace.
   /////////////////
   class CssImportTrace final : public CssParentNode {
-    ADD_CONSTREF(char, type)
-    ADD_CONSTREF(sass::string, name)
+    ADD_PROPERTY(char, type)
+    ADD_PROPERTY(sass::string, name)
   public:
     CssImportTrace(const SourceSpan& pstate,
       CssParentNode* parent,

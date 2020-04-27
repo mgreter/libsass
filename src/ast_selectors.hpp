@@ -239,13 +239,13 @@ namespace Sass {
     // The operator that defines the semantics of [value].
     // If this is empty, this matches any element with the given property,
     // regardless of this value. It's empty if and only if [value] is empty.
-    ADD_CONSTREF(sass::string, op);
+    ADD_PROPERTY(sass::string, op);
 
     // An assertion about the value of [name].
     // The precise semantics of this string are defined by [op].
     // If this is `null`, this matches any element with the given property,
     // regardless of this value. It's `null` if and only if [op] is `null`.
-    ADD_CONSTREF(sass::string, value);
+    ADD_PROPERTY(sass::string, value);
 
       // The modifier which indicates how the attribute selector should be
     // processed. See for example [case-sensitivity][] modifiers.
@@ -294,12 +294,12 @@ namespace Sass {
   class PseudoSelector final : public SimpleSelector {
 
     // Like [name], but without any vendor prefixes.
-    ADD_CONSTREF(sass::string, normalized);
+    ADD_PROPERTY(sass::string, normalized);
 
     // The non-selector argument passed to this selector. This is
     // `null` if there's no argument. If [argument] and [selector]
     // are both non-`null`, the selector follows the argument.
-    ADD_CONSTREF(sass::string, argument);
+    ADD_PROPERTY(sass::string, argument);
 
     // The selector argument passed to this selector. This is `null`
     // if there's no selector. If [argument] and [selector] are

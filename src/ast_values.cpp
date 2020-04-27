@@ -22,7 +22,7 @@ namespace Sass {
 
   // Standard value constructor
   Value::Value(const SourceSpan& pstate)
-    : Expression(pstate)
+    : Expression(pstate), hash_(0)
   { }
 
   // Return normalized index for vector from overflow-able sass index
@@ -207,7 +207,7 @@ namespace Sass {
   }
 
   Value::Value(const Value* ptr, bool childless)
-  : Expression(ptr->pstate()) { }
+  : Expression(ptr->pstate()), hash_(ptr->hash_) { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -271,14 +271,14 @@ namespace Sass {
 
   size_t Map::hash() const
   {
-    if (hash_ == 0) {
+    if (Value::hash_ == 0) {
       for (auto kv : elements_) {
-        hash_combine(hash_, kv.first->hash());
-        hash_combine(hash_, kv.second->hash());
+        hash_combine(Value::hash_, kv.first->hash());
+        hash_combine(Value::hash_, kv.second->hash());
       }
     }
 
-    return hash_;
+    return Value::hash_;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -286,7 +286,7 @@ namespace Sass {
 
   Binary_Expression::Binary_Expression(const SourceSpan& pstate,
                     Operand op, ExpressionObj lhs, ExpressionObj rhs)
-  : Expression(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false), hash_(0)
+  : Expression(pstate), op_(op), left_(lhs), right_(rhs), allowsSlash_(false)
   { }
 
   /////////////////////////////////////////////////////////////////////////
@@ -306,8 +306,7 @@ namespace Sass {
     // epsilon_(0.00001),
     zero_(zero),
     lhsAsSlash_(),
-    rhsAsSlash_(),
-    hash_(0)
+    rhsAsSlash_()
   {
   }
 
@@ -318,8 +317,7 @@ namespace Sass {
     // epsilon_(0.00001),
     zero_(zero),
     lhsAsSlash_(),
-    rhsAsSlash_(),
-    hash_(0)
+    rhsAsSlash_()
   {
   }
 
@@ -329,8 +327,7 @@ namespace Sass {
     value_(ptr->value_),
     // epsilon_(ptr->epsilon_),
     lhsAsSlash_(ptr->lhsAsSlash_),
-    rhsAsSlash_(ptr->rhsAsSlash_),
-    hash_(ptr->hash_)
+    rhsAsSlash_(ptr->rhsAsSlash_)
   {}
 
   // cancel out unnecessary units
@@ -490,16 +487,14 @@ namespace Sass {
 
   Color::Color(const SourceSpan& pstate, double a, const sass::string& disp)
   : Value(pstate),
-    disp_(disp), a_(a),
-    hash_(0)
+    disp_(disp), a_(a)
   {}
 
   Color::Color(const Color* ptr, bool childless)
   : Value(ptr),
     // reset on copy
     disp_(""),
-    a_(ptr->a_),
-    hash_(ptr->hash_)
+    a_(ptr->a_)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -696,14 +691,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Boolean::Boolean(const SourceSpan& pstate, bool val)
-    : Value(pstate), value_(val),
-    hash_(0)
+    : Value(pstate), value_(val)
   {}
 
   Boolean::Boolean(const Boolean* ptr, bool childless)
   : Value(ptr),
-    value_(ptr->value_),
-    hash_(ptr->hash_)
+    value_(ptr->value_)
   {}
 
  bool Boolean::operator== (const Value& rhs) const
@@ -885,22 +878,21 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   String::String(const SourceSpan& pstate, const sass::string& val, bool hasQuotes)
-  : Value(pstate), value_(val), hasQuotes_(hasQuotes), hash_(0)
+  : Value(pstate), value_(val), hasQuotes_(hasQuotes)
   {}
 
   String::String(const SourceSpan& pstate, sass::string&& val, bool hasQuotes)
-    : Value(pstate), value_(std::move(val)), hasQuotes_(hasQuotes), hash_(0)
+    : Value(pstate), value_(std::move(val)), hasQuotes_(hasQuotes)
   {}
 
   String::String(const SourceSpan& pstate, const char* beg, bool hasQuotes)
-  : Value(pstate), value_(beg), hasQuotes_(hasQuotes), hash_(0)
+  : Value(pstate), value_(beg), hasQuotes_(hasQuotes)
   {}
 
   String::String(const String* ptr, bool childless)
   : Value(ptr),
     value_(ptr->value_),
-    hasQuotes_(ptr->hasQuotes_),
-    hash_(ptr->hash_)
+    hasQuotes_(ptr->hasQuotes_)
   {}
 
   bool String::is_invisible() const {

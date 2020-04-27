@@ -513,7 +513,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Argument::Argument(const SourceSpan& pstate, ExpressionObj val, const EnvKey& n, bool rest, bool keyword)
-  : Expression(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword), hash_(0)
+  : Expression(pstate), value_(val), name_(n), is_rest_argument_(rest), is_keyword_argument_(keyword)
   {
   }
   // Argument::Argument(const Argument* ptr, bool childless)

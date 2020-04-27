@@ -69,7 +69,7 @@ namespace Sass {
   // A native string wrapped as an expression
   ///////////////////////////////////////////////////////////////////////
   class ItplString final : public Interpolant {
-    ADD_CONSTREF(sass::string, text)
+    ADD_PROPERTY(sass::string, text)
   public:
     ItplString(const SourceSpan& pstate, const sass::string& text);
     ItplString(const SourceSpan& pstate, sass::string&& text);
@@ -131,11 +131,11 @@ namespace Sass {
   class ArgumentDeclaration : public AST_Node {
 
     // The arguments that are taken.
-    ADD_CONSTREF(sass::vector<ArgumentObj>, arguments);
+    ADD_PROPERTY(sass::vector<ArgumentObj>, arguments);
 
     // The name of the rest argument (as in `$args...`),
     // or `null` if none was declared.
-    ADD_CONSTREF(sass::string, restArg);
+    ADD_PROPERTY(sass::string, restArg);
 
   public:
 
@@ -226,7 +226,7 @@ namespace Sass {
     ADD_REF(sass::vector<ExpressionObj>, positional);
 
     // The argument expressions passed by name.
-    ADD_CONSTREF(EnvKeyFlatMap<ExpressionObj>, named);
+    ADD_PROPERTY(EnvKeyFlatMap<ExpressionObj>, named);
 
     // The first rest argument (as in `$args...`).
     ADD_PROPERTY(ExpressionObj, restArg);
@@ -366,7 +366,7 @@ namespace Sass {
   };
 
   class ListExpression : public Expression {
-    ADD_CONSTREF(sass::vector<ExpressionObj>, contents);
+    ADD_PROPERTY(sass::vector<ExpressionObj>, contents);
     ADD_PROPERTY(Sass_Separator, separator);
     ADD_PROPERTY(bool, hasBrackets);
   public:
@@ -422,7 +422,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
 
   class MapExpression final : public Expression {
-    ADD_CONSTREF(sass::vector<ExpressionObj>, kvlist);
+    ADD_PROPERTY(sass::vector<ExpressionObj>, kvlist);
   public:
     void append(Expression* kv) {
       kvlist_.emplace_back(kv);
@@ -453,7 +453,7 @@ namespace Sass {
   };
 
   class MapMerge final : public Statement {
-    ADD_CONSTREF(EnvKey, variable);
+    ADD_PROPERTY(EnvKey, variable);
     ADD_PROPERTY(ExpressionObj, value);
     ADD_PROPERTY(IdxRef, vidx);
     ADD_PROPERTY(bool, is_default);
@@ -467,7 +467,7 @@ namespace Sass {
   // Assignments -- variable and value.
   /////////////////////////////////////
   class Assignment final : public Statement {
-    ADD_CONSTREF(EnvKey, variable);
+    ADD_PROPERTY(EnvKey, variable);
     ADD_PROPERTY(ExpressionObj, value);
     ADD_PROPERTY(IdxRef, vidx);
     ADD_PROPERTY(bool, is_default);
@@ -497,7 +497,7 @@ namespace Sass {
     // or `null` if no condition is attached.
     ADD_PROPERTY(InterpolationObj, media);
 
-    ADD_CONSTREF(sass::vector<ExpressionObj>, queries44);
+    ADD_PROPERTY(sass::vector<ExpressionObj>, queries44);
 
     // Flag to hoist import to the top.
     ADD_PROPERTY(bool, outOfOrder);
@@ -520,7 +520,7 @@ namespace Sass {
   // We do not support to load sass partials programmatic
   // They also don't allow any supports or media queries.
   class DynamicImport : public ImportBase {
-    ADD_CONSTREF(sass::string, url);
+    ADD_PROPERTY(sass::string, url);
   public:
     DynamicImport(const SourceSpan& pstate, const sass::string& url);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -528,7 +528,7 @@ namespace Sass {
 
   // After DynamicImport is loaded
   class IncludeImport final : public DynamicImport {
-    ADD_CONSTREF(Include, include);
+    ADD_PROPERTY(Include, include);
   public:
     IncludeImport(DynamicImport* import, Include include);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -586,7 +586,7 @@ namespace Sass {
 
   class SilentComment final : public Statement {
     // The text of this comment, including comment characters.
-    ADD_CONSTREF(sass::string, text)
+    ADD_PROPERTY(sass::string, text)
   public:
     SilentComment(const SourceSpan& pstate, const sass::string& text);
     // not used in dart sass beside tests!?
@@ -611,7 +611,7 @@ namespace Sass {
   // The Sass `@for` control directive.
   /////////////////////////////////////
   class For final : public ParentStatement {
-    ADD_CONSTREF(EnvKey, variable);
+    ADD_PROPERTY(EnvKey, variable);
     ADD_PROPERTY(ExpressionObj, lower_bound);
     ADD_PROPERTY(ExpressionObj, upper_bound);
     ADD_POINTER(IDXS*, idxs);
@@ -626,7 +626,7 @@ namespace Sass {
   // The Sass `@each` control directive.
   //////////////////////////////////////
   class Each final : public ParentStatement {
-    ADD_CONSTREF(sass::vector<EnvKey>, variables);
+    ADD_PROPERTY(sass::vector<EnvKey>, variables);
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(ExpressionObj, list);
   public:
@@ -703,14 +703,14 @@ namespace Sass {
 
     // The namespace of the function being invoked,
     // or `null` if it's invoked without a namespace.
-    ADD_CONSTREF(sass::string, ns);
+    ADD_PROPERTY(sass::string, ns);
 
-    ADD_CONSTREF(IdxRef, fidx);
+    ADD_PROPERTY(IdxRef, fidx);
 
     // The name of the function being invoked. If this is
     // interpolated, the function will be interpreted as plain
     // CSS, even if it has the same name as a Sass function.
-    ADD_CONSTREF(InterpolationObj, name);
+    ADD_PROPERTY(InterpolationObj, name);
 
     ADD_PROPERTY(bool, selfAssign);
 
@@ -735,7 +735,7 @@ namespace Sass {
   class CallableDeclaration : public ParentStatement {
     // The name of this callable.
     // This may be empty for callables without names.
-    ADD_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(EnvKey, name);
     ADD_POINTER(IDXS*, idxs);
     ADD_PROPERTY(IdxRef, fidx);
     ADD_PROPERTY(IdxRef, cidx);
@@ -783,7 +783,7 @@ namespace Sass {
 
   class MixinRule final :
     public CallableDeclaration {
-    ADD_CONSTREF(IdxRef, cidx);
+    ADD_PROPERTY(IdxRef, cidx);
   public:
     MixinRule(
       const SourceSpan& pstate,
@@ -799,16 +799,16 @@ namespace Sass {
 
     // The namespace of the mixin being invoked, or
     // `null` if it's invoked without a namespace.
-    ADD_CONSTREF(sass::string, ns);
+    ADD_PROPERTY(sass::string, ns);
 
     // The name of the mixin being invoked.
-    ADD_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(EnvKey, name);
 
     // The block that will be invoked for [ContentRule]s in the mixin
     // being invoked, or `null` if this doesn't pass a content block.
     ADD_PROPERTY(ContentBlockObj, content);
 
-    ADD_CONSTREF(IdxRef, midx);
+    ADD_PROPERTY(IdxRef, midx);
 
   public:
 
@@ -952,11 +952,10 @@ namespace Sass {
   // Individual argument objects for mixin and function calls.
   ////////////////////////////////////////////////////////////
   class Argument final : public Expression {
-    HASH_PROPERTY(ExpressionObj, value);
-    HASH_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(ExpressionObj, value);
+    ADD_PROPERTY(EnvKey, name);
     ADD_PROPERTY(bool, is_rest_argument);
     ADD_PROPERTY(bool, is_keyword_argument);
-    mutable size_t hash_;
   public:
     Argument(const SourceSpan& pstate, ExpressionObj val,
       const EnvKey& n, bool rest = false, bool keyword = false);
@@ -982,7 +981,7 @@ namespace Sass {
 
   class UserDefinedCallable : public Callable {
     // Name of this callable (used for reporting)
-    ADD_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(EnvKey, name);
     // The declaration (parameters this function takes).
     ADD_PROPERTY(CallableDeclarationObj, declaration);
     // The environment in which this callable was declared.
@@ -999,7 +998,7 @@ namespace Sass {
   };
 
   class PlainCssCallable : public Callable {
-    ADD_CONSTREF(sass::string, name);
+    ADD_PROPERTY(sass::string, name);
   public:
     PlainCssCallable(const SourceSpan& pstate, const sass::string& name);
     Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
@@ -1010,11 +1009,11 @@ namespace Sass {
   class BuiltInCallable : public Callable {
 
     // The function name
-    ADD_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(EnvKey, name);
 
     ADD_PROPERTY(ArgumentDeclarationObj, parameters);
 
-    ADD_CONSTREF(SassFnPair, function);
+    ADD_PROPERTY(SassFnPair, function);
 
   public:
 
@@ -1046,7 +1045,7 @@ namespace Sass {
   class BuiltInCallables : public Callable {
 
     // The function name
-    ADD_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(EnvKey, name);
 
     // The overloads declared for this callable.
     ADD_PROPERTY(SassFnPairs, overloads);
@@ -1082,7 +1081,7 @@ namespace Sass {
 
     // The function name
     // ToDo: should be EnvKey too?
-    ADD_CONSTREF(sass::string, name);
+    ADD_PROPERTY(sass::string, name);
 
     ADD_PROPERTY(ArgumentDeclarationObj, declaration);
 

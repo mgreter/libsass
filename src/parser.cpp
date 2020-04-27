@@ -149,7 +149,7 @@ namespace Sass {
       if (scanner.scanChar($dash)) {
         text.writeCharCode($dash);
         _identifierBody(text, unit);
-        return text.toString43();
+        return text.buffer;
       }
     }
 

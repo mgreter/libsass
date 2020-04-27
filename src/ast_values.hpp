@@ -120,6 +120,11 @@ namespace Sass {
   // base class for values that support operations
   //////////////////////////////////////////////////////////////////////
   class Value : public Expression {
+  protected:
+
+    // Hash is only calculated once
+    mutable size_t hash_;
+
   public:
 
     /*
@@ -467,8 +472,6 @@ namespace Sass {
 
   protected:
 
-    // Hash is only calculated once
-    mutable size_t hash_;
     // Reset it once container is mutated
     // Therefore don't allow outside mutation
     void reset_hash() override final { hash_ = 0; }
@@ -654,11 +657,10 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////////
   class Binary_Expression : public Expression {
   private:
-    HASH_PROPERTY(Operand, op)
-    HASH_PROPERTY(ExpressionObj, left)
-    HASH_PROPERTY(ExpressionObj, right)
-    HASH_PROPERTY(bool, allowsSlash)
-    mutable size_t hash_;
+    ADD_PROPERTY(Operand, op);
+    ADD_PROPERTY(ExpressionObj, left);
+    ADD_PROPERTY(ExpressionObj, right);
+    ADD_PROPERTY(bool, allowsSlash);
   public:
     Binary_Expression(const SourceSpan& pstate,
                       Operand op, ExpressionObj lhs, ExpressionObj rhs);
@@ -699,7 +701,7 @@ namespace Sass {
   // Variable references.
   ///////////////////////
   class Variable final : public Expression {
-    ADD_CONSTREF(EnvKey, name);
+    ADD_PROPERTY(EnvKey, name);
     ADD_PROPERTY(IdxRef, vidx);
   public:
     Variable(const SourceSpan& pstate,
@@ -718,12 +720,9 @@ namespace Sass {
 
     // The representation of this number as two
     // slash-separated numbers, if it has one.
-    ADD_CONSTREF(NumberObj, lhsAsSlash);
-    ADD_CONSTREF(NumberObj, rhsAsSlash);
+    ADD_PROPERTY(NumberObj, lhsAsSlash);
+    ADD_PROPERTY(NumberObj, rhsAsSlash);
 
-
-
-    mutable size_t hash_;
   public:
     enum Sass_Tag getTag() const override final { return SASS_NUMBER; }
     Number(const SourceSpan& pstate, double val, const sass::string& u = StrEmpty, bool zero = true);
@@ -1076,10 +1075,9 @@ namespace Sass {
   // Colors.
   //////////
   class Color : public Value {
-    ADD_CONSTREF(sass::string, disp)
+    ADD_PROPERTY(sass::string, disp)
     HASH_PROPERTY(double, a)
-  protected:
-    mutable size_t hash_;
+
   public:
     enum Sass_Tag getTag() const override final { return SASS_COLOR; }
     Color(const SourceSpan& pstate, double a = 1, const sass::string& disp = StrEmpty);
@@ -1219,7 +1217,7 @@ namespace Sass {
   // Errors from Sass_Values.
   //////////////////////////////
   class Custom_Error final : public Value {
-    ADD_CONSTREF(sass::string, message)
+    ADD_PROPERTY(sass::string, message)
   public:
     enum Sass_Tag getTag() const override final { return SASS_ERROR; }
     size_t hash() const override final { return 0; }
@@ -1234,7 +1232,7 @@ namespace Sass {
   // Warnings from Sass_Values.
   //////////////////////////////
   class Custom_Warning final : public Value {
-    ADD_CONSTREF(sass::string, message)
+    ADD_PROPERTY(sass::string, message)
   public:
     enum Sass_Tag getTag() const override final { return SASS_WARNING; }
     size_t hash() const override final { return 0; }
@@ -1250,7 +1248,7 @@ namespace Sass {
   ////////////
   class Boolean final : public Value {
     HASH_PROPERTY(bool, value)
-    mutable size_t hash_;
+
   public:
     enum Sass_Tag getTag() const override final { return SASS_BOOLEAN; }
     Boolean(const SourceSpan& pstate, bool val);
@@ -1324,8 +1322,7 @@ namespace Sass {
   class String final : public Value {
     HASH_CONSTREF(sass::string, value);
     ADD_PROPERTY(bool, hasQuotes);
-  protected:
-    mutable size_t hash_;
+
   public:
     enum Sass_Tag getTag() const override final { return SASS_STRING; }
     virtual String* isString() override final { return this; }

@@ -12,9 +12,11 @@ namespace Sass {
 
   private:
 
-    sass::string buffer;
 
   public:
+
+    sass::string buffer;
+
     StringBuffer() :
       buffer()
     {}

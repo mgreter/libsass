@@ -83,9 +83,9 @@ private:
 protected:\
   type name##_;\
 public:\
-  const type& name() const { return name##_; }\
-  void name(type&& name##__) { name##_ = name##__; }\
-  void name(const type& name##__) { name##_ = name##__; }\
+  const type& name() const { return name##_; } \
+  void name(type&& name##__) { name##_ = std::move(name##__); } \
+  void name(const type& name##__) { name##_ = name##__; } \
 private:
 
 #define ADD_VECTOR(type, name)\
@@ -93,7 +93,7 @@ protected:\
   type name##_;\
 public:\
   const sass::vector<type>& name() const { return name##_; }\
-  void name(sass::vector<type>&& name##__) { name##_ = name##__; }\
+  void name(sass::vector<type>&& name##__) { name##_ = std::move(name##__); }\
   void name(const sass::vector<type>& name##__) { name##_ = name##__; }\
 private:
 
@@ -102,18 +102,10 @@ protected:\
   type name##_;\
 public:\
   const type& name() const { return name##_; }\
-  void name(type&& name##__) { hash_ = 0; name##_ = name##__; }\
+  void name(type&& name##__) { hash_ = 0; name##_ = std::move(name##__); }\
   void name(const type& name##__) { hash_ = 0; name##_ = name##__; }\
 private:
 
-#define ADD_CONSTREF(type, name) \
-protected: \
-  type name##_; \
-public: \
-  const type& name() const { return name##_; } \
-  void name(type&& name##__) { name##_ = name##__; } \
-  void name(const type& name##__) { name##_ = name##__; } \
-private:
 
 #define ADD_REF(type, name) \
 protected: \
@@ -121,7 +113,7 @@ protected: \
 public: \
   type& name() { return name##_; } \
   const type& name() const { return name##_; } \
-  void name(type&& name##__) { name##_ = name##__; } \
+  void name(type&& name##__) { name##_ = std::move(name##__); } \
   void name(const type& name##__) { name##_ = name##__; } \
 private:
 
@@ -130,7 +122,7 @@ protected: \
   type name##_; \
 public: \
   const type& name() const { return name##_; } \
-  void name(type&& name##__) { hash_ = 0; name##_ = name##__; } \
+  void name(type&& name##__) { hash_ = 0; name##_ = std::move(name##__); } \
   void name(const type& name##__) { hash_ = 0; name##_ = name##__; } \
 private:
 
