@@ -693,10 +693,6 @@ namespace Sass {
     {
     }
 
-    sass::string toString() const {
-      return "if"; // +arguments_->toString();
-    }
-
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -934,9 +930,6 @@ namespace Sass {
     // The default at-root query, which excludes only style rules.
     // ToDo: check out how to make this static
     static AtRootQuery* defaultQuery(const SourceSpan& pstate);
-
-    // Only for debug purposes
-    sass::string toString() const;
 
     ATTACH_CRTP_PERFORM_METHODS()
   };

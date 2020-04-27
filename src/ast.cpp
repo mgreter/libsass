@@ -691,37 +691,7 @@ namespace Sass {
       && named_.empty()
       && restArg_.isNull();
   }
-  /*
-  sass::string ArgumentInvocation::toString() const
-  {
-    sass::sstream strm;
-    strm << "(";
-    bool addComma = false;
-    for (Expression* named : positional_) {
-      if (addComma) strm << ", ";
-      strm << named->to_string();
-      addComma = true;
-    }
-    for (auto kv : named_) {
-      if (addComma) strm << ", ";
-      strm << kv.first.orig() << ": ";
-//      strm << named_->get(named)->to_string();
-      addComma = true;
-    }
-    if (!restArg_.isNull()) {
-      if (addComma) strm << ", ";
-      strm << restArg_->to_string() << "...";
-      addComma = true;
-    }
-    if (!kwdRest_.isNull()) {
-      if (addComma) strm << ", ";
-      strm << kwdRest_->to_string() << "...";
-      addComma = true;
-    }
-    strm << ")";
-    return strm.str();
-  }
-  */
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

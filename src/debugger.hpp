@@ -397,7 +397,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     AtRootQuery* query = Cast<AtRootQuery>(node);
     std::cerr << ind << "AtRootQuery " << query;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " <" << query->toString() << ">";
+    std::cerr << " <" << query->inspect() << ">";
     std::cerr << std::endl;
   }
   else if (Cast<CssAtRootRule>(node)) {
