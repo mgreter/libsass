@@ -57,7 +57,7 @@ namespace Sass {
     // void write(const String* string) = delete;
 
     // Once you call this function, buffer is emptied
-    const sass::string& toString(bool rtrim = false)
+    const sass::string& toString43(bool rtrim = false)
     {
       if (rtrim) {
         StringUtils::makeRightTrimmed(buffer);
@@ -163,11 +163,11 @@ namespace Sass {
     }
 
     sass::string trailingString() {
-      return text.toString();
+      return text.toString43();
     }
 
     bool trailingStringEndsWith(const sass::string& cmp) {
-      sass::string tail(text.toString(true));
+      sass::string tail(text.toString43(true));
       StringUtils::makeRightTrimmed(tail); // needed??
       // could optimize the check to account trim
       return StringUtils::endsWith(tail, cmp);

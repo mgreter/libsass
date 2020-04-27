@@ -149,7 +149,7 @@ namespace Sass {
       if (scanner.scanChar($dash)) {
         text.writeCharCode($dash);
         _identifierBody(text, unit);
-        return text.toString();
+        return text.toString43();
       }
     }
 
@@ -171,7 +171,7 @@ namespace Sass {
 
     _identifierBody(text, unit);
 
-    return text.toString();
+    return text.toString43();
 
   }
 
@@ -191,7 +191,7 @@ namespace Sass {
       if (scanner.scanChar($dash)) {
         text.writeCharCode($dash);
         _identifierBody(text, unit);
-        return text.toString();
+        return text.toString43();
       }
     }
 
@@ -212,7 +212,7 @@ namespace Sass {
     }
 
     _identifierBody(text, unit);
-    return text.toString();
+    return text.toString43();
 
   }
 
@@ -226,7 +226,7 @@ namespace Sass {
         "Expected identifier body.",
         *context.logger123, scanner.rawSpan());
     }
-    return text.toString();
+    return text.toString43();
   }
 
   // Like [_identifierBody], but parses the body into the [text] buffer.
@@ -238,7 +238,7 @@ namespace Sass {
         break;
       }
       else if (unit && next == $dash) {
-        // Disallow `-` followed by a dot or a digit digit in units.
+        // Disallow `-` followed by a dot or a digit in units.
         uint8_t second = scanner.peekChar(1);
         if (second != $nul && (second == $dot || isDigit(second))) break;
         text.write(scanner.readChar());
@@ -298,7 +298,7 @@ namespace Sass {
       }
     }
 
-    return buffer.toString();
+    return buffer.toString43();
   }
 
   // Consumes and returns a natural number.
@@ -430,7 +430,7 @@ namespace Sass {
     if (!brackets.empty()) scanner.expectChar(brackets.back());
     if (!allowEmpty && buffer.empty()) scanner.error(
       "Expected token.", *context.logger123, scanner.rawSpan());
-    return buffer.toString();
+    return buffer.toString43();
 
   }
   // EO declarationValue
@@ -477,7 +477,7 @@ namespace Sass {
       }
       else if (next == $rparen) {
         buffer.write(scanner.readChar());
-        return buffer.toString();
+        return buffer.toString43();
       }
       else {
         break;
@@ -541,7 +541,7 @@ namespace Sass {
       if (value > 0xF) buffer.write(hexCharFor(value >> 4));
       buffer.write(hexCharFor(value & 0xF));
       buffer.write($space);
-      return buffer.toString();
+      return buffer.toString43();
     }
     else {
       return StringFromCharCodes({ $backslash, value });

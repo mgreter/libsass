@@ -75,7 +75,7 @@ namespace Sass {
 
     scanner.expectChar($percent);
     buffer.writeCharCode($percent);
-    return buffer.toString();
+    return buffer.toString43();
 
   }
 

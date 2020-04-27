@@ -231,7 +231,7 @@ namespace Sass {
   endOfLoop:
 
     lastSilentComment = SASS_MEMORY_NEW(SilentComment,
-      scanner.rawSpanFrom(start), buffer.toString());
+      scanner.rawSpanFrom(start), buffer.toString43());
     return lastSilentComment;
   }
 

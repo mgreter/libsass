@@ -47,12 +47,12 @@ namespace Sass {
       static_cast<const T*>(ptr) : NULL;
   };
 
+  /* String | Expression */
   class Interpolant : public AST_Node {
   public:
     virtual ~Interpolant() {}
     Interpolant(SourceSpan&& pstate);
     Interpolant(const SourceSpan& pstate);
-
 
     virtual ItplString* getItplString() { return nullptr; }
     virtual Expression* getExpression() { return nullptr; }
@@ -139,10 +139,9 @@ namespace Sass {
 
   public:
 
-    ArgumentDeclaration(
-      const SourceSpan& pstate,
-      const sass::vector<ArgumentObj>& arguments,
-      const sass::string& restArg = "");
+    ArgumentDeclaration(SourceSpan&& pstate,
+      sass::vector<ArgumentObj>&& arguments = {},
+      sass::string&& restArg = "");
 
     bool isEmpty() const {
       return arguments_.empty()
@@ -157,11 +156,11 @@ namespace Sass {
       size_t positional,
       const EnvKeyFlatMap<ValueObj>& names,
       const SourceSpan& pstate,
-      const BackTraces& traces);
+      const BackTraces& traces) const;
 
     bool matches(
       size_t positional,
-      const EnvKeyFlatMap<ValueObj>& names);
+      const EnvKeyFlatMap<ValueObj>& names) const;
 
     ATTACH_CRTP_PERFORM_METHODS();
 
@@ -202,9 +201,6 @@ namespace Sass {
     ArgumentResults() :
       separator_(SASS_UNDEF)
     {};
-
-    ArgumentResults(
-      const ArgumentResults& other);
 
     ArgumentResults(
       ArgumentResults&& other) noexcept;
@@ -279,8 +275,8 @@ namespace Sass {
   private:
     ADD_PROPERTY(size_t, tabs)
   public:
-    Statement(SourceSpan&& pstate, size_t t = 0);
-    Statement(const SourceSpan& pstate, size_t t = 0);
+    Statement(SourceSpan&& pstate);
+    Statement(const SourceSpan& pstate);
     virtual ~Statement() = 0; // virtual destructor
     // needed for rearranging nested rulesets during CSS emission
     virtual bool has_content();

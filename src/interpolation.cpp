@@ -41,7 +41,7 @@ namespace Sass {
     if (!text.empty()) {
       // Appends a ItplString from the remaining text in the string buffer
       itpl->append(SASS_MEMORY_NEW(ItplString,
-        pstate, text.toString(rtrim)));
+        pstate, text.toString43(rtrim)));
     }
     // ToDo: get rid of detach?
     return itpl.detach();
@@ -54,7 +54,7 @@ namespace Sass {
     if (text.empty()) return;
     // Create and add string constant to container
     contents.emplace_back(SASS_MEMORY_NEW(
-      ItplString, pstate, text.toString()));
+      ItplString, pstate, text.toString43()));
     // Clear buffer now
     text.clear();
   }

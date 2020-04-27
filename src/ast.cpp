@@ -136,11 +136,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Statement::Statement(const SourceSpan& pstate, size_t t)
-  : AST_Node(pstate), tabs_(t)
+  Statement::Statement(const SourceSpan& pstate)
+  : AST_Node(pstate), tabs_(0)
   { }
-  Statement::Statement(SourceSpan&& pstate, size_t t)
-    : AST_Node(std::move(pstate)), tabs_(t)
+  Statement::Statement(SourceSpan&& pstate)
+    : AST_Node(std::move(pstate)), tabs_(0)
   { }
   Statement::Statement(const Statement* ptr, bool childless)
   : AST_Node(ptr),
@@ -611,19 +611,6 @@ namespace Sass {
       pstate, wihtoutStyleRule, false);
   }
 
-  sass::string AtRootQuery::toString() const
-  {
-    sass::sstream msg;
-    if (include_) msg << "with: ";
-    else msg << "without: ";
-    bool addComma = false;
-    for (auto item : names_) {
-      if (addComma) msg << ", ";
-      msg << item;
-    }
-    return msg.str();
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -749,14 +736,6 @@ namespace Sass {
   }
 
   ArgumentResults::ArgumentResults(
-    const ArgumentResults& other) :
-    positional_(other.positional_),
-    named_(other.named_),
-    separator_(other.separator_)
-  {
-  }
-
-  ArgumentResults::ArgumentResults(
     ArgumentResults&& other) noexcept :
     positional_(std::move(other.positional_)),
     named_(std::move(other.named_)),
@@ -771,13 +750,16 @@ namespace Sass {
     return *this;
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   ArgumentDeclaration::ArgumentDeclaration(
-    const SourceSpan& pstate,
-    const sass::vector<ArgumentObj>& arguments,
-    const sass::string& restArg) :
-    AST_Node(pstate),
-    arguments_(arguments),
-    restArg_(restArg)
+    SourceSpan&& pstate,
+    sass::vector<ArgumentObj>&& arguments,
+    sass::string&& restArg) :
+    AST_Node(std::move(pstate)),
+    arguments_(std::move(arguments)),
+    restArg_(std::move(restArg))
   {
   }
 
@@ -794,7 +776,7 @@ namespace Sass {
     size_t positional,
     const EnvKeyFlatMap<ValueObj>& names,
     const SourceSpan& pstate,
-    const BackTraces& traces)
+    const BackTraces& traces) const
   {
 
     size_t i = 0;
@@ -849,7 +831,7 @@ namespace Sass {
   }
 
   // Returns whether [positional] and [names] are valid for this argument declaration.
-  bool ArgumentDeclaration::matches(size_t positional, const EnvKeyFlatMap<ValueObj>& names)
+  bool ArgumentDeclaration::matches(size_t positional, const EnvKeyFlatMap<ValueObj>& names) const
   {
     size_t namedUsed = 0; Argument* argument;
     for (size_t i = 0, iL = arguments_.size(); i < iL; i++) {

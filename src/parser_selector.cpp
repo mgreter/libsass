@@ -460,7 +460,7 @@ namespace Sass {
         buffer.write(scanner.readChar());
       }
       whitespace();
-      if (!scanCharIgnoreCase($n)) return buffer.toString();
+      if (!scanCharIgnoreCase($n)) return buffer.toString43();
     }
     else {
       expectCharIgnoreCase($n);
@@ -469,7 +469,7 @@ namespace Sass {
     whitespace();
 
     scanner.peekChar(next);
-    if (next != $plus && next != $minus) return buffer.toString();
+    if (next != $plus && next != $minus) return buffer.toString43();
     buffer.write(scanner.readChar());
     whitespace();
 
@@ -480,7 +480,7 @@ namespace Sass {
     while (isDigit(scanner.peekChar())) {
       buffer.write(scanner.readChar());
     }
-    return buffer.toString();
+    return buffer.toString43();
   }
   // _aNPlusB
 

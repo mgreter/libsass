@@ -64,7 +64,7 @@ namespace Sass {
 
     sass::string getString()
     {
-      return _buffer.toString();
+      return _buffer.toString43();
     }
 
   private:

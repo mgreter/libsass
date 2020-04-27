@@ -321,14 +321,14 @@ namespace Sass {
     }
 
     if (scanner.scanChar($colon)) {
-      nameBuffer.write(midBuffer.toString());
+      nameBuffer.write(midBuffer.toString43());
       nameBuffer.write($colon);
       return nullptr;
     }
     else if (isIndented() && _lookingAtInterpolatedIdentifier()) {
       // In the indented syntax, `foo:bar` is always
       // considered a selector rather than a property.
-      nameBuffer.write(midBuffer.toString());
+      nameBuffer.write(midBuffer.toString43());
       return nullptr;
     }
 
@@ -379,7 +379,7 @@ namespace Sass {
       InterpolationObj additional = almostAnyValue();
       if (!isIndented() && scanner.peekChar() == $semicolon) throw;
 
-      nameBuffer.write(midBuffer.toString());
+      nameBuffer.write(midBuffer.toString43());
       nameBuffer.addInterpolation(additional);
       return nullptr;
     }
@@ -1197,9 +1197,7 @@ namespace Sass {
     if (!arguments) {
       SourceSpan pstate(scanner.relevantSpanFrom(start));
       arguments = SASS_MEMORY_NEW(ArgumentInvocation,
-        pstate, sass::vector<ExpressionObj>(),
-        {}
-      );
+        std::move(pstate), {}, {});
     }
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
@@ -1558,8 +1556,8 @@ namespace Sass {
     return SASS_MEMORY_NEW(
       ArgumentDeclaration,
       scanner.relevantSpanFrom(start),
-      arguments,
-      restArgument);
+      std::move(arguments),
+      std::move(restArgument));
 
   }
   // EO _argumentDeclaration
