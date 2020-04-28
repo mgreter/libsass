@@ -166,7 +166,7 @@ namespace Sass {
 
     Interpolation* itpl = node->interpolation();
 
-    if (itpl == nullptr) std::cerr << "FUCK\n";
+    if (itpl == nullptr) return nullptr;
     // auto text123 = interpolationToValue(itpl, true, false);
 
 
@@ -180,7 +180,7 @@ namespace Sass {
 
       // _withParent
       auto pu = parent65;
-      while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
+      while (pu->bubbleThroughStyleRule()) {
         // std::cout << "Go through Keyframe CssStyleRule\n";
         pu = pu->parent_;
       }
@@ -194,13 +194,12 @@ namespace Sass {
 
       pu->append(css2);
 
-      {
-        // Set parent again to css, to append children
-        LOCAL_PTR(CssParentNode, parent65, css2);
-        visitChildren(node->elements());
-      }
+      // Set parent again to css, to append children
+      LOCAL_PTR(CssParentNode, parent65, css2);
+      visitChildren(node->elements());
       return nullptr;
-      // return k.detach();
+
+
     }
     else {
 
@@ -226,7 +225,7 @@ namespace Sass {
       // _withParent
       auto pu = parent65;
       // debug_ast(parent65, "ADD TO");
-      // while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
+      // while (pu->bubbleThroughStyleRule()) {
       while (pu->bubbleThroughStyleRule()) {
         // std::cout << "Go through CssStyleRule\n";
         pu = pu->parent_;
@@ -330,7 +329,7 @@ namespace Sass {
 
 
     auto pu = parent65;
-    while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
+    while (pu->bubbleThroughStyleRule()) {
       // std::cout << "Go through SupportsRule CssStyleRule\n";
       pu = pu->parent_;
     }
@@ -546,7 +545,7 @@ namespace Sass {
 
       auto pu = parent65;
       // debug_ast(parent65);
-      while (Cast<CssStyleRule>(pu) || Cast<CssImportTrace>(pu)) {
+      while (pu->bubbleThroughStyleRule()) {
         // std::cout << "Go through AtRule CssStyleRule\n";
         pu = pu->parent_;
       }
