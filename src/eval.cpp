@@ -69,17 +69,19 @@ namespace Sass {
       }
     }
 
-    CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace, node->pstate(), parent65, node->name().orig());
-    parent65->append(trace);
-
-    LOCAL_PTR(CssParentNode, parent65, trace);
+    CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace,
+      node->pstate(), current, node->name().orig());
+    current->append(trace);
+    trace->parent_ = current;
 
     LOCAL_FLAG(inMixin, true);
+
+    LOCAL_PTR(CssParentNode, current, trace);
 
     callStackFrame frame(*compiler.logger123,
       BackTrace(node->pstate(), mixin->name().orig(), true));
 
-    LocalOption<UserDefinedCallable*> asdqwe2(content88, contentCallable);
+    LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
 
     ArgumentResults& evaluated(node->arguments()->evaluated);
     _evaluateArguments(node->arguments(), evaluated);
@@ -92,10 +94,7 @@ namespace Sass {
       trace,
       node->pstate());
 
-
-    // debug_ast(trace);
     return nullptr;
-
   }
 
   Value* Eval::visitContentRule(ContentRule* c)
@@ -107,30 +106,32 @@ namespace Sass {
 
 
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
-    CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace, c->pstate(), parent65, Strings::contentRule);
-    parent65->append(trace);
+    CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace,
+      c->pstate(), current, Strings::contentRule);
+    current->append(trace);
+    trace->parent_ = current;
 
-      LOCAL_PTR(CssParentNode, parent65, trace);
+    LOCAL_PTR(CssParentNode, current, trace);
 
-      callStackFrame frame(*compiler.logger123,
-        BackTrace(c->pstate(), Strings::contentRule));
+    callStackFrame frame(*compiler.logger123,
+      BackTrace(c->pstate(), Strings::contentRule));
 
-      // EnvSnapshotView view(compiler.varRoot, content->snapshot());
-      EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
+    // EnvSnapshotView view(compiler.varRoot, content->snapshot());
+    EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
-      LocalOption<UserDefinedCallable*> asdqwe(content88, content->content());
+    LOCAL_PTR(UserDefinedCallable, content88, content->content());
 
-      // Appends to trace
-      ArgumentResults& evaluated(c->arguments()->evaluated);
-      _evaluateArguments(c->arguments(), evaluated);
-      ValueObj qwe = _runUserDefinedCallable(
-        evaluated,
-        content,
-        nullptr,
-        false,
-        &Eval::_runWithBlock,
-        trace,
-        c->pstate());
+    // Appends to trace
+    ArgumentResults& evaluated(c->arguments()->evaluated);
+    _evaluateArguments(c->arguments(), evaluated);
+    ValueObj qwe = _runUserDefinedCallable(
+      evaluated,
+      content,
+      nullptr,
+      false,
+      &Eval::_runWithBlock,
+      trace,
+      c->pstate());
 
 
     // _runUserDefinedCallable(node.arguments, content, node, () {
@@ -140,17 +141,7 @@ namespace Sass {
 
   }
 
-  void Eval::_withStyleRule(CssStyleRule* rule, ParentStatement* node, Value* (Eval::*function)(ParentStatement* parent))
-  {
-    auto oldRule = _styleRule;
-    _styleRule = rule;
-    // var result = callback();
-    ValueObj rv = (this->*function)(node);
-    _styleRule = oldRule;
-    // return result;
-  }
-
-  Value* Eval::_acceptNodeChildren(ParentStatement* node)
+    Value* Eval::_acceptNodeChildren(ParentStatement* node)
   {
     return visitChildren(node->elements());
     // for (auto child : parent->elements()) {
@@ -179,11 +170,7 @@ namespace Sass {
       // Most changes here should be mirrored there.
 
       // _withParent
-      auto pu = parent65;
-      while (pu->bubbleThroughStyleRule()) {
-        // std::cout << "Go through Keyframe CssStyleRule\n";
-        pu = pu->parent_;
-      }
+      auto pu = current->bubbleThroughStyleRule2();
 
       // ModifiableCssKeyframeBlock
 
@@ -195,8 +182,7 @@ namespace Sass {
       pu->append(css2);
 
       // Set parent again to css, to append children
-      LOCAL_PTR(CssParentNode, parent65, css2);
-      visitChildren(node->elements());
+      visitChildren2(css2, node->elements());
       return nullptr;
 
 
@@ -223,13 +209,7 @@ namespace Sass {
       extender.addSelector(evaled, mediaStack.back());
 
       // _withParent
-      auto pu = parent65;
-      // debug_ast(parent65, "ADD TO");
-      // while (pu->bubbleThroughStyleRule()) {
-      while (pu->bubbleThroughStyleRule()) {
-        // std::cout << "Go through CssStyleRule\n";
-        pu = pu->parent_;
-      }
+      auto pu = current->bubbleThroughStyleRule2();
 
       CssStyleRule* rule = SASS_MEMORY_NEW(CssStyleRule,
         node->pstate(), pu, evaled);
@@ -240,7 +220,7 @@ namespace Sass {
       _addChild(pu, rule);
 
       LOCAL_FLAG(_atRootExcludingStyleRule, false);
-      LOCAL_PTR(CssParentNode, parent65, rule); // _withParent
+      LOCAL_PTR(CssParentNode, current, rule); // _withParent
       LOCAL_PTR(CssStyleRule, _styleRule, rule); // _withStyleRule
       for (auto child : node->elements()) child->perform(this);
 
@@ -300,9 +280,10 @@ namespace Sass {
   CssRoot* Eval::visitRoot32(Root* root)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
-    LOCAL_PTR(CssParentNode, parent65, css);
+    LOCAL_PTR(CssParentNode, current, css);
     for (const StatementObj& item : root->elements()) {
-      ValueObj child = item->perform(this);
+      Value* child = item->perform(this);
+      if (child) delete child;
     }
     return css.detach();
   }
@@ -322,47 +303,37 @@ namespace Sass {
 
   */
 
+  CssParentNode* Eval::hoistStyleRule(CssParentNode* node)
+  {
+    if (isInStyleRule()) {
+      auto outer = _styleRule->copy(true);
+      node->append(outer);
+      outer->parent_ = node;
+      return outer;
+    }
+    else {
+      return node;
+    }
+  }
+
   Value* Eval::visitSupportsRule(SupportsRule* node)
   {
     ValueObj condition(node->condition()->perform(this));
     EnvScope scoped(compiler.varRoot, node->idxs());
-
-
-    auto pu = parent65;
-    while (pu->bubbleThroughStyleRule()) {
-      // std::cout << "Go through SupportsRule CssStyleRule\n";
-      pu = pu->parent_;
-    }
-
+    auto chroot = current->bubbleThroughStyleRule2();
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
-      node->pstate(), pu, condition);
-
-    pu->append(css);
-
-    LOCAL_PTR(CssParentNode, parent65, css);
-
-    if (!isInStyleRule()) {
-      visitChildren(node->elements());
-    }
-    else {
-      auto cp = _styleRule->copy(true);
-      // cp->clear();
-
-      parent65->append(cp);
-      cp->parent_ = parent65;
-
-      LOCAL_PTR(CssParentNode, parent65, cp);
-      visitChildren(node->elements());
-
-    }
-
-
+      node->pstate(), chroot, condition);
+    chroot->append(css);
+    css->parent_ = chroot;
+    visitChildren2(
+      hoistStyleRule(css),
+      node->elements());
     return nullptr;
   }
 
   CssParentNode* Eval::getRoot()
   {
-    auto pr = parent65;
+    auto pr = current;
     while (pr->parent_) {
       pr = pr->parent_;
     }
@@ -375,7 +346,7 @@ namespace Sass {
     auto _root = getRoot();
     if (nodes.empty()) return _root;
 
-    auto parent = parent65;
+    auto parent = current;
     int innermostContiguous = -1;
     for (int i = 0; i < nodes.size(); i++) {
       while (parent != nodes[i]) {
@@ -420,11 +391,11 @@ namespace Sass {
       query && query->excludesStyleRules());
 
     CssAtRootRuleObj css = SASS_MEMORY_NEW(CssAtRootRule,
-      node->pstate(), parent65, query);
+      node->pstate(), current, query);
 
 
-    auto parent = parent65;
-    auto orgParent = parent65;
+    auto parent = current;
+    auto orgParent = current;
     sass::vector<CssParentNodeObj> included;
 
     while (parent && parent->parent_) { //  is!CssStylesheet (is!CssRootNode)
@@ -437,7 +408,7 @@ namespace Sass {
 
     if (root == orgParent) {
 
-      LOCAL_PTR(CssParentNode, parent65, root);
+      LOCAL_PTR(CssParentNode, current, root);
       visitChildren(node->elements());
 
     }
@@ -510,7 +481,7 @@ namespace Sass {
         _inUnknownAtRule = false;
       }
 
-      LOCAL_PTR(CssParentNode, parent65, newParent);
+      LOCAL_PTR(CssParentNode, current, newParent);
       visitChildren(node->elements());
 
       _mediaQueries = oldQueries;
@@ -529,11 +500,11 @@ namespace Sass {
     CssStringObj value = interpolationToCssString(node->value(), true, true);
 
     if (node->empty()) {
-      // ModifiableCssKeyframeBlock
       CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
-        node->pstate(), parent65, name, value);
+        node->pstate(), current, name, value);
       css->isChildless(node->is_childless());
-      parent65->append(css);
+      current->append(css);
+      css->parent_ = current;
       return nullptr;
     }
 
@@ -543,49 +514,39 @@ namespace Sass {
     LOCAL_FLAG(_inKeyframes, isKeyframe);
 
 
-      auto pu = parent65;
-      // debug_ast(parent65);
-      while (pu->bubbleThroughStyleRule()) {
-        // std::cout << "Go through AtRule CssStyleRule\n";
-        pu = pu->parent_;
+    auto pu = current->bubbleThroughStyleRule2();
+
+    // ModifiableCssKeyframeBlock
+    CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
+      node->pstate(), pu, name, value);
+    css->isChildless(node->is_childless());
+
+    // Adds new empty atRule to Root!
+    pu->append(css);
+
+    auto oldParent = current;
+    current = css;
+
+    if (!(!_atRootExcludingStyleRule && _styleRule != nullptr) || _inKeyframes) {
+
+      for (const auto& child : node->elements()) {
+        ValueObj val = child->perform(this);
       }
-
-      // ModifiableCssKeyframeBlock
-      CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
-        node->pstate(), pu, name, value);
-      css->isChildless(node->is_childless());
-
-      // Adds new empty atRule to Root!
-      pu->append(css);
-
-      auto oldParent = parent65;
-      parent65 = css;
-
-      if (!(!_atRootExcludingStyleRule && _styleRule != nullptr) || _inKeyframes) {
-
-        for (const auto& child : node->elements()) {
-          ValueObj val = child->perform(this);
-        }
         
 
-      }
-      else {
+    }
+    else {
 
-        // If we're in a style rule, copy it into the at-rule so that
-        // declarations immediately inside it have somewhere to go.
-        // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
-        CssStyleRule* qwe = _styleRule->copy(true);
-        // qwe->clear();
-        css->append(qwe);
-        qwe->parent_ = css;
-        parent65 = qwe;
+      // If we're in a style rule, copy it into the at-rule so that
+      // declarations immediately inside it have somewhere to go.
+      // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
+      CssStyleRule* qwe = _styleRule->copy(true);
+      css->append(qwe);
+      qwe->parent_ = css;
+      visitChildren2(qwe, node->elements());
 
-        for (const auto& child : node->elements()) {
-          ValueObj val = child->perform(this);
-        }
-
-      }
-      parent65 = oldParent;
+    }
+    current = oldParent;
 
 
     return nullptr;
@@ -625,12 +586,12 @@ namespace Sass {
 
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), parent65, mergedQueries.empty() ? parsed : mergedQueries);
+      node->pstate(), current, mergedQueries.empty() ? parsed : mergedQueries);
 
 
     // std::cerr << "IN ==== [[" << debug_vec(css->queries().elements()) << "]]\n";
 
-    auto chroot = parent65;
+    auto chroot = current;
 
       while ((Cast<CssStyleRule>(chroot) || Cast<CssImportTrace>(chroot)) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
       chroot = chroot->parent_;
@@ -642,8 +603,8 @@ namespace Sass {
     _addChild(chroot, css);
 
 
-    auto oldParent = parent65;
-    parent65 = css;
+    auto oldParent = current;
+    current = css;
     auto oldMediaQueries = std::move(_mediaQueries);
     _mediaQueries = mergedQueries.empty() ? parsed : mergedQueries;
 
@@ -660,26 +621,13 @@ namespace Sass {
       CssStyleRule* qwe = _styleRule->copy(true);
       qwe->parent_ = css;
       css->append(qwe);
-      parent65 = qwe;
-
-      for (auto& child : node->elements()) {
-        ValueObj rv = child->perform(this);
-      }
-
+      visitChildren2(qwe, node->elements());
     }
 
     _mediaQueries = std::move(oldMediaQueries);
-    parent65 = oldParent;
+    current = oldParent;
 
     mediaStack.pop_back();
-
-/*
-
-    parent65->append(css);
-    LOCAL_PTR(CssParentNode, parent65, css);
-    visitChildren(node->elements());
-
-    */
 
     // The parent to add declarations too
     // return css.detach();
@@ -715,7 +663,7 @@ namespace Sass {
 
   bool Eval::isRoot() const
   {
-    return parent65 == nullptr;
+    return current == nullptr;
   }
 
   Value* Eval::_runUserDefinedCallable(
@@ -1109,6 +1057,16 @@ namespace Sass {
       // Disabled, not sure if needed?
       // Seems dart-sass doesn't have it!
       if (val) return val.detach();
+    }
+    return nullptr;
+  }
+
+  Value* Eval::visitChildren2(CssParentNode* parent,
+    const sass::vector<StatementObj>& children)
+  {
+    LOCAL_PTR(CssParentNode, current, parent);
+    for (const auto& child : children) {
+      ValueObj val = child->perform(this);
     }
     return nullptr;
   }
@@ -2066,7 +2024,7 @@ namespace Sass {
     // will throw an error that we want the user to see.
     if (cssValue != nullptr && (!cssValue->value()->isBlank()
       || cssValue->value()->lengthAsList() == 0)) {
-      parent65->append(SASS_MEMORY_NEW(CssDeclaration,
+      current->append(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
@@ -2154,7 +2112,7 @@ namespace Sass {
     if (_inFunction) return nullptr;
     sass::string text(performInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    parent65->append(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
+    current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
     return nullptr;
   }
 
@@ -2229,16 +2187,13 @@ namespace Sass {
   Value* Eval::visitExtendRule(ExtendRule* e)
   {
 
-    // Once we have blocks as parent classes we can use blockStack!
-    if (!isInStyleRule() && !isInMixin() && !isInContentBlock()) {
-      error(
-        "@extend may only be used within style rules.",
-        e->pstate(), traces);
+    if (!isInStyleRule() /* || !_declarationName.empty() */) {
+      error("@extend may only be used within style rules.", e->pstate(), traces);
     }
 
     InterpolationObj itpl = e->selector();
 
-    sass::string text = interpolationToValue(itpl, true, false);
+    // sass::string text = interpolationToValue(itpl, true, false);
 
     SelectorListObj slist = itplToSelector(itpl,
       plainCss, isRoot());
@@ -2405,7 +2360,7 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, node->idxs());
 
     // Evaluate the first run in outer scope
-    // All successive runs are from innter scope
+    // All successive runs are from inner scope
     if (result->isTruthy()) {
 
       while (true) {
@@ -2425,42 +2380,25 @@ namespace Sass {
 
   Value* Eval::visitMixinRule(MixinRule* rule)
   {
-
-    UserDefinedCallableObj cb =
+    UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-
-    if (rule->fidx().isValid()) {
-      compiler.varRoot.setMixin(rule->fidx(), cb);
-    }
-    else {
-      std::cerr << "why not set?";
-    }
-
-    // scope->setMixin2(rule->name(), cb);
-
+    compiler.varRoot.setMixin(rule->fidx(), callable);
     return nullptr;
   }
 
   Value* Eval::visitFunctionRule(FunctionRule* rule)
   {
-
-    CallableObj cb = SASS_MEMORY_NEW(UserDefinedCallable,
-      rule->pstate(), rule->name(), rule, nullptr);
-
-    if (rule->fidx().isValid()) {
-      compiler.varRoot.setFunction(rule->fidx(), cb);
-      // return nullptr;
-    }
-
+    CallableObj callable =
+      SASS_MEMORY_NEW(UserDefinedCallable,
+        rule->pstate(), rule->name(), rule, nullptr);
+    compiler.varRoot.setFunction(rule->fidx(), callable);
     return nullptr;
   }
 
-
-
   Value* Eval::visitSilentComment(SilentComment* c)
   {
-    // parent65->append(c);
+    // current->append(c);
     return nullptr;
   }
 
@@ -2489,7 +2427,9 @@ namespace Sass {
       BackTrace(rule->pstate(), Strings::importRule));
 
     // Evaluate the included sheet
-    append_block(sheet.root2);
+    for (const StatementObj& item : sheet.root2->elements()) {
+      item->perform(this);
+    }
 
     // These data object have just been borrowed
     // sass_import_take_source(compiler.import_stack.back());
@@ -2545,7 +2485,7 @@ namespace Sass {
       import->media(evalMediaQueries(rule->media()));
     }
     // append new css import to result
-    parent65->append(import);
+    current->append(import);
     // import has been consumed
     return nullptr;
   }
@@ -2560,21 +2500,10 @@ namespace Sass {
     return rv.detach();
   }
 
-  // process and add to last block on stack
-  void Eval::append_block(Root* block)
-  {
-    for (const StatementObj& item : block->elements()) {
-      item->perform(this);
-    }
-  }
 
   bool Eval::isInMixin()
   {
     return inMixin;
-    // for (SassCallee& callee : compiler.callee_stack) {
-    //   if (callee.type == SASS_CALLEE_MIXIN) return true;
-    // }
-    // return false;
   }
 
   SelectorListObj& Eval::selector()
@@ -2608,17 +2537,12 @@ namespace Sass {
     return false;
   }
 
-  // Whether we'   currently building the output of a style rule.
-
-  bool Eval::isInStyleRule() const {
-
-    // _styleRule != null && !_atRootExcludingStyleRule;
-
-    return !_atRootExcludingStyleRule &&
-      _styleRule != nullptr;
-    // return !_styleRule.isNull() &&
-    //  !_atRootExcludingStyleRule;
+  // Check if we currently build
+  // the output of a style rule.
+  bool Eval::isInStyleRule() const
+  {
+    return _styleRule != nullptr &&
+      !_atRootExcludingStyleRule;
   }
-
 
 }

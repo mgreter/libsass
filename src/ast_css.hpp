@@ -81,6 +81,7 @@ namespace Sass {
 
     // 
     virtual bool bubbleThroughStyleRule() const { return false; }
+    virtual CssParentNode* bubbleThroughStyleRule2() { return this; }
 
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -278,6 +279,9 @@ namespace Sass {
     bool is_invisible() const override;
 
     bool bubbleThroughStyleRule() const override final { return true; }
+    CssParentNode* bubbleThroughStyleRule2() override final {
+      return parent_ ? parent_->bubbleThroughStyleRule2() : this;
+    }
 
     ATTACH_COPY_OPERATIONS2(CssStyleRule);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -456,6 +460,11 @@ namespace Sass {
       CssParentNode* parent,
       const sass::string& name, sass::vector<CssNodeObj>&& b, char type = 'm');
     bool bubbleThroughStyleRule() const override final { return true; }
+
+    CssParentNode* bubbleThroughStyleRule2() override final {
+      return parent_ ? parent_->bubbleThroughStyleRule2() : this;
+    }
+
     bool is_invisible() const override final { return empty(); }
     ATTACH_COPY_OPERATIONS2(CssImportTrace);
     ATTACH_CRTP_PERFORM_METHODS();

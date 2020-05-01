@@ -258,7 +258,7 @@ namespace Sass {
     return false;
   }
 
-  Value* Map::get2(size_t idx) {
+  Value* Map::getPairAsList(size_t idx) {
     // asVector();
 
     auto kv = elements_.begin() + idx;
@@ -1158,7 +1158,7 @@ namespace Sass {
   Value* Values::iterator::operator*() {
     switch (type) {
     case MapIterator:
-      return static_cast<Map*>(val)->get2(cur);
+      return static_cast<Map*>(val)->getPairAsList(cur);
     case ListIterator:
       return static_cast<List*>(val)->get(cur);
     case SingleIterator:
@@ -1196,9 +1196,7 @@ namespace Sass {
   // Allows negative index but no overflow either
   Value* Map::getValueAt(Value* index, Logger& logger)
   {
-    // const sass::vector<ValueObj>& values = asVector();
-    size_t idx = sassIndexToListIndex(index, logger, "n");
-    return get2(idx);
+    return getPairAsList(sassIndexToListIndex(index, logger, "n"));
   }
 
   // Only used for nth sass function
@@ -1206,7 +1204,6 @@ namespace Sass {
   // Allows negative index but no overflow either
   Value* List::getValueAt(Value* index, Logger& logger)
   {
-    size_t idx = sassIndexToListIndex(index, logger, "n");
-    return get(idx);
+    return get(sassIndexToListIndex(index, logger, "n"));
   }
 }

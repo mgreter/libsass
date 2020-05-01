@@ -638,7 +638,7 @@ namespace Sass {
       return sass::string::npos;
     }
 
-    Value* get2(size_t idx);
+    Value* getPairAsList(size_t idx);
 
 
     size_t hash() const override final;

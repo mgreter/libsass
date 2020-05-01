@@ -25,7 +25,7 @@ namespace Sass {
    public:
 
      bool inMixin;
-     CssParentNode* parent65;
+     CssParentNode* current;
      MediaStack mediaStack;
      SelectorStack originalStack;
      SelectorStack selectorStack;
@@ -100,8 +100,6 @@ namespace Sass {
     // Whether we're currently building the output of a style rule.
     bool isInStyleRule() const;
 
-    void _withStyleRule(CssStyleRule* rule, ParentStatement* node, Value* (Eval::*function)(ParentStatement* parent));
-
     Value* _acceptNodeChildren(ParentStatement* parent);
 
     std::pair<sass::vector<ExpressionObj>, EnvKeyFlatMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
@@ -143,6 +141,7 @@ namespace Sass {
 
     // for evaluating function bodies
     Value* visitChildren(const sass::vector<StatementObj>& children);
+    Value* visitChildren2(CssParentNode* parent, const sass::vector<StatementObj>& children);
 
     Value* operator()(Return*);
     Value* operator()(WarnRule*);
@@ -215,6 +214,8 @@ namespace Sass {
 
     Value* _runAndCheck(UserDefinedCallable*, CssImportTrace*);
 
+    CssParentNode* hoistStyleRule(CssParentNode* node);
+
     Value* visitSupportsRule(SupportsRule* node);
     sass::vector<CssMediaQueryObj> mergeMediaQueries(const sass::vector<CssMediaQueryObj>& lhs, const sass::vector<CssMediaQueryObj>& rhs);
     Value* visitMediaRule(MediaRule* node);
@@ -267,8 +268,6 @@ namespace Sass {
     Value* visitStaticImport99(StaticImport* rule);
 
     Value* visitImportRule99(ImportRule* rule);
-
-    void append_block(Root* root);
 
     bool isInMixin();
 

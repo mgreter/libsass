@@ -206,8 +206,6 @@ namespace Sass {
     IdxRef createVariable(const EnvKey& name, bool global = false);
     IdxRef getVariableIdx(const EnvKey& name, bool global = false);
 
-
-
  };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -466,7 +464,6 @@ namespace Sass {
 
   };
 
-  
 }
 
 #endif

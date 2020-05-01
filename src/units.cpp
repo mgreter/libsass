@@ -160,8 +160,8 @@ namespace Sass {
     if (t1 != t2) return 0;
     // get absolute offset
     // used for array access
-    size_t i1 = u1 - t1;
-    size_t i2 = u2 - t2;
+    size_t i1 = u1 > t1 ? u1 - t1 : t1 - u1;
+    size_t i2 = u2 > t2 ? u2 - t2 : t2 - u2;
     // process known units
     switch (t1) {
       case LENGTH:
@@ -361,6 +361,10 @@ namespace Sass {
 
   const sass::string& Units::unit() const
   {
+    // Units are expected to be short, so we hopefully
+    // can profit from small objects optimization. This
+    // is not guaranteed, but still safe to assume that
+    // any mature implementation utilizes it.
     if (stringified.empty()) {
       size_t iL = numerators.size();
       size_t nL = denominators.size();
@@ -432,6 +436,9 @@ namespace Sass {
       // get and increment afterwards
       const sass::string l_num = *(l_num_it ++);
 
+      // ToDo: we erase from base vector in the loop.
+      // Iterators might get invalid during the loop
+      // ToDo: refactor to use index access instead.
       auto r_num_it = r_nums.begin(), r_num_end = r_nums.end();
 
       bool found = false;

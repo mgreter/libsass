@@ -9,6 +9,7 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4005)
+#pragma warning(disable : 26812)
 #endif
 
 // applies to MSVC and MinGW
