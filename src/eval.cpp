@@ -903,7 +903,7 @@ namespace Sass {
     sass::vector<ValueObj>& positional = evaluated.positional();
     ArgumentDeclaration* overload = callable->declaration();
 
-    sass::string name(callable->name());
+    const EnvKey& name(callable->name37());
 
 //    return SASS_MEMORY_NEW(String, "[asd]", "Hossa");
 
@@ -955,13 +955,13 @@ namespace Sass {
       entry->function(c_args, entry, compiler.wrap());
 
     if (sass_value_get_tag(c_val) == SASS_ERROR) {
-      sass::string message("error in C function " + name + ": ");// +sass_error_get_message(c_val));
+      sass::string message("error in C function " + name.orig() + ": ");// +sass_error_get_message(c_val));
       sass_delete_value(c_val);
       sass_delete_value(c_args);
       error(message, pstate, traces);
     }
     else if (sass_value_get_tag(c_val) == SASS_WARNING) {
-      sass::string message("warning in C function " + name + ": ");// +sass_warning_get_message(c_val));
+      sass::string message("warning in C function " + name.orig() + ": ");// +sass_warning_get_message(c_val));
       sass_delete_value(c_val);
       sass_delete_value(c_args);
       error(message, pstate, traces);
@@ -1431,10 +1431,9 @@ namespace Sass {
 
   Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
-    BackTrace trace(pstate, name(), true);
+    BackTrace trace(pstate, name37().orig(), true);
     callStackFrame frame(*eval.compiler.logger123, trace);
-    ValueObj rv = eval._runExternalCallable(
-      arguments, this, pstate);
+    ValueObj rv = eval._runExternalCallable(arguments, this, pstate);
     rv = rv->withoutSlash();
     return rv.detach();
   }

@@ -936,7 +936,7 @@ namespace Sass {
     ArgumentDeclaration* parameters,
     struct SassFunction* function) :
     Callable(SourceSpan::tmp("[external]")),
-    name_(name),
+    name37_(name), // XZU
     declaration_(parameters),
     function_(function)
   {

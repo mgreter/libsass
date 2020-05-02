@@ -1081,9 +1081,7 @@ namespace Sass {
 
   class ExternalCallable : public Callable {
 
-    // The function name
-    // ToDo: should be EnvKey too?
-    ADD_PROPERTY(sass::string, name);
+    ADD_PROPERTY(EnvKey, name37);
 
     ADD_PROPERTY(ArgumentDeclarationObj, declaration);
 

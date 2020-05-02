@@ -292,9 +292,9 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
     // Get newly declared environment items
     callable->idxs(local.getIdxs());
     // Currently external functions are treated globally
-    if (fnLookup.count(callable->name()) == 0) {
-      fnLookup.insert(std::make_pair(callable->name(), callable));
-      varRoot.createFunction(callable->name());
+    if (fnLookup.count(callable->name37()) == 0) {
+      fnLookup.insert(std::make_pair(callable->name37(), callable));
+      varRoot.createFunction(callable->name37());
       fnList.push_back(callable);
     }
   }
