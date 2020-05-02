@@ -1520,7 +1520,7 @@ namespace Sass {
       Expression* ex = compiler.varRoot.getVariable(vidx);
       return ex->perform(this)->withoutSlash();
     }
-
+    std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
     ValueObj ex = compiler.varRoot
       .getLexicalVariable(v->name());
 

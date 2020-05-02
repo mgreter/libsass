@@ -285,6 +285,26 @@ namespace Sass {
   // ##########################################################################
   // ##########################################################################
 
+  IdxRef EnvFrame::getVariableIdx2(const EnvKey& name, bool global)
+  {
+    EnvFrame* current = this;
+    if (global) current = &root;
+    while (current != nullptr) {
+      // Check if we already have this var
+      auto it = current->varIdxs.find(name);
+      if (it != current->varIdxs.end()) {
+        return {
+          current->varFrameOffset,
+          it->second
+        };
+      }
+      // Return error if chroot is enforced
+      // if (current->chroot) return IdxRef{};
+      current = current->getParent();
+    }
+    return IdxRef{};
+  }
+
   IdxRef EnvFrame::getVariableIdx(const EnvKey& name, bool global)
   {
     EnvFrame* current = this;

@@ -2581,7 +2581,7 @@ namespace Sass {
     // access parent scope until the variable is also created
     // in the local scope, then it will access this variable.
     // auto vidx3 = context.varStack.back()->getVariableIdx(name);
-    vidx = context.varStack.back()->getVariableIdx(name);
+    vidx = context.varStack.back()->getVariableIdx2(name);
 
     /*
     if (!vidx.isValid()) {

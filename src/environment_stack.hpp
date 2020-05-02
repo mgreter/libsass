@@ -205,6 +205,7 @@ namespace Sass {
     IdxRef hoistVariable(const EnvKey& name, bool global = false);
     IdxRef createVariable(const EnvKey& name, bool global = false);
     IdxRef getVariableIdx(const EnvKey& name, bool global = false);
+    IdxRef getVariableIdx2(const EnvKey& name, bool global = false);
 
  };
 
