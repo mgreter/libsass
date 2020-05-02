@@ -145,7 +145,7 @@ namespace Sass {
 
   class EnvFrame {
 
-  private:
+  public:
     friend class EnvRoot;
 
     // Cache last parent
@@ -162,6 +162,9 @@ namespace Sass {
     EnvKeyMap<uint32_t> varIdxs;
     EnvKeyMap<uint32_t> mixIdxs;
     EnvKeyMap<uint32_t> fnIdxs;
+
+
+    EnvKeyMap<sass::vector<VariableObj>> outsiders;
 
     // Offset to get active frame
     uint32_t varFrameOffset;

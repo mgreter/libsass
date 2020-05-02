@@ -879,6 +879,7 @@ namespace Sass {
   For* StylesheetParser::_forRule(Offset start, Statement* (StylesheetParser::* child)())
   {
     LOCAL_FLAG(_inControlDirective, true);
+    LOCAL_FLAG(_inControlStruct, true);
 
     // Create new variable frame from parent
     // EnvFrame* parent = context.varStack.back();
@@ -907,7 +908,9 @@ namespace Sass {
     For* loop = _withChildren<For>(
       child, variable, from, to, exclusive == 1);
     loop->pstate(scanner.relevantSpanFrom(start));
+
     loop->idxs(local.getIdxs());
+
     return loop;
 
       /*
@@ -2591,7 +2594,19 @@ namespace Sass {
     // access parent scope until the variable is also created
     // in the local scope, then it will access this variable.
     // auto vidx3 = context.varStack.back()->getVariableIdx(name);
-    vidx = context.varStack.back()->getVariableIdx2(name);
+
+     vidx = context.varStack.back()->getVariableIdx2(name);
+
+    VariableObj var = SASS_MEMORY_NEW(Variable,
+      scanner.relevantSpanFrom(start),
+      name, vidx);
+
+    // if (_inControlStruct) {
+      if (context.varStack.back()->varIdxs.count(name) == 0) {
+        // context.varStack.back()->outsiders[name].push_back(var);
+      }
+      // }
+
 
     /*
     if (!vidx.isValid() && !_inArgumentInvocation) {
@@ -2601,9 +2616,7 @@ namespace Sass {
     }
     */
 
-    return SASS_MEMORY_NEW(Variable,
-      scanner.relevantSpanFrom(start),
-      name, vidx);
+    return var.detach();
 
   }
   // _variable
