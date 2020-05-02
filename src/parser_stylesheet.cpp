@@ -1518,16 +1518,15 @@ namespace Sass {
       Offset variableStart(scanner.offset);
       sass::string name(variableName());
       EnvKey norm(name);
-      context.varStack.back()->createVariable(norm);
       whitespace();
 
       ExpressionObj defaultValue;
       if (scanner.scanChar($colon)) {
         whitespace();
-        auto old = context.varStack.back();
-        context.varStack.pop_back();
+        // auto old = context.varStack.back();
+        // context.varStack.pop_back();
         defaultValue = _expressionUntilComma();
-        context.varStack.push_back(old);
+        // context.varStack.push_back(old);
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
@@ -1535,8 +1534,17 @@ namespace Sass {
         whitespace();
         // context.varStack.back()->createVariable(name);
         restArgument = name;
+
+        // Defer adding variable until we parsed expression
+        // Just in case the same variable is mentioned again
+        context.varStack.back()->createVariable(norm);
+
         break;
       }
+
+      // Defer adding variable until we parsed expression
+      // Just in case the same variable is mentioned again
+      context.varStack.back()->createVariable(norm);
 
       arguments.emplace_back(SASS_MEMORY_NEW(Argument,
         scanner.relevantSpanFrom(variableStart), defaultValue, name));
@@ -1575,7 +1583,9 @@ namespace Sass {
     ExpressionObj restArg;
     ExpressionObj kwdRest;
     while (_lookingAtExpression()) {
+      _inArgumentInvocation = true;
       ExpressionObj expression = _expressionUntilComma(!mixin);
+      _inArgumentInvocation = false;
       whitespace();
 
       Variable* var = Cast<Variable>(expression);
@@ -2584,9 +2594,9 @@ namespace Sass {
     vidx = context.varStack.back()->getVariableIdx2(name);
 
     /*
-    if (!vidx.isValid()) {
+    if (!vidx.isValid() && !_inArgumentInvocation) {
       // Postpone this check into runtime
-      error("Accessing uninitialized variable.",
+      error("Undefined variable.",
         *context.logger123, scanner.relevantSpanFrom(start));
     }
     */

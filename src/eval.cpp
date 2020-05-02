@@ -1520,7 +1520,6 @@ namespace Sass {
       Expression* ex = compiler.varRoot.getVariable(vidx);
       return ex->perform(this)->withoutSlash();
     }
-    std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
     ValueObj ex = compiler.varRoot
       .getLexicalVariable(v->name());
 
@@ -1528,6 +1527,8 @@ namespace Sass {
       error("Undefined variable.",
         v->pstate(), traces);
     }
+
+    std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
 
     Value* value = ex->perform(this);
     return value->withoutSlash();

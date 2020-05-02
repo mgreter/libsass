@@ -45,6 +45,8 @@ namespace Sass {
 
     // BackTraces traces;
 
+    bool _inArgumentInvocation = false;
+
     // Whether we've consumed a rule other than `@charset`, `@forward`, or
     // `@use`.
     bool _isUseAllowed = true;
