@@ -947,46 +947,37 @@ namespace Sass {
       ScopedStackFrame<EnvFrame>
         scoped2(context.varStack, &local);
 
-      children
-        = this->children(child);
-      whitespaceWithoutComments();
-
-      sass::vector<StatementObj> clauses;
+      children = this->children(child);
       SourceSpan pstate(scanner.relevantSpanFrom(start));
-      cur = root = SASS_MEMORY_NEW(If, pstate, std::move(condition), std::move(children));
-      root->idxs(local.getIdxs());
+      cur = root = SASS_MEMORY_NEW(If, pstate,
+        local.getIdxs(),
+        std::move(condition),
+        std::move(children));
     }
+
+    whitespaceWithoutComments();
 
     sass::vector<If*> ifs;
     ifs.push_back(root);
 
     while (scanElse(ifIndentation)) {
       whitespace();
-
-      // EnvFrame local(context.varStack.back());
-      // ScopedStackFrame<EnvFrame>
-      //   scoped2(context.varStack, &local);
-
       // scanned a else if
       if (scanIdentifier("if")) {
         whitespace();
 
+        ExpressionObj condition = expression();
+        start = scanner.offset;
+
         EnvFrame local(context.varStack.back());
         ScopedStackFrame<EnvFrame>
           scoped2(context.varStack, &local);
-
-        ExpressionObj condition = expression();
-
-
-        start = scanner.offset;
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
-        If* alternative = SASS_MEMORY_NEW(If, pstate, condition, std::move(children));
+
+        If* alternative = SASS_MEMORY_NEW(If, pstate, local.getIdxs(), std::move(condition), std::move(children));
         cur->alternatives3().push_back(alternative);
-        alternative->idxs(local.getIdxs());
-        // cur->alt_idxs().push_back(alternative);
         cur = alternative;
-        // ifs.push_back(cur);
       }
       // scanned a pure else
       else {
@@ -998,11 +989,8 @@ namespace Sass {
         start = scanner.offset;
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
-        If* alternative = SASS_MEMORY_NEW(If, pstate, {}, std::move(children));
+        If* alternative = SASS_MEMORY_NEW(If, pstate, local.getIdxs(), {}, std::move(children));
         cur->alternatives3().push_back(alternative);
-        alternative->idxs(local.getIdxs());
-        // cur->alt_idxs().push_back(local.getIdxs());
-        // iffy->idxs(local.getIdxs());
         break;
       }
     }

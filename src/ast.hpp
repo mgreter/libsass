@@ -604,7 +604,7 @@ namespace Sass {
     ADD_PROPERTY(ExpressionObj, predicate);
     ADD_REF(sass::vector<IfObj>, alternatives3);
   public:
-    If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt = {});
+    If(const SourceSpan& pstate, IDXS* idxs, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt = {});
     virtual bool has_content() override;
     ATTACH_CRTP_PERFORM_METHODS();
   };

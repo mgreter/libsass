@@ -379,8 +379,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  If::If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt)
-    : ParentStatement(pstate, std::move(els)), idxs_(0), predicate_(pred), alternatives3_(std::move(alt))
+  If::If(const SourceSpan& pstate, IDXS* idxs, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt)
+    : ParentStatement(pstate, std::move(els)), idxs_(idxs), predicate_(pred), alternatives3_(std::move(alt))
   {}
 
   bool If::has_content()
