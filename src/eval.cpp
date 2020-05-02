@@ -83,13 +83,8 @@ namespace Sass {
 
     LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
 
-    // EnvScope scoped(compiler.varRoot, mixin->declaration()->idxs()); // Not needed, but useful?
-    // Now I should probably set the variables from the prototype?
-
-    // auto asd = compiler.varStack.back();
     ArgumentResults& evaluated(node->arguments()->evaluated);
     _evaluateArguments(node->arguments(), evaluated);
-
     ValueObj qwe = _runUserDefinedCallable(
       evaluated,
       mixin,
@@ -750,7 +745,6 @@ namespace Sass {
         pstate, std::move(values), separator, std::move(named));
       auto size = declared.size();
       compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)size, argumentList);
-      std::cerr << "Set rest arg: " << declaredArguments->restArg() << "\n";
       // callenv.set_local(declaredArguments->restArg(), argumentList);
     }
 
@@ -1524,11 +1518,11 @@ namespace Sass {
 
   Value* Eval::operator()(Variable* v)
   {
-    IdxRef lvidx = v->lidx();
-    if (lvidx.isValid()) {
-      Expression* ex = compiler.varRoot.getVariable(lvidx);
-      if (ex) return ex->perform(this)->withoutSlash();
-    }
+    // IdxRef lvidx = v->lidx();
+    // if (lvidx.isValid()) {
+    //   Expression* ex = compiler.varRoot.getVariable(lvidx);
+    //   if (ex) return ex->perform(this)->withoutSlash();
+    // }
     IdxRef vidx = v->vidx();
     if (vidx.isValid()) {
       Expression* ex = compiler.varRoot.getVariable(vidx);
@@ -2135,20 +2129,31 @@ namespace Sass {
   {
     ValueObj rv;
 
-    EnvScope scoped(compiler.varRoot, i->idxs());
-
-    ValueObj condition = i->predicate()->perform(this);
-    if (condition->isTruthy()) {
+    // This is an else statement
+    if (i->predicate().isNull()) {
+      EnvScope scoped(compiler.varRoot, i->idxs());
       rv = visitChildren(i->elements());
     }
     else {
-      for (auto alternative : i->alternatives()) {
-        // Returns nullptr anyway?
-        rv = alternative->perform(this);
+      // Execute the condition statement
+      ValueObj condition = i->predicate()->perform(this);
+      // If true append all children of this clause
+      if (condition->isTruthy()) {
+        // Create local variable scope for children
+        EnvScope scoped(compiler.varRoot, i->idxs());
+        rv = visitChildren(i->elements());
+      }
+      else {
+        // If condition is falsy, execute else blocks
+        for (If* alternative : i->alternatives3()) {
+          // Create local variable scope for children
+          EnvScope scoped(compiler.varRoot, alternative->idxs());
+          rv = visitIfRule(alternative);
+        }
       }
     }
+    // Is probably nullptr!?
     return rv.detach();
-
   }
 
   // For does not create a new env scope

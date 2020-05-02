@@ -788,6 +788,11 @@ namespace Sass {
 
   }
 
+  void Inspect::operator()(FunctionExpression* expr)
+  {
+    append_string("FunctionExpression");
+  }
+
   void Inspect::operator()(UnaryExpression* expr)
   {
     if (expr->optype() == UnaryExpression::PLUS)       append_string("+");

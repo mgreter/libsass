@@ -880,6 +880,7 @@ namespace Sass {
   {
     LOCAL_FLAG(_inControlDirective, true);
     LOCAL_FLAG(_inControlStruct, true);
+    LOCAL_FLAG(_inLoopDirective, true);
 
     // Create new variable frame from parent
     // EnvFrame* parent = context.varStack.back();
@@ -939,18 +940,22 @@ namespace Sass {
 
     IfObj root;
     IfObj cur;
+    sass::vector<StatementObj> children;
 
-    EnvFrame local(context.varStack.back());
-    ScopedStackFrame<EnvFrame>
-      scoped2(context.varStack, &local);
+    {
+      EnvFrame local(context.varStack.back());
+      ScopedStackFrame<EnvFrame>
+        scoped2(context.varStack, &local);
 
-    sass::vector<StatementObj> children
-      = this->children(child);
-    whitespaceWithoutComments();
+      children
+        = this->children(child);
+      whitespaceWithoutComments();
 
-    sass::vector<StatementObj> clauses;
-    SourceSpan pstate(scanner.relevantSpanFrom(start));
-    cur = root = SASS_MEMORY_NEW(If, pstate, std::move(condition), std::move(children));
+      sass::vector<StatementObj> clauses;
+      SourceSpan pstate(scanner.relevantSpanFrom(start));
+      cur = root = SASS_MEMORY_NEW(If, pstate, std::move(condition), std::move(children));
+      root->idxs(local.getIdxs());
+    }
 
     sass::vector<If*> ifs;
     ifs.push_back(root);
@@ -962,8 +967,13 @@ namespace Sass {
       // ScopedStackFrame<EnvFrame>
       //   scoped2(context.varStack, &local);
 
+      // scanned a else if
       if (scanIdentifier("if")) {
         whitespace();
+
+        EnvFrame local(context.varStack.back());
+        ScopedStackFrame<EnvFrame>
+          scoped2(context.varStack, &local);
 
         ExpressionObj condition = expression();
 
@@ -972,22 +982,34 @@ namespace Sass {
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
         If* alternative = SASS_MEMORY_NEW(If, pstate, condition, std::move(children));
-        cur->alternatives().push_back(alternative);
+        cur->alternatives3().push_back(alternative);
+        alternative->idxs(local.getIdxs());
+        // cur->alt_idxs().push_back(alternative);
         cur = alternative;
-        ifs.push_back(cur);
+        // ifs.push_back(cur);
       }
+      // scanned a pure else
       else {
+
+        EnvFrame local(context.varStack.back());
+        ScopedStackFrame<EnvFrame>
+          scoped2(context.varStack, &local);
+
         start = scanner.offset;
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
-        cur->alternatives(std::move(children));
+        If* alternative = SASS_MEMORY_NEW(If, pstate, {}, std::move(children));
+        cur->alternatives3().push_back(alternative);
+        alternative->idxs(local.getIdxs());
+        // cur->alt_idxs().push_back(local.getIdxs());
+        // iffy->idxs(local.getIdxs());
         break;
       }
     }
 
-    for (auto iffy : ifs) {
-      iffy->idxs(local.getIdxs());
-    }
+   // for (auto iffy : ifs) {
+      // iffy->idxs(local.getIdxs());
+   // }
 
     whitespaceWithoutComments();
 
@@ -1455,6 +1477,7 @@ namespace Sass {
   // to consume any children that are specifically allowed in the caller's context.
   WhileRule* StylesheetParser::_whileRule(Offset start, Statement* (StylesheetParser::* child)())
   {
+    LOCAL_FLAG(_inLoopDirective, true);
     LOCAL_FLAG(_inControlDirective, true);
     EnvFrame local(context.varStack.back());
     ScopedStackFrame<EnvFrame>
@@ -2595,12 +2618,13 @@ namespace Sass {
     // in the local scope, then it will access this variable.
     // auto vidx3 = context.varStack.back()->getVariableIdx(name);
 
-    if (name == "$args2") {
-      std::cerr << "why?\n";
-    }
-    else {
+    if (_inLoopDirective) {
       vidx = context.varStack.back()->getVariableIdx(name);
     }
+    else {
+      vidx = context.varStack.back()->getVariableIdx2(name);
+    }
+
 
 
     VariableObj var = SASS_MEMORY_NEW(Variable,

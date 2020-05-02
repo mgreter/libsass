@@ -599,10 +599,12 @@ namespace Sass {
   ////////////////////////////////////
   class If final : public ParentStatement {
     ADD_POINTER(IDXS*, idxs);
+    // Predicate is optional, which indicates an else block.
+    // In this case further `alternatives` are simply ignored.
     ADD_PROPERTY(ExpressionObj, predicate);
-    ADD_REF(sass::vector<StatementObj>, alternatives);
+    ADD_REF(sass::vector<IfObj>, alternatives3);
   public:
-    If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<StatementObj>&& alt = {});
+    If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt = {});
     virtual bool has_content() override;
     ATTACH_CRTP_PERFORM_METHODS();
   };

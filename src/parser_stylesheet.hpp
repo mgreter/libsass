@@ -48,6 +48,8 @@ namespace Sass {
     bool _inArgumentInvocation = false;
     bool _inControlStruct = false;
 
+    bool _inLoopDirective = false;
+
     // Whether we've consumed a rule other than `@charset`, `@forward`, or
     // `@use`.
     bool _isUseAllowed = true;

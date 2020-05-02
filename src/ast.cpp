@@ -379,16 +379,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  If::If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<StatementObj>&& alt)
-    : ParentStatement(pstate, std::move(els)), idxs_(0), predicate_(pred), alternatives_(std::move(alt))
+  If::If(const SourceSpan& pstate, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt)
+    : ParentStatement(pstate, std::move(els)), idxs_(0), predicate_(pred), alternatives3_(std::move(alt))
   {}
 
   bool If::has_content()
   {
     if (ParentStatement::has_content()) return true;
-    if (alternatives_.empty()) return false;
-    for (size_t i = 0, L = alternatives_.size(); i < L; ++i) {
-      if (alternatives_[i]->has_content()) return true;
+    if (alternatives3_.empty()) return false;
+    for (size_t i = 0, L = alternatives3_.size(); i < L; ++i) {
+      if (alternatives3_[i]->has_content()) return true;
     }
     return false;
   }

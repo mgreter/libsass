@@ -57,6 +57,7 @@ namespace Sass {
     // virtual void operator()(ErrorRule*);
     // virtual void operator()(DebugRule*);
     void _writeMapElement(Expression* value);
+
     // virtual void operator()(If*);
     // virtual void operator()(For*);
     // virtual void operator()(Each*);
@@ -72,6 +73,8 @@ namespace Sass {
     virtual void operator()(BuiltInCallables*) override;
     virtual void operator()(UserDefinedCallable*) override;
     virtual void operator()(List*) override;
+    
+    virtual void operator()(FunctionExpression* expr) override;
     // virtual void operator()(ValueExpression* expr) override;
 	  // virtual void operator()(ParenthesizedExpression* expr) override;
     // virtual void operator()(ParenthesizedExpression*);
