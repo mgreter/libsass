@@ -2142,13 +2142,10 @@ namespace Sass {
         EnvScope scoped(compiler.varRoot, i->idxs());
         rv = visitChildren(i->elements());
       }
-      else {
+      else if (i->alternatives3()) {
         // If condition is falsy, execute else blocks
-        for (If* alternative : i->alternatives3()) {
-          // Create local variable scope for children
-          EnvScope scoped(compiler.varRoot, alternative->idxs());
-          rv = visitIfRule(alternative);
-        }
+        EnvScope scoped(compiler.varRoot, i->alternatives3()->idxs());
+        rv = visitIfRule(i->alternatives3());
       }
     }
     // Is probably nullptr!?

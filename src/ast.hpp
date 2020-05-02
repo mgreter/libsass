@@ -602,9 +602,9 @@ namespace Sass {
     // Predicate is optional, which indicates an else block.
     // In this case further `alternatives` are simply ignored.
     ADD_PROPERTY(ExpressionObj, predicate);
-    ADD_REF(sass::vector<IfObj>, alternatives3);
+    ADD_REF(IfObj, alternatives3);
   public:
-    If(const SourceSpan& pstate, IDXS* idxs, ExpressionObj pred, sass::vector<StatementObj>&& els, sass::vector<IfObj>&& alt = {});
+    If(const SourceSpan& pstate, IDXS* idxs, ExpressionObj pred, sass::vector<StatementObj>&& els, IfObj alt = {});
     virtual bool has_content() override;
     ATTACH_CRTP_PERFORM_METHODS();
   };

@@ -976,7 +976,7 @@ namespace Sass {
         SourceSpan pstate(scanner.relevantSpanFrom(start));
 
         If* alternative = SASS_MEMORY_NEW(If, pstate, local.getIdxs(), std::move(condition), std::move(children));
-        cur->alternatives3().push_back(alternative);
+        cur->alternatives3(alternative);
         cur = alternative;
       }
       // scanned a pure else
@@ -990,7 +990,7 @@ namespace Sass {
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
         If* alternative = SASS_MEMORY_NEW(If, pstate, local.getIdxs(), {}, std::move(children));
-        cur->alternatives3().push_back(alternative);
+        cur->alternatives3(alternative);
         break;
       }
     }
