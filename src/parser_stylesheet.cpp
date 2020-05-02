@@ -2602,8 +2602,11 @@ namespace Sass {
       name, vidx);
 
     // if (_inControlStruct) {
-      if (context.varStack.back()->varIdxs.count(name) == 0) {
-        // context.varStack.back()->outsiders[name].push_back(var);
+      if (vidx.frame == context.varStack.back()->varFrameOffset) { // or globals
+        context.varStack.back()->outsiders[name].push_back(var);
+      }
+      else if (!vidx.isValid()) {
+        context.varStack.front()->outsiders[name].push_back(var);
       }
       // }
 

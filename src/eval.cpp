@@ -1515,11 +1515,11 @@ namespace Sass {
 
   Value* Eval::operator()(Variable* v)
   {
-    // IdxRef lvidx = v->lidx();
-    // if (lvidx.isValid()) {
-    //   Expression* ex = compiler.varRoot.getVariable(lvidx);
-    //   if (ex) return ex->perform(this)->withoutSlash();
-    // }
+    IdxRef lvidx = v->lidx();
+    if (lvidx.isValid()) {
+      Expression* ex = compiler.varRoot.getVariable(lvidx);
+      if (ex) return ex->perform(this)->withoutSlash();
+    }
     IdxRef vidx = v->vidx();
     if (vidx.isValid()) {
       Expression* ex = compiler.varRoot.getVariable(vidx);
@@ -1533,7 +1533,7 @@ namespace Sass {
         v->pstate(), traces);
     }
 
-   // std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
+   std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
 
     Value* value = ex->perform(this);
     return value->withoutSlash();
