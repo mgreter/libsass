@@ -302,7 +302,7 @@ namespace Sass {
 
   class EnvScope {
 
-  private:
+  public:
 
     // Runtime environment
     EnvRoot& env;

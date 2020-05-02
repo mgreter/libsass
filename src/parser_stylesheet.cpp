@@ -1904,7 +1904,7 @@ namespace Sass {
       case $comma:
         // If we discover we're parsing a list whose first element is a
         // division operation, and we're in parentheses, reparse outside of a
-        // paren context. This ensures that `(1/2, 1)` doesn't perform division
+        // parent context. This ensures that `(1/2, 1)` doesn't perform division
         // on its first element.
         if (_inParentheses) {
           _inParentheses = false;
@@ -2588,26 +2588,32 @@ namespace Sass {
 
     // Completely static code, no loops
     // Therefore variables are fully static
-    // Access before intialization points to parent
+    // Access before initialization points to parent
     // Access after point to the local scoped variable
     // If the variable does not exist yet, it means it will
     // access parent scope until the variable is also created
     // in the local scope, then it will access this variable.
     // auto vidx3 = context.varStack.back()->getVariableIdx(name);
 
-     vidx = context.varStack.back()->getVariableIdx2(name);
+    if (name == "$args2") {
+      std::cerr << "why?\n";
+    }
+    else {
+      vidx = context.varStack.back()->getVariableIdx(name);
+    }
+
 
     VariableObj var = SASS_MEMORY_NEW(Variable,
       scanner.relevantSpanFrom(start),
       name, vidx);
 
     // if (_inControlStruct) {
-      if (vidx.frame == context.varStack.back()->varFrameOffset) { // or globals
-        context.varStack.back()->outsiders[name].push_back(var);
-      }
-      else if (!vidx.isValid()) {
-        context.varStack.front()->outsiders[name].push_back(var);
-      }
+//      if (vidx.frame != context.varStack.back()->varFrameOffset) { // or globals
+//        context.varStack.back()->outsiders[name].push_back(var);
+//      }
+//      else if (!vidx.isValid()) {
+//        context.varStack.front()->outsiders[name].push_back(var);
+//      }
       // }
 
 

@@ -165,7 +165,10 @@ namespace Sass {
       if (it != current->varIdxs.end()) {
         const IdxRef vidx{ current->varFrame, it->second };
         ValueObj value = root.getVariable(vidx);
-        if (!value.isNull()) return value;
+        std::cerr << "found lexical " << (size_t(varFrames[vidx.frame]) + vidx.offset) << "\n";
+        if (!value.isNull()) {
+          return value;
+        }
       }
       if (current->parent == 0xFFFFFFFF) break;
       else current = root.idxs[idx = current->parent];
@@ -264,6 +267,7 @@ namespace Sass {
   // Set variable instance by stack index reference
   void EnvRoot::setVariable(uint32_t frame, uint32_t offset, ValueObj obj)
   {
+    std::cerr << "Set var at " << (size_t(varFrames[frame]) + offset) << "\n";
     variables[size_t(varFrames[frame]) + offset] = obj;
   }
   // EO setVariable

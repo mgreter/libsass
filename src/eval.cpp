@@ -83,8 +83,13 @@ namespace Sass {
 
     LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
 
+    // EnvScope scoped(compiler.varRoot, mixin->declaration()->idxs()); // Not needed, but useful?
+    // Now I should probably set the variables from the prototype?
+
+    // auto asd = compiler.varStack.back();
     ArgumentResults& evaluated(node->arguments()->evaluated);
     _evaluateArguments(node->arguments(), evaluated);
+
     ValueObj qwe = _runUserDefinedCallable(
       evaluated,
       mixin,
@@ -116,14 +121,17 @@ namespace Sass {
     callStackFrame frame(*compiler.logger123,
       BackTrace(c->pstate(), Strings::contentRule));
 
-    // EnvSnapshotView view(compiler.varRoot, content->snapshot());
-    EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
-
     LOCAL_PTR(UserDefinedCallable, content88, content->content());
+
+
 
     // Appends to trace
     ArgumentResults& evaluated(c->arguments()->evaluated);
     _evaluateArguments(c->arguments(), evaluated);
+
+    // EnvSnapshotView view(compiler.varRoot, content->snapshot());
+    EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
+
     ValueObj qwe = _runUserDefinedCallable(
       evaluated,
       content,
@@ -742,6 +750,7 @@ namespace Sass {
         pstate, std::move(values), separator, std::move(named));
       auto size = declared.size();
       compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)size, argumentList);
+      std::cerr << "Set rest arg: " << declaredArguments->restArg() << "\n";
       // callenv.set_local(declaredArguments->restArg(), argumentList);
     }
 
@@ -1533,7 +1542,7 @@ namespace Sass {
         v->pstate(), traces);
     }
 
-   std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
+   // std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
 
     Value* value = ex->perform(this);
     return value->withoutSlash();

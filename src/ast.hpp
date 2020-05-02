@@ -135,7 +135,7 @@ namespace Sass {
 
     // The name of the rest argument (as in `$args...`),
     // or `null` if none was declared.
-    ADD_PROPERTY(sass::string, restArg);
+    ADD_PROPERTY(sass::string, restArg); // Make EnvKey!!!
 
   public:
 
