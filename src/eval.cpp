@@ -736,7 +736,10 @@ namespace Sass {
         (uint32_t)declared.size(), argumentList);
     }
 
-    return (this->*run)(callable, trace);
+    // This seems needed???
+    ValueObj result = (this->*run)(callable, trace);
+    return result.detach();
+
   }
 
   Value* Eval::_runBuiltInCallable(
