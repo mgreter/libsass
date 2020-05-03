@@ -93,7 +93,7 @@ namespace Sass {
       &Eval::_runWithBlock,
       trace,
       node->pstate());
-
+    evaluated.clear();
     return nullptr;
   }
 
@@ -135,7 +135,7 @@ namespace Sass {
       &Eval::_runWithBlock,
       trace,
       c->pstate());
-
+    evaluated.clear();
 
     // _runUserDefinedCallable(node.arguments, content, node, () {
     // return nullptr;
@@ -740,6 +740,7 @@ namespace Sass {
     // This is needed since we have the result also
     // stored in the scope, so it would get collected.
     ValueObj result = (this->*run)(callable, trace);
+    evaluated.clear();
     return result.detach();
 
   }
@@ -794,7 +795,7 @@ namespace Sass {
     }
 
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-
+    evaluated.clear(); // move stuff instead??
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();

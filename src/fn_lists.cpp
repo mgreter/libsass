@@ -34,7 +34,7 @@ namespace Sass {
         Value* input = arguments[0];
         Value* index = arguments[1];
 
-        if (selfAssign /* && input->refcount < AssignableRefCount */) {
+        if (selfAssign && input->refcount < AssignableRefCount) {
           if (List* lst = Cast<List>(input)) {
             size_t idx = input->sassIndexToListIndex(index, logger642, "n");
             lst->at(idx) = arguments[2];
@@ -93,7 +93,7 @@ namespace Sass {
           }
         }
 
-        if (selfAssign /* && list2->refcount < AssignableRefCount */) {
+        if (selfAssign && list2->refcount < AssignableRefCount) {
           if (List* lst = Cast<List>(list2)) {
             lst->separator(separator);
             lst->hasBrackets(bracketed);
@@ -140,7 +140,7 @@ namespace Sass {
             *ctx.logger123, pstate);
         }
 
-        if (selfAssign /* && list->refcount < AssignableRefCount */) {
+        if (selfAssign && list->refcount < AssignableRefCount) {
           if (List* lst = Cast<List>(list)) {
             lst->separator(separator);
             lst->append(value);
@@ -150,8 +150,8 @@ namespace Sass {
 
         sass::vector<ValueObj> values;
         auto it = list->iterator();
-        std::copy(it.begin(), it.end(),
-          std::back_inserter(values));
+        values.insert(values.end(),
+          it.begin(), it.end());
         values.emplace_back(value);
         return SASS_MEMORY_NEW(List,
           list->pstate(), std::move(values),

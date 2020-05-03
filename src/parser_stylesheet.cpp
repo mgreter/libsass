@@ -2605,8 +2605,8 @@ namespace Sass {
     if (_inLoopDirective) {
       // We can't fully optimize this case, since on consecutive
       // runs this might reference to a later created local variable.
-      // https://github.com/sass/sass/issues/2854
-      vidx = context.varStack.back()->getVariableIdx(name);
+      // https://github.com/sass/sass/issues/2854 - costs ~5%
+      vidx = context.varStack.back()->getVariableIdx3(name);
     }
     else {
       // The regular case can be fully optimized, although this may
