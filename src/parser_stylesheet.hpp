@@ -36,7 +36,8 @@ namespace Sass {
       _inUnknownAtRule(false),
       _inStyleRule(false),
       _inParentheses(false),
-      lastSilentComment()
+      lastSilentComment(),
+      exclusive(0) // FIXME
     {}
 
   public:

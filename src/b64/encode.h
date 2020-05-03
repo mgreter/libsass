@@ -47,9 +47,9 @@ namespace base64
 		{
 			base64_init_encodestate(&_state);
 			//
-			const int N = _buffersize;
+      size_t N = _buffersize;
 			char* plaintext = new char[N];
-			char* code = new char[2*N];
+			char* code = new char[N*2];
 			int plainlength;
 			int codelength;
 

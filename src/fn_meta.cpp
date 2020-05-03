@@ -156,7 +156,7 @@ namespace Sass {
         String* plugin = arguments[2]->assertStringOrNull(*ctx.logger123, pstate, Sass::Strings::module);
 
         if (css && plugin != nullptr) {
-          Exception::SassRuntimeException2(
+          throw Exception::SassRuntimeException2(
             "$css and $module may not both be passed at once.",
             *ctx.logger123);
         }

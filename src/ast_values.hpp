@@ -107,7 +107,7 @@ namespace Sass {
     Type type;
 
     // Standard value constructor
-    Values(Value* val) : val(val) {}
+    Values(Value* val) : val(val), type(SingleIterator){}
 
     // Get iterator at the given position
     iterator begin() { return iterator(val, false); }

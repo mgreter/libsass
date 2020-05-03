@@ -160,8 +160,8 @@ namespace Sass {
     if (t1 != t2) return 0;
     // get absolute offset
     // used for array access
-    size_t i1 = u1 > t1 ? u1 - t1 : t1 - u1;
-    size_t i2 = u2 > t2 ? u2 - t2 : t2 - u2;
+    size_t i1 = size_t(u1) > size_t(t1) ? u1 - t1 : t1 - u1;
+    size_t i2 = size_t(u2) > size_t(t2) ? u2 - t2 : t2 - u2;
     // process known units
     switch (t1) {
       case LENGTH:

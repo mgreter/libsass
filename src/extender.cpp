@@ -405,13 +405,13 @@ namespace Sass {
   // Note: maybe refactor to return `bool` (and pass reference)
   // Note: dart-sass throws an error in here
   // ##########################################################################
-  ExtSelExtMap Extender::extendExistingExtensions(
+  void Extender::extendExistingExtensions(
     // Taking in a reference here makes MSVC debug stuck!?
     const sass::vector<Extension>& oldExtensions,
     const ExtSelExtMap& newExtensions)
   {
 
-    ExtSelExtMap additionalExtensions;
+    // ExtSelExtMap additionalExtensions;
 
     // During the loop `oldExtensions` vector might be changed.
     // Callers normally pass this from `extensionsByExtender` and
@@ -478,7 +478,7 @@ namespace Sass {
 
     }
 
-    return additionalExtensions;
+    // return additionalExtensions;
 
   }
   // EO extendExistingExtensions

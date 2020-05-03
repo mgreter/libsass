@@ -163,9 +163,6 @@ namespace Sass {
     EnvKeyMap<uint32_t> mixIdxs;
     EnvKeyMap<uint32_t> fnIdxs;
 
-
-    EnvKeyMap<sass::vector<VariableObj>> outsiders;
-
     // Offset to get active frame
     uint32_t varFrameOffset;
     uint32_t mixFrameOffset;

@@ -487,7 +487,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
       inc.syntax
     );
 
-    register_import(import);
+    RootObj sheet = register_import(import);
 
     // delete memory of current stack frame
     sass_delete_import(import);
@@ -613,7 +613,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
             auto statement = SASS_MEMORY_NEW(DynamicImport, pstate, path_key);
             rule->append(SASS_MEMORY_NEW(IncludeImport, statement, include));
             // Parse to stylesheet
-            register_import(import);
+            RootObj sheet = register_import(import);
           }
           // Only a path was returned
           // Try to load it like normal

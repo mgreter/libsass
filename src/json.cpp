@@ -93,7 +93,9 @@ static void sb_grow(SB *sb, int need)
   do {
     alloc *= 2;
   } while (alloc < length + need);
-
+  #ifdef _MSC_VER
+  #pragma warning(disable : 6308)
+  #endif
   sb->start = (char*) realloc(sb->start, alloc + 1);
   if (sb->start == NULL)
     out_of_memory();

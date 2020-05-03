@@ -37,7 +37,7 @@ namespace std {
 
 namespace Sass {
 
-  sass::string pluralize(sass::string singular, size_t size, sass::string plural = "");
+  sass::string pluralize(const sass::string& singular, size_t size, const sass::string& plural = "");
   sass::string toSentence(EnvKeyFlatMap<ValueObj>& names, const sass::string& conjunction = "and");
 
 }

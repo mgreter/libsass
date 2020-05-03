@@ -976,7 +976,7 @@ namespace Sass {
         SourceSpan pstate(scanner.relevantSpanFrom(start));
 
         If* alternative = SASS_MEMORY_NEW(If, pstate, local.getIdxs(), std::move(condition), std::move(children));
-        cur->alternatives3(alternative);
+        cur->alternative(alternative);
         cur = alternative;
       }
       // scanned a pure else
@@ -990,14 +990,10 @@ namespace Sass {
         children = this->children(child);
         SourceSpan pstate(scanner.relevantSpanFrom(start));
         If* alternative = SASS_MEMORY_NEW(If, pstate, local.getIdxs(), {}, std::move(children));
-        cur->alternatives3(alternative);
+        cur->alternative(alternative);
         break;
       }
     }
-
-   // for (auto iffy : ifs) {
-      // iffy->idxs(local.getIdxs());
-   // }
 
     whitespaceWithoutComments();
 
@@ -1226,7 +1222,6 @@ namespace Sass {
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
       LOCAL_FLAG(_inContentBlock, true);
-      // auto cidx = local.createMixin(Keys::kwdContentRule, false);
       // EnvFrame inner(context.varStack.back());
       // ScopedStackFrame<EnvFrame>
       //   scope(context.varStack, &inner);
@@ -1277,8 +1272,8 @@ namespace Sass {
     EnvFrame local(context.varStack.back(), true);
     ScopedStackFrame<EnvFrame>
       scoped(context.varStack, &local);
-    // Create space for optional content callables
-    // ToDo: check if this can be conditionaly done?
+    // Create space for optional content callable
+    // ToDo: check if this can be conditionally done?
     auto cidx = local.createMixin(Keys::contentRule);
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
@@ -1321,9 +1316,9 @@ namespace Sass {
   // EO _mixinRule
 
   // Consumes a `@moz-document` rule. Gecko's `@-moz-document` diverges
-  // from [the specificiation][] allows the `url-prefix` and `domain`
+  // from [the specification][] allows the `url-prefix` and `domain`
   // functions to omit quotation marks, contrary to the standard.
-  // [the specificiation]: http://www.w3.org/TR/css3-conditional/
+  // [the specification]: http://www.w3.org/TR/css3-conditional/
   AtRule* StylesheetParser::mozDocumentRule(Offset start, Interpolation* name)
   {
 
@@ -1914,7 +1909,7 @@ namespace Sass {
 
       case $comma:
         // If we discover we're parsing a list whose first element is a
-        // division operation, and we're in parentheses, reparse outside of a
+        // division operation, and we're in parentheses, re-parse outside of a
         // parent context. This ensures that `(1/2, 1)` doesn't perform division
         // on its first element.
         if (_inParentheses) {
@@ -2275,7 +2270,6 @@ namespace Sass {
     double alpha = 1.0;
 
     if (!isHex(scanner.peekChar())) {
-      // #abc
       red = (digit1 << 4) + digit1;
       green = (digit2 << 4) + digit2;
       blue = (digit3 << 4) + digit3;
@@ -2283,19 +2277,23 @@ namespace Sass {
     else {
       uint8_t digit4 = _hexDigit();
       if (!isHex(scanner.peekChar())) {
-        // #abcd
         red = (digit1 << 4) + digit1;
         green = (digit2 << 4) + digit2;
         blue = (digit3 << 4) + digit3;
-        alpha = ((digit4 << 4) + digit4) / 255.0;
+        uint8_t a = (digit4 << 4) + digit4;
+        alpha = a / 255.0;
       }
       else {
         red = (digit1 << 4) + digit2;
         green = (digit3 << 4) + digit4;
-        blue = (_hexDigit() << 4) + _hexDigit();
-
+        uint8_t digit5 = _hexDigit();
+        uint8_t digit6 = _hexDigit();
+        blue = (digit5 << 4) + digit6;
         if (isHex(scanner.peekChar())) {
-          alpha = ((_hexDigit() << 4) + _hexDigit()) / 255.0;
+          uint8_t digit7 = _hexDigit();
+          uint8_t digit8 = _hexDigit();
+          uint8_t a = (digit7 << 4) + digit8;
+          alpha = a / 255.0;
         }
       }
     }
@@ -2582,9 +2580,8 @@ namespace Sass {
     Offset start(scanner.offset);
 
     sass::string ns, name = variableName();
-    // Check if variable already exists, otherwise error!
-    // context.varStack.back()->hoistVariable(name);
     if (scanner.peekChar() == $dot && scanner.peekChar(1) != $dot) {
+      // Skip the dot
       scanner.readChar();
       ns = name;
       name = _publicIdentifier();
@@ -2596,48 +2593,22 @@ namespace Sass {
     }
 
     IdxRef vidx;
-
-    // Completely static code, no loops
-    // Therefore variables are fully static
-    // Access before initialization points to parent
-    // Access after point to the local scoped variable
-    // If the variable does not exist yet, it means it will
-    // access parent scope until the variable is also created
-    // in the local scope, then it will access this variable.
-    // auto vidx3 = context.varStack.back()->getVariableIdx(name);
-
     if (_inLoopDirective) {
+      // We can't fully optimize this case, since on consecutive
+      // runs this might reference to a later created local variable.
+      // https://github.com/sass/sass/issues/2854
       vidx = context.varStack.back()->getVariableIdx(name);
     }
     else {
+      // The regular case can be fully optimized, although this may
+      // also return no result for globals that are created afterwards.
+      // This is mainly the case for variables referenced in mixins.
       vidx = context.varStack.back()->getVariableIdx2(name);
     }
 
-
-
-    VariableObj var = SASS_MEMORY_NEW(Variable,
+    return SASS_MEMORY_NEW(Variable,
       scanner.relevantSpanFrom(start),
       name, vidx);
-
-    // if (_inControlStruct) {
-//      if (vidx.frame != context.varStack.back()->varFrameOffset) { // or globals
-//        context.varStack.back()->outsiders[name].push_back(var);
-//      }
-//      else if (!vidx.isValid()) {
-//        context.varStack.front()->outsiders[name].push_back(var);
-//      }
-      // }
-
-
-    /*
-    if (!vidx.isValid() && !_inArgumentInvocation) {
-      // Postpone this check into runtime
-      error("Undefined variable.",
-        *context.logger123, scanner.relevantSpanFrom(start));
-    }
-    */
-
-    return var.detach();
 
   }
   // _variable

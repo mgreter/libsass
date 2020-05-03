@@ -410,19 +410,6 @@ namespace Sass {
 		EnvFrame* parent = getParent();
     if (parent) offset = parent->frameOffset;
 
-    if (outsiders.size()) {
-      for (auto var : outsiders) {
-        // Check if we now have a local variable for me
-        if (varIdxs.count(var.first) == 1) {
-          auto loc = varIdxs.at(var.first);
-          for (const VariableObj& idx : var.second) {
-            idx->lidx({ varFrameOffset, loc });
-          }
-        }
-      }
-    }
-    outsiders.clear();
-
     IDXS* idxs = new IDXS(
       frameOffset, offset,
       varFrameOffset,

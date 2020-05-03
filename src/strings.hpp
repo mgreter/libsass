@@ -61,6 +61,9 @@ namespace Sass {
 
     extern const sass::string utf8bom;
 
+    extern const sass::string argument;
+    extern const sass::string _or_;
+
   }
 
   namespace Keys {

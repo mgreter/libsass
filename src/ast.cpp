@@ -380,15 +380,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   If::If(const SourceSpan& pstate, IDXS* idxs, ExpressionObj pred, sass::vector<StatementObj>&& els, IfObj alt)
-    : ParentStatement(pstate, std::move(els)), idxs_(idxs), predicate_(pred), alternatives3_(alt)
+    : ParentStatement(pstate, std::move(els)), idxs_(idxs), predicate_(pred), alternative_(alt)
   {}
 
   bool If::has_content()
   {
     if (ParentStatement::has_content()) return true;
-    if (alternatives3_.isNull()) return false;
-    if (alternatives3_->has_content()) return true;
-    return false;
+    return alternative_ && alternative_->has_content();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -936,7 +934,8 @@ namespace Sass {
     Callable(SourceSpan::tmp("[external]")),
     name37_(name), // XZU
     declaration_(parameters),
-    function_(function)
+    function_(function),
+    idxs_(nullptr)
   {
   }
 

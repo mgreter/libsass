@@ -55,6 +55,9 @@ namespace Sass
 
 		const sass::string utf8bom("\xEF\xBB\xBF");
 
+    const sass::string argument("argument");
+    const sass::string _or_("or");
+
   } // namespace Strings
 
   namespace Keys {

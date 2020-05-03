@@ -74,7 +74,7 @@ namespace Sass {
         ? floorl(number) : ceill(number));
   }
 
-  /// Returns [number] if it's within [min] and [max], or `NAN` if it's not.
+  /// Returns [number] if it's within [min] and [max], or `HUGE_VAL` if it's not.
   ///
   /// If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
   /// appropriate value.
@@ -82,7 +82,7 @@ namespace Sass {
     if (fuzzyEquals(number, min, epsilon)) return min;
     if (fuzzyEquals(number, max, epsilon)) return max;
     if (number > min && number < max) return number;
-    return NAN;
+    return HUGE_VAL;
   }
 
   inline bool fuzzyCheckRange(double number, double min, double max, double epsilon, double& value) {

@@ -277,7 +277,7 @@ namespace Sass {
     // selector list, so that relevant results don't get trimmed too early.
     // Returns `null` (Note: empty map) if there are no extensions to add.
     // ##########################################################################
-    ExtSelExtMap extendExistingExtensions(
+    void extendExistingExtensions( // was ExtSelExtMap
       // Taking in a reference here makes MSVC debug stuck!?
       const sass::vector<Extension>& extensions,
       const ExtSelExtMap& newExtensions);

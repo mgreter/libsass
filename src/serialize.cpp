@@ -5,7 +5,13 @@
 namespace Sass {
 
   SerializeVisitor::SerializeVisitor(bool inspect, bool quote, bool useSpaces) :
-    _inspect(inspect) //, _quote(quote) //, _useSpaces(useSpaces)
+    _inspect(inspect),
+    _isCompressed(false),
+    _indentCharacter('\t'),
+    _lineFeed("\n"),
+    _indentWidth(2)
+
+    //, _quote(quote) //, _useSpaces(useSpaces)
   {
   }
 

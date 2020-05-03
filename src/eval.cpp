@@ -350,8 +350,8 @@ namespace Sass {
     if (nodes.empty()) return _root;
 
     auto parent = current;
-    int innermostContiguous = -1;
-    for (int i = 0; i < nodes.size(); i++) {
+    size_t innermostContiguous = -1;
+    for (size_t i = 0; i < nodes.size(); i++) {
       while (parent != nodes[i]) {
         innermostContiguous = -1;
         parent = parent->parent_;
@@ -811,9 +811,11 @@ namespace Sass {
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
-    sass::sstream strm;
-    strm << "No " << pluralize("argument", named.size());
-    strm << " named " << toSentence(named, "or") << ".";
+
+    sass::sstream strm; // This concatenation avoids MSVC warning
+    sass::string term(pluralize(Strings::argument, named.size()));
+    sass::string options(toSentence(named, Strings::_or_));
+    strm << "No " << term << " named " << options << ".";
     throw Exception::SassRuntimeException2(
       strm.str(), *compiler.logger123);
   }
@@ -877,9 +879,11 @@ namespace Sass {
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
-    sass::sstream strm;
-    strm << "No " << pluralize("argument", named.size());
-    strm << " named " << toSentence(named, "or") << ".";
+
+    sass::sstream strm; // This concatenation avoids MSVC warning
+    sass::string term(pluralize(Strings::argument, named.size()));
+    sass::string options(toSentence(named, Strings::_or_));
+    strm << "No " << term << " named " << options << ".";
     throw Exception::SassRuntimeException2(
       strm.str(), *compiler.logger123);
   }
@@ -1622,7 +1626,8 @@ namespace Sass {
       }
       */
 
-      results.emplace_back(result->toValString());
+      sass::string str(result->toValString());
+      results.emplace_back(std::move(str));
 
     }
 
@@ -2127,13 +2132,8 @@ namespace Sass {
   Value* Eval::visitIfRule(If* i)
   {
     ValueObj rv;
-
-    // This is an else statement
-    if (i->predicate().isNull()) {
-      EnvScope scoped(compiler.varRoot, i->idxs());
-      rv = visitChildren(i->elements());
-    }
-    else {
+    // Has a condition?
+    if (i->predicate()) {
       // Execute the condition statement
       ValueObj condition = i->predicate()->perform(this);
       // If true append all children of this clause
@@ -2142,11 +2142,14 @@ namespace Sass {
         EnvScope scoped(compiler.varRoot, i->idxs());
         rv = visitChildren(i->elements());
       }
-      else if (i->alternatives3()) {
+      else if (i->alternative()) {
         // If condition is falsy, execute else blocks
-        EnvScope scoped(compiler.varRoot, i->alternatives3()->idxs());
-        rv = visitIfRule(i->alternatives3());
+        rv = visitIfRule(i->alternative());
       }
+    }
+    else {
+      EnvScope scoped(compiler.varRoot, i->idxs());
+      rv = visitChildren(i->elements());
     }
     // Is probably nullptr!?
     return rv.detach();
@@ -2157,7 +2160,7 @@ namespace Sass {
   Value* Eval::visitForRule(For* f)
   {
     BackTrace trace(f->pstate(), Strings::forRule);
-    callStackFrame(traces, trace);
+    // callStackFrame frame(traces, trace);
     EnvScope scoped(compiler.varRoot, f->idxs());
 
     // const EnvKey& variable(f->variable());
