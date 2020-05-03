@@ -305,6 +305,21 @@ namespace Sass {
     return IdxRef{};
   }
 
+
+  IdxRef EnvFrame::getVariableIdx3(const EnvKey& name, bool global)
+  {
+    EnvFrame* current = this;
+    if (global) current = &root;
+    auto it = current->varIdxs.find(name);
+    if (it != current->varIdxs.end()) {
+      return {
+        current->varFrameOffset,
+        it->second
+      };
+    }
+    return IdxRef{};
+  }
+
   IdxRef EnvFrame::getVariableIdx(const EnvKey& name, bool global)
   {
     EnvFrame* current = this;

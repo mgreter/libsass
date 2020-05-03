@@ -708,6 +708,7 @@ namespace Sass {
     Variable(const SourceSpan& pstate,
       const EnvKey& name,
       IdxRef vidx);
+    Variable* getVariable() override final { return this; }
     ATTACH_CRTP_PERFORM_METHODS();
   };
 

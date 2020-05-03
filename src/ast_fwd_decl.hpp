@@ -88,7 +88,6 @@ namespace Sass {
   class CssAtRootRule;
   class AtRootRule;
   class Assignment;
-  class MapMerge;
 
   class WarnRule;
 
@@ -227,7 +226,6 @@ namespace Sass {
   IMPL_MEM_OBJ(AtRootRule);
   IMPL_MEM_OBJ(Declaration);
   IMPL_MEM_OBJ(Assignment);
-  IMPL_MEM_OBJ(MapMerge);
   IMPL_MEM_OBJ(ImportRule);
   IMPL_MEM_OBJ(ImportBase);
   IMPL_MEM_OBJ(StaticImport);

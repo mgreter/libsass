@@ -109,6 +109,9 @@ namespace Sass {
       throw std::runtime_error("Invalid reflection");
     }
 
+    virtual Variable* getVariable() { return nullptr; }
+    virtual FunctionExpression* getFunctionExpression() { return nullptr; }
+
     virtual bool is_false() { return false; }
     // virtual bool is_true() { return !is_false(); }
     virtual bool operator== (const Expression& rhs) const { return false; }
@@ -452,17 +455,6 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
-  class MapMerge final : public Statement {
-    ADD_PROPERTY(EnvKey, variable);
-    ADD_PROPERTY(ExpressionObj, value);
-    ADD_PROPERTY(IdxRef, vidx);
-    ADD_PROPERTY(bool, is_default);
-    ADD_PROPERTY(bool, is_global);
-  public:
-    MapMerge(const SourceSpan& pstate, const sass::string& var, IdxRef vidx, ExpressionObj val, bool is_default = false, bool is_global = false);
-    ATTACH_CRTP_PERFORM_METHODS();
-  };
-
   /////////////////////////////////////
   // Assignments -- variable and value.
   /////////////////////////////////////
@@ -473,7 +465,7 @@ namespace Sass {
     ADD_PROPERTY(bool, is_default);
     ADD_PROPERTY(bool, is_global);
   public:
-    Assignment(const SourceSpan& pstate, const sass::string& var, IdxRef vidx, ExpressionObj val, bool is_default = false, bool is_global = false);
+    Assignment(const SourceSpan& pstate, const EnvKey& var, IdxRef vidx, ExpressionObj val, bool is_default = false, bool is_global = false);
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -726,6 +718,9 @@ namespace Sass {
     {
 
     }
+
+    FunctionExpression* getFunctionExpression() override final { return this; }
+
 
     ATTACH_CRTP_PERFORM_METHODS();
   };

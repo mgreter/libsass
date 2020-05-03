@@ -275,12 +275,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Assignment::Assignment(const SourceSpan& pstate, const sass::string& var, IdxRef vidx, ExpressionObj val, bool is_default, bool is_global)
+  Assignment::Assignment(const SourceSpan& pstate, const EnvKey& var, IdxRef vidx, ExpressionObj val, bool is_default, bool is_global)
   : Statement(pstate), variable_(var), value_(val), vidx_(vidx), is_default_(is_default), is_global_(is_global)
-  {}
-
-  MapMerge::MapMerge(const SourceSpan& pstate, const sass::string& var, IdxRef vidx, ExpressionObj val, bool is_default, bool is_global)
-    : Statement(pstate), variable_(var), value_(val), vidx_(vidx), is_default_(is_default), is_global_(is_global)
   {}
 
   /////////////////////////////////////////////////////////////////////////

@@ -74,7 +74,6 @@ namespace Sass {
     virtual T operator()(Declaration* x) = 0;
     virtual T operator()(CssDeclaration* x) = 0;
     virtual T operator()(Assignment* x)             = 0;
-    virtual T operator()(MapMerge* x) = 0;
     virtual T operator()(ImportRule* x) = 0;
     virtual T operator()(StaticImport* x) = 0;
     virtual T operator()(DynamicImport* x) = 0;
@@ -192,7 +191,6 @@ namespace Sass {
     
     T operator()(Declaration* x)            { return static_cast<D*>(this)->fallback(x); }
     T operator()(Assignment* x)             { return static_cast<D*>(this)->fallback(x); }
-    T operator()(MapMerge* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(ImportRule* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(StaticImport* x) { return static_cast<D*>(this)->fallback(x); }
     T operator()(DynamicImport* x) { return static_cast<D*>(this)->fallback(x); }

@@ -25,7 +25,7 @@ namespace Sass {
         MapObj map2 = arguments[1]->assertMap(*ctx.logger123, Sass::Strings::map2);
         // We assign to ourself, so we can optimize this
         // This can shave off a few percent of run-time
-        if (selfAssign && map1->refcount < AssignableRefCount + 1) {
+        if (selfAssign/* && map1->refcount < AssignableRefCount + 1*/) {
           for (auto kv : map2->elements()) { map1->set(kv); }
           return map1.detach();
         }
@@ -46,7 +46,7 @@ namespace Sass {
       BUILT_IN_FN(remove_many)
       {
         MapObj map = arguments[0]->assertMap(*ctx.logger123, Sass::Strings::map);
-        if (selfAssign && map->refcount < AssignableRefCount + 1) {
+        if (selfAssign /* && map->refcount < AssignableRefCount + 1 */) {
 
           map->erase(arguments[1]);
           for (Value* key : arguments[2]->iterator()) {

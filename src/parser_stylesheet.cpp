@@ -28,25 +28,31 @@ namespace Sass {
     scanner.scan(Strings::utf8bom);
 
     Offset start(scanner.offset);
-    sass::vector<StatementObj> statements;
-
+    sass::vector<StatementObj> children;
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
-    // check seems a bit esoteric but works
+    // Check seems a bit esoteric but works
     if (context.included_sources.size() == 1) {
-      // apply headers only on very first include
-      context.apply_custom_headers2(statements, pstate);
+      // Apply headers only on very first include
+      context.apply_custom_headers2(children, pstate);
     }
 
-    // parse all root statements and append to statements
-    sass::vector<StatementObj> parsed(this->statements(&StylesheetParser::_rootStatement));
-    std::move(parsed.begin(), parsed.end(), std::back_inserter(statements));
+    // Parse nested root statements
+    sass::vector<StatementObj> parsed(
+      statements(&StylesheetParser::_rootStatement));
+
+    // Move parsed children into our array
+    children.insert(children.end(),
+      std::make_move_iterator(parsed.begin()),
+      std::make_move_iterator(parsed.end()));
 
     // make sure everything is parsed
     scanner.expectDone();
 
-    return SASS_MEMORY_NEW(Root, scanner.relevantSpanFrom(start), std::move(statements));
-
+    // Return the new root object
+    return SASS_MEMORY_NEW(Root,
+      scanner.relevantSpanFrom(start),
+      std::move(children));
   }
 
   // Consumes a variable declaration.
@@ -57,11 +63,12 @@ namespace Sass {
     Offset start(scanner.offset);
 
     sass::string ns;
-    sass::string name = variableName();
+    sass::string id = variableName();
     if (scanner.scanChar($dot)) {
-      ns = name;
-      name = _publicIdentifier();
+      ns = id;
+      id = _publicIdentifier();
     }
+    EnvKey name(id);
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
@@ -109,7 +116,8 @@ namespace Sass {
         auto& pos = args->positional();
         if (pos.size() > 0) {
           if (Variable* var = Cast<Variable>(pos[0])) {
-            if (var->name().norm() == name) {
+            if (vidx.isValid() && vidx == var->vidx()) {
+              // if (var->name().norm() == name.norm()) {
               // SASS_MEMORY_NEW(MapMerge,
               //   scanner.relevantSpan(start), name, vidx, value, guarded, global);
               // debug_ast(var);
@@ -776,6 +784,7 @@ namespace Sass {
 
   Each* StylesheetParser::_eachRule(Offset start, Statement* (StylesheetParser::* child)())
   {
+    LOCAL_FLAG(_inLoopDirective, true);
     LOCAL_FLAG(_inControlDirective, true);
     sass::vector<EnvKey> variables;
     EnvFrame local(context.varStack.back());

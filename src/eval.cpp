@@ -632,6 +632,7 @@ namespace Sass {
   }
 
   Eval::Eval(Compiler& compiler) :
+    logger456(*compiler.logger123),
     inMixin(false),
     mediaStack(),
     originalStack(),
@@ -645,8 +646,8 @@ namespace Sass {
     _inKeyframes(false),
     plainCss(false),
     compiler(compiler),
-    extender(Extender::NORMAL, compiler.logger123->callStack),
-    traces(*compiler.logger123)
+    extender(Extender::NORMAL, logger456),
+    traces(logger456)
   {
 
     mediaStack.push_back({});
@@ -736,7 +737,8 @@ namespace Sass {
         (uint32_t)declared.size(), argumentList);
     }
 
-    // This seems needed???
+    // This is needed since we have the result also
+    // stored in the scope, so it would get collected.
     ValueObj result = (this->*run)(callable, trace);
     return result.detach();
 
@@ -1097,7 +1099,7 @@ namespace Sass {
 
       BackTrace trace(node->pstate());
       callStackFrame frame(*compiler.logger123, trace);
-      compiler.logger123->addWarn43(result, false);
+      logger456.addWarn43(result, false);
 
     }
     // options().output_style = outstyle;
@@ -1171,9 +1173,9 @@ namespace Sass {
       // options().output_style = outstyle;
 
       // How to access otherwise?
-      compiler.logger123->warnings <<
+      logger456.warnings <<
         output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
-      compiler.logger123->warnings << STRMLF;
+      logger456.warnings << STRMLF;
 
     }
 
@@ -2041,11 +2043,6 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Eval::visitMapMerge(MapMerge* a)
-  {
-    return nullptr;
-  }
-
   Value* Eval::visitVariableDeclaration(Assignment* a)
   {
     const IdxRef& vidx(a->vidx());
@@ -2057,7 +2054,7 @@ namespace Sass {
       // Check if we are at the global scope
       if (compiler.varRoot.isGlobal()) {
         if (!compiler.varRoot.getGlobalVariable(name)) {
-          compiler.logger123->addWarn33(
+          logger456.addWarn33(
             "As of LibSass 4.1, !global assignments won't be able to declare new"
             " variables. Since this assignment is at the root of the stylesheet,"
             " the !global flag is unnecessary and can safely be removed.",
@@ -2066,7 +2063,7 @@ namespace Sass {
       }
       else {
         if (!compiler.varRoot.getGlobalVariable(name)) {
-          compiler.logger123->addWarn33(
+          logger456.addWarn33(
             "As of LibSass 4.1, !global assignments won't be able to declare new variables."
             " Consider adding `" + name.orig() + ": null` at the root of the stylesheet.",
             a->pstate(), true);
@@ -2222,7 +2219,7 @@ namespace Sass {
             }
             sels << "` instead. See http://bit.ly/ExtendCompound for details.";
 
-            compiler.logger123->addWarn33(sels.str(), compound->pstate());
+            logger456.addWarn33(sels.str(), compound->pstate());
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {

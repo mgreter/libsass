@@ -34,9 +34,9 @@ namespace Sass {
         Value* input = arguments[0];
         Value* index = arguments[1];
 
-        if (selfAssign && input->refcount < AssignableRefCount) {
+        if (selfAssign /* && input->refcount < AssignableRefCount */) {
           if (List* lst = Cast<List>(input)) {
-            size_t idx = input->sassIndexToListIndex(index, *ctx.logger123, "n");
+            size_t idx = input->sassIndexToListIndex(index, logger642, "n");
             lst->at(idx) = arguments[2];
             return lst;
           }
@@ -93,7 +93,7 @@ namespace Sass {
           }
         }
 
-        if (selfAssign && list2->refcount < AssignableRefCount) {
+        if (selfAssign /* && list2->refcount < AssignableRefCount */) {
           if (List* lst = Cast<List>(list2)) {
             lst->separator(separator);
             lst->hasBrackets(bracketed);
@@ -140,7 +140,7 @@ namespace Sass {
             *ctx.logger123, pstate);
         }
 
-        if (selfAssign && list->refcount < AssignableRefCount) {
+        if (selfAssign /* && list->refcount < AssignableRefCount */) {
           if (List* lst = Cast<List>(list)) {
             lst->separator(separator);
             lst->append(value);

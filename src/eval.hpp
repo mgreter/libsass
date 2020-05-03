@@ -24,6 +24,9 @@ namespace Sass {
 
    public:
 
+     Logger& logger456;
+
+
      bool inMixin;
      CssParentNode* current;
      MediaStack mediaStack;
@@ -127,7 +130,6 @@ namespace Sass {
     Value* operator()(AtRule* node) { return visitAtRule(node); }
     Value* operator()(Declaration* node) { return visitDeclaration(node); }
     Value* operator()(Assignment* node) { return visitVariableDeclaration(node); }
-    Value* operator()(MapMerge* node) { return visitMapMerge(node); }
     Value* operator()(ImportRule* node) { return visitImportRule99(node); }
     Value* operator()(StaticImport* node) { return visitStaticImport99(node); }
     Value* operator()(DynamicImport* node) { return visitDynamicImport99(node); }
@@ -228,8 +230,6 @@ namespace Sass {
     Value* visitDeclaration(Declaration* node);
 
     Value* visitVariableDeclaration(Assignment* a);
-
-    Value* visitMapMerge(MapMerge* a);
 
     Value* visitLoudComment(LoudComment* c);
 

@@ -65,6 +65,18 @@ namespace Sass {
     IdxRef(uint32_t frame, uint32_t offset)
     : frame(frame), offset(offset) {}
 
+    bool operator==(const IdxRef& rhs) const
+    {
+      return frame == rhs.frame
+        && offset == rhs.offset;
+    }
+
+    bool operator<(const IdxRef& rhs) const
+    {
+      if (frame < rhs.frame) return true;
+      return offset < rhs.offset;
+    }
+
     bool isValid() const { // 3%
       return offset != 0xFFFFFFFF
         && frame != 0xFFFFFFFF;
@@ -206,6 +218,7 @@ namespace Sass {
     IdxRef createVariable(const EnvKey& name, bool global = false);
     IdxRef getVariableIdx(const EnvKey& name, bool global = false);
     IdxRef getVariableIdx2(const EnvKey& name, bool global = false);
+    IdxRef getVariableIdx3(const EnvKey& name, bool global = false);
 
  };
 
