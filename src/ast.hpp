@@ -199,11 +199,18 @@ namespace Sass {
     // The separator used for the rest argument list, if any.
     ADD_REF(Sass_Separator, separator);
 
+    ADD_PROPERTY(size_t, bidx);
+
   public:
 
     ArgumentResults() :
-      separator_(SASS_UNDEF)
+      separator_(SASS_UNDEF),
+      bidx_(sass::string::npos)
     {};
+
+    ArgumentResults(
+      const ArgumentResults& other) noexcept;
+
 
     ArgumentResults(
       ArgumentResults&& other) noexcept;
@@ -248,7 +255,7 @@ namespace Sass {
 
     // Cache evaluated results object
     // Re-used for better performance
-    ArgumentResults evaluated;
+    ArgumentResults evaluated44;
 
   public:
 

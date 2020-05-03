@@ -25,7 +25,33 @@ namespace Sass {
    public:
 
      Logger& logger456;
+     ArgumentResults evaluated33; // (arguments->evaluated);
 
+     sass::vector<size_t> freeResultBuffers; // (arguments->evaluated);
+     sass::vector<ArgumentResults*> resultBufferes; // (arguments->evaluated);
+
+
+     ArgumentResults* getResultBuffer() {
+
+       if (freeResultBuffers.empty()) {
+         size_t bidx = resultBufferes.size();
+         resultBufferes.push_back(new ArgumentResults());
+         resultBufferes.back()->bidx(bidx);
+         return resultBufferes.back();
+       }
+
+       size_t bidx = freeResultBuffers.back();
+       freeResultBuffers.pop_back();
+       return resultBufferes[bidx];
+
+     }
+
+     void returnResultBuffer(ArgumentResults& results)
+     {
+       freeResultBuffers.push_back(results.bidx());
+     }
+
+     size_t counter = 0;
 
      bool inMixin;
      CssParentNode* current;

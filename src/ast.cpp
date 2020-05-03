@@ -698,6 +698,14 @@ namespace Sass {
   }
 
   ArgumentResults::ArgumentResults(
+    const ArgumentResults& other) noexcept :
+    positional_(other.positional_),
+    named_(other.named_),
+    separator_(other.separator_)
+  {
+  }
+
+  ArgumentResults::ArgumentResults(
     ArgumentResults&& other) noexcept :
     positional_(std::move(other.positional_)),
     named_(std::move(other.named_)),
