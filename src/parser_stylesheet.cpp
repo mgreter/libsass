@@ -784,7 +784,8 @@ namespace Sass {
 
   Each* StylesheetParser::_eachRule(Offset start, Statement* (StylesheetParser::* child)())
   {
-    LOCAL_FLAG(_inLoopDirective, true);
+    // This must be enabled to pass tests
+    // LOCAL_FLAG(_inLoopDirective, true);
     LOCAL_FLAG(_inControlDirective, true);
     sass::vector<EnvKey> variables;
     EnvFrame local(context.varStack.back());
@@ -2605,7 +2606,7 @@ namespace Sass {
     if (_inLoopDirective) {
       // We can't fully optimize this case, since on consecutive
       // runs this might reference to a later created local variable.
-      // https://github.com/sass/sass/issues/2854 - costs ~5%
+      // https://github.com/sass/sass/issues/2854 - costs ~10%
       vidx = context.varStack.back()->getVariableIdx3(name);
     }
     else {

@@ -221,6 +221,11 @@ namespace Sass {
       positional_.clear();
     }
 
+    void clear2() {
+      named_.clear();
+      positional_.clear();
+    }
+
   };
 
   class ArgumentInvocation : public AST_Node {

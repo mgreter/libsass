@@ -80,6 +80,18 @@ namespace Sass {
       CssImportTrace* trace,
       const SourceSpan& pstate);
 
+    Value* _runUserDefinedCallable2(
+      sass::vector<ValueObj>&& positional,
+      EnvKeyFlatMap<ValueObj>&& named,
+      enum Sass_Separator separator,
+      UserDefinedCallable* callable,
+      UserDefinedCallable* content,
+      bool isMixinCall,
+      Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
+      CssImportTrace* trace,
+      const SourceSpan& pstate);
+
+
     Value* _runBuiltInCallable(
       ArgumentInvocation* arguments,
       BuiltInCallable* callable,

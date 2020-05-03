@@ -93,7 +93,7 @@ namespace Sass {
       &Eval::_runWithBlock,
       trace,
       node->pstate());
-    evaluated.clear();
+    evaluated.clear2();
     return nullptr;
   }
 
@@ -127,15 +127,19 @@ namespace Sass {
     // EnvSnapshotView view(compiler.varRoot, content->snapshot());
     EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
-    ValueObj qwe = _runUserDefinedCallable(
-      evaluated,
+    ValueObj qwe = _runUserDefinedCallable2(
+      std::move(evaluated.positional()),
+      std::move(evaluated.named()),
+      evaluated.separator(),
       content,
       nullptr,
       false,
       &Eval::_runWithBlock,
       trace,
       c->pstate());
-    evaluated.clear();
+    // evaluated.clear2();
+
+
 
     // _runUserDefinedCallable(node.arguments, content, node, () {
     // return nullptr;
@@ -740,7 +744,88 @@ namespace Sass {
     // This is needed since we have the result also
     // stored in the scope, so it would get collected.
     ValueObj result = (this->*run)(callable, trace);
-    evaluated.clear();
+    evaluated.clear2();
+    return result.detach();
+
+  }
+
+  Value* Eval::_runUserDefinedCallable2(
+    sass::vector<ValueObj>&& positional,
+    EnvKeyFlatMap<ValueObj>&& named,
+    enum Sass_Separator separator,
+    UserDefinedCallable* callable,
+    UserDefinedCallable* content,
+    bool isMixinCall,
+    Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
+    CssImportTrace* trace,
+    const SourceSpan& pstate)
+  {
+
+    // On user defined fn we set the variables on the stack
+    // ArgumentResults& evaluated = _evaluateArguments(arguments); // , false
+
+    auto idxs = callable->declaration()->idxs();
+    EnvScope scoped(compiler.varRoot, idxs);
+
+    if (content) {
+      auto cidx = content->declaration()->cidx();
+      if (cidx.isValid()) {
+        compiler.varRoot.setMixin(cidx, content);
+      }
+      else {
+        std::cerr << "Invalid cidx1 on " << content << "\n";
+      }
+    }
+
+    // EnvKeyFlatMap<ValueObj>& named = evaluated.named();
+    // sass::vector<ValueObj>& positional = evaluated.positional();
+    CallableDeclaration* declaration = callable->declaration();
+    ArgumentDeclaration* declaredArguments = declaration->arguments();
+    if (!declaredArguments) throw std::runtime_error("Mixin declaration has no arguments");
+    const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
+
+    // Create a new scope from the callable, outside variables are not visible?
+    if (declaredArguments) declaredArguments->verify(positional.size(), named, pstate, traces);
+    size_t minLength = std::min(positional.size(), declared.size());
+
+    for (size_t i = 0; i < minLength; i++) {
+      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i,
+        positional[i]->withoutSlash());
+    }
+
+    size_t i;
+    ValueObj value;
+    for (i = positional.size(); i < declared.size(); i++) {
+      Argument* argument = declared[i];
+      auto& name(argument->name());
+      if (named.count(name) == 1) {
+        value = named[name]->perform(this);
+        named.erase(name);
+      }
+      else {
+        // Use the default arguments
+        value = argument->value()->perform(this);
+      }
+      auto result = value->withoutSlash();
+      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i, result);
+    }
+
+    ArgumentListObj argumentList;
+    if (!declaredArguments->restArg().empty()) {
+      sass::vector<ValueObj> values;
+      if (positional.size() > declared.size()) {
+        values = sublist(positional, declared.size());
+      }
+      if (separator == SASS_UNDEF) separator = SASS_COMMA;
+      argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
+        std::move(values), separator, std::move(named));
+      compiler.varRoot.setVariable(idxs->varFrame,
+        (uint32_t)declared.size(), argumentList);
+    }
+
+    // This is needed since we have the result also
+    // stored in the scope, so it would get collected.
+    ValueObj result = (this->*run)(callable, trace);
     return result.detach();
 
   }
@@ -795,7 +880,7 @@ namespace Sass {
     }
 
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-    evaluated.clear(); // move stuff instead??
+    evaluated.clear2(); // move stuff instead??
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
@@ -861,7 +946,7 @@ namespace Sass {
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
 
     // Collect the items
-    evaluated.clear();
+    evaluated.clear2();
 
 
     if (argumentList == nullptr) return result.detach();
