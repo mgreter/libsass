@@ -39,7 +39,8 @@ namespace Sass {
     }
 
     // Attach stuff to error object
-    compiler.error.what = what;
+    compiler.error.what.clear();
+    if (what) compiler.error.what = what;
     compiler.error.status = status;
     compiler.error.messages = logger.errors.str();
     compiler.error.warnings = logger.warnings.str();

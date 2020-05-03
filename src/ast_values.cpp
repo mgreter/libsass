@@ -313,9 +313,9 @@ namespace Sass {
   Number::Number(const SourceSpan& pstate, double val, Units&& units, bool zero)
     : Value(pstate),
     Units(std::move(units)),
+    zero_(zero),
     value_(val),
     // epsilon_(0.00001),
-    zero_(zero),
     lhsAsSlash_(),
     rhsAsSlash_()
   {
@@ -324,6 +324,7 @@ namespace Sass {
   Number::Number(const Number* ptr, bool childless)
   : Value(ptr),
     Units(ptr),
+    zero_(false),
     value_(ptr->value_),
     // epsilon_(ptr->epsilon_),
     lhsAsSlash_(ptr->lhsAsSlash_),

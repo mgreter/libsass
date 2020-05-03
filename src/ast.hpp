@@ -889,8 +889,8 @@ namespace Sass {
   public:
 
     AtRootQuery(
-      const SourceSpan& pstate,
-      const StringSet& names,
+      SourceSpan&& pstate,
+      StringSet&& names,
       bool include);
 
     // Whether this includes or excludes *all* rules.
@@ -931,7 +931,7 @@ namespace Sass {
 
     // The default at-root query, which excludes only style rules.
     // ToDo: check out how to make this static
-    static AtRootQuery* defaultQuery(const SourceSpan& pstate);
+    static AtRootQuery* defaultQuery(SourceSpan&& pstate);
 
     ATTACH_CRTP_PERFORM_METHODS()
   };

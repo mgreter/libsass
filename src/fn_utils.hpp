@@ -82,7 +82,7 @@ namespace Sass {
     if (fuzzyEquals(number, min, epsilon)) return min;
     if (fuzzyEquals(number, max, epsilon)) return max;
     if (number > min && number < max) return number;
-    return HUGE_VAL;
+    return std::numeric_limits<double>::quiet_NaN();
   }
 
   inline bool fuzzyCheckRange(double number, double min, double max, double epsilon, double& value) {

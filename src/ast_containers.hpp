@@ -277,7 +277,7 @@ namespace Sass {
     };
 
     // Move constructor
-    Hashed(Hashed<K, T>&& move) :
+    Hashed(Hashed<K, T>&& move) noexcept :
       elements_(std::move(move.elements_)),
       hash_(move.hash_) {};
 

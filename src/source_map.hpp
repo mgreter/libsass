@@ -66,7 +66,7 @@ private:
   public:
 
     // Allow to move the buffer
-    OutputBuffer(OutputBuffer&&);
+    OutputBuffer(OutputBuffer&&) noexcept;
     // The main buffer string
     sass::string buffer;
     // The optional source map

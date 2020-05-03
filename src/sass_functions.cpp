@@ -75,7 +75,7 @@ extern "C" {
   // We take ownership of the memory for source and srcmap (freed when context is destroyed)
   struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path, char* source, char* srcmap, enum SassImportFormat format)
   {
-    struct SassImport* v = new SassImport();
+    struct SassImport* v = new SassImport{};
     if (v == 0) return 0;
     v->line = -1;
     v->column = -1;

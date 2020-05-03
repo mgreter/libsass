@@ -31,7 +31,9 @@ namespace Sass {
     scanner.expectDone();
 
     return SASS_MEMORY_NEW(AtRootQuery,
-      scanner.rawSpanFrom(start), atRules, include);
+      scanner.rawSpanFrom(start),
+      std::move(atRules),
+      include);
 
   }
 

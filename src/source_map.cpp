@@ -43,7 +43,7 @@ namespace Sass {
       if (generated_line != previous_generated_line) {
         previous_generated_column = 0;
         if (generated_line > previous_generated_line) {
-          result += sass::string(generated_line - previous_generated_line, ';');
+          result += sass::string(size_t(generated_line) - previous_generated_line, ';');
           previous_generated_line = generated_line;
         }
       }
@@ -156,7 +156,7 @@ namespace Sass {
     return SourceSpan(pstate.getSource());
   }
 
-  OutputBuffer::OutputBuffer(OutputBuffer&& old) :
+  OutputBuffer::OutputBuffer(OutputBuffer&& old) noexcept :
     buffer(std::move(old.buffer)),
     smap(std::move(old.smap))
   {

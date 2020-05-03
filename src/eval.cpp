@@ -144,14 +144,10 @@ namespace Sass {
 
   }
 
-    Value* Eval::_acceptNodeChildren(ParentStatement* node)
+  Value* Eval::_acceptNodeChildren(ParentStatement* node)
   {
     return visitChildren(node->elements());
-    // for (auto child : parent->elements()) {
-    //   child->perform(this);
-    // }
   }
-
 
   Value* Eval::visitStyleRule(StyleRule* node)
   {
@@ -350,13 +346,13 @@ namespace Sass {
     if (nodes.empty()) return _root;
 
     auto parent = current;
-    size_t innermostContiguous = -1;
+    size_t innermostContiguous = sass::string::npos;
     for (size_t i = 0; i < nodes.size(); i++) {
       while (parent != nodes[i]) {
-        innermostContiguous = -1;
+        innermostContiguous = sass::string::npos;
         parent = parent->parent_;
       }
-      if (innermostContiguous == -1) {
+      if (innermostContiguous == sass::string::npos) {
         innermostContiguous = i;
       }
       parent = parent->parent_;
@@ -371,10 +367,7 @@ namespace Sass {
 
   Value* Eval::visitAtRootRule(AtRootRule* node)
   {
-
     EnvScope scoped(compiler.varRoot, node->idxs());
-
-    // std::cerr << "visitAtRootRule\n";
     InterpolationObj itpl = node->query();
     AtRootQueryObj query;
 
@@ -385,7 +378,8 @@ namespace Sass {
         compiler);
     }
     else {
-      query = AtRootQuery::defaultQuery(node->pstate());
+      query = AtRootQuery::defaultQuery(
+        SourceSpan{ node->pstate() });
     }
 
     LOCAL_FLAG(_inKeyframes, false);
@@ -726,13 +720,8 @@ namespace Sass {
       }
       auto result = value->withoutSlash();
       compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i, result);
-
-      // callenv.set_local(
-      //   argument->name(),
-      //   result);
     }
 
-    // bool isNamedEmpty = named.empty();
     ArgumentListObj argumentList;
     if (!declaredArguments->restArg().empty()) {
       sass::vector<ValueObj> values;
@@ -741,19 +730,13 @@ namespace Sass {
       }
       Sass_Separator separator = evaluated.separator();
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(ArgumentList,
-        pstate, std::move(values), separator, std::move(named));
-      auto size = declared.size();
-      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)size, argumentList);
-      // callenv.set_local(declaredArguments->restArg(), argumentList);
+      argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
+        std::move(values), separator, std::move(named));
+      compiler.varRoot.setVariable(idxs->varFrame,
+        (uint32_t)declared.size(), argumentList);
     }
 
-    ValueObj result = (this->*run)(callable, trace);
-
-    return result.detach();
-
-    // throw Exception::SassScriptException("Nonono");
-
+    return (this->*run)(callable, trace);
   }
 
   Value* Eval::_runBuiltInCallable(
@@ -766,7 +749,6 @@ namespace Sass {
     ArgumentResults& evaluated(arguments->evaluated);
     _evaluateArguments(arguments, evaluated); // 12%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
-    // named.clear();
     sass::vector<ValueObj>& positional(evaluated.positional());
     const SassFnPair& tuple(callable->callbackFor(positional.size(), named)); // 0.13%
 
@@ -998,8 +980,7 @@ namespace Sass {
     sass::vector<ExpressionObj>,
     EnvKeyFlatMap<ExpressionObj>
   > Eval::_evaluateMacroArguments(
-    CallableInvocation& invocation
-  )
+    CallableInvocation& invocation)
   {
 
     if (invocation.arguments()->restArg() == nullptr) {
@@ -1009,12 +990,9 @@ namespace Sass {
     }
 
     ArgumentInvocation* arguments = invocation.arguments();
-    // var positional = invocation.arguments.positional.toList();
+    // Create copies here, since we alter the content later
     sass::vector<ExpressionObj> positional = arguments->positional();
-    // var named = normalizedMap(invocation.arguments.named);
-    // ToDO: why is this chancged?
     EnvKeyFlatMap<ExpressionObj> named = arguments->named();
-    // var rest = invocation.arguments.rest.accept(this);
     ValueObj rest = arguments->restArg()->perform(this);
 
     if (Map* restMap = rest->isMap()) {
@@ -1044,11 +1022,14 @@ namespace Sass {
         std::move(named));
     }
 
-    auto keywordRest = arguments->kwdRest()->perform(this);
+    ValueObj keywordRest = arguments->kwdRest()->perform(this);
 
     if (Map* restMap = keywordRest->isMap()) {
-      _addRestMap2(named, restMap, arguments->kwdRest()->pstate());
-      return std::make_pair(positional, named);
+      _addRestMap2(named, restMap,
+        arguments->kwdRest()->pstate());
+      return std::make_pair(
+        std::move(positional),
+        std::move(named));
     }
 
     throw Exception::SassRuntimeException2(

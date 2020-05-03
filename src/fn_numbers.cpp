@@ -132,7 +132,7 @@ namespace Sass {
         long limit = nr->assertInt(logger642, pstate, "limit");
         if (limit >= 1) {
           return SASS_MEMORY_NEW(Number, pstate,
-            (long) getRandomDouble(1, limit + 1));
+            (long) getRandomDouble(1, double(limit) + 1));
         }
         // Report invalid arguments error
         sass::sstream strm;

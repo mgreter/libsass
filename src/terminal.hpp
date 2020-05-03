@@ -45,7 +45,7 @@ namespace Terminal {
   }
   */
 
-  static size_t getWidth(bool error = false)
+  static SHORT getWidth(bool error = false)
   {
     DWORD fd = error
       ? STD_ERROR_HANDLE

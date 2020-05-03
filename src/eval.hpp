@@ -160,7 +160,6 @@ namespace Sass {
     Value* operator()(ValueExpression*);
     Value* operator()(ParenthesizedExpression*);
     Value* operator()(Binary_Expression*);
-    Value* evalBinOp(Binary_Expression* b_in);
     Value* operator()(UnaryExpression*);
     Callable* _getFunction(const IdxRef& fidx, const sass::string& name, const sass::string& ns);
     Callable* _getMixin(const IdxRef& fidx, const EnvKey& name, const sass::string& ns);
@@ -185,7 +184,7 @@ namespace Sass {
       EnvKeyFlatMap<ValueObj>& result,
       const EnvKeyFlatMap<ExpressionObj>& map)
     {
-      for (auto kv : map) {
+      for (const auto& kv : map) {
         result[kv.first] =
           kv.second->perform(this);
       }

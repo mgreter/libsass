@@ -527,11 +527,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   AtRootQuery::AtRootQuery(
-    const SourceSpan& pstate,
-    const StringSet& names,
+    SourceSpan&& pstate,
+    StringSet&& names,
     bool include) :
-    AST_Node(pstate),
-    names_(names),
+    AST_Node(std::move(pstate)),
+    names_(std::move(names)),
     include_(include)
   {}
 
@@ -599,12 +599,12 @@ namespace Sass {
   }
 
 
-  AtRootQuery* AtRootQuery::defaultQuery(const SourceSpan& pstate)
+  AtRootQuery* AtRootQuery::defaultQuery(SourceSpan&& pstate)
   {
     StringSet wihtoutStyleRule;
     wihtoutStyleRule.insert("rule");
-    return SASS_MEMORY_NEW(AtRootQuery,
-      pstate, wihtoutStyleRule, false);
+    return SASS_MEMORY_NEW(AtRootQuery, std::move(pstate),
+      std::move(wihtoutStyleRule), false);
   }
 
   /////////////////////////////////////////////////////////////////////////

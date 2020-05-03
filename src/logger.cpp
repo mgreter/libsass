@@ -237,7 +237,8 @@ namespace Sass {
               << getColor(Terminal::red)
               << upper;
             // This needs a loop unfortunately
-            for (size_t n = 0; n < beg.column + 2; n++) {
+            size_t cols = beg.column;
+            for (size_t n = 0; n < cols + 2; n++) {
               msg_stream << runin;
             }
             // Final indicator

@@ -715,9 +715,9 @@ namespace Sass {
   // Numbers, percentages, dimensions, and colors.
   ////////////////////////////////////////////////
   class Number : public Value, public Units {
+    ADD_PROPERTY(bool, zero);
     HASH_PROPERTY(double, value);
     // ADD_PROPERTY(double, epsilon);
-    ADD_PROPERTY(bool, zero);
 
     // The representation of this number as two
     // slash-separated numbers, if it has one.

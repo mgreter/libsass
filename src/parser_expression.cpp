@@ -82,7 +82,7 @@ namespace Sass {
       SourceSpan pstate = SourceSpan::delta(
         lhs->pstate(), singleExpression->pstate());
 
-      parser.scanner.relevantSpanFrom(start.offset);
+      // parser.scanner.relevantSpanFrom(start.offset); // ToDO: disable
       Binary_Expression* binex = SASS_MEMORY_NEW(Binary_Expression,
         pstate, op, lhs, singleExpression);
       singleExpression = binex; // down cast

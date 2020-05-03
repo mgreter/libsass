@@ -57,7 +57,7 @@ namespace LUrlParser
 		std::string m_Password;
 
 		clParseURL()
-			: m_ErrorCode( LUrlParserError_Uninitialized )
+			: m_ErrorCode(LUrlParserError_Uninitialized )
 		{}
 
 		/// return 'true' if the parsing was successful
