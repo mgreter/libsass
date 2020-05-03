@@ -83,7 +83,7 @@ namespace Sass {
 
     LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
 
-    ArgumentResults evaluated; // NO (node->arguments()->evaluated44);
+    ArgumentResults evaluated(getResultBuffer()); // NO (node->arguments()->evaluated44);
     _evaluateArguments(node->arguments(), evaluated);
     ValueObj qwe = _runUserDefinedCallable2(
       std::move(evaluated.positional()),
@@ -95,6 +95,7 @@ namespace Sass {
       &Eval::_runWithBlock,
       trace,
       node->pstate());
+    returnResultBuffer(evaluated);
     // evaluated.clear2();
     return nullptr;
   }
@@ -842,7 +843,7 @@ namespace Sass {
 
     // evaluated33.clear();
     // On builtin we pass it to the function (has only positional args)
-    ArgumentResults& evaluated(*getResultBuffer()); // big!
+    ArgumentResults& evaluated(getResultBuffer()); // big!
     _evaluateArguments(arguments, evaluated); // 12%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
@@ -907,7 +908,7 @@ namespace Sass {
     const SourceSpan& pstate,
     bool selfAssign)
   {
-    ArgumentResults evaluated; // (arguments->evaluated44);
+    ArgumentResults& evaluated(getResultBuffer()); // (arguments->evaluated44);
     _evaluateArguments(arguments, evaluated); // 33%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
@@ -952,7 +953,8 @@ namespace Sass {
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
 
     // Collect the items
-    evaluated.clear2();
+    returnResultBuffer(evaluated);
+    // evaluated.clear2();
 
 
     if (argumentList == nullptr) return result.detach();
@@ -980,7 +982,7 @@ namespace Sass {
     ExternalCallable* callable,
     const SourceSpan& pstate)
   {
-    ArgumentResults evaluated; // (arguments->evaluated44);
+    ArgumentResults evaluated(getResultBuffer());
     _evaluateArguments(arguments, evaluated);
     EnvKeyFlatMap<ValueObj>& named = evaluated.named();
     sass::vector<ValueObj>& positional = evaluated.positional();
@@ -1052,6 +1054,7 @@ namespace Sass {
     ValueObj result(reinterpret_cast<Value*>(c_val));
     sass_delete_value(c_val);
     sass_delete_value(c_args);
+    returnResultBuffer(evaluated);
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
@@ -1503,11 +1506,12 @@ namespace Sass {
     LocalOption<bool> inMixin(eval.inMixin, false);
     BackTrace trace(pstate, name().orig(), true);
     callStackFrame frame(*eval.compiler.logger123, trace);
-    ArgumentResults evaluated; // (arguments->evaluated44);
+    ArgumentResults evaluated(eval.getResultBuffer()); // (arguments->evaluated44);
     // std::cerr << "who does that?\n";
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable(evaluated,
       this, nullptr, false, &Eval::_runAndCheck, nullptr, pstate);
+    eval.returnResultBuffer(evaluated);
     rv = rv->withoutSlash();
     return rv.detach();
   }

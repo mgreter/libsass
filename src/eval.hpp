@@ -31,23 +31,25 @@ namespace Sass {
      sass::vector<ArgumentResults*> resultBufferes; // (arguments->evaluated);
 
 
-     ArgumentResults* getResultBuffer() {
+     ArgumentResults& getResultBuffer() {
 
        if (freeResultBuffers.empty()) {
          size_t bidx = resultBufferes.size();
          resultBufferes.push_back(new ArgumentResults());
          resultBufferes.back()->bidx(bidx);
-         return resultBufferes.back();
+         return *resultBufferes.back();
        }
 
        size_t bidx = freeResultBuffers.back();
        freeResultBuffers.pop_back();
-       return resultBufferes[bidx];
+       return *resultBufferes[bidx];
 
      }
 
      void returnResultBuffer(ArgumentResults& results)
      {
+       results.named().clear();
+       results.positional().clear();
        freeResultBuffers.push_back(results.bidx());
      }
 
