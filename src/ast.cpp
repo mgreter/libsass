@@ -3,6 +3,7 @@
 #include "sass.hpp"
 
 #include "ast.hpp"
+#include "eval.hpp"
 #include "debugger.hpp"
 #include "parser_scss.hpp"
 #include "parser_at_root_query.hpp"
@@ -684,41 +685,6 @@ namespace Sass {
       && restArg_.isNull();
   }
 
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  ArgumentResults::ArgumentResults(
-    sass::vector<ValueObj>&& positional,
-    EnvKeyFlatMap<ValueObj>&& named,
-    Sass_Separator separator) :
-    positional_(std::move(positional)),
-    named_(std::move(named)),
-    separator_(separator)
-  {
-  }
-
-  ArgumentResults::ArgumentResults(
-    const ArgumentResults& other) noexcept :
-    positional_(other.positional_),
-    named_(other.named_),
-    separator_(other.separator_)
-  {
-  }
-
-  ArgumentResults::ArgumentResults(
-    ArgumentResults&& other) noexcept :
-    positional_(std::move(other.positional_)),
-    named_(std::move(other.named_)),
-    separator_(other.separator_)
-  {
-  }
-
-  ArgumentResults& ArgumentResults::operator=(ArgumentResults&& other) noexcept {
-    positional_ = std::move(other.positional_);
-    named_ = std::move(other.named_);
-    separator_ = other.separator_;
-    return *this;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

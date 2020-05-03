@@ -35,6 +35,56 @@
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ArgumentResults::ArgumentResults(
+    sass::vector<ValueObj>&& positional,
+    EnvKeyFlatMap<ValueObj>&& named,
+    Sass_Separator separator) :
+    positional_(std::move(positional)),
+    named_(std::move(named)),
+    separator_(separator)
+  {
+  }
+
+  ArgumentResults::ArgumentResults(
+    const ArgumentResults& other) noexcept :
+    positional_(other.positional_),
+    named_(other.named_),
+    separator_(other.separator_)
+  {
+  }
+
+  ArgumentResults::ArgumentResults(
+    ArgumentResults&& other) noexcept :
+    positional_(std::move(other.positional_)),
+    named_(std::move(other.named_)),
+    separator_(other.separator_)
+  {
+  }
+
+  ArgumentResults& ArgumentResults::operator=(ArgumentResults&& other) noexcept {
+    positional_ = std::move(other.positional_);
+    named_ = std::move(other.named_);
+    separator_ = other.separator_;
+    return *this;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ResultsBuffer::ResultsBuffer(Eval& eval)
+    : eval(eval), buffer(eval.getResultBuffer())
+  {}
+
+  ResultsBuffer::~ResultsBuffer()
+  {
+    eval.returnResultBuffer(buffer);
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {
@@ -83,11 +133,12 @@ namespace Sass {
 
     LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
 
-    ArgumentResults evaluated(getResultBuffer()); // NO (node->arguments()->evaluated44);
+    ResultsBuffer evaluated2(*this);
+    ArgumentResults& evaluated(evaluated2.buffer);
     _evaluateArguments(node->arguments(), evaluated);
     ValueObj qwe = _runUserDefinedCallable2(
-      std::move(evaluated.positional()),
-      std::move(evaluated.named()),
+      evaluated.positional(),
+      evaluated.named(),
       evaluated.separator(),
       mixin,
       nullptr,
@@ -95,7 +146,6 @@ namespace Sass {
       &Eval::_runWithBlock,
       trace,
       node->pstate());
-    returnResultBuffer(evaluated);
     // evaluated.clear2();
     return nullptr;
   }
@@ -131,8 +181,8 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
     ValueObj qwe = _runUserDefinedCallable2(
-      std::move(evaluated.positional()),
-      std::move(evaluated.named()),
+      evaluated.positional(),
+      evaluated.named(),
       evaluated.separator(),
       content,
       nullptr,
@@ -640,7 +690,6 @@ namespace Sass {
 
   Eval::Eval(Compiler& compiler) :
     logger456(*compiler.logger123),
-    evaluated33(),
     inMixin(false),
     mediaStack(),
     originalStack(),
@@ -665,97 +714,25 @@ namespace Sass {
     bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::tmp("[TRUE]"), true);
     bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::tmp("[FALSE]"), false);
   }
-  Eval::~Eval() { }
+  Eval::~Eval() {
+
+    if (freeResultBuffers.size() != resultBufferes.size()) {
+      std::cerr << "Leaked some result buffer\n";
+    }
+    for (auto buffer : resultBufferes) {
+      delete buffer; // delete heap item
+    }
+
+  }
 
   bool Eval::isRoot() const
   {
     return current == nullptr;
   }
 
-  Value* Eval::_runUserDefinedCallable(
-    ArgumentResults& evaluated,
-    UserDefinedCallable* callable,
-    UserDefinedCallable* content,
-    bool isMixinCall,
-    Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
-    CssImportTrace* trace,
-    const SourceSpan& pstate)
-  {
-
-    // On user defined fn we set the variables on the stack
-    // ArgumentResults& evaluated = _evaluateArguments(arguments); // , false
-
-    auto idxs = callable->declaration()->idxs();
-    EnvScope scoped(compiler.varRoot, idxs);
-
-    if (content) {
-      auto cidx = content->declaration()->cidx();
-      if (cidx.isValid()) {
-        compiler.varRoot.setMixin(cidx, content);
-      }
-      else {
-        std::cerr << "Invalid cidx1 on " << content << "\n";
-      }
-    }
-
-    EnvKeyFlatMap<ValueObj>& named = evaluated.named();
-    sass::vector<ValueObj>& positional = evaluated.positional();
-    CallableDeclaration* declaration = callable->declaration();
-    ArgumentDeclaration* declaredArguments = declaration->arguments();
-    if (!declaredArguments) throw std::runtime_error("Mixin declaration has no arguments");
-    const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
-
-    // Create a new scope from the callable, outside variables are not visible?
-    if (declaredArguments) declaredArguments->verify(positional.size(), named, pstate, traces);
-    size_t minLength = std::min(positional.size(), declared.size());
-
-    for (size_t i = 0; i < minLength; i++) {
-      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i,
-        positional[i]->withoutSlash());
-    }
-
-    size_t i;
-    ValueObj value;
-    for (i = positional.size(); i < declared.size(); i++) {
-      Argument* argument = declared[i];
-      auto& name(argument->name());
-      if (named.count(name) == 1) {
-        value = named[name]->perform(this);
-        named.erase(name);
-      }
-      else {
-        // Use the default arguments
-        value = argument->value()->perform(this);
-      }
-      auto result = value->withoutSlash();
-      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i, result);
-    }
-
-    ArgumentListObj argumentList;
-    if (!declaredArguments->restArg().empty()) {
-      sass::vector<ValueObj> values;
-      if (positional.size() > declared.size()) {
-        values = sublist(positional, declared.size());
-      }
-      Sass_Separator separator = evaluated.separator();
-      if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
-        std::move(values), separator, std::move(named));
-      compiler.varRoot.setVariable(idxs->varFrame,
-        (uint32_t)declared.size(), argumentList);
-    }
-
-    // This is needed since we have the result also
-    // stored in the scope, so it would get collected.
-    ValueObj result = (this->*run)(callable, trace);
-    evaluated.clear2();
-    return result.detach();
-
-  }
-
   Value* Eval::_runUserDefinedCallable2(
-    sass::vector<ValueObj>&& positional,
-    EnvKeyFlatMap<ValueObj>&& named,
+    sass::vector<ValueObj>& positional,
+    EnvKeyFlatMap<ValueObj>& named,
     enum Sass_Separator separator,
     UserDefinedCallable* callable,
     UserDefinedCallable* content,
@@ -789,11 +766,13 @@ namespace Sass {
     const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
 
     // Create a new scope from the callable, outside variables are not visible?
-    if (declaredArguments) declaredArguments->verify(positional.size(), named, pstate, traces);
+    declaredArguments->verify(positional.size(), named, pstate, traces);
     size_t minLength = std::min(positional.size(), declared.size());
 
+    // Set positional arguments 
     for (size_t i = 0; i < minLength; i++) {
-      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i,
+      compiler.varRoot.setVariable(
+        idxs->varFrame, (uint32_t)i,
         positional[i]->withoutSlash());
     }
 
@@ -810,19 +789,23 @@ namespace Sass {
         // Use the default arguments
         value = argument->value()->perform(this);
       }
-      auto result = value->withoutSlash();
-      compiler.varRoot.setVariable(idxs->varFrame, (uint32_t)i, result);
+      compiler.varRoot.setVariable(
+        idxs->varFrame, (uint32_t)i,
+        value->withoutSlash());
     }
 
     ArgumentListObj argumentList;
     if (!declaredArguments->restArg().empty()) {
-      sass::vector<ValueObj> values;
       if (positional.size() > declared.size()) {
-        values = sublist(positional, declared.size());
+        positional.erase(positional.begin(),
+          positional.begin() + declared.size());
+      }
+      else {
+        positional.clear();
       }
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
       argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
-        std::move(values), separator, std::move(named));
+        std::move(positional), separator, std::move(named));
       compiler.varRoot.setVariable(idxs->varFrame,
         (uint32_t)declared.size(), argumentList);
     }
@@ -843,11 +826,12 @@ namespace Sass {
 
     // evaluated33.clear();
     // On builtin we pass it to the function (has only positional args)
-    ArgumentResults& evaluated(getResultBuffer()); // big!
+    ResultsBuffer evaluated2(*this); // big!
+    ArgumentResults& evaluated(evaluated2.buffer); // big!
     _evaluateArguments(arguments, evaluated); // 12%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
-    const SassFnPair& tuple(callable->callbackFor(positional.size(), named)); // 0.13%
+    const SassFnPair& tuple(callable->function()); // 0.13%
 
     ArgumentDeclaration* overload = tuple.first;
     const SassFnSig& callback = tuple.second;
@@ -886,8 +870,8 @@ namespace Sass {
     }
 
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-    returnResultBuffer(evaluated);
-    // evaluated.clear2(); // move stuff instead??
+    // returnResultBuffer(evaluated);
+    // evaluated.clear(); // move stuff instead??
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
@@ -908,7 +892,8 @@ namespace Sass {
     const SourceSpan& pstate,
     bool selfAssign)
   {
-    ArgumentResults& evaluated(getResultBuffer()); // (arguments->evaluated44);
+    ResultsBuffer evaluated2(*this);
+    ArgumentResults& evaluated(evaluated2.buffer);
     _evaluateArguments(arguments, evaluated); // 33%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
@@ -953,7 +938,6 @@ namespace Sass {
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
 
     // Collect the items
-    returnResultBuffer(evaluated);
     // evaluated.clear2();
 
 
@@ -982,7 +966,8 @@ namespace Sass {
     ExternalCallable* callable,
     const SourceSpan& pstate)
   {
-    ArgumentResults evaluated(getResultBuffer());
+    ResultsBuffer evaluated2(*this);
+    ArgumentResults& evaluated(evaluated2.buffer);
     _evaluateArguments(arguments, evaluated);
     EnvKeyFlatMap<ValueObj>& named = evaluated.named();
     sass::vector<ValueObj>& positional = evaluated.positional();
@@ -1054,7 +1039,6 @@ namespace Sass {
     ValueObj result(reinterpret_cast<Value*>(c_val));
     sass_delete_value(c_val);
     sass_delete_value(c_args);
-    returnResultBuffer(evaluated);
     if (argumentList == nullptr) return result.detach();
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
@@ -1506,12 +1490,15 @@ namespace Sass {
     LocalOption<bool> inMixin(eval.inMixin, false);
     BackTrace trace(pstate, name().orig(), true);
     callStackFrame frame(*eval.compiler.logger123, trace);
-    ArgumentResults evaluated(eval.getResultBuffer()); // (arguments->evaluated44);
+    ResultsBuffer evaluated2(eval);
+    ArgumentResults& evaluated(evaluated2.buffer);
     // std::cerr << "who does that?\n";
     eval._evaluateArguments(arguments, evaluated);
-    ValueObj rv = eval._runUserDefinedCallable(evaluated,
+    ValueObj rv = eval._runUserDefinedCallable2(
+      evaluated.positional(),
+      evaluated.named(),
+      evaluated.separator(),
       this, nullptr, false, &Eval::_runAndCheck, nullptr, pstate);
-    eval.returnResultBuffer(evaluated);
     rv = rv->withoutSlash();
     return rv.detach();
   }
@@ -1957,9 +1944,11 @@ namespace Sass {
     sass::vector<ValueObj>& positional(evaluated.positional());
     sass::vector<ExpressionObj>& positionalIn(arguments->positional());
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
-    positional.resize(positionalIn.size());
+    // positional.resize(positionalIn.size());
+    positional.clear();
+    positional.reserve(positionalIn.size());
     for (size_t i = 0, iL = positionalIn.size(); i < iL; i++) {
-      positional[i] = positionalIn[i]->perform(this);
+      positional.emplace_back(positionalIn[i]->perform(this));
     }
 
     named.clear();

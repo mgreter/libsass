@@ -16,6 +16,85 @@ namespace Sass {
 
   class Context;
 
+
+
+  /// The result of evaluating arguments to a function or mixin.
+  class ArgumentResults {
+
+    // Arguments passed by position.
+    ADD_REF(sass::vector<ValueObj>, positional);
+
+    // The [AstNode]s that hold the spans for each [positional]
+    // argument, or `null` if source span tracking is disabled. This
+    // stores [AstNode]s rather than [FileSpan]s so it can avoid
+    // calling [AstNode.span] if the span isn't required, since
+    // some nodes need to do real work to manufacture a source span.
+    // sass::vector<Ast_Node_Obj> positionalNodes;
+
+    // Arguments passed by name.
+    // A list implementation might be more efficient
+    // I dont expect any function to have many arguments
+    // Normally the tradeoff is around 8 items in the list
+    ADD_REF(EnvKeyFlatMap<ValueObj>, named);
+
+    // The [AstNode]s that hold the spans for each [named] argument,
+    // or `null` if source span tracking is disabled. This stores
+    // [AstNode]s rather than [FileSpan]s so it can avoid calling
+    // [AstNode.span] if the span isn't required, since some nodes
+    // need to do real work to manufacture a source span.
+    // EnvKeyFlatMap<Ast_Node_Obj> namedNodes;
+
+    // The separator used for the rest argument list, if any.
+    ADD_REF(Sass_Separator, separator);
+
+    ADD_PROPERTY(size_t, bidx);
+
+  public:
+
+    ArgumentResults() :
+      separator_(SASS_UNDEF),
+      bidx_(sass::string::npos)
+    {};
+
+    ArgumentResults(
+      const ArgumentResults& other) noexcept;
+
+
+    ArgumentResults(
+      ArgumentResults&& other) noexcept;
+
+    ArgumentResults& operator=(
+      ArgumentResults&& other) noexcept;
+
+    ArgumentResults(
+      sass::vector<ValueObj>&& positional,
+      EnvKeyFlatMap<ValueObj>&& named,
+      Sass_Separator separator);
+
+    void clear() {
+      named_.clear();
+      positional_.clear();
+    }
+
+    void clear2() {
+      named_.clear();
+      positional_.clear();
+    }
+
+  };
+
+  class ResultsBuffer {
+
+  public:
+
+    Eval& eval;
+    ArgumentResults& buffer;
+
+    ResultsBuffer(Eval& eval);
+    ~ResultsBuffer();
+
+  };
+
   class Eval : public Operation_CRTP<Value*, Eval> {
 
   private:
@@ -25,7 +104,6 @@ namespace Sass {
    public:
 
      Logger& logger456;
-     ArgumentResults evaluated33; // (arguments->evaluated);
 
      sass::vector<size_t> freeResultBuffers; // (arguments->evaluated);
      sass::vector<ArgumentResults*> resultBufferes; // (arguments->evaluated);
@@ -99,18 +177,9 @@ namespace Sass {
 
     bool isRoot() const;
 
-    Value* _runUserDefinedCallable(
-      ArgumentResults& arguments,
-      UserDefinedCallable* callable,
-      UserDefinedCallable* content,
-      bool isMixinCall,
-      Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
-      CssImportTrace* trace,
-      const SourceSpan& pstate);
-
     Value* _runUserDefinedCallable2(
-      sass::vector<ValueObj>&& positional,
-      EnvKeyFlatMap<ValueObj>&& named,
+      sass::vector<ValueObj>& positional,
+      EnvKeyFlatMap<ValueObj>& named,
       enum Sass_Separator separator,
       UserDefinedCallable* callable,
       UserDefinedCallable* content,

@@ -169,72 +169,6 @@ namespace Sass {
 
   };
 
-
-  /// The result of evaluating arguments to a function or mixin.
-  class ArgumentResults {
-
-    // Arguments passed by position.
-    ADD_REF(sass::vector<ValueObj>, positional);
-
-    // The [AstNode]s that hold the spans for each [positional]
-    // argument, or `null` if source span tracking is disabled. This
-    // stores [AstNode]s rather than [FileSpan]s so it can avoid
-    // calling [AstNode.span] if the span isn't required, since
-    // some nodes need to do real work to manufacture a source span.
-    // sass::vector<Ast_Node_Obj> positionalNodes;
-
-    // Arguments passed by name.
-    // A list implementation might be more efficient
-    // I dont expect any function to have many arguments
-    // Normally the tradeoff is around 8 items in the list
-    ADD_REF(EnvKeyFlatMap<ValueObj>, named);
-
-    // The [AstNode]s that hold the spans for each [named] argument,
-    // or `null` if source span tracking is disabled. This stores
-    // [AstNode]s rather than [FileSpan]s so it can avoid calling
-    // [AstNode.span] if the span isn't required, since some nodes
-    // need to do real work to manufacture a source span.
-    // EnvKeyFlatMap<Ast_Node_Obj> namedNodes;
-
-    // The separator used for the rest argument list, if any.
-    ADD_REF(Sass_Separator, separator);
-
-    ADD_PROPERTY(size_t, bidx);
-
-  public:
-
-    ArgumentResults() :
-      separator_(SASS_UNDEF),
-      bidx_(sass::string::npos)
-    {};
-
-    ArgumentResults(
-      const ArgumentResults& other) noexcept;
-
-
-    ArgumentResults(
-      ArgumentResults&& other) noexcept;
-
-    ArgumentResults& operator=(
-      ArgumentResults&& other) noexcept;
-
-    ArgumentResults(
-      sass::vector<ValueObj>&& positional,
-      EnvKeyFlatMap<ValueObj>&& named,
-      Sass_Separator separator);
-
-    void clear() {
-      named_.clear();
-      positional_.clear();
-    }
-
-    void clear2() {
-      named_.clear();
-      positional_.clear();
-    }
-
-  };
-
   class ArgumentInvocation : public AST_Node {
 
     // The arguments passed by position.
@@ -250,12 +184,6 @@ namespace Sass {
     // This can be an already evaluated Map (via call) or a MapExpression.
     // So we must guarantee that this evaluates to a real Map value.
     ADD_PROPERTY(ExpressionObj, kwdRest);
-
-  public:
-
-    // Cache evaluated results object
-    // Re-used for better performance
-    ArgumentResults evaluated44;
 
   public:
 
@@ -1042,7 +970,7 @@ namespace Sass {
       ArgumentDeclaration* parameters,
       const SassFnSig& callback);
 
-    virtual const SassFnPair& callbackFor(
+    const SassFnPair& callbackFor(
       size_t positional,
       const EnvKeyFlatMap<ValueObj>& names);
 
