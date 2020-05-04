@@ -1,0 +1,19 @@
+src_cpp = files({{cpp_sources}})
+src_c = files({{c_sources}})
+
+subdir('memory')
+
+sass_lib = library('sass', src_cpp, src_c, src_res,
+  include_directories: sass_inc,
+  dependencies: deps,
+  c_args: ['-DADD_EXPORTS'],
+  cpp_args: ['-DADD_EXPORTS'],
+  install: true
+)
+
+sass_dep = declare_dependency(link_with: sass_lib, include_directories: sass_inc)
+
+import('pkgconfig').generate(
+  sass_lib,
+  description: 'A C implementation of a Sass compiler'
+)

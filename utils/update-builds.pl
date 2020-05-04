@@ -7,6 +7,10 @@ use warnings;
 # Alternative `cpanm install File::Slurp`
 use File::Slurp qw(read_file write_file);
 
+my $tmpl_generic_list = <<EOTMPL;
+  '%s',
+EOTMPL
+
 my $tmpl_msvc_head = <<EOTMPL;
     <ClInclude Include="\$(LIBSASS_HEADERS_DIR)\\%s" />
 EOTMPL
@@ -60,29 +64,39 @@ if ($srcfiles =~ /^\s*CSOURCES\s*=\s*((?:.*(?:\\\r?\n))*.*)/m) {
 sub renderTemplate($@) {
     my $str = "\n";
     my $tmpl = shift;
+    my $indent = shift;
     foreach my $inc (@_) {
         $str .= sprintf($tmpl, $inc);
     }
-    $str .= "  ";
+    $str .= " " x $indent;
     return $str;
 }
 
+my $meson = read_file("build-skeletons/src-meson.build");
+$meson =~s /\{\{includes\}\}/renderTemplate($tmpl_generic_list, 0, @INCFILES)/eg;
+$meson =~s /\{\{headers\}\}/renderTemplate($tmpl_generic_list, 0, @HPPFILES)/eg;
+$meson =~s /\{\{cpp_sources\}\}/renderTemplate($tmpl_generic_list, 0, @SOURCES)/eg;
+$meson =~s /\{\{c_sources\}\}/renderTemplate($tmpl_generic_list, 0, @CSOURCES)/eg;
+warn "Generating ../src/meson.build\n";
+write_file("../src/meson.build", $meson);
+
+# Convert to backslashes for MSVC
 @INCFILES = map { s/\//\\/gr } @INCFILES;
 @HPPFILES = map { s/\//\\/gr } @HPPFILES;
 @SOURCES = map { s/\//\\/gr } @SOURCES;
 @CSOURCES = map { s/\//\\/gr } @CSOURCES;
 
 my $targets = read_file("build-skeletons/libsass.targets");
-$targets =~s /\{\{includes\}\}/renderTemplate($tmpl_msvc_inc, @INCFILES)/eg;
-$targets =~s /\{\{headers\}\}/renderTemplate($tmpl_msvc_head, @HPPFILES)/eg;
-$targets =~s /\{\{sources\}\}/renderTemplate($tmpl_msvc_src, @SOURCES, @CSOURCES)/eg;
+$targets =~s /\{\{includes\}\}/renderTemplate($tmpl_msvc_inc, 2, @INCFILES)/eg;
+$targets =~s /\{\{headers\}\}/renderTemplate($tmpl_msvc_head, 2, @HPPFILES)/eg;
+$targets =~s /\{\{sources\}\}/renderTemplate($tmpl_msvc_src, 2, @SOURCES, @CSOURCES)/eg;
 warn "Generating ../win/libsass.targets\n";
 write_file("../win/libsass.targets", $targets);
 
 my $filters = read_file("build-skeletons/libsass.vcxproj.filters");
-$filters =~s /\{\{includes\}\}/renderTemplate($tmpl_msvc_filter_inc, @INCFILES)/eg;
-$filters =~s /\{\{headers\}\}/renderTemplate($tmpl_msvc_filter_head, @HPPFILES)/eg;
-$filters =~s /\{\{sources\}\}/renderTemplate($tmpl_msvc_filter_src, @SOURCES, @CSOURCES)/eg;
+$filters =~s /\{\{includes\}\}/renderTemplate($tmpl_msvc_filter_inc, 2, @INCFILES)/eg;
+$filters =~s /\{\{headers\}\}/renderTemplate($tmpl_msvc_filter_head, 2, @HPPFILES)/eg;
+$filters =~s /\{\{sources\}\}/renderTemplate($tmpl_msvc_filter_src, 2, @SOURCES, @CSOURCES)/eg;
 warn "Generating ../win/libsass.vcxproj.filters\n";
 write_file("../win/libsass.vcxproj.filters", $filters);
 
