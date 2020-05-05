@@ -42,4 +42,6 @@ namespace Sass {
 #endif
 
   bool SharedObj::taint = false;
+  // size_t SharedObj::moves = 0;
+  // size_t SharedObj::copies = 0;
 }

@@ -143,6 +143,10 @@ namespace Sass {
   // ToDo: rid of all the static_cast that are now needed in SharedImpl.
   class SharedPtr {
 
+  protected:
+
+    SharedObj* node;
+
   private:
 
     static const uint32_t SET_DETACHED_BITMASK = (uint32_t(1) << (sizeof(uint32_t) * 8 - 1));
@@ -170,17 +174,16 @@ namespace Sass {
       return *this;
     }
 
-    SharedPtr& operator=(SharedPtr&& obj)
+    SharedPtr& operator=(SharedPtr&& obj) noexcept
     {
-      // Evacuate optional old node
-      if (node && node != obj.node) {
-        decRefCount();
+      if (node != obj.node) {
+        if (node) decRefCount();
+        node = obj.node;
+        obj.node = nullptr;
       }
-      // Assign node
-      node = obj.node;
-      // Clear old object
-      obj.node = nullptr;
-      // Return us
+      else if (node != nullptr) {
+        node->refcount &= UNSET_DETACHED_BITMASK;
+      }
       return *this;
     }
 
@@ -202,7 +205,7 @@ namespace Sass {
       if (node && node->dbg) {
         std::cerr << "DETACHING NODE\n";
       }
-      #endif 
+      #endif
       return node;
     }
 
@@ -234,10 +237,10 @@ namespace Sass {
     // Returns whether the caller is the only holder of this item
     bool isShared() const { return node && node->refcount > 1; }
 
-   protected:
-    SharedObj* node;
+  protected:
+
     // ##__declspec(noinline)
-    inline void decRefCount() {
+    inline void decRefCount() noexcept {
       if (node == nullptr) return;
       --node->refcount;
       #ifdef DEBUG_SHARED_PTR
@@ -263,7 +266,7 @@ namespace Sass {
       }
       #endif
     }
-    void incRefCount() {
+    void incRefCount() noexcept {
       if (node == nullptr) return;
       node->refcount &= UNSET_DETACHED_BITMASK;
       ++node->refcount;

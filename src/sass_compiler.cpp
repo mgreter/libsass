@@ -148,6 +148,7 @@ namespace Sass {
           break;
         }
 
+        // std::cerr << "FINISHES " << SharedObj::moves << " vs " << SharedObj::copies << "\n";
         // Success
         return true;
       }

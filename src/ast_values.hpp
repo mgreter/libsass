@@ -703,7 +703,6 @@ namespace Sass {
   class Variable final : public Expression {
     ADD_PROPERTY(EnvKey, name);
     ADD_PROPERTY(IdxRef, vidx);
-    ADD_PROPERTY(IdxRef, lidx);
   public:
     Variable(const SourceSpan& pstate,
       const EnvKey& name,

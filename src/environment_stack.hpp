@@ -82,6 +82,10 @@ namespace Sass {
         && frame != 0xFFFFFFFF;
     }
 
+    operator bool() const {
+      return isValid();
+    }
+
   };
 
   /////////////////////////////////////////////////////////////////////////////

@@ -1591,26 +1591,21 @@ namespace Sass {
 
   Value* Eval::operator()(Variable* v)
   {
-    // IdxRef lvidx = v->lidx();
-    // if (lvidx.isValid()) {
-    //   Expression* ex = compiler.varRoot.getVariable(lvidx);
-    //   if (ex) return ex->perform(this)->withoutSlash();
-    // }
-    IdxRef vidx = v->vidx();
-    if (vidx.isValid()) {
+    // See if we already know the variable-
+    // Optimization took place during parsing.
+    if (IdxRef vidx = v->vidx()) {
       Expression* ex = compiler.varRoot.getVariable(vidx);
-      return ex->perform(this)->withoutSlash();
+      return ex ? ex->perform(this)->withoutSlash() : nullptr;
     }
-    ValueObj ex = compiler.varRoot
+    // Resolve variable dynamically
+    Value* ex = compiler.varRoot
       .getLexicalVariable(v->name());
-
-    if (ex.isNull()) {
+    // Check for runtime error
+    if (ex == nullptr) {
       error("Undefined variable.",
         v->pstate(), traces);
     }
-
-   // std::cerr << "NIOPE " << v->name().norm() << " in " << compiler.getInputPath() << "\n";
-
+    // Perform evaluation and return
     Value* value = ex->perform(this);
     return value->withoutSlash();
   }
