@@ -234,12 +234,10 @@ namespace Sass {
   public:
     Statement(SourceSpan&& pstate);
     Statement(const SourceSpan& pstate);
-    virtual ~Statement() = 0; // virtual destructor
-    virtual bool has_content();
+    virtual bool has_content() const;
     virtual bool is_invisible() const;
     ATTACH_COPY_CTOR(Statement)
   };
-  inline Statement::~Statement() { }
 
 
   class Root : public AST_Node, public Vectorized<Statement> {
@@ -273,7 +271,7 @@ namespace Sass {
 
     ParentStatement(const ParentStatement* ptr, bool childless); // copy constructor
     virtual ~ParentStatement() = 0; // virtual destructor
-    virtual bool has_content() override;
+    virtual bool has_content() const override;
     ATTACH_CRTP_PERFORM_METHODS()
   };
   inline ParentStatement::~ParentStatement() { }
@@ -552,7 +550,7 @@ namespace Sass {
     ADD_REF(IfObj, alternative);
   public:
     If(const SourceSpan& pstate, IDXS* idxs, ExpressionObj pred, sass::vector<StatementObj>&& els, IfObj alt = {});
-    virtual bool has_content() override;
+    virtual bool has_content() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -771,7 +769,7 @@ namespace Sass {
       const sass::string& ns = "",
       ContentBlock* content = nullptr);
 
-    bool has_content() override final;
+    bool has_content() const override final;
 
     ATTACH_CRTP_PERFORM_METHODS();
   };

@@ -148,7 +148,7 @@ namespace Sass {
     tabs_(ptr->tabs_)
   { }
 
-  bool Statement::has_content()
+  bool Statement::has_content() const
   {
     return Cast<ContentRule>(this) != nullptr;
   }
@@ -181,7 +181,7 @@ namespace Sass {
     if (!childless) elements_ = ptr->elements();
   }
 
-  bool ParentStatement::has_content()
+  bool ParentStatement::has_content() const
   {
     if (Statement::has_content()) return true;
     for (auto child : elements_) {
@@ -380,7 +380,7 @@ namespace Sass {
     : ParentStatement(pstate, std::move(els)), idxs_(idxs), predicate_(pred), alternative_(alt)
   {}
 
-  bool If::has_content()
+  bool If::has_content() const
   {
     if (ParentStatement::has_content()) return true;
     return alternative_ && alternative_->has_content();
@@ -853,7 +853,7 @@ namespace Sass {
   {
   }
 
-  bool IncludeRule::has_content() {
+  bool IncludeRule::has_content() const {
     return !content_.isNull();
   }
 
