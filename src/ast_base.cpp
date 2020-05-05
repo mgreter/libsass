@@ -1,7 +1,3 @@
-// sass.hpp must go before all system headers to get the
-// __EXTENSIONS__ fix on Solaris.
-#include "sass.hpp"
-
 #include "ast_base.hpp"
 
 namespace Sass {
@@ -30,17 +26,20 @@ namespace Sass {
     "+", "-", "*", "/", "%", "=", "invalid"
   };
 
-  // Precedence is used to 
+  // Precedence is used to decide order
+  // in ExpressionParser::addOperator.
   uint8_t sass_op_to_precedence(enum Sass_OP op)
   {
     return SassOpPresedence[op];
   }
 
+  // Get readable name for error messages
   const char* sass_op_to_name(enum Sass_OP op)
   {
     return SassOpName[op];
   }
 
+  // Get readable name for operator (e.g. `==`)
   const char* sass_op_separator(enum Sass_OP op)
   {
     return SassOpOperator[op];

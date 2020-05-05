@@ -1,13 +1,19 @@
 #ifndef SASS_AST_BASE_H
 #define SASS_AST_BASE_H
 
+// sass.hpp must go before all system headers to get the
+// __EXTENSIONS__ fix on Solaris.
+#include "sass.hpp"
+
 #include <stdint.h>
-#include "sass/values.h"
-#include "memory/shared_ptr.hpp"
 #include "ast_def_macros.hpp"
+#include "ast_fwd_decl.hpp"
 #include "source_span.hpp"
 #include "operation.hpp"
 #include "mapping.hpp"
+
+// #include "sass/values.h"
+// #include "memory/shared_ptr.hpp"
 
 namespace Sass {
 

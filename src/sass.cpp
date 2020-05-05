@@ -138,6 +138,17 @@ extern "C" {
   // Get compiled libsass version
   const char* ADDCALL libsass_version(void)
   {
+    std::cerr << "GO ON ==================\n";
+    AST_Node_Obj lala;
+    AST_Node_Obj lulu = SASS_MEMORY_NEW(
+      Number, SourceSpan::tmp("[NA]"), 42, "px"
+    );
+
+    for (size_t i = 0; i < 1000000000; i += 1) {
+      lala = std::move(lulu);
+      lulu = std::move(lala);
+    }
+
     return LIBSASS_VERSION;
   }
 

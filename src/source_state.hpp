@@ -7,30 +7,29 @@
 namespace Sass
 {
 
-	/**
-	 * Stores a reference (shared ptr) to the source code
-	 * and one offset position (line and column information).
-	 **/
+	
+	// Stores a reference (shared ptr) to the source code
+	// and one offset position (line and column information).
 	class SourceState
 	{
 
-    /** The source code reference **/
+    // The source code reference
     SourceDataObj source;
 
   public:
 
-		/** The position within the source **/
+		// The position within the source
 		Offset position;
 
-    /** Move constructor **/
+    // Move constructor
     // SourceState(SourceState&&);
 
    // SourceState(const SourceState&);
 
-    /** Regular value constructor **/
+    // Regular value constructor
     SourceState(SourceDataObj source = {}, Offset position = Offset());
 
-		/** Return the attach source id **/
+		// Return the attach source id
 		size_t getSrcIdx() const;
 
     // Return the attached source path

@@ -9,6 +9,9 @@
 
 namespace Sass {
 
+  // Basic class for text file positions
+  // The logic how to count characters and
+  // to add/subtract are implemented here.
   class Offset {
 
   public:

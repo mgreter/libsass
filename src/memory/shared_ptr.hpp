@@ -170,6 +170,10 @@ namespace Sass {
       return *this;
     }
 
+    SharedPtr& operator=(SharedPtr&& obj) {
+      return *this = obj.node;
+    }
+
     SharedPtr& operator=(const SharedPtr& obj) {
       return *this = obj.node;
     }
@@ -252,6 +256,7 @@ namespace Sass {
     void incRefCount() {
       if (node == nullptr) return;
       node->refcount &= UNSET_DETACHED_BITMASK;
+      std::cerr << "Fullda\n";
       ++node->refcount;
       #ifdef DEBUG_SHARED_PTR
       if (SharedObj::maxRefCount < node->refcount) {
@@ -282,6 +287,12 @@ namespace Sass {
     SharedImpl<T>& operator=(U *rhs) {
       return static_cast<SharedImpl<T>&>(
         SharedPtr::operator=(static_cast<T*>(rhs)));
+    }
+
+    template <class U>
+    SharedImpl<T>& operator=(SharedImpl<U>&& rhs) {
+      return static_cast<SharedImpl<T>&>(
+        SharedPtr::operator=(std::move(static_cast<SharedImpl<T>&>(rhs))));
     }
 
     template <class U>
