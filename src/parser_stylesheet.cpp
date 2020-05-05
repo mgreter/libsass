@@ -785,7 +785,7 @@ namespace Sass {
   Each* StylesheetParser::_eachRule(Offset start, Statement* (StylesheetParser::* child)())
   {
     // This must be enabled to pass tests
-    // LOCAL_FLAG(_inLoopDirective, true);
+    LOCAL_FLAG(_inLoopDirective, true);
     LOCAL_FLAG(_inControlDirective, true);
     sass::vector<EnvKey> variables;
     EnvFrame local(context.varStack.back());
@@ -1238,12 +1238,13 @@ namespace Sass {
       if (contentArguments.isNull()) {
         // Dart-sass creates this one too
         contentArguments = SASS_MEMORY_NEW(
-          ArgumentDeclaration, scanner.relevantSpan(), sass::vector<ArgumentObj>());
+          ArgumentDeclaration,
+          scanner.relevantSpan());
       }
       content = _withChildren<ContentBlock>(
         &StylesheetParser::_childStatement,
         contentArguments);
-      content->pstate(scanner.relevantSpanFrom(start));
+      // content->pstate(scanner.relevantSpanFrom(start));
       content->idxs(local.getIdxs());
       rule->content(content);
     }

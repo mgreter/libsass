@@ -55,36 +55,36 @@ namespace Sass {
     }
 
     // Copy constructor
-    EnvKey(const EnvKey& nstr) :
-      _orig(nstr._orig),
-      _norm(nstr._norm),
-      _hash(nstr._hash)
+    EnvKey(const EnvKey& key) :
+      _orig(key._orig),
+      _norm(key._norm),
+      _hash(key._hash)
     {
     }
 
     // Move constructor
-    EnvKey(EnvKey&& nstr) noexcept :
-      _orig(std::move(nstr._orig)),
-      _norm(std::move(nstr._norm)),
-      _hash(std::move(nstr._hash))
+    EnvKey(EnvKey&& key) noexcept :
+      _orig(std::move(key._orig)),
+      _norm(std::move(key._norm)),
+      _hash(std::move(key._hash))
     {
     }
 
     // Copy assignment operator
-    EnvKey& operator=(const EnvKey& nstr)
+    EnvKey& operator=(const EnvKey& key)
     {
-      _orig = nstr._orig;
-      _norm = nstr._norm;
-      _hash = nstr._hash;
+      _orig = key._orig;
+      _norm = key._norm;
+      _hash = key._hash;
       return *this;
     }
 
     // Move assignment operator
-    EnvKey& operator=(EnvKey&& nstr) noexcept
+    EnvKey& operator=(EnvKey&& key) noexcept
     {
-      _orig = std::move(nstr._orig);
-      _norm = std::move(nstr._norm);
-      _hash = std::move(nstr._hash);
+      _orig = std::move(key._orig);
+      _norm = std::move(key._norm);
+      _hash = std::move(key._hash);
       return *this;
     }
 
@@ -92,6 +92,12 @@ namespace Sass {
     bool operator==(const EnvKey& rhs) const
     {
       return norm() == rhs.norm();
+    }
+
+    // Simple helper
+    bool empty() const
+    {
+      return _norm.empty();
     }
 
     // Simple constant getter functions

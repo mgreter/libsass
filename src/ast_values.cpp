@@ -859,21 +859,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ItplString::ItplString(const SourceSpan& pstate, const sass::string& text) :
-    Interpolant(pstate), text_(text)
-  {
-  }
-
   ItplString::ItplString(const SourceSpan& pstate, sass::string&& text) :
     Interpolant(pstate), text_(std::move(text))
-  {
-  }
+  {}
 
-  //ItplString::ItplString(const ItplString* ptr, bool childless) :
-  //  Interpolant(ptr),
-  //  text_(ptr->text_)
-  //{
-  //}
+  ItplString::ItplString(const SourceSpan& pstate, const sass::string& text) :
+    Interpolant(pstate), text_(text)
+  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

@@ -68,15 +68,21 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // A native string wrapped as an expression
   ///////////////////////////////////////////////////////////////////////
-  class ItplString final : public Interpolant {
-    ADD_PROPERTY(sass::string, text)
-  public:
-    ItplString(const SourceSpan& pstate, const sass::string& text);
-    ItplString(const SourceSpan& pstate, sass::string&& text);
+  class ItplString final : public Interpolant
+  {
 
-    const sass::string& getText() const override final { return text_; }
+    ADD_PROPERTY(sass::string, text)
+
+  public:
+
+    ItplString(const SourceSpan& pstate, sass::string&& text);
+    ItplString(const SourceSpan& pstate, const sass::string& text);
+
+    // Getters to avoid need for dynamic cast (slightly faster)
     ItplString* getItplString() override final { return this; }
     const ItplString* getItplString() const override final { return this; }
+
+    const sass::string& getText() const override final { return text_; }
 
     bool operator==(const ItplString& rhs) const {
       return text_ == rhs.text_;
@@ -84,7 +90,6 @@ namespace Sass {
     bool operator!=(const ItplString& rhs) const {
       return text_ != rhs.text_;
     }
-
 
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -94,13 +99,20 @@ namespace Sass {
   // represents elements in value contexts, which exist primarily to be
   // evaluated and returned.
   //////////////////////////////////////////////////////////////////////
-  class Expression : public Interpolant {
+  class Expression : public Interpolant
+  {
   public:
+
     Expression(SourceSpan&& pstate);
     Expression(const SourceSpan& pstate);
-    virtual const sass::string& getText() const override { return Strings::empty; }
+
+    // Getters to avoid need for dynamic cast (slightly faster)
     Expression* getExpression() override final { return this; }
     const Expression* getExpression() const override final { return this; }
+
+    // Base implementation for parent Interpolant interface
+    virtual const sass::string& getText() const override { return Strings::empty; }
+
     virtual operator bool() { return true; }
     virtual ~Expression() { }
     virtual bool is_invisible() const { return false; }
@@ -121,7 +133,8 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  class CallableInvocation {
+  class CallableInvocation
+  {
     // The arguments passed to the callable.
     ADD_PROPERTY(ArgumentInvocationObj, arguments);
   public:
@@ -130,21 +143,24 @@ namespace Sass {
       arguments_(arguments) {}
   };
 
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
 
-  class ArgumentDeclaration : public AST_Node {
+  class ArgumentDeclaration : public AST_Node
+  {
 
     // The arguments that are taken.
     ADD_PROPERTY(sass::vector<ArgumentObj>, arguments);
 
     // The name of the rest argument (as in `$args...`),
     // or `null` if none was declared.
-    ADD_PROPERTY(sass::string, restArg); // Make EnvKey!!!
+    ADD_PROPERTY(EnvKey, restArg);
 
   public:
 
     ArgumentDeclaration(SourceSpan&& pstate,
       sass::vector<ArgumentObj>&& arguments = {},
-      sass::string&& restArg = "");
+      EnvKey&& restArg = {});
 
     bool isEmpty() const {
       return arguments_.empty()
@@ -219,7 +235,6 @@ namespace Sass {
     Statement(SourceSpan&& pstate);
     Statement(const SourceSpan& pstate);
     virtual ~Statement() = 0; // virtual destructor
-    // needed for rearranging nested rulesets during CSS emission
     virtual bool has_content();
     virtual bool is_invisible() const;
     ATTACH_COPY_CTOR(Statement)

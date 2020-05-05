@@ -692,7 +692,7 @@ namespace Sass {
   ArgumentDeclaration::ArgumentDeclaration(
     SourceSpan&& pstate,
     sass::vector<ArgumentObj>&& arguments,
-    sass::string&& restArg) :
+    EnvKey&& restArg) :
     AST_Node(std::move(pstate)),
     arguments_(std::move(arguments)),
     restArg_(std::move(restArg))
