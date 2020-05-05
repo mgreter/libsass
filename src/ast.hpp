@@ -234,7 +234,6 @@ namespace Sass {
     Statement(SourceSpan&& pstate);
     Statement(const SourceSpan& pstate);
     virtual bool has_content() const;
-    virtual bool is_invisible() const;
     ATTACH_COPY_CTOR(Statement)
   };
 
@@ -403,7 +402,6 @@ namespace Sass {
   public:
     Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value = {}, bool c = false);
     Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, sass::vector<StatementObj>&& b);
-    bool is_invisible() const override;
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -816,8 +814,6 @@ namespace Sass {
     // This is only parsed after the interpolation has been resolved.
     MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add);
     MediaRule(const SourceSpan& pstate, InterpolationObj query, bool add, sass::vector<StatementObj>&& els);
-
-    bool is_invisible() const override { return false; };
     ATTACH_CRTP_PERFORM_METHODS()
   };
 

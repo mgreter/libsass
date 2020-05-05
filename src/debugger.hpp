@@ -486,7 +486,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << (selector->isClass() ? " [isClass]" : " -");
     std::cerr << (selector->isElement() ? " [isElement]" : " -");
     std::cerr << (selector->isSyntacticClass() ? " [isSyntacticClass]" : " -");
-    std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
+    // std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     std::cerr << std::endl;
     std::cerr << ind << " <= " << selector->argument() << std::endl;
@@ -619,7 +619,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     SupportsRule* block = Cast<SupportsRule>(node);
     std::cerr << ind << "SupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    if (block->is_invisible()) std::cerr << " [isInvisible]";
+    // if (block->is_invisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
     debug_block(block, ind + " <>");
@@ -630,7 +630,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     CssSupportsRule* block = Cast<CssSupportsRule>(node);
     std::cerr << ind << "CssSupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    if (block->is_invisible()) std::cerr << " [isInvisible]";
+    // if (block->is_invisible()) std::cerr << " [isInvisible]";
     debug_ast(block->condition(), ind + " =@ ");
     for (auto stmt : block->elements()) {
       debug_ast(stmt, ind + " <>");
@@ -640,7 +640,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     SupportsRule* block = Cast<SupportsRule>(node);
     std::cerr << ind << "SupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    if (block->is_invisible()) std::cerr << " [isInvisible]";
+    // if (block->is_invisible()) std::cerr << " [isInvisible]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->condition(), ind + " =@ ");
     debug_block(block, ind + " <>");
@@ -848,7 +848,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "IncludeRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
-    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->content(), ind + " @ ");
@@ -857,7 +857,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "ContentBlock " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
-    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_block(ruleset, ind + " ");
@@ -867,7 +867,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "MixinRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
-    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->arguments(), ind + "$");
@@ -887,7 +887,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "FunctionRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
-    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_block(ruleset, ind + " ");
@@ -896,7 +896,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "StyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
-    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->interpolation(), ind + "#");
     debug_block(ruleset, ind + " ");
@@ -904,7 +904,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
   else if (CssStyleRule* ruleset = Cast<CssStyleRule>(node)) {
     std::cerr << ind << "CssStyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
+    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     std::cerr << std::endl;
     debug_ast(ruleset->selector(), ind + ">");
     // debug_ast(ruleset->interpolation(), ind + "#");

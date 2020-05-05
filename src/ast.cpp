@@ -95,11 +95,6 @@ namespace Sass {
     return Cast<ContentRule>(this) != nullptr;
   }
 
-  bool Statement::is_invisible() const
-  {
-    return false;
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -207,13 +202,6 @@ namespace Sass {
   Declaration::Declaration(const SourceSpan& pstate, InterpolationObj name, ExpressionObj value, bool c, sass::vector<StatementObj>&& b)
     : ParentStatement(pstate, std::move(b)), name_(name), value_(value), is_custom_property_(c)
   {}
-
-  bool Declaration::is_invisible() const
-  {
-    if (is_custom_property()) return false;
-    return !(value_ && !value_.isNull());
-  }
-
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
