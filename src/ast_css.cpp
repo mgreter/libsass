@@ -41,10 +41,10 @@ namespace Sass {
     isChildless_(false),
     parent_(parent)
   {}
-
   
   CssParentNode::CssParentNode(
-    const CssParentNode* ptr, bool childless) :
+    const CssParentNode* ptr,
+    bool childless) :
     CssNode(ptr),
     Vectorized(),
     isChildless_(ptr->isChildless_),
@@ -176,8 +176,7 @@ namespace Sass {
     CssParentNode* parent,
     CssString* name,
     CssString* value,
-    sass::vector<CssNodeObj>&& children)
-    :
+    sass::vector<CssNodeObj>&& children) :
     CssParentNode(pstate, parent, std::move(children)),
     name_(name),
     value_(value)
@@ -290,14 +289,6 @@ namespace Sass {
     CssParentNode(ptr, childless),
     selector_(ptr->selector_)
   {}
-
-  // Return a copy with empty children
-  // CssKeyframeBlock* CssKeyframeBlock::copyWithoutChildren() {
-  //   CssKeyframeBlock* cpy = SASS_MEMORY_COPY(this);
-  //   cpy->clear(); // return with empty children
-  //   return cpy;
-  // }
-  // EO copyWithoutChildren
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////

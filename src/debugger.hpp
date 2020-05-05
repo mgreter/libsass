@@ -412,7 +412,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     SelectorList* selector = Cast<SelectorList>(node);
     std::cerr << ind << "SelectorList " << selector;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    // std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     std::cerr << (selector->has_real_parent_ref() ? " [real-parent]" : " -");
     std::cerr << std::endl;
@@ -427,11 +426,9 @@ inline void debug_ast(AST_Node* node, std::string ind)
       << " [" << (selector->chroots() ? "CHROOT" : "CONNECT") << "]"
       << " [length:" << longToHex(selector->length()) << "]"
       << " [weight:" << longToHex(selector->specificity()) << "]"
-      // << (selector->is_invisible() ? " [is_invisible]" : " -")
       << (selector->isInvisible() ? " [isInvisible]" : " -")
       << (selector->hasPreLineFeed() ? " [hasPreLineFeed]" : " -")
 
-      // << (selector->is_invisible() ? " [INVISIBLE]": " -")
       // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
       // << (selector->is_optional() ? " [is_optional]": " -")
       << (selector->has_real_parent_ref() ? " [real parent]" : " -")
@@ -467,7 +464,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << (selector->hasRealParent() ? " [REAL PARENT]" : "") << ">";
     std::cerr << " [weight:" << longToHex(selector->specificity()) << "]";
     std::cerr << (selector->hasPostLineBreak() ? " [hasPostLineBreak]" : " -");
-    // std::cerr << (selector->is_invisible() ? " [is_invisible]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     std::cerr << "\n";
     for (const SimpleSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
@@ -844,7 +840,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "PlainCssCallable " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
-    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     // debug_ast(ruleset->content(), ind + " @ ");
@@ -882,7 +877,6 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "MixinRArgumentDeclarationule " << args;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
-    // std::cerr << (ruleset->is_invisible() ? " [INVISIBLE]" : "");
     // std::cerr << " [" << ruleset->name() << "]";
     std::cerr << std::endl;
     // debug_ast(ruleset->arguments(), ind + "$");
