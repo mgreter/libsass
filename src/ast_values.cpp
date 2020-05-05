@@ -888,9 +888,9 @@ namespace Sass {
     hasQuotes_(ptr->hasQuotes_)
   {}
 
-  bool String::is_invisible() const {
-    return !hasQuotes_ && value_.empty();
-  }
+  //bool String::is_invisible() const {
+  //  return !hasQuotes_ && value_.empty();
+  //}
 
   bool String::operator== (const Value& rhs) const
   {

@@ -528,9 +528,6 @@ namespace Sass {
 
     virtual const sass::string& type() const override { return StrTypeList; }
 
-    bool is_invisible() const override
-    { return isBlank() && !hasBrackets(); }
-
     size_t hash() const;
 
     OVERRIDE_EQ_OPERATIONS(Value);
@@ -596,7 +593,6 @@ namespace Sass {
     Map(const SourceSpan& pstate, Hashed::ordered_map_type&& move);
 
     const sass::string& type() const override final { return StrTypeMap; }
-    bool is_invisible() const override { return empty(); }
 
     Map* isMap() override final { return this; }
     const Map* isMap() const override final { return this; }
@@ -685,7 +681,6 @@ namespace Sass {
 
     size_t hash() const override final { return 0; }
     const sass::string& type() const override final { return StrTypeFunction; }
-    bool is_invisible() const override { return true; }
 
     Function* isFunction() override final { return this; }
     const Function* isFunction() const override final { return this; }
@@ -1334,7 +1329,6 @@ namespace Sass {
     String(const SourceSpan& pstate, const sass::string& val, bool hasQuotes = false);
     String(const SourceSpan& pstate, sass::string&& val, bool hasQuotes = false);
     const sass::string& type() const override { return StrTypeString; }
-    bool is_invisible() const override;
     size_t hash() const override;
     bool operator== (const Value& rhs) const override;
     bool operator== (const String& rhs) const;
@@ -1368,7 +1362,6 @@ namespace Sass {
     Null(const SourceSpan& pstate);
     enum Sass_Tag getTag() const override final { return SASS_NULL; }
     const sass::string& type() const override final { return StrTypeNull; }
-    bool is_invisible() const override { return true; }
 
     size_t hash() const override final;
 

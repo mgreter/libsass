@@ -115,7 +115,6 @@ namespace Sass {
 
     virtual operator bool() { return true; }
     virtual ~Expression() { }
-    virtual bool is_invisible() const { return false; }
 
     virtual const sass::string& type() const {
       throw std::runtime_error("Invalid reflection");
