@@ -22,7 +22,12 @@ namespace Sass
 		/** The position within the source **/
 		Offset position;
 
-		/** Regular value constructor **/
+    /** Move constructor **/
+    // SourceState(SourceState&&);
+
+   // SourceState(const SourceState&);
+
+    /** Regular value constructor **/
     SourceState(SourceDataObj source = {}, Offset position = Offset());
 
 		/** Return the attach source id **/

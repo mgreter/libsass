@@ -10,6 +10,16 @@ namespace Sass
 		, position(position)
 	{}
 
+//  SourceState::SourceState(const SourceState& state)
+//    : source(state.source),
+//    position(state.position)
+//  {}
+
+  // SourceState::SourceState(SourceState&& state)
+  //   : source(std::move(state.source))
+  //   , position(std::move(state.position))
+  // {}
+
   SourceData* SourceState::getSource() const
 	{
 		return source.ptr();

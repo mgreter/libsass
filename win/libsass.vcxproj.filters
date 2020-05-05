@@ -182,9 +182,6 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\logger.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ascii.hpp">
-      <Filter>Library Includes</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\json.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
@@ -338,6 +335,9 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_css.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_base.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_values.cpp">

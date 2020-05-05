@@ -312,7 +312,7 @@ namespace Sass {
       throw Exception::SassScriptException2(
         inspect() + " is not a valid selector: it must be a string,\n"
         "a list of strings, or a list of lists of strings.",
-        logger, pstate_, name);
+        logger, this->pstate(), name);
     }
 
     /// Parses [this] as a selector list, in the same manner as the

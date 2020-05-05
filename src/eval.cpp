@@ -611,9 +611,9 @@ namespace Sass {
 
     ExpressionObj mq;
     sass::string str_mq;
-    SourceSpan state(node->pstate());
+    const SourceSpan& state = node->query() ?
+      node->query()->pstate() : node->pstate();
     if (node->query()) {
-      state = node->query()->pstate();
       str_mq = performInterpolation(node->query(), false);
     }
 

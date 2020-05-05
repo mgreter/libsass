@@ -19,6 +19,12 @@ namespace Sass {
     column(0)
   {}
 
+  // Move constructor
+//  Offset::Offset(Offset&& offset) :
+//    line(offset.line),
+//    column(offset.column)
+//  {}
+
   // Create an `Offset` from the given string
   // Will use `append` internally on all chars
   Offset::Offset(uint8_t character)

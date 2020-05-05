@@ -13,65 +13,7 @@ namespace Sass {
 
   // static Null sass_null(SourceSpan("null"));
 
-  uint8_t sass_op_to_precedence(enum Sass_OP op) {
-    switch (op) {
-    case OR: return 1;
-    case AND: return 2;
-    case EQ: return 3;
-    case NEQ: return 3;
-    case GT: return 4;
-    case GTE: return 4;
-    case LT: return 4;
-    case LTE: return 4;
-    case ADD: return 5;
-    case SUB: return 5;
-    case MUL: return 6;
-    case DIV: return 6;
-    case MOD: return 6;
-    case IESEQ: return 9;
-    default: return 255;
-    }
-  }
 
-  const char* sass_op_to_name(enum Sass_OP op) {
-    switch (op) {
-      case AND: return "and";
-      case OR: return "or";
-      case EQ: return "eq";
-      case NEQ: return "neq";
-      case GT: return "gt";
-      case GTE: return "gte";
-      case LT: return "lt";
-      case LTE: return "lte";
-      case ADD: return "plus";
-      case SUB: return "minus";
-      case MUL: return "times";
-      case DIV: return "div";
-      case MOD: return "mod";
-      case IESEQ: return "seq";
-      default: return "invalid";
-    }
-  }
-
-  const char* sass_op_separator(enum Sass_OP op) {
-    switch (op) {
-      case AND: return "&&";
-      case OR: return "||";
-      case EQ: return "==";
-      case NEQ: return "!=";
-      case GT: return ">";
-      case GTE: return ">=";
-      case LT: return "<";
-      case LTE: return "<=";
-      case ADD: return "+";
-      case SUB: return "-";
-      case MUL: return "*";
-      case DIV: return "/";
-      case MOD: return "%";
-      case IESEQ: return "=";
-      default: return "invalid";
-    }
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

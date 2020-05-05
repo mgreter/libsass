@@ -50,7 +50,7 @@ enum Sass_Separator {
 
 // Value Operators
 enum Sass_OP {
-  AND, OR,                   // logical connectives
+  OR, AND,                   // logical connectives
   EQ, NEQ, GT, GTE, LT, LTE, // arithmetic relations
   ADD, SUB, MUL, DIV, MOD,   // arithmetic functions
   IESEQ                      // special IE single equal

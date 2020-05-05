@@ -16,19 +16,23 @@ namespace Sass {
   const char* sass_op_separator(enum Sass_OP op);
 
   //////////////////////////////////////////////////////////
-// Abstract base class for all abstract syntax tree nodes.
-//////////////////////////////////////////////////////////
+  // Abstract base class for all abstract syntax tree nodes.
+  //////////////////////////////////////////////////////////
   class AST_Node : public SharedObj {
     ADD_PROPERTY(SourceSpan, pstate);
   public:
+
     AST_Node(const SourceSpan& pstate)
       : SharedObj(), pstate_(pstate)
     { }
+
     AST_Node(SourceSpan&& pstate)
       : SharedObj(), pstate_(std::move(pstate))
     { }
+
     AST_Node(const AST_Node* ptr)
       : pstate_(ptr->pstate_)
+      // SharedObj(ptr)
     { }
 
     // allow implicit conversion to string

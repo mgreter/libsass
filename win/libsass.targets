@@ -57,7 +57,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\inspect.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\interpolation.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\logger.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ascii.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\json.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\kwd_arg_macros.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\listize.hpp" />
@@ -111,6 +110,7 @@
   <ItemGroup Label="LibSass Sources">
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_css.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_base.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_values.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_supports.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_cmp.cpp" />

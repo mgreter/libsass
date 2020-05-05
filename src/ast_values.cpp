@@ -111,18 +111,18 @@ namespace Sass {
 
   SelectorList* Value::assertSelector(Context& ctx, const sass::string& name, bool allowParent)
   {
-    callStackFrame frame(*ctx.logger123, pstate_);
-    sass::string text(_selectorString(*ctx.logger123, pstate_, name));
-    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate_);
+    callStackFrame frame(*ctx.logger123, pstate());
+    sass::string text(_selectorString(*ctx.logger123, pstate(), name));
+    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate());
     SelectorParser parser(ctx, source, allowParent);
     return parser.parse().detach();
   }
 
   CompoundSelector* Value::assertCompoundSelector(Context& ctx, const sass::string& name, bool allowParent)
   {
-    callStackFrame frame(*ctx.logger123, pstate_);
-    sass::string text(_selectorString(*ctx.logger123, pstate_, name));
-    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate_);
+    callStackFrame frame(*ctx.logger123, pstate());
+    sass::string text(_selectorString(*ctx.logger123, pstate(), name));
+    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, std::move(text), pstate());
     SelectorParser parser(ctx, source, allowParent);
     return parser.parseCompoundSelector().detach();
   }
@@ -785,7 +785,7 @@ namespace Sass {
     if (!hasQuotes()) return text_;
     // quote ? ? = hasQuotes ? _bestQuote() : null;
     if (!quote && hasQuotes()) quote = findBestQuote();
-    InterpolationBuffer buffer(pstate_);
+    InterpolationBuffer buffer(pstate());
 
     using namespace Character;
 
@@ -833,7 +833,7 @@ namespace Sass {
     if (quote != 0) {
       buffer.write(quote);
     }
-    return buffer.getInterpolation(pstate_);
+    return buffer.getInterpolation(pstate());
 
   }
 
