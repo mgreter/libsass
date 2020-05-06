@@ -65,7 +65,7 @@ namespace Sass {
       }
 
       auto styleRule = Cast<CssStyleRule>(node);
-      if (styleRule && styleRule->selector()->isInvisible()) {
+      if (styleRule && styleRule->selector()->empty()) {
         //std::cerr << "Saw invisible selector\n";
         return true;
       }
@@ -181,11 +181,6 @@ namespace Sass {
     name_(name),
     value_(value)
   {}
-
-  bool CssAtRule::is_invisible() const
-  {
-    return false; //  empty() && !isChildless_;
-  }
 
   CssAtRule::CssAtRule(
     const CssAtRule* ptr, bool childless) :
@@ -336,10 +331,10 @@ namespace Sass {
     condition_(condition)
   {}
 
-  bool CssSupportsRule::is_invisible() const
+  bool CssSupportsRule::isInvisibleCss() const
   {
     for (auto stmt : elements()) {
-      if (!stmt->is_invisible()) return false;
+      if (!stmt->isInvisibleCss()) return false;
     }
     return true;
   }

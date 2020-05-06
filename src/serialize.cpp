@@ -297,7 +297,7 @@ namespace Sass {
   {
     bool first = true;
     for (auto complex : list->elements()) {
-      if (!_inspect && complex->isInvisible()) {
+      if (!_inspect && complex->is_invisible()) {
         continue;
       }
       if (first) {

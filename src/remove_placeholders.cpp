@@ -10,8 +10,8 @@ namespace Sass {
     Remove_Placeholders::Remove_Placeholders()
     { }
 
-    bool isInvisible(CssNode* stmt) {
-      return stmt->is_invisible();
+    bool isInvisibleCss(CssNode* stmt) {
+      return stmt->isInvisibleCss();
     }
 
     void Remove_Placeholders::remove_placeholders(SimpleSelector* simple)
@@ -62,7 +62,7 @@ namespace Sass {
       // Clean up all our children
       b->CssParentNode::perform(this);
       // Remove all invisible items
-      listEraseItemIf(b->elements(), isInvisible);
+      listEraseItemIf(b->elements(), isInvisibleCss);
     }
 
     void Remove_Placeholders::operator()(CssStyleRule* rule)

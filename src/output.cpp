@@ -196,20 +196,20 @@ namespace Sass {
     // Avoid null pointer exception
     if (rule == nullptr) return;
     // Skip empty/invisible rule
-    if (rule->isInvisible()) return;
+    if (rule->isInvisible5()) return;
     // Avoid null pointer exception
     // if (rule->block() == nullptr) return;
     // Skip empty/invisible rule
     bool invisible = true;
     for (auto& item : rule->elements()) {
-      if (!item->is_invisible()) {
+      if (!item->isInvisibleCss()) {
         invisible = false;
         break;
       }
     }
     if (invisible) return;
     // Skip if block is empty/invisible
-    if (!rule->isInvisible()) {
+    if (!rule->isInvisible5()) {
       // Let inspect do its magic
       Inspect::visitCssMediaRule(rule);
     }

@@ -21,7 +21,9 @@ namespace Sass {
   public:
     CssNode(const SourceSpan& pstate);
 
-    virtual bool is_invisible() const { return false; }
+    virtual bool isInvisibleCss() const { return false; }
+
+
     // size_t tabs() const { return 0; }
     // void tabs(size_t tabs) const { }
 
@@ -61,7 +63,7 @@ namespace Sass {
     {
       // Is invisible until something is visible
       for (auto child : elements()) {
-        if (!child->is_invisible()) return false;
+        if (!child->isInvisibleCss()) return false;
       }
       return true;
     }
@@ -153,8 +155,6 @@ namespace Sass {
       CssString* name,
       CssString* value,
       sass::vector<CssNodeObj>&& children);
-
-    bool is_invisible() const override final;
 
     ATTACH_COPY_CTOR(CssAtRule);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -276,7 +276,8 @@ namespace Sass {
       SelectorList* selector,
       sass::vector<CssNodeObj>&& children);
 
-    bool is_invisible() const override;
+    // Selector and one child must be visible
+    bool isInvisibleCss() const override final;
 
     bool bubbleThroughStyleRule() const override final { return true; }
     CssParentNode* bubbleThroughStyleRule2() override final {
@@ -303,7 +304,7 @@ namespace Sass {
       ExpressionObj condition,
       sass::vector<CssNodeObj>&& children);
 
-    bool is_invisible() const override;
+    bool isInvisibleCss() const override;
     ATTACH_COPY_OPERATIONS2(CssSupportsRule);
     ATTACH_CRTP_PERFORM_METHODS();
   };
@@ -431,8 +432,7 @@ namespace Sass {
       return visitor.visitCssMediaRule(this);
     }
 
-    bool isInvisible() const { return queries_.empty(); }
-    bool is_invisible() const override { return queries_.empty(); };
+    bool isInvisible5() const { return queries_.empty(); };
 
     // Append additional media queries
     void concat(const sass::vector<CssMediaQueryObj>& queries);
@@ -465,7 +465,7 @@ namespace Sass {
       return parent_ ? parent_->bubbleThroughStyleRule2() : this;
     }
 
-    bool is_invisible() const override final { return empty(); }
+    bool isInvisibleCss() const override final { return empty(); }
     ATTACH_COPY_OPERATIONS2(CssImportTrace);
     ATTACH_CRTP_PERFORM_METHODS();
   };

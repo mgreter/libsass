@@ -356,7 +356,7 @@ namespace Sass {
 
   void Inspect::operator()(CssMediaRule* rule)
   {
-    if (!rule->is_invisible()) {
+    if (!rule->isInvisible5()) {
       visitCssMediaRule(rule);
     }
   }
@@ -378,7 +378,7 @@ namespace Sass {
       node->value()->perform(this);
     }
     if (!node->isChildless()) {
-      if (node->empty() || node->is_invisible()) {
+      if (node->empty()) {
         append_optional_space();
         append_string("{}");
       }
