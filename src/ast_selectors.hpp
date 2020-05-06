@@ -74,7 +74,8 @@ namespace Sass {
     SimpleSelector(const SourceSpan& pstate, const sass::string& n = Strings::empty);
     virtual size_t hash() const override;
     virtual bool empty() const;
-    virtual bool has_placeholder();
+
+    virtual bool isPlaceholder() { return false; }
 
     ~SimpleSelector() {};
     virtual CompoundSelector* unifyWith(CompoundSelector*);
@@ -141,9 +142,10 @@ namespace Sass {
   public:
     PlaceholderSelector(const SourceSpan& pstate, const sass::string& n);
     ~PlaceholderSelector() {}
+
     bool isInvisible() const override { return true; }
-    virtual unsigned long specificity() const override;
-    virtual bool has_placeholder() override;
+    bool isPlaceholder() override final { return true; }
+    unsigned long specificity() const override final;
 
     // Returns whether this is a private selector.
     // That is, whether it begins with `-` or `_`.
@@ -427,7 +429,10 @@ namespace Sass {
     virtual bool isInvisible() const { return false; }
 
     virtual bool isImpossible() const { return false; }
-    virtual bool has_placeholder() const = 0;
+
+    // Specialized by CompoundSelector
+    virtual bool hasPlaceholder() const { return false; }
+
     bool has_real_parent_ref() const override = 0;
 
     ComplexSelector* wrapInComplex();
@@ -468,7 +473,6 @@ namespace Sass {
     SelectorCombinator(const SourceSpan& pstate, Combinator combinator, bool postLineBreak = false);
 
     bool has_real_parent_ref() const override final { return false; }
-    bool has_placeholder() const override final { return false; }
 
     /* helper function for syntax sugar */
     SelectorCombinator* getCombinator() final override { return this; }
@@ -546,7 +550,9 @@ namespace Sass {
 
     void cloneChildren() override final;
     bool has_real_parent_ref() const override final;
-    bool has_placeholder() const override final;
+
+    bool hasPlaceholder() const override final;
+
     sass::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, BackTraces& traces, bool implicit_parent = true);
 
     virtual bool isCompound() const override final { return true; };

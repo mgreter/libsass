@@ -146,11 +146,6 @@ namespace Sass {
     return name_ == "*";
   }
 
-  bool SimpleSelector::has_placeholder()
-  {
-    return false;
-  }
-
   bool SimpleSelector::has_real_parent_ref() const
   {
     return false;
@@ -178,10 +173,6 @@ namespace Sass {
   unsigned long PlaceholderSelector::specificity() const
   {
 		return Constants::Specificity::Base;
-  }
-
-  bool PlaceholderSelector::has_placeholder() {
-    return true;
   }
 
   // Returns whether this is a private selector.
@@ -465,7 +456,7 @@ namespace Sass {
 
   bool ComplexSelector::hasPlaceholderCplxSel() const {
     for (size_t i = 0, L = length(); i < L; ++i) {
-      if (get(i)->has_placeholder()) return true;
+      if (get(i)->hasPlaceholder()) return true;
     }
     return false;
   }
@@ -564,55 +555,54 @@ namespace Sass {
     // if (Cast<TypeSelector>(front)) {
     //  if (front->ns() != "") return false;
     // }
-    for (const SimpleSelector* s : elements()) {
+    for (const SimpleSelectorObj& s : elements()) {
       if (s && s->has_real_parent_ref()) return true;
-    }
-    return false;
-  }
-
-  bool CompoundSelector::has_placeholder() const
-  {
-    if (length() == 0) return false;
-    for (SimpleSelectorObj ss : elements()) {
-      if (ss->has_placeholder()) return true;
     }
     return false;
   }
 
   void CompoundSelector::cloneChildren()
   {
-    for (size_t i = 0, l = length(); i < l; i++) {
-      at(i) = SASS_MEMORY_CLONE(at(i));
+    for (SimpleSelectorObj& sel : elements()) {
+      sel = SASS_MEMORY_CLONE(sel);
     }
+  }
+
+  bool CompoundSelector::hasPlaceholder() const
+  {
+    if (length() == 0) return false;
+    for (const SimpleSelectorObj& ss : elements()) {
+      if (ss && ss->isPlaceholder()) return true;
+    }
+    return false;
   }
 
   unsigned long CompoundSelector::specificity() const
   {
-    int sum = 0;
-    for (size_t i = 0, L = length(); i < L; ++i)
-    { sum += get(i)->specificity(); }
-    return sum;
+    int specificity = 0;
+    for (const SimpleSelectorObj& sel : elements())
+    { specificity += sel->specificity(); }
+    return specificity;
   }
 
   bool CompoundSelector::isInvisible() const
   {
-    for (size_t i = 0; i < length(); i += 1) {
-      if (!get(i)->isInvisible()) return false;
+    for (const SimpleSelectorObj& sel : elements()) {
+      if (!sel->isInvisible()) return false;
     }
     return true;
   }
 
   bool CompoundSelector::isImpossible() const
   {
-    for (size_t i = 0; i < length(); i += 1) {
-      if (SimpleSelector* simple = get(i)) {
-        if (simple->isImpossible()) return true;
-      }
+    for (const SimpleSelectorObj& sel : elements()) {
+      if (sel && sel->isImpossible()) return true;
     }
     return false;
   }
 
-  bool CompoundSelector::isSuperselectorOf(const CompoundSelector* sub, sass::string wrapped) const
+  bool CompoundSelector::isSuperselectorOf(
+    const CompoundSelector* sub, sass::string wrapped) const
   {
     return compoundIsSuperselector(this, sub, {});
   }
