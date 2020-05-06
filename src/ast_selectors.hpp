@@ -388,7 +388,7 @@ namespace Sass {
 
     size_t hash() const override final;
     void cloneChildren() override final;
-    bool hasPlaceholderCplxSel() const;
+    bool hasPlaceholder() const;
     bool has_real_parent_ref() const override final;
 
     sass::vector<ComplexSelectorObj> resolveParentSelectors(SelectorList* parent, BackTraces& traces, bool implicit_parent = true);

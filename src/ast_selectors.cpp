@@ -454,7 +454,7 @@ namespace Sass {
     return 0;
   }
 
-  bool ComplexSelector::hasPlaceholderCplxSel() const {
+  bool ComplexSelector::hasPlaceholder() const {
     for (size_t i = 0, L = length(); i < L; ++i) {
       if (get(i)->hasPlaceholder()) return true;
     }

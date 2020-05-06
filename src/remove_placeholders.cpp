@@ -32,7 +32,7 @@ namespace Sass {
 
     void Remove_Placeholders::remove_placeholders(ComplexSelector* complex)
     {
-      if (complex->hasPlaceholderCplxSel()) {
+      if (complex->hasPlaceholder()) {
         complex->clear(); // remove all
       }
       else {
