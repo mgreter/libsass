@@ -687,12 +687,9 @@ namespace Sass {
 
     // If there's more than one target and they all need to
     // match, we track which targets are actually extended.
-    ExtSmplSelSet targetsUsed2;
-
-    ExtSmplSelSet* targetsUsed = nullptr;
-
+    std::unique_ptr<ExtSmplSelSet> targetsUsed;
     if (mode != ExtendMode::NORMAL && extensions.size() > 1) {
-      targetsUsed = &targetsUsed2;
+      targetsUsed.reset(new ExtSmplSelSet());
     }
 
     sass::vector<ComplexSelectorObj> result;
@@ -700,7 +697,8 @@ namespace Sass {
     sass::vector<sass::vector<Extension>> options;
     for (size_t i = 0; i < compound->length(); i++) {
       const SimpleSelectorObj& simple = compound->get(i);
-      auto extended = extendSimple(simple, extensions, mediaQueryContext, targetsUsed);
+      auto extended = extendSimple(simple, extensions,
+        mediaQueryContext, targetsUsed.get());
       if (extended.empty()) {
         if (!options.empty()) {
           options.push_back({ extensionForSimple(simple) });
