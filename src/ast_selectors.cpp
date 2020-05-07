@@ -325,9 +325,9 @@ namespace Sass {
       (selector() && selector()->empty());
   }
 
-  bool PseudoSelector::has_real_parent_ref() const
-  {
-    return selector() && selector()->has_real_parent_ref();
+  bool PseudoSelector::has_real_parent_ref() const {
+    if (!selector()) return false;
+    return selector()->has_real_parent_ref();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -351,7 +351,7 @@ namespace Sass {
 
   bool SelectorList::has_real_parent_ref() const
   {
-    for (const ComplexSelectorObj& s : elements()) {
+    for (ComplexSelectorObj s : elements()) {
       if (s && s->has_real_parent_ref()) return true;
     }
     return false;
@@ -454,18 +454,17 @@ namespace Sass {
     return 0;
   }
 
-  bool ComplexSelector::hasPlaceholder() const
-  {
-    for (const CompoundSelectorObj& sel : elements()) {
-      if (sel && sel->hasPlaceholder()) return true;
+  bool ComplexSelector::hasPlaceholder() const {
+    for (size_t i = 0, L = length(); i < L; ++i) {
+      if (get(i)->hasPlaceholder()) return true;
     }
     return false;
   }
 
   bool ComplexSelector::has_real_parent_ref() const
   {
-    for (const SelectorComponentObj& sel : elements()) {
-      if (sel && sel->has_real_parent_ref()) return true;
+    for (SelectorComponent* component : elements()) {
+      if (component->has_real_parent_ref()) return true;
     }
     return false;
   }

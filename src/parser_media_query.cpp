@@ -54,7 +54,7 @@ namespace Sass {
       sass::string identifier2 = identifier();
       whitespace();
 
-      if (equalsIgnoreCase(identifier2, "and")) {
+      if (StringUtils::equalsIgnoreCase(identifier2, "and", 3)) {
         // For example, "@media screen and ..."
         type = identifier1;
       }

@@ -44,7 +44,6 @@ namespace Sass {
         listEraseItemIf(complex->elements(), listIsEmpty<SelectorComponent>);
       }
       // ToDo: describe what this means
-      // This must come last ...
       if (complex->isImpossible()) {
         complex->clear(); // remove all
       }

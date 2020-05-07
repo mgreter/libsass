@@ -30,19 +30,6 @@ namespace Sass {
 
     Context& context;
 
-    /// Returns whether [string1] and [string2] are equal, ignoring ASCII case.
-    bool equalsIgnoreCase(sass::string string1, sass::string string2)
-    {
-      if (string1.length() != string2.length()) return false;
-      if (string1 == string2) return true;
-      for (size_t i = 0; i < string1.length(); i++) {
-        if (!Character::characterEqualsIgnoreCase(string1[i], string2[i])) {
-          return false;
-        }
-      }
-      return true;
-    }
-
     Parser(
       Context& context,
       SourceDataObj source);
@@ -208,7 +195,7 @@ namespace Sass {
     // Prints a source span highlight of the current location being scanned.
     // If [message] is passed, prints that as well. This is
     // intended for use when debugging parser failures.
-    void debug(sass::string message);
+    // void debug2(sass::string message);
 
     // If [position] is separated from the previous non-whitespace character
     // in `scanner.string` by one or more newlines, returns the offset of the

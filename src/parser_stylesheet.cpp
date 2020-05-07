@@ -68,7 +68,9 @@ namespace Sass {
       ns = id;
       id = _publicIdentifier();
     }
-    EnvKey name(id);
+
+    // Create EnvKey from id
+    EnvKey name(std::move(id));
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
@@ -108,27 +110,22 @@ namespace Sass {
 
     expectStatementSeparator("variable declaration");
 
-    IdxRef vidx = context.varStack.back()->hoistVariable(name, global); //  || guarded
+    IdxRef vidx = context.varStack.back()->hoistVariable(name, global);
+
+    // Optimization for cases where functions manipulate same var
     if (FunctionExpression* fn = Cast<FunctionExpression>(value)) {
-      // const sass::string& fnName(fn->name()->getPlainString());
-      // if (name == "map-merge") {
-        auto& args = fn->arguments();
-        auto& pos = args->positional();
-        if (pos.size() > 0) {
-          if (Variable* var = Cast<Variable>(pos[0])) {
-            if (vidx.isValid() && vidx == var->vidx()) {
-              // if (var->name().norm() == name.norm()) {
-              // SASS_MEMORY_NEW(MapMerge,
-              //   scanner.relevantSpan(start), name, vidx, value, guarded, global);
-              // debug_ast(var);
-              // Can bring 15%
-              fn->selfAssign(true);
-            }
+      auto& args = fn->arguments();
+      auto& pos = args->positional();
+      if (pos.size() > 0) {
+        if (Variable* var = Cast<Variable>(pos[0])) {
+          if (vidx.isValid() && vidx == var->vidx()) {
+            // Can bring 15%
+            fn->selfAssign(true);
           }
         }
-        // debug_ast(fn->arguments());
       }
-    // }
+    }
+
     Assignment* declaration = SASS_MEMORY_NEW(Assignment,
       scanner.relevantSpanFrom(start), name, vidx, value, guarded, global);
 
@@ -146,6 +143,7 @@ namespace Sass {
   {
     Offset start(scanner.offset);
     switch (scanner.peekChar()) {
+
     case $at:
       return atRule(&StylesheetParser::_childStatement, root);
 
@@ -174,6 +172,7 @@ namespace Sass {
       else {
         return _styleRule();
       }
+
     }
     return nullptr;
   }
@@ -188,18 +187,17 @@ namespace Sass {
     // from old-style property syntax. We don't support old property syntax, but
     // we do support the backslash because it's easy to do.
     if (isIndented()) scanner.scanChar($backslash);
-
-    InterpolationObj styleRule = styleRuleSelector();
-
+    InterpolationObj styleRule(styleRuleSelector());
     EnvFrame local(context.varStack.back(), true);
     ScopedStackFrame<EnvFrame>
       scoped(context.varStack, &local);
 
-    auto qwe = _withChildren<StyleRule>(
+    auto rule = _withChildren<StyleRule>(
       &StylesheetParser::_childStatement,
       styleRule.ptr());
-    qwe->idxs(local.getIdxs());
-    return qwe;
+    // ToDo: pass IDXS implicitly
+    rule->idxs(local.getIdxs());
+    return rule;
   }
 
   // Consumes a [Declaration] or a [StyleRule].
@@ -230,6 +228,7 @@ namespace Sass {
   //   beneath it.
   Statement* StylesheetParser::_declarationOrStyleRule()
   {
+
     if (plainCss() && _inStyleRule && !_inUnknownAtRule) {
       return _declaration();
     }
@@ -250,7 +249,7 @@ namespace Sass {
     }
 
     buffer.addInterpolation(styleRuleSelector());
-    SourceSpan selectorPstate = scanner.relevantSpanFrom(start);
+    SourceSpan selectorPstate(scanner.relevantSpanFrom(start));
 
     LOCAL_FLAG(_inStyleRule, true);
 
@@ -275,7 +274,6 @@ namespace Sass {
     }
 
     return rule.detach();
-
   }
   // _declarationOrStyleRule
 
@@ -3488,7 +3486,7 @@ namespace Sass {
         interpolatedIdentifier();
       whitespace();
 
-      if (equalsIgnoreCase(identifier->getPlainString(), "and")) {
+      if (StringUtils::equalsIgnoreCase(identifier->getPlainString(), "and", 3)) {
         // For example, "@media screen and ..."
         buffer.write(" and ");
       }

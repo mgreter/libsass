@@ -260,7 +260,7 @@ namespace Sass {
   sass::string Parser::string()
   {
     // NOTE: this logic is largely duplicated in ScssParser._interpolatedString.
-        // Most changes here should be mirrored there.
+    // Most changes here should be mirrored there.
 
     uint8_t quote = scanner.readChar();
     if (quote != $single_quote && quote != $double_quote) {
@@ -719,8 +719,7 @@ namespace Sass {
   void Parser::expectIdentifier(const char* text, sass::string name)
   {
     Offset start(scanner.offset);
-    for (size_t i = 0; text[i]; i++) {
-      // uint8_t next = text[i]; // cast needed
+    for (uint8_t i = 0; text[i]; i++) {
       if (scanCharIgnoreCase(text[i])) continue;
       if (name.empty()) name = quote(text);
       scanner.error("Expected " + name + ".",
@@ -736,8 +735,7 @@ namespace Sass {
   void Parser::expectIdentifier(sass::string text, sass::string name)
   {
     Offset start(scanner.offset);
-    for (size_t i = 0; i < text[i]; i++) {
-      // uint8_t next = text[i]; // cast needed
+    for (uint8_t i = 0; i < text[i]; i++) {
       if (scanCharIgnoreCase(text[i])) continue;
       if (name.empty()) name = quote(text);
       scanner.error("Expected " + name + ".",
@@ -762,18 +760,17 @@ namespace Sass {
   // Prints a source span highlight of the current location being scanned.
   // If [message] is passed, prints that as well. This is
   // intended for use when debugging parser failures.
-
-  void Parser::debug(sass::string message) {
-	  // How to access otherwise?
-	  context.logger123->warnings
-		  << "DEBUG: " << message << "\n";
-	  if (message.empty()) {
-		  // print(scanner.emptySpan.highlight(color: true));
-	  }
-	  else {
-		  // print(scanner.emptySpan.message(message.toString(), color: true));
-	  }
-  }
+  // void Parser::debug2(sass::string message) {
+	//   // How to access otherwise?
+	//   context.logger123->warnings
+	// 	  << "DEBUGGER: " << message << "\n";
+	//   if (message.empty()) {
+	// 	  // print(scanner.emptySpan.highlight(color: true));
+	//   }
+	//   else {
+	// 	  // print(scanner.emptySpan.message(message.toString(), color: true));
+	//   }
+  // }
   // EO expectIdentifier
 
   // If [position] is separated from the previous non-whitespace character
