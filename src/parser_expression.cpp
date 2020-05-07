@@ -71,7 +71,7 @@ namespace Sass {
       // in dart sass this sets allowSlash to true!
       Binary_Expression* binex = SASS_MEMORY_NEW(Binary_Expression,
         // Span should be between the two operations probably?
-        SourceSpan::tmp("[pstateS3]"), Sass_OP::DIV, operands.back(), singleExpression);
+        singleExpression->pstate(), Sass_OP::DIV, operands.back(), singleExpression);
       singleExpression = binex; // down cast
       binex->allowsSlash(true);
       operands.pop_back();

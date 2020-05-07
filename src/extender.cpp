@@ -794,7 +794,7 @@ namespace Sass {
         first = false;
         CompoundSelectorObj mergedSelector =
           SASS_MEMORY_NEW(CompoundSelector,
-            SourceSpan::tmp("[ext]"));
+            compound->pstate());
         for (size_t n = 0; n < path.size(); n += 1) {
           const ComplexSelectorObj& sel = path[n].extender;
           if (CompoundSelector* compound = sel->last()->getCompound()) {
@@ -821,7 +821,7 @@ namespace Sass {
         if (!originals.empty()) {
           CompoundSelectorObj merged =
             SASS_MEMORY_NEW(CompoundSelector,
-              SourceSpan::tmp("[phony]"));
+              compound->pstate());
           merged->concat(originals);
           toUnify.insert(toUnify.begin(), { merged });
         }
@@ -846,8 +846,7 @@ namespace Sass {
       }
 
       for (sass::vector<SelectorComponentObj>& components : complexes) {
-        auto sel = SASS_MEMORY_NEW(ComplexSelector,
-          SourceSpan::tmp ("[ext]"));
+        auto sel = SASS_MEMORY_NEW(ComplexSelector, compound->pstate());
         sel->hasPreLineFeed(lineBreak);
         sel->elementsM(std::move(components));
         unifiedPaths.emplace_back(sel);
