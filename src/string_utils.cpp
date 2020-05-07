@@ -6,8 +6,10 @@
 namespace Sass {
   namespace StringUtils {
 
-    // Import from character
     using namespace Character;
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
     bool _equalsIgnoreCase(const char a, const char b) {
       return Character::characterEqualsIgnoreCase(a, b);
@@ -34,7 +36,7 @@ namespace Sass {
       return suffix.size() <= str.size() && std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
     }
 
-    // This is an optimized version when you pass it static test you know is already lowercase
+    // Optimized version when you pass `const char*` you know is already lowercase.
     bool startsWithIgnoreCase(const sass::string& str, const char* prefix, size_t len) {
       return len <= str.size() && std::equal(prefix, prefix + len, str.begin(), _equalsIgnoreCaseConst);
     }
@@ -43,7 +45,7 @@ namespace Sass {
       return prefix.size() <= str.size() && std::equal(prefix.begin(), prefix.end(), str.begin(), _equalsIgnoreCase);
     }
 
-    // This is an optimized version when you pass it static test you know is already lowercase
+    // Optimized version when you pass `const char*` you know is already lowercase.
     bool endsWithIgnoreCase(const sass::string& str, const char* suffix, size_t len) {
       return len <= str.size() && std::equal(suffix, suffix + len, str.end() - len, _equalsIgnoreCaseConst);
     }
@@ -53,15 +55,17 @@ namespace Sass {
     }
 
     bool equalsIgnoreCase(const sass::string& a, const char* b, size_t len) {
-      if (len != strlen(b)) std::cerr << "Fuck yeah " << b << " => " << strlen(b) << "\n";
       return len == a.size() && std::equal(b, b + len, a.begin(), _equalsIgnoreCaseConst);
     }
 
+    // Make the passed string whitespace trimmed.
     void makeTrimmed(sass::string& str) {
       makeLeftTrimmed(str);
       makeRightTrimmed(str);
     }
+    // EO makeTrimmed
 
+    // Trim the left side of passed string.
     void makeLeftTrimmed(sass::string& str) {
       if (str.begin() != str.end()) {
         auto pos = std::find_if_not(
@@ -70,7 +74,9 @@ namespace Sass {
         str.erase(str.begin(), pos);
       }
     }
+    // EO makeLeftTrimmed
 
+    // Trim the right side of passed string.
     void makeRightTrimmed(sass::string& str) {
       if (str.begin() != str.end()) {
         auto pos = std::find_if_not(
@@ -79,21 +85,27 @@ namespace Sass {
         str.erase(str.rend() - pos);
       }
     }
+    // EO makeRightTrimmed
 
+    // Make the passed string lowercase.
     void makeLowerCase(sass::string& str) {
       for (char& character : str) {
         if (character >= $A && character <= $Z)
           character |= asciiCaseBit;
       }
     }
+    // EO makeLowerCase
 
+    // Make the passed string uppercase.
     void makeUpperCase(sass::string& str) {
       for (char& character : str) {
         if (character >= $a && character <= $z)
           character &= ~asciiCaseBit;
       }
     }
+    // EO makeUpperCase
 
+    // Return new string converted to lowercase.
     sass::string toLowerCase(const sass::string& str) {
       sass::string rv(str);
       for (char& character : rv) {
@@ -102,7 +114,9 @@ namespace Sass {
       }
       return rv;
     }
+    // EO toLowerCase
 
+    // Return new string converted to uppercase.
     sass::string toUpperCase(const sass::string& str) {
       sass::string rv(str);
       for (char& character : rv) {
@@ -111,7 +125,10 @@ namespace Sass {
       }
       return rv;
     }
+    // EO toUpperCase
 
+    // Return list of strings split by `delimiter`.
+    // Optionally `trim` all results (default behavior).
     sass::vector<sass::string> split(sass::string str, char delimiter, bool trim)
     {
       sass::vector<sass::string> rv;
@@ -134,8 +151,9 @@ namespace Sass {
       // return back
       return rv;
     }
+    // EO split
 
-
+    // Return joined string from all passed strings, delimited by separator.
     sass::string join(const sass::vector<sass::string>& strings, const char* separator)
     {
       switch (strings.size())
@@ -145,9 +163,10 @@ namespace Sass {
       case 1:
         return strings[0];
       default:
-        size_t size = 0, sep_len = strlen(separator);
+        size_t size = strings[0].size();
+        size_t sep_len = strlen(separator);
         for (size_t i = 1; i < strings.size(); i++) {
-          size += strings[i].size() + sep_len;
+          size += sep_len + strings[i].size();
         }
         sass::string os;
         os.reserve(size);
@@ -159,6 +178,7 @@ namespace Sass {
         return os;
       }
     }
+    // EO join
 
   }
 }

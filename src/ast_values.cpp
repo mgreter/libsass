@@ -12,6 +12,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // This should be thread-safe
   static std::hash<bool> boolHasher;
   static std::hash<double> doubleHasher;
   static std::hash<std::size_t> sizetHasher;
@@ -23,7 +24,7 @@ namespace Sass {
   // Standard value constructor
   Value::Value(const SourceSpan& pstate)
     : Expression(pstate), hash_(0)
-  { }
+  {}
 
   // Return normalized index for vector from overflow-able sass index
   size_t Value::sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name)
@@ -849,13 +850,6 @@ namespace Sass {
 
   }
 
-  // StringExpression::StringExpression(const StringExpression* ptr, bool childless) :
-  //   Expression(ptr->pstate()),
-  //   text_(ptr->text_),
-  //   hasQuotes_(ptr->hasQuotes_)
-  // {
-  // }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -1060,7 +1054,7 @@ namespace Sass {
 
   ArgumentList::ArgumentList(
     const ArgumentList* ptr, bool childless) :
-    List(ptr),
+    List(ptr, childless),
     _keywords(ptr->_keywords),
     _wereKeywordsAccessed(ptr->_wereKeywordsAccessed)
   {
@@ -1071,8 +1065,9 @@ namespace Sass {
   {
     Map* map = SASS_MEMORY_NEW(Map, pstate());
     for (auto kv : _keywords) {
-      String* keystr = SASS_MEMORY_NEW( // XXXXXXXXYYYY
-        String, pstate(), kv.first.orig().substr(1));
+      String* keystr = SASS_MEMORY_NEW(
+        String, kv.second->pstate(),
+        kv.first.orig().substr(1));
       map->insert(keystr, kv.second);
     }
     return map;
