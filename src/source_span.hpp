@@ -19,10 +19,6 @@ namespace Sass
 							 const Offset& position = Offset(),
 							 const Offset& span = Offset());
 
-    // SourceSpan(SourceSpan&&);
-
-    // SourceSpan(const SourceSpan&);
-
     static SourceSpan tmp(const char* path);
 
 		// Offset size

@@ -6,7 +6,6 @@
 
 namespace Sass
 {
-
 	
 	// Stores a reference (shared ptr) to the source code
 	// and one offset position (line and column information).
