@@ -1142,9 +1142,9 @@ namespace Sass {
 
   // Consumes a supports condition and/or a media query after an `@import`.
   // Returns `null` if neither type of query can be found.
-  std::pair<SupportsCondition_Obj, InterpolationObj> StylesheetParser::tryImportQueries()
+  std::pair<SupportsConditionObj, InterpolationObj> StylesheetParser::tryImportQueries()
   {
-    SupportsCondition_Obj supports;
+    SupportsConditionObj supports;
     if (scanIdentifier("supports")) {
       scanner.expectChar($lparen);
       Offset start(scanner.offset);
@@ -3607,7 +3607,7 @@ namespace Sass {
         scanner.relevantSpanFrom(start), _supportsConditionInParens());
     }
 
-    SupportsCondition_Obj condition =
+    SupportsConditionObj condition =
       _supportsConditionInParens();
     whitespace();
     while (lookingAtIdentifier()) {
@@ -3621,7 +3621,7 @@ namespace Sass {
       }
 
       whitespace();
-      SupportsCondition_Obj right =
+      SupportsConditionObj right =
         _supportsConditionInParens();
       
       condition = SASS_MEMORY_NEW(SupportsOperation,
@@ -3646,7 +3646,7 @@ namespace Sass {
     whitespace();
     uint8_t next = scanner.peekChar();
     if (next == $lparen || next == $hash) {
-      SupportsCondition_Obj condition
+      SupportsConditionObj condition
         = _supportsCondition();
       whitespace();
       scanner.expectChar($rparen);
@@ -3654,7 +3654,7 @@ namespace Sass {
     }
 
     if (next == $n || next == $N) {
-      SupportsNegation_Obj negation
+      SupportsNegationObj negation
         = _trySupportsNegation();
       if (negation != nullptr) {
         scanner.expectChar($rparen);

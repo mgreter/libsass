@@ -196,7 +196,7 @@ namespace Sass {
 
     bool _isPlainImportUrl(const sass::string& url) const;
 
-    std::pair<SupportsCondition_Obj, InterpolationObj> tryImportQueries();
+    std::pair<SupportsConditionObj, InterpolationObj> tryImportQueries();
 
     IncludeRule* _includeRule2(Offset start); // IncludeRule
 

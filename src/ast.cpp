@@ -228,7 +228,7 @@ namespace Sass {
   StaticImport::StaticImport(
     const SourceSpan& pstate,
     InterpolationObj url,
-    SupportsCondition_Obj supports,
+    SupportsConditionObj supports,
     InterpolationObj media) :
     ImportBase(pstate),
     url_(url),

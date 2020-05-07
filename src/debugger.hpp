@@ -416,7 +416,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << (selector->has_real_parent_ref() ? " [real-parent]" : " -");
     std::cerr << std::endl;
 
-    for (const ComplexSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
+    for (const ComplexSelectorObj& i : selector->elements()) { debug_ast(i, ind + " "); }
 
   }
   else if (Cast<ComplexSelector>(node)) {
@@ -466,7 +466,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << (selector->hasPostLineBreak() ? " [hasPostLineBreak]" : " -");
     std::cerr << (selector->isInvisible() ? " [isInvisible]" : " -");
     std::cerr << "\n";
-    for (const SimpleSelector_Obj& i : selector->elements()) { debug_ast(i, ind + " "); }
+    for (const SimpleSelectorObj& i : selector->elements()) { debug_ast(i, ind + " "); }
 
   }
   else if (Cast<Parent_Reference>(node)) {
@@ -811,28 +811,28 @@ inline void debug_ast(AST_Node* node, std::string ind)
     debug_ast(block->name(), ind + "#");
     debug_ast(block->value(), ind + "=");
 
-    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+    for (const StatementObj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<Each>(node)) {
     Each* block = Cast<Each>(node);
     std::cerr << ind << "Each [" << debug_vec(block->variables()) << "]" << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+    for (const StatementObj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<For>(node)) {
     For* block = Cast<For>(node);
     std::cerr << ind << "For " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+    for (const StatementObj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<WhileRule>(node)) {
     WhileRule* block = Cast<WhileRule>(node);
     std::cerr << ind << "WhileRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs() << std::endl;
-    for (const Statement_Obj& i : block->elements()) { debug_ast(i, ind + " "); }
+    for (const StatementObj& i : block->elements()) { debug_ast(i, ind + " "); }
   }
 
 
@@ -1125,7 +1125,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "Has_Block " << has_block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << has_block->tabs() << std::endl;
-    for (const Statement_Obj& i : has_block->elements()) { debug_ast(i, ind + " "); }
+    for (const StatementObj& i : has_block->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<Statement>(node)) {
     Statement* statement = Cast<Statement>(node);

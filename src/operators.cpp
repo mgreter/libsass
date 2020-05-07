@@ -44,8 +44,8 @@ namespace Sass {
     bool cmp(ValueObj lhs, ValueObj rhs, const Sass_OP op)
     {
       // can only compare numbers!?
-      Number_Obj l = lhs->isNumber();
-      Number_Obj r = rhs->isNumber();
+      const Number* l = lhs->isNumber();
+      const Number* r = rhs->isNumber();
       // operation is undefined if one is not a number
       if (!l || !r) throw Exception::UndefinedOperation(lhs, rhs, op);
       // use compare operator from ast node

@@ -29,7 +29,7 @@ namespace Sass {
     // stores [AstNode]s rather than [FileSpan]s so it can avoid
     // calling [AstNode.span] if the span isn't required, since
     // some nodes need to do real work to manufacture a source span.
-    // sass::vector<Ast_Node_Obj> positionalNodes;
+    // sass::vector<Ast_NodeObj> positionalNodes;
 
     // Arguments passed by name.
     // A list implementation might be more efficient
@@ -42,7 +42,7 @@ namespace Sass {
     // [AstNode]s rather than [FileSpan]s so it can avoid calling
     // [AstNode.span] if the span isn't required, since some nodes
     // need to do real work to manufacture a source span.
-    // EnvKeyFlatMap<Ast_Node_Obj> namedNodes;
+    // EnvKeyFlatMap<Ast_NodeObj> namedNodes;
 
     // The separator used for the rest argument list, if any.
     ADD_REF(Sass_Separator, separator);
@@ -201,8 +201,8 @@ namespace Sass {
       const SourceSpan& pstate,
       bool selfAssign);
 
-    Boolean_Obj bool_true;
-    Boolean_Obj bool_false;
+    BooleanObj bool_true;
+    BooleanObj bool_false;
 
     SelectorListObj& selector();
     SelectorListObj& original();

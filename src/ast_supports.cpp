@@ -9,10 +9,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition)
+  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsConditionObj condition)
   : ParentStatement(pstate), condition_(condition), idxs_(0)
   {}
-  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, sass::vector<StatementObj>&& els)
+  SupportsRule::SupportsRule(const SourceSpan& pstate, SupportsConditionObj condition, sass::vector<StatementObj>&& els)
     : ParentStatement(pstate, std::move(els)), condition_(condition), idxs_(0)
   {}
 
@@ -26,14 +26,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsOperation::SupportsOperation(const SourceSpan& pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o)
+  SupportsOperation::SupportsOperation(const SourceSpan& pstate, SupportsConditionObj l, SupportsConditionObj r, Operand o)
   : SupportsCondition(pstate), left_(l), right_(r), operand_(o)
   { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  SupportsNegation::SupportsNegation(const SourceSpan& pstate, SupportsCondition_Obj c)
+  SupportsNegation::SupportsNegation(const SourceSpan& pstate, SupportsConditionObj c)
   : SupportsCondition(pstate), condition_(c)
   { }
 

@@ -40,11 +40,11 @@ namespace Sass {
   // `@supports` rule.
   ////////////////////
   class SupportsRule : public ParentStatement {
-    ADD_PROPERTY(SupportsCondition_Obj, condition);
+    ADD_PROPERTY(SupportsConditionObj, condition);
     ADD_POINTER(IDXS*, idxs);
   public:
-    SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition);
-    SupportsRule(const SourceSpan& pstate, SupportsCondition_Obj condition, sass::vector<StatementObj>&& els);
+    SupportsRule(const SourceSpan& pstate, SupportsConditionObj condition);
+    SupportsRule(const SourceSpan& pstate, SupportsConditionObj condition, sass::vector<StatementObj>&& els);
     // ATTACH_CLONE_OPERATIONS(SupportsRule)
     ATTACH_CRTP_PERFORM_METHODS()
   };
@@ -65,11 +65,11 @@ namespace Sass {
   public:
     enum Operand { AND, OR };
   private:
-    ADD_PROPERTY(SupportsCondition_Obj, left);
-    ADD_PROPERTY(SupportsCondition_Obj, right);
+    ADD_PROPERTY(SupportsConditionObj, left);
+    ADD_PROPERTY(SupportsConditionObj, right);
     ADD_PROPERTY(Operand, operand);
   public:
-    SupportsOperation(const SourceSpan& pstate, SupportsCondition_Obj l, SupportsCondition_Obj r, Operand o);
+    SupportsOperation(const SourceSpan& pstate, SupportsConditionObj l, SupportsConditionObj r, Operand o);
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
@@ -78,9 +78,9 @@ namespace Sass {
   //////////////////////////////////////////
   class SupportsNegation : public SupportsCondition {
   private:
-    ADD_PROPERTY(SupportsCondition_Obj, condition);
+    ADD_PROPERTY(SupportsConditionObj, condition);
   public:
-    SupportsNegation(const SourceSpan& pstate, SupportsCondition_Obj c);
+    SupportsNegation(const SourceSpan& pstate, SupportsConditionObj c);
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
