@@ -313,7 +313,7 @@ namespace Sass {
     // ##########################################################################
     Extension extensionForCompound(
       // Taking in a reference here makes MSVC debug stuck!?
-      const sass::vector<SimpleSelectorObj>& simples) const;
+      const CompoundSelectorObj& compound) const;
 
     // ##########################################################################
     // Extends [compound] using [extensions], and returns the

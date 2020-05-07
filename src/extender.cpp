@@ -663,11 +663,8 @@ namespace Sass {
   // ##########################################################################
   Extension Extender::extensionForCompound(
     // Taking in a reference here makes MSVC debug stuck!?
-    const sass::vector<SimpleSelectorObj>& simples) const
+    const CompoundSelectorObj& compound) const
   {
-    CompoundSelectorObj compound = SASS_MEMORY_NEW(CompoundSelector,
-      SourceSpan::tmp("[ext]"));
-    compound->concat(simples);
     Extension extension(compound->wrapInComplex());
     // extension.specificity = sourceSpecificity[simple];
     extension.isOriginal = true;
@@ -712,11 +709,11 @@ namespace Sass {
       else {
         if (options.empty()) {
           if (i != 0) {
-            sass::vector<SimpleSelectorObj> in;
-            for (size_t n = 0; n < i; n += 1) {
-              in.emplace_back(compound->get(n));
-            }
-            options.push_back({ extensionForCompound(in) });
+            sass::vector<SimpleSelectorObj> children;
+            children.insert(children.begin(),
+              compound->begin(), compound->begin() + i);
+            options.push_back({ extensionForCompound(SASS_MEMORY_NEW(
+              CompoundSelector, compound->pstate(), std::move(children))) });
           }
         }
         options.insert(options.end(),
