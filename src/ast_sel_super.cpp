@@ -386,7 +386,7 @@ namespace Sass {
       }
 
       // Find the first index where `complex2.sublist(i2, afterSuperselector)`
-      // is a subselector of [compound1]. We stop before the superselector
+      // is a sub-selector of [compound1]. We stop before the superselector
       // would encompass all of [complex2] because we know [complex1] has 
       // more than one element, and consuming all of [complex2] wouldn't 
       // leave anything for the rest of [complex1] to match.
@@ -477,7 +477,7 @@ namespace Sass {
     sass::vector<SelectorComponentObj> cplx1(complex1);
     sass::vector<SelectorComponentObj> cplx2(complex2);
     CompoundSelectorObj base = SASS_MEMORY_NEW(CompoundSelector,
-      SourceSpan::tmp("[tmp]"));
+      SourceSpan::tmp("[BASE]"));
     cplx1.emplace_back(base); cplx2.emplace_back(base);
     return complexIsSuperselector(cplx1, cplx2);
   }

@@ -59,8 +59,7 @@ enum Sass_OP {
 // Creator functions for all value types
 ADDAPI struct SassValue* ADDCALL sass_make_null    (void);
 ADDAPI struct SassValue* ADDCALL sass_make_boolean (bool val);
-ADDAPI struct SassValue* ADDCALL sass_make_string  (const char* val);
-ADDAPI struct SassValue* ADDCALL sass_make_qstring (const char* val);
+ADDAPI struct SassValue* ADDCALL sass_make_string  (const char* val, bool is_quoted);
 ADDAPI struct SassValue* ADDCALL sass_make_number  (double val, const char* unit);
 
 ADDAPI struct SassValue* ADDCALL sass_make_number2(double val, const char* unit);

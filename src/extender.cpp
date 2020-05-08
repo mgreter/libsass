@@ -651,7 +651,7 @@ namespace Sass {
     const SimpleSelectorObj& simple) const
   {
     Extension extension(simple->wrapInComplex());
-    extension.specificity = maxSourceSpecificity(simple);
+    // extension.specificity = maxSourceSpecificity(simple);
     extension.isOriginal = true;
     return extension;
   }

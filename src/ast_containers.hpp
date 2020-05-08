@@ -142,9 +142,17 @@ namespace Sass {
     // Remove and return item on the front
     T shift() {
       reset_hash();
-      T first = at(0);
+      T head = first();
       elements_.erase(begin());
-      return first;
+      return head;
+    }
+
+    // Remove and return item on the back
+    T pop() {
+      reset_hash();
+      T tail = last();
+      elements_.pop_back();
+      return tail;
     }
 
     // Insert one item on the back

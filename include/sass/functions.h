@@ -36,7 +36,7 @@ ADDAPI void ADDCALL sass_delete_importer (struct SassImporter* cb);
 // Creator for a single import entry returned by the custom importer inside the list
 ADDAPI struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum SassImportFormat type);
 // set error message to abort import and to print out a message (path from existing object is used in output)
-ADDAPI struct SassImport* ADDCALL sass_import_set_error(struct SassImport* import, const char* message, uint32_t line, uint32_t col);
+// ADDAPI struct SassImport* ADDCALL sass_import_set_error(struct SassImport* import, const char* message, uint32_t line, uint32_t col);
 
 // Getters for callee entry
 // ADDAPI const char* ADDCALL sass_callee_get_name (struct SassCallee*);
@@ -61,9 +61,9 @@ ADDAPI const char* ADDCALL sass_import_get_srcmap (struct SassImport*);
 ADDAPI enum SassImportFormat ADDCALL sass_import_get_type(struct SassImport*);
 
 // Getters from import error entry
-ADDAPI uint32_t ADDCALL sass_import_get_error_line (struct SassImport*);
-ADDAPI uint32_t ADDCALL sass_import_get_error_column (struct SassImport*);
-ADDAPI const char* ADDCALL sass_import_get_error_message (struct SassImport*);
+// ADDAPI uint32_t ADDCALL sass_import_get_error_line (struct SassImport*);
+// ADDAPI uint32_t ADDCALL sass_import_get_error_column (struct SassImport*);
+// ADDAPI const char* ADDCALL sass_import_get_error_message (struct SassImport*);
 
 // Just in case we have some stray import structs
 ADDAPI void ADDCALL sass_delete_import (struct SassImport*);

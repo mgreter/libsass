@@ -79,28 +79,28 @@ namespace Sass {
         if (LOAD_LIB_FN(__plugin_load_fns__, plugin_load_functions, "libsass_load_functions"))
         {
           struct SassFunctionList* fns = plugin_load_functions();
-          while (sass_function_list_size(fns) > 0) {
-            functions.emplace_back(sass_function_list_shift(fns));
-          }
-          sass_delete_function_list(fns); // only delete the container, items not yet
+          // while (sass_function_list_size(fns) > 0) {
+          //   functions.emplace_back(sass_function_list_shift(fns));
+          // }
+          // sass_delete_function_list(fns); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_importers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))
         {
           struct SassImporterList* imps = plugin_load_importers();
-          while (sass_importer_list_size(imps) > 0) {
-            importers.emplace_back(sass_importer_list_shift(imps));
-          }
-          sass_delete_importer_list(imps); // only delete the container, items not yet
+          // while (sass_importer_list_size(imps) > 0) {
+          //   importers.emplace_back(sass_importer_list_shift(imps));
+          // }
+          // sass_delete_importer_list(imps); // only delete the container, items not yet
         }
         // try to get import address for "libsass_load_headers"
         if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_headers, "libsass_load_headers"))
         {
           struct SassImporterList* imps = plugin_load_headers();
-          while (sass_importer_list_size(imps) > 0) {
-            headers.emplace_back(sass_importer_list_shift(imps));
-          }
-          sass_delete_importer_list(imps); // only delete the container, items not yet
+          // while (sass_importer_list_size(imps) > 0) {
+          //   headers.emplace_back(sass_importer_list_shift(imps));
+          // }
+          // sass_delete_importer_list(imps); // only delete the container, items not yet
         }
         // success
         return true;

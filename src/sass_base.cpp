@@ -6,10 +6,9 @@
 #include "terminal.hpp"
 #include "file.hpp"
 
-#ifdef __cplusplus
-namespace Sass {
+using namespace Sass;
+
 extern "C" {
-#endif
 
   void ADDCALL sass_chdir(const char* path)
   {
@@ -28,7 +27,4 @@ extern "C" {
     Terminal::print(message, false);
   }
 
-#ifdef __cplusplus
-} // __cplusplus defined.
-} // EO namespace Sass
-#endif
+}

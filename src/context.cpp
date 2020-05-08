@@ -95,7 +95,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, struct SassFunction* cb, str
   } \
   const char* inp_str = sass_string_get_value(inp); \
   std::string rv = fn(inp_str, comp); \
-  return sass_make_string(rv.c_str()); \
+  return sass_make_string(rv.c_str(), false); \
 } \
 
   IMPLEMENT_STR_FN(crc16s)
@@ -561,6 +561,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
 
     // Process custom importers and headers.
     // They must be presorted by priorities.
+    /*
     for (struct SassImporter* importer : importers) {
       // Get the external importer function
       SassImporterLambda fn = sass_importer_get_callback(importer);
@@ -642,7 +643,7 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
       }
     }
     // Return result
-    return has_import;
+    */return has_import;
   }
   // EO callCustomLoader
 

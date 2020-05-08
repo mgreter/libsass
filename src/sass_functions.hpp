@@ -22,28 +22,9 @@ class SourceDataObj;
 
 // External import entry
 struct SassImport {
-  //char* imp_path; // path as found in the import statement
-  // char *abs_path; // path after importer has resolved it
-  // char* source;
-  //char* srcmap;
-  // error handling
-  sass::string error;
-  uint32_t line;
-  uint32_t column;
   enum SassImportFormat format;
-  // the import type
-  // Sass_Import_Type type;
   Sass::SourceDataObj srcdata;
 };
-
-// // External call entry
-// struct SassCallee {
-//   const char* name;
-//   const char* path;
-//   uint32_t line;
-//   uint32_t column;
-//   enum Sass_Callee_Type type;
-// };
 
 // Struct to hold importer callback
 struct SassImporter {
