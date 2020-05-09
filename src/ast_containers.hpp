@@ -102,7 +102,8 @@ namespace Sass {
     void concat(const sass::vector<T>& v)
     {
       if (v.empty()) return;
-      elements().insert(end(), v.begin(), v.end());
+      elements_.insert(end(),
+        v.begin(), v.end());
       reset_hash();
     }
 
@@ -110,8 +111,9 @@ namespace Sass {
     void concat(sass::vector<T>&& v)
     {
       if (v.empty()) return;
-      std::move(v.begin(), v.end(),
-        std::back_inserter(elements_));
+      elements_.insert(elements_.end(),
+        std::make_move_iterator(v.begin()),
+        std::make_move_iterator(v.end()));
       reset_hash();
     }
 
@@ -199,13 +201,6 @@ namespace Sass {
         }
       }
       return false;
-    }
-
-    // This might be better implemented as `operator=`?
-    void elementsC(const sass::vector<T>& e)
-    {
-      reset_hash();
-      elements_ = e;
     }
 
     // This might be better implemented as `operator=`?
@@ -299,7 +294,7 @@ namespace Sass {
     size_t size() const { return elements_.size(); }
     bool empty() const { return elements_.empty(); }
 
-    bool has(K k) const {
+    bool has(const K& k) const {
       return elements_.count(k) == 1;
     }
 
@@ -308,13 +303,13 @@ namespace Sass {
       elements_.reserve(size);
     }
 
-    T at(K k) const {
+    T at(const K& k) const {
       auto it = elements_.find(k);
       if (it == elements_.end()) return {};
       else return it->second;
     }
 
-    bool erase(K key)
+    bool erase(const K& key)
     {
       reset_hash();
       return elements_.erase(key) != 0;
@@ -326,19 +321,38 @@ namespace Sass {
       elements_[kv.first] = kv.second;
     }
 
-    void insert(K key, T val)
+    void insert(const K& key, const T& val)
     {
       reset_hash();
       elements_[key] = val;
     }
 
-    void concat(Hashed<K, T> arr)
+    void insert(const K& key, T&& val)
     {
       reset_hash();
-      for (const auto& kv : arr) {
+      elements_[key] = std::move(val);
+    }
+
+    void concat(const Hashed<K, T>& map)
+    {
+      reset_hash();
+      for (const auto& kv : map) {
         elements_[kv.first] = kv.second;
       }
-      // elements_.append(arr.elements());
+    }
+
+    void concat(Hashed<K, T>&& map)
+    {
+      reset_hash();
+      for (auto& kv : map) {
+        auto it = elements_.find(kv.first);
+        if (it != elements_.end()) {
+          *it = std::move(kv.second);
+        }
+        else {
+          elements_.insert(std::move(kv));
+        }
+      }
     }
 
     // Return unmodifiable reference
