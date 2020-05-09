@@ -70,8 +70,6 @@ namespace Sass {
       return true;
     }
 
-    bool hasVisibleSibling(CssParentNode* node);
-
     virtual bool isInvisibleSibling() const override;
 
     // bool get isChildless;
@@ -450,9 +448,6 @@ namespace Sass {
     bool isInvisibleCss() const override final {
       return queries_.empty() || CssParentNode::isInvisibleCss();
     }
-
-    // Append additional media queries
-    void concat(const sass::vector<CssMediaQueryObj>& queries);
 
     // Check if two instances are considered equal
     bool operator== (const CssMediaRule& rhs) const;

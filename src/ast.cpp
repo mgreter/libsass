@@ -137,36 +137,6 @@ namespace Sass {
     : ParentStatement(std::move(pstate), std::move(els)), interpolation_(s), idxs_(0)
   {}
 
-  bool CssStyleRule::isInvisibleCss() const
-  {
-    bool sel_invisible = true;
-    if (const SelectorList * sl = selector()) {
-      for (auto child : sl->elements()) {
-        if (!child->is_invisible()) {
-          sel_invisible = false;
-          break;
-        }
-      }
-    }
-    if (sel_invisible) return true;
-    for (CssNode* item : elements()) {
-      if (!item->isInvisibleCss()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool CssStyleRule::isInvisibleSibling() const {
-    if (selector_->isInvisible()) return true;
-    for (auto child : elements_) {
-      if (!child->isInvisibleSibling()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

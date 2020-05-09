@@ -53,53 +53,16 @@ namespace Sass {
   {
     if (!childless) elements_ = ptr->elements_;
   }
+
   bool CssParentNode::isInvisibleSibling() const
   {
-
-    // An unknown at-rule is never invisible. Because we don't know the
-    // semantics of unknown rules, we can't guarantee that (for example)
-    // `@foo {}` isn't meaningful.
-    // if (auto atr = Cast<CssAtRule>(node)) {
-    //   //std::cerr << "Saw atRule\n";
-    //   return atr->isInvisibleSibling();
-    // }
-    // 
-    // auto styleRule = Cast<CssStyleRule>(node);
-    // if (styleRule && styleRule->selector()) {
-    //   if (styleRule->isInvisibleSibling()) {
-    //     return true;
-    //   }
-    // }
-
     for (auto item : elements()) {
       if (!item->isInvisibleSibling()) {
         return false;
       }
     }
-
     return true;
   }
-
-  bool CssParentNode::hasVisibleSibling(CssParentNode* node)
-  {
-    if (node->parent_ == nullptr) return false;
-
-    CssParentNode* siblings = node->parent_;
-
-    auto it = std::find(siblings->begin(), siblings->end(), node);
-
-    while (++it != siblings->end()) {
-      // Special context for invisibility!
-      // dart calls this out to the parent
-      CssNode* child = *it;
-      if (!child->isInvisibleCss()) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -308,6 +271,33 @@ namespace Sass {
     selector_(ptr->selector_)
   {}
 
+
+  bool CssStyleRule::isInvisibleCss() const
+  {
+    bool sel_invisible = true;
+    if (const SelectorList* sl = selector()) {
+      for (auto child : sl->elements()) {
+        if (!child->is_invisible()) {
+          sel_invisible = false;
+          break;
+        }
+      }
+    }
+    if (sel_invisible) return true;
+    for (CssNode* item : elements()) {
+      if (!item->isInvisibleCss()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool CssStyleRule::isInvisibleSibling() const
+  {
+    if (selector_->isInvisible()) return true;
+    return CssParentNode::isInvisibleSibling();
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
@@ -330,8 +320,8 @@ namespace Sass {
 
   bool CssSupportsRule::isInvisibleCss() const
   {
-    for (auto stmt : elements()) {
-      if (!stmt->isInvisibleCss()) return false;
+    for (auto child : elements()) {
+      if (!child->isInvisibleCss()) return false;
     }
     return true;
   }
@@ -376,13 +366,6 @@ namespace Sass {
   }
   // EO operator==
 
-  // Append additional media queries
-  void CssMediaRule::concat(const sass::vector<CssMediaQueryObj>& queries)
-  {
-    queries_.concat(queries);
-  }
-  // EO concat(List<CssMediaQuery>)
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -420,28 +403,27 @@ namespace Sass {
     sass::string theirModifier(other->modifier());
     StringUtils::makeLowerCase(theirModifier);
 
-    sass::string type;
-    sass::string modifier;
+    sass::string type, modifier;
     sass::vector<sass::string> features;
 
     if (ourType.empty() && theirType.empty()) {
       CssMediaQueryObj query = SASS_MEMORY_NEW(CssMediaQuery, pstate());
-      sass::vector<sass::string> f1(this->features());
-      sass::vector<sass::string> f2(other->features());
+      const sass::vector<sass::string>& f1(this->features());
+      const sass::vector<sass::string>& f2(other->features());
       features.insert(features.end(), f1.begin(), f1.end());
       features.insert(features.end(), f2.begin(), f2.end());
       query->features(features);
       return query;
     }
 
-    bool ourModifierIsNot = StringUtils::equalsIgnoreCase(ourModifier, "not", 3);
-    bool theirModifierIsNot = StringUtils::equalsIgnoreCase(theirModifier, "not", 3);
+    bool ourModifierIsNot = (ourModifier == "not");
+    bool theirModifierIsNot = (theirModifier == "not");
 
     if (ourModifierIsNot != theirModifierIsNot) {
       if (ourType == theirType) {
-        sass::vector<sass::string> negativeFeatures =
+        const sass::vector<sass::string>& negativeFeatures =
           ourModifierIsNot ? this->features() : other->features();
-        sass::vector<sass::string> positiveFeatures =
+        const sass::vector<sass::string>& positiveFeatures =
           ourModifierIsNot ? other->features() : this->features();
 
         // If the negative features are a subset of the positive features, the
