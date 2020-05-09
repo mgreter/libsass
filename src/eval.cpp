@@ -296,6 +296,8 @@ namespace Sass {
 
     bool hasFaba = false;
 
+
+
     if (parent->parent_ != nullptr) {
 
       CssParentNode* siblings = parent->parent_;
@@ -309,7 +311,10 @@ namespace Sass {
       while (++it != siblings->end()) {
         // Special context for invisibility!
         // dart calls this out to the parent
-        if (!parent->_isInvisible2(*it)) {
+        const CssNode* child = *it;
+        // hasFollowingSibling
+        // if (!parent->_isInvisible2(*it)) {
+        if (!child->isInvisibleSibling()) {
           hasFaba = true;
           break;
         }

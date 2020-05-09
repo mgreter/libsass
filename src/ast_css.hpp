@@ -23,6 +23,8 @@ namespace Sass {
 
     virtual bool isInvisibleCss() const { return false; }
 
+    virtual bool isInvisibleSibling() const { return false; }
+
 
     // size_t tabs() const { return 0; }
     // void tabs(size_t tabs) const { }
@@ -61,15 +63,16 @@ namespace Sass {
 
     bool empty() const
     {
-      // Is invisible until something is visible
+      // Is empty until something is visible
       for (auto child : elements()) {
         if (!child->isInvisibleCss()) return false;
       }
       return true;
     }
 
-    bool _isInvisible2(CssNode* node);
     bool hasVisibleSibling(CssParentNode* node);
+
+    virtual bool isInvisibleSibling() const override;
 
     // bool get isChildless;
 //    ATTACH_VIRTUAL_COPY_OPERATIONS(CssParentNode);
@@ -155,6 +158,14 @@ namespace Sass {
       CssString* name,
       CssString* value,
       sass::vector<CssNodeObj>&& children);
+
+    bool isInvisibleCss() const override final {
+      return false;
+    }
+
+    bool isInvisibleSibling() const override final {
+      return false;
+    }
 
     ATTACH_COPY_CTOR(CssAtRule);
     ATTACH_CRTP_PERFORM_METHODS();
@@ -278,6 +289,8 @@ namespace Sass {
 
     // Selector and one child must be visible
     bool isInvisibleCss() const override final;
+
+    bool isInvisibleSibling() const override final;
 
     bool bubbleThroughStyleRule() const override final { return true; }
     CssParentNode* bubbleThroughStyleRule2() override final {
@@ -433,6 +446,10 @@ namespace Sass {
     }
 
     bool isInvisible5() const { return queries_.empty(); };
+
+    bool isInvisibleCss() const override final {
+      return queries_.empty() || CssParentNode::isInvisibleCss();
+    }
 
     // Append additional media queries
     void concat(const sass::vector<CssMediaQueryObj>& queries);

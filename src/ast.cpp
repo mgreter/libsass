@@ -157,6 +157,16 @@ namespace Sass {
     return true;
   }
 
+  bool CssStyleRule::isInvisibleSibling() const {
+    if (selector_->isInvisible()) return true;
+    for (auto child : elements_) {
+      if (!child->isInvisibleSibling()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

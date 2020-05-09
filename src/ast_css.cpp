@@ -1,5 +1,6 @@
 #include "string_utils.hpp"
 #include "ast_css.hpp"
+#include "debugger.hpp"
 #include "strings.hpp"
 #include "util.hpp"
 #include "ast.hpp"
@@ -52,36 +53,31 @@ namespace Sass {
   {
     if (!childless) elements_ = ptr->elements_;
   }
-
-  bool CssParentNode::_isInvisible2(CssNode* asd)
+  bool CssParentNode::isInvisibleSibling() const
   {
-    if (auto node = Cast<CssParentNode>(asd)) {
-      // An unknown at-rule is never invisible. Because we don't know the
-      // semantics of unknown rules, we can't guarantee that (for example)
-      // `@foo {}` isn't meaningful.
-      if (Cast<CssAtRule>(node)) {
-        //std::cerr << "Saw atRule\n";
+
+    // An unknown at-rule is never invisible. Because we don't know the
+    // semantics of unknown rules, we can't guarantee that (for example)
+    // `@foo {}` isn't meaningful.
+    // if (auto atr = Cast<CssAtRule>(node)) {
+    //   //std::cerr << "Saw atRule\n";
+    //   return atr->isInvisibleSibling();
+    // }
+    // 
+    // auto styleRule = Cast<CssStyleRule>(node);
+    // if (styleRule && styleRule->selector()) {
+    //   if (styleRule->isInvisibleSibling()) {
+    //     return true;
+    //   }
+    // }
+
+    for (auto item : elements()) {
+      if (!item->isInvisibleSibling()) {
         return false;
       }
-
-      auto styleRule = Cast<CssStyleRule>(node);
-      if (styleRule && styleRule->selector()->empty()) {
-        //std::cerr << "Saw invisible selector\n";
-        return true;
-      }
-
-      for (auto item : node->elements()) {
-        if (!_isInvisible2(item)) {
-          //std::cerr << "Saw visible child\n";
-          return false;
-        }
-      }
-
-      return true;
     }
-    else {
-      return false;
-    }
+
+    return true;
   }
 
   bool CssParentNode::hasVisibleSibling(CssParentNode* node)
@@ -95,7 +91,8 @@ namespace Sass {
     while (++it != siblings->end()) {
       // Special context for invisibility!
       // dart calls this out to the parent
-      if (!_isInvisible2(*it)) {
+      CssNode* child = *it;
+      if (!child->isInvisibleCss()) {
         return true;
       }
     }

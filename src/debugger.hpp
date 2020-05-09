@@ -358,6 +358,14 @@ inline void debug_block(Root* node, std::string ind)
   }
 }
 
+inline void debug_css_parent_node(CssParentNode* rule, std::string ind = "")
+{
+  std::cerr << ind << "CssParentNode " << rule;
+  std::cerr << " (" << pstate_source_position(rule) << ")";
+  std::cerr << std::endl;
+  debug_block(rule, ind + " ");
+}
+
 inline void debug_ast(AST_Node* node, std::string ind)
 {
   if (node == 0) return;
@@ -584,7 +592,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (auto item : rule->elements()) {
       debug_ast(item, ind + " !! ");
     }
-    // debug_ast(rule, ind + " :: ");
+    debug_css_parent_node(rule, ind + " :: ");
   }
   else if (Cast<CssDeclaration>(node)) {
     CssDeclaration* rule = Cast<CssDeclaration>(node);
