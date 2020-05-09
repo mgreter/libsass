@@ -8,37 +8,37 @@ extern "C" {
 #endif
 
 // Creator for sass custom importer return argument list
-ADDAPI struct SassImportList* ADDCALL sass_make_import_list();
-ADDAPI void ADDCALL sass_delete_import_list(struct SassImportList* list);
-ADDAPI size_t ADDCALL sass_import_list_size(struct SassImportList* list);
-ADDAPI struct SassImport* ADDCALL sass_import_list_shift(struct SassImportList* list);
-ADDAPI void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport*);
+// ADDAPI struct SassImportList* ADDCALL sass_make_import_list();
+// ADDAPI void ADDCALL sass_delete_import_list(struct SassImportList* list);
+// ADDAPI size_t ADDCALL sass_import_list_size(struct SassImportList* list);
+// ADDAPI struct SassImport* ADDCALL sass_import_list_shift(struct SassImportList* list);
+// ADDAPI void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport*);
 
 // Creator for sass custom importer return argument list
-ADDAPI struct SassImporterList* ADDCALL sass_make_importer_list ();
-ADDAPI void ADDCALL sass_delete_importer_list(struct SassImporterList* list);
-ADDAPI size_t ADDCALL sass_importer_list_size(struct SassImporterList* list);
-ADDAPI struct SassImporter* ADDCALL sass_importer_list_shift(struct SassImporterList* list);
-ADDAPI void ADDCALL sass_importer_list_push(struct SassImporterList* list, struct SassImporter*);
+// ADDAPI struct SassImporterList* ADDCALL sass_make_importer_list ();
+// ADDAPI void ADDCALL sass_delete_importer_list(struct SassImporterList* list);
+// ADDAPI size_t ADDCALL sass_importer_list_size(struct SassImporterList* list);
+// ADDAPI struct SassImporter* ADDCALL sass_importer_list_shift(struct SassImporterList* list);
+// ADDAPI void ADDCALL sass_importer_list_push(struct SassImporterList* list, struct SassImporter*);
 
 // Creators for custom importer callback (with some additional pointer)
 // The pointer is mostly used to store the callback into the actual binding
-ADDAPI struct SassImporter* ADDCALL sass_make_importer (SassImporterLambda importer, double priority, void* cookie);
+  ADDAPI struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda importer, double priority, void* cookie);
 
-// Getters for import function descriptors
-ADDAPI SassImporterLambda ADDCALL sass_importer_get_callback(struct SassImporter* cb);
-ADDAPI double ADDCALL sass_importer_get_priority (struct SassImporter* cb);
-ADDAPI void* ADDCALL sass_importer_get_cookie (struct SassImporter* cb);
+  // Getters for import function descriptors
+  ADDAPI SassImporterLambda ADDCALL sass_importer_get_callback(struct SassImporter* cb);
+  ADDAPI double ADDCALL sass_importer_get_priority(struct SassImporter* cb);
+  ADDAPI void* ADDCALL sass_importer_get_cookie(struct SassImporter* cb);
 
-// Deallocator for associated memory
-ADDAPI void ADDCALL sass_delete_importer (struct SassImporter* cb);
+  // Deallocator for associated memory
+  ADDAPI void ADDCALL sass_delete_importer(struct SassImporter* cb);
 
-// Creator for a single import entry returned by the custom importer inside the list
-ADDAPI struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum SassImportFormat type);
-// set error message to abort import and to print out a message (path from existing object is used in output)
-// ADDAPI struct SassImport* ADDCALL sass_import_set_error(struct SassImport* import, const char* message, uint32_t line, uint32_t col);
+  // Creator for a single import entry returned by the custom importer inside the list
+  ADDAPI struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_base, char* source, char* srcmap, enum SassImportFormat format);
+  // set error message to abort import and to print out a message (path from existing object is used in output)
+  // ADDAPI struct SassImport* ADDCALL sass_import_set_error(struct SassImport* import, const char* message, uint32_t line, uint32_t col);
 
-// Getters for callee entry
+  // Getters for callee entry
 // ADDAPI const char* ADDCALL sass_callee_get_name (struct SassCallee*);
 // ADDAPI const char* ADDCALL sass_callee_get_path (struct SassCallee*);
 // ADDAPI uint32_t ADDCALL sass_callee_get_line (struct SassCallee*);

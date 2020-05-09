@@ -11,8 +11,8 @@ extern "C" {
   ADDAPI int ADDCALL sass_error_get_status(struct SassError* error);
   ADDAPI char* ADDCALL sass_error_get_json(struct SassError* error);
   ADDAPI const char* ADDCALL sass_error_get_what(struct SassError* error);
-  ADDAPI const char* ADDCALL sass_error_get_messages(struct SassError* error);
-  ADDAPI const char* ADDCALL sass_error_get_warnings(struct SassError* error);
+  // ADDAPI const char* ADDCALL sass_error_get_messages(struct SassError* error);
+  // ADDAPI const char* ADDCALL sass_error_get_warnings(struct SassError* error);
   ADDAPI const char* ADDCALL sass_error_get_formatted(struct SassError* error);
 
   // These are here for convenience, could get them also indirectly

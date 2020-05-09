@@ -21,14 +21,8 @@ namespace Sass {
     // Epsilon for precision
     double epsilon;
 
-    // output buffers
-    sass::ostream errors;
-
     // warning buffers
-    sass::ostream warnings;
-
-    // formatted buffers
-    sass::ostream formatted;
+    sass::ostream warnings12;
 
     // The current callstack
     BackTraces callStack;
@@ -67,6 +61,17 @@ namespace Sass {
     void writeWarnHead(
       bool deprecation = false);
 
+    // Print to stderr stream
+    void printWarning(
+      const sass::string& message,
+      const SourceSpan& pstate,
+      bool deprecation = false);
+
+    void printSourceSpan(
+      SourceSpan pstate,
+      sass::ostream& stream,
+      enum SassLoggerStyle logstyle);
+
   public:
 
     void writeStackTraces(sass::ostream& os,
@@ -75,26 +80,23 @@ namespace Sass {
 													bool showPos = true,
 													size_t showTraces = sass::string::npos);
 
-
-
   public:
 
     Logger(size_t precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
 
-    void format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum SassLoggerStyle logstyle);
-
-    /*
-    virtual void warn(sass::string message) const = 0;
-    virtual void debug(sass::string message) const = 0;
-    virtual void error(sass::string message) const = 0;
-    void addWarn(const sass::string& message);
-    */
-
-
-    void addWarn43(const sass::string& message, bool deprecation = false);
-    void addWarn33(const sass::string& message, const SourceSpan& pstate, bool deprecation = false);
-
     void setPrecision(size_t precision);
+
+    void addWarning(const sass::string& message);
+
+    void addWarning(const sass::string& message, const SourceSpan& pstate)
+    {
+      printWarning(message, pstate, false);
+    }
+
+    void addDeprecation(const sass::string& message, const SourceSpan& pstate)
+    {
+      printWarning(message, pstate, true);
+    }
 
   public:
 

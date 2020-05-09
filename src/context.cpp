@@ -694,10 +694,10 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
 
   }
 
-  sass::string Context::render_stderr()
-  {
-    return logger123->errors.str();
-  }
+  //sass::string Context::render_stderr()
+  //{
+  //  return logger123->errors12.str();
+  //}
 
 
 

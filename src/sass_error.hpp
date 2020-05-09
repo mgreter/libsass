@@ -27,8 +27,13 @@ public:
 
   // Streams from logger
   // Also when status is 0
-  sass::string messages; // go into warnings!!!
-  sass::string warnings;
+
+  // sass::string messages86;
+
+  // Contains all @debug and deprecation warnings
+  // Must be all in one to keep the output order
+  // sass::string warnings86;
+
   sass::string formatted;
 
   // Constructor

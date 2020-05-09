@@ -26,6 +26,7 @@ extern "C" {
     // Returns pointer to error object associated with compiler.
     // Will be valid until the associated compiler is destroyed.
     ADDAPI struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* compiler);
+    ADDAPI const char* ADDCALL sass_compiler_get_stderr(struct SassCompiler* compiler);
 
     // Push function for paths (no manipulation support for now)
     ADDAPI void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* paths);
@@ -48,6 +49,7 @@ extern "C" {
     // ADDAPI void ADDCALL sass_compiler_set_source_map_root(struct SassCompiler* compiler, const char* source_map_root);
 
     // Getter for sass compiler results
+    ADDAPI const char* ADDCALL sass_compiler_get_stderr_string(struct SassCompiler* compiler);
     ADDAPI const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler);
     ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* compiler);
     ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);

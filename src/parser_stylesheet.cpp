@@ -268,7 +268,7 @@ namespace Sass {
       itpl.ptr());
     rule->idxs(local.getIdxs());
     if (isIndented() && rule->empty()) {
-      context.logger123->addWarn33(
+      context.logger123->addWarning(
         "This selector doesn't have any properties and won't be rendered.",
         selectorPstate);
     }
@@ -1404,10 +1404,10 @@ namespace Sass {
 
     if (needsDeprecationWarning) {
 
-      context.logger123->addWarn33(
+      context.logger123->addDeprecation(
         "@-moz-document is deprecated and support will be removed from Sass "
         "in a future release. For details, see http://bit.ly/moz-document.",
-        atRule->pstate(), true);
+        atRule->pstate());
     }
 
     return atRule;
@@ -2635,7 +2635,7 @@ namespace Sass {
     scanner.expectChar($ampersand);
 
     if (scanner.scanChar($ampersand)) {
-      context.logger123->addWarn33(
+      context.logger123->addWarning(
         "In Sass, \"&&\" means two copies of the parent selector. You "
         "probably want to use \"and\" instead.",
         scanner.relevantSpanFrom(start));

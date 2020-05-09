@@ -303,9 +303,9 @@ namespace Sass {
   Number::Number(const SourceSpan& pstate, double val, const sass::string& u, bool zero)
   : Value(pstate),
     Units(u),
+    zero_(zero),
     value_(val),
     // epsilon_(0.00001),
-    zero_(zero),
     lhsAsSlash_(),
     rhsAsSlash_()
   {

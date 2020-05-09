@@ -67,6 +67,10 @@ namespace Sass {
 
   void Compiler::parse()
   {
+    if (entry_point == nullptr) {
+      throw std::runtime_error(
+        "No entry point given for parsing.");
+    }
     // Check if anything was actually loaded
     // This should only happen with SourceFile
     // SourceString will always return empty string

@@ -41,6 +41,9 @@ namespace Sass {
     // The rendered css content.
     sass::string content;
 
+    // Rendered warnings and debugs.
+    sass::string warnings;
+
     // The rendered output footer. This includes the
     // rendered css comment footer for the source-map.
     // Append after output for the full output document.
@@ -52,6 +55,8 @@ namespace Sass {
 
     // Runtime error
     SassError error;
+
+
     /*
     // error status
     int error_status;

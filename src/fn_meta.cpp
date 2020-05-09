@@ -200,10 +200,10 @@ namespace Sass {
 
         if (String * str = function->isString()) {
           sass::string name = unquote(str->value());
-          ctx.logger123->addWarn33(
+          ctx.logger123->addDeprecation(
             "Passing a string to call() is deprecated and will be illegal in LibSass "
             "4.1.0. Use call(get-function(" + str->toValString() + ")) instead.",
-            str->pstate(), true);
+            str->pstate());
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(String, pstate, str->value()));

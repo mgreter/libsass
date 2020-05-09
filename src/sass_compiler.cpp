@@ -9,14 +9,14 @@ namespace Sass {
   static int handle_error(Compiler& compiler, StackTraces* traces, const char* what, int status)
   {
 
-    Logger& logger(*compiler.logger123);
-
+    sass::ostream formatted;
     bool has_final_lf = false;
-    logger.formatted << "Error: ";
+    Logger& logger(*compiler.logger123);
+    formatted << "Error: ";
     // Add message and ensure it is
     // added with a final line-feed.
     if (what != nullptr) {
-      logger.formatted << what;
+      formatted << what;
       while (*what) {
         has_final_lf =
           *what == '\r' ||
@@ -24,7 +24,7 @@ namespace Sass {
         ++what;
       }
       if (!has_final_lf) {
-        logger.formatted << STRMLF;
+        formatted << STRMLF;
       }
     }
 
@@ -33,7 +33,7 @@ namespace Sass {
     // Some stuff is only logged if we have some traces
     // Otherwise we don't know where the error comes from
     if (traces && traces->size() > 0) {
-      logger.writeStackTraces(logger.formatted, *traces, "  ");
+      logger.writeStackTraces(formatted, *traces, "  ");
       // Copy items over to error object
       compiler.error.traces = *traces;
     }
@@ -42,9 +42,7 @@ namespace Sass {
     compiler.error.what.clear();
     if (what) compiler.error.what = what;
     compiler.error.status = status;
-    compiler.error.messages = logger.errors.str();
-    compiler.error.warnings = logger.warnings.str();
-    compiler.error.formatted = logger.formatted.str();
+    compiler.error.formatted = formatted.str();
 
     return status;
 
@@ -87,17 +85,21 @@ namespace Sass {
     bool ADDCALL sass_compiler_parse(struct SassCompiler* sass_compiler)
     {
       Compiler& compiler(Compiler::unwrap(sass_compiler));
-      try { compiler.parse(); return true; }
+      bool success = false;
+      try { compiler.parse(); success = true; }
       catch (...) { handle_errors(compiler); }
-      return false;
+      compiler.warnings = compiler.logger123->warnings12.str();
+      return success;
     }
 
     bool ADDCALL sass_compiler_compile(struct SassCompiler* sass_compiler)
     {
       Compiler& compiler(Compiler::unwrap(sass_compiler));
-      try { compiler.compile(); return true; }
+      bool success = false;
+      try { compiler.compile(); success = true; }
       catch (...) { handle_errors(compiler); }
-      return false;
+      compiler.warnings = compiler.logger123->warnings12.str();
+      return success;
     }
 
     bool ADDCALL sass_compiler_render(struct SassCompiler* sass_compiler)
@@ -108,15 +110,10 @@ namespace Sass {
 
       try {
 
+        compiler.error.status = 0;
         // This will hopefully use move semantics
         OutputBuffer output(compiler.renderCss());
-
-        compiler.content = output.buffer;
-
-        compiler.error.status = 0;
-        compiler.error.messages = compiler.logger123->errors.str();
-        compiler.error.warnings = compiler.logger123->warnings.str();
-        compiler.error.formatted = compiler.logger123->formatted.str();
+        compiler.content = std::move(output.buffer);
 
         // Create options to render source map and footer.
         struct SassSrcMapOptions options(compiler.srcmap_options);
@@ -148,7 +145,6 @@ namespace Sass {
           break;
         }
 
-        // std::cerr << "FINISHES " << SharedObj::moves << " vs " << SharedObj::copies << "\n";
         // Success
         return true;
       }
@@ -159,8 +155,6 @@ namespace Sass {
 
     }
     // EO sass_compiler_render
-
-
 
     struct SassImport* ADDCALL sass_make_file_import(struct SassCompiler* sass_compiler, const char* imp_path)
     {
@@ -203,6 +197,12 @@ namespace Sass {
     {
       if (Compiler::unwrap(compiler).content.empty()) return nullptr;
       return Compiler::unwrap(compiler).content.c_str();
+    }
+
+    ADDAPI const char* ADDCALL sass_compiler_get_stderr_string(struct SassCompiler* compiler)
+    {
+      if (Compiler::unwrap(compiler).warnings.empty()) return nullptr;
+      return Compiler::unwrap(compiler).warnings.c_str();
     }
 
     ADDAPI const char* ADDCALL sass_compiler_get_footer_string(struct SassCompiler* compiler)
@@ -250,7 +250,6 @@ namespace Sass {
     {
       Compiler::unwrap(compiler).precision = precision;
       Compiler::unwrap(compiler).logger123->setPrecision(precision);
-
     }
 
     int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler)
@@ -321,6 +320,11 @@ namespace Sass {
     struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* compiler)
     {
       return &Compiler::unwrap(compiler).error;
+    }
+
+    const char* ADDCALL sass_compiler_get_stderr(struct SassCompiler* compiler)
+    {
+      return Compiler::unwrap(compiler).warnings.c_str();
     }
 
     size_t ADDCALL sass_compiler_count_traces(struct SassCompiler* compiler)

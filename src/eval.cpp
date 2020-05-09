@@ -1178,7 +1178,7 @@ namespace Sass {
 
       BackTrace trace(node->pstate());
       callStackFrame frame(*compiler.logger123, trace);
-      logger456.addWarn43(result, false);
+      logger456.addWarning(result);
 
     }
     // options().output_style = outstyle;
@@ -1252,9 +1252,9 @@ namespace Sass {
       // options().output_style = outstyle;
 
       // How to access otherwise?
-      logger456.warnings <<
+      logger456.warnings12 <<
         output_path << ":" << node->pstate().getLine() << " DEBUG: " << result;
-      logger456.warnings << STRMLF;
+      logger456.warnings12 << STRMLF;
 
     }
 
@@ -2135,19 +2135,19 @@ namespace Sass {
       // Check if we are at the global scope
       if (compiler.varRoot.isGlobal()) {
         if (!compiler.varRoot.getGlobalVariable(name)) {
-          logger456.addWarn33(
+          logger456.addDeprecation(
             "As of LibSass 4.1, !global assignments won't be able to declare new"
             " variables. Since this assignment is at the root of the stylesheet,"
             " the !global flag is unnecessary and can safely be removed.",
-            a->pstate(), true);
+            a->pstate());
         }
       }
       else {
         if (!compiler.varRoot.getGlobalVariable(name)) {
-          logger456.addWarn33(
+          logger456.addDeprecation(
             "As of LibSass 4.1, !global assignments won't be able to declare new variables."
             " Consider adding `" + name.orig() + ": null` at the root of the stylesheet.",
-            a->pstate(), true);
+            a->pstate());
         }
       }
 
@@ -2300,7 +2300,7 @@ namespace Sass {
             }
             sels << "` instead. See http://bit.ly/ExtendCompound for details.";
 
-            logger456.addWarn33(sels.str(), compound->pstate());
+            logger456.addDeprecation(sels.str(), compound->pstate());
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {

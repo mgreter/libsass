@@ -45,14 +45,14 @@ namespace Sass {
   void Logger::writeWarnHead(bool deprecation)
   {
     if (style & SASS_LOGGER_COLOR) {
-      warnings << getColor(Terminal::yellow);
-      if (!deprecation) warnings << "Warning";
-      else warnings << "Deprecation Warning";
-      warnings << getColor(Terminal::reset);
+      warnings12 << getColor(Terminal::yellow);
+      if (!deprecation) warnings12 << "Warning";
+      else warnings12 << "Deprecation Warning";
+      warnings12 << getColor(Terminal::reset);
     }
     else {
-      if (!deprecation) warnings << "WARNING";
-      else warnings << "DEPRECATION WARNING";
+      if (!deprecation) warnings12 << "WARNING";
+      else warnings12 << "DEPRECATION WARNING";
     }
   }
 
@@ -88,39 +88,40 @@ namespace Sass {
   }
 
   // Print a warning without any SourceSpan (used by @warn)
-  void Logger::addWarn43(const sass::string& message, bool deprecation)
+  void Logger::addWarning(const sass::string& message)
   {
-    writeWarnHead(deprecation);
-    warnings << ": ";
+    writeWarnHead(false);
+    warnings12 << ": ";
 
-    wrap(message, 80, warnings);
+    wrap(message, 80, warnings12);
     StackTraces stack(callStack.begin(), callStack.end());
-		writeStackTraces(warnings, stack, "    ", true, 0);
+		writeStackTraces(warnings12, stack, "    ", true, 0);
   }
 
 
   // Print a regular warning or deprecation
-  void Logger::addWarn33(const sass::string& message, const SourceSpan& pstate, bool deprecation)
+  void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, bool deprecation)
   {
 
     callStackFrame frame(*this, pstate);
 
     writeWarnHead(deprecation);
-    warnings << " on line " << pstate.getLine();
-    warnings << ", column " << pstate.getColumn();
-    warnings << " of " << pstate.getDebugPath() << ':' << STRMLF;
+    warnings12 << " on line " << pstate.getLine();
+    warnings12 << ", column " << pstate.getColumn();
+    warnings12 << " of " << pstate.getDebugPath() << ':' << STRMLF;
 
     // Might be expensive to call?
     // size_t cols = Terminal::getWidth();
     // size_t width = std::min<size_t>(cols, 80);
-    wrap(message, 80, warnings);
+    wrap(message, 80, warnings12);
 
-    warnings << STRMLF;
+    warnings12 << STRMLF;
 
     StackTraces stack(callStack.begin(), callStack.end());
-		writeStackTraces(warnings, stack, "    ", true);
+		writeStackTraces(warnings12, stack, "    ", true);
 
   }
+
   /*
   StdLogger::StdLogger(size_t precision, enum SassLoggerStyle style) :
     Logger(precision, style)
@@ -145,7 +146,7 @@ namespace Sass {
 
 
 
-  void Logger::format_pstate(sass::ostream& msg_stream, SourceSpan pstate, enum SassLoggerStyle logstyle)
+  void Logger::printSourceSpan(SourceSpan pstate, sass::ostream& stream, enum SassLoggerStyle logstyle)
   {
 
     // ASCII reporting
@@ -189,7 +190,7 @@ namespace Sass {
       }
 
       // Write intro line
-      msg_stream
+      stream
         << getColor(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
@@ -203,7 +204,7 @@ namespace Sass {
         StringUtils::makeRightTrimmed(lines[i]);
 
         // Write the line number and the code
-        msg_stream
+        stream
           << getColor(Terminal::blue)
           << std::right << std::setfill(' ')
           << std::setw(padding) << (beg.line + i + 1)
@@ -225,10 +226,10 @@ namespace Sass {
             auto line_beg = lines[i].begin();
             utf8::advance(line_beg, beg.column, lines[i].end());
             lines[i].insert(line_beg - lines[i].begin(), getColor(Terminal::red));
-            msg_stream << "  " << lines[i] << getColor(Terminal::reset) << STRMLF;
+            stream << "  " << lines[i] << getColor(Terminal::reset) << STRMLF;
 
             // Print the line beneath
-            msg_stream
+            stream
               << getColor(Terminal::blue)
               << std::right << std::setfill(' ')
               << std::setw(padding) << ' '
@@ -239,17 +240,17 @@ namespace Sass {
             // This needs a loop unfortunately
             size_t cols = beg.column;
             for (size_t n = 0; n < cols + 2; n++) {
-              msg_stream << runin;
+              stream << runin;
             }
             // Final indicator
-            msg_stream
+            stream
               << '^'
               << getColor(Terminal::reset)
               << STRMLF;
           }
           // Just print the code line
           else {
-            msg_stream
+            stream
               << getColor(Terminal::red)
               << upper << ' ' << lines[i]
               << getColor(Terminal::reset)
@@ -265,10 +266,10 @@ namespace Sass {
             auto line_beg = lines[i].begin();
             utf8::advance(line_beg, end.column, lines[i].end());
             lines[i].insert(line_beg - lines[i].begin(), getColor(Terminal::reset));
-            msg_stream << getColor(Terminal::red) << middle << ' ' << lines[i] << STRMLF;
+            stream << getColor(Terminal::red) << middle << ' ' << lines[i] << STRMLF;
 
             // Print the line beneath
-            msg_stream
+            stream
               << getColor(Terminal::blue)
               << std::right << std::setfill(' ')
               << std::setw(padding) << ' '
@@ -278,17 +279,17 @@ namespace Sass {
               << lower;
             // This needs a loop unfortunately
             for (size_t n = 0; n < end.column; n++) {
-              msg_stream << runin;
+              stream << runin;
             }
             // Final indicator
-            msg_stream
+            stream
               << '^'
               << getColor(Terminal::reset)
               << STRMLF;
           }
           else {
             // Just print the code line
-            msg_stream
+            stream
               << getColor(Terminal::red)
               << lower << ' ' << lines[i]
               << getColor(Terminal::reset)
@@ -297,7 +298,7 @@ namespace Sass {
         } 
         else {
           // Just print the code line
-          msg_stream
+          stream
             << getColor(Terminal::red)
             << middle << ' ' << lines[i]
             << getColor(Terminal::reset)
@@ -306,7 +307,7 @@ namespace Sass {
       }
 
       // Write outro line
-      msg_stream
+      stream
         << getColor(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
@@ -358,7 +359,7 @@ namespace Sass {
       // rhs_len = utf8::distance(rhs.begin(), rhs.end());
 
       // Report the trace
-      msg_stream
+      stream
 
         // Write the leading line
         << getColor(Terminal::blue)
@@ -589,7 +590,7 @@ namespace Sass {
       // if (trace.caller.substr(0, 6) == ", in f") continue;
 
       if (amount == sass::string::npos || amount > 0) {
-        format_pstate(os, trace.pstate, style);
+        printSourceSpan(trace.pstate, os, style);
         if (amount > 0) --amount;
       }
 
