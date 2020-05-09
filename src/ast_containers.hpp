@@ -298,11 +298,6 @@ namespace Sass {
       return elements_.count(k) == 1;
     }
 
-    void reserve(size_t size)
-    {
-      elements_.reserve(size);
-    }
-
     T at(const K& k) const {
       auto it = elements_.find(k);
       if (it == elements_.end()) return {};
@@ -331,28 +326,6 @@ namespace Sass {
     {
       reset_hash();
       elements_[key] = std::move(val);
-    }
-
-    void concat(const Hashed<K, T>& map)
-    {
-      reset_hash();
-      for (const auto& kv : map) {
-        elements_[kv.first] = kv.second;
-      }
-    }
-
-    void concat(Hashed<K, T>&& map)
-    {
-      reset_hash();
-      for (auto& kv : map) {
-        auto it = elements_.find(kv.first);
-        if (it != elements_.end()) {
-          *it = std::move(kv.second);
-        }
-        else {
-          elements_.insert(std::move(kv));
-        }
-      }
     }
 
     // Return unmodifiable reference
