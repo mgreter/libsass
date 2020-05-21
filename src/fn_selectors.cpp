@@ -105,7 +105,7 @@ namespace Sass {
               "a list of strings, or a list of lists of strings.",
               logger642, arg->pstate());
           }
-          sass::string text(arg->to_css(false));
+          sass::string text(arg->to_css(logger642, false));
           SourceSpan state(arg->pstate());
           auto source = SASS_MEMORY_NEW(SourceItpl,
             std::move(text), state);

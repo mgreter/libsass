@@ -11,6 +11,7 @@
 #include "source_span.hpp"
 #include "operation.hpp"
 #include "mapping.hpp"
+#include "logger.hpp"
 
 // #include "sass/values.h"
 // #include "memory/shared_ptr.hpp"
@@ -58,7 +59,7 @@ namespace Sass {
     virtual sass::string to_css(Sass_Inspect_Options opt, bool quotes = false) const;
     virtual sass::string to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes = false) const;
     virtual sass::string to_css(sass::vector<Mapping>& mappings, bool quotes = false) const;
-    virtual sass::string to_css(bool quotes) const;
+    virtual sass::string to_css(Logger& logger, bool quotes) const;
 
     virtual void cloneChildren() {};
 

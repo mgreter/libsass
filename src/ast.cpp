@@ -62,7 +62,7 @@ namespace Sass {
     return to_css({ SASS_STYLE_NESTED, SassDefaultPrecision }, mappings, quotes);
   }
 
-  sass::string AST_Node::to_css(bool quotes) const
+  sass::string AST_Node::to_css(Logger& logger, bool quotes) const
   {
     return to_css({ SASS_STYLE_NESTED, SassDefaultPrecision }, quotes);
   }

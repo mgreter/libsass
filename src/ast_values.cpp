@@ -137,7 +137,7 @@ namespace Sass {
   // If [quote] is `false`, quoted strings are emitted without quotes.
 
   sass::string Value::toCssString(Logger& logger, bool quote) const {
-    return to_css(true);
+    return to_css(logger, true);
   }
 
   // The SassScript `=` operation.

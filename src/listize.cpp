@@ -27,10 +27,11 @@ namespace Sass {
 
   Value* Listize::listize(ComplexSelector* selector)
   {
+    Logger loggerFack(5);
     ListObj list = SASS_MEMORY_NEW(List, selector->pstate(), sass::vector<ValueObj>(), SASS_SPACE);
     for (SelectorComponent* component : selector->elements()) {
       list->append(SASS_MEMORY_NEW(String,
-        component->pstate(), component->to_css(false)));
+        component->pstate(), component->to_css(loggerFack, false)));
     }
     return list.detach();
   }
