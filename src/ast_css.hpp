@@ -41,12 +41,13 @@ namespace Sass {
   // [-] CssStylesheet
   // [x] CssSupportsRule
   class CssParentNode : public CssNode,
-    public Vectorized<CssNode> {
+    private Vectorized<CssNode> {
     // Whether the rule has no children and should be emitted
     // without curly braces. This implies `children.isEmpty`,
     // but the reverse is not true—for a rule like `@foo {}`,
     // [children] is empty but [isChildless] is `false`.
     ADD_PROPERTY(bool, isChildless);
+    ADD_PROPERTY(size_t, parentIndex);
   public:
     CssParentNode* parent_;
 
@@ -60,6 +61,26 @@ namespace Sass {
     CssParentNode(const SourceSpan& pstate,
       CssParentNode* parent,
       sass::vector<CssNodeObj>&& children);
+
+    void append(const CssNodeObj& element) = delete;
+    void append(CssNodeObj&& element) = delete;
+
+    sass::vector<T>& elements73() { return Vectorized::elements(); }
+    const sass::vector<T>& elements73() const { return Vectorized::elements(); }
+
+    typename sass::vector<T>::iterator end() { return Vectorized::end(); }
+    typename sass::vector<T>::iterator begin() { return Vectorized::begin(); }
+    typename sass::vector<T>::const_iterator end() const { return Vectorized::end(); }
+    typename sass::vector<T>::const_iterator begin() const { return Vectorized::begin(); }
+
+    size_t length() const { return Vectorized::length(); }
+
+    const T& at(size_t i) const { return Vectorized::at(i); }
+    const T& get(size_t i) const { return Vectorized::get(i); }
+    T& operator[](size_t i) { return elements_[i]; }
+
+    void addChild(CssParentNode* element);
+    void addNode(CssNode* element);
 
     bool empty() const
     {

@@ -13,7 +13,6 @@ namespace Sass {
   // ##########################################################################
   bool hasRoot(const CompoundSelector* compound)
   {
-    // Libsass does not yet know the root selector
     for (const SimpleSelector* simple : compound->elements()) {
       if (const PseudoSelector* pseudo = simple->getPseudoSelector()) {
         if (pseudo->isClass() && pseudo->normalized() == "root") {

@@ -699,9 +699,6 @@ namespace Sass {
       SilentComment* comment = nullptr,
       sass::vector<StatementObj>&& els = {});
 
-    // Stringify declarations etc. (dart)
-    virtual sass::string toString1() const = 0;
-
     ATTACH_ABSTRACT_CRTP_PERFORM_METHODS();
   };
 
@@ -711,7 +708,6 @@ namespace Sass {
     ContentBlock(
       const SourceSpan& pstate,
       ArgumentDeclaration* arguments = nullptr);
-    sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -724,7 +720,6 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
       sass::vector<StatementObj>&& els = {});
-    sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 
@@ -738,7 +733,6 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       SilentComment* comment = nullptr,
       sass::vector<StatementObj>&& els = {});
-    sass::string toString1() const override final;
     ATTACH_CRTP_PERFORM_METHODS();
   };
 

@@ -44,7 +44,7 @@ namespace Sass {
     // includes result for reporting
     if (!n->is_valid_css_unit()) {
       // should be handle in check_expression
-      throw Exception::InvalidValue({}, *n);
+      throw Exception::InvalidCssValue({}, *n);
     }
     // use values to_string facility
     Inspect::operator()(n);
@@ -75,7 +75,7 @@ namespace Sass {
   void Output::operator()(Map* m)
   {
     // should be handle in check_expression
-    throw Exception::InvalidValue({}, *m);
+    throw Exception::InvalidCssValue({}, *m);
   }
 
   OutputBuffer Output::get_buffer(void)
@@ -102,8 +102,7 @@ namespace Sass {
 
     // search for unicode char
     for (const char& chr : wbuf.buffer) {
-      // skip all ascii chars
-      // static cast to unsigned to handle `char` being signed / unsigned
+      // skip all ASCII chars
       if (static_cast<unsigned>(chr) < 128) continue;
       // declare the charset
       if (output_style() != SASS_STYLE_COMPRESSED)
@@ -201,7 +200,7 @@ namespace Sass {
     // if (rule->block() == nullptr) return;
     // Skip empty/invisible rule
     bool invisible = true;
-    for (auto& item : rule->elements()) {
+    for (auto& item : rule->elements73()) {
       if (!item->isInvisibleCss()) {
         invisible = false;
         break;

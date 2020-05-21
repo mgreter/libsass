@@ -11,17 +11,8 @@
 
 namespace Sass {
 
-  // static Null sass_null(SourceSpan("null"));
-
-
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
-  // void AST_Node::update_pstate(const SourceSpan& pstate)
-  // {
-  //   // pstate_.offset += pstate - pstate_ + pstate.offset;
-  // }
 
   sass::string AST_Node::to_string(Sass_Inspect_Options opt) const
   {
@@ -121,7 +112,7 @@ namespace Sass {
   bool ParentStatement::has_content() const
   {
     if (Statement::has_content()) return true;
-    for (auto child : elements_) {
+    for (const StatementObj& child : elements_) {
       if (child->has_content()) return true;
     }
     return false;
@@ -147,6 +138,9 @@ namespace Sass {
     hasBrackets_(false)
   {
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   MapExpression::MapExpression(const SourceSpan& pstate) :
     Expression(pstate),
@@ -615,8 +609,8 @@ namespace Sass {
     return parser.parseArgumentDeclaration2();
   }
 
-  /// Throws a [SassScriptException] if [positional] and [names] aren't valid
-  /// for this argument declaration.
+  /// Throws a [SassScriptException] if [positional] and [names]
+  /// aren't valid for this argument declaration.
   void ArgumentDeclaration::verify(
     size_t positional,
     const EnvKeyFlatMap<ValueObj>& names,
@@ -727,11 +721,6 @@ namespace Sass {
   {
   }
 
-  sass::string FunctionRule::toString1() const
-  {
-    return sass::string();
-  }
-
   MixinRule::MixinRule(
     const SourceSpan& pstate,
     const sass::string& name,
@@ -742,14 +731,6 @@ namespace Sass {
       name, arguments, comment, std::move(els))
   {
   }
-
-  sass::string MixinRule::toString1() const
-  {
-    return sass::string();
-  }
-
-
-
 
   IncludeRule::IncludeRule(
     const SourceSpan& pstate,
@@ -771,11 +752,6 @@ namespace Sass {
     ArgumentDeclaration* arguments) :
     CallableDeclaration(pstate, Keys::contentRule, arguments)
   {
-  }
-
-  sass::string ContentBlock::toString1() const
-  {
-    return sass::string();
   }
 
   UserDefinedCallable::UserDefinedCallable(

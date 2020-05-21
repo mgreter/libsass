@@ -15,13 +15,9 @@ namespace Sass {
 
   StackTraces convertTraces(BackTraces traces)
   {
-
-    StackTraces stack;
-    for (BackTrace trace : traces) {
-      stack.push_back(trace);
-    }
-    return stack;
-
+    // This will trigger StackTrace constructor
+    // Copies necessary stuff from BackTrace
+    return { traces.begin(), traces.end() };
   }
 
   namespace Exception {
@@ -68,15 +64,20 @@ namespace Sass {
     }
 
 
-    InvalidValue::InvalidValue(BackTraces traces, const Value& val)
-    : Base(val.inspect() + " isn't a valid CSS value.", traces, val.pstate())
+    InvalidCssValue::InvalidCssValue(BackTraces traces, const Value& val)
+      : Base(val.inspect() + " isn't a valid CSS value.", traces, val.pstate())
     {}
 
+    InvalidCssValue2::InvalidCssValue2(BackTraces traces, const Value& val)
+      : Base(val.inspect() + " isn't a valid CSS value2.", traces, val.pstate())
+    {}
 
+    // Thrown when a parent selector is used without any parent
     TopLevelParent::TopLevelParent(BackTraces traces, SourceSpan pstate)
       : Base("Top-level selectors may not contain the parent selector \"&\".", traces, pstate)
     {}
-      
+
+    // Thrown when a non-optional extend found nothing to extend
     UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, Extension extension)
       : Base("The target selector was not found.\n"
         "Use \"@extend " + extension.target->inspect() +
@@ -84,13 +85,12 @@ namespace Sass {
         traces, extension.target->pstate())
     {}
 
+    // Thrown when we extend across incompatible media contexts
     ExtendAcrossMedia::ExtendAcrossMedia(BackTraces traces, Extension extension)
       : Base("You may not @extend selectors across media queries.", traces)
-    {
-
-    }
+    {}
     
-
+    // Thrown when we find an unexpected UTF8 sequence
     InvalidUnicode::InvalidUnicode(SourceSpan pstate, BackTraces traces)
       : Base("Invalid UTF-8.", traces, pstate)
     {}
@@ -98,11 +98,6 @@ namespace Sass {
     SassScriptException2::SassScriptException2(sass::string msg,
       BackTraces traces, SourceSpan pstate, sass::string name) :
       Base(name.empty() ? msg : "$" + name + ": " + msg, traces)
-    {}
-
-    SassScriptException3::SassScriptException3(sass::string msg,
-      BackTraces traces, SourceSpan pstate, sass::string name) :
-      Base(name.empty() ? msg : "$" + name + ": " + msg, traces, pstate)
     {}
 
 

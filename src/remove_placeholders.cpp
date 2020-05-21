@@ -62,7 +62,7 @@ namespace Sass {
       // Clean up all our children
       b->CssParentNode::perform(this);
       // Remove all invisible items
-      listEraseItemIf(b->elements(), isInvisibleCss);
+      listEraseItemIf(b->elements73(), isInvisibleCss); // QQQQQQQQQQQQHHHHHH
     }
 
     void Remove_Placeholders::operator()(CssStyleRule* rule)
@@ -77,7 +77,7 @@ namespace Sass {
 
     void Remove_Placeholders::operator()(CssParentNode* m)
     {
-      for (CssNodeObj& stmt : m->elements()) {
+      for (CssNodeObj& stmt : m->elements73()) {
         stmt->perform(this);
       }
     }

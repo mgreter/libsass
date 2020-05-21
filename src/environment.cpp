@@ -5,7 +5,6 @@
 
 namespace Sass {
 
-
   sass::string pluralize(const sass::string& singular, size_t size, const sass::string& plural)
   {
 	  if (size == 1) return singular;

@@ -121,8 +121,8 @@ namespace Sass {
 
     CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace,
       node->pstate(), current, node->name().orig());
-    current->append(trace);
-    trace->parent_ = current;
+    // _addChild(current, trace);
+    current->addChild(trace);
 
     LOCAL_FLAG(inMixin, true);
 
@@ -161,8 +161,7 @@ namespace Sass {
     // EnvScope scoped(compiler.varRoot, before->declaration()->idxs());
     CssImportTraceObj trace = SASS_MEMORY_NEW(CssImportTrace,
       c->pstate(), current, Strings::contentRule);
-    current->append(trace);
-    trace->parent_ = current;
+    current->addChild(trace);
 
     LOCAL_PTR(CssParentNode, current, trace);
 
@@ -235,7 +234,7 @@ namespace Sass {
       CssStringList* strings = SASS_MEMORY_NEW(CssStringList, node->pstate(), parser.parse());
       CssKeyframeBlockObj css2 = SASS_MEMORY_NEW(CssKeyframeBlock, node->pstate(), pu, strings);
 
-      pu->append(css2);
+      pu->addChild(css2);
 
       // Set parent again to css, to append children
       visitChildren2(css2, node->elements());
@@ -303,10 +302,17 @@ namespace Sass {
       CssParentNode* siblings = parent->parent_;
 
       auto it = siblings->begin();
-      while (it != siblings->end()) {
-        if (it->ptr() == parent) break;
-        ++it;
+      if (parent->parentIndex() != -1) {
+        it += parent->parentIndex();
       }
+      else {
+        std::cerr << "FOBAU\n";
+        while (it != siblings->end()) {
+          if (it->ptr() == parent) break;
+          ++it;
+        }
+      }
+
 
       while (++it != siblings->end()) {
         // Special context for invisibility!
@@ -315,26 +321,17 @@ namespace Sass {
         // hasFollowingSibling
         // if (!parent->_isInvisible2(*it)) {
         if (!child->isInvisibleSibling()) {
-          hasFaba = true;
+          //std::cerr << "THE STRANGE ONE\n";
+          auto grandparent = parent->parent_;
+          parent = parent->copy(true);
+          // parent->clear();
+          grandparent->addChild(parent);
           break;
         }
       }
     }
 
-
-
-    //if (node->hasVisibleSibling(parent)) {
-     if (hasFaba) {
-     //std::cerr << "THE STRANGE ONE\n";
-      auto grandparent = parent->parent_;
-      parent = parent->copy(true);
-      // parent->clear();
-      grandparent->append(parent);
-    }
-
-    parent->append(node);
-    node->parent_ = parent;
-
+    parent->addChild(node);
   }
 
 
@@ -368,7 +365,7 @@ namespace Sass {
   {
     if (isInStyleRule()) {
       auto outer = _styleRule->copy(true);
-      node->append(outer);
+      node->addChild(outer);
       outer->parent_ = node;
       return outer;
     }
@@ -384,7 +381,7 @@ namespace Sass {
     auto chroot = current->bubbleThroughStyleRule2();
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(), chroot, condition);
-    chroot->append(css);
+    chroot->addChild(css);
     css->parent_ = chroot;
     visitChildren2(
       hoistStyleRule(css),
@@ -489,7 +486,7 @@ namespace Sass {
           auto copy = (*it)->copy(true);
           // copy->clear();
           // std::cerr << "Did copy\n";
-          copy->append(outerCopy);
+          copy->addChild(outerCopy);
           outerCopy->parent_ = copy;
           outerCopy = copy;
         }
@@ -497,7 +494,7 @@ namespace Sass {
 
 
       if (outerCopy != nullptr) {
-        root->append(outerCopy);
+        root->addChild(outerCopy);
         outerCopy->parent_ = root;
       }
 
@@ -562,7 +559,7 @@ namespace Sass {
       CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
         node->pstate(), current, name, value);
       css->isChildless(node->is_childless());
-      current->append(css);
+      current->addChild(css);
       css->parent_ = current;
       return nullptr;
     }
@@ -581,7 +578,7 @@ namespace Sass {
     css->isChildless(node->is_childless());
 
     // Adds new empty atRule to Root!
-    pu->append(css);
+    pu->addChild(css);
 
     auto oldParent = current;
     current = css;
@@ -600,8 +597,7 @@ namespace Sass {
       // declarations immediately inside it have somewhere to go.
       // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
       CssStyleRule* qwe = _styleRule->copy(true);
-      css->append(qwe);
-      qwe->parent_ = css;
+      css->addChild(qwe);
       visitChildren2(qwe, node->elements());
 
     }
@@ -678,8 +674,7 @@ namespace Sass {
       // std::cerr << "AASDASDAS\n";
 
       CssStyleRule* qwe = _styleRule->copy(true);
-      qwe->parent_ = css;
-      css->append(qwe);
+      css->addChild(qwe);
       visitChildren2(qwe, node->elements());
     }
 
@@ -2109,7 +2104,7 @@ namespace Sass {
     // will throw an error that we want the user to see.
     if (cssValue != nullptr && (!cssValue->value()->isBlank()
       || cssValue->value()->lengthAsList() == 0)) {
-      current->append(SASS_MEMORY_NEW(CssDeclaration,
+      current->addNode(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
@@ -2192,7 +2187,7 @@ namespace Sass {
     if (_inFunction) return nullptr;
     sass::string text(performInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
+    current->addNode(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
     return nullptr;
   }
 
@@ -2571,7 +2566,7 @@ namespace Sass {
       import->media(evalMediaQueries(rule->media()));
     }
     // append new css import to result
-    current->append(import);
+    current->addNode(import);
     // import has been consumed
     return nullptr;
   }

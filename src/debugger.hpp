@@ -346,7 +346,7 @@ inline void debug_block(ParentStatement* node, std::string ind)
 
 inline void debug_block(CssParentNode* node, std::string ind)
 {
-  for (auto item : node->elements()) {
+  for (auto item : node->elements73()) {
     debug_ast(item, ind);
   }
 }
@@ -589,7 +589,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     for (auto item : rule->queries()) {
       debug_ast(item, ind + "() ");
     }
-    for (auto item : rule->elements()) {
+    for (auto item : rule->elements73()) {
       debug_ast(item, ind + " !! ");
     }
     debug_css_parent_node(rule, ind + " :: ");
@@ -640,7 +640,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     // if (block->is_invisible()) std::cerr << " [isInvisible]";
     debug_ast(block->condition(), ind + " =@ ");
-    for (auto stmt : block->elements()) {
+    for (auto stmt : block->elements73()) {
       debug_ast(stmt, ind + " <>");
     }
   }
@@ -916,7 +916,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(ruleset->selector(), ind + ">");
     // debug_ast(ruleset->interpolation(), ind + "#");
-    for (auto stmt : ruleset->elements()) {
+    for (auto stmt : ruleset->elements73()) {
       debug_ast(stmt, ind + " !! ");
     }
     // debug_ast(ruleset, ind + " :: ");

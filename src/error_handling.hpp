@@ -62,15 +62,6 @@ namespace Sass {
       virtual ~InvalidSyntax() noexcept {};
     };
 
-    // Push pstate to back traces on our own
-    class SassScriptException3 : public Base {
-    public:
-      SassScriptException3(sass::string msg,
-        BackTraces traces, SourceSpan pstate,
-        sass::string name = "");
-      ~SassScriptException3() noexcept {};
-    };
-
     class SassScriptException2 : public Base {
     public:
       SassScriptException2(sass::string msg,
@@ -104,11 +95,19 @@ namespace Sass {
         virtual ~DuplicateKeyError() noexcept {};
     };
 
-    class InvalidValue : public Base {
+    class InvalidCssValue : public Base {
       public:
-        InvalidValue(BackTraces traces, const Value& val);
+        InvalidCssValue(BackTraces traces, const Value& val);
         virtual const char* errtype() const { return "Error"; }
-        virtual ~InvalidValue() noexcept {};
+        virtual ~InvalidCssValue() noexcept {};
+    };
+
+
+    class InvalidCssValue2 : public Base {
+    public:
+      InvalidCssValue2(BackTraces traces, const Value& val);
+      virtual const char* errtype() const { return "Error"; }
+      virtual ~InvalidCssValue2() noexcept {};
     };
 
     /* common virtual base class (has no pstate or trace) */

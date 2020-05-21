@@ -199,7 +199,7 @@ namespace Sass {
       operator()(query);
       joinIt = true;
     }
-    visitBlockStatements(node->elements());
+    visitBlockStatements(node->elements73());
   }
   // EO visitCssMediaRule
 
@@ -347,7 +347,7 @@ namespace Sass {
     // append_scope_closer();
     if (!node->empty()) {
       append_scope_opener();
-      for (CssNode* stmt : node->elements()) {
+      for (CssNode* stmt : node->elements73()) {
         stmt->perform(this);
       }
       append_scope_closer();
@@ -383,7 +383,7 @@ namespace Sass {
         append_string("{}");
       }
       else {
-        visitBlockStatements(node->elements());
+        visitBlockStatements(node->elements73());
       }
     }
     else {
@@ -463,7 +463,7 @@ namespace Sass {
 
   void Inspect::operator()(CssImportTrace* trace)
   {
-    for (CssNode* stmt : trace->elements()) {
+    for (CssNode* stmt : trace->elements73()) {
       stmt->perform(this);
     }
   }
@@ -472,7 +472,7 @@ namespace Sass {
   {
     if (output_style() == SASS_STYLE_TO_CSS) {
       // should be handle in check_expression
-      throw Exception::InvalidValue({}, *map);
+      throw Exception::InvalidCssValue2({}, *map);
     }
 
     if (output_style() == SASS_STYLE_INSPECT && map->empty()) {
@@ -725,7 +725,7 @@ namespace Sass {
 
     else if (list->empty()) {
       if (!inspect) {
-        throw Exception::InvalidValue({}, *list);
+        throw Exception::InvalidCssValue({}, *list);
       }
       append_char($lparen);
       append_char($rparen);
@@ -859,7 +859,7 @@ namespace Sass {
 
     if (opt.output_style == SASS_STYLE_TO_CSS && !n->is_valid_css_unit()) {
       // traces.push_back(BackTrace(nr->pstate()));
-      throw Exception::InvalidValue({}, *n);
+      throw Exception::InvalidCssValue({}, *n);
     }
 
     // output the final token
@@ -1012,7 +1012,7 @@ namespace Sass {
     bool inspect = output_style() == SASS_STYLE_INSPECT;
 
     if (!inspect) {
-      throw Exception::InvalidValue({}, *f);
+      throw Exception::InvalidCssValue({}, *f);
     }
     append_token("get-function", f);
     append_string("(");

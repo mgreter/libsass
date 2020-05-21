@@ -30,6 +30,7 @@ namespace Sass {
     CssNode(pstate),
     Vectorized(),
     isChildless_(false),
+    parentIndex_(-1),
     parent_(parent)
   {}
 
@@ -40,6 +41,7 @@ namespace Sass {
     CssNode(pstate),
     Vectorized(std::move(children)),
     isChildless_(false),
+    parentIndex_(-1),
     parent_(parent)
   {}
   
@@ -62,6 +64,20 @@ namespace Sass {
       }
     }
     return true;
+  }
+
+  void CssParentNode::addChild(CssParentNode* child)
+  {
+    child->parent_ = this;
+    child->parentIndex(length());
+    elements_.push_back(child);
+  }
+
+  void CssParentNode::addNode(CssNode* child)
+  {
+    // child->parent_ = this;
+    // child->parentIndex(length());
+    elements_.push_back(child);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -284,7 +300,7 @@ namespace Sass {
       }
     }
     if (sel_invisible) return true;
-    for (CssNode* item : elements()) {
+    for (const CssNode* item : elements73()) {
       if (!item->isInvisibleCss()) {
         return false;
       }
@@ -320,7 +336,7 @@ namespace Sass {
 
   bool CssSupportsRule::isInvisibleCss() const
   {
-    for (auto child : elements()) {
+    for (auto child : elements73()) {
       if (!child->isInvisibleCss()) return false;
     }
     return true;
