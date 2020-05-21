@@ -136,7 +136,7 @@ namespace Sass {
   ///
   // If [quote] is `false`, quoted strings are emitted without quotes.
 
-  sass::string Value::toCssString(bool quote) const {
+  sass::string Value::toCssString(Logger& logger, bool quote) const {
     return to_css(true);
   }
 
@@ -144,8 +144,8 @@ namespace Sass {
   inline Value* Value::singleEquals(
     Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    sass::string text(toCssString());
-    text += "=" + other->toCssString();
+    sass::string text(toCssString(logger));
+    text += "=" + other->toCssString(logger);
     return SASS_MEMORY_NEW(String, pstate, text);
   }
 
@@ -153,13 +153,13 @@ namespace Sass {
   inline Value* Value::plus(
     Value* other, Logger& logger, const SourceSpan& pstate) const {
     if (String * str = other->isString()) {
-      sass::string text(toCssString() + str->value());
+      sass::string text(toCssString(logger) + str->value());
       return SASS_MEMORY_NEW(String,
         pstate, text, str->hasQuotes());
     }
     else {
-      sass::string text(toCssString());
-      text += other->toCssString();
+      sass::string text(toCssString(logger));
+      text += other->toCssString(logger);
       return SASS_MEMORY_NEW(String, pstate, text);
     }
   }
@@ -167,36 +167,36 @@ namespace Sass {
   // The SassScript `-` operation.
   inline Value* Value::minus(
     Value* other, Logger& logger, const SourceSpan& pstate) const {
-    sass::string text(toCssString());
-    text += "-" + other->toCssString();
+    sass::string text(toCssString(logger));
+    text += "-" + other->toCssString(logger);
     return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript `/` operation.
   inline Value* Value::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const {
-    sass::string text(toCssString());
-    text += "/" + other->toCssString();
+    sass::string text(toCssString(logger));
+    text += "/" + other->toCssString(logger);
     return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `+` operation.
   inline Value* Value::unaryPlus(Logger& logger, const SourceSpan& pstate) const
   {
-    sass::string text("+" + toCssString());
+    sass::string text("+" + toCssString(logger));
     return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `-` operation.
   inline Value* Value::unaryMinus(Logger& logger, const SourceSpan& pstate) const
   {
-    sass::string text("-" + toCssString());
+    sass::string text("-" + toCssString(logger));
     return SASS_MEMORY_NEW(String, pstate, text);
   }
 
   // The SassScript unary `/` operation.
   inline Value* Value::unaryDivide(Logger& logger, const SourceSpan& pstate) const
   {
-    sass::string text("/" + toCssString());
+    sass::string text("/" + toCssString(logger));
     return SASS_MEMORY_NEW(String, pstate, text);
   }
 

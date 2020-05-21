@@ -399,7 +399,7 @@ namespace Sass {
     /// isn't valid CSS.
     ///
     /// If [quote] is `false`, quoted strings are emitted without quotes.
-    sass::string toCssString(bool quote = true) const;
+    sass::string toCssString(Logger& logger, bool quote = true) const;
 
 
     // virtual sass::string toStringent(bool quote = true) const = 0;
@@ -1345,7 +1345,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(String,
           pstate, std::move(text), hasQuotes());
       }
-      sass::string text(value() + other->toCssString());
+      sass::string text(value() + other->toCssString(logger));
       return SASS_MEMORY_NEW(String,
         pstate, std::move(text), hasQuotes());
     }
