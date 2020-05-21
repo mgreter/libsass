@@ -1661,7 +1661,7 @@ namespace Sass {
     SourceSpan pstate(interpolation->pstate());
     mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
-    sass::string css(interpolation->to_css(mappings));
+    sass::string css(interpolation->to_css(logger456, mappings));
     return css;
 
     sass::vector<sass::string> results;
@@ -1712,7 +1712,7 @@ namespace Sass {
     mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
     return SASS_MEMORY_NEW(SourceItpl,
-      interpolation->to_css(mappings),
+      interpolation->to_css(logger456, mappings),
       interpolation->pstate());
 
   }
@@ -1810,7 +1810,7 @@ namespace Sass {
   }
 
 
-/// parentheses if necessary.
+/// parentheses if necessary. 
 ///
 /// If [operator] is passed, it's the operator for the surrounding
 /// [SupportsOperation], and is used to determine whether parentheses are
@@ -2332,7 +2332,7 @@ namespace Sass {
     SourceSpan pstate(itpl->pstate());
     mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     InterpolationObj evaled = evalInterpolation(itpl, false);
-    sass::string css(evaled->to_css(mappings));
+    sass::string css(evaled->to_css(logger456, mappings));
     StringUtils::makeTrimmed(css);
     auto text = css;
 

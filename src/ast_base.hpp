@@ -58,7 +58,7 @@ namespace Sass {
 
     virtual sass::string to_css(Sass_Inspect_Options opt, bool quotes = false) const;
     virtual sass::string to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes = false) const;
-    virtual sass::string to_css(sass::vector<Mapping>& mappings, bool quotes = false) const;
+    virtual sass::string to_css(Logger& logger, sass::vector<Mapping>& mappings, bool quotes = false) const;
     virtual sass::string to_css(Logger& logger, bool quotes) const;
 
     virtual void cloneChildren() {};
