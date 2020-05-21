@@ -33,6 +33,11 @@ namespace Sass {
   {
   }
 
+  Inspect::Inspect(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled)
+    : Emitter(opt, srcmap_enabled), quotes(true)
+  {
+  }
+
   Inspect::~Inspect() { }
 
   void Inspect::visitBlockStatements(sass::vector<StatementObj> children)

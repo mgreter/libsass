@@ -24,7 +24,7 @@ namespace Sass {
     return i.get_buffer();
   }
 
-  sass::string AST_Node::to_css(Sass_Inspect_Options opt, bool quotes) const
+  sass::string AST_Node::to_css(Logger& logger, Sass_Inspect_Options opt, bool quotes) const
   {
     opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
@@ -36,11 +36,11 @@ namespace Sass {
     return i.get_buffer();
   }
 
-  sass::string AST_Node::to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes) const
+  sass::string AST_Node::to_css(Logger& logger, Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes) const
   {
     opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
-    Inspect i(out, false);
+    Inspect i(logger, out, false);
     i.quotes = quotes;
     i.in_declaration = true;
     // ToDo: inspect should be const
@@ -59,12 +59,12 @@ namespace Sass {
 
   sass::string AST_Node::to_css(Logger& logger, sass::vector<Mapping>& mappings, bool quotes) const
   {
-    return to_css({ SASS_STYLE_NESTED, SassDefaultPrecision }, mappings, quotes);
+    return to_css(logger, { SASS_STYLE_NESTED, SassDefaultPrecision }, mappings, quotes);
   }
 
   sass::string AST_Node::to_css(Logger& logger, bool quotes) const
   {
-    return to_css({ SASS_STYLE_NESTED, SassDefaultPrecision }, quotes);
+    return to_css(logger, { SASS_STYLE_NESTED, SassDefaultPrecision }, quotes);
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -56,8 +56,8 @@ namespace Sass {
 
     virtual sass::string to_string(Sass_Inspect_Options opt) const;
 
-    virtual sass::string to_css(Sass_Inspect_Options opt, bool quotes = false) const;
-    virtual sass::string to_css(Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes = false) const;
+    virtual sass::string to_css(Logger& logger, Sass_Inspect_Options opt, bool quotes = false) const;
+    virtual sass::string to_css(Logger& logger, Sass_Inspect_Options opt, sass::vector<Mapping>& mappings, bool quotes = false) const;
     virtual sass::string to_css(Logger& logger, sass::vector<Mapping>& mappings, bool quotes = false) const;
     virtual sass::string to_css(Logger& logger, bool quotes) const;
 

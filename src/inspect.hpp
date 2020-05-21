@@ -4,6 +4,7 @@
 #include "position.hpp"
 #include "operation.hpp"
 #include "emitter.hpp"
+#include "logger.hpp"
 #include "visitor_selector.hpp"
 
 namespace Sass {
@@ -23,6 +24,7 @@ namespace Sass {
     bool quotes;
 
     Inspect(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
+    Inspect(Logger& logger, struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
     virtual ~Inspect();
 
     void visitBlockStatements(sass::vector<StatementObj> children);
