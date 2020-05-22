@@ -16,6 +16,7 @@ namespace Sass {
     {}
 
     void operator()(Function* f) override;
+    void operator()(Number* number) override;
     void operator()(List* f) override;
     void operator()(Map* f) override;
 

@@ -25,6 +25,11 @@ namespace Sass {
     // Whether quoted strings should be emitted with quotes.
     bool quotes;
 
+    // So far this only influences how list are rendered.
+    // If the separator is known to be comma, we append
+    // a trailing comma for lists with a single item.
+    bool inspect;
+
     Inspect(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
     Inspect(Logger& logger, struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
     virtual ~Inspect();

@@ -16,8 +16,9 @@ namespace Sass {
 
   sass::string AST_Node::inspect(int precision) const
   {
-    SassOutputOptionsCpp out({ SASS_STYLE_INSPECT, precision });
+    SassOutputOptionsCpp out({ SASS_STYLE_NESTED, precision });
     Inspect i(out, false);
+    i.inspect = true;
     i.in_declaration = true;
     // ToDo: inspect should be const
     const_cast<AST_Node*>(this)->perform(&i);

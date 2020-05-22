@@ -33,12 +33,12 @@ namespace Sass {
   using namespace Character;
 
   Inspect::Inspect(SassOutputOptionsCpp& opt, bool srcmap_enabled)
-    : Emitter(opt, srcmap_enabled), quotes(true)
+    : Emitter(opt, srcmap_enabled), quotes(true), inspect(false)
   {
   }
 
   Inspect::Inspect(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled)
-    : Emitter(opt, srcmap_enabled), quotes(true)
+    : Emitter(opt, srcmap_enabled), quotes(true), inspect(false)
   {
   }
 
@@ -666,9 +666,6 @@ namespace Sass {
   void Inspect::visitSelectorList(SelectorList* list)
   {
     if (list->empty()) {
-      // if (output_style() == SASS_STYLE_INSPECT) {
-      //   append_token("()", list);
-      // }
       return;
     }
 
@@ -721,37 +718,40 @@ namespace Sass {
 
   void Inspect::operator()(List* list)
   {
-    bool inspect = output_style() == SASS_STYLE_INSPECT;
+
+    // Handle empty case
+    if (list->empty()) {
+      if (list->hasBrackets()) {
+        append_char($lbracket);
+        append_char($rbracket);
+      }
+      else {
+        append_char($lparen);
+        append_char($rparen);
+      }
+      return;
+    }
+
+    bool preserveComma = inspect &&
+      list->length() == 1 &&
+      list->separator() == SASS_COMMA;
 
     if (list->hasBrackets()) {
       append_char($lbracket);
     }
-
-    else if (list->empty()) {
-      if (!inspect) {
-        throw Exception::InvalidCssValue({}, *list);
-      }
-      append_char($lparen);
-      append_char($rparen);
-      return;
-    }
-
-    bool singleton = inspect &&
-      list->length() == 1 &&
-      list->separator() == SASS_COMMA;
-    if (singleton && !list->hasBrackets()) {
+    else if(preserveComma) {
       append_char($lparen);
     }
 
     add_open_mapping(list);
 
-    sass::vector<ValueObj> values
-      = list->elements();
+    const sass::vector<ValueObj>& values(list->elements());
 
     bool first = true;
     sass::string joiner =
       list->separator() == SASS_SPACE ? " " :
       output_style() == SASS_STYLE_COMPRESSED ? "," : ", ";
+
     for (Value* value : values) {
       // Only print `null` when inspecting
       if (!inspect && value->isBlank()) continue;
@@ -779,7 +779,7 @@ namespace Sass {
 
     add_close_mapping(list);
 
-    if (singleton) {
+    if (preserveComma) {
       append_char($comma);
       if (!list->hasBrackets()) {
         append_char($rparen);
@@ -861,11 +861,6 @@ namespace Sass {
     // add unit now
     res += n->unit();
 
-    if (opt.output_style == SASS_STYLE_TO_CSS && !n->is_valid_css_unit()) {
-      // traces.push_back(BackTrace(nr->pstate()));
-      // issue_1804
-      throw Exception::InvalidCssValue({}, *n);
-    }
 
     // output the final token
     append_token(res, n);
@@ -989,8 +984,6 @@ namespace Sass {
 
   void Inspect::operator()(Interpolation* node)
   {
-    // bool inspect = output_style() == SASS_STYLE_INSPECT;
-    // if (inspect) append_string("#{");
     for (Interpolant* value : node->elements()) {
       if (ItplString* str = value->getItplString()) {
         append_token(str->text(), str);
@@ -999,7 +992,6 @@ namespace Sass {
         value->perform(this);
       }
     }
-    // if (inspect) append_string("}");
   }
 
   void Inspect::operator()(Custom_Error* e)
@@ -1014,11 +1006,6 @@ namespace Sass {
 
   void Inspect::operator()(Function* f)
   {
-    bool inspect = output_style() == SASS_STYLE_INSPECT;
-
-    if (!inspect) {
-      throw Exception::InvalidCssValue({}, *f);
-    }
     append_token("get-function", f);
     append_string("(");
     f->callable()->perform(this);
