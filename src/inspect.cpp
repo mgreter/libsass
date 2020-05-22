@@ -813,16 +813,6 @@ namespace Sass {
   void Inspect::operator()(Number* n)
   {
 
-    if (n->lhsAsSlash() && n->rhsAsSlash()) {
-      n->lhsAsSlash()->perform(this);
-      append_string("/");
-      n->rhsAsSlash()->perform(this);
-      return;
-    }
-
-    // reduce units
-    n->reduce();
-
     if (std::isnan(n->value())) {
       append_string("NaN");
       return;
@@ -860,7 +850,6 @@ namespace Sass {
 
     // add unit now
     res += n->unit();
-
 
     // output the final token
     append_token(res, n);
