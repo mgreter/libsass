@@ -12,7 +12,9 @@ namespace Sass {
 
   // public SelectorVisitor<void>
   class Inspect : public Operation_CRTP<void, Inspect>, public Emitter,
-  public SelectorVisitor<void> {
+
+    public SelectorVisitor<void> {
+
   protected:
     // import all the class-specific methods and override as desired
     using Operation_CRTP<void, Inspect>::operator();

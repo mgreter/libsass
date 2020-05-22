@@ -69,7 +69,7 @@ namespace Sass {
     {}
 
     InvalidCssValue2::InvalidCssValue2(BackTraces traces, const Value& val)
-      : Base(val.inspect() + " isn't a valid CSS value2.", traces, val.pstate())
+      : Base(val.inspect() + " isn't a valid CSS value.", traces, val.pstate())
     {}
 
     // Thrown when a parent selector is used without any parent
@@ -80,7 +80,8 @@ namespace Sass {
     // Thrown when a non-optional extend found nothing to extend
     UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, Extension extension)
       : Base("The target selector was not found.\n"
-        "Use \"@extend " + extension.target->inspect() +
+        // Calling inspect to the placeholder is visible
+        "Use \"@extend " + extension.target->to_string() +
         " !optional\" to avoid this error.",
         traces, extension.target->pstate())
     {}

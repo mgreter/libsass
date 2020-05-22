@@ -1661,7 +1661,7 @@ namespace Sass {
     SourceSpan pstate(interpolation->pstate());
     mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
-    sass::string css(interpolation->to_css(logger456, mappings));
+    sass::string css(interpolation->to_css(logger456));
     return css;
 
     sass::vector<sass::string> results;
@@ -1712,7 +1712,7 @@ namespace Sass {
     mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     interpolation = evalInterpolation(interpolation, warnForColor);
     return SASS_MEMORY_NEW(SourceItpl,
-      interpolation->to_css(logger456, mappings),
+      interpolation->to_css(logger456),
       interpolation->pstate());
 
   }
@@ -1789,6 +1789,7 @@ namespace Sass {
   {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
+      // SHould both be to CSS??? does not quote?
       if (quote) return evaled->toValString();
       else return evaled->to_css(logger456, false);
     }
@@ -2332,7 +2333,7 @@ namespace Sass {
     SourceSpan pstate(itpl->pstate());
     mappings.emplace_back(Mapping(pstate.getSrcIdx(), pstate.position, Offset()));
     InterpolationObj evaled = evalInterpolation(itpl, false);
-    sass::string css(evaled->to_css(logger456, mappings));
+    sass::string css(evaled->to_css(logger456/*, mappings*/));
     StringUtils::makeTrimmed(css);
     auto text = css;
 

@@ -8,6 +8,7 @@
 
 #include "logger.hpp"
 #include "operators.hpp"
+#include "operation.hpp"
 #include "environment.hpp"
 #include "dart_helpers.hpp"
 
@@ -119,13 +120,36 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
   // base class for values that support operations
   //////////////////////////////////////////////////////////////////////
-  class Value : public Expression {
+  class Value : public Expression, public ValueVisitable<sass::string> {
   protected:
 
     // Hash is only calculated once
     mutable size_t hash_;
 
+  private:
+
+    // Internal API 
+    virtual void stringify(sass::string& buffer) const {
+      buffer += "Hello";
+    }
+
   public:
+
+    // You may overload this in final classes for better performance
+    // Encouraged if you can return a const sass::string& directly
+    sass::string stringify() const {
+      sass::string buffer;
+      stringify(buffer);
+      return buffer;
+    }
+
+    virtual sass::string visit(ValueVisitor2<sass::string>& visitor) override {
+      return "HEllo";
+    }
+
+
+
+
 
     /*
       String toCssString({bool quote = true}) => serializeValue(this, quote: quote);
@@ -1251,6 +1275,13 @@ namespace Sass {
 
     Boolean* isBoolean() override final { return this; }
     const Boolean* isBoolean() const override final { return this; }
+
+    // template <typename T>
+    // sass::string visit(ValueVisitor2<sass::string>& visitor) override final {
+    //   return visitor.visitBoolean(this);
+    // }
+
+
 
     // Return the list separator
     bool isTruthy() const override final {

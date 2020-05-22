@@ -5,15 +5,15 @@
 #include <vector>
 
 #include "util.hpp"
-#include "inspect.hpp"
+#include "cssize.hpp"
 #include "operation.hpp"
 
 namespace Sass {
   class Context;
 
-  class Output : public Inspect {
+  class Output : public Cssize {
   protected:
-    using Inspect::operator();
+    using Cssize::operator();
 
   public:
     Output(SassOutputOptionsCpp& opt, bool srcmap_enabled);

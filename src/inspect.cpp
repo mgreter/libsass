@@ -22,6 +22,10 @@
 #include "utf8/checked.h"
 #include "debugger.hpp"
 
+// I want an inspect without any sourcemap stuff
+// a) string only generator
+// b) with source-mappings
+
 namespace Sass {
 
   // Import some namespaces
@@ -475,16 +479,11 @@ namespace Sass {
 
   void Inspect::operator()(Map* map)
   {
-    if (output_style() == SASS_STYLE_TO_CSS) {
-      // should be handle in check_expression
-      throw Exception::InvalidCssValue2({}, *map);
-    }
 
-    if (output_style() == SASS_STYLE_INSPECT && map->empty()) {
+    if (map->empty()) {
       append_string("()");
       return;
     }
-    if (map->empty()) return;
     // if (map->is_invisible()) return;
     bool items_output = false;
     append_string("(");
@@ -667,9 +666,9 @@ namespace Sass {
   void Inspect::visitSelectorList(SelectorList* list)
   {
     if (list->empty()) {
-      if (output_style() == SASS_STYLE_INSPECT) {
-        append_token("()", list);
-      }
+      // if (output_style() == SASS_STYLE_INSPECT) {
+      //   append_token("()", list);
+      // }
       return;
     }
 
@@ -864,6 +863,7 @@ namespace Sass {
 
     if (opt.output_style == SASS_STYLE_TO_CSS && !n->is_valid_css_unit()) {
       // traces.push_back(BackTrace(nr->pstate()));
+      // issue_1804
       throw Exception::InvalidCssValue({}, *n);
     }
 
@@ -989,8 +989,8 @@ namespace Sass {
 
   void Inspect::operator()(Interpolation* node)
   {
-    bool inspect = output_style() == SASS_STYLE_INSPECT;
-    if (inspect) append_string("#{");
+    // bool inspect = output_style() == SASS_STYLE_INSPECT;
+    // if (inspect) append_string("#{");
     for (Interpolant* value : node->elements()) {
       if (ItplString* str = value->getItplString()) {
         append_token(str->text(), str);
@@ -999,7 +999,7 @@ namespace Sass {
         value->perform(this);
       }
     }
-    if (inspect) append_string("}");
+    // if (inspect) append_string("}");
   }
 
   void Inspect::operator()(Custom_Error* e)
@@ -1049,9 +1049,7 @@ namespace Sass {
 
   void Inspect::operator()(PlaceholderSelector* node)
   {
-    if (output_style() == SASS_STYLE_INSPECT) {
-      append_token(node->name(), node);
-    }
+    append_token(node->name(), node);
   }
 
   void Inspect::operator()(SelectorList* g)

@@ -33,6 +33,44 @@ namespace Sass {
     virtual sass::string perform(Operation<sass::string>* op) override { return (*op)(this); } \
     virtual CssNode* perform(Operation<CssNode*>* op) override { return (*op)(this); } \
 
+  template <typename T>
+  class ValueVisitor2 {
+  public:
+    virtual T visitBoolean(Boolean* value) = 0;
+    virtual T visitColor(Color* value) = 0;
+    virtual T visitFunction(Function* value) = 0;
+    virtual T visitList(List* value) = 0;
+    virtual T visitMap(Map* value) = 0;
+    virtual T visitNull(Null* value) = 0;
+    virtual T visitNumber(Number* value) = 0;
+    virtual T visitString(String* value) = 0;
+  };
+
+
+  template <typename T>
+  class ValueVisitable {
+    virtual T visit(ValueVisitor2<T>& visitor) = 0;
+  };
+
+  /*
+  template <typename T, typename D>
+  class ValueVisitorCRTP : public ValueVisitor<T> {
+  public:
+    T visitBoolean()(Boolean* value) {
+      return static_cast<D*>(this)->fallback(x);
+    }
+
+    // You may not implement all methods if you don't need them
+    // But if they get called we must inform the user about it
+    template <typename U> inline T fallback(U x)
+    {
+      throw std::runtime_error(std::string(typeid(*this).name())
+        + ": CRTP not implemented for " + typeid(x).name());
+    }
+
+  };
+  */
+
   template<typename T>
   class Operation {
   public:

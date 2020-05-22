@@ -18,7 +18,7 @@ namespace Sass {
   // ToDo: move assignment
 
   Output::Output(SassOutputOptionsCpp& opt, bool srcmap_enabled)
-    : Inspect(opt, srcmap_enabled),
+    : Cssize(opt, srcmap_enabled),
     charset(""),
     top_nodes(0)
   {}
@@ -47,7 +47,7 @@ namespace Sass {
       throw Exception::InvalidCssValue({}, *n);
     }
     // use values to_string facility
-    Inspect::operator()(n);
+    Cssize::operator()(n);
     // output the final token
     // append_token(res, n);
   }
@@ -58,7 +58,7 @@ namespace Sass {
       // top_nodes.emplace_back(imp);
     }
     else {
-      Inspect::operator()(imp);
+      Cssize::operator()(imp);
     }
   }
 
@@ -68,7 +68,7 @@ namespace Sass {
       top_nodes.emplace_back(imp);
     }
     else {
-      Inspect::operator()(imp);
+      Cssize::operator()(imp);
     }
   }
 
@@ -81,7 +81,7 @@ namespace Sass {
   OutputBuffer Output::get_buffer(void)
   {
     // This needs saving
-    Inspect inspect(opt, wbuf.smap ? true : false);
+    Cssize inspect(opt, wbuf.smap ? true : false);
 
     size_t size_nodes = top_nodes.size();
     for (size_t i = 0; i < size_nodes; i++) {
@@ -152,7 +152,7 @@ namespace Sass {
 
   void Output::operator()(CssStyleRule* r)
   {
-    Inspect::visitCssStyleRule(r);
+    Cssize::visitCssStyleRule(r);
   }
 
 
@@ -210,7 +210,7 @@ namespace Sass {
     // Skip if block is empty/invisible
     if (!rule->isInvisible5()) {
       // Let inspect do its magic
-      Inspect::visitCssMediaRule(rule);
+      Cssize::visitCssMediaRule(rule);
     }
   }
 
