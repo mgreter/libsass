@@ -15,7 +15,7 @@
 
 namespace Sass {
 
-  double round(double val, size_t precision)
+  double round(double val, int precision)
   {
     // Disable FMA3-optimized implementation when compiling with VS2013 for x64 targets
     // See https://github.com/sass/node-sass/issues/1854 for details

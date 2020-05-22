@@ -14,10 +14,20 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  sass::string AST_Node::inspect(int precision) const
+  {
+    SassOutputOptionsCpp out({ SASS_STYLE_INSPECT, precision });
+    Inspect i(out, false);
+    i.in_declaration = true;
+    // ToDo: inspect should be const
+    const_cast<AST_Node*>(this)->perform(&i);
+    return i.get_buffer();
+  }
+
   sass::string AST_Node::to_string(Sass_Inspect_Options opt) const
   {
     SassOutputOptionsCpp out(opt);
-    Inspect i(out, false);
+    Cssize i(out, false);
     i.in_declaration = true;
     // ToDo: inspect should be const
     const_cast<AST_Node*>(this)->perform(&i);

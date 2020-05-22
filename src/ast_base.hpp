@@ -50,7 +50,7 @@ namespace Sass {
 
     virtual ~AST_Node() {};
 
-    virtual sass::string inspect() const { return to_string({ SASS_STYLE_INSPECT, SassDefaultPrecision }); }
+    virtual sass::string inspect(int precision = SassDefaultPrecision) const;
 
     virtual sass::string to_string() const;
 

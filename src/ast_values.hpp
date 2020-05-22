@@ -1364,7 +1364,7 @@ namespace Sass {
     bool operator== (const Value& rhs) const override;
     bool operator== (const String& rhs) const;
     // quotes are forced on inspection
-    virtual sass::string inspect() const override;
+    virtual sass::string inspect(int precision = SassDefaultPrecision) const override;
     virtual bool isBlank() const override;
     String* assertString(Logger& logger, const SourceSpan& parent, const sass::string& name = StrEmpty) override final {
       return this;

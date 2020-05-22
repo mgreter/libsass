@@ -26,8 +26,8 @@ namespace Sass {
             String, pstate, "null");
         }
         return SASS_MEMORY_NEW(String,
-          pstate, arguments[0]->to_string({
-            SASS_STYLE_INSPECT, ctx.precision
+          pstate, arguments[0]->inspect({
+            ctx.precision
           }));
       }
 

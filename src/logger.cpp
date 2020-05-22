@@ -27,7 +27,7 @@ namespace Sass {
 
   using namespace Constants;
 
-  Logger::Logger(size_t precision, enum SassLoggerStyle style) :
+  Logger::Logger(int precision, enum SassLoggerStyle style) :
     epsilon(std::pow(0.1, precision + 1)),
     style(style)
   {
@@ -36,7 +36,7 @@ namespace Sass {
     }
   }
 
-  void Logger::setPrecision(size_t precision)
+  void Logger::setPrecision(int precision)
   {
     epsilon = std::pow(0.1, precision + 1);
   }
@@ -123,7 +123,7 @@ namespace Sass {
   }
 
   /*
-  StdLogger::StdLogger(size_t precision, enum SassLoggerStyle style) :
+  StdLogger::StdLogger(int precision, enum SassLoggerStyle style) :
     Logger(precision, style)
   {
   }

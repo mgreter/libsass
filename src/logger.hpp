@@ -82,9 +82,9 @@ namespace Sass {
 
   public:
 
-    Logger(size_t precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
+    Logger(int precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
 
-    void setPrecision(size_t precision);
+    void setPrecision(int precision);
 
     void addWarning(const sass::string& message);
 
@@ -116,7 +116,7 @@ namespace Sass {
 
   public:
 
-    StdLogger(size_t precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
+    StdLogger(int precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
 
     void warn(sass::string message) const override final;
     void debug(sass::string message) const override final;

@@ -1790,7 +1790,7 @@ namespace Sass {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
       // SHould both be to CSS??? does not quote?
-      if (quote) return evaled->toValString();
+      if (quote) return evaled->to_string();
       else return evaled->to_css(logger456, false);
     }
     else {

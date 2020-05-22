@@ -16,6 +16,10 @@
 
 namespace Sass {
 
+  // Import some namespaces
+  using namespace Charcode;
+  using namespace Character;
+
   void Cssize::operator()(Function* f)
   {
     bool inspect = output_style() == SASS_STYLE_INSPECT;
@@ -36,9 +40,19 @@ namespace Sass {
     Inspect::operator()(value);
   }
 
-  void Cssize::operator()(List* value)
+  void Cssize::operator()(List* list)
   {
-    Inspect::operator()(value);
+    // if (list->empty()) {
+    //   if (list->hasBrackets()) {
+    //     append_char($lbracket);
+    //     append_char($rbracket);
+    //   }
+    //   else {
+    //     throw Exception::InvalidCssValue({}, *list);
+    //   }
+    //   return;
+    // }
+    Inspect::operator()(list);
   }
 
 

@@ -895,7 +895,7 @@ namespace Sass {
     return value() == rhs.value();
   }
 
-  sass::string String::inspect() const
+  sass::string String::inspect(int precision) const
   {
     return hasQuotes() ? quote(value_, '*') : value_;
   }
