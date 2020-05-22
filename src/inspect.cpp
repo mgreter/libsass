@@ -802,7 +802,7 @@ namespace Sass {
     if (expr->optype() == UnaryExpression::PLUS)       append_string("+");
     else if (expr->optype() == UnaryExpression::SLASH) append_string("/");
     else                                                append_string("-");
-    append_string(expr->operand()->to_string());
+    append_string(expr->operand()->inspect());
   }
 
   // void Inspect::operator()(Variable* var)

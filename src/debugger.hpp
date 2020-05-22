@@ -33,7 +33,7 @@ inline sass::string dbgValStr(CssString* str) {
 
 inline sass::string debug_vec(const AST_Node* node) {
   if (node == NULL) return "null";
-  else return node->to_string();
+  else return node->inspect();
 }
 
 inline std::string debug_dude(sass::vector<sass::vector<int>> vec) {
@@ -69,7 +69,7 @@ inline std::string debug_vec(sass::vector<ComplexSelectorObj> vec) {
   std::stringstream out;
   out << "[";
   SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, SourceSpan::tmp("DBG"), std::move(vec));
-  out << slist->to_string();
+  out << slist->inspect();
   out << "]";
   return out.str();
 }
@@ -732,7 +732,7 @@ inline void debug_ast(AST_Node* node, std::string ind)
     std::cerr << ind << "Return " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " " << block->tabs();
-    std::cerr << " [" << block->value()->to_string() << "]" << std::endl;
+    std::cerr << " [" << block->value()->inspect() << "]" << std::endl;
   }
   else if (Cast<ExtendRule>(node)) {
     ExtendRule* block = Cast<ExtendRule>(node);

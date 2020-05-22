@@ -17,8 +17,8 @@ namespace Sass {
 
   // ToDo: move assignment
 
-  Output::Output(SassOutputOptionsCpp& opt, bool srcmap_enabled)
-    : Cssize(opt, srcmap_enabled),
+  Output::Output(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled)
+    : Cssize(logger, opt, srcmap_enabled),
     charset(""),
     top_nodes(0)
   {}
@@ -81,7 +81,7 @@ namespace Sass {
   OutputBuffer Output::get_buffer(void)
   {
     // This needs saving
-    Cssize inspect(opt, wbuf.smap ? true : false);
+    Inspect inspect(opt, wbuf.smap ? true : false);
 
     size_t size_nodes = top_nodes.size();
     for (size_t i = 0; i < size_nodes; i++) {

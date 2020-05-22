@@ -8,11 +8,13 @@
 namespace Sass {
 
   class Cssize : public Inspect {
+  private:
+    Logger& logger;
   protected:
     using Inspect::operator();
   public:
-    Cssize(SassOutputOptionsCpp& opt, bool srcmap_enabled)
-      : Inspect(opt, srcmap_enabled)
+    Cssize(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled)
+      : Inspect(opt, srcmap_enabled), logger(logger)
     {}
 
     void operator()(Function* f) override;

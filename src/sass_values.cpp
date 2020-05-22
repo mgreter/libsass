@@ -274,7 +274,7 @@ extern "C" {
     Value* val = getValue(v);
     // Sass_Inspect_Options options(compressed ?
     //   SASS_STYLE_COMPRESSED : SASS_STYLE_NESTED, precision);
-    sass::string str(val->toValString(/*options*/));
+    sass::string str(val->inspect(/*options*/));
     return sass_make_string(str.c_str(), true);
   }
 

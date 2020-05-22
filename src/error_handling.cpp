@@ -81,7 +81,7 @@ namespace Sass {
     UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, Extension extension)
       : Base("The target selector was not found.\n"
         // Calling inspect to the placeholder is visible
-        "Use \"@extend " + extension.target->to_string() +
+        "Use \"@extend " + extension.target->inspect() +
         " !optional\" to avoid this error.",
         traces, extension.target->pstate())
     {}

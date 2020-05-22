@@ -100,7 +100,7 @@ namespace Sass {
       }
       else {
         // callStackFrame frame(traces, BackTrace(number->pstate()));
-        error(name + ": Expected " + number->toValString() +
+        error(name + ": Expected " + number->toValString(traces) +
           " to have no units or \"%\".", number->pstate(), traces);
       }
       if (value < 0.0) return 0.0;
@@ -118,12 +118,12 @@ namespace Sass {
       return false;
     }
 
-    Value* _parseChannels(sass::string name, sass::vector<sass::string> argumentNames, Value* channels, const SourceSpan& pstate, BackTraces traces)
+    Value* _parseChannels(sass::string name, sass::vector<sass::string> argumentNames, Value* channels, const SourceSpan& pstate, Logger& traces)
     {
       if (isVar(channels)) {
         sass::sstream fncall;
         fncall << name << "("
-          << channels->toValString() << ")";
+          << channels->toValString(traces) << ")";
         return SASS_MEMORY_NEW(String,
           pstate, fncall.str());
       }
@@ -168,7 +168,7 @@ namespace Sass {
           fncall << name << "(";
           for (size_t i = 0, iL = list->length(); i < iL; i++) {
             if (i > 0) { fncall << " "; }
-            fncall << list->get(i)->toValString();
+            fncall << list->get(i)->inspect();
           }
           fncall << ")";
           return SASS_MEMORY_NEW(String,
@@ -199,7 +199,7 @@ namespace Sass {
         fncall << name << "(";
         for (size_t i = 0, iL = list->length(); i < iL; i++) {
           if (i > 0) { fncall << " "; }
-          fncall << list->get(i)->toValString();
+          fncall << list->get(i)->inspect();
 
         }
         fncall << ")";
@@ -219,7 +219,7 @@ namespace Sass {
       fncall << name << "(";
       for (Value* arg : arguments) {
         if (addComma) fncall << ", ";
-        fncall << arg->toValString();
+        fncall << arg->inspect();
         addComma = true;
       }
       fncall << ")";
@@ -234,7 +234,7 @@ namespace Sass {
       fncall << color->r() << ", ";
       fncall << color->g() << ", ";
       fncall << color->b() << ", ";
-      fncall << alpha->toValString() << ")";
+      fncall << alpha->inspect() << ")";
       return SASS_MEMORY_NEW(String,
         pstate, fncall.str());
     }
@@ -297,7 +297,7 @@ namespace Sass {
       {
         ValueObj parsed = _parseChannels(
           Strings::rgb, { "$red", "$green", "$blue" },
-          arguments[0], pstate, {});
+          arguments[0], pstate, *ctx.logger123);
         if (String * str = parsed->isString()) {
           parsed.detach();
           return str;
@@ -305,7 +305,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgb, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString(*ctx.logger123));
       }
 
 
@@ -331,7 +331,7 @@ namespace Sass {
       {
         ValueObj parsed = _parseChannels(
           Strings::rgba, { "$red", "$green", "$blue" },
-          arguments[0], pstate, {});
+          arguments[0], pstate, *ctx.logger123);
         if (String* str = parsed->isString()) {
           parsed.detach();
           return str;
@@ -339,7 +339,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _rgb(Strings::rgba, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString(*ctx.logger123));
       }
 
 
@@ -372,7 +372,7 @@ namespace Sass {
       {
         ValueObj parsed = _parseChannels(
           Strings::hsl, { "$hue", "$saturation", "$lightness" },
-          arguments[0], pstate, {});
+          arguments[0], pstate, *ctx.logger123);
         if (String* str = parsed->isString()) { // Ex
           parsed.detach();
           return str;
@@ -380,7 +380,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsl, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString(*ctx.logger123));
       }
 
 
@@ -413,7 +413,7 @@ namespace Sass {
       {
         ValueObj parsed = _parseChannels(
           Strings::hsla, { "$hue", "$saturation", "$lightness" },
-          arguments[0], pstate, {});
+          arguments[0], pstate, *ctx.logger123);
         if (String* str = parsed->isString()) { // Ex
           parsed.detach();
           return str;
@@ -421,7 +421,7 @@ namespace Sass {
         if (List * list = parsed->isList()) { // Ex
           return _hsl(Strings::hsla, list->elements(), "", pstate, *ctx.logger123);
         }
-        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString());
+        return SASS_MEMORY_NEW(String, pstate, arguments[0]->toValString(*ctx.logger123));
       }
 
       BUILT_IN_FN(red)
@@ -549,7 +549,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(*ctx.logger123, Strings::amount);
         return SASS_MEMORY_NEW(String, pstate,
-          "saturate(" + number->toValString() + ")");
+          "saturate(" + number->toValString(*ctx.logger123) + ")");
       }
 
       BUILT_IN_FN(desaturate)
@@ -1030,13 +1030,13 @@ namespace Sass {
 
 
     // Who calls me, shouldn't we go from value? Why ast node?
-    Number* assertNumber(AST_Node* node, sass::string name, const SourceSpan& pstate, BackTraces traces)
+    Number* assertNumber(AST_Node* node, sass::string name, const SourceSpan& pstate, Logger& logger)
     {
       if (node == nullptr) return nullptr;
       Number* nr = Cast<Number>(node);
       if (nr == nullptr) {
-        error(name + ": " + node->to_string()
-          + " is not a number.", pstate, traces);
+        error(name + ": " + node->to_string(logger)
+          + " is not a number.", pstate, logger);
       }
       return nr;
     }
@@ -1054,10 +1054,10 @@ namespace Sass {
       if (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a)) {
         sass::sstream fncall;
         fncall << name << "(";
-        fncall << _r->toValString() << ", ";
-        fncall << _g->toValString() << ", ";
-        fncall << _b->toValString();
-        if (_a) { fncall << ", " << _a->toValString(); }
+        fncall << _r->toValString(logger) << ", ";
+        fncall << _g->toValString(logger) << ", ";
+        fncall << _b->toValString(logger);
+        if (_a) { fncall << ", " << _a->toValString(logger); }
         fncall << ")";
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
@@ -1088,10 +1088,10 @@ namespace Sass {
       if (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a)) {
         sass::sstream fncall;
         fncall << name << "(";
-        fncall << _h->toValString() << ", ";
-        fncall << _s->toValString() << ", ";
-        fncall << _l->toValString();
-        if (_a) { fncall << ", " << _a->toValString(); }
+        fncall << _h->toValString(logger) << ", ";
+        fncall << _s->toValString(logger) << ", ";
+        fncall << _l->toValString(logger);
+        if (_a) { fncall << ", " << _a->toValString(logger); }
         fncall << ")";
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }

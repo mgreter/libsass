@@ -1053,7 +1053,7 @@ namespace Sass {
     Sass_Inspect_Options serializeOpt(compiler);
     serializeOpt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(serializeOpt);
-    Cssize serialize(out, false);
+    Cssize serialize(logger456, out, false);
     serialize.in_declaration = true;
     serialize.quotes = false;
     node->perform(&serialize);
@@ -1173,7 +1173,7 @@ namespace Sass {
     }
     else {
 
-      sass::string result(unquote(message->toValString()));
+      sass::string result(unquote(message->toValString(logger456)));
 
 
       BackTrace trace(node->pstate());
@@ -1212,7 +1212,7 @@ namespace Sass {
     }
     else { 
 
-      sass::string result(message->to_string());
+      sass::string result(message->to_string(logger456));
       // options().output_style = outstyle;
       error(result, node->pstate(), traces);
 
@@ -1691,7 +1691,7 @@ namespace Sass {
       }
       */
 
-      sass::string str(result->toValString());
+      sass::string str(result->toValString(logger456));
       results.emplace_back(std::move(str));
 
     }
@@ -1790,7 +1790,7 @@ namespace Sass {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
       // SHould both be to CSS??? does not quote?
-      if (quote) return evaled->to_string();
+      if (quote) return evaled->to_string(logger456);
       else return evaled->to_css(logger456, false);
     }
     else {
@@ -2296,7 +2296,7 @@ namespace Sass {
             sels << "Compound selectors may no longer be extended. Consider `@extend ";
             for (auto sel : compound->elements()) {
               if (addComma) sels << ", ";
-              sels << sel->to_string();
+              sels << sel->to_string(logger456);
               addComma = true;
             }
             sels << "` instead. See http://bit.ly/ExtendCompound for details.";
