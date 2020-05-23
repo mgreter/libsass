@@ -58,11 +58,6 @@ namespace Sass {
     virtual size_t contentSize() const = 0;
     virtual size_t srcmapsSize() const = 0;
 
-    // Needed to satisfy SharedObj
-    sass::string to_string() const {
-      return content();
-    }
-
     // Returns adjusted source span regarding interpolation.
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const {
       return pstate;

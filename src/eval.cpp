@@ -1541,7 +1541,7 @@ namespace Sass {
       rest = rest->perform(&eval);
       if (addComma) { strm += ", "; }
       else { addComma = true; }
-      strm += eval._serialize(rest);
+      strm += eval._evaluateToCss(rest);
     }
     strm += ")";
     return SASS_MEMORY_NEW(
@@ -1802,11 +1802,11 @@ namespace Sass {
 /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
 /// [AstNode.span] if the span isn't required, since some nodes need to do
 /// real work to manufacture a source span.
-  sass::string Eval::_serialize(Expression* value, bool quote)
-  {
-    // _addExceptionSpan(nodeWithSpan, () = > value.toCssString(quote: quote));
-    return value->to_css(logger456, false);
-  }
+//  sass::string Eval::_serialize(Expression* value, bool quote)
+//  {
+//    // _addExceptionSpan(nodeWithSpan, () = > value.toCssString(quote: quote));
+//    return value->to_css(logger456, false);
+//  }
 
 
 /// parentheses if necessary. 
@@ -1904,17 +1904,7 @@ namespace Sass {
     }
   }
 
-  /// Adds the values in [map] to [values].
-  ///
-  /// Throws a [SassRuntimeException] associated with [nodeForSpan]'s source
-  /// span if any [map] keys aren't strings.
-  ///
-  /// If [convert] is passed, that's used to convert the map values to the value
-  /// type for [values]. Otherwise, the [Value]s are used as-is.
-  ///
-  /// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
-  /// [AstNode.span] if the span isn't required, since some nodes need to do
-  /// real work to manufacture a source span.
+  /// Adds the values in [map] to [values] as value expressions.
   void Eval::_addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& pstate) {
     // convert ??= (value) = > value as T;
 

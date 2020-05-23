@@ -311,8 +311,6 @@ namespace Sass {
 
     sass::string _evaluateToCss(Expression* expression, bool quote = true);
 
-    sass::string _serialize(Expression* expression, bool quote = true);
-
     sass::string _parenthesize(SupportsCondition* condition);
     sass::string _parenthesize(SupportsCondition* condition, SupportsOperation::Operand operand);
     sass::string _visitSupportsCondition(SupportsCondition* condition);

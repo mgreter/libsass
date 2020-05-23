@@ -114,9 +114,6 @@ namespace Sass {
     }
     #endif
 
-    virtual sass::string to_string() const {
-      return "[SHAREDPTR]";
-    }
    protected:
     friend class SharedPtr;
     friend class MemoryPool;
