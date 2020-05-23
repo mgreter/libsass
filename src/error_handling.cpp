@@ -59,17 +59,17 @@ namespace Sass {
     DuplicateKeyError::DuplicateKeyError(BackTraces traces, const Map& dup, const Expression& org)
     : Base(def_msg, traces), dup(dup), org(org)
     {
-      // msg = "Duplicate key " + dup.get_duplicate_key()->inspect() + " in map (" + org.inspect() + ").";
+      // msg = "Duplicate key " + dup.get_duplicate_key()->inspectValue() + " in map (" + org.inspectValue() + ").";
       msg = "Duplicate key."; // dart-sass keeps it simple ...
     }
 
 
     InvalidCssValue::InvalidCssValue(BackTraces traces, const Value& val)
-      : Base(val.inspect() + " isn't a valid CSS value.", traces, val.pstate())
+      : Base(val.inspectValue() + " isn't a valid CSS value.", traces, val.pstate())
     {}
 
     InvalidCssValue2::InvalidCssValue2(BackTraces traces, const Value& val)
-      : Base(val.inspect() + " isn't a valid CSS value.", traces, val.pstate())
+      : Base(val.inspectValue() + " isn't a valid CSS value.", traces, val.pstate())
     {}
 
     // Thrown when a parent selector is used without any parent
@@ -139,23 +139,24 @@ namespace Sass {
 
     AlphaChannelsNotEqual::AlphaChannelsNotEqual(const Color_RGBA* lhs, const Color_RGBA* rhs, enum Sass_OP op)
       : OperationError("Alpha channels must be equal: "
-        + lhs->inspect() + " "
+        + lhs->inspectValue() + " "
         + sass_op_to_name(op) + " "
-        + rhs->inspect() + ".")
+        + rhs->inspectValue() + ".")
     {}
 
-    UndefinedOperation::UndefinedOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op)
-      : OperationError("Undefined operation: \""
-        + lhs->inspect() + " "
-        + sass_op_separator(op) + " "
-        + rhs->inspect() + "\".")
-    {}
 
-    InvalidNullOperation::InvalidNullOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op)
+    InvalidNullOperation::InvalidNullOperation(const Value* lhs, const Value* rhs, enum Sass_OP op)
       : OperationError("Invalid null operation: \""
-        + lhs->inspect() + " "
+        + lhs->inspectValue() + " "
         + sass_op_to_name(op) + " "
-        + rhs->inspect() + "\".")
+        + rhs->inspectValue() + "\".")
+    {}
+
+    UndefinedOperation::UndefinedOperation(const Value* lhs, const Value* rhs, enum Sass_OP op)
+      : OperationError("Undefined operation: \""
+        + lhs->inspectValue() + " "
+        + sass_op_separator(op) + " "
+        + rhs->inspectValue() + "\".")
     {}
 
 

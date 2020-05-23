@@ -17,8 +17,8 @@ namespace Sass {
 
   // ToDo: move assignment
 
-  Output::Output(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled)
-    : Cssize(logger, opt, srcmap_enabled),
+  Output::Output(SassOutputOptionsCpp& opt, bool srcmap_enabled)
+    : Cssize(opt, srcmap_enabled),
     charset(""),
     top_nodes(0)
   {}

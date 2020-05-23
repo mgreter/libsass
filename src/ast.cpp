@@ -25,10 +25,10 @@ namespace Sass {
     return i.get_buffer();
   }
 
-  sass::string AST_Node::to_string(Logger& logger, Sass_Inspect_Options opt) const
+  sass::string AST_Node::to_string(Sass_Inspect_Options opt) const
   {
     SassOutputOptionsCpp out(opt);
-    Cssize i(logger, out, false);
+    Cssize i(out, false);
     i.in_declaration = true;
     // ToDo: inspect should be const
     const_cast<AST_Node*>(this)->perform(&i);
@@ -39,7 +39,7 @@ namespace Sass {
   {
     opt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(opt);
-    Cssize i(logger, out, false);
+    Cssize i(out, false);
     i.quotes = quotes;
     i.in_declaration = true;
     // ToDo: inspect should be const
@@ -63,9 +63,9 @@ namespace Sass {
   //   return i.get_buffer();
   // }
 
-  sass::string AST_Node::to_string(Logger& logger) const
+  sass::string AST_Node::to_string() const
   {
-    return to_string(logger, { SASS_STYLE_NESTED, SassDefaultPrecision });
+    return to_string({ SASS_STYLE_NESTED, SassDefaultPrecision });
   }
 
   // sass::string AST_Node::to_css(Logger& logger, sass::vector<Mapping>& mappings, bool quotes) const

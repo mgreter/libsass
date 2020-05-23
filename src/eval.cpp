@@ -1053,7 +1053,7 @@ namespace Sass {
     Sass_Inspect_Options serializeOpt(compiler);
     serializeOpt.output_style = SASS_STYLE_TO_CSS;
     SassOutputOptionsCpp out(serializeOpt);
-    Cssize serialize(logger456, out, false);
+    Cssize serialize(out, false);
     serialize.in_declaration = true;
     serialize.quotes = false;
     node->perform(&serialize);
@@ -1173,7 +1173,7 @@ namespace Sass {
     }
     else {
 
-      sass::string result(unquote(message->toValString(logger456)));
+      sass::string result(unquote(message->inspectValue()));
 
 
       BackTrace trace(node->pstate());
@@ -1212,7 +1212,7 @@ namespace Sass {
     }
     else { 
 
-      sass::string result(message->to_string(logger456));
+      sass::string result(message->inspectValue());
       // options().output_style = outstyle;
       error(result, node->pstate(), traces);
 
@@ -1247,7 +1247,7 @@ namespace Sass {
     }
     else {
 
-      sass::string result(unquote(message->inspect()));
+      sass::string result(unquote(message->inspectValue()));
       sass::string output_path(node->pstate().getDebugPath());
       // options().output_style = outstyle;
 
@@ -1691,7 +1691,7 @@ namespace Sass {
       }
       */
 
-      sass::string str(result->toValString(logger456));
+      sass::string str(result->inspectValue());
       results.emplace_back(std::move(str));
 
     }
@@ -1790,7 +1790,7 @@ namespace Sass {
     ValueObj evaled = expression->perform(this);
     if (!evaled->isNull()) {
       // SHould both be to CSS??? does not quote?
-      if (quote) return evaled->to_string(logger456);
+      if (quote) return evaled->to_string();
       else return evaled->to_css(logger456, false);
     }
     else {
@@ -1900,7 +1900,7 @@ namespace Sass {
         callStackFrame frame(*compiler.logger123, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
-          kv.first->inspect() + " is not a string in " + map->inspect() + ".",
+          kv.first->inspectValue() + " is not a string in " + map->inspectValue() + ".",
           *compiler.logger123);
       }
     }
@@ -1929,7 +1929,7 @@ namespace Sass {
         callStackFrame frame(*compiler.logger123, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
-          kv.first->inspect() + " is not a string in " + map->inspect() + ".",
+          kv.first->inspectValue() + " is not a string in " + map->inspectValue() + ".",
           *compiler.logger123);
       }
     }
@@ -2296,7 +2296,7 @@ namespace Sass {
             sels << "Compound selectors may no longer be extended. Consider `@extend ";
             for (auto sel : compound->elements()) {
               if (addComma) sels << ", ";
-              sels << sel->to_string(logger456);
+              sels << sel->inspectSelector();
               addComma = true;
             }
             sels << "` instead. See http://bit.ly/ExtendCompound for details.";

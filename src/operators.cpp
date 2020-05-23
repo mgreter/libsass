@@ -82,8 +82,8 @@ namespace Sass {
       sass::string lstr(lqstr ? lqstr->value() : lhs.inspect(/*opt*/));
       sass::string rstr(rqstr ? rqstr->value() : rhs.inspect(/*opt*/));
 
-      // if (lhs.isNull()) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
-      // if (Cast<Null>(&rhs)) throw Exception::InvalidNullOperation(&lhs, &rhs, op);
+      // if (lhs.isNull()) throw Exception::InvalidNullOperation2(&lhs, &rhs, op);
+      // if (Cast<Null>(&rhs)) throw Exception::InvalidNullOperation2(&lhs, &rhs, op);
 
       sass::string sep;
       switch (op) {
@@ -133,7 +133,7 @@ namespace Sass {
         throw Exception::ZeroDivisionError(lhs, rhs);
       }
 
-      op_color_deprecation(op, lhs.inspect(), rhs.inspect(), pstate);
+      op_color_deprecation(op, lhs.inspectValue(), rhs.inspectValue(), pstate);
 
       return SASS_MEMORY_NEW(Color_RGBA,
                              pstate,
@@ -262,7 +262,7 @@ namespace Sass {
       switch (op) {
         case Sass_OP::ADD:
         case Sass_OP::MUL: {
-          op_color_deprecation(op, lhs.inspect(), rhs.inspect(), pstate);
+          op_color_deprecation(op, lhs.inspectValue(), rhs.inspectValue(), pstate);
           return SASS_MEMORY_NEW(Color_RGBA,
                                 pstate,
                                 ops[op](lval, rhs.r()),
@@ -272,11 +272,11 @@ namespace Sass {
         }
         case Sass_OP::SUB:
         case Sass_OP::DIV: {
-          sass::string color(rhs.inspect());
-          op_color_deprecation(op, lhs.inspect(), color, pstate);
+          sass::string color(rhs.inspectValue());
+          op_color_deprecation(op, lhs.inspectValue(), color, pstate);
           return SASS_MEMORY_NEW(String,
                                 pstate,
-                                lhs.inspect()
+                                lhs.inspectValue()
                                 + sass_op_separator(op)
                                 + color, true);
         }
@@ -295,7 +295,7 @@ namespace Sass {
         throw Exception::ZeroDivisionError(lhs, rhs);
       }
 
-      op_color_deprecation(op, lhs.inspect(), rhs.inspect(), pstate);
+      op_color_deprecation(op, lhs.inspectValue(), rhs.inspectValue(), pstate);
 
       return SASS_MEMORY_NEW(Color_RGBA,
                             pstate,

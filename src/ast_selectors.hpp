@@ -59,6 +59,10 @@ namespace Sass {
     virtual size_t minSpecificity() const { return specificity(); }
     // Calls the appropriate visit method on [visitor].
     virtual void accept(SelectorVisitor<void>& visitor) = 0;
+
+    sass::string inspectSelector() const {
+      return inspect();
+    }
     ATTACH_VIRTUAL_COPY_OPERATIONS(Selector)
   };
   inline Selector::~Selector() { }

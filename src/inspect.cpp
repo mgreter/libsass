@@ -801,8 +801,8 @@ namespace Sass {
   {
     if (expr->optype() == UnaryExpression::PLUS)       append_string("+");
     else if (expr->optype() == UnaryExpression::SLASH) append_string("/");
-    else                                                append_string("-");
-    append_string(expr->operand()->inspect());
+    else                                               append_string("-");
+    operator()(expr->operand());
   }
 
   // void Inspect::operator()(Variable* var)
@@ -812,6 +812,13 @@ namespace Sass {
 
   void Inspect::operator()(Number* n)
   {
+
+    if (n->lhsAsSlash() && n->rhsAsSlash()) {
+      n->lhsAsSlash()->perform(this);
+      append_string("/");
+      n->rhsAsSlash()->perform(this);
+      return;
+    }
 
     if (std::isnan(n->value())) {
       append_string("NaN");

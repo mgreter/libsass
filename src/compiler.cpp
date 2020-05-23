@@ -138,7 +138,7 @@ namespace Sass {
   OutputBuffer Compiler::renderCss()
   {
     // Create the emitter object
-    Output emitter(*logger123, *this, srcmap_options.mode != SASS_SRCMAP_NONE);
+    Output emitter(*this, srcmap_options.mode != SASS_SRCMAP_NONE);
     emitter.reserve(1024 * 1024); // 1MB
 
     // Start the render process

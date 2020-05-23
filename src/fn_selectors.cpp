@@ -52,7 +52,7 @@ namespace Sass {
           if (StringObj str = exp->isString()) {
             str->hasQuotes(false);
           }
-          sass::string exp_src = exp->to_string(logger642);
+          sass::string exp_src = exp->to_string(ctx);
 
           SourceSpan state(exp->pstate());
           auto source = SASS_MEMORY_NEW(SourceItpl,
@@ -129,16 +129,16 @@ namespace Sass {
               compound = _prependParent(compound);
               if (compound == nullptr) {
                 throw Exception::SassRuntimeException2(
-                  "Can't append " + child->to_string(logger642) + " to " +
-                  reduced->to_string(logger642) + ".",
+                  "Can't append " + child->inspectSelector() + " to " +
+                  reduced->inspectSelector() + ".",
                   logger642);
               }
               complex->at(0) = compound;
             }
             else {
               throw Exception::SassRuntimeException2(
-                "Can't append " + child->to_string(logger642) + " to " +
-                reduced->to_string(logger642) + ".",
+                "Can't append " + child->inspectSelector() + " to " +
+                reduced->inspectSelector() + ".",
                 logger642);
             }
           }
@@ -194,7 +194,7 @@ namespace Sass {
           selector->pstate(), sass::vector<ValueObj>(), SASS_COMMA);
         for (size_t i = 0, L = selector->length(); i < L; ++i) {
           const SimpleSelectorObj& ss = selector->get(i);
-          sass::string ss_string = ss->to_string(logger642);
+          sass::string ss_string = ss->to_string();
           l->append(SASS_MEMORY_NEW(String, ss->pstate(), ss_string));
         }
         return l;

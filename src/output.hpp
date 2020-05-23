@@ -16,7 +16,7 @@ namespace Sass {
     using Cssize::operator();
 
   public:
-    Output(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled);
+    Output(SassOutputOptionsCpp& opt, bool srcmap_enabled);
     virtual ~Output();
 
   protected:

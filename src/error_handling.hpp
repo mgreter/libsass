@@ -140,17 +140,18 @@ namespace Sass {
         virtual ~IncompatibleUnits() noexcept {};
     };
 
+
     class UndefinedOperation : public OperationError {
-      public:
-        UndefinedOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op);
-        // virtual const char* errtype() const { return "Error"; }
-        virtual ~UndefinedOperation() noexcept {};
+    public:
+      UndefinedOperation(const Value* lhs, const Value* rhs, enum Sass_OP op);
+      // virtual const char* errtype() const { return "Error"; }
+      virtual ~UndefinedOperation() noexcept {};
     };
 
     class InvalidNullOperation : public OperationError {
-      public:
-        InvalidNullOperation(const Expression* lhs, const Expression* rhs, enum Sass_OP op);
-        virtual ~InvalidNullOperation() noexcept {};
+    public:
+      InvalidNullOperation(const Value* lhs, const Value* rhs, enum Sass_OP op);
+      virtual ~InvalidNullOperation() noexcept {};
     };
 
     class AlphaChannelsNotEqual : public OperationError {
