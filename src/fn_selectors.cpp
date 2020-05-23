@@ -194,7 +194,7 @@ namespace Sass {
           selector->pstate(), sass::vector<ValueObj>(), SASS_COMMA);
         for (size_t i = 0, L = selector->length(); i < L; ++i) {
           const SimpleSelectorObj& ss = selector->get(i);
-          sass::string ss_string = ss->to_string();
+          sass::string ss_string = ss->inspectSelector();
           l->append(SASS_MEMORY_NEW(String, ss->pstate(), ss_string));
         }
         return l;

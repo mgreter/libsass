@@ -1028,19 +1028,6 @@ namespace Sass {
 
     }
 
-
-    // Who calls me, shouldn't we go from value? Why ast node?
-    Number* assertNumber(AST_Node* node, sass::string name, const SourceSpan& pstate, BackTraces traces)
-    {
-      if (node == nullptr) return nullptr;
-      Number* nr = Cast<Number>(node);
-      if (nr == nullptr) {
-        error(name + ": " + node->to_string()
-          + " is not a number.", pstate, traces);
-      }
-      return nr;
-    }
-
     Value* _rgb(const sass::string& name, const sass::vector<ValueObj>& arguments, Signature sig, const SourceSpan& pstate, Logger& logger)
     {
       Value* _r = arguments[0];

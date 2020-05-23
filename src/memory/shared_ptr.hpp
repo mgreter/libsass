@@ -315,11 +315,6 @@ namespace Sass {
         SharedPtr::operator=(static_cast<const SharedImpl<T>&>(rhs)));
     }
 
-    operator sass::string() const {
-      if (node) return node->to_string();
-      return "null";
-    }
-
     using SharedPtr::isNull;
     using SharedPtr::operator bool;
     operator T*() const { return static_cast<T*>(this->obj()); }
