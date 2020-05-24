@@ -96,6 +96,21 @@ namespace Sass {
         virtual ~DuplicateKeyError() noexcept {};
     };
 
+    
+
+      class TooManyArguments : public Base {
+      public:
+        TooManyArguments(BackTraces traces, size_t given, size_t expected);
+        TooManyArguments(BackTraces traces, EnvKeyFlatMap<ExpressionObj> given, Sass::EnvKeySet expected);
+        virtual const char* errtype() const { return "Error"; }
+    };
+
+    class MissingArgument : public Base {
+    public:
+      MissingArgument(BackTraces traces, const sass::string& name);
+      virtual const char* errtype() const { return "Error"; }
+    };
+
     class ArgumentGivenTwice : public Base {
     public:
       ArgumentGivenTwice(BackTraces traces, const sass::string& name);
@@ -105,12 +120,6 @@ namespace Sass {
     class UnknownNamedArgument : public Base {
     public:
       UnknownNamedArgument(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ValueObj> names);
-      virtual const char* errtype() const { return "Error"; }
-    };
-
-    class UnknownNamedArgument2 : public Base {
-    public:
-      UnknownNamedArgument2(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ExpressionObj> names);
       virtual const char* errtype() const { return "Error"; }
     };
 

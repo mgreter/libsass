@@ -766,7 +766,16 @@ namespace Sass {
     const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
 
     // Create a new scope from the callable, outside variables are not visible?
-    declaredArguments->verify(positional.size(), named, pstate, traces);
+
+    positional.resize(declared.size());
+    for (size_t i = 0; i < declared.size(); i += 1) {
+      Value* value = getArgument(positional, named, i, declared[i]->name());
+      compiler.varRoot.setVariable(
+        idxs->varFrame, (uint32_t)i,
+        value->withoutSlash());
+    }
+
+    // declaredArguments->verify(positional.size(), named, pstate, traces);
     size_t minLength = std::min(positional.size(), declared.size());
 
     // Set positional arguments 
@@ -831,14 +840,23 @@ namespace Sass {
     _evaluateArguments(arguments, evaluated); // 12%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
+
+    // Redo this shit!!
+
     const SassFnPair& tuple(callable->function()); // 0.13%
 
     ArgumentDeclaration* overload = tuple.first;
     const SassFnSig& callback = tuple.second;
     const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
 
-    overload->verify(positional.size(), named, pstate, *compiler.logger123); // 0.66%
+    // overload->verify(positional.size(), named, pstate, *compiler.logger123); // 0.66%
 
+
+    positional.resize(declaredArguments.size());
+    for (size_t i = 0; i < declaredArguments.size(); i += 1) {
+      positional[i] = getArgument(positional, named, i, declaredArguments[i]->name());
+    }
+/*
     for (size_t i = positional.size();
       i < declaredArguments.size();
       i++) {
@@ -852,6 +870,7 @@ namespace Sass {
         positional.emplace_back(argument->value()->perform(this));
       }
     }
+    */
 
     bool isNamedEmpty = named.empty();
     ArgumentListObj argumentList;
@@ -1540,72 +1559,91 @@ namespace Sass {
 
   }
 
-  ArgumentDeclaration ifDeclaration({}, {
-      new Argument({}, {}, EnvKey{"if-true"}),
-      new Argument({}, {}, EnvKey{"if-false"}),
-    });
+  Expression* Eval::getArgument(
+    sass::vector<ExpressionObj>& positional,
+    EnvKeyFlatMap<ExpressionObj>& named,
+    size_t idx, const EnvKey& key)
+  {
+    auto name = named.find(key);
+    if (positional.size() > idx) {
+      if (name != named.end()) {
+        throw Exception::ArgumentGivenTwice(logger456, key.norm());
+      }
+      return positional[idx];
+    }
+    else if (name != named.end()) {
+      return name->second;
+    }
+    throw Exception::MissingArgument(logger456, key.norm());
+  }
 
-  // This operates very similar to a function call
-  // But it does evaluate its arguments lazily
+  Value* Eval::getArgument(
+    sass::vector<ValueObj>& positional,
+    EnvKeyFlatMap<ValueObj>& named,
+    size_t idx, const EnvKey& key)
+  {
+    auto name = named.find(key);
+    if (positional.size() > idx) {
+      if (name != named.end()) {
+        throw Exception::ArgumentGivenTwice(logger456, key.norm());
+      }
+      return positional[idx];
+    }
+    else if (name != named.end()) {
+      return name->second;
+    }
+    throw Exception::MissingArgument(logger456, key.norm());
+  }
+
+  // This operates similar to a function call
   Value* Eval::operator()(IfExpression* node)
   {
-
+    ExpressionObj condition, ifTrue, ifFalse;
     ArgumentInvocation* arguments = node->arguments();
-    sass::vector<ExpressionObj>& positional(arguments->positional());
-    EnvKeyFlatMap<ExpressionObj>& named(arguments->named());
-
+    callStackFrame frame(*compiler.logger123, node->pstate());
     // Rest arguments must be evaluated in all cases
     // evaluateMacroArguments is only used for this
     if (node->arguments()->restArg() != nullptr) {
+      // We need to make copies here to preserve originals
+      // We could optimize this further, but impact is slim
+      EnvKeyFlatMap<ExpressionObj> named(arguments->named());
+      sass::vector<ExpressionObj> positional(arguments->positional());
       _evaluateMacroArguments(*node, positional, named);
-    }
-
-    Expression* ifTrue = named.at(Keys::$ifTrue);
-    Expression* ifFalse = named.at(Keys::$ifFalse);
-    Expression* condition = named.at(Keys::$condition);
-
-    size_t positionals = positional.size();
-
-    if (positionals > 0) {
-      if (condition) {
-        throw Exception::ArgumentGivenTwice(traces, "$condition");
+      condition = getArgument(positional, named, 0, Keys::$condition);
+      ifTrue = getArgument(positional, named, 1, Keys::$ifTrue);
+      ifFalse = getArgument(positional, named, 2, Keys::$ifFalse);
+      if (positional.size() > 3) {
+        throw Exception::TooManyArguments(logger456, positional.size(), 3);
       }
-      condition = positional[0];
-    }
-    if (positionals > 1) {
-      if (ifTrue) {
-        throw Exception::ArgumentGivenTwice(traces, "$if-true");
+      if (positional.size() + named.size() > 3) {
+        throw Exception::TooManyArguments(logger456, named,
+          { Keys::$condition, Keys::$ifTrue, Keys::$ifFalse });
       }
-      ifTrue = positional[1];
     }
-    if (positionals > 2) {
-      if (ifFalse) {
-        throw Exception::ArgumentGivenTwice(traces, "$if-false");
+    else {
+      EnvKeyFlatMap<ExpressionObj>& named(arguments->named());
+      sass::vector<ExpressionObj>& positional(arguments->positional());
+      condition = getArgument(positional, named, 0, Keys::$condition);
+      ifTrue = getArgument(positional, named, 1, Keys::$ifTrue);
+      ifFalse = getArgument(positional, named, 2, Keys::$ifFalse);
+      if (positional.size() > 3) {
+        throw Exception::TooManyArguments(logger456, positional.size(), 3);
       }
-      ifFalse = positional[2];
+      if (positional.size() + named.size() > 3) {
+        throw Exception::TooManyArguments(logger456, named,
+          { Keys::$condition, Keys::$ifTrue, Keys::$ifFalse });
+      }
     }
-
-    // Only 3 arguments allowed, but 6 were passed
-
-
-    // ifDeclaration.verify(positional, named, node->pstate(), logger456);
-    // if (named.size()) {
-    //   BackTrace trace(arguments->pstate());
-    //   callStackFrame frame(*compiler.logger123, trace);
-    //   throw Exception::UnknownNamedArgument2(node->pstate(), logger456, named);
-    // }
+    // Size for positional
+    // Too many named args
 
     //throw Exception::SassRuntimeException2(
     //  "Only one positional argument is allowed. All "
     //  "other arguments must be passed by name.",
     //  logger456);
 
-    // We might fail if named arguments are missing or too few passed
-    condition = positional.size() > 0 ? positional[0] : named.at(Keys::$condition);
-    ifTrue = positional.size() > 1 ? positional[1] : named.at(Keys::$ifTrue);
-    ifFalse = positional.size() > 2 ? positional[2] : named.at(Keys::$ifFalse);
     ValueObj rv = condition ? condition->perform(this) : nullptr;
-    const ExpressionObj& ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
+    Expression* ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
     return ex ? ex->perform(this) : nullptr;
   }
 

@@ -40,6 +40,7 @@ namespace Sass {
   sass::string pluralize(const sass::string& singular, size_t size, const sass::string& plural = "");
   sass::string toSentence(const EnvKeyFlatMap<ExpressionObj>& names, const sass::string& conjunction = "and");
   sass::string toSentence(const EnvKeyFlatMap<ValueObj>& names, const sass::string& conjunction = "and");
+  sass::string toSentence(const EnvKeySet& names, const sass::string& conjunction = "and");
 
 }
 

@@ -101,6 +101,18 @@ namespace Sass {
 
     void _addChild(CssParentNode* parent, CssParentNode* node);
 
+    // Helper for IfExpression
+    Expression* getArgument(
+      sass::vector<ExpressionObj>& positional,
+      EnvKeyFlatMap<ExpressionObj>& named,
+      size_t idx, const EnvKey& key);
+
+    // Helper for IfExpression
+    Value* getArgument(
+      sass::vector<ValueObj>& positional,
+      EnvKeyFlatMap<ValueObj>& named,
+      size_t idx, const EnvKey& key);
+
    public:
 
      Logger& logger456;

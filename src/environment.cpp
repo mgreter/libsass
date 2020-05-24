@@ -14,49 +14,77 @@ namespace Sass {
 
   sass::string toSentence(const EnvKeyFlatMap<ValueObj>& names, const sass::string& conjunction)
   {
-    sass::sstream strm;
+    sass::string buffer;
 	  size_t L = names.size(), i = 0;
 	  auto it = names.begin();
 	  while (i < L) {
 		  // add conjugation
 		  if (i > 0) {
 			  if (i < L - 1) {
-				  strm << ", ";
+          buffer += ", ";
 			  }
 			  else {
-				  strm << " " <<
-					  conjunction << " ";
+          buffer += " ";
+          buffer += conjunction;
+          buffer += " ";
 			  }
 		  }
-      strm << it->first.orig();
+      buffer += it->first.orig();
       it++;
 		  i++;
 	  }
-	  return strm.str();
+	  return buffer;
   }
 
 
   sass::string toSentence(const EnvKeyFlatMap<ExpressionObj>& names, const sass::string& conjunction)
   {
-    sass::sstream strm;
+    sass::string buffer;
     size_t L = names.size(), i = 0;
     auto it = names.begin();
     while (i < L) {
       // add conjugation
       if (i > 0) {
         if (i < L - 1) {
-          strm << ", ";
+          buffer += ", ";
         }
         else {
-          strm << " " <<
-            conjunction << " ";
+          buffer += " ";
+          buffer += conjunction;
+          buffer += " ";
         }
       }
-      strm << it->first.orig();
+      buffer += it->first.orig();
       it++;
       i++;
     }
-    return strm.str();
+    return buffer;
   }
+
+
+  sass::string toSentence(const EnvKeySet& names, const sass::string& conjunction)
+  {
+    sass::string buffer;
+    size_t L = names.size(), i = 0;
+    auto it = names.begin();
+    while (i < L) {
+      // add conjugation
+      if (i > 0) {
+        if (i < L - 1) {
+          buffer += ", ";
+        }
+        else {
+          buffer += " ";
+          buffer += conjunction;
+          buffer += " ";
+        }
+      }
+      buffer += it->orig();
+      it++;
+      i++;
+    }
+    return buffer;
+  }
+
 }
 

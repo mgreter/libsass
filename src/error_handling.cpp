@@ -73,6 +73,39 @@ namespace Sass {
       return msg;
     }
 
+    sass::string formatTooManyArguments(size_t given, size_t expected) {
+      sass::ostream msg;
+      msg << "Only ";
+      msg << expected;
+      msg << " arguments allowed, but ";
+      msg << given;
+      msg << " were passed.";
+      return msg.str();
+    }
+
+    sass::string formatTooManyArguments(EnvKeyFlatMap<ExpressionObj> given, Sass::EnvKeySet expected) {
+      Sass::EnvKeySet superfluous;
+      for (auto pair : given) {
+        if (expected.count(pair.first) == 0) {
+          superfluous.insert(pair.first);
+        }
+      }
+      return "No argument named " +
+        toSentence(superfluous, "or") + ".";
+    }
+
+    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, size_t expected)
+      : Base(formatTooManyArguments(given, expected), traces)
+    {}
+
+    TooManyArguments::TooManyArguments(BackTraces traces, EnvKeyFlatMap<ExpressionObj> given, Sass::EnvKeySet expected)
+      : Base(formatTooManyArguments(given, expected), traces)
+    {}
+
+    MissingArgument::MissingArgument(BackTraces traces, const sass::string& name)
+      : Base("Missing argument " + name + ".", traces)
+    {}
+
     ArgumentGivenTwice::ArgumentGivenTwice(BackTraces traces, const sass::string& name)
       : Base("Argument " + name + " name was passed both by position and by name.", traces)
     {}
@@ -91,10 +124,6 @@ namespace Sass {
       msg += ".";
       return msg;
     }
-
-    UnknownNamedArgument2::UnknownNamedArgument2(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ExpressionObj> names)
-      : Base(formatUnknownNamedArgument2(names), traces, pstate)
-    {}
 
     InvalidCssValue::InvalidCssValue(BackTraces traces, const Value& val)
       : Base(val.inspectValue() + " isn't a valid CSS value.", traces, val.pstate())
