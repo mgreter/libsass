@@ -726,6 +726,8 @@ namespace Sass {
     return current == nullptr;
   }
 
+  // Used for user functions and also by
+  // mixin includes and content includes.
   Value* Eval::_runUserDefinedCallable2(
     ArgumentResults& evaled,
     UserDefinedCallable* callable,
@@ -735,9 +737,6 @@ namespace Sass {
     CssImportTrace* trace,
     const SourceSpan& pstate)
   {
-
-    // On user defined fn we set the variables on the stack
-    // ArgumentResults& evaluated = _evaluateArguments(arguments); // , false
 
     auto idxs = callable->declaration()->idxs();
     EnvScope scoped(compiler.varRoot, idxs);
@@ -1375,16 +1374,6 @@ namespace Sass {
       compiler.varRoot.getLexicalMixin(name);
   }
 
-  Value* Eval::_runWithBlock(UserDefinedCallable* callable, CssImportTrace* trace)
-  {
-    ValueObj result; // declare outside for loop to re-use
-    CallableDeclaration* declaration = callable->declaration();
-    for (Statement* statement : declaration->elements()) {
-      // Makes sure results get cleaned up
-      result = statement->perform(this);
-    }
-    return nullptr;
-  }
 
   Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
   {
@@ -1410,14 +1399,21 @@ namespace Sass {
   {
     LocalOption<bool> inMixin(eval.inMixin, false);
     BackTrace trace(pstate, name().orig(), true);
-    callStackFrame frame(*eval.compiler.logger123, trace);
+    callStackFrame frame(eval.logger456, trace);
     ResultsBuffer evaluated2(eval);
     ArgumentResults& evaluated(evaluated2.buffer);
     // std::cerr << "who does that?\n";
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable2(
       evaluated,
-      this, nullptr, false, &Eval::_runAndCheck, nullptr, pstate);
+      this, nullptr, false, &Eval::_runWithBlock, nullptr, pstate);
+
+    if (rv.isNull()) {
+      throw Exception::SassRuntimeException2(
+        "Function finished without @return.",
+        eval.logger456);
+    }
+
     rv = rv->withoutSlash();
     return rv.detach();
   }
@@ -2090,6 +2086,17 @@ namespace Sass {
     throw Exception::SassRuntimeException2(
       "Function finished without @return.",
       *compiler.logger123);
+  }
+
+  Value* Eval::_runWithBlock(UserDefinedCallable* callable, CssImportTrace* trace)
+  {
+    CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->elements()) {
+      // Makes sure results get cleaned up
+      Value* value = statement->perform(this);
+      if (value != nullptr) return value;
+    }
+    return nullptr;
   }
 
   sass::vector<CssMediaQueryObj> Eval::mergeMediaQueries(
