@@ -83,18 +83,6 @@ namespace Sass {
 
   };
 
-  class ResultsBuffer {
-
-  public:
-
-    Eval& eval;
-    ArgumentResults& buffer;
-
-    ResultsBuffer(Eval& eval);
-    ~ResultsBuffer();
-
-  };
-
   class Eval : public Operation_CRTP<Value*, Eval> {
 
   private:
@@ -121,32 +109,6 @@ namespace Sass {
   public:
 
      Logger& logger456;
-
-     sass::vector<size_t> freeResultBuffers; // (arguments->evaluated);
-     sass::vector<ArgumentResults*> resultBufferes; // (arguments->evaluated);
-
-
-     ArgumentResults& getResultBuffer() {
-
-       if (freeResultBuffers.empty()) {
-         size_t bidx = resultBufferes.size();
-         resultBufferes.push_back(new ArgumentResults());
-         resultBufferes.back()->bidx(bidx);
-         return *resultBufferes.back();
-       }
-
-       size_t bidx = freeResultBuffers.back();
-       freeResultBuffers.pop_back();
-       return *resultBufferes[bidx];
-
-     }
-
-     void returnResultBuffer(ArgumentResults& results)
-     {
-       results.named().clear();
-       results.positional().clear();
-       freeResultBuffers.push_back(results.bidx());
-     }
 
      size_t counter = 0;
 
@@ -208,6 +170,7 @@ namespace Sass {
 
     Value* _runBuiltInCallable(
       ArgumentInvocation* arguments,
+      ArgumentResults& evaluated,
       const SassFnPair& function,
       const SourceSpan& pstate,
       bool selfAssign);
@@ -309,16 +272,6 @@ namespace Sass {
     // Value* operator()(ItplString*);
     Value* operator()(Null*);
     Value* operator()(Argument*);
-
-    inline void keywordMapMap2(
-      EnvKeyFlatMap<ValueObj>& result,
-      const EnvKeyFlatMap<ExpressionObj>& map)
-    {
-      for (const auto& kv : map) {
-        result[kv.first] =
-          kv.second->perform(this);
-      }
-    }
 
     CssParentNode* getRoot();
 

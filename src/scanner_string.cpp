@@ -60,16 +60,16 @@ namespace Sass {
   void StringScanner::consumedChar(uint8_t character)
   {
     switch (character) {
-    case $lf:
-      offset.line += 1;
-      offset.column = 0;
-      break;
     case $space:
     case $tab:
     case $vt:
     case $ff:
     case $cr:
       offset.column += 1;
+      break;
+    case $lf:
+      offset.line += 1;
+      offset.column = 0;
       break;
     default:
       // skip over 10xxxxxx and 01xxxxxx

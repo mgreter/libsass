@@ -688,17 +688,17 @@ namespace Sass {
   }
 
   // Returns whether [positional] and [names] are valid for this argument declaration.
-  bool ArgumentDeclaration::matches(size_t positional, const EnvKeyFlatMap<ValueObj>& names) const
+  bool ArgumentDeclaration::matches(const ArgumentResults& evaluated) const
   {
     size_t namedUsed = 0; Argument* argument;
     for (size_t i = 0, iL = arguments_.size(); i < iL; i++) {
       argument = arguments_[i];
-      if (i < positional) {
-        if (names.count(argument->name()) == 1) {
+      if (i < evaluated.positional().size()) {
+        if (evaluated.named().count(argument->name()) == 1) {
           return false;
         }
       }
-      else if (names.count(argument->name()) == 1) {
+      else if (evaluated.named().count(argument->name()) == 1) {
         namedUsed++;
       }
       else if (argument->value().isNull()) {
@@ -706,8 +706,8 @@ namespace Sass {
       }
     }
     if (!restArg_.empty()) return true;
-    if (positional > arguments_.size()) return false;
-    if (namedUsed < names.size()) return false;
+    if (evaluated.positional().size() > arguments_.size()) return false;
+    if (namedUsed < evaluated.named().size()) return false;
     return true;
   }
 

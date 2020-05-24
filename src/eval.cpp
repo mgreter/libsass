@@ -74,18 +74,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ResultsBuffer::ResultsBuffer(Eval& eval)
-    : eval(eval), buffer(eval.getResultBuffer())
-  {}
-
-  ResultsBuffer::~ResultsBuffer()
-  {
-    eval.returnResultBuffer(buffer);
-  }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {
     UserDefinedCallableObj mixin = node->midx().isValid() ?
@@ -133,8 +121,7 @@ namespace Sass {
 
     LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
 
-    ResultsBuffer evaluated2(*this);
-    ArgumentResults& evaluated(evaluated2.buffer);
+    ArgumentResults evaluated;
     _evaluateArguments(node->arguments(), evaluated);
     ValueObj qwe = _runUserDefinedCallable2(
       evaluated, mixin, node->pstate());
@@ -784,22 +771,17 @@ namespace Sass {
 
   Value* Eval::_runBuiltInCallable(
     ArgumentInvocation* arguments,
-    BuiltInCallable* callable,
+    ArgumentResults& evaled,
+    const SassFnPair& function,
     const SourceSpan& pstate,
     bool selfAssign)
   {
 
-    const SassFnPair& function(callable->function());
-    const ArgumentDeclaration* prototype = function.first;
     const SassFnSig& callback = function.second;
+    const ArgumentDeclaration* prototype = function.first;
     if (!prototype) throw std::runtime_error("Mixin declaration has no arguments");
     const sass::vector<ArgumentObj>& parameters = prototype->arguments();
 
-    // evaluated33.clear();
-    // On builtin we pass it to the function (has only positional args)
-    ResultsBuffer evaluated2(*this); // big!
-    ArgumentResults& evaled(evaluated2.buffer); // big!
-    _evaluateArguments(arguments, evaled); // 12%
     auto& positional(evaled.positional());
 
     // If the callable accepts rest argument we can pass all unknown args
@@ -833,19 +815,24 @@ namespace Sass {
         );
         positional.resize(parameters.size());
       }
-
+      // Try to complete positionals via named arguments
+      // ToDo: doesn't detect arguments that are given twice?
       for (size_t i = positional.size(); i < parameters.size(); i += 1) {
         positional.push_back(getArgument(evaled, i, parameters[i]));
       }
-
-      if (evaled.separator() == SASS_UNDEF) evaled.separator(SASS_COMMA);
+      // Create an argument list with the remaining arguments
       ArgumentListObj argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
         std::move(resty), evaled.separator(), std::move(evaled.named()));
+      // Make sure to preserve comma separator
+      if (argumentList->separator() == SASS_UNDEF) {
+        argumentList->separator(SASS_COMMA);
+      }
       // ToDo: Did we account for this variable?
       positional.emplace_back(argumentList);
 
     }
 
+    // ToDo: this should not be necessary!?
     ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
     return result.detach();
 
@@ -854,72 +841,15 @@ namespace Sass {
 
   Value* Eval::_runBuiltInCallable(
     ArgumentInvocation* arguments,
-    const SassFnPair& function,
+    BuiltInCallable* callable,
     const SourceSpan& pstate,
     bool selfAssign)
   {
-
-    const ArgumentDeclaration* prototype = function.first;
-    const SassFnSig& callback = function.second;
-    if (!prototype) throw std::runtime_error("Mixin declaration has no arguments");
-    const sass::vector<ArgumentObj>& parameters = prototype->arguments();
-
-    // evaluated33.clear();
-    // On builtin we pass it to the function (has only positional args)
-    ResultsBuffer evaluated2(*this); // big!
-    ArgumentResults& evaled(evaluated2.buffer); // big!
-    _evaluateArguments(arguments, evaled); // 12%
-    auto& positional(evaled.positional());
-
-    // If the callable accepts rest argument we can pass all unknown args
-    // Also if we must pass rest args we must pass only the remaining parts
-    if (prototype->restArg().empty()) {
-
-      // Check that all positional arguments are consumed
-      if (positional.size() > parameters.size()) {
-        throw Exception::TooManyArguments(logger456, positional.size() - parameters.size(), parameters.size());
-      }
-
-      for (size_t i = positional.size(); i < parameters.size(); i += 1) {
-        positional.push_back(getArgument(evaled, i, parameters[i]));
-      }
-
-      // Check that all named arguments are consumed
-      if (evaled.named().size()) {
-        throw Exception::TooManyArguments(logger456, evaled.named());
-      }
-
-    }
-    else {
-
-      sass::vector<ValueObj> resty;
-
-      // Remove the consumed positional arguments
-      if (positional.size() > parameters.size()) {
-        resty.insert(resty.end(),
-          std::make_move_iterator(positional.begin() + parameters.size()),
-          std::make_move_iterator(positional.end())
-        );
-        positional.resize(parameters.size());
-      }
-
-      for (size_t i = positional.size(); i < parameters.size(); i += 1) {
-        positional.push_back(getArgument(evaled, i, parameters[i]));
-      }
-
-      if (evaled.separator() == SASS_UNDEF) evaled.separator(SASS_COMMA);
-      ArgumentListObj argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
-        std::move(resty), evaled.separator(), std::move(evaled.named()));
-      // ToDo: Did we account for this variable?
-      positional.emplace_back(argumentList);
-
-    }
-
-    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-    return result.detach();
-
+    ArgumentResults evaluated;
+    _evaluateArguments(arguments, evaluated);
+    const SassFnPair& function(callable->callbackFor(evaluated));
+    return _runBuiltInCallable(arguments, evaluated, function, pstate, selfAssign);
   }
-
 
   Value* Eval::_runBuiltInCallables(
     ArgumentInvocation* arguments,
@@ -927,84 +857,19 @@ namespace Sass {
     const SourceSpan& pstate,
     bool selfAssign)
   {
-    ResultsBuffer evaluated2(*this);
-    ArgumentResults& evaluated(evaluated2.buffer);
-    _evaluateArguments(arguments, evaluated); // 33%
-    EnvKeyFlatMap<ValueObj>& named(evaluated.named());
-    sass::vector<ValueObj>& positional(evaluated.positional());
-
-    const SassFnPair& tuple(callable->callbackFor(positional.size(), named)); // 4.7%
-    return _runBuiltInCallable(arguments, tuple, pstate, selfAssign);
-
-    ArgumentDeclaration* overload = tuple.first;
-    const SassFnSig& callback = tuple.second;
-    const sass::vector<ArgumentObj>& prototype(overload->arguments());
-
-    overload->verify(positional.size(), named, pstate, *compiler.logger123); // 7.5%
-
-    for (size_t i = positional.size();
-      i < prototype.size();
-      i++) {
-      Argument* argument = prototype[i];
-      const auto& name(argument->name());
-      if (named.count(name) == 1) {
-        positional.emplace_back(named[name]->perform(this));
-        named.erase(name); // consume arguments once
-      }
-      else {
-        positional.emplace_back(argument->value()->perform(this));
-      }
-    }
-
-    bool isNamedEmpty = named.empty();
-    ArgumentListObj argumentList;
-    if (!overload->restArg().empty()) {
-      sass::vector<ValueObj> rest;
-      if (positional.size() > prototype.size()) {
-        rest = sublist(positional, prototype.size());
-        removeRange(positional, prototype.size(), positional.size());
-      }
-
-      Sass_Separator separator = evaluated.separator();
-      if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(ArgumentList,
-        pstate, std::move(rest), separator, std::move(named));
-      positional.emplace_back(argumentList);
-    }
-
-    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 13%
-
-    // Collect the items
-    // evaluated.clear2();
-
-
-    if (argumentList == nullptr) return result.detach();
-    if (isNamedEmpty) return result.detach();
-    /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
-
-    sass::sstream strm; // This concatenation avoids MSVC warning
-    sass::string term(pluralize(Strings::argument, named.size()));
-    sass::string options(toSentence(named, Strings::_or_));
-    strm << "No " << term << " named " << options << ".";
-    throw Exception::SassRuntimeException2(
-      strm.str(), *compiler.logger123);
+    ArgumentResults evaluated;
+    _evaluateArguments(arguments, evaluated);
+    const SassFnPair& tuple(callable->callbackFor(evaluated));
+    return _runBuiltInCallable(arguments, evaluated, tuple, pstate, selfAssign);
   }
 
-
-
-
-
-
-
-
-
+  // Call external C-API function
   Value* Eval::_runExternalCallable(
     ArgumentInvocation* arguments,
     ExternalCallable* callable,
     const SourceSpan& pstate)
   {
-    ResultsBuffer evaluated2(*this);
-    ArgumentResults& evaluated(evaluated2.buffer);
+    ArgumentResults evaluated;
     _evaluateArguments(arguments, evaluated);
     EnvKeyFlatMap<ValueObj>& named = evaluated.named();
     sass::vector<ValueObj>& positional = evaluated.positional();
@@ -1455,8 +1320,7 @@ namespace Sass {
     LocalOption<bool> inMixin(eval.inMixin, false);
     BackTrace trace(pstate, name().orig(), true);
     callStackFrame frame(eval.logger456, trace);
-    ResultsBuffer evaluated2(eval);
-    ArgumentResults& evaluated(evaluated2.buffer);
+    ArgumentResults evaluated;
     // std::cerr << "who does that?\n";
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable2(
@@ -2053,8 +1917,10 @@ namespace Sass {
     }
 
     named.clear();
-    // Reserving on ordered-map seems slower?
-    keywordMapMap2(named, arguments->named());
+
+    for (const auto& kv : arguments->named()) {
+      named.insert(std::make_pair(kv.first, kv.second->perform(this)));
+    }
 
     if (arguments->restArg() == nullptr) {
       evaluated.separator(SASS_UNDEF);

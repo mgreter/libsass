@@ -3,6 +3,7 @@
 #include "sass.hpp"
 #include "ast.hpp"
 
+#include "eval.hpp"
 #include "fn_utils.hpp"
 #include "util_string.hpp"
 #include "parser_scss.hpp"
@@ -38,7 +39,7 @@ namespace Sass {
   }
 
   const SassFnPair& BuiltInCallable::callbackFor(
-    size_t positional, const EnvKeyFlatMap<ValueObj>& names)
+    const ArgumentResults& evaluated)
   {
     return function_;
   }
@@ -53,10 +54,10 @@ namespace Sass {
   }
 
   const SassFnPair& BuiltInCallables::callbackFor(
-    size_t positional, const EnvKeyFlatMap<ValueObj>& names)
+    const ArgumentResults& evaluated)
   {
     for (SassFnPair& pair : overloads_) {
-      if (pair.first->matches(positional, names)) {
+      if (pair.first->matches(evaluated)) {
         return pair;
       }
     }

@@ -35,6 +35,7 @@ namespace Sass {
   class BuiltInCallables;
   class BuiltInCallable;
 
+  class ArgumentResults;
   class CallableInvocation;
   class ArgumentInvocation;
   class ArgumentDeclaration;

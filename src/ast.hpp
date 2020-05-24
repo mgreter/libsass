@@ -177,8 +177,7 @@ namespace Sass {
       const BackTraces& traces) const;
 
     bool matches(
-      size_t positional,
-      const EnvKeyFlatMap<ValueObj>& names) const;
+      const ArgumentResults& evaluated) const;
 
     ATTACH_CRTP_PERFORM_METHODS();
 
@@ -918,6 +917,8 @@ namespace Sass {
     ATTACH_CRTP_PERFORM_METHODS()
   };
 
+
+
   class UserDefinedCallable : public Callable {
     // Name of this callable (used for reporting)
     ADD_PROPERTY(EnvKey, name);
@@ -973,8 +974,7 @@ namespace Sass {
       const SassFnSig& callback);
 
     const SassFnPair& callbackFor(
-      size_t positional,
-      const EnvKeyFlatMap<ValueObj>& names);
+      const ArgumentResults& evaluated);
 
     bool operator== (const Callable& rhs) const override final;
 
@@ -1008,8 +1008,7 @@ namespace Sass {
       const SassFnPairs& overloads);
 
     const SassFnPair& callbackFor(
-      size_t positional,
-      const EnvKeyFlatMap<ValueObj>& names); // override final;
+      const ArgumentResults& evaluated); // override final;
 
     bool operator== (const Callable& rhs) const override final;
 
