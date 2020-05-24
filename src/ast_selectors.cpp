@@ -418,7 +418,7 @@ namespace Sass {
   unsigned long ComplexSelector::specificity() const
   {
     int sum = 0;
-    for (auto component : elements()) {
+    for (SelectorComponent* component : elements()) {
       sum += component->specificity();
     }
     return sum;
@@ -427,8 +427,8 @@ namespace Sass {
   bool ComplexSelector::isInvisible() const
   {
     if (length() == 0) return true;
-    for (size_t i = 0; i < length(); i += 1) {
-      if (get(i)->isInvisible()) return true;
+    for (SelectorComponent* component : elements()) {
+      if (component->isInvisible()) return true;
     }
     return false;
   }
@@ -436,10 +436,8 @@ namespace Sass {
   bool ComplexSelector::isImpossible() const
   {
     if (length() == 0) return false;
-    for (size_t i = 0; i < length(); i += 1) {
-      if (CompoundSelector* compound = get(i)->getCompound()) {
-        if (compound->isImpossible()) return true;
-      }
+    for (SelectorComponent* component : elements()) {
+      if (component->isImpossible()) return true;
     }
     return false;
   }
@@ -455,8 +453,8 @@ namespace Sass {
   }
 
   bool ComplexSelector::hasPlaceholder() const {
-    for (size_t i = 0, L = length(); i < L; ++i) {
-      if (get(i)->hasPlaceholder()) return true;
+    for (SelectorComponent* component : elements()) {
+      if (component->hasPlaceholder()) return true;
     }
     return false;
   }

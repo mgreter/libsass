@@ -686,16 +686,7 @@ namespace Sass {
     bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::tmp("[TRUE]"), true);
     bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::tmp("[FALSE]"), false);
   }
-  Eval::~Eval() {
-
-    if (freeResultBuffers.size() != resultBufferes.size()) {
-      std::cerr << "Leaked some result buffer\n";
-    }
-    for (auto buffer : resultBufferes) {
-      delete buffer; // delete heap item
-    }
-
-  }
+  Eval::~Eval() {}
 
   bool Eval::isRoot() const
   {
@@ -1555,10 +1546,10 @@ namespace Sass {
   Value* Eval::operator()(FunctionExpression* node)
   {
     // Function Expression might be simple and static, or dynamic CSS call
-    const sass::string& plainName(node->name()->getPlainString());
     CallableObj function = node->fidx().isValid()
       ? compiler.varRoot.getFunction(node->fidx())
-      : compiler.varRoot.getLexicalFunction(plainName);
+      : compiler.varRoot.getLexicalFunction(
+          node->name()->getPlainString());
 
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
