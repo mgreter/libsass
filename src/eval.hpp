@@ -115,8 +115,7 @@ namespace Sass {
 
     // Helper for IfExpression
     Value* getArgument(
-      sass::vector<ValueObj>& positional,
-      EnvKeyFlatMap<ValueObj>& named,
+      ArgumentResults& evaled,
       size_t idx, const Argument* arg);
 
   public:

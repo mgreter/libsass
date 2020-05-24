@@ -952,7 +952,7 @@ namespace Sass {
 
     ADD_PROPERTY(ArgumentDeclarationObj, parameters);
 
-    ADD_PROPERTY(SassFnPair, function);
+    ADD_REF(SassFnPair, function);
 
   public:
 
