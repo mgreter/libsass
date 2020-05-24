@@ -804,22 +804,27 @@ namespace Sass {
 
     sass::vector<ValueObj> positional2(positional);
 
-    if (parameters.size() < positional2.size()) positional2.resize(parameters.size());
-    for (size_t i = positional.size(); i < parameters.size(); i += 1) {
-      positional2.push_back(getArgument(evaled, i, parameters[i]));
-    }
-
     // If the callable accepts rest argument we can pass all unknown args
     // Also if we must pass rest args we must pass only the remaining parts
     if (prototype->restArg().empty()) {
+
       // Check that all positional arguments are consumed
       if (positional.size() > parameters.size()) {
         throw Exception::TooManyArguments(logger456, positional.size() - parameters.size(), parameters.size());
       }
+
+      for (size_t i = positional.size(); i < parameters.size(); i += 1) {
+        positional.push_back(getArgument(evaled, i, parameters[i]));
+      }
+
       // Check that all named arguments are consumed
       if (evaled.named().size()) {
         throw Exception::TooManyArguments(logger456, evaled.named());
       }
+
+      ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
+      return result.detach();
+
     }
     else {
 
@@ -834,15 +839,26 @@ namespace Sass {
         // positional.resize(parameters.size());
       }
 
+      if (parameters.size() < positional.size()) {
+        positional.resize(parameters.size());
+      }
+
+      for (size_t i = positional.size(); i < parameters.size(); i += 1) {
+        positional.push_back(getArgument(evaled, i, parameters[i]));
+      }
+
+
       if (evaled.separator() == SASS_UNDEF) evaled.separator(SASS_COMMA);
       ArgumentListObj argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
         std::move(resty), evaled.separator(), std::move(evaled.named()));
       // ToDo: Did we account for this variable?
-      positional2.emplace_back(argumentList);
+      positional.emplace_back(argumentList);
+
+      ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
+      return result.detach();
+
     }
 
-    ValueObj result = callback(pstate, positional2, compiler, *compiler.logger123, *this, selfAssign); // 7%
-    return result.detach();
 
     // bool isNamedEmpty = evaluated.named.empty();
     // ArgumentListObj argumentList;
