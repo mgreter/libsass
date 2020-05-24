@@ -139,9 +139,6 @@ namespace Sass {
     ValueObj qwe = _runUserDefinedCallable2(
       evaluated,
       mixin,
-      nullptr,
-      true,
-      trace,
       node->pstate());
     // evaluated.clear2();
     return nullptr;
@@ -179,9 +176,6 @@ namespace Sass {
     ValueObj qwe = _runUserDefinedCallable2(
       evaluated,
       content,
-      nullptr,
-      false,
-      trace,
       c->pstate());
     // evaluated.clear2();
 
@@ -729,24 +723,11 @@ namespace Sass {
   Value* Eval::_runUserDefinedCallable2(
     ArgumentResults& evaled,
     UserDefinedCallable* callable,
-    UserDefinedCallable* content,
-    bool isMixinCall,
-    CssImportTrace* trace,
     const SourceSpan& pstate)
   {
 
     auto idxs = callable->declaration()->idxs();
     EnvScope scoped(compiler.varRoot, idxs);
-
-    if (content) {
-      auto cidx = content->declaration()->cidx();
-      if (cidx.isValid()) {
-        compiler.varRoot.setMixin(cidx, content);
-      }
-      else {
-        std::cerr << "Invalid cidx1 on " << content << "\n";
-      }
-    }
 
     // EnvKeyFlatMap<ValueObj>& named = evaluated.named();
     // sass::vector<ValueObj>& positional = evaluated.positional();
@@ -1407,7 +1388,7 @@ namespace Sass {
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable2(
       evaluated,
-      this, nullptr, false, nullptr, pstate);
+      this, pstate);
 
     if (rv.isNull()) {
       throw Exception::SassRuntimeException2(

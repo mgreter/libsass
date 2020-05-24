@@ -198,9 +198,6 @@ namespace Sass {
     Value* _runUserDefinedCallable2(
       ArgumentResults& evaled,
       UserDefinedCallable* callable,
-      UserDefinedCallable* content,
-      bool isMixinCall,
-      CssImportTrace* trace,
       const SourceSpan& pstate);
 
 
