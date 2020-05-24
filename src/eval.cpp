@@ -802,7 +802,74 @@ namespace Sass {
     _evaluateArguments(arguments, evaled); // 12%
     auto& positional(evaled.positional());
 
-    sass::vector<ValueObj> positional2(positional);
+    // If the callable accepts rest argument we can pass all unknown args
+    // Also if we must pass rest args we must pass only the remaining parts
+    if (prototype->restArg().empty()) {
+
+      // Check that all positional arguments are consumed
+      if (positional.size() > parameters.size()) {
+        throw Exception::TooManyArguments(logger456, positional.size() - parameters.size(), parameters.size());
+      }
+
+      for (size_t i = positional.size(); i < parameters.size(); i += 1) {
+        positional.push_back(getArgument(evaled, i, parameters[i]));
+      }
+
+      // Check that all named arguments are consumed
+      if (evaled.named().size()) {
+        throw Exception::TooManyArguments(logger456, evaled.named());
+      }
+
+    }
+    else {
+
+      sass::vector<ValueObj> resty;
+
+      // Remove the consumed positional arguments
+      if (positional.size() > parameters.size()) {
+        resty.insert(resty.end(),
+          std::make_move_iterator(positional.begin() + parameters.size()),
+          std::make_move_iterator(positional.end())
+        );
+        positional.resize(parameters.size());
+      }
+
+      for (size_t i = positional.size(); i < parameters.size(); i += 1) {
+        positional.push_back(getArgument(evaled, i, parameters[i]));
+      }
+
+      if (evaled.separator() == SASS_UNDEF) evaled.separator(SASS_COMMA);
+      ArgumentListObj argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
+        std::move(resty), evaled.separator(), std::move(evaled.named()));
+      // ToDo: Did we account for this variable?
+      positional.emplace_back(argumentList);
+
+    }
+
+    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
+    return result.detach();
+
+  }
+
+
+  Value* Eval::_runBuiltInCallable(
+    ArgumentInvocation* arguments,
+    const SassFnPair& function,
+    const SourceSpan& pstate,
+    bool selfAssign)
+  {
+
+    const ArgumentDeclaration* prototype = function.first;
+    const SassFnSig& callback = function.second;
+    if (!prototype) throw std::runtime_error("Mixin declaration has no arguments");
+    const sass::vector<ArgumentObj>& parameters = prototype->arguments();
+
+    // evaluated33.clear();
+    // On builtin we pass it to the function (has only positional args)
+    ResultsBuffer evaluated2(*this); // big!
+    ArgumentResults& evaled(evaluated2.buffer); // big!
+    _evaluateArguments(arguments, evaled); // 12%
+    auto& positional(evaled.positional());
 
     // If the callable accepts rest argument we can pass all unknown args
     // Also if we must pass rest args we must pass only the remaining parts
@@ -822,9 +889,6 @@ namespace Sass {
         throw Exception::TooManyArguments(logger456, evaled.named());
       }
 
-      ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-      return result.detach();
-
     }
     else {
 
@@ -836,10 +900,6 @@ namespace Sass {
           std::make_move_iterator(positional.begin() + parameters.size()),
           std::make_move_iterator(positional.end())
         );
-        // positional.resize(parameters.size());
-      }
-
-      if (parameters.size() < positional.size()) {
         positional.resize(parameters.size());
       }
 
@@ -847,46 +907,18 @@ namespace Sass {
         positional.push_back(getArgument(evaled, i, parameters[i]));
       }
 
-
       if (evaled.separator() == SASS_UNDEF) evaled.separator(SASS_COMMA);
       ArgumentListObj argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
         std::move(resty), evaled.separator(), std::move(evaled.named()));
       // ToDo: Did we account for this variable?
       positional.emplace_back(argumentList);
 
-      ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
-      return result.detach();
-
     }
 
-
-    // bool isNamedEmpty = evaluated.named.empty();
-    // ArgumentListObj argumentList;
-    // if (!prototype->restArg().empty()) {
-    //   sass::vector<ValueObj> rest;
-    //   if (positional2.size() > parameters.size()) {
-    //     rest = sublist(positional2, parameters.size());
-    //     removeRange(positional2, parameters.size(), positional2.size());
-    //   }
-    // 
-    //   Sass_Separator separator = evaluated.separator();
-    //   if (separator == SASS_UNDEF) separator = SASS_COMMA;
-    //   argumentList = SASS_MEMORY_NEW(ArgumentList,
-    //     pstate, std::move(rest), separator, std::move(named));
-    //   positional2.emplace_back(argumentList);
-    // }
-
-    // returnResultBuffer(evaluated);
-    // evaluated.clear(); // move stuff instead??
-    // if (argumentList == nullptr) return result.detach();
-    // if (isNamedEmpty) return result.detach();
-    /* if (argumentList.wereKeywordsAccessed) */
-    // return result.detach();
-
-    // throw Exception::UnknownNamedArgument(pstate, *compiler.logger123, named);
+    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
+    return result.detach();
 
   }
-
 
 
   Value* Eval::_runBuiltInCallables(
@@ -900,7 +932,9 @@ namespace Sass {
     _evaluateArguments(arguments, evaluated); // 33%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
+
     const SassFnPair& tuple(callable->callbackFor(positional.size(), named)); // 4.7%
+    return _runBuiltInCallable(arguments, tuple, pstate, selfAssign);
 
     ArgumentDeclaration* overload = tuple.first;
     const SassFnSig& callback = tuple.second;

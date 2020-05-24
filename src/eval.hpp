@@ -206,6 +206,12 @@ namespace Sass {
       const SourceSpan& pstate,
       bool selfAssign);
 
+    Value* _runBuiltInCallable(
+      ArgumentInvocation* arguments,
+      const SassFnPair& function,
+      const SourceSpan& pstate,
+      bool selfAssign);
+
     Value* _runBuiltInCallables(
       ArgumentInvocation* arguments,
       BuiltInCallables* callable,
