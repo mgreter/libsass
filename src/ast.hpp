@@ -190,7 +190,7 @@ namespace Sass {
     ADD_REF(sass::vector<ExpressionObj>, positional);
 
     // The argument expressions passed by name.
-    ADD_PROPERTY(EnvKeyFlatMap<ExpressionObj>, named);
+    ADD_REF(EnvKeyFlatMap<ExpressionObj>, named);
 
     // The first rest argument (as in `$args...`).
     ADD_PROPERTY(ExpressionObj, restArg);

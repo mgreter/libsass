@@ -63,6 +63,38 @@ namespace Sass {
       msg = "Duplicate key."; // dart-sass keeps it simple ...
     }
 
+    sass::string formatUnknownNamedArgument(const EnvKeyFlatMap<ValueObj>& names)
+    {
+      sass::string msg("No ");
+      msg += pluralize(Strings::argument, names.size());
+      msg += " named ";
+      msg += toSentence(names, Strings::_or_);
+      msg += ".";
+      return msg;
+    }
+
+    ArgumentGivenTwice::ArgumentGivenTwice(BackTraces traces, const sass::string& name)
+      : Base("Argument " + name + " name was passed both by position and by name.", traces)
+    {}
+
+    UnknownNamedArgument::UnknownNamedArgument(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ValueObj> names)
+      : Base(formatUnknownNamedArgument(names), traces, pstate)
+    {
+    }
+
+    sass::string formatUnknownNamedArgument2(const EnvKeyFlatMap<ExpressionObj>& names)
+    {
+      sass::string msg("No ");
+      msg += pluralize(Strings::argument, names.size());
+      msg += " named ";
+      msg += toSentence(names, Strings::_or_);
+      msg += ".";
+      return msg;
+    }
+
+    UnknownNamedArgument2::UnknownNamedArgument2(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ExpressionObj> names)
+      : Base(formatUnknownNamedArgument2(names), traces, pstate)
+    {}
 
     InvalidCssValue::InvalidCssValue(BackTraces traces, const Value& val)
       : Base(val.inspectValue() + " isn't a valid CSS value.", traces, val.pstate())

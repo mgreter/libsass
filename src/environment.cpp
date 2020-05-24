@@ -12,7 +12,7 @@ namespace Sass {
 	  else return singular + "s";
   }
 
-  sass::string toSentence(EnvKeyFlatMap<ValueObj>& names, const sass::string& conjunction)
+  sass::string toSentence(const EnvKeyFlatMap<ValueObj>& names, const sass::string& conjunction)
   {
     sass::sstream strm;
 	  size_t L = names.size(), i = 0;
@@ -35,5 +35,28 @@ namespace Sass {
 	  return strm.str();
   }
 
+
+  sass::string toSentence(const EnvKeyFlatMap<ExpressionObj>& names, const sass::string& conjunction)
+  {
+    sass::sstream strm;
+    size_t L = names.size(), i = 0;
+    auto it = names.begin();
+    while (i < L) {
+      // add conjugation
+      if (i > 0) {
+        if (i < L - 1) {
+          strm << ", ";
+        }
+        else {
+          strm << " " <<
+            conjunction << " ";
+        }
+      }
+      strm << it->first.orig();
+      it++;
+      i++;
+    }
+    return strm.str();
+  }
 }
 

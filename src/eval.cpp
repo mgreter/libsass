@@ -876,12 +876,8 @@ namespace Sass {
     if (isNamedEmpty) return result.detach();
     /* if (argumentList.wereKeywordsAccessed) */ return result.detach();
 
-    sass::sstream strm; // This concatenation avoids MSVC warning
-    sass::string term(pluralize(Strings::argument, named.size()));
-    sass::string options(toSentence(named, Strings::_or_));
-    strm << "No " << term << " named " << options << ".";
-    throw Exception::SassRuntimeException2(
-      strm.str(), *compiler.logger123);
+    throw Exception::UnknownNamedArgument(pstate, *compiler.logger123, named);
+
   }
 
 
@@ -1058,68 +1054,6 @@ namespace Sass {
     serialize.quotes = false;
     node->perform(&serialize);
     return serialize.get_buffer();
-  }
-
-  std::pair<
-    sass::vector<ExpressionObj>,
-    EnvKeyFlatMap<ExpressionObj>
-  > Eval::_evaluateMacroArguments(
-    CallableInvocation& invocation)
-  {
-
-    if (invocation.arguments()->restArg() == nullptr) {
-      return std::make_pair(
-        invocation.arguments()->positional(),
-        invocation.arguments()->named());
-    }
-
-    ArgumentInvocation* arguments = invocation.arguments();
-    // Create copies here, since we alter the content later
-    sass::vector<ExpressionObj> positional = arguments->positional();
-    EnvKeyFlatMap<ExpressionObj> named = arguments->named();
-    ValueObj rest = arguments->restArg()->perform(this);
-
-    if (Map* restMap = rest->isMap()) {
-      _addRestMap2(named, restMap, arguments->restArg()->pstate());
-    }
-    else if (List * restList = rest->isList()) {
-      for (const ValueObj& value : restList->elements()) {
-        positional.emplace_back(SASS_MEMORY_NEW(
-          ValueExpression, value->pstate(), value));
-      }
-      // separator = list->separator();
-      if (ArgumentList* args = rest->isArgList()) {
-        for (auto& kv : args->keywords()) {
-          named[kv.first] = SASS_MEMORY_NEW(ValueExpression,
-            kv.second->pstate(), kv.second);
-        }
-      }
-    }
-    else {
-      positional.emplace_back(SASS_MEMORY_NEW(
-        ValueExpression, rest->pstate(), rest));
-    }
-
-    if (arguments->kwdRest() == nullptr) {
-      return std::make_pair(
-        std::move(positional),
-        std::move(named));
-    }
-
-    ValueObj keywordRest = arguments->kwdRest()->perform(this);
-
-    if (Map* restMap = keywordRest->isMap()) {
-      _addRestMap2(named, restMap,
-        arguments->kwdRest()->pstate());
-      return std::make_pair(
-        std::move(positional),
-        std::move(named));
-    }
-
-    throw Exception::SassRuntimeException2(
-      "Variable keyword arguments must be a map (was $keywordRest).",
-      *compiler.logger123);
-
   }
 
   Value* Eval::visitChildren(const sass::vector<StatementObj>& children)
@@ -1557,17 +1491,121 @@ namespace Sass {
     return callable->execute(*this, arguments, pstate, selfAssign);
   }
 
+
+  void Eval::_evaluateMacroArguments(
+    CallableInvocation& invocation,
+    sass::vector<ExpressionObj>& positional,
+    EnvKeyFlatMap<ExpressionObj>& named)
+  {
+
+    ArgumentInvocation* arguments = invocation.arguments();
+    ValueObj rest = arguments->restArg()->perform(this);
+
+    if (Map* restMap = rest->isMap()) {
+      _addRestMap2(named, restMap, arguments->restArg()->pstate());
+    }
+    else if (List* restList = rest->isList()) {
+      for (const ValueObj& value : restList->elements()) {
+        positional.emplace_back(SASS_MEMORY_NEW(
+          ValueExpression, value->pstate(), value));
+      }
+      // separator = list->separator();
+      if (ArgumentList* args = rest->isArgList()) {
+        for (auto& kv : args->keywords()) {
+          named[kv.first] = SASS_MEMORY_NEW(ValueExpression,
+            kv.second->pstate(), kv.second);
+        }
+      }
+    }
+    else {
+      positional.emplace_back(SASS_MEMORY_NEW(
+        ValueExpression, rest->pstate(), rest));
+    }
+
+    if (arguments->kwdRest() == nullptr) {
+      return;
+    }
+
+    ValueObj keywordRest = arguments->kwdRest()->perform(this);
+
+    if (Map* restMap = keywordRest->isMap()) {
+      _addRestMap2(named, restMap,
+        arguments->kwdRest()->pstate());
+      return;
+    }
+
+    throw Exception::SassRuntimeException2(
+      "Variable keyword arguments must be a map (was $keywordRest).",
+      *compiler.logger123);
+
+  }
+
+  ArgumentDeclaration ifDeclaration({}, {
+      new Argument({}, {}, EnvKey{"if-true"}),
+      new Argument({}, {}, EnvKey{"if-false"}),
+    });
+
+  // This operates very similar to a function call
+  // But it does evaluate its arguments lazily
   Value* Eval::operator()(IfExpression* node)
   {
-    auto pair = _evaluateMacroArguments(*node);
-    const sass::vector<ExpressionObj>& positional(pair.first);
-    const EnvKeyFlatMap<ExpressionObj>& named(pair.second);
+
+    ArgumentInvocation* arguments = node->arguments();
+    sass::vector<ExpressionObj>& positional(arguments->positional());
+    EnvKeyFlatMap<ExpressionObj>& named(arguments->named());
+
+    // Rest arguments must be evaluated in all cases
+    // evaluateMacroArguments is only used for this
+    if (node->arguments()->restArg() != nullptr) {
+      _evaluateMacroArguments(*node, positional, named);
+    }
+
+    Expression* ifTrue = named.at(Keys::$ifTrue);
+    Expression* ifFalse = named.at(Keys::$ifFalse);
+    Expression* condition = named.at(Keys::$condition);
+
+    size_t positionals = positional.size();
+
+    if (positionals > 0) {
+      if (condition) {
+        throw Exception::ArgumentGivenTwice(traces, "$condition");
+      }
+      condition = positional[0];
+    }
+    if (positionals > 1) {
+      if (ifTrue) {
+        throw Exception::ArgumentGivenTwice(traces, "$if-true");
+      }
+      ifTrue = positional[1];
+    }
+    if (positionals > 2) {
+      if (ifFalse) {
+        throw Exception::ArgumentGivenTwice(traces, "$if-false");
+      }
+      ifFalse = positional[2];
+    }
+
+    // Only 3 arguments allowed, but 6 were passed
+
+
+    // ifDeclaration.verify(positional, named, node->pstate(), logger456);
+    // if (named.size()) {
+    //   BackTrace trace(arguments->pstate());
+    //   callStackFrame frame(*compiler.logger123, trace);
+    //   throw Exception::UnknownNamedArgument2(node->pstate(), logger456, named);
+    // }
+
+    //throw Exception::SassRuntimeException2(
+    //  "Only one positional argument is allowed. All "
+    //  "other arguments must be passed by name.",
+    //  logger456);
+
     // We might fail if named arguments are missing or too few passed
-    ExpressionObj condition = positional.size() > 0 ? positional[0] : named.at(Keys::$condition);
-    ExpressionObj ifTrue = positional.size() > 1 ? positional[1] : named.at(Keys::$ifTrue);
-    ExpressionObj ifFalse = positional.size() > 2 ? positional[2] : named.at(Keys::$ifFalse);
+    condition = positional.size() > 0 ? positional[0] : named.at(Keys::$condition);
+    ifTrue = positional.size() > 1 ? positional[1] : named.at(Keys::$ifTrue);
+    ifFalse = positional.size() > 2 ? positional[2] : named.at(Keys::$ifFalse);
     ValueObj rv = condition ? condition->perform(this) : nullptr;
-    ExpressionObj ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
+    const ExpressionObj& ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
     return ex ? ex->perform(this) : nullptr;
   }
 
@@ -1904,7 +1942,7 @@ namespace Sass {
     }
   }
 
-  /// Adds the values in [map] to [values] as value expressions.
+  /// Adds the values in [map] to [values].
   void Eval::_addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& pstate) {
     // convert ??= (value) = > value as T;
 

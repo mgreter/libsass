@@ -214,7 +214,9 @@ namespace Sass {
 
     Value* _acceptNodeChildren(ParentStatement* parent);
 
-    std::pair<sass::vector<ExpressionObj>, EnvKeyFlatMap<ExpressionObj>> _evaluateMacroArguments(CallableInvocation& invocation);
+    void _evaluateMacroArguments(CallableInvocation& invocation,
+      sass::vector<ExpressionObj>& positional,
+      EnvKeyFlatMap<ExpressionObj>& named);
 
     Value* _runExternalCallable(ArgumentInvocation* arguments, ExternalCallable* callable, const SourceSpan& pstate);
 

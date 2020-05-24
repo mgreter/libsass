@@ -13,6 +13,7 @@
 #include "position.hpp"
 #include "backtrace.hpp"
 #include "ast_fwd_decl.hpp"
+#include "environment_cnt.hpp"
 #include "sass/functions.h"
 
 namespace Sass {
@@ -93,6 +94,24 @@ namespace Sass {
         DuplicateKeyError(BackTraces traces, const Map& dup, const Expression& org);
         virtual const char* errtype() const { return "Error"; }
         virtual ~DuplicateKeyError() noexcept {};
+    };
+
+    class ArgumentGivenTwice : public Base {
+    public:
+      ArgumentGivenTwice(BackTraces traces, const sass::string& name);
+      virtual const char* errtype() const { return "Error"; }
+    };
+
+    class UnknownNamedArgument : public Base {
+    public:
+      UnknownNamedArgument(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ValueObj> names);
+      virtual const char* errtype() const { return "Error"; }
+    };
+
+    class UnknownNamedArgument2 : public Base {
+    public:
+      UnknownNamedArgument2(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ExpressionObj> names);
+      virtual const char* errtype() const { return "Error"; }
     };
 
     class InvalidCssValue : public Base {
