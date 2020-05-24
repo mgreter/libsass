@@ -101,7 +101,8 @@ namespace Sass {
       class TooManyArguments : public Base {
       public:
         TooManyArguments(BackTraces traces, size_t given, size_t expected);
-        TooManyArguments(BackTraces traces, EnvKeyFlatMap<ExpressionObj> given, Sass::EnvKeySet expected);
+        TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ExpressionObj>& given, const Sass::EnvKeySet& expected);
+        TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ValueObj>& given, const sass::vector<ArgumentObj>& expected);
         virtual const char* errtype() const { return "Error"; }
     };
 

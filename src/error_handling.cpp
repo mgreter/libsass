@@ -75,15 +75,15 @@ namespace Sass {
 
     sass::string formatTooManyArguments(size_t given, size_t expected) {
       sass::ostream msg;
-      msg << "Only ";
-      msg << expected;
-      msg << " arguments allowed, but ";
-      msg << given;
-      msg << " were passed.";
+      msg << "Only " << expected << " ";
+      msg << pluralize("argument", expected);
+      msg << " allowed, but " << given << " ";
+      msg << pluralize("was", given, "were");
+      msg << " passed.";
       return msg.str();
     }
 
-    sass::string formatTooManyArguments(EnvKeyFlatMap<ExpressionObj> given, Sass::EnvKeySet expected) {
+    sass::string formatTooManyArguments(const EnvKeyFlatMap<ExpressionObj>& given, const Sass::EnvKeySet& expected) {
       Sass::EnvKeySet superfluous;
       for (auto pair : given) {
         if (expected.count(pair.first) == 0) {
@@ -94,11 +94,34 @@ namespace Sass {
         toSentence(superfluous, "or") + ".";
     }
 
+    sass::string formatTooManyArguments(const EnvKeyFlatMap<ValueObj>& given, const Sass::EnvKeySet& expected) {
+      Sass::EnvKeySet superfluous;
+      for (auto pair : given) {
+        if (expected.count(pair.first) == 0) {
+          superfluous.insert(pair.first);
+        }
+      }
+      return "No argument named " +
+        toSentence(superfluous, "or") + ".";
+    }
+
+    sass::string formatTooManyArguments(const EnvKeyFlatMap<ValueObj>& given, const sass::vector<ArgumentObj>& arguments) {
+      Sass::EnvKeySet expected;
+      for (auto arg : arguments) {
+        expected.insert(arg->name());
+      }
+      return formatTooManyArguments(given, expected);
+    }
+
     TooManyArguments::TooManyArguments(BackTraces traces, size_t given, size_t expected)
       : Base(formatTooManyArguments(given, expected), traces)
     {}
 
-    TooManyArguments::TooManyArguments(BackTraces traces, EnvKeyFlatMap<ExpressionObj> given, Sass::EnvKeySet expected)
+    TooManyArguments::TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ExpressionObj>& given, const Sass::EnvKeySet& expected)
+      : Base(formatTooManyArguments(given, expected), traces)
+    {}
+
+    TooManyArguments::TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ValueObj>& given, const sass::vector<ArgumentObj>& expected)
       : Base(formatTooManyArguments(given, expected), traces)
     {}
 

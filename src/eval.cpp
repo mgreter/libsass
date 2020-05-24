@@ -731,8 +731,8 @@ namespace Sass {
   }
 
   Value* Eval::_runUserDefinedCallable2(
-    sass::vector<ValueObj>& positional,
-    EnvKeyFlatMap<ValueObj>& named,
+    sass::vector<ValueObj>& evaledPositional,
+    EnvKeyFlatMap<ValueObj>& evaledNamed,
     enum Sass_Separator separator,
     UserDefinedCallable* callable,
     UserDefinedCallable* content,
@@ -766,24 +766,54 @@ namespace Sass {
     const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
 
     // Create a new scope from the callable, outside variables are not visible?
-    declaredArguments->verify(positional.size(), named, pstate, traces);
-    size_t minLength = std::min(positional.size(), declared.size());
 
-    // Set positional arguments 
-    for (size_t i = 0; i < minLength; i++) {
+    for (size_t i = 0; i < declared.size(); i += 1) {
+
+    }
+
+
+    // evaledPositional.resize(declared.size());
+    for (size_t i = 0; i < declared.size(); i += 1) {
+      ValueObj value = getArgument(evaledPositional, evaledNamed, i, declared[i]);
       compiler.varRoot.setVariable(
         idxs->varFrame, (uint32_t)i,
-        positional[i]->withoutSlash());
+        value->withoutSlash());
     }
+
+    if (declaration->arguments()) {
+
+    }
+
+    // If the callable accepts rest argument we can pass all unknown args
+
+    if (declaredArguments->restArg().empty()) {
+      if (evaledPositional.size() > declared.size()) {
+        throw Exception::TooManyArguments(logger456, evaledPositional.size(), declared.size());
+      }
+      if (evaledPositional.size() + evaledNamed.size() > declared.size()) {
+        throw Exception::TooManyArguments(logger456, evaledNamed, declared);
+      }
+    }
+
+    // declaredArguments->verify(evaledPositional.size(), evaledNamed, pstate, traces);
+
+    // size_t minLength = std::min(evaledPositional.size(), declared.size());
+
+    // Set positional arguments 
+    // for (size_t i = 0; i < minLength; i++) {
+    //   compiler.varRoot.setVariable(
+    //     idxs->varFrame, (uint32_t)i,
+    //     evaledPositional[i]->withoutSlash());
+    // }
 
     size_t i;
     ValueObj value;
-    for (i = positional.size(); i < declared.size(); i++) {
+    for (i = evaledPositional.size(); i < declared.size(); i++) {
       Argument* argument = declared[i];
       auto& name(argument->name());
-      if (named.count(name) == 1) {
-        value = named[name]->perform(this);
-        named.erase(name);
+      if (evaledNamed.count(name) == 1) {
+        value = evaledNamed[name]->perform(this);
+        evaledNamed.erase(name);
       }
       else {
         // Use the default arguments
@@ -796,16 +826,16 @@ namespace Sass {
 
     ArgumentListObj argumentList;
     if (!declaredArguments->restArg().empty()) {
-      if (positional.size() > declared.size()) {
-        positional.erase(positional.begin(),
-          positional.begin() + declared.size());
+      if (evaledPositional.size() > declared.size()) {
+        evaledPositional.erase(evaledPositional.begin(),
+          evaledPositional.begin() + declared.size());
       }
       else {
-        positional.clear();
+        evaledPositional.clear();
       }
       if (separator == SASS_UNDEF) separator = SASS_COMMA;
       argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
-        std::move(positional), separator, std::move(named));
+        std::move(evaledPositional), separator, std::move(evaledNamed));
       compiler.varRoot.setVariable(idxs->varFrame,
         (uint32_t)declared.size(), argumentList);
     }
@@ -1574,6 +1604,27 @@ namespace Sass {
       return name->second;
     }
     throw Exception::MissingArgument(logger456, key.norm());
+  }
+
+  Value* Eval::getArgument(
+    sass::vector<ValueObj>& positional,
+    EnvKeyFlatMap<ValueObj>& named,
+    size_t idx, const Argument* arg)
+  {
+    auto name = named.find(arg->name());
+    if (positional.size() > idx) {
+      if (name != named.end()) {
+        throw Exception::ArgumentGivenTwice(logger456, arg->name().norm());
+      }
+      return positional[idx];
+    }
+    else if (name != named.end()) {
+      return name->second;
+    }
+    else if (arg->value()) {
+      return arg->value()->perform(this);
+    }
+    throw Exception::MissingArgument(logger456, arg->name().norm());
   }
 
   // This operates similar to a function call

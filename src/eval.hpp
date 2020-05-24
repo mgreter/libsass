@@ -113,7 +113,13 @@ namespace Sass {
       EnvKeyFlatMap<ValueObj>& named,
       size_t idx, const EnvKey& key);
 
-   public:
+    // Helper for IfExpression
+    Value* getArgument(
+      sass::vector<ValueObj>& positional,
+      EnvKeyFlatMap<ValueObj>& named,
+      size_t idx, const Argument* arg);
+
+  public:
 
      Logger& logger456;
 

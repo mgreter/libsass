@@ -149,7 +149,7 @@ namespace Sass {
   {
 
     // The arguments that are taken.
-    ADD_PROPERTY(sass::vector<ArgumentObj>, arguments);
+    ADD_REF(sass::vector<ArgumentObj>, arguments);
 
     // The name of the rest argument (as in `$args...`),
     // or `null` if none was declared.
