@@ -62,6 +62,7 @@ public:
 #define LOCAL_COUNT(name,opt) LocalOption<size_t> cnt_##name(name, opt)
 #define LOCAL_STRING(name,opt) LocalOption<sass::string> flag_##name(name, opt)
 #define LOCAL_PTR(var,name,opt) LocalOption<var*> flag_##name(name, opt)
+#define LOCAL_VEC(var,name,opt) LocalOption<var*> flag_##name(name, opt)
 
 #define NESTING_GUARD(name) \
   LocalOption<size_t> cnt_##name(name, name + 1); \
@@ -129,7 +130,7 @@ private:
 #ifdef DEBUG_SHARED_PTR
 
 #define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
-  virtual klass* copy(sass::string, size_t) const { \
+  virtual klass* copy(bool childless, sass::string, size_t) const { \
     throw std::runtime_error("Copy not implemented"); \
   } \
   virtual klass* clone(sass::string, size_t) const { \
@@ -137,13 +138,16 @@ private:
   } \
 
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
-  klass(const klass* ptr); \
-  virtual klass* copy(sass::string, size_t) const override { \
+  klass(const klass* ptr, bool childless = false); \
+  virtual klass* copy(bool childless, sass::string, size_t) const override { \
     throw std::runtime_error("Copy not implemented"); \
   } \
   virtual klass* clone(sass::string, size_t) const override { \
     throw std::runtime_error("Clone not implemented"); \
   } \
+
+#define ATTACH_COPY_CTOR(klass) \
+  klass(const klass* ptr, bool childless = false); \
 
 #define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
@@ -181,53 +185,6 @@ private:
   klass(const klass* ptr, bool childless = false); \
   virtual klass* copy(bool childless = false) const; \
   virtual klass* clone() const; \
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#define ATTACH_ABSTRACT_COPY_OPERATIONS2(klass) \
-  virtual klass* copy(bool childless = false) const { \
-    throw std::runtime_error("Copy not implemented"); \
-  } \
-
-#define ATTACH_ABSTRACT_CLONE_OPERATIONS2(klass) \
-  virtual klass* copy(bool childless = false) const { \
-    throw std::runtime_error("Copy not implemented"); \
-  } \
-  virtual klass* clone() const { \
-    throw std::runtime_error("Clone not implemented"); \
-  } \
-
-#define ATTACH_VIRTUAL_COPY_OPERATIONS2(klass) \
-  klass(const klass* ptr, bool childless = false); \
-  virtual klass* copy(bool childless = false) const override { \
-    throw std::runtime_error("Copy not implemented"); \
-  }
-
-#define ATTACH_VIRTUAL_CLONE_OPERATIONS2(klass) \
-  klass(const klass* ptr, bool childless = false); \
-  virtual klass* clone() const override { \
-    throw std::runtime_error("Clone not implemented"); \
-  } \
-  virtual klass* clone() const { \
-    throw std::runtime_error("Clone not implemented"); \
-  } \
-
-#define ATTACH_CLONE_OPERATIONS2(klass) \
-  klass(const klass* ptr, bool childless = false); \
-  virtual klass* copy(bool childless = false) const override; \
-  virtual klass* clone() const override; \
 
 #endif
 

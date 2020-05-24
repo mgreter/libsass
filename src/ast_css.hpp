@@ -65,6 +65,10 @@ namespace Sass {
     void append(const CssNodeObj& element) = delete;
     void append(CssNodeObj&& element) = delete;
 
+    virtual bool bubbles() const {
+      return false;
+    }
+
     sass::vector<T>& elements73() { return Vectorized::elements(); }
     const sass::vector<T>& elements73() const { return Vectorized::elements(); }
 
@@ -311,6 +315,10 @@ namespace Sass {
 
     bool isInvisibleSibling() const override final;
 
+    bool bubbles() const override final {
+      return true;
+    }
+
     bool bubbleThroughStyleRule() const override final { return true; }
     CssParentNode* bubbleThroughStyleRule2() override final {
       return parent_ ? parent_->bubbleThroughStyleRule2() : this;
@@ -470,6 +478,11 @@ namespace Sass {
       return queries_.empty() || CssParentNode::isInvisibleCss();
     }
 
+    bool bubbles() const override final {
+      return true;
+    }
+
+
     // Check if two instances are considered equal
     bool operator== (const CssMediaRule& rhs) const;
 
@@ -496,6 +509,10 @@ namespace Sass {
 
     CssParentNode* bubbleThroughStyleRule2() override final {
       return parent_ ? parent_->bubbleThroughStyleRule2() : this;
+    }
+
+    bool bubbles() const override final {
+      return true;
     }
 
     bool isInvisibleCss() const override final { return empty(); }

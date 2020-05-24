@@ -24,7 +24,7 @@ namespace Sass {
     if (pool == nullptr) {
       pool = new MemoryPool();
     }
-    allocations++;
+    ++allocations;
     return pool->allocate(size);
   }
 

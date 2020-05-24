@@ -22,10 +22,10 @@
   // How many buckets should we have for the free-list
   // Determines when allocations go directly to malloc/free
   // For maximum size of managed items multiply by alignment
-  #define SassAllocatorBuckets 512
+  #define SassAllocatorBuckets 640
 
   // The size of the memory pool arenas in bytes.
-  #define SassAllocatorArenaSize (1024 * 256)
+  #define SassAllocatorArenaSize (1024 * 640)
 
 #endif
 // EO SASS_CUSTOM_ALLOCATOR

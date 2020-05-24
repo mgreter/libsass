@@ -12,7 +12,6 @@ enum SassOutputStyle {
   SASS_STYLE_COMPACT,
   SASS_STYLE_COMPRESSED,
   // only used internally
-  SASS_STYLE_INSPECT,
   SASS_STYLE_TO_CSS
 };
 

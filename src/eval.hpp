@@ -278,7 +278,7 @@ namespace Sass {
     CssParentNode* _trimIncluded(sass::vector<CssParentNodeObj>& nodes);
 
     void _addRestMap(EnvKeyFlatMap<ValueObj>& values, Map* map, const SourceSpan& nodeForSpan);
-    void _addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& nodeForSpan);
+    void _addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map);
 	  void _evaluateArguments(ArgumentInvocation* arguments, ArgumentResults& evaluated);
 
     sass::string _evaluateToCss(Expression* expression, bool quote = true);

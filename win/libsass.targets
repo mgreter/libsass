@@ -90,7 +90,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_functions.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sass_values.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\scanner_string.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\serialize.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_map.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_state.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_span.hpp" />
@@ -145,7 +144,6 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\position.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\offset.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\serialize.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\eval.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\evaluate.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\listize.cpp" />

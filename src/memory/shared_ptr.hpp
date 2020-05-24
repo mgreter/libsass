@@ -27,7 +27,9 @@ namespace Sass {
 
   ///////////////////////////////////////////////////////////////////////////////
   // Use macros for the allocation task, since overloading operator `new`
-  // has been proven to be flaky under certain compilers (see comment below).
+  // has been proven to be flaky under certain compilers. This allows us
+  // to track memory issues better by adding the source location for every
+  // memory allocation, so once it leaks we know where it was created.
   ///////////////////////////////////////////////////////////////////////////////
 
   #ifdef DEBUG_SHARED_PTR
@@ -36,7 +38,10 @@ namespace Sass {
       ((Class*)(new Class(__VA_ARGS__))->trace(__FILE__, __LINE__)) \
 
     #define SASS_MEMORY_COPY(obj) \
-      ((obj)->copy(__FILE__, __LINE__)) \
+      ((obj)->copy(false, __FILE__, __LINE__)) \
+
+    #define SASS_MEMORY_COPY_EMPTY(obj) \
+      ((obj)->copy(true, __FILE__, __LINE__)) \
 
     #define SASS_MEMORY_CLONE(obj) \
       ((obj)->clone(__FILE__, __LINE__)) \
@@ -47,8 +52,12 @@ namespace Sass {
       new Class(__VA_ARGS__) \
 
     #define SASS_MEMORY_COPY(obj) \
-      ((obj)->copy()) \
+      ((obj)->copy(false)) \
 
+    #define SASS_MEMORY_COPY_EMPTY(obj) \
+      ((obj)->copy(true)) \
+
+    // Last counted 6 users
     #define SASS_MEMORY_CLONE(obj) \
       ((obj)->clone()) \
 

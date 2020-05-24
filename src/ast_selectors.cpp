@@ -372,8 +372,8 @@ namespace Sass {
   bool SelectorList::isInvisible() const
   {
     if (empty()) return true;
-    for (size_t i = 0; i < length(); i += 1) {
-      if (get(i)->isInvisible()) return true;
+    for (ComplexSelector* complex : elements()) {
+      if (complex->isInvisible()) return true;
     }
     return false;
   }
@@ -779,7 +779,7 @@ namespace Sass {
     if (!chroots() && !has_real_parent_ref()) {
       // Check if we should never connect to parent
       if (!implicit_parent) { return { this }; }
-      // Otherwise add parent selectors at the begining
+      // Otherwise add parent selectors at the beginning
       if (parent) { selectors.emplace_back(parent->elements()); }
     }
 
@@ -797,7 +797,7 @@ namespace Sass {
       }
     }
 
-    // Premutate through all paths
+    // Permutate through all paths
     selectors = permutateAlt(selectors);
 
     // Create final selectors from path permutations
@@ -809,7 +809,7 @@ namespace Sass {
         first->hasPreLineFeed(true);
       }
       // ToDo: remove once we know how to handle line feeds
-      // ToDo: currently a mashup between ruby and dart sass
+      // ToDo: currently a mash-up between ruby and dart sass
       // if (has_real_parent_ref()) first->has_line_feed(false);
       // first->has_line_break(first->has_line_break() || has_line_break());
       first->chroots(true); // has been resolved by now

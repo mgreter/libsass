@@ -83,7 +83,7 @@ namespace Sass {
     if (mixin == nullptr) {
       throw Exception::SassRuntimeException2(
         "Undefined mixin.",
-        *compiler.logger123);
+        logger456);
     }
 
     UserDefinedCallableObj contentCallable;
@@ -100,10 +100,10 @@ namespace Sass {
 
       if (!rule || !rule->has_content()) {
         SourceSpan span(node->content()->pstate());
-        callStackFrame frame(*compiler.logger123, span);
+        callStackFrame frame(logger456, span);
         throw Exception::SassRuntimeException2(
           "Mixin doesn't accept a content block.",
-          *compiler.logger123);
+          logger456);
       }
     }
 
@@ -116,7 +116,7 @@ namespace Sass {
 
     LOCAL_PTR(CssParentNode, current, trace);
 
-    callStackFrame frame(*compiler.logger123,
+    callStackFrame frame(logger456,
       BackTrace(node->pstate(), mixin->name().orig(), true));
 
     LOCAL_PTR(UserDefinedCallable, content88, contentCallable);
@@ -144,7 +144,7 @@ namespace Sass {
 
     LOCAL_PTR(CssParentNode, current, trace);
 
-    callStackFrame frame(*compiler.logger123,
+    callStackFrame frame(logger456,
       BackTrace(c->pstate(), Strings::contentRule));
 
     LOCAL_PTR(UserDefinedCallable, content88, content->content());
@@ -295,7 +295,7 @@ namespace Sass {
         if (!child->isInvisibleSibling()) {
           //std::cerr << "THE STRANGE ONE\n";
           auto grandparent = parent->parent_;
-          parent = parent->copy(true);
+          parent = SASS_MEMORY_COPY_EMPTY(parent);
           // parent->clear();
           grandparent->addChild(parent);
           break;
@@ -336,7 +336,7 @@ namespace Sass {
   CssParentNode* Eval::hoistStyleRule(CssParentNode* node)
   {
     if (isInStyleRule()) {
-      auto outer = _styleRule->copy(true);
+      auto outer = SASS_MEMORY_COPY_EMPTY(_styleRule);
       node->addChild(outer);
       outer->parent_ = node;
       return outer;
@@ -445,7 +445,7 @@ namespace Sass {
       // std::cerr << "Try copy\n";
       // debug_ast(included.front());
       CssParentNode* innerCopy =
-        included.empty() ? nullptr : included.front()->copy(true);
+        included.empty() ? nullptr : SASS_MEMORY_COPY_EMPTY(included.front());
       // if (innerCopy) innerCopy->clear();
       CssParentNode* outerCopy = innerCopy;
       // std::cerr << "Did copy\n";
@@ -455,7 +455,7 @@ namespace Sass {
       if (it != included.end()) {
         if (++it != included.end()) {
           // std::cerr << "Try copy\n";
-          auto copy = (*it)->copy(true);
+          auto copy = SASS_MEMORY_COPY_EMPTY(*it);
           // copy->clear();
           // std::cerr << "Did copy\n";
           copy->addChild(outerCopy);
@@ -568,7 +568,7 @@ namespace Sass {
       // If we're in a style rule, copy it into the at-rule so that
       // declarations immediately inside it have somewhere to go.
       // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
-      CssStyleRule* qwe = _styleRule->copy(true);
+      CssStyleRule* qwe = SASS_MEMORY_COPY_EMPTY(_styleRule);
       css->addChild(qwe);
       visitChildren2(qwe, node->elements());
 
@@ -591,72 +591,52 @@ namespace Sass {
     }
 
 
-    SourceDataObj source = SASS_MEMORY_NEW(SourceItpl,
-      std::move(str_mq), state);
-    MediaQueryParser parser(compiler, source);
-    sass::vector<CssMediaQueryObj> parsed = parser.parse();
-    // std::cerr << "IN MEDIARULE " << source->content() << "\n";
+    MediaQueryParser parser(compiler, SASS_MEMORY_NEW(
+      SourceItpl, std::move(str_mq), state));
+    sass::vector<CssMediaQueryObj> parsed(parser.parse());
 
-    sass::vector<CssMediaQueryObj> mergedQueries;
-    if (!_mediaQueries.empty()) {
-      mergedQueries = mergeMediaQueries(_mediaQueries, parsed);
-    }
+    sass::vector<CssMediaQueryObj> mergedQueries
+      (mergeMediaQueries(_mediaQueries, parsed));
 
-    // std::cerr << "mergedQueries " << debug_vec(mergedQueries) << "\n";
-
-    if (_hasMediaQueries && mergedQueries.empty()) {
-      return nullptr;
+    if (mergedQueries.empty()) {
+      if (_hasMediaQueries) {
+        return nullptr;
+      }
+      mergedQueries = parsed;
     }
 
     LOCAL_FLAG(_hasMediaQueries, true);
 
-
-    // Create a new CSS only representation of the media rule
-    CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
-      node->pstate(), current, mergedQueries.empty() ? parsed : mergedQueries);
-
-
-    // std::cerr << "IN ==== [[" << debug_vec(css->queries().elements()) << "]]\n";
-
     auto chroot = current;
-
-      while ((Cast<CssStyleRule>(chroot) || Cast<CssImportTrace>(chroot)) || (!mergedQueries.empty() && Cast<CssMediaRule>(chroot))) {
+    while (chroot->bubbles()) {
       chroot = chroot->parent_;
     }
 
-
-      // css->parent_ = chroot;
-    // chroot->append(css);
+    // Create a new CSS only representation of the media rule
+    CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
+      node->pstate(), current, mergedQueries);
     _addChild(chroot, css);
 
-
-    auto oldParent = current;
-    current = css;
-    auto oldMediaQueries = std::move(_mediaQueries);
-    _mediaQueries = mergedQueries.empty() ? parsed : mergedQueries;
-
+    LOCAL_PTR(CssParentNode, current, css);
+    auto oldMediaQueries(std::move(_mediaQueries));
+    _mediaQueries = mergedQueries;
     mediaStack.emplace_back(css);
 
-    if (!isInStyleRule()) {
+    if (isInStyleRule()) {
+      CssStyleRule* copy = SASS_MEMORY_COPY_EMPTY(_styleRule);
+      css->addChild(copy);
+      visitChildren2(copy, node->elements());
+    }
+    else {
       for (auto& child : node->elements()) {
         ValueObj rv = child->perform(this);
       }
     }
-    else {
-      // std::cerr << "AASDASDAS\n";
-
-      CssStyleRule* qwe = _styleRule->copy(true);
-      css->addChild(qwe);
-      visitChildren2(qwe, node->elements());
-    }
 
     _mediaQueries = std::move(oldMediaQueries);
-    current = oldParent;
 
     mediaStack.pop_back();
 
-    // The parent to add declarations too
-    // return css.detach();
     return nullptr;
   }
 
@@ -824,7 +804,7 @@ namespace Sass {
     }
 
     // ToDo: this should not be necessary!?
-    ValueObj result = callback(pstate, positional, compiler, *compiler.logger123, *this, selfAssign); // 7%
+    ValueObj result = callback(pstate, positional, compiler, logger456, *this, selfAssign); // 7%
     return result.detach();
 
   }
@@ -1008,7 +988,7 @@ namespace Sass {
 
 
       BackTrace trace(node->pstate());
-      callStackFrame frame(*compiler.logger123, trace);
+      callStackFrame frame(logger456, trace);
       logger456.addWarning(result);
 
     }
@@ -1188,7 +1168,7 @@ namespace Sass {
     case Sass_OP::IESEQ:
       right = rhs->perform(this);
       return left->singleEquals(
-        right, *compiler.logger123, node->pstate());
+        right, logger456, node->pstate());
     case Sass_OP::OR:
       if (left->isTruthy()) {
         return left.detach();
@@ -1209,36 +1189,36 @@ namespace Sass {
         ? bool_false : bool_true;
     case Sass_OP::GT:
       right = rhs->perform(this);
-      return left->greaterThan(right, *compiler.logger123, node->pstate())
+      return left->greaterThan(right, logger456, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::GTE:
       right = rhs->perform(this);
-      return left->greaterThanOrEquals(right, *compiler.logger123, node->pstate())
+      return left->greaterThanOrEquals(right, logger456, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::LT:
       right = rhs->perform(this);
-      return left->lessThan(right, *compiler.logger123, node->pstate())
+      return left->lessThan(right, logger456, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::LTE:
       right = rhs->perform(this);
-      return left->lessThanOrEquals(right, *compiler.logger123, node->pstate())
+      return left->lessThanOrEquals(right, logger456, node->pstate())
         ? bool_true : bool_false;
     case Sass_OP::ADD:
       right = rhs->perform(this);
-      return left->plus(right, *compiler.logger123, node->pstate());
+      return left->plus(right, logger456, node->pstate());
     case Sass_OP::SUB:
       right = rhs->perform(this);
-      return left->minus(right, *compiler.logger123, node->pstate());
+      return left->minus(right, logger456, node->pstate());
     case Sass_OP::MUL:
       right = rhs->perform(this);
-      return left->times(right, *compiler.logger123, node->pstate());
+      return left->times(right, logger456, node->pstate());
     case Sass_OP::DIV:
       right = rhs->perform(this);
       return doDivision(left, right,
-        node->allowsSlash(), *compiler.logger123, node->pstate());
+        node->allowsSlash(), logger456, node->pstate());
     case Sass_OP::MOD:
       right = rhs->perform(this);
-      return left->modulo(right, *compiler.logger123, node->pstate());
+      return left->modulo(right, logger456, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -1249,13 +1229,13 @@ namespace Sass {
     ValueObj operand = node->operand()->perform(this);
     switch (node->optype()) {
     case UnaryExpression::Type::PLUS:
-      return operand->unaryPlus(*compiler.logger123, node->pstate());
+      return operand->unaryPlus(logger456, node->pstate());
     case UnaryExpression::Type::MINUS:
-      return operand->unaryMinus(*compiler.logger123, node->pstate());
+      return operand->unaryMinus(logger456, node->pstate());
     case UnaryExpression::Type::NOT:
-      return operand->unaryNot(*compiler.logger123, node->pstate());
+      return operand->unaryNot(logger456, node->pstate());
     case UnaryExpression::Type::SLASH:
-      return operand->unaryDivide(*compiler.logger123, node->pstate());
+      return operand->unaryDivide(logger456, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -1392,7 +1372,7 @@ namespace Sass {
     ValueObj rest = arguments->restArg()->perform(this);
 
     if (Map* restMap = rest->isMap()) {
-      _addRestMap2(named, restMap, arguments->restArg()->pstate());
+      _addRestMap2(named, restMap);
     }
     else if (List* restList = rest->isList()) {
       for (const ValueObj& value : restList->elements()) {
@@ -1419,14 +1399,13 @@ namespace Sass {
     ValueObj keywordRest = arguments->kwdRest()->perform(this);
 
     if (Map* restMap = keywordRest->isMap()) {
-      _addRestMap2(named, restMap,
-        arguments->kwdRest()->pstate());
+      _addRestMap2(named, restMap);
       return;
     }
 
     throw Exception::SassRuntimeException2(
       "Variable keyword arguments must be a map (was $keywordRest).",
-      *compiler.logger123);
+      logger456);
 
   }
 
@@ -1496,7 +1475,7 @@ namespace Sass {
   {
     ExpressionObj condition, ifTrue, ifFalse;
     ArgumentInvocation* arguments = node->arguments();
-    callStackFrame frame(*compiler.logger123, node->pstate());
+    callStackFrame frame(logger456, node->pstate());
     // Rest arguments must be evaluated in all cases
     // evaluateMacroArguments is only used for this
     if (node->arguments()->restArg() != nullptr) {
@@ -1867,39 +1846,39 @@ namespace Sass {
         values["$" + str->value()] = kv.second; // convert?
       }
       else {
-        callStackFrame frame(*compiler.logger123, pstate);
+        callStackFrame frame(logger456, pstate);
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspectValue() + " is not a string in " + map->inspectValue() + ".",
-          *compiler.logger123);
+          logger456);
       }
     }
   }
 
   /// Adds the values in [map] to [values].
-  void Eval::_addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map, const SourceSpan& pstate) {
+  void Eval::_addRestMap2(EnvKeyFlatMap<ExpressionObj>& values, Map* map) {
     // convert ??= (value) = > value as T;
 
     for (auto kv : map->elements()) {
       if (String* str = kv.first->isString()) {
         values["$" + str->value()] = SASS_MEMORY_NEW(
-          ValueExpression, pstate, kv.second);
+          ValueExpression, map->pstate(), kv.second);
       }
       else {
-        callStackFrame frame(*compiler.logger123, pstate);
+        callStackFrame frame(logger456, map->pstate());
         throw Exception::SassRuntimeException2(
           "Variable keyword argument map must have string keys.\n" +
-          kv.first->inspectValue() + " is not a string in " + map->inspectValue() + ".",
-          *compiler.logger123);
+          kv.first->inspectValue() + " is not a string in " +
+          map->inspectValue() + ".", logger456);
       }
     }
   }
 
   void Eval::_evaluateArguments(ArgumentInvocation* arguments, ArgumentResults& evaluated)
   {
+    EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
     sass::vector<ExpressionObj>& positionalIn(arguments->positional());
-    EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     // positional.resize(positionalIn.size());
     positional.clear();
     positional.reserve(positionalIn.size());
@@ -2058,10 +2037,10 @@ namespace Sass {
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
-      callStackFrame frame(*compiler.logger123, node->value()->pstate());
+      callStackFrame frame(logger456, node->value()->pstate());
       throw Exception::SassRuntimeException2(
         "Custom property values may not be empty.",
-        *compiler.logger123
+        logger456
       );
     }
 
@@ -2178,8 +2157,8 @@ namespace Sass {
     // const EnvKey& variable(f->variable());
     ValueObj low = f->lower_bound()->perform(this);
     ValueObj high = f->upper_bound()->perform(this);
-    NumberObj sass_start = low->assertNumber(*compiler.logger123);
-    NumberObj sass_end = high->assertNumber(*compiler.logger123);
+    NumberObj sass_start = low->assertNumber(logger456);
+    NumberObj sass_end = high->assertNumber(logger456);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
       sass::sstream msg; msg << "Incompatible units "

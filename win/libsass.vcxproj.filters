@@ -281,9 +281,6 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\scanner_string.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\serialize.hpp">
-      <Filter>Library Includes</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\source_map.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
@@ -440,9 +437,6 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\offset.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\serialize.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\eval.cpp">
