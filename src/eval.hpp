@@ -100,7 +100,7 @@ namespace Sass {
   private:
 
     void _addChild(CssParentNode* parent, CssParentNode* node);
-
+    
     // Helper for IfExpression
     Expression* getArgument(
       sass::vector<ExpressionObj>& positional,

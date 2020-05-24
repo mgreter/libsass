@@ -766,16 +766,7 @@ namespace Sass {
     const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
 
     // Create a new scope from the callable, outside variables are not visible?
-
-    positional.resize(declared.size());
-    for (size_t i = 0; i < declared.size(); i += 1) {
-      Value* value = getArgument(positional, named, i, declared[i]->name());
-      compiler.varRoot.setVariable(
-        idxs->varFrame, (uint32_t)i,
-        value->withoutSlash());
-    }
-
-    // declaredArguments->verify(positional.size(), named, pstate, traces);
+    declaredArguments->verify(positional.size(), named, pstate, traces);
     size_t minLength = std::min(positional.size(), declared.size());
 
     // Set positional arguments 
@@ -840,23 +831,14 @@ namespace Sass {
     _evaluateArguments(arguments, evaluated); // 12%
     EnvKeyFlatMap<ValueObj>& named(evaluated.named());
     sass::vector<ValueObj>& positional(evaluated.positional());
-
-    // Redo this shit!!
-
     const SassFnPair& tuple(callable->function()); // 0.13%
 
     ArgumentDeclaration* overload = tuple.first;
     const SassFnSig& callback = tuple.second;
     const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
 
-    // overload->verify(positional.size(), named, pstate, *compiler.logger123); // 0.66%
+    overload->verify(positional.size(), named, pstate, *compiler.logger123); // 0.66%
 
-
-    positional.resize(declaredArguments.size());
-    for (size_t i = 0; i < declaredArguments.size(); i += 1) {
-      positional[i] = getArgument(positional, named, i, declaredArguments[i]->name());
-    }
-/*
     for (size_t i = positional.size();
       i < declaredArguments.size();
       i++) {
@@ -870,7 +852,6 @@ namespace Sass {
         positional.emplace_back(argument->value()->perform(this));
       }
     }
-    */
 
     bool isNamedEmpty = named.empty();
     ArgumentListObj argumentList;
