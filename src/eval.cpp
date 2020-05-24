@@ -141,7 +141,6 @@ namespace Sass {
       mixin,
       nullptr,
       true,
-      &Eval::_runWithBlock,
       trace,
       node->pstate());
     // evaluated.clear2();
@@ -182,7 +181,6 @@ namespace Sass {
       content,
       nullptr,
       false,
-      &Eval::_runWithBlock,
       trace,
       c->pstate());
     // evaluated.clear2();
@@ -733,7 +731,6 @@ namespace Sass {
     UserDefinedCallable* callable,
     UserDefinedCallable* content,
     bool isMixinCall,
-    Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
     CssImportTrace* trace,
     const SourceSpan& pstate)
   {
@@ -798,9 +795,13 @@ namespace Sass {
 
     // This is needed since we have the result also
     // stored in the scope, so it would get collected.
-    ValueObj result = (this->*run)(callable, trace);
-    return result.detach();
-
+    // CallableDeclaration* declaration = callable->declaration();
+    for (Statement* statement : declaration->elements()) {
+      // Makes sure results get cleaned up
+      ValueObj value = statement->perform(this);
+      if (value != nullptr) return value.detach();
+    }
+    return nullptr;
   }
 
   Value* Eval::_runBuiltInCallable(
@@ -1406,7 +1407,7 @@ namespace Sass {
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable2(
       evaluated,
-      this, nullptr, false, &Eval::_runWithBlock, nullptr, pstate);
+      this, nullptr, false, nullptr, pstate);
 
     if (rv.isNull()) {
       throw Exception::SassRuntimeException2(
@@ -2073,30 +2074,6 @@ namespace Sass {
     } else {
       return SASS_MEMORY_NEW(Null, p->pstate());
     }
-  }
-
-  Value* Eval::_runAndCheck(UserDefinedCallable* callable, CssImportTrace* trace)
-  {
-    CallableDeclaration* declaration = callable->declaration();
-    for (Statement* statement : declaration->elements()) {
-      // Normal statements in functions must return nullptr
-      Value* value = statement->perform(this);
-      if (value != nullptr) return value;
-    }
-    throw Exception::SassRuntimeException2(
-      "Function finished without @return.",
-      *compiler.logger123);
-  }
-
-  Value* Eval::_runWithBlock(UserDefinedCallable* callable, CssImportTrace* trace)
-  {
-    CallableDeclaration* declaration = callable->declaration();
-    for (Statement* statement : declaration->elements()) {
-      // Makes sure results get cleaned up
-      Value* value = statement->perform(this);
-      if (value != nullptr) return value;
-    }
-    return nullptr;
   }
 
   sass::vector<CssMediaQueryObj> Eval::mergeMediaQueries(

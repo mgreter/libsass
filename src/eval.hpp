@@ -200,7 +200,6 @@ namespace Sass {
       UserDefinedCallable* callable,
       UserDefinedCallable* content,
       bool isMixinCall,
-      Value* (Eval::* run)(UserDefinedCallable*, CssImportTrace*),
       CssImportTrace* trace,
       const SourceSpan& pstate);
 
@@ -338,8 +337,6 @@ namespace Sass {
     // actual evaluated selectors
     Value* operator()(Parent_Reference*);
 
-    Value* _runAndCheck(UserDefinedCallable*, CssImportTrace*);
-
     CssParentNode* hoistStyleRule(CssParentNode* node);
 
     Value* visitSupportsRule(SupportsRule* node);
@@ -377,8 +374,6 @@ namespace Sass {
     Value* visitMixinRule(MixinRule* rule);
 
     Value* visitFunctionRule(FunctionRule* rule);
-
-    Value* _runWithBlock(UserDefinedCallable* callable, CssImportTrace* trace);
 
     Value* visitIncludeRule(IncludeRule* node);
 
