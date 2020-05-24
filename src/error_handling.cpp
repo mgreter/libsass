@@ -73,8 +73,9 @@ namespace Sass {
       return msg;
     }
 
-    sass::string formatTooManyArguments(size_t given, size_t expected) {
+    sass::string formatTooManyArguments(size_t exessive, size_t expected) {
       sass::ostream msg;
+      size_t given = exessive + expected;
       msg << "Only " << expected << " ";
       msg << pluralize("argument", expected);
       msg << " allowed, but " << given << " ";
@@ -105,24 +106,21 @@ namespace Sass {
         toSentence(superfluous, "or") + ".";
     }
 
-    sass::string formatTooManyArguments(const EnvKeyFlatMap<ValueObj>& given, const sass::vector<ArgumentObj>& arguments) {
-      Sass::EnvKeySet expected;
-      for (auto arg : arguments) {
-        expected.insert(arg->name());
-      }
-      return formatTooManyArguments(given, expected);
+    sass::string formatTooManyArguments(const EnvKeyFlatMap<ValueObj>& superfluous) {
+      return "No argument named " +
+        toSentence(superfluous, "or") + ".";
     }
 
-    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, size_t expected)
-      : Base(formatTooManyArguments(given, expected), traces)
+    TooManyArguments::TooManyArguments(BackTraces traces, size_t exessive, size_t expected)
+      : Base(formatTooManyArguments(exessive, expected), traces)
     {}
 
     TooManyArguments::TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ExpressionObj>& given, const Sass::EnvKeySet& expected)
       : Base(formatTooManyArguments(given, expected), traces)
     {}
 
-    TooManyArguments::TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ValueObj>& given, const sass::vector<ArgumentObj>& expected)
-      : Base(formatTooManyArguments(given, expected), traces)
+    TooManyArguments::TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ValueObj>& superflous)
+      : Base(formatTooManyArguments(superflous), traces)
     {}
 
     MissingArgument::MissingArgument(BackTraces traces, const sass::string& name)
@@ -135,6 +133,11 @@ namespace Sass {
 
     UnknownNamedArgument::UnknownNamedArgument(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ValueObj> names)
       : Base(formatUnknownNamedArgument(names), traces, pstate)
+    {
+    }
+
+    UnknownNamedArgument2::UnknownNamedArgument2(BackTraces traces, EnvKeyFlatMap<ValueObj> names)
+      : Base(formatUnknownNamedArgument(names), traces)
     {
     }
 

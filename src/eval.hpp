@@ -196,9 +196,7 @@ namespace Sass {
     bool isRoot() const;
 
     Value* _runUserDefinedCallable2(
-      sass::vector<ValueObj>& positional,
-      EnvKeyFlatMap<ValueObj>& named,
-      enum Sass_Separator separator,
+      ArgumentResults& evaled,
       UserDefinedCallable* callable,
       UserDefinedCallable* content,
       bool isMixinCall,

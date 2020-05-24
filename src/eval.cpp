@@ -137,9 +137,7 @@ namespace Sass {
     ArgumentResults& evaluated(evaluated2.buffer);
     _evaluateArguments(node->arguments(), evaluated);
     ValueObj qwe = _runUserDefinedCallable2(
-      evaluated.positional(),
-      evaluated.named(),
-      evaluated.separator(),
+      evaluated,
       mixin,
       nullptr,
       true,
@@ -180,9 +178,7 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, content->declaration()->idxs()); // Not needed, but useful?
 
     ValueObj qwe = _runUserDefinedCallable2(
-      evaluated.positional(),
-      evaluated.named(),
-      evaluated.separator(),
+      evaluated,
       content,
       nullptr,
       false,
@@ -731,9 +727,7 @@ namespace Sass {
   }
 
   Value* Eval::_runUserDefinedCallable2(
-    sass::vector<ValueObj>& evaledPositional,
-    EnvKeyFlatMap<ValueObj>& evaledNamed,
-    enum Sass_Separator separator,
+    ArgumentResults& evaled,
     UserDefinedCallable* callable,
     UserDefinedCallable* content,
     bool isMixinCall,
@@ -761,83 +755,46 @@ namespace Sass {
     // EnvKeyFlatMap<ValueObj>& named = evaluated.named();
     // sass::vector<ValueObj>& positional = evaluated.positional();
     CallableDeclaration* declaration = callable->declaration();
-    ArgumentDeclaration* declaredArguments = declaration->arguments();
-    if (!declaredArguments) throw std::runtime_error("Mixin declaration has no arguments");
-    const sass::vector<ArgumentObj>& declared = declaredArguments->arguments();
-
-    // Create a new scope from the callable, outside variables are not visible?
-
-    for (size_t i = 0; i < declared.size(); i += 1) {
-
-    }
-
+    ArgumentDeclaration* prototype = declaration->arguments();
+    if (!prototype) throw std::runtime_error("Mixin declaration has no arguments");
+    const sass::vector<ArgumentObj>& parameters = prototype->arguments();
 
     // evaledPositional.resize(declared.size());
-    for (size_t i = 0; i < declared.size(); i += 1) {
-      ValueObj value = getArgument(evaledPositional, evaledNamed, i, declared[i]);
+    for (size_t i = 0; i < parameters.size(); i += 1) {
+      ValueObj value = getArgument(evaled.positional(), evaled.named(), i, parameters[i]);
       compiler.varRoot.setVariable(
         idxs->varFrame, (uint32_t)i,
         value->withoutSlash());
     }
 
-    if (declaration->arguments()) {
-
+    // Remove the consumed positional arguments
+    if (evaled.positional().size() > parameters.size()) {
+      evaled.positional().erase(evaled.positional().begin(),
+        evaled.positional().begin() + parameters.size());
+    }
+    else {
+      evaled.positional().clear();
     }
 
     // If the callable accepts rest argument we can pass all unknown args
-
-    if (declaredArguments->restArg().empty()) {
-      if (evaledPositional.size() > declared.size()) {
-        throw Exception::TooManyArguments(logger456, evaledPositional.size(), declared.size());
+    // Also if we must pass rest args we must pass only the remaining parts
+    if (prototype->restArg().empty()) {
+      // Check that all positional arguments are consumed
+      if (evaled.positional().size()) {
+        throw Exception::TooManyArguments(logger456, evaled.positional().size(), parameters.size());
       }
-      if (evaledPositional.size() + evaledNamed.size() > declared.size()) {
-        throw Exception::TooManyArguments(logger456, evaledNamed, declared);
+      // Check that all named arguments are consumed
+      if (evaled.named().size()) {
+        throw Exception::TooManyArguments(logger456, evaled.named());
       }
     }
-
-    // declaredArguments->verify(evaledPositional.size(), evaledNamed, pstate, traces);
-
-    // size_t minLength = std::min(evaledPositional.size(), declared.size());
-
-    // Set positional arguments 
-    // for (size_t i = 0; i < minLength; i++) {
-    //   compiler.varRoot.setVariable(
-    //     idxs->varFrame, (uint32_t)i,
-    //     evaledPositional[i]->withoutSlash());
-    // }
-
-    size_t i;
-    ValueObj value;
-    for (i = evaledPositional.size(); i < declared.size(); i++) {
-      Argument* argument = declared[i];
-      auto& name(argument->name());
-      if (evaledNamed.count(name) == 1) {
-        value = evaledNamed[name]->perform(this);
-        evaledNamed.erase(name);
-      }
-      else {
-        // Use the default arguments
-        value = argument->value()->perform(this);
-      }
-      compiler.varRoot.setVariable(
-        idxs->varFrame, (uint32_t)i,
-        value->withoutSlash());
-    }
-
-    ArgumentListObj argumentList;
-    if (!declaredArguments->restArg().empty()) {
-      if (evaledPositional.size() > declared.size()) {
-        evaledPositional.erase(evaledPositional.begin(),
-          evaledPositional.begin() + declared.size());
-      }
-      else {
-        evaledPositional.clear();
-      }
-      if (separator == SASS_UNDEF) separator = SASS_COMMA;
-      argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
-        std::move(evaledPositional), separator, std::move(evaledNamed));
+    else {
+      if (evaled.separator() == SASS_UNDEF) evaled.separator(SASS_COMMA);
+      ArgumentListObj argumentList = SASS_MEMORY_NEW(ArgumentList, pstate,
+        std::move(evaled.positional()), evaled.separator(), std::move(evaled.named()));
+      // ToDo: Did we account for this variable?
       compiler.varRoot.setVariable(idxs->varFrame,
-        (uint32_t)declared.size(), argumentList);
+        (uint32_t)parameters.size(), argumentList);
     }
 
     // This is needed since we have the result also
@@ -865,14 +822,14 @@ namespace Sass {
 
     ArgumentDeclaration* overload = tuple.first;
     const SassFnSig& callback = tuple.second;
-    const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
+    const sass::vector<ArgumentObj>& prototype(overload->arguments());
 
     overload->verify(positional.size(), named, pstate, *compiler.logger123); // 0.66%
 
     for (size_t i = positional.size();
-      i < declaredArguments.size();
+      i < prototype.size();
       i++) {
-      Argument* argument = declaredArguments[i];
+      Argument* argument = prototype[i];
       const auto& name(argument->name());
       if (named.count(name) == 1) {
         positional.emplace_back(named[name]->perform(this));
@@ -887,9 +844,9 @@ namespace Sass {
     ArgumentListObj argumentList;
     if (!overload->restArg().empty()) {
       sass::vector<ValueObj> rest;
-      if (positional.size() > declaredArguments.size()) {
-        rest = sublist(positional, declaredArguments.size());
-        removeRange(positional, declaredArguments.size(), positional.size());
+      if (positional.size() > prototype.size()) {
+        rest = sublist(positional, prototype.size());
+        removeRange(positional, prototype.size(), positional.size());
       }
 
       Sass_Separator separator = evaluated.separator();
@@ -927,14 +884,14 @@ namespace Sass {
 
     ArgumentDeclaration* overload = tuple.first;
     const SassFnSig& callback = tuple.second;
-    const sass::vector<ArgumentObj>& declaredArguments(overload->arguments());
+    const sass::vector<ArgumentObj>& prototype(overload->arguments());
 
     overload->verify(positional.size(), named, pstate, *compiler.logger123); // 7.5%
 
     for (size_t i = positional.size();
-      i < declaredArguments.size();
+      i < prototype.size();
       i++) {
-      Argument* argument = declaredArguments[i];
+      Argument* argument = prototype[i];
       const auto& name(argument->name());
       if (named.count(name) == 1) {
         positional.emplace_back(named[name]->perform(this));
@@ -949,9 +906,9 @@ namespace Sass {
     ArgumentListObj argumentList;
     if (!overload->restArg().empty()) {
       sass::vector<ValueObj> rest;
-      if (positional.size() > declaredArguments.size()) {
-        rest = sublist(positional, declaredArguments.size());
-        removeRange(positional, declaredArguments.size(), positional.size());
+      if (positional.size() > prototype.size()) {
+        rest = sublist(positional, prototype.size());
+        removeRange(positional, prototype.size(), positional.size());
       }
 
       Sass_Separator separator = evaluated.separator();
@@ -1005,12 +962,12 @@ namespace Sass {
 
     overload->verify(positional.size(), named, pstate, traces);
 
-    const sass::vector<ArgumentObj>& declaredArguments = overload->arguments();
+    const sass::vector<ArgumentObj>& prototype = overload->arguments();
 
     for (size_t i = positional.size();
-      i < declaredArguments.size();
+      i < prototype.size();
       i++) {
-      Argument* argument = declaredArguments[i];
+      Argument* argument = prototype[i];
       const auto& name(argument->name());
       if (named.count(name) == 1) {
         positional.emplace_back(named[name]->perform(this));
@@ -1025,9 +982,9 @@ namespace Sass {
     ArgumentListObj argumentList;
     if (!overload->restArg().empty()) {
       sass::vector<ValueObj> rest;
-      if (positional.size() > declaredArguments.size()) {
-        rest = sublist(positional, declaredArguments.size());
-        removeRange(positional, declaredArguments.size(), positional.size());
+      if (positional.size() > prototype.size()) {
+        rest = sublist(positional, prototype.size());
+        removeRange(positional, prototype.size(), positional.size());
       }
 
       Sass_Separator separator = evaluated.separator();
@@ -1459,9 +1416,7 @@ namespace Sass {
     // std::cerr << "who does that?\n";
     eval._evaluateArguments(arguments, evaluated);
     ValueObj rv = eval._runUserDefinedCallable2(
-      evaluated.positional(),
-      evaluated.named(),
-      evaluated.separator(),
+      evaluated,
       this, nullptr, false, &Eval::_runAndCheck, nullptr, pstate);
     rv = rv->withoutSlash();
     return rv.detach();
@@ -1619,7 +1574,9 @@ namespace Sass {
       return positional[idx];
     }
     else if (name != named.end()) {
-      return name->second;
+      ValueObj val = name->second;
+      named.erase(name);
+      return val.detach();
     }
     else if (arg->value()) {
       return arg->value()->perform(this);
@@ -1645,7 +1602,7 @@ namespace Sass {
       ifTrue = getArgument(positional, named, 1, Keys::$ifTrue);
       ifFalse = getArgument(positional, named, 2, Keys::$ifFalse);
       if (positional.size() > 3) {
-        throw Exception::TooManyArguments(logger456, positional.size(), 3);
+        throw Exception::TooManyArguments(logger456, positional.size() - 3, 3);
       }
       if (positional.size() + named.size() > 3) {
         throw Exception::TooManyArguments(logger456, named,
@@ -1659,7 +1616,7 @@ namespace Sass {
       ifTrue = getArgument(positional, named, 1, Keys::$ifTrue);
       ifFalse = getArgument(positional, named, 2, Keys::$ifFalse);
       if (positional.size() > 3) {
-        throw Exception::TooManyArguments(logger456, positional.size(), 3);
+        throw Exception::TooManyArguments(logger456, positional.size() - 3, 3);
       }
       if (positional.size() + named.size() > 3) {
         throw Exception::TooManyArguments(logger456, named,

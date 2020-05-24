@@ -100,9 +100,9 @@ namespace Sass {
 
       class TooManyArguments : public Base {
       public:
-        TooManyArguments(BackTraces traces, size_t given, size_t expected);
+        TooManyArguments(BackTraces traces, size_t exessive, size_t expected);
         TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ExpressionObj>& given, const Sass::EnvKeySet& expected);
-        TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ValueObj>& given, const sass::vector<ArgumentObj>& expected);
+        TooManyArguments(BackTraces traces, const EnvKeyFlatMap<ValueObj>& superfluous);
         virtual const char* errtype() const { return "Error"; }
     };
 
@@ -121,6 +121,12 @@ namespace Sass {
     class UnknownNamedArgument : public Base {
     public:
       UnknownNamedArgument(SourceSpan pstate, BackTraces traces, EnvKeyFlatMap<ValueObj> names);
+      virtual const char* errtype() const { return "Error"; }
+    };
+
+    class UnknownNamedArgument2 : public Base {
+    public:
+      UnknownNamedArgument2(BackTraces traces, EnvKeyFlatMap<ValueObj> names);
       virtual const char* errtype() const { return "Error"; }
     };
 
