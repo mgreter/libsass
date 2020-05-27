@@ -3,6 +3,8 @@
 #include "sass.hpp"
 
 #include "sass_compiler.hpp"
+#include <excpt.h>
+#include <windows.h>
 
 namespace Sass {
 
@@ -66,6 +68,7 @@ namespace Sass {
     return compiler.error.status;
   }
 
+
   // allow one error handler to throw another error
   // this can happen with invalid utf8 and json lib
   // Note: this might be obsolete but doesn't hurt!?
@@ -75,86 +78,154 @@ namespace Sass {
     catch (...) { return handle_error(compiler); }
   }
 
+
+#ifdef _MSC_VER
+
+  int filter(unsigned int code, struct _EXCEPTION_POINTERS* ep)
+  {
+    if (code == EXCEPTION_ACCESS_VIOLATION)
+    {
+      // std::cerr << "Access violation detected "
+      //   << ep->ExceptionRecord->ExceptionFlags << " at "
+      //   << ep->ExceptionRecord->ExceptionAddress << "\n";
+      return EXCEPTION_EXECUTE_HANDLER;
+    }
+    else if (code == EXCEPTION_STACK_OVERFLOW)
+    {
+      // std::cerr << "Stack overflow detected "
+      //   << ep->ExceptionRecord->ExceptionFlags << " at "
+      //   << ep->ExceptionRecord->ExceptionAddress << "\n";
+      return EXCEPTION_EXECUTE_HANDLER;
+    }
+    else
+    {
+      return EXCEPTION_CONTINUE_SEARCH;
+    }
+  }
+
+  const char* seException(unsigned int code)
+  {
+    switch (code) {
+    case EXCEPTION_ACCESS_VIOLATION:         return "EXCEPTION_ACCESS_VIOLATION";
+    case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:    return "EXCEPTION_ARRAY_BOUNDS_EXCEEDED";
+    case EXCEPTION_BREAKPOINT:               return "EXCEPTION_BREAKPOINT";
+    case EXCEPTION_DATATYPE_MISALIGNMENT:    return "EXCEPTION_DATATYPE_MISALIGNMENT";
+    case EXCEPTION_FLT_DENORMAL_OPERAND:     return "EXCEPTION_FLT_DENORMAL_OPERAND";
+    case EXCEPTION_FLT_DIVIDE_BY_ZERO:       return "EXCEPTION_FLT_DIVIDE_BY_ZERO";
+    case EXCEPTION_FLT_INEXACT_RESULT:       return "EXCEPTION_FLT_INEXACT_RESULT";
+    case EXCEPTION_FLT_INVALID_OPERATION:    return "EXCEPTION_FLT_INVALID_OPERATION";
+    case EXCEPTION_FLT_OVERFLOW:             return "EXCEPTION_FLT_OVERFLOW";
+    case EXCEPTION_FLT_STACK_CHECK:          return "EXCEPTION_FLT_STACK_CHECK";
+    case EXCEPTION_FLT_UNDERFLOW:            return "EXCEPTION_FLT_UNDERFLOW";
+    case EXCEPTION_ILLEGAL_INSTRUCTION:      return "EXCEPTION_ILLEGAL_INSTRUCTION";
+    case EXCEPTION_IN_PAGE_ERROR:            return "EXCEPTION_IN_PAGE_ERROR";
+    case EXCEPTION_INT_DIVIDE_BY_ZERO:       return "EXCEPTION_INT_DIVIDE_BY_ZERO";
+    case EXCEPTION_INT_OVERFLOW:             return "EXCEPTION_INT_OVERFLOW";
+    case EXCEPTION_INVALID_DISPOSITION:      return "EXCEPTION_INVALID_DISPOSITION";
+    case EXCEPTION_NONCONTINUABLE_EXCEPTION: return "EXCEPTION_NONCONTINUABLE_EXCEPTION";
+    case EXCEPTION_PRIV_INSTRUCTION:         return "EXCEPTION_PRIV_INSTRUCTION";
+    case EXCEPTION_SINGLE_STEP:              return "EXCEPTION_SINGLE_STEP";
+    case EXCEPTION_STACK_OVERFLOW:           return "EXCEPTION_STACK_OVERFLOW";
+    default: return "UNKNOWN EXCEPTION";
+    }
+  }
+#endif
+
+  bool __sass_compiler_parse(Compiler& compiler)
+  {
+    compiler.parse();
+    compiler.warnings = compiler.logger123->warnings12.str();
+    return true;
+  }
+
+  // Wrap Structured Exceptions for MSVC
+  bool _sass_compiler_parse(Compiler& compiler)
+  {
+    #ifdef _MSC_VER
+    __try {
+    #endif
+      return __sass_compiler_parse(compiler);
+    #ifdef _MSC_VER
+    }
+    __except (filter(GetExceptionCode(), GetExceptionInformation())) {
+      throw std::runtime_error(seException(GetExceptionCode()));
+    }
+    #endif
+  }
+
+  bool sass_compiler_parse(Compiler& compiler)
+  {
+    try { return _sass_compiler_parse(compiler); }
+    catch (...) { return handle_errors(compiler) == 0; }
+  }
+
+  bool sass_compiler_compile(Compiler& compiler)
+  {
+    bool success = false;
+    try { compiler.compile(); success = true; }
+    catch (...) { handle_errors(compiler); }
+    compiler.warnings = compiler.logger123->warnings12.str();
+    return success;
+  }
+
+  bool sass_compiler_render(Compiler& compiler)
+  {
+
+    if (compiler.compiled == nullptr) return false;
+
+    try {
+
+      compiler.error.status = 0;
+      // This will hopefully use move semantics
+      OutputBuffer output(compiler.renderCss());
+      compiler.content = std::move(output.buffer);
+
+      // Create options to render source map and footer.
+      struct SassSrcMapOptions options(compiler.srcmap_options);
+      // Deduct some options always from original values.
+      // ToDo: is there really any need to customize this?
+      if (options.origin.empty() || options.origin == "stream://stdout") {
+        options.origin = compiler.getOutputPath();
+      }
+      if (options.path.empty() || options.path == "stream://stdout") {
+        options.path = options.origin + ".map";
+      }
+
+      switch (options.mode) {
+      case SASS_SRCMAP_NONE:
+        compiler.srcmap = 0;
+        compiler.footer = 0;
+        break;
+      case SASS_SRCMAP_CREATE:
+        compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
+        compiler.footer = nullptr; // Don't add link, just create map file
+        break;
+      case SASS_SRCMAP_EMBED_LINK:
+        compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
+        compiler.footer = compiler.renderSrcMapLink(options, *output.smap);
+        break;
+      case SASS_SRCMAP_EMBED_JSON:
+        compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
+        compiler.footer = compiler.renderEmbeddedSrcMap(options, *output.smap);
+        break;
+      }
+
+      // Success
+      return true;
+    }
+    catch (...) { handle_errors(compiler); }
+
+    // Failed
+    return false;
+
+  }
+
   extern "C" {
 
     struct SassCompiler* ADDCALL sass_make_compiler()
     {
       return Compiler::wrap(new Compiler());
     }
-
-    bool ADDCALL sass_compiler_parse(struct SassCompiler* sass_compiler)
-    {
-      Compiler& compiler(Compiler::unwrap(sass_compiler));
-      bool success = false;
-      try { compiler.parse(); success = true; }
-      catch (...) { handle_errors(compiler); }
-      compiler.warnings = compiler.logger123->warnings12.str();
-      return success;
-    }
-
-    bool ADDCALL sass_compiler_compile(struct SassCompiler* sass_compiler)
-    {
-      Compiler& compiler(Compiler::unwrap(sass_compiler));
-      bool success = false;
-      try { compiler.compile(); success = true; }
-      catch (...) { handle_errors(compiler); }
-      compiler.warnings = compiler.logger123->warnings12.str();
-      return success;
-    }
-
-    bool ADDCALL sass_compiler_render(struct SassCompiler* sass_compiler)
-    {
-
-      Compiler& compiler(Compiler::unwrap(sass_compiler));
-      if (compiler.compiled == nullptr) return false;
-
-      try {
-
-        compiler.error.status = 0;
-        // This will hopefully use move semantics
-        OutputBuffer output(compiler.renderCss());
-        compiler.content = std::move(output.buffer);
-
-        // Create options to render source map and footer.
-        struct SassSrcMapOptions options(compiler.srcmap_options);
-        // Deduct some options always from original values.
-        // ToDo: is there really any need to customize this?
-        if (options.origin.empty() || options.origin == "stream://stdout") {
-          options.origin = compiler.getOutputPath();
-        }
-        if (options.path.empty() || options.path == "stream://stdout") {
-          options.path = options.origin + ".map";
-        }
-
-        switch (options.mode) {
-        case SASS_SRCMAP_NONE:
-          compiler.srcmap = 0;
-          compiler.footer = 0;
-          break;
-        case SASS_SRCMAP_CREATE:
-          compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
-          compiler.footer = nullptr; // Don't add link, just create map file
-          break;
-        case SASS_SRCMAP_EMBED_LINK:
-          compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
-          compiler.footer = compiler.renderSrcMapLink(options, *output.smap);
-          break;
-        case SASS_SRCMAP_EMBED_JSON:
-          compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
-          compiler.footer = compiler.renderEmbeddedSrcMap(options, *output.smap);
-          break;
-        }
-
-        // Success
-        return true;
-      }
-      catch (...) { handle_errors(compiler); }
-
-      // Failed
-      return false;
-
-    }
-    // EO sass_compiler_render
 
     struct SassImport* ADDCALL sass_make_file_import(struct SassCompiler* sass_compiler, const char* imp_path)
     {
@@ -360,5 +431,25 @@ namespace Sass {
     }
 
   }
+
+}
+
+extern "C" {
+
+  bool ADDCALL sass_compiler_parse(struct SassCompiler* sass_compiler)
+  {
+    return Sass::sass_compiler_parse(Sass::Compiler::unwrap(sass_compiler));
+  }
+
+  bool ADDCALL sass_compiler_compile(struct SassCompiler* sass_compiler)
+  {
+    return Sass::sass_compiler_compile(Sass::Compiler::unwrap(sass_compiler));
+  }
+
+  bool ADDCALL sass_compiler_render(struct SassCompiler* sass_compiler)
+  {
+    return Sass::sass_compiler_render(Sass::Compiler::unwrap(sass_compiler));
+  }
+  // EO sass_compiler_render
 
 }

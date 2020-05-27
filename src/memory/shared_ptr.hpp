@@ -51,13 +51,15 @@ namespace Sass {
     #define SASS_MEMORY_NEW(Class, ...) \
       new Class(__VA_ARGS__) \
 
+    // Last counted 27 users
     #define SASS_MEMORY_COPY(obj) \
       ((obj)->copy(false)) \
 
+    // Last counted 6 users
     #define SASS_MEMORY_COPY_EMPTY(obj) \
       ((obj)->copy(true)) \
 
-    // Last counted 6 users
+    // Last counted 3 users
     #define SASS_MEMORY_CLONE(obj) \
       ((obj)->clone()) \
 

@@ -129,36 +129,34 @@ private:
 
 #ifdef DEBUG_SHARED_PTR
 
-#define ATTACH_ABSTRACT_COPY_OPERATIONS(klass) \
-  virtual klass* copy(bool childless, sass::string, size_t) const { \
+#define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
+  klass(const klass* ptr, bool); \
+  virtual klass* copy(bool, sass::string, size_t) const { \
     throw std::runtime_error("Copy not implemented"); \
   } \
   virtual klass* clone(sass::string, size_t) const { \
     throw std::runtime_error("Clone not implemented"); \
   } \
 
-#define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
-  klass(const klass* ptr, bool childless = false); \
-  virtual klass* copy(bool childless, sass::string, size_t) const override { \
-    throw std::runtime_error("Copy not implemented"); \
-  } \
-  virtual klass* clone(sass::string, size_t) const override { \
-    throw std::runtime_error("Clone not implemented"); \
-  } \
-
 #define ATTACH_COPY_CTOR(klass) \
-  klass(const klass* ptr, bool childless = false); \
+  klass(const klass* ptr, bool, sass::string, size_t); \
 
 #define ATTACH_COPY_OPERATIONS(klass) \
   klass(const klass* ptr); \
-  virtual klass* copy(sass::string, size_t) const override; \
+  virtual klass* copy(bool, sass::string, size_t) const override; \
+
+#define ATTACH_COPY_OPERATIONS2(klass) \
+  klass(const klass* ptr); \
+  virtual klass* copy(bool, sass::string, size_t) const override final; \
 
 #define ATTACH_CLONE_OPERATIONS(klass) \
   klass(const klass* ptr); \
-  virtual klass* copy(sass::string, size_t) const override; \
+  virtual klass* copy(bool, sass::string, size_t) const override; \
   virtual klass* clone(sass::string, size_t) const override; \
 
 #else
+
+// #define ATTACH_VIRTUAL_CLONE_OPERATIONS(klass) \
 
 #define ATTACH_VIRTUAL_COPY_OPERATIONS(klass) \
   klass(const klass* ptr, bool childless = false); \

@@ -29,6 +29,9 @@
 
 #include "json.hpp"
 
+#include <signal.h>
+#include <excpt.h>
+
 namespace Sass {
   using namespace Constants;
   using namespace File;
@@ -667,10 +670,27 @@ struct SassValue* call_sass_function(struct SassValue* s_args, struct SassFuncti
     */
   }
 
+  void sigHandler(int s)
+  {
+    std::cerr << "CATCH SIGNALUM\n";
+    std::cerr << "signal " << s << "\n";
+    exit(1);
+  }
+
   RootObj Context::parseImport(struct SassImport* import)
   {
 
     if (import == nullptr) throw std::runtime_error("No entry point given");
+
+    signal(SIGABRT, sigHandler);
+    signal(SIGFPE, sigHandler);
+    signal(SIGILL, sigHandler);
+    signal(SIGINT, sigHandler);
+    signal(SIGSEGV, sigHandler);
+    signal(SIGTERM, sigHandler);
+    // 
+    // std::cerr << "Doiit " << ((void*)&import) << "\n";
+    parseImport(import);
 
     // add the entry to the stack
     import_stack.emplace_back(import);

@@ -103,7 +103,7 @@ namespace Sass {
     CssParentNode(const CssParentNode* ptr, bool childless);
 
     // Must be implemented in derived classes
-    virtual CssParentNode* copy(bool childless = false) const {
+    virtual CssParentNode* copy(bool childless) const {
       throw std::runtime_error("Copy not implemented");
     }
 
