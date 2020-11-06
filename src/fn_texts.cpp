@@ -186,30 +186,6 @@ namespace Sass {
 
     }
 
-
-    void handle_utf8_error (const SourceSpan& pstate, BackTraces traces)
-    {
-      try {
-       throw;
-      }
-      catch (utf8::invalid_code_point&) {
-        traces.push_back(pstate);
-        throw Exception::RuntimeException(traces,
-          "utf8::invalid_code_point");
-      }
-      catch (utf8::not_enough_room&) {
-        traces.push_back(pstate);
-        throw Exception::RuntimeException(traces,
-          "utf8::not_enough_room");
-      }
-      catch (utf8::invalid_utf8&) {
-        traces.push_back(pstate);
-        throw Exception::RuntimeException(traces,
-          "utf8::invalid_utf8");
-      }
-      catch (...) { throw; }
-    }
-
   }
 
 }
