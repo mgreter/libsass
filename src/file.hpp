@@ -12,6 +12,7 @@
 #include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
+#include "source.hpp"
 
 namespace Sass {
 

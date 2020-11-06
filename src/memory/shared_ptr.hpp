@@ -176,7 +176,7 @@ namespace Sass {
 
   protected:
 
-    RefCounted* node;
+    T* node;
 
   private:
 
@@ -194,7 +194,7 @@ namespace Sass {
       decRefCount();
     }
 
-    SharedPtr<T>& operator=(RefCounted* other_node)
+    SharedPtr<T>& operator=(T* other_node)
     {
       if (node != other_node) {
         if (node) decRefCount();

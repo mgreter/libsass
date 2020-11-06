@@ -9,7 +9,8 @@
 #include "capi_sass.hpp"
 
 #include "ast_nodes.hpp"
-#include "ast_callables.hpp"
+#include "ast_callable.hpp"
+#include "ast_supports.hpp"
 #include "environment_stack.hpp"
 
 namespace Sass {
