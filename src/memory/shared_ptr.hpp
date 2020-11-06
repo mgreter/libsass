@@ -244,23 +244,24 @@ namespace Sass {
       }
     }
 
-    RefCounted* obj() const {
+    T* obj() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
       }
       #endif
-      return node;
+      return static_cast<T*>(node);
     }
 
-    RefCounted* operator->() const {
+    T* operator->() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
       }
       #endif
-      return node;
+      return static_cast<T*>(node);
     }
+
     bool isNull() const { return node == nullptr; }
     operator bool() const { return node != nullptr; }
 
@@ -308,7 +309,7 @@ namespace Sass {
   };
 
   template <class T>
-  class SharedImpl final : private SharedPtr<T> {
+  class SharedImpl final : public SharedPtr<T> {
 
   public:
     SharedImpl() : SharedPtr<T>(nullptr) {}
@@ -339,12 +340,10 @@ namespace Sass {
         SharedPtr<T>::operator=(static_cast<const SharedImpl<T>&>(rhs)));
     }
 
-    using SharedPtr<T>::isNull;
-    using SharedPtr<T>::operator bool;
     operator T*() const { return static_cast<T*>(this->obj()); }
     operator T&() const { return *static_cast<T*>(this->obj()); }
     T& operator* () const { return *static_cast<T*>(this->obj()); };
-    T* operator-> () const { return static_cast<T*>(this->obj()); };
+//    T* operator-> () const { return static_cast<T*>(this->obj()); };
     T* ptr () const { return static_cast<T*>(this->obj()); };
     T* detach() { return static_cast<T*>(SharedPtr<T>::detach()); }
     void clear() { return SharedPtr<T>::clear(); }
