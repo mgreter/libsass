@@ -1395,6 +1395,12 @@ namespace Sass {
     return nullptr;
   }
 
+  Value* Eval::visitUseRule(UseRule* node)
+  {
+    std::cerr << "Nope use\n";
+    return nullptr;
+  }
+
   CssParentNode* Eval::_trimIncluded(CssParentVector& nodes)
   {
 

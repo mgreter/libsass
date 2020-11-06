@@ -323,7 +323,7 @@ namespace Sass {
     Value* visitStyleRule(StyleRule* rule);
     // visitStylesheet
     Value* visitSupportsRule(SupportsRule* rule);
-    // Value* visitUseRule(UseRule* rule);
+    Value* visitUseRule(UseRule* rule);
     Value* visitAssignRule(AssignRule* rule);
     Value* visitWarnRule(WarnRule* rule);
     Value* visitWhileRule(WhileRule* rule);

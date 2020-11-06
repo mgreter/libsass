@@ -495,11 +495,33 @@ namespace Sass {
     }
   };
 
+  /////////////////////////////////////////////////////////////////////////
+  // `@use` rule.
+  /////////////////////////////////////////////////////////////////////////
+  class UseRule final : public Statement
+    // public ImportBase
+  {
+  private:
+    ADD_CONSTREF(sass::string, url);
+    ADD_CONSTREF(sass::string, ns);
+    // Vector with assignments
+  public:
+    // Value constructor
+    UseRule(const SourceSpan& pstate,
+      sass::string&& url,
+      sass::string&& ns = "");
+    // Statement visitor to sass values entry function
+    Value* accept(StatementVisitor<Value*>* visitor) override final {
+      return visitor->visitUseRule(this);
+    }
+  };
+
   /////////////////////////////////////
   // Assignments -- variable and value.
   /////////////////////////////////////
   class AssignRule final : public Statement
   {
+  private:
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(ExpressionObj, value);
     ADD_REF(std::vector<VarRef>, vidxs);
@@ -526,6 +548,7 @@ namespace Sass {
   class IncludeRule final : public Statement,
     public CallableInvocation
   {
+  private:
 
     // The namespace of the mixin being invoked, or
     // `null` if it's invoked without a namespace.

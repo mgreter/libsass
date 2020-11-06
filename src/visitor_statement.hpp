@@ -39,7 +39,7 @@ namespace Sass {
     virtual T visitStyleRule(StyleRule*) = 0;
     //virtual T visitStylesheet(Stylesheet*) = 0;
     virtual T visitSupportsRule(SupportsRule*) = 0;
-    // virtual T visitUseRule(UseRule*) = 0;
+    virtual T visitUseRule(UseRule*) = 0;
     // Renamed from visitVariableDeclaration
     virtual T visitAssignRule(AssignRule*) = 0;
     virtual T visitWarnRule(WarnRule*) = 0;

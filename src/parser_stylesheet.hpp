@@ -10,6 +10,7 @@
 
 #include "parser_base.hpp"
 #include "ast_statements.hpp"
+#include "LUrlParser/LUrlParser.hpp"
 
 namespace Sass {
 
@@ -287,7 +288,9 @@ namespace Sass {
 
     // Consumes a `@use` rule.
     // [start] should point before the `@`.
-    // UseRule* readUseRule(Offset start);
+    UseRule* readUseRule(Offset start);
+
+    sass::string readUseNamespace(LUrlParser::clParseURL& url, Offset start);
 
     // Consumes a `@warn` rule.
     // [start] should point before the `@`.

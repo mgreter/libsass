@@ -600,10 +600,10 @@ namespace Sass {
       return readSupportsRule(start);
     }
     else if (plain == "use") {
-      return readAnyAtRule(start, name);
+      // return readAnyAtRule(start, name);
       // isUseAllowed = wasUseAllowed;
       // if (!root) throwDisallowedAtRule(start);
-      // return parseUseRule(start);
+      return readUseRule(start);
     }
     else if (plain == "warn") {
       return readWarnRule(start);
@@ -1034,6 +1034,43 @@ namespace Sass {
 
   }
 
+  // Consumes a `@use` rule.
+  // [start] should point before the `@`.
+  UseRule* StylesheetParser::readUseRule(Offset start)
+  {
+
+    sass::string url = string();
+    // Verify that this is a real url
+
+    using LUrlParser::clParseURL;
+    clParseURL clURL = clParseURL::ParseURL(url);
+
+    if (!clURL.IsValid()) {
+      throw std::runtime_error("inValid");
+    }
+
+    scanWhitespace();
+    auto ns = readUseNamespace(clURL, start);
+    scanWhitespace();
+    // var configuration = _configuration();
+
+    // var span = scanner.spanFrom(start);
+    // if (!_isUseAllowed) {
+    //   error("@use rules must be written before any other rules.", span);
+    // }
+    // expectStatementSeparator("@use rule");
+    // 
+
+
+    // return UseRule(url, namespace, span, configuration: configuration);
+    return SASS_MEMORY_NEW(UseRule,
+      scanner.relevantSpanFrom(start),
+      std::move(url), std::move(ns));
+
+
+    return nullptr;
+  }
+
   void StylesheetParser::scanImportArgument(ImportRule* rule)
   {
     const char* startpos = scanner.position;
@@ -1460,6 +1497,49 @@ namespace Sass {
       scanner.relevantSpanFrom(start), value);
   }
   // EO readDebugRule
+
+  /// Parses the namespace of a `@use` rule from an `as` clause, or returns the
+  /// default namespace from its URL.
+  sass::string StylesheetParser::readUseNamespace(LUrlParser::clParseURL& url, Offset start)
+  {
+    if (scanIdentifier("as")) {
+      scanWhitespace();
+      return scanner.scanChar($asterisk) ? "" : readIdentifier();
+    }
+
+    sass::string paths = url.m_Path;
+
+    auto end = paths.rbegin();
+    while (*end == '/') end += 1;
+    auto beg = end;
+    while (beg != paths.rend()) {
+      if (*beg == '/') break;
+      beg += 1;
+    }
+
+    sass::string basename(beg.base(), end.base());
+
+    //auto basename = url.pathSegments.isEmpty ? "" : url.pathSegments.last;
+
+    size_t dot = basename.find_first_of('.');
+
+    return basename.substr(
+      basename[0] == '_' ? 1 : 0,
+      dot == NPOS ? basename.size() : dot);
+
+    // isValidIdentifier(ns);
+
+    // return ns;
+
+    //var dot = basename.indexOf(".");
+    //var namespace = basename.substring(
+    //  basename.startsWith("_") ? 1 : 0, dot == -1 ? basename.length : dot);
+    //try {
+    //  return Parser.parseIdentifier(namespace, logger: logger);
+    //} on SassFormatException{
+    //  error('Invalid Sass identifier "$namespace"', scanner.spanFrom(start));
+    //}
+  }
 
   // Consumes a `@warn` rule.
   // [start] should point before the `@`.
@@ -2767,9 +2847,20 @@ namespace Sass {
         return SASS_MEMORY_NEW(StringExpression,
           scanner.relevantSpanFrom(beforeName), identifier);
       }
+      scanner.readChar();
+
+      if (plain.empty()) {
+      //   error("Interpolation isn't allowed in namespaces.", identifier.span);
+      }
+
+      if (scanner.peekChar() == $dollar) {
+        auto name = variableName();
+        return SASS_MEMORY_NEW(VariableExpression,
+          scanner.relevantSpanFrom(beforeName),
+          name, plain);
+      }
 
       ns = identifier->getPlainString();
-      scanner.readChar();
       beforeName = scanner.offset;
 
       Offset start(scanner.offset);

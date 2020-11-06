@@ -280,12 +280,14 @@ namespace Sass {
   class VariableExpression final : public Expression
   {
     ADD_CONSTREF(EnvKey, name);
+    ADD_CONSTREF(sass::string, ns);
     ADD_REF(sass::vector<VarRef>, vidxs);
   public:
     // Value constructor
     VariableExpression(
       SourceSpan&& pstate,
-      const EnvKey& name);
+      const EnvKey& name,
+      const sass::string& ns = "");
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitVariableExpression(this);

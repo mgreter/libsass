@@ -100,6 +100,7 @@ namespace Sass {
 
   class WarnRule;
 
+  class UseRule;
   class ImportRule;
   class ImportBase;
   class StaticImport;
@@ -231,6 +232,7 @@ namespace Sass {
   IMPL_MEM_OBJ(AtRootRule);
   IMPL_MEM_OBJ(Declaration);
   IMPL_MEM_OBJ(AssignRule);
+  IMPL_MEM_OBJ(UseRule);
   IMPL_MEM_OBJ(ImportRule);
   IMPL_MEM_OBJ(ImportBase);
   IMPL_MEM_OBJ(StaticImport);

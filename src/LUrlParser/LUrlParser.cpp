@@ -32,7 +32,7 @@
 #include <cstdlib>
 
 // check if the scheme name is valid
-static bool IsSchemeValid( const std::string& SchemeName )
+static bool IsSchemeValid( const sass::string& SchemeName )
 {
 	for ( auto c : SchemeName  )
 	{
@@ -56,7 +56,7 @@ bool LUrlParser::clParseURL::GetPort( int* OutPort ) const
 }
 
 // based on RFC 1738 and RFC 3986
-LUrlParser::clParseURL LUrlParser::clParseURL::ParseURL( const std::string& URL )
+LUrlParser::clParseURL LUrlParser::clParseURL::ParseURL( const sass::string& URL )
 {
 	LUrlParser::clParseURL Result;
 
@@ -69,28 +69,148 @@ LUrlParser::clParseURL LUrlParser::clParseURL::ParseURL( const std::string& URL 
 	 */
 
 	// try to read scheme
+	const char* LocalString = strchr( CurrentString, ':' );
+
+	if ( LocalString )
 	{
-		const char* LocalString = strchr( CurrentString, ':' );
 
-		if ( !LocalString )
-		{
-			return clParseURL(LUrlParserError::NoUrlCharacter );
-		}
+    // save the scheme name
+    Result.m_Scheme = sass::string(CurrentString, LocalString - CurrentString);
 
-		// save the scheme name
-		Result.m_Scheme = std::string( CurrentString, LocalString - CurrentString );
+    if (!IsSchemeValid(Result.m_Scheme))
+    {
+      return clParseURL(LUrlParserError::InvalidSchemeName);
+    }
 
-		if ( !IsSchemeValid( Result.m_Scheme ) )
-		{
-			return clParseURL( LUrlParserError::InvalidSchemeName );
-		}
+    // scheme should be lowercase
+    std::transform(Result.m_Scheme.begin(), Result.m_Scheme.end(), Result.m_Scheme.begin(), ::tolower);
 
-		// scheme should be lowercase
-		std::transform( Result.m_Scheme.begin(), Result.m_Scheme.end(), Result.m_Scheme.begin(), ::tolower );
+    // skip ':'
+    CurrentString = LocalString + 1;
 
-		// skip ':'
-		CurrentString = LocalString+1;
-	}
+    if (*CurrentString++ != '/') return clParseURL(LUrlParserError::NoDoubleSlash);
+    if (*CurrentString++ != '/') return clParseURL(LUrlParserError::NoDoubleSlash);
+
+
+    // check if the user name and password are specified
+    bool bHasUserName = false;
+
+    const char* LocalString = CurrentString;
+
+    while (*LocalString)
+    {
+      if (*LocalString == '@')
+      {
+        // user name and password are specified
+        bHasUserName = true;
+        break;
+      }
+      else if (*LocalString == '/')
+      {
+        // end of <host>:<port> specification
+        bHasUserName = false;
+        break;
+      }
+
+      LocalString++;
+    }
+
+    // user name and password
+    LocalString = CurrentString;
+
+    if (bHasUserName)
+    {
+      // read user name
+      while (*LocalString && *LocalString != ':' && *LocalString != '@') LocalString++;
+
+      Result.m_UserName = sass::string(CurrentString, LocalString - CurrentString);
+
+      // proceed with the current pointer
+      CurrentString = LocalString;
+
+      if (*CurrentString == ':')
+      {
+        // skip ':'
+        CurrentString++;
+
+        // read password
+        LocalString = CurrentString;
+
+        while (*LocalString && *LocalString != '@') LocalString++;
+
+        Result.m_Password = sass::string(CurrentString, LocalString - CurrentString);
+
+        CurrentString = LocalString;
+      }
+
+      // skip '@'
+      if (*CurrentString != '@')
+      {
+        return clParseURL(LUrlParserError::NoAtSign);
+      }
+
+      CurrentString++;
+    }
+
+    bool bHasBracket = (*CurrentString == '[');
+
+    // go ahead, read the host name
+    LocalString = CurrentString;
+
+    while (*LocalString)
+    {
+      if (bHasBracket && *LocalString == ']')
+      {
+        // end of IPv6 address
+        LocalString++;
+        break;
+      }
+      else if (!bHasBracket && (*LocalString == ':' || *LocalString == '/'))
+      {
+        // port number is specified
+        break;
+      }
+
+      LocalString++;
+    }
+
+    Result.m_Host = sass::string(CurrentString, LocalString - CurrentString);
+
+    CurrentString = LocalString;
+
+    // is port number specified?
+    if (*CurrentString == ':')
+    {
+      CurrentString++;
+
+      // read port number
+      LocalString = CurrentString;
+
+      while (*LocalString && *LocalString != '/') LocalString++;
+
+      Result.m_Port = sass::string(CurrentString, LocalString - CurrentString);
+
+      CurrentString = LocalString;
+    }
+
+    // end of string
+    if (!*CurrentString)
+    {
+      Result.m_ErrorCode = LUrlParserError::Ok;
+
+      return Result;
+    }
+
+    // skip '/'
+    if (*CurrentString != '/')
+    {
+      return clParseURL(LUrlParserError::NoSlash);
+    }
+
+    CurrentString++;
+
+  }
+
 
 	/*
 	 *	//<user>:<password>@<host>:<port>/<url-path>
@@ -98,132 +218,14 @@ LUrlParser::clParseURL LUrlParser::clParseURL::ParseURL( const std::string& URL 
 	 */
 
 	// skip "//"
-	if ( *CurrentString++ != '/' ) return clParseURL( LUrlParserError::NoDoubleSlash );
-	if ( *CurrentString++ != '/' ) return clParseURL( LUrlParserError::NoDoubleSlash );
 
-	// check if the user name and password are specified
-	bool bHasUserName = false;
-
-	const char* LocalString = CurrentString;
-
-	while ( *LocalString )
-	{
-		if ( *LocalString == '@' )
-		{
-			// user name and password are specified
-			bHasUserName = true;
-			break;
-		}
-		else if ( *LocalString == '/' )
-		{
-			// end of <host>:<port> specification
-			bHasUserName = false;
-			break;
-		}
-
-		LocalString++;
-	}
-
-	// user name and password
-	LocalString = CurrentString;
-
-	if ( bHasUserName )
-	{
-		// read user name
-		while ( *LocalString && *LocalString != ':' && *LocalString != '@' ) LocalString++;
-
-		Result.m_UserName = std::string( CurrentString, LocalString - CurrentString );
-
-		// proceed with the current pointer
-		CurrentString = LocalString;
-
-		if ( *CurrentString == ':' )
-		{
-			// skip ':'
-			CurrentString++;
-
-			// read password
-			LocalString = CurrentString;
-
-			while ( *LocalString && *LocalString != '@' ) LocalString++;
-
-			Result.m_Password = std::string( CurrentString, LocalString - CurrentString );
-
-			CurrentString = LocalString;
-		}
-
-		// skip '@'
-		if ( *CurrentString != '@' )
-		{
-			return clParseURL( LUrlParserError::NoAtSign );
-		}
-
-		CurrentString++;
-	}
-
-	bool bHasBracket = ( *CurrentString == '[' );
-
-	// go ahead, read the host name
-	LocalString = CurrentString;
-
-	while ( *LocalString )
-	{
-		if ( bHasBracket && *LocalString == ']' )
-		{
-			// end of IPv6 address
-			LocalString++;
-			break;
-		}
-		else if ( !bHasBracket && ( *LocalString == ':' || *LocalString == '/' ) )
-		{
-			// port number is specified
-			break;
-		}
-
-		LocalString++;
-	}
-
-	Result.m_Host = std::string( CurrentString, LocalString - CurrentString );
-
-	CurrentString = LocalString;
-
-	// is port number specified?
-	if ( *CurrentString == ':' )
-	{
-		CurrentString++;
-
-		// read port number
-		LocalString = CurrentString;
-
-		while ( *LocalString && *LocalString != '/' ) LocalString++;
-
-		Result.m_Port = std::string( CurrentString, LocalString - CurrentString );
-
-		CurrentString = LocalString;
-	}
-
-	// end of string
-	if ( !*CurrentString )
-	{
-		Result.m_ErrorCode = LUrlParserError::Ok;
-
-		return Result;
-	}
-
-	// skip '/'
-	if ( *CurrentString != '/' )
-	{
-		return clParseURL( LUrlParserError::NoSlash );
-	}
-
-	CurrentString++;
 
 	// parse the path
 	LocalString = CurrentString;
 
 	while ( *LocalString && *LocalString != '#' && *LocalString != '?' ) LocalString++;
 
-	Result.m_Path = std::string( CurrentString, LocalString - CurrentString );
+	Result.m_Path = sass::string( CurrentString, LocalString - CurrentString );
 
 	CurrentString = LocalString;
 
@@ -238,7 +240,7 @@ LUrlParser::clParseURL LUrlParser::clParseURL::ParseURL( const std::string& URL 
 
 		while ( *LocalString && *LocalString != '#' ) LocalString++;
 
-		Result.m_Query = std::string( CurrentString, LocalString - CurrentString );
+		Result.m_Query = sass::string( CurrentString, LocalString - CurrentString );
 
 		CurrentString = LocalString;
 	}
@@ -254,7 +256,7 @@ LUrlParser::clParseURL LUrlParser::clParseURL::ParseURL( const std::string& URL 
 
 		while ( *LocalString ) LocalString++;
 
-		Result.m_Fragment = std::string( CurrentString, LocalString - CurrentString );
+		Result.m_Fragment = sass::string( CurrentString, LocalString - CurrentString );
 
 		CurrentString = LocalString;
 	}
