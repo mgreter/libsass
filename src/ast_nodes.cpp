@@ -3,6 +3,7 @@
 /*****************************************************************************/
 #include "ast_nodes.hpp"
 
+#include "sources.hpp"
 #include "ast_css.hpp"
 #include "compiler.hpp"
 #include "exceptions.hpp"

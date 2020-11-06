@@ -1,6 +1,6 @@
 #include "source_span.hpp"
 
-#include "source.hpp"
+#include "sources.hpp"
 #include "ast_nodes.hpp"
 
 namespace Sass {

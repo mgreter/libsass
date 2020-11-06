@@ -6,6 +6,7 @@
 #include "json.hpp"
 #include "eval.hpp"
 #include "output.hpp"
+#include "sources.hpp"
 #include "stylesheet.hpp"
 #include "capi_lists.hpp"
 #include "parser_scss.hpp"

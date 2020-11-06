@@ -12,6 +12,7 @@
 #include "visitor_expression.hpp"
 #include "environment_key.hpp"
 #include "environment_cnt.hpp"
+#include "stylesheet.hpp"
 
 namespace Sass {
 

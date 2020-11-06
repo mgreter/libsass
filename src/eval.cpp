@@ -1,6 +1,7 @@
 #include "eval.hpp"
 
 #include "cssize.hpp"
+#include "sources.hpp"
 #include "compiler.hpp"
 #include "stylesheet.hpp"
 #include "exceptions.hpp"

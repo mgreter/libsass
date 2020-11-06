@@ -1,6 +1,7 @@
 #include "logger.hpp"
 
 #include <iomanip>
+#include "file.hpp"
 #include "source.hpp"
 #include "utf8/checked.h"
 #include "string_utils.hpp"
