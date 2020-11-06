@@ -225,7 +225,7 @@ namespace Sass {
     }
 
     // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
-    RefCounted* detach() {
+    T* detach() {
       if (node != nullptr) {
         node->refcount |= SET_DETACHED_BITMASK;
       }
@@ -234,7 +234,7 @@ namespace Sass {
         std::cerr << "DETACHING NODE\n";
       }
       #endif
-      return node;
+      return static_cast<T*>(node);
     }
 
     void clear() {
@@ -244,7 +244,7 @@ namespace Sass {
       }
     }
 
-    T* obj() const {
+    T* ptr() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -261,6 +261,10 @@ namespace Sass {
       #endif
       return static_cast<T*>(node);
     }
+
+    operator T* () const { return ptr(); }
+    operator T& () const { return *ptr(); }
+    T& operator* () const { return *ptr(); };
 
     bool isNull() const { return node == nullptr; }
     operator bool() const { return node != nullptr; }
@@ -340,13 +344,6 @@ namespace Sass {
         SharedPtr<T>::operator=(static_cast<const SharedImpl<T>&>(rhs)));
     }
 
-    operator T*() const { return static_cast<T*>(this->obj()); }
-    operator T&() const { return *static_cast<T*>(this->obj()); }
-    T& operator* () const { return *static_cast<T*>(this->obj()); };
-//    T* operator-> () const { return static_cast<T*>(this->obj()); };
-    T* ptr () const { return static_cast<T*>(this->obj()); };
-    T* detach() { return static_cast<T*>(SharedPtr<T>::detach()); }
-    void clear() { return SharedPtr<T>::clear(); }
   };
 
   // Comparison operators, based on:
