@@ -138,6 +138,8 @@ namespace Sass {
     Null* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(Null, this);
     }
+
+    IMPLEMENT_ISA_CASTER(Null);
   };
 
   ///////////////////////////////////////////////////////////////////////

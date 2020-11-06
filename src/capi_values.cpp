@@ -36,15 +36,15 @@ extern "C" {
   enum SassValueType ADDCALL sass_value_get_tag(struct SassValue* v) { return getValue(v)->getTag(); }
 
   // Check value for a specific type (dispatch to virtual check methods)
-  bool ADDCALL sass_value_is_null(struct SassValue* val) { return Value::unwrap(val).isNull(); }
-  bool ADDCALL sass_value_is_number(struct SassValue* val) { return Value::unwrap(val).isaNumber(); }
-  bool ADDCALL sass_value_is_string(struct SassValue* val) { return Value::unwrap(val).isaString(); }
-  bool ADDCALL sass_value_is_boolean(struct SassValue* val) { return Value::unwrap(val).isaBoolean(); }
-  bool ADDCALL sass_value_is_color(struct SassValue* val) { return Value::unwrap(val).isaColor(); }
-  bool ADDCALL sass_value_is_list(struct SassValue* val) { return Value::unwrap(val).isaList(); }
-  bool ADDCALL sass_value_is_map(struct SassValue* val) { return Value::unwrap(val).isaMap(); }
-  bool ADDCALL sass_value_is_error(struct SassValue* val) { return Value::unwrap(val).isaCustomError(); }
-  bool ADDCALL sass_value_is_warning(struct SassValue* val) { return Value::unwrap(val).isaCustomWarning(); }
+  bool ADDCALL sass_value_is_null(struct SassValue* val) { return Value::unwrap(val).isaNull() != nullptr; }
+  bool ADDCALL sass_value_is_number(struct SassValue* val) { return Value::unwrap(val).isaNumber() != nullptr; }
+  bool ADDCALL sass_value_is_string(struct SassValue* val) { return Value::unwrap(val).isaString() != nullptr; }
+  bool ADDCALL sass_value_is_boolean(struct SassValue* val) { return Value::unwrap(val).isaBoolean() != nullptr; }
+  bool ADDCALL sass_value_is_color(struct SassValue* val) { return Value::unwrap(val).isaColor() != nullptr; }
+  bool ADDCALL sass_value_is_list(struct SassValue* val) { return Value::unwrap(val).isaList() != nullptr; }
+  bool ADDCALL sass_value_is_map(struct SassValue* val) { return Value::unwrap(val).isaMap() != nullptr; }
+  bool ADDCALL sass_value_is_error(struct SassValue* val) { return Value::unwrap(val).isaCustomError() != nullptr; }
+  bool ADDCALL sass_value_is_warning(struct SassValue* val) { return Value::unwrap(val).isaCustomWarning() != nullptr; }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
