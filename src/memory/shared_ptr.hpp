@@ -176,6 +176,9 @@ namespace Sass {
 
   protected:
 
+    // We could also use `RefCounted*` instead, which would make life
+    // a bit easier with headers. Using `T*` means the implementation
+    // off that class must be known when using this in other classes.
     T* node;
 
   private:
@@ -187,10 +190,10 @@ namespace Sass {
     SharedPtr() : node(nullptr) {}
     SharedPtr(T* ptr) : node(ptr) { incRefCount(); }
     SharedPtr(const SharedPtr<T>& obj) : node(obj.node) { incRefCount(); }
-    SharedPtr(SharedPtr<T>&& obj) noexcept : node(std::move(obj.node)) {
+    SharedPtr(SharedPtr<T>&& obj) noexcept : node(obj.node) {
       obj.node = nullptr; // reset old node pointer
     }
-    virtual ~SharedPtr() {
+    ~SharedPtr() {
       decRefCount();
     }
 
@@ -242,7 +245,7 @@ namespace Sass {
         std::cerr << "DETACHING NODE\n";
       }
       #endif
-      return static_cast<T*>(node);
+      return node;
     }
 
     void clear() {
@@ -258,7 +261,7 @@ namespace Sass {
         std::cerr << "ACCESSING DELETED " << node << "\n";
       }
       #endif
-      return static_cast<T*>(node);
+      return node;
     }
 
     T* operator->() const {
@@ -267,7 +270,7 @@ namespace Sass {
         std::cerr << "ACCESSING DELETED " << node << "\n";
       }
       #endif
-      return static_cast<T*>(node);
+      return node;
     }
 
     operator T* () const { return ptr(); }
