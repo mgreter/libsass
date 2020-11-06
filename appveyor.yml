@@ -32,8 +32,8 @@ cache:
 #   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
-  - git clone https://github.com/sass/sassc.git
-  - git clone https://github.com/mgreter/sass-spec.git --branch feature/libsass-parser-backport
+  - git clone https://github.com/mgreter/sassc.git --branch refactor/libsass-4-alpha
+  - git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha
   - set PATH=C:\Ruby%ruby_version%\bin;%PATH%
   - ps: |
       if(!(gem which minitest 2>$nul)) { gem install minitest --no-ri --no-rdoc }
