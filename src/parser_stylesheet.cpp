@@ -8,6 +8,7 @@
 #include "color_maps.hpp"
 #include "exceptions.hpp"
 #include "source_span.hpp"
+#include "stylesheet.hpp"
 #include "ast_supports.hpp"
 #include "ast_statements.hpp"
 #include "ast_expressions.hpp"
@@ -70,9 +71,6 @@ namespace Sass {
     // make sure everything is parsed
     scanner.expectDone();
 
-    // Finalize variable scopes
-    context.varRoot.finalizeScopes();
-
     // Return the new root object
     return SASS_MEMORY_NEW(Root,
       scanner.relevantSpanFrom(start),
@@ -93,7 +91,7 @@ namespace Sass {
     }
 
     // Create EnvKey from id
-    EnvKey name(std::move(id));
+    EnvKey name(this->ns + std::move(id));
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
@@ -1039,6 +1037,17 @@ namespace Sass {
   UseRule* StylesheetParser::readUseRule(Offset start)
   {
 
+    UseRuleObj rule = SASS_MEMORY_NEW(
+      UseRule, scanner.relevantSpanFrom(start), "", "");
+
+    scanWhitespace();
+    scanImportArgument2(rule, nullptr);
+    scanWhitespace();
+
+   
+    return rule;
+
+/*
     sass::string url = string();
     // Verify that this is a real url
 
@@ -1063,13 +1072,98 @@ namespace Sass {
 
 
     // return UseRule(url, namespace, span, configuration: configuration);
-    return SASS_MEMORY_NEW(UseRule,
-      scanner.relevantSpanFrom(start),
-      std::move(url), std::move(ns));
-
+*/
 
     return nullptr;
+
   }
+
+
+  void StylesheetParser::scanImportArgument2(UseRule* rule, sass::string* ns)
+  {
+    const char* startpos = scanner.position;
+    Offset start(scanner.offset);
+    uint8_t next = scanner.peekChar();
+    if (next == $u || next == $U) {
+      throw std::runtime_error("nono2");
+    }
+
+    sass::string url = string();
+    const char* rawUrlPos = scanner.position;
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    scanWhitespace();
+    auto queries = tryImportQueries();
+    if (isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
+      // Create static import that is never
+      // resolved by libsass (output as is)
+      throw std::runtime_error("nono1");
+      // rule->append(SASS_MEMORY_NEW(StaticImport,
+      //   scanner.relevantSpanFrom(start),
+      //   SASS_MEMORY_NEW(Interpolation, pstate,
+      //     SASS_MEMORY_NEW(String, pstate,
+      //       sass::string(startpos, rawUrlPos))),
+      //   queries.first, queries.second));
+    }
+    // Otherwise return a dynamic import
+    // Will resolve during the eval stage
+    else {
+      // Check for valid dynamic import
+      if (inControlDirective || inMixin) {
+        throwDisallowedAtRule(rule->pstate().position);
+      }
+      // Call custom importers and check if any of them handled the import
+      // if (!context.callCustomImporters(url, pstate, rule)) {
+        // Try to load url into context.sheets
+        resolveDynamicImport2(rule, start, url);
+        // }
+    }
+
+  }
+
+
+  // Resolve import of [path] and add imports to [rule]
+  void StylesheetParser::resolveDynamicImport2(
+    UseRule* rule, Offset start, const sass::string& path)
+  {
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    const ImportRequest import(path, scanner.sourceUrl);
+    callStackFrame frame(context, { pstate, Strings::importRule });
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(context, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = context.loadImport(resolved[0])) {
+      // StyleSheet* sheet = context.registerImport(loaded);
+      rule->sheet(context.registerImport(loaded));
+      // rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
+    }
+    else {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Couldn't read stylesheet for import.");
+    }
+
+  }
+  // EO resolveDynamicImport
 
   void StylesheetParser::scanImportArgument(ImportRule* rule)
   {
@@ -2855,9 +2949,28 @@ namespace Sass {
 
       if (scanner.peekChar() == $dollar) {
         auto name = variableName();
-        return SASS_MEMORY_NEW(VariableExpression,
+        if (!plain.empty()) {
+          name = plain + "." + name;
+        }
+        auto expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(beforeName),
           name, plain);
+
+
+        if (inLoopDirective) {
+          // Static variable resolution will be done in finalize stage
+          // Must be postponed since in loops we may reference post vars
+          context.varStack.back()->variables.push_back(expression);
+        }
+        else {
+          // Otherwise utilize full static optimizations
+          EnvFrame* frame(context.varStack.back());
+          VarRef vidx(frame->getVariableIdx(name, true));
+          if (vidx.isValid()) expression->vidxs().push_back(vidx);
+          else context.varStack.back()->variables.push_back(expression);
+        }
+
+        return expression;
       }
 
       ns = identifier->getPlainString();

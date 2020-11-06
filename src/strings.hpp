@@ -71,6 +71,7 @@ namespace Sass {
     extern const sass::string error;
     extern const sass::string warning;
 
+    extern const sass::string useRule;
     extern const sass::string forRule;
     extern const sass::string warnRule;
     extern const sass::string errorRule;

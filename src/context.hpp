@@ -43,6 +43,7 @@ namespace Sass {
     // Due to EnvKayMap case insensitive.
     EnvKeyMap<CallableObj> fnLookup;
 
+  public:
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?
     // ToDo: should be case insensitive on windows?

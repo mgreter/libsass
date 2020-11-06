@@ -211,6 +211,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     entry_point->loadIfNeeded();
     // Now parse the entry point stylesheet
     sheet = parseRoot(entry_point);
+    // Finalize variable scopes
+    varRoot.finalizeScopes();
     // Update the compiler state
     state = SASS_COMPILER_PARSED;
   }
@@ -706,15 +708,24 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (import->syntax == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, import->source);
+      if (!strcmp(import->getAbsPath(), "D:/github-sass/perl-libsass-selector-refactor/libsass/../foo.useit.doda.scss")) {
+        parser.ns = "foo.";
+      }
       return parser.parseRoot();
     }
     else if (import->syntax == SASS_IMPORT_SASS)
     {
       SassParser parser(*this, import->source);
+      if (!strcmp(import->getAbsPath(), "D:/github-sass/perl-libsass-selector-refactor/libsass/../foo.useit.doda.scss")) {
+        parser.ns = "foo.";
+      }
       return parser.parseRoot();
     }
     else {
       ScssParser parser(*this, import->source);
+      if (!strcmp(import->getAbsPath(), "D:/github-sass/perl-libsass-selector-refactor/libsass/../foo.useit.doda.scss")) {
+        parser.ns = "foo.";
+      }
       return parser.parseRoot();
     }
   }
@@ -724,7 +735,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Results will be stored at `sheets[source->getAbsPath()]`
   StyleSheet* Compiler::registerImport(ImportObj import)
   {
-
     SassImportFormat& format(import->syntax);
     const SourceDataObj& source(import->source);
     const sass::string& abs_path(source->getAbsPath());
@@ -775,6 +785,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
           "Can't find stylesheet to import.");
       }
     }
+
 
     // Invoke correct parser according to format
     StyleSheet* stylesheet = SASS_MEMORY_NEW(

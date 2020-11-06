@@ -502,6 +502,7 @@ namespace Sass {
     // public ImportBase
   {
   private:
+    ADD_CONSTREF(StyleSheetObj, sheet);
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, ns);
     // Vector with assignments

@@ -67,7 +67,8 @@ namespace Sass
 
 
 
-		const sass::string forRule("@for");
+    const sass::string useRule("@use");
+    const sass::string forRule("@for");
 		const sass::string warnRule("@warn");
 		const sass::string errorRule("@error");
 		const sass::string debugRule("@debug");

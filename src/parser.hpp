@@ -30,6 +30,8 @@ namespace Sass {
     // Compiler context
     Compiler& context;
 
+    sass::string ns;
+
     // The scanner that scans through the text being parsed.
     StringScanner scanner;
 

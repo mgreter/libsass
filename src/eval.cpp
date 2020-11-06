@@ -1397,7 +1397,21 @@ namespace Sass {
 
   Value* Eval::visitUseRule(UseRule* node)
   {
-    std::cerr << "Nope use\n";
+    auto sheet = node->sheet();
+    auto root = sheet->root2;
+
+    compiler.import_stack.emplace_back(sheet->import);
+    // compiler.import_stack2.emplace_back(source);
+
+    callStackFrame frame(traces,
+      BackTrace(node->pstate(), Strings::useRule));
+
+    for (auto child : root->elements()) {
+      child->accept(this);
+    }
+
+    compiler.import_stack.pop_back();
+
     return nullptr;
   }
 
