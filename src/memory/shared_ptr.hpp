@@ -168,9 +168,9 @@ namespace Sass {
 #endif
   };
 
-  // SharedPtr is a intermediate (template-less) base class for SharedImpl.
-  // ToDo: there should be a way to include this in SharedImpl and to get
-  // ToDo: rid of all the static_cast that are now needed in SharedImpl.
+  // SharedPtr is a intermediate (template-less) base class for SharedPtr.
+  // ToDo: there should be a way to include this in SharedPtr and to get
+  // ToDo: rid of all the static_cast that are now needed in SharedPtr.
   template <class T>
   class SharedPtr {
 
@@ -310,39 +310,24 @@ namespace Sass {
       }
       #endif
     }
-  };
 
-  template <class T>
-  class SharedImpl final : public SharedPtr<T> {
-
-  public:
-    SharedImpl() : SharedPtr<T>(nullptr) {}
-
-    template <class U>
-    SharedImpl(U* node) :
-      SharedPtr<T>(static_cast<T*>(node)) {}
-
-    template <class U>
-    SharedImpl(const SharedImpl<U>& impl) :
-      SharedImpl(impl.ptr()) {}
-
-    template <class U>
-    SharedImpl<T>& operator=(U *rhs) {
-      return static_cast<SharedImpl<T>&>(
-        SharedPtr<T>::operator=(static_cast<T*>(rhs)));
-    }
-
-    template <class U>
-    SharedImpl<T>& operator=(SharedImpl<U>&& rhs) {
-      return static_cast<SharedImpl<T>&>(
-        SharedPtr<T>::operator=(std::move(static_cast<SharedImpl<T>&>(rhs))));
-    }
-
-    template <class U>
-    SharedImpl<T>& operator=(const SharedImpl<U>& rhs) {
-      return static_cast<SharedImpl<T>&>(
-        SharedPtr<T>::operator=(static_cast<const SharedImpl<T>&>(rhs)));
-    }
+    // template <class U>
+    // SharedPtr<T>& operator=(U *rhs) {
+    //   return static_cast<SharedPtr<T>&>(
+    //     SharedPtr<T>::operator=(static_cast<T*>(rhs)));
+    // }
+    // 
+    // template <class U>
+    // SharedPtr<T>& operator=(SharedPtr<U>&& rhs) {
+    //   return static_cast<SharedPtr<T>&>(
+    //     SharedPtr<T>::operator=(std::move(static_cast<SharedPtr<T>&>(rhs))));
+    // }
+    // 
+    // template <class U>
+    // SharedPtr<T>& operator=(const SharedPtr<U>& rhs) {
+    //   return static_cast<SharedPtr<T>&>(
+    //     SharedPtr<T>::operator=(static_cast<const SharedPtr<T>&>(rhs)));
+    // }
 
   };
 
@@ -350,93 +335,93 @@ namespace Sass {
   // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_cmp
 
   template<class T1, class T2>
-  bool operator==(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
+  bool operator==(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
     return x.ptr() == y.ptr();
   }
 
   template<class T1, class T2>
-  bool operator!=(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
+  bool operator!=(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
     return x.ptr() != y.ptr();
   }
 
   template<class T1, class T2>
-  bool operator<(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
+  bool operator<(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
     using CT = typename std::common_type<T1*, T2*>::type;
     return std::less<CT>()(x.get(), y.get());
   }
 
   template<class T1, class T2>
-  bool operator<=(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
+  bool operator<=(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
     return !(y < x);
   }
 
   template<class T1, class T2>
-  bool operator>(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
+  bool operator>(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
     return y < x;
   }
 
   template<class T1, class T2>
-  bool operator>=(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
+  bool operator>=(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
     return !(x < y);
   }
 
   template <class T>
-  bool operator==(const SharedImpl<T>& x, std::nullptr_t) noexcept {
+  bool operator==(const SharedPtr<T>& x, std::nullptr_t) noexcept {
     return x.isNull();
   }
 
   template <class T>
-  bool operator==(std::nullptr_t, const SharedImpl<T>& x) noexcept {
+  bool operator==(std::nullptr_t, const SharedPtr<T>& x) noexcept {
     return x.isNull();
   }
 
   template <class T>
-  bool operator!=(const SharedImpl<T>& x, std::nullptr_t) noexcept {
+  bool operator!=(const SharedPtr<T>& x, std::nullptr_t) noexcept {
     return !x.isNull();
   }
 
   template <class T>
-  bool operator!=(std::nullptr_t, const SharedImpl<T>& x) noexcept {
+  bool operator!=(std::nullptr_t, const SharedPtr<T>& x) noexcept {
     return !x.isNull();
   }
 
   template <class T>
-  bool operator<(const SharedImpl<T>& x, std::nullptr_t) {
+  bool operator<(const SharedPtr<T>& x, std::nullptr_t) {
     return std::less<T*>()(x.get(), nullptr);
   }
 
   template <class T>
-  bool operator<(std::nullptr_t, const SharedImpl<T>& y) {
+  bool operator<(std::nullptr_t, const SharedPtr<T>& y) {
     return std::less<T*>()(nullptr, y.get());
   }
 
   template <class T>
-  bool operator<=(const SharedImpl<T>& x, std::nullptr_t) {
+  bool operator<=(const SharedPtr<T>& x, std::nullptr_t) {
     return !(nullptr < x);
   }
 
   template <class T>
-  bool operator<=(std::nullptr_t, const SharedImpl<T>& y) {
+  bool operator<=(std::nullptr_t, const SharedPtr<T>& y) {
     return !(y < nullptr);
   }
 
   template <class T>
-  bool operator>(const SharedImpl<T>& x, std::nullptr_t) {
+  bool operator>(const SharedPtr<T>& x, std::nullptr_t) {
     return nullptr < x;
   }
 
   template <class T>
-  bool operator>(std::nullptr_t, const SharedImpl<T>& y) {
+  bool operator>(std::nullptr_t, const SharedPtr<T>& y) {
     return y < nullptr;
   }
 
   template <class T>
-  bool operator>=(const SharedImpl<T>& x, std::nullptr_t) {
+  bool operator>=(const SharedPtr<T>& x, std::nullptr_t) {
     return !(x < nullptr);
   }
 
   template <class T>
-  bool operator>=(std::nullptr_t, const SharedImpl<T>& y) {
+  bool operator>=(std::nullptr_t, const SharedPtr<T>& y) {
     return !(nullptr < y);
   }
 

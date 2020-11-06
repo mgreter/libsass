@@ -180,7 +180,7 @@ namespace Sass {
 
   // declare classes that are instances of memory nodes
   #define IMPL_MEM_OBJ(type) \
-    typedef SharedImpl<type> type##Obj;
+    typedef SharedPtr<type> type##Obj;
 
   IMPL_MEM_OBJ(StyleSheet);
 
