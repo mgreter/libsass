@@ -3,6 +3,7 @@
 #include "character.hpp"
 #include "utf8/checked.h"
 #include "interpolation.hpp"
+#include "ast_imports.hpp"
 
 namespace Sass {
 

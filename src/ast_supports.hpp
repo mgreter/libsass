@@ -8,7 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "ast_nodes.hpp"
+#include "ast_expressions.hpp"
 
 namespace Sass {
 

@@ -13,6 +13,8 @@
 #include "parser_selector.hpp"
 #include "parser_at_root_query.hpp"
 
+#include "ast_imports.hpp"
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////

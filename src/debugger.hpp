@@ -15,6 +15,7 @@
 #include "extension.hpp"
 
 #include "ordered_map.hpp"
+#include "ast_imports.hpp"
 
 using namespace Sass;
 

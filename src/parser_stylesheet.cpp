@@ -9,6 +9,7 @@
 #include "exceptions.hpp"
 #include "source_span.hpp"
 #include "stylesheet.hpp"
+#include "ast_imports.hpp"
 #include "ast_supports.hpp"
 #include "ast_statements.hpp"
 #include "ast_expressions.hpp"

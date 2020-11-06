@@ -221,7 +221,15 @@ namespace Sass {
 
     SharedPtr<T>& operator=(const SharedPtr<T>& obj)
     {
-      return *this = obj.node;
+      if (node != obj.node) {
+        if (node) decRefCount();
+        node = obj.node;
+        incRefCount();
+      }
+      else if (node != nullptr) {
+        node->refcount &= UNSET_DETACHED_BITMASK;
+      }
+      return *this;
     }
 
     // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
