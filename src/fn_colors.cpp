@@ -856,7 +856,7 @@ namespace Sass {
         bool hasRgb = nr_r || nr_g || nr_b;
         bool hasHsl = nr_s || nr_l;
         bool hasHwb = nr_wn || nr_bn;
-        bool hasHue = nr_h;
+        bool hasHue = nr_h != nullptr;
 
         if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
         else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });

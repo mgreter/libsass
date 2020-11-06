@@ -114,7 +114,7 @@ then
     echo "Checking out refactoring branch"
     cd sass-spec
     if ! git config remote.mgreter.url > /dev/null; then
-      git remote add mgreter https://github.com/mgreter/sass-spec.git -f
+      git remote add mgreter https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha -f
       git checkout -b refactoring mgreter/feature/libsass-parser-backport
     fi
     cd ..

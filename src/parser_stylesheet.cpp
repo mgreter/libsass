@@ -672,7 +672,7 @@ namespace Sass {
       // function. If so, throw a more helpful error message.
       StatementObj statement(readDeclarationOrStyleRule());
       // ToDo: dart-sass has a try/catch clause here!?
-      bool isStyleRule = statement->isaStyleRule();
+      bool isStyleRule = statement->isaStyleRule() != nullptr;
       error(
         sass::string("@function rules may not contain ")
         + (isStyleRule ? "style rules." : "declarations."),

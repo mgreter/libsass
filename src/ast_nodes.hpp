@@ -600,6 +600,7 @@ namespace Sass {
     // Declare up-casting methods
     DECLARE_ISA_CASTER(Map);
     DECLARE_ISA_CASTER(List);
+    DECLARE_ISA_CASTER(Null);
     DECLARE_ISA_CASTER(Number);
     DECLARE_ISA_CASTER(Color);
     DECLARE_ISA_CASTER(Boolean);
