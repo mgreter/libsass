@@ -303,7 +303,7 @@ namespace Sass {
 
   // Get function instance by stack index reference
   // Just converting and returning reference to array offset
-  UserDefinedCallableObj& EnvRoot::getFunction(const VarRef& fidx)
+  CallableObj& EnvRoot::getFunction(const VarRef& fidx)
   {
     return functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset];
   }
@@ -379,7 +379,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  UserDefinedCallable* EnvRoot::getFunction(const EnvKey& name) const
+  Callable* EnvRoot::getFunction(const EnvKey& name) const
   {
     if (stack.empty()) return {};
     uint32_t idx = uint32_t(stack.size() - 1);
@@ -388,7 +388,7 @@ namespace Sass {
       auto it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
         const VarRef vidx{ current->fnFrame, it->second };
-        UserDefinedCallableObj& value = root.getFunction(vidx);
+        CallableObj& value = root.getFunction(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;

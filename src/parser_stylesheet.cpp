@@ -598,7 +598,7 @@ namespace Sass {
       return readSupportsRule(start);
     }
     else if (plain == "use") {
-      // return readAnyAtRule(start, name);
+      return readAnyAtRule(start, name);
       // isUseAllowed = wasUseAllowed;
       // if (!root) throwDisallowedAtRule(start);
       return readUseRule(start);
@@ -3569,7 +3569,7 @@ namespace Sass {
     }
     else if (first == $hash && scanner.peekChar(1) == $lbrace) {
       ExpressionObj ex = readSingleInterpolation();
-      buffer.add(ex);
+      buffer.add(ex.ptr());
     }
     else {
       error("Expected identifier.",

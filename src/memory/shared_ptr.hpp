@@ -23,6 +23,7 @@
 
 namespace Sass {
 
+  template <class T>
   class SharedPtr;
 
   ///////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,7 @@ namespace Sass {
 
   #endif
 
-  // SharedObj is the base class for all objects that can be stored as a shared object
+  // RefCounted is the base class for all objects that can be stored as a shared object
   // It adds the reference counter and other values directly to the objects
   // This gives a slight overhead when directly used as a stack object, but has some
   // advantages for our code. It is safe to create two shared pointers from the same
@@ -93,10 +94,10 @@ namespace Sass {
   // pointers on each operation. This can be optimized in `std::shared_ptr`
   // too by using `std::make_shared` (where the control block and the actual
   // object are allocated in one continuous memory block via one single call).
-  class SharedObj {
+  class RefCounted {
 
    public:
-    SharedObj() : refcount(0) {
+    RefCounted() : refcount(0) {
       #ifdef DEBUG_SHARED_PTR
       this->objId = ++objCount;
       if (taint) {
@@ -104,7 +105,7 @@ namespace Sass {
       }
       #endif
     }
-    virtual ~SharedObj() {
+    virtual ~RefCounted() {
       #ifdef DEBUG_SHARED_PTR
       for (size_t i = 0; i < all.size(); i++) {
         if (all[i] == this) {
@@ -120,10 +121,10 @@ namespace Sass {
     #ifdef DEBUG_SHARED_PTR
     static void reportRefCounts() {
       std::cerr << "Max refcount: " <<
-        SharedObj::maxRefCount << "\n";
+        RefCounted::maxRefCount << "\n";
     }
     static void dumpMemLeaks();
-    SharedObj* trace(sass::string file, size_t line) {
+    RefCounted* trace(sass::string file, size_t line) {
       this->file = file;
       this->line = line;
       return this;
@@ -146,7 +147,6 @@ namespace Sass {
     #endif
 
    protected:
-    friend class SharedPtr;
     friend class MemoryPool;
   public:
   public:
@@ -163,7 +163,7 @@ namespace Sass {
     bool dbg = false;
     bool erased = false;
     static size_t objCount;
-    static sass::vector<SharedObj*> all;
+    static sass::vector<RefCounted*> all;
     static std::unordered_set<size_t> deleted;
 #endif
   };
@@ -171,11 +171,12 @@ namespace Sass {
   // SharedPtr is a intermediate (template-less) base class for SharedImpl.
   // ToDo: there should be a way to include this in SharedImpl and to get
   // ToDo: rid of all the static_cast that are now needed in SharedImpl.
+  template <class T>
   class SharedPtr {
 
   protected:
 
-    SharedObj* node;
+    RefCounted* node;
 
   private:
 
@@ -184,16 +185,17 @@ namespace Sass {
 
   public:
     SharedPtr() : node(nullptr) {}
-    SharedPtr(SharedObj* ptr) : node(ptr) { incRefCount(); }
-    SharedPtr(const SharedPtr& obj) : SharedPtr(obj.node) {}
-    SharedPtr(SharedPtr&& obj) noexcept : node(std::move(obj.node)) {
+    SharedPtr(RefCounted* ptr) : node(ptr) { incRefCount(); }
+    SharedPtr(const SharedPtr<T>& obj) : SharedPtr(obj.node) {}
+    SharedPtr(SharedPtr<T>&& obj) noexcept : node(std::move(obj.node)) {
       obj.node = nullptr; // reset old node pointer
     }
     virtual ~SharedPtr() {
       decRefCount();
     }
 
-    SharedPtr& operator=(SharedObj* other_node) {
+    SharedPtr<T>& operator=(RefCounted* other_node)
+    {
       if (node != other_node) {
         if (node) decRefCount();
         node = other_node;
@@ -204,7 +206,7 @@ namespace Sass {
       return *this;
     }
 
-    SharedPtr& operator=(SharedPtr&& obj) noexcept
+    SharedPtr<T>& operator=(SharedPtr<T>&& obj) noexcept
     {
       if (node != obj.node) {
         if (node) decRefCount();
@@ -217,12 +219,13 @@ namespace Sass {
       return *this;
     }
 
-    SharedPtr& operator=(const SharedPtr& obj) {
+    SharedPtr<T>& operator=(const SharedPtr<T>& obj)
+    {
       return *this = obj.node;
     }
 
     // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
-    SharedObj* detach() {
+    RefCounted* detach() {
       if (node != nullptr) {
         node->refcount |= SET_DETACHED_BITMASK;
       }
@@ -241,7 +244,7 @@ namespace Sass {
       }
     }
 
-    SharedObj* obj() const {
+    RefCounted* obj() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -249,7 +252,8 @@ namespace Sass {
       #endif
       return node;
     }
-    SharedObj* operator->() const {
+
+    RefCounted* operator->() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -293,8 +297,8 @@ namespace Sass {
       node->refcount &= UNSET_DETACHED_BITMASK;
       ++node->refcount;
       #ifdef DEBUG_SHARED_PTR
-      if (SharedObj::maxRefCount < node->refcount) {
-        SharedObj::maxRefCount = node->refcount;
+      if (RefCounted::maxRefCount < node->refcount) {
+        RefCounted::maxRefCount = node->refcount;
       }
       if (node->dbg) {
         std::cerr << "+ " << node << " X " << node->refcount << " (" << this << ") " << "\n";
@@ -304,14 +308,14 @@ namespace Sass {
   };
 
   template <class T>
-  class SharedImpl final : private SharedPtr {
+  class SharedImpl final : private SharedPtr<T> {
 
   public:
-    SharedImpl() : SharedPtr(nullptr) {}
+    SharedImpl() : SharedPtr<T>(nullptr) {}
 
     template <class U>
     SharedImpl(U* node) :
-      SharedPtr(static_cast<T*>(node)) {}
+      SharedPtr<T>(static_cast<T*>(node)) {}
 
     template <class U>
     SharedImpl(const SharedImpl<U>& impl) :
@@ -320,30 +324,30 @@ namespace Sass {
     template <class U>
     SharedImpl<T>& operator=(U *rhs) {
       return static_cast<SharedImpl<T>&>(
-        SharedPtr::operator=(static_cast<T*>(rhs)));
+        SharedPtr<T>::operator=(static_cast<T*>(rhs)));
     }
 
     template <class U>
     SharedImpl<T>& operator=(SharedImpl<U>&& rhs) {
       return static_cast<SharedImpl<T>&>(
-        SharedPtr::operator=(std::move(static_cast<SharedImpl<T>&>(rhs))));
+        SharedPtr<T>::operator=(std::move(static_cast<SharedImpl<T>&>(rhs))));
     }
 
     template <class U>
     SharedImpl<T>& operator=(const SharedImpl<U>& rhs) {
       return static_cast<SharedImpl<T>&>(
-        SharedPtr::operator=(static_cast<const SharedImpl<T>&>(rhs)));
+        SharedPtr<T>::operator=(static_cast<const SharedImpl<T>&>(rhs)));
     }
 
-    using SharedPtr::isNull;
-    using SharedPtr::operator bool;
+    using SharedPtr<T>::isNull;
+    using SharedPtr<T>::operator bool;
     operator T*() const { return static_cast<T*>(this->obj()); }
     operator T&() const { return *static_cast<T*>(this->obj()); }
     T& operator* () const { return *static_cast<T*>(this->obj()); };
     T* operator-> () const { return static_cast<T*>(this->obj()); };
     T* ptr () const { return static_cast<T*>(this->obj()); };
-    T* detach() { return static_cast<T*>(SharedPtr::detach()); }
-    void clear() { return SharedPtr::clear(); }
+    T* detach() { return static_cast<T*>(SharedPtr<T>::detach()); }
+    void clear() { return SharedPtr<T>::clear(); }
   };
 
   // Comparison operators, based on:

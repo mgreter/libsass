@@ -344,8 +344,8 @@ namespace Sass {
     // This code looks complicated, but it's actually just a bunch of special
     // cases for interactions between different combinators.
     SelectorCombinatorObj combinator1, combinator2;
-    if (!combinators1.empty()) combinator1 = combinators1.back();
-    if (!combinators2.empty()) combinator2 = combinators2.back();
+    if (!combinators1.empty()) combinator1 = combinators1.back()->isaSelectorCombinator();
+    if (!combinators2.empty()) combinator2 = combinators2.back()->isaSelectorCombinator();
 
     if (!combinator1.isNull() && !combinator2.isNull()) {
 
@@ -358,17 +358,17 @@ namespace Sass {
       if (combinator1->isGeneralCombinator() && combinator2->isGeneralCombinator()) {
 
         if (compound1->isSuperselectorOf(compound2)) {
-          result.push_back({ { compound2, combinator2 } });
+          result.push_back({ { compound2, combinator2.ptr() } });
         }
         else if (compound2->isSuperselectorOf(compound1)) {
-          result.push_back({ { compound1, combinator1 } });
+          result.push_back({ { compound1, combinator1.ptr() } });
         }
         else {
           sass::vector<SelectorComponentVector> choices;
-          choices.push_back({ compound1, combinator1, compound2, combinator2 });
-          choices.push_back({ compound2, combinator2, compound1, combinator1 });
+          choices.push_back({ compound1, combinator1.ptr(), compound2, combinator2.ptr() });
+          choices.push_back({ compound2, combinator2.ptr(), compound1, combinator1.ptr() });
           if (CompoundSelector* unified = compound1->unifyWith(compound2)) {
-            choices.push_back({ unified, combinator1 });
+            choices.push_back({ unified, combinator1.ptr() });
           }
           result.emplace_back(choices);
         }
@@ -406,19 +406,19 @@ namespace Sass {
 
       }
       else if (combinator1->isChildCombinator() && (combinator2->isAdjacentCombinator() || combinator2->isGeneralCombinator())) {
-        result.push_back({ { compound2, combinator2 } });
+        result.push_back({ { compound2, combinator2.ptr() } });
         components1.emplace_back(compound1);
         components1.emplace_back(combinator1);
       }
       else if (combinator2->isChildCombinator() && (combinator1->isAdjacentCombinator() || combinator1->isGeneralCombinator())) {
-        result.push_back({ { compound1, combinator1 } });
+        result.push_back({ { compound1, combinator1.ptr() } });
         components2.emplace_back(compound2);
         components2.emplace_back(combinator2);
       }
       else if (*combinator1 == *combinator2) {
         CompoundSelectorObj unified = compound1->unifyWith(compound2);
         if (unified.isNull()) return false;
-        result.push_back({ { unified, combinator1 } });
+        result.push_back({ { unified, combinator1.ptr() } });
       }
       else {
         return false;
@@ -437,7 +437,7 @@ namespace Sass {
         }
       }
 
-      result.push_back({ { components1.back(), combinator1 } });
+      result.push_back({ { components1.back(), combinator1.ptr() } });
 
       components1.pop_back();
 
@@ -453,7 +453,7 @@ namespace Sass {
       }
     }
 
-    result.push_back({ { components2.back(), combinator2 } });
+    result.push_back({ { components2.back(), combinator2.ptr() } });
 
     components2.pop_back();
 
@@ -541,20 +541,20 @@ namespace Sass {
 
     // Make sure there's at most one `:root` in the output.
     // Note: does not yet do anything in libsass (no root selector)
-    CompoundSelectorObj root1 = getFirstIfRoot(queue1);
-    CompoundSelectorObj root2 = getFirstIfRoot(queue2);
+    CompoundSelectorObj root1(getFirstIfRoot(queue1));
+    CompoundSelectorObj root2(getFirstIfRoot(queue2));
 
     if (!root1.isNull() && !root2.isNull()) {
       CompoundSelectorObj root = root1->unifyWith(root2);
       if (root.isNull()) return {}; // null
-      queue1.insert(queue1.begin(), root);
-      queue2.insert(queue2.begin(), root);
+      queue1.insert(queue1.begin(), root.ptr());
+      queue2.insert(queue2.begin(), root.ptr());
     }
     else if (!root1.isNull()) {
-      queue2.insert(queue2.begin(), root1);
+      queue2.insert(queue2.begin(), root1.ptr());
     }
     else if (!root2.isNull()) {
-      queue1.insert(queue1.begin(), root2);
+      queue1.insert(queue1.begin(), root2.ptr());
     }
 
     // group into sub-lists so no sub-list contains two adjacent ComplexSelectors.

@@ -117,7 +117,7 @@ namespace Sass {
 
 
   // Base class for entry points
-  class Import : public SharedObj {
+  class Import : public RefCounted {
   public:
     SourceDataObj source;
     SassImportFormat syntax;

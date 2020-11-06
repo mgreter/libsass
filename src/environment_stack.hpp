@@ -268,7 +268,7 @@ namespace Sass {
     // variables[varFramePtr[vidx.frame] + vidx.offset]
     sass::vector<ValueObj> variables;
     sass::vector<UserDefinedCallableObj> mixins;
-    sass::vector<UserDefinedCallableObj> functions;
+    sass::vector<CallableObj> functions;
 
     // Every scope we execute in sass gets an entry here.
     // The value stored here is the base address of the
@@ -320,7 +320,7 @@ namespace Sass {
 
     // Get function instance by stack index reference
     // Just converting and returning reference to array offset
-    UserDefinedCallableObj& getFunction(const VarRef& vidx);
+    CallableObj& getFunction(const VarRef& vidx);
 
     // Get mixin instance by stack index reference
     // Just converting and returning reference to array offset
@@ -352,7 +352,7 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    UserDefinedCallable* getFunction(const EnvKey& name) const;
+    Callable* getFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.

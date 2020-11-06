@@ -36,7 +36,7 @@ namespace Sass {
       SASS_MEMORY_NEW(Interpolation, span, url),
       queries.first, queries.second));
     entry->outOfOrder(false);
-    imp->append(entry);
+    imp->append(entry.ptr());
     return imp.detach();
   }
   // EO readImportRule

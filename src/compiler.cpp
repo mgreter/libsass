@@ -225,7 +225,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
-    SharedObj::taint = true;
+    RefCounted::taint = true;
     #endif
 
     // abort if there is no data
@@ -236,7 +236,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     Eval eval(*this, *this, plainCss);
     EnvScope scoped(varRoot, varRoot.idxs);
     for (size_t i = 0; i < fnList.size(); i++) {
-      varRoot.functions[i] = fnList[i];
+      varRoot.functions[i] = fnList[i].ptr();
     }
 
     // debug_ast(root);
@@ -256,7 +256,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
-    SharedObj::taint = false;
+    RefCounted::taint = false;
     #endif
 
     // return processed tree
@@ -619,7 +619,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
     if (callCustomHeaders("sass://header", pstate, rule)) {
-      statements.push_back(rule);
+      statements.push_back(rule.ptr());
     }
   }
 
@@ -675,7 +675,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     SourceStringObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", function->signature);
     // Create a new scss parser instance
-    ScssParser parser(*this, source);
+    ScssParser parser(*this, source.ptr());
     ExternalCallable* callable =
       parser.parseExternalCallable();
     callable->function(function);
@@ -866,7 +866,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
-    SharedObj::taint = true;
+    RefCounted::taint = true;
     #endif
 
     // load and register import
@@ -874,7 +874,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Disable reference tracking
-    SharedObj::taint = false;
+    RefCounted::taint = false;
     #endif
 
     // Return root node

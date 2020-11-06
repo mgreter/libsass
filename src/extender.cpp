@@ -794,7 +794,7 @@ namespace Sass {
             mergedSelector->concat(compound->elements());
           }
         }
-        complexes.push_back({ mergedSelector });
+        complexes.push_back({ mergedSelector.ptr() });
       }
       else {
         sass::vector<SimpleSelectorObj> originals;
@@ -816,7 +816,7 @@ namespace Sass {
             SASS_MEMORY_NEW(CompoundSelector,
               compound->pstate());
           merged->concat(originals);
-          toUnify.insert(toUnify.begin(), { merged });
+          toUnify.insert(toUnify.begin(), { merged.ptr() });
         }
         complexes = unifyComplex(toUnify);
         if (complexes.empty()) {
@@ -905,10 +905,10 @@ namespace Sass {
         sass::vector<PseudoSelectorObj> extended =
           extendPseudo(pseudo, extensions, mediaQueryContext);
         for (PseudoSelectorObj& extend : extended) {
-          SimpleSelectorObj simple = extend;
+          SimpleSelectorObj simple = extend.ptr();
           sass::vector<Extension> result =
             extendWithoutPseudo(simple, extensions, targetsUsed);
-          if (result.empty()) result = { extensionForSimple(extend) };
+          if (result.empty()) result = { extensionForSimple(extend.ptr()) };
           merged.emplace_back(result);
         }
         if (!extended.empty()) {
