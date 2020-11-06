@@ -101,13 +101,6 @@ namespace Sass {
 
 }
 
-
-// simple linked list
-//struct string_list {
-//  string_list* next;
-//  char* string;
-//};
-
 // sass config options structure
 struct Sass_Inspect_Options {
 
