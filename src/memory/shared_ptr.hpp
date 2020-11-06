@@ -267,7 +267,6 @@ namespace Sass {
     T& operator* () const { return *ptr(); };
 
     bool isNull() const { return node == nullptr; }
-    operator bool() const { return node != nullptr; }
 
   protected:
 
@@ -333,97 +332,6 @@ namespace Sass {
 
   // Comparison operators, based on:
   // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_cmp
-
-  template<class T1, class T2>
-  bool operator==(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
-    return x.ptr() == y.ptr();
-  }
-
-  template<class T1, class T2>
-  bool operator!=(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
-    return x.ptr() != y.ptr();
-  }
-
-  template<class T1, class T2>
-  bool operator<(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
-    using CT = typename std::common_type<T1*, T2*>::type;
-    return std::less<CT>()(x.get(), y.get());
-  }
-
-  template<class T1, class T2>
-  bool operator<=(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
-    return !(y < x);
-  }
-
-  template<class T1, class T2>
-  bool operator>(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
-    return y < x;
-  }
-
-  template<class T1, class T2>
-  bool operator>=(const SharedPtr<T1>& x, const SharedPtr<T2>& y) {
-    return !(x < y);
-  }
-
-  template <class T>
-  bool operator==(const SharedPtr<T>& x, std::nullptr_t) noexcept {
-    return x.isNull();
-  }
-
-  template <class T>
-  bool operator==(std::nullptr_t, const SharedPtr<T>& x) noexcept {
-    return x.isNull();
-  }
-
-  template <class T>
-  bool operator!=(const SharedPtr<T>& x, std::nullptr_t) noexcept {
-    return !x.isNull();
-  }
-
-  template <class T>
-  bool operator!=(std::nullptr_t, const SharedPtr<T>& x) noexcept {
-    return !x.isNull();
-  }
-
-  template <class T>
-  bool operator<(const SharedPtr<T>& x, std::nullptr_t) {
-    return std::less<T*>()(x.get(), nullptr);
-  }
-
-  template <class T>
-  bool operator<(std::nullptr_t, const SharedPtr<T>& y) {
-    return std::less<T*>()(nullptr, y.get());
-  }
-
-  template <class T>
-  bool operator<=(const SharedPtr<T>& x, std::nullptr_t) {
-    return !(nullptr < x);
-  }
-
-  template <class T>
-  bool operator<=(std::nullptr_t, const SharedPtr<T>& y) {
-    return !(y < nullptr);
-  }
-
-  template <class T>
-  bool operator>(const SharedPtr<T>& x, std::nullptr_t) {
-    return nullptr < x;
-  }
-
-  template <class T>
-  bool operator>(std::nullptr_t, const SharedPtr<T>& y) {
-    return y < nullptr;
-  }
-
-  template <class T>
-  bool operator>=(const SharedPtr<T>& x, std::nullptr_t) {
-    return !(x < nullptr);
-  }
-
-  template <class T>
-  bool operator>=(std::nullptr_t, const SharedPtr<T>& y) {
-    return !(nullptr < y);
-  }
 
 }  // namespace Sass
 

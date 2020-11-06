@@ -390,7 +390,7 @@ namespace Sass {
 
           if (!unified.isNull()) {
             items.push_back({
-              unified, nextSiblingCombinator
+              unified.ptr(), nextSiblingCombinator
             });
           }
 
@@ -418,7 +418,7 @@ namespace Sass {
       else if (*combinator1 == *combinator2) {
         CompoundSelectorObj unified = compound1->unifyWith(compound2);
         if (unified.isNull()) return false;
-        result.push_back({ { unified, combinator1.ptr() } });
+        result.push_back({ { unified.ptr(), combinator1.ptr() } });
       }
       else {
         return false;
