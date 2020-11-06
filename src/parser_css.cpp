@@ -4,6 +4,7 @@
 #include "parser_css.hpp"
 
 #include "character.hpp"
+#include "ast_imports.hpp"
 #include "ast_expressions.hpp"
 
 namespace Sass {
