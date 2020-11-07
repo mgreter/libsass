@@ -1212,7 +1212,7 @@ namespace Sass {
         // Ensures they are created, but keep them
         // local with a technical namespace
 
-        EnvFrame local(context.varStack, false);
+        EnvFrame local(context.varStack, false, true);
 
         // std::string nr(std::to_string(42));
         // loaded->ns = sass::string(nr.c_str()) + "|";

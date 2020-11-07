@@ -44,7 +44,7 @@ namespace Sass {
     root(root),
     idxs(new VarRefs(
       nullptr, 0, 0, 0,
-      false)),
+      false, false)),
     varIdxs(idxs->varIdxs),
     mixIdxs(idxs->mixIdxs),
     fnIdxs(idxs->fnIdxs),
@@ -58,16 +58,18 @@ namespace Sass {
   // Value constructor
   EnvFrame::EnvFrame(
     EnvFrameVector& stack,
-    bool permeable) :
+    bool permeable,
+    bool isModule) :
     stack(stack),
     permeable(permeable),
+    isModule(isModule),
     parent(*stack.back()),
     root(stack.back()->root),
     idxs(new VarRefs(parent.idxs,
       uint32_t(root.varFramePtr.size()),
       uint32_t(root.mixFramePtr.size()),
       uint32_t(root.fnFramePtr.size()),
-      permeable)),
+      permeable, isModule)),
     varIdxs(idxs->varIdxs),
     mixIdxs(idxs->mixIdxs),
     fnIdxs(idxs->fnIdxs),
@@ -213,6 +215,7 @@ namespace Sass {
   {
     EnvFrame* current = this;
     while (current != nullptr) {
+      if (current->isModule) return {};
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         return { current->idxs->fnFrame, it->second };
@@ -233,7 +236,7 @@ namespace Sass {
       if (it != current->modules.end()) {
         return it->second;
       }
-      current = current->getParent(true);
+      current = current->getParent(true, true);
     }
     // Not found
     return {};
@@ -258,6 +261,7 @@ namespace Sass {
         const EnvKey& name(variable->name());
         while (current != nullptr) {
           // Find the variable name in current scope
+          if (current->isModule) break;
           auto found = current->varIdxs.find(name);
           if (found != current->varIdxs.end()) {
             // Append alternative
@@ -282,6 +286,7 @@ namespace Sass {
         while (current != nullptr) {
           // If current scope is rooted we don't look further, as we
           // already created the local variable and assigned reference.
+          if (current->isModule) break;
           if (!current->permeable) break;
           // Start with the parent
           current = current->pscope;
