@@ -127,6 +127,8 @@ namespace Sass {
     extern const EnvKey ifFalse;
     extern const EnvKey ifTrue;
 
+    extern const EnvKey $star;
+
   }
 
 }

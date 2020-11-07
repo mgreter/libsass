@@ -1251,7 +1251,13 @@ namespace Sass {
 
       }
 
-      current->modules[ns] = sheet->module;
+      if (ns.empty()) {
+        current->globals.push_back(sheet->module);
+      }
+      else {
+        current->modules2[ns] = sheet->module;
+      }
+
 
       rule->sheet(sheet);
 
@@ -2904,7 +2910,21 @@ namespace Sass {
       EnvFrame* frame(context.varStack.back());
       VarRef vidx(frame->getVariableIdx(name, true));
       if (vidx.isValid()) expression->vidxs().push_back(vidx);
-      else context.varStack.back()->variables.push_back(expression);
+      else {
+        for (auto global : context.varStack.back()->getParent(true)->globals) {
+          auto it = global->varIdxs.find(name);
+          if (it != global->varIdxs.end()) {
+            if (vidx.isValid()) {
+              context.addFinalStackTrace(expression->pstate());
+              throw Exception::RuntimeException(context,
+                "This variable is available from multiple global modules.");
+            }
+            vidx.frame = global->varFrame;
+            vidx.offset = it->second;
+          }
+        }
+        if (!vidx.isValid()) context.varStack.back()->variables.push_back(expression);
+      }
     }
 
     return expression;

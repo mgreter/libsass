@@ -232,8 +232,8 @@ namespace Sass {
   {
     EnvFrame* current = this;
     while (current != nullptr) {
-      auto it = current->modules.find(name);
-      if (it != current->modules.end()) {
+      auto it = current->modules2.find(name);
+      if (it != current->modules2.end()) {
         return it->second;
       }
       current = current->getParent(true, true);

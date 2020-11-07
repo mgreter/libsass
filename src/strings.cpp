@@ -82,7 +82,7 @@ namespace Sass
 
 		const sass::string condition("condition");
 		const sass::string ifFalse("if-false");
-		const sass::string ifTrue("if-true");
+    const sass::string ifTrue("if-true");
 
     const sass::string $red("$red");
     const sass::string $green("$green");
@@ -124,7 +124,11 @@ namespace Sass
 
 		const EnvKey condition(Strings::condition);
 		const EnvKey ifFalse(Strings::ifFalse);
-		const EnvKey ifTrue(Strings::ifTrue);
+    const EnvKey ifTrue(Strings::ifTrue);
+
+    const EnvKey $star("");
+
+    
 
 	} // namespace Keys
 

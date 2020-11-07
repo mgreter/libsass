@@ -169,7 +169,8 @@ namespace Sass {
     MidxEnvKeyMap& mixIdxs;
     FidxEnvKeyMap& fnIdxs;
 
-    EnvKeyMap<VarRefs*> modules;
+    EnvKeyMap<VarRefs*> modules2;
+    sass::vector<VarRefs*> globals;
     sass::vector<VarRefs*> scopes;
 
     // Keep track of assignments and variables for dynamic runtime lookups.
