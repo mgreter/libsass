@@ -240,7 +240,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       varRoot.functions[i] = fnList[i].ptr();
     }
 
-    debug_ast(root);
+    // debug_ast(root);
     CssRootObj compiled = eval.acceptRoot(root); // 50%
     // debug_ast(compiled);
 

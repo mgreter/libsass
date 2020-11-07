@@ -3084,7 +3084,7 @@ namespace Sass {
         if (!plain.empty()) {
 
           auto module = context.varStack.back()->getModule(plain);
-          std::cerr << "Var wth ns " << plain << " => " << module << "\n";
+          // std::cerr << "Var wth ns " << plain << " => " << module << "\n";
           auto it = module->varIdxs.find(name);
           if (it != module->varIdxs.end()) {
             VarRef vidx(module->varFrame, it->second);
