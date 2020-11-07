@@ -11,6 +11,7 @@
 #include "ast_nodes.hpp"
 #include "ast_callable.hpp"
 #include "ast_supports.hpp"
+#include "ast_statements.hpp"
 #include "environment_stack.hpp"
 
 namespace Sass {
@@ -502,6 +503,8 @@ namespace Sass {
   class UseRule final : public Statement
     // public ImportBase
   {
+  public:
+    bool isAlias = false;
   private:
     ADD_CONSTREF(StyleSheetObj, sheet);
     ADD_CONSTREF(sass::string, url);
@@ -512,6 +515,7 @@ namespace Sass {
     UseRule(const SourceSpan& pstate,
       sass::string&& url,
       sass::string&& ns = "");
+    virtual ~UseRule() {}
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);

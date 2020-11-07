@@ -597,6 +597,14 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(rule->arguments(), ind + " =@ ");
   }
+  else if (Cast<UseRule>(node)) {
+    UseRule* rule = Cast<UseRule>(node);
+    std::cerr << ind << "UseRule " << rule;
+    std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << std::endl;
+    debug_ast(rule->sheet()->root2, ind + " =@ ");
+
+  }
   else if (Cast<UserDefinedCallable>(node)) {
     UserDefinedCallable* rule = Cast<UserDefinedCallable>(node);
     std::cerr << ind << "UserDefinedCallable " << rule;

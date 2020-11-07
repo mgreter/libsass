@@ -15,6 +15,8 @@
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   // Import some namespaces
@@ -73,9 +75,19 @@ namespace Sass {
     scanner.expectDone();
 
     // Return the new root object
-    return SASS_MEMORY_NEW(Root,
+    auto qwe = SASS_MEMORY_NEW(Root,
       scanner.relevantSpanFrom(start),
       std::move(children));
+
+    for (auto scope : context.varStack.back()->scopes) {
+      qwe->modules.push_back(scope);
+    }
+
+    // for (auto localeconv)
+    // 
+    // 
+
+    return qwe;
   }
   // EO parseRoot
 
@@ -90,9 +102,6 @@ namespace Sass {
       ns = id;
       id = readPublicIdentifier();
     }
-
-    // Create EnvKey from id
-    EnvKey name(this->ns + std::move(id));
 
     if (plainCss()) {
       error("Sass variables aren't allowed in plain CSS.",
@@ -137,6 +146,8 @@ namespace Sass {
     EnvFrame* frame = global ?
       context.varStack.front() :
       context.varStack.back();
+    // Create EnvKey from id
+    EnvKey name(std::move(id)); // frame->ns + 
     // As long as we are not in a loop construct, we
     // can utilize full static variable optimizations.
     VarRef vidx(inLoopDirective ?
@@ -171,6 +182,7 @@ namespace Sass {
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start), name, vidx, value, guarded, global);
     if (inLoopDirective) frame->assignments.push_back(declaration);
+
     return declaration;
   }
   // EO variableDeclaration
@@ -1047,13 +1059,21 @@ namespace Sass {
     UseRuleObj rule = SASS_MEMORY_NEW(
       UseRule, scanner.relevantSpanFrom(start), "", "");
 
+    // Statement* qwe = rule;
+
+    // debug_ast(qwe);
+    // 
+    // exit(1);
+
     scanWhitespace();
     scanImportArgument2(rule);
     scanWhitespace();
 
     expectStatementSeparator("@use rule");
-   
-    return rule;
+
+    if (rule->isAlias) return nullptr;
+
+    return rule.detach();
 
 /*
     sass::string url = string();
@@ -1175,8 +1195,81 @@ namespace Sass {
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
       // StyleSheet* sheet = context.registerImport(loaded);
-      if (!ns.empty()) loaded->ns = ns + ".";
-      rule->sheet(context.registerImport(loaded));
+
+      auto asd = context.sheets.find(loaded->getAbsPath());
+
+      StyleSheet* sheet = asd == context.sheets.end() ? nullptr : asd->second;
+
+      // Test if sheet is already parsed!!
+
+      EnvFrame* current = context.varStack.back();
+
+      if (sheet == nullptr) {
+        // This is the new barrier!
+
+        // Create the new vars in the same frame
+        // The do live beyond their local frame
+        // Ensures they are created, but keep them
+        // local with a technical namespace
+
+        EnvFrame local(context.varStack, false);
+
+        // std::string nr(std::to_string(42));
+        // loaded->ns = sass::string(nr.c_str()) + "|";
+        // context.varStack.back()->ns = "42|";
+        sheet = context.registerImport(loaded);
+
+        sheet->module = local.idxs;
+
+           
+        // sheet->varFrame = local.idxs->varFrame;
+        // sheet->mixFrame = local.idxs->mixFrame;
+        // sheet->fnFrame = local.idxs->fnFrame;
+        // 
+        // for (auto var : local.varIdxs) {
+        //   sheet->varIdxs.insert(var);
+        // }
+        // for (auto mix : local.mixIdxs) {
+        //   sheet->mixIdxs.insert(mix);
+        // }
+        // for (auto fn : local.fnIdxs) {
+        //   sheet->fnIdxs.insert(fn);
+        // }
+
+        // sheet->varIdxs = local.varIdxs;
+        // sheet->mixIdxs = local.mixIdxs;
+        // sheet->fnIdxs = local.fnIdxs;
+
+        current->scopes.push_back(sheet->module);
+
+      }
+      else {
+
+        rule->isAlias = true;
+
+        // Stylesheet already existed
+
+      }
+
+      current->modules[ns] = sheet->module;
+
+      rule->sheet(sheet);
+
+      // Now export the stuff with ns
+      // for (auto var : current->varIdxs) {
+      //   sass::string key(var.first.orig());
+      //   if (StringUtils::startsWith(key, current->ns)) {
+      //     auto it = key.find_first_of('|');
+      //     if (it != NPOS) key = key.substr(it + 1);
+      //     key = ns + "." + key;
+      //     current->varIdxs[key] = var.second;
+      //   }
+      // }
+      //for (auto mix : sheet->mixIdxs) {
+      //}
+      //for (auto fn : sheet->fnIdxs) {
+      //}
+
       // rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
     }
     else {
@@ -2909,6 +3002,8 @@ namespace Sass {
   // Consumes an expression that starts like an identifier.
   Expression* StylesheetParser::readIdentifierLike()
   {
+    sass::string fns = varStack.back()->ns;
+
     Offset start(scanner.offset);
     InterpolationObj identifier = readInterpolatedIdentifier();
     sass::string plain(identifier->getPlainString());
@@ -2978,15 +3073,26 @@ namespace Sass {
 
       if (scanner.peekChar() == $dollar) {
         auto name = variableName();
-        if (!plain.empty()) {
-          name = plain + "." + name;
-        }
+        // if (!plain.empty()) {
+        //   name = plain + "." + name;
+        // }
+        // name = fns + name;
         auto expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),
           name, plain);
 
+        if (!plain.empty()) {
 
-        if (inLoopDirective) {
+          auto module = context.varStack.back()->getModule(plain);
+          std::cerr << "Var wth ns " << plain << " => " << module << "\n";
+          auto it = module->varIdxs.find(name);
+          if (it != module->varIdxs.end()) {
+            VarRef vidx(module->varFrame, it->second);
+            if (vidx.isValid()) expression->vidxs().push_back(vidx);
+            // std::cerr << "Found it " << vidx.toString() << "\n";
+          }
+
+        } if (inLoopDirective) {
           // Static variable resolution will be done in finalize stage
           // Must be postponed since in loops we may reference post vars
           context.varStack.back()->variables.push_back(expression);

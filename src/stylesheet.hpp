@@ -7,8 +7,11 @@
 
 #include "file.hpp"
 #include "ast_nodes.hpp"
+// #include "environment_stack.hpp"
 
 namespace Sass {
+
+  class VarRefs;
 
   // parsed stylesheet from loaded resource
   // this should be a `Module` for sass 4.0
@@ -40,6 +43,18 @@ namespace Sass {
       // The module's mixins. Implementations must ensure that
       // each [Callable] is stored under its own name.
       // Map<String, Callable> get mixins;
+
+      sass::string ns = "42|";
+
+      VarRefs* module;
+
+      uint32_t varFrame;
+      uint32_t mixFrame;
+      uint32_t fnFrame;
+
+      VidxEnvKeyMap varIdxs;
+      MidxEnvKeyMap mixIdxs;
+      FidxEnvKeyMap fnIdxs;
 
       // The extensions defined in this module, which is also able to update
       // [css]'s style rules in-place based on downstream extensions.

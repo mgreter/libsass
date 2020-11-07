@@ -67,9 +67,10 @@ namespace Sass {
       : pstate_(ptr->pstate_)
     {}
 
+
     // Delete compare operators to make implementation more clear
     // Helps us spot cases where we use undefined implementations
-    // virtual bool operator==(const AstNode& rhs) const = delete;
+    virtual bool operator==(const AstNode& rhs) const { return false; }
     // virtual bool operator!=(const AstNode& rhs) const = delete;
     // virtual bool operator>=(const AstNode& rhs) const = delete;
     // virtual bool operator<=(const AstNode& rhs) const = delete;
@@ -627,9 +628,15 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  class VarRefs;
+
   class Root final : public AstNode,
     public Vectorized<Statement>
   {
+  public:
+
+    sass::vector<VarRefs*> modules;
+
   public:
 
     Root(const SourceSpan& pstate, size_t reserve = 0)

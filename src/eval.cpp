@@ -1346,11 +1346,31 @@ namespace Sass {
   CssRoot* Eval::acceptRoot(Root* root)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
+
+    // The scopes of all modules most be live
+    // Otherwise the variable stack is too short
+    // EnvScope scoped(varRoot, varRoot.idxs);
+
+    auto modules = root->modules;
+
+    // No guaranteed destruct order!!
+    sass::vector<EnvScope*> scopes;
+
+    for (auto module : root->modules) {
+      scopes.emplace_back(new EnvScope{ compiler.varRoot, module });
+    }
+
     LOCAL_PTR(CssParentNode, current, css);
     for (const StatementObj& item : root->elements()) {
       ValueObj child = item->accept(this);
       // if (child) delete child;
     }
+
+    while (scopes.size()) {
+      delete scopes.back();
+      scopes.pop_back();
+    }
+
     return css.detach();
   }
 
@@ -1404,6 +1424,9 @@ namespace Sass {
 
     compiler.import_stack.emplace_back(sheet->import);
     // compiler.import_stack2.emplace_back(source);
+
+    // EnvScope scoped(varRoot, varRoot.idxs);
+    // EnvScope scoped(compiler.varRoot, sheet->module);
 
     callStackFrame frame(traces,
       BackTrace(node->pstate(), Strings::useRule));

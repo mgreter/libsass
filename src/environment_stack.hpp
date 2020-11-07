@@ -25,11 +25,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Helper typedefs to test implementations
-  typedef EnvKeyMap<uint32_t> VidxEnvKeyMap;
-  typedef EnvKeyMap<uint32_t> MidxEnvKeyMap;
-  typedef EnvKeyMap<uint32_t> FidxEnvKeyMap;
-
   // Helper typedef for our frame stack type
   typedef sass::vector<EnvFrame*> EnvFrameVector;
 
@@ -151,6 +146,9 @@ namespace Sass {
     // Lookups are still looking at all parents and root.
     bool permeable;
 
+    // Some frames have a namespace, are transparent, fuck!
+    sass::string ns; // Set during parsing phase, localize bitch
+
     // Reference to parent
     EnvFrame& parent;
 
@@ -164,6 +162,9 @@ namespace Sass {
     VidxEnvKeyMap& varIdxs;
     MidxEnvKeyMap& mixIdxs;
     FidxEnvKeyMap& fnIdxs;
+
+    EnvKeyMap<VarRefs*> modules;
+    sass::vector<VarRefs*> scopes;
 
     // Keep track of assignments and variables for dynamic runtime lookups.
     // This is needed only for loops, due to sass "weird" variable scoping.
@@ -243,6 +244,8 @@ namespace Sass {
     // Return variable in lexical manner. If [passThrough] is false,
     // we abort the lexical lookup on any non-permeable scope frame.
     VarRef getVariableIdx(const EnvKey& name, bool passThrough = false);
+
+    VarRefs* getModule(const EnvKey& name);
       
  };
 

@@ -240,7 +240,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       varRoot.functions[i] = fnList[i].ptr();
     }
 
-    // debug_ast(root);
+    debug_ast(root);
     CssRootObj compiled = eval.acceptRoot(root); // 50%
     // debug_ast(compiled);
 
@@ -789,8 +789,23 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
 
     // Invoke correct parser according to format
-    StyleSheet* stylesheet = SASS_MEMORY_NEW(
-      StyleSheet, import, parseSource(import));
+    StyleSheetObj stylesheet = SASS_MEMORY_NEW(
+      StyleSheet, import, nullptr);
+
+    std::string nr(std::to_string(sheets.size()));
+    stylesheet->ns = sass::string(nr.c_str()) + "|";
+
+    sheetStack.push_back(stylesheet);
+
+    auto current = varStack.back();
+    sass::string prevNs = current->ns;
+    current->ns = stylesheet->ns;
+
+    stylesheet->root2 = parseSource(import);
+
+    current->ns = prevNs;
+
+    sheetStack.pop_back();
 
     // Pop from import stack
     import_stack.pop_back();
@@ -799,7 +814,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sheets.insert({ abs_path, stylesheet });
 
     // Return pointer
-    return stylesheet;
+    return stylesheet.detach();
 
   }
   // EO registerImport

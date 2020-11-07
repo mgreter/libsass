@@ -37,6 +37,11 @@ namespace Sass {
   typedef EnvKeyFlatMap<ValueObj> ValueFlatMap;
   typedef EnvKeyFlatMap<ExpressionObj> ExpressionFlatMap;
 
+  // Helper typedefs to test implementations
+  typedef EnvKeyMap<uint32_t> VidxEnvKeyMap;
+  typedef EnvKeyMap<uint32_t> MidxEnvKeyMap;
+  typedef EnvKeyMap<uint32_t> FidxEnvKeyMap;
+
 };
 
 #endif

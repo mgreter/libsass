@@ -223,7 +223,22 @@ namespace Sass {
     return {};
   }
   // EO getVariableIdx
-  
+
+
+  VarRefs* EnvFrame::getModule(const EnvKey& name)
+  {
+    EnvFrame* current = this;
+    while (current != nullptr) {
+      auto it = current->modules.find(name);
+      if (it != current->modules.end()) {
+        return it->second;
+      }
+      current = current->getParent(true);
+    }
+    // Not found
+    return {};
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
