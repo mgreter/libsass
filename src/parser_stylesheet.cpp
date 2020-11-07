@@ -973,8 +973,8 @@ namespace Sass {
 
     scanWhitespaceWithoutComments();
 
-    sass::vector<IfRule*> ifs;
-    ifs.push_back(root);
+    // sass::vector<IfRule*> ifs;
+    // ifs.push_back(root);
 
     while (scanElse(ifIndentation)) {
       scanWhitespace();
@@ -1012,6 +1012,7 @@ namespace Sass {
 
     scanWhitespaceWithoutComments();
 
+    cur.clear();
     return root.detach();
 
   }

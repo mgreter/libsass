@@ -197,16 +197,21 @@ namespace Sass {
       decRefCount();
     }
 
-    SharedPtr<T>& operator=(T* other_node)
+    SharedPtr<T>& operator=(T* other)
     {
-      if (node != other_node) {
+      if (node != other) {
         if (node) decRefCount();
-        node = other_node;
+        node = other;
         incRefCount();
       } else if (node != nullptr) {
         node->refcount &= UNSET_DETACHED_BITMASK;
       }
       return *this;
+    }
+
+    SharedPtr<T>& operator=(const SharedPtr<T>& obj)
+    {
+      return *this = obj.node;
     }
 
     SharedPtr<T>& operator=(SharedPtr<T>&& obj) noexcept
@@ -222,21 +227,10 @@ namespace Sass {
       return *this;
     }
 
-    SharedPtr<T>& operator=(const SharedPtr<T>& obj)
+    // Prevents all SharedPtrs from freeing this node
+    // until it is assigned to any other SharedPtr.
+    T* detach()
     {
-      if (node != obj.node) {
-        if (node) decRefCount();
-        node = obj.node;
-        incRefCount();
-      }
-      else if (node != nullptr) {
-        node->refcount &= UNSET_DETACHED_BITMASK;
-      }
-      return *this;
-    }
-
-    // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
-    T* detach() {
       if (node != nullptr) {
         node->refcount |= SET_DETACHED_BITMASK;
       }
