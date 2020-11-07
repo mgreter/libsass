@@ -710,7 +710,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     {
       CssParser parser(*this, import->source);
       if (!strcmp(import->getAbsPath(), "D:/github-sass/perl-libsass-selector-refactor/libsass/../foo.useit.doda.scss")) {
-        parser.ns = "foo.";
+        parser.ns = import->ns;
       }
       return parser.parseRoot();
     }
@@ -718,14 +718,14 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     {
       SassParser parser(*this, import->source);
       if (!strcmp(import->getAbsPath(), "D:/github-sass/perl-libsass-selector-refactor/libsass/../foo.useit.doda.scss")) {
-        parser.ns = "foo.";
+        parser.ns = import->ns;
       }
       return parser.parseRoot();
     }
     else {
       ScssParser parser(*this, import->source);
       if (!strcmp(import->getAbsPath(), "D:/github-sass/perl-libsass-selector-refactor/libsass/../foo.useit.doda.scss")) {
-        parser.ns = "foo.";
+        parser.ns = import->ns;
       }
       return parser.parseRoot();
     }

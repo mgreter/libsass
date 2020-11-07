@@ -609,9 +609,11 @@ namespace Sass {
 
   Import::Import(
     SourceData* source,
-    SassImportFormat syntax) :
+    SassImportFormat syntax,
+    const sass::string& ns) :
     source(source),
-    syntax(syntax)
+    syntax(syntax),
+    ns(ns)
   {}
 
   bool Import::isLoaded() const

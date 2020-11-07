@@ -61,6 +61,10 @@ namespace Sass {
 
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.
+    sass::vector<StyleSheet*> sheetStack;
+
+    // Stack of environment frames. New frames are appended
+    // when parser encounters a new environment scoping.
     sass::vector<EnvFrame*> varStack;
 
     // The root environment where parsed root variables

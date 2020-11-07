@@ -253,7 +253,7 @@ namespace Sass {
     // Consumes an argument to an `@import` rule.
     // If anything is found it will be added to [rule].
     virtual void scanImportArgument(ImportRule* rule);
-    void scanImportArgument2(UseRule* rule, sass::string* ns);
+    void scanImportArgument2(UseRule* rule);
 
     // Returns whether [url] indicates that an `@import` is a plain CSS import.
     bool isPlainImportUrl(const sass::string& url) const;
@@ -502,7 +502,8 @@ namespace Sass {
 
     void resolveDynamicImport2(
       UseRule* rule, Offset start,
-      const sass::string& path);
+      const sass::string& path,
+      const sass::string& ns = "");
 
   };
 

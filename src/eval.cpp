@@ -1348,8 +1348,8 @@ namespace Sass {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     LOCAL_PTR(CssParentNode, current, css);
     for (const StatementObj& item : root->elements()) {
-      Value* child = item->accept(this);
-      if (child) delete child;
+      ValueObj child = item->accept(this);
+      // if (child) delete child;
     }
     return css.detach();
   }

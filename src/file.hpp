@@ -122,6 +122,7 @@ namespace Sass {
   public:
     SourceDataObj source;
     SassImportFormat syntax;
+    sass::string ns;
     void loadIfNeeded();
     bool isLoaded() const;
     const char* getImpPath() const;
@@ -132,7 +133,8 @@ namespace Sass {
 
     Import(
       SourceData* source,
-      SassImportFormat syntax);
+      SassImportFormat syntax,
+      const sass::string& ns = "");
 
     CAPI_WRAPPER(Import, SassImport);
   };

@@ -599,7 +599,7 @@ namespace Sass {
       return readSupportsRule(start);
     }
     else if (plain == "use") {
-      return readAnyAtRule(start, name);
+      // return readAnyAtRule(start, name);
       // isUseAllowed = wasUseAllowed;
       // if (!root) throwDisallowedAtRule(start);
       return readUseRule(start);
@@ -898,6 +898,11 @@ namespace Sass {
     // lastSilentComment = null;
     sass::string name = readIdentifier();
     sass::string normalized(name);
+
+    if (!ns.empty()) {
+      name = ns + name;
+    }
+
     scanWhitespace();
 
     ArgumentDeclarationObj arguments = parseArgumentDeclaration();
@@ -1043,9 +1048,10 @@ namespace Sass {
       UseRule, scanner.relevantSpanFrom(start), "", "");
 
     scanWhitespace();
-    scanImportArgument2(rule, nullptr);
+    scanImportArgument2(rule);
     scanWhitespace();
 
+    expectStatementSeparator("@use rule");
    
     return rule;
 
@@ -1081,7 +1087,7 @@ namespace Sass {
   }
 
 
-  void StylesheetParser::scanImportArgument2(UseRule* rule, sass::string* ns)
+  void StylesheetParser::scanImportArgument2(UseRule* rule)
   {
     const char* startpos = scanner.position;
     Offset start(scanner.offset);
@@ -1091,7 +1097,20 @@ namespace Sass {
     }
 
     sass::string url = string();
-    const char* rawUrlPos = scanner.position;
+    // Verify that this is a real url
+
+    using LUrlParser::clParseURL;
+    clParseURL clURL = clParseURL::ParseURL(url);
+
+    if (!clURL.IsValid()) {
+      throw std::runtime_error("Invalid URL");
+    }
+
+    scanWhitespace();
+    auto ns = readUseNamespace(clURL, start);
+    scanWhitespace();
+
+    // const char* rawUrlPos = scanner.position;
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     scanWhitespace();
     auto queries = tryImportQueries();
@@ -1116,7 +1135,7 @@ namespace Sass {
       // Call custom importers and check if any of them handled the import
       // if (!context.callCustomImporters(url, pstate, rule)) {
         // Try to load url into context.sheets
-        resolveDynamicImport2(rule, start, url);
+        resolveDynamicImport2(rule, start, url, ns);
         // }
     }
 
@@ -1125,7 +1144,8 @@ namespace Sass {
 
   // Resolve import of [path] and add imports to [rule]
   void StylesheetParser::resolveDynamicImport2(
-    UseRule* rule, Offset start, const sass::string& path)
+    UseRule* rule, Offset start, const sass::string& path,
+    const sass::string& ns)
   {
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(path, scanner.sourceUrl);
@@ -1155,6 +1175,7 @@ namespace Sass {
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
       // StyleSheet* sheet = context.registerImport(loaded);
+      if (!ns.empty()) loaded->ns = ns + ".";
       rule->sheet(context.registerImport(loaded));
       // rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
     }
@@ -1347,6 +1368,8 @@ namespace Sass {
       name = readPublicIdentifier();
     }
 
+    if (!ns.empty()) name = ns + "." + name;
+
     scanWhitespace();
     ArgumentInvocationObj arguments;
     if (scanner.peekChar() == $lparen) {
@@ -1434,6 +1457,10 @@ namespace Sass {
     // lastSilentComment = null;
     sass::string name = readIdentifier();
     scanWhitespace();
+
+    if (!ns.empty()) {
+      name = ns + name;
+    }
 
     ArgumentDeclarationObj arguments;
     if (scanner.peekChar() == $lparen) {
@@ -2955,7 +2982,7 @@ namespace Sass {
           name = plain + "." + name;
         }
         auto expression = SASS_MEMORY_NEW(VariableExpression,
-          scanner.relevantSpanFrom(beforeName),
+          scanner.relevantSpanFrom(start),
           name, plain);
 
 
@@ -2979,9 +3006,10 @@ namespace Sass {
       beforeName = scanner.offset;
 
       Offset start(scanner.offset);
+      auto fname = readPublicIdentifier();
       StringObj ident(SASS_MEMORY_NEW(String,
         scanner.relevantSpanFrom(start),
-        readPublicIdentifier()));
+        sass::string(fname)));
 
       InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
         ident->pstate());
@@ -2992,9 +3020,16 @@ namespace Sass {
       }
 
       ArgumentInvocation* args = readArgumentInvocation();
-      return SASS_MEMORY_NEW(FunctionExpression,
+      FunctionExpression* fn = SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start), itpl, args, ns);
-
+      sass::string name(identifier->getPlainString());
+      if (!fname.empty()) {
+        if (!ns.empty()) fname = ns + "." + fname;
+        // Get the function through the whole stack
+        auto fidx = context.varStack.back()->getFunctionIdx(fname);
+        fn->fidx(fidx);
+      }
+      return fn;
     }
     else if (next == $lparen) {
       ArgumentInvocation* args = readArgumentInvocation();
