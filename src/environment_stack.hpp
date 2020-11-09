@@ -261,8 +261,8 @@ namespace Sass {
     // are added multiple times so we can revert to them.
     // variables[varFramePtr[vidx.frame] + vidx.offset]
     sass::vector<ValueObj> variables;
-    sass::vector<UserDefinedCallableObj> mixins;
-    sass::vector<UserDefinedCallableObj> functions;
+    sass::vector<CallableObj> mixins;
+    sass::vector<CallableObj> functions;
 
     // Every scope we execute in sass gets an entry here.
     // The value stored here is the base address of the
@@ -273,6 +273,11 @@ namespace Sass {
     sass::vector<uint32_t> varFramePtr;
     sass::vector<uint32_t> mixFramePtr;
     sass::vector<uint32_t> fnFramePtr;
+
+    // Internal functions are stored here
+    sass::vector<CallableObj> intFunction;
+    sass::vector<CallableObj> intMixin;
+    sass::vector<ValueObj> intVariables;
 
     // All created runtime variable objects.
     // Needed to track the memory allocations
@@ -314,11 +319,11 @@ namespace Sass {
 
     // Get function instance by stack index reference
     // Just converting and returning reference to array offset
-    UserDefinedCallableObj& getFunction(const VarRef& vidx);
+    CallableObj& getFunction(const VarRef& vidx);
 
     // Get mixin instance by stack index reference
     // Just converting and returning reference to array offset
-    UserDefinedCallableObj& getMixin(const VarRef& midx);
+    CallableObj& getMixin(const VarRef& midx);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
@@ -340,13 +345,13 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
-    UserDefinedCallable* getMixin(const EnvKey& name) const;
+    Callable* getMixin(const EnvKey& name) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    UserDefinedCallable* getFunction(const EnvKey& name) const;
+    Callable* getFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.

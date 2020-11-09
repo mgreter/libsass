@@ -98,14 +98,14 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Register built-in function with only one parameter list.
     /////////////////////////////////////////////////////////////////////////
-    void registerBuiltInFunction(const sass::string& name,
+    uint32_t registerBuiltInFunction(const sass::string& name,
       const sass::string& signature, SassFnSig cb);
 
     /////////////////////////////////////////////////////////////////////////
     // Register built-in functions that can take different
     // functional arguments (best suited will be chosen).
     /////////////////////////////////////////////////////////////////////////
-    void registerBuiltInOverloadFns(const sass::string& name,
+    uint32_t registerBuiltInOverloadFns(const sass::string& name,
       const std::vector<std::pair<sass::string, SassFnSig>>& overloads);
 
     /////////////////////////////////////////////////////////////////////////

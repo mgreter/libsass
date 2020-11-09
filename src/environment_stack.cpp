@@ -297,23 +297,38 @@ namespace Sass {
   // Just converting and returning reference to array offset
   ValueObj& EnvRoot::getVariable(const VarRef& vidx)
   {
-    return variables[size_t(varFramePtr[vidx.frame]) + vidx.offset];
+    if (vidx.frame == 0xFFFFFFFF) {
+      return intVariables[vidx.offset];
+    }
+    else {
+      return variables[size_t(varFramePtr[vidx.frame]) + vidx.offset];
+    }
   }
   // EO getVariable
 
   // Get function instance by stack index reference
   // Just converting and returning reference to array offset
-  UserDefinedCallableObj& EnvRoot::getFunction(const VarRef& fidx)
+  CallableObj& EnvRoot::getFunction(const VarRef& fidx)
   {
-    return functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset];
+    if (fidx.frame == 0xFFFFFFFF) {
+      return intFunction[fidx.offset];
+    }
+    else {
+      return functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset];
+    }
   }
   // EO getFunction
 
   // Get mixin instance by stack index reference
   // Just converting and returning reference to array offset
-  UserDefinedCallableObj& EnvRoot::getMixin(const VarRef& midx)
+  CallableObj& EnvRoot::getMixin(const VarRef& midx)
   {
-    return mixins[size_t(mixFramePtr[midx.frame]) + midx.offset];
+    if (midx.frame == 0xFFFFFFFF) {
+      return intMixin[midx.offset];
+    }
+    else {
+      return mixins[size_t(mixFramePtr[midx.frame]) + midx.offset];
+    }
   }
   // EO getMixin
 
@@ -356,7 +371,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
-  UserDefinedCallable* EnvRoot::getMixin(const EnvKey& name) const
+  Callable* EnvRoot::getMixin(const EnvKey& name) const
   {
     if (stack.empty()) return {};
     uint32_t idx = uint32_t(stack.size() - 1);
@@ -365,7 +380,7 @@ namespace Sass {
       auto it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
         const VarRef vidx{ current->mixFrame, it->second };
-        UserDefinedCallableObj& value = root.getMixin(vidx);
+        CallableObj& value = root.getMixin(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;
@@ -379,7 +394,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  UserDefinedCallable* EnvRoot::getFunction(const EnvKey& name) const
+  Callable* EnvRoot::getFunction(const EnvKey& name) const
   {
     if (stack.empty()) return {};
     uint32_t idx = uint32_t(stack.size() - 1);
@@ -388,7 +403,7 @@ namespace Sass {
       auto it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
         const VarRef vidx{ current->fnFrame, it->second };
-        UserDefinedCallableObj& value = root.getFunction(vidx);
+        CallableObj& value = root.getFunction(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;

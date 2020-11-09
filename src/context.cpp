@@ -159,4 +159,31 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  void Module::addFunction(const sass::string& name, uint32_t offset)
+  {
+    idxs->fnIdxs[name] = offset;
+  }
+
+  void Module::addVariable(const sass::string& name, uint32_t offset)
+  {
+    idxs->varIdxs[name] = offset;
+  }
+
+  void Module::addMixin(const sass::string& name, uint32_t offset)
+  {
+    idxs->mixIdxs[name] = offset;
+  }
+
+  Module::Module() :
+    idxs(new VarRefs(
+      nullptr,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      false))
+  {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
 }

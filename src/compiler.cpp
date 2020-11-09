@@ -628,7 +628,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   /////////////////////////////////////////////////////////////////////////
 
   // Register built-in function with only one parameter list.
-  void Compiler::registerBuiltInFunction(const sass::string& name,
+  uint32_t Compiler::registerBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
     EnvRoot root(varStack);
@@ -637,14 +637,15 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     auto args = ArgumentDeclaration::parse(*this, source);
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     fnLookup.insert(std::make_pair(callable->envkey(), callable));
-    varRoot.createFunction(callable->envkey());
+    VarRef idx(varRoot.createFunction(callable->envkey()));
     fnList.push_back(callable);
+    return idx.offset;
   }
   // EO registerBuiltInFunction
 
   // Register built-in functions that can take different
   // functional arguments (best suited will be chosen).
-  void Compiler::registerBuiltInOverloadFns(const sass::string& name,
+  uint32_t Compiler::registerBuiltInOverloadFns(const sass::string& name,
     const std::vector<std::pair<sass::string, SassFnSig>>& overloads)
   {
     SassFnPairs pairs;
@@ -657,8 +658,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     }
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
     fnLookup.insert(std::make_pair(name, callable));
-    varRoot.createFunction(name);
+    VarRef idx(varRoot.createFunction(name));
     fnList.push_back(callable);
+    return idx.offset;
   }
   // EO registerBuiltInOverloadFns
 
