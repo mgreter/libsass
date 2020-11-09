@@ -34,16 +34,15 @@ namespace Sass {
         MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
         // We assign to ourself, so we can optimize this
         // This can shave off a few percent of run-time
-#ifdef SASS_OPTIMIZE_SELF_ASSIGN
+        #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (selfAssign && map1->refcount < AssignableRefCount + 1) {
           for (auto kv : map2->elements()) { map1->insertOrSet(kv); }
           return map1.detach();
         }
-#endif
+        #endif
         Map* copy = SASS_MEMORY_COPY(map1);
         for (auto kv : map2->elements()) {
-          copy->insertOrSet(kv);
-        }
+          copy->insertOrSet(kv); }
         return copy;
       }
 
@@ -63,7 +62,7 @@ namespace Sass {
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
 
-#ifdef SASS_OPTIMIZE_SELF_ASSIGN
+        #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (selfAssign && map->refcount < AssignableRefCount + 1) {
           map->erase(arguments[1]);
           for (Value* key : arguments[2]->iterator()) {
@@ -71,7 +70,7 @@ namespace Sass {
           }
           return map.detach();
         }
-#endif
+        #endif
 
         MapObj copy = SASS_MEMORY_COPY(map);
         copy->erase(arguments[1]);
@@ -113,15 +112,15 @@ namespace Sass {
       void registerFunctions(Compiler& ctx)
       {
         Module& module(ctx.createModule("map"));
-        ctx.registerBuiltInFunction("map-get", "$map, $key", get);
-        ctx.registerBuiltInFunction("map-merge", "$map1, $map2", merge);
-        ctx.registerBuiltInOverloadFns("map-remove", {
+        module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key", get));
+        module.addFunction("merge", ctx.registerBuiltInFunction("map-merge", "$map1, $map2", merge));
+        module.addFunction("remove", ctx.registerBuiltInOverloadFns("map-remove", {
           std::make_pair("$map", remove_one),
           std::make_pair("$map, $key, $keys...", remove_many)
-          });
-        ctx.registerBuiltInFunction("map-keys", "$map", keys);
-        ctx.registerBuiltInFunction("map-values", "$map", values);
-        ctx.registerBuiltInFunction("map-has-key", "$map, $key", hasKey);
+          }));
+        module.addFunction("keys", ctx.registerBuiltInFunction("map-keys", "$map", keys));
+        module.addFunction("values", ctx.registerBuiltInFunction("map-values", "$map", values));
+        module.addFunction("has-key", ctx.registerBuiltInFunction("map-has-key", "$map, $key", hasKey));
       }
 
       /*******************************************************************/
