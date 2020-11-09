@@ -81,102 +81,6 @@ namespace Sass {
   }
   // EO parseRoot
 
-  // Consumes a variable declaration.
-  Statement* StylesheetParser::readVariableDeclaration()
-  {
-    Offset start(scanner.offset);
-
-    sass::string ns;
-    sass::string id = variableName();
-    if (scanner.scanChar($dot)) {
-      ns = id;
-      id = readPublicIdentifier();
-    }
-
-    // Create EnvKey from id
-    EnvKey name(std::move(id));
-
-    if (plainCss()) {
-      error("Sass variables aren't allowed in plain CSS.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    scanner.expectChar($colon);
-    scanWhitespace();
-
-    ExpressionObj value = readExpression();
-
-    bool guarded = false;
-    bool global = false;
-
-    Offset flagStart(scanner.offset);
-    while (scanner.scanChar($exclamation)) {
-      sass::string flag = readIdentifier();
-      if (flag == "default") {
-        guarded = true;
-      }
-      else if (flag == "global") {
-        if (!ns.empty()) {
-          error("!global isn't allowed for variables in other modules.",
-            scanner.relevantSpanFrom(flagStart));
-        }
-        global = true;
-      }
-      else {
-        error("Invalid flag name.",
-          scanner.relevantSpanFrom(flagStart));
-      }
-
-      scanWhitespace();
-      flagStart = scanner.offset;
-    }
-
-    expectStatementSeparator("variable declaration");
-
-    bool has_local = false;
-    // Skip to optional global scope
-    EnvFrame* frame = global ?
-      context.varStack.front() :
-      context.varStack.back();
-    // As long as we are not in a loop construct, we
-    // can utilize full static variable optimizations.
-    VarRef vidx(inLoopDirective ?
-      frame->getLocalVariableIdx(name) :
-      frame->getVariableIdx(name));
-    // Check if we found a local variable to use
-    if (vidx.isValid()) has_local = true;
-    // Otherwise we must create a new local variable
-    else vidx = frame->createVariable(name);
-
-    // JIT self assignments
-    #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-    // Optimization for cases where functions manipulate same variable
-    // We detect these cases here in order for the function to optimize
-    // self-assignment case (e.g. map-merge). It can then manipulate
-    // the value passed as the first argument directly in-place.
-    if (has_local && !global) {
-      // Certainly looks a bit like some poor man's JIT 
-      if (auto fn = value->isaFunctionExpression()) {
-        auto& pos(fn->arguments()->positional());
-        if (pos.size() > 0) {
-          if (auto var = pos[0]->isaVariableExpression()) {
-            if (var->name() == name) { // same name
-              fn->selfAssign(true); // Up to 15% faster
-            }
-          }
-        }
-      }
-    }
-    #endif
-
-    AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start), name, { vidx }, value, guarded, global);
-    if (inLoopDirective) frame->assignments.push_back(declaration);
-    return declaration;
-  }
-  // EO variableDeclaration
-
   // Consumes a statement that's allowed at the top level of the stylesheet or
   // within nested style and at rules. If [root] is `true`, this parses at-rules
   // that are allowed only at the root of the stylesheet.
@@ -379,8 +283,15 @@ namespace Sass {
     }
     #endif
 
+    if (!ns.empty()) {
+      auto pstate(scanner.relevantSpanFrom(start));
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Variable namespaces not supported yet!");
+    }
+
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start), name, { vidx }, value, guarded, global);
+      scanner.relevantSpanFrom(start), name, ns, { vidx }, value, guarded, global);
     if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
@@ -1681,8 +1592,15 @@ namespace Sass {
         std::move(pstate), {}, {});
     }
 
+    if (!ns.empty()) {
+      auto pstate(scanner.relevantSpanFrom(start));
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Mixin namespaces not supported yet!");
+    }
+
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
-      scanner.relevantSpanFrom(start), name, arguments);
+    scanner.relevantSpanFrom(start), name, ns, arguments);
 
     if (!name.empty()) {
       // Get the function through the whole stack
@@ -3037,10 +2955,17 @@ namespace Sass {
         scanner.relevantSpanFrom(start));
     }
 
+    if (!ns.empty()) {
+      auto pstate(scanner.relevantSpanFrom(start));
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Variable namespaces not supported yet!");
+    }
+
     VariableExpression* expression =
       SASS_MEMORY_NEW(VariableExpression,
         scanner.relevantSpanFrom(start),
-        name);
+        name, ns);
 
     if (inLoopDirective) {
       // Static variable resolution will be done in finalize stage
@@ -3211,10 +3136,47 @@ namespace Sass {
         return SASS_MEMORY_NEW(StringExpression,
           scanner.relevantSpanFrom(beforeName), identifier);
       }
+      scanner.readChar();
+
+      if (scanner.peekChar() == $dollar) {
+        sass::string name(variableName());
+
+        if (!plain.empty()) {
+          auto pstate(scanner.relevantSpanFrom(start));
+          context.addFinalStackTrace(pstate);
+          throw Exception::ParserException(context,
+            "Variable namespaces not supported yet!");
+        }
+
+        auto expression = SASS_MEMORY_NEW(VariableExpression,
+          scanner.relevantSpanFrom(start),
+          name, plain);
+
+        if (inLoopDirective) {
+          // Static variable resolution will be done in finalize stage
+          // Must be postponed since in loops we may reference post vars
+          context.varStack.back()->variables.push_back(expression);
+        }
+        else {
+          // Otherwise utilize full static optimizations
+          EnvFrame* frame(context.varStack.back());
+          VarRef vidx(frame->getVariableIdx(name, true));
+          if (vidx.isValid()) expression->vidxs().push_back(vidx);
+          else context.varStack.back()->variables.push_back(expression);
+        }
+
+        return expression;
+      }
 
       ns = identifier->getPlainString();
-      scanner.readChar();
       beforeName = scanner.offset;
+
+      if (!ns.empty()) {
+        auto pstate(scanner.relevantSpanFrom(start));
+        context.addFinalStackTrace(pstate);
+        throw Exception::ParserException(context,
+          "Function namespaces not supported yet!");
+      }
 
       Offset start(scanner.offset);
       StringObj ident(SASS_MEMORY_NEW(String,
@@ -3230,6 +3192,7 @@ namespace Sass {
       }
 
       ArgumentInvocation* args = readArgumentInvocation();
+
       return SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start), itpl, args, ns);
 

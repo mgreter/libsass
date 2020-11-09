@@ -219,9 +219,11 @@ namespace Sass {
 
   VariableExpression::VariableExpression(
     SourceSpan&& pstate,
-    const EnvKey& name) :
+    const EnvKey& name,
+    const sass::string& ns) :
     Expression(std::move(pstate)),
-    name_(name)
+    name_(name),
+    ns_(ns)
   {}
 
   /////////////////////////////////////////////////////////////////////////

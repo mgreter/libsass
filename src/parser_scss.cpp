@@ -99,7 +99,7 @@ namespace Sass {
     while (true) {
       switch (scanner.peekChar()) {
       case $dollar:
-        children.emplace_back(readVariableDeclaration());
+        children.emplace_back(readVariableDeclarationWithoutNamespace("", scanner.offset));
         break;
 
       case $slash:
@@ -145,7 +145,7 @@ namespace Sass {
     while (!scanner.isDone()) {
       switch (scanner.peekChar()) {
       case $dollar:
-        statements.emplace_back(readVariableDeclaration());
+        statements.emplace_back(readVariableDeclarationWithoutNamespace("", scanner.offset));
         break;
 
       case $slash:
