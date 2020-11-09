@@ -116,9 +116,6 @@ namespace Sass {
     // from before the corresponding `@if` was parsed.
     virtual bool scanElse(size_t ifIndentation) = 0;
 
-    // Consumes a variable declaration.
-    virtual Statement* readVariableDeclaration();
-
     // Consumes a block of child statements. Unlike most production consumers,
     // this does *not* consume trailing whitespace. This is necessary to ensure
     // that the source span for the parent rule doesn't cover whitespace after the rule.
@@ -317,8 +314,6 @@ namespace Sass {
     // [start] should point before the `@`.
     UseRule* readUseRule(Offset start);
 
-    sass::string readUseNamespace(const sass::string& url, Offset start);
-
     bool readWithConfiguration(
       sass::vector<ConfiguredVariable>& vars,
       bool allowGuarded = false);
@@ -331,6 +326,8 @@ namespace Sass {
     // Consumes a `@forward` rule.
     // [start] should point before the `@`.
     ForwardRule* readForwardRule(Offset start);
+
+    sass::string readUseNamespace(const sass::string& url, Offset start);
 
     // Consumes a `@warn` rule.
     // [start] should point before the `@`.

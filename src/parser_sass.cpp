@@ -168,7 +168,7 @@ namespace Sass {
       return nullptr;
 
     case $dollar:
-      return readVariableDeclaration();
+      return readVariableDeclarationWithoutNamespace("", scanner.offset);
       break;
 
     case $slash:

@@ -223,8 +223,8 @@ namespace Sass {
   IncludeRule::IncludeRule(
     SourceSpan&& pstate,
     const EnvKey& name,
-    ArgumentInvocation* arguments,
     const sass::string& ns,
+    ArgumentInvocation* arguments,
     ContentBlock* content) :
     Statement(std::move(pstate)),
     CallableInvocation(arguments),
@@ -412,12 +412,14 @@ namespace Sass {
   AssignRule::AssignRule(
     const SourceSpan& pstate,
     const EnvKey& variable,
+    const sass::string ns,
     sass::vector<VarRef> vidxs,
     Expression* value,
     bool is_default,
     bool is_global) :
     Statement(pstate),
     variable_(variable),
+    ns_(ns),
     value_(value),
     vidxs_(std::move(vidxs)),
     is_default_(is_default),
