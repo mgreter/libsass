@@ -1397,6 +1397,20 @@ namespace Sass {
     return nullptr;
   }
 
+  Value* Eval::visitUseRule(UseRule* node)
+  {
+    compiler.addFinalStackTrace(node->pstate());
+    throw Exception::RuntimeException(compiler,
+      "@use rules not yet supported in LibSass!");
+  }
+
+  Value* Eval::visitForwardRule(ForwardRule* node)
+  {
+    compiler.addFinalStackTrace(node->pstate());
+    throw Exception::RuntimeException(compiler,
+      "@forward rules not yet supported in LibSass!");
+  }
+
   CssParentNode* Eval::_trimIncluded(CssParentVector& nodes)
   {
 
