@@ -12,7 +12,7 @@ namespace Sass {
 
 
   // SourceData is the base class to hold loaded sass content.
-  class SourceData : public SharedObj
+  class SourceData : public RefCounted
   {
   protected:
 

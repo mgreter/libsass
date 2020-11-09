@@ -341,7 +341,7 @@ extern "C" {
   {
     delete& Compiler::unwrap(compiler);
     #ifdef DEBUG_SHARED_PTR
-    SharedObj::dumpMemLeaks();
+    RefCounted::dumpMemLeaks();
     #endif
 
   }

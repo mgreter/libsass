@@ -11,7 +11,7 @@ namespace Sass {
 
   // parsed stylesheet from loaded resource
   // this should be a `Module` for sass 4.0
-  class StyleSheet : public SharedObj {
+  class StyleSheet : public RefCounted {
     public:
 
       // Whether this was parsed from a plain CSS stylesheet.

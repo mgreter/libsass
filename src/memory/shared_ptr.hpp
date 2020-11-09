@@ -83,7 +83,7 @@ namespace Sass {
 
   #endif
 
-  // SharedObj is the base class for all objects that can be stored as a shared object
+  // RefCounted is the base class for all objects that can be stored as a shared object
   // It adds the reference counter and other values directly to the objects
   // This gives a slight overhead when directly used as a stack object, but has some
   // advantages for our code. It is safe to create two shared pointers from the same
@@ -93,10 +93,10 @@ namespace Sass {
   // pointers on each operation. This can be optimized in `std::shared_ptr`
   // too by using `std::make_shared` (where the control block and the actual
   // object are allocated in one continuous memory block via one single call).
-  class SharedObj {
+  class RefCounted {
 
    public:
-    SharedObj() : refcount(0) {
+    RefCounted() : refcount(0) {
       #ifdef DEBUG_SHARED_PTR
       this->objId = ++objCount;
       if (taint) {
@@ -104,7 +104,7 @@ namespace Sass {
       }
       #endif
     }
-    virtual ~SharedObj() {
+    virtual ~RefCounted() {
       #ifdef DEBUG_SHARED_PTR
       for (size_t i = 0; i < all.size(); i++) {
         if (all[i] == this) {
@@ -120,10 +120,10 @@ namespace Sass {
     #ifdef DEBUG_SHARED_PTR
     static void reportRefCounts() {
       std::cerr << "Max refcount: " <<
-        SharedObj::maxRefCount << "\n";
+        RefCounted::maxRefCount << "\n";
     }
     static void dumpMemLeaks();
-    SharedObj* trace(sass::string file, size_t line) {
+    RefCounted* trace(sass::string file, size_t line) {
       this->file = file;
       this->line = line;
       return this;
@@ -163,7 +163,7 @@ namespace Sass {
     bool dbg = false;
     bool erased = false;
     static size_t objCount;
-    static sass::vector<SharedObj*> all;
+    static sass::vector<RefCounted*> all;
     static std::unordered_set<size_t> deleted;
 #endif
   };
@@ -175,7 +175,7 @@ namespace Sass {
 
   protected:
 
-    SharedObj* node;
+    RefCounted* node;
 
   private:
 
@@ -184,7 +184,7 @@ namespace Sass {
 
   public:
     SharedPtr() : node(nullptr) {}
-    SharedPtr(SharedObj* ptr) : node(ptr) { incRefCount(); }
+    SharedPtr(RefCounted* ptr) : node(ptr) { incRefCount(); }
     SharedPtr(const SharedPtr& obj) : SharedPtr(obj.node) {}
     SharedPtr(SharedPtr&& obj) noexcept : node(std::move(obj.node)) {
       obj.node = nullptr; // reset old node pointer
@@ -193,7 +193,7 @@ namespace Sass {
       decRefCount();
     }
 
-    SharedPtr& operator=(SharedObj* other_node) {
+    SharedPtr& operator=(RefCounted* other_node) {
       if (node != other_node) {
         if (node) decRefCount();
         node = other_node;
@@ -222,7 +222,7 @@ namespace Sass {
     }
 
     // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
-    SharedObj* detach() {
+    RefCounted* detach() {
       if (node != nullptr) {
         node->refcount |= SET_DETACHED_BITMASK;
       }
@@ -241,7 +241,7 @@ namespace Sass {
       }
     }
 
-    SharedObj* obj() const {
+    RefCounted* obj() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -249,7 +249,7 @@ namespace Sass {
       #endif
       return node;
     }
-    SharedObj* operator->() const {
+    RefCounted* operator->() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -293,8 +293,8 @@ namespace Sass {
       node->refcount &= UNSET_DETACHED_BITMASK;
       ++node->refcount;
       #ifdef DEBUG_SHARED_PTR
-      if (SharedObj::maxRefCount < node->refcount) {
-        SharedObj::maxRefCount = node->refcount;
+      if (RefCounted::maxRefCount < node->refcount) {
+        RefCounted::maxRefCount = node->refcount;
       }
       if (node->dbg) {
         std::cerr << "+ " << node << " X " << node->refcount << " (" << this << ") " << "\n";
