@@ -19,6 +19,17 @@
 
 namespace Sass {
 
+  class Module
+  {
+  private:
+    VarRefs* idxs;
+  public:
+    void addFunction(const sass::string& name, uint32_t offset);
+    void addVariable(const sass::string& name, uint32_t offset);
+    void addMixin(const sass::string& name, uint32_t offset);
+    Module();
+  };
+
   // Compiler is stateful, while Context is more low-level
   class Context : public SassOutputOptionsCpp {
 
@@ -32,6 +43,14 @@ namespace Sass {
     // it for lookups during parsing. You may reset this for
     // another compilation when reusing the context.
     sass::vector<sass::string> includePaths;
+
+  public:
+
+    EnvKeyMap<Module> modules;
+
+    Module& createModule(const sass::string& name) {
+      return modules[name];
+    }
 
   protected:
 
