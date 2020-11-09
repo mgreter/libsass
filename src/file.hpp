@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "source.hpp"
 #include "sass/context.h"
 #include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
@@ -125,6 +126,7 @@ namespace Sass {
     bool isLoaded() const;
     const char* getImpPath() const;
     const char* getAbsPath() const;
+    const char* getFileName() const;
     Import(SassImportFormat syntax = SASS_IMPORT_AUTO) :
       syntax(syntax)
     {}

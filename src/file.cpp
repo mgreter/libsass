@@ -607,6 +607,11 @@ namespace Sass {
     return source->getAbsPath();
   }
 
+  const char* Import::getFileName() const
+  {
+    return source->getFileName();
+  }
+
   Import::Import(
     SourceData* source,
     SassImportFormat syntax) :

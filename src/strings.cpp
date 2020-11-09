@@ -58,6 +58,7 @@ namespace Sass
     const sass::string function("function");
     const sass::string arglist("arglist");
 
+    const sass::string with("with");
     const sass::string list("list");
     const sass::string name("name");
 		const sass::string media("media");
@@ -67,6 +68,7 @@ namespace Sass
 
 
 
+    const sass::string useRule("@use");
 		const sass::string forRule("@for");
 		const sass::string warnRule("@warn");
 		const sass::string errorRule("@error");
@@ -74,6 +76,7 @@ namespace Sass
 		const sass::string extendRule("@extend");
 		const sass::string importRule("@import");
 		const sass::string contentRule("@content");
+    const sass::string forwardRule("@forward");
 
 		const sass::string scaleColor("scale-color");
 		const sass::string colorAdjust("color-adjust");

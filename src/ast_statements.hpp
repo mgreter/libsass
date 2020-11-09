@@ -9,7 +9,9 @@
 #include "capi_sass.hpp"
 
 #include "ast_nodes.hpp"
-#include "ast_callables.hpp"
+#include "ast_callable.hpp"
+#include "ast_supports.hpp"
+#include "ast_statements.hpp"
 #include "environment_stack.hpp"
 
 namespace Sass {
@@ -500,9 +502,10 @@ namespace Sass {
   /////////////////////////////////////
   class AssignRule final : public Statement
   {
+  private:
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(ExpressionObj, value);
-    ADD_REF(std::vector<VarRef>, vidxs);
+    ADD_REF(sass::vector<VarRef>, vidxs);
     ADD_CONSTREF(bool, is_default);
     ADD_CONSTREF(bool, is_global);
   public:
@@ -510,7 +513,7 @@ namespace Sass {
     AssignRule(
       const SourceSpan& pstate,
       const EnvKey& variable,
-      VarRef vidx,
+      sass::vector<VarRef> vidxs,
       Expression* value,
       bool is_default = false,
       bool is_global = false);
@@ -526,6 +529,7 @@ namespace Sass {
   class IncludeRule final : public Statement,
     public CallableInvocation
   {
+  private:
 
     // The namespace of the mixin being invoked, or
     // `null` if it's invoked without a namespace.

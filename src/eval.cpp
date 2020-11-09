@@ -340,7 +340,7 @@ namespace Sass {
         std::move(positional), std::move(results.named()));
       // Set last lexical variable on scope
       compiler.varRoot.setVariable(idxs->varFrame,
-        (uint32_t)parameters.size(), restargs);
+        (uint32_t)parameters.size(), restargs.ptr());
 
     }
     else {
@@ -1948,7 +1948,7 @@ namespace Sass {
       if (f->is_inclusive()) ++end;
       for (double i = start; i < end; ++i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
+        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr());
         val = acceptChildren(f);
         if (val) break;
       }
@@ -1957,7 +1957,7 @@ namespace Sass {
       if (f->is_inclusive()) --end;
       for (double i = start; i > end; --i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it);
+        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr());
         val = acceptChildren(f);
         if (val) break;
       }

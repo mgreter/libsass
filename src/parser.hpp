@@ -99,8 +99,8 @@ namespace Sass {
     // Consumes a chunk of a plain CSS identifier after the name start.
     sass::string identifierBody();
 
-    // Like [consumeidentifierBody], but parses the body into the [text] buffer.
-    void consumeidentifierBody(StringBuffer& text, bool unit = false);
+    // Like [consumeIdentifierBody], but parses the body into the [text] buffer.
+    void consumeIdentifierBody(StringBuffer& text, bool unit = false);
 
     // Consumes a plain CSS string. This returns the parsed contents of the 
     // string—that is, it doesn't include quotes and its escapes are resolved.

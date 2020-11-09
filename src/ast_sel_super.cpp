@@ -40,10 +40,10 @@ namespace Sass {
   {
     sass::vector<PseudoSelectorObj> rv;
     for (const SimpleSelectorObj& sel : compound->elements()) {
-      if (const PseudoSelector* pseudo = sel->isaPseudoSelector()) {
+      if (const PseudoSelectorObj& pseudo = sel->isaPseudoSelector()) {
         if (pseudo->isClass() == isClass && pseudo->selector()) {
           if (sel->name() == name) {
-            rv.emplace_back(sel);
+            rv.emplace_back(pseudo);
           }
         }
       }

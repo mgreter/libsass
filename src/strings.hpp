@@ -56,6 +56,7 @@ namespace Sass {
     extern const sass::string map1;
     extern const sass::string map2;
     extern const sass::string args;
+    extern const sass::string with;
     extern const sass::string list;
     extern const sass::string name;
     extern const sass::string null;
@@ -71,6 +72,7 @@ namespace Sass {
     extern const sass::string error;
     extern const sass::string warning;
 
+    extern const sass::string useRule;
     extern const sass::string forRule;
     extern const sass::string warnRule;
     extern const sass::string errorRule;
@@ -78,6 +80,7 @@ namespace Sass {
     extern const sass::string extendRule;
     extern const sass::string importRule;
     extern const sass::string contentRule;
+    extern const sass::string forwardRule;
 
     extern const sass::string scaleColor;
     extern const sass::string colorAdjust;

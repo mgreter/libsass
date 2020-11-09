@@ -25,11 +25,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Helper typedefs to test implementations
-  typedef EnvKeyMap<uint32_t> VidxEnvKeyMap;
-  typedef EnvKeyMap<uint32_t> MidxEnvKeyMap;
-  typedef EnvKeyMap<uint32_t> FidxEnvKeyMap;
-
   // Helper typedef for our frame stack type
   typedef sass::vector<EnvFrame*> EnvFrameVector;
 
@@ -70,8 +65,7 @@ namespace Sass {
     }
 
     bool isValid() const { // 3%
-      return offset != 0xFFFFFFFF
-        && frame != 0xFFFFFFFF;
+      return offset != 0xFFFFFFFF;
     }
 
     operator bool() const {

@@ -171,7 +171,7 @@ namespace Sass {
     #endif
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start), name, vidx, value, guarded, global);
+      scanner.relevantSpanFrom(start), name, { vidx }, value, guarded, global);
     if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }

@@ -39,11 +39,9 @@ namespace Sass {
     // If [specificity] isn't passed, it defaults to `extender.maxSpecificity`.
     Extension(ComplexSelectorObj extender) :
       extender(extender),
-      target({}),
       specificity(0),
       isOptional(true),
-      isOriginal(false),
-      mediaContext({})
+      isOriginal(false)
     {}
 
     // Copy constructor
@@ -58,12 +56,9 @@ namespace Sass {
 
     // Default constructor
     Extension() :
-      extender({}),
-      target({}),
       specificity(0),
       isOptional(false),
-      isOriginal(false),
-      mediaContext({})
+      isOriginal(false)
     {}
 
     // Asserts that the [mediaContext] for a selector is 

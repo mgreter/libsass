@@ -8,6 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include "ast_values.hpp"
 #include "ast_callables.hpp"
 #include "environment_stack.hpp"
 
