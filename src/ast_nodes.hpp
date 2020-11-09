@@ -488,7 +488,10 @@ namespace Sass {
     virtual String* assertString(Logger& logger, const sass::string& name);
 
     // Assert and return a string/nullptr or throws if incompatible
-    virtual String* assertStringOrNull(Logger& logger, const sass::string& name);
+    String* assertStringOrNull(Logger& logger, const sass::string& name);
+
+    // Assert and return a string/nullptr or throws if incompatible
+    Map* assertMapOrNull(Logger& logger, const sass::string& name);
 
     // Assert and return an argument list or throws if incompatible
     virtual ArgumentList* assertArgumentList(Logger& logger, const sass::string& name);

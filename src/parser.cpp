@@ -110,7 +110,7 @@ namespace Sass {
       text.write($dash);
       if (scanner.scanChar($dash)) {
         text.writeCharCode($dash);
-        consumeidentifierBody(text, unit);
+        consumeIdentifierBody(text, unit);
         return text.buffer;
       }
     }
@@ -131,7 +131,7 @@ namespace Sass {
         scanner.rawSpanFrom(start));
     }
 
-    consumeidentifierBody(text, unit);
+    consumeIdentifierBody(text, unit);
 
     return std::move(text.buffer);
 
@@ -141,7 +141,7 @@ namespace Sass {
   sass::string Parser::identifierBody()
   {
     StringBuffer text;
-    consumeidentifierBody(text);
+    consumeIdentifierBody(text);
     if (text.empty()) {
       error(
         "Expected identifier body.",
@@ -150,8 +150,8 @@ namespace Sass {
     return text.buffer;
   }
 
-  // Like [consumeidentifierBody], but parses the body into the [text] buffer.
-  void Parser::consumeidentifierBody(StringBuffer& text, bool unit)
+  // Like [consumeIdentifierBody], but parses the body into the [text] buffer.
+  void Parser::consumeIdentifierBody(StringBuffer& text, bool unit)
   {
     while (true) {
       uint8_t next = scanner.peekChar();
@@ -183,13 +183,14 @@ namespace Sass {
     // NOTE: this logic is largely duplicated in ScssParser._interpolatedString.
     // Most changes here should be mirrored there.
 
-    uint8_t quote = scanner.readChar();
+    uint8_t quote = scanner.peekChar();
     if (quote != $single_quote && quote != $double_quote) {
       error("Expected string.",
         scanner.rawSpan());
         /*,
         position: quote == null ? scanner.position : scanner.position - 1*/
     }
+    scanner.readChar();
 
     StringBuffer buffer;
     while (true) {

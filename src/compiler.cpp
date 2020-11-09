@@ -618,7 +618,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // dispatch headers which will add custom functions
     // custom headers are added to the import instance
     if (callCustomHeaders("sass://header", pstate, rule)) {
-      statements.push_back(rule);
+      statements.push_back(rule.ptr());
     }
   }
 
@@ -674,7 +674,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     SourceStringObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", function->signature);
     // Create a new scss parser instance
-    ScssParser parser(*this, source);
+    ScssParser parser(*this, source.ptr());
     ExternalCallable* callable =
       parser.parseExternalCallable();
     callable->function(function);
@@ -778,7 +778,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     }
 
     // Invoke correct parser according to format
-    StyleSheet* stylesheet = SASS_MEMORY_NEW(
+    StyleSheetObj stylesheet = SASS_MEMORY_NEW(
       StyleSheet, import, parseSource(import));
 
     // Pop from import stack
@@ -788,7 +788,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     sheets.insert({ abs_path, stylesheet });
 
     // Return pointer
-    return stylesheet;
+    return stylesheet.detach();
 
   }
   // EO registerImport

@@ -148,7 +148,7 @@ namespace Sass {
     // Try to read source and (ToDo) optional mappings
     if (ImportObj loaded = read_file(import)) {
       sources.insert({ import.abs_path, loaded });
-      return loaded.detach();
+      return loaded.ptr();
     }
     // Throw error if read has failed
     throw Exception::OperationError(

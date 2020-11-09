@@ -6,6 +6,7 @@
 #include "capi_sass.hpp"
 
 #include "ast_nodes.hpp"
+#include "ast_selectors.hpp"
 #include "visitor_css.hpp"
 // #include "ast_def_macros.hpp"
 

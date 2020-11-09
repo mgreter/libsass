@@ -386,14 +386,14 @@ namespace Sass {
   AssignRule::AssignRule(
     const SourceSpan& pstate,
     const EnvKey& variable,
-    VarRef vidx,
+    sass::vector<VarRef> vidxs,
     Expression* value,
     bool is_default,
     bool is_global) :
     Statement(pstate),
     variable_(variable),
     value_(value),
-    vidxs_({ vidx }),
+    vidxs_(std::move(vidxs)),
     is_default_(is_default),
     is_global_(is_global)
   {}

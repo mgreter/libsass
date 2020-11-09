@@ -184,8 +184,8 @@ namespace Sass {
       if (secondNumber && secondNumber->hasAsSlash()) {
         return SASS_MEMORY_NEW(List, pstate, {
           list->get(0), list->get(1),
-          secondNumber->lhsAsSlash(),
-          secondNumber->rhsAsSlash()
+          secondNumber->lhsAsSlash().ptr(),
+          secondNumber->rhsAsSlash().ptr()
         });
       }
       if (secondString && !secondString->hasQuotes()

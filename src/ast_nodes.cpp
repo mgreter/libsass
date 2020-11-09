@@ -414,6 +414,14 @@ namespace Sass {
     return this->assertString(logger, name);
   }
 
+  // Assert and return a map/nullptr or throws if incompatible
+  Map* Value::assertMapOrNull(Logger& logger, const sass::string& name)
+  {
+    if (this->isNull()) return nullptr;
+    return this->assertMap(logger, name);
+  }
+
+
   // Assert and return an argument list or throws if incompatible
   ArgumentList* Value::assertArgumentList(Logger& logger, const sass::string& name)
   {

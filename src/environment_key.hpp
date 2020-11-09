@@ -88,6 +88,10 @@ namespace Sass {
       return *this;
     }
 
+    bool isPrivate() {
+      return _norm[0] == '-';
+    }
+
     // Compare normalization forms
     bool operator==(const EnvKey& rhs) const
     {
