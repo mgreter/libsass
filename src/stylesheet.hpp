@@ -6,6 +6,7 @@
 #include "capi_sass.hpp"
 
 #include "file.hpp"
+#include "ast_nodes.hpp"
 
 namespace Sass {
 

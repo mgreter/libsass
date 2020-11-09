@@ -10,6 +10,7 @@
 
 #include <map>
 #include "file.hpp"
+#include "stylesheet.hpp"
 #include "ast_callables.hpp"
 
 // #include "output.hpp"

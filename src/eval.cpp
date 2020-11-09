@@ -1210,47 +1210,55 @@ namespace Sass {
 
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {
-    UserDefinedCallableObj mixin = node->midx().isValid() ?
+    CallableObj rule = node->midx().isValid() ?
       compiler.varRoot.getMixin(node->midx()).ptr() :
       compiler.varRoot.getMixin(node->name());
 
-    if (mixin == nullptr) {
+    if (rule == nullptr) {
       compiler.addFinalStackTrace(node->pstate());
       throw Exception::RuntimeException(
         logger456, "Undefined mixin.");
     }
 
-    UserDefinedCallableObj callable;
+    if (auto mixin = rule->isaUserDefinedCallable()) {
 
-    if (node->content() != nullptr) {
+      UserDefinedCallableObj callable;
 
-      callable = SASS_MEMORY_NEW(
-        UserDefinedCallable,
-        node->pstate(), node->name(),
-        node->content(), content88);
+      if (node->content() != nullptr) {
 
-      MixinRule* rule = mixin->declaration()->isaMixinRule();
-      node->content()->cidx(rule->cidx());
+        callable = SASS_MEMORY_NEW(
+          UserDefinedCallable,
+          node->pstate(), node->name(),
+          node->content().ptr(), content88);
 
-      if (!rule || !rule->hasContent()) {
-        SourceSpan span(node->content()->pstate());
-        callStackFrame frame(logger456, span);
-        throw Exception::RuntimeException(logger456,
-          "Mixin doesn't accept a content block.");
+        MixinRule* rule = mixin->declaration()->isaMixinRule();
+        node->content()->cidx(rule->cidx());
+
+        if (!rule || !rule->hasContent()) {
+          SourceSpan span(node->content()->pstate());
+          callStackFrame frame(logger456, span);
+          throw Exception::RuntimeException(logger456,
+            "Mixin doesn't accept a content block.");
+        }
       }
+
+      LOCAL_FLAG(inMixin, true);
+
+      callStackFrame frame(logger456,
+        BackTrace(node->pstate(), mixin->envkey().orig(), true));
+
+      LOCAL_PTR(UserDefinedCallable, content88, callable);
+
+      ValueObj qwe = _runUserDefinedCallable(
+        node->arguments(), mixin, node->pstate());
+
+      // node->content()->accept(this);
     }
+    else if (auto builtin = rule->isaBuiltInCallable()) {
 
-    LOCAL_FLAG(inMixin, true);
+      builtin->execute(*this, node->arguments(), node->pstate(), false);
 
-    callStackFrame frame(logger456,
-      BackTrace(node->pstate(), mixin->envkey().orig(), true));
-
-    LOCAL_PTR(UserDefinedCallable, content88, callable);
-
-    ValueObj qwe = _runUserDefinedCallable(
-      node->arguments(), mixin, node->pstate());
-
-    // node->content()->accept(this);
+    }
 
     return nullptr;
   }
