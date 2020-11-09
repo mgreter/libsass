@@ -159,17 +159,18 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-		    ctx.registerBuiltInFunction("round", "$number", round);
-		    ctx.registerBuiltInFunction("ceil", "$number", ceil);
-		    ctx.registerBuiltInFunction("floor", "$number", floor);
-		    ctx.registerBuiltInFunction("abs", "$number", abs);
-		    ctx.registerBuiltInFunction("max", "$numbers...", max);
-		    ctx.registerBuiltInFunction("min", "$numbers...", min);
-		    ctx.registerBuiltInFunction("random", "$limit: null", random);
-		    ctx.registerBuiltInFunction("unit", "$number", unit);
-		    ctx.registerBuiltInFunction("percentage", "$number", percentage);
-		    ctx.registerBuiltInFunction("unitless", "$number", isUnitless);
-		    ctx.registerBuiltInFunction("comparable", "$number1, $number2", compatible);
+        Module& module(ctx.createModule("number"));
+		    module.addFunction("round", ctx.registerBuiltInFunction("round", "$number", round));
+		    module.addFunction("ceil", ctx.registerBuiltInFunction("ceil", "$number", ceil));
+		    module.addFunction("floor", ctx.registerBuiltInFunction("floor", "$number", floor));
+		    module.addFunction("abs", ctx.registerBuiltInFunction("abs", "$number", abs));
+		    module.addFunction("max", ctx.registerBuiltInFunction("max", "$numbers...", max));
+		    module.addFunction("min", ctx.registerBuiltInFunction("min", "$numbers...", min));
+		    module.addFunction("random", ctx.registerBuiltInFunction("random", "$limit: null", random));
+		    module.addFunction("unit", ctx.registerBuiltInFunction("unit", "$number", unit));
+		    module.addFunction("percentage", ctx.registerBuiltInFunction("percentage", "$number", percentage));
+		    module.addFunction("unitless", ctx.registerBuiltInFunction("unitless", "$number", isUnitless));
+		    module.addFunction("comparable", ctx.registerBuiltInFunction("comparable", "$number1, $number2", compatible));
 	    }
 
       /*******************************************************************/

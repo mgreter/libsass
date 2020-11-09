@@ -171,16 +171,16 @@ namespace Sass {
 
 	    void registerFunctions(Compiler& ctx)
 	    {
-
-		    ctx.registerBuiltInFunction("unquote", "$string", unquote);
-		    ctx.registerBuiltInFunction("quote", "$string", quote);
-		    ctx.registerBuiltInFunction("to-upper-case", "$string", toUpperCase);
-		    ctx.registerBuiltInFunction("to-lower-case", "$string", toLowerCase);
-		    ctx.registerBuiltInFunction("str-length", "$string", length);
-		    ctx.registerBuiltInFunction("str-insert", "$string, $insert, $index", insert);
-		    ctx.registerBuiltInFunction("str-index", "$string, $substring", index);
-		    ctx.registerBuiltInFunction("str-slice", "$string, $start-at, $end-at: -1", slice);
-		    ctx.registerBuiltInFunction("unique-id", "", uniqueId);
+        Module& module(ctx.createModule("string"));
+		    module.addFunction("unquote", ctx.registerBuiltInFunction("unquote", "$string", unquote));
+		    module.addFunction("quote", ctx.registerBuiltInFunction("quote", "$string", quote));
+		    module.addFunction("to-upper-case", ctx.registerBuiltInFunction("to-upper-case", "$string", toUpperCase));
+		    module.addFunction("to-lower-case", ctx.registerBuiltInFunction("to-lower-case", "$string", toLowerCase));
+		    module.addFunction("length", ctx.registerBuiltInFunction("str-length", "$string", length));
+		    module.addFunction("insert", ctx.registerBuiltInFunction("str-insert", "$string, $insert, $index", insert));
+		    module.addFunction("index", ctx.registerBuiltInFunction("str-index", "$string, $substring", index));
+		    module.addFunction("slice", ctx.registerBuiltInFunction("str-slice", "$string, $start-at, $end-at: -1", slice));
+		    module.addFunction("unique-id", ctx.registerBuiltInFunction("unique-id", "", uniqueId));
 
 	    }
 

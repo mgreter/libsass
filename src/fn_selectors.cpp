@@ -192,14 +192,15 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-		    ctx.registerBuiltInFunction("selector-nest", "$selectors...", nest);
-		    ctx.registerBuiltInFunction("selector-append", "$selectors...", append);
-		    ctx.registerBuiltInFunction("selector-extend", "$selector, $extendee, $extender", extend);
-		    ctx.registerBuiltInFunction("selector-replace", "$selector, $original, $replacement", replace);
-		    ctx.registerBuiltInFunction("selector-unify", "$selector1, $selector2", unify);
-		    ctx.registerBuiltInFunction("is-superselector", "$super, $sub", isSuper);
-		    ctx.registerBuiltInFunction("simple-selectors", "$selector", simple);
-		    ctx.registerBuiltInFunction("selector-parse", "$selector", parse);
+        Module& module(ctx.createModule("selector"));
+        module.addFunction("nest", ctx.registerBuiltInFunction("selector-nest", "$selectors...", nest));
+		    module.addFunction("append", ctx.registerBuiltInFunction("selector-append", "$selectors...", append));
+		    module.addFunction("extend", ctx.registerBuiltInFunction("selector-extend", "$selector, $extendee, $extender", extend));
+		    module.addFunction("replace", ctx.registerBuiltInFunction("selector-replace", "$selector, $original, $replacement", replace));
+		    module.addFunction("unify", ctx.registerBuiltInFunction("selector-unify", "$selector1, $selector2", unify));
+		    module.addFunction("is-superselector", ctx.registerBuiltInFunction("is-superselector", "$super, $sub", isSuper));
+		    module.addFunction("simple-selectors", ctx.registerBuiltInFunction("simple-selectors", "$selector", simple));
+		    module.addFunction("parse", ctx.registerBuiltInFunction("selector-parse", "$selector", parse));
 	    }
 
       /*******************************************************************/

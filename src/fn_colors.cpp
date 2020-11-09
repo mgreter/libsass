@@ -1070,79 +1070,80 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
       {
+        Module& module(ctx.createModule("color"));
 
-        ctx.registerBuiltInOverloadFns("rgb", {
+        module.addFunction("rgb", ctx.registerBuiltInOverloadFns("rgb", {
           std::make_pair("$red, $green, $blue, $alpha", rgb4arg),
           std::make_pair("$red, $green, $blue", rgb3arg),
           std::make_pair("$color, $alpha", rgb2arg),
           std::make_pair("$channels", rgb1arg),
-        });
-        ctx.registerBuiltInOverloadFns("rgba", {
+        }));
+        module.addFunction("rgba", ctx.registerBuiltInOverloadFns("rgba", {
           std::make_pair("$red, $green, $blue, $alpha", rgba4arg),
           std::make_pair("$red, $green, $blue", rgba3arg),
           std::make_pair("$color, $alpha", rgba2arg),
           std::make_pair("$channels", rgba1arg),
-        });
-        ctx.registerBuiltInOverloadFns("hsl", {
+        }));
+        module.addFunction("hsl", ctx.registerBuiltInOverloadFns("hsl", {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsl4arg),
           std::make_pair("$hue, $saturation, $lightness", hsl3arg),
           std::make_pair("$color, $alpha", hsl2arg),
           std::make_pair("$channels", hsl1arg),
-        });
-        ctx.registerBuiltInOverloadFns("hsla", {
+        }));
+        module.addFunction("hsla", ctx.registerBuiltInOverloadFns("hsla", {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsla4arg),
           std::make_pair("$hue, $saturation, $lightness", hsla3arg),
           std::make_pair("$color, $alpha", hsla2arg),
           std::make_pair("$channels", hsla1arg),
-        });
-        ctx.registerBuiltInOverloadFns("hwb", {
+        }));
+        module.addFunction("hwb", ctx.registerBuiltInOverloadFns("hwb", {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", hwb4arg),
           std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
           std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
-        });
-        ctx.registerBuiltInOverloadFns("hwba", {
+        }));
+        module.addFunction("hwba", ctx.registerBuiltInOverloadFns("hwba", {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
           std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
           std::make_pair("$color, $alpha", hwba2arg),
           std::make_pair("$channels", hwba1arg),
-        });
+        }));
 
-        ctx.registerBuiltInFunction("red", "$color", red);
-        ctx.registerBuiltInFunction("green", "$color", green);
-        ctx.registerBuiltInFunction("blue", "$color", blue);
-        ctx.registerBuiltInFunction("hue", "$color", hue);
-        ctx.registerBuiltInFunction("lightness", "$color", lightness);
-        ctx.registerBuiltInFunction("saturation", "$color", saturation);
-        //ctx.registerBuiltInFunction("blackness", "$color", blackness);
-        //ctx.registerBuiltInFunction("whiteness", "$color", whiteness);
-        ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert);
-        ctx.registerBuiltInFunction("grayscale", "$color", grayscale);
-        ctx.registerBuiltInFunction("complement", "$color", complement);
-        ctx.registerBuiltInFunction("lighten", "$color, $amount", lighten);
-        ctx.registerBuiltInFunction("darken", "$color, $amount", darken);
-        ctx.registerBuiltInFunction("desaturate", "$color, $amount", desaturate);
-        ctx.registerBuiltInOverloadFns("saturate", {
+        module.addFunction("red", ctx.registerBuiltInFunction("red", "$color", red));
+        module.addFunction("green", ctx.registerBuiltInFunction("green", "$color", green));
+        module.addFunction("blue", ctx.registerBuiltInFunction("blue", "$color", blue));
+        module.addFunction("hue", ctx.registerBuiltInFunction("hue", "$color", hue));
+        module.addFunction("lightness", ctx.registerBuiltInFunction("lightness", "$color", lightness));
+        module.addFunction("saturation", ctx.registerBuiltInFunction("saturation", "$color", saturation));
+        //module.addFunction("blackness", ctx.registerBuiltInFunction("blackness", "$color", blackness);
+        //module.addFunction("whiteness", ctx.registerBuiltInFunction("whiteness", "$color", whiteness);
+        module.addFunction("invert", ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert));
+        module.addFunction("grayscale", ctx.registerBuiltInFunction("grayscale", "$color", grayscale));
+        module.addFunction("complement", ctx.registerBuiltInFunction("complement", "$color", complement));
+        module.addFunction("lighten", ctx.registerBuiltInFunction("lighten", "$color, $amount", lighten));
+        module.addFunction("darken", ctx.registerBuiltInFunction("darken", "$color, $amount", darken));
+        module.addFunction("desaturate", ctx.registerBuiltInFunction("desaturate", "$color, $amount", desaturate));
+        module.addFunction("saturate", ctx.registerBuiltInOverloadFns("saturate", {
           std::make_pair("$amount", saturate1arg),
           std::make_pair("$color, $amount", saturate2arg),
-          });
+          }));
 
-        ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue);
-        ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust);
-        ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change);
-        ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale);
-        ctx.registerBuiltInFunction("mix", "$color1, $color2, $weight: 50%", mix);
+        module.addFunction("adjust-hue", ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue));
+        module.addFunction("adjust-color", ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust));
+        module.addFunction("change-color", ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change));
+        module.addFunction("scale-color", ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale));
+        module.addFunction("mix", ctx.registerBuiltInFunction("mix", "$color1, $color2, $weight: 50%", mix));
 
-        ctx.registerBuiltInFunction("opacify", "$color, $amount", opacify);
-        ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify);
-        ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize);
-        ctx.registerBuiltInFunction("transparentize", "$color, $amount", transparentize);
-        ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr);
-        ctx.registerBuiltInOverloadFns("alpha", {
+        module.addFunction("opacify", ctx.registerBuiltInFunction("opacify", "$color, $amount", opacify));
+        module.addFunction("fade-in", ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify));
+        module.addFunction("fade-out", ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize));
+        module.addFunction("transparentize", ctx.registerBuiltInFunction("transparentize", "$color, $amount", transparentize));
+        module.addFunction("ie-hex-str", ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr));
+        module.addFunction("alpha", ctx.registerBuiltInOverloadFns("alpha", {
           std::make_pair("$color", alphaOne),
           std::make_pair("$args...", alphaAny),
-          });
-        ctx.registerBuiltInFunction("opacity", "$color", opacity);
+          }));
+        module.addFunction("opacity", ctx.registerBuiltInFunction("opacity", "$color", opacity));
 
       }
 

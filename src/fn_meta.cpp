@@ -229,24 +229,26 @@ namespace Sass {
 	    void registerFunctions(Compiler& compiler)
 	    {
 
+        Module& module(compiler.createModule("meta"));
+
 		    // Meta functions
-        compiler.registerBuiltInFunction("feature-exists", "$feature", featureExists);
-        compiler.registerBuiltInFunction("type-of", "$value", typeOf);
-        compiler.registerBuiltInFunction("inspect", "$value", inspect);
-        compiler.registerBuiltInFunction("keywords", "$args", keywords);
+        module.addFunction("feature-exists", compiler.registerBuiltInFunction("feature-exists", "$feature", featureExists));
+        module.addFunction("type-of", compiler.registerBuiltInFunction("type-of", "$value", typeOf));
+        module.addFunction("inspect", compiler.registerBuiltInFunction("inspect", "$value", inspect));
+        module.addFunction("keywords", compiler.registerBuiltInFunction("keywords", "$args", keywords));
 
 		    // ToDo: dart-sass keeps them on the local environment scope, see below:
 		    // These functions are defined in the context of the evaluator because
 		    // they need access to the [_environment] or other local state.
-        compiler.registerBuiltInFunction("global-variable-exists", "$name, $module: null", globalVariableExists);
-        compiler.registerBuiltInFunction("variable-exists", "$name", variableExists);
-        compiler.registerBuiltInFunction("function-exists", "$name, $module: null", functionExists);
-        compiler.registerBuiltInFunction("mixin-exists", "$name, $module: null", mixinExists);
-        compiler.registerBuiltInFunction("content-exists", "", contentExists);
-		    // compiler.registerBuiltInFunction("module-variables", "$module", moduleVariables);
-		    // compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions);
-        compiler.registerBuiltInFunction("get-function", "$name, $css: false, $module: null", getFunction);
-        compiler.registerBuiltInFunction("call", "$function, $args...", call);
+        module.addFunction("global-variable-exists", compiler.registerBuiltInFunction("global-variable-exists", "$name, $module: null", globalVariableExists));
+        module.addFunction("variable-exists", compiler.registerBuiltInFunction("variable-exists", "$name", variableExists));
+        module.addFunction("function-exists", compiler.registerBuiltInFunction("function-exists", "$name, $module: null", functionExists));
+        module.addFunction("mixin-exists", compiler.registerBuiltInFunction("mixin-exists", "$name, $module: null", mixinExists));
+        module.addFunction("content-exists", compiler.registerBuiltInFunction("content-exists", "", contentExists));
+		    // module.addFunction("get", compiler.registerBuiltInFunction("module-variables", "$module", moduleVariables));
+		    // module.addFunction("get", compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions));
+        module.addFunction("get-function", compiler.registerBuiltInFunction("get-function", "$name, $css: false, $module: null", getFunction));
+        module.addFunction("call", compiler.registerBuiltInFunction("call", "$function, $args...", call));
 
 	    }
 

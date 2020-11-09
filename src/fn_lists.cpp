@@ -235,15 +235,16 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-		    ctx.registerBuiltInFunction("length", "$list", length);
-		    ctx.registerBuiltInFunction("nth", "$list, $n", nth);
-		    ctx.registerBuiltInFunction("set-nth", "$list, $n, $value", setNth);
-		    ctx.registerBuiltInFunction("join", "$list1, $list2, $separator: auto, $bracketed: auto", join);
-		    ctx.registerBuiltInFunction("append", "$list, $val, $separator: auto", append);
-		    ctx.registerBuiltInFunction("zip", "$lists...", zip);
-		    ctx.registerBuiltInFunction("index", "$list, $value", index);
-		    ctx.registerBuiltInFunction("list-separator", "$list", separator);
-		    ctx.registerBuiltInFunction("is-bracketed", "$list", isBracketed);
+        Module& module(ctx.createModule("color"));
+        module.addFunction("length", ctx.registerBuiltInFunction("length", "$list", length));
+		    module.addFunction("nth", ctx.registerBuiltInFunction("nth", "$list, $n", nth));
+		    module.addFunction("set-nth", ctx.registerBuiltInFunction("set-nth", "$list, $n, $value", setNth));
+		    module.addFunction("join", ctx.registerBuiltInFunction("join", "$list1, $list2, $separator: auto, $bracketed: auto", join));
+		    module.addFunction("append", ctx.registerBuiltInFunction("append", "$list, $val, $separator: auto", append));
+		    module.addFunction("zip", ctx.registerBuiltInFunction("zip", "$lists...", zip));
+		    module.addFunction("index", ctx.registerBuiltInFunction("index", "$list, $value", index));
+		    module.addFunction("list-separator", ctx.registerBuiltInFunction("list-separator", "$list", separator));
+		    module.addFunction("is-bracketed", ctx.registerBuiltInFunction("is-bracketed", "$list", isBracketed));
 	    }
 
       /*******************************************************************/
