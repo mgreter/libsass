@@ -379,6 +379,32 @@ namespace Sass {
     Statement(pstate)
   {}
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  UseRule::UseRule(
+    const SourceSpan& pstate,
+    const sass::string& url,
+    sass::vector<ConfiguredVariable>&& config) :
+    Statement(pstate),
+    url_(url),
+    config_(std::move(config))
+  {}
+
+  ForwardRule::ForwardRule(
+    const SourceSpan& pstate,
+    const sass::string& url,
+    sass::vector<ConfiguredVariable>&& config,
+    std::set<sass::string>&& toggledVariables,
+    std::set<sass::string>&& toggledCallables,
+    bool isShown) :
+    isShown_(isShown),
+    Statement(pstate),
+    url_(url),
+    config_(std::move(config)),
+    toggledVariables_(std::move(toggledVariables)),
+    toggledCallables_(std::move(toggledCallables))
+  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

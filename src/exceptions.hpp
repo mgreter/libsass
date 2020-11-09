@@ -35,7 +35,7 @@ namespace Sass {
       "LibSass will abort here in order to avoid a possible stack overflow.\n";
 
     class Base : public std::runtime_error {
-      protected:
+      public:
         sass::string msg;
       public:
         StackTraces traces;

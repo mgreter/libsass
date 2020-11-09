@@ -112,24 +112,24 @@ namespace Sass {
 
     Offset flagStart(scanner.offset);
     while (scanner.scanChar($exclamation)) {
-       sass::string flag = readIdentifier();
-       if (flag == "default") {
-         guarded = true;
-       }
-       else if (flag == "global") {
-         if (!ns.empty()) {
-           error("!global isn't allowed for variables in other modules.",
-             scanner.relevantSpanFrom(flagStart));
-         }
-         global = true;
-       }
-       else {
-         error("Invalid flag name.",
-           scanner.relevantSpanFrom(flagStart));
-       }
+      sass::string flag = readIdentifier();
+      if (flag == "default") {
+        guarded = true;
+      }
+      else if (flag == "global") {
+        if (!ns.empty()) {
+          error("!global isn't allowed for variables in other modules.",
+            scanner.relevantSpanFrom(flagStart));
+        }
+        global = true;
+      }
+      else {
+        error("Invalid flag name.",
+          scanner.relevantSpanFrom(flagStart));
+      }
 
-       scanWhitespace();
-       flagStart = scanner.offset;
+      scanWhitespace();
+      flagStart = scanner.offset;
     }
 
     expectStatementSeparator("variable declaration");
@@ -211,7 +211,7 @@ namespace Sass {
         return readDeclarationOrStyleRule();
       }
       else {
-        return readStyleRule();
+        return readVariableDeclarationOrStyleRule();
       }
 
     }
@@ -219,8 +219,174 @@ namespace Sass {
   }
   // EO readStatement
 
+  // Tries to parse a namespaced [VariableDeclaration], and returns the value
+  // parsed so far if it fails.
+  //
+  // This can return either an [Interpolation], indicating that it couldn't
+  // consume a variable declaration and that property declaration or selector
+  // parsing should be attempted; or it can return a [VariableDeclaration],
+  // indicating that it successfully consumed a variable declaration.
+  bool StylesheetParser::tryVariableDeclarationOrInterpolation(
+    AssignRule*& assignment, Interpolation*& interpolation)
+  {
+
+    if (!lookingAtIdentifier()) {
+      interpolation = readInterpolatedIdentifier();
+      return true;
+    }
+
+    Offset start(scanner.offset);
+    sass::string identifier(readIdentifier());
+    if (scanner.matches(".$")) {
+      scanner.readChar();
+      assignment = readVariableDeclarationWithoutNamespace(identifier, start);
+      return true;
+    }
+    else {
+
+      ItplStringObj prefix(SASS_MEMORY_NEW(ItplString,
+        scanner.relevantSpanFrom(start), identifier));
+
+      // Parse the rest of an interpolated identifier
+      // if one exists, so callers don't have to.
+      if (lookingAtInterpolatedIdentifierBody()) {
+        interpolation = readInterpolatedIdentifier();
+        interpolation->unshift(prefix.ptr());
+      }
+      else {
+        interpolation = SASS_MEMORY_NEW(Interpolation,
+          scanner.relevantSpanFrom(start), prefix);
+      }
+
+      return true;
+    }
+
+
+    return false;
+  }
+
+  AssignRule* StylesheetParser::readVariableDeclarationWithNamespace()
+  {
+    Offset start(scanner.offset);
+    sass::string ns(readIdentifier());
+    scanner.expectChar($dot);
+    return readVariableDeclarationWithoutNamespace(ns, start);
+  }
+
+  // Returns whether [identifier] is module-private.
+  // Assumes [identifier] is a valid Sass identifier.
+  bool isPrivate(const sass::string& identifier)
+  {
+    return identifier[0] == $dash ||
+      identifier[0] == $underscore;
+  }
+
+  // Throws an error if [identifier] isn't public.
+  void StylesheetParser::assertPublicIdentifier(
+    const sass::string& identifier, Offset start)
+  {
+    if (!isPrivate(identifier)) return;
+    error("Private members can't be accessed from outside their modules.",
+      scanner.relevantSpanFrom(start));
+  }
+
+  AssignRule* StylesheetParser::readVariableDeclarationWithoutNamespace(
+    const sass::string& ns, Offset start)
+  {
+
+    // LocalOption<SilentCommentObj>
+    //   scomp(lastSilentComment, nullptr);
+
+    sass::string vname(variableName());
+
+    if (!ns.empty()) {
+      assertPublicIdentifier(vname, start);
+    }
+
+    EnvKey name(vname);
+
+    if (plainCss()) {
+      error("Sass variables aren't allowed in plain CSS.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    scanWhitespace();
+    scanner.expectChar($colon);
+    scanWhitespace();
+
+    ExpressionObj value = readExpression();
+
+    bool guarded = false;
+    bool global = false;
+
+    Offset flagStart(scanner.offset);
+    while (scanner.scanChar($exclamation)) {
+      sass::string flag = readIdentifier();
+      if (flag == "default") {
+        guarded = true;
+      }
+      else if (flag == "global") {
+        if (!ns.empty()) {
+          error("!global isn't allowed for variables in other modules.",
+            scanner.relevantSpanFrom(flagStart));
+        }
+        global = true;
+      }
+      else {
+        error("Invalid flag name.",
+          scanner.relevantSpanFrom(flagStart));
+      }
+
+      scanWhitespace();
+      flagStart = scanner.offset;
+    }
+
+    expectStatementSeparator("variable declaration");
+
+    bool has_local = false;
+    // Skip to optional global scope
+    EnvFrame* frame = global ?
+      context.varStack.front() :
+      context.varStack.back();
+    // As long as we are not in a loop construct, we
+    // can utilize full static variable optimizations.
+    VarRef vidx(inLoopDirective ?
+      frame->getLocalVariableIdx(name) :
+      frame->getVariableIdx(name));
+    // Check if we found a local variable to use
+    if (vidx.isValid()) has_local = true;
+    // Otherwise we must create a new local variable
+    else vidx = frame->createVariable(name);
+
+    // JIT self assignments
+    #ifdef SASS_OPTIMIZE_SELF_ASSIGN
+    // Optimization for cases where functions manipulate same variable
+    // We detect these cases here in order for the function to optimize
+    // self-assignment case (e.g. map-merge). It can then manipulate
+    // the value passed as the first argument directly in-place.
+    if (has_local && !global) {
+      // Certainly looks a bit like some poor man's JIT 
+      if (auto fn = value->isaFunctionExpression()) {
+        auto& pos(fn->arguments()->positional());
+        if (pos.size() > 0) {
+          if (auto var = pos[0]->isaVariableExpression()) {
+            if (var->name() == name) { // same name
+              fn->selfAssign(true); // Up to 15% faster
+            }
+          }
+        }
+      }
+    }
+    #endif
+
+    AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
+      scanner.relevantSpanFrom(start), name, { vidx }, value, guarded, global);
+    if (inLoopDirective) frame->assignments.push_back(declaration);
+    return declaration;
+  }
+
   // Consumes a style rule.
-  StyleRule* StylesheetParser::readStyleRule()
+  StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
   {
     LOCAL_FLAG(inStyleRule, true);
 
@@ -229,6 +395,10 @@ namespace Sass {
     // we do support the backslash because it's easy to do.
     if (isIndented()) scanner.scanChar($backslash);
     InterpolationObj readStyleRule(styleRuleSelector());
+    if (itpl) {
+      itpl->concat(readStyleRule); readStyleRule = itpl;
+      readStyleRule->pstate(scanner.relevantSpanFrom(itpl->pstate().position));
+    }
     EnvFrame local(context.varStack, false);
 
     Offset start(scanner.offset);
@@ -269,8 +439,7 @@ namespace Sass {
   {
 
     if (plainCss() && inStyleRule && !inUnknownAtRule) {
-      // _propertyOrVariableDeclaration
-      return readDeclaration();
+      return readPropertyOrVariableDeclaration();
     }
 
     // The indented syntax allows a single backslash to distinguish a style rule
@@ -282,11 +451,13 @@ namespace Sass {
 
     Offset start(scanner.offset);
     InterpolationBuffer buffer(scanner);
-    Declaration* declaration = tryDeclarationOrBuffer(buffer);
+    Statement* declaration = tryDeclarationOrBuffer(buffer);
 
     if (declaration != nullptr) {
       return declaration;
     }
+
+    // This differs from dart-sass
 
     buffer.addInterpolation(styleRuleSelector());
     SourceSpan selectorPstate(scanner.relevantSpanFrom(start));
@@ -313,22 +484,44 @@ namespace Sass {
   }
   // readDeclarationOrStyleRule
 
+  Statement* StylesheetParser::readVariableDeclarationOrStyleRule()
+  {
+
+    if (plainCss()) return readStyleRule();
+
+    // The indented syntax allows a single backslash to distinguish a style rule
+    // from old-style property syntax. We don't support old property syntax, but
+    // we do support the backslash because it's easy to do.
+    if (isIndented() && scanner.scanChar($backslash)) return readStyleRule();
+
+    if (!lookingAtIdentifier()) return readStyleRule();
+
+    Offset start(scanner.offset);
+    AssignRule* assignment = nullptr;
+    Interpolation* interpolation = nullptr;
+    tryVariableDeclarationOrInterpolation(assignment, interpolation);
+    if (assignment) return assignment;
+    return readStyleRule(interpolation); // , start
+  }
+
 
   // Tries to parse a declaration, and returns the value parsed so
   // far if it fails. This can return either an [InterpolationBuffer],
   // indicating that it couldn't consume a declaration and that selector
   // parsing should be attempted; or it can return a [Declaration],
   // indicating that it successfully consumed a declaration.
-  Declaration* StylesheetParser::tryDeclarationOrBuffer(InterpolationBuffer& nameBuffer)
+  Statement* StylesheetParser::tryDeclarationOrBuffer(InterpolationBuffer& nameBuffer)
   {
     Offset start(scanner.offset);
 
     // Allow the "*prop: val", ":prop: val",
     // "#prop: val", and ".prop: val" hacks.
     uint8_t first = scanner.peekChar();
+    bool startsWithPunctuation = false;
     if (first == $colon || first == $asterisk || first == $dot ||
         (first == $hash && scanner.peekChar(1) != $lbrace)) {
       sass::sstream strm;
+      startsWithPunctuation = true;
       strm << scanner.readChar();
       strm << rawText(&StylesheetParser::scanWhitespace);
       nameBuffer.write(strm.str(), scanner.relevantSpanFrom(start));
@@ -338,7 +531,18 @@ namespace Sass {
       return nullptr;
     }
 
+    if (startsWithPunctuation == false) {
+      Interpolation* itpl = nullptr;
+      AssignRule* assignment = nullptr;
+      tryVariableDeclarationOrInterpolation(assignment, itpl);
+      if (assignment != nullptr) return assignment;
+      if (itpl) nameBuffer.addInterpolation(itpl);
+    }
+    else {
     nameBuffer.addInterpolation(readInterpolatedIdentifier());
+    }
+
+    isUseAllowed = false;
     if (scanner.matches("/*")) nameBuffer.write(rawText(&StylesheetParser::loudComment));
 
     StringBuffer midBuffer;
@@ -446,7 +650,7 @@ namespace Sass {
   // Consumes a property declaration. This is only used in contexts where
   // declarations are allowed but style rules are not, such as nested
   // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
-  Declaration* StylesheetParser::readDeclaration(bool parseCustomProperties)
+  Statement* StylesheetParser::readDeclaration(bool parseCustomProperties)
   {
 
     Offset start(scanner.offset);
@@ -511,13 +715,87 @@ namespace Sass {
   }
   // EO readDeclaration
 
+    // Consumes a property declaration. This is only used in contexts where
+  // declarations are allowed but style rules are not, such as nested
+  // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
+  Statement* StylesheetParser::readPropertyOrVariableDeclaration(bool parseCustomProperties)
+  {
+
+    Offset start(scanner.offset);
+
+    InterpolationObj name;
+    // Allow the "*prop: val", ":prop: val",
+    // "#prop: val", and ".prop: val" hacks.
+    uint8_t first = scanner.peekChar();
+    if (first == $colon ||
+      first == $asterisk ||
+      first == $dot ||
+      (first == $hash && scanner.peekChar(1) != $lbrace)) {
+      InterpolationBuffer nameBuffer(scanner);
+      nameBuffer.write(scanner.readChar());
+      nameBuffer.write(rawText(&StylesheetParser::scanWhitespace));
+      nameBuffer.addInterpolation(readInterpolatedIdentifier());
+      name = nameBuffer.getInterpolation(scanner.relevantSpanFrom(start));
+    }
+    else if (!plainCss()) {
+      AssignRule* assignment = nullptr;
+      Interpolation* interpolation = nullptr;
+      tryVariableDeclarationOrInterpolation(assignment, interpolation);
+      if (assignment) return assignment; else name = interpolation;
+    }
+    else {
+      name = readInterpolatedIdentifier();
+    }
+
+    scanWhitespace();
+    scanner.expectChar($colon);
+    scanWhitespace();
+
+    if (parseCustomProperties && startsWith(name->getInitialPlain(), "--", 2)) {
+      InterpolationObj value = readInterpolatedDeclarationValue();
+      expectStatementSeparator("custom property");
+      return SASS_MEMORY_NEW(Declaration,
+        scanner.relevantSpanFrom(start),
+        name, value->wrapInStringExpression());
+    }
+
+    if (lookingAtChildren()) {
+      if (plainCss()) {
+        error("Nested declarations aren't allowed in plain CSS.",
+          scanner.rawSpan());
+      }
+      return withChildren<Declaration>(
+        &StylesheetParser::readDeclarationOrAtRule,
+        start, name, nullptr, false);
+    }
+
+    ExpressionObj value = readExpression();
+    if (lookingAtChildren()) {
+      if (plainCss()) {
+        error("Nested declarations aren't allowed in plain CSS.",
+          scanner.rawSpan());
+      }
+      // only without children;
+      return withChildren<Declaration>(
+        &StylesheetParser::readDeclarationOrAtRule,
+        start, name, value, false);
+    }
+    else {
+      expectStatementSeparator();
+      return SASS_MEMORY_NEW(Declaration,
+        scanner.relevantSpanFrom(start), name, value);
+    }
+
+  }
+  // EO readDeclaration
+
   // Consumes a statement that's allowed within a declaration.
   Statement* StylesheetParser::readDeclarationOrAtRule()
   {
     if (scanner.peekChar() == $at) {
       return readDeclarationAtRule();
     }
-    return readDeclaration(false);
+    return readPropertyOrVariableDeclaration(false);
   }
   // EO readDeclarationOrAtRule
 
@@ -540,7 +818,7 @@ namespace Sass {
     // name, we always set it to `false` and then set it back to its previous
     // value if we're parsing an allowed rule.
     bool wasUseAllowed = isUseAllowed;
-    LOCAL_FLAG(isUseAllowed, false);
+    isUseAllowed = false;
 
     sass::string plain(name->getPlainString());
     if (plain == "at-root") {
@@ -601,10 +879,16 @@ namespace Sass {
       return readSupportsRule(start);
     }
     else if (plain == "use") {
-      return readAnyAtRule(start, name);
-      // isUseAllowed = wasUseAllowed;
-      // if (!root) throwDisallowedAtRule(start);
-      // return parseUseRule(start);
+      // return readAnyAtRule(start, name);
+      isUseAllowed = wasUseAllowed;
+      if (!root) throwDisallowedAtRule(start);
+      return readUseRule(start);
+    }
+    else if (plain == "forward") {
+      // return readAnyAtRule(start, name);
+      isUseAllowed = wasUseAllowed;
+      if (!root) throwDisallowedAtRule(start);
+      return readForwardRule(start);
     }
     else if (plain == "warn") {
       return readWarnRule(start);
@@ -900,6 +1184,7 @@ namespace Sass {
     // lastSilentComment = null;
     sass::string name = readIdentifier();
     sass::string normalized(name);
+
     scanWhitespace();
 
     ArgumentDeclarationObj arguments = parseArgumentDeclaration();
@@ -1033,6 +1318,164 @@ namespace Sass {
     expectStatementSeparator("@import rule");
     return rule.detach();
 
+  }
+
+  // Consumes a `@use` rule.
+  // [start] should point before the `@`.
+  UseRule* StylesheetParser::readUseRule(Offset start)
+  {
+    scanWhitespace();
+    sass::string url = string();
+    scanWhitespace();
+    auto ns = readUseNamespace(url, start);
+    scanWhitespace();
+
+    sass::vector<ConfiguredVariable> config;
+    readWithConfiguration(config, false);
+    expectStatementSeparator("@use rule");
+
+    if (isUseAllowed == false) {
+      throw Exception::ParserException(context,
+        "@use rules must be written before any other rules.");
+    }
+
+    return SASS_MEMORY_NEW(UseRule,
+      scanner.relevantSpanFrom(start),
+      url, std::move(config));
+  }
+
+  // Consumes a `@forward` rule.
+  // [start] should point before the `@`.
+  ForwardRule* StylesheetParser::readForwardRule(Offset start)
+  {
+    scanWhitespace();
+    sass::string url = string();
+
+    scanWhitespace();
+    sass::string prefix;
+    if (scanIdentifier("as")) {
+      scanWhitespace();
+      prefix = readIdentifier();
+      scanner.expectChar($asterisk);
+      scanWhitespace();
+    }
+
+    bool isShown = false;
+    bool isHidden = false;
+    std::set<sass::string> toggledVariables;
+    std::set<sass::string> toggledCallables;
+    if (scanIdentifier("show")) {
+      readForwardMembers(toggledVariables, toggledCallables);
+      isShown = true;
+    }
+    else if (scanIdentifier("hide")) {
+      readForwardMembers(toggledVariables, toggledCallables);
+      isHidden = true;
+    }
+
+    sass::vector<ConfiguredVariable> config;
+    readWithConfiguration(config, true);
+    expectStatementSeparator("@forward rule");
+    if (isUseAllowed == false) {
+      throw Exception::ParserException(context,
+        "@forward rules must be written before any other rules.");
+    }
+    return SASS_MEMORY_NEW(ForwardRule,
+      scanner.relevantSpanFrom(start),
+      url, std::move(config),
+      std::move(toggledVariables),
+      std::move(toggledCallables),
+      isShown);
+  }
+
+  /// Parses the namespace of a `@use` rule from an `as` clause, or returns the
+  /// default namespace from its URL.
+  sass::string StylesheetParser::readUseNamespace(const sass::string& url, Offset start)
+  {
+    if (scanIdentifier("as")) {
+      scanWhitespace();
+      return scanner.scanChar($asterisk)
+        ? "" : readIdentifier();
+    }
+    return url;
+  }
+
+  bool StylesheetParser::readWithConfiguration(
+    sass::vector<ConfiguredVariable>& vars,
+    bool allowGuarded)
+  {
+    if (!scanIdentifier("with")) return false;
+
+    scanWhitespace();
+    scanner.expectChar($lparen);
+
+    std::set<sass::string> seen;
+
+    while (true) {
+      scanWhitespace();
+
+      Offset variableStart(scanner.offset);
+      sass::string name(variableName());
+      scanWhitespace();
+      scanner.expectChar($colon);
+      scanWhitespace();
+      Expression* expression = readExpressionUntilComma();
+
+      bool guarded = false;
+      Offset flagStart(scanner.offset);
+      if (allowGuarded && scanner.scanChar($exclamation)) {
+        sass::string flag(readIdentifier());
+        if (flag == "default") {
+          guarded = true;
+        }
+        else {
+          error("Invalid flag name.",
+            scanner.relevantSpanFrom(flagStart));
+        }
+      }
+
+      if (seen.count(name) == 1) {
+        error("The same variable may only be configured once.",
+          scanner.relevantSpanFrom(variableStart));
+      }
+
+      seen.insert(name);
+
+      ConfiguredVariable variable;
+      variable.expression = expression;
+      variable.isGuarded = guarded;
+      variable.pstate = scanner.relevantSpanFrom(variableStart);
+      variable.name = name;
+      vars.push_back(variable);
+
+      if (!scanner.scanChar($comma)) break;
+      scanWhitespace();
+      if (!lookingAtExpression()) break;
+    }
+
+    scanner.expectChar($rparen);
+    return true;
+  }
+
+  void StylesheetParser::readForwardMembers(std::set<sass::string>& variables, std::set<sass::string>& callables)
+  {
+    try {
+      do {
+        scanWhitespace();
+        if (scanner.peekChar() == $dollar) {
+          variables.insert(variableName());
+        }
+        else {
+          callables.insert(readIdentifier());
+        }
+        scanWhitespace();
+      } while (scanner.scanChar($comma));
+    }
+    // ToDo: Profile how expensive this is
+    catch (Exception::ParserException& err) {
+      err.msg = "Expected variable, mixin, or function name";
+      throw err;
+    }
   }
 
   void StylesheetParser::scanImportArgument(ImportRule* rule)
@@ -3366,7 +3809,7 @@ namespace Sass {
     }
     else if (first == $hash && scanner.peekChar(1) == $lbrace) {
       ExpressionObj ex = readSingleInterpolation();
-      buffer.add(ex);
+      buffer.add(ex.ptr());
     }
     else {
       error("Expected identifier.",
