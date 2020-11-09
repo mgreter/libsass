@@ -497,6 +497,42 @@ namespace Sass {
     }
   };
 
+  /////////////////////////////////////////////////////////////////////////
+  // `@use` rule.
+  /////////////////////////////////////////////////////////////////////////
+  class UseRule final : public Statement
+  {
+  private:
+    ADD_CONSTREF(sass::string, url);
+  public:
+    // Value constructor
+    UseRule(
+      const SourceSpan& pstate,
+      const sass::string& url);
+    // Statement visitor to sass values entry function
+    Value* accept(StatementVisitor<Value*>* visitor) override final {
+      return visitor->visitUseRule(this);
+    }
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  // `@use` rule.
+  /////////////////////////////////////////////////////////////////////////
+  class ForwardRule final : public Statement
+  {
+  private:
+    ADD_CONSTREF(sass::string, url);
+  public:
+    // Value constructor
+    ForwardRule(
+      const SourceSpan& pstate,
+      const sass::string& url);
+      // Statement visitor to sass values entry function
+    Value* accept(StatementVisitor<Value*>* visitor) override final {
+      return visitor->visitForwardRule(this);
+    }
+  };
+
   /////////////////////////////////////
   // Assignments -- variable and value.
   /////////////////////////////////////

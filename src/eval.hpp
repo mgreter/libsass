@@ -310,7 +310,7 @@ namespace Sass {
     Value* visitErrorRule(ErrorRule* rule);
     Value* visitExtendRule(ExtendRule* rule);
     Value* visitForRule(ForRule* rule);
-    // Value* visitForwardRule(ForwardRule* rule);
+    Value* visitForwardRule(ForwardRule* rule);
     Value* visitFunctionRule(FunctionRule* rule);
     Value* visitIfRule(IfRule* rule);
     Value* visitImportRule(ImportRule* rule);
@@ -323,7 +323,7 @@ namespace Sass {
     Value* visitStyleRule(StyleRule* rule);
     // visitStylesheet
     Value* visitSupportsRule(SupportsRule* rule);
-    // Value* visitUseRule(UseRule* rule);
+    Value* visitUseRule(UseRule* rule);
     Value* visitAssignRule(AssignRule* rule);
     Value* visitWarnRule(WarnRule* rule);
     Value* visitWhileRule(WhileRule* rule);

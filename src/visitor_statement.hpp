@@ -26,7 +26,7 @@ namespace Sass {
     virtual T visitErrorRule(ErrorRule*) = 0;
     virtual T visitExtendRule(ExtendRule*) = 0;
     virtual T visitForRule(ForRule*) = 0;
-    // virtual T visitForwardRule(ForwardRule*) = 0;
+    virtual T visitForwardRule(ForwardRule*) = 0;
     virtual T visitFunctionRule(FunctionRule*) = 0;
     virtual T visitIfRule(IfRule*) = 0;
     virtual T visitImportRule(ImportRule*) = 0;
@@ -39,7 +39,7 @@ namespace Sass {
     virtual T visitStyleRule(StyleRule*) = 0;
     //virtual T visitStylesheet(Stylesheet*) = 0;
     virtual T visitSupportsRule(SupportsRule*) = 0;
-    // virtual T visitUseRule(UseRule*) = 0;
+    virtual T visitUseRule(UseRule*) = 0;
     // Renamed from visitVariableDeclaration
     virtual T visitAssignRule(AssignRule*) = 0;
     virtual T visitWarnRule(WarnRule*) = 0;
