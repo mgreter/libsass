@@ -1,9 +1,10 @@
-#include "source.hpp"
+#include "sources.hpp"
 
 #include <cstring>
 #include "unicode.hpp"
 #include "charcode.hpp"
 #include "character.hpp"
+#include "source_span.hpp"
 
 namespace Sass {
 
@@ -267,6 +268,13 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+
+  // Returns adjusted source span regarding interpolation.
+
+  SourceSpan SourceData::adjustSourceSpan(SourceSpan& pstate) const {
+    return pstate;
+  }
 
 }
 

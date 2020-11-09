@@ -1,6 +1,6 @@
 #include "capi_compiler.hpp"
 
-#include "source.hpp"
+#include "sources.hpp"
 #include "exceptions.hpp"
 
 #ifdef _MSC_VER

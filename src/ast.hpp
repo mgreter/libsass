@@ -16,6 +16,7 @@
 #include "ast_fwd_decl.hpp"
 #include "ast_helpers.hpp"
 #include "ast_nodes.hpp"
+#include "ast_imports.hpp"
 #include "ast_selectors.hpp"
 #include "ast_statements.hpp"
 #include "ast_supports.hpp"

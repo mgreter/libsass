@@ -4,6 +4,7 @@
 #include "parser_css.hpp"
 
 #include "character.hpp"
+#include "ast_imports.hpp"
 #include "ast_expressions.hpp"
 
 namespace Sass {
@@ -36,7 +37,7 @@ namespace Sass {
       SASS_MEMORY_NEW(Interpolation, span, url),
       queries.first, queries.second));
     entry->outOfOrder(false);
-    imp->append(entry);
+    imp->append(entry.ptr());
     return imp.detach();
   }
   // EO readImportRule

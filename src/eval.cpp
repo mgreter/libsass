@@ -1,10 +1,12 @@
 #include "eval.hpp"
 
 #include "cssize.hpp"
+#include "sources.hpp"
 #include "compiler.hpp"
 #include "stylesheet.hpp"
 #include "exceptions.hpp"
 #include "ast_values.hpp"
+#include "ast_imports.hpp"
 #include "ast_selectors.hpp"
 #include "ast_callables.hpp"
 #include "ast_statements.hpp"

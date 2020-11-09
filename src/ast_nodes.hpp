@@ -232,56 +232,6 @@ namespace Sass {
   };
 
   //////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////
-
-  class StaticImport final : public ImportBase
-  {
-  private:
-
-    // The URL for this import.
-    // This already contains quotes.
-    ADD_CONSTREF(InterpolationObj, url);
-
-    // The supports condition attached to this import,
-    // or `null` if no condition is attached.
-    ADD_CONSTREF(SupportsConditionObj, supports);
-
-    // The media query attached to this import,
-    // or `null` if no condition is attached.
-    ADD_CONSTREF(InterpolationObj, media);
-
-    // Flag to hoist import to the top.
-    ADD_CONSTREF(bool, outOfOrder);
-
-  public:
-
-    // Object constructor by values
-    StaticImport(const SourceSpan& pstate,
-      InterpolationObj url,
-      SupportsConditionObj supports = {},
-      InterpolationObj media = {});
-    // Implement final up-casting method
-    IMPLEMENT_ISA_CASTER(StaticImport);
-  };
-  // EO class StaticImport
-
-  // Dynamic import beside its name must have a static url
-  // We do not support to load sass partials programmatic
-  // They also don't allow any supports or media queries.
-  class IncludeImport final : public ImportBase
-  {
-  private:
-
-    ADD_CONSTREF(StyleSheetObj, sheet);
-
-  public:
-
-    IncludeImport(const SourceSpan& pstate, StyleSheet* sheet);
-    // Implement final up-casting method
-    IMPLEMENT_ISA_CASTER(IncludeImport);
-  };
-
-  //////////////////////////////////////////////////////////////////////
   // Helper class to iterator over different Value types.
   // Depending on the type of the Value (e.g. List vs String),
   // we either want to iterate over a container or a single value.
