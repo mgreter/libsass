@@ -29,6 +29,8 @@
 
 #include <string>
 
+#include "../capi_sass.hpp"
+
 namespace LUrlParser
 {
 
@@ -49,14 +51,14 @@ namespace LUrlParser
 	{
 	public:
 		LUrlParserError m_ErrorCode;
-		std::string m_Scheme;
-		std::string m_Host;
-		std::string m_Port;
-		std::string m_Path;
-		std::string m_Query;
-		std::string m_Fragment;
-		std::string m_UserName;
-		std::string m_Password;
+    sass::string m_Scheme;
+    sass::string m_Host;
+    sass::string m_Port;
+    sass::string m_Path;
+    sass::string m_Query;
+    sass::string m_Fragment;
+    sass::string m_UserName;
+    sass::string m_Password;
 
 		clParseURL()
 			: m_ErrorCode(LUrlParserError::Uninitialized )
@@ -69,7 +71,7 @@ namespace LUrlParser
 		bool GetPort( int* OutPort ) const;
 
 		/// parse the URL
-		static clParseURL ParseURL( const std::string& URL );
+		static clParseURL ParseURL( const sass::string& URL );
 
 	private:
 		explicit clParseURL( LUrlParserError ErrorCode )
