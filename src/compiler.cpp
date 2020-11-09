@@ -223,7 +223,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
-    SharedObj::taint = true;
+    RefCounted::taint = true;
     #endif
 
     // abort if there is no data
@@ -254,7 +254,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
-    SharedObj::taint = false;
+    RefCounted::taint = false;
     #endif
 
     // return processed tree
@@ -855,7 +855,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
-    SharedObj::taint = true;
+    RefCounted::taint = true;
     #endif
 
     // load and register import
@@ -863,7 +863,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     #ifdef DEBUG_SHARED_PTR
     // Disable reference tracking
-    SharedObj::taint = false;
+    RefCounted::taint = false;
     #endif
 
     // Return root node

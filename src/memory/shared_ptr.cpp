@@ -11,12 +11,12 @@
 namespace Sass {
 
   #ifdef DEBUG_SHARED_PTR
-  void SharedObj::dumpMemLeaks() {
+  void RefCounted::dumpMemLeaks() {
     if (!all.empty()) {
       std::cerr << "###################################\n";
       std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
       std::cerr << "###################################\n";
-      for (SharedObj* var : all) {
+      for (RefCounted* var : all) {
         if (AstNode* ast = dynamic_cast<AstNode*>(var)) {
           std::cerr << "LEAKED AST " << ast->getDbgFile() << ":" << ast->getDbgLine() << "\n";
           debug_ast(ast);
@@ -33,13 +33,13 @@ namespace Sass {
       objCount = 0;
     }
   }
-  size_t SharedObj::objCount = 0;
-  sass::vector<SharedObj*> SharedObj::all;
-  std::unordered_set<size_t> SharedObj::deleted;
-  size_t SharedObj::maxRefCount = 0;
+  size_t RefCounted::objCount = 0;
+  sass::vector<RefCounted*> RefCounted::all;
+  std::unordered_set<size_t> RefCounted::deleted;
+  size_t RefCounted::maxRefCount = 0;
 #endif
 
-  bool SharedObj::taint = false;
-  // size_t SharedObj::moves = 0;
-  // size_t SharedObj::copies = 0;
+  bool RefCounted::taint = false;
+  // size_t RefCounted::moves = 0;
+  // size_t RefCounted::copies = 0;
 }
