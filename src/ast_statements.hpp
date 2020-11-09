@@ -8,6 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include <set>
 #include "ast_nodes.hpp"
 #include "ast_callable.hpp"
 #include "ast_supports.hpp"
@@ -15,6 +16,16 @@
 #include "environment_stack.hpp"
 
 namespace Sass {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  struct ConfiguredVariable {
+    sass::string name;
+    ExpressionObj expression;
+    SourceSpan pstate;
+    bool isGuarded = false;
+  };
 
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for statements that contain blocks of statements.
@@ -504,11 +515,13 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(sass::string, url);
+    ADD_CONSTREF(sass::vector<ConfiguredVariable>, config);
   public:
     // Value constructor
     UseRule(
       const SourceSpan& pstate,
-      const sass::string& url);
+      const sass::string& url,
+      sass::vector<ConfiguredVariable>&& config);
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);
@@ -521,12 +534,20 @@ namespace Sass {
   class ForwardRule final : public Statement
   {
   private:
+    ADD_CONSTREF(bool, isShown);
     ADD_CONSTREF(sass::string, url);
+    ADD_CONSTREF(sass::vector<ConfiguredVariable>, config);
+    ADD_CONSTREF(std::set<sass::string>, toggledVariables);
+    ADD_CONSTREF(std::set<sass::string>, toggledCallables);
   public:
     // Value constructor
     ForwardRule(
       const SourceSpan& pstate,
-      const sass::string& url);
+      const sass::string& url,
+      sass::vector<ConfiguredVariable>&& config,
+      std::set<sass::string>&& toggledVariables,
+      std::set<sass::string>&& toggledCallables,
+      bool isShown);
       // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitForwardRule(this);

@@ -8,6 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include <set>
 #include "parser_base.hpp"
 #include "ast_statements.hpp"
 
@@ -136,8 +137,31 @@ namespace Sass {
     Statement* readRootStatement() { return readStatement(true); }
     Statement* readChildStatement() { return readStatement(false); }
 
+    // Tries to parse a namespaced [VariableDeclaration], and returns the value
+    // parsed so far if it fails.
+    //
+    // This can return either an [Interpolation], indicating that it couldn't
+    // consume a variable declaration and that property declaration or selector
+    // parsing should be attempted; or it can return a [VariableDeclaration],
+    // indicating that it successfully consumed a variable declaration.
+    bool tryVariableDeclarationOrInterpolation(
+      AssignRule*& assignment,
+      Interpolation*& interpolation);
+
+    AssignRule* readVariableDeclarationWithNamespace();
+
+    void assertPublicIdentifier(
+      const sass::string& identifier,
+      Offset start);
+
+
+    // Consumes a variable declaration. This never *consumes* a namespace,
+    // but if [namespace] is passed it will be used for the declaration.
+    AssignRule* readVariableDeclarationWithoutNamespace(
+      const sass::string& ns, Offset start);
+
     // Consumes a style rule.
-    StyleRule* readStyleRule();
+    StyleRule* readStyleRule(Interpolation* itpl = nullptr);
 
     // Consumes a [Declaration] or a [StyleRule].
     //
@@ -167,17 +191,21 @@ namespace Sass {
     //   beneath it.
     Statement* readDeclarationOrStyleRule();
 
+    Statement* readVariableDeclarationOrStyleRule();
+
     // Tries to parse a declaration, and returns the value parsed so
     // far if it fails. This can return either an [InterpolationBuffer],
     // indicating that it couldn't consume a declaration and that selector
     // parsing should be attempted; or it can return a [Declaration],
     // indicating that it successfully consumed a declaration.
-    Declaration* tryDeclarationOrBuffer(InterpolationBuffer& buffer);
+    Statement* tryDeclarationOrBuffer(InterpolationBuffer& buffer);
 
     // Consumes a property declaration. This is only used in contexts where
     // declarations are allowed but style rules are not, such as nested
     // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
-    Declaration* readDeclaration(bool parseCustomProperties = true);
+    Statement* readDeclaration(bool parseCustomProperties = true);
+
+    Statement* readPropertyOrVariableDeclaration(bool parseCustomProperties = true);
 
     // Consumes a statement that's allowed within a declaration.
     Statement* readDeclarationOrAtRule();
@@ -287,7 +315,22 @@ namespace Sass {
 
     // Consumes a `@use` rule.
     // [start] should point before the `@`.
-    // UseRule* readUseRule(Offset start);
+    UseRule* readUseRule(Offset start);
+
+    sass::string readUseNamespace(const sass::string& url, Offset start);
+
+    bool readWithConfiguration(
+      sass::vector<ConfiguredVariable>& vars,
+      bool allowGuarded = false);
+
+    void readForwardMembers(
+      std::set<sass::string>& variables,
+      std::set<sass::string>& callables
+    );
+
+    // Consumes a `@forward` rule.
+    // [start] should point before the `@`.
+    ForwardRule* readForwardRule(Offset start);
 
     // Consumes a `@warn` rule.
     // [start] should point before the `@`.
