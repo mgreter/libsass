@@ -10,6 +10,7 @@
 
 #include "ast_fwd_decl.hpp"
 #include "offset.hpp"
+#include "source.hpp"
 
 namespace Sass
 {

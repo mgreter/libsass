@@ -4,6 +4,7 @@
 #include "source_state.hpp"
 
 #include "source.hpp"
+#include "file.hpp"
 
 namespace Sass
 {

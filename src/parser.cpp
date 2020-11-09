@@ -3,6 +3,7 @@
 /*****************************************************************************/
 #include "parser.hpp"
 
+#include "sources.hpp"
 #include "compiler.hpp"
 #include "charcode.hpp"
 #include "character.hpp"

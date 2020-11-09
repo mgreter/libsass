@@ -3,7 +3,8 @@
 #include "capi_sass.hpp"
 
 #include "capi_functions.hpp"
-#include "source.hpp"
+#include "sources.hpp"
+#include "file.hpp"
 
 using namespace Sass;
 
