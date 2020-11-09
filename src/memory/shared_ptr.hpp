@@ -23,6 +23,7 @@
 
 namespace Sass {
 
+  template <class T>
   class SharedPtr;
 
   ///////////////////////////////////////////////////////////////////////////
@@ -146,7 +147,6 @@ namespace Sass {
     #endif
 
    protected:
-    friend class SharedPtr;
     friend class MemoryPool;
   public:
   public:
@@ -168,14 +168,18 @@ namespace Sass {
 #endif
   };
 
-  // SharedPtr is a intermediate (template-less) base class for SharedImpl.
-  // ToDo: there should be a way to include this in SharedImpl and to get
-  // ToDo: rid of all the static_cast that are now needed in SharedImpl.
+  // SharedPtr is a intermediate (template-less) base class for SharedPtr.
+  // ToDo: there should be a way to include this in SharedPtr and to get
+  // ToDo: rid of all the static_cast that are now needed in SharedPtr.
+  template <class T>
   class SharedPtr {
 
   protected:
 
-    RefCounted* node;
+    // We could also use `RefCounted*` instead, which would make life
+    // a bit easier with headers. Using `T*` means the implementation
+    // off that class must be known when using this in other classes.
+    T* node;
 
   private:
 
@@ -184,19 +188,20 @@ namespace Sass {
 
   public:
     SharedPtr() : node(nullptr) {}
-    SharedPtr(RefCounted* ptr) : node(ptr) { incRefCount(); }
-    SharedPtr(const SharedPtr& obj) : SharedPtr(obj.node) {}
-    SharedPtr(SharedPtr&& obj) noexcept : node(std::move(obj.node)) {
+    SharedPtr(T* ptr) : node(ptr) { incRefCount(); }
+    SharedPtr(const SharedPtr<T>& obj) : node(obj.node) { incRefCount(); }
+    SharedPtr(SharedPtr<T>&& obj) noexcept : node(obj.node) {
       obj.node = nullptr; // reset old node pointer
     }
-    virtual ~SharedPtr() {
+    ~SharedPtr() {
       decRefCount();
     }
 
-    SharedPtr& operator=(RefCounted* other_node) {
-      if (node != other_node) {
+    SharedPtr<T>& operator=(T* other)
+    {
+      if (node != other) {
         if (node) decRefCount();
-        node = other_node;
+        node = other;
         incRefCount();
       } else if (node != nullptr) {
         node->refcount &= UNSET_DETACHED_BITMASK;
@@ -204,7 +209,12 @@ namespace Sass {
       return *this;
     }
 
-    SharedPtr& operator=(SharedPtr&& obj) noexcept
+    SharedPtr<T>& operator=(const SharedPtr<T>& obj)
+    {
+      return *this = obj.node;
+    }
+
+    SharedPtr<T>& operator=(SharedPtr<T>&& obj) noexcept
     {
       if (node != obj.node) {
         if (node) decRefCount();
@@ -217,12 +227,10 @@ namespace Sass {
       return *this;
     }
 
-    SharedPtr& operator=(const SharedPtr& obj) {
-      return *this = obj.node;
-    }
-
-    // Prevents all SharedPtrs from freeing this node until it is assigned to another SharedPtr.
-    RefCounted* detach() {
+    // Prevents all SharedPtrs from freeing this node
+    // until it is assigned to any other SharedPtr.
+    T* detach()
+    {
       if (node != nullptr) {
         node->refcount |= SET_DETACHED_BITMASK;
       }
@@ -241,7 +249,7 @@ namespace Sass {
       }
     }
 
-    RefCounted* obj() const {
+    T* ptr() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -249,7 +257,8 @@ namespace Sass {
       #endif
       return node;
     }
-    RefCounted* operator->() const {
+
+    T* operator->() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -257,8 +266,12 @@ namespace Sass {
       #endif
       return node;
     }
+
+    operator T* () const { return ptr(); }
+    operator T& () const { return *ptr(); }
+    T& operator* () const { return *ptr(); };
+
     bool isNull() const { return node == nullptr; }
-    operator bool() const { return node != nullptr; }
 
   protected:
 
@@ -301,144 +314,29 @@ namespace Sass {
       }
       #endif
     }
-  };
 
-  template <class T>
-  class SharedImpl final : private SharedPtr {
+    // template <class U>
+    // SharedPtr<T>& operator=(U *rhs) {
+    //   return static_cast<SharedPtr<T>&>(
+    //     SharedPtr<T>::operator=(static_cast<T*>(rhs)));
+    // }
+    // 
+    // template <class U>
+    // SharedPtr<T>& operator=(SharedPtr<U>&& rhs) {
+    //   return static_cast<SharedPtr<T>&>(
+    //     SharedPtr<T>::operator=(std::move(static_cast<SharedPtr<T>&>(rhs))));
+    // }
+    // 
+    // template <class U>
+    // SharedPtr<T>& operator=(const SharedPtr<U>& rhs) {
+    //   return static_cast<SharedPtr<T>&>(
+    //     SharedPtr<T>::operator=(static_cast<const SharedPtr<T>&>(rhs)));
+    // }
 
-  public:
-    SharedImpl() : SharedPtr(nullptr) {}
-
-    template <class U>
-    SharedImpl(U* node) :
-      SharedPtr(static_cast<T*>(node)) {}
-
-    template <class U>
-    SharedImpl(const SharedImpl<U>& impl) :
-      SharedImpl(impl.ptr()) {}
-
-    template <class U>
-    SharedImpl<T>& operator=(U *rhs) {
-      return static_cast<SharedImpl<T>&>(
-        SharedPtr::operator=(static_cast<T*>(rhs)));
-    }
-
-    template <class U>
-    SharedImpl<T>& operator=(SharedImpl<U>&& rhs) {
-      return static_cast<SharedImpl<T>&>(
-        SharedPtr::operator=(std::move(static_cast<SharedImpl<T>&>(rhs))));
-    }
-
-    template <class U>
-    SharedImpl<T>& operator=(const SharedImpl<U>& rhs) {
-      return static_cast<SharedImpl<T>&>(
-        SharedPtr::operator=(static_cast<const SharedImpl<T>&>(rhs)));
-    }
-
-    using SharedPtr::isNull;
-    using SharedPtr::operator bool;
-    operator T*() const { return static_cast<T*>(this->obj()); }
-    operator T&() const { return *static_cast<T*>(this->obj()); }
-    T& operator* () const { return *static_cast<T*>(this->obj()); };
-    T* operator-> () const { return static_cast<T*>(this->obj()); };
-    T* ptr () const { return static_cast<T*>(this->obj()); };
-    T* detach() { return static_cast<T*>(SharedPtr::detach()); }
-    void clear() { return SharedPtr::clear(); }
   };
 
   // Comparison operators, based on:
   // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_cmp
-
-  template<class T1, class T2>
-  bool operator==(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
-    return x.ptr() == y.ptr();
-  }
-
-  template<class T1, class T2>
-  bool operator!=(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
-    return x.ptr() != y.ptr();
-  }
-
-  template<class T1, class T2>
-  bool operator<(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
-    using CT = typename std::common_type<T1*, T2*>::type;
-    return std::less<CT>()(x.get(), y.get());
-  }
-
-  template<class T1, class T2>
-  bool operator<=(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
-    return !(y < x);
-  }
-
-  template<class T1, class T2>
-  bool operator>(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
-    return y < x;
-  }
-
-  template<class T1, class T2>
-  bool operator>=(const SharedImpl<T1>& x, const SharedImpl<T2>& y) {
-    return !(x < y);
-  }
-
-  template <class T>
-  bool operator==(const SharedImpl<T>& x, std::nullptr_t) noexcept {
-    return x.isNull();
-  }
-
-  template <class T>
-  bool operator==(std::nullptr_t, const SharedImpl<T>& x) noexcept {
-    return x.isNull();
-  }
-
-  template <class T>
-  bool operator!=(const SharedImpl<T>& x, std::nullptr_t) noexcept {
-    return !x.isNull();
-  }
-
-  template <class T>
-  bool operator!=(std::nullptr_t, const SharedImpl<T>& x) noexcept {
-    return !x.isNull();
-  }
-
-  template <class T>
-  bool operator<(const SharedImpl<T>& x, std::nullptr_t) {
-    return std::less<T*>()(x.get(), nullptr);
-  }
-
-  template <class T>
-  bool operator<(std::nullptr_t, const SharedImpl<T>& y) {
-    return std::less<T*>()(nullptr, y.get());
-  }
-
-  template <class T>
-  bool operator<=(const SharedImpl<T>& x, std::nullptr_t) {
-    return !(nullptr < x);
-  }
-
-  template <class T>
-  bool operator<=(std::nullptr_t, const SharedImpl<T>& y) {
-    return !(y < nullptr);
-  }
-
-  template <class T>
-  bool operator>(const SharedImpl<T>& x, std::nullptr_t) {
-    return nullptr < x;
-  }
-
-  template <class T>
-  bool operator>(std::nullptr_t, const SharedImpl<T>& y) {
-    return y < nullptr;
-  }
-
-  template <class T>
-  bool operator>=(const SharedImpl<T>& x, std::nullptr_t) {
-    return !(x < nullptr);
-  }
-
-  template <class T>
-  bool operator>=(std::nullptr_t, const SharedImpl<T>& y) {
-    return !(nullptr < y);
-  }
 
 }  // namespace Sass
 

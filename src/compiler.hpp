@@ -8,6 +8,7 @@
 #include "logger.hpp"
 #include "context.hpp"
 #include "ast_css.hpp"
+#include "stylesheet.hpp"
 #include "capi_error.hpp"
 #include "capi_context.hpp"
 

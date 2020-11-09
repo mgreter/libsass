@@ -527,7 +527,7 @@ namespace Sass {
       const Offset& start, Args... args)
     {
       StatementVector elements(readChildren(child));
-      SharedImpl<T> result = SASS_MEMORY_NEW(T,
+      SharedPtr<T> result = SASS_MEMORY_NEW(T,
         scanner.relevantSpanFrom(start),
         args..., std::move(elements));
       scanWhitespaceWithoutComments();

@@ -14,7 +14,7 @@ namespace Sass {
   protected:
 
     // The main underlying container
-    typedef SharedImpl<V> T;
+    typedef SharedPtr<V> T;
     typedef Vectorized Klass;
     sass::vector<T> elements_;
 
