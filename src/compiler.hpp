@@ -109,7 +109,7 @@ namespace Sass {
     // functional arguments (best suited will be chosen).
     /////////////////////////////////////////////////////////////////////////
     uint32_t registerBuiltInOverloadFns(const sass::string& name,
-      const std::vector<std::pair<sass::string, SassFnSig>>& overloads);
+      const sass::vector<std::pair<sass::string, SassFnSig>>& overloads);
 
     /////////////////////////////////////////////////////////////////////////
     // @param imp_path The relative or custom path for be imported

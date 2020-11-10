@@ -664,7 +664,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Register built-in functions that can take different
   // functional arguments (best suited will be chosen).
   uint32_t Compiler::registerBuiltInOverloadFns(const sass::string& name,
-    const std::vector<std::pair<sass::string, SassFnSig>>& overloads)
+    const sass::vector<std::pair<sass::string, SassFnSig>>& overloads)
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {

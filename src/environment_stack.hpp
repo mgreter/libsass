@@ -108,8 +108,8 @@ namespace Sass {
 
     // Keep track of assignments and variables for dynamic runtime lookups.
     // This is needed only for loops, due to sass "weird" variable scoping.
-    std::vector<AssignRuleObj> assignments;
-    std::vector<VariableExpressionObj> variables;
+    sass::vector<AssignRuleObj> assignments;
+    sass::vector<VariableExpressionObj> variables;
 
     // Value constructor
     VarRefs(VarRefs* pscope,
@@ -161,8 +161,8 @@ namespace Sass {
 
     // Keep track of assignments and variables for dynamic runtime lookups.
     // This is needed only for loops, due to sass "weird" variable scoping.
-    std::vector<AssignRuleObj>& assignments;
-    std::vector<VariableExpressionObj>& variables;
+    sass::vector<AssignRuleObj>& assignments;
+    sass::vector<VariableExpressionObj>& variables;
 
   private:
 
