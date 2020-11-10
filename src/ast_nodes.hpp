@@ -634,8 +634,7 @@ namespace Sass {
   {
   public:
 
-    ModuleMap<std::pair<VarRefs*, Root*>> fwdModule;
-    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal;
+    VarRefs* idxs;
 
     Root(const SourceSpan& pstate, size_t reserve = 0)
       : AstNode(pstate), Vectorized<Statement>(reserve)

@@ -516,6 +516,7 @@ namespace Sass {
   private:
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::vector<ConfiguredVariable>, config);
+    ADD_CONSTREF(RootObj, root);
   public:
     bool isSupported = false;
     // Value constructor

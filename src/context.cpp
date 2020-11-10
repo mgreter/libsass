@@ -180,7 +180,8 @@ namespace Sass {
       0xFFFFFFFF,
       0xFFFFFFFF,
       0xFFFFFFFF,
-      false))
+      false,
+      true))
   {}
 
   /////////////////////////////////////////////////////////////////////////

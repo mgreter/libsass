@@ -265,7 +265,9 @@ namespace Sass {
     // Check if we found a local variable to use
     if (vidx.isValid()) has_local = true;
     // Otherwise we must create a new local variable
-    else vidx = frame->createVariable(name);
+    else {
+      vidx = frame->createVariable(name);
+    }
 
     // JIT self assignments
     #ifdef SASS_OPTIMIZE_SELF_ASSIGN
@@ -288,15 +290,49 @@ namespace Sass {
     }
     #endif
 
+    sass::vector<VarRef> vidxs;
+
+    if (vidx.isValid()) vidxs.push_back(vidx);
+    EnvFrame* module(context.varStack.back()->getModule());
+
     if (!ns.empty()) {
-      auto pstate(scanner.relevantSpanFrom(start));
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Variable namespaces not supported yet!");
+      // auto pstate(scanner.relevantSpanFrom(start));
+      // context.addFinalStackTrace(pstate);
+      // throw Exception::ParserException(context,
+      //   "Variable namespaces not supported yet!");
+
+      auto it = module->fwdModule33.find(ns);
+      if (it != module->fwdModule33.end()) {
+        VarRefs* refs = it->second.first;
+        auto in = refs->varIdxs.find(name);
+        if (in != refs->varIdxs.end()) {
+          uint32_t offset = in->second;
+          vidxs.push_back({ refs->varFrame, offset });
+        }
+      }
+
+      if (vidxs.empty()) {
+        VarRef vidx(module->getVariableIdx(name, true));
+        if (!vidxs.empty()) vidxs.push_back(vidx);
+      }
+
+
+    }
+    else {
+
+      for (auto fwd : module->fwdGlobal33) {
+        VarRefs* refs = fwd.first;
+        auto in = refs->fnIdxs.find(name);
+        if (in != refs->fnIdxs.end()) {
+          uint32_t offset = in->second;
+          vidxs.push_back({ refs->fnFrame, offset });
+        }
+      }
+
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start), name, ns, { vidx }, value, guarded, global);
+      scanner.relevantSpanFrom(start), name, ns, vidxs, value, guarded, global);
     if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
@@ -1259,17 +1295,19 @@ namespace Sass {
       scanner.relevantSpanFrom(start),
       url, std::move(config));
 
+    EnvFrame* current(context.varStack.back());
+
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
       sass::string name(url.substr(5));
       if (ns.empty()) ns = name;
       if (Module* module = context.getModule(name)) {
         if (ns == "*") {
-          currentRoot->fwdGlobal.push_back(
+          current->fwdGlobal33.push_back(
             { module->idxs, nullptr });
         }
         else {
-          currentRoot->fwdModule[ns] =
+          current->fwdModule33[ns] =
             { module->idxs, nullptr };
         }
         rule->isSupported = true;
@@ -1279,7 +1317,102 @@ namespace Sass {
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
       }
+      return rule.detach();
     }
+
+
+
+
+
+
+
+
+
+
+
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    const ImportRequest import(url, scanner.sourceUrl);
+    callStackFrame frame(context, { pstate, Strings::useRule });
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(context, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = context.loadImport(resolved[0])) {
+
+
+      // ToDo: We don't take format into account
+      StyleSheet* sheet = nullptr;
+      EnvFrame* frame(context.varStack.back());
+      auto cached = context.sheets.find(loaded->getAbsPath());
+      if (cached != context.sheets.end()) {
+        sheet = cached->second;
+      }
+      else {
+        EnvFrame local(context.varStack, true, true);
+        local.idxs->varFrame = 0xFFFFFFFF;
+        local.idxs->mixFrame = 0xFFFFFFFF;
+        local.idxs->fnFrame = 0xFFFFFFFF;
+        sheet = context.registerImport(loaded);
+        sheet->root2->idxs = local.idxs;
+      }
+
+      Root* root = sheet->root2;
+      VarRefs* refs = root->idxs;
+      rule->root(root);
+
+      if (ns == "*") {
+        // This must not be on root block
+        // These may vary for different use rules
+        frame->fwdGlobal33.push_back(
+          { refs, sheet->root2 });
+      }
+      else {
+        frame->fwdModule33[ns] =
+        { refs, sheet->root2 };
+      }
+      rule->isSupported = true;
+
+
+      // rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
+    }
+    else {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Couldn't read stylesheet for import.");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     return rule.detach();
   }
@@ -2966,7 +3099,7 @@ namespace Sass {
   }
   // EO readUnicodeRange
 
-  // Consumes a variable expression.
+  // Consumes a variable expression (only called without namespace).
   VariableExpression* StylesheetParser::readVariableExpression(bool hoist)
   {
     Offset start(scanner.offset);
@@ -2988,7 +3121,7 @@ namespace Sass {
       auto pstate(scanner.relevantSpanFrom(start));
       context.addFinalStackTrace(pstate);
       throw Exception::ParserException(context,
-        "Variable namespaces not supported yet!");
+        "Variable namespaces not supported!");
     }
 
     VariableExpression* expression =
@@ -3002,10 +3135,26 @@ namespace Sass {
       context.varStack.back()->variables.push_back(expression);
     }
     else {
+
+      sass::vector<VarRef> vidxs;
+
       // Otherwise utilize full static optimizations
       EnvFrame* frame(context.varStack.back());
       VarRef vidx(frame->getVariableIdx(name, true));
-      if (vidx.isValid()) expression->vidxs().push_back(vidx);
+      if (vidx.isValid()) vidxs.push_back(vidx);
+
+      EnvFrame* module(context.varStack.back()->getModule());
+
+      for (auto fwd : module->fwdGlobal33) {
+        VarRefs* refs = fwd.first;
+        auto in = refs->varIdxs.find(name);
+        if (in != refs->varIdxs.end()) {
+          uint32_t offset = in->second;
+          vidxs.push_back({ refs->varFrame, offset });
+        }
+      }
+
+      if (!vidxs.empty()) expression->vidxs(vidxs);
       else context.varStack.back()->variables.push_back(expression);
     }
 
@@ -3170,12 +3319,7 @@ namespace Sass {
       if (scanner.peekChar() == $dollar) {
         sass::string name(variableName());
 
-        if (!plain.empty()) {
-          auto pstate(scanner.relevantSpanFrom(start));
-          context.addFinalStackTrace(pstate);
-          throw Exception::ParserException(context,
-            "Variable namespaces not supported yet!");
-        }
+        sass::vector<VarRef> vidxs;
 
         auto expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),
@@ -3187,10 +3331,37 @@ namespace Sass {
           context.varStack.back()->variables.push_back(expression);
         }
         else {
+
+
+          if (!plain.empty()) {
+            // auto pstate(scanner.relevantSpanFrom(start));
+            // context.addFinalStackTrace(pstate);
+            // throw Exception::ParserException(context,
+            //   "Variable namespaces not supported yet!");
+
+        // First search in forwarded modules
+            EnvFrame* frame(context.varStack.back()->getModule());
+            auto it = frame->fwdModule33.find(plain);
+            if (it != frame->fwdModule33.end()) {
+              VarRefs* refs = it->second.first;
+              auto in = refs->varIdxs.find(name);
+              if (in != refs->varIdxs.end()) {
+                uint32_t offset = in->second;
+                vidxs.push_back({ refs->varFrame, offset });
+              }
+            }
+
+            if (vidxs.empty()) {
+              VarRef vidx(frame->getVariableIdx(name, true));
+              if (!vidxs.empty()) vidxs.push_back(vidx);
+            }
+
+          }
+
           // Otherwise utilize full static optimizations
-          EnvFrame* frame(context.varStack.back());
-          VarRef vidx(frame->getVariableIdx(name, true));
-          if (vidx.isValid()) expression->vidxs().push_back(vidx);
+          // EnvFrame* frame(context.varStack.back());
+          // VarRef vidx(frame->getVariableIdx(name, true));
+          if (!vidxs.empty()) expression->vidxs(vidxs);
           else context.varStack.back()->variables.push_back(expression);
         }
 
@@ -3220,8 +3391,9 @@ namespace Sass {
         scanner.relevantSpanFrom(start), itpl, args, ns);
 
       // First search in forwarded modules
-      auto it = currentRoot->fwdModule.find(ns);
-      if (it != currentRoot->fwdModule.end()) {
+      EnvFrame* frame(context.varStack.back()->getModule());
+      auto it = frame->fwdModule33.find(ns);
+      if (it != frame->fwdModule33.end()) {
         VarRefs* refs = it->second.first;
         auto in = refs->fnIdxs.find(ident->value());
         if (in != refs->fnIdxs.end()) {
@@ -3246,7 +3418,8 @@ namespace Sass {
       if (!name.empty()) {
 
         // Then search in global modules
-        for (auto fwd : currentRoot->fwdGlobal) {
+        EnvFrame* frame(context.varStack.back());
+        for (auto fwd : frame->fwdGlobal33) {
           VarRefs* refs = fwd.first;
           auto in = refs->fnIdxs.find(name);
           if (in != refs->fnIdxs.end()) {

@@ -1408,9 +1408,18 @@ namespace Sass {
   Value* Eval::visitUseRule(UseRule* node)
   {
     compiler.addFinalStackTrace(node->pstate());
+
+    if (node->root()) {
+      for (auto child : node->root()->elements()) {
+        child->accept(this);
+      }
+    }
+
     if (node->isSupported) return nullptr;
-    throw Exception::RuntimeException(compiler,
-      "@use rules not yet supported in LibSass!");
+
+    return nullptr;
+    // throw Exception::RuntimeException(compiler,
+    //   "@use rules not yet supported in LibSass!");
   }
 
   Value* Eval::visitForwardRule(ForwardRule* node)
