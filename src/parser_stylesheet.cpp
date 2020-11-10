@@ -1297,7 +1297,7 @@ namespace Sass {
     scanWhitespace();
     sass::string url(string());
     scanWhitespace();
-    auto ns = readUseNamespace(url, start);
+    sass::string ns(readUseNamespace(url, start));
     scanWhitespace();
 
     sass::vector<ConfiguredVariable> config;
@@ -1340,6 +1340,14 @@ namespace Sass {
 
 
 
+    // Deduct the namespace from url
+    // After last slash before first dot
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      if (start == NPOS) start = 0;
+      auto end = url.find_first_of(".", start);
+      ns = url.substr(start, end);
+    }
 
 
 
