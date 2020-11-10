@@ -384,7 +384,10 @@ extern "C" {
 
   void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision)
   {
-    Compiler::unwrap(compiler).precision = precision;
+    Compiler& context(Compiler::unwrap(compiler));
+    context.precision = precision;
+    context.epsilon2 = std::pow(0.1, precision);
+    sprintf_s(context.nr_sprintf, 32, "%%.%df", precision);
     Compiler::unwrap(compiler).setLogPrecision(precision);
   }
 
