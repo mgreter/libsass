@@ -907,7 +907,7 @@ namespace Sass {
 
     // Avoid streams
     char buf[255];
-    sprintf_s(buf, 255,
+    snprintf(buf, 255,
       opt.nr_sprintf,
       value->value());
 
