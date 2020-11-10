@@ -19,10 +19,10 @@
 // Functions to register
 #include "fn_maps.hpp"
 #include "fn_meta.hpp"
+#include "fn_math.hpp"
 #include "fn_lists.hpp"
 #include "fn_texts.hpp"
 #include "fn_colors.hpp"
-#include "fn_numbers.hpp"
 #include "fn_selectors.hpp"
 
 #include <cstring>
@@ -660,6 +660,27 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     return idx.offset;
   }
   // EO registerBuiltInFunction
+
+  // Register built-in functions that can take different
+  // functional arguments (best suited will be chosen).
+  uint32_t Compiler::createBuiltInOverloadFns(const sass::string& name,
+    const sass::vector<std::pair<sass::string, SassFnSig>>& overloads)
+  {
+    SassFnPairs pairs;
+    for (auto overload : overloads) {
+      EnvRoot root(varStack);
+      SourceDataObj source = SASS_MEMORY_NEW(SourceString,
+        "sass://signature", "(" + overload.first + ")");
+      auto args = ArgumentDeclaration::parse(*this, source);
+      pairs.emplace_back(std::make_pair(args, overload.second));
+    }
+    auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
+    VarRef idx(varRoot.createFunction(":" + name));
+    varRoot.intFunction.push_back(callable);
+    fnList.push_back(callable);
+    return idx.offset;
+  }
+  // EO registerBuiltInOverloadFns
 
   // Register built-in functions that can take different
   // functional arguments (best suited will be chosen).

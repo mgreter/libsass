@@ -602,6 +602,18 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate, hsla->l(), Strings::percent);
       }
 
+      BUILT_IN_FN(noLighten)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "lighten", "$lightness: ");
+      }
+
+      BUILT_IN_FN(noDarken)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "darken", "$lightness: -");
+      }
+
       BUILT_IN_FN(whiteness)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::whiteness);
@@ -625,6 +637,12 @@ namespace Sass {
         ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
         copy->h(absmod(copy->h() + degrees->value(), 360.0));
         return copy.detach();
+      }
+
+      BUILT_IN_FN(noAdjustHue)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "adjust-hue", "$hue: ", Strings::degrees);
       }
 
       BUILT_IN_FN(complement)
@@ -700,6 +718,19 @@ namespace Sass {
         return copy.detach(); // Return HSLA
       }
 
+
+      BUILT_IN_FN(noSaturate)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "saturate", "$saturation: ");
+      }
+        
+      BUILT_IN_FN(noDesaturate)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "desaturate", "$saturation: -");
+      }
+
       /*******************************************************************/
 
       BUILT_IN_FN(opacify)
@@ -720,6 +751,18 @@ namespace Sass {
         ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
         copy->a(clamp(copy->a() - nr, 0.0, 1.0));
         return copy.detach(); // Return HSLA
+      }
+
+      BUILT_IN_FN(noOpacify)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "opacify", "$alpha: ");
+      }
+
+      BUILT_IN_FN(noTransparentize)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "transparentize", "$alpha: -");
       }
 
       /*******************************************************************/
@@ -1120,24 +1163,34 @@ namespace Sass {
         module.addFunction("invert", ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert));
         module.addFunction("grayscale", ctx.registerBuiltInFunction("grayscale", "$color", grayscale));
         module.addFunction("complement", ctx.registerBuiltInFunction("complement", "$color", complement));
-        module.addFunction("lighten", ctx.registerBuiltInFunction("lighten", "$color, $amount", lighten));
-        module.addFunction("darken", ctx.registerBuiltInFunction("darken", "$color, $amount", darken));
-        module.addFunction("desaturate", ctx.registerBuiltInFunction("desaturate", "$color, $amount", desaturate));
-        module.addFunction("saturate", ctx.registerBuiltInOverloadFns("saturate", {
+
+        module.addFunction("desaturate", ctx.createBuiltInFunction("desaturate", "$color, $amount", noDesaturate));
+        ctx.registerBuiltInFunction("desaturate", "$color, $amount", desaturate);
+
+        module.addFunction("saturate", ctx.createBuiltInFunction("saturate", "$color, $amount", noSaturate));
+        ctx.registerBuiltInOverloadFns("saturate", {
           std::make_pair("$amount", saturate1arg),
           std::make_pair("$color, $amount", saturate2arg),
-          }));
+          });
 
-        module.addFunction("adjust-hue", ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue));
-        module.addFunction("adjust-color", ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust));
-        module.addFunction("change-color", ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change));
-        module.addFunction("scale-color", ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale));
+        module.addFunction("lighten", ctx.createBuiltInFunction("lighten", "$color, $amount", noLighten));
+        ctx.registerBuiltInFunction("lighten", "$color, $amount", lighten);
+        module.addFunction("darken", ctx.createBuiltInFunction("darken", "$color, $amount", noDarken));
+        ctx.registerBuiltInFunction("darken", "$color, $amount", darken);
+
+        module.addFunction("adjust-hue", ctx.createBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue));
+        ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", noAdjustHue);
+        module.addFunction("adjust", ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust));
+        module.addFunction("change", ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change));
+        module.addFunction("scale", ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale));
         module.addFunction("mix", ctx.registerBuiltInFunction("mix", "$color1, $color2, $weight: 50%", mix));
 
-        module.addFunction("opacify", ctx.registerBuiltInFunction("opacify", "$color, $amount", opacify));
+        module.addFunction("opacify", ctx.createBuiltInFunction("opacify", "$color, $amount", opacify));
+        ctx.registerBuiltInFunction("opacify", "$color, $amount", noOpacify);
         module.addFunction("fade-in", ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify));
         module.addFunction("fade-out", ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize));
-        module.addFunction("transparentize", ctx.registerBuiltInFunction("transparentize", "$color, $amount", transparentize));
+        module.addFunction("transparentize", ctx.createBuiltInFunction("transparentize", "$color, $amount", transparentize));
+        ctx.registerBuiltInFunction("transparentize", "$color, $amount", noTransparentize);
         module.addFunction("ie-hex-str", ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr));
         module.addFunction("alpha", ctx.registerBuiltInOverloadFns("alpha", {
           std::make_pair("$color", alphaOne),

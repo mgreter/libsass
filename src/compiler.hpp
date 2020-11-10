@@ -108,6 +108,8 @@ namespace Sass {
     // Register built-in functions that can take different
     // functional arguments (best suited will be chosen).
     /////////////////////////////////////////////////////////////////////////
+    uint32_t createBuiltInOverloadFns(const sass::string& name,
+      const sass::vector<std::pair<sass::string, SassFnSig>>& overloads);
     uint32_t registerBuiltInOverloadFns(const sass::string& name,
       const sass::vector<std::pair<sass::string, SassFnSig>>& overloads);
 

@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
-#include "fn_numbers.hpp"
+#include "fn_math.hpp"
 
 #include "compiler.hpp"
 #include "exceptions.hpp"
@@ -159,7 +159,7 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-        Module& module(ctx.createModule("number"));
+        Module& module(ctx.createModule("math"));
 		    module.addFunction("round", ctx.registerBuiltInFunction("round", "$number", round));
 		    module.addFunction("ceil", ctx.registerBuiltInFunction("ceil", "$number", ceil));
 		    module.addFunction("floor", ctx.registerBuiltInFunction("floor", "$number", floor));
