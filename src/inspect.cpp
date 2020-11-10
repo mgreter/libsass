@@ -905,33 +905,33 @@ namespace Sass {
       return;
     }
 
-    sass::sstream ss;
-    ss.precision(opt.precision);
-    // This can be a bottleneck
-    ss << std::fixed << value->value();
+    // Avoid streams
+    char buf[255];
+    sprintf_s(buf, 255,
+      opt.nr_sprintf,
+      value->value());
 
-    sass::string res = ss.str();
-    size_t s = res.size();
+    // Operate from behind
+    char* end = buf;
 
-    // delete trailing zeros
-    for (s = s - 1; s > 0; --s)
-    {
-      if (res[s] == '0') {
-        res.erase(s, 1);
-      }
-      else break;
+    // Move to last position
+    while (*end != 0) ++end;
+    if (end != buf) end--;
+    // Delete trailing zeros
+    while (*end == '0') {
+      *end = 0;
+      end--;
+    }
+    // Delete trailing decimal separator
+    if (*end == '.') *end = 0;
+
+    // Some final cosmetics
+    if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
+      buf[0] = '0'; buf[1] = 0;
     }
 
-    // delete trailing decimal separator
-    if (res[s] == '.') res.erase(s, 1);
-
-    // some final cosmetics
-    if (res == "0.0") res = "0";
-    else if (res == "") res = "0";
-    else if (res == "-0") res = "0";
-    else if (res == "-0.0") res = "0";
-
     // add unit now
+    sass::string res(buf);
     res += value->unit();
 
     // output the final token

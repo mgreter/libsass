@@ -14,6 +14,7 @@
 // Default precision to format floats
 #define SassDefaultPrecision 10
 #define SassDefaultEpsilon 10E-10
+#define SassDefaultNrSprintf "%.10f"
 
 /////////////////////////////////////////////////////////////////////////
 // Logger default settings

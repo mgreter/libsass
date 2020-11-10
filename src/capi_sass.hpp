@@ -111,11 +111,17 @@ struct Sass_Inspect_Options {
   // Precision for fractional numbers
   int precision;
 
+  double epsilon2;
+  char nr_sprintf[32];
+
   // initialization list (constructor with defaults)
   Sass_Inspect_Options(SassOutputStyle style = SASS_STYLE_NESTED,
                        int precision = 10)
   : output_style(style), precision(precision)
-  { }
+  {
+    epsilon2 = std::pow(0.1, precision);
+    sprintf_s(nr_sprintf, 32, "%%.%df", precision);
+  }
 
 };
 
