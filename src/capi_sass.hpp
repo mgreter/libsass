@@ -120,7 +120,7 @@ struct Sass_Inspect_Options {
   : output_style(style), precision(precision)
   {
     epsilon2 = std::pow(0.1, precision);
-    sprintf_s(nr_sprintf, 32, "%%.%df", precision);
+    snprintf(nr_sprintf, 32, "%%.%df", precision);
   }
 
 };
