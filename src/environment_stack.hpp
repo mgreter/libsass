@@ -172,7 +172,7 @@ namespace Sass {
       auto current = this;
       while (!current->isRoot()) {
         if (current->idxs->isModule)
-          return this;
+          return current;
         current = &current->parent;
       }
       return current;
