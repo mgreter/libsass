@@ -3754,6 +3754,12 @@ namespace Sass {
               VarRefs* refs = it->second.first;
               auto in = refs->varIdxs.find(name);
               if (in != refs->varIdxs.end()) {
+                if (isPrivate(name)) {
+                  context.addFinalStackTrace(expression->pstate());
+                  throw Exception::ParserException(context,
+                    "Private members can't be accessed "
+                    "from outside their modules.");
+                }
                 uint32_t offset = in->second;
                 vidxs.push_back({ refs->varFrame, offset });
               }
