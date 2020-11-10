@@ -98,15 +98,17 @@ extern "C" {
 
 namespace Sass {
 
-  double round32(double val, int precision)
+  double round64(double val, double epsilon)
   {
     // https://github.com/sass/sass/commit/4e3e1d5684cc29073a507578fc977434ff488c93
-    if (std::fmod(val, 1) - 0.5 > -std::pow(0.1, precision + 1)) return std::ceil(val);
-    else if (std::fmod(val, 1) - 0.5 > std::pow(0.1, precision)) return std::floor(val);
-    // Work around some compiler issue
-    // Cygwin has it not defined in std
-    using namespace std;
-    return ::round(val);
+    // ToDo: maybe speed up further by using `std::remainder`
+    double rest = std::fmod(val, 1.0) / 5.0;
+    if (val >= 0) {
+      if (0.1 - rest < epsilon) return std::ceil(val);
+      else return std::floor(val);
+    }
+    if (rest + 0.1 <= epsilon) return std::floor(val);
+    else return std::ceil(val);
   }
 
   // helper to aid dreaded MSVC debug mode

@@ -9,6 +9,7 @@
 #include "sources.hpp"
 #include "stylesheet.hpp"
 #include "capi_lists.hpp"
+#include "ast_imports.hpp"
 #include "parser_scss.hpp"
 #include "parser_sass.hpp"
 #include "parser_css.hpp"
@@ -29,8 +30,6 @@
 #ifdef _MSC_VER
 #include <excpt.h>
 #endif
-
-#include "debugger.hpp"
 
 struct SassImport;
 
@@ -239,6 +238,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     }
 
     // debug_ast(root);
+
     CssRootObj compiled = eval.acceptRoot(root); // 50%
     // debug_ast(compiled);
 

@@ -13,6 +13,7 @@
 
 // Default precision to format floats
 #define SassDefaultPrecision 10
+#define SassDefaultEpsilon 10E-10
 
 /////////////////////////////////////////////////////////////////////////
 // Logger default settings
