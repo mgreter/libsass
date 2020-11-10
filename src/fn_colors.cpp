@@ -1115,8 +1115,8 @@ namespace Sass {
         module.addFunction("hue", ctx.registerBuiltInFunction("hue", "$color", hue));
         module.addFunction("lightness", ctx.registerBuiltInFunction("lightness", "$color", lightness));
         module.addFunction("saturation", ctx.registerBuiltInFunction("saturation", "$color", saturation));
-        //module.addFunction("blackness", ctx.registerBuiltInFunction("blackness", "$color", blackness);
-        //module.addFunction("whiteness", ctx.registerBuiltInFunction("whiteness", "$color", whiteness);
+        module.addFunction("blackness", ctx.createBuiltInFunction("blackness", "$color", blackness));
+        module.addFunction("whiteness", ctx.createBuiltInFunction("whiteness", "$color", whiteness));
         module.addFunction("invert", ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert));
         module.addFunction("grayscale", ctx.registerBuiltInFunction("grayscale", "$color", grayscale));
         module.addFunction("complement", ctx.registerBuiltInFunction("complement", "$color", complement));
