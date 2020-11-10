@@ -167,6 +167,21 @@ namespace Sass {
     return *this;
   }
 
+  bool Values::iterator::isLast()
+  {
+    switch (type) {
+    case MapIterator:
+      return last == cur + 1;
+    case ListIterator:
+      return last == cur + 1;
+    case SingleIterator:
+      return true;
+    case NullPtrIterator:
+      return true;
+    }
+    return true;
+  }
+
   Value* Values::iterator::operator*()
   {
     switch (type) {

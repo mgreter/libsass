@@ -17,6 +17,52 @@ namespace Sass {
 
       /*******************************************************************/
 
+      // Merges [map1] and [map2], with values in [map2] taking precedence.
+      // If both [map1] and [map2] have a map value associated with
+      // the same key, this recursively merges those maps as well.
+      Map* deepMergeImpl(Map* map1, Map* map2)
+      {
+
+        if (map2->empty()) return map1;
+
+        // Avoid making a mutable copy of `map2` if it would totally overwrite `map1`
+        // anyway.
+        // var mutable = false;
+        // var result = map2.contents;
+        // void _ensureMutable() {
+        //   if (mutable) return;
+        //   mutable = true;
+        //   result = Map.of(result);
+        // }
+
+        MapObj result = SASS_MEMORY_COPY(map2);
+
+        // Because values in `map2` take precedence over `map1`, we just check if any
+        // entires in `map1` don't have corresponding keys in `map2`, or if they're
+        // maps that need to be merged in their own right.
+        for (auto kv : map1->elements()) {
+          Value* key = kv.first;
+          Value* value = kv.second;
+          auto it = result->find(key);
+          if (it != result->end()) {
+            Map* valueMap = value->isaMap();
+            Map* resultMap = it->second->isaMap();
+            if (resultMap != nullptr && valueMap != nullptr) {
+              Map* merged = deepMergeImpl(valueMap, resultMap);
+              // if (identical(merged, resultMap)) return;
+              it.value() = merged;
+            }
+          }
+          else {
+            result->insert(kv);
+          }
+        }
+
+        return result.detach();
+      }
+
+      /*******************************************************************/
+
       BUILT_IN_FN(get)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
@@ -107,6 +153,38 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
       }
 
+      BUILT_IN_FN(fnDeepMerge)
+      {
+        MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
+        MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
+        return deepMergeImpl(map1, map2);
+      }
+      
+      BUILT_IN_FN(fnDeepRemove)
+      {
+        MapObj map = arguments[0]->assertMap(compiler, Strings::map);
+        MapObj result = SASS_MEMORY_COPY(map);
+        auto it = arguments[1]->iterator();
+        auto cur = it.begin(), end = it.end();
+        Map* level = result;
+        while (cur != end) {
+          if (cur.isLast()) {
+            level->erase(*cur);
+            return result.detach();
+          }
+          else {
+            // Go further down one key
+            auto child = level->find(*cur);
+            if (child == level->end()) return result.detach();
+            auto childMap = child->second->isaMap();
+            if (childMap == nullptr) return result.detach();
+            child.value() = level = SASS_MEMORY_COPY(childMap);
+          }
+          ++cur;
+        }
+        return result.detach();
+      }
+
       /*******************************************************************/
 
       void registerFunctions(Compiler& ctx)
@@ -121,7 +199,12 @@ namespace Sass {
         module.addFunction("keys", ctx.registerBuiltInFunction("map-keys", "$map", keys));
         module.addFunction("values", ctx.registerBuiltInFunction("map-values", "$map", values));
         module.addFunction("has-key", ctx.registerBuiltInFunction("map-has-key", "$map, $key", hasKey));
+
+        module.addFunction("deep-merge", ctx.createBuiltInFunction("deep-merge", "$map1, $map2", fnDeepMerge));
+        module.addFunction("deep-remove", ctx.createBuiltInFunction("deep-remove", "$map, $keys...", fnDeepRemove));
+
       }
+
 
       /*******************************************************************/
 
