@@ -636,6 +636,8 @@ namespace Sass {
 
     VarRefs* idxs;
 
+    sass::vector<std::pair<VarRefs*, Root*>> forwarded;
+
     Root(const SourceSpan& pstate, size_t reserve = 0)
       : AstNode(pstate), Vectorized<Statement>(reserve)
     {}

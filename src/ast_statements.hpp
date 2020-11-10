@@ -539,9 +539,10 @@ namespace Sass {
   private:
     ADD_CONSTREF(bool, isShown);
     ADD_CONSTREF(sass::string, url);
-    ADD_CONSTREF(sass::vector<ConfiguredVariable>, config);
-    ADD_CONSTREF(std::set<sass::string>, toggledVariables);
-    ADD_CONSTREF(std::set<sass::string>, toggledCallables);
+    ADD_REF(sass::vector<ConfiguredVariable>, config);
+    ADD_REF(std::set<sass::string>, toggledVariables);
+    ADD_REF(std::set<sass::string>, toggledCallables);
+    ADD_CONSTREF(RootObj, root);
   public:
     // Value constructor
     ForwardRule(

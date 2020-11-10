@@ -1417,8 +1417,6 @@ namespace Sass {
       }
     }
 
-    if (node->isSupported) return nullptr;
-
     return nullptr;
     // throw Exception::RuntimeException(compiler,
     //   "@use rules not yet supported in LibSass!");
@@ -1426,9 +1424,16 @@ namespace Sass {
 
   Value* Eval::visitForwardRule(ForwardRule* node)
   {
-    compiler.addFinalStackTrace(node->pstate());
-    throw Exception::RuntimeException(compiler,
-      "@forward rules not yet supported in LibSass!");
+    BackTrace trace(node->pstate(), Strings::useRule, true);
+    callStackFrame frame(logger456, trace);
+
+    if (node->root()) {
+      for (auto child : node->root()->elements()) {
+        child->accept(this);
+      }
+    }
+
+    return nullptr;
   }
 
   CssParentNode* Eval::_trimIncluded(CssParentVector& nodes)

@@ -1429,16 +1429,36 @@ namespace Sass {
       VarRefs* refs = root->idxs;
       rule->root(root);
 
+      // This leaks, give it someone
+      VarRefs* copy = new VarRefs(*refs);
+
+      for (auto fwd : root->forwarded) {
+        for (auto fn : fwd.first->fnIdxs) {
+          copy->fnIdxs.insert(fn);
+        }
+        for (auto mix : fwd.first->mixIdxs) {
+          copy->mixIdxs.insert(mix);
+        }
+        for (auto var : fwd.first->fnIdxs) {
+          copy->fnIdxs.insert(var);
+        }
+      }
+
+      // currentRoot->forwarded.push_back
+
       if (ns == "*") {
         // This must not be on root block
         // These may vary for different use rules
         frame->fwdGlobal33.push_back(
-          { refs, sheet->root2 });
+          { copy, sheet->root2 });
       }
       else {
+
+        // Combine forwarded with local scope
         frame->fwdModule33[ns] =
-        { refs, sheet->root2 };
+        { copy, sheet->root2 };
       }
+
       rule->isSupported = true;
 
 
@@ -1497,18 +1517,338 @@ namespace Sass {
     }
 
     sass::vector<ConfiguredVariable> config;
-    readWithConfiguration(config, true);
+    bool hasWith(readWithConfiguration(config, true));
     expectStatementSeparator("@forward rule");
+
     if (isUseAllowed == false) {
       throw Exception::ParserException(context,
         "@forward rules must be written before any other rules.");
     }
-    return SASS_MEMORY_NEW(ForwardRule,
+
+    ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
       url, std::move(config),
       std::move(toggledVariables),
       std::move(toggledCallables),
       isShown);
+
+    EnvFrame* current(context.varStack.back());
+
+    // Support internal modules first
+    if (startsWith(url, "sass:", 5)) {
+      sass::string name(url.substr(5));
+      if (prefix.empty()) prefix = name; // Must not happen!
+      if (Module* module = context.getModule(name)) {
+
+        VarRefs* idxs = module->idxs;
+
+        // This leaks for now, testing only
+        VarRefs* exposed = new VarRefs(
+          idxs->pscope,
+          idxs->varFrame,
+          idxs->mixFrame,
+          idxs->fnFrame,
+          idxs->permeable,
+          idxs->isModule);
+
+        if (isShown)
+        {
+          for (auto kv : idxs->varIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            if (toggledVariables.count(key.orig()) == 1)
+              exposed->varIdxs.insert({ key, kv.second });
+          }
+          for (auto kv : idxs->mixIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            if (toggledCallables.count(key.orig()) == 1)
+              exposed->mixIdxs.insert({ key, kv.second });
+          }
+          for (auto kv : idxs->fnIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            if (toggledCallables.count(key.orig()) == 1)
+              exposed->fnIdxs.insert({ key, kv.second });
+          }
+        }
+        else if (isHidden) {
+          for (auto kv : idxs->varIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            if (toggledVariables.count(key.orig()) == 0)
+              exposed->varIdxs.insert({ key, kv.second });
+          }
+          for (auto kv : idxs->mixIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            if (toggledCallables.count(key.orig()) == 0)
+              exposed->mixIdxs.insert({ key, kv.second });
+          }
+          for (auto kv : idxs->fnIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            if (toggledCallables.count(key.orig()) == 0)
+              exposed->fnIdxs.insert({ key, kv.second });
+          }
+        }
+        else {
+          for (auto kv : idxs->varIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            exposed->varIdxs.insert({ key, kv.second });
+          }
+          for (auto kv : idxs->mixIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            exposed->mixIdxs.insert({ key, kv.second });
+          }
+          for (auto kv : idxs->fnIdxs) {
+            EnvKey key(prefix + kv.first.orig());
+            exposed->fnIdxs.insert({ key, kv.second });
+          }
+        }
+
+        // current->forwarded.push_back({ exposed, nullptr });
+        currentRoot->forwarded.push_back({ exposed, nullptr });
+
+        rule->root(nullptr);
+
+      }
+      else {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Invalid internal module requested.");
+      }
+      return rule.detach();
+    }
+
+
+    // Load the shit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    auto& withConfig = rule->config();
+    LocalOption<sass::vector<ConfiguredVariable>*>
+      scoped(context.withConfig, hasWith ? &withConfig : nullptr);
+
+
+
+
+
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    const ImportRequest import(url, scanner.sourceUrl);
+    callStackFrame frame(context, { pstate, Strings::useRule });
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(context, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = context.loadImport(resolved[0])) {
+
+      // ToDo: We don't take format into account
+      StyleSheet* sheet = nullptr;
+      EnvFrame* frame(context.varStack.back());
+      auto cached = context.sheets.find(loaded->getAbsPath());
+      if (cached != context.sheets.end()) {
+
+        // Check if with is given, error
+
+        sheet = cached->second;
+
+        if (hasWith) {
+          throw Exception::ParserException(context,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+
+      }
+      else {
+        EnvFrame local(context.varStack, true, true);
+        local.idxs->varFrame = 0xFFFFFFFF;
+        local.idxs->mixFrame = 0xFFFFFFFF;
+        local.idxs->fnFrame = 0xFFFFFFFF;
+        sheet = context.registerImport(loaded);
+        sheet->root2->idxs = local.idxs;
+        // sheet->root2->con context->node
+      }
+
+      if (context.withConfig) {
+        for (auto& varcfg : *context.withConfig) {
+          if (varcfg.wasUsed == false) {
+            context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "This variable was not declared with "
+              "!default in the @used module.");
+          }
+        }
+      }
+
+      Root* root = sheet->root2;
+      VarRefs* refs = root->idxs;
+      rule->root(root);
+
+      // This leaks, give it someone
+      VarRefs* idxs = refs;
+
+
+
+
+      // This leaks for now, testing only
+      VarRefs* exposed = new VarRefs(
+        idxs->pscope,
+        idxs->varFrame,
+        idxs->mixFrame,
+        idxs->fnFrame,
+        idxs->permeable,
+        idxs->isModule);
+
+      for (auto fwd : root->forwarded) {
+        for (auto kv : fwd.first->varIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          exposed->varIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : fwd.first->mixIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          exposed->mixIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : fwd.first->fnIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          exposed->fnIdxs.insert({ key, kv.second });
+        }
+      }
+
+      if (isShown)
+      {
+        for (auto kv : idxs->varIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          if (toggledVariables.count(key.orig()) == 1)
+            exposed->varIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : idxs->mixIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          if (toggledCallables.count(key.orig()) == 1)
+            exposed->mixIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : idxs->fnIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          if (toggledCallables.count(key.orig()) == 1)
+            exposed->fnIdxs.insert({ key, kv.second });
+        }
+      }
+      else if (isHidden) {
+        for (auto kv : idxs->varIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          if (toggledVariables.count(key.orig()) == 0)
+            exposed->varIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : idxs->mixIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          if (toggledCallables.count(key.orig()) == 0)
+            exposed->mixIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : idxs->fnIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          if (toggledCallables.count(key.orig()) == 0)
+            exposed->fnIdxs.insert({ key, kv.second });
+        }
+      }
+      else {
+        for (auto kv : idxs->varIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          exposed->varIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : idxs->mixIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          exposed->mixIdxs.insert({ key, kv.second });
+        }
+        for (auto kv : idxs->fnIdxs) {
+          EnvKey key(prefix + kv.first.orig());
+          exposed->fnIdxs.insert({ key, kv.second });
+        }
+      }
+
+      // current->forwarded.push_back({ exposed, nullptr });
+      currentRoot->forwarded.push_back({ exposed, nullptr });
+
+
+
+
+
+      // for (auto fwd : root->forwarded) {
+      //   for (auto fn : fwd.first->fnIdxs) {
+      //     copy->fnIdxs.insert(fn);
+      //   }
+      //   for (auto mix : fwd.first->mixIdxs) {
+      //     copy->mixIdxs.insert(mix);
+      //   }
+      //   for (auto var : fwd.first->fnIdxs) {
+      //     copy->fnIdxs.insert(var);
+      //   }
+      // }
+
+      // currentRoot->forwarded.push_back
+
+      // if (ns == "*") {
+      //   // This must not be on root block
+      //   // These may vary for different use rules
+      //   frame->fwdGlobal33.push_back(
+      //     { copy, sheet->root2 });
+      // }
+      // else {
+      // 
+      //   // Combine forwarded with local scope
+      //   frame->fwdModule33[ns] =
+      //   { copy, sheet->root2 };
+      // }
+      // 
+      // rule->isSupported = true;
+
+
+      // rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
+    }
+    else {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Couldn't read stylesheet for import.");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return rule.detach();
   }
 
   /// Parses the namespace of a `@use` rule from an `as` clause, or returns the
