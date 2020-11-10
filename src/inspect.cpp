@@ -780,17 +780,19 @@ namespace Sass {
     // resolved color
     sass::string res_name = name;
 
-    double r = round32(clamp(c->r(), 0.0, 255.0), opt.precision);
-    double g = round32(clamp(c->g(), 0.0, 255.0), opt.precision);
-    double b = round32(clamp(c->b(), 0.0, 255.0), opt.precision);
+    double epsilon = std::pow(0.1, opt.precision);
+
+    double r = round64(clamp(c->r(), 0.0, 255.0), epsilon);
+    double g = round64(clamp(c->g(), 0.0, 255.0), epsilon);
+    double b = round64(clamp(c->b(), 0.0, 255.0), epsilon);
     double a = clamp<double>(c->a(), 0, 1);
 
     // get color from given name (if one was given at all)
     if (name != "" && name_to_color(name)) {
       const ColorRgba* n = name_to_color(name);
-      r = round32(clamp(n->r(), 0.0, 255.0), opt.precision);
-      g = round32(clamp(n->g(), 0.0, 255.0), opt.precision);
-      b = round32(clamp(n->b(), 0.0, 255.0), opt.precision);
+      r = round64(clamp(n->r(), 0.0, 255.0), epsilon);
+      g = round64(clamp(n->g(), 0.0, 255.0), epsilon);
+      b = round64(clamp(n->b(), 0.0, 255.0), epsilon);
       a = clamp(n->a(), 0.0, 1.0);
     }
     // otherwise get the possible resolved color name

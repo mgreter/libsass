@@ -171,8 +171,8 @@ namespace Sass {
     return m;
   }
 
-  double round32(double val, int precision = SassDefaultPrecision);
-  
+  double round64(double val, double epsilon = SassDefaultEpsilon);
+
 }
 
 

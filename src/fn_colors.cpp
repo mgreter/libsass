@@ -536,21 +536,21 @@ namespace Sass {
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round32(rgba->r()));
+        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->r(), compiler.epsilon));
       }
 
       BUILT_IN_FN(green)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round32(rgba->g()));
+        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->g(), compiler.epsilon));
       }
 
       BUILT_IN_FN(blue)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round32(rgba->b()));
+        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->b(), compiler.epsilon));
       }
 
       /*******************************************************************/
