@@ -104,6 +104,8 @@ namespace Sass {
     uint32_t registerBuiltInFunction(const sass::string& name,
       const sass::string& signature, SassFnSig cb);
 
+    uint32_t createBuiltInVariable(const sass::string& name, Value* value);
+
     /////////////////////////////////////////////////////////////////////////
     // Register built-in functions that can take different
     // functional arguments (best suited will be chosen).
