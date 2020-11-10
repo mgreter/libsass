@@ -293,6 +293,9 @@ namespace Sass {
       // Move to the next item
       iterator& operator++();
 
+      // Check if it's the last item
+      bool isLast();
+
       // Compare operators
       bool operator==(const iterator& other) const;
       bool operator!=(const iterator& other) const;

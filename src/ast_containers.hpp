@@ -258,9 +258,10 @@ namespace Sass {
       sass::vector<std::pair<K, T>>
     >;
 
+    ordered_map_type elements_;
+
   protected:
 
-    ordered_map_type elements_;
 
     // Hash is only calculated once and afterwards the value
     // must not be mutated, which is the case with how sass
@@ -322,6 +323,11 @@ namespace Sass {
       return elements_.find(key);
     }
 
+    typename ordered_map_type::iterator find(const K& key)
+    {
+      return elements_.find(key);
+    }
+
     void insert(std::pair<K, T>&& kv)
     {
       elements_.insert(kv);
@@ -360,8 +366,8 @@ namespace Sass {
       elements_[key] = std::move(val);
     }
 
-    // Return unmodifiable reference
-    const ordered_map_type& elements() const {
+    // Return modifiable reference
+    ordered_map_type& elements() {
       return elements_;
     }
 
