@@ -356,6 +356,11 @@ namespace Sass {
       double value = 0.0,
       const sass::string& units = "");
 
+    // Value constructor
+    Number(
+      const SourceSpan& pstate,
+      double value, Units units);
+
     // Copy constructor
     Number(const Number* ptr);
 
