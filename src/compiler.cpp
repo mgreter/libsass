@@ -644,6 +644,15 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
   // EO registerBuiltInFunction
 
+  uint32_t Compiler::createBuiltInVariable(const sass::string& name, Value* value)
+  {
+    EnvRoot root(varStack);
+    auto& variables(varRoot.intVariables);
+    uint32_t offset((uint32_t)variables.size());
+    varRoot.intVariables.push_back(value);
+    return varRoot.varIdxs[name] = offset;
+  }
+
   // Register built-in function with only one parameter list.
   uint32_t Compiler::registerBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
