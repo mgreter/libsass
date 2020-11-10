@@ -212,6 +212,8 @@ namespace Sass {
     EnvFrame* getParent(bool passThrough = false) {
       if (isRoot())
         return nullptr;
+      if (idxs->isModule)
+        return nullptr;
       if (!passThrough)
         if (!permeable)
           return nullptr;

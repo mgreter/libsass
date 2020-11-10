@@ -68,7 +68,12 @@ namespace Sass {
     // Lookup functions by function name
     // Due to EnvKayMap case insensitive.
     EnvKeyMap<CallableObj> fnLookup;
+
+
   public:
+
+    sass::vector<ConfiguredVariable>* withConfig = nullptr;
+
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?
     // ToDo: should be case insensitive on windows?
