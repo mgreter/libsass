@@ -1430,7 +1430,13 @@ namespace Sass {
       rule->root(root);
 
       // This leaks, give it someone
-      VarRefs* copy = new VarRefs(*refs);
+      VarRefs* copy = new VarRefs(
+        refs->pscope,
+        refs->varFrame,
+        refs->mixFrame,
+        refs->fnFrame,
+        refs->permeable,
+        refs->isModule);
 
       for (auto fwd : root->forwarded) {
         for (auto var : fwd.first->varIdxs) {
@@ -1461,6 +1467,14 @@ namespace Sass {
           copy->fnIdxs.insert(fn);
         }
       }
+
+      // Implementation is limited
+      for (auto it : refs->varIdxs)
+        copy->varIdxs.insert(it);
+      for (auto it : refs->mixIdxs)
+        copy->mixIdxs.insert(it);
+      for (auto it : refs->fnIdxs)
+        copy->fnIdxs.insert(it);
 
       // currentRoot->forwarded.push_back
 

@@ -136,18 +136,55 @@ namespace Sass {
 
       BUILT_IN_FN(moduleVariables)
       {
-        // String* variable = arguments[0]->assertString(Sass::Strings::name);
-        // String* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
-        throw Exception::RuntimeException(compiler,
-          "Modules are not supported yet");
+        String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
+        Map* list = SASS_MEMORY_NEW(Map, pstate);
+        auto module = compiler.varStack.back()->getModule();
+        auto it = module->fwdModule33.find(ns->value());
+        if (it != module->fwdModule33.end()) {
+          VarRefs* refs = it->second.first;
+          for (auto entry : refs->varIdxs) {
+            auto name = SASS_MEMORY_NEW(String, pstate,
+              sass::string(entry.first.norm()), true);
+            VarRef vidx(refs->varFrame, entry.second);
+            list->insert({ name, compiler.
+              varRoot.getVariable(vidx) });
+          }
+          if (Root* block = it->second.second) {
+            for (auto fwds : block->forwarded) {
+              for (auto fwd : fwds.first->varIdxs) {
+                std::cerr << "include that\n";
+              }
+            }
+          }
+        }
+        return list;
       }
 
       BUILT_IN_FN(moduleFunctions)
       {
-        // String* variable = arguments[0]->assertString(Sass::Strings::name);
-        // String* plugin = arguments[1]->assertStringOrNull(Sass::Strings::module);
-        throw Exception::RuntimeException(compiler,
-          "Modules are not supported yet");
+        String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
+        Map* list = SASS_MEMORY_NEW(Map, pstate);
+        auto module = compiler.varStack.back()->getModule();
+        auto it = module->fwdModule33.find(ns->value());
+        if (it != module->fwdModule33.end()) {
+          VarRefs* refs = it->second.first;
+          for (auto entry : refs->fnIdxs) {
+            auto name = SASS_MEMORY_NEW(String, pstate,
+              sass::string(entry.first.norm()), true);
+            VarRef fidx(refs->fnFrame, entry.second);
+            auto callable = compiler.varRoot.getFunction(fidx);
+            auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
+            list->insert({ name, fn });
+          }
+          if (Root* block = it->second.second) {
+            for (auto fwds : block->forwarded) {
+              for (auto fwd : fwds.first->fnIdxs) {
+                std::cerr << "include that\n";
+              }
+            }
+          }
+        }
+        return list;
       }
 
       /// Like `_environment.getFunction`, but also returns built-in
@@ -245,8 +282,8 @@ namespace Sass {
         module.addFunction("function-exists", compiler.registerBuiltInFunction("function-exists", "$name, $module: null", functionExists));
         module.addFunction("mixin-exists", compiler.registerBuiltInFunction("mixin-exists", "$name, $module: null", mixinExists));
         module.addFunction("content-exists", compiler.registerBuiltInFunction("content-exists", "", contentExists));
-		    // module.addFunction("get", compiler.registerBuiltInFunction("module-variables", "$module", moduleVariables));
-		    // module.addFunction("get", compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions));
+		    module.addFunction("module-variables", compiler.createBuiltInFunction("module-variables", "$module", moduleVariables));
+		    module.addFunction("module-functions", compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions));
         module.addFunction("get-function", compiler.registerBuiltInFunction("get-function", "$name, $css: false, $module: null", getFunction));
         module.addFunction("call", compiler.registerBuiltInFunction("call", "$function, $args...", call));
 
