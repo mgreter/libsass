@@ -19,6 +19,21 @@ namespace Sass {
 
       /*******************************************************************/
 
+      double fuzzyRoundIfZero(double number, double epsilon) {
+        if (!fuzzyEquals(number, 0.0, epsilon)) return number;
+        return number < 0.0 ? -0.0 : 0;
+      }
+
+      double coerceToRad(Number* number, Compiler& compiler) {
+        Units radiants("rad");
+        if (double factor = number->getUnitConvertFactor(radiants)) {
+          return number->value() * factor;
+        }
+        throw Exception::UnitMismatch(compiler, number, "rad");
+      }
+
+      /*******************************************************************/
+
       BUILT_IN_FN(round)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
@@ -36,6 +51,28 @@ namespace Sass {
           std::ceil(number->value()),
           number->unit());
       }
+      BUILT_IN_FN(fnClamp)
+      {
+
+        Number* min = arguments[0]->assertNumber(compiler, "min");
+        Number* number = arguments[1]->assertNumber(compiler, "number");
+        Number* max = arguments[2]->assertNumber(compiler, "max");
+        if (min->hasUnits() == number->hasUnits() && number->hasUnits() == max->hasUnits()) {
+          if (min->greaterThanOrEquals(max, compiler, pstate)) return min;
+          if (min->greaterThanOrEquals(number, compiler, pstate)) return min;
+          if (number->greaterThanOrEquals(max, compiler, pstate)) return max;
+          return number;
+        }
+
+        auto arg2 = min->hasUnits() != number->hasUnits() ? number : max;
+        auto arg2Name = min->hasUnits() != number->hasUnits() ? "$number" : "$max";
+        auto unit1 = min->hasUnits() ? "has unit " + min->unit() : "is unitless";
+        auto unit2 = arg2->hasUnits() ? "has unit " + arg2->unit() : "is unitless";
+        throw Exception::RuntimeException(compiler,
+          "$min " + unit1 + " but " + arg2Name + " " + unit2 + ". "
+          "Arguments must all have units or all be unitless.");
+      }
+
 
       /*******************************************************************/
 
@@ -56,6 +93,133 @@ namespace Sass {
           std::abs(number->value()),
           number->unit());
       }
+
+      BUILT_IN_FN(fnHypot)
+      {
+        sass::vector<Number*> numbers;
+        for (Value* value : arguments[0]->iterator()) {
+          numbers.push_back(value->assertNumber(compiler, ""));
+        }
+
+        if (numbers.empty()) {
+          throw Exception::RuntimeException(compiler,
+            "At least one argument must be passed.");
+        }
+
+        auto numeratorUnits = numbers[0]->numerators;
+        auto denominatorUnits = numbers[0]->denominators;
+        auto subtotal = 0.0;
+        for (auto i = 0; i < numbers.size(); i++) {
+          auto& number = numbers[i];
+          if (number->hasUnits() == numbers[0]->hasUnits()) {
+            if (double factor = number->getUnitConvertFactor(numbers[0])) {
+              subtotal += std::pow(number->value() * factor, 2.0);
+            }
+            else {
+              throw Exception::UnitMismatch(compiler, numbers[0], number);
+            }
+          }
+          else {
+            auto unit1 = numbers[0]->hasUnits() ? "has unit " + numbers[0]->unit() : "is unitless";
+            auto unit2 = number->hasUnits() ? "has unit " + number->unit() : "is unitless";
+            sass::sstream strm; strm << (i + 1);
+            throw Exception::RuntimeException(compiler,
+              "Argument 1 " + unit1 + " but argument " + strm.str() + " " + unit2 + ". "
+              "Arguments must all have units or all be unitless.");
+          }
+        }
+
+        return SASS_MEMORY_NEW(Number, pstate,
+          std::sqrt(subtotal), numbers[0]);
+
+      }
+
+      BUILT_IN_FN(fnLog)
+      {
+        auto number = arguments[0]->assertNumber(compiler, Strings::number);
+        if (number->hasUnits()) {
+          throw Exception::RuntimeException(compiler,
+            "$number: Expected $number to have no units.");
+        }
+
+        double numberValue = fuzzyRoundIfZero(number->value(), compiler.epsilon);
+        if (arguments[1]->isNull()) {
+          return SASS_MEMORY_NEW(Number,
+            pstate, std::log(numberValue));
+        }
+
+        auto base = arguments[1]->assertNumber(compiler, "base");
+        if (base->hasUnits()) {
+          throw Exception::RuntimeException(compiler,
+            "$base: Expected $base to have no units.");
+        }
+
+        auto baseValue = fuzzyEquals(base->value(), 1.0, compiler.epsilon)
+          ? fuzzyRound(base->value(), compiler.epsilon)
+          : fuzzyRoundIfZero(base->value(), compiler.epsilon);
+
+        return SASS_MEMORY_NEW(Number, pstate,
+          std::log(numberValue) / std::log(baseValue));
+      }
+
+      BUILT_IN_FN(fnPow)
+      {
+
+        auto base = arguments[0]->assertNumber(compiler, "base");
+        auto exponent = arguments[1]->assertNumber(compiler, "exponent");
+        if (base->hasUnits()) {
+          throw Exception::RuntimeException(compiler,
+            "$base: Expected $base to have no units.");
+        }
+        if (exponent->hasUnits()) {
+          throw Exception::RuntimeException(compiler,
+            "$exponent: Expected $exponent to have no units.");
+        }
+
+        // Exponentiating certain real numbers leads to special behaviors. Ensure that
+        // these behaviors are consistent for numbers within the precision limit.
+        auto baseValue = fuzzyRoundIfZero(base->value(), compiler.epsilon);
+        auto exponentValue = fuzzyRoundIfZero(exponent->value(), compiler.epsilon);
+        if (fuzzyEquals(std::abs(baseValue), 1.0, compiler.epsilon) && std::isinf(exponentValue)) {
+          return SASS_MEMORY_NEW(Number, pstate, std::numeric_limits<double>::quiet_NaN());
+        }
+        else if (fuzzyEquals(baseValue, 0.0, compiler.epsilon)) {
+          if (std::isinf(exponentValue) &&
+            fuzzyIsInt(exponentValue, compiler.epsilon) &&
+            (int)round64(exponentValue, compiler.epsilon) % 2 == 1) {
+            exponentValue = fuzzyRound(exponentValue, compiler.epsilon);
+          }
+        }
+        else if (std::isinf(baseValue) &&
+          fuzzyLessThan(baseValue, 0.0, compiler.epsilon) &&
+          std::isinf(exponentValue) &&
+          fuzzyIsInt(exponentValue, compiler.epsilon)) {
+          exponentValue = fuzzyRound(exponentValue, compiler.epsilon);
+        }
+        else if (std::isinf(baseValue) &&
+          fuzzyLessThan(baseValue, 0.0, compiler.epsilon) &&
+          std::isinf(exponentValue) &&
+          fuzzyIsInt(exponentValue, compiler.epsilon) &&
+          (int)round64(exponentValue, compiler.epsilon) % 2 == 1) {
+          exponentValue = fuzzyRound(exponentValue, compiler.epsilon);
+        }
+
+        return SASS_MEMORY_NEW(Number, pstate,
+          std::pow(baseValue, exponentValue));
+
+      }
+
+      BUILT_IN_FN(fnSqrt)
+      {
+        auto number = arguments[0]->assertNumber(compiler, "number");
+        if (number->hasUnits()) {
+          throw Exception::RuntimeException(compiler,
+            "$number: Expected $number to have no units.");
+        }
+        return SASS_MEMORY_NEW(Number, pstate, std::sqrt(
+          fuzzyRoundIfZero(number->value(), compiler.epsilon)));
+      }
+      
 
       /*******************************************************************/
 
@@ -158,20 +322,6 @@ namespace Sass {
 
       /*******************************************************************/
 
-      double fuzzyRoundIfZero(double number, double epsilon) {
-        if (!fuzzyEquals(number, 0.0, epsilon)) return number;
-        return number < 0.0 ? -0.0 : 0;
-      }
-
-      double coerceToRad(Number* number, Compiler& compiler) {
-        Units radiants("rad");
-        if (double factor = number->getUnitConvertFactor(radiants)) {
-          return number->value() * factor;
-        }
-        throw Exception::RuntimeException(compiler,
-          "asdasd");
-      }
-
       BUILT_IN_FN(fnCos)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
@@ -262,8 +412,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Number, pstate, result, "deg");
         }
 
-        throw Exception::RuntimeException(compiler,
-          "Not compatible.");
+        throw Exception::UnitMismatch(compiler, x, y);
       }
 
       /*******************************************************************/
@@ -279,7 +428,7 @@ namespace Sass {
             3.14159265358979323846264338327950288419716939937510)));
         module.addFunction("ceil", ctx.registerBuiltInFunction("ceil", "$number", ceil));
 
-        // module.addFunction("clamp", ctx.createBuiltInFunction("clamp", "$min, $number, $max", clamp));
+        module.addFunction("clamp", ctx.createBuiltInFunction("clamp", "$min, $number, $max", fnClamp));
 
         module.addFunction("floor", ctx.registerBuiltInFunction("floor", "$number", floor));
         module.addFunction("max", ctx.registerBuiltInFunction("max", "$numbers...", max));
@@ -287,10 +436,10 @@ namespace Sass {
         module.addFunction("round", ctx.registerBuiltInFunction("round", "$number", round));
 
         module.addFunction("abs", ctx.registerBuiltInFunction("abs", "$number", abs));
-        // module.addFunction("hypot", ctx.createBuiltInFunction("clamp", "$number", fnHypot));
-        // module.addFunction("log", ctx.createBuiltInFunction("log", "$number, $base: null", fnLog));
-        // module.addFunction("pow", ctx.createBuiltInFunction("clamp", "$number, $base: null", fnPow));
-        // module.addFunction("sqrt", ctx.createBuiltInFunction("clamp", "$number", fnSqrt));
+        module.addFunction("hypot", ctx.createBuiltInFunction("hypot", "$number...", fnHypot));
+        module.addFunction("log", ctx.createBuiltInFunction("log", "$number, $base: null", fnLog));
+        module.addFunction("pow", ctx.createBuiltInFunction("pow", "$base, $exponent", fnPow));
+        module.addFunction("sqrt", ctx.createBuiltInFunction("sqrt", "$number", fnSqrt));
 
         module.addFunction("cos", ctx.createBuiltInFunction("cos", "$number", fnCos));
         module.addFunction("sin", ctx.createBuiltInFunction("sin", "$number", fnSin));
@@ -304,8 +453,8 @@ namespace Sass {
         module.addFunction("random", ctx.registerBuiltInFunction("random", "$limit: null", random));
 		    module.addFunction("unit", ctx.registerBuiltInFunction("unit", "$number", unit));
 		    module.addFunction("percentage", ctx.registerBuiltInFunction("percentage", "$number", percentage));
-		    module.addFunction("unitless", ctx.registerBuiltInFunction("unitless", "$number", isUnitless));
-		    module.addFunction("comparable", ctx.registerBuiltInFunction("comparable", "$number1, $number2", compatible));
+		    module.addFunction("is-unitless", ctx.registerBuiltInFunction("unitless", "$number", isUnitless));
+		    module.addFunction("compatible", ctx.registerBuiltInFunction("comparable", "$number1, $number2", compatible));
 	    }
 
       /*******************************************************************/

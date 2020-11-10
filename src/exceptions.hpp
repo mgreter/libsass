@@ -59,6 +59,20 @@ namespace Sass {
       virtual const char* what() const throw() { return msg.c_str(); }
     };
 
+    class UnitMismatch : public RuntimeException
+    {
+    public:
+      UnitMismatch(
+        BackTraces traces,
+        const Number& lhs,
+        const Number& rhs);
+      UnitMismatch(
+        BackTraces traces,
+        const Number& lhs,
+        const sass::string& rhs);
+    };
+
+
     class DeprecatedColorAdjustFn : public RuntimeException
     {
     public:

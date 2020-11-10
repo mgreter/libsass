@@ -583,6 +583,19 @@ namespace Sass {
     rhsAsSlash_()
   {}
 
+  // Value constructor
+  Number::Number(
+    const SourceSpan& pstate,
+    double value,
+    Units units) :
+    Value(pstate),
+    Units(units),
+    value_(value),
+    lhsAsSlash_(),
+    rhsAsSlash_()
+  {}
+
+
   // Copy constructor
   Number::Number(const Number* ptr) :
     Value(ptr),
