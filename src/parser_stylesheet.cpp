@@ -2162,22 +2162,46 @@ namespace Sass {
         std::move(pstate), {}, {});
     }
 
+    sass::vector<VarRef> midxs;
+
     if (!ns.empty()) {
       auto pstate(scanner.relevantSpanFrom(start));
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Mixin namespaces not supported yet!");
+      EnvFrame* frame(context.varStack.back()->getModule());
+      auto it = frame->fwdModule33.find(ns);
+      if (it != frame->fwdModule33.end()) {
+        VarRefs* refs = it->second.first;
+        auto in = refs->mixIdxs.find(name);
+        if (in != refs->mixIdxs.end()) {
+          if (isPrivate(name)) {
+            context.addFinalStackTrace(pstate);
+            throw Exception::ParserException(context,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
+          uint32_t offset = in->second;
+          midxs.push_back({ refs->mixFrame, offset });
+        }
+      }
+      if (midxs.empty()) {
+        VarRef midx(frame->getMixinIdx(name, true));
+        if (!midxs.empty()) midxs.push_back(midx);
+      }
+      // context.addFinalStackTrace(pstate);
+      // throw Exception::ParserException(context,
+      //   "Mixin namespaces not supported yet!");
     }
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
     scanner.relevantSpanFrom(start), name, ns, arguments);
 
-    if (!name.empty()) {
+    if (!name.empty() && midxs.empty()) {
       // Get the function through the whole stack
-      auto midx = context.varStack.back()->getMixinIdx(name);
-      rule->midx(midx);
+      midxs.push_back(context.varStack.back()->getMixinIdx(name));
     }
 
+    if (!midxs.empty()) {
+      rule->midx(midxs[0]);
+    }
 
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
