@@ -65,7 +65,13 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_containers.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_imports.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_supports.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_callable.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_callables.hpp">
@@ -152,19 +158,19 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\compiler.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_colors.hpp">
-      <Filter>Library Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_lists.hpp">
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_meta.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_maps.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_meta.hpp">
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_math.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_numbers.hpp">
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_colors.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_lists.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_selectors.hpp">
@@ -207,6 +213,9 @@
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\source.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sources.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\output.hpp">
@@ -385,7 +394,13 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\compiler.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_meta.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_maps.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_math.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_lists.cpp">
@@ -394,16 +409,10 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_colors.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_numbers.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_texts.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_selectors.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_meta.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\color_maps.cpp">

@@ -59,6 +59,17 @@ namespace Sass {
       virtual const char* what() const throw() { return msg.c_str(); }
     };
 
+    class DeprecatedColorAdjustFn : public RuntimeException
+    {
+    public:
+      DeprecatedColorAdjustFn(
+        Logger& logger,
+        const ValueVector& arguments,
+        sass::string name,
+        sass::string prefix,
+        sass::string secondarg = Strings::amount);
+    };
+
     class InvalidParent : public Base {
       protected:
         Selector* parent;

@@ -1407,7 +1407,9 @@ namespace Sass {
 
   Value* Eval::visitUseRule(UseRule* node)
   {
-    compiler.addFinalStackTrace(node->pstate());
+
+    BackTrace trace(node->pstate(), Strings::useRule, true);
+    callStackFrame frame(logger456, trace);
 
     if (node->root()) {
       for (auto child : node->root()->elements()) {
