@@ -78,6 +78,8 @@ namespace Sass {
     // Main parser entry function
     Root* parseRoot();
 
+    Root* currentRoot = nullptr;
+
     // Parse external callback function
     ExternalCallable* parseExternalCallable();
 

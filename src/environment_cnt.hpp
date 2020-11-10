@@ -26,6 +26,12 @@ namespace Sass {
   >;
 
   template<typename T>
+  using ModuleMap = UnorderedMap<
+    const sass::string, T, hashString, equalsString,
+    Sass::Allocator<std::pair<const EnvKey, T>>
+  >;
+
+  template<typename T>
   // Performance comparisons on MSVC and bolt-bench:
   // tsl::hopscotch_map is 10% slower than Sass::FlatMap
   // std::unordered_map a bit faster than tsl::hopscotch_map

@@ -1408,6 +1408,7 @@ namespace Sass {
   Value* Eval::visitUseRule(UseRule* node)
   {
     compiler.addFinalStackTrace(node->pstate());
+    if (node->isSupported) return nullptr;
     throw Exception::RuntimeException(compiler,
       "@use rules not yet supported in LibSass!");
   }

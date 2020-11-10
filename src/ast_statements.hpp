@@ -517,6 +517,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::vector<ConfiguredVariable>, config);
   public:
+    bool isSupported = false;
     // Value constructor
     UseRule(
       const SourceSpan& pstate,

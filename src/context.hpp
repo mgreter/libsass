@@ -22,9 +22,8 @@ namespace Sass {
 
   class Module
   {
-  private:
-    VarRefs* idxs;
   public:
+    VarRefs* idxs;
     void addFunction(const sass::string& name, uint32_t offset);
     void addVariable(const sass::string& name, uint32_t offset);
     void addMixin(const sass::string& name, uint32_t offset);
@@ -51,6 +50,12 @@ namespace Sass {
 
     Module& createModule(const sass::string& name) {
       return modules[name];
+    }
+
+    Module* getModule(const sass::string& name) {
+      auto it = modules.find(name);
+      if (it == modules.end()) return nullptr;
+      return &it->second;
     }
 
   protected:

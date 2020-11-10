@@ -134,6 +134,22 @@ namespace Sass {
     }
   };
 
+  struct hashString {
+    inline size_t operator()(const sass::string& str) const
+    {
+      return MurmurHash2(
+        (void*)str.c_str(),
+        (int)str.size(),
+        getHashSeed());
+    }
+  };
+
+  struct equalsString {
+    bool operator() (const sass::string& lhs, const sass::string& rhs) const {
+      return lhs == rhs;
+    }
+  };
+
 };
 
 #endif

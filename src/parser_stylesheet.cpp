@@ -49,8 +49,12 @@ namespace Sass {
     // Create initial states
     Offset start(scanner.offset);
 
+    RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
+
+    LOCAL_PTR(Root, currentRoot, root);
+
     // The parsed children
-    StatementVector children;
+    StatementVector& children(root->elements());
 
     // Check seems a bit esoteric but works
     if (context.included_sources.size() == 1) {
@@ -62,7 +66,7 @@ namespace Sass {
     // Parse nested root statements
     StatementVector parsed(readStatements(
       &StylesheetParser::readRootStatement));
-
+    
     // Move parsed children into our array
     children.insert(children.end(),
       std::make_move_iterator(parsed.begin()),
@@ -74,10 +78,11 @@ namespace Sass {
     // Finalize variable scopes
     context.varRoot.finalizeScopes();
 
+    // Update the parser state at the end
+    root->pstate(scanner.relevantSpanFrom(start));
+
     // Return the new root object
-    return SASS_MEMORY_NEW(Root,
-      scanner.relevantSpanFrom(start),
-      std::move(children));
+    return root.detach();
   }
   // EO parseRoot
 
@@ -1236,7 +1241,7 @@ namespace Sass {
   UseRule* StylesheetParser::readUseRule(Offset start)
   {
     scanWhitespace();
-    sass::string url = string();
+    sass::string url(string());
     scanWhitespace();
     auto ns = readUseNamespace(url, start);
     scanWhitespace();
@@ -1250,9 +1255,26 @@ namespace Sass {
         "@use rules must be written before any other rules.");
     }
 
-    return SASS_MEMORY_NEW(UseRule,
+    UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
       scanner.relevantSpanFrom(start),
       url, std::move(config));
+
+    // Allow some items to load
+    // We are always at the top of Root
+    // So we add something to there
+    if (url == "sass:meta") {
+      if (ns.empty()) ns = "meta";
+      if (Module* module = context.getModule("meta")) {
+        currentRoot->fwdModule["meta"] = { module->idxs, nullptr };
+        rule->isSupported = true;
+      }
+      else {
+        throw Exception::RuntimeException(context,
+          "Module not found.");
+      }
+    }
+
+    return rule.detach();
   }
 
   // Consumes a `@forward` rule.
@@ -3172,10 +3194,12 @@ namespace Sass {
       beforeName = scanner.offset;
 
       if (!ns.empty()) {
-        auto pstate(scanner.relevantSpanFrom(start));
-        context.addFinalStackTrace(pstate);
-        throw Exception::ParserException(context,
-          "Function namespaces not supported yet!");
+        if (ns != "meta") {
+          auto pstate(scanner.relevantSpanFrom(start));
+          context.addFinalStackTrace(pstate);
+          throw Exception::ParserException(context,
+            "Function namespaces not supported yet!");
+        }
       }
 
       Offset start(scanner.offset);
@@ -3192,9 +3216,25 @@ namespace Sass {
       }
 
       ArgumentInvocation* args = readArgumentInvocation();
+      sass::string name(identifier->getPlainString());
 
-      return SASS_MEMORY_NEW(FunctionExpression,
+      FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start), itpl, args, ns);
+
+      if (!ns.empty()) {
+        auto it = currentRoot->fwdModule.find(ns);
+        if (it != currentRoot->fwdModule.end()) {
+          VarRefs* refs = it->second.first;
+          Root* block = it->second.second;
+          auto in = refs->fnIdxs.find(ident->value());
+          if (in != refs->fnIdxs.end()) {
+            uint32_t offset = in->second;
+            fn->fidx({ refs->fnFrame, offset });
+          }
+        }
+      }
+
+      return fn.detach();
 
     }
     else if (next == $lparen) {
