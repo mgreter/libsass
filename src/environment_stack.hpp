@@ -166,6 +166,8 @@ namespace Sass {
     ModuleMap<std::pair<VarRefs*, Root*>> fwdModule33;
     sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal33;
 
+    sass::vector<std::pair<VarRefs*, Root*>> forwarded;
+
     EnvFrame* getModule() {
       auto current = this;
       while (!current->isRoot()) {
