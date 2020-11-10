@@ -638,6 +638,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     fnLookup.insert(std::make_pair(callable->envkey(), callable));
     VarRef idx(varRoot.createFunction(callable->envkey()));
+    varRoot.intFunction.push_back(callable);
     fnList.push_back(callable);
     return idx.offset;
   }
@@ -659,6 +660,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
     fnLookup.insert(std::make_pair(name, callable));
     VarRef idx(varRoot.createFunction(name));
+    varRoot.intFunction.push_back(callable);
     fnList.push_back(callable);
     return idx.offset;
   }

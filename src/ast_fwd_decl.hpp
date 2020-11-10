@@ -19,6 +19,8 @@
 /////////////////////////////////////////////
 namespace Sass {
 
+  class VarRef;
+  class VarRefs;
   class Logger;
   class Compiler;
   class EnvFrame;
