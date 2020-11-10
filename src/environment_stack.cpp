@@ -44,7 +44,7 @@ namespace Sass {
     root(root),
     idxs(new VarRefs(
       nullptr, 0, 0, 0,
-      false)),
+      false, true)),
     varIdxs(idxs->varIdxs),
     mixIdxs(idxs->mixIdxs),
     fnIdxs(idxs->fnIdxs),
@@ -58,16 +58,18 @@ namespace Sass {
   // Value constructor
   EnvFrame::EnvFrame(
     EnvFrameVector& stack,
-    bool permeable) :
+    bool permeable,
+    bool isModule) :
     stack(stack),
     permeable(permeable),
+    // isModule(isModule),
     parent(*stack.back()),
     root(stack.back()->root),
     idxs(new VarRefs(parent.idxs,
       uint32_t(root.varFramePtr.size()),
       uint32_t(root.mixFramePtr.size()),
       uint32_t(root.fnFramePtr.size()),
-      permeable)),
+      permeable, isModule)),
     varIdxs(idxs->varIdxs),
     mixIdxs(idxs->mixIdxs),
     fnIdxs(idxs->fnIdxs),
@@ -107,6 +109,12 @@ namespace Sass {
   VarRef EnvFrame::createVariable(
     const EnvKey& name)
   {
+    if (idxs->varFrame == 0xFFFFFFFF) {
+      uint32_t offset = (uint32_t)root.intVariables.size();
+      root.intVariables.resize(offset + 1);
+      varIdxs[name] = offset;
+      return { 0xFFFFFFFF, offset };
+    }
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
     // Remember the variable name
@@ -123,6 +131,12 @@ namespace Sass {
   VarRef EnvFrame::createFunction(
     const EnvKey& name)
   {
+    if (idxs->fnFrame == 0xFFFFFFFF) {
+      uint32_t offset = (uint32_t)root.intFunction.size();
+      root.intFunction.resize(offset + 1);
+      fnIdxs[name] = offset;
+      return { 0xFFFFFFFF, offset };
+    }
     // Check for existing function
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
@@ -143,6 +157,12 @@ namespace Sass {
   VarRef EnvFrame::createMixin(
     const EnvKey& name)
   {
+    if (idxs->mixFrame == 0xFFFFFFFF) {
+      uint32_t offset = (uint32_t)root.intMixin.size();
+      root.intMixin.resize(offset + 1);
+      mixIdxs[name] = offset;
+      return { 0xFFFFFFFF, offset };
+    }
     // Check for existing mixin
     auto it = mixIdxs.find(name);
     if (it != mixIdxs.end()) {
@@ -336,7 +356,12 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setVariable(const VarRef& vidx, ValueObj value)
   {
-    variables[size_t(varFramePtr[vidx.frame]) + vidx.offset] = value;
+    if (vidx.frame == 0xFFFFFFFF) {
+      intVariables[vidx.offset] = value;
+    }
+    else {
+      variables[size_t(varFramePtr[vidx.frame]) + vidx.offset] = value;
+    }
   }
   // EO setVariable
 
@@ -344,7 +369,12 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setVariable(uint32_t frame, uint32_t offset, ValueObj value)
   {
-    variables[size_t(varFramePtr[frame]) + offset] = value;
+    if (frame == 0xFFFFFFFF) {
+      intVariables[offset] = value;
+    }
+    else {
+      variables[size_t(varFramePtr[frame]) + offset] = value;
+    }
   }
   // EO setVariable
 
@@ -352,7 +382,12 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setFunction(const VarRef& fidx, UserDefinedCallableObj value)
   {
-    functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset] = value;
+    if (fidx.frame == 0xFFFFFFFF) {
+      intFunction[fidx.offset] = value;;
+    }
+    else {
+      functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset] = value;
+    }
   }
   // EO setFunction
 
@@ -360,7 +395,12 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setMixin(const VarRef& midx, UserDefinedCallableObj value)
   {
-    mixins[size_t(mixFramePtr[midx.frame]) + midx.offset] = value;
+    if (midx.frame == 0xFFFFFFFF) {
+      intMixin[midx.offset] = value;
+    }
+    else {
+      mixins[size_t(mixFramePtr[midx.frame]) + midx.offset] = value;
+    }
   }
   // EO setMixin
 

@@ -24,6 +24,7 @@ namespace Sass {
   {
   public:
     VarRefs* idxs;
+    bool isActive = false;
     void addFunction(const sass::string& name, uint32_t offset);
     void addVariable(const sass::string& name, uint32_t offset);
     void addMixin(const sass::string& name, uint32_t offset);
@@ -67,7 +68,7 @@ namespace Sass {
     // Lookup functions by function name
     // Due to EnvKayMap case insensitive.
     EnvKeyMap<CallableObj> fnLookup;
-
+  public:
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?
     // ToDo: should be case insensitive on windows?

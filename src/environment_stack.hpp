@@ -94,6 +94,8 @@ namespace Sass {
     // Assignments directly in those can bleed to the root scope.
     bool permeable;
 
+    bool isModule = false;
+
     // Parents for specific types
     uint32_t varFrame;
     uint32_t mixFrame;
@@ -116,9 +118,11 @@ namespace Sass {
       uint32_t varFrame,
       uint32_t mixFrame,
       uint32_t fnFrame,
-      bool permeable) :
+      bool permeable,
+      bool isModule) :
       pscope(pscope),
       permeable(permeable),
+      isModule(isModule),
       varFrame(varFrame),
       mixFrame(mixFrame),
       fnFrame(fnFrame)
@@ -159,6 +163,19 @@ namespace Sass {
     MidxEnvKeyMap& mixIdxs;
     FidxEnvKeyMap& fnIdxs;
 
+    ModuleMap<std::pair<VarRefs*, Root*>> fwdModule33;
+    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal33;
+
+    EnvFrame* getModule() {
+      auto current = this;
+      while (!current->isRoot()) {
+        if (current->idxs->isModule)
+          return this;
+        current = &current->parent;
+      }
+      return current;
+    }
+
     // Keep track of assignments and variables for dynamic runtime lookups.
     // This is needed only for loops, due to sass "weird" variable scoping.
     sass::vector<AssignRuleObj>& assignments;
@@ -179,7 +196,8 @@ namespace Sass {
       EnvFrameVector& stack,
       // Rules like `@if`, `@for` etc. are semi-global (permeable).
       // Assignments directly in those can bleed to the root scope.
-      bool permeable = false);
+      bool permeable = false,
+      bool isModule = false);
 
     // Destructor
     ~EnvFrame();
