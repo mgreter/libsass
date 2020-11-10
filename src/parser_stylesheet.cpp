@@ -1433,14 +1433,32 @@ namespace Sass {
       VarRefs* copy = new VarRefs(*refs);
 
       for (auto fwd : root->forwarded) {
-        for (auto fn : fwd.first->fnIdxs) {
-          copy->fnIdxs.insert(fn);
+        for (auto var : fwd.first->varIdxs) {
+          if (copy->varIdxs.count(var.first)) {
+            // context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "variable named $" + var.first.norm() + ".");
+          }
+          copy->varIdxs.insert(var);
         }
         for (auto mix : fwd.first->mixIdxs) {
+          if (copy->mixIdxs.count(mix.first)) {
+            // context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "mixin named " + mix.first.norm() + ".");
+          }
           copy->mixIdxs.insert(mix);
         }
-        for (auto var : fwd.first->fnIdxs) {
-          copy->fnIdxs.insert(var);
+        for (auto fn : fwd.first->fnIdxs) {
+          if (copy->fnIdxs.count(fn.first)) {
+            // context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "function named " + fn.first.norm() + ".");
+          }
+          copy->fnIdxs.insert(fn);
         }
       }
 
