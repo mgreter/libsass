@@ -28,7 +28,7 @@ namespace Sass {
   template<typename T>
   using ModuleMap = UnorderedMap<
     const sass::string, T, hashString, equalsString,
-    Sass::Allocator<std::pair<const EnvKey, T>>
+    std::allocator<std::pair<const EnvKey, T>>
   >;
 
   template<typename T>
