@@ -331,6 +331,24 @@ namespace Sass {
 
     }
 
+
+    if (context.withConfig) {
+      if (frame->idxs->varFrame == 0xFFFFFFFF) {
+        for (auto& varcfg : *context.withConfig) {
+          if (name == varcfg.name) {
+            if (!guarded) {
+              throw Exception::RuntimeException(context,
+                "This variable was not declared with "
+                "!default in the @used module.");
+            }
+            value = varcfg.expression;
+            varcfg.wasUsed = true;
+          }
+        }
+      }
+    }
+    // Check if we have a configuration
+
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start), name, ns, vidxs, value, guarded, global);
     if (inLoopDirective) frame->assignments.push_back(declaration);
@@ -1283,7 +1301,7 @@ namespace Sass {
     scanWhitespace();
 
     sass::vector<ConfiguredVariable> config;
-    readWithConfiguration(config, false);
+    bool hasWith(readWithConfiguration(config, false));
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
@@ -1325,6 +1343,9 @@ namespace Sass {
 
 
 
+    auto& withConfig = rule->config();
+    LocalOption<sass::vector<ConfiguredVariable>*>
+      scoped(context.withConfig, hasWith ? &withConfig : nullptr);
 
 
 
@@ -1358,13 +1379,22 @@ namespace Sass {
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
 
-
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
       EnvFrame* frame(context.varStack.back());
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
+
+        // Check if with is given, error
+
         sheet = cached->second;
+
+        if (hasWith) {
+          throw Exception::ParserException(context,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+
       }
       else {
         EnvFrame local(context.varStack, true, true);
@@ -1373,6 +1403,18 @@ namespace Sass {
         local.idxs->fnFrame = 0xFFFFFFFF;
         sheet = context.registerImport(loaded);
         sheet->root2->idxs = local.idxs;
+        // sheet->root2->con context->node
+      }
+
+      if (context.withConfig) {
+        for (auto& varcfg : *context.withConfig) {
+          if (varcfg.wasUsed == false) {
+            context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "This variable was not declared with "
+              "!default in the @used module.");
+          }
+        }
       }
 
       Root* root = sheet->root2;
