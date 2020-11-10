@@ -1259,18 +1259,25 @@ namespace Sass {
       scanner.relevantSpanFrom(start),
       url, std::move(config));
 
-    // Allow some items to load
-    // We are always at the top of Root
-    // So we add something to there
-    if (url == "sass:meta") {
-      if (ns.empty()) ns = "meta";
-      if (Module* module = context.getModule("meta")) {
-        currentRoot->fwdModule["meta"] = { module->idxs, nullptr };
+    // Support internal modules first
+    if (startsWith(url, "sass:", 5)) {
+      sass::string name(url.substr(5));
+      if (ns.empty()) ns = name;
+      if (Module* module = context.getModule(name)) {
+        if (ns == "*") {
+          currentRoot->fwdGlobal.push_back(
+            { module->idxs, nullptr });
+        }
+        else {
+          currentRoot->fwdModule[ns] =
+            { module->idxs, nullptr };
+        }
         rule->isSupported = true;
       }
       else {
+        context.addFinalStackTrace(rule->pstate());
         throw Exception::RuntimeException(context,
-          "Module not found.");
+          "Invalid internal module requested.");
       }
     }
 
@@ -1328,9 +1335,9 @@ namespace Sass {
     if (scanIdentifier("as")) {
       scanWhitespace();
       return scanner.scanChar($asterisk)
-        ? "" : readIdentifier();
+        ? "*" : readIdentifier();
     }
-    return url;
+    return "";
   }
 
   bool StylesheetParser::readWithConfiguration(
@@ -3193,18 +3200,9 @@ namespace Sass {
       ns = identifier->getPlainString();
       beforeName = scanner.offset;
 
-      if (!ns.empty()) {
-        if (ns != "meta") {
-          auto pstate(scanner.relevantSpanFrom(start));
-          context.addFinalStackTrace(pstate);
-          throw Exception::ParserException(context,
-            "Function namespaces not supported yet!");
-        }
-      }
-
-      Offset start(scanner.offset);
+      Offset before(scanner.offset);
       StringObj ident(SASS_MEMORY_NEW(String,
-        scanner.relevantSpanFrom(start),
+        scanner.relevantSpanFrom(before),
         readPublicIdentifier()));
 
       InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
@@ -3221,33 +3219,50 @@ namespace Sass {
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start), itpl, args, ns);
 
-      if (!ns.empty()) {
-        auto it = currentRoot->fwdModule.find(ns);
-        if (it != currentRoot->fwdModule.end()) {
-          VarRefs* refs = it->second.first;
-          Root* block = it->second.second;
-          auto in = refs->fnIdxs.find(ident->value());
+      // First search in forwarded modules
+      auto it = currentRoot->fwdModule.find(ns);
+      if (it != currentRoot->fwdModule.end()) {
+        VarRefs* refs = it->second.first;
+        auto in = refs->fnIdxs.find(ident->value());
+        if (in != refs->fnIdxs.end()) {
+          uint32_t offset = in->second;
+          fn->fidx({ refs->fnFrame, offset });
+        }
+      }
+
+      if (!fn->fidx().isValid()) {
+        context.addFinalStackTrace(fn->pstate());
+        throw Exception::ParserException(context,
+          "Undefined function.");
+      }
+
+      return fn.detach();
+    }
+    else if (next == $lparen) {
+      ArgumentInvocation* args = readArgumentInvocation();
+      FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
+        scanner.relevantSpanFrom(start), identifier, args, ns);
+      sass::string name(identifier->getPlainString());
+      if (!name.empty()) {
+
+        // Then search in global modules
+        for (auto fwd : currentRoot->fwdGlobal) {
+          VarRefs* refs = fwd.first;
+          auto in = refs->fnIdxs.find(name);
           if (in != refs->fnIdxs.end()) {
             uint32_t offset = in->second;
             fn->fidx({ refs->fnFrame, offset });
           }
         }
+
+        if (!fn->fidx().isValid()) {
+          // Try to get the function through the whole stack
+          fn->fidx(context.varStack.back()->getFunctionIdx(name));
+        }
+
       }
 
       return fn.detach();
-
-    }
-    else if (next == $lparen) {
-      ArgumentInvocation* args = readArgumentInvocation();
-      FunctionExpression* fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), identifier, args, ns);
-      sass::string name(identifier->getPlainString());
-      if (!name.empty()) {
-        // Get the function through the whole stack
-        auto fidx = context.varStack.back()->getFunctionIdx(name);
-        fn->fidx(fidx);
-      }
-      return fn;
     }
     else {
       return SASS_MEMORY_NEW(StringExpression,

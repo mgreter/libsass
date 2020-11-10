@@ -628,6 +628,23 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   /////////////////////////////////////////////////////////////////////////
 
   // Register built-in function with only one parameter list.
+  uint32_t Compiler::createBuiltInFunction(const sass::string& name,
+    const sass::string& signature, SassFnSig cb)
+  {
+    EnvRoot root(varStack);
+    SourceDataObj source = SASS_MEMORY_NEW(SourceString,
+      "sass://signature", "(" + signature + ")");
+    auto args = ArgumentDeclaration::parse(*this, source);
+    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    VarRef fidx({ 0xFFFFFFFF, (uint32_t)varRoot.intFunction.size() });
+    VarRef lidx(varRoot.createFunction(":" + name));
+    varRoot.intFunction.push_back(callable);
+    fnList.push_back(callable);
+    return lidx.offset;
+  }
+  // EO registerBuiltInFunction
+
+  // Register built-in function with only one parameter list.
   uint32_t Compiler::registerBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
