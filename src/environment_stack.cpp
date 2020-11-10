@@ -273,6 +273,7 @@ namespace Sass {
               });
           }
           // Process the parent scope
+          if (current->isModule) break;
           current = current->pscope;
         }
       }
@@ -288,6 +289,7 @@ namespace Sass {
           // If current scope is rooted we don't look further, as we
           // already created the local variable and assigned reference.
           if (!current->permeable) break;
+          if (current->isModule) break;
           // Start with the parent
           current = current->pscope;
           // Find the variable name in current scope
