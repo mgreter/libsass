@@ -1543,14 +1543,14 @@ namespace Sass {
 
     bool isShown = false;
     bool isHidden = false;
-    std::set<sass::string> toggledVariables;
-    std::set<sass::string> toggledCallables;
+    std::set<sass::string> toggledVariables2;
+    std::set<sass::string> toggledCallables2;
     if (scanIdentifier("show")) {
-      readForwardMembers(toggledVariables, toggledCallables);
+      readForwardMembers(toggledVariables2, toggledCallables2);
       isShown = true;
     }
     else if (scanIdentifier("hide")) {
-      readForwardMembers(toggledVariables, toggledCallables);
+      readForwardMembers(toggledVariables2, toggledCallables2);
       isHidden = true;
     }
 
@@ -1566,9 +1566,12 @@ namespace Sass {
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
       url, std::move(config),
-      std::move(toggledVariables),
-      std::move(toggledCallables),
+      std::move(toggledVariables2),
+      std::move(toggledCallables2),
       isShown);
+
+    std::set<sass::string>& toggledVariables(rule->toggledVariables());
+    std::set<sass::string>& toggledCallables(rule->toggledCallables());
 
     // EnvFrame* current(context.varStack.back());
 
