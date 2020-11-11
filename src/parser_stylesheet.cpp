@@ -1602,7 +1602,7 @@ namespace Sass {
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
       sass::string name(url.substr(5));
-      if (prefix.empty()) prefix = name; // Must not happen!
+      // if (prefix.empty()) prefix = name; // Must not happen!
       if (Module* module = context.getModule(name)) {
 
         VarRefs* idxs = module->idxs;
