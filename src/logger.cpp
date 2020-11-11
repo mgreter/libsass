@@ -82,9 +82,12 @@ namespace Sass {
       }
       os << word << ' ';
       current += word.size() + 1;
-      while (in.peek() == '\n') {
+      while (Character::isNewline(in.peek())) {
+        if (in.peek() == '\n') {
+          os << STRMLF;
+          current = 0;
+        }
         in.ignore(1);
-        os << STRMLF;
       }
     }
     if (current != 0) {
