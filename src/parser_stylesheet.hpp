@@ -219,7 +219,7 @@ namespace Sass {
     Statement* readDeclarationAtRule();
 
     // Consumes a statement allowed within a function.
-    Statement* readFunctionAtRule();
+    Statement* readFunctionRuleChild();
 
     // Consumes an at-rule's name, with interpolation disallowed.
     sass::string readPlainAtRuleName();

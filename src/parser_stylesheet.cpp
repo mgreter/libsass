@@ -925,9 +925,15 @@ namespace Sass {
   }
 
   // Consumes a statement allowed within a function.
-  Statement* StylesheetParser::readFunctionAtRule()
+  Statement* StylesheetParser::readFunctionRuleChild()
   {
     if (scanner.peekChar() != $at) {
+
+      StringScannerState state(scanner.state());
+      try { return readVariableDeclarationWithNamespace(); }
+      // dart-sass does some error cosmetic here
+      catch (...) { scanner.backtrack(state); }
+
       // If a variable declaration failed to parse, it's possible the user
       // thought they could write a style rule or property declaration in a
       // function. If so, throw a more helpful error message.
@@ -947,7 +953,7 @@ namespace Sass {
     }
     else if (name == "each") {
       return readEachRule(start,
-        &StylesheetParser::readFunctionAtRule);
+        &StylesheetParser::readFunctionRuleChild);
     }
     else if (name == "else") {
       return throwDisallowedAtRule(start);
@@ -957,11 +963,11 @@ namespace Sass {
     }
     else if (name == "for") {
       return readForRule(start,
-        &StylesheetParser::readFunctionAtRule);
+        &StylesheetParser::readFunctionRuleChild);
     }
     else if (name == "if") {
       return readIfRule(start,
-        &StylesheetParser::readFunctionAtRule);
+        &StylesheetParser::readFunctionRuleChild);
     }
     else if (name == "return") {
       return readReturnRule(start);
@@ -971,7 +977,7 @@ namespace Sass {
     }
     else if (name == "while") {
       return readWhileRule(start,
-        &StylesheetParser::readFunctionAtRule);
+        &StylesheetParser::readFunctionRuleChild);
     }
     else {
       return throwDisallowedAtRule(start);
@@ -1183,7 +1189,7 @@ namespace Sass {
 
     scanWhitespace();
     FunctionRule* rule = withChildren<FunctionRule>(
-      &StylesheetParser::readFunctionAtRule,
+      &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
     rule->fidx(parent->createFunction(name));
     return rule;
