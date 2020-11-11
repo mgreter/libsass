@@ -149,13 +149,6 @@ namespace Sass {
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
-          if (Root* block = it->second.second) {
-            for (auto fwds : block->forwarded) {
-              for (auto fwd : fwds.first->varIdxs) {
-                std::cerr << "include that\n";
-              }
-            }
-          }
         }
         return list;
       }
@@ -175,13 +168,6 @@ namespace Sass {
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
-          }
-          if (Root* block = it->second.second) {
-            for (auto fwds : block->forwarded) {
-              for (auto fwd : fwds.first->fnIdxs) {
-                std::cerr << "include that\n";
-              }
-            }
           }
         }
         return list;
