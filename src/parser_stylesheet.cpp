@@ -1330,6 +1330,7 @@ namespace Sass {
       url, std::move(config));
 
     EnvFrame* current(context.varStack.back());
+    EnvFrame* modFrame(context.varStack.back()->getModule());
 
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
@@ -1341,6 +1342,14 @@ namespace Sass {
             { module->idxs, nullptr });
         }
         else {
+
+          if (modFrame->fwdModule33.count(ns)) {
+            context.addFinalStackTrace(rule->pstate());
+            throw Exception::ParserException(context,
+              "There's already a module with "
+              "namespace \"" + ns + "\".");
+          }
+
           current->fwdModule33[ns] =
             { module->idxs, nullptr };
         }
@@ -1365,8 +1374,6 @@ namespace Sass {
       if (url[start] == '_') start += 1;
       ns = url.substr(start, end);
     }
-
-
 
     auto& withConfig = rule->config();
     LocalOption<sass::vector<ConfiguredVariable>*>
@@ -1406,12 +1413,10 @@ namespace Sass {
 
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      EnvFrame* frame(context.varStack.back()->getModule());
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
 
         // Check if with is given, error
-
         sheet = cached->second;
 
         if (hasWith) {
@@ -1439,6 +1444,14 @@ namespace Sass {
               "This variable was not declared with "
               "!default in the @used module.");
           }
+        }
+      }
+
+      if (!ns.empty()) {
+        if (modFrame->fwdModule33.count(ns)) {
+          throw Exception::ParserException(context,
+            "There's already a module with "
+            "namespace \"" + ns + "\".");
         }
       }
 
@@ -1498,13 +1511,13 @@ namespace Sass {
       if (ns == "*") {
         // This must not be on root block
         // These may vary for different use rules
-        frame->fwdGlobal33.push_back(
+        modFrame->fwdGlobal33.push_back(
           { copy, sheet->root2 });
       }
       else {
 
         // Combine forwarded with local scope
-        frame->fwdModule33[ns] =
+        modFrame->fwdModule33[ns] =
         { copy, sheet->root2 };
       }
 
