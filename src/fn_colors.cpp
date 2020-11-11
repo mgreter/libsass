@@ -398,12 +398,26 @@ namespace Sass {
 
       BUILT_IN_FN(rgb1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          Color* rgb = color->toRGBA();
+          rgb->a(1.0);
+          return rgb;
+        }
+        #endif
         return handleOneArgColorFn(Strings::rgb,
           arguments[0], &rgbFn, compiler, pstate, false);
       }
 
       BUILT_IN_FN(fnRgb1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          Color* rgb = color->toRGBA();
+          rgb->a(1.0);
+          return rgb;
+        }
+        #endif
         return handleOneArgColorFn(Strings::rgb,
           arguments[0], &rgbFn, compiler, pstate, true);
       }
@@ -448,12 +462,22 @@ namespace Sass {
 
       BUILT_IN_FN(rgba1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          return color->toRGBA();
+        }
+        #endif
         return handleOneArgColorFn(Strings::rgba,
           arguments[0], &rgbFn, compiler, pstate, false);
       }
 
       BUILT_IN_FN(fnRgba1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          return color->toRGBA();
+        }
+        #endif
         return handleOneArgColorFn(Strings::rgba,
           arguments[0], &rgbFn, compiler, pstate, true);
       }
@@ -503,12 +527,26 @@ namespace Sass {
 
       BUILT_IN_FN(hsl1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          Color* hsl = color->toHSLA();
+          hsl->a(1.0);
+          return hsl;
+        }
+        #endif
         return handleOneArgColorFn(Strings::hsl,
           arguments[0], &hslFn, compiler, pstate, false);
       }
 
       BUILT_IN_FN(fnHsl1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          Color* hsl = color->toHSLA();
+          hsl->a(1.0);
+          return hsl;
+        }
+        #endif
         return handleOneArgColorFn(Strings::hsl,
           arguments[0], &hslFn, compiler, pstate, true);
       }
@@ -554,12 +592,22 @@ namespace Sass {
 
       BUILT_IN_FN(hsla1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          return color->toHSLA();
+        }
+        #endif
         return handleOneArgColorFn(Strings::hsla,
           arguments[0], &hslFn, compiler, pstate, false);
       }
 
       BUILT_IN_FN(fnHsla1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          return color->toHSLA();
+        }
+        #endif
         return handleOneArgColorFn(Strings::hsla,
           arguments[0], &hslFn, compiler, pstate, true);
       }
@@ -605,12 +653,26 @@ namespace Sass {
 
       BUILT_IN_FN(hwb1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          Color* hwb = color->toHWBA();
+          hwb->a(1.0);
+          return hwb;
+        }
+        #endif
         return handleOneArgColorFn(Strings::hwb,
           arguments[0], &hwbFn, compiler, pstate, false);
       }
 
       BUILT_IN_FN(fnHwb1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          Color* hwb = color->toHWBA();
+          hwb->a(1.0);
+          return hwb;
+        }
+        #endif
         ValueObj value = handleOneArgColorFn(Strings::hwb,
           arguments[0], &hwbFn, compiler, pstate, true);
         if (value->isaString()) {
@@ -654,12 +716,22 @@ namespace Sass {
 
       BUILT_IN_FN(hwba1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          return color->toHWBA();
+        }
+        #endif
         return handleOneArgColorFn(Strings::hwba,
           arguments[0], &hwbFn, compiler, pstate, false);
       }
 
       BUILT_IN_FN(fnHwba1arg)
       {
+        #ifdef SassPreserveColorInfo
+        if (Color* color = arguments[0]->isaColor()) {
+          return color->toHWBA();
+        }
+        #endif
         ValueObj value = handleOneArgColorFn(Strings::hwba,
           arguments[0], &hwbFn, compiler, pstate, true);
         if (value->isaString()) {
@@ -766,15 +838,31 @@ namespace Sass {
 
       BUILT_IN_FN(whiteness)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::whiteness);
-        ColorHwbaObj hwba(color->toHWBA()); // This probably creates a copy
+        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+        #ifdef SassPreserveColorInfo
+        ColorHwbaObj hwba(color->toHWBA());
+        #else
+        ColorRgbaObj rgba(color->copyAsRGBA());
+        rgba->r(round64(rgba->r(), compiler.epsilon));
+        rgba->g(round64(rgba->g(), compiler.epsilon));
+        rgba->b(round64(rgba->b(), compiler.epsilon));
+        ColorHwbaObj hwba(rgba->toHWBA());
+        #endif
         return SASS_MEMORY_NEW(Number, pstate, hwba->w(), Strings::percent);
       }
 
       BUILT_IN_FN(blackness)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::blackness);
-        ColorHwbaObj hwba(color->toHWBA()); // This probably creates a copy
+        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+        #ifdef SassPreserveColorInfo
+        ColorHwbaObj hwba(color->toHWBA());
+        #else
+        ColorRgbaObj rgba(color->copyAsRGBA());
+        rgba->r(round64(rgba->r(), compiler.epsilon));
+        rgba->g(round64(rgba->g(), compiler.epsilon));
+        rgba->b(round64(rgba->b(), compiler.epsilon));
+        ColorHwbaObj hwba(rgba->toHWBA());
+        #endif
         return SASS_MEMORY_NEW(Number, pstate, hwba->b(), Strings::percent);
       }
 
