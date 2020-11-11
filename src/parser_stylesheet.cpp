@@ -265,9 +265,6 @@ namespace Sass {
     // Check if we found a local variable to use
     if (vidx.isValid()) has_local = true;
     // Otherwise we must create a new local variable
-    else if (ns.empty()) {
-      vidx = frame->createVariable(name);
-    }
 
     // JIT self assignments
     #ifdef SASS_OPTIMIZE_SELF_ASSIGN
@@ -326,12 +323,14 @@ namespace Sass {
     }
     else {
 
-      for (auto fwd : module->fwdGlobal33) {
+      // This only checks within the local frame
+      // Don't assign global if in another scope!
+      for (auto fwd : frame->fwdGlobal33) {
         VarRefs* refs = fwd.first;
-        auto in = refs->fnIdxs.find(name);
-        if (in != refs->fnIdxs.end()) {
+        auto in = refs->varIdxs.find(name);
+        if (in != refs->varIdxs.end()) {
           uint32_t offset = in->second;
-          vidxs.push_back({ refs->fnFrame, offset });
+          vidxs.push_back({ refs->varFrame, offset });
         }
       }
 
@@ -354,6 +353,11 @@ namespace Sass {
       }
     }
     // Check if we have a configuration
+
+    if (vidxs.empty()) {
+      // Not if we have one forwarded!
+      vidxs.push_back(frame->createVariable(name));
+    }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start), name, ns, vidxs, value, guarded, global);
@@ -1358,6 +1362,7 @@ namespace Sass {
       auto start = url.find_last_of("/\\");
       start = (start == NPOS ? 0 : start + 1);
       auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
       ns = url.substr(start, end);
     }
 
