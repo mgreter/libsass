@@ -66,12 +66,7 @@ namespace Sass {
         BackTraces traces,
         const Number& lhs,
         const Number& rhs);
-      UnitMismatch(
-        BackTraces traces,
-        const Number& lhs,
-        const sass::string& rhs);
     };
-
 
     class DeprecatedColorAdjustFn : public RuntimeException
     {

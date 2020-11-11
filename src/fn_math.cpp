@@ -24,12 +24,14 @@ namespace Sass {
         return number < 0.0 ? -0.0 : 0;
       }
 
-      double coerceToRad(Number* number, Compiler& compiler) {
+      double coerceToRad(Number* number, Compiler& compiler, const sass::string& vname) {
         Units radiants("rad");
         if (double factor = number->getUnitConvertFactor(radiants)) {
           return number->value() * factor;
         }
-        throw Exception::UnitMismatch(compiler, number, "rad");
+        compiler.addFinalStackTrace(number->pstate());
+        throw Exception::RuntimeException(compiler, "$" + vname +
+          ": Expected " + number->inspect() + " to be an angle.");
       }
 
       /*******************************************************************/
@@ -138,8 +140,8 @@ namespace Sass {
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$number: Expected $number to have no units.");
+          throw Exception::RuntimeException(compiler, "$number: "
+            "Expected " + number->inspect() + " to have no units.");
         }
 
         double numberValue = fuzzyRoundIfZero(number->value(), compiler.epsilon);
@@ -150,8 +152,8 @@ namespace Sass {
 
         auto base = arguments[1]->assertNumber(compiler, "base");
         if (base->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$base: Expected $base to have no units.");
+          throw Exception::RuntimeException(compiler, "$base: "
+            "Expected " + base->inspect() + " to have no units.");
         }
 
         auto baseValue = fuzzyEquals(base->value(), 1.0, compiler.epsilon)
@@ -168,12 +170,12 @@ namespace Sass {
         auto base = arguments[0]->assertNumber(compiler, "base");
         auto exponent = arguments[1]->assertNumber(compiler, "exponent");
         if (base->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$base: Expected $base to have no units.");
+          throw Exception::RuntimeException(compiler, "$base: "
+            "Expected " + base->inspect() + " to have no units.");
         }
         if (exponent->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$exponent: Expected $exponent to have no units.");
+          throw Exception::RuntimeException(compiler, "$exponent: "
+            "Expected " + exponent->inspect() + " to have no units.");
         }
 
         // Exponentiating certain real numbers leads to special behaviors. Ensure that
@@ -213,8 +215,8 @@ namespace Sass {
       {
         auto number = arguments[0]->assertNumber(compiler, "number");
         if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$number: Expected $number to have no units.");
+          throw Exception::RuntimeException(compiler, "$number: "
+            "Expected " + number->inspect() + " to have no units.");
         }
         return SASS_MEMORY_NEW(Number, pstate, std::sqrt(
           fuzzyRoundIfZero(number->value(), compiler.epsilon)));
@@ -326,13 +328,13 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::cos(coerceToRad(number, compiler)));
+          std::cos(coerceToRad(number, compiler, Strings::number)));
       }
 
       BUILT_IN_FN(fnSin)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
-        double numberValue = coerceToRad(number, compiler);
+        double numberValue = coerceToRad(number, compiler, Strings::number);
         numberValue = fuzzyRoundIfZero(numberValue, compiler.epsilon);
         return SASS_MEMORY_NEW(Number, pstate,
           std::sin(numberValue));
@@ -342,7 +344,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         double asymptoteInterval = 0.5 * PI; double tanPeriod = 2.0 * PI;
-        double numberValue = coerceToRad(number, compiler);
+        double numberValue = coerceToRad(number, compiler, Strings::number);
         if (fuzzyEquals(std::fmod(numberValue - asymptoteInterval, tanPeriod), 0.0, compiler.epsilon)) {
           return SASS_MEMORY_NEW(Number, pstate, std::numeric_limits<double>::infinity());
         }
@@ -359,8 +361,8 @@ namespace Sass {
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$number: Expected $number to have no units.");
+          throw Exception::RuntimeException(compiler, "$number: "
+            "Expected " + number->inspect() + " to have no units.");
         }
         auto numberValue = fuzzyEquals(std::abs(number->value()), 1.0, compiler.epsilon)
           ? fuzzyRound(number->value(), compiler.epsilon)
@@ -372,8 +374,8 @@ namespace Sass {
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$number: Expected $number to have no units.");
+          throw Exception::RuntimeException(compiler, "$number: "
+            "Expected " + number->inspect() + " to have no units.");
         }
         auto numberValue = fuzzyEquals(std::abs(number->value()), 1.0, compiler.epsilon)
           ? fuzzyRound(number->value(), compiler.epsilon)
@@ -385,8 +387,8 @@ namespace Sass {
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$number: Expected $number to have no units.");
+          throw Exception::RuntimeException(compiler, "$number: "
+            "Expected " + number->inspect() + " to have no units.");
         }
         auto numberValue = fuzzyRoundIfZero(number->value(), compiler.epsilon);
         return SASS_MEMORY_NEW(Number, pstate,
