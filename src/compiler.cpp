@@ -31,6 +31,8 @@
 #include <excpt.h>
 #endif
 
+// #include "debugger.hpp"
+
 struct SassImport;
 
 namespace Sass {
