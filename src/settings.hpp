@@ -17,6 +17,20 @@
 #define SassDefaultNrSprintf "%.10f"
 
 /////////////////////////////////////////////////////////////////////////
+// Should we preserve color information when possible
+// E.g. if we create a HWB color with zero hue (which is always `gray`),
+// dart-sass returns `50.196%` for its whiteness, no matter with which
+// `whiteness` argument the HWB color was initialized. Even worse that
+// `gray` would actually have a `whiteness` of exactly `50%`. But due
+// to dart-sass internally clamping the rgb components to integer, the
+// wrong `whiteness` of `50.1960784314%` is produced. LibSass tries to
+// preserve the information for colors whenever possible, when doing
+// transformations between formats it will not clamp the components.
+/////////////////////////////////////////////////////////////////////////
+
+#define SassPreserveColorInfo
+
+/////////////////////////////////////////////////////////////////////////
 // Logger default settings
 /////////////////////////////////////////////////////////////////////////
 
