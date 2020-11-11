@@ -537,7 +537,7 @@ namespace Sass {
   class ForwardRule final : public Statement
   {
   private:
-    ADD_CONSTREF(bool, isShown);
+    ADD_PROPERTY(bool, isShown);
     ADD_CONSTREF(sass::string, url);
     ADD_REF(sass::vector<ConfiguredVariable>, config);
     ADD_REF(std::set<sass::string>, toggledVariables);

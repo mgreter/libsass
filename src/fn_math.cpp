@@ -109,7 +109,7 @@ namespace Sass {
         auto numeratorUnits = numbers[0]->numerators;
         auto denominatorUnits = numbers[0]->denominators;
         auto subtotal = 0.0;
-        for (auto i = 0; i < numbers.size(); i++) {
+        for (size_t i = 0; i < numbers.size(); i++) {
           auto& number = numbers[i];
           if (number->hasUnits() == numbers[0]->hasUnits()) {
             if (double factor = number->getUnitConvertFactor(numbers[0])) {

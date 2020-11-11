@@ -1570,7 +1570,7 @@ namespace Sass {
       std::move(toggledCallables),
       isShown);
 
-    EnvFrame* current(context.varStack.back());
+    // EnvFrame* current(context.varStack.back());
 
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
@@ -1707,7 +1707,7 @@ namespace Sass {
 
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      EnvFrame* frame(context.varStack.back()->getModule());
+      // EnvFrame* frame(context.varStack.back()->getModule());
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
 
