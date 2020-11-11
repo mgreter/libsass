@@ -639,6 +639,8 @@ namespace Sass {
 
     VarRefs* idxs;
 
+    bool isActive = false;
+
     sass::vector<std::pair<VarRefs*, Root*>> forwarded;
 
     Root(const SourceSpan& pstate, size_t reserve = 0)

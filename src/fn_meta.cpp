@@ -142,6 +142,11 @@ namespace Sass {
         auto it = module->fwdModule33.find(ns->value());
         if (it != module->fwdModule33.end()) {
           VarRefs* refs = it->second.first;
+          Root* root = it->second.second;
+          if (root && !root->isActive) {
+            throw Exception::RuntimeException(compiler, "There is "
+              "no module with namespace \"" + ns->value() + "\".");
+          }
           for (auto entry : refs->varIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
@@ -149,6 +154,10 @@ namespace Sass {
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
+        }
+        else {
+          throw Exception::RuntimeException(compiler, "There is "
+            "no module with namespace \"" + ns->value() + "\".");
         }
         return list;
       }
@@ -161,6 +170,11 @@ namespace Sass {
         auto it = module->fwdModule33.find(ns->value());
         if (it != module->fwdModule33.end()) {
           VarRefs* refs = it->second.first;
+          Root* root = it->second.second;
+          if (root && !root->isActive) {
+            throw Exception::RuntimeException(compiler, "There is "
+              "no module with namespace \"" + ns->value() + "\".");
+          }
           for (auto entry : refs->fnIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
@@ -169,6 +183,10 @@ namespace Sass {
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
+        }
+        else {
+          throw Exception::RuntimeException(compiler, "There is "
+            "no module with namespace \"" + ns->value() + "\".");
         }
         return list;
       }

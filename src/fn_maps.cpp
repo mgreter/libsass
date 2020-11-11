@@ -52,6 +52,13 @@ namespace Sass {
               // if (identical(merged, resultMap)) return;
               it.value() = merged;
             }
+            else {
+              // Might got an empty list that could be a map
+              List* resultList = it->second->isaList();
+              if (resultList && resultList->empty()) {
+                it.value() = kv.second;
+              }
+            }
           }
           else {
             result->insert(kv);
@@ -164,9 +171,23 @@ namespace Sass {
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         MapObj result = SASS_MEMORY_COPY(map);
-        auto it = arguments[1]->iterator();
-        auto cur = it.begin(), end = it.end();
         Map* level = result;
+
+        auto it = arguments[2]->iterator();
+        auto cur = it.begin(), end = it.end();
+
+        if (cur == end) {
+          level->erase(arguments[1]);
+          return result.detach();
+        }
+        else {
+          auto child = level->find(arguments[1]);
+          if (child == level->end()) return result.detach();
+          auto childMap = child->second->isaMap();
+          if (childMap == nullptr) return result.detach();
+          child.value() = level = SASS_MEMORY_COPY(childMap);
+        }
+
         while (cur != end) {
           if (cur.isLast()) {
             level->erase(*cur);
@@ -201,7 +222,7 @@ namespace Sass {
         module.addFunction("has-key", ctx.registerBuiltInFunction("map-has-key", "$map, $key", hasKey));
 
         module.addFunction("deep-merge", ctx.createBuiltInFunction("deep-merge", "$map1, $map2", fnDeepMerge));
-        module.addFunction("deep-remove", ctx.createBuiltInFunction("deep-remove", "$map, $keys...", fnDeepRemove));
+        module.addFunction("deep-remove", ctx.createBuiltInFunction("deep-remove", "$map, $key, $keys...", fnDeepRemove));
 
       }
 
