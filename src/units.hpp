@@ -32,6 +32,7 @@ namespace Sass {
     MM,
     PT,
     PX,
+    QMM,
 
     // angle units
     DEG = ANGLE,
@@ -134,7 +135,7 @@ namespace Sass {
   };
 
   /* Declare matrix tables for unit conversion factors*/
-  extern const double size_conversion_factors[6][6];
+  extern const double size_conversion_factors[7][7];
   extern const double angle_conversion_factors[4][4];
   extern const double time_conversion_factors[2][2];
   extern const double frequency_conversion_factors[2][2];

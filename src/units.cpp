@@ -16,44 +16,45 @@ namespace Sass {
   /* and yes, we actually use both, not sure why, but why not!? */
   /////////////////////////////////////////////////////////////////////////
 
-  const double size_conversion_factors[6][6] =
+  const double size_conversion_factors[7][7] =
   {
-             /*  in         cm         pc         mm         pt         px        */
-    /* in   */ { 1,         2.54,      6,         25.4,      72,        96,       },
-    /* cm   */ { 1.0/2.54,  1,         6.0/2.54,  10,        72.0/2.54, 96.0/2.54 },
-    /* pc   */ { 1.0/6.0,   2.54/6.0,  1,         25.4/6.0,  72.0/6.0,  96.0/6.0  },
-    /* mm   */ { 1.0/25.4,  1.0/10.0,  6.0/25.4,  1,         72.0/25.4, 96.0/25.4 },
-    /* pt   */ { 1.0/72.0,  2.54/72.0, 6.0/72.0,  25.4/72.0, 1,         96.0/72.0 },
-    /* px   */ { 1.0/96.0,  2.54/96.0, 6.0/96.0,  25.4/96.0, 72.0/96.0, 1,        }
+             /*  in          cm          pc          mm          pt          px          q           */
+    /* in   */ { 1.0,        2.54,       6.0,        25.4,       72.0,       96.0,       101.6       },
+    /* cm   */ { 1.0/2.54,   2.54/2.54,  6.0/2.54,   25.4/2.54,  72.0/2.54,  96.0/2.54,  101.6/2.54  },
+    /* pc   */ { 1.0/6.0,    2.54/6.0,   6.0/6.0,    25.4/6.0,   72.0/6.0,   96.0/6.0,   101.6/6.0   },
+    /* mm   */ { 1.0/25.4,   2.54/25.4,  6.0/25.4,   25.4/25.4,  72.0/25.4,  96.0/25.4,  101.6/25.4  },
+    /* pt   */ { 1.0/72.0,   2.54/72.0,  6.0/72.0,   25.4/72.0,  72.0/72.0,  96.0/72.0,  101.6/72.0  },
+    /* px   */ { 1.0/96.0,   2.54/96.0,  6.0/96.0,   25.4/96.0,  72.0/96.0,  96.0/96.0,  101.6/96.0  },
+    /* q    */ { 1.0/101.6,  2.54/101.6, 6.0/101.6,  25.4/101.6, 72.0/101.6, 96.0/101.6, 101.6/101.6 },
   };
 
   const double angle_conversion_factors[4][4] =
   {
              /*  deg        grad       rad        turn      */
-    /* deg  */ { 1,         40.0/36.0, PI/180.0,  1.0/360.0 },
-    /* grad */ { 36.0/40.0, 1,         PI/200.0,  1.0/400.0 },
-    /* rad  */ { 180.0/PI,  200.0/PI,  1,         0.5/PI    },
-    /* turn */ { 360.0,     400.0,     2.0*PI,    1         }
+    /* deg  */ { 1.0,       40.0/36.0, PI/180.0,  1.0/360.0 },
+    /* grad */ { 36.0/40.0, 1.0,       PI/200.0,  1.0/400.0 },
+    /* rad  */ { 180.0/PI,  200.0/PI,  1.0,       0.5/PI    },
+    /* turn */ { 360.0,     400.0,     2.0*PI,    1.0       }
   };
 
   const double time_conversion_factors[2][2] =
   {
              /*  s          ms        */
-    /* s    */ { 1,         1000.0    },
-    /* ms   */ { 1/1000.0,  1         }
+    /* s    */ { 1.0,       1000.0    },
+    /* ms   */ { 1/1000.0,  1.0       }
   };
   const double frequency_conversion_factors[2][2] =
   {
              /*  Hz         kHz       */
-    /* Hz   */ { 1,         1/1000.0  },
-    /* kHz  */ { 1000.0,    1         }
+    /* Hz   */ { 1.0,       1/1000.0  },
+    /* kHz  */ { 1000.0,    1.0       }
   };
   const double resolution_conversion_factors[3][3] =
   {
              /*  dpi        dpcm       dppx     */
-    /* dpi  */ { 1,         1/2.54,    1/96.0   },
-    /* dpcm */ { 2.54,      1,         2.54/96  },
-    /* dppx */ { 96,        96/2.54,   1        }
+    /* dpi  */ { 1.0,       1.0/2.54,  1.0/96.0 },
+    /* dpcm */ { 2.54,      1.0,       2.54/96  },
+    /* dppx */ { 96.0,      96.0/2.54, 1.0      }
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -94,6 +95,7 @@ namespace Sass {
     else if (s == "mm")   return UnitType::MM;
     else if (s == "cm")   return UnitType::CM;
     else if (s == "in")   return UnitType::INCH;
+    else if (s == "q")   return UnitType::QMM;
     // angle units
     else if (s == "deg")  return UnitType::DEG;
     else if (s == "grad") return UnitType::GRAD;
@@ -123,7 +125,8 @@ namespace Sass {
       case UnitType::MM:      return "mm";
       case UnitType::CM:      return "cm";
       case UnitType::INCH:    return "in";
-      // angle units
+      case UnitType::QMM:     return "q";
+        // angle units
       case UnitType::DEG:     return "deg";
       case UnitType::GRAD:    return "grad";
       case UnitType::RAD:     return "rad";
