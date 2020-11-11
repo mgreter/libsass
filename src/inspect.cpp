@@ -896,12 +896,24 @@ namespace Sass {
     }
 
     if (std::isnan(value->value())) {
-      append_string("NaN");
+      if (value->value() < 0) {
+        append_string("-NaN");
+      }
+      else {
+        append_string("NaN");
+      }
+      append_string(value->unit());
       return;
     }
 
     if (std::isinf(value->value())) {
-      append_string("Infinity");
+      if (value->value() < 0) {
+        append_string("-Infinity");
+      }
+      else {
+        append_string("Infinity");
+      }
+      append_string(value->unit());
       return;
     }
 

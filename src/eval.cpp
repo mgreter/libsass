@@ -1973,11 +1973,9 @@ namespace Sass {
     NumberObj sass_end = high->assertNumber(logger456, "");
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
-      sass::sstream msg; msg << "Incompatible units "
-        << sass_start->unit() << " and "
-        << sass_end->unit() << ".";
-      logger456.addFinalStackTrace(low->pstate());
-      throw Exception::RuntimeException(traces, msg.str());
+      logger456.addFinalStackTrace(f->pstate());
+      throw Exception::UnitMismatch(
+        logger456, sass_start, sass_end);
     }
     double start = sass_start->value();
     double end = sass_end->value();

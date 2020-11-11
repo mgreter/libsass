@@ -110,16 +110,6 @@ namespace Sass {
       this->traces.push_back(rhs.pstate());
     }
 
-    UnitMismatch::UnitMismatch(BackTraces traces, const Number& lhs, const sass::string& rhs)
-      : RuntimeException(traces, "Incompatible units "
-        + rhs + " and "
-        + lhs.unit() + ".")
-    {
-      this->traces.push_back(lhs.pstate());
-    }
-
-
-
     InvalidParent::InvalidParent(Selector* parent, BackTraces traces, Selector* selector)
     : Base(def_msg, traces, selector->pstate()), parent(parent), selector(selector)
     {

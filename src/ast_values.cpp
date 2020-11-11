@@ -698,10 +698,8 @@ namespace Sass {
       }
       // Throw error, unit are incompatible
       logger.addFinalStackTrace(pstate);
-      throw Exception::SassScriptException(
-        "Incompatible units " + l.unit()
-        + " and " + r.unit() + ".",
-        logger, pstate);
+      throw Exception::UnitMismatch(
+        logger, this, rhs);
     }
     logger.addFinalStackTrace(pstate);
     throw Exception::SassScriptException(
@@ -729,10 +727,8 @@ namespace Sass {
       }
       // Throw error, unit are incompatible
       logger.addFinalStackTrace(pstate);
-      throw Exception::SassScriptException(
-        "Incompatible units " + l.unit()
-        + " and " + r.unit() + ".",
-        logger, pstate);
+      throw Exception::UnitMismatch(
+        logger, this, rhs);
     }
     logger.addFinalStackTrace(pstate);
     throw Exception::SassScriptException(
@@ -760,10 +756,8 @@ namespace Sass {
       }
       // Throw error, unit are incompatible
       logger.addFinalStackTrace(pstate);
-      throw Exception::SassScriptException(
-        "Incompatible units " + l.unit()
-        + " and " + r.unit() + ".",
-        logger, pstate);
+      throw Exception::UnitMismatch(
+        logger, this, rhs);
     }
     logger.addFinalStackTrace(pstate);
     throw Exception::SassScriptException(
@@ -791,10 +785,8 @@ namespace Sass {
       }
       // Throw error, unit are incompatible
       logger.addFinalStackTrace(pstate);
-      throw Exception::SassScriptException(
-        "Incompatible units " + l.unit()
-        + " and " + r.unit() + ".",
-        logger, pstate);
+      throw Exception::UnitMismatch(
+        logger, this, rhs);
     }
     logger.addFinalStackTrace(pstate);
     throw Exception::SassScriptException(
@@ -948,10 +940,8 @@ namespace Sass {
       // Returns zero on incompatible units
       if (f == 0.0) {
         logger.addFinalStackTrace(pstate);
-        throw Exception::SassScriptException(
-          "Incompatible units " + rhs.unit()
-          + " and " + unit() + ".",
-          logger, pstate);
+        throw Exception::UnitMismatch(
+          logger, left, right);
       }
       // Now apply the conversion factor
       copy->value(op(lval, right.value() * f));
