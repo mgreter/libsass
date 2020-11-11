@@ -582,7 +582,7 @@ namespace Sass {
       BUILT_IN_FN(fnInvert)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addDeprecation("Passing a number to "
+          compiler.addWarning("Passing a number to "
             "color.invert() is deprecated.\r\n\r\nRecommendation: "
             "invert(" + arguments[0]->inspect() + ")", pstate);
         }
@@ -747,12 +747,7 @@ namespace Sass {
           arguments, "transparentize", "$alpha: -");
       }
 
-      BUILT_IN_FN(noOpacity)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "opacity", "$alpha: ");
-      }
-      
+     
       BUILT_IN_FN(noSaturate)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
@@ -853,6 +848,16 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
+      BUILT_IN_FN(noOpacity)
+      {
+        if (arguments[0]->isaNumber()) {
+          compiler.addWarning("Passing a number to "
+            "color.opacity() is deprecated.\n\nRecommendation: "
+            "opacity(" + arguments[0]->inspect() + ")",
+            arguments[0]->pstate());
+        }
+        return opacity(pstate, arguments, compiler, eval, selfAssign);
+      }
 
       BUILT_IN_FN(ieHexStr)
       {

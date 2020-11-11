@@ -82,6 +82,10 @@ namespace Sass {
       }
       os << word << ' ';
       current += word.size() + 1;
+      while (in.peek() == '\n') {
+        in.ignore(1);
+        os << STRMLF;
+      }
     }
     if (current != 0) {
       os << STRMLF;
