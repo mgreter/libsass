@@ -265,7 +265,7 @@ namespace Sass {
     // Check if we found a local variable to use
     if (vidx.isValid()) has_local = true;
     // Otherwise we must create a new local variable
-    else {
+    else if (ns.empty()) {
       vidx = frame->createVariable(name);
     }
 
@@ -294,6 +294,7 @@ namespace Sass {
 
     if (vidx.isValid()) vidxs.push_back(vidx);
     EnvFrame* module(context.varStack.back()->getModule());
+    SourceSpan pstate(scanner.relevantSpanFrom(start));
 
     if (!ns.empty()) {
       // auto pstate(scanner.relevantSpanFrom(start));
@@ -316,6 +317,11 @@ namespace Sass {
         if (!vidxs.empty()) vidxs.push_back(vidx);
       }
 
+      if (vidxs.empty()) {
+        context.addFinalStackTrace(pstate);
+        throw Exception::RuntimeException(context,
+          "Undefined variable.");
+      }
 
     }
     else {
