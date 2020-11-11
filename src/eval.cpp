@@ -1412,6 +1412,7 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (node->root()) {
+      node->root()->isActive = true;
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
@@ -1428,6 +1429,7 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (node->root()) {
+      node->root()->isActive = true;
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
