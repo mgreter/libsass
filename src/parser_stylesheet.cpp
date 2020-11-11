@@ -1350,7 +1350,7 @@ namespace Sass {
     // After last slash before first dot
     if (ns.empty() && !url.empty()) {
       auto start = url.find_last_of("/\\");
-      if (start == NPOS) start = 0;
+      start = (start == NPOS ? 0 : start + 1);
       auto end = url.find_first_of(".", start);
       ns = url.substr(start, end);
     }
