@@ -89,14 +89,6 @@ namespace Sass {
 
   public:
 
-    // Stack of environment frames. New frames are appended
-    // when parser encounters a new environment scoping.
-    sass::vector<EnvFrame*> varStack;
-
-    // The root environment where parsed root variables
-    // and (custom) functions plus mixins are registered.
-    EnvRoot varRoot; // Must be after varStack!
-
     // The import stack during evaluation phase
     sass::vector<ImportObj> import_stack;
 
@@ -120,20 +112,6 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Some simple delegations to variable root for runtime queries
     /////////////////////////////////////////////////////////////////////////
-
-    // Get the value object for the variable by [name] on runtime.
-    // If [global] flag is given, we 
-    ValueObj getVariable(const EnvKey& name, bool global = false) {
-      return varRoot.getVariable(name, global);
-    }
-
-    void setVariable(const EnvKey& name, ValueObj val, bool global = false) {
-      return varRoot.setVariable(name, val, global);
-    }
-
-    // Functions only for evaluation phase (C-API functions and eval itself)
-    CallableObj getMixin(const EnvKey& name) { return varRoot.getMixin(name); }
-    CallableObj getFunction(const EnvKey& name) { return varRoot.getFunction(name); }
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

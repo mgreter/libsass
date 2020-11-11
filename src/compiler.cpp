@@ -154,6 +154,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   Compiler::Compiler() :
     Context(),
+    varRoot(varStack, *this),
     state(SASS_COMPILER_CREATED),
     output_path("stream://stdout"),
     entry_point(),
@@ -631,7 +632,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   uint32_t Compiler::createBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
-    EnvRoot root(varStack);
+    EnvRoot root(varStack, *this);
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
     auto args = ArgumentDeclaration::parse(*this, source);
@@ -646,10 +647,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   uint32_t Compiler::createBuiltInVariable(const sass::string& name, Value* value)
   {
-    EnvRoot root(varStack);
+    EnvRoot root(varStack, *this);
     auto& variables(varRoot.intVariables);
     uint32_t offset((uint32_t)variables.size());
     varRoot.intVariables.push_back(value);
+    varRoot.privateVarOffset = offset;
     return varRoot.varIdxs[name] = offset;
   }
 
@@ -657,7 +659,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   uint32_t Compiler::registerBuiltInFunction(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
-    EnvRoot root(varStack);
+    EnvRoot root(varStack, *this);
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
     auto args = ArgumentDeclaration::parse(*this, source);
@@ -677,7 +679,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
-      EnvRoot root(varStack);
+      EnvRoot root(varStack, *this);
       SourceDataObj source = SASS_MEMORY_NEW(SourceString,
         "sass://signature", "(" + overload.first + ")");
       auto args = ArgumentDeclaration::parse(*this, source);
@@ -698,7 +700,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
-      EnvRoot root(varStack);
+      EnvRoot root(varStack, *this);
       SourceDataObj source = SASS_MEMORY_NEW(SourceString,
         "sass://signature", "(" + overload.first + ")");
       auto args = ArgumentDeclaration::parse(*this, source);
@@ -737,7 +739,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Main entry point for custom functions passed through the C-API.
   void Compiler::registerCustomFunction(struct SassFunction* function)
   {
-    EnvRoot root(varStack);
+    EnvRoot root(varStack, *this);
     // Create a new external callable from the sass function
     ExternalCallable* callable = makeExternalCallable(function);
     // Currently external functions are treated globally

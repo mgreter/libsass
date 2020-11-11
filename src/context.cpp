@@ -25,8 +25,7 @@ namespace Sass {
 
   // Default constructor
   Context::Context() :
-    SassOutputOptionsCpp(),
-    varRoot(varStack)
+    SassOutputOptionsCpp()
   {
     // Sass 3.4: The current working directory will no longer be placed onto the Sass load path by default.
     // If you need the current working directory to be available, set SASS_PATH=. in your shell's environment.

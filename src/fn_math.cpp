@@ -428,8 +428,11 @@ namespace Sass {
         module.addVariable("pi", ctx.createBuiltInVariable("pi",
           SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510)));
-        module.addFunction("ceil", ctx.registerBuiltInFunction("ceil", "$number", ceil));
+        module.addVariable("tau", ctx.createBuiltInVariable("tau",
+          SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
+            3.14159265358979323846264338327950288419716939937510 * 2.0)));
 
+        module.addFunction("ceil", ctx.registerBuiltInFunction("ceil", "$number", ceil));
         module.addFunction("clamp", ctx.createBuiltInFunction("clamp", "$min, $number, $max", fnClamp));
 
         module.addFunction("floor", ctx.registerBuiltInFunction("floor", "$number", floor));

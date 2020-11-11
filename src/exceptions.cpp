@@ -336,9 +336,6 @@ namespace Sass {
     sass::string secondarg) :
     RuntimeException(logger, "")
 	{
-    const Color* color = arguments[0]->assertColor(logger, Strings::color);
-    const Number* amount = arguments[1]->assertNumber(logger, secondarg);
-    // double nr = amount->assertRange(0.0, 100.0, logger, secondarg);
     msg += "The function " + name + "() isn't in the sass:color module.\n\n";
     msg += "Recommendation: color.adjust(" + arguments[0]->inspect() +
       ", " + prefix + arguments[1]->inspect() + ")\n\n";

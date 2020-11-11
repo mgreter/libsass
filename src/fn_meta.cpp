@@ -193,7 +193,7 @@ namespace Sass {
 
       /// Like `_environment.getFunction`, but also returns built-in
       /// globally-available functions.
-      Callable* _getFunction(const EnvKey& name, Context& ctx, const sass::string& ns = "") {
+      Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
         return ctx.getFunction(name); // no detach, is a reference anyway
       }
 

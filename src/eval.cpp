@@ -1882,13 +1882,12 @@ namespace Sass {
 
     // We always must have at least one variable
     SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
-    // Get the main (local) variable
-    VarRef vidx(a->vidxs().front());
+
     // Check if we can overwrite an existing variable
     // We create it locally if none other there yet.
-    for (auto idx : a->vidxs()) {
+    for (auto vidx : a->vidxs()) {
       // Get the value reference (now guaranteed to exist)
-      ValueObj& value(compiler.varRoot.getVariable(idx));
+      ValueObj& value(compiler.varRoot.getVariable(vidx));
       // Skip if nothing is stored yet, keep looking
       // for another variable with a value set
       if (value == nullptr) continue;
@@ -1896,7 +1895,14 @@ namespace Sass {
       // if no value has been set yet or that value
       // was explicitly set to a SassNull value.
       if (!a->is_default() || value->isNull()) {
-        compiler.varRoot.setVariable(idx,
+
+        if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
+          compiler.addFinalStackTrace(a->pstate());
+          throw Exception::RuntimeException(compiler,
+            "Cannot modify built-in variable.");
+        }
+
+        compiler.varRoot.setVariable(vidx,
            a->value()->accept(this));
       }
       // Finished
@@ -1919,6 +1925,15 @@ namespace Sass {
           " Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
           a->pstate());
       }
+    }
+
+    // Get the main (local) variable
+    VarRef vidx(a->vidxs().front());
+
+    if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
+      compiler.addFinalStackTrace(a->pstate());
+      throw Exception::RuntimeException(compiler,
+        "Cannot modify built-in variable.");
     }
 
     // Now create the new variable
