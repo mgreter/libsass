@@ -21,7 +21,7 @@ namespace Sass {
 
       double fuzzyRoundIfZero(double number, double epsilon) {
         if (!fuzzyEquals(number, 0.0, epsilon)) return number;
-        return number < 0.0 ? -0.0 : 0;
+        return std::signbit(number) ? -0.0 : 0.0;
       }
 
       double coerceToRad(Number* number, Compiler& compiler, const sass::string& vname) {
@@ -181,33 +181,33 @@ namespace Sass {
         // Exponentiating certain real numbers leads to special behaviors. Ensure that
         // these behaviors are consistent for numbers within the precision limit.
         auto baseValue = fuzzyRoundIfZero(base->value(), compiler.epsilon);
-        auto exponentValue = fuzzyRoundIfZero(exponent->value(), compiler.epsilon);
-        if (fuzzyEquals(std::abs(baseValue), 1.0, compiler.epsilon) && std::isinf(exponentValue)) {
+        auto expValue = fuzzyRoundIfZero(exponent->value(), compiler.epsilon);
+        bool isIntExp = fuzzyIsInt(expValue, compiler.epsilon);
+        if (fuzzyEquals(std::abs(baseValue), 1.0, compiler.epsilon) && std::isinf(expValue)) {
           return SASS_MEMORY_NEW(Number, pstate, std::numeric_limits<double>::quiet_NaN());
         }
         else if (fuzzyEquals(baseValue, 0.0, compiler.epsilon)) {
-          if (std::isinf(exponentValue) &&
-            fuzzyIsInt(exponentValue, compiler.epsilon) &&
-            (int)round64(exponentValue, compiler.epsilon) % 2 == 1) {
-            exponentValue = fuzzyRound(exponentValue, compiler.epsilon);
+          if (std::isinf(expValue) && isIntExp &&
+            (int)round64(expValue, compiler.epsilon) % 2 == 1) {
+            expValue = fuzzyRound(expValue, compiler.epsilon);
           }
         }
         else if (std::isinf(baseValue) &&
           fuzzyLessThan(baseValue, 0.0, compiler.epsilon) &&
-          std::isinf(exponentValue) &&
-          fuzzyIsInt(exponentValue, compiler.epsilon)) {
-          exponentValue = fuzzyRound(exponentValue, compiler.epsilon);
-        }
-        else if (std::isinf(baseValue) &&
-          fuzzyLessThan(baseValue, 0.0, compiler.epsilon) &&
-          std::isinf(exponentValue) &&
-          fuzzyIsInt(exponentValue, compiler.epsilon) &&
-          (int)round64(exponentValue, compiler.epsilon) % 2 == 1) {
-          exponentValue = fuzzyRound(exponentValue, compiler.epsilon);
+          std::isinf(expValue) && isIntExp) {
+          expValue = fuzzyRound(expValue, compiler.epsilon);
         }
 
-        return SASS_MEMORY_NEW(Number, pstate,
-          std::pow(baseValue, exponentValue));
+
+        if (isIntExp) {
+          return SASS_MEMORY_NEW(Number, pstate,
+            std::pow(baseValue, (int)expValue));
+        }
+        else {
+          return SASS_MEMORY_NEW(Number, pstate,
+            std::pow(baseValue, expValue));
+        }
+
 
       }
 
@@ -452,7 +452,7 @@ namespace Sass {
         module.addFunction("acos", ctx.createBuiltInFunction("acos", "$number", fnACos));
         module.addFunction("asin", ctx.createBuiltInFunction("asin", "$number", fnASin));
         module.addFunction("atan", ctx.createBuiltInFunction("atan", "$number", fnATan));
-        module.addFunction("atan2", ctx.createBuiltInFunction("atan2", "$x, $y", fnATan2));
+        module.addFunction("atan2", ctx.createBuiltInFunction("atan2", "$y, $x", fnATan2));
 
 
         module.addFunction("random", ctx.registerBuiltInFunction("random", "$limit: null", random));
