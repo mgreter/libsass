@@ -24,7 +24,8 @@ namespace Sass {
       const sass::string& name,
       const ValueVector& arguments,
       const SourceSpan& pstate,
-      Logger& logger);
+      Logger& logger,
+      bool strict);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -205,7 +206,8 @@ namespace Sass {
       Value* argument,
       colFn function,
       Compiler& compiler,
-      SourceSpan pstate)
+      SourceSpan pstate,
+      bool strict)
     {
       // Parse the color channel arguments
       ValueObj parsed = parseColorChannels(
@@ -216,7 +218,7 @@ namespace Sass {
       }
       // Execute function with list of arguments
       if (const List* list = parsed->isaList()) {
-        return (*function)(name, list->elements(), pstate, compiler);
+        return (*function)(name, list->elements(), pstate, compiler, strict);
       }
       // Otherwise return
       return argument;
@@ -317,7 +319,7 @@ namespace Sass {
         pstate, fncall.str());
     }
 
-    Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger)
+    Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       // Check if any `calc()` or `var()` are passed
       if (isVar(arguments[0])) {
@@ -335,7 +337,7 @@ namespace Sass {
             name, pstate, arguments);
         }
       }
-      else if (isSpecialNumber(arguments[1])) {
+      else if (!strict && isSpecialNumber(arguments[1])) {
         if (const Color* color = arguments[0]->assertColor(logger, Strings::color)) {
           ColorRgbaObj rgba = color->toRGBA();
           return _functionRgbString(name,
@@ -361,25 +363,49 @@ namespace Sass {
       BUILT_IN_FN(rgb4arg)
       {
         return rgbFn(Strings::rgb,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
       }
 
       BUILT_IN_FN(rgb3arg)
       {
         return rgbFn(Strings::rgb,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnRgb4arg)
+      {
+        return rgbFn(Strings::rgb,
+          arguments, pstate, compiler, true);
+      }
+
+      BUILT_IN_FN(fnRgb3arg)
+      {
+        return rgbFn(Strings::rgb,
+          arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(rgb2arg)
       {
         return handleTwoArgRgb(Strings::rgb,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnRgb2arg)
+      {
+        return handleTwoArgRgb(Strings::rgb,
+          arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(rgb1arg)
       {
         return handleOneArgColorFn(Strings::rgb,
-          arguments[0], &rgbFn, compiler, pstate);
+          arguments[0], &rgbFn, compiler, pstate, false);
+      }
+
+      BUILT_IN_FN(fnRgb1arg)
+      {
+        return handleOneArgColorFn(Strings::rgb,
+          arguments[0], &rgbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -387,25 +413,49 @@ namespace Sass {
       BUILT_IN_FN(rgba4arg)
       {
         return rgbFn(Strings::rgba,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
       }
 
       BUILT_IN_FN(rgba3arg)
       {
         return rgbFn(Strings::rgba,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnRgba4arg)
+      {
+        return rgbFn(Strings::rgba,
+          arguments, pstate, compiler, true);
+      }
+
+      BUILT_IN_FN(fnRgba3arg)
+      {
+        return rgbFn(Strings::rgba,
+          arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(rgba2arg)
       {
         return handleTwoArgRgb(Strings::rgba,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnRgba2arg)
+      {
+        return handleTwoArgRgb(Strings::rgba,
+          arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(rgba1arg)
       {
         return handleOneArgColorFn(Strings::rgba,
-          arguments[0], &rgbFn, compiler, pstate);
+          arguments[0], &rgbFn, compiler, pstate, false);
+      }
+
+      BUILT_IN_FN(fnRgba1arg)
+      {
+        return handleOneArgColorFn(Strings::rgba,
+          arguments[0], &rgbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -413,14 +463,25 @@ namespace Sass {
       BUILT_IN_FN(hsl4arg)
       {
         return hslFn(Strings::hsl,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
       }
-
 
       BUILT_IN_FN(hsl3arg)
       {
         return hslFn(Strings::hsl,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnHsl4arg)
+      {
+        return hslFn(Strings::hsl,
+          arguments, pstate, compiler, true);
+      }
+
+      BUILT_IN_FN(fnHsl3arg)
+      {
+        return hslFn(Strings::hsl,
+          arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(hsl2arg)
@@ -434,22 +495,44 @@ namespace Sass {
         throw Exception::MissingArgument(compiler, Keys::lightness);
       }
 
+      BUILT_IN_FN(fnHsl2arg)
+      {
+        // Otherwise throw error for missing argument
+        throw Exception::MissingArgument(compiler, Keys::lightness);
+      }
+
       BUILT_IN_FN(hsl1arg)
       {
         return handleOneArgColorFn(Strings::hsl,
-          arguments[0], &hslFn, compiler, pstate);
+          arguments[0], &hslFn, compiler, pstate, false);
+      }
+
+      BUILT_IN_FN(fnHsl1arg)
+      {
+        return handleOneArgColorFn(Strings::hsl,
+          arguments[0], &hslFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
 
       BUILT_IN_FN(hsla4arg)
       {
-        return hslFn(Strings::hsla, arguments, pstate, compiler);
+        return hslFn(Strings::hsla, arguments, pstate, compiler, false);
       }
 
       BUILT_IN_FN(hsla3arg)
       {
-        return hslFn(Strings::hsla, arguments, pstate, compiler);
+        return hslFn(Strings::hsla, arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnHsla4arg)
+      {
+        return hslFn(Strings::hsla, arguments, pstate, compiler, true);
+      }
+
+      BUILT_IN_FN(fnHsla3arg)
+      {
+        return hslFn(Strings::hsla, arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(hsla2arg)
@@ -463,10 +546,22 @@ namespace Sass {
         throw Exception::MissingArgument(compiler, Keys::lightness);
       }
 
+      BUILT_IN_FN(fnHsla2arg)
+      {
+        // Otherwise throw error for missing argument
+        throw Exception::MissingArgument(compiler, Keys::lightness);
+      }
+
       BUILT_IN_FN(hsla1arg)
       {
         return handleOneArgColorFn(Strings::hsla,
-          arguments[0], &hslFn, compiler, pstate);
+          arguments[0], &hslFn, compiler, pstate, false);
+      }
+
+      BUILT_IN_FN(fnHsla1arg)
+      {
+        return handleOneArgColorFn(Strings::hsla,
+          arguments[0], &hslFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -474,14 +569,27 @@ namespace Sass {
       BUILT_IN_FN(hwb4arg)
       {
         return hwbFn(Strings::hwb,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
       }
 
 
       BUILT_IN_FN(hwb3arg)
       {
         return hwbFn(Strings::hwb,
-          arguments, pstate, compiler);
+          arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnHwb4arg)
+      {
+        return hwbFn(Strings::hwb,
+          arguments, pstate, compiler, true);
+      }
+
+
+      BUILT_IN_FN(fnHwb3arg)
+      {
+        return hwbFn(Strings::hwb,
+          arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(hwb2arg)
@@ -495,22 +603,44 @@ namespace Sass {
         throw Exception::MissingArgument(compiler, Keys::lightness);
       }
 
+      BUILT_IN_FN(fnHwb2arg)
+      {
+        // Otherwise throw error for missing argument
+        throw Exception::MissingArgument(compiler, Keys::lightness);
+      }
+
       BUILT_IN_FN(hwb1arg)
       {
         return handleOneArgColorFn(Strings::hwb,
-          arguments[0], &hwbFn, compiler, pstate);
+          arguments[0], &hwbFn, compiler, pstate, false);
+      }
+
+      BUILT_IN_FN(fnHwb1arg)
+      {
+        return handleOneArgColorFn(Strings::hwb,
+          arguments[0], &hwbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
 
       BUILT_IN_FN(hwba4arg)
       {
-        return hwbFn(Strings::hwba, arguments, pstate, compiler);
+        return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
       }
 
       BUILT_IN_FN(hwba3arg)
       {
-        return hwbFn(Strings::hwba, arguments, pstate, compiler);
+        return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
+      }
+
+      BUILT_IN_FN(fnHwba4arg)
+      {
+        return hwbFn(Strings::hwba, arguments, pstate, compiler, true);
+      }
+
+      BUILT_IN_FN(fnHwba3arg)
+      {
+        return hwbFn(Strings::hwba, arguments, pstate, compiler, true);
       }
 
       BUILT_IN_FN(hwba2arg)
@@ -524,10 +654,22 @@ namespace Sass {
         throw Exception::MissingArgument(compiler, Keys::lightness);
       }
 
+      BUILT_IN_FN(fnHwba2arg)
+      {
+        // Otherwise throw error for missing argument
+        throw Exception::MissingArgument(compiler, Keys::lightness);
+      }
+
       BUILT_IN_FN(hwba1arg)
       {
         return handleOneArgColorFn(Strings::hwba,
-          arguments[0], &hwbFn, compiler, pstate);
+          arguments[0], &hwbFn, compiler, pstate, false);
+      }
+
+      BUILT_IN_FN(fnHwba1arg)
+      {
+        return handleOneArgColorFn(Strings::hwba,
+          arguments[0], &hwbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -1168,42 +1310,78 @@ namespace Sass {
       {
         Module& module(ctx.createModule("color"));
 
-        module.addFunction("rgb", ctx.registerBuiltInOverloadFns("rgb", {
+        module.addFunction("rgb", ctx.createBuiltInOverloadFns("rgb", {
+          std::make_pair("$red, $green, $blue, $alpha", fnRgb4arg),
+          std::make_pair("$red, $green, $blue", fnRgb3arg),
+          std::make_pair("$color, $alpha", fnRgb2arg),
+          std::make_pair("$channels", fnRgb1arg),
+        }));
+        ctx.registerBuiltInOverloadFns("rgb", {
           std::make_pair("$red, $green, $blue, $alpha", rgb4arg),
           std::make_pair("$red, $green, $blue", rgb3arg),
           std::make_pair("$color, $alpha", rgb2arg),
           std::make_pair("$channels", rgb1arg),
+          });
+        module.addFunction("rgba", ctx.createBuiltInOverloadFns("rgba", {
+          std::make_pair("$red, $green, $blue, $alpha", fnRgba4arg),
+          std::make_pair("$red, $green, $blue", fnRgba3arg),
+          std::make_pair("$color, $alpha", fnRgba2arg),
+          std::make_pair("$channels", fnRgba1arg),
         }));
-        module.addFunction("rgba", ctx.registerBuiltInOverloadFns("rgba", {
+        ctx.registerBuiltInOverloadFns("rgba", {
           std::make_pair("$red, $green, $blue, $alpha", rgba4arg),
           std::make_pair("$red, $green, $blue", rgba3arg),
           std::make_pair("$color, $alpha", rgba2arg),
           std::make_pair("$channels", rgba1arg),
+        });
+        module.addFunction("hsl", ctx.createBuiltInOverloadFns("hsl", {
+          std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsl4arg),
+          std::make_pair("$hue, $saturation, $lightness", fnHsl3arg),
+          std::make_pair("$color, $alpha", fnHsl2arg),
+          std::make_pair("$channels", fnHsl1arg),
         }));
-        module.addFunction("hsl", ctx.registerBuiltInOverloadFns("hsl", {
+        ctx.registerBuiltInOverloadFns("hsl", {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsl4arg),
           std::make_pair("$hue, $saturation, $lightness", hsl3arg),
           std::make_pair("$color, $alpha", hsl2arg),
           std::make_pair("$channels", hsl1arg),
+        });
+        module.addFunction("hsla", ctx.createBuiltInOverloadFns("hsla", {
+          std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsla4arg),
+          std::make_pair("$hue, $saturation, $lightness", fnHsla3arg),
+          std::make_pair("$color, $alpha", fnHsla2arg),
+          std::make_pair("$channels", fnHsla1arg),
         }));
-        module.addFunction("hsla", ctx.registerBuiltInOverloadFns("hsla", {
+        ctx.registerBuiltInOverloadFns("hsla", {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsla4arg),
           std::make_pair("$hue, $saturation, $lightness", hsla3arg),
           std::make_pair("$color, $alpha", hsla2arg),
           std::make_pair("$channels", hsla1arg),
+        });
+        module.addFunction("hwb", ctx.createBuiltInOverloadFns("hwb", {
+          std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwb4arg),
+          std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
+          std::make_pair("$color, $alpha", fnHwb2arg),
+          std::make_pair("$channels", fnHwb1arg),
         }));
-        module.addFunction("hwb", ctx.registerBuiltInOverloadFns("hwb", {
+        ctx.registerBuiltInOverloadFns("hwb", {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", hwb4arg),
           std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
           std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
+        });
+        module.addFunction("hwba", ctx.createBuiltInOverloadFns("hwba", {
+          std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
+          std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
+          std::make_pair("$color, $alpha", fnHwba2arg),
+          std::make_pair("$channels", fnHwba1arg),
         }));
-        module.addFunction("hwba", ctx.registerBuiltInOverloadFns("hwba", {
+        ctx.registerBuiltInOverloadFns("hwba", {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
           std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
           std::make_pair("$color, $alpha", hwba2arg),
           std::make_pair("$channels", hwba1arg),
-        }));
+        });
 
         module.addFunction("red", ctx.registerBuiltInFunction("red", "$color", red));
         module.addFunction("green", ctx.registerBuiltInFunction("green", "$color", green));
@@ -1261,7 +1439,7 @@ namespace Sass {
 
     }
 
-    Value* rgbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger)
+    Value* rgbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _r = arguments[0];
       Value* _g = arguments[1];
@@ -1271,7 +1449,7 @@ namespace Sass {
         _a = arguments[3];
       }
       // Check if any `calc()` or `var()` are passed
-      if (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a)) {
+      if (!strict && (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
         sass::sstream fncall;
         fncall << name << "(";
         fncall << _r->inspect() << ", ";
@@ -1295,7 +1473,7 @@ namespace Sass {
 
     }
 
-    Value* hwbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger)
+    Value* hwbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _h = arguments[0];
       Value* _w = arguments[1];
@@ -1305,7 +1483,7 @@ namespace Sass {
         _a = arguments[3];
       }
       // Check if any `calc()` or `var()` are passed
-      if (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a)) {
+      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
         sass::sstream fncall;
         fncall << name << "(";
         fncall << _h->inspect() << ", ";
@@ -1329,7 +1507,7 @@ namespace Sass {
 
     }
 
-    Value* hslFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger)
+    Value* hslFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _h = arguments[0];
       Value* _s = arguments[1];
@@ -1339,7 +1517,7 @@ namespace Sass {
         _a = arguments[3];
       }
       // Check if any `calc()` or `var()` are passed
-      if (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a)) {
+      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a))) {
         sass::sstream fncall;
         fncall << name << "(";
         fncall << _h->inspect() << ", ";
