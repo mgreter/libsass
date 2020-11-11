@@ -719,6 +719,19 @@ namespace Sass {
       }
 
 
+      BUILT_IN_FN(noFadeIn)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "fade-in", "$alpha: ");
+      }
+      
+      BUILT_IN_FN(noFadeOut)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "fade-out", "$alpha: -");
+      }
+
+
       BUILT_IN_FN(noSaturate)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
@@ -1187,8 +1200,11 @@ namespace Sass {
 
         module.addFunction("opacify", ctx.createBuiltInFunction("opacify", "$color, $amount", opacify));
         ctx.registerBuiltInFunction("opacify", "$color, $amount", noOpacify);
-        module.addFunction("fade-in", ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify));
-        module.addFunction("fade-out", ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize));
+        module.addFunction("fade-in", ctx.createBuiltInFunction("fade-in", "$color, $amount", noFadeIn));
+        module.addFunction("fade-out", ctx.createBuiltInFunction("fade-out", "$color, $amount", noFadeOut));
+        ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify);
+        ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize);
+
         module.addFunction("transparentize", ctx.createBuiltInFunction("transparentize", "$color, $amount", transparentize));
         ctx.registerBuiltInFunction("transparentize", "$color, $amount", noTransparentize);
         module.addFunction("ie-hex-str", ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr));
