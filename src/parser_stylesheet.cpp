@@ -1291,7 +1291,6 @@ namespace Sass {
 
   ImportRule* StylesheetParser::readImportRule(Offset start)
   {
-
     ImportRuleObj rule = SASS_MEMORY_NEW(
       ImportRule, scanner.relevantSpanFrom(start));
 
@@ -1316,11 +1315,21 @@ namespace Sass {
     sass::string ns(readUseNamespace(url, start));
     scanWhitespace();
 
+    SourceSpan state(scanner.relevantSpanFrom(start));
+
+    // Check if name is valid identifier
+    if (url.empty() || isDigit(url[0])) {
+      context.addFinalStackTrace(state);
+      throw Exception::RuntimeException(context,
+        "Invalid Sass identifier \"" + url + "\"");
+    }
+
     sass::vector<ConfiguredVariable> config;
     bool hasWith(readWithConfiguration(config, false));
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
+      context.addFinalStackTrace(state);
       throw Exception::ParserException(context,
         "@use rules must be written before any other rules.");
     }
@@ -1583,6 +1592,8 @@ namespace Sass {
     expectStatementSeparator("@forward rule");
 
     if (isUseAllowed == false) {
+      SourceSpan state(scanner.relevantSpanFrom(start));
+      context.addFinalStackTrace(state);
       throw Exception::ParserException(context,
         "@forward rules must be written before any other rules.");
     }
@@ -3497,7 +3508,7 @@ namespace Sass {
     if (!isDigit(scanner.peekChar(1))) {
       if (allowTrailingDot) return 0.0;
       error("Expected digit.",
-        scanner.relevantSpanFrom(start));
+        scanner.rawSpan());
     }
 
     scanner.readChar();
