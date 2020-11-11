@@ -68,6 +68,11 @@ namespace Sass {
       return offset != 0xFFFFFFFF;
     }
 
+    bool isPrivate(uint32_t privateOffset) {
+      return frame == 0xFFFFFFFF &&
+        offset <= privateOffset;
+    }
+
     operator bool() const {
       return isValid();
     }
@@ -300,7 +305,9 @@ namespace Sass {
     sass::vector<CallableObj> intFunction;
     sass::vector<CallableObj> intMixin;
     sass::vector<ValueObj> intVariables;
-
+  public:
+    uint32_t privateVarOffset = 0;
+  private:
     // All created runtime variable objects.
     // Needed to track the memory allocations
     // And useful to resolve parents indirectly
@@ -310,10 +317,13 @@ namespace Sass {
     // The current runtime stack
     sass::vector<const VarRefs*> stack;
 
+    Compiler& compiler;
+
   public:
 
     // Value constructor
-    EnvRoot(EnvFrameVector& stack);
+    EnvRoot(EnvFrameVector& stack,
+      Compiler& compiler);
 
     // Destructor
     ~EnvRoot() {

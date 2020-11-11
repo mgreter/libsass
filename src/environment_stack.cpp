@@ -6,6 +6,7 @@
 #include "ast_expressions.hpp"
 #include "ast_statements.hpp"
 #include "exceptions.hpp"
+#include "compiler.hpp"
 
 namespace Sass {
 
@@ -16,8 +17,10 @@ namespace Sass {
   // The root is used for all runtime state
   // Also contains parsed root scope stack
   EnvRoot::EnvRoot(
-    EnvFrameVector& stack) :
-    EnvFrame(*this, stack)
+    EnvFrameVector& stack,
+    Compiler& compiler) :
+    EnvFrame(*this, stack),
+    compiler(compiler)
   {
     // Initialize as not active yet
     root.varFramePtr.push_back(0xFFFFFFFF);
