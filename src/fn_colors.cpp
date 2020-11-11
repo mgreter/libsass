@@ -583,8 +583,9 @@ namespace Sass {
       {
         if (arguments[0]->isaNumber()) {
           compiler.addWarning("Passing a number to "
-            "color.invert() is deprecated.\r\n\r\nRecommendation: "
-            "invert(" + arguments[0]->inspect() + ")", pstate);
+            "color.invert() is deprecated.\n\nRecommendation: "
+            "invert(" + arguments[0]->inspect() + ")",
+            arguments[0]->pstate());
         }
         return invert(pstate, arguments, compiler, eval, selfAssign);
       }
@@ -847,6 +848,19 @@ namespace Sass {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
+
+      BUILT_IN_FN(noGrayscale)
+      {
+        if (arguments[0]->isaNumber()) {
+          compiler.addWarning("Passing a number to "
+            "color.grayscale() is deprecated.\n\nRecommendation: "
+            "grayscale(" + arguments[0]->inspect() + ")",
+            arguments[0]->pstate());
+        }
+        return grayscale(pstate, arguments, compiler, eval, selfAssign);
+      }
+        
+
 
       BUILT_IN_FN(noOpacity)
       {
@@ -1201,7 +1215,8 @@ namespace Sass {
         module.addFunction("whiteness", ctx.createBuiltInFunction("whiteness", "$color", whiteness));
         module.addFunction("invert", ctx.createBuiltInFunction("invert", "$color, $weight: 100%", fnInvert));
         ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert);
-        module.addFunction("grayscale", ctx.registerBuiltInFunction("grayscale", "$color", grayscale));
+        module.addFunction("grayscale", ctx.createBuiltInFunction("grayscale", "$color", noGrayscale));
+        ctx.registerBuiltInFunction("grayscale", "$color", grayscale);
         module.addFunction("complement", ctx.registerBuiltInFunction("complement", "$color", complement));
 
         module.addFunction("desaturate", ctx.createBuiltInFunction("desaturate", "$color, $amount", noDesaturate));
