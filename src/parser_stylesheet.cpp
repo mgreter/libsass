@@ -2213,6 +2213,20 @@ namespace Sass {
       // throw Exception::ParserException(context,
       //   "Mixin namespaces not supported yet!");
     }
+    else {
+
+      // Then search in global modules
+      EnvFrame* frame(context.varStack.back()->getModule());
+      for (auto fwd : frame->fwdGlobal33) {
+        VarRefs* refs = fwd.first;
+        auto in = refs->mixIdxs.find(name);
+        if (in != refs->mixIdxs.end()) {
+          uint32_t offset = in->second;
+          midxs.push_back({ refs->mixFrame, offset });
+        }
+      }
+
+    }
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
     scanner.relevantSpanFrom(start), name, ns, arguments);
