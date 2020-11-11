@@ -579,6 +579,16 @@ namespace Sass {
         return mixColors(inverse, color, weight, pstate, compiler);
       }
 
+      BUILT_IN_FN(fnInvert)
+      {
+        if (arguments[0]->isaNumber()) {
+          compiler.addDeprecation("Passing a number to "
+            "color.invert() is deprecated.\r\n\r\nRecommendation: "
+            "invert(" + arguments[0]->inspect() + ")", pstate);
+        }
+        return invert(pstate, arguments, compiler, eval, selfAssign);
+      }
+
       /*******************************************************************/
 
       BUILT_IN_FN(hue)
@@ -731,7 +741,18 @@ namespace Sass {
           arguments, "fade-out", "$alpha: -");
       }
 
+      BUILT_IN_FN(noTansparentize)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "transparentize", "$alpha: -");
+      }
 
+      BUILT_IN_FN(noOpacity)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "opacity", "$alpha: ");
+      }
+      
       BUILT_IN_FN(noSaturate)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
@@ -1173,7 +1194,8 @@ namespace Sass {
         module.addFunction("saturation", ctx.registerBuiltInFunction("saturation", "$color", saturation));
         module.addFunction("blackness", ctx.createBuiltInFunction("blackness", "$color", blackness));
         module.addFunction("whiteness", ctx.createBuiltInFunction("whiteness", "$color", whiteness));
-        module.addFunction("invert", ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert));
+        module.addFunction("invert", ctx.createBuiltInFunction("invert", "$color, $weight: 100%", fnInvert));
+        ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert);
         module.addFunction("grayscale", ctx.registerBuiltInFunction("grayscale", "$color", grayscale));
         module.addFunction("complement", ctx.registerBuiltInFunction("complement", "$color", complement));
 
@@ -1191,28 +1213,29 @@ namespace Sass {
         module.addFunction("darken", ctx.createBuiltInFunction("darken", "$color, $amount", noDarken));
         ctx.registerBuiltInFunction("darken", "$color, $amount", darken);
 
-        module.addFunction("adjust-hue", ctx.createBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue));
-        ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", noAdjustHue);
+        module.addFunction("adjust-hue", ctx.createBuiltInFunction("adjust-hue", "$color, $degrees", noAdjustHue));
+        ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue);
         module.addFunction("adjust", ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust));
         module.addFunction("change", ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change));
         module.addFunction("scale", ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale));
         module.addFunction("mix", ctx.registerBuiltInFunction("mix", "$color1, $color2, $weight: 50%", mix));
 
-        module.addFunction("opacify", ctx.createBuiltInFunction("opacify", "$color, $amount", opacify));
-        ctx.registerBuiltInFunction("opacify", "$color, $amount", noOpacify);
+        module.addFunction("opacify", ctx.createBuiltInFunction("opacify", "$color, $amount", noOpacify));
+        ctx.registerBuiltInFunction("opacify", "$color, $amount", opacify);
         module.addFunction("fade-in", ctx.createBuiltInFunction("fade-in", "$color, $amount", noFadeIn));
         module.addFunction("fade-out", ctx.createBuiltInFunction("fade-out", "$color, $amount", noFadeOut));
         ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify);
         ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize);
 
-        module.addFunction("transparentize", ctx.createBuiltInFunction("transparentize", "$color, $amount", transparentize));
-        ctx.registerBuiltInFunction("transparentize", "$color, $amount", noTransparentize);
+        module.addFunction("transparentize", ctx.createBuiltInFunction("transparentize", "$color, $amount", noTansparentize));
+        ctx.registerBuiltInFunction("transparentize", "$color, $amount", transparentize);
         module.addFunction("ie-hex-str", ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr));
         module.addFunction("alpha", ctx.registerBuiltInOverloadFns("alpha", {
           std::make_pair("$color", alphaOne),
           std::make_pair("$args...", alphaAny),
           }));
-        module.addFunction("opacity", ctx.registerBuiltInFunction("opacity", "$color", opacity));
+        module.addFunction("opacity", ctx.createBuiltInFunction("opacity", "$color", noOpacity));
+        ctx.registerBuiltInFunction("opacity", "$color", opacity);
 
       }
 

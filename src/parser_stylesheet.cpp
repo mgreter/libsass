@@ -1389,7 +1389,7 @@ namespace Sass {
 
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      EnvFrame* frame(context.varStack.back());
+      EnvFrame* frame(context.varStack.back()->getModule());
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
 
@@ -1701,7 +1701,7 @@ namespace Sass {
 
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      EnvFrame* frame(context.varStack.back());
+      EnvFrame* frame(context.varStack.back()->getModule());
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
 
@@ -3870,7 +3870,7 @@ namespace Sass {
       if (!name.empty()) {
 
         // Then search in global modules
-        EnvFrame* frame(context.varStack.back());
+        EnvFrame* frame(context.varStack.back()->getModule());
         for (auto fwd : frame->fwdGlobal33) {
           VarRefs* refs = fwd.first;
           auto in = refs->fnIdxs.find(name);
