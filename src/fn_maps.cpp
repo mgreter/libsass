@@ -155,8 +155,8 @@ namespace Sass {
 
       BUILT_IN_FN(fnDeepMerge)
       {
-        MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
-        MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
+        Map* map1 = arguments[0]->assertMap(compiler, Strings::map1);
+        Map* map2 = arguments[1]->assertMap(compiler, Strings::map2);
         return deepMergeImpl(map1, map2);
       }
       
