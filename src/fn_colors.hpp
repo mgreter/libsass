@@ -21,19 +21,22 @@ namespace Sass {
       const sass::string& name,
       const ValueVector& arguments,
       const SourceSpan& pstate,
-      Logger& logger);
+      Logger& logger,
+      bool strict = false);
 
     Value* hslFn(
       const sass::string& name,
       const ValueVector& arguments,
       const SourceSpan& pstate,
-      Logger& logger);
+      Logger& logger,
+      bool strict = false);
 
     Value* hwbFn(
       const sass::string& name,
       const ValueVector& arguments,
       const SourceSpan& pstate,
-      Logger& logger);
+      Logger& logger,
+      bool strict = false);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
