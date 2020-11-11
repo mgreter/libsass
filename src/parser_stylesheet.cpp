@@ -3814,9 +3814,16 @@ namespace Sass {
 
         sass::vector<VarRef> vidxs;
 
-        auto expression = SASS_MEMORY_NEW(VariableExpression,
+        VariableExpressionObj expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),
           name, plain);
+
+        if (isPrivate(name)) {
+          context.addFinalStackTrace(expression->pstate());
+          throw Exception::ParserException(context,
+            "Private members can't be accessed "
+            "from outside their modules.");
+        }
 
         if (inLoopDirective) {
           // Static variable resolution will be done in finalize stage
@@ -3864,7 +3871,7 @@ namespace Sass {
           else context.varStack.back()->variables.push_back(expression);
         }
 
-        return expression;
+        return expression.detach();
       }
 
       ns = identifier->getPlainString();
