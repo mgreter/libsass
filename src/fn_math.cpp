@@ -414,7 +414,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Number, pstate, result, "deg");
         }
 
-        throw Exception::UnitMismatch(compiler, x, y);
+        throw Exception::UnitMismatch(compiler, y, x);
       }
 
       /*******************************************************************/

@@ -498,7 +498,7 @@ namespace Sass {
       BUILT_IN_FN(fnHsl2arg)
       {
         // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        throw Exception::TooManyArguments(compiler, 2, 1);
       }
 
       BUILT_IN_FN(hsl1arg)
@@ -549,7 +549,7 @@ namespace Sass {
       BUILT_IN_FN(fnHsla2arg)
       {
         // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        throw Exception::TooManyArguments(compiler, 2, 1);
       }
 
       BUILT_IN_FN(hsla1arg)
@@ -594,19 +594,13 @@ namespace Sass {
 
       BUILT_IN_FN(hwb2arg)
       {
-        // hwb(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
-        // and functions are parsed after variable substitution.
-        if (isVar(arguments[0]) || isVar(arguments[1])) {
-          return getFunctionString(Strings::hwb, pstate, arguments);
-        }
-        // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        return getFunctionString(Strings::hwb, pstate, arguments);
       }
 
       BUILT_IN_FN(fnHwb2arg)
       {
         // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        throw Exception::TooManyArguments(compiler, 2, 1);
       }
 
       BUILT_IN_FN(hwb1arg)
@@ -617,8 +611,13 @@ namespace Sass {
 
       BUILT_IN_FN(fnHwb1arg)
       {
-        return handleOneArgColorFn(Strings::hwb,
+        ValueObj value = handleOneArgColorFn(Strings::hwb,
           arguments[0], &hwbFn, compiler, pstate, true);
+        if (value->isaString()) {
+          throw Exception::RuntimeException(compiler, "Expected "
+            "numeric channels, got \"" + value->inspect() + "\".");
+        }
+        return value.detach();
       }
 
       /*******************************************************************/
@@ -645,19 +644,12 @@ namespace Sass {
 
       BUILT_IN_FN(hwba2arg)
       {
-        // hwb(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
-        // and functions are parsed after variable substitution.
-        if (isVar(arguments[0]) || isVar(arguments[1])) {
-          return getFunctionString(Strings::hwba, pstate, arguments);
-        }
-        // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        return getFunctionString(Strings::hwba, pstate, arguments);
       }
 
       BUILT_IN_FN(fnHwba2arg)
       {
-        // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        throw Exception::TooManyArguments(compiler, 2, 1);
       }
 
       BUILT_IN_FN(hwba1arg)
@@ -668,8 +660,13 @@ namespace Sass {
 
       BUILT_IN_FN(fnHwba1arg)
       {
-        return handleOneArgColorFn(Strings::hwba,
+        ValueObj value = handleOneArgColorFn(Strings::hwba,
           arguments[0], &hwbFn, compiler, pstate, true);
+        if (value->isaString()) {
+          throw Exception::RuntimeException(compiler, "Expected "
+            "numeric channels, got \"" + value->inspect() + "\".");
+        }
+        return value.detach();
       }
 
       /*******************************************************************/
@@ -1495,14 +1492,16 @@ namespace Sass {
       }
 
       Number* h = _h->assertNumber(logger, Strings::hue);
-      Number* w = _w->assertNumber(logger, Strings::whiteness);
-      Number* b = _b->assertNumber(logger, Strings::blackness);
+      Number* w = _w->assertNumber(logger, Strings::whiteness)
+        ->assertHasUnits(logger, "%", Strings::whiteness);
+      Number* b = _b->assertNumber(logger, Strings::blackness)
+        ->assertHasUnits(logger, "%", Strings::blackness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
       return SASS_MEMORY_NEW(ColorHwba, pstate,
         h->value(),
-        clamp(w->value(), 0.0, 100.0),
-        clamp(b->value(), 0.0, 100.0),
+        w->assertRange(0.0, 100.0, logger, Strings::whiteness),
+        b->assertRange(0.0, 100.0, logger, Strings::blackness),
         _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0);
 
     }
