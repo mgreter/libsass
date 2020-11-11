@@ -840,7 +840,9 @@ namespace Sass {
     }
     // Catch division by zero
     else if (op == div && rval == 0) {
-      if (lval) return SASS_MEMORY_NEW(Number, pstate,
+      if (lval < 0) return SASS_MEMORY_NEW(Number, pstate,
+        - std::numeric_limits<double>::infinity());
+      else if (lval > 0) return SASS_MEMORY_NEW(Number, pstate,
         std::numeric_limits<double>::infinity());
       else return SASS_MEMORY_NEW(Number, pstate,
         std::numeric_limits<double>::quiet_NaN());
