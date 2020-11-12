@@ -291,7 +291,8 @@ namespace Sass {
             kvar.value = kv.second;
             kvar.isGuarded = false;
             kvar.wasUsed = false;
-            kvar.pstate = name->pstate();
+            kvar.pstate2 = name->pstate();
+            kvar.isNull = !kv.second || kv.second->isaNull();
             withConfigs.push_back(kvar);
             if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,

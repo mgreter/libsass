@@ -49,7 +49,7 @@ namespace Sass {
 
     sass::vector<WithConfig*> withConfigStack;
 
-    WithConfigVar* getCfgVar(const EnvKey& name);
+    WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
 
     EnvKeyMap<Module> modules;
 

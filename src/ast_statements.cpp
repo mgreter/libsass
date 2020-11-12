@@ -44,14 +44,25 @@ namespace Sass {
       // If the value is a default, we should look further
       // down the tree and only add it if not there yet
       if (cfgvar.isGuarded) {
-        if (getCfgVar(cfgvar.name) == nullptr) {
-          config[cfgvar.name] = cfgvar;
-        }
+      // 
+      //   // Need the first unguarded or the last guarded
+      // 
+      ;
+      // Check if we have a non-default parent
+      if (auto pr = getCfgVar(cfgvar.name, true, false)) {
+        pr->wasUsed = true;
       }
-      else {
-        config[cfgvar.name] = cfgvar;
+      //     pr = getCfgVar(cfgvar.name, false);
+      //     std::cerr << "asdasd\n";
+      //   }
+      //   if (getCfgVar(cfgvar.name, false) == nullptr) {
+      //     config[cfgvar.name] = cfgvar;
+      //   }
+      // }
+      // else {
+      //   config[cfgvar.name] = cfgvar;
       }
-
+      config[cfgvar.name] = cfgvar;
     }
     // Push the lookup table onto the stack
     compiler.withConfigStack.push_back(this);
@@ -62,10 +73,12 @@ namespace Sass {
     // Check if everything was consumed
     for (auto cfgvar : config) {
       if (cfgvar.second.wasUsed == false) {
-        compiler.addFinalStackTrace(cfgvar.second.pstate);
-        throw Exception::RuntimeException(compiler, "$" +
-          cfgvar.second.name + " was not declared "
-          "with !default in the @used module.");
+        if (cfgvar.second.isGuarded == false) {
+          compiler.addFinalStackTrace(cfgvar.second.pstate2);
+          throw Exception::RuntimeException(compiler, "$" +
+            cfgvar.second.name + " was not declared "
+            "with !default in the @used module.");
+        }
       }
     }
   }
@@ -80,7 +93,7 @@ namespace Sass {
     compiler.withConfigStack.pop_back();
   }
 
-  WithConfigVar* WithConfig::getCfgVar(EnvKey name) {
+  WithConfigVar* WithConfig::getCfgVar(EnvKey name, bool skipGuarded, bool skipNull) {
 
     auto it = compiler.withConfigStack.rbegin();
     while (it != compiler.withConfigStack.rend()) {
@@ -102,8 +115,13 @@ namespace Sass {
       // Then try to find the named item
       auto varcfg = withcfg->config.find(name);
       if (varcfg != withcfg->config.end()) {
-        varcfg->second.wasUsed = true;
-        return &varcfg->second;
+        bool consume = true;
+        if (skipGuarded && varcfg->second.isGuarded) consume = false;
+        if (skipNull && varcfg->second.isNull) consume = false;
+        if (consume) {
+          varcfg->second.wasUsed = true;
+          return &varcfg->second;
+        }
       }
       it += 1;
     }
