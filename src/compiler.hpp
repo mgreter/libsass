@@ -25,8 +25,6 @@ namespace Sass {
 
     bool hasWithConfig = false;
 
-    sass::vector<EnvKeyMap<WithConfigVar>> withConfigStack;
-
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.
     sass::vector<EnvFrame*> varStack;

@@ -39,32 +39,27 @@ namespace Sass {
   class WithConfig {
   public:
 
+
+    // Managed resource
     Compiler& compiler;
 
-    WithConfig& parent;
-
-
+    // Flag if we do RAI
     bool hasConfig = false;
 
     // Our configuration
     EnvKeyMap<WithConfigVar> config;
 
+    // Value constructor
     WithConfig(
       Compiler& compiler,
       sass::vector<WithConfigVar> config,
       bool hasConfig = true);
 
-    // WithConfig(WithConfig& parent);
-
+    // Destructor
     ~WithConfig();
 
-    void getValue(const EnvKey& name) {
-
-    }
-
-    bool isRoot() {
-      return &parent == this;
-    }
+    // Get value and mark it as used
+    WithConfigVar* getCfgVar(const EnvKey& name);
 
   };
 
