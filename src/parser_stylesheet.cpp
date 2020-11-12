@@ -1481,11 +1481,11 @@ namespace Sass {
         // Check if with is given, error
         sheet = cached->second;
 
-        // if (hasWithConfig) {
-        //   throw Exception::ParserException(context,
-        //     "This module was already loaded, so it "
-        //     "can't be configured using \"with\".");
-        // }
+        if (hasWith) {
+          throw Exception::ParserException(context,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
 
       }
       else {
@@ -1641,6 +1641,7 @@ namespace Sass {
     bool isHidden = false;
     std::set<sass::string> toggledVariables2;
     std::set<sass::string> toggledCallables2;
+    Offset beforeShow(scanner.offset);
     if (scanIdentifier("show")) {
       readForwardMembers(toggledVariables2, toggledCallables2);
       isShown = true;
@@ -1667,18 +1668,46 @@ namespace Sass {
       }
     }
 
+    if (isHidden) {
+      for (auto asd : toggledVariables2) {
+        if (context.withConfig.count(asd)) {
+          context.withConfig.erase(asd);
+        }
+        // else {
+        //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
+        //   context.addFinalStackTrace(state);
+        //   throw Exception::RuntimeException(context,
+        //     "Unknown variable \"$" + asd + "\" in deny-list.");
+        // }
+      }
+    }
+    if (isShown) {
+      auto moved(std::move(context.withConfig));
+      for (auto asd : toggledVariables2) {
+        if (moved.count(asd)) {
+          context.withConfig[asd] = moved[asd];
+        }
+        // else {
+        //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
+        //   context.addFinalStackTrace(state);
+        //   throw Exception::RuntimeException(context,
+        //     "Unknown variable \"$" + asd + "\" in allow-list.");
+        // }
+      }
+    }
+
     for (auto kv : config) {
       if (kv.isGuarded) {
         // The item was already given previously
         if (context.withConfig.count(kv.name)) {
           if (context.withConfig[kv.name].isGuarded) {
-            context.withConfig[kv.name] = kv;
+            context.withConfig[kv.name].expression = kv.expression;
           }
           if (context.withConfig[kv.name].expression.isNull()) {
-            context.withConfig[kv.name] = kv;
+            context.withConfig[kv.name].expression = kv.expression;
           }
           else if (context.withConfig[kv.name].expression->isaNullExpression()) {
-            context.withConfig[kv.name] = kv;
+            context.withConfig[kv.name].expression = kv.expression;
           }
         }
         else {
@@ -1686,7 +1715,12 @@ namespace Sass {
         }
       }
       else {
-        context.withConfig[kv.name] = kv;
+        if (context.withConfig.count(kv.name)) {
+          context.withConfig[kv.name].expression = kv.expression;
+        }
+        else {
+          context.withConfig[kv.name] = kv;
+        }
       }
     }
 
@@ -2021,7 +2055,7 @@ namespace Sass {
             "!default in the @used module.");
         }
         else if (oldConfig.count(varcfg.name)) {
-          oldConfig[varcfg.name].wasUsed = true;
+          // oldConfig[varcfg.name].wasUsed = true;
         }
         // if (oldConfig.count(varcfg.name) == 0) {
         //   context.withConfig.erase(varcfg.name);
@@ -2035,7 +2069,21 @@ namespace Sass {
       // Now restore old-config with access flag preserved
       for (auto qwe : context.withConfig) {
         if (oldConfig.count(prefix + qwe.first.norm())) {
-          oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed;
+          bool hasInConfig = false;
+          bool wasUsed = false;
+          for (auto ha : config) {
+            if (ha.name == qwe.first.norm()) {
+              wasUsed = ha.wasUsed;
+              hasInConfig = true;
+              break;
+            }
+          }
+          if (hasInConfig) {
+            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed; // wasUsed
+          }
+          else {
+            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed;
+          }
         }
       }
       context.withConfig.clear();
