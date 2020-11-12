@@ -2,6 +2,7 @@
 
 #include "permutate.hpp"
 #include "callstack.hpp"
+#include "exceptions.hpp"
 #include "dart_helpers.hpp"
 #include "ast_selectors.hpp"
 
@@ -70,10 +71,10 @@ namespace Sass {
 
     for (auto complex : targets->elements()) {
 
-      // This seems superfluous, check is done before!?
-      // if (complex->length() != 1) {
-      //   error("complex selectors may not be extended.", complex->pstate(), traces);
-      // }
+      if (complex->size() > 1) {
+        throw Exception::RuntimeException(traces,
+          "complex selectors may not be extended.");
+      }
 
       if (const CompoundSelector* compound = complex->first()->isaCompoundSelector()) {
 
@@ -92,6 +93,11 @@ namespace Sass {
         // }
 
         selector = extender.extendList(selector, extensions, {});
+
+      }
+      else {
+        throw Exception::RuntimeException(traces,
+          "combinators cannot be extended.");
 
       }
 
