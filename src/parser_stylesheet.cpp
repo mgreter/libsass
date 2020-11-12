@@ -349,24 +349,23 @@ namespace Sass {
     }
 
 
-    if (context.withConfig) {
-      if (frame->idxs->varFrame == 0xFFFFFFFF) {
-        // this is wrong, varcfg.name is correctly prefixed
-        // but assignment does not take prefix into account!
-        for (auto& varcfg : *context.withConfig) {
-          if (name == varcfg.name) {
-            if (!guarded) {
-              context.addFinalStackTrace(varcfg.pstate);
-              throw Exception::RuntimeException(context,
-                "This variable was not declared with "
-                "!default in the @used module.");
-            }
-            value = varcfg.expression;
-            varcfg.wasUsed = true;
+    if (frame->idxs->varFrame == 0xFFFFFFFF) {
+      // this is wrong, varcfg.name is correctly prefixed
+      // but assignment does not take prefix into account!
+      for (auto& varcfg : context.withConfig) {
+        if (name == varcfg.first) {
+          if (!guarded) {
+            context.addFinalStackTrace(varcfg.second.pstate);
+            throw Exception::RuntimeException(context,
+              "This variable was not declared with "
+              "!default in the @used module.");
           }
+          value = varcfg.second.expression;
+          varcfg.second.wasUsed = true;
         }
       }
     }
+
     // Check if we have a configuration
 
     if (vidxs.empty()) {
@@ -1339,14 +1338,16 @@ namespace Sass {
         "Invalid Sass identifier \"" + url + "\"");
     }
 
-    sass::vector<ConfiguredVariable> scoped2;
-    sass::vector<ConfiguredVariable>& config(
-      context.withConfig ? *context.withConfig : scoped2);
+    sass::vector<ConfiguredVariable> config;
+    EnvKeyMap<ConfiguredVariable> oldConfig = context.withConfig;
+
     bool hasWith(readWithConfiguration(config, true));
+    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
 
-    LocalOption<sass::vector<ConfiguredVariable>*>
-      scoped(context.withConfig, &config);
+    for (auto kv : config) {
+      context.withConfig[kv.name] = kv;
+    }
 
     if (isUseAllowed == false) {
       context.addFinalStackTrace(state);
@@ -1454,7 +1455,7 @@ namespace Sass {
         // Check if with is given, error
         sheet = cached->second;
 
-        if (hasWith) {
+        if (hasWithConfig) {
           throw Exception::ParserException(context,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1471,16 +1472,23 @@ namespace Sass {
         // sheet->root2->con context->node
       }
 
-      if (hasWith) {
-        for (auto& varcfg : *context.withConfig) {
-          if (varcfg.wasUsed == false) {
-            context.addFinalStackTrace(varcfg.pstate);
-            throw Exception::RuntimeException(context,
-              "This variable was not declared with "
-              "!default in the @used module.");
-          }
+      for (auto item : config) {
+        auto& varcfg = context.withConfig[item.name];
+        if (varcfg.wasUsed == false) {
+          context.addFinalStackTrace(varcfg.pstate);
+          throw Exception::RuntimeException(context,
+            "This variable was not declared with "
+            "!default in the @used module.");
+        }
+        if (oldConfig.count(varcfg.name) == 0) {
+          context.withConfig.erase(varcfg.name);
+        }
+        else {
+          context.withConfig[varcfg.name].expression =
+            oldConfig[varcfg.name].expression;
         }
       }
+
 
       if (!ns.empty()) {
         if (modFrame->fwdModule33.count(ns)) {
@@ -1616,26 +1624,26 @@ namespace Sass {
       isHidden = true;
     }
 
-    // This should be reverted or find better way
-    // Remove prefix from configured variables
-    // When going into a forward rule with prefix
-    sass::vector<ConfiguredVariable> scoped2;
-    if (context.withConfig) {
-      for (auto& asd : *context.withConfig) {
-        if (startsWith(asd.name, prefix)) {
-          asd.name = asd.name.substr(prefix.size());
-        }
-        scoped2.push_back(asd);
+    sass::vector<ConfiguredVariable> config;
+    EnvKeyMap<ConfiguredVariable> oldConfig = context.withConfig;
+
+    bool hasWith(readWithConfiguration(config, true));
+    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
+    expectStatementSeparator("@forward rule");
+
+    // Rewrite the whole old config
+    context.withConfig.clear();
+    for (auto kv : oldConfig) {
+      auto varcfg = kv.second;
+      if (startsWith(varcfg.name, prefix)) {
+        varcfg.name = varcfg.name.substr(prefix.size());
+        context.withConfig[varcfg.name] = varcfg;
       }
     }
 
-    sass::vector<ConfiguredVariable>& config(
-      context.withConfig ? *context.withConfig : scoped2);
-    bool hasWith(readWithConfiguration(config, true));
-    expectStatementSeparator("@forward rule");
-
-    LocalOption<sass::vector<ConfiguredVariable>*>
-      scoped(context.withConfig, &config);
+    for (auto kv : config) {
+      context.withConfig[kv.name] = kv;
+    }
 
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
@@ -1748,6 +1756,33 @@ namespace Sass {
         // current->forwarded.push_back({ exposed, nullptr });
         currentRoot->forwarded.push_back({ exposed, nullptr });
 
+        // Now restore old-config with access flag preserved
+        context.withConfig.clear();
+        for (auto asd : oldConfig) {
+          context.withConfig.insert(asd);
+        }
+        // context.withConfig = oldConfig;
+
+        for (auto varcfg : config) {
+          if (varcfg.wasUsed == false) {
+            context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "This variable was not declared with "
+              "!default in the @used module.");
+          }
+          else {
+            context.withConfig[varcfg.name].wasUsed = true;
+          }
+          // if (oldConfig.count(varcfg.name) == 0) {
+          //   context.withConfig.erase(varcfg.name);
+          // }
+          // else {
+          //   context.withConfig[prefix + varcfg.name].expression =
+          //     oldConfig[prefix + varcfg.name].expression;
+          // }
+        }
+
+
         rule->root(nullptr);
 
       }
@@ -1755,15 +1790,6 @@ namespace Sass {
         context.addFinalStackTrace(rule->pstate());
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
-      }
-
-      if (context.withConfig) {
-        for (auto& asd : *context.withConfig) {
-          if (startsWith(asd.name, prefix)) {
-            asd.name = prefix + asd.name;
-          }
-          scoped2.push_back(asd);
-        }
       }
 
       return rule.detach();
@@ -1816,13 +1842,12 @@ namespace Sass {
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
 
-        // Check if with is given, error
-
         hasCached = true;
 
+        // Check if with is given, error
         sheet = cached->second;
 
-        if (context.withConfig) {
+        if (hasWithConfig) {
           throw Exception::ParserException(context,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1839,16 +1864,16 @@ namespace Sass {
         // sheet->root2->con context->node
       }
 
-      if (hasWith) {
-        for (auto& varcfg : *context.withConfig) {
-          if (varcfg.wasUsed == false) {
-            context.addFinalStackTrace(varcfg.pstate);
-            throw Exception::RuntimeException(context,
-              "This variable was not declared with "
-              "!default in the @used module.");
-          }
-        }
-      }
+      // if (hasWith) {
+      //   for (auto& varcfg : *context.withConfig) {
+      //     if (varcfg.wasUsed == false) {
+      //       context.addFinalStackTrace(varcfg.pstate);
+      //       throw Exception::RuntimeException(context,
+      //         "This variable was not declared with "
+      //         "!default in the @used module.");
+      //     }
+      //   }
+      // }
 
       Root* root = sheet->root2;
       VarRefs* refs = root->idxs;
@@ -1943,6 +1968,38 @@ namespace Sass {
         }
       }
 
+      for (auto varcfg : config) {
+        if (context.withConfig[varcfg.name].wasUsed == false) {
+          context.addFinalStackTrace(varcfg.pstate);
+          throw Exception::RuntimeException(context,
+            "This variable was not declared with "
+            "!default in the @used module.");
+        }
+        else if (oldConfig.count(varcfg.name)) {
+          oldConfig[varcfg.name].wasUsed = true;
+        }
+        // if (oldConfig.count(varcfg.name) == 0) {
+        //   context.withConfig.erase(varcfg.name);
+        // }
+        // else {
+        //   context.withConfig[prefix + varcfg.name].expression =
+        //     oldConfig[prefix + varcfg.name].expression;
+        // }
+      }
+
+      // Now restore old-config with access flag preserved
+      for (auto qwe : context.withConfig) {
+        if (oldConfig.count(prefix + qwe.first.norm())) {
+          oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed;
+        }
+      }
+      context.withConfig.clear();
+      for (auto asd : oldConfig) {
+        context.withConfig.insert(asd);
+      }
+      // context.withConfig = oldConfig;
+
+
       // current->forwarded.push_back({ exposed, nullptr });
       currentRoot->forwarded.push_back({ exposed, nullptr });
 
@@ -1995,9 +2052,9 @@ namespace Sass {
 
     std::set<sass::string> seen;
 
-    if (context.withConfig) {
-      std::cerr << "must merge";
-    }
+    // if (context.withConfig) {
+    //   std::cerr << "must merge";
+    // }
 
     while (true) {
       scanWhitespace();
