@@ -1345,8 +1345,8 @@ namespace Sass {
         "Invalid Sass identifier \"" + url + "\"");
     }
 
-    sass::vector<ConfiguredVariable> config;
-    EnvKeyMap<ConfiguredVariable> oldConfig = context.withConfig;
+    sass::vector<WithConfigVar> config;
+    EnvKeyMap<WithConfigVar> oldConfig = context.withConfig;
 
     bool hasWith(readWithConfiguration(config, false));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
@@ -1653,8 +1653,8 @@ namespace Sass {
       isHidden = true;
     }
 
-    sass::vector<ConfiguredVariable> config;
-    EnvKeyMap<ConfiguredVariable> oldConfig = context.withConfig;
+    sass::vector<WithConfigVar> config;
+    EnvKeyMap<WithConfigVar> oldConfig = context.withConfig;
 
     bool hasWith(readWithConfiguration(config, true));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
@@ -2139,7 +2139,7 @@ namespace Sass {
   }
 
   bool StylesheetParser::readWithConfiguration(
-    sass::vector<ConfiguredVariable>& vars,
+    sass::vector<WithConfigVar>& vars,
     bool allowGuarded)
   {
     if (!scanIdentifier("with")) return false;
@@ -2183,7 +2183,7 @@ namespace Sass {
 
       seen.insert(name);
 
-      ConfiguredVariable variable;
+      WithConfigVar variable;
       variable.expression = expression;
       variable.isGuarded = guarded;
       variable.pstate = scanner.relevantSpanFrom(variableStart);

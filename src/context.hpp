@@ -72,9 +72,9 @@ namespace Sass {
 
   public:
 
-    // sass::vector<ConfiguredVariable>* withConfig = nullptr;
+    // sass::vector<WithConfigVar>* withConfig = nullptr;
 
-    EnvKeyMap<ConfiguredVariable> withConfig;
+    EnvKeyMap<WithConfigVar> withConfig;
 
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?

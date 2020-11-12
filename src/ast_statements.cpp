@@ -4,8 +4,49 @@
 #include "ast_statements.hpp"
 
 #include "ast_supports.hpp"
+#include "exceptions.hpp"
+#include "compiler.hpp"
 
 namespace Sass {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  WithConfig::WithConfig(
+    Compiler& compiler,
+    sass::vector<WithConfigVar> configs,
+    bool hasConfig) :
+    compiler(compiler),
+    parent(*this),
+    hasConfig(hasConfig)
+  {
+    // Do nothing if we don't have any config
+    // Since we are used as a stack RAI object
+    // this mode is very useful to ease coding
+    if (hasConfig == false) return;
+    // Read the list of config variables into
+    // a map and error if items are duplicated
+    EnvKeyMap<WithConfigVar> config;
+    for (auto cfgvar : configs) {
+      if (config.count(cfgvar.name) == 1) {
+        throw Exception::RuntimeException(compiler,
+          "Defined Twice");
+      }
+    }
+    // Push the lookup table onto the stack
+    compiler.withConfigStack.push_back(config);
+  }
+
+  WithConfig::~WithConfig()
+  {
+    // Do nothing if we don't have any config
+    // Since we are used as a stack RAI object
+    // this mode is very useful to ease coding
+    if (hasConfig == false) return;
+    // Otherwise check if everything was consumed
+    // Then remove the config from the stack
+    compiler.withConfigStack.pop_back();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
