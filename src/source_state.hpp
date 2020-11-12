@@ -43,7 +43,10 @@ namespace Sass
     // Return the resolved absolute path
     const char* getAbsPath() const;
 
-		// Return the attached source
+    // Return the resolved filename
+    const char* getFileName() const;
+
+    // Return the attached source
 		SourceData* getSource() const;
 
     // Return the attached source
