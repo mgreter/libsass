@@ -308,6 +308,12 @@ namespace Sass {
           vidxs.push_back({ refs->varFrame, offset });
         }
       }
+      else {
+        SourceSpan state(scanner.relevantSpanFrom(start));
+        context.addFinalStackTrace(state);
+        throw Exception::RuntimeException(context, "There is no "
+          "module with the namespace \"" + name.orig() + "\".");
+      }
 
       if (vidxs.empty()) {
         VarRef vidx(module->getVariableIdx(name, true));
@@ -342,6 +348,7 @@ namespace Sass {
         for (auto& varcfg : *context.withConfig) {
           if (name == varcfg.name) {
             if (!guarded) {
+              context.addFinalStackTrace(varcfg.pstate);
               throw Exception::RuntimeException(context,
                 "This variable was not declared with "
                 "!default in the @used module.");
@@ -1343,6 +1350,13 @@ namespace Sass {
 
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
+
+      if (hasWith) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Built-in modules can't be configured.");
+      }
+
       sass::string name(url.substr(5));
       if (ns.empty()) ns = name;
       if (Module* module = context.getModule(name)) {
@@ -1386,7 +1400,8 @@ namespace Sass {
 
     auto& withConfig = rule->config();
     LocalOption<sass::vector<ConfiguredVariable>*>
-      scoped(context.withConfig, hasWith ? &withConfig : nullptr);
+      scoped(context.withConfig, hasWith ?
+        &withConfig : context.withConfig);
 
 
 
@@ -1612,6 +1627,13 @@ namespace Sass {
 
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
+
+      if (hasWith) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Built-in modules can't be configured.");
+      }
+
       sass::string name(url.substr(5));
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (Module* module = context.getModule(name)) {
@@ -1709,7 +1731,8 @@ namespace Sass {
 
     auto& withConfig = rule->config();
     LocalOption<sass::vector<ConfiguredVariable>*>
-      scoped(context.withConfig, hasWith ? &withConfig : nullptr);
+      scoped(context.withConfig, hasWith ?
+        &withConfig : context.withConfig);
 
 
 
@@ -1753,7 +1776,7 @@ namespace Sass {
 
         sheet = cached->second;
 
-        if (hasWith) {
+        if (context.withConfig) {
           throw Exception::ParserException(context,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1869,40 +1892,6 @@ namespace Sass {
       currentRoot->forwarded.push_back({ exposed, nullptr });
 
 
-
-
-
-      // for (auto fwd : root->forwarded) {
-      //   for (auto fn : fwd.first->fnIdxs) {
-      //     copy->fnIdxs.insert(fn);
-      //   }
-      //   for (auto mix : fwd.first->mixIdxs) {
-      //     copy->mixIdxs.insert(mix);
-      //   }
-      //   for (auto var : fwd.first->fnIdxs) {
-      //     copy->fnIdxs.insert(var);
-      //   }
-      // }
-
-      // currentRoot->forwarded.push_back
-
-      // if (ns == "*") {
-      //   // This must not be on root block
-      //   // These may vary for different use rules
-      //   frame->fwdGlobal33.push_back(
-      //     { copy, sheet->root2 });
-      // }
-      // else {
-      // 
-      //   // Combine forwarded with local scope
-      //   frame->fwdModule33[ns] =
-      //   { copy, sheet->root2 };
-      // }
-      // 
-      // rule->isSupported = true;
-
-
-      // rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
     }
     else {
       context.addFinalStackTrace(pstate);
@@ -2240,6 +2229,12 @@ namespace Sass {
           midxs.push_back({ refs->mixFrame, offset });
         }
       }
+      else {
+        context.addFinalStackTrace(scanner.relevantSpanFrom(start));
+        throw Exception::RuntimeException(context, "There "
+          "is no module with the namespace \"" + ns + "\".");
+      }
+
       if (midxs.empty()) {
         VarRef midx(frame->getMixinIdx(name, true));
         if (!midxs.empty()) midxs.push_back(midx);
@@ -3867,6 +3862,12 @@ namespace Sass {
                 vidxs.push_back({ refs->varFrame, offset });
               }
             }
+            else {
+              SourceSpan state(scanner.relevantSpanFrom(start));
+              context.addFinalStackTrace(state);
+              throw Exception::RuntimeException(context, "There is no "
+                "module with the namespace \"" + plain + "\".");
+            }
 
             if (vidxs.empty()) {
               VarRef vidx(frame->getVariableIdx(name, true));
@@ -3917,6 +3918,12 @@ namespace Sass {
           uint32_t offset = in->second;
           fn->fidx({ refs->fnFrame, offset });
         }
+      }
+      else {
+        SourceSpan state(scanner.relevantSpanFrom(start));
+        context.addFinalStackTrace(state);
+        throw Exception::RuntimeException(context, "There is no "
+          "module with the namespace \"" + ns + "\".");
       }
 
       if (!fn->fidx().isValid()) {
