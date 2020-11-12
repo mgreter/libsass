@@ -211,6 +211,7 @@ namespace Sass {
       void registerFunctions(Compiler& ctx)
       {
         Module& module(ctx.createModule("map"));
+        // module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key", set));
         module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key", get));
         module.addFunction("merge", ctx.registerBuiltInFunction("map-merge", "$map1, $map2", merge));
         module.addFunction("remove", ctx.registerBuiltInOverloadFns("map-remove", {

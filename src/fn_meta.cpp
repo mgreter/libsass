@@ -289,20 +289,78 @@ namespace Sass {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
         bool css = arguments[1]->isTruthy(); // supports all values
-        String* plugin = arguments[2]->assertStringOrNull(compiler, Sass::Strings::module);
+        String* ns = arguments[2]->assertStringOrNull(compiler, Sass::Strings::module);
 
-        if (css && plugin != nullptr) {
+        if (css && ns != nullptr) {
           throw Exception::RuntimeException(compiler,
             "$css and $module may not both be passed at once.");
         }
 
-        CallableObj callable = css
-          ? SASS_MEMORY_NEW(PlainCssCallable, pstate, name->value())
-          : _getFunction(name->value(), compiler);
+        if (css) {
+          return SASS_MEMORY_NEW(Function, pstate,
+            SASS_MEMORY_NEW(PlainCssCallable, pstate,
+              name->value()));
+        }
 
-        if (callable == nullptr) throw
-          Exception::RuntimeException(compiler,
-            "Function not found: " + name->value());
+        // CallableObj callable = css
+        //   ? SASS_MEMORY_NEW(PlainCssCallable, pstate, name->value())
+        //   : _getFunction(name->value(), compiler);
+
+
+        CallableObj callable;
+
+        auto parent = compiler.varStack.back()->getModule();
+
+        if (ns != nullptr) {
+          auto pp = parent->fwdModule33.find(ns->value());
+          if (pp != parent->fwdModule33.end()) {
+            VarRefs* module = pp->second.first;
+            auto it = module->fnIdxs.find(name->value());
+            if (it != module->fnIdxs.end()) {
+              VarRef fidx({ module->fnFrame, it->second });
+              callable = compiler.varRoot.getFunction(fidx);
+            }
+          }
+          else {
+            throw Exception::RuntimeException(compiler,
+              "There is no module with the namespace \"" + ns->value() + "\".");
+          }
+        }
+        else {
+
+          callable = _getFunction(name->value(), compiler);
+
+          if (!callable) {
+
+            for (auto asd : parent->fwdGlobal33) {
+              VarRefs* global = asd.first;
+              auto it = global->fnIdxs.find(name->value());
+              if (it != global->fnIdxs.end()) {
+                if (callable) {
+                  throw Exception::RuntimeException(compiler,
+                    "This function is available from multiple global modules.");
+                }
+                VarRef fidx({ global->fnFrame, it->second });
+                callable = compiler.varRoot.getFunction(fidx);
+                if (callable) break;
+              }
+            }
+          }
+        }
+
+
+        if (callable == nullptr) {
+          if (name->hasQuotes()) {
+            throw
+              Exception::RuntimeException(compiler,
+                "Function not found: \"" + name->value() + "\"");
+          }
+          else {
+            throw
+              Exception::RuntimeException(compiler,
+                "Function not found: " + name->value() + "");
+          }
+        }
 
         return SASS_MEMORY_NEW(Function, pstate, callable);
 
