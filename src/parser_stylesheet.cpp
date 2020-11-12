@@ -1648,7 +1648,10 @@ namespace Sass {
     bool hasWith(readWithConfiguration(config, true));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
-    WithConfig wconfig(context, config, hasWith);
+
+    // The show or hide config also hides these
+    WithConfig wconfig(context, config, hasWith,
+      isShown, isHidden, toggledVariables2, prefix);
 
     // Rewrite the whole old config
     // context.withConfig.clear();

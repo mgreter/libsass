@@ -15,14 +15,25 @@ namespace Sass {
   WithConfig::WithConfig(
     Compiler& compiler,
     sass::vector<WithConfigVar> configs,
-    bool hasConfig) :
+    bool hasConfig,
+    bool hasShowFilter,
+    bool hasHideFilter,
+    std::set<sass::string> filters,
+    const sass::string& prefix) :
     compiler(compiler),
-    hasConfig(hasConfig)
+    hasConfig(hasConfig),
+    hasShowFilter(hasShowFilter),
+    hasHideFilter(hasHideFilter),
+    filters(filters),
+    prefix(prefix)
   {
+    // Only calculate this once
+    doRAII = hasConfig || hasShowFilter
+      || hasHideFilter || !prefix.empty();
     // Do nothing if we don't have any config
     // Since we are used as a stack RAI object
     // this mode is very useful to ease coding
-    if (hasConfig == false) return;
+    if (!doRAII) return;
     // Read the list of config variables into
     // a map and error if items are duplicated
     for (auto cfgvar : configs) {
@@ -30,7 +41,17 @@ namespace Sass {
         throw Exception::RuntimeException(compiler,
           "Defined Twice");
       }
-      config[cfgvar.name] = cfgvar;
+      // If the value is a default, we should look further
+      // down the tree and only add it if not there yet
+      if (cfgvar.isGuarded) {
+        if (getCfgVar(cfgvar.name) == nullptr) {
+          config[cfgvar.name] = cfgvar;
+        }
+      }
+      else {
+        config[cfgvar.name] = cfgvar;
+      }
+
     }
     // Push the lookup table onto the stack
     compiler.withConfigStack.push_back(this);
@@ -42,9 +63,9 @@ namespace Sass {
     for (auto cfgvar : config) {
       if (cfgvar.second.wasUsed == false) {
         compiler.addFinalStackTrace(cfgvar.second.pstate);
-        throw Exception::RuntimeException(compiler,
-          "This variable was not declared with "
-          "!default in the @used module.");
+        throw Exception::RuntimeException(compiler, "$" +
+          cfgvar.second.name + " was not declared "
+          "with !default in the @used module.");
       }
     }
   }
@@ -54,16 +75,31 @@ namespace Sass {
     // Do nothing if we don't have any config
     // Since we are used as a stack RAI object
     // this mode is very useful to ease coding
-    if (hasConfig == false) return;
+    if (!doRAII) return;
     // Then remove the config from the stack
     compiler.withConfigStack.pop_back();
   }
 
-  WithConfigVar* WithConfig::getCfgVar(const EnvKey& name) {
+  WithConfigVar* WithConfig::getCfgVar(EnvKey name) {
 
     auto it = compiler.withConfigStack.rbegin();
     while (it != compiler.withConfigStack.rend()) {
       auto withcfg = *it; // Dereference iterator
+      // Check if we should apply any filtering first
+      if (withcfg->hasHideFilter) {
+        if (withcfg->filters.count(name.norm()))
+          return nullptr;
+      }
+      if (withcfg->hasShowFilter) {
+        if (!withcfg->filters.count(name.norm()))
+          return nullptr;
+      }
+      // Should we apply some prefixes
+      if (!withcfg->prefix.empty()) {
+        sass::string prefix = withcfg->prefix;
+        name = EnvKey(prefix + name.orig());
+      }
+      // Then try to find the named item
       auto varcfg = withcfg->config.find(name);
       if (varcfg != withcfg->config.end()) {
         varcfg->second.wasUsed = true;
