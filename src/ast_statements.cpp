@@ -36,18 +36,25 @@ namespace Sass {
     compiler.withConfigStack.push_back(this);
   }
 
+  void WithConfig::finalize()
+  {
+    // Check if everything was consumed
+    for (auto cfgvar : config) {
+      if (cfgvar.second.wasUsed == false) {
+        compiler.addFinalStackTrace(cfgvar.second.pstate);
+        throw Exception::RuntimeException(compiler,
+          "This variable was not declared with "
+          "!default in the @used module.");
+      }
+    }
+  }
+
   WithConfig::~WithConfig()
   {
     // Do nothing if we don't have any config
     // Since we are used as a stack RAI object
     // this mode is very useful to ease coding
     if (hasConfig == false) return;
-    // Otherwise check if everything was consumed
-    for (auto cfgvar : config) {
-      if (cfgvar.second.wasUsed == false) {
-        std::cerr << "Var " << cfgvar.second.name << " was not used\n";
-      }
-    }
     // Then remove the config from the stack
     compiler.withConfigStack.pop_back();
   }

@@ -55,6 +55,8 @@ namespace Sass {
       sass::vector<WithConfigVar> config,
       bool hasConfig = true);
 
+    void finalize();
+
     // Destructor
     ~WithConfig();
 

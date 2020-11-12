@@ -1951,11 +1951,6 @@ namespace Sass {
             "Cannot modify built-in variable.");
         }
 
-        if (a->is_default()) {
-          std::cerr << "HAS DEFAULT\n";
-        }
-
-
         compiler.varRoot.setVariable(vidx,
            a->value()->accept(this));
       }
@@ -1990,25 +1985,9 @@ namespace Sass {
         "Cannot modify built-in variable.");
     }
 
-    if (a->is_default()) {
-      std::cerr << "HAS DEFAULT\n";
-
-      if (auto cfgvar = compiler.getCfgVar(a->variable())) {
-        std::cerr << "HAS DEFAULT and with cfg\n";
-
-      }
-
-      // Now create the new variable
-      compiler.varRoot.setVariable(vidx,
-        a->value()->accept(this));
-
-    }
-    else {
-      // Now create the new variable
-      compiler.varRoot.setVariable(vidx,
-        a->value()->accept(this));
-    }
-
+    // Now create the new variable
+    compiler.varRoot.setVariable(vidx,
+      a->value()->accept(this));
 
     return nullptr;
   }
