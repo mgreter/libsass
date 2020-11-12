@@ -107,11 +107,6 @@ namespace Sass {
         if (!withcfg->filters.count(name.norm()))
           return nullptr;
       }
-      // Should we apply some prefixes
-      if (!withcfg->prefix.empty()) {
-        sass::string prefix = withcfg->prefix;
-        name = EnvKey(prefix + name.orig());
-      }
       // Then try to find the named item
       auto varcfg = withcfg->config.find(name);
       if (varcfg != withcfg->config.end()) {
@@ -122,6 +117,11 @@ namespace Sass {
           varcfg->second.wasUsed = true;
           return &varcfg->second;
         }
+      }
+      // Should we apply some prefixes
+      if (!withcfg->prefix.empty()) {
+        sass::string prefix = withcfg->prefix;
+        name = EnvKey(prefix + name.orig());
       }
       it += 1;
     }
