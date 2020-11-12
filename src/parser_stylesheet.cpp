@@ -335,6 +335,12 @@ namespace Sass {
         VarRefs* refs = fwd.first;
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
+          if (isPrivate(name.orig())) {
+            context.addFinalStackTrace(pstate);
+            throw Exception::ParserException(context,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
           uint32_t offset = in->second;
           vidxs.push_back({ refs->varFrame, offset });
         }
@@ -1652,16 +1658,19 @@ namespace Sass {
         if (isShown)
         {
           for (auto kv : idxs->varIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             if (toggledVariables.count(key.orig()) == 1)
               exposed->varIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->mixIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             if (toggledCallables.count(key.orig()) == 1)
               exposed->mixIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->fnIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             if (toggledCallables.count(key.orig()) == 1)
               exposed->fnIdxs.insert({ key, kv.second });
@@ -1669,16 +1678,19 @@ namespace Sass {
         }
         else if (isHidden) {
           for (auto kv : idxs->varIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             if (toggledVariables.count(key.orig()) == 0)
               exposed->varIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->mixIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             if (toggledCallables.count(key.orig()) == 0)
               exposed->mixIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->fnIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             if (toggledCallables.count(key.orig()) == 0)
               exposed->fnIdxs.insert({ key, kv.second });
@@ -1686,14 +1698,17 @@ namespace Sass {
         }
         else {
           for (auto kv : idxs->varIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             exposed->varIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->mixIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             exposed->mixIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->fnIdxs) {
+            if (kv.first.orig()[0] == '-') continue;
             EnvKey key(prefix + kv.first.orig());
             exposed->fnIdxs.insert({ key, kv.second });
           }
@@ -1841,16 +1856,19 @@ namespace Sass {
       if (isShown)
       {
         for (auto kv : idxs->varIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           if (toggledVariables.count(key.orig()) == 1)
             exposed->varIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->mixIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           if (toggledCallables.count(key.orig()) == 1)
             exposed->mixIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->fnIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           if (toggledCallables.count(key.orig()) == 1)
             exposed->fnIdxs.insert({ key, kv.second });
@@ -1858,16 +1876,19 @@ namespace Sass {
       }
       else if (isHidden) {
         for (auto kv : idxs->varIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           if (toggledVariables.count(key.orig()) == 0)
             exposed->varIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->mixIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           if (toggledCallables.count(key.orig()) == 0)
             exposed->mixIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->fnIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           if (toggledCallables.count(key.orig()) == 0)
             exposed->fnIdxs.insert({ key, kv.second });
@@ -1875,14 +1896,17 @@ namespace Sass {
       }
       else {
         for (auto kv : idxs->varIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           exposed->varIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->mixIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           exposed->mixIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->fnIdxs) {
+          if (kv.first.orig()[0] == '-') continue;
           EnvKey key(prefix + kv.first.orig());
           exposed->fnIdxs.insert({ key, kv.second });
         }
@@ -2252,17 +2276,16 @@ namespace Sass {
         VarRefs* refs = fwd.first;
         auto in = refs->mixIdxs.find(name);
         if (in != refs->mixIdxs.end()) {
+          if (isPrivate(name)) {
+            context.addFinalStackTrace(pstate);
+            throw Exception::ParserException(context,
+              "Private mixins can't be accessed "
+              "from outside their modules.");
+          }
           uint32_t offset = in->second;
           midxs.push_back({ refs->mixFrame, offset });
         }
       }
-      if (isPrivate(name)) {
-        context.addFinalStackTrace(pstate);
-        throw Exception::ParserException(context,
-          "Private mixins can't be accessed "
-          "from outside their modules.");
-      }
-
     }
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
