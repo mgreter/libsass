@@ -1506,7 +1506,8 @@ namespace Sass {
               "Two forwarded modules both define a "
               "variable named $" + var.first.norm() + ".");
           }
-          copy->varIdxs.insert(var);
+          if (refs->varIdxs.count(var.first) == 0)
+            copy->varIdxs.insert(var);
         }
         for (auto mix : fwd.first->mixIdxs) {
           if (copy->mixIdxs.count(mix.first)) {
@@ -1515,7 +1516,8 @@ namespace Sass {
               "Two forwarded modules both define a "
               "mixin named " + mix.first.norm() + ".");
           }
-          copy->mixIdxs.insert(mix);
+          if (refs->mixIdxs.count(mix.first) == 0)
+            copy->mixIdxs.insert(mix);
         }
         for (auto fn : fwd.first->fnIdxs) {
           if (copy->fnIdxs.count(fn.first)) {
@@ -1524,7 +1526,8 @@ namespace Sass {
               "Two forwarded modules both define a "
               "function named " + fn.first.norm() + ".");
           }
-          copy->fnIdxs.insert(fn);
+          if (refs->fnIdxs.count(fn.first) == 0)
+            copy->fnIdxs.insert(fn);
         }
       }
 
