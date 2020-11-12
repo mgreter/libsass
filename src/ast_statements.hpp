@@ -516,15 +516,14 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(sass::string, url);
-    ADD_REF(sass::vector<ConfiguredVariable>, config);
+    // ADD_REF(sass::vector<ConfiguredVariable>, config);
     ADD_CONSTREF(RootObj, root);
   public:
     bool isSupported = false;
     // Value constructor
     UseRule(
       const SourceSpan& pstate,
-      const sass::string& url,
-      sass::vector<ConfiguredVariable>&& config);
+      const sass::string& url);
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);
@@ -539,7 +538,6 @@ namespace Sass {
   private:
     ADD_CONSTREF(sass::string, url);
     ADD_PROPERTY(bool, isShown);
-    ADD_REF(sass::vector<ConfiguredVariable>, config);
     ADD_REF(std::set<sass::string>, toggledVariables);
     ADD_REF(std::set<sass::string>, toggledCallables);
     ADD_CONSTREF(RootObj, root);
@@ -548,7 +546,6 @@ namespace Sass {
     ForwardRule(
       const SourceSpan& pstate,
       const sass::string& url,
-      sass::vector<ConfiguredVariable>&& config,
       std::set<sass::string>&& toggledVariables,
       std::set<sass::string>&& toggledCallables,
       bool isShown);
