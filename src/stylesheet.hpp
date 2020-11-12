@@ -7,6 +7,7 @@
 
 #include "file.hpp"
 #include "ast_nodes.hpp"
+#include "ast_css.hpp"
 
 namespace Sass {
 

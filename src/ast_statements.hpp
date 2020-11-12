@@ -13,6 +13,7 @@
 #include "ast_callable.hpp"
 #include "ast_supports.hpp"
 #include "ast_statements.hpp"
+#include "ast_css.hpp"
 #include "environment_stack.hpp"
 
 namespace Sass {
@@ -518,6 +519,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, url);
     // ADD_REF(sass::vector<ConfiguredVariable>, config);
     ADD_CONSTREF(RootObj, root);
+    ADD_PROPERTY(bool, hasWithConfig);
   public:
     bool isSupported = false;
     // Value constructor
@@ -538,6 +540,7 @@ namespace Sass {
   private:
     ADD_CONSTREF(sass::string, url);
     ADD_PROPERTY(bool, isShown);
+    ADD_PROPERTY(bool, hasWithConfig);
     ADD_REF(std::set<sass::string>, toggledVariables);
     ADD_REF(std::set<sass::string>, toggledCallables);
     ADD_CONSTREF(RootObj, root);
