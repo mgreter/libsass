@@ -9,6 +9,7 @@
 #include "ast_values.hpp"
 #include "ast_callables.hpp"
 #include "ast_expressions.hpp"
+#include "string_utils.hpp"
 
 namespace Sass {
 
@@ -269,16 +270,27 @@ namespace Sass {
 
       BUILT_IN_FN(loadCss)
       {
-        String* url = arguments[0]->assertStringOrNull(compiler, Strings::module);
+        String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
         Map* withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
-        auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
-        auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
-        auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
+        // auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
+        // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
+        // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
 
+        EnvKeyFlatMap<ValueObj> config;
+        if (withMap) {
+          for (auto kv : withMap->elements()) {
+            String* name = kv.first->assertString(compiler, "with key");
+            if (config.count(name->value()) == 1) {
+              throw Exception::RuntimeException(compiler,
+                "The variable $" + name->value() + " was configured twice.");
+            }
+            config[name->value()] = kv.second;
+          }
+        }
 
-
-
-
+        if (StringUtils::startsWith(url->value(), "sass:", 5)) {
+          return SASS_MEMORY_NEW(Null, pstate);
+        }
 
         sass::string previous(".");
         const ImportRequest import(url->value(), previous);
@@ -323,16 +335,30 @@ namespace Sass {
                 + " was already loaded, so it "
                 "can\'t be configured using \"with\".");
             }
-            else {
+            else if (sheet->root2->isLoading) {
               throw Exception::ParserException(compiler,
-                "Module loop: this module is already being loaded.");
+                "Module loop: " + sass::string(sheet->root2->pstate().getFileName()) + " is already being loaded.");
             }
           }
 
-          sheet->root2->isActive = true;
-          for (auto child : sheet->root2->elements()) {
-            child->accept(&eval);
+          if (sheet->root2->loaded) {
+            std::cerr << "Sheet was active, only insert css\n";
+            for (auto child : sheet->root2->loaded->elements()) {
+              eval.current->append(child);
+            }
           }
+          else {
+
+            sheet->root2->isActive = true;
+            sheet->root2->isLoading = true;
+            for (auto child : sheet->root2->elements()) {
+              child->accept(&eval);
+            }
+            sheet->root2->loaded = eval.current;
+            sheet->root2->isLoading = false;
+
+          }
+
 
         }
         else {

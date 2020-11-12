@@ -28,7 +28,7 @@ namespace Sass {
 
     // The extend handler
     Extender extender;
-
+  public:
     CssParentNode* current;
     CssMediaVector mediaStack;
     SelectorLists originalStack;
