@@ -291,7 +291,7 @@ namespace Sass {
             kvar.value = kv.second;
             kvar.isGuarded = false;
             kvar.wasUsed = false;
-            kvar.pstate = kvar.value->pstate();
+            kvar.pstate = name->pstate();
             withConfigs.push_back(kvar);
             if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,
@@ -301,7 +301,7 @@ namespace Sass {
           }
         }
 
-        WithConfig configsa(compiler, withConfigs, withMap);
+        WithConfig wconfig(compiler, withConfigs, withMap);
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
@@ -421,7 +421,7 @@ namespace Sass {
             "Couldn't load it.");
         }
 
-
+        wconfig.finalize();
 
         return SASS_MEMORY_NEW(Null, pstate);;
       }

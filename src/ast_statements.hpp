@@ -37,6 +37,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   class WithConfig {
+
+  private:
+
+    bool doRAII = false;
+
   public:
 
 
@@ -45,6 +50,12 @@ namespace Sass {
 
     // Flag if we do RAI
     bool hasConfig = false;
+    bool hasShowFilter = false;
+    bool hasHideFilter = false;
+
+    std::set<sass::string> filters;
+
+    sass::string prefix;
 
     // Our configuration
     EnvKeyMap<WithConfigVar> config;
@@ -53,7 +64,11 @@ namespace Sass {
     WithConfig(
       Compiler& compiler,
       sass::vector<WithConfigVar> config,
-      bool hasConfig = true);
+      bool hasConfig = true,
+      bool hasShowFilter = false,
+      bool hasHideFilter = false,
+      std::set<sass::string> filters = {},
+      const sass::string& prefix = "");
 
     void finalize();
 
@@ -61,7 +76,7 @@ namespace Sass {
     ~WithConfig();
 
     // Get value and mark it as used
-    WithConfigVar* getCfgVar(const EnvKey& name);
+    WithConfigVar* getCfgVar(EnvKey name);
 
   };
 
