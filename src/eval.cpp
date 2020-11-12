@@ -1356,15 +1356,17 @@ namespace Sass {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     LOCAL_PTR(CssParentNode, current, css);
     root->isActive = true;
+    root->isLoading = true;
     for (const StatementObj& item : root->elements()) {
       Value* child = item->accept(this);
       if (child) delete child;
     }
+    root->isLoading = false;
     return css.detach();
   }
 
   /*
-
+   
   /// Whether this node has a visible sibling after it.
   bool get hasFollowingSibling {
     if (_parent == null) return false;
@@ -1413,13 +1415,37 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (node->root()) {
-      node->root()->isActive = true;
-      node->root()->isLoading = true;
-      for (auto child : node->root()->elements()) {
+
+      Root* root = node->root();
+
+      LocalOption<bool> scoped(compiler.hasWithConfig,
+        compiler.hasWithConfig || node->hasWithConfig());
+
+      if (root->isActive) {
+        if (node->hasWithConfig() || compiler.hasWithConfig) {
+          throw Exception::RuntimeException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+      }
+
+      root->isActive = true;
+      root->isLoading = true;
+      root->loaded = current;
+      root->loaded = SASS_MEMORY_NEW(CssStyleRule,
+      root->pstate(), nullptr, selectorStack.back());
+      auto oldCurrent = current;
+      current = root->loaded;
+      for (auto child : root->elements()) {
         child->accept(this);
       }
-      node->root()->isLoading = false;
-      node->root()->loaded = current;
+      current = oldCurrent;
+
+      for (auto child : root->loaded->elements()) {
+        if (current) current->append(child);
+      }
+
+      root->isLoading = false;
     }
 
     return nullptr;
@@ -1433,6 +1459,20 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (node->root()) {
+
+      Root* root = node->root();
+
+      LocalOption<bool> scoped(compiler.hasWithConfig,
+        compiler.hasWithConfig || node->hasWithConfig());
+
+      if (root->isActive) {
+        if (node->hasWithConfig() || compiler.hasWithConfig) {
+          throw Exception::RuntimeException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+      }
+
       node->root()->isActive = true;
       node->root()->isLoading = true;
       for (auto child : node->root()->elements()) {

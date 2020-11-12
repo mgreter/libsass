@@ -449,6 +449,8 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
+      if (idxs->varFrame == 0xFFFFFFFF) return;
+
       // Check if we have scoped variables
       if (idxs->varIdxs.size() != 0) {
         // Get offset into variable vector
@@ -499,6 +501,8 @@ namespace Sass {
       // The frame might be fully empty
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
+
+      if (idxs->varFrame == 0xFFFFFFFF) return;
 
       // Check if we had scoped variables
       if (idxs->varIdxs.size() != 0) {

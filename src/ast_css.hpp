@@ -542,6 +542,30 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  class Root final : public AstNode,
+    public Vectorized<Statement>
+  {
+  public:
+
+    VarRefs* idxs;
+
+    CssParentNodeObj loaded = nullptr;
+
+    bool isActive = false;
+    bool isLoading = false;
+
+    sass::vector<std::pair<VarRefs*, Root*>> forwarded;
+
+    Root(const SourceSpan& pstate, size_t reserve = 0)
+      : AstNode(pstate), Vectorized<Statement>(reserve)
+    {}
+
+    Root(const SourceSpan& pstate, StatementVector&& vec)
+      : AstNode(pstate), Vectorized<Statement>(std::move(vec))
+    {}
+
+  };
+
 }
 
 

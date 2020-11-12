@@ -1385,6 +1385,8 @@ namespace Sass {
       scanner.relevantSpanFrom(start),
       url);
 
+    rule->hasWithConfig(hasWith);
+
     EnvFrame* current(context.varStack.back());
     EnvFrame* modFrame(context.varStack.back()->getModule());
 
@@ -1737,6 +1739,8 @@ namespace Sass {
       std::move(toggledVariables2),
       std::move(toggledCallables2),
       isShown);
+
+    rule->hasWithConfig(hasWith);
 
     std::set<sass::string>& toggledVariables(rule->toggledVariables());
     std::set<sass::string>& toggledCallables(rule->toggledCallables());

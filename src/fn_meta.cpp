@@ -11,6 +11,8 @@
 #include "ast_expressions.hpp"
 #include "string_utils.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   namespace Functions {
@@ -276,19 +278,29 @@ namespace Sass {
         // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
         // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
 
+        LocalOption<bool> scoped(compiler.hasWithConfig,
+          compiler.hasWithConfig || withMap);
+
         EnvKeyFlatMap<ValueObj> config;
         if (withMap) {
           for (auto kv : withMap->elements()) {
             String* name = kv.first->assertString(compiler, "with key");
-            if (config.count(name->value()) == 1) {
+            EnvKey kname(name->value());
+            if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,
-                "The variable $" + name->value() + " was configured twice.");
+                "The variable $" + kname.norm() + " was configured twice.");
             }
             config[name->value()] = kv.second;
           }
         }
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
+
+          if (withMap) {
+            throw Exception::RuntimeException(compiler, "Built-in "
+              "module " + url->value() + " can't be configured.");
+          }
+
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
@@ -342,20 +354,54 @@ namespace Sass {
           }
 
           if (sheet->root2->loaded) {
-            std::cerr << "Sheet was active, only insert css\n";
+            if (withMap) {
+              throw Exception::RuntimeException(compiler,
+                "Module twice");
+            }
             for (auto child : sheet->root2->loaded->elements()) {
-              eval.current->append(child);
+              if (auto css = child->isaCssStyleRule()) {
+                for (auto inner : css->elements()) {
+                  auto pr = eval.current->isaCssStyleRule();
+                  auto copy = SASS_MEMORY_COPY(css->selector());
+                  for (ComplexSelector* asd : copy->elements()) {
+                    asd->chroots(false);
+                  }
+                  // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
+                  SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
+                  auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
+                  eval.current->parent()->append(newRule);
+                }
+              }
+              else {
+                if (eval.current) eval.current->append(child);
+              }
             }
           }
           else {
+            Root* root = sheet->root2;
 
-            sheet->root2->isActive = true;
-            sheet->root2->isLoading = true;
-            for (auto child : sheet->root2->elements()) {
+            root->isActive = true;
+            root->isLoading = true;
+            root->loaded = eval.current;
+            root->loaded = SASS_MEMORY_NEW(CssStyleRule,
+              root->pstate(), nullptr, nullptr);
+            auto oldCurrent = eval.current;
+            eval.current = root->loaded;
+            EnvScope scoped(compiler.varRoot, root->idxs);
+            for (auto child : root->elements()) {
               child->accept(&eval);
             }
-            sheet->root2->loaded = eval.current;
-            sheet->root2->isLoading = false;
+            eval.current = oldCurrent;
+            root->isLoading = false;
+
+            for (auto child : sheet->root2->loaded->elements()) {
+              if (eval.current->parent()) {
+                eval.current->parent()->append(child);
+              }
+              else {
+                eval.current->append(child);
+              }
+            }
 
           }
 
