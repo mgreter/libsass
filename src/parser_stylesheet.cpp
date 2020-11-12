@@ -1399,6 +1399,42 @@ namespace Sass {
       if (ns.empty()) ns = name;
       if (Module* module = context.getModule(name)) {
         if (ns == "*") {
+
+          // Check if we push the same stuff twice
+          for (auto fwd : modFrame->fwdGlobal33) {
+            if (module->idxs == fwd.first) continue;
+            bool sameVarFrame(module->idxs->varFrame == fwd.first->varFrame);
+            bool sameMixFrame(module->idxs->mixFrame == fwd.first->mixFrame);
+            bool sameFnFrame(module->idxs->fnFrame == fwd.first->fnFrame);
+            for (auto it : module->idxs->varIdxs) {
+              auto var = fwd.first->varIdxs.find(it.first);
+              if (var != fwd.first->varIdxs.end()) {
+                if (sameVarFrame && it.second == var->second) continue;
+                throw Exception::ParserException(context,
+                  "$" + it.first.norm() + " is available "
+                  "from multiple global modules.");
+              }
+            }
+            for (auto it : module->idxs->mixIdxs) {
+              auto var = fwd.first->mixIdxs.find(it.first);
+              if (var != fwd.first->mixIdxs.end()) {
+                if (sameMixFrame && it.second == var->second) continue;
+                throw Exception::ParserException(context,
+                  "Mixin " + it.first.norm() + " is "
+                  "available from multiple global modules.");
+              }
+            }
+            for (auto it : module->idxs->fnIdxs) {
+              auto var = fwd.first->fnIdxs.find(it.first);
+              if (var != fwd.first->fnIdxs.end()) {
+                if (sameFnFrame && it.second == var->second) continue;
+                throw Exception::ParserException(context,
+                  "Function " + it.first.norm() + " is "
+                  "available from multiple global modules.");
+              }
+            }
+          }
+
           current->fwdGlobal33.push_back(
             { module->idxs, nullptr });
         }
@@ -1579,6 +1615,42 @@ namespace Sass {
       if (ns == "*") {
         // This must not be on root block
         // These may vary for different use rules
+
+        // Check if we push the same stuff twice
+        for (auto fwd : modFrame->fwdGlobal33) {
+          if (copy == fwd.first) continue;
+          bool sameVarFrame(copy->varFrame == fwd.first->varFrame);
+          bool sameMixFrame(copy->mixFrame == fwd.first->mixFrame);
+          bool sameFnFrame(copy->fnFrame == fwd.first->fnFrame);
+          for (auto it : copy->varIdxs) {
+            auto var = fwd.first->varIdxs.find(it.first);
+            if (var != fwd.first->varIdxs.end()) {
+              if (sameVarFrame && it.second == var->second) continue;
+              throw Exception::ParserException(context,
+                "$" + it.first.norm() + " is available "
+                "from multiple global modules.");
+            }
+          }
+          for (auto it : copy->mixIdxs) {
+            auto var = fwd.first->mixIdxs.find(it.first);
+            if (var != fwd.first->mixIdxs.end()) {
+              if (sameMixFrame && it.second == var->second) continue;
+              throw Exception::ParserException(context,
+                "Mixin " + it.first.norm() + " is "
+                "available from multiple global modules.");
+            }
+          }
+          for (auto it : copy->fnIdxs) {
+            auto var = fwd.first->fnIdxs.find(it.first);
+            if (var != fwd.first->fnIdxs.end()) {
+              if (sameFnFrame && it.second == var->second) continue;
+              throw Exception::ParserException(context,
+                "Function " + it.first.norm() + " is "
+                "available from multiple global modules.");
+            }
+          }
+        }
+
         modFrame->fwdGlobal33.push_back(
           { copy, sheet->root2 });
       }
