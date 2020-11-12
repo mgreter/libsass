@@ -317,7 +317,7 @@ namespace Sass {
     UseRule* readUseRule(Offset start);
 
     bool readWithConfiguration(
-      sass::vector<ConfiguredVariable>& vars,
+      sass::vector<WithConfigVar>& vars,
       bool allowGuarded = false);
 
     void readForwardMembers(

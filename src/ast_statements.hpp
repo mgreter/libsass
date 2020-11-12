@@ -21,12 +21,51 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  struct ConfiguredVariable {
+  struct WithConfigVar {
     sass::string name;
     ExpressionObj expression;
+    ValueObj value;
     SourceSpan pstate;
     bool isGuarded = false;
     bool wasUsed = false;
+  };
+
+
+  /////////////////////////////////////////////////////////////////////////
+  // Helper class to manage nested `with` config for @use, @forward and
+  // @include meta.load-css rules.
+  /////////////////////////////////////////////////////////////////////////
+
+  class WithConfig {
+  public:
+
+    Compiler& compiler;
+
+    WithConfig& parent;
+
+
+    bool hasConfig = false;
+
+    // Our configuration
+    EnvKeyMap<WithConfigVar> config;
+
+    WithConfig(
+      Compiler& compiler,
+      sass::vector<WithConfigVar> config,
+      bool hasConfig = true);
+
+    // WithConfig(WithConfig& parent);
+
+    ~WithConfig();
+
+    void getValue(const EnvKey& name) {
+
+    }
+
+    bool isRoot() {
+      return &parent == this;
+    }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -517,7 +556,7 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(sass::string, url);
-    // ADD_REF(sass::vector<ConfiguredVariable>, config);
+    // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     ADD_PROPERTY(bool, hasWithConfig);
   public:

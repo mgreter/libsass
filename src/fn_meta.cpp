@@ -277,15 +277,22 @@ namespace Sass {
         // auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
         // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
         // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
-
         LocalOption<bool> scoped(compiler.hasWithConfig,
           compiler.hasWithConfig || withMap);
 
         EnvKeyFlatMap<ValueObj> config;
+        sass::vector<WithConfigVar> withConfigs;
         if (withMap) {
           for (auto kv : withMap->elements()) {
             String* name = kv.first->assertString(compiler, "with key");
             EnvKey kname(name->value());
+            WithConfigVar kvar;
+            kvar.name = name->value();
+            kvar.value = kv.second;
+            kvar.isGuarded = false;
+            kvar.wasUsed = false;
+            kvar.pstate = kvar.value->pstate();
+            withConfigs.push_back(kvar);
             if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,
                 "The variable $" + kname.norm() + " was configured twice.");
@@ -293,6 +300,8 @@ namespace Sass {
             config[name->value()] = kv.second;
           }
         }
+
+        WithConfig configsa(compiler, withConfigs, withMap);
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
