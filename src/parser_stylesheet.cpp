@@ -363,27 +363,6 @@ namespace Sass {
         }
       }
 
-      // this is wrong, varcfg.name is correctly prefixed
-      // but assignment does not take prefix into account!
-      for (auto& varcfg : context.withConfig) {
-        if (name == varcfg.first) {
-          if (!guarded) {
-            context.addFinalStackTrace(varcfg.second.pstate);
-            throw Exception::RuntimeException(context,
-              "This variable was not declared with "
-              "!default in the @used module.");
-          }
-          if (varcfg.second.isGuarded) {
-            // if (value.isNull()) {
-            value = varcfg.second.expression;
-              // }
-          }
-          else {
-            value = varcfg.second.expression;
-          }
-          varcfg.second.wasUsed = true;
-        }
-      }
     }
 
     // Check if we have a configuration
@@ -1359,36 +1338,34 @@ namespace Sass {
     }
 
     sass::vector<WithConfigVar> config;
-    EnvKeyMap<WithConfigVar> oldConfig = context.withConfig;
-
     bool hasWith(readWithConfiguration(config, false));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
-
     WithConfig wconfig(context, config, hasWith);
+   
 
-    for (auto kv : config) {
-      if (kv.isGuarded) {
-        // The item was already given previously
-        if (context.withConfig.count(kv.name)) {
-          if (context.withConfig[kv.name].isGuarded) {
-            context.withConfig[kv.name] = kv;
-          }
-          if (context.withConfig[kv.name].expression.isNull()) {
-            context.withConfig[kv.name] = kv;
-          }
-          else if (context.withConfig[kv.name].expression->isaNullExpression()) {
-            context.withConfig[kv.name] = kv;
-          }
-        }
-        else {
-          context.withConfig[kv.name] = kv;
-        }
-      }
-      else {
-        context.withConfig[kv.name] = kv;
-      }
-    }
+    // for (auto kv : config) {
+    //   if (kv.isGuarded) {
+    //     // The item was already given previously
+    //     if (context.withConfig.count(kv.name)) {
+    //       if (context.withConfig[kv.name].isGuarded) {
+    //         context.withConfig[kv.name] = kv;
+    //       }
+    //       if (context.withConfig[kv.name].expression.isNull()) {
+    //         context.withConfig[kv.name] = kv;
+    //       }
+    //       else if (context.withConfig[kv.name].expression->isaNullExpression()) {
+    //         context.withConfig[kv.name] = kv;
+    //       }
+    //     }
+    //     else {
+    //       context.withConfig[kv.name] = kv;
+    //     }
+    //   }
+    //   else {
+    //     context.withConfig[kv.name] = kv;
+    //   }
+    // }
 
     if (isUseAllowed == false) {
       context.addFinalStackTrace(state);
@@ -1444,6 +1421,8 @@ namespace Sass {
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
       }
+
+      wconfig.finalize();
       return rule.detach();
     }
 
@@ -1515,22 +1494,22 @@ namespace Sass {
         // sheet->root2->con context->node
       }
 
-      for (auto item : config) {
-        auto& varcfg = context.withConfig[item.name];
-        if (varcfg.wasUsed == false) {
-          context.addFinalStackTrace(varcfg.pstate);
-          throw Exception::RuntimeException(context,
-            "This variable was not declared with "
-            "!default in the @used module.");
-        }
-        if (oldConfig.count(varcfg.name) == 0) {
-          context.withConfig.erase(varcfg.name);
-        }
-        else {
-          context.withConfig[varcfg.name].expression =
-            oldConfig[varcfg.name].expression;
-        }
-      }
+      // for (auto item : config) {
+      //   auto& varcfg = context.withConfig[item.name];
+      //   if (varcfg.wasUsed == false) {
+      //     context.addFinalStackTrace(varcfg.pstate);
+      //     throw Exception::RuntimeException(context,
+      //       "This variable was not declared with "
+      //       "!default in the @used module.");
+      //   }
+      //   if (oldConfig.count(varcfg.name) == 0) {
+      //     context.withConfig.erase(varcfg.name);
+      //   }
+      //   else {
+      //     context.withConfig[varcfg.name].expression =
+      //       oldConfig[varcfg.name].expression;
+      //   }
+      // }
 
 
       if (!ns.empty()) {
@@ -1631,10 +1610,7 @@ namespace Sass {
 
     if (hasCached) return nullptr;
 
-
-
-
-
+    wconfig.finalize();
     return rule.detach();
   }
 
@@ -1669,78 +1645,76 @@ namespace Sass {
     }
 
     sass::vector<WithConfigVar> config;
-    EnvKeyMap<WithConfigVar> oldConfig = context.withConfig;
-
     bool hasWith(readWithConfiguration(config, true));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
     WithConfig wconfig(context, config, hasWith);
 
     // Rewrite the whole old config
-    context.withConfig.clear();
-    for (auto kv : oldConfig) {
-      auto varcfg = kv.second;
-      if (startsWith(varcfg.name, prefix)) {
-        varcfg.name = varcfg.name.substr(prefix.size());
-        context.withConfig[varcfg.name] = varcfg;
-      }
-    }
+    // context.withConfig.clear();
+    // for (auto kv : oldConfig) {
+    //   auto varcfg = kv.second;
+    //   if (startsWith(varcfg.name, prefix)) {
+    //     varcfg.name = varcfg.name.substr(prefix.size());
+    //     context.withConfig[varcfg.name] = varcfg;
+    //   }
+    // }
 
-    if (isHidden) {
-      for (auto asd : toggledVariables2) {
-        if (context.withConfig.count(asd)) {
-          context.withConfig.erase(asd);
-        }
-        // else {
-        //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
-        //   context.addFinalStackTrace(state);
-        //   throw Exception::RuntimeException(context,
-        //     "Unknown variable \"$" + asd + "\" in deny-list.");
-        // }
-      }
-    }
-    if (isShown) {
-      auto moved(std::move(context.withConfig));
-      for (auto asd : toggledVariables2) {
-        if (moved.count(asd)) {
-          context.withConfig[asd] = moved[asd];
-        }
-        // else {
-        //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
-        //   context.addFinalStackTrace(state);
-        //   throw Exception::RuntimeException(context,
-        //     "Unknown variable \"$" + asd + "\" in allow-list.");
-        // }
-      }
-    }
-
-    for (auto kv : config) {
-      if (kv.isGuarded) {
-        // The item was already given previously
-        if (context.withConfig.count(kv.name)) {
-          if (context.withConfig[kv.name].isGuarded) {
-            context.withConfig[kv.name].expression = kv.expression;
-          }
-          if (context.withConfig[kv.name].expression.isNull()) {
-            context.withConfig[kv.name].expression = kv.expression;
-          }
-          else if (context.withConfig[kv.name].expression->isaNullExpression()) {
-            context.withConfig[kv.name].expression = kv.expression;
-          }
-        }
-        else {
-          context.withConfig[kv.name] = kv;
-        }
-      }
-      else {
-        if (context.withConfig.count(kv.name)) {
-          context.withConfig[kv.name].expression = kv.expression;
-        }
-        else {
-          context.withConfig[kv.name] = kv;
-        }
-      }
-    }
+    //if (isHidden) {
+    //  for (auto asd : toggledVariables2) {
+    //    if (context.withConfig.count(asd)) {
+    //      context.withConfig.erase(asd);
+    //    }
+    //    // else {
+    //    //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
+    //    //   context.addFinalStackTrace(state);
+    //    //   throw Exception::RuntimeException(context,
+    //    //     "Unknown variable \"$" + asd + "\" in deny-list.");
+    //    // }
+    //  }
+    //}
+    //if (isShown) {
+    //  auto moved(std::move(context.withConfig));
+    //  for (auto asd : toggledVariables2) {
+    //    if (moved.count(asd)) {
+    //      context.withConfig[asd] = moved[asd];
+    //    }
+    //    // else {
+    //    //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
+    //    //   context.addFinalStackTrace(state);
+    //    //   throw Exception::RuntimeException(context,
+    //    //     "Unknown variable \"$" + asd + "\" in allow-list.");
+    //    // }
+    //  }
+    //}
+    //
+    //for (auto kv : config) {
+    //  if (kv.isGuarded) {
+    //    // The item was already given previously
+    //    if (context.withConfig.count(kv.name)) {
+    //      if (context.withConfig[kv.name].isGuarded) {
+    //        context.withConfig[kv.name].expression = kv.expression;
+    //      }
+    //      if (context.withConfig[kv.name].expression.isNull()) {
+    //        context.withConfig[kv.name].expression = kv.expression;
+    //      }
+    //      else if (context.withConfig[kv.name].expression->isaNullExpression()) {
+    //        context.withConfig[kv.name].expression = kv.expression;
+    //      }
+    //    }
+    //    else {
+    //      context.withConfig[kv.name] = kv;
+    //    }
+    //  }
+    //  else {
+    //    if (context.withConfig.count(kv.name)) {
+    //      context.withConfig[kv.name].expression = kv.expression;
+    //    }
+    //    else {
+    //      context.withConfig[kv.name] = kv;
+    //    }
+    //  }
+    //}
 
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
@@ -1856,30 +1830,30 @@ namespace Sass {
         currentRoot->forwarded.push_back({ exposed, nullptr });
 
         // Now restore old-config with access flag preserved
-        context.withConfig.clear();
-        for (auto asd : oldConfig) {
-          context.withConfig.insert(asd);
-        }
-        // context.withConfig = oldConfig;
-
-        for (auto varcfg : config) {
-          if (varcfg.wasUsed == false) {
-            context.addFinalStackTrace(varcfg.pstate);
-            throw Exception::RuntimeException(context,
-              "This variable was not declared with "
-              "!default in the @used module.");
-          }
-          else {
-            context.withConfig[varcfg.name].wasUsed = true;
-          }
-          // if (oldConfig.count(varcfg.name) == 0) {
-          //   context.withConfig.erase(varcfg.name);
-          // }
-          // else {
-          //   context.withConfig[prefix + varcfg.name].expression =
-          //     oldConfig[prefix + varcfg.name].expression;
-          // }
-        }
+        //context.withConfig.clear();
+        //for (auto asd : oldConfig) {
+        //  context.withConfig.insert(asd);
+        //}
+        //// context.withConfig = oldConfig;
+        //
+        //for (auto varcfg : config) {
+        //  if (varcfg.wasUsed == false) {
+        //    context.addFinalStackTrace(varcfg.pstate);
+        //    throw Exception::RuntimeException(context,
+        //      "This variable was not declared with "
+        //      "!default in the @used module.");
+        //  }
+        //  else {
+        //    context.withConfig[varcfg.name].wasUsed = true;
+        //  }
+        //  // if (oldConfig.count(varcfg.name) == 0) {
+        //  //   context.withConfig.erase(varcfg.name);
+        //  // }
+        //  // else {
+        //  //   context.withConfig[prefix + varcfg.name].expression =
+        //  //     oldConfig[prefix + varcfg.name].expression;
+        //  // }
+        //}
 
 
         rule->root(nullptr);
@@ -1891,6 +1865,7 @@ namespace Sass {
           "Invalid internal module requested.");
       }
 
+      wconfig.finalize();
       return rule.detach();
     }
 
@@ -2067,49 +2042,49 @@ namespace Sass {
         }
       }
 
-      for (auto varcfg : config) {
-        if (context.withConfig[varcfg.name].wasUsed == false) {
-          context.addFinalStackTrace(varcfg.pstate);
-          throw Exception::RuntimeException(context,
-            "This variable was not declared with "
-            "!default in the @used module.");
-        }
-        else if (oldConfig.count(varcfg.name)) {
-          // oldConfig[varcfg.name].wasUsed = true;
-        }
-        // if (oldConfig.count(varcfg.name) == 0) {
-        //   context.withConfig.erase(varcfg.name);
-        // }
-        // else {
-        //   context.withConfig[prefix + varcfg.name].expression =
-        //     oldConfig[prefix + varcfg.name].expression;
-        // }
-      }
+//      for (auto varcfg : config) {
+//        if (context.withConfig[varcfg.name].wasUsed == false) {
+//          context.addFinalStackTrace(varcfg.pstate);
+//          throw Exception::RuntimeException(context,
+//            "This variable was not declared with "
+//            "!default in the @used module.");
+//        }
+//        else if (oldConfig.count(varcfg.name)) {
+//          // oldConfig[varcfg.name].wasUsed = true;
+//        }
+//        // if (oldConfig.count(varcfg.name) == 0) {
+//        //   context.withConfig.erase(varcfg.name);
+//        // }
+//        // else {
+//        //   context.withConfig[prefix + varcfg.name].expression =
+//        //     oldConfig[prefix + varcfg.name].expression;
+//        // }
+//      }
 
       // Now restore old-config with access flag preserved
-      for (auto qwe : context.withConfig) {
-        if (oldConfig.count(prefix + qwe.first.norm())) {
-          bool hasInConfig = false;
-          bool wasUsed = false;
-          for (auto ha : config) {
-            if (ha.name == qwe.first.norm()) {
-              wasUsed = ha.wasUsed;
-              hasInConfig = true;
-              break;
-            }
-          }
-          if (hasInConfig) {
-            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed; // wasUsed
-          }
-          else {
-            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed;
-          }
-        }
-      }
-      context.withConfig.clear();
-      for (auto asd : oldConfig) {
-        context.withConfig.insert(asd);
-      }
+//      for (auto qwe : context.withConfig) {
+//        if (oldConfig.count(prefix + qwe.first.norm())) {
+//          bool hasInConfig = false;
+//          bool wasUsed = false;
+//          for (auto ha : config) {
+//            if (ha.name == qwe.first.norm()) {
+//              wasUsed = ha.wasUsed;
+//              hasInConfig = true;
+//              break;
+//            }
+//          }
+//          if (hasInConfig) {
+//            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed; // wasUsed
+//          }
+//          else {
+//            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed;
+//          }
+//        }
+//      }
+//      context.withConfig.clear();
+//      for (auto asd : oldConfig) {
+//        context.withConfig.insert(asd);
+//      }
       // context.withConfig = oldConfig;
 
 
@@ -2139,6 +2114,7 @@ namespace Sass {
 
 
 
+    wconfig.finalize();
     return rule.detach();
   }
 
