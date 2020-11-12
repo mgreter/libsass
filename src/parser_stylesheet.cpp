@@ -1889,7 +1889,7 @@ namespace Sass {
 
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(url, scanner.sourceUrl);
-    callStackFrame frame(context, { pstate, Strings::useRule });
+    callStackFrame frame(context, { pstate, Strings::forwardRule });
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
