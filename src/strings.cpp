@@ -58,6 +58,7 @@ namespace Sass
     const sass::string function("function");
     const sass::string arglist("arglist");
 
+    const sass::string url("url");
     const sass::string with("with");
     const sass::string list("list");
     const sass::string name("name");

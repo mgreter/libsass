@@ -57,6 +57,7 @@ namespace Sass {
     extern const sass::string map2;
     extern const sass::string args;
     extern const sass::string with;
+    extern const sass::string url;
     extern const sass::string list;
     extern const sass::string name;
     extern const sass::string null;

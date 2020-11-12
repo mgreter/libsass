@@ -1355,6 +1355,7 @@ namespace Sass {
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     LOCAL_PTR(CssParentNode, current, css);
+    root->isActive = true;
     for (const StatementObj& item : root->elements()) {
       Value* child = item->accept(this);
       if (child) delete child;
@@ -1413,9 +1414,12 @@ namespace Sass {
 
     if (node->root()) {
       node->root()->isActive = true;
+      node->root()->isLoading = true;
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
+      node->root()->isLoading = false;
+      node->root()->loaded = current;
     }
 
     return nullptr;
@@ -1430,9 +1434,12 @@ namespace Sass {
 
     if (node->root()) {
       node->root()->isActive = true;
+      node->root()->isLoading = true;
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
+      node->root()->isLoading = false;
+      node->root()->loaded = current;
     }
 
     return nullptr;

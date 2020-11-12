@@ -640,7 +640,10 @@ namespace Sass {
 
     VarRefs* idxs;
 
+    CssParentNode* loaded = nullptr;
+
     bool isActive = false;
+    bool isLoading = false;
 
     sass::vector<std::pair<VarRefs*, Root*>> forwarded;
 
