@@ -85,10 +85,33 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
+        auto parent = compiler.varStack.back()->getModule();
         if (plugin != nullptr) {
-          throw Exception::RuntimeException(compiler,
-            "Modules are not supported yet");
+          auto pp = parent->fwdModule33.find(plugin->value());
+          if (pp != parent->fwdModule33.end()) {
+            VarRefs* module = pp->second.first;
+            auto it = module->varIdxs.find(variable->value());
+            return SASS_MEMORY_NEW(Boolean, pstate,
+              it != module->varIdxs.end());
+          }
+          else {
+            throw Exception::RuntimeException(compiler,
+              "There is no module with the namespace \"" + plugin->value() + "\".");
+          }
+          return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
+        bool hasVar = false;
+        for (auto asd : parent->fwdGlobal33) {
+          VarRefs* global = asd.first;
+          if (global->varIdxs.count(variable->value()) != 0) {
+            if (hasVar) {
+              throw Exception::RuntimeException(compiler,
+                "This variable is available from multiple global modules.");
+            }
+            hasVar = true;
+          }
+        }
+        if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
         return SASS_MEMORY_NEW(Boolean, pstate,
           compiler.getVariable(variable->value(), true));
 
@@ -100,6 +123,19 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         ValueObj ex = compiler.getVariable(variable->value());
+        bool hasVar = false;
+        auto parent = compiler.varStack.back()->getModule();
+        for (auto asd : parent->fwdGlobal33) {
+          VarRefs* global = asd.first;
+          if (global->varIdxs.count(variable->value()) != 0) {
+            if (hasVar) {
+              throw Exception::RuntimeException(compiler,
+                "This variable is available from multiple global modules.");
+            }
+            hasVar = true;
+          }
+        }
+        if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
         return SASS_MEMORY_NEW(Boolean, pstate, !ex.isNull());
       }
 
@@ -107,10 +143,33 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
+        auto parent = compiler.varStack.back()->getModule();
         if (plugin != nullptr) {
-          throw Exception::RuntimeException(compiler,
-            "Modules are not supported yet");
+          auto pp = parent->fwdModule33.find(plugin->value());
+          if (pp != parent->fwdModule33.end()) {
+            VarRefs* module = pp->second.first;
+            auto it = module->fnIdxs.find(variable->value());
+            return SASS_MEMORY_NEW(Boolean, pstate,
+              it != module->fnIdxs.end());
+          }
+          else {
+            throw Exception::RuntimeException(compiler,
+              "There is no module with the namespace \"" + plugin->value() + "\".");
+          }
+          return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
+        bool hasFn = false;
+        for (auto asd : parent->fwdGlobal33) {
+          VarRefs* global = asd.first;
+          if (global->fnIdxs.count(variable->value()) != 0) {
+            if (hasFn) {
+              throw Exception::RuntimeException(compiler,
+                "This function is available from multiple global modules.");
+            }
+            hasFn = true;
+          }
+        }
+        if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
         CallableObj fn = compiler.getFunction(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
@@ -119,10 +178,35 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
+
+        auto parent = compiler.varStack.back()->getModule();
         if (plugin != nullptr) {
-          throw Exception::RuntimeException(compiler,
-            "Modules are not supported yet");
+          auto pp = parent->fwdModule33.find(plugin->value());
+          if (pp != parent->fwdModule33.end()) {
+            VarRefs* module = pp->second.first;
+            auto it = module->mixIdxs.find(variable->value());
+            return SASS_MEMORY_NEW(Boolean, pstate,
+              it != module->mixIdxs.end());
+          }
+          else {
+            throw Exception::RuntimeException(compiler,
+              "There is no module with the namespace \"" + plugin->value() + "\".");
+          }
+          return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
+        bool hasFn = false;
+        for (auto asd : parent->fwdGlobal33) {
+          VarRefs* global = asd.first;
+          if (global->mixIdxs.count(variable->value()) != 0) {
+            if (hasFn) {
+              throw Exception::RuntimeException(compiler,
+                "This function is available from multiple global modules.");
+            }
+            hasFn = true;
+          }
+        }
+        if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
+
         CallableObj fn = compiler.getMixin(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }

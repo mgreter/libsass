@@ -1424,7 +1424,7 @@ namespace Sass {
               if (var != fwd.first->mixIdxs.end()) {
                 if (sameMixFrame && it.second == var->second) continue;
                 throw Exception::ParserException(context,
-                  "Mixin " + it.first.norm() + " is "
+                  "Mixin \"" + it.first.norm() + "(...)\" is "
                   "available from multiple global modules.");
               }
             }
@@ -1433,7 +1433,7 @@ namespace Sass {
               if (var != fwd.first->fnIdxs.end()) {
                 if (sameFnFrame && it.second == var->second) continue;
                 throw Exception::ParserException(context,
-                  "Function " + it.first.norm() + " is "
+                  "Function \"" + it.first.norm() + "(...)\" is "
                   "available from multiple global modules.");
               }
             }
@@ -1640,7 +1640,7 @@ namespace Sass {
             if (var != fwd.first->mixIdxs.end()) {
               if (sameMixFrame && it.second == var->second) continue;
               throw Exception::ParserException(context,
-                "Mixin " + it.first.norm() + " is "
+                "Mixin \"" + it.first.norm() + "(...)\" is "
                 "available from multiple global modules.");
             }
           }
@@ -1649,7 +1649,7 @@ namespace Sass {
             if (var != fwd.first->fnIdxs.end()) {
               if (sameFnFrame && it.second == var->second) continue;
               throw Exception::ParserException(context,
-                "Function " + it.first.norm() + " is "
+                "Function \"" + it.first.norm() + "(...)\" is "
                 "available from multiple global modules.");
             }
           }
