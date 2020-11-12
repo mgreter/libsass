@@ -351,6 +351,8 @@ namespace Sass {
 
     if (context.withConfig) {
       if (frame->idxs->varFrame == 0xFFFFFFFF) {
+        // this is wrong, varcfg.name is correctly prefixed
+        // but assignment does not take prefix into account!
         for (auto& varcfg : *context.withConfig) {
           if (name == varcfg.name) {
             if (!guarded) {
@@ -1337,9 +1339,14 @@ namespace Sass {
         "Invalid Sass identifier \"" + url + "\"");
     }
 
-    sass::vector<ConfiguredVariable> config;
-    bool hasWith(readWithConfiguration(config, false));
+    sass::vector<ConfiguredVariable> scoped2;
+    sass::vector<ConfiguredVariable>& config(
+      context.withConfig ? *context.withConfig : scoped2);
+    bool hasWith(readWithConfiguration(config, true));
     expectStatementSeparator("@use rule");
+
+    LocalOption<sass::vector<ConfiguredVariable>*>
+      scoped(context.withConfig, &config);
 
     if (isUseAllowed == false) {
       context.addFinalStackTrace(state);
@@ -1349,13 +1356,17 @@ namespace Sass {
 
     UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
       scanner.relevantSpanFrom(start),
-      url, std::move(config));
+      url);
 
     EnvFrame* current(context.varStack.back());
     EnvFrame* modFrame(context.varStack.back()->getModule());
 
+    bool hasCached = false;
+
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
+
+      hasCached = true;
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1404,15 +1415,6 @@ namespace Sass {
       ns = url.substr(start, end);
     }
 
-    auto& withConfig = rule->config();
-    LocalOption<sass::vector<ConfiguredVariable>*>
-      scoped(context.withConfig, hasWith ?
-        &withConfig : context.withConfig);
-
-
-
-
-
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(url, scanner.sourceUrl);
     callStackFrame frame(context, { pstate, Strings::useRule });
@@ -1443,8 +1445,11 @@ namespace Sass {
 
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      auto cached = context.sheets.find(loaded->getAbsPath());
+      auto asd = loaded->getAbsPath();
+      auto cached = context.sheets.find(asd);
       if (cached != context.sheets.end()) {
+
+        hasCached = true;
 
         // Check if with is given, error
         sheet = cached->second;
@@ -1466,7 +1471,7 @@ namespace Sass {
         // sheet->root2->con context->node
       }
 
-      if (context.withConfig) {
+      if (hasWith) {
         for (auto& varcfg : *context.withConfig) {
           if (varcfg.wasUsed == false) {
             context.addFinalStackTrace(varcfg.pstate);
@@ -1573,7 +1578,7 @@ namespace Sass {
 
 
 
-
+    if (hasCached) return nullptr;
 
 
 
@@ -1611,9 +1616,26 @@ namespace Sass {
       isHidden = true;
     }
 
-    sass::vector<ConfiguredVariable> config;
+    // This should be reverted or find better way
+    // Remove prefix from configured variables
+    // When going into a forward rule with prefix
+    sass::vector<ConfiguredVariable> scoped2;
+    if (context.withConfig) {
+      for (auto& asd : *context.withConfig) {
+        if (startsWith(asd.name, prefix)) {
+          asd.name = asd.name.substr(prefix.size());
+        }
+        scoped2.push_back(asd);
+      }
+    }
+
+    sass::vector<ConfiguredVariable>& config(
+      context.withConfig ? *context.withConfig : scoped2);
     bool hasWith(readWithConfiguration(config, true));
     expectStatementSeparator("@forward rule");
+
+    LocalOption<sass::vector<ConfiguredVariable>*>
+      scoped(context.withConfig, &config);
 
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
@@ -1624,7 +1646,7 @@ namespace Sass {
 
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
-      url, std::move(config),
+      url,
       std::move(toggledVariables2),
       std::move(toggledCallables2),
       isShown);
@@ -1634,8 +1656,14 @@ namespace Sass {
 
     // EnvFrame* current(context.varStack.back());
 
+    bool hasCached = false;
+
+
+
     // Support internal modules first
     if (startsWith(url, "sass:", 5)) {
+
+      hasCached = true;
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1728,6 +1756,16 @@ namespace Sass {
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
       }
+
+      if (context.withConfig) {
+        for (auto& asd : *context.withConfig) {
+          if (startsWith(asd.name, prefix)) {
+            asd.name = prefix + asd.name;
+          }
+          scoped2.push_back(asd);
+        }
+      }
+
       return rule.detach();
     }
 
@@ -1739,18 +1777,6 @@ namespace Sass {
 
 
 
-
-
-
-
-
-
-
-
-    auto& withConfig = rule->config();
-    LocalOption<sass::vector<ConfiguredVariable>*>
-      scoped(context.withConfig, hasWith ?
-        &withConfig : context.withConfig);
 
 
 
@@ -1792,6 +1818,8 @@ namespace Sass {
 
         // Check if with is given, error
 
+        hasCached = true;
+
         sheet = cached->second;
 
         if (context.withConfig) {
@@ -1811,7 +1839,7 @@ namespace Sass {
         // sheet->root2->con context->node
       }
 
-      if (context.withConfig) {
+      if (hasWith) {
         for (auto& varcfg : *context.withConfig) {
           if (varcfg.wasUsed == false) {
             context.addFinalStackTrace(varcfg.pstate);
@@ -1936,6 +1964,7 @@ namespace Sass {
 
 
 
+    if (hasCached) return nullptr;
 
 
 
@@ -1965,6 +1994,10 @@ namespace Sass {
     scanner.expectChar($lparen);
 
     std::set<sass::string> seen;
+
+    if (context.withConfig) {
+      std::cerr << "must merge";
+    }
 
     while (true) {
       scanWhitespace();
