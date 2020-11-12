@@ -351,8 +351,12 @@ namespace Sass {
 
     if (frame->idxs->varFrame == 0xFFFFFFFF) {
 
-      if (guarded) {
-        if (auto cfgvar = context.getCfgVar(name)) {
+      // Assign a default
+      if (guarded && ns.empty()) {
+        auto cfgvar = context.getCfgVar(name, true, false);
+        if (!cfgvar || cfgvar->isNull) cfgvar = context.getCfgVar(name, false, false);
+
+        if (cfgvar) {
           if (cfgvar->value) {
             value = SASS_MEMORY_NEW(ValueExpression,
               cfgvar->value->pstate(), cfgvar->value);
@@ -2253,7 +2257,8 @@ namespace Sass {
       WithConfigVar variable;
       variable.expression = expression;
       variable.isGuarded = guarded;
-      variable.pstate = scanner.relevantSpanFrom(variableStart);
+      variable.isNull = !expression || expression->isaNullExpression();
+      variable.pstate2 = scanner.relevantSpanFrom(variableStart);
       variable.name = name;
       vars.push_back(variable);
 

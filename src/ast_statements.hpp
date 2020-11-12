@@ -25,9 +25,10 @@ namespace Sass {
     sass::string name;
     ExpressionObj expression;
     ValueObj value;
-    SourceSpan pstate;
+    SourceSpan pstate2;
     bool isGuarded = false;
     bool wasUsed = false;
+    bool isNull = true;
   };
 
 
@@ -76,7 +77,7 @@ namespace Sass {
     ~WithConfig();
 
     // Get value and mark it as used
-    WithConfigVar* getCfgVar(EnvKey name);
+    WithConfigVar* getCfgVar(EnvKey name, bool skipGuarded, bool skipNull);
 
   };
 
