@@ -647,6 +647,20 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
   // EO registerBuiltInFunction
 
+  uint32_t Compiler::createBuiltInMixin(const sass::string& name,
+    const sass::string& signature, SassFnSig cb)
+  {
+    EnvRoot root(varStack, *this);
+    SourceDataObj source = SASS_MEMORY_NEW(SourceString,
+      "sass://signature", "(" + signature + ")");
+    ArgumentDeclaration* args = ArgumentDeclaration::parse(*this, source);
+    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    auto& mixins(varRoot.intMixin);
+    uint32_t offset((uint32_t)mixins.size());
+    varRoot.intMixin.push_back(callable);
+    return varRoot.mixIdxs[name] = offset;
+  }
+
   uint32_t Compiler::createBuiltInVariable(const sass::string& name, Value* value)
   {
     EnvRoot root(varStack, *this);

@@ -41,6 +41,12 @@ namespace Sass
     return source->getAbsPath();
   }
 
+  // Return the resolved absolute path
+  const char* SourceState::getFileName() const
+  {
+    return source->getFileName();
+  }
+
   // Return the attached source
   const char* SourceState::getContent() const
   {

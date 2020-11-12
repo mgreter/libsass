@@ -267,27 +267,107 @@ namespace Sass {
 
       }
 
-	    void registerFunctions(Compiler& compiler)
+      BUILT_IN_FN(loadCss)
+      {
+        String* url = arguments[0]->assertStringOrNull(compiler, Strings::module);
+        Map* withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
+        auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
+        auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
+        auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
+
+
+
+
+
+
+        sass::string previous(".");
+        const ImportRequest import(url->value(), previous);
+        // Search for valid imports (e.g. partials) on the file-system
+        // Returns multiple valid results for ambiguous import path
+        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import));
+
+        // Error if no file to import was found
+        if (resolved.empty()) {
+          compiler.addFinalStackTrace(pstate);
+          throw Exception::ParserException(compiler,
+            "Can't find stylesheet to import.");
+        }
+        // Error if multiple files to import were found
+        else if (resolved.size() > 1) {
+          sass::sstream msg_stream;
+          msg_stream << "It's not clear which file to import. Found:\n";
+          for (size_t i = 0, L = resolved.size(); i < L; ++i)
+          {
+            msg_stream << "  " << resolved[i].imp_path << "\n";
+          }
+          throw Exception::ParserException(compiler, msg_stream.str());
+        }
+
+        // We made sure exactly one entry was found, load its content
+        if (ImportObj loaded = compiler.loadImport(resolved[0])) {
+
+          auto asd = compiler.sheets.find(loaded->getAbsPath());
+
+          StyleSheet* sheet = asd == compiler.sheets.end() ? nullptr : asd->second;
+
+          if (sheet == nullptr) {
+            // This is the new barrier!
+            EnvFrame local(compiler.varStack, false, true);
+            sheet = compiler.registerImport(loaded); // @use
+            sheet->root2->idxs = local.idxs;
+          }
+          else if (sheet->root2->isActive) {
+            if (withMap) {
+              throw Exception::ParserException(compiler,
+                sass::string(sheet->root2->pstate().getFileName())
+                + " was already loaded, so it "
+                "can\'t be configured using \"with\".");
+            }
+            else {
+              throw Exception::ParserException(compiler,
+                "Module loop: this module is already being loaded.");
+            }
+          }
+
+          sheet->root2->isActive = true;
+          for (auto child : sheet->root2->elements()) {
+            child->accept(&eval);
+          }
+
+        }
+        else {
+          throw Exception::ParserException(compiler,
+            "Couldn't load it.");
+        }
+
+
+
+        return SASS_MEMORY_NEW(Null, pstate);;
+      }
+
+      void registerFunctions(Compiler& compiler)
 	    {
 
         Module& module(compiler.createModule("meta"));
 
-		    // Meta functions
+        module.addMixin("load-css", compiler.createBuiltInMixin("load-css", "$url, $with: null", loadCss));
+
+        // Meta functions
         module.addFunction("feature-exists", compiler.registerBuiltInFunction("feature-exists", "$feature", featureExists));
         module.addFunction("type-of", compiler.registerBuiltInFunction("type-of", "$value", typeOf));
         module.addFunction("inspect", compiler.registerBuiltInFunction("inspect", "$value", inspect));
         module.addFunction("keywords", compiler.registerBuiltInFunction("keywords", "$args", keywords));
 
-		    // ToDo: dart-sass keeps them on the local environment scope, see below:
-		    // These functions are defined in the context of the evaluator because
-		    // they need access to the [_environment] or other local state.
+        // ToDo: dart-sass keeps them on the local environment scope, see below:
+        // These functions are defined in the context of the evaluator because
+        // they need access to the [_environment] or other local state.
         module.addFunction("global-variable-exists", compiler.registerBuiltInFunction("global-variable-exists", "$name, $module: null", globalVariableExists));
         module.addFunction("variable-exists", compiler.registerBuiltInFunction("variable-exists", "$name", variableExists));
         module.addFunction("function-exists", compiler.registerBuiltInFunction("function-exists", "$name, $module: null", functionExists));
         module.addFunction("mixin-exists", compiler.registerBuiltInFunction("mixin-exists", "$name, $module: null", mixinExists));
         module.addFunction("content-exists", compiler.registerBuiltInFunction("content-exists", "", contentExists));
-		    module.addFunction("module-variables", compiler.createBuiltInFunction("module-variables", "$module", moduleVariables));
-		    module.addFunction("module-functions", compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions));
+        module.addFunction("module-variables", compiler.createBuiltInFunction("module-variables", "$module", moduleVariables));
+        module.addFunction("module-functions", compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions));
         module.addFunction("get-function", compiler.registerBuiltInFunction("get-function", "$name, $css: false, $module: null", getFunction));
         module.addFunction("call", compiler.registerBuiltInFunction("call", "$function, $args...", call));
 

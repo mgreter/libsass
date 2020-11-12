@@ -129,6 +129,7 @@ namespace Sass {
       const sass::string& signature, SassFnSig cb);
 
     uint32_t createBuiltInVariable(const sass::string& name, Value* value);
+    uint32_t createBuiltInMixin(const sass::string& name, const sass::string& signature, SassFnSig cb);
 
     /////////////////////////////////////////////////////////////////////////
     // Register built-in functions that can take different
