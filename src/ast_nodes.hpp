@@ -173,6 +173,7 @@ namespace Sass {
     DECLARE_ISA_CASTER(VariableExpression);
     DECLARE_ISA_CASTER(FunctionExpression);
     DECLARE_ISA_CASTER(NumberExpression);
+    DECLARE_ISA_CASTER(NullExpression);
     // Implement our up-casting
     IMPLEMENT_ISA_CASTER(Expression);
   };

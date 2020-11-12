@@ -360,7 +360,14 @@ namespace Sass {
               "This variable was not declared with "
               "!default in the @used module.");
           }
-          value = varcfg.second.expression;
+          if (varcfg.second.isGuarded) {
+            // if (value.isNull()) {
+            value = varcfg.second.expression;
+              // }
+          }
+          else {
+            value = varcfg.second.expression;
+          }
           varcfg.second.wasUsed = true;
         }
       }
@@ -1341,12 +1348,31 @@ namespace Sass {
     sass::vector<ConfiguredVariable> config;
     EnvKeyMap<ConfiguredVariable> oldConfig = context.withConfig;
 
-    bool hasWith(readWithConfiguration(config, true));
+    bool hasWith(readWithConfiguration(config, false));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
 
     for (auto kv : config) {
-      context.withConfig[kv.name] = kv;
+      if (kv.isGuarded) {
+        // The item was already given previously
+        if (context.withConfig.count(kv.name)) {
+          if (context.withConfig[kv.name].isGuarded) {
+            context.withConfig[kv.name] = kv;
+          }
+          if (context.withConfig[kv.name].expression.isNull()) {
+            context.withConfig[kv.name] = kv;
+          }
+          else if (context.withConfig[kv.name].expression->isaNullExpression()) {
+            context.withConfig[kv.name] = kv;
+          }
+        }
+        else {
+          context.withConfig[kv.name] = kv;
+        }
+      }
+      else {
+        context.withConfig[kv.name] = kv;
+      }
     }
 
     if (isUseAllowed == false) {
@@ -1455,11 +1481,11 @@ namespace Sass {
         // Check if with is given, error
         sheet = cached->second;
 
-        if (hasWithConfig) {
-          throw Exception::ParserException(context,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
+        // if (hasWithConfig) {
+        //   throw Exception::ParserException(context,
+        //     "This module was already loaded, so it "
+        //     "can't be configured using \"with\".");
+        // }
 
       }
       else {
@@ -1642,7 +1668,26 @@ namespace Sass {
     }
 
     for (auto kv : config) {
-      context.withConfig[kv.name] = kv;
+      if (kv.isGuarded) {
+        // The item was already given previously
+        if (context.withConfig.count(kv.name)) {
+          if (context.withConfig[kv.name].isGuarded) {
+            context.withConfig[kv.name] = kv;
+          }
+          if (context.withConfig[kv.name].expression.isNull()) {
+            context.withConfig[kv.name] = kv;
+          }
+          else if (context.withConfig[kv.name].expression->isaNullExpression()) {
+            context.withConfig[kv.name] = kv;
+          }
+        }
+        else {
+          context.withConfig[kv.name] = kv;
+        }
+      }
+      else {
+        context.withConfig[kv.name] = kv;
+      }
     }
 
     if (isUseAllowed == false) {

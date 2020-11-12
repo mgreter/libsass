@@ -69,6 +69,7 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitNullExpression(this);
     }
+    IMPLEMENT_ISA_CASTER(NullExpression);
   };
 
   /////////////////////////////////////////////////////////////////////////

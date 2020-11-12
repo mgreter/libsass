@@ -27,6 +27,7 @@ namespace Sass {
     Compiler& context,
     SourceDataObj source) :
     context(context),
+    hasWithConfig(context.hasWithConfig),
     scanner(context, source),
     varStack(context.varStack),
     lastSilentComment()
