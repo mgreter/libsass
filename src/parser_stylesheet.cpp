@@ -2246,6 +2246,7 @@ namespace Sass {
     else {
 
       // Then search in global modules
+      auto pstate = scanner.relevantSpanFrom(start);
       EnvFrame* frame(context.varStack.back()->getModule());
       for (auto fwd : frame->fwdGlobal33) {
         VarRefs* refs = fwd.first;
@@ -2254,6 +2255,12 @@ namespace Sass {
           uint32_t offset = in->second;
           midxs.push_back({ refs->mixFrame, offset });
         }
+      }
+      if (isPrivate(name)) {
+        context.addFinalStackTrace(pstate);
+        throw Exception::ParserException(context,
+          "Private mixins can't be accessed "
+          "from outside their modules.");
       }
 
     }
@@ -3942,6 +3949,7 @@ namespace Sass {
       if (!name.empty()) {
 
         // Then search in global modules
+        auto pstate = scanner.relevantSpanFrom(start);
         EnvFrame* frame(context.varStack.back()->getModule());
         for (auto fwd : frame->fwdGlobal33) {
           VarRefs* refs = fwd.first;
@@ -3951,6 +3959,12 @@ namespace Sass {
             fn->fidx({ refs->fnFrame, offset });
           }
         }
+        // if (isPrivate(name)) {
+        //   context.addFinalStackTrace(pstate);
+        //   throw Exception::ParserException(context,
+        //     "Private functions can't be accessed "
+        //     "from outside their modules.");
+        // }
 
         if (!fn->fidx().isValid()) {
           // Try to get the function through the whole stack
