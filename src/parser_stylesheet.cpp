@@ -350,6 +350,19 @@ namespace Sass {
 
 
     if (frame->idxs->varFrame == 0xFFFFFFFF) {
+
+      if (guarded) {
+        if (auto cfgvar = context.getCfgVar(name)) {
+          if (cfgvar->value) {
+            value = SASS_MEMORY_NEW(ValueExpression,
+              cfgvar->value->pstate(), cfgvar->value);
+          }
+          else {
+            value = cfgvar->expression;
+          }
+        }
+      }
+
       // this is wrong, varcfg.name is correctly prefixed
       // but assignment does not take prefix into account!
       for (auto& varcfg : context.withConfig) {
@@ -1352,6 +1365,8 @@ namespace Sass {
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
 
+    WithConfig wconfig(context, config, hasWith);
+
     for (auto kv : config) {
       if (kv.isGuarded) {
         // The item was already given previously
@@ -1659,6 +1674,7 @@ namespace Sass {
     bool hasWith(readWithConfiguration(config, true));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
+    WithConfig wconfig(context, config, hasWith);
 
     // Rewrite the whole old config
     context.withConfig.clear();

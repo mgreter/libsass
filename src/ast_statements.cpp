@@ -17,7 +17,6 @@ namespace Sass {
     sass::vector<WithConfigVar> configs,
     bool hasConfig) :
     compiler(compiler),
-    parent(*this),
     hasConfig(hasConfig)
   {
     // Do nothing if we don't have any config
@@ -26,15 +25,15 @@ namespace Sass {
     if (hasConfig == false) return;
     // Read the list of config variables into
     // a map and error if items are duplicated
-    EnvKeyMap<WithConfigVar> config;
     for (auto cfgvar : configs) {
       if (config.count(cfgvar.name) == 1) {
         throw Exception::RuntimeException(compiler,
           "Defined Twice");
       }
+      config[cfgvar.name] = cfgvar;
     }
     // Push the lookup table onto the stack
-    compiler.withConfigStack.push_back(config);
+    compiler.withConfigStack.push_back(this);
   }
 
   WithConfig::~WithConfig()
@@ -44,8 +43,28 @@ namespace Sass {
     // this mode is very useful to ease coding
     if (hasConfig == false) return;
     // Otherwise check if everything was consumed
+    for (auto cfgvar : config) {
+      if (cfgvar.second.wasUsed == false) {
+        std::cerr << "Var " << cfgvar.second.name << " was not used\n";
+      }
+    }
     // Then remove the config from the stack
     compiler.withConfigStack.pop_back();
+  }
+
+  WithConfigVar* WithConfig::getCfgVar(const EnvKey& name) {
+
+    auto it = compiler.withConfigStack.rbegin();
+    while (it != compiler.withConfigStack.rend()) {
+      auto withcfg = *it; // Dereference iterator
+      auto varcfg = withcfg->config.find(name);
+      if (varcfg != withcfg->config.end()) {
+        varcfg->second.wasUsed = true;
+        return &varcfg->second;
+      }
+      it += 1;
+    }
+    return nullptr;
   }
 
   /////////////////////////////////////////////////////////////////////////

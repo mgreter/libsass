@@ -47,6 +47,10 @@ namespace Sass {
 
   public:
 
+    sass::vector<WithConfig*> withConfigStack;
+
+    WithConfigVar* getCfgVar(const EnvKey& name);
+
     EnvKeyMap<Module> modules;
 
     Module& createModule(const sass::string& name) {
