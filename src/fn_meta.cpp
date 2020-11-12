@@ -346,7 +346,12 @@ namespace Sass {
 
           if (sheet == nullptr) {
             // This is the new barrier!
-            EnvFrame local(compiler.varStack, false, true);
+            EnvFrame local(compiler.varStack, true, true);
+            // EnvFrame local(context.varStack, true, true);
+            local.idxs->varFrame = 0xFFFFFFFF;
+            local.idxs->mixFrame = 0xFFFFFFFF;
+            local.idxs->fnFrame = 0xFFFFFFFF;
+
             sheet = compiler.registerImport(loaded); // @use
             sheet->root2->idxs = local.idxs;
           }
