@@ -31,8 +31,12 @@ namespace Sass {
     strm << "Nothing may be indented ";
     if (name.empty()) { strm << "here."; }
     else { strm << "beneath a " + name + "."; }
-    scanWhitespaceWithoutComments();
-    error(strm.str(), scanner.rawSpan());
+    Offset start(scanner.relevant);
+    while (uint32_t chr = scanner.peekChar()) {
+      if (!isWhitespace(chr)) break;
+      scanner.readChar();
+    }
+    error(strm.str(), scanner.rawSpanFrom(start));
 
       /*,
       position: nextIndentationEnd.position*/
