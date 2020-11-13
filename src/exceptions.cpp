@@ -342,6 +342,48 @@ namespace Sass {
     msg += "More info: https://sass-lang.com/documentation/functions/color#" + name;
 	}
 
+	ModuleAlreadyKnown::ModuleAlreadyKnown(
+    BackTraces traces,
+    sass::string name) :
+    RuntimeException(traces,
+      "There's already a module with"
+      " namespace \"" + name + "\".")
+	{}
+
+  TardyAtRule::TardyAtRule(
+    BackTraces traces,
+    sass::string name) :
+    RuntimeException(traces,
+      name + " rules must be written"
+      " before any other rules.")
+  {}
+
+  InvalidSassIdentifier::InvalidSassIdentifier(
+    BackTraces traces,
+    sass::string name) :
+    RuntimeException(traces,
+      "Invalid Sass identifier"
+      " \"" + name + "\"")
+  {}
+
+  UnknwonImport::UnknwonImport(
+    BackTraces traces) :
+    RuntimeException(traces,
+      "Can't find stylesheet to import.")
+  {}
+
+  AmbiguousImports::AmbiguousImports(BackTraces traces,
+    sass::vector<ResolvedImport> imports) :
+    RuntimeException(traces,
+      "It's not clear which file to import.")
+    {
+      msg += " Found:\n";
+      for (size_t i = 0, L = imports.size(); i < L; ++i)
+      { msg += "  " + imports[i].imp_path + "\n"; }
+    }
+
+
+  
 }
 
 }
