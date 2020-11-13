@@ -15,6 +15,7 @@
 #include "ast_statements.hpp"
 #include "ast_css.hpp"
 #include "environment_stack.hpp"
+#include "file.hpp"
 
 namespace Sass {
 
@@ -568,6 +569,7 @@ namespace Sass {
   class UseRule final : public Statement
   {
   private:
+    ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, url);
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
@@ -577,7 +579,8 @@ namespace Sass {
     // Value constructor
     UseRule(
       const SourceSpan& pstate,
-      const sass::string& url);
+      const sass::string& url,
+      Import* import);
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);
@@ -590,6 +593,7 @@ namespace Sass {
   class ForwardRule final : public Statement
   {
   private:
+    ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, url);
     ADD_PROPERTY(bool, isShown);
     ADD_PROPERTY(bool, hasWithConfig);
@@ -601,6 +605,7 @@ namespace Sass {
     ForwardRule(
       const SourceSpan& pstate,
       const sass::string& url,
+      Import* import,
       std::set<sass::string>&& toggledVariables,
       std::set<sass::string>&& toggledCallables,
       bool isShown);

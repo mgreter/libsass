@@ -505,18 +505,22 @@ namespace Sass {
 
   UseRule::UseRule(
     const SourceSpan& pstate,
-    const sass::string& url) :
+    const sass::string& url,
+    Import* import) :
     Statement(pstate),
+    import_(import),
     url_(url)
   {}
 
   ForwardRule::ForwardRule(
     const SourceSpan& pstate,
     const sass::string& url,
+    Import* import,
     std::set<sass::string>&& toggledVariables,
     std::set<sass::string>&& toggledCallables,
     bool isShown) :
     Statement(pstate),
+    import_(import),
     url_(url),
     isShown_(isShown),
     toggledVariables_(std::move(toggledVariables)),
