@@ -55,7 +55,7 @@ namespace Sass {
     bool hasShowFilter = false;
     bool hasHideFilter = false;
 
-    std::set<sass::string> filters;
+    std::set<EnvKey> filters;
 
     sass::string prefix;
 
@@ -69,7 +69,7 @@ namespace Sass {
       bool hasConfig = true,
       bool hasShowFilter = false,
       bool hasHideFilter = false,
-      std::set<sass::string> filters = {},
+      std::set<EnvKey> filters = {},
       const sass::string& prefix = "");
 
     void finalize();
@@ -597,8 +597,8 @@ namespace Sass {
     ADD_CONSTREF(sass::string, url);
     ADD_PROPERTY(bool, isShown);
     ADD_PROPERTY(bool, hasWithConfig);
-    ADD_REF(std::set<sass::string>, toggledVariables);
-    ADD_REF(std::set<sass::string>, toggledCallables);
+    ADD_REF(std::set<EnvKey>, toggledVariables);
+    ADD_REF(std::set<EnvKey>, toggledCallables);
     ADD_CONSTREF(RootObj, root);
   public:
     // Value constructor
@@ -606,8 +606,8 @@ namespace Sass {
       const SourceSpan& pstate,
       const sass::string& url,
       Import* import,
-      std::set<sass::string>&& toggledVariables,
-      std::set<sass::string>&& toggledCallables,
+      std::set<EnvKey>&& toggledVariables,
+      std::set<EnvKey>&& toggledCallables,
       bool isShown);
       // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {

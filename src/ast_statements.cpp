@@ -18,7 +18,7 @@ namespace Sass {
     bool hasConfig,
     bool hasShowFilter,
     bool hasHideFilter,
-    std::set<sass::string> filters,
+    std::set<EnvKey> filters,
     const sass::string& prefix) :
     compiler(compiler),
     hasConfig(hasConfig),
@@ -516,8 +516,8 @@ namespace Sass {
     const SourceSpan& pstate,
     const sass::string& url,
     Import* import,
-    std::set<sass::string>&& toggledVariables,
-    std::set<sass::string>&& toggledCallables,
+    std::set<EnvKey>&& toggledVariables,
+    std::set<EnvKey>&& toggledCallables,
     bool isShown) :
     Statement(pstate),
     import_(import),

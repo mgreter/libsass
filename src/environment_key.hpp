@@ -98,6 +98,12 @@ namespace Sass {
       return norm() == rhs.norm();
     }
 
+    // Compare normalization forms
+    bool operator<(const EnvKey& rhs) const
+    {
+      return norm() < rhs.norm();
+    }
+
     // Simple helper
     bool empty() const
     {
