@@ -116,7 +116,7 @@ namespace Sass {
     // that it doesn't consume multi-line comments.
     LoudComment* loudComment();
 
-    void scanWhitespace() override final;
+    void scanWhitespaceWithoutComments() override final;
 
     // Expect and consume a single newline character.
     void expectNewline();
