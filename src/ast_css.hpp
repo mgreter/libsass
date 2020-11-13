@@ -8,6 +8,8 @@
 #include "ast_nodes.hpp"
 #include "ast_selectors.hpp"
 #include "visitor_css.hpp"
+#include "ast_statements.hpp"
+#include "environment_stack.hpp"
 // #include "ast_def_macros.hpp"
 
 namespace Sass {
@@ -553,6 +555,12 @@ namespace Sass {
 
     bool isActive = false;
     bool isLoading = false;
+
+
+    EnvKeyMap<VarRef> mergedFwdVars;
+    EnvKeyMap<VarRef> mergedFwdMixs;
+    EnvKeyMap<VarRef> mergedFwdFns;
+
 
     sass::vector<std::pair<VarRefs*, Root*>> forwarded;
 
