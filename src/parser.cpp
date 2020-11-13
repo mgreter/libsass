@@ -87,6 +87,9 @@ namespace Sass {
     scanner.expect("/*");
     while (true) {
       auto next = scanner.readChar();
+      if (isNewline(next)) {
+        scanner._fail("*/");
+      }
       if (next != $asterisk) continue;
 
       do {
