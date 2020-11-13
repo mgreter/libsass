@@ -1739,72 +1739,6 @@ namespace Sass {
     WithConfig wconfig(context, config, hasWith,
       isShown, isHidden, toggledVariables2, prefix);
 
-    // Rewrite the whole old config
-    // context.withConfig.clear();
-    // for (auto kv : oldConfig) {
-    //   auto varcfg = kv.second;
-    //   if (startsWith(varcfg.name, prefix)) {
-    //     varcfg.name = varcfg.name.substr(prefix.size());
-    //     context.withConfig[varcfg.name] = varcfg;
-    //   }
-    // }
-
-    //if (isHidden) {
-    //  for (auto asd : toggledVariables2) {
-    //    if (context.withConfig.count(asd)) {
-    //      context.withConfig.erase(asd);
-    //    }
-    //    // else {
-    //    //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
-    //    //   context.addFinalStackTrace(state);
-    //    //   throw Exception::RuntimeException(context,
-    //    //     "Unknown variable \"$" + asd + "\" in deny-list.");
-    //    // }
-    //  }
-    //}
-    //if (isShown) {
-    //  auto moved(std::move(context.withConfig));
-    //  for (auto asd : toggledVariables2) {
-    //    if (moved.count(asd)) {
-    //      context.withConfig[asd] = moved[asd];
-    //    }
-    //    // else {
-    //    //   SourceSpan state(scanner.relevantSpanFrom(beforeShow));
-    //    //   context.addFinalStackTrace(state);
-    //    //   throw Exception::RuntimeException(context,
-    //    //     "Unknown variable \"$" + asd + "\" in allow-list.");
-    //    // }
-    //  }
-    //}
-    //
-    //for (auto kv : config) {
-    //  if (kv.isGuarded) {
-    //    // The item was already given previously
-    //    if (context.withConfig.count(kv.name)) {
-    //      if (context.withConfig[kv.name].isGuarded) {
-    //        context.withConfig[kv.name].expression = kv.expression;
-    //      }
-    //      if (context.withConfig[kv.name].expression.isNull()) {
-    //        context.withConfig[kv.name].expression = kv.expression;
-    //      }
-    //      else if (context.withConfig[kv.name].expression->isaNullExpression()) {
-    //        context.withConfig[kv.name].expression = kv.expression;
-    //      }
-    //    }
-    //    else {
-    //      context.withConfig[kv.name] = kv;
-    //    }
-    //  }
-    //  else {
-    //    if (context.withConfig.count(kv.name)) {
-    //      context.withConfig[kv.name].expression = kv.expression;
-    //    }
-    //    else {
-    //      context.withConfig[kv.name] = kv;
-    //    }
-    //  }
-    //}
-
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
       context.addFinalStackTrace(state);
@@ -1915,35 +1849,84 @@ namespace Sass {
           }
         }
 
+
+        //*************************************************
+        auto& mergedFwdVar(currentRoot->mergedFwdVars);
+        //*************************************************
+        if (mergedFwdVar.empty()) {
+          for (auto var : exposed->varIdxs) {
+            mergedFwdVar.insert({ var.first,
+              { exposed->varFrame, var.second }
+              });
+          }
+        }
+        else {
+          for (auto var : exposed->varIdxs) {
+            VarRef vidx(exposed->varFrame, var.second);
+            auto it = mergedFwdVar.find(var.first);
+            if (it == mergedFwdVar.end()) {
+              mergedFwdVar.insert({ var.first, vidx });
+            }
+            else if (vidx != it->second) {
+              throw Exception::RuntimeException(context,
+                "Two forwarded modules both define a "
+                "variable named $" + var.first.norm() + ".");
+            }
+          }
+        }
+
+        //*************************************************
+        auto& mergedFwdMix(currentRoot->mergedFwdMixs);
+        //*************************************************
+        if (mergedFwdMix.empty()) {
+          for (auto mix : exposed->mixIdxs) {
+            mergedFwdMix.insert({ mix.first,
+              { exposed->mixFrame, mix.second }
+              });
+          }
+        }
+        else {
+          for (auto mix : exposed->mixIdxs) {
+            VarRef midx(exposed->mixFrame, mix.second);
+            auto it = mergedFwdMix.find(mix.first);
+            if (it == mergedFwdMix.end()) {
+              mergedFwdMix.insert({ mix.first, midx });
+            }
+            else if (midx != it->second) {
+              throw Exception::RuntimeException(context,
+                "Two forwarded modules both define a "
+                "mixin named " + mix.first.norm() + ".");
+            }
+          }
+        }
+
+        //*************************************************
+        auto& mergedFwdFn(currentRoot->mergedFwdFns);
+        //*************************************************
+        if (mergedFwdFn.empty()) {
+          for (auto fn : exposed->fnIdxs) {
+            mergedFwdFn.insert({ fn.first,
+              { exposed->fnFrame, fn.second }
+              });
+          }
+        }
+        else {
+          for (auto fn : exposed->fnIdxs) {
+            VarRef fidx(exposed->fnFrame, fn.second);
+            auto it = mergedFwdFn.find(fn.first);
+            if (it == mergedFwdFn.end()) {
+              mergedFwdFn.insert({ fn.first, fidx });
+            }
+            else if (fidx != it->second) {
+              throw Exception::RuntimeException(context,
+                "Two forwarded modules both define a "
+                "function named " + fn.first.norm() + ".");
+            }
+          }
+        }
+
         // current->forwarded.push_back({ exposed, nullptr });
         currentRoot->forwarded.push_back({ exposed, nullptr });
-
-        // Now restore old-config with access flag preserved
-        //context.withConfig.clear();
-        //for (auto asd : oldConfig) {
-        //  context.withConfig.insert(asd);
-        //}
-        //// context.withConfig = oldConfig;
-        //
-        //for (auto varcfg : config) {
-        //  if (varcfg.wasUsed == false) {
-        //    context.addFinalStackTrace(varcfg.pstate);
-        //    throw Exception::RuntimeException(context,
-        //      "This variable was not declared with "
-        //      "!default in the @used module.");
-        //  }
-        //  else {
-        //    context.withConfig[varcfg.name].wasUsed = true;
-        //  }
-        //  // if (oldConfig.count(varcfg.name) == 0) {
-        //  //   context.withConfig.erase(varcfg.name);
-        //  // }
-        //  // else {
-        //  //   context.withConfig[prefix + varcfg.name].expression =
-        //  //     oldConfig[prefix + varcfg.name].expression;
-        //  // }
-        //}
-
 
         rule->root(nullptr);
 
@@ -1957,18 +1940,6 @@ namespace Sass {
       wconfig.finalize();
       return rule.detach();
     }
-
-
-    // Load the shit
-
-
-
-
-
-
-
-
-
 
 
     SourceSpan pstate = scanner.relevantSpanFrom(start);
@@ -2024,19 +1995,7 @@ namespace Sass {
         local.idxs->fnFrame = 0xFFFFFFFF;
         sheet = context.registerImport(loaded);
         sheet->root2->idxs = local.idxs;
-        // sheet->root2->con context->node
       }
-
-      // if (hasWith) {
-      //   for (auto& varcfg : *context.withConfig) {
-      //     if (varcfg.wasUsed == false) {
-      //       context.addFinalStackTrace(varcfg.pstate);
-      //       throw Exception::RuntimeException(context,
-      //         "This variable was not declared with "
-      //         "!default in the @used module.");
-      //     }
-      //   }
-      // }
 
       Root* root = sheet->root2;
       VarRefs* refs = root->idxs;
@@ -2058,17 +2017,45 @@ namespace Sass {
         idxs->isModule);
 
       for (auto fwd : root->forwarded) {
-        for (auto kv : fwd.first->varIdxs) {
-          EnvKey key(prefix + kv.first.orig());
-          exposed->varIdxs.insert({ key, kv.second });
+        if (exposed == fwd.first) continue;
+        bool sameVarFrame(exposed->varFrame == fwd.first->varFrame);
+        bool sameMixFrame(exposed->mixFrame == fwd.first->mixFrame);
+        bool sameFnFrame(exposed->fnFrame == fwd.first->fnFrame);
+        for (auto var : fwd.first->varIdxs) {
+          auto it = exposed->varIdxs.find(var.first);
+          if (it != exposed->varIdxs.end()) {
+            if (sameVarFrame && it->second == var.second) continue;
+            // context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "variable named $" + var.first.norm() + ".");
+          }
+          if (refs->varIdxs.count(var.first) == 0)
+            exposed->varIdxs.insert(var);
         }
-        for (auto kv : fwd.first->mixIdxs) {
-          EnvKey key(prefix + kv.first.orig());
-          exposed->mixIdxs.insert({ key, kv.second });
+        for (auto mix : fwd.first->mixIdxs) {
+          auto it = exposed->mixIdxs.find(mix.first);
+          if (it != exposed->mixIdxs.end()) {
+            if (sameMixFrame && it->second == mix.second) continue;
+            // context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "mixin named " + mix.first.norm() + ".");
+          }
+          if (refs->mixIdxs.count(mix.first) == 0)
+            exposed->mixIdxs.insert(mix);
         }
-        for (auto kv : fwd.first->fnIdxs) {
-          EnvKey key(prefix + kv.first.orig());
-          exposed->fnIdxs.insert({ key, kv.second });
+        for (auto fn : fwd.first->fnIdxs) {
+          auto it = exposed->fnIdxs.find(fn.first);
+          if (it != exposed->fnIdxs.end()) {
+            if (sameFnFrame && it->second == fn.second) continue;
+            // context.addFinalStackTrace(varcfg.pstate);
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "function named " + fn.first.norm() + ".");
+          }
+          if (refs->fnIdxs.count(fn.first) == 0)
+            exposed->fnIdxs.insert(fn);
         }
       }
 
@@ -2131,50 +2118,81 @@ namespace Sass {
         }
       }
 
-//      for (auto varcfg : config) {
-//        if (context.withConfig[varcfg.name].wasUsed == false) {
-//          context.addFinalStackTrace(varcfg.pstate);
-//          throw Exception::RuntimeException(context,
-//            "This variable was not declared with "
-//            "!default in the @used module.");
-//        }
-//        else if (oldConfig.count(varcfg.name)) {
-//          // oldConfig[varcfg.name].wasUsed = true;
-//        }
-//        // if (oldConfig.count(varcfg.name) == 0) {
-//        //   context.withConfig.erase(varcfg.name);
-//        // }
-//        // else {
-//        //   context.withConfig[prefix + varcfg.name].expression =
-//        //     oldConfig[prefix + varcfg.name].expression;
-//        // }
-//      }
 
-      // Now restore old-config with access flag preserved
-//      for (auto qwe : context.withConfig) {
-//        if (oldConfig.count(prefix + qwe.first.norm())) {
-//          bool hasInConfig = false;
-//          bool wasUsed = false;
-//          for (auto ha : config) {
-//            if (ha.name == qwe.first.norm()) {
-//              wasUsed = ha.wasUsed;
-//              hasInConfig = true;
-//              break;
-//            }
-//          }
-//          if (hasInConfig) {
-//            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed; // wasUsed
-//          }
-//          else {
-//            oldConfig[prefix + qwe.first.norm()].wasUsed = qwe.second.wasUsed;
-//          }
-//        }
-//      }
-//      context.withConfig.clear();
-//      for (auto asd : oldConfig) {
-//        context.withConfig.insert(asd);
-//      }
-      // context.withConfig = oldConfig;
+      //*************************************************
+      auto& mergedFwdVar(currentRoot->mergedFwdVars);
+      //*************************************************
+      if (mergedFwdVar.empty()) {
+        for (auto var : exposed->varIdxs) {
+          mergedFwdVar.insert({ var.first,
+            { exposed->varFrame, var.second }
+            });
+        }
+      }
+      else {
+        for (auto var : exposed->varIdxs) {
+          VarRef vidx(exposed->varFrame, var.second);
+          auto it = mergedFwdVar.find(var.first);
+          if (it == mergedFwdVar.end()) {
+            mergedFwdVar.insert({ var.first, vidx });
+          }
+          else if (vidx != it->second) {
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "variable named $" + var.first.norm() + ".");
+          }
+        }
+      }
+
+      //*************************************************
+      auto& mergedFwdMix(currentRoot->mergedFwdMixs);
+      //*************************************************
+      if (mergedFwdMix.empty()) {
+        for (auto mix : exposed->mixIdxs) {
+          mergedFwdMix.insert({ mix.first,
+            { exposed->mixFrame, mix.second }
+            });
+        }
+      }
+      else {
+        for (auto mix : exposed->mixIdxs) {
+          VarRef midx(exposed->mixFrame, mix.second);
+          auto it = mergedFwdMix.find(mix.first);
+          if (it == mergedFwdMix.end()) {
+            mergedFwdMix.insert({ mix.first, midx });
+          }
+          else if (midx != it->second) {
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "mixin named " + mix.first.norm() + ".");
+          }
+        }
+      }
+
+      //*************************************************
+      auto& mergedFwdFn(currentRoot->mergedFwdFns);
+      //*************************************************
+      if (mergedFwdFn.empty()) {
+        for (auto fn : exposed->fnIdxs) {
+          mergedFwdFn.insert({ fn.first,
+            { exposed->fnFrame, fn.second }
+            });
+        }
+      }
+      else {
+        for (auto fn : exposed->fnIdxs) {
+          VarRef fidx(exposed->fnFrame, fn.second);
+          auto it = mergedFwdFn.find(fn.first);
+          if (it == mergedFwdFn.end()) {
+            mergedFwdFn.insert({ fn.first, fidx });
+          }
+          else if (fidx != it->second) {
+            throw Exception::RuntimeException(context,
+              "Two forwarded modules both define a "
+              "function named " + fn.first.norm() + ".");
+          }
+        }
+      }
 
 
       // current->forwarded.push_back({ exposed, nullptr });

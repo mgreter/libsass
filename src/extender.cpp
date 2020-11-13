@@ -73,7 +73,8 @@ namespace Sass {
 
       if (complex->size() > 1) {
         throw Exception::RuntimeException(traces,
-          "complex selectors may not be extended.");
+          "Can't extend complex selector " +
+          complex->inspect() + ".");
       }
 
       if (const CompoundSelector* compound = complex->first()->isaCompoundSelector()) {

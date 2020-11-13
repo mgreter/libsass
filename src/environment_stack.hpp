@@ -59,6 +59,11 @@ namespace Sass {
         && offset == rhs.offset;
     }
 
+    bool operator!=(const VarRef& rhs) const {
+      return frame != rhs.frame
+        || offset != rhs.offset;
+    }
+
     bool operator<(const VarRef& rhs) const {
       if (frame < rhs.frame) return true;
       return offset < rhs.offset;
