@@ -1364,30 +1364,6 @@ namespace Sass {
     expectStatementSeparator("@use rule");
     WithConfig wconfig(context, config, hasWith);
    
-
-    // for (auto kv : config) {
-    //   if (kv.isGuarded) {
-    //     // The item was already given previously
-    //     if (context.withConfig.count(kv.name)) {
-    //       if (context.withConfig[kv.name].isGuarded) {
-    //         context.withConfig[kv.name] = kv;
-    //       }
-    //       if (context.withConfig[kv.name].expression.isNull()) {
-    //         context.withConfig[kv.name] = kv;
-    //       }
-    //       else if (context.withConfig[kv.name].expression->isaNullExpression()) {
-    //         context.withConfig[kv.name] = kv;
-    //       }
-    //     }
-    //     else {
-    //       context.withConfig[kv.name] = kv;
-    //     }
-    //   }
-    //   else {
-    //     context.withConfig[kv.name] = kv;
-    //   }
-    // }
-
     if (isUseAllowed == false) {
       context.addFinalStackTrace(state);
       throw Exception::ParserException(context,
@@ -1501,7 +1477,7 @@ namespace Sass {
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import));
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, false));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -1551,24 +1527,6 @@ namespace Sass {
         sheet->root2->import = loaded;
         // sheet->root2->con context->node
       }
-
-      // for (auto item : config) {
-      //   auto& varcfg = context.withConfig[item.name];
-      //   if (varcfg.wasUsed == false) {
-      //     context.addFinalStackTrace(varcfg.pstate);
-      //     throw Exception::RuntimeException(context,
-      //       "This variable was not declared with "
-      //       "!default in the @used module.");
-      //   }
-      //   if (oldConfig.count(varcfg.name) == 0) {
-      //     context.withConfig.erase(varcfg.name);
-      //   }
-      //   else {
-      //     context.withConfig[varcfg.name].expression =
-      //       oldConfig[varcfg.name].expression;
-      //   }
-      // }
-
 
       if (!ns.empty()) {
         if (modFrame->fwdModule33.count(ns)) {
@@ -1647,6 +1605,32 @@ namespace Sass {
       if (ns == "*") {
         // This must not be on root block
         // These may vary for different use rules
+
+
+        for (auto var : copy->varIdxs) {
+          auto it = modFrame->varIdxs.find(var.first);
+          if (it != modFrame->varIdxs.end()) {
+            throw Exception::ParserException(context,
+              "This module and the new module both define a "
+              "variable named \"$" + var.first.norm() + "\".");
+          }
+        }
+        for (auto mix : copy->mixIdxs) {
+          auto it = modFrame->mixIdxs.find(mix.first);
+          if (it != modFrame->mixIdxs.end()) {
+            throw Exception::ParserException(context,
+              "This module and the new module both define a "
+              "mixin named \"" + mix.first.norm() + "\".");
+          }
+        }
+        for (auto fn : copy->fnIdxs) {
+          auto it = modFrame->fnIdxs.find(fn.first);
+          if (it != modFrame->fnIdxs.end()) {
+            throw Exception::ParserException(context,
+              "This module and the new module both define a "
+              "function named \"" + fn.first.norm() + "\".");
+          }
+        }
 
         // Check if we push the same stuff twice
         for (auto fwd : modFrame->fwdGlobal33) {
@@ -1966,7 +1950,7 @@ namespace Sass {
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import));
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, false));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -2397,7 +2381,7 @@ namespace Sass {
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import));
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, true));
 
     // Error if no file to import was found
     if (resolved.empty()) {
