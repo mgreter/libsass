@@ -321,8 +321,8 @@ namespace Sass {
       bool allowGuarded = false);
 
     void readForwardMembers(
-      std::set<sass::string>& variables,
-      std::set<sass::string>& callables
+      std::set<EnvKey>& variables,
+      std::set<EnvKey>& callables
     );
 
     // Consumes a `@forward` rule.

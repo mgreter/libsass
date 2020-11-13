@@ -1736,8 +1736,8 @@ namespace Sass {
 
     bool isShown = false;
     bool isHidden = false;
-    std::set<sass::string> toggledVariables2;
-    std::set<sass::string> toggledCallables2;
+    std::set<EnvKey> toggledVariables2;
+    std::set<EnvKey> toggledCallables2;
     Offset beforeShow(scanner.offset);
     if (scanIdentifier("show")) {
       readForwardMembers(toggledVariables2, toggledCallables2);
@@ -1773,8 +1773,8 @@ namespace Sass {
 
     rule->hasWithConfig(hasWith);
 
-    std::set<sass::string>& toggledVariables(rule->toggledVariables());
-    std::set<sass::string>& toggledCallables(rule->toggledCallables());
+    std::set<EnvKey>& toggledVariables(rule->toggledVariables());
+    std::set<EnvKey>& toggledCallables(rule->toggledCallables());
 
     // EnvFrame* current(context.varStack.back());
 
@@ -1811,57 +1811,57 @@ namespace Sass {
         if (isShown)
         {
           for (auto kv : idxs->varIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
-            if (toggledVariables.count(key.orig()) == 1)
+            if (toggledVariables.count(key) == 1)
               exposed->varIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->mixIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
-            if (toggledCallables.count(key.orig()) == 1)
+            if (toggledCallables.count(key) == 1)
               exposed->mixIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->fnIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
-            if (toggledCallables.count(key.orig()) == 1)
+            if (toggledCallables.count(key) == 1)
               exposed->fnIdxs.insert({ key, kv.second });
           }
         }
         else if (isHidden) {
           for (auto kv : idxs->varIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
-            if (toggledVariables.count(key.orig()) == 0)
+            if (toggledVariables.count(key) == 0)
               exposed->varIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->mixIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
-            if (toggledCallables.count(key.orig()) == 0)
+            if (toggledCallables.count(key) == 0)
               exposed->mixIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->fnIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
-            if (toggledCallables.count(key.orig()) == 0)
+            if (toggledCallables.count(key) == 0)
               exposed->fnIdxs.insert({ key, kv.second });
           }
         }
         else {
           for (auto kv : idxs->varIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
             exposed->varIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->mixIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
             exposed->mixIdxs.insert({ key, kv.second });
           }
           for (auto kv : idxs->fnIdxs) {
-            if (kv.first.orig()[0] == '-') continue;
+            if (kv.first.isPrivate()) continue;
             EnvKey key(prefix + kv.first.orig());
             exposed->fnIdxs.insert({ key, kv.second });
           }
@@ -2081,57 +2081,57 @@ namespace Sass {
       if (isShown)
       {
         for (auto kv : idxs->varIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
-          if (toggledVariables.count(key.orig()) == 1)
+          if (toggledVariables.count(key) == 1)
             exposed->varIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->mixIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
-          if (toggledCallables.count(key.orig()) == 1)
+          if (toggledCallables.count(key) == 1)
             exposed->mixIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->fnIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
-          if (toggledCallables.count(key.orig()) == 1)
+          if (toggledCallables.count(key) == 1)
             exposed->fnIdxs.insert({ key, kv.second });
         }
       }
       else if (isHidden) {
         for (auto kv : idxs->varIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
-          if (toggledVariables.count(key.orig()) == 0)
+          if (toggledVariables.count(key) == 0)
             exposed->varIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->mixIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
-          if (toggledCallables.count(key.orig()) == 0)
+          if (toggledCallables.count(key) == 0)
             exposed->mixIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->fnIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
-          if (toggledCallables.count(key.orig()) == 0)
+          if (toggledCallables.count(key) == 0)
             exposed->fnIdxs.insert({ key, kv.second });
         }
       }
       else {
         for (auto kv : idxs->varIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
           exposed->varIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->mixIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
           exposed->mixIdxs.insert({ key, kv.second });
         }
         for (auto kv : idxs->fnIdxs) {
-          if (kv.first.orig()[0] == '-') continue;
+          if (kv.first.isPrivate()) continue;
           EnvKey key(prefix + kv.first.orig());
           exposed->fnIdxs.insert({ key, kv.second });
         }
@@ -2265,7 +2265,7 @@ namespace Sass {
     scanWhitespace();
     scanner.expectChar($lparen);
 
-    std::set<sass::string> seen;
+    std::set<EnvKey> seen;
 
     // if (context.withConfig) {
     //   std::cerr << "must merge";
@@ -2318,7 +2318,7 @@ namespace Sass {
     return true;
   }
 
-  void StylesheetParser::readForwardMembers(std::set<sass::string>& variables, std::set<sass::string>& callables)
+  void StylesheetParser::readForwardMembers(std::set<EnvKey>& variables, std::set<EnvKey>& callables)
   {
     try {
       do {

@@ -76,7 +76,7 @@ namespace Sass {
         throw Exception::RuntimeException(logger,
           "Can't extend complex selector " +
           complex->inspect() + ".");
-        #endif
+        #else
         sass::sstream sels; bool addComma = false;
         sels << "Complex selectors may no longer be extended. Consider `@extend ";
         for (auto sel : complex->elements()) {
@@ -86,6 +86,7 @@ namespace Sass {
         }
         sels << "` instead. See http://bit.ly/ExtendCompound for details.";
         logger.addDeprecation(sels.str(), complex->pstate());
+        #endif
       }
 
       if (const CompoundSelector* compound = complex->first()->isaCompoundSelector()) {
