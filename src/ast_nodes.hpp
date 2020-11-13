@@ -290,9 +290,13 @@ namespace Sass {
 
       // Dereference current item
       reference operator*();
+      reference operator->();
 
       // Move to the next item
       iterator& operator++();
+      iterator& operator+=(size_t offset);
+      iterator& operator-=(size_t offset);
+      iterator operator-(size_t offset);
 
       // Check if it's the last item
       bool isLast();

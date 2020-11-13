@@ -4,6 +4,7 @@
 #include "fn_maps.hpp"
 
 #include "compiler.hpp"
+#include "exceptions.hpp"
 #include "ast_values.hpp"
 
 namespace Sass {
@@ -74,9 +75,109 @@ namespace Sass {
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         Value* key = arguments[1]->assertValue(compiler, Strings::key);
+
+
         auto it = map->find(key);
-        if (it != map->end()) return it->second;
+        if (it != map->end()) {
+          auto rv = it->second;
+
+          auto inner = arguments[2]->iterator();
+          auto cur = inner.begin(), end = inner.end();
+          if (cur == end) {
+            return rv;
+          }
+          while (cur != end) {
+            if (auto deep = rv->isaMap()) {
+              auto dada = deep->find(*cur);
+              if (dada != deep->end()) {
+                rv = dada.value();
+              }
+              else {
+                return SASS_MEMORY_NEW(Null, pstate);
+              }
+            }
+            else {
+              return SASS_MEMORY_NEW(Null, pstate);
+            }
+            ++cur;
+          }
+
+          return rv;
+        }
         return SASS_MEMORY_NEW(Null, pstate);
+      }
+
+
+      BUILT_IN_FN(fnMapSetThreeArgs)
+      {
+        auto map = arguments[0]->assertMap(compiler, Strings::map);
+        auto copy = SASS_MEMORY_COPY(map);
+        auto it = copy->find(arguments[1]);
+        if (it == copy->end()) {
+          copy->insert({ arguments[1], arguments[2] });
+        }
+        else {
+          it.value() = arguments[2];
+        }
+        return copy;
+      }
+
+      BUILT_IN_FN(fnMapSetTwoArgs)
+      {
+        auto map = arguments[0]->assertMap(compiler, Strings::map);
+        MapObj copy = map = SASS_MEMORY_COPY(map);
+        auto it = arguments[1]->iterator();
+        auto size = arguments[1]->lengthAsList();
+        auto cur = it.begin(), end = it.end();
+        if (size == 0) {
+          throw Exception::RuntimeException(compiler,
+            "Expected $args to contain a key.");
+        }
+        else if (size == 1) {
+          throw Exception::RuntimeException(compiler,
+            "Expected $args to contain a value.");
+        }
+
+
+        while (cur != end) {
+          auto qwe = *cur;
+          auto it = map->find(qwe);
+          if (it != map->end()) {
+            ValueObj inner = it->second;
+            if (auto qwe = inner->isaMap()) {
+              map = qwe;
+            }
+            else {  
+              if (cur == end - 2) {
+                ++cur;
+                it.value() = *cur;
+                break;
+              }
+              else {
+                auto newMap = SASS_MEMORY_NEW(Map,
+                  map->pstate(), {});
+                it.value() = newMap;
+                map = newMap;
+              }
+            }
+          }
+          else {
+            if (cur == end - 2) {
+              ++cur;
+              map->insert({ qwe, *cur });
+              break;
+            }
+            else {
+              auto newMap = SASS_MEMORY_NEW(Map,
+                map->pstate(), {});
+              map->insert({ qwe, newMap });
+              map = newMap;
+            }
+          }
+          ++cur;
+        }
+
+        return copy.detach();
       }
 
       /*******************************************************************/
@@ -98,6 +199,65 @@ namespace Sass {
           copy->insertOrSet(kv); }
         return copy;
       }
+
+      BUILT_IN_FN(merge_many)
+      {
+        MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
+
+        auto it = arguments[1]->iterator();
+        auto size = arguments[1]->lengthAsList();
+
+        if (size == 0) {
+          throw Exception::RuntimeException(compiler,
+            "Expected $args to contain a key.");
+        }
+        else if (size == 1) {
+          throw Exception::RuntimeException(compiler,
+            "Expected $args to contain a map.");
+        }
+
+        auto cur = it.begin(), end = it.end() - 1;
+
+        Map *last = (end)->assertMap(compiler, Strings::map2);
+
+        MapObj copy = map1 = SASS_MEMORY_COPY(map1);
+
+        while (cur != end) {
+
+          auto it = copy->find(*cur);
+          if (it != copy->end()) {
+            if (auto inner = it->second->isaMap()) {
+              copy = SASS_MEMORY_COPY(inner);
+              it.value() = copy;
+            }
+            else {
+              Map* empty = SASS_MEMORY_NEW(Map,
+                it->second->pstate());
+              it.value() = empty;
+              copy = empty;
+            }
+          }
+          else {
+            Map* empty = SASS_MEMORY_NEW(Map,
+              last->pstate());
+            copy->insert({ *cur, empty });
+            copy = empty;
+          }
+
+          // if (!cur->isaMap()) {
+          //   *cur = SASS_MEMORY_NEW(Map, )
+          // }
+
+
+          ++cur;
+        }
+
+        for (auto kv : last->elements()) {
+          copy->insertOrSet(kv); }
+        return map1.detach();
+      }
+
+      
 
       /*******************************************************************/
 
@@ -157,7 +317,48 @@ namespace Sass {
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         Value* key = arguments[1]->assertValue(compiler, Strings::key);
-        return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
+        if (arguments[2]->lengthAsList() == 0) {
+          return SASS_MEMORY_NEW(Boolean, pstate, map->has(key));
+        }
+        else {
+          Map* current = map;
+          auto first = current->find(key);
+          if (first != current->end()) {
+            current = first->second->isaMap();
+            if (!current) {
+              return SASS_MEMORY_NEW(Boolean, pstate, false);
+            }
+            auto it = arguments[2]->iterator();
+            auto cur = it.begin(), end = it.end() - 1;
+            Value* last = *end;
+            while (cur != end) {
+              auto inner = current->find(*cur);
+              if (inner != current->end()) {
+                if (auto imap = inner->second->isaMap()) {
+                  current = imap;
+                }
+                else {
+                  return SASS_MEMORY_NEW(Boolean, pstate, false);
+                }
+              }
+              else {
+                return SASS_MEMORY_NEW(Boolean, pstate, false);
+              }
+              ++cur;
+            }
+
+            // Still here, check now
+            auto rv = current->find(last);
+            return SASS_MEMORY_NEW(Boolean, pstate,
+               rv != current->end());
+
+          }
+          else {
+            return SASS_MEMORY_NEW(Boolean, pstate, false);
+          }
+
+        }
+        return SASS_MEMORY_NEW(Boolean, pstate, false);
       }
 
       BUILT_IN_FN(fnDeepMerge)
@@ -211,16 +412,27 @@ namespace Sass {
       void registerFunctions(Compiler& ctx)
       {
         Module& module(ctx.createModule("map"));
-        // module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key", set));
-        module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key", get));
-        module.addFunction("merge", ctx.registerBuiltInFunction("map-merge", "$map1, $map2", merge));
+
+        module.addFunction("set", ctx.createBuiltInOverloadFns("map-set", {
+          std::make_pair("$map, $key, $value", fnMapSetThreeArgs),
+          std::make_pair("$map, $args...", fnMapSetTwoArgs)
+        }));
+
+        module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key, $keys...", get));
+
+        module.addFunction("merge", ctx.registerBuiltInOverloadFns("map-merge", {
+          std::make_pair("$map1, $map2", merge),
+          std::make_pair("$map1, $args...", merge_many)
+          }));
+
         module.addFunction("remove", ctx.registerBuiltInOverloadFns("map-remove", {
           std::make_pair("$map", remove_one),
           std::make_pair("$map, $key, $keys...", remove_many)
           }));
+
         module.addFunction("keys", ctx.registerBuiltInFunction("map-keys", "$map", keys));
         module.addFunction("values", ctx.registerBuiltInFunction("map-values", "$map", values));
-        module.addFunction("has-key", ctx.registerBuiltInFunction("map-has-key", "$map, $key", hasKey));
+        module.addFunction("has-key", ctx.registerBuiltInFunction("map-has-key", "$map, $key, $keys...", hasKey));
 
         module.addFunction("deep-merge", ctx.createBuiltInFunction("deep-merge", "$map1, $map2", fnDeepMerge));
         module.addFunction("deep-remove", ctx.createBuiltInFunction("deep-remove", "$map, $key, $keys...", fnDeepRemove));

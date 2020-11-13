@@ -45,6 +45,13 @@ namespace Sass {
 
       /*******************************************************************/
 
+      BUILT_IN_FN(fnIf)
+      {
+        // Always evaluates both sides!
+        return arguments[0]->isTruthy() ?
+          arguments[1] : arguments[0];
+      }
+
       BUILT_IN_FN(keywords)
       {
         ArgumentList* argumentList = arguments[0]->assertArgumentList(compiler, Sass::Strings::args);
@@ -587,6 +594,7 @@ namespace Sass {
         module.addFunction("inspect", compiler.registerBuiltInFunction("inspect", "$value", inspect));
         module.addFunction("keywords", compiler.registerBuiltInFunction("keywords", "$args", keywords));
 
+        compiler.registerBuiltInFunction("if", "$condition, $if-true, $if-false", fnIf);
         // ToDo: dart-sass keeps them on the local environment scope, see below:
         // These functions are defined in the context of the evaluator because
         // they need access to the [_environment] or other local state.
