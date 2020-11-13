@@ -1379,7 +1379,7 @@ namespace Sass {
 
     UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
       scanner.relevantSpanFrom(start),
-      url);
+      url, {});
 
     rule->hasWithConfig(hasWith);
 
@@ -1531,6 +1531,7 @@ namespace Sass {
         local.idxs->fnFrame = 0xFFFFFFFF;
         sheet = context.registerImport(loaded);
         sheet->root2->idxs = local.idxs;
+        sheet->root2->import = loaded;
         // sheet->root2->con context->node
       }
 
@@ -1748,7 +1749,7 @@ namespace Sass {
 
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
-      url,
+      url, {},
       std::move(toggledVariables2),
       std::move(toggledCallables2),
       isShown);
@@ -1995,6 +1996,7 @@ namespace Sass {
         local.idxs->fnFrame = 0xFFFFFFFF;
         sheet = context.registerImport(loaded);
         sheet->root2->idxs = local.idxs;
+        sheet->root2->import = loaded;
       }
 
       Root* root = sheet->root2;

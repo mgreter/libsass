@@ -1436,9 +1436,11 @@ namespace Sass {
       root->pstate(), nullptr, selectorStack.back());
       auto oldCurrent = current;
       current = root->loaded;
+      compiler.import_stack.push_back(root->import);
       for (auto child : root->elements()) {
         child->accept(this);
       }
+      compiler.import_stack.pop_back();
       current = oldCurrent;
 
       for (auto child : root->loaded->elements()) {
@@ -1475,9 +1477,11 @@ namespace Sass {
 
       node->root()->isActive = true;
       node->root()->isLoading = true;
+      compiler.import_stack.push_back(root->import);
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
+      compiler.import_stack.pop_back();
       node->root()->isLoading = false;
       node->root()->loaded = current;
     }

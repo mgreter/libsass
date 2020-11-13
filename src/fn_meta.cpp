@@ -463,8 +463,10 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
-        sass::string previous(".");
-        const ImportRequest import(url->value(), previous);
+        Import* loaded = compiler.import_stack.back();
+
+        // Loading relative to where the function was included
+        const ImportRequest import(url->value(), pstate.getAbsPath());
         // Search for valid imports (e.g. partials) on the file-system
         // Returns multiple valid results for ambiguous import path
         const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import));
@@ -504,6 +506,7 @@ namespace Sass {
             sheet = compiler.registerImport(loaded); // @use
             // eval.selectorStack.pop_back();
             sheet->root2->idxs = local.idxs;
+            sheet->root2->import = loaded;
           }
           else if (sheet->root2->isActive) {
             if (withMap) {
@@ -557,9 +560,11 @@ namespace Sass {
             eval.current = root->loaded;
             EnvScope scoped(compiler.varRoot, root->idxs);
             eval.selectorStack.push_back(nullptr);
+            compiler.import_stack.push_back(root->import);
             for (auto child : root->elements()) {
               child->accept(&eval);
             }
+            compiler.import_stack.pop_back();
             eval.selectorStack.pop_back();
             eval.current = oldCurrent;
             root->isLoading = false;

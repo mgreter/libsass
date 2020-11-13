@@ -553,6 +553,8 @@ namespace Sass {
 
     CssParentNodeObj loaded = nullptr;
 
+    ImportObj import;
+
     bool isActive = false;
     bool isLoading = false;
 
