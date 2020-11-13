@@ -16,7 +16,7 @@ namespace Sass {
     Offset start(scanner.offset);
     InterpolationBuffer buffer(scanner);
     do {
-      buffer.addInterpolation(readAlmostAnyValue());
+      buffer.addInterpolation(readAlmostAnyValue(true));
       buffer.writeCharCode($lf);
     } while (buffer.trailingStringEndsWith(",") &&
       scanCharIf(isNewline));

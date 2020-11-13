@@ -53,6 +53,16 @@ namespace Sass {
   }
   // EO readSilentComment
 
+  // Consume a silent comment and throws error
+  void CssParser::scanSilentComment()
+  {
+    Offset start(scanner.offset);
+    lastSilentComment = ScssParser::readSilentComment();
+    error("Silent comments aren't allowed in plain CSS.",
+      scanner.relevantSpanFrom(start));
+  }
+  // EO readSilentComment
+
   // Helper to declare all forbidden at-rules
   bool isForbiddenCssAtRule(const sass::string& name)
   {

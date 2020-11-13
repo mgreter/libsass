@@ -78,11 +78,13 @@ namespace Sass {
       }
     }
 
-    if (auto str = contents.back()->isaItplString()) {
-      text.write(
-        str->text(),
-        str->pstate());
-      contents.pop_back();
+    if (!contents.empty()) {
+      if (auto str = contents.back()->isaItplString()) {
+        text.write(
+          str->text(),
+          str->pstate());
+        contents.pop_back();
+      }
     }
 
   }

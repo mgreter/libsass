@@ -4576,7 +4576,7 @@ namespace Sass {
   //   the text is expected to be re-parsed.
   // * This supports Sass-style single-line comments.
   // * This does not compress adjacent whitespace characters.
-  Interpolation* StylesheetParser::readAlmostAnyValue()
+  Interpolation* StylesheetParser::readAlmostAnyValue(bool omitComments)
   {
     // const char* start = scanner.position;
     InterpolationBuffer buffer(scanner);
@@ -4606,7 +4606,7 @@ namespace Sass {
       case $slash:
         commentStart = scanner.position;
         if (scanComment()) {
-          buffer.write(scanner.substring(commentStart));
+          if (!omitComments) buffer.write(scanner.substring(commentStart));
         }
         else {
           buffer.write(scanner.readChar());
