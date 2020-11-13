@@ -1043,8 +1043,7 @@ namespace Sass {
     }
 
     SelectorListObj list = SASS_MEMORY_NEW(SelectorList,
-      pseudo->pstate());
-    list->concat(expanded);
+      pseudo->pstate(), std::move(expanded));
     return { pseudo->withSelector(list) };
 
   }
