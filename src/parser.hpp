@@ -68,7 +68,7 @@ namespace Sass {
     }
 
     // Consumes whitespace, but not comments.
-    inline void scanWhitespaceWithoutComments()
+    virtual void scanWhitespaceWithoutComments()
     {
       while (!scanner.isDone() && Character::isWhitespace(scanner.peekChar())) {
         scanner.readChar();
