@@ -1574,8 +1574,14 @@ namespace Sass {
         refs->isModule);
 
       for (auto fwd : root->forwarded) {
+        if (copy == fwd.first) continue;
+        bool sameVarFrame(copy->varFrame == fwd.first->varFrame);
+        bool sameMixFrame(copy->mixFrame == fwd.first->mixFrame);
+        bool sameFnFrame(copy->fnFrame == fwd.first->fnFrame);
         for (auto var : fwd.first->varIdxs) {
-          if (copy->varIdxs.count(var.first)) {
+          auto it = copy->varIdxs.find(var.first);
+          if (it != copy->varIdxs.end()) {
+            if (sameVarFrame && it->second == var.second) continue;
             // context.addFinalStackTrace(varcfg.pstate);
             throw Exception::RuntimeException(context,
               "Two forwarded modules both define a "
@@ -1585,7 +1591,9 @@ namespace Sass {
             copy->varIdxs.insert(var);
         }
         for (auto mix : fwd.first->mixIdxs) {
-          if (copy->mixIdxs.count(mix.first)) {
+          auto it = copy->mixIdxs.find(mix.first);
+          if (it != copy->mixIdxs.end()) {
+            if (sameMixFrame && it->second == mix.second) continue;
             // context.addFinalStackTrace(varcfg.pstate);
             throw Exception::RuntimeException(context,
               "Two forwarded modules both define a "
@@ -1595,7 +1603,9 @@ namespace Sass {
             copy->mixIdxs.insert(mix);
         }
         for (auto fn : fwd.first->fnIdxs) {
-          if (copy->fnIdxs.count(fn.first)) {
+          auto it = copy->fnIdxs.find(fn.first);
+          if (it != copy->fnIdxs.end()) {
+            if (sameFnFrame && it->second == fn.second) continue;
             // context.addFinalStackTrace(varcfg.pstate);
             throw Exception::RuntimeException(context,
               "Two forwarded modules both define a "
@@ -1626,30 +1636,30 @@ namespace Sass {
           bool sameVarFrame(copy->varFrame == fwd.first->varFrame);
           bool sameMixFrame(copy->mixFrame == fwd.first->mixFrame);
           bool sameFnFrame(copy->fnFrame == fwd.first->fnFrame);
-          for (auto it : copy->varIdxs) {
-            auto var = fwd.first->varIdxs.find(it.first);
-            if (var != fwd.first->varIdxs.end()) {
-              if (sameVarFrame && it.second == var->second) continue;
+          for (auto var : copy->varIdxs) {
+            auto it = fwd.first->varIdxs.find(var.first);
+            if (it != fwd.first->varIdxs.end()) {
+              if (sameVarFrame && var.second == it->second) continue;
               throw Exception::ParserException(context,
-                "$" + it.first.norm() + " is available "
+                "$" + var.first.norm() + " is available "
                 "from multiple global modules.");
             }
           }
-          for (auto it : copy->mixIdxs) {
-            auto var = fwd.first->mixIdxs.find(it.first);
-            if (var != fwd.first->mixIdxs.end()) {
-              if (sameMixFrame && it.second == var->second) continue;
+          for (auto var : copy->mixIdxs) {
+            auto it = fwd.first->mixIdxs.find(var.first);
+            if (it != fwd.first->mixIdxs.end()) {
+              if (sameMixFrame && var.second == it->second) continue;
               throw Exception::ParserException(context,
-                "Mixin \"" + it.first.norm() + "(...)\" is "
+                "Mixin \"" + var.first.norm() + "(...)\" is "
                 "available from multiple global modules.");
             }
           }
-          for (auto it : copy->fnIdxs) {
-            auto var = fwd.first->fnIdxs.find(it.first);
-            if (var != fwd.first->fnIdxs.end()) {
-              if (sameFnFrame && it.second == var->second) continue;
+          for (auto var : copy->fnIdxs) {
+            auto it = fwd.first->fnIdxs.find(var.first);
+            if (it != fwd.first->fnIdxs.end()) {
+              if (sameFnFrame && var.second == it->second) continue;
               throw Exception::ParserException(context,
-                "Function \"" + it.first.norm() + "(...)\" is "
+                "Function \"" + var.first.norm() + "(...)\" is "
                 "available from multiple global modules.");
             }
           }
