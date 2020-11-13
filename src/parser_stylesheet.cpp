@@ -304,6 +304,15 @@ namespace Sass {
         VarRefs* refs = it->second.first;
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
+
+          if (isPrivate(name.orig())) {
+            SourceSpan state(scanner.relevantSpanFrom(start));
+            context.addFinalStackTrace(state);
+            throw Exception::ParserException(context,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
+
           uint32_t offset = in->second;
           vidxs.push_back({ refs->varFrame, offset });
         }
@@ -3979,6 +3988,12 @@ namespace Sass {
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
           uint32_t offset = in->second;
+          if (isPrivate(name)) {
+            context.addFinalStackTrace(expression->pstate());
+            throw Exception::ParserException(context,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
           vidxs.push_back({ refs->varFrame, offset });
         }
       }
@@ -4245,8 +4260,11 @@ namespace Sass {
         VarRefs* refs = it->second.first;
         auto in = refs->fnIdxs.find(ident->value());
         if (in != refs->fnIdxs.end()) {
-          uint32_t offset = in->second;
-          fn->fidx({ refs->fnFrame, offset });
+          // Pass this silently
+          if (!isPrivate(ident->value())) {
+            uint32_t offset = in->second;
+            fn->fidx({ refs->fnFrame, offset });
+          }
         }
       }
       else {
@@ -4278,8 +4296,11 @@ namespace Sass {
           VarRefs* refs = fwd.first;
           auto in = refs->fnIdxs.find(name);
           if (in != refs->fnIdxs.end()) {
-            uint32_t offset = in->second;
-            fn->fidx({ refs->fnFrame, offset });
+            // Pass this silently
+            if (!isPrivate(name)) {
+              uint32_t offset = in->second;
+              fn->fidx({ refs->fnFrame, offset });
+            }
           }
         }
         // if (isPrivate(name)) {

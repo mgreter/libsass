@@ -33,9 +33,9 @@ namespace Sass {
     SelectorListObj& selector,
     const SelectorListObj& source,
     const SelectorListObj& targets,
-    BackTraces& traces)
+    Logger& logger)
   {
-    return extendOrReplace(selector, source, targets, ExtendMode::TARGETS, traces);
+    return extendOrReplace(selector, source, targets, ExtendMode::TARGETS, logger);
   }
   // EO Extender::extend
 
@@ -46,9 +46,9 @@ namespace Sass {
     SelectorListObj& selector,
     const SelectorListObj& source,
     const SelectorListObj& targets,
-    BackTraces& traces)
+    Logger& logger)
   {
-    return extendOrReplace(selector, source, targets, ExtendMode::REPLACE, traces);
+    return extendOrReplace(selector, source, targets, ExtendMode::REPLACE, logger);
   }
   // EO Extender::replace
 
@@ -60,7 +60,7 @@ namespace Sass {
     const SelectorListObj& source,
     const SelectorListObj& targets,
     const ExtendMode mode,
-    BackTraces& traces)
+    Logger& logger)
   {
     ExtSelExtMapEntry extenders;
 
@@ -72,9 +72,20 @@ namespace Sass {
     for (auto complex : targets->elements()) {
 
       if (complex->size() > 1) {
-        throw Exception::RuntimeException(traces,
+        #ifdef SassRestrictCompoundExtending
+        throw Exception::RuntimeException(logger,
           "Can't extend complex selector " +
           complex->inspect() + ".");
+        #endif
+        sass::sstream sels; bool addComma = false;
+        sels << "Complex selectors may no longer be extended. Consider `@extend ";
+        for (auto sel : complex->elements()) {
+          if (addComma) sels << ", ";
+          sels << sel->inspect();
+          addComma = true;
+        }
+        sels << "` instead. See http://bit.ly/ExtendCompound for details.";
+        logger.addDeprecation(sels.str(), complex->pstate());
       }
 
       if (const CompoundSelector* compound = complex->first()->isaCompoundSelector()) {
@@ -85,7 +96,7 @@ namespace Sass {
           extensions.insert(std::make_pair(simple, extenders));
         }
 
-        Extender extender(mode, traces);
+        Extender extender(mode, logger);
 
         // if (!selector->hasInvisible()) {
         for (auto sel : selector->elements()) {
@@ -97,7 +108,7 @@ namespace Sass {
 
       }
       else {
-        throw Exception::RuntimeException(traces,
+        throw Exception::RuntimeException(logger,
           "combinators cannot be extended.");
 
       }
