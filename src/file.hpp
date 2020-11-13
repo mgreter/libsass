@@ -69,7 +69,7 @@ namespace Sass {
 
     // helper function to resolve a include filename
     // this has the original resolve logic for sass include
-    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, std::unordered_map<sass::string, bool>& cache);
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, bool forImport, std::unordered_map<sass::string, bool>& cache);
 
     // split a path string delimited by semicolons or colons (OS dependent)
     // StringVector split_path_list(sass::string paths);
@@ -153,7 +153,7 @@ namespace Sass {
 
 
   namespace File {
-    sass::vector<ResolvedImport> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD,
+    sass::vector<ResolvedImport> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD, bool forImport,
       std::unordered_map<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });
   }
 

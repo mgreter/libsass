@@ -557,7 +557,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
               // Search for valid imports (e.g. partials) on the file-system
               // Returns multiple valid results for ambiguous import path
-              const sass::vector<ResolvedImport> resolved(findIncludes(request));
+              const sass::vector<ResolvedImport> resolved(findIncludes(request, true));
 
 
               // Error if no file to import was found

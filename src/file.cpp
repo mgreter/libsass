@@ -413,6 +413,7 @@ namespace Sass {
       const sass::string& root,
       const sass::string& file,
       const sass::string& CWD,
+      bool forImport,
       std::unordered_map<sass::string, bool>& cache,
       const std::vector<sass::string>& exts)
     {
@@ -434,11 +435,21 @@ namespace Sass {
         }
       }
 
-      findFileOrPartial(root, base, name + ".import" + suffix, CWD, cache, exts, includes);
-      if (includes.size()) return includes;
+      if (forImport) {
+        findFileOrPartial(root, base, name + ".import" + suffix, CWD, cache, exts, includes);
+        if (includes.size()) return includes;
 
-      findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
-      if (includes.size()) return includes;
+        findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
+        if (includes.size()) return includes;
+      }
+      else {
+        findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
+        if (includes.size()) return includes;
+
+        findFileOrPartial(root, base, name + ".import" + suffix, CWD, cache, exts, includes);
+        if (includes.size()) return includes;
+      }
+
 
       // if (!suffix.empty()) return includes;
 
@@ -476,12 +487,12 @@ namespace Sass {
     }
 
     // helper function to resolve a filename
-    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, std::unordered_map<sass::string, bool>& cache)
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, bool forImport, std::unordered_map<sass::string, bool>& cache)
     {
       // search in every include path for a match
       for (size_t i = 0, S = paths.size(); i < S; ++i)
       {
-        sass::vector<ResolvedImport> resolved(resolve_includes(paths[i], file, CWD, cache));
+        sass::vector<ResolvedImport> resolved(resolve_includes(paths[i], file, CWD, forImport, cache));
         if (resolved.size()) return resolved[0].abs_path;
       }
       // nothing found

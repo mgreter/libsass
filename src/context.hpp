@@ -140,7 +140,7 @@ namespace Sass {
     // Implementation for `resolveDynamicImport`
     // Look for all possible filename variants (e.g. partials)
     // Returns all results (e.g. for ambiguous but valid imports)
-    sass::vector<ResolvedImport> findIncludes(const ImportRequest& import);
+    sass::vector<ResolvedImport> findIncludes(const ImportRequest& import, bool forImport);
 
   };
   // EO Context

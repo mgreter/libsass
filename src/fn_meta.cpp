@@ -469,7 +469,7 @@ namespace Sass {
         const ImportRequest import(url->value(), pstate.getAbsPath());
         // Search for valid imports (e.g. partials) on the file-system
         // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import));
+        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, true)); //XXXXX
 
         // Error if no file to import was found
         if (resolved.empty()) {
