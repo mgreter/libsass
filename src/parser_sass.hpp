@@ -114,7 +114,9 @@ namespace Sass {
     // Consumes an indented-style loud context.
     // This overrides loud comment consumption so
     // that it doesn't consume multi-line comments.
-    LoudComment* loudComment();
+    LoudComment* readLoudComment();
+
+    void scanLoudComment() override final;
 
     void scanWhitespaceWithoutComments() override final;
 

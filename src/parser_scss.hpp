@@ -81,7 +81,7 @@ namespace Sass {
     virtual SilentComment* readSilentComment() override;
 
     // Consumes a statement-level loud comment block.
-    virtual LoudComment* loudComment();
+    virtual LoudComment* readLoudComment();
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

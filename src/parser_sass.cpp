@@ -24,6 +24,26 @@ namespace Sass {
     return buffer.getInterpolation(scanner.rawSpanFrom(start));
   }
 
+  // Consumes and ignores a loud (CSS-style) comment.
+  // This overrides loud comment consumption so that
+  // it doesn't consume multi-line comments.
+  void SassParser::scanLoudComment()
+  {
+    scanner.expect("/*");
+    while (true) {
+      auto next = scanner.readChar();
+      if (isNewline(next)) {
+        scanner._fail("*/");
+      }
+      if (next != $asterisk) continue;
+
+      do {
+        next = scanner.readChar();
+      } while (next == $asterisk);
+      if (next == $slash) break;
+    }
+  }
+
   void SassParser::expectStatementSeparator(sass::string name) {
     if (!atEndOfStatement()) expectNewline();
     if (peekIndentation() <= currentIndentation) return;
@@ -182,7 +202,7 @@ namespace Sass {
         return lastSilentComment.ptr();
         break;
       case $asterisk:
-        return loudComment();
+        return readLoudComment();
         break;
       default:
         return (this->*child)();
@@ -243,7 +263,7 @@ namespace Sass {
     return lastSilentComment;
   }
 
-  LoudComment* SassParser::loudComment()
+  LoudComment* SassParser::readLoudComment()
   {
     Offset start(scanner.offset);
     scanner.expect("/*");

@@ -63,7 +63,7 @@ namespace Sass {
       return true;
     }
     else if (next == $asterisk) {
-      loudComment();
+      scanLoudComment();
       return true;
     }
     else {
@@ -82,14 +82,11 @@ namespace Sass {
   }
 
   // Consumes and ignores a loud (CSS-style) comment.
-  void Parser::loudComment()
+  void Parser::scanLoudComment()
   {
     scanner.expect("/*");
     while (true) {
       auto next = scanner.readChar();
-      if (isNewline(next)) {
-        scanner._fail("*/");
-      }
       if (next != $asterisk) continue;
 
       do {
@@ -275,7 +272,7 @@ namespace Sass {
 
       case $slash:
         if (scanner.peekChar(1) == $asterisk) {
-          buffer.write(rawText(&Parser::loudComment));
+          buffer.write(rawText(&Parser::scanLoudComment));
         }
         else {
           buffer.write(scanner.readChar());

@@ -109,7 +109,7 @@ namespace Sass {
           scanWhitespaceWithoutComments();
           break;
         case $asterisk:
-          children.emplace_back(loudComment());
+          children.emplace_back(readLoudComment());
           scanWhitespaceWithoutComments();
           break;
         default:
@@ -155,7 +155,7 @@ namespace Sass {
           scanWhitespaceWithoutComments();
           break;
         case $asterisk:
-          statements.emplace_back(loudComment());
+          statements.emplace_back(readLoudComment());
           scanWhitespaceWithoutComments();
           break;
         default:
@@ -205,7 +205,7 @@ namespace Sass {
   // EO readSilentComment
 
   // Consumes a statement-level loud comment block.
-  LoudComment* ScssParser::loudComment()
+  LoudComment* ScssParser::readLoudComment()
   {
     InterpolationBuffer buffer(scanner);
     Offset start(scanner.offset);
