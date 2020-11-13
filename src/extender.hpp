@@ -175,7 +175,7 @@ namespace Sass {
       SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
-      BackTraces& traces);
+      Logger& logger);
 
     /////////////////////////////////////////////////////////////////////////
     // Returns a copy of [selector] with [targets] replaced by [source].
@@ -184,7 +184,7 @@ namespace Sass {
       SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
-      BackTraces& traces);
+      Logger& logger);
 
     /////////////////////////////////////////////////////////////////////////
     // Adds [selector] to this extender, with [selectorSpan] as the span covering
@@ -247,7 +247,7 @@ namespace Sass {
       const SelectorListObj& source,
       const SelectorListObj& target,
       const ExtendMode mode,
-      BackTraces& traces);
+      Logger& logger);
 
     /////////////////////////////////////////////////////////////////////////
     // Returns an extension that combines [left] and [right]. Throws 

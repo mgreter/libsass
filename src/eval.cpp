@@ -2099,15 +2099,19 @@ namespace Sass {
           if (compound->size() != 1) {
 
             sass::sstream sels; bool addComma = false;
-            sels << "Compound selectors may no longer be extended. Consider `@extend ";
+            sels << "compound selectors may no longer be extended.\nConsider `@extend ";
             for (auto sel : compound->elements()) {
               if (addComma) sels << ", ";
               sels << sel->inspect();
               addComma = true;
             }
-            sels << "` instead. See http://bit.ly/ExtendCompound for details.";
-
+            sels << "` instead.\nSee http://bit.ly/ExtendCompound for details.";
+            #ifdef SassRestrictCompoundExtending
+            logger456.addFinalStackTrace(compound->pstate());
+            throw Exception::RuntimeException(traces, sels.str());
+            #else
             logger456.addDeprecation(sels.str(), compound->pstate());
+            #endif
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
