@@ -500,8 +500,9 @@ namespace Sass {
             local.idxs->varFrame = 0xFFFFFFFF;
             local.idxs->mixFrame = 0xFFFFFFFF;
             local.idxs->fnFrame = 0xFFFFFFFF;
-
+            // eval.selectorStack.push_back(nullptr);
             sheet = compiler.registerImport(loaded); // @use
+            // eval.selectorStack.pop_back();
             sheet->root2->idxs = local.idxs;
           }
           else if (sheet->root2->isActive) {
@@ -524,46 +525,65 @@ namespace Sass {
             }
             for (auto child : sheet->root2->loaded->elements()) {
               if (auto css = child->isaCssStyleRule()) {
-                for (auto inner : css->elements()) {
-                  auto pr = eval.current->isaCssStyleRule();
-                  auto copy = SASS_MEMORY_COPY(css->selector());
-                  for (ComplexSelector* asd : copy->elements()) {
-                    asd->chroots(false);
+                if (auto pr = eval.current->isaCssStyleRule()) {
+                  for (auto inner : css->elements()) {
+                    auto copy = SASS_MEMORY_COPY(css->selector());
+                    for (ComplexSelector* asd : copy->elements()) {
+                      asd->chroots(false);
+                    }
+                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
+                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
+                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
+                    eval.current->parent()->append(newRule);
                   }
-                  // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
-                  SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
-                  auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
-                  eval.current->parent()->append(newRule);
+                }
+                else {
+                  if (eval.current) eval.current->append(child);
                 }
               }
               else {
                 if (eval.current) eval.current->append(child);
               }
             }
-          }
+            }
           else {
             Root* root = sheet->root2;
-
             root->isActive = true;
             root->isLoading = true;
-            root->loaded = eval.current;
+            //root->loaded = eval.current;
             root->loaded = SASS_MEMORY_NEW(CssStyleRule,
               root->pstate(), nullptr, nullptr);
             auto oldCurrent = eval.current;
             eval.current = root->loaded;
             EnvScope scoped(compiler.varRoot, root->idxs);
+            eval.selectorStack.push_back(nullptr);
             for (auto child : root->elements()) {
               child->accept(&eval);
             }
+            eval.selectorStack.pop_back();
             eval.current = oldCurrent;
             root->isLoading = false;
 
             for (auto child : sheet->root2->loaded->elements()) {
-              if (eval.current->parent()) {
-                eval.current->parent()->append(child);
+              if (auto css = child->isaCssStyleRule()) {
+                if (auto pr = eval.current->isaCssStyleRule()) {
+                  for (auto inner : css->elements()) {
+                    auto copy = SASS_MEMORY_COPY(css->selector());
+                    for (ComplexSelector* asd : copy->elements()) {
+                      asd->chroots(false);
+                    }
+                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
+                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
+                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
+                    eval.current->parent()->append(newRule);
+                  }
+                }
+                else {
+                  if (eval.current) eval.current->append(child);
+                }
               }
               else {
-                eval.current->append(child);
+                if (eval.current) eval.current->append(child);
               }
             }
 
