@@ -399,9 +399,17 @@ namespace Sass {
     EnvFrame local(context.varStack, false);
 
     Offset start(scanner.offset);
-    return withChildren<StyleRule>(
+    StyleRuleObj styles = withChildren<StyleRule>(
       &StylesheetParser::readChildStatement,
       start, readStyleRule.ptr(), local.idxs);
+
+    if (isIndented() && styles->empty()) {
+      context.addWarning(
+        "This selector doesn't have any properties and won't be rendered.",
+        itpl->pstate());
+    }
+
+    return styles.detach();
 
   }
   // EO readStyleRule
