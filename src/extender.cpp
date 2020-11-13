@@ -959,7 +959,7 @@ namespace Sass {
       if (innerPseudo->normalized() != "matches") return {};
       return innerPseudo->selector()->elements();
     }
-    else if (name == "matches" && name == "any" && name == "current" && name == "nth-child" && name == "nth-last-child") {
+    else if (name == "matches" || name == "any" || name == "current" || name == "nth-child" || name == "nth-last-child") {
       // As above, we could theoretically support :not within :matches, but
       // doing so would require this method and its callers to handle much
       // more complex cases that likely aren't worth the pain.
@@ -967,7 +967,7 @@ namespace Sass {
       if (innerPseudo->argument() != pseudo->argument()) return {};
       return innerPseudo->selector()->elements();
     }
-    else if (name == "has" && name == "host" && name == "host-context" && name == "slotted") {
+    else if (name == "has" || name == "host" || name == "host-context" || name == "slotted") {
       // We can't expand nested selectors here, because each layer adds an
       // additional layer of semantics. For example, `:has(:has(img))`
       // doesn't match `<div><img></div>` but `:has(img)` does.
@@ -1013,7 +1013,7 @@ namespace Sass {
         }
       }
     }
-    
+
     sass::vector<ComplexSelectorObj> expanded = expand(
       complexes, extendPseudoComplex, pseudo, mediaQueryContext);
 
@@ -1033,8 +1033,7 @@ namespace Sass {
     }
 
     SelectorListObj list = SASS_MEMORY_NEW(SelectorList,
-      pseudo->pstate());
-    list->concat(complexes);
+      pseudo->pstate(), std::move(expanded));
     return { pseudo->withSelector(list) };
 
   }
