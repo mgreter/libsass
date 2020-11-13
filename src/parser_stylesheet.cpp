@@ -312,7 +312,7 @@ namespace Sass {
         SourceSpan state(scanner.relevantSpanFrom(start));
         context.addFinalStackTrace(state);
         throw Exception::RuntimeException(context, "There is no "
-          "module with the namespace \"" + name.orig() + "\".");
+          "module with the namespace \"" + ns + "\".");
       }
 
       if (vidxs.empty()) {
