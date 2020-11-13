@@ -78,9 +78,9 @@ namespace Sass {
         offset <= privateOffset;
     }
 
-    operator bool() const {
-      return isValid();
-    }
+    //operator bool() const {
+    //  return isValid();
+    //}
 
     // Very small helper for debugging
     sass::string toString() const;

@@ -544,8 +544,20 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  class Moduled
+  {
+  public:
+
+    // Forwarded items must be on internal scope
+    VidxEnvKeyMap mergedFwdVars3;
+    MidxEnvKeyMap mergedFwdMixs3;
+    FidxEnvKeyMap mergedFwdFns3;
+
+  };
+
   class Root final : public AstNode,
-    public Vectorized<Statement>
+    public Vectorized<Statement>,
+    public Moduled
   {
   public:
 
@@ -558,13 +570,6 @@ namespace Sass {
     bool isActive = false;
     bool isLoading = false;
 
-
-    EnvKeyMap<VarRef> mergedFwdVars;
-    EnvKeyMap<VarRef> mergedFwdMixs;
-    EnvKeyMap<VarRef> mergedFwdFns;
-
-
-    sass::vector<std::pair<VarRefs*, Root*>> forwarded;
 
     Root(const SourceSpan& pstate, size_t reserve = 0)
       : AstNode(pstate), Vectorized<Statement>(reserve)

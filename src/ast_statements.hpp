@@ -575,7 +575,6 @@ namespace Sass {
     ADD_CONSTREF(RootObj, root);
     ADD_PROPERTY(bool, hasWithConfig);
   public:
-    bool isSupported = false;
     // Value constructor
     UseRule(
       const SourceSpan& pstate,

@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include "logger.hpp"
 #include "units.hpp"
+#include "file.hpp"
 #include "backtrace.hpp"
 #include "ast_fwd_decl.hpp"
 #include "environment_cnt.hpp"
@@ -58,6 +59,45 @@ namespace Sass {
       RuntimeException(sass::string msg, BackTraces traces, SourceSpan pstate);
       virtual const char* what() const throw() { return msg.c_str(); }
     };
+
+    class ModuleAlreadyKnown : public RuntimeException
+    {
+    public:
+      ModuleAlreadyKnown(
+        BackTraces traces,
+        sass::string name);
+    };
+
+    class TardyAtRule : public RuntimeException
+    {
+    public:
+      TardyAtRule(
+        BackTraces traces,
+        sass::string name);
+    };
+
+    class InvalidSassIdentifier : public RuntimeException
+    {
+    public:
+      InvalidSassIdentifier(
+        BackTraces traces,
+        sass::string name);
+    };
+
+    class UnknwonImport : public RuntimeException
+    {
+    public:
+      UnknwonImport(
+        BackTraces traces);
+    };
+
+    class AmbiguousImports : public RuntimeException
+    {
+    public:
+      AmbiguousImports(BackTraces traces,
+        sass::vector<ResolvedImport> imports);
+    };
+
 
     class UnitMismatch : public RuntimeException
     {
