@@ -67,7 +67,7 @@ ADDAPI struct SassValue* ADDCALL sass_make_number2(double val, const char* unit)
 
 ADDAPI struct SassValue* ADDCALL sass_make_color   (double r, double g, double b, double a);
 ADDAPI struct SassValue* ADDCALL sass_make_list    (enum SassSeparator sep, bool is_bracketed);
-ADDAPI struct SassValue* ADDCALL sass_make_map     ();
+ADDAPI struct SassValue* ADDCALL sass_make_map     (void);
 ADDAPI struct SassValue* ADDCALL sass_make_error   (const char* msg);
 ADDAPI struct SassValue* ADDCALL sass_make_warning (const char* msg);
 
