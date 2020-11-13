@@ -41,6 +41,9 @@ namespace Sass {
     // Consume a silent comment and throws error
     SilentComment* readSilentComment() override final;
 
+    // Consume a silent comment and throws error
+    void scanSilentComment() override final;
+
     // Parse allowed at-rule statement and parse children via [child_parser] parser function
     Statement* readAtRule(Statement* (StylesheetParser::* child_parser)(), bool root = false) override final;
 

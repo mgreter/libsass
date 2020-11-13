@@ -59,7 +59,8 @@ namespace Sass {
     if (scanner.peekChar() != $slash) return false;
     auto next = scanner.peekChar(1);
     if (next == $slash) {
-      lastSilentComment = readSilentComment();
+      //lastSilentComment = read
+      scanSilentComment();
       return true;
     }
     else if (next == $asterisk) {
@@ -72,13 +73,12 @@ namespace Sass {
   }
 
   // Consumes and ignores a silent (Sass-style) comment.
-  SilentComment* Parser::readSilentComment()
+  void Parser::scanSilentComment()
   {
     scanner.expect("//");
     while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
       scanner.readChar();
     }
-    return nullptr;
   }
 
   // Consumes and ignores a loud (CSS-style) comment.

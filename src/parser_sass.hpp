@@ -109,7 +109,7 @@ namespace Sass {
     Statement* parseChild(Statement* (StylesheetParser::* statement)());
 
     // Consumes an indented-style silent comment.
-    SilentComment* readSilentComment() override final;
+    SilentComment* readSilentComment();
 
     // Consumes an indented-style loud context.
     // This overrides loud comment consumption so

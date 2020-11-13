@@ -460,7 +460,7 @@ namespace Sass {
     //   the text is expected to be re-parsed.
     // * This supports Sass-style single-line comments.
     // * This does not compress adjacent whitespace characters.
-    Interpolation* readAlmostAnyValue();
+    Interpolation* readAlmostAnyValue(bool omitComments = false);
 
     // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`, or `"}"` and 
     // returns their contents as a string. If [allowEmpty] is `false` (the default), this

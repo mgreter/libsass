@@ -87,11 +87,10 @@ namespace Sass {
     // Returns whether the comment was consumed.
     bool scanComment();
 
-    // Consumes and ignores a silent (Sass-style) comment.
-    virtual SilentComment* readSilentComment();
-
     // Consumes and ignores a loud (CSS-style) comment.
     virtual void scanLoudComment();
+
+    virtual void scanSilentComment();
 
     // Consumes a plain CSS identifier. If [unit] is `true`, this 
     // doesn't parse a `-` followed by a digit. This ensures that 

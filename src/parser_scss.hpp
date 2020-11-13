@@ -78,7 +78,7 @@ namespace Sass {
       Statement* (StylesheetParser::* statement)()) override;
 
     // Consumes a statement-level silent comment block.
-    virtual SilentComment* readSilentComment() override;
+    virtual SilentComment* readSilentComment();
 
     // Consumes a statement-level loud comment block.
     virtual LoudComment* readLoudComment();
