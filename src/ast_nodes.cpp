@@ -167,6 +167,61 @@ namespace Sass {
     return *this;
   }
 
+  Values::iterator& Values::iterator::operator+=(size_t offset)
+  {
+    switch (type) {
+    case MapIterator:
+      cur = std::min(cur + offset, last);
+      break;
+    case ListIterator:
+      cur = std::min(cur + offset, last);
+      break;
+    case SingleIterator:
+      cur = 1;
+      break;
+    case NullPtrIterator:
+      break;
+    }
+    return *this;
+  }
+
+  Values::iterator& Values::iterator::operator-=(size_t offset)
+  {
+    switch (type) {
+    case MapIterator:
+      cur = std::max(cur - offset, (size_t)0);
+      break;
+    case ListIterator:
+      cur = std::max(cur - offset, (size_t)0);
+      break;
+    case SingleIterator:
+      cur = 1;
+      break;
+    case NullPtrIterator:
+      break;
+    }
+    return *this;
+  }
+
+  Values::iterator Values::iterator::operator-(size_t offset)
+  {
+    Values::iterator copy(*this);
+    switch (type) {
+    case MapIterator:
+      copy.cur = std::max(copy.cur - offset, (size_t)0);
+      break;
+    case ListIterator:
+      copy.cur = std::max(copy.cur - offset, (size_t)0);
+      break;
+    case SingleIterator:
+      copy.cur = 1;
+      break;
+    case NullPtrIterator:
+      break;
+    }
+    return copy;
+  }
+
   bool Values::iterator::isLast()
   {
     switch (type) {
@@ -195,6 +250,11 @@ namespace Sass {
       return nullptr;
     }
     return nullptr;
+  }
+
+  Value* Values::iterator::operator->()
+  {
+    return Values::iterator::operator*();
   }
 
   bool Values::iterator::operator==(const iterator& other) const
