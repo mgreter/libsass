@@ -540,7 +540,7 @@ namespace Sass {
     }
 
     isUseAllowed = false;
-    if (scanner.matches("/*")) nameBuffer.write(rawText(&StylesheetParser::loudComment));
+    if (scanner.matches("/*")) nameBuffer.write(rawText(&StylesheetParser::scanLoudComment));
 
     StringBuffer midBuffer;
     midBuffer.write(rawText(&StylesheetParser::scanWhitespace));
@@ -4713,7 +4713,7 @@ namespace Sass {
 
       case $slash:
         if (scanner.peekChar(1) == $asterisk) {
-          buffer.write(rawText(&StylesheetParser::loudComment));
+          buffer.write(rawText(&StylesheetParser::scanLoudComment));
         }
         else {
           buffer.write(scanner.readChar());
