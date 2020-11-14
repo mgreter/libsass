@@ -652,7 +652,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
 
   // Register built-in function with only one parameter list.
-  uint32_t Compiler::createBuiltInFunction(const sass::string& name,
+  uint32_t Compiler::createBuiltInFunction(const EnvKey& name,
     const sass::string& signature, SassFnSig cb)
   {
     EnvRoot root(varStack, *this);
@@ -669,19 +669,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // EO registerBuiltInFunction
 
   // Register built-in function with only one parameter list.
-  uint32_t Compiler::registerBuiltInFunction(const sass::string& name,
+  uint32_t Compiler::registerBuiltInFunction(const EnvKey& name,
     const sass::string& signature, SassFnSig cb)
   {
-    EnvRoot root(varStack, *this);
-    SourceDataObj source = SASS_MEMORY_NEW(SourceString,
-      "sass://signature", "(" + signature + ")");
-    auto args = ArgumentDeclaration::parse(*this, source);
-    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
-    auto& functions(varRoot.intFunction);
-    uint32_t offset((uint32_t)functions.size());
-    varRoot.intFunction.push_back(callable);
-    varRoot.privateFnOffset = offset;
-    return varRoot.fnIdxs[name] = offset;
+    auto fn = createBuiltInFunction(name, signature, cb);
+    return varRoot.fnIdxs[name] = fn; // Make findable
   }
   // EO registerBuiltInFunction
 

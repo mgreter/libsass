@@ -236,16 +236,18 @@ namespace Sass {
       void registerFunctions(Compiler& ctx)
 	    {
         Module& module(ctx.createModule("color"));
-        module.addFunction("length", ctx.registerBuiltInFunction("length", "$list", length));
-		    module.addFunction("nth", ctx.registerBuiltInFunction("nth", "$list, $n", nth));
-		    module.addFunction("set-nth", ctx.registerBuiltInFunction("set-nth", "$list, $n, $value", setNth));
-		    module.addFunction("join", ctx.registerBuiltInFunction("join", "$list1, $list2, $separator: auto, $bracketed: auto", join));
-		    module.addFunction("append", ctx.registerBuiltInFunction("append", "$list, $val, $separator: auto", append));
-		    module.addFunction("zip", ctx.registerBuiltInFunction("zip", "$lists...", zip));
-		    module.addFunction("index", ctx.registerBuiltInFunction("index", "$list, $value", index));
-		    module.addFunction("list-separator", ctx.registerBuiltInFunction("list-separator", "$list", separator));
-		    module.addFunction("is-bracketed", ctx.registerBuiltInFunction("is-bracketed", "$list", isBracketed));
-	    }
+
+        module.addFunction(key_length, ctx.registerBuiltInFunction(key_length, "$list", length));
+        module.addFunction(key_nth, ctx.registerBuiltInFunction(key_nth, "$list, $n", nth));
+        module.addFunction(key_set_nth, ctx.registerBuiltInFunction(key_set_nth, "$list, $n, $value", setNth));
+        module.addFunction(key_join, ctx.registerBuiltInFunction(key_join, "$list1, $list2, $separator: auto, $bracketed : auto", join));
+        module.addFunction(key_append, ctx.registerBuiltInFunction(key_append, "$list, $val, $separator: auto", append));
+        module.addFunction(key_zip, ctx.registerBuiltInFunction(key_zip, "$lists...", zip));
+        module.addFunction(key_index, ctx.registerBuiltInFunction(key_index, "$list, $value", index));
+        module.addFunction(key_list_separator, ctx.registerBuiltInFunction(key_list_separator, "$list", separator));
+        module.addFunction(key_is_bracketed, ctx.registerBuiltInFunction(key_is_bracketed, "$list", isBracketed));
+
+      }
 
       /*******************************************************************/
 

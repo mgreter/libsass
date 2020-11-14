@@ -422,45 +422,40 @@ namespace Sass {
       void registerFunctions(Compiler& ctx)
 	    {
         Module& module(ctx.createModule("math"));
-        module.addVariable("e", ctx.createBuiltInVariable("e",
+        module.addVariable(key_e, ctx.createBuiltInVariable("e",
           SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
             2.71828182845904523536028747135266249775724709369995)));
-        module.addVariable("pi", ctx.createBuiltInVariable("pi",
+        module.addVariable(key_pi, ctx.createBuiltInVariable("pi",
           SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510)));
-        module.addVariable("tau", ctx.createBuiltInVariable("tau",
+        module.addVariable(key_tau, ctx.createBuiltInVariable("tau",
           SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510 * 2.0)));
 
-        module.addFunction("ceil", ctx.registerBuiltInFunction("ceil", "$number", ceil));
-        module.addFunction("clamp", ctx.createBuiltInFunction("clamp", "$min, $number, $max", fnClamp));
-
-        module.addFunction("floor", ctx.registerBuiltInFunction("floor", "$number", floor));
-        module.addFunction("max", ctx.registerBuiltInFunction("max", "$numbers...", max));
-        module.addFunction("min", ctx.registerBuiltInFunction("min", "$numbers...", min));
-        module.addFunction("round", ctx.registerBuiltInFunction("round", "$number", round));
-
-        module.addFunction("abs", ctx.registerBuiltInFunction("abs", "$number", abs));
-        module.addFunction("hypot", ctx.createBuiltInFunction("hypot", "$number...", fnHypot));
-        module.addFunction("log", ctx.createBuiltInFunction("log", "$number, $base: null", fnLog));
-        module.addFunction("pow", ctx.createBuiltInFunction("pow", "$base, $exponent", fnPow));
-        module.addFunction("sqrt", ctx.createBuiltInFunction("sqrt", "$number", fnSqrt));
-
-        module.addFunction("cos", ctx.createBuiltInFunction("cos", "$number", fnCos));
-        module.addFunction("sin", ctx.createBuiltInFunction("sin", "$number", fnSin));
-        module.addFunction("tan", ctx.createBuiltInFunction("tan", "$number", fnTan));
-        module.addFunction("acos", ctx.createBuiltInFunction("acos", "$number", fnACos));
-        module.addFunction("asin", ctx.createBuiltInFunction("asin", "$number", fnASin));
-        module.addFunction("atan", ctx.createBuiltInFunction("atan", "$number", fnATan));
-        module.addFunction("atan2", ctx.createBuiltInFunction("atan2", "$y, $x", fnATan2));
-
-
-        module.addFunction("random", ctx.registerBuiltInFunction("random", "$limit: null", random));
-		    module.addFunction("unit", ctx.registerBuiltInFunction("unit", "$number", unit));
-		    module.addFunction("percentage", ctx.registerBuiltInFunction("percentage", "$number", percentage));
-		    module.addFunction("is-unitless", ctx.registerBuiltInFunction("unitless", "$number", isUnitless));
-		    module.addFunction("compatible", ctx.registerBuiltInFunction("comparable", "$number1, $number2", compatible));
-	    }
+        module.addFunction(key_ceil, ctx.registerBuiltInFunction(key_ceil, "$number", ceil));
+        module.addFunction(key_clamp, ctx.createBuiltInFunction(key_clamp, "$min, $number, $max", fnClamp));
+        module.addFunction(key_floor, ctx.registerBuiltInFunction(key_floor, "$number", floor));
+        module.addFunction(key_max, ctx.registerBuiltInFunction(key_max, "$numbers...", max));
+        module.addFunction(key_min, ctx.registerBuiltInFunction(key_min, "$numbers...", min));
+        module.addFunction(key_round, ctx.registerBuiltInFunction(key_round, "$number", round));
+        module.addFunction(key_abs, ctx.registerBuiltInFunction(key_abs, "$number", abs));
+        module.addFunction(key_hypot, ctx.createBuiltInFunction(key_hypot, "$number...", fnHypot));
+        module.addFunction(key_log, ctx.createBuiltInFunction(key_log, "$number, $base: null", fnLog));
+        module.addFunction(key_pow, ctx.createBuiltInFunction(key_pow, "$base, $exponent", fnPow));
+        module.addFunction(key_sqrt, ctx.createBuiltInFunction(key_sqrt, "$number", fnSqrt));
+        module.addFunction(key_cos, ctx.createBuiltInFunction(key_cos, "$number", fnCos));
+        module.addFunction(key_sin, ctx.createBuiltInFunction(key_sin, "$number", fnSin));
+        module.addFunction(key_tan, ctx.createBuiltInFunction(key_tan, "$number", fnTan));
+        module.addFunction(key_acos, ctx.createBuiltInFunction(key_acos, "$number", fnACos));
+        module.addFunction(key_asin, ctx.createBuiltInFunction(key_asin, "$number", fnASin));
+        module.addFunction(key_atan, ctx.createBuiltInFunction(key_atan, "$number", fnATan));
+        module.addFunction(key_atan2, ctx.createBuiltInFunction(key_atan2, "$y, $x", fnATan2));
+        module.addFunction(key_random, ctx.registerBuiltInFunction(key_random, "$limit: null", random));
+        module.addFunction(key_unit, ctx.registerBuiltInFunction(key_unit, "$number", unit));
+        module.addFunction(key_percentage, ctx.registerBuiltInFunction(key_percentage, "$number", percentage));
+        module.addFunction(key_is_unitless, ctx.registerBuiltInFunction(key_unitless, "$number", isUnitless));
+          module.addFunction(key_compatible, ctx.registerBuiltInFunction(key_comparable, "$number1, $number2", compatible));
+      }
 
       /*******************************************************************/
 

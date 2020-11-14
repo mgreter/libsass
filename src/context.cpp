@@ -167,17 +167,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void Module::addFunction(const sass::string& name, uint32_t offset)
+  void Module::addFunction(const EnvKey& name, uint32_t offset)
   {
     idxs->fnIdxs[name] = offset;
   }
 
-  void Module::addVariable(const sass::string& name, uint32_t offset)
+  void Module::addVariable(const EnvKey& name, uint32_t offset)
   {
     idxs->varIdxs[name] = offset;
   }
 
-  void Module::addMixin(const sass::string& name, uint32_t offset)
+  void Module::addMixin(const EnvKey& name, uint32_t offset)
   {
     idxs->mixIdxs[name] = offset;
   }
