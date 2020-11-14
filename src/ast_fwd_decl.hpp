@@ -35,6 +35,7 @@ namespace Sass {
   class SourceItpl;
 
   class AstNode;
+  class Moduled;
   class Root;
 
   class Callable;

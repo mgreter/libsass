@@ -548,10 +548,26 @@ namespace Sass {
   {
   public:
 
+    // True once loaded
+    bool isActive = false;
+
+    // Import through which we are loaded
+    ImportObj import;
+
     // Forwarded items must be on internal scope
-    VidxEnvKeyMap mergedFwdVars3;
-    MidxEnvKeyMap mergedFwdMixs3;
-    FidxEnvKeyMap mergedFwdFns3;
+
+    VarRefs* idxs;
+
+    // All @forward rules get merged into these objects
+    // Those are not available on the local scope, they
+    // are only used when another module consumes us!
+    // On @use those must be merged with local ones!
+    VidxEnvKeyMap mergedFwdVar;
+    MidxEnvKeyMap mergedFwdMix;
+    FidxEnvKeyMap mergedFwdFn;
+
+    // The evaluated css tree
+    CssParentNodeObj loaded = nullptr;
 
   };
 
@@ -561,13 +577,6 @@ namespace Sass {
   {
   public:
 
-    VarRefs* idxs;
-
-    CssParentNodeObj loaded = nullptr;
-
-    ImportObj import;
-
-    bool isActive = false;
     bool isLoading = false;
 
 
