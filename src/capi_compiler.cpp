@@ -281,10 +281,10 @@ namespace Sass {
       return Compiler::unwrap(compiler).source_comments;
     }
 
-    // void ADDCALL sass_compiler_set_source_comments(struct SassCompiler* compiler, bool source_comments)
-    // {
-    //   Compiler::unwrap(compiler).source_comments = source_comments;
-    // }
+    void ADDCALL sass_compiler_set_source_comments(struct SassCompiler* compiler, bool source_comments)
+    {
+      Compiler::unwrap(compiler).source_comments = source_comments;
+    }
 
     // Returns pointer to error object associated with compiler.
     // Will be valid until the associated compiler is destroyed.

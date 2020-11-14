@@ -55,6 +55,8 @@ extern "C" {
   ADDAPI void ADDCALL sass_compiler_set_srcmap_file_urls(struct SassCompiler* compiler, bool enable);
   ADDAPI void ADDCALL sass_compiler_set_srcmap_embed_contents(struct SassCompiler* compiler, bool enable);
 
+  ADDAPI void ADDCALL sass_compiler_set_source_comments(struct SassCompiler* compiler, bool source_comments);
+
   ADDAPI size_t ADDCALL sass_compiler_get_included_files_count(struct SassCompiler* compiler);
   ADDAPI const char* ADDCALL sass_compiler_get_included_file_path(struct SassCompiler* compiler, size_t n);
 
