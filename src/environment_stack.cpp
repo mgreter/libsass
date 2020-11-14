@@ -102,6 +102,16 @@ namespace Sass {
   {
     // Pop from stack
     stack.pop_back();
+
+    for (auto fwd : fwdGlobal33) {
+      if (fwd.second == nullptr) continue;
+      delete fwd.first;
+    }
+    for (auto fwd : fwdModule33) {
+      if (fwd.second.second == nullptr) continue;
+      delete fwd.second.first;
+    }
+
   }
 
   /////////////////////////////////////////////////////////////////////////
