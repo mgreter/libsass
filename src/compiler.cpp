@@ -541,7 +541,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               StyleSheet* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
               rule->append(SASS_MEMORY_NEW(IncludeImport,
-                pstate, sheet));
+                pstate, abs_path, sheet));
             }
             // Only a path was returned
             // Try to load it like normal
@@ -578,7 +578,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               // We made sure exactly one entry was found, load its content
               if (ImportObj loaded = loadImport(resolved[0])) {
                 StyleSheet* sheet = registerImport(loaded);
-                rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
+                const sass::string& url(resolved[0].abs_path);
+                rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
               }
               else {
                 BackTraces& traces = *this;
@@ -784,6 +785,25 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     const SourceDataObj& source(import->source);
     const sass::string& abs_path(source->getAbsPath());
 
+    // Put import onto the stack array
+    import_stack.emplace_back(import);
+
+    // check existing import stack for possible recursion
+    for (size_t i = import_stack.size() - 2; i != 0; --i) {
+      const SourceDataObj parent = import_stack[i]->source;
+      if (std::strcmp(parent->getAbsPath(), source->getAbsPath()) == 0) {
+        // make path relative to the current directory
+        sass::string stack("An @import loop has been found:");
+        for (size_t n = i; n < import_stack.size() - 1; ++n) {
+          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->source->getAbsPath(), CWD, CWD)) +
+            " imports " + sass::string(File::abs2rel(import_stack[n + 1]->source->getAbsPath(), CWD, CWD));
+        }
+        // implement error throw directly until we
+        // decided how to handle full stack traces
+        throw Exception::RuntimeException(*this, stack);
+      }
+    }
+
     // ToDo: We don't take format into account
     auto cached = sheets.find(abs_path);
     if (cached != sheets.end()) {
@@ -794,24 +814,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     source->setSrcIdx(included_sources.size());
     // Add source to global include array
     included_sources.emplace_back(source);
-    // Put import onto the stack array
-    import_stack.emplace_back(import);
-
-    // check existing import stack for possible recursion
-    for (size_t i = 0; i < import_stack.size() - 2; ++i) {
-      const SourceDataObj parent = import_stack[i]->source;
-      if (std::strcmp(parent->getAbsPath(), source->getAbsPath()) == 0) {
-        // make path relative to the current directory
-        sass::string stack("An @import loop has been found:");
-        for (size_t n = 1; n < i + 2; ++n) {
-          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->source->getAbsPath(), CWD, CWD)) +
-            " imports " + sass::string(File::abs2rel(import_stack[n + 1]->source->getAbsPath(), CWD, CWD));
-        }
-        // implement error throw directly until we
-        // decided how to handle full stack traces
-        throw Exception::RuntimeException(*this, stack);
-      }
-    }
 
     // Auto detect input file format
     if (format == SASS_IMPORT_AUTO) {

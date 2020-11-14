@@ -56,10 +56,14 @@ namespace Sass {
   private:
 
     ADD_CONSTREF(StyleSheetObj, sheet);
+    ADD_CONSTREF(sass::string, prev);
+    ADD_CONSTREF(sass::string, url);
 
   public:
 
-    IncludeImport(const SourceSpan& pstate, StyleSheet* sheet);
+    IncludeImport(const SourceSpan& pstate,
+      const sass::string& url,
+      StyleSheet* sheet);
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(IncludeImport);
   };

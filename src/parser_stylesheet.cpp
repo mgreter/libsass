@@ -1999,11 +1999,16 @@ namespace Sass {
       if (inControlDirective || inMixin) {
         throwDisallowedAtRule(rule->pstate().position);
       }
+
+      rule->append(SASS_MEMORY_NEW(IncludeImport,
+        scanner.relevantSpanFrom(start), url, nullptr));
+
       // Call custom importers and check if any of them handled the import
-      if (!context.callCustomImporters(url, pstate, rule)) {
-        // Try to load url into context.sheets
-        resolveDynamicImport(rule, start, url);
-      }
+//      if (!context.callCustomImporters(url, pstate, rule)) {
+//        // Try to load url into context.sheets
+//        resolveDynamicImport(rule, start, url);
+//      }
+
     }
   
   }
@@ -2039,7 +2044,8 @@ namespace Sass {
     if (ImportObj loaded = context.loadImport(resolved[0])) {
       EnvFrame local(context.varStack, true, false, true);
       StyleSheet* sheet = context.registerImport(loaded);
-      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
+      const sass::string& url(resolved[0].abs_path);
+      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
     }
     else {
       context.addFinalStackTrace(pstate);

@@ -533,6 +533,7 @@ namespace Sass {
       return result.detach();
     }
 
+  public:
     // Resolve import of [path] and add imports to [rule]
     void resolveDynamicImport(
       ImportRule* rule, Offset start,
