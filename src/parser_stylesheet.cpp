@@ -50,6 +50,7 @@ namespace Sass {
     Offset start(scanner.offset);
 
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
+    root->idxs = context.varStack.back()->idxs;;
 
     LOCAL_PTR(Root, currentRoot, root);
 
@@ -1476,8 +1477,20 @@ namespace Sass {
       }
 
       if (ns == "*") {
+
+        for (auto var : module->idxs->varIdxs) {
+          current->varIdxs.insert(var);
+        }
+        for (auto mix : module->idxs->mixIdxs) {
+          current->mixIdxs.insert(mix);
+        }
+        for (auto fn : module->idxs->fnIdxs) {
+          current->fnIdxs.insert(fn);
+        }
+
         current->fwdGlobal33.push_back(
           { module->idxs, nullptr });
+
       }
       else if (modFrame->fwdModule33.count(ns)) {
         context.addFinalStackTrace(rule->pstate());
@@ -1552,8 +1565,23 @@ namespace Sass {
     else {
       EnvFrame local(context.varStack, true, true);
       sheet = context.registerImport(loaded);
-      sheet->root2->idxs = local.idxs;
+      // sheet->root2->idxs = local.idxs;
       sheet->root2->import = loaded;
+
+      Root* root = sheet->root2;
+      VarRefs* idxs = root->idxs;
+
+      // Expose what has been forwarded to us
+      for (auto var : root->mergedFwdVar) {
+        idxs->varIdxs.insert(var);
+      }
+      for (auto mix : root->mergedFwdMix) {
+        idxs->mixIdxs.insert(mix);
+      }
+      for (auto fn : root->mergedFwdFn) {
+        idxs->fnIdxs.insert(fn);
+      }
+
       // sheet->root2->con context->node
     }
 
@@ -1565,26 +1593,12 @@ namespace Sass {
     // This leaks, give it someone
     VarRefs* exposing = refs;
 
-    // Expose what has been forwarded to us
-    for (auto var : module->mergedFwdVar) {
-      if (exposing->varIdxs.count(var.first) == 0)
-        exposing->varIdxs.insert(var);
-    }
-    for (auto mix : module->mergedFwdMix) {
-      if (exposing->mixIdxs.count(mix.first) == 0)
-        exposing->mixIdxs.insert(mix);
-    }
-    for (auto fn : module->mergedFwdFn) {
-      if (exposing->fnIdxs.count(fn.first) == 0)
-        exposing->fnIdxs.insert(fn);
-    }
-
-
     if (ns == "*") {
 
       for (auto var : exposing->varIdxs) {
         auto it = modFrame->varIdxs.find(var.first);
         if (it != modFrame->varIdxs.end()) {
+          if (var.second == it->second) continue;
           throw Exception::ParserException(context,
             "This module and the new module both define a "
             "variable named \"$" + var.first.norm() + "\".");
@@ -1593,6 +1607,7 @@ namespace Sass {
       for (auto mix : exposing->mixIdxs) {
         auto it = modFrame->mixIdxs.find(mix.first);
         if (it != modFrame->mixIdxs.end()) {
+          if (mix.second == it->second) continue;
           throw Exception::ParserException(context,
             "This module and the new module both define a "
             "mixin named \"" + mix.first.norm() + "\".");
@@ -1601,6 +1616,7 @@ namespace Sass {
       for (auto fn : exposing->fnIdxs) {
         auto it = modFrame->fnIdxs.find(fn.first);
         if (it != modFrame->fnIdxs.end()) {
+          if (fn.second == it->second) continue;
           throw Exception::ParserException(context,
             "This module and the new module both define a "
             "function named \"" + fn.first.norm() + "\".");
@@ -1641,6 +1657,7 @@ namespace Sass {
 
       modFrame->fwdGlobal33.push_back(
         { exposing, sheet->root2 });
+
     }
     else {
 
@@ -1807,7 +1824,7 @@ namespace Sass {
         // ToDo: must not create new real scope!
         EnvFrame local(context.varStack, true, true);
         sheet = context.registerImport(loaded);
-        sheet->root2->idxs = local.idxs;
+        // sheet->root2->idxs = local.idxs;
         sheet->root2->import = loaded;
       }
 
