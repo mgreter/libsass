@@ -626,7 +626,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Interface for built in functions
   /////////////////////////////////////////////////////////////////////////
 
-  uint32_t Compiler::createBuiltInMixin(const sass::string& name,
+  // Register built-in mixin and associate mixin callback
+  uint32_t Compiler::createBuiltInMixin(const EnvKey& name,
     const sass::string& signature, SassFnSig cb)
   {
     EnvRoot root(varStack, *this);
@@ -641,7 +642,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     return offset; // No lookup
   }
 
-  uint32_t Compiler::createBuiltInVariable(const sass::string& name, Value* value)
+  // Register built-in variable with the associated value
+  uint32_t Compiler::createBuiltInVariable(const EnvKey& name, Value* value)
   {
     EnvRoot root(varStack, *this);
     auto& variables(varRoot.intVariables);
@@ -668,19 +670,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
   // EO registerBuiltInFunction
 
-  // Register built-in function with only one parameter list.
-  uint32_t Compiler::registerBuiltInFunction(const EnvKey& name,
-    const sass::string& signature, SassFnSig cb)
-  {
-    auto fn = createBuiltInFunction(name, signature, cb);
-    return varRoot.fnIdxs[name] = fn; // Make findable
-  }
-  // EO registerBuiltInFunction
-
   // Register built-in functions that can take different
   // functional arguments (best suited will be chosen).
-  uint32_t Compiler::createBuiltInOverloadFns(const sass::string& name,
-    const sass::vector<std::pair<sass::string, SassFnSig>>& overloads)
+  uint32_t Compiler::createBuiltInOverloadFns(const EnvKey& name,
+    const sass::vector<std::pair<const sass::string, SassFnSig>>& overloads)
   {
     SassFnPairs pairs;
     for (auto overload : overloads) {
@@ -699,25 +692,27 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   }
   // EO registerBuiltInOverloadFns
 
+  // Register built-in function with only one parameter list.
+  uint32_t Compiler::registerBuiltInFunction(const EnvKey& name,
+    const sass::string& signature, SassFnSig cb)
+  {
+    auto fn = createBuiltInFunction(name, signature, cb);
+    return varRoot.fnIdxs[name] = fn; // Expose
+  }
+  // EO registerBuiltInFunction
+
+  void Compiler::exposeFunction(const EnvKey& name, uint32_t idx)
+  {
+    varRoot.fnIdxs[name] = idx;
+  }
+
   // Register built-in functions that can take different
   // functional arguments (best suited will be chosen).
-  uint32_t Compiler::registerBuiltInOverloadFns(const sass::string& name,
-    const sass::vector<std::pair<sass::string, SassFnSig>>& overloads)
+  uint32_t Compiler::registerBuiltInOverloadFns(const EnvKey& name,
+    const sass::vector<std::pair<const sass::string, SassFnSig>>& overloads)
   {
-    SassFnPairs pairs;
-    for (auto overload : overloads) {
-      EnvRoot root(varStack, *this);
-      SourceDataObj source = SASS_MEMORY_NEW(SourceString,
-        "sass://signature", "(" + overload.first + ")");
-      auto args = ArgumentDeclaration::parse(*this, source);
-      pairs.emplace_back(std::make_pair(args, overload.second));
-    }
-    auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
-    auto& functions(varRoot.intFunction);
-    uint32_t offset((uint32_t)functions.size());
-    varRoot.intFunction.push_back(callable);
-    varRoot.privateFnOffset = offset;
-    return varRoot.fnIdxs[name] = offset;
+    auto fn = createBuiltInOverloadFns(name, overloads);
+    return varRoot.fnIdxs[name] = fn; // Expose
   }
   // EO registerBuiltInOverloadFns
 

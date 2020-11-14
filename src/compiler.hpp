@@ -128,17 +128,19 @@ namespace Sass {
     uint32_t registerBuiltInFunction(const EnvKey& name,
       const sass::string& signature, SassFnSig cb);
 
-    uint32_t createBuiltInVariable(const sass::string& name, Value* value);
-    uint32_t createBuiltInMixin(const sass::string& name, const sass::string& signature, SassFnSig cb);
+    void exposeFunction(const EnvKey& name, uint32_t idx);
+
+    uint32_t createBuiltInVariable(const EnvKey& name, Value* value);
+    uint32_t createBuiltInMixin(const EnvKey& name, const sass::string& signature, SassFnSig cb);
 
     /////////////////////////////////////////////////////////////////////////
     // Register built-in functions that can take different
     // functional arguments (best suited will be chosen).
     /////////////////////////////////////////////////////////////////////////
-    uint32_t createBuiltInOverloadFns(const sass::string& name,
-      const sass::vector<std::pair<sass::string, SassFnSig>>& overloads);
-    uint32_t registerBuiltInOverloadFns(const sass::string& name,
-      const sass::vector<std::pair<sass::string, SassFnSig>>& overloads);
+    uint32_t createBuiltInOverloadFns(const EnvKey& name,
+      const sass::vector<std::pair<const sass::string, SassFnSig>>& overloads);
+    uint32_t registerBuiltInOverloadFns(const EnvKey& name,
+      const sass::vector<std::pair<const sass::string, SassFnSig>>& overloads);
 
     /////////////////////////////////////////////////////////////////////////
     // @param imp_path The relative or custom path for be imported
