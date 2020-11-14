@@ -1538,7 +1538,7 @@ namespace Sass {
     // Error if no file to import was found
     if (resolved.empty()) {
       context.addFinalStackTrace(pstate);
-      throw Exception::UnknwonImport(context);
+      throw Exception::UnknownImport(context);
     }
     // Error if multiple files to import were found
     else if (resolved.size() > 1) {

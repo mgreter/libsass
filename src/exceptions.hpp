@@ -84,10 +84,10 @@ namespace Sass {
         sass::string name);
     };
 
-    class UnknwonImport : public RuntimeException
+    class UnknownImport : public RuntimeException
     {
     public:
-      UnknwonImport(
+      UnknownImport(
         BackTraces traces);
     };
 
