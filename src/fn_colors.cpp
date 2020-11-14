@@ -1393,132 +1393,195 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
       {
-        Module& module(ctx.createModule("color"));
 
-        module.addFunction(key_rgb, ctx.createBuiltInOverloadFns("rgb", {
+        // Some functions are stricter if called from module namespace
+        uint32_t idx_rgb_strict = ctx.createBuiltInOverloadFns(key_rgb, {
           std::make_pair("$red, $green, $blue, $alpha", fnRgb4arg),
           std::make_pair("$red, $green, $blue", fnRgb3arg),
           std::make_pair("$color, $alpha", fnRgb2arg),
           std::make_pair("$channels", fnRgb1arg),
-        }));
-        ctx.registerBuiltInOverloadFns("rgb", {
+        });
+        uint32_t idx_rgb_loose = ctx.createBuiltInOverloadFns(key_rgb, {
           std::make_pair("$red, $green, $blue, $alpha", rgb4arg),
           std::make_pair("$red, $green, $blue", rgb3arg),
           std::make_pair("$color, $alpha", rgb2arg),
           std::make_pair("$channels", rgb1arg),
           });
-        module.addFunction(key_rgba, ctx.createBuiltInOverloadFns("rgba", {
+        uint32_t idx_rgba_strict = ctx.createBuiltInOverloadFns(key_rgba, {
           std::make_pair("$red, $green, $blue, $alpha", fnRgba4arg),
           std::make_pair("$red, $green, $blue", fnRgba3arg),
           std::make_pair("$color, $alpha", fnRgba2arg),
           std::make_pair("$channels", fnRgba1arg),
-        }));
-        ctx.registerBuiltInOverloadFns("rgba", {
+        });
+        uint32_t idx_rgba_loose = ctx.createBuiltInOverloadFns(key_rgba, {
           std::make_pair("$red, $green, $blue, $alpha", rgba4arg),
           std::make_pair("$red, $green, $blue", rgba3arg),
           std::make_pair("$color, $alpha", rgba2arg),
           std::make_pair("$channels", rgba1arg),
         });
-        module.addFunction(key_hsl, ctx.createBuiltInOverloadFns("hsl", {
+        uint32_t idx_hsl_strict = ctx.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsl4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsl3arg),
           std::make_pair("$color, $alpha", fnHsl2arg),
           std::make_pair("$channels", fnHsl1arg),
-        }));
-        ctx.registerBuiltInOverloadFns("hsl", {
+        });
+        uint32_t idx_hsl_loose = ctx.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsl4arg),
           std::make_pair("$hue, $saturation, $lightness", hsl3arg),
           std::make_pair("$color, $alpha", hsl2arg),
           std::make_pair("$channels", hsl1arg),
         });
-        module.addFunction(key_hsla, ctx.createBuiltInOverloadFns("hsla", {
+        uint32_t idx_hsla_strict = ctx.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsla4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsla3arg),
           std::make_pair("$color, $alpha", fnHsla2arg),
           std::make_pair("$channels", fnHsla1arg),
-        }));
-        ctx.registerBuiltInOverloadFns("hsla", {
+        });
+        uint32_t idx_hsla_loose = ctx.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsla4arg),
           std::make_pair("$hue, $saturation, $lightness", hsla3arg),
           std::make_pair("$color, $alpha", hsla2arg),
           std::make_pair("$channels", hsla1arg),
         });
-        module.addFunction(key_hwb, ctx.createBuiltInOverloadFns("hwb", {
+        uint32_t idx_hwb_strict = ctx.createBuiltInOverloadFns(key_hwb, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwb4arg),
           std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
           std::make_pair("$color, $alpha", fnHwb2arg),
           std::make_pair("$channels", fnHwb1arg),
-        }));
-        ctx.registerBuiltInOverloadFns("hwb", {
+        });
+        uint32_t idx_hwb_loose = ctx.createBuiltInOverloadFns(key_hwb, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", hwb4arg),
           std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
           std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
         });
-        module.addFunction(key_hwba, ctx.createBuiltInOverloadFns("hwba", {
+        uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
           std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
           std::make_pair("$color, $alpha", fnHwba2arg),
           std::make_pair("$channels", fnHwba1arg),
-        }));
-        ctx.registerBuiltInOverloadFns("hwba", {
+        });
+        uint32_t idx_hwba_loose = ctx.createBuiltInOverloadFns(key_hwba, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
           std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
           std::make_pair("$color, $alpha", hwba2arg),
           std::make_pair("$channels", hwba1arg),
         });
 
-        module.addFunction(key_red, ctx.registerBuiltInFunction(key_red, "$color", red));
-        module.addFunction(key_green, ctx.registerBuiltInFunction(key_green, "$color", green));
-        module.addFunction(key_blue, ctx.registerBuiltInFunction(key_blue, "$color", blue));
-        module.addFunction(key_hue, ctx.registerBuiltInFunction(key_hue, "$color", hue));
-        module.addFunction(key_lightness, ctx.registerBuiltInFunction(key_lightness, "$color", lightness));
-        module.addFunction(key_saturation, ctx.registerBuiltInFunction(key_saturation, "$color", saturation));
-        module.addFunction(key_blackness, ctx.createBuiltInFunction(key_blackness, "$color", blackness));
-        module.addFunction(key_whiteness, ctx.createBuiltInFunction(key_whiteness, "$color", whiteness));
-        module.addFunction(key_invert, ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert));
-        ctx.registerBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
-        module.addFunction(key_grayscale, ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale));
-        ctx.registerBuiltInFunction(key_grayscale, "$color", grayscale);
-        module.addFunction(key_complement, ctx.registerBuiltInFunction(key_complement, "$color", complement));
-
-        module.addFunction(key_desaturate, ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate));
-        ctx.registerBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
-
-        module.addFunction(key_saturate, ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate));
-        ctx.registerBuiltInOverloadFns("saturate", {
+        uint32_t idx_red = ctx.createBuiltInFunction(key_red, "$color", red);
+        uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
+        uint32_t idx_blue = ctx.createBuiltInFunction(key_blue, "$color", blue);
+        uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
+        uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
+        uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
+        uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
+        uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
+        uint32_t idx_invert_strict = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
+        uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
+        uint32_t idx_grayscale_strict = ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
+        uint32_t idx_grayscale_loose = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
+        uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color", complement);
+        uint32_t idx_desaturate_strict = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
+        uint32_t idx_desaturate_loose = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
+        uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
+        uint32_t idx_saturate_loose = ctx.createBuiltInOverloadFns(key_saturate, {
           std::make_pair("$amount", saturate1arg),
           std::make_pair("$color, $amount", saturate2arg),
           });
-
-        module.addFunction(key_lighten, ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten));
-        ctx.registerBuiltInFunction(key_lighten, "$color, $amount", lighten);
-        module.addFunction(key_darken, ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken));
-        ctx.registerBuiltInFunction(key_darken, "$color, $amount", darken);
-
-        module.addFunction(key_adjust_hue, ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue));
-        ctx.registerBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
-        module.addFunction(key_adjust, ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust));
-        module.addFunction(key_change, ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change));
-        module.addFunction(key_scale, ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale));
-        module.addFunction(key_mix, ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix));
-
-        module.addFunction(key_opacify, ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify));
-        ctx.registerBuiltInFunction(key_opacify, "$color, $amount", opacify);
-        module.addFunction(key_fade_in, ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn));
-        module.addFunction(key_fade_out, ctx.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut));
-        ctx.registerBuiltInFunction(key_fade_in, "$color, $amount", opacify);
-        ctx.registerBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
-
-        module.addFunction(key_transparentize, ctx.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize));
-        ctx.registerBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
-        module.addFunction(key_ie_hex_str, ctx.registerBuiltInFunction(key_ie_hex_str, "$color", ieHexStr));
-        module.addFunction(key_alpha, ctx.registerBuiltInOverloadFns("alpha", {
+        uint32_t idx_lighten_strict = ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
+        uint32_t idx_lighten_loose = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
+        uint32_t idx_darken_strict = ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
+        uint32_t idx_darken_loose = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
+        uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
+        uint32_t idx_adjust_hue_loose = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
+        uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
+        uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
+        uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
+        uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
+        uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
+        uint32_t idx_opacify_loose = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
+        uint32_t idx_fade_in_strict = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);
+        uint32_t idx_fade_in_loose = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        uint32_t idx_fade_out_strict = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut);
+        uint32_t idx_fade_out_loose = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
+        uint32_t idx_transparentize_strict = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize);
+        uint32_t idx_transparentize_loose = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
+        uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
+        uint32_t idx_alpha = ctx.createBuiltInOverloadFns(key_alpha, {
           std::make_pair("$color", alphaOne),
           std::make_pair("$args...", alphaAny),
-          }));
-        module.addFunction(key_opacity, ctx.createBuiltInFunction(key_opacity, "$color", noOpacity));
-        ctx.registerBuiltInFunction(key_opacity, "$color", opacity);
+          });
+        uint32_t idx_opacity_strict = ctx.createBuiltInFunction(key_opacity, "$color", noOpacity);
+        uint32_t idx_opacity_loose = ctx.createBuiltInFunction(key_opacity, "$color", opacity);
+
+        ctx.exposeFunction(key_rgb, idx_rgb_loose);
+        ctx.exposeFunction(key_rgba, idx_rgba_loose);
+        ctx.exposeFunction(key_hsl, idx_hsl_loose);
+        ctx.exposeFunction(key_hsla, idx_hsla_loose);
+        ctx.exposeFunction(key_hwb, idx_hwb_loose);
+        ctx.exposeFunction(key_hwba, idx_hwba_loose);
+        ctx.exposeFunction(key_red, idx_red);
+        ctx.exposeFunction(key_green, idx_green);
+        ctx.exposeFunction(key_blue, idx_blue);
+        ctx.exposeFunction(key_hue, idx_hue);
+        ctx.exposeFunction(key_lightness, idx_lightness);
+        ctx.exposeFunction(key_saturation, idx_saturation);
+        ctx.exposeFunction(key_blackness, idx_blackness);
+        ctx.exposeFunction(key_whiteness, idx_whiteness);
+        ctx.exposeFunction(key_invert, idx_invert_loose);
+        ctx.exposeFunction(key_grayscale, idx_grayscale_loose);
+        ctx.exposeFunction(key_complement, idx_complement);
+        ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
+        ctx.exposeFunction(key_saturate, idx_saturate_loose);
+        ctx.exposeFunction(key_lighten, idx_lighten_loose);
+        ctx.exposeFunction(key_darken, idx_darken_loose);
+        ctx.exposeFunction(key_adjust_hue, idx_adjust_hue_loose);
+        ctx.exposeFunction(key_adjust_color, idx_adjust);
+        ctx.exposeFunction(key_change_color, idx_change);
+        ctx.exposeFunction(key_scale_color, idx_scale);
+        ctx.exposeFunction(key_mix, idx_mix);
+        ctx.exposeFunction(key_opacify, idx_opacify_loose);
+        ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
+        ctx.exposeFunction(key_fade_out, idx_fade_out_loose);
+        ctx.exposeFunction(key_transparentize, idx_transparentize_loose);
+        ctx.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
+        ctx.exposeFunction(key_alpha, idx_alpha);
+        ctx.exposeFunction(key_opacity, idx_opacity_loose);
+
+        Module& module(ctx.createModule("color"));
+        module.addFunction(key_rgb, idx_rgb_strict);
+        module.addFunction(key_rgba, idx_rgba_strict);
+        module.addFunction(key_hsl, idx_hsl_strict);
+        module.addFunction(key_hsla, idx_hsla_strict);
+        module.addFunction(key_hwb, idx_hwb_strict);
+        module.addFunction(key_hwba, idx_hwba_strict);
+        module.addFunction(key_red, idx_red);
+        module.addFunction(key_green, idx_green);
+        module.addFunction(key_blue, idx_blue);
+        module.addFunction(key_hue, idx_hue);
+        module.addFunction(key_lightness, idx_lightness);
+        module.addFunction(key_saturation, idx_saturation);
+        module.addFunction(key_blackness, idx_blackness);
+        module.addFunction(key_whiteness, idx_whiteness);
+        module.addFunction(key_invert, idx_invert_strict);
+        module.addFunction(key_grayscale, idx_grayscale_strict);
+        module.addFunction(key_complement, idx_complement);
+        module.addFunction(key_desaturate, idx_desaturate_strict);
+        module.addFunction(key_saturate, idx_saturate_strict);
+        module.addFunction(key_lighten, idx_lighten_strict);
+        module.addFunction(key_darken, idx_darken_strict);
+        module.addFunction(key_adjust_hue, idx_adjust_hue_strict);
+        module.addFunction(key_adjust, idx_adjust);
+        module.addFunction(key_change, idx_change);
+        module.addFunction(key_scale, idx_scale);
+        module.addFunction(key_mix, idx_mix);
+        module.addFunction(key_opacify, idx_opacify_strict);
+        module.addFunction(key_fade_in, idx_fade_in_strict);
+        module.addFunction(key_fade_out, idx_fade_out_strict);
+        module.addFunction(key_transparentize, idx_transparentize_strict);
+        module.addFunction(key_ie_hex_str, idx_ie_hex_str);
+        module.addFunction(key_alpha, idx_alpha);
+        module.addFunction(key_opacity, idx_opacity_strict);
 
       }
 

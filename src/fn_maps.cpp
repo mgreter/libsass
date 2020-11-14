@@ -413,19 +413,19 @@ namespace Sass {
       {
         Module& module(ctx.createModule("map"));
 
-        module.addFunction(key_set, ctx.createBuiltInOverloadFns("map-set", {
+        module.addFunction(key_set, ctx.createBuiltInOverloadFns(key_map_set, {
           std::make_pair("$map, $key, $value", fnMapSetThreeArgs),
           std::make_pair("$map, $args...", fnMapSetTwoArgs)
         }));
 
         module.addFunction(key_get, ctx.registerBuiltInFunction(key_map_get, "$map, $key, $keys...", get));
 
-        module.addFunction(key_merge, ctx.registerBuiltInOverloadFns("map-merge", {
+        module.addFunction(key_merge, ctx.registerBuiltInOverloadFns(key_map_merge, {
           std::make_pair("$map1, $map2", merge),
           std::make_pair("$map1, $args...", merge_many)
           }));
 
-        module.addFunction(key_remove, ctx.registerBuiltInOverloadFns("map-remove", {
+        module.addFunction(key_remove, ctx.registerBuiltInOverloadFns(key_map_remove, {
           std::make_pair("$map", remove_one),
           std::make_pair("$map, $key, $keys...", remove_many)
           }));

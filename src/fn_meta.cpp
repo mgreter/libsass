@@ -613,7 +613,7 @@ namespace Sass {
 
         compiler.registerBuiltInFunction(key_if, "$condition, $if-true, $if-false", fnIf);
 
-        module.addMixin(key_load_css, compiler.createBuiltInMixin("load-css", "$url, $with: null", loadCss));
+        module.addMixin(key_load_css, compiler.createBuiltInMixin(key_load_css, "$url, $with: null", loadCss));
 
         module.addFunction(key_feature_exists, compiler.registerBuiltInFunction(key_feature_exists, "$feature", featureExists));
         module.addFunction(key_type_of, compiler.registerBuiltInFunction(key_type_of, "$value", typeOf));
