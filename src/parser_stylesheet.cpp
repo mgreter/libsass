@@ -2000,14 +2000,14 @@ namespace Sass {
         throwDisallowedAtRule(rule->pstate().position);
       }
 
-      rule->append(SASS_MEMORY_NEW(IncludeImport,
-        scanner.relevantSpanFrom(start), url, nullptr));
+//      rule->append(SASS_MEMORY_NEW(IncludeImport,
+//        scanner.relevantSpanFrom(start), url, nullptr));
 
       // Call custom importers and check if any of them handled the import
-//      if (!context.callCustomImporters(url, pstate, rule)) {
+      if (!context.callCustomImporters(url, pstate, rule)) {
 //        // Try to load url into context.sheets
-//        resolveDynamicImport(rule, start, url);
-//      }
+        resolveDynamicImport(rule, start, url);
+      }
 
     }
   

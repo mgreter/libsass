@@ -2331,7 +2331,8 @@ namespace Sass {
       // if (!context.callCustomImporters(url, pstate, rule)) {
         // Try to load url into context.sheets
 
-    StyleSheetObj sheet = resolveDynamicImport(rule);
+    StyleSheetObj sheet = rule->sheet();
+    //StyleSheetObj sheet = resolveDynamicImport(rule);
 
     // debug_ast(sheet->root2);
 
