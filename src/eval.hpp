@@ -269,6 +269,10 @@ namespace Sass {
     void acceptStaticImport(StaticImport* import);
     void acceptIncludeImport(IncludeImport* import);
 
+
+    StyleSheet* resolveDynamicImport(IncludeImport* rule);
+
+
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 

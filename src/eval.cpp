@@ -15,6 +15,8 @@
 #include "parser_media_query.hpp"
 #include "parser_keyframe_selector.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -2265,6 +2267,51 @@ namespace Sass {
     return nullptr;
   }
 
+  // Resolve import of [path] and add imports to [rule]
+  StyleSheet* Eval::resolveDynamicImport(IncludeImport* import)
+  {
+    SourceSpan pstate(import->pstate());
+    const ImportRequest request(import->url(), ".");
+    callStackFrame frame(compiler, { pstate, Strings::importRule });
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(compiler.findIncludes(request, true));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::ParserException(compiler,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(compiler, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = compiler.loadImport(resolved[0])) {
+      EnvFrame local(compiler.varStack, true, false, true);
+      StyleSheet* sheet = compiler.registerImport(loaded);
+      // const sass::string& url(resolved[0].abs_path);
+      return sheet;
+//      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
+
+    }
+
+    compiler.addFinalStackTrace(pstate);
+    throw Exception::ParserException(compiler,
+      "Couldn't read stylesheet for import.");
+
+  }
+  // EO resolveDynamicImport
+
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
 
@@ -2273,12 +2320,22 @@ namespace Sass {
 
     // This will error if the path was not loaded before
     // ToDo: Why don't we attach the sheet to include itself?
-    StyleSheetObj sheet = rule->sheet();
+    // rule->sheet();
 
     // Create C-API exposed object to query
     //struct SassImport import{
     //   sheet.syntax, sheet.source, ""
     //};
+
+          // Call custom importers and check if any of them handled the import
+      // if (!context.callCustomImporters(url, pstate, rule)) {
+        // Try to load url into context.sheets
+
+    StyleSheetObj sheet = resolveDynamicImport(rule);
+
+    // debug_ast(sheet->root2);
+
+        // }
 
     // Add C-API to stack to expose it
     compiler.import_stack.emplace_back(sheet->import);
