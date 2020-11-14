@@ -1797,6 +1797,8 @@ namespace Sass {
           }
         }
 
+        delete exposed;
+
         rule->root(nullptr);
 
       }
@@ -1969,7 +1971,7 @@ namespace Sass {
       }
 
 
-
+      delete exposed;
 
     }
     else {
