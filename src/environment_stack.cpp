@@ -79,12 +79,20 @@ namespace Sass {
     assignments(idxs->assignments),
     variables(idxs->variables)
   {
-    // Initialize stacks as not active yet
-    root.varFramePtr.push_back(0xFFFFFFFF);
-    root.mixFramePtr.push_back(0xFFFFFFFF);
-    root.fnFramePtr.push_back(0xFFFFFFFF);
-    // Account for allocated memory
-    root.scopes.push_back(idxs);
+    if (isModule) {
+      // Lives in built-in scope
+      idxs->varFrame = 0xFFFFFFFF;
+      idxs->mixFrame = 0xFFFFFFFF;
+      idxs->fnFrame = 0xFFFFFFFF;
+    }
+    else {
+      // Initialize stacks as not active yet
+      root.varFramePtr.push_back(0xFFFFFFFF);
+      root.mixFramePtr.push_back(0xFFFFFFFF);
+      root.fnFramePtr.push_back(0xFFFFFFFF);
+      // Account for allocated memory
+      root.scopes.push_back(idxs);
+    }
     // Check and prevent stack smashing
     if (stack.size() > MAX_NESTING) {
       throw Exception::RecursionLimitError();
@@ -103,14 +111,14 @@ namespace Sass {
     // Pop from stack
     stack.pop_back();
 
-    for (auto fwd : fwdGlobal33) {
-      if (fwd.second == nullptr) continue;
-      delete fwd.first;
-    }
-    for (auto fwd : fwdModule33) {
-      if (fwd.second.second == nullptr) continue;
-      delete fwd.second.first;
-    }
+    // for (auto fwd : fwdGlobal33) {
+    //   if (fwd.second == nullptr) continue;
+    //   delete fwd.first;
+    // }
+    // for (auto fwd : fwdModule33) {
+    //   if (fwd.second.second == nullptr) continue;
+    //   delete fwd.second.first;
+    // }
 
   }
 

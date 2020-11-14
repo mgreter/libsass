@@ -1323,6 +1323,83 @@ namespace Sass {
 
   }
 
+  void exposeFiltered(
+    EnvKeyFlatMap<uint32_t>& merged,
+    EnvKeyFlatMap<uint32_t> expose,
+    const sass::string prefix,
+    const std::set<EnvKey>& filters,
+    const sass::string& errprefix,
+    Logger& logger,
+    bool show)
+  {
+    for (auto idx : expose) {
+      if (idx.first.isPrivate()) continue;
+      EnvKey key(prefix + idx.first.orig());
+      if (show == (filters.count(key) == 1)) {
+        auto it = merged.find(key);
+        if (it == merged.end()) {
+          merged.insert({ key, idx.second });
+        }
+        else if (idx.second != it->second) {
+          throw Exception::RuntimeException(logger,
+            "Two forwarded modules both define a "
+            + errprefix + key.norm() + ".");
+        }
+      }
+    }
+  }
+
+  void exposeFiltered(
+    EnvKeyFlatMap<uint32_t>& merged,
+    EnvKeyFlatMap<uint32_t> expose,
+    const sass::string prefix,
+    const sass::string& errprefix,
+    Logger& logger)
+  {
+    for (auto idx : expose) {
+      if (idx.first.isPrivate()) continue;
+      EnvKey key(prefix + idx.first.orig());
+      auto it = merged.find(key);
+      if (it == merged.end()) {
+        merged.insert({ key, idx.second });
+      }
+      else if (idx.second != it->second) {
+        throw Exception::RuntimeException(logger,
+          "Two forwarded modules both define a "
+          + errprefix + key.norm() + ".");
+      }
+    }
+  }
+
+  void mergeForwards(
+    VarRefs* idxs,
+    Root* currentRoot,
+    bool isShown,
+    bool isHidden,
+    const sass::string prefix,
+    const std::set<EnvKey>& toggledVariables,
+    const std::set<EnvKey>& toggledCallables,
+    Logger& logger)
+  {
+
+    if (isShown) {
+      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
+      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
+      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
+    }
+    else if (isHidden) {
+      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
+      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
+      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
+    }
+    else {
+      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
+      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
+      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
+    }
+
+  }
+
   ImportRule* StylesheetParser::readImportRule(Offset start)
   {
     ImportRuleObj rule = SASS_MEMORY_NEW(
@@ -1474,9 +1551,6 @@ namespace Sass {
     }
     else {
       EnvFrame local(context.varStack, true, true);
-      local.idxs->varFrame = 0xFFFFFFFF;
-      local.idxs->mixFrame = 0xFFFFFFFF;
-      local.idxs->fnFrame = 0xFFFFFFFF;
       sheet = context.registerImport(loaded);
       sheet->root2->idxs = local.idxs;
       sheet->root2->import = loaded;
@@ -1486,40 +1560,29 @@ namespace Sass {
     Root* root = sheet->root2;
     VarRefs* refs = root->idxs;
     rule->root(root);
+    Moduled* module = root;
 
     // This leaks, give it someone
-    VarRefs* exposed = new VarRefs(
-      refs->pscope,
-      refs->varFrame,
-      refs->mixFrame,
-      refs->fnFrame,
-      refs->permeable,
-      refs->isModule);
+    VarRefs* exposing = refs;
 
-    for (auto fwd : root->mergedFwdVars3) {
-      if (refs->varIdxs.count(fwd.first) == 0)
-        exposed->varIdxs.insert(fwd);
+    // Expose what has been forwarded to us
+    for (auto var : module->mergedFwdVar) {
+      if (exposing->varIdxs.count(var.first) == 0)
+        exposing->varIdxs.insert(var);
     }
-    for (auto fwd : root->mergedFwdMixs3) {
-      if (refs->mixIdxs.count(fwd.first) == 0)
-        exposed->mixIdxs.insert(fwd);
+    for (auto mix : module->mergedFwdMix) {
+      if (exposing->mixIdxs.count(mix.first) == 0)
+        exposing->mixIdxs.insert(mix);
     }
-    for (auto fwd : root->mergedFwdFns3) {
-      if (refs->fnIdxs.count(fwd.first) == 0)
-        exposed->fnIdxs.insert(fwd);
+    for (auto fn : module->mergedFwdFn) {
+      if (exposing->fnIdxs.count(fn.first) == 0)
+        exposing->fnIdxs.insert(fn);
     }
 
-    // Implementation is limited
-    for (auto it : refs->varIdxs)
-      exposed->varIdxs.insert(it);
-    for (auto it : refs->mixIdxs)
-      exposed->mixIdxs.insert(it);
-    for (auto it : refs->fnIdxs)
-      exposed->fnIdxs.insert(it);
 
     if (ns == "*") {
 
-      for (auto var : exposed->varIdxs) {
+      for (auto var : exposing->varIdxs) {
         auto it = modFrame->varIdxs.find(var.first);
         if (it != modFrame->varIdxs.end()) {
           throw Exception::ParserException(context,
@@ -1527,7 +1590,7 @@ namespace Sass {
             "variable named \"$" + var.first.norm() + "\".");
         }
       }
-      for (auto mix : exposed->mixIdxs) {
+      for (auto mix : exposing->mixIdxs) {
         auto it = modFrame->mixIdxs.find(mix.first);
         if (it != modFrame->mixIdxs.end()) {
           throw Exception::ParserException(context,
@@ -1535,7 +1598,7 @@ namespace Sass {
             "mixin named \"" + mix.first.norm() + "\".");
         }
       }
-      for (auto fn : exposed->fnIdxs) {
+      for (auto fn : exposing->fnIdxs) {
         auto it = modFrame->fnIdxs.find(fn.first);
         if (it != modFrame->fnIdxs.end()) {
           throw Exception::ParserException(context,
@@ -1546,32 +1609,29 @@ namespace Sass {
 
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->fwdGlobal33) {
-        if (exposed == fwd.first) continue;
-        bool sameVarFrame(exposed->varFrame == fwd.first->varFrame);
-        bool sameMixFrame(exposed->mixFrame == fwd.first->mixFrame);
-        bool sameFnFrame(exposed->fnFrame == fwd.first->fnFrame);
-        for (auto var : exposed->varIdxs) {
+        if (exposing == fwd.first) continue;
+        for (auto var : exposing->varIdxs) {
           auto it = fwd.first->varIdxs.find(var.first);
           if (it != fwd.first->varIdxs.end()) {
-            if (sameVarFrame && var.second == it->second) continue;
+            if (var.second == it->second) continue;
             throw Exception::ParserException(context,
               "$" + var.first.norm() + " is available "
               "from multiple global modules.");
           }
         }
-        for (auto var : exposed->mixIdxs) {
+        for (auto var : exposing->mixIdxs) {
           auto it = fwd.first->mixIdxs.find(var.first);
           if (it != fwd.first->mixIdxs.end()) {
-            if (sameMixFrame && var.second == it->second) continue;
+            if (var.second == it->second) continue;
             throw Exception::ParserException(context,
               "Mixin \"" + var.first.norm() + "(...)\" is "
               "available from multiple global modules.");
           }
         }
-        for (auto var : exposed->fnIdxs) {
+        for (auto var : exposing->fnIdxs) {
           auto it = fwd.first->fnIdxs.find(var.first);
           if (it != fwd.first->fnIdxs.end()) {
-            if (sameFnFrame && var.second == it->second) continue;
+            if (var.second == it->second) continue;
             throw Exception::ParserException(context,
               "Function \"" + var.first.norm() + "(...)\" is "
               "available from multiple global modules.");
@@ -1580,13 +1640,13 @@ namespace Sass {
       }
 
       modFrame->fwdGlobal33.push_back(
-        { exposed, sheet->root2 });
+        { exposing, sheet->root2 });
     }
     else {
 
       // Combine forwarded with local scope
       modFrame->fwdModule33[ns] =
-      { exposed, sheet->root2 };
+      { exposing, sheet->root2 };
     }
 
 
@@ -1601,35 +1661,6 @@ namespace Sass {
     wconfig.finalize();
     return rule.detach();
   }
-
-  void exposeFiltered(
-    EnvKeyFlatMap<uint32_t>& exposed,
-    EnvKeyFlatMap<uint32_t> idxs,
-    const sass::string prefix,
-    std::set<EnvKey>& filters,
-    size_t show)
-  {
-    for (auto kv : idxs) {
-      if (kv.first.isPrivate()) continue;
-      EnvKey key(prefix + kv.first.orig());
-      if (filters.count(key) == show)
-        exposed.insert({ key, kv.second });
-    }
-  }
-
-  void exposeFiltered(
-    EnvKeyFlatMap<uint32_t>& exposed,
-    EnvKeyFlatMap<uint32_t> idxs,
-    const sass::string prefix,
-    std::set<EnvKey>& filters)
-  {
-    for (auto kv : idxs) {
-      if (kv.first.isPrivate()) continue;
-      EnvKey key(prefix + kv.first.orig());
-      exposed.insert({ key, kv.second });
-    }
-  }
-
 
   // Consumes a `@forward` rule.
   // [start] should point before the `@`.
@@ -1710,95 +1741,8 @@ namespace Sass {
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (Module* module = context.getModule(name)) {
 
-        VarRefs* idxs = module->idxs;
-
-        // This leaks for now, testing only
-        VarRefs* exposed = new VarRefs(
-          idxs->pscope,
-          idxs->varFrame,
-          idxs->mixFrame,
-          idxs->fnFrame,
-          idxs->permeable,
-          idxs->isModule);
-
-        if (isShown) {
-          exposeFiltered(exposed->varIdxs, idxs->varIdxs, prefix, toggledVariables, 1);
-          exposeFiltered(exposed->mixIdxs, idxs->mixIdxs, prefix, toggledCallables, 1);
-          exposeFiltered(exposed->fnIdxs, idxs->fnIdxs, prefix, toggledCallables, 1);
-        }
-        else if (isHidden) {
-          exposeFiltered(exposed->varIdxs, idxs->varIdxs, prefix, toggledVariables, 0);
-          exposeFiltered(exposed->mixIdxs, idxs->mixIdxs, prefix, toggledCallables, 0);
-          exposeFiltered(exposed->fnIdxs, idxs->fnIdxs, prefix, toggledCallables, 0);
-        }
-        else {
-          exposeFiltered(exposed->varIdxs, idxs->varIdxs, prefix, toggledVariables);
-          exposeFiltered(exposed->mixIdxs, idxs->mixIdxs, prefix, toggledCallables);
-          exposeFiltered(exposed->fnIdxs, idxs->fnIdxs, prefix, toggledCallables);
-        }
-
-        //*************************************************
-        auto& mergedFwdVar(currentRoot->mergedFwdVars3);
-        //*************************************************
-        if (mergedFwdVar.empty()) {
-          mergedFwdVar = exposed->varIdxs;
-        }
-        else {
-          for (auto var : exposed->varIdxs) {
-            auto it = mergedFwdVar.find(var.first);
-            if (it == mergedFwdVar.end()) {
-              mergedFwdVar.insert(var);
-            }
-            else if (var.second != it->second) {
-              throw Exception::RuntimeException(context,
-                "Two forwarded modules both define a "
-                "variable named $" + var.first.norm() + ".");
-            }
-          }
-        }
-
-        //*************************************************
-        auto& mergedFwdMix(currentRoot->mergedFwdMixs3);
-        //*************************************************
-        if (mergedFwdMix.empty()) {
-          mergedFwdMix = exposed->mixIdxs;
-        }
-        else {
-          for (auto mix : exposed->mixIdxs) {
-            auto it = mergedFwdMix.find(mix.first);
-            if (it == mergedFwdMix.end()) {
-              mergedFwdMix.insert(mix);
-            }
-            else if (mix.second != it->second) {
-              throw Exception::RuntimeException(context,
-                "Two forwarded modules both define a "
-                "mixin named " + mix.first.norm() + ".");
-            }
-          }
-        }
-
-        //*************************************************
-        auto& mergedFwdFn(currentRoot->mergedFwdFns3);
-        //*************************************************
-        if (mergedFwdFn.empty()) {
-          mergedFwdFn = exposed->fnIdxs;
-        }
-        else {
-          for (auto fn : exposed->fnIdxs) {
-            auto it = mergedFwdFn.find(fn.first);
-            if (it == mergedFwdFn.end()) {
-              mergedFwdFn.insert(fn);
-            }
-            else if (fn.second != it->second) {
-              throw Exception::RuntimeException(context,
-                "Two forwarded modules both define a "
-                "function named " + fn.first.norm() + ".");
-            }
-          }
-        }
-
-        delete exposed;
-
+        mergeForwards(module->idxs, currentRoot, isShown, isHidden,
+          prefix, toggledVariables, toggledCallables, context);
         rule->root(nullptr);
 
       }
@@ -1860,118 +1804,19 @@ namespace Sass {
 
       }
       else {
+        // ToDo: must not create new real scope!
         EnvFrame local(context.varStack, true, true);
-        local.idxs->varFrame = 0xFFFFFFFF;
-        local.idxs->mixFrame = 0xFFFFFFFF;
-        local.idxs->fnFrame = 0xFFFFFFFF;
         sheet = context.registerImport(loaded);
         sheet->root2->idxs = local.idxs;
         sheet->root2->import = loaded;
       }
 
-      Root* root = sheet->root2;
-      VarRefs* refs = root->idxs;
-      rule->root(root);
+      Root* module = sheet->root2;
+      rule->root(module);
 
-      // This leaks, give it someone
-      VarRefs* idxs = refs;
+      mergeForwards(module->idxs, currentRoot, isShown, isHidden,
+        prefix, toggledVariables, toggledCallables, context);
 
-
-
-
-      // This leaks for now, testing only
-      VarRefs* exposed = new VarRefs(
-        idxs->pscope,
-        idxs->varFrame,
-        idxs->mixFrame,
-        idxs->fnFrame,
-        idxs->permeable,
-        idxs->isModule);
-
-      exposed->varIdxs = root->mergedFwdVars3;
-      exposed->mixIdxs = root->mergedFwdMixs3;
-      exposed->fnIdxs = root->mergedFwdFns3;
-
-      if (isShown)
-      {
-        exposeFiltered(exposed->varIdxs, idxs->varIdxs, prefix, toggledVariables, 1);
-        exposeFiltered(exposed->mixIdxs, idxs->mixIdxs, prefix, toggledCallables, 1);
-        exposeFiltered(exposed->fnIdxs, idxs->fnIdxs, prefix, toggledCallables, 1);
-      }
-      else if (isHidden) {
-        exposeFiltered(exposed->varIdxs, idxs->varIdxs, prefix, toggledVariables, 0);
-        exposeFiltered(exposed->mixIdxs, idxs->mixIdxs, prefix, toggledCallables, 0);
-        exposeFiltered(exposed->fnIdxs, idxs->fnIdxs, prefix, toggledCallables, 0);
-      }
-      else {
-        exposeFiltered(exposed->varIdxs, idxs->varIdxs, prefix, toggledVariables);
-        exposeFiltered(exposed->mixIdxs, idxs->mixIdxs, prefix, toggledCallables);
-        exposeFiltered(exposed->fnIdxs, idxs->fnIdxs, prefix, toggledCallables);
-      }
-
-
-      //*************************************************
-      auto& mergedFwdVar(currentRoot->mergedFwdVars3);
-      //*************************************************
-      if (mergedFwdVar.empty()) {
-        mergedFwdVar = exposed->varIdxs;
-      }
-      else {
-        for (auto var : exposed->varIdxs) {
-          auto it = mergedFwdVar.find(var.first);
-          if (it == mergedFwdVar.end()) {
-            mergedFwdVar.insert(var);
-          }
-          else if (var.second != it->second) {
-            throw Exception::RuntimeException(context,
-              "Two forwarded modules both define a "
-              "variable named $" + var.first.norm() + ".");
-          }
-        }
-      }
-
-      //*************************************************
-      auto& mergedFwdMix(currentRoot->mergedFwdMixs3);
-      //*************************************************
-      if (mergedFwdMix.empty()) {
-        mergedFwdMix = exposed->mixIdxs;
-      }
-      else {
-        for (auto mix : exposed->mixIdxs) {
-          auto it = mergedFwdMix.find(mix.first);
-          if (it == mergedFwdMix.end()) {
-            mergedFwdMix.insert(mix);
-          }
-          else if (mix.second != it->second) {
-            throw Exception::RuntimeException(context,
-              "Two forwarded modules both define a "
-              "mixin named " + mix.first.norm() + ".");
-          }
-        }
-      }
-
-      //*************************************************
-      auto& mergedFwdFn(currentRoot->mergedFwdFns3);
-      //*************************************************
-      if (mergedFwdFn.empty()) {
-        mergedFwdFn = exposed->fnIdxs;
-      }
-      else {
-        for (auto fn : exposed->fnIdxs) {
-          auto it = mergedFwdFn.find(fn.first);
-          if (it == mergedFwdFn.end()) {
-            mergedFwdFn.insert(fn);
-          }
-          else if (fn.second != it->second) {
-            throw Exception::RuntimeException(context,
-              "Two forwarded modules both define a "
-              "function named " + fn.first.norm() + ".");
-          }
-        }
-      }
-
-
-      delete exposed;
 
     }
     else {
@@ -3571,7 +3416,7 @@ namespace Sass {
       // one understood by the locale if needed
       const char* found = strchr(str, '.');
       if (found != NULL) {
-        // substitution is required. perform the substitution on a exposed
+        // substitution is required. perform the substitution on a exposing
         // of the string. This is slower but it is thread safe.
         char* copy = sass_copy_c_string(str);
         *(copy + (found - str)) = separator;

@@ -173,10 +173,9 @@ namespace Sass {
     MidxEnvKeyMap& mixIdxs;
     FidxEnvKeyMap& fnIdxs;
 
-    ModuleMap<std::pair<VarRefs*, Root*>> fwdModule33;
-    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal33;
 
-    sass::vector<std::pair<VarRefs*, Root*>> forwarded;
+    ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule33;
+    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal33;
 
     EnvFrame* getModule() {
       auto current = this;
