@@ -29,7 +29,7 @@ namespace Sass {
     context(context),
     hasWithConfig(context.hasWithConfig),
     scanner(context, source),
-    varStack(context.varStack),
+    varStack(context.varRoot.stack),
     lastSilentComment()
   {}
 
@@ -48,7 +48,7 @@ namespace Sass {
       return parser.scanner.isDone();
     }
     catch (Exception::ParserException&) {
-      return false;
+      return false; 
     }
   }
 

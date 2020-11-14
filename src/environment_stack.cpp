@@ -17,71 +17,40 @@ namespace Sass {
   // The root is used for all runtime state
   // Also contains parsed root scope stack
   EnvRoot::EnvRoot(
-    EnvFrameVector& stack,
     Compiler& compiler) :
-    EnvFrame(*this, stack),
-    compiler(compiler)
+    stack(compiler.varStack3312),
+    idxs(new VarRefs(
+      *this,
+      nullptr,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      false,
+      false,
+      true))
   {
-    // Initialize as not active yet
-    // root.varFramePtr.push_back(0xFFFFFFFF);
-    // root.mixFramePtr.push_back(0xFFFFFFFF);
-    // root.fnFramePtr.push_back(0xFFFFFFFF);
-    // // Account for allocated memory
-    // root.scopes.push_back(idxs);
     // Push onto our stack
-    stack.push_back(this);
+    stack.push_back(this->idxs);
   }
   // EO EnvRoot ctor
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Root-frame constructor
-  // Invoked by EnvRoot ctor
-  EnvFrame::EnvFrame(
-    EnvRoot& root,
-    EnvFrameVector& stack) :
-    stack(stack),
-    permeable(false),
-    parent(root),
-    root(root),
-    idxs(new VarRefs(
-      nullptr,
-      0xFFFFFFFF,
-      0xFFFFFFFF,
-      0xFFFFFFFF,
-      false, true)),
-    varIdxs(idxs->varIdxs),
-    mixIdxs(idxs->mixIdxs),
-    fnIdxs(idxs->fnIdxs),
-    assignments(idxs->assignments),
-    variables(idxs->variables)
-  {
-    // Don't access root, not yet initialized
-  }
-  // EO EnvFrame ctor
-
   // Value constructor
   EnvFrame::EnvFrame(
-    EnvFrameVector& stack,
+    Compiler& compiler,
     bool permeable,
     bool isModule,
     bool isImport) :
-    stack(stack),
-    permeable(permeable),
-    isImport(isImport),
-    parent(*stack.back()),
-    root(stack.back()->root),
-    idxs(new VarRefs(parent.idxs,
-      uint32_t(root.varFramePtr.size()),
-      uint32_t(root.mixFramePtr.size()),
-      uint32_t(root.fnFramePtr.size()),
-      permeable, isModule)),
-    varIdxs(idxs->varIdxs),
-    mixIdxs(idxs->mixIdxs),
-    fnIdxs(idxs->fnIdxs),
-    assignments(idxs->assignments),
-    variables(idxs->variables)
+    stack(compiler.varRoot.stack),
+    idxs(new VarRefs(
+      compiler.varRoot,
+      compiler.varRoot.stack.back(),
+      uint32_t(compiler.varRoot.varFramePtr.size()),
+      uint32_t(compiler.varRoot.mixFramePtr.size()),
+      uint32_t(compiler.varRoot.fnFramePtr.size()),
+      permeable, isImport, isModule))
   {
     if (isModule) {
       // Lives in built-in scope
@@ -91,21 +60,20 @@ namespace Sass {
     }
     else {
       // Initialize stacks as not active yet
-      root.varFramePtr.push_back(0xFFFFFFFF);
-      root.mixFramePtr.push_back(0xFFFFFFFF);
-      root.fnFramePtr.push_back(0xFFFFFFFF);
+      idxs->root.varFramePtr.push_back(0xFFFFFFFF);
+      idxs->root.mixFramePtr.push_back(0xFFFFFFFF);
+      idxs->root.fnFramePtr.push_back(0xFFFFFFFF);
       // Account for allocated memory
-      root.scopes.push_back(idxs);
+      idxs->root.scopes.push_back(idxs);
     }
     // Check and prevent stack smashing
     if (stack.size() > MAX_NESTING) {
       throw Exception::RecursionLimitError();
     }
     // Push onto our stack
-    stack.push_back(this);
+    stack.push_back(this->idxs);
   }
   // EO EnvFrame ctor
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -114,16 +82,6 @@ namespace Sass {
   {
     // Pop from stack
     stack.pop_back();
-
-    // for (auto fwd : fwdGlobal33) {
-    //   if (fwd.second == nullptr) continue;
-    //   delete fwd.first;
-    // }
-    // for (auto fwd : fwdModule33) {
-    //   if (fwd.second.second == nullptr) continue;
-    //   delete fwd.second.first;
-    // }
-
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -131,7 +89,7 @@ namespace Sass {
 
   // Register new variable on local stack
   // Invoked mostly by stylesheet parser
-  VarRef EnvFrame::createVariable(
+  VarRef VarRefs::createVariable(
     const EnvKey& name)
   {
     // Check for existing function
@@ -139,7 +97,7 @@ namespace Sass {
     // if (it != varIdxs.end()) {
     //   return { idxs->varFrame, it->second };
     // }
-    if (idxs->varFrame == 0xFFFFFFFF) {
+    if (varFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intVariables.size();
       root.intVariables.resize(offset + 1);
       varIdxs[name] = offset;
@@ -147,7 +105,7 @@ namespace Sass {
     }
 
     if (isImport) {
-      return parent.createVariable(name);
+      return pscope->createVariable(name);
     }
 
     // Get local offset to new variable
@@ -155,7 +113,7 @@ namespace Sass {
     // Remember the variable name
     varIdxs[name] = offset;
     // Return stack index reference
-    return { idxs->varFrame, offset };
+    return { varFrame, offset };
   }
   // EO createVariable
 
@@ -163,16 +121,16 @@ namespace Sass {
   // Mostly invoked by built-in functions
   // Then invoked for custom C-API function
   // Finally for every parsed function rule
-  VarRef EnvFrame::createFunction(
+  VarRef VarRefs::createFunction(
     const EnvKey& name)
   {
     // Check for existing function
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
       if (it->second > root.privateFnOffset)
-        return { idxs->fnFrame, it->second };
+        return { fnFrame, it->second };
     }
-    if (idxs->fnFrame == 0xFFFFFFFF) {
+    if (fnFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intFunction.size();
       root.intFunction.resize(offset + 1);
       fnIdxs[name] = offset;
@@ -183,23 +141,23 @@ namespace Sass {
     // Remember the function name
     fnIdxs[name] = offset;
     // Return stack index reference
-    return { idxs->fnFrame, offset };
+    return { fnFrame, offset };
   }
   // EO createFunction
 
   // Register new mixin on local stack
   // Only invoked for mixin rules
   // But also for content blocks
-  VarRef EnvFrame::createMixin(
+  VarRef VarRefs::createMixin(
     const EnvKey& name)
   {
     // Check for existing mixin
     auto it = mixIdxs.find(name);
     if (it != mixIdxs.end()) {
       if (it->second > root.privateMixOffset)
-        return { idxs->mixFrame, it->second };
+        return { mixFrame, it->second };
     }
-    if (idxs->mixFrame == 0xFFFFFFFF) {
+    if (mixFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intMixin.size();
       root.intMixin.resize(offset + 1);
       mixIdxs[name] = offset;
@@ -210,7 +168,7 @@ namespace Sass {
     // Remember the mixin name
     mixIdxs[name] = offset;
     // Return stack index reference
-    return { idxs->mixFrame, offset };
+    return { mixFrame, offset };
   }
   // EO createMixin
 
@@ -220,24 +178,24 @@ namespace Sass {
   // Get local variable by name, needed for most simplistic case
   // for static variable optimization in loops. When we know that
   // there is an existing local variable, we can always use that!
-  VarRef EnvFrame::getLocalVariableIdx(const EnvKey& name)
+  VarRef VarRefs::getLocalVariableIdx(const EnvKey& name)
   {
     auto it = varIdxs.find(name);
     if (it == varIdxs.end()) return {};
-    return { idxs->varFrame, it->second };
+    return { varFrame, it->second };
   }
   // EO getLocalVariableIdx
 
   // Return lookups in lexical manner. If [passThrough] is false,
   // we abort the lexical lookup on any non-permeable scope frame.
-  VarRef EnvFrame::getMixinIdx(const EnvKey& name, bool passThrough)
+  VarRef VarRefs::getMixinIdx(const EnvKey& name, bool passThrough)
   {
-    EnvFrame* current = this;
+    VarRefs* current = this;
     while (current != nullptr) {
       // Check if we already have this var
       auto it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
-        return { current->idxs->mixFrame, it->second };
+        return { current->mixFrame, it->second };
       }
       current = current->getParent(passThrough);
     }
@@ -248,14 +206,14 @@ namespace Sass {
 
   // Return lookups in lexical manner. If [passThrough] is false,
   // we abort the lexical lookup on any non-permeable scope frame.
-  VarRef EnvFrame::getFunctionIdx(const EnvKey& name, bool passThrough)
+  VarRef VarRefs::getFunctionIdx(const EnvKey& name, bool passThrough)
   {
-    EnvFrame* current = this;
+    VarRefs* current = this;
     while (current != nullptr) {
       // Check if we already have this var
       auto it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
-        return { current->idxs->fnFrame, it->second };
+        return { current->fnFrame, it->second };
       }
       current = current->getParent(passThrough);
     }
@@ -266,18 +224,25 @@ namespace Sass {
 
   // Return lookups in lexical manner. If [passThrough] is false,
   // we abort the lexical lookup on any non-permeable scope frame.
-  VarRef EnvFrame::getVariableIdx(const EnvKey& name, bool passThrough)
+  VarRef VarRefs::getVariableIdx(const EnvKey& name, bool passThrough)
   {
-    EnvFrame* current = this;
+    VarRefs* current = this;
     while (current != nullptr) {
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
-        return { current->idxs->fnFrame, it->second };
+        return { current->fnFrame, it->second };
       }
       current = current->getParent(passThrough);
     }
     // Not found
     return {};
+  }
+
+  // Test if we are top frame
+
+  bool VarRefs::isRoot() const {
+    // Check if raw pointers are equal
+    return this == root.idxs;
   }
   // EO getVariableIdx
   
@@ -459,7 +424,7 @@ namespace Sass {
       auto it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
         const VarRef vidx{ current->mixFrame, it->second };
-        CallableObj& value = root.getMixin(vidx);
+        CallableObj& value = idxs->root.getMixin(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;
@@ -482,7 +447,7 @@ namespace Sass {
       auto it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
         const VarRef vidx{ current->fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
+        CallableObj& value = idxs->root.getFunction(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;
@@ -510,7 +475,7 @@ namespace Sass {
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = root.getVariable(vidx);
+        ValueObj& value = idxs->root.getVariable(vidx);
         if (value != nullptr) { return value; }
       }
       if (current->pscope == nullptr) break;
@@ -535,7 +500,7 @@ namespace Sass {
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = root.getVariable(vidx);
+        ValueObj& value = idxs->root.getVariable(vidx);
         if (value != nullptr) { value = val; return; }
       }
       if (current->pscope == nullptr) break;

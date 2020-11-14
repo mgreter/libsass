@@ -92,10 +92,10 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
-        auto parent = compiler.varStack.back()->getModule();
+        auto parent = compiler.varRoot.stack.back()->getModule23();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule33.find(plugin->value());
-          if (pp != parent->fwdModule33.end()) {
+          auto pp = parent->fwdModule55.find(plugin->value());
+          if (pp != parent->fwdModule55.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->varIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -108,7 +108,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasVar = false;
-        for (auto asd : parent->fwdGlobal33) {
+        for (auto asd : parent->fwdGlobal55) {
           VarRefs* global = asd.first;
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
@@ -131,8 +131,8 @@ namespace Sass {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         ValueObj ex = compiler.getVariable(variable->value());
         bool hasVar = false;
-        auto parent = compiler.varStack.back()->getModule();
-        for (auto asd : parent->fwdGlobal33) {
+        auto parent = compiler.varRoot.stack.back()->getModule23();
+        for (auto asd : parent->fwdGlobal55) {
           VarRefs* global = asd.first;
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
@@ -150,10 +150,10 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
-        auto parent = compiler.varStack.back()->getModule();
+        auto parent = compiler.varRoot.stack.back()->getModule23();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule33.find(plugin->value());
-          if (pp != parent->fwdModule33.end()) {
+          auto pp = parent->fwdModule55.find(plugin->value());
+          if (pp != parent->fwdModule55.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -166,7 +166,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto asd : parent->fwdGlobal33) {
+        for (auto asd : parent->fwdGlobal55) {
           VarRefs* global = asd.first;
           if (global->fnIdxs.count(variable->value()) != 0) {
             if (hasFn) {
@@ -186,10 +186,10 @@ namespace Sass {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
 
-        auto parent = compiler.varStack.back()->getModule();
+        auto parent = compiler.varRoot.stack.back()->getModule23();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule33.find(plugin->value());
-          if (pp != parent->fwdModule33.end()) {
+          auto pp = parent->fwdModule55.find(plugin->value());
+          if (pp != parent->fwdModule55.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->mixIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -202,7 +202,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto asd : parent->fwdGlobal33) {
+        for (auto asd : parent->fwdGlobal55) {
           VarRefs* global = asd.first;
           if (global->mixIdxs.count(variable->value()) != 0) {
             if (hasFn) {
@@ -232,9 +232,9 @@ namespace Sass {
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         Map* list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.varStack.back()->getModule();
-        auto it = module->fwdModule33.find(ns->value());
-        if (it != module->fwdModule33.end()) {
+        auto module = compiler.varRoot.stack.back()->getModule23();
+        auto it = module->fwdModule55.find(ns->value());
+        if (it != module->fwdModule55.end()) {
           VarRefs* refs = it->second.first;
           Moduled* root = it->second.second;
           if (root && !root->isActive) {
@@ -260,9 +260,9 @@ namespace Sass {
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         Map* list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.varStack.back()->getModule();
-        auto it = module->fwdModule33.find(ns->value());
-        if (it != module->fwdModule33.end()) {
+        auto module = compiler.varRoot.stack.back()->getModule23();
+        auto it = module->fwdModule55.find(ns->value());
+        if (it != module->fwdModule55.end()) {
           VarRefs* refs = it->second.first;
           Moduled* root = it->second.second;
           if (root && !root->isActive) {
@@ -316,11 +316,11 @@ namespace Sass {
 
         CallableObj callable;
 
-        auto parent = compiler.varStack.back()->getModule();
+        auto parent = compiler.varRoot.stack.back()->getModule23();
 
         if (ns != nullptr) {
-          auto pp = parent->fwdModule33.find(ns->value());
-          if (pp != parent->fwdModule33.end()) {
+          auto pp = parent->fwdModule55.find(ns->value());
+          if (pp != parent->fwdModule55.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(name->value());
             if (it != module->fnIdxs.end()) {
@@ -339,7 +339,7 @@ namespace Sass {
 
           if (!callable) {
 
-            for (auto asd : parent->fwdGlobal33) {
+            for (auto asd : parent->fwdGlobal55) {
               VarRefs* global = asd.first;
               auto it = global->fnIdxs.find(name->value());
               if (it != global->fnIdxs.end()) {
@@ -497,7 +497,7 @@ namespace Sass {
 
           if (sheet == nullptr) {
             // This is the new barrier!
-            EnvFrame local(compiler.varStack, true, true);
+            EnvFrame local(compiler, true, true);
             // eval.selectorStack.push_back(nullptr);
             sheet = compiler.registerImport(loaded); // @use
             // eval.selectorStack.pop_back();

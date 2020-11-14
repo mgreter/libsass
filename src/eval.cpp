@@ -1356,7 +1356,7 @@ namespace Sass {
   CssRoot* Eval::acceptRoot(Root* root)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
-    EnvScope scoped(compiler.varRoot, root->idxs);
+    // EnvScope scoped(compiler.varRoot, root->idxs);
     LOCAL_PTR(CssParentNode, current, css);
     root->isActive = true;
     root->isLoading = true;
@@ -2305,7 +2305,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler.varStack, true, false, true);
+      EnvFrame local(compiler, true, false, true);
       StyleSheet* sheet = compiler.registerImport(loaded);
       // const sass::string& url(resolved[0].abs_path);
       return sheet;
