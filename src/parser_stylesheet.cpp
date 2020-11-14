@@ -1759,16 +1759,8 @@ namespace Sass {
     std::set<EnvKey>& toggledVariables(rule->toggledVariables());
     std::set<EnvKey>& toggledCallables(rule->toggledCallables());
 
-    // EnvFrame* current(context.varStack.back());
-
-    bool hasCached = false;
-
-
-
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      hasCached = true;
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1799,6 +1791,8 @@ namespace Sass {
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(url, scanner.sourceUrl);
     callStackFrame frame(context, { pstate, Strings::forwardRule });
+
+    bool hasCached = false;
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
@@ -2062,6 +2056,7 @@ namespace Sass {
     if (ImportObj loaded = context.loadImport(resolved[0])) {
       EnvFrame local(context.varStack, true, false, true);
       StyleSheet* sheet = context.registerImport(loaded);
+      sheet->root2->import = loaded;
       const sass::string& url(resolved[0].abs_path);
       rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
     }
