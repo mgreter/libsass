@@ -310,7 +310,10 @@ namespace Sass {
     sass::vector<CallableObj> intMixin;
     sass::vector<ValueObj> intVariables;
   public:
+    // Last private accessible item
     uint32_t privateVarOffset = 0;
+    uint32_t privateMixOffset = 0;
+    uint32_t privateFnOffset = 0;
   private:
     // All created runtime variable objects.
     // Needed to track the memory allocations
@@ -318,9 +321,10 @@ namespace Sass {
     // Access it by absolute `frameOffset`
     sass::vector<VarRefs*> scopes;
 
+  public:
     // The current runtime stack
     sass::vector<const VarRefs*> stack;
-
+  private:
     Compiler& compiler;
 
   public:
@@ -453,43 +457,46 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      if (idxs->varFrame == 0xFFFFFFFF) return;
+      if (idxs->varFrame != 0xFFFFFFFF) {
 
-      // Check if we have scoped variables
-      if (idxs->varIdxs.size() != 0) {
-        // Get offset into variable vector
-        oldVarOffset = (uint32_t)env.variables.size();
-        // Remember previous frame "addresses"
-        oldVarFrame = env.varFramePtr[idxs->varFrame];
-        // Update current frame offset address
-        env.varFramePtr[idxs->varFrame] = oldVarOffset;
-        // Create space for variables in this frame scope
-        env.variables.resize(oldVarOffset + idxs->varIdxs.size());
+        // Check if we have scoped variables
+        if (idxs->varIdxs.size() != 0) {
+          // Get offset into variable vector
+          oldVarOffset = (uint32_t)env.variables.size();
+          // Remember previous frame "addresses"
+          oldVarFrame = env.varFramePtr[idxs->varFrame];
+          // Update current frame offset address
+          env.varFramePtr[idxs->varFrame] = oldVarOffset;
+          // Create space for variables in this frame scope
+          env.variables.resize(oldVarOffset + idxs->varIdxs.size());
+        }
+
+        // Check if we have scoped mixins
+        if (idxs->mixIdxs.size() != 0) {
+          // Get offset into mixin vector
+          oldMixOffset = (uint32_t)env.mixins.size();
+          // Remember previous frame "addresses"
+          oldMixFrame = env.mixFramePtr[idxs->mixFrame];
+          // Update current frame offset address
+          env.mixFramePtr[idxs->mixFrame] = oldMixOffset;
+          // Create space for mixins in this frame scope
+          env.mixins.resize(oldMixOffset + idxs->mixIdxs.size());
+        }
+
+        // Check if we have scoped functions
+        if (idxs->fnIdxs.size() != 0) {
+          // Get offset into function vector
+          oldFnOffset = (uint32_t)env.functions.size();
+          // Remember previous frame "addresses"
+          oldFnFrame = env.fnFramePtr[idxs->fnFrame];
+          // Update current frame offset address
+          env.fnFramePtr[idxs->fnFrame] = oldFnOffset;
+          // Create space for functions in this frame scope
+          env.functions.resize(oldFnOffset + idxs->fnIdxs.size());
+        }
+
       }
 
-      // Check if we have scoped mixins
-      if (idxs->mixIdxs.size() != 0) {
-        // Get offset into mixin vector
-        oldMixOffset = (uint32_t)env.mixins.size();
-        // Remember previous frame "addresses"
-        oldMixFrame = env.mixFramePtr[idxs->mixFrame];
-        // Update current frame offset address
-        env.mixFramePtr[idxs->mixFrame] = oldMixOffset;
-        // Create space for mixins in this frame scope
-        env.mixins.resize(oldMixOffset + idxs->mixIdxs.size());
-      }
-
-      // Check if we have scoped functions
-      if (idxs->fnIdxs.size() != 0) {
-        // Get offset into function vector
-        oldFnOffset = (uint32_t)env.functions.size();
-        // Remember previous frame "addresses"
-        oldFnFrame = env.fnFramePtr[idxs->fnFrame];
-        // Update current frame offset address
-        env.fnFramePtr[idxs->fnFrame] = oldFnOffset;
-        // Create space for functions in this frame scope
-        env.functions.resize(oldFnOffset + idxs->fnIdxs.size());
-      }
 
       // Push frame onto stack
       // Mostly for dynamic lookups
@@ -506,36 +513,38 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      if (idxs->varFrame == 0xFFFFFFFF) return;
+      if (idxs->varFrame != 0xFFFFFFFF) {
 
-      // Check if we had scoped variables
-      if (idxs->varIdxs.size() != 0) {
-        // Truncate variable vector
-        env.variables.resize(
-          oldVarOffset);
-        // Restore old frame address
-        env.varFramePtr[idxs->varFrame] =
-          oldVarFrame;
-      }
+        // Check if we had scoped variables
+        if (idxs->varIdxs.size() != 0) {
+          // Truncate variable vector
+          env.variables.resize(
+            oldVarOffset);
+          // Restore old frame address
+          env.varFramePtr[idxs->varFrame] =
+            oldVarFrame;
+        }
 
-      // Check if we had scoped mixins
-      if (idxs->mixIdxs.size() != 0) {
-        // Truncate existing vector
-        env.mixins.resize(
-          oldMixOffset);
-        // Restore old frame address
-        env.mixFramePtr[idxs->mixFrame] =
-          oldMixFrame;
-      }
+        // Check if we had scoped mixins
+        if (idxs->mixIdxs.size() != 0) {
+          // Truncate existing vector
+          env.mixins.resize(
+            oldMixOffset);
+          // Restore old frame address
+          env.mixFramePtr[idxs->mixFrame] =
+            oldMixFrame;
+        }
 
-      // Check if we had scoped functions
-      if (idxs->fnIdxs.size() != 0) {
-        // Truncate existing vector
-        env.functions.resize(
-          oldFnOffset);
-        // Restore old frame address
-        env.fnFramePtr[idxs->fnFrame] =
-          oldFnFrame;
+        // Check if we had scoped functions
+        if (idxs->fnIdxs.size() != 0) {
+          // Truncate existing vector
+          env.functions.resize(
+            oldFnOffset);
+          // Restore old frame address
+          env.fnFramePtr[idxs->fnFrame] =
+            oldFnFrame;
+        }
+
       }
 
       // Pop frame from stack

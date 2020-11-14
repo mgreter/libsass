@@ -1354,6 +1354,7 @@ namespace Sass {
   CssRoot* Eval::acceptRoot(Root* root)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
+    EnvScope scoped(compiler.varRoot, root->idxs);
     LOCAL_PTR(CssParentNode, current, css);
     root->isActive = true;
     root->isLoading = true;
@@ -2285,6 +2286,8 @@ namespace Sass {
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
+
+    // EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
 
     // Evaluate the included sheet
     for (const StatementObj& item : sheet->root2->elements()) {

@@ -235,10 +235,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (root.isNull()) return {};
 
     Eval eval(*this, *this, plainCss);
-    EnvScope scoped(varRoot, varRoot.idxs);
-    for (size_t i = 0; i < fnList.size(); i++) {
-      varRoot.functions[i] = fnList[i];
-    }
 
     // debug_ast(root);
 
@@ -630,23 +626,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Interface for built in functions
   /////////////////////////////////////////////////////////////////////////
 
-  // Register built-in function with only one parameter list.
-  uint32_t Compiler::createBuiltInFunction(const sass::string& name,
-    const sass::string& signature, SassFnSig cb)
-  {
-    EnvRoot root(varStack, *this);
-    SourceDataObj source = SASS_MEMORY_NEW(SourceString,
-      "sass://signature", "(" + signature + ")");
-    auto args = ArgumentDeclaration::parse(*this, source);
-    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
-    VarRef fidx({ 0xFFFFFFFF, (uint32_t)varRoot.intFunction.size() });
-    VarRef lidx(varRoot.createFunction(":" + name));
-    varRoot.intFunction.push_back(callable);
-    fnList.push_back(callable);
-    return lidx.offset;
-  }
-  // EO registerBuiltInFunction
-
   uint32_t Compiler::createBuiltInMixin(const sass::string& name,
     const sass::string& signature, SassFnSig cb)
   {
@@ -658,7 +637,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     auto& mixins(varRoot.intMixin);
     uint32_t offset((uint32_t)mixins.size());
     varRoot.intMixin.push_back(callable);
-    return varRoot.mixIdxs[name] = offset;
+    varRoot.privateMixOffset = offset;
+    return offset; // No lookup
   }
 
   uint32_t Compiler::createBuiltInVariable(const sass::string& name, Value* value)
@@ -668,8 +648,25 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     uint32_t offset((uint32_t)variables.size());
     varRoot.intVariables.push_back(value);
     varRoot.privateVarOffset = offset;
-    return varRoot.varIdxs[name] = offset;
+    return offset; // No lookup
   }
+
+  // Register built-in function with only one parameter list.
+  uint32_t Compiler::createBuiltInFunction(const sass::string& name,
+    const sass::string& signature, SassFnSig cb)
+  {
+    EnvRoot root(varStack, *this);
+    SourceDataObj source = SASS_MEMORY_NEW(SourceString,
+      "sass://signature", "(" + signature + ")");
+    auto args = ArgumentDeclaration::parse(*this, source);
+    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    auto& functions(varRoot.intFunction);
+    uint32_t offset((uint32_t)functions.size());
+    varRoot.intFunction.push_back(callable);
+    varRoot.privateFnOffset = offset;
+    return offset; // No lookup
+  }
+  // EO registerBuiltInFunction
 
   // Register built-in function with only one parameter list.
   uint32_t Compiler::registerBuiltInFunction(const sass::string& name,
@@ -680,11 +677,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       "sass://signature", "(" + signature + ")");
     auto args = ArgumentDeclaration::parse(*this, source);
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
-    fnLookup.insert(std::make_pair(callable->envkey(), callable));
-    VarRef idx(varRoot.createFunction(callable->envkey()));
+    auto& functions(varRoot.intFunction);
+    uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
-    fnList.push_back(callable);
-    return idx.offset;
+    varRoot.privateFnOffset = offset;
+    return varRoot.fnIdxs[name] = offset;
   }
   // EO registerBuiltInFunction
 
@@ -702,10 +699,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
-    VarRef idx(varRoot.createFunction(":" + name));
+    auto& functions(varRoot.intFunction);
+    uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
-    fnList.push_back(callable);
-    return idx.offset;
+    varRoot.privateFnOffset = offset;
+    return offset;
   }
   // EO registerBuiltInOverloadFns
 
@@ -723,11 +721,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
-    fnLookup.insert(std::make_pair(name, callable));
-    VarRef idx(varRoot.createFunction(name));
+    auto& functions(varRoot.intFunction);
+    uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
-    fnList.push_back(callable);
-    return idx.offset;
+    varRoot.privateFnOffset = offset;
+    return varRoot.fnIdxs[name] = offset;
   }
   // EO registerBuiltInOverloadFns
 
@@ -759,11 +757,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Create a new external callable from the sass function
     ExternalCallable* callable = makeExternalCallable(function);
     // Currently external functions are treated globally
-    if (fnLookup.count(callable->envkey()) == 0) {
-      fnLookup.insert(std::make_pair(callable->envkey(), callable));
-      varRoot.createFunction(callable->envkey());
-      fnList.push_back(callable);
-    }
+    // if (fnLookup.count(callable->envkey()) == 0) {
+    //   fnLookup.insert(std::make_pair(callable->envkey(), callable));
+    //   varRoot.createFunction(callable->envkey());
+    //   fnList.push_back(callable);
+    // }
   }
   // EO registerCustomFunction
 
@@ -909,19 +907,19 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // registerCustomFunction(qwe);
 
-    registerCustomFunction(sass_make_function("set-local($name, $value)", fn_set_local, (void*)31));
-    registerCustomFunction(sass_make_function("set-global($name, $value)", fn_set_global, (void*)31));
-    registerCustomFunction(sass_make_function("set-lexical($name, $value)", fn_set_lexical, (void*)31));
-
-    registerCustomFunction(sass_make_function("get-local($name)", fn_get_local, (void*)31));
-    registerCustomFunction(sass_make_function("get-global($name)", fn_get_global, (void*)31));
-    registerCustomFunction(sass_make_function("get-lexical($name)", fn_get_lexical, (void*)31));
+    // registerCustomFunction(sass_make_function("set-local($name, $value)", fn_set_local, (void*)31));
+    // registerCustomFunction(sass_make_function("set-global($name, $value)", fn_set_global, (void*)31));
+    // registerCustomFunction(sass_make_function("set-lexical($name, $value)", fn_set_lexical, (void*)31));
+    // 
+    // registerCustomFunction(sass_make_function("get-local($name)", fn_get_local, (void*)31));
+    // registerCustomFunction(sass_make_function("get-global($name)", fn_get_global, (void*)31));
+    // registerCustomFunction(sass_make_function("get-lexical($name)", fn_get_lexical, (void*)31));
 
     // ScopedStack scoped(varStack, &varRoot);
 
     // register custom functions (defined via C-API)
-    for (auto& function : cFunctions)
-      registerCustomFunction(function);
+    //for (auto& function : cFunctions)
+    //  registerCustomFunction(function);
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking

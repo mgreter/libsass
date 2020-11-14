@@ -23,11 +23,11 @@ namespace Sass {
     compiler(compiler)
   {
     // Initialize as not active yet
-    root.varFramePtr.push_back(0xFFFFFFFF);
-    root.mixFramePtr.push_back(0xFFFFFFFF);
-    root.fnFramePtr.push_back(0xFFFFFFFF);
-    // Account for allocated memory
-    root.scopes.push_back(idxs);
+    // root.varFramePtr.push_back(0xFFFFFFFF);
+    // root.mixFramePtr.push_back(0xFFFFFFFF);
+    // root.fnFramePtr.push_back(0xFFFFFFFF);
+    // // Account for allocated memory
+    // root.scopes.push_back(idxs);
     // Push onto our stack
     stack.push_back(this);
   }
@@ -46,7 +46,10 @@ namespace Sass {
     parent(root),
     root(root),
     idxs(new VarRefs(
-      nullptr, 0, 0, 0,
+      nullptr,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
       false, true)),
     varIdxs(idxs->varIdxs),
     mixIdxs(idxs->mixIdxs),
@@ -130,6 +133,11 @@ namespace Sass {
   VarRef EnvFrame::createVariable(
     const EnvKey& name)
   {
+    // Check for existing function
+    // auto it = varIdxs.find(name);
+    // if (it != varIdxs.end()) {
+    //   return { idxs->varFrame, it->second };
+    // }
     if (idxs->varFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intVariables.size();
       root.intVariables.resize(offset + 1);
@@ -152,16 +160,17 @@ namespace Sass {
   VarRef EnvFrame::createFunction(
     const EnvKey& name)
   {
+    // Check for existing function
+    auto it = fnIdxs.find(name);
+    if (it != fnIdxs.end()) {
+      if (it->second > root.privateFnOffset)
+        return { idxs->fnFrame, it->second };
+    }
     if (idxs->fnFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intFunction.size();
       root.intFunction.resize(offset + 1);
       fnIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
-    }
-    // Check for existing function
-    auto it = fnIdxs.find(name);
-    if (it != fnIdxs.end()) {
-      return { idxs->fnFrame, it->second };
     }
     // Get local offset to new function
     uint32_t offset = (uint32_t)fnIdxs.size();
@@ -178,16 +187,17 @@ namespace Sass {
   VarRef EnvFrame::createMixin(
     const EnvKey& name)
   {
+    // Check for existing mixin
+    auto it = mixIdxs.find(name);
+    if (it != mixIdxs.end()) {
+      if (it->second > root.privateMixOffset)
+        return { idxs->mixFrame, it->second };
+    }
     if (idxs->mixFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intMixin.size();
       root.intMixin.resize(offset + 1);
       mixIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
-    }
-    // Check for existing mixin
-    auto it = mixIdxs.find(name);
-    if (it != mixIdxs.end()) {
-      return { idxs->mixFrame, it->second };
     }
     // Get local offset to new mixin
     uint32_t offset = (uint32_t)mixIdxs.size();
@@ -406,7 +416,7 @@ namespace Sass {
   void EnvRoot::setFunction(const VarRef& fidx, UserDefinedCallableObj value)
   {
     if (fidx.frame == 0xFFFFFFFF) {
-      intFunction[fidx.offset] = value;;
+      intFunction[fidx.offset] = value;
     }
     else {
       functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset] = value;
