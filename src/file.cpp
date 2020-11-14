@@ -439,24 +439,20 @@ namespace Sass {
         findFileOrPartial(root, base, name + ".import" + suffix, CWD, cache, exts, includes);
         if (includes.size()) return includes;
 
-        findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
-        if (includes.size()) return includes;
       }
-      else {
-        findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
-        if (includes.size()) return includes;
 
-        findFileOrPartial(root, base, name + ".import" + suffix, CWD, cache, exts, includes);
-        if (includes.size()) return includes;
-      }
+      findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
+      if (includes.size()) return includes;
 
 
       // if (!suffix.empty()) return includes;
 
       sass::string subdir(join_paths(base, name));
 
-      findFileOrPartial(root, subdir, "index.import", CWD, cache, exts, includes);
-      if (includes.size()) return includes;
+      if (forImport) {
+        findFileOrPartial(root, subdir, "index.import", CWD, cache, exts, includes);
+        if (includes.size()) return includes;
+      }
 
       findFileOrPartial(root, subdir, "index", CWD, cache, exts, includes);
       if (includes.size()) return includes;

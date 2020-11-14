@@ -1421,16 +1421,20 @@ namespace Sass {
 
       Root* root = node->root();
 
+      if (root->isActive) {
+        // return nullptr;
+      }
+
       LocalOption<bool> scoped(compiler.hasWithConfig,
         compiler.hasWithConfig || node->hasWithConfig());
 
-      if (root->isActive) {
-        if (node->hasWithConfig() || compiler.hasWithConfig) {
-          throw Exception::RuntimeException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-      }
+      //if (root->isActive) {
+      //  if (node->hasWithConfig() || compiler.hasWithConfig) {
+      //    throw Exception::RuntimeException(compiler,
+      //      "This module was already loaded, so it "
+      //      "can't be configured using \"with\".");
+      //  }
+      //}
 
       root->isActive = true;
       root->isLoading = true;
@@ -1467,16 +1471,20 @@ namespace Sass {
 
       Root* root = node->root();
 
+      if (root->isActive) {
+        // return nullptr;
+      }
+
       LocalOption<bool> scoped(compiler.hasWithConfig,
         compiler.hasWithConfig || node->hasWithConfig());
 
-      if (root->isActive) {
-        if (node->hasWithConfig() || compiler.hasWithConfig) {
-          throw Exception::RuntimeException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-      }
+      //if (root->isActive) {
+      //  if (node->hasWithConfig() || compiler.hasWithConfig) {
+      //    throw Exception::RuntimeException(compiler,
+      //      "This module was already loaded, so it "
+      //      "can't be configured using \"with\".");
+      //  }
+      //}
 
       node->root()->isActive = true;
       node->root()->isLoading = true;
@@ -2347,7 +2355,7 @@ namespace Sass {
 
     EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
 
-    // Evaluate the included sheet
+    // Imports are always executed again
     for (const StatementObj& item : sheet->root2->elements()) {
       item->accept(this);
     }
