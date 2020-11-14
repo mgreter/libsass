@@ -1421,98 +1421,22 @@ namespace Sass {
 
   }
 
-  // Consumes a `@use` rule.
-  // [start] should point before the `@`.
-  UseRule* StylesheetParser::readUseRule(Offset start)
+
+
+  bool StylesheetParser::resolveUseRule(UseRule* rule)
   {
-    scanWhitespace();
-    sass::string url(string());
-    scanWhitespace();
-    sass::string ns(readUseNamespace(url, start));
-    scanWhitespace();
 
-    SourceSpan state(scanner.relevantSpanFrom(start));
+    sass::string ns(rule->ns());
+    sass::string url(rule->url());
+    sass::string prev(rule->prev());
+    bool hasWith(rule->hasWithConfig());
 
-    // Check if name is valid identifier
-    if (url.empty() || isDigit(url[0])) {
-      context.addFinalStackTrace(state);
-      throw Exception::InvalidSassIdentifier(context, url);
-    }
-
-    sass::vector<WithConfigVar> config;
-    bool hasWith(readWithConfiguration(config, false));
-    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
-    expectStatementSeparator("@use rule");
-    WithConfig wconfig(context, config, hasWith);
-   
-    if (isUseAllowed == false) {
-      context.addFinalStackTrace(state);
-      throw Exception::TardyAtRule(
-        context, Strings::useRule);
-    }
-
-    UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
-      scanner.relevantSpanFrom(start), url, {});
-    rule->hasWithConfig(hasWith);
-
-    EnvFrame* current(context.varStack.back());
     EnvFrame* modFrame(context.varStack.back()->getModule());
+    const ImportRequest import(url, scanner.sourceUrl);
+    SourceSpan pstate = rule->pstate();
+    //callStackFrame frame(context, { pstate, Strings::useRule });
 
     bool hasCached = false;
-
-    // Support internal modules first
-    if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      if (hasWith) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Built-in modules can't be configured.");
-      }
-
-      sass::string name(url.substr(5));
-      if (ns.empty()) ns = name;
-
-      Module* module(context.getModule(name));
-
-      if (module == nullptr) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Invalid internal module requested.");
-      }
-
-      if (ns == "*") {
-
-        for (auto var : module->idxs->varIdxs) {
-          current->varIdxs.insert(var);
-        }
-        for (auto mix : module->idxs->mixIdxs) {
-          current->mixIdxs.insert(mix);
-        }
-        for (auto fn : module->idxs->fnIdxs) {
-          current->fnIdxs.insert(fn);
-        }
-
-        current->fwdGlobal33.push_back(
-          { module->idxs, nullptr });
-
-      }
-      else if (modFrame->fwdModule33.count(ns)) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::ModuleAlreadyKnown(context, ns);
-      }
-      else {
-        current->fwdModule33.insert({ ns,
-          { module->idxs, nullptr } });
-      }
-
-      wconfig.finalize();
-      return rule.detach();
-
-    }
-
-    const ImportRequest import(url, scanner.sourceUrl);
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    callStackFrame frame(context, { pstate, Strings::useRule });
 
     // Deduct the namespace from url
     // After last slash before first dot
@@ -1672,13 +1596,107 @@ namespace Sass {
 
 
 
+    return hasCached;
 
 
+  }
 
+  // Consumes a `@use` rule.
+  // [start] should point before the `@`.
+  UseRule* StylesheetParser::readUseRule(Offset start)
+  {
+    scanWhitespace();
+    sass::string url(string());
+    scanWhitespace();
+    sass::string ns(readUseNamespace(url, start));
+    scanWhitespace();
 
+    SourceSpan state(scanner.relevantSpanFrom(start));
 
+    // Check if name is valid identifier
+    if (url.empty() || isDigit(url[0])) {
+      context.addFinalStackTrace(state);
+      throw Exception::InvalidSassIdentifier(context, url);
+    }
+
+    sass::vector<WithConfigVar> config;
+    bool hasWith(readWithConfiguration(config, false));
+    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
+    expectStatementSeparator("@use rule");
+    WithConfig wconfig(context, config, hasWith);
+   
+    if (isUseAllowed == false) {
+      context.addFinalStackTrace(state);
+      throw Exception::TardyAtRule(
+        context, Strings::useRule);
+    }
+
+    UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
+      scanner.relevantSpanFrom(start), url, {});
+    rule->hasWithConfig(hasWith);
+
+    EnvFrame* current(context.varStack.back());
+    EnvFrame* modFrame(context.varStack.back()->getModule());
+
+    // Support internal modules first
+    if (startsWithIgnoreCase(url, "sass:", 5)) {
+
+      if (hasWith) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Built-in modules can't be configured.");
+      }
+
+      sass::string name(url.substr(5));
+      if (ns.empty()) ns = name;
+
+      Module* module(context.getModule(name));
+
+      if (module == nullptr) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Invalid internal module requested.");
+      }
+
+      if (ns == "*") {
+
+        for (auto var : module->idxs->varIdxs) {
+          current->varIdxs.insert(var);
+        }
+        for (auto mix : module->idxs->mixIdxs) {
+          current->mixIdxs.insert(mix);
+        }
+        for (auto fn : module->idxs->fnIdxs) {
+          current->fnIdxs.insert(fn);
+        }
+
+        current->fwdGlobal33.push_back(
+          { module->idxs, nullptr });
+
+      }
+      else if (modFrame->fwdModule33.count(ns)) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::ModuleAlreadyKnown(context, ns);
+      }
+      else {
+        current->fwdModule33.insert({ ns,
+          { module->idxs, nullptr } });
+      }
+
+      wconfig.finalize();
+      return rule.detach();
+
+    }
+
+    bool hasCached = false;
+    rule->ns(ns);
+    rule->url(url);
+    rule->prev(scanner.sourceUrl);
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    callStackFrame frame(context, { pstate, Strings::useRule });
+
+    hasCached = resolveUseRule(rule);
     if (hasCached) return nullptr;
-
     wconfig.finalize();
     return rule.detach();
   }
