@@ -65,10 +65,11 @@ namespace Sass {
   EnvFrame::EnvFrame(
     EnvFrameVector& stack,
     bool permeable,
-    bool isModule) :
+    bool isModule,
+    bool isImport) :
     stack(stack),
     permeable(permeable),
-    // isModule(isModule),
+    isImport(isImport),
     parent(*stack.back()),
     root(stack.back()->root),
     idxs(new VarRefs(parent.idxs,
@@ -144,6 +145,11 @@ namespace Sass {
       varIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
     }
+
+    if (isImport) {
+      return parent.createVariable(name);
+    }
+
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
     // Remember the variable name

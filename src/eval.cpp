@@ -2287,7 +2287,7 @@ namespace Sass {
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
 
-    // EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
+    EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
 
     // Evaluate the included sheet
     for (const StatementObj& item : sheet->root2->elements()) {
