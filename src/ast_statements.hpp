@@ -571,6 +571,8 @@ namespace Sass {
   private:
     ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, url);
+    ADD_CONSTREF(sass::string, ns);
+    ADD_CONSTREF(sass::string, prev);
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     ADD_PROPERTY(bool, hasWithConfig);
