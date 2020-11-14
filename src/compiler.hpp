@@ -23,11 +23,33 @@ namespace Sass {
 
   public:
 
+    EnvKeyMap<Module> modules;
+
+    Module& createModule(const sass::string& name) {
+      auto it = modules.find(name);
+      if (it != modules.end()) {
+        return it->second;
+      }
+      auto kv = std::make_pair(
+        name, Module{ varRoot });
+      modules.insert(kv);
+      it = modules.find(name);
+      // ToDo: fix this!
+      return it->second;
+    }
+
+    Module* getModule(const sass::string& name) {
+      auto it = modules.find(name);
+      if (it == modules.end()) return nullptr;
+      return &it->second;
+    }
+
+
     bool hasWithConfig = false;
 
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.
-    sass::vector<EnvFrame*> varStack;
+    sass::vector<VarRefs*> varStack3312;
 
     // The root environment where parsed root variables
     // and (custom) functions plus mixins are registered.

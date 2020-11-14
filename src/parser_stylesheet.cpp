@@ -50,7 +50,7 @@ namespace Sass {
     Offset start(scanner.offset);
 
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
-    root->idxs = context.varStack.back()->idxs;;
+    root->idxs = context.varRoot.stack.back();
 
     LOCAL_PTR(Root, currentRoot, root);
 
@@ -255,9 +255,9 @@ namespace Sass {
 
     bool has_local = false;
     // Skip to optional global scope
-    EnvFrame* frame = global ?
-      context.varStack.front() :
-      context.varStack.back();
+    VarRefs* frame = global ?
+      context.varRoot.stack.front() :
+      context.varRoot.stack.back();
     // As long as we are not in a loop construct, we
     // can utilize full static variable optimizations.
     VarRef vidx(inLoopDirective ?
@@ -291,7 +291,7 @@ namespace Sass {
     sass::vector<VarRef> vidxs;
 
     if (vidx.isValid()) vidxs.push_back(vidx);
-    EnvFrame* module(context.varStack.back()->getModule());
+    VarRefs* module(context.varRoot.stack.back()->getModule23());
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
     if (!ns.empty()) {
@@ -300,8 +300,8 @@ namespace Sass {
       // throw Exception::ParserException(context,
       //   "Variable namespaces not supported yet!");
 
-      auto it = module->fwdModule33.find(ns);
-      if (it != module->fwdModule33.end()) {
+      auto it = module->fwdModule55.find(ns);
+      if (it != module->fwdModule55.end()) {
         VarRefs* refs = it->second.first;
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
@@ -341,7 +341,7 @@ namespace Sass {
 
       // This only checks within the local frame
       // Don't assign global if in another scope!
-      for (auto fwd : frame->fwdGlobal33) {
+      for (auto fwd : frame->fwdGlobal55) {
         VarRefs* refs = fwd.first;
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
@@ -359,9 +359,9 @@ namespace Sass {
     }
 
     auto pr = frame;
-    while (pr->isImport) pr = &pr->parent;
+    while (pr->isImport) pr = pr->pscope;
 
-    if (pr->idxs->varFrame == 0xFFFFFFFF) {
+    if (pr->varFrame == 0xFFFFFFFF) {
 
       // Assign a default
       if (guarded && ns.empty()) {
@@ -408,7 +408,7 @@ namespace Sass {
       itpl->concat(readStyleRule); readStyleRule = itpl;
       readStyleRule->pstate(scanner.relevantSpanFrom(itpl->pstate().position));
     }
-    EnvFrame local(context.varStack, false);
+    EnvFrame local(context, false);
 
     Offset start(scanner.offset);
     StyleRuleObj styles = withChildren<StyleRule>(
@@ -486,7 +486,7 @@ namespace Sass {
         scanner.relevantSpan());
     }
 
-    EnvFrame local(context.varStack, true);
+    EnvFrame local(context, true);
     InterpolationObj itpl = buffer.getInterpolation(
       scanner.relevantSpanFrom(start));
     StyleRuleObj rule = withChildren<StyleRule>(
@@ -1039,7 +1039,7 @@ namespace Sass {
   AtRootRule* StylesheetParser::readAtRootRule(Offset start)
   {
 
-    EnvFrame local(context.varStack, false);
+    EnvFrame local(context, false);
 
     if (scanner.peekChar() == $lparen) {
       InterpolationObj query = readAtRootQuery();
@@ -1151,14 +1151,14 @@ namespace Sass {
     LOCAL_FLAG(inControlDirective, true);
     LOCAL_FLAG(inLoopDirective, true);
     sass::vector<EnvKey> variables;
-    EnvFrame local(context.varStack, true);
+    EnvFrame local(context, true);
     variables.emplace_back(variableName());
-    local.createVariable(variables.back());
+    local.idxs->createVariable(variables.back());
     scanWhitespace();
     while (scanner.scanChar($comma)) {
       scanWhitespace();
       variables.emplace_back(variableName());
-      local.createVariable(variables.back());
+      local.idxs->createVariable(variables.back());
       scanWhitespace();
     }
     expectIdentifier("in", "\"in\"");
@@ -1200,8 +1200,8 @@ namespace Sass {
   FunctionRule* StylesheetParser::readFunctionRule(Offset start)
   {
     // Variables should not be hoisted through
-    EnvFrame* parent = context.varStack.back();
-    EnvFrame local(context.varStack, false);
+    VarRefs* parent = context.varRoot.stack.back();
+    EnvFrame local(context, false);
 
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
@@ -1233,7 +1233,7 @@ namespace Sass {
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
     auto pr = parent;
-    while (pr->isImport) pr = &pr->parent;
+    while (pr->isImport) pr = pr->pscope;
     rule->fidx(pr->createFunction(name));
     return rule;
   }
@@ -1243,9 +1243,9 @@ namespace Sass {
   {
     LOCAL_FLAG(inControlDirective, true);
     LOCAL_FLAG(inLoopDirective, true);
-    EnvFrame local(context.varStack, true);
+    EnvFrame local(context, true);
     sass::string variable = variableName();
-    local.createVariable(variable);
+    local.idxs->createVariable(variable);
     scanWhitespace();
     expectIdentifier("from", "\"from\"");
     scanWhitespace();
@@ -1274,7 +1274,7 @@ namespace Sass {
     IfRuleObj cur;
 
     /* create anonymous lexical scope */ {
-      EnvFrame local(context.varStack, true);
+      EnvFrame local(context, true);
       StatementVector children(
         readChildren(child));
       cur = root = SASS_MEMORY_NEW(IfRule,
@@ -1297,7 +1297,7 @@ namespace Sass {
         ExpressionObj predicate = readExpression();
         start = scanner.offset;
 
-        EnvFrame local(context.varStack, true);
+        EnvFrame local(context, true);
         StatementVector children(
           readChildren(child));
         IfRule* alternative = SASS_MEMORY_NEW(IfRule,
@@ -1309,7 +1309,7 @@ namespace Sass {
       // scanned a pure else
       else {
 
-        EnvFrame local(context.varStack, true);
+        EnvFrame local(context, true);
 
         start = scanner.offset;
         StatementVector children(
@@ -1431,7 +1431,7 @@ namespace Sass {
     sass::string prev(rule->prev());
     bool hasWith(rule->hasWithConfig());
 
-    EnvFrame* modFrame(context.varStack.back()->getModule());
+    VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
     const ImportRequest import(url, scanner.sourceUrl);
     SourceSpan pstate = rule->pstate();
     //callStackFrame frame(context, { pstate, Strings::useRule });
@@ -1449,7 +1449,7 @@ namespace Sass {
     }
 
     if (!ns.empty()) {
-      if (modFrame->fwdModule33.count(ns)) {
+      if (modFrame->fwdModule55.count(ns)) {
         throw Exception::ModuleAlreadyKnown(context, ns);
       }
     }
@@ -1491,7 +1491,7 @@ namespace Sass {
 
     }
     else {
-      EnvFrame local(context.varStack, true, true);
+      EnvFrame local(context, true, true);
       sheet = context.registerImport(loaded);
       // sheet->root2->idxs = local.idxs;
       sheet->root2->import = loaded;
@@ -1552,7 +1552,7 @@ namespace Sass {
       }
 
       // Check if we push the same stuff twice
-      for (auto fwd : modFrame->fwdGlobal33) {
+      for (auto fwd : modFrame->fwdGlobal55) {
         if (exposing == fwd.first) continue;
         for (auto var : exposing->varIdxs) {
           auto it = fwd.first->varIdxs.find(var.first);
@@ -1583,14 +1583,14 @@ namespace Sass {
         }
       }
 
-      modFrame->fwdGlobal33.push_back(
+      modFrame->fwdGlobal55.push_back(
         { exposing, sheet->root2 });
 
     }
     else {
 
       // Combine forwarded with local scope
-      modFrame->fwdModule33[ns] =
+      modFrame->fwdModule55[ns] =
       { exposing, sheet->root2 };
     }
 
@@ -1635,8 +1635,8 @@ namespace Sass {
       scanner.relevantSpanFrom(start), url, {});
     rule->hasWithConfig(hasWith);
 
-    EnvFrame* current(context.varStack.back());
-    EnvFrame* modFrame(context.varStack.back()->getModule());
+    VarRefs* current(context.varRoot.stack.back());
+    VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
@@ -1670,16 +1670,16 @@ namespace Sass {
           current->fnIdxs.insert(fn);
         }
 
-        current->fwdGlobal33.push_back(
+        current->fwdGlobal55.push_back(
           { module->idxs, nullptr });
 
       }
-      else if (modFrame->fwdModule33.count(ns)) {
+      else if (modFrame->fwdModule55.count(ns)) {
         context.addFinalStackTrace(rule->pstate());
         throw Exception::ModuleAlreadyKnown(context, ns);
       }
       else {
-        current->fwdModule33.insert({ ns,
+        current->fwdModule55.insert({ ns,
           { module->idxs, nullptr } });
       }
 
@@ -1820,7 +1820,7 @@ namespace Sass {
 
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      // EnvFrame* frame(context.varStack.back()->getModule());
+      // EnvFrame* frame(context.varRoot.stack.back()->getModule());
       auto cached = context.sheets.find(loaded->getAbsPath());
       if (cached != context.sheets.end()) {
 
@@ -1838,7 +1838,7 @@ namespace Sass {
       }
       else {
         // ToDo: must not create new real scope!
-        EnvFrame local(context.varStack, true, true);
+        EnvFrame local(context, true, true);
         sheet = context.registerImport(loaded);
         // sheet->root2->idxs = local.idxs;
         sheet->root2->import = loaded;
@@ -2054,7 +2054,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame local(context.varStack, true, false, true);
+      EnvFrame local(context, true, false, true);
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;
       const sass::string& url(resolved[0].abs_path);
@@ -2167,7 +2167,7 @@ namespace Sass {
     }
     scanWhitespace();
 
-    EnvFrame local(context.varStack, true);
+    EnvFrame local(context, true);
 
     ArgumentDeclarationObj contentArguments;
     if (scanIdentifier("using")) {
@@ -2187,9 +2187,9 @@ namespace Sass {
 
     if (!ns.empty()) {
       auto pstate(scanner.relevantSpanFrom(start));
-      EnvFrame* frame(context.varStack.back()->getModule());
-      auto it = frame->fwdModule33.find(ns);
-      if (it != frame->fwdModule33.end()) {
+      VarRefs* frame(context.varRoot.stack.back()->getModule23());
+      auto it = frame->fwdModule55.find(ns);
+      if (it != frame->fwdModule55.end()) {
         VarRefs* refs = it->second.first;
         auto in = refs->mixIdxs.find(name);
         if (in != refs->mixIdxs.end()) {
@@ -2221,8 +2221,8 @@ namespace Sass {
 
       // Then search in global modules
       auto pstate = scanner.relevantSpanFrom(start);
-      EnvFrame* frame(context.varStack.back()->getModule());
-      for (auto fwd : frame->fwdGlobal33) {
+      VarRefs* frame(context.varRoot.stack.back()->getModule23());
+      for (auto fwd : frame->fwdGlobal55) {
         VarRefs* refs = fwd.first;
         auto in = refs->mixIdxs.find(name);
         if (in != refs->mixIdxs.end()) {
@@ -2243,7 +2243,7 @@ namespace Sass {
 
     if (!name.empty() && midxs.empty()) {
       // Get the function through the whole stack
-      midxs.push_back(context.varStack.back()->getMixinIdx(name));
+      midxs.push_back(context.varRoot.stack.back()->getMixinIdx(name));
     }
 
     if (!midxs.empty()) {
@@ -2253,7 +2253,7 @@ namespace Sass {
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
       LOCAL_FLAG(inContentBlock, true);
-      // EnvFrame inner(context.varStack);
+      // EnvFrame inner(context.varRoot.stack);
       if (contentArguments.isNull()) {
         // Dart-sass creates this one too
         contentArguments = SASS_MEMORY_NEW(
@@ -2295,11 +2295,11 @@ namespace Sass {
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
 
-    EnvFrame* parent = context.varStack.back();
-    EnvFrame local(context.varStack, false);
+    VarRefs* parent = context.varRoot.stack.back();
+    EnvFrame local(context, false);
     // Create space for optional content callable
     // ToDo: check if this can be conditionally done?
-    auto cidx = local.createMixin(Keys::contentRule);
+    auto cidx = local.idxs->createMixin(Keys::contentRule);
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
     sass::string name = readIdentifier();
@@ -2329,7 +2329,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     auto pr = parent;
-    while (pr->isImport) pr = &pr->parent;
+    while (pr->isImport) pr = pr->pscope;
     // Not if we have one forwarded!
 
     VarRef fidx = pr->createMixin(name);
@@ -2449,7 +2449,7 @@ namespace Sass {
   {
     auto condition = readSupportsCondition();
     scanWhitespace();
-    EnvFrame local(context.varStack, true);
+    EnvFrame local(context, true);
     return withChildren<SupportsRule>(
       &StylesheetParser::readChildStatement,
       start, condition, local.idxs);
@@ -2485,7 +2485,7 @@ namespace Sass {
   {
     LOCAL_FLAG(inControlDirective, true);
     LOCAL_FLAG(inLoopDirective, true);
-    EnvFrame local(context.varStack, true);
+    EnvFrame local(context, true);
     ExpressionObj condition(readExpression());
     return withChildren<WhileRule>(child,
       start, condition.ptr(), local.idxs);
@@ -2556,13 +2556,13 @@ namespace Sass {
         restArgument = name;
         // Defer adding variable until we parsed expression
         // Just in case the same variable is mentioned again
-        context.varStack.back()->createVariable(norm);
+        context.varRoot.stack.back()->createVariable(norm);
         break;
       }
 
       // Defer adding variable until we parsed expression
       // Just in case the same variable is mentioned again
-      context.varStack.back()->createVariable(norm);
+      context.varRoot.stack.back()->createVariable(norm);
 
       arguments.emplace_back(SASS_MEMORY_NEW(Argument,
         scanner.relevantSpanFrom(variableStart), name, defaultValue));
@@ -3615,20 +3615,20 @@ namespace Sass {
     if (inLoopDirective) {
       // Static variable resolution will be done in finalize stage
       // Must be postponed since in loops we may reference post vars
-      context.varStack.back()->variables.push_back(expression);
+      context.varRoot.stack.back()->variables.push_back(expression);
     }
     else {
 
       sass::vector<VarRef> vidxs;
 
       // Otherwise utilize full static optimizations
-      EnvFrame* frame(context.varStack.back());
+      VarRefs* frame(context.varRoot.stack.back());
       VarRef vidx(frame->getVariableIdx(name, true));
       if (vidx.isValid()) vidxs.push_back(vidx);
 
-      EnvFrame* module(context.varStack.back()->getModule());
+      VarRefs* module(context.varRoot.stack.back()->getModule23());
 
-      for (auto fwd : module->fwdGlobal33) {
+      for (auto fwd : module->fwdGlobal55) {
         VarRefs* refs = fwd.first;
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
@@ -3644,7 +3644,7 @@ namespace Sass {
       }
 
       if (!vidxs.empty()) expression->vidxs(vidxs);
-      else context.varStack.back()->variables.push_back(expression);
+      else context.varRoot.stack.back()->variables.push_back(expression);
     }
 
     return expression;
@@ -3824,7 +3824,7 @@ namespace Sass {
         if (inLoopDirective) {
           // Static variable resolution will be done in finalize stage
           // Must be postponed since in loops we may reference post vars
-          context.varStack.back()->variables.push_back(expression);
+          context.varRoot.stack.back()->variables.push_back(expression);
         }
         else {
 
@@ -3836,9 +3836,9 @@ namespace Sass {
             //   "Variable namespaces not supported yet!");
 
         // First search in forwarded modules
-            EnvFrame* frame(context.varStack.back()->getModule());
-            auto it = frame->fwdModule33.find(plain);
-            if (it != frame->fwdModule33.end()) {
+            VarRefs* frame(context.varRoot.stack.back()->getModule23());
+            auto it = frame->fwdModule55.find(plain);
+            if (it != frame->fwdModule55.end()) {
               VarRefs* refs = it->second.first;
               auto in = refs->varIdxs.find(name);
               if (in != refs->varIdxs.end()) {
@@ -3867,10 +3867,10 @@ namespace Sass {
           }
 
           // Otherwise utilize full static optimizations
-          // EnvFrame* frame(context.varStack.back());
+          // EnvFrame* frame(context.varRoot.stack.back());
           // VarRef vidx(frame->getVariableIdx(name, true));
           if (!vidxs.empty()) expression->vidxs(vidxs);
-          else context.varStack.back()->variables.push_back(expression);
+          else context.varRoot.stack.back()->variables.push_back(expression);
         }
 
         return expression.detach();
@@ -3899,9 +3899,9 @@ namespace Sass {
         scanner.relevantSpanFrom(start), itpl, args, ns);
 
       // First search in forwarded modules
-      EnvFrame* frame(context.varStack.back()->getModule());
-      auto it = frame->fwdModule33.find(ns);
-      if (it != frame->fwdModule33.end()) {
+      VarRefs* frame(context.varRoot.stack.back()->getModule23());
+      auto it = frame->fwdModule55.find(ns);
+      if (it != frame->fwdModule55.end()) {
         VarRefs* refs = it->second.first;
         auto in = refs->fnIdxs.find(ident->value());
         if (in != refs->fnIdxs.end()) {
@@ -3936,8 +3936,8 @@ namespace Sass {
 
         // Then search in global modules
         auto pstate = scanner.relevantSpanFrom(start);
-        EnvFrame* frame(context.varStack.back()->getModule());
-        for (auto fwd : frame->fwdGlobal33) {
+        VarRefs* frame(context.varRoot.stack.back()->getModule23());
+        for (auto fwd : frame->fwdGlobal55) {
           VarRefs* refs = fwd.first;
           auto in = refs->fnIdxs.find(name);
           if (in != refs->fnIdxs.end()) {
@@ -3957,7 +3957,7 @@ namespace Sass {
 
         if (!fn->fidx().isValid()) {
           // Try to get the function through the whole stack
-          fn->fidx(context.varStack.back()->getFunctionIdx(name));
+          fn->fidx(context.varRoot.stack.back()->getFunctionIdx(name));
         }
 
       }

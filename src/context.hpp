@@ -24,11 +24,11 @@ namespace Sass {
   {
   public:
     VarRefs* idxs;
-    bool isActive = false;
+    bool isActive3 = false;
     void addFunction(const EnvKey& name, uint32_t offset);
     void addVariable(const EnvKey& name, uint32_t offset);
     void addMixin(const EnvKey& name, uint32_t offset);
-    Module();
+    Module(EnvRoot& root);
   };
 
   // Compiler is stateful, while Context is more low-level
@@ -50,18 +50,6 @@ namespace Sass {
     sass::vector<WithConfig*> withConfigStack;
 
     WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
-
-    EnvKeyMap<Module> modules;
-
-    Module& createModule(const sass::string& name) {
-      return modules[name];
-    }
-
-    Module* getModule(const sass::string& name) {
-      auto it = modules.find(name);
-      if (it == modules.end()) return nullptr;
-      return &it->second;
-    }
 
   protected:
 

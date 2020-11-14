@@ -26,7 +26,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Helper typedef for our frame stack type
-  typedef sass::vector<EnvFrame*> EnvFrameVector;
+  typedef sass::vector<VarRefs*> EnvFrameVector;
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -96,14 +96,17 @@ namespace Sass {
   class VarRefs {
   public:
 
+    // Cache root reference
+    EnvRoot& root;
+
     // Parent is needed during runtime for
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
 
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
-    bool permeable;
-
+    bool permeable = false;
+    bool isImport = false;
     bool isModule = false;
 
     // Parents for specific types
@@ -123,115 +126,27 @@ namespace Sass {
     sass::vector<AssignRuleObj> assignments;
     sass::vector<VariableExpressionObj> variables;
 
+    ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule55;
+    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal55;
+
     // Value constructor
-    VarRefs(VarRefs* pscope,
+    VarRefs(EnvRoot& root,
+      VarRefs* pscope,
       uint32_t varFrame,
       uint32_t mixFrame,
       uint32_t fnFrame,
       bool permeable,
+      bool isImport,
       bool isModule) :
+      root(root),
       pscope(pscope),
       permeable(permeable),
+      isImport(isImport),
       isModule(isModule),
       varFrame(varFrame),
       mixFrame(mixFrame),
       fnFrame(fnFrame)
     {}
-
-  };
-
-  /////////////////////////////////////////////////////////////////////////
-  // EnvFrames are created during the parsing phase.
-  /////////////////////////////////////////////////////////////////////////
-
-  class EnvFrame {
-
-    // We work together
-    friend class EnvRoot;
-
-  public:
-
-    // Reference to stack
-    // We manage it ourself
-    EnvFrameVector& stack;
-
-    // New variables are hoisted at closest non-permeable.
-    // Lookups are still looking at all parents and root.
-    bool permeable = false;
-    bool isImport = false;
-
-    // Reference to parent
-    EnvFrame& parent;
-
-    // Cache root reference
-    EnvRoot& root;
-
-    // Our runtime object
-    VarRefs* idxs;
-
-    // References into runtime object
-    VidxEnvKeyMap& varIdxs;
-    MidxEnvKeyMap& mixIdxs;
-    FidxEnvKeyMap& fnIdxs;
-
-
-    ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule33;
-    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal33;
-
-    EnvFrame* getModule() {
-      auto current = this;
-      while (!current->isRoot()) {
-        if (current->idxs->isModule)
-          return current;
-        current = &current->parent;
-      }
-      return current;
-    }
-
-    // Keep track of assignments and variables for dynamic runtime lookups.
-    // This is needed only for loops, due to sass "weird" variable scoping.
-    sass::vector<AssignRuleObj>& assignments;
-    sass::vector<VariableExpressionObj>& variables;
-
-  private:
-
-    // Root-frame constructor
-    // Invoked by EnvRoot ctor
-    EnvFrame(
-      EnvRoot& root,
-      EnvFrameVector& stack);
-
-  public:
-
-    // Value constructor
-    EnvFrame(
-      EnvFrameVector& stack,
-      // Rules like `@if`, `@for` etc. are semi-global (permeable).
-      // Assignments directly in those can bleed to the root scope.
-      bool permeable = false,
-      bool isModule = false,
-      bool isImport = false);
-
-    // Destructor
-    ~EnvFrame();
-
-    // Test if we are top frame
-    bool isRoot() const {
-      // Check if raw pointers are equal
-      return this == (EnvFrame*)&root;
-    }
-
-    // Get next parent, but break on root
-    EnvFrame* getParent(bool passThrough = false) {
-      if (isRoot())
-        return nullptr;
-      if (idxs->isModule)
-        return nullptr;
-      if (!passThrough)
-        if (!permeable)
-          return nullptr;
-      return &parent;
-    }
 
     /////////////////////////////////////////////////////////////////////////
     // Register an occurrence during parsing, reserving the offset.
@@ -270,14 +185,79 @@ namespace Sass {
     // Return variable in lexical manner. If [passThrough] is false,
     // we abort the lexical lookup on any non-permeable scope frame.
     VarRef getVariableIdx(const EnvKey& name, bool passThrough = false);
-      
+
+    // Test if we are top frame
+    bool isRoot() const;
+
+    // Get next parent, but break on root
+    VarRefs* getParent(bool passThrough = false) {
+      if (isRoot())
+        return nullptr;
+      if (isModule)
+        return nullptr;
+      if (!passThrough)
+        if (!permeable)
+          return nullptr;
+      return pscope;
+    }
+
+    VarRefs* getModule23() {
+      auto current = this;
+      while (!current->isRoot()) {
+        if (current->isModule)
+          return current;
+        current = current->pscope;
+      }
+      return current;
+    }
+
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  // EnvFrames are created during the parsing phase.
+  /////////////////////////////////////////////////////////////////////////
+
+  class EnvFrame {
+
+  public:
+
+    // Reference to stack
+    // We manage it ourself
+    EnvFrameVector& stack;
+
+    // Our runtime object
+    VarRefs* idxs;
+
+  private:
+
+  public:
+
+    // Value constructor
+    EnvFrame(
+      Compiler& compiler,
+      bool permeable,
+      bool isModule = false,
+      bool isImport = false);
+
+    // Destructor
+    ~EnvFrame();
+  
  };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  class EnvRoot :
-    public EnvFrame {
+  class EnvRoot {
+
+  public:
+
+
+    // Reference to stack
+    // We manage it ourself
+    EnvFrameVector& stack;
+
+    // Our runtime object
+    VarRefs* idxs;
 
   private:
 
@@ -285,6 +265,7 @@ namespace Sass {
     friend class Compiler;
     friend class EnvScope;
     friend class EnvFrame;
+    friend class VarRefs;
 
     // Growable runtime stack (get offset by xxxFramePtr).
     // These vectors are the main stacks during runtime.
@@ -324,19 +305,14 @@ namespace Sass {
     sass::vector<VarRefs*> scopes;
 
   public:
-    // The current runtime stack
-    sass::vector<const VarRefs*> stack;
-  private:
-    Compiler& compiler;
-
-  public:
 
     // Value constructor
-    EnvRoot(EnvFrameVector& stack,
-      Compiler& compiler);
+    EnvRoot(Compiler& compiler);
 
     // Destructor
     ~EnvRoot() {
+      // Pop from stack
+      stack.pop_back();
       // Take care of scope pointers
       for (VarRefs* idx : scopes) {
         delete idx;
@@ -353,7 +329,7 @@ namespace Sass {
     void finalizeScopes();
 
     // Runtime check to see if we are currently in global scope
-    bool isGlobal() const { return root.stack.size() == 1; }
+    bool isGlobal() const { return idxs->root.stack.size() == 1; }
 
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset

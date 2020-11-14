@@ -49,7 +49,7 @@ namespace Sass {
     // sass::vector<Mapping> srcmap;
 
     // Points to context.varStack
-    sass::vector<EnvFrame*>& varStack;
+    sass::vector<VarRefs*>& varStack;
 
     // The silent comment this parser encountered previously.
     SilentCommentObj lastSilentComment;

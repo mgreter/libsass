@@ -182,12 +182,14 @@ namespace Sass {
     idxs->mixIdxs[name] = offset;
   }
 
-  Module::Module() :
+  Module::Module(EnvRoot& root) :
     idxs(new VarRefs(
+      root,
       nullptr,
       0xFFFFFFFF,
       0xFFFFFFFF,
       0xFFFFFFFF,
+      false,
       false,
       true))
   {}
