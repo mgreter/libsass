@@ -207,7 +207,7 @@ extern "C" {
       List, SourceSpan::tmp("sass://list"), {}, sep, is_bracketed));
   }
 
-  struct SassValue* ADDCALL sass_make_map()
+  struct SassValue* ADDCALL sass_make_map(void)
   {
     return newSassValue(SASS_MEMORY_NEW(
       Map, SourceSpan::tmp("sass://map")));
