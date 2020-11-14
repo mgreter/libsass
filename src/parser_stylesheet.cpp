@@ -358,8 +358,10 @@ namespace Sass {
 
     }
 
+    auto pr = frame;
+    while (pr->isImport) pr = &pr->parent;
 
-    if (frame->idxs->varFrame == 0xFFFFFFFF) {
+    if (pr->idxs->varFrame == 0xFFFFFFFF) {
 
       // Assign a default
       if (guarded && ns.empty()) {
@@ -383,7 +385,7 @@ namespace Sass {
 
     if (vidxs.empty()) {
       // Not if we have one forwarded!
-      vidxs.push_back(frame->createVariable(name));
+      vidxs.push_back(pr->createVariable(name));
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
@@ -1230,7 +1232,9 @@ namespace Sass {
     FunctionRule* rule = withChildren<FunctionRule>(
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
-    rule->fidx(parent->createFunction(name));
+    auto pr = parent;
+    while (pr->isImport) pr = &pr->parent;
+    rule->fidx(pr->createFunction(name));
     return rule;
   }
   // EO readFunctionRule
@@ -2033,6 +2037,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
+      EnvFrame local(context.varStack, true, false, true);
       StyleSheet* sheet = context.registerImport(loaded);
       rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, sheet));
     }
@@ -2304,7 +2309,11 @@ namespace Sass {
     LOCAL_FLAG(inMixin, true);
     LOCAL_FLAG(mixinHasContent, false);
 
-    VarRef fidx = parent->createMixin(name);
+    auto pr = parent;
+    while (pr->isImport) pr = &pr->parent;
+    // Not if we have one forwarded!
+
+    VarRef fidx = pr->createMixin(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);

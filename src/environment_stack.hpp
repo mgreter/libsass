@@ -157,7 +157,8 @@ namespace Sass {
 
     // New variables are hoisted at closest non-permeable.
     // Lookups are still looking at all parents and root.
-    bool permeable;
+    bool permeable = false;
+    bool isImport = false;
 
     // Reference to parent
     EnvFrame& parent;
@@ -208,7 +209,8 @@ namespace Sass {
       // Rules like `@if`, `@for` etc. are semi-global (permeable).
       // Assignments directly in those can bleed to the root scope.
       bool permeable = false,
-      bool isModule = false);
+      bool isModule = false,
+      bool isImport = false);
 
     // Destructor
     ~EnvFrame();
