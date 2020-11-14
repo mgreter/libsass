@@ -172,15 +172,15 @@ namespace Sass {
 	    void registerFunctions(Compiler& ctx)
 	    {
         Module& module(ctx.createModule("string"));
-		    module.addFunction("unquote", ctx.registerBuiltInFunction("unquote", "$string", unquote));
-		    module.addFunction("quote", ctx.registerBuiltInFunction("quote", "$string", quote));
-		    module.addFunction("to-upper-case", ctx.registerBuiltInFunction("to-upper-case", "$string", toUpperCase));
-		    module.addFunction("to-lower-case", ctx.registerBuiltInFunction("to-lower-case", "$string", toLowerCase));
-		    module.addFunction("length", ctx.registerBuiltInFunction("str-length", "$string", length));
-		    module.addFunction("insert", ctx.registerBuiltInFunction("str-insert", "$string, $insert, $index", insert));
-		    module.addFunction("index", ctx.registerBuiltInFunction("str-index", "$string, $substring", index));
-		    module.addFunction("slice", ctx.registerBuiltInFunction("str-slice", "$string, $start-at, $end-at: -1", slice));
-		    module.addFunction("unique-id", ctx.registerBuiltInFunction("unique-id", "", uniqueId));
+		    module.addFunction(key_unquote, ctx.registerBuiltInFunction(key_unquote, "$string", unquote));
+		    module.addFunction(key_quote, ctx.registerBuiltInFunction(key_quote, "$string", quote));
+		    module.addFunction(key_to_upper_case, ctx.registerBuiltInFunction(key_to_upper_case, "$string", toUpperCase));
+		    module.addFunction(key_to_lower_case, ctx.registerBuiltInFunction(key_to_lower_case, "$string", toLowerCase));
+		    module.addFunction(key_length, ctx.registerBuiltInFunction(key_str_length, "$string", length));
+		    module.addFunction(key_insert, ctx.registerBuiltInFunction(key_str_insert, "$string, $insert, $index", insert));
+		    module.addFunction(key_index, ctx.registerBuiltInFunction(key_str_index, "$string, $substring", index));
+		    module.addFunction(key_slice, ctx.registerBuiltInFunction(key_str_slice, "$string, $start-at, $end-at: -1", slice));
+		    module.addFunction(key_unique_id, ctx.registerBuiltInFunction(key_unique_id, "", uniqueId));
 
 	    }
 

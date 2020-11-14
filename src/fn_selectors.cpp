@@ -193,14 +193,14 @@ namespace Sass {
       void registerFunctions(Compiler& ctx)
 	    {
         Module& module(ctx.createModule("selector"));
-        module.addFunction("nest", ctx.registerBuiltInFunction("selector-nest", "$selectors...", nest));
-		    module.addFunction("append", ctx.registerBuiltInFunction("selector-append", "$selectors...", append));
-		    module.addFunction("extend", ctx.registerBuiltInFunction("selector-extend", "$selector, $extendee, $extender", extend));
-		    module.addFunction("replace", ctx.registerBuiltInFunction("selector-replace", "$selector, $original, $replacement", replace));
-		    module.addFunction("unify", ctx.registerBuiltInFunction("selector-unify", "$selector1, $selector2", unify));
-		    module.addFunction("is-superselector", ctx.registerBuiltInFunction("is-superselector", "$super, $sub", isSuper));
-		    module.addFunction("simple-selectors", ctx.registerBuiltInFunction("simple-selectors", "$selector", simple));
-		    module.addFunction("parse", ctx.registerBuiltInFunction("selector-parse", "$selector", parse));
+        module.addFunction(key_nest, ctx.registerBuiltInFunction(key_selector_nest, "$selectors...", nest));
+		    module.addFunction(key_append, ctx.registerBuiltInFunction(key_selector_append, "$selectors...", append));
+		    module.addFunction(key_extend, ctx.registerBuiltInFunction(key_selector_extend, "$selector, $extendee, $extender", extend));
+		    module.addFunction(key_replace, ctx.registerBuiltInFunction(key_selector_replace, "$selector, $original, $replacement", replace));
+		    module.addFunction(key_unify, ctx.registerBuiltInFunction(key_selector_unify, "$selector1, $selector2", unify));
+		    module.addFunction(key_is_superselector, ctx.registerBuiltInFunction(key_is_superselector, "$super, $sub", isSuper));
+		    module.addFunction(key_simple_selectors, ctx.registerBuiltInFunction(key_simple_selectors, "$selector", simple));
+		    module.addFunction(key_parse, ctx.registerBuiltInFunction(key_selector_parse, "$selector", parse));
 	    }
 
       /*******************************************************************/

@@ -607,27 +607,27 @@ namespace Sass {
 
         Module& module(compiler.createModule("meta"));
 
-        module.addMixin("load-css", compiler.createBuiltInMixin("load-css", "$url, $with: null", loadCss));
-
-        // Meta functions
-        module.addFunction("feature-exists", compiler.registerBuiltInFunction("feature-exists", "$feature", featureExists));
-        module.addFunction("type-of", compiler.registerBuiltInFunction("type-of", "$value", typeOf));
-        module.addFunction("inspect", compiler.registerBuiltInFunction("inspect", "$value", inspect));
-        module.addFunction("keywords", compiler.registerBuiltInFunction("keywords", "$args", keywords));
-
-        compiler.registerBuiltInFunction("if", "$condition, $if-true, $if-false", fnIf);
         // ToDo: dart-sass keeps them on the local environment scope, see below:
         // These functions are defined in the context of the evaluator because
         // they need access to the [_environment] or other local state.
-        module.addFunction("global-variable-exists", compiler.registerBuiltInFunction("global-variable-exists", "$name, $module: null", globalVariableExists));
-        module.addFunction("variable-exists", compiler.registerBuiltInFunction("variable-exists", "$name", variableExists));
-        module.addFunction("function-exists", compiler.registerBuiltInFunction("function-exists", "$name, $module: null", functionExists));
-        module.addFunction("mixin-exists", compiler.registerBuiltInFunction("mixin-exists", "$name, $module: null", mixinExists));
-        module.addFunction("content-exists", compiler.registerBuiltInFunction("content-exists", "", contentExists));
-        module.addFunction("module-variables", compiler.createBuiltInFunction("module-variables", "$module", moduleVariables));
-        module.addFunction("module-functions", compiler.registerBuiltInFunction("module-functions", "$module", moduleFunctions));
-        module.addFunction("get-function", compiler.registerBuiltInFunction("get-function", "$name, $css: false, $module: null", getFunction));
-        module.addFunction("call", compiler.registerBuiltInFunction("call", "$function, $args...", call));
+
+        compiler.registerBuiltInFunction(key_if, "$condition, $if-true, $if-false", fnIf);
+
+        module.addMixin(key_load_css, compiler.createBuiltInMixin("load-css", "$url, $with: null", loadCss));
+
+        module.addFunction(key_feature_exists, compiler.registerBuiltInFunction(key_feature_exists, "$feature", featureExists));
+        module.addFunction(key_type_of, compiler.registerBuiltInFunction(key_type_of, "$value", typeOf));
+        module.addFunction(key_inspect, compiler.registerBuiltInFunction(key_inspect, "$value", inspect));
+        module.addFunction(key_keywords, compiler.registerBuiltInFunction(key_keywords, "$args", keywords));
+        module.addFunction(key_global_variable_exists, compiler.registerBuiltInFunction(key_global_variable_exists, "$name, $module: null", globalVariableExists));
+        module.addFunction(key_variable_exists, compiler.registerBuiltInFunction(key_variable_exists, "$name", variableExists));
+        module.addFunction(key_function_exists, compiler.registerBuiltInFunction(key_function_exists, "$name, $module: null", functionExists));
+        module.addFunction(key_mixin_exists, compiler.registerBuiltInFunction(key_mixin_exists, "$name, $module: null", mixinExists));
+        module.addFunction(key_content_exists, compiler.registerBuiltInFunction(key_content_exists, "", contentExists));
+        module.addFunction(key_module_variables, compiler.createBuiltInFunction(key_module_variables, "$module", moduleVariables));
+        module.addFunction(key_module_functions, compiler.registerBuiltInFunction(key_module_functions, "$module", moduleFunctions));
+        module.addFunction(key_get_function, compiler.registerBuiltInFunction(key_get_function, "$name, $css: false, $module: null", getFunction));
+        module.addFunction(key_call, compiler.registerBuiltInFunction(key_call, "$function, $args...", call));
 
 	    }
 

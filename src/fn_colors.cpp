@@ -516,7 +516,7 @@ namespace Sass {
           return getFunctionString(Strings::hsl, pstate, arguments);
         }
         // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        throw Exception::MissingArgument(compiler, key_lightness);
       }
 
       BUILT_IN_FN(fnHsl2arg)
@@ -581,7 +581,7 @@ namespace Sass {
           return getFunctionString(Strings::hsla, pstate, arguments);
         }
         // Otherwise throw error for missing argument
-        throw Exception::MissingArgument(compiler, Keys::lightness);
+        throw Exception::MissingArgument(compiler, key_lightness);
       }
 
       BUILT_IN_FN(fnHsla2arg)
@@ -1149,15 +1149,15 @@ namespace Sass {
         // ToDo: solve without erase ...
         ValueFlatMap& keywords(argumentList->keywords());
 
-        Number* nr_r = getKwdArg(keywords, Keys::red, compiler);
-        Number* nr_g = getKwdArg(keywords, Keys::green, compiler);
-        Number* nr_b = getKwdArg(keywords, Keys::blue, compiler);
-        Number* nr_h = getKwdArg(keywords, Keys::hue, compiler);
-        Number* nr_s = getKwdArg(keywords, Keys::saturation, compiler);
-        Number* nr_l = getKwdArg(keywords, Keys::lightness, compiler);
-        Number* nr_a = getKwdArg(keywords, Keys::alpha, compiler);
-        Number* nr_wn = getKwdArg(keywords, Keys::whiteness, compiler);
-        Number* nr_bn = getKwdArg(keywords, Keys::blackness, compiler);
+        Number* nr_r = getKwdArg(keywords, key_red, compiler);
+        Number* nr_g = getKwdArg(keywords, key_green, compiler);
+        Number* nr_b = getKwdArg(keywords, key_blue, compiler);
+        Number* nr_h = getKwdArg(keywords, key_hue, compiler);
+        Number* nr_s = getKwdArg(keywords, key_saturation, compiler);
+        Number* nr_l = getKwdArg(keywords, key_lightness, compiler);
+        Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
+        Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
+        Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
 
         double r = nr_r ? nr_r->assertRange(-255.0, 255.0, compiler, Strings::red) : 0.0;
         double g = nr_g ? nr_g->assertRange(-255.0, 255.0, compiler, Strings::green) : 0.0;
@@ -1236,15 +1236,15 @@ namespace Sass {
         // ToDo: solve without erase ...
         ValueFlatMap& keywords(argumentList->keywords());
 
-        Number* nr_r = getKwdArg(keywords, Keys::red, compiler);
-        Number* nr_g = getKwdArg(keywords, Keys::green, compiler);
-        Number* nr_b = getKwdArg(keywords, Keys::blue, compiler);
-        Number* nr_h = getKwdArg(keywords, Keys::hue, compiler);
-        Number* nr_s = getKwdArg(keywords, Keys::saturation, compiler);
-        Number* nr_l = getKwdArg(keywords, Keys::lightness, compiler);
-        Number* nr_a = getKwdArg(keywords, Keys::alpha, compiler);
-        Number* nr_wn = getKwdArg(keywords, Keys::whiteness, compiler);
-        Number* nr_bn = getKwdArg(keywords, Keys::blackness, compiler);
+        Number* nr_r = getKwdArg(keywords, key_red, compiler);
+        Number* nr_g = getKwdArg(keywords, key_green, compiler);
+        Number* nr_b = getKwdArg(keywords, key_blue, compiler);
+        Number* nr_h = getKwdArg(keywords, key_hue, compiler);
+        Number* nr_s = getKwdArg(keywords, key_saturation, compiler);
+        Number* nr_l = getKwdArg(keywords, key_lightness, compiler);
+        Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
+        Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
+        Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
 
         double r = nr_r ? nr_r->assertRange(0.0, 255.0, compiler, Strings::red) : 0.0;
         double g = nr_g ? nr_g->assertRange(0.0, 255.0, compiler, Strings::green) : 0.0;
@@ -1321,14 +1321,14 @@ namespace Sass {
         // ToDo: solve without erase ...
         ValueFlatMap& keywords(argumentList->keywords());
 
-        Number* nr_r = getKwdArg(keywords, Keys::red, compiler);
-        Number* nr_g = getKwdArg(keywords, Keys::green, compiler);
-        Number* nr_b = getKwdArg(keywords, Keys::blue, compiler);
-        Number* nr_s = getKwdArg(keywords, Keys::saturation, compiler);
-        Number* nr_l = getKwdArg(keywords, Keys::lightness, compiler);
-        Number* nr_wn = getKwdArg(keywords, Keys::whiteness, compiler);
-        Number* nr_bn = getKwdArg(keywords, Keys::blackness, compiler);
-        Number* nr_a = getKwdArg(keywords, Keys::alpha, compiler);
+        Number* nr_r = getKwdArg(keywords, key_red, compiler);
+        Number* nr_g = getKwdArg(keywords, key_green, compiler);
+        Number* nr_b = getKwdArg(keywords, key_blue, compiler);
+        Number* nr_s = getKwdArg(keywords, key_saturation, compiler);
+        Number* nr_l = getKwdArg(keywords, key_lightness, compiler);
+        Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
+        Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
+        Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
 
         double r = nr_r ? nr_r->assertHasUnits(compiler, Strings::percent, Strings::red)->assertRange(-100.0, 100.0, compiler, Strings::red) / 100.0 : 0.0;
         double g = nr_g ? nr_g->assertHasUnits(compiler, Strings::percent, Strings::green)->assertRange(-100.0, 100.0, compiler, Strings::green) / 100.0 : 0.0;
@@ -1395,7 +1395,7 @@ namespace Sass {
       {
         Module& module(ctx.createModule("color"));
 
-        module.addFunction("rgb", ctx.createBuiltInOverloadFns("rgb", {
+        module.addFunction(key_rgb, ctx.createBuiltInOverloadFns("rgb", {
           std::make_pair("$red, $green, $blue, $alpha", fnRgb4arg),
           std::make_pair("$red, $green, $blue", fnRgb3arg),
           std::make_pair("$color, $alpha", fnRgb2arg),
@@ -1407,7 +1407,7 @@ namespace Sass {
           std::make_pair("$color, $alpha", rgb2arg),
           std::make_pair("$channels", rgb1arg),
           });
-        module.addFunction("rgba", ctx.createBuiltInOverloadFns("rgba", {
+        module.addFunction(key_rgba, ctx.createBuiltInOverloadFns("rgba", {
           std::make_pair("$red, $green, $blue, $alpha", fnRgba4arg),
           std::make_pair("$red, $green, $blue", fnRgba3arg),
           std::make_pair("$color, $alpha", fnRgba2arg),
@@ -1419,7 +1419,7 @@ namespace Sass {
           std::make_pair("$color, $alpha", rgba2arg),
           std::make_pair("$channels", rgba1arg),
         });
-        module.addFunction("hsl", ctx.createBuiltInOverloadFns("hsl", {
+        module.addFunction(key_hsl, ctx.createBuiltInOverloadFns("hsl", {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsl4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsl3arg),
           std::make_pair("$color, $alpha", fnHsl2arg),
@@ -1431,7 +1431,7 @@ namespace Sass {
           std::make_pair("$color, $alpha", hsl2arg),
           std::make_pair("$channels", hsl1arg),
         });
-        module.addFunction("hsla", ctx.createBuiltInOverloadFns("hsla", {
+        module.addFunction(key_hsla, ctx.createBuiltInOverloadFns("hsla", {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsla4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsla3arg),
           std::make_pair("$color, $alpha", fnHsla2arg),
@@ -1443,7 +1443,7 @@ namespace Sass {
           std::make_pair("$color, $alpha", hsla2arg),
           std::make_pair("$channels", hsla1arg),
         });
-        module.addFunction("hwb", ctx.createBuiltInOverloadFns("hwb", {
+        module.addFunction(key_hwb, ctx.createBuiltInOverloadFns("hwb", {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwb4arg),
           std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
           std::make_pair("$color, $alpha", fnHwb2arg),
@@ -1455,7 +1455,7 @@ namespace Sass {
           std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
         });
-        module.addFunction("hwba", ctx.createBuiltInOverloadFns("hwba", {
+        module.addFunction(key_hwba, ctx.createBuiltInOverloadFns("hwba", {
           std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
           std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
           std::make_pair("$color, $alpha", fnHwba2arg),
@@ -1468,57 +1468,57 @@ namespace Sass {
           std::make_pair("$channels", hwba1arg),
         });
 
-        module.addFunction("red", ctx.registerBuiltInFunction("red", "$color", red));
-        module.addFunction("green", ctx.registerBuiltInFunction("green", "$color", green));
-        module.addFunction("blue", ctx.registerBuiltInFunction("blue", "$color", blue));
-        module.addFunction("hue", ctx.registerBuiltInFunction("hue", "$color", hue));
-        module.addFunction("lightness", ctx.registerBuiltInFunction("lightness", "$color", lightness));
-        module.addFunction("saturation", ctx.registerBuiltInFunction("saturation", "$color", saturation));
-        module.addFunction("blackness", ctx.createBuiltInFunction("blackness", "$color", blackness));
-        module.addFunction("whiteness", ctx.createBuiltInFunction("whiteness", "$color", whiteness));
-        module.addFunction("invert", ctx.createBuiltInFunction("invert", "$color, $weight: 100%", fnInvert));
-        ctx.registerBuiltInFunction("invert", "$color, $weight: 100%", invert);
-        module.addFunction("grayscale", ctx.createBuiltInFunction("grayscale", "$color", noGrayscale));
-        ctx.registerBuiltInFunction("grayscale", "$color", grayscale);
-        module.addFunction("complement", ctx.registerBuiltInFunction("complement", "$color", complement));
+        module.addFunction(key_red, ctx.registerBuiltInFunction(key_red, "$color", red));
+        module.addFunction(key_green, ctx.registerBuiltInFunction(key_green, "$color", green));
+        module.addFunction(key_blue, ctx.registerBuiltInFunction(key_blue, "$color", blue));
+        module.addFunction(key_hue, ctx.registerBuiltInFunction(key_hue, "$color", hue));
+        module.addFunction(key_lightness, ctx.registerBuiltInFunction(key_lightness, "$color", lightness));
+        module.addFunction(key_saturation, ctx.registerBuiltInFunction(key_saturation, "$color", saturation));
+        module.addFunction(key_blackness, ctx.createBuiltInFunction(key_blackness, "$color", blackness));
+        module.addFunction(key_whiteness, ctx.createBuiltInFunction(key_whiteness, "$color", whiteness));
+        module.addFunction(key_invert, ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert));
+        ctx.registerBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
+        module.addFunction(key_grayscale, ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale));
+        ctx.registerBuiltInFunction(key_grayscale, "$color", grayscale);
+        module.addFunction(key_complement, ctx.registerBuiltInFunction(key_complement, "$color", complement));
 
-        module.addFunction("desaturate", ctx.createBuiltInFunction("desaturate", "$color, $amount", noDesaturate));
-        ctx.registerBuiltInFunction("desaturate", "$color, $amount", desaturate);
+        module.addFunction(key_desaturate, ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate));
+        ctx.registerBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
 
-        module.addFunction("saturate", ctx.createBuiltInFunction("saturate", "$color, $amount", noSaturate));
+        module.addFunction(key_saturate, ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate));
         ctx.registerBuiltInOverloadFns("saturate", {
           std::make_pair("$amount", saturate1arg),
           std::make_pair("$color, $amount", saturate2arg),
           });
 
-        module.addFunction("lighten", ctx.createBuiltInFunction("lighten", "$color, $amount", noLighten));
-        ctx.registerBuiltInFunction("lighten", "$color, $amount", lighten);
-        module.addFunction("darken", ctx.createBuiltInFunction("darken", "$color, $amount", noDarken));
-        ctx.registerBuiltInFunction("darken", "$color, $amount", darken);
+        module.addFunction(key_lighten, ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten));
+        ctx.registerBuiltInFunction(key_lighten, "$color, $amount", lighten);
+        module.addFunction(key_darken, ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken));
+        ctx.registerBuiltInFunction(key_darken, "$color, $amount", darken);
 
-        module.addFunction("adjust-hue", ctx.createBuiltInFunction("adjust-hue", "$color, $degrees", noAdjustHue));
-        ctx.registerBuiltInFunction("adjust-hue", "$color, $degrees", adjustHue);
-        module.addFunction("adjust", ctx.registerBuiltInFunction("adjust-color", "$color, $kwargs...", adjust));
-        module.addFunction("change", ctx.registerBuiltInFunction("change-color", "$color, $kwargs...", change));
-        module.addFunction("scale", ctx.registerBuiltInFunction("scale-color", "$color, $kwargs...", scale));
-        module.addFunction("mix", ctx.registerBuiltInFunction("mix", "$color1, $color2, $weight: 50%", mix));
+        module.addFunction(key_adjust_hue, ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue));
+        ctx.registerBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
+        module.addFunction(key_adjust, ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust));
+        module.addFunction(key_change, ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change));
+        module.addFunction(key_scale, ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale));
+        module.addFunction(key_mix, ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix));
 
-        module.addFunction("opacify", ctx.createBuiltInFunction("opacify", "$color, $amount", noOpacify));
-        ctx.registerBuiltInFunction("opacify", "$color, $amount", opacify);
-        module.addFunction("fade-in", ctx.createBuiltInFunction("fade-in", "$color, $amount", noFadeIn));
-        module.addFunction("fade-out", ctx.createBuiltInFunction("fade-out", "$color, $amount", noFadeOut));
-        ctx.registerBuiltInFunction("fade-in", "$color, $amount", opacify);
-        ctx.registerBuiltInFunction("fade-out", "$color, $amount", transparentize);
+        module.addFunction(key_opacify, ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify));
+        ctx.registerBuiltInFunction(key_opacify, "$color, $amount", opacify);
+        module.addFunction(key_fade_in, ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn));
+        module.addFunction(key_fade_out, ctx.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut));
+        ctx.registerBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        ctx.registerBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
 
-        module.addFunction("transparentize", ctx.createBuiltInFunction("transparentize", "$color, $amount", noTansparentize));
-        ctx.registerBuiltInFunction("transparentize", "$color, $amount", transparentize);
-        module.addFunction("ie-hex-str", ctx.registerBuiltInFunction("ie-hex-str", "$color", ieHexStr));
-        module.addFunction("alpha", ctx.registerBuiltInOverloadFns("alpha", {
+        module.addFunction(key_transparentize, ctx.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize));
+        ctx.registerBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
+        module.addFunction(key_ie_hex_str, ctx.registerBuiltInFunction(key_ie_hex_str, "$color", ieHexStr));
+        module.addFunction(key_alpha, ctx.registerBuiltInOverloadFns("alpha", {
           std::make_pair("$color", alphaOne),
           std::make_pair("$args...", alphaAny),
           }));
-        module.addFunction("opacity", ctx.createBuiltInFunction("opacity", "$color", noOpacity));
-        ctx.registerBuiltInFunction("opacity", "$color", opacity);
+        module.addFunction(key_opacity, ctx.createBuiltInFunction(key_opacity, "$color", noOpacity));
+        ctx.registerBuiltInFunction(key_opacity, "$color", opacity);
 
       }
 

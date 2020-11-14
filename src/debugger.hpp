@@ -304,7 +304,7 @@ inline void debug_ast(const AstNode* node, std::string ind = "") {
   debug_ast(const_cast<AstNode*>(node), ind);
 }
 
-inline sass::string str_replace(sass::string str, const sass::string& oldStr, const sass::string& newStr)
+inline sass::string string_replace(sass::string str, const sass::string& oldStr, const sass::string& newStr)
 {
   size_t pos = 0;
   while ((pos = str.find(oldStr, pos)) != std::string::npos)
@@ -316,9 +316,9 @@ inline sass::string str_replace(sass::string str, const sass::string& oldStr, co
 }
 
 inline sass::string prettyprint(const sass::string& str) {
-  sass::string clean = str_replace(str, "\n", "\\n");
-  clean = str_replace(clean, "	", "\\t");
-  clean = str_replace(clean, "\r", "\\r");
+  sass::string clean = string_replace(str, "\n", "\\n");
+  clean = string_replace(clean, "	", "\\t");
+  clean = string_replace(clean, "\r", "\\r");
   return clean;
 }
 

@@ -25,9 +25,9 @@ namespace Sass {
   public:
     VarRefs* idxs;
     bool isActive = false;
-    void addFunction(const sass::string& name, uint32_t offset);
-    void addVariable(const sass::string& name, uint32_t offset);
-    void addMixin(const sass::string& name, uint32_t offset);
+    void addFunction(const EnvKey& name, uint32_t offset);
+    void addVariable(const EnvKey& name, uint32_t offset);
+    void addMixin(const EnvKey& name, uint32_t offset);
     Module();
   };
 

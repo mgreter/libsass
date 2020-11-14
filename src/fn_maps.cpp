@@ -413,29 +413,29 @@ namespace Sass {
       {
         Module& module(ctx.createModule("map"));
 
-        module.addFunction("set", ctx.createBuiltInOverloadFns("map-set", {
+        module.addFunction(key_set, ctx.createBuiltInOverloadFns("map-set", {
           std::make_pair("$map, $key, $value", fnMapSetThreeArgs),
           std::make_pair("$map, $args...", fnMapSetTwoArgs)
         }));
 
-        module.addFunction("get", ctx.registerBuiltInFunction("map-get", "$map, $key, $keys...", get));
+        module.addFunction(key_get, ctx.registerBuiltInFunction(key_map_get, "$map, $key, $keys...", get));
 
-        module.addFunction("merge", ctx.registerBuiltInOverloadFns("map-merge", {
+        module.addFunction(key_merge, ctx.registerBuiltInOverloadFns("map-merge", {
           std::make_pair("$map1, $map2", merge),
           std::make_pair("$map1, $args...", merge_many)
           }));
 
-        module.addFunction("remove", ctx.registerBuiltInOverloadFns("map-remove", {
+        module.addFunction(key_remove, ctx.registerBuiltInOverloadFns("map-remove", {
           std::make_pair("$map", remove_one),
           std::make_pair("$map, $key, $keys...", remove_many)
           }));
 
-        module.addFunction("keys", ctx.registerBuiltInFunction("map-keys", "$map", keys));
-        module.addFunction("values", ctx.registerBuiltInFunction("map-values", "$map", values));
-        module.addFunction("has-key", ctx.registerBuiltInFunction("map-has-key", "$map, $key, $keys...", hasKey));
+        module.addFunction(key_keys, ctx.registerBuiltInFunction(key_map_keys, "$map", keys));
+        module.addFunction(key_values, ctx.registerBuiltInFunction(key_map_values, "$map", values));
+        module.addFunction(key_has_key, ctx.registerBuiltInFunction(key_map_has_key, "$map, $key, $keys...", hasKey));
 
-        module.addFunction("deep-merge", ctx.createBuiltInFunction("deep-merge", "$map1, $map2", fnDeepMerge));
-        module.addFunction("deep-remove", ctx.createBuiltInFunction("deep-remove", "$map, $key, $keys...", fnDeepRemove));
+        module.addFunction(key_deep_merge, ctx.createBuiltInFunction(key_deep_merge, "$map1, $map2", fnDeepMerge));
+        module.addFunction(key_deep_remove, ctx.createBuiltInFunction(key_deep_remove, "$map, $key, $keys...", fnDeepRemove));
 
       }
 

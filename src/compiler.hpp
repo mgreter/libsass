@@ -123,9 +123,9 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Register built-in function with only one parameter list.
     /////////////////////////////////////////////////////////////////////////
-    uint32_t createBuiltInFunction(const sass::string& name,
+    uint32_t createBuiltInFunction(const EnvKey& name,
       const sass::string& signature, SassFnSig cb);
-    uint32_t registerBuiltInFunction(const sass::string& name,
+    uint32_t registerBuiltInFunction(const EnvKey& name,
       const sass::string& signature, SassFnSig cb);
 
     uint32_t createBuiltInVariable(const sass::string& name, Value* value);
