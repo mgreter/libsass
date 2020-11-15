@@ -360,10 +360,10 @@ namespace Sass {
   }
   // EO getMixin
 
-  void EnvRoot::setModVar(const uint32_t offset, Value* value, bool guarded)
+  void EnvRoot::setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate)
   {
     if (offset < privateVarOffset) {
-      callStackFrame frame(compiler, value->pstate());
+      callStackFrame frame(compiler, pstate);
       throw Exception::RuntimeException(compiler,
         "Cannot modify built-in variable.");
     }
@@ -641,11 +641,11 @@ namespace Sass {
     return nullptr;
   }
 
-  bool VarRefs::setModVar(const EnvKey& name, Value* value, bool guarded) const
+  bool VarRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
   {
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
-      root.setModVar(it->second, value, guarded);
+      root.setModVar(it->second, value, guarded, pstate);
       return true;
     }
     return false;
@@ -795,10 +795,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded)
+  bool EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
     if (stack.empty()) return false;
-    return stack.back()->setModVar(name, ns, value, guarded);
+    return stack.back()->setModVar(name, ns, value, guarded, pstate);
   }
 
   bool EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
@@ -816,7 +816,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded)
+  bool VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
     const VarRefs* current = this;
     while (current) {
@@ -824,13 +824,13 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModVar(name, value, guarded))
+          if (idxs->setModVar(name, value, guarded, pstate))
             return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
-            root.setModVar(fwd->second, value, guarded);
+            root.setModVar(fwd->second, value, guarded, pstate);
             return true;
           }
         }

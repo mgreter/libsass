@@ -2497,7 +2497,8 @@ namespace Sass {
       if (!compiler.varRoot.setModVar(
         a->variable(), a->ns(),
         a->value()->accept(this),
-        a->is_default()))
+        a->is_default(),
+        a->pstate()))
       {
         callStackFrame frame(traces, a->pstate());
         throw Exception::RuntimeException(traces, "Undefined variable.");

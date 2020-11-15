@@ -215,12 +215,12 @@ namespace Sass {
     Callable* getMixin(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
 
-    bool setModVar(const EnvKey& name, Value* value, bool guarded) const;
+    bool setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
     bool setModMix(const EnvKey& name, Callable* callable, bool guarded) const;
     bool setModFn(const EnvKey& name, Callable* callable, bool guarded) const;
 
 
-    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded);
+    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
     bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
     bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
 
@@ -386,7 +386,7 @@ namespace Sass {
     // Just converting reference to array offset and assigning
     void setVariable(const VarRef& vidx, ValueObj value, bool guarded);
 
-    void setModVar(const uint32_t offset, Value* value, bool guarded);
+    void setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate);
     void setModMix(const uint32_t offset, Callable* callable, bool guarded);
     void setModFn(const uint32_t offset, Callable* callable, bool guarded);
 
@@ -424,7 +424,7 @@ namespace Sass {
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name, bool global = false) const;
 
-    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded);
+    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
     bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
     bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
 
