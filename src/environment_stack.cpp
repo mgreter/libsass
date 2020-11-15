@@ -663,6 +663,18 @@ namespace Sass {
   }
 
 
+  bool VarRefs::hasNameSpace(const sass::string& ns) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) return true;
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return false;
+  }
+
   Value* VarRefs::findVariable(const EnvKey& name, const sass::string& ns) const
   {
     const VarRefs* current = this;

@@ -60,6 +60,14 @@ namespace Sass {
       virtual const char* what() const throw() { return msg.c_str(); }
     };
 
+    class ModuleUnknown : public RuntimeException
+    {
+    public:
+      ModuleUnknown(
+        BackTraces traces,
+        sass::string name);
+    };
+
     class ModuleAlreadyKnown : public RuntimeException
     {
     public:

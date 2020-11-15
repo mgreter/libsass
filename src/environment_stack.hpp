@@ -208,6 +208,8 @@ namespace Sass {
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name) const;
 
+    bool hasNameSpace(const sass::string& ns) const;
+
     // Find function only in local frame
     Callable* getFunction(const EnvKey& name) const;
     Callable* getMixin(const EnvKey& name) const;
