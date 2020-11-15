@@ -1436,9 +1436,11 @@ namespace Sass {
     bool hasWith(rule->hasWithConfig());
     auto config(rule->config());
 
+    SourceSpan pstate(rule->pstate());
     VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
-    const ImportRequest import(url, scanner.sourceUrl);
-    SourceSpan pstate = rule->pstate();
+    const ImportRequest import(url, prev);
+    callStackFrame frame(context, { pstate, Strings::useRule });
+    // SourceSpan pstate = rule->pstate();
 
     WithConfig wconfig(context, config, hasWith);
 
@@ -1706,8 +1708,6 @@ namespace Sass {
     rule->needsLoading(true);
     return rule.detach();
 #endif
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    callStackFrame frame(context, { pstate, Strings::useRule });
     rule->config(config);
     rule = resolveUseRule(rule);
     return rule.detach();
