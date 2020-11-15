@@ -52,6 +52,7 @@ namespace Sass {
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
     root->idxs = context.varRoot.stack.back();
 
+    auto& currentRoot(context.currentRoot);
     LOCAL_PTR(Root, currentRoot, root);
 
     // The parsed children
@@ -1328,7 +1329,7 @@ namespace Sass {
 
   }
 
-  void exposeFiltered(
+  void exposeFiltered2(
     EnvKeyFlatMap<uint32_t>& merged,
     EnvKeyFlatMap<uint32_t> expose,
     const sass::string prefix,
@@ -1354,7 +1355,7 @@ namespace Sass {
     }
   }
 
-  void exposeFiltered(
+  void exposeFiltered2(
     EnvKeyFlatMap<uint32_t>& merged,
     EnvKeyFlatMap<uint32_t> expose,
     const sass::string prefix,
@@ -1376,7 +1377,7 @@ namespace Sass {
     }
   }
 
-  void mergeForwards(
+  void mergeForwards2(
     VarRefs* idxs,
     Root* currentRoot,
     bool isShown,
@@ -1388,19 +1389,19 @@ namespace Sass {
   {
 
     if (isShown) {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
+      exposeFiltered2(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
+      exposeFiltered2(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
+      exposeFiltered2(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
     }
     else if (isHidden) {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
+      exposeFiltered2(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
+      exposeFiltered2(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
+      exposeFiltered2(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
     }
     else {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
+      exposeFiltered2(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
+      exposeFiltered2(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
+      exposeFiltered2(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
     }
 
   }
@@ -1421,10 +1422,97 @@ namespace Sass {
 
   }
 
-//  bool StylesheetParser::resolveForwardRule(ForwardRule* rule)
-//  {
-//return nullptr;
-//  }
+  ForwardRule* StylesheetParser::resolveForwardRule(ForwardRule* rule)
+  {
+
+    // sass::string ns(rule->ns());
+    sass::string url(rule->url());
+    sass::string prev(rule->prev());
+    sass::string prefix(rule->prefix());
+    bool isShown(rule->isShown());
+    bool isHidden(rule->isHidden());
+    bool hasWith(rule->hasWithConfig());
+    auto config(rule->config());
+
+    SourceSpan pstate(rule->pstate());
+    const ImportRequest import(rule->url(), rule->prev());
+    callStackFrame frame(context, { pstate, Strings::forwardRule });
+
+    // The show or hide config also hides these
+    WithConfig wconfig(context, rule->config(), rule->hasWithConfig(),
+      rule->isShown(), rule->isHidden(), rule->toggledVariables(), rule->prefix());
+
+    bool hasCached = false;
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, false));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(context, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = context.loadImport(resolved[0])) {
+
+      // ToDo: We don't take format into account
+      StyleSheet* sheet = nullptr;
+      // EnvFrame* frame(context.varRoot.stack.back()->getModule());
+      auto cached = context.sheets.find(loaded->getAbsPath());
+      if (cached != context.sheets.end()) {
+
+        hasCached = true;
+
+        // Check if with is given, error
+        sheet = cached->second;
+
+        if (hasWithConfig) {
+          throw Exception::ParserException(context,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+
+      }
+      else {
+        // ToDo: must not create new real scope!
+        EnvFrame local(context, true, true);
+        sheet = context.registerImport(loaded);
+        // sheet->root2->idxs = local.idxs;
+        sheet->root2->import = loaded;
+      }
+
+      Root* module = sheet->root2;
+      rule->root(module);
+
+      mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
+        prefix, rule->toggledVariables(), rule->toggledCallables(), context);
+
+
+    }
+    else {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Couldn't read stylesheet for import.");
+    }
+
+    if (hasCached) return nullptr;
+    wconfig.finalize();
+    return rule;
+
+  }
 
 
   UseRule* StylesheetParser::resolveUseRule(UseRule* rule)
@@ -1703,12 +1791,12 @@ namespace Sass {
     bool hasCached = false;
     rule->ns(ns);
     rule->url(url);
+    rule->config(config);
     rule->prev(scanner.sourceUrl);
 #ifndef SassEagerUseParsing
     rule->needsLoading(true);
     return rule.detach();
 #endif
-    rule->config(config);
     rule = resolveUseRule(rule);
     return rule.detach();
   }
@@ -1784,7 +1872,7 @@ namespace Sass {
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (Module* module = context.getModule(name)) {
 
-        mergeForwards(module->idxs, currentRoot, isShown, isHidden,
+        mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
           prefix, toggledVariables, toggledCallables, context);
         rule->root(nullptr);
 
@@ -1799,98 +1887,17 @@ namespace Sass {
       return rule.detach();
     }
 
-    // resolveForwardRule(rule);
-
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    const ImportRequest import(url, scanner.sourceUrl);
-    callStackFrame frame(context, { pstate, Strings::forwardRule });
-
-    // The show or hide config also hides these
-    WithConfig wconfig(context, config, hasWith,
-      isShown, isHidden, rule->toggledVariables(), prefix);
-
-    bool hasCached = false;
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Can't find stylesheet to import.");
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      {
-        msg_stream << "  " << resolved[i].imp_path << "\n";
-      }
-      throw Exception::ParserException(context, msg_stream.str());
-    }
-
-    // We made sure exactly one entry was found, load its content
-    if (ImportObj loaded = context.loadImport(resolved[0])) {
-
-      // ToDo: We don't take format into account
-      StyleSheet* sheet = nullptr;
-      // EnvFrame* frame(context.varRoot.stack.back()->getModule());
-      auto cached = context.sheets.find(loaded->getAbsPath());
-      if (cached != context.sheets.end()) {
-
-        hasCached = true;
-
-        // Check if with is given, error
-        sheet = cached->second;
-
-        if (hasWithConfig) {
-          throw Exception::ParserException(context,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-
-      }
-      else {
-        // ToDo: must not create new real scope!
-        EnvFrame local(context, true, true);
-        sheet = context.registerImport(loaded);
-        // sheet->root2->idxs = local.idxs;
-        sheet->root2->import = loaded;
-      }
-
-      Root* module = sheet->root2;
-      rule->root(module);
-
-      mergeForwards(module->idxs, currentRoot, isShown, isHidden,
-        prefix, toggledVariables, toggledCallables, context);
+    rule->url(url);
+    rule->config(config);
+    rule->isShown(isShown);
+    rule->isHidden(isHidden);
+    rule->prefix(prefix);
+    rule->prev(scanner.sourceUrl);
+    rule->hasWithConfig(hasWith);
+    rule = resolveForwardRule(rule);
+    return rule.detach();
 
 
-    }
-    else {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Couldn't read stylesheet for import.");
-    }
-
-
-
-
-
-
-
-
-
-
-
-    if (hasCached) return nullptr;
-
-
-
-
-    wconfig.finalize();
     return rule.detach();
   }
 

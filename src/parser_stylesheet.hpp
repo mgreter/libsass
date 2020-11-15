@@ -78,8 +78,6 @@ namespace Sass {
     // Main parser entry function
     Root* parseRoot();
 
-    Root* currentRoot = nullptr;
-
     // Parse external callback function
     ExternalCallable* parseExternalCallable();
 
@@ -540,7 +538,7 @@ namespace Sass {
       const sass::string& path);
 
     UseRule* resolveUseRule(UseRule* rule);
-    bool resolveForwardRule(ForwardRule* rule);
+    ForwardRule* resolveForwardRule(ForwardRule* rule);
   };
 
   /////////////////////////////////////////////////////////////////////////

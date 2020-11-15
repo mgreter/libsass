@@ -598,10 +598,14 @@ namespace Sass {
   private:
     ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, url);
+    ADD_CONSTREF(sass::string, prev);
+    ADD_CONSTREF(sass::string, prefix);
     ADD_PROPERTY(bool, isShown);
+    ADD_PROPERTY(bool, isHidden);
     ADD_PROPERTY(bool, hasWithConfig);
     ADD_REF(std::set<EnvKey>, toggledVariables);
     ADD_REF(std::set<EnvKey>, toggledCallables);
+    ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
   public:
     // Value constructor

@@ -47,6 +47,8 @@ namespace Sass {
 
   public:
 
+    Root* currentRoot = nullptr;
+
     sass::vector<WithConfig*> withConfigStack;
 
     WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
