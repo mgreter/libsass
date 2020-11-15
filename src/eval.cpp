@@ -1824,7 +1824,7 @@ namespace Sass {
     sass::string prev(node->prev());
     bool hasWith(node->hasWithConfig());
 
-    BackTrace trace(node->pstate(), Strings::useRule, true);
+    BackTrace trace(node->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
     // The show or hide config also hides these
@@ -1893,7 +1893,7 @@ namespace Sass {
 
   Value* Eval::visitForwardRule(ForwardRule* node)
   {
-    BackTrace trace(node->pstate(), Strings::forwardRule, true);
+    BackTrace trace(node->pstate(), Strings::forwardRule, false);
     callStackFrame frame(logger456, trace);
 
     // The show or hide config also hides these
