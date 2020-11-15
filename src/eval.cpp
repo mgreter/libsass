@@ -2484,17 +2484,17 @@ namespace Sass {
     }
 
     // Get the main (local) variable
-    VarRef vidx(a->vidxs().front());
+    // VarRef vidx(a->vidxs().front());
 
-    if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
-      compiler.addFinalStackTrace(a->pstate());
-      throw Exception::RuntimeException(compiler,
-        "Cannot modify built-in variable.");
-    }
+    // if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
+    //   compiler.addFinalStackTrace(a->pstate());
+    //   throw Exception::RuntimeException(compiler,
+    //     "Cannot modify built-in variable.");
+    // }
 
     // Now create the new variable
-    compiler.varRoot.setVariable(vidx,
-      a->value()->accept(this));
+    //compiler.varRoot.setVariable(vidx,
+    //  a->value()->accept(this));
 
     return nullptr;
   }
