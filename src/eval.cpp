@@ -1545,7 +1545,7 @@ namespace Sass {
 
     SourceSpan pstate(rule->pstate());
     const ImportRequest import(rule->url(), rule->prev());
-    callStackFrame frame(compiler, { pstate, Strings::forwardRule });
+    // callStackFrame frame(compiler, { pstate, Strings::forwardRule });
 
     // The show or hide config also hides these
     WithConfig wconfig(compiler, rule->config(), rule->hasWithConfig(),
@@ -1877,7 +1877,7 @@ namespace Sass {
 
   Value* Eval::visitForwardRule(ForwardRule* node)
   {
-    BackTrace trace(node->pstate(), Strings::useRule, true);
+    BackTrace trace(node->pstate(), Strings::forwardRule, true);
     callStackFrame frame(logger456, trace);
 
     if (node->needsLoading()) {
