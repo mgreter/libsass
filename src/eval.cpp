@@ -1547,10 +1547,6 @@ namespace Sass {
     const ImportRequest import(rule->url(), rule->prev());
     // callStackFrame frame(compiler, { pstate, Strings::forwardRule });
 
-    // The show or hide config also hides these
-    WithConfig wconfig(compiler, rule->config(), rule->hasWithConfig(),
-      rule->isShown(), rule->isHidden(), rule->toggledVariables(), rule->prefix());
-
     bool hasCached = false;
 
     // Search for valid imports (e.g. partials) on the file-system
@@ -1612,7 +1608,7 @@ namespace Sass {
         prefix, rule->toggledVariables(), rule->toggledCallables(), compiler);
 
       if (hasCached) return nullptr;
-      wconfig.finalize();
+      // wconfig.finalize();
       return sheet;
 
     }
@@ -1638,9 +1634,6 @@ namespace Sass {
     const ImportRequest import(url, prev);
     SourceSpan pstate = rule->pstate();
     //callStackFrame frame(context, { pstate, Strings::useRule });
-
-    // The show or hide config also hides these
-    WithConfig wconfig(compiler, config, hasWith);
 
     bool hasCached = false;
 
@@ -1805,7 +1798,7 @@ namespace Sass {
 
 
     if (hasCached) return nullptr;
-    //wconfig.finalize();
+    // wconfig.finalize();
     return sheet;
 
 
@@ -1821,6 +1814,9 @@ namespace Sass {
 
     BackTrace trace(node->pstate(), Strings::useRule, true);
     callStackFrame frame(logger456, trace);
+
+    // The show or hide config also hides these
+    WithConfig wconfig(compiler, node->config(), hasWith);
 
     if (node->needsLoading()) {
       if (auto sheet = resolveUseRule(node)) {
@@ -1876,6 +1872,8 @@ namespace Sass {
       root->isLoading = false;
     }
 
+    wconfig.finalize();
+
     return nullptr;
     // throw Exception::RuntimeException(compiler,
     //   "@use rules not yet supported in LibSass!");
@@ -1885,6 +1883,10 @@ namespace Sass {
   {
     BackTrace trace(node->pstate(), Strings::forwardRule, true);
     callStackFrame frame(logger456, trace);
+
+    // The show or hide config also hides these
+    WithConfig wconfig(compiler, node->config(), node->hasWithConfig(),
+      node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
 
     if (node->needsLoading()) {
       if (auto sheet = resolveForwardRule(node)) {
@@ -1930,6 +1932,7 @@ namespace Sass {
       node->root()->loaded = current;
     }
 
+    wconfig.finalize();
     return nullptr;
   }
 
