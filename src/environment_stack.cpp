@@ -465,6 +465,30 @@ namespace Sass {
   }
   // EO getFunction
 
+  Callable* VarRefs::getFunction(const EnvKey& name, const sass::string& ns) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        VarRefs* qwe = it->second.first;
+        Moduled* mod = it->second.second;
+
+
+
+        // const VarRef vidx{ current->fnFrame, it->second.first };
+        // CallableObj& value = root.getFunction(vidx);
+        // if (!value.isNull()) return value;
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return {};
+
+    return nullptr;
+  }
+
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
@@ -475,6 +499,12 @@ namespace Sass {
     return stack.back()->getFunction(name);
   }
   // EO getFunction
+
+  Callable* EnvRoot::getFunction(const EnvKey& name, const sass::string& ns) const
+  {
+    if (stack.empty()) return nullptr;
+    return stack.back()->getFunction(name, ns);
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

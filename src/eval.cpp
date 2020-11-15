@@ -977,7 +977,8 @@ namespace Sass {
     CallableObj function = node->fidx().isValid()
       ? compiler.varRoot.getFunction(node->fidx()).ptr()
       : compiler.varRoot.getFunction(
-        node->name()->getPlainString());
+        node->name()->getPlainString(), // Name should not be itpl?
+        node->ns());
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
         node->pstate(), acceptInterpolation(node->name(), false));

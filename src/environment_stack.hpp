@@ -196,6 +196,7 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
+    Callable* getFunction(const EnvKey& name, const sass::string& ns) const;
     Callable* getFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
@@ -389,6 +390,7 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
+    Callable* getFunction(const EnvKey& name, const sass::string& ns) const;
     Callable* getFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].

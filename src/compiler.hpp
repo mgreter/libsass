@@ -68,6 +68,7 @@ namespace Sass {
     // Functions only for evaluation phase (C-API functions and eval itself)
     CallableObj getMixin(const EnvKey& name) { return varRoot.getMixin(name); }
     CallableObj getFunction(const EnvKey& name) { return varRoot.getFunction(name); }
+    CallableObj getFunction(const EnvKey& name, const sass::string& ns) { return varRoot.getFunction(name, ns); }
 
     // The current state the compiler is in.
     enum SassCompilerState state;

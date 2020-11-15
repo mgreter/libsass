@@ -3918,7 +3918,7 @@ namespace Sass {
         readPublicIdentifier()));
 
       InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
-        ident->pstate());
+        ident->pstate(), ident);
 
       if (ns.empty()) {
         error("Interpolation isn't allowed in namespaces.",
@@ -3929,7 +3929,7 @@ namespace Sass {
       sass::string name(identifier->getPlainString());
 
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), itpl, args, ns);
+        scanner.relevantSpanFrom(start), itpl, args, name);
 
       // First search in forwarded modules
       VarRefs* frame(context.varRoot.stack.back()->getModule23());
@@ -3945,18 +3945,18 @@ namespace Sass {
           }
         }
       }
-      else {
-        SourceSpan state(scanner.relevantSpanFrom(start));
-        context.addFinalStackTrace(state);
-        throw Exception::RuntimeException(context, "There is no "
-          "module with the namespace \"" + ns + "\".");
-      }
-
-      if (!fn->fidx().isValid()) {
-        context.addFinalStackTrace(fn->pstate());
-        throw Exception::ParserException(context,
-          "Undefined function.");
-      }
+      // else {
+      //   SourceSpan state(scanner.relevantSpanFrom(start));
+      //   context.addFinalStackTrace(state);
+      //   throw Exception::RuntimeException(context, "There is no "
+      //     "module with the namespace \"" + ns + "\".");
+      // }
+      // 
+      // if (!fn->fidx().isValid()) {
+      //   context.addFinalStackTrace(fn->pstate());
+      //   throw Exception::ParserException(context,
+      //     "Undefined function.");
+      // }
 
       return fn.detach();
     }
