@@ -888,8 +888,7 @@ namespace Sass {
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = idxs->root.getVariable(vidx);
-        if (value != nullptr) { value = val; return; }
+        return idxs->root.setVariable(vidx, val);
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;

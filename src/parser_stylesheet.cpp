@@ -386,6 +386,18 @@ namespace Sass {
     // Check if we have a configuration
 
     if (vidxs.empty() && ns.empty()) {
+
+      // IF we are semi-global and parent is root
+      // And if that root also contains that variable
+      // We assign to that instead of a new local one!
+      if (frame->permeable && frame->pscope->isModule) {
+        auto root = frame->pscope;
+        if (root->varIdxs.count(name)) {
+          global = false;
+          pr = root;
+        }
+      }
+
       // Also skip if on global scope?
       // Not if we have one forwarded!
       vidxs.push_back(pr->createVariable(name));

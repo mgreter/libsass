@@ -2405,51 +2405,71 @@ namespace Sass {
 
     // Check if we can overwrite an existing variable
     // We create it locally if none other there yet.
-    for (auto vidx : a->vidxs()) {
-      // Get the value reference (now guaranteed to exist)
-      ValueObj& value(compiler.varRoot.getVariable(vidx));
-      // Skip if nothing is stored yet, keep looking
-      // for another variable with a value set
-      if (value == nullptr) continue;
-      // Set variable if default flag is not set or
-      // if no value has been set yet or that value
-      // was explicitly set to a SassNull value.
-
-
-      if (!a->is_default() || value->isNull()) {
-
-        if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
-          compiler.addFinalStackTrace(a->pstate());
-          throw Exception::RuntimeException(compiler,
-            "Cannot modify built-in variable.");
-        }
-
-        compiler.varRoot.setVariable(vidx,
-           a->value()->accept(this));
-      }
-      // Finished
-      return nullptr;
-    }
+    // for (auto vidx : a->vidxs()) {
+    //   // Get the value reference (now guaranteed to exist)
+    //   ValueObj& value(compiler.varRoot.getVariable(vidx));
+    //   // Skip if nothing is stored yet, keep looking
+    //   // for another variable with a value set
+    //   if (value == nullptr) continue;
+    //   // Set variable if default flag is not set or
+    //   // if no value has been set yet or that value
+    //   // was explicitly set to a SassNull value.
+    // 
+    // 
+    //   if (!a->is_default() || value->isNull()) {
+    // 
+    //     if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
+    //       compiler.addFinalStackTrace(a->pstate());
+    //       throw Exception::RuntimeException(compiler,
+    //         "Cannot modify built-in variable.");
+    //     }
+    // 
+    //     compiler.varRoot.setVariable(vidx,
+    //        a->value()->accept(this));
+    //   }
+    //   // Finished
+    //   return nullptr;
+    // }
 
     // Emit deprecation for new var with global flag
     if (a->is_global()) {
-      // Check if we are at the global scope
-      if (compiler.varRoot.isGlobal()) {
-        logger456.addDeprecation(
-          "As of LibSass 4.1, !global assignments won't be able to declare new"
-          " variables. Since this assignment is at the root of the stylesheet,"
-          " the !global flag is unnecessary and can safely be removed.",
-          a->pstate());
+
+      auto rframe = compiler.varRoot.stack[0];
+      auto it = rframe->varIdxs.find(a->variable());
+      if (it != rframe->varIdxs.end()) {
+        auto value = compiler.varRoot.getVariable({
+          rframe->varFrame, it->second });
+        if (value == nullptr) {
+
+          // Check if we are at the global scope
+          if (compiler.varRoot.isGlobal()) {
+            logger456.addDeprecation(
+              "As of LibSass 4.1, !global assignments won't be able to declare new"
+              " variables. Since this assignment is at the root of the stylesheet,"
+              " the !global flag is unnecessary and can safely be removed.",
+              a->pstate());
+          }
+          else {
+            logger456.addDeprecation(
+              "As of LibSass 4.1, !global assignments won't be able to declare new variables."
+              " Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
+              a->pstate());
+          }
+
+        }
       }
-      else {
-        logger456.addDeprecation(
-          "As of LibSass 4.1, !global assignments won't be able to declare new variables."
-          " Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
-          a->pstate());
-      }
+
     }
 
-    if (!a->ns().empty()) {
+
+    if (a->ns().empty()) {
+
+      compiler.varRoot.setVariable(
+        a->variable(),
+        a->value()->accept(this));
+
+    }
+    else {
 
       if (!compiler.varRoot.setModVar(
         a->variable(), a->ns(),
