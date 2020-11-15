@@ -468,10 +468,10 @@ namespace Sass {
         buffer.write(scanner.readChar());
       }
       scanWhitespace();
-      if (!scanCharIgnoreCase($n)) return buffer.buffer;
+      if (!scanIdentChar($n)) return buffer.buffer;
     }
     else {
-      expectCharIgnoreCase($n);
+      expectIdentChar($n);
     }
     buffer.write($n);
     scanWhitespace();

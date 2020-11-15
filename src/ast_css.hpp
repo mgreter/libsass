@@ -544,51 +544,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  class Moduled
-  {
-  public:
-
-    // True once loaded
-    bool isActive = false;
-
-    // Import through which we are loaded
-    ImportObj import;
-
-    // Forwarded items must be on internal scope
-
-    VarRefs* idxs;
-
-    // All @forward rules get merged into these objects
-    // Those are not available on the local scope, they
-    // are only used when another module consumes us!
-    // On @use those must be merged with local ones!
-    VidxEnvKeyMap mergedFwdVar;
-    MidxEnvKeyMap mergedFwdMix;
-    FidxEnvKeyMap mergedFwdFn;
-
-    // The evaluated css tree
-    CssParentNodeObj loaded = nullptr;
-
-  };
-
-  class Root final : public AstNode,
-    public Vectorized<Statement>,
-    public Moduled
-  {
-  public:
-
-    bool isLoading = false;
-
-
-    Root(const SourceSpan& pstate, size_t reserve = 0)
-      : AstNode(pstate), Vectorized<Statement>(reserve)
-    {}
-
-    Root(const SourceSpan& pstate, StatementVector&& vec)
-      : AstNode(pstate), Vectorized<Statement>(std::move(vec))
-    {}
-
-  };
 
 }
 

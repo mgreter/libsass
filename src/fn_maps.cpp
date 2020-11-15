@@ -3,6 +3,7 @@
 /*****************************************************************************/
 #include "fn_maps.hpp"
 
+#include "eval.hpp"
 #include "compiler.hpp"
 #include "exceptions.hpp"
 #include "ast_values.hpp"
@@ -110,8 +111,8 @@ namespace Sass {
 
       BUILT_IN_FN(fnMapSetThreeArgs)
       {
-        auto map = arguments[0]->assertMap(compiler, Strings::map);
-        auto copy = SASS_MEMORY_COPY(map);
+        MapObj map = arguments[0]->assertMap(compiler, Strings::map);
+        auto copy = SASS_MEMORY_COPY(map); // Can be optimized!
         auto it = copy->find(arguments[1]);
         if (it == copy->end()) {
           copy->insert({ arguments[1], arguments[2] });
@@ -124,8 +125,8 @@ namespace Sass {
 
       BUILT_IN_FN(fnMapSetTwoArgs)
       {
-        auto map = arguments[0]->assertMap(compiler, Strings::map);
-        MapObj copy = map = SASS_MEMORY_COPY(map);
+        MapObj map = arguments[0]->assertMap(compiler, Strings::map);
+        MapObj copy = map = SASS_MEMORY_COPY(map); // Can be optimized
         auto it = arguments[1]->iterator();
         auto size = arguments[1]->lengthAsList();
         auto cur = it.begin(), end = it.end();
@@ -189,9 +190,11 @@ namespace Sass {
         // We assign to ourself, so we can optimize this
         // This can shave off a few percent of run-time
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (selfAssign && map1->refcount < AssignableRefCount + 1) {
-          for (auto kv : map2->elements()) { map1->insertOrSet(kv); }
-          return map1.detach();
+        if (eval.assigne && eval.assigne->ptr() == map1.ptr()) {
+          if (map1->refcount < AssignableRefCount + 1) {
+            for (auto kv : map2->elements()) { map1->insertOrSet(kv); }
+            return map1.detach();
+          }
         }
         #endif
         Map* copy = SASS_MEMORY_COPY(map1);
@@ -218,8 +221,7 @@ namespace Sass {
 
         auto cur = it.begin(), end = it.end() - 1;
 
-        Map *last = (end)->assertMap(compiler, Strings::map2);
-
+        MapObj last = (end)->assertMap(compiler, Strings::map2);
         MapObj copy = map1 = SASS_MEMORY_COPY(map1);
 
         while (cur != end) {
@@ -276,7 +278,7 @@ namespace Sass {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (selfAssign && map->refcount < AssignableRefCount + 1) {
+        if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < AssignableRefCount + 1) {
           map->erase(arguments[1]);
           for (Value* key : arguments[2]->iterator()) {
             map->erase(key);
@@ -363,9 +365,10 @@ namespace Sass {
 
       BUILT_IN_FN(fnDeepMerge)
       {
-        Map* map1 = arguments[0]->assertMap(compiler, Strings::map1);
-        Map* map2 = arguments[1]->assertMap(compiler, Strings::map2);
-        return deepMergeImpl(map1, map2);
+        MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
+        MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
+        MapObj result = deepMergeImpl(map1, map2);
+        return result.detach();
       }
       
       BUILT_IN_FN(fnDeepRemove)
@@ -411,7 +414,7 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
       {
-        Module& module(ctx.createModule("map"));
+        BuiltInMod& module(ctx.createModule("map"));
 
         module.addFunction(key_set, ctx.createBuiltInOverloadFns(key_map_set, {
           std::make_pair("$map, $key, $value", fnMapSetThreeArgs),

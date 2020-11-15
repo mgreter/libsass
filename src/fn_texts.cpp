@@ -171,7 +171,7 @@ namespace Sass {
 
 	    void registerFunctions(Compiler& ctx)
 	    {
-        Module& module(ctx.createModule("string"));
+        BuiltInMod& module(ctx.createModule("string"));
 		    module.addFunction(key_unquote, ctx.registerBuiltInFunction(key_unquote, "$string", unquote));
 		    module.addFunction(key_quote, ctx.registerBuiltInFunction(key_quote, "$string", quote));
 		    module.addFunction(key_to_upper_case, ctx.registerBuiltInFunction(key_to_upper_case, "$string", toUpperCase));

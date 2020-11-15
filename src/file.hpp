@@ -13,6 +13,7 @@
 #include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
+#include "util_string.hpp"
 
 namespace Sass {
 
@@ -92,12 +93,26 @@ namespace Sass {
       // base derived from context path
       // this really just acts as a cache
       sass::string base_path;
+      // Consider `.import` files?
+      bool considerImports;
     public:
-      ImportRequest(sass::string imp_path, sass::string ctx_path)
-      : imp_path(File::make_canonical_path(imp_path)),
+      ImportRequest(
+        sass::string imp_path,
+        sass::string ctx_path,
+        bool considerImports) :
+        imp_path(File::make_canonical_path(imp_path)),
         ctx_path(File::make_canonical_path(ctx_path)),
-        base_path(File::dir_name(ctx_path))
-      { }
+        base_path(File::dir_name(ctx_path)),
+        considerImports(considerImports)
+      {}
+
+      bool operator==(const ImportRequest& other) const {
+        return considerImports == other.considerImports
+          && imp_path == other.imp_path
+          && ctx_path == other.ctx_path;
+      }
+
+      ImportRequest() {};
   };
 
   // a resolved include (final import)
@@ -157,6 +172,29 @@ namespace Sass {
       std::unordered_map<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });
   }
 
+}
+
+namespace std {
+  template <> struct hash<Sass::ImportRequest> {
+  public:
+    inline size_t operator()(
+      const Sass::ImportRequest& import) const
+    {
+      size_t hash = import.considerImports;
+      Sass::hash_combine(hash,
+        MurmurHash2(
+        (void*)import.base_path.c_str(),
+          (int)import.base_path.size(),
+          Sass::getHashSeed()));
+
+      Sass::hash_combine(hash,
+        MurmurHash2(
+          (void*)import.imp_path.c_str(),
+          (int)import.imp_path.size(),
+          Sass::getHashSeed()));
+      return hash;
+    }
+  };
 }
 
 #endif

@@ -192,7 +192,7 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-        Module& module(ctx.createModule("selector"));
+        BuiltInMod& module(ctx.createModule("selector"));
         module.addFunction(key_nest, ctx.registerBuiltInFunction(key_selector_nest, "$selectors...", nest));
 		    module.addFunction(key_append, ctx.registerBuiltInFunction(key_selector_append, "$selectors...", append));
 		    module.addFunction(key_extend, ctx.registerBuiltInFunction(key_selector_extend, "$selector, $extendee, $extender", extend));

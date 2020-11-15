@@ -283,12 +283,15 @@ namespace Sass {
   {
     ADD_CONSTREF(EnvKey, name);
     ADD_REF(sass::vector<VarRef>, vidxs);
+    ADD_REF(VarRef, vidx2);
     ADD_CONSTREF(sass::string, ns);
+    ADD_PROPERTY(bool, withinLoop);
   public:
     // Value constructor
     VariableExpression(
       SourceSpan&& pstate,
       const EnvKey& name,
+      bool withinLoop,
       const sass::string& ns = "");
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
@@ -301,14 +304,39 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   class ParenthesizedExpression final : public Expression
   {
+  private:
     ADD_CONSTREF(ExpressionObj, expression)
   public:
+    // Value constructor
     ParenthesizedExpression(
       SourceSpan&& pstate,
       Expression* expression);
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitParenthesizedExpression(this);
+    }
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  // A plain css function (not executed, simply put back in)
+  /////////////////////////////////////////////////////////////////////////
+
+  class PlainCssCallable2 final : public Expression
+  {
+  private:
+    ADD_CONSTREF(InterpolationObj, itpl);
+    ADD_PROPERTY(ArgumentInvocation*, args);
+    ADD_CONSTREF(sass::string, ns);
+  public:
+    // Value constructor
+    PlainCssCallable2(
+      SourceSpan pstate,
+      Interpolation* itpl,
+      ArgumentInvocation* args,
+      const sass::string& ns);
+    // Expression visitor to sass values entry function
+    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitCssFunction(this);
     }
   };
 
@@ -359,18 +387,20 @@ namespace Sass {
     // The name of the function being invoked. If this is
     // interpolated, the function will be interpreted as plain
     // CSS, even if it has the same name as a Sass function.
-    ADD_CONSTREF(InterpolationObj, name);
+    ADD_CONSTREF(sass::string, name);
 
     // The frame offset for the function
-    ADD_CONSTREF(VarRef, fidx);
+    ADD_PROPERTY(CallableObj, cached);
+    ADD_CONSTREF(VarRef, fidx2);
 
     // Internal optimization flag
-    ADD_CONSTREF(bool, selfAssign);
+    ADD_CONSTREF(bool, withinLoop);
 
   public:
     FunctionExpression(SourceSpan pstate,
-      Interpolation* name,
+      const sass::string& name,
       ArgumentInvocation* arguments,
+      bool withinLoop,
       const sass::string& ns = "");
 
     // Expression visitor to sass values entry function

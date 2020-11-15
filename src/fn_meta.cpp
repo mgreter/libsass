@@ -92,10 +92,10 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule55.find(plugin->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(plugin->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->varIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -108,8 +108,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasVar = false;
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->forwards) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -120,7 +119,7 @@ namespace Sass {
         }
         if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
         return SASS_MEMORY_NEW(Boolean, pstate,
-          compiler.getVariable(variable->value(), true));
+          compiler.findVariable(variable->value(), true));
 
       }
 
@@ -129,11 +128,11 @@ namespace Sass {
       BUILT_IN_FN(variableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        ValueObj ex = compiler.getVariable(variable->value());
+        ValueObj ex = compiler.findVariable(variable->value());
+
         bool hasVar = false;
-        auto parent = compiler.varRoot.stack.back()->getModule23();
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        auto parent = compiler.getCurrentModule();
+        for (auto global : parent->forwards) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -150,10 +149,10 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule55.find(plugin->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(plugin->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -166,8 +165,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->forwards) {
           if (global->fnIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -177,8 +175,8 @@ namespace Sass {
           }
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        CallableObj fn = compiler.getFunction(variable->value());
-        return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
+        CallableObj* fn = compiler.findFunction(variable->value());
+        return SASS_MEMORY_NEW(Boolean, pstate, fn && *fn);
       }
 
       BUILT_IN_FN(mixinExists)
@@ -186,10 +184,10 @@ namespace Sass {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
 
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule55.find(plugin->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(plugin->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->mixIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -202,8 +200,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->forwards) {
           if (global->mixIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -214,7 +211,7 @@ namespace Sass {
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
 
-        CallableObj fn = compiler.getMixin(variable->value());
+        CallableObj fn = compiler.findMixin(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
@@ -231,13 +228,13 @@ namespace Sass {
       BUILT_IN_FN(moduleVariables)
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
-        Map* list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.varRoot.stack.back()->getModule23();
-        auto it = module->fwdModule55.find(ns->value());
-        if (it != module->fwdModule55.end()) {
+        MapObj list = SASS_MEMORY_NEW(Map, pstate);
+        auto module = compiler.getCurrentModule();
+        auto it = module->module->moduse.find(ns->value());
+        if (it != module->module->moduse.end()) {
           VarRefs* refs = it->second.first;
-          Moduled* root = it->second.second;
-          if (root && !root->isActive) {
+          Module* root = it->second.second;
+          if (root && !root->isCompiled) {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
@@ -248,24 +245,32 @@ namespace Sass {
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
+          if (root)
+          for (auto entry : root->mergedFwdVar) {
+            auto name = SASS_MEMORY_NEW(String, pstate,
+              sass::string(entry.first.norm()), true);
+            VarRef vidx(0xFFFFFFFF, entry.second);
+            list->insert({ name, compiler.
+              varRoot.getVariable(vidx) });
+          }
         }
         else {
           throw Exception::RuntimeException(compiler, "There is "
             "no module with namespace \"" + ns->value() + "\".");
         }
-        return list;
+        return list.detach();
       }
 
       BUILT_IN_FN(moduleFunctions)
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
-        Map* list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.varRoot.stack.back()->getModule23();
-        auto it = module->fwdModule55.find(ns->value());
-        if (it != module->fwdModule55.end()) {
+        MapObj list = SASS_MEMORY_NEW(Map, pstate);
+        auto module = compiler.getCurrentModule();
+        auto it = module->module->moduse.find(ns->value());
+        if (it != module->module->moduse.end()) {
           VarRefs* refs = it->second.first;
-          Moduled* root = it->second.second;
-          if (root && !root->isActive) {
+          Module* root = it->second.second;
+          if (root && !root->isCompiled) {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
@@ -277,21 +282,31 @@ namespace Sass {
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
+          if (root)
+          for (auto entry : root->mergedFwdFn) {
+            auto name = SASS_MEMORY_NEW(String, pstate,
+              sass::string(entry.first.norm()), true);
+            VarRef fidx(0xFFFFFFFF, entry.second);
+            auto callable = compiler.varRoot.getFunction(fidx);
+            auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
+            list->insert({ name, fn });
+          }
         }
         else {
           throw Exception::RuntimeException(compiler, "There is "
             "no module with namespace \"" + ns->value() + "\".");
         }
-        return list;
+        return list.detach();
       }
 
-      /// Like `_environment.getFunction`, but also returns built-in
+      /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
       Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
-        return ctx.getFunction(name); // no detach, is a reference anyway
+        auto asd = ctx.findFunction(name);
+        return asd ? *asd : nullptr; // no detach, is a reference anyway
       }
 
-      BUILT_IN_FN(getFunction)
+      BUILT_IN_FN(findFunction)
       {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
@@ -304,23 +319,16 @@ namespace Sass {
         }
 
         if (css) {
-          return SASS_MEMORY_NEW(Function, pstate,
-            SASS_MEMORY_NEW(PlainCssCallable, pstate,
-              name->value()));
+          return SASS_MEMORY_NEW(Function, pstate, name->value());
         }
-
-        // CallableObj callable = css
-        //   ? SASS_MEMORY_NEW(PlainCssCallable, pstate, name->value())
-        //   : _getFunction(name->value(), compiler);
-
 
         CallableObj callable;
 
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
 
         if (ns != nullptr) {
-          auto pp = parent->fwdModule55.find(ns->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(ns->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(name->value());
             if (it != module->fnIdxs.end()) {
@@ -339,8 +347,7 @@ namespace Sass {
 
           if (!callable) {
 
-            for (auto asd : parent->fwdGlobal55) {
-              VarRefs* global = asd.first;
+            for (auto global : parent->forwards) {
               auto it = global->fnIdxs.find(name->value());
               if (it != global->fnIdxs.end()) {
                 if (callable) {
@@ -407,205 +414,35 @@ namespace Sass {
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(String, pstate, sass::string(str->value())));
           FunctionExpressionObj expression = SASS_MEMORY_NEW(
-            FunctionExpression, pstate, itpl, invocation);
+            FunctionExpression, pstate, str->value(), invocation,
+            true); // Maybe pass flag into here!?
           return eval.acceptFunctionExpression(expression);
           // return expression->accept(&eval);
 
         }
 
-        Callable* callable = function->assertFunction(compiler, "function")->callable();
-        return callable->execute(eval, invocation, pstate, false);
-
-
-      }
-
-      BUILT_IN_FN(loadCss)
-      {
-        String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
-        Map* withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
-        // auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
-        // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
-        // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
-        LocalOption<bool> scoped(compiler.hasWithConfig,
-          compiler.hasWithConfig || withMap);
-
-        EnvKeyFlatMap<ValueObj> config;
-        sass::vector<WithConfigVar> withConfigs;
-        if (withMap) {
-          for (auto kv : withMap->elements()) {
-            String* name = kv.first->assertString(compiler, "with key");
-            EnvKey kname(name->value());
-            WithConfigVar kvar;
-            kvar.name = name->value();
-            kvar.value = kv.second;
-            kvar.isGuarded = false;
-            kvar.wasUsed = false;
-            kvar.pstate2 = name->pstate();
-            kvar.isNull = !kv.second || kv.second->isaNull();
-            withConfigs.push_back(kvar);
-            if (config.count(kname) == 1) {
-              throw Exception::RuntimeException(compiler,
-                "The variable $" + kname.norm() + " was configured twice.");
-            }
-            config[name->value()] = kv.second;
-          }
-        }
-
-        WithConfig wconfig(compiler, withConfigs, withMap);
-
-        if (StringUtils::startsWith(url->value(), "sass:", 5)) {
-
-          if (withMap) {
-            throw Exception::RuntimeException(compiler, "Built-in "
-              "module " + url->value() + " can't be configured.");
-          }
-
-          return SASS_MEMORY_NEW(Null, pstate);
-        }
-
-        Import* loaded = compiler.import_stack.back();
-
-        // Loading relative to where the function was included
-        const ImportRequest import(url->value(), pstate.getAbsPath());
-        // Search for valid imports (e.g. partials) on the file-system
-        // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, true)); //XXXXX
-
-        // Error if no file to import was found
-        if (resolved.empty()) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::ParserException(compiler,
-            "Can't find stylesheet to import.");
-        }
-        // Error if multiple files to import were found
-        else if (resolved.size() > 1) {
-          sass::sstream msg_stream;
-          msg_stream << "It's not clear which file to import. Found:\n";
-          for (size_t i = 0, L = resolved.size(); i < L; ++i)
-          {
-            msg_stream << "  " << resolved[i].imp_path << "\n";
-          }
-          throw Exception::ParserException(compiler, msg_stream.str());
-        }
-
-        // We made sure exactly one entry was found, load its content
-        if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-
-          auto asd = compiler.sheets.find(loaded->getAbsPath());
-
-          StyleSheet* sheet = asd == compiler.sheets.end() ? nullptr : asd->second;
-
-          if (sheet == nullptr) {
-            // This is the new barrier!
-            EnvFrame local(compiler, true, true);
-            // eval.selectorStack.push_back(nullptr);
-            sheet = compiler.registerImport(loaded); // @use
-            // eval.selectorStack.pop_back();
-            // sheet->root2->idxs = local.idxs;
-            sheet->root2->import = loaded;
-          }
-          else if (sheet->root2->isActive) {
-            if (withMap) {
-              throw Exception::ParserException(compiler,
-                sass::string(sheet->root2->pstate().getFileName())
-                + " was already loaded, so it "
-                "can\'t be configured using \"with\".");
-            }
-            else if (sheet->root2->isLoading) {
-              throw Exception::ParserException(compiler,
-                "Module loop: " + sass::string(sheet->root2->pstate().getFileName()) + " is already being loaded.");
-            }
-          }
-
-          if (sheet->root2->loaded) {
-            if (withMap) {
-              throw Exception::RuntimeException(compiler,
-                "Module twice");
-            }
-            for (auto child : sheet->root2->loaded->elements()) {
-              if (auto css = child->isaCssStyleRule()) {
-                if (auto pr = eval.current->isaCssStyleRule()) {
-                  for (auto inner : css->elements()) {
-                    auto copy = SASS_MEMORY_COPY(css->selector());
-                    for (ComplexSelector* asd : copy->elements()) {
-                      asd->chroots(false);
-                    }
-                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
-                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
-                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
-                    eval.current->parent()->append(newRule);
-                  }
-                }
-                else {
-                  if (eval.current) eval.current->append(child);
-                }
-              }
-              else {
-                if (eval.current) eval.current->append(child);
-              }
-            }
-            }
-          else {
-            Root* root = sheet->root2;
-            root->isActive = true;
-            root->isLoading = true;
-            //root->loaded = eval.current;
-            root->loaded = SASS_MEMORY_NEW(CssStyleRule,
-              root->pstate(), nullptr, nullptr);
-            auto oldCurrent = eval.current;
-            eval.current = root->loaded;
-            EnvScope scoped(compiler.varRoot, root->idxs);
-            eval.selectorStack.push_back(nullptr);
-            compiler.import_stack.push_back(root->import);
-            for (auto child : root->elements()) {
-              child->accept(&eval);
-            }
-            compiler.import_stack.pop_back();
-            eval.selectorStack.pop_back();
-            eval.current = oldCurrent;
-            root->isLoading = false;
-
-            for (auto child : sheet->root2->loaded->elements()) {
-              if (auto css = child->isaCssStyleRule()) {
-                if (auto pr = eval.current->isaCssStyleRule()) {
-                  for (auto inner : css->elements()) {
-                    auto copy = SASS_MEMORY_COPY(css->selector());
-                    for (ComplexSelector* asd : copy->elements()) {
-                      asd->chroots(false);
-                    }
-                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
-                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
-                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
-                    eval.current->parent()->append(newRule);
-                  }
-                }
-                else {
-                  if (eval.current) eval.current->append(child);
-                }
-              }
-              else {
-                if (eval.current) eval.current->append(child);
-              }
-            }
-
-          }
-
-
+        Function* fn = function->assertFunction(compiler, "function");
+        if (fn->cssName().empty()) {
+          return fn->callable()->execute(eval, invocation, pstate);
         }
         else {
-          throw Exception::ParserException(compiler,
-            "Couldn't load it.");
+          sass::string strm;
+          strm += fn->cssName();
+          eval.renderArgumentInvocation(strm, invocation);
+          return SASS_MEMORY_NEW(
+            String, fn->pstate(),
+            std::move(strm));
         }
 
-        wconfig.finalize();
 
-        return SASS_MEMORY_NEW(Null, pstate);;
       }
+
+
 
       void registerFunctions(Compiler& compiler)
 	    {
 
-        Module& module(compiler.createModule("meta"));
+        BuiltInMod& module(compiler.createModule("meta"));
 
         // ToDo: dart-sass keeps them on the local environment scope, see below:
         // These functions are defined in the context of the evaluator because
@@ -626,7 +463,7 @@ namespace Sass {
         module.addFunction(key_content_exists, compiler.registerBuiltInFunction(key_content_exists, "", contentExists));
         module.addFunction(key_module_variables, compiler.createBuiltInFunction(key_module_variables, "$module", moduleVariables));
         module.addFunction(key_module_functions, compiler.registerBuiltInFunction(key_module_functions, "$module", moduleFunctions));
-        module.addFunction(key_get_function, compiler.registerBuiltInFunction(key_get_function, "$name, $css: false, $module: null", getFunction));
+        module.addFunction(key_get_function, compiler.registerBuiltInFunction(key_get_function, "$name, $css: false, $module: null", findFunction));
         module.addFunction(key_call, compiler.registerBuiltInFunction(key_call, "$function, $args...", call));
 
 	    }

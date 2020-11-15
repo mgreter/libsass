@@ -68,8 +68,8 @@ namespace Sass {
     scanWhitespace();
     // StringScannerState beforeAt = scanner.state();
     if (scanner.scanChar($at)) {
-      if (scanIdentifier("else")) return true;
-      if (scanIdentifier("elseif")) {
+      if (scanIdentifier("else", true)) return true;
+      if (scanIdentifier("elseif", true)) {
         /*
         logger123.warn(
           "@elseif is deprecated and will not be supported in future Sass versions.\n"

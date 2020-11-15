@@ -13,69 +13,50 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   WithConfig::WithConfig(
-    Compiler& compiler,
+    WithConfig* pwconfig,
     sass::vector<WithConfigVar> configs,
     bool hasConfig,
     bool hasShowFilter,
     bool hasHideFilter,
-    std::set<EnvKey> filters,
+    std::set<EnvKey> varFilters,
+    std::set<EnvKey> callFilters,
     const sass::string& prefix) :
-    compiler(compiler),
+    parent(pwconfig),
     hasConfig(hasConfig),
     hasShowFilter(hasShowFilter),
     hasHideFilter(hasHideFilter),
-    filters(filters),
+    varFilters(varFilters),
+    callFilters(callFilters),
     prefix(prefix)
   {
+
     // Only calculate this once
     doRAII = hasConfig || hasShowFilter
       || hasHideFilter || !prefix.empty();
-    // Do nothing if we don't have any config
-    // Since we are used as a stack RAI object
-    // this mode is very useful to ease coding
+
     if (!doRAII) return;
+
     // Read the list of config variables into
     // a map and error if items are duplicated
     for (auto cfgvar : configs) {
       if (config.count(cfgvar.name) == 1) {
-        throw Exception::RuntimeException(compiler,
-          "Defined Twice");
-      }
-      // If the value is a default, we should look further
-      // down the tree and only add it if not there yet
-      if (cfgvar.isGuarded) {
-      // 
-      //   // Need the first unguarded or the last guarded
-      // 
-      ;
-      // Check if we have a non-default parent
-      if (auto pr = getCfgVar(cfgvar.name, true, false)) {
-        pr->wasUsed = true;
-      }
-      //     pr = getCfgVar(cfgvar.name, false);
-      //     std::cerr << "asdasd\n";
-      //   }
-      //   if (getCfgVar(cfgvar.name, false) == nullptr) {
-      //     config[cfgvar.name] = cfgvar;
-      //   }
-      // }
-      // else {
-      //   config[cfgvar.name] = cfgvar;
+        // throw Exception::RuntimeException(compiler,
+        //   "Defined Twice");
       }
       config[cfgvar.name] = cfgvar;
     }
     // Push the lookup table onto the stack
-    compiler.withConfigStack.push_back(this);
+    // compiler.withConfigStack.push_back(this);
   }
 
-  void WithConfig::finalize()
+  void WithConfig::finalize(Logger& logger)
   {
     // Check if everything was consumed
     for (auto cfgvar : config) {
       if (cfgvar.second.wasUsed == false) {
         if (cfgvar.second.isGuarded == false) {
-          compiler.addFinalStackTrace(cfgvar.second.pstate2);
-          throw Exception::RuntimeException(compiler, "$" +
+          logger.addFinalStackTrace(cfgvar.second.pstate2);
+          throw Exception::RuntimeException(logger, "$" +
             cfgvar.second.name + " was not declared "
             "with !default in the @used module.");
         }
@@ -90,43 +71,92 @@ namespace Sass {
     // this mode is very useful to ease coding
     if (!doRAII) return;
     // Then remove the config from the stack
-    compiler.withConfigStack.pop_back();
+    // compiler.withConfigStack.pop_back();
   }
 
-  WithConfigVar* WithConfig::getCfgVar(EnvKey name, bool skipGuarded, bool skipNull) {
+  WithConfigVar* WithConfig::getCfgVar(const EnvKey& name)
+  {
 
-    auto it = compiler.withConfigStack.rbegin();
-    while (it != compiler.withConfigStack.rend()) {
-      auto withcfg = *it; // Dereference iterator
+    EnvKey key(name);
+    WithConfig* withcfg = this;
+    while (withcfg) {
       // Check if we should apply any filtering first
       if (withcfg->hasHideFilter) {
-        if (withcfg->filters.count(name.norm()))
-          return nullptr;
+        if (withcfg->varFilters.count(key.norm())) {
+          break;
+        }
       }
       if (withcfg->hasShowFilter) {
-        if (!withcfg->filters.count(name.norm()))
-          return nullptr;
+        if (!withcfg->varFilters.count(key.norm())) {
+          break;
+        }
       }
       // Then try to find the named item
-      auto varcfg = withcfg->config.find(name);
+      auto varcfg = withcfg->config.find(key);
       if (varcfg != withcfg->config.end()) {
-        bool consume = true;
-        if (skipGuarded && varcfg->second.isGuarded) consume = false;
-        if (skipNull && varcfg->second.isNull) consume = false;
-        if (consume) {
-          varcfg->second.wasUsed = true;
-          return &varcfg->second;
+        // Found an unguarded value
+        if (!varcfg->second.isGuarded) {
+          if (!varcfg->second.isNull) {
+            varcfg->second.wasUsed = true;
+            return &varcfg->second;
+          }
         }
       }
       // Should we apply some prefixes
       if (!withcfg->prefix.empty()) {
         sass::string prefix = withcfg->prefix;
-        name = EnvKey(prefix + name.orig());
+        key = EnvKey(prefix + key.orig());
       }
-      it += 1;
+      withcfg = withcfg->parent;
     }
-    return nullptr;
+    // Since we found no unguarded value we can assume
+    // the full stack only contains guarded values.
+    // Therefore they overwrite all each other.
+    withcfg = this; key = name;
+    WithConfigVar* guarded = nullptr;
+    while (withcfg) {
+      // Check if we should apply any filtering first
+      if (withcfg->hasHideFilter) {
+        if (withcfg->varFilters.count(key.norm())) {
+          break;
+        }
+      }
+      if (withcfg->hasShowFilter) {
+        if (!withcfg->varFilters.count(key.norm())) {
+          break;
+        }
+      }
+      // Then try to find the named item
+      auto varcfg = withcfg->config.find(key);
+      if (varcfg != withcfg->config.end()) {
+        varcfg->second.wasUsed = true;
+        if (!guarded) guarded = &varcfg->second;
+      }
+      // Should we apply some prefixes
+      if (!withcfg->prefix.empty()) {
+        sass::string prefix = withcfg->prefix;
+        key = EnvKey(prefix + key.orig());
+      }
+      withcfg = withcfg->parent;
+    }
+    return guarded;
   }
+
+  // Sass::WithConfigScope::WithConfigScope(
+  //   Compiler& compiler,
+  //   WithConfig* config) :
+  //   compiler(compiler),
+  //   config(config)
+  // {
+  //   if (config == nullptr) return;
+  //   compiler.withConfigStack.push_back(config);
+  // }
+  // 
+  // Sass::WithConfigScope::~WithConfigScope()
+  // {
+  //   if (config == nullptr) return;
+  //   compiler.withConfigStack.pop_back();
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -137,7 +167,7 @@ namespace Sass {
     VarRefs* idxs) :
     Statement(std::move(pstate)),
     Vectorized<Statement>(std::move(children)),
-    idxs_(idxs)
+    Env(idxs)
   {}
 
   // Returns whether we have a child content block
@@ -176,7 +206,8 @@ namespace Sass {
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
+      std::move(children),
+      nullptr),
     name_(name),
     value_(value),
     is_custom_property_(is_custom_property)
@@ -241,10 +272,12 @@ namespace Sass {
   MediaRule::MediaRule(
     SourceSpan&& pstate,
     Interpolation* query,
+    VarRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
+      std::move(children),
+      idxs),
     query_(query)
   {}
 
@@ -255,11 +288,13 @@ namespace Sass {
     SourceSpan&& pstate,
     Interpolation* name,
     Interpolation* value,
+    VarRefs* idxs,
     bool isChildless,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
+      std::move(children),
+      idxs),
     name_(name),
     value_(value),
     isChildless_(isChildless)
@@ -291,8 +326,8 @@ namespace Sass {
     IfRule* alternative) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
-    idxs_(idxs),
+      std::move(children),
+      idxs),
     predicate_(predicate),
     alternative_(alternative)
   {}
@@ -503,28 +538,91 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  ModRule::ModRule(
+    const sass::string& prev,
+    const sass::string& url,
+    Import* import,
+    WithConfig* pwconfig,
+    sass::vector<WithConfigVar>&& config,
+    bool hasLocalWith) :
+    WithConfig(pwconfig,
+      std::move(config),
+      hasLocalWith),
+    import_(import),
+    prev_(prev),
+    url_(url),
+    module_(nullptr)
+  {}
+
+  ModRule::ModRule(
+    const sass::string& prev,
+    const sass::string& url,
+    Import* import,
+    const sass::string& prefix,
+    WithConfig* pwconfig,
+    std::set<EnvKey>&& varFilters,
+    std::set<EnvKey>&& callFilters,
+    sass::vector<WithConfigVar>&& config,
+    bool isShown,
+    bool isHidden,
+    bool hasWith) :
+    WithConfig(pwconfig,
+      std::move(config),
+      hasWith, isShown, isHidden,
+      std::move(varFilters),
+      std::move(callFilters),
+      prefix),
+    import_(import),
+    prev_(prev),
+    url_(url),
+    module_(nullptr)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   UseRule::UseRule(
     const SourceSpan& pstate,
+    const sass::string& prev,
     const sass::string& url,
-    Import* import) :
+    Import* import,
+    WithConfig* pwconfig,
+    sass::vector<WithConfigVar>&& config,
+    bool hasLocalWith) :
     Statement(pstate),
-    import_(import),
-    url_(url)
+    ModRule(
+      prev, url,
+      import, pwconfig,
+      std::move(config),
+      hasLocalWith),
+    wasExported_(false)
   {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   ForwardRule::ForwardRule(
     const SourceSpan& pstate,
+    const sass::string& prev,
     const sass::string& url,
     Import* import,
-    std::set<EnvKey>&& toggledVariables,
-    std::set<EnvKey>&& toggledCallables,
-    bool isShown) :
+    const sass::string& prefix,
+    WithConfig* pwconfig,
+    std::set<EnvKey>&& varFilters,
+    std::set<EnvKey>&& callFilters,
+    sass::vector<WithConfigVar>&& config,
+    bool isShown,
+    bool isHidden,
+    bool hasWith) :
     Statement(pstate),
-    import_(import),
-    url_(url),
-    isShown_(isShown),
-    toggledVariables_(std::move(toggledVariables)),
-    toggledCallables_(std::move(toggledCallables))
+    ModRule(
+      prev, url, import,
+      prefix, pwconfig,
+      std::move(varFilters),
+      std::move(callFilters),
+      std::move(config),
+      isShown, isHidden, hasWith),
+    wasMerged_(false)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -533,6 +631,7 @@ namespace Sass {
   AssignRule::AssignRule(
     const SourceSpan& pstate,
     const EnvKey& variable,
+    bool withinLoop,
     const sass::string ns,
     sass::vector<VarRef> vidxs,
     Expression* value,
@@ -542,7 +641,7 @@ namespace Sass {
     variable_(variable),
     ns_(ns),
     value_(value),
-    vidxs_(std::move(vidxs)),
+    withinLoop_(withinLoop),
     is_default_(is_default),
     is_global_(is_global)
   {}

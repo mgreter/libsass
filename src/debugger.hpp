@@ -332,7 +332,7 @@ inline std::string parent_block(VarRefs* node)
 {
   std::stringstream str;
   if (!node) return "";
-  str << "SG: " << (node->permeable ? "true" : "false");
+  str << "SG: " << (node->isPermeable ? "true" : "false");
   return str.str();
 }
 
@@ -386,6 +386,27 @@ inline void debug_css_parent_node(CssParentNode* rule, std::string ind = "")
   debug_block(rule, ind + " ");
 }
 
+inline void debug_idxs(Env* env) {
+  // return;
+  if (env) {
+    std::cerr << " ";
+    std::cerr << "{V:" << env->idxs->varIdxs.size();
+    std::cerr << "|M:" << env->idxs->mixIdxs.size();
+    std::cerr << "|F:" << env->idxs->fnIdxs.size();
+    if (env->idxs->module) {
+      std::cerr << "|U:" << env->idxs->module->upstream.size();
+      std::cerr << "|FV:" << env->idxs->module->mergedFwdVar.size();
+      std::cerr << "|FM:" << env->idxs->module->mergedFwdMix.size();
+      std::cerr << "|FF:" << env->idxs->module->mergedFwdFn.size();
+    }
+    std::cerr << "}";
+  }
+  else {
+    std::cerr << " {nil}";
+  }
+
+}
+
 inline void debug_ast(AstNode* node, std::string ind)
 {
   if (node == 0) return;
@@ -394,6 +415,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     Root* root = Cast<Root>(node);
     std::cerr << ind << "Root " << root;
     std::cerr << " (" << pstate_source_position(root) << ")";
+    debug_idxs(root);
     std::cerr << std::endl;
     debug_block(root, ind + " ");
   }
@@ -600,6 +622,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   ForwardRule* rule = Cast<ForwardRule>(node);
     std::cerr << ind << "ForwardRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
+    debug_idxs(rule->module());
     std::cerr << std::endl;
     debug_ast(rule->root(), ind + " =@ ");
 
@@ -608,6 +631,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     UseRule* rule = Cast<UseRule>(node);
     std::cerr << ind << "UseRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
+    debug_idxs(rule->module());
     std::cerr << std::endl;
     debug_ast(rule->root(), ind + " =@ ");
 
@@ -767,7 +791,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     IfRule* block = Cast<IfRule>(node);
     std::cerr << ind << "IfRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [" << parent_block(block->idxs()) << "]";
+    std::cerr << " [" << parent_block(block->idxs) << "]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->predicate(), ind + " = ");
     debug_block(block, ind + " <>");
@@ -818,8 +842,9 @@ inline void debug_ast(AstNode* node, std::string ind)
     IncludeImport* block = Cast<IncludeImport>(node);
     std::cerr << ind << "IncludeImport " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    // std::cerr << " [" << block->sheet() << "] ";
+    debug_idxs(block->module());
     std::cerr << std::endl;
+    debug_ast(block->root(), ind + " @ ");
   }
   else if (Cast<ImportRule>(node)) {
     ImportRule* block = Cast<ImportRule>(node);
@@ -894,7 +919,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   }
 
 
-  else if (PlainCssCallable* ruleset = Cast<PlainCssCallable>(node)) {
+  else if (PlainCssCallable2* ruleset = Cast<PlainCssCallable2>(node)) {
     std::cerr << ind << "PlainCssCallable " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -942,6 +967,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << ind << "FunctionRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << " fidx(" << ruleset->fidx().toString() << ")";
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_block(ruleset, ind + " ");
@@ -949,7 +975,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   else if (StyleRule* ruleset = Cast<StyleRule>(node)) {
     std::cerr << ind << "StyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [" << parent_block(ruleset->idxs()) << "]";
+    std::cerr << " [" << parent_block(ruleset->idxs) << "]";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->interpolation(), ind + "#");
@@ -998,10 +1024,9 @@ inline void debug_ast(AstNode* node, std::string ind)
     FunctionExpression* expression = Cast<FunctionExpression>(node);
     std::cerr << ind << "FunctionExpression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [selfAssign: " << expression->selfAssign() << "]";
     // if (expression->is_css()) std::cerr << " [css]";
     std::cerr << std::endl;
-    debug_ast(expression->name(), ind + " name: ");
+    // debug_ast(expression->name(), ind + " name: ");
     debug_ast(expression->arguments(), ind + " args: ");
     // debug_ast(expression->func(), ind + " func: ");
   }

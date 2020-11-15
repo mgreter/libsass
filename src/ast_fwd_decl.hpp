@@ -19,13 +19,18 @@
 /////////////////////////////////////////////
 namespace Sass {
 
+  class Env;
+  class EnvRoot;
+  class EnvKey;
+  class Module;
+  class BuiltInMod;
+  class WithConfig;
+
   class VarRef;
   class VarRefs;
   class Logger;
   class Compiler;
   class EnvFrame;
-
-  class StyleSheet;
 
   class SourceData;
   class Import;
@@ -35,12 +40,11 @@ namespace Sass {
   class SourceItpl;
 
   class AstNode;
-  class Moduled;
   class Root;
 
   class Callable;
   class UserDefinedCallable;
-  class PlainCssCallable;
+  class PlainCssCallable2;
   class ExternalCallable;
   class BuiltInCallables;
   class BuiltInCallable;
@@ -186,8 +190,6 @@ namespace Sass {
   #define IMPL_MEM_OBJ(type) \
     typedef SharedPtr<type> type##Obj;
 
-  IMPL_MEM_OBJ(StyleSheet);
-
   IMPL_MEM_OBJ(SourceData);
   IMPL_MEM_OBJ(Import);
   IMPL_MEM_OBJ(SourceFile);
@@ -222,7 +224,7 @@ namespace Sass {
   IMPL_MEM_OBJ(CssSupportsRule);
   IMPL_MEM_OBJ(Callable);
   IMPL_MEM_OBJ(UserDefinedCallable);
-  IMPL_MEM_OBJ(PlainCssCallable);
+  IMPL_MEM_OBJ(PlainCssCallable2);
   IMPL_MEM_OBJ(ExternalCallable);
   IMPL_MEM_OBJ(BuiltInCallable);
   IMPL_MEM_OBJ(BuiltInCallables);
@@ -380,8 +382,7 @@ namespace Sass {
     const SourceSpan& pstate, \
     const ValueVector& arguments, \
     Compiler& compiler, \
-    Eval& eval, \
-    bool selfAssign \
+    Eval& eval \
 
 }
 

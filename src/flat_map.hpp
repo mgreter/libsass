@@ -164,6 +164,7 @@ namespace Sass {
     // EO array[]
 
     // Insert passed key/value pair
+    // ToDo: should return pair<it,bool>
     bool insert(const PAIR& kv)
     {
       if (count(kv.first) == 0) {

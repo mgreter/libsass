@@ -114,6 +114,17 @@ namespace Sass {
     return containsDoubleQuote ? $single_quote : $double_quote;
   }
 
+  PlainCssCallable2::PlainCssCallable2(
+    SourceSpan pstate,
+    Interpolation* itpl,
+    ArgumentInvocation* args,
+    const sass::string& ns) :
+    Expression(std::move(pstate)),
+    itpl_(itpl),
+    args_(args),
+    ns_(ns)
+  {}
+
   // Interpolation that, when evaluated, produces the syntax of this string.
   // Unlike [text], his doesn't resolve escapes and does include quotes for
   // quoted strings. If [static] is true, this escapes any `#{` sequences in
@@ -220,10 +231,12 @@ namespace Sass {
   VariableExpression::VariableExpression(
     SourceSpan&& pstate,
     const EnvKey& name,
+    bool withinLoop,
     const sass::string& ns) :
     Expression(std::move(pstate)),
     name_(name),
-    ns_(ns)
+    ns_(ns),
+    withinLoop_(withinLoop)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -253,15 +266,16 @@ namespace Sass {
 
   FunctionExpression::FunctionExpression(
     SourceSpan pstate,
-    Interpolation* name,
+    const sass::string& name,
     ArgumentInvocation* arguments,
+    bool withinLoop,
     const sass::string& ns) :
     InvocationExpression(
       std::move(pstate),
       arguments),
     ns_(ns),
     name_(name),
-    selfAssign_(false)
+    withinLoop_(withinLoop)
   {}
 
   /////////////////////////////////////////////////////////////////////////

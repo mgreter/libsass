@@ -28,6 +28,8 @@ namespace Sass {
     // Just a counter for nesting guard
     size_t recursion = 0;
 
+  public:
+
     // Whether we are inside a loop directive such as `@for`, `@while` or `@each`.
     // This will disable some incompatible static variable optimizations.
     bool inLoopDirective = false;
@@ -77,8 +79,6 @@ namespace Sass {
 
     // Main parser entry function
     Root* parseRoot();
-
-    Root* currentRoot = nullptr;
 
     // Parse external callback function
     ExternalCallable* parseExternalCallable();
@@ -533,13 +533,6 @@ namespace Sass {
       return result.detach();
     }
 
-  public:
-    // Resolve import of [path] and add imports to [rule]
-    void resolveDynamicImport(
-      ImportRule* rule, Offset start,
-      const sass::string& path);
-
-    bool resolveUseRule(UseRule* rule);
   };
 
   /////////////////////////////////////////////////////////////////////////
