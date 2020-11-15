@@ -1493,6 +1493,7 @@ namespace Sass {
   StyleSheet* Eval::resolveForwardRule(ForwardRule* rule)
   {
 
+
     // sass::string ns(rule->ns());
     sass::string url(rule->url());
     sass::string prev(rule->prev());
@@ -1564,6 +1565,7 @@ namespace Sass {
 
       Root* module = sheet->root2;
       rule->root(module);
+
       mergeForwards(module->idxs, compiler.currentRoot, isShown, isHidden,
         prefix, rule->toggledVariables(), rule->toggledCallables(), compiler);
 
@@ -1576,6 +1578,8 @@ namespace Sass {
     compiler.addFinalStackTrace(pstate);
     throw Exception::ParserException(compiler,
       "Couldn't read stylesheet for import.");
+
+
 
   }
 
@@ -1823,6 +1827,12 @@ namespace Sass {
   {
     BackTrace trace(node->pstate(), Strings::useRule, true);
     callStackFrame frame(logger456, trace);
+
+    if (node->needsLoading()) {
+      auto sheet = resolveForwardRule(node);
+      node->root(sheet->root2);
+      node->needsLoading(false);
+    }
 
     if (node->root()) {
 

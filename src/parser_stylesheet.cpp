@@ -1479,7 +1479,7 @@ namespace Sass {
         // Check if with is given, error
         sheet = cached->second;
 
-        if (hasWithConfig) {
+        if (rule->hasWithConfig()) {
           throw Exception::ParserException(context,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1501,16 +1501,15 @@ namespace Sass {
         prefix, rule->toggledVariables(), rule->toggledCallables(), context);
 
 
-    }
-    else {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Couldn't read stylesheet for import.");
+      if (hasCached) return nullptr;
+      wconfig.finalize();
+      return rule;
+
     }
 
-    if (hasCached) return nullptr;
-    wconfig.finalize();
-    return rule;
+    context.addFinalStackTrace(pstate);
+    throw Exception::ParserException(context,
+      "Couldn't read stylesheet for import.");
 
   }
 
@@ -1795,9 +1794,9 @@ namespace Sass {
     rule->prev(scanner.sourceUrl);
 #ifndef SassEagerUseParsing
     rule->needsLoading(true);
-    return rule.detach();
-#endif
+#else
     rule = resolveUseRule(rule);
+#endif
     return rule.detach();
   }
 
@@ -1893,10 +1892,14 @@ namespace Sass {
     rule->isHidden(isHidden);
     rule->prefix(prefix);
     rule->prev(scanner.sourceUrl);
-    rule->hasWithConfig(hasWith);
+    rule->hasWithConfig(hasWithConfig);
 
-
+#ifndef SassEagerForwardParsing
+    rule->needsLoading(true);
+#else
     rule = resolveForwardRule(rule);
+#endif
+
     return rule.detach();
   }
 
