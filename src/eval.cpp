@@ -311,7 +311,8 @@ namespace Sass {
       // Set lexical variable on scope
       compiler.varRoot.setVariable(
         idxs->varFrame, (uint32_t)i,
-        value->withoutSlash());
+        value->withoutSlash(),
+        false);
     }
 
     // Needed here for a specific edge case: restargs must be consumed
@@ -342,7 +343,8 @@ namespace Sass {
         std::move(positional), std::move(results.named()));
       // Set last lexical variable on scope
       compiler.varRoot.setVariable(idxs->varFrame,
-        (uint32_t)parameters.size(), restargs.ptr());
+        (uint32_t)parameters.size(), restargs.ptr(),
+        false);
 
     }
     else {
@@ -2466,15 +2468,18 @@ namespace Sass {
 
       compiler.varRoot.setVariable(
         a->variable(),
-        a->value()->accept(this));
+        a->value()->accept(this),
+        a->is_default(),
+        a->is_global());
 
     }
     else {
 
       if (!compiler.varRoot.setModVar(
         a->variable(), a->ns(),
-        a->value()->accept(this)
-      )) {
+        a->value()->accept(this),
+        a->is_default()))
+      {
         callStackFrame frame(traces, a->pstate());
         throw Exception::RuntimeException(traces, "Undefined variable.");
       }
@@ -2558,7 +2563,7 @@ namespace Sass {
       if (f->is_inclusive()) ++end;
       for (double i = start; i < end; ++i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr());
+        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr(), false);
         val = acceptChildren(f);
         if (val) break;
       }
@@ -2567,7 +2572,7 @@ namespace Sass {
       if (f->is_inclusive()) --end;
       for (double i = start; i > end; --i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr());
+        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr(), false);
         val = acceptChildren(f);
         if (val) break;
       }
@@ -2656,11 +2661,11 @@ namespace Sass {
         if (variables.size() == 1) {
           List* variable = SASS_MEMORY_NEW(List,
             map->pstate(), { key, value }, SASS_SPACE);
-          compiler.varRoot.setVariable(vidx->varFrame, 0, variable);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, variable, false);
         }
         else {
-          compiler.varRoot.setVariable(vidx->varFrame, 0, key);
-          compiler.varRoot.setVariable(vidx->varFrame, 1, value);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, key, false);
+          compiler.varRoot.setVariable(vidx->varFrame, 1, value, false);
         }
         ValueObj val = acceptChildren(e);
         if (val) return val.detach();
@@ -2683,22 +2688,22 @@ namespace Sass {
       // check if we got passed a list of args (investigate)
       if (List* scalars = item->isaList()) { // Ex
         if (variables.size() == 1) {
-          compiler.varRoot.setVariable(vidx->varFrame, 0, scalars);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, scalars, false);
         }
         else {
           for (size_t j = 0, K = variables.size(); j < K; ++j) {
             compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j,
               j < scalars->size() ? scalars->get(j)
-              : SASS_MEMORY_NEW(Null, expr->pstate()));
+              : SASS_MEMORY_NEW(Null, expr->pstate()), false);
           }
         }
       }
       else {
         if (variables.size() > 0) {
-          compiler.varRoot.setVariable(vidx->varFrame, 0, item);
+          compiler.varRoot.setVariable(vidx->varFrame, 0, item, false);
           for (size_t j = 1, K = variables.size(); j < K; ++j) {
             Value* res = SASS_MEMORY_NEW(Null, expr->pstate());
-            compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res);
+            compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res, false);
           }
         }
       }
@@ -2743,7 +2748,7 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-    compiler.varRoot.setMixin(rule->midx(), callable);
+    compiler.varRoot.setMixin(rule->midx(), callable, false);
     return nullptr;
   }
 
@@ -2757,7 +2762,7 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-    compiler.varRoot.setFunction(rule->fidx(), callable);
+    compiler.varRoot.setFunction(rule->fidx(), callable, false);
     return nullptr;
   }
 

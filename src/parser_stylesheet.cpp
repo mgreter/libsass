@@ -392,12 +392,15 @@ namespace Sass {
       // IF we are semi-global and parent is root
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
-      if (frame->permeable && frame->pscope) {
-        auto parent = frame->pscope;
-        if (parent->varIdxs.count(name)) {
-          pr = parent;
+      auto chroot = frame;
+      while (chroot->permeable && chroot->pscope) {
+        // Check if this frame contains the variable
+        if (chroot->pscope->varIdxs.count(name)) {
+          pr = chroot->pscope;
           hasVar = true;
+          break;
         }
+        chroot = chroot->pscope;
       }
 
       // Also skip if on global scope?

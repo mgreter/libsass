@@ -358,76 +358,87 @@ namespace Sass {
   }
   // EO getMixin
 
-  void EnvRoot::setModVar(const uint32_t offset, Value* value)
+  void EnvRoot::setModVar(const uint32_t offset, Value* value, bool guarded)
   {
     // std::cerr << "Set global variable " << offset
     //   << " - " << value->inspect() << "\n";
-    intVariables[offset] = value;
+    if (!guarded || intVariables[offset] == nullptr)
+      intVariables[offset] = value;
   }
-  void EnvRoot::setModMix(const uint32_t offset, Callable* callable)
+  void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
   {
     // std::cerr << "Set global mixin " << offset
     //   << " - " << callable->name() << "\n";
-    intMixin[offset] = callable;
+    if (!guarded || intMixin[offset] == nullptr)
+      intMixin[offset] = callable;
   }
-  void EnvRoot::setModFn(const uint32_t offset, Callable* callable)
+  void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
   {
     // std::cerr << "Set global variable " << offset
     //   << " - " << callable->name() << "\n";
-    intFunction[offset] = callable;
+    if (!guarded || intFunction[offset] == nullptr)
+      intFunction[offset] = callable;
   }
 
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setVariable(const VarRef& vidx, ValueObj value)
+  void EnvRoot::setVariable(const VarRef& vidx, ValueObj value, bool guarded)
   {
     if (vidx.frame == 0xFFFFFFFF) {
       // std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
-      intVariables[vidx.offset] = value;
+      if (!guarded || intVariables[vidx.offset] == nullptr)
+        intVariables[vidx.offset] = value;
     }
     else {
       // std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
-      variables[size_t(varFramePtr[vidx.frame]) + vidx.offset] = value;
+      ValueObj& slot(variables[size_t(varFramePtr[vidx.frame]) + vidx.offset]);
+      if (slot == nullptr || guarded == false) slot = value;
     }
   }
   // EO setVariable
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setVariable(uint32_t frame, uint32_t offset, ValueObj value)
+  void EnvRoot::setVariable(uint32_t frame, uint32_t offset, ValueObj value, bool guarded)
   {
     if (frame == 0xFFFFFFFF) {
-      intVariables[offset] = value;
+      if (!guarded || intVariables[offset] == nullptr)
+        intVariables[offset] = value;
     }
     else {
-      variables[size_t(varFramePtr[frame]) + offset] = value;
+      ValueObj& slot(variables[size_t(varFramePtr[frame]) + offset]);
+      if (slot == nullptr || guarded == false) slot = value;
     }
   }
   // EO setVariable
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setFunction(const VarRef& fidx, UserDefinedCallableObj value)
+  void EnvRoot::setFunction(const VarRef& fidx, UserDefinedCallableObj value, bool guarded)
   {
     if (fidx.frame == 0xFFFFFFFF) {
-      intFunction[fidx.offset] = value;
+      if (!guarded || intFunction[fidx.offset] == nullptr)
+        intFunction[fidx.offset] = value;
     }
     else {
-      functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset] = value;
+      CallableObj& slot(functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset]);
+      if (slot == nullptr || guarded == false) slot = value;
     }
   }
   // EO setFunction
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setMixin(const VarRef& midx, UserDefinedCallableObj value)
+  void EnvRoot::setMixin(const VarRef& midx, UserDefinedCallableObj value, bool guarded)
   {
     if (midx.frame == 0xFFFFFFFF) {
-      intMixin[midx.offset] = value;
+      if (!guarded || intMixin[midx.offset] == nullptr)
+        intMixin[midx.offset] = value;
     }
     else {
-      mixins[size_t(mixFramePtr[midx.frame]) + midx.offset] = value;
+      CallableObj& slot(mixins[size_t(mixFramePtr[midx.frame]) + midx.offset]);
+      if (slot == nullptr || guarded == false) slot = value;
     }
   }
   // EO setMixin
@@ -621,31 +632,31 @@ namespace Sass {
     return nullptr;
   }
 
-  bool VarRefs::setModVar(const EnvKey& name, Value* value) const
+  bool VarRefs::setModVar(const EnvKey& name, Value* value, bool guarded) const
   {
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
-      root.setModVar(it->second, value);
+      root.setModVar(it->second, value, guarded);
       return true;
     }
     return false;
   }
 
-  bool VarRefs::setModMix(const EnvKey& name, Callable* fn) const
+  bool VarRefs::setModMix(const EnvKey& name, Callable* fn, bool guarded) const
   {
     auto it = mixIdxs.find(name);
     if (it != mixIdxs.end()) {
-      root.setModMix(it->second, fn);
+      root.setModMix(it->second, fn, guarded);
       return true;
     }
     return false;
   }
 
-  bool VarRefs::setModFn(const EnvKey& name, Callable* fn) const
+  bool VarRefs::setModFn(const EnvKey& name, Callable* fn, bool guarded) const
   {
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
-      root.setModFn(it->second, fn);
+      root.setModFn(it->second, fn, guarded);
       return true;
     }
     return false;
@@ -763,28 +774,28 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
+  bool EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded)
   {
     if (stack.empty()) return false;
-    return stack.back()->setModVar(name, ns, value);
+    return stack.back()->setModVar(name, ns, value, guarded);
   }
 
-  bool EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
     if (stack.empty()) return false;
-    return stack.back()->setModMix(name, ns, fn);
+    return stack.back()->setModMix(name, ns, fn, guarded);
   }
 
-  bool EnvRoot::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool EnvRoot::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
     if (stack.empty()) return false;
-    return stack.back()->setModFn(name, ns, fn);
+    return stack.back()->setModFn(name, ns, fn, guarded);
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
+  bool VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded)
   {
     const VarRefs* current = this;
     while (current) {
@@ -792,14 +803,13 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModVar(name, value))
+          if (idxs->setModVar(name, value, guarded))
             return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
-            const VarRef vidx{ 0xFFFFFFFF, fwd->second };
-            root.setVariable(vidx, value);
+            root.setModVar(fwd->second, value, guarded);
             return true;
           }
         }
@@ -810,7 +820,7 @@ namespace Sass {
     return false;
   }
 
-  bool VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
     const VarRefs* current = this;
     while (current) {
@@ -818,13 +828,13 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModMix(name, fn))
+          if (idxs->setModMix(name, fn, guarded))
             return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdMix.find(name);
           if (fwd != mod->mergedFwdMix.end()) {
-            root.setModMix(fwd->second, fn);
+            root.setModMix(fwd->second, fn, guarded);
             return true;
           }
         }
@@ -835,7 +845,7 @@ namespace Sass {
     return false;
   }
 
-  bool VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
     const VarRefs* current = this;
     while (current) {
@@ -843,13 +853,13 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModFn(name, fn))
+          if (idxs->setModFn(name, fn, guarded))
             return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
-            root.setModFn(fwd->second, fn);
+            root.setModFn(fwd->second, fn, guarded);
             return true;
           }
         }
@@ -878,7 +888,7 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  void EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool global)
+  void EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global)
   {
     if (stack.empty()) return;
     uint32_t idx = global ? 0 :
@@ -888,7 +898,7 @@ namespace Sass {
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
-        return idxs->root.setVariable(vidx, val);
+        return idxs->root.setVariable(vidx, val, guarded);
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;

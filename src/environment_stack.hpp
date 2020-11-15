@@ -213,14 +213,14 @@ namespace Sass {
     Callable* getMixin(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
 
-    bool setModVar(const EnvKey& name, Value* value) const;
-    bool setModMix(const EnvKey& name, Callable* callable) const;
-    bool setModFn(const EnvKey& name, Callable* callable) const;
+    bool setModVar(const EnvKey& name, Value* value, bool guarded) const;
+    bool setModMix(const EnvKey& name, Callable* callable, bool guarded) const;
+    bool setModFn(const EnvKey& name, Callable* callable, bool guarded) const;
 
 
-    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value);
-    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
-    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
+    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded);
+    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
+    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
 
     // Test if we are top frame
     bool isRoot() const;
@@ -381,23 +381,23 @@ namespace Sass {
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(const VarRef& vidx, ValueObj value);
+    void setVariable(const VarRef& vidx, ValueObj value, bool guarded);
 
-    void setModVar(const uint32_t offset, Value* value);
-    void setModMix(const uint32_t offset, Callable* callable);
-    void setModFn(const uint32_t offset, Callable* callable);
-
-    // Set items on runtime/evaluation phase via references
-    // Just converting reference to array offset and assigning
-    void setVariable(uint32_t frame, uint32_t offset, ValueObj value);
+    void setModVar(const uint32_t offset, Value* value, bool guarded);
+    void setModMix(const uint32_t offset, Callable* callable, bool guarded);
+    void setModFn(const uint32_t offset, Callable* callable, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setFunction(const VarRef& fidx, UserDefinedCallableObj value);
+    void setVariable(uint32_t frame, uint32_t offset, ValueObj value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setMixin(const VarRef& midx, UserDefinedCallableObj value);
+    void setFunction(const VarRef& fidx, UserDefinedCallableObj value, bool guarded);
+
+    // Set items on runtime/evaluation phase via references
+    // Just converting reference to array offset and assigning
+    void setMixin(const VarRef& midx, UserDefinedCallableObj value, bool guarded);
 
     // Get a mixin associated with the under [name].
     // Will lookup from the last runtime stack scope.
@@ -421,16 +421,16 @@ namespace Sass {
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name, bool global = false) const;
 
-    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value);
-    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
-    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
+    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded);
+    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
+    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
 
     // Set a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    void setVariable(const EnvKey& name, ValueObj val, bool global = false);
+    void setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global);
 
   };
 

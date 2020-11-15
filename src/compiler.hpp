@@ -61,8 +61,8 @@ namespace Sass {
       return varRoot.findVariable(name, global);
     }
 
-    void setVariable(const EnvKey& name, ValueObj val, bool global = false) {
-      return varRoot.setVariable(name, val, global);
+    void setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global) {
+      return varRoot.setVariable(name, val, guarded, global);
     }
 
     // Functions only for evaluation phase (C-API functions and eval itself)
