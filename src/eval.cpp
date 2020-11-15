@@ -1632,11 +1632,15 @@ namespace Sass {
     sass::string url(rule->url());
     sass::string prev(rule->prev());
     bool hasWith(rule->hasWithConfig());
+    auto config(rule->config());
 
     VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
     const ImportRequest import(url, prev);
     SourceSpan pstate = rule->pstate();
     //callStackFrame frame(context, { pstate, Strings::useRule });
+
+    // The show or hide config also hides these
+    WithConfig wconfig(compiler, config, hasWith);
 
     bool hasCached = false;
 
@@ -1800,6 +1804,8 @@ namespace Sass {
 
 
 
+    if (hasCached) return nullptr;
+    //wconfig.finalize();
     return sheet;
 
 
