@@ -2,12 +2,10 @@
 
 namespace Sass {
 
-  // Constructor
-  Sass::StyleSheet::StyleSheet(ImportObj import, RootObj root) :
-    import(import),
-    root2(root)
+  Root::Root(const SourceSpan& pstate, size_t reserve)
+    : AstNode(pstate), Vectorized<Statement>(reserve), Module(nullptr)
   {}
-
-  // We expect more code here once we support modules
-
+  Root::Root(const SourceSpan& pstate, StatementVector&& vec)
+    : AstNode(pstate), Vectorized<Statement>(std::move(vec)), Module(nullptr)
+  {}
 }

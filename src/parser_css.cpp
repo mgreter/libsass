@@ -249,8 +249,16 @@ namespace Sass {
     ArgumentInvocation* args = SASS_MEMORY_NEW(ArgumentInvocation,
       scanner.rawSpanFrom(start), std::move(arguments), {});
     
+    // Plain Css as it's interpolated
+    if (name->getPlainString().empty()) {
+      PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+        scanner.relevantSpanFrom(start), name, args, "");
+      return fn.detach();
+    }
+
     return SASS_MEMORY_NEW(FunctionExpression,
-      scanner.rawSpanFrom(start), name, args);
+      scanner.rawSpanFrom(start), name->getPlainString(), args,
+      inLoopDirective);
 
   }
   // EO readIdentifierLike

@@ -184,7 +184,8 @@ namespace Sass {
   // rewritten and macro-expanded.
   /////////////////////////////////////////////////////////////////////////
   class Statement : public AstNode,
-    public StatementVisitable<Value*>
+    public StatementVisitable<Value*>,
+    public StatementVisitable<void>
   {
   private:
 
@@ -214,6 +215,7 @@ namespace Sass {
     // Needed here to avoid ambiguity from base-classes!??
     // virtual void accept(ExpressionVisitor<void>* visitor) override = 0;
     virtual Value* accept(StatementVisitor<Value*>* visitor) override = 0;
+    virtual void accept(StatementVisitor<void>* visitor) override = 0;
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StyleRule);

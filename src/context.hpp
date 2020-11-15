@@ -20,25 +20,18 @@
 
 namespace Sass {
 
-  class Module
-  {
-  public:
-    VarRefs* idxs;
-    bool isActive3 = false;
-    void addFunction(const EnvKey& name, uint32_t offset);
-    void addVariable(const EnvKey& name, uint32_t offset);
-    void addMixin(const EnvKey& name, uint32_t offset);
-    Module(EnvRoot& root);
-  };
-
   // Compiler is stateful, while Context is more low-level
   class Context : public SassOutputOptionsCpp {
 
-  private:
+  public:
 
     // Checking if a file exists can be quite extensive
     // Keep an internal map to avoid repeated system calls
     std::unordered_map<sass::string, bool> fileExistsCache;
+
+    // Keep cache of resolved import filenames
+    // Key is a pair of previous + import path
+    std::unordered_map<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
 
     // Include paths are local to context since we need to know
     // it for lookups during parsing. You may reset this for
@@ -47,9 +40,13 @@ namespace Sass {
 
   public:
 
-    sass::vector<WithConfig*> withConfigStack;
+    Root* chroot77 = nullptr;
 
-    WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
+    WithConfig* wconfig = nullptr;
+
+    EnvKeyMap<BuiltInMod*> modules;
+
+    WithConfigVar* getCfgVar(const EnvKey& name);
 
   protected:
 
@@ -71,7 +68,7 @@ namespace Sass {
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?
     // ToDo: should be case insensitive on windows?
-    std::map<const sass::string, StyleSheetObj> sheets;
+    std::map<const sass::string, RootObj> sheets;
 
     // Only used to cache `loadImport` calls
     std::map<const sass::string, ImportObj> sources;
@@ -94,6 +91,8 @@ namespace Sass {
 
     // Constructor
     Context();
+
+    virtual ~Context();
 
     /////////////////////////////////////////////////////////////////////////
     // Helpers for `sass_prepare_context`
@@ -125,10 +124,9 @@ namespace Sass {
     // import and then looks in all include folders.
     sass::string findFile(const sass::string& path);
 
-    // Implementation for `resolveDynamicImport`
     // Look for all possible filename variants (e.g. partials)
     // Returns all results (e.g. for ambiguous but valid imports)
-    sass::vector<ResolvedImport> findIncludes(const ImportRequest& import, bool forImport);
+    const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);
 
   };
   // EO Context

@@ -1015,12 +1015,7 @@ namespace Sass {
     if (const Number* nr = other->isaNumber()) {
       return operate(div, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::dividedBy(other, logger, pstate);
-    logger.addFinalStackTrace(pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " / " + other->inspect() + "\".",
-      logger, pstate);
+    return Value::dividedBy(other, logger, pstate);
   }
   // EO dividedBy
 
@@ -1474,6 +1469,13 @@ namespace Sass {
     CallableObj callable) :
     Value(pstate),
     callable_(callable)
+  {}
+
+  Function::Function(
+    const SourceSpan& pstate,
+    const sass::string& cssName) :
+    Value(pstate),
+    cssName_(cssName)
   {}
 
   Function::Function(const Function* ptr) :

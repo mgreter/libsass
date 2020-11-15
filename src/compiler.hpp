@@ -23,29 +23,39 @@ namespace Sass {
 
   public:
 
-    EnvKeyMap<Module> modules;
+    VarRefs* getCurrentFrame() const {
+      if (varRoot.stack.empty()) return nullptr;
+      return varRoot.stack.back();
+    }
 
-    Module& createModule(const sass::string& name) {
+    VarRefs* getCurrentModule() const {
+      if (varRoot.stack.empty()) return nullptr;
+      auto current = varRoot.stack.back();
+      while (current->pscope) {
+        if (current->module) break;
+        current = current->pscope;
+      }
+      return current;
+    }
+
+    BuiltInMod& createModule(const sass::string& name) {
       auto it = modules.find(name);
       if (it != modules.end()) {
-        return it->second;
+        return *it->second;
       }
-      auto kv = std::make_pair(
-        name, Module{ varRoot });
-      modules.insert(kv);
-      it = modules.find(name);
-      // ToDo: fix this!
+      BuiltInMod* module = new BuiltInMod(varRoot);
+      modules.insert({ name, module });
+      return *module;
+    }
+
+    BuiltInMod* getModule(const sass::string& name) {
+      auto it = modules.find(name);
+      if (it == modules.end()) return nullptr;
       return it->second;
     }
 
-    Module* getModule(const sass::string& name) {
-      auto it = modules.find(name);
-      if (it == modules.end()) return nullptr;
-      return &it->second;
-    }
 
-
-    bool hasWithConfig = false;
+    bool implicitWithConfig = false;
 
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.
@@ -57,17 +67,18 @@ namespace Sass {
 
     // Get the value object for the variable by [name] on runtime.
     // If [global] flag is given, we 
-    ValueObj getVariable(const EnvKey& name, bool global = false) {
-      return varRoot.getVariable(name, global);
+    ValueObj findVariable(const EnvKey& name, bool global = false) {
+      return varRoot.findVariable(name, global);
     }
 
-    void setVariable(const EnvKey& name, ValueObj val, bool global = false) {
-      return varRoot.setVariable(name, val, global);
+    VarRef setVariable(const EnvKey& name, bool guarded, bool global) {
+      return varRoot.setVariable(name, guarded, global);
     }
 
     // Functions only for evaluation phase (C-API functions and eval itself)
-    CallableObj getMixin(const EnvKey& name) { return varRoot.getMixin(name); }
-    CallableObj getFunction(const EnvKey& name) { return varRoot.getFunction(name); }
+    Callable* findMixin(const EnvKey& name) { return varRoot.findMixin(name); }
+    CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
+    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) { return varRoot.findFunction(name, ns); }
 
     // The current state the compiler is in.
     enum SassCompilerState state;
@@ -84,7 +95,7 @@ namespace Sass {
     ImportObj entry_point;
 
     // Parsed ast-tree
-    StyleSheetObj sheet;
+    RootObj sheet;
 
     // Evaluated ast-tree
     CssRootObj compiled;
@@ -186,7 +197,7 @@ namespace Sass {
 
     // Parse the import (updates syntax flag if AUTO was set)
     // Results will be stored at `sheets[source->getAbsPath()]`
-    StyleSheet* registerImport(ImportObj import);
+    Root* registerImport(ImportObj import);
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, SourceSpan pstate);
@@ -199,7 +210,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void loadBuiltInFunctions();
 
-    StyleSheet* parseRoot(ImportObj import);
+    Root* parseRoot(ImportObj import);
 
   private:
 
@@ -236,6 +247,24 @@ namespace Sass {
 
   };
 
+  class ImportStackFrame
+  {
+  private:
+
+    Compiler& compiler;
+
+  public:
+
+    ImportStackFrame(
+      Compiler& compiler,
+      Import* import);
+
+    ~ImportStackFrame();
+
+  };
+
+
 }
+
 
 #endif

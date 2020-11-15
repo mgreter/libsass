@@ -19,6 +19,8 @@ namespace Sass {
 
     namespace Meta {
 
+      Value* loadCss(FN_PROTOTYPE2);
+
       // Register all functions at compiler
       void registerFunctions(Compiler& ctx);
 

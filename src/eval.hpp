@@ -19,12 +19,22 @@ namespace Sass {
     public StatementVisitor<Value*>,
     public ExpressionVisitor<Value*> {
 
-  private:
+  public:
+
+    void exposeUseRule(UseRule* rule);
+    void exposeFwdRule(ForwardRule* rule);
+    void exposeImpRule(IncludeImport* rule);
 
     // Some references
     Logger& logger456;
     Compiler& compiler;
     BackTraces& traces;
+
+    // Alias into context
+    Root*& chroot77;
+
+    // Alias into context
+    WithConfig*& wconfig;
 
     // The extend handler
     Extender extender;
@@ -33,6 +43,12 @@ namespace Sass {
     CssMediaVector mediaStack;
     SelectorLists originalStack;
     SelectorLists selectorStack;
+
+    VarRefs* pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame);
+
+    // A pointer to the slot where we will assign to
+    // Used to optimize self-assignment in functions
+    ValueObj* assigne = nullptr;
 
     // The name of the current declaration parent. Used for BEM-
     // declaration blocks as in `div { prefix: { suffix: val; } }`;
@@ -58,13 +74,17 @@ namespace Sass {
     // Whether we're currently building the output of an unknown at rule.
     bool inUnknownAtRule = false;
 
+    // Whether we're currently executing an import.
+    bool inImport = false;
+
     // Whether we're directly within an `@at-root` rule excluding style rules.
     bool atRootExcludingStyleRule = false;
 
     // Whether we're currently building the output of a `@keyframes` rule.
     bool inKeyframes = false;
 
-
+    void insertModule(Module* module);
+    void compileModule(Root* module);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -123,38 +143,26 @@ namespace Sass {
     Value* execute(
       BuiltInCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Call built-in function with overloads
     Value* execute(
       BuiltInCallables* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Used for user functions and also by
     // mixin includes and content includes.
     Value* execute(
       UserDefinedCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Call external C-API function
     Value* execute(
       ExternalCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
-
-    // Return plain css call as string
-    // Used when function is not known
-    Value* execute(
-      PlainCssCallable* callable,
-      ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -211,22 +219,19 @@ namespace Sass {
     Value* _runBuiltInCallable(
       ArgumentInvocation* arguments,
       BuiltInCallable* callable,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Call built-in function with overloads
     Value* _runBuiltInCallables(
       ArgumentInvocation* arguments,
       BuiltInCallables* callable,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Helper for _runBuiltInCallable(s)
     Value* _callBuiltInCallable(
       ArgumentResults& evaluated,
       const SassFnPair& function,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Used for user functions and also by
     // mixin includes and content includes.
@@ -270,9 +275,6 @@ namespace Sass {
     void acceptIncludeImport(IncludeImport* import);
 
 
-    StyleSheet* resolveDynamicImport(IncludeImport* rule);
-
-
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
@@ -282,6 +284,11 @@ namespace Sass {
     // Evaluate all children at a newly established current block context
     Value* acceptChildrenAt(CssParentNode* parent, const Vectorized<Statement>& children);
 
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+    public:
+    void renderArgumentInvocation(sass::string& strm, ArgumentInvocation* args);
+protected:
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
@@ -294,6 +301,7 @@ namespace Sass {
     Value* visitMapExpression(MapExpression*);
     Value* visitNullExpression(NullExpression*);
     Value* visitNumberExpression(NumberExpression*);
+    Value* visitCssFunction(PlainCssCallable2*);
     Value* visitParenthesizedExpression(ParenthesizedExpression*);
     Value* visitParentExpression(ParentExpression*);
     Value* visitStringExpression(StringExpression*);
@@ -332,6 +340,21 @@ namespace Sass {
     Value* visitWarnRule(WarnRule* rule);
     Value* visitWhileRule(WhileRule* rule);
 
+  public:
+    Root* resolveIncludeImport(IncludeImport* rule);
+
+
+    // Backbone loader function
+    // Use by load-css directly
+    Root* loadModule(
+      const sass::string& prev,
+      const sass::string& url,
+      bool isImport = false);
+
+    // Loading of parsed rules
+    Root* loadModRule(ModRule* rule);
+
+  private:
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 

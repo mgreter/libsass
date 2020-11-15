@@ -2,12 +2,17 @@
   <ItemGroup Label="LibSass Includes">
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/base.h" />
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/compiler.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/enums.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/error.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/import.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/lists.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/traces.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/values.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/version.h" />
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h" />
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h" />
   </ItemGroup>
   <ItemGroup Label="LibSass Headers">
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast.hpp" />
@@ -25,6 +30,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_statements.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_expressions.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_values.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\modules.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\backtrace.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\base64vlq.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\character.hpp" />
@@ -98,6 +104,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_state.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_span.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\stylesheet.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\preloader.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\units.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\unicode.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\util_string.hpp" />
@@ -126,6 +133,7 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_super.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_weave.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_selectors.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\modules.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\context.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\constants.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\compiler.cpp" />
@@ -155,6 +163,7 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\extender.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\extension.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\stylesheet.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\preloader.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\interpolation.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_css.cpp" />

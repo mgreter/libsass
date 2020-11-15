@@ -31,7 +31,7 @@
 #include <excpt.h>
 #endif
 
-// #include "debugger.hpp"
+#include "debugger.hpp"
 
 struct SassImport;
 
@@ -43,7 +43,7 @@ namespace Sass {
   {
     Value& value(Value::unwrap(name));
     Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.getVariable(
+    ValueObj rv = compiler.findVariable(
       value.assertString(compiler, "name")->getText(), true);
     if (rv) rv->refcount += 1;
     return rv ? Value::wrap(rv) : sass_make_null();
@@ -53,7 +53,7 @@ namespace Sass {
   {
     Value& value(Value::unwrap(name));
     Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.getVariable(
+    ValueObj rv = compiler.findVariable(
       value.assertString(compiler, "name")->getText());
     if (rv) rv->refcount += 1;
     return rv ? Value::wrap(rv) : sass_make_null();
@@ -63,7 +63,7 @@ namespace Sass {
   {
     Value& value(Value::unwrap(name));
     Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.getVariable(
+    ValueObj rv = compiler.findVariable(
       value.assertString(compiler, "name")->getText());
     if (rv) rv->refcount += 1;
     return rv ? Value::wrap(rv) : sass_make_null();
@@ -71,28 +71,28 @@ namespace Sass {
 
   struct SassValue* set_global(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
   {
-    Value& key(Value::unwrap(name));
-    Value& val(Value::unwrap(value));
-    Compiler& compiler(Compiler::unwrap(comp));
-    compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, true);
+    // Value& key(Value::unwrap(name));
+    // Value& val(Value::unwrap(value));
+    // Compiler& compiler(Compiler::unwrap(comp));
+    // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, true);
     return sass_make_null();
   }
 
   struct SassValue* set_lexical(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
   {
-    Value& key(Value::unwrap(name));
-    Value& val(Value::unwrap(value));
-    Compiler& compiler(Compiler::unwrap(comp));
-    compiler.setVariable(key.assertString(compiler, "name")->getText(), &val);
+    // Value& key(Value::unwrap(name));
+    // Value& val(Value::unwrap(value));
+    // Compiler& compiler(Compiler::unwrap(comp));
+    // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
     return sass_make_null();
   }
 
   struct SassValue* set_local(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
   {
-    Value& key(Value::unwrap(name));
-    Value& val(Value::unwrap(value));
-    Compiler& compiler(Compiler::unwrap(comp));
-    compiler.setVariable(key.assertString(compiler, "name")->getText(), &val);
+    // Value& key(Value::unwrap(name));
+    // Value& val(Value::unwrap(value));
+    // Compiler& compiler(Compiler::unwrap(comp));
+    // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
     return sass_make_null();
   }
 
@@ -221,7 +221,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // parse root block from includes (Move to compiler)
   CssRootObj Compiler::compileRoot(bool plainCss)
   {
-    RootObj root = sheet->root2;
+    RootObj root = sheet;
     if (root == nullptr) return {};
 
     #ifdef DEBUG_SHARED_PTR
@@ -235,8 +235,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (root.isNull()) return {};
 
     Eval eval(*this, *this, plainCss);
-
-    // debug_ast(root);
 
     CssRootObj compiled = eval.acceptRoot(root); // 50%
     // debug_ast(compiled);
@@ -494,7 +492,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
             uniq_path = path_strm.str();
           }
           // create the importer struct
-          ImportRequest importer(uniq_path, ctx_path);
+          ImportRequest importer(uniq_path, ctx_path, false);
           // query data from the current include
           SourceDataObj source = import.source;
           // const char* content = sass_import_get_source(import);
@@ -538,10 +536,13 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               // Import is ready to be served
               if (import.syntax == SASS_IMPORT_AUTO)
                 import.syntax = SASS_IMPORT_SCSS;
-              StyleSheet* sheet = registerImport(&import);
+              ImportStackFrame iframe(*this, &import);
+              Root* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
-              rule->append(SASS_MEMORY_NEW(IncludeImport,
-                pstate, abs_path, sheet));
+              auto inc = SASS_MEMORY_NEW(IncludeImport,
+                pstate, ctx_path, abs_path, &import);
+              inc->root(sheet);
+              rule->append(inc);
             }
             // Only a path was returned
             // Try to load it like normal
@@ -549,11 +550,11 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               // Create a copy for possible error reporting
               sass::string path(abs_path ? abs_path : rel_path);
               // Pass it on as if it was a regular import
-              ImportRequest request(path, ctx_path);
+              ImportRequest request(path, ctx_path, false);
 
               // Search for valid imports (e.g. partials) on the file-system
               // Returns multiple valid results for ambiguous import path
-              const sass::vector<ResolvedImport> resolved(findIncludes(request, true));
+              const sass::vector<ResolvedImport>& resolved(findIncludes(request, true));
 
 
               // Error if no file to import was found
@@ -577,9 +578,14 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
               // We made sure exactly one entry was found, load its content
               if (ImportObj loaded = loadImport(resolved[0])) {
-                StyleSheet* sheet = registerImport(loaded);
+                ImportStackFrame iframe(*this, loaded);
+                Root* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
-                rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
+                auto inc = SASS_MEMORY_NEW(IncludeImport,
+                  pstate, ctx_path, url, &import);
+                inc->root(sheet);
+                rule->append(inc);
+                // Must set the sheet somehow
               }
               else {
                 BackTraces& traces = *this;
@@ -741,9 +747,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Main entry point for custom functions passed through the C-API.
   void Compiler::registerCustomFunction(struct SassFunction* function)
   {
-    EnvRoot root(*this);
+    // EnvRoot root(*this);
     // Create a new external callable from the sass function
-    ExternalCallable* callable = makeExternalCallable(function);
+    // ExternalCallable* callable = makeExternalCallable(function);
     // Currently external functions are treated globally
     // if (fnLookup.count(callable->envkey()) == 0) {
     //   fnLookup.insert(std::make_pair(callable->envkey(), callable));
@@ -759,50 +765,36 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Invoke parser according to import format
   RootObj Compiler::parseSource(ImportObj import)
   {
+    Root* root = nullptr;
     if (import->syntax == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, import->source);
-      return parser.parseRoot();
+      root = parser.parseRoot();
     }
     else if (import->syntax == SASS_IMPORT_SASS)
     {
       SassParser parser(*this, import->source);
-      return parser.parseRoot();
+      root = parser.parseRoot();
     }
     else {
       ScssParser parser(*this, import->source);
-      return parser.parseRoot();
+      root = parser.parseRoot();
     }
+    if (root) root->import = import;
+    return root;
   }
   // EO parseSource
 
   // Parse the import (updates syntax flag if AUTO was set)
   // Results will be stored at `sheets[source->getAbsPath()]`
-  StyleSheet* Compiler::registerImport(ImportObj import)
+  Root* Compiler::registerImport(ImportObj import)
   {
 
     SassImportFormat& format(import->syntax);
     const SourceDataObj& source(import->source);
     const sass::string& abs_path(source->getAbsPath());
 
-    // Put import onto the stack array
-    import_stack.emplace_back(import);
-
-    // check existing import stack for possible recursion
-    for (size_t i = import_stack.size() - 2; i != 0; --i) {
-      const SourceDataObj parent = import_stack[i]->source;
-      if (std::strcmp(parent->getAbsPath(), source->getAbsPath()) == 0) {
-        // make path relative to the current directory
-        sass::string stack("An @import loop has been found:");
-        for (size_t n = i; n < import_stack.size() - 1; ++n) {
-          stack += "\n    " + sass::string(File::abs2rel(import_stack[n]->source->getAbsPath(), CWD, CWD)) +
-            " imports " + sass::string(File::abs2rel(import_stack[n + 1]->source->getAbsPath(), CWD, CWD));
-        }
-        // implement error throw directly until we
-        // decided how to handle full stack traces
-        throw Exception::RuntimeException(*this, stack);
-      }
-    }
+    // ImportStackFrame iframe(*this, import);
 
     // ToDo: We don't take format into account
     auto cached = sheets.find(abs_path);
@@ -833,18 +825,25 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       }
     }
 
+    // std::cerr << "Parsing '" << import->getAbsPath() << "'\n";
+
     // Invoke correct parser according to format
-    StyleSheetObj stylesheet = SASS_MEMORY_NEW(
-      StyleSheet, import, parseSource(import));
+    RootObj stylesheet = parseSource(import);
 
     // Pop from import stack
-    import_stack.pop_back();
+    // import_stack.pop_back();
 
     // Put the parsed stylesheet into the map
     sheets.insert({ abs_path, stylesheet });
 
-    // Return pointer
-    return stylesheet.detach();
+    // stylesheet->import = import;
+    if (stylesheet) {
+      stylesheet->import = import;
+    }
+
+    // Return pointer, we are already managed
+    // Don't call detach, as it could leak then
+    return stylesheet.ptr();
 
   }
   // EO registerImport
@@ -873,7 +872,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     exit(EXIT_FAILURE);
   }
 
-  StyleSheet* Compiler::parseRoot(ImportObj import)
+  Root* Compiler::parseRoot(ImportObj import)
   {
 
     // Attach signal handlers
@@ -887,7 +886,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Insert ourself onto the sources cache
     sources.insert({ import->getAbsPath(), import });
 
-    import_stack.emplace_back(import);
+    // ImportStackFrame iframe(*this, import);
 
     loadBuiltInFunctions();
 
@@ -915,8 +914,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     RefCounted::taint = true;
     #endif
 
+    ImportStackFrame iframe(*this, import);
+
     // load and register import
-    StyleSheet* sheet = registerImport(import);
+    Root* sheet = registerImport(import);
 
     #ifdef DEBUG_SHARED_PTR
     // Disable reference tracking
@@ -931,5 +932,49 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  ImportStackFrame::ImportStackFrame(Compiler& compiler, Import* import) :
+    compiler(compiler)
+  {
+
+    auto& source(import->source);
+    auto& stack(compiler.import_stack);
+
+    // std::cerr << "IMPORT " << sass::string(stack.size(), ' ') << source->getAbsPath() << "\n";
+
+    stack.push_back(import);
+
+    if (stack.size() < 2) return;
+
+
+    // check existing import stack for possible recursion
+    for (size_t i = stack.size() - 2;; --i) {
+      const SourceDataObj parent = stack[i]->source;
+      if (std::strcmp(parent->getAbsPath(), source->getAbsPath()) == 0) {
+        // make path relative to the current directory
+        sass::string msg("An @import loop has been found:");
+        // callStackFrame frame(compiler, import->pstate());
+        for (size_t n = i; n < stack.size() - 1; ++n) {
+          msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), CWD, CWD)) +
+            " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), CWD, CWD));
+        }
+        // implement error throw directly until we
+        // decided how to handle full stack traces
+        throw Exception::RuntimeException(compiler, msg);
+      }
+      // Exit condition
+      if (i == 0) break;
+    }
+
+
+  }
+
+  ImportStackFrame::~ImportStackFrame()
+  {
+    compiler.import_stack.pop_back();
+    // auto& source(compiler.import_stack.back()->source);
+    // std::cerr << "EXIT " << compiler.import_stack2.size()
+    //   << " -> " << source->getAbsPath() << "\n";
+  }
 
 }

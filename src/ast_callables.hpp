@@ -44,7 +44,7 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -82,7 +82,7 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -91,34 +91,6 @@ namespace Sass {
     bool operator==(const Callable& rhs) const override final;
 
     IMPLEMENT_ISA_CASTER(BuiltInCallables);
-  };
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  class PlainCssCallable final : public Callable
-  {
-  private:
-
-    ADD_CONSTREF(sass::string, fname);
-
-  public:
-
-    // Value constructor
-    PlainCssCallable(
-      const SourceSpan& pstate,
-      const sass::string& fname);
-
-    // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
-
-    // Return the function name
-    const sass::string& name() const override final { return fname(); }
-
-    // Equality comparator (needed for `get-function` value)
-    bool operator==(const Callable& rhs) const override final;
-
-    IMPLEMENT_ISA_CASTER(PlainCssCallable);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -145,7 +117,7 @@ namespace Sass {
       UserDefinedCallable* content);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -184,7 +156,7 @@ namespace Sass {
     }
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }

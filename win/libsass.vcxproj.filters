@@ -21,22 +21,37 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/base.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h">
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/compiler.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/enums.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/error.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/import.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/lists.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/traces.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/values.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/version.h">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -84,6 +99,9 @@
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_values.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\modules.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\backtrace.hpp">
@@ -305,6 +323,9 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\stylesheet.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\preloader.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\units.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
@@ -383,6 +404,9 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_selectors.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\modules.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\context.cpp">
@@ -470,6 +494,9 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\stylesheet.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\preloader.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\interpolation.cpp">

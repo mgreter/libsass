@@ -28,6 +28,8 @@ namespace Sass {
   // Helper typedef for our frame stack type
   typedef sass::vector<VarRefs*> EnvFrameVector;
 
+  extern const VarRef nullidx;
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -96,38 +98,53 @@ namespace Sass {
   class VarRefs {
   public:
 
-    // Cache root reference
+    // EnvRoot reference
     EnvRoot& root;
 
     // Parent is needed during runtime for
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
 
-    // Rules like `@if`, `@for` etc. are semi-global (permeable).
-    // Assignments directly in those can bleed to the root scope.
-    bool permeable = false;
-    bool isImport = false;
-    bool isModule = false;
-
-    // Parents for specific types
+    // Global scope pointers
     uint32_t varFrame;
     uint32_t mixFrame;
     uint32_t fnFrame;
 
-    // Remember named mappings
-    // Used for runtime lookups
-    // ToDo: test EnvKeyFlatMap
+    // Lexical scope entries
     VidxEnvKeyMap varIdxs;
     MidxEnvKeyMap mixIdxs;
     FidxEnvKeyMap fnIdxs;
 
-    // Keep track of assignments and variables for dynamic runtime lookups.
-    // This is needed only for loops, due to sass "weird" variable scoping.
-    sass::vector<AssignRuleObj> assignments;
-    sass::vector<VariableExpressionObj> variables;
+    // Special set with global assignments
+    // Needed for imports within style-rules
+    // ToDo: not really tested via specs yet?
+    // EnvKeySet globals;
 
-    ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule55;
-    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal55;
+    // Any import may add forwarded entities to current scope
+    // Since those scopes are dynamic and not global, we can't
+    // simply insert our references. Therefore we must have the
+    // possibility to hoist forwarded entities at any lexical scope.
+    // All @use as "*" do not get exposed to the parent scope though.
+    sass::vector<VarRefs*> forwards;
+
+    // Some scopes are connected to a module
+    // Those expose some additional exports
+    // Modules are global so we just link them
+    Module* module = nullptr;
+
+    // Rules like `@if`, `@for` etc. are semi-global (permeable).
+    // Assignments directly in those can bleed to the root scope.
+    bool isPermeable = false;
+
+    // Imports are transparent for variables, functions and mixins
+    // We always need to create entities inside the parent scope
+    bool isImport = false;
+
+    // Set to true once we are compiled via use or forward
+    // An import does load the sheet, but does not compile it
+    // Compiling it means hard-baking the config vars into it
+    bool isCompiled = false;
+
 
     // Value constructor
     VarRefs(EnvRoot& root,
@@ -135,17 +152,15 @@ namespace Sass {
       uint32_t varFrame,
       uint32_t mixFrame,
       uint32_t fnFrame,
-      bool permeable,
-      bool isImport,
-      bool isModule) :
+      bool isPermeable,
+      bool isImport) :
       root(root),
       pscope(pscope),
-      permeable(permeable),
-      isImport(isImport),
-      isModule(isModule),
       varFrame(varFrame),
       mixFrame(mixFrame),
-      fnFrame(fnFrame)
+      fnFrame(fnFrame),
+      isPermeable(isPermeable),
+      isImport(isImport)
     {}
 
     /////////////////////////////////////////////////////////////////////////
@@ -169,22 +184,50 @@ namespace Sass {
     // But also for content blocks
     VarRef createMixin(const EnvKey& name);
 
-    // Get local variable by name, needed for most simplistic case
-    // for static variable optimization in loops. When we know that
-    // there is an existing local variable, we can always use that!
-    VarRef getLocalVariableIdx(const EnvKey& name);
+    // Get a mixin associated with the under [name].
+    // Will lookup from the last runtime stack scope.
+    // We will move up the runtime stack until we either
+    // find a defined mixin or run out of parent scopes.
+    Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
+    Callable* findMixin(const EnvKey& name) const;
+    Callable* getMixin(const EnvKey& name, bool hidePrivate = false) const;
 
-    // Return mixin in lexical manner. If [passThrough] is false,
-    // we abort the lexical lookup on any non-permeable scope frame.
-    VarRef getMixinIdx(const EnvKey& name, bool passThrough = true);
+    // Get a function associated with the under [name].
+    // Will lookup from the last runtime stack scope.
+    // We will move up the runtime stack until we either
+    // find a defined function or run out of parent scopes.
+    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
+    CallableObj* findFunction(const EnvKey& name) const;
+    CallableObj* getFunction(const EnvKey& name) const;
 
-    // Return function in lexical manner. If [passThrough] is false,
-    // we abort the lexical lookup on any non-permeable scope frame.
-    VarRef getFunctionIdx(const EnvKey& name, bool passThrough = true);
+    // Get a value associated with the variable under [name].
+    // If [global] flag is given, the lookup will be in the root.
+    // Otherwise lookup will be from the last runtime stack scope.
+    // We will move up the runtime stack until we either find a 
+    // defined variable with a value or run out of parent scopes.
+    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
+    Value* findVariable(const EnvKey& name) const;
+    Value* getVariable(const EnvKey& name) const;
 
-    // Return variable in lexical manner. If [passThrough] is false,
-    // we abort the lexical lookup on any non-permeable scope frame.
-    VarRef getVariableIdx(const EnvKey& name, bool passThrough = false);
+    void findVarIdxs(sass::vector<VarRef>& vidxs, const EnvKey& name) const;
+    VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findVarIdx(const EnvKey& name) const;
+    VarRef getVarIdx(const EnvKey& name) const;
+
+
+    bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
+
+    // Find function only in local frame
+
+
+    VarRef setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
+    bool setModMix(const EnvKey& name, Callable* callable, bool guarded) const;
+    bool setModFn(const EnvKey& name, Callable* callable, bool guarded) const;
+
+
+    VarRef setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
+    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
+    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
 
     // Test if we are top frame
     bool isRoot() const;
@@ -193,22 +236,12 @@ namespace Sass {
     VarRefs* getParent(bool passThrough = false) {
       if (isRoot())
         return nullptr;
-      if (isModule)
+      if (module)
         return nullptr;
       if (!passThrough)
-        if (!permeable)
+        if (!isPermeable)
           return nullptr;
       return pscope;
-    }
-
-    VarRefs* getModule23() {
-      auto current = this;
-      while (!current->isRoot()) {
-        if (current->isModule)
-          return current;
-        current = current->pscope;
-      }
-      return current;
     }
 
   };
@@ -235,7 +268,7 @@ namespace Sass {
     // Value constructor
     EnvFrame(
       Compiler& compiler,
-      bool permeable,
+      bool isPermeable,
       bool isModule = false,
       bool isImport = false);
 
@@ -251,6 +284,7 @@ namespace Sass {
 
   public:
 
+    Compiler& compiler;
 
     // Reference to stack
     // We manage it ourself
@@ -265,7 +299,9 @@ namespace Sass {
     friend class Compiler;
     friend class EnvScope;
     friend class EnvFrame;
+    friend class Preloader;
     friend class VarRefs;
+    friend class Eval;
 
     // Growable runtime stack (get offset by xxxFramePtr).
     // These vectors are the main stacks during runtime.
@@ -302,7 +338,7 @@ namespace Sass {
     // Needed to track the memory allocations
     // And useful to resolve parents indirectly
     // Access it by absolute `frameOffset`
-    sass::vector<VarRefs*> scopes;
+    sass::vector<VarRefs*> scopes3;
 
   public:
 
@@ -314,9 +350,11 @@ namespace Sass {
       // Pop from stack
       stack.pop_back();
       // Take care of scope pointers
-      for (VarRefs* idx : scopes) {
+      for (VarRefs* idx : scopes3) {
         delete idx;
       }
+      // Delete our env
+      delete idxs;
     }
 
     // Update variable references and assignments
@@ -334,56 +372,76 @@ namespace Sass {
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
     ValueObj& getVariable(const VarRef& vidx);
+    ValueObj& getModVar(const uint32_t offset);
 
     // Get function instance by stack index reference
     // Just converting and returning reference to array offset
     CallableObj& getFunction(const VarRef& vidx);
+    CallableObj& getModFn(const uint32_t offset);
 
     // Get mixin instance by stack index reference
     // Just converting and returning reference to array offset
     CallableObj& getMixin(const VarRef& midx);
+    CallableObj& getModMix(const uint32_t offset);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(const VarRef& vidx, ValueObj value);
+    void setVariable(const VarRef& vidx, ValueObj value, bool guarded);
+
+    void setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate);
+    void setModMix(const uint32_t offset, Callable* callable, bool guarded);
+    void setModFn(const uint32_t offset, Callable* callable, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(uint32_t frame, uint32_t offset, ValueObj value);
+    void setVariable(uint32_t frame, uint32_t offset, ValueObj value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setFunction(const VarRef& fidx, UserDefinedCallableObj value);
+    void setFunction(const VarRef& fidx, UserDefinedCallableObj value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setMixin(const VarRef& midx, UserDefinedCallableObj value);
+    void setMixin(const VarRef& midx, UserDefinedCallableObj value, bool guarded);
 
     // Get a mixin associated with the under [name].
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
-    Callable* getMixin(const EnvKey& name) const;
+    Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
+    Callable* findMixin(const EnvKey& name) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    Callable* getFunction(const EnvKey& name) const;
+    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
+    CallableObj* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    Value* getVariable(const EnvKey& name, bool global = false) const;
+    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
+    Value* findVariable(const EnvKey& name, bool global = false) const;
+    VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findVarIdx(const EnvKey& name) const;
+
+    void findVarIdxs(sass::vector<VarRef>& vidxs, const EnvKey& name) const;
+
+    VarRef setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
+    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
+    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
 
     // Set a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    void setVariable(const EnvKey& name, ValueObj val, bool global = false);
+    VarRef setVariable(const EnvKey& name, bool guarded, bool global);
+    VarRef setFunction(const EnvKey& name, bool guarded, bool global);
+    VarRef setMixin(const EnvKey& name, bool guarded, bool global);
 
   };
 
@@ -415,6 +473,8 @@ namespace Sass {
     uint32_t oldFnFrame;
     uint32_t oldFnOffset;
 
+    bool wasActive;
+
   public:
 
     // Put frame onto stack
@@ -434,6 +494,9 @@ namespace Sass {
       // The frame might be fully empty
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
+
+      wasActive = idxs->isCompiled;
+      idxs->isCompiled = true;
 
       if (idxs->varFrame != 0xFFFFFFFF) {
 
@@ -524,6 +587,8 @@ namespace Sass {
         }
 
       }
+
+      idxs->isCompiled = wasActive;
 
       // Pop frame from stack
       env.stack.pop_back();

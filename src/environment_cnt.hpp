@@ -31,6 +31,11 @@ namespace Sass {
     std::allocator<std::pair<const sass::string, T>>
   >;
 
+  using ModuleSet = UnorderedSet<
+    sass::string, hashString, equalsString,
+    std::allocator<sass::string>
+  >;
+
   template<typename T>
   // Performance comparisons on MSVC and bolt-bench:
   // tsl::hopscotch_map is 10% slower than Sass::FlatMap

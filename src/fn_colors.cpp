@@ -798,7 +798,7 @@ namespace Sass {
             "invert(" + arguments[0]->inspect() + ")",
             arguments[0]->pstate());
         }
-        return invert(pstate, arguments, compiler, eval, selfAssign);
+        return invert(pstate, arguments, compiler, eval);
       }
 
       /*******************************************************************/
@@ -1084,7 +1084,7 @@ namespace Sass {
             "grayscale(" + arguments[0]->inspect() + ")",
             arguments[0]->pstate());
         }
-        return grayscale(pstate, arguments, compiler, eval, selfAssign);
+        return grayscale(pstate, arguments, compiler, eval);
       }
         
 
@@ -1097,7 +1097,7 @@ namespace Sass {
             "opacity(" + arguments[0]->inspect() + ")",
             arguments[0]->pstate());
         }
-        return opacity(pstate, arguments, compiler, eval, selfAssign);
+        return opacity(pstate, arguments, compiler, eval);
       }
 
       BUILT_IN_FN(ieHexStr)
@@ -1548,7 +1548,7 @@ namespace Sass {
         ctx.exposeFunction(key_alpha, idx_alpha);
         ctx.exposeFunction(key_opacity, idx_opacity_loose);
 
-        Module& module(ctx.createModule("color"));
+        BuiltInMod& module(ctx.createModule("color"));
         module.addFunction(key_rgb, idx_rgb_strict);
         module.addFunction(key_rgba, idx_rgba_strict);
         module.addFunction(key_hsl, idx_hsl_strict);

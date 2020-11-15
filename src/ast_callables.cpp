@@ -93,25 +93,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  PlainCssCallable::PlainCssCallable(
-    const SourceSpan& pstate,
-    const sass::string& fname) :
-    Callable(pstate),
-    fname_(fname)
-  {}
-
-  // Equality comparator (needed for `get-function` value)
-  bool PlainCssCallable::operator==(const Callable& rhs) const
-  {
-    if (const PlainCssCallable* builtin = rhs.isaPlainCssCallable()) {
-      return fname_ == builtin->fname_;
-    }
-    return false;
-  }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   UserDefinedCallable::UserDefinedCallable(
     const SourceSpan& pstate,
     const EnvKey& envkey,
@@ -350,29 +331,24 @@ namespace Sass {
   // Implement the execute dispatch to evaluator
   /////////////////////////////////////////////////////////////////////////
 
-  Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* PlainCssCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* UserDefinedCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* UserDefinedCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
-  }
-
-  Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
-  {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
   /////////////////////////////////////////////////////////////////////////

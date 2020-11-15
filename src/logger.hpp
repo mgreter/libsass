@@ -36,6 +36,8 @@ namespace Sass {
 
     // Append the pstate if not already there
     // Only call this right before throwing errors
+    // DONT USE, CAN LEAD TO SEGFAULTS IF THE ERROR
+    // WE THROW RIGHT AFTER IS CAUGHT AND BACKTRACKED
     void addFinalStackTrace(const SourceSpan& pstate)
     {
       if (callStack.empty()) {

@@ -33,13 +33,20 @@ namespace Sass {
   }
   // EO Context ctor
 
+  Context::~Context()
+  {
+    for (auto& mod : modules) {
+      delete mod.second;
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  WithConfigVar* Context::getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull)
+  WithConfigVar* Context::getCfgVar(const EnvKey& name)
   {
-    if (withConfigStack.empty()) return nullptr;
-    return withConfigStack.back()->getCfgVar(name, skipGuarded, skipNull);
+    if (wconfig == nullptr) return nullptr;
+    return wconfig->getCfgVar(name);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -129,13 +136,19 @@ namespace Sass {
 
   // Look for all possible filename variants (e.g. partials)
   // Returns all results (e.g. for ambiguous valid imports)
-  sass::vector<ResolvedImport> Context::findIncludes(const ImportRequest& import, bool forImport)
+  const sass::vector<ResolvedImport>& Context::findIncludes(const ImportRequest& import, bool forImport)
   {
+    // Try to find cached result first
+    auto it = resolveCache.find(import);
+    if (it != resolveCache.end()) return it->second;
+
     // make sure we resolve against an absolute path
     sass::string base_path(rel2abs(import.base_path, ".", CWD));
     // first try to resolve the load path relative to the base path
-    sass::vector<ResolvedImport> vec(resolve_includes(
-      base_path, import.imp_path, CWD, forImport, fileExistsCache));
+    sass::vector<ResolvedImport>& vec(resolveCache[import]);
+
+    vec = resolve_includes(base_path, import.imp_path, CWD, forImport, fileExistsCache);
+
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
     {
@@ -163,36 +176,6 @@ namespace Sass {
       "File to read not found or unreadable.");
   }
   // EO loadImport
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  void Module::addFunction(const EnvKey& name, uint32_t offset)
-  {
-    idxs->fnIdxs[name] = offset;
-  }
-
-  void Module::addVariable(const EnvKey& name, uint32_t offset)
-  {
-    idxs->varIdxs[name] = offset;
-  }
-
-  void Module::addMixin(const EnvKey& name, uint32_t offset)
-  {
-    idxs->mixIdxs[name] = offset;
-  }
-
-  Module::Module(EnvRoot& root) :
-    idxs(new VarRefs(
-      root,
-      nullptr,
-      0xFFFFFFFF,
-      0xFFFFFFFF,
-      0xFFFFFFFF,
-      false,
-      false,
-      true))
-  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

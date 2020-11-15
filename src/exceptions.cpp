@@ -342,7 +342,15 @@ namespace Sass {
     msg += "More info: https://sass-lang.com/documentation/functions/color#" + name;
 	}
 
-	ModuleAlreadyKnown::ModuleAlreadyKnown(
+  ModuleUnknown::ModuleUnknown(
+    BackTraces traces,
+    sass::string name) :
+    RuntimeException(traces,
+      "There is no module with the"
+      " namespace \"" + name + "\".")
+  {}
+
+  ModuleAlreadyKnown::ModuleAlreadyKnown(
     BackTraces traces,
     sass::string name) :
     RuntimeException(traces,

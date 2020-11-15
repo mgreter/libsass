@@ -51,11 +51,14 @@ namespace Sass {
 
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
     root->idxs = context.varRoot.stack.back();
+    context.varRoot.stack.back()->module = root;
 
-    LOCAL_PTR(Root, currentRoot, root);
+    LOCAL_PTR(Root, chroot77, root);
 
     // The parsed children
     StatementVector& children(root->elements());
+
+    // std::cerr << "Parsing " << scanner.sourceUrl << "\n";
 
     // Check seems a bit esoteric but works
     if (context.included_sources.size() == 1) {
@@ -116,7 +119,6 @@ namespace Sass {
       return readMixinRule(start);
 
     default:
-      isUseAllowed = false;
       if (inStyleRule || inUnknownAtRule || inMixin || inContentBlock) {
         return readDeclarationOrStyleRule();
       }
@@ -129,7 +131,70 @@ namespace Sass {
   }
   // EO readStatement
 
-  // Tries to parse a namespaced [VariableDeclaration], and returns the value
+  ImportRule* StylesheetParser::readImportRule(Offset start)
+  {
+    ImportRuleObj rule = SASS_MEMORY_NEW(
+      ImportRule, scanner.relevantSpanFrom(start));
+
+    do {
+      scanWhitespace();
+      scanImportArgument(rule);
+      scanWhitespace();
+    } while (scanner.scanChar($comma));
+    // Check for expected finalization token
+    expectStatementSeparator("@import rule");
+    return rule.detach();
+  }
+
+
+  void StylesheetParser::scanImportArgument(ImportRule* rule)
+  {
+    const char* startpos = scanner.position;
+    Offset start(scanner.offset);
+    uint8_t next = scanner.peekChar();
+    if (next == $u || next == $U) {
+      Expression* url = readFunctionOrStringExpression();
+      scanWhitespace();
+      auto queries = tryImportQueries();
+      rule->append(SASS_MEMORY_NEW(StaticImport,
+        scanner.relevantSpanFrom(start),
+        SASS_MEMORY_NEW(Interpolation,
+          url->pstate(), url),
+        queries.first, queries.second));
+      return;
+    }
+
+    sass::string url = string();
+    const char* rawUrlPos = scanner.position;
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    scanWhitespace();
+    auto queries = tryImportQueries();
+    if (isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
+      // Create static import that is never
+      // resolved by libsass (output as is)
+      rule->append(SASS_MEMORY_NEW(StaticImport,
+        scanner.relevantSpanFrom(start),
+        SASS_MEMORY_NEW(Interpolation, pstate,
+          SASS_MEMORY_NEW(String, pstate,
+            sass::string(startpos, rawUrlPos))),
+        queries.first, queries.second));
+    }
+    // Otherwise return a dynamic import
+    // Will resolve during the eval stage
+    else {
+      // Check for valid dynamic import
+      if (inControlDirective || inMixin) {
+        throwDisallowedAtRule(rule->pstate().position);
+      }
+
+      rule->append(SASS_MEMORY_NEW(IncludeImport,
+        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
+    }
+
+  }
+
+
+  // Tries to parse a name-spaced [VariableDeclaration], and returns the value
   // parsed so far if it fails.
   //
   // This can return either an [Interpolation], indicating that it couldn't
@@ -200,203 +265,11 @@ namespace Sass {
       scanner.relevantSpanFrom(start));
   }
 
-  AssignRule* StylesheetParser::readVariableDeclarationWithoutNamespace(
-    const sass::string& ns, Offset start)
-  {
-
-    // LocalOption<SilentCommentObj>
-    //   scomp(lastSilentComment, nullptr);
-
-    sass::string vname(variableName());
-
-    if (!ns.empty()) {
-      assertPublicIdentifier(vname, start);
-    }
-
-    EnvKey name(vname);
-
-    if (plainCss()) {
-      error("Sass variables aren't allowed in plain CSS.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    scanner.expectChar($colon);
-    scanWhitespace();
-
-    ExpressionObj value = readExpression();
-
-    bool guarded = false;
-    bool global = false;
-
-    Offset flagStart(scanner.offset);
-    while (scanner.scanChar($exclamation)) {
-      sass::string flag = readIdentifier();
-      if (flag == "default") {
-        guarded = true;
-      }
-      else if (flag == "global") {
-        if (!ns.empty()) {
-          error("!global isn't allowed for variables in other modules.",
-            scanner.relevantSpanFrom(flagStart));
-        }
-        global = true;
-      }
-      else {
-        error("Invalid flag name.",
-          scanner.relevantSpanFrom(flagStart));
-      }
-
-      scanWhitespace();
-      flagStart = scanner.offset;
-    }
-
-    expectStatementSeparator("variable declaration");
-
-    bool has_local = false;
-    // Skip to optional global scope
-    VarRefs* frame = global ?
-      context.varRoot.stack.front() :
-      context.varRoot.stack.back();
-    // As long as we are not in a loop construct, we
-    // can utilize full static variable optimizations.
-    VarRef vidx(inLoopDirective ?
-      frame->getLocalVariableIdx(name) :
-      frame->getVariableIdx(name));
-    // Check if we found a local variable to use
-    if (vidx.isValid()) has_local = true;
-    // Otherwise we must create a new local variable
-
-    // JIT self assignments
-    #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-    // Optimization for cases where functions manipulate same variable
-    // We detect these cases here in order for the function to optimize
-    // self-assignment case (e.g. map-merge). It can then manipulate
-    // the value passed as the first argument directly in-place.
-    if (has_local && !global) {
-      // Certainly looks a bit like some poor man's JIT 
-      if (auto fn = value->isaFunctionExpression()) {
-        auto& pos(fn->arguments()->positional());
-        if (pos.size() > 0) {
-          if (auto var = pos[0]->isaVariableExpression()) {
-            if (var->name() == name) { // same name
-              fn->selfAssign(true); // Up to 15% faster
-            }
-          }
-        }
-      }
-    }
-    #endif
-
-    sass::vector<VarRef> vidxs;
-
-    if (vidx.isValid()) vidxs.push_back(vidx);
-    VarRefs* module(context.varRoot.stack.back()->getModule23());
-    SourceSpan pstate(scanner.relevantSpanFrom(start));
-
-    if (!ns.empty()) {
-      // auto pstate(scanner.relevantSpanFrom(start));
-      // context.addFinalStackTrace(pstate);
-      // throw Exception::ParserException(context,
-      //   "Variable namespaces not supported yet!");
-
-      auto it = module->fwdModule55.find(ns);
-      if (it != module->fwdModule55.end()) {
-        VarRefs* refs = it->second.first;
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-
-          if (isPrivate(name.orig())) {
-            SourceSpan state(scanner.relevantSpanFrom(start));
-            context.addFinalStackTrace(state);
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-
-          uint32_t offset = in->second;
-          vidxs.push_back({ refs->varFrame, offset });
-        }
-      }
-      else {
-        SourceSpan state(scanner.relevantSpanFrom(start));
-        context.addFinalStackTrace(state);
-        throw Exception::RuntimeException(context, "There is no "
-          "module with the namespace \"" + ns + "\".");
-      }
-
-      if (vidxs.empty()) {
-        VarRef vidx(module->getVariableIdx(name, true));
-        if (!vidxs.empty()) vidxs.push_back(vidx);
-      }
-
-      if (vidxs.empty()) {
-        context.addFinalStackTrace(pstate);
-        throw Exception::RuntimeException(context,
-          "Undefined variable.");
-      }
-
-    }
-    else {
-
-      // This only checks within the local frame
-      // Don't assign global if in another scope!
-      for (auto fwd : frame->fwdGlobal55) {
-        VarRefs* refs = fwd.first;
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-          if (isPrivate(name.orig())) {
-            context.addFinalStackTrace(pstate);
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          uint32_t offset = in->second;
-          vidxs.push_back({ refs->varFrame, offset });
-        }
-      }
-
-    }
-
-    auto pr = frame;
-    while (pr->isImport) pr = pr->pscope;
-
-    if (pr->varFrame == 0xFFFFFFFF) {
-
-      // Assign a default
-      if (guarded && ns.empty()) {
-        auto cfgvar = context.getCfgVar(name, true, false);
-        if (!cfgvar || cfgvar->isNull) cfgvar = context.getCfgVar(name, false, false);
-
-        if (cfgvar) {
-          if (cfgvar->value) {
-            value = SASS_MEMORY_NEW(ValueExpression,
-              cfgvar->value->pstate(), cfgvar->value);
-          }
-          else {
-            value = cfgvar->expression;
-          }
-        }
-      }
-
-    }
-
-    // Check if we have a configuration
-
-    if (vidxs.empty()) {
-      // Not if we have one forwarded!
-      vidxs.push_back(pr->createVariable(name));
-    }
-
-    AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start), name, ns, vidxs, value, guarded, global);
-    if (inLoopDirective) frame->assignments.push_back(declaration);
-    return declaration;
-  }
 
   // Consumes a style rule.
   StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
   {
+    isUseAllowed = false;
     LOCAL_FLAG(inStyleRule, true);
 
     // The indented syntax allows a single backslash to distinguish a style rule
@@ -973,7 +846,11 @@ namespace Sass {
       StringScannerState state(scanner.state());
       try { return readVariableDeclarationWithNamespace(); }
       // dart-sass does some error cosmetic here
-      catch (...) { scanner.backtrack(state); }
+      catch (...) {
+
+        scanner.backtrack(state);
+
+      }
 
       // If a variable declaration failed to parse, it's possible the user
       // thought they could write a style rule or property declaration in a
@@ -1195,50 +1072,6 @@ namespace Sass {
   }
   // EO readExtendRule
 
-  // Consumes a function declaration.
-  // [start] should point before the `@`.
-  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
-  {
-    // Variables should not be hoisted through
-    VarRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
-
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    sass::string name = readIdentifier();
-    sass::string normalized(name);
-
-    scanWhitespace();
-
-    ArgumentDeclarationObj arguments = parseArgumentDeclaration();
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain function declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Functions may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    sass::string fname(Util::unvendor(name));
-    if (fname == "calc" || fname == "element" || fname == "expression" ||
-      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
-      error("Invalid function name.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    FunctionRule* rule = withChildren<FunctionRule>(
-      &StylesheetParser::readFunctionRuleChild,
-      start, name, arguments, local.idxs);
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    rule->fidx(pr->createFunction(name));
-    return rule;
-  }
-  // EO readFunctionRule
-
   ForRule* StylesheetParser::readForRule(Offset start, Statement* (StylesheetParser::* child)())
   {
     LOCAL_FLAG(inControlDirective, true);
@@ -1328,555 +1161,6 @@ namespace Sass {
 
   }
 
-  void exposeFiltered(
-    EnvKeyFlatMap<uint32_t>& merged,
-    EnvKeyFlatMap<uint32_t> expose,
-    const sass::string prefix,
-    const std::set<EnvKey>& filters,
-    const sass::string& errprefix,
-    Logger& logger,
-    bool show)
-  {
-    for (auto idx : expose) {
-      if (idx.first.isPrivate()) continue;
-      EnvKey key(prefix + idx.first.orig());
-      if (show == (filters.count(key) == 1)) {
-        auto it = merged.find(key);
-        if (it == merged.end()) {
-          merged.insert({ key, idx.second });
-        }
-        else if (idx.second != it->second) {
-          throw Exception::RuntimeException(logger,
-            "Two forwarded modules both define a "
-            + errprefix + key.norm() + ".");
-        }
-      }
-    }
-  }
-
-  void exposeFiltered(
-    EnvKeyFlatMap<uint32_t>& merged,
-    EnvKeyFlatMap<uint32_t> expose,
-    const sass::string prefix,
-    const sass::string& errprefix,
-    Logger& logger)
-  {
-    for (auto idx : expose) {
-      if (idx.first.isPrivate()) continue;
-      EnvKey key(prefix + idx.first.orig());
-      auto it = merged.find(key);
-      if (it == merged.end()) {
-        merged.insert({ key, idx.second });
-      }
-      else if (idx.second != it->second) {
-        throw Exception::RuntimeException(logger,
-          "Two forwarded modules both define a "
-          + errprefix + key.norm() + ".");
-      }
-    }
-  }
-
-  void mergeForwards(
-    VarRefs* idxs,
-    Root* currentRoot,
-    bool isShown,
-    bool isHidden,
-    const sass::string prefix,
-    const std::set<EnvKey>& toggledVariables,
-    const std::set<EnvKey>& toggledCallables,
-    Logger& logger)
-  {
-
-    if (isShown) {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
-    }
-    else if (isHidden) {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
-    }
-    else {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
-    }
-
-  }
-
-  ImportRule* StylesheetParser::readImportRule(Offset start)
-  {
-    ImportRuleObj rule = SASS_MEMORY_NEW(
-      ImportRule, scanner.relevantSpanFrom(start));
-
-    do {
-      scanWhitespace();
-      scanImportArgument(rule);
-      scanWhitespace();
-    } while (scanner.scanChar($comma));
-    // Check for expected finalization token
-    expectStatementSeparator("@import rule");
-    return rule.detach();
-
-  }
-
-
-
-  bool StylesheetParser::resolveUseRule(UseRule* rule)
-  {
-
-    sass::string ns(rule->ns());
-    sass::string url(rule->url());
-    sass::string prev(rule->prev());
-    bool hasWith(rule->hasWithConfig());
-
-    VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
-    const ImportRequest import(url, scanner.sourceUrl);
-    SourceSpan pstate = rule->pstate();
-    //callStackFrame frame(context, { pstate, Strings::useRule });
-
-    bool hasCached = false;
-
-    // Deduct the namespace from url
-    // After last slash before first dot
-    if (ns.empty() && !url.empty()) {
-      auto start = url.find_last_of("/\\");
-      start = (start == NPOS ? 0 : start + 1);
-      auto end = url.find_first_of(".", start);
-      if (url[start] == '_') start += 1;
-      ns = url.substr(start, end);
-    }
-
-    if (!ns.empty()) {
-      if (modFrame->fwdModule55.count(ns)) {
-        throw Exception::ModuleAlreadyKnown(context, ns);
-      }
-    }
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(
-      context.findIncludes(import, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      context.addFinalStackTrace(pstate);
-      throw Exception::UnknwonImport(context);
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      context.addFinalStackTrace(pstate);
-      throw Exception::AmbiguousImports(context, resolved);
-    }
-
-    // This is guaranteed to either load or error out!
-    ImportObj loaded = context.loadImport(resolved[0]);
-
-    StyleSheet* sheet = nullptr;
-    sass::string abspath(loaded->getAbsPath());
-    auto cached = context.sheets.find(abspath);
-    if (cached != context.sheets.end()) {
-
-      hasCached = true;
-
-      // Check if with is given, error
-      sheet = cached->second;
-
-      if (hasWith) {
-        throw Exception::ParserException(context,
-          "This module was already loaded, so it "
-          "can't be configured using \"with\".");
-      }
-
-    }
-    else {
-      EnvFrame local(context, true, true);
-      sheet = context.registerImport(loaded);
-      // sheet->root2->idxs = local.idxs;
-      sheet->root2->import = loaded;
-
-      Root* root = sheet->root2;
-      VarRefs* idxs = root->idxs;
-
-      // Expose what has been forwarded to us
-      for (auto var : root->mergedFwdVar) {
-        idxs->varIdxs.insert(var);
-      }
-      for (auto mix : root->mergedFwdMix) {
-        idxs->mixIdxs.insert(mix);
-      }
-      for (auto fn : root->mergedFwdFn) {
-        idxs->fnIdxs.insert(fn);
-      }
-
-      // sheet->root2->con context->node
-    }
-
-    Root* root = sheet->root2;
-    VarRefs* refs = root->idxs;
-    rule->root(root);
-    Moduled* module = root;
-
-    // This leaks, give it someone
-    VarRefs* exposing = refs;
-
-    if (ns == "*") {
-
-      for (auto var : exposing->varIdxs) {
-        auto it = modFrame->varIdxs.find(var.first);
-        if (it != modFrame->varIdxs.end()) {
-          if (var.second == it->second) continue;
-          throw Exception::ParserException(context,
-            "This module and the new module both define a "
-            "variable named \"$" + var.first.norm() + "\".");
-        }
-      }
-      for (auto mix : exposing->mixIdxs) {
-        auto it = modFrame->mixIdxs.find(mix.first);
-        if (it != modFrame->mixIdxs.end()) {
-          if (mix.second == it->second) continue;
-          throw Exception::ParserException(context,
-            "This module and the new module both define a "
-            "mixin named \"" + mix.first.norm() + "\".");
-        }
-      }
-      for (auto fn : exposing->fnIdxs) {
-        auto it = modFrame->fnIdxs.find(fn.first);
-        if (it != modFrame->fnIdxs.end()) {
-          if (fn.second == it->second) continue;
-          throw Exception::ParserException(context,
-            "This module and the new module both define a "
-            "function named \"" + fn.first.norm() + "\".");
-        }
-      }
-
-      // Check if we push the same stuff twice
-      for (auto fwd : modFrame->fwdGlobal55) {
-        if (exposing == fwd.first) continue;
-        for (auto var : exposing->varIdxs) {
-          auto it = fwd.first->varIdxs.find(var.first);
-          if (it != fwd.first->varIdxs.end()) {
-            if (var.second == it->second) continue;
-            throw Exception::ParserException(context,
-              "$" + var.first.norm() + " is available "
-              "from multiple global modules.");
-          }
-        }
-        for (auto var : exposing->mixIdxs) {
-          auto it = fwd.first->mixIdxs.find(var.first);
-          if (it != fwd.first->mixIdxs.end()) {
-            if (var.second == it->second) continue;
-            throw Exception::ParserException(context,
-              "Mixin \"" + var.first.norm() + "(...)\" is "
-              "available from multiple global modules.");
-          }
-        }
-        for (auto var : exposing->fnIdxs) {
-          auto it = fwd.first->fnIdxs.find(var.first);
-          if (it != fwd.first->fnIdxs.end()) {
-            if (var.second == it->second) continue;
-            throw Exception::ParserException(context,
-              "Function \"" + var.first.norm() + "(...)\" is "
-              "available from multiple global modules.");
-          }
-        }
-      }
-
-      modFrame->fwdGlobal55.push_back(
-        { exposing, sheet->root2 });
-
-    }
-    else {
-
-      // Combine forwarded with local scope
-      modFrame->fwdModule55[ns] =
-      { exposing, sheet->root2 };
-    }
-
-
-
-    return hasCached;
-
-
-  }
-
-  // Consumes a `@use` rule.
-  // [start] should point before the `@`.
-  UseRule* StylesheetParser::readUseRule(Offset start)
-  {
-    scanWhitespace();
-    sass::string url(string());
-    scanWhitespace();
-    sass::string ns(readUseNamespace(url, start));
-    scanWhitespace();
-
-    SourceSpan state(scanner.relevantSpanFrom(start));
-
-    // Check if name is valid identifier
-    if (url.empty() || isDigit(url[0])) {
-      context.addFinalStackTrace(state);
-      throw Exception::InvalidSassIdentifier(context, url);
-    }
-
-    sass::vector<WithConfigVar> config;
-    bool hasWith(readWithConfiguration(config, false));
-    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
-    expectStatementSeparator("@use rule");
-    WithConfig wconfig(context, config, hasWith);
-   
-    if (isUseAllowed == false) {
-      context.addFinalStackTrace(state);
-      throw Exception::TardyAtRule(
-        context, Strings::useRule);
-    }
-
-    UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
-      scanner.relevantSpanFrom(start), url, {});
-    rule->hasWithConfig(hasWith);
-
-    VarRefs* current(context.varRoot.stack.back());
-    VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
-
-    // Support internal modules first
-    if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      if (hasWith) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Built-in modules can't be configured.");
-      }
-
-      sass::string name(url.substr(5));
-      if (ns.empty()) ns = name;
-
-      Module* module(context.getModule(name));
-
-      if (module == nullptr) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Invalid internal module requested.");
-      }
-
-      if (ns == "*") {
-
-        for (auto var : module->idxs->varIdxs) {
-          current->varIdxs.insert(var);
-        }
-        for (auto mix : module->idxs->mixIdxs) {
-          current->mixIdxs.insert(mix);
-        }
-        for (auto fn : module->idxs->fnIdxs) {
-          current->fnIdxs.insert(fn);
-        }
-
-        current->fwdGlobal55.push_back(
-          { module->idxs, nullptr });
-
-      }
-      else if (modFrame->fwdModule55.count(ns)) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::ModuleAlreadyKnown(context, ns);
-      }
-      else {
-        current->fwdModule55.insert({ ns,
-          { module->idxs, nullptr } });
-      }
-
-      wconfig.finalize();
-      return rule.detach();
-
-    }
-
-    bool hasCached = false;
-    rule->ns(ns);
-    rule->url(url);
-    rule->prev(scanner.sourceUrl);
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    callStackFrame frame(context, { pstate, Strings::useRule });
-
-    hasCached = resolveUseRule(rule);
-    if (hasCached) return nullptr;
-    wconfig.finalize();
-    return rule.detach();
-  }
-
-  // Consumes a `@forward` rule.
-  // [start] should point before the `@`.
-  ForwardRule* StylesheetParser::readForwardRule(Offset start)
-  {
-    scanWhitespace();
-    sass::string url = string();
-
-    scanWhitespace();
-    sass::string prefix;
-    if (scanIdentifier("as")) {
-      scanWhitespace();
-      prefix = readIdentifier();
-      scanner.expectChar($asterisk);
-      scanWhitespace();
-    }
-
-    bool isShown = false;
-    bool isHidden = false;
-    std::set<EnvKey> toggledVariables2;
-    std::set<EnvKey> toggledCallables2;
-    Offset beforeShow(scanner.offset);
-    if (scanIdentifier("show")) {
-      readForwardMembers(toggledVariables2, toggledCallables2);
-      isShown = true;
-    }
-    else if (scanIdentifier("hide")) {
-      readForwardMembers(toggledVariables2, toggledCallables2);
-      isHidden = true;
-    }
-
-    sass::vector<WithConfigVar> config;
-    bool hasWith(readWithConfiguration(config, true));
-    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
-    expectStatementSeparator("@forward rule");
-
-    // The show or hide config also hides these
-    WithConfig wconfig(context, config, hasWith,
-      isShown, isHidden, toggledVariables2, prefix);
-
-    if (isUseAllowed == false) {
-      SourceSpan state(scanner.relevantSpanFrom(start));
-      context.addFinalStackTrace(state);
-      throw Exception::ParserException(context,
-        "@forward rules must be written before any other rules.");
-    }
-
-    ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
-      scanner.relevantSpanFrom(start),
-      url, {},
-      std::move(toggledVariables2),
-      std::move(toggledCallables2),
-      isShown);
-
-    rule->hasWithConfig(hasWith);
-
-    std::set<EnvKey>& toggledVariables(rule->toggledVariables());
-    std::set<EnvKey>& toggledCallables(rule->toggledCallables());
-
-    // Support internal modules first
-    if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      if (hasWith) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Built-in modules can't be configured.");
-      }
-
-      sass::string name(url.substr(5));
-      // if (prefix.empty()) prefix = name; // Must not happen!
-      if (Module* module = context.getModule(name)) {
-
-        mergeForwards(module->idxs, currentRoot, isShown, isHidden,
-          prefix, toggledVariables, toggledCallables, context);
-        rule->root(nullptr);
-
-      }
-      else {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Invalid internal module requested.");
-      }
-
-      wconfig.finalize();
-      return rule.detach();
-    }
-
-
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    const ImportRequest import(url, scanner.sourceUrl);
-    callStackFrame frame(context, { pstate, Strings::forwardRule });
-
-    bool hasCached = false;
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Can't find stylesheet to import.");
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      {
-        msg_stream << "  " << resolved[i].imp_path << "\n";
-      }
-      throw Exception::ParserException(context, msg_stream.str());
-    }
-
-    // We made sure exactly one entry was found, load its content
-    if (ImportObj loaded = context.loadImport(resolved[0])) {
-
-      // ToDo: We don't take format into account
-      StyleSheet* sheet = nullptr;
-      // EnvFrame* frame(context.varRoot.stack.back()->getModule());
-      auto cached = context.sheets.find(loaded->getAbsPath());
-      if (cached != context.sheets.end()) {
-
-        hasCached = true;
-
-        // Check if with is given, error
-        sheet = cached->second;
-
-        if (hasWithConfig) {
-          throw Exception::ParserException(context,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-
-      }
-      else {
-        // ToDo: must not create new real scope!
-        EnvFrame local(context, true, true);
-        sheet = context.registerImport(loaded);
-        // sheet->root2->idxs = local.idxs;
-        sheet->root2->import = loaded;
-      }
-
-      Root* module = sheet->root2;
-      rule->root(module);
-
-      mergeForwards(module->idxs, currentRoot, isShown, isHidden,
-        prefix, toggledVariables, toggledCallables, context);
-
-
-    }
-    else {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Couldn't read stylesheet for import.");
-    }
-
-
-
-
-
-
-
-
-
-
-
-    if (hasCached) return nullptr;
-
-
-
-
-    wconfig.finalize();
-    return rule.detach();
-  }
-
   /// Parses the namespace of a `@use` rule from an `as` clause, or returns the
   /// default namespace from its URL.
   sass::string StylesheetParser::readUseNamespace(const sass::string& url, Offset start)
@@ -1912,7 +1196,7 @@ namespace Sass {
       scanWhitespace();
       scanner.expectChar($colon);
       scanWhitespace();
-      Expression* expression = readExpressionUntilComma();
+      ExpressionObj expression = readExpressionUntilComma();
 
       bool guarded = false;
       Offset flagStart(scanner.offset);
@@ -1972,129 +1256,6 @@ namespace Sass {
     }
   }
 
-  void StylesheetParser::scanImportArgument(ImportRule* rule)
-  {
-    const char* startpos = scanner.position;
-    Offset start(scanner.offset);
-    uint8_t next = scanner.peekChar();
-    if (next == $u || next == $U) {
-      Expression* url = readFunctionOrStringExpression();
-      scanWhitespace();
-      auto queries = tryImportQueries();
-      rule->append(SASS_MEMORY_NEW(StaticImport,
-        scanner.relevantSpanFrom(start),
-        SASS_MEMORY_NEW(Interpolation,
-           url->pstate(), url),
-        queries.first, queries.second));
-      return;
-    }
-
-    sass::string url = string();
-    const char* rawUrlPos = scanner.position;
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    scanWhitespace();
-    auto queries = tryImportQueries();
-    if (isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
-      // Create static import that is never
-      // resolved by libsass (output as is)
-      rule->append(SASS_MEMORY_NEW(StaticImport,
-        scanner.relevantSpanFrom(start),
-        SASS_MEMORY_NEW(Interpolation, pstate,
-          SASS_MEMORY_NEW(String, pstate,
-            sass::string(startpos, rawUrlPos))),
-         queries.first, queries.second));
-    }
-    // Otherwise return a dynamic import
-    // Will resolve during the eval stage
-    else {
-      // Check for valid dynamic import
-      if (inControlDirective || inMixin) {
-        throwDisallowedAtRule(rule->pstate().position);
-      }
-
-//      rule->append(SASS_MEMORY_NEW(IncludeImport,
-//        scanner.relevantSpanFrom(start), url, nullptr));
-
-      // Call custom importers and check if any of them handled the import
-      if (!context.callCustomImporters(url, pstate, rule)) {
-//        // Try to load url into context.sheets
-        resolveDynamicImport(rule, start, url);
-      }
-
-    }
-  
-  }
-
-  // Resolve import of [path] and add imports to [rule]
-  void StylesheetParser::resolveDynamicImport(
-    ImportRule* rule, Offset start, const sass::string& path)
-  {
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    const ImportRequest import(path, scanner.sourceUrl);
-    callStackFrame frame(context, { pstate, Strings::importRule });
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, true));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Can't find stylesheet to import.");
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      { msg_stream << "  " << resolved[i].imp_path << "\n"; }
-      throw Exception::ParserException(context, msg_stream.str());
-    }
-
-    // We made sure exactly one entry was found, load its content
-    if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame local(context, true, false, true);
-      StyleSheet* sheet = context.registerImport(loaded);
-      sheet->root2->import = loaded;
-      const sass::string& url(resolved[0].abs_path);
-      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
-    }
-    else {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Couldn't read stylesheet for import.");
-    }
-
-  }
-  // EO resolveDynamicImport
-
-
-  /*
-  sass::string StylesheetParser::parseImportUrl(sass::string url)
-  {
-
-    // Backwards-compatibility for implementations that
-    // allow absolute Windows paths in imports.
-    if (File::is_absolute_path(url)) {
-    //   return p.windows.toUri(url).toString();
-    }
-    
-
-    using LUrlParser::clParseURL;
-    clParseURL clURL = clParseURL::ParseURL(url);
-
-    if (clURL.IsValid()) {
-
-    }
-
-
-    // Throw a [FormatException] if [url] is invalid.
-    // Uri.parse(url);
-    return url;
-  }
-  */
-
   // Returns whether [url] indicates that an `@import` is a plain CSS import.
   bool StylesheetParser::isPlainImportUrl(const sass::string& url) const
   {
@@ -2148,6 +1309,164 @@ namespace Sass {
   }
   // EO tryImportQueries
 
+
+  // Consumes a `@use` rule.
+  // [start] should point before the `@`.
+  UseRule* StylesheetParser::readUseRule(Offset start)
+  {
+    scanWhitespace();
+    sass::string url(string());
+    scanWhitespace();
+    sass::string ns(readUseNamespace(url, start));
+    scanWhitespace();
+
+    SourceSpan state(scanner.relevantSpanFrom(start));
+
+    // Check if name is valid identifier
+    if (url.empty() || isDigit(url[0])) {
+      context.addFinalStackTrace(state);
+      throw Exception::InvalidSassIdentifier(context, url);
+    }
+
+    sass::vector<WithConfigVar> config;
+    bool hasWith(readWithConfiguration(config, false));
+    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
+    expectStatementSeparator("@use rule");
+
+    if (isUseAllowed == false) {
+      context.addFinalStackTrace(state);
+      throw Exception::TardyAtRule(
+        context, Strings::useRule);
+    }
+
+    UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
+      scanner.relevantSpanFrom(start),
+      scanner.sourceUrl, url, {},
+      wconfig, std::move(config), hasWith);
+
+    LOCAL_PTR(WithConfig, wconfig, rule);
+
+    // VarRefs* current(context.getCurrentFrame());
+    // VarRefs* modFrame(context.getCurrentModule());
+
+    // Support internal modules first
+    if (startsWithIgnoreCase(url, "sass:", 5)) {
+
+      if (hasWith) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Built-in modules can't be configured.");
+      }
+
+      sass::string name(url.substr(5));
+      if (ns.empty()) ns = name;
+      rule->ns(ns == "*" ? "" : ns);
+
+      BuiltInMod* module(context.getModule(name));
+
+      if (module == nullptr) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Invalid internal module requested.");
+      }
+
+      rule->module(module);
+
+      return rule.detach();
+    }
+    // BuiltIn
+
+    // Deduct the namespace from url
+    // After last slash before first dot
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      start = (start == NPOS ? 0 : start + 1);
+      auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
+      ns = url.substr(start, end);
+    }
+
+    rule->ns(ns == "*" ? "" : ns);
+    return rule.detach();
+  }
+
+  // Consumes a `@forward` rule.
+  // [start] should point before the `@`.
+  ForwardRule* StylesheetParser::readForwardRule(Offset start)
+  {
+    scanWhitespace();
+    sass::string url = string();
+
+    scanWhitespace();
+    sass::string prefix;
+    if (scanIdentifier("as")) {
+      scanWhitespace();
+      prefix = readIdentifier();
+      scanner.expectChar($asterisk);
+      scanWhitespace();
+    }
+
+    bool isShown = false;
+    bool isHidden = false;
+    std::set<EnvKey> varFilters;
+    std::set<EnvKey> callFilters;
+    Offset beforeShow(scanner.offset);
+    if (scanIdentifier("show")) {
+      readForwardMembers(varFilters, callFilters);
+      isShown = true;
+    }
+    else if (scanIdentifier("hide")) {
+      readForwardMembers(varFilters, callFilters);
+      isHidden = true;
+    }
+
+    sass::vector<WithConfigVar> config;
+    bool hasWith(readWithConfiguration(config, true));
+    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
+    expectStatementSeparator("@forward rule");
+
+    if (isUseAllowed == false) {
+      SourceSpan state(scanner.relevantSpanFrom(start));
+      context.addFinalStackTrace(state);
+      throw Exception::ParserException(context,
+        "@forward rules must be written before any other rules.");
+    }
+
+    ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
+      scanner.relevantSpanFrom(start),
+      scanner.sourceUrl, url, {},
+      prefix, wconfig,
+      std::move(varFilters),
+      std::move(callFilters),
+      std::move(config),
+      isShown, isHidden, hasWith);
+
+    LOCAL_PTR(WithConfig, wconfig, rule);
+
+    if (startsWithIgnoreCase(url, "sass:", 5)) {
+
+      if (hasWith) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Built-in modules can't be configured.");
+      }
+
+      sass::string name(url.substr(5));
+      if (BuiltInMod* module = context.getModule(name)) {
+        rule->module(module);
+        rule->root(nullptr);
+      }
+      else {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Invalid internal module requested.");
+      }
+
+    }
+
+    return rule.detach();
+  }
+
   // Consumes an `@include` rule.
   // [start] should point before the `@`.
   IncludeRule* StylesheetParser::readIncludeRule(Offset start)
@@ -2185,70 +1504,8 @@ namespace Sass {
 
     sass::vector<VarRef> midxs;
 
-    if (!ns.empty()) {
-      auto pstate(scanner.relevantSpanFrom(start));
-      VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      auto it = frame->fwdModule55.find(ns);
-      if (it != frame->fwdModule55.end()) {
-        VarRefs* refs = it->second.first;
-        auto in = refs->mixIdxs.find(name);
-        if (in != refs->mixIdxs.end()) {
-          if (isPrivate(name)) {
-            context.addFinalStackTrace(pstate);
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          uint32_t offset = in->second;
-          midxs.push_back({ refs->mixFrame, offset });
-        }
-      }
-      else {
-        context.addFinalStackTrace(scanner.relevantSpanFrom(start));
-        throw Exception::RuntimeException(context, "There "
-          "is no module with the namespace \"" + ns + "\".");
-      }
-
-      if (midxs.empty()) {
-        VarRef midx(frame->getMixinIdx(name, true));
-        if (!midxs.empty()) midxs.push_back(midx);
-      }
-      // context.addFinalStackTrace(pstate);
-      // throw Exception::ParserException(context,
-      //   "Mixin namespaces not supported yet!");
-    }
-    else {
-
-      // Then search in global modules
-      auto pstate = scanner.relevantSpanFrom(start);
-      VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      for (auto fwd : frame->fwdGlobal55) {
-        VarRefs* refs = fwd.first;
-        auto in = refs->mixIdxs.find(name);
-        if (in != refs->mixIdxs.end()) {
-          if (isPrivate(name)) {
-            context.addFinalStackTrace(pstate);
-            throw Exception::ParserException(context,
-              "Private mixins can't be accessed "
-              "from outside their modules.");
-          }
-          uint32_t offset = in->second;
-          midxs.push_back({ refs->mixFrame, offset });
-        }
-      }
-    }
-
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
     scanner.relevantSpanFrom(start), name, ns, arguments);
-
-    if (!name.empty() && midxs.empty()) {
-      // Get the function through the whole stack
-      midxs.push_back(context.varRoot.stack.back()->getMixinIdx(name));
-    }
-
-    if (!midxs.empty()) {
-      rule->midx(midxs[0]);
-    }
 
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
@@ -2284,63 +1541,13 @@ namespace Sass {
   // [start] should point before the `@`.
   MediaRule* StylesheetParser::readMediaRule(Offset start)
   {
+    EnvFrame local(context, false);
     InterpolationObj query = readMediaQueryList();
     return withChildren<MediaRule>(
       &StylesheetParser::readChildStatement,
-      start, query);
+      start, query, local.idxs);
   }
 
-  // Consumes a mixin declaration.
-  // [start] should point before the `@`.
-  MixinRule* StylesheetParser::readMixinRule(Offset start)
-  {
-
-    VarRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
-    // Create space for optional content callable
-    // ToDo: check if this can be conditionally done?
-    auto cidx = local.idxs->createMixin(Keys::contentRule);
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    sass::string name = readIdentifier();
-    scanWhitespace();
-
-    ArgumentDeclarationObj arguments;
-    if (scanner.peekChar() == $lparen) {
-      arguments = parseArgumentDeclaration();
-    }
-    else {
-      // Dart-sass creates this one too
-      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
-        scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
-    }
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain mixin declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Mixins may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    LOCAL_FLAG(inMixin, true);
-    LOCAL_FLAG(mixinHasContent, false);
-
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    // Not if we have one forwarded!
-
-    VarRef fidx = pr->createMixin(name);
-    MixinRule* rule = withChildren<MixinRule>(
-      &StylesheetParser::readChildStatement,
-      start, name, arguments, local.idxs);
-    rule->midx(fidx); // to parent
-    rule->cidx(cidx);
-    return rule;
-  }
-  // EO _mixinRule
 
   // Consumes a `@moz-document` rule. Gecko's `@-moz-document` diverges
   // from [the specification][] allows the `url-prefix` and `domain`
@@ -2352,6 +1559,7 @@ namespace Sass {
     Offset valueStart(scanner.offset);
     InterpolationBuffer buffer(scanner);
     bool needsDeprecationWarning = false;
+    EnvFrame local(context, true);
 
     while (true) {
 
@@ -2418,7 +1626,7 @@ namespace Sass {
 
     AtRule* atRule = withChildren<AtRule>(
       &StylesheetParser::readChildStatement,
-      start, name, value, false);
+      start, name, value, local.idxs, false);
 
     if (needsDeprecationWarning) {
 
@@ -2497,6 +1705,7 @@ namespace Sass {
   AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name)
   {
     LOCAL_FLAG(inUnknownAtRule, true);
+    EnvFrame local(context, false);
 
     InterpolationObj value;
     uint8_t next = scanner.peekChar();
@@ -2507,12 +1716,12 @@ namespace Sass {
     if (lookingAtChildren()) {
       return withChildren<AtRule>(
         &StylesheetParser::readChildStatement,
-        start, name, value, false);
+        start, name, value, local.idxs, false);
     }
     expectStatementSeparator();
     return SASS_MEMORY_NEW(AtRule,
       scanner.relevantSpanFrom(start),
-      name, value, true);
+      name, value, local.idxs, true);
   }
   // EO readAnyAtRule
 
@@ -3538,7 +2747,7 @@ namespace Sass {
   StringExpression* StylesheetParser::readUnicodeRange()
   {
     StringScannerState state = scanner.state();
-    expectCharIgnoreCase($u);
+    expectIdentChar($u);
     scanner.expectChar($plus);
 
     size_t i = 0;
@@ -3610,44 +2819,9 @@ namespace Sass {
     VariableExpression* expression =
       SASS_MEMORY_NEW(VariableExpression,
         scanner.relevantSpanFrom(start),
-        name, ns);
-
-    if (inLoopDirective) {
-      // Static variable resolution will be done in finalize stage
-      // Must be postponed since in loops we may reference post vars
-      context.varRoot.stack.back()->variables.push_back(expression);
-    }
-    else {
-
-      sass::vector<VarRef> vidxs;
-
-      // Otherwise utilize full static optimizations
-      VarRefs* frame(context.varRoot.stack.back());
-      VarRef vidx(frame->getVariableIdx(name, true));
-      if (vidx.isValid()) vidxs.push_back(vidx);
-
-      VarRefs* module(context.varRoot.stack.back()->getModule23());
-
-      for (auto fwd : module->fwdGlobal55) {
-        VarRefs* refs = fwd.first;
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-          uint32_t offset = in->second;
-          if (isPrivate(name)) {
-            context.addFinalStackTrace(expression->pstate());
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          vidxs.push_back({ refs->varFrame, offset });
-        }
-      }
-
-      if (!vidxs.empty()) expression->vidxs(vidxs);
-      else context.varRoot.stack.back()->variables.push_back(expression);
-    }
-
+        name, inLoopDirective, ns);
     return expression;
+
   }
   // readVariableExpression
 
@@ -3812,65 +2986,13 @@ namespace Sass {
 
         VariableExpressionObj expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),
-          name, plain);
+          name, inLoopDirective, plain);
 
         if (isPrivate(name)) {
           context.addFinalStackTrace(expression->pstate());
           throw Exception::ParserException(context,
             "Private members can't be accessed "
             "from outside their modules.");
-        }
-
-        if (inLoopDirective) {
-          // Static variable resolution will be done in finalize stage
-          // Must be postponed since in loops we may reference post vars
-          context.varRoot.stack.back()->variables.push_back(expression);
-        }
-        else {
-
-
-          if (!plain.empty()) {
-            // auto pstate(scanner.relevantSpanFrom(start));
-            // context.addFinalStackTrace(pstate);
-            // throw Exception::ParserException(context,
-            //   "Variable namespaces not supported yet!");
-
-        // First search in forwarded modules
-            VarRefs* frame(context.varRoot.stack.back()->getModule23());
-            auto it = frame->fwdModule55.find(plain);
-            if (it != frame->fwdModule55.end()) {
-              VarRefs* refs = it->second.first;
-              auto in = refs->varIdxs.find(name);
-              if (in != refs->varIdxs.end()) {
-                if (isPrivate(name)) {
-                  context.addFinalStackTrace(expression->pstate());
-                  throw Exception::ParserException(context,
-                    "Private members can't be accessed "
-                    "from outside their modules.");
-                }
-                uint32_t offset = in->second;
-                vidxs.push_back({ refs->varFrame, offset });
-              }
-            }
-            else {
-              SourceSpan state(scanner.relevantSpanFrom(start));
-              context.addFinalStackTrace(state);
-              throw Exception::RuntimeException(context, "There is no "
-                "module with the namespace \"" + plain + "\".");
-            }
-
-            if (vidxs.empty()) {
-              VarRef vidx(frame->getVariableIdx(name, true));
-              if (!vidxs.empty()) vidxs.push_back(vidx);
-            }
-
-          }
-
-          // Otherwise utilize full static optimizations
-          // EnvFrame* frame(context.varRoot.stack.back());
-          // VarRef vidx(frame->getVariableIdx(name, true));
-          if (!vidxs.empty()) expression->vidxs(vidxs);
-          else context.varRoot.stack.back()->variables.push_back(expression);
         }
 
         return expression.detach();
@@ -3885,7 +3007,7 @@ namespace Sass {
         readPublicIdentifier()));
 
       InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation,
-        ident->pstate());
+        ident->pstate(), ident);
 
       if (ns.empty()) {
         error("Interpolation isn't allowed in namespaces.",
@@ -3895,73 +3017,33 @@ namespace Sass {
       ArgumentInvocation* args = readArgumentInvocation();
       sass::string name(identifier->getPlainString());
 
-      FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), itpl, args, ns);
-
-      // First search in forwarded modules
-      VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      auto it = frame->fwdModule55.find(ns);
-      if (it != frame->fwdModule55.end()) {
-        VarRefs* refs = it->second.first;
-        auto in = refs->fnIdxs.find(ident->value());
-        if (in != refs->fnIdxs.end()) {
-          // Pass this silently
-          if (!isPrivate(ident->value())) {
-            uint32_t offset = in->second;
-            fn->fidx({ refs->fnFrame, offset });
-          }
-        }
-      }
-      else {
-        SourceSpan state(scanner.relevantSpanFrom(start));
-        context.addFinalStackTrace(state);
-        throw Exception::RuntimeException(context, "There is no "
-          "module with the namespace \"" + ns + "\".");
+      // Plain Css as it's interpolated
+      if (identifier->getPlainString().empty()) {
+        PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+          scanner.relevantSpanFrom(start), itpl, args, ns);
+        return fn.detach();
       }
 
-      if (!fn->fidx().isValid()) {
-        context.addFinalStackTrace(fn->pstate());
-        throw Exception::ParserException(context,
-          "Undefined function.");
-      }
-
-      return fn.detach();
+      return SASS_MEMORY_NEW(FunctionExpression,
+        scanner.relevantSpanFrom(start),
+        itpl->getPlainString(),
+        args, inLoopDirective, name);
     }
     else if (next == $lparen) {
       ArgumentInvocation* args = readArgumentInvocation();
-      FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), identifier, args, ns);
-      sass::string name(identifier->getPlainString());
-      if (!name.empty()) {
 
-        // Then search in global modules
-        auto pstate = scanner.relevantSpanFrom(start);
-        VarRefs* frame(context.varRoot.stack.back()->getModule23());
-        for (auto fwd : frame->fwdGlobal55) {
-          VarRefs* refs = fwd.first;
-          auto in = refs->fnIdxs.find(name);
-          if (in != refs->fnIdxs.end()) {
-            // Pass this silently
-            if (!isPrivate(name)) {
-              uint32_t offset = in->second;
-              fn->fidx({ refs->fnFrame, offset });
-            }
-          }
-        }
-        // if (isPrivate(name)) {
-        //   context.addFinalStackTrace(pstate);
-        //   throw Exception::ParserException(context,
-        //     "Private functions can't be accessed "
-        //     "from outside their modules.");
-        // }
-
-        if (!fn->fidx().isValid()) {
-          // Try to get the function through the whole stack
-          fn->fidx(context.varRoot.stack.back()->getFunctionIdx(name));
-        }
-
+      // Plain Css as it's interpolated
+      if (identifier->getPlainString().empty()) {
+        PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+          scanner.relevantSpanFrom(start), identifier, args, ns);
+        return fn.detach();
       }
 
+      FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
+        scanner.relevantSpanFrom(start),
+        identifier->getPlainString(),
+        args, inLoopDirective, ns);
+      // sass::string name(identifier->getPlainString());
       return fn.detach();
     }
     else {
@@ -4091,12 +3173,12 @@ namespace Sass {
       case $m:
       case $M:
         scanner.readChar();
-        if (scanCharIgnoreCase($i)) {
-          if (!scanCharIgnoreCase($n)) return false;
+        if (scanIdentChar($i)) {
+          if (!scanIdentChar($n)) return false;
           buffer.write("min(");
         }
-        else if (scanCharIgnoreCase($a)) {
-          if (!scanCharIgnoreCase($x)) return false;
+        else if (scanIdentChar($a)) {
+          if (!scanIdentChar($x)) return false;
           buffer.write("max(");
         }
         else {
@@ -4236,8 +3318,16 @@ namespace Sass {
 
     SourceSpan pstate(scanner.relevantSpanFrom(start));
     ArgumentInvocation* args = readArgumentInvocation();
+
+    // Plain Css as it's interpolated
+    if (itpl->getPlainString().empty()) {
+      PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+        scanner.relevantSpanFrom(start), itpl, args, "");
+      return fn.detach();
+    }
+
     return SASS_MEMORY_NEW(FunctionExpression,
-      pstate, itpl, args, "");
+      pstate, itpl->getPlainString(), args, "");
   }
   // readFunctionOrStringExpression
 

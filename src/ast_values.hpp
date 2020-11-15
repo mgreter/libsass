@@ -835,6 +835,7 @@ namespace Sass {
   {
   private:
 
+    ADD_CONSTREF(sass::string, cssName);
     ADD_CONSTREF(CallableObj, callable);
 
   public:
@@ -843,6 +844,11 @@ namespace Sass {
     Function(
       const SourceSpan& pstate,
       CallableObj callable);
+
+    // Value constructor
+    Function(
+      const SourceSpan& pstate,
+      const sass::string& cssName);
 
     // Copy constructor
     Function(const Function* ptr);

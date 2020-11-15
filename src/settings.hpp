@@ -16,6 +16,10 @@
 #define SassDefaultEpsilon 10E-10
 #define SassDefaultNrSprintf "%.10f"
 
+//#define SassEagerUseParsing
+#define SassEagerImportParsing
+//#define SassEagerForwardParsing
+
 /////////////////////////////////////////////////////////////////////////
 // Should we preserve color information when possible
 // E.g. if we create a HWB color with zero hue (which is always `gray`),
