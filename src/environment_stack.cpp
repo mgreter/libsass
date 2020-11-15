@@ -322,7 +322,7 @@ namespace Sass {
   ValueObj& EnvRoot::getVariable(const VarRef& vidx)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      std::cerr << "Get global variable " << vidx.offset << "\n";
+      // std::cerr << "Get global variable " << vidx.offset << "\n";
       return intVariables[vidx.offset];
     }
     else {
@@ -360,20 +360,20 @@ namespace Sass {
 
   void EnvRoot::setModVar(const uint32_t offset, Value* value)
   {
-    std::cerr << "Set global variable " << offset
-      << " - " << value->inspect() << "\n";
+    // std::cerr << "Set global variable " << offset
+    //   << " - " << value->inspect() << "\n";
     intVariables[offset] = value;
   }
   void EnvRoot::setModMix(const uint32_t offset, Callable* callable)
   {
-    std::cerr << "Set global mixin " << offset
-      << " - " << callable->name() << "\n";
+    // std::cerr << "Set global mixin " << offset
+    //   << " - " << callable->name() << "\n";
     intMixin[offset] = callable;
   }
   void EnvRoot::setModFn(const uint32_t offset, Callable* callable)
   {
-    std::cerr << "Set global variable " << offset
-      << " - " << callable->name() << "\n";
+    // std::cerr << "Set global variable " << offset
+    //   << " - " << callable->name() << "\n";
     intFunction[offset] = callable;
   }
 
@@ -383,11 +383,11 @@ namespace Sass {
   void EnvRoot::setVariable(const VarRef& vidx, ValueObj value)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
+      // std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
       intVariables[vidx.offset] = value;
     }
     else {
-      std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
+      // std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
       variables[size_t(varFramePtr[vidx.frame]) + vidx.offset] = value;
     }
   }
@@ -461,10 +461,10 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
-  Callable* EnvRoot::getMixin(const EnvKey& name) const
+  Callable* EnvRoot::findMixin(const EnvKey& name) const
   {
     if (stack.empty()) return nullptr;
-    return stack.back()->getMixin(name);
+    return stack.back()->findMixin(name);
   }
   // EO getMixin
 
@@ -490,11 +490,39 @@ namespace Sass {
           if (!value.isNull()) return value;
         }
       }
-
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
-    return {};
+    return nullptr;
+  }
+  // EO findFunction
+
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  Callable* VarRefs::findMixin(const EnvKey& name) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      auto it = current->mixIdxs.find(name);
+      if (it != current->mixIdxs.end()) {
+        const VarRef midx{ current->mixFrame, it->second };
+        Callable* mixin = root.getMixin(midx);
+        if (mixin != nullptr) return mixin;
+      }
+      for (auto fwds : current->fwdGlobal55) {
+        auto fwd = fwds.first->mixIdxs.find(name);
+        if (fwd != fwds.first->mixIdxs.end()) {
+          const VarRef vidx{ fwds.first->mixFrame, fwd->second };
+          Callable* mixin = root.getMixin(vidx);
+          if (mixin != nullptr) return mixin;
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return nullptr;
   }
   // EO findFunction
 
@@ -508,6 +536,17 @@ namespace Sass {
     }
     return nullptr;
   }
+
+  //Callable* VarRefs::getMixin(const EnvKey& name) const
+  //{
+  //  auto it = mixIdxs.find(name);
+  //  if (it != mixIdxs.end()) {
+  //    const VarRef vidx{ mixFrame, it->second };
+  //    Callable* mixin = root.getFunction(vidx);
+  //    if (mixin != nullptr) return mixin;
+  //  }
+  //  return nullptr;
+  //}
 
   Value* VarRefs::getVariable(const EnvKey& name) const
   {
@@ -576,6 +615,32 @@ namespace Sass {
     return nullptr;
   }
 
+  Callable* VarRefs::findMixin(const EnvKey& name, const sass::string& ns) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          Callable* mixin = idxs->getMixin(name);
+          if (mixin != nullptr) return mixin;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdMix.find(name);
+          if (fwd != mod->mergedFwdMix.end()) {
+            Callable* mixin = root.getMixin(
+              { 0xFFFFFFFF, fwd->second });
+            if (mixin != nullptr) return mixin;
+          }
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return nullptr;
+  }
+
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
@@ -586,6 +651,12 @@ namespace Sass {
     return stack.back()->findFunction(name);
   }
   // EO findFunction
+
+  Callable* EnvRoot::findMixin(const EnvKey& name, const sass::string& ns) const
+  {
+    if (stack.empty()) return nullptr;
+    return stack.back()->findMixin(name, ns);
+  }
 
   Callable* EnvRoot::findFunction(const EnvKey& name, const sass::string& ns) const
   {

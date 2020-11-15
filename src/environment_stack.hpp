@@ -190,7 +190,8 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
-    Callable* getMixin(const EnvKey& name) const;
+    Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
+    Callable* findMixin(const EnvKey& name) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.
@@ -201,6 +202,7 @@ namespace Sass {
 
     // Find function only in local frame
     Callable* getFunction(const EnvKey& name) const;
+    Callable* getMixin(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
 
     bool setModVar(const EnvKey& name, Value* value) const;
@@ -400,7 +402,8 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
-    Callable* getMixin(const EnvKey& name) const;
+    Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
+    Callable* findMixin(const EnvKey& name) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.

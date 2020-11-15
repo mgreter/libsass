@@ -1241,9 +1241,16 @@ namespace Sass {
 
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {
-    CallableObj rule = node->midx().isValid() ?
-      compiler.varRoot.getMixin(node->midx()).ptr() :
-      compiler.varRoot.getMixin(node->name());
+    Callable* rule = nullptr;
+
+    if (node->ns().empty()) {
+      rule = compiler.varRoot.findMixin(node->name());
+    }
+    else {
+      rule = compiler.varRoot.findMixin(
+        node->name(), node->ns()
+      );
+    }
 
     if (rule == nullptr) {
       compiler.addFinalStackTrace(node->pstate());

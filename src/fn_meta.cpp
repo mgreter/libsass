@@ -214,7 +214,7 @@ namespace Sass {
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
 
-        CallableObj fn = compiler.getMixin(variable->value());
+        CallableObj fn = compiler.findMixin(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
