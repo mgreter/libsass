@@ -319,23 +319,24 @@ namespace Sass {
           vidxs.push_back({ refs->varFrame, offset });
         }
       }
-      else {
-        SourceSpan state(scanner.relevantSpanFrom(start));
-        context.addFinalStackTrace(state);
-        throw Exception::RuntimeException(context, "There is no "
-          "module with the namespace \"" + ns + "\".");
-      }
+      //else {
+      //  SourceSpan state(scanner.relevantSpanFrom(start));
+      //  context.addFinalStackTrace(state);
+      //  throw Exception::RuntimeException(context, "There is no "
+      //    "module with the namespace \"" + ns + "\".");
+      //}
 
       if (vidxs.empty()) {
         VarRef vidx(module->getVariableIdx(name, true));
         if (!vidxs.empty()) vidxs.push_back(vidx);
       }
 
-      if (vidxs.empty()) {
-        context.addFinalStackTrace(pstate);
-        throw Exception::RuntimeException(context,
-          "Undefined variable.");
-      }
+      // if (vidxs.empty()) {
+      //   context.addFinalStackTrace(pstate);
+      //   auto asd = context.callStack;
+      //   throw Exception::RuntimeException(context,
+      //     "Undefined variable.");
+      // }
 
     }
     else {
@@ -974,7 +975,11 @@ namespace Sass {
       StringScannerState state(scanner.state());
       try { return readVariableDeclarationWithNamespace(); }
       // dart-sass does some error cosmetic here
-      catch (...) { scanner.backtrack(state); }
+      catch (...) {
+
+        scanner.backtrack(state);
+
+      }
 
       // If a variable declaration failed to parse, it's possible the user
       // thought they could write a style rule or property declaration in a
@@ -2231,11 +2236,11 @@ namespace Sass {
           midxs.push_back({ refs->mixFrame, offset });
         }
       }
-      else {
-        context.addFinalStackTrace(scanner.relevantSpanFrom(start));
-        throw Exception::RuntimeException(context, "There "
-          "is no module with the namespace \"" + ns + "\".");
-      }
+      //else {
+      //  context.addFinalStackTrace(scanner.relevantSpanFrom(start));
+      //  throw Exception::RuntimeException(context, "There "
+      //    "is no module with the namespace \"" + ns + "\".");
+      //}
 
       if (midxs.empty()) {
         VarRef midx(frame->getMixinIdx(name, true));

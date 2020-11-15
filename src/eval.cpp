@@ -1360,6 +1360,10 @@ namespace Sass {
     LOCAL_PTR(CssParentNode, current, css);
     root->isActive = true;
     root->isLoading = true;
+
+    auto& currentRoot(compiler.currentRoot);
+    LOCAL_PTR(Root, currentRoot, root);
+
     for (const StatementObj& item : root->elements()) {
       Value* child = item->accept(this);
       if (child) delete child;
@@ -1556,6 +1560,7 @@ namespace Sass {
 
       }
       else {
+
         // ToDo: must not create new real scope!
         EnvFrame local(compiler, true, true);
         sheet = compiler.registerImport(loaded);
@@ -1565,6 +1570,7 @@ namespace Sass {
 
       Root* module = sheet->root2;
       rule->root(module);
+
 
       mergeForwards(module->idxs, compiler.currentRoot, isShown, isHidden,
         prefix, rule->toggledVariables(), rule->toggledCallables(), compiler);
@@ -1653,6 +1659,8 @@ namespace Sass {
     else {
       EnvFrame local(compiler, true, true);
       sheet = compiler.registerImport(loaded);
+      compiler.varRoot.finalizeScopes();
+
       // sheet->root2->idxs = local.idxs;
       sheet->root2->import = loaded;
 
@@ -1773,9 +1781,13 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (node->needsLoading()) {
-      auto sheet = resolveUseRule(node);
-      node->root(sheet->root2);
-      node->needsLoading(false);
+      if (auto sheet = resolveUseRule(node)) {
+        node->root(sheet->root2);
+        node->needsLoading(false);
+      }
+      else {
+        return nullptr;
+      }
     }
 
     if (node->root()) {
@@ -1783,7 +1795,7 @@ namespace Sass {
       Root* root = node->root();
 
       if (root->isActive) {
-        // return nullptr;
+        return nullptr;
       }
 
       LocalOption<bool> scoped(compiler.hasWithConfig,
@@ -1805,6 +1817,10 @@ namespace Sass {
       auto oldCurrent = current;
       current = root->loaded;
       compiler.import_stack.push_back(root->import);
+
+      auto& currentRoot(compiler.currentRoot);
+      LOCAL_PTR(Root, currentRoot, root);
+
       for (auto child : root->elements()) {
         child->accept(this);
       }
@@ -1829,9 +1845,13 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (node->needsLoading()) {
-      auto sheet = resolveForwardRule(node);
-      node->root(sheet->root2);
-      node->needsLoading(false);
+      if (auto sheet = resolveForwardRule(node)) {
+        node->root(sheet->root2);
+        node->needsLoading(false);
+      }
+      else {
+        return nullptr;
+      }
     }
 
     if (node->root()) {
@@ -1839,7 +1859,7 @@ namespace Sass {
       Root* root = node->root();
 
       if (root->isActive) {
-        // return nullptr;
+        return nullptr;
       }
 
       LocalOption<bool> scoped(compiler.hasWithConfig,
@@ -1856,6 +1876,10 @@ namespace Sass {
       node->root()->isActive = true;
       node->root()->isLoading = true;
       compiler.import_stack.push_back(root->import);
+
+      auto& currentRoot(compiler.currentRoot);
+      LOCAL_PTR(Root, currentRoot, root);
+
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
@@ -2672,8 +2696,11 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, true, false, true);
+      EnvFrame local(compiler, true, false,
+        compiler.varRoot.stack.back()->isModule);
       StyleSheet* sheet = compiler.registerImport(loaded);
+      compiler.varRoot.finalizeScopes();
+
       // const sass::string& url(resolved[0].abs_path);
       return sheet;
 //      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
@@ -2709,6 +2736,7 @@ namespace Sass {
     StyleSheetObj sheet = rule->sheet();
 #else
     StyleSheetObj sheet = resolveDynamicImport(rule);
+    compiler.varRoot.finalizeScopes();
 #endif
     // debug_ast(sheet->root2);
 

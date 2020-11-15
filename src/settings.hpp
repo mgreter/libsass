@@ -16,9 +16,9 @@
 #define SassDefaultEpsilon 10E-10
 #define SassDefaultNrSprintf "%.10f"
 
-#define SassEagerUseParsing
-#define SassEagerImportParsing
-#define SassEagerForwardParsing
+//#define SassEagerUseParsing
+//#define SassEagerImportParsing
+//#define SassEagerForwardParsing
 
 /////////////////////////////////////////////////////////////////////////
 // Should we preserve color information when possible
