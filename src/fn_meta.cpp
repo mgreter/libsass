@@ -130,6 +130,7 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         ValueObj ex = compiler.findVariable(variable->value());
+
         bool hasVar = false;
         auto parent = compiler.varRoot.stack.back()->getModule23();
         for (auto asd : parent->fwdGlobal55) {

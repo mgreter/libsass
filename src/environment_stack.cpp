@@ -505,7 +505,7 @@ namespace Sass {
             if (value && name.isPrivate()) continue;
             if (value != nullptr) return value;
           }
-          if (current == this) {
+          // if (current == this) {
             if (Moduled* mod = fwds.second) {
             auto fwd = mod->mergedFwdVar.find(name);
             if (fwd != mod->mergedFwdVar.end()) {
@@ -514,7 +514,7 @@ namespace Sass {
               if (val && name.isPrivate()) continue;
               if (val != nullptr) return val;
             }
-          }
+            // }
         }
       }
       if (current->pscope == nullptr) break;
