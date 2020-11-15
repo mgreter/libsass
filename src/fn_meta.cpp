@@ -517,6 +517,7 @@ namespace Sass {
             // This is the new barrier!
             EnvFrame local(compiler, true, true);
             // eval.selectorStack.push_back(nullptr);
+            ImportStackFrame iframe(compiler, loaded);
             sheet = compiler.registerImport(loaded); // @use
             // eval.selectorStack.pop_back();
             // sheet->root2->idxs = local.idxs;
@@ -574,11 +575,12 @@ namespace Sass {
             eval.current = root->loaded;
             EnvScope scoped(compiler.varRoot, root->idxs);
             eval.selectorStack.push_back(nullptr);
-            compiler.import_stack.push_back(root->import);
+            ImportStackFrame iframe(compiler, root->import);
+            // compiler.import_stack.push_back(root->import);
             for (auto child : root->elements()) {
               child->accept(&eval);
             }
-            compiler.import_stack.pop_back();
+            // compiler.import_stack.pop_back();
             eval.selectorStack.pop_back();
             eval.current = oldCurrent;
             root->isLoading = false;

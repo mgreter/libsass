@@ -1432,6 +1432,8 @@ namespace Sass {
     auto& currentRoot(compiler.currentRoot);
     LOCAL_PTR(Root, currentRoot, root);
 
+    ImportStackFrame iframe(compiler, root->import);
+
     for (const StatementObj& item : root->elements()) {
       Value* child = item->accept(this);
       if (child) delete child;
@@ -1605,6 +1607,8 @@ namespace Sass {
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
 
+      ImportStackFrame iframe(compiler, loaded);
+
       // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
       // EnvFrame* frame(context.varRoot.stack.back()->getModule());
@@ -1704,6 +1708,7 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(compiler, loaded);
 
     StyleSheet* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
@@ -1893,16 +1898,15 @@ namespace Sass {
       root->pstate(), nullptr, selectorStack.back());
       auto oldCurrent = current;
       current = root->loaded;
-      compiler.import_stack.push_back(root->import);
 
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
       EnvScope scoped2(compiler.varRoot, root->idxs);
-
+      ImportStackFrame iframe(compiler, root->import);
       for (auto child : root->elements()) {
         child->accept(this);
       }
-      compiler.import_stack.pop_back();
+      // compiler.import_stack.pop_back();
       current = oldCurrent;
 
       for (auto child : root->loaded->elements()) {
@@ -1959,7 +1963,7 @@ namespace Sass {
 
       node->root()->isActive = true;
       node->root()->isLoading = true;
-      compiler.import_stack.push_back(root->import);
+      ImportStackFrame iframe(compiler, root->import);
 
       EnvScope scoped2(compiler.varRoot, root->idxs);
       auto& currentRoot(compiler.currentRoot);
@@ -1968,7 +1972,7 @@ namespace Sass {
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
-      compiler.import_stack.pop_back();
+      // compiler.import_stack.pop_back();
       node->root()->isLoading = false;
       node->root()->loaded = current;
     }
@@ -2823,6 +2827,7 @@ namespace Sass {
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
       EnvFrame local(compiler, true, false,
         compiler.varRoot.stack.back()->isModule);
+      ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
 
@@ -2861,19 +2866,19 @@ namespace Sass {
           // Call custom importers and check if any of them handled the import
       // if (!context.callCustomImporters(url, pstate, rule)) {
         // Try to load url into context.sheets
-#ifdef SassEagerImportParsing
     StyleSheetObj sheet = rule->sheet();
-#else
-    StyleSheetObj sheet = resolveDynamicImport(rule);
-    compiler.varRoot.finalizeScopes();
-#endif
+
+    if (sheet.isNull()) {
+      sheet = resolveDynamicImport(rule);
+      compiler.varRoot.finalizeScopes();
+    }
+
     // debug_ast(sheet->root2);
 
         // }
 
     // Add C-API to stack to expose it
-    compiler.import_stack.emplace_back(sheet->import);
-    // compiler.import_stack2.emplace_back(source);
+    ImportStackFrame iframe(compiler, sheet->import);
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
@@ -2890,7 +2895,7 @@ namespace Sass {
     // sass_import_take_srcmap(compiler.import_stack.back());
 
     // Finally remove if from the stack
-    compiler.import_stack.pop_back();
+    // compiler.import_stack.pop_back();
 
   }
 

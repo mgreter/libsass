@@ -237,6 +237,24 @@ namespace Sass {
 
   };
 
+  class ImportStackFrame
+  {
+  private:
+
+    Compiler& compiler;
+
+  public:
+
+    ImportStackFrame(
+      Compiler& compiler,
+      Import* import);
+
+    ~ImportStackFrame();
+
+  };
+
+
 }
+
 
 #endif

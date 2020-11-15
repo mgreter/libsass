@@ -1512,6 +1512,7 @@ namespace Sass {
       else {
         // ToDo: must not create new real scope!
         EnvFrame local(context, true, true);
+        ImportStackFrame iframe(context, loaded);
         sheet = context.registerImport(loaded);
         // sheet->root2->idxs = local.idxs;
         sheet->root2->import = loaded;
@@ -1612,6 +1613,7 @@ namespace Sass {
     }
     else {
       EnvFrame local(context, true, true);
+      ImportStackFrame iframe(context, loaded);
       sheet = context.registerImport(loaded);
       // sheet->root2->idxs = local.idxs;
       sheet->root2->import = loaded;
@@ -2109,6 +2111,7 @@ namespace Sass {
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
       EnvFrame local(context, true, false, true);
+      ImportStackFrame iframe(context, loaded);
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;
       const sass::string& url(resolved[0].abs_path);
