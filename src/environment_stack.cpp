@@ -643,6 +643,33 @@ namespace Sass {
     return false;
   }
 
+
+  Value* VarRefs::findVariable(const EnvKey& name, const sass::string& ns) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          Value* val = idxs->getVariable(name);
+          if (val != nullptr) return val;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdVar.find(name);
+          if (fwd != mod->mergedFwdVar.end()) {
+            Value* val = root.getVariable(
+              { 0xFFFFFFFF, fwd->second });
+            if (val != nullptr) return val;
+          }
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return nullptr;
+  }
+
   Callable* VarRefs::findFunction(const EnvKey& name, const sass::string& ns) const
   {
     const VarRefs* current = this;
@@ -814,32 +841,6 @@ namespace Sass {
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
-  }
-
-  Value* VarRefs::findVariable(const EnvKey& name, const sass::string& ns) const
-  {
-    const VarRefs* current = this;
-    while (current) {
-      // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          Value* val = idxs->getVariable(name);
-          if (val != nullptr) return val;
-        }
-        if (Moduled* mod = it->second.second) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            Value* val = root.getVariable(
-              { 0xFFFFFFFF, fwd->second });
-            if (val != nullptr) return val;
-          }
-        }
-      }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
-    }
-    return nullptr;
   }
 
   // Get a value associated with the variable under [name].

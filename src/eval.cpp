@@ -982,6 +982,10 @@ namespace Sass {
       function = compiler.varRoot.findFunction(
         node->name()->getPlainString(), node->ns()
       );
+      if (function == nullptr) {
+        callStackFrame frame(traces, node->pstate());
+        throw Exception::RuntimeException(traces, "Undefined function.");
+      }
     }
 
     // Function Expression might be simple and static, or dynamic CSS call
@@ -1159,6 +1163,10 @@ namespace Sass {
       value = compiler.varRoot.findVariable(
         variable->name(), variable->ns()
       );
+      if (value == nullptr) {
+        callStackFrame frame(traces, variable->pstate());
+        throw Exception::RuntimeException(traces, "Undefined variable.");
+      }
     }
 
     if (value != nullptr) {
@@ -1250,6 +1258,10 @@ namespace Sass {
       rule = compiler.varRoot.findMixin(
         node->name(), node->ns()
       );
+      if (rule == nullptr) {
+        callStackFrame frame(traces, node->pstate());
+        throw Exception::RuntimeException(traces, "Undefined mixin.");
+      }
     }
 
     if (rule == nullptr) {
