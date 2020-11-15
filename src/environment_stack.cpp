@@ -362,22 +362,22 @@ namespace Sass {
   {
     // std::cerr << "Set global variable " << offset
     //   << " - " << value->inspect() << "\n";
-    if (!guarded || intVariables[offset] == nullptr)
-      intVariables[offset] = value;
+    ValueObj& slot(intVariables[offset]);
+    if (!guarded || !slot || slot->isaNull()) slot = value;
   }
   void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
   {
     // std::cerr << "Set global mixin " << offset
     //   << " - " << callable->name() << "\n";
-    if (!guarded || intMixin[offset] == nullptr)
-      intMixin[offset] = callable;
+    CallableObj& slot(intMixin[offset]);
+    if (!guarded || !slot) slot = callable;
   }
   void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
   {
     // std::cerr << "Set global variable " << offset
     //   << " - " << callable->name() << "\n";
-    if (!guarded || intFunction[offset] == nullptr)
-      intFunction[offset] = callable;
+    CallableObj& slot(intFunction[offset]);
+    if (!guarded || !slot) slot = callable;
   }
 
 
@@ -387,7 +387,8 @@ namespace Sass {
   {
     if (vidx.frame == 0xFFFFFFFF) {
       // std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
-      if (!guarded || intVariables[vidx.offset] == nullptr)
+      ValueObj& slot(intVariables[vidx.offset]);
+      if (!guarded || !slot || slot->isaNull())
         intVariables[vidx.offset] = value;
     }
     else {
@@ -403,12 +404,13 @@ namespace Sass {
   void EnvRoot::setVariable(uint32_t frame, uint32_t offset, ValueObj value, bool guarded)
   {
     if (frame == 0xFFFFFFFF) {
-      if (!guarded || intVariables[offset] == nullptr)
+      ValueObj& slot(intVariables[offset]);
+      if (!guarded || !slot || slot->isaNull())
         intVariables[offset] = value;
     }
     else {
       ValueObj& slot(variables[size_t(varFramePtr[frame]) + offset]);
-      if (slot == nullptr || guarded == false) slot = value;
+      if (!guarded || !slot || slot->isaNull()) slot = value;
     }
   }
   // EO setVariable
@@ -423,7 +425,7 @@ namespace Sass {
     }
     else {
       CallableObj& slot(functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset]);
-      if (slot == nullptr || guarded == false) slot = value;
+      if (!guarded || !slot) slot = value;
     }
   }
   // EO setFunction
@@ -438,7 +440,7 @@ namespace Sass {
     }
     else {
       CallableObj& slot(mixins[size_t(mixFramePtr[midx.frame]) + midx.offset]);
-      if (slot == nullptr || guarded == false) slot = value;
+      if (!guarded || !slot) slot = value;
     }
   }
   // EO setMixin
