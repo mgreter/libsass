@@ -575,7 +575,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, prev);
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
-    ADD_PROPERTY(bool, hasWithConfig);
+    ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, needsLoading);
     ADD_PROPERTY(sass::vector<WithConfigVar>, config);
   public:
@@ -602,7 +602,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, prefix);
     ADD_PROPERTY(bool, isShown);
     ADD_PROPERTY(bool, isHidden);
-    ADD_PROPERTY(bool, hasWithConfig);
+    ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, needsLoading);
     ADD_REF(std::set<EnvKey>, toggledVariables);
     ADD_REF(std::set<EnvKey>, toggledCallables);

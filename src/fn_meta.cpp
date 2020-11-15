@@ -444,12 +444,15 @@ namespace Sass {
         // auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
         // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
         // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
-        LocalOption<bool> scoped(compiler.hasWithConfig,
-          compiler.hasWithConfig || withMap);
+
+        bool hasWith = withMap && !withMap->empty();
+
+        LocalOption<bool> scoped(compiler.implicitWithConfig,
+          compiler.implicitWithConfig || hasWith);
 
         EnvKeyFlatMap<ValueObj> config;
         sass::vector<WithConfigVar> withConfigs;
-        if (withMap) {
+        if (hasWith) {
           for (auto kv : withMap->elements()) {
             String* name = kv.first->assertString(compiler, "with key");
             EnvKey kname(name->value());
@@ -469,11 +472,11 @@ namespace Sass {
           }
         }
 
-        WithConfig wconfig(compiler, withConfigs, withMap);
+        WithConfig wconfig(compiler, withConfigs, hasWith);
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
-          if (withMap) {
+          if (hasWith) {
             throw Exception::RuntimeException(compiler, "Built-in "
               "module " + url->value() + " can't be configured.");
           }
@@ -524,7 +527,7 @@ namespace Sass {
             sheet->root2->import = loaded;
           }
           else if (sheet->root2->isActive) {
-            if (withMap) {
+            if (hasWith) {
               throw Exception::ParserException(compiler,
                 sass::string(sheet->root2->pstate().getFileName())
                 + " was already loaded, so it "
@@ -537,7 +540,7 @@ namespace Sass {
           }
 
           if (sheet->root2->loaded) {
-            if (withMap) {
+            if (hasWith) {
               throw Exception::RuntimeException(compiler,
                 "Module twice");
             }

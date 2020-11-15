@@ -289,6 +289,7 @@ namespace Sass {
 
   public:
 
+    Compiler& compiler;
 
     // Reference to stack
     // We manage it ourself

@@ -1454,7 +1454,7 @@ namespace Sass {
     sass::string prefix(rule->prefix());
     bool isShown(rule->isShown());
     bool isHidden(rule->isHidden());
-    bool hasWith(rule->hasWithConfig());
+    bool hasWith(rule->hasLocalWith());
     auto config(rule->config());
 
     SourceSpan pstate(rule->pstate());
@@ -1462,7 +1462,7 @@ namespace Sass {
     callStackFrame frame(context, { pstate, Strings::forwardRule });
 
     // The show or hide config also hides these
-    WithConfig wconfig(context, rule->config(), rule->hasWithConfig(),
+    WithConfig wconfig(context, rule->config(), rule->hasLocalWith(),
       rule->isShown(), rule->isHidden(), rule->toggledVariables(), rule->prefix());
 
     bool hasCached = false;
@@ -1502,7 +1502,7 @@ namespace Sass {
         // Check if with is given, error
         sheet = cached->second;
 
-        if (rule->hasWithConfig()) {
+        if (context.implicitWithConfig || hasWith) {
           throw Exception::ParserException(context,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1544,7 +1544,7 @@ namespace Sass {
     sass::string ns(rule->ns());
     sass::string url(rule->url());
     sass::string prev(rule->prev());
-    bool hasWith(rule->hasWithConfig());
+    bool hasWith(rule->hasLocalWith());
     auto config(rule->config());
 
     SourceSpan pstate(rule->pstate());
@@ -1744,7 +1744,7 @@ namespace Sass {
 
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, false));
-    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
+    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
     expectStatementSeparator("@use rule");
    
     if (isUseAllowed == false) {
@@ -1755,7 +1755,7 @@ namespace Sass {
 
     UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
       scanner.relevantSpanFrom(start), url, {});
-    rule->hasWithConfig(hasWith);
+    rule->hasLocalWith(hasWith);
 
     VarRefs* current(context.varRoot.stack.back());
     VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
@@ -1860,7 +1860,7 @@ namespace Sass {
 
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, true));
-    LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
+    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
 
     if (isUseAllowed == false) {
@@ -1877,7 +1877,7 @@ namespace Sass {
       std::move(toggledCallables2),
       isShown);
 
-    rule->hasWithConfig(hasWith);
+    rule->hasLocalWith(hasWith);
 
     std::set<EnvKey>& toggledVariables(rule->toggledVariables());
     std::set<EnvKey>& toggledCallables(rule->toggledCallables());
@@ -1920,7 +1920,7 @@ namespace Sass {
     rule->isHidden(isHidden);
     rule->prefix(prefix);
     rule->prev(scanner.sourceUrl);
-    rule->hasWithConfig(hasWithConfig);
+    rule->hasLocalWith(hasWith);
 
 #ifndef SassEagerForwardParsing
     rule->needsLoading(true);

@@ -1574,7 +1574,7 @@ namespace Sass {
     sass::string prefix(rule->prefix());
     bool isShown(rule->isShown());
     bool isHidden(rule->isHidden());
-    bool hasWith(rule->hasWithConfig());
+    bool hasWith(rule->hasLocalWith());
     auto config(rule->config());
 
     SourceSpan pstate(rule->pstate());
@@ -1613,14 +1613,14 @@ namespace Sass {
       StyleSheet* sheet = nullptr;
       // EnvFrame* frame(context.varRoot.stack.back()->getModule());
       auto cached = compiler.sheets.find(loaded->getAbsPath());
-      if (cached != compiler.sheets.end()) {
+      if (cached != compiler.sheets.end() && cached->second->hasBeenUsed) {
 
         hasCached = true;
 
         // Check if with is given, error
         sheet = cached->second;
 
-        if (rule->hasWithConfig()) {
+        if (compiler.implicitWithConfig || hasWith) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1632,6 +1632,7 @@ namespace Sass {
         // ToDo: must not create new real scope!
         EnvFrame local(compiler, true, true);
         sheet = compiler.registerImport(loaded);
+        sheet->hasBeenUsed = true;
         // sheet->root2->idxs = local.idxs;
         sheet->root2->import = loaded;
       }
@@ -1664,7 +1665,7 @@ namespace Sass {
     sass::string ns(rule->ns());
     sass::string url(rule->url());
     sass::string prev(rule->prev());
-    bool hasWith(rule->hasWithConfig());
+    bool hasWith(rule->hasLocalWith());
     auto config(rule->config());
 
     const ImportRequest import(url, prev);
@@ -1713,7 +1714,7 @@ namespace Sass {
     StyleSheet* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
-    if (cached != compiler.sheets.end()) {
+    if (cached != compiler.sheets.end() && cached->second->hasBeenUsed) {
 
       hasCached = true;
 
@@ -1730,6 +1731,7 @@ namespace Sass {
     else {
       EnvFrame local(compiler, true, true);
       sheet = compiler.registerImport(loaded);
+      sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
 
       // sheet->root2->idxs = local.idxs;
@@ -1854,7 +1856,10 @@ namespace Sass {
     sass::string ns(node->ns());
     sass::string url(node->url());
     sass::string prev(node->prev());
-    bool hasWith(node->hasWithConfig());
+    bool hasWith(node->hasLocalWith());
+
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || hasWith);
 
     BackTrace trace(node->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
@@ -1877,19 +1882,13 @@ namespace Sass {
       Root* root = node->root();
 
       if (root->isActive) {
+        if (node->hasLocalWith() || compiler.implicitWithConfig) {
+          throw Exception::RuntimeException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
         return nullptr;
       }
-
-      LocalOption<bool> scoped(compiler.hasWithConfig,
-        compiler.hasWithConfig || node->hasWithConfig());
-
-      //if (root->isActive) {
-      //  if (node->hasWithConfig() || compiler.hasWithConfig) {
-      //    throw Exception::RuntimeException(compiler,
-      //      "This module was already loaded, so it "
-      //      "can't be configured using \"with\".");
-      //  }
-      //}
 
       root->isActive = true;
       root->isLoading = true;
@@ -1928,8 +1927,11 @@ namespace Sass {
     BackTrace trace(node->pstate(), Strings::forwardRule, false);
     callStackFrame frame(logger456, trace);
 
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || node->hasLocalWith());
+
     // The show or hide config also hides these
-    WithConfig wconfig(compiler, node->config(), node->hasWithConfig(),
+    WithConfig wconfig(compiler, node->config(), node->hasLocalWith(),
       node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
 
     if (node->needsLoading()) {
@@ -1947,19 +1949,13 @@ namespace Sass {
       Root* root = node->root();
 
       if (root->isActive) {
+        if (node->hasLocalWith() || compiler.implicitWithConfig) {
+          throw Exception::RuntimeException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
         return nullptr;
       }
-
-      LocalOption<bool> scoped(compiler.hasWithConfig,
-        compiler.hasWithConfig || node->hasWithConfig());
-
-      //if (root->isActive) {
-      //  if (node->hasWithConfig() || compiler.hasWithConfig) {
-      //    throw Exception::RuntimeException(compiler,
-      //      "This module was already loaded, so it "
-      //      "can't be configured using \"with\".");
-      //  }
-      //}
 
       node->root()->isActive = true;
       node->root()->isLoading = true;

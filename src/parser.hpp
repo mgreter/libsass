@@ -30,7 +30,7 @@ namespace Sass {
     // Compiler context
     Compiler& context;
 
-    bool& hasWithConfig;
+    bool& implicitWithConfig;
 
     // The scanner that scans through the text being parsed.
     StringScanner scanner;

@@ -50,6 +50,8 @@ namespace Sass {
       // The module's CSS tree.
       RootObj root2;
 
+      bool hasBeenUsed = false;
+
     public:
 
       // default argument constructor

@@ -18,6 +18,7 @@ namespace Sass {
   // Also contains parsed root scope stack
   EnvRoot::EnvRoot(
     Compiler& compiler) :
+    compiler(compiler),
     stack(compiler.varStack3312),
     idxs(new VarRefs(
       *this,
@@ -361,6 +362,11 @@ namespace Sass {
 
   void EnvRoot::setModVar(const uint32_t offset, Value* value, bool guarded)
   {
+    if (offset < privateVarOffset) {
+      callStackFrame frame(compiler, value->pstate());
+      throw Exception::RuntimeException(compiler,
+        "Cannot modify built-in variable.");
+    }
     // std::cerr << "Set global variable " << offset
     //   << " - " << value->inspect() << "\n";
     ValueObj& slot(intVariables[offset]);
