@@ -483,19 +483,21 @@ namespace Sass {
         ValueObj& value = root.getVariable(vidx);
         if (value != nullptr) { return value; }
       }
-      for (auto fwds : current->fwdGlobal55) {
-        auto fwd = fwds.first->varIdxs.find(name);
-        if (fwd != fwds.first->varIdxs.end()) {
-          const VarRef vidx{ fwds.first->varFrame, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return value;
-        }
-        if (Moduled* mod = fwds.second) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            Value* val = root.getVariable(
-              { 0xFFFFFFFF, fwd->second });
-            if (val != nullptr) return val;
+        for (auto fwds : current->fwdGlobal55) {
+          auto fwd = fwds.first->varIdxs.find(name);
+          if (fwd != fwds.first->varIdxs.end()) {
+            const VarRef vidx{ fwds.first->varFrame, fwd->second };
+            Value* value = root.getVariable(vidx);
+            if (value != nullptr) return value;
+          }
+          if (current == this) {
+            if (Moduled* mod = fwds.second) {
+            auto fwd = mod->mergedFwdVar.find(name);
+            if (fwd != mod->mergedFwdVar.end()) {
+              Value* val = root.getVariable(
+                { 0xFFFFFFFF, fwd->second });
+              if (val != nullptr) return val;
+            }
           }
         }
       }

@@ -1642,7 +1642,6 @@ namespace Sass {
     bool hasWith(rule->hasWithConfig());
     auto config(rule->config());
 
-    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
     const ImportRequest import(url, prev);
     SourceSpan pstate = rule->pstate();
     //callStackFrame frame(context, { pstate, Strings::useRule });
@@ -1659,6 +1658,7 @@ namespace Sass {
       ns = url.substr(start, end);
     }
 
+    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
     if (!ns.empty()) {
       if (modFrame->fwdModule55.count(ns)) {
         throw Exception::ModuleAlreadyKnown(compiler, ns);
@@ -1870,6 +1870,7 @@ namespace Sass {
 
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
+      EnvScope scoped2(compiler.varRoot, root->idxs);
 
       for (auto child : root->elements()) {
         child->accept(this);
@@ -1933,6 +1934,7 @@ namespace Sass {
       node->root()->isLoading = true;
       compiler.import_stack.push_back(root->import);
 
+      EnvScope scoped2(compiler.varRoot, root->idxs);
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
 
