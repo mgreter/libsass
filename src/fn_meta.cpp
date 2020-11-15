@@ -249,6 +249,14 @@ namespace Sass {
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
+          if (root)
+          for (auto entry : root->mergedFwdVar) {
+            auto name = SASS_MEMORY_NEW(String, pstate,
+              sass::string(entry.first.norm()), true);
+            VarRef vidx(0xFFFFFFFF, entry.second);
+            list->insert({ name, compiler.
+              varRoot.getVariable(vidx) });
+          }
         }
         else {
           throw Exception::RuntimeException(compiler, "There is "
@@ -274,6 +282,15 @@ namespace Sass {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             VarRef fidx(refs->fnFrame, entry.second);
+            auto callable = compiler.varRoot.getFunction(fidx);
+            auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
+            list->insert({ name, fn });
+          }
+          if (root)
+          for (auto entry : root->mergedFwdFn) {
+            auto name = SASS_MEMORY_NEW(String, pstate,
+              sass::string(entry.first.norm()), true);
+            VarRef fidx(0xFFFFFFFF, entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
