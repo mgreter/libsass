@@ -405,7 +405,9 @@ namespace Sass {
 
       // Also skip if on global scope?
       // Not if we have one forwarded!
-      if (!hasVar) vidxs.push_back(pr->createVariable(name));
+      if (!hasVar) {
+        vidxs.push_back(pr->createVariable(name));
+      }
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
