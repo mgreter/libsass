@@ -318,23 +318,23 @@ namespace Sass {
           vidxs.push_back({ refs->varFrame, offset });
         }
       }
-      //else {
-      //  SourceSpan state(scanner.relevantSpanFrom(start));
-      //  context.addFinalStackTrace(state);
-      //  throw Exception::RuntimeException(context, "There is no "
-      //    "module with the namespace \"" + ns + "\".");
-      //}
+      else {
+        SourceSpan state(scanner.relevantSpanFrom(start));
+        context.addFinalStackTrace(state);
+        throw Exception::RuntimeException(context, "There is no "
+          "module with the namespace \"" + ns + "\".");
+      }
 
       if (vidxs.empty()) {
         VarRef vidx(module->getVariableIdx(name, true));
         if (!vidxs.empty()) vidxs.push_back(vidx);
       }
 
-      // if (vidxs.empty()) {
-      //   context.addFinalStackTrace(pstate);
-      //   throw Exception::RuntimeException(context,
-      //     "Undefined variable.");
-      // }
+      if (vidxs.empty()) {
+        context.addFinalStackTrace(pstate);
+        throw Exception::RuntimeException(context,
+          "Undefined variable.");
+      }
 
     }
     else {
@@ -1421,9 +1421,11 @@ namespace Sass {
 
   }
 
-  bool StylesheetParser::resolveForwardRule(ForwardRule* rule)
-  {
-  }
+//  bool StylesheetParser::resolveForwardRule(ForwardRule* rule)
+//  {
+//return nullptr;
+//  }
+
 
   bool StylesheetParser::resolveUseRule(UseRule* rule)
   {
@@ -1625,7 +1627,6 @@ namespace Sass {
     bool hasWith(readWithConfiguration(config, false));
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
-    WithConfig wconfig(context, config, hasWith);
    
     if (isUseAllowed == false) {
       context.addFinalStackTrace(state);
@@ -1642,6 +1643,8 @@ namespace Sass {
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
+
+      WithConfig wconfig(context, config, hasWith);
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1686,20 +1689,22 @@ namespace Sass {
       }
 
       wconfig.finalize();
-      return nullptr;
+      return rule.detach();
 
     }
-
 
     bool hasCached = false;
     rule->ns(ns);
     rule->url(url);
     rule->prev(scanner.sourceUrl);
+#ifndef SassEagerUseParsing
+    rule->needsLoading(true);
     return rule.detach();
-
+#endif
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     callStackFrame frame(context, { pstate, Strings::useRule });
 
+    WithConfig wconfig(context, config, hasWith);
     hasCached = resolveUseRule(rule);
     if (hasCached) return nullptr;
     wconfig.finalize();
@@ -1789,7 +1794,7 @@ namespace Sass {
       }
 
       wconfig.finalize();
-      return nullptr;
+      return rule.detach();
     }
 
 
@@ -2018,18 +2023,15 @@ namespace Sass {
       }
 
 #ifdef SassEagerImportParsing
-      resolveDynamicImport(rule, start, url);
+      // Call custom importers and check if any of them handled the import
+      if (!context.callCustomImporters(url, pstate, rule)) {
+        // Try to load url into context.sheets
+        resolveDynamicImport(rule, start, url);
+      }
 #else
       rule->append(SASS_MEMORY_NEW(IncludeImport,
         scanner.relevantSpanFrom(start), url, nullptr));
 #endif
-
-
-      // Call custom importers and check if any of them handled the import
-//      if (!context.callCustomImporters(url, pstate, rule)) {
-//        // Try to load url into context.sheets
-     //   resolveDynamicImport(rule, start, url);
-    //  }
 
     }
   
@@ -2213,11 +2215,11 @@ namespace Sass {
           midxs.push_back({ refs->mixFrame, offset });
         }
       }
-      //else {
-      //  context.addFinalStackTrace(scanner.relevantSpanFrom(start));
-      //  throw Exception::RuntimeException(context, "There "
-      //    "is no module with the namespace \"" + ns + "\".");
-      //}
+      else {
+        context.addFinalStackTrace(scanner.relevantSpanFrom(start));
+        throw Exception::RuntimeException(context, "There "
+          "is no module with the namespace \"" + ns + "\".");
+      }
 
       if (midxs.empty()) {
         VarRef midx(frame->getMixinIdx(name, true));
@@ -3862,12 +3864,12 @@ namespace Sass {
                 vidxs.push_back({ refs->varFrame, offset });
               }
             }
-            //else {
-            //  SourceSpan state(scanner.relevantSpanFrom(start));
-            //  context.addFinalStackTrace(state);
-            //  throw Exception::RuntimeException(context, "There is no "
-            //    "module with the namespace \"" + plain + "\".");
-            //}
+            else {
+              SourceSpan state(scanner.relevantSpanFrom(start));
+              context.addFinalStackTrace(state);
+              throw Exception::RuntimeException(context, "There is no "
+                "module with the namespace \"" + plain + "\".");
+            }
 
             if (vidxs.empty()) {
               VarRef vidx(frame->getVariableIdx(name, true));
@@ -3922,18 +3924,18 @@ namespace Sass {
           }
         }
       }
-      //else {
-      //  SourceSpan state(scanner.relevantSpanFrom(start));
-      //  context.addFinalStackTrace(state);
-      //  throw Exception::RuntimeException(context, "There is no "
-      //    "module with the namespace \"" + ns + "\".");
-      //}
+      else {
+        SourceSpan state(scanner.relevantSpanFrom(start));
+        context.addFinalStackTrace(state);
+        throw Exception::RuntimeException(context, "There is no "
+          "module with the namespace \"" + ns + "\".");
+      }
 
-      //if (!fn->fidx().isValid()) {
-      //  context.addFinalStackTrace(fn->pstate());
-      //  throw Exception::ParserException(context,
-      //    "Undefined function.");
-      //}
+      if (!fn->fidx().isValid()) {
+        context.addFinalStackTrace(fn->pstate());
+        throw Exception::ParserException(context,
+          "Undefined function.");
+      }
 
       return fn.detach();
     }

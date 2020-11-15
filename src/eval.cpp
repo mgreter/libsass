@@ -1597,12 +1597,18 @@ namespace Sass {
   Value* Eval::visitUseRule(UseRule* node)
   {
 
+    sass::string ns(node->ns());
+    sass::string url(node->url());
+    sass::string prev(node->prev());
+    bool hasWith(node->hasWithConfig());
+
     BackTrace trace(node->pstate(), Strings::useRule, true);
     callStackFrame frame(logger456, trace);
 
-    if (!node->root()) {
+    if (node->needsLoading()) {
       auto sheet = resolveUseRule(node);
       node->root(sheet->root2);
+      node->needsLoading(false);
     }
 
     if (node->root()) {
@@ -1610,7 +1616,7 @@ namespace Sass {
       Root* root = node->root();
 
       if (root->isActive) {
-        return nullptr;
+        // return nullptr;
       }
 
       LocalOption<bool> scoped(compiler.hasWithConfig,
@@ -1654,11 +1660,6 @@ namespace Sass {
   {
     BackTrace trace(node->pstate(), Strings::useRule, true);
     callStackFrame frame(logger456, trace);
-
-    if (!node->root()) {
-      // auto sheet = resolveForwardRule(node);
-      // node->root(sheet->root2);
-    }
 
     if (node->root()) {
 
@@ -2498,10 +2499,8 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, true, false,
-        compiler.varRoot.stack.back()->fnFrame == 0xFFFFFFFF);
+      EnvFrame local(compiler, true, false, true);
       StyleSheet* sheet = compiler.registerImport(loaded);
-      sheet->root2->idxs = local.idxs;
       // const sass::string& url(resolved[0].abs_path);
       return sheet;
 //      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));

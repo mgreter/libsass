@@ -271,7 +271,6 @@ namespace Sass {
 
 
     StyleSheet* resolveDynamicImport(IncludeImport* rule);
-    //StyleSheet* resolveUseRule(IncludeImport* rule);
 
 
     /////////////////////////////////////////////////////////////////////////

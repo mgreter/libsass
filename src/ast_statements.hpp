@@ -576,6 +576,7 @@ namespace Sass {
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     ADD_PROPERTY(bool, hasWithConfig);
+    ADD_PROPERTY(bool, needsLoading);
   public:
     // Value constructor
     UseRule(

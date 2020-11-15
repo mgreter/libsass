@@ -509,7 +509,8 @@ namespace Sass {
     Import* import) :
     Statement(pstate),
     import_(import),
-    url_(url)
+    url_(url),
+    needsLoading_(false)
   {}
 
   ForwardRule::ForwardRule(
