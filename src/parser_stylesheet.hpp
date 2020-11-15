@@ -539,7 +539,8 @@ namespace Sass {
       ImportRule* rule, Offset start,
       const sass::string& path);
 
-    bool resolveUseRule(UseRule* rule);
+    UseRule* resolveUseRule(UseRule* rule);
+    bool resolveForwardRule(ForwardRule* rule);
   };
 
   /////////////////////////////////////////////////////////////////////////

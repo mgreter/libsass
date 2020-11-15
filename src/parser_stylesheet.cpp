@@ -1427,17 +1427,21 @@ namespace Sass {
 //  }
 
 
-  bool StylesheetParser::resolveUseRule(UseRule* rule)
+  UseRule* StylesheetParser::resolveUseRule(UseRule* rule)
   {
 
     sass::string ns(rule->ns());
     sass::string url(rule->url());
     sass::string prev(rule->prev());
     bool hasWith(rule->hasWithConfig());
+    auto config(rule->config());
 
     VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
     const ImportRequest import(url, scanner.sourceUrl);
     SourceSpan pstate = rule->pstate();
+
+    WithConfig wconfig(context, config, hasWith);
+
     //callStackFrame frame(context, { pstate, Strings::useRule });
 
     bool hasCached = false;
@@ -1599,8 +1603,9 @@ namespace Sass {
     }
 
 
-
-    return hasCached;
+    if (hasCached) return nullptr;
+    wconfig.finalize();
+    return rule;
 
 
   }
@@ -1703,11 +1708,8 @@ namespace Sass {
 #endif
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     callStackFrame frame(context, { pstate, Strings::useRule });
-
-    WithConfig wconfig(context, config, hasWith);
-    hasCached = resolveUseRule(rule);
-    if (hasCached) return nullptr;
-    wconfig.finalize();
+    rule->config(config);
+    rule = resolveUseRule(rule);
     return rule.detach();
   }
 
@@ -1797,6 +1799,7 @@ namespace Sass {
       return rule.detach();
     }
 
+    // resolveForwardRule(rule);
 
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(url, scanner.sourceUrl);
