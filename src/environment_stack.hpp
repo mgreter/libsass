@@ -200,6 +200,14 @@ namespace Sass {
     Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
     Callable* findFunction(const EnvKey& name) const;
 
+    // Get a value associated with the variable under [name].
+    // If [global] flag is given, the lookup will be in the root.
+    // Otherwise lookup will be from the last runtime stack scope.
+    // We will move up the runtime stack until we either find a 
+    // defined variable with a value or run out of parent scopes.
+    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
+    Value* findVariable(const EnvKey& name) const;
+
     // Find function only in local frame
     Callable* getFunction(const EnvKey& name) const;
     Callable* getMixin(const EnvKey& name) const;
@@ -209,13 +217,6 @@ namespace Sass {
     bool setModMix(const EnvKey& name, Callable* callable) const;
     bool setModFn(const EnvKey& name, Callable* callable) const;
 
-    // Get a value associated with the variable under [name].
-    // If [global] flag is given, the lookup will be in the root.
-    // Otherwise lookup will be from the last runtime stack scope.
-    // We will move up the runtime stack until we either find a 
-    // defined variable with a value or run out of parent scopes.
-    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
-    Value* findVariable(const EnvKey& name) const;
 
     void setModVar(const EnvKey& name, const sass::string& ns, Value* value);
     void setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);

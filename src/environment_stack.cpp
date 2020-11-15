@@ -468,6 +468,36 @@ namespace Sass {
   }
   // EO getMixin
 
+  // Get a value associated with the variable under [name].
+  // If [global] flag is given, the lookup will be in the root.
+  // Otherwise lookup will be from the last runtime stack scope.
+  // We will move up the runtime stack until we either find a 
+  // defined variable with a value or run out of parent scopes.
+  Value* VarRefs::findVariable(const EnvKey& name) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      auto it = current->varIdxs.find(name);
+      if (it != current->varIdxs.end()) {
+        const VarRef vidx{ current->varFrame, it->second };
+        ValueObj& value = root.getVariable(vidx);
+        if (value != nullptr) { return value; }
+      }
+      for (auto fwds : current->fwdGlobal55) {
+        auto fwd = fwds.first->varIdxs.find(name);
+        if (fwd != fwds.first->varIdxs.end()) {
+          const VarRef vidx{ fwds.first->varFrame, fwd->second };
+          Value* value = root.getVariable(vidx);
+          if (value != nullptr) return value;
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return {};
+  }
+  // EO getVariable
+
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
@@ -694,28 +724,6 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
-  // Get a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  Value* VarRefs::findVariable(const EnvKey& name) const
-  {
-    const VarRefs* current = this;
-    while (current) {
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = root.getVariable(vidx);
-        if (value != nullptr) { return value; }
-      }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
-    }
-    return {};
-  }
-  // EO getVariable
 
   void VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
   {
