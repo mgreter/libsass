@@ -540,6 +540,8 @@ namespace Sass {
       const sass::string& path);
 
     bool resolveUseRule(UseRule* rule);
+    bool resolveForwardRule(ForwardRule* rule);
+
   };
 
   /////////////////////////////////////////////////////////////////////////

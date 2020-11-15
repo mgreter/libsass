@@ -271,6 +271,7 @@ namespace Sass {
 
 
     StyleSheet* resolveDynamicImport(IncludeImport* rule);
+    //StyleSheet* resolveUseRule(IncludeImport* rule);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -331,6 +332,10 @@ namespace Sass {
     Value* visitAssignRule(AssignRule* rule);
     Value* visitWarnRule(WarnRule* rule);
     Value* visitWhileRule(WhileRule* rule);
+
+
+    StyleSheet* resolveUseRule(UseRule* rule);
+    StyleSheet* resolveForwardRule(UseRule* rule);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

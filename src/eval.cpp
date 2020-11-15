@@ -1411,18 +1411,206 @@ namespace Sass {
     return nullptr;
   }
 
+  StyleSheet* Eval::resolveForwardRule(UseRule* rule)
+  {
+    return nullptr;
+  }
+
+  StyleSheet* Eval::resolveUseRule(UseRule* rule)
+  {
+
+    sass::string ns(rule->ns());
+    sass::string url(rule->url());
+    sass::string prev(rule->prev());
+    bool hasWith(rule->hasWithConfig());
+
+    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+    const ImportRequest import(url, prev);
+    SourceSpan pstate = rule->pstate();
+    //callStackFrame frame(context, { pstate, Strings::useRule });
+
+    bool hasCached = false;
+
+    // Deduct the namespace from url
+    // After last slash before first dot
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      start = (start == NPOS ? 0 : start + 1);
+      auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
+      ns = url.substr(start, end);
+    }
+
+    if (!ns.empty()) {
+      if (modFrame->fwdModule55.count(ns)) {
+        throw Exception::ModuleAlreadyKnown(compiler, ns);
+      }
+    }
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(
+      compiler.findIncludes(import, false));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::UnknwonImport(compiler);
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::AmbiguousImports(compiler, resolved);
+    }
+
+    // This is guaranteed to either load or error out!
+    ImportObj loaded = compiler.loadImport(resolved[0]);
+
+    StyleSheet* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = compiler.sheets.find(abspath);
+    if (cached != compiler.sheets.end()) {
+
+      hasCached = true;
+
+      // Check if with is given, error
+      sheet = cached->second;
+
+      if (hasWith) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
+      }
+
+    }
+    else {
+      EnvFrame local(compiler, true, true);
+      sheet = compiler.registerImport(loaded);
+      // sheet->root2->idxs = local.idxs;
+      sheet->root2->import = loaded;
+
+      Root* root = sheet->root2;
+      VarRefs* idxs = root->idxs;
+
+      // Expose what has been forwarded to us
+      for (auto var : root->mergedFwdVar) {
+        idxs->varIdxs.insert(var);
+      }
+      for (auto mix : root->mergedFwdMix) {
+        idxs->mixIdxs.insert(mix);
+      }
+      for (auto fn : root->mergedFwdFn) {
+        idxs->fnIdxs.insert(fn);
+      }
+
+      // sheet->root2->con context->node
+    }
+
+    Root* root = sheet->root2;
+    VarRefs* refs = root->idxs;
+    rule->root(root);
+    Moduled* module = root;
+
+    // This leaks, give it someone
+    VarRefs* exposing = refs;
+
+    if (ns == "*") {
+
+      for (auto var : exposing->varIdxs) {
+        auto it = modFrame->varIdxs.find(var.first);
+        if (it != modFrame->varIdxs.end()) {
+          if (var.second == it->second) continue;
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "variable named \"$" + var.first.norm() + "\".");
+        }
+      }
+      for (auto mix : exposing->mixIdxs) {
+        auto it = modFrame->mixIdxs.find(mix.first);
+        if (it != modFrame->mixIdxs.end()) {
+          if (mix.second == it->second) continue;
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "mixin named \"" + mix.first.norm() + "\".");
+        }
+      }
+      for (auto fn : exposing->fnIdxs) {
+        auto it = modFrame->fnIdxs.find(fn.first);
+        if (it != modFrame->fnIdxs.end()) {
+          if (fn.second == it->second) continue;
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "function named \"" + fn.first.norm() + "\".");
+        }
+      }
+
+      // Check if we push the same stuff twice
+      for (auto fwd : modFrame->fwdGlobal55) {
+        if (exposing == fwd.first) continue;
+        for (auto var : exposing->varIdxs) {
+          auto it = fwd.first->varIdxs.find(var.first);
+          if (it != fwd.first->varIdxs.end()) {
+            if (var.second == it->second) continue;
+            throw Exception::ParserException(compiler,
+              "$" + var.first.norm() + " is available "
+              "from multiple global modules.");
+          }
+        }
+        for (auto var : exposing->mixIdxs) {
+          auto it = fwd.first->mixIdxs.find(var.first);
+          if (it != fwd.first->mixIdxs.end()) {
+            if (var.second == it->second) continue;
+            throw Exception::ParserException(compiler,
+              "Mixin \"" + var.first.norm() + "(...)\" is "
+              "available from multiple global modules.");
+          }
+        }
+        for (auto var : exposing->fnIdxs) {
+          auto it = fwd.first->fnIdxs.find(var.first);
+          if (it != fwd.first->fnIdxs.end()) {
+            if (var.second == it->second) continue;
+            throw Exception::ParserException(compiler,
+              "Function \"" + var.first.norm() + "(...)\" is "
+              "available from multiple global modules.");
+          }
+        }
+      }
+
+      modFrame->fwdGlobal55.push_back(
+        { exposing, sheet->root2 });
+
+    }
+    else {
+
+      // Combine forwarded with local scope
+      modFrame->fwdModule55[ns] =
+      { exposing, sheet->root2 };
+    }
+
+
+
+    return sheet;
+
+
+  }
+
   Value* Eval::visitUseRule(UseRule* node)
   {
 
     BackTrace trace(node->pstate(), Strings::useRule, true);
     callStackFrame frame(logger456, trace);
 
+    if (!node->root()) {
+      auto sheet = resolveUseRule(node);
+      node->root(sheet->root2);
+    }
+
     if (node->root()) {
 
       Root* root = node->root();
 
       if (root->isActive) {
-        // return nullptr;
+        return nullptr;
       }
 
       LocalOption<bool> scoped(compiler.hasWithConfig,
@@ -1466,6 +1654,11 @@ namespace Sass {
   {
     BackTrace trace(node->pstate(), Strings::useRule, true);
     callStackFrame frame(logger456, trace);
+
+    if (!node->root()) {
+      // auto sheet = resolveForwardRule(node);
+      // node->root(sheet->root2);
+    }
 
     if (node->root()) {
 
@@ -2305,8 +2498,10 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, true, false, true);
+      EnvFrame local(compiler, true, false,
+        compiler.varRoot.stack.back()->fnFrame == 0xFFFFFFFF);
       StyleSheet* sheet = compiler.registerImport(loaded);
+      sheet->root2->idxs = local.idxs;
       // const sass::string& url(resolved[0].abs_path);
       return sheet;
 //      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
@@ -2338,10 +2533,11 @@ namespace Sass {
           // Call custom importers and check if any of them handled the import
       // if (!context.callCustomImporters(url, pstate, rule)) {
         // Try to load url into context.sheets
-
+#ifdef SassEagerImportParsing
     StyleSheetObj sheet = rule->sheet();
-    //StyleSheetObj sheet = resolveDynamicImport(rule);
-
+#else
+    StyleSheetObj sheet = resolveDynamicImport(rule);
+#endif
     // debug_ast(sheet->root2);
 
         // }
