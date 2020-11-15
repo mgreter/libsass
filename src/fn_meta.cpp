@@ -120,7 +120,7 @@ namespace Sass {
         }
         if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
         return SASS_MEMORY_NEW(Boolean, pstate,
-          compiler.getVariable(variable->value(), true));
+          compiler.findVariable(variable->value(), true));
 
       }
 
@@ -129,7 +129,7 @@ namespace Sass {
       BUILT_IN_FN(variableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        ValueObj ex = compiler.getVariable(variable->value());
+        ValueObj ex = compiler.findVariable(variable->value());
         bool hasVar = false;
         auto parent = compiler.varRoot.stack.back()->getModule23();
         for (auto asd : parent->fwdGlobal55) {
@@ -177,7 +177,7 @@ namespace Sass {
           }
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        CallableObj fn = compiler.getFunction(variable->value());
+        CallableObj fn = compiler.findFunction(variable->value());
         return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
       }
 
@@ -285,13 +285,13 @@ namespace Sass {
         return list;
       }
 
-      /// Like `_environment.getFunction`, but also returns built-in
+      /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
       Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
-        return ctx.getFunction(name); // no detach, is a reference anyway
+        return ctx.findFunction(name); // no detach, is a reference anyway
       }
 
-      BUILT_IN_FN(getFunction)
+      BUILT_IN_FN(findFunction)
       {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
@@ -626,7 +626,7 @@ namespace Sass {
         module.addFunction(key_content_exists, compiler.registerBuiltInFunction(key_content_exists, "", contentExists));
         module.addFunction(key_module_variables, compiler.createBuiltInFunction(key_module_variables, "$module", moduleVariables));
         module.addFunction(key_module_functions, compiler.registerBuiltInFunction(key_module_functions, "$module", moduleFunctions));
-        module.addFunction(key_get_function, compiler.registerBuiltInFunction(key_get_function, "$name, $css: false, $module: null", getFunction));
+        module.addFunction(key_get_function, compiler.registerBuiltInFunction(key_get_function, "$name, $css: false, $module: null", findFunction));
         module.addFunction(key_call, compiler.registerBuiltInFunction(key_call, "$function, $args...", call));
 
 	    }

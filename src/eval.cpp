@@ -973,12 +973,23 @@ namespace Sass {
 
   Value* Eval::visitFunctionExpression(FunctionExpression* node)
   {
+    Callable* function = nullptr;
+
+    if (node->ns().empty()) {
+      function = compiler.varRoot.findFunction(node->name()->getPlainString());
+    }
+    else {
+      function = compiler.varRoot.findFunction(
+        node->name()->getPlainString(), node->ns()
+      );
+    }
+
     // Function Expression might be simple and static, or dynamic CSS call
-    CallableObj function = node->fidx().isValid()
-      ? compiler.varRoot.getFunction(node->fidx()).ptr()
-      : compiler.varRoot.getFunction(
-        node->name()->getPlainString(), // Name should not be itpl?
-        node->ns());
+    // CallableObj function = node->fidx().isValid()
+    //   ? compiler.varRoot.getFunction(node->fidx()).ptr()
+    //   : compiler.varRoot.findFunction(
+    //     node->name()->getPlainString(), // Name should not be itpl?
+    //     node->ns());
     if (function == nullptr) {
       function = SASS_MEMORY_NEW(PlainCssCallable,
         node->pstate(), acceptInterpolation(node->name(), false));
@@ -1136,14 +1147,31 @@ namespace Sass {
     return value.detach();
   }
 
-  Value* Eval::visitVariableExpression(VariableExpression* v)
+  Value* Eval::visitVariableExpression(VariableExpression* variable)
   {
-    for (auto vidx : v->vidxs()) {
-      ValueObj& value = compiler.varRoot.getVariable(vidx);
-      if (value == nullptr) continue;
+
+    Value* value = nullptr;
+
+    if (variable->ns().empty()) {
+      value = compiler.varRoot.findVariable(variable->name());
+    }
+    else {
+      value = compiler.varRoot.findVariable(
+        variable->name(), variable->ns()
+      );
+    }
+
+    if (value != nullptr) {
       return value->withoutSlash();
     }
-    logger456.addFinalStackTrace(v->pstate());
+
+    // for (auto vidx : variable->vidxs()) {
+    //   ValueObj& value = compiler.varRoot.getVariable(vidx);
+    //   if (value == nullptr) continue;
+    //   return value->withoutSlash();
+    // }
+
+    logger456.addFinalStackTrace(variable->pstate());
     throw Exception::RuntimeException(traces,
       "Undefined variable.");
   }
@@ -1169,7 +1197,7 @@ namespace Sass {
   Value* Eval::visitDebugRule(DebugRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (Callable* fn = compiler.varRoot.getFunction(Keys::debugRule)) {
+    if (Callable* fn = compiler.varRoot.findFunction(Keys::debugRule)) {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
@@ -1183,7 +1211,7 @@ namespace Sass {
   Value* Eval::visitWarnRule(WarnRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (Callable* fn = compiler.varRoot.getFunction(Keys::warnRule)) {
+    if (Callable* fn = compiler.varRoot.findFunction(Keys::warnRule)) {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
@@ -1197,7 +1225,7 @@ namespace Sass {
   Value* Eval::visitErrorRule(ErrorRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (Callable* fn = compiler.varRoot.getFunction(Keys::errorRule)) {
+    if (Callable* fn = compiler.varRoot.findFunction(Keys::errorRule)) {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
@@ -2334,6 +2362,8 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
+
+
     // We always must have at least one variable
     SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
 
@@ -2381,6 +2411,17 @@ namespace Sass {
           " Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
           a->pstate());
       }
+    }
+
+    if (!a->ns().empty()) {
+
+      compiler.varRoot.setModVar(
+        a->variable(), a->ns(),
+        a->value()->accept(this)
+      );
+
+      return nullptr;
+
     }
 
     // Get the main (local) variable

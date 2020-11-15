@@ -57,8 +57,8 @@ namespace Sass {
 
     // Get the value object for the variable by [name] on runtime.
     // If [global] flag is given, we 
-    ValueObj getVariable(const EnvKey& name, bool global = false) {
-      return varRoot.getVariable(name, global);
+    ValueObj findVariable(const EnvKey& name, bool global = false) {
+      return varRoot.findVariable(name, global);
     }
 
     void setVariable(const EnvKey& name, ValueObj val, bool global = false) {
@@ -67,8 +67,8 @@ namespace Sass {
 
     // Functions only for evaluation phase (C-API functions and eval itself)
     CallableObj getMixin(const EnvKey& name) { return varRoot.getMixin(name); }
-    CallableObj getFunction(const EnvKey& name) { return varRoot.getFunction(name); }
-    CallableObj getFunction(const EnvKey& name, const sass::string& ns) { return varRoot.getFunction(name, ns); }
+    CallableObj findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
+    CallableObj findFunction(const EnvKey& name, const sass::string& ns) { return varRoot.findFunction(name, ns); }
 
     // The current state the compiler is in.
     enum SassCompilerState state;

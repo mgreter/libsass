@@ -43,7 +43,7 @@ namespace Sass {
   {
     Value& value(Value::unwrap(name));
     Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.getVariable(
+    ValueObj rv = compiler.findVariable(
       value.assertString(compiler, "name")->getText(), true);
     if (rv) rv->refcount += 1;
     return rv ? Value::wrap(rv) : sass_make_null();
@@ -53,7 +53,7 @@ namespace Sass {
   {
     Value& value(Value::unwrap(name));
     Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.getVariable(
+    ValueObj rv = compiler.findVariable(
       value.assertString(compiler, "name")->getText());
     if (rv) rv->refcount += 1;
     return rv ? Value::wrap(rv) : sass_make_null();
@@ -63,7 +63,7 @@ namespace Sass {
   {
     Value& value(Value::unwrap(name));
     Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.getVariable(
+    ValueObj rv = compiler.findVariable(
       value.assertString(compiler, "name")->getText());
     if (rv) rv->refcount += 1;
     return rv ? Value::wrap(rv) : sass_make_null();

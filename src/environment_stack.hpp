@@ -196,16 +196,28 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    Callable* getFunction(const EnvKey& name, const sass::string& ns) const;
+    Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
+    Callable* findFunction(const EnvKey& name) const;
+
+    // Find function only in local frame
     Callable* getFunction(const EnvKey& name) const;
+    Value* getVariable(const EnvKey& name) const;
+
+    bool setModVar(const EnvKey& name, Value* value) const;
+    bool setModMix(const EnvKey& name, Callable* callable) const;
+    bool setModFn(const EnvKey& name, Callable* callable) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    Value* getVariable(const EnvKey& name) const;
+    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
+    Value* findVariable(const EnvKey& name) const;
 
+    void setModVar(const EnvKey& name, const sass::string& ns, Value* value);
+    void setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
+    void setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
 
     // Test if we are top frame
     bool isRoot() const;
@@ -368,6 +380,10 @@ namespace Sass {
     // Just converting reference to array offset and assigning
     void setVariable(const VarRef& vidx, ValueObj value);
 
+    void setModVar(const uint32_t offset, Value* value);
+    void setModMix(const uint32_t offset, Callable* callable);
+    void setModFn(const uint32_t offset, Callable* callable);
+
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
     void setVariable(uint32_t frame, uint32_t offset, ValueObj value);
@@ -390,15 +406,20 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    Callable* getFunction(const EnvKey& name, const sass::string& ns) const;
-    Callable* getFunction(const EnvKey& name) const;
+    Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
+    Callable* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    Value* getVariable(const EnvKey& name, bool global = false) const;
+    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
+    Value* findVariable(const EnvKey& name, bool global = false) const;
+
+    void setModVar(const EnvKey& name, const sass::string& ns, Value* value);
+    void setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
+    void setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
 
     // Set a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.

@@ -322,9 +322,11 @@ namespace Sass {
   ValueObj& EnvRoot::getVariable(const VarRef& vidx)
   {
     if (vidx.frame == 0xFFFFFFFF) {
+      std::cerr << "Get global variable " << vidx.offset << "\n";
       return intVariables[vidx.offset];
     }
     else {
+      // std::cerr << "Get variable " << vidx.toString() << "\n";
       return variables[size_t(varFramePtr[vidx.frame]) + vidx.offset];
     }
   }
@@ -341,7 +343,7 @@ namespace Sass {
       return functions[size_t(fnFramePtr[fidx.frame]) + fidx.offset];
     }
   }
-  // EO getFunction
+  // EO findFunction
 
   // Get mixin instance by stack index reference
   // Just converting and returning reference to array offset
@@ -356,14 +358,36 @@ namespace Sass {
   }
   // EO getMixin
 
+  void EnvRoot::setModVar(const uint32_t offset, Value* value)
+  {
+    std::cerr << "Set global variable " << offset
+      << " - " << value->inspect() << "\n";
+    intVariables[offset] = value;
+  }
+  void EnvRoot::setModMix(const uint32_t offset, Callable* callable)
+  {
+    std::cerr << "Set global mixin " << offset
+      << " - " << callable->name() << "\n";
+    intMixin[offset] = callable;
+  }
+  void EnvRoot::setModFn(const uint32_t offset, Callable* callable)
+  {
+    std::cerr << "Set global variable " << offset
+      << " - " << callable->name() << "\n";
+    intFunction[offset] = callable;
+  }
+
+
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
   void EnvRoot::setVariable(const VarRef& vidx, ValueObj value)
   {
     if (vidx.frame == 0xFFFFFFFF) {
+      std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
       intVariables[vidx.offset] = value;
     }
     else {
+      std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
       variables[size_t(varFramePtr[vidx.frame]) + vidx.offset] = value;
     }
   }
@@ -448,7 +472,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  Callable* VarRefs::getFunction(const EnvKey& name) const
+  Callable* VarRefs::findFunction(const EnvKey& name) const
   {
     const VarRefs* current = this;
     while (current) {
@@ -458,34 +482,97 @@ namespace Sass {
         CallableObj& value = root.getFunction(vidx);
         if (!value.isNull()) return value;
       }
+      for (auto fwds : current->fwdGlobal55) {
+        auto fwd = fwds.first->fnIdxs.find(name);
+        if (fwd != fwds.first->fnIdxs.end()) {
+          const VarRef vidx{ fwds.first->fnFrame, fwd->second };
+          CallableObj& value = root.getFunction(vidx);
+          if (!value.isNull()) return value;
+        }
+      }
+
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
     return {};
   }
-  // EO getFunction
+  // EO findFunction
 
-  Callable* VarRefs::getFunction(const EnvKey& name, const sass::string& ns) const
+  Callable* VarRefs::getFunction(const EnvKey& name) const
+  {
+    auto it = fnIdxs.find(name);
+    if (it != fnIdxs.end()) {
+      const VarRef vidx{ fnFrame, it->second };
+      Callable* value = root.getFunction(vidx);
+      if (value != nullptr) return value;
+    }
+    return nullptr;
+  }
+
+  Value* VarRefs::getVariable(const EnvKey& name) const
+  {
+    auto it = varIdxs.find(name);
+    if (it != varIdxs.end()) {
+      const VarRef vidx{ varFrame, it->second };
+      Value* value = root.getVariable(vidx);
+      if (value != nullptr) return value;
+    }
+    return nullptr;
+  }
+
+  bool VarRefs::setModVar(const EnvKey& name, Value* value) const
+  {
+    auto it = varIdxs.find(name);
+    if (it != varIdxs.end()) {
+      root.setModVar(it->second, value);
+      return true;
+    }
+    return false;
+  }
+
+  bool VarRefs::setModMix(const EnvKey& name, Callable* fn) const
+  {
+    auto it = mixIdxs.find(name);
+    if (it != mixIdxs.end()) {
+      root.setModMix(it->second, fn);
+      return true;
+    }
+    return false;
+  }
+
+  bool VarRefs::setModFn(const EnvKey& name, Callable* fn) const
+  {
+    auto it = fnIdxs.find(name);
+    if (it != fnIdxs.end()) {
+      root.setModFn(it->second, fn);
+      return true;
+    }
+    return false;
+  }
+
+  Callable* VarRefs::findFunction(const EnvKey& name, const sass::string& ns) const
   {
     const VarRefs* current = this;
     while (current) {
       // Check if the namespace was registered
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
-        VarRefs* qwe = it->second.first;
-        Moduled* mod = it->second.second;
-
-
-
-        // const VarRef vidx{ current->fnFrame, it->second.first };
-        // CallableObj& value = root.getFunction(vidx);
-        // if (!value.isNull()) return value;
+        if (VarRefs* idxs = it->second.first) {
+          Callable* fn = idxs->getFunction(name);
+          if (fn != nullptr) return fn;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdFn.find(name);
+          if (fwd != mod->mergedFwdFn.end()) {
+            Callable* fn = root.getFunction(
+              { 0xFFFFFFFF, fwd->second });
+            if (fn != nullptr) return fn;
+          }
+        }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
-    return {};
-
     return nullptr;
   }
 
@@ -493,17 +580,45 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  Callable* EnvRoot::getFunction(const EnvKey& name) const
+  Callable* EnvRoot::findFunction(const EnvKey& name) const
   {
     if (stack.empty()) return nullptr;
-    return stack.back()->getFunction(name);
+    return stack.back()->findFunction(name);
   }
-  // EO getFunction
+  // EO findFunction
 
-  Callable* EnvRoot::getFunction(const EnvKey& name, const sass::string& ns) const
+  Callable* EnvRoot::findFunction(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullptr;
-    return stack.back()->getFunction(name, ns);
+    return stack.back()->findFunction(name, ns);
+  }
+
+  Value* EnvRoot::findVariable(const EnvKey& name, const sass::string& ns) const
+  {
+    if (stack.empty()) return nullptr;
+    return stack.back()->findVariable(name, ns);
+  }
+
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  void EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
+  {
+    if (stack.empty()) return;
+    stack.back()->setModVar(name, ns, value);
+  }
+
+  void EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
+  {
+    if (stack.empty()) return;
+    stack.back()->setModMix(name, ns, fn);
+  }
+
+  void EnvRoot::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
+  {
+    if (stack.empty()) return;
+    stack.back()->setModFn(name, ns, fn);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -514,7 +629,7 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  Value* VarRefs::getVariable(const EnvKey& name) const
+  Value* VarRefs::findVariable(const EnvKey& name) const
   {
     const VarRefs* current = this;
     while (current) {
@@ -531,16 +646,109 @@ namespace Sass {
   }
   // EO getVariable
 
+  void VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          if (idxs->setModVar(name, value)) return;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdVar.find(name);
+          if (fwd != mod->mergedFwdVar.end()) {
+            const VarRef vidx{ 0xFFFFFFFF, fwd->second };
+            return root.setVariable(vidx, value);
+          }
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+  }
+
+  void VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          if (idxs->setModMix(name, fn)) return;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdMix.find(name);
+          if (fwd != mod->mergedFwdMix.end()) {
+            return root.setModMix(fwd->second, fn);
+          }
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+  }
+
+  void VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          if (idxs->setModFn(name, fn)) return;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdFn.find(name);
+          if (fwd != mod->mergedFwdFn.end()) {
+            return root.setModFn(fwd->second, fn);
+          }
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+  }
+
+  Value* VarRefs::findVariable(const EnvKey& name, const sass::string& ns) const
+  {
+    const VarRefs* current = this;
+    while (current) {
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          Value* val = idxs->getVariable(name);
+          if (val != nullptr) return val;
+        }
+        if (Moduled* mod = it->second.second) {
+          auto fwd = mod->mergedFwdVar.find(name);
+          if (fwd != mod->mergedFwdVar.end()) {
+            Value* val = root.getVariable(
+              { 0xFFFFFFFF, fwd->second });
+            if (val != nullptr) return val;
+          }
+        }
+      }
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return nullptr;
+  }
+
   // Get a value associated with the variable under [name].
   // If [global] flag is given, the lookup will be in the root.
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  Value* EnvRoot::getVariable(const EnvKey& name, bool global) const
+  Value* EnvRoot::findVariable(const EnvKey& name, bool global) const
   {
     if (stack.empty()) return {};
     auto idxs = global ? stack.front() : stack.back();
-    return idxs->getVariable(name);
+    return idxs->findVariable(name);
   }
   // EO getVariable
 

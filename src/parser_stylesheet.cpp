@@ -385,14 +385,15 @@ namespace Sass {
 
     // Check if we have a configuration
 
-    if (vidxs.empty()) {
+    if (vidxs.empty() && ns.empty()) {
+      // Also skip if on global scope?
       // Not if we have one forwarded!
       vidxs.push_back(pr->createVariable(name));
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start), name, ns, vidxs, value, guarded, global);
-    if (inLoopDirective) frame->assignments.push_back(declaration);
+    // if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
 
@@ -3885,25 +3886,25 @@ namespace Sass {
                 vidxs.push_back({ refs->varFrame, offset });
               }
             }
-            else {
-              SourceSpan state(scanner.relevantSpanFrom(start));
-              context.addFinalStackTrace(state);
-              throw Exception::RuntimeException(context, "There is no "
-                "module with the namespace \"" + plain + "\".");
-            }
-
-            if (vidxs.empty()) {
-              VarRef vidx(frame->getVariableIdx(name, true));
-              if (!vidxs.empty()) vidxs.push_back(vidx);
-            }
+            // else {
+            //   SourceSpan state(scanner.relevantSpanFrom(start));
+            //   context.addFinalStackTrace(state);
+            //   throw Exception::RuntimeException(context, "There is no "
+            //     "module with the namespace \"" + plain + "\".");
+            // }
+            // 
+            // if (vidxs.empty()) {
+            //   VarRef vidx(frame->getVariableIdx(name, true));
+            //   if (!vidxs.empty()) vidxs.push_back(vidx);
+            // }
 
           }
 
           // Otherwise utilize full static optimizations
           // EnvFrame* frame(context.varRoot.stack.back());
           // VarRef vidx(frame->getVariableIdx(name, true));
-          if (!vidxs.empty()) expression->vidxs(vidxs);
-          else context.varRoot.stack.back()->variables.push_back(expression);
+          // if (!vidxs.empty()) expression->vidxs(vidxs);
+          // else context.varRoot.stack.back()->variables.push_back(expression);
         }
 
         return expression.detach();
