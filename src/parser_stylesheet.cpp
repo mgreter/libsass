@@ -1748,10 +1748,6 @@ namespace Sass {
     LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
 
-    // The show or hide config also hides these
-    WithConfig wconfig(context, config, hasWith,
-      isShown, isHidden, toggledVariables2, prefix);
-
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
       context.addFinalStackTrace(state);
@@ -1773,6 +1769,10 @@ namespace Sass {
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
+
+      // The show or hide config also hides these
+      WithConfig wconfig(context, config, hasWith,
+        isShown, isHidden, rule->toggledVariables(), prefix);
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1804,6 +1804,10 @@ namespace Sass {
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(url, scanner.sourceUrl);
     callStackFrame frame(context, { pstate, Strings::forwardRule });
+
+    // The show or hide config also hides these
+    WithConfig wconfig(context, config, hasWith,
+      isShown, isHidden, rule->toggledVariables(), prefix);
 
     bool hasCached = false;
 
