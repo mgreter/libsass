@@ -186,6 +186,26 @@ namespace Sass {
     // we abort the lexical lookup on any non-permeable scope frame.
     VarRef getVariableIdx(const EnvKey& name, bool passThrough = false);
 
+    // Get a mixin associated with the under [name].
+    // Will lookup from the last runtime stack scope.
+    // We will move up the runtime stack until we either
+    // find a defined mixin or run out of parent scopes.
+    Callable* getMixin(const EnvKey& name) const;
+
+    // Get a function associated with the under [name].
+    // Will lookup from the last runtime stack scope.
+    // We will move up the runtime stack until we either
+    // find a defined function or run out of parent scopes.
+    Callable* getFunction(const EnvKey& name) const;
+
+    // Get a value associated with the variable under [name].
+    // If [global] flag is given, the lookup will be in the root.
+    // Otherwise lookup will be from the last runtime stack scope.
+    // We will move up the runtime stack until we either find a 
+    // defined variable with a value or run out of parent scopes.
+    Value* getVariable(const EnvKey& name) const;
+
+
     // Test if we are top frame
     bool isRoot() const;
 

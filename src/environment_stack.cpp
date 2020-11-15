@@ -415,16 +415,14 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
-  Callable* EnvRoot::getMixin(const EnvKey& name) const
+  Callable* VarRefs::getMixin(const EnvKey& name) const
   {
-    if (stack.empty()) return {};
-    uint32_t idx = uint32_t(stack.size() - 1);
-    const VarRefs* current = stack[idx];
+    const VarRefs* current = this;
     while (current) {
       auto it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
         const VarRef vidx{ current->mixFrame, it->second };
-        CallableObj& value = idxs->root.getMixin(vidx);
+        CallableObj& value = root.getMixin(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;
@@ -434,26 +432,47 @@ namespace Sass {
   }
   // EO getMixin
 
+
+  // Get a mixin associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined mixin or run out of parent scopes.
+  Callable* EnvRoot::getMixin(const EnvKey& name) const
+  {
+    if (stack.empty()) return nullptr;
+    return stack.back()->getMixin(name);
+  }
+  // EO getMixin
+
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  Callable* EnvRoot::getFunction(const EnvKey& name) const
+  Callable* VarRefs::getFunction(const EnvKey& name) const
   {
-    if (stack.empty()) return {};
-    uint32_t idx = uint32_t(stack.size() - 1);
-    const VarRefs* current = stack[idx];
+    const VarRefs* current = this;
     while (current) {
       auto it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
         const VarRef vidx{ current->fnFrame, it->second };
-        CallableObj& value = idxs->root.getFunction(vidx);
+        CallableObj& value = root.getFunction(vidx);
         if (!value.isNull()) return value;
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
     return {};
+  }
+  // EO getFunction
+
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  Callable* EnvRoot::getFunction(const EnvKey& name) const
+  {
+    if (stack.empty()) return nullptr;
+    return stack.back()->getFunction(name);
   }
   // EO getFunction
 
@@ -465,23 +484,33 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  Value* EnvRoot::getVariable(const EnvKey& name, bool global) const
+  Value* VarRefs::getVariable(const EnvKey& name) const
   {
-    if (stack.empty()) return {};
-    uint32_t idx = global ? 0 :
-      (uint32_t)stack.size() - 1;
-    const VarRefs* current = stack[idx];
+    const VarRefs* current = this;
     while (current) {
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = idxs->root.getVariable(vidx);
+        ValueObj& value = root.getVariable(vidx);
         if (value != nullptr) { return value; }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
     return {};
+  }
+  // EO getVariable
+
+  // Get a value associated with the variable under [name].
+  // If [global] flag is given, the lookup will be in the root.
+  // Otherwise lookup will be from the last runtime stack scope.
+  // We will move up the runtime stack until we either find a 
+  // defined variable with a value or run out of parent scopes.
+  Value* EnvRoot::getVariable(const EnvKey& name, bool global) const
+  {
+    if (stack.empty()) return {};
+    auto idxs = global ? stack.front() : stack.back();
+    return idxs->getVariable(name);
   }
   // EO getVariable
 
