@@ -1179,7 +1179,7 @@ namespace Sass {
     //   return value->withoutSlash();
     // }
 
-    logger456.addFinalStackTrace(variable->pstate());
+    callStackFrame frame(traces, variable->pstate());
     throw Exception::RuntimeException(traces,
       "Undefined variable.");
   }
@@ -2443,10 +2443,13 @@ namespace Sass {
 
     if (!a->ns().empty()) {
 
-      compiler.varRoot.setModVar(
+      if (!compiler.varRoot.setModVar(
         a->variable(), a->ns(),
         a->value()->accept(this)
-      );
+      )) {
+        callStackFrame frame(traces, a->pstate());
+        throw Exception::RuntimeException(traces, "Undefined variable.");
+      }
 
       return nullptr;
 

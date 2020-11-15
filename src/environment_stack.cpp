@@ -755,28 +755,28 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
+  bool EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
   {
-    if (stack.empty()) return;
-    stack.back()->setModVar(name, ns, value);
+    if (stack.empty()) return false;
+    return stack.back()->setModVar(name, ns, value);
   }
 
-  void EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
   {
-    if (stack.empty()) return;
-    stack.back()->setModMix(name, ns, fn);
+    if (stack.empty()) return false;
+    return stack.back()->setModMix(name, ns, fn);
   }
 
-  void EnvRoot::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool EnvRoot::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
   {
-    if (stack.empty()) return;
-    stack.back()->setModFn(name, ns, fn);
+    if (stack.empty()) return false;
+    return stack.back()->setModFn(name, ns, fn);
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
+  bool VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value)
   {
     const VarRefs* current = this;
     while (current) {
@@ -784,22 +784,25 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModVar(name, value)) return;
+          if (idxs->setModVar(name, value))
+            return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             const VarRef vidx{ 0xFFFFFFFF, fwd->second };
-            return root.setVariable(vidx, value);
+            root.setVariable(vidx, value);
+            return true;
           }
         }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
+    return false;
   }
 
-  void VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn)
   {
     const VarRefs* current = this;
     while (current) {
@@ -807,21 +810,24 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModMix(name, fn)) return;
+          if (idxs->setModMix(name, fn))
+            return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdMix.find(name);
           if (fwd != mod->mergedFwdMix.end()) {
-            return root.setModMix(fwd->second, fn);
+            root.setModMix(fwd->second, fn);
+            return true;
           }
         }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
+    return false;
   }
 
-  void VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
+  bool VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn)
   {
     const VarRefs* current = this;
     while (current) {
@@ -829,18 +835,21 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModFn(name, fn)) return;
+          if (idxs->setModFn(name, fn))
+            return true;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
-            return root.setModFn(fwd->second, fn);
+            root.setModFn(fwd->second, fn);
+            return true;
           }
         }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
+    return false;
   }
 
   // Get a value associated with the variable under [name].

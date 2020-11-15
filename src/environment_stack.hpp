@@ -218,9 +218,9 @@ namespace Sass {
     bool setModFn(const EnvKey& name, Callable* callable) const;
 
 
-    void setModVar(const EnvKey& name, const sass::string& ns, Value* value);
-    void setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
-    void setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
+    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value);
+    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
+    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
 
     // Test if we are top frame
     bool isRoot() const;
@@ -421,9 +421,9 @@ namespace Sass {
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name, bool global = false) const;
 
-    void setModVar(const EnvKey& name, const sass::string& ns, Value* value);
-    void setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
-    void setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
+    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value);
+    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn);
+    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn);
 
     // Set a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
