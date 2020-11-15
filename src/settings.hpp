@@ -17,7 +17,7 @@
 #define SassDefaultNrSprintf "%.10f"
 
 //#define SassEagerUseParsing
-//#define SassEagerImportParsing
+#define SassEagerImportParsing
 //#define SassEagerForwardParsing
 
 /////////////////////////////////////////////////////////////////////////

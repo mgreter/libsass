@@ -1636,8 +1636,9 @@ namespace Sass {
       rule->root(module);
 
 
-      mergeForwards(module->idxs, compiler.currentRoot, isShown, isHidden,
-        prefix, rule->toggledVariables(), rule->toggledCallables(), compiler);
+      // Imports that are inside and might create new globals are not seen yet!
+      mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
+        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
 
       if (hasCached) return nullptr;
       // wconfig.finalize();
@@ -2824,6 +2825,10 @@ namespace Sass {
         compiler.varRoot.stack.back()->isModule);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
+
+
+     // modFrame->fwdGlobal55.push_back(
+     //   { exposing, sheet->root2 });
 
       // const sass::string& url(resolved[0].abs_path);
       return sheet;

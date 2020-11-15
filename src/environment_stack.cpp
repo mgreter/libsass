@@ -98,6 +98,7 @@ namespace Sass {
     //   return { idxs->varFrame, it->second };
     // }
     if (varFrame == 0xFFFFFFFF) {
+      // std::cerr << "Create global variable " << name.orig() << "\n";
       uint32_t offset = (uint32_t)root.intVariables.size();
       root.intVariables.resize(offset + 1);
       varIdxs[name] = offset;
