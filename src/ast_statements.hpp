@@ -603,6 +603,7 @@ namespace Sass {
     ADD_PROPERTY(bool, isShown);
     ADD_PROPERTY(bool, isHidden);
     ADD_PROPERTY(bool, hasWithConfig);
+    ADD_PROPERTY(bool, needsLoading);
     ADD_REF(std::set<EnvKey>, toggledVariables);
     ADD_REF(std::set<EnvKey>, toggledCallables);
     ADD_REF(sass::vector<WithConfigVar>, config);

@@ -1894,10 +1894,9 @@ namespace Sass {
     rule->prefix(prefix);
     rule->prev(scanner.sourceUrl);
     rule->hasWithConfig(hasWith);
+
+
     rule = resolveForwardRule(rule);
-    return rule.detach();
-
-
     return rule.detach();
   }
 

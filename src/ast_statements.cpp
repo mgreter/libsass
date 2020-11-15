@@ -524,6 +524,7 @@ namespace Sass {
     import_(import),
     url_(url),
     isShown_(isShown),
+    needsLoading_(false),
     toggledVariables_(std::move(toggledVariables)),
     toggledCallables_(std::move(toggledCallables))
   {}
