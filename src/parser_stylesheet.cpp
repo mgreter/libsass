@@ -1766,13 +1766,16 @@ namespace Sass {
       if (ns == "*") {
 
         for (auto var : module->idxs->varIdxs) {
-          current->varIdxs.insert(var);
+          if (!var.first.isPrivate())
+            current->varIdxs.insert(var);
         }
         for (auto mix : module->idxs->mixIdxs) {
-          current->mixIdxs.insert(mix);
+          if (!mix.first.isPrivate())
+            current->mixIdxs.insert(mix);
         }
         for (auto fn : module->idxs->fnIdxs) {
-          current->fnIdxs.insert(fn);
+          if (!fn.first.isPrivate())
+            current->fnIdxs.insert(fn);
         }
 
         current->fwdGlobal55.push_back(

@@ -1714,13 +1714,16 @@ namespace Sass {
 
       // Expose what has been forwarded to us
       for (auto var : root->mergedFwdVar) {
-        idxs->varIdxs.insert(var);
+        if (!var.first.isPrivate())
+          idxs->varIdxs.insert(var);
       }
       for (auto mix : root->mergedFwdMix) {
-        idxs->mixIdxs.insert(mix);
+        if (!mix.first.isPrivate())
+          idxs->mixIdxs.insert(mix);
       }
       for (auto fn : root->mergedFwdFn) {
-        idxs->fnIdxs.insert(fn);
+        if (!fn.first.isPrivate())
+          idxs->fnIdxs.insert(fn);
       }
 
       // sheet->root2->con context->node
@@ -1739,6 +1742,7 @@ namespace Sass {
       for (auto var : exposing->varIdxs) {
         auto it = modFrame->varIdxs.find(var.first);
         if (it != modFrame->varIdxs.end()) {
+          if (var.first.isPrivate()) continue;
           if (var.second == it->second) continue;
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
@@ -1748,6 +1752,7 @@ namespace Sass {
       for (auto mix : exposing->mixIdxs) {
         auto it = modFrame->mixIdxs.find(mix.first);
         if (it != modFrame->mixIdxs.end()) {
+          if (mix.first.isPrivate()) continue;
           if (mix.second == it->second) continue;
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
@@ -1757,6 +1762,7 @@ namespace Sass {
       for (auto fn : exposing->fnIdxs) {
         auto it = modFrame->fnIdxs.find(fn.first);
         if (it != modFrame->fnIdxs.end()) {
+          if (fn.first.isPrivate()) continue;
           if (fn.second == it->second) continue;
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "

@@ -88,7 +88,7 @@ namespace Sass {
       return *this;
     }
 
-    bool isPrivate() {
+    bool isPrivate() const {
       return _norm[0] == '-';
     }
 
