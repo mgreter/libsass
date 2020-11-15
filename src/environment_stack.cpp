@@ -490,6 +490,14 @@ namespace Sass {
           Value* value = root.getVariable(vidx);
           if (value != nullptr) return value;
         }
+        if (Moduled* mod = fwds.second) {
+          auto fwd = mod->mergedFwdVar.find(name);
+          if (fwd != mod->mergedFwdVar.end()) {
+            Value* val = root.getVariable(
+              { 0xFFFFFFFF, fwd->second });
+            if (val != nullptr) return val;
+          }
+        }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
@@ -519,6 +527,14 @@ namespace Sass {
           CallableObj& value = root.getFunction(vidx);
           if (!value.isNull()) return value;
         }
+        if (Moduled* mod = fwds.second) {
+          auto fwd = mod->mergedFwdFn.find(name);
+          if (fwd != mod->mergedFwdFn.end()) {
+            Callable* fn = root.getFunction(
+              { 0xFFFFFFFF, fwd->second });
+            if (fn != nullptr) return fn;
+          }
+        }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
@@ -547,6 +563,14 @@ namespace Sass {
           const VarRef vidx{ fwds.first->mixFrame, fwd->second };
           Callable* mixin = root.getMixin(vidx);
           if (mixin != nullptr) return mixin;
+        }
+        if (Moduled* mod = fwds.second) {
+          auto fwd = mod->mergedFwdMix.find(name);
+          if (fwd != mod->mergedFwdMix.end()) {
+            Callable* mix = root.getMixin(
+              { 0xFFFFFFFF, fwd->second });
+            if (mix != nullptr) return mix;
+          }
         }
       }
       if (current->pscope == nullptr) break;
