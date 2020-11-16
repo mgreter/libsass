@@ -556,7 +556,9 @@ namespace Sass {
 
     // Forwarded items must be on internal scope
 
-    VarRefs* idxs;
+    VarRefs* idxs = nullptr;
+
+    VarRefs* exposing = nullptr;
 
     // All @forward rules get merged into these objects
     // Those are not available on the local scope, they

@@ -1838,18 +1838,29 @@ namespace Sass {
         }
       }
 
-      modFrame->fwdGlobal55.push_back(
-        { exposing, sheet->root2 });
+      rule->ns("");
+      sheet->root2->exposing = exposing;
 
     }
     else {
-
-      // Combine forwarded with local scope
-      modFrame->fwdModule55[ns] =
-      { exposing, sheet->root2 };
+      rule->ns(ns);
+      sheet->root2->exposing = exposing;
     }
 
+    sheet->root2->exposing = exposing;
 
+    if (ns.empty()) {
+      Root* root = sheet->root2;
+      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+      mframe->fwdGlobal55.push_back(
+        { root->exposing, root });
+    }
+    else {
+      Root* root = sheet->root2;
+      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+      mframe->fwdModule55[rule->ns()] =
+      { root->exposing, root };
+    }
 
     if (hasCached) return nullptr;
     // wconfig.finalize();
