@@ -410,6 +410,22 @@ namespace Sass {
         chroot = chroot->pscope;
       }
 
+      // Search up the scope until we found module not import
+      while (pr->pscope) {
+
+        if (pr->isModule && !pr->isImport) break;
+
+        if (pr->varIdxs.count(name)) {
+          hasVar = true;
+          break;
+        }
+
+        pr = pr->pscope;
+
+      }
+
+      //auto qwe = pr
+
       // Also skip if on global scope?
       // Not if we have one forwarded!
       if (!hasVar) {
@@ -2076,16 +2092,17 @@ namespace Sass {
         throwDisallowedAtRule(rule->pstate().position);
       }
 
-#ifdef SassEagerImportParsing
-      // Call custom importers and check if any of them handled the import
-      if (!context.callCustomImporters(url, pstate, rule)) {
-        // Try to load url into context.sheets
-        resolveDynamicImport(rule, start, url);
+      if (false) {
+        // Call custom importers and check if any of them handled the import
+        if (!context.callCustomImporters(url, pstate, rule)) {
+          // Try to load url into context.sheets
+          resolveDynamicImport(rule, start, url);
+        }
       }
-#else
-      rule->append(SASS_MEMORY_NEW(IncludeImport,
-        scanner.relevantSpanFrom(start), url, nullptr));
-#endif
+      else {
+        rule->append(SASS_MEMORY_NEW(IncludeImport,
+          scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
+      }
 
     }
   
@@ -2095,6 +2112,7 @@ namespace Sass {
   void StylesheetParser::resolveDynamicImport(
     ImportRule* rule, Offset start, const sass::string& path)
   {
+
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(path, scanner.sourceUrl);
     callStackFrame frame(context, { pstate, Strings::importRule });
@@ -2114,7 +2132,9 @@ namespace Sass {
       sass::sstream msg_stream;
       msg_stream << "It's not clear which file to import. Found:\n";
       for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      { msg_stream << "  " << resolved[i].imp_path << "\n"; }
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
       throw Exception::ParserException(context, msg_stream.str());
     }
 
@@ -2125,7 +2145,8 @@ namespace Sass {
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;
       const sass::string& url(resolved[0].abs_path);
-      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
+      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate,
+        scanner.sourceUrl, url, sheet));
     }
     else {
       context.addFinalStackTrace(pstate);

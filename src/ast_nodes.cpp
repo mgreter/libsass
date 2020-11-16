@@ -119,10 +119,12 @@ namespace Sass {
 
   IncludeImport::IncludeImport(
     const SourceSpan& pstate,
+    const sass::string& prev,
     const sass::string& url,
     StyleSheet* sheet) :
     ImportBase(pstate),
     sheet_(sheet),
+    prev_(prev),
     url_(url)
   {}
 

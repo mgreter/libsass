@@ -2845,12 +2845,13 @@ namespace Sass {
   }
 
   // Resolve import of [path] and add imports to [rule]
-  StyleSheet* Eval::resolveDynamicImport(IncludeImport* import)
+  StyleSheet* Eval::resolveDynamicImport(IncludeImport* rule)
   {
-    SourceSpan pstate(import->pstate());
-    const ImportRequest request(import->url(), ".");
+    SourceSpan pstate(rule->pstate());
+    const ImportRequest request(rule->url(), rule->prev());
     callStackFrame frame(compiler, { pstate, Strings::importRule });
 
+   
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     const sass::vector<ResolvedImport> resolved(compiler.findIncludes(request, true));
@@ -2874,25 +2875,17 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, true, false,
-        compiler.varRoot.stack.back()->isModule);
+      EnvFrame local(compiler, true, true, true);
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
-      compiler.varRoot.finalizeScopes();
-
-
-     // modFrame->fwdGlobal55.push_back(
-     //   { exposing, sheet->root2 });
-
-      // const sass::string& url(resolved[0].abs_path);
+      sheet->root2->import = loaded;
       return sheet;
-//      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
-
     }
-
-    compiler.addFinalStackTrace(pstate);
-    throw Exception::ParserException(compiler,
-      "Couldn't read stylesheet for import.");
+    else {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::ParserException(compiler,
+        "Couldn't read stylesheet for import.");
+    }
 
   }
   // EO resolveDynamicImport
@@ -2954,8 +2947,11 @@ namespace Sass {
     if (!sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
       auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
       for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
+      // for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
       for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
+      // for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
       for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
+      // for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
       pframe->fwdGlobal55.insert(
         pframe->fwdGlobal55.begin(),
         std::make_pair(newrefs, sheet->root2));
