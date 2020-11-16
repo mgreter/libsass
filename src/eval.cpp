@@ -1845,21 +1845,7 @@ namespace Sass {
     else {
       rule->ns(ns);
       sheet->root2->exposing = exposing;
-    }
 
-    sheet->root2->exposing = exposing;
-
-    if (ns.empty()) {
-      Root* root = sheet->root2;
-      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
-      mframe->fwdGlobal55.push_back(
-        { root->exposing, root });
-    }
-    else {
-      Root* root = sheet->root2;
-      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
-      mframe->fwdModule55[rule->ns()] =
-      { root->exposing, root };
     }
 
     if (hasCached) return nullptr;
@@ -1886,12 +1872,15 @@ namespace Sass {
     // The show or hide config also hides these
     WithConfig wconfig(compiler, node->config(), hasWith);
 
+    StyleSheet* sheet = nullptr;
+
     if (node->needsLoading()) {
-      if (auto sheet = resolveUseRule(node)) {
+      if (sheet = resolveUseRule(node)) {
         node->root(sheet->root2);
         node->needsLoading(false);
       }
       else {
+        std::cerr << "Should not happen\n";
         return nullptr;
       }
     }
@@ -1899,6 +1888,15 @@ namespace Sass {
     if (node->root()) {
 
       Root* root = node->root();
+      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+      if (node->ns().empty()) {
+        mframe->fwdGlobal55.push_back(
+          { root->exposing, root });
+      }
+      else {
+        mframe->fwdModule55[node->ns()] =
+        { root->exposing, root };
+      }
 
       if (root->isActive) {
         if (node->hasLocalWith() || compiler.implicitWithConfig) {
@@ -1970,6 +1968,11 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
+        // File was loaded by somebody else first
+        if (node->root()) {
+          mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        }
         return nullptr;
       }
     }
