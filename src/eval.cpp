@@ -1744,18 +1744,8 @@ namespace Sass {
     Root* root = sheet->root2;
     rule->root(root);
 
-    auto exposing = pudding(root, ns == "*");
-
-    if (ns == "*") {
-      rule->ns("");
-      sheet->root2->exposing = exposing;
-    }
-
-    else {
-      rule->ns(ns);
-      sheet->root2->exposing = exposing;
-
-    }
+    root->exposing = pudding(root, ns == "*");
+    rule->ns(ns == "*" ? "" : ns);
 
 
     if (hasCached) return nullptr;
