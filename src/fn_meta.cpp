@@ -518,12 +518,12 @@ namespace Sass {
 
           if (sheet == nullptr) {
             // This is the new barrier!
-            EnvFrame local(compiler, true, true);
+            EnvFrame local(compiler, false, true, true);
             // eval.selectorStack.push_back(nullptr);
             ImportStackFrame iframe(compiler, loaded);
             sheet = compiler.registerImport(loaded); // @use
             // eval.selectorStack.pop_back();
-            // sheet->root2->idxs = local.idxs;
+            sheet->root2->idxs = local.idxs;
             sheet->root2->import = loaded;
           }
           else if (sheet->root2->isActive) {

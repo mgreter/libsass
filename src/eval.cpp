@@ -1973,6 +1973,11 @@ namespace Sass {
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
         }
+        // Must release some scope first
+        if (node->root()) {
+          mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        }
         return nullptr;
       }
 
