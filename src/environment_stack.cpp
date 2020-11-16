@@ -921,12 +921,6 @@ namespace Sass {
       (uint32_t)stack.size() - 1;
     const VarRefs* current = stack[idx];
     while (current) {
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        const VarRef vidx{ current->varFrame, it->second };
-        return idxs->root.setVariable(vidx, val, guarded);
-      }
-
       for (auto fwd : current->fwdGlobal55) {
         VarRefs* refs = fwd.first;
         auto in = refs->varIdxs.find(name);
@@ -939,6 +933,12 @@ namespace Sass {
           const VarRef vidx{ 0xFFFFFFFF, in->second };
           return idxs->root.setVariable(vidx, val, guarded);
         }
+      }
+
+      auto it = current->varIdxs.find(name);
+      if (it != current->varIdxs.end()) {
+        const VarRef vidx{ current->varFrame, it->second };
+        return idxs->root.setVariable(vidx, val, guarded);
       }
 
       if (current->pscope == nullptr) break;

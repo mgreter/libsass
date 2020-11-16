@@ -380,7 +380,7 @@ namespace Sass {
           }
         }
       }
-
+      
     }
 
     // Check if we have a configuration

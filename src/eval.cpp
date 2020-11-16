@@ -1630,7 +1630,7 @@ namespace Sass {
       else {
 
         // ToDo: must not create new real scope!
-        EnvFrame local(compiler, true, true);
+        EnvFrame local(compiler, false, true);
         sheet = compiler.registerImport(loaded);
         sheet->hasBeenUsed = true;
         // sheet->root2->idxs = local.idxs;
@@ -1729,7 +1729,7 @@ namespace Sass {
 
     }
     else {
-      EnvFrame local(compiler, true, true);
+      EnvFrame local(compiler, false, true);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
@@ -1772,6 +1772,10 @@ namespace Sass {
         if (it != modFrame->varIdxs.end()) {
           if (var.first.isPrivate()) continue;
           if (var.second == it->second) continue;
+
+          ValueObj& slot = compiler.varRoot.getVariable({ 0xFFFFFFFF, it->second });
+          if (slot == nullptr) continue;
+
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
             "variable named \"$" + var.first.norm() + "\".");
@@ -1782,6 +1786,8 @@ namespace Sass {
         if (it != modFrame->mixIdxs.end()) {
           if (mix.first.isPrivate()) continue;
           if (mix.second == it->second) continue;
+          CallableObj& slot = compiler.varRoot.getMixin({ 0xFFFFFFFF, it->second });
+          if (slot == nullptr) continue;
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
             "mixin named \"" + mix.first.norm() + "\".");
@@ -1792,6 +1798,8 @@ namespace Sass {
         if (it != modFrame->fnIdxs.end()) {
           if (fn.first.isPrivate()) continue;
           if (fn.second == it->second) continue;
+          CallableObj& slot = compiler.varRoot.getFunction({ 0xFFFFFFFF, it->second });
+          if (slot == nullptr) continue;
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
             "function named \"" + fn.first.norm() + "\".");
