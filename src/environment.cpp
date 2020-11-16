@@ -503,7 +503,6 @@ namespace Sass {
 
     SourceSpan pstate(rule->pstate());
     const ImportRequest import(rule->url(), rule->prev());
-    // callStackFrame frame(compiler, { pstate, Strings::forwardRule });
 
     bool hasCached = false;
 
@@ -522,16 +521,13 @@ namespace Sass {
       sass::sstream msg_stream;
       msg_stream << "It's not clear which file to import. Found:\n";
       for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      {
         msg_stream << "  " << resolved[i].imp_path << "\n";
-      }
       throw Exception::ParserException(compiler, msg_stream.str());
     }
 
     // We made sure exactly one entry was found, load its content
     // This only loads the requested source file, does not parse it
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = nullptr;
       auto cached = compiler.sheets.find(loaded->getAbsPath());
@@ -548,11 +544,9 @@ namespace Sass {
       rule->root(sheet->root2);
       return sheet;
     }
-
     compiler.addFinalStackTrace(pstate);
     throw Exception::ParserException(compiler,
       "Couldn't read stylesheet for import.");
-
   }
   // EO resolveForwardFule
 
@@ -611,18 +605,12 @@ namespace Sass {
     StyleSheet* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
-    if (cached != compiler.sheets.end() && cached->second->hasBeenUsed) {
+    if (cached != compiler.sheets.end()) {
 
       hasCached = true;
 
       // Check if with is given, error
       sheet = cached->second;
-
-      if (hasWith) {
-        throw Exception::ParserException(compiler,
-          "This module was already loaded, so it "
-          "can't be configured using \"with\".");
-      }
 
     }
     else {
@@ -776,6 +764,13 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
+
+        if (compiler.implicitWithConfig) {
+          throw Exception::ParserException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+
         if (node->root()) {
           VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
           node->root()->exposing = pudding(node->root(), ns == "*", modFrame);
