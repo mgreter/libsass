@@ -258,10 +258,10 @@ namespace Sass {
     VarRefs* frame = 
       context.varRoot.stack.back();
 
-    while (frame->isImport) frame = frame->pscope;
+    // while (frame->isImport) frame = frame->pscope;
     if (global) {
       while (frame->pscope) {
-        if (frame->isModule && !frame->isImport) break;
+        if (frame->isModule) break;
         frame = frame->pscope;
       }
     }
@@ -399,16 +399,6 @@ namespace Sass {
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
       auto chroot = pr;
-
-      auto it = pr;
-      while (it) {
-        if (it->varIdxs.count(name)) {
-          hasVar = true;
-          break;
-        }
-        if (it->isModule) break;
-          it = it->pscope;
-      }
 
       while (chroot->permeable && chroot->pscope) {
         // Check if this frame contains the variable
@@ -2134,7 +2124,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame local(context, true, true, true);
+      EnvFrame local(context, false, true, true);
       ImportStackFrame iframe(context, loaded);
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;

@@ -106,9 +106,9 @@ namespace Sass {
       return { 0xFFFFFFFF, offset };
     }
 
-    if (isImport) {
-      return pscope->createVariable(name);
-    }
+    //if (isImport) {
+    //  return pscope->createVariable(name);
+    //}
 
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
