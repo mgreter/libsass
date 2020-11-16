@@ -2953,18 +2953,18 @@ namespace Sass {
       item->accept(this);
     }
 
-    for (auto asd : refs->varIdxs) {
+    for (auto asd : sheet->root2->idxs->varIdxs) {
       std::cerr << "IMPORT HAS NEW VAR " << asd.first.orig() << "\n";
     }
 
-    if (!sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
+    if (true || !sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
       auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
       for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
-      // for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
       for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
-      // for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
       for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
-      // for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
       pframe->fwdGlobal55.insert(
         pframe->fwdGlobal55.begin(),
         std::make_pair(newrefs, sheet->root2));
