@@ -2120,7 +2120,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame local(context, true, false, true);
+      EnvFrame local(context, false, true, true);
       ImportStackFrame iframe(context, loaded);
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;

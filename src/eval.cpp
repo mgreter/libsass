@@ -2932,15 +2932,31 @@ namespace Sass {
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
 
+    VarRefs* pframe = compiler.varRoot.stack.back();
     EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
 
     // debug_ast(sheet->root2);
+
+    VarRefs* refs = sheet->root2->idxs;
+
+    auto& currentRoot(compiler.currentRoot);
+    LOCAL_PTR(Root, currentRoot, sheet->root2);
 
     // Imports are always executed again
     for (const StatementObj& item : sheet->root2->elements()) {
       item->accept(this);
     }
 
+    for (auto asd : refs->varIdxs) {
+      std::cerr << "IMPORT HAS NEW VAR " << asd.first.orig() << "\n";
+    }
+    if (!sheet->root2->mergedFwdVar.empty()) {
+      auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
+      for (auto asd : sheet->root2->mergedFwdVar) {
+        newrefs->varIdxs.insert(asd);
+      }
+      pframe->fwdGlobal55.push_back(std::make_pair(newrefs, sheet->root2));
+    }
 
     // These data object have just been borrowed
     // sass_import_take_source(compiler.import_stack.back());
