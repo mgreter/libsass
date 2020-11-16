@@ -748,6 +748,19 @@ namespace Sass {
       }
 
     }
+    else {
+
+      // for (auto var : modFrame->varIdxs) {
+      //   idxs->varIdxs.insert(var);
+      // }
+      // for (auto var : modFrame->mixIdxs) {
+      //   idxs->mixIdxs.insert(var);
+      // }
+      // for (auto var : modFrame->fnIdxs) {
+      //   idxs->fnIdxs.insert(var);
+      // }
+
+    }
 
     return exposing;
 
@@ -863,12 +876,13 @@ namespace Sass {
       root->isLoading = false;
 
 
-      for (auto var : root->idxs->varIdxs) {
+      for (auto var : modFrame->varIdxs) {
         ValueObj& slot(compiler.varRoot.getModVar(var.second));
         if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
       }
 
       sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+
       if (node->ns().empty()) {
         mframe->fwdGlobal55.push_back(
           { root->exposing, root });
@@ -1218,6 +1232,152 @@ namespace Sass {
   }
   // EO resolveDynamicImport
 
+  // Resolve import of [path] and add imports to [rule]
+  StyleSheet* Eval::resolveDynamicImport(IncludeImport* rule)
+  {
+    SourceSpan pstate(rule->pstate());
+    const ImportRequest request(rule->url(), rule->prev());
+    callStackFrame frame(compiler, { pstate, Strings::importRule });
+
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(compiler.findIncludes(request, true));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::ParserException(compiler,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(compiler, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = compiler.loadImport(resolved[0])) {
+      EnvFrame local(compiler, true, false,
+        compiler.varRoot.stack.back()->isModule);
+      ImportStackFrame iframe(compiler, loaded);
+      StyleSheet* sheet = compiler.registerImport(loaded);
+      compiler.varRoot.finalizeScopes();
+      return sheet;
+    }
+
+    compiler.addFinalStackTrace(pstate);
+    throw Exception::ParserException(compiler,
+      "Couldn't read stylesheet for import.");
+
+  }
+  // EO resolveDynamicImport
+
+  void Eval::acceptIncludeImport(IncludeImport* rule)
+  {
+
+    // Get the include loaded by parser
+    // const ResolvedImport& include(rule->include());
+
+    // This will error if the path was not loaded before
+    // ToDo: Why don't we attach the sheet to include itself?
+    // rule->sheet();
+
+    // Create C-API exposed object to query
+    //struct SassImport import{
+    //   sheet.syntax, sheet.source, ""
+    //};
+
+          // Call custom importers and check if any of them handled the import
+      // if (!context.callCustomImporters(url, pstate, rule)) {
+        // Try to load url into context.sheets
+    StyleSheetObj sheet = rule->sheet();
+
+    if (sheet.isNull()) {
+      sheet = resolveDynamicImport(rule);
+      compiler.varRoot.finalizeScopes();
+    }
+
+    // debug_ast(sheet->root2);
+
+        // }
+
+    // Add C-API to stack to expose it
+    ImportStackFrame iframe(compiler, sheet->import);
+
+    callStackFrame frame(traces,
+      BackTrace(rule->pstate(), Strings::importRule));
+
+    VarRefs* pframe = compiler.varRoot.stack.back();
+    EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
+
+    // debug_ast(sheet->root2);
+
+    VarRefs* refs = sheet->root2->idxs;
+
+    auto& currentRoot(compiler.currentRoot);
+    LOCAL_PTR(Root, currentRoot, sheet->root2);
+
+    // Imports are always executed again
+    for (const StatementObj& item : sheet->root2->elements()) {
+      item->accept(this);
+    }
+
+    //for (auto var : sheet->root2->idxs->varIdxs) {
+    //  ValueObj& slot(compiler.varRoot.getModVar(var.second));
+    //  if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, rule->pstate());
+    //}
+
+    if (pframe->varFrame == 0xFFFFFFFF) {
+      // Global can simply be exposed without further ado (same frame)
+      for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+
+      auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
+      for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
+      for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
+      for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
+      pframe->fwdGlobal55.insert(
+        pframe->fwdGlobal55.begin(),
+        std::make_pair(newrefs, sheet->root2));
+
+      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); }
+      // for (auto asd : sheet->root2->mergedFwdMix) { pframe->module->mergedFwdMix.insert(asd); }
+      // for (auto asd : sheet->root2->mergedFwdFn) { pframe->fnIdxs.insert(asd); }
+
+    }
+    else {
+
+      if (true || !sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
+        auto newrefs = new VarRefs(compiler.varRoot, nullptr, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
+        for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
+        for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
+        for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
+        for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
+        for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
+        for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
+        pframe->fwdGlobal55.insert(
+          pframe->fwdGlobal55.begin(),
+          std::make_pair(newrefs, sheet->root2));
+      }
+
+    }
+
+
+    // These data object have just been borrowed
+    // sass_import_take_source(compiler.import_stack.back());
+    // sass_import_take_srcmap(compiler.import_stack.back());
+
+    // Finally remove if from the stack
+    // compiler.import_stack.pop_back();
+
+  }
 
   // Consumes a `@forward` rule.
   // [start] should point before the `@`.
