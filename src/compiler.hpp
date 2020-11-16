@@ -23,6 +23,16 @@ namespace Sass {
 
   public:
 
+    VarRefs* getCurrentModule() const {
+      if (varRoot.stack.empty()) return nullptr;
+      auto current = varRoot.stack.back();
+      while (current->pscope) {
+        if (current->isModule) break;
+        current = current->pscope;
+      }
+      return current;
+    }
+
     EnvKeyMap<Module> modules;
 
     Module& createModule(const sass::string& name) {

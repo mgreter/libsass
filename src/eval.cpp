@@ -1536,7 +1536,7 @@ namespace Sass {
 
   void mergeForwards(
     VarRefs* idxs,
-    Root* currentRoot,
+    Moduled* currentRoot,
     bool isShown,
     bool isHidden,
     const sass::string prefix,
@@ -1965,7 +1965,7 @@ namespace Sass {
   {
 
     BackTrace trace(node->pstate(), Strings::forwardRule, false);
-    callStackFrame frame(logger456, trace);
+    callStackFrame frame333(logger456, trace);
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || node->hasLocalWith());
@@ -1973,6 +1973,8 @@ namespace Sass {
     // The show or hide config also hides these
     WithConfig wconfig(compiler, node->config(), node->hasLocalWith(),
       node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
+
+    VarRefs* mframe = compiler.getCurrentModule();
 
     if (node->needsLoading()) {
       if (auto sheet = resolveForwardRule(node)) {
@@ -1982,7 +1984,7 @@ namespace Sass {
       else {
         // File was loaded by somebody else first
         if (node->root()) {
-          mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+          mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
             node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
         }
         return nullptr;
@@ -2001,7 +2003,7 @@ namespace Sass {
         }
         // Must release some scope first
         if (node->root()) {
-          mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+          mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
             node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
         }
         return nullptr;
