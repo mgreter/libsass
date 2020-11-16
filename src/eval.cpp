@@ -1737,27 +1737,27 @@ namespace Sass {
       // sheet->root2->idxs = local.idxs;
       sheet->root2->import = loaded;
 
-      Root* root = sheet->root2;
-      VarRefs* idxs = root->idxs;
-
-      // Expose what has been forwarded to us
-      for (auto var : root->mergedFwdVar) {
-        if (!var.first.isPrivate())
-          idxs->varIdxs.insert(var);
-      }
-      for (auto mix : root->mergedFwdMix) {
-        if (!mix.first.isPrivate())
-          idxs->mixIdxs.insert(mix);
-      }
-      for (auto fn : root->mergedFwdFn) {
-        if (!fn.first.isPrivate())
-          idxs->fnIdxs.insert(fn);
-      }
-
       // sheet->root2->con context->node
     }
 
+
     Root* root = sheet->root2;
+    VarRefs* idxs = root->idxs;
+
+    // Expose what has been forwarded to us
+    for (auto var : root->mergedFwdVar) {
+      if (!var.first.isPrivate())
+        idxs->varIdxs.insert(var);
+    }
+    for (auto mix : root->mergedFwdMix) {
+      if (!mix.first.isPrivate())
+        idxs->mixIdxs.insert(mix);
+    }
+    for (auto fn : root->mergedFwdFn) {
+      if (!fn.first.isPrivate())
+        idxs->fnIdxs.insert(fn);
+    }
+
     VarRefs* refs = root->idxs;
     rule->root(root);
     Moduled* module = root;
