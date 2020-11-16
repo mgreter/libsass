@@ -1880,7 +1880,18 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
-        std::cerr << "Should not happen\n";
+        if (node->root()) {
+          Root* root = node->root();
+          VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+          if (node->ns().empty()) {
+            mframe->fwdGlobal55.push_back(
+              { root->exposing, root });
+          }
+          else {
+            mframe->fwdModule55[node->ns()] =
+            { root->exposing, root };
+          }
+        }
         return nullptr;
       }
     }
