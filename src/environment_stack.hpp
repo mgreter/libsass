@@ -433,7 +433,7 @@ namespace Sass {
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    void setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global);
+    bool setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global);
 
   };
 

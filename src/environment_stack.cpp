@@ -914,9 +914,9 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  void EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global)
+  bool EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global)
   {
-    if (stack.empty()) return;
+    if (stack.empty()) return false;
     uint32_t idx = global ? 0 :
       (uint32_t)stack.size() - 1;
     const VarRefs* current = stack[idx];
@@ -931,19 +931,34 @@ namespace Sass {
               "from outside their modules.");
           }
           const VarRef vidx{ 0xFFFFFFFF, in->second };
-          return idxs->root.setVariable(vidx, val, guarded);
+          idxs->root.setVariable(vidx, val, guarded);
+          return true;
         }
+/*
+        if (Moduled* mod = fwd.second) {
+          auto fwd = mod->mergedFwdVar.find(name);
+          if (fwd != mod->mergedFwdVar.end()) {
+            std::cerr << "Got in merged fwd\n";
+            // Value* val = getVariable(
+            //   { 0xFFFFFFFF, fwd->second });
+            // if (val && name.isPrivate()) continue;
+            // if (val != nullptr) return val;
+          }
+        }
+*/
       }
 
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
-        return idxs->root.setVariable(vidx, val, guarded);
+        idxs->root.setVariable(vidx, val, guarded);
+        return true;
       }
 
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
+    return false;
   }
   // EO setVariable
 

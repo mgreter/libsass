@@ -1908,7 +1908,9 @@ namespace Sass {
 
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
-      EnvScope scoped2(compiler.varRoot, root->idxs);
+      VarRefs* idxs = root->idxs;
+      if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
+      EnvScope scoped2(compiler.varRoot, idxs);
       ImportStackFrame iframe(compiler, root->import);
       for (auto child : root->elements()) {
         child->accept(this);
@@ -1923,7 +1925,7 @@ namespace Sass {
       root->isLoading = false;
     }
 
-    // wconfig.finalize();
+    wconfig.finalize();
 
     return nullptr;
     // throw Exception::RuntimeException(compiler,
@@ -1969,7 +1971,11 @@ namespace Sass {
       node->root()->isLoading = true;
       ImportStackFrame iframe(compiler, root->import);
 
-      EnvScope scoped2(compiler.varRoot, root->idxs);
+      // For a forward within an import this can be wrong
+      // We should assign to variables in the parent ...
+      VarRefs* idxs = root->idxs;
+      if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
+      EnvScope scoped2(compiler.varRoot, idxs);
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
 
@@ -1981,7 +1987,7 @@ namespace Sass {
       node->root()->loaded = current;
     }
 
-    // wconfig.finalize();
+    wconfig.finalize();
     return nullptr;
   }
 
@@ -2428,7 +2434,6 @@ namespace Sass {
   {
 
 
-
     // We always must have at least one variable
     SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
 
@@ -2519,12 +2524,19 @@ namespace Sass {
 
     if (a->ns().empty()) {
 
-      compiler.varRoot.setVariable(
+      if (!compiler.varRoot.setVariable(
         a->variable(),
         a->value()->accept(this),
         a->is_default(),
-        a->is_global());
-
+        a->is_global()))
+      {
+        if (!a->vidxs().empty()) {
+          compiler.varRoot.setVariable(
+            a->vidxs().front(),
+            a->value()->accept(this),
+            false);
+        }
+      }
     }
     else {
 
