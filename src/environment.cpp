@@ -588,11 +588,6 @@ namespace Sass {
     }
 
     VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-    if (!ns.empty()) {
-      if (modFrame->fwdModule55.count(ns)) {
-        throw Exception::ModuleAlreadyKnown(compiler, ns);
-      }
-    }
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
@@ -626,6 +621,13 @@ namespace Sass {
 
     }
     else {
+
+      if (!ns.empty()) {
+        if (modFrame->fwdModule55.count(ns)) {
+          throw Exception::ModuleAlreadyKnown(compiler, ns);
+        }
+      }
+
       EnvFrame local(compiler, false, true);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
