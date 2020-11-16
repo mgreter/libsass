@@ -51,6 +51,7 @@ namespace Sass {
 
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
     root->idxs = context.varRoot.stack.back();
+    context.varRoot.stack.back()->module = root;
 
     auto& currentRoot(context.currentRoot);
     LOCAL_PTR(Root, currentRoot, root);
@@ -2084,7 +2085,7 @@ namespace Sass {
       }
 #else
       rule->append(SASS_MEMORY_NEW(IncludeImport,
-        scanner.relevantSpanFrom(start), url, nullptr));
+        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
 #endif
 
     }
@@ -2095,6 +2096,7 @@ namespace Sass {
   void StylesheetParser::resolveDynamicImport(
     ImportRule* rule, Offset start, const sass::string& path)
   {
+
     SourceSpan pstate = scanner.relevantSpanFrom(start);
     const ImportRequest import(path, scanner.sourceUrl);
     callStackFrame frame(context, { pstate, Strings::importRule });
@@ -2114,7 +2116,9 @@ namespace Sass {
       sass::sstream msg_stream;
       msg_stream << "It's not clear which file to import. Found:\n";
       for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      { msg_stream << "  " << resolved[i].imp_path << "\n"; }
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
       throw Exception::ParserException(context, msg_stream.str());
     }
 
@@ -2125,7 +2129,8 @@ namespace Sass {
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;
       const sass::string& url(resolved[0].abs_path);
-      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
+      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate,
+        scanner.sourceUrl, url, sheet));
     }
     else {
       context.addFinalStackTrace(pstate);

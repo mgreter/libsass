@@ -103,6 +103,8 @@ namespace Sass {
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
 
+    Moduled* module = nullptr;
+
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
     bool permeable = false;
@@ -212,6 +214,7 @@ namespace Sass {
 
     // Find function only in local frame
     Callable* getFunction(const EnvKey& name) const;
+
     Callable* getMixin(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
 
@@ -373,6 +376,7 @@ namespace Sass {
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
     ValueObj& getVariable(const VarRef& vidx);
+    ValueObj& getModVar(const uint32_t offset);
 
     // Get function instance by stack index reference
     // Just converting and returning reference to array offset

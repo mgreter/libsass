@@ -554,6 +554,8 @@ namespace Sass {
   class ImportRule final : public Statement,
     public Vectorized<ImportBase>
   {
+    ADD_CONSTREF(sass::string, url);
+    ADD_CONSTREF(sass::string, prev);
   public:
     // Value constructor
     ImportRule(const SourceSpan& pstate);

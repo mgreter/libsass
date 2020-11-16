@@ -62,6 +62,7 @@ namespace Sass {
   public:
 
     IncludeImport(const SourceSpan& pstate,
+      const sass::string& prev,
       const sass::string& url,
       StyleSheet* sheet);
     // Implement final up-casting method
