@@ -254,7 +254,7 @@ namespace Sass {
   // Update variable references and assignments
   void EnvRoot::finalizeScopes()
   {
-
+    return; // Disabled for now
     // Process every scope ever seen
     for (VarRefs* scope : scopes) {
 

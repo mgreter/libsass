@@ -1642,8 +1642,8 @@ namespace Sass {
 
 
       // Imports that are inside and might create new globals are not seen yet!
-      mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
-        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
+      // mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
+      //   rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
 
       if (hasCached) return nullptr;
       // wconfig.finalize();
@@ -1982,10 +1982,14 @@ namespace Sass {
       for (auto child : node->root()->elements()) {
         child->accept(this);
       }
+
       // compiler.import_stack.pop_back();
       node->root()->isLoading = false;
       node->root()->loaded = current;
     }
+
+    mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+      node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
 
     wconfig.finalize();
     return nullptr;
@@ -2875,7 +2879,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, true, true, true);
+      EnvFrame local(compiler, false, true, true);
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       sheet->root2->import = loaded;

@@ -362,6 +362,12 @@ namespace Sass {
     auto pr = frame;
     while (pr->isImport) pr = pr->pscope;
 
+    if (global) {
+      while (pr->pscope) {
+        pr = pr->pscope;
+      }
+    }
+
     if (pr->varFrame == 0xFFFFFFFF) {
 
       // Assign a default
@@ -391,14 +397,7 @@ namespace Sass {
       // IF we are semi-global and parent is root
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
-      auto chroot = frame;
-
-      if (global) {
-        while (chroot->pscope) {
-          chroot = chroot->pscope;
-        }
-        pr = chroot;
-      }
+      auto chroot = pr;
 
       while (chroot->permeable && chroot->pscope) {
         // Check if this frame contains the variable
