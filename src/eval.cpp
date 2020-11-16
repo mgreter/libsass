@@ -2956,7 +2956,9 @@ namespace Sass {
       for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
       for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
       for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
-      pframe->fwdGlobal55.push_back(std::make_pair(newrefs, sheet->root2));
+      pframe->fwdGlobal55.insert(
+        pframe->fwdGlobal55.begin(),
+        std::make_pair(newrefs, sheet->root2));
     }
 
     // These data object have just been borrowed
