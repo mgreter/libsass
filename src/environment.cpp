@@ -106,19 +106,18 @@ namespace Sass {
         // This check may not be needed, but we create a
         // superfluous variable slot in the scope
         for (auto fwds : rframe->fwdGlobal55) {
-          auto it = fwds->varIdxs.find(a->variable());
-          if (it != fwds->varIdxs.end()) {
+          auto it = fwds.first->varIdxs.find(a->variable());
+          if (it != fwds.first->varIdxs.end()) {
             VarRef vidx(0xFFFFFFFF, it->second);
             auto value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
-          if (auto module = fwds->module) {
-            auto fwd = fwds->module->mergedFwdVar.find(a->variable());
-            if (fwd != fwds->module->mergedFwdVar.end()) {
-              VarRef vidx(0xFFFFFFFF, fwd->second);
-              auto value = compiler.varRoot.getVariable(vidx);
-              if (value != nullptr) hasVar = true;
-            }
+
+          auto fwd = fwds.second->mergedFwdVar.find(a->variable());
+          if (fwd != fwds.second->mergedFwdVar.end()) {
+            VarRef vidx(0xFFFFFFFF, fwd->second);
+            auto value = compiler.varRoot.getVariable(vidx);
+            if (value != nullptr) hasVar = true;
           }
         }
       }
@@ -342,7 +341,8 @@ namespace Sass {
 
       // This only checks within the local frame
       // Don't assign global if in another scope!
-      for (auto refs : frame->fwdGlobal55) {
+      for (auto fwd : frame->fwdGlobal55) {
+        VarRefs* refs = fwd.first;
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
           if (name.isPrivate()) {
@@ -717,10 +717,10 @@ namespace Sass {
 
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->fwdGlobal55) {
-        if (exposing == fwd) continue;
+        if (exposing == fwd.first) continue;
         for (auto var : exposing->varIdxs) {
-          auto it = fwd->varIdxs.find(var.first);
-          if (it != fwd->varIdxs.end()) {
+          auto it = fwd.first->varIdxs.find(var.first);
+          if (it != fwd.first->varIdxs.end()) {
             if (var.second == it->second) continue;
             throw Exception::ParserException(compiler,
               "$" + var.first.norm() + " is available "
@@ -728,8 +728,8 @@ namespace Sass {
           }
         }
         for (auto var : exposing->mixIdxs) {
-          auto it = fwd->mixIdxs.find(var.first);
-          if (it != fwd->mixIdxs.end()) {
+          auto it = fwd.first->mixIdxs.find(var.first);
+          if (it != fwd.first->mixIdxs.end()) {
             if (var.second == it->second) continue;
             throw Exception::ParserException(compiler,
               "Mixin \"" + var.first.norm() + "(...)\" is "
@@ -737,8 +737,8 @@ namespace Sass {
           }
         }
         for (auto var : exposing->fnIdxs) {
-          auto it = fwd->fnIdxs.find(var.first);
-          if (it != fwd->fnIdxs.end()) {
+          auto it = fwd.first->fnIdxs.find(var.first);
+          if (it != fwd.first->fnIdxs.end()) {
             if (var.second == it->second) continue;
             throw Exception::ParserException(compiler,
               "Function \"" + var.first.norm() + "(...)\" is "
@@ -805,7 +805,9 @@ namespace Sass {
           Root* root = node->root();
           VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
           if (node->ns().empty()) {
-            mframe->fwdGlobal55.push_back(root->exposing);
+root->exposing->module = root;
+            mframe->fwdGlobal55.push_back(
+              { root->exposing, root });
           }
           else {
             mframe->fwdModule55[node->ns()] =
@@ -832,8 +834,9 @@ namespace Sass {
         VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
         sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
         if (node->ns().empty()) {
+root->exposing->module = root;
           mframe->fwdGlobal55.push_back(
-            root->exposing);
+            { root->exposing, root });
         }
         else {
           mframe->fwdModule55[node->ns()] =
@@ -883,8 +886,9 @@ namespace Sass {
       sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
 
       if (node->ns().empty()) {
+root->exposing->module = root;
         mframe->fwdGlobal55.push_back(
-          root->exposing);
+          { root->exposing, root });
       }
       else {
         mframe->fwdModule55[node->ns()] =
@@ -1096,7 +1100,7 @@ namespace Sass {
         }
 
         current->fwdGlobal55.push_back(
-          module->idxs);
+          { module->idxs, nullptr });
 
       }
       else if (modFrame->fwdModule55.count(ns)) {
@@ -1334,17 +1338,17 @@ namespace Sass {
 
     if (pframe->varFrame == 0xFFFFFFFF) {
       // Global can simply be exposed without further ado (same frame)
-//      for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
-//      for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
-//      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
-//
-//      auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
-//      for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
-//      for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
-//      for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
-//      pframe->fwdGlobal55.insert(
-//        pframe->fwdGlobal55.begin(),
-//        std::make_pair(newrefs, sheet->root2));
+      for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+
+      auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
+      for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
+      for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
+      for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
+      pframe->fwdGlobal55.insert(
+        pframe->fwdGlobal55.begin(),
+        std::make_pair(newrefs, sheet->root2));
 
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); }
       // for (auto asd : sheet->root2->mergedFwdMix) { pframe->module->mergedFwdMix.insert(asd); }
