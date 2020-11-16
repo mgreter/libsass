@@ -49,7 +49,7 @@ namespace Sass {
   using namespace Character;
   using namespace StringUtils;
 
-  bool udbg = false;
+  bool udbg = true;
 
 
   Value* Eval::visitAssignRule(AssignRule* a)
@@ -914,7 +914,7 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
-        if (node->hasLocalWith() && compiler.implicitWithConfig) {
+        if (compiler.implicitWithConfig) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1338,7 +1338,7 @@ namespace Sass {
 
         bool hasWith = withMap && !withMap->empty();
 
-        if (udbg) std::cerr << "Visit use rule '" << url->value() << "' "
+        if (udbg) std::cerr << "Visit load-css '" << url->value() << "' "
           << hasWith << " -> " << compiler.implicitWithConfig << "\n";
 
         LocalOption<bool> scoped(compiler.implicitWithConfig,
@@ -1427,18 +1427,6 @@ namespace Sass {
                 "can\'t be configured using \"with\".");
             }
 
-            if (sheet->root2->isActive) {
-              if (hasWith) {
-                throw Exception::ParserException(compiler,
-                  sass::string(sheet->root2->pstate().getFileName())
-                  + " was already loaded, so it "
-                  "can\'t be configured using \"with\".");
-              }
-              else if (sheet->root2->isLoading) {
-                throw Exception::ParserException(compiler,
-                  "Module loop: " + sass::string(sheet->root2->pstate().getFileName()) + " is already being loaded.");
-              }
-            }
           }
 
           if (sheet->root2->loaded) {
