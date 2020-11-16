@@ -39,6 +39,8 @@ namespace Sass {
   using namespace Character;
   using namespace StringUtils;
 
+  bool udbg = true;
+
 
   Value* Eval::visitAssignRule(AssignRule* a)
   {
@@ -747,9 +749,6 @@ namespace Sass {
     sass::string prev(node->prev());
     bool hasWith(node->hasLocalWith());
 
-    LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || hasWith);
-
     BackTrace trace(node->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
@@ -757,6 +756,9 @@ namespace Sass {
     WithConfig wconfig(compiler, node->config(), hasWith);
 
     StyleSheet* sheet = nullptr;
+
+    if (udbg) std::cerr << "Visit use rule '" << node->url() << "'\n";
+
 
     if (node->needsLoading()) {
       if (sheet = resolveUseRule(node)) {
@@ -785,9 +787,14 @@ namespace Sass {
             { root->exposing, root };
           }
         }
+
+        if (udbg) std::cerr << "Cached use rule '" << node->url() << "'\n";
         return nullptr;
       }
     }
+
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || node->hasLocalWith());
 
     if (node->root()) {
 
@@ -795,11 +802,11 @@ namespace Sass {
       VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
 
       if (root->isActive) {
-        if (node->hasLocalWith() || compiler.implicitWithConfig) {
-          throw Exception::RuntimeException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
+        // if (node->hasLocalWith() || compiler.implicitWithConfig) {
+        //   throw Exception::RuntimeException(compiler,
+        //     "This module was already loaded, so it "
+        //     "can't be configured using \"with\".");
+        // }
         VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
         sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
         if (node->ns().empty()) {
@@ -833,6 +840,9 @@ namespace Sass {
       for (auto child : root->elements()) {
         child->accept(this);
       }
+
+      if (udbg) std::cerr << "Compiled use rule '" << node->url() << "'\n";
+
       // compiler.import_stack.pop_back();
       current = oldCurrent;
 
@@ -885,6 +895,8 @@ namespace Sass {
     WithConfig wconfig(compiler, node->config(), node->hasLocalWith(),
       node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
 
+    if (udbg) std::cerr << "Visit forward rule '" << node->url() << "'\n";
+
     VarRefs* mframe = compiler.getCurrentModule();
 
     if (node->needsLoading()) {
@@ -899,6 +911,8 @@ namespace Sass {
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
         }
+
+        if (udbg) std::cerr << "Cached forward rule '" << node->url() << "'\n";
 
         // File was loaded by somebody else first
         if (node->root()) {
@@ -945,6 +959,8 @@ namespace Sass {
       // compiler.import_stack.pop_back();
       node->root()->isLoading = false;
       node->root()->loaded = current;
+
+      if (udbg) std::cerr << "Compiled forward rule '" << node->url() << "'\n";
 
     }
 
