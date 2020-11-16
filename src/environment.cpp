@@ -486,6 +486,580 @@ namespace Sass {
 
   }
 
+
+  void exposeFiltered(
+    EnvKeyFlatMap<uint32_t>& merged,
+    EnvKeyFlatMap<uint32_t> expose,
+    const sass::string prefix,
+    const std::set<EnvKey>& filters,
+    const sass::string& errprefix,
+    Logger& logger,
+    bool show)
+  {
+    for (auto idx : expose) {
+      if (idx.first.isPrivate()) continue;
+      EnvKey key(prefix + idx.first.orig());
+      if (show == (filters.count(key) == 1)) {
+        auto it = merged.find(key);
+        if (it == merged.end()) {
+          merged.insert({ key, idx.second });
+        }
+        else if (idx.second != it->second) {
+          throw Exception::RuntimeException(logger,
+            "Two forwarded modules both define a "
+            + errprefix + key.norm() + ".");
+        }
+      }
+    }
+  }
+
+  void exposeFiltered(
+    EnvKeyFlatMap<uint32_t>& merged,
+    EnvKeyFlatMap<uint32_t> expose,
+    const sass::string prefix,
+    const sass::string& errprefix,
+    Logger& logger)
+  {
+    for (auto idx : expose) {
+      if (idx.first.isPrivate()) continue;
+      EnvKey key(prefix + idx.first.orig());
+      auto it = merged.find(key);
+      if (it == merged.end()) {
+        merged.insert({ key, idx.second });
+      }
+      else if (idx.second != it->second) {
+        throw Exception::RuntimeException(logger,
+          "Two forwarded modules both define a "
+          + errprefix + key.norm() + ".");
+      }
+    }
+  }
+
+  void mergeForwards(
+    VarRefs* idxs,
+    Moduled* currentRoot,
+    bool isShown,
+    bool isHidden,
+    const sass::string prefix,
+    const std::set<EnvKey>& toggledVariables,
+    const std::set<EnvKey>& toggledCallables,
+    Logger& logger)
+  {
+
+    if (isShown) {
+      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
+      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
+      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
+    }
+    else if (isHidden) {
+      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
+      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
+      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
+    }
+    else {
+      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
+      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
+      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
+    }
+
+  }
+
+
+  StyleSheet* Eval::resolveForwardRule(ForwardRule* rule)
+  {
+
+
+    // sass::string ns(rule->ns());
+    sass::string url(rule->url());
+    sass::string prev(rule->prev());
+    sass::string prefix(rule->prefix());
+    bool isShown(rule->isShown());
+    bool isHidden(rule->isHidden());
+    bool hasWith(rule->hasLocalWith());
+    auto config(rule->config());
+
+    SourceSpan pstate(rule->pstate());
+    const ImportRequest import(rule->url(), rule->prev());
+    // callStackFrame frame(compiler, { pstate, Strings::forwardRule });
+
+    bool hasCached = false;
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, false));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::ParserException(compiler,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(compiler, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = compiler.loadImport(resolved[0])) {
+
+      ImportStackFrame iframe(compiler, loaded);
+
+      // ToDo: We don't take format into account
+      StyleSheet* sheet = nullptr;
+      // EnvFrame* frame(context.varRoot.stack.back()->getModule());
+      auto cached = compiler.sheets.find(loaded->getAbsPath());
+      if (cached != compiler.sheets.end() && cached->second->hasBeenUsed) {
+
+        hasCached = true;
+
+        // Check if with is given, error
+        sheet = cached->second;
+
+        if (compiler.implicitWithConfig || hasWith) {
+          throw Exception::ParserException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+
+      }
+      else {
+
+        // ToDo: must not create new real scope!
+        EnvFrame local(compiler, false, true);
+        sheet = compiler.registerImport(loaded);
+        sheet->hasBeenUsed = true;
+        // sheet->root2->idxs = local.idxs;
+        sheet->root2->import = loaded;
+      }
+
+      Root* module = sheet->root2;
+      rule->root(module);
+
+
+      // Imports that are inside and might create new globals are not seen yet!
+      // mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
+      //   rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
+
+      if (hasCached) return nullptr;
+      // wconfig.finalize();
+      return sheet;
+
+    }
+
+    compiler.addFinalStackTrace(pstate);
+    throw Exception::ParserException(compiler,
+      "Couldn't read stylesheet for import.");
+
+
+
+  }
+
+  StyleSheet* Eval::resolveUseRule(UseRule* rule)
+  {
+
+    sass::string ns(rule->ns());
+    sass::string url(rule->url());
+    sass::string prev(rule->prev());
+    bool hasWith(rule->hasLocalWith());
+    auto config(rule->config());
+
+    const ImportRequest import(url, prev);
+    SourceSpan pstate = rule->pstate();
+    //callStackFrame frame(context, { pstate, Strings::useRule });
+
+    bool hasCached = false;
+
+    // Deduct the namespace from url
+    // After last slash before first dot
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      start = (start == NPOS ? 0 : start + 1);
+      auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
+      ns = url.substr(start, end);
+    }
+
+    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+    if (!ns.empty()) {
+      if (modFrame->fwdModule55.count(ns)) {
+        throw Exception::ModuleAlreadyKnown(compiler, ns);
+      }
+    }
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(
+      compiler.findIncludes(import, false));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::UnknwonImport(compiler);
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::AmbiguousImports(compiler, resolved);
+    }
+
+    // This is guaranteed to either load or error out!
+    ImportObj loaded = compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(compiler, loaded);
+
+    StyleSheet* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = compiler.sheets.find(abspath);
+    if (cached != compiler.sheets.end() && cached->second->hasBeenUsed) {
+
+      hasCached = true;
+
+      // Check if with is given, error
+      sheet = cached->second;
+
+      if (hasWith) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
+      }
+
+    }
+    else {
+      EnvFrame local(compiler, false, true);
+      sheet = compiler.registerImport(loaded);
+      sheet->hasBeenUsed = true;
+      compiler.varRoot.finalizeScopes();
+
+      // sheet->root2->idxs = local.idxs;
+      sheet->root2->import = loaded;
+
+      // sheet->root2->con context->node
+    }
+
+
+    Root* root = sheet->root2;
+    rule->root(root);
+
+    rule->ns(ns == "*" ? "" : ns);
+
+    if (hasCached) return nullptr;
+    // wconfig.finalize();
+    return sheet;
+
+
+  }
+
+  VarRefs* Eval::pudding(Moduled* root, bool intoRoot, VarRefs* modFrame)
+  {
+
+    VarRefs* idxs = root->idxs;
+    VarRefs* refs = root->idxs;
+    Moduled* module = root;
+    VarRefs* exposing = refs;
+
+    // Expose what has been forwarded to us
+    for (auto var : root->mergedFwdVar) {
+      if (!var.first.isPrivate())
+        idxs->varIdxs.insert(var);
+    }
+    for (auto mix : root->mergedFwdMix) {
+      if (!mix.first.isPrivate())
+        idxs->mixIdxs.insert(mix);
+    }
+    for (auto fn : root->mergedFwdFn) {
+      if (!fn.first.isPrivate())
+        idxs->fnIdxs.insert(fn);
+    }
+
+    if (intoRoot) {
+
+      for (auto var : exposing->varIdxs) {
+        auto it = modFrame->varIdxs.find(var.first);
+        if (it != modFrame->varIdxs.end()) {
+          if (var.first.isPrivate()) continue;
+          if (var.second == it->second) continue;
+
+          ValueObj& slot = compiler.varRoot.getVariable({ 0xFFFFFFFF, it->second });
+          if (slot == nullptr) continue;
+
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "variable named \"$" + var.first.norm() + "\".");
+        }
+      }
+      for (auto mix : exposing->mixIdxs) {
+        auto it = modFrame->mixIdxs.find(mix.first);
+        if (it != modFrame->mixIdxs.end()) {
+          if (mix.first.isPrivate()) continue;
+          if (mix.second == it->second) continue;
+          CallableObj& slot = compiler.varRoot.getMixin({ 0xFFFFFFFF, it->second });
+          if (slot == nullptr) continue;
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "mixin named \"" + mix.first.norm() + "\".");
+        }
+      }
+      for (auto fn : exposing->fnIdxs) {
+        auto it = modFrame->fnIdxs.find(fn.first);
+        if (it != modFrame->fnIdxs.end()) {
+          if (fn.first.isPrivate()) continue;
+          if (fn.second == it->second) continue;
+          CallableObj& slot = compiler.varRoot.getFunction({ 0xFFFFFFFF, it->second });
+          if (slot == nullptr) continue;
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "function named \"" + fn.first.norm() + "\".");
+        }
+      }
+
+      // Check if we push the same stuff twice
+      for (auto fwd : modFrame->fwdGlobal55) {
+        if (exposing == fwd.first) continue;
+        for (auto var : exposing->varIdxs) {
+          auto it = fwd.first->varIdxs.find(var.first);
+          if (it != fwd.first->varIdxs.end()) {
+            if (var.second == it->second) continue;
+            throw Exception::ParserException(compiler,
+              "$" + var.first.norm() + " is available "
+              "from multiple global modules.");
+          }
+        }
+        for (auto var : exposing->mixIdxs) {
+          auto it = fwd.first->mixIdxs.find(var.first);
+          if (it != fwd.first->mixIdxs.end()) {
+            if (var.second == it->second) continue;
+            throw Exception::ParserException(compiler,
+              "Mixin \"" + var.first.norm() + "(...)\" is "
+              "available from multiple global modules.");
+          }
+        }
+        for (auto var : exposing->fnIdxs) {
+          auto it = fwd.first->fnIdxs.find(var.first);
+          if (it != fwd.first->fnIdxs.end()) {
+            if (var.second == it->second) continue;
+            throw Exception::ParserException(compiler,
+              "Function \"" + var.first.norm() + "(...)\" is "
+              "available from multiple global modules.");
+          }
+        }
+      }
+
+    }
+
+    return exposing;
+
+  }
+
+  Value* Eval::visitUseRule(UseRule* node)
+  {
+
+    sass::string ns(node->ns());
+    sass::string url(node->url());
+    sass::string prev(node->prev());
+    bool hasWith(node->hasLocalWith());
+
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || hasWith);
+
+    BackTrace trace(node->pstate(), Strings::useRule, false);
+    callStackFrame frame(logger456, trace);
+
+    // The show or hide config also hides these
+    WithConfig wconfig(compiler, node->config(), hasWith);
+
+    StyleSheet* sheet = nullptr;
+
+    if (node->needsLoading()) {
+      if (sheet = resolveUseRule(node)) {
+        node->root(sheet->root2);
+        node->needsLoading(false);
+      }
+      else {
+        if (node->root()) {
+          VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+          node->root()->exposing = pudding(node->root(), ns == "*", modFrame);
+          Root* root = node->root();
+          VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+          if (node->ns().empty()) {
+            mframe->fwdGlobal55.push_back(
+              { root->exposing, root });
+          }
+          else {
+            mframe->fwdModule55[node->ns()] =
+            { root->exposing, root };
+          }
+        }
+        return nullptr;
+      }
+    }
+
+    if (node->root()) {
+
+      Root* root = node->root();
+      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+
+      if (root->isActive) {
+        if (node->hasLocalWith() || compiler.implicitWithConfig) {
+          throw Exception::RuntimeException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+        VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+        sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+        if (node->ns().empty()) {
+          mframe->fwdGlobal55.push_back(
+            { root->exposing, root });
+        }
+        else {
+          mframe->fwdModule55[node->ns()] =
+          { root->exposing, root };
+        }
+        return nullptr;
+      }
+
+      root->isActive = true;
+      root->isLoading = true;
+      root->loaded = current;
+      root->loaded = SASS_MEMORY_NEW(CssStyleRule,
+        root->pstate(), nullptr, selectorStack.back());
+      auto oldCurrent = current;
+      current = root->loaded;
+
+      auto& currentRoot(compiler.currentRoot);
+      LOCAL_PTR(Root, currentRoot, root);
+      VarRefs* idxs = root->idxs;
+
+      VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+
+      EnvScope scoped2(compiler.varRoot, idxs);
+
+      ImportStackFrame iframe(compiler, root->import);
+      for (auto child : root->elements()) {
+        child->accept(this);
+      }
+      // compiler.import_stack.pop_back();
+      current = oldCurrent;
+
+      for (auto child : root->loaded->elements()) {
+        if (current) current->append(child);
+      }
+
+      root->isLoading = false;
+
+
+      for (auto var : root->idxs->varIdxs) {
+        ValueObj& slot(compiler.varRoot.getModVar(var.second));
+        if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
+      }
+
+      sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+      if (node->ns().empty()) {
+        mframe->fwdGlobal55.push_back(
+          { root->exposing, root });
+      }
+      else {
+        mframe->fwdModule55[node->ns()] =
+        { root->exposing, root };
+      }
+
+    }
+    else {
+      // std::cerr << "Still now root\n";
+    }
+
+
+
+    wconfig.finalize();
+
+    return nullptr;
+    // throw Exception::RuntimeException(compiler,
+    //   "@use rules not yet supported in LibSass!");
+  }
+
+  Value* Eval::visitForwardRule(ForwardRule* node)
+  {
+
+    BackTrace trace(node->pstate(), Strings::forwardRule, false);
+    callStackFrame frame333(logger456, trace);
+
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || node->hasLocalWith());
+
+    // The show or hide config also hides these
+    WithConfig wconfig(compiler, node->config(), node->hasLocalWith(),
+      node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
+
+    VarRefs* mframe = compiler.getCurrentModule();
+
+    if (node->needsLoading()) {
+      if (auto sheet = resolveForwardRule(node)) {
+        node->root(sheet->root2);
+        node->needsLoading(false);
+      }
+      else {
+        // File was loaded by somebody else first
+        if (node->root()) {
+          mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
+            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        }
+        return nullptr;
+      }
+    }
+
+    if (node->root()) {
+
+      Root* root = node->root();
+
+      if (root->isActive) {
+        if (node->hasLocalWith() || compiler.implicitWithConfig) {
+          throw Exception::RuntimeException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+        // Must release some scope first
+        if (node->root()) {
+          mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
+            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        }
+        return nullptr;
+      }
+
+      node->root()->isActive = true;
+      node->root()->isLoading = true;
+      ImportStackFrame iframe(compiler, root->import);
+
+      // For a forward within an import this can be wrong
+      // We should assign to variables in the parent ...
+      VarRefs* idxs = root->idxs;
+      if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
+      EnvScope scoped2(compiler.varRoot, idxs);
+      auto& currentRoot(compiler.currentRoot);
+      LOCAL_PTR(Root, currentRoot, root);
+
+      for (auto child : node->root()->elements()) {
+        child->accept(this);
+      }
+      // compiler.import_stack.pop_back();
+      node->root()->isLoading = false;
+      node->root()->loaded = current;
+
+    }
+
+    // Must release some scope first
+    if (node->root()) {
+      mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+        node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+    }
+
+    wconfig.finalize();
+    return nullptr;
+  }
+
   ImportRule* StylesheetParser::readImportRule(Offset start)
   {
     ImportRuleObj rule = SASS_MEMORY_NEW(
@@ -605,6 +1179,112 @@ namespace Sass {
 #endif
     return rule.detach();
   }
+
+
+  void StylesheetParser::scanImportArgument(ImportRule* rule)
+  {
+    const char* startpos = scanner.position;
+    Offset start(scanner.offset);
+    uint8_t next = scanner.peekChar();
+    if (next == $u || next == $U) {
+      Expression* url = readFunctionOrStringExpression();
+      scanWhitespace();
+      auto queries = tryImportQueries();
+      rule->append(SASS_MEMORY_NEW(StaticImport,
+        scanner.relevantSpanFrom(start),
+        SASS_MEMORY_NEW(Interpolation,
+          url->pstate(), url),
+        queries.first, queries.second));
+      return;
+    }
+
+    sass::string url = string();
+    const char* rawUrlPos = scanner.position;
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    scanWhitespace();
+    auto queries = tryImportQueries();
+    if (isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
+      // Create static import that is never
+      // resolved by libsass (output as is)
+      rule->append(SASS_MEMORY_NEW(StaticImport,
+        scanner.relevantSpanFrom(start),
+        SASS_MEMORY_NEW(Interpolation, pstate,
+          SASS_MEMORY_NEW(String, pstate,
+            sass::string(startpos, rawUrlPos))),
+        queries.first, queries.second));
+    }
+    // Otherwise return a dynamic import
+    // Will resolve during the eval stage
+    else {
+      // Check for valid dynamic import
+      if (inControlDirective || inMixin) {
+        throwDisallowedAtRule(rule->pstate().position);
+      }
+
+#ifdef SassEagerImportParsing
+      // Call custom importers and check if any of them handled the import
+      if (!context.callCustomImporters(url, pstate, rule)) {
+        // Try to load url into context.sheets
+        resolveDynamicImport(rule, start, url);
+      }
+#else
+      rule->append(SASS_MEMORY_NEW(IncludeImport,
+        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
+#endif
+
+    }
+
+  }
+
+  // Resolve import of [path] and add imports to [rule]
+  void StylesheetParser::resolveDynamicImport(
+    ImportRule* rule, Offset start, const sass::string& path)
+  {
+
+    SourceSpan pstate = scanner.relevantSpanFrom(start);
+    const ImportRequest import(path, scanner.sourceUrl);
+    callStackFrame frame(context, { pstate, Strings::importRule });
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, true));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Can't find stylesheet to import.");
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      sass::sstream msg_stream;
+      msg_stream << "It's not clear which file to import. Found:\n";
+      for (size_t i = 0, L = resolved.size(); i < L; ++i)
+      {
+        msg_stream << "  " << resolved[i].imp_path << "\n";
+      }
+      throw Exception::ParserException(context, msg_stream.str());
+    }
+
+    // We made sure exactly one entry was found, load its content
+    if (ImportObj loaded = context.loadImport(resolved[0])) {
+      EnvFrame local(context, true, false, true);
+      ImportStackFrame iframe(context, loaded);
+      StyleSheet* sheet = context.registerImport(loaded);
+      sheet->root2->import = loaded;
+      const sass::string& url(resolved[0].abs_path);
+      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate,
+        scanner.sourceUrl, url, sheet));
+    }
+    else {
+      context.addFinalStackTrace(pstate);
+      throw Exception::ParserException(context,
+        "Couldn't read stylesheet for import.");
+    }
+
+  }
+  // EO resolveDynamicImport
+
 
   // Consumes a `@forward` rule.
   // [start] should point before the `@`.
