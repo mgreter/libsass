@@ -1995,10 +1995,14 @@ namespace Sass {
       // compiler.import_stack.pop_back();
       node->root()->isLoading = false;
       node->root()->loaded = current;
+
     }
 
-    mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
-      node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+    // Must release some scope first
+    if (node->root()) {
+      mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+        node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+    }
 
     wconfig.finalize();
     return nullptr;
