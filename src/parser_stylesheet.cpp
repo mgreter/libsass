@@ -1267,7 +1267,7 @@ namespace Sass {
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
     auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
+    //while (pr->isImport) pr = pr->pscope;
     rule->fidx(pr->createFunction(name));
     return rule;
   }
@@ -2401,7 +2401,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
+    //while (pr->isImport) pr = pr->pscope;
     // Not if we have one forwarded!
 
     VarRef fidx = pr->createMixin(name);
