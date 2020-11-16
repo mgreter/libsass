@@ -1744,9 +1744,7 @@ namespace Sass {
     Root* root = sheet->root2;
     rule->root(root);
 
-    root->exposing = pudding(root, ns == "*");
     rule->ns(ns == "*" ? "" : ns);
-
 
     if (hasCached) return nullptr;
     // wconfig.finalize();
@@ -1755,15 +1753,13 @@ namespace Sass {
 
   }
 
-  VarRefs* Eval::pudding(Moduled* root, bool intoRoot)
+  VarRefs* Eval::pudding(Moduled* root, bool intoRoot, VarRefs* modFrame)
   {
 
     VarRefs* idxs = root->idxs;
     VarRefs* refs = root->idxs;
     Moduled* module = root;
     VarRefs* exposing = refs;
-
-    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
 
     // Expose what has been forwarded to us
     for (auto var : root->mergedFwdVar) {
@@ -1884,6 +1880,8 @@ namespace Sass {
       }
       else {
         if (node->root()) {
+          VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+          node->root()->exposing = pudding(node->root(), ns == "*", modFrame);
           Root* root = node->root();
           VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
           if (node->ns().empty()) {
@@ -1903,20 +1901,22 @@ namespace Sass {
 
       Root* root = node->root();
       VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
-      if (node->ns().empty()) {
-        mframe->fwdGlobal55.push_back(
-          { root->exposing, root });
-      }
-      else {
-        mframe->fwdModule55[node->ns()] =
-        { root->exposing, root };
-      }
 
       if (root->isActive) {
         if (node->hasLocalWith() || compiler.implicitWithConfig) {
           throw Exception::RuntimeException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
+        }
+        VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+        sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+        if (node->ns().empty()) {
+          mframe->fwdGlobal55.push_back(
+            { root->exposing, root });
+        }
+        else {
+          mframe->fwdModule55[node->ns()] =
+          { root->exposing, root };
         }
         return nullptr;
       }
@@ -1932,8 +1932,20 @@ namespace Sass {
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
       VarRefs* idxs = root->idxs;
-      if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
+
       EnvScope scoped2(compiler.varRoot, idxs);
+
+      VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+      sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+      if (node->ns().empty()) {
+        mframe->fwdGlobal55.push_back(
+          { root->exposing, root });
+      }
+      else {
+        mframe->fwdModule55[node->ns()] =
+        { root->exposing, root };
+      }
+
       ImportStackFrame iframe(compiler, root->import);
       for (auto child : root->elements()) {
         child->accept(this);
@@ -1953,6 +1965,9 @@ namespace Sass {
         if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
       }
 
+    }
+    else {
+      // std::cerr << "Still now root\n";
     }
 
 
