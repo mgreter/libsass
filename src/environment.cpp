@@ -1356,18 +1356,23 @@ namespace Sass {
 
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->fwdGlobal55.insert(asd); }
 
-      //if (true || !sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
-      //  auto newrefs = new VarRefs(compiler.varRoot, nullptr, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
-      //  for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
-      //  for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
-      //  for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
-      //  for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
-      //  for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
-      //  for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
-      //  pframe->fwdGlobal55.insert(
-      //    pframe->fwdGlobal55.begin(),
-      //    std::make_pair(newrefs, sheet->root2));
-      //}
+      // We need to support this: a { @import { @forward { $a: 1 } } }
+      // The variable is not created at root, should be intermixed with
+      // the scope opened by the `a` style rule.
+      // Create 
+
+      if (true || !sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
+        auto newrefs = new VarRefs(compiler.varRoot, nullptr, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
+        for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
+        for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
+        for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
+        for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
+        for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
+        for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
+        pframe->fwdGlobal55.insert(
+          pframe->fwdGlobal55.begin(),
+          newrefs);
+      }
 
     }
 

@@ -130,6 +130,7 @@ namespace Sass {
 
     ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule55;
     sass::vector<VarRefs*> fwdGlobal55;
+    //sass::vector<Moduled*> fwdGlobal77;
 
     // Value constructor
     VarRefs(EnvRoot& root,
