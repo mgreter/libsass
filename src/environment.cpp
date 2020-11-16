@@ -1,3 +1,13 @@
+#include "fn_meta.hpp"
+
+#include "eval.hpp"
+#include "compiler.hpp"
+#include "exceptions.hpp"
+#include "ast_values.hpp"
+#include "ast_callables.hpp"
+#include "ast_expressions.hpp"
+#include "string_utils.hpp"
+
 #include "environment.hpp"
 
 #include "eval.hpp"
@@ -39,7 +49,7 @@ namespace Sass {
   using namespace Character;
   using namespace StringUtils;
 
-  bool udbg = true;
+  bool udbg = false;
 
 
   Value* Eval::visitAssignRule(AssignRule* a)
@@ -757,8 +767,11 @@ namespace Sass {
 
     StyleSheet* sheet = nullptr;
 
-    if (udbg) std::cerr << "Visit use rule '" << node->url() << "'\n";
+    if (udbg) std::cerr << "Visit use rule '" << node->url() << "' "
+      << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || node->hasLocalWith());
 
     if (node->needsLoading()) {
       if (sheet = resolveUseRule(node)) {
@@ -766,13 +779,11 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
-
-        if (compiler.implicitWithConfig) {
+        if (node->hasLocalWith() && compiler.implicitWithConfig) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
         }
-
         if (node->root()) {
           VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
           node->root()->exposing = pudding(node->root(), ns == "*", modFrame);
@@ -792,9 +803,6 @@ namespace Sass {
         return nullptr;
       }
     }
-
-    LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || node->hasLocalWith());
 
     if (node->root()) {
 
@@ -888,16 +896,17 @@ namespace Sass {
     BackTrace trace(node->pstate(), Strings::forwardRule, false);
     callStackFrame frame333(logger456, trace);
 
-    LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || node->hasLocalWith());
+    if (udbg) std::cerr << "Visit forward rule '" << node->url() << "' "
+      << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
     // The show or hide config also hides these
     WithConfig wconfig(compiler, node->config(), node->hasLocalWith(),
       node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
 
-    if (udbg) std::cerr << "Visit forward rule '" << node->url() << "'\n";
-
     VarRefs* mframe = compiler.getCurrentModule();
+
+    LocalOption<bool> scoped(compiler.implicitWithConfig,
+      compiler.implicitWithConfig || node->hasLocalWith());
 
     if (node->needsLoading()) {
       if (auto sheet = resolveForwardRule(node)) {
@@ -905,12 +914,17 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
-
-        if (compiler.implicitWithConfig) {
+        if (node->hasLocalWith() && compiler.implicitWithConfig) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
         }
+
+        // if (compiler.implicitWithConfig && node->hasLocalWith()) {
+        //   throw Exception::ParserException(compiler,
+        //     "This module was already loaded, so it "
+        //     "can't be configured using \"with\".");
+        // }
 
         if (udbg) std::cerr << "Cached forward rule '" << node->url() << "'\n";
 
@@ -923,16 +937,19 @@ namespace Sass {
       }
     }
 
+    // LocalOption<bool> scoped(compiler.implicitWithConfig,
+    //   compiler.implicitWithConfig || node->hasLocalWith());
+
     if (node->root()) {
 
       Root* root = node->root();
 
       if (root->isActive) {
-        if (node->hasLocalWith() || compiler.implicitWithConfig) {
-          throw Exception::RuntimeException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
+        // if (node->hasLocalWith() || compiler.implicitWithConfig) {
+        //   throw Exception::RuntimeException(compiler,
+        //     "This module was already loaded, so it "
+        //     "can't be configured using \"with\".");
+        // }
         // Must release some scope first
         if (node->root()) {
           mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
@@ -1303,4 +1320,213 @@ namespace Sass {
     return rule.detach();
   }
 
+  namespace Functions {
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
+    namespace Meta {
+
+
+      BUILT_IN_FN(loadCss)
+      {
+        String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
+        Map* withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
+        // auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
+        // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
+        // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
+
+        bool hasWith = withMap && !withMap->empty();
+
+        if (udbg) std::cerr << "Visit use rule '" << url->value() << "' "
+          << hasWith << " -> " << compiler.implicitWithConfig << "\n";
+
+        LocalOption<bool> scoped(compiler.implicitWithConfig,
+          compiler.implicitWithConfig || hasWith);
+
+        EnvKeyFlatMap<ValueObj> config;
+        sass::vector<WithConfigVar> withConfigs;
+        if (hasWith) {
+          for (auto kv : withMap->elements()) {
+            String* name = kv.first->assertString(compiler, "with key");
+            EnvKey kname(name->value());
+            WithConfigVar kvar;
+            kvar.name = name->value();
+            kvar.value = kv.second;
+            kvar.isGuarded = false;
+            kvar.wasUsed = false;
+            kvar.pstate2 = name->pstate();
+            kvar.isNull = !kv.second || kv.second->isaNull();
+            withConfigs.push_back(kvar);
+            if (config.count(kname) == 1) {
+              throw Exception::RuntimeException(compiler,
+                "The variable $" + kname.norm() + " was configured twice.");
+            }
+            config[name->value()] = kv.second;
+          }
+        }
+
+        WithConfig wconfig(compiler, withConfigs, hasWith);
+
+        if (StringUtils::startsWith(url->value(), "sass:", 5)) {
+
+          if (hasWith) {
+            throw Exception::RuntimeException(compiler, "Built-in "
+              "module " + url->value() + " can't be configured.");
+          }
+
+          return SASS_MEMORY_NEW(Null, pstate);
+        }
+
+        Import* loaded = compiler.import_stack.back();
+
+        // Loading relative to where the function was included
+        const ImportRequest import(url->value(), pstate.getAbsPath());
+        // Search for valid imports (e.g. partials) on the file-system
+        // Returns multiple valid results for ambiguous import path
+        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, true)); //XXXXX
+
+        // Error if no file to import was found
+        if (resolved.empty()) {
+          compiler.addFinalStackTrace(pstate);
+          throw Exception::ParserException(compiler,
+            "Can't find stylesheet to import.");
+        }
+        // Error if multiple files to import were found
+        else if (resolved.size() > 1) {
+          sass::sstream msg_stream;
+          msg_stream << "It's not clear which file to import. Found:\n";
+          for (size_t i = 0, L = resolved.size(); i < L; ++i)
+            msg_stream << "  " << resolved[i].imp_path << "\n";
+          throw Exception::ParserException(compiler, msg_stream.str());
+        }
+
+        // We made sure exactly one entry was found, load its content
+        if (ImportObj loaded = compiler.loadImport(resolved[0])) {
+
+          auto asd = compiler.sheets.find(loaded->getAbsPath());
+
+          StyleSheet* sheet = asd == compiler.sheets.end() ? nullptr : asd->second;
+
+          if (sheet == nullptr) {
+            // This is the new barrier!
+            EnvFrame local(compiler, true, true);
+            // eval.selectorStack.push_back(nullptr);
+            ImportStackFrame iframe(compiler, loaded);
+            sheet = compiler.registerImport(loaded); // @use
+            // eval.selectorStack.pop_back();
+            sheet->root2->idxs = local.idxs;
+            sheet->root2->import = loaded;
+          }
+          else {
+
+            if (hasWith && compiler.implicitWithConfig) {
+              throw Exception::ParserException(compiler,
+                sass::string(sheet->root2->pstate().getFileName())
+                + " was already loaded, so it "
+                "can\'t be configured using \"with\".");
+            }
+
+            if (sheet->root2->isActive) {
+              if (hasWith) {
+                throw Exception::ParserException(compiler,
+                  sass::string(sheet->root2->pstate().getFileName())
+                  + " was already loaded, so it "
+                  "can\'t be configured using \"with\".");
+              }
+              else if (sheet->root2->isLoading) {
+                throw Exception::ParserException(compiler,
+                  "Module loop: " + sass::string(sheet->root2->pstate().getFileName()) + " is already being loaded.");
+              }
+            }
+          }
+
+          if (sheet->root2->loaded) {
+            if (hasWith) {
+              throw Exception::RuntimeException(compiler,
+                "Module twice");
+            }
+            for (auto child : sheet->root2->loaded->elements()) {
+              if (auto css = child->isaCssStyleRule()) {
+                if (auto pr = eval.current->isaCssStyleRule()) {
+                  for (auto inner : css->elements()) {
+                    auto copy = SASS_MEMORY_COPY(css->selector());
+                    for (ComplexSelector* asd : copy->elements()) {
+                      asd->chroots(false);
+                    }
+                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
+                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
+                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
+                    eval.current->parent()->append(newRule);
+                  }
+                }
+                else {
+                  if (eval.current) eval.current->append(child);
+                }
+              }
+              else {
+                if (eval.current) eval.current->append(child);
+              }
+            }
+          }
+          else {
+            Root* root = sheet->root2;
+            root->isActive = true;
+            root->isLoading = true;
+            //root->loaded = eval.current;
+            root->loaded = SASS_MEMORY_NEW(CssStyleRule,
+              root->pstate(), nullptr, nullptr);
+            auto oldCurrent = eval.current;
+            eval.current = root->loaded;
+            EnvScope scoped(compiler.varRoot, root->idxs);
+            eval.selectorStack.push_back(nullptr);
+            ImportStackFrame iframe(compiler, root->import);
+            // compiler.import_stack.push_back(root->import);
+            for (auto child : root->elements()) {
+              child->accept(&eval);
+            }
+            // compiler.import_stack.pop_back();
+            eval.selectorStack.pop_back();
+            eval.current = oldCurrent;
+            root->isLoading = false;
+
+            for (auto child : sheet->root2->loaded->elements()) {
+              if (auto css = child->isaCssStyleRule()) {
+                if (auto pr = eval.current->isaCssStyleRule()) {
+                  for (auto inner : css->elements()) {
+                    auto copy = SASS_MEMORY_COPY(css->selector());
+                    for (ComplexSelector* asd : copy->elements()) {
+                      asd->chroots(false);
+                    }
+                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
+                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
+                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
+                    eval.current->parent()->append(newRule);
+                  }
+                }
+                else {
+                  if (eval.current) eval.current->append(child);
+                }
+              }
+              else {
+                if (eval.current) eval.current->append(child);
+              }
+            }
+
+          }
+
+
+        }
+        else {
+          throw Exception::ParserException(compiler,
+            "Couldn't load it.");
+        }
+
+        wconfig.finalize();
+
+        return SASS_MEMORY_NEW(Null, pstate);;
+      }
+
+    }
+  }
 }
