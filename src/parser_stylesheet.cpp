@@ -1532,8 +1532,8 @@ namespace Sass {
       Root* module = sheet->root2;
       rule->root(module);
 
-      // mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
-      //   prefix, rule->toggledVariables(), rule->toggledCallables(), context);
+      mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
+        prefix, rule->toggledVariables(), rule->toggledCallables(), context);
 
 
       if (hasCached) return nullptr;
@@ -1910,9 +1910,9 @@ namespace Sass {
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (Module* module = context.getModule(name)) {
 
-        // mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
-        //   prefix, toggledVariables, toggledCallables, context);
-        // rule->root(nullptr);
+        mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
+          prefix, toggledVariables, toggledCallables, context);
+        rule->root(nullptr);
 
       }
       else {
