@@ -255,9 +255,17 @@ namespace Sass {
 
     bool has_local = false;
     // Skip to optional global scope
-    VarRefs* frame = global ?
-      context.varRoot.stack.front() :
+    VarRefs* frame = 
       context.varRoot.stack.back();
+
+    while (frame->isImport) frame = frame->pscope;
+    if (global) {
+      while (frame->pscope) {
+        if (frame->isModule && !frame->isImport) break;
+        frame = frame->pscope;
+      }
+    }
+
     // As long as we are not in a loop construct, we
     // can utilize full static variable optimizations.
     VarRef vidx(inLoopDirective ?
@@ -360,13 +368,6 @@ namespace Sass {
     }
 
     auto pr = frame;
-    while (pr->isImport) pr = pr->pscope;
-
-    if (global) {
-      while (pr->pscope) {
-        pr = pr->pscope;
-      }
-    }
 
     if (pr->varFrame == 0xFFFFFFFF) {
 

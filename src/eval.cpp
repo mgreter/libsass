@@ -1909,7 +1909,7 @@ namespace Sass {
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
       VarRefs* idxs = root->idxs;
-      if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
+      //if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
       EnvScope scoped2(compiler.varRoot, idxs);
       ImportStackFrame iframe(compiler, root->import);
       for (auto child : root->elements()) {
@@ -1923,7 +1923,16 @@ namespace Sass {
       }
 
       root->isLoading = false;
+
+
+      for (auto var : root->idxs->varIdxs) {
+        ValueObj& slot(compiler.varRoot.getModVar(var.second));
+        if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
+      }
+
     }
+
+
 
     wconfig.finalize();
 

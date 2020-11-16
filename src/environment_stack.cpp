@@ -336,6 +336,14 @@ namespace Sass {
 
   // Get function instance by stack index reference
   // Just converting and returning reference to array offset
+  ValueObj& EnvRoot::getModVar(const uint32_t offset)
+  {
+    return intVariables[offset];
+  }
+  // EO findFunction
+
+  // Get function instance by stack index reference
+  // Just converting and returning reference to array offset
   CallableObj& EnvRoot::getFunction(const VarRef& fidx)
   {
     if (fidx.frame == 0xFFFFFFFF) {
