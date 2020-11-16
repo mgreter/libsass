@@ -2925,16 +2925,9 @@ namespace Sass {
         compiler.varRoot.stack.back()->isModule);
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
+      sheet->root2->import = loaded;
       compiler.varRoot.finalizeScopes();
-
-
-     // modFrame->fwdGlobal55.push_back(
-     //   { exposing, sheet->root2 });
-
-      // const sass::string& url(resolved[0].abs_path);
       return sheet;
-//      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate, url, sheet));
-
     }
 
     compiler.addFinalStackTrace(pstate);
