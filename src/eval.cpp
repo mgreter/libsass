@@ -1923,7 +1923,16 @@ namespace Sass {
       }
 
       root->isLoading = false;
+
+
+      for (auto var : root->idxs->varIdxs) {
+        ValueObj& slot(compiler.varRoot.getModVar(var.second));
+        if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
+      }
+
     }
+
+
 
     wconfig.finalize();
 

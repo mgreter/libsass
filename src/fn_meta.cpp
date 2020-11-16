@@ -523,7 +523,7 @@ namespace Sass {
             ImportStackFrame iframe(compiler, loaded);
             sheet = compiler.registerImport(loaded); // @use
             // eval.selectorStack.pop_back();
-            // sheet->root2->idxs = local.idxs;
+            sheet->root2->idxs = local.idxs;
             sheet->root2->import = loaded;
           }
           else if (sheet->root2->isActive) {
