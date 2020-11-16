@@ -426,6 +426,7 @@ namespace Sass {
   // Consumes a style rule.
   StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
   {
+    isUseAllowed = false;
     LOCAL_FLAG(inStyleRule, true);
 
     // The indented syntax allows a single backslash to distinguish a style rule
