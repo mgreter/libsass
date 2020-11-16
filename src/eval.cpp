@@ -1933,18 +1933,9 @@ namespace Sass {
       LOCAL_PTR(Root, currentRoot, root);
       VarRefs* idxs = root->idxs;
 
-      EnvScope scoped2(compiler.varRoot, idxs);
-
       VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-      sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
-      if (node->ns().empty()) {
-        mframe->fwdGlobal55.push_back(
-          { root->exposing, root });
-      }
-      else {
-        mframe->fwdModule55[node->ns()] =
-        { root->exposing, root };
-      }
+
+      EnvScope scoped2(compiler.varRoot, idxs);
 
       ImportStackFrame iframe(compiler, root->import);
       for (auto child : root->elements()) {
@@ -1963,6 +1954,16 @@ namespace Sass {
       for (auto var : root->idxs->varIdxs) {
         ValueObj& slot(compiler.varRoot.getModVar(var.second));
         if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
+      }
+
+      sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+      if (node->ns().empty()) {
+        mframe->fwdGlobal55.push_back(
+          { root->exposing, root });
+      }
+      else {
+        mframe->fwdModule55[node->ns()] =
+        { root->exposing, root };
       }
 
     }
