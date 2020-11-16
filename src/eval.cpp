@@ -1923,7 +1923,7 @@ namespace Sass {
       root->isLoading = false;
     }
 
-    wconfig.finalize();
+    // wconfig.finalize();
 
     return nullptr;
     // throw Exception::RuntimeException(compiler,
@@ -1981,7 +1981,7 @@ namespace Sass {
       node->root()->loaded = current;
     }
 
-    wconfig.finalize();
+    // wconfig.finalize();
     return nullptr;
   }
 
