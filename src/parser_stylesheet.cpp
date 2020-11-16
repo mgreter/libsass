@@ -410,22 +410,6 @@ namespace Sass {
         chroot = chroot->pscope;
       }
 
-      // Search up the scope until we found module not import
-      while (pr->pscope) {
-
-        if (pr->isModule && !pr->isImport) break;
-
-        if (pr->varIdxs.count(name)) {
-          hasVar = true;
-          break;
-        }
-
-        pr = pr->pscope;
-
-      }
-
-      //auto qwe = pr
-
       // Also skip if on global scope?
       // Not if we have one forwarded!
       if (!hasVar) {
