@@ -1742,7 +1742,38 @@ namespace Sass {
 
 
     Root* root = sheet->root2;
+    rule->root(root);
+
+    auto exposing = pudding(root, ns == "*");
+
+    if (ns == "*") {
+      rule->ns("");
+      sheet->root2->exposing = exposing;
+    }
+
+    else {
+      rule->ns(ns);
+      sheet->root2->exposing = exposing;
+
+    }
+
+
+    if (hasCached) return nullptr;
+    // wconfig.finalize();
+    return sheet;
+
+
+  }
+
+  VarRefs* Eval::pudding(Moduled* root, bool intoRoot)
+  {
+
     VarRefs* idxs = root->idxs;
+    VarRefs* refs = root->idxs;
+    Moduled* module = root;
+    VarRefs* exposing = refs;
+
+    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
 
     // Expose what has been forwarded to us
     for (auto var : root->mergedFwdVar) {
@@ -1758,14 +1789,7 @@ namespace Sass {
         idxs->fnIdxs.insert(fn);
     }
 
-    VarRefs* refs = root->idxs;
-    rule->root(root);
-    Moduled* module = root;
-
-    // This leaks, give it someone
-    VarRefs* exposing = refs;
-
-    if (ns == "*") {
+    if (intoRoot) {
 
       for (auto var : exposing->varIdxs) {
         auto it = modFrame->varIdxs.find(var.first);
@@ -1838,20 +1862,9 @@ namespace Sass {
         }
       }
 
-      rule->ns("");
-      sheet->root2->exposing = exposing;
-
-    }
-    else {
-      rule->ns(ns);
-      sheet->root2->exposing = exposing;
-
     }
 
-    if (hasCached) return nullptr;
-    // wconfig.finalize();
-    return sheet;
-
+    return exposing;
 
   }
 

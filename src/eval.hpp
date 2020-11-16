@@ -34,6 +34,8 @@ namespace Sass {
     SelectorLists originalStack;
     SelectorLists selectorStack;
 
+    VarRefs* pudding(Moduled* root, bool intoRoot);
+
     // The name of the current declaration parent. Used for BEM-
     // declaration blocks as in `div { prefix: { suffix: val; } }`;
     sass::string declarationName;
