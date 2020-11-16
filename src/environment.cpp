@@ -529,59 +529,32 @@ namespace Sass {
     }
 
     // We made sure exactly one entry was found, load its content
+    // This only loads the requested source file, does not parse it
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
 
       ImportStackFrame iframe(compiler, loaded);
-
-      // ToDo: We don't take format into account
       StyleSheet* sheet = nullptr;
-      // EnvFrame* frame(context.varRoot.stack.back()->getModule());
       auto cached = compiler.sheets.find(loaded->getAbsPath());
-      if (cached != compiler.sheets.end() && cached->second->hasBeenUsed) {
-
-        hasCached = true;
-
+      if (cached != compiler.sheets.end()) {
         // Check if with is given, error
         sheet = cached->second;
-
-        if (compiler.implicitWithConfig || hasWith) {
-          throw Exception::ParserException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-
+        rule->root(sheet->root2);
+        return nullptr;
       }
-      else {
-
-        // ToDo: must not create new real scope!
-        EnvFrame local(compiler, false, true);
-        sheet = compiler.registerImport(loaded);
-        sheet->hasBeenUsed = true;
-        // sheet->root2->idxs = local.idxs;
-        sheet->root2->import = loaded;
-      }
-
-      Root* module = sheet->root2;
-      rule->root(module);
-
-
-      // Imports that are inside and might create new globals are not seen yet!
-      // mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
-      //   rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
-
-      if (hasCached) return nullptr;
-      // wconfig.finalize();
+      EnvFrame local(compiler, false, true);
+      sheet = compiler.registerImport(loaded);
+      sheet->hasBeenUsed = true;
+      sheet->root2->import = loaded;
+      rule->root(sheet->root2);
       return sheet;
-
     }
 
     compiler.addFinalStackTrace(pstate);
     throw Exception::ParserException(compiler,
       "Couldn't read stylesheet for import.");
 
-
-
   }
+  // EO resolveForwardFule
 
   StyleSheet* Eval::resolveUseRule(UseRule* rule)
   {
@@ -925,6 +898,13 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
+
+        if (compiler.implicitWithConfig) {
+          throw Exception::ParserException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+
         // File was loaded by somebody else first
         if (node->root()) {
           mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
