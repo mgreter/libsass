@@ -117,7 +117,6 @@ namespace Sass {
       return readMixinRule(start);
 
     default:
-      isUseAllowed = false;
       if (inStyleRule || inUnknownAtRule || inMixin || inContentBlock) {
         return readDeclarationOrStyleRule();
       }

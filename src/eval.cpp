@@ -2465,10 +2465,37 @@ namespace Sass {
 
       auto rframe = compiler.varRoot.stack[0];
       auto it = rframe->varIdxs.find(a->variable());
+
+      bool hasVar = false;
+
       if (it != rframe->varIdxs.end()) {
-        auto value = compiler.varRoot.getVariable({
-          rframe->varFrame, it->second });
-        if (value == nullptr) {
+        VarRef vidx(rframe->varFrame, it->second);
+        auto value = compiler.varRoot.getVariable(vidx);
+        if (value != nullptr) hasVar = true;
+      }
+
+      if (hasVar == false) {
+        // libsass/variable-scoping/defaults-global-null
+        // This check may not be needed, but we create a
+        // superfluous variable slot in the scope
+        for (auto fwds : rframe->fwdGlobal55) {
+          auto it = fwds.first->varIdxs.find(a->variable());
+          if (it != fwds.first->varIdxs.end()) {
+            VarRef vidx(0xFFFFFFFF, it->second);
+            auto value = compiler.varRoot.getVariable(vidx);
+            if (value != nullptr) hasVar = true;
+          }
+
+          auto fwd = fwds.second->mergedFwdVar.find(a->variable());
+          if (fwd != fwds.second->mergedFwdVar.end()) {
+            VarRef vidx(0xFFFFFFFF, fwd->second);
+            auto value = compiler.varRoot.getVariable(vidx);
+            if (value != nullptr) hasVar = true;
+          }
+        }
+      }
+
+      if (hasVar == false) {
 
           // Check if we are at the global scope
           if (compiler.varRoot.isGlobal()) {
@@ -2485,7 +2512,6 @@ namespace Sass {
               a->pstate());
           }
 
-        }
       }
 
     }
@@ -2508,8 +2534,14 @@ namespace Sass {
         a->is_default(),
         a->pstate()))
       {
-        callStackFrame frame(traces, a->pstate());
-        throw Exception::RuntimeException(traces, "Undefined variable.");
+        if (compiler.varRoot.stack.back()->hasNameSpace(a->ns(), a->variable())) {
+          callStackFrame frame(traces, a->pstate());
+          throw Exception::RuntimeException(traces, "Undefined variable.");
+        }
+        else {
+          callStackFrame frame(traces, a->pstate());
+          throw Exception::ModuleUnknown(traces, a->ns());
+        }
       }
 
       return nullptr;
@@ -2890,10 +2922,13 @@ namespace Sass {
 
     EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
 
+    // debug_ast(sheet->root2);
+
     // Imports are always executed again
     for (const StatementObj& item : sheet->root2->elements()) {
       item->accept(this);
     }
+
 
     // These data object have just been borrowed
     // sass_import_take_source(compiler.import_stack.back());

@@ -381,7 +381,7 @@ namespace Sass {
   }
   void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
   {
-    // std::cerr << "Set global variable " << offset
+    // std::cerr << "Set global function " << offset
     //   << " - " << callable->name() << "\n";
     CallableObj& slot(intFunction[offset]);
     if (!guarded || !slot) slot = callable;
