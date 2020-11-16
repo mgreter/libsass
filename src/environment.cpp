@@ -409,83 +409,6 @@ namespace Sass {
     // if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
-  void exposeFiltered2(
-    EnvKeyFlatMap<uint32_t>& merged,
-    EnvKeyFlatMap<uint32_t> expose,
-    const sass::string prefix,
-    const std::set<EnvKey>& filters,
-    const sass::string& errprefix,
-    Logger& logger,
-    bool show)
-  {
-    for (auto idx : expose) {
-      if (idx.first.isPrivate()) continue;
-      EnvKey key(prefix + idx.first.orig());
-      if (show == (filters.count(key) == 1)) {
-        auto it = merged.find(key);
-        if (it == merged.end()) {
-          merged.insert({ key, idx.second });
-        }
-        else if (idx.second != it->second) {
-          throw Exception::RuntimeException(logger,
-            "Two forwarded modules both define a "
-            + errprefix + key.norm() + ".");
-        }
-      }
-    }
-  }
-
-  void exposeFiltered2(
-    EnvKeyFlatMap<uint32_t>& merged,
-    EnvKeyFlatMap<uint32_t> expose,
-    const sass::string prefix,
-    const sass::string& errprefix,
-    Logger& logger)
-  {
-    for (auto idx : expose) {
-      if (idx.first.isPrivate()) continue;
-      EnvKey key(prefix + idx.first.orig());
-      auto it = merged.find(key);
-      if (it == merged.end()) {
-        merged.insert({ key, idx.second });
-      }
-      else if (idx.second != it->second) {
-        throw Exception::RuntimeException(logger,
-          "Two forwarded modules both define a "
-          + errprefix + key.norm() + ".");
-      }
-    }
-  }
-
-  void mergeForwards2(
-    VarRefs* idxs,
-    Root* currentRoot,
-    bool isShown,
-    bool isHidden,
-    const sass::string prefix,
-    const std::set<EnvKey>& toggledVariables,
-    const std::set<EnvKey>& toggledCallables,
-    Logger& logger)
-  {
-
-    if (isShown) {
-      exposeFiltered2(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
-      exposeFiltered2(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
-      exposeFiltered2(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
-    }
-    else if (isHidden) {
-      exposeFiltered2(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
-      exposeFiltered2(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
-      exposeFiltered2(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
-    }
-    else {
-      exposeFiltered2(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
-      exposeFiltered2(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
-      exposeFiltered2(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
-    }
-
-  }
-
 
   void exposeFiltered(
     EnvKeyFlatMap<uint32_t>& merged,
@@ -1357,7 +1280,7 @@ namespace Sass {
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (Module* module = context.getModule(name)) {
 
-        mergeForwards2(module->idxs, context.currentRoot, isShown, isHidden,
+        mergeForwards(module->idxs, context.currentRoot, isShown, isHidden,
           prefix, toggledVariables, toggledCallables, context);
         rule->root(nullptr);
 
