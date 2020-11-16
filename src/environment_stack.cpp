@@ -455,27 +455,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Get a mixin associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined mixin or run out of parent scopes.
-  Callable* VarRefs::getMixin(const EnvKey& name) const
-  {
-    const VarRefs* current = this;
-    while (current) {
-      auto it = current->mixIdxs.find(name);
-      if (it != current->mixIdxs.end()) {
-        const VarRef vidx{ current->mixFrame, it->second };
-        CallableObj& value = root.getMixin(vidx);
-        if (!value.isNull()) return value;
-      }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
-    }
-    return {};
-  }
-  // EO getMixin
-
 
   // Get a mixin associated with the under [name].
   // Will lookup from the last runtime stack scope.
@@ -606,6 +585,30 @@ namespace Sass {
   }
   // EO findFunction
 
+  // Get a mixin associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined mixin or run out of parent scopes.
+  Callable* VarRefs::getMixin(const EnvKey& name) const
+  {
+    auto it = mixIdxs.find(name);
+    if (it != mixIdxs.end()) {
+      const VarRef vidx{ mixFrame, it->second };
+      Callable* value = root.getMixin(vidx);
+      if (value != nullptr) return value;
+    }
+    for (auto fwds : fwdGlobal55) {
+      auto it = fwds.first->mixIdxs.find(name);
+      if (it != fwds.first->mixIdxs.end()) {
+        const VarRef vidx{ fwds.first->mixFrame, it->second };
+        Callable* value = root.getMixin(vidx);
+        if (value != nullptr) return value;
+      }
+    }
+    return nullptr;
+  }
+  // EO getMixin
+
   Callable* VarRefs::getFunction(const EnvKey& name) const
   {
     auto it = fnIdxs.find(name);
@@ -613,6 +616,14 @@ namespace Sass {
       const VarRef vidx{ fnFrame, it->second };
       Callable* value = root.getFunction(vidx);
       if (value != nullptr) return value;
+    }
+    for (auto fwds : fwdGlobal55) {
+      auto it = fwds.first->fnIdxs.find(name);
+      if (it != fwds.first->fnIdxs.end()) {
+        const VarRef vidx{ fwds.first->fnFrame, it->second };
+        Callable* value = root.getFunction(vidx);
+        if (value != nullptr) return value;
+      }
     }
     return nullptr;
   }
@@ -636,6 +647,14 @@ namespace Sass {
       Value* value = root.getVariable(vidx);
       if (value != nullptr) return value;
     }
+    for (auto fwds : fwdGlobal55) {
+      auto it = fwds.first->varIdxs.find(name);
+      if (it != fwds.first->varIdxs.end()) {
+        const VarRef vidx{ fwds.first->varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
+    }
     return nullptr;
   }
 
@@ -645,6 +664,13 @@ namespace Sass {
     if (it != varIdxs.end()) {
       root.setModVar(it->second, value, guarded, pstate);
       return true;
+    }
+    for (auto fwds : fwdGlobal55) {
+      auto it = fwds.first->varIdxs.find(name);
+      if (it != fwds.first->varIdxs.end()) {
+        root.setModVar(it->second, value, guarded, pstate);
+        return true;
+      }
     }
     return false;
   }
@@ -665,6 +691,13 @@ namespace Sass {
     if (it != fnIdxs.end()) {
       root.setModFn(it->second, fn, guarded);
       return true;
+    }
+    for (auto fwds : fwdGlobal55) {
+      auto it = fwds.first->fnIdxs.find(name);
+      if (it != fwds.first->fnIdxs.end()) {
+        root.setModFn(it->second, fn, guarded);
+        return true;
+      }
     }
     return false;
   }

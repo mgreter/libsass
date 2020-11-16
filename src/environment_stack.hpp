@@ -212,6 +212,7 @@ namespace Sass {
 
     // Find function only in local frame
     Callable* getFunction(const EnvKey& name) const;
+
     Callable* getMixin(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
 
