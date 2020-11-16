@@ -103,6 +103,8 @@ namespace Sass {
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
 
+    Moduled* module = nullptr;
+
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
     bool permeable = false;

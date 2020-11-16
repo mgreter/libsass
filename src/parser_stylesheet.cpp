@@ -51,6 +51,7 @@ namespace Sass {
 
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
     root->idxs = context.varRoot.stack.back();
+    context.varRoot.stack.back()->module = root;
 
     auto& currentRoot(context.currentRoot);
     LOCAL_PTR(Root, currentRoot, root);

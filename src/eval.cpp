@@ -2957,30 +2957,30 @@ namespace Sass {
       item->accept(this);
     }
 
-    for (auto asd : sheet->root2->idxs->varIdxs) {
-      std::cerr << "IMPORT HAS NEW VAR " << asd.first.orig() << "\n";
+    for (auto asd : refs->varIdxs) {
+      // std::cerr << "IMPORT HAS NEW VAR " << asd.first.orig() << "\n";
     }
-
+    Root* root = sheet->root2;
     if (pframe->varFrame == 0xFFFFFFFF) {
       // Global can simply be exposed without further ado (same frame)
-      for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
-      for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
-      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
-      for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs.insert(asd); }
-      for (auto asd : sheet->root2->mergedFwdMix) { pframe->mixIdxs.insert(asd); }
-      for (auto asd : sheet->root2->mergedFwdFn) { pframe->fnIdxs.insert(asd); }
+      for (auto asd : root->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); }
+      for (auto asd : root->mergedFwdMix) { pframe->module->mergedFwdMix.insert(asd); }
+      for (auto asd : root->mergedFwdFn) { pframe->module->mergedFwdFn.insert(asd); }
+      for (auto asd : refs->varIdxs) { pframe->varIdxs.insert(asd); }
+      for (auto asd : refs->mixIdxs) { pframe->mixIdxs.insert(asd); }
+      for (auto asd : refs->fnIdxs) { pframe->fnIdxs.insert(asd); }
 
     }
     else {
 
-      if (true || !sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
+      if (true || !root->mergedFwdVar.empty() || !root->mergedFwdFn.empty() || !root->mergedFwdMix.empty()) {
         auto newrefs = new VarRefs(compiler.varRoot, refs->pscope, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
-        for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
-        for (auto asd : sheet->root2->idxs->varIdxs) { newrefs->varIdxs.insert(asd); }
-        for (auto asd : sheet->root2->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
-        for (auto asd : sheet->root2->idxs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
-        for (auto asd : sheet->root2->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
-        for (auto asd : sheet->root2->idxs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
+        for (auto asd : root->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
+        for (auto asd : root->mergedFwdMix) { newrefs->mixIdxs.insert(asd); }
+        for (auto asd : root->mergedFwdFn) { newrefs->fnIdxs.insert(asd); }
+        for (auto asd : refs->varIdxs) { newrefs->varIdxs.insert(asd); }
+        for (auto asd : refs->mixIdxs) { newrefs->mixIdxs.insert(asd); }
+        for (auto asd : refs->fnIdxs) { newrefs->fnIdxs.insert(asd); }
         pframe->fwdGlobal55.insert(
           pframe->fwdGlobal55.begin(),
           std::make_pair(newrefs, sheet->root2));
