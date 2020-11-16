@@ -393,6 +393,14 @@ namespace Sass {
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
       auto chroot = frame;
+
+      if (global) {
+        while (chroot->pscope) {
+          chroot = chroot->pscope;
+        }
+        pr = chroot;
+      }
+
       while (chroot->permeable && chroot->pscope) {
         // Check if this frame contains the variable
         if (chroot->pscope->varIdxs.count(name)) {

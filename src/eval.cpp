@@ -985,7 +985,7 @@ namespace Sass {
         node->name()->getPlainString(), node->ns()
       );
       if (function == nullptr) {
-        if (compiler.varRoot.stack.back()->hasNameSpace(node->ns())) {
+        if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name()->getPlainString())) {
           callStackFrame frame(traces, node->pstate());
           throw Exception::RuntimeException(traces, "Undefined function.");
         }
@@ -1172,7 +1172,7 @@ namespace Sass {
         variable->name(), variable->ns()
       );
       if (value == nullptr) {
-        if (compiler.varRoot.stack.back()->hasNameSpace(variable->ns())) {
+        if (compiler.varRoot.stack.back()->hasNameSpace(variable->ns(), variable->name())) {
           callStackFrame frame(traces, variable->pstate());
           throw Exception::RuntimeException(traces, "Undefined variable.");
         }
@@ -1273,7 +1273,7 @@ namespace Sass {
         node->name(), node->ns()
       );
       if (rule == nullptr) {
-        if (compiler.varRoot.stack.back()->hasNameSpace(node->ns())) {
+        if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
           callStackFrame frame(traces, node->pstate());
           throw Exception::RuntimeException(traces, "Undefined mixin.");
         }

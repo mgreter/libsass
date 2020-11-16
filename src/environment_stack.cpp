@@ -670,12 +670,19 @@ namespace Sass {
   }
 
 
-  bool VarRefs::hasNameSpace(const sass::string& ns) const
+  bool VarRefs::hasNameSpace(const sass::string& ns, const EnvKey& name) const
   {
     const VarRefs* current = this;
     while (current) {
       auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) return true;
+      if (it != current->fwdModule55.end()) {
+        auto fwd = it->second.first->varIdxs.find(name);
+        if (fwd != it->second.first->varIdxs.end()) {
+          ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
+          return slot != nullptr;
+        }
+        return true;
+      }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
@@ -919,6 +926,21 @@ namespace Sass {
         const VarRef vidx{ current->varFrame, it->second };
         return idxs->root.setVariable(vidx, val, guarded);
       }
+
+      for (auto fwd : current->fwdGlobal55) {
+        VarRefs* refs = fwd.first;
+        auto in = refs->varIdxs.find(name);
+        if (in != refs->varIdxs.end()) {
+          if (name.isPrivate()) {
+            throw Exception::ParserException(compiler,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
+          const VarRef vidx{ 0xFFFFFFFF, in->second };
+          return idxs->root.setVariable(vidx, val, guarded);
+        }
+      }
+
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
