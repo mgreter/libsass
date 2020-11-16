@@ -129,7 +129,8 @@ namespace Sass {
     sass::vector<VariableExpressionObj> variables;
 
     ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule55;
-    sass::vector<std::pair<VarRefs*, Root*>> fwdGlobal55;
+
+    sass::vector<VarRefs*> fwdGlobal55;
 
     // Value constructor
     VarRefs(EnvRoot& root,
