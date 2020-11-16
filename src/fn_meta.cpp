@@ -108,8 +108,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasVar = false;
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->fwdGlobal55) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -133,8 +132,7 @@ namespace Sass {
 
         bool hasVar = false;
         auto parent = compiler.varRoot.stack.back()->getModule23();
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->fwdGlobal55) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -167,8 +165,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->fwdGlobal55) {
           if (global->fnIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -203,8 +200,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto asd : parent->fwdGlobal55) {
-          VarRefs* global = asd.first;
+        for (auto global : parent->fwdGlobal55) {
           if (global->mixIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -357,8 +353,7 @@ namespace Sass {
 
           if (!callable) {
 
-            for (auto asd : parent->fwdGlobal55) {
-              VarRefs* global = asd.first;
+            for (auto global : parent->fwdGlobal55) {
               auto it = global->fnIdxs.find(name->value());
               if (it != global->fnIdxs.end()) {
                 if (callable) {

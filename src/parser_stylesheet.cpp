@@ -1389,8 +1389,7 @@ namespace Sass {
       // Then search in global modules
       auto pstate = scanner.relevantSpanFrom(start);
       VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      for (auto fwd : frame->fwdGlobal55) {
-        VarRefs* refs = fwd.first;
+      for (auto refs : frame->fwdGlobal55) {
         auto in = refs->mixIdxs.find(name);
         if (in != refs->mixIdxs.end()) {
           if (isPrivate(name)) {
@@ -2795,8 +2794,7 @@ namespace Sass {
 
       VarRefs* module(context.varRoot.stack.back()->getModule23());
 
-      for (auto fwd : module->fwdGlobal55) {
-        VarRefs* refs = fwd.first;
+      for (auto refs : module->fwdGlobal55) {
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
           uint32_t offset = in->second;
@@ -3104,8 +3102,7 @@ namespace Sass {
         // Then search in global modules
         auto pstate = scanner.relevantSpanFrom(start);
         VarRefs* frame(context.varRoot.stack.back()->getModule23());
-        for (auto fwd : frame->fwdGlobal55) {
-          VarRefs* refs = fwd.first;
+        for (auto refs : frame->fwdGlobal55) {
           auto in = refs->fnIdxs.find(name);
           if (in != refs->fnIdxs.end()) {
             // Pass this silently
