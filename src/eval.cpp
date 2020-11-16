@@ -1642,8 +1642,8 @@ namespace Sass {
 
 
       // Imports that are inside and might create new globals are not seen yet!
-      mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
-        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
+      // mergeForwards(module->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
+      //   rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
 
       if (hasCached) return nullptr;
       // wconfig.finalize();
@@ -1838,18 +1838,15 @@ namespace Sass {
         }
       }
 
-      modFrame->fwdGlobal55.push_back(
-        { exposing, sheet->root2 });
+      rule->ns("");
+      sheet->root2->exposing = exposing;
 
     }
     else {
+      rule->ns(ns);
+      sheet->root2->exposing = exposing;
 
-      // Combine forwarded with local scope
-      modFrame->fwdModule55[ns] =
-      { exposing, sheet->root2 };
     }
-
-
 
     if (hasCached) return nullptr;
     // wconfig.finalize();
@@ -1875,12 +1872,26 @@ namespace Sass {
     // The show or hide config also hides these
     WithConfig wconfig(compiler, node->config(), hasWith);
 
+    StyleSheet* sheet = nullptr;
+
     if (node->needsLoading()) {
-      if (auto sheet = resolveUseRule(node)) {
+      if (sheet = resolveUseRule(node)) {
         node->root(sheet->root2);
         node->needsLoading(false);
       }
       else {
+        if (node->root()) {
+          Root* root = node->root();
+          VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+          if (node->ns().empty()) {
+            mframe->fwdGlobal55.push_back(
+              { root->exposing, root });
+          }
+          else {
+            mframe->fwdModule55[node->ns()] =
+            { root->exposing, root };
+          }
+        }
         return nullptr;
       }
     }
@@ -1888,6 +1899,15 @@ namespace Sass {
     if (node->root()) {
 
       Root* root = node->root();
+      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+      if (node->ns().empty()) {
+        mframe->fwdGlobal55.push_back(
+          { root->exposing, root });
+      }
+      else {
+        mframe->fwdModule55[node->ns()] =
+        { root->exposing, root };
+      }
 
       if (root->isActive) {
         if (node->hasLocalWith() || compiler.implicitWithConfig) {
@@ -1959,6 +1979,11 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
+        // File was loaded by somebody else first
+        if (node->root()) {
+          mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        }
         return nullptr;
       }
     }
@@ -1972,6 +1997,11 @@ namespace Sass {
           throw Exception::RuntimeException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
+        }
+        // Must release some scope first
+        if (node->root()) {
+          mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
         }
         return nullptr;
       }
@@ -1994,6 +2024,13 @@ namespace Sass {
       // compiler.import_stack.pop_back();
       node->root()->isLoading = false;
       node->root()->loaded = current;
+
+    }
+
+    // Must release some scope first
+    if (node->root()) {
+      mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
+        node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
     }
 
     wconfig.finalize();
@@ -2854,12 +2891,13 @@ namespace Sass {
   }
 
   // Resolve import of [path] and add imports to [rule]
-  StyleSheet* Eval::resolveDynamicImport(IncludeImport* import)
+  StyleSheet* Eval::resolveDynamicImport(IncludeImport* rule)
   {
-    SourceSpan pstate(import->pstate());
-    const ImportRequest request(import->url(), ".");
+    SourceSpan pstate(rule->pstate());
+    const ImportRequest request(rule->url(), rule->prev());
     callStackFrame frame(compiler, { pstate, Strings::importRule });
 
+   
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     const sass::vector<ResolvedImport> resolved(compiler.findIncludes(request, true));
@@ -2940,6 +2978,9 @@ namespace Sass {
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
+
+    auto& currentRoot(compiler.currentRoot);
+    LOCAL_PTR(Root, currentRoot, sheet->root2);
 
     EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
 
