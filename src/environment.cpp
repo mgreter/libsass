@@ -1354,6 +1354,9 @@ namespace Sass {
     }
     else {
 
+
+      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->fwdGlobal55.insert(asd); }
+
       //if (true || !sheet->root2->mergedFwdVar.empty() || !sheet->root2->mergedFwdFn.empty() || !sheet->root2->mergedFwdMix.empty()) {
       //  auto newrefs = new VarRefs(compiler.varRoot, nullptr, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false, false, false);
       //  for (auto asd : sheet->root2->mergedFwdVar) { newrefs->varIdxs.insert(asd); }
