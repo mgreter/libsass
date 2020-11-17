@@ -513,13 +513,11 @@ namespace Sass {
         auto qwe = frame;
         while (qwe) {
 
-          if (qwe->varFrame == 0xFFFFFFFF) {
-            if (qwe->varIdxs.count(name)) {
-              hasVar = true;
-              break;
-            }
+          if (qwe->varIdxs.count(name)) {
+            hasVar = true;
+            break;
           }
-          else if (!qwe->isModule) break;
+          if (!qwe->isModule && !qwe->permeable) break;
           qwe = qwe->pscope;
         }
         if (!hasVar)
