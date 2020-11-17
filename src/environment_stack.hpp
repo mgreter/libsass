@@ -110,6 +110,7 @@ namespace Sass {
     bool permeable = false;
     bool isImport = false;
     bool isModule = false;
+    bool isActive = false;
 
     // Parents for specific types
     uint32_t varFrame;
@@ -160,17 +161,20 @@ namespace Sass {
     // Register new variable on local stack
     // Invoked mostly by stylesheet parser
     VarRef createVariable(const EnvKey& name);
+    VarRef createLexicalVar(const EnvKey& name);
 
     // Register new function on local stack
     // Mostly invoked by built-in functions
     // Then invoked for custom C-API function
     // Finally for every parsed function rule
     VarRef createFunction(const EnvKey& name);
+    VarRef createLexicalFn(const EnvKey& name);
 
     // Register new mixin on local stack
     // Only invoked for mixin rules
     // But also for content blocks
     VarRef createMixin(const EnvKey& name);
+    VarRef createLexicalMix(const EnvKey& name);
 
     // Get local variable by name, needed for most simplistic case
     // for static variable optimization in loops. When we know that
@@ -470,6 +474,8 @@ namespace Sass {
     uint32_t oldFnFrame;
     uint32_t oldFnOffset;
 
+    bool wasActive;
+
   public:
 
     // Put frame onto stack
@@ -490,10 +496,13 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
+      wasActive = idxs->isActive;
+      idxs->isActive = true;
+
       if (idxs->varFrame != 0xFFFFFFFF) {
 
         // Check if we have scoped variables
-        if (idxs->varIdxs.size() != 0) {
+        // if (idxs->varIdxs.size() != 0) {
           // Get offset into variable vector
           oldVarOffset = (uint32_t)env.variables.size();
           // Remember previous frame "addresses"
@@ -502,10 +511,10 @@ namespace Sass {
           env.varFramePtr[idxs->varFrame] = oldVarOffset;
           // Create space for variables in this frame scope
           env.variables.resize(oldVarOffset + idxs->varIdxs.size());
-        }
+          // }
 
         // Check if we have scoped mixins
-        if (idxs->mixIdxs.size() != 0) {
+        // if (idxs->mixIdxs.size() != 0) {
           // Get offset into mixin vector
           oldMixOffset = (uint32_t)env.mixins.size();
           // Remember previous frame "addresses"
@@ -514,10 +523,10 @@ namespace Sass {
           env.mixFramePtr[idxs->mixFrame] = oldMixOffset;
           // Create space for mixins in this frame scope
           env.mixins.resize(oldMixOffset + idxs->mixIdxs.size());
-        }
+          // }
 
         // Check if we have scoped functions
-        if (idxs->fnIdxs.size() != 0) {
+        // if (idxs->fnIdxs.size() != 0) {
           // Get offset into function vector
           oldFnOffset = (uint32_t)env.functions.size();
           // Remember previous frame "addresses"
@@ -526,7 +535,7 @@ namespace Sass {
           env.fnFramePtr[idxs->fnFrame] = oldFnOffset;
           // Create space for functions in this frame scope
           env.functions.resize(oldFnOffset + idxs->fnIdxs.size());
-        }
+          // }
 
       }
 
@@ -549,36 +558,38 @@ namespace Sass {
       if (idxs->varFrame != 0xFFFFFFFF) {
 
         // Check if we had scoped variables
-        if (idxs->varIdxs.size() != 0) {
+        // if (idxs->varIdxs.size() != 0) {
           // Truncate variable vector
           env.variables.resize(
             oldVarOffset);
           // Restore old frame address
           env.varFramePtr[idxs->varFrame] =
             oldVarFrame;
-        }
+          // }
 
         // Check if we had scoped mixins
-        if (idxs->mixIdxs.size() != 0) {
+        // if (idxs->mixIdxs.size() != 0) {
           // Truncate existing vector
           env.mixins.resize(
             oldMixOffset);
           // Restore old frame address
           env.mixFramePtr[idxs->mixFrame] =
             oldMixFrame;
-        }
+          // }
 
         // Check if we had scoped functions
-        if (idxs->fnIdxs.size() != 0) {
+        // if (idxs->fnIdxs.size() != 0) {
           // Truncate existing vector
           env.functions.resize(
             oldFnOffset);
           // Restore old frame address
           env.fnFramePtr[idxs->fnFrame] =
             oldFnFrame;
-        }
+          // }
 
       }
+
+      idxs->isActive = wasActive;
 
       // Pop frame from stack
       env.stack.pop_back();

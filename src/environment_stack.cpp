@@ -1,6 +1,6 @@
 bool stkdbg = false;
 bool mixdbg = false;
-bool fndbg = true;
+bool fndbg = false;
 
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
@@ -148,11 +148,60 @@ namespace Sass {
     }
     // Get local offset to new function
     uint32_t offset = (uint32_t)fnIdxs.size();
-    if (fndbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
+    if (fndbg) std::cerr << "Create local function " << name.orig() << " at " << offset << "\n";
     // Remember the function name
     fnIdxs[name] = offset;
     // Return stack index reference
     return { fnFrame, offset };
+  }
+  // EO createFunction
+
+  VarRef VarRefs::createLexicalVar(
+    const EnvKey& name)
+  {
+    auto current = this;
+    // Skip over all imports
+    while (current->isImport) {
+      current = current->pscope;
+    }
+    if (current->isActive) {
+      // throw "Can't create on active frame";
+      root.variables.push_back({});
+    }
+    return current->createVariable(name);
+  }
+  // EO createFunction
+
+
+  VarRef VarRefs::createLexicalFn(
+    const EnvKey& name)
+  {
+    auto current = this;
+    // Skip over all imports
+    while (current->isImport) {
+      current = current->pscope;
+    }
+    if (current->isActive) {
+      // throw "Can't create on active frame";
+      root.functions.push_back({});
+    }
+    return current->createFunction(name);
+  }
+  // EO createFunction
+
+  VarRef VarRefs::createLexicalMix(
+    const EnvKey& name)
+  {
+    auto current = this;
+    // Skip over all imports
+    while (current->isImport) {
+      current = current->pscope;
+    }
+    if (current->isActive) {
+      // throw "Can't create on active frame";
+      root.mixins.push_back({});
+    }
+    return current->createMixin(name);
   }
   // EO createFunction
 

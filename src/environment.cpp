@@ -1,4 +1,4 @@
-bool udbg = true;
+bool udbg = false;
 
 #include "fn_meta.hpp"
 
@@ -241,7 +241,7 @@ namespace Sass {
     while (pr->isImport) pr = pr->pscope;
     // Not if we have one forwarded!
 
-    VarRef fidx = pr->createMixin(name);
+    VarRef fidx = pr->createLexicalMix(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
@@ -288,9 +288,7 @@ namespace Sass {
     FunctionRule* rule = withChildren<FunctionRule>(
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    rule->fidx(pr->createFunction(name));
+    rule->fidx(parent->createLexicalFn(name));
     return rule;
   }
   // EO readFunctionRule
@@ -521,7 +519,7 @@ namespace Sass {
           qwe = qwe->pscope;
         }
         if (!hasVar)
-        vidxs.push_back(pr->createVariable(name));
+        vidxs.push_back(pr->createLexicalVar(name));
       }
     }
 
