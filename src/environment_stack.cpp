@@ -8,6 +8,8 @@
 #include "exceptions.hpp"
 #include "compiler.hpp"
 
+bool stkdbg = false;
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -102,6 +104,8 @@ namespace Sass {
       // std::cerr << "Create global variable " << name.orig() << "\n";
       uint32_t offset = (uint32_t)root.intVariables.size();
       root.intVariables.resize(offset + 1);
+      //root.intVariables[offset] = SASS_MEMORY_NEW(Null,
+      //  SourceSpan::tmp("null"));
       varIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
     }
@@ -324,11 +328,11 @@ namespace Sass {
   ValueObj& EnvRoot::getVariable(const VarRef& vidx)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      // std::cerr << "Get global variable " << vidx.offset << "\n";
+      if (stkdbg) std::cerr << "Get global variable " << vidx.offset << "\n";
       return intVariables[vidx.offset];
     }
     else {
-      // std::cerr << "Get variable " << vidx.toString() << "\n";
+      if (stkdbg) std::cerr << "Get variable " << vidx.toString() << "\n";
       return variables[size_t(varFramePtr[vidx.frame]) + vidx.offset];
     }
   }
@@ -375,22 +379,22 @@ namespace Sass {
       throw Exception::RuntimeException(compiler,
         "Cannot modify built-in variable.");
     }
-    // std::cerr << "Set global variable " << offset
-    //   << " - " << value->inspect() << "\n";
+    if (stkdbg) std::cerr << "Set global variable " << offset
+       << " - " << value->inspect() << "\n";
     ValueObj& slot(intVariables[offset]);
     if (!guarded || !slot || slot->isaNull()) slot = value;
   }
   void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
   {
-    // std::cerr << "Set global mixin " << offset
-    //   << " - " << callable->name() << "\n";
+    if (stkdbg) std::cerr << "Set global mixin " << offset
+       << " - " << callable->name() << "\n";
     CallableObj& slot(intMixin[offset]);
     if (!guarded || !slot) slot = callable;
   }
   void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
   {
-    // std::cerr << "Set global function " << offset
-    //   << " - " << callable->name() << "\n";
+    if (stkdbg) std::cerr << "Set global function " << offset
+       << " - " << callable->name() << "\n";
     CallableObj& slot(intFunction[offset]);
     if (!guarded || !slot) slot = callable;
   }
@@ -401,13 +405,13 @@ namespace Sass {
   void EnvRoot::setVariable(const VarRef& vidx, ValueObj value, bool guarded)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      // std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
+      if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull())
         intVariables[vidx.offset] = value;
     }
     else {
-      // std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
+      if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
       ValueObj& slot(variables[size_t(varFramePtr[vidx.frame]) + vidx.offset]);
       if (slot == nullptr || guarded == false) slot = value;
     }
@@ -420,10 +424,12 @@ namespace Sass {
   {
     if (frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[offset]);
+      if (stkdbg) std::cerr << "Set global variable " << offset << " - " << value->inspect() << "\n";
       if (!guarded || !slot || slot->isaNull())
         intVariables[offset] = value;
     }
     else {
+      if (stkdbg) std::cerr << "Set variable " << frame << ":" << offset << " - " << value->inspect() << "\n";
       ValueObj& slot(variables[size_t(varFramePtr[frame]) + offset]);
       if (!guarded || !slot || slot->isaNull()) slot = value;
     }
@@ -612,6 +618,14 @@ namespace Sass {
         Callable* value = root.getMixin(vidx);
         if (value != nullptr) return value;
       }
+      if (Moduled* mod = fwds->module) {
+        auto fwd = mod->mergedFwdMix.find(name);
+        if (fwd != mod->mergedFwdMix.end()) {
+          const VarRef vidx{ fwds->mixFrame, it->second };
+          Callable* value = root.getMixin(vidx);
+          if (value != nullptr) return value;
+        }
+      }
     }
     return nullptr;
   }
@@ -631,6 +645,14 @@ namespace Sass {
         const VarRef vidx{ fwds->fnFrame, it->second };
         Callable* value = root.getFunction(vidx);
         if (value != nullptr) return value;
+      }
+      if (Moduled* mod = fwds->module) {
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          const VarRef vidx{ fwds->fnFrame, it->second };
+          Callable* value = root.getFunction(vidx);
+          if (value != nullptr) return value;
+        }
       }
     }
     return nullptr;
@@ -661,6 +683,14 @@ namespace Sass {
         const VarRef vidx{ fwds->varFrame, it->second };
         Value* value = root.getVariable(vidx);
         if (value != nullptr) return value;
+      }
+      if (Moduled* mod = fwds->module) {
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          const VarRef vidx{ fwds->varFrame, it->second };
+          Value* value = root.getVariable(vidx);
+          if (value != nullptr) return value;
+        }
       }
     }
     return nullptr;
@@ -969,6 +999,7 @@ namespace Sass {
       (uint32_t)stack.size() - 1;
     const VarRefs* current = stack[idx];
     while (current) {
+
       for (auto refs : current->fwdGlobal55) {
         auto in = refs->varIdxs.find(name);
         if (in != refs->varIdxs.end()) {
@@ -981,18 +1012,20 @@ namespace Sass {
           idxs->root.setVariable(vidx, val, guarded);
           return true;
         }
-/*
-        if (Moduled* mod = fwd.second) {
+        // Modules inserted by import
+        if (Moduled* mod = refs->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
-            std::cerr << "Got in merged fwd\n";
-            // Value* val = getVariable(
-            //   { 0xFFFFFFFF, fwd->second });
-            // if (val && name.isPrivate()) continue;
-            // if (val != nullptr) return val;
+            if (name.isPrivate()) {
+              throw Exception::ParserException(compiler,
+                "Private members can't be accessed "
+                "from outside their modules.");
+            }
+            const VarRef vidx{ 0xFFFFFFFF, fwd->second };
+            idxs->root.setVariable(vidx, val, guarded);
+            return true;
           }
         }
-*/
       }
 
       auto it = current->varIdxs.find(name);

@@ -199,6 +199,103 @@ namespace Sass {
   }
 
 
+
+  // Consumes a mixin declaration.
+  // [start] should point before the `@`.
+  MixinRule* StylesheetParser::readMixinRule(Offset start)
+  {
+
+    VarRefs* parent = context.varRoot.stack.back();
+    EnvFrame local(context, false);
+    // Create space for optional content callable
+    // ToDo: check if this can be conditionally done?
+    auto cidx = local.idxs->createMixin(Keys::contentRule);
+    // var precedingComment = lastSilentComment;
+    // lastSilentComment = null;
+    sass::string name = readIdentifier();
+    scanWhitespace();
+
+    ArgumentDeclarationObj arguments;
+    if (scanner.peekChar() == $lparen) {
+      arguments = parseArgumentDeclaration();
+    }
+    else {
+      // Dart-sass creates this one too
+      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
+        scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
+    }
+
+    if (inMixin || inContentBlock) {
+      error("Mixins may not contain mixin declarations.",
+        scanner.relevantSpanFrom(start));
+    }
+    else if (inControlDirective) {
+      error("Mixins may not be declared in control directives.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    scanWhitespace();
+    LOCAL_FLAG(inMixin, true);
+    LOCAL_FLAG(mixinHasContent, false);
+
+    auto pr = parent;
+    while (pr->isImport) pr = pr->pscope;
+    // Not if we have one forwarded!
+
+    VarRef fidx = pr->createMixin(name);
+    MixinRule* rule = withChildren<MixinRule>(
+      &StylesheetParser::readChildStatement,
+      start, name, arguments, local.idxs);
+    rule->midx(fidx); // to parent
+    rule->cidx(cidx);
+    return rule;
+  }
+  // EO _mixinRule
+
+  // Consumes a function declaration.
+  // [start] should point before the `@`.
+  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
+  {
+    // Variables should not be hoisted through
+    VarRefs* parent = context.varRoot.stack.back();
+    EnvFrame local(context, false);
+
+    // var precedingComment = lastSilentComment;
+    // lastSilentComment = null;
+    sass::string name = readIdentifier();
+    sass::string normalized(name);
+
+    scanWhitespace();
+
+    ArgumentDeclarationObj arguments = parseArgumentDeclaration();
+
+    if (inMixin || inContentBlock) {
+      error("Mixins may not contain function declarations.",
+        scanner.relevantSpanFrom(start));
+    }
+    else if (inControlDirective) {
+      error("Functions may not be declared in control directives.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    sass::string fname(Util::unvendor(name));
+    if (fname == "calc" || fname == "element" || fname == "expression" ||
+      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
+      error("Invalid function name.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    scanWhitespace();
+    FunctionRule* rule = withChildren<FunctionRule>(
+      &StylesheetParser::readFunctionRuleChild,
+      start, name, arguments, local.idxs);
+    auto pr = parent;
+    while (pr->isImport) pr = pr->pscope;
+    rule->fidx(pr->createFunction(name));
+    return rule;
+  }
+  // EO readFunctionRule
+
   AssignRule* StylesheetParser::readVariableDeclarationWithoutNamespace(
     const sass::string& ns, Offset start)
   {
@@ -1262,8 +1359,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, true, false,
-        compiler.varRoot.stack.back()->isModule);
+      EnvFrame local(compiler, false, true, false);
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
@@ -1306,6 +1402,10 @@ namespace Sass {
 
         // }
 
+    if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
+      << compiler.implicitWithConfig << "\n";
+
+
     // Add C-API to stack to expose it
     ImportStackFrame iframe(compiler, sheet->import);
 
@@ -1327,28 +1427,40 @@ namespace Sass {
       item->accept(this);
     }
 
-    //for (auto var : sheet->root2->idxs->varIdxs) {
-    //  ValueObj& slot(compiler.varRoot.getModVar(var.second));
-    //  if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, rule->pstate());
-    //}
+    if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
+      << compiler.implicitWithConfig << "\n";
 
     if (pframe->varFrame == 0xFFFFFFFF) {
+
+      if (udbg) std::cerr << " import into global frame '" << rule->url() << "'\n";
+
       // Global can simply be exposed without further ado (same frame)
-      // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->varIdxs) {
+        if (udbg) std::cerr << "  var " << asd.first.orig() << "\n";
+        pframe->varIdxs.insert(asd);
+      }
       // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs[asd.first] = asd.second; }
       // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->module->mergedFwdVar.insert(asd); }
       // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->module->mergedFwdVar[asd.first] = asd.second; }
 
-      for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs.insert(asd); } // a: 18
+      for (auto asd : sheet->root2->mergedFwdVar) {
+        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
+        pframe->varIdxs.insert(asd); } // a: 18
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs[asd.first] = asd.second; } // a: 25
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); } // a: 24
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar[asd.first] = asd.second; } // a: 24
 
 
-      // for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
-      // for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->mixIdxs) {
+        if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
+        pframe->mixIdxs.insert(asd); }
 
-      for (auto asd : sheet->root2->mergedFwdMix) { pframe->mixIdxs[asd.first] = asd.second; }
+      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+
+      for (auto asd : sheet->root2->mergedFwdMix) {
+        if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
+        pframe->mixIdxs[asd.first] = asd.second; }
+
       for (auto asd : sheet->root2->mergedFwdFn) { pframe->fnIdxs[asd.first] = asd.second; }
 
       // sheet->root2->idxs->module = sheet->root2;
@@ -1370,6 +1482,10 @@ namespace Sass {
       // The variable is not created at root, should be intermixed with
       // the scope opened by the `a` style rule.
       // Create 
+
+      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
+        << compiler.implicitWithConfig << "\n";
+
 
       sheet->root2->idxs->module = sheet->root2;
       pframe->fwdGlobal55.insert(

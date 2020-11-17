@@ -1008,50 +1008,6 @@ namespace Sass {
   }
   // EO readExtendRule
 
-  // Consumes a function declaration.
-  // [start] should point before the `@`.
-  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
-  {
-    // Variables should not be hoisted through
-    VarRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
-
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    sass::string name = readIdentifier();
-    sass::string normalized(name);
-
-    scanWhitespace();
-
-    ArgumentDeclarationObj arguments = parseArgumentDeclaration();
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain function declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Functions may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    sass::string fname(Util::unvendor(name));
-    if (fname == "calc" || fname == "element" || fname == "expression" ||
-      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
-      error("Invalid function name.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    FunctionRule* rule = withChildren<FunctionRule>(
-      &StylesheetParser::readFunctionRuleChild,
-      start, name, arguments, local.idxs);
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    rule->fidx(pr->createFunction(name));
-    return rule;
-  }
-  // EO readFunctionRule
-
   ForRule* StylesheetParser::readForRule(Offset start, Statement* (StylesheetParser::* child)())
   {
     LOCAL_FLAG(inControlDirective, true);
@@ -1456,57 +1412,6 @@ namespace Sass {
       start, query);
   }
 
-  // Consumes a mixin declaration.
-  // [start] should point before the `@`.
-  MixinRule* StylesheetParser::readMixinRule(Offset start)
-  {
-
-    VarRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
-    // Create space for optional content callable
-    // ToDo: check if this can be conditionally done?
-    auto cidx = local.idxs->createMixin(Keys::contentRule);
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    sass::string name = readIdentifier();
-    scanWhitespace();
-
-    ArgumentDeclarationObj arguments;
-    if (scanner.peekChar() == $lparen) {
-      arguments = parseArgumentDeclaration();
-    }
-    else {
-      // Dart-sass creates this one too
-      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
-        scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
-    }
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain mixin declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Mixins may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    LOCAL_FLAG(inMixin, true);
-    LOCAL_FLAG(mixinHasContent, false);
-
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    // Not if we have one forwarded!
-
-    VarRef fidx = pr->createMixin(name);
-    MixinRule* rule = withChildren<MixinRule>(
-      &StylesheetParser::readChildStatement,
-      start, name, arguments, local.idxs);
-    rule->midx(fidx); // to parent
-    rule->cidx(cidx);
-    return rule;
-  }
-  // EO _mixinRule
 
   // Consumes a `@moz-document` rule. Gecko's `@-moz-document` diverges
   // from [the specification][] allows the `url-prefix` and `domain`
