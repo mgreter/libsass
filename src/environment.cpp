@@ -1,4 +1,4 @@
-bool udbg = false;
+bool udbg = true;
 
 #include "fn_meta.hpp"
 
@@ -238,7 +238,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     auto pr = parent;
-    //while (pr->isImport) pr = pr->pscope;
+    while (pr->isImport) pr = pr->pscope;
     // Not if we have one forwarded!
 
     VarRef fidx = pr->createMixin(name);
@@ -289,7 +289,7 @@ namespace Sass {
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
     auto pr = parent;
-    //while (pr->isImport) pr = pr->pscope;
+    while (pr->isImport) pr = pr->pscope;
     rule->fidx(pr->createFunction(name));
     return rule;
   }
@@ -454,7 +454,7 @@ namespace Sass {
     }
 
     auto pr = frame;
-    //while (pr->isImport) pr = pr->pscope;
+    while (pr->isImport) pr = pr->pscope;
 
     if (pr->varFrame == 0xFFFFFFFF) {
 
@@ -581,7 +581,7 @@ namespace Sass {
 
   void mergeForwards(
     VarRefs* idxs,
-    Moduled* currentRoot,
+    Moduled* module,
     bool isShown,
     bool isHidden,
     const sass::string prefix,
@@ -590,20 +590,29 @@ namespace Sass {
     Logger& logger)
   {
 
+    // Only should happen if forward was found in root stylesheet
+    // Doesn't make much sense as there is nowhere to forward to
+    if (idxs->module != nullptr) {
+      // This is needed to support double forwarding (ToDo - need filter, order?)
+      for (auto entry : idxs->module->mergedFwdVar) { module->mergedFwdVar.insert(entry); }
+      for (auto entry : idxs->module->mergedFwdMix) { module->mergedFwdMix.insert(entry); }
+      for (auto entry : idxs->module->mergedFwdFn) { module->mergedFwdFn.insert(entry); }
+    }
+
     if (isShown) {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
+      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
+      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
+      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
     }
     else if (isHidden) {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
+      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
+      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
+      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
     }
     else {
-      exposeFiltered(currentRoot->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
-      exposeFiltered(currentRoot->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
-      exposeFiltered(currentRoot->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
+      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
+      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
+      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
     }
 
   }
@@ -1443,6 +1452,8 @@ namespace Sass {
     if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
       << compiler.implicitWithConfig << "\n";
 
+    while (pframe->isImport) pframe = pframe->pscope;
+
     if (pframe->varFrame == 0xFFFFFFFF) {
 
       if (udbg) std::cerr << " import into global frame '" << rule->url() << "'\n";
@@ -1459,7 +1470,8 @@ namespace Sass {
       for (auto asd : sheet->root2->mergedFwdVar) {
         if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
         pframe->varIdxs.insert(asd); } // a: 18
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs[asd.first] = asd.second; } // a: 25
+
+                                       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs[asd.first] = asd.second; } // a: 25
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); } // a: 24
       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar[asd.first] = asd.second; } // a: 24
 
@@ -1468,13 +1480,17 @@ namespace Sass {
         if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
         pframe->mixIdxs.insert(asd); }
 
-      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+      for (auto asd : sheet->root2->idxs->fnIdxs) {
+        if (udbg) std::cerr << "  fn " << asd.first.orig() << "\n";
+        pframe->fnIdxs.insert(asd); }
 
       for (auto asd : sheet->root2->mergedFwdMix) {
         if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
         pframe->mixIdxs[asd.first] = asd.second; }
 
-      for (auto asd : sheet->root2->mergedFwdFn) { pframe->fnIdxs[asd.first] = asd.second; }
+      for (auto asd : sheet->root2->mergedFwdFn) {
+        if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
+        pframe->fnIdxs[asd.first] = asd.second; }
 
       // sheet->root2->idxs->module = sheet->root2;
       // pframe->fwdGlobal55.insert(
