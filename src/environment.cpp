@@ -462,6 +462,7 @@ namespace Sass {
         if (!cfgvar || cfgvar->isNull) cfgvar = context.getCfgVar(name, false, false);
 
         if (cfgvar) {
+          guarded = cfgvar->isGuarded;
           if (cfgvar->value) {
             value = SASS_MEMORY_NEW(ValueExpression,
               cfgvar->value->pstate(), cfgvar->value);
@@ -801,9 +802,9 @@ namespace Sass {
           ValueObj& slot = compiler.varRoot.getVariable({ 0xFFFFFFFF, it->second });
           if (slot == nullptr || slot->isaNull()) continue;
 
-          //throw Exception::ParserException(compiler,
-          //  "This module and the new module both define a "
-          //  "variable named \"$" + var.first.norm() + "\".");
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "variable named \"$" + var.first.norm() + "\".");
         }
       }
       for (auto mix : exposing->mixIdxs) {
@@ -813,9 +814,9 @@ namespace Sass {
           if (mix.second == it->second) continue;
           CallableObj& slot = compiler.varRoot.getMixin({ 0xFFFFFFFF, it->second });
           if (slot == nullptr) continue;
-          //throw Exception::ParserException(compiler,
-          //  "This module and the new module both define a "
-          //  "mixin named \"" + mix.first.norm() + "\".");
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "mixin named \"" + mix.first.norm() + "\".");
         }
       }
       for (auto fn : exposing->fnIdxs) {
@@ -825,9 +826,9 @@ namespace Sass {
           if (fn.second == it->second) continue;
           CallableObj& slot = compiler.varRoot.getFunction({ 0xFFFFFFFF, it->second });
           if (slot == nullptr) continue;
-          //throw Exception::ParserException(compiler,
-          //  "This module and the new module both define a "
-          //  "function named \"" + fn.first.norm() + "\".");
+          throw Exception::ParserException(compiler,
+            "This module and the new module both define a "
+            "function named \"" + fn.first.norm() + "\".");
         }
       }
 
