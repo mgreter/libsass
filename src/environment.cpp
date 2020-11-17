@@ -1,3 +1,5 @@
+bool udbg = false;
+
 #include "fn_meta.hpp"
 
 #include "eval.hpp"
@@ -48,9 +50,6 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
   using namespace StringUtils;
-
-  bool udbg = false;
-
 
   Value* Eval::visitAssignRule(AssignRule* a)
   {
@@ -508,6 +507,22 @@ namespace Sass {
       // Also skip if on global scope?
       // Not if we have one forwarded!
       if (!hasVar) {
+
+        // Skip if we create new global that already exists in the stack
+
+        auto qwe = frame;
+        while (qwe) {
+
+          if (qwe->varFrame == 0xFFFFFFFF) {
+            if (qwe->varIdxs.count(name)) {
+              hasVar = true;
+              break;
+            }
+          }
+          else if (!qwe->isModule) break;
+          qwe = qwe->pscope;
+        }
+        if (!hasVar)
         vidxs.push_back(pr->createVariable(name));
       }
     }
@@ -1265,12 +1280,12 @@ namespace Sass {
       }
 
 #ifdef SassEagerImportParsing
-      // Call custom importers and check if any of them handled the import
-      if (!context.callCustomImporters(url, pstate, rule)) {
-        // Try to load url into context.sheets
-        resolveDynamicImport(rule, start, url);
-      }
-#else
+//       // Call custom importers and check if any of them handled the import
+//       if (!context.callCustomImporters(url, pstate, rule)) {
+//         // Try to load url into context.sheets
+//         resolveDynamicImport(rule, start, url);
+//       }
+// #else
       rule->append(SASS_MEMORY_NEW(IncludeImport,
         scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
 #endif

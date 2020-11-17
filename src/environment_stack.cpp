@@ -1,3 +1,5 @@
+bool stkdbg = false;
+
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
@@ -7,8 +9,6 @@
 #include "ast_statements.hpp"
 #include "exceptions.hpp"
 #include "compiler.hpp"
-
-bool stkdbg = false;
 
 namespace Sass {
 
@@ -101,7 +101,7 @@ namespace Sass {
     //   return { idxs->varFrame, it->second };
     // }
     if (varFrame == 0xFFFFFFFF) {
-      // std::cerr << "Create global variable " << name.orig() << "\n";
+      if (stkdbg) std::cerr << "Create global variable " << name.orig() << "\n";
       uint32_t offset = (uint32_t)root.intVariables.size();
       root.intVariables.resize(offset + 1);
       //root.intVariables[offset] = SASS_MEMORY_NEW(Null,
@@ -116,6 +116,7 @@ namespace Sass {
 
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
+    if (stkdbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
     // Remember the variable name
     varIdxs[name] = offset;
     // Return stack index reference
