@@ -665,7 +665,7 @@ namespace Sass {
         rule->root(sheet->root2);
         return nullptr;
       }
-      EnvFrame local(compiler, false, true);
+      EnvFrame local(compiler, true, true, false);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       sheet->root2->import = loaded;
