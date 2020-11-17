@@ -666,7 +666,7 @@ namespace Sass {
         rule->root(sheet->root2);
         return nullptr;
       }
-      EnvFrame local(compiler, true, true, false);
+      EnvFrame local(compiler, true, true, false, true);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       sheet->root2->import = loaded;
@@ -745,7 +745,7 @@ namespace Sass {
         }
       }
 
-      EnvFrame local(compiler, false, true);
+      EnvFrame local(compiler, false, true, false);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
@@ -867,12 +867,13 @@ namespace Sass {
     }
     else {
 
+      // No idea why this is needed!
       for (auto var : modFrame->varIdxs) {
         idxs->varIdxs.insert(var);
       }
-      for (auto var : modFrame->mixIdxs) {
-        idxs->mixIdxs.insert(var);
-      }
+      // for (auto var : modFrame->mixIdxs) {
+      //   idxs->mixIdxs.insert(var);
+      // }
       //for (auto var : modFrame->fnIdxs) {
       //  idxs->fnIdxs.insert(var);
       //}
@@ -1462,58 +1463,29 @@ namespace Sass {
         if (udbg) std::cerr << "  var " << asd.first.orig() << "\n";
         pframe->varIdxs.insert(asd);
       }
-      // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs[asd.first] = asd.second; }
-      // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->module->mergedFwdVar.insert(asd); }
-      // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->module->mergedFwdVar[asd.first] = asd.second; }
-
-      for (auto asd : sheet->root2->mergedFwdVar) {
-        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
-        pframe->varIdxs.insert(asd); } // a: 18
-
-                                       // for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs[asd.first] = asd.second; } // a: 25
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); } // a: 24
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar[asd.first] = asd.second; } // a: 24
-
-
       for (auto asd : sheet->root2->idxs->mixIdxs) {
         if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
         pframe->mixIdxs.insert(asd); }
-
       for (auto asd : sheet->root2->idxs->fnIdxs) {
         if (udbg) std::cerr << "  fn " << asd.first.orig() << "\n";
         pframe->fnIdxs.insert(asd); }
 
+      for (auto asd : sheet->root2->mergedFwdVar) {
+        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
+        pframe->varIdxs.insert(asd);
+      } // a: 18
       for (auto asd : sheet->root2->mergedFwdMix) {
         if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
         pframe->mixIdxs[asd.first] = asd.second; }
-
       for (auto asd : sheet->root2->mergedFwdFn) {
         if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
         pframe->fnIdxs[asd.first] = asd.second; }
 
-      // sheet->root2->idxs->module = sheet->root2;
-      // pframe->fwdGlobal55.insert(
-      //   pframe->fwdGlobal55.begin(),
-      //   sheet->root2->idxs);
-
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); }
-      // for (auto asd : sheet->root2->mergedFwdMix) { pframe->module->mergedFwdMix.insert(asd); }
-      // for (auto asd : sheet->root2->mergedFwdFn) { pframe->fnIdxs.insert(asd); }
-
     }
     else {
 
-
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->fwdGlobal55.insert(asd); }
-
-      // We need to support this: a { @import { @forward { $a: 1 } } }
-      // The variable is not created at root, should be intermixed with
-      // the scope opened by the `a` style rule.
-      // Create 
-
       if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
         << compiler.implicitWithConfig << "\n";
-
 
       sheet->root2->idxs->module = sheet->root2;
       pframe->fwdGlobal55.insert(
@@ -1521,14 +1493,6 @@ namespace Sass {
         sheet->root2->idxs);
 
     }
-
-
-    // These data object have just been borrowed
-    // sass_import_take_source(compiler.import_stack.back());
-    // sass_import_take_srcmap(compiler.import_stack.back());
-
-    // Finally remove if from the stack
-    // compiler.import_stack.pop_back();
 
   }
 

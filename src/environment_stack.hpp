@@ -110,6 +110,7 @@ namespace Sass {
     bool permeable = false;
     bool isImport = false;
     bool isModule = false;
+    bool isForward = false;
     bool isActive = false;
 
     // Parents for specific types
@@ -141,7 +142,8 @@ namespace Sass {
       uint32_t fnFrame,
       bool permeable,
       bool isImport,
-      bool isModule) :
+      bool isModule,
+      bool isForward) :
       root(root),
       pscope(pscope),
       permeable(permeable),
@@ -283,7 +285,8 @@ namespace Sass {
       Compiler& compiler,
       bool permeable,
       bool isModule = false,
-      bool isImport = false);
+      bool isImport = false,
+      bool isForward = false);
 
     // Destructor
     ~EnvFrame();
