@@ -1334,19 +1334,20 @@ namespace Sass {
 
     if (pframe->varFrame == 0xFFFFFFFF) {
       // Global can simply be exposed without further ado (same frame)
-      for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
+      // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs.insert(asd); }
       // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->varIdxs[asd.first] = asd.second; }
       // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->module->mergedFwdVar.insert(asd); }
       // for (auto asd : sheet->root2->idxs->varIdxs) { pframe->module->mergedFwdVar[asd.first] = asd.second; }
 
-      for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs.insert(asd); }
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs[asd.first] = asd.second; }
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); }
-      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar[asd.first] = asd.second; }
+      for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs.insert(asd); } // a: 18
+      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->varIdxs[asd.first] = asd.second; } // a: 25
+      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar.insert(asd); } // a: 24
+      // for (auto asd : sheet->root2->mergedFwdVar) { pframe->module->mergedFwdVar[asd.first] = asd.second; } // a: 24
 
 
-      for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
-      for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+      // for (auto asd : sheet->root2->idxs->mixIdxs) { pframe->mixIdxs.insert(asd); }
+      // for (auto asd : sheet->root2->idxs->fnIdxs) { pframe->fnIdxs.insert(asd); }
+
       for (auto asd : sheet->root2->mergedFwdMix) { pframe->mixIdxs[asd.first] = asd.second; }
       for (auto asd : sheet->root2->mergedFwdFn) { pframe->fnIdxs[asd.first] = asd.second; }
 
