@@ -238,7 +238,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
+    //while (pr->isImport) pr = pr->pscope;
     // Not if we have one forwarded!
 
     VarRef fidx = pr->createMixin(name);
@@ -289,7 +289,7 @@ namespace Sass {
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
     auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
+    //while (pr->isImport) pr = pr->pscope;
     rule->fidx(pr->createFunction(name));
     return rule;
   }
@@ -454,7 +454,7 @@ namespace Sass {
     }
 
     auto pr = frame;
-    while (pr->isImport) pr = pr->pscope;
+    //while (pr->isImport) pr = pr->pscope;
 
     if (pr->varFrame == 0xFFFFFFFF) {
 
@@ -517,7 +517,7 @@ namespace Sass {
             hasVar = true;
             break;
           }
-          if (!qwe->isModule && !qwe->permeable) break;
+          if (!qwe->isImport && !qwe->permeable) break;
           qwe = qwe->pscope;
         }
         if (!hasVar)
@@ -1090,7 +1090,7 @@ namespace Sass {
       // For a forward within an import this can be wrong
       // We should assign to variables in the parent ...
       VarRefs* idxs = root->idxs;
-      if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
+      //if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
       EnvScope scoped2(compiler.varRoot, idxs);
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
@@ -1372,7 +1372,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, false, true, false);
+      EnvFrame local(compiler, false, true, true);
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
@@ -1388,6 +1388,9 @@ namespace Sass {
 
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
+
+    if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
+      << compiler.implicitWithConfig << "\n";
 
     // Get the include loaded by parser
     // const ResolvedImport& include(rule->include());
@@ -1414,9 +1417,6 @@ namespace Sass {
     // debug_ast(sheet->root2);
 
         // }
-
-    if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
-      << compiler.implicitWithConfig << "\n";
 
 
     // Add C-API to stack to expose it

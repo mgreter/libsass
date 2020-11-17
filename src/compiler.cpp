@@ -819,6 +819,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       }
     }
 
+    // std::cerr << "Parsing '" << import->getAbsPath() << "'\n";
+
     // Invoke correct parser according to format
     StyleSheetObj stylesheet = SASS_MEMORY_NEW(
       StyleSheet, import, parseSource(import));

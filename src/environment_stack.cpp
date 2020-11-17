@@ -101,8 +101,8 @@ namespace Sass {
     //   return { idxs->varFrame, it->second };
     // }
     if (varFrame == 0xFFFFFFFF) {
-      if (stkdbg) std::cerr << "Create global variable " << name.orig() << "\n";
       uint32_t offset = (uint32_t)root.intVariables.size();
+      if (stkdbg) std::cerr << "Create global variable " << name.orig() << " at " << offset << "\n";
       root.intVariables.resize(offset + 1);
       //root.intVariables[offset] = SASS_MEMORY_NEW(Null,
       //  SourceSpan::tmp("null"));
@@ -380,10 +380,16 @@ namespace Sass {
       throw Exception::RuntimeException(compiler,
         "Cannot modify built-in variable.");
     }
-    if (stkdbg) std::cerr << "Set global variable " << offset
-       << " - " << value->inspect() << "\n";
     ValueObj& slot(intVariables[offset]);
-    if (!guarded || !slot || slot->isaNull()) slot = value;
+    if (!guarded || !slot || slot->isaNull()) {
+      if (stkdbg) std::cerr << "Set global variable " << offset
+        << " - " << value->inspect() << "\n";
+      slot = value;
+    }
+    else {
+      if (stkdbg) std::cerr << "Guarded global variable " << offset
+        << " - " << value->inspect() << "\n";
+    }
   }
   void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
   {
@@ -406,10 +412,14 @@ namespace Sass {
   void EnvRoot::setVariable(const VarRef& vidx, ValueObj value, bool guarded)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
       ValueObj& slot(intVariables[vidx.offset]);
-      if (!guarded || !slot || slot->isaNull())
+      if (!guarded || !slot || slot->isaNull()) {
+        if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
         intVariables[vidx.offset] = value;
+      }
+      else {
+        if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
+      }
     }
     else {
       if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
