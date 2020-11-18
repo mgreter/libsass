@@ -20,17 +20,6 @@
 
 namespace Sass {
 
-  class Module
-  {
-  public:
-    VarRefs* idxs;
-    bool isActive3 = false;
-    void addFunction(const EnvKey& name, uint32_t offset);
-    void addVariable(const EnvKey& name, uint32_t offset);
-    void addMixin(const EnvKey& name, uint32_t offset);
-    Module(EnvRoot& root);
-  };
-
   // Compiler is stateful, while Context is more low-level
   class Context : public SassOutputOptionsCpp {
 

@@ -953,7 +953,6 @@ namespace Sass {
   {
 
     root->isActive = true;
-    root->isLoading = true;
     root->loaded = current;
     root->loaded = SASS_MEMORY_NEW(CssStyleRule,
       root->pstate(), nullptr, selectorStack.back());
@@ -975,7 +974,6 @@ namespace Sass {
       child->accept(this);
     }
     selectorStack.pop_back();
-    root->isLoading = false;
 
     current = oldCurrent;
 
@@ -1172,8 +1170,6 @@ namespace Sass {
 
 
       insertModule(root);
-
-      root->isLoading = false;
 
       // compiler.import_stack.pop_back();
 

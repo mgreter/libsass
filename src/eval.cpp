@@ -1427,7 +1427,6 @@ namespace Sass {
     // EnvScope scoped(compiler.varRoot, root->idxs);
     LOCAL_PTR(CssParentNode, current, css);
     root->isActive = true;
-    root->isLoading = true;
 
     auto& currentRoot(compiler.currentRoot);
     LOCAL_PTR(Root, currentRoot, root);
@@ -1438,7 +1437,6 @@ namespace Sass {
       Value* child = item->accept(this);
       if (child) delete child;
     }
-    root->isLoading = false;
     return css.detach();
   }
 

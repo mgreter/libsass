@@ -14,6 +14,7 @@
 #include "ast_supports.hpp"
 #include "ast_statements.hpp"
 #include "ast_css.hpp"
+#include "stylesheet.hpp"
 #include "environment_stack.hpp"
 #include "file.hpp"
 

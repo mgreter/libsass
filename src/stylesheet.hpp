@@ -11,6 +11,42 @@
 
 namespace Sass {
 
+
+  class Moduled
+  {
+  public:
+
+    // True once loaded
+    bool isActive = false;
+
+    // Forwarded items must be on internal scope
+    VarRefs* idxs = nullptr;
+    VarRefs* exposing = nullptr;
+
+    // All @forward rules get merged into these objects
+    // Those are not available on the local scope, they
+    // are only used when another module consumes us!
+    // On @use those must be merged with local ones!
+    VidxEnvKeyMap mergedFwdVar;
+    MidxEnvKeyMap mergedFwdMix;
+    FidxEnvKeyMap mergedFwdFn;
+
+    // The evaluated css tree
+    CssParentNodeObj loaded = nullptr;
+
+  };
+
+  class Module
+  {
+  public:
+    VarRefs* idxs;
+    bool isActive3 = false;
+    void addFunction(const EnvKey& name, uint32_t offset);
+    void addVariable(const EnvKey& name, uint32_t offset);
+    void addMixin(const EnvKey& name, uint32_t offset);
+    Module(EnvRoot& root);
+  };
+
   // parsed stylesheet from loaded resource
   // this should be a `Module` for sass 4.0
   class Root final : public AstNode,
@@ -19,17 +55,10 @@ namespace Sass {
   {
   public:
 
-    // Whether this was parsed from a plain CSS stylesheet.
-    // bool plainCss33;
-
-    // SourceDataObj source;
-
     // The canonical URL for this module's source file. This may be `null`
     // if the module was loaded from a string without a URL provided.
-    // struct SassImport* import;
-
-    // the import type
-    // SassImportFormat syntax;
+    // It also has the input type (css vs sass) attached
+    ImportObj import;
 
     // Modules that this module uses.
     // List<Module> get upstream;
@@ -48,8 +77,6 @@ namespace Sass {
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
     // Extender extender;
-
-    bool isLoading = false;
 
     Root(const SourceSpan& pstate, size_t reserve = 0)
       : AstNode(pstate), Vectorized<Statement>(reserve)
