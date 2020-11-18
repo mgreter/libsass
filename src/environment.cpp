@@ -620,20 +620,8 @@ namespace Sass {
   Root* Eval::resolveForwardRule(ForwardRule* rule)
   {
 
-
-    // sass::string ns(rule->ns());
-    // sass::string url(rule->url());
-    // sass::string prev(rule->prev());
-    // sass::string prefix(rule->prefix());
-    // bool isShown(rule->isShown());
-    // bool isHidden(rule->isHidden());
-    // bool hasWith(rule->hasLocalWith());
-    // auto config(rule->config());
-
     SourceSpan pstate(rule->pstate());
     const ImportRequest import(rule->url(), rule->prev());
-
-    bool hasCached = false;
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
@@ -744,11 +732,7 @@ namespace Sass {
       EnvFrame local(compiler, false, true); // correct
       sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
-
-      // sheet->idxs = local.idxs;
       sheet->import = loaded;
-
-      // sheet->con context->node
     }
 
 
@@ -767,9 +751,6 @@ namespace Sass {
   {
 
     VarRefs* idxs = root->idxs;
-    VarRefs* refs = root->idxs;
-    Moduled* module = root;
-    VarRefs* exposing = refs;
 
     // Expose what has been forwarded to us
     for (auto var : root->mergedFwdVar) {
@@ -787,7 +768,7 @@ namespace Sass {
 
     if (intoRoot) {
 
-      for (auto var : exposing->varIdxs) {
+      for (auto var : idxs->varIdxs) {
         auto it = modFrame->varIdxs.find(var.first);
         if (it != modFrame->varIdxs.end()) {
           if (var.first.isPrivate()) continue;
@@ -801,7 +782,7 @@ namespace Sass {
             "variable named \"$" + var.first.norm() + "\".");
         }
       }
-      for (auto mix : exposing->mixIdxs) {
+      for (auto mix : idxs->mixIdxs) {
         auto it = modFrame->mixIdxs.find(mix.first);
         if (it != modFrame->mixIdxs.end()) {
           if (mix.first.isPrivate()) continue;
@@ -813,7 +794,7 @@ namespace Sass {
             "mixin named \"" + mix.first.norm() + "\".");
         }
       }
-      for (auto fn : exposing->fnIdxs) {
+      for (auto fn : idxs->fnIdxs) {
         auto it = modFrame->fnIdxs.find(fn.first);
         if (it != modFrame->fnIdxs.end()) {
           if (fn.first.isPrivate()) continue;
@@ -828,8 +809,8 @@ namespace Sass {
 
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->fwdGlobal55) {
-        if (exposing == fwd) continue;
-        for (auto var : exposing->varIdxs) {
+        if (idxs == fwd) continue;
+        for (auto var : idxs->varIdxs) {
           auto it = fwd->varIdxs.find(var.first);
           if (it != fwd->varIdxs.end()) {
             if (var.second == it->second) continue;
@@ -838,7 +819,7 @@ namespace Sass {
               "from multiple global modules.");
           }
         }
-        for (auto var : exposing->mixIdxs) {
+        for (auto var : idxs->mixIdxs) {
           auto it = fwd->mixIdxs.find(var.first);
           if (it != fwd->mixIdxs.end()) {
             if (var.second == it->second) continue;
@@ -847,7 +828,7 @@ namespace Sass {
               "available from multiple global modules.");
           }
         }
-        for (auto var : exposing->fnIdxs) {
+        for (auto var : idxs->fnIdxs) {
           auto it = fwd->fnIdxs.find(var.first);
           if (it != fwd->fnIdxs.end()) {
             if (var.second == it->second) continue;
@@ -874,7 +855,7 @@ namespace Sass {
 
     }
 
-    return exposing;
+    return idxs;
 
   }
 
@@ -1052,11 +1033,10 @@ namespace Sass {
     WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith(),
       rule->isShown(), rule->isHidden(), rule->toggledVariables(), rule->prefix());
 
-    VarRefs* mframe = compiler.getCurrentModule();
-
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || rule->hasLocalWith());
 
+    // Flag for dynamic modules vs builtins
     if (rule->needsLoading()) {
       if (auto sheet = resolveForwardRule(rule)) {
         rule->root(sheet);
