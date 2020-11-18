@@ -37,7 +37,7 @@ namespace Sass {
         Value* index = arguments[1];
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (false && eval.assigne->ptr() == input && input->refcount < AssignableRefCount) {
+        if (eval.assigne && eval.assigne->ptr() == input && input->refcount < AssignableRefCount) {
           if (List* lst = input->isaList()) {
             size_t idx = input->sassIndexToListIndex(index, compiler, "n");
             lst->at(idx) = arguments[2];
@@ -98,7 +98,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (false && eval.assigne->ptr() == list2 && list2->refcount < AssignableRefCount) {
+        if (eval.assigne && eval.assigne->ptr() == list2 && list2->refcount < AssignableRefCount) {
           if (List* lst = list2->isaList()) {
             ValueVector& values(lst->elements());
             lst->separator(separator);
@@ -147,7 +147,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (false && eval.assigne->ptr() == list && list->refcount < AssignableRefCount) {
+        if (eval.assigne && eval.assigne->ptr() == list && list->refcount < AssignableRefCount) {
           if (List* lst = list->isaList()) {
             lst->separator(separator);
             lst->append(value);

@@ -260,27 +260,6 @@ namespace Sass {
     if (vidx.isValid()) has_local = true;
     // Otherwise we must create a new local variable
 
-    // JIT self assignments
-#ifdef SASS_OPTIMIZE_SELF_ASSIGN
-// Optimization for cases where functions manipulate same variable
-// We detect these cases here in order for the function to optimize
-// self-assignment case (e.g. map-merge). It can then manipulate
-// the value passed as the first argument directly in-place.
-//    if (has_local && !global) {
-//      // Certainly looks a bit like some poor man's JIT 
-//      if (auto fn = value->isaFunctionExpression()) {
-//        auto& pos(fn->arguments()->positional());
-//        if (pos.size() > 0) {
-//          if (auto var = pos[0]->isaVariableExpression()) {
-//            if (var->name() == name) { // same name
-//              fn->selfAssign(true); // Up to 15% faster
-//            }
-//          }
-//        }
-//      }
-//    }
-#endif
-
     sass::vector<VarRef> vidxs;
 
     if (vidx.isValid()) vidxs.push_back(vidx);
@@ -311,24 +290,11 @@ namespace Sass {
           vidxs.push_back({ refs->varFrame, offset });
         }
       }
-      //else {
-      //  SourceSpan state(scanner.relevantSpanFrom(start));
-      //  context.addFinalStackTrace(state);
-      //  throw Exception::RuntimeException(context, "There is no "
-      //    "module with the namespace \"" + ns + "\".");
-      //}
 
       if (vidxs.empty()) {
         VarRef vidx(module->getVariableIdx(name, true));
         if (!vidxs.empty()) vidxs.push_back(vidx);
       }
-
-      // if (vidxs.empty()) {
-      //   context.addFinalStackTrace(pstate);
-      //   auto asd = context.callStack;
-      //   throw Exception::RuntimeException(context,
-      //     "Undefined variable.");
-      // }
 
     }
     else {
@@ -421,9 +387,7 @@ namespace Sass {
           qwe = qwe->pscope;
         }
         if (!hasVar) {
-          vidx2 = pr->createLexicalVar(name);
-          vidxs.push_back(vidx2);
-
+          pr->createLexicalVar(name);
         }
 
       }
@@ -432,12 +396,7 @@ namespace Sass {
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start),
       name, inLoopDirective, ns,
-      vidxs, value, guarded, global);
-
-    if (!vidxs.empty()) {
-      // Needs to be done on runtime!
-      // declaration->vidx2(vidx2);
-    }
+      {}, value, guarded, global);
 
     // if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
