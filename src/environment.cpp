@@ -1771,28 +1771,6 @@ namespace Sass {
               throw Exception::RuntimeException(compiler,
                 "Module twice");
             }
-            for (auto child : sheet->root2->loaded->elements()) {
-              if (auto css = child->isaCssStyleRule()) {
-                if (auto pr = eval.current->isaCssStyleRule()) {
-                  for (auto inner : css->elements()) {
-                    auto copy = SASS_MEMORY_COPY(css->selector());
-                    for (ComplexSelector* asd : copy->elements()) {
-                      asd->chroots(false);
-                    }
-                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
-                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
-                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
-                    eval.current->parent()->append(newRule);
-                  }
-                }
-                else {
-                  if (eval.current) eval.current->append(child);
-                }
-              }
-              else {
-                if (eval.current) eval.current->append(child);
-              }
-            }
           }
           else {
             Root* root = sheet->root2;
@@ -1815,31 +1793,9 @@ namespace Sass {
             eval.current = oldCurrent;
             root->isLoading = false;
 
-            for (auto child : sheet->root2->loaded->elements()) {
-              if (auto css = child->isaCssStyleRule()) {
-                if (auto pr = eval.current->isaCssStyleRule()) {
-                  for (auto inner : css->elements()) {
-                    auto copy = SASS_MEMORY_COPY(css->selector());
-                    for (ComplexSelector* asd : copy->elements()) {
-                      asd->chroots(false);
-                    }
-                    // auto reduced1 = copy1->resolveParentSelectors(css->selector(), compiler, false);
-                    SelectorListObj resolved = copy->resolveParentSelectors(pr->selector(), compiler, true);
-                    auto newRule = SASS_MEMORY_NEW(CssStyleRule, css->pstate(), eval.current, resolved, { inner });
-                    eval.current->parent()->append(newRule);
-                  }
-                }
-                else {
-                  if (eval.current) eval.current->append(child);
-                }
-              }
-              else {
-                if (eval.current) eval.current->append(child);
-              }
-            }
-
           }
 
+          eval.insertModule(sheet->root2);
 
         }
         else {
