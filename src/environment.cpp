@@ -1020,32 +1020,18 @@ namespace Sass {
 
       Root* root = node->root();
 
-      if (root->isCompiled) {
-
-        root->exposing = pudding(root, ns == "*", mframe);
-
-        if (node->ns().empty()) {
-          root->exposing->module = root;
-          mframe->fwdGlobal55.push_back(root->exposing);
-        }
-        else {
-          mframe->fwdModule55[node->ns()] =
-          { root->exposing, root };
-        }
-
-        return nullptr;
-
-      }
-      else {
+      if (!root->isCompiled) {
 
         compileModule(root);
         if (udbg) std::cerr << "Compiled use rule '" << node->url() << "'\n";
-        insertModule(root);
 
         for (auto var : mframe->varIdxs) {
           ValueObj& slot(compiler.varRoot.getModVar(var.second));
           if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
         }
+
+        insertModule(root);
+
 
       }
 
