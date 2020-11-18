@@ -899,21 +899,21 @@ namespace Sass {
     return nullidx;
   }
 
-  bool VarRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
+  VarRef VarRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
   {
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
       root.setModVar(it->second, value, guarded, pstate);
-      return true;
+      return { 0xFFFFFFFF, it->second };
     }
     for (auto fwds : fwdGlobal55) {
       auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
         root.setModVar(it->second, value, guarded, pstate);
-        return true;
+        return { 0xFFFFFFFF, it->second };
       }
     }
-    return false;
+    return nullidx;
   }
 
   bool VarRefs::setModMix(const EnvKey& name, Callable* fn, bool guarded) const
@@ -1159,9 +1159,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
+  VarRef EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
-    if (stack.empty()) return false;
+    if (stack.empty()) return nullidx;
     return stack.back()->setModVar(name, ns, value, guarded, pstate);
   }
 
@@ -1180,7 +1180,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
+  VarRef VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
     const VarRefs* current = this;
     while (current) {
@@ -1188,21 +1188,21 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModVar(name, value, guarded, pstate))
-            return true;
+          VarRef vidx = idxs->setModVar(name, value, guarded, pstate);
+          if (vidx.isValid()) return vidx;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             root.setModVar(fwd->second, value, guarded, pstate);
-            return true;
+            return { 0xFFFFFFFF, fwd->second };
           }
         }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
-    return false;
+    return nullidx;
   }
 
   bool VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
@@ -1273,9 +1273,9 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  bool EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global)
+  VarRef EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global)
   {
-    if (stack.empty()) return false;
+    if (stack.empty()) return nullidx;
     uint32_t idx = global ? 0 :
       (uint32_t)stack.size() - 1;
     const VarRefs* current = stack[idx];
@@ -1291,7 +1291,7 @@ namespace Sass {
           }
           const VarRef vidx{ 0xFFFFFFFF, in->second };
           idxs->root.setVariable(vidx, val, guarded);
-          return true;
+          return vidx;
         }
         // Modules inserted by import
         if (Moduled* mod = refs->module) {
@@ -1304,7 +1304,7 @@ namespace Sass {
             }
             const VarRef vidx{ 0xFFFFFFFF, fwd->second };
             idxs->root.setVariable(vidx, val, guarded);
-            return true;
+            return vidx;
           }
         }
       }
@@ -1313,13 +1313,13 @@ namespace Sass {
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
         idxs->root.setVariable(vidx, val, guarded);
-        return true;
+        return vidx;
       }
 
       if (current->pscope == nullptr) break;
       else current = current->pscope;
     }
-    return false;
+    return nullidx;
   }
   // EO setVariable
 

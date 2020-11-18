@@ -54,16 +54,6 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
-    if (!a->withinLoop() && a->vidx2().isValid() && a->ns().empty()) {
-      if (!a->is_default() && !a->is_global()) {
-        compiler.varRoot.setVariable(
-          a->vidx2(),
-          a->value()->accept(this),
-          false);
-        return nullptr;
-      }
-    }
-
     // We always must have at least one variable
     // SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
 
@@ -94,6 +84,18 @@ namespace Sass {
     //   // Finished
     //   return nullptr;
     // }
+
+    ValueObj result = a->value()->accept(this);
+
+    if (!a->withinLoop() && a->vidx2().isValid()) {
+      //   if (!a->is_default() && !a->is_global()) {
+      compiler.varRoot.setVariable(
+        a->vidx2(),
+        result,
+        false);
+      return nullptr;
+      //   }
+    }
 
     // Emit deprecation for new var with global flag
     if (a->is_global()) {
@@ -151,156 +153,38 @@ namespace Sass {
 
     }
 
-
     if (a->ns().empty()) {
 
-      if (!compiler.varRoot.setVariable(
+      a->vidx2(compiler.varRoot.setVariable(
         a->variable(),
-        a->value()->accept(this),
+        result,
         a->is_default(),
-        a->is_global()))
-      {
-        if (!a->vidxs().empty()) {
-          compiler.varRoot.setVariable(
-            a->vidxs().front(),
-            a->value()->accept(this),
-            false);
-        }
-      }
+        a->is_global()));
     }
     else {
 
-      if (!compiler.varRoot.setModVar(
+      a->vidx2(compiler.varRoot.setModVar(
         a->variable(), a->ns(),
-        a->value()->accept(this),
+        result,
         a->is_default(),
-        a->pstate()))
-      {
-        if (compiler.varRoot.stack.back()->hasNameSpace(a->ns(), a->variable())) {
-          callStackFrame frame(traces, a->pstate());
-          throw Exception::RuntimeException(traces, "Undefined variable.");
-        }
-        else {
-          callStackFrame frame(traces, a->pstate());
-          throw Exception::ModuleUnknown(traces, a->ns());
-        }
-      }
-
-      return nullptr;
+        a->pstate()));
 
     }
 
-    // Get the main (local) variable
-    // VarRef vidx(a->vidxs().front());
-
-    // if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
-    //   compiler.addFinalStackTrace(a->pstate());
-    //   throw Exception::RuntimeException(compiler,
-    //     "Cannot modify built-in variable.");
-    // }
-
-    // Now create the new variable
-    //compiler.varRoot.setVariable(vidx,
-    //  a->value()->accept(this));
+    if (!a->vidx2().isValid())
+    {
+      if (compiler.varRoot.stack.back()->hasNameSpace(a->ns(), a->variable())) {
+        callStackFrame frame(traces, a->pstate());
+        throw Exception::RuntimeException(traces, "Undefined variable.");
+      }
+      else {
+        callStackFrame frame(traces, a->pstate());
+        throw Exception::ModuleUnknown(traces, a->ns());
+      }
+    }
 
     return nullptr;
   }
-
-
-
-  // Consumes a mixin declaration.
-  // [start] should point before the `@`.
-  MixinRule* StylesheetParser::readMixinRule(Offset start)
-  {
-
-    VarRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
-    // Create space for optional content callable
-    // ToDo: check if this can be conditionally done?
-    auto cidx = local.idxs->createMixin(Keys::contentRule);
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    sass::string name = readIdentifier();
-    scanWhitespace();
-
-    ArgumentDeclarationObj arguments;
-    if (scanner.peekChar() == $lparen) {
-      arguments = parseArgumentDeclaration();
-    }
-    else {
-      // Dart-sass creates this one too
-      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
-        scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
-    }
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain mixin declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Mixins may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    LOCAL_FLAG(inMixin, true);
-    LOCAL_FLAG(mixinHasContent, false);
-
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    // Not if we have one forwarded!
-
-    VarRef fidx = pr->createLexicalMix(name);
-    MixinRule* rule = withChildren<MixinRule>(
-      &StylesheetParser::readChildStatement,
-      start, name, arguments, local.idxs);
-    rule->midx(fidx); // to parent
-    rule->cidx(cidx);
-    return rule;
-  }
-  // EO _mixinRule
-
-  // Consumes a function declaration.
-  // [start] should point before the `@`.
-  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
-  {
-    // Variables should not be hoisted through
-    VarRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
-
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    sass::string name = readIdentifier();
-    sass::string normalized(name);
-
-    scanWhitespace();
-
-    ArgumentDeclarationObj arguments = parseArgumentDeclaration();
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain function declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Functions may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    sass::string fname(Util::unvendor(name));
-    if (fname == "calc" || fname == "element" || fname == "expression" ||
-      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
-      error("Invalid function name.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    FunctionRule* rule = withChildren<FunctionRule>(
-      &StylesheetParser::readFunctionRuleChild,
-      start, name, arguments, local.idxs);
-    rule->fidx(parent->createLexicalFn(name));
-    return rule;
-  }
-  // EO readFunctionRule
 
   AssignRule* StylesheetParser::readVariableDeclarationWithoutNamespace(
     const sass::string& ns, Offset start)
@@ -487,6 +371,7 @@ namespace Sass {
     // Check if we have a configuration
 
     bool hasVar = false;
+    VarRef vidx2;
 
     if (vidxs.empty() && ns.empty()) {
 
@@ -528,8 +413,12 @@ namespace Sass {
           if (!qwe->isImport && !qwe->permeable) break;
           qwe = qwe->pscope;
         }
-        if (!hasVar)
-        vidxs.push_back(pr->createLexicalVar(name));
+        if (!hasVar) {
+          vidx2 = pr->createLexicalVar(name);
+          vidxs.push_back(vidx2);
+
+        }
+
       }
     }
 
@@ -539,12 +428,109 @@ namespace Sass {
       vidxs, value, guarded, global);
 
     if (!vidxs.empty()) {
-      declaration->vidx2(vidxs.back ());
+      // Needs to be done on runtime!
+      // declaration->vidx2(vidx2);
     }
 
     // if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
+
+  // Consumes a mixin declaration.
+  // [start] should point before the `@`.
+  MixinRule* StylesheetParser::readMixinRule(Offset start)
+  {
+
+    VarRefs* parent = context.varRoot.stack.back();
+    EnvFrame local(context, false);
+    // Create space for optional content callable
+    // ToDo: check if this can be conditionally done?
+    auto cidx = local.idxs->createMixin(Keys::contentRule);
+    // var precedingComment = lastSilentComment;
+    // lastSilentComment = null;
+    sass::string name = readIdentifier();
+    scanWhitespace();
+
+    ArgumentDeclarationObj arguments;
+    if (scanner.peekChar() == $lparen) {
+      arguments = parseArgumentDeclaration();
+    }
+    else {
+      // Dart-sass creates this one too
+      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
+        scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
+    }
+
+    if (inMixin || inContentBlock) {
+      error("Mixins may not contain mixin declarations.",
+        scanner.relevantSpanFrom(start));
+    }
+    else if (inControlDirective) {
+      error("Mixins may not be declared in control directives.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    scanWhitespace();
+    LOCAL_FLAG(inMixin, true);
+    LOCAL_FLAG(mixinHasContent, false);
+
+    auto pr = parent;
+    while (pr->isImport) pr = pr->pscope;
+    // Not if we have one forwarded!
+
+    VarRef fidx = pr->createLexicalMix(name);
+    MixinRule* rule = withChildren<MixinRule>(
+      &StylesheetParser::readChildStatement,
+      start, name, arguments, local.idxs);
+    rule->midx(fidx); // to parent
+    rule->cidx(cidx);
+    return rule;
+  }
+  // EO _mixinRule
+
+  // Consumes a function declaration.
+  // [start] should point before the `@`.
+  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
+  {
+    // Variables should not be hoisted through
+    VarRefs* parent = context.varRoot.stack.back();
+    EnvFrame local(context, false);
+
+    // var precedingComment = lastSilentComment;
+    // lastSilentComment = null;
+    sass::string name = readIdentifier();
+    sass::string normalized(name);
+
+    scanWhitespace();
+
+    ArgumentDeclarationObj arguments = parseArgumentDeclaration();
+
+    if (inMixin || inContentBlock) {
+      error("Mixins may not contain function declarations.",
+        scanner.relevantSpanFrom(start));
+    }
+    else if (inControlDirective) {
+      error("Functions may not be declared in control directives.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    sass::string fname(Util::unvendor(name));
+    if (fname == "calc" || fname == "element" || fname == "expression" ||
+      fname == "url" || fname == "and" || fname == "or" || fname == "not") {
+      error("Invalid function name.",
+        scanner.relevantSpanFrom(start));
+    }
+
+    scanWhitespace();
+    FunctionRule* rule = withChildren<FunctionRule>(
+      &StylesheetParser::readFunctionRuleChild,
+      start, name, arguments, local.idxs);
+    rule->fidx(parent->createLexicalFn(name));
+    return rule;
+  }
+  // EO readFunctionRule
+
+
 
   void exposeFiltered(
     EnvKeyFlatMap<uint32_t>& merged,

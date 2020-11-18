@@ -233,12 +233,12 @@ namespace Sass {
     // Find function only in local frame
 
 
-    bool setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
+    VarRef setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
     bool setModMix(const EnvKey& name, Callable* callable, bool guarded) const;
     bool setModFn(const EnvKey& name, Callable* callable, bool guarded) const;
 
 
-    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
+    VarRef setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
     bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
     bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
 
@@ -447,7 +447,7 @@ namespace Sass {
     VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
     VarRef findVarIdx(const EnvKey& name) const;
 
-    bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
+    VarRef setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
     bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
     bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
 
@@ -456,7 +456,7 @@ namespace Sass {
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    bool setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global);
+    VarRef setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global);
 
   };
 

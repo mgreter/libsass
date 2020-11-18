@@ -71,7 +71,7 @@ namespace Sass {
       return varRoot.findVariable(name, global);
     }
 
-    bool setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global) {
+    VarRef setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global) {
       return varRoot.setVariable(name, val, guarded, global);
     }
 
