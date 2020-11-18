@@ -31,9 +31,7 @@ namespace Sass {
 
     // Keep cache of resolved import filenames
     // Key is a pair of previous + import path
-    std::unordered_map<
-      std::pair<sass::string, sass::string>,
-      sass::vector<ResolvedImport>> resolveCache;
+    std::unordered_map<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
 
     // Include paths are local to context since we need to know
     // it for lookups during parsing. You may reset this for

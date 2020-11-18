@@ -494,7 +494,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
             uniq_path = path_strm.str();
           }
           // create the importer struct
-          ImportRequest importer(uniq_path, ctx_path);
+          ImportRequest importer(uniq_path, ctx_path, false);
           // query data from the current include
           SourceDataObj source = import.source;
           // const char* content = sass_import_get_source(import);
@@ -550,7 +550,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               // Create a copy for possible error reporting
               sass::string path(abs_path ? abs_path : rel_path);
               // Pass it on as if it was a regular import
-              ImportRequest request(path, ctx_path);
+              ImportRequest request(path, ctx_path, false);
 
               // Search for valid imports (e.g. partials) on the file-system
               // Returns multiple valid results for ambiguous import path

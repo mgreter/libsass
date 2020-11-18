@@ -76,9 +76,9 @@ namespace Sass {
     }
 
     // Functions only for evaluation phase (C-API functions and eval itself)
-    CallableObj findMixin(const EnvKey& name) { return varRoot.findMixin(name); }
-    CallableObj findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
-    CallableObj findFunction(const EnvKey& name, const sass::string& ns) { return varRoot.findFunction(name, ns); }
+    Callable* findMixin(const EnvKey& name) { return varRoot.findMixin(name); }
+    CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
+    Callable* findFunction(const EnvKey& name, const sass::string& ns) { return varRoot.findFunction(name, ns); }
 
     // The current state the compiler is in.
     enum SassCompilerState state;

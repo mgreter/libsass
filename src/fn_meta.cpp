@@ -175,8 +175,8 @@ namespace Sass {
           }
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        CallableObj fn = compiler.findFunction(variable->value());
-        return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
+        CallableObj* fn = compiler.findFunction(variable->value());
+        return SASS_MEMORY_NEW(Boolean, pstate, fn && *fn);
       }
 
       BUILT_IN_FN(mixinExists)
@@ -302,7 +302,8 @@ namespace Sass {
       /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
       Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
-        return ctx.findFunction(name); // no detach, is a reference anyway
+        auto asd = ctx.findFunction(name);
+        return asd ? *asd : nullptr; // no detach, is a reference anyway
       }
 
       BUILT_IN_FN(findFunction)

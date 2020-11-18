@@ -356,6 +356,7 @@ namespace Sass {
       const sass::string& dirname,
       const sass::string& basename,
       const sass::string& CWD,
+      bool considerImports,
       std::unordered_map<sass::string, bool>& cache,
       const std::vector<sass::string>& exts,
       sass::vector<ResolvedImport>& candidates)
@@ -363,14 +364,14 @@ namespace Sass {
       sass::string relPath(join_paths(dirname, "_" + basename));
       sass::string absPath(join_paths(root, relPath));
       if (file_exists(join_paths(root, relPath), CWD, cache)) {
-        ImportRequest request(relPath, root);
+        ImportRequest request(relPath, root, considerImports);
         ResolvedImport import(request, absPath, SASS_IMPORT_AUTO);
         candidates.push_back(import);
       }
       relPath = join_paths(dirname, basename);
       absPath = join_paths(root, relPath);
       if (file_exists(join_paths(root, relPath), CWD, cache)) {
-        ImportRequest request(relPath, root);
+        ImportRequest request(relPath, root, considerImports);
         ResolvedImport import(request, absPath, SASS_IMPORT_AUTO);
         candidates.push_back(import);
       }
@@ -379,14 +380,14 @@ namespace Sass {
         relPath = join_paths(dirname, "_" + basename + ext);
         absPath = join_paths(root, relPath);
         if (file_exists(join_paths(root, relPath), CWD, cache)) {
-          ImportRequest request(relPath, root);
+          ImportRequest request(relPath, root, considerImports);
           ResolvedImport import(request, absPath, SASS_IMPORT_AUTO);
           candidates.push_back(import);
         }
         relPath = join_paths(dirname, basename + ext);
         absPath = join_paths(root, relPath);
         if (file_exists(join_paths(root, relPath), CWD, cache)) {
-          ImportRequest request(relPath, root);
+          ImportRequest request(relPath, root, considerImports);
           ResolvedImport import(request, absPath, SASS_IMPORT_AUTO);
           candidates.push_back(import);
         }
@@ -436,12 +437,12 @@ namespace Sass {
       }
 
       if (forImport) {
-        findFileOrPartial(root, base, name + ".import" + suffix, CWD, cache, exts, includes);
+        findFileOrPartial(root, base, name + ".import" + suffix, CWD, forImport, cache, exts, includes);
         if (includes.size()) return includes;
 
       }
 
-      findFileOrPartial(root, base, name + suffix, CWD, cache, exts, includes);
+      findFileOrPartial(root, base, name + suffix, CWD, forImport, cache, exts, includes);
       if (includes.size()) return includes;
 
 
@@ -450,11 +451,11 @@ namespace Sass {
       sass::string subdir(join_paths(base, name));
 
       if (forImport) {
-        findFileOrPartial(root, subdir, "index.import", CWD, cache, exts, includes);
+        findFileOrPartial(root, subdir, "index.import", CWD, forImport, cache, exts, includes);
         if (includes.size()) return includes;
       }
 
-      findFileOrPartial(root, subdir, "index", CWD, cache, exts, includes);
+      findFileOrPartial(root, subdir, "index", CWD, forImport, cache, exts, includes);
       if (includes.size()) return includes;
 
       return includes;

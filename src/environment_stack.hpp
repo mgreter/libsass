@@ -205,7 +205,7 @@ namespace Sass {
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
     Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
-    Callable* findFunction(const EnvKey& name) const;
+    CallableObj* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
@@ -423,7 +423,7 @@ namespace Sass {
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
     Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
-    Callable* findFunction(const EnvKey& name) const;
+    CallableObj* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.

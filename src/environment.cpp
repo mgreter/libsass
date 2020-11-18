@@ -621,7 +621,7 @@ namespace Sass {
   {
 
     SourceSpan pstate(rule->pstate());
-    const ImportRequest import(rule->url(), rule->prev());
+    const ImportRequest import(rule->url(), rule->prev(), false);
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
@@ -674,7 +674,7 @@ namespace Sass {
     sass::string ns(rule->ns());
     sass::string url(rule->url());
 
-    const ImportRequest import(rule->url(), rule->prev());
+    const ImportRequest import(rule->url(), rule->prev(), false);
 
     bool hasCached = false;
 
@@ -1241,7 +1241,7 @@ namespace Sass {
   Root* Eval::resolveDynamicImport(IncludeImport* rule)
   {
     SourceSpan pstate(rule->pstate());
-    const ImportRequest request(rule->url(), rule->prev());
+    const ImportRequest request(rule->url(), rule->prev(), true);
     callStackFrame frame(compiler, { pstate, Strings::importRule });
 
 
@@ -1548,7 +1548,7 @@ namespace Sass {
         Import* loaded = compiler.import_stack.back();
 
         // Loading relative to where the function was included
-        const ImportRequest import(url->value(), pstate.getAbsPath());
+        const ImportRequest import(url->value(), pstate.getAbsPath(), false);
         // Search for valid imports (e.g. partials) on the file-system
         // Returns multiple valid results for ambiguous import path
         const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, true)); //XXXXX
