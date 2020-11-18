@@ -234,7 +234,7 @@ namespace Sass {
         if (it != module->fwdModule55.end()) {
           VarRefs* refs = it->second.first;
           Moduled* root = it->second.second;
-          if (root && !root->isActive) {
+          if (root && !root->isCompiled) {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
@@ -270,7 +270,7 @@ namespace Sass {
         if (it != module->fwdModule55.end()) {
           VarRefs* refs = it->second.first;
           Moduled* root = it->second.second;
-          if (root && !root->isActive) {
+          if (root && !root->isCompiled) {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }

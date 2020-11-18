@@ -952,7 +952,7 @@ namespace Sass {
   void Eval::compileModule(Root* root)
   {
 
-    root->isActive = true;
+    root->isCompiled = true;
     root->loaded = current;
     root->loaded = SASS_MEMORY_NEW(CssStyleRule,
       root->pstate(), nullptr, selectorStack.back());
@@ -990,8 +990,6 @@ namespace Sass {
     BackTrace trace(node->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
-    Root* sheet = nullptr;
-
     if (udbg) std::cerr << "Visit use rule '" << node->url() << "' "
       << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
@@ -1002,8 +1000,8 @@ namespace Sass {
       compiler.implicitWithConfig || node->hasLocalWith());
 
     if (node->needsLoading()) {
-      if (sheet = resolveUseRule(node)) {
-        node->root(sheet);
+      if (Root* module = resolveUseRule(node)) {
+        node->root(module);
         node->needsLoading(false);
       }
       else {
@@ -1039,9 +1037,9 @@ namespace Sass {
 
       VarRefs* mframe(compiler.getCurrentModule());
 
-      if (root->isActive) {
+      if (root->isCompiled) {
 
-        sheet->exposing = pudding(sheet, ns == "*", mframe);
+        root->exposing = pudding(root, ns == "*", mframe);
 
         if (node->ns().empty()) {
           root->exposing->module = root;
@@ -1068,7 +1066,7 @@ namespace Sass {
 
       }
 
-      sheet->exposing = pudding(sheet, ns == "*", mframe);
+      root->exposing = pudding(root, ns == "*", mframe);
 
       if (node->ns().empty()) {
         root->exposing->module = root;
@@ -1142,7 +1140,7 @@ namespace Sass {
 
       Root* root = node->root();
 
-      if (root->isActive) {
+      if (root->isCompiled) {
         // if (node->hasLocalWith() || compiler.implicitWithConfig) {
         //   throw Exception::RuntimeException(compiler,
         //     "This module was already loaded, so it "
@@ -1679,15 +1677,9 @@ namespace Sass {
 
         // We made sure exactly one entry was found, load its content
         if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-
-          Root* sheet = eval.loadModule(compiler, loaded, hasWith);
-
-          if (!sheet->loaded) {
-            eval.compileModule(sheet);
-          }
-
-          eval.insertModule(sheet);
-
+          Root* module = eval.loadModule(compiler, loaded, hasWith);
+          if (!module->loaded) eval.compileModule(module);
+          eval.insertModule(module);
         }
         else {
           // Probably on access violations?

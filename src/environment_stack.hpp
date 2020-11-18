@@ -110,7 +110,7 @@ namespace Sass {
     bool permeable = false;
     bool isImport = false;
     bool isModule = false;
-    bool isActive = false;
+    bool isCompiled = false;
 
     // Parents for specific types
     uint32_t varFrame;
@@ -496,8 +496,8 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      wasActive = idxs->isActive;
-      idxs->isActive = true;
+      wasActive = idxs->isCompiled;
+      idxs->isCompiled = true;
 
       if (idxs->varFrame != 0xFFFFFFFF) {
 
@@ -589,7 +589,7 @@ namespace Sass {
 
       }
 
-      idxs->isActive = wasActive;
+      idxs->isCompiled = wasActive;
 
       // Pop frame from stack
       env.stack.pop_back();

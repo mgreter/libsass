@@ -1426,7 +1426,7 @@ namespace Sass {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     // EnvScope scoped(compiler.varRoot, root->idxs);
     LOCAL_PTR(CssParentNode, current, css);
-    root->isActive = true;
+    root->isCompiled = true;
 
     auto& currentRoot(compiler.currentRoot);
     LOCAL_PTR(Root, currentRoot, root);

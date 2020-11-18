@@ -17,7 +17,7 @@ namespace Sass {
   public:
 
     // True once loaded
-    bool isActive = false;
+    bool isCompiled = false;
 
     // Modules that this module uses.
     // List<Module> get upstream;

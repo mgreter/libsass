@@ -164,7 +164,7 @@ namespace Sass {
     while (current->isImport) {
       current = current->pscope;
     }
-    if (current->isActive) {
+    if (current->isCompiled) {
       // throw "Can't create on active frame";
       root.variables.push_back({});
     }
@@ -181,7 +181,7 @@ namespace Sass {
     while (current->isImport) {
       current = current->pscope;
     }
-    if (current->isActive) {
+    if (current->isCompiled) {
       // throw "Can't create on active frame";
       root.functions.push_back({});
     }
@@ -197,7 +197,7 @@ namespace Sass {
     while (current->isImport) {
       current = current->pscope;
     }
-    if (current->isActive) {
+    if (current->isCompiled) {
       // throw "Can't create on active frame";
       root.mixins.push_back({});
     }
