@@ -221,7 +221,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // parse root block from includes (Move to compiler)
   CssRootObj Compiler::compileRoot(bool plainCss)
   {
-    RootObj root = sheet->root2;
+    RootObj root = sheet;
     if (root == nullptr) return {};
 
     #ifdef DEBUG_SHARED_PTR
@@ -539,7 +539,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               if (import.syntax == SASS_IMPORT_AUTO)
                 import.syntax = SASS_IMPORT_SCSS;
               ImportStackFrame iframe(*this, &import);
-              StyleSheet* sheet = registerImport(&import);
+              Root* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
               rule->append(SASS_MEMORY_NEW(IncludeImport,
                 pstate, ctx_path, abs_path, sheet));
@@ -579,7 +579,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               // We made sure exactly one entry was found, load its content
               if (ImportObj loaded = loadImport(resolved[0])) {
                 ImportStackFrame iframe(*this, loaded);
-                StyleSheet* sheet = registerImport(loaded);
+                Root* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
                 rule->append(SASS_MEMORY_NEW(IncludeImport,
                   pstate, ctx_path, url, sheet));
@@ -762,26 +762,29 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Invoke parser according to import format
   RootObj Compiler::parseSource(ImportObj import)
   {
+    Root* root = nullptr;
     if (import->syntax == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, import->source);
-      return parser.parseRoot();
+      root = parser.parseRoot();
     }
     else if (import->syntax == SASS_IMPORT_SASS)
     {
       SassParser parser(*this, import->source);
-      return parser.parseRoot();
+      root = parser.parseRoot();
     }
     else {
       ScssParser parser(*this, import->source);
-      return parser.parseRoot();
+      root = parser.parseRoot();
     }
+    if (root) root->import = import;
+    return root;
   }
   // EO parseSource
 
   // Parse the import (updates syntax flag if AUTO was set)
   // Results will be stored at `sheets[source->getAbsPath()]`
-  StyleSheet* Compiler::registerImport(ImportObj import)
+  Root* Compiler::registerImport(ImportObj import)
   {
 
     SassImportFormat& format(import->syntax);
@@ -822,8 +825,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // std::cerr << "Parsing '" << import->getAbsPath() << "'\n";
 
     // Invoke correct parser according to format
-    StyleSheetObj stylesheet = SASS_MEMORY_NEW(
-      StyleSheet, import, parseSource(import));
+    RootObj stylesheet = parseSource(import);
 
     // Pop from import stack
     // import_stack.pop_back();
@@ -831,9 +833,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Put the parsed stylesheet into the map
     sheets.insert({ abs_path, stylesheet });
 
-    // stylesheet->root2->import = import;
-    if (stylesheet->root2) {
-      stylesheet->root2->import = import;
+    // stylesheet->import = import;
+    if (stylesheet) {
+      stylesheet->import = import;
     }
 
     // Return pointer
@@ -866,7 +868,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     exit(EXIT_FAILURE);
   }
 
-  StyleSheet* Compiler::parseRoot(ImportObj import)
+  Root* Compiler::parseRoot(ImportObj import)
   {
 
     // Attach signal handlers
@@ -911,7 +913,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     ImportStackFrame iframe(*this, import);
 
     // load and register import
-    StyleSheet* sheet = registerImport(import);
+    Root* sheet = registerImport(import);
 
     #ifdef DEBUG_SHARED_PTR
     // Disable reference tracking

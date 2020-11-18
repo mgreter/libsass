@@ -95,7 +95,7 @@ namespace Sass {
     ImportObj entry_point;
 
     // Parsed ast-tree
-    StyleSheetObj sheet;
+    RootObj sheet;
 
     // Evaluated ast-tree
     CssRootObj compiled;
@@ -197,7 +197,7 @@ namespace Sass {
 
     // Parse the import (updates syntax flag if AUTO was set)
     // Results will be stored at `sheets[source->getAbsPath()]`
-    StyleSheet* registerImport(ImportObj import);
+    Root* registerImport(ImportObj import);
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, SourceSpan pstate);
@@ -210,7 +210,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void loadBuiltInFunctions();
 
-    StyleSheet* parseRoot(ImportObj import);
+    Root* parseRoot(ImportObj import);
 
   private:
 

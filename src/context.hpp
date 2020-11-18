@@ -73,7 +73,7 @@ namespace Sass {
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?
     // ToDo: should be case insensitive on windows?
-    std::map<const sass::string, StyleSheetObj> sheets;
+    std::map<const sass::string, RootObj> sheets;
 
     // Only used to cache `loadImport` calls
     std::map<const sass::string, ImportObj> sources;

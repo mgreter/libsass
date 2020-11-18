@@ -13,49 +13,53 @@ namespace Sass {
 
   // parsed stylesheet from loaded resource
   // this should be a `Module` for sass 4.0
-  class StyleSheet : public RefCounted {
-    public:
+  class Root final : public AstNode,
+    public Vectorized<Statement>,
+    public Moduled
+  {
+  public:
 
-      // Whether this was parsed from a plain CSS stylesheet.
-      // bool plainCss33;
+    // Whether this was parsed from a plain CSS stylesheet.
+    // bool plainCss33;
 
-      // SourceDataObj source;
+    // SourceDataObj source;
 
-      // The canonical URL for this module's source file. This may be `null`
-      // if the module was loaded from a string without a URL provided.
-      // struct SassImport* import;
+    // The canonical URL for this module's source file. This may be `null`
+    // if the module was loaded from a string without a URL provided.
+    // struct SassImport* import;
 
-      // the import type
-      // SassImportFormat syntax;
+    // the import type
+    // SassImportFormat syntax;
 
-      // Modules that this module uses.
-      // List<Module> get upstream;
+    // Modules that this module uses.
+    // List<Module> get upstream;
 
-      // The module's variables.
-      // Map<String, Value> get variables;
+    // The module's variables.
+    // Map<String, Value> get variables;
 
-      // The module's functions. Implementations must ensure
-      // that each [Callable] is stored under its own name.
-      // Map<String, Callable> get functions;
+    // The module's functions. Implementations must ensure
+    // that each [Callable] is stored under its own name.
+    // Map<String, Callable> get functions;
 
-      // The module's mixins. Implementations must ensure that
-      // each [Callable] is stored under its own name.
-      // Map<String, Callable> get mixins;
+    // The module's mixins. Implementations must ensure that
+    // each [Callable] is stored under its own name.
+    // Map<String, Callable> get mixins;
 
-      // The extensions defined in this module, which is also able to update
-      // [css]'s style rules in-place based on downstream extensions.
-      // Extender extender;
+    // The extensions defined in this module, which is also able to update
+    // [css]'s style rules in-place based on downstream extensions.
+    // Extender extender;
 
-      // The module's CSS tree.
-      RootObj root2;
+    bool isLoading = false;
 
-    public:
+    Root(const SourceSpan& pstate, size_t reserve = 0)
+      : AstNode(pstate), Vectorized<Statement>(reserve)
+    {}
 
-      // default argument constructor
-      StyleSheet(ImportObj import, RootObj root);
+    Root(const SourceSpan& pstate, StatementVector&& vec)
+      : AstNode(pstate), Vectorized<Statement>(std::move(vec))
+    {}
 
   };
-
 
 }
 

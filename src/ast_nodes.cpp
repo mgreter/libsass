@@ -121,7 +121,7 @@ namespace Sass {
     const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
-    StyleSheet* sheet) :
+    Root* sheet) :
     ImportBase(pstate),
     sheet_(sheet),
     prev_(prev),

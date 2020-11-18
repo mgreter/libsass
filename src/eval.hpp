@@ -68,7 +68,7 @@ namespace Sass {
 
     void insertModule(Moduled* module);
     void compileModule(Root* module);
-    StyleSheet* loadModule(Compiler& compiler, Import* import, bool hasWith = false);
+    Root* loadModule(Compiler& compiler, Import* import, bool hasWith = false);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -274,7 +274,7 @@ namespace Sass {
     void acceptIncludeImport(IncludeImport* import);
 
 
-    StyleSheet* resolveDynamicImport(IncludeImport* rule);
+    Root* resolveDynamicImport(IncludeImport* rule);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -337,8 +337,8 @@ namespace Sass {
     Value* visitWhileRule(WhileRule* rule);
 
 
-    StyleSheet* resolveUseRule(UseRule* rule);
-    StyleSheet* resolveForwardRule(ForwardRule* rule);
+    Root* resolveUseRule(UseRule* rule);
+    Root* resolveForwardRule(ForwardRule* rule);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

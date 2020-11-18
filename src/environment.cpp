@@ -617,7 +617,7 @@ namespace Sass {
   }
 
 
-  StyleSheet* Eval::resolveForwardRule(ForwardRule* rule)
+  Root* Eval::resolveForwardRule(ForwardRule* rule)
   {
 
 
@@ -658,19 +658,19 @@ namespace Sass {
     // This only loads the requested source file, does not parse it
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
       ImportStackFrame iframe(compiler, loaded);
-      StyleSheet* sheet = nullptr;
+      Root* sheet = nullptr;
       auto cached = compiler.sheets.find(loaded->getAbsPath());
       if (cached != compiler.sheets.end()) {
         // Check if with is given, error
         sheet = cached->second;
-        rule->root(sheet->root2);
+        rule->root(sheet);
         return nullptr;
       }
       // Verified this must be permeable for now
       EnvFrame local(compiler, true, true, false); // forward
       sheet = compiler.registerImport(loaded);
-      sheet->root2->import = loaded;
-      rule->root(sheet->root2);
+      sheet->import = loaded;
+      rule->root(sheet);
       return sheet;
     }
     compiler.addFinalStackTrace(pstate);
@@ -679,7 +679,7 @@ namespace Sass {
   }
   // EO resolveForwardFule
 
-  StyleSheet* Eval::resolveUseRule(UseRule* rule)
+  Root* Eval::resolveUseRule(UseRule* rule)
   {
 
     sass::string ns(rule->ns());
@@ -726,7 +726,7 @@ namespace Sass {
     ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
 
-    StyleSheet* sheet = nullptr;
+    Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
     if (cached != compiler.sheets.end()) {
@@ -749,14 +749,14 @@ namespace Sass {
       sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
 
-      // sheet->root2->idxs = local.idxs;
-      sheet->root2->import = loaded;
+      // sheet->idxs = local.idxs;
+      sheet->import = loaded;
 
-      // sheet->root2->con context->node
+      // sheet->con context->node
     }
 
 
-    Root* root = sheet->root2;
+    Root* root = sheet;
     rule->root(root);
 
     rule->ns(ns == "*" ? "" : ns);
@@ -923,7 +923,7 @@ namespace Sass {
     }
   }
 
-  StyleSheet* Eval::loadModule(Compiler& compiler, Import* loaded, bool hasWith)
+  Root* Eval::loadModule(Compiler& compiler, Import* loaded, bool hasWith)
   {
     // First check if the module was already loaded
     auto it = compiler.sheets.find(loaded->getAbsPath());
@@ -942,10 +942,10 @@ namespace Sass {
     EnvFrame local(compiler, false, true); 
     // eval.selectorStack.push_back(nullptr);
     ImportStackFrame iframe(compiler, loaded);
-    StyleSheet* sheet = compiler.registerImport(loaded);
+    Root* sheet = compiler.registerImport(loaded);
     // eval.selectorStack.pop_back();
-    sheet->root2->idxs = local.idxs;
-    sheet->root2->import = loaded;
+    sheet->idxs = local.idxs;
+    sheet->import = loaded;
     return sheet;
   }
 
@@ -995,7 +995,7 @@ namespace Sass {
     // The show or hide config also hides these
     WithConfig wconfig(compiler, node->config(), hasWith);
 
-    StyleSheet* sheet = nullptr;
+    Root* sheet = nullptr;
 
     if (udbg) std::cerr << "Visit use rule '" << node->url() << "' "
       << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
@@ -1005,7 +1005,7 @@ namespace Sass {
 
     if (node->needsLoading()) {
       if (sheet = resolveUseRule(node)) {
-        node->root(sheet->root2);
+        node->root(sheet);
         node->needsLoading(false);
       }
       else {
@@ -1046,7 +1046,7 @@ namespace Sass {
         //     "can't be configured using \"with\".");
         // }
         VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-        sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+        sheet->exposing = pudding(sheet, ns == "*", modFrame);
         if (node->ns().empty()) {
           root->exposing->module = root;
           mframe->fwdGlobal55.push_back(root->exposing);
@@ -1073,7 +1073,7 @@ namespace Sass {
         if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
       }
 
-      sheet->root2->exposing = pudding(sheet->root2, ns == "*", modFrame);
+      sheet->exposing = pudding(sheet, ns == "*", modFrame);
 
       if (node->ns().empty()) {
         root->exposing->module = root;
@@ -1118,7 +1118,7 @@ namespace Sass {
 
     if (node->needsLoading()) {
       if (auto sheet = resolveForwardRule(node)) {
-        node->root(sheet->root2);
+        node->root(sheet);
         node->needsLoading(false);
       }
       else {
@@ -1358,7 +1358,7 @@ namespace Sass {
   }
 
   // Resolve import of [path] and add imports to [rule]
-  StyleSheet* Eval::resolveDynamicImport(IncludeImport* rule)
+  Root* Eval::resolveDynamicImport(IncludeImport* rule)
   {
     SourceSpan pstate(rule->pstate());
     const ImportRequest request(rule->url(), rule->prev());
@@ -1392,7 +1392,7 @@ namespace Sass {
       // IsImport vs permeable seems to be the same!?
       EnvFrame local(compiler, false, true, true); // Verified (import)
       ImportStackFrame iframe(compiler, loaded);
-      StyleSheet* sheet = compiler.registerImport(loaded);
+      Root* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
       return sheet;
     }
@@ -1425,36 +1425,36 @@ namespace Sass {
           // Call custom importers and check if any of them handled the import
       // if (!context.callCustomImporters(url, pstate, rule)) {
         // Try to load url into context.sheets
-    StyleSheetObj sheet = rule->sheet();
+    RootObj sheet = rule->sheet();
 
     if (sheet.isNull()) {
       sheet = resolveDynamicImport(rule);
       compiler.varRoot.finalizeScopes();
     }
 
-    // debug_ast(sheet->root2);
+    // debug_ast(sheet);
 
         // }
 
 
     // Add C-API to stack to expose it
-    ImportStackFrame iframe(compiler, sheet->root2->import);
+    ImportStackFrame iframe(compiler, sheet->import);
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));
 
     VarRefs* pframe = compiler.varRoot.stack.back();
-    EnvScope scoped(compiler.varRoot, sheet->root2->idxs);
+    EnvScope scoped(compiler.varRoot, sheet->idxs);
 
-    // debug_ast(sheet->root2);
+    // debug_ast(sheet);
 
-    VarRefs* refs = sheet->root2->idxs;
+    VarRefs* refs = sheet->idxs;
 
     auto& currentRoot(compiler.currentRoot);
-    LOCAL_PTR(Root, currentRoot, sheet->root2);
+    LOCAL_PTR(Root, currentRoot, sheet);
 
     // Imports are always executed again
-    for (const StatementObj& item : sheet->root2->elements()) {
+    for (const StatementObj& item : sheet->elements()) {
       item->accept(this);
     }
 
@@ -1468,25 +1468,25 @@ namespace Sass {
       if (udbg) std::cerr << " import into global frame '" << rule->url() << "'\n";
 
       // Global can simply be exposed without further ado (same frame)
-      for (auto asd : sheet->root2->idxs->varIdxs) {
+      for (auto asd : sheet->idxs->varIdxs) {
         if (udbg) std::cerr << "  var " << asd.first.orig() << "\n";
         pframe->varIdxs.insert(asd);
       }
-      for (auto asd : sheet->root2->idxs->mixIdxs) {
+      for (auto asd : sheet->idxs->mixIdxs) {
         if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
         pframe->mixIdxs.insert(asd); }
-      for (auto asd : sheet->root2->idxs->fnIdxs) {
+      for (auto asd : sheet->idxs->fnIdxs) {
         if (udbg) std::cerr << "  fn " << asd.first.orig() << "\n";
         pframe->fnIdxs.insert(asd); }
 
-      for (auto asd : sheet->root2->mergedFwdVar) {
+      for (auto asd : sheet->mergedFwdVar) {
         if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
         pframe->varIdxs.insert(asd);
       } // a: 18
-      for (auto asd : sheet->root2->mergedFwdMix) {
+      for (auto asd : sheet->mergedFwdMix) {
         if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
         pframe->mixIdxs[asd.first] = asd.second; }
-      for (auto asd : sheet->root2->mergedFwdFn) {
+      for (auto asd : sheet->mergedFwdFn) {
         if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
         pframe->fnIdxs[asd.first] = asd.second; }
 
@@ -1496,10 +1496,10 @@ namespace Sass {
       if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
         << compiler.implicitWithConfig << "\n";
 
-      sheet->root2->idxs->module = sheet->root2;
+      sheet->idxs->module = sheet;
       pframe->fwdGlobal55.insert(
         pframe->fwdGlobal55.begin(),
-        sheet->root2->idxs);
+        sheet->idxs);
 
     }
 
@@ -1692,13 +1692,13 @@ namespace Sass {
         // We made sure exactly one entry was found, load its content
         if (ImportObj loaded = compiler.loadImport(resolved[0])) {
 
-          StyleSheet* sheet = eval.loadModule(compiler, loaded, hasWith);
+          Root* sheet = eval.loadModule(compiler, loaded, hasWith);
 
-          if (!sheet->root2->loaded) {
-            eval.compileModule(sheet->root2);
+          if (!sheet->loaded) {
+            eval.compileModule(sheet);
           }
 
-          eval.insertModule(sheet->root2);
+          eval.insertModule(sheet);
 
         }
         else {

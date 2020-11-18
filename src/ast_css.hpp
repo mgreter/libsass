@@ -573,25 +573,6 @@ namespace Sass {
 
   };
 
-  class Root final : public AstNode,
-    public Vectorized<Statement>,
-    public Moduled
-  {
-  public:
-
-    bool isLoading = false;
-
-
-    Root(const SourceSpan& pstate, size_t reserve = 0)
-      : AstNode(pstate), Vectorized<Statement>(reserve)
-    {}
-
-    Root(const SourceSpan& pstate, StatementVector&& vec)
-      : AstNode(pstate), Vectorized<Statement>(std::move(vec))
-    {}
-
-  };
-
 }
 
 

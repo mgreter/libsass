@@ -25,8 +25,6 @@ namespace Sass {
   class Compiler;
   class EnvFrame;
 
-  class StyleSheet;
-
   class SourceData;
   class Import;
   class SourceFile;
@@ -185,8 +183,6 @@ namespace Sass {
   // declare classes that are instances of memory nodes
   #define IMPL_MEM_OBJ(type) \
     typedef SharedPtr<type> type##Obj;
-
-  IMPL_MEM_OBJ(StyleSheet);
 
   IMPL_MEM_OBJ(SourceData);
   IMPL_MEM_OBJ(Import);
