@@ -636,6 +636,10 @@ namespace Sass {
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);
     ADD_REF(sass::vector<VarRef>, vidxs);
+
+    ADD_REF(VarRef, vidx2);
+    ADD_PROPERTY(bool, withinLoop);
+
     ADD_CONSTREF(bool, is_default); // ToDO rename
     ADD_CONSTREF(bool, is_global); // ToDO rename
   public:
@@ -643,6 +647,7 @@ namespace Sass {
     AssignRule(
       const SourceSpan& pstate,
       const EnvKey& variable,
+      bool withinLoop,
       const sass::string ns,
       sass::vector<VarRef> vidxs,
       Expression* value,

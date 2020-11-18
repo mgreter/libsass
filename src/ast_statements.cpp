@@ -535,6 +535,7 @@ namespace Sass {
   AssignRule::AssignRule(
     const SourceSpan& pstate,
     const EnvKey& variable,
+    bool withinLoop,
     const sass::string ns,
     sass::vector<VarRef> vidxs,
     Expression* value,
@@ -545,6 +546,7 @@ namespace Sass {
     ns_(ns),
     value_(value),
     vidxs_(std::move(vidxs)),
+    withinLoop_(withinLoop),
     is_default_(is_default),
     is_global_(is_global)
   {}

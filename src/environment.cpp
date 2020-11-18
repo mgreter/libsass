@@ -54,9 +54,18 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
+    if (!a->withinLoop() && a->vidx2().isValid() && a->ns().empty()) {
+      if (!a->is_default() && !a->is_global()) {
+        compiler.varRoot.setVariable(
+          a->vidx2(),
+          a->value()->accept(this),
+          false);
+        return nullptr;
+      }
+    }
 
     // We always must have at least one variable
-    SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
+    // SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
 
     // Check if we can overwrite an existing variable
     // We create it locally if none other there yet.
@@ -525,7 +534,14 @@ namespace Sass {
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start), name, ns, vidxs, value, guarded, global);
+      scanner.relevantSpanFrom(start),
+      name, inLoopDirective, ns,
+      vidxs, value, guarded, global);
+
+    if (!vidxs.empty()) {
+      declaration->vidx2(vidxs.back ());
+    }
+
     // if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
