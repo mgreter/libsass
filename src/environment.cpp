@@ -843,9 +843,9 @@ namespace Sass {
     else {
 
       // No idea why this is needed!
-      for (auto var : modFrame->varIdxs) {
-        idxs->varIdxs.insert(var);
-      }
+      //for (auto var : modFrame->varIdxs) {
+      //  idxs->varIdxs.insert(var);
+      //}
       // for (auto var : modFrame->mixIdxs) {
       //   idxs->mixIdxs.insert(var);
       // }
