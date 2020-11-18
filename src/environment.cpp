@@ -667,7 +667,7 @@ namespace Sass {
         return nullptr;
       }
       // Verified this must be permeable for now
-      EnvFrame local(compiler, true, true, false, false);
+      EnvFrame local(compiler, true, true, false); // forward
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       sheet->root2->import = loaded;
@@ -746,7 +746,7 @@ namespace Sass {
         }
       }
       // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true, false, false); // correct
+      EnvFrame local(compiler, false, true); // correct
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
@@ -1326,69 +1326,12 @@ namespace Sass {
         throwDisallowedAtRule(rule->pstate().position);
       }
 
-#ifdef SassEagerImportParsing
-//       // Call custom importers and check if any of them handled the import
-//       if (!context.callCustomImporters(url, pstate, rule)) {
-//         // Try to load url into context.sheets
-//         resolveDynamicImport(rule, start, url);
-//       }
-// #else
       rule->append(SASS_MEMORY_NEW(IncludeImport,
         scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
-#endif
 
     }
 
   }
-
-  // Resolve import of [path] and add imports to [rule]
-  void StylesheetParser::resolveDynamicImport(
-    ImportRule* rule, Offset start, const sass::string& path)
-  {
-
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    const ImportRequest import(path, scanner.sourceUrl);
-    callStackFrame frame(context, { pstate, Strings::importRule });
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(context.findIncludes(import, true));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Can't find stylesheet to import.");
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      {
-        msg_stream << "  " << resolved[i].imp_path << "\n";
-      }
-      throw Exception::ParserException(context, msg_stream.str());
-    }
-
-    // We made sure exactly one entry was found, load its content
-    if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame local(context, true, true, true, false); // wrong
-      ImportStackFrame iframe(context, loaded);
-      StyleSheet* sheet = context.registerImport(loaded);
-      sheet->root2->import = loaded;
-      const sass::string& url(resolved[0].abs_path);
-      rule->append(SASS_MEMORY_NEW(IncludeImport, pstate,
-        scanner.sourceUrl, url, sheet));
-    }
-    else {
-      context.addFinalStackTrace(pstate);
-      throw Exception::ParserException(context,
-        "Couldn't read stylesheet for import.");
-    }
-
-  }
-  // EO resolveDynamicImport
 
   // Resolve import of [path] and add imports to [rule]
   StyleSheet* Eval::resolveDynamicImport(IncludeImport* rule)
@@ -1423,7 +1366,7 @@ namespace Sass {
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
       // IsModule seems to have minor impacts here
       // IsImport vs permeable seems to be the same!?
-      EnvFrame local(compiler, true, true, true, false); // Verified
+      EnvFrame local(compiler, false, true, true); // Verified (import)
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
@@ -1731,7 +1674,7 @@ namespace Sass {
 
           if (sheet == nullptr) {
             // This is the new barrier!
-            EnvFrame local(compiler, false, true, false, false); // correct
+            EnvFrame local(compiler, false, true, false); // correct (load-css)
             // eval.selectorStack.push_back(nullptr);
             ImportStackFrame iframe(compiler, loaded);
             sheet = compiler.registerImport(loaded); // @use

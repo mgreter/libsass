@@ -128,7 +128,8 @@ namespace Sass {
     }
     else {
 
-      resolveDynamicImport(rule, start, url);
+      rule->append(SASS_MEMORY_NEW(IncludeImport,
+        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
 
     }
 

@@ -531,14 +531,6 @@ namespace Sass {
       return result.detach();
     }
 
-  public:
-    // Resolve import of [path] and add imports to [rule]
-    void resolveDynamicImport(
-      ImportRule* rule, Offset start,
-      const sass::string& path);
-
-    UseRule* resolveUseRule(UseRule* rule);
-    ForwardRule* resolveForwardRule(ForwardRule* rule);
   };
 
   /////////////////////////////////////////////////////////////////////////

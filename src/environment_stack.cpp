@@ -32,8 +32,7 @@ namespace Sass {
       0xFFFFFFFF,
       false,
       false,
-      true,
-      false))
+      true))
   {
     // Push onto our stack
     stack.push_back(this->idxs);
@@ -48,8 +47,7 @@ namespace Sass {
     Compiler& compiler,
     bool permeable,
     bool isModule,
-    bool isImport,
-    bool isForward) :
+    bool isImport) :
     stack(compiler.varRoot.stack),
     idxs(new VarRefs(
       compiler.varRoot,
@@ -57,7 +55,7 @@ namespace Sass {
       uint32_t(compiler.varRoot.varFramePtr.size()),
       uint32_t(compiler.varRoot.mixFramePtr.size()),
       uint32_t(compiler.varRoot.fnFramePtr.size()),
-      permeable, isImport, isModule, isForward))
+      permeable, isImport, isModule))
   {
     if (isModule) {
       // Lives in built-in scope
