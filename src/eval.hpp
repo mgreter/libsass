@@ -67,6 +67,7 @@ namespace Sass {
     bool inKeyframes = false;
 
     void insertModule(Moduled* module);
+    void compileModule(Root* module);
 
 
     /////////////////////////////////////////////////////////////////////////
