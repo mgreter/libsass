@@ -831,7 +831,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // Put the parsed stylesheet into the map
     sheets.insert({ abs_path, stylesheet });
 
-    stylesheet->import = import;
+    // stylesheet->root2->import = import;
     if (stylesheet->root2) {
       stylesheet->root2->import = import;
     }

@@ -669,7 +669,6 @@ namespace Sass {
       // Verified this must be permeable for now
       EnvFrame local(compiler, true, true, false); // forward
       sheet = compiler.registerImport(loaded);
-      sheet->hasBeenUsed = true;
       sheet->root2->import = loaded;
       rule->root(sheet->root2);
       return sheet;
@@ -748,7 +747,6 @@ namespace Sass {
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, false, true); // correct
       sheet = compiler.registerImport(loaded);
-      sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
 
       // sheet->root2->idxs = local.idxs;
@@ -1440,7 +1438,7 @@ namespace Sass {
 
 
     // Add C-API to stack to expose it
-    ImportStackFrame iframe(compiler, sheet->import);
+    ImportStackFrame iframe(compiler, sheet->root2->import);
 
     callStackFrame frame(traces,
       BackTrace(rule->pstate(), Strings::importRule));

@@ -45,12 +45,9 @@ namespace Sass {
       // The extensions defined in this module, which is also able to update
       // [css]'s style rules in-place based on downstream extensions.
       // Extender extender;
-      ImportObj import;
 
       // The module's CSS tree.
       RootObj root2;
-
-      bool hasBeenUsed = false;
 
     public:
 
