@@ -28,6 +28,8 @@ namespace Sass {
   // Helper typedef for our frame stack type
   typedef sass::vector<VarRefs*> EnvFrameVector;
 
+  extern const VarRef nullidx;
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -199,6 +201,7 @@ namespace Sass {
     // find a defined mixin or run out of parent scopes.
     Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
     Callable* findMixin(const EnvKey& name) const;
+    Callable* getMixin(const EnvKey& name) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.
@@ -208,6 +211,10 @@ namespace Sass {
     CallableObj* findFunction(const EnvKey& name) const;
     CallableObj* getFunction(const EnvKey& name) const;
 
+    VarRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findFnIdx(const EnvKey& name) const;
+    VarRef getFnIdx(const EnvKey& name) const;
+
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
@@ -215,13 +222,12 @@ namespace Sass {
     // defined variable with a value or run out of parent scopes.
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name) const;
+    Value* getVariable(const EnvKey& name) const;
 
     bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
 
     // Find function only in local frame
 
-    Callable* getMixin(const EnvKey& name) const;
-    Value* getVariable(const EnvKey& name) const;
 
     bool setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
     bool setModMix(const EnvKey& name, Callable* callable, bool guarded) const;
@@ -424,6 +430,10 @@ namespace Sass {
     // find a defined function or run out of parent scopes.
     CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
     CallableObj* findFunction(const EnvKey& name) const;
+
+
+    VarRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findFnIdx(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.

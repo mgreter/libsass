@@ -975,42 +975,49 @@ namespace Sass {
 
   Value* Eval::visitFunctionExpression(FunctionExpression* node)
   {
-    Callable* function = nullptr;
+    CallableObj* function = node->function;
 
-    if (node->ns().empty()) {
-      auto asd = compiler.varRoot.findFunction(node->name()->getPlainString());
-      if (asd != nullptr) function = *asd;
-    }
-    else {
-      auto asd = compiler.varRoot.findFunction(
-        node->name()->getPlainString(), node->ns()
-      );
-      function = asd ? *asd : nullptr;
-      if (function == nullptr) {
-        if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name()->getPlainString())) {
-          callStackFrame frame(traces, node->pstate());
-          throw Exception::RuntimeException(traces, "Undefined function.");
-        }
-        else {
-          callStackFrame frame(traces, node->pstate());
-          throw Exception::ModuleUnknown(traces, node->ns());
+    if (function == nullptr) {
+
+      if (node->ns().empty()) {
+        function = compiler.varRoot.findFunction(node->name()->getPlainString());
+      }
+      else {
+        function = compiler.varRoot.findFunction(
+          node->name()->getPlainString(), node->ns()
+        );
+        if (function == nullptr) {
+          if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name()->getPlainString())) {
+            callStackFrame frame(traces, node->pstate());
+            throw Exception::RuntimeException(traces, "Undefined function.");
+          }
+          else {
+            callStackFrame frame(traces, node->pstate());
+            throw Exception::ModuleUnknown(traces, node->ns());
+          }
         }
       }
+
+      if (function == nullptr) {
+        CallableObj tmp = SASS_MEMORY_NEW(PlainCssCallable,
+          node->pstate(), acceptInterpolation(node->name(), false));
+        LOCAL_FLAG(inFunction, true);
+        return tmp->execute(*this,
+          node->arguments(), node->pstate(),
+          node->selfAssign());
+      }
+
     }
 
-    // Function Expression might be simple and static, or dynamic CSS call
-    // CallableObj function = node->fidx().isValid()
-    //   ? compiler.varRoot.getFunction(node->fidx()).ptr()
-    //   : compiler.varRoot.findFunction(
-    //     node->name()->getPlainString(), // Name should not be itpl?
-    //     node->ns());
-    if (function == nullptr) {
-      function = SASS_MEMORY_NEW(PlainCssCallable,
-        node->pstate(), acceptInterpolation(node->name(), false));
+    if (!node->withinLoop()) {
+      // Cache whatever we found
+      // node->function = function;
     }
+
     LOCAL_FLAG(inFunction, true);
-    return function->execute(*this, node->arguments(),
-      node->pstate(), node->selfAssign());
+    return (*function)->execute(*this,
+      node->arguments(), node->pstate(),
+      node->selfAssign());
   }
 
   Value* Eval::visitBinaryOpExpression(BinaryOpExpression* node)
