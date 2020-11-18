@@ -666,7 +666,8 @@ namespace Sass {
         rule->root(sheet->root2);
         return nullptr;
       }
-      EnvFrame local(compiler, true, true, false, true);
+      // Verified this must be permeable for now
+      EnvFrame local(compiler, true, true, false, false);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       sheet->root2->import = loaded;
@@ -744,8 +745,8 @@ namespace Sass {
           throw Exception::ModuleAlreadyKnown(compiler, ns);
         }
       }
-
-      EnvFrame local(compiler, false, true, false);
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(compiler, false, true, false, false);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
@@ -1381,7 +1382,9 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame local(compiler, false, true, true);
+      // IsModule seems to have minor impacts here
+      // IsImport vs permeable seems to be the same!?
+      EnvFrame local(compiler, true, true, true, false); // Verified
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
