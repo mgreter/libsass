@@ -19,6 +19,24 @@ namespace Sass {
     // True once loaded
     bool isActive = false;
 
+    // Modules that this module uses.
+    // List<Module> get upstream;
+
+    // The module's variables.
+    // Map<String, Value> get variables;
+
+    // The module's functions. Implementations must ensure
+    // that each [Callable] is stored under its own name.
+    // Map<String, Callable> get functions;
+
+    // The module's mixins. Implementations must ensure that
+    // each [Callable] is stored under its own name.
+    // Map<String, Callable> get mixins;
+
+    // The extensions defined in this module, which is also able to update
+    // [css]'s style rules in-place based on downstream extensions.
+    // Extender extender;
+
     // Forwarded items must be on internal scope
     VarRefs* idxs = nullptr;
     VarRefs* exposing = nullptr;
@@ -55,28 +73,9 @@ namespace Sass {
   {
   public:
 
-    // The canonical URL for this module's source file. This may be `null`
-    // if the module was loaded from a string without a URL provided.
+    // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
     ImportObj import;
-
-    // Modules that this module uses.
-    // List<Module> get upstream;
-
-    // The module's variables.
-    // Map<String, Value> get variables;
-
-    // The module's functions. Implementations must ensure
-    // that each [Callable] is stored under its own name.
-    // Map<String, Callable> get functions;
-
-    // The module's mixins. Implementations must ensure that
-    // each [Callable] is stored under its own name.
-    // Map<String, Callable> get mixins;
-
-    // The extensions defined in this module, which is also able to update
-    // [css]'s style rules in-place based on downstream extensions.
-    // Extender extender;
 
     Root(const SourceSpan& pstate, size_t reserve = 0)
       : AstNode(pstate), Vectorized<Statement>(reserve)

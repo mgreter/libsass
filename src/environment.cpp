@@ -990,13 +990,13 @@ namespace Sass {
     BackTrace trace(node->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
-    // The show or hide config also hides these
-    WithConfig wconfig(compiler, node->config(), hasWith);
-
     Root* sheet = nullptr;
 
     if (udbg) std::cerr << "Visit use rule '" << node->url() << "' "
       << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
+
+    // The show or hide config also hides these
+    WithConfig wconfig(compiler, node->config(), node->hasLocalWith());
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || node->hasLocalWith());
@@ -1007,6 +1007,7 @@ namespace Sass {
         node->needsLoading(false);
       }
       else {
+
         if (node->hasLocalWith() && compiler.implicitWithConfig) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
@@ -1035,16 +1036,13 @@ namespace Sass {
     if (node->root()) {
 
       Root* root = node->root();
-      VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+
+      VarRefs* mframe(compiler.getCurrentModule());
 
       if (root->isActive) {
-        // if (node->hasLocalWith() || compiler.implicitWithConfig) {
-        //   throw Exception::RuntimeException(compiler,
-        //     "This module was already loaded, so it "
-        //     "can't be configured using \"with\".");
-        // }
-        VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-        sheet->exposing = pudding(sheet, ns == "*", modFrame);
+
+        sheet->exposing = pudding(sheet, ns == "*", mframe);
+
         if (node->ns().empty()) {
           root->exposing->module = root;
           mframe->fwdGlobal55.push_back(root->exposing);
@@ -1053,25 +1051,24 @@ namespace Sass {
           mframe->fwdModule55[node->ns()] =
           { root->exposing, root };
         }
+
         return nullptr;
+
+      }
+      else {
+
+        compileModule(root);
+        if (udbg) std::cerr << "Compiled use rule '" << node->url() << "'\n";
+        insertModule(root);
+
+        for (auto var : mframe->varIdxs) {
+          ValueObj& slot(compiler.varRoot.getModVar(var.second));
+          if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
+        }
+
       }
 
-      VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-
-      compileModule(root);
-
-      if (udbg) std::cerr << "Compiled use rule '" << node->url() << "'\n";
-
-      insertModule(root);
-
-
-
-      for (auto var : modFrame->varIdxs) {
-        ValueObj& slot(compiler.varRoot.getModVar(var.second));
-        if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
-      }
-
-      sheet->exposing = pudding(sheet, ns == "*", modFrame);
+      sheet->exposing = pudding(sheet, ns == "*", mframe);
 
       if (node->ns().empty()) {
         root->exposing->module = root;
@@ -1083,11 +1080,6 @@ namespace Sass {
       }
 
     }
-    else {
-      // std::cerr << "Still now root\n";
-    }
-
-
 
     wconfig.finalize();
 
