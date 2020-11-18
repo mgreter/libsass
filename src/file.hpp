@@ -104,7 +104,7 @@ namespace Sass {
         ctx_path(File::make_canonical_path(ctx_path)),
         base_path(File::dir_name(ctx_path)),
         considerImports(considerImports)
-      { }
+      {}
 
       bool operator==(const ImportRequest& other) const {
         return considerImports == other.considerImports
@@ -183,8 +183,8 @@ namespace std {
       size_t hash = import.considerImports;
       Sass::hash_combine(hash,
         MurmurHash2(
-        (void*)import.ctx_path.c_str(),
-          (int)import.ctx_path.size(),
+        (void*)import.base_path.c_str(),
+          (int)import.base_path.size(),
           Sass::getHashSeed()));
 
       Sass::hash_combine(hash,

@@ -2682,42 +2682,8 @@ namespace Sass {
       SASS_MEMORY_NEW(VariableExpression,
         scanner.relevantSpanFrom(start),
         name, inLoopDirective, ns);
-
-    if (inLoopDirective) {
-      // Static variable resolution will be done in finalize stage
-      // Must be postponed since in loops we may reference post vars
-      context.varRoot.stack.back()->variables.push_back(expression);
-    }
-    else {
-
-      sass::vector<VarRef> vidxs;
-
-      // Otherwise utilize full static optimizations
-      VarRefs* frame(context.varRoot.stack.back());
-      VarRef vidx(frame->getVariableIdx(name, true));
-      if (vidx.isValid()) vidxs.push_back(vidx);
-
-      VarRefs* module(context.varRoot.stack.back()->getModule23());
-
-      for (auto refs : module->fwdGlobal55) {
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-          uint32_t offset = in->second;
-          if (isPrivate(name)) {
-            context.addFinalStackTrace(expression->pstate());
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          vidxs.push_back({ refs->varFrame, offset });
-        }
-      }
-
-      if (!vidxs.empty()) expression->vidxs(vidxs);
-      else context.varRoot.stack.back()->variables.push_back(expression);
-    }
-
     return expression;
+
   }
   // readVariableExpression
 

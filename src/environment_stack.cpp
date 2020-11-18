@@ -36,6 +36,15 @@ namespace Sass {
       false,
       true))
   {
+    variables.reserve(256);
+    functions.reserve(256);
+    mixins.reserve(128);
+    varFramePtr.reserve(256);
+    mixFramePtr.reserve(128);
+    fnFramePtr.reserve(256);
+    intVariables.reserve(256);
+    intFunction.reserve(256);
+    intMixin.reserve(128);
     // Push onto our stack
     stack.push_back(this->idxs);
   }
@@ -106,7 +115,7 @@ namespace Sass {
     // }
     if (varFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intVariables.size();
-      if (stkdbg) std::cerr << "Create global variable " << name.orig() << " at " << offset << "\n";
+      // if (stkdbg) std::cerr << "Create global variable " << name.orig() << " at " << offset << "\n";
       root.intVariables.resize(offset + 1);
       //root.intVariables[offset] = SASS_MEMORY_NEW(Null,
       //  SourceSpan::tmp("null"));
@@ -120,7 +129,7 @@ namespace Sass {
 
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
-    if (stkdbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
+    // if (stkdbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
     // Remember the variable name
     varIdxs[name] = offset;
     // Return stack index reference
@@ -386,11 +395,11 @@ namespace Sass {
   ValueObj& EnvRoot::getVariable(const VarRef& vidx)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      if (stkdbg) std::cerr << "Get global variable " << vidx.offset << "\n";
+      // if (stkdbg) std::cerr << "Get global variable " << vidx.offset << "\n";
       return intVariables[vidx.offset];
     }
     else {
-      if (stkdbg) std::cerr << "Get variable " << vidx.toString() << "\n";
+      // if (stkdbg) std::cerr << "Get variable " << vidx.toString() << "\n";
       return variables[size_t(varFramePtr[vidx.frame]) + vidx.offset];
     }
   }
@@ -441,26 +450,26 @@ namespace Sass {
     }
     ValueObj& slot(intVariables[offset]);
     if (!guarded || !slot || slot->isaNull()) {
-      if (stkdbg) std::cerr << "Set global variable " << offset
-        << " - " << value->inspect() << "\n";
+      // if (stkdbg) std::cerr << "Set global variable " << offset
+      //   << " - " << value->inspect() << "\n";
       slot = value;
     }
-    else {
-      if (stkdbg) std::cerr << "Guarded global variable " << offset
-        << " - " << value->inspect() << "\n";
-    }
+    // else {
+    //   if (stkdbg) std::cerr << "Guarded global variable " << offset
+    //     << " - " << value->inspect() << "\n";
+    // }
   }
   void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
   {
-    if (stkdbg) std::cerr << "Set global mixin " << offset
-       << " - " << callable->name() << "\n";
+    // if (stkdbg) std::cerr << "Set global mixin " << offset
+    //    << " - " << callable->name() << "\n";
     CallableObj& slot(intMixin[offset]);
     if (!guarded || !slot) slot = callable;
   }
   void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
   {
-    if (stkdbg) std::cerr << "Set global function " << offset
-       << " - " << callable->name() << "\n";
+    // if (stkdbg) std::cerr << "Set global function " << offset
+    //    << " - " << callable->name() << "\n";
     CallableObj& slot(intFunction[offset]);
     if (!guarded || !slot) slot = callable;
   }
@@ -473,15 +482,15 @@ namespace Sass {
     if (vidx.frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull()) {
-        if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
+        // if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
         intVariables[vidx.offset] = value;
       }
-      else {
-        if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
-      }
+      // else {
+      //   if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
+      // }
     }
     else {
-      if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
+      // if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
       ValueObj& slot(variables[size_t(varFramePtr[vidx.frame]) + vidx.offset]);
       if (slot == nullptr || guarded == false) slot = value;
     }
@@ -494,12 +503,12 @@ namespace Sass {
   {
     if (frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[offset]);
-      if (stkdbg) std::cerr << "Set global variable " << offset << " - " << value->inspect() << "\n";
+      // if (stkdbg) std::cerr << "Set global variable " << offset << " - " << value->inspect() << "\n";
       if (!guarded || !slot || slot->isaNull())
         intVariables[offset] = value;
     }
     else {
-      if (stkdbg) std::cerr << "Set variable " << frame << ":" << offset << " - " << value->inspect() << "\n";
+      // if (stkdbg) std::cerr << "Set variable " << frame << ":" << offset << " - " << value->inspect() << "\n";
       ValueObj& slot(variables[size_t(varFramePtr[frame]) + offset]);
       if (!guarded || !slot || slot->isaNull()) slot = value;
     }
@@ -605,7 +614,7 @@ namespace Sass {
       if (it != current->varIdxs.end()) {
         const VarRef vidx{ current->varFrame, it->second };
         ValueObj& value = root.getVariable(vidx);
-        if (value != nullptr) return vidx;
+        if (!value.isNull()) return vidx;
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->varIdxs.find(name);
@@ -618,9 +627,9 @@ namespace Sass {
         if (Moduled* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
-            VarRef vidx{ 0xFFFFFFFF, fwd->second };
-            Value* value = root.getVariable(vidx);
+            Value* value = root.getModVar(fwd->second);
             if (value && name.isPrivate()) continue;
+            VarRef vidx{ 0xFFFFFFFF, fwd->second };
             if (value != nullptr) return vidx;
           }
         }

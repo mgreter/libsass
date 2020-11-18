@@ -1192,7 +1192,7 @@ namespace Sass {
     Value* value = nullptr;
 
     // inLoop optimization can bring 5%
-    if (variable->vidx2().isValid() && !variable->withinLoop()) {
+    if (variable->vidx2().isValid()) {
       value = compiler.varRoot.getVariable(variable->vidx2());
     }
 
@@ -1203,7 +1203,7 @@ namespace Sass {
         auto vidx = compiler.varRoot.findVarIdx(variable->name());
         if (vidx != nullidx) {
           value = compiler.varRoot.getVariable(vidx);
-          variable->vidx2(vidx);
+          if (!variable->withinLoop()) variable->vidx2(vidx);
         }
         //value = compiler.varRoot.findVariable(variable->name());
       }
@@ -1213,7 +1213,7 @@ namespace Sass {
         );
         if (vidx != nullidx) {
           value = compiler.varRoot.getVariable(vidx);
-          variable->vidx2(vidx);
+          if (!variable->withinLoop()) variable->vidx2(vidx);
         }
         if (value == nullptr) {
           if (compiler.varRoot.stack.back()->hasNameSpace(variable->ns(), variable->name())) {
@@ -1630,16 +1630,18 @@ namespace Sass {
         inKeyframes = false;
       }
 
-      bool hasAtRuleInIncluded = false;
-      for (auto include : included) {
-        if (include->isaCssAtRule()) {
-          hasAtRuleInIncluded = true;
-          break;
+      if (inUnknownAtRule) {
+        bool hasAtRuleInIncluded = false;
+        for (auto include : included) {
+          // A flag on parent could save 1%
+          if (include->isaCssAtRule()) {
+            hasAtRuleInIncluded = true;
+            break;
+          }
         }
-      }
-
-      if (inUnknownAtRule && !hasAtRuleInIncluded) {
-        inUnknownAtRule = false;
+        if (!hasAtRuleInIncluded) {
+          inUnknownAtRule = false;
+        }
       }
 
       acceptChildrenAt(newParent, node);

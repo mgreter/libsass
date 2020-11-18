@@ -533,8 +533,8 @@ namespace Sass {
 
 
   void exposeFiltered(
-    EnvKeyFlatMap<uint32_t>& merged,
-    EnvKeyFlatMap<uint32_t> expose,
+    VidxEnvKeyMap& merged,
+    VidxEnvKeyMap expose,
     const sass::string prefix,
     const std::set<EnvKey>& filters,
     const sass::string& errprefix,
@@ -559,8 +559,8 @@ namespace Sass {
   }
 
   void exposeFiltered(
-    EnvKeyFlatMap<uint32_t>& merged,
-    EnvKeyFlatMap<uint32_t> expose,
+    VidxEnvKeyMap& merged,
+    VidxEnvKeyMap expose,
     const sass::string prefix,
     const sass::string& errprefix,
     Logger& logger)
