@@ -625,7 +625,7 @@ namespace Sass {
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, false));
+    const sass::vector<ResolvedImport>& resolved(compiler.findIncludes(import, false));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -692,7 +692,7 @@ namespace Sass {
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport> resolved(
+    const sass::vector<ResolvedImport>& resolved(
       compiler.findIncludes(import, false));
 
     // Error if no file to import was found
@@ -1248,7 +1248,11 @@ namespace Sass {
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     // This should be cached somehow to improve speed by much!
-    const sass::vector<ResolvedImport> resolved(compiler.findIncludes(request, true));
+
+    if (rule->candidates == nullptr) {
+      rule->candidates = &compiler.findIncludes(request, true);
+    }
+    const sass::vector<ResolvedImport>& resolved(*rule->candidates);
 
     // Error if no file to import was found
     if (resolved.empty()) {

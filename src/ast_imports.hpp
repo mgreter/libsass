@@ -59,7 +59,10 @@ namespace Sass {
     ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, url);
 
+
   public:
+
+    const sass::vector<ResolvedImport>* candidates = nullptr;
 
     IncludeImport(const SourceSpan& pstate,
       const sass::string& prev,

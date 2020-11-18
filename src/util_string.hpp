@@ -62,4 +62,24 @@ namespace Sass {
 }
 // EO namespace Util
 
+namespace std {
+  template <> struct hash<std::pair<sass::string, sass::string>> {
+  public:
+    inline size_t operator()(
+      const std::pair<sass::string, sass::string>& key) const
+    {
+      size_t hash = MurmurHash2(
+        (void*)key.first.c_str(),
+        (int)key.first.size(),
+        Sass::getHashSeed());
+      Sass::hash_combine(hash,
+        MurmurHash2(
+        (void*)key.second.c_str(),
+          (int)key.second.size(),
+          Sass::getHashSeed()));
+      return hash;
+    }
+  };
+}
+
 #endif  // SASS_UTIL_STRING_H

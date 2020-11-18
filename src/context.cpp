@@ -129,13 +129,23 @@ namespace Sass {
 
   // Look for all possible filename variants (e.g. partials)
   // Returns all results (e.g. for ambiguous valid imports)
-  sass::vector<ResolvedImport> Context::findIncludes(const ImportRequest& import, bool forImport)
+  const sass::vector<ResolvedImport>& Context::findIncludes(const ImportRequest& import, bool forImport)
   {
+    // Create the caching key for resolve caching
+    std::pair<sass::string, sass::string> cacheKey =
+      std::make_pair(import.base_path, import.imp_path);
+
+    // Try to find cached result first
+    auto it = resolveCache.find(cacheKey);
+    if (it != resolveCache.end()) return it->second;
+
     // make sure we resolve against an absolute path
     sass::string base_path(rel2abs(import.base_path, ".", CWD));
     // first try to resolve the load path relative to the base path
-    sass::vector<ResolvedImport> vec(resolve_includes(
-      base_path, import.imp_path, CWD, forImport, fileExistsCache));
+    sass::vector<ResolvedImport>& vec(resolveCache[cacheKey]);
+
+    vec = resolve_includes(base_path, import.imp_path, CWD, forImport, fileExistsCache);
+
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
     {

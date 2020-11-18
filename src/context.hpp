@@ -23,11 +23,17 @@ namespace Sass {
   // Compiler is stateful, while Context is more low-level
   class Context : public SassOutputOptionsCpp {
 
-  private:
+  public:
 
     // Checking if a file exists can be quite extensive
     // Keep an internal map to avoid repeated system calls
     std::unordered_map<sass::string, bool> fileExistsCache;
+
+    // Keep cache of resolved import filenames
+    // Key is a pair of previous + import path
+    std::unordered_map<
+      std::pair<sass::string, sass::string>,
+      sass::vector<ResolvedImport>> resolveCache;
 
     // Include paths are local to context since we need to know
     // it for lookups during parsing. You may reset this for
@@ -119,7 +125,7 @@ namespace Sass {
     // Implementation for `resolveDynamicImport`
     // Look for all possible filename variants (e.g. partials)
     // Returns all results (e.g. for ambiguous but valid imports)
-    sass::vector<ResolvedImport> findIncludes(const ImportRequest& import, bool forImport);
+    const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);
 
   };
   // EO Context
