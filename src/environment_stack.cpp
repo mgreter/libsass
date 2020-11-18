@@ -1282,7 +1282,7 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  VarRef EnvRoot::setVariable(const EnvKey& name, ValueObj val, bool guarded, bool global)
+  VarRef EnvRoot::setVariable(const EnvKey& name, bool guarded, bool global)
   {
     if (stack.empty()) return nullidx;
     uint32_t idx = global ? 0 :
@@ -1298,9 +1298,9 @@ namespace Sass {
               "Private members can't be accessed "
               "from outside their modules.");
           }
-          const VarRef vidx{ 0xFFFFFFFF, in->second };
-          idxs->root.setVariable(vidx, val, guarded);
-          return vidx;
+          return { 0xFFFFFFFF, in->second };
+          // idxs->root.setVariable(vidx, val, guarded);
+          // return vidx;
         }
         // Modules inserted by import
         if (Moduled* mod = refs->module) {
@@ -1311,18 +1311,18 @@ namespace Sass {
                 "Private members can't be accessed "
                 "from outside their modules.");
             }
-            const VarRef vidx{ 0xFFFFFFFF, fwd->second };
-            idxs->root.setVariable(vidx, val, guarded);
-            return vidx;
+            return { 0xFFFFFFFF, fwd->second };
+            // idxs->root.setVariable(vidx, val, guarded);
+            // return vidx;
           }
         }
       }
 
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
-        const VarRef vidx{ current->varFrame, it->second };
-        idxs->root.setVariable(vidx, val, guarded);
-        return vidx;
+        return { current->varFrame, it->second };
+        // idxs->root.setVariable(vidx, val, guarded);
+        // return vidx;
       }
 
       if (current->pscope == nullptr) break;

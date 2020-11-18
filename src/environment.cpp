@@ -85,16 +85,15 @@ namespace Sass {
     //   return nullptr;
     // }
 
-    ValueObj result = a->value()->accept(this);
-
     if (!a->withinLoop() && a->vidx2().isValid()) {
-      //   if (!a->is_default() && !a->is_global()) {
+      assigne = &compiler.varRoot.getVariable(a->vidx2());
+      ValueObj result = a->value()->accept(this);
       compiler.varRoot.setVariable(
         a->vidx2(),
         result,
         false);
+      assigne = nullptr;
       return nullptr;
-      //   }
     }
 
     // Emit deprecation for new var with global flag
@@ -157,11 +156,20 @@ namespace Sass {
 
       a->vidx2(compiler.varRoot.setVariable(
         a->variable(),
-        result,
         a->is_default(),
         a->is_global()));
+      assigne = &compiler.varRoot.getVariable(a->vidx2());
+      ValueObj result = a->value()->accept(this);
+      compiler.varRoot.setVariable(
+        a->vidx2(),
+        result,
+        a->is_default());
+      assigne = nullptr;
+
     }
     else {
+
+      ValueObj result = a->value()->accept(this);
 
       a->vidx2(compiler.varRoot.setModVar(
         a->variable(), a->ns(),
