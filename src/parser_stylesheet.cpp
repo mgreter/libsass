@@ -2966,7 +2966,7 @@ namespace Sass {
       sass::string name(identifier->getPlainString());
 
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), itpl, args, name);
+        scanner.relevantSpanFrom(start), itpl, args, inLoopDirective, name);
 
       // First search in forwarded modules
       VarRefs* frame(context.varRoot.stack.back()->getModule23());
@@ -3000,7 +3000,7 @@ namespace Sass {
     else if (next == $lparen) {
       ArgumentInvocation* args = readArgumentInvocation();
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), identifier, args, ns);
+        scanner.relevantSpanFrom(start), identifier, args, inLoopDirective, ns);
       sass::string name(identifier->getPlainString());
       if (!name.empty()) {
 

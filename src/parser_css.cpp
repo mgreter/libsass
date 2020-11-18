@@ -250,7 +250,8 @@ namespace Sass {
       scanner.rawSpanFrom(start), std::move(arguments), {});
     
     return SASS_MEMORY_NEW(FunctionExpression,
-      scanner.rawSpanFrom(start), name, args);
+      scanner.rawSpanFrom(start), name, args,
+      inLoopDirective);
 
   }
   // EO readIdentifierLike

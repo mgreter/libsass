@@ -978,10 +978,10 @@ namespace Sass {
     Callable* function = nullptr;
 
     if (node->ns().empty()) {
-      function = compiler.varRoot.findFunction(node->name()->getPlainString());
+      function = *compiler.varRoot.findFunction(node->name()->getPlainString());
     }
     else {
-      function = compiler.varRoot.findFunction(
+      function = *compiler.varRoot.findFunction(
         node->name()->getPlainString(), node->ns()
       );
       if (function == nullptr) {
@@ -1219,8 +1219,8 @@ namespace Sass {
   Value* Eval::visitDebugRule(DebugRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (Callable* fn = compiler.varRoot.findFunction(Keys::debugRule)) {
-      callExternalMessageOverloadFunction(fn, message);
+    if (CallableObj* fn = compiler.varRoot.findFunction(Keys::debugRule)) {
+      callExternalMessageOverloadFunction(*fn, message);
     }
     else {
       logger456.addDebug(message->
@@ -1233,8 +1233,8 @@ namespace Sass {
   Value* Eval::visitWarnRule(WarnRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (Callable* fn = compiler.varRoot.findFunction(Keys::warnRule)) {
-      callExternalMessageOverloadFunction(fn, message);
+    if (CallableObj* fn = compiler.varRoot.findFunction(Keys::warnRule)) {
+      callExternalMessageOverloadFunction(*fn, message);
     }
     else {
       sass::string result(message->toCss(logger456, false));
@@ -1247,8 +1247,8 @@ namespace Sass {
   Value* Eval::visitErrorRule(ErrorRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (Callable* fn = compiler.varRoot.findFunction(Keys::errorRule)) {
-      callExternalMessageOverloadFunction(fn, message);
+    if (CallableObj* fn = compiler.varRoot.findFunction(Keys::errorRule)) {
+      callExternalMessageOverloadFunction(*fn, message);
     }
     else {
       sass::string result(message->toCss(logger456, true));

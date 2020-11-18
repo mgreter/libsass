@@ -255,13 +255,15 @@ namespace Sass {
     SourceSpan pstate,
     Interpolation* name,
     ArgumentInvocation* arguments,
+    bool withinLoop,
     const sass::string& ns) :
     InvocationExpression(
       std::move(pstate),
       arguments),
     ns_(ns),
     name_(name),
-    selfAssign_(false)
+    selfAssign_(false),
+    withinLoop_(withinLoop)
   {}
 
   /////////////////////////////////////////////////////////////////////////

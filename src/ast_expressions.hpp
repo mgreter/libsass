@@ -367,10 +367,18 @@ namespace Sass {
     // Internal optimization flag
     ADD_CONSTREF(bool, selfAssign);
 
+    // Internal optimization flag
+    ADD_CONSTREF(bool, withinLoop);
+
+  public:
+
+    CallableObj* function = nullptr;
+
   public:
     FunctionExpression(SourceSpan pstate,
       Interpolation* name,
       ArgumentInvocation* arguments,
+      bool withinLoop,
       const sass::string& ns = "");
 
     // Expression visitor to sass values entry function

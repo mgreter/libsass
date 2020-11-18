@@ -204,8 +204,8 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
-    Callable* findFunction(const EnvKey& name) const;
+    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
+    CallableObj* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
@@ -218,7 +218,7 @@ namespace Sass {
     bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
 
     // Find function only in local frame
-    Callable* getFunction(const EnvKey& name) const;
+    CallableObj* getFunction(const EnvKey& name) const;
 
     Callable* getMixin(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
@@ -422,8 +422,8 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    Callable* findFunction(const EnvKey& name, const sass::string& ns) const;
-    Callable* findFunction(const EnvKey& name) const;
+    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
+    CallableObj* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
