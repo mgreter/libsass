@@ -746,7 +746,7 @@ namespace Sass {
         }
       }
       // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true, false, false);
+      EnvFrame local(compiler, false, true, false, false); // correct
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
@@ -1373,7 +1373,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame local(context, true, false, true);
+      EnvFrame local(context, true, true, true, false); // wrong
       ImportStackFrame iframe(context, loaded);
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;
@@ -1731,7 +1731,7 @@ namespace Sass {
 
           if (sheet == nullptr) {
             // This is the new barrier!
-            EnvFrame local(compiler, true, true);
+            EnvFrame local(compiler, false, true, false, false); // correct
             // eval.selectorStack.push_back(nullptr);
             ImportStackFrame iframe(compiler, loaded);
             sheet = compiler.registerImport(loaded); // @use
@@ -1739,50 +1739,22 @@ namespace Sass {
             sheet->root2->idxs = local.idxs;
             sheet->root2->import = loaded;
           }
-          else {
-
-            if (hasWith && compiler.implicitWithConfig) {
-              throw Exception::ParserException(compiler,
-                sass::string(sheet->root2->pstate().getFileName())
-                + " was already loaded, so it "
-                "can\'t be configured using \"with\".");
-            }
-
+          else if (hasWith && compiler.implicitWithConfig) {
+            throw Exception::ParserException(compiler,
+              sass::string(sheet->root2->pstate().getFileName())
+              + " was already loaded, so it "
+              "can\'t be configured using \"with\".");
           }
 
-          if (sheet->root2->loaded) {
-            if (hasWith) {
-              throw Exception::RuntimeException(compiler,
-                "Module twice");
-            }
-          }
-          else {
-            Root* root = sheet->root2;
-            root->isActive = true;
-            root->isLoading = true;
-            //root->loaded = eval.current;
-            root->loaded = SASS_MEMORY_NEW(CssStyleRule,
-              root->pstate(), nullptr, nullptr);
-            auto oldCurrent = eval.current;
-            eval.current = root->loaded;
-            EnvScope scoped(compiler.varRoot, root->idxs);
-            eval.selectorStack.push_back(nullptr);
-            ImportStackFrame iframe(compiler, root->import);
-            // compiler.import_stack.push_back(root->import);
-            for (auto child : root->elements()) {
-              child->accept(&eval);
-            }
-            // compiler.import_stack.pop_back();
-            eval.selectorStack.pop_back();
-            eval.current = oldCurrent;
-            root->isLoading = false;
-
+          if (!sheet->root2->loaded) {
+            eval.compileModule(sheet->root2);
           }
 
           eval.insertModule(sheet->root2);
 
         }
         else {
+          // Probably on access violations?
           throw Exception::ParserException(compiler,
             "Couldn't load it.");
         }
