@@ -593,7 +593,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  CallableObj* VarRefs::findFunction(const EnvKey& name) const
+  Callable* VarRefs::findFunction(const EnvKey& name) const
   {
     const VarRefs* current = this;
     while (current) {
@@ -601,7 +601,7 @@ namespace Sass {
       if (it != current->fnIdxs.end()) {
         const VarRef vidx{ current->fnFrame, it->second };
         CallableObj& value = root.getFunction(vidx);
-        if (!value.isNull()) return &value;
+        if (!value.isNull()) return value;
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->fnIdxs.find(name);
@@ -609,15 +609,15 @@ namespace Sass {
           const VarRef vidx{ fwds->fnFrame, fwd->second };
           CallableObj& value = root.getFunction(vidx);
           if (value && name.isPrivate()) continue;
-          if (!value.isNull()) return &value;
+          if (!value.isNull()) return value;
         }
         if (Moduled* mod = fwds->module) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
-            CallableObj& fn = root.getFunction(
+            Callable* fn = root.getFunction(
               { 0xFFFFFFFF, fwd->second });
             if (fn && name.isPrivate()) continue;
-            if (!fn.isNull()) return &fn;
+            if (fn != nullptr) return fn;
           }
         }
       }
@@ -699,27 +699,27 @@ namespace Sass {
   }
   // EO getMixin
 
-  CallableObj* VarRefs::getFunction(const EnvKey& name) const
+  Callable* VarRefs::getFunction(const EnvKey& name) const
   {
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
       const VarRef vidx{ fnFrame, it->second };
-      CallableObj& value = root.getFunction(vidx);
-      if (!value.isNull()) return &value;
+      Callable* value = root.getFunction(vidx);
+      if (value != nullptr) return value;
     }
     for (auto fwds : fwdGlobal55) {
       auto it = fwds->fnIdxs.find(name);
       if (it != fwds->fnIdxs.end()) {
         const VarRef vidx{ fwds->fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (!value.isNull()) return &value;
+        Callable* value = root.getFunction(vidx);
+        if (value != nullptr) return value;
       }
       if (Moduled* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
           const VarRef vidx{ fwds->fnFrame, it->second };
-          CallableObj& value = root.getFunction(vidx);
-          if (!value.isNull()) return &value;
+          Callable* value = root.getFunction(vidx);
+          if (value != nullptr) return value;
         }
       }
     }
@@ -861,7 +861,7 @@ namespace Sass {
     return nullptr;
   }
 
-  CallableObj* VarRefs::findFunction(const EnvKey& name, const sass::string& ns) const
+  Callable* VarRefs::findFunction(const EnvKey& name, const sass::string& ns) const
   {
     const VarRefs* current = this;
     while (current) {
@@ -869,15 +869,15 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         if (VarRefs* idxs = it->second.first) {
-          CallableObj* fn = idxs->getFunction(name);
+          Callable* fn = idxs->getFunction(name);
           if (fn != nullptr) return fn;
         }
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
-            CallableObj& fn = root.getFunction(
+            Callable* fn = root.getFunction(
               { 0xFFFFFFFF, fwd->second });
-            if (!fn.isNull()) return &fn;
+            if (fn != nullptr) return fn;
           }
         }
       }
@@ -917,7 +917,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  CallableObj* EnvRoot::findFunction(const EnvKey& name) const
+  Callable* EnvRoot::findFunction(const EnvKey& name) const
   {
     if (stack.empty()) return nullptr;
     return stack.back()->findFunction(name);
@@ -930,7 +930,7 @@ namespace Sass {
     return stack.back()->findMixin(name, ns);
   }
 
-  CallableObj* EnvRoot::findFunction(const EnvKey& name, const sass::string& ns) const
+  Callable* EnvRoot::findFunction(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullptr;
     return stack.back()->findFunction(name, ns);
