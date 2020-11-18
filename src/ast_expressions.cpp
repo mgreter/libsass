@@ -264,7 +264,6 @@ namespace Sass {
       arguments),
     ns_(ns),
     name_(name),
-    selfAssign_(false),
     withinLoop_(withinLoop)
   {}
 

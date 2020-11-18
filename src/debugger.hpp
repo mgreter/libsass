@@ -998,7 +998,6 @@ inline void debug_ast(AstNode* node, std::string ind)
     FunctionExpression* expression = Cast<FunctionExpression>(node);
     std::cerr << ind << "FunctionExpression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [selfAssign: " << expression->selfAssign() << "]";
     // if (expression->is_css()) std::cerr << " [css]";
     std::cerr << std::endl;
     debug_ast(expression->name(), ind + " name: ");

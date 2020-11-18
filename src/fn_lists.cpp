@@ -1,5 +1,6 @@
 #include "fn_lists.hpp"
 
+#include "eval.hpp"
 #include "compiler.hpp"
 #include "exceptions.hpp"
 #include "ast_values.hpp"
@@ -36,7 +37,7 @@ namespace Sass {
         Value* index = arguments[1];
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (selfAssign && input->refcount < AssignableRefCount) {
+        if (false && eval.assigne->ptr() == input && input->refcount < AssignableRefCount) {
           if (List* lst = input->isaList()) {
             size_t idx = input->sassIndexToListIndex(index, compiler, "n");
             lst->at(idx) = arguments[2];
@@ -97,7 +98,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (selfAssign && list2->refcount < AssignableRefCount) {
+        if (false && eval.assigne->ptr() == list2 && list2->refcount < AssignableRefCount) {
           if (List* lst = list2->isaList()) {
             ValueVector& values(lst->elements());
             lst->separator(separator);
@@ -146,7 +147,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (selfAssign && list->refcount < AssignableRefCount) {
+        if (false && eval.assigne->ptr() == list && list->refcount < AssignableRefCount) {
           if (List* lst = list->isaList()) {
             lst->separator(separator);
             lst->append(value);

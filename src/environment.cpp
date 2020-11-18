@@ -170,7 +170,6 @@ namespace Sass {
     else {
 
       ValueObj result = a->value()->accept(this);
-
       a->vidx2(compiler.varRoot.setModVar(
         a->variable(), a->ns(),
         result,
@@ -267,19 +266,19 @@ namespace Sass {
 // We detect these cases here in order for the function to optimize
 // self-assignment case (e.g. map-merge). It can then manipulate
 // the value passed as the first argument directly in-place.
-    if (has_local && !global) {
-      // Certainly looks a bit like some poor man's JIT 
-      if (auto fn = value->isaFunctionExpression()) {
-        auto& pos(fn->arguments()->positional());
-        if (pos.size() > 0) {
-          if (auto var = pos[0]->isaVariableExpression()) {
-            if (var->name() == name) { // same name
-              fn->selfAssign(true); // Up to 15% faster
-            }
-          }
-        }
-      }
-    }
+//    if (has_local && !global) {
+//      // Certainly looks a bit like some poor man's JIT 
+//      if (auto fn = value->isaFunctionExpression()) {
+//        auto& pos(fn->arguments()->positional());
+//        if (pos.size() > 0) {
+//          if (auto var = pos[0]->isaVariableExpression()) {
+//            if (var->name() == name) { // same name
+//              fn->selfAssign(true); // Up to 15% faster
+//            }
+//          }
+//        }
+//      }
+//    }
 #endif
 
     sass::vector<VarRef> vidxs;

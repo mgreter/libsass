@@ -44,7 +44,7 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -82,7 +82,7 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -110,7 +110,7 @@ namespace Sass {
       const sass::string& fname);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return fname(); }
@@ -145,7 +145,7 @@ namespace Sass {
       UserDefinedCallable* content);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -184,7 +184,7 @@ namespace Sass {
     }
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) override final;
+    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }

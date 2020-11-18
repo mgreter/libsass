@@ -350,29 +350,29 @@ namespace Sass {
   // Implement the execute dispatch to evaluator
   /////////////////////////////////////////////////////////////////////////
 
-  Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* PlainCssCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* PlainCssCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* UserDefinedCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* UserDefinedCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
-  Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign)
+  Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
   {
-    return eval.execute(this, arguments, pstate, selfAssign);
+    return eval.execute(this, arguments, pstate);
   }
 
   /////////////////////////////////////////////////////////////////////////

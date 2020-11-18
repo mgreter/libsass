@@ -131,38 +131,33 @@ namespace Sass {
     Value* execute(
       BuiltInCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Call built-in function with overloads
     Value* execute(
       BuiltInCallables* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Used for user functions and also by
     // mixin includes and content includes.
     Value* execute(
       UserDefinedCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Call external C-API function
     Value* execute(
       ExternalCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Return plain css call as string
     // Used when function is not known
     Value* execute(
       PlainCssCallable* callable,
       ArgumentInvocation* arguments,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -219,22 +214,19 @@ namespace Sass {
     Value* _runBuiltInCallable(
       ArgumentInvocation* arguments,
       BuiltInCallable* callable,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Call built-in function with overloads
     Value* _runBuiltInCallables(
       ArgumentInvocation* arguments,
       BuiltInCallables* callable,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Helper for _runBuiltInCallable(s)
     Value* _callBuiltInCallable(
       ArgumentResults& evaluated,
       const SassFnPair& function,
-      const SourceSpan& pstate,
-      bool selfAssign);
+      const SourceSpan& pstate);
 
     // Used for user functions and also by
     // mixin includes and content includes.

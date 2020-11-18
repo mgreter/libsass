@@ -150,12 +150,11 @@ namespace Sass {
   Value* Eval::_runBuiltInCallable(
     ArgumentInvocation* arguments,
     BuiltInCallable* callable,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
-    return _callBuiltInCallable(results, tuple, pstate, selfAssign);
+    return _callBuiltInCallable(results, tuple, pstate);
   }
 
   //*************************************************//
@@ -164,12 +163,11 @@ namespace Sass {
   Value* Eval::_runBuiltInCallables(
     ArgumentInvocation* arguments,
     BuiltInCallables* callable,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
-    return _callBuiltInCallable(results, tuple, pstate, selfAssign);
+    return _callBuiltInCallable(results, tuple, pstate);
   }
 
   //*************************************************//
@@ -178,8 +176,7 @@ namespace Sass {
   Value* Eval::_callBuiltInCallable(
     ArgumentResults& results,
     const SassFnPair& function,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
 
     // Here the strategy is to re-use the positional arguments if possible
@@ -261,7 +258,7 @@ namespace Sass {
     // Now execute the built-in function
     ValueObj result = callback(pstate,
       positional, compiler,
-      *this, selfAssign); // 7%
+      *this); // 7%
 
     // If we had no rest arguments, this will be true
     if (restargs == nullptr) return result.detach();
@@ -518,14 +515,13 @@ namespace Sass {
   Value* Eval::execute(
     BuiltInCallable* callable,
     ArgumentInvocation* arguments,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
     callStackFrame frame(logger456, trace);
     ValueObj rv = _runBuiltInCallable(
-      arguments, callable, pstate, selfAssign);
+      arguments, callable, pstate);
     if (rv.isNull()) {
       throw Exception::RuntimeException(logger456,
         "Function finished without @return.");
@@ -540,14 +536,13 @@ namespace Sass {
   Value* Eval::execute(
     BuiltInCallables* callable,
     ArgumentInvocation* arguments,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
     callStackFrame frame(logger456, trace);
     ValueObj rv = _runBuiltInCallables(arguments,
-      callable, pstate, selfAssign);
+      callable, pstate);
     if (rv.isNull()) {
       throw Exception::RuntimeException(logger456,
         "Function finished without @return.");
@@ -563,8 +558,7 @@ namespace Sass {
   Value* Eval::execute(
     UserDefinedCallable* callable,
     ArgumentInvocation* arguments,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     LOCAL_FLAG(inMixin, false);
     const EnvKey& key(callable->envkey());
@@ -586,8 +580,7 @@ namespace Sass {
   Value* Eval::execute(
     ExternalCallable* callable,
     ArgumentInvocation* arguments,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
@@ -609,8 +602,7 @@ namespace Sass {
   Value* Eval::execute(
     PlainCssCallable* callable,
     ArgumentInvocation* arguments,
-    const SourceSpan& pstate,
-    bool selfAssign)
+    const SourceSpan& pstate)
   {
     if (!arguments->named().empty()) {
       callStackFrame frame(traces,
@@ -983,8 +975,7 @@ namespace Sass {
       function = &compiler.varRoot.getFunction(node->fidx2());
       LOCAL_FLAG(inFunction, true);
       return (*function)->execute(*this,
-        node->arguments(), node->pstate(),
-        node->selfAssign());
+        node->arguments(), node->pstate());
     }
 
     if (function == nullptr) {
@@ -1021,8 +1012,7 @@ namespace Sass {
           node->pstate(), acceptInterpolation(node->name(), false));
         LOCAL_FLAG(inFunction, true);
         return tmp->execute(*this,
-          node->arguments(), node->pstate(),
-          node->selfAssign());
+          node->arguments(), node->pstate());
       }
 
     }
@@ -1034,8 +1024,7 @@ namespace Sass {
 
     LOCAL_FLAG(inFunction, true);
     return (*function)->execute(*this,
-      node->arguments(), node->pstate(),
-      node->selfAssign());
+      node->arguments(), node->pstate());
   }
 
   Value* Eval::visitBinaryOpExpression(BinaryOpExpression* node)
@@ -1369,7 +1358,7 @@ namespace Sass {
     }
     else if (auto builtin = rule->isaBuiltInCallable()) {
 
-      builtin->execute(*this, node->arguments(), node->pstate(), false);
+      builtin->execute(*this, node->arguments(), node->pstate());
 
     }
 

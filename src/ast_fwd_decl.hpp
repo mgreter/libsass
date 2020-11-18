@@ -376,8 +376,7 @@ namespace Sass {
     const SourceSpan& pstate, \
     const ValueVector& arguments, \
     Compiler& compiler, \
-    Eval& eval, \
-    bool selfAssign \
+    Eval& eval \
 
 }
 

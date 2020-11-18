@@ -429,7 +429,7 @@ namespace Sass {
         }
 
         Callable* callable = function->assertFunction(compiler, "function")->callable();
-        return callable->execute(eval, invocation, pstate, false);
+        return callable->execute(eval, invocation, pstate);
 
 
       }

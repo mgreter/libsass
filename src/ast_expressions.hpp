@@ -368,9 +368,6 @@ namespace Sass {
     ADD_CONSTREF(VarRef, fidx2);
 
     // Internal optimization flag
-    ADD_CONSTREF(bool, selfAssign);
-
-    // Internal optimization flag
     ADD_CONSTREF(bool, withinLoop);
 
   public:

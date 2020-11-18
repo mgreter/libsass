@@ -32,7 +32,7 @@ namespace Sass {
     Callable(const SourceSpan& pstate);
 
     // The main entry point to execute the function (implemented in each specialization)
-    virtual Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate, bool selfAssign) = 0;
+    virtual Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) = 0;
 
     // Return the function name
     virtual const sass::string& name() const = 0;
