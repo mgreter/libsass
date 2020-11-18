@@ -999,6 +999,8 @@ namespace Sass {
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || node->hasLocalWith());
 
+    VarRefs* mframe(compiler.getCurrentModule());
+
     if (node->needsLoading()) {
       if (Root* module = resolveUseRule(node)) {
         node->root(module);
@@ -1011,31 +1013,12 @@ namespace Sass {
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
         }
-        if (node->root()) {
-          VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-          node->root()->exposing = pudding(node->root(), ns == "*", modFrame);
-          Root* root = node->root();
-          VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
-          if (node->ns().empty()) {
-            root->exposing->module = root;
-            mframe->fwdGlobal55.push_back(root->exposing);
-          }
-          else {
-            mframe->fwdModule55[node->ns()] =
-            { root->exposing, root };
-          }
-        }
-
-        if (udbg) std::cerr << "Cached use rule '" << node->url() << "'\n";
-        return nullptr;
       }
     }
 
     if (node->root()) {
 
       Root* root = node->root();
-
-      VarRefs* mframe(compiler.getCurrentModule());
 
       if (root->isCompiled) {
 
