@@ -752,20 +752,6 @@ namespace Sass {
 
     VarRefs* idxs = root->idxs;
 
-    // Expose what has been forwarded to us
-    for (auto var : root->mergedFwdVar) {
-      if (!var.first.isPrivate())
-        idxs->varIdxs.insert(var);
-    }
-    for (auto mix : root->mergedFwdMix) {
-      if (!mix.first.isPrivate())
-        idxs->mixIdxs.insert(mix);
-    }
-    for (auto fn : root->mergedFwdFn) {
-      if (!fn.first.isPrivate())
-        idxs->fnIdxs.insert(fn);
-    }
-
     if (intoRoot) {
 
       for (auto var : idxs->varIdxs) {
@@ -843,17 +829,31 @@ namespace Sass {
     else {
 
       // No idea why this is needed!
-      //for (auto var : modFrame->varIdxs) {
-      //  idxs->varIdxs.insert(var);
-      //}
-      // for (auto var : modFrame->mixIdxs) {
-      //   idxs->mixIdxs.insert(var);
-      // }
+      for (auto var : modFrame->varIdxs) {
+        idxs->module->mergedFwdVar.insert(var);
+      }
+      for (auto var : modFrame->mixIdxs) {
+        idxs->mixIdxs.insert(var);
+      }
       //for (auto var : modFrame->fnIdxs) {
       //  idxs->fnIdxs.insert(var);
       //}
 
     }
+
+    // Expose what has been forwarded to us
+    // for (auto var : root->mergedFwdVar) {
+    //   if (!var.first.isPrivate())
+    //     idxs->varIdxs.insert(var);
+    // }
+    // for (auto mix : root->mergedFwdMix) {
+    //   if (!mix.first.isPrivate())
+    //     idxs->mixIdxs.insert(mix);
+    // }
+    // for (auto fn : root->mergedFwdFn) {
+    //   if (!fn.first.isPrivate())
+    //     idxs->fnIdxs.insert(fn);
+    // }
 
     return idxs;
 
@@ -1247,6 +1247,7 @@ namespace Sass {
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
+    // This should be cached somehow to improve speed by much!
     const sass::vector<ResolvedImport> resolved(compiler.findIncludes(request, true));
 
     // Error if no file to import was found
