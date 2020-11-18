@@ -524,28 +524,60 @@ namespace Sass {
     return true;
   }
 
-  // Consumes the next character if it's equal
-  // to [letter], ignoring ASCII case.
-  bool Parser::scanCharIgnoreCase(uint8_t letter)
+  bool Parser::scanIdentCharSensitive(uint8_t letter)
   {
-    if (!equalsLetterIgnoreCase(letter, scanner.peekChar())) return false;
-    scanner.readChar();
-    return true;
+    auto next = scanner.peekChar();
+    if (letter == next) {
+      scanner.readChar();
+      return true;
+    }
+    else if (next == $backslash) {
+      StringScannerState state = scanner.state();
+      next = escapeCharacter();
+      if (letter == next) return true;
+      scanner.backtrack(state);
+    }
+    return false;
   }
 
-  // Consumes the next character and asserts that
-  // it's equal to [letter], ignoring ASCII case.
-  void Parser::expectCharIgnoreCase(uint8_t letter)
+  bool Parser::scanIdentCharInsensitive(uint8_t letter)
+  {
+    auto next = scanner.peekChar();
+    if (equalsLetterIgnoreCase(letter, next)) {
+      scanner.readChar();
+      return true;
+    }
+    else if (next == $backslash) {
+      StringScannerState state = scanner.state();
+      next = escapeCharacter();
+      if (equalsLetterIgnoreCase(letter, next)) return true;
+      scanner.backtrack(state);
+    }
+    return false;
+  }
+
+  void Parser::expectIdentCharSensitive(uint8_t letter)
   {
     Offset start(scanner.offset);
-    uint8_t actual(scanner.readChar());
-    if (!equalsLetterIgnoreCase(letter, actual)) {
-      sass::string msg = "Expected \"";
-      msg += letter; msg += "\".";
-      scanner.offset = start;
-      error(msg, scanner.rawSpan());
-    }
+    if (scanIdentCharSensitive(letter)) return;
+
+    sass::string msg = "Expected \"";
+    msg += letter; msg += "\".";
+    scanner.offset = start;
+    error(msg, scanner.rawSpan());
   }
+
+  void Parser::expectIdentCharInsensitive(uint8_t letter)
+  {
+    Offset start(scanner.offset);
+    if (scanIdentCharInsensitive(letter)) return;
+
+    sass::string msg = "Expected \"";
+    msg += letter; msg += "\".";
+    scanner.offset = start;
+    error(msg, scanner.rawSpan());
+  }
+
 
   // Returns whether the scanner is immediately before a number. This follows [the CSS algorithm].
   // [the CSS algorithm]: https://drafts.csswg.org/css-syntax-3/#starts-with-a-number
@@ -603,13 +635,13 @@ namespace Sass {
   // EO lookingAtIdentifierBody
 
   // Consumes an identifier if its name exactly matches [text].
-  bool Parser::scanIdentifier(const char* text)
+  bool Parser::scanIdentifier(const char* text, bool sensitive)
   {
     if (!lookingAtIdentifier()) return false;
 
     StringScannerState state = scanner.state();
     for (size_t i = 0; text[i]; i++) {
-      if (scanCharIgnoreCase(text[i])) continue;
+      if (scanIdentChar(text[i], sensitive)) continue;
       scanner.backtrack(state);
       return false;
     }
@@ -621,30 +653,18 @@ namespace Sass {
   // EO scanIdentifier
 
   // Consumes an identifier if its name exactly matches [text].
-  bool Parser::scanIdentifier(sass::string text)
+  bool Parser::scanIdentifier(sass::string text, bool sensitive)
   {
-    if (!lookingAtIdentifier()) return false;
-
-    StringScannerState state = scanner.state();
-    for (size_t i = 0; text[i]; i++) {
-      // uint8_t next = text[i]; // cast needed
-      if (scanCharIgnoreCase(text[i])) continue;
-      scanner.backtrack(state);
-      return false;
-    }
-
-    if (!lookingAtIdentifierBody()) return true;
-    scanner.backtrack(state);
-    return false;
+    return scanIdentifier(text.c_str(), sensitive);
   }
   // EO scanIdentifier
 
   // Consumes an identifier and asserts that its name exactly matches [text].
-  void Parser::expectIdentifier(const char* text, sass::string name)
+  void Parser::expectIdentifier(const char* text, sass::string name, bool sensitive)
   {
     Offset start(scanner.offset);
     for (uint8_t i = 0; text[i]; i++) {
-      if (scanCharIgnoreCase(text[i])) continue;
+      if (scanIdentChar(text[i], sensitive)) continue;
       error("Expected " + name + ".",
         scanner.rawSpanFrom(start));
     }

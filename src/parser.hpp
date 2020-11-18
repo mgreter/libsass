@@ -136,13 +136,25 @@ namespace Sass {
     // Returns whether or not the character was consumed.
     bool scanCharIf(bool (*condition)(uint8_t character));
 
-    // Consumes the next character if it's equal
-    // to [letter], ignoring ASCII case.
-    bool scanCharIgnoreCase(uint8_t letter);
+    // Consumes the next character or escape sequence if it matches [expected].
+    // Matching will be case-insensitive unless [caseSensitive] is true.
+    bool scanIdentCharInsensitive(uint8_t letter);
+    bool scanIdentCharSensitive(uint8_t letter);
+
+    bool scanIdentChar(uint8_t letter, bool sensitive = false) {
+      if (sensitive) return scanIdentCharSensitive(letter);
+      else return scanIdentCharInsensitive(letter);
+    }
 
     // Consumes the next character and asserts that
     // it's equal to [letter], ignoring ASCII case.
-    void expectCharIgnoreCase(uint8_t letter);
+    void expectIdentCharInsensitive(uint8_t letter);
+    void expectIdentCharSensitive(uint8_t letter);
+
+    void expectIdentChar(uint8_t letter, bool sensitive = false) {
+      if (sensitive) return expectIdentCharSensitive(letter);
+      else return expectIdentCharInsensitive(letter);
+    }
 
     // Returns whether the scanner is immediately before a number. This follows [the CSS algorithm].
     // [the CSS algorithm]: https://drafts.csswg.org/css-syntax-3/#starts-with-a-number
@@ -159,8 +171,8 @@ namespace Sass {
     bool lookingAtIdentifierBody();
 
     // Consumes an identifier if its name exactly matches [text].
-    bool scanIdentifier(const char* text);
-    bool scanIdentifier(sass::string text);
+    bool scanIdentifier(const char* text, bool sensitive = false);
+    bool scanIdentifier(sass::string text, bool sensitive = false);
 
     // ToDo: make template to ignore return type
     template <typename T, typename X>
@@ -174,7 +186,7 @@ namespace Sass {
     }
 
     // Consumes an identifier and asserts that its name exactly matches [text].
-    void expectIdentifier(const char* text, sass::string name);
+    void expectIdentifier(const char* text, sass::string name, bool sensitive = false);
 
     // Throws an error associated with [span].
     void error(sass::string message, SourceSpan pstate /*, FileSpan span */);

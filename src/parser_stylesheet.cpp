@@ -2609,7 +2609,7 @@ namespace Sass {
   StringExpression* StylesheetParser::readUnicodeRange()
   {
     StringScannerState state = scanner.state();
-    expectCharIgnoreCase($u);
+    expectIdentChar($u);
     scanner.expectChar($plus);
 
     size_t i = 0;
@@ -3160,12 +3160,12 @@ namespace Sass {
       case $m:
       case $M:
         scanner.readChar();
-        if (scanCharIgnoreCase($i)) {
-          if (!scanCharIgnoreCase($n)) return false;
+        if (scanIdentChar($i)) {
+          if (!scanIdentChar($n)) return false;
           buffer.write("min(");
         }
-        else if (scanCharIgnoreCase($a)) {
-          if (!scanCharIgnoreCase($x)) return false;
+        else if (scanIdentChar($a)) {
+          if (!scanIdentChar($x)) return false;
           buffer.write("max(");
         }
         else {
