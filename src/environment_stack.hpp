@@ -434,8 +434,6 @@ namespace Sass {
     // find a defined function or run out of parent scopes.
     CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
     CallableObj* findFunction(const EnvKey& name) const;
-
-
     VarRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
     VarRef findFnIdx(const EnvKey& name) const;
 
@@ -446,6 +444,8 @@ namespace Sass {
     // defined variable with a value or run out of parent scopes.
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name, bool global = false) const;
+    VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findVarIdx(const EnvKey& name) const;
 
     bool setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
     bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);

@@ -2681,7 +2681,7 @@ namespace Sass {
     VariableExpression* expression =
       SASS_MEMORY_NEW(VariableExpression,
         scanner.relevantSpanFrom(start),
-        name, ns);
+        name, inLoopDirective, ns);
 
     if (inLoopDirective) {
       // Static variable resolution will be done in finalize stage
@@ -2882,7 +2882,7 @@ namespace Sass {
 
         VariableExpressionObj expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),
-          name, plain);
+          name, inLoopDirective, plain);
 
         if (isPrivate(name)) {
           context.addFinalStackTrace(expression->pstate());

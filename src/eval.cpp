@@ -997,9 +997,6 @@ namespace Sass {
         }
       }
       else {
-        //auto qwe = compiler.varRoot.findFunction(
-        //  node->name()->getPlainString(), node->ns()
-        //);
         auto fidx = compiler.varRoot.findFnIdx(
           node->name()->getPlainString(), node->ns()
         );
@@ -1194,34 +1191,50 @@ namespace Sass {
 
     Value* value = nullptr;
 
-    if (variable->ns().empty()) {
-      value = compiler.varRoot.findVariable(variable->name());
+    // inLoop optimization can bring 5%
+    if (variable->vidx2().isValid() && !variable->withinLoop()) {
+      value = compiler.varRoot.getVariable(variable->vidx2());
     }
-    else {
-      value = compiler.varRoot.findVariable(
-        variable->name(), variable->ns()
-      );
-      if (value == nullptr) {
-        if (compiler.varRoot.stack.back()->hasNameSpace(variable->ns(), variable->name())) {
-          callStackFrame frame(traces, variable->pstate());
-          throw Exception::RuntimeException(traces, "Undefined variable.");
+
+
+    if (value == nullptr) {
+
+      if (variable->ns().empty()) {
+        auto vidx = compiler.varRoot.findVarIdx(variable->name());
+        if (vidx != nullidx) {
+          value = compiler.varRoot.getVariable(vidx);
+          variable->vidx2(vidx);
         }
-        else {
-          callStackFrame frame(traces, variable->pstate());
-          throw Exception::ModuleUnknown(traces, variable->ns());
+        //value = compiler.varRoot.findVariable(variable->name());
+      }
+      else {
+        auto vidx = compiler.varRoot.findVarIdx(
+          variable->name(), variable->ns()
+        );
+        if (vidx != nullidx) {
+          value = compiler.varRoot.getVariable(vidx);
+          variable->vidx2(vidx);
+        }
+        if (value == nullptr) {
+          if (compiler.varRoot.stack.back()->hasNameSpace(variable->ns(), variable->name())) {
+            callStackFrame frame(traces, variable->pstate());
+            throw Exception::RuntimeException(traces, "Undefined variable.");
+          }
+          else {
+            callStackFrame frame(traces, variable->pstate());
+            throw Exception::ModuleUnknown(traces, variable->ns());
+          }
         }
       }
     }
 
+
+
+
+
     if (value != nullptr) {
       return value->withoutSlash();
     }
-
-    // for (auto vidx : variable->vidxs()) {
-    //   ValueObj& value = compiler.varRoot.getVariable(vidx);
-    //   if (value == nullptr) continue;
-    //   return value->withoutSlash();
-    // }
 
     callStackFrame frame(traces, variable->pstate());
     throw Exception::RuntimeException(traces,

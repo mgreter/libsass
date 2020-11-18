@@ -283,12 +283,15 @@ namespace Sass {
   {
     ADD_CONSTREF(EnvKey, name);
     ADD_REF(sass::vector<VarRef>, vidxs);
+    ADD_REF(VarRef, vidx2);
     ADD_CONSTREF(sass::string, ns);
+    ADD_PROPERTY(bool, withinLoop);
   public:
     // Value constructor
     VariableExpression(
       SourceSpan&& pstate,
       const EnvKey& name,
+      bool withinLoop,
       const sass::string& ns = "");
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {

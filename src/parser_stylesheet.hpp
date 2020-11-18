@@ -28,6 +28,8 @@ namespace Sass {
     // Just a counter for nesting guard
     size_t recursion = 0;
 
+  public:
+
     // Whether we are inside a loop directive such as `@for`, `@while` or `@each`.
     // This will disable some incompatible static variable optimizations.
     bool inLoopDirective = false;

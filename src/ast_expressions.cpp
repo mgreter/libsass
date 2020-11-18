@@ -220,10 +220,12 @@ namespace Sass {
   VariableExpression::VariableExpression(
     SourceSpan&& pstate,
     const EnvKey& name,
+    bool withinLoop,
     const sass::string& ns) :
     Expression(std::move(pstate)),
     name_(name),
-    ns_(ns)
+    ns_(ns),
+    withinLoop_(withinLoop)
   {}
 
   /////////////////////////////////////////////////////////////////////////

@@ -1130,6 +1130,18 @@ namespace Sass {
     return stack.back()->findVariable(name, ns);
   }
 
+  VarRef EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns) const
+  {
+    if (stack.empty()) return nullidx;
+    return stack.back()->findVarIdx(name, ns);
+  }
+
+  VarRef EnvRoot::findVarIdx(const EnvKey& name) const
+  {
+    if (stack.empty()) return nullidx;
+    return stack.back()->findVarIdx(name);
+  }
+
   VarRef EnvRoot::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullidx;
@@ -1141,6 +1153,7 @@ namespace Sass {
     if (stack.empty()) return nullidx;
     return stack.back()->findFnIdx(name);
   }
+
 
 
   /////////////////////////////////////////////////////////////////////////
