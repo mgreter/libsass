@@ -666,7 +666,7 @@ namespace Sass {
         rule->root(sheet->root2);
         return nullptr;
       }
-      EnvFrame wtf(compiler, false, true, false, false);
+      EnvFrame local(compiler, true, true, false, true);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       sheet->root2->import = loaded;
@@ -745,7 +745,7 @@ namespace Sass {
         }
       }
 
-      EnvFrame wtf(compiler, false, true, false, false);
+      EnvFrame local(compiler, false, true, false);
       sheet = compiler.registerImport(loaded);
       sheet->hasBeenUsed = true;
       compiler.varRoot.finalizeScopes();
@@ -1333,7 +1333,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = context.loadImport(resolved[0])) {
-      EnvFrame wtf(context, false, true, false, false);
+      EnvFrame local(context, true, false, true);
       ImportStackFrame iframe(context, loaded);
       StyleSheet* sheet = context.registerImport(loaded);
       sheet->root2->import = loaded;
@@ -1381,7 +1381,7 @@ namespace Sass {
 
     // We made sure exactly one entry was found, load its content
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      EnvFrame wtf(compiler, false, true, false, false);
+      EnvFrame local(compiler, false, true, true);
       ImportStackFrame iframe(compiler, loaded);
       StyleSheet* sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
