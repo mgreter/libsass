@@ -979,36 +979,36 @@ namespace Sass {
 
   }
 
-  Value* Eval::visitUseRule(UseRule* node)
+  Value* Eval::visitUseRule(UseRule* rule)
   {
 
-    sass::string ns(node->ns());
-    sass::string url(node->url());
-    sass::string prev(node->prev());
-    bool hasWith(node->hasLocalWith());
+    sass::string ns(rule->ns());
+    sass::string url(rule->url());
+    sass::string prev(rule->prev());
+    bool hasWith(rule->hasLocalWith());
 
-    BackTrace trace(node->pstate(), Strings::useRule, false);
+    BackTrace trace(rule->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
-    if (udbg) std::cerr << "Visit use rule '" << node->url() << "' "
-      << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
+    if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
+      << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
     // The show or hide config also hides these
-    WithConfig wconfig(compiler, node->config(), node->hasLocalWith());
+    WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith());
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || node->hasLocalWith());
+      compiler.implicitWithConfig || rule->hasLocalWith());
 
     VarRefs* mframe(compiler.getCurrentModule());
 
-    if (node->needsLoading()) {
-      if (Root* module = resolveUseRule(node)) {
-        node->root(module);
-        node->needsLoading(false);
+    if (rule->needsLoading()) {
+      if (Root* module = resolveUseRule(rule)) {
+        rule->root(module);
+        rule->needsLoading(false);
       }
       else {
 
-        if (node->hasLocalWith() && compiler.implicitWithConfig) {
+        if (rule->hasLocalWith() && compiler.implicitWithConfig) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -1016,18 +1016,18 @@ namespace Sass {
       }
     }
 
-    if (node->root()) {
+    if (rule->root()) {
 
-      Root* root = node->root();
+      Root* root = rule->root();
 
       if (!root->isCompiled) {
 
         compileModule(root);
-        if (udbg) std::cerr << "Compiled use rule '" << node->url() << "'\n";
+        if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
 
         for (auto var : mframe->varIdxs) {
           ValueObj& slot(compiler.varRoot.getModVar(var.second));
-          if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, node->pstate());
+          if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, rule->pstate());
         }
 
         insertModule(root);
@@ -1037,12 +1037,12 @@ namespace Sass {
 
       root->exposing = pudding(root, ns == "*", mframe);
 
-      if (node->ns().empty()) {
+      if (rule->ns().empty()) {
         root->exposing->module = root;
         mframe->fwdGlobal55.push_back(root->exposing);
       }
       else {
-        mframe->fwdModule55[node->ns()] =
+        mframe->fwdModule55[rule->ns()] =
         { root->exposing, root };
       }
 
@@ -1055,28 +1055,28 @@ namespace Sass {
     //   "@use rules not yet supported in LibSass!");
   }
 
-  Value* Eval::visitForwardRule(ForwardRule* node)
+  Value* Eval::visitForwardRule(ForwardRule* rule)
   {
 
-    BackTrace trace(node->pstate(), Strings::forwardRule, false);
+    BackTrace trace(rule->pstate(), Strings::forwardRule, false);
     callStackFrame frame333(logger456, trace);
 
-    if (udbg) std::cerr << "Visit forward rule '" << node->url() << "' "
-      << node->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
+    if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
+      << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
     // The show or hide config also hides these
-    WithConfig wconfig(compiler, node->config(), node->hasLocalWith(),
-      node->isShown(), node->isHidden(), node->toggledVariables(), node->prefix());
+    WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith(),
+      rule->isShown(), rule->isHidden(), rule->toggledVariables(), rule->prefix());
 
     VarRefs* mframe = compiler.getCurrentModule();
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || node->hasLocalWith());
+      compiler.implicitWithConfig || rule->hasLocalWith());
 
-    if (node->needsLoading()) {
-      if (auto sheet = resolveForwardRule(node)) {
-        node->root(sheet);
-        node->needsLoading(false);
+    if (rule->needsLoading()) {
+      if (auto sheet = resolveForwardRule(rule)) {
+        rule->root(sheet);
+        rule->needsLoading(false);
       }
       else {
         if (compiler.implicitWithConfig) {
@@ -1085,47 +1085,47 @@ namespace Sass {
             "can't be configured using \"with\".");
         }
 
-        // if (compiler.implicitWithConfig && node->hasLocalWith()) {
+        // if (compiler.implicitWithConfig && rule->hasLocalWith()) {
         //   throw Exception::ParserException(compiler,
         //     "This module was already loaded, so it "
         //     "can't be configured using \"with\".");
         // }
 
-        if (udbg) std::cerr << "Cached forward rule '" << node->url() << "'\n";
+        if (udbg) std::cerr << "Cached forward rule '" << rule->url() << "'\n";
 
         // File was loaded by somebody else first
-        if (node->root()) {
-          mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
-            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        if (rule->root()) {
+          mergeForwards(rule->root()->idxs, mframe->module, rule->isShown(), rule->isHidden(),
+            rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
         }
         return nullptr;
       }
     }
 
     // LocalOption<bool> scoped(compiler.implicitWithConfig,
-    //   compiler.implicitWithConfig || node->hasLocalWith());
+    //   compiler.implicitWithConfig || rule->hasLocalWith());
 
-    if (node->root()) {
+    if (rule->root()) {
 
-      Root* root = node->root();
+      Root* root = rule->root();
 
       if (root->isCompiled) {
-        // if (node->hasLocalWith() || compiler.implicitWithConfig) {
+        // if (rule->hasLocalWith() || compiler.implicitWithConfig) {
         //   throw Exception::RuntimeException(compiler,
         //     "This module was already loaded, so it "
         //     "can't be configured using \"with\".");
         // }
         // Must release some scope first
-        if (node->root()) {
-          mergeForwards(node->root()->idxs, mframe->module, node->isShown(), node->isHidden(),
-            node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+        if (rule->root()) {
+          mergeForwards(rule->root()->idxs, mframe->module, rule->isShown(), rule->isHidden(),
+            rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
         }
         return nullptr;
       }
 
-      compileModule(node->root());
+      compileModule(rule->root());
 
-      if (udbg) std::cerr << "Compiled forward rule '" << node->url() << "'\n";
+      if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
 
 
       insertModule(root);
@@ -1135,9 +1135,9 @@ namespace Sass {
     }
 
     // Must release some scope first
-    if (node->root()) {
-      mergeForwards(node->root()->idxs, compiler.currentRoot, node->isShown(), node->isHidden(),
-        node->prefix(), node->toggledVariables(), node->toggledCallables(), compiler);
+    if (rule->root()) {
+      mergeForwards(rule->root()->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
+        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
     }
 
     wconfig.finalize();
