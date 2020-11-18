@@ -885,6 +885,46 @@ namespace Sass {
 
   }
 
+  void Eval::insertModule(Moduled* module)
+  {
+    // Nowhere to append to, exit
+    if (current == nullptr) return;
+    // Nothing to be added yet? Error?
+    if (module->loaded == nullptr) return;
+    // The children to be added to the document
+    auto& children(module->loaded->elements());
+    // Check if we have any parent
+    // Meaning we append to the root
+    if (!current->parent()) {
+      auto& target(current->elements());
+      target.insert(target.end(),
+        children.begin(),
+        children.end());
+      return;
+    }
+    // Process all children to be added
+    // Each one needs to be interweaved
+    for (auto child : children) {
+      auto css = child->isaCssStyleRule();
+      auto parent = current->isaCssStyleRule();
+      if (css && parent) {
+        for (auto inner : css->elements()) {
+          auto copy = SASS_MEMORY_COPY(css->selector());
+          for (ComplexSelector* selector : copy->elements()) {
+            selector->chroots(false);
+          }
+          SelectorListObj resolved = copy->resolveParentSelectors(
+            parent->selector(), compiler, true);
+          current->parent()->append(SASS_MEMORY_NEW(CssStyleRule,
+            css->pstate(), current, resolved, { inner }));
+        }
+      }
+      else {
+        current->append(child);
+      }
+    }
+  }
+
   Value* Eval::visitUseRule(UseRule* node)
   {
 
@@ -979,18 +1019,19 @@ namespace Sass {
       EnvScope scoped2(compiler.varRoot, idxs);
 
       ImportStackFrame iframe(compiler, root->import);
+
+      selectorStack.push_back(nullptr);
       for (auto child : root->elements()) {
         child->accept(this);
       }
+      selectorStack.pop_back();
 
       if (udbg) std::cerr << "Compiled use rule '" << node->url() << "'\n";
 
       // compiler.import_stack.pop_back();
       current = oldCurrent;
 
-      for (auto child : root->loaded->elements()) {
-        if (current) current->append(child);
-      }
+      insertModule(root);
 
       root->isLoading = false;
 
@@ -1095,24 +1136,38 @@ namespace Sass {
 
       node->root()->isActive = true;
       node->root()->isLoading = true;
-      ImportStackFrame iframe(compiler, root->import);
+      root->loaded = current;
+      root->loaded = SASS_MEMORY_NEW(CssStyleRule,
+        root->pstate(), nullptr, selectorStack.back());
+      auto oldCurrent = current;
+      current = root->loaded;
 
-      // For a forward within an import this can be wrong
-      // We should assign to variables in the parent ...
-      VarRefs* idxs = root->idxs;
-      //if (compiler.varRoot.stack.back()->isImport) idxs = nullptr;
-      EnvScope scoped2(compiler.varRoot, idxs);
       auto& currentRoot(compiler.currentRoot);
       LOCAL_PTR(Root, currentRoot, root);
+      VarRefs* idxs = root->idxs;
 
-      for (auto child : node->root()->elements()) {
+      VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+
+      EnvScope scoped2(compiler.varRoot, idxs);
+
+      ImportStackFrame iframe(compiler, root->import);
+
+      selectorStack.push_back(nullptr);
+      for (auto child : root->elements()) {
         child->accept(this);
       }
-      // compiler.import_stack.pop_back();
-      node->root()->isLoading = false;
-      node->root()->loaded = current;
+      selectorStack.pop_back();
 
       if (udbg) std::cerr << "Compiled forward rule '" << node->url() << "'\n";
+
+      // compiler.import_stack.pop_back();
+      current = oldCurrent;
+
+      insertModule(root);
+
+      root->isLoading = false;
+
+      // compiler.import_stack.pop_back();
 
     }
 
