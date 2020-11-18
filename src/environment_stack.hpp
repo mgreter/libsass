@@ -224,6 +224,10 @@ namespace Sass {
     Value* findVariable(const EnvKey& name) const;
     Value* getVariable(const EnvKey& name) const;
 
+    VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findVarIdx(const EnvKey& name) const;
+    VarRef getVarIdx(const EnvKey& name) const;
+
     bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
 
     // Find function only in local frame
