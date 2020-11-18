@@ -2906,22 +2906,22 @@ namespace Sass {
             //   "Variable namespaces not supported yet!");
 
         // First search in forwarded modules
-            VarRefs* frame(context.varRoot.stack.back()->getModule23());
-            auto it = frame->fwdModule55.find(plain);
-            if (it != frame->fwdModule55.end()) {
-              VarRefs* refs = it->second.first;
-              auto in = refs->varIdxs.find(name);
-              if (in != refs->varIdxs.end()) {
-                if (isPrivate(name)) {
-                  context.addFinalStackTrace(expression->pstate());
-                  throw Exception::ParserException(context,
-                    "Private members can't be accessed "
-                    "from outside their modules.");
-                }
-                uint32_t offset = in->second;
-                vidxs.push_back({ refs->varFrame, offset });
-              }
-            }
+            //VarRefs* frame(context.varRoot.stack.back()->getModule23());
+            //auto it = frame->fwdModule55.find(plain);
+            //if (it != frame->fwdModule55.end()) {
+            //  VarRefs* refs = it->second.first;
+            //  auto in = refs->varIdxs.find(name);
+            //  if (in != refs->varIdxs.end()) {
+            //    if (isPrivate(name)) {
+            //      context.addFinalStackTrace(expression->pstate());
+            //      throw Exception::ParserException(context,
+            //        "Private members can't be accessed "
+            //        "from outside their modules.");
+            //    }
+            //    uint32_t offset = in->second;
+            //    vidxs.push_back({ refs->varFrame, offset });
+            //  }
+            //}
             // else {
             //   SourceSpan state(scanner.relevantSpanFrom(start));
             //   context.addFinalStackTrace(state);
@@ -2969,19 +2969,19 @@ namespace Sass {
         scanner.relevantSpanFrom(start), itpl, args, inLoopDirective, name);
 
       // First search in forwarded modules
-      VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      auto it = frame->fwdModule55.find(ns);
-      if (it != frame->fwdModule55.end()) {
-        VarRefs* refs = it->second.first;
-        auto in = refs->fnIdxs.find(ident->value());
-        if (in != refs->fnIdxs.end()) {
-          // Pass this silently
-          if (!isPrivate(ident->value())) {
-            uint32_t offset = in->second;
-            fn->fidx({ refs->fnFrame, offset });
-          }
-        }
-      }
+      //VarRefs* frame(context.varRoot.stack.back()->getModule23());
+      //auto it = frame->fwdModule55.find(ns);
+      //if (it != frame->fwdModule55.end()) {
+      //  VarRefs* refs = it->second.first;
+      //  auto in = refs->fnIdxs.find(ident->value());
+      //  if (in != refs->fnIdxs.end()) {
+      //    // Pass this silently
+      //    if (!isPrivate(ident->value())) {
+      //      uint32_t offset = in->second;
+      //      fn->fidx({ refs->fnFrame, offset });
+      //    }
+      //  }
+      //}
       // else {
       //   SourceSpan state(scanner.relevantSpanFrom(start));
       //   context.addFinalStackTrace(state);
@@ -3004,30 +3004,30 @@ namespace Sass {
       sass::string name(identifier->getPlainString());
       if (!name.empty()) {
 
-        // Then search in global modules
-        auto pstate = scanner.relevantSpanFrom(start);
-        VarRefs* frame(context.varRoot.stack.back()->getModule23());
-        for (auto refs : frame->fwdGlobal55) {
-          auto in = refs->fnIdxs.find(name);
-          if (in != refs->fnIdxs.end()) {
-            // Pass this silently
-            if (!isPrivate(name)) {
-              uint32_t offset = in->second;
-              fn->fidx({ refs->fnFrame, offset });
-            }
-          }
-        }
-        // if (isPrivate(name)) {
-        //   context.addFinalStackTrace(pstate);
-        //   throw Exception::ParserException(context,
-        //     "Private functions can't be accessed "
-        //     "from outside their modules.");
-        // }
-
-        if (!fn->fidx().isValid()) {
-          // Try to get the function through the whole stack
-          fn->fidx(context.varRoot.stack.back()->getFunctionIdx(name));
-        }
+        //// Then search in global modules
+        //auto pstate = scanner.relevantSpanFrom(start);
+        //VarRefs* frame(context.varRoot.stack.back()->getModule23());
+        //for (auto refs : frame->fwdGlobal55) {
+        //  auto in = refs->fnIdxs.find(name);
+        //  if (in != refs->fnIdxs.end()) {
+        //    // Pass this silently
+        //    if (!isPrivate(name)) {
+        //      uint32_t offset = in->second;
+        //      fn->fidx({ refs->fnFrame, offset });
+        //    }
+        //  }
+        //}
+        //// if (isPrivate(name)) {
+        ////   context.addFinalStackTrace(pstate);
+        ////   throw Exception::ParserException(context,
+        ////     "Private functions can't be accessed "
+        ////     "from outside their modules.");
+        //// }
+        //
+        //if (!fn->fidx().isValid()) {
+        //  // Try to get the function through the whole stack
+        //  fn->fidx(context.varRoot.stack.back()->getFunctionIdx(name));
+        //}
 
       }
 

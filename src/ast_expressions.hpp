@@ -362,7 +362,7 @@ namespace Sass {
     ADD_CONSTREF(InterpolationObj, name);
 
     // The frame offset for the function
-    ADD_CONSTREF(VarRef, fidx);
+    ADD_CONSTREF(VarRef, fidx2);
 
     // Internal optimization flag
     ADD_CONSTREF(bool, selfAssign);

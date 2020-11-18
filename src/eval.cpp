@@ -977,15 +977,36 @@ namespace Sass {
   {
     CallableObj* function = node->function;
 
+    VarRef fidx;
+
+    if (node->fidx2().isValid()) {
+      function = &compiler.varRoot.getFunction(node->fidx2());
+      LOCAL_FLAG(inFunction, true);
+      return (*function)->execute(*this,
+        node->arguments(), node->pstate(),
+        node->selfAssign());
+    }
+
     if (function == nullptr) {
 
       if (node->ns().empty()) {
-        function = compiler.varRoot.findFunction(node->name()->getPlainString());
+        auto fidx = compiler.varRoot.findFnIdx(node->name()->getPlainString());
+        if (fidx != nullidx) {
+          function = &compiler.varRoot.getFunction(fidx);
+          node->fidx2(fidx);
+        }
       }
       else {
-        function = compiler.varRoot.findFunction(
+        //auto qwe = compiler.varRoot.findFunction(
+        //  node->name()->getPlainString(), node->ns()
+        //);
+        auto fidx = compiler.varRoot.findFnIdx(
           node->name()->getPlainString(), node->ns()
         );
+        if (fidx != nullidx) {
+          function = &compiler.varRoot.getFunction(fidx);
+          node->fidx2(fidx);
+        }
         if (function == nullptr) {
           if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name()->getPlainString())) {
             callStackFrame frame(traces, node->pstate());

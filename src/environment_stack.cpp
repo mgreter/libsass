@@ -940,8 +940,8 @@ namespace Sass {
           if (fidx != nullidx) return fidx;
         }
         if (Moduled* mod = it->second.second) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
+          auto fwd = mod->mergedFwdFn.find(name);
+          if (fwd != mod->mergedFwdFn.end()) {
             VarRef fidx{ 0xFFFFFFFF, fwd->second };
             CallableObj& fn = root.getFunction(fidx);
             if (fn != nullptr) return fidx;
