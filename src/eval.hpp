@@ -68,6 +68,7 @@ namespace Sass {
 
     void insertModule(Moduled* module);
     void compileModule(Root* module);
+    StyleSheet* loadModule(Compiler& compiler, Import* import, bool hasWith = false);
 
 
     /////////////////////////////////////////////////////////////////////////
