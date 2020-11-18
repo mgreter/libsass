@@ -267,54 +267,10 @@ namespace Sass {
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
     if (!ns.empty()) {
-      // auto pstate(scanner.relevantSpanFrom(start));
-      // context.addFinalStackTrace(pstate);
-      // throw Exception::ParserException(context,
-      //   "Variable namespaces not supported yet!");
-
-      auto it = module->fwdModule55.find(ns);
-      if (it != module->fwdModule55.end()) {
-        VarRefs* refs = it->second.first;
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-
-          if (name.isPrivate()) {
-            SourceSpan state(scanner.relevantSpanFrom(start));
-            context.addFinalStackTrace(state);
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-
-          uint32_t offset = in->second;
-          vidxs.push_back({ refs->varFrame, offset });
-        }
-      }
-
       if (vidxs.empty()) {
         VarRef vidx(module->getVariableIdx(name, true));
         if (!vidxs.empty()) vidxs.push_back(vidx);
       }
-
-    }
-    else {
-
-      // This only checks within the local frame
-      // Don't assign global if in another scope!
-      for (auto refs : frame->fwdGlobal55) {
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-          if (name.isPrivate()) {
-            context.addFinalStackTrace(pstate);
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          uint32_t offset = in->second;
-          vidxs.push_back({ refs->varFrame, offset });
-        }
-      }
-
     }
 
     auto pr = frame;
