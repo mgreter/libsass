@@ -36,6 +36,10 @@ namespace Sass {
 
     VarRefs* pudding(Moduled* root, bool intoRoot, VarRefs* modFrame);
 
+    // A pointer to the slot where we will assign to
+    // Used to optimize self-assignment in functions
+    ValueObj* assigne = nullptr;
+
     // The name of the current declaration parent. Used for BEM-
     // declaration blocks as in `div { prefix: { suffix: val; } }`;
     sass::string declarationName;

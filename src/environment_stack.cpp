@@ -483,7 +483,7 @@ namespace Sass {
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull()) {
         // if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
-        intVariables[vidx.offset] = value;
+        slot = value;
       }
       // else {
       //   if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
