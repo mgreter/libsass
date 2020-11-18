@@ -622,13 +622,13 @@ namespace Sass {
 
 
     // sass::string ns(rule->ns());
-    sass::string url(rule->url());
-    sass::string prev(rule->prev());
-    sass::string prefix(rule->prefix());
-    bool isShown(rule->isShown());
-    bool isHidden(rule->isHidden());
-    bool hasWith(rule->hasLocalWith());
-    auto config(rule->config());
+    // sass::string url(rule->url());
+    // sass::string prev(rule->prev());
+    // sass::string prefix(rule->prefix());
+    // bool isShown(rule->isShown());
+    // bool isHidden(rule->isHidden());
+    // bool hasWith(rule->hasLocalWith());
+    // auto config(rule->config());
 
     SourceSpan pstate(rule->pstate());
     const ImportRequest import(rule->url(), rule->prev());
@@ -682,15 +682,11 @@ namespace Sass {
   Root* Eval::resolveUseRule(UseRule* rule)
   {
 
+    // Deduct namespace from url
     sass::string ns(rule->ns());
     sass::string url(rule->url());
-    sass::string prev(rule->prev());
-    bool hasWith(rule->hasLocalWith());
-    auto config(rule->config());
 
-    const ImportRequest import(url, prev);
-    SourceSpan pstate = rule->pstate();
-    //callStackFrame frame(context, { pstate, Strings::useRule });
+    const ImportRequest import(rule->url(), rule->prev());
 
     bool hasCached = false;
 
@@ -713,12 +709,12 @@ namespace Sass {
 
     // Error if no file to import was found
     if (resolved.empty()) {
-      compiler.addFinalStackTrace(pstate);
+      compiler.addFinalStackTrace(rule->pstate());
       throw Exception::UnknwonImport(compiler);
     }
     // Error if multiple files to import were found
     else if (resolved.size() > 1) {
-      compiler.addFinalStackTrace(pstate);
+      compiler.addFinalStackTrace(rule->pstate());
       throw Exception::AmbiguousImports(compiler, resolved);
     }
 
@@ -756,8 +752,7 @@ namespace Sass {
     }
 
 
-    Root* root = sheet;
-    rule->root(root);
+    rule->root(sheet);
 
     rule->ns(ns == "*" ? "" : ns);
 
@@ -963,7 +958,7 @@ namespace Sass {
     LOCAL_PTR(Root, currentRoot, root);
     VarRefs* idxs = root->idxs;
 
-    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+    VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
 
     EnvScope scoped2(compiler.varRoot, idxs);
 
@@ -977,15 +972,15 @@ namespace Sass {
 
     current = oldCurrent;
 
+    for (auto var : mframe->varIdxs) {
+      ValueObj& slot(compiler.varRoot.getModVar(var.second));
+      if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, root->pstate());
+    }
+
   }
 
   Value* Eval::visitUseRule(UseRule* rule)
   {
-
-    sass::string ns(rule->ns());
-    sass::string url(rule->url());
-    sass::string prev(rule->prev());
-    bool hasWith(rule->hasLocalWith());
 
     BackTrace trace(rule->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
@@ -1024,18 +1019,10 @@ namespace Sass {
 
         compileModule(root);
         if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
-
-        for (auto var : mframe->varIdxs) {
-          ValueObj& slot(compiler.varRoot.getModVar(var.second));
-          if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, rule->pstate());
-        }
-
         insertModule(root);
-
-
       }
 
-      root->exposing = pudding(root, ns == "*", mframe);
+      root->exposing = pudding(root, rule->ns().empty(), mframe);
 
       if (rule->ns().empty()) {
         root->exposing->module = root;
@@ -1049,10 +1036,7 @@ namespace Sass {
     }
 
     wconfig.finalize();
-
     return nullptr;
-    // throw Exception::RuntimeException(compiler,
-    //   "@use rules not yet supported in LibSass!");
   }
 
   Value* Eval::visitForwardRule(ForwardRule* rule)
@@ -1085,53 +1069,18 @@ namespace Sass {
             "can't be configured using \"with\".");
         }
 
-        // if (compiler.implicitWithConfig && rule->hasLocalWith()) {
-        //   throw Exception::ParserException(compiler,
-        //     "This module was already loaded, so it "
-        //     "can't be configured using \"with\".");
-        // }
-
         if (udbg) std::cerr << "Cached forward rule '" << rule->url() << "'\n";
 
-        // File was loaded by somebody else first
-        if (rule->root()) {
-          mergeForwards(rule->root()->idxs, mframe->module, rule->isShown(), rule->isHidden(),
-            rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
-        }
-        return nullptr;
       }
     }
 
-    // LocalOption<bool> scoped(compiler.implicitWithConfig,
-    //   compiler.implicitWithConfig || rule->hasLocalWith());
-
     if (rule->root()) {
-
       Root* root = rule->root();
-
-      if (root->isCompiled) {
-        // if (rule->hasLocalWith() || compiler.implicitWithConfig) {
-        //   throw Exception::RuntimeException(compiler,
-        //     "This module was already loaded, so it "
-        //     "can't be configured using \"with\".");
-        // }
-        // Must release some scope first
-        if (rule->root()) {
-          mergeForwards(rule->root()->idxs, mframe->module, rule->isShown(), rule->isHidden(),
-            rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
-        }
-        return nullptr;
+      if (!root->isCompiled) {
+        compileModule(rule->root());
+        if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
+        insertModule(root);
       }
-
-      compileModule(rule->root());
-
-      if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
-
-
-      insertModule(root);
-
-      // compiler.import_stack.pop_back();
-
     }
 
     // Must release some scope first
@@ -1256,11 +1205,7 @@ namespace Sass {
     rule->url(url);
     rule->config(config);
     rule->prev(scanner.sourceUrl);
-#ifndef SassEagerUseParsing
     rule->needsLoading(true);
-#else
-    rule = resolveUseRule(rule);
-#endif
     return rule.detach();
   }
 
@@ -1553,13 +1498,7 @@ namespace Sass {
     rule->prefix(prefix);
     rule->prev(scanner.sourceUrl);
     rule->hasLocalWith(hasWith);
-
-#ifndef SassEagerForwardParsing
     rule->needsLoading(true);
-#else
-    rule = resolveForwardRule(rule);
-#endif
-
     return rule.detach();
   }
 
