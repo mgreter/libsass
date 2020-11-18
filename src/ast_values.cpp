@@ -1015,12 +1015,7 @@ namespace Sass {
     if (const Number* nr = other->isaNumber()) {
       return operate(div, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::dividedBy(other, logger, pstate);
-    logger.addFinalStackTrace(pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " / " + other->inspect() + "\".",
-      logger, pstate);
+    return Value::dividedBy(other, logger, pstate);
   }
   // EO dividedBy
 
