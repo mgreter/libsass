@@ -982,9 +982,10 @@ namespace Sass {
       if (asd != nullptr) function = *asd;
     }
     else {
-      function = compiler.varRoot.findFunction(
+      auto asd = compiler.varRoot.findFunction(
         node->name()->getPlainString(), node->ns()
       );
+      function = asd ? *asd : nullptr;
       if (function == nullptr) {
         if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name()->getPlainString())) {
           callStackFrame frame(traces, node->pstate());
