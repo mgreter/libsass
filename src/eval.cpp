@@ -984,7 +984,7 @@ namespace Sass {
         auto fidx = compiler.varRoot.findFnIdx(node->name()->getPlainString());
         if (fidx != nullidx) {
           function = &compiler.varRoot.getFunction(fidx);
-          node->fidx2(fidx);
+          /* if (!node->withinLoop()) */ node->fidx2(fidx);
         }
       }
       else {
@@ -993,7 +993,7 @@ namespace Sass {
         );
         if (fidx != nullidx) {
           function = &compiler.varRoot.getFunction(fidx);
-          node->fidx2(fidx);
+          /* if (!node->withinLoop()) */ node->fidx2(fidx);
         }
         if (function == nullptr) {
           if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name()->getPlainString())) {
