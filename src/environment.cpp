@@ -253,25 +253,18 @@ namespace Sass {
       context.varRoot.stack.back();
     // As long as we are not in a loop construct, we
     // can utilize full static variable optimizations.
-    VarRef vidx(inLoopDirective ?
-      frame->getLocalVariableIdx(name) :
-      frame->getVariableIdx(name));
-    // Check if we found a local variable to use
-    if (vidx.isValid()) has_local = true;
-    // Otherwise we must create a new local variable
-
-    sass::vector<VarRef> vidxs;
-
-    if (vidx.isValid()) vidxs.push_back(vidx);
+    //VarRef vidx(inLoopDirective ?
+    //  frame->getLocalVariableIdx(name) :
+    //  frame->getVariableIdx(name));
+    //// Check if we found a local variable to use
+    //if (vidx.isValid()) has_local = true;
+    //// Otherwise we must create a new local variable
+    //
+    //sass::vector<VarRef> vidxs;
+    //
+    //if (vidx.isValid()) vidxs.push_back(vidx);
     VarRefs* module(context.varRoot.stack.back()->getModule23());
     SourceSpan pstate(scanner.relevantSpanFrom(start));
-
-    if (!ns.empty()) {
-      if (vidxs.empty()) {
-        VarRef vidx(module->getVariableIdx(name, true));
-        if (!vidxs.empty()) vidxs.push_back(vidx);
-      }
-    }
 
     auto pr = frame;
     while (pr->isImport) pr = pr->pscope;
@@ -299,54 +292,30 @@ namespace Sass {
 
     // Check if we have a configuration
 
-    bool hasVar = false;
-    VarRef vidx2;
-
-    if (vidxs.empty() && ns.empty()) {
+    if (ns.empty()) {
 
       // IF we are semi-global and parent is root
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
+      bool hasVar = false;
       auto chroot = frame;
-
-      if (global) {
-        while (chroot->pscope) {
-          chroot = chroot->pscope;
-        }
-        pr = chroot;
-      }
-
-      while (chroot->permeable && chroot->pscope) {
-        // Check if this frame contains the variable
-        if (chroot->pscope->varIdxs.count(name)) {
-          pr = chroot->pscope;
+      while (chroot) {
+        if (chroot->varIdxs.count(name)) {
           hasVar = true;
           break;
         }
-        chroot = chroot->pscope;
+        if (chroot->isImport || chroot->permeable) {
+          chroot = chroot->pscope;
+        }
+        else {
+          break;
+        }
       }
 
-      // Also skip if on global scope?
-      // Not if we have one forwarded!
       if (!hasVar) {
-
-        // Skip if we create new global that already exists in the stack
-
-        auto qwe = frame;
-        while (qwe) {
-
-          if (qwe->varIdxs.count(name)) {
-            hasVar = true;
-            break;
-          }
-          if (!qwe->isImport && !qwe->permeable) break;
-          qwe = qwe->pscope;
-        }
-        if (!hasVar) {
-          pr->createLexicalVar(name);
-        }
-
+        frame->createLexicalVar(name);
       }
+
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
