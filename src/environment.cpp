@@ -246,30 +246,30 @@ namespace Sass {
 
     expectStatementSeparator("variable declaration");
 
-    bool has_local = false;
     // Skip to optional global scope
     VarRefs* frame = global ?
       context.varRoot.stack.front() :
       context.varRoot.stack.back();
-    // As long as we are not in a loop construct, we
-    // can utilize full static variable optimizations.
-    //VarRef vidx(inLoopDirective ?
-    //  frame->getLocalVariableIdx(name) :
-    //  frame->getVariableIdx(name));
-    //// Check if we found a local variable to use
-    //if (vidx.isValid()) has_local = true;
-    //// Otherwise we must create a new local variable
-    //
-    //sass::vector<VarRef> vidxs;
-    //
-    //if (vidx.isValid()) vidxs.push_back(vidx);
-    VarRefs* module(context.varRoot.stack.back()->getModule23());
+
+    VarRefs* module(context.getCurrentModule());
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
-    auto pr = frame;
-    while (pr->isImport) pr = pr->pscope;
+    bool hasVar = false;
+    auto chroot = frame;
+    while (chroot) {
+      if (chroot->varIdxs.count(name)) {
+        hasVar = true;
+        break;
+      }
+      if (chroot->isImport || chroot->permeable) {
+        chroot = chroot->pscope;
+      }
+      else {
+        break;
+      }
+    }
 
-    if (pr->varFrame == 0xFFFFFFFF) {
+    if (chroot->varFrame == 0xFFFFFFFF) {
 
       // Assign a default
       if (guarded && ns.empty()) {
@@ -297,21 +297,6 @@ namespace Sass {
       // IF we are semi-global and parent is root
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
-      bool hasVar = false;
-      auto chroot = frame;
-      while (chroot) {
-        if (chroot->varIdxs.count(name)) {
-          hasVar = true;
-          break;
-        }
-        if (chroot->isImport || chroot->permeable) {
-          chroot = chroot->pscope;
-        }
-        else {
-          break;
-        }
-      }
-
       if (!hasVar) {
         frame->createLexicalVar(name);
       }
