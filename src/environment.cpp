@@ -257,9 +257,11 @@ namespace Sass {
     bool hasVar = false;
     auto chroot = frame;
     while (chroot) {
-      if (chroot->varIdxs.count(name)) {
-        hasVar = true;
-        break;
+      if (ns.empty()) {
+        if (chroot->varIdxs.count(name)) {
+          hasVar = true;
+          break;
+        }
       }
       if (chroot->isImport || chroot->permeable) {
         chroot = chroot->pscope;
