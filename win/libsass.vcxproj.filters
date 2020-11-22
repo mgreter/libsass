@@ -21,22 +21,37 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/base.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h">
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/compiler.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/enums.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/error.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/import.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/lists.h">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/traces.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/values.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/version.h">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -222,6 +222,7 @@ namespace Sass {
     MediaRule(
       SourceSpan&& pstate,
       Interpolation* query,
+      VarRefs* idxs,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -244,6 +245,7 @@ namespace Sass {
       SourceSpan&& pstate,
       Interpolation* name,
       Interpolation* value,
+      VarRefs* idxs,
       bool is_childless = true,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
@@ -277,7 +279,7 @@ namespace Sass {
   class IfRule final : public ParentStatement
   {
     // Variables for children scope
-    ADD_PROPERTY(VarRefs*, idxs);
+    // ADD_PROPERTY(VarRefs*, idxs);
     // Predicate is optional, which indicates an else block.
     // In this case further `alternatives` are simply ignored.
     ADD_CONSTREF(ExpressionObj, predicate);

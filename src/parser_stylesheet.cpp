@@ -1406,10 +1406,11 @@ namespace Sass {
   // [start] should point before the `@`.
   MediaRule* StylesheetParser::readMediaRule(Offset start)
   {
+    EnvFrame local(context, false);
     InterpolationObj query = readMediaQueryList();
     return withChildren<MediaRule>(
       &StylesheetParser::readChildStatement,
-      start, query);
+      start, query, local.idxs);
   }
 
 
@@ -1423,6 +1424,7 @@ namespace Sass {
     Offset valueStart(scanner.offset);
     InterpolationBuffer buffer(scanner);
     bool needsDeprecationWarning = false;
+    EnvFrame local(context, true);
 
     while (true) {
 
@@ -1489,7 +1491,7 @@ namespace Sass {
 
     AtRule* atRule = withChildren<AtRule>(
       &StylesheetParser::readChildStatement,
-      start, name, value, false);
+      start, name, value, local.idxs, false);
 
     if (needsDeprecationWarning) {
 
@@ -1568,6 +1570,7 @@ namespace Sass {
   AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name)
   {
     LOCAL_FLAG(inUnknownAtRule, true);
+    EnvFrame local(context, false);
 
     InterpolationObj value;
     uint8_t next = scanner.peekChar();
@@ -1578,12 +1581,12 @@ namespace Sass {
     if (lookingAtChildren()) {
       return withChildren<AtRule>(
         &StylesheetParser::readChildStatement,
-        start, name, value, false);
+        start, name, value, local.idxs, false);
     }
     expectStatementSeparator();
     return SASS_MEMORY_NEW(AtRule,
       scanner.relevantSpanFrom(start),
-      name, value, true);
+      name, value, local.idxs, true);
   }
   // EO readAnyAtRule
 

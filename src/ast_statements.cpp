@@ -176,7 +176,8 @@ namespace Sass {
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
+      std::move(children),
+      nullptr),
     name_(name),
     value_(value),
     is_custom_property_(is_custom_property)
@@ -241,10 +242,12 @@ namespace Sass {
   MediaRule::MediaRule(
     SourceSpan&& pstate,
     Interpolation* query,
+    VarRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
+      std::move(children),
+      idxs),
     query_(query)
   {}
 
@@ -255,11 +258,13 @@ namespace Sass {
     SourceSpan&& pstate,
     Interpolation* name,
     Interpolation* value,
+    VarRefs* idxs,
     bool isChildless,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
+      std::move(children),
+      idxs),
     name_(name),
     value_(value),
     isChildless_(isChildless)
@@ -291,8 +296,8 @@ namespace Sass {
     IfRule* alternative) :
     ParentStatement(
       std::move(pstate),
-      std::move(children)),
-    idxs_(idxs),
+      std::move(children),
+      idxs),
     predicate_(predicate),
     alternative_(alternative)
   {}

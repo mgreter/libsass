@@ -1654,6 +1654,8 @@ namespace Sass {
       return nullptr;
     }
 
+    EnvScope scoped(compiler.varRoot, node->idxs());
+
     sass::string normalized(Util::unvendor(name->text()));
     bool isKeyframe = normalized == "keyframes";
     LOCAL_FLAG(inUnknownAtRule, !isKeyframe);
@@ -1703,6 +1705,7 @@ namespace Sass {
     sass::string str_mq;
     const SourceSpan& state = node->query() ?
       node->query()->pstate() : node->pstate();
+    EnvScope scoped(compiler.varRoot, node->idxs());
     if (node->query()) {
       str_mq = acceptInterpolation(node->query(), false);
     }

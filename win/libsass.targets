@@ -2,12 +2,17 @@
   <ItemGroup Label="LibSass Includes">
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/base.h" />
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/compiler.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/enums.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/error.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/fwdecl.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/import.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/lists.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/traces.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/values.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/version.h" />
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/context.h" />
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass/function.h" />
   </ItemGroup>
   <ItemGroup Label="LibSass Headers">
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast.hpp" />
