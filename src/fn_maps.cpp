@@ -414,7 +414,7 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
       {
-        Module& module(ctx.createModule("map"));
+        BuiltInMod& module(ctx.createModule("map"));
 
         module.addFunction(key_set, ctx.createBuiltInOverloadFns(key_map_set, {
           std::make_pair("$map, $key, $value", fnMapSetThreeArgs),

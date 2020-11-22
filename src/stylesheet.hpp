@@ -20,7 +20,7 @@ namespace Sass {
     bool isCompiled = false;
 
     // Modules that this module uses.
-    // List<Module> get upstream;
+    // List<BuiltInMod> get upstream;
 
     // The module's variables.
     // Map<String, Value> get variables;
@@ -54,7 +54,7 @@ namespace Sass {
 
   };
 
-  class Module
+  class BuiltInMod
   {
   public:
     VarRefs* idxs;
@@ -62,7 +62,7 @@ namespace Sass {
     void addFunction(const EnvKey& name, uint32_t offset);
     void addVariable(const EnvKey& name, uint32_t offset);
     void addMixin(const EnvKey& name, uint32_t offset);
-    Module(EnvRoot& root);
+    BuiltInMod(EnvRoot& root);
   };
 
   // parsed stylesheet from loaded resource

@@ -1548,7 +1548,7 @@ namespace Sass {
         ctx.exposeFunction(key_alpha, idx_alpha);
         ctx.exposeFunction(key_opacity, idx_opacity_loose);
 
-        Module& module(ctx.createModule("color"));
+        BuiltInMod& module(ctx.createModule("color"));
         module.addFunction(key_rgb, idx_rgb_strict);
         module.addFunction(key_rgba, idx_rgba_strict);
         module.addFunction(key_hsl, idx_hsl_strict);

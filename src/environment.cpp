@@ -794,7 +794,7 @@ namespace Sass {
       // Return cached stylesheet
       return it->second;
     }
-    // Module is created within a new scope
+    // BuiltInMod is created within a new scope
     EnvFrame local(compiler, false, true); 
     // eval.selectorStack.push_back(nullptr);
     ImportStackFrame iframe(compiler, loaded);
@@ -1019,7 +1019,7 @@ namespace Sass {
       sass::string name(url.substr(5));
       if (ns.empty()) ns = name;
 
-      Module* module(context.getModule(name));
+      BuiltInMod* module(context.getModule(name));
 
       if (module == nullptr) {
         context.addFinalStackTrace(rule->pstate());
@@ -1339,7 +1339,7 @@ namespace Sass {
 
       sass::string name(url.substr(5));
       // if (prefix.empty()) prefix = name; // Must not happen!
-      if (Module* module = context.getModule(name)) {
+      if (BuiltInMod* module = context.getModule(name)) {
 
         mergeForwards(module->idxs, context.currentRoot, isShown, isHidden,
           prefix, toggledVariables, toggledCallables, context);

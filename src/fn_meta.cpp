@@ -439,7 +439,7 @@ namespace Sass {
       void registerFunctions(Compiler& compiler)
 	    {
 
-        Module& module(compiler.createModule("meta"));
+        BuiltInMod& module(compiler.createModule("meta"));
 
         // ToDo: dart-sass keeps them on the local environment scope, see below:
         // These functions are defined in the context of the evaluator because

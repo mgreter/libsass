@@ -236,7 +236,7 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-        Module& module(ctx.createModule("color"));
+        BuiltInMod& module(ctx.createModule("color"));
 
         module.addFunction(key_length, ctx.registerBuiltInFunction(key_length, "$list", length));
         module.addFunction(key_nth, ctx.registerBuiltInFunction(key_nth, "$list, $n", nth));

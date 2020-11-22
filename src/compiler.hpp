@@ -23,6 +23,11 @@ namespace Sass {
 
   public:
 
+    VarRefs* getCurrentFrame() const {
+      if (varRoot.stack.empty()) return nullptr;
+      return varRoot.stack.back();
+    }
+
     VarRefs* getCurrentModule() const {
       if (varRoot.stack.empty()) return nullptr;
       auto current = varRoot.stack.back();
@@ -33,22 +38,22 @@ namespace Sass {
       return current;
     }
 
-    EnvKeyMap<Module> modules;
+    EnvKeyMap<BuiltInMod> modules;
 
-    Module& createModule(const sass::string& name) {
+    BuiltInMod& createModule(const sass::string& name) {
       auto it = modules.find(name);
       if (it != modules.end()) {
         return it->second;
       }
       auto kv = std::make_pair(
-        name, Module{ varRoot });
+        name, BuiltInMod{ varRoot });
       modules.insert(kv);
       it = modules.find(name);
       // ToDo: fix this!
       return it->second;
     }
 
-    Module* getModule(const sass::string& name) {
+    BuiltInMod* getModule(const sass::string& name) {
       auto it = modules.find(name);
       if (it == modules.end()) return nullptr;
       return &it->second;

@@ -421,7 +421,7 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
-        Module& module(ctx.createModule("math"));
+        BuiltInMod& module(ctx.createModule("math"));
         module.addVariable(key_e, ctx.createBuiltInVariable(key_e,
           SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
             2.71828182845904523536028747135266249775724709369995)));

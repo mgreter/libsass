@@ -173,22 +173,22 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void Module::addFunction(const EnvKey& name, uint32_t offset)
+  void BuiltInMod::addFunction(const EnvKey& name, uint32_t offset)
   {
     idxs->fnIdxs[name] = offset;
   }
 
-  void Module::addVariable(const EnvKey& name, uint32_t offset)
+  void BuiltInMod::addVariable(const EnvKey& name, uint32_t offset)
   {
     idxs->varIdxs[name] = offset;
   }
 
-  void Module::addMixin(const EnvKey& name, uint32_t offset)
+  void BuiltInMod::addMixin(const EnvKey& name, uint32_t offset)
   {
     idxs->mixIdxs[name] = offset;
   }
 
-  Module::Module(EnvRoot& root) :
+  BuiltInMod::BuiltInMod(EnvRoot& root) :
     idxs(new VarRefs(
       root,
       nullptr,
