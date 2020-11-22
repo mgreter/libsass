@@ -1182,6 +1182,8 @@ namespace Sass {
 
     // inLoop optimization can bring 5%
     if (variable->vidx2().isValid()) {
+      // Only optimized inside this function yet!
+      // std::cerr << "Does this ever happen?\n";
       value = compiler.varRoot.getVariable(variable->vidx2());
     }
 
@@ -1192,6 +1194,7 @@ namespace Sass {
         auto vidx = compiler.varRoot.findVarIdx(variable->name());
         if (vidx != nullidx) {
           value = compiler.varRoot.getVariable(vidx);
+          // Find out when this is really safe to do!
           if (!variable->withinLoop()) variable->vidx2(vidx);
         }
         //value = compiler.varRoot.findVariable(variable->name());
@@ -1202,6 +1205,7 @@ namespace Sass {
         );
         if (vidx != nullidx) {
           value = compiler.varRoot.getVariable(vidx);
+          // Find out when this is really safe to do!
           if (!variable->withinLoop()) variable->vidx2(vidx);
         }
         if (value == nullptr) {

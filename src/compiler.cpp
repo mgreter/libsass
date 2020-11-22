@@ -31,7 +31,7 @@
 #include <excpt.h>
 #endif
 
-// #include "debugger.hpp"
+#include "debugger.hpp"
 
 struct SassImport;
 

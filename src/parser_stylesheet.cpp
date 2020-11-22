@@ -59,6 +59,8 @@ namespace Sass {
     // The parsed children
     StatementVector& children(root->elements());
 
+    // std::cerr << "Parsing " << scanner.sourceUrl << "\n";
+
     // Check seems a bit esoteric but works
     if (context.included_sources.size() == 1) {
       // Apply headers only on very first include

@@ -115,7 +115,7 @@ namespace Sass {
     // }
     if (varFrame == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intVariables.size();
-      // if (stkdbg) std::cerr << "Create global variable " << name.orig() << " at " << offset << "\n";
+      if (stkdbg) std::cerr << "Create global variable " << name.orig() << " at " << offset << "\n";
       root.intVariables.resize(offset + 1);
       //root.intVariables[offset] = SASS_MEMORY_NEW(Null,
       //  SourceSpan::tmp("null"));
@@ -129,7 +129,7 @@ namespace Sass {
 
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
-    // if (stkdbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
+    if (stkdbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
     // Remember the variable name
     varIdxs[name] = offset;
     // Return stack index reference
@@ -172,13 +172,13 @@ namespace Sass {
   {
     auto current = this;
     // Skip over all imports
-    while (current->isImport) {
-      current = current->pscope;
-    }
-    if (current->isCompiled) {
-      // throw "Can't create on active frame";
-      root.variables.push_back({});
-    }
+    //while (current->isImport) {
+    //  current = current->pscope;
+    //}
+    //if (current->isCompiled) {
+    //  // throw "Can't create on active frame";
+    //  root.variables.push_back({});
+    //}
     return current->createVariable(name);
   }
   // EO createFunction
@@ -301,9 +301,11 @@ namespace Sass {
   {
     VarRefs* current = this;
     while (current != nullptr) {
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        return { current->fnFrame, it->second };
+      if (!current->isImport) {
+        auto it = current->varIdxs.find(name);
+        if (it != current->varIdxs.end()) {
+          return { current->fnFrame, it->second };
+        }
       }
       current = current->getParent(passThrough);
     }
@@ -325,66 +327,6 @@ namespace Sass {
   // Update variable references and assignments
   void EnvRoot::finalizeScopes()
   {
-    return; // Disabled for now
-    // Process every scope ever seen
-    for (VarRefs* scope : scopes) {
-
-      // Process all variable expression (e.g. variables used in sass-scripts).
-      // Move up the tree to find possible parent scopes also containing this
-      // variable. On runtime we will return the first item that has a value set.
-      for (VariableExpression* variable : scope->variables)
-      {
-        VarRefs* current = scope;
-        const EnvKey& name(variable->name());
-        while (current != nullptr) {
-          // Find the variable name in current scope
-          auto found = current->varIdxs.find(name);
-          if (found != current->varIdxs.end()) {
-            // Append alternative
-            variable->vidxs()
-              .emplace_back(VarRef{
-                current->varFrame,
-                found->second
-              });
-          }
-          // Process the parent scope
-          if (current->isModule) break;
-          current = current->pscope;
-        }
-      }
-      // EO variables
-
-      // Process all variable assignment rules. Assignments can bleed up to the
-      // parent scope under certain conditions. We bleed up regular style rules,
-      // but not into the root scope itself (until it is semi global scope).
-      for (AssignRule* assignment : scope->assignments)
-      {
-        VarRefs* current = scope;
-        while (current != nullptr) {
-          // If current scope is rooted we don't look further, as we
-          // already created the local variable and assigned reference.
-          if (!current->permeable) break;
-          if (current->isModule) break;
-          // Start with the parent
-          current = current->pscope;
-          // Find the variable name in current scope
-          auto found = current->varIdxs
-            .find(assignment->variable());
-          if (found != current->varIdxs.end()) {
-            // Append another alternative
-            assignment->vidxs()
-              .emplace_back(VarRef{
-                current->varFrame,
-                found->second
-              });
-          }
-          // EO found current var
-        }
-        // EO while parent
-      }
-      // EO assignments
-
-    }
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -450,26 +392,26 @@ namespace Sass {
     }
     ValueObj& slot(intVariables[offset]);
     if (!guarded || !slot || slot->isaNull()) {
-      // if (stkdbg) std::cerr << "Set global variable " << offset
-      //   << " - " << value->inspect() << "\n";
+      if (stkdbg) std::cerr << "Set global variable " << offset
+        << " - " << value->inspect() << "\n";
       slot = value;
     }
-    // else {
-    //   if (stkdbg) std::cerr << "Guarded global variable " << offset
-    //     << " - " << value->inspect() << "\n";
-    // }
+    else {
+      if (stkdbg) std::cerr << "Guarded global variable " << offset
+        << " - " << value->inspect() << "\n";
+    }
   }
   void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
   {
-    // if (stkdbg) std::cerr << "Set global mixin " << offset
-    //    << " - " << callable->name() << "\n";
+    if (stkdbg) std::cerr << "Set global mixin " << offset
+       << " - " << callable->name() << "\n";
     CallableObj& slot(intMixin[offset]);
     if (!guarded || !slot) slot = callable;
   }
   void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
   {
-    // if (stkdbg) std::cerr << "Set global function " << offset
-    //    << " - " << callable->name() << "\n";
+    if (stkdbg) std::cerr << "Set global function " << offset
+       << " - " << callable->name() << "\n";
     CallableObj& slot(intFunction[offset]);
     if (!guarded || !slot) slot = callable;
   }
@@ -482,15 +424,15 @@ namespace Sass {
     if (vidx.frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull()) {
-        // if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
+        if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
         slot = value;
       }
-      // else {
-      //   if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
-      // }
+      else {
+        if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
+      }
     }
     else {
-      // if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
+      if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
       ValueObj& slot(variables[size_t(varFramePtr[vidx.frame]) + vidx.offset]);
       if (slot == nullptr || guarded == false) slot = value;
     }
@@ -503,12 +445,12 @@ namespace Sass {
   {
     if (frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[offset]);
-      // if (stkdbg) std::cerr << "Set global variable " << offset << " - " << value->inspect() << "\n";
+      if (stkdbg) std::cerr << "Set global variable " << offset << " - " << value->inspect() << "\n";
       if (!guarded || !slot || slot->isaNull())
         intVariables[offset] = value;
     }
     else {
-      // if (stkdbg) std::cerr << "Set variable " << frame << ":" << offset << " - " << value->inspect() << "\n";
+      if (stkdbg) std::cerr << "Set variable " << frame << ":" << offset << " - " << value->inspect() << "\n";
       ValueObj& slot(variables[size_t(varFramePtr[frame]) + offset]);
       if (!guarded || !slot || slot->isaNull()) slot = value;
     }
@@ -569,11 +511,13 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = root.getVariable(vidx);
-        if (value != nullptr) { return value; }
+      if (!current->isImport) {
+        auto it = current->varIdxs.find(name);
+        if (it != current->varIdxs.end()) {
+          const VarRef vidx{ current->varFrame, it->second };
+          ValueObj& value = root.getVariable(vidx);
+          if (value != nullptr) { return value; }
+        }
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->varIdxs.find(name);
@@ -610,11 +554,13 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = root.getVariable(vidx);
-        if (!value.isNull()) return vidx;
+      if (!current->isImport) {
+        auto it = current->varIdxs.find(name);
+        if (it != current->varIdxs.end()) {
+          const VarRef vidx{ current->varFrame, it->second };
+          ValueObj& value = root.getVariable(vidx);
+          if (!value.isNull()) return vidx;
+        }
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->varIdxs.find(name);
@@ -855,6 +801,7 @@ namespace Sass {
 
   Value* VarRefs::getVariable(const EnvKey& name) const
   {
+    if (!isImport) return nullptr;
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
       const VarRef vidx{ varFrame, it->second };
@@ -883,6 +830,7 @@ namespace Sass {
 
   VarRef VarRefs::getVarIdx(const EnvKey& name) const
   {
+    if (isImport) return nullidx;
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
       const VarRef vidx{ varFrame, it->second };
@@ -1316,6 +1264,11 @@ namespace Sass {
             // return vidx;
           }
         }
+      }
+
+      if (current->isImport) {
+        current = current->pscope;
+        continue;
       }
 
       auto it = current->varIdxs.find(name);

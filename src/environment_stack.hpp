@@ -323,6 +323,7 @@ namespace Sass {
     friend class EnvScope;
     friend class EnvFrame;
     friend class VarRefs;
+    friend class Eval;
 
     // Growable runtime stack (get offset by xxxFramePtr).
     // These vectors are the main stacks during runtime.

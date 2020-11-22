@@ -44,6 +44,8 @@ bool udbg = false;
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   // Import some namespaces
@@ -1155,9 +1157,32 @@ namespace Sass {
     if (ImportObj loaded = compiler.loadImport(resolved[0])) {
       // IsModule seems to have minor impacts here
       // IsImport vs permeable seems to be the same!?
+      auto vframe = compiler.getCurrentFrame();
       EnvFrame local(compiler, false, true, true); // Verified (import)
       ImportStackFrame iframe(compiler, loaded);
       Root* sheet = compiler.registerImport(loaded);
+
+
+      // Skip over all imports
+      while (vframe->isImport) {
+        vframe = vframe->pscope;
+      }
+
+      for (auto& var : sheet->idxs->varIdxs) {
+        auto it = vframe->varIdxs.find(var.first);
+        if (it == vframe->varIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+            compiler.varRoot.variables.push_back({});
+          }
+          // std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createVariable(var.first);
+        }
+
+      }
+
+      // debug_ast(sheet);
+
       compiler.varRoot.finalizeScopes();
       return sheet;
     }
