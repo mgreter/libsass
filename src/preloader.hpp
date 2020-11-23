@@ -28,6 +28,9 @@ namespace Sass {
     Root* root;
 
     // Alias into context
+    Root*& chroot77;
+
+    // Alias into context
     WithConfig*& wconfig;
 
     // Current module scope

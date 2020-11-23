@@ -53,8 +53,7 @@ namespace Sass {
     root->idxs = context.varRoot.stack.back();
     context.varRoot.stack.back()->module = root;
 
-    auto& currentRoot(context.currentRoot);
-    LOCAL_PTR(Root, currentRoot, root);
+    LOCAL_PTR(Root, chroot77, root);
 
     // The parsed children
     StatementVector& children(root->elements());

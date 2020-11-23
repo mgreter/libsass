@@ -27,6 +27,7 @@ namespace Sass {
   Eval::Eval(Compiler& compiler, Logger& logger, bool plainCss) :
     logger456(logger),
     compiler(compiler),
+    chroot77(compiler.chroot77),
     wconfig(compiler.wconfig),
     traces(logger),
     extender(
@@ -1473,8 +1474,7 @@ namespace Sass {
     LOCAL_PTR(CssParentNode, current, css);
     root->isCompiled = true;
 
-    auto& currentRoot(compiler.currentRoot);
-    LOCAL_PTR(Root, currentRoot, root);
+    LOCAL_PTR(Root, chroot77, root);
 
     ImportStackFrame iframe(compiler, root->import);
 

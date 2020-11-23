@@ -29,6 +29,9 @@ namespace Sass {
     BackTraces& traces;
 
     // Alias into context
+    Root*& chroot77;
+
+    // Alias into context
     WithConfig*& wconfig;
 
     // The extend handler

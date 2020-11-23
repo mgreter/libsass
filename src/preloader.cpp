@@ -14,7 +14,8 @@ namespace Sass {
   Preloader::Preloader(Eval& eval, Root* root) :
     eval(eval),
     root(root),
-    wconfig(eval.compiler.wconfig),
+    chroot77(eval.chroot77),
+    wconfig(eval.wconfig),
     module(root),
     idxs(root->idxs)
   {}

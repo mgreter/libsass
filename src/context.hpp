@@ -40,7 +40,7 @@ namespace Sass {
 
   public:
 
-    Root* currentRoot = nullptr;
+    Root* chroot77 = nullptr;
 
     WithConfig* wconfig = nullptr;
 

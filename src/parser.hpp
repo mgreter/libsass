@@ -31,6 +31,9 @@ namespace Sass {
     Compiler& context;
 
     // Alias into context
+    Root*& chroot77;
+
+    // Alias into context
     WithConfig*& wconfig;
 
     bool& implicitWithConfig;

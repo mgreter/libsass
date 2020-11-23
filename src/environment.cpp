@@ -970,8 +970,7 @@ namespace Sass {
     auto oldCurrent = current;
     current = root->loaded;
 
-    auto& currentRoot(compiler.currentRoot);
-    LOCAL_PTR(Root, currentRoot, root);
+    LOCAL_PTR(Root, chroot77, root);
     VarRefs* idxs = root->idxs;
 
     VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
@@ -1133,7 +1132,7 @@ namespace Sass {
 
     // Must release some scope first
     if (rule->root() && !rule->wasMerged()) {
-      mergeForwards(rule->root()->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
+      mergeForwards(rule->root()->idxs, chroot77, rule->isShown(), rule->isHidden(),
         rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
       rule->wasMerged(true);
     }
@@ -1449,8 +1448,7 @@ namespace Sass {
 
     VarRefs* refs = sheet->idxs;
 
-    auto& currentRoot(compiler.currentRoot);
-    LOCAL_PTR(Root, currentRoot, sheet);
+    LOCAL_PTR(Root, chroot77, sheet);
 
     // Imports are always executed again
     for (const StatementObj& item : sheet->elements()) {
@@ -1579,7 +1577,7 @@ namespace Sass {
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (BuiltInMod* module = context.getModule(name)) {
         if (!rule->wasMerged()) {
-          mergeForwards(module->idxs, context.currentRoot, isShown, isHidden,
+          mergeForwards(module->idxs, chroot77, isShown, isHidden,
             prefix, toggledVariables, toggledCallables, context);
           rule->wasMerged(true);
         }
