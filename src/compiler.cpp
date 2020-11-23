@@ -237,6 +237,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     Eval eval(*this, *this, plainCss);
 
     CssRootObj compiled = eval.acceptRoot(root); // 50%
+    // debug_ast(compiled);
 
     Extension unsatisfied;
     // check that all extends were used

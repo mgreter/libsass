@@ -1023,7 +1023,6 @@ namespace Sass {
 
     // Must release some scope first
     if (rule->root()) {
-      std::cerr << "MERGE FWD\n";
       mergeForwards(rule->root()->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
         rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
     }
@@ -1299,7 +1298,7 @@ namespace Sass {
 
     // Skip over all imports
     // We are doing it out of order
-    if (vframe) {
+    while (vframe) {
       // Merge it up through all imports
       for (auto& var : sheet->idxs->varIdxs) {
         auto it = vframe->varIdxs.find(var.first);
@@ -1339,8 +1338,8 @@ namespace Sass {
         }
       }
 
-      //if (!vframe->isImport) break;
-      //vframe = vframe->pscope;
+      if (!vframe->isImport) break;
+      vframe = vframe->pscope;
     }
 
 
