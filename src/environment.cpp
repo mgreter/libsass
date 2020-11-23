@@ -1468,6 +1468,10 @@ namespace Sass {
 
         WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
+
+        WithConfig*& pwconfig(compiler.wconfig);
+        LOCAL_PTR(WithConfig, pwconfig, &wconfig);
+
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
           if (hasWith) {
