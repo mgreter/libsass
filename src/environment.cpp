@@ -941,31 +941,19 @@ namespace Sass {
 
     VarRefs* mframe(compiler.getCurrentModule());
 
-    if (rule->needsLoading()) {
-      resolveUseRule(rule);
+    Root* root = resolveUseRule(rule);
+
+    if (root->isCompiled && rule->hasLocalWith()) {
+      throw Exception::ParserException(compiler,
+        "This module was already loaded, so it "
+        "can't be configured using \"with\".");
     }
 
-    if (rule->root()) {
+    compileModule(root);
+    if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
+    insertModule(root);
 
-      Root* root = rule->root();
-
-      if (!root->isCompiled) {
-
-        compileModule(root);
-        if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
-        insertModule(root);
-      }
-      else {
-        if (rule->hasLocalWith() && compiler.implicitWithConfig) {
-          throw Exception::ParserException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-      }
-
-      exposeUseRule(rule);
-
-    }
+    exposeUseRule(rule);
 
     if (!rule->wconfig()) return nullptr;
     rule->wconfig()->finalize(compiler);
