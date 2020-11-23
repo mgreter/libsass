@@ -33,7 +33,13 @@ namespace Sass {
     // Do nothing if we don't have any config
     // Since we are used as a stack RAI object
     // this mode is very useful to ease coding
+    if (!compiler.withConfigStack.empty()) {
+      parent = compiler.withConfigStack.back();
+    }
+
     if (!doRAII) return;
+
+
     // Read the list of config variables into
     // a map and error if items are duplicated
     for (auto cfgvar : configs) {
@@ -44,23 +50,11 @@ namespace Sass {
       // If the value is a default, we should look further
       // down the tree and only add it if not there yet
       if (cfgvar.isGuarded) {
-      // 
-      //   // Need the first unguarded or the last guarded
-      // 
-      ;
-      // Check if we have a non-default parent
-      if (auto pr = getCfgVar(cfgvar.name, true, false)) {
-        pr->wasUsed = true;
-      }
-      //     pr = getCfgVar(cfgvar.name, false);
-      //     std::cerr << "asdasd\n";
-      //   }
-      //   if (getCfgVar(cfgvar.name, false) == nullptr) {
-      //     config[cfgvar.name] = cfgvar;
-      //   }
-      // }
-      // else {
-      //   config[cfgvar.name] = cfgvar;
+        // Check if we have a non-default parent
+        if (auto pr = getCfgVar(cfgvar.name, true, false)) {
+          cfgvar.expression = pr->expression;
+          pr->wasUsed = true;
+        }
       }
       config[cfgvar.name] = cfgvar;
     }
@@ -126,6 +120,22 @@ namespace Sass {
       it += 1;
     }
     return nullptr;
+  }
+
+  Sass::WithConfigScope::WithConfigScope(
+    Compiler& compiler,
+    WithConfig* config) :
+    compiler(compiler),
+    config(config)
+  {
+    if (config == nullptr) return;
+    compiler.withConfigStack.push_back(config);
+  }
+
+  Sass::WithConfigScope::~WithConfigScope()
+  {
+    if (config == nullptr) return;
+    compiler.withConfigStack.pop_back();
   }
 
   /////////////////////////////////////////////////////////////////////////

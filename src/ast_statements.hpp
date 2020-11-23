@@ -52,6 +52,8 @@ namespace Sass {
     // Managed resource
     Compiler& compiler;
 
+    WithConfig* parent = nullptr;
+
     // Flag if we do RAI
     bool hasConfig = false;
     bool hasShowFilter = false;
@@ -82,6 +84,17 @@ namespace Sass {
     // Get value and mark it as used
     WithConfigVar* getCfgVar(EnvKey name, bool skipGuarded, bool skipNull);
 
+  };
+
+  class WithConfigScope
+  {
+    Compiler& compiler;
+    WithConfig* config;
+  public:
+    WithConfigScope(
+      Compiler& compiler,
+      WithConfig* config);
+    ~WithConfigScope();
   };
 
   /////////////////////////////////////////////////////////////////////////
