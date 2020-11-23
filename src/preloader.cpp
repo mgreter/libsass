@@ -51,6 +51,11 @@ namespace Sass {
 
   void Preloader::visitUseRule(UseRule* rule)
   {
+    callStackFrame frame(eval.compiler, {
+      rule->pstate(), Strings::useRule });
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+
     // May not be defined yet
     Module* mod = rule->module();
 
@@ -59,11 +64,6 @@ namespace Sass {
 
     // Seems already loaded?
     if (rule->root()) return;
-
-    callStackFrame frame(eval.compiler, {
-      rule->pstate(), Strings::useRule });
-
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     // Resolve final file to load
     const ImportRequest request(
@@ -113,65 +113,37 @@ namespace Sass {
       sheet = cached->second;
       rule->module(sheet);
       rule->root(sheet);
+      return;
     }
     else {
-      {
-        // Permeable seems to have minor negative impact!?
-        EnvFrame local(eval.compiler, false, true); // correct
-        sheet = eval.compiler.registerImport(loaded);
-        sheet->import = loaded;
-        rule->module(sheet);
-        rule->root(sheet);
-      }
-      {
-        if (sheet->empty()) return;
-        LOCAL_PTR(Root, module, sheet);
-        LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-        eval.compiler.varRoot.stack.push_back(sheet->idxs);
-        for (auto& it : sheet->elements()) it->accept(this);
-        eval.compiler.varRoot.stack.pop_back();
-      }
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(eval.compiler, false, true); // correct
+      sheet = eval.compiler.registerImport(loaded);
+      sheet->import = loaded;
     }
+    
+    rule->module(sheet);
+    rule->root(sheet);
 
-    if (rule->ns().empty()) {
-      idxs->fwdGlobal55.push_back(sheet->idxs);
-    }
-    else {
-      idxs->fwdModule55[rule->ns()] =
-      { sheet->idxs, sheet };
-    }
+return;
+    if (sheet->empty()) return;
+    LOCAL_PTR(Root, module, sheet);
+    LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+    eval.compiler.varRoot.stack.push_back(sheet->idxs);
+    for (auto it : sheet->elements()) it->accept(this);
+    eval.compiler.varRoot.stack.pop_back();
 
   }
 
   void Preloader::visitForwardRule(ForwardRule* rule)
   {
-    // May not be defined yet
-    Module* mod = rule->module();
-
-    // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn) {
-      if (rule->root() && !rule->wasMerged()) {
-        mergeForwards(rule->module()->idxs, module, rule->isShown(), rule->isHidden(),
-          rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
-        rule->wasMerged(true);
-      }
-      return;
-    }
-
-    // Seems already loaded?
-    if (rule->root()) {
-      if (rule->root() && !rule->wasMerged()) {
-        mergeForwards(rule->root()->idxs, module, rule->isShown(), rule->isHidden(),
-          rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
-        rule->wasMerged(true);
-      }
-      return;
-    }
-
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
 
     LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+
+    // May not be defined yet
+    Module* mod = rule->module();
 
     // Nothing to be done for built-ins
     if (mod && mod->isBuiltIn && !rule->wasMerged()) {
@@ -236,7 +208,6 @@ namespace Sass {
 
     rule->module(sheet);
     rule->root(sheet);
-
     {
       if (sheet->empty()) return;
       LOCAL_PTR(Root, module, sheet);
