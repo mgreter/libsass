@@ -943,15 +943,19 @@ namespace Sass {
 
     Root* root = resolveUseRule(rule);
 
-    if (root->isCompiled && rule->hasLocalWith()) {
-      throw Exception::ParserException(compiler,
-        "This module was already loaded, so it "
-        "can't be configured using \"with\".");
+    if (root->isCompiled) {
+      if (rule->hasLocalWith()) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
+      }
+    }
+    else {
+      compileModule(root);
+      if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
+      insertModule(root);
     }
 
-    compileModule(root);
-    if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
-    insertModule(root);
 
     exposeUseRule(rule);
 
