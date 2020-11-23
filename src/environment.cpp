@@ -909,58 +909,30 @@ namespace Sass {
   Value* Eval::visitUseRule(UseRule* rule)
   {
 
-    // May not be defined yet
-    Module* mod = rule->module();
-
-    // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn) {
-      exposeUseRule(rule);
-      return nullptr;
-    }
-
-    // Seems already loaded?
-    // if (rule->root()) {
-    //   exposeUseRule(rule);
-    //   return nullptr;
-    // }
-
-
     BackTrace trace(rule->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
       << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
-
-    // The show or hide config also hides these
-    // WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith());
-
-    LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || rule->hasLocalWith());
-
-    VarRefs* mframe(compiler.getCurrentModule());
-
-    Root* root = resolveUseRule(rule);
-
-    if (root->isCompiled) {
-      if (rule->hasLocalWith()) {
+    if (Root* root = resolveUseRule(rule)) {
+      if (!root->isCompiled) {
+        LocalOption<bool> scoped(compiler.implicitWithConfig,
+          compiler.implicitWithConfig || rule->hasLocalWith());
+        LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+        compileModule(root);
+        if (rule->wconfig()) rule->wconfig()->finalize(compiler);
+        if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
+        insertModule(root);
+      }
+      else if (rule->hasLocalWith()) {
         throw Exception::ParserException(compiler,
           "This module was already loaded, so it "
           "can't be configured using \"with\".");
       }
     }
-    else {
-      compileModule(root);
-      if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
-      insertModule(root);
-    }
-
 
     exposeUseRule(rule);
-
-    if (!rule->wconfig()) return nullptr;
-    rule->wconfig()->finalize(compiler);
     return nullptr;
   }
 

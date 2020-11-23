@@ -60,6 +60,7 @@ namespace Sass {
       rule->pstate(), Strings::useRule });
 
     Root* sheet = eval.resolveUseRule(rule);
+    // eval.exposeUseRule(rule); // five errs
 
 return;
 
