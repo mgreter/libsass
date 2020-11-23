@@ -13,7 +13,7 @@
 namespace Sass {
 
 
-  class Moduled
+  class Moduled : public Module
   {
   public:
 
@@ -39,7 +39,6 @@ namespace Sass {
     // Extender extender;
 
     // Forwarded items must be on internal scope
-    VarRefs* idxs = nullptr;
     VarRefs* exposing = nullptr;
 
     // All @forward rules get merged into these objects
@@ -52,6 +51,8 @@ namespace Sass {
 
     // The evaluated css tree
     CssParentNodeObj loaded = nullptr;
+
+    Moduled::Moduled() : Module(nullptr) {}
 
   };
 
@@ -67,13 +68,9 @@ namespace Sass {
     // It also has the input type (css vs sass) attached
     ImportObj import;
 
-    Root(const SourceSpan& pstate, size_t reserve = 0)
-      : AstNode(pstate), Vectorized<Statement>(reserve)
-    {}
+    Root(const SourceSpan& pstate, size_t reserve = 0);
 
-    Root(const SourceSpan& pstate, StatementVector&& vec)
-      : AstNode(pstate), Vectorized<Statement>(std::move(vec))
-    {}
+    Root(const SourceSpan& pstate, StatementVector&& vec);
 
   };
 
