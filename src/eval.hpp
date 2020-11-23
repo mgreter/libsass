@@ -22,6 +22,7 @@ namespace Sass {
   public:
 
     void exposeUseRule(UseRule* rule);
+    void exposeFwdRule(ForwardRule* rule);
 
     // Some references
     Logger& logger456;

@@ -993,37 +993,20 @@ namespace Sass {
       if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, root->pstate());
     }
 
-  }
+      }
 
-  Value* Eval::visitUseRule(UseRule* rule)
+
+  void Eval::exposeFwdRule(ForwardRule* rule)
   {
+    if (!rule->module()) return;
+    if (rule->wasMerged()) return;
+    rule->wasMerged(true);
 
-    BackTrace trace(rule->pstate(), Strings::useRule, false);
-    callStackFrame frame(logger456, trace);
+    mergeForwards(rule->module()->idxs, chroot77, rule->isShown(), rule->isHidden(),
+      rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
 
-    if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
-      << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
-
-    if (Root* root = resolveUseRule(rule)) {
-      if (!root->isCompiled) {
-        LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || rule->hasLocalWith());
-        LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
-        compileModule(root);
-        if (rule->wconfig()) rule->wconfig()->finalize(compiler);
-        if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
-        insertModule(root);
-      }
-      else if (rule->hasLocalWith()) {
-        throw Exception::ParserException(compiler,
-          "This module was already loaded, so it "
-          "can't be configured using \"with\".");
-      }
-    }
-
-    exposeUseRule(rule);
-    return nullptr;
   }
+
 
   void Eval::exposeUseRule(UseRule* rule)
   {
@@ -1083,6 +1066,36 @@ namespace Sass {
 
   }
 
+  Value* Eval::visitUseRule(UseRule* rule)
+  {
+
+    BackTrace trace(rule->pstate(), Strings::useRule, false);
+    callStackFrame frame(logger456, trace);
+
+    if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
+      << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
+
+    if (Root* root = resolveUseRule(rule)) {
+      if (!root->isCompiled) {
+        LocalOption<bool> scoped(compiler.implicitWithConfig,
+          compiler.implicitWithConfig || rule->hasLocalWith());
+        LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+        compileModule(root);
+        if (rule->wconfig()) rule->wconfig()->finalize(compiler);
+        if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
+        insertModule(root);
+      }
+      else if (rule->hasLocalWith()) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
+      }
+    }
+
+    exposeUseRule(rule);
+    return nullptr;
+  }
+
   Value* Eval::visitForwardRule(ForwardRule* rule)
   {
 
@@ -1092,54 +1105,24 @@ namespace Sass {
     if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
       << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
-    LocalOption<bool> scoped(compiler.implicitWithConfig,
-      compiler.implicitWithConfig || rule->hasLocalWith());
-
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
-
-    // Flag for dynamic modules vs builtins
-    if (rule->needsLoading()) {
-      if (auto sheet = resolveForwardRule(rule)) {
-        rule->root(sheet);
-        rule->needsLoading(false);
-      }
-      else {
-        if (compiler.implicitWithConfig) {
-          throw Exception::ParserException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-
-        if (udbg) std::cerr << "Cached forward rule '" << rule->url() << "'\n";
-
-      }
-    }
-
-    if (rule->root()) {
-      Root* root = rule->root();
+    if (Root* root = resolveForwardRule(rule)) {
       if (!root->isCompiled) {
-        compileModule(rule->root());
+        LocalOption<bool> scoped(compiler.implicitWithConfig,
+          compiler.implicitWithConfig || rule->hasLocalWith());
+        LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+        compileModule(root);
+        if (rule->wconfig()) rule->wconfig()->finalize(compiler);
         if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
         insertModule(root);
       }
-      else {
-        if (compiler.implicitWithConfig) {
-          throw Exception::ParserException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
+      else if (compiler.implicitWithConfig || rule->hasLocalWith()) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
       }
     }
 
-    // Must release some scope first
-    if (rule->root() && !rule->wasMerged()) {
-      mergeForwards(rule->root()->idxs, chroot77, rule->isShown(), rule->isHidden(),
-        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
-      rule->wasMerged(true);
-    }
-
-    if (!rule->wconfig()) return nullptr;
-    rule->wconfig()->finalize(compiler);
+    exposeFwdRule(rule);
     return nullptr;
   }
 
