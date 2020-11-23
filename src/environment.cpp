@@ -671,11 +671,8 @@ namespace Sass {
     auto cached = compiler.sheets.find(abspath);
     if (cached != compiler.sheets.end()) {
       sheet = cached->second;
-      // rule->module(sheet);
-      // rule->root(sheet);
     }
     else {
-
       if (!ns.empty()) {
         VarRefs* modFrame(compiler.getCurrentModule());
         if (modFrame->fwdModule55.count(ns)) {
@@ -945,19 +942,7 @@ namespace Sass {
     VarRefs* mframe(compiler.getCurrentModule());
 
     if (rule->needsLoading()) {
-      std::cerr << "===============================================\n";
-      if (Root* module = resolveUseRule(rule)) {
-        rule->root(module);
-        rule->needsLoading(false);
-      }
-      else {
-
-        if (rule->hasLocalWith() && compiler.implicitWithConfig) {
-          throw Exception::ParserException(compiler,
-            "This module was already loaded, so it "
-            "can't be configured using \"with\".");
-        }
-      }
+      resolveUseRule(rule);
     }
 
     if (rule->root()) {

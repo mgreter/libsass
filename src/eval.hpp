@@ -337,10 +337,10 @@ namespace Sass {
     Value* visitWarnRule(WarnRule* rule);
     Value* visitWhileRule(WhileRule* rule);
 
-
+  public:
     Root* resolveUseRule(UseRule* rule);
     Root* resolveForwardRule(ForwardRule* rule);
-
+  private:
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
