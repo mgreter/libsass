@@ -600,8 +600,6 @@ namespace Sass {
     ImportStackFrame iframe(compiler, loaded);
     rule->import(loaded);
 
-    rule->needsLoading(false);
-
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
@@ -609,12 +607,6 @@ namespace Sass {
       sheet = cached->second;
     }
     else {
-      // if (!ns.empty()) {
-      //   VarRefs* modFrame(compiler.getCurrentModule());
-      //   if (modFrame->fwdModule55.count(ns)) {
-      //     throw Exception::ModuleAlreadyKnown(compiler, ns);
-      //   }
-      // }
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, true, true, false); // correct
       sheet = compiler.registerImport(loaded);
@@ -624,7 +616,6 @@ namespace Sass {
     rule->module(sheet);
     rule->root(sheet);
 
-    // wconfig.finalize();
     return sheet;
 
   }
@@ -754,7 +745,6 @@ namespace Sass {
     rule->import(loaded);
 
     rule->ns(ns == "*" ? "" : ns);
-    rule->needsLoading(false);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
@@ -1248,7 +1238,6 @@ namespace Sass {
     rule->url(url);
     rule->config(config);
     rule->prev(scanner.sourceUrl);
-    rule->needsLoading(true);
     return rule.detach();
   }
 
@@ -1588,7 +1577,6 @@ namespace Sass {
     rule->config(config);
     rule->prev(scanner.sourceUrl);
     rule->hasLocalWith(hasWith);
-    rule->needsLoading(true);
     return rule.detach();
   }
 
