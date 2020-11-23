@@ -124,6 +124,14 @@ namespace Sass {
       return;
     }
     else {
+
+      if (!ns.empty()) {
+        VarRefs* modFrame(eval.compiler.getCurrentModule());
+        if (modFrame->fwdModule55.count(ns)) {
+          throw Exception::ModuleAlreadyKnown(eval.compiler, ns);
+        }
+      }
+
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true); // correct
       sheet = eval.compiler.registerImport(loaded);

@@ -663,41 +663,35 @@ namespace Sass {
     ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
 
-    bool hasCached = false;
+    rule->ns(ns == "*" ? "" : ns);
+    rule->needsLoading(false);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
     if (cached != compiler.sheets.end()) {
-
-      hasCached = true;
-
-      // Check if with is given, error
       sheet = cached->second;
-
+      // rule->module(sheet);
+      // rule->root(sheet);
     }
     else {
 
       if (!ns.empty()) {
-        VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
+        VarRefs* modFrame(compiler.getCurrentModule());
         if (modFrame->fwdModule55.count(ns)) {
           throw Exception::ModuleAlreadyKnown(compiler, ns);
         }
       }
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, false, true); // correct
-      LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
       sheet = compiler.registerImport(loaded);
-      compiler.varRoot.finalizeScopes();
       sheet->import = loaded;
     }
 
 
+    rule->module(sheet);
     rule->root(sheet);
 
-    rule->ns(ns == "*" ? "" : ns);
-
-    if (hasCached) return nullptr;
     // wconfig.finalize();
     return sheet;
 
