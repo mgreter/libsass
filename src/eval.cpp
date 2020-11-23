@@ -25,6 +25,7 @@ namespace Sass {
   Eval::Eval(Compiler& compiler, Logger& logger, bool plainCss) :
     logger456(logger),
     compiler(compiler),
+    wconfig(compiler.wconfig),
     traces(logger),
     extender(
       Extender::NORMAL,

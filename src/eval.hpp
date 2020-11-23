@@ -26,6 +26,9 @@ namespace Sass {
     Compiler& compiler;
     BackTraces& traces;
 
+    // Alias into context
+    WithConfig*& wconfig;
+
     // The extend handler
     Extender extender;
   public:

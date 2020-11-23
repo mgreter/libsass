@@ -48,10 +48,6 @@ namespace Sass {
 
   public:
 
-
-    // Managed resource
-    Compiler& compiler;
-
     WithConfig* parent = nullptr;
 
     // Flag if we do RAI

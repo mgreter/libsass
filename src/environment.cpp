@@ -538,6 +538,7 @@ namespace Sass {
       }
       // Verified this must be permeable for now
       EnvFrame local(compiler, true, true, false); // forward
+      LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
       sheet = compiler.registerImport(loaded);
       sheet->import = loaded;
       rule->root(sheet);
@@ -612,6 +613,7 @@ namespace Sass {
       }
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, false, true); // correct
+      LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
       sheet = compiler.registerImport(loaded);
       compiler.varRoot.finalizeScopes();
       sheet->import = loaded;

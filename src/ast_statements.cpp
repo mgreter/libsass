@@ -20,7 +20,6 @@ namespace Sass {
     bool hasHideFilter,
     std::set<EnvKey> filters,
     const sass::string& prefix) :
-    compiler(compiler),
     parent(pwconfig),
     hasConfig(hasConfig),
     hasShowFilter(hasShowFilter),
@@ -39,8 +38,8 @@ namespace Sass {
     // a map and error if items are duplicated
     for (auto cfgvar : configs) {
       if (config.count(cfgvar.name) == 1) {
-        throw Exception::RuntimeException(compiler,
-          "Defined Twice");
+        // throw Exception::RuntimeException(compiler,
+        //   "Defined Twice");
       }
       // If the value is a default, we should look further
       // down the tree and only add it if not there yet
