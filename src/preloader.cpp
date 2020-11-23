@@ -87,11 +87,12 @@ return;
       rule->wasMerged(true);
     }
 
-return;
+// return;
 
     if (root->empty()) return;
     LOCAL_PTR(Root, module, root);
     LOCAL_PTR(VarRefs, idxs, root->idxs);
+    ImportStackFrame iframe(eval.compiler, rule->import());
     eval.compiler.varRoot.stack.push_back(root->idxs);
     for (auto it : root->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();

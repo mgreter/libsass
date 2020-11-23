@@ -597,6 +597,7 @@ namespace Sass {
     // This is guaranteed to either load or error out!
     ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
+    rule->import(loaded);
 
     rule->needsLoading(false);
 
