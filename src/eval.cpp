@@ -2221,15 +2221,6 @@ namespace Sass {
     return rule->value()->accept(this);
   }
 
-  Value* Eval::visitFunctionRule(FunctionRule* rule)
-  {
-    UserDefinedCallableObj callable =
-      SASS_MEMORY_NEW(UserDefinedCallable,
-        rule->pstate(), rule->name(), rule, nullptr);
-    compiler.varRoot.setFunction(rule->fidx(), callable, false);
-    return nullptr;
-  }
-
   Value* Eval::visitSilentComment(SilentComment* c)
   {
     // current->append(c);

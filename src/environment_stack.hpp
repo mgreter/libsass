@@ -465,6 +465,7 @@ namespace Sass {
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
     VarRef setVariable(const EnvKey& name, bool guarded, bool global);
+    VarRef setFunction(const EnvKey& name, bool guarded, bool global);
 
   };
 

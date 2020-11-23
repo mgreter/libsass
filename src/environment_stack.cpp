@@ -205,13 +205,13 @@ namespace Sass {
   {
     auto current = this;
     // Skip over all imports
-    // while (current->isImport) {
-    //   current = current->pscope;
-    // }
-    // if (current->isCompiled) {
-    //   // throw "Can't create on active frame";
-    //   root.mixins.push_back({});
-    // }
+    while (current->isImport) {
+      current = current->pscope;
+    }
+    if (current->isCompiled) {
+      // throw "Can't create on active frame";
+      root.mixins.push_back({});
+    }
     return current->createMixin(name);
   }
   // EO createFunction
@@ -265,12 +265,10 @@ namespace Sass {
   {
     VarRefs* current = this;
     while (current != nullptr) {
-      if (!current->isImport) {
-        // Check if we already have this var
-        auto it = current->mixIdxs.find(name);
-        if (it != current->mixIdxs.end()) {
-          return { current->mixFrame, it->second };
-        }
+      // Check if we already have this var
+      auto it = current->mixIdxs.find(name);
+      if (it != current->mixIdxs.end()) {
+        return { current->mixFrame, it->second };
       }
       current = current->getParent(passThrough);
     }
@@ -679,13 +677,11 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      if (!current->isImport) {
-        auto it = current->mixIdxs.find(name);
-        if (it != current->mixIdxs.end()) {
-          const VarRef midx{ current->mixFrame, it->second };
-          Callable* mixin = root.getMixin(midx);
-          if (mixin != nullptr) return mixin;
-        }
+      auto it = current->mixIdxs.find(name);
+      if (it != current->mixIdxs.end()) {
+        const VarRef midx{ current->mixFrame, it->second };
+        Callable* mixin = root.getMixin(midx);
+        if (mixin != nullptr) return mixin;
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->mixIdxs.find(name);
@@ -718,7 +714,6 @@ namespace Sass {
   // find a defined mixin or run out of parent scopes.
   Callable* VarRefs::getMixin(const EnvKey& name) const
   {
-    if (!isImport) return nullptr;
     auto it = mixIdxs.find(name);
     if (it != mixIdxs.end()) {
       const VarRef vidx{ mixFrame, it->second };
@@ -747,7 +742,7 @@ namespace Sass {
 
   VarRef VarRefs::getFnIdx(const EnvKey& name) const
   {
-    if (!isImport) return nullidx;
+    if (isImport) return nullidx;
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
       const VarRef fidx{ fnFrame, it->second };
@@ -775,7 +770,7 @@ namespace Sass {
 
   CallableObj* VarRefs::getFunction(const EnvKey& name) const
   {
-    if (!isImport) return nullptr;
+    if (isImport) return nullptr;
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
       const VarRef vidx{ fnFrame, it->second };
@@ -814,7 +809,7 @@ namespace Sass {
 
   Value* VarRefs::getVariable(const EnvKey& name) const
   {
-    if (!isImport) return nullptr;
+    if (isImport) return nullptr;
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
       const VarRef vidx{ varFrame, it->second };
@@ -997,19 +992,21 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          VarRef fidx = idxs->getFnIdx(name);
-          if (fidx != nullidx) return fidx;
-        }
-        if (Moduled* mod = it->second.second) {
-          auto fwd = mod->mergedFwdFn.find(name);
-          if (fwd != mod->mergedFwdFn.end()) {
-            VarRef fidx{ 0xFFFFFFFF, fwd->second };
-            CallableObj& fn = root.getFunction(fidx);
-            if (fn != nullptr) return fidx;
+      if (!current->isImport) {
+        // Check if the namespace was registered
+        auto it = current->fwdModule55.find(ns);
+        if (it != current->fwdModule55.end()) {
+          if (VarRefs* idxs = it->second.first) {
+            VarRef fidx = idxs->getFnIdx(name);
+            if (fidx != nullidx) return fidx;
+          }
+          if (Moduled* mod = it->second.second) {
+            auto fwd = mod->mergedFwdFn.find(name);
+            if (fwd != mod->mergedFwdFn.end()) {
+              VarRef fidx{ 0xFFFFFFFF, fwd->second };
+              CallableObj& fn = root.getFunction(fidx);
+              if (fn != nullptr) return fidx;
+            }
           }
         }
       }
@@ -1297,6 +1294,70 @@ namespace Sass {
     return nullidx;
   }
   // EO setVariable
+
+
+
+
+  // Set a value associated with the variable under [name].
+  // If [global] flag is given, the lookup will be in the root.
+  // Otherwise lookup will be from the last runtime stack scope.
+  // We will move up the runtime stack until we either find a 
+  // defined variable with a value or run out of parent scopes.
+  VarRef EnvRoot::setFunction(const EnvKey& name, bool guarded, bool global)
+  {
+    if (stack.empty()) return nullidx;
+    uint32_t idx = global ? 0 :
+      (uint32_t)stack.size() - 1;
+    const VarRefs* current = stack[idx];
+    while (current) {
+
+      for (auto refs : current->fwdGlobal55) {
+        auto in = refs->fnIdxs.find(name);
+        if (in != refs->fnIdxs.end()) {
+          if (name.isPrivate()) {
+            throw Exception::ParserException(compiler,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
+          return { 0xFFFFFFFF, in->second };
+          // idxs->root.setVariable(vidx, val, guarded);
+          // return vidx;
+        }
+        // Modules inserted by import
+        if (Moduled* mod = refs->module) {
+          auto fwd = mod->mergedFwdFn.find(name);
+          if (fwd != mod->mergedFwdFn.end()) {
+            if (name.isPrivate()) {
+              throw Exception::ParserException(compiler,
+                "Private members can't be accessed "
+                "from outside their modules.");
+            }
+            return { 0xFFFFFFFF, fwd->second };
+            // idxs->root.setFunction(vidx, val, guarded);
+            // return vidx;
+          }
+        }
+      }
+
+      if (current->isImport) {
+        current = current->pscope;
+        continue;
+      }
+
+      auto it = current->fnIdxs.find(name);
+      if (it != current->fnIdxs.end()) {
+        return { current->fnFrame, it->second };
+        // idxs->root.setVariable(vidx, val, guarded);
+        // return vidx;
+      }
+
+      if (current->pscope == nullptr) break;
+      else current = current->pscope;
+    }
+    return nullidx;
+  }
+  // EO setVariable
+
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

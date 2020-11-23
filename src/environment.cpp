@@ -222,6 +222,21 @@ namespace Sass {
     return nullptr;
   }
 
+  Value* Eval::visitFunctionRule(FunctionRule* rule)
+  {
+    UserDefinedCallableObj callable =
+      SASS_MEMORY_NEW(UserDefinedCallable,
+        rule->pstate(), rule->name(), rule, nullptr);
+
+    rule->fidx(compiler.varRoot.setFunction(
+      rule->name(), false, false));
+
+    compiler.varRoot.setFunction(rule->fidx(), callable, false);
+    return nullptr;
+  }
+
+
+
   AssignRule* StylesheetParser::readVariableDeclarationWithoutNamespace(
     const sass::string& ns, Offset start)
   {
