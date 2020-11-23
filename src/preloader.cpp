@@ -57,6 +57,8 @@ namespace Sass {
 
     Root* sheet = eval.resolveUseRule(rule);
 
+    return;
+
     if (sheet && !sheet->empty()) {
       LOCAL_PTR(Root, chroot77, sheet);
       LOCAL_PTR(VarRefs, idxs, sheet->idxs);
@@ -76,6 +78,8 @@ namespace Sass {
       rule->pstate(), Strings::forwardRule });
 
     Root* sheet = eval.resolveForwardRule(rule);
+
+    return;
 
     if (sheet && !sheet->empty()) {
       LOCAL_PTR(Root, chroot77, sheet);
@@ -97,6 +101,8 @@ namespace Sass {
       rule->pstate(), Strings::importRule });
 
     Root* root = eval.resolveIncludeImport(rule);
+
+    return;
 
     if (root && !root->empty()) {
       LOCAL_PTR(Root, chroot77, root);
