@@ -985,6 +985,10 @@ namespace Sass {
 
       }
 
+  void Eval::exposeImpRule(IncludeImport* rule)
+  {
+    // std::cerr << "Expose import\n";
+  }
 
   void Eval::exposeFwdRule(ForwardRule* rule)
   {
@@ -1001,13 +1005,14 @@ namespace Sass {
   void Eval::exposeUseRule(UseRule* rule)
   {
 
+    if (!rule->module()) return;
     if (rule->waxExported()) return;
     rule->waxExported(true);
 
     VarRefs* mframe(compiler.getCurrentModule());
     VarRefs* frame(compiler.getCurrentFrame());
 
-    if (rule->module() && rule->module()->isBuiltIn) {
+    if (rule->module()->isBuiltIn) {
 
       if (rule->ns().empty()) {
 
@@ -1028,8 +1033,6 @@ namespace Sass {
         // mframe->fwdGlobal55.push_back(rule->module()->idxs);
 
       }
-
-
 
     }
 
@@ -1052,10 +1055,137 @@ namespace Sass {
       }
 
     }
+    else {
+
+      throw "Invalid state!";
+
+    }
 
 
   }
 
+  void Eval::acceptIncludeImport(IncludeImport* rule)
+  {
+
+    if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
+      << compiler.implicitWithConfig << "\n";
+
+    callStackFrame cframe(traces, BackTrace(
+      rule->pstate(), Strings::importRule));
+    Root* sheet = resolveIncludeImport(rule);
+
+    VarRefs* pframe = compiler.getCurrentFrame();
+
+    // Imports are always executed again
+    Preloader preproc(*this, sheet);
+    preproc.acceptRoot(sheet);
+
+    // Add C-API to stack to expose it
+    ImportStackFrame iframe(compiler, sheet->import);
+    EnvScope scoped(compiler.varRoot, sheet->idxs);
+    VarRefs* refs = sheet->idxs;
+    LOCAL_PTR(Root, chroot77, sheet);
+
+    while (pframe->isImport) {
+      pframe = pframe->pscope;
+    }
+
+    // Skip over all imports
+    // We are doing it out of order
+
+    for (auto& var : sheet->mergedFwdVar) {
+      auto it = pframe->varIdxs.find(var.first);
+      if (it == pframe->varIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.variables.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createVariable(var.first);
+      }
+    }
+
+
+    // Merge it up through all imports
+    for (auto& var : sheet->idxs->varIdxs) {
+      auto it = pframe->varIdxs.find(var.first);
+      if (it == pframe->varIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.variables.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createVariable(var.first);
+      }
+    }
+
+    // Merge it up through all imports
+    for (auto& fn : sheet->idxs->fnIdxs) {
+      auto it = pframe->fnIdxs.find(fn.first);
+      if (it == pframe->fnIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.functions.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createFunction(fn.first);
+      }
+    }
+
+    // Merge it up through all imports
+    for (auto& mix : sheet->idxs->mixIdxs) {
+      auto it = pframe->mixIdxs.find(mix.first);
+      if (it == pframe->mixIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.mixins.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createMixin(mix.first);
+      }
+    }
+
+  
+    if (pframe->varFrame != 0xFFFFFFFF) {
+
+      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
+        << compiler.implicitWithConfig << "\n";
+
+      sheet->idxs->module = sheet;
+      pframe->fwdGlobal55.insert(
+        pframe->fwdGlobal55.begin(),
+        sheet->idxs);
+
+    }
+
+
+    // Imports are always executed again
+    for (const StatementObj& item : sheet->elements()) {
+      item->accept(this);
+    }
+
+    if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
+      << compiler.implicitWithConfig << "\n";
+
+
+    if (pframe->varFrame == 0xFFFFFFFF) {
+
+      // Import to forward
+      for (auto& asd : sheet->mergedFwdVar) {
+        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
+        pframe->varIdxs.insert(asd);
+      } // a: 18
+      for (auto& asd : sheet->mergedFwdMix) {
+        if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
+        pframe->mixIdxs[asd.first] = asd.second; }
+      for (auto& asd : sheet->mergedFwdFn) {
+        if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
+        pframe->fnIdxs[asd.first] = asd.second; }
+
+    }
+
+
+  }
   Value* Eval::visitUseRule(UseRule* rule)
   {
 
@@ -1349,138 +1479,6 @@ namespace Sass {
 
   }
   // EO resolveDynamicImport
-
-  void Eval::acceptIncludeImport(IncludeImport* rule)
-  {
-
-    if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
-      << compiler.implicitWithConfig << "\n";
-
-    callStackFrame cframe(traces, BackTrace(
-      rule->pstate(), Strings::importRule));
-    Root* sheet = resolveIncludeImport(rule);
-
-    VarRefs* vframe = compiler.getCurrentFrame();
-    VarRefs* pframe = compiler.getCurrentFrame();
-
-    // Imports are always executed again
-    Preloader preproc(*this, sheet);
-    preproc.acceptRoot(sheet);
-
-    // Add C-API to stack to expose it
-    ImportStackFrame iframe(compiler, sheet->import);
-    EnvScope scoped(compiler.varRoot, sheet->idxs);
-    VarRefs* refs = sheet->idxs;
-    LOCAL_PTR(Root, chroot77, sheet);
-
-    // Skip over all imports
-    // We are doing it out of order
-    while (vframe) {
-
-      // Merge it up through all imports
-      for (auto& var : sheet->idxs->varIdxs) {
-        auto it = vframe->varIdxs.find(var.first);
-        if (it == vframe->varIdxs.end()) {
-          if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
-            compiler.varRoot.variables.push_back({});
-          }
-          // std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createVariable(var.first);
-        }
-      }
-
-      // Merge it up through all imports
-      for (auto& fn : sheet->idxs->fnIdxs) {
-        auto it = vframe->fnIdxs.find(fn.first);
-        if (it == vframe->fnIdxs.end()) {
-          if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
-            compiler.varRoot.functions.push_back({});
-          }
-          // std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createFunction(fn.first);
-        }
-      }
-
-      // Merge it up through all imports
-      for (auto& mix : sheet->idxs->mixIdxs) {
-        auto it = vframe->mixIdxs.find(mix.first);
-        if (it == vframe->mixIdxs.end()) {
-          if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
-            compiler.varRoot.mixins.push_back({});
-          }
-          // std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createMixin(mix.first);
-        }
-      }
-
-      if (!vframe->isImport) break;
-      vframe = vframe->pscope;
-    }
-
-    while (pframe->isImport) pframe = pframe->pscope;
-
-    if (pframe->varFrame != 0xFFFFFFFF) {
-
-      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
-        << compiler.implicitWithConfig << "\n";
-
-      sheet->idxs->module = sheet;
-      pframe->fwdGlobal55.insert(
-        pframe->fwdGlobal55.begin(),
-        sheet->idxs);
-
-    }
-
-
-    // Imports are always executed again
-    for (const StatementObj& item : sheet->elements()) {
-      item->accept(this);
-    }
-
-    if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
-      << compiler.implicitWithConfig << "\n";
-
-
-    if (pframe->varFrame == 0xFFFFFFFF) {
-
-      if (udbg) std::cerr << " import into global frame '" << rule->url() << "'\n";
-
-      // Global can simply be exposed without further ado (same frame)
-      for (auto& asd : sheet->idxs->varIdxs) {
-        if (udbg) std::cerr << "  var " << asd.first.orig() << "\n";
-        pframe->varIdxs.insert(asd);
-      }
-      for (auto& asd : sheet->idxs->mixIdxs) {
-        if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
-        pframe->mixIdxs.insert(asd);
-      }
-      for (auto& asd : sheet->idxs->fnIdxs) {
-        if (udbg) std::cerr << "  fn " << asd.first.orig() << "\n";
-        pframe->fnIdxs.insert(asd);
-      }
-    }
-
-    if (pframe->varFrame == 0xFFFFFFFF) {
-
-      for (auto& asd : sheet->mergedFwdVar) {
-        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
-        pframe->varIdxs.insert(asd);
-      } // a: 18
-      for (auto& asd : sheet->mergedFwdMix) {
-        if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
-        pframe->mixIdxs[asd.first] = asd.second; }
-      for (auto& asd : sheet->mergedFwdFn) {
-        if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
-        pframe->fnIdxs[asd.first] = asd.second; }
-
-    }
-
-
-  }
-
   // Consumes a `@forward` rule.
   // [start] should point before the `@`.
   ForwardRule* StylesheetParser::readForwardRule(Offset start)

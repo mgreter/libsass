@@ -33,13 +33,8 @@ namespace Sass {
     // Alias into context
     WithConfig*& wconfig;
 
-    // Current module scope
-    Root* module = nullptr;
-
     // Current lexical scope
     VarRefs* idxs;
-
-    void exposeImport(Eval& eval, Root* sheet);
 
     void visitParentStatement(ParentStatement* rule);
     void visitIncludeImport(IncludeImport* include);
@@ -52,10 +47,8 @@ namespace Sass {
 
     void process();
 
-
     void acceptRoot(Root* root);
 
-    void visitArgumentDeclaration(ArgumentDeclaration* args);
 
     void visitAtRootRule(AtRootRule* rule) override final;
     void visitAtRule(AtRule* rule) override final;

@@ -16,7 +16,6 @@ namespace Sass {
     root(root),
     chroot77(eval.chroot77),
     wconfig(eval.wconfig),
-    module(root),
     idxs(root->idxs)
   {}
 
@@ -29,15 +28,16 @@ namespace Sass {
   }
 
 
-  void Preloader::acceptRoot(Root* root)
+  void Preloader::acceptRoot(Root* sheet)
   {
-    if (root->empty()) return;
-    LOCAL_PTR(Root, module, root);
-    LOCAL_PTR(VarRefs, idxs, root->idxs);
-    ImportStackFrame isf(eval.compiler, root->import);
-    eval.compiler.varRoot.stack.push_back(root->idxs);
-    for (auto& it : root->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    if (sheet && !sheet->empty()) {
+      LOCAL_PTR(Root, chroot77, sheet);
+      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+      ImportStackFrame isf(eval.compiler, sheet->import);
+      eval.compiler.varRoot.stack.push_back(sheet->idxs);
+      for (auto& it : sheet->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.pop_back();
+    }
   }
 
 
@@ -57,17 +57,16 @@ namespace Sass {
 
     Root* sheet = eval.resolveUseRule(rule);
 
-    // {
-    //   if (sheet->empty()) return;
-    //   LOCAL_PTR(Root, module, sheet);
-    //   LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-    //   // ImportStackFrame iframe(eval.compiler, rule->import());
-    //   eval.compiler.varRoot.stack.push_back(sheet->idxs);
-    //   for (auto it : sheet->elements()) it->accept(this);
-    //   eval.compiler.varRoot.stack.pop_back();
-    // }
-    // // 
-    // eval.exposeUseRule(rule); // five errs
+    if (sheet && !sheet->empty()) {
+      LOCAL_PTR(Root, chroot77, sheet);
+      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+      ImportStackFrame iframe(eval.compiler, rule->import());
+      eval.compiler.varRoot.stack.push_back(sheet->idxs);
+      for (auto& it : sheet->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.pop_back();
+    }
+
+    eval.exposeUseRule(rule);
 
   }
 
@@ -76,113 +75,20 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
 
-    Root* root = eval.resolveForwardRule(rule);
+    Root* sheet = eval.resolveForwardRule(rule);
 
-    {
-      if (root->empty()) return;
-      LOCAL_PTR(Root, module, root);
-      LOCAL_PTR(VarRefs, idxs, root->idxs);
+    if (sheet && !sheet->empty()) {
+      LOCAL_PTR(Root, chroot77, sheet);
+      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
       ImportStackFrame iframe(eval.compiler, rule->import());
-      eval.compiler.varRoot.stack.push_back(root->idxs);
-      for (auto& it : root->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.push_back(sheet->idxs);
+      for (auto& it : sheet->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
 
-    // Nothing to be done for built-ins
-    if (root && root->isBuiltIn && !rule->wasMerged()) {
-      mergeForwards(rule->module()->idxs, module, rule->isShown(), rule->isHidden(),
-        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
-      rule->wasMerged(true);
-    }
-
-
+    eval.exposeFwdRule(rule);
   }
 
-  void Preloader::exposeImport(Eval& eval, Root* sheet)
-  {
-    auto vframe = eval.compiler.getCurrentFrame();
-
-    // Skip over all imports
-    // We are doing it out of order
-    while (vframe) {
-
-      for (auto& var : sheet->mergedFwdVar) {
-        auto it = module->mergedFwdVar.find(var.first);
-        if (it == module->mergedFwdVar.end()) {
-          module->mergedFwdVar[var.first] = var.second;
-          // eval.compiler.varRoot.variables.push_back({});
-          // std::cerr << "EXPORT " << var.first.norm() << "\n";
-          // vframe->createVariable(var.first);
-        }
-        else {
-          // it->second = var.second;
-        }
-      }
-
-      // Merge it up through all imports
-      for (auto& var : sheet->idxs->varIdxs) {
-        auto it = vframe->varIdxs.find(var.first);
-        if (it == vframe->varIdxs.end()) {
-          if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
-          }
-          // eval.compiler.varRoot.variables.push_back({});
-          std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createVariable(var.first);
-        }
-        else {
-          // it->second = var.second;
-        }
-      }
-
-
-      // Merge it up through all imports
-      for (auto& var : sheet->idxs->varIdxs) {
-        auto it = vframe->varIdxs.find(var.first);
-        if (it == vframe->varIdxs.end()) {
-          if (vframe->isCompiled) {
-            throw "Can't create on active frame";
-            // eval.compiler.varRoot.variables.push_back({});
-          }
-          std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createVariable(var.first);
-        }
-        else {
-          it->second = var.second;
-        }
-      }
-
-      // Merge it up through all imports
-      for (auto& fn : sheet->idxs->fnIdxs) {
-        auto it = vframe->fnIdxs.find(fn.first);
-        if (it == vframe->fnIdxs.end()) {
-          if (vframe->isCompiled) {
-            throw "Can't create on active frame";
-            // eval.compiler.varRoot.functions.push_back({});
-          }
-          // std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createFunction(fn.first);
-        }
-      }
-
-      // Merge it up through all imports
-      for (auto& mix : sheet->idxs->mixIdxs) {
-        auto it = vframe->mixIdxs.find(mix.first);
-        if (it == vframe->mixIdxs.end()) {
-          if (vframe->isCompiled) {
-            throw "Can't create on active frame";
-            // eval.compiler.varRoot.mixins.push_back({});
-          }
-          // std::cerr << "EXPORT " << var.first.norm() << "\n";
-          vframe->createMixin(mix.first);
-        }
-      }
-
-      if (!vframe->isImport) break;
-      vframe = vframe->pscope;
-      // break;
-    }
-  }
 
   void Preloader::visitIncludeImport(IncludeImport* rule)
   {
@@ -192,30 +98,18 @@ namespace Sass {
 
     Root* root = eval.resolveIncludeImport(rule);
 
-return;
-    {
-      if (root->empty()) return;
-      LOCAL_PTR(Root, module, root);
+    if (root && !root->empty()) {
+      LOCAL_PTR(Root, chroot77, root);
       LOCAL_PTR(VarRefs, idxs, root->idxs);
+      ImportStackFrame iframe(eval.compiler, rule->import());
       eval.compiler.varRoot.stack.push_back(root->idxs);
       for (auto& it : root->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
 
+    eval.exposeImpRule(rule);
+
   }
-
-
-  // void Preloader::visitArgumentDeclaration(ArgumentDeclaration* args)
-  // {
-  //   for (Argument* arg : args->arguments()) {
-  //     uint32_t offset = (uint32_t)idxs->varIdxs.size();
-  //     idxs->varIdxs.insert({ arg->name(), offset });
-  //   }
-  //   if (!args->restArg().empty()) {
-  //     uint32_t offset = (uint32_t)idxs->varIdxs.size();
-  //     idxs->varIdxs.insert({ args->restArg(), offset });
-  //   }
-  // }
 
   void Preloader::visitAssignRule(AssignRule* rule)
   {
@@ -224,13 +118,8 @@ return;
 
   void Preloader::visitFunctionRule(FunctionRule* rule)
   {
-    // VarRefs* idxs(chroot->idxs);
     const EnvKey& fname(rule->name());
-
     LOCAL_PTR(VarRefs, idxs, rule->idxs);
-    // First push argument onto the scope!
-    // visitArgumentDeclaration(rule->arguments());
-
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
@@ -238,12 +127,8 @@ return;
 
   void Preloader::visitMixinRule(MixinRule* rule)
   {
-    //VarRefs* idxs(chroot->idxs);
     const EnvKey& mname(rule->name());
     LOCAL_PTR(VarRefs, idxs, rule->idxs);
-    // First push argument onto the scope!
-    // visitArgumentDeclaration(rule->arguments());
-
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
@@ -305,15 +190,12 @@ return;
 
   void Preloader::visitIncludeRule(IncludeRule* rule)
   {
-    auto& content = rule->content();
-    if (content == nullptr) return;
-    // rule->cidx(idxs->createMixin(Keys::contentRule));
-    LOCAL_PTR(VarRefs, idxs, content->idxs);
-    // First push argument onto the scope!
-    // visitArgumentDeclaration(content->arguments());
-    eval.compiler.varRoot.stack.push_back(content->idxs);
-    for (auto& it : content->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    if (ContentBlock* content = rule->content()) {
+      LOCAL_PTR(VarRefs, idxs, content->idxs);
+      eval.compiler.varRoot.stack.push_back(content->idxs);
+      for (auto& it : content->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.pop_back();
+    }
   }
 
   void Preloader::visitLoudComment(LoudComment* rule)
