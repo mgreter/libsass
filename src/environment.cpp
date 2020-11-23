@@ -971,7 +971,7 @@ namespace Sass {
     // BuiltInMod is created within a new scope
     EnvFrame local(compiler, false, true); 
     // eval.selectorStack.push_back(nullptr);
-    ImportStackFrame iframe(compiler, loaded);
+    // ImportStackFrame iframe(compiler, loaded);
     Root* sheet = compiler.registerImport(loaded);
     // eval.selectorStack.pop_back();
     sheet->idxs = local.idxs;
@@ -982,7 +982,9 @@ namespace Sass {
   void Eval::compileModule(Root* root)
   {
 
+    if (root->isCompiled) return;
     root->isCompiled = true;
+
     root->loaded = current;
     root->loaded = SASS_MEMORY_NEW(CssStyleRule,
       root->pstate(), nullptr, selectorStack.back());
@@ -995,8 +997,6 @@ namespace Sass {
     VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
 
     EnvScope scoped2(compiler.varRoot, idxs);
-
-    ImportStackFrame iframe(compiler, root->import);
 
     selectorStack.push_back(nullptr);
     for (auto& child : root->elements()) {
@@ -1225,6 +1225,7 @@ namespace Sass {
 
     if (Root* root = resolveUseRule(rule)) {
       if (!root->isCompiled) {
+        ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
           compiler.implicitWithConfig || rule->hasLocalWith());
         LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
@@ -1255,6 +1256,7 @@ namespace Sass {
 
     if (Root* root = resolveForwardRule(rule)) {
       if (!root->isCompiled) {
+        ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
           compiler.implicitWithConfig || rule->hasLocalWith());
         LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
@@ -1666,7 +1668,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
-        Import* loaded = compiler.import_stack.back();
+        // Import* loaded = compiler.import_stack.back();
 
         // Loading relative to where the function was included
         const ImportRequest request(url->value(), pstate.getAbsPath(), false);
@@ -1674,7 +1676,7 @@ namespace Sass {
         // Search for valid imports (e.g. partials) on the file-system
         // Returns multiple valid results for ambiguous import path
         const sass::vector<ResolvedImport>& resolved(
-          compiler.findIncludes(request, false));
+          compiler.findIncludes(request, true));
 
         // Error if no file to import was found
         if (resolved.empty()) {
@@ -1688,17 +1690,29 @@ namespace Sass {
         }
 
 
-        // We made sure exactly one entry was found, load its content
-        if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-          Root* module = eval.loadModule(compiler, loaded, hasWith);
-          if (!module->loaded) eval.compileModule(module);
-          eval.insertModule(module);
-        }
-        else {
-          // Probably on access violations?
-          throw Exception::ParserException(compiler,
-            "Couldn't load it.");
-        }
+        // This is guaranteed to either load or error out!
+        ImportObj loaded = compiler.loadImport(resolved[0]);
+        ImportStackFrame iframe(compiler, loaded);
+
+        // rule->import(loaded);
+
+        Root* module = eval.loadModule(compiler, loaded, hasWith);
+        eval.compileModule(module);
+        eval.insertModule(module);
+
+        // Root* sheet = nullptr;
+        // sass::string abspath(loaded->getAbsPath());
+        // auto cached = compiler.sheets.find(abspath);
+        // if (cached != compiler.sheets.end()) {
+        //   sheet = cached->second;
+        // }
+        // else {
+        //   // Permeable seems to have minor negative impact!?
+        //   EnvFrame local(compiler, true, true, false); // correct
+        //   sheet = compiler.registerImport(loaded);
+        //   sheet->import = loaded;
+        // }
+
 
         wconfig.finalize(compiler);
 
