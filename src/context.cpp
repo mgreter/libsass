@@ -189,7 +189,7 @@ namespace Sass {
   }
 
   BuiltInMod::BuiltInMod(EnvRoot& root) :
-    idxs(new VarRefs(
+    Module(new VarRefs(
       root,
       nullptr,
       0xFFFFFFFF,

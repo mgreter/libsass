@@ -8,6 +8,7 @@
 #include "file.hpp"
 #include "ast_nodes.hpp"
 #include "ast_css.hpp"
+#include "modules.hpp"
 
 namespace Sass {
 
@@ -52,17 +53,6 @@ namespace Sass {
     // The evaluated css tree
     CssParentNodeObj loaded = nullptr;
 
-  };
-
-  class BuiltInMod
-  {
-  public:
-    VarRefs* idxs;
-    bool isActive3 = false;
-    void addFunction(const EnvKey& name, uint32_t offset);
-    void addVariable(const EnvKey& name, uint32_t offset);
-    void addMixin(const EnvKey& name, uint32_t offset);
-    BuiltInMod(EnvRoot& root);
   };
 
   // parsed stylesheet from loaded resource

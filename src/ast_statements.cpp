@@ -137,7 +137,7 @@ namespace Sass {
     VarRefs* idxs) :
     Statement(std::move(pstate)),
     Vectorized<Statement>(std::move(children)),
-    idxs_(idxs)
+    Env(idxs)
   {}
 
   // Returns whether we have a child content block

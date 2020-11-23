@@ -14,6 +14,7 @@
 #include "ast_supports.hpp"
 #include "ast_statements.hpp"
 #include "ast_css.hpp"
+#include "modules.hpp"
 #include "stylesheet.hpp"
 #include "environment_stack.hpp"
 #include "file.hpp"
@@ -87,9 +88,10 @@ namespace Sass {
   // Abstract base class for statements that contain blocks of statements.
   /////////////////////////////////////////////////////////////////////////
 
-  class ParentStatement : public Statement, public Vectorized<Statement>
+  class ParentStatement : public Statement,
+    public Vectorized<Statement>,
+    public Env
   {
-    ADD_PROPERTY(VarRefs*, idxs);
   public:
     // Value constructor
     ParentStatement(

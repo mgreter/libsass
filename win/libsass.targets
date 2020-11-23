@@ -30,6 +30,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_statements.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_expressions.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_values.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\modules.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\backtrace.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\base64vlq.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\character.hpp" />
@@ -131,6 +132,7 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_super.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_sel_weave.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\ast_selectors.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\modules.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\context.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\constants.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\compiler.cpp" />

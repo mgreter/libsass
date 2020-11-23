@@ -19,6 +19,10 @@
 /////////////////////////////////////////////
 namespace Sass {
 
+  class Env;
+  class Module;
+  class BuiltInMod;
+
   class VarRef;
   class VarRefs;
   class Logger;

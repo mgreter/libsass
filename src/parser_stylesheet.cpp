@@ -2865,7 +2865,7 @@ namespace Sass {
         if (inLoopDirective) {
           // Static variable resolution will be done in finalize stage
           // Must be postponed since in loops we may reference post vars
-          context.varRoot.stack.back()->variables.push_back(expression);
+          // context.varRoot.stack.back()->variables.push_back(expression);
         }
         else {
 

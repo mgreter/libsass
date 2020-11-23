@@ -298,7 +298,7 @@ namespace Sass {
     ValueVector& positional(results.positional());
 
     // Create the variable scope to pass args
-    auto idxs = callable->declaration()->idxs();
+    auto idxs = callable->declaration()->idxs;
     EnvScope scoped(compiler.varRoot, idxs);
 
     // Try to fetch arguments for all parameters
@@ -1400,7 +1400,7 @@ namespace Sass {
   Value* Eval::visitStyleRule(StyleRule* node)
   {
     // Create a scope for lexical block variables
-    EnvScope scope(compiler.varRoot, node->idxs());
+    EnvScope scope(compiler.varRoot, node->idxs);
     // Keyframe blocks have a specific syntax inside them
     // Therefore style rules render a bit different inside them
     if (inKeyframes) {
@@ -1508,7 +1508,7 @@ namespace Sass {
     ValueObj condition = SASS_MEMORY_NEW(
       String, node->condition()->pstate(),
       _visitSupportsCondition(node->condition()));
-    EnvScope scoped(compiler.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs);
     auto chroot = current->bubbleThrough(true);
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(), chroot, condition);
@@ -1549,7 +1549,7 @@ namespace Sass {
 
   Value* Eval::visitAtRootRule(AtRootRule* node)
   {
-    EnvScope scoped(compiler.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs);
     InterpolationObj itpl = node->query();
     AtRootQueryObj query;
 
@@ -1658,7 +1658,7 @@ namespace Sass {
       return nullptr;
     }
 
-    EnvScope scoped(compiler.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs);
 
     sass::string normalized(Util::unvendor(name->text()));
     bool isKeyframe = normalized == "keyframes";
@@ -1709,7 +1709,7 @@ namespace Sass {
     sass::string str_mq;
     const SourceSpan& state = node->query() ?
       node->query()->pstate() : node->pstate();
-    EnvScope scoped(compiler.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs);
     if (node->query()) {
       str_mq = acceptInterpolation(node->query(), false);
     }
@@ -1986,7 +1986,7 @@ namespace Sass {
       // If true append all children of this clause
       if (condition->isTruthy()) {
         // Create local variable scope for children
-        EnvScope scoped(compiler.varRoot, i->idxs());
+        EnvScope scoped(compiler.varRoot, i->idxs);
         rv = acceptChildren(i);
       }
       else if (i->alternative()) {
@@ -1995,7 +1995,7 @@ namespace Sass {
       }
     }
     else {
-      EnvScope scoped(compiler.varRoot, i->idxs());
+      EnvScope scoped(compiler.varRoot, i->idxs);
       rv = acceptChildren(i);
     }
     // Is probably nullptr!?
@@ -2007,7 +2007,7 @@ namespace Sass {
   Value* Eval::visitForRule(ForRule* f)
   {
     BackTrace trace(f->pstate(), Strings::forRule);
-    EnvScope scoped(compiler.varRoot, f->idxs());
+    EnvScope scoped(compiler.varRoot, f->idxs);
     ValueObj low = f->lower_bound()->accept(this);
     ValueObj high = f->upper_bound()->accept(this);
     NumberObj sass_start = low->assertNumber(logger456, "");
@@ -2026,7 +2026,7 @@ namespace Sass {
       if (f->is_inclusive()) ++end;
       for (double i = start; i < end; ++i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr(), false);
+        compiler.varRoot.setVariable(f->idxs->varFrame, 0, it.ptr(), false);
         val = acceptChildren(f);
         if (val) break;
       }
@@ -2035,7 +2035,7 @@ namespace Sass {
       if (f->is_inclusive()) --end;
       for (double i = start; i > end; --i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs()->varFrame, 0, it.ptr(), false);
+        compiler.varRoot.setVariable(f->idxs->varFrame, 0, it.ptr(), false);
         val = acceptChildren(f);
         if (val) break;
       }
@@ -2112,9 +2112,9 @@ namespace Sass {
 
   Value* Eval::visitEachRule(EachRule* e)
   {
-    const VarRefs* vidx(e->idxs());
+    const VarRefs* vidx(e->idxs);
     const sass::vector<EnvKey>& variables(e->variables());
-    EnvScope scoped(compiler.varRoot, e->idxs());
+    EnvScope scoped(compiler.varRoot, e->idxs);
     ValueObj expr = e->expressions()->accept(this);
     if (MapObj map = expr->isaMap()) {
       Map::ordered_map_type els(map->elements());
@@ -2181,7 +2181,7 @@ namespace Sass {
   {
 
     // First condition runs outside
-    EnvScope scoped(compiler.varRoot, node->idxs());
+    EnvScope scoped(compiler.varRoot, node->idxs);
     Expression* condition = node->condition();
     ValueObj result = condition->accept(this);
 

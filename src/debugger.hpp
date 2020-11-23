@@ -767,7 +767,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     IfRule* block = Cast<IfRule>(node);
     std::cerr << ind << "IfRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [" << parent_block(block->idxs()) << "]";
+    std::cerr << " [" << parent_block(block->idxs) << "]";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->predicate(), ind + " = ");
     debug_block(block, ind + " <>");
@@ -949,7 +949,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   else if (StyleRule* ruleset = Cast<StyleRule>(node)) {
     std::cerr << ind << "StyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [" << parent_block(ruleset->idxs()) << "]";
+    std::cerr << " [" << parent_block(ruleset->idxs) << "]";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
     std::cerr << std::endl;
     debug_ast(ruleset->interpolation(), ind + "#");

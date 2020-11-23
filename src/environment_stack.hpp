@@ -111,8 +111,12 @@ namespace Sass {
     // Assignments directly in those can bleed to the root scope.
     bool permeable = false;
     bool isImport = false;
+
     bool isModule = false;
+
+
     bool isCompiled = false;
+
 
     // Parents for specific types
     uint32_t varFrame;
@@ -128,12 +132,15 @@ namespace Sass {
 
     // Keep track of assignments and variables for dynamic runtime lookups.
     // This is needed only for loops, due to sass "weird" variable scoping.
-    sass::vector<AssignRuleObj> assignments;
-    sass::vector<VariableExpressionObj> variables;
+    // sass::vector<AssignRuleObj> assignments;
+    // sass::vector<VariableExpressionObj> variables;
+
+    // Special set with global assignments
+    // Needed for imports within style-rules
+    EnvKeySet globals;
 
     ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule55;
     sass::vector<VarRefs*> fwdGlobal55;
-    //sass::vector<Moduled*> fwdGlobal77;
 
     // Value constructor
     VarRefs(EnvRoot& root,
