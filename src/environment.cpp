@@ -98,6 +98,33 @@ namespace Sass {
       return nullptr;
     }
 
+    ValueObj result;
+
+    const EnvKey& vname(a->variable());
+
+    if (a->is_default()) {
+
+      auto frame = compiler.getCurrentFrame();
+
+      // If we have a config and the variable is already set
+      // we still overwrite the variable beside being guarded
+      WithConfigVar* wconf = nullptr;
+      if (compiler.wconfig && frame->varFrame == 0xFFFFFFFF && a->ns().empty()) {
+        wconf = wconfig->getCfgVar(vname, false, true);
+      }
+      if (wconf) {
+        // Via load-css
+        if (wconf->value) {
+          result = wconf->value;
+        }
+        // Via regular load
+        else if (wconf->expression) {
+          a->value(wconf->expression);
+        }
+        a->is_default(wconf->isGuarded);
+      }
+    }
+
     // Emit deprecation for new var with global flag
     if (a->is_global()) {
 
@@ -161,7 +188,7 @@ namespace Sass {
         a->is_default(),
         a->is_global()));
       assigne = &compiler.varRoot.getVariable(a->vidx2());
-      ValueObj result = a->value()->accept(this);
+      if (!result) result = a->value()->accept(this);
       compiler.varRoot.setVariable(
         a->vidx2(),
         result,
@@ -171,7 +198,7 @@ namespace Sass {
     }
     else {
 
-      ValueObj result = a->value()->accept(this);
+      if (!result) result = a->value()->accept(this);
       a->vidx2(compiler.varRoot.setModVar(
         a->variable(), a->ns(),
         result,

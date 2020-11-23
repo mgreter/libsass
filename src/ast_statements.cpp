@@ -45,7 +45,7 @@ namespace Sass {
       // down the tree and only add it if not there yet
       if (cfgvar.isGuarded) {
         // Check if we have a non-default parent
-        if (auto pr = getCfgVar(cfgvar.name, true, false)) {
+        if (auto pr = getCfgVar(cfgvar.name, true, true)) {
           cfgvar.expression = pr->expression;
           pr->wasUsed = true;
         }
