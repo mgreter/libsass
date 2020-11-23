@@ -1205,6 +1205,9 @@ namespace Sass {
   // Resolve import of [path] and add imports to [rule]
   Root* Eval::resolveDynamicImport(IncludeImport* rule)
   {
+
+    if (rule->sheet()) return rule->sheet();
+
     SourceSpan pstate(rule->pstate());
     const ImportRequest request(rule->url(), rule->prev(), true);
     callStackFrame frame(compiler, { pstate, Strings::importRule });

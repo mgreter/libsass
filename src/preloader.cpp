@@ -218,20 +218,20 @@ namespace Sass {
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(eval.compiler, loaded);
 
-    // Root* sheet = nullptr;
-    // sass::string abspath(loaded->getAbsPath());
-    // auto cached = eval.compiler.sheets.find(abspath);
-    // if (cached != eval.compiler.sheets.end()) {
-    //   sheet = cached->second;
-    // }
-    // else {
-    //   // Permeable seems to have minor negative impact!?
-    //   EnvFrame local(eval.compiler, false, true); // correct
-    //   sheet = eval.compiler.registerImport(loaded);
-    //   sheet->import = loaded;
-    // }
-    // 
-    // rule->root(sheet);
+    Root* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = eval.compiler.sheets.find(abspath);
+    if (cached != eval.compiler.sheets.end()) {
+      sheet = cached->second;
+    }
+    else {
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(eval.compiler, false, true, true);
+      sheet = eval.compiler.registerImport(loaded);
+      sheet->import = loaded;
+    }
+    
+    rule->sheet(sheet);
     // rule->module(sheet);
     // rule->needsLoading(false);
 
