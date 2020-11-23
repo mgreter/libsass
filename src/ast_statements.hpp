@@ -676,6 +676,9 @@ namespace Sass {
       WithConfig* pwconfig,
       sass::vector<WithConfigVar>&& config,
       bool hasLocalWith);
+    ~UseRule() override final {
+      delete wconfig_;
+    }
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);

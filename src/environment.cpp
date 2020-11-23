@@ -930,6 +930,11 @@ namespace Sass {
         mframe->fwdGlobal55.push_back(root->idxs);
       }
       else {
+        // Refactor to only fetch once!
+        if (mframe->fwdModule55.count(rule->ns())) {
+          throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
+        }
+
         mframe->fwdModule55[rule->ns()] =
         { root->idxs, root };
       }
