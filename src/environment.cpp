@@ -1280,6 +1280,32 @@ namespace Sass {
         }
       }
 
+      // Merge it up through all imports
+      for (auto& fn : sheet->idxs->fnIdxs) {
+        auto it = vframe->fnIdxs.find(fn.first);
+        if (it == vframe->fnIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+          }
+          compiler.varRoot.functions.push_back({});
+          // std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createFunction(fn.first);
+        }
+      }
+
+      // Merge it up through all imports
+      for (auto& mix : sheet->idxs->mixIdxs) {
+        auto it = vframe->mixIdxs.find(mix.first);
+        if (it == vframe->mixIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+          }
+          compiler.varRoot.mixins.push_back({});
+          // std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createMixin(mix.first);
+        }
+      }
+
       if (!vframe->isImport) break;
       vframe = vframe->pscope;
     }
