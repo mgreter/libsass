@@ -607,13 +607,31 @@ namespace Sass {
   Root* Eval::resolveUseRule(UseRule* rule)
   {
 
+    // May not be defined yet
+    Module* mod = rule->module();
+
+    // Nothing to be done for built-ins
+    if (mod && mod->isBuiltIn) {
+      return nullptr;
+    }
+
+    // Seems already loaded?
+    if (rule->root()) {
+      return rule->root();
+    }
+
+    // callStackFrame frame(compiler, {
+    //   rule->pstate(), Strings::useRule });
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+
+    // Resolve final file to load
+    const ImportRequest request(
+      rule->url(), rule->prev(), false);
+
     // Deduct namespace from url
     sass::string ns(rule->ns());
     sass::string url(rule->url());
-
-    const ImportRequest import(rule->url(), rule->prev(), false);
-
-    bool hasCached = false;
 
     // Deduct the namespace from url
     // After last slash before first dot
@@ -625,12 +643,10 @@ namespace Sass {
       ns = url.substr(start, end);
     }
 
-    VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
-
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(import, false));
+      compiler.findIncludes(request, false));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -647,6 +663,8 @@ namespace Sass {
     ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
 
+    bool hasCached = false;
+
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
@@ -661,6 +679,7 @@ namespace Sass {
     else {
 
       if (!ns.empty()) {
+        VarRefs* modFrame(compiler.varRoot.stack.back()->getModule23());
         if (modFrame->fwdModule55.count(ns)) {
           throw Exception::ModuleAlreadyKnown(compiler, ns);
         }
