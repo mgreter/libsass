@@ -222,6 +222,18 @@ namespace Sass {
     return nullptr;
   }
 
+  Value* Eval::visitMixinRule(MixinRule* rule)
+  {
+    UserDefinedCallableObj callable =
+      SASS_MEMORY_NEW(UserDefinedCallable,
+        rule->pstate(), rule->name(), rule, nullptr);
+    rule->midx(compiler.varRoot.setMixin(
+      rule->name(), false, false));
+    compiler.varRoot.setMixin(rule->midx(), callable, false);
+    return nullptr;
+  }
+
+
   Value* Eval::visitFunctionRule(FunctionRule* rule)
   {
     UserDefinedCallableObj callable =

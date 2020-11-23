@@ -2207,15 +2207,6 @@ namespace Sass {
 
   }
 
-  Value* Eval::visitMixinRule(MixinRule* rule)
-  {
-    UserDefinedCallableObj callable =
-      SASS_MEMORY_NEW(UserDefinedCallable,
-        rule->pstate(), rule->name(), rule, nullptr);
-    compiler.varRoot.setMixin(rule->midx(), callable, false);
-    return nullptr;
-  }
-
   Value* Eval::visitReturnRule(ReturnRule* rule)
   {
     return rule->value()->accept(this);
