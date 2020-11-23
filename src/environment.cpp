@@ -1384,13 +1384,9 @@ namespace Sass {
     if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
       << compiler.implicitWithConfig << "\n";
 
-    RootObj sheet = rule->sheet();
-
-    if (sheet.isNull()) {
-      callStackFrame frame(compiler, {
-        rule->pstate(), Strings::importRule });
-      sheet = resolveIncludeImport(rule);
-    }
+    callStackFrame frame(compiler, {
+      rule->pstate(), Strings::importRule });
+    Root* sheet = resolveIncludeImport(rule);
 
     auto vframe = compiler.getCurrentFrame();
 
@@ -1446,11 +1442,11 @@ namespace Sass {
     // Add C-API to stack to expose it
     ImportStackFrame iframe(compiler, sheet->import);
 
-    callStackFrame frame(traces,
-      BackTrace(rule->pstate(), Strings::importRule));
-
-    VarRefs* pframe = compiler.varRoot.stack.back();
+    VarRefs* pframe = compiler.getCurrentFrame();
     EnvScope scoped(compiler.varRoot, sheet->idxs);
+
+    callStackFrame cframe(traces, BackTrace(
+      rule->pstate(), Strings::importRule));
 
     // debug_ast(sheet);
 
