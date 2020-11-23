@@ -1391,6 +1391,10 @@ namespace Sass {
     VarRefs* vframe = compiler.getCurrentFrame();
     VarRefs* pframe = compiler.getCurrentFrame();
 
+    // Imports are always executed again
+    Preloader preproc(*this, sheet);
+    preproc.acceptRoot(sheet);
+
     // Add C-API to stack to expose it
     ImportStackFrame iframe(compiler, sheet->import);
     EnvScope scoped(compiler.varRoot, sheet->idxs);
@@ -1458,11 +1462,6 @@ namespace Sass {
 
     }
 
-    // Imports are always executed again
-    Preloader preproc(*this, sheet);
-    for (const StatementObj& item : sheet->elements()) {
-      item->accept(&preproc);
-    }
 
     // Imports are always executed again
     for (const StatementObj& item : sheet->elements()) {
