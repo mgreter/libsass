@@ -13,7 +13,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   WithConfig::WithConfig(
-    Compiler& compiler,
+    WithConfig* pwconfig,
     sass::vector<WithConfigVar> configs,
     bool hasConfig,
     bool hasShowFilter,
@@ -21,24 +21,19 @@ namespace Sass {
     std::set<EnvKey> filters,
     const sass::string& prefix) :
     compiler(compiler),
+    parent(pwconfig),
     hasConfig(hasConfig),
     hasShowFilter(hasShowFilter),
     hasHideFilter(hasHideFilter),
     filters(filters),
     prefix(prefix)
   {
+
     // Only calculate this once
     doRAII = hasConfig || hasShowFilter
       || hasHideFilter || !prefix.empty();
-    // Do nothing if we don't have any config
-    // Since we are used as a stack RAI object
-    // this mode is very useful to ease coding
-    if (!compiler.withConfigStack.empty()) {
-      parent = compiler.withConfigStack.back();
-    }
 
     if (!doRAII) return;
-
 
     // Read the list of config variables into
     // a map and error if items are duplicated
@@ -59,17 +54,17 @@ namespace Sass {
       config[cfgvar.name] = cfgvar;
     }
     // Push the lookup table onto the stack
-    compiler.withConfigStack.push_back(this);
+    // compiler.withConfigStack.push_back(this);
   }
 
-  void WithConfig::finalize()
+  void WithConfig::finalize(Logger& logger)
   {
     // Check if everything was consumed
     for (auto cfgvar : config) {
       if (cfgvar.second.wasUsed == false) {
         if (cfgvar.second.isGuarded == false) {
-          compiler.addFinalStackTrace(cfgvar.second.pstate2);
-          throw Exception::RuntimeException(compiler, "$" +
+          logger.addFinalStackTrace(cfgvar.second.pstate2);
+          throw Exception::RuntimeException(logger, "$" +
             cfgvar.second.name + " was not declared "
             "with !default in the @used module.");
         }
@@ -84,14 +79,13 @@ namespace Sass {
     // this mode is very useful to ease coding
     if (!doRAII) return;
     // Then remove the config from the stack
-    compiler.withConfigStack.pop_back();
+    // compiler.withConfigStack.pop_back();
   }
 
   WithConfigVar* WithConfig::getCfgVar(EnvKey name, bool skipGuarded, bool skipNull) {
 
-    auto it = compiler.withConfigStack.rbegin();
-    while (it != compiler.withConfigStack.rend()) {
-      auto withcfg = *it; // Dereference iterator
+    auto withcfg = this;
+    while (withcfg) {
       // Check if we should apply any filtering first
       if (withcfg->hasHideFilter) {
         if (withcfg->filters.count(name.norm()))
@@ -117,7 +111,7 @@ namespace Sass {
         sass::string prefix = withcfg->prefix;
         name = EnvKey(prefix + name.orig());
       }
-      it += 1;
+      withcfg = withcfg->parent;
     }
     return nullptr;
   }
@@ -520,14 +514,25 @@ namespace Sass {
 
   UseRule::UseRule(
     const SourceSpan& pstate,
+    const sass::string& prev,
     const sass::string& url,
-    Import* import) :
+    Import* import,
+    WithConfig* pwconfig,
+    sass::vector<WithConfigVar>&& config,
+    bool hasLocalWith) :
     Statement(pstate),
     import_(import),
+    prev_(prev),
     url_(url),
+    hasLocalWith_(hasLocalWith),
     needsLoading_(false),
+    config_(std::move(config)),
+    wconfig_(new WithConfig(pwconfig,
+      config_, hasLocalWith_)),
     module_(nullptr)
-  {}
+  {
+    // ;
+  }
 
   ForwardRule::ForwardRule(
     const SourceSpan& pstate,
@@ -535,6 +540,7 @@ namespace Sass {
     const sass::string& url,
     Import* import,
     const sass::string& prefix,
+    WithConfig* pwconfig,
     std::set<EnvKey>&& toggledVariables,
     std::set<EnvKey>&& toggledCallables,
     sass::vector<WithConfigVar>&& config,
@@ -552,14 +558,15 @@ namespace Sass {
     needsLoading_(false),
     toggledVariables_(std::move(toggledVariables)),
     toggledCallables_(std::move(toggledCallables)),
-    // config_(std::move(config)),
+    config_(std::move(config)),
+    wconfig_(new WithConfig(pwconfig,
+      config_, hasLocalWith_,
+      isShown_, isHidden_,
+      toggledVariables_,
+      prefix_)),
     module_(nullptr)
   {
-    // The show or hide config also filters these
-    // WithConfig* wconfig = new WithConfig(context,
-    //   config, hasWith, isShown, isHidden,
-    //   rule->toggledVariables(), prefix);
-
+    // The show or hide config also hides these
   }
 
   /////////////////////////////////////////////////////////////////////////

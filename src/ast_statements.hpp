@@ -68,7 +68,7 @@ namespace Sass {
 
     // Value constructor
     WithConfig(
-      Compiler& compiler,
+      WithConfig* pwconfig,
       sass::vector<WithConfigVar> config,
       bool hasConfig = true,
       bool hasShowFilter = false,
@@ -76,7 +76,7 @@ namespace Sass {
       std::set<EnvKey> filters = {},
       const sass::string& prefix = "");
 
-    void finalize();
+    void finalize(Logger& logger);
 
     // Destructor
     ~WithConfig();
@@ -656,14 +656,16 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(ImportObj, import);
+    ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, ns);
-    ADD_CONSTREF(sass::string, prev);
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, needsLoading);
     ADD_PROPERTY(sass::vector<WithConfigVar>, config);
+
+    ADD_PROPERTY(WithConfig*, wconfig);
 
     // We have both, root and module
     ADD_PROPERTY(Module*, module);
@@ -672,8 +674,12 @@ namespace Sass {
     // Value constructor
     UseRule(
       const SourceSpan& pstate,
+      const sass::string& prev,
       const sass::string& url,
-      Import* import);
+      Import* import,
+      WithConfig* pwconfig,
+      sass::vector<WithConfigVar>&& config,
+      bool hasLocalWith);
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);
@@ -702,6 +708,7 @@ namespace Sass {
     ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     // We have both, root and module
+    ADD_PROPERTY(WithConfig*, wconfig);
     ADD_PROPERTY(Module*, module);
   public:
     // Value constructor
@@ -711,6 +718,7 @@ namespace Sass {
       const sass::string& url,
       Import* import,
       const sass::string& prefix,
+      WithConfig* pwconfig,
       std::set<EnvKey>&& toggledVariables,
       std::set<EnvKey>&& toggledCallables,
       sass::vector<WithConfigVar>&& config,

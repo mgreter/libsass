@@ -852,7 +852,7 @@ namespace Sass {
       << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
     // The show or hide config also hides these
-    WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith());
+    // WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith());
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || rule->hasLocalWith());
@@ -905,7 +905,8 @@ namespace Sass {
 
     }
 
-    wconfig.finalize();
+    if (!rule->wconfig()) return nullptr;
+    rule->wconfig()->finalize(compiler);
     return nullptr;
   }
 
@@ -917,10 +918,6 @@ namespace Sass {
 
     if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
       << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
-
-    // The show or hide config also hides these
-    WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith(),
-      rule->isShown(), rule->isHidden(), rule->toggledVariables(), rule->prefix());
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || rule->hasLocalWith());
@@ -965,7 +962,8 @@ namespace Sass {
         rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
     }
 
-    wconfig.finalize();
+    if (!rule->wconfig()) return nullptr;
+    rule->wconfig()->finalize(compiler);
     return nullptr;
   }
 
@@ -1015,7 +1013,9 @@ namespace Sass {
     }
 
     UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
-      scanner.relevantSpanFrom(start), url, {});
+      scanner.relevantSpanFrom(start),
+      scanner.sourceUrl, url, {},
+      nullptr, std::move(config), hasWith);
     rule->hasLocalWith(hasWith);
 
     VarRefs* current(context.varRoot.stack.back());
@@ -1024,7 +1024,7 @@ namespace Sass {
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
-      WithConfig wconfig(context, config, hasWith);
+      // WithConfig wconfig(context, config, hasWith);
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1073,7 +1073,7 @@ namespace Sass {
           { module->idxs, nullptr } });
       }
 
-      wconfig.finalize();
+      // wconfig.finalize();
       return rule.detach();
 
     }
@@ -1358,7 +1358,8 @@ namespace Sass {
 
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
-      scanner.sourceUrl, url, {}, prefix,
+      scanner.sourceUrl, url, {},
+      prefix, nullptr, // pwconfig
       std::move(toggledVariables2),
       std::move(toggledCallables2),
       std::move(config),
@@ -1373,8 +1374,8 @@ namespace Sass {
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       // The show or hide config also hides these
-      WithConfig wconfig(context, config, hasWith,
-        isShown, isHidden, rule->toggledVariables(), prefix);
+      // WithConfig wconfig(context, config, hasWith,
+      //   isShown, isHidden, rule->toggledVariables(), prefix);
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1396,7 +1397,7 @@ namespace Sass {
           "Invalid internal module requested.");
       }
 
-      wconfig.finalize();
+      // wconfig.finalize();
       return rule.detach();
     }
 
@@ -1454,7 +1455,7 @@ namespace Sass {
           }
         }
 
-        WithConfig wconfig(compiler, withConfigs, hasWith);
+        WithConfig wconfig(nullptr, withConfigs, hasWith);
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
@@ -1501,7 +1502,7 @@ namespace Sass {
             "Couldn't load it.");
         }
 
-        wconfig.finalize();
+        wconfig.finalize(compiler);
 
         return SASS_MEMORY_NEW(Null, pstate);;
       }
