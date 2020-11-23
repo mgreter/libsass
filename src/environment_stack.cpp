@@ -189,13 +189,13 @@ namespace Sass {
   {
     auto current = this;
     // Skip over all imports
-    while (current->isImport) {
-      current = current->pscope;
-    }
-    if (current->isCompiled) {
-      // throw "Can't create on active frame";
-      root.functions.push_back({});
-    }
+    // while (current->isImport) {
+    //   current = current->pscope;
+    // }
+    // if (current->isCompiled) {
+    //   // throw "Can't create on active frame";
+    //   root.functions.push_back({});
+    // }
     return current->createFunction(name);
   }
   // EO createFunction
@@ -205,13 +205,13 @@ namespace Sass {
   {
     auto current = this;
     // Skip over all imports
-    while (current->isImport) {
-      current = current->pscope;
-    }
-    if (current->isCompiled) {
-      // throw "Can't create on active frame";
-      root.mixins.push_back({});
-    }
+    // while (current->isImport) {
+    //   current = current->pscope;
+    // }
+    // if (current->isCompiled) {
+    //   // throw "Can't create on active frame";
+    //   root.mixins.push_back({});
+    // }
     return current->createMixin(name);
   }
   // EO createFunction
@@ -265,10 +265,12 @@ namespace Sass {
   {
     VarRefs* current = this;
     while (current != nullptr) {
-      // Check if we already have this var
-      auto it = current->mixIdxs.find(name);
-      if (it != current->mixIdxs.end()) {
-        return { current->mixFrame, it->second };
+      if (!current->isImport) {
+        // Check if we already have this var
+        auto it = current->mixIdxs.find(name);
+        if (it != current->mixIdxs.end()) {
+          return { current->mixFrame, it->second };
+        }
       }
       current = current->getParent(passThrough);
     }
@@ -283,10 +285,12 @@ namespace Sass {
   {
     VarRefs* current = this;
     while (current != nullptr) {
-      // Check if we already have this var
-      auto it = current->fnIdxs.find(name);
-      if (it != current->fnIdxs.end()) {
-        return { current->fnFrame, it->second };
+      if (!current->isImport) {
+        // Check if we already have this var
+        auto it = current->fnIdxs.find(name);
+        if (it != current->fnIdxs.end()) {
+          return { current->fnFrame, it->second };
+        }
       }
       current = current->getParent(passThrough);
     }
@@ -594,11 +598,13 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      auto it = current->fnIdxs.find(name);
-      if (it != current->fnIdxs.end()) {
-        const VarRef vidx{ current->fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (!value.isNull()) return &value;
+      if (!current->isImport) {
+        auto it = current->fnIdxs.find(name);
+        if (it != current->fnIdxs.end()) {
+          const VarRef vidx{ current->fnFrame, it->second };
+          CallableObj& value = root.getFunction(vidx);
+          if (!value.isNull()) return &value;
+        }
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->fnIdxs.find(name);
@@ -633,11 +639,13 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      auto it = current->fnIdxs.find(name);
-      if (it != current->fnIdxs.end()) {
-        const VarRef vidx{ current->fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (!value.isNull()) return vidx;
+      if (!current->isImport) {
+        auto it = current->fnIdxs.find(name);
+        if (it != current->fnIdxs.end()) {
+          const VarRef vidx{ current->fnFrame, it->second };
+          CallableObj& value = root.getFunction(vidx);
+          if (!value.isNull()) return vidx;
+        }
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->fnIdxs.find(name);
@@ -671,11 +679,13 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      auto it = current->mixIdxs.find(name);
-      if (it != current->mixIdxs.end()) {
-        const VarRef midx{ current->mixFrame, it->second };
-        Callable* mixin = root.getMixin(midx);
-        if (mixin != nullptr) return mixin;
+      if (!current->isImport) {
+        auto it = current->mixIdxs.find(name);
+        if (it != current->mixIdxs.end()) {
+          const VarRef midx{ current->mixFrame, it->second };
+          Callable* mixin = root.getMixin(midx);
+          if (mixin != nullptr) return mixin;
+        }
       }
       for (auto fwds : current->fwdGlobal55) {
         auto fwd = fwds->mixIdxs.find(name);
@@ -708,6 +718,7 @@ namespace Sass {
   // find a defined mixin or run out of parent scopes.
   Callable* VarRefs::getMixin(const EnvKey& name) const
   {
+    if (!isImport) return nullptr;
     auto it = mixIdxs.find(name);
     if (it != mixIdxs.end()) {
       const VarRef vidx{ mixFrame, it->second };
@@ -736,6 +747,7 @@ namespace Sass {
 
   VarRef VarRefs::getFnIdx(const EnvKey& name) const
   {
+    if (!isImport) return nullidx;
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
       const VarRef fidx{ fnFrame, it->second };
@@ -763,6 +775,7 @@ namespace Sass {
 
   CallableObj* VarRefs::getFunction(const EnvKey& name) const
   {
+    if (!isImport) return nullptr;
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
       const VarRef vidx{ fnFrame, it->second };
