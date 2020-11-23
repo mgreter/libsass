@@ -62,6 +62,9 @@ namespace Sass {
     // Nothing to be done for built-ins
     if (mod && mod->isBuiltIn) return;
 
+    // Seems already loaded?
+    if (rule->root()) return;
+
     // Resolve final file to load
     const ImportRequest request(
       rule->url(), rule->prev(), false);
@@ -98,25 +101,30 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(eval.compiler, loaded);
+
+    rule->ns(ns == "*" ? "" : ns);
+    rule->needsLoading(false);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
       sheet = cached->second;
+      rule->module(sheet);
+      rule->root(sheet);
+      return;
     }
     else {
+      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true); // correct
       sheet = eval.compiler.registerImport(loaded);
       sheet->import = loaded;
     }
     
-    rule->root(sheet);
     rule->module(sheet);
-    rule->ns(ns == "*" ? "" : ns);
-    rule->needsLoading(false);
+    rule->root(sheet);
+    // this->acceptRoot(sheet);
 
   }
 
@@ -132,6 +140,9 @@ namespace Sass {
 
     // Nothing to be done for built-ins
     if (mod && mod->isBuiltIn) return;
+
+    // Seems already loaded?
+    if (rule->root()) return;
 
     // Resolve final file to load
     const ImportRequest request(
@@ -158,24 +169,29 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(eval.compiler, loaded);
+
+    rule->needsLoading(false);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
       sheet = cached->second;
+      rule->module(sheet);
+      rule->root(sheet);
+      return;
     }
     else {
+      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true); // correct
       sheet = eval.compiler.registerImport(loaded);
       sheet->import = loaded;
     }
     
-    rule->root(sheet);
     rule->module(sheet);
-    rule->needsLoading(false);
+    rule->root(sheet);
+    //this->acceptRoot(sheet);
 
   }
 
@@ -190,6 +206,9 @@ namespace Sass {
 
     // Nothing to be done for built-ins
     if (mod && mod->isBuiltIn) return;
+
+    // Seems already loaded?
+    if (rule->sheet()) return;
 
     // Resolve final file to load
     const ImportRequest request(
@@ -216,15 +235,17 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(eval.compiler, loaded);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
       sheet = cached->second;
+      rule->sheet(sheet);
+      return;
     }
     else {
+      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true, true);
       sheet = eval.compiler.registerImport(loaded);
@@ -232,6 +253,8 @@ namespace Sass {
     }
     
     rule->sheet(sheet);
+    //this->acceptRoot(sheet);
+
     // rule->module(sheet);
     // rule->needsLoading(false);
 

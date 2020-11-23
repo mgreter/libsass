@@ -1208,6 +1208,8 @@ namespace Sass {
 
     if (rule->sheet()) return rule->sheet();
 
+    std::cerr << "WAT THE WASD\n";
+
     SourceSpan pstate(rule->pstate());
     const ImportRequest request(rule->url(), rule->prev(), true);
     callStackFrame frame(compiler, { pstate, Strings::importRule });

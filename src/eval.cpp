@@ -15,6 +15,8 @@
 #include "parser_media_query.hpp"
 #include "parser_keyframe_selector.hpp"
 
+#include "preloader.hpp"
+
 #include "debugger.hpp"
 
 namespace Sass {
@@ -1460,6 +1462,11 @@ namespace Sass {
 
   CssRoot* Eval::acceptRoot(Root* root)
   {
+
+    // debug_ast(root);
+    Preloader preloader(*this, root);
+    preloader.process();
+
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     // EnvScope scoped(compiler.varRoot, root->idxs);
     LOCAL_PTR(CssParentNode, current, css);
