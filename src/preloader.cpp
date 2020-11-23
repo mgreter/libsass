@@ -9,6 +9,8 @@
 #include "environment.hpp"
 #include "ast_imports.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   Preloader::Preloader(Eval& eval, Root* root) :
@@ -170,6 +172,7 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(eval.compiler, loaded);
 
     rule->needsLoading(false);
 
@@ -177,23 +180,27 @@ namespace Sass {
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
-      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->module(sheet);
       rule->root(sheet);
       return;
     }
     else {
-      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
-      EnvFrame local(eval.compiler, false, true); // correct
+      EnvFrame local(eval.compiler, true, true); // correct
       sheet = eval.compiler.registerImport(loaded);
       sheet->import = loaded;
     }
     
     rule->module(sheet);
     rule->root(sheet);
-    //this->acceptRoot(sheet);
+
+    if (sheet->empty()) return;
+    LOCAL_PTR(Module, module, sheet);
+    LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+    eval.compiler.varRoot.stack.push_back(sheet->idxs);
+    for (auto it : sheet->elements()) it->accept(this);
+    eval.compiler.varRoot.stack.pop_back();
 
   }
 
@@ -237,18 +244,17 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(eval.compiler, loaded);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
-      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->sheet(sheet);
       return;
     }
     else {
-      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true, true);
       sheet = eval.compiler.registerImport(loaded);
@@ -256,7 +262,18 @@ namespace Sass {
     }
     
     rule->sheet(sheet);
-    //this->acceptRoot(sheet);
+
+    // std::cerr << "LOADED " << abspath << "\n";
+
+    // debug_ast(sheet);
+    if (sheet->empty()) return;
+    LOCAL_PTR(Module, module, sheet);
+    LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+    eval.compiler.varRoot.stack.push_back(sheet->idxs);
+    for (auto& it : sheet->elements()) it->accept(this);
+    eval.compiler.varRoot.stack.pop_back();
+
+    // this->acceptRoot(sheet);
 
     // rule->module(sheet);
     // rule->needsLoading(false);

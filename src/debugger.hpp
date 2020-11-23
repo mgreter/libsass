@@ -386,6 +386,25 @@ inline void debug_css_parent_node(CssParentNode* rule, std::string ind = "")
   debug_block(rule, ind + " ");
 }
 
+inline void debug_idxs(Env* env) {
+  if (env) {
+    std::cerr << " ";
+    std::cerr << "{V:" << env->idxs->varIdxs.size();
+    std::cerr << "|M:" << env->idxs->mixIdxs.size();
+    std::cerr << "|F:" << env->idxs->fnIdxs.size();
+    if (env->idxs->module) {
+      std::cerr << "|FV:" << env->idxs->module->mergedFwdVar.size();
+      std::cerr << "|FM:" << env->idxs->module->mergedFwdMix.size();
+      std::cerr << "|FF:" << env->idxs->module->mergedFwdFn.size();
+    }
+    std::cerr << "}";
+  }
+  else {
+    std::cerr << " {nil}";
+  }
+
+}
+
 inline void debug_ast(AstNode* node, std::string ind)
 {
   if (node == 0) return;
@@ -394,6 +413,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     Root* root = Cast<Root>(node);
     std::cerr << ind << "Root " << root;
     std::cerr << " (" << pstate_source_position(root) << ")";
+    debug_idxs(root);
     std::cerr << std::endl;
     debug_block(root, ind + " ");
   }
@@ -600,6 +620,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   ForwardRule* rule = Cast<ForwardRule>(node);
     std::cerr << ind << "ForwardRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
+    debug_idxs(rule->module());
     std::cerr << std::endl;
     debug_ast(rule->root(), ind + " =@ ");
 
@@ -608,6 +629,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     UseRule* rule = Cast<UseRule>(node);
     std::cerr << ind << "UseRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
+    debug_idxs(rule->module());
     std::cerr << std::endl;
     debug_ast(rule->root(), ind + " =@ ");
 
@@ -818,8 +840,9 @@ inline void debug_ast(AstNode* node, std::string ind)
     IncludeImport* block = Cast<IncludeImport>(node);
     std::cerr << ind << "IncludeImport " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    // std::cerr << " [" << block->sheet() << "] ";
+    debug_idxs(block->module());
     std::cerr << std::endl;
+    debug_ast(block->sheet(), ind + " @ ");
   }
   else if (Cast<ImportRule>(node)) {
     ImportRule* block = Cast<ImportRule>(node);
@@ -942,6 +965,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << ind << "FunctionRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [indent: " << ruleset->tabs() << "]";
+    std::cerr << " fidx(" << ruleset->fidx().toString() << ")";
     std::cerr << " [" << ruleset->name().orig() << "]";
     std::cerr << std::endl;
     debug_block(ruleset, ind + " ");
