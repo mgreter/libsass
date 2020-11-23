@@ -932,6 +932,7 @@ namespace Sass {
     VarRefs* mframe(compiler.getCurrentModule());
 
     if (rule->needsLoading()) {
+      std::cerr << "===============================================\n";
       if (Root* module = resolveUseRule(rule)) {
         rule->root(module);
         rule->needsLoading(false);
