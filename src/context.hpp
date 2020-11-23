@@ -42,7 +42,7 @@ namespace Sass {
 
     Root* currentRoot = nullptr;
 
-    sass::vector<WithConfig*> withConfigStack;
+    WithConfig* wconfig = nullptr;
 
     WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
 

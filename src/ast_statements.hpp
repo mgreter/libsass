@@ -86,16 +86,16 @@ namespace Sass {
 
   };
 
-  class WithConfigScope
-  {
-    Compiler& compiler;
-    WithConfig* config;
-  public:
-    WithConfigScope(
-      Compiler& compiler,
-      WithConfig* config);
-    ~WithConfigScope();
-  };
+  // class WithConfigScope
+  // {
+  //   Compiler& compiler;
+  //   WithConfig* config;
+  // public:
+  //   WithConfigScope(
+  //     Compiler& compiler,
+  //     WithConfig* config);
+  //   ~WithConfigScope();
+  // };
 
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for statements that contain blocks of statements.

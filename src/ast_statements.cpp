@@ -116,21 +116,21 @@ namespace Sass {
     return nullptr;
   }
 
-  Sass::WithConfigScope::WithConfigScope(
-    Compiler& compiler,
-    WithConfig* config) :
-    compiler(compiler),
-    config(config)
-  {
-    if (config == nullptr) return;
-    compiler.withConfigStack.push_back(config);
-  }
-
-  Sass::WithConfigScope::~WithConfigScope()
-  {
-    if (config == nullptr) return;
-    compiler.withConfigStack.pop_back();
-  }
+  // Sass::WithConfigScope::WithConfigScope(
+  //   Compiler& compiler,
+  //   WithConfig* config) :
+  //   compiler(compiler),
+  //   config(config)
+  // {
+  //   if (config == nullptr) return;
+  //   compiler.withConfigStack.push_back(config);
+  // }
+  // 
+  // Sass::WithConfigScope::~WithConfigScope()
+  // {
+  //   if (config == nullptr) return;
+  //   compiler.withConfigStack.pop_back();
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
