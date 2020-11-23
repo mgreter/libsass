@@ -556,26 +556,49 @@ namespace Sass {
   Root* Eval::resolveForwardRule(ForwardRule* rule)
   {
 
+    // May not be defined yet
+    Module* mod = rule->module();
+
+    // Nothing to be done for built-ins
+    if (mod && mod->isBuiltIn) {
+      return nullptr;
+    }
+
+    // Seems already loaded?
+    if (rule->root()) {
+      return rule->root();
+    }
+
+    // callStackFrame frame(compiler, {
+    //   rule->pstate(), Strings::useRule });
+
+    // LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+
+    // Resolve final file to load
+    const ImportRequest request(
+      rule->url(), rule->prev(), false);
+
+    // Deduct namespace from url
+    // sass::string ns(rule->ns());
+    // sass::string url(rule->url());
+
+
     SourceSpan pstate(rule->pstate());
-    const ImportRequest import(rule->url(), rule->prev(), false);
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport>& resolved(compiler.findIncludes(import, false));
+    const sass::vector<ResolvedImport>& resolved(
+      compiler.findIncludes(request, false));
 
     // Error if no file to import was found
     if (resolved.empty()) {
-      compiler.addFinalStackTrace(pstate);
-      throw Exception::ParserException(compiler,
-        "Can't find stylesheet to import.");
+      compiler.addFinalStackTrace(rule->pstate());
+      throw Exception::UnknwonImport(compiler);
     }
     // Error if multiple files to import were found
     else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-        msg_stream << "  " << resolved[i].imp_path << "\n";
-      throw Exception::ParserException(compiler, msg_stream.str());
+      compiler.addFinalStackTrace(rule->pstate());
+      throw Exception::AmbiguousImports(compiler, resolved);
     }
 
     // We made sure exactly one entry was found, load its content
