@@ -631,7 +631,8 @@ namespace Sass {
   Root* Eval::resolveIncludeImport(
     const SourceSpan& pstate,
     const sass::string& prev,
-    const sass::string& url)
+    const sass::string& url,
+    bool scoped)
   {
 
     // Nothing to be done for built-ins
@@ -680,8 +681,9 @@ namespace Sass {
     }
     else {
       // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true, true); // correct
+      EnvFrame local(compiler, false, true, !scoped); // correct
       sheet = compiler.registerImport(loaded);
+      sheet->idxs = local.idxs;
       sheet->import = loaded;
     }
 
@@ -930,32 +932,6 @@ namespace Sass {
         current->append(child);
       }
     }
-  }
-
-  Root* Eval::loadModule(Compiler& compiler, Import* loaded, bool hasWith)
-  {
-    // First check if the module was already loaded
-    auto it = compiler.sheets.find(loaded->getAbsPath());
-    if (it != compiler.sheets.end()) {
-      // Don't allow to reconfigure once loaded
-      if (hasWith && compiler.implicitWithConfig) {
-        throw Exception::ParserException(compiler,
-          sass::string(loaded->getImpPath())
-          + " was already loaded, so it "
-          "can\'t be configured using \"with\".");
-      }
-      // Return cached stylesheet
-      return it->second;
-    }
-    // BuiltInMod is created within a new scope
-    EnvFrame local(compiler, false, true); 
-    // eval.selectorStack.push_back(nullptr);
-    // ImportStackFrame iframe(compiler, loaded);
-    Root* sheet = compiler.registerImport(loaded);
-    // eval.selectorStack.pop_back();
-    sheet->idxs = local.idxs;
-    sheet->import = loaded;
-    return sheet;
   }
 
   void Eval::compileModule(Root* root)
@@ -1634,9 +1610,6 @@ namespace Sass {
         WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
 
-        WithConfig*& pwconfig(compiler.wconfig);
-        LOCAL_PTR(WithConfig, pwconfig, &wconfig);
-
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
           if (hasWith) {
@@ -1647,53 +1620,29 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
-        // Import* loaded = compiler.import_stack.back();
 
-        // Loading relative to where the function was included
-        const ImportRequest request(url->value(), pstate.getAbsPath(), false);
-
-        // Search for valid imports (e.g. partials) on the file-system
-        // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport>& resolved(
-          compiler.findIncludes(request, true));
-
-        // Error if no file to import was found
-        if (resolved.empty()) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::UnknwonImport(compiler);
+        sass::string prev(pstate.getAbsPath());
+        if (Root* sheet = eval.resolveIncludeImport(
+          pstate, prev, url->value(), true)) {
+          if (!sheet->isCompiled) {
+            ImportStackFrame iframe(compiler, sheet->import);
+            LocalOption<bool> scoped(compiler.implicitWithConfig,
+              compiler.implicitWithConfig || hasWith);
+            WithConfig*& pwconfig(compiler.wconfig);
+            LOCAL_PTR(WithConfig, pwconfig, &wconfig);
+            eval.compileModule(sheet);
+            wconfig.finalize(compiler);
+            eval.insertModule(sheet);
+          }
+          else if (hasWith) {
+            throw Exception::ParserException(compiler,
+              sass::string(sheet->pstate().getImpPath())
+              + " was already loaded, so it "
+              "can't be configured using \"with\".");
+          }
         }
-        // Error if multiple files to import were found
-        else if (resolved.size() > 1) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::AmbiguousImports(compiler, resolved);
-        }
 
 
-        // This is guaranteed to either load or error out!
-        ImportObj loaded = compiler.loadImport(resolved[0]);
-        ImportStackFrame iframe(compiler, loaded);
-
-        // rule->import(loaded);
-
-        Root* module = eval.loadModule(compiler, loaded, hasWith);
-        eval.compileModule(module);
-        eval.insertModule(module);
-
-        // Root* sheet = nullptr;
-        // sass::string abspath(loaded->getAbsPath());
-        // auto cached = compiler.sheets.find(abspath);
-        // if (cached != compiler.sheets.end()) {
-        //   sheet = cached->second;
-        // }
-        // else {
-        //   // Permeable seems to have minor negative impact!?
-        //   EnvFrame local(compiler, true, true, false); // correct
-        //   sheet = compiler.registerImport(loaded);
-        //   sheet->import = loaded;
-        // }
-
-
-        wconfig.finalize(compiler);
 
         return SASS_MEMORY_NEW(Null, pstate);;
       }

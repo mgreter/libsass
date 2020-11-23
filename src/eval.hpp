@@ -351,7 +351,8 @@ namespace Sass {
     Root* resolveIncludeImport(
       const SourceSpan& pstate,
       const sass::string& prev,
-      const sass::string& url);
+      const sass::string& url,
+      bool scoped = false);
 
   private:
     /////////////////////////////////////////////////////////////////////////
