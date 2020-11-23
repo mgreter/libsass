@@ -1384,8 +1384,8 @@ namespace Sass {
     if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
       << compiler.implicitWithConfig << "\n";
 
-    callStackFrame frame(compiler, {
-      rule->pstate(), Strings::importRule });
+    callStackFrame cframe(traces, BackTrace(
+      rule->pstate(), Strings::importRule));
     Root* sheet = resolveIncludeImport(rule);
 
     auto vframe = compiler.getCurrentFrame();
@@ -1444,9 +1444,6 @@ namespace Sass {
 
     VarRefs* pframe = compiler.getCurrentFrame();
     EnvScope scoped(compiler.varRoot, sheet->idxs);
-
-    callStackFrame cframe(traces, BackTrace(
-      rule->pstate(), Strings::importRule));
 
     // debug_ast(sheet);
 
