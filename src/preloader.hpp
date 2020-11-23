@@ -31,11 +31,12 @@ namespace Sass {
     WithConfig*& wconfig;
 
     // Current module scope
-    Module* module;
+    Root* module = nullptr;
 
     // Current lexical scope
     VarRefs* idxs;
 
+    void exposeImport(Eval& eval, Root* sheet);
 
     void visitParentStatement(ParentStatement* rule);
     void visitIncludeImport(IncludeImport* include);

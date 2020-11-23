@@ -25,6 +25,16 @@ namespace std {
 
 namespace Sass {
 
+  void mergeForwards(
+    VarRefs* idxs,
+    Moduled* module,
+    bool isShown,
+    bool isHidden,
+    const sass::string prefix,
+    const std::set<EnvKey>& toggledVariables,
+    const std::set<EnvKey>& toggledCallables,
+    Logger& logger);
+
 }
 
 #endif

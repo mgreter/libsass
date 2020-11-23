@@ -702,6 +702,7 @@ namespace Sass {
     ADD_PROPERTY(bool, isHidden);
     ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, needsLoading);
+    ADD_PROPERTY(bool, wasMerged);
     ADD_REF(std::set<EnvKey>, toggledVariables);
     ADD_REF(std::set<EnvKey>, toggledCallables);
     ADD_REF(sass::vector<WithConfigVar>, config);

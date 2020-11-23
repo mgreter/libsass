@@ -329,6 +329,7 @@ namespace Sass {
     friend class Compiler;
     friend class EnvScope;
     friend class EnvFrame;
+    friend class Preloader;
     friend class VarRefs;
     friend class Eval;
 

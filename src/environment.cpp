@@ -1022,9 +1022,10 @@ namespace Sass {
     }
 
     // Must release some scope first
-    if (rule->root()) {
+    if (rule->root() && !rule->wasMerged()) {
       mergeForwards(rule->root()->idxs, compiler.currentRoot, rule->isShown(), rule->isHidden(),
         rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
+      rule->wasMerged(true);
     }
 
     if (!rule->wconfig()) return nullptr;
@@ -1299,6 +1300,25 @@ namespace Sass {
     // Skip over all imports
     // We are doing it out of order
     while (vframe) {
+
+      // if (Module* module = sheet->idxs->module) {
+      // 
+      //   // Merge it up through all imports
+      //   for (auto& var : module->mergedFwdVar) {
+      //     auto it = module->mergedFwdVar.find(var.first);
+      //     if (it == module->mergedFwdVar.end()) {
+      //       if (vframe->isCompiled) {
+      //         // throw "Can't create on active frame";
+      //       }
+      //       compiler.varRoot.variables.push_back({});
+      //       // std::cerr << "EXPORT " << var.first.norm() << "\n";
+      //       vframe->createVariable(var.first);
+      //     }
+      //   }
+      // 
+      // }
+
+
       // Merge it up through all imports
       for (auto& var : sheet->idxs->varIdxs) {
         auto it = vframe->varIdxs.find(var.first);
@@ -1486,8 +1506,11 @@ namespace Sass {
       sass::string name(url.substr(5));
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (BuiltInMod* module = context.getModule(name)) {
-        mergeForwards(module->idxs, context.currentRoot, isShown, isHidden,
-          prefix, toggledVariables, toggledCallables, context);
+        if (!rule->wasMerged()) {
+          mergeForwards(module->idxs, context.currentRoot, isShown, isHidden,
+            prefix, toggledVariables, toggledCallables, context);
+          rule->wasMerged(true);
+        }
         rule->module(module);
         rule->root(nullptr);
       }

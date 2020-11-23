@@ -554,6 +554,7 @@ namespace Sass {
     isShown_(isShown),
     isHidden_(isHidden),
     hasLocalWith_(hasWith),
+    wasMerged_(false),
     needsLoading_(false),
     toggledVariables_(std::move(toggledVariables)),
     toggledCallables_(std::move(toggledCallables)),

@@ -31,7 +31,7 @@ namespace Sass {
   void Preloader::acceptRoot(Root* root)
   {
     if (root->empty()) return;
-    LOCAL_PTR(Module, module, root);
+    LOCAL_PTR(Root, module, root);
     LOCAL_PTR(VarRefs, idxs, root->idxs);
     ImportStackFrame isf(eval.compiler, root->import);
     eval.compiler.varRoot.stack.push_back(root->idxs);
@@ -101,6 +101,7 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(eval.compiler, loaded);
 
     rule->ns(ns == "*" ? "" : ns);
     rule->needsLoading(false);
@@ -109,14 +110,12 @@ namespace Sass {
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
-      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->module(sheet);
       rule->root(sheet);
       return;
     }
     else {
-      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true); // correct
       sheet = eval.compiler.registerImport(loaded);
@@ -125,7 +124,14 @@ namespace Sass {
     
     rule->module(sheet);
     rule->root(sheet);
-    // this->acceptRoot(sheet);
+
+return;
+    if (sheet->empty()) return;
+    LOCAL_PTR(Root, module, sheet);
+    LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+    eval.compiler.varRoot.stack.push_back(sheet->idxs);
+    for (auto it : sheet->elements()) it->accept(this);
+    eval.compiler.varRoot.stack.pop_back();
 
   }
 
@@ -140,10 +146,20 @@ namespace Sass {
     Module* mod = rule->module();
 
     // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn) return;
+    if (mod && mod->isBuiltIn && !rule->wasMerged()) {
+      mergeForwards(rule->module()->idxs, module, rule->isShown(), rule->isHidden(),
+        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
+      rule->wasMerged(true);
+      return;
+    }
 
     // Seems already loaded?
-    if (rule->root()) return;
+    if (rule->root() && !rule->wasMerged()) {
+      mergeForwards(rule->root()->idxs, module, rule->isShown(), rule->isHidden(),
+        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
+      rule->wasMerged(true);
+      return;
+    }
 
     // Resolve final file to load
     const ImportRequest request(
@@ -189,17 +205,109 @@ namespace Sass {
       sheet = eval.compiler.registerImport(loaded);
       sheet->import = loaded;
     }
-    
+
     rule->module(sheet);
     rule->root(sheet);
+    {
+      if (sheet->empty()) return;
+      LOCAL_PTR(Root, module, sheet);
+      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+      eval.compiler.varRoot.stack.push_back(sheet->idxs);
+      for (auto it : sheet->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.pop_back();
+    }
 
-    if (sheet->empty()) return;
-    LOCAL_PTR(Module, module, sheet);
-    LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-    eval.compiler.varRoot.stack.push_back(sheet->idxs);
-    for (auto it : sheet->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    if (rule->root() && !rule->wasMerged()) {
+      mergeForwards(rule->root()->idxs, module, rule->isShown(), rule->isHidden(),
+        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
+      rule->wasMerged(true);
+    }
+  }
 
+  void Preloader::exposeImport(Eval& eval, Root* sheet)
+  {
+    auto vframe = eval.compiler.getCurrentFrame();
+
+    // Skip over all imports
+    // We are doing it out of order
+    while (vframe) {
+
+      for (auto& var : sheet->mergedFwdVar) {
+        auto it = module->mergedFwdVar.find(var.first);
+        if (it == module->mergedFwdVar.end()) {
+          module->mergedFwdVar[var.first] = var.second;
+          // eval.compiler.varRoot.variables.push_back({});
+          // std::cerr << "EXPORT " << var.first.norm() << "\n";
+          // vframe->createVariable(var.first);
+        }
+        else {
+          // it->second = var.second;
+        }
+      }
+
+      // Merge it up through all imports
+      for (auto& var : sheet->idxs->varIdxs) {
+        auto it = vframe->varIdxs.find(var.first);
+        if (it == vframe->varIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+          }
+          // eval.compiler.varRoot.variables.push_back({});
+          std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createVariable(var.first);
+        }
+        else {
+          // it->second = var.second;
+        }
+      }
+
+
+      // Merge it up through all imports
+      for (auto& var : sheet->idxs->varIdxs) {
+        auto it = vframe->varIdxs.find(var.first);
+        if (it == vframe->varIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+          }
+          // eval.compiler.varRoot.variables.push_back({});
+          std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createVariable(var.first);
+        }
+        else {
+          it->second = var.second;
+        }
+      }
+
+      // Merge it up through all imports
+      for (auto& fn : sheet->idxs->fnIdxs) {
+        auto it = vframe->fnIdxs.find(fn.first);
+        if (it == vframe->fnIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+          }
+          // eval.compiler.varRoot.functions.push_back({});
+          // std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createFunction(fn.first);
+        }
+      }
+
+      // Merge it up through all imports
+      for (auto& mix : sheet->idxs->mixIdxs) {
+        auto it = vframe->mixIdxs.find(mix.first);
+        if (it == vframe->mixIdxs.end()) {
+          if (vframe->isCompiled) {
+            // throw "Can't create on active frame";
+          }
+          eval.compiler.varRoot.mixins.push_back({});
+          // std::cerr << "EXPORT " << var.first.norm() << "\n";
+          vframe->createMixin(mix.first);
+        }
+      }
+
+      if (!vframe->isImport) break;
+      vframe = vframe->pscope;
+      // break;
+    }
   }
 
   void Preloader::visitIncludeImport(IncludeImport* rule)
@@ -242,29 +350,35 @@ namespace Sass {
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = eval.compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(eval.compiler, loaded);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
-      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->sheet(sheet);
       return;
     }
     else {
-      ImportStackFrame iframe(eval.compiler, loaded);
       // Permeable seems to have minor negative impact!?
       EnvFrame local(eval.compiler, false, true, true);
       sheet = eval.compiler.registerImport(loaded);
       sheet->import = loaded;
     }
     
+    rule->module(sheet);
     rule->sheet(sheet);
-    //this->acceptRoot(sheet);
 
-    // rule->module(sheet);
-    // rule->needsLoading(false);
+return;
+    {
+      if (sheet->empty()) return;
+      LOCAL_PTR(Root, module, sheet);
+      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+      eval.compiler.varRoot.stack.push_back(sheet->idxs);
+      for (auto it : sheet->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.pop_back();
+    }
 
   }
 
