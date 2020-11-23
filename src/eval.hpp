@@ -346,6 +346,13 @@ namespace Sass {
     Root* resolveUseRule(UseRule* rule);
     Root* resolveForwardRule(ForwardRule* rule);
     Root* resolveIncludeImport(IncludeImport* rule);
+
+
+    Root* resolveIncludeImport(
+      const SourceSpan& pstate,
+      const sass::string& prev,
+      const sass::string& url);
+
   private:
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

@@ -57,7 +57,7 @@ namespace Sass {
 
     Root* sheet = eval.resolveUseRule(rule);
 
-    return;
+    // return;
 
     if (sheet && !sheet->empty()) {
       LOCAL_PTR(Root, chroot77, sheet);
@@ -67,6 +67,8 @@ namespace Sass {
       for (auto& it : sheet->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
+
+    return;
 
     eval.exposeUseRule(rule);
 
@@ -79,7 +81,7 @@ namespace Sass {
 
     Root* sheet = eval.resolveForwardRule(rule);
 
-    return;
+    // return;
 
     if (sheet && !sheet->empty()) {
       LOCAL_PTR(Root, chroot77, sheet);
@@ -89,6 +91,8 @@ namespace Sass {
       for (auto& it : sheet->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
+
+    return;
 
     eval.exposeFwdRule(rule);
   }
@@ -112,6 +116,8 @@ namespace Sass {
       for (auto& it : root->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
+
+    return;
 
     eval.exposeImpRule(rule);
 

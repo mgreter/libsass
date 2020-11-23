@@ -623,6 +623,30 @@ namespace Sass {
 
   Root* Eval::resolveIncludeImport(IncludeImport* rule)
   {
+    // Seems already loaded?
+    if (rule->sheet()) {
+      return rule->sheet();
+    }
+
+    if (rule->module() && rule->module()->isBuiltIn) {
+      return nullptr;
+    }
+
+
+    if (Root* sheet2 = resolveIncludeImport(
+      rule->pstate(),
+      rule->prev(),
+      rule->url()
+    )) {
+      rule->import(sheet2->import);
+      rule->module(sheet2);
+      rule->sheet(sheet2);
+      return sheet2;
+    }
+
+    return nullptr;
+
+
     // May not be defined yet
     Module* mod = rule->module();
 
@@ -631,10 +655,6 @@ namespace Sass {
       return nullptr;
     }
 
-    // Seems already loaded?
-    if (rule->sheet()) {
-      return rule->sheet();
-    }
 
     // callStackFrame frame(compiler, {
     //   rule->pstate(), Strings::useRule });
@@ -684,6 +704,70 @@ namespace Sass {
     return sheet;
   }
 
+
+  Root* Eval::resolveIncludeImport(
+    const SourceSpan& pstate,
+    const sass::string& prev,
+    const sass::string& url)
+  {
+
+    // Nothing to be done for built-ins
+    // if (mod && mod->isBuiltIn) {
+    //   return nullptr;
+    // }
+
+    // Seems already loaded?
+    // if (rule->sheet()) {
+    //   return rule->sheet();
+    // }
+
+    // callStackFrame frame(compiler, {
+    //   rule->pstate(), Strings::useRule });
+
+    // Resolve final file to load
+    const ImportRequest request(
+      url, prev, false);
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport>& resolved(
+      compiler.findIncludes(request, true));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::UnknwonImport(compiler);
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      compiler.addFinalStackTrace(pstate);
+      throw Exception::AmbiguousImports(compiler, resolved);
+    }
+
+    // This is guaranteed to either load or error out!
+    ImportObj loaded = compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(compiler, loaded);
+    // rule->import(loaded);
+
+    Root* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = compiler.sheets.find(abspath);
+    if (cached != compiler.sheets.end()) {
+      sheet = cached->second;
+    }
+    else {
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(compiler, false, true, true); // correct
+      sheet = compiler.registerImport(loaded);
+      sheet->import = loaded;
+    }
+
+    // rule->module(sheet);
+    // rule->sheet(sheet);
+
+    // wconfig.finalize();
+    return sheet;
+  }
   Root* Eval::resolveUseRule(UseRule* rule)
   {
 
@@ -1641,34 +1725,18 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
-        Import* loaded = compiler.import_stack.back();
+        // Import* loaded = compiler.import_stack.back();
 
-        // Loading relative to where the function was included
-        const ImportRequest import(url->value(), pstate.getAbsPath(), false);
-        // Search for valid imports (e.g. partials) on the file-system
-        // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, true)); //XXXXX
-
-        // Error if no file to import was found
-        if (resolved.empty()) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::ParserException(compiler,
-            "Can't find stylesheet to import.");
-        }
-        // Error if multiple files to import were found
-        else if (resolved.size() > 1) {
-          sass::sstream msg_stream;
-          msg_stream << "It's not clear which file to import. Found:\n";
-          for (size_t i = 0, L = resolved.size(); i < L; ++i)
-            msg_stream << "  " << resolved[i].imp_path << "\n";
-          throw Exception::ParserException(compiler, msg_stream.str());
-        }
+        sass::string prev(pstate.getAbsPath());
+        Root* sheet = eval.resolveIncludeImport(
+          pstate, prev, url->value());
 
         // We made sure exactly one entry was found, load its content
-        if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-          Root* module = eval.loadModule(compiler, loaded, hasWith);
-          if (!module->loaded) eval.compileModule(module);
-          eval.insertModule(module);
+        if (sheet) {
+          if (!sheet->loaded) {
+            eval.compileModule(sheet);
+          }
+          eval.insertModule(sheet);
         }
         else {
           // Probably on access violations?
