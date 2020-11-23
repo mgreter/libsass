@@ -1,4 +1,4 @@
-bool udbg = false;
+bool udbg = true;
 
 #include "fn_meta.hpp"
 
@@ -330,7 +330,7 @@ namespace Sass {
 
     if (chroot->varFrame == 0xFFFFFFFF) {
 
-      // Assign a default
+      // Assign a default -> must go to eval stage!!!!!
       if (guarded && ns.empty()) {
         auto cfgvar = context.getCfgVar(name, true, false);
         if (!cfgvar || cfgvar->isNull) cfgvar = context.getCfgVar(name, false, false);
@@ -607,6 +607,7 @@ namespace Sass {
       sheet = cached->second;
     }
     else {
+      if (udbg) std::cerr << "Loaded forward '" << rule->url() << "'\n";
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, true, true, false); // correct
       sheet = compiler.registerImport(loaded);
@@ -652,7 +653,8 @@ namespace Sass {
   Root* Eval::resolveIncludeImport(
     const SourceSpan& pstate,
     const sass::string& prev,
-    const sass::string& url)
+    const sass::string& url,
+    bool scoped)
   {
 
     // Nothing to be done for built-ins
@@ -700,9 +702,15 @@ namespace Sass {
       sheet = cached->second;
     }
     else {
+
+      if (udbg) std::cerr << "Loaded import '" << url << "'\n";
+
       // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true, true); // correct
+      EnvFrame local(compiler, false, true, !scoped); // correct
       sheet = compiler.registerImport(loaded);
+      Preloader preloader(*this, sheet);
+      preloader.process();
+      sheet->idxs = local.idxs;
       sheet->import = loaded;
     }
 
@@ -787,6 +795,7 @@ namespace Sass {
           throw Exception::ModuleAlreadyKnown(compiler, ns);
         }
       }
+      if (udbg) std::cerr << "Loaded use '" << url << "'\n";
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, false, true); // correct
       sheet = compiler.registerImport(loaded);
@@ -953,32 +962,6 @@ namespace Sass {
     }
   }
 
-  Root* Eval::loadModule(Compiler& compiler, Import* loaded, bool hasWith)
-  {
-    // First check if the module was already loaded
-    auto it = compiler.sheets.find(loaded->getAbsPath());
-    if (it != compiler.sheets.end()) {
-      // Don't allow to reconfigure once loaded
-      if (hasWith && compiler.implicitWithConfig) {
-        throw Exception::ParserException(compiler,
-          sass::string(loaded->getImpPath())
-          + " was already loaded, so it "
-          "can\'t be configured using \"with\".");
-      }
-      // Return cached stylesheet
-      return it->second;
-    }
-    // BuiltInMod is created within a new scope
-    EnvFrame local(compiler, false, true); 
-    // eval.selectorStack.push_back(nullptr);
-    // ImportStackFrame iframe(compiler, loaded);
-    Root* sheet = compiler.registerImport(loaded);
-    // eval.selectorStack.pop_back();
-    sheet->idxs = local.idxs;
-    sheet->import = loaded;
-    return sheet;
-  }
-
   void Eval::compileModule(Root* root)
   {
 
@@ -1101,7 +1084,6 @@ namespace Sass {
     callStackFrame cframe(traces, BackTrace(
       rule->pstate(), Strings::importRule));
     Root* sheet = resolveIncludeImport(rule);
-
     VarRefs* pframe = compiler.getCurrentFrame();
 
     // Imports are always executed again
@@ -1191,6 +1173,8 @@ namespace Sass {
     for (const StatementObj& item : sheet->elements()) {
       item->accept(this);
     }
+
+    // sheet->isCompiled = true; // Mark as done
 
     if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
       << compiler.implicitWithConfig << "\n";
@@ -1449,65 +1433,7 @@ namespace Sass {
 
   }
 
-  // Resolve import of [path] and add imports to [rule]
-  Root* Eval::resolveDynamicImport(IncludeImport* rule)
-  {
 
-    if (rule->sheet()) return rule->sheet();
-
-    std::cerr << "WAT THE WASD\n";
-
-    SourceSpan pstate(rule->pstate());
-    const ImportRequest request(rule->url(), rule->prev(), true);
-    callStackFrame frame(compiler, { pstate, Strings::importRule });
-
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    // This should be cached somehow to improve speed by much!
-
-    if (rule->candidates == nullptr) {
-      rule->candidates = &compiler.findIncludes(request, true);
-    }
-    const sass::vector<ResolvedImport>& resolved(*rule->candidates);
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      compiler.addFinalStackTrace(pstate);
-      throw Exception::ParserException(compiler,
-        "Can't find stylesheet to import.");
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      {
-        msg_stream << "  " << resolved[i].imp_path << "\n";
-      }
-      throw Exception::ParserException(compiler, msg_stream.str());
-    }
-
-    // We made sure exactly one entry was found, load its content
-    if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      // IsModule seems to have minor impacts here
-      // IsImport vs permeable seems to be the same!?
-      EnvFrame local(compiler, false, true, true); // Verified (import)
-      ImportStackFrame iframe(compiler, loaded);
-      Root* sheet = compiler.registerImport(loaded);
-
-
-      // debug_ast(sheet);
-
-      compiler.varRoot.finalizeScopes();
-      return sheet;
-    }
-
-    compiler.addFinalStackTrace(pstate);
-    throw Exception::ParserException(compiler,
-      "Couldn't read stylesheet for import.");
-
-  }
   // EO resolveDynamicImport
   // Consumes a `@forward` rule.
   // [start] should point before the `@`.
@@ -1652,11 +1578,6 @@ namespace Sass {
           }
         }
 
-        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
-
-
-        WithConfig*& pwconfig(compiler.wconfig);
-        LOCAL_PTR(WithConfig, pwconfig, &wconfig);
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
@@ -1668,55 +1589,35 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
-        // Import* loaded = compiler.import_stack.back();
 
-        // Loading relative to where the function was included
-        const ImportRequest request(url->value(), pstate.getAbsPath(), false);
+        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
-        // Search for valid imports (e.g. partials) on the file-system
-        // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport>& resolved(
-          compiler.findIncludes(request, true));
-
-        // Error if no file to import was found
-        if (resolved.empty()) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::UnknwonImport(compiler);
+        sass::string prev(pstate.getAbsPath());
+        if (Root* sheet = eval.resolveIncludeImport(
+          pstate, prev, url->value(), true)) {
+          if (!sheet->isCompiled) {
+            ImportStackFrame iframe(compiler, sheet->import);
+            LocalOption<bool> scoped(compiler.implicitWithConfig,
+              compiler.implicitWithConfig || hasWith);
+            WithConfig*& pwconfig(compiler.wconfig);
+            LOCAL_PTR(WithConfig, pwconfig, &wconfig);
+            eval.compileModule(sheet);
+            wconfig.finalize(compiler);
+            sheet->isCompiled = true;
+          }
+          else if (compiler.implicitWithConfig || hasWith) {
+            throw Exception::ParserException(compiler,
+              sass::string(sheet->pstate().getImpPath())
+              + " was already loaded, so it "
+              "can't be configured using \"with\".");
+          }
+          eval.insertModule(sheet);
         }
-        // Error if multiple files to import were found
-        else if (resolved.size() > 1) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::AmbiguousImports(compiler, resolved);
-        }
 
 
-        // This is guaranteed to either load or error out!
-        ImportObj loaded = compiler.loadImport(resolved[0]);
-        ImportStackFrame iframe(compiler, loaded);
+        // wconfig.finalize(compiler);
 
-        // rule->import(loaded);
-
-        Root* module = eval.loadModule(compiler, loaded, hasWith);
-        eval.compileModule(module);
-        eval.insertModule(module);
-
-        // Root* sheet = nullptr;
-        // sass::string abspath(loaded->getAbsPath());
-        // auto cached = compiler.sheets.find(abspath);
-        // if (cached != compiler.sheets.end()) {
-        //   sheet = cached->second;
-        // }
-        // else {
-        //   // Permeable seems to have minor negative impact!?
-        //   EnvFrame local(compiler, true, true, false); // correct
-        //   sheet = compiler.registerImport(loaded);
-        //   sheet->import = loaded;
-        // }
-
-
-        wconfig.finalize(compiler);
-
-        return SASS_MEMORY_NEW(Null, pstate);;
+        return SASS_MEMORY_NEW(Null, pstate);
       }
 
     }
