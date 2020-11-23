@@ -1618,9 +1618,6 @@ namespace Sass {
       {
         String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
         Map* withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
-        // auto name = SASS_MEMORY_NEW(CssString, pstate, "added");
-        // auto value = SASS_MEMORY_NEW(String, pstate, "yeppa mixin");
-        // auto decl = SASS_MEMORY_NEW(CssDeclaration, pstate, name, value);
 
         bool hasWith = withMap && !withMap->empty();
 
@@ -1672,25 +1669,24 @@ namespace Sass {
         Import* loaded = compiler.import_stack.back();
 
         // Loading relative to where the function was included
-        const ImportRequest import(url->value(), pstate.getAbsPath(), false);
+        const ImportRequest request(url->value(), pstate.getAbsPath(), false);
+
         // Search for valid imports (e.g. partials) on the file-system
         // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport> resolved(compiler.findIncludes(import, true)); //XXXXX
+        const sass::vector<ResolvedImport>& resolved(
+          compiler.findIncludes(request, false));
 
         // Error if no file to import was found
         if (resolved.empty()) {
           compiler.addFinalStackTrace(pstate);
-          throw Exception::ParserException(compiler,
-            "Can't find stylesheet to import.");
+          throw Exception::UnknwonImport(compiler);
         }
         // Error if multiple files to import were found
         else if (resolved.size() > 1) {
-          sass::sstream msg_stream;
-          msg_stream << "It's not clear which file to import. Found:\n";
-          for (size_t i = 0, L = resolved.size(); i < L; ++i)
-            msg_stream << "  " << resolved[i].imp_path << "\n";
-          throw Exception::ParserException(compiler, msg_stream.str());
+          compiler.addFinalStackTrace(pstate);
+          throw Exception::AmbiguousImports(compiler, resolved);
         }
+
 
         // We made sure exactly one entry was found, load its content
         if (ImportObj loaded = compiler.loadImport(resolved[0])) {
