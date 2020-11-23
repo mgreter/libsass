@@ -78,88 +78,24 @@ return;
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
-
-    // May not be defined yet
-    Module* mod = rule->module();
+    Root* root = eval.resolveForwardRule(rule);
 
     // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn && !rule->wasMerged()) {
+    if (root && root->isBuiltIn && !rule->wasMerged()) {
       mergeForwards(rule->module()->idxs, module, rule->isShown(), rule->isHidden(),
         rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
       rule->wasMerged(true);
-      return;
     }
 
-    // Seems already loaded?
-    if (rule->root() && !rule->wasMerged()) {
-      mergeForwards(rule->root()->idxs, module, rule->isShown(), rule->isHidden(),
-        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
-      rule->wasMerged(true);
-      return;
-    }
+return;
 
-    // Resolve final file to load
-    const ImportRequest request(
-      rule->url(), rule->prev(), false);
+    if (root->empty()) return;
+    LOCAL_PTR(Root, module, root);
+    LOCAL_PTR(VarRefs, idxs, root->idxs);
+    eval.compiler.varRoot.stack.push_back(root->idxs);
+    for (auto it : root->elements()) it->accept(this);
+    eval.compiler.varRoot.stack.pop_back();
 
-    // Deduct namespace from url
-    sass::string url(rule->url());
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport>& resolved(
-      eval.compiler.findIncludes(request, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      eval.compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::UnknwonImport(eval.compiler);
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      eval.compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::AmbiguousImports(eval.compiler, resolved);
-    }
-
-    // This is guaranteed to either load or error out!
-    ImportObj loaded = eval.compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(eval.compiler, loaded);
-
-    rule->needsLoading(false);
-
-    Root* sheet = nullptr;
-    sass::string abspath(loaded->getAbsPath());
-    auto cached = eval.compiler.sheets.find(abspath);
-    if (cached != eval.compiler.sheets.end()) {
-      sheet = cached->second;
-      rule->module(sheet);
-      rule->root(sheet);
-      return;
-    }
-    else {
-      // Permeable seems to have minor negative impact!?
-      EnvFrame local(eval.compiler, true, true); // correct
-      sheet = eval.compiler.registerImport(loaded);
-      sheet->import = loaded;
-    }
-
-    rule->module(sheet);
-    rule->root(sheet);
-    {
-      if (sheet->empty()) return;
-      LOCAL_PTR(Root, module, sheet);
-      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-      eval.compiler.varRoot.stack.push_back(sheet->idxs);
-      for (auto it : sheet->elements()) it->accept(this);
-      eval.compiler.varRoot.stack.pop_back();
-    }
-
-    if (rule->root() && !rule->wasMerged()) {
-      mergeForwards(rule->root()->idxs, module, rule->isShown(), rule->isHidden(),
-        rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), eval.compiler);
-      rule->wasMerged(true);
-    }
   }
 
   void Preloader::exposeImport(Eval& eval, Root* sheet)

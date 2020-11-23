@@ -572,18 +572,11 @@ namespace Sass {
     // callStackFrame frame(compiler, {
     //   rule->pstate(), Strings::useRule });
 
-    // LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     // Resolve final file to load
     const ImportRequest request(
       rule->url(), rule->prev(), false);
-
-    // Deduct namespace from url
-    // sass::string ns(rule->ns());
-    // sass::string url(rule->url());
-
-
-    SourceSpan pstate(rule->pstate());
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
@@ -626,7 +619,6 @@ namespace Sass {
       sheet->import = loaded;
     }
 
-
     rule->module(sheet);
     rule->root(sheet);
 
@@ -661,9 +653,9 @@ namespace Sass {
     const ImportRequest request(
       rule->url(), rule->prev(), false);
 
-    // Deduct namespace from url
+    // Deduce namespace from url
     sass::string ns(rule->ns());
-    sass::string url(rule->url());
+    const sass::string& url(rule->url());
 
     // Deduct the namespace from url
     // After last slash before first dot
