@@ -35,7 +35,7 @@ namespace Sass {
     LOCAL_PTR(VarRefs, idxs, root->idxs);
     ImportStackFrame isf(eval.compiler, root->import);
     eval.compiler.varRoot.stack.push_back(root->idxs);
-    for (auto it : root->elements()) it->accept(this);
+    for (auto& it : root->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 
@@ -45,7 +45,7 @@ namespace Sass {
     if (rule->empty()) return;
     LOCAL_PTR(VarRefs, idxs, rule->idxs);
     eval.compiler.varRoot.stack.push_back(rule->idxs);
-    for (auto it : rule->elements()) it->accept(this);
+    for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 
@@ -83,7 +83,7 @@ namespace Sass {
       LOCAL_PTR(VarRefs, idxs, root->idxs);
       ImportStackFrame iframe(eval.compiler, rule->import());
       eval.compiler.varRoot.stack.push_back(root->idxs);
-      for (auto it : root->elements()) it->accept(this);
+      for (auto& it : root->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
 
@@ -191,69 +191,13 @@ namespace Sass {
 
     Root* root = eval.resolveIncludeImport(rule);
 
-    return;
-
-    // May not be defined yet
-    Module* mod = rule->module();
-
-    // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn) return;
-
-    // Seems already loaded?
-    if (rule->sheet()) return;
-
-    // Resolve final file to load
-    const ImportRequest request(
-      rule->url(), rule->prev(), false);
-
-    // Deduct namespace from url
-    sass::string url(rule->url());
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport>& resolved(
-      eval.compiler.findIncludes(request, true));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      eval.compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::UnknwonImport(eval.compiler);
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      eval.compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::AmbiguousImports(eval.compiler, resolved);
-    }
-
-    // This is guaranteed to either load or error out!
-    ImportObj loaded = eval.compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(eval.compiler, loaded);
-
-    Root* sheet = nullptr;
-    sass::string abspath(loaded->getAbsPath());
-    auto cached = eval.compiler.sheets.find(abspath);
-    if (cached != eval.compiler.sheets.end()) {
-      sheet = cached->second;
-      rule->sheet(sheet);
-      return;
-    }
-    else {
-      // Permeable seems to have minor negative impact!?
-      EnvFrame local(eval.compiler, false, true, true);
-      sheet = eval.compiler.registerImport(loaded);
-      sheet->import = loaded;
-    }
-    
-    rule->module(sheet);
-    rule->sheet(sheet);
-
 return;
     {
-      if (sheet->empty()) return;
-      LOCAL_PTR(Root, module, sheet);
-      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-      eval.compiler.varRoot.stack.push_back(sheet->idxs);
-      for (auto it : sheet->elements()) it->accept(this);
+      if (root->empty()) return;
+      LOCAL_PTR(Root, module, root);
+      LOCAL_PTR(VarRefs, idxs, root->idxs);
+      eval.compiler.varRoot.stack.push_back(root->idxs);
+      for (auto& it : root->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
     }
 
@@ -287,7 +231,7 @@ return;
     // visitArgumentDeclaration(rule->arguments());
 
     eval.compiler.varRoot.stack.push_back(rule->idxs);
-    for (auto it : rule->elements()) it->accept(this);
+    for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 
@@ -300,7 +244,7 @@ return;
     // visitArgumentDeclaration(rule->arguments());
 
     eval.compiler.varRoot.stack.push_back(rule->idxs);
-    for (auto it : rule->elements()) it->accept(this);
+    for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 
@@ -367,7 +311,7 @@ return;
     // First push argument onto the scope!
     // visitArgumentDeclaration(content->arguments());
     eval.compiler.varRoot.stack.push_back(content->idxs);
-    for (auto it : content->elements()) it->accept(this);
+    for (auto& it : content->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 
@@ -388,7 +332,7 @@ return;
       idxs->varIdxs.insert({ vars[i], (uint32_t)i });
     }
     eval.compiler.varRoot.stack.push_back(rule->idxs);
-    for (auto it : rule->elements()) it->accept(this);
+    for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 
@@ -397,7 +341,7 @@ return;
     LOCAL_PTR(VarRefs, idxs, rule->idxs);
     idxs->varIdxs.insert({ rule->varname(), 0 });
     eval.compiler.varRoot.stack.push_back(rule->idxs);
-    for (auto it : rule->elements()) it->accept(this);
+    for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
   }
 

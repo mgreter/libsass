@@ -135,7 +135,7 @@ namespace Sass {
 
       if (it != rframe->varIdxs.end()) {
         VarRef vidx(rframe->varFrame, it->second);
-        auto value = compiler.varRoot.getVariable(vidx);
+        auto& value = compiler.varRoot.getVariable(vidx);
         if (value != nullptr) hasVar = true;
       }
 
@@ -147,14 +147,14 @@ namespace Sass {
           auto it = fwds->varIdxs.find(a->variable());
           if (it != fwds->varIdxs.end()) {
             VarRef vidx(0xFFFFFFFF, it->second);
-            auto value = compiler.varRoot.getVariable(vidx);
+            auto& value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
 
           auto fwd = fwds->module->mergedFwdVar.find(a->variable());
           if (fwd != fwds->module->mergedFwdVar.end()) {
             VarRef vidx(0xFFFFFFFF, fwd->second);
-            auto value = compiler.varRoot.getVariable(vidx);
+            auto& value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
         }
@@ -475,7 +475,7 @@ namespace Sass {
     Logger& logger,
     bool show)
   {
-    for (auto idx : expose) {
+    for (auto& idx : expose) {
       if (idx.first.isPrivate()) continue;
       EnvKey key(prefix + idx.first.orig());
       if (show == (filters.count(key) == 1)) {
@@ -499,7 +499,7 @@ namespace Sass {
     const sass::string& errprefix,
     Logger& logger)
   {
-    for (auto idx : expose) {
+    for (auto& idx : expose) {
       if (idx.first.isPrivate()) continue;
       EnvKey key(prefix + idx.first.orig());
       auto it = merged.find(key);
@@ -529,9 +529,9 @@ namespace Sass {
     // Doesn't make much sense as there is nowhere to forward to
     if (idxs->module != nullptr) {
       // This is needed to support double forwarding (ToDo - need filter, order?)
-      for (auto entry : idxs->module->mergedFwdVar) { module->mergedFwdVar.insert(entry); }
-      for (auto entry : idxs->module->mergedFwdMix) { module->mergedFwdMix.insert(entry); }
-      for (auto entry : idxs->module->mergedFwdFn) { module->mergedFwdFn.insert(entry); }
+      for (auto& entry : idxs->module->mergedFwdVar) { module->mergedFwdVar.insert(entry); }
+      for (auto& entry : idxs->module->mergedFwdMix) { module->mergedFwdMix.insert(entry); }
+      for (auto& entry : idxs->module->mergedFwdFn) { module->mergedFwdFn.insert(entry); }
     }
 
     if (isShown) {
@@ -654,7 +654,7 @@ namespace Sass {
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(request, false));
+      compiler.findIncludes(request, true));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -679,12 +679,6 @@ namespace Sass {
       sheet = cached->second;
     }
     else {
-      // if (!ns.empty()) {
-      //   VarRefs* modFrame(compiler.getCurrentModule());
-      //   if (modFrame->fwdModule55.count(ns)) {
-      //     throw Exception::ModuleAlreadyKnown(compiler, ns);
-      //   }
-      // }
       // Permeable seems to have minor negative impact!?
       EnvFrame local(compiler, false, true, true); // correct
       sheet = compiler.registerImport(loaded);
@@ -795,7 +789,7 @@ namespace Sass {
 
     if (intoRoot) {
 
-      for (auto var : idxs->varIdxs) {
+      for (auto& var : idxs->varIdxs) {
         auto it = modFrame->varIdxs.find(var.first);
         if (it != modFrame->varIdxs.end()) {
           if (var.first.isPrivate()) continue;
@@ -809,7 +803,7 @@ namespace Sass {
             "variable named \"$" + var.first.norm() + "\".");
         }
       }
-      for (auto mix : idxs->mixIdxs) {
+      for (auto& mix : idxs->mixIdxs) {
         auto it = modFrame->mixIdxs.find(mix.first);
         if (it != modFrame->mixIdxs.end()) {
           if (mix.first.isPrivate()) continue;
@@ -821,7 +815,7 @@ namespace Sass {
             "mixin named \"" + mix.first.norm() + "\".");
         }
       }
-      for (auto fn : idxs->fnIdxs) {
+      for (auto& fn : idxs->fnIdxs) {
         auto it = modFrame->fnIdxs.find(fn.first);
         if (it != modFrame->fnIdxs.end()) {
           if (fn.first.isPrivate()) continue;
@@ -837,7 +831,7 @@ namespace Sass {
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->fwdGlobal55) {
         if (idxs == fwd) continue;
-        for (auto var : idxs->varIdxs) {
+        for (auto& var : idxs->varIdxs) {
           auto it = fwd->varIdxs.find(var.first);
           if (it != fwd->varIdxs.end()) {
             if (var.second == it->second) continue;
@@ -846,7 +840,7 @@ namespace Sass {
               "from multiple global modules.");
           }
         }
-        for (auto var : idxs->mixIdxs) {
+        for (auto& var : idxs->mixIdxs) {
           auto it = fwd->mixIdxs.find(var.first);
           if (it != fwd->mixIdxs.end()) {
             if (var.second == it->second) continue;
@@ -855,7 +849,7 @@ namespace Sass {
               "available from multiple global modules.");
           }
         }
-        for (auto var : idxs->fnIdxs) {
+        for (auto& var : idxs->fnIdxs) {
           auto it = fwd->fnIdxs.find(var.first);
           if (it != fwd->fnIdxs.end()) {
             if (var.second == it->second) continue;
@@ -870,10 +864,10 @@ namespace Sass {
     else {
 
       // No idea why this is needed!
-      for (auto var : modFrame->varIdxs) {
+      for (auto& var : modFrame->varIdxs) {
         idxs->module->mergedFwdVar.insert(var);
       }
-      for (auto var : modFrame->mixIdxs) {
+      for (auto& var : modFrame->mixIdxs) {
         idxs->mixIdxs.insert(var);
       }
       //for (auto var : modFrame->fnIdxs) {
@@ -919,11 +913,11 @@ namespace Sass {
     }
     // Process all children to be added
     // Each one needs to be interweaved
-    for (auto child : children) {
+    for (auto& child : children) {
       auto css = child->isaCssStyleRule();
       auto parent = current->isaCssStyleRule();
       if (css && parent) {
-        for (auto inner : css->elements()) {
+        for (auto& inner : css->elements()) {
           auto copy = SASS_MEMORY_COPY(css->selector());
           for (ComplexSelector* selector : copy->elements()) {
             selector->chroots(false);
@@ -987,14 +981,14 @@ namespace Sass {
     ImportStackFrame iframe(compiler, root->import);
 
     selectorStack.push_back(nullptr);
-    for (auto child : root->elements()) {
+    for (auto& child : root->elements()) {
       child->accept(this);
     }
     selectorStack.pop_back();
 
     current = oldCurrent;
 
-    for (auto var : mframe->varIdxs) {
+    for (auto& var : mframe->varIdxs) {
       ValueObj& slot(compiler.varRoot.getModVar(var.second));
       if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, root->pstate());
     }
@@ -1234,15 +1228,15 @@ namespace Sass {
         if (true) {
 
 
-          for (auto var : module->idxs->varIdxs) {
+          for (auto& var : module->idxs->varIdxs) {
             if (!var.first.isPrivate())
               current->varIdxs.insert(var);
           }
-          for (auto mix : module->idxs->mixIdxs) {
+          for (auto& mix : module->idxs->mixIdxs) {
             if (!mix.first.isPrivate())
               current->mixIdxs.insert(mix);
           }
-          for (auto fn : module->idxs->fnIdxs) {
+          for (auto& fn : module->idxs->fnIdxs) {
             if (!fn.first.isPrivate())
               current->fnIdxs.insert(fn);
           }
@@ -1393,7 +1387,9 @@ namespace Sass {
     RootObj sheet = rule->sheet();
 
     if (sheet.isNull()) {
-      sheet = resolveDynamicImport(rule);
+      callStackFrame frame(compiler, {
+        rule->pstate(), Strings::importRule });
+      sheet = resolveIncludeImport(rule);
     }
 
     auto vframe = compiler.getCurrentFrame();
@@ -1478,25 +1474,25 @@ namespace Sass {
       if (udbg) std::cerr << " import into global frame '" << rule->url() << "'\n";
 
       // Global can simply be exposed without further ado (same frame)
-      for (auto asd : sheet->idxs->varIdxs) {
+      for (auto& asd : sheet->idxs->varIdxs) {
         if (udbg) std::cerr << "  var " << asd.first.orig() << "\n";
         pframe->varIdxs.insert(asd);
       }
-      for (auto asd : sheet->idxs->mixIdxs) {
+      for (auto& asd : sheet->idxs->mixIdxs) {
         if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
         pframe->mixIdxs.insert(asd); }
-      for (auto asd : sheet->idxs->fnIdxs) {
+      for (auto& asd : sheet->idxs->fnIdxs) {
         if (udbg) std::cerr << "  fn " << asd.first.orig() << "\n";
         pframe->fnIdxs.insert(asd); }
 
-      for (auto asd : sheet->mergedFwdVar) {
+      for (auto& asd : sheet->mergedFwdVar) {
         if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
         pframe->varIdxs.insert(asd);
       } // a: 18
-      for (auto asd : sheet->mergedFwdMix) {
+      for (auto& asd : sheet->mergedFwdMix) {
         if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
         pframe->mixIdxs[asd.first] = asd.second; }
-      for (auto asd : sheet->mergedFwdFn) {
+      for (auto& asd : sheet->mergedFwdFn) {
         if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
         pframe->fnIdxs[asd.first] = asd.second; }
 
@@ -1643,7 +1639,7 @@ namespace Sass {
         sass::vector<WithConfigVar> withConfigs;
 
         if (hasWith) {
-          for (auto kv : withMap->elements()) {
+          for (auto& kv : withMap->elements()) {
             String* name = kv.first->assertString(compiler, "with key");
             EnvKey kname(name->value());
             WithConfigVar kvar;
