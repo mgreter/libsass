@@ -109,6 +109,7 @@ namespace Sass {
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
+      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->module(sheet);
       rule->root(sheet);
@@ -176,6 +177,7 @@ namespace Sass {
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
+      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->module(sheet);
       rule->root(sheet);
@@ -240,6 +242,7 @@ namespace Sass {
     sass::string abspath(loaded->getAbsPath());
     auto cached = eval.compiler.sheets.find(abspath);
     if (cached != eval.compiler.sheets.end()) {
+      ImportStackFrame iframe(eval.compiler, loaded);
       sheet = cached->second;
       rule->sheet(sheet);
       return;

@@ -7,7 +7,6 @@
 #include "eval.hpp"
 #include "output.hpp"
 #include "sources.hpp"
-#include "preloader.hpp"
 #include "stylesheet.hpp"
 #include "capi_lists.hpp"
 #include "ast_imports.hpp"
