@@ -38,9 +38,6 @@ namespace Sass {
     // [css]'s style rules in-place based on downstream extensions.
     // Extender extender;
 
-    // Forwarded items must be on internal scope
-    VarRefs* exposing33 = nullptr;
-
     // All @forward rules get merged into these objects
     // Those are not available on the local scope, they
     // are only used when another module consumes us!

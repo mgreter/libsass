@@ -104,6 +104,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_state.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_span.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\stylesheet.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\preloader.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\units.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\unicode.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\util_string.hpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\extender.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\extension.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\stylesheet.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\preloader.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\interpolation.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_css.cpp" />

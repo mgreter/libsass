@@ -7,6 +7,7 @@
 #include "eval.hpp"
 #include "output.hpp"
 #include "sources.hpp"
+#include "preloader.hpp"
 #include "stylesheet.hpp"
 #include "capi_lists.hpp"
 #include "ast_imports.hpp"
@@ -237,6 +238,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     Eval eval(*this, *this, plainCss);
 
     // debug_ast(root);
+    Preloader preloader(eval, root);
+    preloader.process();
 
     CssRootObj compiled = eval.acceptRoot(root); // 50%
     // debug_ast(compiled);

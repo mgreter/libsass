@@ -323,6 +323,9 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\stylesheet.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\preloader.hpp">
+      <Filter>Library Includes</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\units.hpp">
       <Filter>Library Includes</Filter>
     </ClInclude>
@@ -491,6 +494,9 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\stylesheet.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\preloader.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\interpolation.cpp">

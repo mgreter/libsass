@@ -651,6 +651,10 @@ namespace Sass {
     ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, needsLoading);
     ADD_PROPERTY(sass::vector<WithConfigVar>, config);
+
+    // We have both, root and module
+    ADD_PROPERTY(Module*, module);
+
   public:
     // Value constructor
     UseRule(

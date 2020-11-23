@@ -19,7 +19,7 @@ namespace Sass {
     public StatementVisitor<Value*>,
     public ExpressionVisitor<Value*> {
 
-  private:
+  public:
 
     // Some references
     Logger& logger456;
