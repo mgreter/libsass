@@ -885,15 +885,15 @@ namespace Sass {
         insertModule(root);
       }
 
-      root->exposing = pudding(root, rule->ns().empty(), mframe);
+      root->exposing33 = pudding(root, rule->ns().empty(), mframe);
 
       if (rule->ns().empty()) {
-        root->exposing->module = root;
-        mframe->fwdGlobal55.push_back(root->exposing);
+        root->exposing33->module = root;
+        mframe->fwdGlobal55.push_back(root->exposing33);
       }
       else {
         mframe->fwdModule55[rule->ns()] =
-        { root->exposing, root };
+        { root->idxs, root };
       }
 
     }

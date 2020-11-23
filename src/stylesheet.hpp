@@ -39,7 +39,7 @@ namespace Sass {
     // Extender extender;
 
     // Forwarded items must be on internal scope
-    VarRefs* exposing = nullptr;
+    VarRefs* exposing33 = nullptr;
 
     // All @forward rules get merged into these objects
     // Those are not available on the local scope, they
@@ -49,10 +49,7 @@ namespace Sass {
     MidxEnvKeyMap mergedFwdMix;
     FidxEnvKeyMap mergedFwdFn;
 
-    // The evaluated css tree
-    CssParentNodeObj loaded = nullptr;
-
-    Moduled::Moduled() : Module(nullptr) {}
+    Moduled() : Module(nullptr) {}
 
   };
 
