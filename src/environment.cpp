@@ -853,6 +853,8 @@ namespace Sass {
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
       << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
 
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+
     // The show or hide config also hides these
     // WithConfig wconfig(compiler, rule->config(), rule->hasLocalWith());
 
@@ -923,6 +925,8 @@ namespace Sass {
 
     LocalOption<bool> scoped(compiler.implicitWithConfig,
       compiler.implicitWithConfig || rule->hasLocalWith());
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     // Flag for dynamic modules vs builtins
     if (rule->needsLoading()) {
@@ -1441,6 +1445,7 @@ namespace Sass {
 
         EnvKeyFlatMap<ValueObj> config;
         sass::vector<WithConfigVar> withConfigs;
+
         if (hasWith) {
           for (auto kv : withMap->elements()) {
             String* name = kv.first->assertString(compiler, "with key");
@@ -1461,7 +1466,7 @@ namespace Sass {
           }
         }
 
-        WithConfig wconfig(nullptr, withConfigs, hasWith);
+        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
