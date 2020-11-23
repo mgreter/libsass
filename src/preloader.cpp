@@ -145,9 +145,9 @@ namespace Sass {
         auto it = vframe->varIdxs.find(var.first);
         if (it == vframe->varIdxs.end()) {
           if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
+            throw "Can't create on active frame";
+            // eval.compiler.varRoot.variables.push_back({});
           }
-          // eval.compiler.varRoot.variables.push_back({});
           std::cerr << "EXPORT " << var.first.norm() << "\n";
           vframe->createVariable(var.first);
         }
@@ -161,9 +161,9 @@ namespace Sass {
         auto it = vframe->fnIdxs.find(fn.first);
         if (it == vframe->fnIdxs.end()) {
           if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
+            throw "Can't create on active frame";
+            // eval.compiler.varRoot.functions.push_back({});
           }
-          // eval.compiler.varRoot.functions.push_back({});
           // std::cerr << "EXPORT " << var.first.norm() << "\n";
           vframe->createFunction(fn.first);
         }
@@ -174,9 +174,9 @@ namespace Sass {
         auto it = vframe->mixIdxs.find(mix.first);
         if (it == vframe->mixIdxs.end()) {
           if (vframe->isCompiled) {
-            // throw "Can't create on active frame";
+            throw "Can't create on active frame";
+            // eval.compiler.varRoot.mixins.push_back({});
           }
-          eval.compiler.varRoot.mixins.push_back({});
           // std::cerr << "EXPORT " << var.first.norm() << "\n";
           vframe->createMixin(mix.first);
         }

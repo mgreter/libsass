@@ -1164,6 +1164,7 @@ namespace Sass {
 
         if (true) {
 
+
           for (auto var : module->idxs->varIdxs) {
             if (!var.first.isPrivate())
               current->varIdxs.insert(var);
@@ -1194,6 +1195,7 @@ namespace Sass {
       return rule.detach();
 
     }
+    // BuiltIn
 
     bool hasCached = false;
     rule->ns(ns);
