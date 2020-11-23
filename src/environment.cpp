@@ -980,8 +980,35 @@ namespace Sass {
     rule->waxExported(true);
 
     VarRefs* mframe(compiler.getCurrentModule());
+    VarRefs* frame(compiler.getCurrentFrame());
 
-    if (rule->root()) {
+    if (rule->module() && rule->module()->isBuiltIn) {
+
+      if (rule->ns().empty()) {
+
+        // for (auto var : rule->module()->idxs->varIdxs) {
+        //   if (!var.first.isPrivate())
+        //     mframe->varIdxs.insert(var);
+        // }
+        // for (auto mix : rule->module()->idxs->mixIdxs) {
+        //   if (!mix.first.isPrivate())
+        //     mframe->mixIdxs.insert(mix);
+        // }
+        // for (auto fn : rule->module()->idxs->fnIdxs) {
+        //   if (!fn.first.isPrivate())
+        //     mframe->fnIdxs.insert(fn);
+        // }
+
+        // rule->module()->idxs->module = nullptr;
+        // mframe->fwdGlobal55.push_back(rule->module()->idxs);
+
+      }
+
+
+
+    }
+
+    else if (rule->root()) {
 
       pudding(rule->root()->idxs, rule->ns().empty(), mframe);
 
@@ -1146,22 +1173,24 @@ namespace Sass {
 
       if (ns == "*") {
 
-        for (auto var : module->idxs->varIdxs) {
-          if (!var.first.isPrivate())
-            current->varIdxs.insert(var);
-        }
-        for (auto mix : module->idxs->mixIdxs) {
-          if (!mix.first.isPrivate())
-            current->mixIdxs.insert(mix);
-        }
-        for (auto fn : module->idxs->fnIdxs) {
-          if (!fn.first.isPrivate())
-            current->fnIdxs.insert(fn);
-        }
+        if (true) {
 
-        module->idxs->module = nullptr;
-        current->fwdGlobal55.push_back(module->idxs);
+          for (auto var : module->idxs->varIdxs) {
+            if (!var.first.isPrivate())
+              current->varIdxs.insert(var);
+          }
+          for (auto mix : module->idxs->mixIdxs) {
+            if (!mix.first.isPrivate())
+              current->mixIdxs.insert(mix);
+          }
+          for (auto fn : module->idxs->fnIdxs) {
+            if (!fn.first.isPrivate())
+              current->fnIdxs.insert(fn);
+          }
 
+          // module->idxs->module = nullptr;
+          current->fwdGlobal55.push_back(module->idxs);
+        }
       }
       else if (modFrame->fwdModule55.count(ns)) {
         context.addFinalStackTrace(rule->pstate());
