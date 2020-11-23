@@ -659,6 +659,7 @@ namespace Sass {
     ADD_CONSTREF(RootObj, root);
     ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, needsLoading);
+    ADD_PROPERTY(bool, waxExported);
     ADD_PROPERTY(sass::vector<WithConfigVar>, config);
 
     ADD_PROPERTY(WithConfig*, wconfig);

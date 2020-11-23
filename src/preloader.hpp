@@ -81,6 +81,8 @@ namespace Sass {
     void visitWarnRule(WarnRule* rule) override final;
     void visitWhileRule(WhileRule* rule) override final;
 
+    Root* loadUseRule(UseRule* rule);
+
   };
 
 }

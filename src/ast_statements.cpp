@@ -525,6 +525,7 @@ namespace Sass {
     url_(url),
     hasLocalWith_(hasLocalWith),
     needsLoading_(false),
+    waxExported_(false),
     config_(std::move(config)),
     wconfig_(new WithConfig(pwconfig,
       config_, hasLocalWith_)),

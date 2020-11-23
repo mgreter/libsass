@@ -685,10 +685,8 @@ namespace Sass {
 
   }
 
-  VarRefs* Eval::pudding(Moduled* root, bool intoRoot, VarRefs* modFrame)
+  VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame)
   {
-
-    VarRefs* idxs = root->idxs;
 
     if (intoRoot) {
 
@@ -901,6 +899,22 @@ namespace Sass {
   Value* Eval::visitUseRule(UseRule* rule)
   {
 
+    // May not be defined yet
+    Module* mod = rule->module();
+
+    // Nothing to be done for built-ins
+    if (mod && mod->isBuiltIn) {
+      exposeUseRule(rule);
+      return nullptr;
+    }
+
+    // Seems already loaded?
+    // if (rule->root()) {
+    //   exposeUseRule(rule);
+    //   return nullptr;
+    // }
+
+
     BackTrace trace(rule->pstate(), Strings::useRule, false);
     callStackFrame frame(logger456, trace);
 
@@ -950,11 +964,30 @@ namespace Sass {
         }
       }
 
-      pudding(root, rule->ns().empty(), mframe);
+      exposeUseRule(rule);
+
+    }
+
+    if (!rule->wconfig()) return nullptr;
+    rule->wconfig()->finalize(compiler);
+    return nullptr;
+  }
+
+  void Eval::exposeUseRule(UseRule* rule)
+  {
+
+    if (rule->waxExported()) return;
+    rule->waxExported(true);
+
+    VarRefs* mframe(compiler.getCurrentModule());
+
+    if (rule->root()) {
+
+      pudding(rule->root()->idxs, rule->ns().empty(), mframe);
 
       if (rule->ns().empty()) {
         // We should pudding when accessing!?
-        mframe->fwdGlobal55.push_back(root->idxs);
+        mframe->fwdGlobal55.push_back(rule->root()->idxs);
       }
       else {
         // Refactor to only fetch once!
@@ -963,14 +996,12 @@ namespace Sass {
         }
 
         mframe->fwdModule55[rule->ns()] =
-        { root->idxs, root };
+        { rule->root()->idxs, rule->root() };
       }
 
     }
 
-    if (!rule->wconfig()) return nullptr;
-    rule->wconfig()->finalize(compiler);
-    return nullptr;
+
   }
 
   Value* Eval::visitForwardRule(ForwardRule* rule)

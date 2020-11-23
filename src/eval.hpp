@@ -21,6 +21,8 @@ namespace Sass {
 
   public:
 
+    void exposeUseRule(UseRule* rule);
+
     // Some references
     Logger& logger456;
     Compiler& compiler;
@@ -37,7 +39,7 @@ namespace Sass {
     SelectorLists originalStack;
     SelectorLists selectorStack;
 
-    VarRefs* pudding(Moduled* root, bool intoRoot, VarRefs* modFrame);
+    VarRefs* pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame);
 
     // A pointer to the slot where we will assign to
     // Used to optimize self-assignment in functions

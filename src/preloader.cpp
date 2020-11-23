@@ -49,12 +49,15 @@ namespace Sass {
     eval.compiler.varRoot.stack.pop_back();
   }
 
+  Root* Preloader::loadUseRule(UseRule* rule)
+  {
+    return nullptr;
+  }
+
   void Preloader::visitUseRule(UseRule* rule)
   {
-    callStackFrame frame(eval.compiler, {
-      rule->pstate(), Strings::useRule });
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    // Root* sheet = loadUseRule(rule);
 
     // May not be defined yet
     Module* mod = rule->module();
@@ -64,6 +67,11 @@ namespace Sass {
 
     // Seems already loaded?
     if (rule->root()) return;
+
+    callStackFrame frame(eval.compiler, {
+      rule->pstate(), Strings::useRule });
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     // Resolve final file to load
     const ImportRequest request(
