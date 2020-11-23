@@ -515,24 +515,42 @@ namespace Sass {
     Statement(pstate),
     import_(import),
     url_(url),
-    needsLoading_(false)
+    needsLoading_(false),
+    module_(nullptr)
   {}
 
   ForwardRule::ForwardRule(
     const SourceSpan& pstate,
+    const sass::string& prev,
     const sass::string& url,
     Import* import,
+    const sass::string& prefix,
     std::set<EnvKey>&& toggledVariables,
     std::set<EnvKey>&& toggledCallables,
-    bool isShown) :
+    sass::vector<WithConfigVar>&& config,
+    bool isShown,
+    bool isHidden,
+    bool hasWith) :
     Statement(pstate),
     import_(import),
+    prev_(prev),
     url_(url),
+    prefix_(prefix),
     isShown_(isShown),
+    isHidden_(isHidden),
+    hasLocalWith_(hasWith),
     needsLoading_(false),
     toggledVariables_(std::move(toggledVariables)),
-    toggledCallables_(std::move(toggledCallables))
-  {}
+    toggledCallables_(std::move(toggledCallables)),
+    // config_(std::move(config)),
+    module_(nullptr)
+  {
+    // The show or hide config also filters these
+    // WithConfig* wconfig = new WithConfig(context,
+    //   config, hasWith, isShown, isHidden,
+    //   rule->toggledVariables(), prefix);
+
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

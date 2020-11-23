@@ -125,7 +125,8 @@ namespace Sass {
     ImportBase(pstate),
     sheet_(sheet),
     prev_(prev),
-    url_(url)
+    url_(url),
+    module_(nullptr)
   {}
 
   //////////////////////////////////////////////////////////////////////

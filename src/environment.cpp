@@ -884,6 +884,13 @@ namespace Sass {
         if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
         insertModule(root);
       }
+      else {
+        if (rule->hasLocalWith() && compiler.implicitWithConfig) {
+          throw Exception::ParserException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
+      }
 
       pudding(root, rule->ns().empty(), mframe);
 
@@ -942,6 +949,13 @@ namespace Sass {
         compileModule(rule->root());
         if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
         insertModule(root);
+      }
+      else {
+        if (compiler.implicitWithConfig) {
+          throw Exception::ParserException(compiler,
+            "This module was already loaded, so it "
+            "can't be configured using \"with\".");
+        }
       }
     }
 
@@ -1028,6 +1042,8 @@ namespace Sass {
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
       }
+
+      rule->module(module);
 
       if (ns == "*") {
 
@@ -1342,10 +1358,11 @@ namespace Sass {
 
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
-      url, {},
+      scanner.sourceUrl, url, {}, prefix,
       std::move(toggledVariables2),
       std::move(toggledCallables2),
-      isShown);
+      std::move(config),
+      isShown, isHidden, hasWith);
 
     rule->hasLocalWith(hasWith);
 
@@ -1368,11 +1385,10 @@ namespace Sass {
       sass::string name(url.substr(5));
       // if (prefix.empty()) prefix = name; // Must not happen!
       if (BuiltInMod* module = context.getModule(name)) {
-
         mergeForwards(module->idxs, context.currentRoot, isShown, isHidden,
           prefix, toggledVariables, toggledCallables, context);
+        rule->module(module);
         rule->root(nullptr);
-
       }
       else {
         context.addFinalStackTrace(rule->pstate());
@@ -1386,9 +1402,6 @@ namespace Sass {
 
     rule->url(url);
     rule->config(config);
-    rule->isShown(isShown);
-    rule->isHidden(isHidden);
-    rule->prefix(prefix);
     rule->prev(scanner.sourceUrl);
     rule->hasLocalWith(hasWith);
     rule->needsLoading(true);

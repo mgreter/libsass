@@ -688,15 +688,20 @@ namespace Sass {
     ADD_REF(std::set<EnvKey>, toggledCallables);
     ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
+    // We have both, root and module
+    ADD_PROPERTY(Module*, module);
   public:
     // Value constructor
     ForwardRule(
       const SourceSpan& pstate,
+      const sass::string& prev,
       const sass::string& url,
       Import* import,
+      const sass::string& prefix,
       std::set<EnvKey>&& toggledVariables,
       std::set<EnvKey>&& toggledCallables,
-      bool isShown);
+      sass::vector<WithConfigVar>&& config,
+      bool isShown, bool isHidden, bool hasWith);
       // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitForwardRule(this);

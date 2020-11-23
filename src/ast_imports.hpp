@@ -58,6 +58,7 @@ namespace Sass {
     ADD_CONSTREF(RootObj, sheet);
     ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, url);
+    ADD_PROPERTY(Module*, module);
 
 
   public:
