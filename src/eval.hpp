@@ -340,6 +340,7 @@ namespace Sass {
   public:
     Root* resolveUseRule(UseRule* rule);
     Root* resolveForwardRule(ForwardRule* rule);
+    Root* resolveIncludeImport(IncludeImport* rule);
   private:
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

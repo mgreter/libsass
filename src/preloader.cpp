@@ -49,11 +49,6 @@ namespace Sass {
     eval.compiler.varRoot.stack.pop_back();
   }
 
-  Root* Preloader::loadUseRule(UseRule* rule)
-  {
-    return nullptr;
-  }
-
   void Preloader::visitUseRule(UseRule* rule)
   {
     callStackFrame frame(eval.compiler, {
@@ -70,7 +65,7 @@ namespace Sass {
     //   for (auto it : sheet->elements()) it->accept(this);
     //   eval.compiler.varRoot.stack.pop_back();
     // }
-    // 
+    // // 
     // eval.exposeUseRule(rule); // five errs
 
   }
@@ -193,6 +188,10 @@ namespace Sass {
 
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::importRule });
+
+    Root* root = eval.resolveIncludeImport(rule);
+
+    return;
 
     // May not be defined yet
     Module* mod = rule->module();

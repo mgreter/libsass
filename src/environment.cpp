@@ -629,6 +629,75 @@ namespace Sass {
   }
   // EO resolveForwardFule
 
+  Root* Eval::resolveIncludeImport(IncludeImport* rule)
+  {
+    // May not be defined yet
+    Module* mod = rule->module();
+
+    // Nothing to be done for built-ins
+    if (mod && mod->isBuiltIn) {
+      return nullptr;
+    }
+
+    // Seems already loaded?
+    if (rule->sheet()) {
+      return rule->sheet();
+    }
+
+    // callStackFrame frame(compiler, {
+    //   rule->pstate(), Strings::useRule });
+
+    // Resolve final file to load
+    const ImportRequest request(
+      rule->url(), rule->prev(), false);
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport>& resolved(
+      compiler.findIncludes(request, false));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(rule->pstate());
+      throw Exception::UnknwonImport(compiler);
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      compiler.addFinalStackTrace(rule->pstate());
+      throw Exception::AmbiguousImports(compiler, resolved);
+    }
+
+    // This is guaranteed to either load or error out!
+    ImportObj loaded = compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(compiler, loaded);
+    rule->import(loaded);
+
+    Root* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = compiler.sheets.find(abspath);
+    if (cached != compiler.sheets.end()) {
+      sheet = cached->second;
+    }
+    else {
+      // if (!ns.empty()) {
+      //   VarRefs* modFrame(compiler.getCurrentModule());
+      //   if (modFrame->fwdModule55.count(ns)) {
+      //     throw Exception::ModuleAlreadyKnown(compiler, ns);
+      //   }
+      // }
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(compiler, false, true, true); // correct
+      sheet = compiler.registerImport(loaded);
+      sheet->import = loaded;
+    }
+
+    rule->module(sheet);
+    rule->sheet(sheet);
+
+    // wconfig.finalize();
+    return sheet;
+  }
+
   Root* Eval::resolveUseRule(UseRule* rule)
   {
 
@@ -1321,54 +1390,17 @@ namespace Sass {
     if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
       << compiler.implicitWithConfig << "\n";
 
-    // Get the include loaded by parser
-    // const ResolvedImport& include(rule->include());
-
-    // This will error if the path was not loaded before
-    // ToDo: Why don't we attach the sheet to include itself?
-    // rule->sheet();
-
-    // Create C-API exposed object to query
-    //struct SassImport import{
-    //   sheet.syntax, sheet.source, ""
-    //};
-
-          // Call custom importers and check if any of them handled the import
-      // if (!context.callCustomImporters(url, pstate, rule)) {
-        // Try to load url into context.sheets
     RootObj sheet = rule->sheet();
 
     if (sheet.isNull()) {
       sheet = resolveDynamicImport(rule);
-      compiler.varRoot.finalizeScopes();
     }
 
-    // debug_ast(sheet);
-
-        // }
     auto vframe = compiler.getCurrentFrame();
 
     // Skip over all imports
     // We are doing it out of order
     while (vframe) {
-
-      // if (Module* module = sheet->idxs->module) {
-      // 
-      //   // Merge it up through all imports
-      //   for (auto& var : module->mergedFwdVar) {
-      //     auto it = module->mergedFwdVar.find(var.first);
-      //     if (it == module->mergedFwdVar.end()) {
-      //       if (vframe->isCompiled) {
-      //         // throw "Can't create on active frame";
-      //       }
-      //       compiler.varRoot.variables.push_back({});
-      //       // std::cerr << "EXPORT " << var.first.norm() << "\n";
-      //       vframe->createVariable(var.first);
-      //     }
-      //   }
-      // 
-      // }
-
 
       // Merge it up through all imports
       for (auto& var : sheet->idxs->varIdxs) {
