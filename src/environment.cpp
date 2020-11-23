@@ -601,29 +601,38 @@ namespace Sass {
       throw Exception::AmbiguousImports(compiler, resolved);
     }
 
-    // We made sure exactly one entry was found, load its content
-    // This only loads the requested source file, does not parse it
-    if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      ImportStackFrame iframe(compiler, loaded);
-      Root* sheet = nullptr;
-      auto cached = compiler.sheets.find(loaded->getAbsPath());
-      if (cached != compiler.sheets.end()) {
-        // Check if with is given, error
-        sheet = cached->second;
-        rule->root(sheet);
-        return nullptr;
-      }
-      // Verified this must be permeable for now
-      EnvFrame local(compiler, true, true, false); // forward
-      LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    // This is guaranteed to either load or error out!
+    ImportObj loaded = compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(compiler, loaded);
+
+    rule->needsLoading(false);
+
+    Root* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = compiler.sheets.find(abspath);
+    if (cached != compiler.sheets.end()) {
+      sheet = cached->second;
+    }
+    else {
+      // if (!ns.empty()) {
+      //   VarRefs* modFrame(compiler.getCurrentModule());
+      //   if (modFrame->fwdModule55.count(ns)) {
+      //     throw Exception::ModuleAlreadyKnown(compiler, ns);
+      //   }
+      // }
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(compiler, true, true, false); // correct
       sheet = compiler.registerImport(loaded);
       sheet->import = loaded;
-      rule->root(sheet);
-      return sheet;
     }
-    compiler.addFinalStackTrace(pstate);
-    throw Exception::ParserException(compiler,
-      "Couldn't read stylesheet for import.");
+
+
+    rule->module(sheet);
+    rule->root(sheet);
+
+    // wconfig.finalize();
+    return sheet;
+
   }
   // EO resolveForwardFule
 
