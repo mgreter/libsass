@@ -30,6 +30,9 @@ namespace Sass {
     // Compiler context
     Compiler& context;
 
+    // Alias into context
+    WithConfig*& wconfig;
+
     bool& implicitWithConfig;
 
     // The scanner that scans through the text being parsed.

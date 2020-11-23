@@ -27,6 +27,9 @@ namespace Sass {
     Eval& eval;
     Root* root;
 
+    // Alias into context
+    WithConfig*& wconfig;
+
     // Current module scope
     Module* module;
 

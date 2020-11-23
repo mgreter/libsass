@@ -1015,8 +1015,10 @@ namespace Sass {
     UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
       scanner.relevantSpanFrom(start),
       scanner.sourceUrl, url, {},
-      nullptr, std::move(config), hasWith);
+      wconfig, std::move(config), hasWith);
     rule->hasLocalWith(hasWith);
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     VarRefs* current(context.varRoot.stack.back());
     VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
@@ -1359,11 +1361,13 @@ namespace Sass {
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
       scanner.sourceUrl, url, {},
-      prefix, nullptr, // pwconfig
+      prefix, wconfig, // pwconfig
       std::move(toggledVariables2),
       std::move(toggledCallables2),
       std::move(config),
       isShown, isHidden, hasWith);
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     rule->hasLocalWith(hasWith);
 

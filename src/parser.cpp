@@ -27,6 +27,7 @@ namespace Sass {
     Compiler& context,
     SourceDataObj source) :
     context(context),
+    wconfig(context.wconfig),
     implicitWithConfig(context.implicitWithConfig),
     scanner(context, source),
     varStack(context.varRoot.stack),

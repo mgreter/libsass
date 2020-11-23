@@ -14,6 +14,7 @@ namespace Sass {
   Preloader::Preloader(Eval& eval, Root* root) :
     eval(eval),
     root(root),
+    wconfig(eval.compiler.wconfig),
     module(root),
     idxs(root->idxs)
   {}
@@ -52,6 +53,8 @@ namespace Sass {
   {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::useRule });
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     // May not be defined yet
     Module* mod = rule->module();
@@ -121,6 +124,8 @@ namespace Sass {
   {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
+
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
 
     // May not be defined yet
     Module* mod = rule->module();
