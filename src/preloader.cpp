@@ -60,16 +60,18 @@ namespace Sass {
       rule->pstate(), Strings::useRule });
 
     Root* sheet = eval.resolveUseRule(rule);
+
+    // {
+    //   if (sheet->empty()) return;
+    //   LOCAL_PTR(Root, module, sheet);
+    //   LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+    //   // ImportStackFrame iframe(eval.compiler, rule->import());
+    //   eval.compiler.varRoot.stack.push_back(sheet->idxs);
+    //   for (auto it : sheet->elements()) it->accept(this);
+    //   eval.compiler.varRoot.stack.pop_back();
+    // }
+    // 
     // eval.exposeUseRule(rule); // five errs
-
-return;
-
-    if (sheet->empty()) return;
-    LOCAL_PTR(Root, module, sheet);
-    LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-    eval.compiler.varRoot.stack.push_back(sheet->idxs);
-    for (auto it : sheet->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
 
   }
 
@@ -80,6 +82,16 @@ return;
 
     Root* root = eval.resolveForwardRule(rule);
 
+    {
+      if (root->empty()) return;
+      LOCAL_PTR(Root, module, root);
+      LOCAL_PTR(VarRefs, idxs, root->idxs);
+      ImportStackFrame iframe(eval.compiler, rule->import());
+      eval.compiler.varRoot.stack.push_back(root->idxs);
+      for (auto it : root->elements()) it->accept(this);
+      eval.compiler.varRoot.stack.pop_back();
+    }
+
     // Nothing to be done for built-ins
     if (root && root->isBuiltIn && !rule->wasMerged()) {
       mergeForwards(rule->module()->idxs, module, rule->isShown(), rule->isHidden(),
@@ -87,15 +99,6 @@ return;
       rule->wasMerged(true);
     }
 
-// return;
-
-    if (root->empty()) return;
-    LOCAL_PTR(Root, module, root);
-    LOCAL_PTR(VarRefs, idxs, root->idxs);
-    ImportStackFrame iframe(eval.compiler, rule->import());
-    eval.compiler.varRoot.stack.push_back(root->idxs);
-    for (auto it : root->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
 
   }
 
