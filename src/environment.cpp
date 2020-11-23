@@ -11,6 +11,7 @@ bool udbg = false;
 #include "string_utils.hpp"
 
 #include "environment.hpp"
+#include "preloader.hpp"
 
 #include "eval.hpp"
 #include "cssize.hpp"
@@ -1387,7 +1388,14 @@ namespace Sass {
       rule->pstate(), Strings::importRule));
     Root* sheet = resolveIncludeImport(rule);
 
-    auto vframe = compiler.getCurrentFrame();
+    VarRefs* vframe = compiler.getCurrentFrame();
+    VarRefs* pframe = compiler.getCurrentFrame();
+
+    // Add C-API to stack to expose it
+    ImportStackFrame iframe(compiler, sheet->import);
+    EnvScope scoped(compiler.varRoot, sheet->idxs);
+    VarRefs* refs = sheet->idxs;
+    LOCAL_PTR(Root, chroot77, sheet);
 
     // Skip over all imports
     // We are doing it out of order
@@ -1399,8 +1407,8 @@ namespace Sass {
         if (it == vframe->varIdxs.end()) {
           if (vframe->isCompiled) {
             // throw "Can't create on active frame";
+            compiler.varRoot.variables.push_back({});
           }
-          compiler.varRoot.variables.push_back({});
           // std::cerr << "EXPORT " << var.first.norm() << "\n";
           vframe->createVariable(var.first);
         }
@@ -1412,8 +1420,8 @@ namespace Sass {
         if (it == vframe->fnIdxs.end()) {
           if (vframe->isCompiled) {
             // throw "Can't create on active frame";
+            compiler.varRoot.functions.push_back({});
           }
-          compiler.varRoot.functions.push_back({});
           // std::cerr << "EXPORT " << var.first.norm() << "\n";
           vframe->createFunction(fn.first);
         }
@@ -1425,8 +1433,8 @@ namespace Sass {
         if (it == vframe->mixIdxs.end()) {
           if (vframe->isCompiled) {
             // throw "Can't create on active frame";
+            compiler.varRoot.mixins.push_back({});
           }
-          compiler.varRoot.mixins.push_back({});
           // std::cerr << "EXPORT " << var.first.norm() << "\n";
           vframe->createMixin(mix.first);
         }
@@ -1436,19 +1444,25 @@ namespace Sass {
       vframe = vframe->pscope;
     }
 
+    while (pframe->isImport) pframe = pframe->pscope;
 
+    if (pframe->varFrame != 0xFFFFFFFF) {
 
-    // Add C-API to stack to expose it
-    ImportStackFrame iframe(compiler, sheet->import);
+      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
+        << compiler.implicitWithConfig << "\n";
 
-    VarRefs* pframe = compiler.getCurrentFrame();
-    EnvScope scoped(compiler.varRoot, sheet->idxs);
+      sheet->idxs->module = sheet;
+      pframe->fwdGlobal55.insert(
+        pframe->fwdGlobal55.begin(),
+        sheet->idxs);
 
-    // debug_ast(sheet);
+    }
 
-    VarRefs* refs = sheet->idxs;
-
-    LOCAL_PTR(Root, chroot77, sheet);
+    // Imports are always executed again
+    Preloader preproc(*this, sheet);
+    for (const StatementObj& item : sheet->elements()) {
+      item->accept(&preproc);
+    }
 
     // Imports are always executed again
     for (const StatementObj& item : sheet->elements()) {
@@ -1458,7 +1472,6 @@ namespace Sass {
     if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
       << compiler.implicitWithConfig << "\n";
 
-    while (pframe->isImport) pframe = pframe->pscope;
 
     if (pframe->varFrame == 0xFFFFFFFF) {
 
@@ -1471,10 +1484,15 @@ namespace Sass {
       }
       for (auto& asd : sheet->idxs->mixIdxs) {
         if (udbg) std::cerr << "  mix " << asd.first.orig() << "\n";
-        pframe->mixIdxs.insert(asd); }
+        pframe->mixIdxs.insert(asd);
+      }
       for (auto& asd : sheet->idxs->fnIdxs) {
         if (udbg) std::cerr << "  fn " << asd.first.orig() << "\n";
-        pframe->fnIdxs.insert(asd); }
+        pframe->fnIdxs.insert(asd);
+      }
+    }
+
+    if (pframe->varFrame == 0xFFFFFFFF) {
 
       for (auto& asd : sheet->mergedFwdVar) {
         if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
@@ -1488,17 +1506,7 @@ namespace Sass {
         pframe->fnIdxs[asd.first] = asd.second; }
 
     }
-    else {
 
-      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
-        << compiler.implicitWithConfig << "\n";
-
-      sheet->idxs->module = sheet;
-      pframe->fwdGlobal55.insert(
-        pframe->fwdGlobal55.begin(),
-        sheet->idxs);
-
-    }
 
   }
 
