@@ -44,7 +44,7 @@ namespace Sass {
     SelectorLists originalStack;
     SelectorLists selectorStack;
 
-    VarRefs* pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame);
+    VarRefs* pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame, bool drStrange = true);
 
     // A pointer to the slot where we will assign to
     // Used to optimize self-assignment in functions

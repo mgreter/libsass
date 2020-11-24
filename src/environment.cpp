@@ -767,7 +767,7 @@ namespace Sass {
 
   }
 
-  VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame)
+  VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame, bool drStrange)
   {
 
     if (intoRoot) {
@@ -779,7 +779,7 @@ namespace Sass {
           if (var.second == it->second) continue;
 
           ValueObj& slot = compiler.varRoot.getVariable({ 0xFFFFFFFF, it->second });
-          if (slot == nullptr || slot->isaNull()) continue;
+          if (!drStrange && (slot == nullptr || slot->isaNull())) continue;
 
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
