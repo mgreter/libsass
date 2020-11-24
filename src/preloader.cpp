@@ -56,9 +56,7 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::useRule });
     acceptRoot(eval.resolveUseRule(rule));
-    if (rule->module()->isBuiltIn) {
-      eval.exposeUseRule(rule);
-    }
+    eval.exposeUseRule(rule);
   }
 
   void Preloader::visitForwardRule(ForwardRule* rule)
@@ -72,10 +70,8 @@ namespace Sass {
 
   void Preloader::visitIncludeImport(IncludeImport* rule)
   {
-
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::importRule });
-
     acceptRoot(eval.resolveIncludeImport(rule));
     eval.exposeImpRule(rule);
 
