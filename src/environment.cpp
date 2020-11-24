@@ -1041,7 +1041,7 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule, bool fucker)
+  void Eval::exposeImpRule(IncludeImport* rule)
   {
 
     VarRefs* pframe = compiler.getCurrentFrame();
@@ -1052,7 +1052,7 @@ namespace Sass {
 
     if (rule->wasExported33()) {
 
-      if (fucker || false) {
+      if (true || false) {
         if (pframe->varFrame == 0xFFFFFFFF) {
 
           // Import to forward
@@ -1115,7 +1115,7 @@ namespace Sass {
     }
 
 
-    if (fucker) {
+    if (true) {
       if (pframe->varFrame == 0xFFFFFFFF) {
 
         // Import to forward
@@ -1161,7 +1161,7 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    exposeImpRule(rule, true);
+    exposeImpRule(rule);
 
     // Imports are always executed again
     for (const StatementObj& item : sheet->elements()) {
