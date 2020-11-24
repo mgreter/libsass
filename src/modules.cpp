@@ -9,6 +9,10 @@ namespace Sass {
   {
   }
 
+  BuiltInMod::~BuiltInMod() {
+    delete idxs;
+  }
+
   Env::~Env() {
     //delete idxs;
   }
