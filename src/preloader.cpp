@@ -55,46 +55,17 @@ namespace Sass {
   {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::useRule });
-
-    Root* sheet = eval.resolveUseRule(rule);
-
-    // return;
-
-    if (sheet && !sheet->empty()) {
-      LOCAL_PTR(Root, chroot77, sheet);
-      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-      ImportStackFrame iframe(eval.compiler, rule->import());
-      eval.compiler.varRoot.stack.push_back(sheet->idxs);
-      for (auto& it : sheet->elements()) it->accept(this);
-      eval.compiler.varRoot.stack.pop_back();
-    }
-
+    acceptRoot(eval.resolveUseRule(rule));
     return;
-
     eval.exposeUseRule(rule);
-
   }
 
   void Preloader::visitForwardRule(ForwardRule* rule)
   {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
-
-    Root* sheet = eval.resolveForwardRule(rule);
-
-    // return;
-
-    if (sheet && !sheet->empty()) {
-      LOCAL_PTR(Root, chroot77, sheet);
-      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
-      ImportStackFrame iframe(eval.compiler, rule->import());
-      eval.compiler.varRoot.stack.push_back(sheet->idxs);
-      for (auto& it : sheet->elements()) it->accept(this);
-      eval.compiler.varRoot.stack.pop_back();
-    }
-
+    acceptRoot(eval.resolveForwardRule(rule));
     return;
-
     eval.exposeFwdRule(rule);
   }
 
