@@ -109,6 +109,7 @@ namespace Sass {
     void addVariable(const EnvKey& name, uint32_t offset);
     void addMixin(const EnvKey& name, uint32_t offset);
     BuiltInMod(EnvRoot& root);
+    ~BuiltInMod();
   };
 
 }
