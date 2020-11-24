@@ -41,15 +41,6 @@ namespace Sass {
         // throw Exception::RuntimeException(compiler,
         //   "Defined Twice");
       }
-      // If the value is a default, we should look further
-      // down the tree and only add it if not there yet
-      if (cfgvar.isGuarded) {
-        // Check if we have a non-default parent
-        if (auto pr = getCfgVar(cfgvar.name, true, true)) {
-          cfgvar.expression = pr->expression;
-          pr->wasUsed = true;
-        }
-      }
       config[cfgvar.name] = cfgvar;
     }
     // Push the lookup table onto the stack
@@ -81,38 +72,67 @@ namespace Sass {
     // compiler.withConfigStack.pop_back();
   }
 
-  WithConfigVar* WithConfig::getCfgVar(EnvKey name, bool skipGuarded, bool skipNull) {
+  WithConfigVar* WithConfig::getCfgVar(const EnvKey& name2, bool skipGuarded, bool skipNull) {
 
-    auto withcfg = this;
+    WithConfig* withcfg = this;
+    WithConfigVar* guarded = nullptr;
+    WithConfig* gpwithcfg = nullptr;
+    EnvKey key(name2);
+    EnvKey gname;
     while (withcfg) {
       // Check if we should apply any filtering first
       if (withcfg->hasHideFilter) {
-        if (withcfg->filters.count(name.norm()))
-          return nullptr;
+        if (withcfg->filters.count(key.norm())) {
+          break;
+        }
       }
       if (withcfg->hasShowFilter) {
-        if (!withcfg->filters.count(name.norm()))
-          return nullptr;
+        if (!withcfg->filters.count(key.norm())) {
+          break;
+        }
       }
       // Then try to find the named item
-      auto varcfg = withcfg->config.find(name);
+      auto varcfg = withcfg->config.find(key);
       if (varcfg != withcfg->config.end()) {
-        bool consume = true;
-        if (skipGuarded && varcfg->second.isGuarded) consume = false;
-        if (skipNull && varcfg->second.isNull) consume = false;
-        if (consume) {
-          varcfg->second.wasUsed = true;
-          return &varcfg->second;
+        // Found an unguarded value
+        if (!varcfg->second.isGuarded) {
+          if (!varcfg->second.isNull) {
+            varcfg->second.wasUsed = true;
+            return &varcfg->second;
+          }
+        }
+        else if (!guarded) {
+          gpwithcfg = withcfg->parent;
+          guarded = &varcfg->second;
+          gname = key;
         }
       }
       // Should we apply some prefixes
       if (!withcfg->prefix.empty()) {
         sass::string prefix = withcfg->prefix;
-        name = EnvKey(prefix + name.orig());
+        key = EnvKey(prefix + key.orig());
       }
       withcfg = withcfg->parent;
     }
-    return nullptr;
+    // Return guarded
+    if (gpwithcfg) {
+      // Since we found not unguarded value,
+      // we can assume all have been used
+      while (gpwithcfg) {
+        // Then try to find the named item
+        auto varcfg = gpwithcfg->config.find(gname);
+        if (varcfg != gpwithcfg->config.end()) {
+          varcfg->second.wasUsed = true;
+        }
+        // Should we apply some prefixes
+        if (!gpwithcfg->prefix.empty()) {
+          sass::string prefix = gpwithcfg->prefix;
+          gname = EnvKey(prefix + gname.orig());
+        }
+        gpwithcfg = gpwithcfg->parent;
+      }
+    }
+    return guarded;
   }
 
   // Sass::WithConfigScope::WithConfigScope(

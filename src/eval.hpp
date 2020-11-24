@@ -280,6 +280,9 @@ namespace Sass {
     void acceptIncludeImport(IncludeImport* import);
 
 
+    Root* resolveDynamicImport(IncludeImport* rule);
+
+
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
@@ -348,8 +351,7 @@ namespace Sass {
     Root* resolveIncludeImport(
       const SourceSpan& pstate,
       const sass::string& prev,
-      const sass::string& url,
-      bool scoped = false);
+      const sass::string& url);
 
   private:
     /////////////////////////////////////////////////////////////////////////

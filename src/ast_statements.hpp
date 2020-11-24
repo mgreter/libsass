@@ -78,7 +78,7 @@ namespace Sass {
     ~WithConfig();
 
     // Get value and mark it as used
-    WithConfigVar* getCfgVar(EnvKey name, bool skipGuarded, bool skipNull);
+    WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
 
   };
 
