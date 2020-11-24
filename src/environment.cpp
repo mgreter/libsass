@@ -999,7 +999,6 @@ namespace Sass {
     if (rule->wasExported()) return;
     rule->wasExported(true);
 
-    VarRefs* mframe(compiler.getCurrentModule());
     VarRefs* frame(compiler.getCurrentFrame());
 
     if (rule->module()->isBuiltIn) {
@@ -1021,7 +1020,7 @@ namespace Sass {
     }
     else if (rule->root()) {
 
-      pudding(rule->root()->idxs, rule->ns().empty(), mframe);
+      pudding(rule->root()->idxs, rule->ns().empty(), frame);
 
       if (rule->ns().empty()) {
         // We should pudding when accessing!?
