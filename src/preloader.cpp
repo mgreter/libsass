@@ -56,7 +56,7 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::useRule });
     acceptRoot(eval.resolveUseRule(rule));
-    eval.exposeUseRule(rule);
+    //eval.exposeUseRule(rule);
   }
 
   void Preloader::visitForwardRule(ForwardRule* rule)
