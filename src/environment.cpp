@@ -992,42 +992,6 @@ namespace Sass {
 
   }
 
-  void Eval::exposeUseRule2(UseRule* rule)
-  {
-    if (rule->wasExported()) return;
-
-    // We need a module loaded
-    if (Module* mod = rule->module()) {
-
-      VarRefs* frame = compiler.getCurrentFrame();
-      if (mod->isBuiltIn) {
-
-        if (rule->ns().empty()) {
-          frame->fwdGlobal55.push_back(mod->idxs);
-          rule->wasExported(true);
-        }
-        else if (frame->fwdModule55.count(rule->ns())) {
-          compiler.addFinalStackTrace(rule->pstate());
-          throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
-        }
-        else {
-          frame->fwdModule55.insert({ rule->ns(),
-            { mod->idxs, nullptr } });
-          rule->wasExported(true);
-        }
-
-      }
-      else {
-
-
-
-      }
-
-    }
-
-  }
-
-
   void Eval::exposeUseRule(UseRule* rule)
   {
 
