@@ -553,7 +553,7 @@ namespace Sass {
     import_(import),
     prev_(prev),
     url_(url),
-    waxExported_(false),
+    wasExported_(false),
     module_(nullptr)
   {
     // ;

@@ -57,37 +57,6 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
-    // We always must have at least one variable
-    // SASS_ASSERT(a->vidxs().empty(), "Invalid VIDX");
-
-    // Check if we can overwrite an existing variable
-    // We create it locally if none other there yet.
-    // for (auto vidx : a->vidxs()) {
-    //   // Get the value reference (now guaranteed to exist)
-    //   ValueObj& value(compiler.varRoot.getVariable(vidx));
-    //   // Skip if nothing is stored yet, keep looking
-    //   // for another variable with a value set
-    //   if (value == nullptr) continue;
-    //   // Set variable if default flag is not set or
-    //   // if no value has been set yet or that value
-    //   // was explicitly set to a SassNull value.
-    // 
-    // 
-    //   if (!a->is_default() || value->isNull()) {
-    // 
-    //     if (vidx.isPrivate(compiler.varRoot.privateVarOffset)) {
-    //       compiler.addFinalStackTrace(a->pstate());
-    //       throw Exception::RuntimeException(compiler,
-    //         "Cannot modify built-in variable.");
-    //     }
-    // 
-    //     compiler.varRoot.setVariable(vidx,
-    //        a->value()->accept(this));
-    //   }
-    //   // Finished
-    //   return nullptr;
-    // }
-
     if (!a->withinLoop() && a->vidx2().isValid()) {
       assigne = &compiler.varRoot.getVariable(a->vidx2());
       ValueObj result = a->value()->accept(this);
@@ -199,7 +168,20 @@ namespace Sass {
     }
     else {
 
+      VarRefs* mod = compiler.getCurrentModule();
+
+      auto it = mod->fwdModule55.find(a->ns());
+      if (it == mod->fwdModule55.end()) {
+        compiler.addFinalStackTrace(a->pstate());
+        throw Exception::ModuleUnknown(compiler, a->ns());
+      }
+      else if (it->second.second && !it->second.second->isCompiled) {
+        compiler.addFinalStackTrace(a->pstate());
+        throw Exception::ModuleUnknown(compiler, a->ns());
+      }
+
       if (!result) result = a->value()->accept(this);
+
       a->vidx2(compiler.varRoot.setModVar(
         a->variable(), a->ns(),
         result,
@@ -339,6 +321,12 @@ namespace Sass {
       }
 
     }
+    // else {
+    //   auto it = frame->fwdModule55.find(ns);
+    //   if (it == frame->fwdModule55.end()) {
+    //     throw "No modulpo";
+    //   }
+    // }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start),
@@ -1073,15 +1061,15 @@ namespace Sass {
 
       if (rule->ns().empty()) {
         // We should pudding when accessing!?
-        mframe->fwdGlobal55.push_back(rule->root()->idxs);
+        frame->fwdGlobal55.push_back(rule->root()->idxs);
       }
       else {
         // Refactor to only fetch once!
-        if (mframe->fwdModule55.count(rule->ns())) {
+        if (frame->fwdModule55.count(rule->ns())) {
           throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
         }
 
-        mframe->fwdModule55[rule->ns()] =
+        frame->fwdModule55[rule->ns()] =
         { rule->root()->idxs, rule->root() };
       }
 

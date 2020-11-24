@@ -932,7 +932,12 @@ namespace Sass {
           ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
           return slot != nullptr;
         }
-        return true;
+        if (it->second.second) {
+          return it->second.second->isCompiled;
+        }
+        else {
+          return true;
+        }
       }
       if (current->pscope == nullptr) break;
       else current = current->pscope;
