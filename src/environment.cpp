@@ -1327,12 +1327,7 @@ namespace Sass {
       rule->module(module);
 
       if (ns == "*") {
-
-        if (true) {
-
-          // module->idxs->module = nullptr;
-          current->fwdGlobal55.push_back(module->idxs);
-        }
+        current->fwdGlobal55.push_back(module->idxs);
       }
       else if (modFrame->fwdModule55.count(ns)) {
         context.addFinalStackTrace(rule->pstate());
