@@ -977,11 +977,6 @@ namespace Sass {
 
       }
 
-  void Eval::exposeImpRule(IncludeImport* rule)
-  {
-    // std::cerr << "Expose import\n";
-  }
-
   void Eval::exposeFwdRule(ForwardRule* rule)
   {
     if (!rule->module()) return;
@@ -1046,6 +1041,62 @@ namespace Sass {
 
   }
 
+  void Eval::exposeImpRule(IncludeImport* rule, VarRefs* pframe)
+  {
+    // Merge it up through all imports
+    for (auto& var : rule->sheet()->idxs->varIdxs) {
+      auto it = pframe->varIdxs.find(var.first);
+      if (it == pframe->varIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.variables.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createVariable(var.first);
+      }
+    }
+
+    // Merge it up through all imports
+    for (auto& fn : rule->sheet()->idxs->fnIdxs) {
+      auto it = pframe->fnIdxs.find(fn.first);
+      if (it == pframe->fnIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.functions.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createFunction(fn.first);
+      }
+    }
+
+    // Merge it up through all imports
+    for (auto& mix : rule->sheet()->idxs->mixIdxs) {
+      auto it = pframe->mixIdxs.find(mix.first);
+      if (it == pframe->mixIdxs.end()) {
+        if (pframe->isCompiled) {
+          // throw "Can't create on active frame";
+          compiler.varRoot.mixins.push_back({});
+        }
+        // std::cerr << "EXPORT " << var.first.norm() << "\n";
+        pframe->createMixin(mix.first);
+      }
+    }
+
+
+    if (pframe->varFrame != 0xFFFFFFFF) {
+
+      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
+        << compiler.implicitWithConfig << "\n";
+
+      rule->sheet()->idxs->module = rule->sheet();
+      pframe->fwdGlobal55.insert(
+        pframe->fwdGlobal55.begin(),
+        rule->sheet()->idxs);
+
+    }
+
+  }
+
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
 
@@ -1055,6 +1106,7 @@ namespace Sass {
     callStackFrame cframe(traces, BackTrace(
       rule->pstate(), Strings::importRule));
     Root* sheet = resolveIncludeImport(rule);
+    rule->sheet(sheet);
 
     VarRefs* pframe = compiler.getCurrentFrame();
 
@@ -1074,59 +1126,8 @@ namespace Sass {
     // Skip over all imports
     // We are doing it out of order
 
+    exposeImpRule(rule, pframe);
 
-
-    // Merge it up through all imports
-    for (auto& var : sheet->idxs->varIdxs) {
-      auto it = pframe->varIdxs.find(var.first);
-      if (it == pframe->varIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.variables.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
-        pframe->createVariable(var.first);
-      }
-    }
-
-    // Merge it up through all imports
-    for (auto& fn : sheet->idxs->fnIdxs) {
-      auto it = pframe->fnIdxs.find(fn.first);
-      if (it == pframe->fnIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.functions.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
-        pframe->createFunction(fn.first);
-      }
-    }
-
-    // Merge it up through all imports
-    for (auto& mix : sheet->idxs->mixIdxs) {
-      auto it = pframe->mixIdxs.find(mix.first);
-      if (it == pframe->mixIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.mixins.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
-        pframe->createMixin(mix.first);
-      }
-    }
-
-  
-    if (pframe->varFrame != 0xFFFFFFFF) {
-
-      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
-        << compiler.implicitWithConfig << "\n";
-
-      sheet->idxs->module = sheet;
-      pframe->fwdGlobal55.insert(
-        pframe->fwdGlobal55.begin(),
-        sheet->idxs);
-
-    }
 
 
     // Imports are always executed again

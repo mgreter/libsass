@@ -85,7 +85,7 @@ namespace Sass {
 
     return;
 
-    eval.exposeImpRule(rule);
+    // eval.exposeImpRule(rule);
 
   }
 
