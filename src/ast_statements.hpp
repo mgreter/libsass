@@ -659,7 +659,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, ns);
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
-    ADD_PROPERTY(bool, waxExported);
+    ADD_PROPERTY(bool, wasExported);
 
     // We have both, root and module
     ADD_PROPERTY(Module*, module);

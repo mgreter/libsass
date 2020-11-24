@@ -1006,7 +1006,7 @@ namespace Sass {
 
   void Eval::exposeUseRule2(UseRule* rule)
   {
-    if (rule->waxExported()) return;
+    if (rule->wasExported()) return;
 
     // We need a module loaded
     if (Module* mod = rule->module()) {
@@ -1016,7 +1016,7 @@ namespace Sass {
 
         if (rule->ns().empty()) {
           frame->fwdGlobal55.push_back(mod->idxs);
-          rule->waxExported(true);
+          rule->wasExported(true);
         }
         else if (frame->fwdModule55.count(rule->ns())) {
           compiler.addFinalStackTrace(rule->pstate());
@@ -1025,16 +1025,17 @@ namespace Sass {
         else {
           frame->fwdModule55.insert({ rule->ns(),
             { mod->idxs, nullptr } });
-          rule->waxExported(true);
+          rule->wasExported(true);
         }
+
+      }
+      else {
+
+
 
       }
 
     }
-
-    // if ()
-
-
 
   }
 
@@ -1043,35 +1044,29 @@ namespace Sass {
   {
 
     if (!rule->module()) return;
-    if (rule->waxExported()) return;
-    rule->waxExported(true);
+    if (rule->wasExported()) return;
+    rule->wasExported(true);
 
     VarRefs* mframe(compiler.getCurrentModule());
+    VarRefs* frame(compiler.getCurrentFrame());
 
     if (rule->module()->isBuiltIn) {
 
       if (rule->ns().empty()) {
-
-        // for (auto var : rule->module()->idxs->varIdxs) {
-        //   if (!var.first.isPrivate())
-        //     mframe->varIdxs.insert(var);
-        // }
-        // for (auto mix : rule->module()->idxs->mixIdxs) {
-        //   if (!mix.first.isPrivate())
-        //     mframe->mixIdxs.insert(mix);
-        // }
-        // for (auto fn : rule->module()->idxs->fnIdxs) {
-        //   if (!fn.first.isPrivate())
-        //     mframe->fnIdxs.insert(fn);
-        // }
-
-        // rule->module()->idxs->module = nullptr;
-        // mframe->fwdGlobal55.push_back(rule->module()->idxs);
-
+        frame->fwdGlobal55.push_back(rule->module()->idxs);
+        rule->wasExported(true);
+      }
+      else if (frame->fwdModule55.count(rule->ns())) {
+        compiler.addFinalStackTrace(rule->pstate());
+        throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
+      }
+      else {
+        frame->fwdModule55.insert({ rule->ns(),
+          { rule->module()->idxs, nullptr } });
+        rule->wasExported(true);
       }
 
     }
-
     else if (rule->root()) {
 
       pudding(rule->root()->idxs, rule->ns().empty(), mframe);
