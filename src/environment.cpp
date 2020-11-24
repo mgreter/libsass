@@ -1059,11 +1059,6 @@ namespace Sass {
     for (auto& var : cidxs->varIdxs) {
       auto it = pframe->varIdxs.find(var.first);
       if (it == pframe->varIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.variables.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
         pframe->createVariable(var.first);
       }
     }
@@ -1072,11 +1067,6 @@ namespace Sass {
     for (auto& fn : cidxs->fnIdxs) {
       auto it = pframe->fnIdxs.find(fn.first);
       if (it == pframe->fnIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.functions.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
         pframe->createFunction(fn.first);
       }
     }
@@ -1085,11 +1075,6 @@ namespace Sass {
     for (auto& mix : cidxs->mixIdxs) {
       auto it = pframe->mixIdxs.find(mix.first);
       if (it == pframe->mixIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.mixins.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
         pframe->createMixin(mix.first);
       }
     }
