@@ -1050,11 +1050,6 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    if (rule->wasExported33()) {
-
-    }
-
-    rule->wasExported33(true);
     if (pframe->varFrame == 0xFFFFFFFF) {
 
       // Import to forward
