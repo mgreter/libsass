@@ -18,13 +18,15 @@ namespace Sass {
     bool hasConfig,
     bool hasShowFilter,
     bool hasHideFilter,
-    std::set<EnvKey> filters,
+    std::set<EnvKey> varFilters,
+    std::set<EnvKey> callFilters,
     const sass::string& prefix) :
     parent(pwconfig),
     hasConfig(hasConfig),
     hasShowFilter(hasShowFilter),
     hasHideFilter(hasHideFilter),
-    filters(filters),
+    varFilters(varFilters),
+    callFilters(callFilters),
     prefix(prefix)
   {
 
@@ -80,12 +82,12 @@ namespace Sass {
     while (withcfg) {
       // Check if we should apply any filtering first
       if (withcfg->hasHideFilter) {
-        if (withcfg->filters.count(key.norm())) {
+        if (withcfg->varFilters.count(key.norm())) {
           break;
         }
       }
       if (withcfg->hasShowFilter) {
-        if (!withcfg->filters.count(key.norm())) {
+        if (!withcfg->varFilters.count(key.norm())) {
           break;
         }
       }
@@ -115,12 +117,12 @@ namespace Sass {
     while (withcfg) {
       // Check if we should apply any filtering first
       if (withcfg->hasHideFilter) {
-        if (withcfg->filters.count(key.norm())) {
+        if (withcfg->varFilters.count(key.norm())) {
           break;
         }
       }
       if (withcfg->hasShowFilter) {
-        if (!withcfg->filters.count(key.norm())) {
+        if (!withcfg->varFilters.count(key.norm())) {
           break;
         }
       }
@@ -565,8 +567,8 @@ namespace Sass {
     Import* import,
     const sass::string& prefix,
     WithConfig* pwconfig,
-    std::set<EnvKey>&& toggledVariables,
-    std::set<EnvKey>&& toggledCallables,
+    std::set<EnvKey>&& varFilters,
+    std::set<EnvKey>&& callFilters,
     sass::vector<WithConfigVar>&& config,
     bool isShown,
     bool isHidden,
@@ -576,17 +578,16 @@ namespace Sass {
     prev_(prev),
     url_(url),
     prefix_(prefix),
-    isShown_(isShown),
-    isHidden_(isHidden),
+    isShown2_(isShown),
+    isHidden3_(isHidden),
     hasLocalWith_(hasWith),
     wasMerged_(false),
-    toggledVariables2_(std::move(toggledVariables)),
-    toggledCallables_(std::move(toggledCallables)),
     config_(std::move(config)),
     wconfig(new WithConfig(pwconfig,
       config_, hasLocalWith_,
-      isShown_, isHidden_,
-      toggledVariables2_,
+      isShown, isHidden,
+      std::move(varFilters),
+      std::move(callFilters),
       prefix_)),
     module_(nullptr)
   {

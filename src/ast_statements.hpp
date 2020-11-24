@@ -55,7 +55,8 @@ namespace Sass {
     bool hasShowFilter = false;
     bool hasHideFilter = false;
 
-    std::set<EnvKey> filters;
+    std::set<EnvKey> varFilters;
+    std::set<EnvKey> callFilters;
 
     sass::string prefix;
 
@@ -69,7 +70,8 @@ namespace Sass {
       bool hasConfig = true,
       bool hasShowFilter = false,
       bool hasHideFilter = false,
-      std::set<EnvKey> filters = {},
+      std::set<EnvKey> varfilters = {},
+      std::set<EnvKey> callFilters = {},
       const sass::string& prefix = "");
 
     void finalize(Logger& logger);
@@ -698,12 +700,10 @@ namespace Sass {
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, prefix);
-    ADD_PROPERTY(bool, isShown);
-    ADD_PROPERTY(bool, isHidden);
+    ADD_PROPERTY(bool, isShown2);
+    ADD_PROPERTY(bool, isHidden3);
     ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, wasMerged);
-    ADD_REF(std::set<EnvKey>, toggledVariables2);
-    ADD_REF(std::set<EnvKey>, toggledCallables);
     ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     // We have both, root and module
@@ -718,8 +718,8 @@ namespace Sass {
       Import* import,
       const sass::string& prefix,
       WithConfig* pwconfig,
-      std::set<EnvKey>&& toggledVariables,
-      std::set<EnvKey>&& toggledCallables,
+      std::set<EnvKey>&& varFilters,
+      std::set<EnvKey>&& callFilters,
       sass::vector<WithConfigVar>&& config,
       bool isShown, bool isHidden, bool hasWith);
       // Statement visitor to sass values entry function

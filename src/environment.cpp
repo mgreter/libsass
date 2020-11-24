@@ -1005,8 +1005,8 @@ namespace Sass {
     if (rule->wasMerged()) return;
     rule->wasMerged(true);
 
-    mergeForwards(rule->module()->idxs, chroot77, rule->isShown(), rule->isHidden(),
-      rule->prefix(), rule->wconfig->filters, rule->toggledCallables(), compiler);
+    mergeForwards(rule->module()->idxs, chroot77, rule->wconfig->hasShowFilter, rule->wconfig->hasHideFilter,
+      rule->prefix(), rule->wconfig->varFilters, rule->wconfig->callFilters, compiler);
 
   }
 
@@ -1508,15 +1508,15 @@ namespace Sass {
 
     bool isShown = false;
     bool isHidden = false;
-    std::set<EnvKey> toggledVariables2;
-    std::set<EnvKey> toggledCallables2;
+    std::set<EnvKey> varFilters;
+    std::set<EnvKey> callFilters;
     Offset beforeShow(scanner.offset);
     if (scanIdentifier("show")) {
-      readForwardMembers(toggledVariables2, toggledCallables2);
+      readForwardMembers(varFilters, callFilters);
       isShown = true;
     }
     else if (scanIdentifier("hide")) {
-      readForwardMembers(toggledVariables2, toggledCallables2);
+      readForwardMembers(varFilters, callFilters);
       isHidden = true;
     }
 
@@ -1536,17 +1536,14 @@ namespace Sass {
       scanner.relevantSpanFrom(start),
       scanner.sourceUrl, url, {},
       prefix, wconfig, // pwconfig
-      std::move(toggledVariables2),
-      std::move(toggledCallables2),
+      std::move(varFilters),
+      std::move(callFilters),
       std::move(config),
       isShown, isHidden, hasWith);
 
     LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
 
     rule->hasLocalWith(hasWith);
-
-    std::set<EnvKey>& toggledVariables(rule->wconfig->filters);
-    std::set<EnvKey>& toggledCallables(rule->toggledCallables());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
