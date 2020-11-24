@@ -1006,18 +1006,17 @@ namespace Sass {
 
   void Eval::exposeUseRule2(UseRule* rule)
   {
-    return;
     if (rule->waxExported()) return;
-    rule->waxExported(true);
 
     // We need a module loaded
     if (Module* mod = rule->module()) {
 
-      VarRefs* frame = compiler.getCurrentFrame();
+      VarRefs* frame = compiler.getCurrentModule();
       if (mod->isBuiltIn) {
 
         if (rule->ns().empty()) {
           frame->fwdGlobal55.push_back(mod->idxs);
+          rule->waxExported(true);
         }
         else if (frame->fwdModule55.count(rule->ns())) {
           compiler.addFinalStackTrace(rule->pstate());
@@ -1026,6 +1025,7 @@ namespace Sass {
         else {
           frame->fwdModule55.insert({ rule->ns(),
             { mod->idxs, nullptr } });
+          rule->waxExported(true);
         }
 
       }
@@ -1335,8 +1335,8 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    VarRefs* current(context.varRoot.stack.back());
-    VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
+    VarRefs* current(context.getCurrentFrame());
+    VarRefs* modFrame(context.getCurrentModule());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
@@ -1371,7 +1371,7 @@ namespace Sass {
       else {
         current->fwdModule55.insert({ ns,
           { module->idxs, nullptr } });
-        //rule->waxExported(true);
+        rule->waxExported(true);
       }
 
       // wconfig.finalize();
