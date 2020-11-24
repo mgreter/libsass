@@ -547,14 +547,13 @@ namespace Sass {
     sass::vector<WithConfigVar>&& config,
     bool hasLocalWith) :
     Statement(pstate),
+    WithConfig(pwconfig,
+      std::move(config),
+      hasLocalWith),
     import_(import),
     prev_(prev),
     url_(url),
-    hasLocalWith_(hasLocalWith),
     waxExported_(false),
-    config_(std::move(config)),
-    wconfig_(new WithConfig(pwconfig,
-      config_, hasLocalWith_)),
     module_(nullptr)
   {
     // ;

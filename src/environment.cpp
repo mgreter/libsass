@@ -707,7 +707,7 @@ namespace Sass {
     // callStackFrame frame(compiler, {
     //   rule->pstate(), Strings::useRule });
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    LOCAL_PTR(WithConfig, wconfig, rule);
 
     // Resolve final file to load
     const ImportRequest request(
@@ -1194,20 +1194,20 @@ namespace Sass {
     callStackFrame frame(logger456, trace);
 
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
-      << rule->hasLocalWith() << " -> " << compiler.implicitWithConfig << "\n";
+      << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
 
     if (Root* root = resolveUseRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || rule->hasLocalWith());
-        LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+          compiler.implicitWithConfig || rule->hasConfig);
+        LOCAL_PTR(WithConfig, wconfig, rule);
         compileModule(root);
-        if (rule->wconfig()) rule->wconfig()->finalize(compiler);
+        rule->finalize(compiler);
         if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
         insertModule(root);
       }
-      else if (rule->hasLocalWith()) {
+      else if (rule->hasConfig) {
         throw Exception::ParserException(compiler,
           "This module was already loaded, so it "
           "can't be configured using \"with\".");
@@ -1298,17 +1298,14 @@ namespace Sass {
       scanner.relevantSpanFrom(start),
       scanner.sourceUrl, url, {},
       wconfig, std::move(config), hasWith);
-    rule->hasLocalWith(hasWith);
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    LOCAL_PTR(WithConfig, wconfig, rule);
 
     VarRefs* current(context.varRoot.stack.back());
     VarRefs* modFrame(context.varRoot.stack.back()->getModule23());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      // WithConfig wconfig(context, config, hasWith);
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1367,7 +1364,6 @@ namespace Sass {
     // BuiltIn
 
     rule->ns(ns);
-    rule->config(config);
     return rule.detach();
   }
 

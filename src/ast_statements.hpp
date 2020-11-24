@@ -650,7 +650,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
-  class UseRule final : public Statement
+  class UseRule final : public Statement, public WithConfig
   {
   private:
     ADD_CONSTREF(ImportObj, import);
@@ -659,11 +659,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, ns);
     // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
-    ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, waxExported);
-    ADD_PROPERTY(sass::vector<WithConfigVar>, config);
-
-    ADD_PROPERTY(WithConfig*, wconfig);
 
     // We have both, root and module
     ADD_PROPERTY(Module*, module);
@@ -678,9 +674,6 @@ namespace Sass {
       WithConfig* pwconfig,
       sass::vector<WithConfigVar>&& config,
       bool hasLocalWith);
-    ~UseRule() override final {
-      delete wconfig_;
-    }
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);
