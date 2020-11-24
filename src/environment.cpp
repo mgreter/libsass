@@ -308,7 +308,6 @@ namespace Sass {
       context.varRoot.stack.front() :
       context.varRoot.stack.back();
 
-    VarRefs* module(context.getCurrentModule());
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
     bool hasVar = false;
@@ -497,11 +496,7 @@ namespace Sass {
   void mergeForwards(
     VarRefs* idxs,
     Moduled* module,
-    bool isShown,
-    bool isHidden,
-    const sass::string prefix,
-    const std::set<EnvKey>& toggledVariables,
-    const std::set<EnvKey>& toggledCallables,
+    WithConfig* wconfig,
     Logger& logger)
   {
 
@@ -514,20 +509,20 @@ namespace Sass {
       for (auto& entry : idxs->module->mergedFwdFn) { module->mergedFwdFn.insert(entry); }
     }
 
-    if (isShown) {
-      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, true);
-      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, true);
-      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, true);
+    if (wconfig->hasShowFilter) {
+      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, wconfig->prefix, wconfig->varFilters, "variable named $", logger, true);
+      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, wconfig->prefix, wconfig->callFilters, "mixin named ", logger, true);
+      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, wconfig->prefix, wconfig->callFilters, "function named ", logger, true);
     }
-    else if (isHidden) {
-      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, prefix, toggledVariables, "variable named $", logger, false);
-      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, prefix, toggledCallables, "mixin named ", logger, false);
-      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, prefix, toggledCallables, "function named ", logger, false);
+    else if (wconfig->hasHideFilter) {
+      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, wconfig->prefix, wconfig->varFilters, "variable named $", logger, false);
+      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, wconfig->prefix, wconfig->callFilters, "mixin named ", logger, false);
+      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, wconfig->prefix, wconfig->callFilters, "function named ", logger, false);
     }
     else {
-      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, prefix, "variable named $", logger);
-      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, prefix, "mixin named ", logger);
-      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, prefix, "function named ", logger);
+      exposeFiltered(module->mergedFwdVar, idxs->varIdxs, wconfig->prefix, "variable named $", logger);
+      exposeFiltered(module->mergedFwdMix, idxs->mixIdxs, wconfig->prefix, "mixin named ", logger);
+      exposeFiltered(module->mergedFwdFn, idxs->fnIdxs, wconfig->prefix, "function named ", logger);
     }
 
   }
@@ -1005,8 +1000,7 @@ namespace Sass {
     if (rule->wasMerged()) return;
     rule->wasMerged(true);
 
-    mergeForwards(rule->module()->idxs, chroot77, rule->wconfig->hasShowFilter, rule->wconfig->hasHideFilter,
-      rule->prefix(), rule->wconfig->varFilters, rule->wconfig->callFilters, compiler);
+    mergeForwards(rule->module()->idxs, chroot77, rule->wconfig, compiler);
 
   }
 
@@ -1019,7 +1013,6 @@ namespace Sass {
     rule->waxExported(true);
 
     VarRefs* mframe(compiler.getCurrentModule());
-    VarRefs* frame(compiler.getCurrentFrame());
 
     if (rule->module()->isBuiltIn) {
 
@@ -1092,7 +1085,6 @@ namespace Sass {
     // Add C-API to stack to expose it
     ImportStackFrame iframe(compiler, sheet->import);
     EnvScope scoped(compiler.varRoot, sheet->idxs);
-    VarRefs* refs = sheet->idxs;
     LOCAL_PTR(Root, chroot77, sheet);
 
     while (pframe->isImport) {
@@ -1374,11 +1366,8 @@ namespace Sass {
     }
     // BuiltIn
 
-    bool hasCached = false;
     rule->ns(ns);
-    rule->url(url);
     rule->config(config);
-    rule->prev(scanner.sourceUrl);
     return rule.detach();
   }
 
