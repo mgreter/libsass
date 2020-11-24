@@ -47,7 +47,7 @@ namespace Sass {
       }
       auto kv = std::make_pair(
         name, BuiltInMod{ varRoot });
-      modules.insert(kv);
+      modules.insert(std::move(kv));
       it = modules.find(name);
       // ToDo: fix this!
       return it->second;

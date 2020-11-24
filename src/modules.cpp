@@ -13,6 +13,12 @@ namespace Sass {
     delete idxs;
   }
 
+  BuiltInMod::BuiltInMod(BuiltInMod&& other) noexcept:
+    Module(other.idxs)
+  {
+    other.idxs = nullptr;
+  }
+
   Env::~Env() {
     //delete idxs;
   }

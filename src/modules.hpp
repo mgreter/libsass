@@ -106,6 +106,12 @@ namespace Sass {
   {
   public:
 
+    BuiltInMod& operator=(const BuiltInMod&) = delete;
+    BuiltInMod(const BuiltInMod&) = delete;
+    BuiltInMod() = default;
+
+    BuiltInMod(BuiltInMod&&) noexcept;
+
     void addFunction(const EnvKey& name, uint32_t offset);
     void addVariable(const EnvKey& name, uint32_t offset);
     void addMixin(const EnvKey& name, uint32_t offset);
