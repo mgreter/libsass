@@ -79,13 +79,7 @@ namespace Sass {
 
     Root* root = eval.resolveIncludeImport(rule);
     acceptRoot(root);
-
-    return;
-
-
-    return;
-
-    // eval.exposeImpRule(rule);
+    eval.exposeImpRule(rule);
 
   }
 

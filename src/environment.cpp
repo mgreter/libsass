@@ -1041,8 +1041,11 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule, VarRefs* pframe2)
+  void Eval::exposeImpRule(IncludeImport* rule)
   {
+
+    if (rule->wasExported()) return;
+    rule->wasExported(true);
 
     VarRefs* pframe = compiler.getCurrentFrame();
 
@@ -1050,8 +1053,10 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
+    VarRefs* cidxs = rule->sheet()->idxs;
+
     // Merge it up through all imports
-    for (auto& var : rule->sheet()->idxs->varIdxs) {
+    for (auto& var : cidxs->varIdxs) {
       auto it = pframe->varIdxs.find(var.first);
       if (it == pframe->varIdxs.end()) {
         if (pframe->isCompiled) {
@@ -1064,7 +1069,7 @@ namespace Sass {
     }
 
     // Merge it up through all imports
-    for (auto& fn : rule->sheet()->idxs->fnIdxs) {
+    for (auto& fn : cidxs->fnIdxs) {
       auto it = pframe->fnIdxs.find(fn.first);
       if (it == pframe->fnIdxs.end()) {
         if (pframe->isCompiled) {
@@ -1077,7 +1082,7 @@ namespace Sass {
     }
 
     // Merge it up through all imports
-    for (auto& mix : rule->sheet()->idxs->mixIdxs) {
+    for (auto& mix : cidxs->mixIdxs) {
       auto it = pframe->mixIdxs.find(mix.first);
       if (it == pframe->mixIdxs.end()) {
         if (pframe->isCompiled) {
@@ -1095,7 +1100,7 @@ namespace Sass {
       if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
         << compiler.implicitWithConfig << "\n";
 
-      rule->sheet()->idxs->module = rule->sheet();
+      cidxs->module = rule->sheet();
       pframe->fwdGlobal55.insert(
         pframe->fwdGlobal55.begin(),
         rule->sheet()->idxs);
@@ -1134,7 +1139,7 @@ namespace Sass {
     // Skip over all imports
     // We are doing it out of order
 
-    exposeImpRule(rule, pframe);
+    exposeImpRule(rule);
 
 
 
@@ -1152,7 +1157,7 @@ namespace Sass {
       // Import to forward
       for (auto& asd : sheet->mergedFwdVar) {
         if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
-        pframe->varIdxs.insert(asd);
+        pframe->varIdxs[asd.first] = asd.second;
       } // a: 18
       for (auto& asd : sheet->mergedFwdMix) {
         if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
