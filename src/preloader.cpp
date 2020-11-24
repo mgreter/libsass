@@ -78,10 +78,10 @@ namespace Sass {
       rule->pstate(), Strings::importRule });
 
     Root* root = eval.resolveIncludeImport(rule);
+    acceptRoot(root);
 
     return;
 
-    acceptRoot(root);
 
     return;
 

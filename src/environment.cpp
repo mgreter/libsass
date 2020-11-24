@@ -1046,7 +1046,6 @@ namespace Sass {
 
     VarRefs* pframe = compiler.getCurrentFrame();
 
-
     while (pframe->isImport) {
       pframe = pframe->pscope;
     }
@@ -1130,6 +1129,7 @@ namespace Sass {
     while (pframe->isImport) {
       pframe = pframe->pscope;
     }
+
 
     // Skip over all imports
     // We are doing it out of order
