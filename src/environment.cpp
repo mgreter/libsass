@@ -1283,8 +1283,6 @@ namespace Sass {
 
         WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
-        LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || hasWith);
         WithConfig*& pwconfig(compiler.wconfig);
         LOCAL_PTR(WithConfig, pwconfig, &wconfig);
 
@@ -1295,6 +1293,8 @@ namespace Sass {
           pstate, prev, url->value(), true)) {
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
+            LocalOption<bool> scoped(compiler.implicitWithConfig,
+              compiler.implicitWithConfig || hasWith);
             eval.compileModule(sheet);
             wconfig.finalize(compiler);
           }
