@@ -1011,7 +1011,7 @@ namespace Sass {
     // We need a module loaded
     if (Module* mod = rule->module()) {
 
-      VarRefs* frame = compiler.getCurrentModule();
+      VarRefs* frame = compiler.getCurrentFrame();
       if (mod->isBuiltIn) {
 
         if (rule->ns().empty()) {
@@ -1349,7 +1349,7 @@ namespace Sass {
 
       sass::string name(url.substr(5));
       if (ns.empty()) ns = name;
-      rule->ns(ns);
+      rule->ns(ns == "*" ? "" : ns);
 
       BuiltInMod* module(context.getModule(name));
 
