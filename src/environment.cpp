@@ -547,7 +547,7 @@ namespace Sass {
     // callStackFrame frame(compiler, {
     //   rule->pstate(), Strings::useRule });
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
+    LOCAL_PTR(WithConfig, wconfig, rule);
 
     // Resolve final file to load
     const ImportRequest request(
@@ -1000,7 +1000,7 @@ namespace Sass {
     if (rule->wasMerged()) return;
     rule->wasMerged(true);
 
-    mergeForwards(rule->module()->idxs, chroot77, rule->wconfig, compiler);
+    mergeForwards(rule->module()->idxs, chroot77, rule, compiler);
 
   }
 
@@ -1225,20 +1225,20 @@ namespace Sass {
     callStackFrame frame333(logger456, trace);
 
     if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
-      << rule->wconfig->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
+      << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
 
     if (Root* root = resolveForwardRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || rule->wconfig->hasConfig);
-        LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
+          compiler.implicitWithConfig || rule->hasConfig);
+        LOCAL_PTR(WithConfig, wconfig, rule);
         compileModule(root);
-        if (rule->wconfig) rule->wconfig->finalize(compiler);
+        rule->finalize(compiler);
         if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
         insertModule(root);
       }
-      else if (compiler.implicitWithConfig || rule->wconfig->hasConfig) {
+      else if (compiler.implicitWithConfig || rule->hasConfig) {
         throw Exception::ParserException(compiler,
           "This module was already loaded, so it "
           "can't be configured using \"with\".");
@@ -1530,7 +1530,7 @@ namespace Sass {
       std::move(config),
       isShown, isHidden, hasWith);
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
+    LOCAL_PTR(WithConfig, wconfig, rule);
 
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
