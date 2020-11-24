@@ -1041,7 +1041,7 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule, bool fucker, VarRefs* pframe2)
+  void Eval::exposeImpRule(IncludeImport* rule, bool fucker)
   {
 
     VarRefs* pframe = compiler.getCurrentFrame();
@@ -1116,17 +1116,17 @@ namespace Sass {
 
 
     if (fucker) {
-      if (pframe2->varFrame == 0xFFFFFFFF) {
+      if (pframe->varFrame == 0xFFFFFFFF) {
 
         // Import to forward
         for (auto& asd : rule->sheet()->mergedFwdVar) {
-          pframe2->varIdxs[asd.first] = asd.second;
+          pframe->varIdxs[asd.first] = asd.second;
         } // a: 18
         for (auto& asd : rule->sheet()->mergedFwdMix) {
-          pframe2->mixIdxs[asd.first] = asd.second;
+          pframe->mixIdxs[asd.first] = asd.second;
         }
         for (auto& asd : rule->sheet()->mergedFwdFn) {
-          pframe2->fnIdxs[asd.first] = asd.second;
+          pframe->fnIdxs[asd.first] = asd.second;
         }
 
       }
@@ -1161,7 +1161,7 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    exposeImpRule(rule, true, pframe);
+    exposeImpRule(rule, true);
 
     // Imports are always executed again
     for (const StatementObj& item : sheet->elements()) {
