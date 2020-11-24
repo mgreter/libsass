@@ -1330,20 +1330,6 @@ namespace Sass {
 
         if (true) {
 
-
-          for (auto& var : module->idxs->varIdxs) {
-            if (!var.first.isPrivate())
-              current->varIdxs.insert(var);
-          }
-          for (auto& mix : module->idxs->mixIdxs) {
-            if (!mix.first.isPrivate())
-              current->mixIdxs.insert(mix);
-          }
-          for (auto& fn : module->idxs->fnIdxs) {
-            if (!fn.first.isPrivate())
-              current->fnIdxs.insert(fn);
-          }
-
           // module->idxs->module = nullptr;
           current->fwdGlobal55.push_back(module->idxs);
         }
