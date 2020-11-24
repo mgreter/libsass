@@ -1127,16 +1127,6 @@ namespace Sass {
     exposeImpRule(rule);
 
 
-
-    // Imports are always executed again
-    for (const StatementObj& item : sheet->elements()) {
-      item->accept(this);
-    }
-
-    if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
-      << compiler.implicitWithConfig << "\n";
-
-
     if (pframe->varFrame == 0xFFFFFFFF) {
 
       // Import to forward
@@ -1146,12 +1136,24 @@ namespace Sass {
       } // a: 18
       for (auto& asd : sheet->mergedFwdMix) {
         if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
-        pframe->mixIdxs[asd.first] = asd.second; }
+        pframe->mixIdxs[asd.first] = asd.second;
+      }
       for (auto& asd : sheet->mergedFwdFn) {
         if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
-        pframe->fnIdxs[asd.first] = asd.second; }
+        pframe->fnIdxs[asd.first] = asd.second;
+      }
 
     }
+
+
+    // Imports are always executed again
+    for (const StatementObj& item : sheet->elements()) {
+      item->accept(this);
+    }
+
+    if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
+      << compiler.implicitWithConfig << "\n";
+
 
 
   }
