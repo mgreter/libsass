@@ -73,7 +73,7 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::importRule });
     acceptRoot(eval.resolveIncludeImport(rule));
-    eval.exposeImpRule(rule);
+    eval.exposeImpRule(rule, true);
 
   }
 

@@ -1050,7 +1050,7 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    if (rule->wasExported()) {
+    if (rule->wasExported33()) {
 
       if (fucker || false) {
         if (pframe->varFrame == 0xFFFFFFFF) {
@@ -1072,7 +1072,7 @@ namespace Sass {
       return;
     }
 
-    rule->wasExported(true);
+    rule->wasExported33(true);
 
 
     VarRefs* cidxs = rule->sheet()->idxs;

@@ -127,7 +127,7 @@ namespace Sass {
     prev_(prev),
     url_(url),
     module_(nullptr),
-    wasExported_(false)
+    wasExported33_(false)
   {}
 
   //////////////////////////////////////////////////////////////////////
