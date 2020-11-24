@@ -1349,6 +1349,7 @@ namespace Sass {
 
       sass::string name(url.substr(5));
       if (ns.empty()) ns = name;
+      rule->ns(ns);
 
       BuiltInMod* module(context.getModule(name));
 
@@ -1360,19 +1361,6 @@ namespace Sass {
 
       rule->module(module);
 
-      if (ns == "*") {
-        current->fwdGlobal55.push_back(module->idxs);
-        rule->waxExported(true);
-      }
-      else if (modFrame->fwdModule55.count(ns)) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::ModuleAlreadyKnown(context, ns);
-      }
-      else {
-        current->fwdModule55.insert({ ns,
-          { module->idxs, nullptr } });
-        rule->waxExported(true);
-      }
 
       // wconfig.finalize();
       return rule.detach();
