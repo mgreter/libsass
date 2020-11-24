@@ -212,7 +212,8 @@ namespace Sass {
         rule->pstate(), rule->name(), rule, nullptr);
     rule->midx(compiler.varRoot.setMixin(
       rule->name(), false, false));
-    compiler.varRoot.setMixin(rule->midx(), callable, false);
+    compiler.varRoot.setMixin(
+      rule->midx(), callable, false);
     return nullptr;
   }
 
@@ -222,11 +223,10 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-
     rule->fidx(compiler.varRoot.setFunction(
       rule->name(), false, false));
-
-    compiler.varRoot.setFunction(rule->fidx(), callable, false);
+    compiler.varRoot.setFunction(
+      rule->fidx(), callable, false);
     return nullptr;
   }
 
@@ -317,7 +317,7 @@ namespace Sass {
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
       if (!hasVar) {
-        frame->createLexicalVar(name);
+        frame->createVariable(name);
       }
 
     }
@@ -850,9 +850,9 @@ namespace Sass {
       for (auto& var : modFrame->varIdxs) {
         idxs->module->mergedFwdVar.insert(var);
       }
-      for (auto& var : modFrame->mixIdxs) {
-        idxs->mixIdxs.insert(var);
-      }
+      //for (auto& var : modFrame->mixIdxs) {
+      //  idxs->mixIdxs.insert(var);
+      //}
       //for (auto var : modFrame->fnIdxs) {
       //  idxs->fnIdxs.insert(var);
       //}
@@ -1138,15 +1138,15 @@ namespace Sass {
     VarRefs* pframe = compiler.getCurrentFrame();
 
     // Imports are always executed again
-    Preloader preproc(*this, sheet);
-    preproc.acceptRoot(sheet);
+    //Preloader preproc(*this, sheet);
+    //preproc.acceptRoot(sheet);
 
     // Add C-API to stack to expose it
     ImportStackFrame iframe(compiler, sheet->import);
     EnvScope scoped(compiler.varRoot, sheet->idxs);
     LOCAL_PTR(Root, chroot77, sheet);
 
-    while (pframe->isImport) {
+    if (pframe->isImport) {
       pframe = pframe->pscope;
     }
 

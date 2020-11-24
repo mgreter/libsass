@@ -194,7 +194,7 @@ namespace Sass {
   }
 
 
-  // Tries to parse a namespaced [VariableDeclaration], and returns the value
+  // Tries to parse a name-spaced [VariableDeclaration], and returns the value
   // parsed so far if it fails.
   //
   // This can return either an [Interpolation], indicating that it couldn't

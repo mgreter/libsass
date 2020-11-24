@@ -74,7 +74,6 @@ namespace Sass {
       rule->pstate(), Strings::importRule });
     acceptRoot(eval.resolveIncludeImport(rule));
     eval.exposeImpRule(rule);
-
   }
 
   void Preloader::visitAssignRule(AssignRule* rule)

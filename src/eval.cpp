@@ -687,8 +687,8 @@ namespace Sass {
         std::back_inserter(positional));
       separator = list->separator();
       if (ArgumentList* args = rest->isaArgumentList()) {
-        auto kwds = args->keywords();
-        for (auto kv : kwds) {
+        auto& kwds = args->keywords();
+        for (const auto& kv : kwds) {
           named[kv.first] = kv.second;
         }
       }
@@ -702,7 +702,7 @@ namespace Sass {
       return results;
     }
 
-    // kwdRest already poisened
+    // kwdRest already poisoned
     ValueObj keywordRest = arguments->kwdRest()->accept(this);
 
     if (Map* restMap = keywordRest->isaMap()) {
@@ -1550,7 +1550,7 @@ namespace Sass {
     }
 
     if (parent != _root) return _root;
-    auto root = nodes[innermostContiguous];
+    auto& root = nodes[innermostContiguous];
     nodes.resize(innermostContiguous);
     return root;
 
@@ -1618,7 +1618,7 @@ namespace Sass {
       LOCAL_FLAG(inKeyframes, inKeyframes);
       LOCAL_FLAG(inUnknownAtRule, inUnknownAtRule);
       LOCAL_FLAG(atRootExcludingStyleRule, atRootExcludingStyleRule);
-      auto oldQueries = mediaQueries;
+      CssMediaQueryVector oldQueries = mediaQueries;
 
       if (query->excludesStyleRules()) {
         atRootExcludingStyleRule = true;
@@ -1634,7 +1634,7 @@ namespace Sass {
 
       if (inUnknownAtRule) {
         bool hasAtRuleInIncluded = false;
-        for (auto include : included) {
+        for (auto& include : included) {
           // A flag on parent could save 1%
           if (include->isaCssAtRule()) {
             hasAtRuleInIncluded = true;
@@ -1878,7 +1878,7 @@ namespace Sass {
   void Eval::_addRestValueMap(ValueFlatMap& values, Map* map, const SourceSpan& pstate) {
     // convert ??= (value) = > value as T;
 
-    for(auto kv : map->elements()) {
+    for(const auto& kv : map->elements()) {
       if (String* str = kv.first->isaString()) {
         values[str->value()] = kv.second;
       }
@@ -1896,7 +1896,7 @@ namespace Sass {
   void Eval::_addRestExpressionMap(ExpressionFlatMap& values, Map* map, const SourceSpan& pstate) {
     // convert ??= (value) = > value as T;
 
-    for (auto kv : map->elements()) {
+    for (const auto& kv : map->elements()) {
       if (String* str = kv.first->isaString()) {
         values[str->value()] = SASS_MEMORY_NEW(
           ValueExpression, map->pstate(), kv.second);
@@ -2066,7 +2066,7 @@ namespace Sass {
 
     if (slist) {
 
-      for (auto complex : slist->elements()) {
+      for (const auto& complex : slist->elements()) {
 
         if (complex->size() != 1) {
           logger456.addFinalStackTrace(complex->pstate());
@@ -2074,13 +2074,13 @@ namespace Sass {
             "complex selectors may not be extended.");
         }
 
-        if (const CompoundSelector * compound = complex->first()->isaCompoundSelector()) {
+        if (const CompoundSelector* compound = complex->first()->isaCompoundSelector()) {
 
           if (compound->size() != 1) {
 
             sass::sstream sels; bool addComma = false;
             sels << "compound selectors may no longer be extended.\nConsider `@extend ";
-            for (auto sel : compound->elements()) {
+            for (const auto& sel : compound->elements()) {
               if (addComma) sels << ", ";
               sels << sel->inspect();
               addComma = true;
@@ -2127,7 +2127,7 @@ namespace Sass {
     ValueObj expr = e->expressions()->accept(this);
     if (MapObj map = expr->isaMap()) {
       Map::ordered_map_type els(map->elements());
-      for (auto kv : els) {
+      for (const auto& kv : els) {
         ValueObj key = kv.first;
         ValueObj value = kv.second;
         if (variables.size() == 1) {
