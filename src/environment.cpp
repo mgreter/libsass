@@ -111,7 +111,7 @@ namespace Sass {
       // we still overwrite the variable beside being guarded
       WithConfigVar* wconf = nullptr;
       if (compiler.wconfig && frame->varFrame == 0xFFFFFFFF && a->ns().empty()) {
-        wconf = wconfig->getCfgVar(vname, false, true);
+        wconf = wconfig->getCfgVar(vname);
       }
       if (wconf) {
         // Via load-css

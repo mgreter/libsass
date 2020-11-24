@@ -44,7 +44,7 @@ namespace Sass {
 
     WithConfig* wconfig = nullptr;
 
-    WithConfigVar* getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull);
+    WithConfigVar* getCfgVar(const EnvKey& name);
 
   protected:
 

@@ -36,10 +36,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  WithConfigVar* Context::getCfgVar(const EnvKey& name, bool skipGuarded, bool skipNull)
+  WithConfigVar* Context::getCfgVar(const EnvKey& name)
   {
     if (wconfig == nullptr) return nullptr;
-    return wconfig->getCfgVar(name, skipGuarded, skipNull);
+    return wconfig->getCfgVar(name);
   }
 
   /////////////////////////////////////////////////////////////////////////

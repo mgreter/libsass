@@ -72,13 +72,11 @@ namespace Sass {
     // compiler.withConfigStack.pop_back();
   }
 
-  WithConfigVar* WithConfig::getCfgVar(const EnvKey& name2, bool skipGuarded, bool skipNull) {
+  WithConfigVar* WithConfig::getCfgVar(const EnvKey& name)
+  {
 
+    EnvKey key(name);
     WithConfig* withcfg = this;
-    WithConfigVar* guarded = nullptr;
-    WithConfig* gpwithcfg = nullptr;
-    EnvKey key(name2);
-    EnvKey gname;
     while (withcfg) {
       // Check if we should apply any filtering first
       if (withcfg->hasHideFilter) {
@@ -101,11 +99,6 @@ namespace Sass {
             return &varcfg->second;
           }
         }
-        else if (!guarded) {
-          gpwithcfg = withcfg->parent;
-          guarded = &varcfg->second;
-          gname = key;
-        }
       }
       // Should we apply some prefixes
       if (!withcfg->prefix.empty()) {
@@ -114,23 +107,35 @@ namespace Sass {
       }
       withcfg = withcfg->parent;
     }
-    // Return guarded
-    if (gpwithcfg) {
-      // Since we found not unguarded value,
-      // we can assume all have been used
-      while (gpwithcfg) {
-        // Then try to find the named item
-        auto varcfg = gpwithcfg->config.find(gname);
-        if (varcfg != gpwithcfg->config.end()) {
-          varcfg->second.wasUsed = true;
+    // Since we found no unguarded value we can assume
+    // the full stack only contains guarded values.
+    // Therefore they overwrite all each other.
+    withcfg = this; key = name;
+    WithConfigVar* guarded = nullptr;
+    while (withcfg) {
+      // Check if we should apply any filtering first
+      if (withcfg->hasHideFilter) {
+        if (withcfg->filters.count(key.norm())) {
+          break;
         }
-        // Should we apply some prefixes
-        if (!gpwithcfg->prefix.empty()) {
-          sass::string prefix = gpwithcfg->prefix;
-          gname = EnvKey(prefix + gname.orig());
-        }
-        gpwithcfg = gpwithcfg->parent;
       }
+      if (withcfg->hasShowFilter) {
+        if (!withcfg->filters.count(key.norm())) {
+          break;
+        }
+      }
+      // Then try to find the named item
+      auto varcfg = withcfg->config.find(key);
+      if (varcfg != withcfg->config.end()) {
+        varcfg->second.wasUsed = true;
+        if (!guarded) guarded = &varcfg->second;
+      }
+      // Should we apply some prefixes
+      if (!withcfg->prefix.empty()) {
+        sass::string prefix = withcfg->prefix;
+        key = EnvKey(prefix + key.orig());
+      }
+      withcfg = withcfg->parent;
     }
     return guarded;
   }
