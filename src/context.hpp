@@ -120,7 +120,6 @@ namespace Sass {
     // import and then looks in all include folders.
     sass::string findFile(const sass::string& path);
 
-    // Implementation for `resolveDynamicImport`
     // Look for all possible filename variants (e.g. partials)
     // Returns all results (e.g. for ambiguous but valid imports)
     const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);

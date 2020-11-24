@@ -1229,69 +1229,6 @@ namespace Sass {
     return nullptr;
   }
 
-  // Resolve import of [path] and add imports to [rule]
-  Root* Eval::resolveDynamicImport(IncludeImport* rule)
-  {
-
-    if (rule->sheet()) return rule->sheet();
-
-    std::cerr << "WAT THE WASD\n";
-
-    SourceSpan pstate(rule->pstate());
-    const ImportRequest request(rule->url(), rule->prev(), true);
-    callStackFrame frame(compiler, { pstate, Strings::importRule });
-
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    // This should be cached somehow to improve speed by much!
-
-    if (rule->candidates == nullptr) {
-      rule->candidates = &compiler.findIncludes(request, true);
-    }
-    const sass::vector<ResolvedImport>& resolved(*rule->candidates);
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      compiler.addFinalStackTrace(pstate);
-      throw Exception::ParserException(compiler,
-        "Can't find stylesheet to import.");
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      sass::sstream msg_stream;
-      msg_stream << "It's not clear which file to import. Found:\n";
-      for (size_t i = 0, L = resolved.size(); i < L; ++i)
-      {
-        msg_stream << "  " << resolved[i].imp_path << "\n";
-      }
-      throw Exception::ParserException(compiler, msg_stream.str());
-    }
-
-    // We made sure exactly one entry was found, load its content
-    if (ImportObj loaded = compiler.loadImport(resolved[0])) {
-      // IsModule seems to have minor impacts here
-      // IsImport vs permeable seems to be the same!?
-      EnvFrame local(compiler, false, true, true); // Verified (import)
-      ImportStackFrame iframe(compiler, loaded);
-      Root* sheet = compiler.registerImport(loaded);
-
-
-      // debug_ast(sheet);
-
-      compiler.varRoot.finalizeScopes();
-      return sheet;
-    }
-
-    compiler.addFinalStackTrace(pstate);
-    throw Exception::ParserException(compiler,
-      "Couldn't read stylesheet for import.");
-
-  }
-  // EO resolveDynamicImport
-
-
-
   namespace Functions {
 
     /////////////////////////////////////////////////////////////////////////
