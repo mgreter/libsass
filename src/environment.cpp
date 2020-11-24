@@ -1041,8 +1041,16 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule, VarRefs* pframe)
+  void Eval::exposeImpRule(IncludeImport* rule, VarRefs* pframe2)
   {
+
+    VarRefs* pframe = compiler.getCurrentFrame();
+
+
+    while (pframe->isImport) {
+      pframe = pframe->pscope;
+    }
+
     // Merge it up through all imports
     for (auto& var : rule->sheet()->idxs->varIdxs) {
       auto it = pframe->varIdxs.find(var.first);
