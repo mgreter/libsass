@@ -1272,6 +1272,77 @@ namespace Sass {
   }
   // EO tryImportQueries
 
+
+  // Consumes a `@use` rule.
+  // [start] should point before the `@`.
+  UseRule* StylesheetParser::readUseRule(Offset start)
+  {
+    scanWhitespace();
+    sass::string url(string());
+    scanWhitespace();
+    sass::string ns(readUseNamespace(url, start));
+    scanWhitespace();
+
+    SourceSpan state(scanner.relevantSpanFrom(start));
+
+    // Check if name is valid identifier
+    if (url.empty() || isDigit(url[0])) {
+      context.addFinalStackTrace(state);
+      throw Exception::InvalidSassIdentifier(context, url);
+    }
+
+    sass::vector<WithConfigVar> config;
+    bool hasWith(readWithConfiguration(config, false));
+    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
+    expectStatementSeparator("@use rule");
+
+    if (isUseAllowed == false) {
+      context.addFinalStackTrace(state);
+      throw Exception::TardyAtRule(
+        context, Strings::useRule);
+    }
+
+    UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
+      scanner.relevantSpanFrom(start),
+      scanner.sourceUrl, url, {},
+      wconfig, std::move(config), hasWith);
+
+    LOCAL_PTR(WithConfig, wconfig, rule);
+
+    VarRefs* current(context.getCurrentFrame());
+    VarRefs* modFrame(context.getCurrentModule());
+
+    // Support internal modules first
+    if (startsWithIgnoreCase(url, "sass:", 5)) {
+
+      if (hasWith) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Built-in modules can't be configured.");
+      }
+
+      sass::string name(url.substr(5));
+      if (ns.empty()) ns = name;
+      rule->ns(ns == "*" ? "" : ns);
+
+      BuiltInMod* module(context.getModule(name));
+
+      if (module == nullptr) {
+        context.addFinalStackTrace(rule->pstate());
+        throw Exception::RuntimeException(context,
+          "Invalid internal module requested.");
+      }
+
+      rule->module(module);
+
+      return rule.detach();
+    }
+    // BuiltIn
+
+    rule->ns(ns);
+    return rule.detach();
+  }
+
   // Consumes an `@include` rule.
   // [start] should point before the `@`.
   IncludeRule* StylesheetParser::readIncludeRule(Offset start)
@@ -1309,69 +1380,8 @@ namespace Sass {
 
     sass::vector<VarRef> midxs;
 
-    if (!ns.empty()) {
-      auto pstate(scanner.relevantSpanFrom(start));
-      VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      auto it = frame->fwdModule55.find(ns);
-      if (it != frame->fwdModule55.end()) {
-        VarRefs* refs = it->second.first;
-        auto in = refs->mixIdxs.find(name);
-        if (in != refs->mixIdxs.end()) {
-          if (isPrivate(name)) {
-            context.addFinalStackTrace(pstate);
-            throw Exception::ParserException(context,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          uint32_t offset = in->second;
-          midxs.push_back({ refs->mixFrame, offset });
-        }
-      }
-      //else {
-      //  context.addFinalStackTrace(scanner.relevantSpanFrom(start));
-      //  throw Exception::RuntimeException(context, "There "
-      //    "is no module with the namespace \"" + ns + "\".");
-      //}
-
-      if (midxs.empty()) {
-        VarRef midx(frame->getMixinIdx(name, true));
-        if (!midxs.empty()) midxs.push_back(midx);
-      }
-      // context.addFinalStackTrace(pstate);
-      // throw Exception::ParserException(context,
-      //   "Mixin namespaces not supported yet!");
-    }
-    else {
-
-      // Then search in global modules
-      auto pstate = scanner.relevantSpanFrom(start);
-      VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      for (auto refs : frame->fwdGlobal55) {
-        auto in = refs->mixIdxs.find(name);
-        if (in != refs->mixIdxs.end()) {
-          if (isPrivate(name)) {
-            context.addFinalStackTrace(pstate);
-            throw Exception::ParserException(context,
-              "Private mixins can't be accessed "
-              "from outside their modules.");
-          }
-          uint32_t offset = in->second;
-          midxs.push_back({ refs->mixFrame, offset });
-        }
-      }
-    }
-
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
     scanner.relevantSpanFrom(start), name, ns, arguments);
-
-    if (!name.empty() && midxs.empty()) {
-      // Get the function through the whole stack
-      midxs.push_back(context.varRoot.stack.back()->getMixinIdx(name));
-    }
-
-    if (!midxs.empty()) {
-      rule->midx(midxs[0]);
-    }
 
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
