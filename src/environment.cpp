@@ -1041,7 +1041,7 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule)
+  void Eval::exposeImpRule(IncludeImport* rule, bool fucker)
   {
 
     if (rule->wasExported()) return;
