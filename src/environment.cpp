@@ -1006,22 +1006,36 @@ namespace Sass {
 
   void Eval::exposeUseRule2(UseRule* rule)
   {
+    return;
+    if (rule->waxExported()) return;
+    rule->waxExported(true);
+
     // We need a module loaded
-    if (!rule->module()) return;
+    if (Module* mod = rule->module()) {
+
+      VarRefs* frame = compiler.getCurrentFrame();
+      if (mod->isBuiltIn) {
+
+        if (rule->ns().empty()) {
+          frame->fwdGlobal55.push_back(mod->idxs);
+        }
+        else if (frame->fwdModule55.count(rule->ns())) {
+          compiler.addFinalStackTrace(rule->pstate());
+          throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
+        }
+        else {
+          frame->fwdModule55.insert({ rule->ns(),
+            { mod->idxs, nullptr } });
+        }
+
+      }
+
+    }
 
     // if ()
 
-    // if (ns == "*") {
-    //   current->fwdGlobal55.push_back(module->idxs);
-    // }
-    // else if (modFrame->fwdModule55.count(ns)) {
-    //   context.addFinalStackTrace(rule->pstate());
-    //   throw Exception::ModuleAlreadyKnown(context, ns);
-    // }
-    // else {
-    //   current->fwdModule55.insert({ ns,
-    //     { module->idxs, nullptr } });
-    // }
+
+
   }
 
 
@@ -1348,6 +1362,7 @@ namespace Sass {
 
       if (ns == "*") {
         current->fwdGlobal55.push_back(module->idxs);
+        rule->waxExported(true);
       }
       else if (modFrame->fwdModule55.count(ns)) {
         context.addFinalStackTrace(rule->pstate());
@@ -1356,6 +1371,7 @@ namespace Sass {
       else {
         current->fwdModule55.insert({ ns,
           { module->idxs, nullptr } });
+        //rule->waxExported(true);
       }
 
       // wconfig.finalize();
