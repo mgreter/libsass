@@ -60,6 +60,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(ImportObj, import);
     ADD_PROPERTY(Module*, module);
+    ADD_PROPERTY(bool, wasExported);
 
 
   public:

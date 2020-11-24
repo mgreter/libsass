@@ -126,7 +126,8 @@ namespace Sass {
     sheet_(sheet),
     prev_(prev),
     url_(url),
-    module_(nullptr)
+    module_(nullptr),
+    wasExported_(false)
   {}
 
   //////////////////////////////////////////////////////////////////////
