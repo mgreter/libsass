@@ -391,11 +391,11 @@ namespace Sass {
     while (pr->isImport) pr = pr->pscope;
     // Not if we have one forwarded!
 
-    VarRef fidx = pr->createLexicalMix(name);
+    VarRef midx = pr->createLexicalMix(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
-    rule->midx(fidx); // to parent
+    rule->midx(midx); // to parent
     rule->cidx(cidx);
     return rule;
   }
@@ -1407,82 +1407,8 @@ namespace Sass {
 
   }
   // EO resolveDynamicImport
-  // Consumes a `@forward` rule.
-  // [start] should point before the `@`.
-  ForwardRule* StylesheetParser::readForwardRule(Offset start)
-  {
-    scanWhitespace();
-    sass::string url = string();
 
-    scanWhitespace();
-    sass::string prefix;
-    if (scanIdentifier("as")) {
-      scanWhitespace();
-      prefix = readIdentifier();
-      scanner.expectChar($asterisk);
-      scanWhitespace();
-    }
 
-    bool isShown = false;
-    bool isHidden = false;
-    std::set<EnvKey> varFilters;
-    std::set<EnvKey> callFilters;
-    Offset beforeShow(scanner.offset);
-    if (scanIdentifier("show")) {
-      readForwardMembers(varFilters, callFilters);
-      isShown = true;
-    }
-    else if (scanIdentifier("hide")) {
-      readForwardMembers(varFilters, callFilters);
-      isHidden = true;
-    }
-
-    sass::vector<WithConfigVar> config;
-    bool hasWith(readWithConfiguration(config, true));
-    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
-    expectStatementSeparator("@forward rule");
-
-    if (isUseAllowed == false) {
-      SourceSpan state(scanner.relevantSpanFrom(start));
-      context.addFinalStackTrace(state);
-      throw Exception::ParserException(context,
-        "@forward rules must be written before any other rules.");
-    }
-
-    ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
-      scanner.relevantSpanFrom(start),
-      scanner.sourceUrl, url, {},
-      prefix, wconfig,
-      std::move(varFilters),
-      std::move(callFilters),
-      std::move(config),
-      isShown, isHidden, hasWith);
-
-    LOCAL_PTR(WithConfig, wconfig, rule);
-
-    if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      if (hasWith) {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Built-in modules can't be configured.");
-      }
-
-      sass::string name(url.substr(5));
-      if (BuiltInMod* module = context.getModule(name)) {
-        rule->module(module);
-        rule->root(nullptr);
-      }
-      else {
-        context.addFinalStackTrace(rule->pstate());
-        throw Exception::RuntimeException(context,
-          "Invalid internal module requested.");
-      }
-
-    }
-
-    return rule.detach();
-  }
 
   namespace Functions {
 
