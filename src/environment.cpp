@@ -1041,7 +1041,7 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule, bool fucker)
+  void Eval::exposeImpRule(IncludeImport* rule, bool fucker, VarRefs* pframe2, Root* sheet)
   {
 
     if (rule->wasExported()) return;
@@ -1092,6 +1092,27 @@ namespace Sass {
 
     }
 
+    if (fucker == false) return;
+
+    if (pframe2->varFrame == 0xFFFFFFFF) {
+
+      // Import to forward
+      for (auto& asd : sheet->mergedFwdVar) {
+        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
+        pframe2->varIdxs[asd.first] = asd.second;
+      } // a: 18
+      for (auto& asd : sheet->mergedFwdMix) {
+        if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
+        pframe2->mixIdxs[asd.first] = asd.second;
+      }
+      for (auto& asd : sheet->mergedFwdFn) {
+        if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
+        pframe2->fnIdxs[asd.first] = asd.second;
+      }
+
+    }
+
+
   }
 
   void Eval::acceptIncludeImport(IncludeImport* rule)
@@ -1124,26 +1145,8 @@ namespace Sass {
     // Skip over all imports
     // We are doing it out of order
 
-    exposeImpRule(rule);
+    exposeImpRule(rule, true, pframe, sheet);
 
-
-    if (pframe->varFrame == 0xFFFFFFFF) {
-
-      // Import to forward
-      for (auto& asd : sheet->mergedFwdVar) {
-        if (udbg) std::cerr << "  merged var " << asd.first.orig() << "\n";
-        pframe->varIdxs[asd.first] = asd.second;
-      } // a: 18
-      for (auto& asd : sheet->mergedFwdMix) {
-        if (udbg) std::cerr << "  merged mix " << asd.first.orig() << "\n";
-        pframe->mixIdxs[asd.first] = asd.second;
-      }
-      for (auto& asd : sheet->mergedFwdFn) {
-        if (udbg) std::cerr << "  merged fn " << asd.first.orig() << "\n";
-        pframe->fnIdxs[asd.first] = asd.second;
-      }
-
-    }
 
 
     // Imports are always executed again

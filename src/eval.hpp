@@ -23,7 +23,7 @@ namespace Sass {
 
     void exposeUseRule(UseRule* rule);
     void exposeFwdRule(ForwardRule* rule);
-    void exposeImpRule(IncludeImport* rule, bool fucker = false);
+    void exposeImpRule(IncludeImport* rule, bool fucker = false, VarRefs* pframe2 = nullptr, Root* sheet = nullptr);
 
     // Some references
     Logger& logger456;
