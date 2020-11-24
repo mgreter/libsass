@@ -383,6 +383,8 @@ namespace Sass {
       for (VarRefs* idx : scopes) {
         delete idx;
       }
+      // Delete our env
+      delete idxs;
     }
 
     // Update variable references and assignments
