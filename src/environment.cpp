@@ -1074,17 +1074,6 @@ namespace Sass {
     // Skip over all imports
     // We are doing it out of order
 
-    for (auto& var : sheet->mergedFwdVar) {
-      auto it = pframe->varIdxs.find(var.first);
-      if (it == pframe->varIdxs.end()) {
-        if (pframe->isCompiled) {
-          // throw "Can't create on active frame";
-          compiler.varRoot.variables.push_back({});
-        }
-        // std::cerr << "EXPORT " << var.first.norm() << "\n";
-        pframe->createVariable(var.first);
-      }
-    }
 
 
     // Merge it up through all imports
