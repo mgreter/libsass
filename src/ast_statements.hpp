@@ -693,7 +693,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
-  class ForwardRule final : public Statement, public WithConfig
+  class ForwardRule final : public Statement
   {
   private:
     ADD_CONSTREF(ImportObj, import);
@@ -705,6 +705,7 @@ namespace Sass {
     // We have both, root and module
     ADD_PROPERTY(Module*, module);
   public:
+    WithConfig* wconfig = nullptr;
     // Value constructor
     ForwardRule(
       const SourceSpan& pstate,
