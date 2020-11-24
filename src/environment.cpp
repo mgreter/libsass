@@ -1286,8 +1286,6 @@ namespace Sass {
         WithConfig*& pwconfig(compiler.wconfig);
         LOCAL_PTR(WithConfig, pwconfig, &wconfig);
 
-        // rule->import(loaded);
-
         sass::string prev(pstate.getAbsPath());
         if (Root* sheet = eval.resolveIncludeImport(
           pstate, prev, url->value(), true)) {
@@ -1306,29 +1304,6 @@ namespace Sass {
           }
           eval.insertModule(sheet);
         }
-
-        /*
-        sass::string prev(pstate.getAbsPath());
-        if (Root* sheet = eval.resolveIncludeImport(
-          pstate, prev, url->value(), true)) {
-          if (!sheet->isCompiled) {
-            ImportStackFrame iframe(compiler, sheet->import);
-            LocalOption<bool> scoped(compiler.implicitWithConfig,
-              compiler.implicitWithConfig || hasWith);
-            WithConfig*& pwconfig(compiler.wconfig);
-            LOCAL_PTR(WithConfig, pwconfig, &wconfig);
-            eval.compileModule(sheet);
-            wconfig.finalize(compiler);
-            eval.insertModule(sheet);
-          }
-          else if (hasWith) {
-            throw Exception::ParserException(compiler,
-              sass::string(sheet->pstate().getImpPath())
-              + " was already loaded, so it "
-              "can't be configured using \"with\".");
-          }
-        }
-        */
 
         return SASS_MEMORY_NEW(Null, pstate);
       }
