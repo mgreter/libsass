@@ -1052,25 +1052,23 @@ namespace Sass {
 
     if (rule->wasExported33()) {
 
-      if (pframe->varFrame == 0xFFFFFFFF) {
-
-        // Import to forward
-        for (auto& asd : rule->sheet()->mergedFwdVar) {
-          pframe->varIdxs[asd.first] = asd.second;
-        } // a: 18
-        for (auto& asd : rule->sheet()->mergedFwdMix) {
-          pframe->mixIdxs[asd.first] = asd.second;
-        }
-        for (auto& asd : rule->sheet()->mergedFwdFn) {
-          pframe->fnIdxs[asd.first] = asd.second;
-        }
-
-      }
-
-      return;
     }
 
     rule->wasExported33(true);
+    if (pframe->varFrame == 0xFFFFFFFF) {
+
+      // Import to forward
+      for (auto& asd : rule->sheet()->mergedFwdVar) {
+        pframe->varIdxs[asd.first] = asd.second;
+      } // a: 18
+      for (auto& asd : rule->sheet()->mergedFwdMix) {
+        pframe->mixIdxs[asd.first] = asd.second;
+      }
+      for (auto& asd : rule->sheet()->mergedFwdFn) {
+        pframe->fnIdxs[asd.first] = asd.second;
+      }
+
+    }
 
 
     VarRefs* cidxs = rule->sheet()->idxs;
