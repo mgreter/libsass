@@ -580,13 +580,13 @@ namespace Sass {
     isHidden_(isHidden),
     hasLocalWith_(hasWith),
     wasMerged_(false),
-    toggledVariables_(std::move(toggledVariables)),
+    toggledVariables2_(std::move(toggledVariables)),
     toggledCallables_(std::move(toggledCallables)),
     config_(std::move(config)),
-    wconfig_(new WithConfig(pwconfig,
+    wconfig(new WithConfig(pwconfig,
       config_, hasLocalWith_,
       isShown_, isHidden_,
-      toggledVariables_,
+      toggledVariables2_,
       prefix_)),
     module_(nullptr)
   {

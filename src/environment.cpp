@@ -552,7 +552,7 @@ namespace Sass {
     // callStackFrame frame(compiler, {
     //   rule->pstate(), Strings::useRule });
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
 
     // Resolve final file to load
     const ImportRequest request(
@@ -1006,7 +1006,7 @@ namespace Sass {
     rule->wasMerged(true);
 
     mergeForwards(rule->module()->idxs, chroot77, rule->isShown(), rule->isHidden(),
-      rule->prefix(), rule->toggledVariables(), rule->toggledCallables(), compiler);
+      rule->prefix(), rule->wconfig->filters, rule->toggledCallables(), compiler);
 
   }
 
@@ -1240,9 +1240,9 @@ namespace Sass {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
           compiler.implicitWithConfig || rule->hasLocalWith());
-        LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+        LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
         compileModule(root);
-        if (rule->wconfig()) rule->wconfig()->finalize(compiler);
+        if (rule->wconfig) rule->wconfig->finalize(compiler);
         if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
         insertModule(root);
       }
@@ -1541,19 +1541,15 @@ namespace Sass {
       std::move(config),
       isShown, isHidden, hasWith);
 
-    LOCAL_PTR(WithConfig, wconfig, rule->wconfig());
+    LOCAL_PTR(WithConfig, wconfig, rule->wconfig);
 
     rule->hasLocalWith(hasWith);
 
-    std::set<EnvKey>& toggledVariables(rule->toggledVariables());
+    std::set<EnvKey>& toggledVariables(rule->wconfig->filters);
     std::set<EnvKey>& toggledCallables(rule->toggledCallables());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
-
-      // The show or hide config also hides these
-      // WithConfig wconfig(context, config, hasWith,
-      //   isShown, isHidden, rule->toggledVariables(), prefix);
 
       if (hasWith) {
         context.addFinalStackTrace(rule->pstate());
@@ -1562,13 +1558,7 @@ namespace Sass {
       }
 
       sass::string name(url.substr(5));
-      // if (prefix.empty()) prefix = name; // Must not happen!
       if (BuiltInMod* module = context.getModule(name)) {
-        if (!rule->wasMerged()) {
-          mergeForwards(module->idxs, chroot77, isShown, isHidden,
-            prefix, toggledVariables, toggledCallables, context);
-          rule->wasMerged(true);
-        }
         rule->module(module);
         rule->root(nullptr);
       }
@@ -1582,10 +1572,10 @@ namespace Sass {
       return rule.detach();
     }
 
-    rule->url(url);
-    rule->config(config);
-    rule->prev(scanner.sourceUrl);
-    rule->hasLocalWith(hasWith);
+    // rule->url(url);
+    // rule->config(config);
+    // rule->prev(scanner.sourceUrl);
+    // rule->hasLocalWith(hasWith);
     return rule.detach();
   }
 

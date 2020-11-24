@@ -702,14 +702,14 @@ namespace Sass {
     ADD_PROPERTY(bool, isHidden);
     ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, wasMerged);
-    ADD_REF(std::set<EnvKey>, toggledVariables);
+    ADD_REF(std::set<EnvKey>, toggledVariables2);
     ADD_REF(std::set<EnvKey>, toggledCallables);
     ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     // We have both, root and module
-    ADD_PROPERTY(WithConfig*, wconfig);
     ADD_PROPERTY(Module*, module);
   public:
+    WithConfig* wconfig = nullptr;
     // Value constructor
     ForwardRule(
       const SourceSpan& pstate,
