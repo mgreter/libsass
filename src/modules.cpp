@@ -10,7 +10,7 @@ namespace Sass {
   }
 
   Env::~Env() {
-    delete idxs;
+    //delete idxs;
   }
 
 }
