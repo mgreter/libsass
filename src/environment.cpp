@@ -767,7 +767,7 @@ namespace Sass {
 
   }
 
-  VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame, bool drStrange)
+  VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame)
   {
 
     if (intoRoot) {
@@ -779,7 +779,7 @@ namespace Sass {
           if (var.second == it->second) continue;
 
           ValueObj& slot = compiler.varRoot.getVariable({ 0xFFFFFFFF, it->second });
-          if (!drStrange && (slot == nullptr || slot->isaNull())) continue;
+          if (slot == nullptr || slot->isaNull()) continue;
 
           throw Exception::ParserException(compiler,
             "This module and the new module both define a "
@@ -1227,70 +1227,6 @@ namespace Sass {
 
     exposeFwdRule(rule);
     return nullptr;
-  }
-
-  ImportRule* StylesheetParser::readImportRule(Offset start)
-  {
-    ImportRuleObj rule = SASS_MEMORY_NEW(
-      ImportRule, scanner.relevantSpanFrom(start));
-
-    do {
-      scanWhitespace();
-      scanImportArgument(rule);
-      scanWhitespace();
-    } while (scanner.scanChar($comma));
-    // Check for expected finalization token
-    expectStatementSeparator("@import rule");
-    return rule.detach();
-
-  }
-
-
-  void StylesheetParser::scanImportArgument(ImportRule* rule)
-  {
-    const char* startpos = scanner.position;
-    Offset start(scanner.offset);
-    uint8_t next = scanner.peekChar();
-    if (next == $u || next == $U) {
-      Expression* url = readFunctionOrStringExpression();
-      scanWhitespace();
-      auto queries = tryImportQueries();
-      rule->append(SASS_MEMORY_NEW(StaticImport,
-        scanner.relevantSpanFrom(start),
-        SASS_MEMORY_NEW(Interpolation,
-          url->pstate(), url),
-        queries.first, queries.second));
-      return;
-    }
-
-    sass::string url = string();
-    const char* rawUrlPos = scanner.position;
-    SourceSpan pstate = scanner.relevantSpanFrom(start);
-    scanWhitespace();
-    auto queries = tryImportQueries();
-    if (isPlainImportUrl(url) || queries.first != nullptr || queries.second != nullptr) {
-      // Create static import that is never
-      // resolved by libsass (output as is)
-      rule->append(SASS_MEMORY_NEW(StaticImport,
-        scanner.relevantSpanFrom(start),
-        SASS_MEMORY_NEW(Interpolation, pstate,
-          SASS_MEMORY_NEW(String, pstate,
-            sass::string(startpos, rawUrlPos))),
-        queries.first, queries.second));
-    }
-    // Otherwise return a dynamic import
-    // Will resolve during the eval stage
-    else {
-      // Check for valid dynamic import
-      if (inControlDirective || inMixin) {
-        throwDisallowedAtRule(rule->pstate().position);
-      }
-
-      rule->append(SASS_MEMORY_NEW(IncludeImport,
-        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
-
-    }
-
   }
 
   // Resolve import of [path] and add imports to [rule]
