@@ -41,32 +41,6 @@ namespace Sass {
     }
   }
 
-  Root* Eval::loadModule(Compiler& compiler, Import* loaded, bool hasWith)
-  {
-    // First check if the module was already loaded
-    auto it = compiler.sheets.find(loaded->getAbsPath());
-    if (it != compiler.sheets.end()) {
-      // Don't allow to reconfigure once loaded
-      if (hasWith && compiler.implicitWithConfig && it->second->isCompiled) {
-        throw Exception::ParserException(compiler,
-          sass::string(loaded->getImpPath())
-          + " was already loaded, so it "
-          "can\'t be configured using \"with\".");
-      }
-      // Return cached stylesheet
-      return it->second;
-    }
-    // BuiltInMod is created within a new scope
-    EnvFrame local(compiler, false, true);
-    // eval.selectorStack.push_back(nullptr);
-    // ImportStackFrame iframe(compiler, loaded);
-    Root* sheet = compiler.registerImport(loaded);
-    // eval.selectorStack.pop_back();
-    sheet->idxs = local.idxs;
-    sheet->import = loaded;
-    return sheet;
-  }
-
 
   void Preloader::visitParentStatement(ParentStatement* rule)
   {

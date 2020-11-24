@@ -934,6 +934,32 @@ namespace Sass {
     }
   }
 
+  Root* Eval::loadModule(Compiler& compiler, Import* loaded, bool hasWith)
+  {
+    // First check if the module was already loaded
+    auto it = compiler.sheets.find(loaded->getAbsPath());
+    if (it != compiler.sheets.end()) {
+      // Don't allow to reconfigure once loaded
+      if (hasWith && compiler.implicitWithConfig) {
+        throw Exception::ParserException(compiler,
+          sass::string(loaded->getImpPath())
+          + " was already loaded, so it "
+          "can\'t be configured using \"with\".");
+      }
+      // Return cached stylesheet
+      return it->second;
+    }
+    // BuiltInMod is created within a new scope
+    EnvFrame local(compiler, false, true); 
+    // eval.selectorStack.push_back(nullptr);
+    // ImportStackFrame iframe(compiler, loaded);
+    Root* sheet = compiler.registerImport(loaded);
+    // eval.selectorStack.pop_back();
+    sheet->idxs = local.idxs;
+    sheet->import = loaded;
+    return sheet;
+  }
+
   void Eval::compileModule(Root* root)
   {
 
@@ -1581,9 +1607,6 @@ namespace Sass {
         if (udbg) std::cerr << "Visit load-css '" << url->value() << "' "
           << hasWith << " -> " << compiler.implicitWithConfig << "\n";
 
-        LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || hasWith);
-
         EnvKeyFlatMap<ValueObj> config;
         sass::vector<WithConfigVar> withConfigs;
 
@@ -1607,8 +1630,6 @@ namespace Sass {
           }
         }
 
-        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
-
 
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
@@ -1620,7 +1641,44 @@ namespace Sass {
           return SASS_MEMORY_NEW(Null, pstate);
         }
 
+        // Loading relative to where the function was included
+        const ImportRequest request(url->value(), pstate.getAbsPath(), false);
 
+        // Search for valid imports (e.g. partials) on the file-system
+        // Returns multiple valid results for ambiguous import path
+        const sass::vector<ResolvedImport>& resolved(
+          compiler.findIncludes(request, true));
+
+        // Error if no file to import was found
+        if (resolved.empty()) {
+          compiler.addFinalStackTrace(pstate);
+          throw Exception::UnknwonImport(compiler);
+        }
+        // Error if multiple files to import were found
+        else if (resolved.size() > 1) {
+          compiler.addFinalStackTrace(pstate);
+          throw Exception::AmbiguousImports(compiler, resolved);
+        }
+
+
+        // This is guaranteed to either load or error out!
+        ImportObj loaded = compiler.loadImport(resolved[0]);
+        ImportStackFrame iframe(compiler, loaded);
+
+        LocalOption<bool> scoped(compiler.implicitWithConfig,
+          compiler.implicitWithConfig || hasWith);
+        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
+        WithConfig*& pwconfig(compiler.wconfig);
+        LOCAL_PTR(WithConfig, pwconfig, &wconfig);
+
+        // rule->import(loaded);
+
+        Root* module = eval.loadModule(compiler, loaded, hasWith);
+        eval.compileModule(module);
+        eval.insertModule(module);
+        wconfig.finalize(compiler);
+
+        /*
         sass::string prev(pstate.getAbsPath());
         if (Root* sheet = eval.resolveIncludeImport(
           pstate, prev, url->value(), true)) {
@@ -1641,10 +1699,9 @@ namespace Sass {
               "can't be configured using \"with\".");
           }
         }
+        */
 
-
-
-        return SASS_MEMORY_NEW(Null, pstate);;
+        return SASS_MEMORY_NEW(Null, pstate);
       }
 
     }
