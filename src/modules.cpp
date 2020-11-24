@@ -9,4 +9,8 @@ namespace Sass {
   {
   }
 
+  Env::~Env() {
+    delete idxs;
+  }
+
 }

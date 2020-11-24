@@ -20,9 +20,7 @@ namespace Sass {
   public:
     Env(VarRefs* idxs)
       : idxs(idxs) {}
-    ~Env() {
-      delete idxs;
-    }
+    ~Env();
   };
 
   /////////////////////////////////////////////////////////////////////////
