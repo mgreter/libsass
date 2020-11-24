@@ -22,6 +22,7 @@ namespace Sass {
   public:
 
     void exposeUseRule(UseRule* rule);
+    void exposeUseRule2(UseRule* rule);
     void exposeFwdRule(ForwardRule* rule);
     void exposeImpRule(IncludeImport* rule);
 

@@ -1004,6 +1004,26 @@ namespace Sass {
 
   }
 
+  void Eval::exposeUseRule2(UseRule* rule)
+  {
+    // We need a module loaded
+    if (!rule->module()) return;
+
+    // if ()
+
+    // if (ns == "*") {
+    //   current->fwdGlobal55.push_back(module->idxs);
+    // }
+    // else if (modFrame->fwdModule55.count(ns)) {
+    //   context.addFinalStackTrace(rule->pstate());
+    //   throw Exception::ModuleAlreadyKnown(context, ns);
+    // }
+    // else {
+    //   current->fwdModule55.insert({ ns,
+    //     { module->idxs, nullptr } });
+    // }
+  }
+
 
   void Eval::exposeUseRule(UseRule* rule)
   {
