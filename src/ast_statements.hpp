@@ -693,23 +693,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
-  class ForwardRule final : public Statement
+  class ForwardRule final : public Statement, public WithConfig
   {
   private:
     ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, prefix);
-    ADD_PROPERTY(bool, isShown2);
-    ADD_PROPERTY(bool, isHidden3);
-    ADD_PROPERTY(bool, hasLocalWith);
     ADD_PROPERTY(bool, wasMerged);
-    ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
     // We have both, root and module
     ADD_PROPERTY(Module*, module);
   public:
-    WithConfig* wconfig = nullptr;
     // Value constructor
     ForwardRule(
       const SourceSpan& pstate,

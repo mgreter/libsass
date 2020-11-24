@@ -574,21 +574,17 @@ namespace Sass {
     bool isHidden,
     bool hasWith) :
     Statement(pstate),
+    WithConfig(pwconfig,
+      std::move(config),
+      hasWith, isShown, isHidden,
+      std::move(varFilters),
+      std::move(callFilters),
+      prefix_),
     import_(import),
     prev_(prev),
     url_(url),
     prefix_(prefix),
-    isShown2_(isShown),
-    isHidden3_(isHidden),
-    hasLocalWith_(hasWith),
     wasMerged_(false),
-    config_(std::move(config)),
-    wconfig(new WithConfig(pwconfig,
-      config_, hasLocalWith_,
-      isShown, isHidden,
-      std::move(varFilters),
-      std::move(callFilters),
-      prefix_)),
     module_(nullptr)
   {
     // The show or hide config also hides these
