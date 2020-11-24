@@ -583,7 +583,6 @@ namespace Sass {
     import_(import),
     prev_(prev),
     url_(url),
-    prefix_(prefix),
     wasMerged_(false),
     module_(nullptr)
   {
