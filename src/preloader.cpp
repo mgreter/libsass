@@ -75,18 +75,7 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::importRule });
 
-    Root* root = eval.resolveIncludeImport(rule);
-
-    return;
-
-    if (root && !root->empty()) {
-      LOCAL_PTR(Root, chroot77, root);
-      LOCAL_PTR(VarRefs, idxs, root->idxs);
-      ImportStackFrame iframe(eval.compiler, rule->import());
-      eval.compiler.varRoot.stack.push_back(root->idxs);
-      for (auto& it : root->elements()) it->accept(this);
-      eval.compiler.varRoot.stack.pop_back();
-    }
+    acceptRoot(eval.resolveIncludeImport(rule));
 
     return;
 
