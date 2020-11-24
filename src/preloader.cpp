@@ -66,8 +66,9 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
     acceptRoot(eval.resolveForwardRule(rule));
-    return;
-    eval.exposeFwdRule(rule);
+    if (rule->module()->isBuiltIn) {
+      eval.exposeFwdRule(rule);
+    }
   }
 
 
@@ -77,8 +78,7 @@ namespace Sass {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::importRule });
 
-    Root* root = eval.resolveIncludeImport(rule);
-    acceptRoot(root);
+    acceptRoot(eval.resolveIncludeImport(rule));
     eval.exposeImpRule(rule);
 
   }
