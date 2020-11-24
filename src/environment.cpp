@@ -1283,29 +1283,6 @@ namespace Sass {
 
         WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
-        // Loading relative to where the function was included
-        const ImportRequest request(url->value(), pstate.getAbsPath(), false);
-
-        // Search for valid imports (e.g. partials) on the file-system
-        // Returns multiple valid results for ambiguous import path
-        const sass::vector<ResolvedImport>& resolved(
-          compiler.findIncludes(request, true));
-
-        // Error if no file to import was found
-        if (resolved.empty()) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::UnknwonImport(compiler);
-        }
-        // Error if multiple files to import were found
-        else if (resolved.size() > 1) {
-          compiler.addFinalStackTrace(pstate);
-          throw Exception::AmbiguousImports(compiler, resolved);
-        }
-
-
-        // This is guaranteed to either load or error out!
-        ImportObj loaded = compiler.loadImport(resolved[0]);
-
         LocalOption<bool> scoped(compiler.implicitWithConfig,
           compiler.implicitWithConfig || hasWith);
         WithConfig*& pwconfig(compiler.wconfig);
@@ -1317,11 +1294,11 @@ namespace Sass {
         if (Root* sheet = eval.resolveIncludeImport(
           pstate, prev, url->value(), true)) {
           if (!sheet->isCompiled) {
-            ImportStackFrame iframe(compiler, loaded);
+            ImportStackFrame iframe(compiler, sheet->import);
             eval.compileModule(sheet);
             wconfig.finalize(compiler);
           }
-          else if (hasWith) {
+          else if (compiler.implicitWithConfig || hasWith) {
             throw Exception::ParserException(compiler,
               sass::string(sheet->pstate().getImpPath())
               + " was already loaded, so it "
