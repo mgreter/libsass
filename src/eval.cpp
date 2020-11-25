@@ -1366,7 +1366,8 @@ namespace Sass {
     }
     else if (auto builtin = rule->isaBuiltInCallable()) {
 
-      builtin->execute(*this, node->arguments(), node->pstate());
+      // Return value is void, but we still want to collect its memory
+      ValueObj rv = builtin->execute(*this, node->arguments(), node->pstate());
 
     }
 
