@@ -127,7 +127,7 @@ namespace Sass {
     // All @use as "*" do not get exposed to the parent scope though.
     sass::vector<VarRefs*> fwdGlobal55;
 
-    ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
+    // ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
 
     // Some scopes are connected to a module
     // Those expose some additional exports
@@ -146,7 +146,6 @@ namespace Sass {
     // An import does load the sheet, but does not compile it
     // Compiling it means hard-baking the config vars into it
     bool isCompiled = false;
-
 
     // Value constructor
     VarRefs(EnvRoot& root,

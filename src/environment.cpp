@@ -170,15 +170,18 @@ namespace Sass {
 
       VarRefs* mod = compiler.getCurrentModule();
 
-      auto it = mod->fwdModule55.find(a->ns());
-      if (it == mod->fwdModule55.end()) {
-        compiler.addFinalStackTrace(a->pstate());
-        throw Exception::ModuleUnknown(compiler, a->ns());
+      if (Module* module = mod->module) {
+        auto it = module->moduse.find(a->ns());
+        if (it == module->moduse.end()) {
+          compiler.addFinalStackTrace(a->pstate());
+          throw Exception::ModuleUnknown(compiler, a->ns());
+        }
+        else if (it->second.second && !it->second.second->isCompiled) {
+          compiler.addFinalStackTrace(a->pstate());
+          throw Exception::ModuleUnknown(compiler, a->ns());
+        }
       }
-      else if (it->second.second && !it->second.second->isCompiled) {
-        compiler.addFinalStackTrace(a->pstate());
-        throw Exception::ModuleUnknown(compiler, a->ns());
-      }
+
 
       if (!result) result = a->value()->accept(this);
 
@@ -797,16 +800,17 @@ namespace Sass {
         frame->fwdGlobal55.push_back(rule->module()->idxs);
         rule->wasExported(true);
       }
-      else if (frame->fwdModule55.count(rule->ns())) {
-        compiler.addFinalStackTrace(rule->pstate());
-        throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
+      else if (Module* module = frame->module) {
+        if (module->moduse.count(rule->ns())) {
+          compiler.addFinalStackTrace(rule->pstate());
+          throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
+        }
+        else {
+          module->moduse.insert({ rule->ns(),
+            { rule->module()->idxs, nullptr } });
+          rule->wasExported(true);
+        }
       }
-      else {
-        frame->fwdModule55.insert({ rule->ns(),
-          { rule->module()->idxs, nullptr } });
-        rule->wasExported(true);
-      }
-
     }
     else if (rule->root()) {
 
@@ -816,13 +820,13 @@ namespace Sass {
         // We should pudding when accessing!?
         frame->fwdGlobal55.push_back(rule->root()->idxs);
       }
-      else {
+      else if (Module* module = frame->module) {
         // Refactor to only fetch once!
-        if (frame->fwdModule55.count(rule->ns())) {
+        if (module->moduse.count(rule->ns())) {
           throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
         }
 
-        frame->fwdModule55[rule->ns()] =
+        module->moduse[rule->ns()] =
         { rule->root()->idxs, rule->root() };
       }
 

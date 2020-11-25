@@ -924,18 +924,20 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        auto fwd = it->second.first->varIdxs.find(name);
-        if (fwd != it->second.first->varIdxs.end()) {
-          ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
-          return slot != nullptr;
-        }
-        if (it->second.second) {
-          return it->second.second->isCompiled;
-        }
-        else {
-          return true;
+      if (Module* module = current->module) {
+        auto it = module->moduse.find(ns);
+        if (it != module->moduse.end()) {
+          auto fwd = it->second.first->varIdxs.find(name);
+          if (fwd != it->second.first->varIdxs.end()) {
+            ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
+            return slot != nullptr;
+          }
+          if (it->second.second) {
+            return it->second.second->isCompiled;
+          }
+          else {
+            return true;
+          }
         }
       }
       if (current->pscope == nullptr) break;

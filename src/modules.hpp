@@ -80,6 +80,8 @@ namespace Sass {
     // Modules that this module uses.
     sass::vector<Module*> upstream;
 
+    ModuleMap<std::pair<VarRefs*, Module*>> moduse;
+
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
     // Extender extender;
