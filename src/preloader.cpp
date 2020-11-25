@@ -55,7 +55,7 @@ namespace Sass {
   {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::useRule });
-    acceptRoot(eval.loadUseRule(rule));
+    acceptRoot(eval.loadModRule(rule));
     eval.exposeUseRule(rule);
   }
 
@@ -63,7 +63,7 @@ namespace Sass {
   {
     callStackFrame frame(eval.compiler, {
       rule->pstate(), Strings::forwardRule });
-    acceptRoot(eval.resolveForwardRule(rule));
+    acceptRoot(eval.loadModRule(rule));
     eval.exposeFwdRule(rule);
   }
 

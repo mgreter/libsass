@@ -339,8 +339,7 @@ namespace Sass {
     Value* visitWhileRule(WhileRule* rule);
 
   public:
-    Root* loadUseRule(UseRule* rule);
-    Root* resolveForwardRule(ForwardRule* rule);
+    Root* loadModRule(ModRule* rule);
     Root* resolveIncludeImport(IncludeImport* rule);
 
 

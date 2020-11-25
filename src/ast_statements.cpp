@@ -539,12 +539,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ModRule::ModRule(
+    const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
     Import* import,
     WithConfig* pwconfig,
     sass::vector<WithConfigVar>&& config,
     bool hasLocalWith) :
+    Statement(pstate),
     WithConfig(pwconfig,
       std::move(config),
       hasLocalWith),
@@ -555,6 +557,7 @@ namespace Sass {
   {}
 
   ModRule::ModRule(
+    const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
     Import* import,
@@ -566,6 +569,7 @@ namespace Sass {
     bool isShown,
     bool isHidden,
     bool hasWith) :
+    Statement(pstate),
     WithConfig(pwconfig,
       std::move(config),
       hasWith, isShown, isHidden,
@@ -578,6 +582,9 @@ namespace Sass {
     module_(nullptr)
   {}
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   UseRule::UseRule(
     const SourceSpan& pstate,
     const sass::string& prev,
@@ -586,13 +593,16 @@ namespace Sass {
     WithConfig* pwconfig,
     sass::vector<WithConfigVar>&& config,
     bool hasLocalWith) :
-    Statement(pstate),
-    ModRule(prev, url,
+    ModRule(pstate,
+      prev, url,
       import, pwconfig,
       std::move(config),
       hasLocalWith),
     wasExported_(false)
   {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   ForwardRule::ForwardRule(
     const SourceSpan& pstate,
@@ -607,14 +617,13 @@ namespace Sass {
     bool isShown,
     bool isHidden,
     bool hasWith) :
-    Statement(pstate),
-    ModRule(
+    ModRule(pstate,
       prev, url, import,
       prefix, pwconfig,
       std::move(varFilters),
       std::move(callFilters),
       std::move(config),
-      hasWith, isShown, isHidden),
+      isShown, isHidden, hasWith),
     wasMerged_(false)
   {}
 

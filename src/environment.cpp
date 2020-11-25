@@ -503,7 +503,7 @@ namespace Sass {
 
   }
 
-  Root* Eval::loadUseRule(UseRule* rule)
+  Root* Eval::loadModRule(ModRule* rule)
   {
 
     // May not be defined yet
@@ -576,69 +576,6 @@ namespace Sass {
     return sheet;
 
   }
-
-  Root* Eval::resolveForwardRule(ForwardRule* rule)
-  {
-
-    // May not be defined yet
-    Module* mod = rule->module();
-
-    // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn) {
-      return nullptr;
-    }
-
-    // Seems already loaded?
-    if (rule->root()) {
-      return rule->root();
-    }
-
-    LOCAL_PTR(WithConfig, wconfig, rule);
-
-    // Resolve final file to load
-    const ImportRequest request(
-      rule->url(), rule->prev(), false);
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(request, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::UnknwonImport(compiler);
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::AmbiguousImports(compiler, resolved);
-    }
-
-    // This is guaranteed to either load or error out!
-    ImportObj loaded = compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(compiler, loaded);
-    rule->import(loaded);
-
-    Root* sheet = nullptr;
-    sass::string abspath(loaded->getAbsPath());
-    auto cached = compiler.sheets.find(abspath);
-    if (cached != compiler.sheets.end()) {
-      sheet = cached->second;
-    }
-    else {
-      EnvFrame local(compiler, false, true);
-      sheet = compiler.registerImport(loaded);
-      sheet->import = loaded;
-    }
-
-    rule->module(sheet);
-    rule->root(sheet);
-
-    return sheet;
-
-  }
-  // EO resolveForwardFule
 
   Root* Eval::resolveIncludeImport(IncludeImport* rule)
   {
@@ -1098,7 +1035,7 @@ namespace Sass {
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
       << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
 
-    if (Root* root = loadUseRule(rule)) {
+    if (Root* root = loadModRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
@@ -1129,7 +1066,7 @@ namespace Sass {
     if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
       << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
 
-    if (Root* root = resolveForwardRule(rule)) {
+    if (Root* root = loadModRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
