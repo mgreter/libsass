@@ -334,7 +334,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     while (frame->isImport) frame = frame->pscope;
-    VarRef midx = frame->createLexicalMix(name);
+    VarRef midx = frame->createMixin(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
@@ -384,7 +384,7 @@ namespace Sass {
     FunctionRule* rule = withChildren<FunctionRule>(
       &StylesheetParser::readFunctionRuleChild,
       start, name, arguments, local.idxs);
-    rule->fidx(parent->createLexicalFn(name));
+    rule->fidx(parent->createFunction(name));
     return rule;
   }
   // EO readFunctionRule

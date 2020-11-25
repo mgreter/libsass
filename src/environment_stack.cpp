@@ -166,55 +166,6 @@ namespace Sass {
   }
   // EO createFunction
 
-  VarRef VarRefs::createLexicalVar(
-    const EnvKey& name)
-  {
-    auto current = this;
-    // Skip over all imports
-    //while (current->isImport) {
-    //  current = current->pscope;
-    //}
-    //if (current->isCompiled) {
-    //  // throw "Can't create on active frame";
-    //  root.variables.push_back({});
-    //}
-    return current->createVariable(name);
-  }
-  // EO createFunction
-
-
-  VarRef VarRefs::createLexicalFn(
-    const EnvKey& name)
-  {
-    auto current = this;
-    // Skip over all imports
-    // while (current->isImport) {
-    //   current = current->pscope;
-    // }
-    // if (current->isCompiled) {
-    //   // throw "Can't create on active frame";
-    //   root.functions.push_back({});
-    // }
-    return current->createFunction(name);
-  }
-  // EO createFunction
-
-  VarRef VarRefs::createLexicalMix(
-    const EnvKey& name)
-  {
-    auto current = this;
-    // Skip over all imports
-    // while (current->isImport) {
-    //   current = current->pscope;
-    // }
-    // if (current->isCompiled) {
-    //   // throw "Can't create on active frame";
-    //   root.mixins.push_back({});
-    // }
-    return current->createMixin(name);
-  }
-  // EO createFunction
-
   // Register new mixin on local stack
   // Only invoked for mixin rules
   // But also for content blocks

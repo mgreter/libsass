@@ -172,20 +172,17 @@ namespace Sass {
     // Register new variable on local stack
     // Invoked mostly by stylesheet parser
     VarRef createVariable(const EnvKey& name);
-    VarRef createLexicalVar(const EnvKey& name);
 
     // Register new function on local stack
     // Mostly invoked by built-in functions
     // Then invoked for custom C-API function
     // Finally for every parsed function rule
     VarRef createFunction(const EnvKey& name);
-    VarRef createLexicalFn(const EnvKey& name);
 
     // Register new mixin on local stack
     // Only invoked for mixin rules
     // But also for content blocks
     VarRef createMixin(const EnvKey& name);
-    VarRef createLexicalMix(const EnvKey& name);
 
     // Return variable in lexical manner. If [passThrough] is false,
     // we abort the lexical lookup on any non-permeable scope frame.
