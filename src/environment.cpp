@@ -526,18 +526,8 @@ namespace Sass {
       rule->url(), rule->prev(), false);
 
     // Deduce namespace from url
-    sass::string ns(rule->ns());
+    const sass::string& ns(rule->ns());
     const sass::string& url(rule->url());
-
-    // Deduct the namespace from url
-    // After last slash before first dot
-    if (ns.empty() && !url.empty()) {
-      auto start = url.find_last_of("/\\");
-      start = (start == NPOS ? 0 : start + 1);
-      auto end = url.find_first_of(".", start);
-      if (url[start] == '_') start += 1;
-      ns = url.substr(start, end);
-    }
 
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
@@ -560,10 +550,8 @@ namespace Sass {
     ImportStackFrame iframe(compiler, loaded);
     rule->import(loaded);
 
-    rule->ns(ns == "*" ? "" : ns);
-
     Root* sheet = nullptr;
-    sass::string abspath(loaded->getAbsPath());
+    const auto& abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
     if (cached != compiler.sheets.end()) {
       sheet = cached->second;

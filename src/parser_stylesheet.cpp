@@ -1376,7 +1376,17 @@ namespace Sass {
     }
     // BuiltIn
 
-    rule->ns(ns);
+    // Deduct the namespace from url
+    // After last slash before first dot
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      start = (start == NPOS ? 0 : start + 1);
+      auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
+      ns = url.substr(start, end);
+    }
+
+    rule->ns(ns == "*" ? "" : ns);
     return rule.detach();
   }
 
