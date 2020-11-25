@@ -111,8 +111,8 @@ namespace Sass {
 
       BUILT_IN_FN(fnMapSetThreeArgs)
       {
-        auto map = arguments[0]->assertMap(compiler, Strings::map);
-        auto copy = SASS_MEMORY_COPY(map);
+        MapObj map = arguments[0]->assertMap(compiler, Strings::map);
+        auto copy = SASS_MEMORY_COPY(map); // Can be optimized!
         auto it = copy->find(arguments[1]);
         if (it == copy->end()) {
           copy->insert({ arguments[1], arguments[2] });
@@ -125,8 +125,8 @@ namespace Sass {
 
       BUILT_IN_FN(fnMapSetTwoArgs)
       {
-        auto map = arguments[0]->assertMap(compiler, Strings::map);
-        MapObj copy = map = SASS_MEMORY_COPY(map);
+        MapObj map = arguments[0]->assertMap(compiler, Strings::map);
+        MapObj copy = map = SASS_MEMORY_COPY(map); // Can be optimized
         auto it = arguments[1]->iterator();
         auto size = arguments[1]->lengthAsList();
         auto cur = it.begin(), end = it.end();
@@ -221,8 +221,7 @@ namespace Sass {
 
         auto cur = it.begin(), end = it.end() - 1;
 
-        Map *last = (end)->assertMap(compiler, Strings::map2);
-
+        MapObj last = (end)->assertMap(compiler, Strings::map2);
         MapObj copy = map1 = SASS_MEMORY_COPY(map1);
 
         while (cur != end) {
@@ -366,8 +365,8 @@ namespace Sass {
 
       BUILT_IN_FN(fnDeepMerge)
       {
-        Map* map1 = arguments[0]->assertMap(compiler, Strings::map1);
-        Map* map2 = arguments[1]->assertMap(compiler, Strings::map2);
+        MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
+        MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
         return deepMergeImpl(map1, map2);
       }
       

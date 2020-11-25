@@ -836,8 +836,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
       stylesheet->import = import;
     }
 
-    // Return pointer
-    return stylesheet.detach();
+    // Return pointer, we are already managed
+    // Don't call detach, as it could leak then
+    return stylesheet.ptr();
 
   }
   // EO registerImport

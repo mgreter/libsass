@@ -251,7 +251,7 @@ namespace Sass {
 
     T* ptr() const {
       #ifdef DEBUG_SHARED_PTR
-      if (node && node->deleted.count(node->objId) == 1) {
+      if (node && node->deleted.size() && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
       }
       #endif
@@ -260,7 +260,7 @@ namespace Sass {
 
     T* operator->() const {
       #ifdef DEBUG_SHARED_PTR
-      if (node && node->deleted.count(node->objId) == 1) {
+      if (node && node->deleted.size() && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
       }
       #endif

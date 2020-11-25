@@ -1210,7 +1210,7 @@ namespace Sass {
       BUILT_IN_FN(loadCss)
       {
         String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
-        Map* withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
+        MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
 
         bool hasWith = withMap && !withMap->empty();
 
@@ -1257,7 +1257,7 @@ namespace Sass {
         LOCAL_PTR(WithConfig, pwconfig, &wconfig);
 
         sass::string prev(pstate.getAbsPath());
-        if (RootObj sheet = eval.resolveIncludeImport(
+        if (Root* sheet = eval.resolveIncludeImport(
           pstate, prev, url->value(), true)) {
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
