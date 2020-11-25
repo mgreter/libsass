@@ -125,7 +125,7 @@ namespace Sass {
     // simply insert our references. Therefore we must have the
     // possibility to hoist forwarded entities at any lexical scope.
     // All @use as "*" do not get exposed to the parent scope though.
-    sass::vector<VarRefs*> fwdGlobal55;
+    sass::vector<VarRefs*> forwards;
 
     // Some scopes are connected to a module
     // Those expose some additional exports

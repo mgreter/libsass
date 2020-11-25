@@ -113,7 +113,7 @@ namespace Sass {
         // libsass/variable-scoping/defaults-global-null
         // This check may not be needed, but we create a
         // superfluous variable slot in the scope
-        for (auto fwds : rframe->fwdGlobal55) {
+        for (auto fwds : rframe->forwards) {
           auto it = fwds->varIdxs.find(a->variable());
           if (it != fwds->varIdxs.end()) {
             VarRef vidx(0xFFFFFFFF, it->second);
@@ -624,7 +624,7 @@ namespace Sass {
       }
 
       // Check if we push the same stuff twice
-      for (auto fwd : modFrame->fwdGlobal55) {
+      for (auto fwd : modFrame->forwards) {
         if (idxs == fwd) continue;
         for (auto& var : idxs->varIdxs) {
           auto it = fwd->varIdxs.find(var.first);
@@ -794,7 +794,7 @@ namespace Sass {
     if (rule->module()->isBuiltIn) {
 
       if (rule->ns().empty()) {
-        frame->fwdGlobal55.push_back(rule->module()->idxs);
+        frame->forwards.push_back(rule->module()->idxs);
         rule->wasExported(true);
       }
       else if (frame->module->moduse.count(rule->ns())) {
@@ -814,7 +814,7 @@ namespace Sass {
 
       if (rule->ns().empty()) {
         // We should pudding when accessing!?
-        frame->fwdGlobal55.push_back(rule->root()->idxs);
+        frame->forwards.push_back(rule->root()->idxs);
       }
       else {
         // Refactor to only fetch once!
@@ -894,8 +894,8 @@ namespace Sass {
         << compiler.implicitWithConfig << "\n";
 
       cidxs->module = rule->root();
-      pframe->fwdGlobal55.insert(
-        pframe->fwdGlobal55.begin(),
+      pframe->forwards.insert(
+        pframe->forwards.begin(),
         rule->root()->idxs);
 
     }
