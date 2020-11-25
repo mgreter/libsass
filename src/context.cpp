@@ -35,9 +35,13 @@ namespace Sass {
 
   Context::~Context()
   {
-    for (auto mod : modules) {
+    for (auto& mod : modules) {
       delete mod.second;
     }
+    for (auto idxs : scopes) {
+      // delete idxs;
+    }
+    
   }
 
   /////////////////////////////////////////////////////////////////////////

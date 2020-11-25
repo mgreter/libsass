@@ -79,8 +79,6 @@ namespace Sass {
       idxs->root.varFramePtr.push_back(0xFFFFFFFF);
       idxs->root.mixFramePtr.push_back(0xFFFFFFFF);
       idxs->root.fnFramePtr.push_back(0xFFFFFFFF);
-      // Account for allocated memory
-      idxs->root.scopes.push_back(idxs);
     }
     // Check and prevent stack smashing
     if (stack.size() > MAX_NESTING) {
@@ -88,6 +86,8 @@ namespace Sass {
     }
     // Push onto our stack
     stack.push_back(this->idxs);
+    // Account for allocated memory
+    idxs->root.scopes3.push_back(idxs);
   }
   // EO EnvFrame ctor
   /////////////////////////////////////////////////////////////////////////

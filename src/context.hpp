@@ -46,6 +46,8 @@ namespace Sass {
 
     EnvKeyMap<BuiltInMod*> modules;
 
+    sass::vector<VarRefs*> scopes;
+
     WithConfigVar* getCfgVar(const EnvKey& name);
 
   protected:

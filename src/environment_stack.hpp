@@ -368,7 +368,7 @@ namespace Sass {
     // Needed to track the memory allocations
     // And useful to resolve parents indirectly
     // Access it by absolute `frameOffset`
-    sass::vector<VarRefs*> scopes;
+    sass::vector<VarRefs*> scopes3;
 
   public:
 
@@ -380,7 +380,7 @@ namespace Sass {
       // Pop from stack
       stack.pop_back();
       // Take care of scope pointers
-      for (VarRefs* idx : scopes) {
+      for (VarRefs* idx : scopes3) {
         delete idx;
       }
       // Delete our env
