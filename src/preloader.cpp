@@ -83,7 +83,7 @@ namespace Sass {
 
   void Preloader::visitFunctionRule(FunctionRule* rule)
   {
-    const EnvKey& fname(rule->name());
+    // const EnvKey& fname(rule->name());
     LOCAL_PTR(VarRefs, idxs, rule->idxs);
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
@@ -92,7 +92,7 @@ namespace Sass {
 
   void Preloader::visitMixinRule(MixinRule* rule)
   {
-    const EnvKey& mname(rule->name());
+    // const EnvKey& mname(rule->name());
     LOCAL_PTR(VarRefs, idxs, rule->idxs);
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);

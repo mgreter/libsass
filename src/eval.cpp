@@ -1488,7 +1488,7 @@ namespace Sass {
     // debug_ast(root);
     Preloader preloader(*this, root);
     preloader.process();
-   //  debug_ast(root);
+   debug_ast(root);
 
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     // EnvScope scoped(compiler.varRoot, root->idxs);

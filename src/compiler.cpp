@@ -71,27 +71,27 @@ namespace Sass {
 
   struct SassValue* set_global(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
   {
-    Value& key(Value::unwrap(name));
-    Value& val(Value::unwrap(value));
-    Compiler& compiler(Compiler::unwrap(comp));
+    // Value& key(Value::unwrap(name));
+    // Value& val(Value::unwrap(value));
+    // Compiler& compiler(Compiler::unwrap(comp));
     // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, true);
     return sass_make_null();
   }
 
   struct SassValue* set_lexical(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
   {
-    Value& key(Value::unwrap(name));
-    Value& val(Value::unwrap(value));
-    Compiler& compiler(Compiler::unwrap(comp));
+    // Value& key(Value::unwrap(name));
+    // Value& val(Value::unwrap(value));
+    // Compiler& compiler(Compiler::unwrap(comp));
     // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
     return sass_make_null();
   }
 
   struct SassValue* set_local(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
   {
-    Value& key(Value::unwrap(name));
-    Value& val(Value::unwrap(value));
-    Compiler& compiler(Compiler::unwrap(comp));
+    // Value& key(Value::unwrap(name));
+    // Value& val(Value::unwrap(value));
+    // Compiler& compiler(Compiler::unwrap(comp));
     // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
     return sass_make_null();
   }

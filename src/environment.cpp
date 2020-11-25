@@ -299,7 +299,8 @@ namespace Sass {
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
 
-    VarRefs* parent = context.varRoot.stack.back();
+    VarRefs* frame = context.getCurrentFrame();
+
     EnvFrame local(context, false);
     // Create space for optional content callable
     // ToDo: check if this can be conditionally done?
@@ -332,15 +333,13 @@ namespace Sass {
     LOCAL_FLAG(inMixin, true);
     LOCAL_FLAG(mixinHasContent, false);
 
-    auto pr = parent;
-    while (pr->isImport) pr = pr->pscope;
-    // Not if we have one forwarded!
-
-    VarRef midx = pr->createLexicalMix(name);
+    while (frame->isImport) frame = frame->pscope;
+    VarRef midx = frame->createLexicalMix(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
-    // Function can't be created in loops
+    // Mixins can't be created in loops
+    // Must be on root, not even in @if
     // Therefore this optimization is safe
     rule->midx(midx);
     rule->cidx(cidx);

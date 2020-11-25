@@ -1,4 +1,4 @@
-bool stkdbg = false;
+bool stkdbg = true;
 bool mixdbg = false;
 bool fndbg = false;
 
@@ -1164,16 +1164,17 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          VarRef vidx = idxs->setModVar(name, value, guarded, pstate);
-          if (vidx.isValid()) return vidx;
-        }
+        // We set forwarded vars first!
         if (Moduled* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             root.setModVar(fwd->second, value, guarded, pstate);
             return { 0xFFFFFFFF, fwd->second };
           }
+        }
+        if (VarRefs* idxs = it->second.first) {
+          VarRef vidx = idxs->setModVar(name, value, guarded, pstate);
+          if (vidx.isValid()) return vidx;
         }
       }
       if (current->pscope == nullptr) break;

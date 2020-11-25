@@ -38,10 +38,6 @@ namespace Sass {
     for (auto& mod : modules) {
       delete mod.second;
     }
-    for (auto idxs : scopes) {
-      // delete idxs;
-    }
-    
   }
 
   /////////////////////////////////////////////////////////////////////////
