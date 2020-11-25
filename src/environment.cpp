@@ -503,6 +503,7 @@ namespace Sass {
 
   }
 
+
   Root* Eval::loadModRule(ModRule* rule)
   {
 
@@ -577,34 +578,6 @@ namespace Sass {
 
   }
 
-  Root* Eval::resolveIncludeImport(IncludeImport* rule)
-  {
-    // Seems already loaded?
-    if (rule->sheet()) {
-      return rule->sheet();
-    }
-
-    if (rule->module() && rule->module()->isBuiltIn) {
-      return nullptr;
-    }
-
-
-    if (Root* sheet2 = resolveIncludeImport(
-      rule->pstate(),
-      rule->prev(),
-      rule->url()
-    )) {
-      rule->import(sheet2->import);
-      rule->module(sheet2);
-      rule->sheet(sheet2);
-      return sheet2;
-    }
-
-    return nullptr;
-
-  }
-
-
   Root* Eval::resolveIncludeImport(
     const SourceSpan& pstate,
     const sass::string& prev,
@@ -619,7 +592,7 @@ namespace Sass {
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(request, true));
+      compiler.findIncludes(request, !scoped));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -656,6 +629,35 @@ namespace Sass {
 
     // wconfig.finalize();
     return sheet;
+  }
+
+
+  Root* Eval::resolveIncludeImport(IncludeImport* rule)
+  {
+    // Seems already loaded?
+    if (rule->sheet()) {
+      return rule->sheet();
+    }
+
+    if (rule->module() && rule->module()->isBuiltIn) {
+      return nullptr;
+    }
+
+
+    if (Root* sheet2 = resolveIncludeImport(
+      rule->pstate(),
+      rule->prev(),
+      rule->url(),
+      false
+    )) {
+      rule->import(sheet2->import);
+      rule->module(sheet2);
+      rule->sheet(sheet2);
+      return sheet2;
+    }
+
+    return nullptr;
+
   }
 
 
