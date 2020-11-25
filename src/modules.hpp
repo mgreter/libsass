@@ -110,6 +110,7 @@ namespace Sass {
     BuiltInMod(const BuiltInMod&) = delete;
     BuiltInMod() = default;
 
+    BuiltInMod& operator=(BuiltInMod&&) noexcept;
     BuiltInMod(BuiltInMod&&) noexcept;
 
     void addFunction(const EnvKey& name, uint32_t offset);

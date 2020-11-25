@@ -44,6 +44,8 @@ namespace Sass {
 
     WithConfig* wconfig = nullptr;
 
+    EnvKeyMap<BuiltInMod*> modules;
+
     WithConfigVar* getCfgVar(const EnvKey& name);
 
   protected:
@@ -89,6 +91,8 @@ namespace Sass {
 
     // Constructor
     Context();
+
+    virtual ~Context();
 
     /////////////////////////////////////////////////////////////////////////
     // Helpers for `sass_prepare_context`

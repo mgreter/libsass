@@ -690,8 +690,8 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(ImportObj, import);
-    ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, prev);
+    ADD_CONSTREF(sass::string, url);
     ADD_PROPERTY(bool, wasMerged);
     ADD_CONSTREF(RootObj, root);
     // We have both, root and module

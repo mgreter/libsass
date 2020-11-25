@@ -38,25 +38,20 @@ namespace Sass {
       return current;
     }
 
-    EnvKeyMap<BuiltInMod> modules;
-
     BuiltInMod& createModule(const sass::string& name) {
       auto it = modules.find(name);
       if (it != modules.end()) {
-        return it->second;
+        return *it->second;
       }
-      auto kv = std::make_pair(
-        name, BuiltInMod{ varRoot });
-      modules.insert(std::move(kv));
-      it = modules.find(name);
-      // ToDo: fix this!
-      return it->second;
+      BuiltInMod* module = new BuiltInMod(varRoot);
+      modules.insert({ name, module });
+      return *module;
     }
 
     BuiltInMod* getModule(const sass::string& name) {
       auto it = modules.find(name);
       if (it == modules.end()) return nullptr;
-      return &it->second;
+      return it->second;
     }
 
 
