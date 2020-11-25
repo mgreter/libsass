@@ -339,15 +339,19 @@ namespace Sass {
     Value* visitWhileRule(WhileRule* rule);
 
   public:
-    Root* loadModRule(ModRule* rule);
     Root* resolveIncludeImport(IncludeImport* rule);
 
 
-    Root* loadModRule22(
+    // Backbone loader function
+    // Use by load-css directly
+    Root* loadModule(
       const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
       bool scoped = false);
+
+    // Loading of parsed rules
+    Root* loadModRule(ModRule* rule);
 
   private:
     /////////////////////////////////////////////////////////////////////////

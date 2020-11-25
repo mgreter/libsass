@@ -308,13 +308,11 @@ namespace Sass {
 
     // Check if we have a configuration
 
-    if (ns.empty()) {
+    if (ns.empty() && !hasVar) {
       // IF we are semi-global and parent is root
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
-      if (!hasVar) {
-        frame->createVariable(name);
-      }
+      frame->createVariable(name);
     }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
@@ -522,14 +520,14 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    auto sheet2 = loadModRule22(rule->pstate(),
+    auto sheet2 = loadModule(rule->pstate(),
       rule->prev(), rule->url(), false);
     rule->module(sheet2);
     rule->root(sheet2);
     return sheet2;
   }
 
-  Root* Eval::loadModRule22(
+  Root* Eval::loadModule(
     const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
@@ -595,7 +593,7 @@ namespace Sass {
     }
 
 
-    if (Root* sheet2 = loadModRule22(
+    if (Root* sheet2 = loadModule(
       rule->pstate(),
       rule->prev(),
       rule->url(),
@@ -1099,7 +1097,7 @@ namespace Sass {
         LOCAL_PTR(WithConfig, pwconfig, &wconfig);
 
         sass::string prev(pstate.getAbsPath());
-        if (Root* sheet = eval.loadModRule22(
+        if (Root* sheet = eval.loadModule(
           pstate, prev, url->value(), false)) {
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
