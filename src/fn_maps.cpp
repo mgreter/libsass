@@ -367,7 +367,8 @@ namespace Sass {
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
         MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
-        return deepMergeImpl(map1, map2);
+        MapObj result = deepMergeImpl(map1, map2);
+        return result.detach();
       }
       
       BUILT_IN_FN(fnDeepRemove)
