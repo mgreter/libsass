@@ -105,18 +105,23 @@ namespace Sass {
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
 
+    // Some scopes are connected to a module
+    // Those expose some additional exports
+    // Modules are global so we just link them
     Module* module = nullptr;
 
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
     bool permeable = false;
+
+    // Imports are transparent for variables, functions and mixins
+    // We always need to create entities inside the parent scope
     bool isImport = false;
 
-    bool isModule = false;
-
-
+    // Set to true once we are compiled via use or forward
+    // An import does load the sheet, but does not compile it
+    // Compiling it means hard-baking the config vars into it
     bool isCompiled = false;
-
 
     // Parents for specific types
     uint32_t varFrame;
@@ -124,22 +129,17 @@ namespace Sass {
     uint32_t fnFrame;
 
     // Remember named mappings
-    // Used for runtime lookups
-    // ToDo: test EnvKeyFlatMap
     VidxEnvKeyMap varIdxs;
     MidxEnvKeyMap mixIdxs;
     FidxEnvKeyMap fnIdxs;
 
-    // Keep track of assignments and variables for dynamic runtime lookups.
-    // This is needed only for loops, due to sass "weird" variable scoping.
-    // sass::vector<AssignRuleObj> assignments;
-    // sass::vector<VariableExpressionObj> variables;
-
     // Special set with global assignments
     // Needed for imports within style-rules
+    // ToDo: not really tested via specs yet?
     EnvKeySet globals;
 
     ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
+
     sass::vector<VarRefs*> fwdGlobal55;
 
     // Value constructor
@@ -149,13 +149,11 @@ namespace Sass {
       uint32_t mixFrame,
       uint32_t fnFrame,
       bool permeable,
-      bool isImport,
-      bool isModule) :
+      bool isImport) :
       root(root),
       pscope(pscope),
       permeable(permeable),
       isImport(isImport),
-      isModule(isModule),
       varFrame(varFrame),
       mixFrame(mixFrame),
       fnFrame(fnFrame)
@@ -256,22 +254,12 @@ namespace Sass {
     VarRefs* getParent(bool passThrough = false) {
       if (isRoot())
         return nullptr;
-      if (isModule)
+      if (module)
         return nullptr;
       if (!passThrough)
         if (!permeable)
           return nullptr;
       return pscope;
-    }
-
-    VarRefs* getModule23() {
-      auto current = this;
-      while (!current->isRoot()) {
-        if (current->isModule)
-          return current;
-        current = current->pscope;
-      }
-      return current;
     }
 
   };

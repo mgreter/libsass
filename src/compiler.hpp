@@ -32,7 +32,7 @@ namespace Sass {
       if (varRoot.stack.empty()) return nullptr;
       auto current = varRoot.stack.back();
       while (current->pscope) {
-        if (current->isModule) break;
+        if (current->module) break;
         current = current->pscope;
       }
       return current;

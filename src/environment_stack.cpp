@@ -33,8 +33,7 @@ namespace Sass {
       0xFFFFFFFF,
       0xFFFFFFFF,
       false,
-      false,
-      true))
+      false))
   {
     variables.reserve(256);
     functions.reserve(256);
@@ -66,7 +65,7 @@ namespace Sass {
       uint32_t(compiler.varRoot.varFramePtr.size()),
       uint32_t(compiler.varRoot.mixFramePtr.size()),
       uint32_t(compiler.varRoot.fnFramePtr.size()),
-      permeable, isImport, isModule))
+      permeable, isImport))
   {
     if (isModule) {
       // Lives in built-in scope

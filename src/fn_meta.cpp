@@ -92,7 +92,7 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
           auto pp = parent->fwdModule55.find(plugin->value());
           if (pp != parent->fwdModule55.end()) {
@@ -131,7 +131,7 @@ namespace Sass {
         ValueObj ex = compiler.findVariable(variable->value());
 
         bool hasVar = false;
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         for (auto global : parent->fwdGlobal55) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
@@ -149,7 +149,7 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
           auto pp = parent->fwdModule55.find(plugin->value());
           if (pp != parent->fwdModule55.end()) {
@@ -184,7 +184,7 @@ namespace Sass {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
 
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
           auto pp = parent->fwdModule55.find(plugin->value());
           if (pp != parent->fwdModule55.end()) {
@@ -229,7 +229,7 @@ namespace Sass {
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.varRoot.stack.back()->getModule23();
+        auto module = compiler.getCurrentModule();
         auto it = module->fwdModule55.find(ns->value());
         if (it != module->fwdModule55.end()) {
           VarRefs* refs = it->second.first;
@@ -265,7 +265,7 @@ namespace Sass {
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.varRoot.stack.back()->getModule23();
+        auto module = compiler.getCurrentModule();
         auto it = module->fwdModule55.find(ns->value());
         if (it != module->fwdModule55.end()) {
           VarRefs* refs = it->second.first;
@@ -331,7 +331,7 @@ namespace Sass {
 
         CallableObj callable;
 
-        auto parent = compiler.varRoot.stack.back()->getModule23();
+        auto parent = compiler.getCurrentModule();
 
         if (ns != nullptr) {
           auto pp = parent->fwdModule55.find(ns->value());

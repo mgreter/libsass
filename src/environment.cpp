@@ -753,7 +753,7 @@ namespace Sass {
     LOCAL_PTR(Root, chroot77, root);
     VarRefs* idxs = root->idxs;
 
-    VarRefs* mframe(compiler.varRoot.stack.back()->getModule23());
+    VarRefs* mframe(compiler.getCurrentModule());
 
     EnvScope scoped2(compiler.varRoot, idxs);
 

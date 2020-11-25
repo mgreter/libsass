@@ -25,8 +25,7 @@ namespace Sass {
       0xFFFFFFFF,
       0xFFFFFFFF,
       false, // permeable
-      false, // isImport
-      true)) // isModule
+      false))
   {
     isBuiltIn = true;
     isLoaded = true;

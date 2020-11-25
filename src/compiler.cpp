@@ -747,9 +747,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Main entry point for custom functions passed through the C-API.
   void Compiler::registerCustomFunction(struct SassFunction* function)
   {
-    EnvRoot root(*this);
+    // EnvRoot root(*this);
     // Create a new external callable from the sass function
-    ExternalCallable* callable = makeExternalCallable(function);
+    // ExternalCallable* callable = makeExternalCallable(function);
     // Currently external functions are treated globally
     // if (fnLookup.count(callable->envkey()) == 0) {
     //   fnLookup.insert(std::make_pair(callable->envkey(), callable));
@@ -971,8 +971,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   ImportStackFrame::~ImportStackFrame()
   {
-    auto& source(compiler.import_stack.back()->source);
     compiler.import_stack.pop_back();
+    // auto& source(compiler.import_stack.back()->source);
     // std::cerr << "EXIT " << compiler.import_stack2.size()
     //   << " -> " << source->getAbsPath() << "\n";
   }

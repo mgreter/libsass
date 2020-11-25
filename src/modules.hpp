@@ -103,10 +103,10 @@ namespace Sass {
     EnvKeySet globals;
 
     // Uses with namespace
-    ModuleMap<Module*> moduse;
+    // ModuleMap<Module*> moduse;
 
     // Uses without namespace (as *)
-    sass::vector<Module*> globuse;
+    // sass::vector<Module*> globuse;
 
   public:
 
