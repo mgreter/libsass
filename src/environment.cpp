@@ -520,15 +520,14 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    auto sheet2 = loadModule(rule->pstate(),
-      rule->prev(), rule->url(), false);
+    auto sheet2 = loadModule(
+      rule->prev(), rule->url());
     rule->module(sheet2);
     rule->root(sheet2);
     return sheet2;
   }
 
   Root* Eval::loadModule(
-    const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
     bool isImport)
@@ -545,19 +544,16 @@ namespace Sass {
 
     // Error if no file to import was found
     if (resolved.empty()) {
-      compiler.addFinalStackTrace(pstate);
       throw Exception::UnknwonImport(compiler);
     }
     // Error if multiple files to import were found
     else if (resolved.size() > 1) {
-      compiler.addFinalStackTrace(pstate);
       throw Exception::AmbiguousImports(compiler, resolved);
     }
 
     // This is guaranteed to either load or error out!
     ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
-    // rule->import(loaded);
 
     Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
@@ -594,7 +590,6 @@ namespace Sass {
 
 
     if (Root* sheet2 = loadModule(
-      rule->pstate(),
       rule->prev(),
       rule->url(),
       true
@@ -1098,7 +1093,7 @@ namespace Sass {
 
         sass::string prev(pstate.getAbsPath());
         if (Root* sheet = eval.loadModule(
-          pstate, prev, url->value(), false)) {
+          prev, url->value(), false)) {
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
             LocalOption<bool> scoped(compiler.implicitWithConfig,
