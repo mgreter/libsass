@@ -27,9 +27,9 @@ namespace Sass {
   Eval::Eval(Compiler& compiler, Logger& logger, bool plainCss) :
     logger456(logger),
     compiler(compiler),
+    traces(logger),
     chroot77(compiler.chroot77),
     wconfig(compiler.wconfig),
-    traces(logger),
     extender(
       Extender::NORMAL,
       logger456),
@@ -1488,7 +1488,7 @@ namespace Sass {
     // debug_ast(root);
     Preloader preloader(*this, root);
     preloader.process();
-   debug_ast(root);
+    // debug_ast(root);
 
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
     // EnvScope scoped(compiler.varRoot, root->idxs);

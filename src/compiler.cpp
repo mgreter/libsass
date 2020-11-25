@@ -539,9 +539,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               ImportStackFrame iframe(*this, &import);
               Root* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
-              rule->append(SASS_MEMORY_NEW(IncludeImport,
-                pstate, ctx_path, abs_path, &import));
-              // Must set the sheet somehow!
+              auto inc = SASS_MEMORY_NEW(IncludeImport,
+                pstate, ctx_path, abs_path, &import);
+              inc->root(sheet);
+              rule->append(inc);
             }
             // Only a path was returned
             // Try to load it like normal
@@ -580,8 +581,10 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
                 ImportStackFrame iframe(*this, loaded);
                 Root* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
-                rule->append(SASS_MEMORY_NEW(IncludeImport,
-                  pstate, ctx_path, url, &import));
+                auto inc = SASS_MEMORY_NEW(IncludeImport,
+                  pstate, ctx_path, url, &import);
+                inc->root(sheet);
+                rule->append(inc);
                 // Must set the sheet somehow
               }
               else {

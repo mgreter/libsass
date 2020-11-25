@@ -1,4 +1,4 @@
-bool stkdbg = true;
+bool stkdbg = false;
 bool mixdbg = false;
 bool fndbg = false;
 

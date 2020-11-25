@@ -1346,8 +1346,8 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    VarRefs* current(context.getCurrentFrame());
-    VarRefs* modFrame(context.getCurrentModule());
+    // VarRefs* current(context.getCurrentFrame());
+    // VarRefs* modFrame(context.getCurrentModule());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
