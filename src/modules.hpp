@@ -79,6 +79,25 @@ namespace Sass {
     MidxEnvKeyMap mergedFwdMix;
     FidxEnvKeyMap mergedFwdFn;
 
+    // Modules that this module uses.
+    // List<BuiltInMod> get upstream;
+
+    // The module's variables.
+    // Map<String, Value> get variables;
+
+    // The module's functions. Implementations must ensure
+    // that each [Callable] is stored under its own name.
+    // Map<String, Callable> get functions;
+
+    // The module's mixins. Implementations must ensure that
+    // each [Callable] is stored under its own name.
+    // Map<String, Callable> get mixins;
+
+    // The extensions defined in this module, which is also able to update
+    // [css]'s style rules in-place based on downstream extensions.
+    // Extender extender;
+
+
     // Special set with global assignments
     // Needed for imports within style-rules
     EnvKeySet globals;

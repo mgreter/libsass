@@ -440,7 +440,7 @@ namespace Sass {
 
   void mergeForwards(
     VarRefs* idxs,
-    Moduled* module,
+    Module* module,
     WithConfig* wconfig,
     Logger& logger)
   {
@@ -687,12 +687,16 @@ namespace Sass {
 
   }
 
-  void Eval::insertModule(Moduled* module)
+  void Eval::insertModule(Module* module)
   {
     // Nowhere to append to, exit
     if (current == nullptr) return;
     // Nothing to be added yet? Error?
     if (module->loaded == nullptr) return;
+
+    // for (auto child : module->upstream) {
+    // }
+
     // The children to be added to the document
     auto& children(module->loaded->elements());
     // Check if we have any parent
@@ -916,6 +920,7 @@ namespace Sass {
       ImportStackFrame iframe(compiler, root->import);
       EnvScope scoped(compiler.varRoot, root->idxs);
       LOCAL_PTR(Root, chroot77, root);
+      LOCAL_FLAG(inImport, true);
       exposeImpRule(rule);
       // Imports are always executed again
       for (const StatementObj& item : root->elements()) {
@@ -942,6 +947,10 @@ namespace Sass {
         compileModule(root);
         rule->finalize(compiler);
         if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
+        insertModule(root);
+      }
+      else if (inImport) {
+        // We must also produce inner modules somehow
         insertModule(root);
       }
       else if (rule->hasConfig) {

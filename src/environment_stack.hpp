@@ -105,7 +105,7 @@ namespace Sass {
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
 
-    Moduled* module = nullptr;
+    Module* module = nullptr;
 
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
@@ -139,7 +139,7 @@ namespace Sass {
     // Needed for imports within style-rules
     EnvKeySet globals;
 
-    ModuleMap<std::pair<VarRefs*, Moduled*>> fwdModule55;
+    ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
     sass::vector<VarRefs*> fwdGlobal55;
 
     // Value constructor

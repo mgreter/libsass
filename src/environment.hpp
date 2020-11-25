@@ -27,7 +27,7 @@ namespace Sass {
 
   void mergeForwards(
     VarRefs* idxs,
-    Moduled* module,
+    Module* module,
     bool isShown,
     bool isHidden,
     const sass::string prefix,

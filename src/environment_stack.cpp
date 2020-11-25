@@ -531,7 +531,7 @@ namespace Sass {
           if (value && name.isPrivate()) continue;
           if (value != nullptr) return value;
         }
-        if (Moduled* mod = fwds->module) {
+        if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             Value* val = root.getVariable(
@@ -574,7 +574,7 @@ namespace Sass {
           if (value && name.isPrivate()) continue;
           if (value != nullptr) return vidx;
         }
-        if (Moduled* mod = fwds->module) {
+        if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             Value* value = root.getModVar(fwd->second);
@@ -614,7 +614,7 @@ namespace Sass {
           if (value && name.isPrivate()) continue;
           if (!value.isNull()) return &value;
         }
-        if (Moduled* mod = fwds->module) {
+        if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
             CallableObj& fn = root.getFunction(
@@ -655,7 +655,7 @@ namespace Sass {
           if (value && name.isPrivate()) continue;
           if (!value.isNull()) return vidx;
         }
-        if (Moduled* mod = fwds->module) {
+        if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
             const VarRef fidx{ 0xFFFFFFFF, fwd->second };
@@ -695,7 +695,7 @@ namespace Sass {
           if (mixin && name.isPrivate()) continue;
           if (mixin != nullptr) return mixin;
         }
-        if (Moduled* mod = fwds->module) {
+        if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdMix.find(name);
           if (fwd != mod->mergedFwdMix.end()) {
             Callable* mix = root.getMixin(
@@ -732,7 +732,7 @@ namespace Sass {
         Callable* value = root.getMixin(vidx);
         if (value != nullptr) return value;
       }
-      if (Moduled* mod = fwds->module) {
+      if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdMix.find(name);
         if (fwd != mod->mergedFwdMix.end()) {
           const VarRef vidx{ fwds->mixFrame, it->second };
@@ -761,7 +761,7 @@ namespace Sass {
         CallableObj& value = root.getFunction(fidx);
         if (value != nullptr) return fidx;
       }
-      if (Moduled* mod = fwds->module) {
+      if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
           const VarRef fidx{ fwds->fnFrame, it->second };
@@ -789,7 +789,7 @@ namespace Sass {
         CallableObj& value = root.getFunction(vidx);
         if (value != nullptr) return &value;
       }
-      if (Moduled* mod = fwds->module) {
+      if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
           const VarRef vidx{ fwds->fnFrame, it->second };
@@ -828,7 +828,7 @@ namespace Sass {
         Value* value = root.getVariable(vidx);
         if (value != nullptr) return value;
       }
-      if (Moduled* mod = fwds->module) {
+      if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
           const VarRef vidx{ fwds->varFrame, it->second };
@@ -857,7 +857,7 @@ namespace Sass {
         Value* value = root.getVariable(vidx);
         if (value != nullptr) return vidx;
       }
-      if (Moduled* mod = fwds->module) {
+      if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
           const VarRef vidx{ fwds->varFrame, it->second };
@@ -956,7 +956,7 @@ namespace Sass {
           Value* val = idxs->getVariable(name);
           if (val != nullptr) return val;
         }
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             Value* val = root.getVariable(
@@ -983,7 +983,7 @@ namespace Sass {
           VarRef vidx = idxs->getVarIdx(name);
           if (vidx != nullidx) return vidx;
         }
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             VarRef vidx{ 0xFFFFFFFF, fwd->second };
@@ -1010,7 +1010,7 @@ namespace Sass {
             VarRef fidx = idxs->getFnIdx(name);
             if (fidx != nullidx) return fidx;
           }
-          if (Moduled* mod = it->second.second) {
+          if (Module* mod = it->second.second) {
             auto fwd = mod->mergedFwdFn.find(name);
             if (fwd != mod->mergedFwdFn.end()) {
               VarRef fidx{ 0xFFFFFFFF, fwd->second };
@@ -1037,7 +1037,7 @@ namespace Sass {
           CallableObj* fn = idxs->getFunction(name);
           if (fn != nullptr) return fn;
         }
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
             CallableObj& fn = root.getFunction(
@@ -1063,7 +1063,7 @@ namespace Sass {
           Callable* mixin = idxs->getMixin(name);
           if (mixin != nullptr) return mixin;
         }
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdMix.find(name);
           if (fwd != mod->mergedFwdMix.end()) {
             Callable* mixin = root.getMixin(
@@ -1165,7 +1165,7 @@ namespace Sass {
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
         // We set forwarded vars first!
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             root.setModVar(fwd->second, value, guarded, pstate);
@@ -1194,7 +1194,7 @@ namespace Sass {
           if (idxs->setModMix(name, fn, guarded))
             return true;
         }
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdMix.find(name);
           if (fwd != mod->mergedFwdMix.end()) {
             root.setModMix(fwd->second, fn, guarded);
@@ -1219,7 +1219,7 @@ namespace Sass {
           if (idxs->setModFn(name, fn, guarded))
             return true;
         }
-        if (Moduled* mod = it->second.second) {
+        if (Module* mod = it->second.second) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
             root.setModFn(fwd->second, fn, guarded);
@@ -1272,7 +1272,7 @@ namespace Sass {
           // return vidx;
         }
         // Modules inserted by import
-        if (Moduled* mod = refs->module) {
+        if (Module* mod = refs->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             if (name.isPrivate()) {
@@ -1335,7 +1335,7 @@ namespace Sass {
           // return vidx;
         }
         // Modules inserted by import
-        if (Moduled* mod = refs->module) {
+        if (Module* mod = refs->module) {
           auto fwd = mod->mergedFwdFn.find(name);
           if (fwd != mod->mergedFwdFn.end()) {
             if (name.isPrivate()) {
@@ -1398,7 +1398,7 @@ namespace Sass {
           // return vidx;
         }
         // Modules inserted by import
-        if (Moduled* mod = refs->module) {
+        if (Module* mod = refs->module) {
           auto fwd = mod->mergedFwdMix.find(name);
           if (fwd != mod->mergedFwdMix.end()) {
             if (name.isPrivate()) {

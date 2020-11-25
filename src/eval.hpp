@@ -74,13 +74,16 @@ namespace Sass {
     // Whether we're currently building the output of an unknown at rule.
     bool inUnknownAtRule = false;
 
+    // Whether we're currently executing an import.
+    bool inImport = false;
+
     // Whether we're directly within an `@at-root` rule excluding style rules.
     bool atRootExcludingStyleRule = false;
 
     // Whether we're currently building the output of a `@keyframes` rule.
     bool inKeyframes = false;
 
-    void insertModule(Moduled* module);
+    void insertModule(Module* module);
     void compileModule(Root* module);
 
 
