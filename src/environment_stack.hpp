@@ -187,19 +187,6 @@ namespace Sass {
     VarRef createMixin(const EnvKey& name);
     VarRef createLexicalMix(const EnvKey& name);
 
-    // Get local variable by name, needed for most simplistic case
-    // for static variable optimization in loops. When we know that
-    // there is an existing local variable, we can always use that!
-    VarRef getLocalVariableIdx(const EnvKey& name);
-
-    // Return mixin in lexical manner. If [passThrough] is false,
-    // we abort the lexical lookup on any non-permeable scope frame.
-    VarRef getMixinIdx(const EnvKey& name, bool passThrough = true);
-
-    // Return function in lexical manner. If [passThrough] is false,
-    // we abort the lexical lookup on any non-permeable scope frame.
-    VarRef getFunctionIdx(const EnvKey& name, bool passThrough = true);
-
     // Return variable in lexical manner. If [passThrough] is false,
     // we abort the lexical lookup on any non-permeable scope frame.
     VarRef getVariableIdx(const EnvKey& name, bool passThrough = false);

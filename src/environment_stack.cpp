@@ -247,57 +247,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Get local variable by name, needed for most simplistic case
-  // for static variable optimization in loops. When we know that
-  // there is an existing local variable, we can always use that!
-  VarRef VarRefs::getLocalVariableIdx(const EnvKey& name)
-  {
-    auto it = varIdxs.find(name);
-    if (it == varIdxs.end()) return {};
-    return { varFrame, it->second };
-  }
-  // EO getLocalVariableIdx
-
-  // Return lookups in lexical manner. If [passThrough] is false,
-  // we abort the lexical lookup on any non-permeable scope frame.
-  VarRef VarRefs::getMixinIdx(const EnvKey& name, bool passThrough)
-  {
-    VarRefs* current = this;
-    while (current != nullptr) {
-      if (!current->isImport) {
-        // Check if we already have this var
-        auto it = current->mixIdxs.find(name);
-        if (it != current->mixIdxs.end()) {
-          return { current->mixFrame, it->second };
-        }
-      }
-      current = current->getParent(passThrough);
-    }
-    // Not found
-    return VarRef{};
-  }
-  // EO getMixinIdx
-
-  // Return lookups in lexical manner. If [passThrough] is false,
-  // we abort the lexical lookup on any non-permeable scope frame.
-  VarRef VarRefs::getFunctionIdx(const EnvKey& name, bool passThrough)
-  {
-    VarRefs* current = this;
-    while (current != nullptr) {
-      if (!current->isImport) {
-        // Check if we already have this var
-        auto it = current->fnIdxs.find(name);
-        if (it != current->fnIdxs.end()) {
-          return { current->fnFrame, it->second };
-        }
-      }
-      current = current->getParent(passThrough);
-    }
-    // Not found
-    return VarRef{};
-  }
-  // EO getFunctionIdx
-
   // Return lookups in lexical manner. If [passThrough] is false,
   // we abort the lexical lookup on any non-permeable scope frame.
   VarRef VarRefs::getVariableIdx(const EnvKey& name, bool passThrough)
