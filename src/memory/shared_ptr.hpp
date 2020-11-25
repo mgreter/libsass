@@ -159,7 +159,7 @@ namespace Sass {
     size_t line;
   public:
     size_t objId;
-  protected:
+  public:
     bool dbg = false;
     bool erased = false;
     static size_t objCount;

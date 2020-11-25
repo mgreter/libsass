@@ -82,7 +82,6 @@ namespace Sass {
 
     void insertModule(Moduled* module);
     void compileModule(Root* module);
-    Root* loadModule(Compiler& compiler, Import* import, bool hasWith = false);
 
 
     /////////////////////////////////////////////////////////////////////////
