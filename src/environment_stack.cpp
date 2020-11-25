@@ -924,9 +924,9 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      if (Module* module = current->module) {
-        auto it = module->moduse.find(ns);
-        if (it != module->moduse.end()) {
+      if (Module* mod = current->module) {
+        auto it = mod->moduse.find(ns);
+        if (it != mod->moduse.end()) {
           auto fwd = it->second.first->varIdxs.find(name);
           if (fwd != it->second.first->varIdxs.end()) {
             ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
@@ -950,20 +950,22 @@ namespace Sass {
   {
     const VarRefs* current = this;
     while (current) {
-      // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          Value* val = idxs->getVariable(name);
-          if (val != nullptr) return val;
-        }
-        if (Module* mod = it->second.second) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            Value* val = root.getVariable(
-              { 0xFFFFFFFF, fwd->second });
+      if (Module* mod = current->module) {
+        // Check if the namespace was registered
+        auto it = mod->moduse.find(ns);
+        if (it != mod->moduse.end()) {
+          if (VarRefs* idxs = it->second.first) {
+            Value* val = idxs->getVariable(name);
             if (val != nullptr) return val;
           }
+          // if (Module* mod = it->second.second) {
+            auto fwd = mod->mergedFwdVar.find(name);
+            if (fwd != mod->mergedFwdVar.end()) {
+              Value* val = root.getVariable(
+                { 0xFFFFFFFF, fwd->second });
+              if (val != nullptr) return val;
+            }
+          // }
         }
       }
       if (current->pscope == nullptr) break;
@@ -975,62 +977,56 @@ namespace Sass {
 
   VarRef VarRefs::findVarIdx(const EnvKey& name, const sass::string& ns) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope) {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
       // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          VarRef vidx = idxs->getVarIdx(name);
-          if (vidx != nullidx) return vidx;
-        }
-        if (Module* mod = it->second.second) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            VarRef vidx{ 0xFFFFFFFF, fwd->second };
-            ValueObj& val = root.getVariable(vidx);
-            if (val != nullptr) return vidx;
-          }
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      if (VarRefs* idxs = it->second.first) {
+        VarRef vidx = idxs->getVarIdx(name);
+        if (vidx != nullidx) return vidx;
+      }
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdVar.find(name);
+        if (fwd != mod->mergedFwdVar.end()) {
+          VarRef vidx{ 0xFFFFFFFF, fwd->second };
+          ValueObj& val = root.getVariable(vidx);
+          if (val != nullptr) return vidx;
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return nullidx;
   }
 
   VarRef VarRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
-    const VarRefs* current = this;
-    while (current) {
-      if (!current->isImport) {
-        // Check if the namespace was registered
-        auto it = current->fwdModule55.find(ns);
-        if (it != current->fwdModule55.end()) {
-          if (VarRefs* idxs = it->second.first) {
-            VarRef fidx = idxs->getFnIdx(name);
-            if (fidx != nullidx) return fidx;
-          }
-          if (Module* mod = it->second.second) {
-            auto fwd = mod->mergedFwdFn.find(name);
-            if (fwd != mod->mergedFwdFn.end()) {
-              VarRef fidx{ 0xFFFFFFFF, fwd->second };
-              CallableObj& fn = root.getFunction(fidx);
-              if (fn != nullptr) return fidx;
-            }
+    for (const VarRefs* current = this; current; current = current->pscope) {
+      if (current->isImport) continue;
+      // Check if the namespace was registered
+      auto it = current->fwdModule55.find(ns);
+      if (it != current->fwdModule55.end()) {
+        if (VarRefs* idxs = it->second.first) {
+          VarRef fidx = idxs->getFnIdx(name);
+          if (fidx != nullidx) return fidx;
+        }
+        if (Module* mod = it->second.second) {
+          auto fwd = mod->mergedFwdFn.find(name);
+          if (fwd != mod->mergedFwdFn.end()) {
+            VarRef fidx{ 0xFFFFFFFF, fwd->second };
+            CallableObj& fn = root.getFunction(fidx);
+            if (fn != nullptr) return fidx;
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return nullidx;
   }
 
   CallableObj* VarRefs::findFunction(const EnvKey& name, const sass::string& ns) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope) {
       // Check if the namespace was registered
       auto it = current->fwdModule55.find(ns);
       if (it != current->fwdModule55.end()) {
@@ -1047,8 +1043,6 @@ namespace Sass {
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return nullptr;
   }
