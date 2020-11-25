@@ -538,6 +538,46 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  ModRule::ModRule(
+    const sass::string& prev,
+    const sass::string& url,
+    Import* import,
+    WithConfig* pwconfig,
+    sass::vector<WithConfigVar>&& config,
+    bool hasLocalWith) :
+    WithConfig(pwconfig,
+      std::move(config),
+      hasLocalWith),
+    import_(import),
+    prev_(prev),
+    url_(url),
+    module_(nullptr)
+  {}
+
+  ModRule::ModRule(
+    const sass::string& prev,
+    const sass::string& url,
+    Import* import,
+    const sass::string& prefix,
+    WithConfig* pwconfig,
+    std::set<EnvKey>&& varFilters,
+    std::set<EnvKey>&& callFilters,
+    sass::vector<WithConfigVar>&& config,
+    bool isShown,
+    bool isHidden,
+    bool hasWith) :
+    WithConfig(pwconfig,
+      std::move(config),
+      hasWith, isShown, isHidden,
+      std::move(varFilters),
+      std::move(callFilters),
+      prefix),
+    import_(import),
+    prev_(prev),
+    url_(url),
+    module_(nullptr)
+  {}
+
   UseRule::UseRule(
     const SourceSpan& pstate,
     const sass::string& prev,
@@ -547,17 +587,12 @@ namespace Sass {
     sass::vector<WithConfigVar>&& config,
     bool hasLocalWith) :
     Statement(pstate),
-    WithConfig(pwconfig,
+    ModRule(prev, url,
+      import, pwconfig,
       std::move(config),
       hasLocalWith),
-    import_(import),
-    prev_(prev),
-    url_(url),
-    wasExported_(false),
-    module_(nullptr)
-  {
-    // ;
-  }
+    wasExported_(false)
+  {}
 
   ForwardRule::ForwardRule(
     const SourceSpan& pstate,
@@ -573,20 +608,15 @@ namespace Sass {
     bool isHidden,
     bool hasWith) :
     Statement(pstate),
-    WithConfig(pwconfig,
-      std::move(config),
-      hasWith, isShown, isHidden,
+    ModRule(
+      prev, url, import,
+      prefix, pwconfig,
       std::move(varFilters),
       std::move(callFilters),
-      prefix),
-    import_(import),
-    prev_(prev),
-    url_(url),
-    wasMerged_(false),
-    module_(nullptr)
-  {
-    // The show or hide config also hides these
-  }
+      std::move(config),
+      hasWith, isShown, isHidden),
+    wasMerged_(false)
+  {}
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

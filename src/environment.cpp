@@ -563,8 +563,7 @@ namespace Sass {
           throw Exception::ModuleAlreadyKnown(compiler, ns);
         }
       }
-      // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true); // correct
+      EnvFrame local(compiler, false, true);
       sheet = compiler.registerImport(loaded);
       sheet->import = loaded;
     }
@@ -628,8 +627,7 @@ namespace Sass {
       sheet = cached->second;
     }
     else {
-      // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, true, true, false); // correct
+      EnvFrame local(compiler, false, true);
       sheet = compiler.registerImport(loaded);
       sheet->import = loaded;
     }

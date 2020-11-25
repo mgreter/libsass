@@ -647,22 +647,47 @@ namespace Sass {
     }
   };
 
-  /////////////////////////////////////////////////////////////////////////
-  // `@use` rule.
-  /////////////////////////////////////////////////////////////////////////
-  class UseRule final : public Statement, public WithConfig
+  class ModRule : public WithConfig
   {
   private:
     ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, ns);
-    // ADD_REF(sass::vector<WithConfigVar>, config);
     ADD_CONSTREF(RootObj, root);
+    ADD_PROPERTY(Module*, module);
+  public:
+
+    ModRule(const sass::string& prev,
+      const sass::string& url,
+      Import* import,
+      WithConfig* pwconfig,
+      sass::vector<WithConfigVar>&& config,
+      bool hasLocalWith);
+
+    ModRule(const sass::string& prev,
+      const sass::string& url,
+      Import* import,
+      const sass::string& prefix,
+      WithConfig* pwconfig,
+      std::set<EnvKey>&& varFilters,
+      std::set<EnvKey>&& callFilters,
+      sass::vector<WithConfigVar>&& config,
+      bool isShown,
+      bool isHidden,
+      bool hasWith);
+  };
+
+
+  /////////////////////////////////////////////////////////////////////////
+  // `@use` rule.
+  /////////////////////////////////////////////////////////////////////////
+  class UseRule final : public Statement, public ModRule
+  {
+  private:
+
     ADD_PROPERTY(bool, wasExported);
 
-    // We have both, root and module
-    ADD_PROPERTY(Module*, module);
 
   public:
     // Value constructor
@@ -686,16 +711,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
-  class ForwardRule final : public Statement, public WithConfig
+  class ForwardRule final : public Statement, public ModRule
   {
   private:
-    ADD_CONSTREF(ImportObj, import);
-    ADD_CONSTREF(sass::string, prev);
-    ADD_CONSTREF(sass::string, url);
     ADD_PROPERTY(bool, wasMerged);
-    ADD_CONSTREF(RootObj, root);
-    // We have both, root and module
-    ADD_PROPERTY(Module*, module);
   public:
     ForwardRule(
       const SourceSpan& pstate,
