@@ -522,67 +522,18 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    // Resolve final file to load
-    const ImportRequest request(
-      rule->url(), rule->prev(), false);
-
-    // Deduce namespace from url
-    const sass::string& ns(rule->ns());
-    const sass::string& url(rule->url());
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(request, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::UnknwonImport(compiler);
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::AmbiguousImports(compiler, resolved);
-    }
-
-    // This is guaranteed to either load or error out!
-    ImportObj loaded = compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(compiler, loaded);
-    rule->import(loaded);
-
-    Root* sheet = nullptr;
-    const auto& abspath(loaded->getAbsPath());
-    auto cached = compiler.sheets.find(abspath);
-    if (cached != compiler.sheets.end()) {
-      sheet = cached->second;
-    }
-    else {
-      if (!ns.empty()) {
-        VarRefs* modFrame(compiler.getCurrentModule());
-        if (modFrame->fwdModule55.count(ns)) {
-          throw Exception::ModuleAlreadyKnown(compiler, ns);
-        }
-      }
-      EnvFrame local(compiler, false, true);
-      sheet = compiler.registerImport(loaded);
-      sheet->import = loaded;
-    }
-
-
-    rule->module(sheet);
-    rule->root(sheet);
-
-    // wconfig.finalize();
-    return sheet;
-
+    auto sheet2 = loadModRule22(rule->pstate(),
+      rule->prev(), rule->url(), false);
+    rule->module(sheet2);
+    rule->root(sheet2);
+    return sheet2;
   }
 
-  Root* Eval::resolveIncludeImport(
+  Root* Eval::loadModRule22(
     const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
-    bool scoped)
+    bool isImport)
   {
 
     // Resolve final file to load
@@ -592,7 +543,7 @@ namespace Sass {
     // Search for valid imports (e.g. partials) on the file-system
     // Returns multiple valid results for ambiguous import path
     const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(request, !scoped));
+      compiler.findIncludes(request, isImport));
 
     // Error if no file to import was found
     if (resolved.empty()) {
@@ -618,7 +569,7 @@ namespace Sass {
     }
     else {
       // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true, !scoped); // correct
+      EnvFrame local(compiler, false, true, isImport); // correct
       sheet = compiler.registerImport(loaded);
       sheet->idxs = local.idxs;
       sheet->import = loaded;
@@ -644,11 +595,11 @@ namespace Sass {
     }
 
 
-    if (Root* sheet2 = resolveIncludeImport(
+    if (Root* sheet2 = loadModRule22(
       rule->pstate(),
       rule->prev(),
       rule->url(),
-      false
+      true
     )) {
       rule->import(sheet2->import);
       rule->module(sheet2);
@@ -1148,8 +1099,8 @@ namespace Sass {
         LOCAL_PTR(WithConfig, pwconfig, &wconfig);
 
         sass::string prev(pstate.getAbsPath());
-        if (Root* sheet = eval.resolveIncludeImport(
-          pstate, prev, url->value(), true)) {
+        if (Root* sheet = eval.loadModRule22(
+          pstate, prev, url->value(), false)) {
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
             LocalOption<bool> scoped(compiler.implicitWithConfig,

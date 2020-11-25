@@ -343,7 +343,7 @@ namespace Sass {
     Root* resolveIncludeImport(IncludeImport* rule);
 
 
-    Root* resolveIncludeImport(
+    Root* loadModRule22(
       const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
