@@ -811,7 +811,7 @@ namespace Sass {
     SelectorParser parser(compiler, synthetic);
     parser.allowPlaceholder = plainCss == false;
     parser.allowParent = allowParent && plainCss == false;
-    return parser.parseSelectorList();
+    return parser.parseSelectorList(); // comes detached!
   }
 
   /////////////////////////////////////////////////////////////////////////

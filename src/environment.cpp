@@ -901,7 +901,7 @@ namespace Sass {
       auto parent = current->isaCssStyleRule();
       if (css && parent) {
         for (auto& inner : css->elements()) {
-          auto copy = SASS_MEMORY_COPY(css->selector());
+          SelectorListObj copy = SASS_MEMORY_COPY(css->selector());
           for (ComplexSelector* selector : copy->elements()) {
             selector->chroots(false);
           }
