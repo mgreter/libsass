@@ -394,6 +394,7 @@ inline void debug_idxs(Env* env) {
     std::cerr << "|M:" << env->idxs->mixIdxs.size();
     std::cerr << "|F:" << env->idxs->fnIdxs.size();
     if (env->idxs->module) {
+      std::cerr << "|U:" << env->idxs->module->upstream.size();
       std::cerr << "|FV:" << env->idxs->module->mergedFwdVar.size();
       std::cerr << "|FM:" << env->idxs->module->mergedFwdMix.size();
       std::cerr << "|FF:" << env->idxs->module->mergedFwdFn.size();

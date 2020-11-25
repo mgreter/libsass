@@ -80,7 +80,7 @@ namespace Sass {
     FidxEnvKeyMap mergedFwdFn;
 
     // Modules that this module uses.
-    // List<BuiltInMod> get upstream;
+    sass::vector<Module*> upstream;
 
     // The module's variables.
     // Map<String, Value> get variables;

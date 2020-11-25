@@ -495,7 +495,9 @@ namespace Sass {
       rule->prev(), rule->url());
     rule->module(sheet2);
     rule->root(sheet2);
+
     return sheet2;
+
   }
 
   Root* Eval::loadModule(
@@ -694,8 +696,13 @@ namespace Sass {
     // Nothing to be added yet? Error?
     if (module->loaded == nullptr) return;
 
-    // for (auto child : module->upstream) {
-    // }
+    // For imports we always reproduce
+    if (inImport) {
+      // Don't like the recursion, but OK
+      for (auto upstream : module->upstream) {
+        insertModule(upstream);
+      }
+    }
 
     // The children to be added to the document
     auto& children(module->loaded->elements());
@@ -939,6 +946,7 @@ namespace Sass {
       << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
 
     if (Root* root = loadModRule(rule)) {
+      compiler.chroot77->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,
