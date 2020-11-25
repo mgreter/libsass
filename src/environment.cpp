@@ -170,8 +170,8 @@ namespace Sass {
 
       VarRefs* mod = compiler.getCurrentModule();
 
-      auto it = mod->fwdModule55.find(a->ns());
-      if (it == mod->fwdModule55.end()) {
+      auto it = mod->module->moduse.find(a->ns());
+      if (it == mod->module->moduse.end()) {
         compiler.addFinalStackTrace(a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
@@ -797,15 +797,12 @@ namespace Sass {
         frame->fwdGlobal55.push_back(rule->module()->idxs);
         rule->wasExported(true);
       }
-      else if (frame->fwdModule55.count(rule->ns())) {
+      else if (frame->module->moduse.count(rule->ns())) {
         compiler.addFinalStackTrace(rule->pstate());
         throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
       }
       else {
         frame->module->moduse.insert({ rule->ns(),
-          { rule->module()->idxs, nullptr } });
-
-        frame->fwdModule55.insert({ rule->ns(),
           { rule->module()->idxs, nullptr } });
         rule->wasExported(true);
       }
@@ -821,14 +818,11 @@ namespace Sass {
       }
       else {
         // Refactor to only fetch once!
-        if (frame->fwdModule55.count(rule->ns())) {
+        if (frame->module->moduse.count(rule->ns())) {
           throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
         }
 
         frame->module->moduse[rule->ns()] =
-        { rule->root()->idxs, rule->root() };
-
-        frame->fwdModule55[rule->ns()] =
         { rule->root()->idxs, rule->root() };
       }
 

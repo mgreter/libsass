@@ -94,8 +94,8 @@ namespace Sass {
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule55.find(plugin->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(plugin->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->varIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -151,8 +151,8 @@ namespace Sass {
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule55.find(plugin->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(plugin->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -186,8 +186,8 @@ namespace Sass {
 
         auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
-          auto pp = parent->fwdModule55.find(plugin->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(plugin->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->mixIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
@@ -230,8 +230,8 @@ namespace Sass {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
         auto module = compiler.getCurrentModule();
-        auto it = module->fwdModule55.find(ns->value());
-        if (it != module->fwdModule55.end()) {
+        auto it = module->module->moduse.find(ns->value());
+        if (it != module->module->moduse.end()) {
           VarRefs* refs = it->second.first;
           Module* root = it->second.second;
           if (root && !root->isCompiled) {
@@ -266,8 +266,8 @@ namespace Sass {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
         auto module = compiler.getCurrentModule();
-        auto it = module->fwdModule55.find(ns->value());
-        if (it != module->fwdModule55.end()) {
+        auto it = module->module->moduse.find(ns->value());
+        if (it != module->module->moduse.end()) {
           VarRefs* refs = it->second.first;
           Module* root = it->second.second;
           if (root && !root->isCompiled) {
@@ -334,8 +334,8 @@ namespace Sass {
         auto parent = compiler.getCurrentModule();
 
         if (ns != nullptr) {
-          auto pp = parent->fwdModule55.find(ns->value());
-          if (pp != parent->fwdModule55.end()) {
+          auto pp = parent->module->moduse.find(ns->value());
+          if (pp != parent->module->moduse.end()) {
             VarRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(name->value());
             if (it != module->fnIdxs.end()) {

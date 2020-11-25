@@ -127,8 +127,6 @@ namespace Sass {
     // All @use as "*" do not get exposed to the parent scope though.
     sass::vector<VarRefs*> fwdGlobal55;
 
-    ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
-
     // Some scopes are connected to a module
     // Those expose some additional exports
     // Modules are global so we just link them
