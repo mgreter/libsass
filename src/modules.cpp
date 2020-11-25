@@ -24,8 +24,8 @@ namespace Sass {
       0xFFFFFFFF,
       0xFFFFFFFF,
       0xFFFFFFFF,
-      false, // permeable
-      false))
+      false, // isPermeable
+      false)) // isImport
   {
     isBuiltIn = true;
     isLoaded = true;

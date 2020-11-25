@@ -274,7 +274,7 @@ namespace Sass {
           break;
         }
       }
-      if (chroot->isImport || chroot->permeable) {
+      if (chroot->isImport || chroot->isPermeable) {
         chroot = chroot->pscope;
       }
       else {
@@ -694,7 +694,7 @@ namespace Sass {
     // Nowhere to append to, exit
     if (current == nullptr) return;
     // Nothing to be added yet? Error?
-    if (module->loaded == nullptr) return;
+    if (module->compiled == nullptr) return;
 
     // For imports we always reproduce
     if (inImport) {
@@ -705,7 +705,7 @@ namespace Sass {
     }
 
     // The children to be added to the document
-    auto& children(module->loaded->elements());
+    auto& children(module->compiled->elements());
     // Check if we have any parent
     // Meaning we append to the root
     if (!current->parent()) {
@@ -744,11 +744,11 @@ namespace Sass {
     if (root->isCompiled) return;
     root->isCompiled = true;
 
-    root->loaded = current;
-    root->loaded = SASS_MEMORY_NEW(CssStyleRule,
+    root->compiled = current;
+    root->compiled = SASS_MEMORY_NEW(CssStyleRule,
       root->pstate(), nullptr, selectorStack.back());
     auto oldCurrent = current;
-    current = root->loaded;
+    current = root->compiled;
 
     LOCAL_PTR(Root, chroot77, root);
     VarRefs* idxs = root->idxs;

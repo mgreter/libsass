@@ -98,12 +98,36 @@ namespace Sass {
   class VarRefs {
   public:
 
-    // Cache root reference
+    // EnvRoot reference
     EnvRoot& root;
 
     // Parent is needed during runtime for
     // dynamic setter and getter by EnvKey.
     VarRefs* pscope;
+
+    // Global scope pointers
+    uint32_t varFrame;
+    uint32_t mixFrame;
+    uint32_t fnFrame;
+
+    // Lexical scope entries
+    VidxEnvKeyMap varIdxs;
+    MidxEnvKeyMap mixIdxs;
+    FidxEnvKeyMap fnIdxs;
+
+    // Special set with global assignments
+    // Needed for imports within style-rules
+    // ToDo: not really tested via specs yet?
+    // EnvKeySet globals;
+
+    // Any import may add forwarded entities to current scope
+    // Since those scopes are dynamic and not global, we can't
+    // simply insert our references. Therefore we must have the
+    // possibility to hoist forwarded entities at any lexical scope.
+    // All @use as "*" do not get exposed to the parent scope though.
+    sass::vector<VarRefs*> fwdGlobal55;
+
+    ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
 
     // Some scopes are connected to a module
     // Those expose some additional exports
@@ -112,7 +136,7 @@ namespace Sass {
 
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
-    bool permeable = false;
+    bool isPermeable = false;
 
     // Imports are transparent for variables, functions and mixins
     // We always need to create entities inside the parent scope
@@ -123,24 +147,6 @@ namespace Sass {
     // Compiling it means hard-baking the config vars into it
     bool isCompiled = false;
 
-    // Parents for specific types
-    uint32_t varFrame;
-    uint32_t mixFrame;
-    uint32_t fnFrame;
-
-    // Remember named mappings
-    VidxEnvKeyMap varIdxs;
-    MidxEnvKeyMap mixIdxs;
-    FidxEnvKeyMap fnIdxs;
-
-    // Special set with global assignments
-    // Needed for imports within style-rules
-    // ToDo: not really tested via specs yet?
-    EnvKeySet globals;
-
-    ModuleMap<std::pair<VarRefs*, Module*>> fwdModule55;
-
-    sass::vector<VarRefs*> fwdGlobal55;
 
     // Value constructor
     VarRefs(EnvRoot& root,
@@ -148,11 +154,11 @@ namespace Sass {
       uint32_t varFrame,
       uint32_t mixFrame,
       uint32_t fnFrame,
-      bool permeable,
+      bool isPermeable,
       bool isImport) :
       root(root),
       pscope(pscope),
-      permeable(permeable),
+      isPermeable(isPermeable),
       isImport(isImport),
       varFrame(varFrame),
       mixFrame(mixFrame),
@@ -257,7 +263,7 @@ namespace Sass {
       if (module)
         return nullptr;
       if (!passThrough)
-        if (!permeable)
+        if (!isPermeable)
           return nullptr;
       return pscope;
     }
@@ -286,7 +292,7 @@ namespace Sass {
     // Value constructor
     EnvFrame(
       Compiler& compiler,
-      bool permeable,
+      bool isPermeable,
       bool isModule = false,
       bool isImport = false);
 

@@ -12,23 +12,24 @@
 
 namespace Sass {
 
-  class VarRefs;
-  class EnvRoot;
-  class EnvKey;
+  /////////////////////////////////////////////////////////////////////////
+  // Base class for any scope. We want to keep the pointer
+  // separate from the main object in this case here. They are
+  // mostly managed by EnvRoot and stay alive with main context.
+  /////////////////////////////////////////////////////////////////////////
 
   class Env
   {
   public:
     VarRefs* idxs = nullptr;
-  public:
     Env(VarRefs* idxs)
       : idxs(idxs) {}
   };
 
   /////////////////////////////////////////////////////////////////////////
-  // A module is first a foremost a unit that provides variables,
-  // functions and mixins. We know built-in modules, which don't
-  // have any content ever are always loaded and available. Custom
+  // A module is first and foremost a unit that provides variables,
+  // functions and mixins. We know built-in modules, which don't have
+  // any content ever and are always loaded and available. Custom
   // modules are loaded from any given url. They are related and
   // linked to regular @imports, as those are also some kind of
   // special modules. An @import will load as a module, but that
@@ -46,7 +47,7 @@ namespace Sass {
   // across module boundaries. We need to mark environments to remember
   // in which context a module was brought into the tree. For imports
   // we simply skip the whole frame. Instead the lookup should find
-  // the variable we created in the caller's scope.
+  // the variable we created in the caller's scope (Optimizations ToDo).
   /////////////////////////////////////////////////////////////////////////
 
   class Module : public Env
@@ -65,16 +66,13 @@ namespace Sass {
     // True once the module is compiled and ready
     bool isCompiled = false;
 
-    // The loaded AST-Tree
-    RootObj loaded83;
-
     // The compiled AST-Tree
-    CssParentNodeObj loaded;
+    CssParentNodeObj compiled;
 
     // All @forward rules get merged into these objects
     // Those are not available on the local scope, they
     // are only used when another module consumes us!
-    // On @use those must be merged with local ones!
+    // On @use they must be merged into local scope!
     VidxEnvKeyMap mergedFwdVar;
     MidxEnvKeyMap mergedFwdMix;
     FidxEnvKeyMap mergedFwdFn;
@@ -82,31 +80,14 @@ namespace Sass {
     // Modules that this module uses.
     sass::vector<Module*> upstream;
 
-    // The module's variables.
-    // Map<String, Value> get variables;
-
-    // The module's functions. Implementations must ensure
-    // that each [Callable] is stored under its own name.
-    // Map<String, Callable> get functions;
-
-    // The module's mixins. Implementations must ensure that
-    // each [Callable] is stored under its own name.
-    // Map<String, Callable> get mixins;
-
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
     // Extender extender;
 
-
     // Special set with global assignments
     // Needed for imports within style-rules
-    EnvKeySet globals;
-
-    // Uses with namespace
-    // ModuleMap<Module*> moduse;
-
-    // Uses without namespace (as *)
-    // sass::vector<Module*> globuse;
+    // ToDo: not really tested via specs yet?
+    // EnvKeySet globals;
 
   public:
 
@@ -114,16 +95,21 @@ namespace Sass {
 
   };
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   class BuiltInMod : public Module
   {
   public:
-
     void addFunction(const EnvKey& name, uint32_t offset);
     void addVariable(const EnvKey& name, uint32_t offset);
     void addMixin(const EnvKey& name, uint32_t offset);
     BuiltInMod(EnvRoot& root);
     ~BuiltInMod();
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

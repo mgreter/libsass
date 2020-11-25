@@ -332,7 +332,7 @@ inline std::string parent_block(VarRefs* node)
 {
   std::stringstream str;
   if (!node) return "";
-  str << "SG: " << (node->permeable ? "true" : "false");
+  str << "SG: " << (node->isPermeable ? "true" : "false");
   return str.str();
 }
 

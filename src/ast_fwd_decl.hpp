@@ -20,6 +20,8 @@
 namespace Sass {
 
   class Env;
+  class EnvRoot;
+  class EnvKey;
   class Module;
   class BuiltInMod;
   class WithConfig;

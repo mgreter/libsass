@@ -55,7 +55,7 @@ namespace Sass {
   // Value constructor
   EnvFrame::EnvFrame(
     Compiler& compiler,
-    bool permeable,
+    bool isPermeable,
     bool isModule,
     bool isImport) :
     stack(compiler.varRoot.stack),
@@ -65,7 +65,7 @@ namespace Sass {
       uint32_t(compiler.varRoot.varFramePtr.size()),
       uint32_t(compiler.varRoot.mixFramePtr.size()),
       uint32_t(compiler.varRoot.fnFramePtr.size()),
-      permeable, isImport))
+      isPermeable, isImport))
   {
     if (isModule) {
       // Lives in built-in scope
