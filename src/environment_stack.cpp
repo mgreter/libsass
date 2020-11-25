@@ -922,26 +922,25 @@ namespace Sass {
 
   bool VarRefs::hasNameSpace(const sass::string& ns, const EnvKey& name) const
   {
-    const VarRefs* current = this;
-    while (current) {
-      if (Module* mod = current->module) {
-        auto it = mod->moduse.find(ns);
-        if (it != mod->moduse.end()) {
-          auto fwd = it->second.first->varIdxs.find(name);
-          if (fwd != it->second.first->varIdxs.end()) {
-            ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
-            return slot != nullptr;
-          }
-          if (it->second.second) {
-            return it->second.second->isCompiled;
-          }
-          else {
-            return true;
-          }
-        }
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
+      // Check if the namespace was registered
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      auto fwd = it->second.first->varIdxs.find(name);
+      if (fwd != it->second.first->varIdxs.end()) {
+        ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
+        return slot != nullptr;
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
+      if (it->second.second) {
+        return it->second.second->isCompiled;
+      }
+      else {
+        return true;
+      }
     }
     return false;
   }
@@ -1158,76 +1157,76 @@ namespace Sass {
 
   VarRef VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
       // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        // We set forwarded vars first!
-        if (Module* mod = it->second.second) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            root.setModVar(fwd->second, value, guarded, pstate);
-            return { 0xFFFFFFFF, fwd->second };
-          }
-        }
-        if (VarRefs* idxs = it->second.first) {
-          VarRef vidx = idxs->setModVar(name, value, guarded, pstate);
-          if (vidx.isValid()) return vidx;
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      // We set forwarded vars first!
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdVar.find(name);
+        if (fwd != mod->mergedFwdVar.end()) {
+          root.setModVar(fwd->second, value, guarded, pstate);
+          return { 0xFFFFFFFF, fwd->second };
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
+      if (VarRefs* idxs = it->second.first) {
+        VarRef vidx = idxs->setModVar(name, value, guarded, pstate);
+        if (vidx.isValid()) return vidx;
+      }
     }
     return nullidx;
   }
 
   bool VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
       // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModMix(name, fn, guarded))
-            return true;
-        }
-        if (Module* mod = it->second.second) {
-          auto fwd = mod->mergedFwdMix.find(name);
-          if (fwd != mod->mergedFwdMix.end()) {
-            root.setModMix(fwd->second, fn, guarded);
-            return true;
-          }
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      if (VarRefs* idxs = it->second.first) {
+        if (idxs->setModMix(name, fn, guarded))
+          return true;
+      }
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdMix.find(name);
+        if (fwd != mod->mergedFwdMix.end()) {
+          root.setModMix(fwd->second, fn, guarded);
+          return true;
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return false;
   }
 
   bool VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
       // Check if the namespace was registered
-      auto it = current->fwdModule55.find(ns);
-      if (it != current->fwdModule55.end()) {
-        if (VarRefs* idxs = it->second.first) {
-          if (idxs->setModFn(name, fn, guarded))
-            return true;
-        }
-        if (Module* mod = it->second.second) {
-          auto fwd = mod->mergedFwdFn.find(name);
-          if (fwd != mod->mergedFwdFn.end()) {
-            root.setModFn(fwd->second, fn, guarded);
-            return true;
-          }
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      if (VarRefs* idxs = it->second.first) {
+        if (idxs->setModFn(name, fn, guarded))
+          return true;
+      }
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          root.setModFn(fwd->second, fn, guarded);
+          return true;
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return false;
   }
