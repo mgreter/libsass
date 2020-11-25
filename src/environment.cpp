@@ -236,9 +236,6 @@ namespace Sass {
     const sass::string& ns, Offset start)
   {
 
-    // LocalOption<SilentCommentObj>
-    //   scomp(lastSilentComment, nullptr);
-
     sass::string vname(variableName());
 
     if (!ns.empty()) {
@@ -312,21 +309,13 @@ namespace Sass {
     // Check if we have a configuration
 
     if (ns.empty()) {
-
       // IF we are semi-global and parent is root
       // And if that root also contains that variable
       // We assign to that instead of a new local one!
       if (!hasVar) {
         frame->createVariable(name);
       }
-
     }
-    // else {
-    //   auto it = frame->fwdModule55.find(ns);
-    //   if (it == frame->fwdModule55.end()) {
-    //     throw "No modulpo";
-    //   }
-    // }
 
     AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
       scanner.relevantSpanFrom(start),
@@ -431,8 +420,6 @@ namespace Sass {
   }
   // EO readFunctionRule
 
-
-
   void exposeFiltered(
     VidxEnvKeyMap& merged,
     VidxEnvKeyMap expose,
@@ -466,6 +453,7 @@ namespace Sass {
     const sass::string& errprefix,
     Logger& logger)
   {
+
     for (auto& idx : expose) {
       if (idx.first.isPrivate()) continue;
       EnvKey key(prefix + idx.first.orig());
@@ -515,6 +503,92 @@ namespace Sass {
 
   }
 
+  Root* Eval::loadUseRule(UseRule* rule)
+  {
+
+    // May not be defined yet
+    Module* mod = rule->module();
+
+    // Nothing to be done for built-ins
+    if (mod && mod->isBuiltIn) {
+      return nullptr;
+    }
+
+    // Seems already loaded?
+    if (rule->root()) {
+      return rule->root();
+    }
+
+    LOCAL_PTR(WithConfig, wconfig, rule);
+
+    // Resolve final file to load
+    const ImportRequest request(
+      rule->url(), rule->prev(), false);
+
+    // Deduce namespace from url
+    sass::string ns(rule->ns());
+    const sass::string& url(rule->url());
+
+    // Deduct the namespace from url
+    // After last slash before first dot
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      start = (start == NPOS ? 0 : start + 1);
+      auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
+      ns = url.substr(start, end);
+    }
+
+    // Search for valid imports (e.g. partials) on the file-system
+    // Returns multiple valid results for ambiguous import path
+    const sass::vector<ResolvedImport>& resolved(
+      compiler.findIncludes(request, false));
+
+    // Error if no file to import was found
+    if (resolved.empty()) {
+      compiler.addFinalStackTrace(rule->pstate());
+      throw Exception::UnknwonImport(compiler);
+    }
+    // Error if multiple files to import were found
+    else if (resolved.size() > 1) {
+      compiler.addFinalStackTrace(rule->pstate());
+      throw Exception::AmbiguousImports(compiler, resolved);
+    }
+
+    // This is guaranteed to either load or error out!
+    ImportObj loaded = compiler.loadImport(resolved[0]);
+    ImportStackFrame iframe(compiler, loaded);
+    rule->import(loaded);
+
+    rule->ns(ns == "*" ? "" : ns);
+
+    Root* sheet = nullptr;
+    sass::string abspath(loaded->getAbsPath());
+    auto cached = compiler.sheets.find(abspath);
+    if (cached != compiler.sheets.end()) {
+      sheet = cached->second;
+    }
+    else {
+      if (!ns.empty()) {
+        VarRefs* modFrame(compiler.getCurrentModule());
+        if (modFrame->fwdModule55.count(ns)) {
+          throw Exception::ModuleAlreadyKnown(compiler, ns);
+        }
+      }
+      // Permeable seems to have minor negative impact!?
+      EnvFrame local(compiler, false, true); // correct
+      sheet = compiler.registerImport(loaded);
+      sheet->import = loaded;
+    }
+
+
+    rule->module(sheet);
+    rule->root(sheet);
+
+    // wconfig.finalize();
+    return sheet;
+
+  }
 
   Root* Eval::resolveForwardRule(ForwardRule* rule)
   {
@@ -531,9 +605,6 @@ namespace Sass {
     if (rule->root()) {
       return rule->root();
     }
-
-    // callStackFrame frame(compiler, {
-    //   rule->pstate(), Strings::useRule });
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
@@ -618,19 +689,6 @@ namespace Sass {
     bool scoped)
   {
 
-    // Nothing to be done for built-ins
-    // if (mod && mod->isBuiltIn) {
-    //   return nullptr;
-    // }
-
-    // Seems already loaded?
-    // if (rule->sheet()) {
-    //   return rule->sheet();
-    // }
-
-    // callStackFrame frame(compiler, {
-    //   rule->pstate(), Strings::useRule });
-
     // Resolve final file to load
     const ImportRequest request(
       url, prev, false);
@@ -676,96 +734,8 @@ namespace Sass {
     // wconfig.finalize();
     return sheet;
   }
-  Root* Eval::resolveUseRule(UseRule* rule)
-  {
-
-    // May not be defined yet
-    Module* mod = rule->module();
-
-    // Nothing to be done for built-ins
-    if (mod && mod->isBuiltIn) {
-      return nullptr;
-    }
-
-    // Seems already loaded?
-    if (rule->root()) {
-      return rule->root();
-    }
-
-    // callStackFrame frame(compiler, {
-    //   rule->pstate(), Strings::useRule });
-
-    LOCAL_PTR(WithConfig, wconfig, rule);
-
-    // Resolve final file to load
-    const ImportRequest request(
-      rule->url(), rule->prev(), false);
-
-    // Deduce namespace from url
-    sass::string ns(rule->ns());
-    const sass::string& url(rule->url());
-
-    // Deduct the namespace from url
-    // After last slash before first dot
-    if (ns.empty() && !url.empty()) {
-      auto start = url.find_last_of("/\\");
-      start = (start == NPOS ? 0 : start + 1);
-      auto end = url.find_first_of(".", start);
-      if (url[start] == '_') start += 1;
-      ns = url.substr(start, end);
-    }
-
-    // Search for valid imports (e.g. partials) on the file-system
-    // Returns multiple valid results for ambiguous import path
-    const sass::vector<ResolvedImport>& resolved(
-      compiler.findIncludes(request, false));
-
-    // Error if no file to import was found
-    if (resolved.empty()) {
-      compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::UnknwonImport(compiler);
-    }
-    // Error if multiple files to import were found
-    else if (resolved.size() > 1) {
-      compiler.addFinalStackTrace(rule->pstate());
-      throw Exception::AmbiguousImports(compiler, resolved);
-    }
-
-    // This is guaranteed to either load or error out!
-    ImportObj loaded = compiler.loadImport(resolved[0]);
-    ImportStackFrame iframe(compiler, loaded);
-    rule->import(loaded);
-
-    rule->ns(ns == "*" ? "" : ns);
-
-    Root* sheet = nullptr;
-    sass::string abspath(loaded->getAbsPath());
-    auto cached = compiler.sheets.find(abspath);
-    if (cached != compiler.sheets.end()) {
-      sheet = cached->second;
-    }
-    else {
-      if (!ns.empty()) {
-        VarRefs* modFrame(compiler.getCurrentModule());
-        if (modFrame->fwdModule55.count(ns)) {
-          throw Exception::ModuleAlreadyKnown(compiler, ns);
-        }
-      }
-      // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true); // correct
-      sheet = compiler.registerImport(loaded);
-      sheet->import = loaded;
-    }
 
 
-    rule->module(sheet);
-    rule->root(sheet);
-
-    // wconfig.finalize();
-    return sheet;
-
-
-  }
 
   VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame)
   {
@@ -1111,10 +1081,6 @@ namespace Sass {
 
     VarRefs* pframe = compiler.getCurrentFrame();
 
-    // Imports are always executed again
-    //Preloader preproc(*this, sheet);
-    //preproc.acceptRoot(sheet);
-
     // Add C-API to stack to expose it
     ImportStackFrame iframe(compiler, sheet->import);
     EnvScope scoped(compiler.varRoot, sheet->idxs);
@@ -1146,7 +1112,7 @@ namespace Sass {
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
       << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
 
-    if (Root* root = resolveUseRule(rule)) {
+    if (Root* root = loadUseRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.implicitWithConfig,

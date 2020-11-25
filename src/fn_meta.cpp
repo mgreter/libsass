@@ -228,7 +228,7 @@ namespace Sass {
       BUILT_IN_FN(moduleVariables)
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
-        Map* list = SASS_MEMORY_NEW(Map, pstate);
+        MapObj list = SASS_MEMORY_NEW(Map, pstate);
         auto module = compiler.varRoot.stack.back()->getModule23();
         auto it = module->fwdModule55.find(ns->value());
         if (it != module->fwdModule55.end()) {
@@ -258,13 +258,13 @@ namespace Sass {
           throw Exception::RuntimeException(compiler, "There is "
             "no module with namespace \"" + ns->value() + "\".");
         }
-        return list;
+        return list.detach();
       }
 
       BUILT_IN_FN(moduleFunctions)
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
-        Map* list = SASS_MEMORY_NEW(Map, pstate);
+        MapObj list = SASS_MEMORY_NEW(Map, pstate);
         auto module = compiler.varRoot.stack.back()->getModule23();
         auto it = module->fwdModule55.find(ns->value());
         if (it != module->fwdModule55.end()) {
@@ -296,7 +296,7 @@ namespace Sass {
           throw Exception::RuntimeException(compiler, "There is "
             "no module with namespace \"" + ns->value() + "\".");
         }
-        return list;
+        return list.detach();
       }
 
       /// Like `_environment.findFunction`, but also returns built-in

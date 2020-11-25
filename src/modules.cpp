@@ -1,33 +1,59 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "modules.hpp"
 
 #include "stylesheet.hpp"
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   Module::Module(VarRefs* idxs) :
     Env(idxs)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  BuiltInMod::BuiltInMod(EnvRoot& root) :
+    Module(new VarRefs(
+      root,
+      nullptr,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      0xFFFFFFFF,
+      false, // permeable
+      false, // isImport
+      true)) // isModule
   {
+    isBuiltIn = true;
+    isLoaded = true;
+    isCompiled = true;
   }
 
-  BuiltInMod::~BuiltInMod() {
+  BuiltInMod::~BuiltInMod()
+  {
     delete idxs;
   }
 
-  BuiltInMod::BuiltInMod(BuiltInMod&& other) noexcept :
-    Module(other.idxs)
+  void BuiltInMod::addFunction(const EnvKey& name, uint32_t offset)
   {
-    other.idxs = nullptr;
+    idxs->fnIdxs[name] = offset;
   }
 
-  BuiltInMod& BuiltInMod::operator=(BuiltInMod&& other) noexcept
+  void BuiltInMod::addVariable(const EnvKey& name, uint32_t offset)
   {
-    idxs = other.idxs;
-    other.idxs = nullptr;
-    return *this;
+    idxs->varIdxs[name] = offset;
   }
 
-  Env::~Env() {
-    //delete idxs;
+  void BuiltInMod::addMixin(const EnvKey& name, uint32_t offset)
+  {
+    idxs->mixIdxs[name] = offset;
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }

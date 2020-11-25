@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_MODULES_HPP
 #define SASS_MODULES_HPP
 
@@ -20,7 +23,6 @@ namespace Sass {
   public:
     Env(VarRefs* idxs)
       : idxs(idxs) {}
-    ~Env();
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -82,36 +84,20 @@ namespace Sass {
     EnvKeySet globals;
 
     // Uses with namespace
-    ModuleMap<Module*> uses;
+    ModuleMap<Module*> moduse;
 
     // Uses without namespace (as *)
     sass::vector<Module*> globuse;
 
-    // Modules that this module uses.
-    // We probably don't need this?
-    // sass::vector<Module*> upstream;
-
-
-    // sass::vector<Module*> forwards2;
-
-
-    // ModuleSet loaded;
-    
-
   public:
+
     Module(VarRefs* idxs);
+
   };
 
   class BuiltInMod : public Module
   {
   public:
-
-    BuiltInMod& operator=(const BuiltInMod&) = delete;
-    BuiltInMod(const BuiltInMod&) = delete;
-    BuiltInMod() = default;
-
-    BuiltInMod& operator=(BuiltInMod&&) noexcept;
-    BuiltInMod(BuiltInMod&&) noexcept;
 
     void addFunction(const EnvKey& name, uint32_t offset);
     void addVariable(const EnvKey& name, uint32_t offset);

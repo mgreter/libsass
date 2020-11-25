@@ -1196,7 +1196,7 @@ namespace Sass {
       scanWhitespace();
       scanner.expectChar($colon);
       scanWhitespace();
-      Expression* expression = readExpressionUntilComma();
+      ExpressionObj expression = readExpressionUntilComma();
 
       bool guarded = false;
       Offset flagStart(scanner.offset);
@@ -1255,32 +1255,6 @@ namespace Sass {
       throw err;
     }
   }
-
-
-  /*
-  sass::string StylesheetParser::parseImportUrl(sass::string url)
-  {
-
-    // Backwards-compatibility for implementations that
-    // allow absolute Windows paths in imports.
-    if (File::is_absolute_path(url)) {
-    //   return p.windows.toUri(url).toString();
-    }
-    
-
-    using LUrlParser::clParseURL;
-    clParseURL clURL = clParseURL::ParseURL(url);
-
-    if (clURL.IsValid()) {
-
-    }
-
-
-    // Throw a [FormatException] if [url] is invalid.
-    // Uri.parse(url);
-    return url;
-  }
-  */
 
   // Returns whether [url] indicates that an `@import` is a plain CSS import.
   bool StylesheetParser::isPlainImportUrl(const sass::string& url) const
@@ -3011,58 +2985,6 @@ namespace Sass {
             "from outside their modules.");
         }
 
-        if (inLoopDirective) {
-          // Static variable resolution will be done in finalize stage
-          // Must be postponed since in loops we may reference post vars
-          // context.varRoot.stack.back()->variables.push_back(expression);
-        }
-        else {
-
-
-          if (!plain.empty()) {
-            // auto pstate(scanner.relevantSpanFrom(start));
-            // context.addFinalStackTrace(pstate);
-            // throw Exception::ParserException(context,
-            //   "Variable namespaces not supported yet!");
-
-        // First search in forwarded modules
-            //VarRefs* frame(context.varRoot.stack.back()->getModule23());
-            //auto it = frame->fwdModule55.find(plain);
-            //if (it != frame->fwdModule55.end()) {
-            //  VarRefs* refs = it->second.first;
-            //  auto in = refs->varIdxs.find(name);
-            //  if (in != refs->varIdxs.end()) {
-            //    if (isPrivate(name)) {
-            //      context.addFinalStackTrace(expression->pstate());
-            //      throw Exception::ParserException(context,
-            //        "Private members can't be accessed "
-            //        "from outside their modules.");
-            //    }
-            //    uint32_t offset = in->second;
-            //    vidxs.push_back({ refs->varFrame, offset });
-            //  }
-            //}
-            // else {
-            //   SourceSpan state(scanner.relevantSpanFrom(start));
-            //   context.addFinalStackTrace(state);
-            //   throw Exception::RuntimeException(context, "There is no "
-            //     "module with the namespace \"" + plain + "\".");
-            // }
-            // 
-            // if (vidxs.empty()) {
-            //   VarRef vidx(frame->getVariableIdx(name, true));
-            //   if (!vidxs.empty()) vidxs.push_back(vidx);
-            // }
-
-          }
-
-          // Otherwise utilize full static optimizations
-          // EnvFrame* frame(context.varRoot.stack.back());
-          // VarRef vidx(frame->getVariableIdx(name, true));
-          // if (!vidxs.empty()) expression->vidxs(vidxs);
-          // else context.varRoot.stack.back()->variables.push_back(expression);
-        }
-
         return expression.detach();
       }
 
@@ -3085,72 +3007,15 @@ namespace Sass {
       ArgumentInvocation* args = readArgumentInvocation();
       sass::string name(identifier->getPlainString());
 
-      FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
-        scanner.relevantSpanFrom(start), itpl, args, inLoopDirective, name);
-
-      // First search in forwarded modules
-      //VarRefs* frame(context.varRoot.stack.back()->getModule23());
-      //auto it = frame->fwdModule55.find(ns);
-      //if (it != frame->fwdModule55.end()) {
-      //  VarRefs* refs = it->second.first;
-      //  auto in = refs->fnIdxs.find(ident->value());
-      //  if (in != refs->fnIdxs.end()) {
-      //    // Pass this silently
-      //    if (!isPrivate(ident->value())) {
-      //      uint32_t offset = in->second;
-      //      fn->fidx({ refs->fnFrame, offset });
-      //    }
-      //  }
-      //}
-      // else {
-      //   SourceSpan state(scanner.relevantSpanFrom(start));
-      //   context.addFinalStackTrace(state);
-      //   throw Exception::RuntimeException(context, "There is no "
-      //     "module with the namespace \"" + ns + "\".");
-      // }
-      // 
-      // if (!fn->fidx().isValid()) {
-      //   context.addFinalStackTrace(fn->pstate());
-      //   throw Exception::ParserException(context,
-      //     "Undefined function.");
-      // }
-
-      return fn.detach();
+      return SASS_MEMORY_NEW(FunctionExpression,
+        scanner.relevantSpanFrom(start),
+        itpl, args, inLoopDirective, name);
     }
     else if (next == $lparen) {
       ArgumentInvocation* args = readArgumentInvocation();
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start), identifier, args, inLoopDirective, ns);
       sass::string name(identifier->getPlainString());
-      if (!name.empty()) {
-
-        //// Then search in global modules
-        //auto pstate = scanner.relevantSpanFrom(start);
-        //VarRefs* frame(context.varRoot.stack.back()->getModule23());
-        //for (auto refs : frame->fwdGlobal55) {
-        //  auto in = refs->fnIdxs.find(name);
-        //  if (in != refs->fnIdxs.end()) {
-        //    // Pass this silently
-        //    if (!isPrivate(name)) {
-        //      uint32_t offset = in->second;
-        //      fn->fidx({ refs->fnFrame, offset });
-        //    }
-        //  }
-        //}
-        //// if (isPrivate(name)) {
-        ////   context.addFinalStackTrace(pstate);
-        ////   throw Exception::ParserException(context,
-        ////     "Private functions can't be accessed "
-        ////     "from outside their modules.");
-        //// }
-        //
-        //if (!fn->fidx().isValid()) {
-        //  // Try to get the function through the whole stack
-        //  fn->fidx(context.varRoot.stack.back()->getFunctionIdx(name));
-        //}
-
-      }
-
       return fn.detach();
     }
     else {

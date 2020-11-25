@@ -387,6 +387,7 @@ inline void debug_css_parent_node(CssParentNode* rule, std::string ind = "")
 }
 
 inline void debug_idxs(Env* env) {
+  return;
   if (env) {
     std::cerr << " ";
     std::cerr << "{V:" << env->idxs->varIdxs.size();

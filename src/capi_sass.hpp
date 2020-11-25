@@ -2,7 +2,7 @@
 #ifndef SASS_SASS_H
 #define SASS_SASS_H
 
-// #define DEBUG_SHARED_PTR
+#define DEBUG_SHARED_PTR
 
 // Undefine extensions macro to tell sys includes
 // that we do not want any macros to be exported
