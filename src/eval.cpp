@@ -1191,7 +1191,6 @@ namespace Sass {
       value = compiler.varRoot.getVariable(variable->vidx2());
     }
 
-
     if (value == nullptr) {
 
       if (variable->ns().empty()) {
@@ -1224,10 +1223,6 @@ namespace Sass {
         }
       }
     }
-
-
-
-
 
     if (value != nullptr) {
       return value->withoutSlash();
@@ -1300,6 +1295,31 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  Value* Eval::visitMixinRule(MixinRule* rule)
+  {
+    UserDefinedCallableObj callable =
+      SASS_MEMORY_NEW(UserDefinedCallable,
+        rule->pstate(), rule->name(), rule, nullptr);
+    rule->midx(compiler.varRoot.setMixin(
+      rule->name(), false, false));
+    compiler.varRoot.setMixin(
+      rule->midx(), callable, false);
+    return nullptr;
+  }
+
+
+  Value* Eval::visitFunctionRule(FunctionRule* rule)
+  {
+    UserDefinedCallableObj callable =
+      SASS_MEMORY_NEW(UserDefinedCallable,
+        rule->pstate(), rule->name(), rule, nullptr);
+    rule->fidx(compiler.varRoot.setFunction(
+      rule->name(), false, false));
+    compiler.varRoot.setFunction(
+      rule->fidx(), callable, false);
+    return nullptr;
+  }
 
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {

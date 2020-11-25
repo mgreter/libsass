@@ -205,30 +205,6 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Eval::visitMixinRule(MixinRule* rule)
-  {
-    UserDefinedCallableObj callable =
-      SASS_MEMORY_NEW(UserDefinedCallable,
-        rule->pstate(), rule->name(), rule, nullptr);
-    rule->midx(compiler.varRoot.setMixin(
-      rule->name(), false, false));
-    compiler.varRoot.setMixin(
-      rule->midx(), callable, false);
-    return nullptr;
-  }
-
-
-  Value* Eval::visitFunctionRule(FunctionRule* rule)
-  {
-    UserDefinedCallableObj callable =
-      SASS_MEMORY_NEW(UserDefinedCallable,
-        rule->pstate(), rule->name(), rule, nullptr);
-    rule->fidx(compiler.varRoot.setFunction(
-      rule->name(), false, false));
-    compiler.varRoot.setFunction(
-      rule->fidx(), callable, false);
-    return nullptr;
-  }
 
 
 
@@ -306,12 +282,7 @@ namespace Sass {
       }
     }
 
-    // Check if we have a configuration
-
     if (ns.empty() && !hasVar) {
-      // IF we are semi-global and parent is root
-      // And if that root also contains that variable
-      // We assign to that instead of a new local one!
       frame->createVariable(name);
     }
 
@@ -320,7 +291,6 @@ namespace Sass {
       name, inLoopDirective, ns,
       {}, value, guarded, global);
 
-    // if (inLoopDirective) frame->assignments.push_back(declaration);
     return declaration;
   }
 
@@ -370,7 +340,9 @@ namespace Sass {
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
-    rule->midx(midx); // to parent
+    // Function can't be created in loops
+    // Therefore this optimization is safe
+    rule->midx(midx);
     rule->cidx(cidx);
     return rule;
   }
@@ -580,8 +552,8 @@ namespace Sass {
   Root* Eval::resolveIncludeImport(IncludeImport* rule)
   {
     // Seems already loaded?
-    if (rule->sheet()) {
-      return rule->sheet();
+    if (rule->root()) {
+      return rule->root();
     }
 
     if (rule->module() && rule->module()->isBuiltIn) {
@@ -596,7 +568,7 @@ namespace Sass {
     )) {
       rule->import(sheet2->import);
       rule->module(sheet2);
-      rule->sheet(sheet2);
+      rule->root(sheet2);
       return sheet2;
     }
 
@@ -866,20 +838,20 @@ namespace Sass {
     if (pframe->varFrame == 0xFFFFFFFF) {
 
       // Import to forward
-      for (auto& asd : rule->sheet()->mergedFwdVar) {
+      for (auto& asd : rule->root()->mergedFwdVar) {
         pframe->varIdxs[asd.first] = asd.second;
       } // a: 18
-      for (auto& asd : rule->sheet()->mergedFwdMix) {
+      for (auto& asd : rule->root()->mergedFwdMix) {
         pframe->mixIdxs[asd.first] = asd.second;
       }
-      for (auto& asd : rule->sheet()->mergedFwdFn) {
+      for (auto& asd : rule->root()->mergedFwdFn) {
         pframe->fnIdxs[asd.first] = asd.second;
       }
 
     }
 
 
-    VarRefs* cidxs = rule->sheet()->idxs;
+    VarRefs* cidxs = rule->root()->idxs;
 
     // Merge it up through all imports
     for (auto& var : cidxs->varIdxs) {
@@ -911,10 +883,10 @@ namespace Sass {
       if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
         << compiler.implicitWithConfig << "\n";
 
-      cidxs->module = rule->sheet();
+      cidxs->module = rule->root();
       pframe->fwdGlobal55.insert(
         pframe->fwdGlobal55.begin(),
-        rule->sheet()->idxs);
+        rule->root()->idxs);
 
     }
 
@@ -922,13 +894,13 @@ namespace Sass {
     if (pframe->varFrame == 0xFFFFFFFF) {
 
       // Import to forward
-      for (auto& asd : rule->sheet()->mergedFwdVar) {
+      for (auto& asd : rule->root()->mergedFwdVar) {
         pframe->varIdxs[asd.first] = asd.second;
       } // a: 18
-      for (auto& asd : rule->sheet()->mergedFwdMix) {
+      for (auto& asd : rule->root()->mergedFwdMix) {
         pframe->mixIdxs[asd.first] = asd.second;
       }
-      for (auto& asd : rule->sheet()->mergedFwdFn) {
+      for (auto& asd : rule->root()->mergedFwdFn) {
         pframe->fnIdxs[asd.first] = asd.second;
       }
 
@@ -939,44 +911,25 @@ namespace Sass {
 
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
-
-    if (udbg) std::cerr << "Visit import rule '" << rule->url() << "' "
-      << compiler.implicitWithConfig << "\n";
-
-    callStackFrame cframe(traces, BackTrace(
-      rule->pstate(), Strings::importRule));
-    Root* sheet = resolveIncludeImport(rule);
-    rule->sheet(sheet);
-
-    VarRefs* pframe = compiler.getCurrentFrame();
-
-    // Add C-API to stack to expose it
-    ImportStackFrame iframe(compiler, sheet->import);
-    EnvScope scoped(compiler.varRoot, sheet->idxs);
-    LOCAL_PTR(Root, chroot77, sheet);
-
-    if (pframe->isImport) {
-      pframe = pframe->pscope;
+    BackTrace trace(rule->pstate(), Strings::importRule);
+    callStackFrame cframe(logger456, trace);
+    if (Root* root = loadModRule(rule)) {
+      ImportStackFrame iframe(compiler, root->import);
+      EnvScope scoped(compiler.varRoot, root->idxs);
+      LOCAL_PTR(Root, chroot77, root);
+      exposeImpRule(rule);
+      // Imports are always executed again
+      for (const StatementObj& item : root->elements()) {
+        item->accept(this);
+      }
     }
-
-    exposeImpRule(rule);
-
-    // Imports are always executed again
-    for (const StatementObj& item : sheet->elements()) {
-      item->accept(this);
-    }
-
-    if (udbg) std::cerr << "Compiled import rule '" << rule->url() << "' "
-      << compiler.implicitWithConfig << "\n";
-
-
-
   }
+
   Value* Eval::visitUseRule(UseRule* rule)
   {
 
-    BackTrace trace(rule->pstate(), Strings::useRule, false);
-    callStackFrame frame(logger456, trace);
+    BackTrace trace(rule->pstate(), Strings::useRule);
+    callStackFrame cframe(logger456, trace);
 
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
       << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";

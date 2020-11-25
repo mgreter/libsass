@@ -540,7 +540,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               Root* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
               rule->append(SASS_MEMORY_NEW(IncludeImport,
-                pstate, ctx_path, abs_path, sheet));
+                pstate, ctx_path, abs_path, &import));
+              // Must set the sheet somehow!
             }
             // Only a path was returned
             // Try to load it like normal
@@ -580,7 +581,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
                 Root* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
                 rule->append(SASS_MEMORY_NEW(IncludeImport,
-                  pstate, ctx_path, url, sheet));
+                  pstate, ctx_path, url, &import));
+                // Must set the sheet somehow
               }
               else {
                 BackTraces& traces = *this;

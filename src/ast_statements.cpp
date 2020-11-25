@@ -539,14 +539,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ModRule::ModRule(
-    const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
     Import* import,
     WithConfig* pwconfig,
     sass::vector<WithConfigVar>&& config,
     bool hasLocalWith) :
-    Statement(pstate),
     WithConfig(pwconfig,
       std::move(config),
       hasLocalWith),
@@ -557,7 +555,6 @@ namespace Sass {
   {}
 
   ModRule::ModRule(
-    const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
     Import* import,
@@ -569,7 +566,6 @@ namespace Sass {
     bool isShown,
     bool isHidden,
     bool hasWith) :
-    Statement(pstate),
     WithConfig(pwconfig,
       std::move(config),
       hasWith, isShown, isHidden,
@@ -593,7 +589,8 @@ namespace Sass {
     WithConfig* pwconfig,
     sass::vector<WithConfigVar>&& config,
     bool hasLocalWith) :
-    ModRule(pstate,
+    Statement(pstate),
+    ModRule(
       prev, url,
       import, pwconfig,
       std::move(config),
@@ -617,7 +614,8 @@ namespace Sass {
     bool isShown,
     bool isHidden,
     bool hasWith) :
-    ModRule(pstate,
+    Statement(pstate),
+    ModRule(
       prev, url, import,
       prefix, pwconfig,
       std::move(varFilters),

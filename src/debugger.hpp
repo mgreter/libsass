@@ -843,7 +843,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     debug_idxs(block->module());
     std::cerr << std::endl;
-    debug_ast(block->sheet(), ind + " @ ");
+    debug_ast(block->root(), ind + " @ ");
   }
   else if (Cast<ImportRule>(node)) {
     ImportRule* block = Cast<ImportRule>(node);

@@ -121,12 +121,15 @@ namespace Sass {
     const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
-    Root* sheet) :
+    Import* import) :
     ImportBase(pstate),
-    sheet_(sheet),
-    prev_(prev),
-    url_(url),
-    module_(nullptr)
+    ModRule(
+      prev, url,
+      import)
+    // sheet_(sheet),
+    // prev_(prev),
+    // url_(url),
+    // module_(nullptr)
   {}
 
   //////////////////////////////////////////////////////////////////////

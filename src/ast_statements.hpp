@@ -647,7 +647,7 @@ namespace Sass {
     }
   };
 
-  class ModRule : public Statement, public WithConfig
+  class ModRule : public WithConfig
   {
   private:
     ADD_CONSTREF(ImportObj, import);
@@ -659,16 +659,14 @@ namespace Sass {
   public:
 
     ModRule(
-      const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
       Import* import,
-      WithConfig* pwconfig,
-      sass::vector<WithConfigVar>&& config,
-      bool hasLocalWith);
+      WithConfig* pwconfig = nullptr,
+      sass::vector<WithConfigVar>&& config = {},
+      bool hasLocalWith = false);
 
     ModRule(
-      const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
       Import* import,
@@ -686,7 +684,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
-  class UseRule final : public ModRule
+  class UseRule final : public Statement, public ModRule
   {
   private:
 
@@ -715,7 +713,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
-  class ForwardRule final : public ModRule
+  class ForwardRule final : public Statement, public ModRule
   {
   private:
     ADD_PROPERTY(bool, wasMerged);
