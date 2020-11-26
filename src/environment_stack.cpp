@@ -474,8 +474,32 @@ namespace Sass {
   {
     for (const VarRefs* current = this; current; current = current->pscope)
     {
-      auto rv = current->getVariable(name);
-      if (rv != nullptr) return rv;
+      if (current->isImport == false) {
+        auto it = current->varIdxs.find(name);
+        if (it != current->varIdxs.end()) {
+          const VarRef vidx{ current->varFrame, it->second };
+          ValueObj& value = root.getVariable(vidx);
+          if (value != nullptr) { return value; }
+        }
+      }
+      if (name.isPrivate()) continue;
+      for (auto fwds : current->forwards) {
+        auto fwd = fwds->varIdxs.find(name);
+        if (fwd != fwds->varIdxs.end()) {
+          const VarRef vidx{ fwds->varFrame, fwd->second };
+          Value* value = root.getVariable(vidx);
+          if (value && name.isPrivate()) continue;
+          if (value != nullptr) return value;
+        }
+        if (Module* mod = fwds->module) {
+          auto fwd = mod->mergedFwdVar.find(name);
+          if (fwd != mod->mergedFwdVar.end()) {
+            Value* val = root.getVariable(
+              { 0xFFFFFFFF, fwd->second });
+            if (val != nullptr) return val;
+          }
+        }
+      }
     }
     return nullptr;
   }
@@ -512,44 +536,13 @@ namespace Sass {
   }
   // EO findFunction
 
-
-  Value* VarRefs::getVariable(const EnvKey& name) const
-  {
-    if (isImport == false) {
-      auto it = varIdxs.find(name);
-      if (it != varIdxs.end()) {
-        const VarRef vidx{ varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-    }
-    if (name.isPrivate()) return nullptr;
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
-      if (it != fwds->varIdxs.end()) {
-        const VarRef vidx{ fwds->varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef vidx{ fwds->varFrame, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return value;
-        }
-      }
-    }
-    return nullptr;
-  }
-
   // Get a mixin associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
   Callable* VarRefs::getMixin(const EnvKey& name, bool hidePrivate) const
   {
-    if (isImport == false) {
+    if (!isImport) {
       auto it = mixIdxs.find(name);
       if (it != mixIdxs.end()) {
         const VarRef vidx{ mixFrame, it->second };
@@ -636,6 +629,34 @@ namespace Sass {
       }
     }
     return nullidx;
+  }
+
+  Value* VarRefs::getVariable(const EnvKey& name) const
+  {
+    if (isImport) return nullptr;
+    auto it = varIdxs.find(name);
+    if (it != varIdxs.end()) {
+      const VarRef vidx{ varFrame, it->second };
+      Value* value = root.getVariable(vidx);
+      if (value != nullptr) return value;
+    }
+    for (auto fwds : forwards) {
+      auto it = fwds->varIdxs.find(name);
+      if (it != fwds->varIdxs.end()) {
+        const VarRef vidx{ fwds->varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
+      if (Module* mod = fwds->module) {
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          const VarRef vidx{ fwds->varFrame, fwd->second };
+          Value* value = root.getVariable(vidx);
+          if (value != nullptr) return value;
+        }
+      }
+    }
+    return nullptr;
   }
 
 
