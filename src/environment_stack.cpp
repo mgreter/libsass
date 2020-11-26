@@ -545,33 +545,8 @@ namespace Sass {
   {
     for (const VarRefs* current = this; current; current = current->pscope)
     {
-      // auto rv = current->getMixin(name);
-      // if (rv != nullptr) return rv;
-      if (!current->isImport) {
-        auto it = current->mixIdxs.find(name);
-        if (it != current->mixIdxs.end()) {
-          const VarRef midx{ current->mixFrame, it->second };
-          Callable* mixin = root.getMixin(midx);
-          if (mixin != nullptr) return mixin;
-        }
-      }
-      if (name.isPrivate()) continue;
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->mixIdxs.find(name);
-        if (fwd != fwds->mixIdxs.end()) {
-          const VarRef vidx{ fwds->mixFrame, fwd->second };
-          Callable* mixin = root.getMixin(vidx);
-          if (mixin != nullptr) return mixin;
-        }
-        if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdMix.find(name);
-          if (fwd != mod->mergedFwdMix.end()) {
-            Callable* mix = root.getMixin(
-              { 0xFFFFFFFF, fwd->second });
-            if (mix != nullptr) return mix;
-          }
-        }
-      }
+      auto rv = current->getMixin(name);
+      if (rv != nullptr) return rv;
     }
     return nullptr;
   }
@@ -583,13 +558,15 @@ namespace Sass {
   // find a defined mixin or run out of parent scopes.
   Callable* VarRefs::getMixin(const EnvKey& name, bool hidePrivate) const
   {
-    if (isImport) return nullptr;
-    auto it = mixIdxs.find(name);
-    if (it != mixIdxs.end()) {
-      const VarRef vidx{ mixFrame, it->second };
-      Callable* value = root.getMixin(vidx);
-      if (value != nullptr) return value;
+    if (!isImport) {
+      auto it = mixIdxs.find(name);
+      if (it != mixIdxs.end()) {
+        const VarRef vidx{ mixFrame, it->second };
+        Callable* value = root.getMixin(vidx);
+        if (value != nullptr) return value;
+      }
     }
+    if (name.isPrivate()) return nullptr;
     for (auto fwds : forwards) {
       auto it = fwds->mixIdxs.find(name);
       if (it != fwds->mixIdxs.end()) {
@@ -600,7 +577,7 @@ namespace Sass {
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdMix.find(name);
         if (fwd != mod->mergedFwdMix.end()) {
-          const VarRef vidx{ 0xFFFFFFFF, it->second };
+          const VarRef vidx{ 0xFFFFFFFF, fwd->second };
           Callable* value = root.getMixin(vidx);
           if (value != nullptr) return value;
         }
