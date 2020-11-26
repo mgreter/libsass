@@ -474,32 +474,8 @@ namespace Sass {
   {
     for (const VarRefs* current = this; current; current = current->pscope)
     {
-      if (current->isImport == false) {
-        auto it = current->varIdxs.find(name);
-        if (it != current->varIdxs.end()) {
-          const VarRef vidx{ current->varFrame, it->second };
-          ValueObj& value = root.getVariable(vidx);
-          if (value != nullptr) { return value; }
-        }
-      }
-      if (name.isPrivate()) continue;
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->varIdxs.find(name);
-        if (fwd != fwds->varIdxs.end()) {
-          const VarRef vidx{ fwds->varFrame, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value && name.isPrivate()) continue;
-          if (value != nullptr) return value;
-        }
-        if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            Value* val = root.getVariable(
-              { 0xFFFFFFFF, fwd->second });
-            if (val != nullptr) return val;
-          }
-        }
-      }
+      auto rv = current->getVariable(name);
+      if (rv != nullptr) return rv;
     }
     return nullptr;
   }
@@ -633,13 +609,15 @@ namespace Sass {
 
   Value* VarRefs::getVariable(const EnvKey& name) const
   {
-    if (isImport) return nullptr;
-    auto it = varIdxs.find(name);
-    if (it != varIdxs.end()) {
-      const VarRef vidx{ varFrame, it->second };
-      Value* value = root.getVariable(vidx);
-      if (value != nullptr) return value;
+    if (isImport == false) {
+      auto it = varIdxs.find(name);
+      if (it != varIdxs.end()) {
+        const VarRef vidx{ varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
     }
+    if (name.isPrivate()) return nullptr;
     for (auto fwds : forwards) {
       auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
