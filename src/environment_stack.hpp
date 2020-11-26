@@ -156,11 +156,11 @@ namespace Sass {
       bool isImport) :
       root(root),
       pscope(pscope),
-      isPermeable(isPermeable),
-      isImport(isImport),
       varFrame(varFrame),
       mixFrame(mixFrame),
-      fnFrame(fnFrame)
+      fnFrame(fnFrame),
+      isPermeable(isPermeable),
+      isImport(isImport)
     {}
 
     /////////////////////////////////////////////////////////////////////////
