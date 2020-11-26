@@ -386,44 +386,6 @@ namespace Sass {
   }
   // EO getMixin
 
-  // Get a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  Value* VarRefs::findVariable(const EnvKey& name) const
-  {
-    for (const VarRefs* current = this; current; current = current->pscope)
-    {
-      if (current->isImport) continue;
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        const VarRef vidx{ current->varFrame, it->second };
-        ValueObj& value = root.getVariable(vidx);
-        if (value != nullptr) { return value; }
-      }
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->varIdxs.find(name);
-        if (fwd != fwds->varIdxs.end()) {
-          const VarRef vidx{ fwds->varFrame, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value && name.isPrivate()) continue;
-          if (value != nullptr) return value;
-        }
-        if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            Value* val = root.getVariable(
-              { 0xFFFFFFFF, fwd->second });
-            if (val && name.isPrivate()) continue;
-            if (val != nullptr) return val;
-          }
-        }
-      }
-    }
-    return nullptr;
-  }
-  // EO getVariable
 
 
   // Get a value associated with the variable under [name].
@@ -464,20 +426,6 @@ namespace Sass {
     return {};
   }
   // EO getVariable
-  // Get a function associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined function or run out of parent scopes.
-  CallableObj* VarRefs::findFunction(const EnvKey& name) const
-  {
-    for (const VarRefs* current = this; current; current = current->pscope)
-    {
-      auto rv = current->getFunction(name);
-      if (rv != nullptr) return rv;
-    }
-    return nullptr;
-  }
-  // EO findFunction
 
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
@@ -516,6 +464,23 @@ namespace Sass {
   }
   // EO findFunction
 
+
+  // Get a value associated with the variable under [name].
+  // If [global] flag is given, the lookup will be in the root.
+  // Otherwise lookup will be from the last runtime stack scope.
+  // We will move up the runtime stack until we either find a 
+  // defined variable with a value or run out of parent scopes.
+  Value* VarRefs::findVariable(const EnvKey& name) const
+  {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      auto rv = current->getVariable(name);
+      if (rv != nullptr) return rv;
+    }
+    return nullptr;
+  }
+  // EO getVariable
+
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
@@ -531,13 +496,60 @@ namespace Sass {
   }
   // EO findFunction
 
+
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  CallableObj* VarRefs::findFunction(const EnvKey& name) const
+  {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      auto rv = current->getFunction(name);
+      if (rv != nullptr) return rv;
+    }
+    return nullptr;
+  }
+  // EO findFunction
+
+
+  Value* VarRefs::getVariable(const EnvKey& name) const
+  {
+    if (isImport == false) {
+      auto it = varIdxs.find(name);
+      if (it != varIdxs.end()) {
+        const VarRef vidx{ varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
+    }
+    if (name.isPrivate()) return nullptr;
+    for (auto fwds : forwards) {
+      auto it = fwds->varIdxs.find(name);
+      if (it != fwds->varIdxs.end()) {
+        const VarRef vidx{ fwds->varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
+      if (Module* mod = fwds->module) {
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          const VarRef vidx{ fwds->varFrame, fwd->second };
+          Value* value = root.getVariable(vidx);
+          if (value != nullptr) return value;
+        }
+      }
+    }
+    return nullptr;
+  }
+
   // Get a mixin associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
   Callable* VarRefs::getMixin(const EnvKey& name, bool hidePrivate) const
   {
-    if (!isImport) {
+    if (isImport == false) {
       auto it = mixIdxs.find(name);
       if (it != mixIdxs.end()) {
         const VarRef vidx{ mixFrame, it->second };
@@ -567,6 +579,7 @@ namespace Sass {
   // EO getMixin
 
 
+
   CallableObj* VarRefs::getFunction(const EnvKey& name) const
   {
     if (!isImport) {
@@ -588,7 +601,7 @@ namespace Sass {
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef vidx{ fwds->fnFrame, it->second };
+          const VarRef vidx{ fwds->fnFrame, fwd->second };
           CallableObj& value = root.getFunction(vidx);
           if (value != nullptr) return &value;
         }
@@ -616,53 +629,13 @@ namespace Sass {
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef fidx{ fwds->fnFrame, it->second };
+          const VarRef fidx{ fwds->fnFrame, fwd->second };
           CallableObj& value = root.getFunction(fidx);
           if (value != nullptr) return fidx;
         }
       }
     }
     return nullidx;
-  }
-
-
-  //Callable* VarRefs::getMixin(const EnvKey& name) const
-  //{
-  //  auto it = mixIdxs.find(name);
-  //  if (it != mixIdxs.end()) {
-  //    const VarRef vidx{ mixFrame, it->second };
-  //    Callable* mixin = root.getFunction(vidx);
-  //    if (mixin != nullptr) return mixin;
-  //  }
-  //  return nullptr;
-  //}
-
-  Value* VarRefs::getVariable(const EnvKey& name) const
-  {
-    if (isImport) return nullptr;
-    auto it = varIdxs.find(name);
-    if (it != varIdxs.end()) {
-      const VarRef vidx{ varFrame, it->second };
-      Value* value = root.getVariable(vidx);
-      if (value != nullptr) return value;
-    }
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
-      if (it != fwds->varIdxs.end()) {
-        const VarRef vidx{ fwds->varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef vidx{ fwds->varFrame, it->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return value;
-        }
-      }
-    }
-    return nullptr;
   }
 
 
