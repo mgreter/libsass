@@ -465,6 +465,37 @@ namespace Sass {
   // EO findFunction
 
 
+  Value* VarRefs::getVariable(const EnvKey& name) const
+  {
+    if (isImport == false) {
+      auto it = varIdxs.find(name);
+      if (it != varIdxs.end()) {
+        const VarRef vidx{ varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
+    }
+    if (name.isPrivate()) return nullptr;
+    for (auto fwds : forwards) {
+      auto it = fwds->varIdxs.find(name);
+      if (it != fwds->varIdxs.end()) {
+        const VarRef vidx{ fwds->varFrame, it->second };
+        Value* value = root.getVariable(vidx);
+        if (value != nullptr) return value;
+      }
+      if (Module* mod = fwds->module) {
+        auto fwd = mod->mergedFwdVar.find(name);
+        if (fwd != mod->mergedFwdVar.end()) {
+          const VarRef vidx{ 0xFFFFFFFF, fwd->second };
+          Value* value = root.getVariable(vidx);
+          if (value != nullptr) return value;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+
   // Get a value associated with the variable under [name].
   // If [global] flag is given, the lookup will be in the root.
   // Otherwise lookup will be from the last runtime stack scope.
@@ -605,36 +636,6 @@ namespace Sass {
       }
     }
     return nullidx;
-  }
-
-  Value* VarRefs::getVariable(const EnvKey& name) const
-  {
-    if (isImport == false) {
-      auto it = varIdxs.find(name);
-      if (it != varIdxs.end()) {
-        const VarRef vidx{ varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-    }
-    if (name.isPrivate()) return nullptr;
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
-      if (it != fwds->varIdxs.end()) {
-        const VarRef vidx{ fwds->varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef vidx{ fwds->varFrame, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return value;
-        }
-      }
-    }
-    return nullptr;
   }
 
 
