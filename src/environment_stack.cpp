@@ -198,31 +198,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Return lookups in lexical manner. If [passThrough] is false,
-  // we abort the lexical lookup on any non-permeable scope frame.
-  VarRef VarRefs::getVariableIdx(const EnvKey& name, bool passThrough)
-  {
-    VarRefs* current = this;
-    while (current != nullptr) {
-      if (!current->isImport) {
-        auto it = current->varIdxs.find(name);
-        if (it != current->varIdxs.end()) {
-          return { current->fnFrame, it->second };
-        }
-      }
-      current = current->getParent(passThrough);
-    }
-    // Not found
-    return {};
-  }
-
   // Test if we are top frame
-
   bool VarRefs::isRoot() const {
     // Check if raw pointers are equal
     return this == root.idxs;
   }
-  // EO getVariableIdx
+  // EO isRoot
   
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -412,8 +393,8 @@ namespace Sass {
   // defined variable with a value or run out of parent scopes.
   Value* VarRefs::findVariable(const EnvKey& name) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
       if (!current->isImport) {
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
@@ -440,10 +421,8 @@ namespace Sass {
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
-    return {};
+    return nullptr;
   }
   // EO getVariable
 
@@ -455,8 +434,8 @@ namespace Sass {
   // defined variable with a value or run out of parent scopes.
   VarRef VarRefs::findVarIdx(const EnvKey& name) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
       if (!current->isImport) {
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
@@ -483,8 +462,6 @@ namespace Sass {
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return {};
   }
@@ -495,8 +472,8 @@ namespace Sass {
   // find a defined function or run out of parent scopes.
   CallableObj* VarRefs::findFunction(const EnvKey& name) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
       if (!current->isImport) {
         auto it = current->fnIdxs.find(name);
         if (it != current->fnIdxs.end()) {
@@ -523,8 +500,6 @@ namespace Sass {
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return nullptr;
   }
@@ -536,8 +511,8 @@ namespace Sass {
   // find a defined function or run out of parent scopes.
   VarRef VarRefs::findFnIdx(const EnvKey& name) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
       if (!current->isImport) {
         auto it = current->fnIdxs.find(name);
         if (it != current->fnIdxs.end()) {
@@ -564,8 +539,6 @@ namespace Sass {
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return nullidx;
   }
@@ -576,8 +549,10 @@ namespace Sass {
   // find a defined function or run out of parent scopes.
   Callable* VarRefs::findMixin(const EnvKey& name) const
   {
-    const VarRefs* current = this;
-    while (current) {
+    for (const VarRefs* current = this; current; current = current->pscope)
+    {
+      // auto rv = current->getMixin(name);
+      // if (rv != nullptr) return rv;
       if (!current->isImport) {
         auto it = current->mixIdxs.find(name);
         if (it != current->mixIdxs.end()) {
@@ -604,8 +579,6 @@ namespace Sass {
           }
         }
       }
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
     }
     return nullptr;
   }
@@ -615,7 +588,7 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
-  Callable* VarRefs::getMixin(const EnvKey& name) const
+  Callable* VarRefs::getMixin(const EnvKey& name, bool hidePrivate) const
   {
     if (isImport) return nullptr;
     auto it = mixIdxs.find(name);
@@ -634,7 +607,7 @@ namespace Sass {
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdMix.find(name);
         if (fwd != mod->mergedFwdMix.end()) {
-          const VarRef vidx{ fwds->mixFrame, it->second };
+          const VarRef vidx{ 0xFFFFFFFF, it->second };
           Callable* value = root.getMixin(vidx);
           if (value != nullptr) return value;
         }

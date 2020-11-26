@@ -184,17 +184,13 @@ namespace Sass {
     // But also for content blocks
     VarRef createMixin(const EnvKey& name);
 
-    // Return variable in lexical manner. If [passThrough] is false,
-    // we abort the lexical lookup on any non-permeable scope frame.
-    VarRef getVariableIdx(const EnvKey& name, bool passThrough = false);
-
     // Get a mixin associated with the under [name].
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
     Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
     Callable* findMixin(const EnvKey& name) const;
-    Callable* getMixin(const EnvKey& name) const;
+    Callable* getMixin(const EnvKey& name, bool hidePrivate = false) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.
