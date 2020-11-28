@@ -40,8 +40,10 @@ install:
       if(!(gem which hrx 2>$nul)) { gem install hrx --no-ri --no-rdoc }
       if ($env:Compiler -eq "mingw" -AND -Not (Test-Path "C:\mingw64")) {
         # Install MinGW.
-        $file = "x86_64-4.9.2-release-win32-seh-rt_v4-rev3.7z"
-        wget https://bintray.com/artifact/download/drewwells/generic/$file -OutFile $file
+        # $file = "x86_64-4.9.2-release-win32-seh-rt_v4-rev3.7z"
+        $file = "x86_64-4.9.4-release-win32-seh-rt_v5-rev0.7z"
+        # wget https://bintray.com/artifact/download/drewwells/generic/$file -OutFile $file
+        wget https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.4/threads-win32/seh/x86_64-4.9.4-release-win32-seh-rt_v5-rev0.7z/download -OutFile $file
         &7z x -oC:\ $file > $null
       }
   - set PATH=C:\mingw64\bin;%PATH%
