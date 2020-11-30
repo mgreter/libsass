@@ -2117,7 +2117,7 @@ namespace Sass {
 
   Value* Eval::visitEachRule(EachRule* e)
   {
-    const VarRefs* vidx(e->idxs);
+    const EnvRefs* vidx(e->idxs);
     const sass::vector<EnvKey>& variables(e->variables());
     EnvScope scoped(compiler.varRoot, e->idxs);
     ValueObj expr = e->expressions()->accept(this);

@@ -21,8 +21,8 @@ namespace Sass {
   class Env
   {
   public:
-    VarRefs* idxs = nullptr;
-    Env(VarRefs* idxs)
+    EnvRefs* idxs = nullptr;
+    Env(EnvRefs* idxs)
       : idxs(idxs) {}
   };
 
@@ -80,7 +80,7 @@ namespace Sass {
     // Modules that this module uses.
     sass::vector<Module*> upstream;
 
-    ModuleMap<std::pair<VarRefs*, Module*>> moduse;
+    ModuleMap<std::pair<EnvRefs*, Module*>> moduse;
 
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
@@ -93,7 +93,7 @@ namespace Sass {
 
   public:
 
-    Module(VarRefs* idxs);
+    Module(EnvRefs* idxs);
 
   };
 

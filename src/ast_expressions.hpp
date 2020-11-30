@@ -282,8 +282,8 @@ namespace Sass {
   class VariableExpression final : public Expression
   {
     ADD_CONSTREF(EnvKey, name);
-    ADD_REF(sass::vector<VarRef>, vidxs);
-    ADD_REF(VarRef, vidx2);
+    ADD_REF(sass::vector<EnvIdx>, vidxs);
+    ADD_REF(EnvIdx, vidx2);
     ADD_CONSTREF(sass::string, ns);
     ADD_PROPERTY(bool, withinLoop);
   public:
@@ -390,7 +390,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, name);
 
     // The frame offset for the function
-    ADD_REF(VarRef, fidx2);
+    ADD_REF(EnvIdx, fidx2);
 
     // Internal optimization flag
     ADD_CONSTREF(bool, withinLoop);

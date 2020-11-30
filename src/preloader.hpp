@@ -34,7 +34,7 @@ namespace Sass {
     WithConfig*& wconfig;
 
     // Current lexical scope
-    VarRefs* idxs;
+    EnvRefs* idxs;
 
     void visitParentStatement(ParentStatement* rule);
     void visitIncludeImport(IncludeImport* include);

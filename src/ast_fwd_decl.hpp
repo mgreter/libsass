@@ -26,8 +26,8 @@ namespace Sass {
   class BuiltInMod;
   class WithConfig;
 
-  class VarRef;
-  class VarRefs;
+  class EnvIdx;
+  class EnvRefs;
   class Logger;
   class Compiler;
   class EnvFrame;

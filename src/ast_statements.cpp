@@ -164,7 +164,7 @@ namespace Sass {
   ParentStatement::ParentStatement(
     SourceSpan&& pstate,
     StatementVector&& children,
-    VarRefs* idxs) :
+    EnvRefs* idxs) :
     Statement(std::move(pstate)),
     Vectorized<Statement>(std::move(children)),
     Env(idxs)
@@ -186,7 +186,7 @@ namespace Sass {
   StyleRule::StyleRule(
     SourceSpan&& pstate,
     Interpolation* interpolation,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -222,7 +222,7 @@ namespace Sass {
     Expression* lower_bound,
     Expression* upper_bound,
     bool is_inclusive,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -241,7 +241,7 @@ namespace Sass {
     SourceSpan&& pstate,
     const EnvKeys& variables,
     Expression* expressions,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -257,7 +257,7 @@ namespace Sass {
   WhileRule::WhileRule(
     SourceSpan&& pstate,
     Expression* condition,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -272,7 +272,7 @@ namespace Sass {
   MediaRule::MediaRule(
     SourceSpan&& pstate,
     Interpolation* query,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -288,7 +288,7 @@ namespace Sass {
     SourceSpan&& pstate,
     Interpolation* name,
     Interpolation* value,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     bool isChildless,
     StatementVector&& children) :
     ParentStatement(
@@ -306,7 +306,7 @@ namespace Sass {
   AtRootRule::AtRootRule(
     SourceSpan&& pstate,
     Interpolation* query,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -320,7 +320,7 @@ namespace Sass {
 
   IfRule::IfRule(
     SourceSpan&& pstate,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children,
     Expression* predicate,
     IfRule* alternative) :
@@ -345,7 +345,7 @@ namespace Sass {
   SupportsRule::SupportsRule(
     SourceSpan&& pstate,
     SupportsCondition* condition,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
@@ -363,7 +363,7 @@ namespace Sass {
     ArgumentDeclaration* arguments,
     StatementVector&& children,
     SilentComment* comment,
-    VarRefs* idxs) :
+    EnvRefs* idxs) :
     ParentStatement(
       std::move(pstate),
       std::move(children),
@@ -400,7 +400,7 @@ namespace Sass {
   ContentBlock::ContentBlock(
     SourceSpan&& pstate,
     ArgumentDeclaration* arguments,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children,
     SilentComment* comment) :
     CallableDeclaration(
@@ -418,7 +418,7 @@ namespace Sass {
     SourceSpan&& pstate,
     const EnvKey& name,
     ArgumentDeclaration* arguments,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children,
     SilentComment* comment) :
     CallableDeclaration(
@@ -435,7 +435,7 @@ namespace Sass {
     SourceSpan&& pstate,
     const sass::string& name,
     ArgumentDeclaration* arguments,
-    VarRefs* idxs,
+    EnvRefs* idxs,
     StatementVector&& children,
     SilentComment* comment) :
     CallableDeclaration(
@@ -633,7 +633,7 @@ namespace Sass {
     const EnvKey& variable,
     bool withinLoop,
     const sass::string ns,
-    sass::vector<VarRef> vidxs,
+    sass::vector<EnvIdx> vidxs,
     Expression* value,
     bool is_default,
     bool is_global) :

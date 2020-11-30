@@ -1278,8 +1278,8 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    // VarRefs* current(context.getCurrentFrame());
-    // VarRefs* modFrame(context.getCurrentModule());
+    // EnvRefs* current(context.getCurrentFrame());
+    // EnvRefs* modFrame(context.getCurrentModule());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
@@ -1434,7 +1434,7 @@ namespace Sass {
         std::move(pstate), {}, {});
     }
 
-    sass::vector<VarRef> midxs;
+    sass::vector<EnvIdx> midxs;
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
     scanner.relevantSpanFrom(start), name, ns, arguments);
@@ -2914,7 +2914,7 @@ namespace Sass {
       if (scanner.peekChar() == $dollar) {
         sass::string name(variableName());
 
-        sass::vector<VarRef> vidxs;
+        sass::vector<EnvIdx> vidxs;
 
         VariableExpressionObj expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),

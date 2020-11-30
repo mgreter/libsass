@@ -55,7 +55,7 @@ namespace Sass {
     // sass::vector<Mapping> srcmap;
 
     // Points to context.varStack
-    sass::vector<VarRefs*>& varStack;
+    sass::vector<EnvRefs*>& varStack;
 
     // The silent comment this parser encountered previously.
     SilentCommentObj lastSilentComment;

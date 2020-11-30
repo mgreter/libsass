@@ -96,7 +96,7 @@ namespace Sass {
         if (plugin != nullptr) {
           auto pp = parent->module->moduse.find(plugin->value());
           if (pp != parent->module->moduse.end()) {
-            VarRefs* module = pp->second.first;
+            EnvRefs* module = pp->second.first;
             auto it = module->varIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
               it != module->varIdxs.end());
@@ -153,7 +153,7 @@ namespace Sass {
         if (plugin != nullptr) {
           auto pp = parent->module->moduse.find(plugin->value());
           if (pp != parent->module->moduse.end()) {
-            VarRefs* module = pp->second.first;
+            EnvRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
               it != module->fnIdxs.end());
@@ -188,7 +188,7 @@ namespace Sass {
         if (plugin != nullptr) {
           auto pp = parent->module->moduse.find(plugin->value());
           if (pp != parent->module->moduse.end()) {
-            VarRefs* module = pp->second.first;
+            EnvRefs* module = pp->second.first;
             auto it = module->mixIdxs.find(variable->value());
             return SASS_MEMORY_NEW(Boolean, pstate,
               it != module->mixIdxs.end());
@@ -232,7 +232,7 @@ namespace Sass {
         auto module = compiler.getCurrentModule();
         auto it = module->module->moduse.find(ns->value());
         if (it != module->module->moduse.end()) {
-          VarRefs* refs = it->second.first;
+          EnvRefs* refs = it->second.first;
           Module* root = it->second.second;
           if (root && !root->isCompiled) {
             throw Exception::RuntimeException(compiler, "There is "
@@ -241,7 +241,7 @@ namespace Sass {
           for (auto entry : refs->varIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            VarRef vidx(refs->varFrame, entry.second);
+            EnvIdx vidx(refs->varFrame, entry.second);
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
@@ -249,7 +249,7 @@ namespace Sass {
           for (auto entry : root->mergedFwdVar) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            VarRef vidx(0xFFFFFFFF, entry.second);
+            EnvIdx vidx(0xFFFFFFFF, entry.second);
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
@@ -268,7 +268,7 @@ namespace Sass {
         auto module = compiler.getCurrentModule();
         auto it = module->module->moduse.find(ns->value());
         if (it != module->module->moduse.end()) {
-          VarRefs* refs = it->second.first;
+          EnvRefs* refs = it->second.first;
           Module* root = it->second.second;
           if (root && !root->isCompiled) {
             throw Exception::RuntimeException(compiler, "There is "
@@ -277,7 +277,7 @@ namespace Sass {
           for (auto entry : refs->fnIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            VarRef fidx(refs->fnFrame, entry.second);
+            EnvIdx fidx(refs->fnFrame, entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
@@ -286,7 +286,7 @@ namespace Sass {
           for (auto entry : root->mergedFwdFn) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            VarRef fidx(0xFFFFFFFF, entry.second);
+            EnvIdx fidx(0xFFFFFFFF, entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
@@ -329,10 +329,10 @@ namespace Sass {
         if (ns != nullptr) {
           auto pp = parent->module->moduse.find(ns->value());
           if (pp != parent->module->moduse.end()) {
-            VarRefs* module = pp->second.first;
+            EnvRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(name->value());
             if (it != module->fnIdxs.end()) {
-              VarRef fidx({ module->fnFrame, it->second });
+              EnvIdx fidx({ module->fnFrame, it->second });
               callable = compiler.varRoot.getFunction(fidx);
             }
           }
@@ -354,7 +354,7 @@ namespace Sass {
                   throw Exception::RuntimeException(compiler,
                     "This function is available from multiple global modules.");
                 }
-                VarRef fidx({ global->fnFrame, it->second });
+                EnvIdx fidx({ global->fnFrame, it->second });
                 callable = compiler.varRoot.getFunction(fidx);
                 if (callable) break;
               }

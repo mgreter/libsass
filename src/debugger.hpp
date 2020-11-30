@@ -328,7 +328,7 @@ inline std::string longToHex(long long t) {
   return is.str();
 }
 
-inline std::string parent_block(VarRefs* node)
+inline std::string parent_block(EnvRefs* node)
 {
   std::stringstream str;
   if (!node) return "";

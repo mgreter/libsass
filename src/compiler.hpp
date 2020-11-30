@@ -23,12 +23,12 @@ namespace Sass {
 
   public:
 
-    VarRefs* getCurrentFrame() const {
+    EnvRefs* getCurrentFrame() const {
       if (varRoot.stack.empty()) return nullptr;
       return varRoot.stack.back();
     }
 
-    VarRefs* getCurrentModule() const {
+    EnvRefs* getCurrentModule() const {
       if (varRoot.stack.empty()) return nullptr;
       auto current = varRoot.stack.back();
       while (current->pscope) {
@@ -59,7 +59,7 @@ namespace Sass {
 
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.
-    sass::vector<VarRefs*> varStack3312;
+    sass::vector<EnvRefs*> varStack3312;
 
     // The root environment where parsed root variables
     // and (custom) functions plus mixins are registered.
@@ -71,7 +71,7 @@ namespace Sass {
       return varRoot.findVariable(name, global);
     }
 
-    VarRef setVariable(const EnvKey& name, bool guarded, bool global) {
+    EnvIdx setVariable(const EnvKey& name, bool guarded, bool global) {
       return varRoot.setVariable(name, guarded, global);
     }
 
