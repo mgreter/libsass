@@ -1053,7 +1053,7 @@ namespace Sass {
     }
 
     LOCAL_FLAG(inFunction, true);
-    node->cached(*function);
+    // node->cached(*function);
     return (*function)->execute(*this,
       node->arguments(), node->pstate());
   }
