@@ -188,38 +188,28 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
-    Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
-    Callable* findMixin(const EnvKey& name) const;
-    Callable* getMixin(const EnvKey& name, bool hidePrivate = false) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    CallableObj* findFunction(const EnvKey& name) const;
-    CallableObj* getFunction(const EnvKey& name) const;
-
-    EnvIdx findFnIdx(const EnvKey& name) const;
+    
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
-    Value* findVariable(const EnvKey& name) const;
-    Value* getVariable(const EnvKey& name) const;
 
     void findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const;
 
     EnvIdx findVarIdx(const EnvKey& name, const sass::string& ns) const;
-    EnvIdx findFnIdx(const EnvKey& name, const sass::string& ns) const;
+    EnvIdx findFnIdx22(const EnvKey& name, const sass::string& ns) const;
+    EnvIdx findMixIdx22(const EnvKey& name, const sass::string& ns) const;
 
     EnvIdx findVarIdx(const EnvKey& name) const;
-    EnvIdx getVarIdx(const EnvKey& name) const;
-
-    EnvIdx getFnIdx(const EnvKey& name) const;
-
+    EnvIdx findFnIdx(const EnvKey& name) const;
+    EnvIdx findMixIdx(const EnvKey& name) const;
 
     bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
 
@@ -230,21 +220,6 @@ namespace Sass {
 
 
     EnvIdx setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
-
-    // Test if we are top frame
-    bool isRoot() const;
-
-    // Get next parent, but break on root
-    EnvRefs* getParent(bool passThrough = false) {
-      if (isRoot())
-        return nullptr;
-      if (module)
-        return nullptr;
-      if (!passThrough)
-        if (!isPermeable)
-          return nullptr;
-      return pscope;
-    }
 
   };
 
@@ -359,15 +334,6 @@ namespace Sass {
       delete idxs;
     }
 
-    // Update variable references and assignments
-    // Process all variable expression (e.g. variables used in sass-scripts).
-    // Move up the tree to find possible parent scopes also containing this
-    // variable. On runtime we will return the first item that has a value set.
-    // Process all variable assignment rules. Assignments can bleed up to the
-    // parent scope under certain conditions. We bleed up regular style rules,
-    // but not into the root scope itself (until it is semi global scope).
-    void finalizeScopes();
-
     // Runtime check to see if we are currently in global scope
     bool isGlobal() const { return idxs->root.stack.size() == 1; }
 
@@ -388,58 +354,45 @@ namespace Sass {
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(const EnvIdx& vidx, ValueObj value, bool guarded);
+    void setVariable(const EnvIdx& vidx, Value* value, bool guarded);
     void setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate);
     EnvIdx setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(uint32_t frame, uint32_t offset, ValueObj value, bool guarded);
+    void setVariable(uint32_t frame, uint32_t offset, Value* value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setFunction(const EnvIdx& fidx, UserDefinedCallableObj value, bool guarded);
+    void setFunction(const EnvIdx& fidx, UserDefinedCallable* value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setMixin(const EnvIdx& midx, UserDefinedCallableObj value, bool guarded);
-
-    // Get a mixin associated with the under [name].
-    // Will lookup from the last runtime stack scope.
-    // We will move up the runtime stack until we either
-    // find a defined mixin or run out of parent scopes.
-    Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
-
-    // Get a function associated with the under [name].
-    // Will lookup from the last runtime stack scope.
-    // We will move up the runtime stack until we either
-    // find a defined function or run out of parent scopes.
-    CallableObj* findFunction(const EnvKey& name) const;
+    void setMixin(const EnvIdx& midx, UserDefinedCallable* value, bool guarded);
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    Value* findVariable(const EnvKey& name, const sass::string& ns) const;
-    Value* findVariable(const EnvKey& name, bool global = false) const;
+    Value* findVariable33(const EnvKey& name, const sass::string& ns) const;
 
-    EnvIdx findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    EnvIdx findFnIdx(
+      const EnvKey& name,
+      const sass::string& ns) const;
 
-    EnvIdx findVarIdx(const EnvKey& name) const;
+    EnvIdx findMixIdx(
+      const EnvKey& name,
+      const sass::string& ns) const;
 
-    EnvIdx findFnIdx(const EnvKey& name, const sass::string& ns) const;
+    EnvIdx findVarIdx(
+      const EnvKey& name,
+      const sass::string& ns,
+      bool global = false) const;
 
-    void findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const;
-
-    // Set a value associated with the variable under [name].
-    // If [global] flag is given, the lookup will be in the root.
-    // Otherwise lookup will be from the last runtime stack scope.
-    // We will move up the runtime stack until we either find a 
-    // defined variable with a value or run out of parent scopes.
-    EnvIdx setVariable(const EnvKey& name, bool guarded, bool global);
-    EnvIdx setFunction(const EnvKey& name, bool guarded, bool global);
-    EnvIdx setMixin(const EnvKey& name, bool guarded, bool global);
+    void findVarIdxs(
+      sass::vector<EnvIdx>& vidxs,
+      const EnvKey& name) const;
 
   };
 

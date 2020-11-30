@@ -22,12 +22,10 @@ namespace Sass {
   // During the whole parsing we should keep a big map of
   // Variable name to EnvIdx vector with all alternatives
 
-
   void Preloader::process()
   {
     acceptRoot(root);
   }
-
 
   void Preloader::acceptRoot(Root* sheet)
   {
@@ -40,7 +38,6 @@ namespace Sass {
       eval.compiler.varRoot.stack.pop_back();
     }
   }
-
 
   void Preloader::visitParentStatement(ParentStatement* rule)
   {
@@ -66,7 +63,6 @@ namespace Sass {
     acceptRoot(eval.loadModRule(rule));
     eval.exposeFwdRule(rule);
   }
-
 
   void Preloader::visitIncludeImport(IncludeImport* rule)
   {

@@ -41,32 +41,35 @@ namespace Sass {
 
   struct SassValue* get_global(struct SassCompiler* comp, struct SassValue* name)
   {
-    Value& value(Value::unwrap(name));
-    Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.findVariable(
-      value.assertString(compiler, "name")->getText(), true);
-    if (rv) rv->refcount += 1;
-    return rv ? Value::wrap(rv) : sass_make_null();
+    // Value& value(Value::unwrap(name));
+    // Compiler& compiler(Compiler::unwrap(comp));
+    // ValueObj rv = compiler.findVariable(
+    //   value.assertString(compiler, "name")->getText(), true);
+    // if (rv) rv->refcount += 1;
+    // return rv ? Value::wrap(rv) : sass_make_null();
+    return sass_make_null();
   }
 
   struct SassValue* get_lexical(struct SassCompiler* comp, struct SassValue* name)
   {
-    Value& value(Value::unwrap(name));
-    Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.findVariable(
-      value.assertString(compiler, "name")->getText());
-    if (rv) rv->refcount += 1;
-    return rv ? Value::wrap(rv) : sass_make_null();
+    // Value& value(Value::unwrap(name));
+    // Compiler& compiler(Compiler::unwrap(comp));
+    // ValueObj rv = compiler.findVariable(
+    //   value.assertString(compiler, "name")->getText());
+    // if (rv) rv->refcount += 1;
+    // return rv ? Value::wrap(rv) : sass_make_null();
+    return sass_make_null();
   }
 
   struct SassValue* get_local(struct SassCompiler* comp, struct SassValue* name)
   {
-    Value& value(Value::unwrap(name));
-    Compiler& compiler(Compiler::unwrap(comp));
-    ValueObj rv = compiler.findVariable(
-      value.assertString(compiler, "name")->getText());
-    if (rv) rv->refcount += 1;
-    return rv ? Value::wrap(rv) : sass_make_null();
+    // Value& value(Value::unwrap(name));
+    // Compiler& compiler(Compiler::unwrap(comp));
+    // ValueObj rv = compiler.findVariable(
+    //   value.assertString(compiler, "name")->getText());
+    // if (rv) rv->refcount += 1;
+    // return rv ? Value::wrap(rv) : sass_make_null();
+    return sass_make_null();
   }
 
   struct SassValue* set_global(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)

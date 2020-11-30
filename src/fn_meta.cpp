@@ -118,8 +118,10 @@ namespace Sass {
           }
         }
         if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        return SASS_MEMORY_NEW(Boolean, pstate,
-          compiler.findVariable(variable->value(), true));
+        EnvIdx vidx = compiler.varRoot.findVarIdx(variable->value(), "", true);
+        if (!vidx.isValid()) return SASS_MEMORY_NEW(Boolean, pstate, false);
+        auto& var = compiler.varRoot.getVariable(vidx);
+        return SASS_MEMORY_NEW(Boolean, pstate, !var.isNull());
 
       }
 
@@ -128,7 +130,7 @@ namespace Sass {
       BUILT_IN_FN(variableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        ValueObj ex = compiler.findVariable(variable->value());
+        EnvIdx vidx = compiler.varRoot.findVarIdx(variable->value(), "");
 
         bool hasVar = false;
         auto parent = compiler.getCurrentModule();
@@ -142,7 +144,9 @@ namespace Sass {
           }
         }
         if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        return SASS_MEMORY_NEW(Boolean, pstate, !ex.isNull());
+        if (!vidx.isValid()) return SASS_MEMORY_NEW(Boolean, pstate, false);
+        auto& var = compiler.varRoot.getVariable(vidx);
+        return SASS_MEMORY_NEW(Boolean, pstate, !var.isNull());
       }
 
       BUILT_IN_FN(functionExists)
@@ -175,8 +179,8 @@ namespace Sass {
           }
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        CallableObj* fn = compiler.findFunction(variable->value());
-        return SASS_MEMORY_NEW(Boolean, pstate, fn && *fn);
+        EnvIdx fidx = compiler.varRoot.findFnIdx(variable->value(), "");
+        return SASS_MEMORY_NEW(Boolean, pstate, fidx.isValid());
       }
 
       BUILT_IN_FN(mixinExists)
@@ -211,8 +215,8 @@ namespace Sass {
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
 
-        CallableObj fn = compiler.varRoot.findMixin(variable->value(), "");
-        return SASS_MEMORY_NEW(Boolean, pstate, !fn.isNull());
+        auto fidx = compiler.varRoot.findMixIdx(variable->value(), "");
+        return SASS_MEMORY_NEW(Boolean, pstate, fidx.isValid());
       }
 
       BUILT_IN_FN(contentExists)
@@ -302,8 +306,9 @@ namespace Sass {
       /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
       Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
-        auto asd = ctx.findFunction(name);
-        return asd ? *asd : nullptr; // no detach, is a reference anyway
+        EnvIdx fidx = ctx.varRoot.findFnIdx(name, "");
+        if (!fidx.isValid()) return nullptr;
+        return ctx.varRoot.getFunction(fidx);
       }
 
       BUILT_IN_FN(findFunction)

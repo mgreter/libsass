@@ -18,7 +18,8 @@ namespace Sass {
   // Each parsed scope gets its own environment frame
   /////////////////////////////////////////////////////////////////////////
 
-  const EnvIdx nullidx;
+  const EnvIdx nullidx{ 0xFFFFFFFF, 0xFFFFFFFF };
+  // const EnvIdx nomodidx{ 0xFFFFFFFE, 0xFFFFFFFF };
 
   // The root is used for all runtime state
   // Also contains parsed root scope stack
@@ -195,24 +196,7 @@ namespace Sass {
   }
   // EO createMixin
 
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  // Test if we are top frame
-  bool EnvRefs::isRoot() const {
-    // Check if raw pointers are equal
-    return this == root.idxs;
-  }
-  // EO isRoot
-  
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  // Update variable references and assignments
-  void EnvRoot::finalizeScopes()
-  {
-  }
-
+ 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -304,7 +288,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setVariable(const EnvIdx& vidx, ValueObj value, bool guarded)
+  void EnvRoot::setVariable(const EnvIdx& vidx, Value* value, bool guarded)
   {
     if (vidx.frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[vidx.offset]);
@@ -326,7 +310,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setVariable(uint32_t frame, uint32_t offset, ValueObj value, bool guarded)
+  void EnvRoot::setVariable(uint32_t frame, uint32_t offset, Value* value, bool guarded)
   {
     if (frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[offset]);
@@ -344,7 +328,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setFunction(const EnvIdx& fidx, UserDefinedCallableObj value, bool guarded)
+  void EnvRoot::setFunction(const EnvIdx& fidx, UserDefinedCallable* value, bool guarded)
   {
     if (fidx.frame == 0xFFFFFFFF) {
       if (!guarded || intFunction[fidx.offset] == nullptr)
@@ -359,7 +343,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setMixin(const EnvIdx& midx, UserDefinedCallableObj value, bool guarded)
+  void EnvRoot::setMixin(const EnvIdx& midx, UserDefinedCallable* value, bool guarded)
   {
     if (midx.frame == 0xFFFFFFFF) {
       if (!guarded || intMixin[midx.offset] == nullptr)
@@ -375,6 +359,70 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  EnvIdx EnvRefs::findMixIdx(const EnvKey& name) const
+  {
+    for (const EnvRefs* current = this; current; current = current->pscope)
+    {
+      if (!name.isPrivate()) {
+        for (auto fwds : current->forwards) {
+          auto fwd = fwds->mixIdxs.find(name);
+          if (fwd != fwds->mixIdxs.end()) {
+            return { fwds->mixFrame, fwd->second };
+          }
+          if (Module* mod = fwds->module) {
+            auto fwd = mod->mergedFwdMix.find(name);
+            if (fwd != mod->mergedFwdMix.end()) {
+              return { 0xFFFFFFFF, fwd->second };
+            }
+          }
+        }
+      }
+      if (current->isImport) continue;
+      auto it = current->mixIdxs.find(name);
+      if (it != current->mixIdxs.end()) {
+        return { current->mixFrame, it->second };
+      }
+    }
+    return nullidx;
+  }
+  // EO findFunction
+
+
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  EnvIdx EnvRefs::findFnIdx(const EnvKey& name) const
+  {
+    for (const EnvRefs* current = this; current; current = current->pscope)
+    {
+      if (!name.isPrivate()) {
+        for (auto fwds : current->forwards) {
+          auto fwd = fwds->fnIdxs.find(name);
+          if (fwd != fwds->fnIdxs.end()) {
+            return { fwds->fnFrame, fwd->second };
+          }
+          if (Module* mod = fwds->module) {
+            auto fwd = mod->mergedFwdFn.find(name);
+            if (fwd != mod->mergedFwdFn.end()) {
+              return { 0xFFFFFFFF, fwd->second };
+            }
+          }
+        }
+      }
+      if (current->isImport) continue;
+      auto it = current->fnIdxs.find(name);
+      if (it != current->fnIdxs.end()) {
+        return { current->fnFrame, it->second };
+      }
+    }
+    return nullidx;
+  }
+  // EO findFunction
 
   // Get a value associated with the variable under [name].
   // If [global] flag is given, the lookup will be in the root.
@@ -385,29 +433,32 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
-      if (current->isImport == false) {
-        auto it = current->varIdxs.find(name);
-        if (it != current->varIdxs.end()) {
-          const EnvIdx vidx{ current->varFrame, it->second };
-          ValueObj& value = root.getVariable(vidx);
-          if (!value.isNull()) return vidx;
-        }
-      }
-      if (name.isPrivate()) continue;
       for (auto fwds : current->forwards) {
         auto fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
-          const EnvIdx vidx{ fwds->varFrame, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return vidx;
+          if (name.isPrivate()) {
+            throw Exception::ParserException(root.compiler,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
+          return { fwds->varFrame, fwd->second };
         }
         if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
-            ValueObj& value = root.getModVar(fwd->second);
-            if (value) return { 0xFFFFFFFF, fwd->second };
+            if (name.isPrivate()) {
+              throw Exception::ParserException(root.compiler,
+                "Private members can't be accessed "
+                "from outside their modules.");
+            }
+            return { 0xFFFFFFFF, fwd->second };
           }
         }
+      }
+      if (current->isImport) continue;
+      auto it = current->varIdxs.find(name);
+      if (it != current->varIdxs.end()) {
+        return { current->varFrame, it->second };
       }
     }
     return nullidx;
@@ -419,266 +470,35 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  void EnvRefs::findVarIdxs(
-    sass::vector<EnvIdx>& vidxs,
-    const EnvKey& name) const
+  void EnvRefs::findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport == false) {
-        // if (current->pscope && current->pscope->module) break;
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
-          const EnvIdx vidx{ current->varFrame, it->second };
-          vidxs.push_back(vidx);
-          continue;
+          vidxs.emplace_back(EnvIdx{
+            current->varFrame, it->second });
         }
       }
       if (name.isPrivate()) continue;
       for (auto fwds : current->forwards) {
         auto fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
-          const EnvIdx vidx{ fwds->varFrame, fwd->second };
-          vidxs.push_back(vidx);
-          continue;
+          vidxs.emplace_back(EnvIdx{
+            fwds->varFrame, fwd->second });
         }
         if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
-            vidxs.push_back({ 0xFFFFFFFF, fwd->second });
-            continue;
+            vidxs.emplace_back(EnvIdx{
+              0xFFFFFFFF, fwd->second });
           }
         }
       }
     }
   }
   // EO getVariable
-
-
-  Value* EnvRefs::getVariable(const EnvKey& name) const
-  {
-    if (isImport == false) {
-      auto it = varIdxs.find(name);
-      if (it != varIdxs.end()) {
-        const EnvIdx vidx{ varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-    }
-    if (name.isPrivate()) return nullptr;
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
-      if (it != fwds->varIdxs.end()) {
-        const EnvIdx vidx{ fwds->varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return value;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdVar.find(name);
-        if (fwd != mod->mergedFwdVar.end()) {
-          const EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return value;
-        }
-      }
-    }
-    return nullptr;
-  }
-
-
-  // Get a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  Value* EnvRefs::findVariable(const EnvKey& name) const
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      auto rv = current->getVariable(name);
-      if (rv != nullptr) return rv;
-    }
-    return nullptr;
-  }
-  // EO getVariable
-
-  // Get a function associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined function or run out of parent scopes.
-  Callable* EnvRefs::findMixin(const EnvKey& name) const
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      auto rv = current->getMixin(name);
-      if (rv != nullptr) return rv;
-    }
-    return nullptr;
-  }
-  // EO findFunction
-
-
-  // Get a function associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined function or run out of parent scopes.
-  CallableObj* EnvRefs::findFunction(const EnvKey& name) const
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      auto rv = current->getFunction(name);
-      if (rv != nullptr) return rv;
-    }
-    return nullptr;
-  }
-  // EO findFunction
-
-  // Get a function associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined function or run out of parent scopes.
-  EnvIdx EnvRefs::findFnIdx(const EnvKey& name) const
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      auto rv = current->getFnIdx(name);
-      if (rv.isValid()) return rv;
-    }
-    return nullidx;
-  }
-  // EO findFunction
-
-  // Get a mixin associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined mixin or run out of parent scopes.
-  Callable* EnvRefs::getMixin(const EnvKey& name, bool hidePrivate) const
-  {
-    if (!isImport) {
-      auto it = mixIdxs.find(name);
-      if (it != mixIdxs.end()) {
-        const EnvIdx vidx{ mixFrame, it->second };
-        Callable* value = root.getMixin(vidx);
-        if (value != nullptr) return value;
-      }
-    }
-    if (name.isPrivate()) return nullptr;
-    for (auto fwds : forwards) {
-      auto it = fwds->mixIdxs.find(name);
-      if (it != fwds->mixIdxs.end()) {
-        const EnvIdx vidx{ fwds->mixFrame, it->second };
-        Callable* value = root.getMixin(vidx);
-        if (value != nullptr) return value;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdMix.find(name);
-        if (fwd != mod->mergedFwdMix.end()) {
-          const EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
-          Callable* value = root.getMixin(vidx);
-          if (value != nullptr) return value;
-        }
-      }
-    }
-    return nullptr;
-  }
-  // EO getMixin
-
-
-
-  CallableObj* EnvRefs::getFunction(const EnvKey& name) const
-  {
-    if (!isImport) {
-      auto it = fnIdxs.find(name);
-      if (it != fnIdxs.end()) {
-        const EnvIdx vidx{ fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (value != nullptr) return &value;
-      }
-    }
-    if (name.isPrivate()) return nullptr;
-    for (auto fwds : forwards) {
-      auto it = fwds->fnIdxs.find(name);
-      if (it != fwds->fnIdxs.end()) {
-        const EnvIdx vidx{ fwds->fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (value != nullptr) return &value;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          const EnvIdx vidx{ fwds->fnFrame, fwd->second };
-          CallableObj& value = root.getFunction(vidx);
-          if (value != nullptr) return &value;
-        }
-      }
-    }
-    return nullptr;
-  }
-
-
-  // Get a value associated with the variable under [name].
-// If [global] flag is given, the lookup will be in the root.
-// Otherwise lookup will be from the last runtime stack scope.
-// We will move up the runtime stack until we either find a 
-// defined variable with a value or run out of parent scopes.
-  EnvIdx EnvRefs::getFnIdx(const EnvKey& name) const
-  {
-    if (!isImport) {
-      auto it = fnIdxs.find(name);
-      if (it != fnIdxs.end()) {
-        const EnvIdx vidx{ fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (value != nullptr) return vidx;
-      }
-    }
-    if (name.isPrivate()) return nullidx;
-    for (auto fwds : forwards) {
-      auto it = fwds->fnIdxs.find(name);
-      if (it != fwds->fnIdxs.end()) {
-        const EnvIdx vidx{ fwds->fnFrame, it->second };
-        CallableObj& value = root.getFunction(vidx);
-        if (value != nullptr) return vidx;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          const EnvIdx vidx{ fwds->fnFrame, fwd->second };
-          CallableObj& value = root.getFunction(vidx);
-          if (value != nullptr) return vidx;
-        }
-      }
-    }
-    return nullidx;
-  }
-
-  // EO getVariable
-  EnvIdx EnvRefs::getVarIdx(const EnvKey& name) const
-  {
-    if (isImport) return nullidx;
-    auto it = varIdxs.find(name);
-    if (it != varIdxs.end()) {
-      const EnvIdx vidx{ varFrame, it->second };
-      Value* value = root.getVariable(vidx);
-      if (value != nullptr) return vidx;
-    }
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
-      if (it != fwds->varIdxs.end()) {
-        const EnvIdx vidx{ fwds->varFrame, it->second };
-        Value* value = root.getVariable(vidx);
-        if (value != nullptr) return vidx;
-      }
-      if (Module* mod = fwds->module) {
-        auto fwd = mod->mergedFwdVar.find(name);
-        if (fwd != mod->mergedFwdVar.end()) {
-          const EnvIdx vidx{ fwds->varFrame, it->second };
-          Value* value = root.getVariable(vidx);
-          if (value != nullptr) return vidx;
-        }
-      }
-    }
-    return nullidx;
-  }
 
   EnvIdx EnvRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
   {
@@ -723,33 +543,6 @@ namespace Sass {
     return false;
   }
 
-  Value* EnvRefs::findVariable(const EnvKey& name, const sass::string& ns) const
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      if (current->isImport) continue;
-      Module* mod = current->module;
-      if (mod == nullptr) continue;
-      // Check if the namespace was registered
-      auto it = mod->moduse.find(ns);
-      if (it == mod->moduse.end()) continue;
-      if (EnvRefs* idxs = it->second.first) {
-        Value* val = idxs->getVariable(name);
-        if (val != nullptr) return val;
-      }
-      // if (Module* mod = it->second.second) {
-      auto fwd = mod->mergedFwdVar.find(name);
-      if (fwd != mod->mergedFwdVar.end()) {
-        Value* val = root.getVariable(
-          { 0xFFFFFFFF, fwd->second });
-        if (val != nullptr) return val;
-      }
-      // }
-    }
-    return nullptr;
-  }
-
-
   EnvIdx EnvRefs::findVarIdx(const EnvKey& name, const sass::string& ns) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
@@ -761,8 +554,10 @@ namespace Sass {
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
       if (EnvRefs* idxs = it->second.first) {
-        EnvIdx vidx = idxs->getVarIdx(name);
-        if (vidx != nullidx) return vidx;
+        auto it = idxs->varIdxs.find(name);
+        if (it != idxs->varIdxs.end()) {
+          return { idxs->varFrame, it->second };
+        }
       }
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdVar.find(name);
@@ -777,88 +572,62 @@ namespace Sass {
   }
 
 
-  EnvIdx EnvRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRefs::findMixIdx22(const EnvKey& name, const sass::string& ns) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
       if (mod == nullptr) continue;
-      // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
       if (EnvRefs* idxs = it->second.first) {
-        EnvIdx vidx = idxs->getFnIdx(name);
-        if (vidx != nullidx) return vidx;
+        auto it = idxs->mixIdxs.find(name);
+        if (it != idxs->mixIdxs.end()) {
+          return { idxs->mixFrame, it->second };
+        }
       }
       if (Module* mod = it->second.second) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
-          CallableObj& val = root.getFunction(vidx);
-          if (val != nullptr) return vidx;
+        auto fwd = mod->mergedFwdMix.find(name);
+        if (fwd != mod->mergedFwdMix.end()) {
+          return { 0xFFFFFFFF, fwd->second };
         }
       }
     }
     return nullidx;
   }
 
-  Callable* EnvRefs::findMixin(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRefs::findFnIdx22(const EnvKey& name, const sass::string& ns) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
       if (mod == nullptr) continue;
-      // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
       if (EnvRefs* idxs = it->second.first) {
-        Callable* mixin = idxs->getMixin(name);
-        if (mixin != nullptr) return mixin;
+        auto it = idxs->fnIdxs.find(name);
+        if (it != idxs->fnIdxs.end()) {
+          return { idxs->fnFrame, it->second };
+        }
       }
       if (Module* mod = it->second.second) {
-        auto fwd = mod->mergedFwdMix.find(name);
-        if (fwd != mod->mergedFwdMix.end()) {
-          Callable* mixin = root.getMixin(
-            { 0xFFFFFFFF, fwd->second });
-          if (mixin != nullptr) return mixin;
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          return { 0xFFFFFFFF, fwd->second };
         }
       }
     }
-    return nullptr;
+    return nullidx;
   }
 
-  // Get a function associated with [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined function or run out of parent scopes.
-  CallableObj* EnvRoot::findFunction(const EnvKey& name) const
-  {
-    if (stack.empty()) return nullptr;
-    return stack.back()->findFunction(name);
-  }
-  // EO findFunction
-
-  Callable* EnvRoot::findMixin(const EnvKey& name, const sass::string& ns) const
-  {
-    if (stack.empty()) return nullptr;
-    if (ns.empty()) return stack.back()->findMixin(name);
-    else return stack.back()->findMixin(name, ns);
-  }
-
-  Value* EnvRoot::findVariable(const EnvKey& name, const sass::string& ns) const
-  {
-    if (stack.empty()) return nullptr;
-    if (ns.empty()) return stack.back()->findVariable(name);
-    else return stack.back()->findVariable(name, ns);
-  }
-
-  EnvIdx EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns, bool global) const
   {
     if (stack.empty()) return nullidx;
-    if (ns.empty()) return stack.back()->findVarIdx(name);
-    else return stack.back()->findVarIdx(name, ns);
+    auto& frame = global ? stack.front() : stack.back();
+    if (ns.empty()) return frame->findVarIdx(name);
+    else return frame->findVarIdx(name, ns);
   }
 
   // Find a function reference for [name] within the current scope stack.
@@ -867,13 +636,16 @@ namespace Sass {
   {
     if (stack.empty()) return nullidx;
     if (ns.empty()) return stack.back()->findFnIdx(name);
-    else return stack.back()->findFnIdx(name, ns);
+    else return stack.back()->findFnIdx22(name, ns);
   }
 
-  EnvIdx EnvRoot::findVarIdx(const EnvKey& name) const
+  // Find a function reference for [name] within the current scope stack.
+  // If [ns] is not empty, we will only look within loaded modules.
+  EnvIdx EnvRoot::findMixIdx(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullidx;
-    return stack.back()->findVarIdx(name);
+    if (ns.empty()) return stack.back()->findMixIdx(name);
+    else return stack.back()->findMixIdx22(name, ns);
   }
 
   void EnvRoot::findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const
@@ -919,206 +691,6 @@ namespace Sass {
     }
     return nullidx;
   }
-
-  // Get a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  Value* EnvRoot::findVariable(const EnvKey& name, bool global) const
-  {
-    if (stack.empty()) return {};
-    auto idxs = global ? stack.front() : stack.back();
-    return idxs->findVariable(name);
-  }
-  // EO getVariable
-
-  // Set a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  EnvIdx EnvRoot::setVariable(const EnvKey& name, bool guarded, bool global)
-  {
-    if (stack.empty()) return nullidx;
-    uint32_t idx = global ? 0 :
-      (uint32_t)stack.size() - 1;
-    const EnvRefs* current = stack[idx];
-    while (current) {
-
-      for (auto refs : current->forwards) {
-        auto in = refs->varIdxs.find(name);
-        if (in != refs->varIdxs.end()) {
-          if (name.isPrivate()) {
-            throw Exception::ParserException(compiler,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          return { 0xFFFFFFFF, in->second };
-          // idxs->root.setVariable(vidx, val, guarded);
-          // return vidx;
-        }
-        // Modules inserted by import
-        if (Module* mod = refs->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            if (name.isPrivate()) {
-              throw Exception::ParserException(compiler,
-                "Private members can't be accessed "
-                "from outside their modules.");
-            }
-            return { 0xFFFFFFFF, fwd->second };
-            // idxs->root.setVariable(vidx, val, guarded);
-            // return vidx;
-          }
-        }
-      }
-
-      if (current->isImport) {
-        current = current->pscope;
-        continue;
-      }
-
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        return { current->varFrame, it->second };
-        // idxs->root.setVariable(vidx, val, guarded);
-        // return vidx;
-      }
-
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
-    }
-    return nullidx;
-  }
-  // EO setVariable
-
-
-
-
-  // Set a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  EnvIdx EnvRoot::setFunction(const EnvKey& name, bool guarded, bool global)
-  {
-    if (stack.empty()) return nullidx;
-    uint32_t idx = global ? 0 :
-      (uint32_t)stack.size() - 1;
-    const EnvRefs* current = stack[idx];
-    while (current) {
-
-      for (auto refs : current->forwards) {
-        auto in = refs->fnIdxs.find(name);
-        if (in != refs->fnIdxs.end()) {
-          if (name.isPrivate()) {
-            throw Exception::ParserException(compiler,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          return { 0xFFFFFFFF, in->second };
-          // idxs->root.setVariable(vidx, val, guarded);
-          // return vidx;
-        }
-        // Modules inserted by import
-        if (Module* mod = refs->module) {
-          auto fwd = mod->mergedFwdFn.find(name);
-          if (fwd != mod->mergedFwdFn.end()) {
-            if (name.isPrivate()) {
-              throw Exception::ParserException(compiler,
-                "Private members can't be accessed "
-                "from outside their modules.");
-            }
-            return { 0xFFFFFFFF, fwd->second };
-            // idxs->root.setFunction(vidx, val, guarded);
-            // return vidx;
-          }
-        }
-      }
-
-      if (current->isImport) {
-        current = current->pscope;
-        continue;
-      }
-
-      auto it = current->fnIdxs.find(name);
-      if (it != current->fnIdxs.end()) {
-        return { current->fnFrame, it->second };
-        // idxs->root.setVariable(vidx, val, guarded);
-        // return vidx;
-      }
-
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
-    }
-    return nullidx;
-  }
-  // EO setVariable
-
-
-
-
-  // Set a value associated with the variable under [name].
-  // If [global] flag is given, the lookup will be in the root.
-  // Otherwise lookup will be from the last runtime stack scope.
-  // We will move up the runtime stack until we either find a 
-  // defined variable with a value or run out of parent scopes.
-  EnvIdx EnvRoot::setMixin(const EnvKey& name, bool guarded, bool global)
-  {
-    if (stack.empty()) return nullidx;
-    uint32_t idx = global ? 0 :
-      (uint32_t)stack.size() - 1;
-    const EnvRefs* current = stack[idx];
-    while (current) {
-
-      for (auto refs : current->forwards) {
-        auto in = refs->mixIdxs.find(name);
-        if (in != refs->mixIdxs.end()) {
-          if (name.isPrivate()) {
-            throw Exception::ParserException(compiler,
-              "Private members can't be accessed "
-              "from outside their modules.");
-          }
-          return { 0xFFFFFFFF, in->second };
-          // idxs->root.setVariable(vidx, val, guarded);
-          // return vidx;
-        }
-        // Modules inserted by import
-        if (Module* mod = refs->module) {
-          auto fwd = mod->mergedFwdMix.find(name);
-          if (fwd != mod->mergedFwdMix.end()) {
-            if (name.isPrivate()) {
-              throw Exception::ParserException(compiler,
-                "Private members can't be accessed "
-                "from outside their modules.");
-            }
-            return { 0xFFFFFFFF, fwd->second };
-            // idxs->root.setFunction(vidx, val, guarded);
-            // return vidx;
-          }
-        }
-      }
-
-      if (current->isImport) {
-        current = current->pscope;
-        continue;
-      }
-
-      auto it = current->mixIdxs.find(name);
-      if (it != current->mixIdxs.end()) {
-        return { current->mixFrame, it->second };
-        // idxs->root.setVariable(vidx, val, guarded);
-        // return vidx;
-      }
-
-      if (current->pscope == nullptr) break;
-      else current = current->pscope;
-    }
-    return nullidx;
-  }
-  // EO setVariable
-
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

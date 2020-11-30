@@ -792,12 +792,14 @@ namespace Sass {
     // The name of the mixin being invoked.
     ADD_CONSTREF(EnvKey, name);
 
+    ADD_CONSTREF(EnvIdx, midx);
+
     // The block that will be invoked for [ContentRule]s in the mixin
     // being invoked, or `null` if this doesn't pass a content block.
     ADD_CONSTREF(ContentBlockObj, content);
 
 
-    ADD_PROPERTY(CallableObj, cached); // circular?
+    // ADD_PROPERTY(CallableObj, cached); // circular?
 
   public:
 
