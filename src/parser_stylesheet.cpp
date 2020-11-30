@@ -540,74 +540,6 @@ namespace Sass {
   // Consumes a property declaration. This is only used in contexts where
   // declarations are allowed but style rules are not, such as nested
   // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
-  Statement* StylesheetParser::readDeclaration(bool parseCustomProperties)
-  {
-
-    Offset start(scanner.offset);
-
-    InterpolationObj name;
-    // Allow the "*prop: val", ":prop: val",
-    // "#prop: val", and ".prop: val" hacks.
-    uint8_t first = scanner.peekChar();
-    if (first == $colon ||
-        first == $asterisk ||
-        first == $dot ||
-        (first == $hash && scanner.peekChar(1) != $lbrace)) {
-      InterpolationBuffer nameBuffer(scanner);
-      nameBuffer.write(scanner.readChar());
-      nameBuffer.write(rawText(&StylesheetParser::scanWhitespace));
-      nameBuffer.addInterpolation(readInterpolatedIdentifier());
-      name = nameBuffer.getInterpolation(scanner.relevantSpanFrom(start));
-    }
-    else {
-      name = readInterpolatedIdentifier();
-    }
-
-    scanWhitespace();
-    scanner.expectChar($colon);
-    scanWhitespace();
-
-    if (parseCustomProperties && startsWith(name->getInitialPlain(), "--", 2)) {
-      InterpolationObj value = readInterpolatedDeclarationValue();
-      expectStatementSeparator("custom property");
-      return SASS_MEMORY_NEW(Declaration,
-        scanner.relevantSpanFrom(start),
-        name, value->wrapInStringExpression());
-    }
-
-    if (lookingAtChildren()) {
-      if (plainCss()) {
-        error("Nested declarations aren't allowed in plain CSS.",
-          scanner.rawSpan());
-      }
-      return withChildren<Declaration>(
-        &StylesheetParser::readDeclarationOrAtRule,
-        start, name, nullptr, false);
-    }
-
-    ExpressionObj value = readExpression();
-    if (lookingAtChildren()) {
-      if (plainCss()) {
-        error("Nested declarations aren't allowed in plain CSS.",
-          scanner.rawSpan());
-      }
-      // only without children;
-      return withChildren<Declaration>(
-        &StylesheetParser::readDeclarationOrAtRule,
-        start, name, value, false);
-    }
-    else {
-      expectStatementSeparator();
-      return SASS_MEMORY_NEW(Declaration,
-        scanner.relevantSpanFrom(start), name, value);
-    }
-
-  }
-  // EO readDeclaration
-
-    // Consumes a property declaration. This is only used in contexts where
-  // declarations are allowed but style rules are not, such as nested
-  // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
   Statement* StylesheetParser::readPropertyOrVariableDeclaration(bool parseCustomProperties)
   {
 
@@ -677,7 +609,7 @@ namespace Sass {
     }
 
   }
-  // EO readDeclaration
+  // EO readPropertyOrVariableDeclaration
 
   // Consumes a statement that's allowed within a declaration.
   Statement* StylesheetParser::readDeclarationOrAtRule()
