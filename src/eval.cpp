@@ -1012,23 +1012,19 @@ namespace Sass {
   Value* Eval::visitFunctionExpression(FunctionExpression* node)
   {
 
-    VarRef& fidx(node->fidx2());
-
-    if (!fidx.isValid()) {
-      if (node->ns().empty()) {
-        node->fidx2(compiler.varRoot.findFnIdx(node->name()));
-      }
-      else {
-        node->fidx2(compiler.varRoot.findFnIdx(node->name(), node->ns()));
-      }
+    if (!node->fidx2().isValid()) {
+      node->fidx2(compiler.varRoot.findFnIdx(node->name(), node->ns()));
     }
-
-    Callable* function = nullptr;
 
     if (node->fidx2().isValid()) {
-      function = compiler.varRoot.getFunction(node->fidx2());
+      if (Callable* function = compiler.varRoot.getFunction(node->fidx2())) {
+        LOCAL_FLAG(inFunction, true);
+        return function->execute(*this,
+          node->arguments(), node->pstate());
+      }
     }
-    else if (node->ns().empty()) {
+
+    if (node->ns().empty()) {
       sass::string strm;
       strm += node->name();
       renderArgumentInvocation(
@@ -1037,20 +1033,13 @@ namespace Sass {
         String, node->pstate(),
         std::move(strm));
     }
-    else {
-      if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
-        callStackFrame frame(traces, node->pstate());
-        throw Exception::RuntimeException(traces, "Undefined function.");
-      }
-      else {
-        callStackFrame frame(traces, node->pstate());
-        throw Exception::ModuleUnknown(traces, node->ns());
-      }
-    }
 
-    LOCAL_FLAG(inFunction, true);
-    return function->execute(*this,
-      node->arguments(), node->pstate());
+    callStackFrame frame(traces, node->pstate());
+    if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
+      throw Exception::RuntimeException(traces, "Undefined function.");
+    }
+    throw Exception::ModuleUnknown(traces, node->ns());
+
   }
 
   Value* Eval::visitBinaryOpExpression(BinaryOpExpression* node)

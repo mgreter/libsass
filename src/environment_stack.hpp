@@ -436,7 +436,6 @@ namespace Sass {
     VarRef findVarIdx(const EnvKey& name) const;
 
     VarRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
-    VarRef findFnIdx(const EnvKey& name) const;
 
     void findVarIdxs(sass::vector<VarRef>& vidxs, const EnvKey& name) const;
 

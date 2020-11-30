@@ -889,7 +889,7 @@ namespace Sass {
     return nullptr;
   }
 
-  // Get a function associated with the under [name].
+  // Get a function associated with [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
@@ -903,25 +903,31 @@ namespace Sass {
   Callable* EnvRoot::findMixin(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullptr;
-    return stack.back()->findMixin(name, ns);
+    if (ns.empty()) return stack.back()->findMixin(name);
+    else return stack.back()->findMixin(name, ns);
   }
 
   Value* EnvRoot::findVariable(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullptr;
-    return stack.back()->findVariable(name, ns);
+    if (ns.empty()) return stack.back()->findVariable(name);
+    else return stack.back()->findVariable(name, ns);
   }
 
   VarRef EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullidx;
-    return stack.back()->findVarIdx(name, ns);
+    if (ns.empty()) return stack.back()->findVarIdx(name);
+    else return stack.back()->findVarIdx(name, ns);
   }
 
+  // Find a function reference for [name] within the current scope stack.
+  // If [ns] is not empty, we will only look within loaded modules.
   VarRef EnvRoot::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullidx;
-    return stack.back()->findFnIdx(name, ns);
+    if (ns.empty()) return stack.back()->findFnIdx(name);
+    else return stack.back()->findFnIdx(name, ns);
   }
 
   VarRef EnvRoot::findVarIdx(const EnvKey& name) const
@@ -934,13 +940,6 @@ namespace Sass {
   {
     if (stack.empty()) return;
     stack.back()->findVarIdxs(vidxs, name);
-  }
-
-
-  VarRef EnvRoot::findFnIdx(const EnvKey& name) const
-  {
-    if (stack.empty()) return nullidx;
-    return stack.back()->findFnIdx(name);
   }
 
   /////////////////////////////////////////////////////////////////////////
