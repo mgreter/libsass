@@ -283,7 +283,7 @@ namespace Sass {
   {
     ADD_CONSTREF(EnvKey, name);
     ADD_REF(sass::vector<EnvIdx>, vidxs);
-    ADD_REF(EnvIdx, vidx2);
+    // ADD_REF(EnvIdx, vidx2);
     ADD_CONSTREF(sass::string, ns);
     ADD_PROPERTY(bool, withinLoop);
   public:

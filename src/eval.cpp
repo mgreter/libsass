@@ -930,33 +930,28 @@ namespace Sass {
 
   Value* Eval::visitIncludeRule(IncludeRule* node)
   {
+
     Callable* callable = nullptr;
 
-    if (node->cached()) {
-      LOCAL_FLAG(inFunction, true);
-      callable = node->cached();
+    if (!node->midx().isValid()) {
+      node->midx(compiler.varRoot.findMixIdx(node->name(), node->ns()));
+    }
+
+    if (node->midx().isValid()) {
+      callable = compiler.varRoot.getMixin(node->midx());
     }
 
     if (callable == nullptr) {
-      if (node->ns().empty()) {
-        callable = compiler.varRoot.findMixin(node->name(), node->ns());
-      }
-      else {
-        callable = compiler.varRoot.findMixin(
-          node->name(), node->ns()
-        );
-        if (callable == nullptr) {
-          if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
-            callStackFrame frame(traces, node->pstate());
-            throw Exception::RuntimeException(traces, "Undefined mixin.");
-          }
-          else {
-            callStackFrame frame(traces, node->pstate());
-            throw Exception::ModuleUnknown(traces, node->ns());
-          }
+      if (!node->ns().empty()) {
+        if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
+          callStackFrame frame(traces, node->pstate());
+          throw Exception::RuntimeException(traces, "Undefined mixin.");
+        }
+        else {
+          callStackFrame frame(traces, node->pstate());
+          throw Exception::ModuleUnknown(traces, node->ns());
         }
       }
-
     }
 
     if (callable == nullptr) {
@@ -965,7 +960,7 @@ namespace Sass {
         logger456, "Undefined mixin.");
     }
 
-    node->cached(callable);
+    // node->cached(callable);
 
     if (auto mixin = callable->isaUserDefinedCallable()) {
 
@@ -1236,31 +1231,17 @@ namespace Sass {
     if (variable->vidxs().empty()) {
 
       if (variable->ns().empty()) {
-        // Get all parent variables
-        if (variable->withinLoop()) {
-          compiler.varRoot.findVarIdxs(
-            variable->vidxs(), variable->name());
-        }
-        else {
-          auto vidx = compiler.varRoot.findVarIdx(variable->name());
-          if (vidx.isValid()) variable->vidxs().push_back(vidx);
-        }
+        // Find all idxs and fill vidxs
+        compiler.varRoot.findVarIdxs(
+          variable->vidxs(),
+          variable->name());
       }
       else {
 
         auto vidx = compiler.varRoot.findVarIdx(
           variable->name(), variable->ns());
         if (vidx.isValid()) variable->vidxs().push_back(vidx);
-        else {
-          if (compiler.varRoot.stack.back()->hasNameSpace(variable->ns(), variable->name())) {
-            callStackFrame frame(traces, variable->pstate());
-            throw Exception::RuntimeException(traces, "Undefined variable.");
-          }
-          else {
-            callStackFrame frame(traces, variable->pstate());
-            throw Exception::ModuleUnknown(traces, variable->ns());
-          }
-        }
+
       }
 
     }
@@ -1273,6 +1254,11 @@ namespace Sass {
     }
 
     callStackFrame frame(traces, variable->pstate());
+
+    if (!variable->ns().empty() && !compiler.varRoot.stack.back()->hasNameSpace(variable->ns(), variable->name())) {
+      throw Exception::ModuleUnknown(traces, variable->ns());
+    }
+
     throw Exception::RuntimeException(traces,
       "Undefined variable.");
   }
@@ -1298,8 +1284,10 @@ namespace Sass {
   Value* Eval::visitDebugRule(DebugRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (CallableObj* fn = compiler.varRoot.findFunction(Keys::debugRule)) {
-      callExternalMessageOverloadFunction(*fn, message);
+    EnvIdx fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
+    if (fidx.isValid()) {
+      CallableObj& fn = compiler.varRoot.getFunction(fidx);
+      callExternalMessageOverloadFunction(fn, message);
     }
     else {
       logger456.addDebug(message->
@@ -1312,8 +1300,10 @@ namespace Sass {
   Value* Eval::visitWarnRule(WarnRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (CallableObj* fn = compiler.varRoot.findFunction(Keys::warnRule)) {
-      callExternalMessageOverloadFunction(*fn, message);
+    EnvIdx fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
+    if (fidx.isValid()) {
+      CallableObj& fn = compiler.varRoot.getFunction(fidx);
+      callExternalMessageOverloadFunction(fn, message);
     }
     else {
       sass::string result(message->toCss(logger456, false));
@@ -1326,8 +1316,10 @@ namespace Sass {
   Value* Eval::visitErrorRule(ErrorRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    if (CallableObj* fn = compiler.varRoot.findFunction(Keys::errorRule)) {
-      callExternalMessageOverloadFunction(*fn, message);
+    EnvIdx fidx = compiler.varRoot.findFnIdx(Keys::errorRule, "");
+    if (fidx.isValid()) {
+      CallableObj& fn = compiler.varRoot.getFunction(fidx);
+      callExternalMessageOverloadFunction(fn, message);
     }
     else {
       sass::string result(message->toCss(logger456, true));
@@ -1345,8 +1337,8 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-    rule->midx(compiler.varRoot.setMixin(
-      rule->name(), false, false));
+    rule->midx(compiler.varRoot.findMixIdx(
+      rule->name(), Strings::empty));
     compiler.varRoot.setMixin(
       rule->midx(), callable, false);
     return nullptr;
@@ -1358,8 +1350,8 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-    rule->fidx(compiler.varRoot.setFunction(
-      rule->name(), false, false));
+    rule->fidx(compiler.varRoot.findFnIdx(
+      rule->name(), Strings::empty));
     compiler.varRoot.setFunction(
       rule->fidx(), callable, false);
     return nullptr;

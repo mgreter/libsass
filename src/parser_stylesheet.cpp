@@ -79,9 +79,6 @@ namespace Sass {
     // make sure everything is parsed
     scanner.expectDone();
 
-    // Finalize variable scopes
-    context.varRoot.finalizeScopes();
-
     // Update the parser state at the end
     root->pstate(scanner.relevantSpanFrom(start));
 

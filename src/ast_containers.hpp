@@ -315,6 +315,8 @@ namespace Sass {
 
     bool erase(const K& key)
     {
+      // Would be faster by quite a bit (2% for bolt)
+      // return elements_.unordered_erase(key) != 0;
       return elements_.erase(key) != 0;
     }
 

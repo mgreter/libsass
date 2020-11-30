@@ -65,18 +65,8 @@ namespace Sass {
     // and (custom) functions plus mixins are registered.
     EnvRoot varRoot; // Must be after varStack!
 
-    // Get the value object for the variable by [name] on runtime.
-    // If [global] flag is given, we 
-    ValueObj findVariable(const EnvKey& name, bool global = false) {
-      return varRoot.findVariable(name, global);
-    }
-
-    EnvIdx setVariable(const EnvKey& name, bool guarded, bool global) {
-      return varRoot.setVariable(name, guarded, global);
-    }
-
     // Functions only for evaluation phase (C-API functions and eval itself)
-    CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
+    // CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
 
     // The current state the compiler is in.
     enum SassCompilerState state;
