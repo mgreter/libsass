@@ -157,7 +157,7 @@ namespace Sass {
     // Value constructor
     Color(const SourceSpan& pstate,
       double alpha = 1,
-      const sass::string& disp = Strings::empty);
+      const sass::string& disp = "");
 
     // Copy constructor
     Color(const Color* ptr);
@@ -217,7 +217,7 @@ namespace Sass {
     // Value constructor
     ColorRgba(const SourceSpan& pstate,
       double red, double green, double blue, double alpha = 1.0,
-      const sass::string& disp = Strings::empty);
+      const sass::string& disp = "");
 
     // Copy constructor
     ColorRgba(const ColorRgba* ptr);
@@ -262,7 +262,7 @@ namespace Sass {
     // Value constructor
     ColorHsla(const SourceSpan& pstate,
       double hue, double saturation, double lightness, double alpha = 1,
-      const sass::string& disp = Strings::empty);
+      const sass::string& disp = "");
 
     // Copy constructor
     ColorHsla(const ColorHsla* ptr);
@@ -306,7 +306,7 @@ namespace Sass {
     // Value constructor
     ColorHwba(const SourceSpan& pstate,
       double hue, double whiteness, double blackness, double alpha = 1,
-      const sass::string& disp = Strings::empty);
+      const sass::string& disp = "");
 
     // Copy constructor
     ColorHwba(const ColorHwba* ptr);
