@@ -415,7 +415,6 @@ namespace Sass {
     // We will move up the runtime stack until we either
     // find a defined mixin or run out of parent scopes.
     Callable* findMixin(const EnvKey& name, const sass::string& ns) const;
-    Callable* findMixin(const EnvKey& name) const;
 
     // Get a function associated with the under [name].
     // Will lookup from the last runtime stack scope.

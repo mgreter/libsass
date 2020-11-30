@@ -939,7 +939,7 @@ namespace Sass {
 
     if (callable == nullptr) {
       if (node->ns().empty()) {
-        callable = compiler.varRoot.findMixin(node->name());
+        callable = compiler.varRoot.findMixin(node->name(), node->ns());
       }
       else {
         callable = compiler.varRoot.findMixin(
@@ -997,13 +997,10 @@ namespace Sass {
       ValueObj qwe = _runUserDefinedCallable(
         node->arguments(), mixin, node->pstate());
 
-      // node->content()->accept(this);
     }
     else if (auto builtin = callable->isaBuiltInCallable()) {
-
-      // Return value is void, but we still want to collect its memory
+      // Return value is ignored, but we still want to collect its memory
       ValueObj rv = builtin->execute(*this, node->arguments(), node->pstate());
-
     }
 
     return nullptr;

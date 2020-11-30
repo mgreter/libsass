@@ -76,7 +76,6 @@ namespace Sass {
     }
 
     // Functions only for evaluation phase (C-API functions and eval itself)
-    Callable* findMixin(const EnvKey& name) { return varRoot.findMixin(name); }
     CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
 
     // The current state the compiler is in.
