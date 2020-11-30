@@ -391,17 +391,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
 
-  // Get a mixin associated with the under [name].
-  // Will lookup from the last runtime stack scope.
-  // We will move up the runtime stack until we either
-  // find a defined mixin or run out of parent scopes.
-  Callable* EnvRoot::findMixin(const EnvKey& name) const
-  {
-    if (stack.empty()) return nullptr;
-    return stack.back()->findMixin(name);
-  }
-  // EO getMixin
-
   // Get a value associated with the variable under [name].
   // If [global] flag is given, the lookup will be in the root.
   // Otherwise lookup will be from the last runtime stack scope.

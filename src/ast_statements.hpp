@@ -796,7 +796,8 @@ namespace Sass {
     // being invoked, or `null` if this doesn't pass a content block.
     ADD_CONSTREF(ContentBlockObj, content);
 
-    ADD_PROPERTY(CallableObj, cached);
+
+    ADD_PROPERTY(CallableObj, cached); // circular?
 
   public:
 
