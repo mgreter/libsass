@@ -202,8 +202,6 @@ namespace Sass {
     // Consumes a property declaration. This is only used in contexts where
     // declarations are allowed but style rules are not, such as nested
     // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
-    Statement* readDeclaration(bool parseCustomProperties = true);
-
     Statement* readPropertyOrVariableDeclaration(bool parseCustomProperties = true);
 
     // Consumes a statement that's allowed within a declaration.
