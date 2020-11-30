@@ -1012,49 +1012,44 @@ namespace Sass {
   Value* Eval::visitFunctionExpression(FunctionExpression* node)
   {
 
-    if (node->cached()) {
-      LOCAL_FLAG(inFunction, true);
-      return node->cached()->execute(*this,
-        node->arguments(), node->pstate());
-    }
+    VarRef& fidx(node->fidx2());
 
-    CallableObj* function = nullptr;
-
-    if (function == nullptr) {
+    if (!fidx.isValid()) {
       if (node->ns().empty()) {
-        function = compiler.varRoot.findFunction(node->name());
+        node->fidx2(compiler.varRoot.findFnIdx(node->name()));
       }
       else {
-        function = compiler.varRoot.findFunction(
-          node->name(), node->ns()
-        );
-        if (function == nullptr) {
-          if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
-            callStackFrame frame(traces, node->pstate());
-            throw Exception::RuntimeException(traces, "Undefined function.");
-          }
-          else {
-            callStackFrame frame(traces, node->pstate());
-            throw Exception::ModuleUnknown(traces, node->ns());
-          }
-        }
+        node->fidx2(compiler.varRoot.findFnIdx(node->name(), node->ns()));
       }
+    }
 
-      if (function == nullptr) {
-        sass::string strm;
-        strm += node->name();
-        renderArgumentInvocation(
-          strm, node->arguments());
-        return SASS_MEMORY_NEW(
-          String, node->pstate(),
-          std::move(strm));
+    Callable* function = nullptr;
+
+    if (node->fidx2().isValid()) {
+      function = compiler.varRoot.getFunction(node->fidx2());
+    }
+    else if (node->ns().empty()) {
+      sass::string strm;
+      strm += node->name();
+      renderArgumentInvocation(
+        strm, node->arguments());
+      return SASS_MEMORY_NEW(
+        String, node->pstate(),
+        std::move(strm));
+    }
+    else {
+      if (compiler.varRoot.stack.back()->hasNameSpace(node->ns(), node->name())) {
+        callStackFrame frame(traces, node->pstate());
+        throw Exception::RuntimeException(traces, "Undefined function.");
       }
-
+      else {
+        callStackFrame frame(traces, node->pstate());
+        throw Exception::ModuleUnknown(traces, node->ns());
+      }
     }
 
     LOCAL_FLAG(inFunction, true);
-    // node->cached(*function);
-    return (*function)->execute(*this,
+    return function->execute(*this,
       node->arguments(), node->pstate());
   }
 

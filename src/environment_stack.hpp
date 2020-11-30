@@ -196,9 +196,10 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
     CallableObj* findFunction(const EnvKey& name) const;
     CallableObj* getFunction(const EnvKey& name) const;
+
+    VarRef findFnIdx(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
@@ -210,9 +211,14 @@ namespace Sass {
     Value* getVariable(const EnvKey& name) const;
 
     void findVarIdxs(sass::vector<VarRef>& vidxs, const EnvKey& name) const;
+
     VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
+
     VarRef findVarIdx(const EnvKey& name) const;
     VarRef getVarIdx(const EnvKey& name) const;
+
+    VarRef getFnIdx(const EnvKey& name) const;
 
 
     bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
@@ -415,7 +421,6 @@ namespace Sass {
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
     // find a defined function or run out of parent scopes.
-    CallableObj* findFunction(const EnvKey& name, const sass::string& ns) const;
     CallableObj* findFunction(const EnvKey& name) const;
 
     // Get a value associated with the variable under [name].
@@ -425,8 +430,13 @@ namespace Sass {
     // defined variable with a value or run out of parent scopes.
     Value* findVariable(const EnvKey& name, const sass::string& ns) const;
     Value* findVariable(const EnvKey& name, bool global = false) const;
+
     VarRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+
     VarRef findVarIdx(const EnvKey& name) const;
+
+    VarRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
+    VarRef findFnIdx(const EnvKey& name) const;
 
     void findVarIdxs(sass::vector<VarRef>& vidxs, const EnvKey& name) const;
 
