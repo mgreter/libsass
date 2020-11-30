@@ -301,21 +301,6 @@ namespace Sass {
         << " - " << value->inspect() << "\n";
     }
   }
-  void EnvRoot::setModMix(const uint32_t offset, Callable* callable, bool guarded)
-  {
-    if (stkdbg) std::cerr << "Set global mixin " << offset
-       << " - " << callable->name() << "\n";
-    CallableObj& slot(intMixin[offset]);
-    if (!guarded || !slot) slot = callable;
-  }
-  void EnvRoot::setModFn(const uint32_t offset, Callable* callable, bool guarded)
-  {
-    if (stkdbg) std::cerr << "Set global function " << offset
-       << " - " << callable->name() << "\n";
-    CallableObj& slot(intFunction[offset]);
-    if (!guarded || !slot) slot = callable;
-  }
-
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
@@ -712,40 +697,6 @@ namespace Sass {
     return nullidx;
   }
 
-  bool EnvRefs::setModMix(const EnvKey& name, Callable* fn, bool guarded) const
-  {
-    auto it = mixIdxs.find(name);
-    if (it != mixIdxs.end()) {
-      root.setModMix(it->second, fn, guarded);
-      return true;
-    }
-    for (auto fwds : forwards) {
-      auto it = fwds->mixIdxs.find(name);
-      if (it != fwds->mixIdxs.end()) {
-        root.setModFn(it->second, fn, guarded);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool EnvRefs::setModFn(const EnvKey& name, Callable* fn, bool guarded) const
-  {
-    auto it = fnIdxs.find(name);
-    if (it != fnIdxs.end()) {
-      root.setModFn(it->second, fn, guarded);
-      return true;
-    }
-    for (auto fwds : forwards) {
-      auto it = fwds->fnIdxs.find(name);
-      if (it != fwds->fnIdxs.end()) {
-        root.setModFn(it->second, fn, guarded);
-        return true;
-      }
-    }
-    return false;
-  }
-
 
   bool EnvRefs::hasNameSpace(const sass::string& ns, const EnvKey& name) const
   {
@@ -934,22 +885,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  EnvIdx EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
+  EnvIdx EnvRoot::setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
     if (stack.empty()) return nullidx;
     return stack.back()->setModVar(name, ns, value, guarded, pstate);
-  }
-
-  bool EnvRoot::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
-  {
-    if (stack.empty()) return false;
-    return stack.back()->setModMix(name, ns, fn, guarded);
-  }
-
-  bool EnvRoot::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
-  {
-    if (stack.empty()) return false;
-    return stack.back()->setModFn(name, ns, fn, guarded);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -979,56 +918,6 @@ namespace Sass {
       }
     }
     return nullidx;
-  }
-
-  bool EnvRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      if (current->isImport) continue;
-      Module* mod = current->module;
-      if (mod == nullptr) continue;
-      // Check if the namespace was registered
-      auto it = mod->moduse.find(ns);
-      if (it == mod->moduse.end()) continue;
-      if (EnvRefs* idxs = it->second.first) {
-        if (idxs->setModMix(name, fn, guarded))
-          return true;
-      }
-      if (Module* mod = it->second.second) {
-        auto fwd = mod->mergedFwdMix.find(name);
-        if (fwd != mod->mergedFwdMix.end()) {
-          root.setModMix(fwd->second, fn, guarded);
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  bool EnvRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
-  {
-    for (const EnvRefs* current = this; current; current = current->pscope)
-    {
-      if (current->isImport) continue;
-      Module* mod = current->module;
-      if (mod == nullptr) continue;
-      // Check if the namespace was registered
-      auto it = mod->moduse.find(ns);
-      if (it == mod->moduse.end()) continue;
-      if (EnvRefs* idxs = it->second.first) {
-        if (idxs->setModFn(name, fn, guarded))
-          return true;
-      }
-      if (Module* mod = it->second.second) {
-        auto fwd = mod->mergedFwdFn.find(name);
-        if (fwd != mod->mergedFwdFn.end()) {
-          root.setModFn(fwd->second, fn, guarded);
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   // Get a value associated with the variable under [name].
