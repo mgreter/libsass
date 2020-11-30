@@ -275,7 +275,6 @@ namespace Sass {
       arguments),
     ns_(ns),
     name_(name),
-    cached_(nullptr),
     withinLoop_(withinLoop)
   {}
 

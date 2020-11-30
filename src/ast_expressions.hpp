@@ -390,8 +390,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, name);
 
     // The frame offset for the function
-    ADD_PROPERTY(Callable*, cached);
-    ADD_CONSTREF(VarRef, fidx2);
+    ADD_REF(VarRef, fidx2);
 
     // Internal optimization flag
     ADD_CONSTREF(bool, withinLoop);
