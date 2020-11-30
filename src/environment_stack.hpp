@@ -227,13 +227,9 @@ namespace Sass {
 
 
     EnvIdx setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
-    bool setModMix(const EnvKey& name, Callable* callable, bool guarded) const;
-    bool setModFn(const EnvKey& name, Callable* callable, bool guarded) const;
 
 
     EnvIdx setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
-    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
-    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded);
 
     // Test if we are top frame
     bool isRoot() const;
@@ -393,10 +389,8 @@ namespace Sass {
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
     void setVariable(const EnvIdx& vidx, ValueObj value, bool guarded);
-
     void setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate);
-    void setModMix(const uint32_t offset, Callable* callable, bool guarded);
-    void setModFn(const uint32_t offset, Callable* callable, bool guarded);
+    EnvIdx setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
@@ -437,10 +431,6 @@ namespace Sass {
     EnvIdx findFnIdx(const EnvKey& name, const sass::string& ns) const;
 
     void findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const;
-
-    EnvIdx setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
-    bool setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
-    bool setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guraded);
 
     // Set a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.

@@ -46,8 +46,6 @@ namespace Sass {
 
     EnvKeyMap<BuiltInMod*> modules;
 
-    WithConfigVar* getCfgVar(const EnvKey& name);
-
   protected:
 
     // Functions in order of appearance

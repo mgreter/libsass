@@ -182,7 +182,7 @@ namespace Sass {
 
       if (!result) result = a->value()->accept(this);
 
-      a->vidx2(compiler.varRoot.setModVar(
+      a->vidx2(compiler.varRoot.setModVar2(
         a->variable(), a->ns(),
         result,
         a->is_default(),
