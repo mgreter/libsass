@@ -108,7 +108,7 @@ namespace Sass {
     ParentStatement(
       SourceSpan&& pstate,
       StatementVector&& children,
-      VarRefs* idxs = nullptr);
+      EnvRefs* idxs = nullptr);
     // Returns whether we have a child content block
     virtual bool hasContent() const override;
   };
@@ -127,7 +127,7 @@ namespace Sass {
     // Value constructor
     StyleRule(SourceSpan&& pstate,
       Interpolation* interpolation,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -181,7 +181,7 @@ namespace Sass {
       Expression* lower_bound,
       Expression* upper_bound,
       bool is_inclusive = false,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -205,7 +205,7 @@ namespace Sass {
       SourceSpan&& pstate,
       const EnvKeys& variables,
       Expression* expressions,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -227,7 +227,7 @@ namespace Sass {
     WhileRule(
       SourceSpan&& pstate,
       Expression* condition,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -250,7 +250,7 @@ namespace Sass {
     MediaRule(
       SourceSpan&& pstate,
       Interpolation* query,
-      VarRefs* idxs,
+      EnvRefs* idxs,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -276,7 +276,7 @@ namespace Sass {
       SourceSpan&& pstate,
       Interpolation* name,
       Interpolation* value,
-      VarRefs* idxs,
+      EnvRefs* idxs,
       bool is_childless = true,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
@@ -299,7 +299,7 @@ namespace Sass {
     AtRootRule(
       SourceSpan&& pstate,
       Interpolation* query = nullptr,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -316,7 +316,7 @@ namespace Sass {
   class IfRule final : public ParentStatement
   {
     // Variables for children scope
-    // ADD_PROPERTY(VarRefs*, idxs);
+    // ADD_PROPERTY(EnvRefs*, idxs);
     // Predicate is optional, which indicates an else block.
     // In this case further `alternatives` are simply ignored.
     ADD_CONSTREF(ExpressionObj, predicate);
@@ -325,7 +325,7 @@ namespace Sass {
   public:
     // Value constructor
     IfRule(SourceSpan&& pstate,
-      VarRefs* idxs,
+      EnvRefs* idxs,
       StatementVector&& children = {},
       Expression* predicate = nullptr,
       IfRule* alternative = {});
@@ -350,7 +350,7 @@ namespace Sass {
     SupportsRule(
       SourceSpan&& pstate,
       SupportsCondition* condition,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -379,7 +379,7 @@ namespace Sass {
       ArgumentDeclaration* arguments,
       StatementVector&& children = {},
       SilentComment* comment = nullptr,
-      VarRefs* idxs = nullptr);
+      EnvRefs* idxs = nullptr);
     // Declare up-casting methods
     DECLARE_ISA_CASTER(MixinRule);
   };
@@ -391,7 +391,7 @@ namespace Sass {
     public CallableDeclaration
   {
     // Content function reference
-    ADD_CONSTREF(VarRef, cidx);
+    ADD_CONSTREF(EnvIdx, cidx);
 
     ADD_CONSTREF(UserDefinedCallableObj, cmixin);
 
@@ -400,7 +400,7 @@ namespace Sass {
     ContentBlock(
       SourceSpan&& pstate,
       ArgumentDeclaration* arguments = nullptr,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
     // Statement visitor to sass values entry function
@@ -419,14 +419,14 @@ namespace Sass {
     public CallableDeclaration
   {
     // Function reference
-    ADD_CONSTREF(VarRef, fidx);
+    ADD_CONSTREF(EnvIdx, fidx);
   public:
     // Value constructor
     FunctionRule(
       SourceSpan&& pstate,
       const EnvKey& name,
       ArgumentDeclaration* arguments,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
     // Statement visitor to sass values entry function
@@ -445,16 +445,16 @@ namespace Sass {
     public CallableDeclaration
   {
     // Mixin function reference
-    ADD_CONSTREF(VarRef, midx);
+    ADD_CONSTREF(EnvIdx, midx);
     // Content function reference
-    // ADD_CONSTREF(VarRef, cidx33);
+    // ADD_CONSTREF(EnvIdx, cidx33);
   public:
     // Value constructor
     MixinRule(
       SourceSpan&& pstate,
       const sass::string& name,
       ArgumentDeclaration* arguments,
-      VarRefs* idxs = nullptr,
+      EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
     // Statement visitor to sass values entry function
@@ -750,9 +750,9 @@ namespace Sass {
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);
-    ADD_REF(sass::vector<VarRef>, vidxs);
+    ADD_REF(sass::vector<EnvIdx>, vidxs);
 
-    ADD_REF(VarRef, vidx2);
+    ADD_REF(EnvIdx, vidx2);
     ADD_PROPERTY(bool, withinLoop);
 
     ADD_CONSTREF(bool, is_default); // ToDO rename
@@ -764,7 +764,7 @@ namespace Sass {
       const EnvKey& variable,
       bool withinLoop,
       const sass::string ns,
-      sass::vector<VarRef> vidxs,
+      sass::vector<EnvIdx> vidxs,
       Expression* value,
       bool is_default = false,
       bool is_global = false);

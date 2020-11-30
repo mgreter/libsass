@@ -18,7 +18,7 @@ namespace Sass {
   // Each parsed scope gets its own environment frame
   /////////////////////////////////////////////////////////////////////////
 
-  const VarRef nullidx;
+  const EnvIdx nullidx;
 
   // The root is used for all runtime state
   // Also contains parsed root scope stack
@@ -26,7 +26,7 @@ namespace Sass {
     Compiler& compiler) :
     compiler(compiler),
     stack(compiler.varStack3312),
-    idxs(new VarRefs(
+    idxs(new EnvRefs(
       *this,
       nullptr,
       0xFFFFFFFF,
@@ -59,7 +59,7 @@ namespace Sass {
     bool isModule,
     bool isImport) :
     stack(compiler.varRoot.stack),
-    idxs(new VarRefs(
+    idxs(new EnvRefs(
       compiler.varRoot,
       compiler.varRoot.stack.back(),
       uint32_t(compiler.varRoot.varFramePtr.size()),
@@ -104,7 +104,7 @@ namespace Sass {
 
   // Register new variable on local stack
   // Invoked mostly by stylesheet parser
-  VarRef VarRefs::createVariable(
+  EnvIdx EnvRefs::createVariable(
     const EnvKey& name)
   {
     // Check for existing function
@@ -140,7 +140,7 @@ namespace Sass {
   // Mostly invoked by built-in functions
   // Then invoked for custom C-API function
   // Finally for every parsed function rule
-  VarRef VarRefs::createFunction(
+  EnvIdx EnvRefs::createFunction(
     const EnvKey& name)
   {
     // Check for existing function
@@ -169,7 +169,7 @@ namespace Sass {
   // Register new mixin on local stack
   // Only invoked for mixin rules
   // But also for content blocks
-  VarRef VarRefs::createMixin(
+  EnvIdx EnvRefs::createMixin(
     const EnvKey& name)
   {
     // Check for existing mixin
@@ -199,7 +199,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Test if we are top frame
-  bool VarRefs::isRoot() const {
+  bool EnvRefs::isRoot() const {
     // Check if raw pointers are equal
     return this == root.idxs;
   }
@@ -218,7 +218,7 @@ namespace Sass {
 
   // Get value instance by stack index reference
   // Just converting and returning reference to array offset
-  ValueObj& EnvRoot::getVariable(const VarRef& vidx)
+  ValueObj& EnvRoot::getVariable(const EnvIdx& vidx)
   {
     if (vidx.frame == 0xFFFFFFFF) {
       // if (stkdbg) std::cerr << "Get global variable " << vidx.offset << "\n";
@@ -257,7 +257,7 @@ namespace Sass {
   // Get function instance by stack index reference
 
   // Just converting and returning reference to array offset
-  CallableObj& EnvRoot::getFunction(const VarRef& fidx)
+  CallableObj& EnvRoot::getFunction(const EnvIdx& fidx)
   {
     if (fidx.frame == 0xFFFFFFFF) {
       return intFunction[fidx.offset];
@@ -270,7 +270,7 @@ namespace Sass {
 
   // Get mixin instance by stack index reference
   // Just converting and returning reference to array offset
-  CallableObj& EnvRoot::getMixin(const VarRef& midx)
+  CallableObj& EnvRoot::getMixin(const EnvIdx& midx)
   {
     if (midx.frame == 0xFFFFFFFF) {
       if (mixdbg) std::cerr << "Get global mixin " << midx.offset << "\n";
@@ -319,7 +319,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setVariable(const VarRef& vidx, ValueObj value, bool guarded)
+  void EnvRoot::setVariable(const EnvIdx& vidx, ValueObj value, bool guarded)
   {
     if (vidx.frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[vidx.offset]);
@@ -359,7 +359,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setFunction(const VarRef& fidx, UserDefinedCallableObj value, bool guarded)
+  void EnvRoot::setFunction(const EnvIdx& fidx, UserDefinedCallableObj value, bool guarded)
   {
     if (fidx.frame == 0xFFFFFFFF) {
       if (!guarded || intFunction[fidx.offset] == nullptr)
@@ -374,7 +374,7 @@ namespace Sass {
 
   // Set items on runtime/evaluation phase via references
   // Just converting reference to array offset and assigning
-  void EnvRoot::setMixin(const VarRef& midx, UserDefinedCallableObj value, bool guarded)
+  void EnvRoot::setMixin(const EnvIdx& midx, UserDefinedCallableObj value, bool guarded)
   {
     if (midx.frame == 0xFFFFFFFF) {
       if (!guarded || intMixin[midx.offset] == nullptr)
@@ -407,14 +407,14 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  VarRef VarRefs::findVarIdx(const EnvKey& name) const
+  EnvIdx EnvRefs::findVarIdx(const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport == false) {
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
-          const VarRef vidx{ current->varFrame, it->second };
+          const EnvIdx vidx{ current->varFrame, it->second };
           ValueObj& value = root.getVariable(vidx);
           if (!value.isNull()) return vidx;
         }
@@ -423,7 +423,7 @@ namespace Sass {
       for (auto fwds : current->forwards) {
         auto fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
-          const VarRef vidx{ fwds->varFrame, fwd->second };
+          const EnvIdx vidx{ fwds->varFrame, fwd->second };
           Value* value = root.getVariable(vidx);
           if (value != nullptr) return vidx;
         }
@@ -445,17 +445,17 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  void VarRefs::findVarIdxs(
-    sass::vector<VarRef>& vidxs,
+  void EnvRefs::findVarIdxs(
+    sass::vector<EnvIdx>& vidxs,
     const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport == false) {
         // if (current->pscope && current->pscope->module) break;
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
-          const VarRef vidx{ current->varFrame, it->second };
+          const EnvIdx vidx{ current->varFrame, it->second };
           vidxs.push_back(vidx);
           continue;
         }
@@ -464,7 +464,7 @@ namespace Sass {
       for (auto fwds : current->forwards) {
         auto fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
-          const VarRef vidx{ fwds->varFrame, fwd->second };
+          const EnvIdx vidx{ fwds->varFrame, fwd->second };
           vidxs.push_back(vidx);
           continue;
         }
@@ -481,12 +481,12 @@ namespace Sass {
   // EO getVariable
 
 
-  Value* VarRefs::getVariable(const EnvKey& name) const
+  Value* EnvRefs::getVariable(const EnvKey& name) const
   {
     if (isImport == false) {
       auto it = varIdxs.find(name);
       if (it != varIdxs.end()) {
-        const VarRef vidx{ varFrame, it->second };
+        const EnvIdx vidx{ varFrame, it->second };
         Value* value = root.getVariable(vidx);
         if (value != nullptr) return value;
       }
@@ -495,14 +495,14 @@ namespace Sass {
     for (auto fwds : forwards) {
       auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
-        const VarRef vidx{ fwds->varFrame, it->second };
+        const EnvIdx vidx{ fwds->varFrame, it->second };
         Value* value = root.getVariable(vidx);
         if (value != nullptr) return value;
       }
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdVar.find(name);
         if (fwd != mod->mergedFwdVar.end()) {
-          const VarRef vidx{ 0xFFFFFFFF, fwd->second };
+          const EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
           Value* value = root.getVariable(vidx);
           if (value != nullptr) return value;
         }
@@ -517,9 +517,9 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  Value* VarRefs::findVariable(const EnvKey& name) const
+  Value* EnvRefs::findVariable(const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       auto rv = current->getVariable(name);
       if (rv != nullptr) return rv;
@@ -532,9 +532,9 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  Callable* VarRefs::findMixin(const EnvKey& name) const
+  Callable* EnvRefs::findMixin(const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       auto rv = current->getMixin(name);
       if (rv != nullptr) return rv;
@@ -548,9 +548,9 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  CallableObj* VarRefs::findFunction(const EnvKey& name) const
+  CallableObj* EnvRefs::findFunction(const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       auto rv = current->getFunction(name);
       if (rv != nullptr) return rv;
@@ -563,9 +563,9 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  VarRef VarRefs::findFnIdx(const EnvKey& name) const
+  EnvIdx EnvRefs::findFnIdx(const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       auto rv = current->getFnIdx(name);
       if (rv.isValid()) return rv;
@@ -578,12 +578,12 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined mixin or run out of parent scopes.
-  Callable* VarRefs::getMixin(const EnvKey& name, bool hidePrivate) const
+  Callable* EnvRefs::getMixin(const EnvKey& name, bool hidePrivate) const
   {
     if (!isImport) {
       auto it = mixIdxs.find(name);
       if (it != mixIdxs.end()) {
-        const VarRef vidx{ mixFrame, it->second };
+        const EnvIdx vidx{ mixFrame, it->second };
         Callable* value = root.getMixin(vidx);
         if (value != nullptr) return value;
       }
@@ -592,14 +592,14 @@ namespace Sass {
     for (auto fwds : forwards) {
       auto it = fwds->mixIdxs.find(name);
       if (it != fwds->mixIdxs.end()) {
-        const VarRef vidx{ fwds->mixFrame, it->second };
+        const EnvIdx vidx{ fwds->mixFrame, it->second };
         Callable* value = root.getMixin(vidx);
         if (value != nullptr) return value;
       }
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdMix.find(name);
         if (fwd != mod->mergedFwdMix.end()) {
-          const VarRef vidx{ 0xFFFFFFFF, fwd->second };
+          const EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
           Callable* value = root.getMixin(vidx);
           if (value != nullptr) return value;
         }
@@ -611,12 +611,12 @@ namespace Sass {
 
 
 
-  CallableObj* VarRefs::getFunction(const EnvKey& name) const
+  CallableObj* EnvRefs::getFunction(const EnvKey& name) const
   {
     if (!isImport) {
       auto it = fnIdxs.find(name);
       if (it != fnIdxs.end()) {
-        const VarRef vidx{ fnFrame, it->second };
+        const EnvIdx vidx{ fnFrame, it->second };
         CallableObj& value = root.getFunction(vidx);
         if (value != nullptr) return &value;
       }
@@ -625,14 +625,14 @@ namespace Sass {
     for (auto fwds : forwards) {
       auto it = fwds->fnIdxs.find(name);
       if (it != fwds->fnIdxs.end()) {
-        const VarRef vidx{ fwds->fnFrame, it->second };
+        const EnvIdx vidx{ fwds->fnFrame, it->second };
         CallableObj& value = root.getFunction(vidx);
         if (value != nullptr) return &value;
       }
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef vidx{ fwds->fnFrame, fwd->second };
+          const EnvIdx vidx{ fwds->fnFrame, fwd->second };
           CallableObj& value = root.getFunction(vidx);
           if (value != nullptr) return &value;
         }
@@ -647,12 +647,12 @@ namespace Sass {
 // Otherwise lookup will be from the last runtime stack scope.
 // We will move up the runtime stack until we either find a 
 // defined variable with a value or run out of parent scopes.
-  VarRef VarRefs::getFnIdx(const EnvKey& name) const
+  EnvIdx EnvRefs::getFnIdx(const EnvKey& name) const
   {
     if (!isImport) {
       auto it = fnIdxs.find(name);
       if (it != fnIdxs.end()) {
-        const VarRef vidx{ fnFrame, it->second };
+        const EnvIdx vidx{ fnFrame, it->second };
         CallableObj& value = root.getFunction(vidx);
         if (value != nullptr) return vidx;
       }
@@ -661,14 +661,14 @@ namespace Sass {
     for (auto fwds : forwards) {
       auto it = fwds->fnIdxs.find(name);
       if (it != fwds->fnIdxs.end()) {
-        const VarRef vidx{ fwds->fnFrame, it->second };
+        const EnvIdx vidx{ fwds->fnFrame, it->second };
         CallableObj& value = root.getFunction(vidx);
         if (value != nullptr) return vidx;
       }
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
-          const VarRef vidx{ fwds->fnFrame, fwd->second };
+          const EnvIdx vidx{ fwds->fnFrame, fwd->second };
           CallableObj& value = root.getFunction(vidx);
           if (value != nullptr) return vidx;
         }
@@ -678,26 +678,26 @@ namespace Sass {
   }
 
   // EO getVariable
-  VarRef VarRefs::getVarIdx(const EnvKey& name) const
+  EnvIdx EnvRefs::getVarIdx(const EnvKey& name) const
   {
     if (isImport) return nullidx;
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
-      const VarRef vidx{ varFrame, it->second };
+      const EnvIdx vidx{ varFrame, it->second };
       Value* value = root.getVariable(vidx);
       if (value != nullptr) return vidx;
     }
     for (auto fwds : forwards) {
       auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
-        const VarRef vidx{ fwds->varFrame, it->second };
+        const EnvIdx vidx{ fwds->varFrame, it->second };
         Value* value = root.getVariable(vidx);
         if (value != nullptr) return vidx;
       }
       if (Module* mod = fwds->module) {
         auto fwd = mod->mergedFwdVar.find(name);
         if (fwd != mod->mergedFwdVar.end()) {
-          const VarRef vidx{ fwds->varFrame, it->second };
+          const EnvIdx vidx{ fwds->varFrame, it->second };
           Value* value = root.getVariable(vidx);
           if (value != nullptr) return vidx;
         }
@@ -706,7 +706,7 @@ namespace Sass {
     return nullidx;
   }
 
-  VarRef VarRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
+  EnvIdx EnvRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
   {
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
@@ -723,7 +723,7 @@ namespace Sass {
     return nullidx;
   }
 
-  bool VarRefs::setModMix(const EnvKey& name, Callable* fn, bool guarded) const
+  bool EnvRefs::setModMix(const EnvKey& name, Callable* fn, bool guarded) const
   {
     auto it = mixIdxs.find(name);
     if (it != mixIdxs.end()) {
@@ -740,7 +740,7 @@ namespace Sass {
     return false;
   }
 
-  bool VarRefs::setModFn(const EnvKey& name, Callable* fn, bool guarded) const
+  bool EnvRefs::setModFn(const EnvKey& name, Callable* fn, bool guarded) const
   {
     auto it = fnIdxs.find(name);
     if (it != fnIdxs.end()) {
@@ -758,9 +758,9 @@ namespace Sass {
   }
 
 
-  bool VarRefs::hasNameSpace(const sass::string& ns, const EnvKey& name) const
+  bool EnvRefs::hasNameSpace(const sass::string& ns, const EnvKey& name) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -783,9 +783,9 @@ namespace Sass {
     return false;
   }
 
-  Value* VarRefs::findVariable(const EnvKey& name, const sass::string& ns) const
+  Value* EnvRefs::findVariable(const EnvKey& name, const sass::string& ns) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -793,7 +793,7 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      if (VarRefs* idxs = it->second.first) {
+      if (EnvRefs* idxs = it->second.first) {
         Value* val = idxs->getVariable(name);
         if (val != nullptr) return val;
       }
@@ -810,9 +810,9 @@ namespace Sass {
   }
 
 
-  VarRef VarRefs::findVarIdx(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRefs::findVarIdx(const EnvKey& name, const sass::string& ns) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -820,14 +820,14 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      if (VarRefs* idxs = it->second.first) {
-        VarRef vidx = idxs->getVarIdx(name);
+      if (EnvRefs* idxs = it->second.first) {
+        EnvIdx vidx = idxs->getVarIdx(name);
         if (vidx != nullidx) return vidx;
       }
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdVar.find(name);
         if (fwd != mod->mergedFwdVar.end()) {
-          VarRef vidx{ 0xFFFFFFFF, fwd->second };
+          EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
           ValueObj& val = root.getVariable(vidx);
           if (val != nullptr) return vidx;
         }
@@ -837,9 +837,9 @@ namespace Sass {
   }
 
 
-  VarRef VarRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -847,14 +847,14 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      if (VarRefs* idxs = it->second.first) {
-        VarRef vidx = idxs->getFnIdx(name);
+      if (EnvRefs* idxs = it->second.first) {
+        EnvIdx vidx = idxs->getFnIdx(name);
         if (vidx != nullidx) return vidx;
       }
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
-          VarRef vidx{ 0xFFFFFFFF, fwd->second };
+          EnvIdx vidx{ 0xFFFFFFFF, fwd->second };
           CallableObj& val = root.getFunction(vidx);
           if (val != nullptr) return vidx;
         }
@@ -863,9 +863,9 @@ namespace Sass {
     return nullidx;
   }
 
-  Callable* VarRefs::findMixin(const EnvKey& name, const sass::string& ns) const
+  Callable* EnvRefs::findMixin(const EnvKey& name, const sass::string& ns) const
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -873,7 +873,7 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      if (VarRefs* idxs = it->second.first) {
+      if (EnvRefs* idxs = it->second.first) {
         Callable* mixin = idxs->getMixin(name);
         if (mixin != nullptr) return mixin;
       }
@@ -914,7 +914,7 @@ namespace Sass {
     else return stack.back()->findVariable(name, ns);
   }
 
-  VarRef EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullidx;
     if (ns.empty()) return stack.back()->findVarIdx(name);
@@ -923,20 +923,20 @@ namespace Sass {
 
   // Find a function reference for [name] within the current scope stack.
   // If [ns] is not empty, we will only look within loaded modules.
-  VarRef EnvRoot::findFnIdx(const EnvKey& name, const sass::string& ns) const
+  EnvIdx EnvRoot::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
     if (stack.empty()) return nullidx;
     if (ns.empty()) return stack.back()->findFnIdx(name);
     else return stack.back()->findFnIdx(name, ns);
   }
 
-  VarRef EnvRoot::findVarIdx(const EnvKey& name) const
+  EnvIdx EnvRoot::findVarIdx(const EnvKey& name) const
   {
     if (stack.empty()) return nullidx;
     return stack.back()->findVarIdx(name);
   }
 
-  void EnvRoot::findVarIdxs(sass::vector<VarRef>& vidxs, const EnvKey& name) const
+  void EnvRoot::findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const
   {
     if (stack.empty()) return;
     stack.back()->findVarIdxs(vidxs, name);
@@ -945,7 +945,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  VarRef EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
+  EnvIdx EnvRoot::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
     if (stack.empty()) return nullidx;
     return stack.back()->setModVar(name, ns, value, guarded, pstate);
@@ -966,9 +966,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  VarRef VarRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
+  EnvIdx EnvRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -984,17 +984,17 @@ namespace Sass {
           return { 0xFFFFFFFF, fwd->second };
         }
       }
-      if (VarRefs* idxs = it->second.first) {
-        VarRef vidx = idxs->setModVar(name, value, guarded, pstate);
+      if (EnvRefs* idxs = it->second.first) {
+        EnvIdx vidx = idxs->setModVar(name, value, guarded, pstate);
         if (vidx.isValid()) return vidx;
       }
     }
     return nullidx;
   }
 
-  bool VarRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
+  bool EnvRefs::setModMix(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -1002,7 +1002,7 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      if (VarRefs* idxs = it->second.first) {
+      if (EnvRefs* idxs = it->second.first) {
         if (idxs->setModMix(name, fn, guarded))
           return true;
       }
@@ -1017,9 +1017,9 @@ namespace Sass {
     return false;
   }
 
-  bool VarRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
+  bool EnvRefs::setModFn(const EnvKey& name, const sass::string& ns, Callable* fn, bool guarded)
   {
-    for (const VarRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -1027,7 +1027,7 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      if (VarRefs* idxs = it->second.first) {
+      if (EnvRefs* idxs = it->second.first) {
         if (idxs->setModFn(name, fn, guarded))
           return true;
       }
@@ -1060,12 +1060,12 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  VarRef EnvRoot::setVariable(const EnvKey& name, bool guarded, bool global)
+  EnvIdx EnvRoot::setVariable(const EnvKey& name, bool guarded, bool global)
   {
     if (stack.empty()) return nullidx;
     uint32_t idx = global ? 0 :
       (uint32_t)stack.size() - 1;
-    const VarRefs* current = stack[idx];
+    const EnvRefs* current = stack[idx];
     while (current) {
 
       for (auto refs : current->forwards) {
@@ -1123,12 +1123,12 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  VarRef EnvRoot::setFunction(const EnvKey& name, bool guarded, bool global)
+  EnvIdx EnvRoot::setFunction(const EnvKey& name, bool guarded, bool global)
   {
     if (stack.empty()) return nullidx;
     uint32_t idx = global ? 0 :
       (uint32_t)stack.size() - 1;
-    const VarRefs* current = stack[idx];
+    const EnvRefs* current = stack[idx];
     while (current) {
 
       for (auto refs : current->forwards) {
@@ -1186,12 +1186,12 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  VarRef EnvRoot::setMixin(const EnvKey& name, bool guarded, bool global)
+  EnvIdx EnvRoot::setMixin(const EnvKey& name, bool guarded, bool global)
   {
     if (stack.empty()) return nullidx;
     uint32_t idx = global ? 0 :
       (uint32_t)stack.size() - 1;
-    const VarRefs* current = stack[idx];
+    const EnvRefs* current = stack[idx];
     while (current) {
 
       for (auto refs : current->forwards) {
@@ -1246,7 +1246,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Very small helper for debugging
-  sass::string VarRef::toString() const
+  sass::string EnvIdx::toString() const
   {
     sass::sstream strm;
     strm << frame << ":" << offset;

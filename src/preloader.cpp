@@ -20,7 +20,7 @@ namespace Sass {
   {}
 
   // During the whole parsing we should keep a big map of
-  // Variable name to VarRef vector with all alternatives
+  // Variable name to EnvIdx vector with all alternatives
 
 
   void Preloader::process()
@@ -33,7 +33,7 @@ namespace Sass {
   {
     if (sheet && !sheet->empty()) {
       LOCAL_PTR(Root, chroot77, sheet);
-      LOCAL_PTR(VarRefs, idxs, sheet->idxs);
+      LOCAL_PTR(EnvRefs, idxs, sheet->idxs);
       ImportStackFrame isf(eval.compiler, sheet->import);
       eval.compiler.varRoot.stack.push_back(sheet->idxs);
       for (auto& it : sheet->elements()) it->accept(this);
@@ -45,7 +45,7 @@ namespace Sass {
   void Preloader::visitParentStatement(ParentStatement* rule)
   {
     if (rule->empty()) return;
-    LOCAL_PTR(VarRefs, idxs, rule->idxs);
+    LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
@@ -84,7 +84,7 @@ namespace Sass {
   void Preloader::visitFunctionRule(FunctionRule* rule)
   {
     // const EnvKey& fname(rule->name());
-    LOCAL_PTR(VarRefs, idxs, rule->idxs);
+    LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
@@ -93,7 +93,7 @@ namespace Sass {
   void Preloader::visitMixinRule(MixinRule* rule)
   {
     // const EnvKey& mname(rule->name());
-    LOCAL_PTR(VarRefs, idxs, rule->idxs);
+    LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
     eval.compiler.varRoot.stack.pop_back();
@@ -156,7 +156,7 @@ namespace Sass {
   void Preloader::visitIncludeRule(IncludeRule* rule)
   {
     if (ContentBlock* content = rule->content()) {
-      LOCAL_PTR(VarRefs, idxs, content->idxs);
+      LOCAL_PTR(EnvRefs, idxs, content->idxs);
       eval.compiler.varRoot.stack.push_back(content->idxs);
       for (auto& it : content->elements()) it->accept(this);
       eval.compiler.varRoot.stack.pop_back();
@@ -174,7 +174,7 @@ namespace Sass {
 
   void Preloader::visitEachRule(EachRule* rule)
   {
-    LOCAL_PTR(VarRefs, idxs, rule->idxs);
+    LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     auto& vars(rule->variables());
     for (size_t i = 0; i < vars.size(); i += 1) {
       idxs->varIdxs.insert({ vars[i], (uint32_t)i });
@@ -186,7 +186,7 @@ namespace Sass {
 
   void Preloader::visitForRule(ForRule* rule)
   {
-    LOCAL_PTR(VarRefs, idxs, rule->idxs);
+    LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     idxs->varIdxs.insert({ rule->varname(), 0 });
     eval.compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);

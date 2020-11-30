@@ -26,7 +26,7 @@ namespace std {
 namespace Sass {
 
   void mergeForwards(
-    VarRefs* idxs,
+    EnvRefs* idxs,
     Module* module,
     bool isShown,
     bool isHidden,

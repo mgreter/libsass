@@ -104,7 +104,7 @@ namespace Sass {
       bool hasVar = false;
 
       if (it != rframe->varIdxs.end()) {
-        VarRef vidx(rframe->varFrame, it->second);
+        EnvIdx vidx(rframe->varFrame, it->second);
         auto& value = compiler.varRoot.getVariable(vidx);
         if (value != nullptr) hasVar = true;
       }
@@ -116,14 +116,14 @@ namespace Sass {
         for (auto fwds : rframe->forwards) {
           auto it = fwds->varIdxs.find(a->variable());
           if (it != fwds->varIdxs.end()) {
-            VarRef vidx(0xFFFFFFFF, it->second);
+            EnvIdx vidx(0xFFFFFFFF, it->second);
             auto& value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
 
           auto fwd = fwds->module->mergedFwdVar.find(a->variable());
           if (fwd != fwds->module->mergedFwdVar.end()) {
-            VarRef vidx(0xFFFFFFFF, fwd->second);
+            EnvIdx vidx(0xFFFFFFFF, fwd->second);
             auto& value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
@@ -168,7 +168,7 @@ namespace Sass {
     }
     else {
 
-      VarRefs* mod = compiler.getCurrentModule();
+      EnvRefs* mod = compiler.getCurrentModule();
 
       auto it = mod->module->moduse.find(a->ns());
       if (it == mod->module->moduse.end()) {
@@ -259,7 +259,7 @@ namespace Sass {
     expectStatementSeparator("variable declaration");
 
     // Skip to optional global scope
-    VarRefs* frame = global ?
+    EnvRefs* frame = global ?
       context.varRoot.stack.front() :
       context.varRoot.stack.back();
 
@@ -299,7 +299,7 @@ namespace Sass {
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
 
-    VarRefs* frame = context.getCurrentFrame();
+    EnvRefs* frame = context.getCurrentFrame();
 
     EnvFrame local(context, false);
     // Create space for optional content callable
@@ -334,7 +334,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     while (frame->isImport) frame = frame->pscope;
-    VarRef midx = frame->createMixin(name);
+    EnvIdx midx = frame->createMixin(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
@@ -352,7 +352,7 @@ namespace Sass {
   FunctionRule* StylesheetParser::readFunctionRule(Offset start)
   {
     // Variables should not be hoisted through
-    VarRefs* parent = context.varRoot.stack.back();
+    EnvRefs* parent = context.varRoot.stack.back();
     EnvFrame local(context, false);
 
     // var precedingComment = lastSilentComment;
@@ -439,7 +439,7 @@ namespace Sass {
   }
 
   void mergeForwards(
-    VarRefs* idxs,
+    EnvRefs* idxs,
     Module* module,
     WithConfig* wconfig,
     Logger& logger)
@@ -579,7 +579,7 @@ namespace Sass {
 
 
 
-  VarRefs* Eval::pudding(VarRefs* idxs, bool intoRoot, VarRefs* modFrame)
+  EnvRefs* Eval::pudding(EnvRefs* idxs, bool intoRoot, EnvRefs* modFrame)
   {
 
     if (intoRoot) {
@@ -751,9 +751,9 @@ namespace Sass {
     current = root->compiled;
 
     LOCAL_PTR(Root, chroot77, root);
-    VarRefs* idxs = root->idxs;
+    EnvRefs* idxs = root->idxs;
 
-    VarRefs* mframe(compiler.getCurrentModule());
+    EnvRefs* mframe(compiler.getCurrentModule());
 
     EnvScope scoped2(compiler.varRoot, idxs);
 
@@ -789,7 +789,7 @@ namespace Sass {
     if (rule->wasExported()) return;
     rule->wasExported(true);
 
-    VarRefs* frame(compiler.getCurrentFrame());
+    EnvRefs* frame(compiler.getCurrentFrame());
 
     if (rule->module()->isBuiltIn) {
 
@@ -839,7 +839,7 @@ namespace Sass {
   void Eval::exposeImpRule(IncludeImport* rule)
   {
 
-    VarRefs* pframe = compiler.getCurrentFrame();
+    EnvRefs* pframe = compiler.getCurrentFrame();
 
     while (pframe->isImport) {
       pframe = pframe->pscope;
@@ -861,7 +861,7 @@ namespace Sass {
     }
 
 
-    VarRefs* cidxs = rule->root()->idxs;
+    EnvRefs* cidxs = rule->root()->idxs;
 
     // Merge it up through all imports
     for (auto& var : cidxs->varIdxs) {
