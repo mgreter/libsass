@@ -325,7 +325,7 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(InterpolationObj, itpl);
-    ADD_PROPERTY(ArgumentInvocation*, args);
+    ADD_CONSTREF(ArgumentInvocationObj, args);
     ADD_CONSTREF(sass::string, ns);
   public:
     // Value constructor
