@@ -19,15 +19,17 @@
 /////////////////////////////////////////////
 namespace Sass {
 
-  class Env;
-  class EnvRoot;
+  // Forward declare
   class EnvKey;
+  class EnvRef;
+  class EnvRefs;
+  class EnvRoot;
+  class EnvFrame;
+
   class Module;
   class BuiltInMod;
   class WithConfig;
 
-  class EnvIdx;
-  class EnvRefs;
   class Logger;
   class Compiler;
   class EnvFrame;

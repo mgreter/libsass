@@ -14,7 +14,7 @@ extern "C" {
   {
     struct SassFunction* cb = new SassFunction{};
     if (cb == 0 || signature == 0) return 0;
-    cb->signature = sass_copy_c_string(signature);
+    cb->signature = signature;
     cb->function = callback;
     cb->cookie = cookie;
     return cb;
@@ -22,7 +22,6 @@ extern "C" {
 
   void ADDCALL sass_delete_function(struct SassFunction* function)
   {
-    sass_free_c_string(function->signature);
     delete function;
   }
 
@@ -32,7 +31,7 @@ extern "C" {
 
   const char* ADDCALL sass_function_get_signature(struct SassFunction* function)
   {
-    return function->signature;
+    return function->signature.c_str();
   }
 
   SassFunctionLambda ADDCALL sass_function_get_function(struct SassFunction* function)

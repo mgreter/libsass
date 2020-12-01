@@ -52,11 +52,6 @@ namespace Sass {
     // Same order needed for function stack
     std::vector<CallableObj> fnList;
 
-    // Lookup functions by function name
-    // Due to EnvKayMap case insensitive.
-    EnvKeyMap<CallableObj> fnLookup;
-
-
   public:
 
     // sass::vector<WithConfigVar>* withConfig = nullptr;

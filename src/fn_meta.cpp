@@ -118,7 +118,7 @@ namespace Sass {
           }
         }
         if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        EnvIdx vidx = compiler.varRoot.findVarIdx(variable->value(), "", true);
+        EnvRef vidx = compiler.varRoot.findVarIdx(variable->value(), "", true);
         if (!vidx.isValid()) return SASS_MEMORY_NEW(Boolean, pstate, false);
         auto& var = compiler.varRoot.getVariable(vidx);
         return SASS_MEMORY_NEW(Boolean, pstate, !var.isNull());
@@ -130,7 +130,7 @@ namespace Sass {
       BUILT_IN_FN(variableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        EnvIdx vidx = compiler.varRoot.findVarIdx(variable->value(), "");
+        EnvRef vidx = compiler.varRoot.findVarIdx(variable->value(), "");
 
         bool hasVar = false;
         auto parent = compiler.getCurrentModule();
@@ -179,7 +179,7 @@ namespace Sass {
           }
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        EnvIdx fidx = compiler.varRoot.findFnIdx(variable->value(), "");
+        EnvRef fidx = compiler.varRoot.findFnIdx(variable->value(), "");
         return SASS_MEMORY_NEW(Boolean, pstate, fidx.isValid());
       }
 
@@ -245,7 +245,7 @@ namespace Sass {
           for (auto entry : refs->varIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvIdx vidx(refs->varFrame, entry.second);
+            EnvRef vidx(refs->framePtr, entry.second);
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
@@ -253,7 +253,7 @@ namespace Sass {
           for (auto entry : root->mergedFwdVar) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvIdx vidx(0xFFFFFFFF, entry.second);
+            EnvRef vidx(0xFFFFFFFF, entry.second);
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
@@ -281,7 +281,7 @@ namespace Sass {
           for (auto entry : refs->fnIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvIdx fidx(refs->fnFrame, entry.second);
+            EnvRef fidx(refs->framePtr, entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
@@ -290,7 +290,7 @@ namespace Sass {
           for (auto entry : root->mergedFwdFn) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvIdx fidx(0xFFFFFFFF, entry.second);
+            EnvRef fidx(0xFFFFFFFF, entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
@@ -306,7 +306,7 @@ namespace Sass {
       /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
       Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
-        EnvIdx fidx = ctx.varRoot.findFnIdx(name, "");
+        EnvRef fidx = ctx.varRoot.findFnIdx(name, "");
         if (!fidx.isValid()) return nullptr;
         return ctx.varRoot.getFunction(fidx);
       }
@@ -337,7 +337,7 @@ namespace Sass {
             EnvRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(name->value());
             if (it != module->fnIdxs.end()) {
-              EnvIdx fidx({ module->fnFrame, it->second });
+              EnvRef fidx({ module->framePtr, it->second });
               callable = compiler.varRoot.getFunction(fidx);
             }
           }
@@ -359,7 +359,7 @@ namespace Sass {
                   throw Exception::RuntimeException(compiler,
                     "This function is available from multiple global modules.");
                 }
-                EnvIdx fidx({ global->fnFrame, it->second });
+                EnvRef fidx({ global->framePtr, it->second });
                 callable = compiler.varRoot.getFunction(fidx);
                 if (callable) break;
               }

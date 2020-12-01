@@ -15,7 +15,7 @@
 
 // Minimal alignment for memory fragments. Must be a multiple
 // of `SASS_MEM_ALIGN` and should not be too big (maybe 1 or 2)
-#define SassAllocatorHeadSize sizeof(unsigned int)
+// #define SassAllocatorHeadSize sizeof(unsigned int)
 
 // The number of bytes we use for our book-keeping before every
 // memory fragment. Needed to know to which bucket we belongs on
@@ -34,12 +34,17 @@
 #ifdef SASS_CUSTOM_ALLOCATOR
 
   // How many buckets should we have for the free-list
-  // Determines when allocations go directly to malloc/free
-  // For maximum size of managed items multiply by alignment
-  #define SassAllocatorBuckets 640
+  // We have a bucket for every `SASS_MEM_ALIGN` * `SassAllocatorBuckets`
+  // When something requests x amount of memory, we will pad the request
+  // to be a multiple of `SASS_MEM_ALIGN` and then assign it either to
+  // an existing bucket or directly use to malloc/free. Otherwise we will
+  // chunk out a slice of the arena to store it in that memory.
+  #define SassAllocatorBuckets 960
 
   // The size of the memory pool arenas in bytes.
-  #define SassAllocatorArenaSize (1024 * 640)
+  // This determines the minimum allocated memory chunk.
+  // Whenever we need more memory, we malloc that much.
+  #define SassAllocatorArenaSize (1024 * 1024)
 
 #endif
 // EO SASS_CUSTOM_ALLOCATOR

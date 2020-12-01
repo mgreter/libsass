@@ -55,7 +55,7 @@ namespace Sass {
     for (auto cfgvar : config) {
       if (cfgvar.second.wasUsed == false) {
         if (cfgvar.second.isGuarded == false) {
-          logger.addFinalStackTrace(cfgvar.second.pstate2);
+          callStackFrame csf(logger, cfgvar.second.pstate2);
           throw Exception::RuntimeException(logger, "$" +
             cfgvar.second.name + " was not declared "
             "with !default in the @used module.");
@@ -633,7 +633,7 @@ namespace Sass {
     const EnvKey& variable,
     bool withinLoop,
     const sass::string ns,
-    sass::vector<EnvIdx> vidxs,
+    sass::vector<EnvRef> vidxs,
     Expression* value,
     bool is_default,
     bool is_global) :

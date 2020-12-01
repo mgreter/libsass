@@ -7,7 +7,7 @@
 
 // Struct to hold custom function callback
 struct SassFunction {
-  char* signature;
+  sass::string signature;
   SassFunctionLambda function;
   void* cookie;
 };

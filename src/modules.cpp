@@ -22,9 +22,7 @@ namespace Sass {
       root,
       nullptr,
       0xFFFFFFFF,
-      0xFFFFFFFF,
-      0xFFFFFFFF,
-      false, // isPermeable
+      false, // isSemiGlobal
       false)) // isImport
   {
     isBuiltIn = true;

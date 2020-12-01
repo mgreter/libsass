@@ -25,6 +25,8 @@
 #include "fn_colors.hpp"
 #include "fn_selectors.hpp"
 
+#include "preloader.hpp"
+
 #include <cstring>
 #include <csignal>
 #ifdef _MSC_VER
@@ -96,7 +98,7 @@ namespace Sass {
     // Value& val(Value::unwrap(value));
     // Compiler& compiler(Compiler::unwrap(comp));
     // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
-    return sass_make_null();
+    return value;
   }
 
   // so far only pow has two arguments
@@ -238,6 +240,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     if (root.isNull()) return {};
 
     Eval eval(*this, *this, plainCss);
+
+    // Preloader preloader(*this, root);
+    // preloader.process();
 
     CssRootObj compiled = eval.acceptRoot(root); // 50%
     // debug_ast(compiled);
@@ -466,7 +471,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     for (struct SassImporter* importer : importers) {
 
       // Get the external importer function
-      SassImporterLambda fn = sass_importer_get_callback(importer);
+      SassImporterLambda fn = importer->importer;
 
       // std::cerr << "Calling custom loader " << fn << "\n";
 
@@ -730,35 +735,22 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // Interface for external custom functions
   /////////////////////////////////////////////////////////////////////////
 
-  // Create a new external callable from the sass function. Parses
-  // function signature into function name and argument declaration.
-  ExternalCallable* Compiler::makeExternalCallable(struct SassFunction* function)
-  {
-    // Create temporary source object for signature
-    SourceStringObj source = SASS_MEMORY_NEW(SourceString,
-      "sass://signature", function->signature);
-    // Create a new scss parser instance
-    ScssParser parser(*this, source.ptr());
-    ExternalCallable* callable =
-      parser.parseExternalCallable();
-    callable->function(function);
-    return callable;
-  }
-  // EO makeExternalCallable
-
   // Register an external custom sass function on the global scope.
   // Main entry point for custom functions passed through the C-API.
   void Compiler::registerCustomFunction(struct SassFunction* function)
   {
-    // EnvRoot root(*this);
-    // Create a new external callable from the sass function
-    // ExternalCallable* callable = makeExternalCallable(function);
-    // Currently external functions are treated globally
-    // if (fnLookup.count(callable->envkey()) == 0) {
-    //   fnLookup.insert(std::make_pair(callable->envkey(), callable));
-    //   varRoot.createFunction(callable->envkey());
-    //   fnList.push_back(callable);
-    // }
+    EnvRoot root(*this);
+    SourceDataObj source = SASS_MEMORY_NEW(SourceString,
+      "sass://signature", sass::string(function->signature));
+    ScssParser parser(*this, source.ptr());
+    ExternalCallable* callable =
+      parser.parseExternalCallable();
+    callable->function(function);
+    auto& functions(varRoot.intFunction);
+    uint32_t offset((uint32_t)functions.size());
+    varRoot.intFunction.push_back(callable);
+    varRoot.idxs->fnIdxs[callable->name()] = offset;
+    varRoot.privateFnOffset = offset;
   }
   // EO registerCustomFunction
 
@@ -898,7 +890,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     // registerCustomFunction(qwe);
 
-    // registerCustomFunction(sass_make_function("set-local($name, $value)", fn_set_local, (void*)31));
+    registerCustomFunction(sass_make_function("set-local($name, $value)", fn_set_local, (void*)31));
     // registerCustomFunction(sass_make_function("set-global($name, $value)", fn_set_global, (void*)31));
     // registerCustomFunction(sass_make_function("set-lexical($name, $value)", fn_set_lexical, (void*)31));
     // 

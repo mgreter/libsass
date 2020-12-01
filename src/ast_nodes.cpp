@@ -296,7 +296,7 @@ namespace Sass {
   // The SassScript `>` operation.
   bool Value::greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " > " + other->inspect() + "\".",
@@ -307,7 +307,7 @@ namespace Sass {
   // The SassScript `>=` operation.
   bool Value::greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " >= " + other->inspect() + "\".",
@@ -318,7 +318,7 @@ namespace Sass {
   // The SassScript `<` operation.
   bool Value::lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " < " + other->inspect() + "\".",
@@ -329,7 +329,7 @@ namespace Sass {
   // The SassScript `<=` operation.
   bool Value::lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " <= " + other->inspect() + "\".",
@@ -340,7 +340,7 @@ namespace Sass {
   // The SassScript `*` operation.
   Value* Value::times(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " * " + other->inspect() + "\".",
@@ -351,7 +351,7 @@ namespace Sass {
   // The SassScript `%` operation.
   Value* Value::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -441,7 +441,7 @@ namespace Sass {
   // Assert and return a color or throws if incompatible
   const Color* Value::assertColor(Logger& logger, const sass::string& name) const
   {
-    logger.addFinalStackTrace(pstate());
+    callStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a color.",
       logger, pstate(), name);
@@ -450,7 +450,7 @@ namespace Sass {
   // Assert and return a function or throws if incompatible
   Function* Value::assertFunction(Logger& logger, const sass::string& name)
   {
-    logger.addFinalStackTrace(pstate());
+    callStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a function reference.",
       logger, pstate(), name);
@@ -459,7 +459,7 @@ namespace Sass {
   // Assert and return a map or throws if incompatible
   Map* Value::assertMap(Logger& logger, const sass::string& name)
   {
-    logger.addFinalStackTrace(pstate());
+    callStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a map.",
       logger, pstate(), name);
@@ -468,7 +468,7 @@ namespace Sass {
   // Assert and return a number or throws if incompatible
   Number* Value::assertNumber(Logger& logger, const sass::string& name)
   {
-    logger.addFinalStackTrace(pstate());
+    callStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a number.",
       logger, pstate(), name);
@@ -484,7 +484,7 @@ namespace Sass {
   // Assert and return a string or throws if incompatible
   String* Value::assertString(Logger& logger, const sass::string& name)
   {
-    logger.addFinalStackTrace(pstate());
+    callStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a string.",
       logger, pstate(), name);
@@ -508,7 +508,7 @@ namespace Sass {
   // Assert and return an argument list or throws if incompatible
   ArgumentList* Value::assertArgumentList(Logger& logger, const sass::string& name)
   {
-    logger.addFinalStackTrace(pstate());
+    callStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not an argument list.",
       logger, pstate(), name);

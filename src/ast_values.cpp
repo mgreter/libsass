@@ -143,7 +143,7 @@ namespace Sass {
   Value* Color::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " + " + other->inspect() + "\".",
@@ -155,7 +155,7 @@ namespace Sass {
   Value* Color::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " - " + other->inspect() + "\".",
@@ -167,7 +167,7 @@ namespace Sass {
   Value* Color::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " / " + other->inspect() + "\".",
@@ -178,7 +178,7 @@ namespace Sass {
 
   Value* Color::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -697,11 +697,11 @@ namespace Sass {
         return l.value() > r.value();
       }
       // Throw error, unit are incompatible
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " > " + other->inspect() + "\".",
@@ -726,11 +726,11 @@ namespace Sass {
         return l.value() >= r.value();
       }
       // Throw error, unit are incompatible
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " >= " + other->inspect() + "\".",
@@ -755,11 +755,11 @@ namespace Sass {
         return l.value() < r.value();
       }
       // Throw error, unit are incompatible
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " < " + other->inspect() + "\".",
@@ -784,11 +784,11 @@ namespace Sass {
         return l.value() <= r.value();
       }
       // Throw error, unit are incompatible
-      logger.addFinalStackTrace(pstate);
+      callStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " <= " + other->inspect() + "\".",
@@ -941,7 +941,7 @@ namespace Sass {
       double f(right.getUnitConvertFactor(left));
       // Returns zero on incompatible units
       if (f == 0.0) {
-        logger.addFinalStackTrace(pstate);
+        callStackFrame csf(logger, pstate);
         throw Exception::UnitMismatch(
           logger, left, right);
       }
@@ -960,7 +960,7 @@ namespace Sass {
       return operate(add, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::plus(other, logger, pstate);
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " + " + other->inspect() + "\".",
@@ -974,7 +974,7 @@ namespace Sass {
       return operate(sub, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::minus(other, logger, pstate);
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " - " + other->inspect() + "\".",
@@ -988,7 +988,7 @@ namespace Sass {
       return operate(mul, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::times(other, logger, pstate);
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " * " + other->inspect() + "\".",
@@ -1002,7 +1002,7 @@ namespace Sass {
       return operate(mod, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::plus(other, logger, pstate);
-    logger.addFinalStackTrace(pstate);
+    callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -1045,7 +1045,7 @@ namespace Sass {
       return lround(value_);
     }
     SourceSpan span(this->pstate());
-    logger.addFinalStackTrace(span);
+    callStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       inspect() + " is not an int.",
       logger, span, name);
@@ -1055,7 +1055,7 @@ namespace Sass {
   {
     if (!hasUnits()) return this;
     SourceSpan span(this->pstate());
-    logger.addFinalStackTrace(span);
+    callStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       "Expected " + inspect() + " to have no units.",
       logger, span, name);
@@ -1065,7 +1065,7 @@ namespace Sass {
   {
     if (hasUnit(unit)) return this;
     SourceSpan span(this->pstate());
-    logger.addFinalStackTrace(span);
+    callStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       "Expected " + inspect() + " to have unit \"" + unit + "\".",
       logger, span, name);
@@ -1078,7 +1078,7 @@ namespace Sass {
       msg << "Expected " << inspect() << " to be within ";
       msg << min << unit() << " and " << max << unit() << ".";
       SourceSpan span(this->pstate());
-      logger.addFinalStackTrace(span);
+      callStackFrame csf(logger, span);
       throw Exception::SassScriptException(
         msg.str(), logger, span, name);
     }

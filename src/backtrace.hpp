@@ -51,6 +51,11 @@ namespace Sass {
       return name;
     }
 
+    bool operator==(const StackTrace& other) const {
+      return pstate == other.pstate &&
+        name == other.name && fn == other.fn;
+    }
+
     bool isFn() const override final {
       return fn;
     }

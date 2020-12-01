@@ -213,13 +213,6 @@ namespace Sass {
       const sass::vector<struct SassImporter*>& importers, bool singletone = true);
 
     /////////////////////////////////////////////////////////////////////////
-    // Create a new external callable from the sass function. Parses
-    // function signature into function name and argument declaration.
-    // The function you pass in will be taken over and freed by us!
-    /////////////////////////////////////////////////////////////////////////
-    ExternalCallable* makeExternalCallable(struct SassFunction* function);
-
-    /////////////////////////////////////////////////////////////////////////
     // Register an external custom sass function on the global scope.
     // Main entry point for custom functions passed through the C-API.
     // The function you pass in will be taken over and freed by us!

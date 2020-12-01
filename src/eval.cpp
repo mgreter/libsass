@@ -311,7 +311,7 @@ namespace Sass {
       ValueObj value = getParameter(results, i, parameters[i]);
       // Set lexical variable on scope
       compiler.varRoot.setVariable(
-        idxs->varFrame, (uint32_t)i,
+        idxs->framePtr, (uint32_t)i,
         value->withoutSlash(),
         false);
     }
@@ -343,7 +343,7 @@ namespace Sass {
       restargs = SASS_MEMORY_NEW(ArgumentList, pstate, separator,
         std::move(positional), std::move(results.named()));
       // Set last lexical variable on scope
-      compiler.varRoot.setVariable(idxs->varFrame,
+      compiler.varRoot.setVariable(idxs->framePtr,
         (uint32_t)parameters.size(), restargs.ptr(),
         false);
 
@@ -610,18 +610,14 @@ namespace Sass {
     ValueFlatMap& named(results.named());
     ValueVector& positional(results.positional());
 
-    // Clear existing array, but
-    // preserve existing memory 
-    named.clear(); positional.clear();
-    // Allocate minimum expected size
-
     // Collect positional args by evaluating input arguments
-    positional.reserve(arguments->positional().size());
+    positional.reserve(arguments->positional().size() + 1);
     for (const auto& arg : arguments->positional()) {
       positional.emplace_back(arg->accept(this));
     }
 
     // Collect named args by evaluating input arguments
+    // named.reserve(arguments->named().size() + 4);
     for (const auto& kv : arguments->named()) {
       named.insert(std::make_pair(kv.first, kv.second->accept(this)));
     }
@@ -653,7 +649,7 @@ namespace Sass {
       }
     }
     else {
-      positional.emplace_back(rest);
+      positional.emplace_back(std::move(rest));
     }
 
     if (arguments->kwdRest() == nullptr) {
@@ -670,7 +666,7 @@ namespace Sass {
       return results;
     }
     else {
-      logger456.addFinalStackTrace(keywordRest->pstate());
+      callStackFrame csf(logger456, keywordRest->pstate());
       throw Exception::RuntimeException(traces,
         "Variable keyword arguments must be a map (was $keywordRest).");
     }
@@ -955,7 +951,7 @@ namespace Sass {
     }
 
     if (callable == nullptr) {
-      compiler.addFinalStackTrace(node->pstate());
+      callStackFrame csf(logger456, node->pstate());
       throw Exception::RuntimeException(
         logger456, "Undefined mixin.");
     }
@@ -1284,7 +1280,7 @@ namespace Sass {
   Value* Eval::visitDebugRule(DebugRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvIdx fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
     if (fidx.isValid()) {
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
@@ -1300,7 +1296,7 @@ namespace Sass {
   Value* Eval::visitWarnRule(WarnRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvIdx fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
     if (fidx.isValid()) {
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
@@ -1316,7 +1312,7 @@ namespace Sass {
   Value* Eval::visitErrorRule(ErrorRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvIdx fidx = compiler.varRoot.findFnIdx(Keys::errorRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::errorRule, "");
     if (fidx.isValid()) {
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
@@ -1865,7 +1861,7 @@ namespace Sass {
 
     for(const auto& kv : map->elements()) {
       if (String* str = kv.first->isaString()) {
-        values[str->value()] = kv.second;
+        values.insert(std::make_pair(str->value(), kv.second));
       }
       else {
         callStackFrame frame(logger456, pstate);
@@ -1883,8 +1879,8 @@ namespace Sass {
 
     for (const auto& kv : map->elements()) {
       if (String* str = kv.first->isaString()) {
-        values[str->value()] = SASS_MEMORY_NEW(
-          ValueExpression, map->pstate(), kv.second);
+        values.insert(std::make_pair(str->value(), SASS_MEMORY_NEW(
+          ValueExpression, map->pstate(), kv.second)));
       }
       else {
         callStackFrame frame(logger456, pstate);
@@ -1917,7 +1913,7 @@ namespace Sass {
   {
 
     if (!isInStyleRule() && !inUnknownAtRule && !inKeyframes) {
-      logger456.addFinalStackTrace(node->pstate());
+      callStackFrame csf(logger456, node->pstate());
       throw Exception::RuntimeException(traces,
         "Declarations may only be used within style rules.");
     }
@@ -2008,7 +2004,7 @@ namespace Sass {
     NumberObj sass_end = high->assertNumber(logger456, "");
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
-      logger456.addFinalStackTrace(f->pstate());
+      callStackFrame csf(logger456, f->pstate());
       throw Exception::UnitMismatch(
         logger456, sass_start, sass_end);
     }
@@ -2020,7 +2016,7 @@ namespace Sass {
       if (f->is_inclusive()) ++end;
       for (double i = start; i < end; ++i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs->varFrame, 0, it.ptr(), false);
+        compiler.varRoot.setVariable(f->idxs->framePtr, 0, it.ptr(), false);
         val = acceptChildren(f);
         if (val) break;
       }
@@ -2029,7 +2025,7 @@ namespace Sass {
       if (f->is_inclusive()) --end;
       for (double i = start; i > end; --i) {
         NumberObj it = SASS_MEMORY_NEW(Number, low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(f->idxs->varFrame, 0, it.ptr(), false);
+        compiler.varRoot.setVariable(f->idxs->framePtr, 0, it.ptr(), false);
         val = acceptChildren(f);
         if (val) break;
       }
@@ -2041,7 +2037,7 @@ namespace Sass {
   {
 
     if (!isInStyleRule() /* || !declarationName.empty() */) {
-      logger456.addFinalStackTrace(e->pstate());
+      callStackFrame csf(logger456, e->pstate());
       throw Exception::RuntimeException(traces,
         "@extend may only be used within style rules.");
     }
@@ -2054,7 +2050,7 @@ namespace Sass {
       for (const auto& complex : slist->elements()) {
 
         if (complex->size() != 1) {
-          logger456.addFinalStackTrace(complex->pstate());
+          callStackFrame csf(logger456, complex->pstate());
           throw Exception::RuntimeException(traces,
             "complex selectors may not be extended.");
         }
@@ -2072,7 +2068,7 @@ namespace Sass {
             }
             sels << "` instead.\nSee http://bit.ly/ExtendCompound for details.";
             #ifdef SassRestrictCompoundExtending
-            logger456.addFinalStackTrace(compound->pstate());
+            callStackFrame csf(logger456, compound->pstate());
             throw Exception::RuntimeException(traces, sels.str());
             #else
             logger456.addDeprecation(sels.str(), compound->pstate());
@@ -2092,7 +2088,7 @@ namespace Sass {
 
         }
         else {
-          logger456.addFinalStackTrace(complex->pstate());
+          callStackFrame csf(logger456, complex->pstate());
           throw Exception::RuntimeException(traces,
             "complex selectors may not be extended.");
         }
@@ -2118,11 +2114,11 @@ namespace Sass {
         if (variables.size() == 1) {
           List* variable = SASS_MEMORY_NEW(List,
             map->pstate(), { key, value }, SASS_SPACE);
-          compiler.varRoot.setVariable(vidx->varFrame, 0, variable, false);
+          compiler.varRoot.setVariable(vidx->framePtr, 0, variable, false);
         }
         else {
-          compiler.varRoot.setVariable(vidx->varFrame, 0, key, false);
-          compiler.varRoot.setVariable(vidx->varFrame, 1, value, false);
+          compiler.varRoot.setVariable(vidx->framePtr, 0, key, false);
+          compiler.varRoot.setVariable(vidx->framePtr, 1, value, false);
         }
         ValueObj val = acceptChildren(e);
         if (val) return val.detach();
@@ -2145,11 +2141,11 @@ namespace Sass {
       // check if we got passed a list of args (investigate)
       if (List* scalars = item->isaList()) { // Ex
         if (variables.size() == 1) {
-          compiler.varRoot.setVariable(vidx->varFrame, 0, scalars, false);
+          compiler.varRoot.setVariable(vidx->framePtr, 0, scalars, false);
         }
         else {
           for (size_t j = 0, K = variables.size(); j < K; ++j) {
-            compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j,
+            compiler.varRoot.setVariable(vidx->framePtr, (uint32_t)j,
               j < scalars->size() ? scalars->get(j)
               : SASS_MEMORY_NEW(Null, expr->pstate()), false);
           }
@@ -2157,10 +2153,10 @@ namespace Sass {
       }
       else {
         if (variables.size() > 0) {
-          compiler.varRoot.setVariable(vidx->varFrame, 0, item, false);
+          compiler.varRoot.setVariable(vidx->framePtr, 0, item, false);
           for (size_t j = 1, K = variables.size(); j < K; ++j) {
             Value* res = SASS_MEMORY_NEW(Null, expr->pstate());
-            compiler.varRoot.setVariable(vidx->varFrame, (uint32_t)j, res, false);
+            compiler.varRoot.setVariable(vidx->framePtr, (uint32_t)j, res, false);
           }
         }
       }
