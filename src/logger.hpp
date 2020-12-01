@@ -34,24 +34,6 @@ namespace Sass {
     // Flag for unicode and/or color
     enum SassLoggerStyle style;
 
-    // Append the pstate if not already there
-    // Only call this right before throwing errors
-    // DONT USE, CAN LEAD TO SEGFAULTS IF THE ERROR
-    // WE THROW RIGHT AFTER IS CAUGHT AND BACKTRACKED
-    void addFinalStackTrace(const SourceSpan& pstate)
-    {
-      if (callStack.empty()) {
-        callStack.push_back(pstate);
-      }
-      else {
-        BackTrace& trace(callStack.back());
-        if (!(trace.pstate == pstate)) {
-          callStack.push_back(pstate);
-        }
-      }
-    }
-    // EO addFinalStackTrace
-
   private:
 
     // Split the line to three parts for error reporting.

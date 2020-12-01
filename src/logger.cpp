@@ -596,6 +596,7 @@ namespace Sass {
 
     i_beg = traces.size() - 1;
     i_end = sass::string::npos;
+    const StackTrace* prev = nullptr;
     for (size_t i = i_beg; i != i_end; i--) {
 
       const StackTrace& trace = traces[i];
@@ -607,8 +608,10 @@ namespace Sass {
       // if (trace.caller.substr(0, 6) == ", in f") continue;
 
       if (amount == sass::string::npos || amount > 0) {
+        if (prev && *prev == trace) continue;
         printSourceSpan(trace.pstate, os, style);
         if (amount > 0) --amount;
+        prev = &trace;
       }
 
       if (showPos) {

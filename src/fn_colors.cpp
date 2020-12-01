@@ -153,12 +153,12 @@ namespace Sass {
           msg << " space-separated";
         }
         msg << " list.";
-        compiler.addFinalStackTrace(list->pstate());
+        callStackFrame csf(compiler, list->pstate());
         throw Exception::RuntimeException(compiler, msg.str());
       }
       // Check if we have too many arguments
       if (list->size() > 3) {
-        compiler.addFinalStackTrace(list->pstate());
+        callStackFrame csf(compiler, list->pstate());
         throw Exception::TooManyArguments(compiler, list->size(), 3);
       }
       // Check for not enough arguments
@@ -297,7 +297,7 @@ namespace Sass {
         value = max * number->value() / 100;
       }
       else {
-        traces.addFinalStackTrace(number->pstate());
+        callStackFrame csf(traces, number->pstate());
         throw Exception::RuntimeException(traces,
           name + ": Expected " + number->inspect()
           + " to have no units or \"%\".");
@@ -1060,7 +1060,7 @@ namespace Sass {
           // Support the proprietary Microsoft alpha() function.
           return getFunctionString(Strings::alpha, pstate, arguments);
         }
-        compiler.addFinalStackTrace(arguments[0]->pstate());
+        callStackFrame csf(compiler, arguments[0]->pstate());
         throw Exception::TooManyArguments(compiler, size, 1);
       }
 

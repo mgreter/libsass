@@ -14,13 +14,14 @@ namespace Sass {
   Preloader::Preloader(Eval& eval, Root* root) :
     eval(eval),
     root(root),
+    compiler(eval.compiler),
     chroot77(eval.chroot77),
     wconfig(eval.wconfig),
     idxs(root->idxs)
   {}
 
   // During the whole parsing we should keep a big map of
-  // Variable name to EnvIdx vector with all alternatives
+  // Variable name to EnvRef vector with all alternatives
 
   void Preloader::process()
   {
@@ -32,10 +33,10 @@ namespace Sass {
     if (sheet && !sheet->empty()) {
       LOCAL_PTR(Root, chroot77, sheet);
       LOCAL_PTR(EnvRefs, idxs, sheet->idxs);
-      ImportStackFrame isf(eval.compiler, sheet->import);
-      eval.compiler.varRoot.stack.push_back(sheet->idxs);
+      ImportStackFrame isf(compiler, sheet->import);
+      compiler.varRoot.stack.push_back(sheet->idxs);
       for (auto& it : sheet->elements()) it->accept(this);
-      eval.compiler.varRoot.stack.pop_back();
+      compiler.varRoot.stack.pop_back();
     }
   }
 
@@ -43,14 +44,14 @@ namespace Sass {
   {
     if (rule->empty()) return;
     LOCAL_PTR(EnvRefs, idxs, rule->idxs);
-    eval.compiler.varRoot.stack.push_back(rule->idxs);
+    compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    compiler.varRoot.stack.pop_back();
   }
 
   void Preloader::visitUseRule(UseRule* rule)
   {
-    callStackFrame frame(eval.compiler, {
+    callStackFrame frame(compiler, {
       rule->pstate(), Strings::useRule });
     acceptRoot(eval.loadModRule(rule));
     eval.exposeUseRule(rule);
@@ -58,7 +59,7 @@ namespace Sass {
 
   void Preloader::visitForwardRule(ForwardRule* rule)
   {
-    callStackFrame frame(eval.compiler, {
+    callStackFrame frame(compiler, {
       rule->pstate(), Strings::forwardRule });
     acceptRoot(eval.loadModRule(rule));
     eval.exposeFwdRule(rule);
@@ -66,7 +67,7 @@ namespace Sass {
 
   void Preloader::visitIncludeImport(IncludeImport* rule)
   {
-    callStackFrame frame(eval.compiler, {
+    callStackFrame frame(compiler, {
       rule->pstate(), Strings::importRule });
     acceptRoot(eval.resolveIncludeImport(rule));
     eval.exposeImpRule(rule);
@@ -81,18 +82,18 @@ namespace Sass {
   {
     // const EnvKey& fname(rule->name());
     LOCAL_PTR(EnvRefs, idxs, rule->idxs);
-    eval.compiler.varRoot.stack.push_back(rule->idxs);
+    compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    compiler.varRoot.stack.pop_back();
   }
 
   void Preloader::visitMixinRule(MixinRule* rule)
   {
     // const EnvKey& mname(rule->name());
     LOCAL_PTR(EnvRefs, idxs, rule->idxs);
-    eval.compiler.varRoot.stack.push_back(rule->idxs);
+    compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    compiler.varRoot.stack.pop_back();
   }
 
   void Preloader::visitImportRule(ImportRule* rule)
@@ -153,9 +154,9 @@ namespace Sass {
   {
     if (ContentBlock* content = rule->content()) {
       LOCAL_PTR(EnvRefs, idxs, content->idxs);
-      eval.compiler.varRoot.stack.push_back(content->idxs);
+      compiler.varRoot.stack.push_back(content->idxs);
       for (auto& it : content->elements()) it->accept(this);
-      eval.compiler.varRoot.stack.pop_back();
+      compiler.varRoot.stack.pop_back();
     }
   }
 
@@ -175,18 +176,18 @@ namespace Sass {
     for (size_t i = 0; i < vars.size(); i += 1) {
       idxs->varIdxs.insert({ vars[i], (uint32_t)i });
     }
-    eval.compiler.varRoot.stack.push_back(rule->idxs);
+    compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    compiler.varRoot.stack.pop_back();
   }
 
   void Preloader::visitForRule(ForRule* rule)
   {
     LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     idxs->varIdxs.insert({ rule->varname(), 0 });
-    eval.compiler.varRoot.stack.push_back(rule->idxs);
+    compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
-    eval.compiler.varRoot.stack.pop_back();
+    compiler.varRoot.stack.pop_back();
   }
 
   void Preloader::visitReturnRule(ReturnRule* rule)

@@ -332,7 +332,7 @@ inline std::string parent_block(EnvRefs* node)
 {
   std::stringstream str;
   if (!node) return "";
-  str << "SG: " << (node->isPermeable ? "true" : "false");
+  str << "SG: " << (node->isSemiGlobal ? "true" : "false");
   return str.str();
 }
 

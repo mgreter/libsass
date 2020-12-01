@@ -57,7 +57,7 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
-    if (!a->withinLoop() && a->vidx2().isValid()) {
+    if (a->vidx2().isValid()) {
       assigne = &compiler.varRoot.getVariable(a->vidx2());
       ValueObj result = a->value()->accept(this);
       compiler.varRoot.setVariable(
@@ -79,7 +79,7 @@ namespace Sass {
       // If we have a config and the variable is already set
       // we still overwrite the variable beside being guarded
       WithConfigVar* wconf = nullptr;
-      if (compiler.wconfig && frame->varFrame == 0xFFFFFFFF && a->ns().empty()) {
+      if (compiler.wconfig && frame->framePtr == 0xFFFFFFFF && a->ns().empty()) {
         wconf = wconfig->getCfgVar(vname);
       }
       if (wconf) {
@@ -104,7 +104,7 @@ namespace Sass {
       bool hasVar = false;
 
       if (it != rframe->varIdxs.end()) {
-        EnvIdx vidx(rframe->varFrame, it->second);
+        EnvRef vidx(rframe->framePtr, it->second);
         auto& value = compiler.varRoot.getVariable(vidx);
         if (value != nullptr) hasVar = true;
       }
@@ -116,14 +116,14 @@ namespace Sass {
         for (auto fwds : rframe->forwards) {
           auto it = fwds->varIdxs.find(a->variable());
           if (it != fwds->varIdxs.end()) {
-            EnvIdx vidx(0xFFFFFFFF, it->second);
+            EnvRef vidx(0xFFFFFFFF, it->second);
             auto& value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
 
           auto fwd = fwds->module->mergedFwdVar.find(a->variable());
           if (fwd != fwds->module->mergedFwdVar.end()) {
-            EnvIdx vidx(0xFFFFFFFF, fwd->second);
+            EnvRef vidx(0xFFFFFFFF, fwd->second);
             auto& value = compiler.varRoot.getVariable(vidx);
             if (value != nullptr) hasVar = true;
           }
@@ -170,11 +170,11 @@ namespace Sass {
 
       auto it = mod->module->moduse.find(a->ns());
       if (it == mod->module->moduse.end()) {
-        compiler.addFinalStackTrace(a->pstate());
+        callStackFrame csf(compiler, a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
       else if (it->second.second && !it->second.second->isCompiled) {
-        compiler.addFinalStackTrace(a->pstate());
+        callStackFrame csf(compiler, a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
 
@@ -272,7 +272,7 @@ namespace Sass {
           break;
         }
       }
-      if (chroot->isImport || chroot->isPermeable) {
+      if (chroot->isImport || chroot->isSemiGlobal) {
         chroot = chroot->pscope;
       }
       else {
@@ -332,7 +332,7 @@ namespace Sass {
     LOCAL_FLAG(mixinHasContent, false);
 
     while (frame->isImport) frame = frame->pscope;
-    EnvIdx midx = frame->createMixin(name);
+    EnvRef midx = frame->createMixin(name);
     MixinRule* rule = withChildren<MixinRule>(
       &StylesheetParser::readChildStatement,
       start, name, arguments, local.idxs);
@@ -526,24 +526,17 @@ namespace Sass {
     ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
 
-    Root* sheet = nullptr;
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets.find(abspath);
     if (cached != compiler.sheets.end()) {
-      sheet = cached->second;
-    }
-    else {
-      // Permeable seems to have minor negative impact!?
-      EnvFrame local(compiler, false, true, isImport); // correct
-      sheet = compiler.registerImport(loaded);
-      sheet->idxs = local.idxs;
-      sheet->import = loaded;
+      return cached->second;
     }
 
-    // rule->module(sheet);
-    // rule->sheet(sheet);
-
-    // wconfig.finalize();
+    // Permeable seems to have minor negative impact!?
+    EnvFrame local(compiler, false, true, isImport); // correct
+    Root* sheet = compiler.registerImport(loaded);
+    sheet->idxs = local.idxs;
+    sheet->import = loaded;
     return sheet;
   }
 
@@ -796,7 +789,6 @@ namespace Sass {
         rule->wasExported(true);
       }
       else if (frame->module->moduse.count(rule->ns())) {
-        compiler.addFinalStackTrace(rule->pstate());
         throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
       }
       else {
@@ -843,7 +835,7 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    if (pframe->varFrame == 0xFFFFFFFF) {
+    if (pframe->framePtr == 0xFFFFFFFF) {
 
       // Import to forward
       for (auto& asd : rule->root()->mergedFwdVar) {
@@ -863,30 +855,27 @@ namespace Sass {
 
     // Merge it up through all imports
     for (auto& var : cidxs->varIdxs) {
-      auto it = pframe->varIdxs.find(var.first);
-      if (it == pframe->varIdxs.end()) {
+      if (pframe->varIdxs.count(var.first) == 0) {
         pframe->createVariable(var.first);
       }
     }
 
     // Merge it up through all imports
     for (auto& fn : cidxs->fnIdxs) {
-      auto it = pframe->fnIdxs.find(fn.first);
-      if (it == pframe->fnIdxs.end()) {
+      if (pframe->fnIdxs.count(fn.first) == 0) {
         pframe->createFunction(fn.first);
       }
     }
 
     // Merge it up through all imports
     for (auto& mix : cidxs->mixIdxs) {
-      auto it = pframe->mixIdxs.find(mix.first);
-      if (it == pframe->mixIdxs.end()) {
+      if (pframe->mixIdxs.count(mix.first) == 0) {
         pframe->createMixin(mix.first);
       }
     }
 
 
-    if (pframe->varFrame != 0xFFFFFFFF) {
+    if (pframe->framePtr != 0xFFFFFFFF) {
 
       if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
         << compiler.implicitWithConfig << "\n";
@@ -897,9 +886,7 @@ namespace Sass {
         rule->root()->idxs);
 
     }
-
-
-    if (pframe->varFrame == 0xFFFFFFFF) {
+    else {
 
       // Import to forward
       for (auto& asd : rule->root()->mergedFwdVar) {

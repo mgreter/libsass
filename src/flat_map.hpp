@@ -169,7 +169,22 @@ namespace Sass {
     {
       if (count(kv.first) == 0) {
         // Append the pair
-        items.push_back(kv);
+        items.emplace_back(kv);
+        // Returns success
+        return true;
+      }
+      // Nothing inserted
+      return false;
+    }
+    // EO insert
+
+    // Insert passed key/value pair
+    // ToDo: should return pair<it,bool>
+    bool insert(const PAIR&& kv)
+    {
+      if (count(kv.first) == 0) {
+        // Append the pair
+        items.emplace_back(std::move(kv));
         // Returns success
         return true;
       }

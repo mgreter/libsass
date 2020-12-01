@@ -29,7 +29,7 @@ namespace Sass {
         if (double factor = number->getUnitConvertFactor(radiants)) {
           return number->value() * factor;
         }
-        compiler.addFinalStackTrace(number->pstate());
+        callStackFrame csf(compiler, number->pstate());
         throw Exception::RuntimeException(compiler, "$" + vname +
           ": Expected " + number->inspect() + " to be an angle.");
       }

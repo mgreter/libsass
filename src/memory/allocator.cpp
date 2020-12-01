@@ -5,11 +5,8 @@
 
 #ifdef SASS_CUSTOM_ALLOCATOR
 #include "memory_pool.hpp"
-#endif
 
 namespace Sass {
-
-#ifdef SASS_CUSTOM_ALLOCATOR
 
   // You must only use PODs for thread_local.
   // Objects get very unpredictable init order.
@@ -46,6 +43,6 @@ namespace Sass {
 
   }
 
-#endif
-
 }
+
+#endif

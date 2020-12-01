@@ -26,6 +26,7 @@ namespace Sass {
 
     Eval& eval;
     Root* root;
+    Compiler& compiler;
 
     // Alias into context
     Root*& chroot77;

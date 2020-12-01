@@ -95,7 +95,7 @@ namespace Sass {
     else if (s == "mm")   return UnitType::MM;
     else if (s == "cm")   return UnitType::CM;
     else if (s == "in")   return UnitType::INCH;
-    else if (s == "q")   return UnitType::QMM;
+    else if (s == "q")    return UnitType::QMM;
     // angle units
     else if (s == "deg")  return UnitType::DEG;
     else if (s == "grad") return UnitType::GRAD;

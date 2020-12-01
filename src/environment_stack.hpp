@@ -1,8 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
-#ifndef SASS_VAR_STACK_HPP
-#define SASS_VAR_STACK_HPP
+#ifndef SASS_ENV_STACK_HPP
+#define SASS_ENV_STACK_HPP
 
 // sass.hpp must go before all system headers
 // to get the __EXTENSIONS__ fix on Solaris.
@@ -16,80 +16,78 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Forward declare
-  class EnvIdx;
-  class EnvRefs;
-  class EnvRoot;
-  class EnvFrame;
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   // Helper typedef for our frame stack type
   typedef sass::vector<EnvRefs*> EnvFrameVector;
 
-  extern const EnvIdx nullidx;
+  // Constant similar to nullptr
+  extern const EnvRef nullidx;
 
   /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   // Base class/struct for variable references. Each variable belongs to an
-  // environment frame (determined as we see variables during parsing). This
-  // is similar to how C organizes local stack variables via frame offsets.
-  class EnvIdx {
-
+  // environment frame (determined as we see variables during parsing). Similar
+  // to how C organizes local variables via function stack pointers.
+  /////////////////////////////////////////////////////////////////////////
+  class EnvRef
+  {
   public:
 
+    // The lexical frame pointer
+    // Each parsed scope gets its own
     uint32_t frame;
+
+    // Local offset within the frame
     uint32_t offset;
 
-    EnvIdx() :
+    // Default constructor
+    EnvRef() :
       frame(0xFFFFFFFF),
       offset(0xFFFFFFFF)
     {}
 
-    EnvIdx(
+    // Value constructor
+    EnvRef(
       uint32_t frame,
-      uint32_t offset,
-      bool overwrites = false) :
+      uint32_t offset) :
       frame(frame),
       offset(offset)
     {}
 
-    bool operator==(const EnvIdx& rhs) const {
+    // Implement native equality operator
+    bool operator==(const EnvRef& rhs) const {
       return frame == rhs.frame
         && offset == rhs.offset;
     }
 
-    bool operator!=(const EnvIdx& rhs) const {
+    // Implement native inequality operator
+    bool operator!=(const EnvRef& rhs) const {
       return frame != rhs.frame
         || offset != rhs.offset;
     }
 
-    bool operator<(const EnvIdx& rhs) const {
+    // Implement operator to allow use in sets
+    bool operator<(const EnvRef& rhs) const {
       if (frame < rhs.frame) return true;
       return offset < rhs.offset;
     }
 
+    // Check if reference is valid
     bool isValid() const { // 3%
       return offset != 0xFFFFFFFF;
     }
 
+    // Check if entity is read-only
     bool isPrivate(uint32_t privateOffset) {
       return frame == 0xFFFFFFFF &&
         offset <= privateOffset;
     }
 
-    //operator bool() const {
-    //  return isValid();
-    //}
-
-    // Very small helper for debugging
+    // Small helper for debugging
     sass::string toString() const;
 
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // 
   /////////////////////////////////////////////////////////////////////////
 
   // Runtime query structure
@@ -106,9 +104,7 @@ namespace Sass {
     EnvRefs* pscope;
 
     // Global scope pointers
-    uint32_t varFrame;
-    uint32_t mixFrame;
-    uint32_t fnFrame;
+    uint32_t framePtr;
 
     // Lexical scope entries
     VidxEnvKeyMap varIdxs;
@@ -132,35 +128,30 @@ namespace Sass {
     // Modules are global so we just link them
     Module* module = nullptr;
 
-    // Rules like `@if`, `@for` etc. are semi-global (permeable).
-    // Assignments directly in those can bleed to the root scope.
-    bool isPermeable = false;
-
     // Imports are transparent for variables, functions and mixins
     // We always need to create entities inside the parent scope
     bool isImport = false;
+
+    // Rules like `@if`, `@for` etc. are semi-global (permeable).
+    // Assignments directly in those can bleed to the root scope.
+    bool isSemiGlobal = false;
 
     // Set to true once we are compiled via use or forward
     // An import does load the sheet, but does not compile it
     // Compiling it means hard-baking the config vars into it
     bool isCompiled = false;
 
-
     // Value constructor
     EnvRefs(EnvRoot& root,
       EnvRefs* pscope,
-      uint32_t varFrame,
-      uint32_t mixFrame,
-      uint32_t fnFrame,
-      bool isPermeable,
+      uint32_t framePtr,
+      bool isSemiGlobal,
       bool isImport) :
       root(root),
       pscope(pscope),
-      varFrame(varFrame),
-      mixFrame(mixFrame),
-      fnFrame(fnFrame),
-      isPermeable(isPermeable),
-      isImport(isImport)
+      framePtr(framePtr),
+      isImport(isImport),
+      isSemiGlobal(isSemiGlobal)
     {}
 
     /////////////////////////////////////////////////////////////////////////
@@ -171,18 +162,18 @@ namespace Sass {
 
     // Register new variable on local stack
     // Invoked mostly by stylesheet parser
-    EnvIdx createVariable(const EnvKey& name);
+    EnvRef createVariable(const EnvKey& name);
 
     // Register new function on local stack
     // Mostly invoked by built-in functions
     // Then invoked for custom C-API function
     // Finally for every parsed function rule
-    EnvIdx createFunction(const EnvKey& name);
+    EnvRef createFunction(const EnvKey& name);
 
     // Register new mixin on local stack
     // Only invoked for mixin rules
     // But also for content blocks
-    EnvIdx createMixin(const EnvKey& name);
+    EnvRef createMixin(const EnvKey& name);
 
     // Get a mixin associated with the under [name].
     // Will lookup from the last runtime stack scope.
@@ -201,25 +192,25 @@ namespace Sass {
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
 
-    void findVarIdxs(sass::vector<EnvIdx>& vidxs, const EnvKey& name) const;
+    void findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const;
 
-    EnvIdx findVarIdx(const EnvKey& name, const sass::string& ns) const;
-    EnvIdx findFnIdx22(const EnvKey& name, const sass::string& ns) const;
-    EnvIdx findMixIdx22(const EnvKey& name, const sass::string& ns) const;
+    EnvRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
+    EnvRef findFnIdx22(const EnvKey& name, const sass::string& ns) const;
+    EnvRef findMixIdx22(const EnvKey& name, const sass::string& ns) const;
 
-    EnvIdx findVarIdx(const EnvKey& name) const;
-    EnvIdx findFnIdx(const EnvKey& name) const;
-    EnvIdx findMixIdx(const EnvKey& name) const;
+    EnvRef findVarIdx(const EnvKey& name) const;
+    EnvRef findFnIdx(const EnvKey& name) const;
+    EnvRef findMixIdx(const EnvKey& name) const;
 
     bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
 
     // Find function only in local frame
 
 
-    EnvIdx setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
+    EnvRef setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const;
 
 
-    EnvIdx setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
+    EnvRef setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate);
 
   };
 
@@ -245,7 +236,7 @@ namespace Sass {
     // Value constructor
     EnvFrame(
       Compiler& compiler,
-      bool isPermeable,
+      bool isSemiGlobal,
       bool isModule = false,
       bool isImport = false);
 
@@ -267,7 +258,7 @@ namespace Sass {
     // We manage it ourself
     EnvFrameVector& stack;
 
-    // Our runtime object
+    // Root runtime env
     EnvRefs* idxs;
 
   private:
@@ -276,20 +267,18 @@ namespace Sass {
     friend class Compiler;
     friend class EnvScope;
     friend class EnvFrame;
-    friend class Preloader;
     friend class EnvRefs;
-    friend class Eval;
 
-    // Growable runtime stack (get offset by xxxFramePtr).
+    // Growable runtime stack (get offset by xxxStackPtr).
     // These vectors are the main stacks during runtime.
     // When a scope with two variables is executed, two
     // new items are added to the variables stack. If the
     // same scope is called more than once, its variables
     // are added multiple times so we can revert to them.
-    // variables[varFramePtr[vidx.frame] + vidx.offset]
-    sass::vector<ValueObj> variables;
-    sass::vector<CallableObj> mixins;
-    sass::vector<CallableObj> functions;
+    // variables[varStackPtr[vidx.frame] + vidx.offset]
+    sass::vector<ValueObj> varStack;
+    sass::vector<CallableObj> mixStack;
+    sass::vector<CallableObj> fnStack;
 
     // Every scope we execute in sass gets an entry here.
     // The value stored here is the base address of the
@@ -297,9 +286,9 @@ namespace Sass {
     // Gives current offset into growable runtime stack.
     // Old values are restored when scopes are exited.
     // Access it by absolute `frameOffset`
-    sass::vector<uint32_t> varFramePtr;
-    sass::vector<uint32_t> mixFramePtr;
-    sass::vector<uint32_t> fnFramePtr;
+    sass::vector<uint32_t> varStackPtr;
+    sass::vector<uint32_t> mixStackPtr;
+    sass::vector<uint32_t> fnStackPtr;
 
     // Internal functions are stored here
     sass::vector<CallableObj> intFunction;
@@ -339,24 +328,24 @@ namespace Sass {
 
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
-    ValueObj& getVariable(const EnvIdx& vidx);
+    ValueObj& getVariable(const EnvRef& vidx);
     ValueObj& getModVar(const uint32_t offset);
 
     // Get function instance by stack index reference
     // Just converting and returning reference to array offset
-    CallableObj& getFunction(const EnvIdx& vidx);
+    CallableObj& getFunction(const EnvRef& vidx);
     CallableObj& getModFn(const uint32_t offset);
 
     // Get mixin instance by stack index reference
     // Just converting and returning reference to array offset
-    CallableObj& getMixin(const EnvIdx& midx);
+    CallableObj& getMixin(const EnvRef& midx);
     CallableObj& getModMix(const uint32_t offset);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(const EnvIdx& vidx, Value* value, bool guarded);
+    void setVariable(const EnvRef& vidx, Value* value, bool guarded);
     void setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate);
-    EnvIdx setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
+    EnvRef setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
@@ -364,34 +353,33 @@ namespace Sass {
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setFunction(const EnvIdx& fidx, UserDefinedCallable* value, bool guarded);
+    void setFunction(const EnvRef& fidx, UserDefinedCallable* value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setMixin(const EnvIdx& midx, UserDefinedCallable* value, bool guarded);
+    void setMixin(const EnvRef& midx, UserDefinedCallable* value, bool guarded);
 
     // Get a value associated with the variable under [name].
     // If [global] flag is given, the lookup will be in the root.
     // Otherwise lookup will be from the last runtime stack scope.
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
-    Value* findVariable33(const EnvKey& name, const sass::string& ns) const;
 
-    EnvIdx findFnIdx(
+    EnvRef findFnIdx(
       const EnvKey& name,
       const sass::string& ns) const;
 
-    EnvIdx findMixIdx(
+    EnvRef findMixIdx(
       const EnvKey& name,
       const sass::string& ns) const;
 
-    EnvIdx findVarIdx(
+    EnvRef findVarIdx(
       const EnvKey& name,
       const sass::string& ns,
       bool global = false) const;
 
     void findVarIdxs(
-      sass::vector<EnvIdx>& vidxs,
+      sass::vector<EnvRef>& vidxs,
       const EnvKey& name) const;
 
   };
@@ -424,8 +412,6 @@ namespace Sass {
     uint32_t oldFnFrame;
     uint32_t oldFnOffset;
 
-    bool wasActive;
-
   public:
 
     // Put frame onto stack
@@ -446,45 +432,42 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      wasActive = idxs->isCompiled;
-      idxs->isCompiled = true;
-
-      if (idxs->varFrame != 0xFFFFFFFF) {
+      if (idxs->framePtr != 0xFFFFFFFF) {
 
         // Check if we have scoped variables
         if (idxs->varIdxs.size() != 0) {
           // Get offset into variable vector
-          oldVarOffset = (uint32_t)env.variables.size();
+          oldVarOffset = (uint32_t)env.varStack.size();
           // Remember previous frame "addresses"
-          oldVarFrame = env.varFramePtr[idxs->varFrame];
+          oldVarFrame = env.varStackPtr[idxs->framePtr];
           // Update current frame offset address
-          env.varFramePtr[idxs->varFrame] = oldVarOffset;
+          env.varStackPtr[idxs->framePtr] = oldVarOffset;
           // Create space for variables in this frame scope
-          env.variables.resize(oldVarOffset + idxs->varIdxs.size());
+          env.varStack.resize(oldVarOffset + idxs->varIdxs.size());
         }
 
         // Check if we have scoped mixins
         if (idxs->mixIdxs.size() != 0) {
           // Get offset into mixin vector
-          oldMixOffset = (uint32_t)env.mixins.size();
+          oldMixOffset = (uint32_t)env.mixStack.size();
           // Remember previous frame "addresses"
-          oldMixFrame = env.mixFramePtr[idxs->mixFrame];
+          oldMixFrame = env.mixStackPtr[idxs->framePtr];
           // Update current frame offset address
-          env.mixFramePtr[idxs->mixFrame] = oldMixOffset;
+          env.mixStackPtr[idxs->framePtr] = oldMixOffset;
           // Create space for mixins in this frame scope
-          env.mixins.resize(oldMixOffset + idxs->mixIdxs.size());
+          env.mixStack.resize(oldMixOffset + idxs->mixIdxs.size());
         }
 
         // Check if we have scoped functions
         if (idxs->fnIdxs.size() != 0) {
           // Get offset into function vector
-          oldFnOffset = (uint32_t)env.functions.size();
+          oldFnOffset = (uint32_t)env.fnStack.size();
           // Remember previous frame "addresses"
-          oldFnFrame = env.fnFramePtr[idxs->fnFrame];
+          oldFnFrame = env.fnStackPtr[idxs->framePtr];
           // Update current frame offset address
-          env.fnFramePtr[idxs->fnFrame] = oldFnOffset;
+          env.fnStackPtr[idxs->framePtr] = oldFnOffset;
           // Create space for functions in this frame scope
-          env.functions.resize(oldFnOffset + idxs->fnIdxs.size());
+          env.fnStack.resize(oldFnOffset + idxs->fnIdxs.size());
         }
 
       }
@@ -505,41 +488,39 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      if (idxs->varFrame != 0xFFFFFFFF) {
+      if (idxs->framePtr != 0xFFFFFFFF) {
 
         // Check if we had scoped variables
         if (idxs->varIdxs.size() != 0) {
           // Truncate variable vector
-          env.variables.resize(
+          env.varStack.resize(
             oldVarOffset);
           // Restore old frame address
-          env.varFramePtr[idxs->varFrame] =
+          env.varStackPtr[idxs->framePtr] =
             oldVarFrame;
         }
 
         // Check if we had scoped mixins
         if (idxs->mixIdxs.size() != 0) {
           // Truncate existing vector
-          env.mixins.resize(
+          env.mixStack.resize(
             oldMixOffset);
           // Restore old frame address
-          env.mixFramePtr[idxs->mixFrame] =
+          env.mixStackPtr[idxs->framePtr] =
             oldMixFrame;
         }
 
         // Check if we had scoped functions
         if (idxs->fnIdxs.size() != 0) {
           // Truncate existing vector
-          env.functions.resize(
+          env.fnStack.resize(
             oldFnOffset);
           // Restore old frame address
-          env.fnFramePtr[idxs->fnFrame] =
+          env.fnStackPtr[idxs->framePtr] =
             oldFnFrame;
         }
 
       }
-
-      idxs->isCompiled = wasActive;
 
       // Pop frame from stack
       env.stack.pop_back();

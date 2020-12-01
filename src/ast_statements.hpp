@@ -391,7 +391,7 @@ namespace Sass {
     public CallableDeclaration
   {
     // Content function reference
-    ADD_CONSTREF(EnvIdx, cidx);
+    ADD_CONSTREF(EnvRef, cidx);
 
     ADD_CONSTREF(UserDefinedCallableObj, cmixin);
 
@@ -419,7 +419,7 @@ namespace Sass {
     public CallableDeclaration
   {
     // Function reference
-    ADD_CONSTREF(EnvIdx, fidx);
+    ADD_CONSTREF(EnvRef, fidx);
   public:
     // Value constructor
     FunctionRule(
@@ -445,9 +445,9 @@ namespace Sass {
     public CallableDeclaration
   {
     // Mixin function reference
-    ADD_CONSTREF(EnvIdx, midx);
+    ADD_CONSTREF(EnvRef, midx);
     // Content function reference
-    // ADD_CONSTREF(EnvIdx, cidx33);
+    // ADD_CONSTREF(EnvRef, cidx33);
   public:
     // Value constructor
     MixinRule(
@@ -750,9 +750,9 @@ namespace Sass {
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);
-    ADD_REF(sass::vector<EnvIdx>, vidxs);
+    ADD_REF(sass::vector<EnvRef>, vidxs);
 
-    ADD_REF(EnvIdx, vidx2);
+    ADD_REF(EnvRef, vidx2);
     ADD_PROPERTY(bool, withinLoop);
 
     ADD_CONSTREF(bool, is_default); // ToDO rename
@@ -764,7 +764,7 @@ namespace Sass {
       const EnvKey& variable,
       bool withinLoop,
       const sass::string ns,
-      sass::vector<EnvIdx> vidxs,
+      sass::vector<EnvRef> vidxs,
       Expression* value,
       bool is_default = false,
       bool is_global = false);
@@ -792,7 +792,7 @@ namespace Sass {
     // The name of the mixin being invoked.
     ADD_CONSTREF(EnvKey, name);
 
-    ADD_CONSTREF(EnvIdx, midx);
+    ADD_CONSTREF(EnvRef, midx);
 
     // The block that will be invoked for [ContentRule]s in the mixin
     // being invoked, or `null` if this doesn't pass a content block.

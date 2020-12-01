@@ -51,7 +51,7 @@ namespace Sass {
         // Iterate over the rest argument list
         for (Value* arg : arguments[0]->iterator()) {
           if (arg->isNull()) {
-            compiler.addFinalStackTrace(arg->pstate());
+            callStackFrame csf(compiler, arg->pstate());
             throw Exception::RuntimeException(compiler, // "$selectors: "
               "null is not a valid selector: it must be a string,\n"
               "a list of strings, or a list of lists of strings.");

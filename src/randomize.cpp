@@ -41,6 +41,7 @@ namespace Sass {
     }
     // Use some sensible default
     if (seed == 0) {
+      // Fibonacci/Golden Ratio Hashing
       seed = 0x9e3779b9;
     }
     // Return the seed

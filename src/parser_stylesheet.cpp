@@ -1253,7 +1253,7 @@ namespace Sass {
 
     // Check if name is valid identifier
     if (url.empty() || isDigit(url[0])) {
-      context.addFinalStackTrace(state);
+      callStackFrame csf(context, state);
       throw Exception::InvalidSassIdentifier(context, url);
     }
 
@@ -1263,7 +1263,7 @@ namespace Sass {
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
-      context.addFinalStackTrace(state);
+      callStackFrame csf(context, state);
       throw Exception::TardyAtRule(
         context, Strings::useRule);
     }
@@ -1282,7 +1282,7 @@ namespace Sass {
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       if (hasWith) {
-        context.addFinalStackTrace(rule->pstate());
+        callStackFrame csf(context, rule->pstate());
         throw Exception::RuntimeException(context,
           "Built-in modules can't be configured.");
       }
@@ -1294,7 +1294,7 @@ namespace Sass {
       BuiltInMod* module(context.getModule(name));
 
       if (module == nullptr) {
-        context.addFinalStackTrace(rule->pstate());
+        callStackFrame csf(context, rule->pstate());
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
       }
@@ -1356,7 +1356,7 @@ namespace Sass {
 
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
-      context.addFinalStackTrace(state);
+      callStackFrame csf(context, state);
       throw Exception::ParserException(context,
         "@forward rules must be written before any other rules.");
     }
@@ -1375,7 +1375,7 @@ namespace Sass {
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       if (hasWith) {
-        context.addFinalStackTrace(rule->pstate());
+        callStackFrame csf(context, rule->pstate());
         throw Exception::RuntimeException(context,
           "Built-in modules can't be configured.");
       }
@@ -1386,7 +1386,7 @@ namespace Sass {
         rule->root(nullptr);
       }
       else {
-        context.addFinalStackTrace(rule->pstate());
+        callStackFrame csf(context, rule->pstate());
         throw Exception::RuntimeException(context,
           "Invalid internal module requested.");
       }
@@ -1431,7 +1431,7 @@ namespace Sass {
         std::move(pstate), {}, {});
     }
 
-    sass::vector<EnvIdx> midxs;
+    sass::vector<EnvRef> midxs;
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
     scanner.relevantSpanFrom(start), name, ns, arguments);
@@ -2740,7 +2740,7 @@ namespace Sass {
 
     if (!ns.empty()) {
       auto pstate(scanner.relevantSpanFrom(start));
-      context.addFinalStackTrace(pstate);
+      callStackFrame csf(context, pstate);
       throw Exception::ParserException(context,
         "Variable namespaces not supported!");
     }
@@ -2911,14 +2911,14 @@ namespace Sass {
       if (scanner.peekChar() == $dollar) {
         sass::string name(variableName());
 
-        sass::vector<EnvIdx> vidxs;
+        sass::vector<EnvRef> vidxs;
 
         VariableExpressionObj expression = SASS_MEMORY_NEW(VariableExpression,
           scanner.relevantSpanFrom(start),
           name, inLoopDirective, plain);
 
         if (isPrivate(name)) {
-          context.addFinalStackTrace(expression->pstate());
+          callStackFrame csf(context, expression->pstate());
           throw Exception::ParserException(context,
             "Private members can't be accessed "
             "from outside their modules.");
