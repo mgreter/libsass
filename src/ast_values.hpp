@@ -243,6 +243,8 @@ namespace Sass {
     ColorRgba* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(ColorRgba, this);
     }
+
+    IMPLEMENT_ISA_CASTER(ColorRgba);
   };
 
 
@@ -288,6 +290,8 @@ namespace Sass {
     ColorHsla* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(ColorHsla, this);
     }
+
+    IMPLEMENT_ISA_CASTER(ColorHsla);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -332,6 +336,8 @@ namespace Sass {
     ColorHwba* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(ColorHwba, this);
     }
+
+    IMPLEMENT_ISA_CASTER(ColorHwba);
   };
 
   ///////////////////////////////////////////////////////////////////////

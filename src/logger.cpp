@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "logger.hpp"
 
 #include <iomanip>
@@ -627,18 +630,6 @@ namespace Sass {
     os << STRMLF;
 
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // EO writeStackTraces
 
 }

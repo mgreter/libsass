@@ -1,5 +1,8 @@
-#ifndef SASS_C_BASE_H
-#define SASS_C_BASE_H
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+#ifndef SASS_BASE_H
+#define SASS_BASE_H
 
 #ifdef _MSC_VER
   #pragma warning(disable : 4503)
@@ -42,7 +45,7 @@
 
 #ifdef _WIN32
 
-  /* You should define ADD_EXPORTS *only* when building the DLL. */
+/* You should define ADD_EXPORTS *only* when building the DLL. */
   #ifdef ADD_EXPORTS
     #define ADDAPI __declspec(dllexport)
     #define ADDCALL __cdecl
@@ -86,16 +89,6 @@ extern "C" {
   // Deallocate libsass heap memory
   ADDAPI void ADDCALL sass_free_memory(void* ptr);
   ADDAPI void ADDCALL sass_free_c_string(char* ptr);
-
-  // Resolve a file via the given include paths in the sass option struct
-  // find_file looks for the exact file name while find_include does a regular sass include
-  // ADDAPI char* ADDCALL sass_find_file (const char* path, struct SassOptionsCpp* opt);
-  // ADDAPI char* ADDCALL sass_find_include (const char* path, struct SassOptionsCpp* opt);
-
-  // Resolve a file relative to last import or include paths in the sass option struct
-  // find_file looks for the exact file name while find_include does a regular sass include
-  // ADDAPI char* ADDCALL sass_compiler_find_file(const char* path, struct SassCompiler* compiler);
-  // ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
 
   // Return implemented sass language version
   ADDAPI const char* ADDCALL libsass_version(void);

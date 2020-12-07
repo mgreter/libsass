@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_SCANNER_STRING_HPP
 #define SASS_SCANNER_STRING_HPP
 

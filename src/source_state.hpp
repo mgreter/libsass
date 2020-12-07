@@ -71,6 +71,6 @@ namespace Sass
 		sass::string getDebugPath() const;
 	};
 
-} // namespace Sass
+}
 
 #endif

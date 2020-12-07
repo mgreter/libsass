@@ -184,8 +184,12 @@ namespace Sass {
         throwDisallowedAtRule(rule->pstate().position);
       }
 
-      rule->append(SASS_MEMORY_NEW(IncludeImport,
-        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
+      SourceSpan pstate(scanner.relevantSpanFrom(start));
+      if (!context.callCustomImporters(url, pstate, rule)) {
+        rule->append(SASS_MEMORY_NEW(IncludeImport62,
+          pstate, scanner.sourceUrl, url, nullptr));
+      }
+
     }
 
   }
@@ -2990,7 +2994,7 @@ namespace Sass {
     uint8_t next = 0;
     makeLowerCase(name);
     InterpolationBuffer buffer(scanner);
-    sass::string normalized(Util::unvendor(name));
+    sass::string normalized(StringUtils::unvendor(name));
 
     if (normalized == "calc" || normalized == "element" || normalized == "expression") {
       if (!scanner.scanChar($lparen)) return nullptr;

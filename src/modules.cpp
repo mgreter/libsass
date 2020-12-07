@@ -4,6 +4,7 @@
 #include "modules.hpp"
 
 #include "stylesheet.hpp"
+#include "modules.hpp"
 
 namespace Sass {
 

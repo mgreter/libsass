@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_EVAL_HPP
 #define SASS_EVAL_HPP
 
@@ -23,7 +26,7 @@ namespace Sass {
 
     void exposeUseRule(UseRule* rule);
     void exposeFwdRule(ForwardRule* rule);
-    void exposeImpRule(IncludeImport* rule);
+    void exposeImpRule(IncludeImport62* rule);
 
     // Some references
     Logger& logger456;
@@ -272,7 +275,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     void acceptStaticImport(StaticImport* import);
-    void acceptIncludeImport(IncludeImport* import);
+    void acceptIncludeImport(IncludeImport62* import);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -341,7 +344,7 @@ protected:
     Value* visitWhileRule(WhileRule* rule);
 
   public:
-    Root* resolveIncludeImport(IncludeImport* rule);
+    Root* resolveIncludeImport(IncludeImport62* rule);
 
 
     // Backbone loader function

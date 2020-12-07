@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "output.hpp"
 
 #include "ast_css.hpp"
@@ -17,7 +20,7 @@ namespace Sass {
 
   // Value constructor
   Output::Output(
-    SassOutputOptionsCpp& opt,
+    OutputOptions& opt,
     bool srcmap_enabled) :
     Cssize(opt, srcmap_enabled)
   {}
@@ -25,7 +28,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // local helper function
+  // Local helper function to right-trim multi-line text.
+  // Only the last line is right trimmed in an optimized way.
+  // Note: this is merely cosmetic to match dart-sass output.
   void trim_trailing_lines(sass::string& text)
   {
     auto start = text.begin();
@@ -52,22 +57,31 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Get the output buffer for what has been rendered.
+  // This will actually invoke quite a bit under the hood.
+  // First we will render the hoisted imports with comments.
+  // Then we will prepend this string to the already rendered one.
+  // This involves adjusting the source-map so mappings still match.
+  // Note: this is less complicated than one could initially think, as
+  // Note: source-maps are easy to manipulate with full lines only.
   OutputBuffer Output::getBuffer(void)
   {
-    // This needs saving
+    // Create an identical rendered for the hoisted part
     Inspect inspect(opt, wbuf.smap ? true : false);
 
-    size_t size_nodes = top_nodes.size();
-    for (size_t i = 0; i < size_nodes; i++) {
-      top_nodes[i]->accept(&inspect);
+    // Render the hoisted imports with comments
+    for (size_t i = 0; i < imports.size(); i++) {
+      imports[i]->accept(&inspect);
       inspect.append_mandatory_linefeed();
     }
 
-    // flush scheduled outputs
     // maybe omit semicolon if possible
     inspect.finalize(wbuf.buffer.size() == 0);
     // prepend buffer on top
     prepend_output(inspect.output());
+    // flush trailing comments
+    flushCssComments();
+
     // make sure we end with a linefeed
     if (!StringUtils::endsWith(wbuf.buffer, opt.linefeed)) {
       // if the output is not completely empty
@@ -88,12 +102,47 @@ namespace Sass {
     }
 
     // add charset as first line, before comments and imports
+    // adding any unicode BOM should not alter source-maps
     if (!charset.empty()) prepend_string(charset);
 
+    // pass the buffer back
     return std::move(wbuf);
-
   }
   // EO getBuffer
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Helper function to append comment to output
+  void Output::printCssComment(CssComment* comment)
+  {
+    bool important = comment->isPreserved();
+    if (output_style() == SASS_STYLE_COMPRESSED || output_style() == SASS_STYLE_COMPACT) {
+      if (!important) return;
+    }
+    if (output_style() != SASS_STYLE_COMPRESSED || important) {
+      append_indentation();
+      append_string(comment->text());
+      if (indentation == 0) {
+        append_mandatory_linefeed();
+      }
+      else {
+        append_optional_linefeed();
+      }
+    }
+  }
+  // EO printCssComment
+
+  // Flushes all queued comments to output
+  // Also resets and clears the queue
+  void Output::flushCssComments()
+  {
+    for (CssComment* comment : comments) {
+      printCssComment(comment);
+    }
+    comments.clear();
+  }
+  // EO flushCssComments
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -101,37 +150,63 @@ namespace Sass {
   void Output::visitCssImport(CssImport* imp)
   {
     if (imp->outOfOrder()) {
-      top_nodes.emplace_back(imp);
+      imports.insert(imports.end(),
+        comments.begin(), comments.end());
+      imports.emplace_back(imp);
+      comments.clear();
     }
     else {
+      // This case is possible if an `@import` within
+      // an imported css file is inside a `CssStyleRule`.
+      flushCssComments();
       Cssize::visitCssImport(imp);
     }
   }
   // EO visitCssImport
 
-  void Output::visitCssComment(CssComment* c)
+  void Output::visitCssComment(CssComment* comment)
   {
-    bool important = c->isPreserved();
-    if (output_style() == SASS_STYLE_COMPRESSED || output_style() == SASS_STYLE_COMPACT) {
-      if (!important) return;
+    if (hoistComments) {
+      comments.emplace_back(comment);
     }
-    if (output_style() != SASS_STYLE_COMPRESSED || important) {
-      if (wbuf.buffer.size() == 0) {
-        top_nodes.emplace_back(c);
-      }
-      else {
-        append_indentation();
-        append_string(c->text());
-        if (indentation == 0) {
-          append_mandatory_linefeed();
-        }
-        else {
-          append_optional_linefeed();
-        }
-      }
+    else {
+      printCssComment(comment);
     }
   }
   // EO visitCssComment
+
+  void Output::visitCssStyleRule(CssStyleRule* rule)
+  {
+    // Prepend previous comments
+    flushCssComments();
+    // Never hoist nested comments
+    LOCAL_FLAG(hoistComments, false);
+    // Let inspect do its magic
+    Cssize::visitCssStyleRule(rule);
+  }
+  // EO visitCssStyleRule
+
+  void Output::visitCssSupportsRule(CssSupportsRule* rule)
+  {
+    // Prepend previous comments
+    flushCssComments();
+    // Never hoist nested comments
+    LOCAL_FLAG(hoistComments, false);
+    // Let inspect do its magic
+    Cssize::visitCssSupportsRule(rule);
+  }
+  // EO visitCssSupportsRule
+
+  void Output::visitCssAtRule(CssAtRule* rule)
+  {
+    // Prepend previous comments
+    flushCssComments();
+    // Never hoist nested comments
+    LOCAL_FLAG(hoistComments, false);
+    // Let inspect do its magic
+    Cssize::visitCssAtRule(rule);
+  }
+  // EO visitCssAtRule
 
   void Output::visitCssMediaRule(CssMediaRule* rule)
   {
@@ -139,6 +214,10 @@ namespace Sass {
     if (rule == nullptr) return;
     // Skip empty or invisible rule
     if (rule->isInvisibleCss()) return;
+    // Prepend previous comments
+    flushCssComments();
+    // Never hoist nested comments
+    LOCAL_FLAG(hoistComments, false);
     // Let inspect do its magic
     Cssize::visitCssMediaRule(rule);
   }

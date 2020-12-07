@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_ERROR_EXCEPTIONS_HPP
 #define SASS_ERROR_EXCEPTIONS_HPP
 
@@ -14,7 +17,6 @@
 #include "backtrace.hpp"
 #include "ast_fwd_decl.hpp"
 #include "environment_cnt.hpp"
-#include "sass/functions.h"
 
 namespace Sass {
 
@@ -234,14 +236,14 @@ namespace Sass {
         ZeroDivisionError(const Value& lhs, const Value& rhs);
     };
 
-    class IncompatibleUnits : public OperationError {
-      protected:
-        // const Sass::UnitType lhs;
-        // const Sass::UnitType rhs;
-      public:
-        IncompatibleUnits(const Units& lhs, const Units& rhs);
-        // virtual ~IncompatibleUnits() noexcept {};
-    };
+    //class IncompatibleUnits : public OperationError {
+    //  protected:
+    //    // const Sass::UnitType lhs;
+    //    // const Sass::UnitType rhs;
+    //  public:
+    //    IncompatibleUnits(const Units& lhs, const Units& rhs);
+    //    // virtual ~IncompatibleUnits() noexcept {};
+    //};
 
 
 

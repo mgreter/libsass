@@ -1,5 +1,8 @@
-#ifndef SASS_C_ERROR_H
-#define SASS_C_ERROR_H
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+#ifndef SASS_ERROR_H
+#define SASS_ERROR_H
 
 #include <sass/base.h>
 
@@ -7,31 +10,45 @@
 extern "C" {
 #endif
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Error related getters (use after compiler was rendered)
   ADDAPI int ADDCALL sass_error_get_status(const struct SassError* error);
+
+  // Getter for plain error message (use after compiler was rendered).
+  ADDAPI const char* ADDCALL sass_error_get_string(const struct SassError* error);
+
+  // Getter for error status as json object (Useful to pass to downstream).
   ADDAPI char* ADDCALL sass_error_get_json(const struct SassError* error);
-  ADDAPI const char* ADDCALL sass_error_get_what(const struct SassError* error);
-  // ADDAPI const char* ADDCALL sass_error_get_messages(struct SassError* error);
-  // ADDAPI const char* ADDCALL sass_error_get_warnings(struct SassError* error);
+
+  // Getter for formatted error message. According to logger style this
+  // may be in unicode and may contain ANSI escape codes for colors.
   ADDAPI const char* ADDCALL sass_error_get_formatted(const struct SassError* error);
 
-  // These are here for convenience, could get them also indirectly
+  // Getter for line position where error occurred (starts from 1).
   ADDAPI size_t ADDCALL sass_error_get_line(const struct SassError* error);
+
+  // Getter for column position where error occurred (starts from 1).
   ADDAPI size_t ADDCALL sass_error_get_column(const struct SassError* error);
-  ADDAPI const char* ADDCALL sass_error_get_path(const struct SassError* error);
+
+  // Getter for source content referenced in line and column.
   ADDAPI const char* ADDCALL sass_error_get_content(const struct SassError* error);
 
-  // ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
-  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_last(struct SassTraces* traces);
-  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_trace(struct SassTraces* traces, size_t i);
+  // Getter for path where the error occurred.
+  ADDAPI const char* ADDCALL sass_error_get_path(const struct SassError* error);
 
+  // Getter for number of traces attached to error object.
   ADDAPI size_t ADDCALL sass_error_count_traces(const struct SassError* error);
-  ADDAPI const struct SassTrace* ADDCALL sass_error_last_trace(const struct SassError* error);
-  ADDAPI const struct SassTrace* ADDCALL sass_error_get_trace(const struct SassError* error, size_t i);
 
-  ADDAPI size_t ADDCALL sass_compiler_count_traces(struct SassCompiler* compiler);
-  ADDAPI const struct SassTrace* ADDCALL sass_compiler_last_trace(struct SassCompiler* compiler);
-  ADDAPI const struct SassTrace* ADDCALL sass_compiler_get_trace(struct SassCompiler* compiler, size_t i);
+  // Getter for last trace (or nullptr if none are available).
+  ADDAPI const struct SassTrace* ADDCALL sass_error_last_trace(const struct SassError* error);
+
+  // Getter for nth trace (or nullptr if `n` is invalid).
+  ADDAPI const struct SassTrace* ADDCALL sass_error_get_trace(const struct SassError* error, size_t n);
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 #ifdef __cplusplus
 } // __cplusplus defined.

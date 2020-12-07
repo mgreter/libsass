@@ -65,10 +65,11 @@ namespace Sass {
     eval.exposeFwdRule(rule);
   }
 
-  void Preloader::visitIncludeImport(IncludeImport* rule)
+  void Preloader::visitIncludeImport(IncludeImport62* rule)
   {
     callStackFrame frame(compiler, {
       rule->pstate(), Strings::importRule });
+    // We could demux glob-stars here
     acceptRoot(eval.resolveIncludeImport(rule));
     eval.exposeImpRule(rule);
   }
@@ -80,7 +81,6 @@ namespace Sass {
 
   void Preloader::visitFunctionRule(FunctionRule* rule)
   {
-    // const EnvKey& fname(rule->name());
     LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
@@ -89,7 +89,6 @@ namespace Sass {
 
   void Preloader::visitMixinRule(MixinRule* rule)
   {
-    // const EnvKey& mname(rule->name());
     LOCAL_PTR(EnvRefs, idxs, rule->idxs);
     compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
@@ -99,12 +98,11 @@ namespace Sass {
   void Preloader::visitImportRule(ImportRule* rule)
   {
     for (const ImportBaseObj& import : rule->elements()) {
-      if (IncludeImport* include = import->isaIncludeImport()) {
+      if (IncludeImport62* include = import->isaIncludeImport62()) {
         visitIncludeImport(include);
       }
     }
   }
-
 
   void Preloader::visitAtRootRule(AtRootRule* rule)
   {
@@ -216,10 +214,6 @@ namespace Sass {
   {
     visitParentStatement(rule);
   }
-
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

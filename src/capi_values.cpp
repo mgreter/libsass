@@ -1,29 +1,39 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "capi_values.hpp"
 
 #include "exceptions.hpp"
 #include "ast_values.hpp"
-
-using namespace Sass;
-
-struct SassMapIterator {
-  Hashed<ValueObj, ValueObj>::ordered_map_type::iterator pos;
-  Hashed<ValueObj, ValueObj>::ordered_map_type::iterator end;
-};
 
 extern "C" {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Map* getMap(struct SassValue* value) { return reinterpret_cast<Map*>(value); }
-  List* getList(struct SassValue* value) { return reinterpret_cast<List*>(value); }
-  Value* getValue(struct SassValue* value) { return reinterpret_cast<Value*>(value); }
-  Number* getNumber(struct SassValue* value) { return reinterpret_cast<Number*>(value); }
-  String* getString(struct SassValue* value) { return reinterpret_cast<String*>(value); }
-  Boolean* getBoolean(struct SassValue* value) { return reinterpret_cast<Boolean*>(value); }
-  ColorRgba* getColor(struct SassValue* value) { return reinterpret_cast<ColorRgba*>(value); }
-  CustomError* getError(struct SassValue* value) { return reinterpret_cast<CustomError*>(value); }
-  CustomWarning* getWarning(struct SassValue* value) { return reinterpret_cast<CustomWarning*>(value); }
+  using namespace Sass;
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  struct SassMapIterator {
+    Hashed<ValueObj, ValueObj>::ordered_map_type::iterator pos;
+    Hashed<ValueObj, ValueObj>::ordered_map_type::iterator end;
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  Map* getMap(struct SassValue* value) { return Value::unwrap(value).isaMap(); }
+  List* getList(struct SassValue* value) { return Value::unwrap(value).isaList(); }
+  Null* getNull(struct SassValue* value) { return Value::unwrap(value).isaNull(); }
+  Value* getValue(struct SassValue* value) { return Value::unwrap(value).isaValue(); }
+  Number* getNumber(struct SassValue* value) { return Value::unwrap(value).isaNumber(); }
+  String* getString(struct SassValue* value) { return Value::unwrap(value).isaString(); }
+  Boolean* getBoolean(struct SassValue* value) { return Value::unwrap(value).isaBoolean(); }
+  ColorRgba* getColor(struct SassValue* value) { return Value::unwrap(value).isaColorRgba(); }
+  CustomError* getError(struct SassValue* value) { return Value::unwrap(value).isaCustomError(); }
+  CustomWarning* getWarning(struct SassValue* value) { return Value::unwrap(value).isaCustomWarning(); }
 
   // Return another reference to an existing value. We simply re-use the reference counted
   // object and re-implement the memory handling also partially here (SharedImpl lite).
@@ -32,19 +42,19 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Return the sass tag for a generic sass value
+  // Return the sass tag for a generic sass value (useful for your own case switch)
   enum SassValueType ADDCALL sass_value_get_tag(struct SassValue* v) { return getValue(v)->getTag(); }
 
   // Check value for a specific type (dispatch to virtual check methods)
-  bool ADDCALL sass_value_is_null(struct SassValue* val) { return Value::unwrap(val).isaNull() != nullptr; }
-  bool ADDCALL sass_value_is_number(struct SassValue* val) { return Value::unwrap(val).isaNumber() != nullptr; }
-  bool ADDCALL sass_value_is_string(struct SassValue* val) { return Value::unwrap(val).isaString() != nullptr; }
-  bool ADDCALL sass_value_is_boolean(struct SassValue* val) { return Value::unwrap(val).isaBoolean() != nullptr; }
-  bool ADDCALL sass_value_is_color(struct SassValue* val) { return Value::unwrap(val).isaColor() != nullptr; }
-  bool ADDCALL sass_value_is_list(struct SassValue* val) { return Value::unwrap(val).isaList() != nullptr; }
-  bool ADDCALL sass_value_is_map(struct SassValue* val) { return Value::unwrap(val).isaMap() != nullptr; }
-  bool ADDCALL sass_value_is_error(struct SassValue* val) { return Value::unwrap(val).isaCustomError() != nullptr; }
-  bool ADDCALL sass_value_is_warning(struct SassValue* val) { return Value::unwrap(val).isaCustomWarning() != nullptr; }
+  bool ADDCALL sass_value_is_null(struct SassValue* value) { return getNull(value) != nullptr; }
+  bool ADDCALL sass_value_is_number(struct SassValue* value) { return getNumber(value) != nullptr; }
+  bool ADDCALL sass_value_is_string(struct SassValue* value) { return getString(value) != nullptr; }
+  bool ADDCALL sass_value_is_boolean(struct SassValue* value) { return getBoolean(value) != nullptr; }
+  bool ADDCALL sass_value_is_color(struct SassValue* value) { return getColor(value) != nullptr; }
+  bool ADDCALL sass_value_is_list(struct SassValue* value) { return getList(value) != nullptr; }
+  bool ADDCALL sass_value_is_map(struct SassValue* value) { return getMap(value) != nullptr; }
+  bool ADDCALL sass_value_is_error(struct SassValue* value) { return getError(value) != nullptr; }
+  bool ADDCALL sass_value_is_warning(struct SassValue* value) { return getWarning(value) != nullptr; }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -144,7 +154,7 @@ extern "C" {
 
   /////////////////////////////////////////////////////////////////////////
   // ToDo: should list also have an iterator, is it so useful and cool?
-  // ToDo: Index access has the advantage it is not invalidated ever.
+  // ToDo: Index access has the advantage that it is never invalidated.
   /////////////////////////////////////////////////////////////////////////
 
   // Getters and setters for Sass_List
@@ -154,8 +164,14 @@ extern "C" {
   void ADDCALL sass_list_set_separator(struct SassValue* v, enum SassSeparator separator) { getList(v)->separator(separator); }
   bool ADDCALL sass_list_get_is_bracketed(struct SassValue* v) { return getList(v)->hasBrackets(); }
   void ADDCALL sass_list_set_is_bracketed(struct SassValue* v, bool is_bracketed) { getList(v)->hasBrackets(is_bracketed); }
+
+  void ADDCALL sass_list_push(struct SassValue* list, struct SassValue* value) { getList(list)->append(getValue(value)); }
+  void ADDCALL sass_list_unshift(struct SassValue* list, struct SassValue* value) { getList(list)->unshift(getValue(value)); }
+  struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i) { return Value::wrap(getList(list)->at(i)); }
+  struct SassValue* ADDCALL sass_list_pop(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->pop()); }
+  struct SassValue* ADDCALL sass_list_shift(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->shift()); }
+
   // Getters and setters for Sass_List values
-  // TODO: also have at!
   struct SassValue* ADDCALL sass_list_get_value(struct SassValue* v, size_t i) { return Value::wrap(getList(v)->at(i)); } 
   void ADDCALL sass_list_set_value(struct SassValue* v, size_t i, struct SassValue* value) { getList(v)->at(i) = getValue(value); }
 
@@ -167,11 +183,6 @@ extern "C" {
   const char* ADDCALL sass_warning_get_message(struct SassValue* v) { return getWarning(v)->message().c_str(); };
   void ADDCALL sass_warning_set_message(struct SassValue* v, const char* msg) { getWarning(v)->message(msg); };
 
-  void ADDCALL sass_list_push(struct SassValue* list, struct SassValue* value) { getList(list)->append(getValue(value)); }
-  void ADDCALL sass_list_unshift(struct SassValue* list, struct SassValue* value) { getList(list)->unshift(getValue(value)); }
-  struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i) { return Value::wrap(getList(list)->at(i)); }
-  struct SassValue* ADDCALL sass_list_pop(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->pop()); }
-  struct SassValue* ADDCALL sass_list_shift(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->shift()); }
 
   /////////////////////////////////////////////////////////////////////////
   // Constructor functions for all value types
@@ -183,10 +194,10 @@ extern "C" {
       Boolean, SourceSpan::tmp("sass://boolean"), state));
   }
 
-  struct SassValue* ADDCALL sass_make_number(double val, const char* unit)
+  struct SassValue* ADDCALL sass_make_number(double value, const char* unit)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      Number, SourceSpan::tmp("sass://number"), val, unit ? unit : ""));
+      Number, SourceSpan::tmp("sass://number"), value, unit ? unit : ""));
   }
 
   struct SassValue* ADDCALL sass_make_color(double r, double g, double b, double a)
@@ -195,10 +206,10 @@ extern "C" {
       ColorRgba, SourceSpan::tmp("sass://color"), r, g, b, a));
   }
 
-  struct SassValue* ADDCALL sass_make_string(const char* val, bool is_quoted)
+  struct SassValue* ADDCALL sass_make_string(const char* value, bool is_quoted)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      String, SourceSpan::tmp("sass://string"), val, is_quoted));
+      String, SourceSpan::tmp("sass://string"), value, is_quoted));
   }
 
   struct SassValue* ADDCALL sass_make_list(enum SassSeparator sep, bool is_bracketed)
@@ -232,16 +243,17 @@ extern "C" {
   }
 
   /////////////////////////////////////////////////////////////////////////
-  // will free all associated sass values
+  // Decrease reference counter and eventually free memory.
+  // Will free all associated sass values for maps or lists.
   /////////////////////////////////////////////////////////////////////////
 
-  void ADDCALL sass_delete_value(struct SassValue* val)
+  void ADDCALL sass_delete_value(struct SassValue* value)
   {
-    Value* value = getValue(val);
+    Value* val = getValue(value);
     if (value) {
-      value->refcount -= 1;
-      if (value->refcount == 0) {
-        delete value;
+      val->refcount -= 1;
+      if (val->refcount == 0) {
+        delete val;
       }
     }
   }
@@ -250,9 +262,9 @@ extern "C" {
   // Make a deep cloned copy of the given sass value
   /////////////////////////////////////////////////////////////////////////
 
-  struct SassValue* ADDCALL sass_clone_value(struct SassValue* val)
+  struct SassValue* ADDCALL sass_clone_value(struct SassValue* value)
   {
-    Value* copy = getValue(val)->copy(SASS_MEMORY_POS_VOID);
+    Value* copy = getValue(value)->copy(SASS_MEMORY_POS_VOID);
     copy->cloneChildren(SASS_MEMORY_POS_VOID);
     return newSassValue(copy);
   }
@@ -260,19 +272,16 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  struct SassValue* ADDCALL sass_value_stringify(struct SassValue* v, bool compressed, int precision)
+  struct SassValue* ADDCALL sass_value_stringify(struct SassValue* value, bool compressed, int precision)
   {
-    Value* val = getValue(v);
-    // Sass_Inspect_Options options(compressed ?
-    //   SASS_STYLE_COMPRESSED : SASS_STYLE_NESTED, precision);
-    sass::string str(val->inspect(/*options*/));
+    Value* val = getValue(value);
+    sass::string str(val->inspect(precision));
     return sass_make_string(str.c_str(), true);
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // ToDo: remove and re-implement, we need to log stuff!
   struct SassValue* ADDCALL sass_value_op(enum SassOperator op, struct SassValue* left, struct SassValue* right)
   {
 
@@ -283,30 +292,26 @@ extern "C" {
     Value* rhs = getValue(right);
 
     try {
-
       switch (op) {
-      case SassOperator::OR:  return Value::wrap(lhs->isTruthy() ? lhs : rhs);
-      case SassOperator::AND: return Value::wrap(lhs->isTruthy() ? rhs : lhs);
-      case SassOperator::ADD: copy = lhs->plus(rhs, logger, pstate); break;
-      case SassOperator::SUB: copy = lhs->minus(rhs, logger, pstate); break;
-      case SassOperator::MUL: copy = lhs->times(rhs, logger, pstate); break;
-      case SassOperator::DIV: copy = lhs->dividedBy(rhs, logger, pstate); break;
-      case SassOperator::MOD: copy = lhs->modulo(rhs, logger, pstate); break;
-      case SassOperator::EQ:  return sass_make_boolean(PtrObjEqualityFn(rhs, lhs));
-      case SassOperator::NEQ: return sass_make_boolean(!PtrObjEqualityFn(rhs, lhs));
-      case SassOperator::GT:  return sass_make_boolean(lhs->greaterThan(rhs, logger, pstate));
-      case SassOperator::GTE: return sass_make_boolean(lhs->greaterThanOrEquals(rhs, logger, pstate));
-      case SassOperator::LT:  return sass_make_boolean(lhs->lessThan(rhs, logger, pstate));
-      case SassOperator::LTE: return sass_make_boolean(lhs->lessThanOrEquals(rhs, logger, pstate));
-      default: throw Exception::SassScriptException("Not implemented.", logger, pstate);
+        case SassOperator::OR:  return Value::wrap(lhs->isTruthy() ? lhs : rhs);
+        case SassOperator::AND: return Value::wrap(lhs->isTruthy() ? rhs : lhs);
+        case SassOperator::ADD: copy = lhs->plus(rhs, logger, pstate); break;
+        case SassOperator::SUB: copy = lhs->minus(rhs, logger, pstate); break;
+        case SassOperator::MUL: copy = lhs->times(rhs, logger, pstate); break;
+        case SassOperator::DIV: copy = lhs->dividedBy(rhs, logger, pstate); break;
+        case SassOperator::MOD: copy = lhs->modulo(rhs, logger, pstate); break;
+        case SassOperator::EQ:  return sass_make_boolean(PtrObjEqualityFn(rhs, lhs));
+        case SassOperator::NEQ: return sass_make_boolean(!PtrObjEqualityFn(rhs, lhs));
+        case SassOperator::GT:  return sass_make_boolean(lhs->greaterThan(rhs, logger, pstate));
+        case SassOperator::GTE: return sass_make_boolean(lhs->greaterThanOrEquals(rhs, logger, pstate));
+        case SassOperator::LT:  return sass_make_boolean(lhs->lessThan(rhs, logger, pstate));
+        case SassOperator::LTE: return sass_make_boolean(lhs->lessThanOrEquals(rhs, logger, pstate));
+        default: throw Exception::SassScriptException("Operation not implemented.", logger, pstate);
       }
-
       copy->refcount += 1;
       return copy->wrap();
     }
-//
-//    // simply pass the error message back to the caller for now
-//    // catch (Exception::InvalidSass& e) { return sass_make_error(e.what()); }
+    // simply pass the error message back to the caller for now
     catch (std::bad_alloc&) { return sass_make_error("memory exhausted"); }
     catch (std::exception & e) { return sass_make_error(e.what()); }
     catch (sass::string & e) { return sass_make_error(e.c_str()); }
@@ -314,5 +319,8 @@ extern "C" {
     catch (...) { return sass_make_error("unknown"); }
 
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }

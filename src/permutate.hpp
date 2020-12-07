@@ -1,5 +1,8 @@
-#ifndef SASS_PATHS_HPP
-#define SASS_PATHS_HPP
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+#ifndef SASS_PERMUTATE_HPP
+#define SASS_PERMUTATE_HPP
 
 // sass.hpp must go before all system headers
 // to get the __EXTENSIONS__ fix on Solaris.

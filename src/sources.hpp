@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_SOURCES_HPP
 #define SASS_SOURCES_HPP
 
@@ -5,7 +8,6 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "file.hpp"
 #include "source.hpp"
 #include "source_span.hpp"
 

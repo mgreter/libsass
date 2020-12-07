@@ -5,21 +5,125 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include <map>
 #include "logger.hpp"
-#include "context.hpp"
 #include "ast_css.hpp"
 #include "stylesheet.hpp"
 #include "capi_error.hpp"
-#include "capi_context.hpp"
-
-struct SassImport;
+#include "capi_import.hpp"
+#include "capi_importer.hpp"
+#include "capi_compiler.hpp"
+#include "capi_traces.hpp"
+#include "source_map.hpp"
 
 namespace Sass {
+
+  // Helper function to sort header and importer arrays by priorities
+  inline bool cmpImporterPrio(struct SassImporter* i, struct SassImporter* j)
+  {
+    return sass_importer_get_priority(i) > sass_importer_get_priority(j);
+  }
 
   // The split between Context and Compiler is technically not really needed.
   // But it helps a little to organize the different aspects of the compilation.
   // The Context mainly stores all the read-only values (e.g. settings).
-  class Compiler final : public Context, public Logger {
+  class Compiler final : public OutputOptions, public Logger {
+
+
+  public:
+
+    // Checking if a file exists can be quite extensive
+    // Keep an internal map to avoid repeated system calls
+    std::unordered_map<sass::string, bool> fileExistsCache;
+
+    // Keep cache of resolved import filenames
+    // Key is a pair of previous + import path
+    std::unordered_map<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
+
+    // Include paths are local to context since we need to know
+    // it for lookups during parsing. You may reset this for
+    // another compilation when reusing the context.
+    sass::vector<sass::string> includePaths;
+
+  public:
+
+    Root* chroot77 = nullptr;
+
+    WithConfig* wconfig = nullptr;
+
+    EnvKeyMap<BuiltInMod*> modules;
+
+  protected:
+
+    // Functions in order of appearance
+    // Same order needed for function stack
+    std::vector<CallableObj> fnList;
+
+  public:
+
+    // sass::vector<WithConfigVar>* withConfig = nullptr;
+    virtual ~Compiler();
+
+    // EnvKeyMap<WithConfigVar> withConfig;
+
+    // Sheets are filled after resources are parsed
+    // This could be shared, should go to engine!?
+    // ToDo: should be case insensitive on windows?
+    std::map<const sass::string, RootObj> sheets;
+
+    // Only used to cache `loadImport` calls
+    std::map<const sass::string, Import93Obj> sources;
+
+    // Additional C-API stuff for interaction
+    sass::vector<struct SassImporter*> cHeaders;
+    sass::vector<struct SassImporter*> cImporters;
+    sass::vector<struct SassFunction*> cFunctions;
+
+  public:
+
+    // The import stack during evaluation phase
+    sass::vector<Import93Obj> import_stack;
+
+    // List of all sources that have been included
+    sass::vector<SourceDataObj> included_sources;
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////////////
+    // Helpers for `sass_prepare_context`
+    /////////////////////////////////////////////////////////////////////////
+
+    void addCustomHeader(struct SassImporter* header);
+    void addCustomImporter(struct SassImporter* importer);
+    void addCustomFunction(struct SassFunction* function);
+
+    /////////////////////////////////////////////////////////////////////////
+    // Some simple delegations to variable root for runtime queries
+    /////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
+    // Load plugins from path, which can be path separated
+    void loadPlugins(const sass::string& paths);
+
+    // Add additional include paths, which can be path separated
+    void addIncludePaths(const sass::string& paths);
+
+    // Load import from the file-system and create source object
+    // Results will be stored at `sources[source->getAbsPath()]`
+    Import93* loadImport(const ResolvedImport& import);
+
+    // Implementation for `sass_compiler_find_file`
+    // Looks for the file in regard to the current
+    // import and then looks in all include folders.
+    sass::string findFile(const sass::string& path);
+
+    // Look for all possible filename variants (e.g. partials)
+    // Returns all results (e.g. for ambiguous but valid imports)
+    const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);
+
 
   public:
 
@@ -72,7 +176,7 @@ namespace Sass {
     enum SassCompilerState state;
 
     // Option struct for source map options
-    struct SassSrcMapOptions srcmap_options;
+    SrcMapOptions srcmap_options;
 
     // Where we want to store the output.
     // Source-map path is deducted from it.
@@ -80,7 +184,7 @@ namespace Sass {
     sass::string output_path;
 
     // main entry point for compilation
-    ImportObj entry_point;
+    Import93Obj entry_point;
 
     // Parsed ast-tree
     RootObj sheet;
@@ -132,13 +236,13 @@ namespace Sass {
     // ToDO, maybe belongs to compiler?
     CssRootObj compileRoot(bool plainCss);
 
-    char* renderSrcMapJson(struct SassSrcMapOptions options,
+    char* renderSrcMapJson(SrcMapOptions options,
       const SourceMap& source_map);
 
-    char* renderSrcMapLink(struct SassSrcMapOptions options,
+    char* renderSrcMapLink(SrcMapOptions options,
       const SourceMap& source_map);
 
-    char* renderEmbeddedSrcMap(struct SassSrcMapOptions options,
+    char* renderEmbeddedSrcMap(SrcMapOptions options,
       const SourceMap& source_map);
 
     /////////////////////////////////////////////////////////////////////////
@@ -185,7 +289,7 @@ namespace Sass {
 
     // Parse the import (updates syntax flag if AUTO was set)
     // Results will be stored at `sheets[source->getAbsPath()]`
-    Root* registerImport(ImportObj import);
+    Root* registerImport(Import93Obj import);
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, SourceSpan pstate);
@@ -198,7 +302,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void loadBuiltInFunctions();
 
-    Root* parseRoot(ImportObj import);
+    Root* parseRoot(Import93Obj import);
 
   private:
 
@@ -212,15 +316,16 @@ namespace Sass {
     bool callCustomLoader(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule,
       const sass::vector<struct SassImporter*>& importers, bool singletone = true);
 
+    public:
     /////////////////////////////////////////////////////////////////////////
     // Register an external custom sass function on the global scope.
     // Main entry point for custom functions passed through the C-API.
     // The function you pass in will be taken over and freed by us!
     /////////////////////////////////////////////////////////////////////////
-    void registerCustomFunction(struct SassFunction* function);
+      void registerCustomFunction(struct SassFunction* function);
 
     // Invoke parser according to import format
-    RootObj parseSource(ImportObj source);
+    RootObj parseSource(Import93Obj source);
 
   public:
 
@@ -238,7 +343,7 @@ namespace Sass {
 
     ImportStackFrame(
       Compiler& compiler,
-      Import* import);
+      Import93* import);
 
     ~ImportStackFrame();
 

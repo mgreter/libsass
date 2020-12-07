@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "file.hpp"
 
 // Some functions are heavily inspired by Perl
@@ -302,7 +305,7 @@ namespace Sass {
       size_t index = 0;
       size_t minSize = std::min(abs_path.size(), abs_base.size());
       for (size_t i = 0; i < minSize; ++i) {
-        #ifdef FS_CASE_SENSITIVE
+        #ifdef FS_CASE_SENSITIVITY
           if (abs_path[i] != abs_base[i]) break;
         #else
           // compare the characters in a case insensitive manner
@@ -560,14 +563,14 @@ namespace Sass {
     }
     // EO slurp_file
 
-    Import* read_file(const ResolvedImport& import)
+    Import93* read_file(const ResolvedImport& import)
     {
       // try to read the content of the resolved file entry
       // the memory buffer returned to us must be freed by us!
       if (char* contents = slurp_file(import.abs_path, CWD)) {
         // Return LoadedImport object
         // ToDo: Add sourcemap parsing
-        return SASS_MEMORY_NEW(Import,
+        return SASS_MEMORY_NEW(Import93,
           SASS_MEMORY_NEW(SourceFile,
             import.imp_path.c_str(),
             import.abs_path.c_str(),
@@ -584,7 +587,7 @@ namespace Sass {
   // Entry point for top level file import
   // Don't load like other includes, we do not
   // check inside include paths for this file!
-  void Import::loadIfNeeded()
+  void Import93::loadIfNeeded()
   {
     // Only load once
     if (isLoaded()) return;
@@ -612,29 +615,40 @@ namespace Sass {
     }
   }
 
-  const char* Import::getImpPath() const
+  const char* Import93::getImpPath() const
   {
     return source->getImpPath();
   }
 
-  const char* Import::getAbsPath() const
+  const char* Import93::getAbsPath() const
   {
     return source->getAbsPath();
   }
 
-  const char* Import::getFileName() const
+  const char* Import93::getFileName() const
   {
     return source->getFileName();
   }
 
-  Import::Import(
+  const char* Import93::getErrorMsg() const
+  {
+    return error;
+  }
+
+  void Import93::setErrorMsg(const char* msg)
+  {
+    sass_free_c_string(error);
+    error = sass_copy_c_string(msg);
+  }
+
+  Import93::Import93(
     SourceData* source,
-    SassImportFormat syntax) :
+    SassImportSyntax syntax) :
     source(source),
     syntax(syntax)
   {}
 
-  bool Import::isLoaded() const
+  bool Import93::isLoaded() const
   {
     return source && source->content();
   }

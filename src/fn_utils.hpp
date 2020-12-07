@@ -58,20 +58,50 @@ namespace Sass {
     if (number > 0) {
       return lround(fuzzyLessThan(
         fmod(number, 1.0), 0.5, epsilon)
-          ? floor(number) : ceill(number));
+        ? floor(number) : ceill(number));
     }
     return lround(fuzzyLessThanOrEquals(
-      fmod(number, 1.0), - 0.5, epsilon)
-        ? floorl(number) : ceill(number));
+      fmod(number, 1.0), -0.5, epsilon)
+      ? floorl(number) : ceill(number));
   }
 
   // Returns `true` if it's within [min] and [max],
   // or [number] is [fuzzyEquals] to [min] or [max].
   inline bool fuzzyCheckRange(double number, double min, double max, double epsilon)
   {
-    return (number > min&& number < max)
+    return (number > min && number < max)
       || fuzzyEquals(number, min, epsilon)
       || fuzzyEquals(number, max, epsilon);
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  inline double round64(double val, double epsilon)
+  {
+    // https://github.com/sass/sass/commit/4e3e1d5684cc29073a507578fc977434ff488c93
+    // ToDo: maybe speed up further by using `std::remainder`
+    double rest = std::fmod(val, 1.0) / 5.0;
+    if (val >= 0) {
+      if (0.1 - rest < epsilon) return std::ceil(val);
+      else return std::floor(val);
+    }
+    if (rest + 0.1 <= epsilon) return std::floor(val);
+    else return std::ceil(val);
+  }
+
+  template <typename T>
+  inline T clamp(const T& n, const T& lower, const T& upper)
+  {
+    return std::max(lower, std::min(n, upper));
+  }
+
+  template <typename T>
+  inline T absmod(const T& n, const T& r)
+  {
+    T m = std::fmod(n, r);
+    if (m < 0.0) m += r;
+    return m;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -82,6 +112,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-}
+};
 
 #endif

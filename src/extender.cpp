@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "extender.hpp"
 
 #include "permutate.hpp"
@@ -72,7 +75,7 @@ namespace Sass {
     for (auto complex : targets->elements()) {
 
       if (complex->size() > 1) {
-        #ifdef SassRestrictCompoundExtending
+        #if SassRestrictCompoundExtending
         throw Exception::RuntimeException(logger,
           "Can't extend complex selector " +
           complex->inspect() + ".");

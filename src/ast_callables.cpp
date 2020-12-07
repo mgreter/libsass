@@ -120,11 +120,11 @@ namespace Sass {
   ExternalCallable::ExternalCallable(
     const EnvKey& fname,
     ArgumentDeclaration* parameters,
-    struct SassFunction* function) :
+    SassFunctionLambda lambda) :
     Callable(SourceSpan::tmp("[EXTERNAL]")),
     envkey_(fname),
     declaration_(parameters),
-    function_(function)
+    lambda_(lambda)
   {}
 
   // Equality comparator (needed for `get-function` value)
@@ -132,7 +132,7 @@ namespace Sass {
   {
     if (const ExternalCallable* builtin = rhs.isaExternalCallable()) {
       return envkey_ == builtin->envkey_ &&
-        function_ == builtin->function_;
+        lambda_ == builtin->lambda_;
     }
     return false;
   }

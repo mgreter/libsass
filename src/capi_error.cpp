@@ -1,62 +1,9 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "capi_error.hpp"
 
 #include "json.hpp"
-
-#ifdef __cplusplus
-using namespace Sass;
-extern "C" {
-#endif
-
-    int ADDCALL sass_error_get_status(const struct SassError* error) { return error->status; }
-    char* ADDCALL sass_error_get_json(const struct SassError* error) { return error->getJson(true); }
-    const char* ADDCALL sass_error_get_what(const struct SassError* error) { return error->what.c_str(); }
-    // const char* ADDCALL sass_error_get_messages(struct SassError* error) { return error->messages86.c_str(); }
-    // const char* ADDCALL sass_error_get_warnings(struct SassError* error) { return error->warnings86.c_str(); }
-    const char* ADDCALL sass_error_get_formatted(const struct SassError* error) { return error->formatted.c_str(); }
-
-    const char* ADDCALL sass_error_get_path(const struct SassError* error)
-    {
-      if (error->traces.empty()) return nullptr;
-      return error->traces.back().pstate.getAbsPath();
-    }
-
-    size_t ADDCALL sass_error_get_line(const struct SassError* error)
-    {
-      if (error->traces.empty()) return 0;
-      return error->traces.back().pstate.getLine();
-    }
-    size_t ADDCALL sass_error_get_column(const struct SassError* error)
-    {
-      if (error->traces.empty()) return 0;
-      return error->traces.back().pstate.getColumn();
-    }
-    const char* ADDCALL sass_error_get_content(const struct SassError* error)
-    {
-      if (error->traces.empty()) return 0;
-      return error->traces.back().pstate.getContent();
-    }
-
-    size_t ADDCALL sass_error_count_traces(const struct SassError* error)
-    {
-      return error->traces.size();
-    }
-
-    const struct SassTrace* ADDCALL sass_error_last_trace(const struct SassError* error)
-    {
-      if (error->traces.empty()) return nullptr;
-      return error->traces.back().wrap();
-    }
-
-    const struct SassTrace* ADDCALL sass_error_get_trace(const struct SassError* error, size_t i)
-    {
-      if (error->traces.size() < i) return nullptr;
-      return error->traces.at(i).wrap();
-    }
-
-#ifdef __cplusplus
-} // __cplusplus defined.
-#endif
-
 
 // Create error formatted as serialized json.
 // You must free the data returned from here.
@@ -70,7 +17,7 @@ char* SassError::getJson(bool include_sources) const
   // Attach all stack traces
   if (traces.size() > 0) {
     JsonNode* json_traces = json_mkarray();
-    for (const  Sass::StackTrace& trace : traces) {
+    for (const Sass::StackTrace& trace : traces) {
       JsonNode* json_trace = json_mkobject();
       const Sass::SourceSpan& pstate(trace.pstate);
       json_append_member(json_trace, "file", json_mkstring(pstate.getAbsPath()));
@@ -85,8 +32,6 @@ char* SassError::getJson(bool include_sources) const
   // Attach the generic error reporting items
   json_append_member(json, "status", json_mknumber(status));
   json_append_member(json, "error", json_mkstring(what.c_str()));
-  // json_append_member(json, "messages", json_mkstring(messages86.c_str()));
-  // json_append_member(json, "warnings", json_mkstring(warnings86.c_str()));
   json_append_member(json, "formatted", json_mkstring(formatted.c_str()));
 
   char* serialized = nullptr;
@@ -102,3 +47,84 @@ char* SassError::getJson(bool include_sources) const
   return serialized;
 
 }
+// EO SassError::getJson
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  using namespace Sass;
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Error related getters (use after compiler was rendered)
+  int ADDCALL sass_error_get_status(const struct SassError* error) { return error->status; }
+
+  // Getter for plain error message (use after compiler was rendered).
+  const char* ADDCALL sass_error_get_string(const struct SassError* error) { return error->what.c_str(); }
+
+  // Getter for error status as json object (Useful to pass to downstream).
+  char* ADDCALL sass_error_get_json(const struct SassError* error) { return error->getJson(true); }
+
+  // Getter for formatted error message. According to logger style this
+  // may be in unicode and may contain ANSI escape codes for colors.
+  const char* ADDCALL sass_error_get_formatted(const struct SassError* error) { return error->formatted.c_str(); }
+
+  // Getter for line position where error occurred (starts from 1).
+  size_t ADDCALL sass_error_get_line(const struct SassError* error)
+  {
+    if (error->traces.empty()) return 0;
+    return error->traces.back().pstate.getLine();
+  }
+
+  // Getter for column position where error occurred (starts from 1).
+  size_t ADDCALL sass_error_get_column(const struct SassError* error)
+  {
+    if (error->traces.empty()) return 0;
+    return error->traces.back().pstate.getColumn();
+  }
+
+  // Getter for source content referenced in line and column.
+  const char* ADDCALL sass_error_get_content(const struct SassError* error)
+  {
+    if (error->traces.empty()) return 0;
+    return error->traces.back().pstate.getContent();
+  }
+
+  // Getter for path where the error occurred.
+  const char* ADDCALL sass_error_get_path(const struct SassError* error)
+  {
+    if (error->traces.empty()) return nullptr;
+    return error->traces.back().pstate.getAbsPath();
+  }
+
+  // Getter for number of traces attached to error object.
+  size_t ADDCALL sass_error_count_traces(const struct SassError* error)
+  {
+    return error->traces.size();
+  }
+
+  // Getter for last trace (or nullptr if none are available).
+  const struct SassTrace* ADDCALL sass_error_last_trace(const struct SassError* error)
+  {
+    if (error->traces.empty()) return nullptr;
+    return error->traces.back().wrap();
+  }
+
+  // Getter for nth trace (or nullptr if `n` is invalid).
+  const struct SassTrace* ADDCALL sass_error_get_trace(const struct SassError* error, size_t i)
+  {
+    if (error->traces.size() < i) return nullptr;
+    return error->traces.at(i).wrap();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+} // __cplusplus defined.
+#endif

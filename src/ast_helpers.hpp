@@ -6,7 +6,6 @@
 #include "capi_sass.hpp"
 #include <algorithm>
 #include <functional>
-#include "util_string.hpp"
 #include "string_utils.hpp"
 
 namespace Sass {

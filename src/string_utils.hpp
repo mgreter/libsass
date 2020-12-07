@@ -54,6 +54,10 @@ namespace Sass {
     // Return joined string from all passed strings, delimited by separator.
     sass::string join(const sass::vector<sass::string>& strings, const char* separator);
 
+    // Returns [name] without a vendor prefix.
+    // If [name] has no vendor prefix, it's returned as-is.
+    sass::string unvendor(const sass::string& name);
+
   }
 }
 

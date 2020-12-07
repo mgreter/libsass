@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_VISITOR_VALUE_HPP
 #define SASS_VISITOR_VALUE_HPP
 

@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_TERMINAL_HPP
 #define SASS_TERMINAL_HPP
 
@@ -22,21 +25,23 @@ namespace Terminal {
   // Import constant terminal color definition
   using namespace Sass::Constants::Terminal;
 
+  // Query number of available console columns
+  // Useful to shorten our output to fit nicely
   short getColumns(bool error = false);
 
   // Check if we are actually printing to the console
   // In all other cases we want monochrome ASCII output
   bool isConsoleAttached(bool error = false);
+
+  // Check that we print to a terminal with unicode support
   bool hasUnicodeSupport(bool error = false);
+
+  // Check that we print to a terminal with color support
   bool hasColorSupport(bool error = false);
 
+  // This function is able to print a line with colors
+  // It translates the ANSI terminal codes to windows
   void print(const char* output, bool error = false);
-
-
-#ifdef _WIN32
-  /*
-  */
-#endif
 
 }
 

@@ -74,7 +74,7 @@ namespace Sass {
       idxs->root.fnStackPtr.push_back(0xFFFFFFFF);
     }
     // Check and prevent stack smashing
-    if (stack.size() > MAX_NESTING) {
+    if (stack.size() > SassMaxNesting) {
       throw Exception::RecursionLimitError();
     }
     // Push onto our stack
@@ -497,7 +497,7 @@ namespace Sass {
       // Check if the namespace was registered
       auto it = mod->moduse.find(ns);
       if (it == mod->moduse.end()) continue;
-      auto fwd = it->second.first->varIdxs.find(name);
+      // auto fwd = it->second.first->varIdxs.find(name);
       // if (fwd != it->second.first->varIdxs.end()) {
       //   ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
       //   return slot != nullptr;

@@ -11,7 +11,7 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Emitter::Emitter(struct SassOutputOptionsCpp& opt, bool srcmap_enabled)
+  Emitter::Emitter(OutputOptions& opt, bool srcmap_enabled)
   : wbuf(srcmap_enabled),
     opt(opt),
     indentation(0),

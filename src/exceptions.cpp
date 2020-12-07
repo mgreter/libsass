@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "exceptions.hpp"
 
 #include "ast_selectors.hpp"
@@ -304,11 +307,11 @@ namespace Sass {
       : OperationError("divided by 0")
     {}
 
-    IncompatibleUnits::IncompatibleUnits(const Units& lhs, const Units& rhs)
-      : OperationError("Incompatible units "
-        + rhs.unit() + " and "
-        + lhs.unit() + ".")
-    {}
+    //IncompatibleUnits::IncompatibleUnits(const Units& lhs, const Units& rhs)
+    //  : OperationError("Incompatible units "
+    //    + rhs.unit() + " and "
+    //    + lhs.unit() + ".")
+    //{}
 
 
 

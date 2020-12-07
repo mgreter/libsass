@@ -1,6 +1,11 @@
-// must be the first include in all compile units
-#ifndef SASS_SASS_H
-#define SASS_SASS_H
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+#ifndef SASS_CAPI_SASS_HPP
+#define SASS_CAPI_SASS_HPP
+
+// This include must be the first in all compile units!
+// Otherwise you may run into issues with other headers!
 
 // #define DEBUG_SHARED_PTR
 
@@ -10,7 +15,6 @@
 #undef __EXTENSIONS__
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4005)
 #pragma warning(disable : 26812)
 #endif
 
@@ -30,14 +34,13 @@
 # endif
 #endif
 
-
 // should we be case insensitive
 // when dealing with files or paths
-#ifndef FS_CASE_SENSITIVE
+#ifndef FS_CASE_SENSITIVITY
 # ifdef _WIN32
-#  define FS_CASE_SENSITIVE 0
+#  define FS_CASE_SENSITIVITY 0
 # else
-#  define FS_CASE_SENSITIVE 1
+#  define FS_CASE_SENSITIVITY 1
 # endif
 #endif
 
@@ -60,8 +63,9 @@
 # endif
 #endif
 
-// include C-API header
+// Include C-API headers
 #include "sass/base.h"
+#include "sass/version.h"
 
 // Include allocator
 #include "memory.hpp"
@@ -69,10 +73,7 @@
 // Include random seed
 #include "randomize.hpp"
 
-// #include "../../parallel-hashmap/parallel_hashmap/phmap.h"
-// #include "../../ordered-map/include/tsl/ordered_set.h"
-// #include "robin_hood.hpp"
-
+// Include unordered map implementation
 #ifdef USE_TSL_HOPSCOTCH
 #include "tessil/hopscotch_map.h"
 #include "tessil/hopscotch_set.h"
@@ -95,99 +96,164 @@
 // output behaviors
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  const double PI = std::acos(-1);
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // sass inspect options
+  class InspectOptions
+  {
+  public:
+
+    // Output style for the generated CSS code
+    // A value from above SASS_STYLE_* constants
+    enum SassOutputStyle output_style;
+
+    // Precision for fractional numbers
+    int precision;
+
+    // Number format for sprintf.
+    // Cached to speed up output.
+    char nr_sprintf[32];
+
+    // Update precision and epsilon etc.
+    void setPrecision(int precision)
+    {
+      this->precision = precision;
+      // Update sprintf format to match precision
+      snprintf(this->nr_sprintf, 32, "%%.%df", precision);
+    }
+
+    // initialization list (constructor with defaults)
+    InspectOptions(
+      enum SassOutputStyle style = SASS_STYLE_NESTED,
+      int precision = SassDefaultPrecision) :
+      output_style(style),
+      precision(precision)
+    {
+      // Update sprintf format to match precision
+      snprintf(nr_sprintf, 32, "%%.%df", precision);
+    }
+
+  };
+  // EO class InspectOptions
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // sass output and inspect options
+  class OutputOptions : public InspectOptions
+  {
+  public:
+    // String to be used for indentation
+    const char* indent;
+    // String to be used to for line feeds
+    const char* linefeed;
+
+    // Emit comments in the generated CSS indicating
+    // the corresponding source line.
+    bool source_comments;
+
+    // initialization list (constructor with defaults)
+    OutputOptions(InspectOptions& opt,
+      const char* indent = "  ",
+      const char* linefeed = "\n",
+      bool source_comments = false)
+      : InspectOptions(opt),
+      indent(indent), linefeed(linefeed),
+      source_comments(source_comments)
+    { }
+
+    // initialization list (constructor with defaults)
+    OutputOptions(SassOutputStyle style = SASS_STYLE_NESTED,
+      int precision = SassDefaultPrecision,
+      const char* indent = "  ",
+      const char* linefeed = "\n",
+      bool source_comments = false)
+      : InspectOptions(style, precision),
+      indent(indent), linefeed(linefeed),
+      source_comments(source_comments)
+    { }
+
+  };
+  // EO class OutputOptions
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // sass source-map options
+  class SrcMapOptions
+  {
+  public:
+
+    // Case 1: create no source-maps
+    // Case 2: create source-maps, but no reference in css
+    // Case 3: create source-maps, reference to file in css
+    // Case 4: create source-maps, embed the json in the css
+    // Note: Writing source-maps to disk depends on implementor
+    enum SassSrcMapMode mode;
+
+    // Flag to embed full sources
+    // Ignored for SASS_SRCMAP_NONE
+    bool embed_contents;
+
+    // create file URLs for sources
+    bool file_urls;
+
+    // Directly inserted in source maps
+    sass::string root;
+
+    // Path where source map is saved
+    sass::string path;
+
+    // Path to file that loads us
+    sass::string origin;
+
+    // Init everything to false
+    SrcMapOptions() :
+      mode(SASS_SRCMAP_NONE),
+      embed_contents(true),
+      file_urls(false)
+    {}
+
+  };
+  // EO class SrcMapOptions
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // helper to aid dreaded MSVC debug mode
   // see implementation for more details
-  char* sass_copy_string(sass::string str);
-
-}
-
-// sass config options structure
-struct Sass_Inspect_Options {
-
-  // Output style for the generated CSS code
-  // A value from above SASS_STYLE_* constants
-  enum SassOutputStyle output_style;
-
-  // Precision for fractional numbers
-  int precision;
-
-  double epsilon2;
-  char nr_sprintf[32];
-
-  // initialization list (constructor with defaults)
-  Sass_Inspect_Options(SassOutputStyle style = SASS_STYLE_NESTED,
-                       int precision = 10)
-  : output_style(style), precision(precision)
-  {
-    epsilon2 = std::pow(0.1, precision);
-    snprintf(nr_sprintf, 32, "%%.%df", precision);
+  inline char* sass_copy_string(sass::string str) {
+    // In MSVC the following can lead to segfault:
+    // sass_copy_c_string(stream.str().c_str());
+    // Reason is that the string returned by str() is disposed before
+    // sass_copy_c_string is invoked. The string is actually a stack
+    // object, so indeed nobody is holding on to it. So it seems
+    // perfectly fair to release it right away. So the const char*
+    // by c_str will point to invalid memory. I'm not sure if this is
+    // the behavior for all compiler, but I'm pretty sure we would
+    // have gotten more issues reported if that would be the case.
+    // Wrapping it in a functions seems the cleanest approach as the
+    // function must hold on to the stack variable until it's done.
+    return sass_copy_c_string(str.c_str());
   }
+  // EO sass_copy_string
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 };
-
-// sass config options structure
-struct SassOutputOptionsCpp : Sass_Inspect_Options {
-
-  // String to be used for indentation
-  const char* indent;
-  // String to be used to for line feeds
-  const char* linefeed;
-
-  // Emit comments in the generated CSS indicating
-  // the corresponding source line.
-  bool source_comments;
-
-  // initialization list (constructor with defaults)
-  SassOutputOptionsCpp(struct Sass_Inspect_Options& opt,
-                      const char* indent = "  ",
-                      const char* linefeed = "\n",
-                      bool source_comments = false)
-  : Sass_Inspect_Options(opt),
-    indent(indent), linefeed(linefeed),
-    source_comments(source_comments)
-  { }
-
-  // initialization list (constructor with defaults)
-  SassOutputOptionsCpp(SassOutputStyle style = SASS_STYLE_NESTED,
-                      int precision = 10,
-                      const char* indent = "  ",
-                      const char* linefeed = "\n",
-                      bool source_comments = false)
-  : Sass_Inspect_Options(style, precision),
-    indent(indent), linefeed(linefeed),
-    source_comments(source_comments)
-  { }
-
-};
-
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-namespace Sass {
-
-  template <typename T>
-  T clamp(const T& n, const T& lower, const T& upper) {
-    return std::max(lower, std::min(n, upper));
-  }
-
-  template <typename T>
-  T absmod(const T& n, const T& r) {
-    T m = std::fmod(n, r);
-    if (m < 0.0) m += r;
-    return m;
-  }
-
-  double round64(double val, double epsilon = SassDefaultEpsilon);
-
-}
-
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef NDEBUG
-// #define SASS_ASSERT(cond, msg) ((void)0)
-#define SASS_ASSERT(cond, msg) assert(cond && msg)
+#define SASS_ASSERT(cond, msg) ((void)0)
 #else
 #ifdef DEBUG
 #define SASS_ASSERT(cond, msg) assert(cond && msg)
@@ -195,5 +261,8 @@ namespace Sass {
 #define SASS_ASSERT(cond, msg) ((void)0)
 #endif
 #endif
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
 #endif

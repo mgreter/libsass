@@ -1,12 +1,14 @@
 #ifndef ASSERT_HPP
+#define ASSERT_HPP
 
 #include <string>
 #include <vector>
+#include <iomanip>
 #include "../src/memory/allocator.hpp"
 #include "../src/offset.hpp"
 
-Sass::sass::string escape_string(const Sass::sass::string& str) {
-  Sass::sass::string out;
+sass::string escape_string(const sass::string& str) {
+  sass::string out;
   out.reserve(str.size());
   for (char c : str) {
     switch (c) {
@@ -45,7 +47,7 @@ Sass::sass::string escape_string(const Sass::sass::string& str) {
 
 #define ASSERT_NR_EQ(a, b) \
   if (a != b) { \
-    std::cerr << \
+    std::cerr << std::setprecision(12) << \
       "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
       "\n  LHS: [" << a << "]" \
       "\n  RHS: [" << b << "]" << \
@@ -54,7 +56,7 @@ Sass::sass::string escape_string(const Sass::sass::string& str) {
   } \
 
 #define ASSERT_STR_EQ(a, b) \
-  if (Sass::sass::string(b) != a) { \
+  if (sass::string(b) != a) { \
     std::cerr << \
       "Expected LHS == RHS at " << __FILE__ << ":" << __LINE__ << \
       "\n  LHS: [" << escape_string(a) << "]" \
@@ -64,8 +66,8 @@ Sass::sass::string escape_string(const Sass::sass::string& str) {
   } \
 
 #define INIT_TEST_RESULTS \
-  Sass::sass::vector<Sass::sass::string> passed; \
-  Sass::sass::vector<Sass::sass::string> failed; \
+  sass::vector<sass::string> passed; \
+  sass::vector<sass::string> failed; \
 
 #define TEST(fn) \
   if (fn()) { \

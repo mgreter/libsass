@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "scanner_string.hpp"
 
 #include "charcode.hpp"
@@ -212,7 +215,7 @@ namespace Sass {
   // rather than the end of the string.
   sass::string StringScanner::substring(const char* start, const char* end)
   {
-    if (end == 0) end = position;
+    if (end == nullptr) end = position;
     return sass::string(start, end);
   }
 

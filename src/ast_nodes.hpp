@@ -16,7 +16,9 @@
 namespace Sass {
 
   //////////////////////////////////////////////////////////////////////
-  // define cast template now (need complete type)
+  // Define cast template now (need complete type).
+  // Note: we should have gotten rid of all usage by now.
+  // Note: only debugger still uses this (move there?).
   //////////////////////////////////////////////////////////////////////
 
   template<class T>
@@ -37,7 +39,7 @@ namespace Sass {
   const char* sass_op_separator(enum SassOperator op);
 
   typedef LocalStack<EnvFrame*> ScopedStack;
-  typedef LocalStack<ImportObj> ScopedImport;
+  typedef LocalStack<Import93Obj> ScopedImport93;
   typedef LocalStack<SelectorListObj> ScopedSelector;
 
   /////////////////////////////////////////////////////////////////////////
@@ -231,7 +233,7 @@ namespace Sass {
     ImportBase(const ImportBase* ptr);
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StaticImport);
-    DECLARE_ISA_CASTER(IncludeImport);
+    DECLARE_ISA_CASTER(IncludeImport62);
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -560,12 +562,15 @@ namespace Sass {
 
   public:
 
-    // Declare up-casting methods
+    // Declare further up-casting methods
     DECLARE_ISA_CASTER(Map);
     DECLARE_ISA_CASTER(List);
     DECLARE_ISA_CASTER(Null);
     DECLARE_ISA_CASTER(Number);
     DECLARE_ISA_CASTER(Color);
+    DECLARE_ISA_CASTER(ColorRgba);
+    DECLARE_ISA_CASTER(ColorHsla);
+    DECLARE_ISA_CASTER(ColorHwba);
     DECLARE_ISA_CASTER(Boolean);
     DECLARE_ISA_CASTER(Function);
     DECLARE_ISA_CASTER(CustomError);

@@ -1,10 +1,12 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "fn_colors.hpp"
 
 #include <iomanip>
 #include "compiler.hpp"
 #include "exceptions.hpp"
 #include "ast_values.hpp"
-#include "util_string.hpp"
 
 namespace Sass {
 
@@ -398,7 +400,7 @@ namespace Sass {
 
       BUILT_IN_FN(rgb1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* rgb = color->toRGBA();
           rgb->a(1.0);
@@ -411,7 +413,7 @@ namespace Sass {
 
       BUILT_IN_FN(fnRgb1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* rgb = color->toRGBA();
           rgb->a(1.0);
@@ -462,7 +464,7 @@ namespace Sass {
 
       BUILT_IN_FN(rgba1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toRGBA();
         }
@@ -473,7 +475,7 @@ namespace Sass {
 
       BUILT_IN_FN(fnRgba1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toRGBA();
         }
@@ -527,7 +529,7 @@ namespace Sass {
 
       BUILT_IN_FN(hsl1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* hsl = color->toHSLA();
           hsl->a(1.0);
@@ -540,7 +542,7 @@ namespace Sass {
 
       BUILT_IN_FN(fnHsl1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* hsl = color->toHSLA();
           hsl->a(1.0);
@@ -592,7 +594,7 @@ namespace Sass {
 
       BUILT_IN_FN(hsla1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toHSLA();
         }
@@ -603,7 +605,7 @@ namespace Sass {
 
       BUILT_IN_FN(fnHsla1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toHSLA();
         }
@@ -653,7 +655,7 @@ namespace Sass {
 
       BUILT_IN_FN(hwb1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* hwb = color->toHWBA();
           hwb->a(1.0);
@@ -666,7 +668,7 @@ namespace Sass {
 
       BUILT_IN_FN(fnHwb1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* hwb = color->toHWBA();
           hwb->a(1.0);
@@ -716,7 +718,7 @@ namespace Sass {
 
       BUILT_IN_FN(hwba1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toHWBA();
         }
@@ -727,7 +729,7 @@ namespace Sass {
 
       BUILT_IN_FN(fnHwba1arg)
       {
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toHWBA();
         }
@@ -839,7 +841,7 @@ namespace Sass {
       BUILT_IN_FN(whiteness)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         ColorHwbaObj hwba(color->toHWBA());
         #else
         ColorRgbaObj rgba(color->copyAsRGBA());
@@ -854,7 +856,7 @@ namespace Sass {
       BUILT_IN_FN(blackness)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        #ifdef SassPreserveColorInfo
+        #if SassPreserveColorInfo
         ColorHwbaObj hwba(color->toHWBA());
         #else
         ColorRgbaObj rgba(color->copyAsRGBA());

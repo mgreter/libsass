@@ -1,15 +1,17 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "terminal.hpp"
 
 // Minimal terminal abstraction for cross compatibility.
 // Its main purpose is to let us print stuff with colors.
 namespace Terminal {
 
-#ifdef _WIN32
-
   // Query number of available console columns
   // Useful to shorten our output to fit nicely
   short getColumns(bool error)
   {
+#ifdef _WIN32
     DWORD fd = error
       ? STD_ERROR_HANDLE
       : STD_OUTPUT_HANDLE;
@@ -23,12 +25,16 @@ namespace Terminal {
     GetConsoleScreenBufferInfo(handle, &csbi);
     // csbi.srWindow.Right - csbi.srWindow.Left
     return csbi.dwMaximumWindowSize.X;
+#else
+    return 80;
+#endif
   }
 
   // Check if we are actually printing to the console
   // In all other cases we want monochrome ASCII output
   bool isConsoleAttached(bool error)
   {
+#ifdef _WIN32
     DWORD fd = error
       ? STD_ERROR_HANDLE
       : STD_OUTPUT_HANDLE;
@@ -37,30 +43,41 @@ namespace Terminal {
     if (handle == INVALID_HANDLE_VALUE) return false;
     DWORD filetype = GetFileType(handle);
     return filetype == FILE_TYPE_CHAR;
+#else
+    return false;
+#endif
   }
 
-  // Check if we are actually printing to the console
-  // In all other cases we want monochrome ASCII output
+  // Check that we print to a terminal with unicode support
   bool hasUnicodeSupport(bool error)
   {
-    return false;
+#ifdef _WIN32
     UINT cp = GetConsoleOutputCP();
     if (cp == 0) return false;
     return cp == 65001;
+#else
+    return false;
+#endif
   }
 
+  // Check that we print to a terminal with color support
   bool hasColorSupport(bool error)
   {
-    return false;
+#ifdef _WIN32
     return isConsoleAttached(true);
+#else
+    return false;
+#endif
   }
 
   // This function is able to print a line with colors
-  // It translates the Unix terminal codes to windows
+  // It translates the ANSI terminal codes to windows
   void print(const char* output, bool error)
   {
 
     if (output == 0) return;
+
+#ifdef _WIN32
 
     DWORD fd = error
       ? STD_ERROR_HANDLE
@@ -154,31 +171,17 @@ namespace Terminal {
 
     fflush(error ? stderr : stdout);
 
-  }
-
 #else
 
-  short getColumns(bool error)
-  {
-    return 80;
-  }
-
-  // Check if we are actually printing to the console
-  // In all other cases we want monochrome ASCII output
-  bool isConsoleAttached(bool error) { return true; }
-  bool hasUnicodeSupport(bool error) { return true; }
-  bool hasColorSupport(bool error) { return true; }
-
-  void print(const char* output, bool error)
-  {
     if (error) {
       std::cerr << output;
     }
     else {
       std::cout << output;
     }
-  }
 
 #endif
+
+  }
 
 }

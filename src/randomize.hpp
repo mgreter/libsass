@@ -1,8 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
-#ifndef SASS_RAND_SEED_HPP
-#define SASS_RAND_SEED_HPP
+#ifndef SASS_RANDOMIZE_HPP
+#define SASS_RANDOMIZE_HPP
 
 #include <cstdint>
 
